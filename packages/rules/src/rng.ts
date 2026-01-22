@@ -13,6 +13,20 @@ export class DefaultRNG implements RNG {
   }
 }
 
+/** Simple deterministic LCG for tests - not cryptographically secure */
+export class SeededRNG implements RNG {
+  private state: number;
+  constructor(seed: number) {
+    // ensure seed in [1..2^31)
+    this.state = seed >>> 0 || 1;
+  }
+  next(): number {
+    // constants from Numerical Recipes
+    this.state = (this.state * 1664525 + 1013904223) >>> 0;
+    return this.state / 0x100000000;
+  }
+}
+
 const defaultRng = new DefaultRNG();
 
 // Бросок одного d6

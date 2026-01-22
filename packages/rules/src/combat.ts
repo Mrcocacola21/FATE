@@ -13,6 +13,8 @@ import {
   ABILITY_BERSERK_AUTO_DEFENSE,
   canUseAbility,
   consumeAbilityCharges,
+  getAbilitySpec,
+  getCharges,
 } from "./abilities";
 import { canDirectlyTargetUnit } from "./visibility";
 
@@ -135,6 +137,8 @@ export function resolveAttack(
     defenderUseBerserkAutoDefense?: boolean;
     /** Для спец-кейсов (наездник по пути): не проверять дистанцию/тип атаки */
     ignoreRange?: boolean;
+    /** Для AoE/path attacks: игнорировать стелс и при атаке раскрывать цель */
+    ignoreStealth?: boolean;
   },
   rng: RNG
 ): { nextState: GameState; events: GameEvent[] } {
@@ -154,7 +158,7 @@ export function resolveAttack(
 
   // Нельзя напрямую таргетить невидимого врага (стелс).
   // AoE-атаки должны резолвиться отдельной логикой, а не через resolveAttack.
-  if (!canDirectlyTargetUnit(state, attacker.id, defender.id)) {
+  if (!params.ignoreStealth && !canDirectlyTargetUnit(state, attacker.id, defender.id)) {
     return { nextState: state, events: [] };
   }
 
@@ -174,8 +178,20 @@ export function resolveAttack(
     params.defenderUseBerserkAutoDefense === true;
 
   if (defenderAfter.class === "berserker" && wantsAutoDefense) {
-    // проверяем, хватает ли зарядов на способность
-    if (canUseAbility(defenderAfter, ABILITY_BERSERK_AUTO_DEFENSE)) {
+    const spec = getAbilitySpec(ABILITY_BERSERK_AUTO_DEFENSE);
+    const currentCharges = getCharges(
+      defenderAfter,
+      ABILITY_BERSERK_AUTO_DEFENSE
+    );
+    const requiredCharges =
+      spec?.maxCharges ?? spec?.chargesPerUse ?? spec?.chargeCost ?? 0;
+
+    // Срабатывает только при полных зарядах (6) и при явном выборе игрока
+    if (
+      spec &&
+      currentCharges === requiredCharges &&
+      canUseAbility(defenderAfter, ABILITY_BERSERK_AUTO_DEFENSE)
+    ) {
       defenderAfter = consumeAbilityCharges(
         defenderAfter,
         ABILITY_BERSERK_AUTO_DEFENSE
@@ -258,36 +274,40 @@ export function resolveAttack(
     hit = true;
   }
 
-  // Берсерк: простая версия авто-защиты через счётчик зарядов
-  // (если не сработала ability-версия выше).
-  const useBerserkerAutoDefense =
-    params.defenderUseBerserkAutoDefense ?? true;
-
-  if (
-    defenderAfter.class === "berserker" &&
-    useBerserkerAutoDefense
-  ) {
-    const currentCharges =
-      defenderAfter.charges["berserkAutoDefense"] ?? 0;
-    if (currentCharges > 0) {
-      hit = false;
-      defenderAfter = {
-        ...defenderAfter,
-        charges: {
-          ...defenderAfter.charges,
-          berserkAutoDefense: currentCharges - 1,
-        },
-      };
-      events.push({
-        type: "abilityUsed",
-        unitId: defenderAfter.id,
-        abilityId: "berserkAutoDefense",
-      });
-    }
-  }
-
   // --- Урон / выход из стелса ассасина ---
   let damage = 0;
+  let attackerRevealedToDefender = false;
+
+  // Если цель была в стелсе и мы специально атакуем (AoE/path), раскрываем её для атакующего
+  if (defenderAfter.isStealthed) {
+    if (params.ignoreStealth) {
+      defenderAfter = {
+        ...defenderAfter,
+        isStealthed: false,
+        stealthTurnsLeft: 0,
+      };
+
+      // Обновляем knowledge: атакующий владелец теперь знает цель
+      const attackerOwner = attackerAfter.owner;
+      const nextKnowledge = {
+        ...state.knowledge,
+        [attackerOwner]: {
+          ...(state.knowledge?.[attackerOwner] ?? {}),
+          [defenderAfter.id]: true,
+        },
+      };
+
+      const tmpUnits = { ...units, [defenderAfter.id]: defenderAfter };
+      const tmpState: GameState = { ...state, units: tmpUnits, knowledge: nextKnowledge };
+
+      // push reveal event
+      events.push({ type: "stealthRevealed", unitId: defenderAfter.id, reason: "attacked" });
+
+      // update working copies
+      units[defenderAfter.id] = defenderAfter;
+      state = tmpState;
+    }
+  }
 
   if (hit) {
     if (attackerAfter.class === "assassin" && attackerAfter.isStealthed) {
@@ -298,6 +318,7 @@ export function resolveAttack(
         isStealthed: false,
         stealthTurnsLeft: 0,
       };
+      attackerRevealedToDefender = true;
     } else {
       damage = attackerAfter.attack;
     }
@@ -328,6 +349,15 @@ export function resolveAttack(
   const nextState: GameState = {
     ...state,
     units,
+    knowledge: attackerRevealedToDefender
+      ? {
+          ...state.knowledge,
+          [defenderAfter.owner]: {
+            ...(state.knowledge?.[defenderAfter.owner] ?? {}),
+            [attackerAfter.id]: true,
+          },
+        }
+      : state.knowledge,
   };
 
   events.push({

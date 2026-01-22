@@ -39,17 +39,21 @@ export function canUnitEnterCell(
 
   // Здесь occupant — враг.
   if (occupant.isStealthed) {
-    // Если юнит умеет видеть невидимых — он "знает", что там враг → нельзя.
+    // Если юнит пассивно видит невидимых — он знает, что там враг → нельзя.
     if (unitCanSeeStealthed(state, unit)) {
       return false;
     }
+
+    // Если движок уже знает об этом враге (knowledge), то блокируем как видимого
+    const known = state.knowledge?.[unit.owner]?.[occupant.id];
+    if (known) return false;
 
     // Правило: скрытый герой не может делить клетку с другим скрытым.
     if (unit.isStealthed) {
       return false;
     }
 
-    // Иначе: враг невидим, можно наступить на его клетку.
+    // Иначе: враг невидим и неизвестен — можно наступить на его клетку.
     return true;
   }
 
@@ -81,8 +85,11 @@ export function canDirectlyTargetUnit(
   }
 
   // Враг в стелсе и мы его не "видим" → нельзя нацелиться
-  if (target.isStealthed && !unitCanSeeStealthed(state, source)) {
-    return false;
+  if (target.isStealthed) {
+    const known = state.knowledge?.[source.owner]?.[target.id];
+    if (!unitCanSeeStealthed(state, source) && !known) {
+      return false;
+    }
   }
 
   return true;

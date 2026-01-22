@@ -1,4 +1,4 @@
-// packages/rules/src/actions.ts
+﻿// packages/rules/src/actions.ts
 
 import {
   GameState,
@@ -23,12 +23,14 @@ import {
   attemptEnterStealth,
   performSearchStealth,
   processStartOfTurnStealth,
+  revealStealthedInArea,
 } from "./stealth";
 import {
   initUnitAbilities,
   processUnitStartOfTurn,
   getAbilitySpec,
   spendCharges,
+  ABILITY_TRICKSTER_AOE,
 } from "./abilities";
 import { unitCanSeeStealthed } from "./visibility";
 
@@ -38,16 +40,29 @@ function roll2D6Sum(rng: RNG): number {
   return d1 + d2;
 }
 
+function parseCoord(value: unknown): Coord | null {
+  if (typeof value !== "object" || value === null) return null;
+  const maybe = value as { col?: unknown; row?: unknown };
+  if (typeof maybe.col !== "number" || typeof maybe.row !== "number") return null;
+  return { col: maybe.col, row: maybe.row };
+}
+
+function parseAoECenter(payload: unknown): Coord | null {
+  if (typeof payload !== "object" || payload === null) return null;
+  const maybe = payload as { center?: unknown };
+  return parseCoord(maybe.center);
+}
+
 function applyRollInitiative(
   state: GameState,
   rng: RNG
 ): ApplyResult {
-  // Бросаем инициативу только в фазе расстановки
+  // Р‘СЂРѕСЃР°РµРј РёРЅРёС†РёР°С‚РёРІСѓ С‚РѕР»СЊРєРѕ РІ С„Р°Р·Рµ СЂР°СЃСЃС‚Р°РЅРѕРІРєРё
   if (state.phase !== "placement") {
     return { state, events: [] };
   }
 
-  // Уже бросали — второй раз не даём
+  // РЈР¶Рµ Р±СЂРѕСЃР°Р»Рё вЂ” РІС‚РѕСЂРѕР№ СЂР°Р· РЅРµ РґР°С‘Рј
   if (state.initiative.P1 !== null || state.initiative.P2 !== null) {
     return { state, events: [] };
   }
@@ -55,7 +70,7 @@ function applyRollInitiative(
   let p1: number;
   let p2: number;
 
-  // Перебрасываем, пока не будет разницы
+  // РџРµСЂРµР±СЂР°СЃС‹РІР°РµРј, РїРѕРєР° РЅРµ Р±СѓРґРµС‚ СЂР°Р·РЅРёС†С‹
   do {
     p1 = roll2D6Sum(rng);
     p2 = roll2D6Sum(rng);
@@ -70,7 +85,7 @@ function applyRollInitiative(
       P2: p2,
     },
     placementFirstPlayer,
-    // важное: тот, кто ставит первым, становится currentPlayer
+    // РІР°Р¶РЅРѕРµ: С‚РѕС‚, РєС‚Рѕ СЃС‚Р°РІРёС‚ РїРµСЂРІС‹Рј, СЃС‚Р°РЅРѕРІРёС‚СЃСЏ currentPlayer
     currentPlayer: placementFirstPlayer,
   };
 
@@ -89,17 +104,17 @@ function applyChooseArena(
   state: GameState,
   action: Extract<GameAction, { type: "chooseArena" }>
 ): ApplyResult {
-  // Выбор арены имеет смысл только до боя
+  // Р’С‹Р±РѕСЂ Р°СЂРµРЅС‹ РёРјРµРµС‚ СЃРјС‹СЃР» С‚РѕР»СЊРєРѕ РґРѕ Р±РѕСЏ
   if (state.phase !== "placement") {
     return { state, events: [] };
   }
 
-  // Уже выбрали арену — повтор не нужен
+  // РЈР¶Рµ РІС‹Р±СЂР°Р»Рё Р°СЂРµРЅСѓ вЂ” РїРѕРІС‚РѕСЂ РЅРµ РЅСѓР¶РµРЅ
   if (state.arenaId !== null) {
     return { state, events: [] };
   }
 
-  // По-хорошему, арену выбирают ПОСЛЕ броска инициативы
+  // РџРѕ-С…РѕСЂРѕС€РµРјСѓ, Р°СЂРµРЅСѓ РІС‹Р±РёСЂР°СЋС‚ РџРћРЎР›Р• Р±СЂРѕСЃРєР° РёРЅРёС†РёР°С‚РёРІС‹
   if (state.initiative.P1 === null || state.initiative.P2 === null) {
     return { state, events: [] };
   }
@@ -147,10 +162,25 @@ function applyUseAbility(
     return { state, events: [] };
   }
 
+  const isTricksterAoE = spec.id === ABILITY_TRICKSTER_AOE;
+  const aoeCenter = isTricksterAoE ? parseAoECenter(action.payload) : null;
+
+  if (isTricksterAoE) {
+    if (unit.class !== "trickster") {
+      return { state, events: [] };
+    }
+    if (!aoeCenter || !isInsideBoard(aoeCenter, state.boardSize)) {
+      return { state, events: [] };
+    }
+  }
+
   const cost = spec.actionCost;
 
-  // Проверяем экономику
+  // РџСЂРѕРІРµСЂСЏРµРј СЌРєРѕРЅРѕРјРёРєСѓ
   if (cost?.consumesAction && unit.hasActedThisTurn) {
+    return { state, events: [] };
+  }
+  if (cost?.consumesAttack && unit.hasAttackedThisTurn) {
     return { state, events: [] };
   }
   if (cost?.consumesMove && unit.hasMovedThisTurn) {
@@ -160,11 +190,11 @@ function applyUseAbility(
     return { state, events: [] };
   }
 
-  // Сколько зарядов надо на использование
+  // РЎРєРѕР»СЊРєРѕ Р·Р°СЂСЏРґРѕРІ РЅР°РґРѕ РЅР° РёСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ
   const chargeAmount =
     spec.chargesPerUse ?? spec.chargeCost ?? 0;
 
-  // Платим зарядами
+  // РџР»Р°С‚РёРј Р·Р°СЂСЏРґР°РјРё
   const { unit: afterCharges, ok } = spendCharges(
     unit,
     spec.id,
@@ -174,20 +204,22 @@ function applyUseAbility(
     return { state, events: [] };
   }
 
-  // Обновляем экономику
+  // РћР±РЅРѕРІР»СЏРµРј СЌРєРѕРЅРѕРјРёРєСѓ
   const updatedUnit: UnitState = {
     ...afterCharges,
     hasActedThisTurn:
       unit.hasActedThisTurn || !!cost?.consumesAction,
+    hasAttackedThisTurn:
+      unit.hasAttackedThisTurn || !!cost?.consumesAttack,
     hasMovedThisTurn:
       unit.hasMovedThisTurn || !!cost?.consumesMove,
     stealthAttemptedThisTurn:
       unit.stealthAttemptedThisTurn || !!cost?.consumesStealthSlot,
   };
 
-  // TODO: сюда потом добавим реальный эффект способности (урон/баф/телепорт)
+  // TODO: СЃСЋРґР° РїРѕС‚РѕРј РґРѕР±Р°РІРёРј СЂРµР°Р»СЊРЅС‹Р№ СЌС„С„РµРєС‚ СЃРїРѕСЃРѕР±РЅРѕСЃС‚Рё (СѓСЂРѕРЅ/Р±Р°С„/С‚РµР»РµРїРѕСЂС‚)
 
-  const newState: GameState = {
+  let nextState: GameState = {
     ...state,
     units: {
       ...state.units,
@@ -203,7 +235,47 @@ function applyUseAbility(
     },
   ];
 
-  return { state: newState, events };
+  if (isTricksterAoE && aoeCenter) {
+    const radius = 1;
+    const revealRes = revealStealthedInArea(nextState, aoeCenter, radius, rng);
+    nextState = revealRes.state;
+    events.push(...revealRes.events);
+
+    const targetIds = Object.values(nextState.units)
+      .filter((u) => {
+        if (!u.isAlive || !u.position) return false;
+        if (u.owner === updatedUnit.owner) return false;
+        return chebyshev(u.position, aoeCenter) <= radius;
+      })
+      .map((u) => u.id);
+
+    for (const targetId of targetIds) {
+      const target = nextState.units[targetId];
+      if (!target || !target.isAlive || !target.position) continue;
+      const res = resolveAttack(
+        nextState,
+        {
+          attackerId: updatedUnit.id,
+          defenderId: target.id,
+          ignoreRange: true,
+          ignoreStealth: true,
+        },
+        rng
+      );
+      nextState = res.nextState;
+      events.push(...res.events);
+    }
+
+    events.push({
+      type: "aoeResolved",
+      unitId: updatedUnit.id,
+      center: aoeCenter,
+      radius,
+      targets: targetIds,
+    });
+  }
+
+  return { state: nextState, events };
 }
 
 
@@ -220,6 +292,9 @@ export function createEmptyGame(): GameState {
     activeUnitId: null,
     turnOrder: [],
     turnOrderIndex: 0,
+    placementOrder: [],
+    turnQueue: [],
+    turnQueueIndex: 0,
 
     units: {},
     events: [],
@@ -229,6 +304,7 @@ export function createEmptyGame(): GameState {
     arenaId: null,
     startingUnitId: null,
     unitsPlaced: { P1: 0, P2: 0 },
+    knowledge: { P1: {}, P2: {} },
   };
 }
 
@@ -238,7 +314,7 @@ export function rollInitiativeForMatch(
   state: GameState,
   rng: RNG
 ): { state: GameState; events: GameEvent[] } {
-  // просто делегируем в applyRollInitiative
+  // РїСЂРѕСЃС‚Рѕ РґРµР»РµРіРёСЂСѓРµРј РІ applyRollInitiative
   return applyRollInitiative(state, rng);
 }
 
@@ -246,13 +322,13 @@ export function setArena(
   state: GameState,
   arenaId: string
 ): { state: GameState; events: GameEvent[] } {
-  // просто делегируем в applyChooseArena
+  // РїСЂРѕСЃС‚Рѕ РґРµР»РµРіРёСЂСѓРµРј РІ applyChooseArena
   return applyChooseArena(state, { type: "chooseArena", arenaId });
 }
 
 
 
-// Создаём 7 фигур игрока с дефолтными статами и ещё без позиции
+// РЎРѕР·РґР°С‘Рј 7 С„РёРіСѓСЂ РёРіСЂРѕРєР° СЃ РґРµС„РѕР»С‚РЅС‹РјРё СЃС‚Р°С‚Р°РјРё Рё РµС‰С‘ Р±РµР· РїРѕР·РёС†РёРё
 export function createDefaultArmy(player: PlayerId): UnitState[] {
   const classesOrder = [
     "rider",
@@ -283,6 +359,7 @@ export function createDefaultArmy(player: PlayerId): UnitState[] {
       lastChargedTurn: undefined,
     
       hasMovedThisTurn: false,
+      hasAttackedThisTurn: false,
       hasActedThisTurn: false,
     
       isAlive: true,
@@ -297,7 +374,7 @@ export function createDefaultArmy(player: PlayerId): UnitState[] {
 
 
 
-// Добавить армию в GameState
+// Р”РѕР±Р°РІРёС‚СЊ Р°СЂРјРёСЋ РІ GameState
 export function attachArmy(
   state: GameState,
   army: UnitState[]
@@ -313,7 +390,7 @@ function nextPlayer(player: PlayerId): PlayerId {
   return player === "P1" ? "P2" : "P1";
 }
 
-// Применяем действие к состоянию игры
+// РџСЂРёРјРµРЅСЏРµРј РґРµР№СЃС‚РІРёРµ Рє СЃРѕСЃС‚РѕСЏРЅРёСЋ РёРіСЂС‹
 export function applyAction(
   state: GameState,
   action: GameAction,
@@ -370,22 +447,22 @@ function getOwnerOfStartingUnit(
 
 function getNextAliveUnitIndex(
   state: GameState,
-  fromIndex: number
+  fromIndex: number,
+  queue: string[]
 ): number | null {
-  const order = state.turnOrder;
-  const len = order.length;
+  const len = queue.length;
   if (len === 0) return null;
 
   for (let step = 1; step <= len; step++) {
     const idx = (fromIndex + step) % len;
-    const unitId = order[idx];
+    const unitId = queue[idx];
     const u = state.units[unitId];
     if (u && u.isAlive && u.position) {
       return idx;
     }
   }
 
-  // Нет живых фигур вообще
+  // РќРµС‚ Р¶РёРІС‹С… С„РёРіСѓСЂ РІРѕРѕР±С‰Рµ
   return null;
 }
 
@@ -403,29 +480,29 @@ function applyPlaceUnit(
     return { state, events: [] };
   }
 
-  // Нельзя выставлять фигуру не своего игрока
+  // РќРµР»СЊР·СЏ РІС‹СЃС‚Р°РІР»СЏС‚СЊ С„РёРіСѓСЂСѓ РЅРµ СЃРІРѕРµРіРѕ РёРіСЂРѕРєР°
   if (unit.owner !== state.currentPlayer) {
     return { state, events: [] };
   }
 
-  // Нельзя повторно "выставлять" уже поставленную фигуру
+  // РќРµР»СЊР·СЏ РїРѕРІС‚РѕСЂРЅРѕ "РІС‹СЃС‚Р°РІР»СЏС‚СЊ" СѓР¶Рµ РїРѕСЃС‚Р°РІР»РµРЅРЅСѓСЋ С„РёРіСѓСЂСѓ
   if (unit.position) {
     return { state, events: [] };
   }
 
   const pos = action.position;
 
-  // Координата должна быть на доске
+  // РљРѕРѕСЂРґРёРЅР°С‚Р° РґРѕР»Р¶РЅР° Р±С‹С‚СЊ РЅР° РґРѕСЃРєРµ
   if (!isInsideBoard(pos, state.boardSize)) {
     return { state, events: [] };
   }
 
-  // Клетка должна быть свободна
+  // РљР»РµС‚РєР° РґРѕР»Р¶РЅР° Р±С‹С‚СЊ СЃРІРѕР±РѕРґРЅР°
   if (isCellOccupied(state, pos)) {
     return { state, events: [] };
   }
 
-  // Ограничение: только b–h (колонки 1..7) задней линии своего игрока
+  // РћРіСЂР°РЅРёС‡РµРЅРёРµ: С‚РѕР»СЊРєРѕ bвЂ“h (РєРѕР»РѕРЅРєРё 1..7) Р·Р°РґРЅРµР№ Р»РёРЅРёРё СЃРІРѕРµРіРѕ РёРіСЂРѕРєР°
   const backRow = unit.owner === "P1" ? 0 : state.boardSize - 1;
   if (pos.row !== backRow) {
     return { state, events: [] };
@@ -441,19 +518,19 @@ function applyPlaceUnit(
 
   const owner = unit.owner;
 
-  // Обновляем счётчик выставленных фигур
+  // РћР±РЅРѕРІР»СЏРµРј СЃС‡С‘С‚С‡РёРє РІС‹СЃС‚Р°РІР»РµРЅРЅС‹С… С„РёРіСѓСЂ
   const unitsPlaced = {
     ...state.unitsPlaced,
     [owner]: state.unitsPlaced[owner] + 1,
   };
 
-  // Первая поставленная фигура — кандидат на «ходит первой»
-  const startingUnitId = state.startingUnitId ?? updatedUnit.id;
+  const placementOrder = [...state.placementOrder, updatedUnit.id];
+  let startingUnitId = placementOrder[0] ?? updatedUnit.id;
 
-  // Глобальная очередь ходов: просто складываем id по фактическому порядку placement
-  const turnOrder = [...state.turnOrder, updatedUnit.id];
+  // Backward compat: keep turnOrder in sync with placementOrder
+  const turnOrder = [...placementOrder];
 
-  // По умолчанию — переключаем право расстановки
+  // РџРѕ СѓРјРѕР»С‡Р°РЅРёСЋ вЂ” РїРµСЂРµРєР»СЋС‡Р°РµРј РїСЂР°РІРѕ СЂР°СЃСЃС‚Р°РЅРѕРІРєРё
   const otherPlayer: PlayerId = owner === "P1" ? "P2" : "P1";
   let phase: GameState["phase"] = state.phase;
   let currentPlayer: PlayerId = otherPlayer;
@@ -461,35 +538,66 @@ function applyPlaceUnit(
   let roundNumber = state.roundNumber;
   let activeUnitId = state.activeUnitId;
   let turnOrderIndex = state.turnOrderIndex;
+  let turnQueue = state.turnQueue;
+  let turnQueueIndex = state.turnQueueIndex;
 
   let extraEvents: GameEvent[] = [];
+  let initialKnowledge: GameState["knowledge"] | undefined = undefined;
 
-  // Проверяем, закончилась ли расстановка у ОБОИХ
+  // РџСЂРѕРІРµСЂСЏРµРј, Р·Р°РєРѕРЅС‡РёР»Р°СЃСЊ Р»Рё СЂР°СЃСЃС‚Р°РЅРѕРІРєР° Сѓ РћР‘РћРРҐ
   if (unitsPlaced.P1 >= 7 && unitsPlaced.P2 >= 7) {
-    // Переходим в бой
+    // РџРµСЂРµС…РѕРґРёРј РІ Р±РѕР№
     phase = "battle";
     turnNumber = 1;
     roundNumber = 1;
     activeUnitId = null;
 
-    const startingOwner = getOwnerOfStartingUnit(
-      state,
-      startingUnitId,
-      updatedUnit
-    );
+    // Инициализируем очередь хода из placementOrder
+    turnQueue = [...placementOrder];
+    turnQueueIndex = 0;
 
-    // Кто владеет первой поставленной фигурой — тот «первый ходит»
+    const queueHead = turnQueue[0] ?? startingUnitId;
+    startingUnitId = queueHead ?? startingUnitId;
+
+    const startingOwner = queueHead
+      ? (state.units[queueHead] ??
+          (queueHead === updatedUnit.id ? updatedUnit : null)
+        )?.owner ?? updatedUnit.owner
+      : updatedUnit.owner;
+
+    // Владелец первого в очереди ходит первым
     currentPlayer = startingOwner;
 
-    // Смещаем указатель очереди так, чтобы первым в очереди был именно startingUnitId
-    const idx = turnOrder.indexOf(startingUnitId);
-    turnOrderIndex = idx >= 0 ? idx : 0;
+    // Backward compat: keep turnOrderIndex in sync
+    turnOrderIndex = turnQueueIndex;
+
+    // РРЅРёС†РёР°Р»РёР·РёСЂСѓРµРј knowledge: РєР°Р¶РґС‹Р№ РёРіСЂРѕРє Р·РЅР°РµС‚ РІСЃРµС… СЃРІРѕРёС… С„РёРіСѓСЂ,
+    // Рё РІРёРґРёРјС‹С… РІСЂР°Р¶РµСЃРєРёС… (РЅРµ РІ СЃС‚РµР»СЃРµ).
+    const knowledge: GameState["knowledge"] = { P1: {}, P2: {} };
+    for (const u of turnQueue) {
+      const uu = state.units[u] || (u === updatedUnit.id ? updatedUnit : null);
+      if (!uu) continue;
+      knowledge[uu.owner][uu.id] = true; // friendly always known
+    }
+    for (const uid of Object.keys(state.units)) {
+      const uu = state.units[uid];
+      if (!uu) continue;
+      const owner = uu.owner;
+      const other: PlayerId = owner === "P1" ? "P2" : "P1";
+      // enemy visible -> known to other
+      if (!uu.isStealthed) {
+        knowledge[other][uu.id] = true;
+      }
+    }
 
     extraEvents.push({
       type: "battleStarted",
       startingUnitId,
       startingPlayer: startingOwner,
     });
+
+    // Attach knowledge to newState below
+    initialKnowledge = knowledge;
   }
 
   const newState: GameState = {
@@ -501,12 +609,16 @@ function applyPlaceUnit(
     activeUnitId,
     startingUnitId,
     unitsPlaced,
+    placementOrder,
+    turnQueue,
+    turnQueueIndex,
     turnOrder,
     turnOrderIndex,
     units: {
       ...state.units,
       [updatedUnit.id]: updatedUnit,
     },
+    knowledge: phase === "battle" ? initialKnowledge ?? state.knowledge : state.knowledge,
   };
 
   const events: GameEvent[] = [
@@ -545,8 +657,9 @@ function applyAttack(
     return { state, events: [] };
   }
 
-  // 🚫 уже тратил действие (атака / поиск / активка)
-  if (attacker.hasActedThisTurn) {
+  // рџљ« СѓР¶Рµ С‚СЂР°С‚РёР» РґРµР№СЃС‚РІРёРµ (Р°С‚Р°РєР° / РїРѕРёСЃРє / Р°РєС‚РёРІРєР°)
+  // Attack specifically limited by hasAttackedThisTurn
+  if (attacker.hasAttackedThisTurn) {
     return { state, events: [] };
   }
 
@@ -567,7 +680,8 @@ function applyAttack(
 
   const updatedAttacker: UnitState = {
     ...attackerAfter,
-    hasActedThisTurn: true, // ✅ потратили действие
+    hasActedThisTurn: true, // вњ… РїРѕС‚СЂР°С‚РёР»Рё РґРµР№СЃС‚РІРёРµ
+    hasAttackedThisTurn: true,
   };
 
   const finalState: GameState = {
@@ -592,7 +706,7 @@ function collectRiderPathTargets(
   const dx = to.col - from.col;
   const dy = to.row - from.row;
 
-  // Нас интересует только чисто ортогональное движение (как ладья).
+  // РќР°СЃ РёРЅС‚РµСЂРµСЃСѓРµС‚ С‚РѕР»СЊРєРѕ С‡РёСЃС‚Рѕ РѕСЂС‚РѕРіРѕРЅР°Р»СЊРЅРѕРµ РґРІРёР¶РµРЅРёРµ (РєР°Рє Р»Р°РґСЊСЏ).
   const isOrthogonal =
     (dx === 0 && dy !== 0) || (dy === 0 && dx !== 0);
   if (!isOrthogonal) {
@@ -603,7 +717,7 @@ function collectRiderPathTargets(
   const stepRow = dy === 0 ? 0 : dy > 0 ? 1 : -1;
   const steps = Math.max(Math.abs(dx), Math.abs(dy));
 
-  // Идём от клетки после старта до клетки назначения включительно
+  // РРґС‘Рј РѕС‚ РєР»РµС‚РєРё РїРѕСЃР»Рµ СЃС‚Р°СЂС‚Р° РґРѕ РєР»РµС‚РєРё РЅР°Р·РЅР°С‡РµРЅРёСЏ РІРєР»СЋС‡РёС‚РµР»СЊРЅРѕ
   for (let i = 1; i <= steps; i++) {
     const cell: Coord = {
       col: from.col + stepCol * i,
@@ -613,14 +727,10 @@ function collectRiderPathTargets(
     const u = getUnitAt(state, cell);
     if (!u || !u.isAlive) continue;
 
-    // Союзников не бьём "по пути"
+    // РЎРѕСЋР·РЅРёРєРѕРІ РЅРµ Р±СЊС‘Рј "РїРѕ РїСѓС‚Рё"
     if (u.owner === rider.owner) continue;
 
-    // Скрытого врага бить нельзя, если его не "видим"
-    if (u.isStealthed && !unitCanSeeStealthed(state, rider)) {
-      continue;
-    }
-
+    // Path attacks hit enemies passed on the path regardless of stealthed state
     targets.push(u.id);
   }
 
@@ -650,10 +760,10 @@ function applyMove(
     return { state, events: [] };
   }
 
-  // начальная позиция — пригодится для спец-правила наездника
+  // РЅР°С‡Р°Р»СЊРЅР°СЏ РїРѕР·РёС†РёСЏ вЂ” РїСЂРёРіРѕРґРёС‚СЃСЏ РґР»СЏ СЃРїРµС†-РїСЂР°РІРёР»Р° РЅР°РµР·РґРЅРёРєР°
   const from = unit.position;
 
-  // 🚫 уже ходил в этом ходу
+  // рџљ« СѓР¶Рµ С…РѕРґРёР» РІ СЌС‚РѕРј С…РѕРґСѓ
   if (unit.hasMovedThisTurn) {
     return { state, events: [] };
   }
@@ -675,10 +785,51 @@ function applyMove(
     return { state, events: [] };
   }
 
+  const hiddenAtDest = getUnitAt(state, action.to);
+  if (
+    hiddenAtDest &&
+    hiddenAtDest.isAlive &&
+    hiddenAtDest.owner !== unit.owner &&
+    hiddenAtDest.isStealthed
+  ) {
+    const known = state.knowledge?.[unit.owner]?.[hiddenAtDest.id];
+    const canSee = unitCanSeeStealthed(state, unit);
+    if (!known && !canSee) {
+      const revealed: UnitState = {
+        ...hiddenAtDest,
+        isStealthed: false,
+        stealthTurnsLeft: 0,
+      };
+      const movedUnit: UnitState = {
+        ...unit,
+        hasMovedThisTurn: true,
+      };
+      const newState: GameState = {
+        ...state,
+        units: {
+          ...state.units,
+          [revealed.id]: revealed,
+          [movedUnit.id]: movedUnit,
+        },
+        knowledge: {
+          ...state.knowledge,
+          [unit.owner]: {
+            ...(state.knowledge?.[unit.owner] ?? {}),
+            [revealed.id]: true,
+          },
+        },
+      };
+      const events: GameEvent[] = [
+        { type: "stealthRevealed", unitId: revealed.id, reason: "steppedOnHidden" },
+      ];
+      return { state: newState, events };
+    }
+  }
+
   const updatedUnit: UnitState = {
     ...unit,
     position: { ...action.to },
-    hasMovedThisTurn: true, // ✅ потратили перемещение
+    hasMovedThisTurn: true, // вњ… РїРѕС‚СЂР°С‚РёР»Рё РїРµСЂРµРјРµС‰РµРЅРёРµ
   };
 
   let newState: GameState = {
@@ -698,10 +849,10 @@ function applyMove(
     },
   ];
 
-  // ---- Спец-правило наездника: атакует всех врагов, через которых проехал ----
+  // ---- РЎРїРµС†-РїСЂР°РІРёР»Рѕ РЅР°РµР·РґРЅРёРєР°: Р°С‚Р°РєСѓРµС‚ РІСЃРµС… РІСЂР°РіРѕРІ, С‡РµСЂРµР· РєРѕС‚РѕСЂС‹С… РїСЂРѕРµС…Р°Р» ----
   if (unit.class === "rider" && from) {
-    // ВАЖНО: путь считаем по старому state и старому положению,
-    // а урон применяем уже к состоянию после перемещения (newState)
+    // Р’РђР–РќРћ: РїСѓС‚СЊ СЃС‡РёС‚Р°РµРј РїРѕ СЃС‚Р°СЂРѕРјСѓ state Рё СЃС‚Р°СЂРѕРјСѓ РїРѕР»РѕР¶РµРЅРёСЋ,
+    // Р° СѓСЂРѕРЅ РїСЂРёРјРµРЅСЏРµРј СѓР¶Рµ Рє СЃРѕСЃС‚РѕСЏРЅРёСЋ РїРѕСЃР»Рµ РїРµСЂРµРјРµС‰РµРЅРёСЏ (newState)
     const targetIds = collectRiderPathTargets(state, unit, from, action.to);
 
     let tmpState = newState;
@@ -712,8 +863,9 @@ function applyMove(
         {
           attackerId: unit.id,
           defenderId,
-          // ignoreRange: true → для этой спец-атаки игнорируем дистанцию
+          // ignoreRange: true в†’ РґР»СЏ СЌС‚РѕР№ СЃРїРµС†-Р°С‚Р°РєРё РёРіРЅРѕСЂРёСЂСѓРµРј РґРёСЃС‚Р°РЅС†РёСЋ
           ignoreRange: true,
+          ignoreStealth: true,
         },
         rng
       );
@@ -723,6 +875,44 @@ function applyMove(
     }
 
     newState = tmpState;
+  }
+
+  // ---- Reveal by adjacency: ending move next to hidden enemies reveals them to mover ----
+  // РћР±С…РѕРґРёРј СЋРЅРёС‚РѕРІ Рё СЂР°СЃРєСЂС‹РІР°РµРј С‚Рµ, РєС‚Рѕ РІ СЂР°РґРёСѓСЃРµ 1 (Chebyshev) РѕС‚ РєРѕРЅРµС‡РЅРѕР№ РїРѕР·РёС†РёРё
+  const moverOwner = updatedUnit.owner;
+  const moverPos = updatedUnit.position!;
+  for (const other of Object.values(newState.units)) {
+    if (!other.isAlive || !other.position) continue;
+    if (other.owner === moverOwner) continue;
+    if (!other.isStealthed) continue;
+
+    const dx = Math.abs(other.position.col - moverPos.col);
+    const dy = Math.abs(other.position.row - moverPos.row);
+    const dist = Math.max(dx, dy);
+    if (dist <= 1) {
+      const revealed: UnitState = {
+        ...other,
+        isStealthed: false,
+        stealthTurnsLeft: 0,
+      };
+
+      newState = {
+        ...newState,
+        units: {
+          ...newState.units,
+          [revealed.id]: revealed,
+        },
+        knowledge: {
+          ...newState.knowledge,
+          [moverOwner]: {
+            ...(newState.knowledge?.[moverOwner] ?? {}),
+            [revealed.id]: true,
+          },
+        },
+      };
+
+      events.push({ type: "stealthRevealed", unitId: revealed.id, reason: "adjacency" });
+    }
   }
 
   return { state: newState, events };
@@ -753,12 +943,12 @@ function applyEnterStealth(
     return { state, events: [] };
   }
 
-  // Уже пытался войти в стелс в этот ход
+  // РЈР¶Рµ РїС‹С‚Р°Р»СЃСЏ РІРѕР№С‚Рё РІ СЃС‚РµР»СЃ РІ СЌС‚РѕС‚ С…РѕРґ
   if (unit.stealthAttemptedThisTurn) {
     return { state, events: [] };
   }
 
-  // Уже в стелсе — считаем, что попытка всё равно потрачена
+  // РЈР¶Рµ РІ СЃС‚РµР»СЃРµ вЂ” СЃС‡РёС‚Р°РµРј, С‡С‚Рѕ РїРѕРїС‹С‚РєР° РІСЃС‘ СЂР°РІРЅРѕ РїРѕС‚СЂР°С‡РµРЅР°
   if (unit.isStealthed) {
     const updated: UnitState = {
       ...unit,
@@ -780,6 +970,32 @@ function applyEnterStealth(
   const canStealth =
     unit.class === "assassin" || unit.class === "archer";
 
+  if (canStealth) {
+    const pos = unit.position!;
+    const hasStealthedOverlap = Object.values(state.units).some((u) => {
+      if (!u.isAlive || !u.isStealthed || !u.position) return false;
+      if (u.id === unit.id) return false;
+      return u.position.col === pos.col && u.position.row === pos.row;
+    });
+    if (hasStealthedOverlap) {
+      const updatedUnit: UnitState = {
+        ...unit,
+        stealthAttemptedThisTurn: true,
+      };
+      const newState: GameState = {
+        ...state,
+        units: {
+          ...state.units,
+          [updatedUnit.id]: updatedUnit,
+        },
+      };
+      const events: GameEvent[] = [
+        { type: "stealthEntered", unitId: updatedUnit.id, success: false },
+      ];
+      return { state: newState, events };
+    }
+  }
+
   let success = false;
 
   if (canStealth) {
@@ -787,7 +1003,7 @@ function applyEnterStealth(
     if (unit.class === "archer") {
       success = roll === 6;
     } else if (unit.class === "assassin") {
-      success = roll >= 5; // 5–6
+      success = roll >= 5; // 5вЂ“6
     }
   }
 
@@ -847,7 +1063,7 @@ function applySearchStealth(
     return { state, events: [] };
   }
 
-  // 🚫 проверяем, чем платим за поиск
+  // рџљ« РїСЂРѕРІРµСЂСЏРµРј, С‡РµРј РїР»Р°С‚РёРј Р·Р° РїРѕРёСЃРє
   if (action.mode === "action" && unit.hasActedThisTurn) {
     return { state, events: [] };
   }
@@ -884,6 +1100,13 @@ function applySearchStealth(
     units[updatedHidden.id] = updatedHidden;
     anyRevealed = true;
 
+    // Mark revealed unit as known for searcher
+    const knowledgeForSearcher = {
+      ...(state.knowledge?.[unit.owner] ?? {}),
+      [updatedHidden.id]: true,
+    };
+
+    // Attach to state below
     events.push({
       type: "stealthRevealed",
       unitId: updatedHidden.id,
@@ -891,7 +1114,7 @@ function applySearchStealth(
     });
   }
 
-  // обновляем экономику хода для ищущего
+  // РѕР±РЅРѕРІР»СЏРµРј СЌРєРѕРЅРѕРјРёРєСѓ С…РѕРґР° РґР»СЏ РёС‰СѓС‰РµРіРѕ
   const updatedSearcher: UnitState = {
     ...searcherBefore,
     hasActedThisTurn:
@@ -905,6 +1128,20 @@ function applySearchStealth(
   const newState: GameState = {
     ...state,
     units,
+    knowledge: {
+      ...state.knowledge,
+      [unit.owner]: {
+        ...(state.knowledge?.[unit.owner] ?? {}),
+        // merge any new reveals from units map
+        ...(Object.values(units)
+          .filter((u) => !u.isStealthed && u.owner !== unit.owner)
+          .reduce<Record<string, boolean>>((acc, u) => {
+            if (state.knowledge?.[unit.owner]?.[u.id]) return acc;
+            acc[u.id] = true;
+            return acc;
+          }, {})),
+      },
+    },
   };
 
   events.unshift({
@@ -921,12 +1158,12 @@ function getNextTurnIndexForPlayer(
   fromIndex: number,
   player: PlayerId
 ): number {
-  const order = state.turnOrder;
+  const order = state.turnQueue.length > 0 ? state.turnQueue : state.turnOrder;
   if (order.length === 0) return fromIndex;
 
   const len = order.length;
 
-  // Ищем вперёд по кругу следующую живую фигуру нужного игрока
+  // РС‰РµРј РІРїРµСЂС‘Рґ РїРѕ РєСЂСѓРіСѓ СЃР»РµРґСѓСЋС‰СѓСЋ Р¶РёРІСѓСЋ С„РёРіСѓСЂСѓ РЅСѓР¶РЅРѕРіРѕ РёРіСЂРѕРєР°
   for (let step = 1; step <= len; step++) {
     const idx = (fromIndex + step) % len;
     const unitId = order[idx];
@@ -936,8 +1173,8 @@ function getNextTurnIndexForPlayer(
     return idx;
   }
 
-  // Если живых фигур игрока нет — пока просто оставляем индекс как есть.
-  // (Позже здесь можно будет завершать игру.)
+  // Р•СЃР»Рё Р¶РёРІС‹С… С„РёРіСѓСЂ РёРіСЂРѕРєР° РЅРµС‚ вЂ” РїРѕРєР° РїСЂРѕСЃС‚Рѕ РѕСЃС‚Р°РІР»СЏРµРј РёРЅРґРµРєСЃ РєР°Рє РµСЃС‚СЊ.
+  // (РџРѕР·Р¶Рµ Р·РґРµСЃСЊ РјРѕР¶РЅРѕ Р±СѓРґРµС‚ Р·Р°РІРµСЂС€Р°С‚СЊ РёРіСЂСѓ.)
   return fromIndex;
 }
 
@@ -949,7 +1186,7 @@ function applyEndTurn(state: GameState, rng: RNG): ApplyResult {
   }
 
   // -----------------------------
-  // 1) Фаза расстановки: просто меняем игрока
+  // 1) Р¤Р°Р·Р° СЂР°СЃСЃС‚Р°РЅРѕРІРєРё: РїСЂРѕСЃС‚Рѕ РјРµРЅСЏРµРј РёРіСЂРѕРєР°
   // -----------------------------
   if (state.phase === "placement") {
     const prevPlayer = state.currentPlayer;
@@ -959,7 +1196,7 @@ function applyEndTurn(state: GameState, rng: RNG): ApplyResult {
       ...state,
       currentPlayer: next,
       turnNumber: state.turnNumber + 1,
-      // roundNumber можно не трогать, он важен в бою
+      // roundNumber РјРѕР¶РЅРѕ РЅРµ С‚СЂРѕРіР°С‚СЊ, РѕРЅ РІР°Р¶РµРЅ РІ Р±РѕСЋ
       activeUnitId: null,
     };
 
@@ -971,19 +1208,40 @@ function applyEndTurn(state: GameState, rng: RNG): ApplyResult {
       },
     ];
 
-    // В placement стелса ещё нет, поэтому processStartOfTurnStealth не вызываем
+    // Р’ placement СЃС‚РµР»СЃР° РµС‰С‘ РЅРµС‚, РїРѕСЌС‚РѕРјСѓ processStartOfTurnStealth РЅРµ РІС‹Р·С‹РІР°РµРј
     return { state: baseState, events };
   }
 
   // -----------------------------
-  // 2) Фаза боя: крутим очередь юнитов
+  // 2) Р¤Р°Р·Р° Р±РѕСЏ: РєСЂСѓС‚РёРј РѕС‡РµСЂРµРґСЊ СЋРЅРёС‚РѕРІ
   // -----------------------------
   if (state.phase === "battle") {
-    const prevIndex = state.turnOrderIndex;
+    // Р•СЃР»Рё Сѓ РѕРґРЅРѕРіРѕ РёР· РёРіСЂРѕРєРѕРІ РЅРµС‚ Р¶РёРІС‹С… С„РёРіСѓСЂ вЂ” Р·Р°РІРµСЂС€Р°РµРј РёРіСЂСѓ
+    const p1Alive = Object.values(state.units).some((u) => u.owner === "P1" && u.isAlive);
+    const p2Alive = Object.values(state.units).some((u) => u.owner === "P2" && u.isAlive);
+    if (!p1Alive || !p2Alive) {
+      const winner: PlayerId | null = !p1Alive && p2Alive ? "P2" : p1Alive && !p2Alive ? "P1" : null;
+      const endedState: GameState = {
+        ...state,
+        phase: "ended",
+        activeUnitId: null,
+      };
+      const events: GameEvent[] = [];
+      if (winner) {
+        events.push({ type: "gameEnded", winner } as any);
+      }
+      return { state: endedState, events };
+    }
 
-    const nextIndex = getNextAliveUnitIndex(state, prevIndex);
+    const queue = state.turnQueue.length > 0 ? state.turnQueue : state.turnOrder;
+    if (queue.length === 0) {
+      return { state, events: [] };
+    }
+    const prevIndex = state.turnQueue.length > 0 ? state.turnQueueIndex : state.turnOrderIndex;
+
+    const nextIndex = getNextAliveUnitIndex(state, prevIndex, queue);
     if (nextIndex === null) {
-      // Никто жив не остался — игра окончена
+      // РќРёРєС‚Рѕ Р¶РёРІ РЅРµ РѕСЃС‚Р°Р»СЃСЏ вЂ” РёРіСЂР° РѕРєРѕРЅС‡РµРЅР°
       const ended: GameState = {
         ...state,
         phase: "ended",
@@ -992,12 +1250,12 @@ function applyEndTurn(state: GameState, rng: RNG): ApplyResult {
       return { state: ended, events: [] };
     }
 
-    const order = state.turnOrder;
+    const order = state.turnQueue.length > 0 ? state.turnQueue : state.turnOrder;
     const nextUnitId = order[nextIndex];
     const nextUnit = state.units[nextUnitId]!;
     const nextPlayer = nextUnit.owner;
 
-    // Новый раунд, если вернулись "назад" по индексу
+    // РќРѕРІС‹Р№ СЂР°СѓРЅРґ, РµСЃР»Рё РІРµСЂРЅСѓР»РёСЃСЊ "РЅР°Р·Р°Рґ" РїРѕ РёРЅРґРµРєСЃСѓ
     const isNewRound = nextIndex <= prevIndex;
 
     let baseState: GameState = {
@@ -1007,6 +1265,7 @@ function applyEndTurn(state: GameState, rng: RNG): ApplyResult {
       roundNumber: state.roundNumber + (isNewRound ? 1 : 0),
       activeUnitId: null,
       turnOrderIndex: nextIndex,
+      turnQueueIndex: nextIndex,
     };
 
     const events: GameEvent[] = [];
@@ -1024,7 +1283,7 @@ function applyEndTurn(state: GameState, rng: RNG): ApplyResult {
       turnNumber: baseState.turnNumber,
     });
 
-    // Здесь тикают таймеры стелса и т.п.
+    // Р—РґРµСЃСЊ С‚РёРєР°СЋС‚ С‚Р°Р№РјРµСЂС‹ СЃС‚РµР»СЃР° Рё С‚.Рї.
     let workingState = baseState;
     const { state: afterStealth, events: stealthEvents } =
       processStartOfTurnStealth(workingState, nextPlayer, rng);
@@ -1034,7 +1293,7 @@ function applyEndTurn(state: GameState, rng: RNG): ApplyResult {
     return { state: workingState, events };
   }
 
-  // На всякий случай, если окажемся в другой фазе
+  // РќР° РІСЃСЏРєРёР№ СЃР»СѓС‡Р°Р№, РµСЃР»Рё РѕРєР°Р¶РµРјСЃСЏ РІ РґСЂСѓРіРѕР№ С„Р°Р·Рµ
   return { state, events: [] };
 }
 
@@ -1053,20 +1312,21 @@ function applyUnitStartTurn(
     return { state, events: [] };
   }
 
-  // Может ходить только владелец currentPlayer
+  // РњРѕР¶РµС‚ С…РѕРґРёС‚СЊ С‚РѕР»СЊРєРѕ РІР»Р°РґРµР»РµС† currentPlayer
   if (unit.owner !== state.currentPlayer) {
     return { state, events: [] };
   }
 
-  // Нельзя в середине хода перехватывать активную фигуру
-  if (state.activeUnitId && state.activeUnitId !== unit.id) {
+  // Нельзя начинать ход, если уже есть активная фигура
+  if (state.activeUnitId !== null) {
     return { state, events: [] };
   }
 
-  // Жёстко: сейчас может начать ход только фигура, стоящая в очереди
-  const order = state.turnOrder;
-  if (order.length > 0) {
-    const scheduledId = order[state.turnOrderIndex];
+  // Жёстко: ходить может только фигура из очереди
+  const queue = state.turnQueue.length > 0 ? state.turnQueue : state.turnOrder;
+  const queueIndex = state.turnQueue.length > 0 ? state.turnQueueIndex : state.turnOrderIndex;
+  if (queue.length > 0) {
+    const scheduledId = queue[queueIndex];
     if (scheduledId !== unit.id) {
       return { state, events: [] };
     }
@@ -1087,6 +1347,7 @@ function applyUnitStartTurn(
     ...unitAfter,
     hasMovedThisTurn: false,
     hasActedThisTurn: false,
+    hasAttackedThisTurn: false,
     stealthAttemptedThisTurn: false,
   };
 
@@ -1101,6 +1362,7 @@ function applyUnitStartTurn(
 
   return { state: newState, events: startEvents };
 }
+
 
 
 

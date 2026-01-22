@@ -8,6 +8,8 @@ import { RNG } from "./rng";
 export interface AbilityActionCost {
   /** Потратить "действие" фигуры (атака/поиск/каст) */
   consumesAction?: boolean;
+  /** Потратить ATTACK (специфическая атака) */
+  consumesAttack?: boolean;
   /** Потратить "перемещение" фигуры */
   consumesMove?: boolean;
   /** Потратить бесплатную попытку входа в скрытность */
@@ -49,6 +51,7 @@ export interface AbilitySpec {
  * Константа с id берсерковской авто-защиты, на которую ссылается combat.ts.
  */
 export const ABILITY_BERSERK_AUTO_DEFENSE = "berserkAutoDefense" as const;
+export const ABILITY_TRICKSTER_AOE = "tricksterAoE" as const;
 
 /**
  * Каталог способностей.
@@ -65,6 +68,13 @@ const ABILITY_SPECS: Record<string, AbilitySpec> = {
     startsFull: true,
     startsCharged: true,
     isSpecialCounter: false,
+  },
+  [ABILITY_TRICKSTER_AOE]: {
+    id: ABILITY_TRICKSTER_AOE,
+    displayName: "Trickster AoE",
+    actionCost: {
+      consumesAttack: true,
+    },
   },
 };
 

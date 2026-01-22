@@ -1,4 +1,4 @@
-// packages/rules/src/stealth.ts
+﻿// packages/rules/src/stealth.ts
 
 import {
     Coord,
@@ -8,11 +8,12 @@ import {
     UnitState,
     UnitClass,
     isInsideBoard,
+    StealthRevealReason,
   } from "./model";
   import { RNG, rollD6 } from "./rng";
   import { getUnitDefinition } from "./units";
   
-  // Направления вокруг клетки (начиная с севера по часовой стрелке)
+  // РќР°РїСЂР°РІР»РµРЅРёСЏ РІРѕРєСЂСѓРі РєР»РµС‚РєРё (РЅР°С‡РёРЅР°СЏ СЃ СЃРµРІРµСЂР° РїРѕ С‡Р°СЃРѕРІРѕР№ СЃС‚СЂРµР»РєРµ)
   const NEIGHBOR_OFFSETS: Coord[] = [
     { col: 0, row: -1 }, // N
     { col: 1, row: -1 }, // NE
@@ -24,18 +25,14 @@ import {
     { col: -1, row: -1 }, // NW
   ];
   
-  type StealthRevealReason =
-    | "search"
-    | "aoeHit"
-    | "durationExpired"
-    | "forcedDisplacement";
+  // use StealthRevealReason from model
   
   /**
-   * Попытка войти в скрытность.
-   * Ограничения:
-   * - только в фазе боя (проверяется в actions.ts)
-   * - только класс с canStealth
-   * - не более 1 попытки за ход (stealthAttemptedThisTurn)
+   * РџРѕРїС‹С‚РєР° РІРѕР№С‚Рё РІ СЃРєСЂС‹С‚РЅРѕСЃС‚СЊ.
+   * РћРіСЂР°РЅРёС‡РµРЅРёСЏ:
+   * - С‚РѕР»СЊРєРѕ РІ С„Р°Р·Рµ Р±РѕСЏ (РїСЂРѕРІРµСЂСЏРµС‚СЃСЏ РІ actions.ts)
+   * - С‚РѕР»СЊРєРѕ РєР»Р°СЃСЃ СЃ canStealth
+   * - РЅРµ Р±РѕР»РµРµ 1 РїРѕРїС‹С‚РєРё Р·Р° С…РѕРґ (stealthAttemptedThisTurn)
    */
   export function attemptEnterStealth(
     state: GameState,
@@ -59,14 +56,38 @@ import {
     if (!def.canStealth) {
       return { state, events: [] };
     }
+
+    const pos = unit.position;
+    const hasStealthedOverlap = Object.values(state.units).some((u) => {
+      if (!u.isAlive || !u.isStealthed || !u.position) return false;
+      if (u.id === unit.id) return false;
+      return u.position.col === pos.col && u.position.row === pos.row;
+    });
+    if (hasStealthedOverlap) {
+      const updated: UnitState = {
+        ...unit,
+        stealthAttemptedThisTurn: true,
+      };
+      const newState: GameState = {
+        ...state,
+        units: {
+          ...state.units,
+          [updated.id]: updated,
+        },
+      };
+      const events: GameEvent[] = [
+        { type: "stealthEntered", unitId: updated.id, success: false },
+      ];
+      return { state: newState, events };
+    }
   
     const roll = rollD6(rng);
     let success = false;
   
-    // Правила:
-    // Лучник: скрытность при к6 = 6
-    // Убийца: скрытность при к6 = 5–6
-    // Остальные (если появятся canStealth) — по умолчанию на 6
+    // РџСЂР°РІРёР»Р°:
+    // Р›СѓС‡РЅРёРє: СЃРєСЂС‹С‚РЅРѕСЃС‚СЊ РїСЂРё Рє6 = 6
+    // РЈР±РёР№С†Р°: СЃРєСЂС‹С‚РЅРѕСЃС‚СЊ РїСЂРё Рє6 = 5вЂ“6
+    // РћСЃС‚Р°Р»СЊРЅС‹Рµ (РµСЃР»Рё РїРѕСЏРІСЏС‚СЃСЏ canStealth) вЂ” РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ РЅР° 6
     if (unit.class === "archer") {
       success = roll === 6;
     } else if (unit.class === "assassin") {
@@ -105,10 +126,10 @@ import {
   }
   
   /**
-   * Раскрытие скрытого героя, включая логику "две фигуры в одной клетке".
-   * - снимаем скрытность
-   * - если в клетке есть другая фигура: пытаемся рандомно выкинуть героя на соседнюю
-   * - если некуда сместить — герой получает 1 урон (может умереть)
+   * Р Р°СЃРєСЂС‹С‚РёРµ СЃРєСЂС‹С‚РѕРіРѕ РіРµСЂРѕСЏ, РІРєР»СЋС‡Р°СЏ Р»РѕРіРёРєСѓ "РґРІРµ С„РёРіСѓСЂС‹ РІ РѕРґРЅРѕР№ РєР»РµС‚РєРµ".
+   * - СЃРЅРёРјР°РµРј СЃРєСЂС‹С‚РЅРѕСЃС‚СЊ
+   * - РµСЃР»Рё РІ РєР»РµС‚РєРµ РµСЃС‚СЊ РґСЂСѓРіР°СЏ С„РёРіСѓСЂР°: РїС‹С‚Р°РµРјСЃСЏ СЂР°РЅРґРѕРјРЅРѕ РІС‹РєРёРЅСѓС‚СЊ РіРµСЂРѕСЏ РЅР° СЃРѕСЃРµРґРЅСЋСЋ
+   * - РµСЃР»Рё РЅРµРєСѓРґР° СЃРјРµСЃС‚РёС‚СЊ вЂ” РіРµСЂРѕР№ РїРѕР»СѓС‡Р°РµС‚ 1 СѓСЂРѕРЅ (РјРѕР¶РµС‚ СѓРјРµСЂРµС‚СЊ)
    */
   export function revealUnit(
     state: GameState,
@@ -134,10 +155,10 @@ import {
       stealthTurnsLeft: 0,
     };
   
-    // Позиция на момент раскрытия гарантированно не null
+    // РџРѕР·РёС†РёСЏ РЅР° РјРѕРјРµРЅС‚ СЂР°СЃРєСЂС‹С‚РёСЏ РіР°СЂР°РЅС‚РёСЂРѕРІР°РЅРЅРѕ РЅРµ null
     const basePos: Coord = u.position!;
   
-    // Ищем другие фигуры в той же клетке
+    // РС‰РµРј РґСЂСѓРіРёРµ С„РёРіСѓСЂС‹ РІ С‚РѕР№ Р¶Рµ РєР»РµС‚РєРµ
     const overlapping: UnitState[] = [];
     for (const other of Object.values(nextState.units)) {
       if (!other.isAlive || !other.position) continue;
@@ -151,7 +172,7 @@ import {
     }
   
     if (overlapping.length > 0) {
-      // Пытаемся сдвинуть героя в одну из свободных соседних клеток
+      // РџС‹С‚Р°РµРјСЃСЏ СЃРґРІРёРЅСѓС‚СЊ РіРµСЂРѕСЏ РІ РѕРґРЅСѓ РёР· СЃРІРѕР±РѕРґРЅС‹С… СЃРѕСЃРµРґРЅРёС… РєР»РµС‚РѕРє
       const freeNeighbors: Coord[] = [];
   
       for (const offset of NEIGHBOR_OFFSETS) {
@@ -196,7 +217,7 @@ import {
           to: dest,
         });
       } else {
-        // Некуда сместиться — герой получает 1 урон
+        // РќРµРєСѓРґР° СЃРјРµСЃС‚РёС‚СЊСЃСЏ вЂ” РіРµСЂРѕР№ РїРѕР»СѓС‡Р°РµС‚ 1 СѓСЂРѕРЅ
         const newHp = Math.max(0, u.hp - 1);
         u = {
           ...u,
@@ -219,6 +240,16 @@ import {
   
     nextState.units[u.id] = u;
   
+    // Р•СЃР»Рё СЂР°СЃРєСЂС‹С‚РёРµ РїСЂРѕРёР·РѕС€Р»Рѕ РїРѕ РїСЂРёС‡РёРЅРµ durationExpired/aoeHit/forcedDisplacement,
+    // СЃС‡РёС‚Р°РµРј, С‡С‚Рѕ С‚РµРїРµСЂСЊ РІСЃРµ РёРіСЂРѕРєРё "СѓР·РЅР°Р»Рё" Рѕ СЋРЅРёС‚Рµ.
+    if (reason === "durationExpired" || reason === "aoeHit" || reason === "forcedDisplacement") {
+      nextState.knowledge = {
+        ...nextState.knowledge,
+        P1: { ...(nextState.knowledge?.P1 ?? {}), [u.id]: true },
+        P2: { ...(nextState.knowledge?.P2 ?? {}), [u.id]: true },
+      };
+    }
+
     events.push({
       type: "stealthRevealed",
       unitId: u.id,
@@ -242,10 +273,10 @@ import {
   
       const dx = Math.abs(u.position.col - center.col);
       const dy = Math.abs(u.position.row - center.row);
-      const dist = Math.max(dx, dy); // Chebyshev-радиус
+      const dist = Math.max(dx, dy); // Chebyshev-СЂР°РґРёСѓСЃ
   
       if (dist <= radius) {
-        // Массовая атака задела скрытого — он раскрывается
+        // РњР°СЃСЃРѕРІР°СЏ Р°С‚Р°РєР° Р·Р°РґРµР»Р° СЃРєСЂС‹С‚РѕРіРѕ вЂ” РѕРЅ СЂР°СЃРєСЂС‹РІР°РµС‚СЃСЏ
         const res = revealUnit(nextState, u.id, "aoeHit", rng);
         nextState = res.state;
         events.push(...res.events);
@@ -256,8 +287,8 @@ import {
   }
   
   /**
-   * Поиск скрытых врагов вокруг юнита (радиус 1 по Chebyshev).
-   * Для каждого найденного врага — бросаем к6, при 5–6 раскрываем.
+   * РџРѕРёСЃРє СЃРєСЂС‹С‚С‹С… РІСЂР°РіРѕРІ РІРѕРєСЂСѓРі СЋРЅРёС‚Р° (СЂР°РґРёСѓСЃ 1 РїРѕ Chebyshev).
+   * Р”Р»СЏ РєР°Р¶РґРѕРіРѕ РЅР°Р№РґРµРЅРЅРѕРіРѕ РІСЂР°РіР° вЂ” Р±СЂРѕСЃР°РµРј Рє6, РїСЂРё 5вЂ“6 СЂР°СЃРєСЂС‹РІР°РµРј.
    */
   export function performSearchStealth(
     state: GameState,
@@ -279,7 +310,7 @@ import {
         if (!u.isAlive || !u.isStealthed || !u.position) return false;
         if (u.owner === searcher.owner) return false;
     
-        const pos = u.position; // здесь уже не null
+        const pos = u.position; // Р·РґРµСЃСЊ СѓР¶Рµ РЅРµ null
         const dx = Math.abs(pos.col - sx);
         const dy = Math.abs(pos.row - sy);
         const dist = Math.max(dx, dy); // Chebyshev
@@ -306,10 +337,10 @@ import {
   }
   
   /**
-   * Обработка начала хода игрока:
-   * - сбрасываем флаг stealthAttemptedThisTurn для его юнитов
-   * - тикаем таймеры скрытности
-   * - если таймер обнулился — раскрываем героя по причине "durationExpired"
+   * РћР±СЂР°Р±РѕС‚РєР° РЅР°С‡Р°Р»Р° С…РѕРґР° РёРіСЂРѕРєР°:
+   * - СЃР±СЂР°СЃС‹РІР°РµРј С„Р»Р°Рі stealthAttemptedThisTurn РґР»СЏ РµРіРѕ СЋРЅРёС‚РѕРІ
+   * - С‚РёРєР°РµРј С‚Р°Р№РјРµСЂС‹ СЃРєСЂС‹С‚РЅРѕСЃС‚Рё
+   * - РµСЃР»Рё С‚Р°Р№РјРµСЂ РѕР±РЅСѓР»РёР»СЃСЏ вЂ” СЂР°СЃРєСЂС‹РІР°РµРј РіРµСЂРѕСЏ РїРѕ РїСЂРёС‡РёРЅРµ "durationExpired"
    */
   export function processStartOfTurnStealth(
     state: GameState,
@@ -329,7 +360,7 @@ import {
   
       let updated: UnitState = {
         ...unit,
-        // каждый ход можно снова пытаться войти в скрытность один раз
+        // РєР°Р¶РґС‹Р№ С…РѕРґ РјРѕР¶РЅРѕ СЃРЅРѕРІР° РїС‹С‚Р°С‚СЊСЃСЏ РІРѕР№С‚Рё РІ СЃРєСЂС‹С‚РЅРѕСЃС‚СЊ РѕРґРёРЅ СЂР°Р·
         stealthAttemptedThisTurn: false,
       };
   
@@ -339,8 +370,8 @@ import {
         }
   
         if (updated.stealthTurnsLeft <= 0) {
-          // сначала сохраняем обновлённого юнита,
-          // затем раскрываем его через revealUnit
+          // СЃРЅР°С‡Р°Р»Р° СЃРѕС…СЂР°РЅСЏРµРј РѕР±РЅРѕРІР»С‘РЅРЅРѕРіРѕ СЋРЅРёС‚Р°,
+          // Р·Р°С‚РµРј СЂР°СЃРєСЂС‹РІР°РµРј РµРіРѕ С‡РµСЂРµР· revealUnit
           nextState.units[updated.id] = updated;
           const res = revealUnit(
             nextState,
@@ -361,3 +392,4 @@ import {
   }
   
   
+

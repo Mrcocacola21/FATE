@@ -55,6 +55,7 @@ export interface UnitState {
 
   /** Экономика хода фигуры */
   hasMovedThisTurn: boolean;
+  hasAttackedThisTurn: boolean;
   hasActedThisTurn: boolean;
 
   isAlive: boolean;
@@ -72,7 +73,10 @@ export type StealthRevealReason =
   | "search"
   | "durationExpired"
   | "aoeHit"
-  | "forcedDisplacement";
+  | "forcedDisplacement"
+  | "adjacency"
+  | "attacked"
+  | "steppedOnHidden";
 
 export type GameEvent =
   | {
@@ -130,6 +134,13 @@ export type GameEvent =
       unitId: string;
       abilityId: string;
     }
+  | {
+      type: "aoeResolved";
+      unitId: string;
+      center: Coord;
+      radius: number;
+      targets: string[];
+    }
     | {
       type: "initiativeRolled";
       rolls: { P1: number; P2: number };
@@ -143,6 +154,10 @@ export type GameEvent =
       type: "battleStarted";
       startingUnitId: string;
       startingPlayer: PlayerId;
+    }
+  | {
+      type: "gameEnded";
+      winner: PlayerId;
     };
 
 
@@ -238,8 +253,28 @@ export interface GameState {
    */
   turnOrderIndex: number;
 
+  /**
+   * Порядок размещения фигур в placement (строго по факту успешных placeUnit).
+   */
+  placementOrder: string[];
+
+  /**
+   * Очередь ходов в бою (инициализируется из placementOrder при старте боя).
+   */
+  turnQueue: string[];
+
+  /**
+   * Индекс «чья очередь ходить» в turnQueue.
+   */
+  turnQueueIndex: number;
+
   units: Record<string, UnitState>;
   events: GameEvent[];
+
+  /** Knowledge: for each player, which unitIds are known (visible) */
+  knowledge: {
+    [playerId in PlayerId]: { [unitId: string]: boolean };
+  };
 
   initiative: {
     P1: number | null;
