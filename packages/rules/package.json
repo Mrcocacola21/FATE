@@ -5,6 +5,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "test": "ts-node src/tests/simpleTests.ts",
     "manual:test": "ts-node src/manualTest.ts"
   },
   "keywords": [],

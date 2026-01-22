@@ -1,5 +1,22 @@
 {
+  "private": true,
+  "workspaces": ["packages/*"],
+  "scripts": {
+    "dev": "concurrently -n rules,server,web -c \"yellow,green,blue\" \"npm run -w rules build -- --watch\" \"npm run -w server dev\" \"npm run -w web dev\"",
+    "build": "npm run -w rules build && npm run -w server build && npm run -w web build",
+    "test": "npm run -w rules test && npm run -w server test",
+    "lint": "eslint \"packages/**/*.{ts,tsx}\"",
+    "format": "prettier -w ."
+  },
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^7.2.0",
+    "@typescript-eslint/parser": "^7.2.0",
+    "concurrently": "^8.2.2",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-react": "^7.34.1",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "prettier": "^3.2.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   }

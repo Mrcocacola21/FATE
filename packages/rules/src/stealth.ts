@@ -9,9 +9,11 @@ import {
     UnitClass,
     isInsideBoard,
     StealthRevealReason,
+    makeEmptyTurnEconomy,
   } from "./model";
   import { RNG, rollD6 } from "./rng";
   import { getUnitDefinition } from "./units";
+  import { canSpendSlots, spendSlots, setTurnEconomy } from "./turnEconomy";
   
   // РќР°РїСЂР°РІР»РµРЅРёСЏ РІРѕРєСЂСѓРі РєР»РµС‚РєРё (РЅР°С‡РёРЅР°СЏ СЃ СЃРµРІРµСЂР° РїРѕ С‡Р°СЃРѕРІРѕР№ СЃС‚СЂРµР»РєРµ)
   const NEIGHBOR_OFFSETS: Coord[] = [
@@ -43,18 +45,44 @@ import {
     if (!unit || !unit.isAlive || !unit.position) {
       return { state, events: [] };
     }
-  
-    if (unit.stealthAttemptedThisTurn) {
+
+    if (!canSpendSlots(unit, { stealth: true })) {
       return { state, events: [] };
     }
-  
+
+    const baseUnit: UnitState = spendSlots(unit, { stealth: true });
+
     if (unit.isStealthed) {
-      return { state, events: [] };
+      return {
+        state: {
+          ...state,
+          units: {
+            ...state.units,
+            [baseUnit.id]: baseUnit,
+          },
+        },
+        events: [],
+      };
     }
-  
+
     const def = getUnitDefinition(unit.class);
     if (!def.canStealth) {
-      return { state, events: [] };
+      return {
+        state: {
+          ...state,
+          units: {
+            ...state.units,
+            [baseUnit.id]: baseUnit,
+          },
+        },
+        events: [
+          {
+            type: "stealthEntered",
+            unitId: baseUnit.id,
+            success: false,
+          },
+        ],
+      };
     }
 
     const pos = unit.position;
@@ -64,30 +92,26 @@ import {
       return u.position.col === pos.col && u.position.row === pos.row;
     });
     if (hasStealthedOverlap) {
-      const updated: UnitState = {
-        ...unit,
-        stealthAttemptedThisTurn: true,
-      };
       const newState: GameState = {
         ...state,
         units: {
           ...state.units,
-          [updated.id]: updated,
+          [baseUnit.id]: baseUnit,
         },
       };
       const events: GameEvent[] = [
-        { type: "stealthEntered", unitId: updated.id, success: false },
+        { type: "stealthEntered", unitId: baseUnit.id, success: false },
       ];
       return { state: newState, events };
     }
-  
+
     const roll = rollD6(rng);
     let success = false;
-  
-    // РџСЂР°РІРёР»Р°:
-    // Р›СѓС‡РЅРёРє: СЃРєСЂС‹С‚РЅРѕСЃС‚СЊ РїСЂРё Рє6 = 6
-    // РЈР±РёР№С†Р°: СЃРєСЂС‹С‚РЅРѕСЃС‚СЊ РїСЂРё Рє6 = 5вЂ“6
-    // РћСЃС‚Р°Р»СЊРЅС‹Рµ (РµСЃР»Рё РїРѕСЏРІСЏС‚СЃСЏ canStealth) вЂ” РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ РЅР° 6
+
+    // Правила:
+    // Лучник: скрытность при к6 = 6
+    // Убийца: скрытность при к6 = 5–6
+    // Остальные (если появятся canStealth) — по умолчанию на 6
     if (unit.class === "archer") {
       success = roll === 6;
     } else if (unit.class === "assassin") {
@@ -95,25 +119,24 @@ import {
     } else {
       success = roll === 6;
     }
-  
+
     const newState: GameState = {
       ...state,
       units: { ...state.units },
     };
-  
+
     const updated: UnitState = {
-      ...unit,
-      stealthAttemptedThisTurn: true,
+      ...baseUnit,
     };
-  
+
     if (success) {
       updated.isStealthed = true;
       const maxTurns = def.maxStealthTurns ?? 3;
       updated.stealthTurnsLeft = maxTurns;
     }
-  
+
     newState.units[updated.id] = updated;
-  
+
     const events: GameEvent[] = [
       {
         type: "stealthEntered",
@@ -121,16 +144,10 @@ import {
         success,
       },
     ];
-  
+
     return { state: newState, events };
   }
-  
-  /**
-   * Р Р°СЃРєСЂС‹С‚РёРµ СЃРєСЂС‹С‚РѕРіРѕ РіРµСЂРѕСЏ, РІРєР»СЋС‡Р°СЏ Р»РѕРіРёРєСѓ "РґРІРµ С„РёРіСѓСЂС‹ РІ РѕРґРЅРѕР№ РєР»РµС‚РєРµ".
-   * - СЃРЅРёРјР°РµРј СЃРєСЂС‹С‚РЅРѕСЃС‚СЊ
-   * - РµСЃР»Рё РІ РєР»РµС‚РєРµ РµСЃС‚СЊ РґСЂСѓРіР°СЏ С„РёРіСѓСЂР°: РїС‹С‚Р°РµРјСЃСЏ СЂР°РЅРґРѕРјРЅРѕ РІС‹РєРёРЅСѓС‚СЊ РіРµСЂРѕСЏ РЅР° СЃРѕСЃРµРґРЅСЋСЋ
-   * - РµСЃР»Рё РЅРµРєСѓРґР° СЃРјРµСЃС‚РёС‚СЊ вЂ” РіРµСЂРѕР№ РїРѕР»СѓС‡Р°РµС‚ 1 СѓСЂРѕРЅ (РјРѕР¶РµС‚ СѓРјРµСЂРµС‚СЊ)
-   */
+
   export function revealUnit(
     state: GameState,
     unitId: string,
@@ -358,11 +375,12 @@ import {
       if (!unit.isAlive) continue;
       if (unit.owner !== currentPlayer) continue;
   
-      let updated: UnitState = {
-        ...unit,
-        // РєР°Р¶РґС‹Р№ С…РѕРґ РјРѕР¶РЅРѕ СЃРЅРѕРІР° РїС‹С‚Р°С‚СЊСЃСЏ РІРѕР№С‚Рё РІ СЃРєСЂС‹С‚РЅРѕСЃС‚СЊ РѕРґРёРЅ СЂР°Р·
-        stealthAttemptedThisTurn: false,
-      };
+      const currentTurn = unit.turn ?? makeEmptyTurnEconomy();
+      let updated: UnitState = setTurnEconomy(unit, {
+        ...currentTurn,
+        // каждый ход можно снова пытаться войти в скрытность один раз
+        stealthUsed: false,
+      });
   
       if (updated.isStealthed) {
         if (updated.stealthTurnsLeft > 0) {

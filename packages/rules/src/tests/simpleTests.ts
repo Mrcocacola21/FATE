@@ -7,6 +7,7 @@ import {
   GameState,
   UnitState,
   ABILITY_BERSERK_AUTO_DEFENSE,
+  ABILITY_TEST_MULTI_SLOT,
 } from "../index";
 import { SeededRNG } from "../rng";
 import assert from "assert";
@@ -1033,7 +1034,12 @@ function testTricksterAoERevealsHiddenInArea() {
   assert(res.state.knowledge["P1"][nearHidden.id] === true, "caster knowledge should include revealed unit");
 
   const aoeEvent = res.events.find((e) => e.type === "aoeResolved");
-  assert(aoeEvent && aoeEvent.type === "aoeResolved" && aoeEvent.targets.includes(nearHidden.id), "aoeResolved should list targets");
+  assert(
+    aoeEvent &&
+      aoeEvent.type === "aoeResolved" &&
+      aoeEvent.affectedUnitIds.includes(nearHidden.id),
+    "aoeResolved should list targets"
+  );
 
   console.log("trickster_aoe_reveals_hidden_in_area passed");
 }
@@ -1207,6 +1213,210 @@ function testArcherCannotTargetHiddenEnemy() {
   console.log("archer_cannot_target_hidden_enemy passed");
 }
 
+function testCannotMoveTwicePerTurn() {
+  const rng = new SeededRNG(300);
+  let state = createEmptyGame();
+  const a1 = createDefaultArmy("P1");
+  const a2 = createDefaultArmy("P2");
+  state = attachArmy(state, a1);
+  state = attachArmy(state, a2);
+
+  const mover = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "knight"
+  )!;
+
+  state = setUnit(state, mover.id, { position: { col: 3, row: 3 } });
+  state = toBattleState(state, "P1", mover.id);
+  state = initKnowledgeForOwners(state);
+
+  const first = applyAction(
+    state,
+    { type: "move", unitId: mover.id, to: { col: 3, row: 4 } } as any,
+    rng
+  );
+  const second = applyAction(
+    first.state,
+    { type: "move", unitId: mover.id, to: { col: 3, row: 5 } } as any,
+    rng
+  );
+
+  assert(
+    second.events.length === 0,
+    "second move should emit no events"
+  );
+  assert.deepStrictEqual(
+    second.state,
+    first.state,
+    "state should be unchanged after second move"
+  );
+
+  console.log("cannot_move_twice_per_turn passed");
+}
+
+function testCannotStealthTwicePerTurn() {
+  const rng = new SeededRNG(301);
+  let state = createEmptyGame();
+  const a1 = createDefaultArmy("P1");
+  const a2 = createDefaultArmy("P2");
+  state = attachArmy(state, a1);
+  state = attachArmy(state, a2);
+
+  const assassin = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "assassin"
+  )!;
+
+  state = setUnit(state, assassin.id, { position: { col: 4, row: 4 } });
+  state = toBattleState(state, "P1", assassin.id);
+
+  const first = applyAction(
+    state,
+    { type: "enterStealth", unitId: assassin.id } as any,
+    rng
+  );
+  const second = applyAction(
+    first.state,
+    { type: "enterStealth", unitId: assassin.id } as any,
+    rng
+  );
+
+  assert(
+    second.events.length === 0,
+    "second stealth attempt should emit no events"
+  );
+  assert.deepStrictEqual(
+    second.state,
+    first.state,
+    "state should be unchanged after second stealth attempt"
+  );
+
+  console.log("cannot_stealth_twice_per_turn passed");
+}
+
+function testSearchStealthSlots() {
+  const rng = new SeededRNG(302);
+  let state = createEmptyGame();
+  const a1 = createDefaultArmy("P1");
+  const a2 = createDefaultArmy("P2");
+  state = attachArmy(state, a1);
+  state = attachArmy(state, a2);
+
+  const searcher = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "spearman"
+  )!;
+  const hidden = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "assassin"
+  )!;
+
+  state = setUnit(state, searcher.id, { position: { col: 4, row: 4 } });
+  state = setUnit(state, hidden.id, {
+    position: { col: 4, row: 5 },
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
+
+  state = toBattleState(state, "P1", searcher.id);
+  state = initKnowledgeForOwners(state);
+
+  const searchMove = applyAction(
+    state,
+    { type: "searchStealth", unitId: searcher.id, mode: "move" } as any,
+    rng
+  );
+
+  const moveAfterSearch = applyAction(
+    searchMove.state,
+    { type: "move", unitId: searcher.id, to: { col: 4, row: 3 } } as any,
+    rng
+  );
+  assert(
+    moveAfterSearch.events.length === 0,
+    "move should be blocked after searchStealth(mode=move)"
+  );
+
+  let state2 = toBattleState(state, "P1", searcher.id);
+  state2 = initKnowledgeForOwners(state2);
+
+  const searchAction = applyAction(
+    state2,
+    { type: "searchStealth", unitId: searcher.id, mode: "action" } as any,
+    rng
+  );
+
+  const moveAfterActionSearch = applyAction(
+    searchAction.state,
+    { type: "move", unitId: searcher.id, to: { col: 4, row: 3 } } as any,
+    rng
+  );
+  const moved = moveAfterActionSearch.events.find((e) => e.type === "unitMoved");
+  assert(moved, "move should be allowed after searchStealth(mode=action)");
+
+  const secondActionSearch = applyAction(
+    searchAction.state,
+    { type: "searchStealth", unitId: searcher.id, mode: "action" } as any,
+    rng
+  );
+  assert(
+    secondActionSearch.events.length === 0,
+    "second action search should be blocked"
+  );
+
+  console.log("search_stealth_slots passed");
+}
+
+function testAbilityConsumesMultipleSlots() {
+  const rng = new SeededRNG(303);
+  let state = createEmptyGame();
+  const a1 = createDefaultArmy("P1");
+  const a2 = createDefaultArmy("P2");
+  state = attachArmy(state, a1);
+  state = attachArmy(state, a2);
+
+  const caster = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "knight"
+  )!;
+  const enemy = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "spearman"
+  )!;
+
+  state = setUnit(state, caster.id, { position: { col: 3, row: 3 } });
+  state = setUnit(state, enemy.id, { position: { col: 3, row: 4 } });
+
+  state = toBattleState(state, "P1", caster.id);
+  state = initKnowledgeForOwners(state);
+
+  const used = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: caster.id,
+      abilityId: ABILITY_TEST_MULTI_SLOT,
+    } as any,
+    rng
+  );
+
+  const moveAfter = applyAction(
+    used.state,
+    { type: "move", unitId: caster.id, to: { col: 3, row: 2 } } as any,
+    rng
+  );
+  assert(
+    moveAfter.events.length === 0,
+    "move should be blocked after multi-slot ability"
+  );
+
+  const attackAfter = applyAction(
+    used.state,
+    { type: "attack", attackerId: caster.id, defenderId: enemy.id } as any,
+    rng
+  );
+  assert(
+    attackAfter.events.length === 0,
+    "attack should be blocked after multi-slot ability"
+  );
+
+  console.log("ability_consumes_multiple_slots passed");
+}
+
 function main() {
   testPlacementToBattleAndTurnOrder();
   testRiderPathHitsStealthed();
@@ -1232,6 +1442,10 @@ function main() {
   testArcherCannotShootThroughEnemies();
   testArcherAttacksFirstOnLine();
   testArcherCannotTargetHiddenEnemy();
+  testCannotMoveTwicePerTurn();
+  testCannotStealthTwicePerTurn();
+  testSearchStealthSlots();
+  testAbilityConsumesMultipleSlots();
 }
 
 main();

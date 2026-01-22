@@ -8,7 +8,8 @@ import {
   PlayerId,
   GameEvent,
   Coord,
-  isInsideBoard
+  isInsideBoard,
+  makeEmptyTurnEconomy
 } from "./model";
 import { getUnitDefinition } from "./units";
 import { RNG, rollD6 } from "./rng";
@@ -23,8 +24,9 @@ import {
   attemptEnterStealth,
   performSearchStealth,
   processStartOfTurnStealth,
-  revealStealthedInArea,
 } from "./stealth";
+import { resolveAoE } from "./aoe";
+import { canSpendSlots, spendSlots, resetTurnEconomy } from "./turnEconomy";
 import {
   initUnitAbilities,
   processUnitStartOfTurn,
@@ -175,18 +177,10 @@ function applyUseAbility(
   }
 
   const cost = spec.actionCost;
+  const costs = cost?.consumes ?? {};
 
-  // РџСЂРѕРІРµСЂСЏРµРј СЌРєРѕРЅРѕРјРёРєСѓ
-  if (cost?.consumesAction && unit.hasActedThisTurn) {
-    return { state, events: [] };
-  }
-  if (cost?.consumesAttack && unit.hasAttackedThisTurn) {
-    return { state, events: [] };
-  }
-  if (cost?.consumesMove && unit.hasMovedThisTurn) {
-    return { state, events: [] };
-  }
-  if (cost?.consumesStealthSlot && unit.stealthAttemptedThisTurn) {
+  // Проверяем экономику
+  if (!canSpendSlots(unit, costs)) {
     return { state, events: [] };
   }
 
@@ -204,18 +198,8 @@ function applyUseAbility(
     return { state, events: [] };
   }
 
-  // РћР±РЅРѕРІР»СЏРµРј СЌРєРѕРЅРѕРјРёРєСѓ
-  const updatedUnit: UnitState = {
-    ...afterCharges,
-    hasActedThisTurn:
-      unit.hasActedThisTurn || !!cost?.consumesAction,
-    hasAttackedThisTurn:
-      unit.hasAttackedThisTurn || !!cost?.consumesAttack,
-    hasMovedThisTurn:
-      unit.hasMovedThisTurn || !!cost?.consumesMove,
-    stealthAttemptedThisTurn:
-      unit.stealthAttemptedThisTurn || !!cost?.consumesStealthSlot,
-  };
+  // Обновляем экономику
+  const updatedUnit: UnitState = spendSlots(afterCharges, costs);
 
   // TODO: СЃСЋРґР° РїРѕС‚РѕРј РґРѕР±Р°РІРёРј СЂРµР°Р»СЊРЅС‹Р№ СЌС„С„РµРєС‚ СЃРїРѕСЃРѕР±РЅРѕСЃС‚Рё (СѓСЂРѕРЅ/Р±Р°С„/С‚РµР»РµРїРѕСЂС‚)
 
@@ -236,43 +220,22 @@ function applyUseAbility(
   ];
 
   if (isTricksterAoE && aoeCenter) {
-    const radius = 1;
-    const revealRes = revealStealthedInArea(nextState, aoeCenter, radius, rng);
-    nextState = revealRes.state;
-    events.push(...revealRes.events);
-
-    const targetIds = Object.values(nextState.units)
-      .filter((u) => {
-        if (!u.isAlive || !u.position) return false;
-        if (u.owner === updatedUnit.owner) return false;
-        return chebyshev(u.position, aoeCenter) <= radius;
-      })
-      .map((u) => u.id);
-
-    for (const targetId of targetIds) {
-      const target = nextState.units[targetId];
-      if (!target || !target.isAlive || !target.position) continue;
-      const res = resolveAttack(
-        nextState,
-        {
-          attackerId: updatedUnit.id,
-          defenderId: target.id,
-          ignoreRange: true,
-          ignoreStealth: true,
-        },
-        rng
-      );
-      nextState = res.nextState;
-      events.push(...res.events);
-    }
-
-    events.push({
-      type: "aoeResolved",
-      unitId: updatedUnit.id,
-      center: aoeCenter,
-      radius,
-      targets: targetIds,
-    });
+    const res = resolveAoE(
+      nextState,
+      updatedUnit.id,
+      aoeCenter,
+      {
+        radius: 1,
+        shape: "chebyshev",
+        revealHidden: true,
+        applyAttacks: true,
+        ignoreStealth: true,
+        targetFilter: (u) => u.owner !== updatedUnit.owner,
+      },
+      rng
+    );
+    nextState = res.nextState;
+    events.push(...res.events);
   }
 
   return { state: nextState, events };
@@ -354,6 +317,7 @@ export function createDefaultArmy(player: PlayerId): UnitState[] {
       isStealthed: false,
       stealthTurnsLeft: 0,
       stealthAttemptedThisTurn: false,
+      turn: makeEmptyTurnEconomy(),
       charges: {},
       cooldowns: {},
       lastChargedTurn: undefined,
@@ -657,9 +621,8 @@ function applyAttack(
     return { state, events: [] };
   }
 
-  // рџљ« СѓР¶Рµ С‚СЂР°С‚РёР» РґРµР№СЃС‚РІРёРµ (Р°С‚Р°РєР° / РїРѕРёСЃРє / Р°РєС‚РёРІРєР°)
-  // Attack specifically limited by hasAttackedThisTurn
-  if (attacker.hasAttackedThisTurn) {
+  // рџљ« РўСЂР°С‚РёР» СЃР»РѕС‚ Р°С‚Р°РєРё
+  if (!canSpendSlots(attacker, { attack: true })) {
     return { state, events: [] };
   }
 
@@ -678,11 +641,7 @@ function applyAttack(
     return { state: nextState, events };
   }
 
-  const updatedAttacker: UnitState = {
-    ...attackerAfter,
-    hasActedThisTurn: true, // вњ… РїРѕС‚СЂР°С‚РёР»Рё РґРµР№СЃС‚РІРёРµ
-    hasAttackedThisTurn: true,
-  };
+  const updatedAttacker: UnitState = spendSlots(attackerAfter, { attack: true });
 
   const finalState: GameState = {
     ...nextState,
@@ -763,8 +722,8 @@ function applyMove(
   // РЅР°С‡Р°Р»СЊРЅР°СЏ РїРѕР·РёС†РёСЏ вЂ” РїСЂРёРіРѕРґРёС‚СЃСЏ РґР»СЏ СЃРїРµС†-РїСЂР°РІРёР»Р° РЅР°РµР·РґРЅРёРєР°
   const from = unit.position;
 
-  // рџљ« СѓР¶Рµ С…РѕРґРёР» РІ СЌС‚РѕРј С…РѕРґСѓ
-  if (unit.hasMovedThisTurn) {
+  // рџљ« СѓР¶Рµ С‚СЂР°С‚РёР» СЃР»РѕС‚ РїРµСЂРµРјРµС‰РµРЅРёСЏ
+  if (!canSpendSlots(unit, { move: true })) {
     return { state, events: [] };
   }
 
@@ -800,10 +759,7 @@ function applyMove(
         isStealthed: false,
         stealthTurnsLeft: 0,
       };
-      const movedUnit: UnitState = {
-        ...unit,
-        hasMovedThisTurn: true,
-      };
+      const movedUnit: UnitState = spendSlots(unit, { move: true });
       const newState: GameState = {
         ...state,
         units: {
@@ -826,10 +782,10 @@ function applyMove(
     }
   }
 
+  const movedUnit: UnitState = spendSlots(unit, { move: true });
   const updatedUnit: UnitState = {
-    ...unit,
+    ...movedUnit,
     position: { ...action.to },
-    hasMovedThisTurn: true, // вњ… РїРѕС‚СЂР°С‚РёР»Рё РїРµСЂРµРјРµС‰РµРЅРёРµ
   };
 
   let newState: GameState = {
@@ -943,23 +899,21 @@ function applyEnterStealth(
     return { state, events: [] };
   }
 
-  // РЈР¶Рµ РїС‹С‚Р°Р»СЃСЏ РІРѕР№С‚Рё РІ СЃС‚РµР»СЃ РІ СЌС‚РѕС‚ С…РѕРґ
-  if (unit.stealthAttemptedThisTurn) {
+  // Уже тратил слот скрытности
+  if (!canSpendSlots(unit, { stealth: true })) {
     return { state, events: [] };
   }
 
-  // РЈР¶Рµ РІ СЃС‚РµР»СЃРµ вЂ” СЃС‡РёС‚Р°РµРј, С‡С‚Рѕ РїРѕРїС‹С‚РєР° РІСЃС‘ СЂР°РІРЅРѕ РїРѕС‚СЂР°С‡РµРЅР°
+  const baseUnit: UnitState = spendSlots(unit, { stealth: true });
+
+  // Уже в стелсе — попытка всё равно потрачена
   if (unit.isStealthed) {
-    const updated: UnitState = {
-      ...unit,
-      stealthAttemptedThisTurn: true,
-    };
     return {
       state: {
         ...state,
         units: {
           ...state.units,
-          [updated.id]: updated,
+          [baseUnit.id]: baseUnit,
         },
       },
       events: [],
@@ -978,19 +932,15 @@ function applyEnterStealth(
       return u.position.col === pos.col && u.position.row === pos.row;
     });
     if (hasStealthedOverlap) {
-      const updatedUnit: UnitState = {
-        ...unit,
-        stealthAttemptedThisTurn: true,
-      };
       const newState: GameState = {
         ...state,
         units: {
           ...state.units,
-          [updatedUnit.id]: updatedUnit,
+          [baseUnit.id]: baseUnit,
         },
       };
       const events: GameEvent[] = [
-        { type: "stealthEntered", unitId: updatedUnit.id, success: false },
+        { type: "stealthEntered", unitId: baseUnit.id, success: false },
       ];
       return { state: newState, events };
     }
@@ -1008,8 +958,7 @@ function applyEnterStealth(
   }
 
   let updatedUnit: UnitState = {
-    ...unit,
-    stealthAttemptedThisTurn: true,
+    ...baseUnit,
   };
 
   if (success) {
@@ -1063,11 +1012,10 @@ function applySearchStealth(
     return { state, events: [] };
   }
 
+  const searchCosts =
+    action.mode === "action" ? { action: true } : { move: true };
   // рџљ« РїСЂРѕРІРµСЂСЏРµРј, С‡РµРј РїР»Р°С‚РёРј Р·Р° РїРѕРёСЃРє
-  if (action.mode === "action" && unit.hasActedThisTurn) {
-    return { state, events: [] };
-  }
-  if (action.mode === "move" && unit.hasMovedThisTurn) {
+  if (!canSpendSlots(unit, searchCosts)) {
     return { state, events: [] };
   }
 
@@ -1100,12 +1048,6 @@ function applySearchStealth(
     units[updatedHidden.id] = updatedHidden;
     anyRevealed = true;
 
-    // Mark revealed unit as known for searcher
-    const knowledgeForSearcher = {
-      ...(state.knowledge?.[unit.owner] ?? {}),
-      [updatedHidden.id]: true,
-    };
-
     // Attach to state below
     events.push({
       type: "stealthRevealed",
@@ -1114,14 +1056,8 @@ function applySearchStealth(
     });
   }
 
-  // РѕР±РЅРѕРІР»СЏРµРј СЌРєРѕРЅРѕРјРёРєСѓ С…РѕРґР° РґР»СЏ РёС‰СѓС‰РµРіРѕ
-  const updatedSearcher: UnitState = {
-    ...searcherBefore,
-    hasActedThisTurn:
-      searcherBefore.hasActedThisTurn || action.mode === "action",
-    hasMovedThisTurn:
-      searcherBefore.hasMovedThisTurn || action.mode === "move",
-  };
+  // Обновляем экономику хода для ищущего
+  const updatedSearcher: UnitState = spendSlots(searcherBefore, searchCosts);
 
   units[updatedSearcher.id] = updatedSearcher;
 
@@ -1343,13 +1279,7 @@ function applyUnitStartTurn(
     return { state: afterStart, events: startEvents };
   }
 
-  const resetUnit: UnitState = {
-    ...unitAfter,
-    hasMovedThisTurn: false,
-    hasActedThisTurn: false,
-    hasAttackedThisTurn: false,
-    stealthAttemptedThisTurn: false,
-  };
+  const resetUnit: UnitState = resetTurnEconomy(unitAfter);
 
   const newState: GameState = {
     ...afterStart,

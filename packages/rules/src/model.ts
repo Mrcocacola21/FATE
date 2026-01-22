@@ -2,6 +2,15 @@
 
 export type PlayerId = "P1" | "P2";
 
+export type TurnSlot = "move" | "attack" | "action" | "stealth";
+
+export interface TurnEconomy {
+  moveUsed: boolean;
+  attackUsed: boolean;
+  actionUsed: boolean;
+  stealthUsed: boolean;
+}
+
 // Классы фигур
 export type UnitClass =
   | "spearman" // копейщик
@@ -47,6 +56,8 @@ export interface UnitState {
   stealthTurnsLeft: number;
   stealthAttemptedThisTurn: boolean; // уже было
 
+  turn: TurnEconomy;
+
   charges: Record<string, number>;
   cooldowns: Record<string, number>;
 
@@ -59,6 +70,15 @@ export interface UnitState {
   hasActedThisTurn: boolean;
 
   isAlive: boolean;
+}
+
+export function makeEmptyTurnEconomy(): TurnEconomy {
+  return {
+    moveUsed: false,
+    attackUsed: false,
+    actionUsed: false,
+    stealthUsed: false,
+  };
 }
 
 
@@ -136,10 +156,10 @@ export type GameEvent =
     }
   | {
       type: "aoeResolved";
-      unitId: string;
+      casterId: string;
       center: Coord;
       radius: number;
-      targets: string[];
+      affectedUnitIds: string[];
     }
     | {
       type: "initiativeRolled";

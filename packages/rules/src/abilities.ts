@@ -1,19 +1,13 @@
 // packages/rules/src/abilities.ts
-import { GameState, UnitState, GameEvent } from "./model";
+import { GameState, UnitState, GameEvent, TurnSlot } from "./model";
 import { RNG } from "./rng";
 
 /**
  * Стоимость способности с точки зрения экономики хода.
  */
-export interface AbilityActionCost {
-  /** Потратить "действие" фигуры (атака/поиск/каст) */
-  consumesAction?: boolean;
-  /** Потратить ATTACK (специфическая атака) */
-  consumesAttack?: boolean;
-  /** Потратить "перемещение" фигуры */
-  consumesMove?: boolean;
-  /** Потратить бесплатную попытку входа в скрытность */
-  consumesStealthSlot?: boolean;
+export interface AbilityCost {
+  /** Какие слоты хода расходуются */
+  consumes?: Partial<Record<TurnSlot, boolean>>;
 }
 
 export interface AbilitySpec {
@@ -43,8 +37,8 @@ export interface AbilitySpec {
   /** Обнулять ли счётчик после использования абилки */
   resetsChargesOnUse?: boolean;
 
-  /** Что тратит абилка: действие/перемещение/слот стелса */
-  actionCost?: AbilityActionCost;
+  /** Что тратит абилка: слоты хода */
+  actionCost?: AbilityCost;
 }
 
 /**
@@ -52,6 +46,7 @@ export interface AbilitySpec {
  */
 export const ABILITY_BERSERK_AUTO_DEFENSE = "berserkAutoDefense" as const;
 export const ABILITY_TRICKSTER_AOE = "tricksterAoE" as const;
+export const ABILITY_TEST_MULTI_SLOT = "testMultiSlot" as const;
 
 /**
  * Каталог способностей.
@@ -73,7 +68,14 @@ const ABILITY_SPECS: Record<string, AbilitySpec> = {
     id: ABILITY_TRICKSTER_AOE,
     displayName: "Trickster AoE",
     actionCost: {
-      consumesAttack: true,
+      consumes: { attack: true },
+    },
+  },
+  [ABILITY_TEST_MULTI_SLOT]: {
+    id: ABILITY_TEST_MULTI_SLOT,
+    displayName: "Test Multi Slot",
+    actionCost: {
+      consumes: { move: true, attack: true },
     },
   },
 };
