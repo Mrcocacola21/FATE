@@ -9,7 +9,10 @@ import {
   GameEvent,
   Coord,
   isInsideBoard,
-  makeEmptyTurnEconomy
+  makeEmptyTurnEconomy,
+  PendingMove,
+  PendingRoll,
+  RollKind
 } from "./model";
 import { getUnitDefinition } from "./units";
 import { RNG, rollD6 } from "./rng";
@@ -20,11 +23,7 @@ import {
   getBerserkerMovesForRoll,
  } from "./movement";
 import { coordsEqual, chebyshev, isCellOccupied, getUnitAt} from "./board";
-import {
-  attemptEnterStealth,
-  performSearchStealth,
-  processStartOfTurnStealth,
-} from "./stealth";
+import { processUnitStartOfTurnStealth } from "./stealth";
 import { resolveAoE } from "./aoe";
 import { canSpendSlots, spendSlots, resetTurnEconomy } from "./turnEconomy";
 import {
@@ -32,7 +31,9 @@ import {
   processUnitStartOfTurn,
   getAbilitySpec,
   spendCharges,
+  ABILITY_BERSERK_AUTO_DEFENSE,
   ABILITY_TRICKSTER_AOE,
+  TRICKSTER_AOE_RADIUS,
 } from "./abilities";
 import { unitCanSeeStealthed } from "./visibility";
 
@@ -42,17 +43,44 @@ function roll2D6Sum(rng: RNG): number {
   return d1 + d2;
 }
 
-function parseCoord(value: unknown): Coord | null {
-  if (typeof value !== "object" || value === null) return null;
-  const maybe = value as { col?: unknown; row?: unknown };
-  if (typeof maybe.col !== "number" || typeof maybe.row !== "number") return null;
-  return { col: maybe.col, row: maybe.row };
+function requestRoll(
+  state: GameState,
+  player: PlayerId,
+  kind: RollKind,
+  context: Record<string, unknown>,
+  actorUnitId?: string
+): ApplyResult {
+  if (state.pendingRoll) {
+    return { state, events: [] };
+  }
+  const nextCounter = (state.rollCounter ?? 0) + 1;
+  const rollId = `roll-${nextCounter}`;
+  const pendingRoll: PendingRoll = {
+    id: rollId,
+    player,
+    kind,
+    context,
+  };
+  const nextState: GameState = {
+    ...state,
+    pendingRoll,
+    rollCounter: nextCounter,
+  };
+  const events: GameEvent[] = [
+    {
+      type: "rollRequested",
+      rollId,
+      kind,
+      player,
+      actorUnitId,
+    },
+  ];
+  return { state: nextState, events };
 }
 
-function parseAoECenter(payload: unknown): Coord | null {
-  if (typeof payload !== "object" || payload === null) return null;
-  const maybe = payload as { center?: unknown };
-  return parseCoord(maybe.center);
+function clearPendingRoll(state: GameState): GameState {
+  if (!state.pendingRoll) return state;
+  return { ...state, pendingRoll: null };
 }
 
 function applyRollInitiative(
@@ -165,7 +193,7 @@ function applyUseAbility(
   }
 
   const isTricksterAoE = spec.id === ABILITY_TRICKSTER_AOE;
-  const aoeCenter = isTricksterAoE ? parseAoECenter(action.payload) : null;
+  const aoeCenter = isTricksterAoE ? unit.position : null;
 
   if (isTricksterAoE) {
     if (unit.class !== "trickster") {
@@ -225,12 +253,12 @@ function applyUseAbility(
       updatedUnit.id,
       aoeCenter,
       {
-        radius: 1,
+        radius: TRICKSTER_AOE_RADIUS,
         shape: "chebyshev",
         revealHidden: true,
         applyAttacks: true,
         ignoreStealth: true,
-        targetFilter: (u) => u.owner !== updatedUnit.owner,
+        abilityId: spec.id,
       },
       rng
     );
@@ -253,6 +281,9 @@ export function createEmptyGame(): GameState {
     roundNumber: 1,
 
     activeUnitId: null,
+    pendingMove: null,
+    pendingRoll: null,
+    rollCounter: 0,
     turnOrder: [],
     turnOrderIndex: 0,
     placementOrder: [],
@@ -268,6 +299,7 @@ export function createEmptyGame(): GameState {
     startingUnitId: null,
     unitsPlaced: { P1: 0, P2: 0 },
     knowledge: { P1: {}, P2: {} },
+    lastKnownPositions: { P1: {}, P2: {} },
   };
 }
 
@@ -360,6 +392,10 @@ export function applyAction(
   action: GameAction,
   rng: RNG
 ): ApplyResult {
+  if (state.pendingRoll && action.type !== "resolvePendingRoll") {
+    return { state, events: [] };
+  }
+
   switch (action.type) {
     case "rollInitiative":
       return applyRollInitiative(state, rng);
@@ -376,6 +412,9 @@ export function applyAction(
     case "move":
       return applyMove(state, action, rng);
 
+    case "requestMoveOptions":
+      return applyRequestMoveOptions(state, action, rng);
+
     case "attack":
       return applyAttack(state, action, rng);
 
@@ -387,6 +426,9 @@ export function applyAction(
 
     case "useAbility":
       return applyUseAbility(state, action, rng);
+
+    case "resolvePendingRoll":
+      return applyResolvePendingRoll(state, action, rng);
 
     case "endTurn":
       return applyEndTurn(state, rng);
@@ -622,36 +664,29 @@ function applyAttack(
   }
 
   // рџљ« РўСЂР°С‚РёР» СЃР»РѕС‚ Р°С‚Р°РєРё
-  if (!canSpendSlots(attacker, { attack: true })) {
+  if (!canSpendSlots(attacker, { attack: true, action: true })) {
     return { state, events: [] };
   }
-
-  const { nextState, events } = resolveAttack(
-    state,
-    {
-      attackerId: attacker.id,
-      defenderId: defender.id,
-      defenderUseBerserkAutoDefense: action.defenderUseBerserkAutoDefense,
-    },
-    rng
-  );
-
-  const attackerAfter = nextState.units[attacker.id];
-  if (!attackerAfter) {
-    return { state: nextState, events };
+  if (defender.class === "berserker") {
+    const charges = defender.charges?.[ABILITY_BERSERK_AUTO_DEFENSE] ?? 0;
+    if (charges === 6) {
+      return requestRoll(
+        state,
+        defender.owner,
+        "berserkerDefenseChoice",
+        { attackerId: attacker.id, defenderId: defender.id },
+        defender.id
+      );
+    }
   }
 
-  const updatedAttacker: UnitState = spendSlots(attackerAfter, { attack: true });
-
-  const finalState: GameState = {
-    ...nextState,
-    units: {
-      ...nextState.units,
-      [updatedAttacker.id]: updatedAttacker,
-    },
-  };
-
-  return { state: finalState, events };
+  return requestRoll(
+    state,
+    attacker.owner,
+    "attackRoll",
+    { attackerId: attacker.id, defenderId: defender.id },
+    attacker.id
+  );
 }
 
 function collectRiderPathTargets(
@@ -696,6 +731,99 @@ function collectRiderPathTargets(
   return targets;
 }
 
+function applyRequestMoveOptions(
+  state: GameState,
+  action: Extract<GameAction, { type: "requestMoveOptions" }>,
+  rng: RNG
+): ApplyResult {
+  if (state.phase !== "battle") {
+    return { state, events: [] };
+  }
+
+  const unit = state.units[action.unitId];
+  if (!unit || !unit.isAlive || !unit.position) {
+    return { state, events: [] };
+  }
+
+  if (unit.owner !== state.currentPlayer) {
+    return { state, events: [] };
+  }
+
+  if (state.activeUnitId !== unit.id) {
+    return { state, events: [] };
+  }
+
+  if (!canSpendSlots(unit, { move: true })) {
+    return { state, events: [] };
+  }
+
+  const existing = state.pendingMove;
+  if (
+    existing &&
+    existing.unitId === unit.id &&
+    existing.expiresTurnNumber === state.turnNumber
+  ) {
+    return {
+      state,
+      events: [
+        {
+          type: "moveOptionsGenerated",
+          unitId: unit.id,
+          roll: existing.roll,
+          legalTo: existing.legalTo,
+        },
+      ],
+    };
+  }
+
+  let roll: number | undefined = undefined;
+  let legalMoves: Coord[] = [];
+
+  if (unit.class === "trickster") {
+    return requestRoll(
+      state,
+      unit.owner,
+      "moveTrickster",
+      { unitId: unit.id },
+      unit.id
+    );
+  }
+  if (unit.class === "berserker") {
+    return requestRoll(
+      state,
+      unit.owner,
+      "moveBerserker",
+      { unitId: unit.id },
+      unit.id
+    );
+  }
+
+  legalMoves = getLegalMovesForUnit(state, unit.id);
+
+  const pendingMove: PendingMove = {
+    unitId: unit.id,
+    roll,
+    legalTo: legalMoves,
+    expiresTurnNumber: state.turnNumber,
+  };
+
+  const newState: GameState = {
+    ...state,
+    pendingMove,
+  };
+
+  const events: GameEvent[] = [
+    {
+      type: "moveOptionsGenerated",
+      unitId: unit.id,
+      roll,
+      legalTo: legalMoves,
+    },
+  ];
+
+  return { state: newState, events };
+}
+
 
 function applyMove(
   state: GameState,
@@ -728,13 +856,16 @@ function applyMove(
   }
 
   let legalMoves: Coord[] = [];
+  const pending = state.pendingMove;
+  const pendingValid =
+    pending &&
+    pending.unitId === unit.id &&
+    pending.expiresTurnNumber === state.turnNumber;
 
-  if (unit.class === "trickster") {
-    const roll = rollD6(rng);
-    legalMoves = getTricksterMovesForRoll(state, unit.id, roll);
-  } else if (unit.class === "berserker") {
-    const roll = rollD6(rng);
-    legalMoves = getBerserkerMovesForRoll(state, unit.id, roll);
+  if (pendingValid) {
+    legalMoves = pending!.legalTo;
+  } else if (unit.class === "trickster" || unit.class === "berserker") {
+    return { state, events: [] };
   } else {
     legalMoves = getLegalMovesForUnit(state, unit.id);
   }
@@ -760,6 +891,15 @@ function applyMove(
         stealthTurnsLeft: 0,
       };
       const movedUnit: UnitState = spendSlots(unit, { move: true });
+      const updatedLastKnown = {
+        ...state.lastKnownPositions,
+        P1: { ...(state.lastKnownPositions?.P1 ?? {}) },
+        P2: { ...(state.lastKnownPositions?.P2 ?? {}) },
+      };
+      if (revealed.position) {
+        updatedLastKnown.P1[revealed.id] = { ...revealed.position };
+        updatedLastKnown.P2[revealed.id] = { ...revealed.position };
+      }
       const newState: GameState = {
         ...state,
         units: {
@@ -774,6 +914,8 @@ function applyMove(
             [revealed.id]: true,
           },
         },
+        lastKnownPositions: updatedLastKnown,
+        pendingMove: pendingValid ? null : state.pendingMove,
       };
       const events: GameEvent[] = [
         { type: "stealthRevealed", unitId: revealed.id, reason: "steppedOnHidden" },
@@ -794,6 +936,8 @@ function applyMove(
       ...state.units,
       [updatedUnit.id]: updatedUnit,
     },
+    pendingMove:
+      pendingValid && pending?.unitId === updatedUnit.id ? null : state.pendingMove,
   };
 
   const events: GameEvent[] = [
@@ -851,6 +995,15 @@ function applyMove(
         isStealthed: false,
         stealthTurnsLeft: 0,
       };
+      const updatedLastKnown = {
+        ...newState.lastKnownPositions,
+        P1: { ...(newState.lastKnownPositions?.P1 ?? {}) },
+        P2: { ...(newState.lastKnownPositions?.P2 ?? {}) },
+      };
+      if (revealed.position) {
+        updatedLastKnown.P1[revealed.id] = { ...revealed.position };
+        updatedLastKnown.P2[revealed.id] = { ...revealed.position };
+      }
 
       newState = {
         ...newState,
@@ -865,6 +1018,7 @@ function applyMove(
             [revealed.id]: true,
           },
         },
+        lastKnownPositions: updatedLastKnown,
       };
 
       events.push({ type: "stealthRevealed", unitId: revealed.id, reason: "adjacency" });
@@ -904,10 +1058,9 @@ function applyEnterStealth(
     return { state, events: [] };
   }
 
-  const baseUnit: UnitState = spendSlots(unit, { stealth: true });
-
   // Уже в стелсе — попытка всё равно потрачена
   if (unit.isStealthed) {
+    const baseUnit: UnitState = spendSlots(unit, { stealth: true });
     return {
       state: {
         ...state,
@@ -932,6 +1085,7 @@ function applyEnterStealth(
       return u.position.col === pos.col && u.position.row === pos.row;
     });
     if (hasStealthedOverlap) {
+      const baseUnit: UnitState = spendSlots(unit, { stealth: true });
       const newState: GameState = {
         ...state,
         units: {
@@ -944,47 +1098,30 @@ function applyEnterStealth(
       ];
       return { state: newState, events };
     }
+
+    return requestRoll(
+      state,
+      unit.owner,
+      "enterStealth",
+      { unitId: unit.id },
+      unit.id
+    );
   }
-
-  let success = false;
-
-  if (canStealth) {
-    const roll = rollD6(rng);
-    if (unit.class === "archer") {
-      success = roll === 6;
-    } else if (unit.class === "assassin") {
-      success = roll >= 5; // 5вЂ“6
-    }
-  }
-
-  let updatedUnit: UnitState = {
-    ...baseUnit,
-  };
-
-  if (success) {
-    updatedUnit = {
-      ...updatedUnit,
-      isStealthed: true,
-      stealthTurnsLeft: 3,
-    };
-  }
-
-  const events: GameEvent[] = [
-    {
-      type: "stealthEntered",
-      unitId: updatedUnit.id,
-      success,
-    },
-  ];
-
+  const baseUnit: UnitState = spendSlots(unit, { stealth: true });
   const newState: GameState = {
     ...state,
     units: {
       ...state.units,
-      [updatedUnit.id]: updatedUnit,
+      [baseUnit.id]: baseUnit,
     },
   };
-
+  const events: GameEvent[] = [
+    {
+      type: "stealthEntered",
+      unitId: baseUnit.id,
+      success: false,
+    },
+  ];
   return { state: newState, events };
 }
 
@@ -1019,25 +1156,158 @@ function applySearchStealth(
     return { state, events: [] };
   }
 
-  const units: Record<string, UnitState> = { ...state.units };
-  const events: GameEvent[] = [];
-  let anyRevealed = false;
-
-  const searcherBefore = units[unit.id]!;
-
-  for (const candidate of Object.values(units)) {
+  const searcher = unit;
+  const candidates = Object.values(state.units).filter((candidate) => {
     if (!candidate.isAlive || !candidate.isStealthed || !candidate.position) {
-      continue;
+      return false;
     }
     if (candidate.owner === unit.owner) {
-      continue;
+      return false;
     }
+    const dist = chebyshev(searcher.position!, candidate.position);
+    return dist <= 1;
+  });
 
-    const dist = chebyshev(searcherBefore.position!, candidate.position);
-    if (dist > 1) continue;
+  if (candidates.length === 0) {
+    return { state, events: [] };
+  }
 
+  return requestRoll(
+    state,
+    unit.owner,
+    "searchStealth",
+    { unitId: unit.id, mode: action.mode },
+    unit.id
+  );
+}
+
+function resolveEnterStealthRoll(
+  state: GameState,
+  unitId: string,
+  rng: RNG
+): ApplyResult {
+  const unit = state.units[unitId];
+  if (!unit || !unit.isAlive || !unit.position) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  if (unit.owner !== state.currentPlayer) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  if (state.activeUnitId !== unit.id) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  if (!canSpendSlots(unit, { stealth: true })) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  const roll = rollD6(rng);
+  const def = getUnitDefinition(unit.class);
+  let success = false;
+
+  if (unit.class === "archer") {
+    success = roll === 6;
+  } else if (unit.class === "assassin") {
+    success = roll >= 5;
+  }
+
+  const baseUnit: UnitState = spendSlots(unit, { stealth: true });
+  const updated: UnitState = success
+    ? {
+        ...baseUnit,
+        isStealthed: true,
+        stealthTurnsLeft: def.maxStealthTurns ?? 3,
+      }
+    : {
+        ...baseUnit,
+      };
+
+  const otherPlayer: PlayerId = unit.owner === "P1" ? "P2" : "P1";
+  const nextState: GameState = {
+    ...state,
+    units: {
+      ...state.units,
+      [updated.id]: updated,
+    },
+    lastKnownPositions:
+      success && updated.position
+        ? {
+            ...state.lastKnownPositions,
+            [otherPlayer]: {
+              ...(state.lastKnownPositions?.[otherPlayer] ?? {}),
+              [updated.id]: { ...updated.position },
+            },
+          }
+        : state.lastKnownPositions,
+  };
+
+  const events: GameEvent[] = [
+    {
+      type: "stealthEntered",
+      unitId: updated.id,
+      success,
+      roll,
+    },
+  ];
+
+  return { state: clearPendingRoll(nextState), events };
+}
+
+function resolveSearchStealthRoll(
+  state: GameState,
+  unitId: string,
+  mode: "action" | "move",
+  rng: RNG
+): ApplyResult {
+  const unit = state.units[unitId];
+  if (!unit || !unit.isAlive || !unit.position) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  if (unit.owner !== state.currentPlayer) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  if (state.activeUnitId !== unit.id) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  const searchCosts = mode === "action" ? { action: true } : { move: true };
+  if (!canSpendSlots(unit, searchCosts)) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  const units: Record<string, UnitState> = { ...state.units };
+  const events: GameEvent[] = [];
+  const rollResults: { targetId: string; roll: number; success: boolean }[] = [];
+  const lastKnownPositions = {
+    ...state.lastKnownPositions,
+    P1: { ...(state.lastKnownPositions?.P1 ?? {}) },
+    P2: { ...(state.lastKnownPositions?.P2 ?? {}) },
+  };
+
+  const candidates = Object.values(units).filter((candidate) => {
+    if (!candidate.isAlive || !candidate.isStealthed || !candidate.position) {
+      return false;
+    }
+    if (candidate.owner === unit.owner) {
+      return false;
+    }
+    const dist = chebyshev(unit.position!, candidate.position);
+    return dist <= 1;
+  });
+
+  if (candidates.length === 0) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  for (const candidate of candidates) {
     const roll = rollD6(rng);
-    if (roll < 5) continue;
+    const success = roll >= 5;
+    rollResults.push({ targetId: candidate.id, roll, success });
+    if (!success) continue;
 
     const updatedHidden: UnitState = {
       ...candidate,
@@ -1046,9 +1316,11 @@ function applySearchStealth(
     };
 
     units[updatedHidden.id] = updatedHidden;
-    anyRevealed = true;
+    if (updatedHidden.position) {
+      lastKnownPositions.P1[updatedHidden.id] = { ...updatedHidden.position };
+      lastKnownPositions.P2[updatedHidden.id] = { ...updatedHidden.position };
+    }
 
-    // Attach to state below
     events.push({
       type: "stealthRevealed",
       unitId: updatedHidden.id,
@@ -1056,9 +1328,7 @@ function applySearchStealth(
     });
   }
 
-  // Обновляем экономику хода для ищущего
-  const updatedSearcher: UnitState = spendSlots(searcherBefore, searchCosts);
-
+  const updatedSearcher: UnitState = spendSlots(unit, searchCosts);
   units[updatedSearcher.id] = updatedSearcher;
 
   const newState: GameState = {
@@ -1068,7 +1338,6 @@ function applySearchStealth(
       ...state.knowledge,
       [unit.owner]: {
         ...(state.knowledge?.[unit.owner] ?? {}),
-        // merge any new reveals from units map
         ...(Object.values(units)
           .filter((u) => !u.isStealthed && u.owner !== unit.owner)
           .reduce<Record<string, boolean>>((acc, u) => {
@@ -1078,15 +1347,236 @@ function applySearchStealth(
           }, {})),
       },
     },
+    lastKnownPositions,
   };
 
   events.unshift({
     type: "searchStealth",
     unitId: updatedSearcher.id,
-    mode: action.mode,
+    mode,
+    rolls: rollResults,
   });
 
-  return { state: newState, events };
+  return { state: clearPendingRoll(newState), events };
+}
+
+function resolveMoveOptionsRoll(
+  state: GameState,
+  unitId: string,
+  kind: "moveTrickster" | "moveBerserker",
+  rng: RNG
+): ApplyResult {
+  const unit = state.units[unitId];
+  if (!unit || !unit.isAlive || !unit.position) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  if (unit.owner !== state.currentPlayer) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  if (state.activeUnitId !== unit.id) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  if (!canSpendSlots(unit, { move: true })) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  const roll = rollD6(rng);
+  const legalMoves =
+    kind === "moveTrickster"
+      ? getTricksterMovesForRoll(state, unit.id, roll)
+      : getBerserkerMovesForRoll(state, unit.id, roll);
+
+  const pendingMove: PendingMove = {
+    unitId: unit.id,
+    roll,
+    legalTo: legalMoves,
+    expiresTurnNumber: state.turnNumber,
+  };
+
+  const newState: GameState = {
+    ...state,
+    pendingMove,
+  };
+
+  const events: GameEvent[] = [
+    {
+      type: "moveOptionsGenerated",
+      unitId: unit.id,
+      roll,
+      legalTo: legalMoves,
+    },
+  ];
+
+  return { state: clearPendingRoll(newState), events };
+}
+
+function resolveAttackRoll(
+  state: GameState,
+  attackerId: string,
+  defenderId: string,
+  rng: RNG,
+  defenderUseBerserkAutoDefense?: boolean
+): ApplyResult {
+  const { nextState, events } = resolveAttack(
+    state,
+    {
+      attackerId,
+      defenderId,
+      defenderUseBerserkAutoDefense,
+    },
+    rng
+  );
+
+  const attackResolved = events.some((e) => e.type === "attackResolved");
+  if (!attackResolved) {
+    return { state: clearPendingRoll(nextState), events };
+  }
+
+  const attackerAfter = nextState.units[attackerId];
+  if (!attackerAfter) {
+    return { state: clearPendingRoll(nextState), events };
+  }
+
+  const updatedAttacker: UnitState = spendSlots(attackerAfter, {
+    attack: true,
+    action: true,
+  });
+
+  const finalState: GameState = {
+    ...nextState,
+    units: {
+      ...nextState.units,
+      [updatedAttacker.id]: updatedAttacker,
+    },
+  };
+
+  return { state: clearPendingRoll(finalState), events };
+}
+
+function resolveBerserkerDefenseChoice(
+  state: GameState,
+  attackerId: string,
+  defenderId: string,
+  choice: "auto" | "roll" | undefined,
+  rng: RNG
+): ApplyResult {
+  const defender = state.units[defenderId];
+  const attacker = state.units[attackerId];
+  if (!defender || !attacker) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  if (defender.class !== "berserker") {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  if (choice === "auto") {
+    const charges = defender.charges?.[ABILITY_BERSERK_AUTO_DEFENSE] ?? 0;
+    if (charges !== 6) {
+      choice = "roll";
+    }
+  }
+
+  if (choice === "auto") {
+    const resolved = resolveAttackRoll(
+      state,
+      attackerId,
+      defenderId,
+      rng,
+      true
+    );
+    return {
+      state: resolved.state,
+      events: [
+        { type: "berserkerDefenseChosen", defenderId, choice: "auto" },
+        ...resolved.events,
+      ],
+    };
+  }
+
+  if (choice === "roll") {
+    const baseState = clearPendingRoll(state);
+    const requested = requestRoll(
+      baseState,
+      attacker.owner,
+      "attackRoll",
+      { attackerId, defenderId },
+      attackerId
+    );
+    return {
+      state: requested.state,
+      events: [
+        { type: "berserkerDefenseChosen", defenderId, choice: "roll" },
+        ...requested.events,
+      ],
+    };
+  }
+
+  return { state: clearPendingRoll(state), events: [] };
+}
+
+function applyResolvePendingRoll(
+  state: GameState,
+  action: Extract<GameAction, { type: "resolvePendingRoll" }>,
+  rng: RNG
+): ApplyResult {
+  const pending = state.pendingRoll;
+  if (!pending || pending.id !== action.pendingRollId) {
+    return { state, events: [] };
+  }
+
+  switch (pending.kind) {
+    case "enterStealth": {
+      const unitId = pending.context.unitId as string | undefined;
+      if (!unitId) return { state: clearPendingRoll(state), events: [] };
+      return resolveEnterStealthRoll(state, unitId, rng);
+    }
+    case "searchStealth": {
+      const unitId = pending.context.unitId as string | undefined;
+      const mode = pending.context.mode as "action" | "move" | undefined;
+      if (!unitId || !mode) {
+        return { state: clearPendingRoll(state), events: [] };
+      }
+      return resolveSearchStealthRoll(state, unitId, mode, rng);
+    }
+    case "moveTrickster": {
+      const unitId = pending.context.unitId as string | undefined;
+      if (!unitId) return { state: clearPendingRoll(state), events: [] };
+      return resolveMoveOptionsRoll(state, unitId, "moveTrickster", rng);
+    }
+    case "moveBerserker": {
+      const unitId = pending.context.unitId as string | undefined;
+      if (!unitId) return { state: clearPendingRoll(state), events: [] };
+      return resolveMoveOptionsRoll(state, unitId, "moveBerserker", rng);
+    }
+    case "attackRoll": {
+      const attackerId = pending.context.attackerId as string | undefined;
+      const defenderId = pending.context.defenderId as string | undefined;
+      if (!attackerId || !defenderId) {
+        return { state: clearPendingRoll(state), events: [] };
+      }
+      return resolveAttackRoll(state, attackerId, defenderId, rng);
+    }
+    case "berserkerDefenseChoice": {
+      const attackerId = pending.context.attackerId as string | undefined;
+      const defenderId = pending.context.defenderId as string | undefined;
+      if (!attackerId || !defenderId) {
+        return { state: clearPendingRoll(state), events: [] };
+      }
+      return resolveBerserkerDefenseChoice(
+        state,
+        attackerId,
+        defenderId,
+        action.choice,
+        rng
+      );
+    }
+    default:
+      return { state: clearPendingRoll(state), events: [] };
+  }
 }
 
 function getNextTurnIndexForPlayer(
@@ -1134,6 +1624,7 @@ function applyEndTurn(state: GameState, rng: RNG): ApplyResult {
       turnNumber: state.turnNumber + 1,
       // roundNumber РјРѕР¶РЅРѕ РЅРµ С‚СЂРѕРіР°С‚СЊ, РѕРЅ РІР°Р¶РµРЅ РІ Р±РѕСЋ
       activeUnitId: null,
+      pendingMove: null,
     };
 
     const events: GameEvent[] = [
@@ -1144,7 +1635,7 @@ function applyEndTurn(state: GameState, rng: RNG): ApplyResult {
       },
     ];
 
-    // Р’ placement СЃС‚РµР»СЃР° РµС‰С‘ РЅРµС‚, РїРѕСЌС‚РѕРјСѓ processStartOfTurnStealth РЅРµ РІС‹Р·С‹РІР°РµРј
+    // В placement стелса ещё нет, только переключаем игрока
     return { state: baseState, events };
   }
 
@@ -1161,6 +1652,7 @@ function applyEndTurn(state: GameState, rng: RNG): ApplyResult {
         ...state,
         phase: "ended",
         activeUnitId: null,
+        pendingMove: null,
       };
       const events: GameEvent[] = [];
       if (winner) {
@@ -1182,6 +1674,7 @@ function applyEndTurn(state: GameState, rng: RNG): ApplyResult {
         ...state,
         phase: "ended",
         activeUnitId: null,
+        pendingMove: null,
       };
       return { state: ended, events: [] };
     }
@@ -1200,6 +1693,7 @@ function applyEndTurn(state: GameState, rng: RNG): ApplyResult {
       turnNumber: state.turnNumber + 1,
       roundNumber: state.roundNumber + (isNewRound ? 1 : 0),
       activeUnitId: null,
+      pendingMove: null,
       turnOrderIndex: nextIndex,
       turnQueueIndex: nextIndex,
     };
@@ -1219,14 +1713,7 @@ function applyEndTurn(state: GameState, rng: RNG): ApplyResult {
       turnNumber: baseState.turnNumber,
     });
 
-    // Р—РґРµСЃСЊ С‚РёРєР°СЋС‚ С‚Р°Р№РјРµСЂС‹ СЃС‚РµР»СЃР° Рё С‚.Рї.
-    let workingState = baseState;
-    const { state: afterStealth, events: stealthEvents } =
-      processStartOfTurnStealth(workingState, nextPlayer, rng);
-    workingState = afterStealth;
-    events.push(...stealthEvents);
-
-    return { state: workingState, events };
+    return { state: baseState, events };
   }
 
   // РќР° РІСЃСЏРєРёР№ СЃР»СѓС‡Р°Р№, РµСЃР»Рё РѕРєР°Р¶РµРјСЃСЏ РІ РґСЂСѓРіРѕР№ С„Р°Р·Рµ
@@ -1268,8 +1755,16 @@ function applyUnitStartTurn(
     }
   }
 
+  const { state: afterStealth, events: stealthEvents } =
+    processUnitStartOfTurnStealth(state, unit.id, rng);
+
+  const unitAfterStealth = afterStealth.units[unit.id];
+  if (!unitAfterStealth || !unitAfterStealth.isAlive || !unitAfterStealth.position) {
+    return { state: afterStealth, events: stealthEvents };
+  }
+
   const { state: afterStart, events: startEvents } = processUnitStartOfTurn(
-    state,
+    afterStealth,
     unit.id,
     rng
   );
@@ -1290,7 +1785,7 @@ function applyUnitStartTurn(
     activeUnitId: resetUnit.id,
   };
 
-  return { state: newState, events: startEvents };
+  return { state: newState, events: [...stealthEvents, ...startEvents] };
 }
 
 

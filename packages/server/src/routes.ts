@@ -1,57 +1,17 @@
 // packages/server/src/routes.ts
 
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
-import { GameAction, GameState, PlayerId, makePlayerView } from "rules";
+import { GameAction, PlayerId, makePlayerView } from "rules";
 import { z } from "zod";
 import { CreateGameBodySchema, GameActionSchema, PlayerIdSchema } from "./schemas";
+import { isActionAllowedByPlayer } from "./permissions";
 import { applyGameAction, createGameRoom, getGameRoom } from "./store";
-import { broadcastGameUpdate } from "./ws";
+import { broadcastActionResult, broadcastRoomState, listRoomSummaries } from "./ws";
 
 function parsePlayerId(request: FastifyRequest): PlayerId | null {
   const raw = (request.query as { playerId?: string }).playerId;
   const parsed = PlayerIdSchema.safeParse(raw);
   return parsed.success ? parsed.data : null;
-}
-
-function isActionAllowedByPlayer(
-  state: GameState,
-  action: GameAction,
-  playerId: PlayerId
-): boolean {
-  const turnBoundActions: GameAction["type"][] = [
-    "placeUnit",
-    "move",
-    "attack",
-    "enterStealth",
-    "searchStealth",
-    "useAbility",
-    "endTurn",
-    "unitStartTurn",
-  ];
-
-  if (turnBoundActions.includes(action.type)) {
-    if (state.currentPlayer !== playerId) return false;
-  }
-
-  switch (action.type) {
-    case "placeUnit":
-    case "move":
-    case "enterStealth":
-    case "searchStealth":
-    case "useAbility":
-    case "unitStartTurn": {
-      const unit = state.units[action.unitId];
-      if (!unit) return false;
-      return unit.owner === playerId;
-    }
-    case "attack": {
-      const unit = state.units[action.attackerId];
-      if (!unit) return false;
-      return unit.owner === playerId;
-    }
-    default:
-      return true;
-  }
 }
 
 function sendValidationError(reply: FastifyReply, error: z.ZodError) {
@@ -60,6 +20,21 @@ function sendValidationError(reply: FastifyReply, error: z.ZodError) {
 
 export async function registerRoutes(server: FastifyInstance) {
   server.get("/api/health", async () => ({ ok: true }));
+
+  server.get("/rooms", async () => listRoomSummaries());
+
+  server.post(
+    "/rooms",
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const parsed = CreateGameBodySchema.safeParse(request.body ?? {});
+      if (!parsed.success) {
+        return sendValidationError(reply, parsed.error);
+      }
+
+      const room = createGameRoom(parsed.data);
+      reply.send({ roomId: room.id });
+    }
+  );
 
   server.post(
     "/api/games",
@@ -156,20 +131,15 @@ export async function registerRoutes(server: FastifyInstance) {
         playerId
       );
 
-      const views = {
-        P1: makePlayerView(state, "P1"),
-        P2: makePlayerView(state, "P2"),
-      };
-
-      broadcastGameUpdate({
+      broadcastRoomState(room.id, state);
+      broadcastActionResult({
         gameId: room.id,
-        views,
+        ok: true,
         events,
-        lastAction: action,
         logIndex,
       });
 
-      const view = playerId === "P1" ? views.P1 : views.P2;
+      const view = makePlayerView(state, playerId);
       reply.send({ view, events, logIndex });
     }
   );

@@ -47,7 +47,10 @@ function nextSeed(): number {
   return Math.floor(Math.random() * 1_000_000_000) + 1;
 }
 
-export function createGameRoom(options: CreateGameOptions = {}): GameRoom {
+function createGameRoomWithId(
+  id: string,
+  options: CreateGameOptions = {}
+): GameRoom {
   const seed = options.seed ?? nextSeed();
   const rng = new SeededRNG(seed);
 
@@ -57,11 +60,15 @@ export function createGameRoom(options: CreateGameOptions = {}): GameRoom {
 
   if (options.arenaId) {
     state = applyAction(state, { type: "rollInitiative" }, rng).state;
-    state = applyAction(state, { type: "chooseArena", arenaId: options.arenaId }, rng).state;
+    state = applyAction(
+      state,
+      { type: "chooseArena", arenaId: options.arenaId },
+      rng
+    ).state;
   }
 
   const room: GameRoom = {
-    id: randomUUID(),
+    id,
     seed,
     rng,
     state,
@@ -73,8 +80,21 @@ export function createGameRoom(options: CreateGameOptions = {}): GameRoom {
   return room;
 }
 
+export function createGameRoom(options: CreateGameOptions = {}): GameRoom {
+  return createGameRoomWithId(randomUUID(), options);
+}
+
 export function getGameRoom(id: string): GameRoom | undefined {
   return games.get(id);
+}
+
+export function getOrCreateGameRoom(
+  id: string,
+  options: CreateGameOptions = {}
+): GameRoom {
+  const existing = games.get(id);
+  if (existing) return existing;
+  return createGameRoomWithId(id, options);
 }
 
 export function listGameRooms(): GameRoom[] {

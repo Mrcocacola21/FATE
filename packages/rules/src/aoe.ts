@@ -15,6 +15,7 @@ export interface AoEParams {
   applyAttacks?: boolean;
   ignoreStealth?: boolean;
   targetFilter?: (unit: UnitState, caster: UnitState) => boolean;
+  abilityId?: string;
 }
 
 function isInsideAoE(
@@ -45,15 +46,25 @@ export function resolveAoE(
   const shape: AoEShape = params.shape ?? "chebyshev";
   const radius = params.radius;
   const targetFilter =
-    params.targetFilter ?? ((u: UnitState) => u.owner !== caster.owner);
+    params.targetFilter ?? (() => true);
 
   let nextState: GameState = state;
   const events: GameEvent[] = [];
+  let revealedUnitIds: string[] = [];
 
   if (params.revealHidden) {
-    const res = revealStealthedInArea(nextState, center, radius, rng);
+    const res = revealStealthedInArea(
+      nextState,
+      center,
+      radius,
+      rng,
+      (u) => targetFilter(u, caster)
+    );
     nextState = res.state;
     events.push(...res.events);
+    revealedUnitIds = res.events.flatMap((e) =>
+      e.type === "stealthRevealed" && e.reason === "aoeHit" ? [e.unitId] : []
+    );
   }
 
   const affectedUnitIds = Object.values(nextState.units)
@@ -86,10 +97,13 @@ export function resolveAoE(
 
   events.push({
     type: "aoeResolved",
+    sourceUnitId: caster.id,
+    abilityId: params.abilityId,
     casterId: caster.id,
     center,
     radius,
     affectedUnitIds,
+    revealedUnitIds,
   });
 
   return { nextState, events };

@@ -5,6 +5,7 @@ export * from "./combat";
 export * from "./actions";
 export * from "./board";
 export * from "./movement";
+export * from "./legal";
 export * from "./stealth";
 export * from "./abilities"; // <-- добавили
 export * from "./turnEconomy";

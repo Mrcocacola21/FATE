@@ -6,7 +6,7 @@ import websocket from "@fastify/websocket";
 import { registerRoutes } from "./routes";
 import { registerGameWebSocket } from "./ws";
 
-async function buildServer() {
+export async function buildServer() {
   const server = Fastify({ logger: true });
 
   await server.register(cors, {
@@ -34,4 +34,6 @@ async function start() {
   }
 }
 
-start();
+if (require.main === module) {
+  start();
+}

@@ -4,16 +4,14 @@ import {
     Coord,
     GameEvent,
     GameState,
-    PlayerId,
     UnitState,
     UnitClass,
     isInsideBoard,
     StealthRevealReason,
-    makeEmptyTurnEconomy,
   } from "./model";
   import { RNG, rollD6 } from "./rng";
   import { getUnitDefinition } from "./units";
-  import { canSpendSlots, spendSlots, setTurnEconomy } from "./turnEconomy";
+  import { canSpendSlots, spendSlots } from "./turnEconomy";
   
   // РќР°РїСЂР°РІР»РµРЅРёСЏ РІРѕРєСЂСѓРі РєР»РµС‚РєРё (РЅР°С‡РёРЅР°СЏ СЃ СЃРµРІРµСЂР° РїРѕ С‡Р°СЃРѕРІРѕР№ СЃС‚СЂРµР»РєРµ)
   const NEIGHBOR_OFFSETS: Coord[] = [
@@ -142,6 +140,7 @@ import {
         type: "stealthEntered",
         unitId: updated.id,
         success,
+        roll,
       },
     ];
 
@@ -257,13 +256,21 @@ import {
   
     nextState.units[u.id] = u;
   
-    // Р•СЃР»Рё СЂР°СЃРєСЂС‹С‚РёРµ РїСЂРѕРёР·РѕС€Р»Рѕ РїРѕ РїСЂРёС‡РёРЅРµ durationExpired/aoeHit/forcedDisplacement,
+    // Р•СЃР»Рё СЂР°СЃРєСЂС‹С‚РёРµ РїСЂРѕРёР·РѕС€Р»Рѕ РїРѕ РїСЂРёС‡РёРЅРµ timerExpired/aoeHit/forcedDisplacement,
     // СЃС‡РёС‚Р°РµРј, С‡С‚Рѕ С‚РµРїРµСЂСЊ РІСЃРµ РёРіСЂРѕРєРё "СѓР·РЅР°Р»Рё" Рѕ СЋРЅРёС‚Рµ.
-    if (reason === "durationExpired" || reason === "aoeHit" || reason === "forcedDisplacement") {
+    if (reason === "timerExpired" || reason === "aoeHit" || reason === "forcedDisplacement") {
       nextState.knowledge = {
         ...nextState.knowledge,
         P1: { ...(nextState.knowledge?.P1 ?? {}), [u.id]: true },
         P2: { ...(nextState.knowledge?.P2 ?? {}), [u.id]: true },
+      };
+    }
+
+    if (u.position) {
+      nextState.lastKnownPositions = {
+        ...nextState.lastKnownPositions,
+        P1: { ...(nextState.lastKnownPositions?.P1 ?? {}), [u.id]: { ...u.position } },
+        P2: { ...(nextState.lastKnownPositions?.P2 ?? {}), [u.id]: { ...u.position } },
       };
     }
 
@@ -280,13 +287,15 @@ import {
     state: GameState,
     center: Coord,
     radius: number,
-    rng: RNG
+    rng: RNG,
+    targetFilter?: (unit: UnitState) => boolean
   ): { state: GameState; events: GameEvent[] } {
     let nextState: GameState = state;
     const events: GameEvent[] = [];
   
     for (const u of Object.values(state.units)) {
       if (!u.isAlive || !u.isStealthed || !u.position) continue;
+      if (targetFilter && !targetFilter(u)) continue;
   
       const dx = Math.abs(u.position.col - center.col);
       const dy = Math.abs(u.position.row - center.row);
@@ -354,60 +363,42 @@ import {
   }
   
   /**
-   * РћР±СЂР°Р±РѕС‚РєР° РЅР°С‡Р°Р»Р° С…РѕРґР° РёРіСЂРѕРєР°:
-   * - СЃР±СЂР°СЃС‹РІР°РµРј С„Р»Р°Рі stealthAttemptedThisTurn РґР»СЏ РµРіРѕ СЋРЅРёС‚РѕРІ
-   * - С‚РёРєР°РµРј С‚Р°Р№РјРµСЂС‹ СЃРєСЂС‹С‚РЅРѕСЃС‚Рё
-   * - РµСЃР»Рё С‚Р°Р№РјРµСЂ РѕР±РЅСѓР»РёР»СЃСЏ вЂ” СЂР°СЃРєСЂС‹РІР°РµРј РіРµСЂРѕСЏ РїРѕ РїСЂРёС‡РёРЅРµ "durationExpired"
+   * Обработка начала хода конкретной фигуры:
+   * - если фигура в стелсе, тикаем таймер её собственной очереди
+   * - на 4-й собственный ход раскрываем до действий
    */
-  export function processStartOfTurnStealth(
+  export function processUnitStartOfTurnStealth(
     state: GameState,
-    currentPlayer: PlayerId,
+    unitId: string,
     rng: RNG
   ): { state: GameState; events: GameEvent[] } {
-    let nextState: GameState = {
-      ...state,
-      units: { ...state.units },
-    };
-  
-    const events: GameEvent[] = [];
-  
-    for (const unit of Object.values(nextState.units)) {
-      if (!unit.isAlive) continue;
-      if (unit.owner !== currentPlayer) continue;
-  
-      const currentTurn = unit.turn ?? makeEmptyTurnEconomy();
-      let updated: UnitState = setTurnEconomy(unit, {
-        ...currentTurn,
-        // каждый ход можно снова пытаться войти в скрытность один раз
-        stealthUsed: false,
-      });
-  
-      if (updated.isStealthed) {
-        if (updated.stealthTurnsLeft > 0) {
-          updated.stealthTurnsLeft -= 1;
-        }
-  
-        if (updated.stealthTurnsLeft <= 0) {
-          // СЃРЅР°С‡Р°Р»Р° СЃРѕС…СЂР°РЅСЏРµРј РѕР±РЅРѕРІР»С‘РЅРЅРѕРіРѕ СЋРЅРёС‚Р°,
-          // Р·Р°С‚РµРј СЂР°СЃРєСЂС‹РІР°РµРј РµРіРѕ С‡РµСЂРµР· revealUnit
-          nextState.units[updated.id] = updated;
-          const res = revealUnit(
-            nextState,
-            updated.id,
-            "durationExpired",
-            rng
-          );
-          nextState = res.state;
-          events.push(...res.events);
-          continue;
-        }
-      }
-  
-      nextState.units[updated.id] = updated;
+    const unit = state.units[unitId];
+    if (!unit || !unit.isAlive) {
+      return { state, events: [] };
     }
-  
-    return { state: nextState, events };
-  }
-  
-  
 
+    if (!unit.isStealthed) {
+      return { state, events: [] };
+    }
+
+    // Reveal on the 4th own turn start.
+    if (unit.stealthTurnsLeft <= 0) {
+      const res = revealUnit(state, unit.id, "timerExpired", rng);
+      return { state: res.state, events: res.events };
+    }
+
+    const updated: UnitState = {
+      ...unit,
+      stealthTurnsLeft: unit.stealthTurnsLeft - 1,
+    };
+
+    const nextState: GameState = {
+      ...state,
+      units: {
+        ...state.units,
+        [updated.id]: updated,
+      },
+    };
+
+    return { state: nextState, events: [] };
+  }

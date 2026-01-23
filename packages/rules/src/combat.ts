@@ -243,6 +243,8 @@ export function resolveAttack(
   // --- Броски 2к6 обеим сторонам ---
   const attackerRoll = roll2D6(rng);
   const defenderRoll = roll2D6(rng);
+  const tieBreakAttacker: number[] = [];
+  const tieBreakDefender: number[] = [];
 
   // При ничьей докидываем по 1к6 до определения результата — ОБЩЕЕ правило.
   // ВАЖНО: isDouble остаётся про первые 2 куба; доп.кубы только увеличивают dice[] и sum.
@@ -252,6 +254,8 @@ export function resolveAttack(
 
     attackerRoll.dice.push(a);
     defenderRoll.dice.push(d);
+    tieBreakAttacker.push(a);
+    tieBreakDefender.push(d);
 
     attackerRoll.sum += a;
     defenderRoll.sum += d;
@@ -277,6 +281,8 @@ export function resolveAttack(
   // --- Урон / выход из стелса ассасина ---
   let damage = 0;
   let attackerRevealedToDefender = false;
+  let revealedDefenderPos: Coord | null = null;
+  let revealedAttackerPos: Coord | null = null;
 
   // Если цель была в стелсе и мы специально атакуем (AoE/path), раскрываем её для атакующего
   if (defenderAfter.isStealthed) {
@@ -286,6 +292,7 @@ export function resolveAttack(
         isStealthed: false,
         stealthTurnsLeft: 0,
       };
+      revealedDefenderPos = defenderAfter.position ?? null;
 
       // Обновляем knowledge: атакующий владелец теперь знает цель
       const attackerOwner = attackerAfter.owner;
@@ -318,6 +325,7 @@ export function resolveAttack(
         isStealthed: false,
         stealthTurnsLeft: 0,
       };
+      revealedAttackerPos = attackerAfter.position ?? null;
       attackerRevealedToDefender = true;
     } else {
       damage = attackerAfter.attack;
@@ -346,6 +354,20 @@ export function resolveAttack(
   units[attackerAfter.id] = attackerAfter;
   units[defenderAfter.id] = defenderAfter;
 
+  const updatedLastKnown = {
+    ...state.lastKnownPositions,
+    P1: { ...(state.lastKnownPositions?.P1 ?? {}) },
+    P2: { ...(state.lastKnownPositions?.P2 ?? {}) },
+  };
+  if (revealedDefenderPos) {
+    updatedLastKnown.P1[defenderAfter.id] = { ...revealedDefenderPos };
+    updatedLastKnown.P2[defenderAfter.id] = { ...revealedDefenderPos };
+  }
+  if (revealedAttackerPos) {
+    updatedLastKnown.P1[attackerAfter.id] = { ...revealedAttackerPos };
+    updatedLastKnown.P2[attackerAfter.id] = { ...revealedAttackerPos };
+  }
+
   const nextState: GameState = {
     ...state,
     units,
@@ -358,6 +380,7 @@ export function resolveAttack(
           },
         }
       : state.knowledge,
+    lastKnownPositions: updatedLastKnown,
   };
 
   events.push({
@@ -366,6 +389,10 @@ export function resolveAttack(
     defenderId: defenderAfter.id,
     attackerRoll,
     defenderRoll,
+    tieBreakDice:
+      tieBreakAttacker.length > 0
+        ? { attacker: tieBreakAttacker, defender: tieBreakDefender }
+        : undefined,
     hit,
     damage,
     defenderHpAfter: defenderAfter.hp,

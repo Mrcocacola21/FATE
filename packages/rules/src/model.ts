@@ -11,6 +11,13 @@ export interface TurnEconomy {
   stealthUsed: boolean;
 }
 
+export interface PendingMove {
+  unitId: string;
+  roll?: number;
+  legalTo: Coord[];
+  expiresTurnNumber: number;
+}
+
 // Классы фигур
 export type UnitClass =
   | "spearman" // копейщик
@@ -91,12 +98,27 @@ export interface DiceRoll {
 
 export type StealthRevealReason =
   | "search"
-  | "durationExpired"
+  | "timerExpired"
   | "aoeHit"
   | "forcedDisplacement"
   | "adjacency"
   | "attacked"
   | "steppedOnHidden";
+
+export type RollKind =
+  | "enterStealth"
+  | "searchStealth"
+  | "moveTrickster"
+  | "moveBerserker"
+  | "attackRoll"
+  | "berserkerDefenseChoice";
+
+export interface PendingRoll {
+  id: string;
+  player: PlayerId;
+  kind: RollKind;
+  context: Record<string, unknown>;
+}
 
 export type GameEvent =
   | {
@@ -125,6 +147,7 @@ export type GameEvent =
       defenderId: string;
       attackerRoll: DiceRoll;
       defenderRoll: DiceRoll;
+      tieBreakDice?: { attacker: number[]; defender: number[] };
       hit: boolean;
       damage: number;
       defenderHpAfter: number;
@@ -138,16 +161,30 @@ export type GameEvent =
       type: "stealthEntered";
       unitId: string;
       success?: boolean;
+      roll?: number;
     }
   | {
       type: "searchStealth";
       unitId: string;
       mode: SearchStealthMode;
+      rolls?: { targetId: string; roll: number; success: boolean }[];
      }   // 👈 НОВОЕ
   | {
       type: "stealthRevealed";
       unitId: string;
       reason: StealthRevealReason;
+    }
+  | {
+      type: "rollRequested";
+      rollId: string;
+      kind: RollKind;
+      player: PlayerId;
+      actorUnitId?: string;
+    }
+  | {
+      type: "berserkerDefenseChosen";
+      defenderId: string;
+      choice: "auto" | "roll";
     }
   | {
       type: "abilityUsed";
@@ -156,10 +193,20 @@ export type GameEvent =
     }
   | {
       type: "aoeResolved";
-      casterId: string;
+      sourceUnitId: string;
+      abilityId?: string;
+      casterId?: string;
       center: Coord;
       radius: number;
       affectedUnitIds: string[];
+      revealedUnitIds: string[];
+      damageByUnitId?: Record<string, number>;
+    }
+  | {
+      type: "moveOptionsGenerated";
+      unitId: string;
+      roll?: number;
+      legalTo: Coord[];
     }
     | {
       type: "initiativeRolled";
@@ -182,6 +229,7 @@ export type GameEvent =
 
 
     export type SearchStealthMode = "action" | "move";
+    export type ResolveRollChoice = "auto" | "roll";
 
     export type GameAction =
     | {
@@ -200,6 +248,10 @@ export type GameEvent =
         type: "move";
         unitId: string;
         to: Coord;
+      }
+    | {
+        type: "requestMoveOptions";
+        unitId: string;
       }
     | {
         type: "attack";
@@ -221,6 +273,11 @@ export type GameEvent =
         unitId: string;
         abilityId: string;
         payload?: unknown;
+      }
+    | {
+        type: "resolvePendingRoll";
+        pendingRollId: string;
+        choice?: ResolveRollChoice;
       }
     | {
         type: "endTurn";
@@ -257,6 +314,9 @@ export interface GameState {
    *  - До unitStartTurn активной фигуры нет (null).
    */
   activeUnitId: string | null;
+  pendingMove: PendingMove | null;
+  pendingRoll: PendingRoll | null;
+  rollCounter: number;
 
   /**
    * Глобальный порядок ходов фигур в бою (циклический список id),
@@ -296,6 +356,11 @@ export interface GameState {
     [playerId in PlayerId]: { [unitId: string]: boolean };
   };
 
+  /** Last known positions for each player (used for hidden units in views) */
+  lastKnownPositions: {
+    [playerId in PlayerId]: { [unitId: string]: Coord };
+  };
+
   initiative: {
     P1: number | null;
     P2: number | null;
@@ -312,6 +377,24 @@ export interface GameState {
     P2: number;
   };
 }
+
+export interface LegalView {
+  placementsByUnitId: Record<string, Coord[]>;
+  movesByUnitId: Record<string, Coord[]>;
+  attackTargetsByUnitId: Record<string, string[]>;
+}
+
+export type PlayerView = Omit<
+  GameState,
+  "knowledge" | "lastKnownPositions" | "pendingRoll" | "rollCounter"
+> & {
+  knowledge: {
+    [playerId in PlayerId]: { [unitId: string]: boolean };
+  };
+  lastKnownPositions: { [unitId: string]: Coord };
+  pendingRoll: PendingRoll | null;
+  legal?: LegalView;
+};
 
 
 

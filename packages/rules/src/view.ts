@@ -1,11 +1,15 @@
 // packages/rules/src/view.ts
 
 import {
+  Coord,
   GameState,
   PlayerId,
+  PlayerView,
   UnitState,
   makeEmptyTurnEconomy,
 } from "./model";
+import { getLegalMovesForUnit } from "./movement";
+import { getLegalPlacements, getLegalAttackTargets } from "./legal";
 
 function cloneUnit(unit: UnitState): UnitState {
   const turn = unit.turn ?? makeEmptyTurnEconomy();
@@ -30,14 +34,16 @@ function maskStealthedEnemy(unit: UnitState): UnitState {
 /**
  * Build a player-specific view of the game state.
  * - Friendly units are fully visible.
- * - Enemy stealthed units are hidden unless known.
- * - Known stealthed enemies are included but masked (no charges/cooldowns).
+ * - Enemy stealthed units are hidden (no real position leaks).
+ * - Last-known positions for hidden enemies are provided separately.
  */
 export function makePlayerView(
   state: GameState,
   playerId: PlayerId
-): GameState {
+): PlayerView {
+  const { pendingRoll, rollCounter, ...baseState } = state;
   const units: Record<string, UnitState> = {};
+  const lastKnownPositions: Record<string, Coord> = {};
 
   for (const unit of Object.values(state.units)) {
     if (unit.owner === playerId) {
@@ -51,11 +57,12 @@ export function makePlayerView(
     }
 
     if (unit.isStealthed) {
-      const known = !!state.knowledge?.[playerId]?.[unit.id];
-      if (!known) {
-        continue;
+      if (unit.owner !== playerId) {
+        const lastKnown = state.lastKnownPositions?.[playerId]?.[unit.id];
+        if (lastKnown) {
+          lastKnownPositions[unit.id] = { ...lastKnown };
+        }
       }
-      units[unit.id] = maskStealthedEnemy(unit);
       continue;
     }
 
@@ -67,15 +74,51 @@ export function makePlayerView(
     P2: playerId === "P2" ? { ...(state.knowledge?.P2 ?? {}) } : {},
   };
 
+  const placementsByUnitId: Record<string, Coord[]> = {};
+  const movesByUnitId: Record<string, Coord[]> = {};
+  const attackTargetsByUnitId: Record<string, string[]> = {};
+
+  for (const unit of Object.values(state.units)) {
+    if (!unit || !unit.isAlive) continue;
+    if (unit.owner !== playerId) continue;
+    placementsByUnitId[unit.id] = getLegalPlacements(state, unit.id);
+    movesByUnitId[unit.id] = getLegalMovesForUnit(state, unit.id);
+    attackTargetsByUnitId[unit.id] = getLegalAttackTargets(state, unit.id);
+  }
+
+  let pendingMove = state.pendingMove;
+  if (pendingMove) {
+    const pendingUnit = state.units[pendingMove.unitId];
+    if (!pendingUnit || pendingUnit.owner !== playerId) {
+      pendingMove = null;
+    } else {
+      pendingMove = {
+        ...pendingMove,
+        legalTo: pendingMove.legalTo.map((c) => ({ ...c })),
+      };
+    }
+  }
+
+  const visiblePendingRoll =
+    pendingRoll && pendingRoll.player === playerId ? pendingRoll : null;
+
   return {
-    ...state,
+    ...baseState,
     units,
     knowledge,
+    lastKnownPositions,
+    pendingRoll: visiblePendingRoll,
+    pendingMove,
     turnOrder: [...state.turnOrder],
     placementOrder: [...state.placementOrder],
     turnQueue: [...state.turnQueue],
     initiative: { ...state.initiative },
     unitsPlaced: { ...state.unitsPlaced },
     events: [],
+    legal: {
+      placementsByUnitId,
+      movesByUnitId,
+      attackTargetsByUnitId,
+    },
   };
 }

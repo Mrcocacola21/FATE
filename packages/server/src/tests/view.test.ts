@@ -33,6 +33,13 @@ function testHiddenEnemyOmitted() {
         stealthTurnsLeft: 3,
       },
     },
+    lastKnownPositions: {
+      ...state.lastKnownPositions,
+      P1: {
+        ...(state.lastKnownPositions?.P1 ?? {}),
+        [enemy!.id]: { col: 4, row: 4 },
+      },
+    },
   };
 
   const view = makePlayerView(state, "P1");
@@ -40,11 +47,17 @@ function testHiddenEnemyOmitted() {
     !view.units[enemy!.id],
     "stealthed unknown enemy should be omitted from view"
   );
+  assert(
+    view.lastKnownPositions[enemy!.id] &&
+      view.lastKnownPositions[enemy!.id].col === 4 &&
+      view.lastKnownPositions[enemy!.id].row === 4,
+    "lastKnownPositions should include hidden enemy position"
+  );
 
   console.log("view_hidden_enemy_omitted passed");
 }
 
-function testKnownStealthedEnemyIncluded() {
+function testKnownStealthedEnemyUsesLastKnown() {
   let state = setupState();
   const enemy = Object.values(state.units).find(
     (u) => u.owner === "P2" && u.class === "assassin"
@@ -66,25 +79,33 @@ function testKnownStealthedEnemyIncluded() {
       ...state.knowledge,
       P1: { ...state.knowledge.P1, [enemy!.id]: true },
     },
+    lastKnownPositions: {
+      ...state.lastKnownPositions,
+      P1: {
+        ...(state.lastKnownPositions?.P1 ?? {}),
+        [enemy!.id]: { col: 4, row: 4 },
+      },
+    },
   };
 
   const view = makePlayerView(state, "P1");
   assert(
-    !!view.units[enemy!.id],
-    "stealthed known enemy should be included in view"
+    !view.units[enemy!.id],
+    "stealthed enemy should be hidden even if previously known"
   );
   assert(
-    view.units[enemy!.id].charges &&
-      Object.keys(view.units[enemy!.id].charges).length === 0,
-    "stealthed known enemy should have charges masked"
+    view.lastKnownPositions[enemy!.id] &&
+      view.lastKnownPositions[enemy!.id].col === 4 &&
+      view.lastKnownPositions[enemy!.id].row === 4,
+    "lastKnownPositions should include hidden enemy position"
   );
 
-  console.log("view_known_stealthed_enemy_included passed");
+  console.log("view_known_stealthed_enemy_uses_last_known passed");
 }
 
 function main() {
   testHiddenEnemyOmitted();
-  testKnownStealthedEnemyIncluded();
+  testKnownStealthedEnemyUsesLastKnown();
 }
 
 main();

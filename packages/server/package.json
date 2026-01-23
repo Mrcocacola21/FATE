@@ -8,7 +8,7 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
-    "test": "tsx src/tests/view.test.ts"
+    "test": "tsx src/tests/view.test.ts && tsx src/tests/ws.smoke.ts"
   },
   "dependencies": {
     "@fastify/cors": "^9.0.1",

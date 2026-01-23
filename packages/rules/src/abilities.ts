@@ -47,6 +47,7 @@ export interface AbilitySpec {
 export const ABILITY_BERSERK_AUTO_DEFENSE = "berserkAutoDefense" as const;
 export const ABILITY_TRICKSTER_AOE = "tricksterAoE" as const;
 export const ABILITY_TEST_MULTI_SLOT = "testMultiSlot" as const;
+export const TRICKSTER_AOE_RADIUS = 2;
 
 /**
  * Каталог способностей.
@@ -68,7 +69,7 @@ const ABILITY_SPECS: Record<string, AbilitySpec> = {
     id: ABILITY_TRICKSTER_AOE,
     displayName: "Trickster AoE",
     actionCost: {
-      consumes: { attack: true },
+      consumes: { attack: true, action: true },
     },
   },
   [ABILITY_TEST_MULTI_SLOT]: {

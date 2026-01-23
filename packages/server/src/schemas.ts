@@ -3,6 +3,11 @@
 import { z } from "zod";
 
 export const PlayerIdSchema = z.union([z.literal("P1"), z.literal("P2")]);
+export const RoleSchema = z.union([
+  z.literal("P1"),
+  z.literal("P2"),
+  z.literal("spectator"),
+]);
 
 export const CoordSchema = z.object({
   col: z.number().int(),
@@ -23,6 +28,7 @@ export const GameActionSchema = z.discriminatedUnion("type", [
     position: CoordSchema,
   }),
   z.object({ type: z.literal("move"), unitId: z.string(), to: CoordSchema }),
+  z.object({ type: z.literal("requestMoveOptions"), unitId: z.string() }),
   z.object({
     type: z.literal("attack"),
     attackerId: z.string(),
@@ -41,8 +47,41 @@ export const GameActionSchema = z.discriminatedUnion("type", [
     abilityId: z.string(),
     payload: z.unknown().optional(),
   }),
+  z.object({
+    type: z.literal("resolvePendingRoll"),
+    pendingRollId: z.string().min(1),
+    choice: z.union([z.literal("auto"), z.literal("roll")]).optional(),
+  }),
   z.object({ type: z.literal("endTurn") }),
   z.object({ type: z.literal("unitStartTurn"), unitId: z.string() }),
 ]);
 
 export type GameActionInput = z.infer<typeof GameActionSchema>;
+
+export const JoinRoomMessageSchema = z.object({
+  type: z.literal("joinRoom"),
+  roomId: z.string().min(1),
+  requestedRole: RoleSchema,
+  name: z.string().min(1).optional(),
+});
+
+export const ActionMessageSchema = z.object({
+  type: z.literal("action"),
+  action: GameActionSchema,
+});
+
+export const RequestMoveOptionsMessageSchema = z.object({
+  type: z.literal("requestMoveOptions"),
+  unitId: z.string(),
+});
+
+export const LeaveRoomMessageSchema = z.object({
+  type: z.literal("leaveRoom"),
+});
+
+export const ClientMessageSchema = z.discriminatedUnion("type", [
+  JoinRoomMessageSchema,
+  ActionMessageSchema,
+  RequestMoveOptionsMessageSchema,
+  LeaveRoomMessageSchema,
+]);
