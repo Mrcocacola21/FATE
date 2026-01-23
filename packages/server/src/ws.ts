@@ -40,47 +40,47 @@ export function registerGameWebSocket(server: FastifyInstance) {
   server.get(
     "/ws/games/:id",
     { websocket: true },
-    (connection, request) => {
+    (socket: WebSocket, request) => {
       const gameId = (request.params as { id: string }).id;
       const playerIdRaw = (request.query as { playerId?: string }).playerId;
 
       const room = getGameRoom(gameId);
       if (!room) {
-        safeSend(connection.socket, {
+        safeSend(socket, {
           type: "error",
           message: "Game not found",
         });
-        connection.socket.close();
+        socket.close();
         return;
       }
 
       const playerIdResult = PlayerIdSchema.safeParse(playerIdRaw);
       if (!playerIdResult.success) {
-        safeSend(connection.socket, {
+        safeSend(socket, {
           type: "error",
           message: "Invalid playerId",
         });
-        connection.socket.close();
+        socket.close();
         return;
       }
 
       const playerId = playerIdResult.data;
       const subscriber: WsSubscriber = {
         playerId,
-        socket: connection.socket,
+        socket,
       };
 
       addSubscriber(gameId, subscriber);
 
       const view = makePlayerView(room.state, playerId);
-      safeSend(connection.socket, {
+      safeSend(socket, {
         type: "stateSnapshot",
         gameId,
         seed: room.seed,
         view,
       });
 
-      connection.socket.on("close", () => {
+      socket.on("close", () => {
         removeSubscriber(gameId, subscriber);
       });
     }

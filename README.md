@@ -51,3 +51,4 @@ npm run test
 
 - The server is authoritative: the client only sends `GameAction` intents.
 - Per-player visibility is enforced by `makePlayerView` (exported from `rules`).
+- Avoid running Vite with `--host 0.0.0.0` unless you explicitly need LAN access.

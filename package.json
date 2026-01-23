@@ -1,14 +1,18 @@
 {
   "private": true,
-  "workspaces": ["packages/*"],
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "dev": "concurrently -n rules,server,web -c \"yellow,green,blue\" \"npm run -w rules build -- --watch\" \"npm run -w server dev\" \"npm run -w web dev\"",
     "build": "npm run -w rules build && npm run -w server build && npm run -w web build",
+    "postinstall": "npm run -w rules build",
     "test": "npm run -w rules test && npm run -w server test",
     "lint": "eslint \"packages/**/*.{ts,tsx}\"",
     "format": "prettier -w ."
   },
   "devDependencies": {
+    "@types/ws": "^8.18.1",
     "@typescript-eslint/eslint-plugin": "^7.2.0",
     "@typescript-eslint/parser": "^7.2.0",
     "concurrently": "^8.2.2",
