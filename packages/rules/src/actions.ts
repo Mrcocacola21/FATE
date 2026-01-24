@@ -1482,6 +1482,14 @@ function resolveMoveOptionsRoll(
     },
   ];
 
+  if (legalMoves.length === 0) {
+    events.push({
+      type: "moveBlocked",
+      unitId: unit.id,
+      reason: "noLegalDestinations",
+    });
+  }
+
   return { state: clearPendingRoll(newState), events };
 }
 

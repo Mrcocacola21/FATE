@@ -355,7 +355,9 @@ export function getBerserkerMovesForRoll(
       break;
     }
     case 6: {
-      for (const dir of ORTHO_DIRS) {
+      const neighbors = [N, NE, E, SE, S, SW, W, NW];
+      for (const d of neighbors) push(addCoord(pos, d));
+      for (const dir of ALL_DIRS) {
         const dest: Coord = {
           col: pos.col + dir.col * 2,
           row: pos.row + dir.row * 2,

@@ -121,6 +121,24 @@ function toBattleState(
   };
 }
 
+function setupBerserkerBattleState(col: number, row: number) {
+  let state = createEmptyGame();
+  const a1 = createDefaultArmy("P1");
+  const a2 = createDefaultArmy("P2");
+  state = attachArmy(state, a1);
+  state = attachArmy(state, a2);
+
+  const berserker = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "berserker"
+  )!;
+
+  state = setUnit(state, berserker.id, { position: { col, row } });
+  state = toBattleState(state, "P1", berserker.id);
+  state = initKnowledgeForOwners(state);
+
+  return { state, berserkerId: berserker.id };
+}
+
 function testPlacementToBattleAndTurnOrder() {
   const rng = new SeededRNG(12345);
   let state = createEmptyGame();
@@ -3204,6 +3222,272 @@ function testBerserkerMoveOptionsGeneratedAndUsed() {
   console.log("berserker_move_options_generated_and_used passed");
 }
 
+function testBerserkerMoveRoll1GeneratesTopRoof() {
+  const rng = new SeededRNG(1972);
+  const setup = setupBerserkerBattleState(4, 4);
+
+  const requested = applyAction(
+    setup.state,
+    { type: "requestMoveOptions", unitId: setup.berserkerId } as any,
+    rng
+  );
+  assert(
+    requested.state.pendingRoll?.kind === "moveBerserker",
+    "berserker move should request a pending roll"
+  );
+
+  const resolved = resolvePendingRollOnce(requested.state, rng);
+  const moveEvent = resolved.events.find(
+    (e) => e.type === "moveOptionsGenerated" && e.unitId === setup.berserkerId
+  );
+  assert(moveEvent && moveEvent.type === "moveOptionsGenerated", "moveOptionsGenerated should be emitted");
+
+  const expected = [
+    { col: 3, row: 3 },
+    { col: 4, row: 3 },
+    { col: 5, row: 3 },
+  ];
+
+  assert.deepStrictEqual(
+    coordKeys(moveEvent.legalTo),
+    coordKeys(expected),
+    "roll 1 should generate the top roof"
+  );
+
+  const dest = expected[0];
+  const moved = applyAction(
+    resolved.state,
+    { type: "move", unitId: setup.berserkerId, to: dest } as any,
+    rng
+  );
+
+  const moveResolved = moved.events.find((e) => e.type === "unitMoved");
+  assert(moveResolved, "berserker move should resolve to a legal cell");
+  assert(
+    moved.state.units[setup.berserkerId].turn.moveUsed,
+    "berserker move should consume the move slot"
+  );
+
+  console.log("berserker_move_roll_1_generates_top_roof passed");
+}
+
+function testBerserkerMoveRoll3GeneratesLeftVertical() {
+  const rng = new SeededRNG(251);
+  const setup = setupBerserkerBattleState(4, 4);
+
+  const requested = applyAction(
+    setup.state,
+    { type: "requestMoveOptions", unitId: setup.berserkerId } as any,
+    rng
+  );
+  const resolved = resolvePendingRollOnce(requested.state, rng);
+  const moveEvent = resolved.events.find(
+    (e) => e.type === "moveOptionsGenerated" && e.unitId === setup.berserkerId
+  );
+  assert(moveEvent && moveEvent.type === "moveOptionsGenerated", "moveOptionsGenerated should be emitted");
+
+  const expected = [
+    { col: 3, row: 3 },
+    { col: 3, row: 4 },
+    { col: 3, row: 5 },
+  ];
+
+  assert.deepStrictEqual(
+    coordKeys(moveEvent.legalTo),
+    coordKeys(expected),
+    "roll 3 should generate the left vertical line"
+  );
+
+  console.log("berserker_move_roll_3_generates_left_vertical passed");
+}
+
+function testBerserkerMoveRoll5GeneratesMooreRadius1() {
+  const rng = new SeededRNG(1112);
+  const setup = setupBerserkerBattleState(4, 4);
+
+  const requested = applyAction(
+    setup.state,
+    { type: "requestMoveOptions", unitId: setup.berserkerId } as any,
+    rng
+  );
+  const resolved = resolvePendingRollOnce(requested.state, rng);
+  const moveEvent = resolved.events.find(
+    (e) => e.type === "moveOptionsGenerated" && e.unitId === setup.berserkerId
+  );
+  assert(moveEvent && moveEvent.type === "moveOptionsGenerated", "moveOptionsGenerated should be emitted");
+
+  const expected = [
+    { col: 3, row: 3 },
+    { col: 4, row: 3 },
+    { col: 5, row: 3 },
+    { col: 3, row: 4 },
+    { col: 5, row: 4 },
+    { col: 3, row: 5 },
+    { col: 4, row: 5 },
+    { col: 5, row: 5 },
+  ];
+
+  assert.deepStrictEqual(
+    coordKeys(moveEvent.legalTo),
+    coordKeys(expected),
+    "roll 5 should generate Moore radius 1"
+  );
+
+  console.log("berserker_move_roll_5_generates_moore_radius1 passed");
+}
+
+function testBerserkerMoveRoll6GeneratesStarShape() {
+  const rng = new SeededRNG(1542);
+  const setup = setupBerserkerBattleState(4, 4);
+
+  const requested = applyAction(
+    setup.state,
+    { type: "requestMoveOptions", unitId: setup.berserkerId } as any,
+    rng
+  );
+  const resolved = resolvePendingRollOnce(requested.state, rng);
+  const moveEvent = resolved.events.find(
+    (e) => e.type === "moveOptionsGenerated" && e.unitId === setup.berserkerId
+  );
+  assert(moveEvent && moveEvent.type === "moveOptionsGenerated", "moveOptionsGenerated should be emitted");
+
+  const expected = [
+    { col: 3, row: 3 },
+    { col: 4, row: 3 },
+    { col: 5, row: 3 },
+    { col: 3, row: 4 },
+    { col: 5, row: 4 },
+    { col: 3, row: 5 },
+    { col: 4, row: 5 },
+    { col: 5, row: 5 },
+    { col: 4, row: 2 },
+    { col: 6, row: 2 },
+    { col: 6, row: 4 },
+    { col: 6, row: 6 },
+    { col: 4, row: 6 },
+    { col: 2, row: 6 },
+    { col: 2, row: 4 },
+    { col: 2, row: 2 },
+  ];
+
+  assert.deepStrictEqual(
+    coordKeys(moveEvent.legalTo),
+    coordKeys(expected),
+    "roll 6 should generate the star shape"
+  );
+
+  console.log("berserker_move_roll_6_generates_star_shape passed");
+}
+
+function testBerserkerMoveFiltersOutOfBounds() {
+  const rng = new SeededRNG(1542);
+  const setup = setupBerserkerBattleState(0, 0);
+
+  const requested = applyAction(
+    setup.state,
+    { type: "requestMoveOptions", unitId: setup.berserkerId } as any,
+    rng
+  );
+  const resolved = resolvePendingRollOnce(requested.state, rng);
+  const moveEvent = resolved.events.find(
+    (e) => e.type === "moveOptionsGenerated" && e.unitId === setup.berserkerId
+  );
+  assert(moveEvent && moveEvent.type === "moveOptionsGenerated", "moveOptionsGenerated should be emitted");
+
+  const expected = [
+    { col: 0, row: 1 },
+    { col: 1, row: 0 },
+    { col: 1, row: 1 },
+    { col: 0, row: 2 },
+    { col: 2, row: 0 },
+    { col: 2, row: 2 },
+  ];
+
+  assert.deepStrictEqual(
+    coordKeys(moveEvent.legalTo),
+    coordKeys(expected),
+    "roll 6 should filter out-of-bounds cells"
+  );
+
+  console.log("berserker_move_filters_out_of_bounds passed");
+}
+
+function testBerserkerMoveCannotEndOnAlly() {
+  const rng = new SeededRNG(1972);
+  const setup = setupBerserkerBattleState(4, 4);
+
+  const ally = Object.values(setup.state.units).find(
+    (u) => u.owner === "P1" && u.id !== setup.berserkerId
+  )!;
+  const stateWithAlly = setUnit(setup.state, ally.id, {
+    position: { col: 5, row: 3 },
+  });
+
+  const requested = applyAction(
+    stateWithAlly,
+    { type: "requestMoveOptions", unitId: setup.berserkerId } as any,
+    rng
+  );
+  const resolved = resolvePendingRollOnce(requested.state, rng);
+  const moveEvent = resolved.events.find(
+    (e) => e.type === "moveOptionsGenerated" && e.unitId === setup.berserkerId
+  );
+  assert(moveEvent && moveEvent.type === "moveOptionsGenerated", "moveOptionsGenerated should be emitted");
+
+  const expected = [
+    { col: 3, row: 3 },
+    { col: 4, row: 3 },
+  ];
+
+  assert.deepStrictEqual(
+    coordKeys(moveEvent.legalTo),
+    coordKeys(expected),
+    "ally-occupied destinations should be excluded"
+  );
+
+  console.log("berserker_move_cannot_end_on_ally passed");
+}
+
+function testBerserkerMoveRequiresManualRollNoAutoroll() {
+  const rng = new SeededRNG(1972);
+  const setup = setupBerserkerBattleState(4, 4);
+
+  const requested = applyAction(
+    setup.state,
+    { type: "requestMoveOptions", unitId: setup.berserkerId } as any,
+    rng
+  );
+
+  assert(
+    requested.state.pendingRoll?.kind === "moveBerserker",
+    "requestMoveOptions should create pending roll"
+  );
+  assert(
+    requested.state.pendingMove === null,
+    "requestMoveOptions should not create move options before roll"
+  );
+  assert(
+    requested.events.some((e) => e.type === "rollRequested"),
+    "requestMoveOptions should emit rollRequested"
+  );
+
+  const resolved = resolvePendingRollOnce(requested.state, rng);
+  const moveEvent = resolved.events.find(
+    (e) => e.type === "moveOptionsGenerated" && e.unitId === setup.berserkerId
+  );
+  assert(moveEvent && moveEvent.type === "moveOptionsGenerated", "moveOptionsGenerated should be emitted");
+  assert(
+    resolved.state.pendingMove && resolved.state.pendingMove.unitId === setup.berserkerId,
+    "pendingMove should be stored after roll"
+  );
+  assert(
+    !resolved.events.some((e) => e.type === "unitMoved"),
+    "resolving the roll should not move the unit"
+  );
+
+  console.log("berserker_move_requires_manual_roll_no_autoroll passed");
+}
+
 function testTricksterMoveRequiresPendingOptions() {
   const rng = new SeededRNG(402);
   let state = createEmptyGame();
@@ -3297,6 +3581,13 @@ function main() {
   testAbilityConsumesMultipleSlots();
   testTricksterMoveOptionsGeneratedAndUsed();
   testBerserkerMoveOptionsGeneratedAndUsed();
+  testBerserkerMoveRoll1GeneratesTopRoof();
+  testBerserkerMoveRoll3GeneratesLeftVertical();
+  testBerserkerMoveRoll5GeneratesMooreRadius1();
+  testBerserkerMoveRoll6GeneratesStarShape();
+  testBerserkerMoveFiltersOutOfBounds();
+  testBerserkerMoveCannotEndOnAlly();
+  testBerserkerMoveRequiresManualRollNoAutoroll();
   testTricksterMoveRequiresPendingOptions();
 }
 

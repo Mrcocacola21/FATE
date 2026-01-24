@@ -51,6 +51,8 @@ function formatEvent(event: GameEvent): string {
       return `Move options: ${event.unitId}${
         typeof event.roll === "number" ? ` rolled ${event.roll}` : ""
       }`;
+    case "moveBlocked":
+      return `Move blocked: ${event.unitId} (${event.reason})`;
     case "battleStarted":
       return `Battle started: ${event.startingPlayer}`;
     case "initiativeRolled":

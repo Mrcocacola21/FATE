@@ -233,6 +233,11 @@ export type GameEvent =
       roll?: number;
       legalTo: Coord[];
     }
+  | {
+      type: "moveBlocked";
+      unitId: string;
+      reason: "noLegalDestinations";
+    }
     | {
       type: "initiativeRolled";
       rolls: { P1: number; P2: number };

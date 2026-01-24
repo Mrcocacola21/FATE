@@ -328,8 +328,8 @@ export function Game() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-sky-50 to-emerald-50 p-6">
-      <div className="grid gap-6 lg:grid-cols-[auto_360px]">
-        <div className="rounded border border-slate-200 bg-white/80 p-4 shadow-sm">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="min-w-0 rounded border border-slate-200 bg-white/80 p-4 shadow-sm">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
             <div>Room: {roomId ?? "-"}</div>
             <div>Role: {role ?? "-"}</div>

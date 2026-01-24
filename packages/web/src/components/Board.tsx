@@ -1,7 +1,11 @@
 import type { Coord, PlayerId, PlayerView } from "rules";
 import { TRICKSTER_AOE_ID, TRICKSTER_AOE_RADIUS, getMaxHp } from "../rulesHints";
-import type { FC } from "react";
+import { useEffect, useRef, useState, type FC } from "react";
 import { HpBar } from "./HpBar";
+
+const MIN_CELL_SIZE = 32;
+const MAX_CELL_SIZE = 96;
+const LABEL_RATIO = 0.6;
 
 interface BoardProps {
   view: PlayerView;
@@ -58,6 +62,77 @@ export const Board: FC<BoardProps> = ({
   const size = view.boardSize ?? 9;
   const maxIndex = size - 1;
   const isFlipped = playerId === "P2";
+  const boardWrapperRef = useRef<HTMLDivElement | null>(null);
+  const [cellSize, setCellSize] = useState(48);
+  const [labelSize, setLabelSize] = useState(28);
+
+  useEffect(() => {
+    const el = boardWrapperRef.current;
+    if (!el) return;
+
+    const computeSizes = (containerWidth: number) => {
+      if (!containerWidth || containerWidth <= 0) return;
+
+      const rawCell = Math.floor(containerWidth / (size + LABEL_RATIO));
+      let nextCell = Math.max(
+        MIN_CELL_SIZE,
+        Math.min(MAX_CELL_SIZE, rawCell)
+      );
+      let nextLabel = Math.round(nextCell * LABEL_RATIO);
+      let totalWidth = nextCell * size + nextLabel;
+
+      if (totalWidth > containerWidth && nextCell > MIN_CELL_SIZE) {
+        nextCell = Math.max(
+          MIN_CELL_SIZE,
+          Math.min(MAX_CELL_SIZE, nextCell - 1)
+        );
+        nextLabel = Math.round(nextCell * LABEL_RATIO);
+        totalWidth = nextCell * size + nextLabel;
+        if (totalWidth > containerWidth && nextCell > MIN_CELL_SIZE) {
+          const fitCell = Math.max(
+            MIN_CELL_SIZE,
+            Math.min(
+              MAX_CELL_SIZE,
+              Math.floor(containerWidth / (size + LABEL_RATIO))
+            )
+          );
+          nextCell = fitCell;
+          nextLabel = Math.round(nextCell * LABEL_RATIO);
+        }
+      }
+
+      setCellSize(nextCell);
+      setLabelSize(nextLabel);
+    };
+
+    const observer =
+      typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver((entries) => {
+            const width = entries[0]?.contentRect.width ?? 0;
+            computeSizes(width);
+          })
+        : null;
+
+    if (observer) {
+      observer.observe(el);
+      computeSizes(el.clientWidth);
+      return () => observer.disconnect();
+    }
+
+    const handleResize = () => computeSizes(el.clientWidth || window.innerWidth);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [size]);
+
+  const boardPixelSize = cellSize * size;
+  const labelFontSize = Math.max(10, Math.round(cellSize * 0.22));
+  const pieceFontSize = Math.max(10, Math.round(cellSize * 0.24));
+  const markerFontSize = Math.max(8, Math.round(cellSize * 0.18));
+  const badgeSize = Math.round(cellSize * 0.7);
+  const lastKnownSize = Math.round(cellSize * 0.7);
+  const hpBarWidth = Math.round(cellSize * 0.7);
+  const highlightInset = Math.max(2, Math.round(cellSize * 0.08));
   const toViewCoord = (coord: Coord): Coord =>
     isFlipped
       ? { col: maxIndex - coord.col, row: maxIndex - coord.row }
@@ -163,13 +238,12 @@ export const Board: FC<BoardProps> = ({
 
       const cellClasses = [
         "relative",
-        "w-12",
-        "h-12",
         "border",
         "border-slate-200",
         "flex",
         "items-center",
         "justify-center",
+        "transition-[width,height] duration-150 ease-out",
         disabled ? "cursor-not-allowed opacity-70" : "cursor-pointer",
         isDark ? "bg-amber-100" : "bg-white",
         isSelected ? "ring-2 ring-teal-500" : "",
@@ -185,23 +259,30 @@ export const Board: FC<BoardProps> = ({
 
         const badgeClasses = [
           "relative",
-          "w-8",
-          "h-8",
           "rounded-full",
           "flex",
           "items-center",
           "justify-center",
-          "text-xs",
           "font-semibold",
           "shadow",
           isFriendly ? "bg-emerald-500 text-white" : "bg-rose-500 text-white",
         ].join(" ");
 
         content = (
-          <div className={badgeClasses}>
+          <div
+            className={badgeClasses}
+            style={{
+              width: badgeSize,
+              height: badgeSize,
+              fontSize: pieceFontSize,
+            }}
+          >
             {isHiddenEnemy ? "?" : getUnitLabel(unit.class)}
             {!isHiddenEnemy && marker && (
-              <span className="absolute -right-1 -top-1 rounded-full bg-white px-1 text-[9px] font-bold text-slate-700 shadow">
+              <span
+                className="absolute -right-1 -top-1 rounded-full bg-white px-1 font-bold text-slate-700 shadow"
+                style={{ fontSize: markerFontSize }}
+              >
                 {marker}
               </span>
             )}
@@ -210,7 +291,14 @@ export const Board: FC<BoardProps> = ({
       } else if (lastKnownCount > 0) {
         const label = lastKnownCount > 1 ? `?${lastKnownCount}` : "?";
         content = (
-          <div className="flex h-8 w-8 items-center justify-center rounded-full border border-dashed border-slate-400 text-xs font-semibold text-slate-500">
+          <div
+            className="flex items-center justify-center rounded-full border border-dashed border-slate-400 font-semibold text-slate-500"
+            style={{
+              width: lastKnownSize,
+              height: lastKnownSize,
+              fontSize: pieceFontSize,
+            }}
+          >
             {label}
           </div>
         );
@@ -220,6 +308,7 @@ export const Board: FC<BoardProps> = ({
         <div
           key={key}
           className={cellClasses}
+          style={{ width: cellSize, height: cellSize }}
           onClick={() => {
             if (disabled) return;
             if (unit && playerId && unit.owner === playerId) {
@@ -231,27 +320,31 @@ export const Board: FC<BoardProps> = ({
         >
           {highlightKind && (
             <div
-              className={`pointer-events-none absolute inset-1 rounded ${getHighlightClass(
+              className={`pointer-events-none absolute rounded ${getHighlightClass(
                 highlightKind
               )}`}
+              style={{ inset: highlightInset }}
             />
           )}
           {aoeKind && (
             <div
-              className={`pointer-events-none absolute inset-1 rounded ${getAoEHighlightClass(
+              className={`pointer-events-none absolute rounded ${getAoEHighlightClass(
                 aoeKind
               )}`}
+              style={{ inset: highlightInset }}
             />
           )}
           {content}
           {unit && (
             <div className="pointer-events-none absolute bottom-1 left-1 right-1 z-10 flex justify-center">
-              <HpBar
-                current={view.units[unit.id]?.hp ?? 0}
-                max={getMaxHp(unit.class)}
-                showText={playerId ? unit.owner === playerId : false}
-                className="w-10"
-              />
+              <div style={{ width: hpBarWidth }}>
+                <HpBar
+                  current={view.units[unit.id]?.hp ?? 0}
+                  max={getMaxHp(unit.class)}
+                  showText={playerId ? unit.owner === playerId : false}
+                  className="w-full"
+                />
+              </div>
             </div>
           )}
         </div>
@@ -260,7 +353,10 @@ export const Board: FC<BoardProps> = ({
     const rowLabel = isFlipped ? maxIndex - row : row;
     rows.push(
       <div key={`row-${row}`} className="flex">
-        <div className="flex h-12 w-8 items-center justify-center text-xs font-semibold text-slate-500">
+        <div
+          className="flex items-center justify-center font-semibold text-slate-500"
+          style={{ width: labelSize, height: cellSize, fontSize: labelFontSize }}
+        >
           {rowLabel}
         </div>
         {cells}
@@ -276,19 +372,31 @@ export const Board: FC<BoardProps> = ({
   }
 
   return (
-    <div className="inline-block">
-      <div className="flex">
-        <div className="h-8 w-8" />
-        {colLabels.map((label, index) => (
-          <div
-            key={`col-${label}-${index}`}
-            className="flex h-8 w-12 items-center justify-center text-xs font-semibold text-slate-500"
-          >
-            {label}
+    <div ref={boardWrapperRef} className="w-full min-w-0 overflow-x-hidden">
+      <div className="flex justify-center">
+        <div
+          className="inline-block transition-[width,height] duration-150 ease-out"
+          style={{ width: boardPixelSize + labelSize, maxWidth: "100%" }}
+        >
+          <div className="flex">
+            <div style={{ width: labelSize, height: labelSize }} />
+            {colLabels.map((label, index) => (
+              <div
+                key={`col-${label}-${index}`}
+                className="flex items-center justify-center font-semibold text-slate-500"
+                style={{
+                  width: cellSize,
+                  height: labelSize,
+                  fontSize: labelFontSize,
+                }}
+              >
+                {label}
+              </div>
+            ))}
           </div>
-        ))}
+          {rows}
+        </div>
       </div>
-      {rows}
     </div>
   );
 };
