@@ -19,6 +19,13 @@ function sendValidationError(reply: FastifyReply, error: z.ZodError) {
 }
 
 export async function registerRoutes(server: FastifyInstance) {
+  server.get("/", async () => ({
+    name: "fate-server",
+    version: process.env.npm_package_version ?? "unknown",
+  }));
+
+  server.get("/health", async () => ({ ok: true }));
+
   server.get("/api/health", async () => ({ ok: true }));
 
   server.get("/rooms", async () => listRoomSummaries());

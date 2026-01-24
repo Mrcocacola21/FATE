@@ -9,8 +9,22 @@ import { registerGameWebSocket } from "./ws";
 export async function buildServer() {
   const server = Fastify({ logger: true });
 
+  const allow = new Set(
+    [
+      "http://localhost:5173",
+      "http://127.0.0.1:5173",
+      process.env.WEB_ORIGIN,
+    ].filter(Boolean) as string[]
+  );
+
   await server.register(cors, {
-    origin: true,
+    origin: (origin, cb) => {
+      if (!origin) return cb(null, true);
+      if (allow.has(origin)) return cb(null, true);
+      if (/^https:\/\/.*\.vercel\.app$/.test(origin)) return cb(null, true);
+      cb(new Error("Not allowed by CORS"), false);
+    },
+    credentials: true,
   });
 
   await server.register(websocket);
@@ -27,7 +41,8 @@ async function start() {
 
   const server = await buildServer();
   try {
-    await server.listen({ port, host });
+    const address = await server.listen({ port, host });
+    server.log.info(`server listening on ${address}`);
   } catch (err) {
     server.log.error(err);
     process.exit(1);

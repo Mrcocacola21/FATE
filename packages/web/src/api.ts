@@ -1,8 +1,21 @@
-﻿import type { GameAction, PlayerView, PlayerId, GameEvent } from "rules";
+import type { GameAction, PlayerView, PlayerId, GameEvent } from "rules";
 
-const API_BASE =
-  (import.meta.env.VITE_SERVER_URL as string | undefined) ??
-  "http://localhost:3000";
+const isProd = import.meta.env.MODE === "production";
+
+const API_URL = isProd
+  ? import.meta.env.VITE_API_URL
+  : import.meta.env.VITE_API_URL ?? "http://localhost:3000";
+
+const WS_URL = isProd
+  ? import.meta.env.VITE_WS_URL
+  : import.meta.env.VITE_WS_URL ?? "ws://localhost:3000/ws";
+
+if (isProd && (!API_URL || !WS_URL)) {
+  throw new Error("Missing VITE_API_URL or VITE_WS_URL in production build.");
+}
+
+const API_BASE = API_URL as string;
+const WS_BASE = WS_URL as string;
 
 export interface CreateGameResponse {
   gameId: string;
@@ -112,7 +125,5 @@ export async function createRoom(params?: {
 }
 
 export function getWsUrl(): string {
-  const wsBase = API_BASE.replace(/^http/, "ws");
-  return `${wsBase}/ws`;
+  return WS_BASE;
 }
-
