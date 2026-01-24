@@ -37,7 +37,7 @@ export interface Coord {
 }
 
 // Фазы партии
-export type GamePhase = "placement" | "battle" | "ended";
+export type GamePhase = "lobby" | "placement" | "battle" | "ended";
 
 // Статическое описание класса (то, что не меняется в бою)
 export interface UnitDefinition {
@@ -110,6 +110,7 @@ export type RollKind =
   | "searchStealth"
   | "moveTrickster"
   | "moveBerserker"
+  | "initiativeRoll"
   | "attack_attackerRoll"
   | "attack_defenderRoll"
   | "berserkerDefenseChoice"
@@ -206,6 +207,27 @@ export type GameEvent =
       actorUnitId?: string;
     }
   | {
+      type: "initiativeRollRequested";
+      rollId: string;
+      player: PlayerId;
+    }
+  | {
+      type: "initiativeRolled";
+      player: PlayerId;
+      dice: number[];
+      sum: number;
+    }
+  | {
+      type: "initiativeResolved";
+      winner: PlayerId;
+      P1sum: number;
+      P2sum: number;
+    }
+  | {
+      type: "placementStarted";
+      placementFirstPlayer: PlayerId;
+    }
+  | {
       type: "berserkerDefenseChosen";
       defenderId: string;
       choice: "auto" | "roll";
@@ -238,11 +260,6 @@ export type GameEvent =
       unitId: string;
       reason: "noLegalDestinations";
     }
-    | {
-      type: "initiativeRolled";
-      rolls: { P1: number; P2: number };
-      placementFirstPlayer: PlayerId;
-    }
   | {
       type: "arenaChosen";
       arenaId: string;
@@ -268,6 +285,18 @@ export type GameEvent =
     | {
         type: "chooseArena";        // 👈 НОВОЕ
         arenaId: string;
+      }
+    | {
+        type: "lobbyInit";
+        host: PlayerId;
+      }
+    | {
+        type: "setReady";
+        player: PlayerId;
+        ready: boolean;
+      }
+    | {
+        type: "startGame";
       }
     | {
         type: "placeUnit";
@@ -308,6 +337,7 @@ export type GameEvent =
         type: "resolvePendingRoll";
         pendingRollId: string;
         choice?: ResolveRollChoice;
+        player: PlayerId;
       }
     | {
         type: "endTurn";
@@ -330,7 +360,10 @@ export interface ApplyResult {
 // Основной стейт игры
 export interface GameState {
   boardSize: number;
-  phase: "placement" | "battle" | "ended";
+  phase: "lobby" | "placement" | "battle" | "ended";
+  hostPlayerId: PlayerId | null;
+  playersReady: { P1: boolean; P2: boolean };
+  seats: { P1: boolean; P2: boolean };
   currentPlayer: PlayerId;
   turnNumber: number;
   roundNumber: number;
@@ -396,6 +429,7 @@ export interface GameState {
   initiative: {
     P1: number | null;
     P2: number | null;
+    winner: PlayerId | null;
   };
 
   placementFirstPlayer: PlayerId | null;

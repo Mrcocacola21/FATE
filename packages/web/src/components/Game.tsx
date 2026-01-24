@@ -40,6 +40,8 @@ function getPendingRollLabel(kind?: string | null) {
       return "Trickster move roll";
     case "moveBerserker":
       return "Berserker move roll";
+    case "initiativeRoll":
+      return "Initiative roll";
     default:
       return kind ?? "Roll";
   }
@@ -57,6 +59,9 @@ export function Game() {
     joined,
     hasSnapshot,
     roomState,
+    roomMeta,
+    seat,
+    isHost,
     events,
     clientLog,
     hoveredAbilityId,
@@ -73,6 +78,9 @@ export function Game() {
     setHoveredAbilityId,
     sendAction,
     requestMoveOptions,
+    setReady,
+    startGame,
+    switchRole,
     leaveRoom,
   } = useGameStore();
 
@@ -80,7 +88,8 @@ export function Game() {
   const view = roomState;
   const isSpectator = role === "spectator";
   const pendingRoll = view?.pendingRoll ?? null;
-  const hasPendingRoll = !!pendingRoll;
+  const pendingMeta = roomMeta?.pendingRoll ?? null;
+  const hasBlockingRoll = !!pendingMeta;
   const pendingQueueCount = view?.pendingCombatQueueCount ?? 0;
   const attackContext = pendingRoll?.context as
     | {
@@ -111,6 +120,17 @@ export function Game() {
       ? view.units[defenderId].charges?.berserkAutoDefense ?? 0
       : 0;
 
+  const readyStatus = roomMeta?.ready ?? { P1: false, P2: false };
+  const playerReady = seat ? readyStatus[seat] : false;
+  const canStartGame =
+    !!roomMeta &&
+    roomMeta.players.P1 &&
+    roomMeta.players.P2 &&
+    readyStatus.P1 &&
+    readyStatus.P2 &&
+    view?.phase === "lobby" &&
+    !pendingMeta;
+
   const autoAttemptKeyRef = useRef<string | null>(null);
   const autoBlockedKeyRef = useRef<string | null>(null);
   const autoInFlightRef = useRef(false);
@@ -134,7 +154,7 @@ export function Game() {
     if (!view || !playerId) return;
     if (!joined || !roomId) return;
     if (isSpectator) return;
-    if (view.pendingRoll) return;
+    if (pendingMeta) return;
 
     if (view.phase !== "battle") {
       return;
@@ -188,17 +208,20 @@ export function Game() {
     joined,
     roomId,
     isSpectator,
+    pendingMeta,
     sendAction,
     setSelectedUnit,
   ]);
 
   const sendGameAction = (action: GameAction) => {
-    if (!joined || isSpectator || hasPendingRoll) return;
+    if (!joined || isSpectator || hasBlockingRoll) return;
+    if (!view || view.phase === "lobby") return;
     sendAction(action);
   };
 
   const requestMove = (unitId: string) => {
-    if (!joined || isSpectator || hasPendingRoll) return;
+    if (!joined || isSpectator || hasBlockingRoll) return;
+    if (!view || view.phase === "lobby") return;
     requestMoveOptions(unitId);
   };
 
@@ -264,7 +287,8 @@ export function Game() {
   }, [actionMode, legalPlacementCoords, legalMoveCoords, legalAttackTargets, view]);
 
   const handleCellClick = (col: number, row: number) => {
-    if (!view || !playerId || !joined || isSpectator || hasPendingRoll) return;
+    if (!view || !playerId || !joined || isSpectator || hasBlockingRoll) return;
+    if (view.phase === "lobby") return;
 
     if (actionMode === "place" && placeUnitId) {
       if (!isCoordInList(legalPlacementCoords, col, row)) return;
@@ -349,14 +373,21 @@ export function Game() {
             selectedUnitId={selectedUnitId}
             highlightedCells={highlightedCells}
             hoveredAbilityId={hoveredAbilityId}
-            disabled={!joined || isSpectator || hasPendingRoll}
+            disabled={
+              !joined || isSpectator || hasBlockingRoll || view.phase === "lobby"
+            }
             onSelectUnit={(id) => {
               setSelectedUnit(id);
               setActionMode(null);
             }}
             onCellClick={handleCellClick}
           />
-          {hasPendingRoll && (
+          {pendingMeta && !pendingRoll && (
+            <div className="mt-4 rounded border border-blue-200 bg-blue-50 p-3 text-xs text-blue-800">
+              Waiting for {pendingMeta.player} to roll.
+            </div>
+          )}
+          {pendingRoll && (
             <div className="mt-4 rounded border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
               Pending roll: {getPendingRollLabel(pendingRoll.kind)}. Resolve to continue.
               {pendingQueueCount > 0 && (
@@ -369,6 +400,62 @@ export function Game() {
         </div>
 
         <div className="space-y-6">
+          {view.phase === "lobby" && (
+            <div className="rounded border border-slate-200 bg-white/80 p-4">
+              <div className="text-sm text-slate-500">Room Lobby</div>
+              <div className="mt-2 space-y-1 text-xs text-slate-600">
+                <div>Room: {roomId ?? "-"}</div>
+                <div>
+                  P1: {roomMeta?.players.P1 ? "occupied" : "open"}{" "}
+                  {readyStatus.P1 ? "(ready)" : "(not ready)"}
+                </div>
+                <div>
+                  P2: {roomMeta?.players.P2 ? "occupied" : "open"}{" "}
+                  {readyStatus.P2 ? "(ready)" : "(not ready)"}
+                </div>
+                <div>Spectators: {roomMeta?.spectators ?? 0}</div>
+                <div>
+                  You: {role ?? "-"}
+                  {seat ? ` (${seat})` : ""} {isHost ? "• host" : ""}
+                </div>
+              </div>
+              {seat && (
+                <button
+                  className={`mt-3 w-full rounded px-3 py-2 text-xs font-semibold ${
+                    playerReady
+                      ? "bg-amber-500 text-white"
+                      : "bg-teal-500 text-white"
+                  }`}
+                  onClick={() => setReady(!playerReady)}
+                  disabled={!joined || !!pendingMeta}
+                >
+                  {playerReady ? "Unready" : "Ready"}
+                </button>
+              )}
+              {seat && (
+                <button
+                  className="mt-2 w-full rounded bg-slate-200 px-3 py-2 text-xs font-semibold"
+                  onClick={() => switchRole("spectator")}
+                  disabled={!joined || !!pendingMeta}
+                >
+                  Switch to Spectator
+                </button>
+              )}
+              {isHost && (
+                <button
+                  className={`mt-3 w-full rounded px-3 py-2 text-xs font-semibold ${
+                    canStartGame
+                      ? "bg-slate-900 text-white"
+                      : "bg-slate-200 text-slate-400"
+                  }`}
+                  onClick={() => startGame()}
+                  disabled={!canStartGame}
+                >
+                  Start Game
+                </button>
+              )}
+            </div>
+          )}
           <TurnQueueTracker view={view} playerId={playerId} />
           <RightPanel
             view={view}
@@ -378,7 +465,7 @@ export function Game() {
             placeUnitId={placeUnitId}
             moveOptions={moveOptions}
             joined={joined}
-            pendingRoll={hasPendingRoll}
+            pendingRoll={hasBlockingRoll}
             onHoverAbility={setHoveredAbilityId}
             onSelectUnit={(id) => {
               setSelectedUnit(id);
@@ -403,7 +490,11 @@ export function Game() {
       {pendingRoll && playerId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40">
           <div className="w-full max-w-sm rounded border border-slate-200 bg-white p-5 shadow-lg">
-            <div className="text-sm font-semibold text-slate-800">Roll required</div>
+            <div className="text-sm font-semibold text-slate-800">
+              {pendingRoll.kind === "initiativeRoll"
+                ? "Roll initiative"
+                : "Roll required"}
+            </div>
             <div className="mt-2 text-xs text-slate-500">
               {pendingRoll.kind === "berserkerDefenseChoice"
                 ? "Choose berserker defense."
@@ -411,6 +502,19 @@ export function Game() {
                     pendingRoll.kind
                   )}.`}
             </div>
+            {pendingRoll.kind === "initiativeRoll" && (
+              <div className="mt-3 rounded bg-slate-50 p-2 text-[11px] text-slate-600">
+                {pendingRoll.player === "P2" && view.initiative.P1 !== null && (
+                  <div>P1 rolled: {view.initiative.P1}</div>
+                )}
+                {pendingRoll.player === "P1" && view.initiative.P2 !== null && (
+                  <div>P2 rolled: {view.initiative.P2}</div>
+                )}
+                {pendingRoll.player === "P1" &&
+                  view.initiative.P2 === null &&
+                  view.initiative.P1 === null && <div>Awaiting your roll.</div>}
+              </div>
+            )}
             {showAttackerRoll && attackerDice.length > 0 && (
               <div className="mt-3 rounded bg-slate-50 p-2 text-[11px] text-slate-600">
                 <div>Attacker roll: [{attackerDice.join(", ")}]</div>

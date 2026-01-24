@@ -38,10 +38,11 @@ export interface ActionResponse {
 export interface RoomSummary {
   id: string;
   createdAt: number;
-  phase: "placement" | "battle" | "ended";
-  p1Taken: boolean;
-  p2Taken: boolean;
+  phase: "lobby" | "placement" | "battle" | "ended";
+  players: { P1: boolean; P2: boolean };
+  ready: { P1: boolean; P2: boolean };
   spectators: number;
+  canStart: boolean;
 }
 
 export interface CreateRoomResponse {

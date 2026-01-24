@@ -1,9 +1,12 @@
 ﻿import type { GameEvent, DiceRoll } from "rules";
 import type { FC } from "react";
 
-function formatDice(roll: DiceRoll) {
+function formatDice(roll?: DiceRoll | null) {
+  if (!roll || !Array.isArray(roll.dice)) {
+    return "(-) = -";
+  }
   const dice = roll.dice.length > 0 ? roll.dice.join(", ") : "-";
-  return `(${dice}) = ${roll.sum}`;
+  return `(${dice}) = ${roll.sum ?? "-"}`;
 }
 
 function formatEvent(event: GameEvent): string {
@@ -23,11 +26,28 @@ function formatEvent(event: GameEvent): string {
     case "stealthEntered":
       return `Stealth attempt: ${event.unitId}${
         typeof event.roll === "number" ? ` rolled ${event.roll}` : ""
-      } (${event.success ? "success" : "fail"})`;
+      } (${event.success === true ? "success" : event.success === false ? "fail" : "unknown"})`;
     case "stealthRevealed":
       return `Stealth revealed: ${event.unitId} (${event.reason})`;
     case "rollRequested":
-      return `Roll requested: ${event.kind} (${event.actorUnitId ?? event.player})`;
+      return `Roll requested: ${event.kind ?? "roll"} (${event.actorUnitId ?? event.player ?? "-"})`;
+    case "initiativeRollRequested":
+      return `Initiative roll requested: ${event.player ?? "-"}`;
+    case "initiativeRolled": {
+      const dice =
+        Array.isArray(event.dice) && event.dice.length > 0
+          ? `[${event.dice.join(", ")}]`
+          : "[-]";
+      return `Initiative rolled: ${event.player ?? "-"} ${dice} = ${
+        event.sum ?? "-"
+      }`;
+    }
+    case "initiativeResolved":
+      return `Initiative resolved: P1 ${event.P1sum ?? "-"} / P2 ${
+        event.P2sum ?? "-"
+      } (winner ${event.winner ?? "-"})`;
+    case "placementStarted":
+      return `Placement started: ${event.placementFirstPlayer ?? "-"}`;
     case "berserkerDefenseChosen":
       return `Berserker defense: ${event.defenderId} (${event.choice})`;
     case "searchStealth":
@@ -46,7 +66,9 @@ function formatEvent(event: GameEvent): string {
     case "abilityUsed":
       return `Ability used: ${event.unitId} (${event.abilityId})`;
     case "aoeResolved":
-      return `AoE resolved: ${event.sourceUnitId} (targets ${event.affectedUnitIds.length}, revealed ${event.revealedUnitIds.length})`;
+      return `AoE resolved: ${event.sourceUnitId} (targets ${
+        event.affectedUnitIds?.length ?? 0
+      }, revealed ${event.revealedUnitIds?.length ?? 0})`;
     case "moveOptionsGenerated":
       return `Move options: ${event.unitId}${
         typeof event.roll === "number" ? ` rolled ${event.roll}` : ""
@@ -54,15 +76,31 @@ function formatEvent(event: GameEvent): string {
     case "moveBlocked":
       return `Move blocked: ${event.unitId} (${event.reason})`;
     case "battleStarted":
-      return `Battle started: ${event.startingPlayer}`;
-    case "initiativeRolled":
-      return `Initiative: P1 ${event.rolls.P1} vs P2 ${event.rolls.P2} (first ${event.placementFirstPlayer})`;
+      return `Battle started: ${event.startingPlayer} (${event.startingUnitId ?? "-"})`;
     case "arenaChosen":
       return `Arena chosen: ${event.arenaId}`;
     case "gameEnded":
       return `Game ended: ${event.winner}`;
     default:
       return event.type;
+  }
+}
+
+function formatEventFallback(event: GameEvent): string {
+  try {
+    const raw = JSON.stringify(event);
+    const clipped = raw.length > 200 ? `${raw.slice(0, 200)}...` : raw;
+    return `Unreadable event: ${clipped}`;
+  } catch {
+    return "Unreadable event";
+  }
+}
+
+function safeFormatEvent(event: GameEvent): string {
+  try {
+    return formatEvent(event);
+  } catch {
+    return formatEventFallback(event);
   }
 }
 
@@ -90,36 +128,55 @@ export const EventLog: FC<EventLogProps> = ({ events, clientLog }) => {
           <div className="text-slate-400">No events yet.</div>
         )}
         {items.map((event, index) => {
-          if (event.type === "attackResolved") {
-            return (
-              <div
-                key={`${event.type}-${index}`}
-                className="mb-2 rounded border border-slate-200 bg-white/70 p-2"
-              >
-                <div className="text-[11px] font-semibold text-slate-700">
-                  Attack: {event.attackerId} to {event.defenderId}
-                </div>
-                <div className="mt-1 grid grid-cols-2 gap-2 text-[10px] text-slate-600">
-                  <div>Attacker {formatDice(event.attackerRoll)}</div>
-                  <div>Defender {formatDice(event.defenderRoll)}</div>
-                </div>
-                {event.tieBreakDice && (
-                  <div className="mt-1 text-[10px] text-slate-500">
-                    Reroll A [{event.tieBreakDice.attacker.join(", ")}] / D [{event.tieBreakDice.defender.join(", ")}]
+          try {
+            if (event.type === "attackResolved") {
+              const attacker = event.attackerId ?? "-";
+              const defender = event.defenderId ?? "-";
+              const attackerRoll = formatDice(event.attackerRoll);
+              const defenderRoll = formatDice(event.defenderRoll);
+              const tieA = event.tieBreakDice?.attacker ?? [];
+              const tieD = event.tieBreakDice?.defender ?? [];
+              const hitLabel =
+                event.hit === true ? "Hit" : event.hit === false ? "Miss" : "Unknown";
+              const damage = event.damage ?? "-";
+              const hpAfter = event.defenderHpAfter ?? "-";
+
+              return (
+                <div
+                  key={`${event.type}-${index}`}
+                  className="mb-2 rounded border border-slate-200 bg-white/70 p-2"
+                >
+                  <div className="text-[11px] font-semibold text-slate-700">
+                    Attack: {attacker} to {defender}
                   </div>
-                )}
-                <div className="mt-1 text-[10px] text-slate-600">
-                  {event.hit ? "Hit" : "Miss"} - Damage {event.damage} - Defender HP {event.defenderHpAfter}
+                  <div className="mt-1 grid grid-cols-2 gap-2 text-[10px] text-slate-600">
+                    <div>Attacker {attackerRoll}</div>
+                    <div>Defender {defenderRoll}</div>
+                  </div>
+                  {event.tieBreakDice && (
+                    <div className="mt-1 text-[10px] text-slate-500">
+                      Reroll A [{tieA.join(", ")}] / D [{tieD.join(", ")}]
+                    </div>
+                  )}
+                  <div className="mt-1 text-[10px] text-slate-600">
+                    {hitLabel} - Damage {damage} - Defender HP {hpAfter}
+                  </div>
                 </div>
+              );
+            }
+
+            return (
+              <div key={`${event.type}-${index}`} className="py-1 text-slate-700">
+                {safeFormatEvent(event)}
+              </div>
+            );
+          } catch {
+            return (
+              <div key={`fallback-${index}`} className="py-1 text-slate-700">
+                {formatEventFallback(event)}
               </div>
             );
           }
-
-          return (
-            <div key={`${event.type}-${index}`} className="py-1 text-slate-700">
-              {formatEvent(event)}
-            </div>
-          );
         })}
       </div>
     </div>

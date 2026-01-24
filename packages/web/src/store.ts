@@ -1,23 +1,41 @@
 import { create } from "zustand";
 import type { GameAction, GameEvent, PlayerView, Coord, PlayerId } from "rules";
-import { createRoom as createRoomApi, listRooms, type RoomSummary } from "./api";
+import { listRooms, type RoomSummary } from "./api";
 import {
   connectGameSocket,
   sendJoinRoom,
   sendLeaveRoom,
   sendMoveOptionsRequest,
+  sendResolvePendingRoll,
+  sendSetReady,
   sendSocketAction,
+  sendStartGame,
+  sendSwitchRole,
   type PlayerRole,
+  type RoomMeta,
   type ServerMessage,
 } from "./ws";
 
 export type ActionMode = "move" | "attack" | "place" | null;
+
+const defaultRoomMeta: RoomMeta = {
+  ready: { P1: false, P2: false },
+  players: { P1: false, P2: false },
+  spectators: 0,
+  phase: "lobby",
+  pendingRoll: null,
+  initiative: { P1: null, P2: null, winner: null },
+  placementFirstPlayer: null,
+};
 
 interface GameStore {
   connectionStatus: "disconnected" | "connecting" | "connected";
   joined: boolean;
   roomId: string | null;
   role: PlayerRole | null;
+  seat: PlayerId | null;
+  isHost: boolean;
+  roomMeta: RoomMeta | null;
   joinError: string | null;
   roomsList: RoomSummary[];
   roomState: PlayerView | null;
@@ -34,9 +52,17 @@ interface GameStore {
   moveOptions: { unitId: string; roll?: number | null; legalTo: Coord[] } | null;
   connect: () => Promise<WebSocket>;
   fetchRooms: () => Promise<void>;
-  createRoom: () => Promise<string>;
-  joinRoom: (roomId: string, role: PlayerRole, name?: string) => Promise<void>;
+  joinRoom: (params: {
+    mode: "create" | "join";
+    roomId?: string;
+    role: PlayerRole;
+    name?: string;
+  }) => Promise<void>;
   leaveRoom: () => void;
+  setReady: (ready: boolean) => void;
+  startGame: () => void;
+  resolvePendingRoll: (pendingRollId: string, choice?: "auto" | "roll") => void;
+  switchRole: (role: PlayerRole) => void;
   sendAction: (action: GameAction) => void;
   requestMoveOptions: (unitId: string) => void;
   setRoomState: (roomId: string, room: PlayerView) => void;
@@ -71,11 +97,13 @@ function handleServerMessage(
   get: () => GameStore
 ) {
   switch (msg.type) {
-    case "joinAccepted": {
+    case "joinAck": {
       set(() => ({
         joined: true,
         roomId: msg.roomId,
         role: msg.role,
+        seat: msg.seat ?? null,
+        isHost: msg.isHost,
         joinError: null,
       }));
       return;
@@ -85,6 +113,9 @@ function handleServerMessage(
         joined: false,
         roomId: null,
         role: null,
+        seat: null,
+        isHost: false,
+        roomMeta: defaultRoomMeta,
         joinError: msg.message,
         roomState: null,
         hasSnapshot: false,
@@ -92,11 +123,64 @@ function handleServerMessage(
       return;
     }
     case "roomState": {
+      const prevMeta = get().roomMeta ?? defaultRoomMeta;
+      const incomingMeta = msg.meta ?? ({} as RoomMeta);
+      const incomingInitiative = incomingMeta.initiative;
+      const nextReady = {
+        P1:
+          incomingMeta.ready?.P1 ??
+          (incomingMeta as any).playersReady?.P1 ??
+          prevMeta.ready.P1 ??
+          false,
+        P2:
+          incomingMeta.ready?.P2 ??
+          (incomingMeta as any).playersReady?.P2 ??
+          prevMeta.ready.P2 ??
+          false,
+      };
+      const nextPlayers = {
+        P1: incomingMeta.players?.P1 ?? prevMeta.players.P1 ?? false,
+        P2: incomingMeta.players?.P2 ?? prevMeta.players.P2 ?? false,
+      };
+      const nextInitiative = {
+        P1:
+          incomingInitiative && "P1" in incomingInitiative
+            ? incomingInitiative.P1
+            : prevMeta.initiative.P1 ?? null,
+        P2:
+          incomingInitiative && "P2" in incomingInitiative
+            ? incomingInitiative.P2
+            : prevMeta.initiative.P2 ?? null,
+        winner:
+          incomingInitiative && "winner" in incomingInitiative
+            ? incomingInitiative.winner
+            : prevMeta.initiative.winner ?? null,
+      };
+      const nextMeta: RoomMeta = {
+        ready: nextReady,
+        players: nextPlayers,
+        spectators: incomingMeta.spectators ?? prevMeta.spectators ?? 0,
+        phase: incomingMeta.phase ?? prevMeta.phase ?? "lobby",
+        pendingRoll:
+          incomingMeta.pendingRoll !== undefined
+            ? incomingMeta.pendingRoll
+            : prevMeta.pendingRoll ?? null,
+        initiative: nextInitiative,
+        placementFirstPlayer:
+          incomingMeta.placementFirstPlayer !== undefined
+            ? incomingMeta.placementFirstPlayer
+            : prevMeta.placementFirstPlayer ?? null,
+      };
+
       set(() => ({
-        roomState: msg.room,
+        roomState: msg.view,
         roomId: msg.roomId,
         joined: true,
         hasSnapshot: true,
+        role: msg.you.role,
+        seat: msg.you.seat ?? null,
+        isHost: msg.you.isHost,
+        roomMeta: nextMeta,
       }));
       return;
     }
@@ -153,19 +237,22 @@ function openSocket(set: (fn: (state: GameStore) => Partial<GameStore>) => void,
       resolve(socket as WebSocket);
     };
 
-    socket.onclose = () => {
-      connectPromise = null;
-      socket = null;
-      set(() => ({
-        connectionStatus: "disconnected",
-        joined: false,
-        roomId: null,
-        role: null,
-        roomState: null,
-        hasSnapshot: false,
-        hoveredAbilityId: null,
-      }));
-    };
+      socket.onclose = () => {
+        connectPromise = null;
+        socket = null;
+        set(() => ({
+          connectionStatus: "disconnected",
+          joined: false,
+          roomId: null,
+          role: null,
+          seat: null,
+          isHost: false,
+          roomMeta: defaultRoomMeta,
+          roomState: null,
+          hasSnapshot: false,
+          hoveredAbilityId: null,
+        }));
+      };
 
     socket.onerror = (err) => {
       connectPromise = null;
@@ -183,6 +270,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
   joined: false,
   roomId: null,
   role: null,
+  seat: null,
+  isHost: false,
+  roomMeta: defaultRoomMeta,
   joinError: null,
   roomsList: [],
   roomState: null,
@@ -202,14 +292,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const rooms = await listRooms();
     set(() => ({ roomsList: rooms }));
   },
-  createRoom: async () => {
-    const res = await createRoomApi();
-    return res.roomId;
-  },
-  joinRoom: async (roomId, role, name) => {
+  joinRoom: async (params) => {
     set(() => ({ joinError: null }));
     const ws = await openSocket(set, get);
-    sendJoinRoom(ws, roomId, role, name);
+    sendJoinRoom(ws, params);
   },
   leaveRoom: () => {
     if (socket && socket.readyState === WebSocket.OPEN) {
@@ -219,6 +305,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
       joined: false,
       roomId: null,
       role: null,
+      seat: null,
+      isHost: false,
+      roomMeta: defaultRoomMeta,
       joinError: null,
       roomState: null,
       hasSnapshot: false,
@@ -234,10 +323,70 @@ export const useGameStore = create<GameStore>((set, get) => ({
       moveOptions: null,
     }));
   },
+  setReady: (ready) => {
+    const state = get();
+    if (!state.joined) {
+      state.addClientLog("Not joined yet. Please join a room first.");
+      return;
+    }
+    if (state.roomState?.phase !== "lobby") {
+      state.addClientLog("Ready-up is only available in the lobby.");
+      return;
+    }
+    if (!socket || socket.readyState !== WebSocket.OPEN) {
+      state.addClientLog("WebSocket not connected.");
+      return;
+    }
+    sendSetReady(socket, ready);
+  },
+  startGame: () => {
+    const state = get();
+    if (!state.joined) {
+      state.addClientLog("Not joined yet. Please join a room first.");
+      return;
+    }
+    if (state.roomState?.phase !== "lobby") {
+      state.addClientLog("Game can only be started from the lobby.");
+      return;
+    }
+    if (!socket || socket.readyState !== WebSocket.OPEN) {
+      state.addClientLog("WebSocket not connected.");
+      return;
+    }
+    sendStartGame(socket);
+  },
+  resolvePendingRoll: (pendingRollId, choice) => {
+    const state = get();
+    if (!state.joined) {
+      state.addClientLog("Not joined yet. Please join a room first.");
+      return;
+    }
+    if (!socket || socket.readyState !== WebSocket.OPEN) {
+      state.addClientLog("WebSocket not connected.");
+      return;
+    }
+    sendResolvePendingRoll(socket, pendingRollId, choice);
+  },
+  switchRole: (role) => {
+    const state = get();
+    if (!state.joined) {
+      state.addClientLog("Not joined yet. Please join a room first.");
+      return;
+    }
+    if (!socket || socket.readyState !== WebSocket.OPEN) {
+      state.addClientLog("WebSocket not connected.");
+      return;
+    }
+    sendSwitchRole(socket, role);
+  },
   sendAction: (action) => {
     const state = get();
-    if (state.roomState?.pendingRoll && action.type !== "resolvePendingRoll") {
+    if (state.roomMeta?.pendingRoll && action.type !== "resolvePendingRoll") {
       state.addClientLog("Resolve the pending roll before acting.");
+      return;
+    }
+    if (state.roomState?.phase === "lobby" && action.type !== "resolvePendingRoll") {
+      state.addClientLog("Game has not started yet.");
       return;
     }
     if (!state.joined) {
@@ -256,8 +405,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
   requestMoveOptions: (unitId) => {
     const state = get();
-    if (state.roomState?.pendingRoll) {
+    if (state.roomMeta?.pendingRoll) {
       state.addClientLog("Resolve the pending roll before acting.");
+      return;
+    }
+    if (state.roomState?.phase === "lobby") {
+      state.addClientLog("Game has not started yet.");
       return;
     }
     if (!state.joined) {
@@ -304,6 +457,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   resetGameState: () =>
     set(() => ({
       roomState: null,
+      roomMeta: defaultRoomMeta,
       hasSnapshot: false,
       hoveredAbilityId: null,
       events: [],

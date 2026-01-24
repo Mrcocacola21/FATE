@@ -253,7 +253,7 @@ export const Board: FC<BoardProps> = ({
       const lastKnownCount = lastKnownByPos.get(key) ?? 0;
 
       if (unit) {
-        const isFriendly = playerId ? unit.owner === playerId : unit.owner === "P1";
+        const isFriendly = playerId ? unit.owner === playerId : false;
         const isHiddenEnemy = !isFriendly && unit.isStealthed;
         const marker = getClassMarker(unit.class);
 

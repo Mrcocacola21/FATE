@@ -16,7 +16,7 @@ import {
   StealthRevealReason
 } from "./model";
 import { getUnitDefinition } from "./units";
-import { RNG, rollD6 } from "./rng";
+import { RNG, rollD6, roll2D6 } from "./rng";
 import { resolveAttack } from "./combat";
 import { 
   getLegalMovesForUnit,
@@ -84,6 +84,31 @@ function clearPendingRoll(state: GameState): GameState {
   return { ...state, pendingRoll: null };
 }
 
+function requestInitiativeRoll(
+  state: GameState,
+  player: PlayerId
+): ApplyResult {
+  const requested = requestRoll(
+    state,
+    player,
+    "initiativeRoll",
+    { step: player },
+    undefined
+  );
+
+  const rollId = requested.state.pendingRoll?.id ?? "";
+  const events: GameEvent[] = [
+    ...requested.events,
+    {
+      type: "initiativeRollRequested",
+      rollId,
+      player,
+    },
+  ];
+
+  return { state: requested.state, events };
+}
+
 function applyRollInitiative(
   state: GameState,
   rng: RNG
@@ -114,6 +139,7 @@ function applyRollInitiative(
     initiative: {
       P1: p1,
       P2: p2,
+      winner: placementFirstPlayer,
     },
     placementFirstPlayer,
     // РІР°Р¶РЅРѕРµ: С‚РѕС‚, РєС‚Рѕ СЃС‚Р°РІРёС‚ РїРµСЂРІС‹Рј, СЃС‚Р°РЅРѕРІРёС‚СЃСЏ currentPlayer
@@ -122,8 +148,13 @@ function applyRollInitiative(
 
   const events: GameEvent[] = [
     {
-      type: "initiativeRolled",
-      rolls: { P1: p1, P2: p2 },
+      type: "initiativeResolved",
+      winner: placementFirstPlayer,
+      P1sum: p1,
+      P2sum: p2,
+    },
+    {
+      type: "placementStarted",
       placementFirstPlayer,
     },
   ];
@@ -164,6 +195,78 @@ function applyChooseArena(
   ];
 
   return { state: newState, events };
+}
+
+function applyLobbyInit(
+  state: GameState,
+  action: Extract<GameAction, { type: "lobbyInit" }>
+): ApplyResult {
+  if (state.phase !== "lobby") {
+    return { state, events: [] };
+  }
+
+  const nextState: GameState = {
+    ...state,
+    hostPlayerId: action.host,
+    playersReady: { P1: false, P2: false },
+    seats: {
+      P1: action.host === "P1",
+      P2: action.host === "P2",
+    },
+    initiative: { P1: null, P2: null, winner: null },
+    placementFirstPlayer: null,
+    pendingRoll: null,
+    pendingMove: null,
+    activeUnitId: null,
+  };
+
+  return { state: nextState, events: [] };
+}
+
+function applySetReady(
+  state: GameState,
+  action: Extract<GameAction, { type: "setReady" }>
+): ApplyResult {
+  if (state.phase !== "lobby") {
+    return { state, events: [] };
+  }
+
+  if (state.seats && !state.seats[action.player]) {
+    return { state, events: [] };
+  }
+
+  const nextState: GameState = {
+    ...state,
+    playersReady: {
+      ...state.playersReady,
+      [action.player]: action.ready,
+    },
+  };
+
+  return { state: nextState, events: [] };
+}
+
+function applyStartGame(
+  state: GameState,
+  _action: Extract<GameAction, { type: "startGame" }>
+): ApplyResult {
+  if (state.phase !== "lobby") {
+    return { state, events: [] };
+  }
+
+  if (!state.playersReady.P1 || !state.playersReady.P2) {
+    return { state, events: [] };
+  }
+
+  const resetState: GameState = {
+    ...state,
+    initiative: { P1: null, P2: null, winner: null },
+    placementFirstPlayer: null,
+    pendingMove: null,
+    activeUnitId: null,
+  };
+
+  return requestInitiativeRoll(resetState, "P1");
 }
 
 
@@ -332,7 +435,10 @@ function applyUseAbility(
 export function createEmptyGame(): GameState {
   return {
     boardSize: 9,
-    phase: "placement",
+    phase: "lobby",
+    hostPlayerId: null,
+    playersReady: { P1: false, P2: false },
+    seats: { P1: false, P2: false },
     currentPlayer: "P1",
     turnNumber: 1,
     roundNumber: 1,
@@ -352,7 +458,7 @@ export function createEmptyGame(): GameState {
     units: {},
     events: [],
 
-    initiative: { P1: null, P2: null },
+    initiative: { P1: null, P2: null, winner: null },
     placementFirstPlayer: null,
     arenaId: null,
     startingUnitId: null,
@@ -461,6 +567,15 @@ export function applyAction(
 
     case "chooseArena":
       return applyChooseArena(state, action);
+
+    case "lobbyInit":
+      return applyLobbyInit(state, action);
+
+    case "setReady":
+      return applySetReady(state, action);
+
+    case "startGame":
+      return applyStartGame(state, action);
 
     case "unitStartTurn":
       return applyUnitStartTurn(state, action, rng);
@@ -1493,6 +1608,90 @@ function resolveMoveOptionsRoll(
   return { state: clearPendingRoll(newState), events };
 }
 
+function resolveInitiativeRoll(
+  state: GameState,
+  pending: PendingRoll,
+  rng: RNG
+): ApplyResult {
+  if (state.phase !== "lobby") {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  const roll = roll2D6(rng);
+  const nextInitiative = {
+    ...state.initiative,
+    [pending.player]: roll.sum,
+  } as GameState["initiative"];
+
+  const nextState: GameState = {
+    ...state,
+    initiative: nextInitiative,
+  };
+
+  const events: GameEvent[] = [
+    {
+      type: "initiativeRolled",
+      player: pending.player,
+      dice: roll.dice,
+      sum: roll.sum,
+    },
+  ];
+
+  if (pending.player === "P1") {
+    const requested = requestInitiativeRoll(clearPendingRoll(nextState), "P2");
+    return { state: requested.state, events: [...events, ...requested.events] };
+  }
+
+  const p1 = nextInitiative.P1;
+  const p2 = nextInitiative.P2;
+  if (p1 === null || p2 === null) {
+    return { state: clearPendingRoll(nextState), events };
+  }
+
+  if (p1 === p2) {
+    const resetState: GameState = {
+      ...nextState,
+      initiative: { P1: null, P2: null, winner: null },
+    };
+    const requested = requestInitiativeRoll(clearPendingRoll(resetState), "P1");
+    return { state: requested.state, events: [...events, ...requested.events] };
+  }
+
+  const winner: PlayerId = p1 > p2 ? "P1" : "P2";
+  const placementState: GameState = {
+    ...nextState,
+    phase: "placement",
+    currentPlayer: winner,
+    placementFirstPlayer: winner,
+    initiative: { ...nextInitiative, winner },
+    pendingRoll: null,
+    pendingMove: null,
+    activeUnitId: null,
+    placementOrder: [],
+    turnOrder: [],
+    turnQueue: [],
+    turnQueueIndex: 0,
+    turnOrderIndex: 0,
+    unitsPlaced: { P1: 0, P2: 0 },
+  };
+
+  const resolvedEvents: GameEvent[] = [
+    ...events,
+    {
+      type: "initiativeResolved",
+      winner,
+      P1sum: p1,
+      P2sum: p2,
+    },
+    {
+      type: "placementStarted",
+      placementFirstPlayer: winner,
+    },
+  ];
+
+  return { state: placementState, events: resolvedEvents };
+}
+
 interface AttackRollContext extends Record<string, unknown> {
   attackerId: string;
   defenderId: string;
@@ -2084,8 +2283,14 @@ function applyResolvePendingRoll(
   if (!pending || pending.id !== action.pendingRollId) {
     return { state, events: [] };
   }
+  if (pending.player !== action.player) {
+    return { state, events: [] };
+  }
 
   switch (pending.kind) {
+    case "initiativeRoll": {
+      return resolveInitiativeRoll(state, pending, rng);
+    }
     case "enterStealth": {
       const unitId = pending.context.unitId as string | undefined;
       if (!unitId) return { state: clearPendingRoll(state), events: [] };

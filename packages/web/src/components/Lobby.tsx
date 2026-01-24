@@ -8,7 +8,6 @@ export function Lobby() {
     roomsList,
     joinError,
     fetchRooms,
-    createRoom,
     joinRoom,
   } = useGameStore();
 
@@ -17,6 +16,12 @@ export function Lobby() {
   const [name, setName] = useState("");
   const [localError, setLocalError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [pendingJoinRoom, setPendingJoinRoom] = useState<{
+    id: string;
+    players: { P1: boolean; P2: boolean };
+  } | null>(null);
+  const [joinRole, setJoinRole] = useState<PlayerRole>("P1");
+  const [joinBusy, setJoinBusy] = useState(false);
 
   useEffect(() => {
     fetchRooms().catch((err) => {
@@ -37,13 +42,11 @@ export function Lobby() {
     setBusy(true);
     setLocalError(null);
     try {
-      const newRoomId = await createRoom();
-      setRoomId(newRoomId);
-      await joinRoom(
-        newRoomId,
+      await joinRoom({
+        mode: "create",
         role,
-        name.trim() ? name.trim() : undefined
-      );
+        name: name.trim() ? name.trim() : undefined,
+      });
       await fetchRooms();
     } catch (err) {
       setLocalError(err instanceof Error ? err.message : "Failed to create room");
@@ -60,7 +63,12 @@ export function Lobby() {
     }
     setLocalError(null);
     try {
-      await joinRoom(trimmed, role, name.trim() ? name.trim() : undefined);
+      await joinRoom({
+        mode: "join",
+        roomId: trimmed,
+        role,
+        name: name.trim() ? name.trim() : undefined,
+      });
     } catch (err) {
       setLocalError(err instanceof Error ? err.message : "Failed to join room");
     }
@@ -104,29 +112,26 @@ export function Lobby() {
                     <div className="text-[11px] text-slate-500">
                       Phase: {room.phase} | Spectators: {room.spectators}
                     </div>
+                    <div className="text-[11px] text-slate-500">
+                      Ready: P1 {room.ready.P1 ? "✓" : "—"} / P2{" "}
+                      {room.ready.P2 ? "✓" : "—"}
+                    </div>
                   </div>
                   <div className="flex items-center gap-2 text-[11px] text-slate-500">
-                    <span>P1: {room.p1Taken ? "taken" : "open"}</span>
-                    <span>P2: {room.p2Taken ? "taken" : "open"}</span>
+                    <span>P1: {room.players.P1 ? "taken" : "open"}</span>
+                    <span>P2: {room.players.P2 ? "taken" : "open"}</span>
                   </div>
                   <button
                     className="rounded bg-slate-200 px-2 py-1 text-[11px]"
                     onClick={async () => {
-                      setRoomId(room.id);
-                      setLocalError(null);
-                      try {
-                        await joinRoom(
-                          room.id,
-                          role,
-                          name.trim() ? name.trim() : undefined
-                        );
-                      } catch (err) {
-                        setLocalError(
-                          err instanceof Error
-                            ? err.message
-                            : "Failed to join room"
-                        );
-                      }
+                      const suggested =
+                        room.players.P1 && !room.players.P2
+                          ? "P2"
+                          : room.players.P2 && !room.players.P1
+                          ? "P1"
+                          : "spectator";
+                      setJoinRole(suggested);
+                      setPendingJoinRoom({ id: room.id, players: room.players });
                     }}
                   >
                     Join
@@ -190,6 +195,93 @@ export function Lobby() {
             </div>
           </div>
         </div>
+        {pendingJoinRoom && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40">
+            <div className="w-full max-w-sm rounded border border-slate-200 bg-white p-5 shadow-lg">
+              <div className="text-sm font-semibold text-slate-800">
+                Join room {pendingJoinRoom.id}
+              </div>
+              <div className="mt-2 space-y-2 text-xs text-slate-600">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="joinRole"
+                    value="P1"
+                    checked={joinRole === "P1"}
+                    disabled={pendingJoinRoom.players.P1}
+                    onChange={() => setJoinRole("P1")}
+                  />
+                  <span>P1 {pendingJoinRoom.players.P1 ? "(taken)" : ""}</span>
+                </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="joinRole"
+                    value="P2"
+                    checked={joinRole === "P2"}
+                    disabled={pendingJoinRoom.players.P2}
+                    onChange={() => setJoinRole("P2")}
+                  />
+                  <span>P2 {pendingJoinRoom.players.P2 ? "(taken)" : ""}</span>
+                </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="joinRole"
+                    value="spectator"
+                    checked={joinRole === "spectator"}
+                    onChange={() => setJoinRole("spectator")}
+                  />
+                  <span>Spectator</span>
+                </label>
+              </div>
+              <div className="mt-4 flex gap-2">
+                <button
+                  className="flex-1 rounded bg-slate-200 px-3 py-2 text-xs font-semibold"
+                  onClick={() => setPendingJoinRoom(null)}
+                  disabled={joinBusy}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="flex-1 rounded bg-slate-900 px-3 py-2 text-xs font-semibold text-white"
+                  onClick={async () => {
+                    if (!pendingJoinRoom) return;
+                    setJoinBusy(true);
+                    setLocalError(null);
+                    try {
+                      await joinRoom({
+                        mode: "join",
+                        roomId: pendingJoinRoom.id,
+                        role: joinRole,
+                        name: name.trim() ? name.trim() : undefined,
+                      });
+                      setPendingJoinRoom(null);
+                    } catch (err) {
+                      setLocalError(
+                        err instanceof Error ? err.message : "Failed to join room"
+                      );
+                    } finally {
+                      setJoinBusy(false);
+                    }
+                  }}
+                  disabled={
+                    joinBusy ||
+                    (joinRole === "P1" && pendingJoinRoom.players.P1) ||
+                    (joinRole === "P2" && pendingJoinRoom.players.P2)
+                  }
+                >
+                  {joinBusy ? "Joining..." : "Join"}
+                </button>
+              </div>
+              {(localError || joinError) && (
+                <div className="mt-3 rounded border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+                  {localError ?? joinError}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

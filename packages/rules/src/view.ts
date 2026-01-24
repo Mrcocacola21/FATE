@@ -151,3 +151,69 @@ export function makePlayerView(
     legalIntents: getLegalIntents(state, playerId),
   };
 }
+
+export function makeSpectatorView(state: GameState): PlayerView {
+  const {
+    pendingRoll,
+    rollCounter,
+    pendingCombatQueue,
+    pendingAoE,
+    ...baseState
+  } = state;
+  const units: Record<string, UnitState> = {};
+
+  for (const unit of Object.values(state.units)) {
+    if (!unit) continue;
+    if (unit.isAlive && unit.isStealthed) {
+      continue;
+    }
+    units[unit.id] = cloneUnit(unit);
+  }
+
+  const basePendingCount = pendingCombatQueue?.length ?? 0;
+  let pendingCombatQueueCount = basePendingCount;
+  if (
+    pendingCombatQueueCount === 0 &&
+    pendingRoll &&
+    (pendingRoll.kind === "tricksterAoE_attackerRoll" ||
+      pendingRoll.kind === "tricksterAoE_defenderRoll")
+  ) {
+    const ctx = pendingRoll.context as {
+      targetsQueue?: string[];
+      currentTargetIndex?: number;
+    };
+    const total = Array.isArray(ctx.targetsQueue) ? ctx.targetsQueue.length : 0;
+    const idx = typeof ctx.currentTargetIndex === "number" ? ctx.currentTargetIndex : 0;
+    pendingCombatQueueCount = Math.max(0, total - idx);
+  }
+
+  return {
+    ...baseState,
+    units,
+    knowledge: { P1: {}, P2: {} },
+    lastKnownPositions: {},
+    pendingRoll: null,
+    pendingCombatQueueCount,
+    pendingMove: null,
+    turnOrder: [...state.turnOrder],
+    placementOrder: [...state.placementOrder],
+    turnQueue: [...state.turnQueue],
+    initiative: { ...state.initiative },
+    unitsPlaced: { ...state.unitsPlaced },
+    events: [],
+    legal: {
+      placementsByUnitId: {},
+      movesByUnitId: {},
+      attackTargetsByUnitId: {},
+    },
+    legalIntents: {
+      canSearchMove: false,
+      canSearchAction: false,
+      searchMoveReason: "spectator",
+      searchActionReason: "spectator",
+      canMove: false,
+      canAttack: false,
+      canEnterStealth: false,
+    },
+  };
+}

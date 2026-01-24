@@ -27,17 +27,33 @@ export interface GameRoom {
   state: GameState;
   actionLog: ActionLogEntry[];
   createdAt: number;
+  hostConnId: string | null;
+  hostSeat: PlayerId;
+  seats: { P1: string | null; P2: string | null };
+  spectators: Set<string>;
 }
 
 export interface CreateGameOptions {
   seed?: number;
   arenaId?: string;
+  hostSeat?: PlayerId;
+  hostConnId?: string | null;
 }
 
 export interface ApplyActionResult {
   state: GameState;
   events: GameEvent[];
   logIndex: number;
+}
+
+export interface RoomSummary {
+  id: string;
+  createdAt: number;
+  phase: GameState["phase"];
+  players: { P1: boolean; P2: boolean };
+  spectators: number;
+  ready: { P1: boolean; P2: boolean };
+  canStart: boolean;
 }
 
 // TODO: replace with persistence-backed storage.
@@ -47,24 +63,42 @@ function nextSeed(): number {
   return Math.floor(Math.random() * 1_000_000_000) + 1;
 }
 
-function createGameRoomWithId(
+export function createGameRoomWithId(
   id: string,
   options: CreateGameOptions = {}
 ): GameRoom {
   const seed = options.seed ?? nextSeed();
   const rng = new SeededRNG(seed);
+  const hostSeat: PlayerId = options.hostSeat ?? "P1";
+  const hostConnId = options.hostConnId ?? null;
 
   let state = createEmptyGame();
   state = attachArmy(state, createDefaultArmy("P1"));
   state = attachArmy(state, createDefaultArmy("P2"));
+  state = applyAction(state, { type: "lobbyInit", host: hostSeat }, rng).state;
 
   if (options.arenaId) {
-    state = applyAction(state, { type: "rollInitiative" }, rng).state;
-    state = applyAction(
-      state,
-      { type: "chooseArena", arenaId: options.arenaId },
-      rng
-    ).state;
+    state = { ...state, arenaId: options.arenaId };
+  }
+
+  if (!hostConnId) {
+    state = {
+      ...state,
+      seats: { P1: false, P2: false },
+    };
+  }
+
+  const seats: { P1: string | null; P2: string | null } = {
+    P1: null,
+    P2: null,
+  };
+  if (hostConnId) {
+    seats[hostSeat] = hostConnId;
+    state = {
+      ...state,
+      seats: { ...state.seats, [hostSeat]: true },
+      playersReady: { ...state.playersReady, [hostSeat]: false },
+    };
   }
 
   const room: GameRoom = {
@@ -74,6 +108,10 @@ function createGameRoomWithId(
     state,
     actionLog: [],
     createdAt: Date.now(),
+    hostConnId,
+    hostSeat,
+    seats,
+    spectators: new Set<string>(),
   };
 
   games.set(room.id, room);
@@ -99,6 +137,33 @@ export function getOrCreateGameRoom(
 
 export function listGameRooms(): GameRoom[] {
   return Array.from(games.values());
+}
+
+export function listRoomSummaries(): RoomSummary[] {
+  return listGameRooms().map((room) => {
+    const players = {
+      P1: !!room.seats.P1,
+      P2: !!room.seats.P2,
+    };
+    const ready = room.state.playersReady;
+    const canStart =
+      room.state.phase === "lobby" &&
+      players.P1 &&
+      players.P2 &&
+      ready.P1 &&
+      ready.P2 &&
+      !room.state.pendingRoll;
+
+    return {
+      id: room.id,
+      createdAt: room.createdAt,
+      phase: room.state.phase,
+      players,
+      spectators: room.spectators.size,
+      ready,
+      canStart,
+    };
+  });
 }
 
 export function applyGameAction(

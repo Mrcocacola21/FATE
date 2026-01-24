@@ -3,7 +3,6 @@
 import assert from "assert";
 import WebSocket from "ws";
 import { buildServer } from "../index";
-import { createGameRoom } from "../store";
 
 function collectMessages(ws: WebSocket) {
   const queue: unknown[] = [];
@@ -40,6 +39,32 @@ function waitForType(
   });
 }
 
+function waitForRoomState(
+  queue: unknown[],
+  predicate: (msg: { type?: string; meta?: any }) => boolean,
+  timeoutMs = 2000
+): Promise<unknown> {
+  return new Promise((resolve, reject) => {
+    const start = Date.now();
+    const tick = () => {
+      const msg = queue.find((item) => {
+        const payload = item as { type?: string; meta?: any };
+        return payload.type === "roomState" && predicate(payload);
+      });
+      if (msg) {
+        resolve(msg);
+        return;
+      }
+      if (Date.now() - start > timeoutMs) {
+        reject(new Error("Timed out waiting for matching roomState"));
+        return;
+      }
+      setTimeout(tick, 20);
+    };
+    tick();
+  });
+}
+
 async function main() {
   const server = await buildServer();
   await server.listen({ port: 0, host: "127.0.0.1" });
@@ -50,47 +75,91 @@ async function main() {
     throw new Error("Unable to determine server address");
   }
 
-  const room = createGameRoom();
   const wsUrl = `ws://127.0.0.1:${address.port}/ws`;
-  const ws = new WebSocket(wsUrl);
+  const ws1 = new WebSocket(wsUrl);
+  const ws2 = new WebSocket(wsUrl);
 
-  await new Promise<void>((resolve, reject) => {
-    ws.once("open", () => resolve());
-    ws.once("error", (err) => reject(err));
-  });
+  await Promise.all([
+    new Promise<void>((resolve, reject) => {
+      ws1.once("open", () => resolve());
+      ws1.once("error", (err) => reject(err));
+    }),
+    new Promise<void>((resolve, reject) => {
+      ws2.once("open", () => resolve());
+      ws2.once("error", (err) => reject(err));
+    }),
+  ]);
 
-  const queue = collectMessages(ws);
+  const queue1 = collectMessages(ws1);
+  const queue2 = collectMessages(ws2);
 
-  ws.send(
+  ws1.send(
     JSON.stringify({
       type: "joinRoom",
-      roomId: room.id,
-      requestedRole: "P1",
+      mode: "create",
+      role: "P1",
     })
   );
 
-  await waitForType(queue, "joinAccepted");
-  await waitForType(queue, "roomState");
+  const joinAck = (await waitForType(queue1, "joinAck")) as {
+    type: string;
+    roomId: string;
+  };
+  const roomId = joinAck.roomId;
+  await waitForType(queue1, "roomState");
 
-  ws.send(
+  ws2.send(
     JSON.stringify({
-      type: "action",
-      action: { type: "rollInitiative" },
+      type: "joinRoom",
+      mode: "join",
+      roomId,
+      role: "P2",
     })
   );
 
-  const actionMsg = await waitForType(queue, "actionResult");
-  const actionResult = actionMsg as { type?: string; error?: string };
-  assert(
-    actionResult.type === "actionResult",
-    "actionResult should be emitted after action"
-  );
-  assert(
-    actionResult.error !== "Must join a room first",
-    "action should not fail with join error after join"
+  await waitForType(queue2, "joinAck");
+  await waitForType(queue2, "roomState");
+
+  ws1.send(JSON.stringify({ type: "setReady", ready: true }));
+  ws2.send(JSON.stringify({ type: "setReady", ready: true }));
+
+  await waitForRoomState(queue1, (msg) => {
+    const ready = msg.meta?.ready as { P1?: boolean; P2?: boolean } | undefined;
+    return !!ready?.P1 && !!ready?.P2;
+  });
+
+  ws1.send(
+    JSON.stringify({
+      type: "startGame",
+    })
   );
 
-  ws.close();
+  const pendingState = (await waitForRoomState(queue1, (msg) => {
+    return msg.meta?.pendingRoll?.player === "P1";
+  })) as {
+    type: string;
+    meta: { pendingRoll?: { id: string; kind: string; player: string } };
+  };
+
+  assert(
+    pendingState.meta.pendingRoll?.kind === "initiativeRoll",
+    "initiative roll should be requested after startGame"
+  );
+  assert(pendingState.meta.pendingRoll?.id, "pending roll id should be present");
+
+  ws1.send(
+    JSON.stringify({
+      type: "resolvePendingRoll",
+      pendingRollId: pendingState.meta.pendingRoll?.id,
+    })
+  );
+
+  await waitForRoomState(queue1, (msg) => {
+    return msg.meta?.pendingRoll?.player === "P2";
+  });
+
+  ws1.close();
+  ws2.close();
   await server.close();
   console.log("ws_smoke passed");
 }

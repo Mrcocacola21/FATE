@@ -5,8 +5,8 @@ import { GameAction, PlayerId, makePlayerView } from "rules";
 import { z } from "zod";
 import { CreateGameBodySchema, GameActionSchema, PlayerIdSchema } from "./schemas";
 import { isActionAllowedByPlayer } from "./permissions";
-import { applyGameAction, createGameRoom, getGameRoom } from "./store";
-import { broadcastActionResult, broadcastRoomState, listRoomSummaries } from "./ws";
+import { applyGameAction, createGameRoom, getGameRoom, listRoomSummaries } from "./store";
+import { broadcastActionResult, broadcastRoomState } from "./ws";
 
 function parsePlayerId(request: FastifyRequest): PlayerId | null {
   const raw = (request.query as { playerId?: string }).playerId;
@@ -126,7 +126,14 @@ export async function registerRoutes(server: FastifyInstance) {
         return sendValidationError(reply, parsed.error);
       }
 
-      const action: GameAction = parsed.data;
+      const parsedAction = parsed.data;
+      const action: GameAction =
+        parsedAction.type === "resolvePendingRoll"
+          ? ({
+              ...parsedAction,
+              player: parsedAction.player ?? playerId,
+            } as GameAction)
+          : (parsedAction as GameAction);
       if (!isActionAllowedByPlayer(room.state, action, playerId)) {
         reply.code(403).send({ error: "Action not allowed for this player" });
         return;
@@ -138,7 +145,7 @@ export async function registerRoutes(server: FastifyInstance) {
         playerId
       );
 
-      broadcastRoomState(room.id, state);
+      broadcastRoomState(room);
       broadcastActionResult({
         gameId: room.id,
         ok: true,

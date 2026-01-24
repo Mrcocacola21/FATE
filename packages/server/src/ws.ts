@@ -3,40 +3,62 @@
 import type { FastifyInstance } from "fastify";
 import { randomUUID } from "node:crypto";
 import WebSocket, { type RawData } from "ws";
-import type { Coord, GameAction, GameEvent, GameState, PlayerId, PlayerView } from "rules";
-import { makePlayerView } from "rules";
+import type {
+  Coord,
+  GameAction,
+  GameEvent,
+  GameState,
+  PlayerId,
+  PlayerView,
+  RollKind,
+} from "rules";
+import { makePlayerView, makeSpectatorView } from "rules";
 import { ClientMessageSchema } from "./schemas";
 import { isActionAllowedByPlayer } from "./permissions";
-import { applyGameAction, getGameRoom, listGameRooms } from "./store";
+import {
+  applyGameAction,
+  createGameRoom,
+  createGameRoomWithId,
+  getGameRoom,
+  type GameRoom,
+} from "./store";
 
 export type PlayerRole = PlayerId | "spectator";
 
-export interface RoomSummary {
-  id: string;
-  createdAt: number;
-  phase: GameState["phase"];
-  p1Taken: boolean;
-  p2Taken: boolean;
+type RoomMeta = {
+  ready: { P1: boolean; P2: boolean };
+  players: { P1: boolean; P2: boolean };
   spectators: number;
-}
-
-type JoinAcceptedMessage = {
-  type: "joinAccepted";
-  roomId: string;
-  role: PlayerRole;
-  connId: string;
-};
-
-type JoinRejectedMessage = {
-  type: "joinRejected";
-  reason: "room_not_found" | "role_taken";
-  message: string;
+  phase: GameState["phase"];
+  pendingRoll: { id: string; kind: RollKind; player: PlayerId } | null;
+  initiative: {
+    P1: number | null;
+    P2: number | null;
+    winner: PlayerId | null;
+  };
+  placementFirstPlayer: PlayerId | null;
 };
 
 type RoomStateMessage = {
   type: "roomState";
   roomId: string;
-  room: PlayerView;
+  you: { role: PlayerRole; seat?: PlayerId; isHost: boolean };
+  view: PlayerView;
+  meta: RoomMeta;
+};
+
+type JoinAckMessage = {
+  type: "joinAck";
+  roomId: string;
+  role: PlayerRole;
+  seat?: PlayerId;
+  isHost: boolean;
+};
+
+type JoinRejectedMessage = {
+  type: "joinRejected";
+  reason: "room_not_found" | "role_taken" | "room_exists";
+  message: string;
 };
 
 type ActionResultMessage = {
@@ -57,12 +79,13 @@ type MoveOptionsMessage = {
 type ErrorMessage = {
   type: "error";
   message: string;
+  code?: string;
 };
 
 type ServerMessage =
-  | JoinAcceptedMessage
-  | JoinRejectedMessage
   | RoomStateMessage
+  | JoinAckMessage
+  | JoinRejectedMessage
   | ActionResultMessage
   | MoveOptionsMessage
   | ErrorMessage;
@@ -70,18 +93,13 @@ type ServerMessage =
 interface ConnectionMeta {
   roomId: string;
   role: PlayerRole;
+  seat: PlayerId | null;
   connId: string;
   name?: string;
 }
 
-interface RoomPresence {
-  players: { P1?: string; P2?: string };
-  spectators: Set<string>;
-}
-
 const roomSockets = new Map<string, Set<WebSocket>>();
 const socketMeta = new Map<WebSocket, ConnectionMeta>();
-const roomPresence = new Map<string, RoomPresence>();
 
 function sendMessage(socket: WebSocket, message: ServerMessage) {
   if (socket.readyState !== WebSocket.OPEN) return;
@@ -95,137 +113,184 @@ function rawDataToString(data: RawData): string {
   return Buffer.from(data).toString();
 }
 
-function getPresence(roomId: string): RoomPresence {
-  let presence = roomPresence.get(roomId);
-  if (!presence) {
-    presence = { players: {}, spectators: new Set<string>() };
-    roomPresence.set(roomId, presence);
-  }
-  return presence;
-}
-
 function viewForRole(state: GameState, role: PlayerRole): PlayerView {
   if (role === "spectator") {
-    const view = makePlayerView(state, "P1");
-    return {
-      ...view,
-      legalIntents: {
-        canSearchMove: false,
-        canSearchAction: false,
-        searchMoveReason: "spectator",
-        searchActionReason: "spectator",
-        canMove: false,
-        canAttack: false,
-        canEnterStealth: false,
-      },
-    };
+    return makeSpectatorView(state);
   }
   return makePlayerView(state, role);
 }
 
-function removeSocketFromRoom(socket: WebSocket, roomId: string) {
-  const sockets = roomSockets.get(roomId);
-  if (sockets) {
-    sockets.delete(socket);
-    if (sockets.size === 0) {
-      roomSockets.delete(roomId);
-    }
-  }
-}
-
-function releasePresence(roomId: string, role: PlayerRole, connId: string) {
-  const presence = roomPresence.get(roomId);
-  if (!presence) return;
-
-  if (role === "spectator") {
-    presence.spectators.delete(connId);
-  } else if (presence.players[role] === connId) {
-    delete presence.players[role];
-  }
-
-  if (
-    !presence.players.P1 &&
-    !presence.players.P2 &&
-    presence.spectators.size === 0
-  ) {
-    roomPresence.delete(roomId);
-  }
-}
-
-function leaveRoomForSocket(socket: WebSocket) {
-  const meta = socketMeta.get(socket);
-  if (!meta) return;
-
-  removeSocketFromRoom(socket, meta.roomId);
-  releasePresence(meta.roomId, meta.role, meta.connId);
-  socketMeta.delete(socket);
-
-  const room = getGameRoom(meta.roomId);
-  if (room) {
-    broadcastRoomState(room.id, room.state);
-  }
-}
-
-function registerSocket(socket: WebSocket, meta: ConnectionMeta) {
-  const existing = socketMeta.get(socket);
-  if (existing) {
-    leaveRoomForSocket(socket);
-  }
-
-  socketMeta.set(socket, meta);
-
-  let sockets = roomSockets.get(meta.roomId);
+function addSocketToRoom(roomId: string, socket: WebSocket) {
+  let sockets = roomSockets.get(roomId);
   if (!sockets) {
     sockets = new Set<WebSocket>();
-    roomSockets.set(meta.roomId, sockets);
+    roomSockets.set(roomId, sockets);
   }
   sockets.add(socket);
 }
 
-function sendRoomState(socket: WebSocket, roomId: string, role: PlayerRole) {
-  const room = getGameRoom(roomId);
-  if (!room) return;
-  const view = viewForRole(room.state, role);
-  sendMessage(socket, { type: "roomState", roomId, room: view });
+function removeSocketFromRoom(roomId: string, socket: WebSocket) {
+  const sockets = roomSockets.get(roomId);
+  if (!sockets) return;
+  sockets.delete(socket);
+  if (sockets.size === 0) {
+    roomSockets.delete(roomId);
+  }
 }
 
-function getMoveOptions(
-  events: GameEvent[],
-  unitId: string
-): { roll: number | null; legalTo: Coord[] } | null {
-  const event = events.find(
-    (item) => item.type === "moveOptionsGenerated" && item.unitId === unitId
-  );
-  if (!event || event.type !== "moveOptionsGenerated") return null;
-  return {
-    roll: event.roll ?? null,
-    legalTo: event.legalTo,
+function assignSeat(room: GameRoom, seat: PlayerId, connId: string): boolean {
+  const current = room.seats[seat];
+  if (current && current !== connId) return false;
+  const isNew = !current || current !== connId;
+  room.seats[seat] = connId;
+  room.state = {
+    ...room.state,
+    seats: { ...room.state.seats, [seat]: true },
+    playersReady: {
+      ...room.state.playersReady,
+      [seat]: isNew ? false : room.state.playersReady[seat],
+    },
+  };
+  return true;
+}
+
+function vacateSeat(room: GameRoom, seat: PlayerId, connId: string) {
+  if (room.seats[seat] !== connId) return;
+  room.seats[seat] = null;
+  room.state = {
+    ...room.state,
+    seats: { ...room.state.seats, [seat]: false },
+    playersReady: { ...room.state.playersReady, [seat]: false },
   };
 }
 
-function handleAction(socket: WebSocket, action: GameAction) {
-  const meta = socketMeta.get(socket);
-  if (!meta) {
-    sendMessage(socket, {
-      type: "error",
-      message: "Must join a room first",
-    });
-    return;
+function updateHost(room: GameRoom) {
+  const hostConnId = room.hostConnId;
+  if (!hostConnId) return;
+  const stillConnected =
+    room.seats.P1 === hostConnId ||
+    room.seats.P2 === hostConnId ||
+    room.spectators.has(hostConnId);
+  if (stillConnected) return;
+
+  if (room.seats.P1) {
+    room.hostConnId = room.seats.P1;
+    room.hostSeat = "P1";
+  } else if (room.seats.P2) {
+    room.hostConnId = room.seats.P2;
+    room.hostSeat = "P2";
+  } else {
+    const nextSpectator = room.spectators.values().next().value as string | undefined;
+    room.hostConnId = nextSpectator ?? null;
   }
 
-  if (meta.role === "spectator") {
+  room.state = {
+    ...room.state,
+    hostPlayerId: room.hostSeat,
+  };
+}
+
+function buildRoomMeta(room: GameRoom): RoomMeta {
+  const ready = room.state.playersReady ?? { P1: false, P2: false };
+  const initiative = room.state.initiative ?? {
+    P1: null,
+    P2: null,
+    winner: null,
+  };
+  return {
+    ready: {
+      P1: ready.P1 ?? false,
+      P2: ready.P2 ?? false,
+    },
+    players: { P1: !!room.seats.P1, P2: !!room.seats.P2 },
+    spectators: room.spectators.size,
+    phase: room.state.phase ?? "lobby",
+    pendingRoll: room.state.pendingRoll
+      ? {
+          id: room.state.pendingRoll.id,
+          kind: room.state.pendingRoll.kind,
+          player: room.state.pendingRoll.player,
+        }
+      : null,
+    initiative: {
+      P1: initiative.P1 ?? null,
+      P2: initiative.P2 ?? null,
+      winner: initiative.winner ?? null,
+    },
+    placementFirstPlayer: room.state.placementFirstPlayer ?? null,
+  };
+}
+
+function sendRoomState(socket: WebSocket, room: GameRoom) {
+  const meta = socketMeta.get(socket);
+  if (!meta) return;
+  const view = viewForRole(room.state, meta.role);
+  const you = {
+    role: meta.role,
+    seat: meta.seat ?? undefined,
+    isHost: room.hostConnId === meta.connId,
+  };
+  sendMessage(socket, {
+    type: "roomState",
+    roomId: room.id,
+    you,
+    view,
+    meta: buildRoomMeta(room),
+  });
+}
+
+export function broadcastRoomState(room: GameRoom) {
+  const sockets = roomSockets.get(room.id);
+  if (!sockets || sockets.size === 0) return;
+  for (const socket of sockets) {
+    sendRoomState(socket, room);
+  }
+}
+
+export function broadcastActionResult(payload: {
+  gameId: string;
+  ok: boolean;
+  events: GameEvent[];
+  logIndex?: number;
+  error?: string;
+}) {
+  const sockets = roomSockets.get(payload.gameId);
+  if (!sockets || sockets.size === 0) return;
+  for (const socket of sockets) {
+    sendMessage(socket, {
+      type: "actionResult",
+      ok: payload.ok,
+      events: payload.events,
+      error: payload.error,
+      logIndex: payload.logIndex,
+    });
+  }
+}
+
+function sendMoveOptionsIfAny(socket: WebSocket, events: GameEvent[]) {
+  const moveEvent = events.find(
+    (item) => item.type === "moveOptionsGenerated"
+  );
+  if (!moveEvent || moveEvent.type !== "moveOptionsGenerated") return;
+  sendMessage(socket, {
+    type: "moveOptions",
+    unitId: moveEvent.unitId,
+    roll: moveEvent.roll ?? null,
+    legalTo: moveEvent.legalTo,
+  });
+}
+
+function applyRoomAction(
+  socket: WebSocket,
+  room: GameRoom,
+  meta: ConnectionMeta,
+  action: GameAction
+) {
+  if (meta.role === "spectator" || !meta.seat) {
     sendMessage(socket, {
       type: "error",
       message: "Spectators cannot act",
-    });
-    return;
-  }
-
-  const room = getGameRoom(meta.roomId);
-  if (!room) {
-    sendMessage(socket, {
-      type: "error",
-      message: "Room not found",
+      code: "spectator",
     });
     return;
   }
@@ -250,7 +315,7 @@ function handleAction(socket: WebSocket, action: GameAction) {
     return;
   }
 
-  if (!isActionAllowedByPlayer(room.state, action, meta.role)) {
+  if (!isActionAllowedByPlayer(room.state, action, meta.seat)) {
     sendMessage(socket, {
       type: "actionResult",
       ok: false,
@@ -260,89 +325,10 @@ function handleAction(socket: WebSocket, action: GameAction) {
     return;
   }
 
-  const { events, logIndex } = applyGameAction(room, action, meta.role);
-
-  broadcastRoomState(room.id, room.state);
+  const { events, logIndex } = applyGameAction(room, action, meta.seat);
+  broadcastRoomState(room);
   broadcastActionResult({ gameId: room.id, ok: true, events, logIndex });
-
-  const moveEvent = events.find(
-    (item) => item.type === "moveOptionsGenerated"
-  );
-  if (moveEvent && moveEvent.type === "moveOptionsGenerated") {
-    sendMessage(socket, {
-      type: "moveOptions",
-      unitId: moveEvent.unitId,
-      roll: moveEvent.roll ?? null,
-      legalTo: moveEvent.legalTo,
-    });
-  }
-}
-
-function tryAssignRole(
-  roomId: string,
-  role: PlayerRole,
-  connId: string
-): boolean {
-  const presence = getPresence(roomId);
-  if (role === "spectator") {
-    presence.spectators.add(connId);
-    return true;
-  }
-
-  const current = presence.players[role];
-  if (current && current !== connId) {
-    return false;
-  }
-
-  presence.players[role] = connId;
-  return true;
-}
-
-export function listRoomSummaries(): RoomSummary[] {
-  return listGameRooms().map((room) => {
-    const presence = roomPresence.get(room.id);
-    return {
-      id: room.id,
-      createdAt: room.createdAt,
-      phase: room.state.phase,
-      p1Taken: !!presence?.players.P1,
-      p2Taken: !!presence?.players.P2,
-      spectators: presence?.spectators.size ?? 0,
-    };
-  });
-}
-
-export function broadcastRoomState(roomId: string, state: GameState) {
-  const sockets = roomSockets.get(roomId);
-  if (!sockets || sockets.size === 0) return;
-
-  for (const socket of sockets) {
-    const meta = socketMeta.get(socket);
-    if (!meta) continue;
-    const view = viewForRole(state, meta.role);
-    sendMessage(socket, { type: "roomState", roomId, room: view });
-  }
-}
-
-export function broadcastActionResult(payload: {
-  gameId: string;
-  ok: boolean;
-  events: GameEvent[];
-  logIndex?: number;
-  error?: string;
-}) {
-  const sockets = roomSockets.get(payload.gameId);
-  if (!sockets || sockets.size === 0) return;
-
-  for (const socket of sockets) {
-    sendMessage(socket, {
-      type: "actionResult",
-      ok: payload.ok,
-      events: payload.events,
-      error: payload.error,
-      logIndex: payload.logIndex,
-    });
-  }
+  sendMoveOptionsIfAny(socket, events);
 }
 
 export function registerGameWebSocket(server: FastifyInstance) {
@@ -368,7 +354,80 @@ export function registerGameWebSocket(server: FastifyInstance) {
       const msg = message.data;
       switch (msg.type) {
         case "joinRoom": {
-          const room = getGameRoom(msg.roomId);
+          const existing = socketMeta.get(socket);
+          if (existing) {
+            const prevRoom = getGameRoom(existing.roomId);
+            if (prevRoom) {
+              if (existing.seat) {
+                vacateSeat(prevRoom, existing.seat, existing.connId);
+              } else {
+                prevRoom.spectators.delete(existing.connId);
+              }
+              updateHost(prevRoom);
+              broadcastRoomState(prevRoom);
+            }
+            removeSocketFromRoom(existing.roomId, socket);
+            socketMeta.delete(socket);
+          }
+
+          const connId = randomUUID();
+          let room: GameRoom | undefined;
+          let seat: PlayerId | null = null;
+
+          if (msg.mode === "create") {
+            const isSeatRole = msg.role === "P1" || msg.role === "P2";
+            const hostSeat: PlayerId =
+              msg.role === "P1" || msg.role === "P2" ? msg.role : "P1";
+            const hostConnForState = isSeatRole ? connId : null;
+            if (msg.roomId && getGameRoom(msg.roomId)) {
+              sendMessage(socket, {
+                type: "joinRejected",
+                reason: "room_exists",
+                message: "Room already exists",
+              });
+              return;
+            }
+            room = msg.roomId
+              ? createGameRoomWithId(msg.roomId, {
+                  hostSeat,
+                  hostConnId: hostConnForState,
+                })
+              : createGameRoom({ hostSeat, hostConnId: hostConnForState });
+
+            room.hostConnId = connId;
+            room.hostSeat = hostSeat;
+            room.state = {
+              ...room.state,
+              hostPlayerId: hostSeat,
+              seats: isSeatRole ? room.state.seats : { P1: false, P2: false },
+            };
+          } else {
+            if (!msg.roomId) {
+              sendMessage(socket, {
+                type: "joinRejected",
+                reason: "room_not_found",
+                message: "Room not found",
+              });
+              return;
+            }
+            room = getGameRoom(msg.roomId);
+            if (!room) {
+              sendMessage(socket, {
+                type: "joinRejected",
+                reason: "room_not_found",
+                message: "Room not found",
+              });
+              return;
+            }
+            if (!room.hostConnId) {
+              room.hostConnId = connId;
+              if (msg.role === "P1" || msg.role === "P2") {
+                room.hostSeat = msg.role;
+                room.state = { ...room.state, hostPlayerId: msg.role };
+              }
+            }
+          }
+
           if (!room) {
             sendMessage(socket, {
               type: "joinRejected",
@@ -378,57 +437,280 @@ export function registerGameWebSocket(server: FastifyInstance) {
             return;
           }
 
-          leaveRoomForSocket(socket);
-          const connId = randomUUID();
-          const accepted = tryAssignRole(room.id, msg.requestedRole, connId);
-          if (!accepted) {
-            sendMessage(socket, {
-              type: "joinRejected",
-              reason: "role_taken",
-              message: "Requested role is already taken",
-            });
-            return;
+          if (msg.role === "P1" || msg.role === "P2") {
+            seat = msg.role;
+            const assigned = assignSeat(room, seat, connId);
+            if (!assigned) {
+              sendMessage(socket, {
+                type: "joinRejected",
+                reason: "role_taken",
+                message: "Requested role is already taken",
+              });
+              return;
+            }
+          } else {
+            room.spectators.add(connId);
           }
 
-          registerSocket(socket, {
+          socketMeta.set(socket, {
             roomId: room.id,
-            role: msg.requestedRole,
+            role: msg.role,
+            seat,
             connId,
             name: msg.name,
           });
-          server.log.info(
-            { roomId: room.id, role: msg.requestedRole, connId },
-            "ws client joined room"
-          );
+          addSocketToRoom(room.id, socket);
+
           sendMessage(socket, {
-            type: "joinAccepted",
+            type: "joinAck",
             roomId: room.id,
-            role: msg.requestedRole,
-            connId,
+            role: msg.role,
+            seat: seat ?? undefined,
+            isHost: room.hostConnId === connId,
           });
-          sendRoomState(socket, room.id, msg.requestedRole);
+
+          broadcastRoomState(room);
+          break;
+        }
+        case "switchRole": {
+          const meta = socketMeta.get(socket);
+          if (!meta) {
+            sendMessage(socket, {
+              type: "error",
+              message: "Must join a room first",
+            });
+            return;
+          }
+          const room = getGameRoom(meta.roomId);
+          if (!room) {
+            sendMessage(socket, { type: "error", message: "Room not found" });
+            return;
+          }
+
+          if (meta.seat) {
+            vacateSeat(room, meta.seat, meta.connId);
+          } else {
+            room.spectators.delete(meta.connId);
+          }
+
+          updateHost(room);
+
+          if (msg.role === "P1" || msg.role === "P2") {
+            const assigned = assignSeat(room, msg.role, meta.connId);
+            if (!assigned) {
+              sendMessage(socket, {
+                type: "error",
+                message: "Requested role is already taken",
+                code: "role_taken",
+              });
+              return;
+            }
+            meta.role = msg.role;
+            meta.seat = msg.role;
+          } else {
+            room.spectators.add(meta.connId);
+            meta.role = "spectator";
+            meta.seat = null;
+          }
+
+          socketMeta.set(socket, meta);
+          broadcastRoomState(room);
           break;
         }
         case "leaveRoom": {
           const meta = socketMeta.get(socket);
-          if (meta) {
-            server.log.info(
-              { roomId: meta.roomId, role: meta.role, connId: meta.connId },
-              "ws client left room"
-            );
+          if (!meta) return;
+          const room = getGameRoom(meta.roomId);
+          if (room) {
+            if (meta.seat) {
+              vacateSeat(room, meta.seat, meta.connId);
+            } else {
+              room.spectators.delete(meta.connId);
+            }
+            updateHost(room);
+            broadcastRoomState(room);
           }
-          leaveRoomForSocket(socket);
+          removeSocketFromRoom(meta.roomId, socket);
+          socketMeta.delete(socket);
           break;
         }
-        case "action": {
-          handleAction(socket, msg.action);
+        case "setReady": {
+          const meta = socketMeta.get(socket);
+          if (!meta || !meta.seat) {
+            sendMessage(socket, {
+              type: "error",
+              message: "Only seated players can ready up",
+              code: "not_seated",
+            });
+            return;
+          }
+          const room = getGameRoom(meta.roomId);
+          if (!room) {
+            sendMessage(socket, { type: "error", message: "Room not found" });
+            return;
+          }
+          if (room.state.phase !== "lobby") {
+            sendMessage(socket, {
+              type: "error",
+              message: "Ready-up is only available in the lobby",
+              code: "not_lobby",
+            });
+            return;
+          }
+
+          const action: GameAction = {
+            type: "setReady",
+            player: meta.seat,
+            ready: msg.ready,
+          };
+
+          const { events, logIndex } = applyGameAction(room, action, meta.seat);
+          broadcastRoomState(room);
+          broadcastActionResult({ gameId: room.id, ok: true, events, logIndex });
+          break;
+        }
+        case "startGame": {
+          const meta = socketMeta.get(socket);
+          if (!meta) {
+            sendMessage(socket, {
+              type: "error",
+              message: "Must join a room first",
+            });
+            return;
+          }
+          const room = getGameRoom(meta.roomId);
+          if (!room) {
+            sendMessage(socket, { type: "error", message: "Room not found" });
+            return;
+          }
+          if (room.hostConnId !== meta.connId) {
+            sendMessage(socket, {
+              type: "error",
+              message: "Only the host can start the game",
+              code: "not_host",
+            });
+            return;
+          }
+          if (room.state.phase !== "lobby") {
+            sendMessage(socket, {
+              type: "error",
+              message: "Game can only be started from the lobby",
+              code: "not_lobby",
+            });
+            return;
+          }
+          if (room.state.pendingRoll) {
+            sendMessage(socket, {
+              type: "error",
+              message: "Initiative roll already in progress",
+              code: "pending_roll",
+            });
+            return;
+          }
+
+          const playersReady = room.state.playersReady;
+          if (!room.seats.P1 || !room.seats.P2 || !playersReady.P1 || !playersReady.P2) {
+            sendMessage(socket, {
+              type: "error",
+              message: "Both players must be seated and ready",
+              code: "not_ready",
+            });
+            return;
+          }
+
+          const action: GameAction = { type: "startGame" };
+          const { events, logIndex } = applyGameAction(room, action, meta.seat ?? room.hostSeat);
+          broadcastRoomState(room);
+          broadcastActionResult({ gameId: room.id, ok: true, events, logIndex });
+          break;
+        }
+        case "resolvePendingRoll": {
+          const meta = socketMeta.get(socket);
+          if (!meta || !meta.seat) {
+            sendMessage(socket, {
+              type: "error",
+              message: "Only seated players can roll",
+              code: "not_seated",
+            });
+            return;
+          }
+          const room = getGameRoom(meta.roomId);
+          if (!room) {
+            sendMessage(socket, { type: "error", message: "Room not found" });
+            return;
+          }
+
+          const pending = room.state.pendingRoll;
+          if (!pending || pending.player !== meta.seat) {
+            sendMessage(socket, {
+              type: "error",
+              message: "Not your pending roll",
+              code: "pending_roll",
+            });
+            return;
+          }
+
+          const action: GameAction = {
+            type: "resolvePendingRoll",
+            pendingRollId: msg.pendingRollId,
+            choice: msg.choice,
+            player: meta.seat,
+          };
+
+          const { events, logIndex } = applyGameAction(room, action, meta.seat);
+          broadcastRoomState(room);
+          broadcastActionResult({ gameId: room.id, ok: true, events, logIndex });
+          sendMoveOptionsIfAny(socket, events);
           break;
         }
         case "requestMoveOptions": {
-          handleAction(socket, {
-            type: "requestMoveOptions",
-            unitId: msg.unitId,
-          });
+          const meta = socketMeta.get(socket);
+          if (!meta) {
+            sendMessage(socket, { type: "error", message: "Must join a room first" });
+            return;
+          }
+          const room = getGameRoom(meta.roomId);
+          if (!room) {
+            sendMessage(socket, { type: "error", message: "Room not found" });
+            return;
+          }
+          const action: GameAction = { type: "requestMoveOptions", unitId: msg.unitId };
+          applyRoomAction(socket, room, meta, action);
+          break;
+        }
+        case "action": {
+          const meta = socketMeta.get(socket);
+          if (!meta) {
+            sendMessage(socket, { type: "error", message: "Must join a room first" });
+            return;
+          }
+          const room = getGameRoom(meta.roomId);
+          if (!room) {
+            sendMessage(socket, { type: "error", message: "Room not found" });
+            return;
+          }
+
+          if (
+            msg.action.type === "lobbyInit" ||
+            msg.action.type === "setReady" ||
+            msg.action.type === "startGame"
+          ) {
+            sendMessage(socket, {
+              type: "error",
+              message: "Invalid action type for this channel",
+            });
+            return;
+          }
+
+          const normalizedAction: GameAction =
+            msg.action.type === "resolvePendingRoll"
+              ? {
+                  ...msg.action,
+                  player: meta.seat ?? (msg.action as any).player,
+                }
+              : msg.action;
+
+          applyRoomAction(socket, room, meta, normalizedAction);
           break;
         }
         default:
@@ -441,24 +723,36 @@ export function registerGameWebSocket(server: FastifyInstance) {
 
     socket.on("close", () => {
       const meta = socketMeta.get(socket);
-      if (meta) {
-        server.log.info(
-          { roomId: meta.roomId, role: meta.role, connId: meta.connId },
-          "ws client disconnected"
-        );
+      if (!meta) return;
+      const room = getGameRoom(meta.roomId);
+      if (room) {
+        if (meta.seat) {
+          vacateSeat(room, meta.seat, meta.connId);
+        } else {
+          room.spectators.delete(meta.connId);
+        }
+        updateHost(room);
+        broadcastRoomState(room);
       }
-      leaveRoomForSocket(socket);
+      removeSocketFromRoom(meta.roomId, socket);
+      socketMeta.delete(socket);
     });
 
     socket.on("error", () => {
       const meta = socketMeta.get(socket);
-      if (meta) {
-        server.log.warn(
-          { roomId: meta.roomId, role: meta.role, connId: meta.connId },
-          "ws client error"
-        );
+      if (!meta) return;
+      const room = getGameRoom(meta.roomId);
+      if (room) {
+        if (meta.seat) {
+          vacateSeat(room, meta.seat, meta.connId);
+        } else {
+          room.spectators.delete(meta.connId);
+        }
+        updateHost(room);
+        broadcastRoomState(room);
       }
-      leaveRoomForSocket(socket);
+      removeSocketFromRoom(meta.roomId, socket);
+      socketMeta.delete(socket);
     });
   });
 }

@@ -1,23 +1,50 @@
-import type { GameAction, GameEvent, PlayerId, PlayerView, Coord } from "rules";
+import type {
+  GameAction,
+  GameEvent,
+  PlayerId,
+  PlayerView,
+  Coord,
+  RollKind,
+  GamePhase,
+} from "rules";
 import { getWsUrl } from "./api";
 
 export type PlayerRole = PlayerId | "spectator";
 
+export type RoomMeta = {
+  ready: { P1: boolean; P2: boolean };
+  players: { P1: boolean; P2: boolean };
+  spectators: number;
+  phase: GamePhase;
+  pendingRoll: { id: string; kind: RollKind; player: PlayerId } | null;
+  initiative: {
+    P1: number | null;
+    P2: number | null;
+    winner: PlayerId | null;
+  };
+  placementFirstPlayer: PlayerId | null;
+};
+
+export type RoomStateMessage = {
+  type: "roomState";
+  roomId: string;
+  you: { role: PlayerRole; seat?: PlayerId; isHost: boolean };
+  view: PlayerView;
+  meta: RoomMeta;
+};
+
 export type ServerMessage =
+  | RoomStateMessage
   | {
-      type: "roomState";
-      roomId: string;
-      room: PlayerView;
-    }
-  | {
-      type: "joinAccepted";
+      type: "joinAck";
       roomId: string;
       role: PlayerRole;
-      connId: string;
+      seat?: PlayerId;
+      isHost: boolean;
     }
   | {
       type: "joinRejected";
-      reason: "room_not_found" | "role_taken";
+      reason: "room_not_found" | "role_taken" | "room_exists";
       message: string;
     }
   | {
@@ -36,17 +63,27 @@ export type ServerMessage =
   | {
       type: "error";
       message: string;
+      code?: string;
     };
 
 export type ClientMessage =
   | {
       type: "joinRoom";
-      roomId: string;
-      requestedRole: PlayerRole;
+      mode: "create" | "join";
+      roomId?: string;
+      role: PlayerRole;
       name?: string;
+    }
+  | { type: "setReady"; ready: boolean }
+  | { type: "startGame" }
+  | {
+      type: "resolvePendingRoll";
+      pendingRollId: string;
+      choice?: "auto" | "roll";
     }
   | { type: "action"; action: GameAction }
   | { type: "requestMoveOptions"; unitId: string }
+  | { type: "switchRole"; role: PlayerRole }
   | { type: "leaveRoom" };
 
 export function connectGameSocket(
@@ -68,12 +105,29 @@ export function connectGameSocket(
 
 export function sendJoinRoom(
   socket: WebSocket,
-  roomId: string,
-  requestedRole: PlayerRole,
-  name?: string
+  params: { mode: "create" | "join"; roomId?: string; role: PlayerRole; name?: string }
 ) {
-  const join: ClientMessage = { type: "joinRoom", roomId, requestedRole, name };
+  const join: ClientMessage = { type: "joinRoom", ...params };
   socket.send(JSON.stringify(join));
+}
+
+export function sendSetReady(socket: WebSocket, ready: boolean) {
+  const msg: ClientMessage = { type: "setReady", ready };
+  socket.send(JSON.stringify(msg));
+}
+
+export function sendStartGame(socket: WebSocket) {
+  const msg: ClientMessage = { type: "startGame" };
+  socket.send(JSON.stringify(msg));
+}
+
+export function sendResolvePendingRoll(
+  socket: WebSocket,
+  pendingRollId: string,
+  choice?: "auto" | "roll"
+) {
+  const msg: ClientMessage = { type: "resolvePendingRoll", pendingRollId, choice };
+  socket.send(JSON.stringify(msg));
 }
 
 export function sendSocketAction(socket: WebSocket, action: GameAction) {
@@ -83,6 +137,11 @@ export function sendSocketAction(socket: WebSocket, action: GameAction) {
 
 export function sendMoveOptionsRequest(socket: WebSocket, unitId: string) {
   const msg: ClientMessage = { type: "requestMoveOptions", unitId };
+  socket.send(JSON.stringify(msg));
+}
+
+export function sendSwitchRole(socket: WebSocket, role: PlayerRole) {
+  const msg: ClientMessage = { type: "switchRole", role };
   socket.send(JSON.stringify(msg));
 }
 

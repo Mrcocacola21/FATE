@@ -60,7 +60,7 @@ export const TurnQueueTracker: FC<TurnQueueTrackerProps> = ({ view, playerId }) 
           const isFriendly = unit
             ? playerId
               ? unit.owner === playerId
-              : unit.owner === "P1"
+              : false
             : false;
           const isDead = unit ? !unit.isAlive : false;
           const label = unit ? classShort(unit.class) : "?";

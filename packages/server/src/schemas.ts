@@ -22,6 +22,13 @@ export const CreateGameBodySchema = z.object({
 export const GameActionSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("rollInitiative") }),
   z.object({ type: z.literal("chooseArena"), arenaId: z.string() }),
+  z.object({ type: z.literal("lobbyInit"), host: PlayerIdSchema }),
+  z.object({
+    type: z.literal("setReady"),
+    player: PlayerIdSchema,
+    ready: z.boolean(),
+  }),
+  z.object({ type: z.literal("startGame") }),
   z.object({
     type: z.literal("placeUnit"),
     unitId: z.string(),
@@ -51,6 +58,7 @@ export const GameActionSchema = z.discriminatedUnion("type", [
     type: z.literal("resolvePendingRoll"),
     pendingRollId: z.string().min(1),
     choice: z.union([z.literal("auto"), z.literal("roll")]).optional(),
+    player: PlayerIdSchema.optional(),
   }),
   z.object({ type: z.literal("endTurn") }),
   z.object({ type: z.literal("unitStartTurn"), unitId: z.string() }),
@@ -60,8 +68,9 @@ export type GameActionInput = z.infer<typeof GameActionSchema>;
 
 export const JoinRoomMessageSchema = z.object({
   type: z.literal("joinRoom"),
-  roomId: z.string().min(1),
-  requestedRole: RoleSchema,
+  mode: z.union([z.literal("create"), z.literal("join")]),
+  roomId: z.string().min(1).optional(),
+  role: RoleSchema,
   name: z.string().min(1).optional(),
 });
 
@@ -75,13 +84,37 @@ export const RequestMoveOptionsMessageSchema = z.object({
   unitId: z.string(),
 });
 
+export const SetReadyMessageSchema = z.object({
+  type: z.literal("setReady"),
+  ready: z.boolean(),
+});
+
+export const StartGameMessageSchema = z.object({
+  type: z.literal("startGame"),
+});
+
+export const ResolvePendingRollMessageSchema = z.object({
+  type: z.literal("resolvePendingRoll"),
+  pendingRollId: z.string().min(1),
+  choice: z.union([z.literal("auto"), z.literal("roll")]).optional(),
+});
+
 export const LeaveRoomMessageSchema = z.object({
   type: z.literal("leaveRoom"),
+});
+
+export const SwitchRoleMessageSchema = z.object({
+  type: z.literal("switchRole"),
+  role: RoleSchema,
 });
 
 export const ClientMessageSchema = z.discriminatedUnion("type", [
   JoinRoomMessageSchema,
   ActionMessageSchema,
   RequestMoveOptionsMessageSchema,
+  SetReadyMessageSchema,
+  StartGameMessageSchema,
+  ResolvePendingRollMessageSchema,
   LeaveRoomMessageSchema,
+  SwitchRoleMessageSchema,
 ]);

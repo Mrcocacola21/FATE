@@ -115,6 +115,9 @@ export const RightPanel: FC<RightPanelProps> = ({
       ? moveOptions.roll
       : null);
 
+  const placementEnabled =
+    joined && !pendingRoll && !isSpectator && isMyTurn && view.phase === "placement";
+
   return (
     <div className="space-y-6">
       <div className="rounded border border-slate-200 bg-white/80 p-4">
@@ -177,7 +180,7 @@ export const RightPanel: FC<RightPanelProps> = ({
                   onSetPlaceUnit(unit.id);
                   onSetActionMode("place");
                 }}
-                disabled={!joined || isSpectator}
+                disabled={!placementEnabled}
               >
                 {unit.id}
               </button>
@@ -193,9 +196,19 @@ export const RightPanel: FC<RightPanelProps> = ({
               Waiting for room join to place units.
             </div>
           )}
+          {!pendingRoll && joined && !isSpectator && !isMyTurn && (
+            <div className="mt-2 text-xs text-amber-600">
+              Waiting for the other player to place.
+            </div>
+          )}
           {isSpectator && (
             <div className="mt-2 text-xs text-amber-600">
               Spectators cannot place units.
+            </div>
+          )}
+          {pendingRoll && (
+            <div className="mt-2 text-xs text-amber-600">
+              Resolve the pending roll before placing units.
             </div>
           )}
         </div>
@@ -385,7 +398,7 @@ export const RightPanel: FC<RightPanelProps> = ({
                   : "bg-slate-100 text-slate-400"
               }`}
               onClick={() => onSendAction({ type: "endTurn" })}
-              disabled={!isMyTurn || !joined || isSpectator}
+              disabled={!isMyTurn || !joined || isSpectator || pendingRoll}
             >
               End Turn
             </button>

@@ -24,6 +24,9 @@ export function isActionAllowedByPlayer(
   }
 
   switch (action.type) {
+    case "rollInitiative": {
+      return false;
+    }
     case "resolvePendingRoll": {
       return (
         !!state.pendingRoll &&

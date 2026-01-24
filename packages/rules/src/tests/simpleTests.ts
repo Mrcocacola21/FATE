@@ -5,6 +5,7 @@ import {
   applyAction as applyActionRaw,
   coordFromNotation,
   GameState,
+  PlayerId,
   UnitState,
   makePlayerView,
   ABILITY_BERSERK_AUTO_DEFENSE,
@@ -68,6 +69,7 @@ function resolvePendingRollOnce(
       type: "resolvePendingRoll",
       pendingRollId: pending.id,
       choice: resolvedChoice,
+      player: pending.player,
     } as any,
     rng as any
   );
@@ -121,12 +123,35 @@ function toBattleState(
   };
 }
 
+function toPlacementState(
+  state: GameState,
+  firstPlayer: PlayerId = "P1"
+): GameState {
+  return {
+    ...state,
+    phase: "placement",
+    currentPlayer: firstPlayer,
+    placementFirstPlayer: firstPlayer,
+    initiative: {
+      ...state.initiative,
+      winner: firstPlayer,
+    },
+    unitsPlaced: { P1: 0, P2: 0 },
+    placementOrder: [],
+    turnQueue: [],
+    turnQueueIndex: 0,
+    turnOrder: [],
+    turnOrderIndex: 0,
+  };
+}
+
 function setupBerserkerBattleState(col: number, row: number) {
   let state = createEmptyGame();
   const a1 = createDefaultArmy("P1");
   const a2 = createDefaultArmy("P2");
   state = attachArmy(state, a1);
   state = attachArmy(state, a2);
+  state = toPlacementState(state, "P1");
 
   const berserker = Object.values(state.units).find(
     (u) => u.owner === "P1" && u.class === "berserker"
@@ -146,6 +171,7 @@ function testPlacementToBattleAndTurnOrder() {
   const a2 = createDefaultArmy("P2");
   state = attachArmy(state, a1);
   state = attachArmy(state, a2);
+  state = toPlacementState(state, "P1");
 
   // simulate simple alternating placement to reach battle
   const p1coords = ["b0","c0","d0","e0","f0","g0","h0"].map(coordFromNotation);
@@ -167,6 +193,139 @@ function testPlacementToBattleAndTurnOrder() {
   assert(state.startingUnitId === state.turnOrder[state.turnOrderIndex], "starting unit must be first in turnOrder");
 
   console.log("testPlacementToBattleAndTurnOrder passed");
+}
+
+function testLobbyReadyAndStartRequiresBothReady() {
+  const rng = new SeededRNG(500);
+  let state = createEmptyGame();
+  const a1 = createDefaultArmy("P1");
+  const a2 = createDefaultArmy("P2");
+  state = attachArmy(state, a1);
+  state = attachArmy(state, a2);
+  state = applyAction(state, { type: "lobbyInit", host: "P1" } as any, rng).state;
+  state = { ...state, seats: { P1: true, P2: true } };
+
+  const start1 = applyAction(state, { type: "startGame" } as any, rng);
+  assert(
+    !start1.state.pendingRoll,
+    "startGame should not request initiative without both ready"
+  );
+
+  state = applyAction(
+    state,
+    { type: "setReady", player: "P1", ready: true } as any,
+    rng
+  ).state;
+
+  const start2 = applyAction(state, { type: "startGame" } as any, rng);
+  assert(
+    !start2.state.pendingRoll,
+    "startGame should not request initiative until both ready"
+  );
+
+  state = applyAction(
+    state,
+    { type: "setReady", player: "P2", ready: true } as any,
+    rng
+  ).state;
+
+  const start3 = applyAction(state, { type: "startGame" } as any, rng);
+  assert(
+    start3.state.pendingRoll?.kind === "initiativeRoll",
+    "startGame should request initiative roll when both ready"
+  );
+  assert(
+    start3.state.pendingRoll?.player === "P1",
+    "initiative roll should start with P1"
+  );
+  assert(start3.state.phase === "lobby", "phase should remain lobby during rolls");
+
+  console.log("testLobbyReadyAndStartRequiresBothReady passed");
+}
+
+function testInitiativeRollSequenceNoAutoroll() {
+  const rng = new SeededRNG(501);
+  let state = createEmptyGame();
+  const a1 = createDefaultArmy("P1");
+  const a2 = createDefaultArmy("P2");
+  state = attachArmy(state, a1);
+  state = attachArmy(state, a2);
+  state = applyAction(state, { type: "lobbyInit", host: "P1" } as any, rng).state;
+  state = { ...state, seats: { P1: true, P2: true } };
+  state = applyAction(
+    state,
+    { type: "setReady", player: "P1", ready: true } as any,
+    rng
+  ).state;
+  state = applyAction(
+    state,
+    { type: "setReady", player: "P2", ready: true } as any,
+    rng
+  ).state;
+
+  state = applyAction(state, { type: "startGame" } as any, rng).state;
+  assert(
+    state.pendingRoll?.player === "P1",
+    "startGame should request P1 initiative roll"
+  );
+  assert(
+    state.initiative.P1 === null && state.initiative.P2 === null,
+    "initiative should not be set before rolls"
+  );
+
+  const afterP1 = resolvePendingRollOnce(state, rng);
+  assert(
+    afterP1.state.pendingRoll?.player === "P2",
+    "P2 roll should be requested after P1 resolves"
+  );
+  assert(
+    afterP1.state.initiative.P1 !== null &&
+      afterP1.state.initiative.P2 === null,
+    "P1 initiative should be set after first roll only"
+  );
+
+  console.log("testInitiativeRollSequenceNoAutoroll passed");
+}
+
+function testInitiativeWinnerSetsPlacementFirstPlayerAndPhasePlacement() {
+  const rng = new SeededRNG(502);
+  let state = createEmptyGame();
+  const a1 = createDefaultArmy("P1");
+  const a2 = createDefaultArmy("P2");
+  state = attachArmy(state, a1);
+  state = attachArmy(state, a2);
+  state = applyAction(state, { type: "lobbyInit", host: "P1" } as any, rng).state;
+  state = { ...state, seats: { P1: true, P2: true } };
+  state = applyAction(
+    state,
+    { type: "setReady", player: "P1", ready: true } as any,
+    rng
+  ).state;
+  state = applyAction(
+    state,
+    { type: "setReady", player: "P2", ready: true } as any,
+    rng
+  ).state;
+  state = applyAction(state, { type: "startGame" } as any, rng).state;
+
+  const resolved = resolveAllPendingRolls(state, rng);
+  const finalState = resolved.state;
+
+  assert(finalState.phase === "placement", "phase should switch to placement");
+  assert(
+    finalState.initiative.winner !== null,
+    "initiative winner should be set"
+  );
+  assert(
+    finalState.placementFirstPlayer === finalState.initiative.winner,
+    "placementFirstPlayer should match initiative winner"
+  );
+  assert(
+    finalState.currentPlayer === finalState.initiative.winner,
+    "currentPlayer should start as initiative winner"
+  );
+
+  console.log("testInitiativeWinnerSetsPlacementFirstPlayerAndPhasePlacement passed");
 }
 
 function testRiderPathHitsStealthed() {
@@ -538,7 +697,11 @@ function testBerserkerDefenseChoiceRollUsesNormalCombat() {
 
   const step2 = applyActionRaw(
     step1.state,
-    { type: "resolvePendingRoll", pendingRollId: pending1!.id } as any,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: pending1!.id,
+      player: pending1!.player,
+    } as any,
     rng
   );
 
@@ -550,7 +713,12 @@ function testBerserkerDefenseChoiceRollUsesNormalCombat() {
 
   const step3 = applyActionRaw(
     step2.state,
-    { type: "resolvePendingRoll", pendingRollId: pending2!.id, choice: "roll" } as any,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: pending2!.id,
+      choice: "roll",
+      player: pending2!.player,
+    } as any,
     rng
   );
 
@@ -1627,6 +1795,7 @@ function testBattleTurnOrderFollowsPlacementOrder() {
   const a2 = createDefaultArmy("P2");
   state = attachArmy(state, a1);
   state = attachArmy(state, a2);
+  state = toPlacementState(state, "P1");
 
   const p1Order = ["rider","spearman","trickster","assassin","berserker","archer","knight"].map(
     (cls) => Object.values(state.units).find((u) => u.owner === "P1" && u.class === cls)!.id
@@ -3522,6 +3691,9 @@ function testTricksterMoveRequiresPendingOptions() {
 
 function main() {
   testPlacementToBattleAndTurnOrder();
+  testLobbyReadyAndStartRequiresBothReady();
+  testInitiativeRollSequenceNoAutoroll();
+  testInitiativeWinnerSetsPlacementFirstPlayerAndPhasePlacement();
   testRiderPathHitsStealthed();
   testGameEndCondition();
   testBerserkerAutoDefenseEnabled();
