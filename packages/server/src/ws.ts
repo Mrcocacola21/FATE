@@ -106,7 +106,19 @@ function getPresence(roomId: string): RoomPresence {
 
 function viewForRole(state: GameState, role: PlayerRole): PlayerView {
   if (role === "spectator") {
-    return makePlayerView(state, "P1");
+    const view = makePlayerView(state, "P1");
+    return {
+      ...view,
+      legalIntents: {
+        canSearchMove: false,
+        canSearchAction: false,
+        searchMoveReason: "spectator",
+        searchActionReason: "spectator",
+        canMove: false,
+        canAttack: false,
+        canEnterStealth: false,
+      },
+    };
   }
   return makePlayerView(state, role);
 }

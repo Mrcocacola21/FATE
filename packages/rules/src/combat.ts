@@ -6,8 +6,8 @@ import {
   UnitState,
   DiceRoll,
   Coord,
+  StealthRevealReason,
 } from "./model";
-import { RNG, rollD6 } from "./rng";
 import { getUnitAt } from "./board";
 import {
   ABILITY_BERSERK_AUTO_DEFENSE,
@@ -21,15 +21,11 @@ import { canDirectlyTargetUnit } from "./visibility";
 
 // --- Вспомогательные функции кубов ---
 
-function roll2D6(rng: RNG): DiceRoll {
-  const d1 = rollD6(rng);
-  const d2 = rollD6(rng);
-  const sum = d1 + d2;
-  return {
-    dice: [d1, d2],
-    sum,
-    isDouble: d1 === d2,
-  };
+function buildDiceRoll(base: number[], tieBreak: number[]): DiceRoll {
+  const dice = [...base, ...tieBreak];
+  const sum = dice.reduce((acc, v) => acc + v, 0);
+  const isDouble = base.length >= 2 && base[0] === base[1];
+  return { dice, sum, isDouble };
 }
 
 function distanceInfo(attPos: Coord, defPos: Coord) {
@@ -79,10 +75,12 @@ export function canAttackTarget(
     }
 
     case "archer": {
-      // любая дистанция по прямой
-      // Арчер может стрелять ЧЕРЕЗ своих, но не через чужих:
-      // он поражает ПЕРВОГО врага по линии.
-      if (!sameRow && !sameCol) return false;
+      // ????? ?????: ?????? ? ????????? (8 ???????????)
+      // ????? ????? ???????? ????? ?????????, ?? ?? ????? ??????:
+      // ???????? ??????? ????? ?? ????.
+      const isStraight = sameRow || sameCol;
+      const isDiagonal = dx === dy;
+      if (!isStraight && !isDiagonal) return false;
 
       const stepCol = Math.sign(defPos.col - attPos.col);
       const stepRow = Math.sign(defPos.row - attPos.row);
@@ -105,14 +103,14 @@ export function canAttackTarget(
             firstEnemy = u;
             break;
           }
-          // свой — стрела летит дальше
+          // ???? ? ?????? ????? ??????
         }
 
         col += stepCol;
         row += stepRow;
       }
 
-      // Можно целиться только в первого врага по линии
+      // ????? ???????? ?????? ? ??????? ????? ?? ????
       return !!firstEnemy && firstEnemy.id === defender.id;
     }
 
@@ -139,8 +137,17 @@ export function resolveAttack(
     ignoreRange?: boolean;
     /** Для AoE/path attacks: игнорировать стелс и при атаке раскрывать цель */
     ignoreStealth?: boolean;
-  },
-  rng: RNG
+    /** Разрешить раскрывать стелс союзников при ignoreStealth (например, Trickster AoE). */
+    revealStealthedAllies?: boolean;
+    /** Причина раскрытия стелса при ignoreStealth. */
+    revealReason?: StealthRevealReason;
+    rolls?: {
+      attackerDice: number[];
+      defenderDice: number[];
+      tieBreakAttacker?: number[];
+      tieBreakDefender?: number[];
+    };
+  }
 ): { nextState: GameState; events: GameEvent[] } {
   const attacker = state.units[params.attackerId];
   const defender = state.units[params.defenderId];
@@ -207,11 +214,17 @@ export function resolveAttack(
       });
 
       // Логируем "атаку без бросков" — просто авто-додж
-      const attackerRoll: DiceRoll = {
-        dice: [],
-        sum: 0,
-        isDouble: false,
-      };
+      const rollInput = params.rolls;
+      const attackerRoll = rollInput
+        ? buildDiceRoll(
+            rollInput.attackerDice ?? [],
+            rollInput.tieBreakAttacker ?? []
+          )
+        : {
+            dice: [],
+            sum: 0,
+            isDouble: false,
+          };
       const defenderRoll: DiceRoll = {
         dice: [],
         sum: 0,
@@ -241,27 +254,23 @@ export function resolveAttack(
   // дальше — обычная боёвка (2к6, дубль рыцаря, копейщика, ассасин и т.д.)
 
   // --- Броски 2к6 обеим сторонам ---
-  const attackerRoll = roll2D6(rng);
-  const defenderRoll = roll2D6(rng);
-  const tieBreakAttacker: number[] = [];
-  const tieBreakDefender: number[] = [];
-
-  // При ничьей докидываем по 1к6 до определения результата — ОБЩЕЕ правило.
-  // ВАЖНО: isDouble остаётся про первые 2 куба; доп.кубы только увеличивают dice[] и sum.
-  while (attackerRoll.sum === defenderRoll.sum) {
-    const a = rollD6(rng);
-    const d = rollD6(rng);
-
-    attackerRoll.dice.push(a);
-    defenderRoll.dice.push(d);
-    tieBreakAttacker.push(a);
-    tieBreakDefender.push(d);
-
-    attackerRoll.sum += a;
-    defenderRoll.sum += d;
+  const rollInput = params.rolls;
+  if (!rollInput) {
+    return { nextState: state, events: [] };
   }
 
-  // Базовый исход: у кого итоговая сумма больше — тот выигрывает
+  const attackerDice = rollInput.attackerDice ?? [];
+  const defenderDice = rollInput.defenderDice ?? [];
+  if (attackerDice.length < 2 || defenderDice.length < 2) {
+    return { nextState: state, events: [] };
+  }
+
+  const tieBreakAttacker = rollInput.tieBreakAttacker ?? [];
+  const tieBreakDefender = rollInput.tieBreakDefender ?? [];
+
+  const attackerRoll = buildDiceRoll(attackerDice, tieBreakAttacker);
+  const defenderRoll = buildDiceRoll(defenderDice, tieBreakDefender);
+
   let hit = attackerRoll.sum > defenderRoll.sum;
 
   // --- Пассивки классов ---
@@ -285,8 +294,10 @@ export function resolveAttack(
   let revealedAttackerPos: Coord | null = null;
 
   // Если цель была в стелсе и мы специально атакуем (AoE/path), раскрываем её для атакующего
-  if (defenderAfter.isStealthed) {
-    if (params.ignoreStealth) {
+  if (defenderAfter.isStealthed && params.ignoreStealth) {
+    const shouldReveal =
+      params.revealStealthedAllies || attackerAfter.owner !== defenderAfter.owner;
+    if (shouldReveal) {
       defenderAfter = {
         ...defenderAfter,
         isStealthed: false,
@@ -308,7 +319,11 @@ export function resolveAttack(
       const tmpState: GameState = { ...state, units: tmpUnits, knowledge: nextKnowledge };
 
       // push reveal event
-      events.push({ type: "stealthRevealed", unitId: defenderAfter.id, reason: "attacked" });
+      events.push({
+        type: "stealthRevealed",
+        unitId: defenderAfter.id,
+        reason: params.revealReason ?? "attacked",
+      });
 
       // update working copies
       units[defenderAfter.id] = defenderAfter;
@@ -360,12 +375,12 @@ export function resolveAttack(
     P2: { ...(state.lastKnownPositions?.P2 ?? {}) },
   };
   if (revealedDefenderPos) {
-    updatedLastKnown.P1[defenderAfter.id] = { ...revealedDefenderPos };
-    updatedLastKnown.P2[defenderAfter.id] = { ...revealedDefenderPos };
+    delete updatedLastKnown.P1[defenderAfter.id];
+    delete updatedLastKnown.P2[defenderAfter.id];
   }
   if (revealedAttackerPos) {
-    updatedLastKnown.P1[attackerAfter.id] = { ...revealedAttackerPos };
-    updatedLastKnown.P2[attackerAfter.id] = { ...revealedAttackerPos };
+    delete updatedLastKnown.P1[attackerAfter.id];
+    delete updatedLastKnown.P2[attackerAfter.id];
   }
 
   const nextState: GameState = {

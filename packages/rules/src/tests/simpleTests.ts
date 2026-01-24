@@ -11,6 +11,7 @@ import {
   ABILITY_TEST_MULTI_SLOT,
   getTricksterMovesForRoll,
   getBerserkerMovesForRoll,
+  getLegalIntents,
 } from "../index";
 import { SeededRNG } from "../rng";
 import assert from "assert";
@@ -45,21 +46,57 @@ function initKnowledgeForOwners(state: GameState): GameState {
 function applyAction(
   state: GameState,
   action: Parameters<typeof applyActionRaw>[1],
-  rng: Parameters<typeof applyActionRaw>[2],
-  rollChoice?: "auto" | "roll"
+  rng: Parameters<typeof applyActionRaw>[2]
 ) {
-  let result = applyActionRaw(state, action as any, rng as any);
+  return applyActionRaw(state, action as any, rng as any);
+}
+
+function resolvePendingRollOnce(
+  state: GameState,
+  rng: Parameters<typeof applyActionRaw>[2],
+  choice?: "auto" | "roll"
+) {
+  if (!state.pendingRoll) {
+    return { state, events: [] as any[] };
+  }
+  const pending = state.pendingRoll;
+  const resolvedChoice =
+    pending.kind === "berserkerDefenseChoice" ? choice ?? "roll" : undefined;
+  return applyActionRaw(
+    state,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: pending.id,
+      choice: resolvedChoice,
+    } as any,
+    rng as any
+  );
+}
+
+function resolveAllPendingRolls(
+  state: GameState,
+  rng: Parameters<typeof applyActionRaw>[2],
+  choice?: "auto" | "roll"
+) {
+  let result = { state, events: [] as any[] };
   while (result.state.pendingRoll) {
-    const pending = result.state.pendingRoll;
-    const choice =
-      pending.kind === "berserkerDefenseChoice" ? rollChoice ?? "roll" : undefined;
-    result = applyActionRaw(
-      result.state,
-      { type: "resolvePendingRoll", pendingRollId: pending.id, choice } as any,
-      rng as any
-    );
+    result = resolvePendingRollOnce(result.state, rng, choice);
   }
   return result;
+}
+
+function resolveAllPendingRollsWithEvents(
+  state: GameState,
+  rng: Parameters<typeof applyActionRaw>[2],
+  choice?: "auto" | "roll"
+) {
+  let current = { state, events: [] as any[] };
+  const events: any[] = [];
+  while (current.state.pendingRoll) {
+    current = resolvePendingRollOnce(current.state, rng, choice);
+    events.push(...current.events);
+  }
+  return { state: current.state, events };
 }
 
 function coordKeys(coords: { col: number; row: number }[]): string[] {
@@ -136,8 +173,14 @@ function testRiderPathHitsStealthed() {
 
   // start rider turn
   state = applyAction(state, { type: "unitStartTurn", unitId: rider.id } as any, rng).state;
-  // move across and hit both
-  state = applyAction(state, { type: "move", unitId: rider.id, to: { col: 5, row: 2 } } as any, rng).state;
+  // move across and hit both (path attacks are now pending rolls)
+  let moveRes = applyAction(
+    state,
+    { type: "move", unitId: rider.id, to: { col: 5, row: 2 } } as any,
+    rng
+  );
+  moveRes = resolveAllPendingRolls(moveRes.state, rng);
+  state = moveRes.state;
 
   // Both enemies should have been at least revealed (isStealthed=false) or dead
   const e1 = state.units[enemy1.id];
@@ -207,7 +250,7 @@ function testBerserkerAutoDefenseEnabled() {
   const knowledgeBefore = JSON.parse(JSON.stringify(state.knowledge));
   const defenderHpBefore = state.units[defender.id].hp;
 
-  const result = applyAction(
+  const initial = applyAction(
     state,
     {
       type: "attack",
@@ -215,12 +258,12 @@ function testBerserkerAutoDefenseEnabled() {
       defenderId: defender.id,
       defenderUseBerserkAutoDefense: true,
     } as any,
-    rng,
-    "auto"
+    rng
   );
+  const resolved = resolveAllPendingRolls(initial.state, rng, "auto");
 
-  const next = result.state;
-  const events = result.events;
+  const next = resolved.state;
+  const events = resolved.events;
   const abilityEvent = events.find(
     (e) => e.type === "abilityUsed" && e.unitId === defender.id
   );
@@ -275,7 +318,7 @@ function testBerserkerAutoDefenseDeclined() {
   state = initKnowledgeForOwners(state);
   const knowledgeBefore = JSON.parse(JSON.stringify(state.knowledge));
 
-  const result = applyAction(
+  const initial = applyAction(
     state,
     {
       type: "attack",
@@ -285,9 +328,10 @@ function testBerserkerAutoDefenseDeclined() {
     } as any,
     rng
   );
+  const resolved = resolveAllPendingRolls(initial.state, rng, "roll");
 
-  const next = result.state;
-  const events = result.events;
+  const next = resolved.state;
+  const events = resolved.events;
   const abilityEvent = events.find((e) => e.type === "abilityUsed");
   const attackEvent = events.find(
     (e) => e.type === "attackResolved" && e.defenderId === defender.id
@@ -336,7 +380,7 @@ function testBerserkerAutoDefenseNoCharges() {
   state = initKnowledgeForOwners(state);
   const knowledgeBefore = JSON.parse(JSON.stringify(state.knowledge));
 
-  const result = applyAction(
+  const initial = applyAction(
     state,
     {
       type: "attack",
@@ -346,9 +390,10 @@ function testBerserkerAutoDefenseNoCharges() {
     } as any,
     rng
   );
+  const resolved = resolveAllPendingRolls(initial.state, rng, "roll");
 
-  const next = result.state;
-  const events = result.events;
+  const next = resolved.state;
+  const events = resolved.events;
   const abilityEvent = events.find((e) => e.type === "abilityUsed");
   const attackEvent = events.find(
     (e) => e.type === "attackResolved" && e.defenderId === defender.id
@@ -395,18 +440,18 @@ function testBerserkerDefenseChoiceAutoDodgeSpends6() {
   state = toBattleState(state, "P1", attacker.id);
   state = initKnowledgeForOwners(state);
 
-  const result = applyAction(
+  const initial = applyAction(
     state,
     {
       type: "attack",
       attackerId: attacker.id,
       defenderId: defender.id,
     } as any,
-    rng,
-    "auto"
+    rng
   );
+  const resolved = resolveAllPendingRolls(initial.state, rng, "auto");
 
-  const choiceEvent = result.events.find(
+  const choiceEvent = resolved.events.find(
     (e) => e.type === "berserkerDefenseChosen"
   );
   assert(
@@ -414,7 +459,7 @@ function testBerserkerDefenseChoiceAutoDodgeSpends6() {
     "berserkerDefenseChosen should record auto choice"
   );
 
-  const attackEvent = result.events.find(
+  const attackEvent = resolved.events.find(
     (e) => e.type === "attackResolved" && e.defenderId === defender.id
   );
   assert(attackEvent, "attackResolved should be emitted");
@@ -424,7 +469,7 @@ function testBerserkerDefenseChoiceAutoDodgeSpends6() {
   }
 
   assert(
-    result.state.units[defender.id].charges[ABILITY_BERSERK_AUTO_DEFENSE] === 0,
+    resolved.state.units[defender.id].charges[ABILITY_BERSERK_AUTO_DEFENSE] === 0,
     "auto-dodge should spend all charges"
   );
 
@@ -469,17 +514,29 @@ function testBerserkerDefenseChoiceRollUsesNormalCombat() {
 
   const pending1 = step1.state.pendingRoll;
   assert(
-    pending1 && pending1.kind === "berserkerDefenseChoice",
-    "berserkerDefenseChoice roll should be requested"
+    pending1 && pending1.kind === "attack_attackerRoll",
+    "attacker roll should be requested first"
   );
 
   const step2 = applyActionRaw(
     step1.state,
-    { type: "resolvePendingRoll", pendingRollId: pending1!.id, choice: "roll" } as any,
+    { type: "resolvePendingRoll", pendingRollId: pending1!.id } as any,
     rng
   );
 
-  const choiceEvent = step2.events.find(
+  const pending2 = step2.state.pendingRoll;
+  assert(
+    pending2 && pending2.kind === "berserkerDefenseChoice",
+    "berserkerDefenseChoice roll should be requested after attacker roll"
+  );
+
+  const step3 = applyActionRaw(
+    step2.state,
+    { type: "resolvePendingRoll", pendingRollId: pending2!.id, choice: "roll" } as any,
+    rng
+  );
+
+  const choiceEvent = step3.events.find(
     (e) => e.type === "berserkerDefenseChosen"
   );
   assert(
@@ -487,16 +544,15 @@ function testBerserkerDefenseChoiceRollUsesNormalCombat() {
     "berserkerDefenseChosen should record roll choice"
   );
 
-  const pending2 = step2.state.pendingRoll;
-  assert(pending2 && pending2.kind === "attackRoll", "attack roll should be requested after roll choice");
-
-  const step3 = applyActionRaw(
-    step2.state,
-    { type: "resolvePendingRoll", pendingRollId: pending2!.id } as any,
-    rng
+  const pending3 = step3.state.pendingRoll;
+  assert(
+    pending3 && pending3.kind === "attack_defenderRoll",
+    "defender roll should be requested after roll choice"
   );
 
-  const attackEvent = step3.events.find(
+  const final = resolveAllPendingRolls(step3.state, rng);
+
+  const attackEvent = final.events.find(
     (e) => e.type === "attackResolved" && e.defenderId === defender.id
   );
   assert(attackEvent, "attackResolved should be emitted");
@@ -507,7 +563,7 @@ function testBerserkerDefenseChoiceRollUsesNormalCombat() {
     );
   }
   assert(
-    step3.state.units[defender.id].charges[ABILITY_BERSERK_AUTO_DEFENSE] === 6,
+    final.state.units[defender.id].charges[ABILITY_BERSERK_AUTO_DEFENSE] === 6,
     "roll defense should not spend charges"
   );
 
@@ -540,22 +596,22 @@ function testCannotAutoDodgeIfChargesNot6() {
   state = toBattleState(state, "P1", attacker.id);
   state = initKnowledgeForOwners(state);
 
-  const result = applyAction(
+  const initial = applyAction(
     state,
     {
       type: "attack",
       attackerId: attacker.id,
       defenderId: defender.id,
     } as any,
-    rng,
-    "auto"
+    rng
   );
+  const resolved = resolveAllPendingRolls(initial.state, rng, "auto");
 
   assert(
-    result.state.units[defender.id].charges[ABILITY_BERSERK_AUTO_DEFENSE] === 5,
+    resolved.state.units[defender.id].charges[ABILITY_BERSERK_AUTO_DEFENSE] === 5,
     "auto-dodge should be rejected when charges are not 6"
   );
-  const attackEvent = result.events.find(
+  const attackEvent = resolved.events.find(
     (e) => e.type === "attackResolved" && e.defenderId === defender.id
   );
   assert(attackEvent, "attack should resolve normally when auto-dodge unavailable");
@@ -590,7 +646,7 @@ function testAssassinAttackFromStealth() {
   state = toBattleState(state, "P1", attacker.id);
   state = initKnowledgeForOwners(state);
 
-  const result = applyAction(
+  const initial = applyAction(
     state,
     {
       type: "attack",
@@ -599,9 +655,10 @@ function testAssassinAttackFromStealth() {
     } as any,
     rng
   );
+  const resolved = resolveAllPendingRolls(initial.state, rng);
 
-  const next = result.state;
-  const events = result.events;
+  const next = resolved.state;
+  const events = resolved.events;
   const attackEvent = events.find(
     (e) => e.type === "attackResolved" && e.attackerId === attacker.id
   );
@@ -650,7 +707,7 @@ function testAssassinAttackWithoutStealth() {
   state = toBattleState(state, "P1", attacker.id);
   state = initKnowledgeForOwners(state);
 
-  const result = applyAction(
+  const initial = applyAction(
     state,
     {
       type: "attack",
@@ -659,9 +716,10 @@ function testAssassinAttackWithoutStealth() {
     } as any,
     rng
   );
+  const resolved = resolveAllPendingRolls(initial.state, rng);
 
-  const next = result.state;
-  const events = result.events;
+  const next = resolved.state;
+  const events = resolved.events;
   const attackEvent = events.find(
     (e) => e.type === "attackResolved" && e.attackerId === attacker.id
   );
@@ -717,7 +775,7 @@ function testSearchRevealsOnlyInRadius() {
   state = toBattleState(state, "P1", searcher.id);
   state = initKnowledgeForOwners(state);
 
-  const result = applyAction(
+  const initial = applyAction(
     state,
     {
       type: "searchStealth",
@@ -726,9 +784,10 @@ function testSearchRevealsOnlyInRadius() {
     } as any,
     rng
   );
+  const resolved = resolveAllPendingRolls(initial.state, rng);
 
-  const next = result.state;
-  const events = result.events;
+  const next = resolved.state;
+  const events = resolved.events;
   const revealEvents = events.filter((e) => e.type === "stealthRevealed");
 
   assert(
@@ -775,7 +834,7 @@ function testSearchUpdatesOnlyPlayerKnowledge() {
   state = initKnowledgeForOwners(state);
   const knowledgeBefore = JSON.parse(JSON.stringify(state.knowledge));
 
-  const result = applyAction(
+  const initial = applyAction(
     state,
     {
       type: "searchStealth",
@@ -784,8 +843,9 @@ function testSearchUpdatesOnlyPlayerKnowledge() {
     } as any,
     rng
   );
+  const resolved = resolveAllPendingRolls(initial.state, rng);
 
-  const next = result.state;
+  const next = resolved.state;
 
   assert(
     next.knowledge["P1"][enemy.id] === true,
@@ -827,7 +887,7 @@ function testSearchStealthRollsLogged() {
   state = toBattleState(state, "P1", searcher.id);
   state = initKnowledgeForOwners(state);
 
-  const result = applyAction(
+  const initial = applyAction(
     state,
     {
       type: "searchStealth",
@@ -836,8 +896,9 @@ function testSearchStealthRollsLogged() {
     } as any,
     rng
   );
+  const resolved = resolveAllPendingRolls(initial.state, rng);
 
-  const searchEvent = result.events.find((e) => e.type === "searchStealth");
+  const searchEvent = resolved.events.find((e) => e.type === "searchStealth");
   assert(
     searchEvent && searchEvent.type === "searchStealth",
     "searchStealth event should be emitted"
@@ -853,6 +914,263 @@ function testSearchStealthRollsLogged() {
   }
 
   console.log("search_stealth_rolls_logged passed");
+}
+
+function testSearchActionBlockedAfterAttack() {
+  const rng = new SeededRNG(1113);
+  let state = createEmptyGame();
+  const a1 = createDefaultArmy("P1");
+  const a2 = createDefaultArmy("P2");
+  state = attachArmy(state, a1);
+  state = attachArmy(state, a2);
+
+  const attacker = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "spearman"
+  )!;
+  const defender = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "knight"
+  )!;
+  const hidden = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "assassin"
+  )!;
+
+  state = setUnit(state, attacker.id, { position: { col: 4, row: 4 } });
+  state = setUnit(state, defender.id, { position: { col: 4, row: 6 } });
+  state = setUnit(state, hidden.id, {
+    position: { col: 5, row: 4 },
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
+
+  state = toBattleState(state, "P1", attacker.id);
+  state = initKnowledgeForOwners(state);
+
+  const attackInitial = applyAction(
+    state,
+    { type: "attack", attackerId: attacker.id, defenderId: defender.id } as any,
+    rng
+  );
+  const attackResolved = resolveAllPendingRolls(attackInitial.state, rng);
+
+  const searchAttempt = applyAction(
+    attackResolved.state,
+    { type: "searchStealth", unitId: attacker.id, mode: "action" } as any,
+    rng
+  );
+
+  assert(searchAttempt.events.length === 0, "search(action) should be blocked after attack");
+  assert.deepStrictEqual(
+    searchAttempt.state,
+    attackResolved.state,
+    "state should be unchanged when search(action) is blocked"
+  );
+
+  console.log("search_action_blocked_after_attack passed");
+}
+
+function testSearchMoveBlockedAfterMove() {
+  const rng = new SeededRNG(1114);
+  let state = createEmptyGame();
+  const a1 = createDefaultArmy("P1");
+  const a2 = createDefaultArmy("P2");
+  state = attachArmy(state, a1);
+  state = attachArmy(state, a2);
+
+  const mover = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "spearman"
+  )!;
+  const hidden = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "assassin"
+  )!;
+
+  state = setUnit(state, mover.id, { position: { col: 4, row: 4 } });
+  state = setUnit(state, hidden.id, { position: { col: 8, row: 8 } });
+
+  state = toBattleState(state, "P1", mover.id);
+  state = initKnowledgeForOwners(state);
+
+  const moveRes = applyAction(
+    state,
+    { type: "move", unitId: mover.id, to: { col: 4, row: 5 } } as any,
+    rng
+  );
+
+  let afterMove = moveRes.state;
+  afterMove = setUnit(afterMove, hidden.id, {
+    position: { col: 5, row: 5 },
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
+
+  const searchAttempt = applyAction(
+    afterMove,
+    { type: "searchStealth", unitId: mover.id, mode: "move" } as any,
+    rng
+  );
+
+  assert(searchAttempt.events.length === 0, "search(move) should be blocked after move");
+  assert.deepStrictEqual(
+    searchAttempt.state,
+    afterMove,
+    "state should be unchanged when search(move) is blocked"
+  );
+
+  console.log("search_move_blocked_after_move passed");
+}
+
+function testSearchActionWorksBeforeAttack() {
+  const rng = new SeededRNG(1115);
+  let state = createEmptyGame();
+  const a1 = createDefaultArmy("P1");
+  const a2 = createDefaultArmy("P2");
+  state = attachArmy(state, a1);
+  state = attachArmy(state, a2);
+
+  const searcher = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "spearman"
+  )!;
+  const hidden = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "assassin"
+  )!;
+
+  state = setUnit(state, searcher.id, { position: { col: 4, row: 4 } });
+  state = setUnit(state, hidden.id, {
+    position: { col: 4, row: 5 },
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
+
+  state = toBattleState(state, "P1", searcher.id);
+  state = initKnowledgeForOwners(state);
+
+  const initial = applyAction(
+    state,
+    { type: "searchStealth", unitId: searcher.id, mode: "action" } as any,
+    rng
+  );
+  assert(
+    initial.state.pendingRoll?.kind === "searchStealth",
+    "search(action) should request a roll before attack"
+  );
+
+  const resolved = resolveAllPendingRolls(initial.state, rng);
+  assert(
+    resolved.state.units[searcher.id].turn.actionUsed === true,
+    "search(action) should consume action slot"
+  );
+
+  console.log("search_action_works_before_attack passed");
+}
+
+function testSearchMoveWorksBeforeMove() {
+  const rng = new SeededRNG(1116);
+  let state = createEmptyGame();
+  const a1 = createDefaultArmy("P1");
+  const a2 = createDefaultArmy("P2");
+  state = attachArmy(state, a1);
+  state = attachArmy(state, a2);
+
+  const searcher = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "spearman"
+  )!;
+  const hidden = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "assassin"
+  )!;
+
+  state = setUnit(state, searcher.id, { position: { col: 4, row: 4 } });
+  state = setUnit(state, hidden.id, {
+    position: { col: 4, row: 5 },
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
+
+  state = toBattleState(state, "P1", searcher.id);
+  state = initKnowledgeForOwners(state);
+
+  const initial = applyAction(
+    state,
+    { type: "searchStealth", unitId: searcher.id, mode: "move" } as any,
+    rng
+  );
+  assert(
+    initial.state.pendingRoll?.kind === "searchStealth",
+    "search(move) should request a roll before move"
+  );
+
+  const resolved = resolveAllPendingRolls(initial.state, rng);
+  assert(
+    resolved.state.units[searcher.id].turn.moveUsed === true,
+    "search(move) should consume move slot"
+  );
+
+  console.log("search_move_works_before_move passed");
+}
+
+function testSearchButtonsEnabledOnFreshUnitTurn() {
+  const rng = new SeededRNG(1117);
+  let state = createEmptyGame();
+  const a1 = createDefaultArmy("P1");
+  const a2 = createDefaultArmy("P2");
+  state = attachArmy(state, a1);
+  state = attachArmy(state, a2);
+
+  const searcher = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "spearman"
+  )!;
+
+  state = setUnit(state, searcher.id, { position: { col: 4, row: 4 } });
+  state = toBattleState(state, "P1", searcher.id);
+  state = initKnowledgeForOwners(state);
+  state = { ...state, activeUnitId: null };
+
+  const started = applyAction(
+    state,
+    { type: "unitStartTurn", unitId: searcher.id } as any,
+    rng
+  );
+
+  let intents = getLegalIntents(started.state, "P1");
+  assert(intents.canSearchMove === true, "search(move) should be legal on fresh turn");
+  assert(intents.canSearchAction === true, "search(action) should be legal on fresh turn");
+  assert(intents.searchMoveReason === undefined, "no search(move) reason expected");
+  assert(intents.searchActionReason === undefined, "no search(action) reason expected");
+
+  const searchMove = applyAction(
+    started.state,
+    { type: "searchStealth", unitId: searcher.id, mode: "move" } as any,
+    rng
+  );
+
+  intents = getLegalIntents(searchMove.state, "P1");
+  assert(intents.canSearchMove === false, "search(move) should be disabled after use");
+  assert(intents.canSearchAction === true, "search(action) should remain after move search");
+
+  const searchAction = applyAction(
+    searchMove.state,
+    { type: "searchStealth", unitId: searcher.id, mode: "action" } as any,
+    rng
+  );
+
+  intents = getLegalIntents(searchAction.state, "P1");
+  assert(intents.canSearchAction === false, "search(action) should be disabled after use");
+
+  const ended = applyAction(
+    searchAction.state,
+    { type: "endTurn" } as any,
+    rng
+  );
+
+  const restarted = applyAction(
+    { ...ended.state, activeUnitId: null },
+    { type: "unitStartTurn", unitId: searcher.id } as any,
+    rng
+  );
+
+  intents = getLegalIntents(restarted.state, "P1");
+  assert(intents.canSearchMove === true, "search(move) should reset on new turn");
+  assert(intents.canSearchAction === true, "search(action) should reset on new turn");
+
+  console.log("search_buttons_enabled_on_fresh_unit_turn passed");
 }
 
 function testAttackAlreadyRevealedUnit() {
@@ -889,7 +1207,7 @@ function testAttackAlreadyRevealedUnit() {
   };
   const knowledgeBefore = JSON.parse(JSON.stringify(state.knowledge));
 
-  const result = applyAction(
+  const initial = applyAction(
     state,
     {
       type: "attack",
@@ -898,8 +1216,9 @@ function testAttackAlreadyRevealedUnit() {
     } as any,
     rng
   );
+  const resolved = resolveAllPendingRolls(initial.state, rng);
 
-  const events = result.events;
+  const events = resolved.events;
   const revealEvents = events.filter((e) => e.type === "stealthRevealed");
   const attackEvent = events.find(
     (e) => e.type === "attackResolved" && e.defenderId === defender.id
@@ -908,7 +1227,7 @@ function testAttackAlreadyRevealedUnit() {
   assert(attackEvent, "attackResolved should be emitted");
   assert(revealEvents.length === 0, "no stealthRevealed events expected");
   assert.deepStrictEqual(
-    result.state.knowledge,
+    resolved.state.knowledge,
     knowledgeBefore,
     "knowledge should remain consistent"
   );
@@ -1005,9 +1324,10 @@ function testCannotAttackTwicePerTurn() {
     } as any,
     rng
   );
+  const resolvedFirst = resolveAllPendingRolls(first.state, rng);
 
   const second = applyAction(
-    first.state,
+    resolvedFirst.state,
     {
       type: "attack",
       attackerId: attacker.id,
@@ -1022,7 +1342,7 @@ function testCannotAttackTwicePerTurn() {
   );
   assert.deepStrictEqual(
     second.state,
-    first.state,
+    resolvedFirst.state,
     "state should be unchanged after second attack"
   );
 
@@ -1063,9 +1383,10 @@ function testAttackConsumesActionSlot() {
     { type: "attack", attackerId: attacker.id, defenderId: defender.id } as any,
     rng
   );
+  const resolvedAttack = resolveAllPendingRolls(attacked.state, rng);
 
   const searchAfter = applyAction(
-    attacked.state,
+    resolvedAttack.state,
     { type: "searchStealth", unitId: attacker.id, mode: "action" } as any,
     rng
   );
@@ -1076,7 +1397,7 @@ function testAttackConsumesActionSlot() {
   );
   assert.deepStrictEqual(
     searchAfter.state,
-    attacked.state,
+    resolvedAttack.state,
     "state should be unchanged after blocked search"
   );
 
@@ -1117,14 +1438,15 @@ function testCannotAttackAfterSearchAction() {
     { type: "searchStealth", unitId: searcher.id, mode: "action" } as any,
     rng
   );
+  const resolvedSearch = resolveAllPendingRolls(searchAction.state, rng);
 
   assert(
-    searchAction.state.units[searcher.id].turn.actionUsed === true,
+    resolvedSearch.state.units[searcher.id].turn.actionUsed === true,
     "search(action) should consume action slot"
   );
 
   const attackAfter = applyAction(
-    searchAction.state,
+    resolvedSearch.state,
     { type: "attack", attackerId: searcher.id, defenderId: defender.id } as any,
     rng
   );
@@ -1226,11 +1548,12 @@ function testAssassinCanEnterStealth() {
   state = setUnit(state, assassin.id, { position: { col: 4, row: 4 } });
   state = toBattleState(state, "P1", assassin.id);
 
-  const res = applyAction(
+  const initial = applyAction(
     state,
     { type: "enterStealth", unitId: assassin.id } as any,
     rng
   );
+  const res = resolveAllPendingRolls(initial.state, rng);
 
   const enter = res.events.find((e) => e.type === "stealthEntered");
   assert(
@@ -1467,11 +1790,12 @@ function testCannotAttackStealthedEnemyDirectly() {
   state = toBattleState(state, "P1", attacker.id);
   state = initKnowledgeForOwners(state);
 
-  const res = applyAction(
+  const initial = applyAction(
     state,
     { type: "attack", attackerId: attacker.id, defenderId: hidden.id } as any,
     rng
   );
+  const res = resolveAllPendingRolls(initial.state, rng);
 
   const attackEvent = res.events.find((e) => e.type === "attackResolved");
   assert(!attackEvent, "attackResolved should not be emitted for hidden target");
@@ -1613,11 +1937,12 @@ function testStealthRollLogged() {
   });
   state = toBattleState(state, "P1", assassin.id);
 
-  const res = applyAction(
+  const initial = applyAction(
     state,
     { type: "enterStealth", unitId: assassin.id } as any,
     rng
   );
+  const res = resolveAllPendingRolls(initial.state, rng);
 
   const enterEvent = res.events.find((e) => e.type === "stealthEntered");
   assert(
@@ -1677,6 +2002,104 @@ function testLastKnownPositionsInView() {
   console.log("last_known_positions_in_view passed");
 }
 
+function testLastKnownPositionPersistsWhileHidden() {
+  const rng = new SeededRNG(1113);
+  let state = createEmptyGame();
+  const a1 = createDefaultArmy("P1");
+  const a2 = createDefaultArmy("P2");
+  state = attachArmy(state, a1);
+  state = attachArmy(state, a2);
+
+  const assassin = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "assassin"
+  )!;
+
+  state = setUnit(state, assassin.id, { position: { col: 4, row: 4 } });
+  state = toBattleState(state, "P1", assassin.id);
+  state = initKnowledgeForOwners(state);
+
+  const enterInitial = applyAction(
+    state,
+    { type: "enterStealth", unitId: assassin.id } as any,
+    rng
+  );
+  const enterResolved = resolveAllPendingRolls(enterInitial.state, rng);
+
+  const lastKnownBefore = enterResolved.state.lastKnownPositions?.P2?.[assassin.id];
+  assert(
+    lastKnownBefore && lastKnownBefore.col === 4 && lastKnownBefore.row === 4,
+    "last known position should be set on stealth entry"
+  );
+
+  const moveRes = applyAction(
+    enterResolved.state,
+    { type: "move", unitId: assassin.id, to: { col: 4, row: 5 } } as any,
+    rng
+  );
+
+  const lastKnownAfter = moveRes.state.lastKnownPositions?.P2?.[assassin.id];
+  assert(
+    lastKnownAfter && lastKnownAfter.col === 4 && lastKnownAfter.row === 4,
+    "last known position should persist while hidden"
+  );
+
+  console.log("last_known_position_persists_while_hidden passed");
+}
+
+function testLastKnownClearedOnStealthExit() {
+  const rng = new SeededRNG(1114);
+  let state = createEmptyGame();
+  const a1 = createDefaultArmy("P1");
+  const a2 = createDefaultArmy("P2");
+  state = attachArmy(state, a1);
+  state = attachArmy(state, a2);
+
+  const assassin = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "assassin"
+  )!;
+
+  state = setUnit(state, assassin.id, {
+    position: { col: 4, row: 4 },
+    isStealthed: true,
+    stealthTurnsLeft: 0,
+  });
+  state = {
+    ...state,
+    lastKnownPositions: {
+      ...state.lastKnownPositions,
+      P2: {
+        ...(state.lastKnownPositions?.P2 ?? {}),
+        [assassin.id]: { col: 4, row: 4 },
+      },
+    },
+  };
+
+  state = {
+    ...state,
+    phase: "battle",
+    currentPlayer: "P1",
+    activeUnitId: null,
+    turnQueue: [assassin.id],
+    turnQueueIndex: 0,
+    turnOrder: [assassin.id],
+    turnOrderIndex: 0,
+  };
+
+  const revealRes = applyAction(
+    state,
+    { type: "unitStartTurn", unitId: assassin.id } as any,
+    rng
+  );
+
+  const cleared = revealRes.state.lastKnownPositions?.P2?.[assassin.id];
+  assert(
+    cleared === undefined,
+    "last known position should be cleared when stealth ends"
+  );
+
+  console.log("last_known_cleared_on_stealth_exit passed");
+}
+
 function testTricksterAoERevealsHiddenInArea() {
   const rng = new SeededRNG(120);
   let state = createEmptyGame();
@@ -1710,7 +2133,7 @@ function testTricksterAoERevealsHiddenInArea() {
   state = toBattleState(state, "P1", trickster.id);
   state = initKnowledgeForOwners(state);
 
-  const res = applyAction(
+  const initial = applyAction(
     state,
     {
       type: "useAbility",
@@ -1720,17 +2143,19 @@ function testTricksterAoERevealsHiddenInArea() {
     } as any,
     rng
   );
+  const resolved = resolveAllPendingRollsWithEvents(initial.state, rng);
+  const events = [...initial.events, ...resolved.events];
 
-  const revealEvent = res.events.find(
+  const revealEvent = events.find(
     (e) => e.type === "stealthRevealed" && e.unitId === nearHidden.id && e.reason === "aoeHit"
   );
   assert(revealEvent, "aoe should reveal hidden enemy in area");
-  assert(res.state.units[nearHidden.id].isStealthed === false, "near hidden should be revealed");
-  assert(res.state.units[midHidden.id].isStealthed === false, "mid hidden should be revealed");
-  assert(res.state.units[farHidden.id].isStealthed === true, "far hidden should remain stealthed");
-  assert(res.state.knowledge["P1"][nearHidden.id] === true, "caster knowledge should include revealed unit");
+  assert(resolved.state.units[nearHidden.id].isStealthed === false, "near hidden should be revealed");
+  assert(resolved.state.units[midHidden.id].isStealthed === false, "mid hidden should be revealed");
+  assert(resolved.state.units[farHidden.id].isStealthed === true, "far hidden should remain stealthed");
+  assert(resolved.state.knowledge["P1"][nearHidden.id] === true, "caster knowledge should include revealed unit");
 
-  const aoeEvent = res.events.find((e) => e.type === "aoeResolved");
+  const aoeEvent = events.find((e) => e.type === "aoeResolved");
   assert(
       aoeEvent &&
       aoeEvent.type === "aoeResolved" &&
@@ -1767,7 +2192,7 @@ function testTricksterAoEIs5x5Radius2() {
   state = toBattleState(state, "P1", trickster.id);
   state = initKnowledgeForOwners(state);
 
-  const res = applyAction(
+  const initial = applyAction(
     state,
     {
       type: "useAbility",
@@ -1777,8 +2202,10 @@ function testTricksterAoEIs5x5Radius2() {
     } as any,
     rng
   );
+  const resolved = resolveAllPendingRollsWithEvents(initial.state, rng);
+  const events = [...initial.events, ...resolved.events];
 
-  const aoeEvent = res.events.find((e) => e.type === "aoeResolved");
+  const aoeEvent = events.find((e) => e.type === "aoeResolved");
   assert(aoeEvent && aoeEvent.type === "aoeResolved", "aoeResolved should be emitted");
   if (aoeEvent && aoeEvent.type === "aoeResolved") {
     assert(aoeEvent.abilityId === "tricksterAoE", "aoeResolved should include abilityId");
@@ -1821,7 +2248,7 @@ function testTricksterAoEHitsAllies() {
   state = toBattleState(state, "P1", trickster.id);
   state = initKnowledgeForOwners(state);
 
-  const res = applyAction(
+  const initial = applyAction(
     state,
     {
       type: "useAbility",
@@ -1831,8 +2258,10 @@ function testTricksterAoEHitsAllies() {
     } as any,
     rng
   );
+  const resolved = resolveAllPendingRollsWithEvents(initial.state, rng);
+  const events = [...initial.events, ...resolved.events];
 
-  const aoeEvent = res.events.find((e) => e.type === "aoeResolved");
+  const aoeEvent = events.find((e) => e.type === "aoeResolved");
   assert(aoeEvent && aoeEvent.type === "aoeResolved", "aoeResolved should be emitted");
   if (aoeEvent && aoeEvent.type === "aoeResolved") {
     assert(
@@ -1845,11 +2274,68 @@ function testTricksterAoEHitsAllies() {
     );
   }
   assert(
-    res.state.units[ally.id].isStealthed === false,
+    resolved.state.units[ally.id].isStealthed === false,
     "ally stealth should be revealed by aoe"
   );
 
   console.log("trickster_aoe_hits_allies passed");
+}
+
+function testTricksterAoEDoesNotDamageSelf() {
+  const rng = new SeededRNG(122);
+  let state = createEmptyGame();
+  const a1 = createDefaultArmy("P1");
+  const a2 = createDefaultArmy("P2");
+  state = attachArmy(state, a1);
+  state = attachArmy(state, a2);
+
+  const trickster = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "trickster"
+  )!;
+  const enemy = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "spearman"
+  )!;
+
+  state = setUnit(state, trickster.id, { position: { col: 4, row: 4 } });
+  state = setUnit(state, enemy.id, { position: { col: 5, row: 4 } });
+
+  state = toBattleState(state, "P1", trickster.id);
+  state = initKnowledgeForOwners(state);
+
+  const hpBefore = state.units[trickster.id].hp;
+
+  const initial = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: trickster.id,
+      abilityId: "tricksterAoE",
+      payload: { center: { col: 4, row: 4 } },
+    } as any,
+    rng
+  );
+  const resolved = resolveAllPendingRollsWithEvents(initial.state, rng);
+  const events = [...initial.events, ...resolved.events];
+
+  const aoeEvent = events.find((e) => e.type === "aoeResolved");
+  assert(aoeEvent && aoeEvent.type === "aoeResolved", "aoeResolved should be emitted");
+  if (aoeEvent && aoeEvent.type === "aoeResolved") {
+    assert(
+      !aoeEvent.damagedUnitIds.includes(trickster.id),
+      "caster should not be damaged by own AoE"
+    );
+    assert(
+      !aoeEvent.affectedUnitIds.includes(trickster.id),
+      "caster should not be listed as an affected target"
+    );
+  }
+
+  assert(
+    resolved.state.units[trickster.id].hp === hpBefore,
+    "caster HP should remain unchanged"
+  );
+
+  console.log("trickster_aoe_does_not_damage_self passed");
 }
 
 function testTricksterAoERevealsAllInArea() {
@@ -1885,7 +2371,7 @@ function testTricksterAoERevealsAllInArea() {
   state = toBattleState(state, "P1", trickster.id);
   state = initKnowledgeForOwners(state);
 
-  const res = applyAction(
+  const initial = applyAction(
     state,
     {
       type: "useAbility",
@@ -1895,8 +2381,10 @@ function testTricksterAoERevealsAllInArea() {
     } as any,
     rng
   );
+  const resolved = resolveAllPendingRollsWithEvents(initial.state, rng);
+  const events = [...initial.events, ...resolved.events];
 
-  const revealEvents = res.events.filter((e) => e.type === "stealthRevealed");
+  const revealEvents = events.filter((e) => e.type === "stealthRevealed");
   assert(
     revealEvents.some((e) => e.type === "stealthRevealed" && e.unitId === enemy.id),
     "enemy should be revealed by aoe"
@@ -1905,8 +2393,183 @@ function testTricksterAoERevealsAllInArea() {
     revealEvents.some((e) => e.type === "stealthRevealed" && e.unitId === ally.id),
     "ally should be revealed by aoe"
   );
+  assert(
+    resolved.state.units[ally.id].isStealthed === false,
+    "ally stealth should be revealed by aoe"
+  );
 
   console.log("trickster_aoe_reveals_all_in_area passed");
+}
+
+function testTricksterAoEAttackerRollOnce() {
+  const rng = new SeededRNG(130);
+  let state = createEmptyGame();
+  const a1 = createDefaultArmy("P1");
+  const a2 = createDefaultArmy("P2");
+  state = attachArmy(state, a1);
+  state = attachArmy(state, a2);
+
+  const trickster = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "trickster"
+  )!;
+  const enemy1 = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "assassin"
+  )!;
+  const enemy2 = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "archer"
+  )!;
+
+  state = setUnit(state, trickster.id, { position: { col: 4, row: 4 } });
+  state = setUnit(state, enemy1.id, { position: { col: 5, row: 4 } });
+  state = setUnit(state, enemy2.id, { position: { col: 6, row: 4 } });
+
+  state = toBattleState(state, "P1", trickster.id);
+  state = initKnowledgeForOwners(state);
+
+  const initial = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: trickster.id,
+      abilityId: "tricksterAoE",
+      payload: { center: { col: 4, row: 4 } },
+    } as any,
+    rng
+  );
+  const resolved = resolveAllPendingRollsWithEvents(initial.state, rng);
+  const events = [...initial.events, ...resolved.events];
+
+  const attackerRolls = events.filter(
+    (e) => e.type === "rollRequested" && e.kind === "tricksterAoE_attackerRoll"
+  );
+  const defenderRolls = events.filter(
+    (e) => e.type === "rollRequested" && e.kind === "tricksterAoE_defenderRoll"
+  );
+
+  assert(attackerRolls.length === 1, "AoE attacker roll should be requested once");
+  assert(defenderRolls.length === 2, "AoE should request defender roll per target");
+
+  console.log("trickster_aoe_attacker_roll_once passed");
+}
+
+function testTricksterAoEMultipleDefendersRollSeparately() {
+  const rng = new SeededRNG(131);
+  let state = createEmptyGame();
+  const a1 = createDefaultArmy("P1");
+  const a2 = createDefaultArmy("P2");
+  state = attachArmy(state, a1);
+  state = attachArmy(state, a2);
+
+  const trickster = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "trickster"
+  )!;
+  const enemy1 = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "assassin"
+  )!;
+  const enemy2 = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "archer"
+  )!;
+
+  state = setUnit(state, trickster.id, { position: { col: 4, row: 4 } });
+  state = setUnit(state, enemy1.id, { position: { col: 5, row: 4 } });
+  state = setUnit(state, enemy2.id, { position: { col: 6, row: 4 } });
+
+  state = toBattleState(state, "P1", trickster.id);
+  state = initKnowledgeForOwners(state);
+
+  const initial = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: trickster.id,
+      abilityId: "tricksterAoE",
+      payload: { center: { col: 4, row: 4 } },
+    } as any,
+    rng
+  );
+  const resolved = resolveAllPendingRollsWithEvents(initial.state, rng);
+  const events = [...initial.events, ...resolved.events];
+
+  const attackEvents = events.filter((e) => e.type === "attackResolved");
+  assert(attackEvents.length === 2, "AoE should resolve combat for each target");
+  const attackerSums = attackEvents
+    .map((e) => (e.type === "attackResolved" ? e.attackerRoll.sum : 0))
+    .filter((v) => v > 0);
+  assert(
+    attackerSums.length === 2 && attackerSums[0] === attackerSums[1],
+    "AoE should reuse the same attacker roll for all targets"
+  );
+
+  console.log("trickster_aoe_multiple_defenders_roll_separately passed");
+}
+
+function testTricksterAoERevealsStealthedUnits() {
+  const rng = new SeededRNG(132);
+  let state = createEmptyGame();
+  const a1 = createDefaultArmy("P1");
+  const a2 = createDefaultArmy("P2");
+  state = attachArmy(state, a1);
+  state = attachArmy(state, a2);
+
+  const trickster = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "trickster"
+  )!;
+  const ally = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "assassin"
+  )!;
+  const enemy = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "archer"
+  )!;
+
+  state = setUnit(state, trickster.id, { position: { col: 4, row: 4 } });
+  state = setUnit(state, ally.id, {
+    position: { col: 5, row: 4 },
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
+  state = setUnit(state, enemy.id, {
+    position: { col: 6, row: 4 },
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
+
+  state = toBattleState(state, "P1", trickster.id);
+  state = initKnowledgeForOwners(state);
+
+  const initial = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: trickster.id,
+      abilityId: "tricksterAoE",
+      payload: { center: { col: 4, row: 4 } },
+    } as any,
+    rng
+  );
+  const resolved = resolveAllPendingRollsWithEvents(initial.state, rng);
+  const events = [...initial.events, ...resolved.events];
+
+  const revealEvents = events.filter(
+    (e) => e.type === "stealthRevealed" && e.reason === "aoeHit"
+  );
+  assert(
+    revealEvents.some((e) => e.type === "stealthRevealed" && e.unitId === ally.id),
+    "AoE should reveal stealthed ally"
+  );
+  assert(
+    revealEvents.some((e) => e.type === "stealthRevealed" && e.unitId === enemy.id),
+    "AoE should reveal stealthed enemy"
+  );
+  assert(
+    resolved.state.units[ally.id].isStealthed === false,
+    "ally stealth should be cleared"
+  );
+  assert(
+    resolved.state.units[enemy.id].isStealthed === false,
+    "enemy stealth should be cleared"
+  );
+
+  console.log("trickster_aoe_reveals_stealthed_units passed");
 }
 
 function testTricksterAoEConsumesAttack() {
@@ -1926,7 +2589,7 @@ function testTricksterAoEConsumesAttack() {
   state = toBattleState(state, "P1", trickster.id);
   state = initKnowledgeForOwners(state);
 
-  const res = applyAction(
+  const initial = applyAction(
     state,
     {
       type: "useAbility",
@@ -1936,6 +2599,7 @@ function testTricksterAoEConsumesAttack() {
     } as any,
     rng
   );
+  const res = resolveAllPendingRollsWithEvents(initial.state, rng);
 
   assert(
     res.state.units[trickster.id].turn.actionUsed === true,
@@ -1954,6 +2618,12 @@ function testTricksterAoEConsumesAttack() {
 
   const attackEvent = followUp.events.find((e) => e.type === "attackResolved");
   assert(!attackEvent, "trickster should not be able to attack after AoE (consumesAttack)");
+  assert(followUp.events.length === 0, "attack should be blocked after AoE");
+  assert.deepStrictEqual(
+    followUp.state,
+    res.state,
+    "state should be unchanged after blocked attack"
+  );
 
   console.log("trickster_aoe_consumes_attack passed");
 }
@@ -1977,11 +2647,12 @@ function testArcherCanShootThroughAllies() {
   state = toBattleState(state, "P1", archer.id);
   state = initKnowledgeForOwners(state);
 
-  const res = applyAction(
+  const initial = applyAction(
     state,
     { type: "attack", attackerId: archer.id, defenderId: enemy.id } as any,
     rng
   );
+  const res = resolveAllPendingRolls(initial.state, rng);
 
   const attackEvent = res.events.find((e) => e.type === "attackResolved");
   assert(attackEvent, "archer should be able to shoot through allies");
@@ -2008,11 +2679,12 @@ function testArcherCannotShootThroughEnemies() {
   state = toBattleState(state, "P1", archer.id);
   state = initKnowledgeForOwners(state);
 
-  const res = applyAction(
+  const initial = applyAction(
     state,
     { type: "attack", attackerId: archer.id, defenderId: farEnemy.id } as any,
     rng
   );
+  const res = resolveAllPendingRolls(initial.state, rng);
 
   const attackEvent = res.events.find((e) => e.type === "attackResolved");
   assert(!attackEvent, "archer should not shoot through enemies");
@@ -2039,11 +2711,12 @@ function testArcherAttacksFirstOnLine() {
   state = toBattleState(state, "P1", archer.id);
   state = initKnowledgeForOwners(state);
 
-  const res = applyAction(
+  const initial = applyAction(
     state,
     { type: "attack", attackerId: archer.id, defenderId: nearEnemy.id } as any,
     rng
   );
+  const res = resolveAllPendingRolls(initial.state, rng);
 
   const attackEvent = res.events.find(
     (e) => e.type === "attackResolved" && e.defenderId === nearEnemy.id
@@ -2074,17 +2747,128 @@ function testArcherCannotTargetHiddenEnemy() {
   state = toBattleState(state, "P1", archer.id);
   state = initKnowledgeForOwners(state);
 
-  const res = applyAction(
+  const initial = applyAction(
     state,
     { type: "attack", attackerId: archer.id, defenderId: hidden.id } as any,
     rng
   );
+  const res = resolveAllPendingRolls(initial.state, rng);
 
   const attackEvent = res.events.find((e) => e.type === "attackResolved");
   assert(!attackEvent, "archer should not target hidden enemy directly");
   assert(res.state.units[hidden.id].isStealthed === true, "hidden enemy should remain stealthed");
 
   console.log("archer_cannot_target_hidden_enemy passed");
+}
+
+function testArcherCanAttackDiagonalFirstTargetOnly() {
+  const rng = new SeededRNG(204);
+  let state = createEmptyGame();
+  const a1 = createDefaultArmy("P1");
+  const a2 = createDefaultArmy("P2");
+  state = attachArmy(state, a1);
+  state = attachArmy(state, a2);
+
+  const archer = Object.values(state.units).find((u) => u.owner === "P1" && u.class === "archer")!;
+  const nearEnemy = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "spearman")!;
+  const farEnemy = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "archer")!;
+
+  state = setUnit(state, archer.id, { position: { col: 2, row: 2 } });
+  state = setUnit(state, nearEnemy.id, { position: { col: 3, row: 3 } });
+  state = setUnit(state, farEnemy.id, { position: { col: 4, row: 4 } });
+
+  state = toBattleState(state, "P1", archer.id);
+  state = initKnowledgeForOwners(state);
+
+  const first = applyAction(
+    state,
+    { type: "attack", attackerId: archer.id, defenderId: farEnemy.id } as any,
+    rng
+  );
+  const firstResolved = resolveAllPendingRolls(first.state, rng);
+  const firstAttack = firstResolved.events.find(
+    (e) => e.type === "attackResolved" && e.defenderId === farEnemy.id
+  );
+  assert(!firstAttack, "archer should not target enemies beyond the first on diagonal");
+
+  const second = applyAction(
+    firstResolved.state,
+    { type: "attack", attackerId: archer.id, defenderId: nearEnemy.id } as any,
+    rng
+  );
+  const secondResolved = resolveAllPendingRolls(second.state, rng);
+  const secondAttack = secondResolved.events.find(
+    (e) => e.type === "attackResolved" && e.defenderId === nearEnemy.id
+  );
+  assert(secondAttack, "archer should attack first enemy on diagonal");
+
+  console.log("archer_can_attack_diagonal_first_target_only passed");
+}
+
+function testArcherCanShootThroughAlliesDiagonal() {
+  const rng = new SeededRNG(205);
+  let state = createEmptyGame();
+  const a1 = createDefaultArmy("P1");
+  const a2 = createDefaultArmy("P2");
+  state = attachArmy(state, a1);
+  state = attachArmy(state, a2);
+
+  const archer = Object.values(state.units).find((u) => u.owner === "P1" && u.class === "archer")!;
+  const ally = Object.values(state.units).find((u) => u.owner === "P1" && u.class === "knight")!;
+  const enemy = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "spearman")!;
+
+  state = setUnit(state, archer.id, { position: { col: 2, row: 2 } });
+  state = setUnit(state, ally.id, { position: { col: 3, row: 3 } });
+  state = setUnit(state, enemy.id, { position: { col: 4, row: 4 } });
+
+  state = toBattleState(state, "P1", archer.id);
+  state = initKnowledgeForOwners(state);
+
+  const initial = applyAction(
+    state,
+    { type: "attack", attackerId: archer.id, defenderId: enemy.id } as any,
+    rng
+  );
+  const resolved = resolveAllPendingRolls(initial.state, rng);
+
+  const attackEvent = resolved.events.find((e) => e.type === "attackResolved");
+  assert(attackEvent, "archer should be able to shoot through allies diagonally");
+
+  console.log("archer_can_shoot_through_allies_diagonal passed");
+}
+
+function testArcherCannotShootThroughEnemiesDiagonal() {
+  const rng = new SeededRNG(206);
+  let state = createEmptyGame();
+  const a1 = createDefaultArmy("P1");
+  const a2 = createDefaultArmy("P2");
+  state = attachArmy(state, a1);
+  state = attachArmy(state, a2);
+
+  const archer = Object.values(state.units).find((u) => u.owner === "P1" && u.class === "archer")!;
+  const nearEnemy = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "spearman")!;
+  const farEnemy = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "archer")!;
+
+  state = setUnit(state, archer.id, { position: { col: 2, row: 2 } });
+  state = setUnit(state, nearEnemy.id, { position: { col: 3, row: 3 } });
+  state = setUnit(state, farEnemy.id, { position: { col: 4, row: 4 } });
+
+  state = toBattleState(state, "P1", archer.id);
+  state = initKnowledgeForOwners(state);
+
+  const initial = applyAction(
+    state,
+    { type: "attack", attackerId: archer.id, defenderId: farEnemy.id } as any,
+    rng
+  );
+  const resolved = resolveAllPendingRolls(initial.state, rng);
+
+  const attackEvent = resolved.events.find(
+    (e) => e.type === "attackResolved" && e.defenderId === farEnemy.id
+  );
+  assert(!attackEvent, "archer should not shoot through enemies diagonally");
+
+  console.log("archer_cannot_shoot_through_enemies_diagonal passed");
 }
 
 function testCannotMoveTwicePerTurn() {
@@ -2147,8 +2931,9 @@ function testCannotStealthTwicePerTurn() {
     { type: "enterStealth", unitId: assassin.id } as any,
     rng
   );
+  const resolvedFirst = resolveAllPendingRolls(first.state, rng);
   const second = applyAction(
-    first.state,
+    resolvedFirst.state,
     { type: "enterStealth", unitId: assassin.id } as any,
     rng
   );
@@ -2159,7 +2944,7 @@ function testCannotStealthTwicePerTurn() {
   );
   assert.deepStrictEqual(
     second.state,
-    first.state,
+    resolvedFirst.state,
     "state should be unchanged after second stealth attempt"
   );
 
@@ -2196,9 +2981,10 @@ function testSearchStealthSlots() {
     { type: "searchStealth", unitId: searcher.id, mode: "move" } as any,
     rng
   );
+  const resolvedSearchMove = resolveAllPendingRolls(searchMove.state, rng);
 
   const moveAfterSearch = applyAction(
-    searchMove.state,
+    resolvedSearchMove.state,
     { type: "move", unitId: searcher.id, to: { col: 4, row: 3 } } as any,
     rng
   );
@@ -2215,9 +3001,10 @@ function testSearchStealthSlots() {
     { type: "searchStealth", unitId: searcher.id, mode: "action" } as any,
     rng
   );
+  const resolvedSearchAction = resolveAllPendingRolls(searchAction.state, rng);
 
   const moveAfterActionSearch = applyAction(
-    searchAction.state,
+    resolvedSearchAction.state,
     { type: "move", unitId: searcher.id, to: { col: 4, row: 3 } } as any,
     rng
   );
@@ -2225,7 +3012,7 @@ function testSearchStealthSlots() {
   assert(moved, "move should be allowed after searchStealth(mode=action)");
 
   const secondActionSearch = applyAction(
-    searchAction.state,
+    resolvedSearchAction.state,
     { type: "searchStealth", unitId: searcher.id, mode: "action" } as any,
     rng
   );
@@ -2307,11 +3094,12 @@ function testTricksterMoveOptionsGeneratedAndUsed() {
   state = toBattleState(state, "P1", trickster.id);
   state = initKnowledgeForOwners(state);
 
-  const options = applyAction(
+  const optionsInitial = applyAction(
     state,
     { type: "requestMoveOptions", unitId: trickster.id } as any,
     rng
   );
+  const options = resolveAllPendingRolls(optionsInitial.state, rng);
 
   const moveEvent = options.events.find(
     (e) => e.type === "moveOptionsGenerated" && e.unitId === trickster.id
@@ -2374,11 +3162,12 @@ function testBerserkerMoveOptionsGeneratedAndUsed() {
   state = toBattleState(state, "P1", berserker.id);
   state = initKnowledgeForOwners(state);
 
-  const options = applyAction(
+  const optionsInitial = applyAction(
     state,
     { type: "requestMoveOptions", unitId: berserker.id } as any,
     rng
   );
+  const options = resolveAllPendingRolls(optionsInitial.state, rng);
 
   const moveEvent = options.events.find(
     (e) => e.type === "moveOptionsGenerated" && e.unitId === berserker.id
@@ -2462,6 +3251,11 @@ function main() {
   testSearchRevealsOnlyInRadius();
   testSearchUpdatesOnlyPlayerKnowledge();
   testSearchStealthRollsLogged();
+  testSearchActionWorksBeforeAttack();
+  testSearchMoveWorksBeforeMove();
+  testSearchActionBlockedAfterAttack();
+  testSearchMoveBlockedAfterMove();
+  testSearchButtonsEnabledOnFreshUnitTurn();
   testAttackAlreadyRevealedUnit();
   testAdjacencyRevealAfterMove();
   testCannotAttackTwicePerTurn();
@@ -2479,15 +3273,24 @@ function main() {
   testStealthLasts3OwnTurnsThenExpiresOn4thStart();
   testStealthRollLogged();
   testLastKnownPositionsInView();
+  testLastKnownPositionPersistsWhileHidden();
+  testLastKnownClearedOnStealthExit();
   testTricksterAoERevealsHiddenInArea();
   testTricksterAoEIs5x5Radius2();
   testTricksterAoEHitsAllies();
+  testTricksterAoEDoesNotDamageSelf();
   testTricksterAoERevealsAllInArea();
+  testTricksterAoEAttackerRollOnce();
+  testTricksterAoEMultipleDefendersRollSeparately();
+  testTricksterAoERevealsStealthedUnits();
   testTricksterAoEConsumesAttack();
   testArcherCanShootThroughAllies();
   testArcherCannotShootThroughEnemies();
   testArcherAttacksFirstOnLine();
   testArcherCannotTargetHiddenEnemy();
+  testArcherCanAttackDiagonalFirstTargetOnly();
+  testArcherCanShootThroughAlliesDiagonal();
+  testArcherCannotShootThroughEnemiesDiagonal();
   testCannotMoveTwicePerTurn();
   testCannotStealthTwicePerTurn();
   testSearchStealthSlots();

@@ -110,14 +110,38 @@ export type RollKind =
   | "searchStealth"
   | "moveTrickster"
   | "moveBerserker"
-  | "attackRoll"
-  | "berserkerDefenseChoice";
+  | "attack_attackerRoll"
+  | "attack_defenderRoll"
+  | "berserkerDefenseChoice"
+  | "riderPathAttack_attackerRoll"
+  | "riderPathAttack_defenderRoll"
+  | "tricksterAoE_attackerRoll"
+  | "tricksterAoE_defenderRoll";
 
 export interface PendingRoll {
   id: string;
   player: PlayerId;
   kind: RollKind;
   context: Record<string, unknown>;
+}
+
+export interface PendingCombatQueueEntry {
+  attackerId: string;
+  defenderId: string;
+  ignoreRange?: boolean;
+  ignoreStealth?: boolean;
+  kind: "riderPath" | "aoe";
+}
+
+export interface PendingAoEResolution {
+  casterId: string;
+  abilityId: string;
+  center: Coord;
+  radius: number;
+  affectedUnitIds: string[];
+  revealedUnitIds: string[];
+  damagedUnitIds: string[];
+  damageByUnitId: Record<string, number>;
 }
 
 export type GameEvent =
@@ -200,6 +224,7 @@ export type GameEvent =
       radius: number;
       affectedUnitIds: string[];
       revealedUnitIds: string[];
+      damagedUnitIds: string[];
       damageByUnitId?: Record<string, number>;
     }
   | {
@@ -316,6 +341,8 @@ export interface GameState {
   activeUnitId: string | null;
   pendingMove: PendingMove | null;
   pendingRoll: PendingRoll | null;
+  pendingCombatQueue: PendingCombatQueueEntry[];
+  pendingAoE: PendingAoEResolution | null;
   rollCounter: number;
 
   /**
@@ -384,16 +411,28 @@ export interface LegalView {
   attackTargetsByUnitId: Record<string, string[]>;
 }
 
+export interface LegalIntents {
+  canSearchMove: boolean;
+  canSearchAction: boolean;
+  searchMoveReason?: string;
+  searchActionReason?: string;
+  canMove: boolean;
+  canAttack: boolean;
+  canEnterStealth: boolean;
+}
+
 export type PlayerView = Omit<
   GameState,
-  "knowledge" | "lastKnownPositions" | "pendingRoll" | "rollCounter"
+  "knowledge" | "lastKnownPositions" | "pendingRoll" | "rollCounter" | "pendingCombatQueue" | "pendingAoE"
 > & {
   knowledge: {
     [playerId in PlayerId]: { [unitId: string]: boolean };
   };
   lastKnownPositions: { [unitId: string]: Coord };
   pendingRoll: PendingRoll | null;
+  pendingCombatQueueCount: number;
   legal?: LegalView;
+  legalIntents?: LegalIntents;
 };
 
 

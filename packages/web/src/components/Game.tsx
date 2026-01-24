@@ -16,6 +16,35 @@ function coordKey(coord: Coord) {
   return `${coord.col},${coord.row}`;
 }
 
+function getPendingRollLabel(kind?: string | null) {
+  switch (kind) {
+    case "attack_attackerRoll":
+      return "Attack roll (attacker)";
+    case "attack_defenderRoll":
+      return "Defense roll";
+    case "riderPathAttack_attackerRoll":
+      return "Rider path attack roll";
+    case "riderPathAttack_defenderRoll":
+      return "Rider path defense roll";
+    case "tricksterAoE_attackerRoll":
+      return "Trickster AoE attack roll";
+    case "tricksterAoE_defenderRoll":
+      return "Trickster AoE defense roll";
+    case "berserkerDefenseChoice":
+      return "Berserker defense choice";
+    case "enterStealth":
+      return "Stealth roll";
+    case "searchStealth":
+      return "Search roll";
+    case "moveTrickster":
+      return "Trickster move roll";
+    case "moveBerserker":
+      return "Berserker move roll";
+    default:
+      return kind ?? "Roll";
+  }
+}
+
 function isCoordInList(coords: Coord[], col: number, row: number): boolean {
   return coords.some((c) => c.col === col && c.row === row);
 }
@@ -52,6 +81,27 @@ export function Game() {
   const isSpectator = role === "spectator";
   const pendingRoll = view?.pendingRoll ?? null;
   const hasPendingRoll = !!pendingRoll;
+  const pendingQueueCount = view?.pendingCombatQueueCount ?? 0;
+  const attackContext = pendingRoll?.context as
+    | {
+        attackerId?: string;
+        defenderId?: string;
+        attackerDice?: number[];
+        tieBreakAttacker?: number[];
+        stage?: "initial" | "tieBreak";
+      }
+    | undefined;
+  const attackerDice = Array.isArray(attackContext?.attackerDice)
+    ? attackContext?.attackerDice ?? []
+    : [];
+  const tieBreakAttacker = Array.isArray(attackContext?.tieBreakAttacker)
+    ? attackContext?.tieBreakAttacker ?? []
+    : [];
+  const showAttackerRoll =
+    pendingRoll?.kind === "attack_defenderRoll" ||
+    pendingRoll?.kind === "riderPathAttack_defenderRoll" ||
+    pendingRoll?.kind === "tricksterAoE_defenderRoll" ||
+    pendingRoll?.kind === "berserkerDefenseChoice";
   const defenderId =
     pendingRoll && pendingRoll.kind === "berserkerDefenseChoice"
       ? (pendingRoll.context as { defenderId?: string }).defenderId
@@ -308,7 +358,12 @@ export function Game() {
           />
           {hasPendingRoll && (
             <div className="mt-4 rounded border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
-              Pending roll: {pendingRoll.kind}. Resolve to continue.
+              Pending roll: {getPendingRollLabel(pendingRoll.kind)}. Resolve to continue.
+              {pendingQueueCount > 0 && (
+                <div className="mt-1 text-[11px] text-amber-700">
+                  Pending attacks: {pendingQueueCount}
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -352,8 +407,20 @@ export function Game() {
             <div className="mt-2 text-xs text-slate-500">
               {pendingRoll.kind === "berserkerDefenseChoice"
                 ? "Choose berserker defense."
-                : "Please roll the dice to resolve the action."}
+                : `Please roll the dice to resolve: ${getPendingRollLabel(
+                    pendingRoll.kind
+                  )}.`}
             </div>
+            {showAttackerRoll && attackerDice.length > 0 && (
+              <div className="mt-3 rounded bg-slate-50 p-2 text-[11px] text-slate-600">
+                <div>Attacker roll: [{attackerDice.join(", ")}]</div>
+                {tieBreakAttacker.length > 0 && (
+                  <div className="mt-1">
+                    Tie-break: [{tieBreakAttacker.join(", ")}]
+                  </div>
+                )}
+              </div>
+            )}
             <div className="mt-4 flex gap-2">
               {pendingRoll.kind === "berserkerDefenseChoice" ? (
                 <>

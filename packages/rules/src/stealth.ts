@@ -266,13 +266,14 @@ import {
       };
     }
 
-    if (u.position) {
-      nextState.lastKnownPositions = {
-        ...nextState.lastKnownPositions,
-        P1: { ...(nextState.lastKnownPositions?.P1 ?? {}), [u.id]: { ...u.position } },
-        P2: { ...(nextState.lastKnownPositions?.P2 ?? {}), [u.id]: { ...u.position } },
-      };
-    }
+    const clearedLastKnown = {
+      ...nextState.lastKnownPositions,
+      P1: { ...(nextState.lastKnownPositions?.P1 ?? {}) },
+      P2: { ...(nextState.lastKnownPositions?.P2 ?? {}) },
+    };
+    delete clearedLastKnown.P1[u.id];
+    delete clearedLastKnown.P2[u.id];
+    nextState.lastKnownPositions = clearedLastKnown;
 
     events.push({
       type: "stealthRevealed",

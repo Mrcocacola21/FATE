@@ -9,7 +9,11 @@ import {
   makeEmptyTurnEconomy,
 } from "./model";
 import { getLegalMovesForUnit } from "./movement";
-import { getLegalPlacements, getLegalAttackTargets } from "./legal";
+import {
+  getLegalPlacements,
+  getLegalAttackTargets,
+  getLegalIntents,
+} from "./legal";
 
 function cloneUnit(unit: UnitState): UnitState {
   const turn = unit.turn ?? makeEmptyTurnEconomy();
@@ -41,7 +45,13 @@ export function makePlayerView(
   state: GameState,
   playerId: PlayerId
 ): PlayerView {
-  const { pendingRoll, rollCounter, ...baseState } = state;
+  const {
+    pendingRoll,
+    rollCounter,
+    pendingCombatQueue,
+    pendingAoE,
+    ...baseState
+  } = state;
   const units: Record<string, UnitState> = {};
   const lastKnownPositions: Record<string, Coord> = {};
 
@@ -102,12 +112,30 @@ export function makePlayerView(
   const visiblePendingRoll =
     pendingRoll && pendingRoll.player === playerId ? pendingRoll : null;
 
+  const basePendingCount = pendingCombatQueue?.length ?? 0;
+  let pendingCombatQueueCount = basePendingCount;
+  if (
+    pendingCombatQueueCount === 0 &&
+    pendingRoll &&
+    (pendingRoll.kind === "tricksterAoE_attackerRoll" ||
+      pendingRoll.kind === "tricksterAoE_defenderRoll")
+  ) {
+    const ctx = pendingRoll.context as {
+      targetsQueue?: string[];
+      currentTargetIndex?: number;
+    };
+    const total = Array.isArray(ctx.targetsQueue) ? ctx.targetsQueue.length : 0;
+    const idx = typeof ctx.currentTargetIndex === "number" ? ctx.currentTargetIndex : 0;
+    pendingCombatQueueCount = Math.max(0, total - idx);
+  }
+
   return {
     ...baseState,
     units,
     knowledge,
     lastKnownPositions,
     pendingRoll: visiblePendingRoll,
+    pendingCombatQueueCount,
     pendingMove,
     turnOrder: [...state.turnOrder],
     placementOrder: [...state.placementOrder],
@@ -120,5 +148,6 @@ export function makePlayerView(
       movesByUnitId,
       attackTargetsByUnitId,
     },
+    legalIntents: getLegalIntents(state, playerId),
   };
 }

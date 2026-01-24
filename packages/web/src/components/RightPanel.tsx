@@ -92,14 +92,16 @@ export const RightPanel: FC<RightPanelProps> = ({
     stealthUsed: false,
   };
 
+  const legalIntents = view.legalIntents;
+
   const canStealth =
     selectedUnit?.class === "assassin" || selectedUnit?.class === "archer";
 
   const moveDisabled = !canAct || economy.moveUsed;
   const attackDisabled = !canAct || economy.attackUsed || economy.actionUsed;
   const stealthDisabled = !canAct || economy.stealthUsed || !canStealth;
-  const searchMoveDisabled = !canAct || economy.moveUsed;
-  const searchActionDisabled = !canAct || economy.actionUsed;
+  const searchMoveDisabled = !canAct || !legalIntents?.canSearchMove;
+  const searchActionDisabled = !canAct || !legalIntents?.canSearchAction;
 
   const abilityAvailable = selectedUnit?.class === "trickster";
   const abilityDisabled =
@@ -136,6 +138,23 @@ export const RightPanel: FC<RightPanelProps> = ({
           >
             Start Turn: {expectedUnitId}
           </button>
+        )}
+        {legalIntents && (
+          <div className="mt-3 space-y-1 text-[10px] text-slate-500">
+            <div>
+              Legal: SM={legalIntents.canSearchMove ? "true" : "false"} SA=
+              {legalIntents.canSearchAction ? "true" : "false"} (reasons:{" "}
+              {legalIntents.searchMoveReason ?? "-"} /{" "}
+              {legalIntents.searchActionReason ?? "-"})
+            </div>
+            <div>
+              Economy: moveUsed={economy.moveUsed ? "true" : "false"} actionUsed=
+              {economy.actionUsed ? "true" : "false"} attackUsed=
+              {economy.attackUsed ? "true" : "false"} stealthUsed=
+              {economy.stealthUsed ? "true" : "false"}
+            </div>
+            <div>pendingRoll: {pendingRoll ? "true" : "false"}</div>
+          </div>
         )}
       </div>
 
@@ -312,6 +331,16 @@ export const RightPanel: FC<RightPanelProps> = ({
             >
               Search (Action)
             </button>
+            {searchMoveDisabled && legalIntents?.searchMoveReason && (
+              <div className="col-span-2 text-[10px] text-slate-400">
+                Search (Move) disabled: {legalIntents.searchMoveReason}
+              </div>
+            )}
+            {searchActionDisabled && legalIntents?.searchActionReason && (
+              <div className="col-span-2 text-[10px] text-slate-400">
+                Search (Action) disabled: {legalIntents.searchActionReason}
+              </div>
+            )}
             <button
               className={`rounded px-2 py-2 ${
                 stealthDisabled ? "bg-slate-100 text-slate-400" : "bg-slate-200"
@@ -344,6 +373,11 @@ export const RightPanel: FC<RightPanelProps> = ({
             >
               {abilityAvailable ? "Trickster AoE" : "Use Ability"}
             </button>
+            {abilityAvailable && (
+              <div className="text-[10px] text-slate-500">
+                AoE: 5x5, hits allies (not self).
+              </div>
+            )}
             <button
               className={`rounded px-2 py-2 ${
                 isMyTurn && joined && !isSpectator

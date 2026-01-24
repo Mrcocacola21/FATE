@@ -4,7 +4,6 @@ import { GameEvent, GameState, Coord, UnitState } from "./model";
 import { RNG } from "./rng";
 import { chebyshev } from "./board";
 import { revealStealthedInArea } from "./stealth";
-import { resolveAttack } from "./combat";
 
 export type AoEShape = "chebyshev";
 
@@ -15,7 +14,9 @@ export interface AoEParams {
   applyAttacks?: boolean;
   ignoreStealth?: boolean;
   targetFilter?: (unit: UnitState, caster: UnitState) => boolean;
+  revealFilter?: (unit: UnitState, caster: UnitState) => boolean;
   abilityId?: string;
+  emitEvent?: boolean;
 }
 
 function isInsideAoE(
@@ -37,16 +38,21 @@ export function resolveAoE(
   center: Coord,
   params: AoEParams,
   rng: RNG
-): { nextState: GameState; events: GameEvent[] } {
+): {
+  nextState: GameState;
+  events: GameEvent[];
+  affectedUnitIds: string[];
+  revealedUnitIds: string[];
+} {
   const caster = state.units[casterId];
   if (!caster || !caster.isAlive) {
-    return { nextState: state, events: [] };
+    return { nextState: state, events: [], affectedUnitIds: [], revealedUnitIds: [] };
   }
 
   const shape: AoEShape = params.shape ?? "chebyshev";
   const radius = params.radius;
-  const targetFilter =
-    params.targetFilter ?? (() => true);
+  const targetFilter = params.targetFilter ?? (() => true);
+  const revealFilter = params.revealFilter ?? targetFilter;
 
   let nextState: GameState = state;
   const events: GameEvent[] = [];
@@ -58,7 +64,7 @@ export function resolveAoE(
       center,
       radius,
       rng,
-      (u) => targetFilter(u, caster)
+      (u) => revealFilter(u, caster)
     );
     nextState = res.state;
     events.push(...res.events);
@@ -75,36 +81,20 @@ export function resolveAoE(
     })
     .map((u) => u.id);
 
-  if (params.applyAttacks) {
-    const ignoreStealth = params.ignoreStealth ?? true;
-    for (const targetId of affectedUnitIds) {
-      const target = nextState.units[targetId];
-      if (!target || !target.isAlive || !target.position) continue;
-      const res = resolveAttack(
-        nextState,
-        {
-          attackerId: caster.id,
-          defenderId: target.id,
-          ignoreRange: true,
-          ignoreStealth,
-        },
-        rng
-      );
-      nextState = res.nextState;
-      events.push(...res.events);
-    }
+  if (params.emitEvent !== false) {
+    events.push({
+      type: "aoeResolved",
+      sourceUnitId: caster.id,
+      abilityId: params.abilityId,
+      casterId: caster.id,
+      center,
+      radius,
+      affectedUnitIds,
+      revealedUnitIds,
+      damagedUnitIds: [],
+      damageByUnitId: {},
+    });
   }
 
-  events.push({
-    type: "aoeResolved",
-    sourceUnitId: caster.id,
-    abilityId: params.abilityId,
-    casterId: caster.id,
-    center,
-    radius,
-    affectedUnitIds,
-    revealedUnitIds,
-  });
-
-  return { nextState, events };
+  return { nextState, events, affectedUnitIds, revealedUnitIds };
 }
