@@ -9,7 +9,7 @@ import {
   UnitState,
 } from "./model";
 import { RNG } from "./rng";
-import { HERO_GRAND_KAISER_ID } from "./heroes";
+import { HERO_GRAND_KAISER_ID, HERO_VLAD_TEPES_ID } from "./heroes";
 
 /**
  * Стоимость способности с точки зрения экономики хода.
@@ -65,6 +65,10 @@ export const ABILITY_KAISER_CARPET_STRIKE = "kaiserCarpetStrike" as const;
 export const ABILITY_KAISER_ENGINEERING_MIRACLE =
   "kaiserEngineeringMiracle" as const;
 export const ABILITY_KAISER_BUNKER = "kaiserBunker" as const;
+export const ABILITY_VLAD_POLKOVODETS = "vladPolkovodets" as const;
+export const ABILITY_VLAD_INTIMIDATE = "vladIntimidate" as const;
+export const ABILITY_VLAD_STAKES = "vladStakes" as const;
+export const ABILITY_VLAD_FOREST = "vladForest" as const;
 export const TRICKSTER_AOE_RADIUS = 2;
 
 /**
@@ -135,6 +139,30 @@ const ABILITY_SPECS: Record<string, AbilitySpec> = {
     description: "Auto transform. Gain rider + berserker movement, attack 2.",
     chargeUnlimited: true,
     triggerCharges: 5,
+  },
+  [ABILITY_VLAD_POLKOVODETS]: {
+    id: ABILITY_VLAD_POLKOVODETS,
+    displayName: "Polkovodets",
+    kind: "passive",
+    description: "+1 damage to adjacent allies (not self).",
+  },
+  [ABILITY_VLAD_INTIMIDATE]: {
+    id: ABILITY_VLAD_INTIMIDATE,
+    displayName: "Intimidating Stare",
+    kind: "passive",
+    description: "After a miss vs Vlad, can push attacker 1 cell.",
+  },
+  [ABILITY_VLAD_STAKES]: {
+    id: ABILITY_VLAD_STAKES,
+    displayName: "Field of Stakes",
+    kind: "impulse",
+    description: "Place 3 hidden stakes at battle start and from 2nd turn.",
+  },
+  [ABILITY_VLAD_FOREST]: {
+    id: ABILITY_VLAD_FOREST,
+    displayName: "Forest of the Dead",
+    kind: "phantasm",
+    description: "Consume 9 stakes to unleash 3x3 AoE (2 dmg, root).",
   },
 };
 
@@ -398,6 +426,14 @@ export function getAbilityViewsForUnit(
       ABILITY_KAISER_DORA,
       ABILITY_KAISER_CARPET_STRIKE,
       ABILITY_KAISER_ENGINEERING_MIRACLE
+    );
+  }
+  if (unit.heroId === HERO_VLAD_TEPES_ID) {
+    abilityIds.push(
+      ABILITY_VLAD_POLKOVODETS,
+      ABILITY_VLAD_INTIMIDATE,
+      ABILITY_VLAD_STAKES,
+      ABILITY_VLAD_FOREST
     );
   }
 

@@ -1,6 +1,7 @@
 import { UnitClass } from "./model";
 
 export const HERO_GRAND_KAISER_ID = "grand-kaiser" as const;
+export const HERO_VLAD_TEPES_ID = "vladTepes" as const;
 
 export interface HeroDefinition {
   id: string;
@@ -17,6 +18,12 @@ export const HERO_CATALOG: HeroDefinition[] = [
     id: HERO_GRAND_KAISER_ID,
     name: "Grand Kaiser",
     mainClass: "archer",
+  },
+  {
+    id: HERO_VLAD_TEPES_ID,
+    name: "Vlad III Tepes",
+    mainClass: "spearman",
+    baseHpOverride: 7,
   },
 ];
 

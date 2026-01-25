@@ -4,6 +4,7 @@ import type { UnitClass } from "rules";
 export const TRICKSTER_AOE_ID = "tricksterAoE";
 export const TRICKSTER_AOE_RADIUS = 2;
 export const KAISER_DORA_ID = "kaiserDora";
+export const VLAD_TEPES_ID = "vladTepes";
 
 const MAX_HP_BY_CLASS: Record<UnitClass, number> = {
   spearman: 5,
@@ -15,6 +16,10 @@ const MAX_HP_BY_CLASS: Record<UnitClass, number> = {
   berserker: 8,
 };
 
-export function getMaxHp(unitClass: UnitClass): number {
-  return MAX_HP_BY_CLASS[unitClass] ?? 1;
+export function getMaxHp(unitClass: UnitClass, heroId?: string): number {
+  let base = MAX_HP_BY_CLASS[unitClass] ?? 1;
+  if (heroId === VLAD_TEPES_ID) {
+    base += 2;
+  }
+  return base;
 }

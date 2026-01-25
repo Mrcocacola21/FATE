@@ -4,6 +4,7 @@ import {
   attachArmy,
   applyAction as applyActionRaw,
   coordFromNotation,
+  Coord,
   GameState,
   PlayerId,
   UnitState,
@@ -13,10 +14,16 @@ import {
   ABILITY_KAISER_CARPET_STRIKE,
   ABILITY_KAISER_ENGINEERING_MIRACLE,
   ABILITY_TEST_MULTI_SLOT,
+  ABILITY_VLAD_FOREST,
   HERO_GRAND_KAISER_ID,
+  HERO_VLAD_TEPES_ID,
+  HERO_REGISTRY,
+  getHeroMeta,
   getTricksterMovesForRoll,
   getBerserkerMovesForRoll,
+  resolveAttack,
   getLegalIntents,
+  linePath,
 } from "../index";
 import { SeededRNG } from "../rng";
 import assert from "assert";
@@ -68,7 +75,8 @@ function resolvePendingRollOnce(
   const resolvedChoice =
     pending.kind === "berserkerDefenseChoice" ||
     pending.kind === "dora_berserkerDefenseChoice" ||
-    pending.kind === "carpetStrike_berserkerDefenseChoice"
+    pending.kind === "carpetStrike_berserkerDefenseChoice" ||
+    pending.kind === "vladForest_berserkerDefenseChoice"
       ? choice ?? "roll"
       : undefined;
   return applyActionRaw(
@@ -146,6 +154,35 @@ function setupKaiserState() {
   )!;
 
   return { state, kaiser, enemy };
+}
+
+function setupVladState() {
+  let state = createEmptyGame();
+  const a1 = createDefaultArmy("P1", { spearman: HERO_VLAD_TEPES_ID });
+  const a2 = createDefaultArmy("P2");
+  state = attachArmy(state, a1);
+  state = attachArmy(state, a2);
+
+  const vlad = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "spearman"
+  )!;
+  const enemy = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "spearman"
+  )!;
+
+  return { state, vlad, enemy };
+}
+
+function makeRngSequence(values: number[]) {
+  let index = 0;
+  return {
+    next: () => {
+      if (index >= values.length) return 0.5;
+      const value = values[index];
+      index += 1;
+      return value;
+    },
+  };
 }
 
 function toPlacementState(
@@ -2727,7 +2764,7 @@ function testTricksterAoERevealsStealthedUnits() {
     (u) => u.owner === "P1" && u.class === "trickster"
   )!;
   const ally = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.class === "assassin"
+    (u) => u.owner === "P1" && u.class === "archer"
   )!;
   const enemy = Object.values(state.units).find(
     (u) => u.owner === "P2" && u.class === "archer"
@@ -3715,11 +3752,11 @@ function testTricksterMoveRequiresPendingOptions() {
 }
 
 function testKaiserBunkerVisibleAndDamageClampedTo1() {
-  const rng = new SeededRNG(685);
+  const rng = makeRngSequence([0.8]);
   let { state, kaiser, enemy } = setupKaiserState();
 
   state = setUnit(state, kaiser.id, { position: { col: 4, row: 4 } });
-  state = setUnit(state, enemy.id, { position: { col: 4, row: 5 } });
+  state = setUnit(state, enemy.id, { position: { col: 4, row: 6 } });
   state = toBattleState(state, "P1", kaiser.id);
 
   let res = applyAction(
@@ -3737,19 +3774,14 @@ function testKaiserBunkerVisibleAndDamageClampedTo1() {
   assert(afterBunker.bunker?.active === true, "bunker should be active");
   assert(afterBunker.isStealthed === false, "bunker should not stealth");
 
-  const enemyState: GameState = {
-    ...res.state,
-    currentPlayer: "P2",
-    activeUnitId: enemy.id,
-  };
-
-  const attackReq = applyAction(
-    enemyState,
-    { type: "attack", attackerId: enemy.id, defenderId: kaiser.id } as any,
-    rng
-  );
-  const resolved = resolveAllPendingRolls(attackReq.state, rng);
-  const finalKaiser = resolved.state.units[kaiser.id];
+  const attack = resolveAttack(res.state, {
+    attackerId: enemy.id,
+    defenderId: kaiser.id,
+    ignoreRange: true,
+    ignoreStealth: true,
+    rolls: { attackerDice: [6, 6], defenderDice: [1, 2] },
+  });
+  const finalKaiser = attack.nextState.units[kaiser.id];
   assert(
     finalKaiser.hp === afterBunker.hp - 1,
     "bunker damage should be clamped to 1"
@@ -3926,7 +3958,7 @@ function testCarpetStrikeRollsCenterThenAttackThenDefenders() {
     position: { col: 4, row: 4 },
     charges: { ...kaiser.charges, [ABILITY_KAISER_CARPET_STRIKE]: 3 },
   });
-  state = setUnit(state, enemy.id, { position: { col: 4, row: 6 } });
+  state = setUnit(state, enemy.id, { position: { col: 4, row: 5 } });
   state = {
     ...state,
     phase: "battle",
@@ -4035,6 +4067,67 @@ function testCarpetStrikeUsesSingleSharedAttackRollForAllTargets() {
   );
 
   console.log("carpet_strike_uses_single_shared_attack_roll_for_all_targets passed");
+}
+
+function testCarpetStrikeDamageIsFixed1IgnoresBuffs() {
+  const rng = makeRngSequence([0.5, 0.5, 0.99, 0.99, 0.01, 0.2]);
+  let state = createEmptyGame();
+  state = attachArmy(
+    state,
+    createDefaultArmy("P1", {
+      archer: HERO_GRAND_KAISER_ID,
+      spearman: HERO_VLAD_TEPES_ID,
+    })
+  );
+  state = attachArmy(state, createDefaultArmy("P2"));
+
+  const kaiser = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "archer"
+  )!;
+  const vlad = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "spearman"
+  )!;
+  const enemy = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "spearman"
+  )!;
+
+  state = setUnit(state, kaiser.id, {
+    position: { col: 0, row: 0 },
+    charges: { ...kaiser.charges, [ABILITY_KAISER_CARPET_STRIKE]: 3 },
+  });
+  state = setUnit(state, vlad.id, { position: { col: 0, row: 1 } });
+  state = setUnit(state, enemy.id, { position: { col: 4, row: 4 } });
+  state = {
+    ...state,
+    phase: "battle",
+    currentPlayer: "P1",
+    activeUnitId: null,
+    turnQueue: [kaiser.id],
+    turnQueueIndex: 0,
+    turnOrder: [kaiser.id],
+    turnOrderIndex: 0,
+  };
+
+  let res = applyAction(
+    state,
+    { type: "unitStartTurn", unitId: kaiser.id } as any,
+    rng
+  );
+  res = resolvePendingRollOnce(res.state, rng);
+  res = resolvePendingRollOnce(res.state, rng);
+  const finished = resolveAllPendingRollsWithEvents(res.state, rng);
+
+  const updatedEnemy = finished.state.units[enemy.id];
+  assert(
+    updatedEnemy.hp === enemy.hp - 1,
+    "carpet strike damage should be fixed to 1"
+  );
+  assert(
+    !finished.events.some((e) => e.type === "damageBonusApplied"),
+    "carpet strike should ignore damage bonuses"
+  );
+
+  console.log("carpet_strike_damage_is_fixed_1_ignores_buffs passed");
 }
 
 function testCarpetStrikeHighlightsAreaMetadataInEvents() {
@@ -4848,6 +4941,1169 @@ function testKaiserMulticlassMovementAndRiderPath() {
   console.log("kaiser_multiclass_movement_modes_work_and_rider_through_enemy_attack_possible passed");
 }
 
+function testPolkovodetsAppliesToAdjacentAlliesNotSelf() {
+  let { state, vlad, enemy } = setupVladState();
+  const ally = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "archer"
+  )!;
+
+  state = setUnit(state, vlad.id, { position: { col: 4, row: 4 } });
+  state = setUnit(state, ally.id, { position: { col: 4, row: 5 } });
+  state = setUnit(state, enemy.id, { position: { col: 4, row: 7 } });
+  state = toBattleState(state, "P1", ally.id);
+  state = initKnowledgeForOwners(state);
+
+  const rng = makeRngSequence([0.99, 0.99, 0.01, 0.2]);
+  let res = applyAction(
+    state,
+    { type: "attack", attackerId: ally.id, defenderId: enemy.id } as any,
+    rng
+  );
+  const resolved = resolveAllPendingRollsWithEvents(res.state, rng);
+  const attackEvent = resolved.events.find(
+    (e) =>
+      e.type === "attackResolved" &&
+      e.attackerId === ally.id &&
+      e.defenderId === enemy.id
+  );
+  assert(attackEvent && attackEvent.type === "attackResolved", "attack should resolve");
+  assert(attackEvent.hit, "attack should hit");
+  assert(
+    attackEvent.damage === ally.attack + 1,
+    "adjacent ally should get +1 damage"
+  );
+
+  let state2 = setupVladState().state;
+  const vlad2 = Object.values(state2.units).find(
+    (u) => u.owner === "P1" && u.heroId === HERO_VLAD_TEPES_ID
+  )!;
+  const enemy2 = Object.values(state2.units).find(
+    (u) => u.owner === "P2" && u.class === "spearman"
+  )!;
+  state2 = setUnit(state2, vlad2.id, { position: { col: 4, row: 4 } });
+  state2 = setUnit(state2, enemy2.id, { position: { col: 4, row: 6 } });
+  state2 = toBattleState(state2, "P1", vlad2.id);
+  state2 = initKnowledgeForOwners(state2);
+
+  const rng2 = makeRngSequence([0.99, 0.99, 0.01, 0.2]);
+  let res2 = applyAction(
+    state2,
+    { type: "attack", attackerId: vlad2.id, defenderId: enemy2.id } as any,
+    rng2
+  );
+  res2 = resolveAllPendingRolls(res2.state, rng2);
+  const attackEvent2 = res2.events.find(
+    (e) =>
+      e.type === "attackResolved" &&
+      e.attackerId === vlad2.id &&
+      e.defenderId === enemy2.id
+  );
+  assert(attackEvent2 && attackEvent2.type === "attackResolved", "attack should resolve");
+  assert(attackEvent2.hit, "attack should hit");
+  assert(
+    attackEvent2.damage === vlad2.attack,
+    "Vlad should not receive his own aura bonus"
+  );
+
+  console.log("polkovodets_applies_to_adjacent_allies_not_self passed");
+}
+
+function testPolkovodetsDoesNotStack() {
+  let { state, vlad, enemy } = setupVladState();
+  const ally = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "archer"
+  )!;
+  const secondVlad = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.id !== vlad.id && u.id !== ally.id
+  )!;
+
+  state = setUnit(state, vlad.id, { position: { col: 3, row: 4 } });
+  state = setUnit(state, secondVlad.id, {
+    position: { col: 5, row: 4 },
+    heroId: HERO_VLAD_TEPES_ID,
+  });
+  state = setUnit(state, ally.id, { position: { col: 4, row: 4 } });
+  state = setUnit(state, enemy.id, { position: { col: 4, row: 6 } });
+  state = toBattleState(state, "P1", ally.id);
+  state = initKnowledgeForOwners(state);
+
+  const rng = makeRngSequence([0.99, 0.99, 0.01, 0.2]);
+  let res = applyAction(
+    state,
+    { type: "attack", attackerId: ally.id, defenderId: enemy.id } as any,
+    rng
+  );
+  const resolved = resolveAllPendingRollsWithEvents(res.state, rng);
+  const attackEvent = resolved.events.find(
+    (e) =>
+      e.type === "attackResolved" &&
+      e.attackerId === ally.id &&
+      e.defenderId === enemy.id
+  );
+  assert(attackEvent && attackEvent.type === "attackResolved", "attack should resolve");
+  assert(attackEvent.hit, "attack should hit");
+  assert(
+    attackEvent.damage === ally.attack + 1,
+    "polkovodets bonus should not stack"
+  );
+
+  console.log("polkovodets_does_not_stack passed");
+}
+
+function testPolkovodetsRiderOnlyIfStartOrEndInAura() {
+  let { state, vlad } = setupVladState();
+  const rider = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "rider"
+  )!;
+  const enemy = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "spearman"
+  )!;
+
+  state = setUnit(state, vlad.id, { position: { col: 1, row: 0 } });
+  state = setUnit(state, rider.id, { position: { col: 0, row: 0 } });
+  state = setUnit(state, enemy.id, { position: { col: 0, row: 2 } });
+  state = toBattleState(state, "P1", rider.id);
+  state = initKnowledgeForOwners(state);
+
+  const rng = makeRngSequence([0.99, 0.99, 0.01, 0.2]);
+  let res = applyAction(
+    state,
+    { type: "move", unitId: rider.id, to: { col: 0, row: 3 } } as any,
+    rng
+  );
+  res = resolveAllPendingRolls(res.state, rng);
+  const attackEvent = res.events.find(
+    (e) =>
+      e.type === "attackResolved" &&
+      e.attackerId === rider.id &&
+      e.defenderId === enemy.id
+  );
+  assert(attackEvent && attackEvent.type === "attackResolved", "rider attack should resolve");
+  assert(attackEvent.hit, "rider attack should hit");
+  assert(
+    attackEvent.damage === rider.attack + 1,
+    "rider should gain aura bonus when starting in aura"
+  );
+
+  let state2 = setupVladState().state;
+  const vlad2 = Object.values(state2.units).find(
+    (u) => u.owner === "P1" && u.heroId === HERO_VLAD_TEPES_ID
+  )!;
+  const rider2 = Object.values(state2.units).find(
+    (u) => u.owner === "P1" && u.class === "rider"
+  )!;
+  const enemy2 = Object.values(state2.units).find(
+    (u) => u.owner === "P2" && u.class === "spearman"
+  )!;
+
+  state2 = setUnit(state2, vlad2.id, { position: { col: 3, row: 3 } });
+  state2 = setUnit(state2, rider2.id, { position: { col: 0, row: 0 } });
+  state2 = setUnit(state2, enemy2.id, { position: { col: 0, row: 2 } });
+  state2 = toBattleState(state2, "P1", rider2.id);
+  state2 = initKnowledgeForOwners(state2);
+
+  const rng2 = makeRngSequence([0.99, 0.99, 0.01, 0.2]);
+  let res2 = applyAction(
+    state2,
+    { type: "move", unitId: rider2.id, to: { col: 0, row: 3 } } as any,
+    rng2
+  );
+  res2 = resolveAllPendingRolls(res2.state, rng2);
+  const attackEvent2 = res2.events.find(
+    (e) =>
+      e.type === "attackResolved" &&
+      e.attackerId === rider2.id &&
+      e.defenderId === enemy2.id
+  );
+  assert(attackEvent2 && attackEvent2.type === "attackResolved", "rider attack should resolve");
+  assert(attackEvent2.hit, "rider attack should hit");
+  assert(
+    attackEvent2.damage === rider2.attack,
+    "rider should not gain aura bonus when outside aura"
+  );
+
+  console.log("polkovodets_rider_only_if_start_or_end_in_aura passed");
+}
+
+function testVladIntimidatePromptsAfterSuccessfulDefense() {
+  let { state, vlad, enemy } = setupVladState();
+  state = setUnit(state, vlad.id, { position: { col: 4, row: 4 } });
+  state = setUnit(state, enemy.id, { position: { col: 4, row: 6 } });
+  state = toBattleState(state, "P2", enemy.id);
+  state = initKnowledgeForOwners(state);
+
+  const rng = makeRngSequence([0.01, 0.01, 0.99, 0.99]);
+  let res = applyAction(
+    state,
+    { type: "attack", attackerId: enemy.id, defenderId: vlad.id } as any,
+    rng
+  );
+  res = resolvePendingRollOnce(res.state, rng);
+  res = resolvePendingRollOnce(res.state, rng);
+  assert(
+    res.state.pendingRoll?.kind === "vladIntimidateChoice",
+    "intimidate should request a choice after a miss"
+  );
+  assert(
+    res.events.some((e) => e.type === "intimidateTriggered"),
+    "intimidateTriggered event should be emitted"
+  );
+
+  console.log("vlad_intimidate_prompts_after_successful_defense passed");
+}
+
+function testVladIntimidatePushesAttackerOneCell() {
+  let { state, vlad, enemy } = setupVladState();
+  state = setUnit(state, vlad.id, { position: { col: 4, row: 4 } });
+  state = setUnit(state, enemy.id, { position: { col: 4, row: 6 } });
+  state = toBattleState(state, "P2", enemy.id);
+  state = initKnowledgeForOwners(state);
+
+  const rng = makeRngSequence([0.01, 0.01, 0.99, 0.99]);
+  let res = applyAction(
+    state,
+    { type: "attack", attackerId: enemy.id, defenderId: vlad.id } as any,
+    rng
+  );
+  res = resolvePendingRollOnce(res.state, rng);
+  res = resolvePendingRollOnce(res.state, rng);
+
+  const pending = res.state.pendingRoll;
+  assert(pending && pending.kind === "vladIntimidateChoice", "intimidate pending roll expected");
+  const options = (pending.context as { options?: Coord[] }).options ?? [];
+  assert(options.length > 0, "intimidate should have options");
+
+  const target = options[0];
+  const pushed = applyAction(
+    res.state,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: pending.id,
+      choice: { type: "intimidatePush", to: target },
+      player: pending.player,
+    } as any,
+    rng
+  );
+  const movedEnemy = pushed.state.units[enemy.id];
+  assert(
+    movedEnemy.position?.col === target.col &&
+      movedEnemy.position?.row === target.row,
+    "attacker should be pushed to selected cell"
+  );
+  assert(
+    pushed.events.some((e) => e.type === "intimidateResolved"),
+    "intimidateResolved event should be emitted"
+  );
+
+  console.log("vlad_intimidate_pushes_attacker_one_cell passed");
+}
+
+function testVladIntimidateNoOptionsAutoSkips() {
+  let { state, vlad, enemy } = setupVladState();
+  const blocker1 = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.id !== enemy.id
+  )!;
+  const blocker2 = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.id !== enemy.id && u.id !== blocker1.id
+  )!;
+  const blocker3 = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.id !== enemy.id && u.id !== blocker1.id && u.id !== blocker2.id
+  )!;
+
+  state = setUnit(state, enemy.id, { position: { col: 0, row: 0 } });
+  state = setUnit(state, vlad.id, { position: { col: 0, row: 2 } });
+  state = setUnit(state, blocker1.id, { position: { col: 0, row: 1 } });
+  state = setUnit(state, blocker2.id, { position: { col: 1, row: 0 } });
+  state = setUnit(state, blocker3.id, { position: { col: 1, row: 1 } });
+  state = toBattleState(state, "P2", enemy.id);
+  state = initKnowledgeForOwners(state);
+
+  const rng = makeRngSequence([0.01, 0.01, 0.99, 0.99]);
+  let res = applyAction(
+    state,
+    { type: "attack", attackerId: enemy.id, defenderId: vlad.id } as any,
+    rng
+  );
+  res = resolvePendingRollOnce(res.state, rng);
+  res = resolvePendingRollOnce(res.state, rng);
+  assert(!res.state.pendingRoll, "intimidate should not trigger without options");
+
+  console.log("vlad_intimidate_no_options_auto_skips passed");
+}
+
+function testVladStakesPromptOnBattleStart() {
+  const rng = new SeededRNG(321);
+  let { state } = setupVladState();
+  state = toPlacementState(state, "P1");
+
+  const p1coords = ["b0","c0","d0","e0","f0","g0","h0"].map(coordFromNotation);
+  const p2coords = ["b8","c8","d8","e8","f8","g8","h8"].map(coordFromNotation);
+
+  let p1i = 0;
+  let p2i = 0;
+  while (state.phase === "placement") {
+    const current = state.currentPlayer;
+    const nextUnit = Object.values(state.units).find(
+      (u) => u.owner === current && !u.position && u.isAlive
+    );
+    if (!nextUnit) {
+      state = applyAction(state, { type: "endTurn" } as any, rng).state;
+      continue;
+    }
+    const pos = current === "P1" ? p1coords[p1i++] : p2coords[p2i++];
+    state = applyAction(
+      state,
+      { type: "placeUnit", unitId: nextUnit.id, position: pos } as any,
+      rng
+    ).state;
+  }
+
+  assert(
+    state.pendingRoll?.kind === "vladPlaceStakes",
+    "battle start should prompt for stakes"
+  );
+
+  console.log("vlad_stakes_prompt_on_battle_start passed");
+}
+
+function testVladStakesPromptOnSecondOwnTurnStart() {
+  const rng = new SeededRNG(99);
+  let { state, vlad } = setupVladState();
+
+  state = setUnit(state, vlad.id, { position: { col: 4, row: 4 } });
+  state = {
+    ...state,
+    phase: "battle",
+    currentPlayer: "P1",
+    activeUnitId: null,
+    turnQueue: [vlad.id],
+    turnQueueIndex: 0,
+    turnOrder: [vlad.id],
+    turnOrderIndex: 0,
+  };
+
+  let res = applyAction(state, { type: "unitStartTurn", unitId: vlad.id } as any, rng);
+  assert(
+    res.state.pendingRoll?.kind !== "vladPlaceStakes",
+    "first turn should not request stakes"
+  );
+  state = applyAction(res.state, { type: "endTurn" } as any, rng).state;
+
+  res = applyAction(state, { type: "unitStartTurn", unitId: vlad.id } as any, rng);
+  assert(
+    res.state.pendingRoll?.kind === "vladPlaceStakes",
+    "second own turn should request stakes"
+  );
+
+  console.log("vlad_stakes_prompt_on_2nd_own_turn_start passed");
+}
+
+function testStakeCannotBePlacedOnVisibleUnit() {
+  const rng = new SeededRNG(77);
+  let { state, vlad, enemy } = setupVladState();
+
+  state = setUnit(state, vlad.id, { position: { col: 4, row: 4 }, ownTurnsStarted: 1 });
+  state = setUnit(state, enemy.id, { position: { col: 5, row: 5 } });
+  state = {
+    ...state,
+    phase: "battle",
+    currentPlayer: "P1",
+    activeUnitId: null,
+    turnQueue: [vlad.id],
+    turnQueueIndex: 0,
+    turnOrder: [vlad.id],
+    turnOrderIndex: 0,
+  };
+
+  let res = applyAction(state, { type: "unitStartTurn", unitId: vlad.id } as any, rng);
+  const pending = res.state.pendingRoll;
+  assert(pending && pending.kind === "vladPlaceStakes", "stake placement should be pending");
+
+  const invalid = applyAction(
+    res.state,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: pending.id,
+      player: pending.player,
+      choice: {
+        type: "placeStakes",
+        positions: [
+          { col: 5, row: 5 },
+          { col: 0, row: 0 },
+          { col: 1, row: 0 },
+        ],
+      },
+    } as any,
+    rng
+  );
+  assert(
+    invalid.state.pendingRoll?.kind === "vladPlaceStakes",
+    "invalid stake placement should keep pending roll"
+  );
+  assert(invalid.state.stakeMarkers.length === 0, "stakes should not be placed");
+
+  console.log("stake_cannot_be_placed_on_visible_unit passed");
+}
+
+function testStakeCanBePlacedOnStealthedUnitNoEffect() {
+  const rng = new SeededRNG(78);
+  let { state, vlad, enemy } = setupVladState();
+
+  state = setUnit(state, vlad.id, { position: { col: 4, row: 4 }, ownTurnsStarted: 1 });
+  state = setUnit(state, enemy.id, {
+    position: { col: 5, row: 5 },
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
+  state = {
+    ...state,
+    phase: "battle",
+    currentPlayer: "P1",
+    activeUnitId: null,
+    turnQueue: [vlad.id],
+    turnQueueIndex: 0,
+    turnOrder: [vlad.id],
+    turnOrderIndex: 0,
+  };
+
+  let res = applyAction(state, { type: "unitStartTurn", unitId: vlad.id } as any, rng);
+  const pending = res.state.pendingRoll;
+  assert(pending && pending.kind === "vladPlaceStakes", "stake placement should be pending");
+
+  const placed = applyAction(
+    res.state,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: pending.id,
+      player: pending.player,
+      choice: {
+        type: "placeStakes",
+        positions: [
+          { col: 5, row: 5 },
+          { col: 0, row: 0 },
+          { col: 1, row: 0 },
+        ],
+      },
+    } as any,
+    rng
+  );
+  assert(
+    placed.state.stakeMarkers.some(
+      (marker) => marker.position.col === 5 && marker.position.row === 5
+    ),
+    "stake should be placed on stealthed unit cell"
+  );
+  assert(
+    !placed.events.some((e) => e.type === "stakeTriggered"),
+    "placing stakes should not trigger them"
+  );
+
+  console.log("stake_can_be_placed_on_stealthed_unit_no_effect passed");
+}
+
+function testLinePathOrthogonalIsExact() {
+  const path = linePath({ col: 0, row: 1 }, { col: 0, row: 3 });
+  assert(path, "line path should exist for orthogonal move");
+  assert.deepStrictEqual(path, [
+    { col: 0, row: 1 },
+    { col: 0, row: 2 },
+    { col: 0, row: 3 },
+  ]);
+
+  console.log("line_path_orthogonal_is_exact passed");
+}
+
+function testLinePathDiagonalIsExact() {
+  const path = linePath({ col: 0, row: 0 }, { col: 2, row: 2 });
+  assert(path, "line path should exist for diagonal move");
+  assert.deepStrictEqual(path, [
+    { col: 0, row: 0 },
+    { col: 1, row: 1 },
+    { col: 2, row: 2 },
+  ]);
+
+  console.log("line_path_diagonal_is_exact passed");
+}
+
+function testTricksterTeleportDoesNotTriggerIntermediateStakes() {
+  const rng = makeRngSequence([0.99]);
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1"));
+  state = attachArmy(state, createDefaultArmy("P2"));
+
+  const trickster = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "trickster"
+  )!;
+
+  state = setUnit(state, trickster.id, { position: { col: 0, row: 0 } });
+  state = {
+    ...state,
+    phase: "battle",
+    currentPlayer: "P1",
+    activeUnitId: trickster.id,
+    turnQueue: [trickster.id],
+    turnQueueIndex: 0,
+    turnOrder: [trickster.id],
+    turnOrderIndex: 0,
+    stakeMarkers: [
+      {
+        id: "stake-1",
+        owner: "P2",
+        position: { col: 0, row: 1 },
+        createdAt: 1,
+        isRevealed: false,
+      },
+    ],
+  };
+
+  let res = applyAction(
+    state,
+    { type: "requestMoveOptions", unitId: trickster.id, mode: "trickster" } as any,
+    rng
+  );
+  assert(
+    res.state.pendingRoll?.kind === "moveTrickster",
+    "trickster move should require roll"
+  );
+
+  res = resolvePendingRollOnce(res.state, rng);
+  const moved = applyAction(
+    res.state,
+    { type: "move", unitId: trickster.id, to: { col: 0, row: 2 } } as any,
+    rng
+  );
+
+  const updated = moved.state.units[trickster.id];
+  assert(
+    updated.position?.col === 0 && updated.position?.row === 2,
+    "trickster should reach destination directly"
+  );
+  assert(
+    moved.state.stakeMarkers[0].isRevealed === false,
+    "intermediate stake should remain hidden"
+  );
+  assert(
+    !moved.events.some((e) => e.type === "stakeTriggered"),
+    "intermediate stake should not trigger"
+  );
+
+  console.log("trickster_teleport_does_not_trigger_intermediate_stakes passed");
+}
+
+function testRiderStopsOnStakeInPath() {
+  const rng = new SeededRNG(84);
+  let { state, vlad } = setupVladState();
+  const rider = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "rider"
+  )!;
+
+  state = setUnit(state, vlad.id, { position: { col: 8, row: 8 } });
+  state = setUnit(state, rider.id, { position: { col: 0, row: 0 } });
+  state = {
+    ...state,
+    phase: "battle",
+    currentPlayer: "P2",
+    activeUnitId: rider.id,
+    turnQueue: [rider.id],
+    turnQueueIndex: 0,
+    turnOrder: [rider.id],
+    turnOrderIndex: 0,
+    stakeMarkers: [
+      {
+        id: "stake-1",
+        owner: "P1",
+        position: { col: 0, row: 1 },
+        createdAt: 1,
+        isRevealed: false,
+      },
+    ],
+  };
+
+  const res = applyAction(
+    state,
+    { type: "move", unitId: rider.id, to: { col: 0, row: 2 } } as any,
+    rng
+  );
+  const updatedRider = res.state.units[rider.id];
+  assert(
+    updatedRider.position?.col === 0 && updatedRider.position?.row === 1,
+    "rider should stop on stake in path"
+  );
+  assert(updatedRider.hp === rider.hp - 1, "stake should deal 1 damage");
+  assert(res.state.stakeMarkers.length === 1, "stake marker should remain");
+  assert(res.state.stakeMarkers[0].isRevealed, "stake should be revealed");
+  assert(
+    res.events.some((e) => e.type === "stakeTriggered"),
+    "stakeTriggered event should be emitted"
+  );
+
+  console.log("rider_stops_on_stake_in_path passed");
+}
+
+function testStakeDoesNotTriggerOnHiddenUnitCell() {
+  const rng = new SeededRNG(85);
+  let { state } = setupVladState();
+  const rider = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "rider"
+  )!;
+  const hidden = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "assassin"
+  )!;
+
+  state = setUnit(state, rider.id, { position: { col: 0, row: 0 } });
+  state = setUnit(state, hidden.id, {
+    position: { col: 0, row: 1 },
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
+  state = {
+    ...state,
+    phase: "battle",
+    currentPlayer: "P2",
+    activeUnitId: rider.id,
+    turnQueue: [rider.id],
+    turnQueueIndex: 0,
+    turnOrder: [rider.id],
+    turnOrderIndex: 0,
+    stakeMarkers: [
+      {
+        id: "stake-1",
+        owner: "P1",
+        position: { col: 0, row: 1 },
+        createdAt: 1,
+        isRevealed: false,
+      },
+    ],
+  };
+
+  const res = applyAction(
+    state,
+    { type: "move", unitId: rider.id, to: { col: 0, row: 2 } } as any,
+    rng
+  );
+  const updatedRider = res.state.units[rider.id];
+  assert(
+    updatedRider.position?.col === 0 && updatedRider.position?.row === 2,
+    "rider should pass through hidden stake cell"
+  );
+  assert(updatedRider.hp === rider.hp, "stake should not trigger on hidden cell");
+  assert(res.state.stakeMarkers.length === 1, "stake marker should remain");
+  assert(
+    res.state.stakeMarkers[0].isRevealed === false,
+    "stake should remain hidden"
+  );
+  assert(
+    !res.events.some((e) => e.type === "stakeTriggered"),
+    "stakeTriggered should not be emitted"
+  );
+
+  console.log("stake_does_not_trigger_on_hidden_unit_cell passed");
+}
+
+function testStakeTriggersOnVisibleUnitStopsAndDamagesAndReveals() {
+  const rng = new SeededRNG(79);
+  let { state, vlad, enemy } = setupVladState();
+
+  state = setUnit(state, vlad.id, { position: { col: 6, row: 6 } });
+  state = setUnit(state, enemy.id, {
+    position: { col: 4, row: 3 },
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
+  state = {
+    ...state,
+    knowledge: {
+      P1: { [enemy.id]: true },
+      P2: { [enemy.id]: true },
+    },
+    phase: "battle",
+    currentPlayer: "P2",
+    activeUnitId: enemy.id,
+    turnQueue: [enemy.id],
+    turnQueueIndex: 0,
+    turnOrder: [enemy.id],
+    turnOrderIndex: 0,
+    stakeMarkers: [
+      {
+        id: "stake-1",
+        owner: "P1",
+        position: { col: 4, row: 4 },
+        createdAt: 1,
+        isRevealed: false,
+      },
+    ],
+  };
+
+  const res = applyAction(
+    state,
+    { type: "move", unitId: enemy.id, to: { col: 4, row: 4 } } as any,
+    rng
+  );
+  const updatedEnemy = res.state.units[enemy.id];
+  assert(updatedEnemy.hp === enemy.hp - 1, "stake should deal 1 damage");
+  assert(updatedEnemy.isStealthed === false, "stake should reveal stealthed unit");
+  assert(res.state.stakeMarkers.length === 1, "stake marker should remain");
+  assert(res.state.stakeMarkers[0].isRevealed, "stake should be revealed");
+  assert(
+    res.events.some((e) => e.type === "stakeTriggered"),
+    "stakeTriggered event should be emitted"
+  );
+
+  console.log("stake_triggers_on_visible_unit_stops_and_damages_and_reveals passed");
+}
+
+function testStakeDoesNotTriggerOnUnknownStealthedUnit() {
+  const rng = new SeededRNG(80);
+  let { state, vlad, enemy } = setupVladState();
+
+  state = setUnit(state, vlad.id, { position: { col: 6, row: 6 } });
+  state = setUnit(state, enemy.id, {
+    position: { col: 4, row: 3 },
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
+  state = {
+    ...state,
+    phase: "battle",
+    currentPlayer: "P2",
+    activeUnitId: enemy.id,
+    turnQueue: [enemy.id],
+    turnQueueIndex: 0,
+    turnOrder: [enemy.id],
+    turnOrderIndex: 0,
+    stakeMarkers: [
+      {
+        id: "stake-1",
+        owner: "P1",
+        position: { col: 4, row: 4 },
+        createdAt: 1,
+        isRevealed: false,
+      },
+    ],
+  };
+
+  const res = applyAction(
+    state,
+    { type: "move", unitId: enemy.id, to: { col: 4, row: 4 } } as any,
+    rng
+  );
+  const updatedEnemy = res.state.units[enemy.id];
+  assert(updatedEnemy.hp === enemy.hp, "stake should not trigger on unknown stealth");
+  assert(res.state.stakeMarkers.length === 1, "stake marker should remain");
+  assert(
+    res.state.stakeMarkers[0].isRevealed === false,
+    "stake should remain hidden"
+  );
+  assert(
+    !res.events.some((e) => e.type === "stakeTriggered"),
+    "stakeTriggered should not be emitted"
+  );
+
+  console.log("stake_does_not_trigger_on_unknown_stealthed_unit passed");
+}
+
+function testAssassinStopsExactlyOnStakeCell() {
+  const rng = new SeededRNG(86);
+  let { state } = setupVladState();
+  const assassin = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "assassin"
+  )!;
+
+  state = setUnit(state, assassin.id, { position: { col: 4, row: 1 } });
+  state = {
+    ...state,
+    phase: "battle",
+    currentPlayer: "P2",
+    activeUnitId: assassin.id,
+    turnQueue: [assassin.id],
+    turnQueueIndex: 0,
+    turnOrder: [assassin.id],
+    turnOrderIndex: 0,
+    stakeMarkers: [
+      {
+        id: "stake-1",
+        owner: "P1",
+        position: { col: 5, row: 1 },
+        createdAt: 1,
+        isRevealed: false,
+      },
+    ],
+  };
+
+  const res = applyAction(
+    state,
+    { type: "move", unitId: assassin.id, to: { col: 6, row: 1 } } as any,
+    rng
+  );
+  const updated = res.state.units[assassin.id];
+  assert(
+    updated.position?.col === 5 && updated.position?.row === 1,
+    "assassin should stop on stake cell"
+  );
+  assert(res.state.stakeMarkers.length === 1, "stake marker should remain");
+  assert(res.state.stakeMarkers[0].isRevealed, "stake should be revealed");
+
+  console.log("assassin_stops_exactly_on_stake_cell passed");
+}
+
+function testStakesDoNotGetRemovedOnTriggerOnlyRevealed() {
+  const rng = new SeededRNG(87);
+  let { state, enemy } = setupVladState();
+
+  state = setUnit(state, enemy.id, { position: { col: 2, row: 2 } });
+  state = {
+    ...state,
+    phase: "battle",
+    currentPlayer: "P2",
+    activeUnitId: enemy.id,
+    turnQueue: [enemy.id],
+    turnQueueIndex: 0,
+    turnOrder: [enemy.id],
+    turnOrderIndex: 0,
+    stakeMarkers: [
+      {
+        id: "stake-1",
+        owner: "P1",
+        position: { col: 2, row: 3 },
+        createdAt: 1,
+        isRevealed: false,
+      },
+    ],
+  };
+
+  const res = applyAction(
+    state,
+    { type: "move", unitId: enemy.id, to: { col: 2, row: 3 } } as any,
+    rng
+  );
+  assert(res.state.stakeMarkers.length === 1, "stake marker should remain");
+  assert(res.state.stakeMarkers[0].isRevealed, "stake should be revealed");
+
+  console.log("stakes_do_not_get_removed_on_trigger_only_revealed passed");
+}
+
+function testTwoTepesHiddenStakesSameCellDamageOnly1() {
+  const rng = new SeededRNG(88);
+  let { state, vlad } = setupVladState();
+  const mover = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "knight"
+  )!;
+
+  state = setUnit(state, vlad.id, { position: { col: 8, row: 8 } });
+  state = setUnit(state, mover.id, { position: { col: 3, row: 3 } });
+  state = {
+    ...state,
+    phase: "battle",
+    currentPlayer: "P1",
+    activeUnitId: mover.id,
+    turnQueue: [mover.id],
+    turnQueueIndex: 0,
+    turnOrder: [mover.id],
+    turnOrderIndex: 0,
+    stakeMarkers: [
+      {
+        id: "stake-1",
+        owner: "P1",
+        position: { col: 3, row: 4 },
+        createdAt: 1,
+        isRevealed: false,
+      },
+      {
+        id: "stake-2",
+        owner: "P2",
+        position: { col: 3, row: 4 },
+        createdAt: 2,
+        isRevealed: false,
+      },
+    ],
+  };
+
+  const res = applyAction(
+    state,
+    { type: "move", unitId: mover.id, to: { col: 3, row: 4 } } as any,
+    rng
+  );
+  const updatedMover = res.state.units[mover.id];
+  assert(updatedMover.hp === mover.hp - 1, "stake damage should be exactly 1");
+
+  console.log("two_tepes_hidden_stakes_same_cell_damage_only_1 passed");
+}
+
+function testTriggerRevealsAllStakesOnCell() {
+  const rng = new SeededRNG(89);
+  let { state } = setupVladState();
+  const mover = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "knight"
+  )!;
+
+  state = setUnit(state, mover.id, { position: { col: 1, row: 1 } });
+  state = {
+    ...state,
+    phase: "battle",
+    currentPlayer: "P1",
+    activeUnitId: mover.id,
+    turnQueue: [mover.id],
+    turnQueueIndex: 0,
+    turnOrder: [mover.id],
+    turnOrderIndex: 0,
+    stakeMarkers: [
+      {
+        id: "stake-1",
+        owner: "P1",
+        position: { col: 1, row: 2 },
+        createdAt: 1,
+        isRevealed: false,
+      },
+      {
+        id: "stake-2",
+        owner: "P2",
+        position: { col: 1, row: 2 },
+        createdAt: 2,
+        isRevealed: false,
+      },
+    ],
+  };
+
+  const res = applyAction(
+    state,
+    { type: "move", unitId: mover.id, to: { col: 1, row: 2 } } as any,
+    rng
+  );
+  const revealedIds = res.events
+    .filter((e) => e.type === "stakeTriggered")
+    .flatMap((e) =>
+      e.type === "stakeTriggered" ? e.stakeIdsRevealed ?? [] : []
+    );
+  assert(
+    revealedIds.includes("stake-1") && revealedIds.includes("stake-2"),
+    "trigger should reveal all stakes on cell"
+  );
+  assert(
+    res.state.stakeMarkers.every((marker) => marker.isRevealed),
+    "all stakes on cell should be revealed"
+  );
+
+  console.log("trigger_reveals_all_stakes_on_cell passed");
+}
+
+function testForestRequires9Stakes() {
+  const rng = new SeededRNG(81);
+  let { state, vlad } = setupVladState();
+
+  state = setUnit(state, vlad.id, { position: { col: 4, row: 4 } });
+  state = {
+    ...state,
+    phase: "battle",
+    currentPlayer: "P1",
+    activeUnitId: null,
+    turnQueue: [vlad.id],
+    turnQueueIndex: 0,
+    turnOrder: [vlad.id],
+    turnOrderIndex: 0,
+    stakeMarkers: Array.from({ length: 8 }, (_, idx) => ({
+      id: `stake-${idx + 1}`,
+      owner: "P1" as const,
+      position: { col: idx % 3, row: Math.floor(idx / 3) },
+      createdAt: idx + 1,
+      isRevealed: false,
+    })),
+  };
+
+  const res = applyAction(
+    state,
+    { type: "unitStartTurn", unitId: vlad.id } as any,
+    rng
+  );
+  assert(
+    res.state.pendingRoll?.kind !== "vladForestTarget",
+    "forest should not trigger without 9 stakes"
+  );
+
+  console.log("forest_requires_9_stakes passed");
+}
+
+function testForestConsumes9AndSkipsStakesPlacementThatTurn() {
+  const rng = new SeededRNG(82);
+  let { state, vlad } = setupVladState();
+
+  state = setUnit(state, vlad.id, { position: { col: 4, row: 4 }, ownTurnsStarted: 1 });
+  state = {
+    ...state,
+    phase: "battle",
+    currentPlayer: "P1",
+    activeUnitId: null,
+    turnQueue: [vlad.id],
+    turnQueueIndex: 0,
+    turnOrder: [vlad.id],
+    turnOrderIndex: 0,
+    stakeMarkers: Array.from({ length: 9 }, (_, idx) => ({
+      id: `stake-${idx + 1}`,
+      owner: "P1" as const,
+      position: { col: (idx + 1) % 3, row: Math.floor(idx / 3) },
+      createdAt: idx + 1,
+      isRevealed: false,
+    })),
+  };
+
+  let res = applyAction(
+    state,
+    { type: "unitStartTurn", unitId: vlad.id } as any,
+    rng
+  );
+  const target = res.state.pendingRoll;
+  assert(
+    target && target.kind === "vladForestTarget",
+    "forest target should be pending"
+  );
+  assert(res.state.stakeMarkers.length === 0, "forest should consume 9 stakes");
+  assert(
+    res.events.some((e) => e.type === "forestActivated"),
+    "forest should emit forestActivated"
+  );
+
+  console.log("forest_consumes_9_and_skips_stakes_placement_that_turn passed");
+}
+
+function testForestAoeDeals2AndRootsOnFail() {
+  const rng = makeRngSequence([0.99, 0.99, 0.01, 0.2]);
+  let { state, vlad, enemy } = setupVladState();
+
+  state = setUnit(state, vlad.id, { position: { col: 4, row: 4 }, ownTurnsStarted: 1 });
+  state = setUnit(state, enemy.id, { position: { col: 4, row: 6 } });
+  state = {
+    ...state,
+    phase: "battle",
+    currentPlayer: "P1",
+    activeUnitId: null,
+    turnQueue: [vlad.id, enemy.id],
+    turnQueueIndex: 0,
+    turnOrder: [vlad.id, enemy.id],
+    turnOrderIndex: 0,
+    stakeMarkers: Array.from({ length: 9 }, (_, idx) => ({
+      id: `stake-${idx + 1}`,
+      owner: "P1" as const,
+      position: { col: (idx + 1) % 3, row: Math.floor(idx / 3) },
+      createdAt: idx + 1,
+      isRevealed: false,
+    })),
+  };
+
+  let res = applyAction(
+    state,
+    { type: "unitStartTurn", unitId: vlad.id } as any,
+    rng
+  );
+  const targetPending = res.state.pendingRoll;
+  assert(
+    targetPending && targetPending.kind === "vladForestTarget",
+    "forest target should be pending"
+  );
+  res = applyAction(
+    res.state,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: targetPending!.id,
+      player: targetPending!.player,
+      choice: { type: "forestTarget", center: { col: 4, row: 6 } },
+    } as any,
+    rng
+  );
+  res = resolvePendingRollOnce(res.state, rng);
+  res = resolvePendingRollOnce(res.state, rng);
+
+  const updatedEnemy = res.state.units[enemy.id];
+  assert(
+    updatedEnemy.hp === enemy.hp - 2,
+    "forest should deal 2 damage on hit"
+  );
+  assert(
+    updatedEnemy.movementDisabledNextTurn === true,
+    "forest should root on hit"
+  );
+
+  console.log("forest_aoe_deals_2_and_roots_on_fail passed");
+}
+
+function testRootBlocksMovementNextTurnOnly() {
+  const rng = new SeededRNG(83);
+  let { state, enemy } = setupVladState();
+
+  state = setUnit(state, enemy.id, {
+    position: { col: 4, row: 4 },
+    movementDisabledNextTurn: true,
+  });
+  state = {
+    ...state,
+    phase: "battle",
+    currentPlayer: "P2",
+    activeUnitId: null,
+    turnQueue: [enemy.id],
+    turnQueueIndex: 0,
+    turnOrder: [enemy.id],
+    turnOrderIndex: 0,
+  };
+
+  let res = applyAction(
+    state,
+    { type: "unitStartTurn", unitId: enemy.id } as any,
+    rng
+  );
+  const rooted = res.state.units[enemy.id];
+  assert(rooted.turn.moveUsed === true, "root should consume move slot");
+  assert(
+    rooted.movementDisabledNextTurn !== true,
+    "root should clear after applying"
+  );
+
+  const blocked = applyAction(
+    res.state,
+    { type: "move", unitId: enemy.id, to: { col: 4, row: 5 } } as any,
+    rng
+  );
+  assert(blocked.events.length === 0, "move should be blocked while rooted");
+  assert(
+    blocked.state.units[enemy.id].position?.row === 4,
+    "rooted unit should not move"
+  );
+
+  const end = applyAction(blocked.state, { type: "endTurn" } as any, rng);
+  res = applyAction(end.state, { type: "unitStartTurn", unitId: enemy.id } as any, rng);
+  assert(
+    res.state.units[enemy.id].turn.moveUsed === false,
+    "move should be available after root expires"
+  );
+
+  console.log("root_blocks_movement_next_turn_only passed");
+}
+
+function testGetHeroMetaReturnsCorrectData() {
+  const meta = getHeroMeta(HERO_VLAD_TEPES_ID);
+  assert(meta, "Vlad meta should exist");
+  assert(meta?.mainClass === "spearman", "Vlad mainClass should be spearman");
+  assert(meta?.baseStats.hp === 7, "Vlad base HP should be 7");
+
+  console.log("getHeroMeta_returns_correct_data passed");
+}
+
+function testHeroRegistryContainsPlayableHeroes() {
+  const required = [
+    HERO_GRAND_KAISER_ID,
+    HERO_VLAD_TEPES_ID,
+    "base-assassin",
+    "base-archer",
+    "base-berserker",
+    "base-rider",
+    "base-spearman",
+    "base-trickster",
+    "base-knight",
+  ];
+  for (const id of required) {
+    assert(HERO_REGISTRY[id], `hero registry should include ${id}`);
+  }
+
+  console.log("hero_registry_contains_all_playable_heroes passed");
+}
+
 function main() {
   testPlacementToBattleAndTurnOrder();
   testLobbyReadyAndStartRequiresBothReady();
@@ -4925,6 +6181,7 @@ function main() {
   testKaiserBunkerExitOnAttackButNotDoraOrImpulse();
   testCarpetStrikeRollsCenterThenAttackThenDefenders();
   testCarpetStrikeUsesSingleSharedAttackRollForAllTargets();
+  testCarpetStrikeDamageIsFixed1IgnoresBuffs();
   testCarpetStrikeHighlightsAreaMetadataInEvents();
   testCarpetStrikeRevealsStealthedUnitsInArea();
   testKaiserCarpetStrikeDoesNotHitSelfInBunker();
@@ -4941,6 +6198,33 @@ function main() {
   testKaiserChargesIncrementEachOwnTurn();
   testChargesAreNotResetByViewOrStartTurn();
   testKaiserMulticlassMovementAndRiderPath();
+  testPolkovodetsAppliesToAdjacentAlliesNotSelf();
+  testPolkovodetsDoesNotStack();
+  testPolkovodetsRiderOnlyIfStartOrEndInAura();
+  testVladIntimidatePromptsAfterSuccessfulDefense();
+  testVladIntimidatePushesAttackerOneCell();
+  testVladIntimidateNoOptionsAutoSkips();
+  testVladStakesPromptOnBattleStart();
+  testVladStakesPromptOnSecondOwnTurnStart();
+  testStakeCannotBePlacedOnVisibleUnit();
+  testStakeCanBePlacedOnStealthedUnitNoEffect();
+  testLinePathOrthogonalIsExact();
+  testLinePathDiagonalIsExact();
+  testTricksterTeleportDoesNotTriggerIntermediateStakes();
+  testRiderStopsOnStakeInPath();
+  testStakeDoesNotTriggerOnHiddenUnitCell();
+  testStakeTriggersOnVisibleUnitStopsAndDamagesAndReveals();
+  testStakeDoesNotTriggerOnUnknownStealthedUnit();
+  testAssassinStopsExactlyOnStakeCell();
+  testStakesDoNotGetRemovedOnTriggerOnlyRevealed();
+  testTwoTepesHiddenStakesSameCellDamageOnly1();
+  testTriggerRevealsAllStakesOnCell();
+  testForestRequires9Stakes();
+  testForestConsumes9AndSkipsStakesPlacementThatTurn();
+  testForestAoeDeals2AndRootsOnFail();
+  testRootBlocksMovementNextTurnOnly();
+  testGetHeroMetaReturnsCorrectData();
+  testHeroRegistryContainsPlayableHeroes();
 }
 
 main();

@@ -161,6 +161,7 @@ export const Board: FC<BoardProps> = ({
     }
   >();
   const lastKnownByPos = new Map<string, number>();
+  const stakeMarkersByPos = new Map<string, boolean>();
   const viewHighlights: Record<string, "place" | "move" | "attack" | "dora"> = {};
   const aoeHighlights = new Map<string, "aoe" | "aoeDisabled">();
   const doraPreviewKeys = new Set<string>();
@@ -180,6 +181,12 @@ export const Board: FC<BoardProps> = ({
     const viewPos = toViewCoord(coord);
     const key = coordKey(viewPos);
     lastKnownByPos.set(key, (lastKnownByPos.get(key) ?? 0) + 1);
+  }
+  for (const marker of view.stakeMarkers ?? []) {
+    const viewPos = toViewCoord(marker.position);
+    const key = coordKey(viewPos);
+    const existing = stakeMarkersByPos.get(key) ?? false;
+    stakeMarkersByPos.set(key, existing || marker.isRevealed);
   }
   for (const [key, kind] of Object.entries(highlightedCells)) {
     const [colRaw, rowRaw] = key.split(",");
@@ -387,6 +394,22 @@ export const Board: FC<BoardProps> = ({
             />
           )}
           {content}
+          {stakeMarkersByPos.has(key) && (
+            <div
+              className={`pointer-events-none absolute left-1 top-1 flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-bold shadow ${
+                stakeMarkersByPos.get(key)
+                  ? "bg-emerald-500 text-white"
+                  : "bg-emerald-200 text-emerald-900"
+              }`}
+              title={
+                stakeMarkersByPos.get(key)
+                  ? "Revealed stake marker"
+                  : "Hidden stake marker"
+              }
+            >
+              {stakeMarkersByPos.get(key) ? "R" : "S"}
+            </div>
+          )}
           {unit?.bunkerActive && (
             <div
               className="pointer-events-none absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-200 text-[9px] font-bold text-amber-900 shadow"
@@ -400,7 +423,7 @@ export const Board: FC<BoardProps> = ({
               <div style={{ width: hpBarWidth }}>
                 <HpBar
                   current={view.units[unit.id]?.hp ?? 0}
-                  max={getMaxHp(unit.class)}
+                  max={getMaxHp(unit.class, view.units[unit.id]?.heroId)}
                   showText={playerId ? unit.owner === playerId : false}
                   className="w-full"
                 />

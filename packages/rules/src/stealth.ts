@@ -258,7 +258,12 @@ import {
   
     // Р•СЃР»Рё СЂР°СЃРєСЂС‹С‚РёРµ РїСЂРѕРёР·РѕС€Р»Рѕ РїРѕ РїСЂРёС‡РёРЅРµ timerExpired/aoeHit/forcedDisplacement,
     // СЃС‡РёС‚Р°РµРј, С‡С‚Рѕ С‚РµРїРµСЂСЊ РІСЃРµ РёРіСЂРѕРєРё "СѓР·РЅР°Р»Рё" Рѕ СЋРЅРёС‚Рµ.
-    if (reason === "timerExpired" || reason === "aoeHit" || reason === "forcedDisplacement") {
+    if (
+      reason === "timerExpired" ||
+      reason === "aoeHit" ||
+      reason === "forcedDisplacement" ||
+      reason === "stakeTriggered"
+    ) {
       nextState.knowledge = {
         ...nextState.knowledge,
         P1: { ...(nextState.knowledge?.P1 ?? {}), [u.id]: true },

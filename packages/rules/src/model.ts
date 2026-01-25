@@ -85,6 +85,8 @@ export interface UnitState {
 
   bunker?: { active: boolean; ownTurnsInBunker: number };
   transformed?: boolean;
+  movementDisabledNextTurn?: boolean;
+  ownTurnsStarted?: number;
 
   turn: TurnEconomy;
 
@@ -126,7 +128,8 @@ export type StealthRevealReason =
   | "forcedDisplacement"
   | "adjacency"
   | "attacked"
-  | "steppedOnHidden";
+  | "steppedOnHidden"
+  | "stakeTriggered";
 
 export type RollKind =
   | "enterStealth"
@@ -148,7 +151,14 @@ export type RollKind =
   | "kaiserCarpetStrikeCenter"
   | "kaiserCarpetStrikeAttack"
   | "carpetStrike_defenderRoll"
-  | "carpetStrike_berserkerDefenseChoice";
+  | "carpetStrike_berserkerDefenseChoice"
+  | "vladIntimidateChoice"
+  | "vladPlaceStakes"
+  | "vladForestChoice"
+  | "vladForestTarget"
+  | "vladForest_attackerRoll"
+  | "vladForest_defenderRoll"
+  | "vladForest_berserkerDefenseChoice";
 
 export interface PendingRoll {
   id: string;
@@ -157,11 +167,21 @@ export interface PendingRoll {
   context: Record<string, unknown>;
 }
 
+export interface StakeMarker {
+  id: string;
+  owner: PlayerId;
+  position: Coord;
+  createdAt: number;
+  isRevealed: boolean;
+}
+
 export interface PendingCombatQueueEntry {
   attackerId: string;
   defenderId: string;
   ignoreRange?: boolean;
   ignoreStealth?: boolean;
+  damageBonus?: number;
+  damageBonusSourceId?: string;
   kind: "riderPath" | "aoe";
 }
 
@@ -264,6 +284,13 @@ export type GameEvent =
       choice: "auto" | "roll";
     }
   | {
+      type: "damageBonusApplied";
+      unitId: string;
+      amount: number;
+      source: "polkovodets";
+      fromUnitId: string;
+    }
+  | {
       type: "chargesUpdated";
       unitId: string;
       deltas: Record<string, number>;
@@ -283,6 +310,37 @@ export type GameEvent =
       type: "bunkerExited";
       unitId: string;
       reason: "timerExpired" | "attacked" | "transformed";
+    }
+  | {
+      type: "intimidateTriggered";
+      defenderId: string;
+      attackerId: string;
+      options: Coord[];
+    }
+  | {
+      type: "intimidateResolved";
+      attackerId: string;
+      from: Coord;
+      to: Coord;
+    }
+  | {
+      type: "stakesPlaced";
+      owner: PlayerId;
+      positions: Coord[];
+      hiddenFromOpponent: boolean;
+    }
+  | {
+      type: "stakeTriggered";
+      markerPos: Coord;
+      unitId: string;
+      damage: number;
+      stopped: boolean;
+      stakeIdsRevealed: string[];
+    }
+  | {
+      type: "forestActivated";
+      vladId: string;
+      stakesConsumed: number;
     }
   | {
       type: "carpetStrikeTriggered";
@@ -350,7 +408,14 @@ export type GameEvent =
 
 
     export type SearchStealthMode = "action" | "move";
-    export type ResolveRollChoice = "auto" | "roll";
+export type ResolveRollChoice =
+  | "auto"
+  | "roll"
+  | "skip"
+  | "activate"
+  | { type: "intimidatePush"; to: Coord }
+  | { type: "placeStakes"; positions: Coord[] }
+  | { type: "forestTarget"; center: Coord };
 
     export type GameAction =
     | {
@@ -457,6 +522,8 @@ export interface GameState {
   pendingCombatQueue: PendingCombatQueueEntry[];
   pendingAoE: PendingAoEResolution | null;
   rollCounter: number;
+  stakeMarkers: StakeMarker[];
+  stakeCounter: number;
 
   /**
    * Глобальный порядок ходов фигур в бою (циклический список id),
@@ -544,7 +611,14 @@ export interface AoEPreview {
 
 export type PlayerView = Omit<
   GameState,
-  "knowledge" | "lastKnownPositions" | "pendingRoll" | "rollCounter" | "pendingCombatQueue" | "pendingAoE"
+  | "knowledge"
+  | "lastKnownPositions"
+  | "pendingRoll"
+  | "rollCounter"
+  | "pendingCombatQueue"
+  | "pendingAoE"
+  | "stakeMarkers"
+  | "stakeCounter"
 > & {
   knowledge: {
     [playerId in PlayerId]: { [unitId: string]: boolean };
@@ -553,6 +627,7 @@ export type PlayerView = Omit<
   pendingRoll: PendingRoll | null;
   pendingCombatQueueCount: number;
   pendingAoEPreview: AoEPreview | null;
+  stakeMarkers: { position: Coord; isRevealed: boolean }[];
   abilitiesByUnitId: Record<string, AbilityView[]>;
   legal?: LegalView;
   legalIntents?: LegalIntents;

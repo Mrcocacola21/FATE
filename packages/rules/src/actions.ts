@@ -10,10 +10,12 @@ import {
   Coord,
   isInsideBoard,
   makeEmptyTurnEconomy,
+  StakeMarker,
   MoveMode,
   PendingMove,
   PendingRoll,
   RollKind,
+  ResolveRollChoice,
   StealthRevealReason
 } from "./model";
 import { getUnitDefinition } from "./units";
@@ -25,10 +27,11 @@ import {
   getTricksterMovesForRoll,
   getBerserkerMovesForRoll,
  } from "./movement";
-import { coordsEqual, chebyshev, isCellOccupied, getUnitAt} from "./board";
-import { processUnitStartOfTurnStealth } from "./stealth";
+import { coordsEqual, chebyshev, isCellOccupied, getUnitAt, ALL_DIRS, addCoord } from "./board";
+import { processUnitStartOfTurnStealth, revealUnit } from "./stealth";
 import { resolveAoE } from "./aoe";
 import { canSpendSlots, spendSlots, resetTurnEconomy } from "./turnEconomy";
+import { linePath } from "./path";
 import {
   initUnitAbilities,
   processUnitStartOfTurn,
@@ -40,11 +43,16 @@ import {
   ABILITY_KAISER_DORA,
   ABILITY_KAISER_CARPET_STRIKE,
   ABILITY_KAISER_ENGINEERING_MIRACLE,
+  ABILITY_VLAD_POLKOVODETS,
+  ABILITY_VLAD_INTIMIDATE,
+  ABILITY_VLAD_STAKES,
+  ABILITY_VLAD_FOREST,
   TRICKSTER_AOE_RADIUS,
 } from "./abilities";
 import { unitCanSeeStealthed } from "./visibility";
 import {
   HERO_GRAND_KAISER_ID,
+  HERO_VLAD_TEPES_ID,
   getHeroDefinition,
   heroMatchesClass,
   type HeroSelection,
@@ -58,6 +66,10 @@ function roll2D6Sum(rng: RNG): number {
 
 function isKaiser(unit: UnitState): boolean {
   return unit.heroId === HERO_GRAND_KAISER_ID;
+}
+
+function isVlad(unit: UnitState): boolean {
+  return unit.heroId === HERO_VLAD_TEPES_ID;
 }
 
 function isKaiserTransformed(unit: UnitState): boolean {
@@ -74,6 +86,403 @@ function getUnitBaseAttack(unit: UnitState): number {
   const def = getUnitDefinition(unit.class);
   const hero = getHeroDefinition(unit.heroId);
   return hero?.baseAttackOverride ?? def.baseAttack;
+}
+
+function isUnitVisibleToPlayer(
+  state: GameState,
+  unit: UnitState,
+  player: PlayerId
+): boolean {
+  if (unit.owner === player) return true;
+  if (!unit.isStealthed) return true;
+  return !!state.knowledge?.[player]?.[unit.id];
+}
+
+function getPolkovodetsSource(
+  state: GameState,
+  attackerId: string,
+  positionOverride?: Coord
+): string | null {
+  const attacker = state.units[attackerId];
+  if (!attacker || !attacker.position) return null;
+  if (isVlad(attacker)) return null;
+
+  const origin = positionOverride ?? attacker.position;
+  const candidates = Object.values(state.units)
+    .filter(
+      (unit) =>
+        unit.isAlive &&
+        unit.position &&
+        unit.owner === attacker.owner &&
+        isVlad(unit) &&
+        unit.id !== attacker.id &&
+        chebyshev(origin, unit.position) <= 1
+    )
+    .map((unit) => unit.id)
+    .sort();
+
+  return candidates.length > 0 ? candidates[0] : null;
+}
+
+function getLegalStakePositions(state: GameState, owner: PlayerId): Coord[] {
+  const positions: Coord[] = [];
+  for (let col = 0; col < state.boardSize; col += 1) {
+    for (let row = 0; row < state.boardSize; row += 1) {
+      const pos = { col, row };
+      if (hasRevealedStakeAt(state, pos)) {
+        continue;
+      }
+      const unit = getUnitAt(state, pos);
+      if (unit && !unit.isStealthed) {
+        continue;
+      }
+      positions.push(pos);
+    }
+  }
+  return positions;
+}
+
+function getStakeMarkersAt(
+  state: GameState,
+  position: Coord
+): StakeMarker[] {
+  return state.stakeMarkers.filter((marker) =>
+    coordsEqual(marker.position, position)
+  );
+}
+
+function hasRevealedStakeAt(state: GameState, position: Coord): boolean {
+  return getStakeMarkersAt(state, position).some((marker) => marker.isRevealed);
+}
+
+function isStakeBlockedByHiddenUnit(
+  state: GameState,
+  position: Coord,
+  ignoreUnitId?: string
+): boolean {
+  const occupant = getUnitAt(state, position);
+  if (!occupant || !occupant.isAlive || !occupant.isStealthed) {
+    return false;
+  }
+  if (ignoreUnitId && occupant.id === ignoreUnitId) {
+    return false;
+  }
+  return true;
+}
+
+function findStakeStopOnPath(
+  state: GameState,
+  unit: UnitState,
+  path: Coord[]
+): Coord | null {
+  for (const cell of path) {
+    const markers = getStakeMarkersAt(state, cell);
+    if (markers.length === 0) continue;
+    if (isStakeBlockedByHiddenUnit(state, cell)) continue;
+    const canSeeMover = markers.some((marker) =>
+      isUnitVisibleToPlayer(state, unit, marker.owner)
+    );
+    if (!canSeeMover) continue;
+    return cell;
+  }
+  return null;
+}
+
+function getAdjacentEmptyCells(state: GameState, origin: Coord): Coord[] {
+  const options: Coord[] = [];
+  for (const dir of ALL_DIRS) {
+    const dest = addCoord(origin, dir);
+    if (!isInsideBoard(dest, state.boardSize)) continue;
+    if (isCellOccupied(state, dest)) continue;
+    options.push(dest);
+  }
+  return options;
+}
+
+function applyStakeTriggerIfAny(
+  state: GameState,
+  unit: UnitState,
+  destination: Coord,
+  rng: RNG
+): { state: GameState; events: GameEvent[]; unit: UnitState; triggered: boolean } {
+  const markers = getStakeMarkersAt(state, destination);
+  if (markers.length === 0) {
+    return { state, events: [], unit, triggered: false };
+  }
+  if (isStakeBlockedByHiddenUnit(state, destination, unit.id)) {
+    return { state, events: [], unit, triggered: false };
+  }
+
+  const canSeeMover = markers.some((marker) =>
+    isUnitVisibleToPlayer(state, unit, marker.owner)
+  );
+  if (!canSeeMover) {
+    return { state, events: [], unit, triggered: false };
+  }
+
+  const revealedIds = markers.map((marker) => marker.id);
+  let nextState: GameState = {
+    ...state,
+    stakeMarkers: state.stakeMarkers.map((marker) =>
+      coordsEqual(marker.position, destination)
+        ? { ...marker, isRevealed: true }
+        : marker
+    ),
+    units: {
+      ...state.units,
+      [unit.id]: unit,
+    },
+  };
+  let updatedUnit = unit;
+  const events: GameEvent[] = [];
+
+  const newHp = Math.max(0, updatedUnit.hp - 1);
+  updatedUnit = {
+    ...updatedUnit,
+    hp: newHp,
+  };
+
+  if (newHp <= 0) {
+    updatedUnit = {
+      ...updatedUnit,
+      isAlive: false,
+      position: null,
+    };
+    events.push({
+      type: "unitDied",
+      unitId: updatedUnit.id,
+      killerId: null,
+    });
+  }
+
+  nextState = {
+    ...nextState,
+    units: {
+      ...nextState.units,
+      [updatedUnit.id]: updatedUnit,
+    },
+  };
+
+  if (updatedUnit.isAlive && updatedUnit.isStealthed) {
+    const revealed = revealUnit(nextState, updatedUnit.id, "stakeTriggered", rng);
+    nextState = revealed.state;
+    events.push(...revealed.events);
+    updatedUnit = nextState.units[updatedUnit.id] ?? updatedUnit;
+  }
+
+  events.push({
+    type: "stakeTriggered",
+    markerPos: destination,
+    unitId: unit.id,
+    damage: 1,
+    stopped: true,
+    stakeIdsRevealed: revealedIds,
+  });
+
+  return { state: nextState, events, unit: updatedUnit, triggered: true };
+}
+
+function requestVladStakesPlacement(
+  state: GameState,
+  owner: PlayerId,
+  reason: "battleStart" | "turnStart",
+  queue?: PlayerId[]
+): ApplyResult {
+  if (state.pendingRoll) {
+    return { state, events: [] };
+  }
+  const legalPositions = getLegalStakePositions(state, owner);
+  const requested = requestRoll(
+    state,
+    owner,
+    "vladPlaceStakes",
+    {
+      owner,
+      count: 3,
+      reason,
+      legalPositions,
+      queue: queue ?? [],
+    },
+    undefined
+  );
+  return requested;
+}
+
+function consumeOldestStakes(
+  state: GameState,
+  owner: PlayerId,
+  count: number
+): { state: GameState; removed: StakeMarker[] } {
+  const owned = state.stakeMarkers
+    .filter((marker) => marker.owner === owner)
+    .sort((a, b) => a.createdAt - b.createdAt);
+  const removed = owned.slice(0, count);
+  const removedIds = new Set(removed.map((marker) => marker.id));
+  const remaining = state.stakeMarkers.filter(
+    (marker) => !removedIds.has(marker.id)
+  );
+  return {
+    state: { ...state, stakeMarkers: remaining },
+    removed,
+  };
+}
+
+type IntimidateResume =
+  | { kind: "none" }
+  | { kind: "combatQueue" }
+  | { kind: "tricksterAoE"; context: Record<string, unknown> }
+  | { kind: "doraAoE"; context: Record<string, unknown> }
+  | { kind: "carpetStrike"; context: Record<string, unknown> }
+  | { kind: "forestAoE"; context: Record<string, unknown> };
+
+function maybeRequestIntimidate(
+  state: GameState,
+  attackerId: string,
+  defenderId: string,
+  baseEvents: GameEvent[],
+  resume: IntimidateResume = { kind: "none" }
+): { state: GameState; events: GameEvent[]; requested: boolean } {
+  const defender = state.units[defenderId];
+  const attacker = state.units[attackerId];
+  if (!defender || !attacker) {
+    return { state, events: baseEvents, requested: false };
+  }
+
+  if (!isVlad(defender) || !defender.isAlive || !defender.position) {
+    return { state, events: baseEvents, requested: false };
+  }
+
+  const attackEvent = baseEvents.find(
+    (event) =>
+      event.type === "attackResolved" &&
+      event.attackerId === attackerId &&
+      event.defenderId === defenderId
+  );
+  if (!attackEvent || attackEvent.type !== "attackResolved" || attackEvent.hit) {
+    return { state, events: baseEvents, requested: false };
+  }
+
+  if (!attacker.isAlive || !attacker.position) {
+    return { state, events: baseEvents, requested: false };
+  }
+
+  const options = getAdjacentEmptyCells(state, attacker.position);
+  if (options.length === 0) {
+    return { state, events: baseEvents, requested: false };
+  }
+
+  const requested = requestRoll(
+    state,
+    defender.owner,
+    "vladIntimidateChoice",
+    {
+      defenderId,
+      attackerId,
+      options,
+      resume,
+    },
+    defender.id
+  );
+
+  const events: GameEvent[] = [
+    ...baseEvents,
+    {
+      type: "intimidateTriggered",
+      defenderId,
+      attackerId,
+      options,
+    },
+    ...requested.events,
+  ];
+
+  return { state: requested.state, events, requested: true };
+}
+
+function shouldOfferVladStakes(unit: UnitState): boolean {
+  return isVlad(unit) && (unit.ownTurnsStarted ?? 0) >= 2;
+}
+
+function activateVladForest(
+  state: GameState,
+  unitId: string,
+  owner: PlayerId
+): ApplyResult {
+  if (state.pendingRoll) {
+    return { state, events: [] };
+  }
+
+  const ownedStakes = state.stakeMarkers.filter(
+    (marker) => marker.owner === owner
+  );
+  if (ownedStakes.length < 9) {
+    return { state, events: [] };
+  }
+
+  const consumed = consumeOldestStakes(state, owner, 9);
+  const cleared = clearPendingRoll(consumed.state);
+
+  const activatedEvents: GameEvent[] = [
+    { type: "forestActivated", vladId: unitId, stakesConsumed: 9 },
+  ];
+
+  const requested = requestRoll(
+    cleared,
+    owner,
+    "vladForestTarget",
+    {
+      unitId,
+      owner,
+    },
+    unitId
+  );
+
+  return {
+    state: requested.state,
+    events: [...activatedEvents, ...requested.events],
+  };
+}
+
+function maybeTriggerVladForestChoice(
+  state: GameState,
+  unitId: string,
+  requireStakePlacement = false
+): ApplyResult {
+  const unit = state.units[unitId];
+  if (!unit || !unit.isAlive || !isVlad(unit)) {
+    return { state, events: [] };
+  }
+
+  if (requireStakePlacement && !shouldOfferVladStakes(unit)) {
+    return { state, events: [] };
+  }
+
+  const ownedStakes = state.stakeMarkers.filter(
+    (marker) => marker.owner === unit.owner
+  ).length;
+  if (ownedStakes < 9) {
+    return { state, events: [] };
+  }
+
+  return activateVladForest(state, unit.id, unit.owner);
+}
+
+function maybeTriggerVladTurnStakes(
+  state: GameState,
+  unitId: string
+): ApplyResult {
+  const unit = state.units[unitId];
+  if (!unit || !unit.isAlive || !shouldOfferVladStakes(unit)) {
+    return { state, events: [] };
+  }
+
+  const ownedStakes = state.stakeMarkers.filter(
+    (marker) => marker.owner === unit.owner
+  ).length;
+  if (ownedStakes >= 9) {
+    return { state, events: [] };
+  }
+
+  return requestVladStakesPlacement(state, unit.owner, "turnStart");
 }
 
 function applyHeroOverrides(unit: UnitState): UnitState {
@@ -781,6 +1190,8 @@ export function createEmptyGame(): GameState {
     pendingCombatQueue: [],
     pendingAoE: null,
     rollCounter: 0,
+    stakeMarkers: [],
+    stakeCounter: 0,
     turnOrder: [],
     turnOrderIndex: 0,
     placementOrder: [],
@@ -852,6 +1263,8 @@ export function createDefaultArmy(
       isStealthed: false,
       stealthTurnsLeft: 0,
       stealthAttemptedThisTurn: false,
+      movementDisabledNextTurn: false,
+      ownTurnsStarted: 0,
       turn: makeEmptyTurnEconomy(),
       charges: {},
       cooldowns: {},
@@ -1153,7 +1566,44 @@ function applyPlaceUnit(
     ...extraEvents,
   ];
 
-  return { state: newState, events };
+  let finalState = newState;
+  let finalEvents = events;
+
+  if (phase === "battle" && !newState.pendingRoll) {
+    const vladOwners = Array.from(
+      new Set(
+        Object.values(newState.units)
+          .filter((u) => u.isAlive && isVlad(u))
+          .map((u) => u.owner)
+      )
+    ).sort() as PlayerId[];
+
+    if (vladOwners.length > 0) {
+      const [firstOwner, ...queue] = vladOwners;
+      const ownedStakes = newState.stakeMarkers.filter(
+        (marker) => marker.owner === firstOwner
+      ).length;
+      const vladUnit = Object.values(newState.units).find(
+        (u) => u.isAlive && isVlad(u) && u.owner === firstOwner
+      );
+      if (ownedStakes >= 9 && vladUnit) {
+        const forest = activateVladForest(newState, vladUnit.id, firstOwner);
+        finalState = forest.state;
+        finalEvents = [...events, ...forest.events];
+      } else {
+        const requested = requestVladStakesPlacement(
+          newState,
+          firstOwner,
+          "battleStart",
+          queue
+        );
+        finalState = requested.state;
+        finalEvents = [...events, ...requested.events];
+      }
+    }
+  }
+
+  return { state: finalState, events: finalEvents };
 }
 
 
@@ -1196,9 +1646,11 @@ function applyAttack(
     preEvents = exited.events;
   }
 
+  const auraSource = getPolkovodetsSource(workingState, workingAttacker.id);
   const context = makeAttackContext({
     attackerId: workingAttacker.id,
     defenderId: defender.id,
+    damageBonusSourceId: auraSource ?? undefined,
     consumeSlots: true,
     queueKind: "normal",
   });
@@ -1254,6 +1706,31 @@ function collectRiderPathTargets(
   }
 
   return targets;
+}
+
+function getRiderPathCells(from: Coord, to: Coord): Coord[] {
+  const dx = to.col - from.col;
+  const dy = to.row - from.row;
+
+  const isOrthogonal =
+    (dx === 0 && dy !== 0) || (dy === 0 && dx !== 0);
+  if (!isOrthogonal) {
+    return [];
+  }
+
+  const stepCol = dx === 0 ? 0 : dx > 0 ? 1 : -1;
+  const stepRow = dy === 0 ? 0 : dy > 0 ? 1 : -1;
+  const steps = Math.max(Math.abs(dx), Math.abs(dy));
+
+  const path: Coord[] = [];
+  for (let i = 1; i <= steps; i++) {
+    path.push({
+      col: from.col + stepCol * i,
+      row: from.row + stepRow * i,
+    });
+  }
+
+  return path;
 }
 
 function applyRequestMoveOptions(
@@ -1448,7 +1925,18 @@ function applyMove(
     return { state, events: [] };
   }
 
-  const hiddenAtDest = getUnitAt(state, action.to);
+  const moveMode =
+    pendingValid && pending?.mode ? pending.mode : ("normal" as MoveMode);
+  const riderMode =
+    moveMode === "rider" ||
+    (moveMode === "normal" && unit.class === "rider");
+
+  const line = moveMode === "trickster" ? null : linePath(from, action.to);
+  const stakePath = line ? line.slice(1) : [action.to];
+  const stakeStop = findStakeStopOnPath(state, unit, stakePath);
+  const finalTo = stakeStop ?? action.to;
+
+  const hiddenAtDest = getUnitAt(state, finalTo);
   if (
     hiddenAtDest &&
     hiddenAtDest.isAlive &&
@@ -1496,9 +1984,9 @@ function applyMove(
   }
 
   const movedUnit: UnitState = spendSlots(unit, { move: true });
-  const updatedUnit: UnitState = {
+  let updatedUnit: UnitState = {
     ...movedUnit,
-    position: { ...action.to },
+    position: { ...finalTo },
   };
 
   let newState: GameState = {
@@ -1519,6 +2007,22 @@ function applyMove(
       to: updatedUnit.position!,
     },
   ];
+
+  const stakeResult = applyStakeTriggerIfAny(
+    newState,
+    updatedUnit,
+    updatedUnit.position!,
+    rng
+  );
+  if (stakeResult.triggered) {
+    newState = stakeResult.state;
+    updatedUnit = stakeResult.unit;
+    events.push(...stakeResult.events);
+  }
+
+  if (!updatedUnit.position) {
+    return { state: newState, events };
+  }
 
   // ---- РЎРїРµС†-РїСЂР°РІРёР»Рѕ РЅР°РµР·РґРЅРёРєР°: Р°С‚Р°РєСѓРµС‚ РІСЃРµС… РІСЂР°РіРѕРІ, С‡РµСЂРµР· РєРѕС‚РѕСЂС‹С… РїСЂРѕРµС…Р°Р» ----
   // ---- Reveal by adjacency: ending move next to hidden enemies reveals them to mover ----
@@ -1567,21 +2071,21 @@ function applyMove(
     }
   }
 
-  const moveMode =
-    pendingValid && pending?.mode ? pending.mode : ("normal" as MoveMode);
-  const riderMode =
-    moveMode === "rider" ||
-    (moveMode === "normal" && unit.class === "rider");
-
   // ---- Rider path attacks: enqueue pending sequential rolls ----
   if (riderMode && from) {
-    const targetIds = collectRiderPathTargets(state, unit, from, action.to);
+    const auraSource =
+      getPolkovodetsSource(state, unit.id, from) ??
+      getPolkovodetsSource(state, unit.id, finalTo);
+    const damageBonus = auraSource ? 1 : 0;
+    const targetIds = collectRiderPathTargets(state, unit, from, finalTo);
     if (targetIds.length > 0) {
       const queue = targetIds.map((defenderId) => ({
         attackerId: unit.id,
         defenderId,
         ignoreRange: true,
         ignoreStealth: true,
+        damageBonus: damageBonus > 0 ? damageBonus : undefined,
+        damageBonusSourceId: auraSource ?? undefined,
         kind: "riderPath" as const,
       }));
 
@@ -1595,6 +2099,8 @@ function applyMove(
         defenderId: queue[0].defenderId,
         ignoreRange: true,
         ignoreStealth: true,
+        damageBonus: damageBonus > 0 ? damageBonus : undefined,
+        damageBonusSourceId: auraSource ?? undefined,
         consumeSlots: false,
         queueKind: "riderPath",
       });
@@ -2441,6 +2947,7 @@ function resolveCarpetStrikeDefenderRoll(
     ignoreStealth: true,
     revealStealthedAllies: true,
     revealReason: "aoeHit",
+    damageOverride: 1,
     rolls: {
       attackerDice,
       defenderDice,
@@ -2448,6 +2955,7 @@ function resolveCarpetStrikeDefenderRoll(
   });
 
   let updatedState = nextState;
+  let updatedEvents = [...events];
   const attackEvent = events.find(
     (e) =>
       e.type === "attackResolved" &&
@@ -2493,7 +3001,22 @@ function resolveCarpetStrikeDefenderRoll(
     attackerDice,
   };
 
-  return advanceCarpetStrikeQueue(updatedState, nextCtx, events);
+  const intimidateResume: IntimidateResume = {
+    kind: "carpetStrike",
+    context: nextCtx as unknown as Record<string, unknown>,
+  };
+  const intimidate = maybeRequestIntimidate(
+    updatedState,
+    caster.id,
+    targetId,
+    updatedEvents,
+    intimidateResume
+  );
+  if (intimidate.requested) {
+    return { state: intimidate.state, events: intimidate.events };
+  }
+
+  return advanceCarpetStrikeQueue(updatedState, nextCtx, updatedEvents);
 }
 
 function resolveCarpetStrikeBerserkerDefenseChoice(
@@ -2565,6 +3088,7 @@ function resolveCarpetStrikeBerserkerDefenseChoice(
     revealStealthedAllies: true,
     revealReason: "aoeHit",
     defenderUseBerserkAutoDefense: true,
+    damageOverride: 1,
     rolls: {
       attackerDice,
       defenderDice: [],
@@ -2572,6 +3096,10 @@ function resolveCarpetStrikeBerserkerDefenseChoice(
   });
 
   let updatedState = nextState;
+  let updatedEvents: GameEvent[] = [
+    { type: "berserkerDefenseChosen", defenderId: target.id, choice: "auto" },
+    ...events,
+  ];
   const attackEvent = events.find(
     (e) =>
       e.type === "attackResolved" &&
@@ -2617,7 +3145,461 @@ function resolveCarpetStrikeBerserkerDefenseChoice(
     attackerDice,
   };
 
-  return advanceCarpetStrikeQueue(updatedState, nextCtx, events);
+  const intimidateResume: IntimidateResume = {
+    kind: "carpetStrike",
+    context: nextCtx as unknown as Record<string, unknown>,
+  };
+  const intimidate = maybeRequestIntimidate(
+    updatedState,
+    caster.id,
+    target.id,
+    updatedEvents,
+    intimidateResume
+  );
+  if (intimidate.requested) {
+    return { state: intimidate.state, events: intimidate.events };
+  }
+
+  return advanceCarpetStrikeQueue(updatedState, nextCtx, updatedEvents);
+}
+
+function finalizeForestAoE(
+  state: GameState,
+  events: GameEvent[]
+): ApplyResult {
+  if (!state.pendingAoE) {
+    return { state: clearPendingRoll(state), events };
+  }
+
+  const aoe = state.pendingAoE;
+  const nextState: GameState = { ...state, pendingAoE: null };
+  return {
+    state: clearPendingRoll(nextState),
+    events: [
+      ...events,
+      {
+        type: "aoeResolved",
+        sourceUnitId: aoe.casterId,
+        abilityId: aoe.abilityId,
+        casterId: aoe.casterId,
+        center: aoe.center,
+        radius: aoe.radius,
+        affectedUnitIds: aoe.affectedUnitIds,
+        revealedUnitIds: aoe.revealedUnitIds,
+        damagedUnitIds: aoe.damagedUnitIds,
+        damageByUnitId: aoe.damageByUnitId,
+      },
+    ],
+  };
+}
+
+function advanceForestAoEQueue(
+  state: GameState,
+  context: ForestAoEContext,
+  events: GameEvent[]
+): ApplyResult {
+  const baseState = clearPendingRoll(state);
+  const targets = Array.isArray(context.targetsQueue)
+    ? context.targetsQueue
+    : [];
+  let idx = context.currentTargetIndex ?? 0;
+
+  while (idx < targets.length) {
+    const targetId = targets[idx];
+    const target = baseState.units[targetId];
+    if (target && target.isAlive) {
+      const nextCtx: ForestAoEContext = {
+        ...context,
+        currentTargetIndex: idx,
+      };
+      const charges = target.charges?.[ABILITY_BERSERK_AUTO_DEFENSE] ?? 0;
+      if (target.class === "berserker" && charges === 6) {
+        const requested = requestRoll(
+          baseState,
+          target.owner,
+          "vladForest_berserkerDefenseChoice",
+          nextCtx,
+          target.id
+        );
+        return {
+          state: requested.state,
+          events: [...events, ...requested.events],
+        };
+      }
+      const requested = requestRoll(
+        baseState,
+        target.owner,
+        "vladForest_defenderRoll",
+        nextCtx,
+        target.id
+      );
+      return {
+        state: requested.state,
+        events: [...events, ...requested.events],
+      };
+    }
+    idx += 1;
+  }
+
+  return finalizeForestAoE(baseState, events);
+}
+
+function resolveForestAttackerRoll(
+  state: GameState,
+  pending: PendingRoll,
+  rng: RNG
+): ApplyResult {
+  const ctx = pending.context as unknown as ForestAoEContext;
+  const caster = state.units[ctx.casterId];
+  if (!caster) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  const attackerDice = rollDice(rng, 2);
+  const nextCtx: ForestAoEContext = {
+    ...ctx,
+    attackerDice,
+    currentTargetIndex: ctx.currentTargetIndex ?? 0,
+  };
+
+  return advanceForestAoEQueue(state, nextCtx, []);
+}
+
+function resolveForestDefenderRoll(
+  state: GameState,
+  pending: PendingRoll,
+  rng: RNG
+): ApplyResult {
+  const ctx = pending.context as unknown as ForestAoEContext;
+  const caster = state.units[ctx.casterId];
+  if (!caster) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  const attackerDice = Array.isArray(ctx.attackerDice) ? ctx.attackerDice : [];
+  if (attackerDice.length < 2) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  const targets = Array.isArray(ctx.targetsQueue) ? ctx.targetsQueue : [];
+  const idx = ctx.currentTargetIndex ?? 0;
+  const targetId = targets[idx];
+  if (!targetId) {
+    return finalizeForestAoE(clearPendingRoll(state), []);
+  }
+
+  const target = state.units[targetId];
+  if (!target || !target.isAlive) {
+    const nextCtx: ForestAoEContext = {
+      ...ctx,
+      currentTargetIndex: idx + 1,
+      attackerDice,
+    };
+    return advanceForestAoEQueue(state, nextCtx, []);
+  }
+
+  const defenderDice = rollDice(rng, 2);
+  const sourceId = getPolkovodetsSource(state, caster.id);
+  const damageBonus = sourceId ? 1 : 0;
+  const { nextState, events } = resolveAttack(state, {
+    attackerId: caster.id,
+    defenderId: targetId,
+    ignoreRange: true,
+    ignoreStealth: true,
+    revealStealthedAllies: true,
+    revealReason: "aoeHit",
+    damageOverride: 2,
+    damageBonus,
+    rolls: {
+      attackerDice,
+      defenderDice,
+    },
+  });
+
+  let updatedEvents = [...events];
+  const attackEvent = events.find(
+    (e) =>
+      e.type === "attackResolved" &&
+      e.attackerId === caster.id &&
+      e.defenderId === targetId
+  );
+
+  if (
+    attackEvent &&
+    attackEvent.type === "attackResolved" &&
+    attackEvent.hit &&
+    damageBonus > 0 &&
+    sourceId
+  ) {
+    updatedEvents.push({
+      type: "damageBonusApplied",
+      unitId: caster.id,
+      amount: damageBonus,
+      source: "polkovodets",
+      fromUnitId: sourceId,
+    });
+  }
+
+  let updatedState = nextState;
+  if (
+    attackEvent &&
+    attackEvent.type === "attackResolved" &&
+    attackEvent.hit
+  ) {
+    const hitUnit = updatedState.units[targetId];
+    if (hitUnit) {
+      updatedState = {
+        ...updatedState,
+        units: {
+          ...updatedState.units,
+          [hitUnit.id]: {
+            ...hitUnit,
+            movementDisabledNextTurn: true,
+          },
+        },
+      };
+    }
+  }
+
+  if (attackEvent && attackEvent.type === "attackResolved" && updatedState.pendingAoE) {
+    let nextPendingAoE = updatedState.pendingAoE;
+    if (attackEvent.damage > 0) {
+      const damaged = nextPendingAoE.damagedUnitIds.includes(attackEvent.defenderId)
+        ? nextPendingAoE.damagedUnitIds
+        : [...nextPendingAoE.damagedUnitIds, attackEvent.defenderId];
+      const damageByUnitId = {
+        ...nextPendingAoE.damageByUnitId,
+        [attackEvent.defenderId]: attackEvent.damage,
+      };
+      nextPendingAoE = {
+        ...nextPendingAoE,
+        damagedUnitIds: damaged,
+        damageByUnitId,
+      };
+    }
+
+    const revealedIds = events
+      .filter((e) => e.type === "stealthRevealed")
+      .map((e) => (e.type === "stealthRevealed" ? e.unitId : ""))
+      .filter((id) => id.length > 0);
+    if (revealedIds.length > 0) {
+      const merged = Array.from(
+        new Set([...nextPendingAoE.revealedUnitIds, ...revealedIds])
+      );
+      nextPendingAoE = { ...nextPendingAoE, revealedUnitIds: merged };
+    }
+
+    if (nextPendingAoE !== updatedState.pendingAoE) {
+      updatedState = { ...updatedState, pendingAoE: nextPendingAoE };
+    }
+  }
+
+  const nextCtx: ForestAoEContext = {
+    ...ctx,
+    currentTargetIndex: idx + 1,
+    attackerDice,
+  };
+
+  const intimidateResume: IntimidateResume = {
+    kind: "forestAoE",
+    context: nextCtx as unknown as Record<string, unknown>,
+  };
+  const intimidate = maybeRequestIntimidate(
+    updatedState,
+    caster.id,
+    targetId,
+    updatedEvents,
+    intimidateResume
+  );
+  if (intimidate.requested) {
+    return { state: intimidate.state, events: intimidate.events };
+  }
+
+  return advanceForestAoEQueue(updatedState, nextCtx, updatedEvents);
+}
+
+function resolveForestBerserkerDefenseChoice(
+  state: GameState,
+  pending: PendingRoll,
+  choice: "auto" | "roll" | undefined,
+  rng: RNG
+): ApplyResult {
+  const ctx = pending.context as unknown as ForestAoEContext;
+  const caster = state.units[ctx.casterId];
+  if (!caster) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  const attackerDice = Array.isArray(ctx.attackerDice) ? ctx.attackerDice : [];
+  if (attackerDice.length < 2) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  const targets = Array.isArray(ctx.targetsQueue) ? ctx.targetsQueue : [];
+  const idx = ctx.currentTargetIndex ?? 0;
+  const targetId = targets[idx];
+  if (!targetId) {
+    return finalizeForestAoE(clearPendingRoll(state), []);
+  }
+
+  const target = state.units[targetId];
+  if (!target || !target.isAlive) {
+    const nextCtx: ForestAoEContext = {
+      ...ctx,
+      currentTargetIndex: idx + 1,
+      attackerDice,
+    };
+    return advanceForestAoEQueue(state, nextCtx, []);
+  }
+
+  let selected: "auto" | "roll" = choice ?? "roll";
+  if (selected === "auto") {
+    const charges = target.charges?.[ABILITY_BERSERK_AUTO_DEFENSE] ?? 0;
+    if (charges !== 6) {
+      selected = "roll";
+    }
+  }
+
+  if (selected === "roll") {
+    const nextCtx: ForestAoEContext = {
+      ...ctx,
+      currentTargetIndex: idx,
+      attackerDice,
+    };
+    const requested = requestRoll(
+      clearPendingRoll(state),
+      target.owner,
+      "vladForest_defenderRoll",
+      nextCtx,
+      target.id
+    );
+    const choiceEvents: GameEvent[] = [
+      { type: "berserkerDefenseChosen", defenderId: target.id, choice: "roll" },
+      ...requested.events,
+    ];
+    return { state: requested.state, events: choiceEvents };
+  }
+
+  const sourceId = getPolkovodetsSource(state, caster.id);
+  const damageBonus = sourceId ? 1 : 0;
+  const { nextState, events } = resolveAttack(state, {
+    attackerId: caster.id,
+    defenderId: target.id,
+    ignoreRange: true,
+    ignoreStealth: true,
+    revealStealthedAllies: true,
+    revealReason: "aoeHit",
+    defenderUseBerserkAutoDefense: true,
+    damageOverride: 2,
+    damageBonus,
+    rolls: {
+      attackerDice,
+      defenderDice: [],
+    },
+  });
+
+  let updatedEvents: GameEvent[] = [
+    { type: "berserkerDefenseChosen", defenderId: target.id, choice: "auto" },
+    ...events,
+  ];
+  const attackEvent = events.find(
+    (e) =>
+      e.type === "attackResolved" &&
+      e.attackerId === caster.id &&
+      e.defenderId === target.id
+  );
+  if (
+    attackEvent &&
+    attackEvent.type === "attackResolved" &&
+    attackEvent.hit &&
+    damageBonus > 0 &&
+    sourceId
+  ) {
+    updatedEvents.push({
+      type: "damageBonusApplied",
+      unitId: caster.id,
+      amount: damageBonus,
+      source: "polkovodets",
+      fromUnitId: sourceId,
+    });
+  }
+
+  let updatedState = nextState;
+  if (
+    attackEvent &&
+    attackEvent.type === "attackResolved" &&
+    attackEvent.hit
+  ) {
+    const hitUnit = updatedState.units[target.id];
+    if (hitUnit) {
+      updatedState = {
+        ...updatedState,
+        units: {
+          ...updatedState.units,
+          [hitUnit.id]: {
+            ...hitUnit,
+            movementDisabledNextTurn: true,
+          },
+        },
+      };
+    }
+  }
+
+  if (attackEvent && attackEvent.type === "attackResolved" && updatedState.pendingAoE) {
+    let nextPendingAoE = updatedState.pendingAoE;
+    if (attackEvent.damage > 0) {
+      const damaged = nextPendingAoE.damagedUnitIds.includes(attackEvent.defenderId)
+        ? nextPendingAoE.damagedUnitIds
+        : [...nextPendingAoE.damagedUnitIds, attackEvent.defenderId];
+      const damageByUnitId = {
+        ...nextPendingAoE.damageByUnitId,
+        [attackEvent.defenderId]: attackEvent.damage,
+      };
+      nextPendingAoE = {
+        ...nextPendingAoE,
+        damagedUnitIds: damaged,
+        damageByUnitId,
+      };
+    }
+
+    const revealedIds = events
+      .filter((e) => e.type === "stealthRevealed")
+      .map((e) => (e.type === "stealthRevealed" ? e.unitId : ""))
+      .filter((id) => id.length > 0);
+    if (revealedIds.length > 0) {
+      const merged = Array.from(
+        new Set([...nextPendingAoE.revealedUnitIds, ...revealedIds])
+      );
+      nextPendingAoE = { ...nextPendingAoE, revealedUnitIds: merged };
+    }
+
+    if (nextPendingAoE !== updatedState.pendingAoE) {
+      updatedState = { ...updatedState, pendingAoE: nextPendingAoE };
+    }
+  }
+
+  const nextCtx: ForestAoEContext = {
+    ...ctx,
+    currentTargetIndex: idx + 1,
+    attackerDice,
+  };
+
+  const intimidateResume: IntimidateResume = {
+    kind: "forestAoE",
+    context: nextCtx as unknown as Record<string, unknown>,
+  };
+  const intimidate = maybeRequestIntimidate(
+    updatedState,
+    caster.id,
+    target.id,
+    updatedEvents,
+    intimidateResume
+  );
+  if (intimidate.requested) {
+    return { state: intimidate.state, events: intimidate.events };
+  }
+
+  return advanceForestAoEQueue(updatedState, nextCtx, updatedEvents);
 }
 
 interface AttackRollContext extends Record<string, unknown> {
@@ -2627,6 +3609,8 @@ interface AttackRollContext extends Record<string, unknown> {
   ignoreStealth?: boolean;
   revealStealthedAllies?: boolean;
   revealReason?: StealthRevealReason;
+  damageBonus?: number;
+  damageBonusSourceId?: string;
   attackerDice?: number[];
   defenderDice?: number[];
   tieBreakAttacker?: number[];
@@ -2646,6 +3630,14 @@ interface TricksterAoEContext extends Record<string, unknown> {
 
 interface DoraAoEContext extends Record<string, unknown> {
   casterId: string;
+  targetsQueue: string[];
+  currentTargetIndex?: number;
+  attackerDice?: number[];
+}
+
+interface ForestAoEContext extends Record<string, unknown> {
+  casterId: string;
+  center: Coord;
   targetsQueue: string[];
   currentTargetIndex?: number;
   attackerDice?: number[];
@@ -2679,6 +3671,8 @@ function makeAttackContext(params: {
   defenderId: string;
   ignoreRange?: boolean;
   ignoreStealth?: boolean;
+  damageBonus?: number;
+  damageBonusSourceId?: string;
   consumeSlots: boolean;
   queueKind: "normal" | "riderPath" | "aoe";
 }): AttackRollContext {
@@ -2687,6 +3681,8 @@ function makeAttackContext(params: {
     defenderId: params.defenderId,
     ignoreRange: params.ignoreRange,
     ignoreStealth: params.ignoreStealth,
+    damageBonus: params.damageBonus,
+    damageBonusSourceId: params.damageBonusSourceId,
     attackerDice: [],
     defenderDice: [],
     tieBreakAttacker: [],
@@ -2710,6 +3706,10 @@ function finalizeAttackFromContext(
     tieBreakDefender: context.tieBreakDefender ?? [],
   };
 
+  const sourceId =
+    context.damageBonusSourceId ?? getPolkovodetsSource(state, context.attackerId);
+  const damageBonus = sourceId ? 1 : 0;
+
   const { nextState, events } = resolveAttack(state, {
     attackerId: context.attackerId,
     defenderId: context.defenderId,
@@ -2718,8 +3718,32 @@ function finalizeAttackFromContext(
     ignoreStealth: context.ignoreStealth,
     revealStealthedAllies: context.revealStealthedAllies,
     revealReason: context.revealReason,
+    damageBonus,
     rolls,
   });
+
+  let updatedEvents = [...events];
+  const attackEvent = events.find(
+    (e) =>
+      e.type === "attackResolved" &&
+      e.attackerId === context.attackerId &&
+      e.defenderId === context.defenderId
+  );
+  if (
+    attackEvent &&
+    attackEvent.type === "attackResolved" &&
+    attackEvent.hit &&
+    damageBonus > 0 &&
+    sourceId
+  ) {
+    updatedEvents.push({
+      type: "damageBonusApplied",
+      unitId: context.attackerId,
+      amount: damageBonus,
+      source: "polkovodets",
+      fromUnitId: sourceId,
+    });
+  }
 
   const attackResolved = events.some((e) => e.type === "attackResolved");
   let updatedState = nextState;
@@ -2785,7 +3809,7 @@ function finalizeAttackFromContext(
     }
   }
 
-  return { state: clearPendingRoll(updatedState), events };
+  return { state: clearPendingRoll(updatedState), events: updatedEvents };
 }
 
 function advanceCombatQueue(
@@ -2855,6 +3879,8 @@ function advanceCombatQueue(
     defenderId: nextEntry.defenderId,
     ignoreRange: nextEntry.ignoreRange,
     ignoreStealth: nextEntry.ignoreStealth,
+    damageBonus: nextEntry.damageBonus,
+    damageBonusSourceId: nextEntry.damageBonusSourceId,
     consumeSlots: false,
     queueKind: nextEntry.kind,
   });
@@ -2994,6 +4020,8 @@ function resolveTricksterAoEDefenderRoll(
   }
 
   const defenderDice = rollDice(rng, 2);
+  const sourceId = getPolkovodetsSource(state, caster.id);
+  const damageBonus = sourceId ? 1 : 0;
   const { nextState, events } = resolveAttack(state, {
     attackerId: caster.id,
     defenderId: targetId,
@@ -3001,6 +4029,7 @@ function resolveTricksterAoEDefenderRoll(
     ignoreStealth: true,
     revealStealthedAllies: true,
     revealReason: "aoeHit",
+    damageBonus,
     rolls: {
       attackerDice,
       defenderDice,
@@ -3008,12 +4037,28 @@ function resolveTricksterAoEDefenderRoll(
   });
 
   let updatedState = nextState;
+  let updatedEvents = [...events];
   const attackEvent = events.find(
     (e) =>
       e.type === "attackResolved" &&
       e.attackerId === caster.id &&
       e.defenderId === targetId
   );
+  if (
+    attackEvent &&
+    attackEvent.type === "attackResolved" &&
+    attackEvent.hit &&
+    damageBonus > 0 &&
+    sourceId
+  ) {
+    updatedEvents.push({
+      type: "damageBonusApplied",
+      unitId: caster.id,
+      amount: damageBonus,
+      source: "polkovodets",
+      fromUnitId: sourceId,
+    });
+  }
   if (attackEvent && attackEvent.type === "attackResolved" && updatedState.pendingAoE) {
     let nextPendingAoE = updatedState.pendingAoE;
     if (attackEvent.damage > 0) {
@@ -3053,7 +4098,22 @@ function resolveTricksterAoEDefenderRoll(
     attackerDice,
   };
 
-  return advanceTricksterAoEQueue(updatedState, nextCtx, events);
+  const intimidateResume: IntimidateResume = {
+    kind: "tricksterAoE",
+    context: nextCtx as unknown as Record<string, unknown>,
+  };
+  const intimidate = maybeRequestIntimidate(
+    updatedState,
+    caster.id,
+    targetId,
+    updatedEvents,
+    intimidateResume
+  );
+  if (intimidate.requested) {
+    return { state: intimidate.state, events: intimidate.events };
+  }
+
+  return advanceTricksterAoEQueue(updatedState, nextCtx, updatedEvents);
 }
 
 function finalizeDoraAoE(
@@ -3188,6 +4248,8 @@ function resolveDoraDefenderRoll(
   }
 
   const defenderDice = rollDice(rng, 2);
+  const sourceId = getPolkovodetsSource(state, caster.id);
+  const damageBonus = sourceId ? 1 : 0;
   const { nextState, events } = resolveAttack(state, {
     attackerId: caster.id,
     defenderId: targetId,
@@ -3195,6 +4257,7 @@ function resolveDoraDefenderRoll(
     ignoreStealth: true,
     revealStealthedAllies: true,
     revealReason: "aoeHit",
+    damageBonus,
     rolls: {
       attackerDice,
       defenderDice,
@@ -3202,12 +4265,28 @@ function resolveDoraDefenderRoll(
   });
 
   let updatedState = nextState;
+  let updatedEvents: GameEvent[] = [...events];
   const attackEvent = events.find(
     (e) =>
       e.type === "attackResolved" &&
       e.attackerId === caster.id &&
       e.defenderId === targetId
   );
+  if (
+    attackEvent &&
+    attackEvent.type === "attackResolved" &&
+    attackEvent.hit &&
+    damageBonus > 0 &&
+    sourceId
+  ) {
+    updatedEvents.push({
+      type: "damageBonusApplied",
+      unitId: caster.id,
+      amount: damageBonus,
+      source: "polkovodets",
+      fromUnitId: sourceId,
+    });
+  }
   if (attackEvent && attackEvent.type === "attackResolved" && updatedState.pendingAoE) {
     let nextPendingAoE = updatedState.pendingAoE;
     if (attackEvent.damage > 0) {
@@ -3247,7 +4326,22 @@ function resolveDoraDefenderRoll(
     attackerDice,
   };
 
-  return advanceDoraAoEQueue(updatedState, nextCtx, events);
+  const intimidateResume: IntimidateResume = {
+    kind: "doraAoE",
+    context: nextCtx as unknown as Record<string, unknown>,
+  };
+  const intimidate = maybeRequestIntimidate(
+    updatedState,
+    caster.id,
+    targetId,
+    updatedEvents,
+    intimidateResume
+  );
+  if (intimidate.requested) {
+    return { state: intimidate.state, events: intimidate.events };
+  }
+
+  return advanceDoraAoEQueue(updatedState, nextCtx, updatedEvents);
 }
 
 function resolveDoraBerserkerDefenseChoice(
@@ -3312,6 +4406,8 @@ function resolveDoraBerserkerDefenseChoice(
   }
 
   if (selected === "auto") {
+    const sourceId = getPolkovodetsSource(state, caster.id);
+    const damageBonus = sourceId ? 1 : 0;
     const { nextState, events } = resolveAttack(state, {
       attackerId: caster.id,
       defenderId: target.id,
@@ -3320,6 +4416,7 @@ function resolveDoraBerserkerDefenseChoice(
       revealStealthedAllies: true,
       revealReason: "aoeHit",
       defenderUseBerserkAutoDefense: true,
+      damageBonus,
       rolls: {
         attackerDice,
         defenderDice: [],
@@ -3327,12 +4424,31 @@ function resolveDoraBerserkerDefenseChoice(
     });
 
     let updatedState = nextState;
+    let updatedEvents: GameEvent[] = [
+      { type: "berserkerDefenseChosen", defenderId: target.id, choice: "auto" },
+      ...events,
+    ];
     const attackEvent = events.find(
       (e) =>
         e.type === "attackResolved" &&
         e.attackerId === caster.id &&
         e.defenderId === target.id
     );
+    if (
+      attackEvent &&
+      attackEvent.type === "attackResolved" &&
+      attackEvent.hit &&
+      damageBonus > 0 &&
+      sourceId
+    ) {
+      updatedEvents.push({
+        type: "damageBonusApplied",
+        unitId: caster.id,
+        amount: damageBonus,
+        source: "polkovodets",
+        fromUnitId: sourceId,
+      });
+    }
     if (attackEvent && attackEvent.type === "attackResolved" && updatedState.pendingAoE) {
       let nextPendingAoE = updatedState.pendingAoE;
       if (attackEvent.damage > 0) {
@@ -3372,12 +4488,22 @@ function resolveDoraBerserkerDefenseChoice(
       attackerDice,
     };
 
-    const choiceEvents: GameEvent[] = [
-      { type: "berserkerDefenseChosen", defenderId: target.id, choice: "auto" },
-      ...events,
-    ];
+    const intimidateResume: IntimidateResume = {
+      kind: "doraAoE",
+      context: nextCtx as unknown as Record<string, unknown>,
+    };
+    const intimidate = maybeRequestIntimidate(
+      updatedState,
+      caster.id,
+      target.id,
+      updatedEvents,
+      intimidateResume
+    );
+    if (intimidate.requested) {
+      return { state: intimidate.state, events: intimidate.events };
+    }
 
-    return advanceDoraAoEQueue(updatedState, nextCtx, choiceEvents);
+    return advanceDoraAoEQueue(updatedState, nextCtx, updatedEvents);
   }
 
   return { state: clearPendingRoll(state), events: [] };
@@ -3480,6 +4606,16 @@ function resolveAttackDefenderRoll(
   }
 
   const resolved = finalizeAttackFromContext(state, nextCtx, false);
+  const intimidate = maybeRequestIntimidate(
+    resolved.state,
+    ctx.attackerId,
+    ctx.defenderId,
+    resolved.events,
+    { kind: "combatQueue" }
+  );
+  if (intimidate.requested) {
+    return { state: intimidate.state, events: intimidate.events };
+  }
   return advanceCombatQueue(resolved.state, resolved.events);
 }
 
@@ -3509,6 +4645,16 @@ function resolveBerserkerDefenseChoiceRoll(
       { type: "berserkerDefenseChosen", defenderId: defender.id, choice: "auto" },
       ...resolved.events,
     ];
+    const intimidate = maybeRequestIntimidate(
+      resolved.state,
+      ctx.attackerId,
+      ctx.defenderId,
+      choiceEvents,
+      { kind: "combatQueue" }
+    );
+    if (intimidate.requested) {
+      return { state: intimidate.state, events: intimidate.events };
+    }
     return advanceCombatQueue(resolved.state, choiceEvents);
   }
 
@@ -3536,6 +4682,336 @@ function resolveBerserkerDefenseChoiceRoll(
   return { state: clearPendingRoll(state), events: [] };
 }
 
+function resolveVladIntimidateChoice(
+  state: GameState,
+  pending: PendingRoll,
+  choice: ResolveRollChoice | undefined,
+  rng: RNG
+): ApplyResult {
+  const ctx = pending.context as {
+    defenderId?: string;
+    attackerId?: string;
+    options?: Coord[];
+    resume?: IntimidateResume;
+  };
+  const defenderId = ctx.defenderId;
+  const attackerId = ctx.attackerId;
+  if (!defenderId || !attackerId) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  const defender = state.units[defenderId];
+  const attacker = state.units[attackerId];
+  if (!defender || !attacker) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  const options = Array.isArray(ctx.options) ? ctx.options : [];
+  const desired =
+    choice && typeof choice === "object" && "type" in choice
+      ? (choice as { type: string; to?: Coord }).to
+      : undefined;
+  const canPush =
+    desired &&
+    options.some((opt) => coordsEqual(opt, desired));
+
+  let updatedState: GameState = clearPendingRoll(state);
+  let updatedAttacker = attacker;
+  const events: GameEvent[] = [];
+
+  if (canPush && attacker.position) {
+    const from = attacker.position;
+    const to = desired!;
+    updatedAttacker = { ...attacker, position: { ...to } };
+    updatedState = {
+      ...updatedState,
+      units: {
+        ...updatedState.units,
+        [updatedAttacker.id]: updatedAttacker,
+      },
+    };
+    events.push({ type: "intimidateResolved", attackerId, from, to });
+
+    if (updatedAttacker.isStealthed) {
+      const revealed = revealUnit(
+        updatedState,
+        updatedAttacker.id,
+        "forcedDisplacement",
+        rng
+      );
+      updatedState = revealed.state;
+      events.push(...revealed.events);
+      updatedAttacker = updatedState.units[updatedAttacker.id] ?? updatedAttacker;
+    }
+
+    if (updatedAttacker.position) {
+      const stakeResult = applyStakeTriggerIfAny(
+        updatedState,
+        updatedAttacker,
+        updatedAttacker.position,
+        rng
+      );
+      if (stakeResult.triggered) {
+        updatedState = stakeResult.state;
+        updatedAttacker = stakeResult.unit;
+        events.push(...stakeResult.events);
+      }
+    }
+  }
+
+  const resume = ctx.resume ?? { kind: "none" };
+  switch (resume.kind) {
+    case "combatQueue":
+      return advanceCombatQueue(updatedState, events);
+    case "tricksterAoE":
+      return advanceTricksterAoEQueue(
+        updatedState,
+        resume.context as unknown as TricksterAoEContext,
+        events
+      );
+    case "doraAoE":
+      return advanceDoraAoEQueue(
+        updatedState,
+        resume.context as unknown as DoraAoEContext,
+        events
+      );
+    case "carpetStrike":
+      return advanceCarpetStrikeQueue(
+        updatedState,
+        resume.context as unknown as CarpetStrikeAoEContext,
+        events
+      );
+    case "forestAoE":
+      return advanceForestAoEQueue(
+        updatedState,
+        resume.context as unknown as ForestAoEContext,
+        events
+      );
+    default:
+      return { state: updatedState, events };
+  }
+}
+
+function resolveVladPlaceStakes(
+  state: GameState,
+  pending: PendingRoll,
+  choice: ResolveRollChoice | undefined
+): ApplyResult {
+  const ctx = pending.context as {
+    owner?: PlayerId;
+    count?: number;
+    reason?: "battleStart" | "turnStart";
+    legalPositions?: Coord[];
+    queue?: PlayerId[];
+  };
+  const owner = ctx.owner;
+  if (!owner) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  const request = choice as { type?: string; positions?: Coord[] } | undefined;
+  if (!request || request.type !== "placeStakes") {
+    return { state, events: [] };
+  }
+
+  const positions = Array.isArray(request.positions) ? request.positions : [];
+  if (positions.length !== 3) {
+    return { state, events: [] };
+  }
+
+  const legalPositions =
+    Array.isArray(ctx.legalPositions) && ctx.legalPositions.length > 0
+      ? ctx.legalPositions
+      : getLegalStakePositions(state, owner);
+  const legalSet = new Set(legalPositions.map((pos) => `${pos.col},${pos.row}`));
+
+  const unique = new Set(positions.map((pos) => `${pos.col},${pos.row}`));
+  if (unique.size !== positions.length) {
+    return { state, events: [] };
+  }
+
+  for (const pos of positions) {
+    if (!legalSet.has(`${pos.col},${pos.row}`)) {
+      return { state, events: [] };
+    }
+  }
+
+  const baseCounter = state.stakeCounter ?? 0;
+  const created = positions.map((pos, index) => ({
+    id: `stake-${owner}-${baseCounter + index + 1}`,
+    owner,
+    position: { ...pos },
+    createdAt: baseCounter + index + 1,
+    isRevealed: false,
+  }));
+
+  const nextState: GameState = {
+    ...state,
+    stakeMarkers: [...state.stakeMarkers, ...created],
+    stakeCounter: baseCounter + created.length,
+  };
+
+  const events: GameEvent[] = [
+    {
+      type: "stakesPlaced",
+      owner,
+      positions: positions.map((pos) => ({ ...pos })),
+      hiddenFromOpponent: true,
+    },
+  ];
+
+  const cleared = clearPendingRoll(nextState);
+  const queue = Array.isArray(ctx.queue) ? ctx.queue : [];
+  if (queue.length > 0) {
+    const [nextOwner, ...rest] = queue;
+    const requested = requestVladStakesPlacement(
+      cleared,
+      nextOwner,
+      ctx.reason ?? "battleStart",
+      rest
+    );
+    return { state: requested.state, events: [...events, ...requested.events] };
+  }
+
+  return { state: cleared, events };
+}
+
+function resolveVladForestChoice(
+  state: GameState,
+  pending: PendingRoll,
+  choice: ResolveRollChoice | undefined
+): ApplyResult {
+  const ctx = pending.context as {
+    unitId?: string;
+    owner?: PlayerId;
+    canPlaceStakes?: boolean;
+  };
+  const owner = ctx.owner;
+  const unitId = ctx.unitId;
+  if (!owner || !unitId) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  const selection = choice as "activate" | "skip" | undefined;
+  const unit = state.units[unitId];
+  if (!unit) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  if (selection === "activate") {
+    const cleared = clearPendingRoll(state);
+    const activated = activateVladForest(cleared, unitId, owner);
+    if (activated.state === cleared && activated.events.length === 0) {
+      return { state: cleared, events: [] };
+    }
+    return activated;
+  }
+
+  return { state: clearPendingRoll(state), events: [] };
+}
+
+function resolveVladForestTarget(
+  state: GameState,
+  pending: PendingRoll,
+  choice: ResolveRollChoice | undefined,
+  rng: RNG
+): ApplyResult {
+  const ctx = pending.context as {
+    unitId?: string;
+    owner?: PlayerId;
+  };
+  const unitId = ctx.unitId;
+  const owner = ctx.owner;
+  if (!unitId || !owner) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  const payload = choice as { type?: string; center?: Coord } | undefined;
+  if (!payload || payload.type !== "forestTarget") {
+    return { state, events: [] };
+  }
+
+  const center = payload.center;
+  if (!center || !isInsideBoard(center, state.boardSize)) {
+    return { state, events: [] };
+  }
+
+  const unit = state.units[unitId];
+  if (!unit || !unit.isAlive) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  const aoeRes = resolveAoE(
+    state,
+    unitId,
+    center,
+    {
+      radius: 1,
+      shape: "chebyshev",
+      revealHidden: true,
+      abilityId: ABILITY_VLAD_FOREST,
+      emitEvent: false,
+    },
+    rng
+  );
+
+  const affectedUnitIds = aoeRes.affectedUnitIds;
+  const revealedUnitIds = aoeRes.revealedUnitIds;
+
+  if (affectedUnitIds.length === 0) {
+    return {
+      state: clearPendingRoll(aoeRes.nextState),
+      events: [
+        ...aoeRes.events,
+        {
+          type: "aoeResolved",
+          sourceUnitId: unitId,
+          abilityId: ABILITY_VLAD_FOREST,
+          casterId: unitId,
+          center,
+          radius: 1,
+          affectedUnitIds,
+          revealedUnitIds,
+          damagedUnitIds: [],
+          damageByUnitId: {},
+        },
+      ],
+    };
+  }
+
+  const queuedState: GameState = {
+    ...aoeRes.nextState,
+    pendingCombatQueue: [],
+    pendingAoE: {
+      casterId: unitId,
+      abilityId: ABILITY_VLAD_FOREST,
+      center,
+      radius: 1,
+      affectedUnitIds,
+      revealedUnitIds,
+      damagedUnitIds: [],
+      damageByUnitId: {},
+    },
+  };
+
+  const nextCtx: ForestAoEContext = {
+    casterId: unitId,
+    center,
+    targetsQueue: affectedUnitIds,
+    currentTargetIndex: 0,
+  };
+
+  const requested = requestRoll(
+    clearPendingRoll(queuedState),
+    owner,
+    "vladForest_attackerRoll",
+    nextCtx,
+    unitId
+  );
+
+  return { state: requested.state, events: [...aoeRes.events, ...requested.events] };
+}
+
 function applyResolvePendingRoll(
   state: GameState,
   action: Extract<GameAction, { type: "resolvePendingRoll" }>,
@@ -3548,6 +5024,10 @@ function applyResolvePendingRoll(
   if (pending.player !== action.player) {
     return { state, events: [] };
   }
+  const autoRollChoice =
+    action.choice === "auto" || action.choice === "roll"
+      ? action.choice
+      : undefined;
 
   switch (pending.kind) {
     case "initiativeRoll": {
@@ -3576,7 +5056,7 @@ function applyResolvePendingRoll(
       return resolveCarpetStrikeBerserkerDefenseChoice(
         state,
         pending,
-        action.choice,
+        autoRollChoice,
         rng
       );
     }
@@ -3619,10 +5099,36 @@ function applyResolvePendingRoll(
       return resolveDoraDefenderRoll(state, pending, rng);
     }
     case "berserkerDefenseChoice": {
-      return resolveBerserkerDefenseChoiceRoll(state, pending, action.choice);
+      return resolveBerserkerDefenseChoiceRoll(state, pending, autoRollChoice);
     }
     case "dora_berserkerDefenseChoice": {
-      return resolveDoraBerserkerDefenseChoice(state, pending, action.choice, rng);
+      return resolveDoraBerserkerDefenseChoice(state, pending, autoRollChoice, rng);
+    }
+    case "vladIntimidateChoice": {
+      return resolveVladIntimidateChoice(state, pending, action.choice, rng);
+    }
+    case "vladPlaceStakes": {
+      return resolveVladPlaceStakes(state, pending, action.choice);
+    }
+    case "vladForestChoice": {
+      return resolveVladForestChoice(state, pending, action.choice);
+    }
+    case "vladForestTarget": {
+      return resolveVladForestTarget(state, pending, action.choice, rng);
+    }
+    case "vladForest_attackerRoll": {
+      return resolveForestAttackerRoll(state, pending, rng);
+    }
+    case "vladForest_defenderRoll": {
+      return resolveForestDefenderRoll(state, pending, rng);
+    }
+    case "vladForest_berserkerDefenseChoice": {
+      return resolveForestBerserkerDefenseChoice(
+        state,
+        pending,
+        autoRollChoice,
+        rng
+      );
     }
     default:
       return { state: clearPendingRoll(state), events: [] };
@@ -3929,29 +5435,76 @@ function applyUnitStartTurn(
     rng
   );
 
-  const engineeringResult = maybeTriggerEngineeringMiracle(afterStart, unit.id);
-  const carpetResult = maybeTriggerCarpetStrike(engineeringResult.state, unit.id);
+  const unitAfterStart = afterStart.units[unit.id];
+  if (!unitAfterStart) {
+    return {
+      state: afterStart,
+      events: [...stealthEvents, ...bunkerEvents, ...startEvents],
+    };
+  }
 
-  const unitAfter = carpetResult.state.units[unit.id];
+  const updatedForTurnCount: UnitState = {
+    ...unitAfterStart,
+    ownTurnsStarted: (unitAfterStart.ownTurnsStarted ?? 0) + 1,
+  };
+
+  const stateAfterTurnCount: GameState = {
+    ...afterStart,
+    units: {
+      ...afterStart.units,
+      [updatedForTurnCount.id]: updatedForTurnCount,
+    },
+  };
+
+  const engineeringResult = maybeTriggerEngineeringMiracle(
+    stateAfterTurnCount,
+    unit.id
+  );
+  const carpetResult = maybeTriggerCarpetStrike(engineeringResult.state, unit.id);
+  const forestResult = maybeTriggerVladForestChoice(
+    carpetResult.state,
+    unit.id,
+    true
+  );
+  const stakesResult = forestResult.state.pendingRoll
+    ? forestResult
+    : maybeTriggerVladTurnStakes(forestResult.state, unit.id);
+  const vladEvents =
+    stakesResult === forestResult
+      ? forestResult.events
+      : [...forestResult.events, ...stakesResult.events];
+
+  const unitAfter = stakesResult.state.units[unit.id];
   if (!unitAfter) {
     return {
-      state: carpetResult.state,
+      state: stakesResult.state,
       events: [
         ...stealthEvents,
         ...bunkerEvents,
         ...startEvents,
         ...engineeringResult.events,
         ...carpetResult.events,
+        ...vladEvents,
       ],
     };
   }
 
-  const resetUnit: UnitState = resetTurnEconomy(unitAfter);
+  let resetUnit: UnitState = resetTurnEconomy(unitAfter);
+  if (resetUnit.movementDisabledNextTurn) {
+    resetUnit = {
+      ...resetUnit,
+      movementDisabledNextTurn: false,
+      turn: {
+        ...resetUnit.turn,
+        moveUsed: true,
+      },
+    };
+  }
 
   const newState: GameState = {
-    ...carpetResult.state,
+    ...stakesResult.state,
     units: {
-      ...carpetResult.state.units,
+      ...stakesResult.state.units,
       [resetUnit.id]: resetUnit,
     },
     activeUnitId: resetUnit.id,
@@ -3965,6 +5518,7 @@ function applyUnitStartTurn(
       ...startEvents,
       ...engineeringResult.events,
       ...carpetResult.events,
+      ...vladEvents,
     ],
   };
 }

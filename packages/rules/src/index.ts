@@ -9,6 +9,9 @@ export * from "./legal";
 export * from "./stealth";
 export * from "./abilities"; // <-- добавили
 export * from "./heroes";
+export * from "./heroMeta";
 export * from "./turnEconomy";
 export * from "./aoe";
 export * from "./view";
+export { linePath } from "./path";
+export * from "./path";

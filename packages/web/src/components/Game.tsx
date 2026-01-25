@@ -52,6 +52,30 @@ function coordKey(coord: Coord) {
   return `${coord.col},${coord.row}`;
 }
 
+function linePath(start: Coord, end: Coord): Coord[] | null {
+  const dx = end.col - start.col;
+  const dy = end.row - start.row;
+  const absDx = Math.abs(dx);
+  const absDy = Math.abs(dy);
+  if (dx === 0 && dy === 0) {
+    return [{ col: start.col, row: start.row }];
+  }
+  if (!(dx === 0 || dy === 0 || absDx === absDy)) {
+    return null;
+  }
+  const steps = Math.max(absDx, absDy);
+  const stepCol = dx === 0 ? 0 : dx > 0 ? 1 : -1;
+  const stepRow = dy === 0 ? 0 : dy > 0 ? 1 : -1;
+  const path: Coord[] = [];
+  for (let i = 0; i <= steps; i += 1) {
+    path.push({
+      col: start.col + stepCol * i,
+      row: start.row + stepRow * i,
+    });
+  }
+  return path;
+}
+
 function getPendingRollLabel(kind?: string | null) {
   switch (kind) {
     case "attack_attackerRoll":
@@ -80,6 +104,20 @@ function getPendingRollLabel(kind?: string | null) {
       return "Carpet Strike defense roll";
     case "carpetStrike_berserkerDefenseChoice":
       return "Carpet Strike berserker defense choice";
+    case "vladPlaceStakes":
+      return "Place stakes";
+    case "vladIntimidateChoice":
+      return "Intimidate choice";
+    case "vladForestChoice":
+      return "Forest choice";
+    case "vladForestTarget":
+      return "Forest target selection";
+    case "vladForest_attackerRoll":
+      return "Forest attack roll";
+    case "vladForest_defenderRoll":
+      return "Forest defense roll";
+    case "vladForest_berserkerDefenseChoice":
+      return "Forest berserker defense choice";
     case "berserkerDefenseChoice":
       return "Berserker defense choice";
     case "enterStealth":
@@ -136,6 +174,8 @@ export function Game() {
   } = useGameStore();
 
   const [doraPreviewCenter, setDoraPreviewCenter] = useState<Coord | null>(null);
+  const [forestPreviewCenter, setForestPreviewCenter] = useState<Coord | null>(null);
+  const [stakeSelections, setStakeSelections] = useState<Coord[]>([]);
 
   const playerId = getLocalPlayerId(role);
   const view = roomState;
@@ -143,6 +183,12 @@ export function Game() {
   const pendingRoll = view?.pendingRoll ?? null;
   const pendingMeta = roomMeta?.pendingRoll ?? null;
   const hasBlockingRoll = !!pendingMeta;
+  const isStakePlacement = pendingRoll?.kind === "vladPlaceStakes";
+  const isForestTarget = pendingRoll?.kind === "vladForestTarget";
+  const isIntimidateChoice = pendingRoll?.kind === "vladIntimidateChoice";
+  const isForestChoice = pendingRoll?.kind === "vladForestChoice";
+  const boardSelectionPending =
+    isStakePlacement || isForestTarget || isIntimidateChoice;
   const pendingQueueCount = view?.pendingCombatQueueCount ?? 0;
   const attackContext = pendingRoll?.context as
     | {
@@ -165,9 +211,11 @@ export function Game() {
     pendingRoll?.kind === "tricksterAoE_defenderRoll" ||
     pendingRoll?.kind === "dora_defenderRoll" ||
     pendingRoll?.kind === "carpetStrike_defenderRoll" ||
+    pendingRoll?.kind === "vladForest_defenderRoll" ||
     pendingRoll?.kind === "berserkerDefenseChoice" ||
     pendingRoll?.kind === "dora_berserkerDefenseChoice" ||
-    pendingRoll?.kind === "carpetStrike_berserkerDefenseChoice";
+    pendingRoll?.kind === "carpetStrike_berserkerDefenseChoice" ||
+    pendingRoll?.kind === "vladForest_berserkerDefenseChoice";
   const defenderId = (() => {
     if (!pendingRoll) return undefined;
     if (pendingRoll.kind === "berserkerDefenseChoice") {
@@ -175,7 +223,8 @@ export function Game() {
     }
     if (
       pendingRoll.kind === "dora_berserkerDefenseChoice" ||
-      pendingRoll.kind === "carpetStrike_berserkerDefenseChoice"
+      pendingRoll.kind === "carpetStrike_berserkerDefenseChoice" ||
+      pendingRoll.kind === "vladForest_berserkerDefenseChoice"
     ) {
       const ctx = pendingRoll.context as {
         targetsQueue?: string[];
@@ -314,6 +363,54 @@ export function Game() {
       ? view.pendingMove
       : null;
 
+  const stakeContext = isStakePlacement
+    ? (pendingRoll?.context as {
+        legalPositions?: Coord[];
+        count?: number;
+      })
+    : null;
+  const stakeLimit = stakeContext?.count ?? 3;
+  const stakeLegalPositions = useMemo(() => {
+    if (!isStakePlacement) return [] as Coord[];
+    const legal = Array.isArray(stakeContext?.legalPositions)
+      ? stakeContext?.legalPositions ?? []
+      : [];
+    return legal;
+  }, [isStakePlacement, stakeContext]);
+  const stakeLegalKeys = useMemo(
+    () => new Set(stakeLegalPositions.map(coordKey)),
+    [stakeLegalPositions]
+  );
+  const stakeSelectionKeys = useMemo(
+    () => new Set(stakeSelections.map(coordKey)),
+    [stakeSelections]
+  );
+
+  const intimidateOptions = useMemo(() => {
+    if (!isIntimidateChoice) return [] as Coord[];
+    const ctx = pendingRoll?.context as { options?: Coord[] } | undefined;
+    return Array.isArray(ctx?.options) ? ctx?.options ?? [] : [];
+  }, [isIntimidateChoice, pendingRoll]);
+  const intimidateKeys = useMemo(
+    () => new Set(intimidateOptions.map(coordKey)),
+    [intimidateOptions]
+  );
+
+  const forestTargetCenters = useMemo(() => {
+    if (!isForestTarget || !view) return [] as Coord[];
+    const centers: Coord[] = [];
+    for (let col = 0; col < (view.boardSize ?? 9); col += 1) {
+      for (let row = 0; row < (view.boardSize ?? 9); row += 1) {
+        centers.push({ col, row });
+      }
+    }
+    return centers;
+  }, [isForestTarget, view]);
+  const forestTargetKeys = useMemo(
+    () => new Set(forestTargetCenters.map(coordKey)),
+    [forestTargetCenters]
+  );
+
   const doraTargetCenters = useMemo(() => {
     if (!view || actionMode !== "dora" || !selectedUnit?.position) {
       return [] as Coord[];
@@ -342,6 +439,29 @@ export function Game() {
       setDoraPreviewCenter(null);
     }
   }, [actionMode, doraPreviewCenter, doraTargetKeys]);
+
+  useEffect(() => {
+    if (!isStakePlacement) {
+      setStakeSelections([]);
+      return;
+    }
+    setStakeSelections([]);
+  }, [isStakePlacement, pendingRoll?.id]);
+
+  useEffect(() => {
+    if (!isForestTarget) {
+      setForestPreviewCenter(null);
+      return;
+    }
+    setForestPreviewCenter(null);
+  }, [isForestTarget, pendingRoll?.id]);
+
+  useEffect(() => {
+    if (!isForestTarget || !forestPreviewCenter) return;
+    if (!forestTargetKeys.has(coordKey(forestPreviewCenter))) {
+      setForestPreviewCenter(null);
+    }
+  }, [isForestTarget, forestPreviewCenter, forestTargetKeys]);
 
   const legalMoveCoords = useMemo(() => {
     if (!view || !selectedUnit) return [] as Coord[];
@@ -375,6 +495,30 @@ export function Game() {
   const highlightedCells = useMemo(() => {
     const highlights: Record<string, "place" | "move" | "attack" | "dora"> = {};
 
+    if (isStakePlacement) {
+      for (const coord of stakeLegalPositions) {
+        highlights[coordKey(coord)] = "place";
+      }
+      for (const coord of stakeSelections) {
+        highlights[coordKey(coord)] = "move";
+      }
+      return highlights;
+    }
+
+    if (isIntimidateChoice) {
+      for (const coord of intimidateOptions) {
+        highlights[coordKey(coord)] = "move";
+      }
+      return highlights;
+    }
+
+    if (isForestTarget) {
+      for (const coord of forestTargetCenters) {
+        highlights[coordKey(coord)] = "dora";
+      }
+      return highlights;
+    }
+
     if (actionMode === "place") {
       for (const coord of legalPlacementCoords) {
         highlights[coordKey(coord)] = "place";
@@ -382,8 +526,23 @@ export function Game() {
     }
 
     if (actionMode === "move") {
-      for (const coord of legalMoveCoords) {
-        highlights[coordKey(coord)] = "move";
+      const riderMode =
+        !!selectedUnit &&
+        (selectedUnit.class === "rider" ||
+          pendingMoveForSelected?.mode === "rider" ||
+          moveOptions?.mode === "rider");
+      if (riderMode && selectedUnit?.position) {
+        for (const coord of legalMoveCoords) {
+          const path = linePath(selectedUnit.position, coord);
+          const cells = path ? path.slice(1) : [coord];
+          for (const cell of cells) {
+            highlights[coordKey(cell)] = "move";
+          }
+        }
+      } else {
+        for (const coord of legalMoveCoords) {
+          highlights[coordKey(coord)] = "move";
+        }
       }
     }
 
@@ -409,11 +568,65 @@ export function Game() {
     legalAttackTargets,
     doraTargetCenters,
     view,
+    isStakePlacement,
+    stakeLegalPositions,
+    stakeSelections,
+    isIntimidateChoice,
+    intimidateOptions,
+    isForestTarget,
+    forestTargetCenters,
+    selectedUnit,
+    pendingMoveForSelected,
+    moveOptions,
   ]);
 
   const handleCellClick = (col: number, row: number) => {
-    if (!view || !playerId || !joined || isSpectator || hasBlockingRoll) return;
+    if (
+      !view ||
+      !playerId ||
+      !joined ||
+      isSpectator ||
+      (hasBlockingRoll && !boardSelectionPending)
+    ) {
+      return;
+    }
     if (view.phase === "lobby") return;
+
+    if (isStakePlacement) {
+      const key = coordKey({ col, row });
+      if (!stakeLegalKeys.has(key)) return;
+      setStakeSelections((prev) => {
+        const exists = prev.some((c) => coordKey(c) === key);
+        if (exists) {
+          return prev.filter((c) => coordKey(c) !== key);
+        }
+        if (prev.length >= stakeLimit) return prev;
+        return [...prev, { col, row }];
+      });
+      return;
+    }
+
+    if (isIntimidateChoice) {
+      const key = coordKey({ col, row });
+      if (!intimidateKeys.has(key) || !pendingRoll) return;
+      sendAction({
+        type: "resolvePendingRoll",
+        pendingRollId: pendingRoll.id,
+        choice: { type: "intimidatePush", to: { col, row } },
+      } as GameAction);
+      return;
+    }
+
+    if (isForestTarget) {
+      const key = coordKey({ col, row });
+      if (!forestTargetKeys.has(key) || !pendingRoll) return;
+      sendAction({
+        type: "resolvePendingRoll",
+        pendingRollId: pendingRoll.id,
+        choice: { type: "forestTarget", center: { col, row } },
+      } as GameAction);
+      return;
+    }
 
     if (actionMode === "place" && placeUnitId) {
       if (!isCoordInList(legalPlacementCoords, col, row)) return;
@@ -468,14 +681,38 @@ export function Game() {
   };
 
   const handleCellHover = (coord: Coord | null) => {
-    if (actionMode !== "dora") return;
-    if (!coord) {
-      setDoraPreviewCenter(null);
+    if (actionMode === "dora") {
+      if (!coord) {
+        setDoraPreviewCenter(null);
+        return;
+      }
+      const key = coordKey(coord);
+      setDoraPreviewCenter(doraTargetKeys.has(key) ? coord : null);
       return;
     }
-    const key = coordKey(coord);
-    setDoraPreviewCenter(doraTargetKeys.has(key) ? coord : null);
+
+    if (isForestTarget) {
+      if (!coord) {
+        setForestPreviewCenter(null);
+        return;
+      }
+      const key = coordKey(coord);
+      setForestPreviewCenter(forestTargetKeys.has(key) ? coord : null);
+    }
   };
+
+  const boardPreviewCenter =
+    actionMode === "dora"
+      ? doraPreviewCenter
+      : isForestTarget
+      ? forestPreviewCenter
+      : null;
+  const boardDisabled =
+    !joined ||
+    isSpectator ||
+    view?.phase === "lobby" ||
+    (hasBlockingRoll && !boardSelectionPending);
+  const allowUnitPick = !boardSelectionPending && actionMode !== "dora";
 
   if (!view || !hasSnapshot) {
     return (
@@ -523,14 +760,10 @@ export function Game() {
             highlightedCells={highlightedCells}
             hoveredAbilityId={hoveredAbilityId}
             doraPreview={
-              actionMode === "dora" && doraPreviewCenter
-                ? { center: doraPreviewCenter, radius: 1 }
-                : null
+              boardPreviewCenter ? { center: boardPreviewCenter, radius: 1 } : null
             }
-            allowUnitSelection={actionMode !== "dora"}
-            disabled={
-              !joined || isSpectator || hasBlockingRoll || view.phase === "lobby"
-            }
+            allowUnitSelection={allowUnitPick}
+            disabled={boardDisabled}
             onSelectUnit={(id) => {
               setSelectedUnit(id);
               setActionMode(null);
@@ -545,8 +778,80 @@ export function Game() {
           )}
           {pendingRoll && (
             <div className="mt-4 rounded border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
-              Pending roll: {getPendingRollLabel(pendingRoll.kind)}. Resolve to continue.
-              {pendingQueueCount > 0 && (
+              {isStakePlacement ? (
+                <div>
+                  <div className="font-semibold">Place 3 stakes</div>
+                  <div className="mt-1 text-[11px] text-amber-700">
+                    Selected: {stakeSelections.length}/{stakeLimit}
+                  </div>
+                  {stakeSelections.length > 0 && (
+                    <div className="mt-1 text-[10px] text-amber-700">
+                      {stakeSelections.map((pos) => `(${pos.col},${pos.row})`).join(", ")}
+                    </div>
+                  )}
+                  <div className="mt-2 flex gap-2">
+                    <button
+                      className="rounded bg-emerald-600 px-3 py-1 text-[10px] font-semibold text-white"
+                      onClick={() =>
+                        pendingRoll &&
+                        sendAction({
+                          type: "resolvePendingRoll",
+                          pendingRollId: pendingRoll.id,
+                          choice: { type: "placeStakes", positions: stakeSelections },
+                        } as GameAction)
+                      }
+                      disabled={stakeSelections.length !== stakeLimit}
+                    >
+                      Place stakes
+                    </button>
+                    <button
+                      className="rounded bg-slate-200 px-3 py-1 text-[10px] font-semibold text-slate-700"
+                      onClick={() => setStakeSelections([])}
+                    >
+                      Clear
+                    </button>
+                  </div>
+                </div>
+              ) : isIntimidateChoice ? (
+                <div>
+                  <div className="font-semibold">Intimidate: choose a push cell</div>
+                  <div className="mt-1 text-[11px] text-amber-700">
+                    Click a highlighted cell or skip.
+                  </div>
+                  <button
+                    className="mt-2 rounded bg-slate-200 px-3 py-1 text-[10px] font-semibold text-slate-700"
+                    onClick={() =>
+                      pendingRoll &&
+                      sendAction({
+                        type: "resolvePendingRoll",
+                        pendingRollId: pendingRoll.id,
+                        choice: "skip",
+                      } as GameAction)
+                    }
+                  >
+                    Skip
+                  </button>
+                </div>
+              ) : isForestTarget ? (
+                <div>
+                  <div className="font-semibold">Forest of the Dead</div>
+                  <div className="mt-1 text-[11px] text-amber-700">
+                    Select the 3x3 center cell.
+                  </div>
+                </div>
+              ) : isForestChoice ? (
+                <div>
+                  <div className="font-semibold">Forest of the Dead ready</div>
+                  <div className="mt-1 text-[11px] text-amber-700">
+                    Decide whether to activate the phantasm.
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  Pending roll: {getPendingRollLabel(pendingRoll.kind)}. Resolve to continue.
+                </div>
+              )}
+              {!isStakePlacement && pendingQueueCount > 0 && (
                 <div className="mt-1 text-[11px] text-amber-700">
                   Pending attacks: {pendingQueueCount}
                 </div>
@@ -646,19 +951,24 @@ export function Game() {
           <EventLog events={events} clientLog={clientLog} />
         </div>
       </div>
-      {pendingRoll && playerId && (
+      {pendingRoll && playerId && !boardSelectionPending && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40">
           <div className="w-full max-w-sm rounded border border-slate-200 bg-white p-5 shadow-lg">
             <div className="text-sm font-semibold text-slate-800">
               {pendingRoll.kind === "initiativeRoll"
                 ? "Roll initiative"
+                : isForestChoice
+                ? "Forest of the Dead"
                 : "Roll required"}
             </div>
             <div className="mt-2 text-xs text-slate-500">
               {pendingRoll.kind === "berserkerDefenseChoice" ||
               pendingRoll.kind === "dora_berserkerDefenseChoice" ||
-              pendingRoll.kind === "carpetStrike_berserkerDefenseChoice"
+              pendingRoll.kind === "carpetStrike_berserkerDefenseChoice" ||
+              pendingRoll.kind === "vladForest_berserkerDefenseChoice"
                 ? "Choose berserker defense."
+                : isForestChoice
+                ? "Activate Forest of the Dead or skip."
                 : `Please roll the dice to resolve: ${getPendingRollLabel(
                     pendingRoll.kind
                   )}.`}
@@ -689,7 +999,8 @@ export function Game() {
             <div className="mt-4 flex gap-2">
               {pendingRoll.kind === "berserkerDefenseChoice" ||
               pendingRoll.kind === "dora_berserkerDefenseChoice" ||
-              pendingRoll.kind === "carpetStrike_berserkerDefenseChoice" ? (
+              pendingRoll.kind === "carpetStrike_berserkerDefenseChoice" ||
+              pendingRoll.kind === "vladForest_berserkerDefenseChoice" ? (
                 <>
                   <button
                     className="flex-1 rounded bg-slate-900 px-3 py-2 text-xs font-semibold text-white"
@@ -715,6 +1026,33 @@ export function Game() {
                     disabled={defenderCharges !== 6}
                   >
                     Auto-dodge (-6)
+                  </button>
+                </>
+              ) : isForestChoice ? (
+                <>
+                  <button
+                    className="flex-1 rounded bg-slate-900 px-3 py-2 text-xs font-semibold text-white"
+                    onClick={() =>
+                      sendAction({
+                        type: "resolvePendingRoll",
+                        pendingRollId: pendingRoll.id,
+                        choice: "activate",
+                      } as GameAction)
+                    }
+                  >
+                    Activate
+                  </button>
+                  <button
+                    className="flex-1 rounded bg-slate-200 px-3 py-2 text-xs font-semibold text-slate-700"
+                    onClick={() =>
+                      sendAction({
+                        type: "resolvePendingRoll",
+                        pendingRollId: pendingRoll.id,
+                        choice: "skip",
+                      } as GameAction)
+                    }
+                  >
+                    Skip
                   </button>
                 </>
               ) : (

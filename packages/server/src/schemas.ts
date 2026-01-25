@@ -42,6 +42,25 @@ export const FigureSetSelectionSchema = z
   })
   .partial();
 
+const ResolveRollChoiceSchema = z.union([
+  z.literal("auto"),
+  z.literal("roll"),
+  z.literal("skip"),
+  z.literal("activate"),
+  z.object({
+    type: z.literal("intimidatePush"),
+    to: CoordSchema,
+  }),
+  z.object({
+    type: z.literal("placeStakes"),
+    positions: z.array(CoordSchema).length(3),
+  }),
+  z.object({
+    type: z.literal("forestTarget"),
+    center: CoordSchema,
+  }),
+]);
+
 export const GameActionSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("rollInitiative") }),
   z.object({ type: z.literal("chooseArena"), arenaId: z.string() }),
@@ -84,7 +103,7 @@ export const GameActionSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("resolvePendingRoll"),
     pendingRollId: z.string().min(1),
-    choice: z.union([z.literal("auto"), z.literal("roll")]).optional(),
+    choice: ResolveRollChoiceSchema.optional(),
     player: PlayerIdSchema.optional(),
   }),
   z.object({ type: z.literal("endTurn") }),
@@ -125,7 +144,7 @@ export const StartGameMessageSchema = z.object({
 export const ResolvePendingRollMessageSchema = z.object({
   type: z.literal("resolvePendingRoll"),
   pendingRollId: z.string().min(1),
-  choice: z.union([z.literal("auto"), z.literal("roll")]).optional(),
+  choice: ResolveRollChoiceSchema.optional(),
 });
 
 export const LeaveRoomMessageSchema = z.object({

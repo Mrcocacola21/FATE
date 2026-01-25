@@ -1,7 +1,7 @@
 // packages/server/src/routes.ts
 
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
-import { GameAction, PlayerId, makePlayerView } from "rules";
+import { GameAction, PlayerId, makePlayerView, HERO_REGISTRY, getHeroMeta } from "rules";
 import { z } from "zod";
 import { CreateGameBodySchema, GameActionSchema, PlayerIdSchema } from "./schemas";
 import { isActionAllowedByPlayer } from "./permissions";
@@ -27,6 +27,21 @@ export async function registerRoutes(server: FastifyInstance) {
   server.get("/health", async () => ({ ok: true }));
 
   server.get("/api/health", async () => ({ ok: true }));
+
+  server.get("/api/heroes", async () => Object.values(HERO_REGISTRY));
+
+  server.get(
+    "/api/heroes/:id",
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const heroId = (request.params as { id: string }).id;
+      const hero = getHeroMeta(heroId);
+      if (!hero) {
+        reply.code(404).send({ error: "Hero not found" });
+        return;
+      }
+      reply.send(hero);
+    }
+  );
 
   server.get("/rooms", async () => listRoomSummaries());
 

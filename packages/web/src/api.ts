@@ -1,4 +1,4 @@
-import type { GameAction, PlayerView, PlayerId, GameEvent } from "rules";
+import type { GameAction, PlayerView, PlayerId, GameEvent, HeroMeta } from "rules";
 
 const isProd = import.meta.env.MODE === "production";
 
@@ -123,6 +123,14 @@ export async function createRoom(params?: {
   }
 
   return (await res.json()) as CreateRoomResponse;
+}
+
+export async function listHeroes(): Promise<HeroMeta[]> {
+  const res = await fetch(`${API_BASE}/api/heroes`);
+  if (!res.ok) {
+    throw new Error(`Failed to load heroes: ${res.status}`);
+  }
+  return (await res.json()) as HeroMeta[];
 }
 
 export function getWsUrl(): string {

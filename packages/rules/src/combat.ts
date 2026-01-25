@@ -141,6 +141,8 @@ export function resolveAttack(
     revealStealthedAllies?: boolean;
     /** Причина раскрытия стелса при ignoreStealth. */
     revealReason?: StealthRevealReason;
+    damageBonus?: number;
+    damageOverride?: number;
     rolls?: {
       attackerDice: number[];
       defenderDice: number[];
@@ -332,8 +334,10 @@ export function resolveAttack(
   }
 
   if (hit) {
-    if (attackerAfter.class === "assassin" && attackerAfter.isStealthed) {
-      // Атака из скрытности: 2 урона и выход из стелса
+    if (params.damageOverride !== undefined) {
+      damage = params.damageOverride;
+    } else if (attackerAfter.class === "assassin" && attackerAfter.isStealthed) {
+      // ?????????? ???? ????????????????????: 2 ?????????? ?? ?????????? ???? ????????????
       damage = 2;
       attackerAfter = {
         ...attackerAfter,
@@ -346,11 +350,15 @@ export function resolveAttack(
       damage = attackerAfter.attack;
     }
 
+    if (params.damageBonus) {
+      damage += params.damageBonus;
+    }
+
     if (defenderAfter.bunker?.active) {
       damage = Math.min(1, damage);
     }
 
-    const newHp = Math.max(0, defenderAfter.hp - damage);
+const newHp = Math.max(0, defenderAfter.hp - damage);
     defenderAfter = {
       ...defenderAfter,
       hp: newHp,

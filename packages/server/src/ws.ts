@@ -277,15 +277,42 @@ export function broadcastActionResult(payload: {
 }) {
   const sockets = roomSockets.get(payload.gameId);
   if (!sockets || sockets.size === 0) return;
+  const room = getGameRoom(payload.gameId);
   for (const socket of sockets) {
+    const meta = socketMeta.get(socket);
+    const filteredEvents = filterEventsForRecipient(
+      room,
+      meta ?? null,
+      payload.events
+    );
     sendMessage(socket, {
       type: "actionResult",
       ok: payload.ok,
-      events: payload.events,
+      events: filteredEvents,
       error: payload.error,
       logIndex: payload.logIndex,
     });
   }
+}
+
+function filterEventsForRecipient(
+  room: GameRoom | undefined,
+  meta: ConnectionMeta | null,
+  events: GameEvent[]
+): GameEvent[] {
+  if (!meta || !room) return events;
+  const role = meta.role;
+  return events.filter((event) => {
+    if (event.type === "stakesPlaced") {
+      return role === event.owner;
+    }
+    if (event.type === "intimidateTriggered") {
+      const defender = room.state.units[event.defenderId];
+      if (!defender) return false;
+      return role === defender.owner;
+    }
+    return true;
+  });
 }
 
 function sendMoveOptionsIfAny(socket: WebSocket, events: GameEvent[]) {

@@ -6,6 +6,7 @@ import type {
   Coord,
   PlayerId,
   MoveMode,
+  ResolveRollChoice,
 } from "rules";
 import { listRooms, type RoomSummary } from "./api";
 import { HERO_CATALOG } from "./figures/catalog";
@@ -79,7 +80,7 @@ interface GameStore {
   leaveRoom: () => void;
   setReady: (ready: boolean) => void;
   startGame: () => void;
-  resolvePendingRoll: (pendingRollId: string, choice?: "auto" | "roll") => void;
+  resolvePendingRoll: (pendingRollId: string, choice?: ResolveRollChoice) => void;
   switchRole: (role: PlayerRole) => void;
   sendAction: (action: GameAction) => void;
   requestMoveOptions: (unitId: string, mode?: MoveMode) => void;

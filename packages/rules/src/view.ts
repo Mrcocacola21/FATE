@@ -23,6 +23,8 @@ function cloneUnit(unit: UnitState): UnitState {
     ...unit,
     position: unit.position ? { ...unit.position } : null,
     bunker: unit.bunker ? { ...unit.bunker } : undefined,
+    movementDisabledNextTurn: unit.movementDisabledNextTurn,
+    ownTurnsStarted: unit.ownTurnsStarted,
     charges: { ...unit.charges },
     cooldowns: { ...unit.cooldowns },
     turn: { ...turn },
@@ -125,6 +127,18 @@ export function makePlayerView(
           radius: pendingAoE.radius,
         }
       : null;
+  const stakeMarkersMap = new Map<string, { position: Coord; isRevealed: boolean }>();
+  for (const marker of state.stakeMarkers) {
+    const visible = marker.owner === playerId || marker.isRevealed;
+    if (!visible) continue;
+    const key = `${marker.position.col},${marker.position.row}`;
+    const existing = stakeMarkersMap.get(key);
+    stakeMarkersMap.set(key, {
+      position: { ...marker.position },
+      isRevealed: (existing?.isRevealed ?? false) || marker.isRevealed,
+    });
+  }
+  const stakeMarkers = Array.from(stakeMarkersMap.values());
 
   const basePendingCount = pendingCombatQueue?.length ?? 0;
   let pendingCombatQueueCount = basePendingCount;
@@ -136,6 +150,9 @@ export function makePlayerView(
       pendingRoll.kind === "dora_attackerRoll" ||
       pendingRoll.kind === "dora_defenderRoll" ||
       pendingRoll.kind === "dora_berserkerDefenseChoice" ||
+      pendingRoll.kind === "vladForest_attackerRoll" ||
+      pendingRoll.kind === "vladForest_defenderRoll" ||
+      pendingRoll.kind === "vladForest_berserkerDefenseChoice" ||
       pendingRoll.kind === "kaiserCarpetStrikeAttack" ||
       pendingRoll.kind === "carpetStrike_defenderRoll" ||
       pendingRoll.kind === "carpetStrike_berserkerDefenseChoice")
@@ -157,6 +174,7 @@ export function makePlayerView(
     pendingRoll: visiblePendingRoll,
     pendingCombatQueueCount,
     pendingAoEPreview,
+    stakeMarkers,
     pendingMove,
     turnOrder: [...state.turnOrder],
     placementOrder: [...state.placementOrder],
@@ -202,6 +220,9 @@ export function makeSpectatorView(state: GameState): PlayerView {
       pendingRoll.kind === "dora_attackerRoll" ||
       pendingRoll.kind === "dora_defenderRoll" ||
       pendingRoll.kind === "dora_berserkerDefenseChoice" ||
+      pendingRoll.kind === "vladForest_attackerRoll" ||
+      pendingRoll.kind === "vladForest_defenderRoll" ||
+      pendingRoll.kind === "vladForest_berserkerDefenseChoice" ||
       pendingRoll.kind === "kaiserCarpetStrikeAttack" ||
       pendingRoll.kind === "carpetStrike_defenderRoll" ||
       pendingRoll.kind === "carpetStrike_berserkerDefenseChoice")
@@ -214,6 +235,18 @@ export function makeSpectatorView(state: GameState): PlayerView {
     const idx = typeof ctx.currentTargetIndex === "number" ? ctx.currentTargetIndex : 0;
     pendingCombatQueueCount = Math.max(0, total - idx);
   }
+
+  const stakeMarkersMap = new Map<string, { position: Coord; isRevealed: boolean }>();
+  for (const marker of state.stakeMarkers) {
+    if (!marker.isRevealed) continue;
+    const key = `${marker.position.col},${marker.position.row}`;
+    const existing = stakeMarkersMap.get(key);
+    stakeMarkersMap.set(key, {
+      position: { ...marker.position },
+      isRevealed: (existing?.isRevealed ?? false) || marker.isRevealed,
+    });
+  }
+  const stakeMarkers = Array.from(stakeMarkersMap.values());
 
   return {
     ...baseState,
@@ -231,6 +264,7 @@ export function makeSpectatorView(state: GameState): PlayerView {
             radius: pendingAoE.radius,
           }
         : null,
+    stakeMarkers,
     pendingMove: null,
     turnOrder: [...state.turnOrder],
     placementOrder: [...state.placementOrder],

@@ -7,6 +7,7 @@ import type {
   RollKind,
   GamePhase,
   MoveMode,
+  ResolveRollChoice,
 } from "rules";
 import { getWsUrl } from "./api";
 import type { FigureSetSelection } from "./figures/types";
@@ -88,7 +89,7 @@ export type ClientMessage =
   | {
       type: "resolvePendingRoll";
       pendingRollId: string;
-      choice?: "auto" | "roll";
+      choice?: ResolveRollChoice;
     }
   | { type: "action"; action: GameAction }
   | { type: "requestMoveOptions"; unitId: string; mode?: MoveMode }
@@ -139,7 +140,7 @@ export function sendStartGame(socket: WebSocket) {
 export function sendResolvePendingRoll(
   socket: WebSocket,
   pendingRollId: string,
-  choice?: "auto" | "roll"
+  choice?: ResolveRollChoice
 ) {
   const msg: ClientMessage = { type: "resolvePendingRoll", pendingRollId, choice };
   socket.send(JSON.stringify(msg));

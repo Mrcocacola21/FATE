@@ -119,6 +119,22 @@ function formatEvent(event: GameEvent): string {
       }`;
     case "abilityUsed":
       return `Ability used: ${event.unitId} (${event.abilityId})`;
+    case "damageBonusApplied":
+      return `Damage bonus: ${event.unitId} +${event.amount} (${event.source})`;
+    case "stakesPlaced":
+      return `Stakes placed: ${event.owner} (${event.positions?.length ?? 0})`;
+    case "stakeTriggered":
+      return `Stake triggered: ${event.unitId} at (${event.markerPos?.col ?? "-"}, ${
+        event.markerPos?.row ?? "-"
+      })`;
+    case "intimidateTriggered":
+      return `Intimidate: ${event.defenderId} vs ${event.attackerId}`;
+    case "intimidateResolved":
+      return `Intimidate push: ${event.attackerId} -> (${event.to?.col ?? "-"}, ${
+        event.to?.row ?? "-"
+      })`;
+    case "forestActivated":
+      return `Forest activated: ${event.vladId} (stakes ${event.stakesConsumed})`;
     case "aoeResolved":
       return `AoE resolved: ${event.sourceUnitId} (targets ${
         event.affectedUnitIds?.length ?? 0
