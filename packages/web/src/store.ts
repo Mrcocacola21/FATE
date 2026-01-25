@@ -1,6 +1,15 @@
 import { create } from "zustand";
-import type { GameAction, GameEvent, PlayerView, Coord, PlayerId } from "rules";
+import type {
+  GameAction,
+  GameEvent,
+  PlayerView,
+  Coord,
+  PlayerId,
+  MoveMode,
+} from "rules";
 import { listRooms, type RoomSummary } from "./api";
+import { HERO_CATALOG } from "./figures/catalog";
+import { loadFigureSetState } from "./figures/storage";
 import {
   connectGameSocket,
   sendJoinRoom,
@@ -16,7 +25,7 @@ import {
   type ServerMessage,
 } from "./ws";
 
-export type ActionMode = "move" | "attack" | "place" | null;
+export type ActionMode = "move" | "attack" | "place" | "dora" | null;
 
 const defaultRoomMeta: RoomMeta = {
   ready: { P1: false, P2: false },
@@ -49,7 +58,15 @@ interface GameStore {
   selectedUnitId: string | null;
   actionMode: ActionMode;
   placeUnitId: string | null;
-  moveOptions: { unitId: string; roll?: number | null; legalTo: Coord[] } | null;
+  moveOptions:
+    | {
+        unitId: string;
+        roll?: number | null;
+        legalTo: Coord[];
+        mode?: MoveMode;
+        modes?: MoveMode[];
+      }
+    | null;
   leavingRoom: boolean;
   connect: () => Promise<WebSocket>;
   fetchRooms: () => Promise<void>;
@@ -65,7 +82,7 @@ interface GameStore {
   resolvePendingRoll: (pendingRollId: string, choice?: "auto" | "roll") => void;
   switchRole: (role: PlayerRole) => void;
   sendAction: (action: GameAction) => void;
-  requestMoveOptions: (unitId: string) => void;
+  requestMoveOptions: (unitId: string, mode?: MoveMode) => void;
   setRoomState: (roomId: string, room: PlayerView) => void;
   applyActionResult: (
     events: GameEvent[],
@@ -78,7 +95,15 @@ interface GameStore {
   setActionMode: (mode: ActionMode) => void;
   setPlaceUnitId: (unitId: string | null) => void;
   setMoveOptions: (
-    options: { unitId: string; roll?: number | null; legalTo: Coord[] } | null
+    options:
+      | {
+          unitId: string;
+          roll?: number | null;
+          legalTo: Coord[];
+          mode?: MoveMode;
+          modes?: MoveMode[];
+        }
+      | null
   ) => void;
   setHoveredAbilityId: (abilityId: string | null) => void;
   resetGameState: () => void;
@@ -165,6 +190,13 @@ function handleServerMessage(
       return;
     }
     case "roomState": {
+      const current = get();
+      if (!current.joined || current.leavingRoom) {
+        return;
+      }
+      if (current.roomId && msg.roomId !== current.roomId) {
+        return;
+      }
       const prevMeta = get().roomMeta ?? defaultRoomMeta;
       const incomingMeta = msg.meta ?? ({} as RoomMeta);
       const incomingInitiative = incomingMeta.initiative;
@@ -245,6 +277,8 @@ function handleServerMessage(
           unitId: msg.unitId,
           roll: msg.roll,
           legalTo: msg.legalTo,
+          mode: msg.mode,
+          modes: msg.modes,
         },
       }));
       return;
@@ -279,17 +313,21 @@ function openSocket(set: (fn: (state: GameStore) => Partial<GameStore>) => void,
       resolve(socket as WebSocket);
     };
 
-      socket.onclose = () => {
-        connectPromise = null;
-        socket = null;
-        set((state) => ({
-          ...buildLeaveResetState(
-            state,
-            state.joined ? "Disconnected" : undefined
-          ),
-          connectionStatus: "disconnected",
-        }));
-      };
+    socket.onclose = () => {
+      connectPromise = null;
+      socket = null;
+      set((state) => ({
+        ...buildLeaveResetState(
+          state,
+          state.joined ? "Disconnected" : undefined
+        ),
+        connectionStatus: "disconnected",
+      }));
+      const { fetchRooms, addClientLog } = get();
+      fetchRooms().catch((err) => {
+        addClientLog(err instanceof Error ? err.message : "Failed to refresh rooms");
+      });
+    };
 
     socket.onerror = (err) => {
       connectPromise = null;
@@ -333,7 +371,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   joinRoom: async (params) => {
     set(() => ({ joinError: null }));
     const ws = await openSocket(set, get);
-    sendJoinRoom(ws, params);
+    const selection = loadFigureSetState(HERO_CATALOG).selection;
+    sendJoinRoom(ws, { ...params, figureSet: selection });
   },
   leaveRoom: () => {
     const state = get();
@@ -428,7 +467,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
     sendSocketAction(socket, action);
   },
-  requestMoveOptions: (unitId) => {
+  requestMoveOptions: (unitId, mode) => {
     const state = get();
     if (state.roomMeta?.pendingRoll) {
       state.addClientLog("Resolve the pending roll before acting.");
@@ -450,7 +489,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       state.addClientLog("WebSocket not connected.");
       return;
     }
-    sendMoveOptionsRequest(socket, unitId);
+    sendMoveOptionsRequest(socket, unitId, mode);
   },
   setRoomState: (roomId, room) =>
     set(() => ({

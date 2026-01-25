@@ -2,7 +2,11 @@ import { useEffect, useState } from "react";
 import { useGameStore } from "../store";
 import type { PlayerRole } from "../ws";
 
-export function Lobby() {
+interface LobbyProps {
+  onOpenFigures?: () => void;
+}
+
+export function Lobby({ onOpenFigures }: LobbyProps) {
   const {
     connectionStatus,
     roomsList,
@@ -78,12 +82,24 @@ export function Lobby() {
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-sky-50 to-emerald-50 p-6">
       <div className="mx-auto max-w-4xl space-y-6">
         <div className="rounded border border-slate-200 bg-white/80 p-6 shadow-sm">
-          <h1 className="text-xl font-semibold">FATE Lobby</h1>
-          <p className="mt-2 text-sm text-slate-500">
-            Create or join a room before playing.
-          </p>
-          <div className="mt-3 text-xs text-slate-500">
-            WebSocket: {connectionStatus}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h1 className="text-xl font-semibold">FATE Lobby</h1>
+              <p className="mt-2 text-sm text-slate-500">
+                Create or join a room before playing.
+              </p>
+              <div className="mt-3 text-xs text-slate-500">
+                WebSocket: {connectionStatus}
+              </div>
+            </div>
+            {onOpenFigures && (
+              <button
+                className="rounded bg-slate-900 px-4 py-2 text-xs font-semibold text-white"
+                onClick={onOpenFigures}
+              >
+                Figure Set
+              </button>
+            )}
           </div>
         </div>
 

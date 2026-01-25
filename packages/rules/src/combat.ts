@@ -346,6 +346,10 @@ export function resolveAttack(
       damage = attackerAfter.attack;
     }
 
+    if (defenderAfter.bunker?.active) {
+      damage = Math.min(1, damage);
+    }
+
     const newHp = Math.max(0, defenderAfter.hp - damage);
     defenderAfter = {
       ...defenderAfter,

@@ -4,6 +4,22 @@ export type PlayerId = "P1" | "P2";
 
 export type TurnSlot = "move" | "attack" | "action" | "stealth";
 
+export type AbilityKind = "passive" | "active" | "impulse" | "phantasm";
+export type AbilitySlot = "none" | "action" | "move" | "attack" | "stealth";
+
+export interface AbilityView {
+  id: string;
+  name: string;
+  kind: AbilityKind;
+  description: string;
+  slot: AbilitySlot;
+  chargeRequired?: number;
+  chargeUnlimited?: boolean;
+  currentCharges?: number;
+  isAvailable: boolean;
+  disabledReason?: string;
+}
+
 export interface TurnEconomy {
   moveUsed: boolean;
   attackUsed: boolean;
@@ -16,6 +32,7 @@ export interface PendingMove {
   roll?: number;
   legalTo: Coord[];
   expiresTurnNumber: number;
+  mode?: MoveMode;
 }
 
 // Классы фигур
@@ -27,6 +44,8 @@ export type UnitClass =
   | "berserker" // берсерк
   | "archer" // лучник
   | "knight"; // рыцарь / сабер
+
+export type MoveMode = "normal" | UnitClass;
 
 // Координаты на поле 9×9
 // col: 0..8 соответствует a..i
@@ -55,6 +74,7 @@ export interface UnitState {
   id: string;
   owner: PlayerId;
   class: UnitClass;
+  heroId?: string;
   hp: number;
   attack: number;
   position: Coord | null;
@@ -62,6 +82,9 @@ export interface UnitState {
   isStealthed: boolean;
   stealthTurnsLeft: number;
   stealthAttemptedThisTurn: boolean; // уже было
+
+  bunker?: { active: boolean; ownTurnsInBunker: number };
+  transformed?: boolean;
 
   turn: TurnEconomy;
 
@@ -107,6 +130,7 @@ export type StealthRevealReason =
 
 export type RollKind =
   | "enterStealth"
+  | "enterBunker"
   | "searchStealth"
   | "moveTrickster"
   | "moveBerserker"
@@ -117,7 +141,14 @@ export type RollKind =
   | "riderPathAttack_attackerRoll"
   | "riderPathAttack_defenderRoll"
   | "tricksterAoE_attackerRoll"
-  | "tricksterAoE_defenderRoll";
+  | "tricksterAoE_defenderRoll"
+  | "dora_attackerRoll"
+  | "dora_defenderRoll"
+  | "dora_berserkerDefenseChoice"
+  | "kaiserCarpetStrikeCenter"
+  | "kaiserCarpetStrikeAttack"
+  | "carpetStrike_defenderRoll"
+  | "carpetStrike_berserkerDefenseChoice";
 
 export interface PendingRoll {
   id: string;
@@ -233,6 +264,47 @@ export type GameEvent =
       choice: "auto" | "roll";
     }
   | {
+      type: "chargesUpdated";
+      unitId: string;
+      deltas: Record<string, number>;
+      now: Record<string, number>;
+    }
+  | {
+      type: "bunkerEntered";
+      unitId: string;
+      roll: number;
+    }
+  | {
+      type: "bunkerEnterFailed";
+      unitId: string;
+      roll: number;
+    }
+  | {
+      type: "bunkerExited";
+      unitId: string;
+      reason: "timerExpired" | "attacked" | "transformed";
+    }
+  | {
+      type: "carpetStrikeTriggered";
+      unitId: string;
+    }
+  | {
+      type: "carpetStrikeCenter";
+      unitId: string;
+      dice: number[];
+      sum: number;
+      center: Coord;
+      area: { shape: "square"; radius: 2 };
+    }
+  | {
+      type: "carpetStrikeAttackRolled";
+      unitId: string;
+      dice: number[];
+      sum: number;
+      center: Coord;
+      affectedUnitIds: string[];
+    }
+  | {
       type: "abilityUsed";
       unitId: string;
       abilityId: string;
@@ -254,6 +326,8 @@ export type GameEvent =
       unitId: string;
       roll?: number;
       legalTo: Coord[];
+      mode?: MoveMode;
+      modes?: MoveMode[];
     }
   | {
       type: "moveBlocked";
@@ -311,6 +385,7 @@ export type GameEvent =
     | {
         type: "requestMoveOptions";
         unitId: string;
+        mode?: MoveMode;
       }
     | {
         type: "attack";
@@ -460,6 +535,13 @@ export interface LegalIntents {
   canEnterStealth: boolean;
 }
 
+export interface AoEPreview {
+  casterId: string;
+  abilityId: string;
+  center: Coord;
+  radius: number;
+}
+
 export type PlayerView = Omit<
   GameState,
   "knowledge" | "lastKnownPositions" | "pendingRoll" | "rollCounter" | "pendingCombatQueue" | "pendingAoE"
@@ -470,6 +552,8 @@ export type PlayerView = Omit<
   lastKnownPositions: { [unitId: string]: Coord };
   pendingRoll: PendingRoll | null;
   pendingCombatQueueCount: number;
+  pendingAoEPreview: AoEPreview | null;
+  abilitiesByUnitId: Record<string, AbilityView[]>;
   legal?: LegalView;
   legalIntents?: LegalIntents;
 };

@@ -1,12 +1,12 @@
 // packages/rules/src/movement.ts
 import {
-    Coord,
-    GameState,
-    UnitState,
-    UnitClass,
-    isInsideBoard,
-  } from "./model";
-  import {
+  Coord,
+  GameState,
+  UnitState,
+  UnitClass,
+  isInsideBoard,
+} from "./model";
+import {
     ALL_DIRS,
     ORTHO_DIRS,
     DIAG_DIRS,
@@ -14,35 +14,74 @@ import {
     isCellOccupied,
   } from "./board";
   import { canUnitEnterCell } from "./visibility";
+import { HERO_GRAND_KAISER_ID } from "./heroes";
 
 
 
-  export function getLegalMovesForUnit(
-    state: GameState,
-    unitId: string
-  ): Coord[] {
-    const unit = state.units[unitId];
-    if (!unit || !unit.isAlive || !unit.position) return [];
-  
-    switch (unit.class) {
+export function getLegalMovesForUnitModes(
+  state: GameState,
+  unitId: string,
+  modes: UnitClass[]
+): Coord[] {
+  const unit = state.units[unitId];
+  if (!unit || !unit.isAlive || !unit.position) return [];
+
+  const seen = new Set<string>();
+  const result: Coord[] = [];
+
+  for (const mode of modes) {
+    let moves: Coord[] = [];
+    switch (mode) {
       case "spearman":
-        return movesSpearman(state, unit);
+        moves = movesSpearman(state, unit);
+        break;
       case "rider":
-        return movesRider(state, unit);
+        moves = movesRider(state, unit);
+        break;
       case "knight":
-        return movesKnight(state, unit);
+        moves = movesKnight(state, unit);
+        break;
       case "archer":
-        return movesArcher(state, unit);
+        moves = movesArcher(state, unit);
+        break;
       case "trickster":
-        return movesTrickster(state, unit);
+        moves = movesTrickster(state, unit);
+        break;
       case "assassin":
-        return movesAssassin(state, unit);
+        moves = movesAssassin(state, unit);
+        break;
       case "berserker":
-        return movesBerserker(state, unit);
+        moves = movesBerserker(state, unit);
+        break;
       default:
-        return [];
+        moves = [];
+    }
+
+    for (const dest of moves) {
+      const key = `${dest.col},${dest.row}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      result.push(dest);
     }
   }
+
+  return result;
+}
+
+export function getLegalMovesForUnit(
+  state: GameState,
+  unitId: string
+): Coord[] {
+  const unit = state.units[unitId];
+  if (!unit || !unit.isAlive || !unit.position) return [];
+
+  const modes: UnitClass[] =
+    unit.heroId === HERO_GRAND_KAISER_ID && unit.transformed
+      ? ["archer", "rider", "berserker"]
+      : [unit.class];
+
+  return getLegalMovesForUnitModes(state, unitId, modes);
+}
   
   // ---------- КОПЕЙЩИК: 1 клетка в любом направлении ----------
   function movesSpearman(

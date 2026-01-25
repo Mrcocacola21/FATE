@@ -5,6 +5,7 @@ import { isCellOccupied } from "./board";
 import { canAttackTarget } from "./combat";
 import { canDirectlyTargetUnit } from "./visibility";
 import { canSpendSlots } from "./turnEconomy";
+import { HERO_GRAND_KAISER_ID } from "./heroes";
 
 export function getLegalPlacements(state: GameState, unitId: string): Coord[] {
   if (state.phase !== "placement") return [];
@@ -86,9 +87,15 @@ export function getLegalIntents(
 
   const canMove = canSpendSlots(activeUnit, { move: true });
   const canAttack = canSpendSlots(activeUnit, { attack: true, action: true });
+  const kaiserTransformed =
+    activeUnit.heroId === HERO_GRAND_KAISER_ID && activeUnit.transformed;
+  const kaiserInBunker =
+    activeUnit.heroId === HERO_GRAND_KAISER_ID && activeUnit.bunker?.active;
   const canEnterStealth =
     canSpendSlots(activeUnit, { stealth: true }) &&
-    (activeUnit.class === "assassin" || activeUnit.class === "archer");
+    (activeUnit.class === "assassin" || activeUnit.class === "archer") &&
+    !kaiserTransformed &&
+    !kaiserInBunker;
 
   return {
     canSearchMove,

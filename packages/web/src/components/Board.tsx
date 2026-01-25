@@ -11,9 +11,12 @@ interface BoardProps {
   view: PlayerView;
   playerId: PlayerId | null;
   selectedUnitId: string | null;
-  highlightedCells: Record<string, "place" | "move" | "attack">;
+  highlightedCells: Record<string, "place" | "move" | "attack" | "dora">;
   hoveredAbilityId?: string | null;
+  doraPreview?: { center: Coord; radius: number } | null;
   disabled?: boolean;
+  allowUnitSelection?: boolean;
+  onCellHover?: (coord: Coord | null) => void;
   onSelectUnit: (unitId: string | null) => void;
   onCellClick: (col: number, row: number) => void;
 }
@@ -28,7 +31,7 @@ function getClassMarker(unitClass: string): string | null {
   return null;
 }
 
-function getHighlightClass(kind: "place" | "move" | "attack") {
+function getHighlightClass(kind: "place" | "move" | "attack" | "dora") {
   switch (kind) {
     case "place":
       return "bg-emerald-300/35";
@@ -36,6 +39,8 @@ function getHighlightClass(kind: "place" | "move" | "attack") {
       return "bg-sky-300/35";
     case "attack":
       return "bg-rose-300/40";
+    case "dora":
+      return "bg-amber-300/35";
     default:
       return "";
   }
@@ -55,7 +60,10 @@ export const Board: FC<BoardProps> = ({
   selectedUnitId,
   highlightedCells,
   hoveredAbilityId,
+  doraPreview = null,
+  allowUnitSelection = true,
   disabled = false,
+  onCellHover,
   onSelectUnit,
   onCellClick,
 }) => {
@@ -144,11 +152,18 @@ export const Board: FC<BoardProps> = ({
 
   const unitsByPos = new Map<
     string,
-    { id: string; owner: PlayerId; class: string; isStealthed: boolean }
+    {
+      id: string;
+      owner: PlayerId;
+      class: string;
+      isStealthed: boolean;
+      bunkerActive: boolean;
+    }
   >();
   const lastKnownByPos = new Map<string, number>();
-  const viewHighlights: Record<string, "place" | "move" | "attack"> = {};
+  const viewHighlights: Record<string, "place" | "move" | "attack" | "dora"> = {};
   const aoeHighlights = new Map<string, "aoe" | "aoeDisabled">();
+  const doraPreviewKeys = new Set<string>();
 
   for (const unit of Object.values(view.units)) {
     if (!unit.position) continue;
@@ -158,6 +173,7 @@ export const Board: FC<BoardProps> = ({
       owner: unit.owner,
       class: unit.class,
       isStealthed: unit.isStealthed,
+      bunkerActive: unit.bunker?.active ?? false,
     });
   }
   for (const coord of Object.values(view.lastKnownPositions ?? {})) {
@@ -222,6 +238,38 @@ export const Board: FC<BoardProps> = ({
     }
   }
 
+  const carpetPreview =
+    view.pendingAoEPreview?.abilityId === "kaiserCarpetStrike"
+      ? view.pendingAoEPreview
+      : null;
+  if (carpetPreview) {
+    const kind: "aoe" | "aoeDisabled" = disabled ? "aoeDisabled" : "aoe";
+    for (let dc = -carpetPreview.radius; dc <= carpetPreview.radius; dc += 1) {
+      for (let dr = -carpetPreview.radius; dr <= carpetPreview.radius; dr += 1) {
+        const col = carpetPreview.center.col + dc;
+        const row = carpetPreview.center.row + dr;
+        if (col < 0 || row < 0 || col >= size || row >= size) continue;
+        const viewPos = toViewCoord({ col, row });
+        aoeHighlights.set(coordKey(viewPos), kind);
+      }
+    }
+  }
+
+  if (doraPreview) {
+    const kind: "aoe" | "aoeDisabled" = disabled ? "aoeDisabled" : "aoe";
+    for (let dc = -doraPreview.radius; dc <= doraPreview.radius; dc += 1) {
+      for (let dr = -doraPreview.radius; dr <= doraPreview.radius; dr += 1) {
+        const col = doraPreview.center.col + dc;
+        const row = doraPreview.center.row + dr;
+        if (col < 0 || row < 0 || col >= size || row >= size) continue;
+        const viewPos = toViewCoord({ col, row });
+        const key = coordKey(viewPos);
+        aoeHighlights.set(key, kind);
+        doraPreviewKeys.add(key);
+      }
+    }
+  }
+
   const rows = [] as JSX.Element[];
 
   for (let row = size - 1; row >= 0; row -= 1) {
@@ -232,6 +280,7 @@ export const Board: FC<BoardProps> = ({
       const key = coordKey(viewCoord);
       const unit = unitsByPos.get(key);
       const isSelected = unit?.id === selectedUnitId;
+      const isDoraPreview = doraPreviewKeys.has(key);
       const isDark = (row + col) % 2 === 1;
       const highlightKind = viewHighlights[key];
       const aoeKind = aoeHighlights.get(key);
@@ -265,6 +314,7 @@ export const Board: FC<BoardProps> = ({
           "justify-center",
           "font-semibold",
           "shadow",
+          isDoraPreview ? "ring-2 ring-amber-400" : "",
           isFriendly ? "bg-emerald-500 text-white" : "bg-rose-500 text-white",
         ].join(" ");
 
@@ -311,12 +361,14 @@ export const Board: FC<BoardProps> = ({
           style={{ width: cellSize, height: cellSize }}
           onClick={() => {
             if (disabled) return;
-            if (unit && playerId && unit.owner === playerId) {
+            if (allowUnitSelection && unit && playerId && unit.owner === playerId) {
               onSelectUnit(unit.id);
               return;
             }
             onCellClick(gameCoord.col, gameCoord.row);
           }}
+          onMouseEnter={() => onCellHover?.(gameCoord)}
+          onMouseLeave={() => onCellHover?.(null)}
         >
           {highlightKind && (
             <div
@@ -335,6 +387,14 @@ export const Board: FC<BoardProps> = ({
             />
           )}
           {content}
+          {unit?.bunkerActive && (
+            <div
+              className="pointer-events-none absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-200 text-[9px] font-bold text-amber-900 shadow"
+              title="In Bunker: incoming hits deal 1 damage."
+            >
+              B
+            </div>
+          )}
           {unit && (
             <div className="pointer-events-none absolute bottom-1 left-1 right-1 z-10 flex justify-center">
               <div style={{ width: hpBarWidth }}>

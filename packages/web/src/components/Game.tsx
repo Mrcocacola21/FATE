@@ -1,15 +1,51 @@
-import { useEffect, useMemo, useRef } from "react";
-import type { Coord, GameAction, PlayerView } from "rules";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { Coord, GameAction, PlayerView, MoveMode } from "rules";
 import { Board } from "./Board";
 import { EventLog } from "./EventLog";
 import { RightPanel } from "./RightPanel";
 import { TurnQueueTracker } from "./TurnQueueTracker";
 import { getLocalPlayerId, useGameStore } from "../store";
+import { KAISER_DORA_ID } from "../rulesHints";
+
+const DORA_DIRS: Coord[] = [
+  { col: 1, row: 0 },
+  { col: -1, row: 0 },
+  { col: 0, row: 1 },
+  { col: 0, row: -1 },
+  { col: 1, row: 1 },
+  { col: 1, row: -1 },
+  { col: -1, row: 1 },
+  { col: -1, row: -1 },
+];
 
 function getUnitAt(view: PlayerView, col: number, row: number) {
   return Object.values(view.units).find(
     (u) => u.position && u.position.col === col && u.position.row === row
   );
+}
+
+function getDoraTargetCenters(view: PlayerView, casterId: string): Coord[] {
+  const caster = view.units[casterId];
+  if (!caster?.position) return [];
+  const size = view.boardSize ?? 9;
+  const origin = caster.position;
+  const targets: Coord[] = [];
+
+  for (const dir of DORA_DIRS) {
+    let col = origin.col + dir.col;
+    let row = origin.row + dir.row;
+    while (col >= 0 && row >= 0 && col < size && row < size) {
+      targets.push({ col, row });
+      const unit = getUnitAt(view, col, row);
+      if (unit && unit.owner !== caster.owner) {
+        break;
+      }
+      col += dir.col;
+      row += dir.row;
+    }
+  }
+
+  return targets;
 }
 
 function coordKey(coord: Coord) {
@@ -30,6 +66,20 @@ function getPendingRollLabel(kind?: string | null) {
       return "Trickster AoE attack roll";
     case "tricksterAoE_defenderRoll":
       return "Trickster AoE defense roll";
+    case "dora_attackerRoll":
+      return "Dora attack roll";
+    case "dora_defenderRoll":
+      return "Dora defense roll";
+    case "dora_berserkerDefenseChoice":
+      return "Dora berserker defense choice";
+    case "kaiserCarpetStrikeCenter":
+      return "Carpet Strike center roll";
+    case "kaiserCarpetStrikeAttack":
+      return "Carpet Strike attack roll";
+    case "carpetStrike_defenderRoll":
+      return "Carpet Strike defense roll";
+    case "carpetStrike_berserkerDefenseChoice":
+      return "Carpet Strike berserker defense choice";
     case "berserkerDefenseChoice":
       return "Berserker defense choice";
     case "enterStealth":
@@ -85,6 +135,8 @@ export function Game() {
     leaveRoom,
   } = useGameStore();
 
+  const [doraPreviewCenter, setDoraPreviewCenter] = useState<Coord | null>(null);
+
   const playerId = getLocalPlayerId(role);
   const view = roomState;
   const isSpectator = role === "spectator";
@@ -111,11 +163,30 @@ export function Game() {
     pendingRoll?.kind === "attack_defenderRoll" ||
     pendingRoll?.kind === "riderPathAttack_defenderRoll" ||
     pendingRoll?.kind === "tricksterAoE_defenderRoll" ||
-    pendingRoll?.kind === "berserkerDefenseChoice";
-  const defenderId =
-    pendingRoll && pendingRoll.kind === "berserkerDefenseChoice"
-      ? (pendingRoll.context as { defenderId?: string }).defenderId
-      : undefined;
+    pendingRoll?.kind === "dora_defenderRoll" ||
+    pendingRoll?.kind === "carpetStrike_defenderRoll" ||
+    pendingRoll?.kind === "berserkerDefenseChoice" ||
+    pendingRoll?.kind === "dora_berserkerDefenseChoice" ||
+    pendingRoll?.kind === "carpetStrike_berserkerDefenseChoice";
+  const defenderId = (() => {
+    if (!pendingRoll) return undefined;
+    if (pendingRoll.kind === "berserkerDefenseChoice") {
+      return (pendingRoll.context as { defenderId?: string }).defenderId;
+    }
+    if (
+      pendingRoll.kind === "dora_berserkerDefenseChoice" ||
+      pendingRoll.kind === "carpetStrike_berserkerDefenseChoice"
+    ) {
+      const ctx = pendingRoll.context as {
+        targetsQueue?: string[];
+        currentTargetIndex?: number;
+      };
+      const targets = Array.isArray(ctx.targetsQueue) ? ctx.targetsQueue : [];
+      const idx = typeof ctx.currentTargetIndex === "number" ? ctx.currentTargetIndex : 0;
+      return targets[idx];
+    }
+    return undefined;
+  })();
   const defenderCharges =
     defenderId && view?.units[defenderId]
       ? view.units[defenderId].charges?.berserkAutoDefense ?? 0
@@ -154,6 +225,7 @@ export function Game() {
 
   useEffect(() => {
     if (!view || !moveOptions) return;
+    if (moveOptions.modes && moveOptions.modes.length > 0) return;
     if (!view.pendingMove || view.pendingMove.unitId !== moveOptions.unitId) {
       setMoveOptions(null);
     }
@@ -228,10 +300,10 @@ export function Game() {
     sendAction(action);
   };
 
-  const requestMove = (unitId: string) => {
+  const requestMove = (unitId: string, mode?: MoveMode) => {
     if (!joined || isSpectator || hasBlockingRoll) return;
     if (!view || view.phase === "lobby") return;
-    requestMoveOptions(unitId);
+    requestMoveOptions(unitId, mode);
   };
 
   const selectedUnit =
@@ -242,10 +314,41 @@ export function Game() {
       ? view.pendingMove
       : null;
 
+  const doraTargetCenters = useMemo(() => {
+    if (!view || actionMode !== "dora" || !selectedUnit?.position) {
+      return [] as Coord[];
+    }
+    return getDoraTargetCenters(view, selectedUnit.id);
+  }, [view, actionMode, selectedUnit]);
+
+  const doraTargetKeys = useMemo(
+    () => new Set(doraTargetCenters.map(coordKey)),
+    [doraTargetCenters]
+  );
+
+  useEffect(() => {
+    if (actionMode !== "dora") {
+      setDoraPreviewCenter(null);
+      return;
+    }
+    if (!selectedUnitId) {
+      setDoraPreviewCenter(null);
+    }
+  }, [actionMode, selectedUnitId]);
+
+  useEffect(() => {
+    if (actionMode !== "dora" || !doraPreviewCenter) return;
+    if (!doraTargetKeys.has(coordKey(doraPreviewCenter))) {
+      setDoraPreviewCenter(null);
+    }
+  }, [actionMode, doraPreviewCenter, doraTargetKeys]);
+
   const legalMoveCoords = useMemo(() => {
     if (!view || !selectedUnit) return [] as Coord[];
     const isSpecial =
-      selectedUnit.class === "trickster" || selectedUnit.class === "berserker";
+      selectedUnit.class === "trickster" ||
+      selectedUnit.class === "berserker" ||
+      selectedUnit.transformed;
 
     if (isSpecial) {
       return (
@@ -270,7 +373,7 @@ export function Game() {
   }, [view, selectedUnit]);
 
   const highlightedCells = useMemo(() => {
-    const highlights: Record<string, "place" | "move" | "attack"> = {};
+    const highlights: Record<string, "place" | "move" | "attack" | "dora"> = {};
 
     if (actionMode === "place") {
       for (const coord of legalPlacementCoords) {
@@ -292,8 +395,21 @@ export function Game() {
       }
     }
 
+    if (actionMode === "dora") {
+      for (const coord of doraTargetCenters) {
+        highlights[coordKey(coord)] = "dora";
+      }
+    }
+
     return highlights;
-  }, [actionMode, legalPlacementCoords, legalMoveCoords, legalAttackTargets, view]);
+  }, [
+    actionMode,
+    legalPlacementCoords,
+    legalMoveCoords,
+    legalAttackTargets,
+    doraTargetCenters,
+    view,
+  ]);
 
   const handleCellClick = (col: number, row: number) => {
     if (!view || !playerId || !joined || isSpectator || hasBlockingRoll) return;
@@ -337,6 +453,28 @@ export function Game() {
       setActionMode(null);
       return;
     }
+
+    if (actionMode === "dora") {
+      if (!doraTargetKeys.has(coordKey({ col, row }))) return;
+      sendGameAction({
+        type: "useAbility",
+        unitId: selectedUnitId,
+        abilityId: KAISER_DORA_ID,
+        payload: { center: { col, row } },
+      });
+      setActionMode(null);
+      return;
+    }
+  };
+
+  const handleCellHover = (coord: Coord | null) => {
+    if (actionMode !== "dora") return;
+    if (!coord) {
+      setDoraPreviewCenter(null);
+      return;
+    }
+    const key = coordKey(coord);
+    setDoraPreviewCenter(doraTargetKeys.has(key) ? coord : null);
   };
 
   if (!view || !hasSnapshot) {
@@ -384,6 +522,12 @@ export function Game() {
             selectedUnitId={selectedUnitId}
             highlightedCells={highlightedCells}
             hoveredAbilityId={hoveredAbilityId}
+            doraPreview={
+              actionMode === "dora" && doraPreviewCenter
+                ? { center: doraPreviewCenter, radius: 1 }
+                : null
+            }
+            allowUnitSelection={actionMode !== "dora"}
             disabled={
               !joined || isSpectator || hasBlockingRoll || view.phase === "lobby"
             }
@@ -392,6 +536,7 @@ export function Game() {
               setActionMode(null);
             }}
             onCellClick={handleCellClick}
+            onCellHover={handleCellHover}
           />
           {pendingMeta && !pendingRoll && (
             <div className="mt-4 rounded border border-blue-200 bg-blue-50 p-3 text-xs text-blue-800">
@@ -484,8 +629,11 @@ export function Game() {
             }}
             onSetActionMode={setActionMode}
             onSetPlaceUnit={setPlaceUnitId}
-            onMoveRequest={(unitId) => {
-              requestMove(unitId);
+            onMoveRequest={(unitId, mode) => {
+              requestMove(unitId, mode);
+              if (mode) {
+                setMoveOptions(null);
+              }
               setActionMode("move");
             }}
             onSendAction={(action) => {
@@ -507,7 +655,9 @@ export function Game() {
                 : "Roll required"}
             </div>
             <div className="mt-2 text-xs text-slate-500">
-              {pendingRoll.kind === "berserkerDefenseChoice"
+              {pendingRoll.kind === "berserkerDefenseChoice" ||
+              pendingRoll.kind === "dora_berserkerDefenseChoice" ||
+              pendingRoll.kind === "carpetStrike_berserkerDefenseChoice"
                 ? "Choose berserker defense."
                 : `Please roll the dice to resolve: ${getPendingRollLabel(
                     pendingRoll.kind
@@ -537,7 +687,9 @@ export function Game() {
               </div>
             )}
             <div className="mt-4 flex gap-2">
-              {pendingRoll.kind === "berserkerDefenseChoice" ? (
+              {pendingRoll.kind === "berserkerDefenseChoice" ||
+              pendingRoll.kind === "dora_berserkerDefenseChoice" ||
+              pendingRoll.kind === "carpetStrike_berserkerDefenseChoice" ? (
                 <>
                   <button
                     className="flex-1 rounded bg-slate-900 px-3 py-2 text-xs font-semibold text-white"

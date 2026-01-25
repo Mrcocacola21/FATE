@@ -1,6 +1,7 @@
 // packages/rules/src/view.ts
 
 import {
+  AbilityView,
   Coord,
   GameState,
   PlayerId,
@@ -14,12 +15,14 @@ import {
   getLegalAttackTargets,
   getLegalIntents,
 } from "./legal";
+import { getAbilityViewsForUnit } from "./abilities";
 
 function cloneUnit(unit: UnitState): UnitState {
   const turn = unit.turn ?? makeEmptyTurnEconomy();
   return {
     ...unit,
     position: unit.position ? { ...unit.position } : null,
+    bunker: unit.bunker ? { ...unit.bunker } : undefined,
     charges: { ...unit.charges },
     cooldowns: { ...unit.cooldowns },
     turn: { ...turn },
@@ -54,10 +57,12 @@ export function makePlayerView(
   } = state;
   const units: Record<string, UnitState> = {};
   const lastKnownPositions: Record<string, Coord> = {};
+  const abilitiesByUnitId: Record<string, AbilityView[]> = {};
 
   for (const unit of Object.values(state.units)) {
     if (unit.owner === playerId) {
       units[unit.id] = cloneUnit(unit);
+      abilitiesByUnitId[unit.id] = getAbilityViewsForUnit(state, unit.id);
       continue;
     }
 
@@ -111,6 +116,15 @@ export function makePlayerView(
 
   const visiblePendingRoll =
     pendingRoll && pendingRoll.player === playerId ? pendingRoll : null;
+  const pendingAoEPreview =
+    pendingAoE && pendingAoE.abilityId
+      ? {
+          casterId: pendingAoE.casterId,
+          abilityId: pendingAoE.abilityId,
+          center: { ...pendingAoE.center },
+          radius: pendingAoE.radius,
+        }
+      : null;
 
   const basePendingCount = pendingCombatQueue?.length ?? 0;
   let pendingCombatQueueCount = basePendingCount;
@@ -118,7 +132,13 @@ export function makePlayerView(
     pendingCombatQueueCount === 0 &&
     pendingRoll &&
     (pendingRoll.kind === "tricksterAoE_attackerRoll" ||
-      pendingRoll.kind === "tricksterAoE_defenderRoll")
+      pendingRoll.kind === "tricksterAoE_defenderRoll" ||
+      pendingRoll.kind === "dora_attackerRoll" ||
+      pendingRoll.kind === "dora_defenderRoll" ||
+      pendingRoll.kind === "dora_berserkerDefenseChoice" ||
+      pendingRoll.kind === "kaiserCarpetStrikeAttack" ||
+      pendingRoll.kind === "carpetStrike_defenderRoll" ||
+      pendingRoll.kind === "carpetStrike_berserkerDefenseChoice")
   ) {
     const ctx = pendingRoll.context as {
       targetsQueue?: string[];
@@ -136,6 +156,7 @@ export function makePlayerView(
     lastKnownPositions,
     pendingRoll: visiblePendingRoll,
     pendingCombatQueueCount,
+    pendingAoEPreview,
     pendingMove,
     turnOrder: [...state.turnOrder],
     placementOrder: [...state.placementOrder],
@@ -143,6 +164,7 @@ export function makePlayerView(
     initiative: { ...state.initiative },
     unitsPlaced: { ...state.unitsPlaced },
     events: [],
+    abilitiesByUnitId,
     legal: {
       placementsByUnitId,
       movesByUnitId,
@@ -176,7 +198,13 @@ export function makeSpectatorView(state: GameState): PlayerView {
     pendingCombatQueueCount === 0 &&
     pendingRoll &&
     (pendingRoll.kind === "tricksterAoE_attackerRoll" ||
-      pendingRoll.kind === "tricksterAoE_defenderRoll")
+      pendingRoll.kind === "tricksterAoE_defenderRoll" ||
+      pendingRoll.kind === "dora_attackerRoll" ||
+      pendingRoll.kind === "dora_defenderRoll" ||
+      pendingRoll.kind === "dora_berserkerDefenseChoice" ||
+      pendingRoll.kind === "kaiserCarpetStrikeAttack" ||
+      pendingRoll.kind === "carpetStrike_defenderRoll" ||
+      pendingRoll.kind === "carpetStrike_berserkerDefenseChoice")
   ) {
     const ctx = pendingRoll.context as {
       targetsQueue?: string[];
@@ -194,6 +222,15 @@ export function makeSpectatorView(state: GameState): PlayerView {
     lastKnownPositions: {},
     pendingRoll: null,
     pendingCombatQueueCount,
+    pendingAoEPreview:
+      pendingAoE && pendingAoE.abilityId
+        ? {
+            casterId: pendingAoE.casterId,
+            abilityId: pendingAoE.abilityId,
+            center: { ...pendingAoE.center },
+            radius: pendingAoE.radius,
+          }
+        : null,
     pendingMove: null,
     turnOrder: [...state.turnOrder],
     placementOrder: [...state.placementOrder],
@@ -201,6 +238,7 @@ export function makeSpectatorView(state: GameState): PlayerView {
     initiative: { ...state.initiative },
     unitsPlaced: { ...state.unitsPlaced },
     events: [],
+    abilitiesByUnitId: {},
     legal: {
       placementsByUnitId: {},
       movesByUnitId: {},

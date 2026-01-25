@@ -5,6 +5,7 @@ import {
   GameEvent,
   GameState,
   PlayerId,
+  HeroSelection,
   applyAction,
   attachArmy,
   createDefaultArmy,
@@ -31,6 +32,7 @@ export interface GameRoom {
   hostSeat: PlayerId;
   seats: { P1: string | null; P2: string | null };
   spectators: Set<string>;
+  figureSets: Partial<Record<PlayerId, HeroSelection>>;
 }
 
 export interface CreateGameOptions {
@@ -112,6 +114,7 @@ export function createGameRoomWithId(
     hostSeat,
     seats,
     spectators: new Set<string>(),
+    figureSets: {},
   };
 
   games.set(room.id, room);

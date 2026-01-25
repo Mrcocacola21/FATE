@@ -14,10 +14,33 @@ export const CoordSchema = z.object({
   row: z.number().int(),
 });
 
+export const MoveModeSchema = z.union([
+  z.literal("normal"),
+  z.literal("spearman"),
+  z.literal("rider"),
+  z.literal("knight"),
+  z.literal("archer"),
+  z.literal("trickster"),
+  z.literal("assassin"),
+  z.literal("berserker"),
+]);
+
 export const CreateGameBodySchema = z.object({
   seed: z.number().int().optional(),
   arenaId: z.string().optional(),
 });
+
+export const FigureSetSelectionSchema = z
+  .object({
+    assassin: z.string(),
+    archer: z.string(),
+    berserker: z.string(),
+    rider: z.string(),
+    spearman: z.string(),
+    trickster: z.string(),
+    knight: z.string(),
+  })
+  .partial();
 
 export const GameActionSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("rollInitiative") }),
@@ -35,7 +58,11 @@ export const GameActionSchema = z.discriminatedUnion("type", [
     position: CoordSchema,
   }),
   z.object({ type: z.literal("move"), unitId: z.string(), to: CoordSchema }),
-  z.object({ type: z.literal("requestMoveOptions"), unitId: z.string() }),
+  z.object({
+    type: z.literal("requestMoveOptions"),
+    unitId: z.string(),
+    mode: MoveModeSchema.optional(),
+  }),
   z.object({
     type: z.literal("attack"),
     attackerId: z.string(),
@@ -72,6 +99,7 @@ export const JoinRoomMessageSchema = z.object({
   roomId: z.string().min(1).optional(),
   role: RoleSchema,
   name: z.string().min(1).optional(),
+  figureSet: FigureSetSelectionSchema.optional(),
 });
 
 export const ActionMessageSchema = z.object({
@@ -82,6 +110,7 @@ export const ActionMessageSchema = z.object({
 export const RequestMoveOptionsMessageSchema = z.object({
   type: z.literal("requestMoveOptions"),
   unitId: z.string(),
+  mode: MoveModeSchema.optional(),
 });
 
 export const SetReadyMessageSchema = z.object({

@@ -1,6 +1,7 @@
 ﻿import type { FC } from "react";
-import type { GameAction, PlayerId, PlayerView } from "rules";
-import { TRICKSTER_AOE_ID } from "../rulesHints";
+import type { GameAction, PlayerId, PlayerView, MoveMode } from "rules";
+import { HERO_CATALOG } from "../figures/catalog";
+import { KAISER_DORA_ID, TRICKSTER_AOE_ID } from "../rulesHints";
 import type { ActionMode } from "../store";
 import type { PlayerRole } from "../ws";
 
@@ -10,13 +11,21 @@ interface RightPanelProps {
   selectedUnitId: string | null;
   actionMode: ActionMode;
   placeUnitId: string | null;
-  moveOptions: { unitId: string; roll?: number | null; legalTo: { col: number; row: number }[] } | null;
+  moveOptions:
+    | {
+        unitId: string;
+        roll?: number | null;
+        legalTo: { col: number; row: number }[];
+        mode?: MoveMode;
+        modes?: MoveMode[];
+      }
+    | null;
   joined: boolean;
   pendingRoll: boolean;
   onSelectUnit: (unitId: string | null) => void;
   onSetActionMode: (mode: ActionMode) => void;
   onSetPlaceUnit: (unitId: string | null) => void;
-  onMoveRequest: (unitId: string) => void;
+  onMoveRequest: (unitId: string, mode?: MoveMode) => void;
   onSendAction: (action: GameAction) => void;
   onHoverAbility: (abilityId: string | null) => void;
 }
@@ -39,6 +48,29 @@ function classBadge(unitClass: string): { label: string; marker?: string } {
       return { label: "Kn" };
     default:
       return { label: unitClass.slice(0, 2) };
+  }
+}
+
+function formatMoveMode(mode: MoveMode): string {
+  switch (mode) {
+    case "normal":
+      return "Normal";
+    case "rider":
+      return "Rider";
+    case "berserker":
+      return "Berserker";
+    case "archer":
+      return "Archer";
+    case "trickster":
+      return "Trickster";
+    case "assassin":
+      return "Assassin";
+    case "spearman":
+      return "Spearman";
+    case "knight":
+      return "Knight";
+    default:
+      return mode;
   }
 }
 
@@ -65,6 +97,28 @@ export const RightPanel: FC<RightPanelProps> = ({
   );
   const unplacedUnits = friendlyUnits.filter((u) => !u.position);
   const selectedUnit = friendlyUnits.find((u) => u.id === selectedUnitId) ?? null;
+  const heroDefinition = selectedUnit?.heroId
+    ? HERO_CATALOG.find((hero) => hero.id === selectedUnit.heroId)
+    : undefined;
+  const abilityViews = selectedUnit
+    ? view.abilitiesByUnitId?.[selectedUnit.id] ?? []
+    : [];
+
+  const doraAbility = abilityViews.find((ability) => ability.id === KAISER_DORA_ID);
+  const doraDisabledReason = doraAbility?.disabledReason;
+  const doraDisabled = !doraAbility || !doraAbility.isAvailable;
+  const hideDoraCharges = !!selectedUnit?.transformed;
+  const doraChargeLabel = doraAbility && !hideDoraCharges
+    ? doraAbility.chargeUnlimited
+      ? `${doraAbility.currentCharges ?? 0}`
+      : doraAbility.chargeRequired !== undefined
+      ? `${doraAbility.currentCharges ?? 0}/${doraAbility.chargeRequired}`
+      : null
+    : null;
+  const moveModeOptions =
+    !pendingRoll && moveOptions && selectedUnit && moveOptions.unitId === selectedUnit.id
+      ? moveOptions.modes ?? null
+      : null;
 
   const queue = view.turnQueue?.length ? view.turnQueue : view.turnOrder;
   const queueIndex = view.turnQueue?.length
@@ -229,7 +283,13 @@ export const RightPanel: FC<RightPanelProps> = ({
                   )}
                 </div>
                 <div>
-                  <div className="text-[11px] font-semibold">{selectedUnit.id}</div>
+                  <div className="text-[11px] font-semibold">
+                    {heroDefinition?.name ?? selectedUnit.id}
+                  </div>
+                  <div className="text-[10px] text-slate-500">
+                    Class {selectedUnit.class}
+                    {heroDefinition ? ` (${selectedUnit.id})` : ""}
+                  </div>
                   <div className="text-[10px] text-slate-500">
                     HP {selectedUnit.hp}
                   </div>
@@ -276,6 +336,75 @@ export const RightPanel: FC<RightPanelProps> = ({
                   Stealth {economy.stealthUsed ? "X" : "-"}
                 </span>
               </div>
+              <div className="mt-4">
+                <div className="text-[11px] font-semibold text-slate-600">
+                  Abilities
+                </div>
+                {abilityViews.length === 0 && (
+                  <div className="mt-2 text-[10px] text-slate-400">
+                    No abilities available.
+                  </div>
+                )}
+                <div className="mt-2 space-y-2">
+                  {abilityViews.map((ability) => {
+                    const hideCharges =
+                      ability.id === KAISER_DORA_ID && selectedUnit?.transformed;
+                    const chargeLabel = hideCharges
+                      ? null
+                      : ability.chargeUnlimited
+                      ? ability.currentCharges ?? 0
+                      : ability.chargeRequired !== undefined
+                      ? `${ability.currentCharges ?? 0}/${ability.chargeRequired}`
+                      : null;
+                    const slotLabel =
+                      ability.slot === "none"
+                        ? "None"
+                        : ability.slot === "action"
+                        ? "Action"
+                        : ability.slot === "move"
+                        ? "Move"
+                        : ability.slot === "attack"
+                        ? "Attack"
+                        : "Stealth";
+                    const kindLabel =
+                      ability.kind === "passive"
+                        ? "Passive"
+                        : ability.kind === "active"
+                        ? "Active"
+                        : ability.kind === "impulse"
+                        ? "Impulse"
+                        : "Phantasm";
+                    return (
+                      <div
+                        key={ability.id}
+                        className={`rounded border border-slate-200 p-2 text-[10px] ${
+                          ability.isAvailable ? "bg-white" : "bg-slate-100 text-slate-400"
+                        }`}
+                        title={ability.disabledReason ?? ""}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="font-semibold">{ability.name}</div>
+                          <span className="rounded bg-slate-200 px-2 py-0.5 text-[9px] text-slate-700">
+                            {kindLabel}
+                          </span>
+                        </div>
+                        <div className="mt-1 text-slate-500">
+                          {ability.description}
+                        </div>
+                        <div className="mt-1 text-slate-500">
+                          Slot: {slotLabel}
+                          {chargeLabel !== null ? ` | Charges: ${chargeLabel}` : ""}
+                        </div>
+                        {ability.disabledReason && (
+                          <div className="mt-1 text-amber-700">
+                            {ability.disabledReason}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           ) : (
             <div className="mt-2 text-xs text-slate-400">Select a unit.</div>
@@ -290,7 +419,8 @@ export const RightPanel: FC<RightPanelProps> = ({
                 if (!selectedUnit) return;
                 if (
                   selectedUnit.class === "trickster" ||
-                  selectedUnit.class === "berserker"
+                  selectedUnit.class === "berserker" ||
+                  selectedUnit.transformed
                 ) {
                   onMoveRequest(selectedUnit.id);
                   return;
@@ -310,6 +440,27 @@ export const RightPanel: FC<RightPanelProps> = ({
             >
               Attack
             </button>
+            {doraAbility && (
+              <button
+                className={`rounded px-2 py-2 ${
+                  doraDisabled ? "bg-slate-100 text-slate-400" : "bg-slate-200"
+                }`}
+                onClick={() => {
+                  if (!selectedUnit) return;
+                  onSetActionMode("dora");
+                }}
+                disabled={doraDisabled}
+                title={doraDisabledReason ?? ""}
+              >
+                {hideDoraCharges ? "DORA" : "Dora"}
+                {doraChargeLabel ? ` (${doraChargeLabel})` : ""}
+              </button>
+            )}
+            {doraAbility && doraDisabledReason && (
+              <div className="col-span-2 text-[10px] text-slate-400">
+                Dora disabled: {doraDisabledReason}
+              </div>
+            )}
             <button
               className={`rounded px-2 py-2 ${
                 searchMoveDisabled ? "bg-slate-100 text-slate-400" : "bg-slate-200"
@@ -413,9 +564,31 @@ export const RightPanel: FC<RightPanelProps> = ({
             </button>
           </div>
 
+          {moveModeOptions && selectedUnit && (
+            <div className="mt-3 text-xs">
+              <div className="text-[11px] text-slate-500">Choose move mode:</div>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {moveModeOptions.map((mode) => (
+                  <button
+                    key={mode}
+                    className={`rounded px-2 py-1 text-[10px] ${
+                      moveDisabled ? "bg-slate-100 text-slate-400" : "bg-slate-200"
+                    }`}
+                    onClick={() => onMoveRequest(selectedUnit.id, mode)}
+                    disabled={moveDisabled}
+                  >
+                    {formatMoveMode(mode)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {actionMode && (
             <div className="mt-3 text-xs text-slate-400">
-              Mode: {actionMode}. Click a highlighted cell to apply.
+              {actionMode === "dora"
+                ? "Dora: select a center cell on the archer line."
+                : `Mode: ${actionMode}. Click a highlighted cell to apply.`}
             </div>
           )}
         </div>
@@ -454,7 +627,7 @@ export const RightPanel: FC<RightPanelProps> = ({
                       : " - unplaced"}
                   </div>
                 </div>
-                {unit.class === "berserker" && (
+                {(unit.class === "berserker" || unit.transformed) && (
                   <span className="rounded-full bg-amber-200 px-2 py-1 text-[10px] font-semibold text-amber-900">
                     BD {berserkCharges ?? 0}
                   </span>

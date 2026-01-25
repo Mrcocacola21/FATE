@@ -10,6 +10,7 @@ import {
   Coord,
   isInsideBoard,
   makeEmptyTurnEconomy,
+  MoveMode,
   PendingMove,
   PendingRoll,
   RollKind,
@@ -20,6 +21,7 @@ import { RNG, rollD6, roll2D6 } from "./rng";
 import { resolveAttack } from "./combat";
 import { 
   getLegalMovesForUnit,
+  getLegalMovesForUnitModes,
   getTricksterMovesForRoll,
   getBerserkerMovesForRoll,
  } from "./movement";
@@ -31,17 +33,146 @@ import {
   initUnitAbilities,
   processUnitStartOfTurn,
   getAbilitySpec,
+  getCharges,
   spendCharges,
   ABILITY_BERSERK_AUTO_DEFENSE,
   ABILITY_TRICKSTER_AOE,
+  ABILITY_KAISER_DORA,
+  ABILITY_KAISER_CARPET_STRIKE,
+  ABILITY_KAISER_ENGINEERING_MIRACLE,
   TRICKSTER_AOE_RADIUS,
 } from "./abilities";
 import { unitCanSeeStealthed } from "./visibility";
+import {
+  HERO_GRAND_KAISER_ID,
+  getHeroDefinition,
+  heroMatchesClass,
+  type HeroSelection,
+} from "./heroes";
 
 function roll2D6Sum(rng: RNG): number {
   const d1 = rollD6(rng);
   const d2 = rollD6(rng);
   return d1 + d2;
+}
+
+function isKaiser(unit: UnitState): boolean {
+  return unit.heroId === HERO_GRAND_KAISER_ID;
+}
+
+function isKaiserTransformed(unit: UnitState): boolean {
+  return isKaiser(unit) && unit.transformed === true;
+}
+
+function getUnitBaseMaxHp(unit: UnitState): number {
+  const def = getUnitDefinition(unit.class);
+  const hero = getHeroDefinition(unit.heroId);
+  return hero?.baseHpOverride ?? def.maxHp;
+}
+
+function getUnitBaseAttack(unit: UnitState): number {
+  const def = getUnitDefinition(unit.class);
+  const hero = getHeroDefinition(unit.heroId);
+  return hero?.baseAttackOverride ?? def.baseAttack;
+}
+
+function applyHeroOverrides(unit: UnitState): UnitState {
+  const hero = getHeroDefinition(unit.heroId);
+  if (!hero) return unit;
+  return {
+    ...unit,
+    hp: hero.baseHpOverride ?? unit.hp,
+    attack: hero.baseAttackOverride ?? unit.attack,
+  };
+}
+
+function getMovementModes(unit: UnitState): UnitState["class"][] {
+  if (isKaiserTransformed(unit)) {
+    return ["archer", "rider", "berserker"];
+  }
+  return [unit.class];
+}
+
+function unitHasMovementMode(unit: UnitState, mode: UnitState["class"]): boolean {
+  return getMovementModes(unit).includes(mode);
+}
+
+function isDoraCenterOnArcherLine(
+  state: GameState,
+  caster: UnitState,
+  center: Coord
+): boolean {
+  if (!caster.position) return false;
+  const from = caster.position;
+  const dx = center.col - from.col;
+  const dy = center.row - from.row;
+  const sameRow = from.row === center.row;
+  const sameCol = from.col === center.col;
+  const isDiagonal = Math.abs(dx) === Math.abs(dy);
+  if (!sameRow && !sameCol && !isDiagonal) {
+    return false;
+  }
+
+  const stepCol = Math.sign(dx);
+  const stepRow = Math.sign(dy);
+  if (stepCol === 0 && stepRow === 0) {
+    return false;
+  }
+
+  let col = from.col + stepCol;
+  let row = from.row + stepRow;
+
+  while (col >= 0 && col < state.boardSize && row >= 0 && row < state.boardSize) {
+    if (col === center.col && row === center.row) {
+      return true;
+    }
+    const u = getUnitAt(state, { col, row });
+    if (u && u.owner !== caster.owner) {
+      return false;
+    }
+    col += stepCol;
+    row += stepRow;
+  }
+
+  return false;
+}
+
+function rollD9(rng: RNG): number {
+  return 1 + Math.floor(rng.next() * 9);
+}
+
+function map2d9ToCoord(state: GameState, d1: number, d2: number): Coord {
+  const max = Math.max(0, state.boardSize - 1);
+  const col = Math.min(max, Math.max(0, d1 - 1));
+  const row = Math.min(max, Math.max(0, d2 - 1));
+  return { col, row };
+}
+
+function exitBunkerForUnit(
+  state: GameState,
+  unit: UnitState,
+  reason: "timerExpired" | "attacked" | "transformed"
+): { state: GameState; events: GameEvent[]; unit: UnitState } {
+  if (!unit.bunker?.active) {
+    return { state, events: [], unit };
+  }
+
+  const updated: UnitState = {
+    ...unit,
+    bunker: { active: false, ownTurnsInBunker: 0 },
+  };
+
+  return {
+    state: {
+      ...state,
+      units: {
+        ...state.units,
+        [updated.id]: updated,
+      },
+    },
+    events: [{ type: "bunkerExited", unitId: updated.id, reason }],
+    unit: updated,
+  };
 }
 
 function requestRoll(
@@ -297,6 +428,18 @@ function applyUseAbility(
     return { state, events: [] };
   }
 
+  if (spec.id === ABILITY_KAISER_DORA) {
+    return applyKaiserDora(state, unit, action, rng);
+  }
+
+  if (spec.id === ABILITY_KAISER_ENGINEERING_MIRACLE) {
+    return { state, events: [] };
+  }
+
+  if (spec.id === ABILITY_KAISER_CARPET_STRIKE) {
+    return { state, events: [] };
+  }
+
   const isTricksterAoE = spec.id === ABILITY_TRICKSTER_AOE;
   const aoeCenter = isTricksterAoE ? unit.position : null;
 
@@ -429,6 +572,195 @@ function applyUseAbility(
   return { state: nextState, events };
 }
 
+interface DoraPayload {
+  center: Coord;
+}
+
+function applyKaiserDora(
+  state: GameState,
+  unit: UnitState,
+  action: Extract<GameAction, { type: "useAbility" }>,
+  rng: RNG
+): ApplyResult {
+  if (!isKaiser(unit)) {
+    return { state, events: [] };
+  }
+
+  const payload = action.payload as DoraPayload | undefined;
+  const center = payload?.center;
+  if (!center || !isInsideBoard(center, state.boardSize)) {
+    return { state, events: [] };
+  }
+
+  if (!isDoraCenterOnArcherLine(state, unit, center)) {
+    return { state, events: [] };
+  }
+
+  const spec = getAbilitySpec(ABILITY_KAISER_DORA);
+  if (!spec) {
+    return { state, events: [] };
+  }
+
+  const costs = spec.actionCost?.consumes ?? {};
+  if (!canSpendSlots(unit, costs)) {
+    return { state, events: [] };
+  }
+
+  let updatedUnit = unit;
+  if (!isKaiserTransformed(unit)) {
+    const chargeAmount = spec.chargesPerUse ?? spec.chargeCost ?? 0;
+    const spent = spendCharges(updatedUnit, spec.id, chargeAmount);
+    if (!spent.ok) {
+      return { state, events: [] };
+    }
+    updatedUnit = spent.unit;
+  }
+
+  updatedUnit = spendSlots(updatedUnit, costs);
+
+  let nextState: GameState = {
+    ...state,
+    units: {
+      ...state.units,
+      [updatedUnit.id]: updatedUnit,
+    },
+  };
+
+  const events: GameEvent[] = [
+    { type: "abilityUsed", unitId: updatedUnit.id, abilityId: spec.id },
+  ];
+
+  const aoeRes = resolveAoE(
+    nextState,
+    updatedUnit.id,
+    center,
+    {
+      radius: 1,
+      shape: "chebyshev",
+      revealHidden: true,
+      abilityId: spec.id,
+      emitEvent: false,
+    },
+    rng
+  );
+
+  nextState = aoeRes.nextState;
+  events.push(...aoeRes.events);
+
+  const affectedUnitIds = aoeRes.affectedUnitIds;
+  const revealedUnitIds = aoeRes.revealedUnitIds;
+
+  if (affectedUnitIds.length === 0) {
+    events.push({
+      type: "aoeResolved",
+      sourceUnitId: updatedUnit.id,
+      abilityId: spec.id,
+      casterId: updatedUnit.id,
+      center,
+      radius: 1,
+      affectedUnitIds,
+      revealedUnitIds,
+      damagedUnitIds: [],
+      damageByUnitId: {},
+    });
+    return { state: nextState, events };
+  }
+
+  const queuedState: GameState = {
+    ...nextState,
+    pendingCombatQueue: [],
+    pendingAoE: {
+      casterId: updatedUnit.id,
+      abilityId: spec.id,
+      center,
+      radius: 1,
+      affectedUnitIds,
+      revealedUnitIds,
+      damagedUnitIds: [],
+      damageByUnitId: {},
+    },
+  };
+
+  const ctx: DoraAoEContext = {
+    casterId: updatedUnit.id,
+    targetsQueue: affectedUnitIds,
+    currentTargetIndex: 0,
+  };
+
+  const requested = requestRoll(
+    queuedState,
+    updatedUnit.owner,
+    "dora_attackerRoll",
+    ctx,
+    updatedUnit.id
+  );
+
+  return { state: requested.state, events: [...events, ...requested.events] };
+}
+
+function applyKaiserEngineeringMiracle(
+  state: GameState,
+  unit: UnitState
+): ApplyResult {
+  if (!isKaiser(unit)) {
+    return { state, events: [] };
+  }
+
+  if (isKaiserTransformed(unit)) {
+    return { state, events: [] };
+  }
+
+  const baseMax = getUnitBaseMaxHp(unit);
+  const newMax = Math.max(
+    getUnitDefinition("archer").maxHp,
+    getUnitDefinition("rider").maxHp,
+    getUnitDefinition("berserker").maxHp
+  );
+  const missing = Math.max(0, baseMax - unit.hp);
+  const nextHp = Math.max(0, newMax - missing);
+  const berserkCharges =
+    unit.charges?.[ABILITY_BERSERK_AUTO_DEFENSE] ?? 0;
+
+  const updatedUnit: UnitState = {
+    ...unit,
+    transformed: true,
+    hp: nextHp,
+    attack: 2,
+    isStealthed: false,
+    stealthTurnsLeft: 0,
+    bunker: { active: false, ownTurnsInBunker: 0 },
+    charges: {
+      ...unit.charges,
+      [ABILITY_BERSERK_AUTO_DEFENSE]: berserkCharges,
+    },
+  };
+
+  const nextState: GameState = {
+    ...state,
+    units: {
+      ...state.units,
+      [updatedUnit.id]: updatedUnit,
+    },
+  };
+
+  const events: GameEvent[] = [];
+  if (unit.bunker?.active) {
+    events.push({
+      type: "bunkerExited",
+      unitId: updatedUnit.id,
+      reason: "transformed",
+    });
+  }
+
+  events.push({
+    type: "abilityUsed",
+    unitId: updatedUnit.id,
+    abilityId: ABILITY_KAISER_ENGINEERING_MIRACLE,
+  });
+
+  return { state: nextState, events };
+}
+
 
 
 
@@ -489,7 +821,10 @@ export function setArena(
 
 
 // РЎРѕР·РґР°С‘Рј 7 С„РёРіСѓСЂ РёРіСЂРѕРєР° СЃ РґРµС„РѕР»С‚РЅС‹РјРё СЃС‚Р°С‚Р°РјРё Рё РµС‰С‘ Р±РµР· РїРѕР·РёС†РёРё
-export function createDefaultArmy(player: PlayerId): UnitState[] {
+export function createDefaultArmy(
+  player: PlayerId,
+  selection?: HeroSelection
+): UnitState[] {
   const classesOrder = [
     "rider",
     "spearman",
@@ -503,11 +838,14 @@ export function createDefaultArmy(player: PlayerId): UnitState[] {
   return classesOrder.map((cls, index) => {
     const def = getUnitDefinition(cls);
     const id = `${player}-${cls}-${index + 1}`;
+    const selectedHero = selection?.[cls];
+    const heroId = heroMatchesClass(selectedHero, cls) ? selectedHero : undefined;
 
     let unit: UnitState = {
       id,
       owner: player,
       class: def.class,
+      heroId,
       hp: def.maxHp,
       attack: def.baseAttack,
       position: null,
@@ -527,6 +865,11 @@ export function createDefaultArmy(player: PlayerId): UnitState[] {
     };
 
     unit = initUnitAbilities(unit);
+    unit = applyHeroOverrides({
+      ...unit,
+      hp: getUnitBaseMaxHp(unit),
+      attack: getUnitBaseAttack(unit),
+    });
 
     return unit;
   });
@@ -841,20 +1184,34 @@ function applyAttack(
   if (!canSpendSlots(attacker, { attack: true, action: true })) {
     return { state, events: [] };
   }
+
+  let workingState = state;
+  let workingAttacker = attacker;
+  let preEvents: GameEvent[] = [];
+
+  if (isKaiser(attacker) && attacker.bunker?.active) {
+    const exited = exitBunkerForUnit(state, attacker, "attacked");
+    workingState = exited.state;
+    workingAttacker = exited.unit;
+    preEvents = exited.events;
+  }
+
   const context = makeAttackContext({
-    attackerId: attacker.id,
+    attackerId: workingAttacker.id,
     defenderId: defender.id,
     consumeSlots: true,
     queueKind: "normal",
   });
 
-  return requestRoll(
-    state,
-    attacker.owner,
+  const requested = requestRoll(
+    workingState,
+    workingAttacker.owner,
     "attack_attackerRoll",
     context,
-    attacker.id
+    workingAttacker.id
   );
+
+  return { state: requested.state, events: [...preEvents, ...requested.events] };
 }
 
 function collectRiderPathTargets(
@@ -931,48 +1288,83 @@ function applyRequestMoveOptions(
     existing.unitId === unit.id &&
     existing.expiresTurnNumber === state.turnNumber
   ) {
+    if (!action.mode || existing.mode === action.mode) {
+      return {
+        state,
+        events: [
+          {
+            type: "moveOptionsGenerated",
+            unitId: unit.id,
+            roll: existing.roll,
+            legalTo: existing.legalTo,
+            mode: existing.mode,
+          },
+        ],
+      };
+    }
+  }
+
+  const movementModes = getMovementModes(unit);
+  const availableModes: MoveMode[] =
+    movementModes.length > 1
+      ? ([
+          "normal",
+          ...movementModes.filter((mode) => mode !== unit.class),
+        ] as MoveMode[])
+      : ["normal"];
+  const requestedMode = action.mode;
+
+  if (!requestedMode && movementModes.length > 1) {
     return {
       state,
       events: [
         {
           type: "moveOptionsGenerated",
           unitId: unit.id,
-          roll: existing.roll,
-          legalTo: existing.legalTo,
+          roll: undefined,
+          legalTo: [],
+          modes: availableModes,
         },
       ],
     };
   }
 
-  let roll: number | undefined = undefined;
-  let legalMoves: Coord[] = [];
+  const chosenMode =
+    requestedMode && requestedMode !== "normal"
+      ? requestedMode
+      : unit.class;
+  if (!movementModes.includes(chosenMode)) {
+    return { state, events: [] };
+  }
 
-  if (unit.class === "trickster") {
+  if (chosenMode === "trickster") {
     return requestRoll(
       state,
       unit.owner,
       "moveTrickster",
-      { unitId: unit.id },
+      { unitId: unit.id, mode: requestedMode ?? "normal" },
       unit.id
     );
   }
-  if (unit.class === "berserker") {
+  if (chosenMode === "berserker") {
     return requestRoll(
       state,
       unit.owner,
       "moveBerserker",
-      { unitId: unit.id },
+      { unitId: unit.id, mode: requestedMode ?? "normal" },
       unit.id
     );
   }
 
-  legalMoves = getLegalMovesForUnit(state, unit.id);
+  const legalMoves = getLegalMovesForUnitModes(state, unit.id, [chosenMode]);
+  const modeValue = requestedMode ?? "normal";
 
   const pendingMove: PendingMove = {
     unitId: unit.id,
-    roll,
+    roll: undefined,
     legalTo: legalMoves,
     expiresTurnNumber: state.turnNumber,
+    mode: modeValue,
   };
 
   const newState: GameState = {
@@ -984,8 +1376,9 @@ function applyRequestMoveOptions(
     {
       type: "moveOptionsGenerated",
       unitId: unit.id,
-      roll,
+      roll: undefined,
       legalTo: legalMoves,
+      mode: modeValue,
     },
   ];
 
@@ -1029,13 +1422,25 @@ function applyMove(
     pending &&
     pending.unitId === unit.id &&
     pending.expiresTurnNumber === state.turnNumber;
+  const movementModes = getMovementModes(unit);
+  const requiresPendingMove =
+    movementModes.length > 1 ||
+    unitHasMovementMode(unit, "trickster") ||
+    unitHasMovementMode(unit, "berserker");
+  if (requiresPendingMove && !pendingValid) {
+    return { state, events: [] };
+  }
 
   if (pendingValid) {
     legalMoves = pending!.legalTo;
-  } else if (unit.class === "trickster" || unit.class === "berserker") {
-    return { state, events: [] };
   } else {
-    legalMoves = getLegalMovesForUnit(state, unit.id);
+    const normalModes = getMovementModes(unit).filter(
+      (mode) => mode !== "trickster" && mode !== "berserker"
+    );
+    if (normalModes.length === 0) {
+      return { state, events: [] };
+    }
+    legalMoves = getLegalMovesForUnitModes(state, unit.id, normalModes);
   }
 
   const isLegal = legalMoves.some((c) => coordsEqual(c, action.to));
@@ -1162,8 +1567,14 @@ function applyMove(
     }
   }
 
+  const moveMode =
+    pendingValid && pending?.mode ? pending.mode : ("normal" as MoveMode);
+  const riderMode =
+    moveMode === "rider" ||
+    (moveMode === "normal" && unit.class === "rider");
+
   // ---- Rider path attacks: enqueue pending sequential rolls ----
-  if (unit.class === "rider" && from) {
+  if (riderMode && from) {
     const targetIds = collectRiderPathTargets(state, unit, from, action.to);
     if (targetIds.length > 0) {
       const queue = targetIds.map((defenderId) => ({
@@ -1229,6 +1640,38 @@ function applyEnterStealth(
 
   if (state.activeUnitId !== unit.id) {
     return { state, events: [] };
+  }
+
+  if (isKaiser(unit)) {
+    if (isKaiserTransformed(unit)) {
+      return { state, events: [] };
+    }
+
+    if (!canSpendSlots(unit, { stealth: true })) {
+      return { state, events: [] };
+    }
+
+    if (unit.bunker?.active) {
+      const baseUnit: UnitState = spendSlots(unit, { stealth: true });
+      return {
+        state: {
+          ...state,
+          units: {
+            ...state.units,
+            [baseUnit.id]: baseUnit,
+          },
+        },
+        events: [],
+      };
+    }
+
+    return requestRoll(
+      state,
+      unit.owner,
+      "enterBunker",
+      { unitId: unit.id },
+      unit.id
+    );
   }
 
   // Уже тратил слот скрытности
@@ -1575,12 +2018,15 @@ function resolveMoveOptionsRoll(
     kind === "moveTrickster"
       ? getTricksterMovesForRoll(state, unit.id, roll)
       : getBerserkerMovesForRoll(state, unit.id, roll);
+  const mode =
+    (state.pendingRoll?.context?.mode as MoveMode | undefined) ?? "normal";
 
   const pendingMove: PendingMove = {
     unitId: unit.id,
     roll,
     legalTo: legalMoves,
     expiresTurnNumber: state.turnNumber,
+    mode,
   };
 
   const newState: GameState = {
@@ -1594,6 +2040,7 @@ function resolveMoveOptionsRoll(
       unitId: unit.id,
       roll,
       legalTo: legalMoves,
+      mode,
     },
   ];
 
@@ -1606,6 +2053,60 @@ function resolveMoveOptionsRoll(
   }
 
   return { state: clearPendingRoll(newState), events };
+}
+
+function resolveEnterBunkerRoll(
+  state: GameState,
+  unitId: string,
+  rng: RNG
+): ApplyResult {
+  const unit = state.units[unitId];
+  if (!unit || !unit.isAlive || !unit.position) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  if (unit.owner !== state.currentPlayer) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  if (state.activeUnitId !== unit.id) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  if (!canSpendSlots(unit, { stealth: true })) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  const roll = rollD6(rng);
+  const success = roll >= 4;
+  const baseUnit: UnitState = spendSlots(unit, { stealth: true });
+  const updated: UnitState = success
+    ? {
+        ...baseUnit,
+        isStealthed: false,
+        stealthTurnsLeft: 0,
+        bunker: { active: true, ownTurnsInBunker: 0 },
+      }
+    : {
+        ...baseUnit,
+        bunker: { active: false, ownTurnsInBunker: 0 },
+      };
+
+  const nextState: GameState = {
+    ...state,
+    units: {
+      ...state.units,
+      [updated.id]: updated,
+    },
+  };
+
+  const events: GameEvent[] = [
+    success
+      ? { type: "bunkerEntered", unitId: updated.id, roll }
+      : { type: "bunkerEnterFailed", unitId: updated.id, roll },
+  ];
+
+  return { state: clearPendingRoll(nextState), events };
 }
 
 function resolveInitiativeRoll(
@@ -1692,6 +2193,433 @@ function resolveInitiativeRoll(
   return { state: placementState, events: resolvedEvents };
 }
 
+interface CarpetStrikeAoEContext extends Record<string, unknown> {
+  casterId: string;
+  center: Coord;
+  targetsQueue: string[];
+  currentTargetIndex?: number;
+  attackerDice?: number[];
+}
+
+function finalizeCarpetStrikeAoE(
+  state: GameState,
+  events: GameEvent[]
+): ApplyResult {
+  if (!state.pendingAoE) {
+    return { state: clearPendingRoll(state), events };
+  }
+
+  const aoe = state.pendingAoE;
+  const nextState: GameState = { ...state, pendingAoE: null };
+  return {
+    state: clearPendingRoll(nextState),
+    events: [
+      ...events,
+      {
+        type: "aoeResolved",
+        sourceUnitId: aoe.casterId,
+        abilityId: aoe.abilityId,
+        casterId: aoe.casterId,
+        center: aoe.center,
+        radius: aoe.radius,
+        affectedUnitIds: aoe.affectedUnitIds,
+        revealedUnitIds: aoe.revealedUnitIds,
+        damagedUnitIds: aoe.damagedUnitIds,
+        damageByUnitId: aoe.damageByUnitId,
+      },
+    ],
+  };
+}
+
+function advanceCarpetStrikeQueue(
+  state: GameState,
+  context: CarpetStrikeAoEContext,
+  events: GameEvent[]
+): ApplyResult {
+  const baseState = clearPendingRoll(state);
+  const targets = Array.isArray(context.targetsQueue)
+    ? context.targetsQueue
+    : [];
+  let idx = context.currentTargetIndex ?? 0;
+
+  while (idx < targets.length) {
+    const targetId = targets[idx];
+    const target = baseState.units[targetId];
+    if (target && target.isAlive) {
+      const nextCtx: CarpetStrikeAoEContext = {
+        ...context,
+        currentTargetIndex: idx,
+      };
+      const attackerDice = Array.isArray(nextCtx.attackerDice)
+        ? nextCtx.attackerDice
+        : [];
+      const charges = target.charges?.[ABILITY_BERSERK_AUTO_DEFENSE] ?? 0;
+      if (target.class === "berserker" && charges === 6 && attackerDice.length >= 2) {
+        const requested = requestRoll(
+          baseState,
+          target.owner,
+          "carpetStrike_berserkerDefenseChoice",
+          nextCtx,
+          target.id
+        );
+        return { state: requested.state, events: [...events, ...requested.events] };
+      }
+      const requested = requestRoll(
+        baseState,
+        target.owner,
+        "carpetStrike_defenderRoll",
+        nextCtx,
+        target.id
+      );
+      return { state: requested.state, events: [...events, ...requested.events] };
+    }
+    idx += 1;
+  }
+
+  return finalizeCarpetStrikeAoE(baseState, events);
+}
+
+function resolveCarpetStrikeCenterRoll(
+  state: GameState,
+  pending: PendingRoll,
+  rng: RNG
+): ApplyResult {
+  const unitId = pending.context.unitId as string | undefined;
+  if (!unitId) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  const caster = state.units[unitId];
+  if (!caster || !caster.isAlive || !caster.position) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  const d1 = rollD9(rng);
+  const d2 = rollD9(rng);
+  const center = map2d9ToCoord(state, d1, d2);
+
+  const aoeRes = resolveAoE(
+    state,
+    caster.id,
+    center,
+    {
+      radius: 2,
+      shape: "chebyshev",
+      revealHidden: true,
+      abilityId: ABILITY_KAISER_CARPET_STRIKE,
+      emitEvent: false,
+    },
+    rng
+  );
+
+  let affectedUnitIds = aoeRes.affectedUnitIds.filter((id) => {
+    const unit = aoeRes.nextState.units[id];
+    if (!unit || !unit.isAlive) return false;
+    if (isKaiserTransformed(unit)) return false;
+    if (unit.id === caster.id && caster.bunker?.active) return false;
+    return true;
+  });
+
+  affectedUnitIds = [...affectedUnitIds].sort();
+
+  const nextState: GameState = {
+    ...aoeRes.nextState,
+    pendingAoE: {
+      casterId: caster.id,
+      abilityId: ABILITY_KAISER_CARPET_STRIKE,
+      center,
+      radius: 2,
+      affectedUnitIds,
+      revealedUnitIds: aoeRes.revealedUnitIds,
+      damagedUnitIds: [],
+      damageByUnitId: {},
+    },
+  };
+
+  const events: GameEvent[] = [
+    ...aoeRes.events,
+    {
+      type: "carpetStrikeCenter",
+      unitId: caster.id,
+      dice: [d1, d2],
+      sum: d1 + d2,
+      center,
+      area: { shape: "square", radius: 2 },
+    },
+  ];
+
+  const ctx: CarpetStrikeAoEContext = {
+    casterId: caster.id,
+    center,
+    targetsQueue: affectedUnitIds,
+    currentTargetIndex: 0,
+  };
+
+  const requested = replacePendingRoll(
+    nextState,
+    caster.owner,
+    "kaiserCarpetStrikeAttack",
+    ctx,
+    caster.id
+  );
+
+  return { state: requested.state, events: [...events, ...requested.events] };
+}
+
+function resolveCarpetStrikeAttackRoll(
+  state: GameState,
+  pending: PendingRoll,
+  rng: RNG
+): ApplyResult {
+  const ctx = pending.context as unknown as CarpetStrikeAoEContext;
+  const caster = state.units[ctx.casterId];
+  if (!caster) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  const attackerDice = rollDice(rng, 2);
+  const sum = sumDice(attackerDice);
+  const affectedUnitIds = Array.isArray(ctx.targetsQueue) ? ctx.targetsQueue : [];
+
+  const events: GameEvent[] = [
+    {
+      type: "carpetStrikeAttackRolled",
+      unitId: caster.id,
+      dice: attackerDice,
+      sum,
+      center: ctx.center,
+      affectedUnitIds,
+    },
+  ];
+
+  const nextCtx: CarpetStrikeAoEContext = {
+    ...ctx,
+    attackerDice,
+    currentTargetIndex: ctx.currentTargetIndex ?? 0,
+  };
+
+  return advanceCarpetStrikeQueue(state, nextCtx, events);
+}
+
+function resolveCarpetStrikeDefenderRoll(
+  state: GameState,
+  pending: PendingRoll,
+  rng: RNG
+): ApplyResult {
+  const ctx = pending.context as unknown as CarpetStrikeAoEContext;
+  const caster = state.units[ctx.casterId];
+  if (!caster) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  const attackerDice = Array.isArray(ctx.attackerDice) ? ctx.attackerDice : [];
+  if (attackerDice.length < 2) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  const targets = Array.isArray(ctx.targetsQueue) ? ctx.targetsQueue : [];
+  const idx = ctx.currentTargetIndex ?? 0;
+  const targetId = targets[idx];
+  if (!targetId) {
+    return finalizeCarpetStrikeAoE(clearPendingRoll(state), []);
+  }
+
+  const target = state.units[targetId];
+  if (!target || !target.isAlive) {
+    const nextCtx: CarpetStrikeAoEContext = {
+      ...ctx,
+      currentTargetIndex: idx + 1,
+    };
+    return advanceCarpetStrikeQueue(state, nextCtx, []);
+  }
+
+  const defenderDice = rollDice(rng, 2);
+  const { nextState, events } = resolveAttack(state, {
+    attackerId: caster.id,
+    defenderId: targetId,
+    ignoreRange: true,
+    ignoreStealth: true,
+    revealStealthedAllies: true,
+    revealReason: "aoeHit",
+    rolls: {
+      attackerDice,
+      defenderDice,
+    },
+  });
+
+  let updatedState = nextState;
+  const attackEvent = events.find(
+    (e) =>
+      e.type === "attackResolved" &&
+      e.attackerId === caster.id &&
+      e.defenderId === targetId
+  );
+  if (attackEvent && attackEvent.type === "attackResolved" && updatedState.pendingAoE) {
+    let nextPendingAoE = updatedState.pendingAoE;
+    if (attackEvent.damage > 0) {
+      const damaged = nextPendingAoE.damagedUnitIds.includes(attackEvent.defenderId)
+        ? nextPendingAoE.damagedUnitIds
+        : [...nextPendingAoE.damagedUnitIds, attackEvent.defenderId];
+      const damageByUnitId = {
+        ...nextPendingAoE.damageByUnitId,
+        [attackEvent.defenderId]: attackEvent.damage,
+      };
+      nextPendingAoE = {
+        ...nextPendingAoE,
+        damagedUnitIds: damaged,
+        damageByUnitId,
+      };
+    }
+
+    const revealedIds = events
+      .filter((e) => e.type === "stealthRevealed")
+      .map((e) => (e.type === "stealthRevealed" ? e.unitId : ""))
+      .filter((id) => id.length > 0);
+    if (revealedIds.length > 0) {
+      const merged = Array.from(
+        new Set([...nextPendingAoE.revealedUnitIds, ...revealedIds])
+      );
+      nextPendingAoE = { ...nextPendingAoE, revealedUnitIds: merged };
+    }
+
+    if (nextPendingAoE !== updatedState.pendingAoE) {
+      updatedState = { ...updatedState, pendingAoE: nextPendingAoE };
+    }
+  }
+
+  const nextCtx: CarpetStrikeAoEContext = {
+    ...ctx,
+    currentTargetIndex: idx + 1,
+    attackerDice,
+  };
+
+  return advanceCarpetStrikeQueue(updatedState, nextCtx, events);
+}
+
+function resolveCarpetStrikeBerserkerDefenseChoice(
+  state: GameState,
+  pending: PendingRoll,
+  choice: "auto" | "roll" | undefined,
+  rng: RNG
+): ApplyResult {
+  const ctx = pending.context as unknown as CarpetStrikeAoEContext;
+  const caster = state.units[ctx.casterId];
+  if (!caster) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  const attackerDice = Array.isArray(ctx.attackerDice) ? ctx.attackerDice : [];
+  if (attackerDice.length < 2) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  const targets = Array.isArray(ctx.targetsQueue) ? ctx.targetsQueue : [];
+  const idx = ctx.currentTargetIndex ?? 0;
+  const targetId = targets[idx];
+  if (!targetId) {
+    return finalizeCarpetStrikeAoE(clearPendingRoll(state), []);
+  }
+
+  const target = state.units[targetId];
+  if (!target || !target.isAlive) {
+    const nextCtx: CarpetStrikeAoEContext = {
+      ...ctx,
+      currentTargetIndex: idx + 1,
+    };
+    return advanceCarpetStrikeQueue(state, nextCtx, []);
+  }
+
+  let selected: "auto" | "roll" = choice ?? "roll";
+  if (selected === "auto") {
+    const charges = target.charges?.[ABILITY_BERSERK_AUTO_DEFENSE] ?? 0;
+    if (charges !== 6) {
+      selected = "roll";
+    }
+  }
+
+  if (selected === "roll") {
+    const nextCtx: CarpetStrikeAoEContext = {
+      ...ctx,
+      currentTargetIndex: idx,
+      attackerDice,
+    };
+    const requested = requestRoll(
+      clearPendingRoll(state),
+      target.owner,
+      "carpetStrike_defenderRoll",
+      nextCtx,
+      target.id
+    );
+    const choiceEvents: GameEvent[] = [
+      { type: "berserkerDefenseChosen", defenderId: target.id, choice: "roll" },
+      ...requested.events,
+    ];
+    return { state: requested.state, events: choiceEvents };
+  }
+
+  const { nextState, events } = resolveAttack(state, {
+    attackerId: caster.id,
+    defenderId: target.id,
+    ignoreRange: true,
+    ignoreStealth: true,
+    revealStealthedAllies: true,
+    revealReason: "aoeHit",
+    defenderUseBerserkAutoDefense: true,
+    rolls: {
+      attackerDice,
+      defenderDice: [],
+    },
+  });
+
+  let updatedState = nextState;
+  const attackEvent = events.find(
+    (e) =>
+      e.type === "attackResolved" &&
+      e.attackerId === caster.id &&
+      e.defenderId === target.id
+  );
+  if (attackEvent && attackEvent.type === "attackResolved" && updatedState.pendingAoE) {
+    let nextPendingAoE = updatedState.pendingAoE;
+    if (attackEvent.damage > 0) {
+      const damaged = nextPendingAoE.damagedUnitIds.includes(attackEvent.defenderId)
+        ? nextPendingAoE.damagedUnitIds
+        : [...nextPendingAoE.damagedUnitIds, attackEvent.defenderId];
+      const damageByUnitId = {
+        ...nextPendingAoE.damageByUnitId,
+        [attackEvent.defenderId]: attackEvent.damage,
+      };
+      nextPendingAoE = {
+        ...nextPendingAoE,
+        damagedUnitIds: damaged,
+        damageByUnitId,
+      };
+    }
+
+    const revealedIds = events
+      .filter((e) => e.type === "stealthRevealed")
+      .map((e) => (e.type === "stealthRevealed" ? e.unitId : ""))
+      .filter((id) => id.length > 0);
+    if (revealedIds.length > 0) {
+      const merged = Array.from(
+        new Set([...nextPendingAoE.revealedUnitIds, ...revealedIds])
+      );
+      nextPendingAoE = { ...nextPendingAoE, revealedUnitIds: merged };
+    }
+
+    if (nextPendingAoE !== updatedState.pendingAoE) {
+      updatedState = { ...updatedState, pendingAoE: nextPendingAoE };
+    }
+  }
+
+  const nextCtx: CarpetStrikeAoEContext = {
+    ...ctx,
+    currentTargetIndex: idx + 1,
+    attackerDice,
+  };
+
+  return advanceCarpetStrikeQueue(updatedState, nextCtx, events);
+}
+
 interface AttackRollContext extends Record<string, unknown> {
   attackerId: string;
   defenderId: string;
@@ -1716,6 +2644,13 @@ interface TricksterAoEContext extends Record<string, unknown> {
   attackerDice?: number[];
 }
 
+interface DoraAoEContext extends Record<string, unknown> {
+  casterId: string;
+  targetsQueue: string[];
+  currentTargetIndex?: number;
+  attackerDice?: number[];
+}
+
 function rollDice(rng: RNG, count: number): number[] {
   const rolls: number[] = [];
   for (let i = 0; i < count; i += 1) {
@@ -1732,7 +2667,7 @@ function replacePendingRoll(
   state: GameState,
   player: PlayerId,
   kind: RollKind,
-  context: AttackRollContext,
+  context: Record<string, unknown>,
   actorUnitId?: string
 ): ApplyResult {
   const baseState = clearPendingRoll(state);
@@ -2121,6 +3056,333 @@ function resolveTricksterAoEDefenderRoll(
   return advanceTricksterAoEQueue(updatedState, nextCtx, events);
 }
 
+function finalizeDoraAoE(
+  state: GameState,
+  events: GameEvent[]
+): ApplyResult {
+  if (!state.pendingAoE) {
+    return { state: clearPendingRoll(state), events };
+  }
+
+  const aoe = state.pendingAoE;
+  const nextState: GameState = { ...state, pendingAoE: null };
+  return {
+    state: clearPendingRoll(nextState),
+    events: [
+      ...events,
+      {
+        type: "aoeResolved",
+        sourceUnitId: aoe.casterId,
+        abilityId: aoe.abilityId,
+        casterId: aoe.casterId,
+        center: aoe.center,
+        radius: aoe.radius,
+        affectedUnitIds: aoe.affectedUnitIds,
+        revealedUnitIds: aoe.revealedUnitIds,
+        damagedUnitIds: aoe.damagedUnitIds,
+        damageByUnitId: aoe.damageByUnitId,
+      },
+    ],
+  };
+}
+
+function advanceDoraAoEQueue(
+  state: GameState,
+  context: DoraAoEContext,
+  events: GameEvent[]
+): ApplyResult {
+  const baseState = clearPendingRoll(state);
+  const targets = Array.isArray(context.targetsQueue)
+    ? context.targetsQueue
+    : [];
+  let idx = context.currentTargetIndex ?? 0;
+
+  while (idx < targets.length) {
+    const targetId = targets[idx];
+    const target = baseState.units[targetId];
+    if (target && target.isAlive) {
+      const nextCtx: DoraAoEContext = {
+        ...context,
+        currentTargetIndex: idx,
+      };
+      const attackerDice = Array.isArray(nextCtx.attackerDice)
+        ? nextCtx.attackerDice
+        : [];
+      const charges = target.charges?.[ABILITY_BERSERK_AUTO_DEFENSE] ?? 0;
+      if (target.class === "berserker" && charges === 6 && attackerDice.length >= 2) {
+        const requested = requestRoll(
+          baseState,
+          target.owner,
+          "dora_berserkerDefenseChoice",
+          nextCtx,
+          target.id
+        );
+        return { state: requested.state, events: [...events, ...requested.events] };
+      }
+      const requested = requestRoll(
+        baseState,
+        target.owner,
+        "dora_defenderRoll",
+        nextCtx,
+        target.id
+      );
+      return { state: requested.state, events: [...events, ...requested.events] };
+    }
+    idx += 1;
+  }
+
+  return finalizeDoraAoE(baseState, events);
+}
+
+function resolveDoraAttackerRoll(
+  state: GameState,
+  pending: PendingRoll,
+  rng: RNG
+): ApplyResult {
+  const ctx = pending.context as unknown as DoraAoEContext;
+  const caster = state.units[ctx.casterId];
+  if (!caster) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  const attackerDice = rollDice(rng, 2);
+  const nextCtx: DoraAoEContext = {
+    ...ctx,
+    attackerDice,
+    currentTargetIndex: ctx.currentTargetIndex ?? 0,
+  };
+
+  return advanceDoraAoEQueue(state, nextCtx, []);
+}
+
+function resolveDoraDefenderRoll(
+  state: GameState,
+  pending: PendingRoll,
+  rng: RNG
+): ApplyResult {
+  const ctx = pending.context as unknown as DoraAoEContext;
+  const caster = state.units[ctx.casterId];
+  if (!caster) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  const attackerDice = Array.isArray(ctx.attackerDice) ? ctx.attackerDice : [];
+  if (attackerDice.length < 2) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  const targets = Array.isArray(ctx.targetsQueue) ? ctx.targetsQueue : [];
+  const idx = ctx.currentTargetIndex ?? 0;
+  const targetId = targets[idx];
+  if (!targetId) {
+    return finalizeDoraAoE(clearPendingRoll(state), []);
+  }
+
+  const target = state.units[targetId];
+  if (!target || !target.isAlive) {
+    const nextCtx: DoraAoEContext = {
+      ...ctx,
+      currentTargetIndex: idx + 1,
+    };
+    return advanceDoraAoEQueue(state, nextCtx, []);
+  }
+
+  const defenderDice = rollDice(rng, 2);
+  const { nextState, events } = resolveAttack(state, {
+    attackerId: caster.id,
+    defenderId: targetId,
+    ignoreRange: true,
+    ignoreStealth: true,
+    revealStealthedAllies: true,
+    revealReason: "aoeHit",
+    rolls: {
+      attackerDice,
+      defenderDice,
+    },
+  });
+
+  let updatedState = nextState;
+  const attackEvent = events.find(
+    (e) =>
+      e.type === "attackResolved" &&
+      e.attackerId === caster.id &&
+      e.defenderId === targetId
+  );
+  if (attackEvent && attackEvent.type === "attackResolved" && updatedState.pendingAoE) {
+    let nextPendingAoE = updatedState.pendingAoE;
+    if (attackEvent.damage > 0) {
+      const damaged = nextPendingAoE.damagedUnitIds.includes(attackEvent.defenderId)
+        ? nextPendingAoE.damagedUnitIds
+        : [...nextPendingAoE.damagedUnitIds, attackEvent.defenderId];
+      const damageByUnitId = {
+        ...nextPendingAoE.damageByUnitId,
+        [attackEvent.defenderId]: attackEvent.damage,
+      };
+      nextPendingAoE = {
+        ...nextPendingAoE,
+        damagedUnitIds: damaged,
+        damageByUnitId,
+      };
+    }
+
+    const revealedIds = events
+      .filter((e) => e.type === "stealthRevealed")
+      .map((e) => (e.type === "stealthRevealed" ? e.unitId : ""))
+      .filter((id) => id.length > 0);
+    if (revealedIds.length > 0) {
+      const merged = Array.from(
+        new Set([...nextPendingAoE.revealedUnitIds, ...revealedIds])
+      );
+      nextPendingAoE = { ...nextPendingAoE, revealedUnitIds: merged };
+    }
+
+    if (nextPendingAoE !== updatedState.pendingAoE) {
+      updatedState = { ...updatedState, pendingAoE: nextPendingAoE };
+    }
+  }
+
+  const nextCtx: DoraAoEContext = {
+    ...ctx,
+    currentTargetIndex: idx + 1,
+    attackerDice,
+  };
+
+  return advanceDoraAoEQueue(updatedState, nextCtx, events);
+}
+
+function resolveDoraBerserkerDefenseChoice(
+  state: GameState,
+  pending: PendingRoll,
+  choice: "auto" | "roll" | undefined,
+  rng: RNG
+): ApplyResult {
+  const ctx = pending.context as unknown as DoraAoEContext;
+  const caster = state.units[ctx.casterId];
+  if (!caster) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  const attackerDice = Array.isArray(ctx.attackerDice) ? ctx.attackerDice : [];
+  if (attackerDice.length < 2) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  const targets = Array.isArray(ctx.targetsQueue) ? ctx.targetsQueue : [];
+  const idx = ctx.currentTargetIndex ?? 0;
+  const targetId = targets[idx];
+  if (!targetId) {
+    return finalizeDoraAoE(clearPendingRoll(state), []);
+  }
+
+  const target = state.units[targetId];
+  if (!target || !target.isAlive) {
+    const nextCtx: DoraAoEContext = {
+      ...ctx,
+      currentTargetIndex: idx + 1,
+    };
+    return advanceDoraAoEQueue(state, nextCtx, []);
+  }
+
+  let selected: "auto" | "roll" = choice ?? "roll";
+  if (selected === "auto") {
+    const charges = target.charges?.[ABILITY_BERSERK_AUTO_DEFENSE] ?? 0;
+    if (charges !== 6) {
+      selected = "roll";
+    }
+  }
+
+  if (selected === "roll") {
+    const nextCtx: DoraAoEContext = {
+      ...ctx,
+      currentTargetIndex: idx,
+      attackerDice,
+    };
+    const requested = requestRoll(
+      clearPendingRoll(state),
+      target.owner,
+      "dora_defenderRoll",
+      nextCtx,
+      target.id
+    );
+    const choiceEvents: GameEvent[] = [
+      { type: "berserkerDefenseChosen", defenderId: target.id, choice: "roll" },
+      ...requested.events,
+    ];
+    return { state: requested.state, events: choiceEvents };
+  }
+
+  if (selected === "auto") {
+    const { nextState, events } = resolveAttack(state, {
+      attackerId: caster.id,
+      defenderId: target.id,
+      ignoreRange: true,
+      ignoreStealth: true,
+      revealStealthedAllies: true,
+      revealReason: "aoeHit",
+      defenderUseBerserkAutoDefense: true,
+      rolls: {
+        attackerDice,
+        defenderDice: [],
+      },
+    });
+
+    let updatedState = nextState;
+    const attackEvent = events.find(
+      (e) =>
+        e.type === "attackResolved" &&
+        e.attackerId === caster.id &&
+        e.defenderId === target.id
+    );
+    if (attackEvent && attackEvent.type === "attackResolved" && updatedState.pendingAoE) {
+      let nextPendingAoE = updatedState.pendingAoE;
+      if (attackEvent.damage > 0) {
+        const damaged = nextPendingAoE.damagedUnitIds.includes(attackEvent.defenderId)
+          ? nextPendingAoE.damagedUnitIds
+          : [...nextPendingAoE.damagedUnitIds, attackEvent.defenderId];
+        const damageByUnitId = {
+          ...nextPendingAoE.damageByUnitId,
+          [attackEvent.defenderId]: attackEvent.damage,
+        };
+        nextPendingAoE = {
+          ...nextPendingAoE,
+          damagedUnitIds: damaged,
+          damageByUnitId,
+        };
+      }
+
+      const revealedIds = events
+        .filter((e) => e.type === "stealthRevealed")
+        .map((e) => (e.type === "stealthRevealed" ? e.unitId : ""))
+        .filter((id) => id.length > 0);
+      if (revealedIds.length > 0) {
+        const merged = Array.from(
+          new Set([...nextPendingAoE.revealedUnitIds, ...revealedIds])
+        );
+        nextPendingAoE = { ...nextPendingAoE, revealedUnitIds: merged };
+      }
+
+      if (nextPendingAoE !== updatedState.pendingAoE) {
+        updatedState = { ...updatedState, pendingAoE: nextPendingAoE };
+      }
+    }
+
+    const nextCtx: DoraAoEContext = {
+      ...ctx,
+      currentTargetIndex: idx + 1,
+      attackerDice,
+    };
+
+    const choiceEvents: GameEvent[] = [
+      { type: "berserkerDefenseChosen", defenderId: target.id, choice: "auto" },
+      ...events,
+    ];
+
+    return advanceDoraAoEQueue(updatedState, nextCtx, choiceEvents);
+  }
+
+  return { state: clearPendingRoll(state), events: [] };
+}
+
 function resolveAttackAttackerRoll(
   state: GameState,
   pending: PendingRoll,
@@ -2291,10 +3553,32 @@ function applyResolvePendingRoll(
     case "initiativeRoll": {
       return resolveInitiativeRoll(state, pending, rng);
     }
+    case "enterBunker": {
+      const unitId = pending.context.unitId as string | undefined;
+      if (!unitId) return { state: clearPendingRoll(state), events: [] };
+      return resolveEnterBunkerRoll(state, unitId, rng);
+    }
     case "enterStealth": {
       const unitId = pending.context.unitId as string | undefined;
       if (!unitId) return { state: clearPendingRoll(state), events: [] };
       return resolveEnterStealthRoll(state, unitId, rng);
+    }
+    case "kaiserCarpetStrikeCenter": {
+      return resolveCarpetStrikeCenterRoll(state, pending, rng);
+    }
+    case "kaiserCarpetStrikeAttack": {
+      return resolveCarpetStrikeAttackRoll(state, pending, rng);
+    }
+    case "carpetStrike_defenderRoll": {
+      return resolveCarpetStrikeDefenderRoll(state, pending, rng);
+    }
+    case "carpetStrike_berserkerDefenseChoice": {
+      return resolveCarpetStrikeBerserkerDefenseChoice(
+        state,
+        pending,
+        action.choice,
+        rng
+      );
     }
     case "searchStealth": {
       const unitId = pending.context.unitId as string | undefined;
@@ -2328,8 +3612,17 @@ function applyResolvePendingRoll(
     case "tricksterAoE_defenderRoll": {
       return resolveTricksterAoEDefenderRoll(state, pending, rng);
     }
+    case "dora_attackerRoll": {
+      return resolveDoraAttackerRoll(state, pending, rng);
+    }
+    case "dora_defenderRoll": {
+      return resolveDoraDefenderRoll(state, pending, rng);
+    }
     case "berserkerDefenseChoice": {
       return resolveBerserkerDefenseChoiceRoll(state, pending, action.choice);
+    }
+    case "dora_berserkerDefenseChoice": {
+      return resolveDoraBerserkerDefenseChoice(state, pending, action.choice, rng);
     }
     default:
       return { state: clearPendingRoll(state), events: [] };
@@ -2477,6 +3770,108 @@ function applyEndTurn(state: GameState, rng: RNG): ApplyResult {
   return { state, events: [] };
 }
 
+function processUnitStartOfTurnBunker(
+  state: GameState,
+  unitId: string
+): { state: GameState; events: GameEvent[] } {
+  const unit = state.units[unitId];
+  if (!unit || !unit.isAlive || !unit.bunker?.active) {
+    return { state, events: [] };
+  }
+
+  if (unit.bunker.ownTurnsInBunker >= 3) {
+    const exited = exitBunkerForUnit(state, unit, "timerExpired");
+    return { state: exited.state, events: exited.events };
+  }
+
+  const updated: UnitState = {
+    ...unit,
+    bunker: {
+      active: true,
+      ownTurnsInBunker: unit.bunker.ownTurnsInBunker + 1,
+    },
+  };
+
+  return {
+    state: {
+      ...state,
+      units: {
+        ...state.units,
+        [updated.id]: updated,
+      },
+    },
+    events: [],
+  };
+}
+
+function maybeTriggerEngineeringMiracle(
+  state: GameState,
+  unitId: string
+): ApplyResult {
+  const unit = state.units[unitId];
+  if (!unit || !unit.isAlive || unit.heroId !== HERO_GRAND_KAISER_ID) {
+    return { state, events: [] };
+  }
+
+  if (unit.transformed) {
+    return { state, events: [] };
+  }
+
+  const spec = getAbilitySpec(ABILITY_KAISER_ENGINEERING_MIRACLE);
+  const triggerCharges = spec?.triggerCharges ?? 0;
+  if (
+    triggerCharges > 0 &&
+    getCharges(unit, ABILITY_KAISER_ENGINEERING_MIRACLE) < triggerCharges
+  ) {
+    return { state, events: [] };
+  }
+
+  return applyKaiserEngineeringMiracle(state, unit);
+}
+
+function maybeTriggerCarpetStrike(
+  state: GameState,
+  unitId: string
+): ApplyResult {
+  const unit = state.units[unitId];
+  if (!unit || !unit.isAlive || unit.heroId !== HERO_GRAND_KAISER_ID) {
+    return { state, events: [] };
+  }
+
+  const charges = getCharges(unit, ABILITY_KAISER_CARPET_STRIKE);
+  if (charges < 3) {
+    return { state, events: [] };
+  }
+
+  const spent = spendCharges(unit, ABILITY_KAISER_CARPET_STRIKE, 3);
+  if (!spent.ok) {
+    return { state, events: [] };
+  }
+
+  const updatedState: GameState = {
+    ...state,
+    units: {
+      ...state.units,
+      [unit.id]: spent.unit,
+    },
+  };
+
+  const requested = requestRoll(
+    updatedState,
+    unit.owner,
+    "kaiserCarpetStrikeCenter",
+    { unitId: unit.id },
+    unit.id
+  );
+
+  const events: GameEvent[] = [
+    { type: "carpetStrikeTriggered", unitId: unit.id },
+    ...requested.events,
+  ];
+
+  return { state: requested.state, events };
+}
+
 
 function applyUnitStartTurn(
   state: GameState,
@@ -2520,29 +3915,58 @@ function applyUnitStartTurn(
     return { state: afterStealth, events: stealthEvents };
   }
 
+  const { state: afterBunker, events: bunkerEvents } =
+    processUnitStartOfTurnBunker(afterStealth, unit.id);
+
+  const unitAfterBunker = afterBunker.units[unit.id];
+  if (!unitAfterBunker) {
+    return { state: afterBunker, events: [...stealthEvents, ...bunkerEvents] };
+  }
+
   const { state: afterStart, events: startEvents } = processUnitStartOfTurn(
-    afterStealth,
+    afterBunker,
     unit.id,
     rng
   );
 
-  const unitAfter = afterStart.units[unit.id];
+  const engineeringResult = maybeTriggerEngineeringMiracle(afterStart, unit.id);
+  const carpetResult = maybeTriggerCarpetStrike(engineeringResult.state, unit.id);
+
+  const unitAfter = carpetResult.state.units[unit.id];
   if (!unitAfter) {
-    return { state: afterStart, events: startEvents };
+    return {
+      state: carpetResult.state,
+      events: [
+        ...stealthEvents,
+        ...bunkerEvents,
+        ...startEvents,
+        ...engineeringResult.events,
+        ...carpetResult.events,
+      ],
+    };
   }
 
   const resetUnit: UnitState = resetTurnEconomy(unitAfter);
 
   const newState: GameState = {
-    ...afterStart,
+    ...carpetResult.state,
     units: {
-      ...afterStart.units,
+      ...carpetResult.state.units,
       [resetUnit.id]: resetUnit,
     },
     activeUnitId: resetUnit.id,
   };
 
-  return { state: newState, events: [...stealthEvents, ...startEvents] };
+  return {
+    state: newState,
+    events: [
+      ...stealthEvents,
+      ...bunkerEvents,
+      ...startEvents,
+      ...engineeringResult.events,
+      ...carpetResult.events,
+    ],
+  };
 }
 
 

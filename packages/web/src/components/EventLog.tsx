@@ -1,6 +1,16 @@
 ﻿import type { GameEvent, DiceRoll } from "rules";
 import type { FC } from "react";
 
+const ABILITY_NAME_BY_ID: Record<string, string> = {
+  berserkAutoDefense: "Berserker Auto Defense",
+  tricksterAoE: "Trickster AoE",
+  kaiserBunker: "Bunker",
+  kaiserDora: "Dora",
+  kaiserCarpetStrike: "Carpet Strike",
+  kaiserEngineeringMiracle: "Engineering Miracle",
+};
+
+
 function formatDice(roll?: DiceRoll | null) {
   if (!roll || !Array.isArray(roll.dice)) {
     return "(-) = -";
@@ -50,6 +60,50 @@ function formatEvent(event: GameEvent): string {
       return `Placement started: ${event.placementFirstPlayer ?? "-"}`;
     case "berserkerDefenseChosen":
       return `Berserker defense: ${event.defenderId} (${event.choice})`;
+    case "chargesUpdated": {
+      const deltas = event.deltas ?? {};
+      const now = event.now ?? {};
+      const entries = Object.entries(deltas).map(([id, delta]) => {
+        const name = ABILITY_NAME_BY_ID[id] ?? id;
+        const after = now[id];
+        const before =
+          typeof after === "number" && typeof delta === "number"
+            ? after - delta
+            : undefined;
+        if (typeof before === "number" && typeof after === "number") {
+          return `${name} ${before}->${after}`;
+        }
+        return `${name} +${delta}`;
+      });
+      const summary = entries.length > 0 ? entries.join(", ") : "-";
+      return `Charges: ${event.unitId} ${summary}`;
+    }
+    case "bunkerEntered":
+      return `Bunker entered: ${event.unitId} (roll ${event.roll ?? "-"})`;
+    case "bunkerEnterFailed":
+      return `Bunker failed: ${event.unitId} (roll ${event.roll ?? "-"})`;
+    case "bunkerExited":
+      return `Bunker exited: ${event.unitId} (${event.reason})`;
+    case "carpetStrikeTriggered":
+      return `Carpet Strike triggered: ${event.unitId}`;
+    case "carpetStrikeCenter": {
+      const dice =
+        Array.isArray(event.dice) && event.dice.length > 0
+          ? `[${event.dice.join(", ")}]`
+          : "[-]";
+      return `Carpet Strike center: ${event.unitId} ${dice} = ${
+        event.sum ?? "-"
+      } -> (${event.center?.col ?? "-"}, ${event.center?.row ?? "-"})`;
+    }
+    case "carpetStrikeAttackRolled": {
+      const dice =
+        Array.isArray(event.dice) && event.dice.length > 0
+          ? `[${event.dice.join(", ")}]`
+          : "[-]";
+      return `Carpet Strike attack: ${event.unitId} ${dice} = ${
+        event.sum ?? "-"
+      }`;
+    }
     case "searchStealth":
       return `Search stealth: ${event.unitId} (${event.mode})${
         event.rolls && event.rolls.length > 0

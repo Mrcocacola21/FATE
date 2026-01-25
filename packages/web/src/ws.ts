@@ -6,8 +6,10 @@ import type {
   Coord,
   RollKind,
   GamePhase,
+  MoveMode,
 } from "rules";
 import { getWsUrl } from "./api";
+import type { FigureSetSelection } from "./figures/types";
 
 export type PlayerRole = PlayerId | "spectator";
 
@@ -63,6 +65,8 @@ export type ServerMessage =
       unitId: string;
       roll: number | null;
       legalTo: Coord[];
+      mode?: MoveMode;
+      modes?: MoveMode[];
     }
   | {
       type: "error";
@@ -77,6 +81,7 @@ export type ClientMessage =
       roomId?: string;
       role: PlayerRole;
       name?: string;
+      figureSet?: FigureSetSelection;
     }
   | { type: "setReady"; ready: boolean }
   | { type: "startGame" }
@@ -86,7 +91,7 @@ export type ClientMessage =
       choice?: "auto" | "roll";
     }
   | { type: "action"; action: GameAction }
-  | { type: "requestMoveOptions"; unitId: string }
+  | { type: "requestMoveOptions"; unitId: string; mode?: MoveMode }
   | { type: "switchRole"; role: PlayerRole }
   | { type: "leaveRoom" };
 
@@ -109,7 +114,13 @@ export function connectGameSocket(
 
 export function sendJoinRoom(
   socket: WebSocket,
-  params: { mode: "create" | "join"; roomId?: string; role: PlayerRole; name?: string }
+  params: {
+    mode: "create" | "join";
+    roomId?: string;
+    role: PlayerRole;
+    name?: string;
+    figureSet?: FigureSetSelection;
+  }
 ) {
   const join: ClientMessage = { type: "joinRoom", ...params };
   socket.send(JSON.stringify(join));
@@ -139,8 +150,12 @@ export function sendSocketAction(socket: WebSocket, action: GameAction) {
   socket.send(JSON.stringify(msg));
 }
 
-export function sendMoveOptionsRequest(socket: WebSocket, unitId: string) {
-  const msg: ClientMessage = { type: "requestMoveOptions", unitId };
+export function sendMoveOptionsRequest(
+  socket: WebSocket,
+  unitId: string,
+  mode?: MoveMode
+) {
+  const msg: ClientMessage = { type: "requestMoveOptions", unitId, mode };
   socket.send(JSON.stringify(msg));
 }
 

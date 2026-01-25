@@ -8,11 +8,13 @@ import type {
   GameAction,
   GameEvent,
   GameState,
+  HeroSelection,
+  MoveMode,
   PlayerId,
   PlayerView,
   RollKind,
 } from "rules";
-import { makePlayerView, makeSpectatorView } from "rules";
+import { attachArmy, createDefaultArmy, makePlayerView, makeSpectatorView } from "rules";
 import { ClientMessageSchema } from "./schemas";
 import { isActionAllowedByPlayer } from "./permissions";
 import {
@@ -74,6 +76,8 @@ type MoveOptionsMessage = {
   unitId: string;
   roll: number | null;
   legalTo: Coord[];
+  mode?: MoveMode;
+  modes?: MoveMode[];
 };
 
 type ErrorMessage = {
@@ -158,6 +162,17 @@ function assignSeat(room: GameRoom, seat: PlayerId, connId: string): boolean {
     },
   };
   return true;
+}
+
+function applyFigureSetToRoom(
+  room: GameRoom,
+  seat: PlayerId,
+  figureSet?: HeroSelection
+) {
+  if (!figureSet) return;
+  room.figureSets[seat] = figureSet;
+  if (room.state.phase !== "lobby") return;
+  room.state = attachArmy(room.state, createDefaultArmy(seat, figureSet));
 }
 
 function vacateSeat(room: GameRoom, seat: PlayerId, connId: string) {
@@ -283,6 +298,8 @@ function sendMoveOptionsIfAny(socket: WebSocket, events: GameEvent[]) {
     unitId: moveEvent.unitId,
     roll: moveEvent.roll ?? null,
     legalTo: moveEvent.legalTo,
+    mode: moveEvent.mode,
+    modes: moveEvent.modes,
   });
 }
 
@@ -454,6 +471,7 @@ export function registerGameWebSocket(server: FastifyInstance) {
               });
               return;
             }
+            applyFigureSetToRoom(room, seat, msg.figureSet as HeroSelection | undefined);
           } else {
             room.spectators.add(connId);
           }
@@ -526,8 +544,9 @@ export function registerGameWebSocket(server: FastifyInstance) {
         case "leaveRoom": {
           const meta = socketMeta.get(socket);
           const roomId = meta?.roomId ?? null;
+          let room: GameRoom | undefined;
           if (meta) {
-            const room = getGameRoom(meta.roomId);
+            room = getGameRoom(meta.roomId);
             if (room) {
               if (meta.seat) {
                 vacateSeat(room, meta.seat, meta.connId);
@@ -535,10 +554,12 @@ export function registerGameWebSocket(server: FastifyInstance) {
                 room.spectators.delete(meta.connId);
               }
               updateHost(room);
-              broadcastRoomState(room);
             }
             removeSocketFromRoom(meta.roomId, socket);
             socketMeta.delete(socket);
+            if (room) {
+              broadcastRoomState(room);
+            }
           }
           sendMessage(socket, { type: "leftRoom", roomId });
           break;
@@ -683,7 +704,11 @@ export function registerGameWebSocket(server: FastifyInstance) {
             sendMessage(socket, { type: "error", message: "Room not found" });
             return;
           }
-          const action: GameAction = { type: "requestMoveOptions", unitId: msg.unitId };
+          const action: GameAction = {
+            type: "requestMoveOptions",
+            unitId: msg.unitId,
+            mode: msg.mode,
+          };
           applyRoomAction(socket, room, meta, action);
           break;
         }
