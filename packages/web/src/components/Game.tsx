@@ -71,6 +71,7 @@ export function Game() {
     moveOptions,
     lastActionResult,
     lastActionResultAt,
+    leavingRoom,
     setSelectedUnit,
     setActionMode,
     setPlaceUnitId,
@@ -119,6 +120,14 @@ export function Game() {
     defenderId && view?.units[defenderId]
       ? view.units[defenderId].charges?.berserkAutoDefense ?? 0
       : 0;
+
+  const handleLeave = () => {
+    if (leavingRoom) return;
+    const label = roomId ?? "this room";
+    const confirmed = window.confirm(`Leave room ${label}? You will disconnect.`);
+    if (!confirmed) return;
+    leaveRoom();
+  };
 
   const readyStatus = roomMeta?.ready ?? { P1: false, P2: false };
   const playerReady = seat ? readyStatus[seat] : false;
@@ -341,9 +350,10 @@ export function Game() {
           </div>
           <button
             className="mt-4 rounded bg-slate-200 px-3 py-2 text-xs"
-            onClick={() => leaveRoom()}
+            onClick={handleLeave}
+            disabled={leavingRoom}
           >
-            Leave
+            {leavingRoom ? "Leaving..." : "Leave"}
           </button>
         </div>
       </div>
@@ -362,9 +372,10 @@ export function Game() {
             <div>Joined: {joined ? "yes" : "no"}</div>
             <button
               className="rounded bg-slate-200 px-2 py-1 text-[10px]"
-              onClick={() => leaveRoom()}
+              onClick={handleLeave}
+              disabled={leavingRoom}
             >
-              Leave
+              {leavingRoom ? "Leaving..." : "Leave"}
             </button>
           </div>
           <Board

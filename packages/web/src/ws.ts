@@ -48,6 +48,10 @@ export type ServerMessage =
       message: string;
     }
   | {
+      type: "leftRoom";
+      roomId: string | null;
+    }
+  | {
       type: "actionResult";
       ok: boolean;
       events: GameEvent[];

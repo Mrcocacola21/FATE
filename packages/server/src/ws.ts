@@ -82,13 +82,19 @@ type ErrorMessage = {
   code?: string;
 };
 
+type LeftRoomMessage = {
+  type: "leftRoom";
+  roomId: string | null;
+};
+
 type ServerMessage =
   | RoomStateMessage
   | JoinAckMessage
   | JoinRejectedMessage
   | ActionResultMessage
   | MoveOptionsMessage
-  | ErrorMessage;
+  | ErrorMessage
+  | LeftRoomMessage;
 
 interface ConnectionMeta {
   roomId: string;
@@ -519,19 +525,22 @@ export function registerGameWebSocket(server: FastifyInstance) {
         }
         case "leaveRoom": {
           const meta = socketMeta.get(socket);
-          if (!meta) return;
-          const room = getGameRoom(meta.roomId);
-          if (room) {
-            if (meta.seat) {
-              vacateSeat(room, meta.seat, meta.connId);
-            } else {
-              room.spectators.delete(meta.connId);
+          const roomId = meta?.roomId ?? null;
+          if (meta) {
+            const room = getGameRoom(meta.roomId);
+            if (room) {
+              if (meta.seat) {
+                vacateSeat(room, meta.seat, meta.connId);
+              } else {
+                room.spectators.delete(meta.connId);
+              }
+              updateHost(room);
+              broadcastRoomState(room);
             }
-            updateHost(room);
-            broadcastRoomState(room);
+            removeSocketFromRoom(meta.roomId, socket);
+            socketMeta.delete(socket);
           }
-          removeSocketFromRoom(meta.roomId, socket);
-          socketMeta.delete(socket);
+          sendMessage(socket, { type: "leftRoom", roomId });
           break;
         }
         case "setReady": {

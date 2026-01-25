@@ -50,6 +50,7 @@ interface GameStore {
   actionMode: ActionMode;
   placeUnitId: string | null;
   moveOptions: { unitId: string; roll?: number | null; legalTo: Coord[] } | null;
+  leavingRoom: boolean;
   connect: () => Promise<WebSocket>;
   fetchRooms: () => Promise<void>;
   joinRoom: (params: {
@@ -83,6 +84,34 @@ interface GameStore {
   resetGameState: () => void;
 }
 
+function buildLeaveResetState(state: GameStore, message?: string): Partial<GameStore> {
+  const clientLog = message
+    ? [...state.clientLog, message].slice(-50)
+    : state.clientLog;
+  return {
+    joined: false,
+    roomId: null,
+    role: null,
+    seat: null,
+    isHost: false,
+    roomMeta: defaultRoomMeta,
+    joinError: null,
+    roomState: null,
+    hasSnapshot: false,
+    hoveredAbilityId: null,
+    events: [],
+    clientLog,
+    lastLogIndex: -1,
+    lastActionResult: null,
+    lastActionResultAt: 0,
+    selectedUnitId: null,
+    actionMode: null,
+    placeUnitId: null,
+    moveOptions: null,
+    leavingRoom: false,
+  };
+}
+
 let socket: WebSocket | null = null;
 let connectPromise: Promise<WebSocket> | null = null;
 
@@ -105,6 +134,7 @@ function handleServerMessage(
         seat: msg.seat ?? null,
         isHost: msg.isHost,
         joinError: null,
+        leavingRoom: false,
       }));
       return;
     }
@@ -119,7 +149,19 @@ function handleServerMessage(
         joinError: msg.message,
         roomState: null,
         hasSnapshot: false,
+        leavingRoom: false,
       }));
+      return;
+    }
+    case "leftRoom": {
+      const { fetchRooms, addClientLog } = get();
+      set((state) => ({
+        ...buildLeaveResetState(state),
+        connectionStatus: state.connectionStatus,
+      }));
+      fetchRooms().catch((err) => {
+        addClientLog(err instanceof Error ? err.message : "Failed to refresh rooms");
+      });
       return;
     }
     case "roomState": {
@@ -240,17 +282,12 @@ function openSocket(set: (fn: (state: GameStore) => Partial<GameStore>) => void,
       socket.onclose = () => {
         connectPromise = null;
         socket = null;
-        set(() => ({
+        set((state) => ({
+          ...buildLeaveResetState(
+            state,
+            state.joined ? "Disconnected" : undefined
+          ),
           connectionStatus: "disconnected",
-          joined: false,
-          roomId: null,
-          role: null,
-          seat: null,
-          isHost: false,
-          roomMeta: defaultRoomMeta,
-          roomState: null,
-          hasSnapshot: false,
-          hoveredAbilityId: null,
         }));
       };
 
@@ -287,6 +324,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   actionMode: null,
   placeUnitId: null,
   moveOptions: null,
+  leavingRoom: false,
   connect: async () => openSocket(set, get),
   fetchRooms: async () => {
     const rooms = await listRooms();
@@ -298,30 +336,17 @@ export const useGameStore = create<GameStore>((set, get) => ({
     sendJoinRoom(ws, params);
   },
   leaveRoom: () => {
-    if (socket && socket.readyState === WebSocket.OPEN) {
-      sendLeaveRoom(socket);
+    const state = get();
+    if (state.leavingRoom) return;
+    if (!socket || socket.readyState !== WebSocket.OPEN) {
+      set((current) => ({
+        ...buildLeaveResetState(current, "Disconnected"),
+        connectionStatus: "disconnected",
+      }));
+      return;
     }
-    set((state) => ({
-      joined: false,
-      roomId: null,
-      role: null,
-      seat: null,
-      isHost: false,
-      roomMeta: defaultRoomMeta,
-      joinError: null,
-      roomState: null,
-      hasSnapshot: false,
-      hoveredAbilityId: null,
-      events: [],
-      clientLog: state.clientLog,
-      lastLogIndex: -1,
-      lastActionResult: null,
-      lastActionResultAt: 0,
-      selectedUnitId: null,
-      actionMode: null,
-      placeUnitId: null,
-      moveOptions: null,
-    }));
+    set(() => ({ leavingRoom: true }));
+    sendLeaveRoom(socket);
   },
   setReady: (ready) => {
     const state = get();
@@ -469,6 +494,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       actionMode: null,
       placeUnitId: null,
       moveOptions: null,
+      leavingRoom: false,
     })),
 }));
 
