@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useGameStore } from "../store";
 import type { PlayerRole } from "../ws";
+import { RulesModal } from "./RulesModal";
 
 interface LobbyProps {
   onOpenFigures?: () => void;
@@ -20,6 +21,7 @@ export function Lobby({ onOpenFigures }: LobbyProps) {
   const [name, setName] = useState("");
   const [localError, setLocalError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [showRules, setShowRules] = useState(false);
   const [pendingJoinRoom, setPendingJoinRoom] = useState<{
     id: string;
     players: { P1: boolean; P2: boolean };
@@ -92,14 +94,22 @@ export function Lobby({ onOpenFigures }: LobbyProps) {
                 WebSocket: {connectionStatus}
               </div>
             </div>
-            {onOpenFigures && (
+            <div className="flex flex-wrap items-center gap-2">
+              {onOpenFigures && (
+                <button
+                  className="rounded bg-slate-900 px-4 py-2 text-xs font-semibold text-white"
+                  onClick={onOpenFigures}
+                >
+                  Figure Set
+                </button>
+              )}
               <button
-                className="rounded bg-slate-900 px-4 py-2 text-xs font-semibold text-white"
-                onClick={onOpenFigures}
+                className="rounded bg-slate-200 px-4 py-2 text-xs font-semibold text-slate-700"
+                onClick={() => setShowRules(true)}
               >
-                Figure Set
+                Rules
               </button>
-            )}
+            </div>
           </div>
         </div>
 
@@ -298,6 +308,7 @@ export function Lobby({ onOpenFigures }: LobbyProps) {
             </div>
           </div>
         )}
+        <RulesModal open={showRules} onClose={() => setShowRules(false)} />
       </div>
     </div>
   );
