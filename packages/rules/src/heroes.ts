@@ -1,5 +1,6 @@
 import { UnitClass } from "./model";
 
+//AloneEmpty
 export const HERO_GRAND_KAISER_ID = "grand-kaiser" as const;
 export const HERO_VLAD_TEPES_ID = "vladTepes" as const;
 export const HERO_GENGHIS_KHAN_ID = "genghisKhan" as const;
@@ -7,6 +8,34 @@ export const HERO_СHIKATILO_ID = "chikatilo" as const;
 export const HERO_GROZNY_ID = "grozny" as const;
 export const HERO_EL_CID_COMPEADOR_ID = "elCidCompeador" as const;
 export const HERO_LECHY_ID = "lechy" as const;
+
+//Nik
+export const HERO_GRIFFITH_ID = "griffith" as const;
+export const HERO_GUTS_ID = "guts" as const;
+export const HERO_ODIN_ID = "odin" as const;
+export const HERO_LOKI_ID = "loki" as const;
+export const HERO_JEBE_ID = "jebe" as const;
+export const HERO_HASSAN_ID = "hassan" as const;
+export const HERO_KALADIN_ID = "kaladin" as const;
+
+//Altein
+export const HERO_FRISK_ID = "frisk" as const;
+export const HERO_SANS_ID = "sans" as const;
+export const HERO_ASGORE_ID = "asgore" as const;
+export const HERO_UNDYNE_ID = "undyne" as const;
+export const HERO_PAPYRUS_ID = "papyrus" as const;
+export const HERO_METTATON_ID = "mettaton" as const;
+export const HERO_RIVER_PERSON_ID = "riverPerson" as const;
+
+//Shynkx
+export const HERO_DUOLINGO_ID = "duolingo" as const;
+export const HERO_LUCHE_ID = "luche" as const;
+export const HERO_KANEKI_ID = "kaneki" as const;
+export const HERO_ZORO_ID = "zoro" as const;
+export const HERO_DON_KIHOTE_ID = "donKihote" as const;
+export const HERO_JACK_RIPPER_ID = "jackRipper" as const;
+export const HERO_ARTEMIDA_ID = "artemida" as const;
+
 
 export interface HeroDefinition {
   id: string;
@@ -24,6 +53,112 @@ export const HERO_CATALOG: HeroDefinition[] = [
     name: "Grand Kaiser",
     mainClass: "archer",
   },
+  {
+    id: HERO_GRIFFITH_ID,
+    name: "Griffith",
+    mainClass: "knight",
+  },
+  {
+    id: HERO_GUTS_ID,
+    name: "Guts",
+    mainClass: "berserker",
+  },
+  {
+    id: HERO_ODIN_ID,
+    name: "Odin",
+    mainClass: "rider",
+  },
+  {
+    id: HERO_LOKI_ID,
+    name: "Loki",
+    mainClass: "trickster",
+  },
+  {
+    id: HERO_JEBE_ID,
+    name: "Jebe",
+    mainClass: "archer",
+  },
+  {
+    id: HERO_HASSAN_ID,
+    name: "Hassan-i Sabbah",
+    mainClass: "assassin",
+  },
+  {
+    id: HERO_KALADIN_ID,
+    name: "Kaladin Stormblessed",
+    mainClass: "spearman",
+  },
+  {
+    id: HERO_LUCHE_ID,
+    name: "Luche",
+    mainClass: "spearman",
+  },
+  {
+    id: HERO_KANEKI_ID,
+    name: "Kaneki",
+    mainClass: "berserker",
+  },
+  {
+    id: HERO_ZORO_ID,
+    name: "Zoro",
+    mainClass: "knight",
+  },
+  {
+    id: HERO_DON_KIHOTE_ID,
+    name: "Don Quixote",
+    mainClass: "rider",
+  },
+  {
+    id: HERO_JACK_RIPPER_ID,
+    name: "Jack the Ripper",
+    mainClass: "assassin",
+  },
+  {
+    id: HERO_ARTEMIDA_ID,
+    name: "Artemida",
+    mainClass: "archer",
+  },
+  {
+    id: HERO_FRISK_ID,
+    name: "Frisk",
+    mainClass: "assassin",
+  },
+  {
+    id: HERO_SANS_ID,
+    name: "Sans",
+    mainClass: "trickster",
+  },
+  {
+    id: HERO_ASGORE_ID,
+    name: "Asgore Dreemurr",
+    mainClass: "knight",
+  },
+  {
+    id: HERO_UNDYNE_ID,
+    name: "Undyne",
+    mainClass: "berserker",
+  },
+  {
+    id: HERO_PAPYRUS_ID,
+    name: "Papyrus",
+    mainClass: "spearman",
+  },
+  {
+    id: HERO_METTATON_ID,
+    name: "Mettaton",
+    mainClass: "archer",
+  },
+  {
+    id: HERO_RIVER_PERSON_ID,
+    name: "River Person",
+    mainClass: "rider",
+  },
+  {
+    id: HERO_DUOLINGO_ID,
+    name: "Duolingo",
+    mainClass: "trickster",
+  },
+  
   {
     id: HERO_СHIKATILO_ID,
     name: "Andrei Chikatilo",
