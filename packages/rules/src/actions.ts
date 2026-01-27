@@ -1250,12 +1250,14 @@ export function createDefaultArmy(
     const def = getUnitDefinition(cls);
     const id = `${player}-${cls}-${index + 1}`;
     const selectedHero = selection?.[cls];
+    const figureId = selectedHero ?? undefined;
     const heroId = heroMatchesClass(selectedHero, cls) ? selectedHero : undefined;
 
     let unit: UnitState = {
       id,
       owner: player,
       class: def.class,
+      figureId,
       heroId,
       hp: def.maxHp,
       attack: def.baseAttack,

@@ -9,7 +9,7 @@ import {
   UnitState,
 } from "./model";
 import { RNG } from "./rng";
-import { HERO_GRAND_KAISER_ID, HERO_VLAD_TEPES_ID } from "./heroes";
+import { HERO_GRAND_KAISER_ID, HERO_VLAD_TEPES_ID, HERO_GENGHIS_KHAN_ID, HERO_EL_CID_COMPEADOR_ID, HERO_GROZNY_ID, HERO_LECHY_ID, HERO_СHIKATILO_ID } from "./heroes";
 
 /**
  * Стоимость способности с точки зрения экономики хода.
@@ -69,6 +69,19 @@ export const ABILITY_VLAD_POLKOVODETS = "vladPolkovodets" as const;
 export const ABILITY_VLAD_INTIMIDATE = "vladIntimidate" as const;
 export const ABILITY_VLAD_STAKES = "vladStakes" as const;
 export const ABILITY_VLAD_FOREST = "vladForest" as const;
+export const ABILITY_GENGHIS_KHAN_LEGEND_OF_THE_STEPPES = "genghisKhanLegendOfTheSteppes" as const;
+export const ABILITY_GENGHIS_KHAN_KHANS_DECREE = "genghisKhanKhansDecree" as const;
+export const ABILITY_GENGHIS_KHAN_MONGOL_CHARGE = "genghisKhanMongolCharge" as const;
+export const ABILITY_GROZNY_INVADE_TIME = "groznyInvadeTime" as const;
+export const ABILITY_GROZNY_TYRANT = "groznyTyrant" as const;
+export const ABILITY_СHIKATILO_MARK = "chikatiloMark" as const;
+export const ABILITY_CHIKATILO_FALSE_TRACE = "chikatiloFalseTrace" as const;
+export const ABILITY_EL_SID_COMPEADOR_TISONA = "elCidCompeadorTisona" as const;
+export const ABILITY_EL_SID_COMPEADOR_KOLADA = "elCidCompeadorKolada" as const;
+export const ABILITY_EL_SID_COMPEADOR_DEMON_DUELIST = "elCidCompeadorDemonDuelist" as const;
+export const ABILITY_LECHY_GUIDE_THE_TRAVELER = "lechyGuideTheTraveler" as const;
+export const ABILITY_LECHY_CONFUSE_THE_TERRAIN = "lechyConfuseTheTerrain" as const;
+export const ABILITY_LECHY_STORM = "lechyStorm" as const;
 export const TRICKSTER_AOE_RADIUS = 2;
 
 /**
@@ -89,6 +102,127 @@ const ABILITY_SPECS: Record<string, AbilitySpec> = {
     startsCharged: true,
     isSpecialCounter: false,
   },
+  [ABILITY_LECHY_STORM]: {
+    id: ABILITY_LECHY_STORM,
+    displayName: "Storm",
+    kind: "phantasm",
+    description: "On 1d6+1 you change the arena to the Storm, everyone who is on the forest marker and the Leshy himself are not affected by the card's effects.",
+    maxCharges: 5,
+    chargesPerUse: 5,
+    actionCost: {
+      consumes: { action: true },
+    },
+  },
+  [ABILITY_LECHY_CONFUSE_THE_TERRAIN]: {
+    id: ABILITY_LECHY_CONFUSE_THE_TERRAIN,
+    displayName: "Confuse the Terrain",
+    kind: "impulse",
+    description: "You change the terrain around you, confusing everyone in your path. Place a forest marker on the square you're standing on. The aura of this area is within the reach of the trickster's attack. Anyone who wants to leave this area must roll a d6 (5-6), otherwise they can only move within the area captured by the marker's aura. This also affects creatures passing by the aura; if they fail, they can stop anywhere in their movement path. Only one forest marker can be on the map at a time.",
+    maxCharges: 3,
+    chargesPerUse: 3,
+  },  
+  [ABILITY_LECHY_GUIDE_THE_TRAVELER]: {
+    id: ABILITY_LECHY_GUIDE_THE_TRAVELER,
+    displayName: "Guide the Traveler",
+    kind: "active",
+    description: "Choose an ally within the attack range of the trickster, you can move with him, he in turn appears in any cell within the attack range of the trickster at the final point of the movement.",
+    maxCharges: 2,
+    chargesPerUse: 2,
+    actionCost: {
+      consumes: { move: true },
+    },
+  },
+  [ABILITY_EL_SID_COMPEADOR_DEMON_DUELIST]: {
+    id: ABILITY_EL_SID_COMPEADOR_DEMON_DUELIST,
+    displayName: "Demon Duelist",
+    kind: "phantasm",
+    description: "You select an enemy hero within your attack range and challenge him to a duel, you can attack as long as your attacks are successful, if the attack fails, you can pay 1 hp and continue the duel.",
+    maxCharges: 5,
+    chargesPerUse: 5,
+    actionCost: {
+      consumes: { action: true },
+    },
+  },
+  [ABILITY_EL_SID_COMPEADOR_KOLADA]: {
+    id: ABILITY_EL_SID_COMPEADOR_KOLADA,
+    displayName: "Kolada",
+    kind: "impulse",
+    description: "At the start of your turn, your Barbarian Sword charges into battle, making one attack against everyone within 1 square of you.",
+    maxCharges: 3,
+    chargesPerUse: 3,
+  },
+  [ABILITY_EL_SID_COMPEADOR_TISONA]: {
+    id: ABILITY_EL_SID_COMPEADOR_TISONA,
+    displayName: "Tisona",
+    kind: "active",
+    description: "You can attack everyone in any straight line except diagonals.",
+    maxCharges: 2,
+    chargesPerUse: 2,
+    actionCost: {
+      consumes: { action: true },
+    },
+  },
+  [ABILITY_CHIKATILO_FALSE_TRACE]: {
+    id: ABILITY_CHIKATILO_FALSE_TRACE,
+    displayName: "False Trace",
+    kind: "phantasm",
+    description: "At the start of combat, place the False Trail Token in his place. Chikatilo can be placed on any square at the start of combat in stealth status. While stealthed, he is not subject to the three-turn stealth rule. If his invisibility is revealed, the False Trail Token automatically activates its ability. If the False Trail Token dies, Andrei Chikatilo is revealed. He cannot remain stealthed unless there are no more pieces left on the board.",
+  },
+  [ABILITY_СHIKATILO_MARK]: {
+    id: ABILITY_СHIKATILO_MARK,
+    displayName: "Killer Mark",
+    kind: "passive",
+    description: "Without revealing his invisibility, Andrei Chikatilo can apply the Killer's Mark to a creature within two squares. Chikatilo gains information about the location of hidden targets at the start of his turn. If Andrei Chikatilo hits this creature, he gains +1 damage to that attack. The Killer's Mark does not stack, but can be applied to multiple heroes.",
+    actionCost: {
+      consumes: { action: true },
+    },
+  },
+  [ABILITY_GROZNY_INVADE_TIME]: {
+    id: ABILITY_GROZNY_INVADE_TIME,
+    displayName: "Invade Time",
+    kind: "active",
+    description: "Move to any free cell of the field.",
+    maxCharges: 3,
+    chargesPerUse: 3,
+    actionCost: {
+      consumes: { move: true },
+    },
+  },
+  [ABILITY_GROZNY_TYRANT]: {
+    id: ABILITY_GROZNY_TYRANT,
+    displayName: "Tyrant",
+    kind: "impulse",
+    description: "If Ivan the Terrible has a weak ally within two squares of him that he can finish off with his BASE DAMAGE, he moves to them (as if he rolled a 6, but without spending any movement) and attempts to finish them off. If he succeeds in finishing them off, he gains +1 damage and regains HP equal to the damage dealt. Starting with the second ally, he gains the movement of all his finished off allies.",
+  },
+  [ABILITY_GENGHIS_KHAN_MONGOL_CHARGE]: {
+    id: ABILITY_GENGHIS_KHAN_MONGOL_CHARGE,
+    displayName: "Mongol Charge",
+    kind: "phantasm",
+    maxCharges: 4,
+    chargesPerUse: 4,
+    description: "You move in any forward direction(including diagonally). All allies hit by you within the same cell can attack, if they can. The Commander ability works on all allies hit by this ability.",
+    actionCost: {
+      consumes: { action: true},
+    },
+  },
+  [ABILITY_GENGHIS_KHAN_LEGEND_OF_THE_STEPPES]: {
+    id: ABILITY_GENGHIS_KHAN_LEGEND_OF_THE_STEPPES,
+    displayName: "Legend of the Steppes",
+    kind: "passive",
+    description: "+1 damage against units that attacked last turn.",
+  },
+  [ABILITY_GENGHIS_KHAN_KHANS_DECREE]: {
+    id: ABILITY_GENGHIS_KHAN_KHANS_DECREE,
+    displayName: "Khan's Decree",
+    kind: "active",
+    description: "In this turn you can move diagonally. Move this unit.",
+    maxCharges: 2,
+    chargesPerUse: 2,
+    actionCost:{
+      consumes: { move: true },
+    },
+  },
+
   [ABILITY_TRICKSTER_AOE]: {
     id: ABILITY_TRICKSTER_AOE,
     displayName: "Trickster AoE",
@@ -111,13 +245,13 @@ const ABILITY_SPECS: Record<string, AbilitySpec> = {
     id: ABILITY_KAISER_BUNKER,
     displayName: "Bunker",
     kind: "passive",
-    description: "Enter on 4-6. Damage capped to 1 for 3 own turns.",
+    description: "Instead of stealth, you have the ability to enter a bunker (4-6), your location is visible, but any hit on you will only deal 1 damage.",
   },
   [ABILITY_KAISER_DORA]: {
     id: ABILITY_KAISER_DORA,
     displayName: "Dora",
     kind: "active",
-    description: "3x3 bombardment on archer line.",
+    description: "Without leaving the bunker, you can attack, select a 3x3 area, the center of this area should be on the line of your possible attack, attack everyone in this area.",
     maxCharges: 2,
     chargesPerUse: 2,
     actionCost: {
@@ -128,7 +262,7 @@ const ABILITY_SPECS: Record<string, AbilitySpec> = {
     id: ABILITY_KAISER_CARPET_STRIKE,
     displayName: "Carpet Strike",
     kind: "impulse",
-    description: "Impulse 5x5 strike: roll center and attack. Hits all sides.",
+    description: "It's time to kill all enemies of the Reich. Roll 2d9 - the result is the center of a 5x5 area. Attack everyone in that area. Carpet Bombing doesn't hit Kaiser if he's in the Bunker. The ability always deals 1 damage.",
     maxCharges: 3,
     chargesPerUse: 3,
   },
@@ -136,21 +270,21 @@ const ABILITY_SPECS: Record<string, AbilitySpec> = {
     id: ABILITY_KAISER_ENGINEERING_MIRACLE,
     displayName: "Engineering Miracle",
     kind: "impulse",
-    description: "Auto transform. Gain rider + berserker movement, attack 2.",
+    description: "You're showing by example what Nazi cyborgs are like. You gain the multi-class of rider and berserker, and the Dora bitch doesn't require more charges. However, you lose the ability to enter stealth and bunkers, and carpet bombings won't affect you in this state.",
     chargeUnlimited: true,
     triggerCharges: 5,
   },
   [ABILITY_VLAD_POLKOVODETS]: {
     id: ABILITY_VLAD_POLKOVODETS,
-    displayName: "Polkovodets",
+    displayName: "Commander",
     kind: "passive",
-    description: "+1 damage to adjacent allies (not self).",
+    description: "Allies within one cell of this figure receive +1 damage (does not work on the figure itself, does not stack, for riders, to receive the damage buff you must either start moving or end in the commander's aura).",
   },
   [ABILITY_VLAD_INTIMIDATE]: {
     id: ABILITY_VLAD_INTIMIDATE,
     displayName: "Intimidating Stare",
     kind: "passive",
-    description: "After a miss vs Vlad, can push attacker 1 cell.",
+    description: "If you defend successfully, you can force the attacker to move one unoccupied square.",
   },
   [ABILITY_VLAD_STAKES]: {
     id: ABILITY_VLAD_STAKES,
@@ -434,6 +568,41 @@ export function getAbilityViewsForUnit(
       ABILITY_VLAD_INTIMIDATE,
       ABILITY_VLAD_STAKES,
       ABILITY_VLAD_FOREST
+    );
+  }
+  if (unit.heroId === HERO_GENGHIS_KHAN_ID) {
+    abilityIds.push(
+      ABILITY_GENGHIS_KHAN_LEGEND_OF_THE_STEPPES,
+      ABILITY_VLAD_POLKOVODETS,
+      ABILITY_GENGHIS_KHAN_KHANS_DECREE,
+      ABILITY_GENGHIS_KHAN_MONGOL_CHARGE
+    );
+  }
+  if (unit.heroId === HERO_EL_CID_COMPEADOR_ID) {
+    abilityIds.push(
+      ABILITY_VLAD_POLKOVODETS,
+      ABILITY_EL_SID_COMPEADOR_TISONA,
+      ABILITY_EL_SID_COMPEADOR_KOLADA,
+      ABILITY_EL_SID_COMPEADOR_DEMON_DUELIST
+    );
+  }
+  if (unit.heroId === HERO_СHIKATILO_ID) {
+    abilityIds.push(
+      ABILITY_СHIKATILO_MARK, 
+      ABILITY_CHIKATILO_FALSE_TRACE);
+  }
+  if (unit.heroId === HERO_GROZNY_ID) {
+    abilityIds.push(
+      ABILITY_GROZNY_INVADE_TIME,
+      ABILITY_GROZNY_TYRANT,
+      ABILITY_VLAD_POLKOVODETS
+    );
+  }
+  if (unit.heroId === HERO_LECHY_ID) {
+    abilityIds.push(
+      ABILITY_LECHY_GUIDE_THE_TRAVELER,
+      ABILITY_LECHY_CONFUSE_THE_TERRAIN,
+      ABILITY_LECHY_STORM
     );
   }
 

@@ -2,6 +2,7 @@ import type { Coord, PlayerId, PlayerView } from "rules";
 import { TRICKSTER_AOE_ID, TRICKSTER_AOE_RADIUS, getMaxHp } from "../rulesHints";
 import { useEffect, useRef, useState, type FC } from "react";
 import { HpBar } from "./HpBar";
+import { getTokenSrc } from "../assets/registry";
 
 const MIN_CELL_SIZE = 32;
 const MAX_CELL_SIZE = 96;
@@ -138,9 +139,12 @@ export const Board: FC<BoardProps> = ({
   const pieceFontSize = Math.max(10, Math.round(cellSize * 0.24));
   const markerFontSize = Math.max(8, Math.round(cellSize * 0.18));
   const badgeSize = Math.round(cellSize * 0.7);
+  const tokenInset = Math.max(2, Math.round(cellSize * 0.08));
+  const tokenSize = Math.max(16, cellSize - tokenInset * 2);
   const lastKnownSize = Math.round(cellSize * 0.7);
   const hpBarWidth = Math.round(cellSize * 0.7);
   const highlightInset = Math.max(2, Math.round(cellSize * 0.08));
+  const missingTokenSrc = getTokenSrc("_missing");
   const toViewCoord = (coord: Coord): Coord =>
     isFlipped
       ? { col: maxIndex - coord.col, row: maxIndex - coord.row }
@@ -312,6 +316,10 @@ export const Board: FC<BoardProps> = ({
         const isFriendly = playerId ? unit.owner === playerId : false;
         const isHiddenEnemy = !isFriendly && unit.isStealthed;
         const marker = getClassMarker(unit.class);
+        const unitView = view.units[unit.id];
+        const tokenId = unitView?.figureId ?? unitView?.heroId ?? unit.class;
+        const tokenSrc = getTokenSrc(tokenId);
+        const isTokenMissing = tokenSrc === missingTokenSrc;
 
         const badgeClasses = [
           "relative",
@@ -325,7 +333,15 @@ export const Board: FC<BoardProps> = ({
           isFriendly ? "bg-emerald-500 text-white" : "bg-rose-500 text-white",
         ].join(" ");
 
-        content = (
+        const tokenClasses = [
+          "relative",
+          "flex",
+          "items-center",
+          "justify-center",
+          isDoraPreview ? "ring-2 ring-amber-400" : "",
+        ].join(" ");
+
+        content = isHiddenEnemy ? (
           <div
             className={badgeClasses}
             style={{
@@ -334,8 +350,31 @@ export const Board: FC<BoardProps> = ({
               fontSize: pieceFontSize,
             }}
           >
-            {isHiddenEnemy ? "?" : getUnitLabel(unit.class)}
-            {!isHiddenEnemy && marker && (
+            ?
+          </div>
+        ) : (
+          <div
+            className={tokenClasses}
+            style={{
+              width: tokenSize,
+              height: tokenSize,
+            }}
+          >
+            <img
+              src={tokenSrc}
+              alt={`${tokenId} token`}
+              className="h-full w-full rounded-md bg-white/80 object-contain shadow ring-1 ring-slate-200"
+              draggable={false}
+            />
+            {isTokenMissing && (
+              <span
+                className="absolute inset-0 flex items-center justify-center font-semibold text-slate-700"
+                style={{ fontSize: pieceFontSize }}
+              >
+                {getUnitLabel(unit.class)}
+              </span>
+            )}
+            {marker && (
               <span
                 className="absolute -right-1 -top-1 rounded-full bg-white px-1 font-bold text-slate-700 shadow"
                 style={{ fontSize: markerFontSize }}

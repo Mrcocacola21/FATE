@@ -2,6 +2,11 @@ import { UnitClass } from "./model";
 
 export const HERO_GRAND_KAISER_ID = "grand-kaiser" as const;
 export const HERO_VLAD_TEPES_ID = "vladTepes" as const;
+export const HERO_GENGHIS_KHAN_ID = "genghisKhan" as const;
+export const HERO_СHIKATILO_ID = "chikatilo" as const;
+export const HERO_GROZNY_ID = "grozny" as const;
+export const HERO_EL_CID_COMPEADOR_ID = "elCidCompeador" as const;
+export const HERO_LECHY_ID = "lechy" as const;
 
 export interface HeroDefinition {
   id: string;
@@ -20,9 +25,39 @@ export const HERO_CATALOG: HeroDefinition[] = [
     mainClass: "archer",
   },
   {
+    id: HERO_СHIKATILO_ID,
+    name: "Andrei Chikatilo",
+    mainClass: "assassin",
+    baseHpOverride: 5,
+  },
+  {
+    id: HERO_GROZNY_ID,
+    name: "Ivan Grozny",
+    mainClass: "berserker",
+    baseHpOverride: 11,
+  },
+  {
+    id: HERO_EL_CID_COMPEADOR_ID,
+    name: "El Cid Compeador",
+    mainClass: "knight",
+    baseHpOverride: 8,
+  },
+  {
+    id: HERO_LECHY_ID,
+    name: "Lechy",
+    mainClass: "trickster",
+    baseHpOverride: 7,
+  },
+  {
     id: HERO_VLAD_TEPES_ID,
     name: "Vlad III Tepes",
     mainClass: "spearman",
+    baseHpOverride: 7,
+  },
+  {
+    id: HERO_GENGHIS_KHAN_ID,
+    name: "Genghis Khan",
+    mainClass: "rider",
     baseHpOverride: 7,
   },
 ];

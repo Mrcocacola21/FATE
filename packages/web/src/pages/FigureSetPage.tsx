@@ -15,6 +15,7 @@ import {
 } from "../figures/storage";
 import { useHeroes } from "../figures/useHeroes";
 import type { AbilityMeta } from "rules";
+import { getFigureArtSrc } from "../assets/registry";
 
 interface FigureSetPageProps {
   onBack?: () => void;
@@ -122,6 +123,9 @@ export function FigureSetPage({ onBack }: FigureSetPageProps) {
     const heroId = state.selection[detailsSlot];
     return heroMetaById.get(heroId) ?? null;
   }, [detailsSlot, heroMetaById, state.selection]);
+
+  const detailsFigureId = detailsSlot ? state.selection[detailsSlot] : null;
+  const detailsArtSrc = getFigureArtSrc(detailsFigureId ?? "");
 
   const abilityGroups = useMemo(() => {
     const groups: Array<{ type: AbilityMeta["type"]; label: string }> = [
@@ -329,6 +333,23 @@ export function FigureSetPage({ onBack }: FigureSetPageProps) {
               {heroesError && (
                 <div className="mt-3 text-xs text-rose-600">{heroesError}</div>
               )}
+              {!heroesLoading && detailsSlot && (
+                <div className="mt-3 space-y-2 text-xs text-slate-700">
+                  <div className="text-[10px] uppercase text-slate-400">
+                    Full art
+                  </div>
+                  <div
+                    className="overflow-hidden rounded border border-slate-200 bg-slate-100"
+                    style={{ aspectRatio: "2 / 3" }}
+                  >
+                    <img
+                      src={detailsArtSrc}
+                      alt={`${detailsHero?.name ?? "Selected hero"} full art`}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                </div>
+              )}
               {!heroesLoading && !detailsSlot && (
                 <div className="mt-3 text-xs text-slate-500">
                   Select a hero to see details.
@@ -340,7 +361,7 @@ export function FigureSetPage({ onBack }: FigureSetPageProps) {
                 </div>
               )}
               {!heroesLoading && detailsSlot && detailsHero && (
-                <div className="mt-3 space-y-4 text-xs text-slate-700">
+                <div className="mt-4 space-y-4 text-xs text-slate-700">
                   <div>
                     <div className="text-sm font-semibold">{detailsHero.name}</div>
                     <div className="text-[10px] uppercase text-slate-400">

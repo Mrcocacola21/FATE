@@ -74,6 +74,7 @@ export interface UnitState {
   id: string;
   owner: PlayerId;
   class: UnitClass;
+  figureId?: string;
   heroId?: string;
   hp: number;
   attack: number;

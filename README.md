@@ -51,6 +51,25 @@ The frontend reads these at build time. In production builds they are required a
 
 Local defaults are provided in `.env.example`.
 
+## Assets (Figure Arts + Tokens)
+
+Recommended formats:
+- WEBP preferred (best size/quality).
+- PNG allowed (if transparency is needed).
+- Token transparency: use WEBP/PNG with alpha.
+
+Suggested sizes:
+- Full art: 1024x1536 (2:3) or 1200x1800.
+- Token: 256x256 or 512x512 square.
+
+File naming rules (must match `figureId`):
+- `packages/web/src/assets/figures/<figureId>.webp`
+- `packages/web/src/assets/tokens/<figureId>.webp`
+
+Tips:
+- Try to keep full art under ~300-600 KB if possible.
+- Assets under `src/assets` are bundled by Vite; if we need user uploads later, move them to `/public` or external storage.
+
 ## Server API
 
 - `GET /` - basic server info

@@ -9,11 +9,29 @@ import {
   ABILITY_VLAD_INTIMIDATE,
   ABILITY_VLAD_POLKOVODETS,
   ABILITY_VLAD_STAKES,
+  ABILITY_EL_SID_COMPEADOR_DEMON_DUELIST,
+  ABILITY_EL_SID_COMPEADOR_KOLADA,
+  ABILITY_EL_SID_COMPEADOR_TISONA,
+  ABILITY_GROZNY_INVADE_TIME,
+  ABILITY_GROZNY_TYRANT,
+  ABILITY_GENGHIS_KHAN_KHANS_DECREE,
+  ABILITY_GENGHIS_KHAN_MONGOL_CHARGE,
+  ABILITY_GENGHIS_KHAN_LEGEND_OF_THE_STEPPES,
+  ABILITY_LECHY_STORM,
+  ABILITY_LECHY_CONFUSE_THE_TERRAIN,
+  ABILITY_LECHY_GUIDE_THE_TRAVELER,
+  ABILITY_СHIKATILO_MARK,
   getAbilitySpec,
+  ABILITY_CHIKATILO_FALSE_TRACE,
 } from "./abilities";
 import {
   HERO_GRAND_KAISER_ID,
   HERO_VLAD_TEPES_ID,
+  HERO_GENGHIS_KHAN_ID,
+  HERO_СHIKATILO_ID,
+  HERO_GROZNY_ID,
+  HERO_EL_CID_COMPEADOR_ID,
+  HERO_LECHY_ID,
   getHeroDefinition,
 } from "./heroes";
 
@@ -112,6 +130,73 @@ const HERO_REGISTRY_LIST: HeroMeta[] = [
       ABILITY_KAISER_DORA,
       ABILITY_KAISER_CARPET_STRIKE,
       ABILITY_KAISER_ENGINEERING_MIRACLE,
+    ]
+      .map(buildAbilityMeta)
+      .filter((item): item is AbilityMeta => item !== null),
+  },
+  { 
+    id: HERO_GENGHIS_KHAN_ID,
+    name: "Genghis Khan",
+    mainClass: "rider",
+    baseStats: buildBaseStats("rider", HERO_GENGHIS_KHAN_ID),
+    abilities: [
+      ABILITY_GENGHIS_KHAN_KHANS_DECREE,
+      ABILITY_GENGHIS_KHAN_MONGOL_CHARGE,
+      ABILITY_VLAD_POLKOVODETS,
+      ABILITY_GENGHIS_KHAN_LEGEND_OF_THE_STEPPES,
+      
+    ]
+      .map(buildAbilityMeta)
+      .filter((item): item is AbilityMeta => item !== null),
+  },
+  {
+    id: HERO_СHIKATILO_ID,
+    name: "Andrei Chikatilo",
+    mainClass: "assassin",
+    baseStats: buildBaseStats("assassin", HERO_СHIKATILO_ID),
+    abilities: [
+      ABILITY_СHIKATILO_MARK,
+      ABILITY_CHIKATILO_FALSE_TRACE,
+    ]
+      .map(buildAbilityMeta)
+      .filter((item): item is AbilityMeta => item !== null),
+  },
+  {
+    id: HERO_GROZNY_ID,
+    name: "Ivan Grozny",
+    mainClass: "berserker",
+    baseStats: buildBaseStats("berserker", HERO_GROZNY_ID),
+    abilities: [
+      ABILITY_GROZNY_INVADE_TIME,
+      ABILITY_VLAD_POLKOVODETS,
+      ABILITY_GROZNY_TYRANT,
+    ]
+      .map(buildAbilityMeta)
+      .filter((item): item is AbilityMeta => item !== null),
+  },
+  {
+    id: HERO_EL_CID_COMPEADOR_ID,
+    name: "El Cid Compeador",
+    mainClass: "knight",
+    baseStats: buildBaseStats("knight", HERO_EL_CID_COMPEADOR_ID),
+    abilities: [
+      ABILITY_EL_SID_COMPEADOR_TISONA,
+      ABILITY_VLAD_POLKOVODETS,
+      ABILITY_EL_SID_COMPEADOR_KOLADA,
+      ABILITY_EL_SID_COMPEADOR_DEMON_DUELIST,
+    ]
+      .map(buildAbilityMeta)
+      .filter((item): item is AbilityMeta => item !== null),
+  },
+  {
+    id: HERO_LECHY_ID,
+    name: "Lechy",
+    mainClass: "trickster",
+    baseStats: buildBaseStats("trickster", HERO_LECHY_ID),
+    abilities: [
+      ABILITY_LECHY_STORM,
+      ABILITY_LECHY_CONFUSE_THE_TERRAIN,
+      ABILITY_LECHY_GUIDE_THE_TRAVELER,
     ]
       .map(buildAbilityMeta)
       .filter((item): item is AbilityMeta => item !== null),
