@@ -9,7 +9,36 @@ import {
   UnitState,
 } from "./model";
 import { RNG } from "./rng";
-import { HERO_GRAND_KAISER_ID, HERO_VLAD_TEPES_ID, HERO_GENGHIS_KHAN_ID, HERO_EL_CID_COMPEADOR_ID, HERO_GROZNY_ID, HERO_LECHY_ID, HERO_СHIKATILO_ID } from "./heroes";
+import { 
+  HERO_GRAND_KAISER_ID, 
+  HERO_VLAD_TEPES_ID, 
+  HERO_GENGHIS_KHAN_ID, 
+  HERO_EL_CID_COMPEADOR_ID, 
+  HERO_GROZNY_ID, 
+  HERO_LECHY_ID, 
+  HERO_СHIKATILO_ID, 
+  HERO_ARTEMIDA_ID,
+  HERO_ASGORE_ID,
+  HERO_DON_KIHOTE_ID,
+  HERO_DUOLINGO_ID,
+  HERO_FRISK_ID,
+  HERO_GRIFFITH_ID,
+  HERO_GUTS_ID,
+  HERO_JACK_RIPPER_ID,
+  HERO_JEBE_ID,
+  HERO_HASSAN_ID,
+  HERO_KALADIN_ID,
+  HERO_KANEKI_ID,
+  HERO_LOKI_ID,
+  HERO_LUCHE_ID,
+  HERO_METTATON_ID,
+  HERO_ODIN_ID,
+  HERO_PAPYRUS_ID,
+  HERO_RIVER_PERSON_ID,
+  HERO_SANS_ID,
+  HERO_UNDYNE_ID,
+  HERO_ZORO_ID
+} from "./heroes";
 
 /**
  * Стоимость способности с точки зрения экономики хода.
@@ -693,7 +722,8 @@ export function getAbilityViewsForUnit(
   if (unit.heroId === HERO_СHIKATILO_ID) {
     abilityIds.push(
       ABILITY_СHIKATILO_MARK, 
-      ABILITY_CHIKATILO_FALSE_TRACE);
+      ABILITY_CHIKATILO_FALSE_TRACE,
+      ABILITY_CHIKATILO_DUMMY);
   }
   if (unit.heroId === HERO_GROZNY_ID) {
     abilityIds.push(
@@ -709,6 +739,170 @@ export function getAbilityViewsForUnit(
       ABILITY_LECHY_STORM
     );
   }
+  if (unit.heroId === HERO_GRIFFITH_ID) {
+    abilityIds.push(
+      ABILITY_GRIFFITH_FEMTO,
+      ABILITY_GRIFFITH_PATHETIC_MAN,
+      ABILITY_VLAD_POLKOVODETS);
+  }
+  if (unit.heroId === HERO_GUTS_ID) {
+    abilityIds.push(
+      ABILITY_GUTS_BERSERK_MODE,
+      ABILITY_GUTS_CANNON,
+      ABILITY_GUTS_ARBALET
+    );
+  }
+  if (unit.heroId === HERO_ODIN_ID) {
+    abilityIds.push(
+      ABILITY_ODIN_SLEIPNIR,
+      ABILITY_ODIN_MUNINN,
+      ABILITY_ODIN_HUGINN,
+      ABILITY_ODIN_GUNGNIR
+    );
+  }
+  if (unit.heroId === HERO_LOKI_ID) {
+    abilityIds.push(
+      ABILITY_LOKI_LAUGHT,
+      ABILITY_LOKI_ILLUSORY_DOUBLE,
+    );
+  }
+  if (unit.heroId === HERO_JEBE_ID) {
+    abilityIds.push(
+      ABILITY_JEBE_KHANS_SHOOTER,
+      ABILITY_JEBE_HAIL_OF_ARROWS,
+      ABILITY_GENGHIS_KHAN_LEGEND_OF_THE_STEPPES,
+      ABILITY_VLAD_POLKOVODETS
+    );
+  }
+  if (unit.heroId === HERO_HASSAN_ID) {
+    abilityIds.push(
+      ABILITY_HASSAN_ONE_WITH_SAND,
+      ABILITY_HASSAN_TRUE_ENEMY,
+      ABILITY_HASSAN_ASSASIN_ORDER,
+      ABILITY_VLAD_POLKOVODETS
+    );
+  }
+  if (unit.heroId === HERO_KALADIN_ID) {
+    abilityIds.push(
+      ABILITY_KALADIN_FIRST,
+      ABILITY_KALADIN_SECOND,
+      ABILITY_KALADIN_THIRD,
+      ABILITY_KALADIN_FOURTH,
+      ABILITY_KALADIN_FIFTH
+    );
+  }
+  if (unit.heroId === HERO_FRISK_ID) {
+    abilityIds.push(
+      ABILITY_FRISK_PURE_SOUL,
+      ABILITY_FRISK_GENOCIDE,
+      ABILITY_FRISK_PACIFIST,
+      ABILITY_FRISK_ONE_WAY
+    );
+  } 
+  if (unit.heroId === HERO_SANS_ID) {
+    abilityIds.push(
+      ABILITY_SANS_GASTER_BLASTER,
+      ABILITY_SANS_JOKE,
+      ABILITY_SANS_KARMA
+    );
+  } 
+  if (unit.heroId === HERO_ASGORE_ID) {
+    abilityIds.push(
+      ABILITY_ASGORE_FIREBALL,
+      ABILITY_ASGORE_FIRE_PARADE,
+      ABILITY_ASGORE_SOUL_PARADE
+    );
+  } 
+  if (unit.heroId === HERO_UNDYNE_ID) {
+    abilityIds.push(
+      ABILITY_UNDYNE_SPEAR_THROW,
+      ABILITY_UNDYNE_ENERGY_SPEAR,
+      ABILITY_UNDYNE_SWITCH_DIRECTION,
+      ABILITY_UNDYNE_UNDYING
+    );
+  } 
+  if (unit.heroId === HERO_PAPYRUS_ID) {
+    abilityIds.push(
+      ABILITY_PAPYRUS_BLUE_BONE,
+      ABILITY_PAPYRUS_SPHAGETTI,
+      ABILITY_PAPYRUS_COOL_DUDE,
+      ABILITY_PAPYRUS_DISBELIEF
+    );
+  } 
+  if (unit.heroId === HERO_METTATON_ID) {
+    abilityIds.push(
+      ABILITY_METTATON_RAITING,
+      ABILITY_METTATON_POPPINS,
+      ABILITY_METTATON_SHOWTIME,
+      ABILITY_METTATON_LASER,
+      ABILITY_METTATON_FINAL_ACCORD
+    );
+  }
+  if (unit.heroId === HERO_RIVER_PERSON_ID) {
+    abilityIds.push(
+      ABILITY_RIVER_PERSON_BOAT,
+      ABILITY_RIVER_PERSON_BOATMAN,
+      ABILITY_RIVER_PERSON_GUIDE_OF_SOULS,
+      ABILITY_RIVER_PERSON_TRA_LA_LA
+    );
+  } 
+  if (unit.heroId === HERO_DUOLINGO_ID) {
+    abilityIds.push(
+      ABILITY_DUOLINGO_STRICK,
+      ABILITY_DUOLINGO_PUSH_NOTIFICATION,
+      ABILITY_DUOLINGO_SKIP_CLASSES,
+      ABILITY_DUOLINGO_BERSERKER
+    );
+  } 
+  if (unit.heroId === HERO_LUCHE_ID) {
+    abilityIds.push(
+      ABILITY_LUCHE_SUN_GLORY,
+      ABILITY_LUCHE_SHINE,
+      ABILITY_LUCHE_DIVINE_RAY,
+      ABILITY_LUCHE_BURNING_SUN
+    );
+  } 
+  if (unit.heroId === HERO_KANEKI_ID) {
+    abilityIds.push(
+      ABILITY_KANEKI_RINKAKU_KAGUNE,
+      ABILITY_KANEKI_RC_CELLS,
+      ABILITY_KANEKI_SCOLOPENDRA
+    );
+  } 
+  if (unit.heroId === HERO_ZORO_ID) {
+    abilityIds.push(
+      ABILITY_ZORO_DETERMINATION,
+      ABILITY_ZORO_ONI_GIRI,
+      ABILITY_ZORO_3_SWORD_STYLE,
+      ABILITY_ZORO_ASURA
+    );
+  } 
+  if (unit.heroId === HERO_DON_KIHOTE_ID) {
+    abilityIds.push(
+      ABILITY_DON_KIHOTE_SORROWFUL_COUNTENANCE,
+      ABILITY_DON_KIHOTE_WINDMILLS,
+      ABILITY_DON_KIHOTE_MADNESS,
+      ABILITY_VLAD_POLKOVODETS
+    );
+  } 
+  if (unit.heroId === HERO_JACK_RIPPER_ID) {
+    abilityIds.push(
+      ABILITY_JACK_RIPPER_SURGERY,
+      ABILITY_JACK_RIPPER_SNARES,
+      ABILITY_JACK_RIPPER_DISMEMBERMENT,
+      ABILITY_JACK_RIPPER_LEGEND_KILLER
+    );
+  } 
+  if (unit.heroId === HERO_ARTEMIDA_ID) {
+    abilityIds.push(
+      ABILITY_ARTEMIDA_ACCURATE_ARROW,
+      ABILITY_ARTEMIDA_MOONLIGHT_SHINE,
+      ABILITY_ARTEMIDA_SILVER_CRESCENT,
+      ABILITY_ARTEMIDA_NATURE_MOVEMENT
+    );
+  }
+  
+
 
   return abilityIds
     .map((id) => {
