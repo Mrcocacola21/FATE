@@ -372,7 +372,7 @@ function maybeRequestIntimidate(
   }
 
   const requested = requestRoll(
-    state,
+    clearPendingRoll(state),
     defender.owner,
     "vladIntimidateChoice",
     {

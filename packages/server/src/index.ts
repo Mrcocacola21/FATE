@@ -7,7 +7,8 @@ import { registerRoutes } from "./routes";
 import { registerGameWebSocket } from "./ws";
 
 export async function buildServer() {
-  const server = Fastify({ logger: true });
+  const logLevel = process.env.LOG_LEVEL ?? "info";
+  const server = Fastify({ logger: { level: logLevel } });
 
   const allow = new Set(
     [

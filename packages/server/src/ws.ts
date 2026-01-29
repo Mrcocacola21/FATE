@@ -24,6 +24,11 @@ import {
   getGameRoom,
   type GameRoom,
 } from "./store";
+import { logFate } from "./fateLogger";
+
+let serverLogger: any = null;
+import { createPongRoom, getPongRoom } from "./pong/rooms";
+import { logPong } from "./pong/logger";
 
 export type PlayerRole = PlayerId | "spectator";
 
@@ -379,9 +384,29 @@ function applyRoomAction(
   broadcastRoomState(room);
   broadcastActionResult({ gameId: room.id, ok: true, events, logIndex });
   sendMoveOptionsIfAny(socket, events);
+  // Log action result summary
+  try {
+    logFate(serverLogger!, {
+      tag: "fate:actionResult",
+      roomId: room.id,
+      actionType: action.type,
+      pendingRollKind: room.state.pendingRoll ? room.state.pendingRoll.kind : undefined,
+      events: events.map((e) => e.type),
+    });
+    // Log individual events (info for major ones, debug for others)
+    for (const ev of events) {
+      const summary: Record<string, any> = { tag: "fate:event", roomId: room.id, eventType: ev.type };
+      if ((ev as any).attackerId) summary.playerId = (ev as any).attackerId;
+      if ((ev as any).defenderId) summary.unitId = (ev as any).defenderId;
+      logFate(serverLogger!, summary);
+    }
+  } catch (e) {
+    logFate(serverLogger!, { tag: "fate:error", roomId: room.id, code: "log_error", message: String(e), err: e });
+  }
 }
 
 export function registerGameWebSocket(server: FastifyInstance) {
+  serverLogger = server.log;
   server.get("/ws", { websocket: true }, (socket) => {
     socket.on("message", (data) => {
       let parsed: unknown;
@@ -403,6 +428,59 @@ export function registerGameWebSocket(server: FastifyInstance) {
 
       const msg = message.data;
       switch (msg.type) {
+        case "pongJoin": {
+          const connId = randomUUID();
+          const roomId = msg.roomId;
+          const room = createPongRoom(roomId, (id, payload) => {
+            const sockets = roomSockets.get(id);
+            if (!sockets) return;
+            for (const s of sockets) {
+              if (s.readyState === WebSocket.OPEN) s.send(JSON.stringify(payload));
+            }
+          }, server.log);
+          addSocketToRoom(roomId, socket);
+          socketMeta.set(socket, {
+            roomId,
+            role: msg.role,
+            seat: msg.role === "P1" || msg.role === "P2" ? msg.role : null,
+            connId,
+            name: msg.name,
+          });
+          logPong(server.log, { tag: "pong:join", roomId, role: msg.role, socketId: connId, name: msg.name });
+          sendMessage(socket, { type: "joinAck", roomId, role: msg.role, seat: msg.role === "P1" || msg.role === "P2" ? msg.role : undefined, isHost: false });
+          try { room.start(); } catch {}
+          if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ type: "pongState", state: room.snapshot() }));
+          break;
+        }
+        case "pongInput": {
+          const meta = socketMeta.get(socket);
+          if (!meta) { sendMessage(socket, { type: "error", message: "Join a room first" }); return; }
+          const room = getPongRoom(meta.roomId);
+          if (!room) { sendMessage(socket, { type: "error", message: "Pong room not found" }); return; }
+          if (meta.seat !== "P1" && meta.seat !== "P2") { sendMessage(socket, { type: "error", message: "Only players may send inputs" }); return; }
+          room.setInput(meta.seat, msg.dir);
+          break;
+        }
+        case "pongStart": {
+          const meta = socketMeta.get(socket);
+          if (!meta) { sendMessage(socket, { type: "error", message: "Join a room first" }); return; }
+          const room = getPongRoom(meta.roomId);
+          if (!room) { sendMessage(socket, { type: "error", message: "Pong room not found" }); return; }
+          room.start();
+          const sockets = roomSockets.get(meta.roomId);
+          if (sockets) for (const s of sockets) if (s.readyState === WebSocket.OPEN) s.send(JSON.stringify({ type: "pongEvent", event: { kind: "start" } }));
+          logPong(server.log, { tag: "pong:start", roomId: meta.roomId });
+          break;
+        }
+        case "pongReset": {
+          const meta = socketMeta.get(socket);
+          if (!meta) return;
+          const room = getPongRoom(meta.roomId);
+          if (!room) return;
+          room.serve(null);
+          logPong(server.log, { tag: "pong:reset", roomId: meta.roomId });
+          break;
+        }
         case "joinRoom": {
           const existing = socketMeta.get(socket);
           if (existing) {
@@ -511,6 +589,16 @@ export function registerGameWebSocket(server: FastifyInstance) {
             name: msg.name,
           });
           addSocketToRoom(room.id, socket);
+
+          // Log join
+          logFate(serverLogger!, {
+            tag: "fate:join",
+            roomId: room.id,
+            role: msg.role,
+            socketId: connId,
+            seat,
+            name: msg.name,
+          });
 
           sendMessage(socket, {
             type: "joinAck",
@@ -785,15 +873,32 @@ export function registerGameWebSocket(server: FastifyInstance) {
     socket.on("close", () => {
       const meta = socketMeta.get(socket);
       if (!meta) return;
-      const room = getGameRoom(meta.roomId);
-      if (room) {
+
+      // Log leave
+      logFate(serverLogger!, {
+        tag: "fate:leave",
+        roomId: meta.roomId,
+        role: meta.role,
+        socketId: meta.connId,
+      });
+
+      const gameRoom = getGameRoom(meta.roomId);
+      if (gameRoom) {
         if (meta.seat) {
-          vacateSeat(room, meta.seat, meta.connId);
+          vacateSeat(gameRoom, meta.seat, meta.connId);
         } else {
-          room.spectators.delete(meta.connId);
+          gameRoom.spectators.delete(meta.connId);
         }
-        updateHost(room);
-        broadcastRoomState(room);
+        updateHost(gameRoom);
+        broadcastRoomState(gameRoom);
+      }
+      const pongRoom = getPongRoom(meta.roomId);
+      if (pongRoom) {
+        // pause game when a player leaves
+        logPong(serverLogger!, { tag: "pong:leave", roomId: meta.roomId, role: meta.role, socketId: meta.connId });
+        // pause the room
+        pongRoom.stop();
+        logPong(serverLogger!, { tag: "pong:pause", roomId: meta.roomId, reason: "player_left" });
       }
       removeSocketFromRoom(meta.roomId, socket);
       socketMeta.delete(socket);

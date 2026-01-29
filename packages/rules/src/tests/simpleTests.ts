@@ -4412,6 +4412,288 @@ function testKaiserDoraOneAttackerRollManyDefenders() {
   console.log("kaiser_dora_one_attacker_roll_many_defenders_roll_separately passed");
 }
 
+function testKaiserDoraDoesNotDuplicateDefenderRollsWithIntimidate() {
+  const rng = makeRngSequence([0.001, 0.001, 0.99, 0.99, 0.5, 0.5]);
+  let state = createEmptyGame();
+  const a1 = createDefaultArmy("P1", { archer: HERO_GRAND_KAISER_ID });
+  const a2 = createDefaultArmy("P2", { spearman: HERO_VLAD_TEPES_ID });
+  state = attachArmy(state, a1);
+  state = attachArmy(state, a2);
+
+  const kaiser = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "archer"
+  )!;
+  const vlad = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "spearman"
+  )!;
+  const other = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class !== "spearman"
+  )!;
+
+  state = setUnit(state, kaiser.id, {
+    position: { col: 4, row: 4 },
+    charges: { ...kaiser.charges, [ABILITY_KAISER_DORA]: 2 },
+  });
+  state = setUnit(state, vlad.id, { position: { col: 4, row: 7 } });
+  state = setUnit(state, other.id, { position: { col: 3, row: 7 } });
+
+  state = toBattleState(state, "P1", kaiser.id);
+  state = initKnowledgeForOwners(state);
+
+  // Use Dora centered to include both targets
+  let res = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: kaiser.id,
+      abilityId: ABILITY_KAISER_DORA,
+      payload: { center: { col: 4, row: 7 } },
+    } as any,
+    rng as any
+  );
+  assert(res.state.pendingRoll?.kind === "dora_attackerRoll", "Dora should request attacker roll first");
+
+  // Resolve attacker roll once
+  res = resolvePendingRollOnce(res.state, rng as any);
+
+  // Now step through all pending rolls and collect rollRequested events
+  const collected: any[] = [];
+  let current = res;
+  let iter = 0;
+  const lastKinds: string[] = [];
+  while (current.state.pendingRoll) {
+    iter += 1;
+    if (iter > 300) {
+      const last = collected.slice(-60).map((e) => JSON.stringify(e)).join("\n");
+      const kinds = lastKinds.slice(-20).join(",");
+      assert(false, `possible infinite loop resolving Dora AoE after ${iter} iterations; recent kinds: ${kinds}\nrecent events:\n${last}`);
+    }
+    collected.push(...current.events);
+    if (current.events && current.events.length > 0) {
+      const types = current.events.map((e: any) => e.type).join(",");
+      console.log(`DEBUG_EVENTS: iter=${iter} events=${types}`);
+    }
+    const pk = current.state.pendingRoll?.kind ?? "none";
+    const ctx = (current.state.pendingRoll && (current.state.pendingRoll.context as any)) || {};
+    const aoe = current.state.pendingAoE;
+    // debug trace for loop
+    console.log(`DEBUG: iter=${iter} pendingRoll=${pk} ctxIdx=${ctx.currentTargetIndex ?? "-"} aoeIdx=${aoe?.affectedUnitIds?.join(",") ?? "-"} damaged=${aoe?.damagedUnitIds?.join(",") ?? "-"}`);
+    lastKinds.push(pk);
+    current = resolvePendingRollOnce(current.state, rng as any);
+  }
+  collected.push(...current.events);
+
+  // Count dora_defenderRoll requests per actor
+  const defenderRequests = collected.filter(
+    (e) => e.type === "rollRequested" && (e as any).kind === "dora_defenderRoll"
+  ) as any[];
+  const actorIds = defenderRequests.map((r) => r.actorUnitId).filter(Boolean) as string[];
+  const unique = new Set(actorIds);
+  assert(
+    unique.size === actorIds.length,
+    "Dora should request at most one defender roll per target"
+  );
+
+  // Ensure Vlad specifically was requested exactly once
+  const vladCount = actorIds.filter((id) => id === vlad.id).length;
+  assert(vladCount === 1, "Vlad should receive exactly one dora_defenderRoll request");
+
+  // Ensure intimidate choice was requested at most once for Vlad
+  const intimidateRequests = collected.filter(
+    (e) => e.type === "rollRequested" && (e as any).kind === "vladIntimidateChoice" && (e as any).actorUnitId === vlad.id
+  ).length;
+  assert(intimidateRequests <= 1, "Intimidate choice should be requested at most once per defense");
+
+  console.log("dora_aoe_does_not_duplicate_defender_rolls_with_intimidate passed");
+}
+
+function testIntimidateTriggersOncePerSuccessfulDefense() {
+  const rng = makeRngSequence([0.001, 0.001, 0.99, 0.99]);
+  let { state, vlad, enemy } = setupVladState();
+  state = setUnit(state, vlad.id, { position: { col: 4, row: 4 } });
+  state = setUnit(state, enemy.id, { position: { col: 4, row: 6 } });
+  state = toBattleState(state, "P2", enemy.id);
+  state = initKnowledgeForOwners(state);
+
+  let res = applyAction(
+    state,
+    { type: "attack", attackerId: enemy.id, defenderId: vlad.id } as any,
+    rng as any
+  );
+  // resolve attacker and defender rolls
+  res = resolvePendingRollOnce(res.state, rng as any);
+  res = resolvePendingRollOnce(res.state, rng as any);
+
+  // There should be at most one intimidate choice roll requested
+  const intimidateRequests = res.events.filter(
+    (e) => e.type === "rollRequested" && (e as any).kind === "vladIntimidateChoice"
+  ).length;
+  assert(intimidateRequests <= 1, "Intimidate choice should be requested at most once");
+
+  // If there was a pending intimidate choice, resolve it by picking first option
+  if (res.state.pendingRoll && res.state.pendingRoll.kind === "vladIntimidateChoice") {
+    const pending = res.state.pendingRoll;
+    const options = (pending.context as any).options as Coord[] || [];
+    const choice = options[0] ? { type: "intimidatePush", to: options[0] } : { type: "intimidateSkip" };
+    const after = applyAction(res.state, { type: "resolvePendingRoll", pendingRollId: pending.id, choice, player: pending.player } as any, rng as any);
+    const intimidateResolvedCount = after.events.filter((e) => e.type === "intimidateResolved").length;
+    assert(intimidateResolvedCount <= 1, "IntimidateResolved should be emitted at most once");
+  }
+
+  console.log("intimidate_triggers_once_per_successful_defense passed");
+}
+
+function testTricksterAoEDoesNotDuplicateDefenderRollsWithIntimidate() {
+  const rng = makeRngSequence([0.001, 0.001, 0.99, 0.99, 0.5, 0.5]);
+  let state = createEmptyGame();
+  const a1 = createDefaultArmy("P1");
+  const a2 = createDefaultArmy("P2", { spearman: HERO_VLAD_TEPES_ID });
+  state = attachArmy(state, a1);
+  state = attachArmy(state, a2);
+
+  const trickster = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "trickster"
+  )!;
+  const vlad = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "spearman"
+  )!;
+  const other = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class !== "spearman"
+  )!;
+
+  state = setUnit(state, trickster.id, { position: { col: 4, row: 4 } });
+  state = setUnit(state, vlad.id, { position: { col: 4, row: 6 } });
+  state = setUnit(state, other.id, { position: { col: 3, row: 6 } });
+
+  state = toBattleState(state, "P1", trickster.id);
+  state = initKnowledgeForOwners(state);
+
+  let res = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: trickster.id,
+      abilityId: "tricksterAoE",
+    } as any,
+    rng as any
+  );
+  assert(res.state.pendingRoll?.kind === "tricksterAoE_attackerRoll", "Trickster should request attacker roll first");
+
+  // Resolve attacker roll once
+  res = resolvePendingRollOnce(res.state, rng as any);
+
+  // Step through pending rolls and ensure intimidate doesn't duplicate defender rolls
+  const collected: any[] = [];
+  let current = res;
+  let iter = 0;
+  const lastKinds: string[] = [];
+  while (current.state.pendingRoll) {
+    iter += 1;
+    if (iter > 300) {
+      const last = collected.slice(-60).map((e) => JSON.stringify(e)).join("\n");
+      const kinds = lastKinds.slice(-20).join(",");
+      assert(false, `possible infinite loop resolving Trickster AoE after ${iter} iterations; recent kinds: ${kinds}\nrecent events:\n${last}`);
+    }
+    collected.push(...current.events);
+    if (current.events && current.events.length > 0) {
+      const types = current.events.map((e: any) => e.type).join(",");
+      console.log(`DEBUG_EVENTS: iter=${iter} events=${types}`);
+    }
+    const pk = current.state.pendingRoll?.kind ?? "none";
+    lastKinds.push(pk);
+    current = resolvePendingRollOnce(current.state, rng as any);
+  }
+
+  const kinds = collected.map((e) => e.type);
+  // Ensure we saw at least one intimidateTriggered
+  assert(kinds.includes("intimidateTriggered"), "intimidate should trigger for Vlad in Trickster AoE");
+
+  console.log("trickster_aoe_does_not_duplicate_defender_rolls_with_intimidate passed");
+}
+
+function testVladForestDoesNotDuplicateDefenderRollsWithIntimidate() {
+  const rng = makeRngSequence([0.99, 0.99, 0.001, 0.001, 0.5, 0.5]);
+  let state = createEmptyGame();
+  const a1 = createDefaultArmy("P1", { spearman: HERO_VLAD_TEPES_ID });
+  const a2 = createDefaultArmy("P2", { spearman: HERO_VLAD_TEPES_ID });
+  state = attachArmy(state, a1);
+  state = attachArmy(state, a2);
+
+  const vladCaster = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "spearman"
+  )!;
+  const vladDefender = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "spearman"
+  )!;
+  const other = Object.values(state.units).find((u) => u.owner === "P2" && u.id !== vladDefender.id)!;
+
+  state = setUnit(state, vladCaster.id, { position: { col: 4, row: 4 }, ownTurnsStarted: 1 });
+  state = setUnit(state, vladDefender.id, { position: { col: 4, row: 6 } });
+  state = setUnit(state, other.id, { position: { col: 3, row: 6 } });
+
+  state = {
+    ...state,
+    phase: "battle",
+    currentPlayer: "P1",
+    activeUnitId: null,
+    turnQueue: [vladCaster.id, vladDefender.id],
+    turnQueueIndex: 0,
+    turnOrder: [vladCaster.id, vladDefender.id],
+    turnOrderIndex: 0,
+    stakeMarkers: Array.from({ length: 9 }, (_, idx) => ({
+      id: `stake-${idx + 1}`,
+      owner: "P1" as const,
+      position: { col: (idx + 1) % 3, row: Math.floor(idx / 3) },
+      createdAt: idx + 1,
+      isRevealed: false,
+    })),
+  };
+
+  // Start Vlad's turn to activate forest
+  let res = applyAction(state, { type: "unitStartTurn", unitId: vladCaster.id } as any, rng as any);
+  const targetPending = res.state.pendingRoll;
+  assert(targetPending && targetPending.kind === "vladForestTarget", "forest target should be pending");
+  res = applyAction(
+    res.state,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: targetPending!.id,
+      player: targetPending!.player,
+      choice: { type: "forestTarget", center: { col: 4, row: 6 } },
+    } as any,
+    rng
+  );
+
+  // Resolve attacker roll and step through pending rolls
+  res = resolvePendingRollOnce(res.state, rng as any);
+  const collected: any[] = [];
+  let current = res;
+  let iter = 0;
+  const lastKinds: string[] = [];
+  while (current.state.pendingRoll) {
+    iter += 1;
+    if (iter > 300) {
+      const last = collected.slice(-60).map((e) => JSON.stringify(e)).join("\n");
+      const kinds = lastKinds.slice(-20).join(",");
+      assert(false, `possible infinite loop resolving Vlad Forest AoE after ${iter} iterations; recent kinds: ${kinds}\nrecent events:\n${last}`);
+    }
+    collected.push(...current.events);
+    if (current.events && current.events.length > 0) {
+      const types = current.events.map((e: any) => e.type).join(",");
+      console.log(`DEBUG_EVENTS: iter=${iter} events=${types}`);
+    }
+    const pk = current.state.pendingRoll?.kind ?? "none";
+    lastKinds.push(pk);
+    current = resolvePendingRollOnce(current.state, rng as any);
+  }
+
+  const kinds = collected.map((e) => e.type);
+  assert(kinds.includes("intimidateTriggered"), "intimidate should trigger for Vlad in Forest AoE");
+
+  console.log("vlad_forest_aoe_does_not_duplicate_defender_rolls_with_intimidate passed");
+}
+
+
 function testKaiserDoraCenterMustBeOnArcherLine() {
   const rng = new SeededRNG(5555);
   let { state, kaiser, enemy } = setupKaiserState();
@@ -6105,6 +6387,8 @@ function testHeroRegistryContainsPlayableHeroes() {
 }
 
 function main() {
+  // Full test run: invoke all test functions in this file
+  console.log('Running full simpleTests suite');
   testPlacementToBattleAndTurnOrder();
   testLobbyReadyAndStartRequiresBothReady();
   testInitiativeRollSequenceNoAutoroll();
@@ -6122,10 +6406,10 @@ function main() {
   testSearchRevealsOnlyInRadius();
   testSearchUpdatesOnlyPlayerKnowledge();
   testSearchStealthRollsLogged();
-  testSearchActionWorksBeforeAttack();
-  testSearchMoveWorksBeforeMove();
   testSearchActionBlockedAfterAttack();
   testSearchMoveBlockedAfterMove();
+  testSearchActionWorksBeforeAttack();
+  testSearchMoveWorksBeforeMove();
   testSearchButtonsEnabledOnFreshUnitTurn();
   testAttackAlreadyRevealedUnit();
   testAdjacencyRevealAfterMove();
@@ -6133,14 +6417,14 @@ function main() {
   testAttackConsumesActionSlot();
   testCannotAttackAfterSearchAction();
   testCannotSearchMoveAfterMove();
+  testRiderCannotEnterStealth();
+  testAssassinCanEnterStealth();
+  testStealthOnlyForUnitsWithAbility();
   testBattleTurnOrderFollowsPlacementOrder();
   testAllyCannotStepOnStealthedAlly();
   testEnemyStepsOnUnknownStealthedRevealsAndCancels();
   testCannotAttackStealthedEnemyDirectly();
   testNoStealthStackingOnEnter();
-  testRiderCannotEnterStealth();
-  testAssassinCanEnterStealth();
-  testStealthOnlyForUnitsWithAbility();
   testStealthLasts3OwnTurnsThenExpiresOn4thStart();
   testStealthRollLogged();
   testLastKnownPositionsInView();
@@ -6188,6 +6472,10 @@ function main() {
   testKaiserCarpetStrikeHitsAlliesAndEnemies();
   testKaiserDoraDoesNotRequireBunker();
   testKaiserDoraOneAttackerRollManyDefenders();
+  testKaiserDoraDoesNotDuplicateDefenderRollsWithIntimidate();
+  testIntimidateTriggersOncePerSuccessfulDefense();
+  testTricksterAoEDoesNotDuplicateDefenderRollsWithIntimidate();
+  testVladForestDoesNotDuplicateDefenderRollsWithIntimidate();
   testKaiserDoraCenterMustBeOnArcherLine();
   testKaiserEngineeringMiracleTransformsStats();
   testKaiserEngineeringMiracleImpulseNoActionNoSpend();

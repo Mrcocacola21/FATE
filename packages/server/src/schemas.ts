@@ -156,6 +156,23 @@ export const SwitchRoleMessageSchema = z.object({
   role: RoleSchema,
 });
 
+// Pong messages
+export const PongJoinMessageSchema = z.object({
+  type: z.literal("pongJoin"),
+  roomId: z.string().min(1),
+  role: RoleSchema,
+  name: z.string().min(1).optional(),
+});
+
+export const PongInputMessageSchema = z.object({
+  type: z.literal("pongInput"),
+  dir: z.union([z.literal("up"), z.literal("down"), z.literal("stop")]),
+});
+
+export const PongStartMessageSchema = z.object({ type: z.literal("pongStart") });
+
+export const PongResetMessageSchema = z.object({ type: z.literal("pongReset") });
+
 export const ClientMessageSchema = z.discriminatedUnion("type", [
   JoinRoomMessageSchema,
   ActionMessageSchema,
@@ -165,4 +182,8 @@ export const ClientMessageSchema = z.discriminatedUnion("type", [
   ResolvePendingRollMessageSchema,
   LeaveRoomMessageSchema,
   SwitchRoleMessageSchema,
+  PongJoinMessageSchema,
+  PongInputMessageSchema,
+  PongStartMessageSchema,
+  PongResetMessageSchema,
 ]);
