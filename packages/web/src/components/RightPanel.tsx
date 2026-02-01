@@ -28,6 +28,7 @@ interface RightPanelProps {
   onMoveRequest: (unitId: string, mode?: MoveMode) => void;
   onSendAction: (action: GameAction) => void;
   onHoverAbility: (abilityId: string | null) => void;
+  onHoverAttackRange: (unitId: string | null, hovering: boolean) => void;
 }
 
 function classBadge(unitClass: string): { label: string; marker?: string } {
@@ -89,6 +90,7 @@ export const RightPanel: FC<RightPanelProps> = ({
   onMoveRequest,
   onSendAction,
   onHoverAbility,
+  onHoverAttackRange,
 }) => {
   const playerId: PlayerId | null = role === "P1" || role === "P2" ? role : null;
   const isSpectator = role === "spectator";
@@ -436,6 +438,10 @@ export const RightPanel: FC<RightPanelProps> = ({
                 attackDisabled ? "bg-slate-100 text-slate-400" : "bg-slate-200"
               }`}
               onClick={() => onSetActionMode("attack")}
+              onMouseEnter={() => onHoverAttackRange(selectedUnit?.id ?? null, true)}
+              onMouseLeave={() => onHoverAttackRange(selectedUnit?.id ?? null, false)}
+              onFocus={() => onHoverAttackRange(selectedUnit?.id ?? null, true)}
+              onBlur={() => onHoverAttackRange(selectedUnit?.id ?? null, false)}
               disabled={attackDisabled}
             >
               Attack

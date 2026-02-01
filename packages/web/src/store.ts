@@ -27,6 +27,7 @@ import {
 } from "./ws";
 
 export type ActionMode = "move" | "attack" | "place" | "dora" | null;
+export type HoverPreview = { type: "attackRange"; unitId: string } | null;
 
 const defaultRoomMeta: RoomMeta = {
   ready: { P1: false, P2: false },
@@ -51,6 +52,7 @@ interface GameStore {
   roomState: PlayerView | null;
   hasSnapshot: boolean;
   hoveredAbilityId: string | null;
+  hoverPreview: HoverPreview;
   events: GameEvent[];
   clientLog: string[];
   lastLogIndex: number;
@@ -107,6 +109,7 @@ interface GameStore {
       | null
   ) => void;
   setHoveredAbilityId: (abilityId: string | null) => void;
+  setHoverPreview: (preview: HoverPreview) => void;
   resetGameState: () => void;
 }
 
@@ -125,6 +128,7 @@ function buildLeaveResetState(state: GameStore, message?: string): Partial<GameS
     roomState: null,
     hasSnapshot: false,
     hoveredAbilityId: null,
+    hoverPreview: null,
     events: [],
     clientLog,
     lastLogIndex: -1,
@@ -354,6 +358,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   roomState: null,
   hasSnapshot: false,
   hoveredAbilityId: null,
+  hoverPreview: null,
   events: [],
   clientLog: [],
   lastLogIndex: -1,
@@ -519,12 +524,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
   setPlaceUnitId: (unitId) => set(() => ({ placeUnitId: unitId })),
   setMoveOptions: (options) => set(() => ({ moveOptions: options })),
   setHoveredAbilityId: (abilityId) => set(() => ({ hoveredAbilityId: abilityId })),
+  setHoverPreview: (preview) => set(() => ({ hoverPreview: preview })),
   resetGameState: () =>
     set(() => ({
       roomState: null,
       roomMeta: defaultRoomMeta,
       hasSnapshot: false,
       hoveredAbilityId: null,
+      hoverPreview: null,
       events: [],
       clientLog: [],
       lastLogIndex: -1,

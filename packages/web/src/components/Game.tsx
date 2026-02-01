@@ -76,6 +76,92 @@ function linePath(start: Coord, end: Coord): Coord[] | null {
   return path;
 }
 
+function getAttackRangeCells(view: PlayerView, unitId: string): Coord[] {
+  const unit = view.units[unitId];
+  if (!unit?.position) return [];
+  const size = view.boardSize ?? 9;
+  const origin = unit.position;
+  const cells: Coord[] = [];
+
+  const addCell = (col: number, row: number) => {
+    if (col < 0 || row < 0 || col >= size || row >= size) return;
+    if (col === origin.col && row === origin.row) return;
+    cells.push({ col, row });
+  };
+
+  switch (unit.class) {
+    case "archer": {
+      for (const dir of DORA_DIRS) {
+        let col = origin.col + dir.col;
+        let row = origin.row + dir.row;
+        while (col >= 0 && row >= 0 && col < size && row < size) {
+          cells.push({ col, row });
+          const occupant = getUnitAt(view, col, row);
+          if (occupant && occupant.owner !== unit.owner) {
+            break;
+          }
+          col += dir.col;
+          row += dir.row;
+        }
+      }
+      break;
+    }
+
+    case "spearman": {
+      for (let dc = -1; dc <= 1; dc += 1) {
+        for (let dr = -1; dr <= 1; dr += 1) {
+          if (dc === 0 && dr === 0) continue;
+          addCell(origin.col + dc, origin.row + dr);
+        }
+      }
+      const reach2 = [
+        { col: 2, row: 0 },
+        { col: -2, row: 0 },
+        { col: 0, row: 2 },
+        { col: 0, row: -2 },
+        { col: 2, row: 2 },
+        { col: 2, row: -2 },
+        { col: -2, row: 2 },
+        { col: -2, row: -2 },
+      ];
+      for (const offset of reach2) {
+        addCell(origin.col + offset.col, origin.row + offset.row);
+      }
+      break;
+    }
+
+    case "trickster": {
+      for (let dc = -2; dc <= 2; dc += 1) {
+        for (let dr = -2; dr <= 2; dr += 1) {
+          if (dc === 0 && dr === 0) continue;
+          if (Math.max(Math.abs(dc), Math.abs(dr)) <= 2) {
+            addCell(origin.col + dc, origin.row + dr);
+          }
+        }
+      }
+      break;
+    }
+
+    case "rider":
+    case "knight":
+    case "assassin":
+    case "berserker": {
+      for (let dc = -1; dc <= 1; dc += 1) {
+        for (let dr = -1; dr <= 1; dr += 1) {
+          if (dc === 0 && dr === 0) continue;
+          addCell(origin.col + dc, origin.row + dr);
+        }
+      }
+      break;
+    }
+
+    default:
+      break;
+  }
+
+  return cells;
+}
+
 function getPendingRollLabel(kind?: string | null) {
   switch (kind) {
     case "attack_attackerRoll":
@@ -153,6 +239,7 @@ export function Game() {
     events,
     clientLog,
     hoveredAbilityId,
+    hoverPreview,
     selectedUnitId,
     actionMode,
     placeUnitId,
@@ -165,6 +252,7 @@ export function Game() {
     setPlaceUnitId,
     setMoveOptions,
     setHoveredAbilityId,
+    setHoverPreview,
     sendAction,
     requestMoveOptions,
     setReady,
@@ -492,8 +580,22 @@ export function Game() {
     return view.legal?.attackTargetsByUnitId[selectedUnit.id] ?? [];
   }, [view, selectedUnit]);
 
+  const hoverAttackPreview = useMemo(() => {
+    if (!view || hoverPreview?.type !== "attackRange") {
+      return null;
+    }
+    const unit = view.units[hoverPreview.unitId];
+    if (!unit?.position) return null;
+    const rangeCells = getAttackRangeCells(view, unit.id);
+    const targetIds = view.legal?.attackTargetsByUnitId[unit.id] ?? [];
+    return { rangeCells, targetIds };
+  }, [view, hoverPreview]);
+
   const highlightedCells = useMemo(() => {
-    const highlights: Record<string, "place" | "move" | "attack" | "dora"> = {};
+    const highlights: Record<
+      string,
+      "place" | "move" | "attack" | "dora" | "attackRange"
+    > = {};
 
     if (isStakePlacement) {
       for (const coord of stakeLegalPositions) {
@@ -560,6 +662,20 @@ export function Game() {
       }
     }
 
+    const allowHoverPreview =
+      !actionMode && !isStakePlacement && !isIntimidateChoice && !isForestTarget;
+
+    if (allowHoverPreview && hoverAttackPreview && view) {
+      for (const coord of hoverAttackPreview.rangeCells) {
+        highlights[coordKey(coord)] = "attackRange";
+      }
+      for (const targetId of hoverAttackPreview.targetIds) {
+        const unit = view.units[targetId];
+        if (!unit?.position) continue;
+        highlights[coordKey(unit.position)] = "attack";
+      }
+    }
+
     return highlights;
   }, [
     actionMode,
@@ -578,6 +694,7 @@ export function Game() {
     selectedUnit,
     pendingMoveForSelected,
     moveOptions,
+    hoverAttackPreview,
   ]);
 
   const handleCellClick = (col: number, row: number) => {
@@ -928,6 +1045,17 @@ export function Game() {
             joined={joined}
             pendingRoll={hasBlockingRoll}
             onHoverAbility={setHoveredAbilityId}
+            onHoverAttackRange={(unitId, hovering) => {
+              if (hovering) {
+                if (unitId) {
+                  setHoverPreview({ type: "attackRange", unitId });
+                }
+                return;
+              }
+              if (hoverPreview?.type === "attackRange") {
+                setHoverPreview(null);
+              }
+            }}
             onSelectUnit={(id) => {
               setSelectedUnit(id);
               setActionMode(null);

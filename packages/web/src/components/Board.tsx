@@ -12,7 +12,10 @@ interface BoardProps {
   view: PlayerView;
   playerId: PlayerId | null;
   selectedUnitId: string | null;
-  highlightedCells: Record<string, "place" | "move" | "attack" | "dora">;
+  highlightedCells: Record<
+    string,
+    "place" | "move" | "attack" | "dora" | "attackRange"
+  >;
   hoveredAbilityId?: string | null;
   doraPreview?: { center: Coord; radius: number } | null;
   disabled?: boolean;
@@ -32,7 +35,9 @@ function getClassMarker(unitClass: string): string | null {
   return null;
 }
 
-function getHighlightClass(kind: "place" | "move" | "attack" | "dora") {
+function getHighlightClass(
+  kind: "place" | "move" | "attack" | "dora" | "attackRange"
+) {
   switch (kind) {
     case "place":
       return "bg-emerald-300/35";
@@ -40,6 +45,8 @@ function getHighlightClass(kind: "place" | "move" | "attack" | "dora") {
       return "bg-sky-300/35";
     case "attack":
       return "bg-rose-300/40";
+    case "attackRange":
+      return "bg-rose-200/35";
     case "dora":
       return "bg-amber-300/35";
     default:
@@ -166,7 +173,10 @@ export const Board: FC<BoardProps> = ({
   >();
   const lastKnownByPos = new Map<string, number>();
   const stakeMarkersByPos = new Map<string, boolean>();
-  const viewHighlights: Record<string, "place" | "move" | "attack" | "dora"> = {};
+  const viewHighlights: Record<
+    string,
+    "place" | "move" | "attack" | "dora" | "attackRange"
+  > = {};
   const aoeHighlights = new Map<string, "aoe" | "aoeDisabled">();
   const doraPreviewKeys = new Set<string>();
 

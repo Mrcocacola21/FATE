@@ -1,0 +1,186 @@
+import type { ApplyResult, GameAction, GameEvent, GameState, UnitState } from "../model";
+import type { RNG } from "../rng";
+import { isInsideBoard } from "../model";
+import { resolveAoE } from "../aoe";
+import {
+  ABILITY_KAISER_CARPET_STRIKE,
+  ABILITY_KAISER_DORA,
+  ABILITY_KAISER_ENGINEERING_MIRACLE,
+  ABILITY_TRICKSTER_AOE,
+  TRICKSTER_AOE_RADIUS,
+  getAbilitySpec,
+  spendCharges,
+} from "../abilities";
+import { canSpendSlots, spendSlots } from "../turnEconomy";
+import { requestRoll } from "./utils/rollUtils";
+import { evAbilityUsed, evAoeResolved } from "./utils/events";
+import { applyKaiserDora } from "./heroes/kaiser";
+import type { TricksterAoEContext } from "./types";
+
+export function applyUseAbility(
+  state: GameState,
+  action: Extract<GameAction, { type: "useAbility" }>,
+  rng: RNG
+): ApplyResult {
+  if (state.phase !== "battle") {
+    return { state, events: [] };
+  }
+
+  const unit = state.units[action.unitId];
+  if (!unit || !unit.isAlive || !unit.position) {
+    return { state, events: [] };
+  }
+
+  if (unit.owner !== state.currentPlayer) {
+    return { state, events: [] };
+  }
+
+  if (state.activeUnitId !== unit.id) {
+    return { state, events: [] };
+  }
+
+  const spec = getAbilitySpec(action.abilityId);
+  if (!spec) {
+    return { state, events: [] };
+  }
+
+  if (spec.id === ABILITY_KAISER_DORA) {
+    return applyKaiserDora(state, unit, action, rng);
+  }
+
+  if (spec.id === ABILITY_KAISER_ENGINEERING_MIRACLE) {
+    return { state, events: [] };
+  }
+
+  if (spec.id === ABILITY_KAISER_CARPET_STRIKE) {
+    return { state, events: [] };
+  }
+
+  const isTricksterAoE = spec.id === ABILITY_TRICKSTER_AOE;
+  const aoeCenter = isTricksterAoE ? unit.position : null;
+
+  if (isTricksterAoE) {
+    if (unit.class !== "trickster") {
+      return { state, events: [] };
+    }
+    if (!aoeCenter || !isInsideBoard(aoeCenter, state.boardSize)) {
+      return { state, events: [] };
+    }
+  }
+
+  const cost = spec.actionCost;
+  const costs = cost?.consumes ?? {};
+
+  // Проверяем экономику
+  if (!canSpendSlots(unit, costs)) {
+    return { state, events: [] };
+  }
+
+  // Сколько зарядов надо на использование
+  const chargeAmount = spec.chargesPerUse ?? spec.chargeCost ?? 0;
+
+  // Платим зарядами
+  const { unit: afterCharges, ok } = spendCharges(
+    unit,
+    spec.id,
+    chargeAmount
+  );
+  if (!ok || !afterCharges) {
+    return { state, events: [] };
+  }
+
+  // Обновляем экономику
+  const updatedUnit: UnitState = spendSlots(afterCharges, costs);
+
+  // TODO: сюда потом добавим реальный эффект способности (урон/баф/телепорт)
+
+  let nextState: GameState = {
+    ...state,
+    units: {
+      ...state.units,
+      [updatedUnit.id]: updatedUnit,
+    },
+  };
+
+  const events: GameEvent[] = [
+    evAbilityUsed({ unitId: updatedUnit.id, abilityId: spec.id }),
+  ];
+
+  if (isTricksterAoE && aoeCenter) {
+    const res = resolveAoE(
+      nextState,
+      updatedUnit.id,
+      aoeCenter,
+      {
+        radius: TRICKSTER_AOE_RADIUS,
+        shape: "chebyshev",
+        revealHidden: false,
+        targetFilter: (u, caster) => u.id !== caster.id,
+        abilityId: spec.id,
+        emitEvent: false,
+      },
+      rng
+    );
+    nextState = res.nextState;
+    events.push(...res.events);
+
+    const affectedUnitIds = res.affectedUnitIds.filter(
+      (id) => id !== updatedUnit.id
+    );
+    const revealedUnitIds: string[] = [];
+
+    if (affectedUnitIds.length === 0) {
+      events.push(
+        evAoeResolved({
+          sourceUnitId: updatedUnit.id,
+          abilityId: spec.id,
+          casterId: updatedUnit.id,
+          center: aoeCenter,
+          radius: TRICKSTER_AOE_RADIUS,
+          affectedUnitIds,
+          revealedUnitIds,
+          damagedUnitIds: [],
+          damageByUnitId: {},
+        })
+      );
+      return { state: nextState, events };
+    }
+
+    const queuedState: GameState = {
+      ...nextState,
+      pendingCombatQueue: [],
+      pendingAoE: {
+        casterId: updatedUnit.id,
+        abilityId: spec.id,
+        center: aoeCenter,
+        radius: TRICKSTER_AOE_RADIUS,
+        affectedUnitIds,
+        revealedUnitIds,
+        damagedUnitIds: [],
+        damageByUnitId: {},
+      },
+    };
+
+    const ctx: TricksterAoEContext = {
+      casterId: updatedUnit.id,
+      targetsQueue: affectedUnitIds,
+      currentTargetIndex: 0,
+    };
+
+    const requested = requestRoll(
+      queuedState,
+      updatedUnit.owner,
+      "tricksterAoE_attackerRoll",
+      ctx,
+      updatedUnit.id
+    );
+
+    return {
+      state: requested.state,
+      events: [...events, ...requested.events],
+    };
+  }
+
+  return { state: nextState, events };
+}
+

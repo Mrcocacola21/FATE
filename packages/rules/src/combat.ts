@@ -59,7 +59,8 @@ export function canAttackTarget(
 
   switch (attacker.class) {
     case "spearman": {
-      // ровно на 2 клетки по прямой или диагонали
+      // 1 клетка вокруг + ровно 2 по прямой или диагонали
+      if (cheb === 1) return true;
       if (cheb !== 2) return false;
       const isStraight = sameRow || sameCol;
       const isDiagonal = dx === dy;
