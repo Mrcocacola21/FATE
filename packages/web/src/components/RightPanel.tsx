@@ -1,5 +1,5 @@
 ﻿import type { FC } from "react";
-import type { GameAction, PlayerId, PlayerView, MoveMode } from "rules";
+import type { AbilityView, GameAction, PlayerId, PlayerView, MoveMode, UnitState } from "rules";
 import { HERO_CATALOG } from "../figures/catalog";
 import {
   EL_CID_DEMON_DUELIST_ID,
@@ -81,6 +81,55 @@ function formatMoveMode(mode: MoveMode): string {
   }
 }
 
+type AbilityChargeState = {
+  current: number;
+  max: number | null;
+  enabled: boolean;
+  reason?: string;
+};
+
+function getAbilityChargeState(
+  abilityId: string,
+  unitState: UnitState | null,
+  abilityMeta?: AbilityView | null
+): AbilityChargeState {
+  const current =
+    abilityMeta?.currentCharges ?? unitState?.charges?.[abilityId] ?? 0;
+  const max = abilityMeta?.chargeUnlimited
+    ? null
+    : typeof abilityMeta?.chargeRequired === "number"
+    ? abilityMeta.chargeRequired
+    : null;
+
+  if (abilityId !== EL_CID_DEMON_DUELIST_ID) {
+    return { current, max, enabled: true };
+  }
+
+  const required = 5;
+  const enabled = current >= required;
+  return {
+    current,
+    max: required,
+    enabled,
+    reason: enabled ? undefined : "Not enough charges",
+  };
+}
+
+function formatChargeLabel(
+  abilityMeta: AbilityView | null | undefined,
+  chargeState: AbilityChargeState,
+  hideCharges: boolean
+): string | null {
+  if (!abilityMeta || hideCharges) return null;
+  if (abilityMeta.chargeUnlimited) {
+    return `${chargeState.current}`;
+  }
+  if (chargeState.max !== null) {
+    return `${chargeState.current}/${chargeState.max}`;
+  }
+  return null;
+}
+
 export const RightPanel: FC<RightPanelProps> = ({
   view,
   role,
@@ -116,30 +165,37 @@ export const RightPanel: FC<RightPanelProps> = ({
   const doraDisabledReason = doraAbility?.disabledReason;
   const doraDisabled = !doraAbility || !doraAbility.isAvailable;
   const hideDoraCharges = !!selectedUnit?.transformed;
-  const doraChargeLabel = doraAbility && !hideDoraCharges
-    ? doraAbility.chargeUnlimited
-      ? `${doraAbility.currentCharges ?? 0}`
-      : doraAbility.chargeRequired !== undefined
-      ? `${doraAbility.currentCharges ?? 0}/${doraAbility.chargeRequired}`
-      : null
+  const doraChargeState = doraAbility
+    ? getAbilityChargeState(doraAbility.id, selectedUnit, doraAbility)
     : null;
+  const doraChargeLabel =
+    doraAbility && doraChargeState
+      ? formatChargeLabel(doraAbility, doraChargeState, hideDoraCharges)
+      : null;
   const tisonaAbility = abilityViews.find(
     (ability) => ability.id === EL_CID_TISONA_ID
   );
   const tisonaDisabledReason = tisonaAbility?.disabledReason;
   const tisonaDisabled = !tisonaAbility || !tisonaAbility.isAvailable;
+  const tisonaChargeState = tisonaAbility
+    ? getAbilityChargeState(tisonaAbility.id, selectedUnit, tisonaAbility)
+    : null;
   const tisonaChargeLabel =
-    tisonaAbility && tisonaAbility.chargeRequired !== undefined
-      ? `${tisonaAbility.currentCharges ?? 0}/${tisonaAbility.chargeRequired}`
+    tisonaAbility && tisonaChargeState
+      ? formatChargeLabel(tisonaAbility, tisonaChargeState, false)
       : null;
   const duelAbility = abilityViews.find(
     (ability) => ability.id === EL_CID_DEMON_DUELIST_ID
   );
   const duelDisabledReason = duelAbility?.disabledReason;
-  const duelDisabled = !duelAbility || !duelAbility.isAvailable;
+  const duelChargeState = duelAbility
+    ? getAbilityChargeState(duelAbility.id, selectedUnit, duelAbility)
+    : null;
+  const duelDisabled =
+    !duelAbility || !duelAbility.isAvailable || !duelChargeState?.enabled;
   const duelChargeLabel =
-    duelAbility && duelAbility.chargeRequired !== undefined
-      ? `${duelAbility.currentCharges ?? 0}/${duelAbility.chargeRequired}`
+    duelAbility && duelChargeState
+      ? formatChargeLabel(duelAbility, duelChargeState, false)
       : null;
   const moveModeOptions =
     !pendingRoll && moveOptions && selectedUnit && moveOptions.unitId === selectedUnit.id
@@ -375,13 +431,19 @@ export const RightPanel: FC<RightPanelProps> = ({
                   {abilityViews.map((ability) => {
                     const hideCharges =
                       ability.id === KAISER_DORA_ID && selectedUnit?.transformed;
-                    const chargeLabel = hideCharges
-                      ? null
-                      : ability.chargeUnlimited
-                      ? ability.currentCharges ?? 0
-                      : ability.chargeRequired !== undefined
-                      ? `${ability.currentCharges ?? 0}/${ability.chargeRequired}`
-                      : null;
+                    const chargeState = getAbilityChargeState(
+                      ability.id,
+                      selectedUnit,
+                      ability
+                    );
+                    const chargeLabel = formatChargeLabel(
+                      ability,
+                      chargeState,
+                      hideCharges
+                    );
+                    const showChargeWarning =
+                      !!chargeState.reason &&
+                      chargeState.reason !== ability.disabledReason;
                     const slotLabel =
                       ability.slot === "none"
                         ? "None"
@@ -400,6 +462,10 @@ export const RightPanel: FC<RightPanelProps> = ({
                         : ability.kind === "impulse"
                         ? "Impulse"
                         : "Phantasm";
+                    const kindBadgeClass =
+                      ability.kind === "phantasm" && !chargeState.enabled
+                        ? "rounded border border-slate-300 bg-slate-200 px-2 py-0.5 text-[9px] text-slate-500"
+                        : "rounded bg-slate-200 px-2 py-0.5 text-[9px] text-slate-700";
                     return (
                       <div
                         key={ability.id}
@@ -420,7 +486,7 @@ export const RightPanel: FC<RightPanelProps> = ({
                       >
                         <div className="flex items-center justify-between gap-2">
                           <div className="font-semibold">{ability.name}</div>
-                          <span className="rounded bg-slate-200 px-2 py-0.5 text-[9px] text-slate-700">
+                          <span className={kindBadgeClass}>
                             {kindLabel}
                           </span>
                         </div>
@@ -434,6 +500,11 @@ export const RightPanel: FC<RightPanelProps> = ({
                         {ability.disabledReason && (
                           <div className="mt-1 text-amber-700">
                             {ability.disabledReason}
+                          </div>
+                        )}
+                        {showChargeWarning && (
+                          <div className="mt-1 text-amber-700">
+                            {chargeState.reason}
                           </div>
                         )}
                       </div>
@@ -519,7 +590,9 @@ export const RightPanel: FC<RightPanelProps> = ({
             {duelAbility && (
               <button
                 className={`rounded px-2 py-2 ${
-                  duelDisabled ? "bg-slate-100 text-slate-400" : "bg-slate-200"
+                  duelDisabled
+                    ? "bg-slate-100 text-slate-400 cursor-not-allowed opacity-60"
+                    : "bg-slate-200"
                 }`}
                 onClick={() => {
                   if (!selectedUnit) return;
