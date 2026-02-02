@@ -1,0 +1,49 @@
+name: Telegram Notify
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Get changed files
+        id: diff
+        run: |
+          BEFORE=$(git rev-parse HEAD~1)
+          AFTER=$(git rev-parse HEAD)
+
+          FILES=$(git diff --name-only $BEFORE $AFTER | sed 's/^/• /')
+          COUNT=$(git diff --name-only $BEFORE $AFTER | wc -l)
+
+          echo "files<<EOF" >> $GITHUB_OUTPUT
+          echo "$FILES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          echo "count=$COUNT" >> $GITHUB_OUTPUT
+          echo "after=$AFTER" >> $GITHUB_OUTPUT
+
+      - name: Send to Telegram
+        run: |
+          TEXT=$(cat <<EOF
+#${{ github.event.repository.name }} | UPDATE
+
+Files changed: ${{ steps.diff.outputs.count }}
+${{ steps.diff.outputs.files }}
+
+🔍 VIEW CHANGES
+https://github.com/${{ github.repository }}/commit/${{ steps.diff.outputs.after }}
+EOF
+)
+
+          curl -s https://api.telegram.org/bot${{ secrets.TG_BOT_TOKEN }}/sendMessage \
+            -d chat_id=${{ secrets.TG_CHAT_ID }} \
+            -d text="$TEXT" \
+            -d disable_web_page_preview=true
