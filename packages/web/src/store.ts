@@ -26,7 +26,14 @@ import {
   type ServerMessage,
 } from "./ws";
 
-export type ActionMode = "move" | "attack" | "place" | "dora" | null;
+export type ActionMode =
+  | "move"
+  | "attack"
+  | "place"
+  | "dora"
+  | "tisona"
+  | "demonDuelist"
+  | null;
 export type HoverPreview = { type: "attackRange"; unitId: string } | null;
 
 const defaultRoomMeta: RoomMeta = {

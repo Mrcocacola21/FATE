@@ -7,6 +7,9 @@ import {
   ABILITY_KAISER_DORA,
   ABILITY_KAISER_ENGINEERING_MIRACLE,
   ABILITY_TRICKSTER_AOE,
+  ABILITY_EL_SID_COMPEADOR_TISONA,
+  ABILITY_EL_SID_COMPEADOR_DEMON_DUELIST,
+  ABILITY_EL_SID_COMPEADOR_KOLADA,
   TRICKSTER_AOE_RADIUS,
   getAbilitySpec,
   spendCharges,
@@ -15,6 +18,7 @@ import { canSpendSlots, spendSlots } from "../turnEconomy";
 import { requestRoll } from "./utils/rollUtils";
 import { evAbilityUsed, evAoeResolved } from "./utils/events";
 import { applyKaiserDora } from "./heroes/kaiser";
+import { applyElCidDemonDuelist, applyElCidTisona } from "./heroes/elCid";
 import type { TricksterAoEContext } from "./types";
 
 export function applyUseAbility(
@@ -53,6 +57,18 @@ export function applyUseAbility(
   }
 
   if (spec.id === ABILITY_KAISER_CARPET_STRIKE) {
+    return { state, events: [] };
+  }
+
+  if (spec.id === ABILITY_EL_SID_COMPEADOR_TISONA) {
+    return applyElCidTisona(state, unit, action, rng);
+  }
+
+  if (spec.id === ABILITY_EL_SID_COMPEADOR_DEMON_DUELIST) {
+    return applyElCidDemonDuelist(state, unit, action);
+  }
+
+  if (spec.id === ABILITY_EL_SID_COMPEADOR_KOLADA) {
     return { state, events: [] };
   }
 

@@ -17,7 +17,7 @@ import { isInsideBoard } from "../model";
 import type { RNG } from "../rng";
 import { roll2D6, rollD6 } from "../rng";
 import { getUnitDefinition } from "../units";
-import { resolveAttack } from "../combat";
+import { canAttackTarget, resolveAttack } from "../combat";
 import { getBerserkerMovesForRoll, getTricksterMovesForRoll } from "../movement";
 import { chebyshev, coordsEqual } from "../board";
 import { revealUnit } from "../stealth";
@@ -36,7 +36,7 @@ import {
   maybeRequestIntimidate,
   requestVladStakesPlacement,
 } from "./heroes/vlad";
-import { isKaiserTransformed, map2d9ToCoord, rollD9 } from "./shared";
+import { isElCid, isKaiserTransformed, map2d9ToCoord, rollD9 } from "./shared";
 import type { IntimidateResume } from "./types";
 import {
   evAoeResolved,
@@ -1342,6 +1342,10 @@ interface AttackRollContext extends Record<string, unknown> {
   berserkerChoiceMade?: boolean;
   consumeSlots?: boolean;
   queueKind?: "normal" | "riderPath" | "aoe";
+  elCidDuelist?: {
+    attackerId: string;
+    targetId: string;
+  };
 }
 
 interface TricksterAoEContext extends Record<string, unknown> {
@@ -1361,6 +1365,13 @@ interface DoraAoEContext extends Record<string, unknown> {
 interface ForestAoEContext extends Record<string, unknown> {
   casterId: string;
   center: Coord;
+  targetsQueue: string[];
+  currentTargetIndex?: number;
+  attackerDice?: number[];
+}
+
+interface ElCidAoEContext extends Record<string, unknown> {
+  casterId: string;
   targetsQueue: string[];
   currentTargetIndex?: number;
   attackerDice?: number[];
@@ -1420,7 +1431,8 @@ function makeAttackContext(params: {
 function finalizeAttackFromContext(
   state: GameState,
   context: AttackRollContext,
-  useAutoDefense: boolean
+  useAutoDefense: boolean,
+  autoHit: boolean = false
 ): ApplyResult {
   const rolls = {
     attackerDice: context.attackerDice ?? [],
@@ -1442,6 +1454,7 @@ function finalizeAttackFromContext(
     revealStealthedAllies: context.revealStealthedAllies,
     revealReason: context.revealReason,
     damageBonus,
+    autoHit,
     rolls,
   });
 
@@ -1624,6 +1637,123 @@ function advanceCombatQueue(
 
   nextEvents = [...nextEvents, ...requested.events];
   return { state: requested.state, events: nextEvents };
+}
+
+function isDoubleRoll(dice: number[]): boolean {
+  return dice.length >= 2 && dice[0] === dice[1];
+}
+
+function findAttackResolved(
+  events: GameEvent[],
+  attackerId: string,
+  defenderId: string
+): Extract<GameEvent, { type: "attackResolved" }> | undefined {
+  return events.find(
+    (event) =>
+      event.type === "attackResolved" &&
+      event.attackerId === attackerId &&
+      event.defenderId === defenderId
+  ) as Extract<GameEvent, { type: "attackResolved" }> | undefined;
+}
+
+function requestElCidDuelistChoice(
+  state: GameState,
+  baseEvents: GameEvent[],
+  attackerId: string,
+  targetId: string
+): ApplyResult {
+  const attacker = state.units[attackerId];
+  const target = state.units[targetId];
+  if (!attacker || !attacker.isAlive || !target || !target.isAlive) {
+    return { state, events: baseEvents };
+  }
+  if (attacker.hp <= 1) {
+    return { state, events: baseEvents };
+  }
+
+  const requested = requestRoll(
+    clearPendingRoll(state),
+    attacker.owner,
+    "elCidDuelistChoice",
+    { attackerId, targetId, duelInProgress: true },
+    attackerId
+  );
+  return { state: requested.state, events: [...baseEvents, ...requested.events] };
+}
+
+function requestNextElCidDuelAttack(
+  state: GameState,
+  baseEvents: GameEvent[],
+  attackerId: string,
+  targetId: string
+): ApplyResult {
+  const attacker = state.units[attackerId];
+  const target = state.units[targetId];
+  if (!attacker || !attacker.isAlive || !target || !target.isAlive) {
+    return { state, events: baseEvents };
+  }
+
+  if (!canAttackTarget(state, attacker, target)) {
+    return { state, events: baseEvents };
+  }
+
+  const ctx: AttackRollContext = {
+    ...makeAttackContext({
+      attackerId,
+      defenderId: targetId,
+      consumeSlots: false,
+      queueKind: "normal",
+    }),
+    elCidDuelist: { attackerId, targetId },
+  };
+
+  const requested = requestRoll(
+    clearPendingRoll(state),
+    attacker.owner,
+    "attack_attackerRoll",
+    ctx,
+    attacker.id
+  );
+  return { state: requested.state, events: [...baseEvents, ...requested.events] };
+}
+
+function handleElCidDuelistAfterAttack(
+  state: GameState,
+  events: GameEvent[],
+  context: AttackRollContext
+): ApplyResult {
+  const duel = context.elCidDuelist;
+  if (!duel) {
+    return { state, events };
+  }
+
+  const attackEvent = findAttackResolved(events, duel.attackerId, duel.targetId);
+  if (!attackEvent) {
+    return { state, events };
+  }
+
+  const attacker = state.units[duel.attackerId];
+  const target = state.units[duel.targetId];
+  if (!attacker || !attacker.isAlive || !target || !target.isAlive) {
+    return { state, events };
+  }
+
+  if (attackEvent.hit) {
+    return requestNextElCidDuelAttack(state, events, duel.attackerId, duel.targetId);
+  }
+
+  const intimidate = maybeRequestIntimidate(
+    state,
+    duel.attackerId,
+    duel.targetId,
+    events,
+    { kind: "elCidDuelist", context: { attackerId: duel.attackerId, targetId: duel.targetId } }
+  );
+  if (intimidate.requested) {
+    return { state: intimidate.state, events: intimidate.events };
+  }
+
+  return requestElCidDuelistChoice(state, events, duel.attackerId, duel.targetId);
 }
 
 function finalizeTricksterAoE(
@@ -1838,6 +1968,486 @@ function resolveTricksterAoEDefenderRoll(
   }
 
   return advanceTricksterAoEQueue(updatedState, nextCtx, updatedEvents);
+}
+
+function finalizeElCidAoE(
+  state: GameState,
+  events: GameEvent[]
+): ApplyResult {
+  if (!state.pendingAoE) {
+    return { state: clearPendingRoll(state), events };
+  }
+
+  const aoe = state.pendingAoE;
+  const nextState: GameState = { ...state, pendingAoE: null };
+  return {
+    state: clearPendingRoll(nextState),
+    events: [
+      ...events,
+      evAoeResolved({
+        sourceUnitId: aoe.casterId,
+        abilityId: aoe.abilityId,
+        casterId: aoe.casterId,
+        center: aoe.center,
+        radius: aoe.radius,
+        affectedUnitIds: aoe.affectedUnitIds,
+        revealedUnitIds: aoe.revealedUnitIds,
+        damagedUnitIds: aoe.damagedUnitIds,
+        damageByUnitId: aoe.damageByUnitId,
+      }),
+    ],
+  };
+}
+
+function advanceElCidAoEQueue(
+  state: GameState,
+  context: ElCidAoEContext,
+  events: GameEvent[],
+  defenderRollKind: RollKind
+): ApplyResult {
+  const baseState = clearPendingRoll(state);
+  const targets = Array.isArray(context.targetsQueue)
+    ? context.targetsQueue
+    : [];
+  let idx = context.currentTargetIndex ?? 0;
+
+  while (idx < targets.length) {
+    const targetId = targets[idx];
+    const target = baseState.units[targetId];
+    if (target && target.isAlive) {
+      const nextCtx: ElCidAoEContext = {
+        ...context,
+        currentTargetIndex: idx,
+      };
+      const requested = requestRoll(
+        baseState,
+        target.owner,
+        defenderRollKind,
+        nextCtx,
+        target.id
+      );
+      return { state: requested.state, events: [...events, ...requested.events] };
+    }
+    idx += 1;
+  }
+
+  return finalizeElCidAoE(baseState, events);
+}
+
+function resolveElCidAoEAutoHit(
+  state: GameState,
+  context: ElCidAoEContext,
+  events: GameEvent[]
+): ApplyResult {
+  const baseState = clearPendingRoll(state);
+  const targets = Array.isArray(context.targetsQueue)
+    ? context.targetsQueue
+    : [];
+  let idx = context.currentTargetIndex ?? 0;
+  let workingState = baseState;
+  let updatedEvents = [...events];
+
+  const attackerDice = Array.isArray(context.attackerDice)
+    ? context.attackerDice
+    : [];
+
+  while (idx < targets.length) {
+    const targetId = targets[idx];
+    const target = workingState.units[targetId];
+    if (!target || !target.isAlive) {
+      idx += 1;
+      continue;
+    }
+
+    const sourceId = getPolkovodetsSource(workingState, context.casterId);
+    const damageBonus = sourceId ? 1 : 0;
+    const { nextState, events: attackEvents } = resolveAttack(workingState, {
+      attackerId: context.casterId,
+      defenderId: targetId,
+      ignoreRange: true,
+      ignoreStealth: true,
+      revealStealthedAllies: true,
+      revealReason: "aoeHit",
+      damageBonus,
+      autoHit: true,
+      rolls: {
+        attackerDice,
+        defenderDice: [],
+      },
+    });
+
+    workingState = nextState;
+    updatedEvents.push(...attackEvents);
+
+    const attackEvent = findAttackResolved(
+      attackEvents,
+      context.casterId,
+      targetId
+    );
+    if (
+      attackEvent &&
+      attackEvent.type === "attackResolved" &&
+      attackEvent.hit &&
+      damageBonus > 0 &&
+      sourceId
+    ) {
+      updatedEvents.push(
+        evDamageBonusApplied({
+          unitId: context.casterId,
+          amount: damageBonus,
+          source: "polkovodets",
+          fromUnitId: sourceId,
+        })
+      );
+    }
+
+    if (attackEvent && attackEvent.type === "attackResolved" && workingState.pendingAoE) {
+      let nextPendingAoE = workingState.pendingAoE;
+      if (attackEvent.damage > 0) {
+        const damaged = nextPendingAoE.damagedUnitIds.includes(attackEvent.defenderId)
+          ? nextPendingAoE.damagedUnitIds
+          : [...nextPendingAoE.damagedUnitIds, attackEvent.defenderId];
+        const damageByUnitId = {
+          ...nextPendingAoE.damageByUnitId,
+          [attackEvent.defenderId]: attackEvent.damage,
+        };
+        nextPendingAoE = {
+          ...nextPendingAoE,
+          damagedUnitIds: damaged,
+          damageByUnitId,
+        };
+      }
+
+      const revealedIds = attackEvents
+        .filter((e) => e.type === "stealthRevealed")
+        .map((e) => (e.type === "stealthRevealed" ? e.unitId : ""))
+        .filter((id) => id.length > 0);
+      if (revealedIds.length > 0) {
+        const merged = Array.from(
+          new Set([...nextPendingAoE.revealedUnitIds, ...revealedIds])
+        );
+        nextPendingAoE = { ...nextPendingAoE, revealedUnitIds: merged };
+      }
+
+      if (nextPendingAoE !== workingState.pendingAoE) {
+        workingState = { ...workingState, pendingAoE: nextPendingAoE };
+      }
+    }
+
+    idx += 1;
+  }
+
+  return finalizeElCidAoE(workingState, updatedEvents);
+}
+
+function resolveElCidTisonaAttackerRoll(
+  state: GameState,
+  pending: PendingRoll,
+  rng: RNG
+): ApplyResult {
+  const ctx = pending.context as unknown as ElCidAoEContext;
+  const caster = state.units[ctx.casterId];
+  if (!caster) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  const attackerDice = rollDice(rng, 2);
+  const nextCtx: ElCidAoEContext = {
+    ...ctx,
+    attackerDice,
+    currentTargetIndex: ctx.currentTargetIndex ?? 0,
+  };
+
+  if (isElCid(caster) && isDoubleRoll(attackerDice)) {
+    return resolveElCidAoEAutoHit(state, nextCtx, []);
+  }
+
+  return advanceElCidAoEQueue(state, nextCtx, [], "elCidTisona_defenderRoll");
+}
+
+function resolveElCidTisonaDefenderRoll(
+  state: GameState,
+  pending: PendingRoll,
+  rng: RNG
+): ApplyResult {
+  const ctx = pending.context as unknown as ElCidAoEContext;
+  const caster = state.units[ctx.casterId];
+  if (!caster) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  const attackerDice = Array.isArray(ctx.attackerDice) ? ctx.attackerDice : [];
+  if (attackerDice.length < 2) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  const targets = Array.isArray(ctx.targetsQueue) ? ctx.targetsQueue : [];
+  const idx = ctx.currentTargetIndex ?? 0;
+  const targetId = targets[idx];
+  if (!targetId) {
+    return finalizeElCidAoE(clearPendingRoll(state), []);
+  }
+
+  const target = state.units[targetId];
+  if (!target || !target.isAlive) {
+    const nextCtx: ElCidAoEContext = {
+      ...ctx,
+      currentTargetIndex: idx + 1,
+    };
+    return advanceElCidAoEQueue(state, nextCtx, [], "elCidTisona_defenderRoll");
+  }
+
+  const defenderDice = rollDice(rng, 2);
+  const sourceId = getPolkovodetsSource(state, caster.id);
+  const damageBonus = sourceId ? 1 : 0;
+  const { nextState, events } = resolveAttack(state, {
+    attackerId: caster.id,
+    defenderId: targetId,
+    ignoreRange: true,
+    ignoreStealth: true,
+    revealStealthedAllies: true,
+    revealReason: "aoeHit",
+    damageBonus,
+    rolls: {
+      attackerDice,
+      defenderDice,
+    },
+  });
+
+  let updatedState = nextState;
+  let updatedEvents: GameEvent[] = [...events];
+  const attackEvent = findAttackResolved(events, caster.id, targetId);
+  if (
+    attackEvent &&
+    attackEvent.type === "attackResolved" &&
+    attackEvent.hit &&
+    damageBonus > 0 &&
+    sourceId
+  ) {
+    updatedEvents.push(
+      evDamageBonusApplied({
+        unitId: caster.id,
+        amount: damageBonus,
+        source: "polkovodets",
+        fromUnitId: sourceId,
+      })
+    );
+  }
+  if (attackEvent && attackEvent.type === "attackResolved" && updatedState.pendingAoE) {
+    let nextPendingAoE = updatedState.pendingAoE;
+    if (attackEvent.damage > 0) {
+      const damaged = nextPendingAoE.damagedUnitIds.includes(attackEvent.defenderId)
+        ? nextPendingAoE.damagedUnitIds
+        : [...nextPendingAoE.damagedUnitIds, attackEvent.defenderId];
+      const damageByUnitId = {
+        ...nextPendingAoE.damageByUnitId,
+        [attackEvent.defenderId]: attackEvent.damage,
+      };
+      nextPendingAoE = {
+        ...nextPendingAoE,
+        damagedUnitIds: damaged,
+        damageByUnitId,
+      };
+    }
+
+    const revealedIds = events
+      .filter((e) => e.type === "stealthRevealed")
+      .map((e) => (e.type === "stealthRevealed" ? e.unitId : ""))
+      .filter((id) => id.length > 0);
+    if (revealedIds.length > 0) {
+      const merged = Array.from(
+        new Set([...nextPendingAoE.revealedUnitIds, ...revealedIds])
+      );
+      nextPendingAoE = { ...nextPendingAoE, revealedUnitIds: merged };
+    }
+
+    if (nextPendingAoE !== updatedState.pendingAoE) {
+      updatedState = { ...updatedState, pendingAoE: nextPendingAoE };
+    }
+  }
+
+  const nextCtx: ElCidAoEContext = {
+    ...ctx,
+    currentTargetIndex: idx + 1,
+    attackerDice,
+  };
+
+  const intimidateResume: IntimidateResume = {
+    kind: "elCidTisonaAoE",
+    context: nextCtx as unknown as Record<string, unknown>,
+  };
+  const intimidate = maybeRequestIntimidate(
+    updatedState,
+    caster.id,
+    targetId,
+    updatedEvents,
+    intimidateResume
+  );
+  if (intimidate.requested) {
+    return { state: intimidate.state, events: intimidate.events };
+  }
+
+  return advanceElCidAoEQueue(
+    updatedState,
+    nextCtx,
+    updatedEvents,
+    "elCidTisona_defenderRoll"
+  );
+}
+
+function resolveElCidKoladaAttackerRoll(
+  state: GameState,
+  pending: PendingRoll,
+  rng: RNG
+): ApplyResult {
+  const ctx = pending.context as unknown as ElCidAoEContext;
+  const caster = state.units[ctx.casterId];
+  if (!caster) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  const attackerDice = rollDice(rng, 2);
+  const nextCtx: ElCidAoEContext = {
+    ...ctx,
+    attackerDice,
+    currentTargetIndex: ctx.currentTargetIndex ?? 0,
+  };
+
+  if (isElCid(caster) && isDoubleRoll(attackerDice)) {
+    return resolveElCidAoEAutoHit(state, nextCtx, []);
+  }
+
+  return advanceElCidAoEQueue(state, nextCtx, [], "elCidKolada_defenderRoll");
+}
+
+function resolveElCidKoladaDefenderRoll(
+  state: GameState,
+  pending: PendingRoll,
+  rng: RNG
+): ApplyResult {
+  const ctx = pending.context as unknown as ElCidAoEContext;
+  const caster = state.units[ctx.casterId];
+  if (!caster) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  const attackerDice = Array.isArray(ctx.attackerDice) ? ctx.attackerDice : [];
+  if (attackerDice.length < 2) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  const targets = Array.isArray(ctx.targetsQueue) ? ctx.targetsQueue : [];
+  const idx = ctx.currentTargetIndex ?? 0;
+  const targetId = targets[idx];
+  if (!targetId) {
+    return finalizeElCidAoE(clearPendingRoll(state), []);
+  }
+
+  const target = state.units[targetId];
+  if (!target || !target.isAlive) {
+    const nextCtx: ElCidAoEContext = {
+      ...ctx,
+      currentTargetIndex: idx + 1,
+    };
+    return advanceElCidAoEQueue(state, nextCtx, [], "elCidKolada_defenderRoll");
+  }
+
+  const defenderDice = rollDice(rng, 2);
+  const sourceId = getPolkovodetsSource(state, caster.id);
+  const damageBonus = sourceId ? 1 : 0;
+  const { nextState, events } = resolveAttack(state, {
+    attackerId: caster.id,
+    defenderId: targetId,
+    ignoreRange: true,
+    ignoreStealth: true,
+    revealStealthedAllies: true,
+    revealReason: "aoeHit",
+    damageBonus,
+    rolls: {
+      attackerDice,
+      defenderDice,
+    },
+  });
+
+  let updatedState = nextState;
+  let updatedEvents: GameEvent[] = [...events];
+  const attackEvent = findAttackResolved(events, caster.id, targetId);
+  if (
+    attackEvent &&
+    attackEvent.type === "attackResolved" &&
+    attackEvent.hit &&
+    damageBonus > 0 &&
+    sourceId
+  ) {
+    updatedEvents.push(
+      evDamageBonusApplied({
+        unitId: caster.id,
+        amount: damageBonus,
+        source: "polkovodets",
+        fromUnitId: sourceId,
+      })
+    );
+  }
+  if (attackEvent && attackEvent.type === "attackResolved" && updatedState.pendingAoE) {
+    let nextPendingAoE = updatedState.pendingAoE;
+    if (attackEvent.damage > 0) {
+      const damaged = nextPendingAoE.damagedUnitIds.includes(attackEvent.defenderId)
+        ? nextPendingAoE.damagedUnitIds
+        : [...nextPendingAoE.damagedUnitIds, attackEvent.defenderId];
+      const damageByUnitId = {
+        ...nextPendingAoE.damageByUnitId,
+        [attackEvent.defenderId]: attackEvent.damage,
+      };
+      nextPendingAoE = {
+        ...nextPendingAoE,
+        damagedUnitIds: damaged,
+        damageByUnitId,
+      };
+    }
+
+    const revealedIds = events
+      .filter((e) => e.type === "stealthRevealed")
+      .map((e) => (e.type === "stealthRevealed" ? e.unitId : ""))
+      .filter((id) => id.length > 0);
+    if (revealedIds.length > 0) {
+      const merged = Array.from(
+        new Set([...nextPendingAoE.revealedUnitIds, ...revealedIds])
+      );
+      nextPendingAoE = { ...nextPendingAoE, revealedUnitIds: merged };
+    }
+
+    if (nextPendingAoE !== updatedState.pendingAoE) {
+      updatedState = { ...updatedState, pendingAoE: nextPendingAoE };
+    }
+  }
+
+  const nextCtx: ElCidAoEContext = {
+    ...ctx,
+    currentTargetIndex: idx + 1,
+    attackerDice,
+  };
+
+  const intimidateResume: IntimidateResume = {
+    kind: "elCidKoladaAoE",
+    context: nextCtx as unknown as Record<string, unknown>,
+  };
+  const intimidate = maybeRequestIntimidate(
+    updatedState,
+    caster.id,
+    targetId,
+    updatedEvents,
+    intimidateResume
+  );
+  if (intimidate.requested) {
+    return { state: intimidate.state, events: intimidate.events };
+  }
+
+  return advanceElCidAoEQueue(
+    updatedState,
+    nextCtx,
+    updatedEvents,
+    "elCidKolada_defenderRoll"
+  );
 }
 
 function finalizeDoraAoE(
@@ -2256,6 +2866,30 @@ function resolveAttackAttackerRoll(
     nextCtx.attackerDice = dice;
   }
 
+  const isAutoHit =
+    stage === "initial" && isElCid(attacker) && isDoubleRoll(dice);
+  if (isAutoHit) {
+    const resolved = finalizeAttackFromContext(state, nextCtx, false, true);
+    if (nextCtx.elCidDuelist) {
+      return handleElCidDuelistAfterAttack(
+        resolved.state,
+        resolved.events,
+        nextCtx
+      );
+    }
+    const intimidate = maybeRequestIntimidate(
+      resolved.state,
+      ctx.attackerId,
+      ctx.defenderId,
+      resolved.events,
+      { kind: "combatQueue" }
+    );
+    if (intimidate.requested) {
+      return { state: intimidate.state, events: intimidate.events };
+    }
+    return advanceCombatQueue(resolved.state, resolved.events);
+  }
+
   const charges = defender.charges?.[ABILITY_BERSERK_AUTO_DEFENSE] ?? 0;
   if (defender.class === "berserker" && charges === 6 && !nextCtx.berserkerChoiceMade) {
     return replacePendingRoll(
@@ -2331,6 +2965,13 @@ function resolveAttackDefenderRoll(
   }
 
   const resolved = finalizeAttackFromContext(state, nextCtx, false);
+  if (nextCtx.elCidDuelist) {
+    return handleElCidDuelistAfterAttack(
+      resolved.state,
+      resolved.events,
+      nextCtx
+    );
+  }
   const intimidate = maybeRequestIntimidate(
     resolved.state,
     ctx.attackerId,
@@ -2370,6 +3011,9 @@ function resolveBerserkerDefenseChoiceRoll(
       evBerserkerDefenseChosen({ defenderId: defender.id, choice: "auto" }),
       ...resolved.events,
     ];
+    if (ctx.elCidDuelist) {
+      return handleElCidDuelistAfterAttack(resolved.state, choiceEvents, ctx);
+    }
     const intimidate = maybeRequestIntimidate(
       resolved.state,
       ctx.attackerId,
@@ -2405,6 +3049,67 @@ function resolveBerserkerDefenseChoiceRoll(
   }
 
   return { state: clearPendingRoll(state), events: [] };
+}
+
+function resolveElCidDuelistChoice(
+  state: GameState,
+  pending: PendingRoll,
+  choice: ResolveRollChoice | undefined
+): ApplyResult {
+  const ctx = pending.context as {
+    attackerId?: string;
+    targetId?: string;
+  };
+  const attackerId = ctx.attackerId;
+  const targetId = ctx.targetId;
+  if (!attackerId || !targetId) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  const attacker = state.units[attackerId];
+  const target = state.units[targetId];
+  if (!attacker || !attacker.isAlive || !target || !target.isAlive) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  const selection =
+    choice === "elCidDuelistContinue"
+      ? "continue"
+      : choice === "elCidDuelistStop"
+      ? "stop"
+      : undefined;
+
+  if (!selection) {
+    return { state, events: [] };
+  }
+
+  if (selection === "stop") {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  if (attacker.hp <= 1) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  const updatedAttacker: UnitState = {
+    ...attacker,
+    hp: attacker.hp - 1,
+  };
+
+  const updatedState: GameState = {
+    ...clearPendingRoll(state),
+    units: {
+      ...state.units,
+      [updatedAttacker.id]: updatedAttacker,
+    },
+  };
+
+  return requestNextElCidDuelAttack(
+    updatedState,
+    [],
+    updatedAttacker.id,
+    targetId
+  );
 }
 
 function resolveVladIntimidateChoice(
@@ -2512,6 +3217,32 @@ function resolveVladIntimidateChoice(
         resume.context as unknown as ForestAoEContext,
         events
       );
+    case "elCidTisonaAoE":
+      return advanceElCidAoEQueue(
+        updatedState,
+        resume.context as unknown as ElCidAoEContext,
+        events,
+        "elCidTisona_defenderRoll"
+      );
+    case "elCidKoladaAoE":
+      return advanceElCidAoEQueue(
+        updatedState,
+        resume.context as unknown as ElCidAoEContext,
+        events,
+        "elCidKolada_defenderRoll"
+      );
+    case "elCidDuelist": {
+      const duelCtx = resume.context as { attackerId?: string; targetId?: string };
+      if (!duelCtx.attackerId || !duelCtx.targetId) {
+        return { state: updatedState, events };
+      }
+      return requestElCidDuelistChoice(
+        updatedState,
+        events,
+        duelCtx.attackerId,
+        duelCtx.targetId
+      );
+    }
     default:
       return { state: updatedState, events };
   }
@@ -2815,6 +3546,18 @@ export function applyResolvePendingRoll(
     case "tricksterAoE_defenderRoll": {
       return resolveTricksterAoEDefenderRoll(state, pending, rng);
     }
+    case "elCidTisona_attackerRoll": {
+      return resolveElCidTisonaAttackerRoll(state, pending, rng);
+    }
+    case "elCidTisona_defenderRoll": {
+      return resolveElCidTisonaDefenderRoll(state, pending, rng);
+    }
+    case "elCidKolada_attackerRoll": {
+      return resolveElCidKoladaAttackerRoll(state, pending, rng);
+    }
+    case "elCidKolada_defenderRoll": {
+      return resolveElCidKoladaDefenderRoll(state, pending, rng);
+    }
     case "dora_attackerRoll": {
       return resolveDoraAttackerRoll(state, pending, rng);
     }
@@ -2852,6 +3595,9 @@ export function applyResolvePendingRoll(
         autoRollChoice,
         rng
       );
+    }
+    case "elCidDuelistChoice": {
+      return resolveElCidDuelistChoice(state, pending, action.choice);
     }
     default:
       return { state: clearPendingRoll(state), events: [] };

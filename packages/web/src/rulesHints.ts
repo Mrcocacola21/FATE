@@ -5,6 +5,10 @@ export const TRICKSTER_AOE_ID = "tricksterAoE";
 export const TRICKSTER_AOE_RADIUS = 2;
 export const KAISER_DORA_ID = "kaiserDora";
 export const VLAD_TEPES_ID = "vladTepes";
+export const EL_CID_COMPEADOR_ID = "elCidCompeador";
+export const EL_CID_TISONA_ID = "elCidCompeadorTisona";
+export const EL_CID_KOLADA_ID = "elCidCompeadorKolada";
+export const EL_CID_DEMON_DUELIST_ID = "elCidCompeadorDemonDuelist";
 
 const MAX_HP_BY_CLASS: Record<UnitClass, number> = {
   spearman: 5,
@@ -19,6 +23,9 @@ const MAX_HP_BY_CLASS: Record<UnitClass, number> = {
 export function getMaxHp(unitClass: UnitClass, heroId?: string): number {
   let base = MAX_HP_BY_CLASS[unitClass] ?? 1;
   if (heroId === VLAD_TEPES_ID) {
+    base += 2;
+  }
+  if (heroId === EL_CID_COMPEADOR_ID) {
     base += 2;
   }
   return base;

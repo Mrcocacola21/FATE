@@ -20,6 +20,9 @@ This runs:
 - `server` on `http://localhost:3000`
 - `web` on `http://localhost:5173`
 
+Note: the server now waits for `packages/rules/dist/index.js` to exist before starting,
+to avoid intermittent "Cannot find module ... rules/dist/index.js" crashes during watch startup.
+
 Optional local env file (not required for dev):
 - Copy `.env.example` to `.env` if you want to pin API/WS URLs.
 

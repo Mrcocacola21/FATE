@@ -144,6 +144,7 @@ export function resolveAttack(
     revealReason?: StealthRevealReason;
     damageBonus?: number;
     damageOverride?: number;
+    autoHit?: boolean;
     rolls?: {
       attackerDice: number[];
       defenderDice: number[];
@@ -264,7 +265,7 @@ export function resolveAttack(
 
   const attackerDice = rollInput.attackerDice ?? [];
   const defenderDice = rollInput.defenderDice ?? [];
-  if (attackerDice.length < 2 || defenderDice.length < 2) {
+  if (attackerDice.length < 2 || (!params.autoHit && defenderDice.length < 2)) {
     return { nextState: state, events: [] };
   }
 
@@ -274,13 +275,13 @@ export function resolveAttack(
   const attackerRoll = buildDiceRoll(attackerDice, tieBreakAttacker);
   const defenderRoll = buildDiceRoll(defenderDice, tieBreakDefender);
 
-  let hit = attackerRoll.sum > defenderRoll.sum;
+  let hit = params.autoHit ? true : attackerRoll.sum > defenderRoll.sum;
 
   // --- Пассивки классов ---
 
   // Копейщик на защите: при дубле на защите — авто-уклонение
   // (дубль проверяется только по первым двум кубам).
-  if (defenderAfter.class === "spearman" && defenderRoll.isDouble) {
+  if (!params.autoHit && defenderAfter.class === "spearman" && defenderRoll.isDouble) {
     hit = false;
   }
 

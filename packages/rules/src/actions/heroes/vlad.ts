@@ -1,7 +1,7 @@
 import type { Coord, GameEvent, GameState, PlayerId, UnitState } from "../../model";
 import { chebyshev, getUnitAt } from "../../board";
 import { clearPendingRoll, requestRoll } from "../utils/rollUtils";
-import { isVlad, getAdjacentEmptyCells, isUnitVisibleToPlayer } from "../shared";
+import { isVlad, isElCid, getAdjacentEmptyCells, isUnitVisibleToPlayer } from "../shared";
 import {
   getLegalStakePositions,
   consumeOldestStakes,
@@ -20,7 +20,7 @@ export function getPolkovodetsSource(
 ): string | null {
   const attacker = state.units[attackerId];
   if (!attacker || !attacker.position) return null;
-  if (isVlad(attacker)) return null;
+  if (isVlad(attacker) || isElCid(attacker)) return null;
 
   const origin = positionOverride ?? attacker.position;
   const candidates = Object.values(state.units)
@@ -29,7 +29,7 @@ export function getPolkovodetsSource(
         unit.isAlive &&
         unit.position &&
         unit.owner === attacker.owner &&
-        isVlad(unit) &&
+        (isVlad(unit) || isElCid(unit)) &&
         unit.id !== attacker.id &&
         chebyshev(origin, unit.position) <= 1
     )

@@ -17,6 +17,10 @@ export interface AttackRollContext extends Record<string, unknown> {
   berserkerChoiceMade?: boolean;
   consumeSlots?: boolean;
   queueKind?: "normal" | "riderPath" | "aoe";
+  elCidDuelist?: {
+    attackerId: string;
+    targetId: string;
+  };
 }
 
 export interface TricksterAoEContext extends Record<string, unknown> {
@@ -41,10 +45,20 @@ export interface ForestAoEContext extends Record<string, unknown> {
   attackerDice?: number[];
 }
 
+export interface ElCidAoEContext extends Record<string, unknown> {
+  casterId: string;
+  targetsQueue: string[];
+  currentTargetIndex?: number;
+  attackerDice?: number[];
+}
+
 export type IntimidateResume =
   | { kind: "none" }
   | { kind: "combatQueue" }
   | { kind: "tricksterAoE"; context: Record<string, unknown> }
   | { kind: "doraAoE"; context: Record<string, unknown> }
   | { kind: "carpetStrike"; context: Record<string, unknown> }
-  | { kind: "forestAoE"; context: Record<string, unknown> };
+  | { kind: "forestAoE"; context: Record<string, unknown> }
+  | { kind: "elCidTisonaAoE"; context: Record<string, unknown> }
+  | { kind: "elCidKoladaAoE"; context: Record<string, unknown> }
+  | { kind: "elCidDuelist"; context: Record<string, unknown> };

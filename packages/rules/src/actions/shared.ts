@@ -5,6 +5,7 @@ import { addCoord, ALL_DIRS, isCellOccupied } from "../board";
 import {
   HERO_GRAND_KAISER_ID,
   HERO_VLAD_TEPES_ID,
+  HERO_EL_CID_COMPEADOR_ID,
   getHeroDefinition,
 } from "../heroes";
 import type { RNG } from "../rng";
@@ -22,6 +23,10 @@ export function isKaiser(unit: UnitState): boolean {
 
 export function isVlad(unit: UnitState): boolean {
   return unit.heroId === HERO_VLAD_TEPES_ID;
+}
+
+export function isElCid(unit: UnitState): boolean {
+  return unit.heroId === HERO_EL_CID_COMPEADOR_ID;
 }
 
 export function isKaiserTransformed(unit: UnitState): boolean {

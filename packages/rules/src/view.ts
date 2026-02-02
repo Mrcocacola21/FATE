@@ -147,6 +147,10 @@ export function makePlayerView(
     pendingRoll &&
     (pendingRoll.kind === "tricksterAoE_attackerRoll" ||
       pendingRoll.kind === "tricksterAoE_defenderRoll" ||
+      pendingRoll.kind === "elCidTisona_attackerRoll" ||
+      pendingRoll.kind === "elCidTisona_defenderRoll" ||
+      pendingRoll.kind === "elCidKolada_attackerRoll" ||
+      pendingRoll.kind === "elCidKolada_defenderRoll" ||
       pendingRoll.kind === "dora_attackerRoll" ||
       pendingRoll.kind === "dora_defenderRoll" ||
       pendingRoll.kind === "dora_berserkerDefenseChoice" ||
@@ -217,6 +221,10 @@ export function makeSpectatorView(state: GameState): PlayerView {
     pendingRoll &&
     (pendingRoll.kind === "tricksterAoE_attackerRoll" ||
       pendingRoll.kind === "tricksterAoE_defenderRoll" ||
+      pendingRoll.kind === "elCidTisona_attackerRoll" ||
+      pendingRoll.kind === "elCidTisona_defenderRoll" ||
+      pendingRoll.kind === "elCidKolada_attackerRoll" ||
+      pendingRoll.kind === "elCidKolada_defenderRoll" ||
       pendingRoll.kind === "dora_attackerRoll" ||
       pendingRoll.kind === "dora_defenderRoll" ||
       pendingRoll.kind === "dora_berserkerDefenseChoice" ||

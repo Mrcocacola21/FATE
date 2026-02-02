@@ -59,6 +59,8 @@ const ResolveRollChoiceSchema = z.union([
     type: z.literal("forestTarget"),
     center: CoordSchema,
   }),
+  z.literal("elCidDuelistContinue"),
+  z.literal("elCidDuelistStop"),
 ]);
 
 export const GameActionSchema = z.discriminatedUnion("type", [

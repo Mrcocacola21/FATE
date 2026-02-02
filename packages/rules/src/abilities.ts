@@ -551,6 +551,12 @@ export function initUnitAbilities(unit: UnitState): UnitState {
     updated = setCharges(updated, ABILITY_KAISER_ENGINEERING_MIRACLE, 0);
   }
 
+  if (unit.heroId === HERO_EL_CID_COMPEADOR_ID) {
+    updated = setCharges(updated, ABILITY_EL_SID_COMPEADOR_TISONA, 0);
+    updated = setCharges(updated, ABILITY_EL_SID_COMPEADOR_KOLADA, 0);
+    updated = setCharges(updated, ABILITY_EL_SID_COMPEADOR_DEMON_DUELIST, 0);
+  }
+
   return updated;
 }
 

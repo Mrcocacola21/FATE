@@ -1,7 +1,13 @@
 ﻿import type { FC } from "react";
 import type { GameAction, PlayerId, PlayerView, MoveMode } from "rules";
 import { HERO_CATALOG } from "../figures/catalog";
-import { KAISER_DORA_ID, TRICKSTER_AOE_ID } from "../rulesHints";
+import {
+  EL_CID_DEMON_DUELIST_ID,
+  EL_CID_KOLADA_ID,
+  EL_CID_TISONA_ID,
+  KAISER_DORA_ID,
+  TRICKSTER_AOE_ID,
+} from "../rulesHints";
 import type { ActionMode } from "../store";
 import type { PlayerRole } from "../ws";
 
@@ -117,6 +123,24 @@ export const RightPanel: FC<RightPanelProps> = ({
       ? `${doraAbility.currentCharges ?? 0}/${doraAbility.chargeRequired}`
       : null
     : null;
+  const tisonaAbility = abilityViews.find(
+    (ability) => ability.id === EL_CID_TISONA_ID
+  );
+  const tisonaDisabledReason = tisonaAbility?.disabledReason;
+  const tisonaDisabled = !tisonaAbility || !tisonaAbility.isAvailable;
+  const tisonaChargeLabel =
+    tisonaAbility && tisonaAbility.chargeRequired !== undefined
+      ? `${tisonaAbility.currentCharges ?? 0}/${tisonaAbility.chargeRequired}`
+      : null;
+  const duelAbility = abilityViews.find(
+    (ability) => ability.id === EL_CID_DEMON_DUELIST_ID
+  );
+  const duelDisabledReason = duelAbility?.disabledReason;
+  const duelDisabled = !duelAbility || !duelAbility.isAvailable;
+  const duelChargeLabel =
+    duelAbility && duelAbility.chargeRequired !== undefined
+      ? `${duelAbility.currentCharges ?? 0}/${duelAbility.chargeRequired}`
+      : null;
   const moveModeOptions =
     !pendingRoll && moveOptions && selectedUnit && moveOptions.unitId === selectedUnit.id
       ? moveOptions.modes ?? null
@@ -383,6 +407,16 @@ export const RightPanel: FC<RightPanelProps> = ({
                           ability.isAvailable ? "bg-white" : "bg-slate-100 text-slate-400"
                         }`}
                         title={ability.disabledReason ?? ""}
+                        onMouseEnter={() => {
+                          if (ability.id === EL_CID_KOLADA_ID) {
+                            onHoverAbility(ability.id);
+                          }
+                        }}
+                        onMouseLeave={() => {
+                          if (ability.id === EL_CID_KOLADA_ID) {
+                            onHoverAbility(null);
+                          }
+                        }}
                       >
                         <div className="flex items-center justify-between gap-2">
                           <div className="font-semibold">{ability.name}</div>
@@ -466,6 +500,36 @@ export const RightPanel: FC<RightPanelProps> = ({
               <div className="col-span-2 text-[10px] text-slate-400">
                 Dora disabled: {doraDisabledReason}
               </div>
+            )}
+            {tisonaAbility && (
+              <button
+                className={`rounded px-2 py-2 ${
+                  tisonaDisabled ? "bg-slate-100 text-slate-400" : "bg-slate-200"
+                }`}
+                onClick={() => {
+                  if (!selectedUnit) return;
+                  onSetActionMode("tisona");
+                }}
+                disabled={tisonaDisabled}
+                title={tisonaDisabledReason ?? ""}
+              >
+                Tisona{tisonaChargeLabel ? ` (${tisonaChargeLabel})` : ""}
+              </button>
+            )}
+            {duelAbility && (
+              <button
+                className={`rounded px-2 py-2 ${
+                  duelDisabled ? "bg-slate-100 text-slate-400" : "bg-slate-200"
+                }`}
+                onClick={() => {
+                  if (!selectedUnit) return;
+                  onSetActionMode("demonDuelist");
+                }}
+                disabled={duelDisabled}
+                title={duelDisabledReason ?? ""}
+              >
+                Demon Duelist{duelChargeLabel ? ` (${duelChargeLabel})` : ""}
+              </button>
             )}
             <button
               className={`rounded px-2 py-2 ${
@@ -594,6 +658,10 @@ export const RightPanel: FC<RightPanelProps> = ({
             <div className="mt-3 text-xs text-slate-400">
               {actionMode === "dora"
                 ? "Dora: select a center cell on the archer line."
+                : actionMode === "tisona"
+                ? "Tisona: select a cell on the same row or column."
+                : actionMode === "demonDuelist"
+                ? "Demon Duelist: select an enemy in attack range."
                 : `Mode: ${actionMode}. Click a highlighted cell to apply.`}
             </div>
           )}

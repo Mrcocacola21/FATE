@@ -10,6 +10,7 @@ export const HERO_CATALOG: HeroCatalog = [
   { id: "vladTepes", name: "Vlad III Tepes", mainClass: "spearman" },
   { id: "base-trickster", name: "Base Trickster", mainClass: "trickster" },
   { id: "base-knight", name: "Base Knight", mainClass: "knight" },
+  { id: "elCidCompeador", name: "El Cid Compeador", mainClass: "knight" },
   /*
   AFTER REALISATION UNCOMMENT;
   { id: "chikatilo", name: "Andrei Chikatilo", mainClass: "assassin" },

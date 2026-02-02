@@ -4,7 +4,9 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "concurrently -n rules,server,web -c \"yellow,green,blue\" \"npm run -w rules build -- --watch\" \"npm run -w server dev\" \"npm run -w web dev\"",
+    "dev": "concurrently -n rules,server,web -c \"yellow,green,blue\" \"npm run -w rules build:watch\" \"npm run -w server dev\" \"npm run -w web dev\"",
+    "dev:server": "npm run -w server dev",
+    "dev:server:standalone": "concurrently -n rules,server -c \"yellow,green\" \"npm run -w rules build:watch\" \"npm run dev:server\"",
     "build": "npm run -w rules build && npm run -w server build && npm run -w web build",
     "postinstall": "npm run -w rules build",
     "test": "npm run -w rules test && npm run -w server test",

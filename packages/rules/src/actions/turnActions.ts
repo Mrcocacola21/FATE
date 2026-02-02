@@ -15,6 +15,7 @@ import {
   maybeTriggerEngineeringMiracle,
   processUnitStartOfTurnBunker,
 } from "./heroes/kaiser";
+import { maybeTriggerElCidKolada } from "./heroes/elCid";
 import {
   maybeTriggerVladForestChoice,
   maybeTriggerVladTurnStakes,
@@ -258,8 +259,11 @@ export function applyUnitStartTurn(
     unit.id
   );
   const carpetResult = maybeTriggerCarpetStrike(engineeringResult.state, unit.id);
+  const koladaResult = carpetResult.state.pendingRoll
+    ? carpetResult
+    : maybeTriggerElCidKolada(carpetResult.state, unit.id, rng);
   const forestResult = maybeTriggerVladForestChoice(
-    carpetResult.state,
+    koladaResult.state,
     unit.id,
     true
   );
@@ -281,6 +285,7 @@ export function applyUnitStartTurn(
         ...startEvents,
         ...engineeringResult.events,
         ...carpetResult.events,
+        ...koladaResult.events,
         ...vladEvents,
       ],
     };
@@ -315,6 +320,7 @@ export function applyUnitStartTurn(
       ...startEvents,
       ...engineeringResult.events,
       ...carpetResult.events,
+      ...koladaResult.events,
       ...vladEvents,
     ],
   };

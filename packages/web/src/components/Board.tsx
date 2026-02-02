@@ -1,5 +1,11 @@
 import type { Coord, PlayerId, PlayerView } from "rules";
-import { TRICKSTER_AOE_ID, TRICKSTER_AOE_RADIUS, getMaxHp } from "../rulesHints";
+import {
+  EL_CID_COMPEADOR_ID,
+  EL_CID_KOLADA_ID,
+  TRICKSTER_AOE_ID,
+  TRICKSTER_AOE_RADIUS,
+  getMaxHp,
+} from "../rulesHints";
 import { useEffect, useRef, useState, type FC } from "react";
 import { HpBar } from "./HpBar";
 import { getTokenSrc } from "../assets/registry";
@@ -250,6 +256,24 @@ export const Board: FC<BoardProps> = ({
         dr <= TRICKSTER_AOE_RADIUS;
         dr += 1
       ) {
+        const col = selectedUnit.position.col + dc;
+        const row = selectedUnit.position.row + dr;
+        if (col < 0 || row < 0 || col >= size || row >= size) continue;
+        const viewPos = toViewCoord({ col, row });
+        aoeHighlights.set(coordKey(viewPos), kind);
+      }
+    }
+  }
+
+  const showKoladaPreview =
+    selectedUnit?.position &&
+    selectedUnit.heroId === EL_CID_COMPEADOR_ID &&
+    (hoveredAbilityId === EL_CID_KOLADA_ID || (isMyTurn && isActive));
+  if (showKoladaPreview && selectedUnit?.position) {
+    const kind: "aoe" | "aoeDisabled" = disabled ? "aoeDisabled" : "aoe";
+    for (let dc = -1; dc <= 1; dc += 1) {
+      for (let dr = -1; dr <= 1; dr += 1) {
+        if (dc === 0 && dr === 0) continue;
         const col = selectedUnit.position.col + dc;
         const row = selectedUnit.position.row + dr;
         if (col < 0 || row < 0 || col >= size || row >= size) continue;

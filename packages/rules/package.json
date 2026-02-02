@@ -1,11 +1,12 @@
 {
   "name": "rules",
   "version": "1.0.0",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
     "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
     "build": "npm run clean && tsc -p tsconfig.json",
+    "build:watch": "tsc -p tsconfig.json --watch",
     "test": "ts-node src/tests/simpleTests.ts",
     "manual:test": "ts-node src/manualTest.ts"
   },

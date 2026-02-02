@@ -5,7 +5,8 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev:raw": "tsx watch src/index.ts",
+    "dev": "node ../../scripts/waitForRulesDist.mjs && npm run dev:raw",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
     "test": "tsx src/tests/view.test.ts && tsx src/tests/ws.smoke.ts"

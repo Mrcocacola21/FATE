@@ -5,7 +5,11 @@ import { EventLog } from "./EventLog";
 import { RightPanel } from "./RightPanel";
 import { TurnQueueTracker } from "./TurnQueueTracker";
 import { getLocalPlayerId, useGameStore } from "../store";
-import { KAISER_DORA_ID } from "../rulesHints";
+import {
+  EL_CID_DEMON_DUELIST_ID,
+  EL_CID_TISONA_ID,
+  KAISER_DORA_ID,
+} from "../rulesHints";
 
 const DORA_DIRS: Coord[] = [
   { col: 1, row: 0 },
@@ -74,6 +78,28 @@ function linePath(start: Coord, end: Coord): Coord[] | null {
     });
   }
   return path;
+}
+
+function getOrthogonalLineCells(
+  size: number,
+  origin: Coord,
+  target: Coord
+): Coord[] {
+  const cells: Coord[] = [];
+  if (origin.row === target.row) {
+    for (let col = 0; col < size; col += 1) {
+      if (col === origin.col) continue;
+      cells.push({ col, row: origin.row });
+    }
+    return cells;
+  }
+  if (origin.col === target.col) {
+    for (let row = 0; row < size; row += 1) {
+      if (row === origin.row) continue;
+      cells.push({ col: origin.col, row });
+    }
+  }
+  return cells;
 }
 
 function getAttackRangeCells(view: PlayerView, unitId: string): Coord[] {
@@ -176,6 +202,16 @@ function getPendingRollLabel(kind?: string | null) {
       return "Trickster AoE attack roll";
     case "tricksterAoE_defenderRoll":
       return "Trickster AoE defense roll";
+    case "elCidTisona_attackerRoll":
+      return "Tisona attack roll";
+    case "elCidTisona_defenderRoll":
+      return "Tisona defense roll";
+    case "elCidKolada_attackerRoll":
+      return "Kolada attack roll";
+    case "elCidKolada_defenderRoll":
+      return "Kolada defense roll";
+    case "elCidDuelistChoice":
+      return "Demon Duelist choice";
     case "dora_attackerRoll":
       return "Dora attack roll";
     case "dora_defenderRoll":
@@ -264,6 +300,7 @@ export function Game() {
   const [doraPreviewCenter, setDoraPreviewCenter] = useState<Coord | null>(null);
   const [forestPreviewCenter, setForestPreviewCenter] = useState<Coord | null>(null);
   const [stakeSelections, setStakeSelections] = useState<Coord[]>([]);
+  const [tisonaPreviewCoord, setTisonaPreviewCoord] = useState<Coord | null>(null);
 
   const playerId = getLocalPlayerId(role);
   const view = roomState;
@@ -275,6 +312,7 @@ export function Game() {
   const isForestTarget = pendingRoll?.kind === "vladForestTarget";
   const isIntimidateChoice = pendingRoll?.kind === "vladIntimidateChoice";
   const isForestChoice = pendingRoll?.kind === "vladForestChoice";
+  const isDuelistChoice = pendingRoll?.kind === "elCidDuelistChoice";
   const boardSelectionPending =
     isStakePlacement || isForestTarget || isIntimidateChoice;
   const pendingQueueCount = view?.pendingCombatQueueCount ?? 0;
@@ -297,6 +335,8 @@ export function Game() {
     pendingRoll?.kind === "attack_defenderRoll" ||
     pendingRoll?.kind === "riderPathAttack_defenderRoll" ||
     pendingRoll?.kind === "tricksterAoE_defenderRoll" ||
+    pendingRoll?.kind === "elCidTisona_defenderRoll" ||
+    pendingRoll?.kind === "elCidKolada_defenderRoll" ||
     pendingRoll?.kind === "dora_defenderRoll" ||
     pendingRoll?.kind === "carpetStrike_defenderRoll" ||
     pendingRoll?.kind === "vladForest_defenderRoll" ||
@@ -327,6 +367,14 @@ export function Game() {
   const defenderCharges =
     defenderId && view?.units[defenderId]
       ? view.units[defenderId].charges?.berserkAutoDefense ?? 0
+      : 0;
+  const duelistContext = isDuelistChoice
+    ? (pendingRoll?.context as { attackerId?: string; targetId?: string } | undefined)
+    : undefined;
+  const duelistAttackerId = duelistContext?.attackerId;
+  const duelistAttackerHp =
+    duelistAttackerId && view?.units[duelistAttackerId]
+      ? view.units[duelistAttackerId].hp
       : 0;
 
   const handleLeave = () => {
@@ -511,6 +559,29 @@ export function Game() {
     [doraTargetCenters]
   );
 
+  const tisonaTargetCells = useMemo(() => {
+    if (!view || actionMode !== "tisona" || !selectedUnit?.position) {
+      return [] as Coord[];
+    }
+    const size = view.boardSize ?? 9;
+    const origin = selectedUnit.position;
+    const cells: Coord[] = [];
+    for (let col = 0; col < size; col += 1) {
+      if (col === origin.col) continue;
+      cells.push({ col, row: origin.row });
+    }
+    for (let row = 0; row < size; row += 1) {
+      if (row === origin.row) continue;
+      cells.push({ col: origin.col, row });
+    }
+    return cells;
+  }, [view, actionMode, selectedUnit]);
+
+  const tisonaTargetKeys = useMemo(
+    () => new Set(tisonaTargetCells.map(coordKey)),
+    [tisonaTargetCells]
+  );
+
   useEffect(() => {
     if (actionMode !== "dora") {
       setDoraPreviewCenter(null);
@@ -527,6 +598,23 @@ export function Game() {
       setDoraPreviewCenter(null);
     }
   }, [actionMode, doraPreviewCenter, doraTargetKeys]);
+
+  useEffect(() => {
+    if (actionMode !== "tisona") {
+      setTisonaPreviewCoord(null);
+      return;
+    }
+    if (!selectedUnitId) {
+      setTisonaPreviewCoord(null);
+    }
+  }, [actionMode, selectedUnitId]);
+
+  useEffect(() => {
+    if (actionMode !== "tisona" || !tisonaPreviewCoord) return;
+    if (!tisonaTargetKeys.has(coordKey(tisonaPreviewCoord))) {
+      setTisonaPreviewCoord(null);
+    }
+  }, [actionMode, tisonaPreviewCoord, tisonaTargetKeys]);
 
   useEffect(() => {
     if (!isStakePlacement) {
@@ -656,14 +744,42 @@ export function Game() {
       }
     }
 
+    if (actionMode === "demonDuelist" && view) {
+      for (const targetId of legalAttackTargets) {
+        const unit = view.units[targetId];
+        if (!unit?.position) continue;
+        highlights[coordKey(unit.position)] = "attack";
+      }
+    }
+
     if (actionMode === "dora") {
       for (const coord of doraTargetCenters) {
         highlights[coordKey(coord)] = "dora";
       }
     }
 
+    if (actionMode === "tisona" && view && selectedUnit?.position) {
+      const size = view.boardSize ?? 9;
+      if (tisonaPreviewCoord) {
+        const lineCells = getOrthogonalLineCells(
+          size,
+          selectedUnit.position,
+          tisonaPreviewCoord
+        );
+        for (const coord of lineCells) {
+          highlights[coordKey(coord)] = "attackRange";
+        }
+      }
+      for (const coord of tisonaTargetCells) {
+        highlights[coordKey(coord)] = "attack";
+      }
+    }
+
     const allowHoverPreview =
-      !actionMode && !isStakePlacement && !isIntimidateChoice && !isForestTarget;
+      !actionMode &&
+      !isStakePlacement &&
+      !isIntimidateChoice &&
+      !isForestTarget;
 
     if (allowHoverPreview && hoverAttackPreview && view) {
       for (const coord of hoverAttackPreview.rangeCells) {
@@ -695,6 +811,8 @@ export function Game() {
     pendingMoveForSelected,
     moveOptions,
     hoverAttackPreview,
+    tisonaTargetCells,
+    tisonaPreviewCoord,
   ]);
 
   const handleCellClick = (col: number, row: number) => {
@@ -784,6 +902,20 @@ export function Game() {
       return;
     }
 
+    if (actionMode === "demonDuelist") {
+      const target = getUnitAt(view, col, row);
+      if (!target) return;
+      if (!legalAttackTargets.includes(target.id)) return;
+      sendGameAction({
+        type: "useAbility",
+        unitId: selectedUnitId,
+        abilityId: EL_CID_DEMON_DUELIST_ID,
+        payload: { targetId: target.id },
+      });
+      setActionMode(null);
+      return;
+    }
+
     if (actionMode === "dora") {
       if (!doraTargetKeys.has(coordKey({ col, row }))) return;
       sendGameAction({
@@ -791,6 +923,18 @@ export function Game() {
         unitId: selectedUnitId,
         abilityId: KAISER_DORA_ID,
         payload: { center: { col, row } },
+      });
+      setActionMode(null);
+      return;
+    }
+
+    if (actionMode === "tisona") {
+      if (!tisonaTargetKeys.has(coordKey({ col, row }))) return;
+      sendGameAction({
+        type: "useAbility",
+        unitId: selectedUnitId,
+        abilityId: EL_CID_TISONA_ID,
+        payload: { target: { col, row } },
       });
       setActionMode(null);
       return;
@@ -805,6 +949,16 @@ export function Game() {
       }
       const key = coordKey(coord);
       setDoraPreviewCenter(doraTargetKeys.has(key) ? coord : null);
+      return;
+    }
+
+    if (actionMode === "tisona") {
+      if (!coord) {
+        setTisonaPreviewCoord(null);
+        return;
+      }
+      const key = coordKey(coord);
+      setTisonaPreviewCoord(tisonaTargetKeys.has(key) ? coord : null);
       return;
     }
 
@@ -829,7 +983,11 @@ export function Game() {
     isSpectator ||
     view?.phase === "lobby" ||
     (hasBlockingRoll && !boardSelectionPending);
-  const allowUnitPick = !boardSelectionPending && actionMode !== "dora";
+  const allowUnitPick =
+    !boardSelectionPending &&
+    actionMode !== "dora" &&
+    actionMode !== "tisona" &&
+    actionMode !== "demonDuelist";
 
   if (!view || !hasSnapshot) {
     return (
@@ -963,6 +1121,13 @@ export function Game() {
                     Decide whether to activate the phantasm.
                   </div>
                 </div>
+              ) : isDuelistChoice ? (
+                <div>
+                  <div className="font-semibold">Demon Duelist</div>
+                  <div className="mt-1 text-[11px] text-amber-700">
+                    Choose whether to continue the duel.
+                  </div>
+                </div>
               ) : (
                 <div>
                   Pending roll: {getPendingRollLabel(pendingRoll.kind)}. Resolve to continue.
@@ -1087,6 +1252,8 @@ export function Game() {
                 ? "Roll initiative"
                 : isForestChoice
                 ? "Forest of the Dead"
+                : isDuelistChoice
+                ? "Demon Duelist"
                 : "Roll required"}
             </div>
             <div className="mt-2 text-xs text-slate-500">
@@ -1097,6 +1264,8 @@ export function Game() {
                 ? "Choose berserker defense."
                 : isForestChoice
                 ? "Activate Forest of the Dead or skip."
+                : isDuelistChoice
+                ? "Pay 1 HP to continue the duel, or stop."
                 : `Please roll the dice to resolve: ${getPendingRollLabel(
                     pendingRoll.kind
                   )}.`}
@@ -1154,6 +1323,34 @@ export function Game() {
                     disabled={defenderCharges !== 6}
                   >
                     Auto-dodge (-6)
+                  </button>
+                </>
+              ) : isDuelistChoice ? (
+                <>
+                  <button
+                    className="flex-1 rounded bg-amber-500 px-3 py-2 text-xs font-semibold text-white"
+                    onClick={() =>
+                      sendAction({
+                        type: "resolvePendingRoll",
+                        pendingRollId: pendingRoll.id,
+                        choice: "elCidDuelistContinue",
+                      } as GameAction)
+                    }
+                    disabled={duelistAttackerHp <= 1}
+                  >
+                    Pay 1 HP
+                  </button>
+                  <button
+                    className="flex-1 rounded bg-slate-200 px-3 py-2 text-xs font-semibold text-slate-700"
+                    onClick={() =>
+                      sendAction({
+                        type: "resolvePendingRoll",
+                        pendingRollId: pendingRoll.id,
+                        choice: "elCidDuelistStop",
+                      } as GameAction)
+                    }
+                  >
+                    Stop
                   </button>
                 </>
               ) : isForestChoice ? (

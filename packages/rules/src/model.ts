@@ -146,6 +146,10 @@ export type RollKind =
   | "riderPathAttack_defenderRoll"
   | "tricksterAoE_attackerRoll"
   | "tricksterAoE_defenderRoll"
+  | "elCidTisona_attackerRoll"
+  | "elCidTisona_defenderRoll"
+  | "elCidKolada_attackerRoll"
+  | "elCidKolada_defenderRoll"
   | "dora_attackerRoll"
   | "dora_defenderRoll"
   | "dora_berserkerDefenseChoice"
@@ -153,6 +157,7 @@ export type RollKind =
   | "kaiserCarpetStrikeAttack"
   | "carpetStrike_defenderRoll"
   | "carpetStrike_berserkerDefenseChoice"
+  | "elCidDuelistChoice"
   | "vladIntimidateChoice"
   | "vladPlaceStakes"
   | "vladForestChoice"
@@ -414,6 +419,8 @@ export type ResolveRollChoice =
   | "roll"
   | "skip"
   | "activate"
+  | "elCidDuelistContinue"
+  | "elCidDuelistStop"
   | { type: "intimidatePush"; to: Coord }
   | { type: "placeStakes"; positions: Coord[] }
   | { type: "forestTarget"; center: Coord };
