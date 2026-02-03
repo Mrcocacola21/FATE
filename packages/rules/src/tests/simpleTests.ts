@@ -36,6 +36,7 @@ import {
   linePath,
 } from "../index";
 import { SeededRNG } from "../rng";
+import * as pendingRollActions from "../actions/pendingRollActions";
 import assert from "assert";
 import fs from "fs";
 import path from "path";
@@ -264,6 +265,7 @@ function testActionModuleBoundaries() {
       ]),
     ],
     ["index.ts", new Set(["./armyActions", "./lobbyActions", "./registry"])],
+    ["pendingRollActions.ts", new Set(["./pendingRoll"])],
   ]);
 
   const violations: string[] = [];
@@ -307,6 +309,24 @@ function testActionModuleBoundaries() {
   );
 
   console.log("action_module_boundaries passed");
+}
+
+function testPendingRollActionsExportsStable() {
+  const expected = ["applyResolvePendingRoll"];
+  const exported = Object.keys(pendingRollActions);
+  for (const name of expected) {
+    assert(
+      exported.includes(name),
+      `pendingRollActions missing export: ${name}`
+    );
+    assert.strictEqual(
+      typeof (pendingRollActions as any)[name],
+      "function",
+      `pendingRollActions export ${name} should be a function`
+    );
+  }
+
+  console.log("pendingRollActions_exports_stable passed");
 }
 
 function toPlacementState(
@@ -8292,6 +8312,7 @@ function main() {
   // Full test run: invoke all test functions in this file
   console.log('Running full simpleTests suite');
   testActionModuleBoundaries();
+  testPendingRollActionsExportsStable();
   testPlacementToBattleAndTurnOrder();
   testLobbyReadyAndStartRequiresBothReady();
   testInitiativeRollSequenceNoAutoroll();
