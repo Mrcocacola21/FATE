@@ -6,6 +6,7 @@ import {
   HERO_GRAND_KAISER_ID,
   HERO_VLAD_TEPES_ID,
   HERO_EL_CID_COMPEADOR_ID,
+  HERO_GENGHIS_KHAN_ID,
   getHeroDefinition,
 } from "../heroes";
 import type { RNG } from "../rng";
@@ -27,6 +28,10 @@ export function isVlad(unit: UnitState): boolean {
 
 export function isElCid(unit: UnitState): boolean {
   return unit.heroId === HERO_EL_CID_COMPEADOR_ID;
+}
+
+export function isGenghis(unit: UnitState): boolean {
+  return unit.heroId === HERO_GENGHIS_KHAN_ID;
 }
 
 export function isKaiserTransformed(unit: UnitState): boolean {

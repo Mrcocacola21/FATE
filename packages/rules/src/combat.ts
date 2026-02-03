@@ -16,6 +16,7 @@ import {
   getAbilitySpec,
   getCharges,
 } from "./abilities";
+import { HERO_GENGHIS_KHAN_ID } from "./heroes";
 import { canDirectlyTargetUnit } from "./visibility";
 
 
@@ -35,6 +36,35 @@ function distanceInfo(attPos: Coord, defPos: Coord) {
   const sameRow = attPos.row === defPos.row;
   const sameCol = attPos.col === defPos.col;
   return { dx, dy, cheb, sameRow, sameCol };
+}
+
+function recordGenghisAttack(attacker: UnitState, defenderId: string): UnitState {
+  if (attacker.heroId !== HERO_GENGHIS_KHAN_ID) {
+    return attacker;
+  }
+  const existing = Array.isArray(attacker.genghisKhanAttackedThisTurn)
+    ? attacker.genghisKhanAttackedThisTurn
+    : [];
+  if (existing.includes(defenderId)) {
+    return attacker;
+  }
+  return {
+    ...attacker,
+    genghisKhanAttackedThisTurn: [...existing, defenderId],
+  };
+}
+
+function hasLegendOfTheSteppesBonus(
+  attacker: UnitState,
+  defenderId: string
+): boolean {
+  if (attacker.heroId !== HERO_GENGHIS_KHAN_ID) {
+    return false;
+  }
+  const lastTurn = Array.isArray(attacker.genghisKhanAttackedLastTurn)
+    ? attacker.genghisKhanAttackedLastTurn
+    : [];
+  return lastTurn.includes(defenderId);
 }
 
 // --- Проверка цели атаки (дистанция / тип) ---
@@ -246,6 +276,9 @@ export function resolveAttack(
         defenderHpAfter: defenderAfter.hp,
       });
 
+      attackerAfter = recordGenghisAttack(attackerAfter, defenderAfter.id);
+      units[attackerAfter.id] = attackerAfter;
+
       const nextState: GameState = {
         ...state,
         units,
@@ -355,6 +388,9 @@ export function resolveAttack(
     if (params.damageBonus) {
       damage += params.damageBonus;
     }
+    if (hasLegendOfTheSteppesBonus(attackerAfter, defenderAfter.id)) {
+      damage += 1;
+    }
 
     if (defenderAfter.bunker?.active) {
       damage = Math.min(1, damage);
@@ -382,6 +418,9 @@ const newHp = Math.max(0, defenderAfter.hp - damage);
 
   units[attackerAfter.id] = attackerAfter;
   units[defenderAfter.id] = defenderAfter;
+
+  attackerAfter = recordGenghisAttack(attackerAfter, defenderAfter.id);
+  units[attackerAfter.id] = attackerAfter;
 
   const updatedLastKnown = {
     ...state.lastKnownPositions,

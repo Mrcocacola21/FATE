@@ -10,6 +10,8 @@ import {
   ABILITY_EL_SID_COMPEADOR_TISONA,
   ABILITY_EL_SID_COMPEADOR_DEMON_DUELIST,
   ABILITY_EL_SID_COMPEADOR_KOLADA,
+  ABILITY_GENGHIS_KHAN_KHANS_DECREE,
+  ABILITY_GENGHIS_KHAN_MONGOL_CHARGE,
   TRICKSTER_AOE_RADIUS,
   getAbilitySpec,
   spendCharges,
@@ -19,6 +21,7 @@ import { requestRoll } from "./utils/rollUtils";
 import { evAbilityUsed, evAoeResolved } from "./utils/events";
 import { applyKaiserDora } from "./heroes/kaiser";
 import { applyElCidDemonDuelist, applyElCidTisona } from "./heroes/elCid";
+import { applyKhansDecree, applyMongolCharge } from "./heroes/genghisKhan";
 import type { TricksterAoEContext } from "./types";
 
 export function applyUseAbility(
@@ -70,6 +73,14 @@ export function applyUseAbility(
 
   if (spec.id === ABILITY_EL_SID_COMPEADOR_KOLADA) {
     return { state, events: [] };
+  }
+
+  if (spec.id === ABILITY_GENGHIS_KHAN_KHANS_DECREE) {
+    return applyKhansDecree(state, unit);
+  }
+
+  if (spec.id === ABILITY_GENGHIS_KHAN_MONGOL_CHARGE) {
+    return applyMongolCharge(state, unit);
   }
 
   const isTricksterAoE = spec.id === ABILITY_TRICKSTER_AOE;

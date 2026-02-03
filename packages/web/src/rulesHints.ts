@@ -6,6 +6,7 @@ export const TRICKSTER_AOE_RADIUS = 2;
 export const KAISER_DORA_ID = "kaiserDora";
 export const VLAD_TEPES_ID = "vladTepes";
 export const EL_CID_COMPEADOR_ID = "elCidCompeador";
+export const GENGHIS_KHAN_ID = "genghisKhan";
 export const EL_CID_TISONA_ID = "elCidCompeadorTisona";
 export const EL_CID_KOLADA_ID = "elCidCompeadorKolada";
 export const EL_CID_DEMON_DUELIST_ID = "elCidCompeadorDemonDuelist";
@@ -27,6 +28,9 @@ export function getMaxHp(unitClass: UnitClass, heroId?: string): number {
   }
   if (heroId === EL_CID_COMPEADOR_ID) {
     base += 2;
+  }
+  if (heroId === GENGHIS_KHAN_ID) {
+    base = 7;
   }
   return base;
 }

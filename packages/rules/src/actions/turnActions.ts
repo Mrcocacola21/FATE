@@ -26,6 +26,35 @@ function nextPlayer(player: PlayerId): PlayerId {
   return player === "P1" ? "P2" : "P1";
 }
 
+function clearGenghisTurnFlags(
+  state: GameState,
+  unitId: string | null
+): GameState {
+  if (!unitId) return state;
+  const unit = state.units[unitId];
+  if (!unit) return state;
+  if (
+    unit.genghisKhanDiagonalMoveActive !== true &&
+    unit.genghisKhanDecreeMovePending !== true &&
+    unit.genghisKhanMongolChargeActive !== true
+  ) {
+    return state;
+  }
+  const cleared: UnitState = {
+    ...unit,
+    genghisKhanDiagonalMoveActive: false,
+    genghisKhanDecreeMovePending: false,
+    genghisKhanMongolChargeActive: false,
+  };
+  return {
+    ...state,
+    units: {
+      ...state.units,
+      [unitId]: cleared,
+    },
+  };
+}
+
 function getNextAliveUnitIndex(
   state: GameState,
   fromIndex: number,
@@ -105,13 +134,14 @@ export function applyEndTurn(state: GameState, rng: RNG): ApplyResult {
   // 2) Р¤Р°Р·Р° Р±РѕСЏ: РєСЂСѓС‚РёРј РѕС‡РµСЂРµРґСЊ СЋРЅРёС‚РѕРІ
   // -----------------------------
   if (state.phase === "battle") {
+    const stateAfterTurn = clearGenghisTurnFlags(state, state.activeUnitId);
     // Р•СЃР»Рё Сѓ РѕРґРЅРѕРіРѕ РёР· РёРіСЂРѕРєРѕРІ РЅРµС‚ Р¶РёРІС‹С… С„РёРіСѓСЂ вЂ” Р·Р°РІРµСЂС€Р°РµРј РёРіСЂСѓ
-    const p1Alive = Object.values(state.units).some((u) => u.owner === "P1" && u.isAlive);
-    const p2Alive = Object.values(state.units).some((u) => u.owner === "P2" && u.isAlive);
+    const p1Alive = Object.values(stateAfterTurn.units).some((u) => u.owner === "P1" && u.isAlive);
+    const p2Alive = Object.values(stateAfterTurn.units).some((u) => u.owner === "P2" && u.isAlive);
     if (!p1Alive || !p2Alive) {
       const winner: PlayerId | null = !p1Alive && p2Alive ? "P2" : p1Alive && !p2Alive ? "P1" : null;
       const endedState: GameState = {
-        ...state,
+        ...stateAfterTurn,
         phase: "ended",
         activeUnitId: null,
         pendingMove: null,
@@ -125,7 +155,7 @@ export function applyEndTurn(state: GameState, rng: RNG): ApplyResult {
 
     const queue = state.turnQueue.length > 0 ? state.turnQueue : state.turnOrder;
     if (queue.length === 0) {
-      return { state, events: [] };
+      return { state: stateAfterTurn, events: [] };
     }
     const prevIndex = state.turnQueue.length > 0 ? state.turnQueueIndex : state.turnOrderIndex;
 
@@ -133,7 +163,7 @@ export function applyEndTurn(state: GameState, rng: RNG): ApplyResult {
     if (nextIndex === null) {
       // РќРёРєС‚Рѕ Р¶РёРІ РЅРµ РѕСЃС‚Р°Р»СЃСЏ вЂ” РёРіСЂР° РѕРєРѕРЅС‡РµРЅР°
       const ended: GameState = {
-        ...state,
+        ...stateAfterTurn,
         phase: "ended",
         activeUnitId: null,
         pendingMove: null,
@@ -143,14 +173,14 @@ export function applyEndTurn(state: GameState, rng: RNG): ApplyResult {
 
     const order = state.turnQueue.length > 0 ? state.turnQueue : state.turnOrder;
     const nextUnitId = order[nextIndex];
-    const nextUnit = state.units[nextUnitId]!;
+    const nextUnit = stateAfterTurn.units[nextUnitId]!;
     const nextPlayer = nextUnit.owner;
 
     // РќРѕРІС‹Р№ СЂР°СѓРЅРґ, РµСЃР»Рё РІРµСЂРЅСѓР»РёСЃСЊ "РЅР°Р·Р°Рґ" РїРѕ РёРЅРґРµРєСЃСѓ
     const isNewRound = nextIndex <= prevIndex;
 
     let baseState: GameState = {
-      ...state,
+      ...stateAfterTurn,
       currentPlayer: nextPlayer,
       turnNumber: state.turnNumber + 1,
       roundNumber: state.roundNumber + (isNewRound ? 1 : 0),
@@ -325,3 +355,10 @@ export function applyUnitStartTurn(
     ],
   };
 }
+
+
+
+
+
+
+

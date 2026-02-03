@@ -98,6 +98,12 @@ export function createDefaultArmy(
       hasAttackedThisTurn: false,
       hasActedThisTurn: false,
 
+      genghisKhanDiagonalMoveActive: false,
+      genghisKhanDecreeMovePending: false,
+      genghisKhanMongolChargeActive: false,
+      genghisKhanAttackedThisTurn: [],
+      genghisKhanAttackedLastTurn: [],
+
       isAlive: true,
     };
 

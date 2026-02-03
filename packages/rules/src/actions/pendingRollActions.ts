@@ -1618,7 +1618,7 @@ function advanceCombatQueue(
     ignoreStealth: nextEntry.ignoreStealth,
     damageBonus: nextEntry.damageBonus,
     damageBonusSourceId: nextEntry.damageBonusSourceId,
-    consumeSlots: false,
+    consumeSlots: nextEntry.consumeSlots ?? false,
     queueKind: nextEntry.kind,
   });
 

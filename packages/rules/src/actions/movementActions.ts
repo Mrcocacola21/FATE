@@ -8,8 +8,10 @@ import type {
   PendingMove,
   UnitState,
 } from "../model";
+import { isInsideBoard } from "../model";
 import type { RNG } from "../rng";
 import { coordsEqual, getUnitAt } from "../board";
+import { getLegalAttackTargets } from "../legal";
 import { getLegalMovesForUnitModes } from "../movement";
 import { linePath } from "../path";
 import { canSpendSlots, spendSlots } from "../turnEconomy";
@@ -92,6 +94,66 @@ export function getRiderPathCells(from: Coord, to: Coord): Coord[] {
   return path;
 }
 
+function getMongolChargeCorridor(path: Coord[], boardSize: number): Coord[] {
+  if (path.length === 0) return [];
+  const start = path[0];
+  const end = path[path.length - 1];
+  const stepCol = Math.sign(end.col - start.col);
+  const stepRow = Math.sign(end.row - start.row);
+
+  let offsets: Coord[] = [];
+  if (stepCol === 0 && stepRow !== 0) {
+    offsets = [
+      { col: -1, row: 0 },
+      { col: 1, row: 0 },
+    ];
+  } else if (stepRow === 0 && stepCol !== 0) {
+    offsets = [
+      { col: 0, row: -1 },
+      { col: 0, row: 1 },
+    ];
+  } else if (Math.abs(stepCol) === 1 && Math.abs(stepRow) === 1) {
+    offsets = [
+      { col: stepCol, row: 0 },
+      { col: 0, row: stepRow },
+    ];
+  }
+
+  const seen = new Set<string>();
+  const corridor: Coord[] = [];
+  const pushCell = (cell: Coord) => {
+    if (!isInsideBoard(cell, boardSize)) return;
+    const key = `${cell.col},${cell.row}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    corridor.push(cell);
+  };
+
+  for (const cell of path) {
+    pushCell(cell);
+    for (const offset of offsets) {
+      pushCell({ col: cell.col + offset.col, row: cell.row + offset.row });
+    }
+  }
+
+  return corridor;
+}
+
+function sortUnitIdsByReadingOrder(state: GameState, unitIds: string[]): string[] {
+  return [...unitIds].sort((a, b) => {
+    const aUnit = state.units[a];
+    const bUnit = state.units[b];
+    const aPos = aUnit?.position;
+    const bPos = bUnit?.position;
+    if (!aPos || !bPos) {
+      return a.localeCompare(b);
+    }
+    if (aPos.row !== bPos.row) return aPos.row - bPos.row;
+    if (aPos.col !== bPos.col) return aPos.col - bPos.col;
+    return a.localeCompare(b);
+  });
+}
+
 export function applyRequestMoveOptions(
   state: GameState,
   action: Extract<GameAction, { type: "requestMoveOptions" }>,
@@ -114,7 +176,8 @@ export function applyRequestMoveOptions(
     return { state, events: [] };
   }
 
-  if (!canSpendSlots(unit, { move: true })) {
+  const canMove = canSpendSlots(unit, { move: true });
+  if (!canMove && !unit.genghisKhanDecreeMovePending && !unit.genghisKhanMongolChargeActive) {
     return { state, events: [] };
   }
 
@@ -218,6 +281,236 @@ export function applyRequestMoveOptions(
   return { state: newState, events };
 }
 
+function applyMongolChargeMove(
+  state: GameState,
+  unit: UnitState,
+  action: Extract<GameAction, { type: "move" }>,
+  rng: RNG
+): ApplyResult {
+  const from = unit.position;
+  if (!from) {
+    return { state, events: [] };
+  }
+
+  const pending = state.pendingMove;
+  const pendingValid =
+    pending &&
+    pending.unitId === unit.id &&
+    pending.expiresTurnNumber === state.turnNumber;
+  if (!pendingValid) {
+    return { state, events: [] };
+  }
+
+  const isLegal = pending!.legalTo.some((c) => coordsEqual(c, action.to));
+  if (!isLegal) {
+    return { state, events: [] };
+  }
+
+  const line = linePath(from, action.to);
+  if (!line) {
+    return { state, events: [] };
+  }
+
+  const stakePath = line.slice(1);
+  const stakeStop = findStakeStopOnPath(state, unit, stakePath);
+  const finalTo = stakeStop ?? action.to;
+
+  const hiddenAtDest = getUnitAt(state, finalTo);
+  if (
+    hiddenAtDest &&
+    hiddenAtDest.isAlive &&
+    hiddenAtDest.owner !== unit.owner &&
+    hiddenAtDest.isStealthed
+  ) {
+    const known = state.knowledge?.[unit.owner]?.[hiddenAtDest.id];
+    const canSee = unitCanSeeStealthed(state, unit);
+    if (!known && !canSee) {
+      const revealed: UnitState = {
+        ...hiddenAtDest,
+        isStealthed: false,
+        stealthTurnsLeft: 0,
+      };
+      const updatedUnit: UnitState = {
+        ...unit,
+        genghisKhanMongolChargeActive: false,
+      };
+      const updatedLastKnown = {
+        ...state.lastKnownPositions,
+        P1: { ...(state.lastKnownPositions?.P1 ?? {}) },
+        P2: { ...(state.lastKnownPositions?.P2 ?? {}) },
+      };
+      delete updatedLastKnown.P1[revealed.id];
+      delete updatedLastKnown.P2[revealed.id];
+      const newState: GameState = {
+        ...state,
+        units: {
+          ...state.units,
+          [revealed.id]: revealed,
+          [updatedUnit.id]: updatedUnit,
+        },
+        knowledge: {
+          ...state.knowledge,
+          [unit.owner]: {
+            ...(state.knowledge?.[unit.owner] ?? {}),
+            [revealed.id]: true,
+          },
+        },
+        lastKnownPositions: updatedLastKnown,
+        pendingMove: pendingValid ? null : state.pendingMove,
+      };
+      const events: GameEvent[] = [
+        evStealthRevealed({ unitId: revealed.id, reason: "steppedOnHidden" }),
+      ];
+      return { state: newState, events };
+    }
+  }
+
+  let updatedUnit: UnitState = {
+    ...unit,
+    position: { ...finalTo },
+    genghisKhanMongolChargeActive: false,
+  };
+
+  let newState: GameState = {
+    ...state,
+    units: {
+      ...state.units,
+      [updatedUnit.id]: updatedUnit,
+    },
+    pendingMove: pendingValid ? null : state.pendingMove,
+  };
+
+  const events: GameEvent[] = [
+    evUnitMoved({ unitId: updatedUnit.id, from, to: updatedUnit.position! }),
+  ];
+
+  const stakeResult = applyStakeTriggerIfAny(
+    newState,
+    updatedUnit,
+    updatedUnit.position!,
+    rng
+  );
+  if (stakeResult.triggered) {
+    newState = stakeResult.state;
+    updatedUnit = stakeResult.unit;
+    events.push(...stakeResult.events);
+  }
+
+  if (!updatedUnit.position) {
+    return { state: newState, events };
+  }
+
+  const moverOwner = updatedUnit.owner;
+  const moverPos = updatedUnit.position!;
+  for (const other of Object.values(newState.units)) {
+    if (!other.isAlive || !other.position) continue;
+    if (other.owner === moverOwner) continue;
+    if (!other.isStealthed) continue;
+
+    const dx = Math.abs(other.position.col - moverPos.col);
+    const dy = Math.abs(other.position.row - moverPos.row);
+    const dist = Math.max(dx, dy);
+    if (dist <= 1) {
+      const revealed: UnitState = {
+        ...other,
+        isStealthed: false,
+        stealthTurnsLeft: 0,
+      };
+      const updatedLastKnown = {
+        ...newState.lastKnownPositions,
+        P1: { ...(newState.lastKnownPositions?.P1 ?? {}) },
+        P2: { ...(newState.lastKnownPositions?.P2 ?? {}) },
+      };
+      delete updatedLastKnown.P1[revealed.id];
+      delete updatedLastKnown.P2[revealed.id];
+
+      newState = {
+        ...newState,
+        units: {
+          ...newState.units,
+          [revealed.id]: revealed,
+        },
+        knowledge: {
+          ...newState.knowledge,
+          [moverOwner]: {
+            ...(newState.knowledge?.[moverOwner] ?? {}),
+            [revealed.id]: true,
+          },
+        },
+        lastKnownPositions: updatedLastKnown,
+      };
+
+      events.push(
+        evStealthRevealed({ unitId: revealed.id, reason: "adjacency" })
+      );
+    }
+  }
+
+  const path = linePath(from, updatedUnit.position);
+  if (!path) {
+    return { state: newState, events };
+  }
+
+  const corridor = getMongolChargeCorridor(path, newState.boardSize);
+  const corridorSet = new Set(corridor.map((cell) => `${cell.col},${cell.row}`));
+  const allies = Object.values(newState.units).filter(
+    (other) =>
+      other.isAlive &&
+      other.position &&
+      other.owner === unit.owner &&
+      other.id !== unit.id &&
+      corridorSet.has(`${other.position.col},${other.position.row}`)
+  );
+
+  const orderedAllies = [...allies].sort((a, b) => a.id.localeCompare(b.id));
+  const queue = orderedAllies.flatMap((ally) => {
+    if (!ally.position) return [];
+    if (!canSpendSlots(ally, { attack: true, action: true })) return [];
+    const targets = getLegalAttackTargets(newState, ally.id);
+    if (targets.length === 0) return [];
+    const sortedTargets = sortUnitIdsByReadingOrder(newState, targets);
+    const defenderId = sortedTargets[0];
+    if (!defenderId) return [];
+    return [
+      {
+        attackerId: ally.id,
+        defenderId,
+        damageBonusSourceId: unit.id,
+        consumeSlots: true,
+        kind: "aoe" as const,
+      },
+    ];
+  });
+
+  if (queue.length === 0) {
+    return { state: newState, events };
+  }
+
+  const queuedState: GameState = {
+    ...newState,
+    pendingCombatQueue: queue,
+  };
+
+  const first = queue[0];
+  const ctx = makeAttackContext({
+    attackerId: first.attackerId,
+    defenderId: first.defenderId,
+    damageBonusSourceId: first.damageBonusSourceId,
+    consumeSlots: first.consumeSlots ?? false,
+    queueKind: "aoe",
+  });
+
+  const requested = requestRoll(
+    queuedState,
+    newState.units[first.attackerId].owner,
+    "attack_attackerRoll",
+    ctx,
+    first.attackerId
+  );
+
+  return { state: requested.state, events: [...events, ...requested.events] };
+}
+
 export function applyMove(
   state: GameState,
   action: Extract<GameAction, { type: "move" }>,
@@ -242,9 +535,11 @@ export function applyMove(
 
   // начальная позиция — пригодится для спец-правила наездника
   const from = unit.position;
+  const isMongolCharge = unit.genghisKhanMongolChargeActive === true;
+  const hasDecreeMove = unit.genghisKhanDecreeMovePending === true;
 
   // 🚫 уже тратил слот перемещения
-  if (!canSpendSlots(unit, { move: true })) {
+  if (!canSpendSlots(unit, { move: true }) && !hasDecreeMove && !isMongolCharge) {
     return { state, events: [] };
   }
 
@@ -254,6 +549,9 @@ export function applyMove(
     pending &&
     pending.unitId === unit.id &&
     pending.expiresTurnNumber === state.turnNumber;
+  if (isMongolCharge && !pendingValid) {
+    return { state, events: [] };
+  }
   const movementModes = getMovementModes(unit);
   const requiresPendingMove =
     movementModes.length > 1 ||
@@ -278,6 +576,10 @@ export function applyMove(
   const isLegal = legalMoves.some((c) => coordsEqual(c, action.to));
   if (!isLegal) {
     return { state, events: [] };
+  }
+
+  if (isMongolCharge) {
+    return applyMongolChargeMove(state, unit, action, rng);
   }
 
   const moveMode =
@@ -306,7 +608,10 @@ export function applyMove(
         isStealthed: false,
         stealthTurnsLeft: 0,
       };
-      const movedUnit: UnitState = spendSlots(unit, { move: true });
+      let movedUnit: UnitState = spendSlots(unit, { move: true });
+      if (hasDecreeMove) {
+        movedUnit = { ...movedUnit, genghisKhanDecreeMovePending: false };
+      }
       const updatedLastKnown = {
         ...state.lastKnownPositions,
         P1: { ...(state.lastKnownPositions?.P1 ?? {}) },
@@ -342,6 +647,9 @@ export function applyMove(
   let updatedUnit: UnitState = {
     ...movedUnit,
     position: { ...finalTo },
+    genghisKhanDecreeMovePending: hasDecreeMove
+      ? false
+      : movedUnit.genghisKhanDecreeMovePending,
   };
 
   let newState: GameState = {
@@ -474,4 +782,9 @@ export function applyMove(
 
   return { state: newState, events };
 }
+
+
+
+
+
 

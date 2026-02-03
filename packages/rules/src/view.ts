@@ -28,6 +28,15 @@ function cloneUnit(unit: UnitState): UnitState {
     charges: { ...unit.charges },
     cooldowns: { ...unit.cooldowns },
     turn: { ...turn },
+    genghisKhanDiagonalMoveActive: unit.genghisKhanDiagonalMoveActive,
+    genghisKhanDecreeMovePending: unit.genghisKhanDecreeMovePending,
+    genghisKhanMongolChargeActive: unit.genghisKhanMongolChargeActive,
+    genghisKhanAttackedThisTurn: unit.genghisKhanAttackedThisTurn
+      ? [...unit.genghisKhanAttackedThisTurn]
+      : unit.genghisKhanAttackedThisTurn,
+    genghisKhanAttackedLastTurn: unit.genghisKhanAttackedLastTurn
+      ? [...unit.genghisKhanAttackedLastTurn]
+      : unit.genghisKhanAttackedLastTurn,
   };
 }
 

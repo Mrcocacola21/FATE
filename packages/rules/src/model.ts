@@ -14,6 +14,7 @@ export interface AbilityView {
   description: string;
   slot: AbilitySlot;
   chargeRequired?: number;
+  maxCharges?: number;
   chargeUnlimited?: boolean;
   currentCharges?: number;
   isAvailable: boolean;
@@ -102,6 +103,17 @@ export interface UnitState {
   hasAttackedThisTurn: boolean;
   hasActedThisTurn: boolean;
 
+  /** Genghis Khan: diagonal move enabled for current turn (Khan's Decree). */
+  genghisKhanDiagonalMoveActive?: boolean;
+  /** Genghis Khan: move allowed after decree even if move slot was consumed. */
+  genghisKhanDecreeMovePending?: boolean;
+  /** Genghis Khan: special move pending for Mongol Charge resolution. */
+  genghisKhanMongolChargeActive?: boolean;
+  /** Genghis Khan: targets attacked during this turn (for Legend of the Steppes). */
+  genghisKhanAttackedThisTurn?: string[];
+  /** Genghis Khan: targets attacked during previous turn (for Legend of the Steppes). */
+  genghisKhanAttackedLastTurn?: string[];
+
   isAlive: boolean;
 }
 
@@ -188,6 +200,7 @@ export interface PendingCombatQueueEntry {
   ignoreStealth?: boolean;
   damageBonus?: number;
   damageBonusSourceId?: string;
+  consumeSlots?: boolean;
   kind: "riderPath" | "aoe";
 }
 

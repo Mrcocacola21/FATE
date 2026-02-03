@@ -14,7 +14,7 @@ import {
     isCellOccupied,
   } from "./board";
   import { canUnitEnterCell } from "./visibility";
-import { HERO_GRAND_KAISER_ID } from "./heroes";
+import { HERO_GENGHIS_KHAN_ID, HERO_GRAND_KAISER_ID } from "./heroes";
 
 
 
@@ -146,6 +146,21 @@ export function getLegalMovesForUnit(
         }
         // Наездник всё равно продолжает дальше
         cur = addCoord(cur, dir);
+      }
+    }
+
+    const allowDiagonalLines =
+      unit.heroId === HERO_GENGHIS_KHAN_ID &&
+      unit.genghisKhanDiagonalMoveActive === true;
+    if (allowDiagonalLines) {
+      for (const dir of DIAG_DIRS) {
+        let cur = addCoord(unit.position!, dir);
+        while (isInsideBoard(cur, state.boardSize)) {
+          if (canUnitEnterCell(state, unit.id, cur)) {
+            res.push(cur);
+          }
+          cur = addCoord(cur, dir);
+        }
       }
     }
 
@@ -409,3 +424,4 @@ export function getBerserkerMovesForRoll(
 
   return res;
 }
+

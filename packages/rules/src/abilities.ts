@@ -333,7 +333,7 @@ const ABILITY_SPECS: Record<string, AbilitySpec> = {
     kind: "phantasm",
     maxCharges: 4,
     chargesPerUse: 4,
-    description: "You move in any forward direction(including diagonally). All allies hit by you within the same cell can attack, if they can. The Commander ability works on all allies hit by this ability.",
+    description: "Move in a straight line (orthogonal or diagonal). Allies in the swept corridor may each make one attack. Commander applies to those attacks.",
     actionCost: {
       consumes: { action: true},
     },
@@ -342,13 +342,13 @@ const ABILITY_SPECS: Record<string, AbilitySpec> = {
     id: ABILITY_GENGHIS_KHAN_LEGEND_OF_THE_STEPPES,
     displayName: "Legend of the Steppes",
     kind: "passive",
-    description: "+1 damage against units that attacked last turn.",
+    description: "+1 damage against targets this unit attacked on the previous turn.",
   },
   [ABILITY_GENGHIS_KHAN_KHANS_DECREE]: {
     id: ABILITY_GENGHIS_KHAN_KHANS_DECREE,
     displayName: "Khan's Decree",
     kind: "active",
-    description: "In this turn you can move diagonally. Move this unit.",
+    description: "This turn you can move diagonally. Move this unit.",
     maxCharges: 2,
     chargesPerUse: 2,
     actionCost:{
@@ -556,6 +556,10 @@ export function initUnitAbilities(unit: UnitState): UnitState {
     updated = setCharges(updated, ABILITY_EL_SID_COMPEADOR_KOLADA, 0);
     updated = setCharges(updated, ABILITY_EL_SID_COMPEADOR_DEMON_DUELIST, 0);
   }
+  if (unit.heroId === HERO_GENGHIS_KHAN_ID) {
+    updated = setCharges(updated, ABILITY_GENGHIS_KHAN_KHANS_DECREE, 0);
+    updated = setCharges(updated, ABILITY_GENGHIS_KHAN_MONGOL_CHARGE, 0);
+  }
 
   return updated;
 }
@@ -602,6 +606,17 @@ export function processUnitStartOfTurn(
     ...updated,
     lastChargedTurn: state.turnNumber,
   };
+
+  if (updated.heroId === HERO_GENGHIS_KHAN_ID) {
+    const attackedThisTurn = Array.isArray(updated.genghisKhanAttackedThisTurn)
+      ? updated.genghisKhanAttackedThisTurn
+      : [];
+    updated = {
+      ...updated,
+      genghisKhanAttackedLastTurn: Array.from(new Set(attackedThisTurn)),
+      genghisKhanAttackedThisTurn: [],
+    };
+  }
 
   const events: GameEvent[] = [];
   if (Object.keys(deltas).length > 0) {
@@ -927,7 +942,10 @@ export function getAbilityViewsForUnit(
       if (spec.kind === "active") {
         disabledReason = getActiveDisabledReason(state, unit, spec);
         isAvailable = !disabledReason;
-      } else if (spec.kind === "impulse") {
+      } else if (
+        spec.kind === "impulse" ||
+        spec.id === ABILITY_GENGHIS_KHAN_MONGOL_CHARGE
+      ) {
         if (spec.id === ABILITY_KAISER_ENGINEERING_MIRACLE && unit.transformed) {
           isAvailable = false;
           disabledReason = "Already transformed";
@@ -947,6 +965,7 @@ export function getAbilityViewsForUnit(
         description: spec.description,
         slot: getSlotFromCost(spec),
         chargeRequired,
+        maxCharges: spec.maxCharges,
         chargeUnlimited: spec.chargeUnlimited,
         currentCharges,
         isAvailable,

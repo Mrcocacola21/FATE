@@ -95,21 +95,26 @@ function getAbilityChargeState(
 ): AbilityChargeState {
   const current =
     abilityMeta?.currentCharges ?? unitState?.charges?.[abilityId] ?? 0;
-  const max = abilityMeta?.chargeUnlimited
-    ? null
-    : typeof abilityMeta?.chargeRequired === "number"
-    ? abilityMeta.chargeRequired
-    : null;
-
-  if (abilityId !== EL_CID_DEMON_DUELIST_ID) {
-    return { current, max, enabled: true };
+  if (abilityMeta?.chargeUnlimited) {
+    return { current, max: null, enabled: true };
   }
 
-  const required = 5;
+  const required =
+    typeof abilityMeta?.chargeRequired === "number"
+      ? abilityMeta.chargeRequired
+      : null;
+  if (required === null) {
+    return { current, max: null, enabled: true };
+  }
+
+  const max =
+    typeof abilityMeta?.maxCharges === "number"
+      ? abilityMeta.maxCharges
+      : required;
   const enabled = current >= required;
   return {
     current,
-    max: required,
+    max,
     enabled,
     reason: enabled ? undefined : "Not enough charges",
   };
@@ -160,43 +165,9 @@ export const RightPanel: FC<RightPanelProps> = ({
   const abilityViews = selectedUnit
     ? view.abilitiesByUnitId?.[selectedUnit.id] ?? []
     : [];
-
-  const doraAbility = abilityViews.find((ability) => ability.id === KAISER_DORA_ID);
-  const doraDisabledReason = doraAbility?.disabledReason;
-  const doraDisabled = !doraAbility || !doraAbility.isAvailable;
-  const hideDoraCharges = !!selectedUnit?.transformed;
-  const doraChargeState = doraAbility
-    ? getAbilityChargeState(doraAbility.id, selectedUnit, doraAbility)
-    : null;
-  const doraChargeLabel =
-    doraAbility && doraChargeState
-      ? formatChargeLabel(doraAbility, doraChargeState, hideDoraCharges)
-      : null;
-  const tisonaAbility = abilityViews.find(
-    (ability) => ability.id === EL_CID_TISONA_ID
+  const actionableAbilities = abilityViews.filter(
+    (ability) => ability.kind !== "passive"
   );
-  const tisonaDisabledReason = tisonaAbility?.disabledReason;
-  const tisonaDisabled = !tisonaAbility || !tisonaAbility.isAvailable;
-  const tisonaChargeState = tisonaAbility
-    ? getAbilityChargeState(tisonaAbility.id, selectedUnit, tisonaAbility)
-    : null;
-  const tisonaChargeLabel =
-    tisonaAbility && tisonaChargeState
-      ? formatChargeLabel(tisonaAbility, tisonaChargeState, false)
-      : null;
-  const duelAbility = abilityViews.find(
-    (ability) => ability.id === EL_CID_DEMON_DUELIST_ID
-  );
-  const duelDisabledReason = duelAbility?.disabledReason;
-  const duelChargeState = duelAbility
-    ? getAbilityChargeState(duelAbility.id, selectedUnit, duelAbility)
-    : null;
-  const duelDisabled =
-    !duelAbility || !duelAbility.isAvailable || !duelChargeState?.enabled;
-  const duelChargeLabel =
-    duelAbility && duelChargeState
-      ? formatChargeLabel(duelAbility, duelChargeState, false)
-      : null;
   const moveModeOptions =
     !pendingRoll && moveOptions && selectedUnit && moveOptions.unitId === selectedUnit.id
       ? moveOptions.modes ?? null
@@ -238,10 +209,6 @@ export const RightPanel: FC<RightPanelProps> = ({
   const stealthDisabled = !canAct || economy.stealthUsed || !canStealth;
   const searchMoveDisabled = !canAct || !legalIntents?.canSearchMove;
   const searchActionDisabled = !canAct || !legalIntents?.canSearchAction;
-
-  const abilityAvailable = selectedUnit?.class === "trickster";
-  const abilityDisabled =
-    !canAct || economy.attackUsed || economy.actionUsed || !abilityAvailable;
 
   const moveRoll =
     (view.pendingMove && view.pendingMove.unitId === selectedUnit?.id
@@ -441,6 +408,8 @@ export const RightPanel: FC<RightPanelProps> = ({
                       chargeState,
                       hideCharges
                     );
+                    const isChargeBlocked =
+                      ability.kind !== "passive" && !chargeState.enabled;
                     const showChargeWarning =
                       !!chargeState.reason &&
                       chargeState.reason !== ability.disabledReason;
@@ -462,10 +431,9 @@ export const RightPanel: FC<RightPanelProps> = ({
                         : ability.kind === "impulse"
                         ? "Impulse"
                         : "Phantasm";
-                    const kindBadgeClass =
-                      ability.kind === "phantasm" && !chargeState.enabled
-                        ? "rounded border border-slate-300 bg-slate-200 px-2 py-0.5 text-[9px] text-slate-500"
-                        : "rounded bg-slate-200 px-2 py-0.5 text-[9px] text-slate-700";
+                    const kindBadgeClass = isChargeBlocked
+                      ? "rounded border border-slate-300 bg-slate-200 px-2 py-0.5 text-[9px] text-slate-500"
+                      : "rounded bg-slate-200 px-2 py-0.5 text-[9px] text-slate-700";
                     return (
                       <div
                         key={ability.id}
@@ -551,59 +519,6 @@ export const RightPanel: FC<RightPanelProps> = ({
             >
               Attack
             </button>
-            {doraAbility && (
-              <button
-                className={`rounded px-2 py-2 ${
-                  doraDisabled ? "bg-slate-100 text-slate-400" : "bg-slate-200"
-                }`}
-                onClick={() => {
-                  if (!selectedUnit) return;
-                  onSetActionMode("dora");
-                }}
-                disabled={doraDisabled}
-                title={doraDisabledReason ?? ""}
-              >
-                {hideDoraCharges ? "DORA" : "Dora"}
-                {doraChargeLabel ? ` (${doraChargeLabel})` : ""}
-              </button>
-            )}
-            {doraAbility && doraDisabledReason && (
-              <div className="col-span-2 text-[10px] text-slate-400">
-                Dora disabled: {doraDisabledReason}
-              </div>
-            )}
-            {tisonaAbility && (
-              <button
-                className={`rounded px-2 py-2 ${
-                  tisonaDisabled ? "bg-slate-100 text-slate-400" : "bg-slate-200"
-                }`}
-                onClick={() => {
-                  if (!selectedUnit) return;
-                  onSetActionMode("tisona");
-                }}
-                disabled={tisonaDisabled}
-                title={tisonaDisabledReason ?? ""}
-              >
-                Tisona{tisonaChargeLabel ? ` (${tisonaChargeLabel})` : ""}
-              </button>
-            )}
-            {duelAbility && (
-              <button
-                className={`rounded px-2 py-2 ${
-                  duelDisabled
-                    ? "bg-slate-100 text-slate-400 cursor-not-allowed opacity-60"
-                    : "bg-slate-200"
-                }`}
-                onClick={() => {
-                  if (!selectedUnit) return;
-                  onSetActionMode("demonDuelist");
-                }}
-                disabled={duelDisabled}
-                title={duelDisabledReason ?? ""}
-              >
-                Demon Duelist{duelChargeLabel ? ` (${duelChargeLabel})` : ""}
-              </button>
-            )}
             <button
               className={`rounded px-2 py-2 ${
                 searchMoveDisabled ? "bg-slate-100 text-slate-400" : "bg-slate-200"
@@ -660,31 +575,104 @@ export const RightPanel: FC<RightPanelProps> = ({
             >
               Enter Stealth
             </button>
-            <button
-              className={`rounded px-2 py-2 ${
-                abilityDisabled ? "bg-slate-100 text-slate-400" : "bg-slate-200"
-              }`}
-              onClick={() =>
-                selectedUnit &&
+            {actionableAbilities.length > 0 && (
+              <div className="col-span-2 text-[11px] text-slate-500">
+                Ability Actions
+              </div>
+            )}
+            {actionableAbilities.map((ability) => {
+              const hideCharges =
+                ability.id === KAISER_DORA_ID && selectedUnit?.transformed;
+              const chargeState = getAbilityChargeState(
+                ability.id,
+                selectedUnit,
+                ability
+              );
+              const chargeLabel = formatChargeLabel(
+                ability,
+                chargeState,
+                hideCharges
+              );
+              const notEnoughCharges = !chargeState.enabled;
+              const slotDisabled =
+                ability.slot === "action"
+                  ? economy.actionUsed
+                  : ability.slot === "move"
+                  ? economy.moveUsed
+                  : ability.slot === "attack"
+                  ? economy.attackUsed
+                  : ability.slot === "stealth"
+                  ? economy.stealthUsed
+                  : false;
+              const slotReason =
+                ability.slot === "action"
+                  ? "Action slot already used"
+                  : ability.slot === "move"
+                  ? "Move slot already used"
+                  : ability.slot === "attack"
+                  ? "Attack slot already used"
+                  : ability.slot === "stealth"
+                  ? "Stealth slot already used"
+                  : undefined;
+              const disabledByActive =
+                ability.kind === "active" ? !ability.isAvailable : false;
+              const disabled =
+                !canAct || notEnoughCharges || slotDisabled || disabledByActive;
+              const chargeWarning = notEnoughCharges
+                ? "Not enough charges"
+                : undefined;
+              const tooltip =
+                ability.disabledReason ?? slotReason ?? chargeWarning ?? "";
+              const label = `${ability.name}${
+                chargeLabel ? ` (${chargeLabel})` : ""
+              }`;
+              const onClick = () => {
+                if (!selectedUnit || disabled) return;
+                if (ability.id === KAISER_DORA_ID) {
+                  onSetActionMode("dora");
+                  return;
+                }
+                if (ability.id === EL_CID_TISONA_ID) {
+                  onSetActionMode("tisona");
+                  return;
+                }
+                if (ability.id === EL_CID_DEMON_DUELIST_ID) {
+                  onSetActionMode("demonDuelist");
+                  return;
+                }
                 onSendAction({
                   type: "useAbility",
                   unitId: selectedUnit.id,
-                  abilityId: TRICKSTER_AOE_ID,
-                })
-              }
-              onMouseEnter={() => onHoverAbility(TRICKSTER_AOE_ID)}
-              onMouseLeave={() => onHoverAbility(null)}
-              onFocus={() => onHoverAbility(TRICKSTER_AOE_ID)}
-              onBlur={() => onHoverAbility(null)}
-              disabled={abilityDisabled}
-            >
-              {abilityAvailable ? "Trickster AoE" : "Use Ability"}
-            </button>
-            {abilityAvailable && (
-              <div className="text-[10px] text-slate-500">
-                AoE: 5x5, hits allies (not self).
-              </div>
-            )}
+                  abilityId: ability.id,
+                });
+              };
+              const hoverable = ability.id === TRICKSTER_AOE_ID;
+              return (
+                <div key={ability.id} className="space-y-1">
+                  <button
+                    className={`w-full rounded px-2 py-2 text-left ${
+                      disabled
+                        ? "bg-slate-100 text-slate-400 cursor-not-allowed opacity-60"
+                        : "bg-slate-200"
+                    }`}
+                    onClick={onClick}
+                    onMouseEnter={() => hoverable && onHoverAbility(ability.id)}
+                    onMouseLeave={() => hoverable && onHoverAbility(null)}
+                    onFocus={() => hoverable && onHoverAbility(ability.id)}
+                    onBlur={() => hoverable && onHoverAbility(null)}
+                    disabled={disabled}
+                    title={tooltip}
+                  >
+                    {label}
+                  </button>
+                  {chargeWarning && (
+                    <div className="text-[10px] text-amber-700">
+                      {chargeWarning}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
             <button
               className={`rounded px-2 py-2 ${
                 isMyTurn && joined && !isSpectator
