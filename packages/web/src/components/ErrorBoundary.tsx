@@ -27,14 +27,14 @@ export class ErrorBoundary extends Component<
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-gradient-to-br from-amber-50 via-sky-50 to-emerald-50 p-6">
-          <div className="mx-auto max-w-lg rounded border border-amber-200 bg-white/90 p-6 text-sm text-amber-900 shadow-sm">
+        <div className="min-h-screen bg-app p-6">
+          <div className="mx-auto max-w-lg rounded-2xl border border-amber-200 bg-white/90 p-6 text-sm text-amber-900 shadow-sm shadow-slate-900/5 dark:border-amber-800/60 dark:bg-neutral-900/70 dark:text-amber-200 dark:shadow-black/40">
             <div className="text-base font-semibold">Something went wrong</div>
-            <div className="mt-2 text-xs text-amber-700">
+            <div className="mt-2 text-xs text-amber-700 dark:text-amber-200">
               {this.state.message ?? "The UI crashed unexpectedly."}
             </div>
             <button
-              className="mt-4 rounded bg-amber-500 px-4 py-2 text-xs font-semibold text-white"
+              className="mt-4 rounded-lg bg-amber-500 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-amber-400"
               onClick={() => window.location.reload()}
             >
               Reload

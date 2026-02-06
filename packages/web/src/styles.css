@@ -4,4 +4,50 @@
 
 body {
   font-family: "Space Grotesk", "Segoe UI", sans-serif;
+  min-height: 100%;
+  background-color: inherit;
+  color: inherit;
+  transition: background-color 200ms ease, color 200ms ease;
+}
+
+:root {
+  color-scheme: light;
+}
+
+html {
+  background-color: #fafafa;
+  color: #171717;
+}
+
+html.dark {
+  color-scheme: dark;
+  background-color: #0a0a0a;
+  color: #f5f5f5;
+}
+
+@layer utilities {
+  .bg-app {
+    @apply bg-white dark:bg-neutral-950;
+  }
+  .bg-surface {
+    @apply bg-white dark:bg-neutral-900;
+  }
+  .bg-surface-solid {
+    @apply bg-white dark:bg-neutral-900;
+  }
+  .text-primary {
+    @apply text-neutral-900 dark:text-neutral-100;
+  }
+  .text-muted {
+    @apply text-neutral-600 dark:text-neutral-300;
+  }
+  .border-ui {
+    @apply border border-neutral-200 dark:border-neutral-800;
+  }
+}
+
+@layer base {
+  button:disabled {
+    @apply cursor-not-allowed opacity-50;
+  }
 }

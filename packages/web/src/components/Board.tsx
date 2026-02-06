@@ -46,22 +46,24 @@ function getHighlightClass(
 ) {
   switch (kind) {
     case "place":
-      return "bg-emerald-300/35";
+      return "bg-emerald-300/35 dark:bg-emerald-500/15";
     case "move":
-      return "bg-sky-300/35";
+      return "bg-sky-300/35 dark:bg-sky-500/15";
     case "attack":
-      return "bg-rose-300/40";
+      return "bg-rose-300/40 dark:bg-rose-500/18";
     case "attackRange":
-      return "bg-rose-200/35";
+      return "bg-rose-200/35 dark:bg-rose-500/12";
     case "dora":
-      return "bg-amber-300/35";
+      return "bg-amber-300/35 dark:bg-amber-500/15";
     default:
       return "";
   }
 }
 
 function getAoEHighlightClass(kind: "aoe" | "aoeDisabled") {
-  return kind === "aoe" ? "bg-amber-400/25" : "bg-slate-400/20";
+  return kind === "aoe"
+    ? "bg-amber-400/25 dark:bg-amber-500/12"
+    : "bg-slate-400/20 dark:bg-neutral-500/10";
 }
 
 function coordKey(coord: Coord): string {
@@ -333,14 +335,14 @@ export const Board: FC<BoardProps> = ({
       const cellClasses = [
         "relative",
         "border",
-        "border-slate-200",
+        "border-slate-200 dark:border-neutral-800",
         "flex",
         "items-center",
         "justify-center",
         "transition-[width,height] duration-150 ease-out",
         disabled ? "cursor-not-allowed opacity-70" : "cursor-pointer",
-        isDark ? "bg-amber-100" : "bg-white",
-        isSelected ? "ring-2 ring-teal-500" : "",
+        isDark ? "bg-amber-100 dark:bg-neutral-900" : "bg-white dark:bg-neutral-950",
+        isSelected ? "ring-2 ring-teal-500 dark:ring-teal-400/60" : "",
       ].join(" ");
 
       let content: JSX.Element | null = null;
@@ -397,12 +399,12 @@ export const Board: FC<BoardProps> = ({
             <img
               src={tokenSrc}
               alt={`${tokenId} token`}
-              className="h-full w-full rounded-md bg-white/80 object-contain shadow ring-1 ring-slate-200"
+              className="h-full w-full rounded-lg bg-white/80 object-contain shadow-sm ring-1 ring-slate-200 dark:bg-neutral-900/70 dark:ring-neutral-800"
               draggable={false}
             />
             {isTokenMissing && (
               <span
-                className="absolute inset-0 flex items-center justify-center font-semibold text-slate-700"
+                className="absolute inset-0 flex items-center justify-center font-semibold text-slate-700 dark:text-slate-200"
                 style={{ fontSize: pieceFontSize }}
               >
                 {getUnitLabel(unit.class)}
@@ -410,7 +412,7 @@ export const Board: FC<BoardProps> = ({
             )}
             {marker && (
               <span
-                className="absolute -right-1 -top-1 rounded-full bg-white px-1 font-bold text-slate-700 shadow"
+                className="absolute -right-1 -top-1 rounded-full bg-white px-1 font-bold text-slate-700 shadow dark:bg-slate-200 dark:text-slate-900"
                 style={{ fontSize: markerFontSize }}
               >
                 {marker}
@@ -422,7 +424,7 @@ export const Board: FC<BoardProps> = ({
         const label = lastKnownCount > 1 ? `?${lastKnownCount}` : "?";
         content = (
           <div
-            className="flex items-center justify-center rounded-full border border-dashed border-slate-400 font-semibold text-slate-500"
+            className="flex items-center justify-center rounded-full border border-dashed border-slate-400 font-semibold text-slate-500 dark:border-slate-600 dark:text-slate-300"
             style={{
               width: lastKnownSize,
               height: lastKnownSize,
@@ -452,7 +454,7 @@ export const Board: FC<BoardProps> = ({
         >
           {highlightKind && (
             <div
-              className={`pointer-events-none absolute rounded ${getHighlightClass(
+              className={`pointer-events-none absolute rounded dark:ring-1 dark:ring-neutral-800/70 ${getHighlightClass(
                 highlightKind
               )}`}
               style={{ inset: highlightInset }}
@@ -460,7 +462,7 @@ export const Board: FC<BoardProps> = ({
           )}
           {aoeKind && (
             <div
-              className={`pointer-events-none absolute rounded ${getAoEHighlightClass(
+              className={`pointer-events-none absolute rounded dark:ring-1 dark:ring-neutral-800/70 ${getAoEHighlightClass(
                 aoeKind
               )}`}
               style={{ inset: highlightInset }}
@@ -472,7 +474,7 @@ export const Board: FC<BoardProps> = ({
               className={`pointer-events-none absolute left-1 top-1 flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-bold shadow ${
                 stakeMarkersByPos.get(key)
                   ? "bg-emerald-500 text-white"
-                  : "bg-emerald-200 text-emerald-900"
+                  : "bg-emerald-200 text-emerald-900 dark:bg-emerald-900/50 dark:text-emerald-200"
               }`}
               title={
                 stakeMarkersByPos.get(key)
@@ -485,7 +487,7 @@ export const Board: FC<BoardProps> = ({
           )}
           {unit?.bunkerActive && (
             <div
-              className="pointer-events-none absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-200 text-[9px] font-bold text-amber-900 shadow"
+              className="pointer-events-none absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-200 text-[9px] font-bold text-amber-900 shadow dark:bg-amber-900/60 dark:text-amber-200"
               title="In Bunker: incoming hits deal 1 damage."
             >
               B
@@ -510,7 +512,7 @@ export const Board: FC<BoardProps> = ({
     rows.push(
       <div key={`row-${row}`} className="flex">
         <div
-          className="flex items-center justify-center font-semibold text-slate-500"
+          className="flex items-center justify-center font-semibold text-slate-500 dark:text-slate-400"
           style={{ width: labelSize, height: cellSize, fontSize: labelFontSize }}
         >
           {rowLabel}
@@ -539,7 +541,7 @@ export const Board: FC<BoardProps> = ({
             {colLabels.map((label, index) => (
               <div
                 key={`col-${label}-${index}`}
-                className="flex items-center justify-center font-semibold text-slate-500"
+                className="flex items-center justify-center font-semibold text-slate-500 dark:text-slate-400"
                 style={{
                   width: cellSize,
                   height: labelSize,

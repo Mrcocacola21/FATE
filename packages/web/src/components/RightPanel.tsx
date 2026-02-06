@@ -223,21 +223,23 @@ export const RightPanel: FC<RightPanelProps> = ({
 
   return (
     <div className="space-y-6">
-      <div className="rounded border border-slate-200 bg-white/80 p-4">
-        <div className="text-sm text-slate-500">Status</div>
-        <div className="mt-2 space-y-1 text-sm">
+      <div className="rounded-2xl border-ui bg-surface p-4 shadow-sm shadow-slate-900/5 dark:border-slate-700/60 dark:bg-slate-900/60 dark:shadow-black/40">
+        <div className="text-sm text-slate-600 dark:text-slate-100">Status</div>
+        <div className="mt-2 space-y-1 text-sm text-slate-700 dark:text-slate-200">
           <div>Phase: {view.phase}</div>
           <div>Current Player: {view.currentPlayer}</div>
           <div>Round: {view.roundNumber}</div>
           <div>Turn: {view.turnNumber}</div>
           <div>Active Unit: {view.activeUnitId ?? "-"}</div>
           {isSpectator && (
-            <div className="text-xs text-amber-600">Spectating</div>
+            <div className="text-xs text-amber-600 dark:text-amber-300">
+              Spectating
+            </div>
           )}
         </div>
         {canStartTurn && expectedUnitId && (
           <button
-            className="mt-3 w-full rounded bg-teal-500 px-3 py-2 text-sm font-semibold text-white"
+            className="mt-3 w-full rounded-lg bg-teal-500 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:shadow dark:bg-teal-800/50 dark:text-slate-100 dark:hover:bg-teal-700/60"
             onClick={() =>
               onSendAction({ type: "unitStartTurn", unitId: expectedUnitId })
             }
@@ -246,7 +248,7 @@ export const RightPanel: FC<RightPanelProps> = ({
           </button>
         )}
         {legalIntents && (
-          <div className="mt-3 space-y-1 text-[10px] text-slate-500">
+          <div className="mt-3 space-y-1 text-[10px] text-slate-500 dark:text-slate-400">
             <div>
               Legal: SM={legalIntents.canSearchMove ? "true" : "false"} SA=
               {legalIntents.canSearchAction ? "true" : "false"} (reasons:{" "}
@@ -265,19 +267,23 @@ export const RightPanel: FC<RightPanelProps> = ({
       </div>
 
       {view.phase === "placement" && (
-        <div className="rounded border border-slate-200 bg-white/80 p-4">
-          <div className="text-sm text-slate-500">Placement</div>
+        <div className="rounded-2xl border-ui bg-surface p-4 shadow-sm shadow-slate-900/5 dark:border-slate-700/60 dark:bg-slate-900/60 dark:shadow-black/40">
+          <div className="text-sm text-slate-600 dark:text-slate-100">
+            Placement
+          </div>
           <div className="mt-3 space-y-2">
             {unplacedUnits.length === 0 && (
-              <div className="text-xs text-slate-400">No unplaced units.</div>
+              <div className="text-xs text-slate-400 dark:text-slate-400">
+                No unplaced units.
+              </div>
             )}
             {unplacedUnits.map((unit) => (
               <button
                 key={unit.id}
-                className={`w-full rounded px-3 py-2 text-left text-xs ${
+                className={`w-full rounded-lg px-3 py-2 text-left text-xs shadow-sm transition hover:shadow ${
                   placeUnitId === unit.id
-                    ? "bg-teal-500 text-white"
-                    : "bg-slate-100 text-slate-700"
+                    ? "bg-teal-500 text-white dark:bg-teal-800/50 dark:text-slate-100 dark:hover:bg-teal-700/60"
+                    : "bg-slate-100 text-slate-700 dark:bg-slate-800/60 dark:text-slate-200 dark:hover:bg-slate-700/60"
                 }`}
                 onClick={() => {
                   onSetPlaceUnit(unit.id);
@@ -290,27 +296,27 @@ export const RightPanel: FC<RightPanelProps> = ({
             ))}
           </div>
           {actionMode === "place" && placeUnitId && (
-            <div className="mt-3 text-xs text-slate-400">
+            <div className="mt-3 text-xs text-slate-400 dark:text-slate-400">
               Click a highlighted cell to place {placeUnitId}.
             </div>
           )}
           {!joined && (
-            <div className="mt-2 text-xs text-amber-600">
+            <div className="mt-2 text-xs text-amber-600 dark:text-amber-300">
               Waiting for room join to place units.
             </div>
           )}
           {!pendingRoll && joined && !isSpectator && !isMyTurn && (
-            <div className="mt-2 text-xs text-amber-600">
+            <div className="mt-2 text-xs text-amber-600 dark:text-amber-300">
               Waiting for the other player to place.
             </div>
           )}
           {isSpectator && (
-            <div className="mt-2 text-xs text-amber-600">
+            <div className="mt-2 text-xs text-amber-600 dark:text-amber-300">
               Spectators cannot place units.
             </div>
           )}
           {pendingRoll && (
-            <div className="mt-2 text-xs text-amber-600">
+            <div className="mt-2 text-xs text-amber-600 dark:text-amber-300">
               Resolve the pending roll before placing units.
             </div>
           )}
@@ -318,28 +324,30 @@ export const RightPanel: FC<RightPanelProps> = ({
       )}
 
       {view.phase === "battle" && (
-        <div className="rounded border border-slate-200 bg-white/80 p-4">
-          <div className="text-sm text-slate-500">Active Unit Panel</div>
+        <div className="rounded-2xl border-ui bg-surface p-4 shadow-sm shadow-slate-900/5 dark:border-slate-700/60 dark:bg-slate-900/60 dark:shadow-black/40">
+          <div className="text-sm text-slate-600 dark:text-slate-100">
+            Active Unit Panel
+          </div>
           {selectedUnit ? (
-            <div className="mt-3 space-y-2 text-xs">
+            <div className="mt-3 space-y-2 text-xs text-slate-700 dark:text-slate-200">
               <div className="flex items-center gap-2">
-                <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-slate-900 text-[10px] font-semibold text-white">
+                <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-slate-900 text-[10px] font-semibold text-white shadow-sm dark:bg-slate-100 dark:text-slate-900">
                   {classBadge(selectedUnit.class).label}
                   {classBadge(selectedUnit.class).marker && (
-                    <span className="absolute -right-1 -top-1 rounded-full bg-white px-1 text-[9px] font-bold text-slate-700 shadow">
+                    <span className="absolute -right-1 -top-1 rounded-full bg-white px-1 text-[9px] font-bold text-slate-700 shadow dark:bg-slate-200 dark:text-slate-900">
                       {classBadge(selectedUnit.class).marker}
                     </span>
                   )}
                 </div>
                 <div>
-                  <div className="text-[11px] font-semibold">
+                  <div className="text-[11px] font-semibold dark:text-slate-100">
                     {heroDefinition?.name ?? selectedUnit.id}
                   </div>
-                  <div className="text-[10px] text-slate-500">
+                  <div className="text-[10px] text-slate-500 dark:text-slate-300">
                     Class {selectedUnit.class}
                     {heroDefinition ? ` (${selectedUnit.id})` : ""}
                   </div>
-                  <div className="text-[10px] text-slate-500">
+                  <div className="text-[10px] text-slate-500 dark:text-slate-300">
                     HP {selectedUnit.hp}
                   </div>
                 </div>
@@ -351,46 +359,54 @@ export const RightPanel: FC<RightPanelProps> = ({
                   : "-"}
               </div>
               {moveRoll !== null && moveRoll !== undefined && (
-                <div className="text-[10px] text-slate-500">
+                <div className="text-[10px] text-slate-500 dark:text-slate-300">
                   Move roll: {moveRoll}
                 </div>
               )}
-              <div className="flex flex-wrap gap-2 text-[10px] text-slate-600">
+              <div className="flex flex-wrap gap-2 text-[10px] text-slate-600 dark:text-slate-200">
                 <span
                   className={`rounded-full px-2 py-0.5 ${
-                    economy.moveUsed ? "bg-slate-200" : "bg-emerald-100"
+                    economy.moveUsed
+                      ? "bg-slate-200 dark:bg-slate-800"
+                      : "bg-emerald-100 dark:bg-emerald-900/40"
                   }`}
                 >
                   Move {economy.moveUsed ? "X" : "-"}
                 </span>
                 <span
                   className={`rounded-full px-2 py-0.5 ${
-                    economy.attackUsed ? "bg-slate-200" : "bg-emerald-100"
+                    economy.attackUsed
+                      ? "bg-slate-200 dark:bg-slate-800"
+                      : "bg-emerald-100 dark:bg-emerald-900/40"
                   }`}
                 >
                   Attack {economy.attackUsed ? "X" : "-"}
                 </span>
                 <span
                   className={`rounded-full px-2 py-0.5 ${
-                    economy.actionUsed ? "bg-slate-200" : "bg-emerald-100"
+                    economy.actionUsed
+                      ? "bg-slate-200 dark:bg-slate-800"
+                      : "bg-emerald-100 dark:bg-emerald-900/40"
                   }`}
                 >
                   Action {economy.actionUsed ? "X" : "-"}
                 </span>
                 <span
                   className={`rounded-full px-2 py-0.5 ${
-                    economy.stealthUsed ? "bg-slate-200" : "bg-emerald-100"
+                    economy.stealthUsed
+                      ? "bg-slate-200 dark:bg-slate-800"
+                      : "bg-emerald-100 dark:bg-emerald-900/40"
                   }`}
                 >
                   Stealth {economy.stealthUsed ? "X" : "-"}
                 </span>
               </div>
               <div className="mt-4">
-                <div className="text-[11px] font-semibold text-slate-600">
+                <div className="text-[11px] font-semibold text-slate-600 dark:text-slate-100">
                   Abilities
                 </div>
                 {abilityViews.length === 0 && (
-                  <div className="mt-2 text-[10px] text-slate-400">
+                  <div className="mt-2 text-[10px] text-slate-400 dark:text-slate-400">
                     No abilities available.
                   </div>
                 )}
@@ -432,14 +448,16 @@ export const RightPanel: FC<RightPanelProps> = ({
                         ? "Impulse"
                         : "Phantasm";
                     const kindBadgeClass = isChargeBlocked
-                      ? "rounded border border-slate-300 bg-slate-200 px-2 py-0.5 text-[9px] text-slate-500"
-                      : "rounded bg-slate-200 px-2 py-0.5 text-[9px] text-slate-700";
+                      ? "rounded-full border border-slate-300 bg-slate-200 px-2 py-0.5 text-[9px] text-slate-500 dark:border-slate-700/60 dark:bg-slate-700/60 dark:text-slate-100"
+                      : "rounded-full bg-slate-200 px-2 py-0.5 text-[9px] text-slate-700 dark:bg-slate-700/60 dark:text-slate-100";
                     return (
                       <div
                         key={ability.id}
-                        className={`rounded border border-slate-200 p-2 text-[10px] ${
-                          ability.isAvailable ? "bg-white" : "bg-slate-100 text-slate-400"
-                        }`}
+                        className={`rounded-xl border border-slate-200 p-2 text-[10px] shadow-sm ${
+                          ability.isAvailable
+                            ? "bg-white dark:bg-slate-800/50"
+                            : "bg-slate-100 text-slate-400 dark:bg-slate-800/40 dark:text-slate-400"
+                        } dark:border-slate-700/60`}
                         title={ability.disabledReason ?? ""}
                         onMouseEnter={() => {
                           if (ability.id === EL_CID_KOLADA_ID) {
@@ -453,25 +471,27 @@ export const RightPanel: FC<RightPanelProps> = ({
                         }}
                       >
                         <div className="flex items-center justify-between gap-2">
-                          <div className="font-semibold">{ability.name}</div>
+                          <div className="font-semibold dark:text-slate-100">
+                            {ability.name}
+                          </div>
                           <span className={kindBadgeClass}>
                             {kindLabel}
                           </span>
                         </div>
-                        <div className="mt-1 text-slate-500">
+                        <div className="mt-1 text-slate-500 dark:text-slate-300">
                           {ability.description}
                         </div>
-                        <div className="mt-1 text-slate-500">
+                        <div className="mt-1 text-slate-500 dark:text-slate-400">
                           Slot: {slotLabel}
                           {chargeLabel !== null ? ` | Charges: ${chargeLabel}` : ""}
                         </div>
                         {ability.disabledReason && (
-                          <div className="mt-1 text-amber-700">
+                          <div className="mt-1 text-amber-700 dark:text-amber-300">
                             {ability.disabledReason}
                           </div>
                         )}
                         {showChargeWarning && (
-                          <div className="mt-1 text-amber-700">
+                          <div className="mt-1 text-amber-700 dark:text-amber-300">
                             {chargeState.reason}
                           </div>
                         )}
@@ -482,13 +502,17 @@ export const RightPanel: FC<RightPanelProps> = ({
               </div>
             </div>
           ) : (
-            <div className="mt-2 text-xs text-slate-400">Select a unit.</div>
+            <div className="mt-2 text-xs text-slate-400 dark:text-slate-400">
+              Select a unit.
+            </div>
           )}
 
           <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
             <button
-              className={`rounded px-2 py-2 ${
-                moveDisabled ? "bg-slate-100 text-slate-400" : "bg-slate-200"
+              className={`rounded-lg px-2 py-2 shadow-sm transition hover:shadow ${
+                moveDisabled
+                  ? "bg-slate-100 text-slate-400 dark:bg-slate-900/50 dark:text-slate-500"
+                  : "bg-slate-200 text-slate-700 dark:bg-slate-800/60 dark:text-slate-100 dark:hover:bg-slate-700/60"
               }`}
               onClick={() => {
                 if (!selectedUnit) return;
@@ -507,8 +531,10 @@ export const RightPanel: FC<RightPanelProps> = ({
               Move
             </button>
             <button
-              className={`rounded px-2 py-2 ${
-                attackDisabled ? "bg-slate-100 text-slate-400" : "bg-slate-200"
+              className={`rounded-lg px-2 py-2 shadow-sm transition hover:shadow ${
+                attackDisabled
+                  ? "bg-slate-100 text-slate-400 dark:bg-slate-900/50 dark:text-slate-500"
+                  : "bg-slate-200 text-slate-700 dark:bg-slate-800/60 dark:text-slate-100 dark:hover:bg-slate-700/60"
               }`}
               onClick={() => onSetActionMode("attack")}
               onMouseEnter={() => onHoverAttackRange(selectedUnit?.id ?? null, true)}
@@ -520,8 +546,10 @@ export const RightPanel: FC<RightPanelProps> = ({
               Attack
             </button>
             <button
-              className={`rounded px-2 py-2 ${
-                searchMoveDisabled ? "bg-slate-100 text-slate-400" : "bg-slate-200"
+              className={`rounded-lg px-2 py-2 shadow-sm transition hover:shadow ${
+                searchMoveDisabled
+                  ? "bg-slate-100 text-slate-400 dark:bg-slate-900/50 dark:text-slate-500"
+                  : "bg-slate-200 text-slate-700 dark:bg-slate-800/60 dark:text-slate-100 dark:hover:bg-slate-700/60"
               }`}
               onClick={() =>
                 selectedUnit &&
@@ -536,10 +564,10 @@ export const RightPanel: FC<RightPanelProps> = ({
               Search (Move)
             </button>
             <button
-              className={`rounded px-2 py-2 ${
+              className={`rounded-lg px-2 py-2 shadow-sm transition hover:shadow ${
                 searchActionDisabled
-                  ? "bg-slate-100 text-slate-400"
-                  : "bg-slate-200"
+                  ? "bg-slate-100 text-slate-400 dark:bg-slate-900/50 dark:text-slate-500"
+                  : "bg-slate-200 text-slate-700 dark:bg-slate-800/60 dark:text-slate-100 dark:hover:bg-slate-700/60"
               }`}
               onClick={() =>
                 selectedUnit &&
@@ -554,18 +582,20 @@ export const RightPanel: FC<RightPanelProps> = ({
               Search (Action)
             </button>
             {searchMoveDisabled && legalIntents?.searchMoveReason && (
-              <div className="col-span-2 text-[10px] text-slate-400">
+              <div className="col-span-2 text-[10px] text-slate-400 dark:text-slate-400">
                 Search (Move) disabled: {legalIntents.searchMoveReason}
               </div>
             )}
             {searchActionDisabled && legalIntents?.searchActionReason && (
-              <div className="col-span-2 text-[10px] text-slate-400">
+              <div className="col-span-2 text-[10px] text-slate-400 dark:text-slate-400">
                 Search (Action) disabled: {legalIntents.searchActionReason}
               </div>
             )}
             <button
-              className={`rounded px-2 py-2 ${
-                stealthDisabled ? "bg-slate-100 text-slate-400" : "bg-slate-200"
+              className={`rounded-lg px-2 py-2 shadow-sm transition hover:shadow ${
+                stealthDisabled
+                  ? "bg-slate-100 text-slate-400 dark:bg-slate-900/50 dark:text-slate-500"
+                  : "bg-slate-200 text-slate-700 dark:bg-slate-800/60 dark:text-slate-100 dark:hover:bg-slate-700/60"
               }`}
               onClick={() =>
                 selectedUnit &&
@@ -576,7 +606,7 @@ export const RightPanel: FC<RightPanelProps> = ({
               Enter Stealth
             </button>
             {actionableAbilities.length > 0 && (
-              <div className="col-span-2 text-[11px] text-slate-500">
+              <div className="col-span-2 text-[11px] text-slate-500 dark:text-slate-400">
                 Ability Actions
               </div>
             )}
@@ -650,10 +680,10 @@ export const RightPanel: FC<RightPanelProps> = ({
               return (
                 <div key={ability.id} className="space-y-1">
                   <button
-                    className={`w-full rounded px-2 py-2 text-left ${
+                    className={`w-full rounded-lg px-2 py-2 text-left shadow-sm transition hover:shadow ${
                       disabled
-                        ? "bg-slate-100 text-slate-400 cursor-not-allowed opacity-60"
-                        : "bg-slate-200"
+                        ? "bg-slate-100 text-slate-400 cursor-not-allowed opacity-60 dark:bg-slate-900/50 dark:text-slate-500"
+                        : "bg-slate-200 text-slate-700 dark:bg-slate-800/60 dark:text-slate-100 dark:hover:bg-slate-700/60"
                     }`}
                     onClick={onClick}
                     onMouseEnter={() => hoverable && onHoverAbility(ability.id)}
@@ -666,7 +696,7 @@ export const RightPanel: FC<RightPanelProps> = ({
                     {label}
                   </button>
                   {chargeWarning && (
-                    <div className="text-[10px] text-amber-700">
+                    <div className="text-[10px] text-amber-700 dark:text-amber-300">
                       {chargeWarning}
                     </div>
                   )}
@@ -674,10 +704,10 @@ export const RightPanel: FC<RightPanelProps> = ({
               );
             })}
             <button
-              className={`rounded px-2 py-2 ${
+              className={`rounded-lg px-2 py-2 shadow-sm transition hover:shadow ${
                 isMyTurn && joined && !isSpectator
-                  ? "bg-slate-200"
-                  : "bg-slate-100 text-slate-400"
+                  ? "bg-slate-200 text-slate-700 dark:bg-slate-800/60 dark:text-slate-100 dark:hover:bg-slate-700/60"
+                  : "bg-slate-100 text-slate-400 dark:bg-slate-900/50 dark:text-slate-500"
               }`}
               onClick={() => onSendAction({ type: "endTurn" })}
               disabled={!isMyTurn || !joined || isSpectator || pendingRoll}
@@ -685,7 +715,7 @@ export const RightPanel: FC<RightPanelProps> = ({
               End Turn
             </button>
             <button
-              className="rounded bg-slate-100 px-2 py-2"
+              className="rounded-lg bg-slate-100 px-2 py-2 text-slate-600 shadow-sm transition hover:shadow dark:bg-slate-800/60 dark:text-slate-200 dark:hover:bg-slate-700/60"
               onClick={() => {
                 onSetActionMode(null);
                 onSelectUnit(null);
@@ -697,13 +727,17 @@ export const RightPanel: FC<RightPanelProps> = ({
 
           {moveModeOptions && selectedUnit && (
             <div className="mt-3 text-xs">
-              <div className="text-[11px] text-slate-500">Choose move mode:</div>
+              <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                Choose move mode:
+              </div>
               <div className="mt-2 flex flex-wrap gap-2">
                 {moveModeOptions.map((mode) => (
                   <button
                     key={mode}
-                    className={`rounded px-2 py-1 text-[10px] ${
-                      moveDisabled ? "bg-slate-100 text-slate-400" : "bg-slate-200"
+                    className={`rounded-lg px-2 py-1 text-[10px] shadow-sm transition hover:shadow ${
+                      moveDisabled
+                        ? "bg-slate-100 text-slate-400 dark:bg-slate-900/50 dark:text-slate-500"
+                        : "bg-slate-200 text-slate-700 dark:bg-slate-800/60 dark:text-slate-100 dark:hover:bg-slate-700/60"
                     }`}
                     onClick={() => onMoveRequest(selectedUnit.id, mode)}
                     disabled={moveDisabled}
@@ -716,7 +750,7 @@ export const RightPanel: FC<RightPanelProps> = ({
           )}
 
           {actionMode && (
-            <div className="mt-3 text-xs text-slate-400">
+            <div className="mt-3 text-xs text-slate-400 dark:text-slate-400">
               {actionMode === "dora"
                 ? "Dora: select a center cell on the archer line."
                 : actionMode === "tisona"
@@ -729,8 +763,8 @@ export const RightPanel: FC<RightPanelProps> = ({
         </div>
       )}
 
-      <div className="rounded border border-slate-200 bg-white/80 p-4">
-        <div className="text-sm text-slate-500">Units</div>
+      <div className="rounded-2xl border-ui bg-surface p-4 shadow-sm shadow-slate-900/5 dark:border-slate-700/60 dark:bg-slate-900/60 dark:shadow-black/40">
+        <div className="text-sm text-slate-500 dark:text-slate-400">Units</div>
         <div className="mt-2 grid grid-cols-1 gap-2 text-xs">
           {friendlyUnits.map((unit) => {
             const badge = classBadge(unit.class);
@@ -738,17 +772,17 @@ export const RightPanel: FC<RightPanelProps> = ({
             return (
               <button
                 key={unit.id}
-                className={`flex items-center gap-3 rounded px-2 py-2 text-left ${
+                className={`flex items-center gap-3 rounded-lg px-2 py-2 text-left shadow-sm transition hover:shadow ${
                   selectedUnitId === unit.id
-                    ? "bg-teal-500 text-white"
-                    : "bg-slate-100 text-slate-700"
+                    ? "bg-teal-500 text-white dark:bg-teal-800/50 dark:text-slate-100 dark:hover:bg-teal-700/60"
+                    : "bg-slate-100 text-slate-700 dark:bg-slate-800/60 dark:text-slate-200 dark:hover:bg-slate-700/60"
                 }`}
                 onClick={() => onSelectUnit(unit.id)}
               >
-                <div className="relative flex h-9 w-9 items-center justify-center rounded-full bg-slate-900 text-[10px] font-semibold text-white">
+                <div className="relative flex h-9 w-9 items-center justify-center rounded-full bg-slate-900 text-[10px] font-semibold text-white shadow-sm dark:bg-slate-100 dark:text-slate-900">
                   {badge.label}
                   {badge.marker && (
-                    <span className="absolute -right-1 -top-1 rounded-full bg-white px-1 text-[9px] font-bold text-slate-700 shadow">
+                    <span className="absolute -right-1 -top-1 rounded-full bg-white px-1 text-[9px] font-bold text-slate-700 shadow dark:bg-slate-200 dark:text-slate-900">
                       {badge.marker}
                     </span>
                   )}
@@ -763,7 +797,7 @@ export const RightPanel: FC<RightPanelProps> = ({
                   </div>
                 </div>
                 {(unit.class === "berserker" || unit.transformed) && (
-                  <span className="rounded-full bg-amber-200 px-2 py-1 text-[10px] font-semibold text-amber-900">
+                  <span className="rounded-full bg-amber-200 px-2 py-1 text-[10px] font-semibold text-amber-900 dark:bg-amber-900/50 dark:text-amber-200">
                     BD {berserkCharges ?? 0}
                   </span>
                 )}

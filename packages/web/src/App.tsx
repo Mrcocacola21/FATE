@@ -25,7 +25,14 @@ export default function App() {
       ) : (
         <>
           <Lobby onOpenFigures={() => setScreen("figures")} />
-          <div style={{marginTop:12}}><button onClick={() => setScreen("heartbreak")}>Open Heartbreak (Ping-Pong)</button></div>
+          <div className="mt-4">
+            <button
+              className="rounded-lg bg-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
+              onClick={() => setScreen("heartbreak")}
+            >
+              Open Heartbreak (Ping-Pong)
+            </button>
+          </div>
         </>
       )}
     </ErrorBoundary>

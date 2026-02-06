@@ -4,6 +4,7 @@ import { Board } from "./Board";
 import { EventLog } from "./EventLog";
 import { RightPanel } from "./RightPanel";
 import { TurnQueueTracker } from "./TurnQueueTracker";
+import { ThemeToggle } from "./ThemeToggle";
 import { getLocalPlayerId, useGameStore } from "../store";
 import {
   EL_CID_DEMON_DUELIST_ID,
@@ -991,15 +992,17 @@ export function Game() {
 
   if (!view || !hasSnapshot) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-sky-50 to-emerald-50 p-6">
-        <div className="mx-auto max-w-xl rounded border border-slate-200 bg-white/80 p-6 shadow-sm">
-          <h1 className="text-xl font-semibold">FATE</h1>
-          <p className="mt-2 text-sm text-slate-500">Waiting for room state...</p>
-          <div className="mt-4 text-xs text-slate-500">
+      <div className="min-h-screen bg-app p-6">
+        <div className="mx-auto max-w-xl rounded-2xl border-ui bg-surface p-6 shadow-sm shadow-slate-900/5 dark:shadow-black/40">
+          <h1 className="text-xl font-semibold text-primary">FATE</h1>
+          <p className="mt-2 text-sm text-muted">
+            Waiting for room state...
+          </p>
+          <div className="mt-4 text-xs text-muted">
             Connected: {connectionStatus === "connected" ? "yes" : "no"} | Status: {connectionStatus} | Joined: {joined ? "yes" : "no"} | Room: {roomId ?? "-"} | Role: {role ?? "-"}
           </div>
           <button
-            className="mt-4 rounded bg-slate-200 px-3 py-2 text-xs"
+            className="mt-4 rounded-lg bg-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
             onClick={handleLeave}
             disabled={leavingRoom}
           >
@@ -1011,22 +1014,25 @@ export function Game() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-sky-50 to-emerald-50 p-6">
+    <div className="min-h-screen bg-app p-6">
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
-        <div className="min-w-0 rounded border border-slate-200 bg-white/80 p-4 shadow-sm">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
+        <div className="min-w-0 rounded-2xl border-ui bg-surface p-4 shadow-sm shadow-slate-900/5 dark:shadow-black/40">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-xs text-muted">
             <div>Room: {roomId ?? "-"}</div>
             <div>Role: {role ?? "-"}</div>
             <div>Connected: {connectionStatus === "connected" ? "yes" : "no"}</div>
             <div>Status: {connectionStatus}</div>
             <div>Joined: {joined ? "yes" : "no"}</div>
-            <button
-              className="rounded bg-slate-200 px-2 py-1 text-[10px]"
-              onClick={handleLeave}
-              disabled={leavingRoom}
-            >
-              {leavingRoom ? "Leaving..." : "Leave"}
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                className="rounded-lg bg-slate-200 px-2 py-1 text-[10px] font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
+                onClick={handleLeave}
+                disabled={leavingRoom}
+              >
+                {leavingRoom ? "Leaving..." : "Leave"}
+              </button>
+              <ThemeToggle />
+            </div>
           </div>
           <Board
             view={view}
@@ -1047,26 +1053,26 @@ export function Game() {
             onCellHover={handleCellHover}
           />
           {pendingMeta && !pendingRoll && (
-            <div className="mt-4 rounded border border-blue-200 bg-blue-50 p-3 text-xs text-blue-800">
+            <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 p-3 text-xs text-blue-800 dark:border-blue-800/60 dark:bg-blue-950/40 dark:text-blue-200">
               Waiting for {pendingMeta.player} to roll.
             </div>
           )}
           {pendingRoll && (
-            <div className="mt-4 rounded border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+            <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-800/60 dark:bg-amber-950/40 dark:text-amber-200">
               {isStakePlacement ? (
                 <div>
                   <div className="font-semibold">Place 3 stakes</div>
-                  <div className="mt-1 text-[11px] text-amber-700">
+                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
                     Selected: {stakeSelections.length}/{stakeLimit}
                   </div>
                   {stakeSelections.length > 0 && (
-                    <div className="mt-1 text-[10px] text-amber-700">
+                    <div className="mt-1 text-[10px] text-amber-700 dark:text-amber-200">
                       {stakeSelections.map((pos) => `(${pos.col},${pos.row})`).join(", ")}
                     </div>
                   )}
                   <div className="mt-2 flex gap-2">
                     <button
-                      className="rounded bg-emerald-600 px-3 py-1 text-[10px] font-semibold text-white"
+                      className="rounded-lg bg-emerald-600 px-3 py-1 text-[10px] font-semibold text-white shadow-sm transition hover:shadow dark:bg-emerald-800/50 dark:text-slate-100 dark:hover:bg-emerald-700/60"
                       onClick={() =>
                         pendingRoll &&
                         sendAction({
@@ -1080,7 +1086,7 @@ export function Game() {
                       Place stakes
                     </button>
                     <button
-                      className="rounded bg-slate-200 px-3 py-1 text-[10px] font-semibold text-slate-700"
+                      className="rounded-lg bg-slate-200 px-3 py-1 text-[10px] font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
                       onClick={() => setStakeSelections([])}
                     >
                       Clear
@@ -1090,11 +1096,11 @@ export function Game() {
               ) : isIntimidateChoice ? (
                 <div>
                   <div className="font-semibold">Intimidate: choose a push cell</div>
-                  <div className="mt-1 text-[11px] text-amber-700">
+                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
                     Click a highlighted cell or skip.
                   </div>
                   <button
-                    className="mt-2 rounded bg-slate-200 px-3 py-1 text-[10px] font-semibold text-slate-700"
+                    className="mt-2 rounded-lg bg-slate-200 px-3 py-1 text-[10px] font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
                     onClick={() =>
                       pendingRoll &&
                       sendAction({
@@ -1110,21 +1116,21 @@ export function Game() {
               ) : isForestTarget ? (
                 <div>
                   <div className="font-semibold">Forest of the Dead</div>
-                  <div className="mt-1 text-[11px] text-amber-700">
+                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
                     Select the 3x3 center cell.
                   </div>
                 </div>
               ) : isForestChoice ? (
                 <div>
                   <div className="font-semibold">Forest of the Dead ready</div>
-                  <div className="mt-1 text-[11px] text-amber-700">
+                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
                     Decide whether to activate the phantasm.
                   </div>
                 </div>
               ) : isDuelistChoice ? (
                 <div>
                   <div className="font-semibold">Demon Duelist</div>
-                  <div className="mt-1 text-[11px] text-amber-700">
+                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
                     Choose whether to continue the duel.
                   </div>
                 </div>
@@ -1134,7 +1140,7 @@ export function Game() {
                 </div>
               )}
               {!isStakePlacement && pendingQueueCount > 0 && (
-                <div className="mt-1 text-[11px] text-amber-700">
+                <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
                   Pending attacks: {pendingQueueCount}
                 </div>
               )}
@@ -1144,9 +1150,11 @@ export function Game() {
 
         <div className="space-y-6">
           {view.phase === "lobby" && (
-            <div className="rounded border border-slate-200 bg-white/80 p-4">
-              <div className="text-sm text-slate-500">Room Lobby</div>
-              <div className="mt-2 space-y-1 text-xs text-slate-600">
+            <div className="rounded-2xl border-ui bg-surface p-4 shadow-sm shadow-slate-900/5 dark:shadow-black/40">
+              <div className="text-sm text-slate-500 dark:text-slate-400">
+                Room Lobby
+              </div>
+              <div className="mt-2 space-y-1 text-xs text-slate-600 dark:text-slate-300">
                 <div>Room: {roomId ?? "-"}</div>
                 <div>
                   P1: {roomMeta?.players.P1 ? "occupied" : "open"}{" "}
@@ -1164,10 +1172,10 @@ export function Game() {
               </div>
               {seat && (
                 <button
-                  className={`mt-3 w-full rounded px-3 py-2 text-xs font-semibold ${
+                  className={`mt-3 w-full rounded-lg px-3 py-2 text-xs font-semibold shadow-sm transition hover:shadow ${
                     playerReady
-                      ? "bg-amber-500 text-white"
-                      : "bg-teal-500 text-white"
+                      ? "bg-amber-500 text-white dark:bg-amber-400"
+                      : "bg-teal-500 text-white dark:bg-teal-800/50 dark:text-slate-100 dark:hover:bg-teal-700/60"
                   }`}
                   onClick={() => setReady(!playerReady)}
                   disabled={!joined || !!pendingMeta}
@@ -1177,7 +1185,7 @@ export function Game() {
               )}
               {seat && (
                 <button
-                  className="mt-2 w-full rounded bg-slate-200 px-3 py-2 text-xs font-semibold"
+                  className="mt-2 w-full rounded-lg bg-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
                   onClick={() => switchRole("spectator")}
                   disabled={!joined || !!pendingMeta}
                 >
@@ -1186,10 +1194,10 @@ export function Game() {
               )}
               {isHost && (
                 <button
-                  className={`mt-3 w-full rounded px-3 py-2 text-xs font-semibold ${
+                  className={`mt-3 w-full rounded-lg px-3 py-2 text-xs font-semibold shadow-sm transition hover:shadow ${
                     canStartGame
-                      ? "bg-slate-900 text-white"
-                      : "bg-slate-200 text-slate-400"
+                      ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
+                      : "bg-slate-200 text-slate-400 dark:bg-slate-800 dark:text-slate-500"
                   }`}
                   onClick={() => startGame()}
                   disabled={!canStartGame}
@@ -1245,9 +1253,9 @@ export function Game() {
         </div>
       </div>
       {pendingRoll && playerId && !boardSelectionPending && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40">
-          <div className="w-full max-w-sm rounded border border-slate-200 bg-white p-5 shadow-lg">
-            <div className="text-sm font-semibold text-slate-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 dark:bg-slate-950/70">
+          <div className="w-full max-w-sm rounded-2xl border-ui bg-surface-solid p-5 shadow-lg shadow-slate-900/10 dark:shadow-black/40">
+            <div className="text-sm font-semibold text-slate-800 dark:text-slate-100">
               {pendingRoll.kind === "initiativeRoll"
                 ? "Roll initiative"
                 : isForestChoice
@@ -1256,7 +1264,7 @@ export function Game() {
                 ? "Demon Duelist"
                 : "Roll required"}
             </div>
-            <div className="mt-2 text-xs text-slate-500">
+            <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
               {pendingRoll.kind === "berserkerDefenseChoice" ||
               pendingRoll.kind === "dora_berserkerDefenseChoice" ||
               pendingRoll.kind === "carpetStrike_berserkerDefenseChoice" ||
@@ -1271,7 +1279,7 @@ export function Game() {
                   )}.`}
             </div>
             {pendingRoll.kind === "initiativeRoll" && (
-              <div className="mt-3 rounded bg-slate-50 p-2 text-[11px] text-slate-600">
+              <div className="mt-3 rounded-lg bg-slate-50 p-2 text-[11px] text-slate-600 dark:bg-slate-800/60 dark:text-slate-200">
                 {pendingRoll.player === "P2" && view.initiative.P1 !== null && (
                   <div>P1 rolled: {view.initiative.P1}</div>
                 )}
@@ -1284,7 +1292,7 @@ export function Game() {
               </div>
             )}
             {showAttackerRoll && attackerDice.length > 0 && (
-              <div className="mt-3 rounded bg-slate-50 p-2 text-[11px] text-slate-600">
+              <div className="mt-3 rounded-lg bg-slate-50 p-2 text-[11px] text-slate-600 dark:bg-slate-800/60 dark:text-slate-200">
                 <div>Attacker roll: [{attackerDice.join(", ")}]</div>
                 {tieBreakAttacker.length > 0 && (
                   <div className="mt-1">
@@ -1300,7 +1308,7 @@ export function Game() {
               pendingRoll.kind === "vladForest_berserkerDefenseChoice" ? (
                 <>
                   <button
-                    className="flex-1 rounded bg-slate-900 px-3 py-2 text-xs font-semibold text-white"
+                    className="flex-1 rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-slate-100 dark:text-slate-900"
                     onClick={() =>
                       sendAction({
                         type: "resolvePendingRoll",
@@ -1312,7 +1320,7 @@ export function Game() {
                     Roll Defense
                   </button>
                   <button
-                    className="flex-1 rounded bg-amber-500 px-3 py-2 text-xs font-semibold text-white"
+                    className="flex-1 rounded-lg bg-amber-500 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-amber-400"
                     onClick={() =>
                       sendAction({
                         type: "resolvePendingRoll",
@@ -1328,7 +1336,7 @@ export function Game() {
               ) : isDuelistChoice ? (
                 <>
                   <button
-                    className="flex-1 rounded bg-amber-500 px-3 py-2 text-xs font-semibold text-white"
+                    className="flex-1 rounded-lg bg-amber-500 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-amber-400"
                     onClick={() =>
                       sendAction({
                         type: "resolvePendingRoll",
@@ -1341,7 +1349,7 @@ export function Game() {
                     Pay 1 HP
                   </button>
                   <button
-                    className="flex-1 rounded bg-slate-200 px-3 py-2 text-xs font-semibold text-slate-700"
+                    className="flex-1 rounded-lg bg-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
                     onClick={() =>
                       sendAction({
                         type: "resolvePendingRoll",
@@ -1356,7 +1364,7 @@ export function Game() {
               ) : isForestChoice ? (
                 <>
                   <button
-                    className="flex-1 rounded bg-slate-900 px-3 py-2 text-xs font-semibold text-white"
+                    className="flex-1 rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-slate-100 dark:text-slate-900"
                     onClick={() =>
                       sendAction({
                         type: "resolvePendingRoll",
@@ -1368,7 +1376,7 @@ export function Game() {
                     Activate
                   </button>
                   <button
-                    className="flex-1 rounded bg-slate-200 px-3 py-2 text-xs font-semibold text-slate-700"
+                    className="flex-1 rounded-lg bg-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
                     onClick={() =>
                       sendAction({
                         type: "resolvePendingRoll",
@@ -1382,7 +1390,7 @@ export function Game() {
                 </>
               ) : (
                 <button
-                  className="w-full rounded bg-slate-900 px-3 py-2 text-xs font-semibold text-white"
+                  className="w-full rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-slate-100 dark:text-slate-900"
                   onClick={() =>
                     sendAction({
                       type: "resolvePendingRoll",

@@ -185,17 +185,19 @@ export const EventLog: FC<EventLogProps> = ({ events, clientLog }) => {
 
   return (
     <div className="space-y-2">
-      <h3 className="text-sm font-semibold text-slate-600">Event Log</h3>
-      <div className="max-h-96 overflow-auto rounded border border-slate-200 bg-white/80 p-3 text-xs">
+      <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-200">
+        Event Log
+      </h3>
+      <div className="max-h-96 overflow-auto rounded-2xl border-ui bg-surface p-3 text-xs shadow-sm shadow-slate-900/5 dark:shadow-black/40">
         {clientItems.length > 0 && (
-          <div className="mb-3 space-y-1 text-[11px] text-amber-700">
+          <div className="mb-3 space-y-1 text-[11px] text-amber-700 dark:text-amber-200">
             {clientItems.map((msg, index) => (
               <div key={`client-${index}`}>{msg}</div>
             ))}
           </div>
         )}
         {items.length === 0 && clientItems.length === 0 && (
-          <div className="text-slate-400">No events yet.</div>
+          <div className="text-slate-400 dark:text-slate-500">No events yet.</div>
         )}
         {items.map((event, index) => {
           try {
@@ -214,21 +216,21 @@ export const EventLog: FC<EventLogProps> = ({ events, clientLog }) => {
               return (
                 <div
                   key={`${event.type}-${index}`}
-                  className="mb-2 rounded border border-slate-200 bg-white/70 p-2"
+                  className="mb-2 rounded-xl border-ui bg-surface p-2 shadow-sm shadow-slate-900/5 dark:shadow-black/30"
                 >
-                  <div className="text-[11px] font-semibold text-slate-700">
+                  <div className="text-[11px] font-semibold text-slate-700 dark:text-slate-100">
                     Attack: {attacker} to {defender}
                   </div>
-                  <div className="mt-1 grid grid-cols-2 gap-2 text-[10px] text-slate-600">
+                  <div className="mt-1 grid grid-cols-2 gap-2 text-[10px] text-slate-600 dark:text-slate-300">
                     <div>Attacker {attackerRoll}</div>
                     <div>Defender {defenderRoll}</div>
                   </div>
                   {event.tieBreakDice && (
-                    <div className="mt-1 text-[10px] text-slate-500">
+                    <div className="mt-1 text-[10px] text-slate-500 dark:text-slate-400">
                       Reroll A [{tieA.join(", ")}] / D [{tieD.join(", ")}]
                     </div>
                   )}
-                  <div className="mt-1 text-[10px] text-slate-600">
+                  <div className="mt-1 text-[10px] text-slate-600 dark:text-slate-300">
                     {hitLabel} - Damage {damage} - Defender HP {hpAfter}
                   </div>
                 </div>
@@ -236,13 +238,19 @@ export const EventLog: FC<EventLogProps> = ({ events, clientLog }) => {
             }
 
             return (
-              <div key={`${event.type}-${index}`} className="py-1 text-slate-700">
+              <div
+                key={`${event.type}-${index}`}
+                className="py-1 text-slate-700 dark:text-slate-200"
+              >
                 {safeFormatEvent(event)}
               </div>
             );
           } catch {
             return (
-              <div key={`fallback-${index}`} className="py-1 text-slate-700">
+              <div
+                key={`fallback-${index}`}
+                className="py-1 text-slate-700 dark:text-slate-200"
+              >
                 {formatEventFallback(event)}
               </div>
             );

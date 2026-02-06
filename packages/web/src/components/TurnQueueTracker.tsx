@@ -37,16 +37,18 @@ export const TurnQueueTracker: FC<TurnQueueTrackerProps> = ({ view, playerId }) 
   const currentUnit = currentUnitId ? view.units[currentUnitId] : null;
 
   return (
-    <div className="rounded border border-slate-200 bg-white/80 p-4">
-      <div className="text-sm text-slate-500">Initiative & Turn Queue</div>
-      <div className="mt-2 text-xs text-slate-600">
+    <div className="rounded-2xl border-ui bg-surface p-4 shadow-sm shadow-slate-900/5 dark:shadow-black/40">
+      <div className="text-sm text-slate-500 dark:text-slate-400">
+        Initiative & Turn Queue
+      </div>
+      <div className="mt-2 text-xs text-slate-600 dark:text-slate-300">
         <div>
           Initiative: P1 {view.initiative.P1 ?? "-"} / P2 {view.initiative.P2 ?? "-"}
         </div>
         <div>Placement first: {view.placementFirstPlayer ?? "-"}</div>
       </div>
 
-      <div className="mt-3 text-xs text-slate-600">
+      <div className="mt-3 text-xs text-slate-600 dark:text-slate-300">
         Now acting:{" "}
         {currentUnit
           ? `${currentUnitId} (${currentUnit.class})`
@@ -68,10 +70,10 @@ export const TurnQueueTracker: FC<TurnQueueTrackerProps> = ({ view, playerId }) 
           return (
             <div
               key={`${unitId}-${idx}`}
-              className={`flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] ${
+              className={`flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] shadow-sm ${
                 isCurrent
-                  ? "border-teal-500 bg-teal-50 text-teal-700"
-                  : "border-slate-200 bg-white text-slate-500"
+                  ? "border-teal-500 bg-teal-50 text-teal-700 dark:bg-teal-900/40 dark:text-teal-200"
+                  : "border-slate-200 bg-white text-slate-500 dark:border-neutral-800 dark:bg-neutral-900/60 dark:text-neutral-300"
               } ${isDead ? "opacity-50 line-through" : ""}`}
               title={unitId}
             >
