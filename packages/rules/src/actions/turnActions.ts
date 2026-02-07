@@ -16,6 +16,7 @@ import {
   processUnitStartOfTurnBunker,
 } from "./heroes/kaiser";
 import { maybeTriggerElCidKolada } from "./heroes/elCid";
+import { maybeTriggerGroznyTyrant } from "./heroes/grozny";
 import {
   maybeTriggerVladForestChoice,
   maybeTriggerVladTurnStakes,
@@ -292,8 +293,11 @@ export function applyUnitStartTurn(
   const koladaResult = carpetResult.state.pendingRoll
     ? carpetResult
     : maybeTriggerElCidKolada(carpetResult.state, unit.id, rng);
+  const tyrantResult = koladaResult.state.pendingRoll
+    ? { state: koladaResult.state, events: [] }
+    : maybeTriggerGroznyTyrant(koladaResult.state, unit.id, rng);
   const forestResult = maybeTriggerVladForestChoice(
-    koladaResult.state,
+    tyrantResult.state,
     unit.id,
     true
   );
@@ -316,6 +320,7 @@ export function applyUnitStartTurn(
         ...engineeringResult.events,
         ...carpetResult.events,
         ...koladaResult.events,
+        ...tyrantResult.events,
         ...vladEvents,
       ],
     };
@@ -351,6 +356,7 @@ export function applyUnitStartTurn(
       ...engineeringResult.events,
       ...carpetResult.events,
       ...koladaResult.events,
+      ...tyrantResult.events,
       ...vladEvents,
     ],
   };

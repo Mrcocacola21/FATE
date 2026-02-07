@@ -21,6 +21,11 @@ export interface AttackRollContext extends Record<string, unknown> {
     attackerId: string;
     targetId: string;
   };
+  tyrant?: {
+    groznyId: string;
+    kills: number;
+    remaining: number;
+  };
 }
 
 export interface TricksterAoEContext extends Record<string, unknown> {

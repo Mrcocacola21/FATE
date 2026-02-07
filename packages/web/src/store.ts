@@ -33,6 +33,7 @@ export type ActionMode =
   | "dora"
   | "tisona"
   | "demonDuelist"
+  | "invadeTime"
   | null;
 export type HoverPreview = { type: "attackRange"; unitId: string } | null;
 

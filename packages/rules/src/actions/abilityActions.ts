@@ -12,6 +12,7 @@ import {
   ABILITY_EL_SID_COMPEADOR_KOLADA,
   ABILITY_GENGHIS_KHAN_KHANS_DECREE,
   ABILITY_GENGHIS_KHAN_MONGOL_CHARGE,
+  ABILITY_GROZNY_INVADE_TIME,
   TRICKSTER_AOE_RADIUS,
   getAbilitySpec,
   spendCharges,
@@ -22,6 +23,7 @@ import { evAbilityUsed, evAoeResolved } from "./utils/events";
 import { applyKaiserDora } from "./heroes/kaiser";
 import { applyElCidDemonDuelist, applyElCidTisona } from "./heroes/elCid";
 import { applyKhansDecree, applyMongolCharge } from "./heroes/genghisKhan";
+import { applyGroznyInvadeTime } from "./heroes/grozny";
 import type { TricksterAoEContext } from "./types";
 
 export function applyUseAbility(
@@ -81,6 +83,10 @@ export function applyUseAbility(
 
   if (spec.id === ABILITY_GENGHIS_KHAN_MONGOL_CHARGE) {
     return applyMongolCharge(state, unit);
+  }
+
+  if (spec.id === ABILITY_GROZNY_INVADE_TIME) {
+    return applyGroznyInvadeTime(state, unit, action, rng);
   }
 
   const isTricksterAoE = spec.id === ABILITY_TRICKSTER_AOE;

@@ -10,6 +10,7 @@ import {
   EL_CID_DEMON_DUELIST_ID,
   EL_CID_TISONA_ID,
   KAISER_DORA_ID,
+  GROZNY_INVADE_TIME_ID,
 } from "../rulesHints";
 
 const DORA_DIRS: Coord[] = [
@@ -583,6 +584,28 @@ export function Game() {
     [tisonaTargetCells]
   );
 
+  const invadeTimeTargets = useMemo(() => {
+    if (!view || actionMode !== "invadeTime" || !selectedUnit?.position) {
+      return [] as Coord[];
+    }
+    const size = view.boardSize ?? 9;
+    const origin = selectedUnit.position;
+    const cells: Coord[] = [];
+    for (let col = 0; col < size; col += 1) {
+      for (let row = 0; row < size; row += 1) {
+        if (col === origin.col && row === origin.row) continue;
+        if (getUnitAt(view, col, row)) continue;
+        cells.push({ col, row });
+      }
+    }
+    return cells;
+  }, [view, actionMode, selectedUnit]);
+
+  const invadeTimeKeys = useMemo(
+    () => new Set(invadeTimeTargets.map(coordKey)),
+    [invadeTimeTargets]
+  );
+
   useEffect(() => {
     if (actionMode !== "dora") {
       setDoraPreviewCenter(null);
@@ -737,6 +760,12 @@ export function Game() {
       }
     }
 
+    if (actionMode === "invadeTime") {
+      for (const coord of invadeTimeTargets) {
+        highlights[coordKey(coord)] = "move";
+      }
+    }
+
     if (actionMode === "attack" && view) {
       for (const targetId of legalAttackTargets) {
         const unit = view.units[targetId];
@@ -814,6 +843,7 @@ export function Game() {
     hoverAttackPreview,
     tisonaTargetCells,
     tisonaPreviewCoord,
+    invadeTimeTargets,
   ]);
 
   const handleCellClick = (col: number, row: number) => {
@@ -887,6 +917,18 @@ export function Game() {
       });
       setActionMode(null);
       setMoveOptions(null);
+      return;
+    }
+
+    if (actionMode === "invadeTime") {
+      if (!invadeTimeKeys.has(coordKey({ col, row }))) return;
+      sendGameAction({
+        type: "useAbility",
+        unitId: selectedUnitId,
+        abilityId: GROZNY_INVADE_TIME_ID,
+        payload: { to: { col, row } },
+      });
+      setActionMode(null);
       return;
     }
 

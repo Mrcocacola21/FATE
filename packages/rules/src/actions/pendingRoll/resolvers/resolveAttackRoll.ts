@@ -13,6 +13,7 @@ import { canSpendSlots, spendSlots } from "../../../turnEconomy";
 import { clearPendingRoll, requestRoll } from "../../utils/rollUtils";
 import { getPolkovodetsSource, maybeRequestIntimidate } from "../../heroes/vlad";
 import { isElCid } from "../../shared";
+import { handleGroznyTyrantAfterAttack } from "../../heroes/grozny";
 import {
   evAoeResolved,
   evBerserkerDefenseChosen,
@@ -142,6 +143,15 @@ function finalizeAttackFromContext(
   }
 
   return { state: clearPendingRoll(updatedState), events: updatedEvents };
+}
+
+function handleTyrantIfNeeded(
+  state: GameState,
+  events: GameEvent[],
+  context: AttackRollContext,
+  rng: RNG
+): { state: GameState; events: GameEvent[]; requested: boolean } {
+  return handleGroznyTyrantAfterAttack(state, events, context, rng);
 }
 
 export function advanceCombatQueue(
@@ -367,17 +377,26 @@ export function resolveAttackAttackerRoll(
         nextCtx
       );
     }
-    const intimidate = maybeRequestIntimidate(
+    const tyrant = handleTyrantIfNeeded(
       resolved.state,
+      resolved.events,
+      nextCtx,
+      rng
+    );
+    if (tyrant.requested) {
+      return { state: tyrant.state, events: tyrant.events };
+    }
+    const intimidate = maybeRequestIntimidate(
+      tyrant.state,
       ctx.attackerId,
       ctx.defenderId,
-      resolved.events,
+      tyrant.events,
       { kind: "combatQueue" }
     );
     if (intimidate.requested) {
       return { state: intimidate.state, events: intimidate.events };
     }
-    return advanceCombatQueue(resolved.state, resolved.events);
+    return advanceCombatQueue(tyrant.state, tyrant.events);
   }
 
   const charges = defender.charges?.[ABILITY_BERSERK_AUTO_DEFENSE] ?? 0;
@@ -462,23 +481,33 @@ export function resolveAttackDefenderRoll(
       nextCtx
     );
   }
-  const intimidate = maybeRequestIntimidate(
+  const tyrant = handleTyrantIfNeeded(
     resolved.state,
+    resolved.events,
+    nextCtx,
+    rng
+  );
+  if (tyrant.requested) {
+    return { state: tyrant.state, events: tyrant.events };
+  }
+  const intimidate = maybeRequestIntimidate(
+    tyrant.state,
     ctx.attackerId,
     ctx.defenderId,
-    resolved.events,
+    tyrant.events,
     { kind: "combatQueue" }
   );
   if (intimidate.requested) {
     return { state: intimidate.state, events: intimidate.events };
   }
-  return advanceCombatQueue(resolved.state, resolved.events);
+  return advanceCombatQueue(tyrant.state, tyrant.events);
 }
 
 export function resolveBerserkerDefenseChoiceRoll(
   state: GameState,
   pending: PendingRoll,
-  choice: "auto" | "roll" | undefined
+  choice: "auto" | "roll" | undefined,
+  rng: RNG
 ): ApplyResult {
   const ctx = pending.context as unknown as AttackRollContext;
   const attacker = state.units[ctx.attackerId];
@@ -504,17 +533,21 @@ export function resolveBerserkerDefenseChoiceRoll(
     if (ctx.elCidDuelist) {
       return handleElCidDuelistAfterAttack(resolved.state, choiceEvents, ctx);
     }
+    const tyrant = handleTyrantIfNeeded(resolved.state, choiceEvents, ctx, rng);
+    if (tyrant.requested) {
+      return { state: tyrant.state, events: tyrant.events };
+    }
     const intimidate = maybeRequestIntimidate(
-      resolved.state,
+      tyrant.state,
       ctx.attackerId,
       ctx.defenderId,
-      choiceEvents,
+      tyrant.events,
       { kind: "combatQueue" }
     );
     if (intimidate.requested) {
       return { state: intimidate.state, events: intimidate.events };
     }
-    return advanceCombatQueue(resolved.state, choiceEvents);
+    return advanceCombatQueue(tyrant.state, tyrant.events);
   }
 
   if (selected === "roll") {

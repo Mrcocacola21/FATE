@@ -146,7 +146,12 @@ export function applyResolvePendingRoll(
       return resolveDoraDefenderRoll(state, pending, rng);
     }
     case "berserkerDefenseChoice": {
-      return resolveBerserkerDefenseChoiceRoll(state, pending, autoRollChoice);
+      return resolveBerserkerDefenseChoiceRoll(
+        state,
+        pending,
+        autoRollChoice,
+        rng
+      );
     }
     case "dora_berserkerDefenseChoice": {
       return resolveDoraBerserkerDefenseChoice(state, pending, autoRollChoice, rng);

@@ -560,6 +560,9 @@ export function initUnitAbilities(unit: UnitState): UnitState {
     updated = setCharges(updated, ABILITY_GENGHIS_KHAN_KHANS_DECREE, 0);
     updated = setCharges(updated, ABILITY_GENGHIS_KHAN_MONGOL_CHARGE, 0);
   }
+  if (unit.heroId === HERO_GROZNY_ID) {
+    updated = setCharges(updated, ABILITY_GROZNY_INVADE_TIME, 0);
+  }
 
   return updated;
 }

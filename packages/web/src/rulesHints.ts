@@ -7,9 +7,12 @@ export const KAISER_DORA_ID = "kaiserDora";
 export const VLAD_TEPES_ID = "vladTepes";
 export const EL_CID_COMPEADOR_ID = "elCidCompeador";
 export const GENGHIS_KHAN_ID = "genghisKhan";
+export const GROZNY_ID = "grozny";
 export const EL_CID_TISONA_ID = "elCidCompeadorTisona";
 export const EL_CID_KOLADA_ID = "elCidCompeadorKolada";
 export const EL_CID_DEMON_DUELIST_ID = "elCidCompeadorDemonDuelist";
+export const GROZNY_INVADE_TIME_ID = "groznyInvadeTime";
+export const GROZNY_TYRANT_ID = "groznyTyrant";
 
 const MAX_HP_BY_CLASS: Record<UnitClass, number> = {
   spearman: 5,
@@ -31,6 +34,9 @@ export function getMaxHp(unitClass: UnitClass, heroId?: string): number {
   }
   if (heroId === GENGHIS_KHAN_ID) {
     base = 7;
+  }
+  if (heroId === GROZNY_ID) {
+    base += 3;
   }
   return base;
 }

@@ -6,6 +6,8 @@ import {
   EL_CID_KOLADA_ID,
   EL_CID_TISONA_ID,
   KAISER_DORA_ID,
+  GROZNY_INVADE_TIME_ID,
+  GROZNY_TYRANT_ID,
   TRICKSTER_AOE_ID,
 } from "../rulesHints";
 import type { ActionMode } from "../store";
@@ -166,7 +168,7 @@ export const RightPanel: FC<RightPanelProps> = ({
     ? view.abilitiesByUnitId?.[selectedUnit.id] ?? []
     : [];
   const actionableAbilities = abilityViews.filter(
-    (ability) => ability.kind !== "passive"
+    (ability) => ability.kind !== "passive" && ability.id !== GROZNY_TYRANT_ID
   );
   const moveModeOptions =
     !pendingRoll && moveOptions && selectedUnit && moveOptions.unitId === selectedUnit.id
@@ -662,6 +664,10 @@ export const RightPanel: FC<RightPanelProps> = ({
                   onSetActionMode("dora");
                   return;
                 }
+                if (ability.id === GROZNY_INVADE_TIME_ID) {
+                  onSetActionMode("invadeTime");
+                  return;
+                }
                 if (ability.id === EL_CID_TISONA_ID) {
                   onSetActionMode("tisona");
                   return;
@@ -753,6 +759,8 @@ export const RightPanel: FC<RightPanelProps> = ({
             <div className="mt-3 text-xs text-slate-400 dark:text-slate-400">
               {actionMode === "dora"
                 ? "Dora: select a center cell on the archer line."
+                : actionMode === "invadeTime"
+                ? "Invade Time: select any open cell on the board."
                 : actionMode === "tisona"
                 ? "Tisona: select a cell on the same row or column."
                 : actionMode === "demonDuelist"
