@@ -35,6 +35,7 @@ export function createEmptyGame(): GameState {
     rollCounter: 0,
     stakeMarkers: [],
     stakeCounter: 0,
+    forestMarker: null,
     turnOrder: [],
     turnOrderIndex: 0,
     placementOrder: [],

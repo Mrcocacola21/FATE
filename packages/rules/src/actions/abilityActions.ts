@@ -15,6 +15,9 @@ import {
   ABILITY_CHIKATILO_ASSASSIN_MARK,
   ABILITY_CHIKATILO_DECOY,
   ABILITY_FALSE_TRAIL_EXPLOSION,
+  ABILITY_LECHY_CONFUSE_TERRAIN,
+  ABILITY_LECHY_GUIDE_TRAVELER,
+  ABILITY_LECHY_STORM,
   ABILITY_GROZNY_INVADE_TIME,
   TRICKSTER_AOE_RADIUS,
   getAbilitySpec,
@@ -33,6 +36,11 @@ import {
   applyChikatiloDecoyStealth,
   applyFalseTrailExplosion,
 } from "./heroes/chikatilo";
+import {
+  applyLechyConfuseTerrain,
+  applyLechyGuideTraveler,
+  applyLechyStorm,
+} from "./heroes/lechy";
 import type { TricksterAoEContext } from "./types";
 
 export function applyUseAbility(
@@ -110,6 +118,18 @@ export function applyUseAbility(
 
   if (spec.id === ABILITY_FALSE_TRAIL_EXPLOSION) {
     return applyFalseTrailExplosion(state, unit);
+  }
+
+  if (spec.id === ABILITY_LECHY_GUIDE_TRAVELER) {
+    return applyLechyGuideTraveler(state, unit, action);
+  }
+
+  if (spec.id === ABILITY_LECHY_CONFUSE_TERRAIN) {
+    return applyLechyConfuseTerrain(state, unit);
+  }
+
+  if (spec.id === ABILITY_LECHY_STORM) {
+    return applyLechyStorm(state, unit);
   }
 
   if (spec.id === ABILITY_GROZNY_INVADE_TIME) {

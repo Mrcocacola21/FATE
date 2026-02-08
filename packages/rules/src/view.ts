@@ -203,6 +203,9 @@ export function makePlayerView(
     units,
     knowledge,
     lastKnownPositions,
+    forestMarker: state.forestMarker
+      ? { ...state.forestMarker, position: { ...state.forestMarker.position } }
+      : null,
     pendingRoll: visiblePendingRoll,
     pendingCombatQueueCount,
     pendingAoEPreview,
@@ -291,6 +294,9 @@ export function makeSpectatorView(state: GameState): PlayerView {
     units,
     knowledge: { P1: {}, P2: {} },
     lastKnownPositions: {},
+    forestMarker: state.forestMarker
+      ? { ...state.forestMarker, position: { ...state.forestMarker.position } }
+      : null,
     pendingRoll: null,
     pendingCombatQueueCount,
     pendingAoEPreview:

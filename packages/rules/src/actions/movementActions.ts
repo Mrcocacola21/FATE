@@ -9,16 +9,19 @@ import type {
   UnitState,
 } from "../model";
 import { isInsideBoard } from "../model";
-import type { RNG } from "../rng";
+import { rollD6, type RNG } from "../rng";
 import { coordsEqual, getUnitAt } from "../board";
 import { getLegalAttackTargets } from "../legal";
 import { getLegalMovesForUnitModes } from "../movement";
 import { linePath } from "../path";
 import { canSpendSlots, spendSlots } from "../turnEconomy";
-import { unitCanSeeStealthed } from "../visibility";
+import { canUnitEnterCell, unitCanSeeStealthed } from "../visibility";
+import { isInsideForestAura } from "../forest";
 import { findStakeStopOnPath, applyStakeTriggerIfAny } from "./utils/stakeUtils";
 import { getMovementModes, unitHasMovementMode } from "./shared";
 import { getPolkovodetsSource } from "./heroes/vlad";
+import { HERO_LECHY_ID } from "../heroes";
+import { requestLechyGuideTravelerPlacement } from "./heroes/lechy";
 import { makeAttackContext } from "./utils/combatCtx";
 import { requestRoll } from "./utils/rollUtils";
 import {
@@ -152,6 +155,70 @@ function sortUnitIdsByReadingOrder(state: GameState, unitIds: string[]): string[
     if (aPos.col !== bPos.col) return aPos.col - bPos.col;
     return a.localeCompare(b);
   });
+}
+
+function buildForestPath(
+  from: Coord,
+  to: Coord,
+  line: Coord[] | null
+): Coord[] {
+  if (line && line.length > 0) {
+    return line;
+  }
+  return [from, to];
+}
+
+function shouldTriggerForestRestriction(
+  state: GameState,
+  from: Coord,
+  to: Coord,
+  path: Coord[]
+): boolean {
+  if (!state.forestMarker) return false;
+  const insideFrom = isInsideForestAura(state, from);
+  const insideTo = isInsideForestAura(state, to);
+  if (insideFrom && !insideTo) return true;
+  if (!insideFrom && insideTo) return true;
+  if (!insideFrom && !insideTo) {
+    return path.some((cell) => isInsideForestAura(state, cell));
+  }
+  return false;
+}
+
+function findForestStopCell(
+  state: GameState,
+  unit: UnitState,
+  path: Coord[],
+  from: Coord
+): Coord {
+  for (let i = path.length - 1; i >= 0; i -= 1) {
+    const cell = path[i];
+    if (!isInsideForestAura(state, cell)) continue;
+    if (coordsEqual(cell, from)) return cell;
+    if (canUnitEnterCell(state, unit.id, cell)) return cell;
+  }
+  return from;
+}
+
+function applyForestRestriction(
+  state: GameState,
+  unit: UnitState,
+  from: Coord,
+  to: Coord,
+  line: Coord[] | null,
+  rng: RNG
+): Coord {
+  const path = buildForestPath(from, to, line);
+  if (!shouldTriggerForestRestriction(state, from, to, path)) {
+    return to;
+  }
+
+  const roll = rollD6(rng);
+  if (roll >= 5) {
+    return to;
+  }
+
+  return findForestStopCell(state, unit, path, from);
 }
 
 export function applyRequestMoveOptions(
@@ -306,14 +373,40 @@ function applyMongolChargeMove(
     return { state, events: [] };
   }
 
-  const line = linePath(from, action.to);
-  if (!line) {
+  const intendedLine = linePath(from, action.to);
+  if (!intendedLine) {
     return { state, events: [] };
   }
 
-  const stakePath = line.slice(1);
+  const forestTo = applyForestRestriction(
+    state,
+    unit,
+    from,
+    action.to,
+    intendedLine,
+    rng
+  );
+  const actualLine = linePath(from, forestTo);
+  const stakePath = actualLine ? actualLine.slice(1) : [forestTo];
   const stakeStop = findStakeStopOnPath(state, unit, stakePath);
-  const finalTo = stakeStop ?? action.to;
+  const finalTo = stakeStop ?? forestTo;
+  const didMove = !coordsEqual(finalTo, from);
+
+  if (!didMove) {
+    const updatedUnit: UnitState = {
+      ...unit,
+      genghisKhanMongolChargeActive: false,
+    };
+    const newState: GameState = {
+      ...state,
+      units: {
+        ...state.units,
+        [updatedUnit.id]: updatedUnit,
+      },
+      pendingMove: pendingValid ? null : state.pendingMove,
+    };
+    return { state: newState, events: [] };
+  }
 
   const hiddenAtDest = getUnitAt(state, finalTo);
   if (
@@ -384,73 +477,80 @@ function applyMongolChargeMove(
     pendingMove: pendingValid ? null : state.pendingMove,
   };
 
-  const events: GameEvent[] = [
-    evUnitMoved({ unitId: updatedUnit.id, from, to: updatedUnit.position! }),
-  ];
+  const events: GameEvent[] = [];
+  if (didMove) {
+    events.push(
+      evUnitMoved({ unitId: updatedUnit.id, from, to: updatedUnit.position! })
+    );
+  }
 
-  const stakeResult = applyStakeTriggerIfAny(
-    newState,
-    updatedUnit,
-    updatedUnit.position!,
-    rng
-  );
-  if (stakeResult.triggered) {
-    newState = stakeResult.state;
-    updatedUnit = stakeResult.unit;
-    events.push(...stakeResult.events);
+  if (didMove) {
+    const stakeResult = applyStakeTriggerIfAny(
+      newState,
+      updatedUnit,
+      updatedUnit.position!,
+      rng
+    );
+    if (stakeResult.triggered) {
+      newState = stakeResult.state;
+      updatedUnit = stakeResult.unit;
+      events.push(...stakeResult.events);
+    }
   }
 
   if (!updatedUnit.position) {
     return { state: newState, events };
   }
 
-  const moverOwner = updatedUnit.owner;
-  const moverPos = updatedUnit.position!;
-  for (const other of Object.values(newState.units)) {
-    if (!other.isAlive || !other.position) continue;
-    if (other.owner === moverOwner) continue;
-    if (!other.isStealthed) continue;
+  if (didMove) {
+    const moverOwner = updatedUnit.owner;
+    const moverPos = updatedUnit.position!;
+    for (const other of Object.values(newState.units)) {
+      if (!other.isAlive || !other.position) continue;
+      if (other.owner === moverOwner) continue;
+      if (!other.isStealthed) continue;
 
-    const dx = Math.abs(other.position.col - moverPos.col);
-    const dy = Math.abs(other.position.row - moverPos.row);
-    const dist = Math.max(dx, dy);
-    if (dist <= 1) {
-      const revealed: UnitState = {
-        ...other,
-        isStealthed: false,
-        stealthTurnsLeft: 0,
-      };
-      const updatedLastKnown = {
-        ...newState.lastKnownPositions,
-        P1: { ...(newState.lastKnownPositions?.P1 ?? {}) },
-        P2: { ...(newState.lastKnownPositions?.P2 ?? {}) },
-      };
-      delete updatedLastKnown.P1[revealed.id];
-      delete updatedLastKnown.P2[revealed.id];
+      const dx = Math.abs(other.position.col - moverPos.col);
+      const dy = Math.abs(other.position.row - moverPos.row);
+      const dist = Math.max(dx, dy);
+      if (dist <= 1) {
+        const revealed: UnitState = {
+          ...other,
+          isStealthed: false,
+          stealthTurnsLeft: 0,
+        };
+        const updatedLastKnown = {
+          ...newState.lastKnownPositions,
+          P1: { ...(newState.lastKnownPositions?.P1 ?? {}) },
+          P2: { ...(newState.lastKnownPositions?.P2 ?? {}) },
+        };
+        delete updatedLastKnown.P1[revealed.id];
+        delete updatedLastKnown.P2[revealed.id];
 
-      newState = {
-        ...newState,
-        units: {
-          ...newState.units,
-          [revealed.id]: revealed,
-        },
-        knowledge: {
-          ...newState.knowledge,
-          [moverOwner]: {
-            ...(newState.knowledge?.[moverOwner] ?? {}),
-            [revealed.id]: true,
+        newState = {
+          ...newState,
+          units: {
+            ...newState.units,
+            [revealed.id]: revealed,
           },
-        },
-        lastKnownPositions: updatedLastKnown,
-      };
+          knowledge: {
+            ...newState.knowledge,
+            [moverOwner]: {
+              ...(newState.knowledge?.[moverOwner] ?? {}),
+              [revealed.id]: true,
+            },
+          },
+          lastKnownPositions: updatedLastKnown,
+        };
 
-      events.push(
-        evStealthRevealed({
-          unitId: revealed.id,
-          reason: "adjacency",
-          revealerId: updatedUnit.id,
-        })
-      );
+        events.push(
+          evStealthRevealed({
+            unitId: revealed.id,
+            reason: "adjacency",
+            revealerId: updatedUnit.id,
+          })
+        );
+      }
     }
   }
 
@@ -596,62 +696,74 @@ export function applyMove(
     moveMode === "rider" ||
     (moveMode === "normal" && unit.class === "rider");
 
-  const line = moveMode === "trickster" ? null : linePath(from, action.to);
-  const stakePath = line ? line.slice(1) : [action.to];
+  const intendedLine = moveMode === "trickster" ? null : linePath(from, action.to);
+  const forestTo = applyForestRestriction(
+    state,
+    unit,
+    from,
+    action.to,
+    intendedLine,
+    rng
+  );
+  const actualLine = moveMode === "trickster" ? null : linePath(from, forestTo);
+  const stakePath = actualLine ? actualLine.slice(1) : [forestTo];
   const stakeStop = findStakeStopOnPath(state, unit, stakePath);
-  const finalTo = stakeStop ?? action.to;
+  const finalTo = stakeStop ?? forestTo;
+  const didMove = !coordsEqual(finalTo, from);
 
-  const hiddenAtDest = getUnitAt(state, finalTo);
-  if (
-    hiddenAtDest &&
-    hiddenAtDest.isAlive &&
-    hiddenAtDest.owner !== unit.owner &&
-    hiddenAtDest.isStealthed
-  ) {
-    const known = state.knowledge?.[unit.owner]?.[hiddenAtDest.id];
-    const canSee = unitCanSeeStealthed(state, unit);
-    if (!known && !canSee) {
-      const revealed: UnitState = {
-        ...hiddenAtDest,
-        isStealthed: false,
-        stealthTurnsLeft: 0,
-      };
-      let movedUnit: UnitState = spendSlots(unit, { move: true });
-      if (hasDecreeMove) {
-        movedUnit = { ...movedUnit, genghisKhanDecreeMovePending: false };
-      }
-      const updatedLastKnown = {
-        ...state.lastKnownPositions,
-        P1: { ...(state.lastKnownPositions?.P1 ?? {}) },
-        P2: { ...(state.lastKnownPositions?.P2 ?? {}) },
-      };
-      delete updatedLastKnown.P1[revealed.id];
-      delete updatedLastKnown.P2[revealed.id];
-      const newState: GameState = {
-        ...state,
-        units: {
-          ...state.units,
-          [revealed.id]: revealed,
-          [movedUnit.id]: movedUnit,
-        },
-        knowledge: {
-          ...state.knowledge,
-          [unit.owner]: {
-            ...(state.knowledge?.[unit.owner] ?? {}),
-            [revealed.id]: true,
+  if (didMove) {
+    const hiddenAtDest = getUnitAt(state, finalTo);
+    if (
+      hiddenAtDest &&
+      hiddenAtDest.isAlive &&
+      hiddenAtDest.owner !== unit.owner &&
+      hiddenAtDest.isStealthed
+    ) {
+      const known = state.knowledge?.[unit.owner]?.[hiddenAtDest.id];
+      const canSee = unitCanSeeStealthed(state, unit);
+      if (!known && !canSee) {
+        const revealed: UnitState = {
+          ...hiddenAtDest,
+          isStealthed: false,
+          stealthTurnsLeft: 0,
+        };
+        let movedUnit: UnitState = spendSlots(unit, { move: true });
+        if (hasDecreeMove) {
+          movedUnit = { ...movedUnit, genghisKhanDecreeMovePending: false };
+        }
+        const updatedLastKnown = {
+          ...state.lastKnownPositions,
+          P1: { ...(state.lastKnownPositions?.P1 ?? {}) },
+          P2: { ...(state.lastKnownPositions?.P2 ?? {}) },
+        };
+        delete updatedLastKnown.P1[revealed.id];
+        delete updatedLastKnown.P2[revealed.id];
+        const newState: GameState = {
+          ...state,
+          units: {
+            ...state.units,
+            [revealed.id]: revealed,
+            [movedUnit.id]: movedUnit,
           },
-        },
-        lastKnownPositions: updatedLastKnown,
-        pendingMove: pendingValid ? null : state.pendingMove,
-      };
-      const events: GameEvent[] = [
-        evStealthRevealed({
-          unitId: revealed.id,
-          reason: "steppedOnHidden",
-          revealerId: unit.id,
-        }),
-      ];
-      return { state: newState, events };
+          knowledge: {
+            ...state.knowledge,
+            [unit.owner]: {
+              ...(state.knowledge?.[unit.owner] ?? {}),
+              [revealed.id]: true,
+            },
+          },
+          lastKnownPositions: updatedLastKnown,
+          pendingMove: pendingValid ? null : state.pendingMove,
+        };
+        const events: GameEvent[] = [
+          evStealthRevealed({
+            unitId: revealed.id,
+            reason: "steppedOnHidden",
+            revealerId: unit.id,
+          }),
+        ];
+        return { state: newState, events };
+      }
     }
   }
 
@@ -674,20 +786,25 @@ export function applyMove(
       pendingValid && pending?.unitId === updatedUnit.id ? null : state.pendingMove,
   };
 
-  const events: GameEvent[] = [
-    evUnitMoved({ unitId: updatedUnit.id, from, to: updatedUnit.position! }),
-  ];
+  const events: GameEvent[] = [];
+  if (didMove) {
+    events.push(
+      evUnitMoved({ unitId: updatedUnit.id, from, to: updatedUnit.position! })
+    );
+  }
 
-  const stakeResult = applyStakeTriggerIfAny(
-    newState,
-    updatedUnit,
-    updatedUnit.position!,
-    rng
-  );
-  if (stakeResult.triggered) {
-    newState = stakeResult.state;
-    updatedUnit = stakeResult.unit;
-    events.push(...stakeResult.events);
+  if (didMove) {
+    const stakeResult = applyStakeTriggerIfAny(
+      newState,
+      updatedUnit,
+      updatedUnit.position!,
+      rng
+    );
+    if (stakeResult.triggered) {
+      newState = stakeResult.state;
+      updatedUnit = stakeResult.unit;
+      events.push(...stakeResult.events);
+    }
   }
 
   if (!updatedUnit.position) {
@@ -697,58 +814,60 @@ export function applyMove(
   // ---- Спец-правило наездника: атакует всех врагов, через которых проехал ----
   // ---- Reveal by adjacency: ending move next to hidden enemies reveals them to mover ----
   // Обходим юнитов и раскрываем те, кто в радиусе 1 (Chebyshev) от конечной позиции
-  const moverOwner = updatedUnit.owner;
-  const moverPos = updatedUnit.position!;
-  for (const other of Object.values(newState.units)) {
-    if (!other.isAlive || !other.position) continue;
-    if (other.owner === moverOwner) continue;
-    if (!other.isStealthed) continue;
+  if (didMove) {
+    const moverOwner = updatedUnit.owner;
+    const moverPos = updatedUnit.position!;
+    for (const other of Object.values(newState.units)) {
+      if (!other.isAlive || !other.position) continue;
+      if (other.owner === moverOwner) continue;
+      if (!other.isStealthed) continue;
 
-    const dx = Math.abs(other.position.col - moverPos.col);
-    const dy = Math.abs(other.position.row - moverPos.row);
-    const dist = Math.max(dx, dy);
-    if (dist <= 1) {
-      const revealed: UnitState = {
-        ...other,
-        isStealthed: false,
-        stealthTurnsLeft: 0,
-      };
-      const updatedLastKnown = {
-        ...newState.lastKnownPositions,
-        P1: { ...(newState.lastKnownPositions?.P1 ?? {}) },
-        P2: { ...(newState.lastKnownPositions?.P2 ?? {}) },
-      };
-      delete updatedLastKnown.P1[revealed.id];
-      delete updatedLastKnown.P2[revealed.id];
+      const dx = Math.abs(other.position.col - moverPos.col);
+      const dy = Math.abs(other.position.row - moverPos.row);
+      const dist = Math.max(dx, dy);
+      if (dist <= 1) {
+        const revealed: UnitState = {
+          ...other,
+          isStealthed: false,
+          stealthTurnsLeft: 0,
+        };
+        const updatedLastKnown = {
+          ...newState.lastKnownPositions,
+          P1: { ...(newState.lastKnownPositions?.P1 ?? {}) },
+          P2: { ...(newState.lastKnownPositions?.P2 ?? {}) },
+        };
+        delete updatedLastKnown.P1[revealed.id];
+        delete updatedLastKnown.P2[revealed.id];
 
-      newState = {
-        ...newState,
-        units: {
-          ...newState.units,
-          [revealed.id]: revealed,
-        },
-        knowledge: {
-          ...newState.knowledge,
-          [moverOwner]: {
-            ...(newState.knowledge?.[moverOwner] ?? {}),
-            [revealed.id]: true,
+        newState = {
+          ...newState,
+          units: {
+            ...newState.units,
+            [revealed.id]: revealed,
           },
-        },
-        lastKnownPositions: updatedLastKnown,
-      };
+          knowledge: {
+            ...newState.knowledge,
+            [moverOwner]: {
+              ...(newState.knowledge?.[moverOwner] ?? {}),
+              [revealed.id]: true,
+            },
+          },
+          lastKnownPositions: updatedLastKnown,
+        };
 
-      events.push(
-        evStealthRevealed({
-          unitId: revealed.id,
-          reason: "adjacency",
-          revealerId: updatedUnit.id,
-        })
-      );
+        events.push(
+          evStealthRevealed({
+            unitId: revealed.id,
+            reason: "adjacency",
+            revealerId: updatedUnit.id,
+          })
+        );
+      }
     }
   }
 
   // ---- Rider path attacks: enqueue pending sequential rolls ----
-  if (riderMode && from) {
+  if (didMove && riderMode && from) {
     const auraSource =
       getPolkovodetsSource(state, unit.id, from) ??
       getPolkovodetsSource(state, unit.id, finalTo);
@@ -792,6 +911,23 @@ export function applyMove(
       return {
         state: requested.state,
         events: [...events, ...requested.events],
+      };
+    }
+  }
+
+  if (
+    updatedUnit.heroId === HERO_LECHY_ID &&
+    updatedUnit.lechyGuideTravelerTargetId
+  ) {
+    const guideResult = requestLechyGuideTravelerPlacement(
+      newState,
+      updatedUnit.id,
+      updatedUnit.lechyGuideTravelerTargetId
+    );
+    if (guideResult.state !== newState || guideResult.events.length > 0) {
+      return {
+        state: guideResult.state,
+        events: [...events, ...guideResult.events],
       };
     }
   }

@@ -23,6 +23,9 @@ import {
   ABILITY_KAISER_CARPET_STRIKE,
   ABILITY_KAISER_ENGINEERING_MIRACLE,
   ABILITY_GROZNY_INVADE_TIME,
+  ABILITY_LECHY_CONFUSE_TERRAIN,
+  ABILITY_LECHY_GUIDE_TRAVELER,
+  ABILITY_LECHY_STORM,
   ABILITY_TEST_MULTI_SLOT,
   ABILITY_VLAD_FOREST,
   HERO_GRAND_KAISER_ID,
@@ -31,11 +34,13 @@ import {
   HERO_GENGHIS_KHAN_ID,
   HERO_EL_CID_COMPEADOR_ID,
   HERO_GROZNY_ID,
+  HERO_LECHY_ID,
   HERO_VLAD_TEPES_ID,
   HERO_REGISTRY,
   getHeroMeta,
   getLegalPlacements,
   getLegalMovesForUnit,
+  getUnitDefinition,
   getTricksterMovesForRoll,
   getBerserkerMovesForRoll,
   resolveAttack,
@@ -6792,6 +6797,417 @@ function testChikatiloDecoyReducesDamageAndConsumesCharges() {
   console.log("chikatilo_decoy_reduces_damage_and_consumes_charges passed");
 }
 
+function testLechyHpBonus() {
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1", { trickster: HERO_LECHY_ID }));
+  state = attachArmy(state, createDefaultArmy("P2"));
+
+  const lechy = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.heroId === HERO_LECHY_ID
+  )!;
+  const baseHp = getUnitDefinition("trickster").maxHp;
+
+  assert(
+    lechy.hp === baseHp + 3,
+    "Lechy HP should be base trickster HP + 3"
+  );
+
+  console.log("lechy_hp_bonus passed");
+}
+
+function testLechyNaturalStealthThreshold() {
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1", { trickster: HERO_LECHY_ID }));
+  state = attachArmy(state, createDefaultArmy("P2"));
+
+  const lechy = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.heroId === HERO_LECHY_ID
+  )!;
+
+  state = setUnit(state, lechy.id, { position: { col: 4, row: 4 } });
+  state = toBattleState(state, "P1", lechy.id);
+  state = initKnowledgeForOwners(state);
+
+  let rng = makeRngSequence([0.8]); // roll 5
+  let res = applyAction(
+    state,
+    { type: "enterStealth", unitId: lechy.id } as any,
+    rng
+  );
+  assert(
+    res.state.pendingRoll?.kind === "enterStealth",
+    "enterStealth should request a roll for Lechy"
+  );
+  res = resolvePendingRollOnce(res.state, rng);
+  assert(
+    res.state.units[lechy.id].isStealthed === true,
+    "Lechy stealth should succeed on roll 5"
+  );
+
+  state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1", { trickster: HERO_LECHY_ID }));
+  state = attachArmy(state, createDefaultArmy("P2"));
+  const lechyFail = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.heroId === HERO_LECHY_ID
+  )!;
+  state = setUnit(state, lechyFail.id, { position: { col: 4, row: 4 } });
+  state = toBattleState(state, "P1", lechyFail.id);
+  state = initKnowledgeForOwners(state);
+
+  rng = makeRngSequence([0.5]); // roll 4
+  res = applyAction(
+    state,
+    { type: "enterStealth", unitId: lechyFail.id } as any,
+    rng
+  );
+  res = resolvePendingRollOnce(res.state, rng);
+  assert(
+    res.state.units[lechyFail.id].isStealthed === false,
+    "Lechy stealth should fail on roll 4"
+  );
+
+  console.log("lechy_natural_stealth_threshold passed");
+}
+
+function testLechyGuideTravelerGatingAndBehavior() {
+  const rng = makeRngSequence([0.99]);
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1", { trickster: HERO_LECHY_ID }));
+  state = attachArmy(state, createDefaultArmy("P2"));
+
+  const lechy = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.heroId === HERO_LECHY_ID
+  )!;
+  const ally = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.id !== lechy.id
+  )!;
+
+  state = setUnit(state, lechy.id, {
+    position: { col: 4, row: 4 },
+    charges: { ...lechy.charges, [ABILITY_LECHY_GUIDE_TRAVELER]: 1 },
+  });
+  state = setUnit(state, ally.id, { position: { col: 5, row: 4 } });
+  state = toBattleState(state, "P1", lechy.id);
+  state = initKnowledgeForOwners(state);
+
+  let res = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: lechy.id,
+      abilityId: ABILITY_LECHY_GUIDE_TRAVELER,
+      payload: { targetId: ally.id },
+    } as any,
+    rng
+  );
+
+  assert(!res.state.pendingRoll, "guide traveler should not trigger without charges");
+  assert(
+    res.state.units[lechy.id].charges[ABILITY_LECHY_GUIDE_TRAVELER] === 1,
+    "guide traveler charges should remain if not enough"
+  );
+
+  state = setUnit(state, lechy.id, {
+    charges: { ...state.units[lechy.id].charges, [ABILITY_LECHY_GUIDE_TRAVELER]: 2 },
+    turn: makeEmptyTurnEconomy(),
+  });
+
+  res = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: lechy.id,
+      abilityId: ABILITY_LECHY_GUIDE_TRAVELER,
+      payload: { targetId: ally.id },
+    } as any,
+    rng
+  );
+
+  assert(
+    res.state.pendingRoll?.kind === "moveTrickster",
+    "guide traveler should request trickster move roll"
+  );
+
+  const afterRoll = resolvePendingRollOnce(res.state, rng);
+  const pendingMove = afterRoll.state.pendingMove;
+  assert(pendingMove && pendingMove.legalTo.length > 0, "pending move should exist");
+
+  const moveTarget =
+    pendingMove.legalTo.find((pos) => pos.col === 6 && pos.row === 4) ??
+    pendingMove.legalTo[0];
+
+  const moved = applyAction(
+    afterRoll.state,
+    { type: "move", unitId: lechy.id, to: moveTarget } as any,
+    rng
+  );
+
+  const pending = moved.state.pendingRoll;
+  assert(
+    pending?.kind === "lechyGuideTravelerPlacement",
+    "guide traveler should request placement after move"
+  );
+
+  const legalPositions = (pending?.context as any)?.legalPositions as Coord[] | undefined;
+  assert(
+    Array.isArray(legalPositions) && legalPositions.length > 0,
+    "guide traveler should expose legal placement positions"
+  );
+
+  const lechyPos = moved.state.units[lechy.id].position!;
+  const allInRange = (legalPositions ?? []).every(
+    (pos) =>
+      Math.max(Math.abs(pos.col - lechyPos.col), Math.abs(pos.row - lechyPos.row)) <= 2
+  );
+  assert(allInRange, "guide traveler positions should be within trickster range");
+
+  const dest = (legalPositions ?? [])[0];
+  const placed = applyAction(
+    moved.state,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: pending!.id,
+      player: pending!.player,
+      choice: { type: "lechyGuideTravelerPlace", position: dest },
+    } as any,
+    rng
+  );
+
+  const allyAfter = placed.state.units[ally.id];
+  assert(
+    allyAfter.position?.col === dest.col &&
+      allyAfter.position?.row === dest.row,
+    "guided ally should move to chosen cell"
+  );
+  assert(
+    placed.state.units[lechy.id].turn.moveUsed === true,
+    "guide traveler should consume move slot"
+  );
+  assert(
+    placed.state.units[lechy.id].charges[ABILITY_LECHY_GUIDE_TRAVELER] === 0,
+    "guide traveler should spend charges"
+  );
+  assert(!placed.state.pendingRoll, "guide traveler pending roll should clear");
+
+  console.log("lechy_guide_traveler_gating_and_behavior passed");
+}
+
+function testLechyConfuseTerrainSingleMarker() {
+  const rng = new SeededRNG(777);
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1", { trickster: HERO_LECHY_ID }));
+  state = attachArmy(state, createDefaultArmy("P2"));
+
+  const lechy = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.heroId === HERO_LECHY_ID
+  )!;
+
+  state = setUnit(state, lechy.id, {
+    position: { col: 2, row: 2 },
+    charges: { ...lechy.charges, [ABILITY_LECHY_CONFUSE_TERRAIN]: 3 },
+  });
+  state = toBattleState(state, "P1", lechy.id);
+  state = initKnowledgeForOwners(state);
+
+  let res = applyAction(
+    state,
+    { type: "useAbility", unitId: lechy.id, abilityId: ABILITY_LECHY_CONFUSE_TERRAIN } as any,
+    rng
+  );
+
+  assert(
+    res.state.forestMarker?.position.col === 2 &&
+      res.state.forestMarker?.position.row === 2,
+    "confuse terrain should place forest marker on Leshy"
+  );
+
+  let next = setUnit(res.state, lechy.id, {
+    position: { col: 4, row: 4 },
+    charges: { ...res.state.units[lechy.id].charges, [ABILITY_LECHY_CONFUSE_TERRAIN]: 3 },
+    turn: makeEmptyTurnEconomy(),
+  });
+  next = { ...next, activeUnitId: lechy.id, currentPlayer: "P1", phase: "battle" };
+
+  res = applyAction(
+    next,
+    { type: "useAbility", unitId: lechy.id, abilityId: ABILITY_LECHY_CONFUSE_TERRAIN } as any,
+    rng
+  );
+
+  assert(
+    res.state.forestMarker?.position.col === 4 &&
+      res.state.forestMarker?.position.row === 4,
+    "confuse terrain should replace existing forest marker"
+  );
+
+  console.log("lechy_confuse_terrain_single_marker passed");
+}
+
+function testLechyStormGatingEffectsAndExemptions() {
+  const rngFail = makeRngSequence([0.01]);
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1", { trickster: HERO_LECHY_ID }));
+  state = attachArmy(state, createDefaultArmy("P2"));
+
+  const lechy = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.heroId === HERO_LECHY_ID
+  )!;
+  const enemy = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "archer"
+  )!;
+  const enemyInside = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.id !== enemy.id
+  )!;
+
+  state = setUnit(state, lechy.id, {
+    position: { col: 4, row: 4 },
+    charges: { ...lechy.charges, [ABILITY_LECHY_STORM]: 4 },
+  });
+  state = toBattleState(state, "P1", lechy.id);
+  state = initKnowledgeForOwners(state);
+
+  let res = applyAction(
+    state,
+    { type: "useAbility", unitId: lechy.id, abilityId: ABILITY_LECHY_STORM } as any,
+    rngFail
+  );
+  assert(res.state.arenaId !== "storm", "storm should not activate without charges");
+
+  state = setUnit(state, lechy.id, {
+    charges: { ...state.units[lechy.id].charges, [ABILITY_LECHY_STORM]: 5 },
+    turn: makeEmptyTurnEconomy(),
+  });
+
+  res = applyAction(
+    state,
+    { type: "useAbility", unitId: lechy.id, abilityId: ABILITY_LECHY_STORM } as any,
+    rngFail
+  );
+  assert(res.state.arenaId === "storm", "storm should activate at full charges");
+  assert(
+    res.state.units[lechy.id].charges[ABILITY_LECHY_STORM] === 0,
+    "storm should spend charges"
+  );
+  assert(
+    res.state.units[lechy.id].turn.actionUsed === true,
+    "storm should consume action slot"
+  );
+
+  let stormState: GameState = {
+    ...res.state,
+    forestMarker: { owner: "P1", position: { col: 4, row: 4 } },
+  };
+  stormState = setUnit(stormState, enemy.id, { position: { col: 8, row: 8 }, hp: 5 });
+  stormState = {
+    ...stormState,
+    phase: "battle",
+    currentPlayer: enemy.owner,
+    activeUnitId: null,
+    turnQueue: [enemy.id],
+    turnQueueIndex: 0,
+    turnOrder: [enemy.id],
+    turnOrderIndex: 0,
+  };
+
+  const damaged = applyAction(
+    stormState,
+    { type: "unitStartTurn", unitId: enemy.id } as any,
+    rngFail
+  );
+  assert(
+    damaged.state.units[enemy.id].hp === 4,
+    "storm should damage non-exempt unit on failed roll"
+  );
+
+  let insideState: GameState = {
+    ...stormState,
+    currentPlayer: enemyInside.owner,
+    activeUnitId: null,
+    turnQueue: [enemyInside.id],
+    turnQueueIndex: 0,
+    turnOrder: [enemyInside.id],
+    turnOrderIndex: 0,
+  };
+  insideState = setUnit(insideState, enemyInside.id, {
+    position: { col: 5, row: 4 },
+    hp: 5,
+  });
+
+  const insideRes = applyAction(
+    insideState,
+    { type: "unitStartTurn", unitId: enemyInside.id } as any,
+    rngFail
+  );
+  assert(
+    insideRes.state.units[enemyInside.id].hp === 5,
+    "storm should not damage units inside forest aura"
+  );
+
+  let lechyStartState: GameState = {
+    ...insideState,
+    currentPlayer: lechy.owner,
+    activeUnitId: null,
+    turnQueue: [lechy.id],
+    turnQueueIndex: 0,
+    turnOrder: [lechy.id],
+    turnOrderIndex: 0,
+  };
+  lechyStartState = setUnit(lechyStartState, lechy.id, {
+    position: { col: 4, row: 4 },
+    hp: 7,
+  });
+
+  const lechyStart = applyAction(
+    lechyStartState,
+    { type: "unitStartTurn", unitId: lechy.id } as any,
+    rngFail
+  );
+  assert(
+    lechyStart.state.units[lechy.id].hp === 7,
+    "Lechy should be storm-exempt"
+  );
+
+  let attackState: GameState = createEmptyGame();
+  attackState = attachArmy(
+    attackState,
+    createDefaultArmy("P1", { trickster: HERO_LECHY_ID })
+  );
+  attackState = attachArmy(attackState, createDefaultArmy("P2"));
+  const attacker = Object.values(attackState.units).find(
+    (u) => u.owner === "P2" && u.class === "archer"
+  )!;
+  const target = Object.values(attackState.units).find(
+    (u) => u.owner === "P1" && u.class === "spearman"
+  )!;
+
+  attackState = setUnit(attackState, attacker.id, { position: { col: 0, row: 0 } });
+  attackState = setUnit(attackState, target.id, { position: { col: 0, row: 4 } });
+  attackState = {
+    ...attackState,
+    phase: "battle",
+    arenaId: "storm",
+  };
+  attackState = initKnowledgeForOwners(attackState);
+
+  const blockedTargets = getLegalAttackTargets(attackState, attacker.id);
+  assert(
+    blockedTargets.length === 0,
+    "storm should block ranged attacks for non-exempt units"
+  );
+
+  attackState = {
+    ...attackState,
+    forestMarker: { owner: "P2", position: { col: 0, row: 0 } },
+  };
+  const allowedTargets = getLegalAttackTargets(attackState, attacker.id);
+  assert(
+    allowedTargets.includes(target.id),
+    "units inside forest aura should ignore storm attack restriction"
+  );
+
+  console.log("lechy_storm_gating_effects_exemptions passed");
+}
+
 function testFalseTrailExplosionHitsAlliesAndEnemiesSingleRoll() {
   const rng = new SequenceRNG([0.99, 0.99, 0.01, 0.01, 0.01, 0.01]);
   let state = createEmptyGame();
@@ -9211,6 +9627,11 @@ function main() {
   testChikatiloTokenDeathRevealsChikatilo();
   testChikatiloAssassinMarkDoesNotRevealAndGrantsBonusDamage();
   testChikatiloDecoyReducesDamageAndConsumesCharges();
+  testLechyHpBonus();
+  testLechyNaturalStealthThreshold();
+  testLechyGuideTravelerGatingAndBehavior();
+  testLechyConfuseTerrainSingleMarker();
+  testLechyStormGatingEffectsAndExemptions();
   testFalseTrailExplosionHitsAlliesAndEnemiesSingleRoll();
   testElCidLongLiverAdds2Hp();
   testElCidWarriorDoubleIsAutoHitNoDefenderRoll();

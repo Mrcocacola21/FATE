@@ -96,6 +96,7 @@ export interface UnitState {
   cooldowns: Record<string, number>;
   chikatiloMarkedTargets?: string[];
   chikatiloFalseTrailTokenId?: string;
+  lechyGuideTravelerTargetId?: string;
 
   /** Номер хода, на котором юнит в последний раз заряжал счётчики */
   lastChargedTurn?: number;
@@ -183,7 +184,8 @@ export type RollKind =
   | "chikatiloDecoyChoice"
   | "falseTrailExplosion_attackerRoll"
   | "falseTrailExplosion_defenderRoll"
-  | "chikatiloFalseTrailRevealChoice";
+  | "chikatiloFalseTrailRevealChoice"
+  | "lechyGuideTravelerPlacement";
 
 export interface PendingRoll {
   id: string;
@@ -198,6 +200,11 @@ export interface StakeMarker {
   position: Coord;
   createdAt: number;
   isRevealed: boolean;
+}
+
+export interface ForestMarker {
+  owner: PlayerId;
+  position: Coord;
 }
 
 export interface PendingCombatQueueEntry {
@@ -448,7 +455,8 @@ export type ResolveRollChoice =
   | { type: "intimidatePush"; to: Coord }
   | { type: "placeStakes"; positions: Coord[] }
   | { type: "forestTarget"; center: Coord }
-  | { type: "chikatiloPlace"; position: Coord };
+  | { type: "chikatiloPlace"; position: Coord }
+  | { type: "lechyGuideTravelerPlace"; position: Coord };
 
     export type GameAction =
     | {
@@ -557,6 +565,7 @@ export interface GameState {
   rollCounter: number;
   stakeMarkers: StakeMarker[];
   stakeCounter: number;
+  forestMarker: ForestMarker | null;
 
   /**
    * Глобальный порядок ходов фигур в бою (циклический список id),

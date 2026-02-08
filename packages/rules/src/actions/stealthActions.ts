@@ -4,7 +4,7 @@ import { getUnitDefinition } from "../units";
 import { chebyshev } from "../board";
 import { canSpendSlots, spendSlots } from "../turnEconomy";
 import { isKaiser, isKaiserTransformed } from "./shared";
-import { HERO_FALSE_TRAIL_TOKEN_ID } from "../heroes";
+import { HERO_FALSE_TRAIL_TOKEN_ID, HERO_LECHY_ID } from "../heroes";
 import { requestRoll } from "./utils/rollUtils";
 import { evSearchStealth, evStealthEntered } from "./utils/events";
 
@@ -87,7 +87,9 @@ export function applyEnterStealth(
 
   // Только ассасин и лучник могут в скрытность
   const canStealth =
-    unit.class === "assassin" || unit.class === "archer";
+    unit.class === "assassin" ||
+    unit.class === "archer" ||
+    unit.heroId === HERO_LECHY_ID;
 
   if (canStealth) {
     const pos = unit.position!;

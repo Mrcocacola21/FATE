@@ -17,6 +17,7 @@ import {
   getCharges,
 } from "./abilities";
 import { HERO_CHIKATILO_ID, HERO_FALSE_TRAIL_TOKEN_ID, HERO_GENGHIS_KHAN_ID } from "./heroes";
+import { isStormActive, isStormExempt } from "./forest";
 import { canDirectlyTargetUnit } from "./visibility";
 
 
@@ -104,6 +105,10 @@ export function canAttackTarget(
   const attPos = attacker.position;
   const defPos = defender.position;
   const { dx, dy, cheb, sameRow, sameCol } = distanceInfo(attPos, defPos);
+
+  if (isStormActive(state) && !isStormExempt(state, attacker)) {
+    if (cheb > 1) return false;
+  }
 
   switch (attacker.class) {
     case "spearman": {

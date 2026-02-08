@@ -18,6 +18,7 @@ import {
 } from "./heroes/kaiser";
 import { maybeTriggerElCidKolada } from "./heroes/elCid";
 import { maybeTriggerGroznyTyrant } from "./heroes/grozny";
+import { applyStormStartOfTurn } from "./heroes/lechy";
 import {
   maybeTriggerVladForestChoice,
   maybeTriggerVladTurnStakes,
@@ -47,6 +48,26 @@ function clearGenghisTurnFlags(
     genghisKhanDiagonalMoveActive: false,
     genghisKhanDecreeMovePending: false,
     genghisKhanMongolChargeActive: false,
+  };
+  return {
+    ...state,
+    units: {
+      ...state.units,
+      [unitId]: cleared,
+    },
+  };
+}
+
+function clearLechyGuideTravelerTarget(
+  state: GameState,
+  unitId: string | null
+): GameState {
+  if (!unitId) return state;
+  const unit = state.units[unitId];
+  if (!unit || !unit.lechyGuideTravelerTargetId) return state;
+  const cleared: UnitState = {
+    ...unit,
+    lechyGuideTravelerTargetId: undefined,
   };
   return {
     ...state,
@@ -136,7 +157,11 @@ export function applyEndTurn(state: GameState, rng: RNG): ApplyResult {
   // 2) Р¤Р°Р·Р° Р±РѕСЏ: РєСЂСѓС‚РёРј РѕС‡РµСЂРµРґСЊ СЋРЅРёС‚РѕРІ
   // -----------------------------
   if (state.phase === "battle") {
-    const stateAfterTurn = clearGenghisTurnFlags(state, state.activeUnitId);
+    const stateAfterGenghis = clearGenghisTurnFlags(state, state.activeUnitId);
+    const stateAfterTurn = clearLechyGuideTravelerTarget(
+      stateAfterGenghis,
+      stateAfterGenghis.activeUnitId
+    );
     // Р•СЃР»Рё Сѓ РѕРґРЅРѕРіРѕ РёР· РёРіСЂРѕРєРѕРІ РЅРµС‚ Р¶РёРІС‹С… С„РёРіСѓСЂ вЂ” Р·Р°РІРµСЂС€Р°РµРј РёРіСЂСѓ
     const p1Alive = Object.values(stateAfterTurn.units).some(
       (u) =>
@@ -269,8 +294,22 @@ export function applyUnitStartTurn(
     return { state: afterBunker, events: [...stealthEvents, ...bunkerEvents] };
   }
 
-  const { state: afterStart, events: startEvents } = processUnitStartOfTurn(
+  const { state: afterStorm, events: stormEvents } = applyStormStartOfTurn(
     afterBunker,
+    unit.id,
+    rng
+  );
+
+  const unitAfterStorm = afterStorm.units[unit.id];
+  if (!unitAfterStorm || !unitAfterStorm.isAlive || !unitAfterStorm.position) {
+    return {
+      state: afterStorm,
+      events: [...stealthEvents, ...bunkerEvents, ...stormEvents],
+    };
+  }
+
+  const { state: afterStart, events: startEvents } = processUnitStartOfTurn(
+    afterStorm,
     unit.id,
     rng
   );
@@ -279,7 +318,7 @@ export function applyUnitStartTurn(
   if (!unitAfterStart) {
     return {
       state: afterStart,
-      events: [...stealthEvents, ...bunkerEvents, ...startEvents],
+      events: [...stealthEvents, ...bunkerEvents, ...stormEvents, ...startEvents],
     };
   }
 
@@ -327,6 +366,7 @@ export function applyUnitStartTurn(
       events: [
         ...stealthEvents,
         ...bunkerEvents,
+        ...stormEvents,
         ...startEvents,
         ...engineeringResult.events,
         ...carpetResult.events,
@@ -363,6 +403,7 @@ export function applyUnitStartTurn(
     events: [
       ...stealthEvents,
       ...bunkerEvents,
+      ...stormEvents,
       ...startEvents,
       ...engineeringResult.events,
       ...carpetResult.events,

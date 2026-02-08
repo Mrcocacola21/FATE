@@ -9,6 +9,7 @@ import {
   HERO_CHIKATILO_ID,
   HERO_FALSE_TRAIL_TOKEN_ID,
   HERO_GRAND_KAISER_ID,
+  HERO_LECHY_ID,
 } from "./heroes";
 
 export function getLegalPlacements(state: GameState, unitId: string): Coord[] {
@@ -127,7 +128,9 @@ export function getLegalIntents(
     activeUnit.heroId === HERO_GRAND_KAISER_ID && activeUnit.bunker?.active;
   const canEnterStealth =
     canSpendSlots(activeUnit, { stealth: true }) &&
-    (activeUnit.class === "assassin" || activeUnit.class === "archer") &&
+    (activeUnit.class === "assassin" ||
+      activeUnit.class === "archer" ||
+      activeUnit.heroId === HERO_LECHY_ID) &&
     !kaiserTransformed &&
     !kaiserInBunker;
   const isFalseTrailToken = activeUnit.heroId === HERO_FALSE_TRAIL_TOKEN_ID;

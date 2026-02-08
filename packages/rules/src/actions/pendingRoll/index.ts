@@ -53,6 +53,7 @@ import {
   resolveFalseTrailExplosionAttackerRoll,
   resolveFalseTrailExplosionDefenderRoll,
 } from "./resolvers/resolveChikatiloRoll";
+import { resolveLechyGuideTravelerPlacement } from "../heroes/lechy";
 
 export function applyResolvePendingRoll(
   state: GameState,
@@ -206,6 +207,9 @@ export function applyResolvePendingRoll(
     }
     case "falseTrailExplosion_defenderRoll": {
       return resolveFalseTrailExplosionDefenderRoll(state, pending, rng);
+    }
+    case "lechyGuideTravelerPlacement": {
+      return resolveLechyGuideTravelerPlacement(state, pending, action.choice as any);
     }
     default:
       return { state: clearPendingRoll(state), events: [] };

@@ -13,6 +13,7 @@ import {
   GROZNY_INVADE_TIME_ID,
   CHIKATILO_ASSASSIN_MARK_ID,
   CHIKATILO_DECOY_ID,
+  LECHY_GUIDE_TRAVELER_ID,
 } from "../rulesHints";
 
 const DORA_DIRS: Coord[] = [
@@ -294,6 +295,8 @@ function getPendingRollLabel(kind?: string | null) {
       return "Forest berserker defense choice";
     case "chikatiloFalseTrailPlacement":
       return "False Trail placement";
+    case "lechyGuideTravelerPlacement":
+      return "Guide Traveler placement";
     case "chikatiloDecoyChoice":
       return "Decoy choice";
     case "chikatiloFalseTrailRevealChoice":
@@ -377,6 +380,8 @@ export function Game() {
   const isDuelistChoice = pendingRoll?.kind === "elCidDuelistChoice";
   const isChikatiloPlacement =
     pendingRoll?.kind === "chikatiloFalseTrailPlacement";
+  const isGuideTravelerPlacement =
+    pendingRoll?.kind === "lechyGuideTravelerPlacement";
   const isChikatiloRevealChoice =
     pendingRoll?.kind === "chikatiloFalseTrailRevealChoice";
   const isChikatiloDecoyChoice = pendingRoll?.kind === "chikatiloDecoyChoice";
@@ -384,7 +389,8 @@ export function Game() {
     isStakePlacement ||
     isForestTarget ||
     isIntimidateChoice ||
-    isChikatiloPlacement;
+    isChikatiloPlacement ||
+    isGuideTravelerPlacement;
   const pendingQueueCount = view?.pendingCombatQueueCount ?? 0;
   const attackContext = pendingRoll?.context as
     | {
@@ -648,6 +654,28 @@ export function Game() {
     [chikatiloPlacementCoords]
   );
 
+  const guideTravelerPlacementCoords = useMemo(() => {
+    if (!isGuideTravelerPlacement) return [] as Coord[];
+    const ctx = pendingRoll?.context as
+      | {
+          legalPositions?: unknown;
+          legalCells?: unknown;
+          legalTargets?: unknown;
+        }
+      | undefined;
+    const fromPositions = normalizeCoordList(ctx?.legalPositions);
+    if (fromPositions.length > 0) return fromPositions;
+    const fromCells = normalizeCoordList(ctx?.legalCells);
+    if (fromCells.length > 0) return fromCells;
+    const fromTargets = normalizeCoordList(ctx?.legalTargets);
+    if (fromTargets.length > 0) return fromTargets;
+    return [] as Coord[];
+  }, [isGuideTravelerPlacement, pendingRoll]);
+  const guideTravelerPlacementKeys = useMemo(
+    () => new Set(guideTravelerPlacementCoords.map(coordKey)),
+    [guideTravelerPlacementCoords]
+  );
+
   const doraTargetCenters = useMemo(() => {
     if (!view || actionMode !== "dora" || !selectedUnit?.position) {
       return [] as Coord[];
@@ -819,6 +847,35 @@ export function Game() {
     [assassinMarkTargets]
   );
 
+  const guideTravelerTargets = useMemo(() => {
+    if (!view || actionMode !== "guideTraveler" || !selectedUnit?.position) {
+      return [] as UnitState[];
+    }
+    const origin = selectedUnit.position;
+    return Object.values(view.units).filter((unit) => {
+      if (!unit?.isAlive || !unit.position) return false;
+      if (unit.id === selectedUnit.id) return false;
+      if (unit.owner !== selectedUnit.owner) return false;
+      const dx = Math.abs(unit.position.col - origin.col);
+      const dy = Math.abs(unit.position.row - origin.row);
+      return Math.max(dx, dy) <= 2;
+    });
+  }, [view, actionMode, selectedUnit]);
+  const guideTravelerTargetIds = useMemo(
+    () => guideTravelerTargets.map((unit) => unit.id),
+    [guideTravelerTargets]
+  );
+  const guideTravelerTargetKeys = useMemo(
+    () =>
+      new Set(
+        guideTravelerTargets
+          .map((unit) => unit.position)
+          .filter((pos): pos is Coord => !!pos)
+          .map(coordKey)
+      ),
+    [guideTravelerTargets]
+  );
+
   const hoverAttackPreview = useMemo(() => {
     if (!view || hoverPreview?.type !== "attackRange") {
       return null;
@@ -867,6 +924,13 @@ export function Game() {
       return highlights;
     }
 
+    if (isGuideTravelerPlacement) {
+      for (const coord of guideTravelerPlacementCoords) {
+        highlights[coordKey(coord)] = "place";
+      }
+      return highlights;
+    }
+
     if (actionMode === "place") {
       for (const coord of legalPlacementCoords) {
         highlights[coordKey(coord)] = "place";
@@ -910,6 +974,12 @@ export function Game() {
 
     if (actionMode === "assassinMark") {
       for (const key of assassinMarkTargetKeys) {
+        highlights[key] = "attack";
+      }
+    }
+
+    if (actionMode === "guideTraveler") {
+      for (const key of guideTravelerTargetKeys) {
         highlights[key] = "attack";
       }
     }
@@ -979,6 +1049,8 @@ export function Game() {
     forestTargetCenters,
     isChikatiloPlacement,
     chikatiloPlacementCoords,
+    isGuideTravelerPlacement,
+    guideTravelerPlacementCoords,
     selectedUnit,
     pendingMoveForSelected,
     moveOptions,
@@ -986,6 +1058,7 @@ export function Game() {
     tisonaTargetCells,
     tisonaPreviewCoord,
     assassinMarkTargetKeys,
+    guideTravelerTargetKeys,
     invadeTimeTargets,
   ]);
 
@@ -1048,6 +1121,17 @@ export function Game() {
       return;
     }
 
+    if (isGuideTravelerPlacement) {
+      const key = coordKey({ col, row });
+      if (!guideTravelerPlacementKeys.has(key) || !pendingRoll) return;
+      sendAction({
+        type: "resolvePendingRoll",
+        pendingRollId: pendingRoll.id,
+        choice: { type: "lechyGuideTravelerPlace", position: { col, row } },
+      } as GameAction);
+      return;
+    }
+
     if (actionMode === "place" && placeUnitId) {
       if (!isCoordInList(legalPlacementCoords, col, row)) return;
       sendGameAction({
@@ -1083,6 +1167,20 @@ export function Game() {
         payload: { to: { col, row } },
       });
       setActionMode(null);
+      return;
+    }
+
+    if (actionMode === "guideTraveler") {
+      const target = getUnitAt(view, col, row);
+      if (!target) return;
+      if (!guideTravelerTargetIds.includes(target.id)) return;
+      sendGameAction({
+        type: "useAbility",
+        unitId: selectedUnitId,
+        abilityId: LECHY_GUIDE_TRAVELER_ID,
+        payload: { targetId: target.id },
+      });
+      setActionMode("move");
       return;
     }
 
@@ -1199,7 +1297,8 @@ export function Game() {
     actionMode !== "dora" &&
     actionMode !== "tisona" &&
     actionMode !== "demonDuelist" &&
-    actionMode !== "assassinMark";
+    actionMode !== "assassinMark" &&
+    actionMode !== "guideTraveler";
 
   if (!view || !hasSnapshot) {
     return (
@@ -1350,6 +1449,13 @@ export function Game() {
                   <div className="font-semibold">False Trail placement</div>
                   <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
                     Select any empty cell to place Chikatilo.
+                  </div>
+                </div>
+              ) : isGuideTravelerPlacement ? (
+                <div>
+                  <div className="font-semibold">Guide Traveler placement</div>
+                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
+                    Select an empty cell to place the guided ally.
                   </div>
                 </div>
               ) : isChikatiloRevealChoice ? (

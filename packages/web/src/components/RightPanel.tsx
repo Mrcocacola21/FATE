@@ -9,6 +9,8 @@ import {
   CHIKATILO_ASSASSIN_MARK_ID,
   CHIKATILO_ID,
   FALSE_TRAIL_TOKEN_ID,
+  LECHY_GUIDE_TRAVELER_ID,
+  LECHY_ID,
   GROZNY_INVADE_TIME_ID,
   GROZNY_TYRANT_ID,
   TRICKSTER_AOE_ID,
@@ -214,7 +216,9 @@ export const RightPanel: FC<RightPanelProps> = ({
   const legalIntents = view.legalIntents;
 
   const canStealth =
-    selectedUnit?.class === "assassin" || selectedUnit?.class === "archer";
+    selectedUnit?.class === "assassin" ||
+    selectedUnit?.class === "archer" ||
+    selectedUnit?.heroId === LECHY_ID;
 
   const moveDisabled = !canAct || economy.moveUsed;
   const attackDisabled = !canAct || economy.attackUsed || economy.actionUsed;
@@ -689,6 +693,10 @@ export const RightPanel: FC<RightPanelProps> = ({
                   onSetActionMode("assassinMark");
                   return;
                 }
+                if (ability.id === LECHY_GUIDE_TRAVELER_ID) {
+                  onSetActionMode("guideTraveler");
+                  return;
+                }
                 if (ability.id === EL_CID_TISONA_ID) {
                   onSetActionMode("tisona");
                   return;
@@ -784,6 +792,8 @@ export const RightPanel: FC<RightPanelProps> = ({
                 ? "Invade Time: select any open cell on the board."
                 : actionMode === "assassinMark"
                 ? "Assassin Mark: select a unit within 2 squares."
+                : actionMode === "guideTraveler"
+                ? "Guide Traveler: select an ally within trickster range."
                 : actionMode === "tisona"
                 ? "Tisona: select a cell on the same row or column."
                 : actionMode === "demonDuelist"

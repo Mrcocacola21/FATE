@@ -120,8 +120,10 @@ export const ABILITY_EL_SID_COMPEADOR_TISONA = "elCidCompeadorTisona" as const;
 export const ABILITY_EL_SID_COMPEADOR_KOLADA = "elCidCompeadorKolada" as const;
 export const ABILITY_EL_SID_COMPEADOR_DEMON_DUELIST = "elCidCompeadorDemonDuelist" as const;
 
-export const ABILITY_LECHY_GUIDE_THE_TRAVELER = "lechyGuideTheTraveler" as const;
-export const ABILITY_LECHY_CONFUSE_THE_TERRAIN = "lechyConfuseTheTerrain" as const;
+export const ABILITY_LECHY_GIANT = "lechyGiant" as const;
+export const ABILITY_LECHY_NATURAL_STEALTH = "lechyNaturalStealth" as const;
+export const ABILITY_LECHY_GUIDE_TRAVELER = "lechyGuideTraveler" as const;
+export const ABILITY_LECHY_CONFUSE_TERRAIN = "lechyConfuseTerrain" as const;
 export const ABILITY_LECHY_STORM = "lechyStorm" as const;
 
 export const ABILITY_GRIFFITH_PATHETIC_MAN = "griffithPatheticMan" as const;
@@ -243,31 +245,43 @@ const ABILITY_SPECS: Record<string, AbilitySpec> = {
     id: ABILITY_LECHY_STORM,
     displayName: "Storm",
     kind: "phantasm",
-    description: "On 1d6+1 you change the arena to the Storm, everyone who is on the forest marker and the Leshy himself are not affected by the card's effects.",
+    description: "Set the arena to Storm. Units outside the forest aura take 1 damage on failed start-turn rolls and lose ranged attacks.",
     maxCharges: 5,
     chargesPerUse: 5,
     actionCost: {
       consumes: { action: true },
     },
   },
-  [ABILITY_LECHY_CONFUSE_THE_TERRAIN]: {
-    id: ABILITY_LECHY_CONFUSE_THE_TERRAIN,
-    displayName: "Confuse the Terrain",
+  [ABILITY_LECHY_CONFUSE_TERRAIN]: {
+    id: ABILITY_LECHY_CONFUSE_TERRAIN,
+    displayName: "Confuse Terrain",
     kind: "impulse",
-    description: "You change the terrain around you, confusing everyone in your path. Place a forest marker on the square you're standing on. The aura of this area is within the reach of the trickster's attack. Anyone who wants to leave this area must roll a d6 (5-6), otherwise they can only move within the area captured by the marker's aura. This also affects creatures passing by the aura; if they fail, they can stop anywhere in their movement path. Only one forest marker can be on the map at a time.",
+    description: "Place a forest marker on your cell. Units leaving or crossing the aura must roll 5-6 or stop inside the aura.",
     maxCharges: 3,
     chargesPerUse: 3,
-  },  
-  [ABILITY_LECHY_GUIDE_THE_TRAVELER]: {
-    id: ABILITY_LECHY_GUIDE_THE_TRAVELER,
-    displayName: "Guide the Traveler",
+  },
+  [ABILITY_LECHY_GUIDE_TRAVELER]: {
+    id: ABILITY_LECHY_GUIDE_TRAVELER,
+    displayName: "Guide Traveler",
     kind: "active",
-    description: "Choose an ally within the attack range of the trickster, you can move with him, he in turn appears in any cell within the attack range of the trickster at the final point of the movement.",
+    description: "Choose an ally within trickster range, move Leshy, then relocate that ally to any empty cell within range of Leshy's final position.",
     maxCharges: 2,
     chargesPerUse: 2,
     actionCost: {
       consumes: { move: true },
     },
+  },
+  [ABILITY_LECHY_GIANT]: {
+    id: ABILITY_LECHY_GIANT,
+    displayName: "Giant",
+    kind: "passive",
+    description: "+3 HP.",
+  },
+  [ABILITY_LECHY_NATURAL_STEALTH]: {
+    id: ABILITY_LECHY_NATURAL_STEALTH,
+    displayName: "Natural Stealth",
+    kind: "passive",
+    description: "Stealth succeeds on 5-6.",
   },
   [ABILITY_EL_SID_COMPEADOR_DEMON_DUELIST]: {
     id: ABILITY_EL_SID_COMPEADOR_DEMON_DUELIST,
@@ -602,6 +616,11 @@ export function initUnitAbilities(unit: UnitState): UnitState {
   if (unit.heroId === HERO_GROZNY_ID) {
     updated = setCharges(updated, ABILITY_GROZNY_INVADE_TIME, 0);
   }
+  if (unit.heroId === HERO_LECHY_ID) {
+    updated = setCharges(updated, ABILITY_LECHY_GUIDE_TRAVELER, 0);
+    updated = setCharges(updated, ABILITY_LECHY_CONFUSE_TERRAIN, 0);
+    updated = setCharges(updated, ABILITY_LECHY_STORM, 0);
+  }
 
   return updated;
 }
@@ -803,8 +822,10 @@ export function getAbilityViewsForUnit(
   }
   if (unit.heroId === HERO_LECHY_ID) {
     abilityIds.push(
-      ABILITY_LECHY_GUIDE_THE_TRAVELER,
-      ABILITY_LECHY_CONFUSE_THE_TERRAIN,
+      ABILITY_LECHY_GIANT,
+      ABILITY_LECHY_NATURAL_STEALTH,
+      ABILITY_LECHY_GUIDE_TRAVELER,
+      ABILITY_LECHY_CONFUSE_TERRAIN,
       ABILITY_LECHY_STORM
     );
   }

@@ -35,6 +35,7 @@ export type ActionMode =
   | "demonDuelist"
   | "invadeTime"
   | "assassinMark"
+  | "guideTraveler"
   | null;
 export type HoverPreview = { type: "attackRange"; unitId: string } | null;
 

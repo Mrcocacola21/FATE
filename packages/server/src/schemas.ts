@@ -66,6 +66,10 @@ const ResolveRollChoiceSchema = z.union([
     type: z.literal("chikatiloPlace"),
     position: CoordSchema,
   }),
+  z.object({
+    type: z.literal("lechyGuideTravelerPlace"),
+    position: CoordSchema,
+  }),
   z.literal("elCidDuelistContinue"),
   z.literal("elCidDuelistStop"),
 ]);
