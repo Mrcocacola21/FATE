@@ -12,6 +12,9 @@ import {
   ABILITY_EL_SID_COMPEADOR_KOLADA,
   ABILITY_GENGHIS_KHAN_KHANS_DECREE,
   ABILITY_GENGHIS_KHAN_MONGOL_CHARGE,
+  ABILITY_CHIKATILO_ASSASSIN_MARK,
+  ABILITY_CHIKATILO_DECOY,
+  ABILITY_FALSE_TRAIL_EXPLOSION,
   ABILITY_GROZNY_INVADE_TIME,
   TRICKSTER_AOE_RADIUS,
   getAbilitySpec,
@@ -24,6 +27,12 @@ import { applyKaiserDora } from "./heroes/kaiser";
 import { applyElCidDemonDuelist, applyElCidTisona } from "./heroes/elCid";
 import { applyKhansDecree, applyMongolCharge } from "./heroes/genghisKhan";
 import { applyGroznyInvadeTime } from "./heroes/grozny";
+import { HERO_FALSE_TRAIL_TOKEN_ID } from "../heroes";
+import {
+  applyChikatiloAssassinMark,
+  applyChikatiloDecoyStealth,
+  applyFalseTrailExplosion,
+} from "./heroes/chikatilo";
 import type { TricksterAoEContext } from "./types";
 
 export function applyUseAbility(
@@ -37,6 +46,9 @@ export function applyUseAbility(
 
   const unit = state.units[action.unitId];
   if (!unit || !unit.isAlive || !unit.position) {
+    return { state, events: [] };
+  }
+  if (unit.heroId === HERO_FALSE_TRAIL_TOKEN_ID) {
     return { state, events: [] };
   }
 
@@ -83,6 +95,18 @@ export function applyUseAbility(
 
   if (spec.id === ABILITY_GENGHIS_KHAN_MONGOL_CHARGE) {
     return applyMongolCharge(state, unit);
+  }
+
+  if (spec.id === ABILITY_CHIKATILO_ASSASSIN_MARK) {
+    return applyChikatiloAssassinMark(state, unit, action);
+  }
+
+  if (spec.id === ABILITY_CHIKATILO_DECOY) {
+    return applyChikatiloDecoyStealth(state, unit);
+  }
+
+  if (spec.id === ABILITY_FALSE_TRAIL_EXPLOSION) {
+    return applyFalseTrailExplosion(state, unit);
   }
 
   if (spec.id === ABILITY_GROZNY_INVADE_TIME) {

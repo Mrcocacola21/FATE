@@ -8,8 +8,13 @@ import type {
 } from "../model";
 import { isInsideBoard } from "../model";
 import { isCellOccupied } from "../board";
+import { HERO_CHIKATILO_ID, HERO_FALSE_TRAIL_TOKEN_ID } from "../heroes";
 import { isVlad } from "./shared";
 import { activateVladForest, requestVladStakesPlacement } from "./heroes/vlad";
+import {
+  requestChikatiloPlacement,
+  setupChikatiloFalseTrailAtBattleStart,
+} from "./heroes/chikatilo";
 import { evBattleStarted, evUnitPlaced } from "./utils/events";
 
 function getOwnerOfStartingUnit(
@@ -37,6 +42,23 @@ export function applyPlaceUnit(
     return { state, events: [] };
   }
 
+  if (unit.heroId === HERO_CHIKATILO_ID) {
+    const tokenId =
+      unit.chikatiloFalseTrailTokenId ?? `falseTrail-${unit.id}`;
+    const token = state.units[tokenId];
+    const hasToken =
+      (token && token.isAlive && token.owner === unit.owner) ||
+      Object.values(state.units).some(
+        (u) =>
+          u.isAlive &&
+          u.owner === unit.owner &&
+          u.heroId === HERO_FALSE_TRAIL_TOKEN_ID
+      );
+    if (hasToken) {
+      return { state, events: [] };
+    }
+  }
+
   // РќРµР»СЊР·СЏ РІС‹СЃС‚Р°РІР»СЏС‚СЊ С„РёРіСѓСЂСѓ РЅРµ СЃРІРѕРµРіРѕ РёРіСЂРѕРєР°
   if (unit.owner !== state.currentPlayer) {
     return { state, events: [] };
@@ -60,12 +82,14 @@ export function applyPlaceUnit(
   }
 
   // РћРіСЂР°РЅРёС‡РµРЅРёРµ: С‚РѕР»СЊРєРѕ bвЂ“h (РєРѕР»РѕРЅРєРё 1..7) Р·Р°РґРЅРµР№ Р»РёРЅРёРё СЃРІРѕРµРіРѕ РёРіСЂРѕРєР°
-  const backRow = unit.owner === "P1" ? 0 : state.boardSize - 1;
-  if (pos.row !== backRow) {
-    return { state, events: [] };
-  }
-  if (pos.col < 1 || pos.col > state.boardSize - 2) {
-    return { state, events: [] };
+  if (unit.heroId !== HERO_FALSE_TRAIL_TOKEN_ID) {
+    const backRow = unit.owner === "P1" ? 0 : state.boardSize - 1;
+    if (pos.row !== backRow) {
+      return { state, events: [] };
+    }
+    if (pos.col < 1 || pos.col > state.boardSize - 2) {
+      return { state, events: [] };
+    }
   }
 
   const updatedUnit: UnitState = {
@@ -100,6 +124,7 @@ export function applyPlaceUnit(
 
   let extraEvents: GameEvent[] = [];
   let initialKnowledge: GameState["knowledge"] | undefined = undefined;
+  let chikatiloPlacementQueue: string[] = [];
 
   // РџСЂРѕРІРµСЂСЏРµРј, Р·Р°РєРѕРЅС‡РёР»Р°СЃСЊ Р»Рё СЂР°СЃСЃС‚Р°РЅРѕРІРєР° Сѓ РћР‘РћРРҐ
   if (unitsPlaced.P1 >= 7 && unitsPlaced.P2 >= 7) {
@@ -147,18 +172,11 @@ export function applyPlaceUnit(
       }
     }
 
-    extraEvents.push(
-      evBattleStarted({
-        startingUnitId,
-        startingPlayer: startingOwner,
-      })
-    );
-
     // Attach knowledge to newState below
     initialKnowledge = knowledge;
   }
 
-  const newState: GameState = {
+  let newState: GameState = {
     ...state,
     phase,
     currentPlayer,
@@ -179,21 +197,67 @@ export function applyPlaceUnit(
     knowledge: phase === "battle" ? initialKnowledge ?? state.knowledge : state.knowledge,
   };
 
-  const events: GameEvent[] = [
+  let events: GameEvent[] = [
     evUnitPlaced({
       unitId: updatedUnit.id,
       position: updatedUnit.position!,
     }),
-    ...extraEvents,
   ];
+
+  if (phase === "battle") {
+    const setup = setupChikatiloFalseTrailAtBattleStart(newState);
+    newState = setup.state;
+    chikatiloPlacementQueue = setup.placementQueue;
+    if (setup.events.length > 0) {
+      extraEvents.push(...setup.events);
+    }
+
+    const battleStartingUnitId = newState.startingUnitId ?? startingUnitId;
+    const startingUnit =
+      battleStartingUnitId && newState.units[battleStartingUnitId]
+        ? newState.units[battleStartingUnitId]
+        : updatedUnit;
+    extraEvents.push(
+      evBattleStarted({
+        startingUnitId: battleStartingUnitId ?? updatedUnit.id,
+        startingPlayer: startingUnit.owner,
+      })
+    );
+  }
+
+  events = [...events, ...extraEvents];
 
   let finalState = newState;
   let finalEvents = events;
 
-  if (phase === "battle" && !newState.pendingRoll) {
+  if (phase === "battle" && chikatiloPlacementQueue.length > 0) {
+    const [first, ...rest] = chikatiloPlacementQueue;
+    const requested = requestChikatiloPlacement(finalState, first, rest);
+    finalState = requested.state;
+    finalEvents = [...finalEvents, ...requested.events];
+  }
+
+  if (
+    unit.heroId === HERO_FALSE_TRAIL_TOKEN_ID &&
+    !finalState.pendingRoll
+  ) {
+    const chikatilo = Object.values(finalState.units).find(
+      (u) =>
+        u.isAlive &&
+        u.owner === unit.owner &&
+        u.heroId === HERO_CHIKATILO_ID
+    );
+    if (chikatilo && !chikatilo.position) {
+      const requested = requestChikatiloPlacement(finalState, chikatilo.id);
+      finalState = requested.state;
+      finalEvents = [...finalEvents, ...requested.events];
+    }
+  }
+
+  if (phase === "battle" && !finalState.pendingRoll) {
     const vladOwners = Array.from(
       new Set(
-        Object.values(newState.units)
+        Object.values(finalState.units)
           .filter((u) => u.isAlive && isVlad(u))
           .map((u) => u.owner)
       )
@@ -201,19 +265,19 @@ export function applyPlaceUnit(
 
     if (vladOwners.length > 0) {
       const [firstOwner, ...queue] = vladOwners;
-      const ownedStakes = newState.stakeMarkers.filter(
+      const ownedStakes = finalState.stakeMarkers.filter(
         (marker) => marker.owner === firstOwner
       ).length;
-      const vladUnit = Object.values(newState.units).find(
+      const vladUnit = Object.values(finalState.units).find(
         (u) => u.isAlive && isVlad(u) && u.owner === firstOwner
       );
       if (ownedStakes >= 9 && vladUnit) {
-        const forest = activateVladForest(newState, vladUnit.id, firstOwner);
+        const forest = activateVladForest(finalState, vladUnit.id, firstOwner);
         finalState = forest.state;
         finalEvents = [...events, ...forest.events];
       } else {
         const requested = requestVladStakesPlacement(
-          newState,
+          finalState,
           firstOwner,
           "battleStart",
           queue

@@ -5,7 +5,11 @@ import { isCellOccupied } from "./board";
 import { canAttackTarget } from "./combat";
 import { canDirectlyTargetUnit } from "./visibility";
 import { canSpendSlots } from "./turnEconomy";
-import { HERO_GRAND_KAISER_ID } from "./heroes";
+import {
+  HERO_CHIKATILO_ID,
+  HERO_FALSE_TRAIL_TOKEN_ID,
+  HERO_GRAND_KAISER_ID,
+} from "./heroes";
 
 export function getLegalPlacements(state: GameState, unitId: string): Coord[] {
   if (state.phase !== "placement") return [];
@@ -13,6 +17,35 @@ export function getLegalPlacements(state: GameState, unitId: string): Coord[] {
   const unit = state.units[unitId];
   if (!unit || !unit.isAlive || unit.position) return [];
   if (unit.owner !== state.currentPlayer) return [];
+
+  if (unit.heroId === HERO_CHIKATILO_ID) {
+    const tokenId =
+      unit.chikatiloFalseTrailTokenId ?? `falseTrail-${unit.id}`;
+    const token = state.units[tokenId];
+    const hasToken =
+      (token && token.isAlive && token.owner === unit.owner) ||
+      Object.values(state.units).some(
+        (u) =>
+          u.isAlive &&
+          u.owner === unit.owner &&
+          u.heroId === HERO_FALSE_TRAIL_TOKEN_ID
+      );
+    if (hasToken) {
+      return [];
+    }
+  }
+
+  if (unit.heroId === HERO_FALSE_TRAIL_TOKEN_ID) {
+    const res: Coord[] = [];
+    for (let col = 0; col < state.boardSize; col += 1) {
+      for (let row = 0; row < state.boardSize; row += 1) {
+        const dest: Coord = { col, row };
+        if (isCellOccupied(state, dest)) continue;
+        res.push(dest);
+      }
+    }
+    return res;
+  }
 
   const res: Coord[] = [];
   const backRow = unit.owner === "P1" ? 0 : state.boardSize - 1;
@@ -34,6 +67,7 @@ export function getLegalAttackTargets(
 
   const attacker = state.units[attackerId];
   if (!attacker || !attacker.isAlive || !attacker.position) return [];
+  if (attacker.heroId === HERO_FALSE_TRAIL_TOKEN_ID) return [];
 
   const targets: string[] = [];
   for (const defender of Object.values(state.units)) {
@@ -96,6 +130,7 @@ export function getLegalIntents(
     (activeUnit.class === "assassin" || activeUnit.class === "archer") &&
     !kaiserTransformed &&
     !kaiserInBunker;
+  const isFalseTrailToken = activeUnit.heroId === HERO_FALSE_TRAIL_TOKEN_ID;
 
   return {
     canSearchMove,
@@ -103,8 +138,8 @@ export function getLegalIntents(
     searchMoveReason: canSearchMove ? undefined : "moveSlotUsed",
     searchActionReason: canSearchAction ? undefined : "actionSlotUsed",
     canMove,
-    canAttack,
-    canEnterStealth,
+    canAttack: isFalseTrailToken ? false : canAttack,
+    canEnterStealth: isFalseTrailToken ? false : canEnterStealth,
   };
 }
 

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { Coord, GameAction, PlayerView, MoveMode } from "rules";
+import { type Coord, type GameAction, type PlayerView, type MoveMode, type UnitState } from "rules";
 import { Board } from "./Board";
 import { EventLog } from "./EventLog";
 import { RightPanel } from "./RightPanel";
@@ -11,6 +11,8 @@ import {
   EL_CID_TISONA_ID,
   KAISER_DORA_ID,
   GROZNY_INVADE_TIME_ID,
+  CHIKATILO_ASSASSIN_MARK_ID,
+  CHIKATILO_DECOY_ID,
 } from "../rulesHints";
 
 const DORA_DIRS: Coord[] = [
@@ -56,6 +58,54 @@ function getDoraTargetCenters(view: PlayerView, casterId: string): Coord[] {
 
 function coordKey(coord: Coord) {
   return `${coord.col},${coord.row}`;
+}
+
+const COLS = "abcdefghi";
+
+function coordFromNotationSafe(value: string): Coord | null {
+  if (value.length !== 2) return null;
+  const colChar = value[0]?.toLowerCase() ?? "";
+  const rowChar = value[1] ?? "";
+  const col = COLS.indexOf(colChar);
+  const row = Number.parseInt(rowChar, 10);
+  if (col < 0 || Number.isNaN(row)) return null;
+  return { col, row };
+}
+
+function normalizeCoordInput(value: unknown): Coord | null {
+  if (value && typeof value === "object") {
+    const colRaw = (value as { col?: unknown }).col;
+    const rowRaw = (value as { row?: unknown }).row;
+    const col =
+      typeof colRaw === "number"
+        ? colRaw
+        : typeof colRaw === "string"
+        ? Number(colRaw)
+        : NaN;
+    const row =
+      typeof rowRaw === "number"
+        ? rowRaw
+        : typeof rowRaw === "string"
+        ? Number(rowRaw)
+        : NaN;
+    if (Number.isFinite(col) && Number.isFinite(row)) {
+      return { col, row };
+    }
+  }
+  if (typeof value === "string") {
+    return coordFromNotationSafe(value);
+  }
+  return null;
+}
+
+function normalizeCoordList(value: unknown): Coord[] {
+  if (!Array.isArray(value)) return [];
+  const coords: Coord[] = [];
+  for (const item of value) {
+    const parsed = normalizeCoordInput(item);
+    if (parsed) coords.push(parsed);
+  }
+  return coords;
 }
 
 function linePath(start: Coord, end: Coord): Coord[] | null {
@@ -242,6 +292,16 @@ function getPendingRollLabel(kind?: string | null) {
       return "Forest defense roll";
     case "vladForest_berserkerDefenseChoice":
       return "Forest berserker defense choice";
+    case "chikatiloFalseTrailPlacement":
+      return "False Trail placement";
+    case "chikatiloDecoyChoice":
+      return "Decoy choice";
+    case "chikatiloFalseTrailRevealChoice":
+      return "False Trail choice";
+    case "falseTrailExplosion_attackerRoll":
+      return "False Trail explosion attack roll";
+    case "falseTrailExplosion_defenderRoll":
+      return "False Trail explosion defense roll";
     case "berserkerDefenseChoice":
       return "Berserker defense choice";
     case "enterStealth":
@@ -315,8 +375,16 @@ export function Game() {
   const isIntimidateChoice = pendingRoll?.kind === "vladIntimidateChoice";
   const isForestChoice = pendingRoll?.kind === "vladForestChoice";
   const isDuelistChoice = pendingRoll?.kind === "elCidDuelistChoice";
+  const isChikatiloPlacement =
+    pendingRoll?.kind === "chikatiloFalseTrailPlacement";
+  const isChikatiloRevealChoice =
+    pendingRoll?.kind === "chikatiloFalseTrailRevealChoice";
+  const isChikatiloDecoyChoice = pendingRoll?.kind === "chikatiloDecoyChoice";
   const boardSelectionPending =
-    isStakePlacement || isForestTarget || isIntimidateChoice;
+    isStakePlacement ||
+    isForestTarget ||
+    isIntimidateChoice ||
+    isChikatiloPlacement;
   const pendingQueueCount = view?.pendingCombatQueueCount ?? 0;
   const attackContext = pendingRoll?.context as
     | {
@@ -337,6 +405,7 @@ export function Game() {
     pendingRoll?.kind === "attack_defenderRoll" ||
     pendingRoll?.kind === "riderPathAttack_defenderRoll" ||
     pendingRoll?.kind === "tricksterAoE_defenderRoll" ||
+    pendingRoll?.kind === "falseTrailExplosion_defenderRoll" ||
     pendingRoll?.kind === "elCidTisona_defenderRoll" ||
     pendingRoll?.kind === "elCidKolada_defenderRoll" ||
     pendingRoll?.kind === "dora_defenderRoll" ||
@@ -345,7 +414,8 @@ export function Game() {
     pendingRoll?.kind === "berserkerDefenseChoice" ||
     pendingRoll?.kind === "dora_berserkerDefenseChoice" ||
     pendingRoll?.kind === "carpetStrike_berserkerDefenseChoice" ||
-    pendingRoll?.kind === "vladForest_berserkerDefenseChoice";
+    pendingRoll?.kind === "vladForest_berserkerDefenseChoice" ||
+    pendingRoll?.kind === "chikatiloDecoyChoice";
   const defenderId = (() => {
     if (!pendingRoll) return undefined;
     if (pendingRoll.kind === "berserkerDefenseChoice") {
@@ -369,6 +439,13 @@ export function Game() {
   const defenderCharges =
     defenderId && view?.units[defenderId]
       ? view.units[defenderId].charges?.berserkAutoDefense ?? 0
+      : 0;
+  const decoyDefenderId = isChikatiloDecoyChoice
+    ? (pendingRoll?.context as { defenderId?: string } | undefined)?.defenderId
+    : undefined;
+  const decoyCharges =
+    decoyDefenderId && view?.units[decoyDefenderId]
+      ? view.units[decoyDefenderId].charges?.[CHIKATILO_DECOY_ID] ?? 0
       : 0;
   const duelistContext = isDuelistChoice
     ? (pendingRoll?.context as { attackerId?: string; targetId?: string } | undefined)
@@ -549,6 +626,28 @@ export function Game() {
     [forestTargetCenters]
   );
 
+  const chikatiloPlacementCoords = useMemo(() => {
+    if (!isChikatiloPlacement) return [] as Coord[];
+    const ctx = pendingRoll?.context as
+      | {
+          legalPositions?: unknown;
+          legalCells?: unknown;
+          legalTargets?: unknown;
+        }
+      | undefined;
+    const fromPositions = normalizeCoordList(ctx?.legalPositions);
+    if (fromPositions.length > 0) return fromPositions;
+    const fromCells = normalizeCoordList(ctx?.legalCells);
+    if (fromCells.length > 0) return fromCells;
+    const fromTargets = normalizeCoordList(ctx?.legalTargets);
+    if (fromTargets.length > 0) return fromTargets;
+    return [] as Coord[];
+  }, [isChikatiloPlacement, pendingRoll]);
+  const chikatiloPlacementKeys = useMemo(
+    () => new Set(chikatiloPlacementCoords.map(coordKey)),
+    [chikatiloPlacementCoords]
+  );
+
   const doraTargetCenters = useMemo(() => {
     if (!view || actionMode !== "dora" || !selectedUnit?.position) {
       return [] as Coord[];
@@ -692,6 +791,34 @@ export function Game() {
     return view.legal?.attackTargetsByUnitId[selectedUnit.id] ?? [];
   }, [view, selectedUnit]);
 
+  const assassinMarkTargets = useMemo(() => {
+    if (!view || actionMode !== "assassinMark" || !selectedUnit?.position) {
+      return [] as UnitState[];
+    }
+    const origin = selectedUnit.position;
+    return Object.values(view.units).filter((unit) => {
+      if (!unit?.isAlive || !unit.position) return false;
+      if (unit.id === selectedUnit.id) return false;
+      const dx = Math.abs(unit.position.col - origin.col);
+      const dy = Math.abs(unit.position.row - origin.row);
+      return Math.max(dx, dy) <= 2;
+    });
+  }, [view, actionMode, selectedUnit]);
+  const assassinMarkTargetIds = useMemo(
+    () => assassinMarkTargets.map((unit) => unit.id),
+    [assassinMarkTargets]
+  );
+  const assassinMarkTargetKeys = useMemo(
+    () =>
+      new Set(
+        assassinMarkTargets
+          .map((unit) => unit.position)
+          .filter((pos): pos is Coord => !!pos)
+          .map(coordKey)
+      ),
+    [assassinMarkTargets]
+  );
+
   const hoverAttackPreview = useMemo(() => {
     if (!view || hoverPreview?.type !== "attackRange") {
       return null;
@@ -729,6 +856,13 @@ export function Game() {
     if (isForestTarget) {
       for (const coord of forestTargetCenters) {
         highlights[coordKey(coord)] = "dora";
+      }
+      return highlights;
+    }
+
+    if (isChikatiloPlacement) {
+      for (const coord of chikatiloPlacementCoords) {
+        highlights[coordKey(coord)] = "place";
       }
       return highlights;
     }
@@ -771,6 +905,12 @@ export function Game() {
         const unit = view.units[targetId];
         if (!unit?.position) continue;
         highlights[coordKey(unit.position)] = "attack";
+      }
+    }
+
+    if (actionMode === "assassinMark") {
+      for (const key of assassinMarkTargetKeys) {
+        highlights[key] = "attack";
       }
     }
 
@@ -837,12 +977,15 @@ export function Game() {
     intimidateOptions,
     isForestTarget,
     forestTargetCenters,
+    isChikatiloPlacement,
+    chikatiloPlacementCoords,
     selectedUnit,
     pendingMoveForSelected,
     moveOptions,
     hoverAttackPreview,
     tisonaTargetCells,
     tisonaPreviewCoord,
+    assassinMarkTargetKeys,
     invadeTimeTargets,
   ]);
 
@@ -894,6 +1037,17 @@ export function Game() {
       return;
     }
 
+    if (isChikatiloPlacement) {
+      const key = coordKey({ col, row });
+      if (!chikatiloPlacementKeys.has(key) || !pendingRoll) return;
+      sendAction({
+        type: "resolvePendingRoll",
+        pendingRollId: pendingRoll.id,
+        choice: { type: "chikatiloPlace", position: { col, row } },
+      } as GameAction);
+      return;
+    }
+
     if (actionMode === "place" && placeUnitId) {
       if (!isCoordInList(legalPlacementCoords, col, row)) return;
       sendGameAction({
@@ -940,6 +1094,20 @@ export function Game() {
         type: "attack",
         attackerId: selectedUnitId,
         defenderId: target.id,
+      });
+      setActionMode(null);
+      return;
+    }
+
+    if (actionMode === "assassinMark") {
+      const target = getUnitAt(view, col, row);
+      if (!target) return;
+      if (!assassinMarkTargetIds.includes(target.id)) return;
+      sendGameAction({
+        type: "useAbility",
+        unitId: selectedUnitId,
+        abilityId: CHIKATILO_ASSASSIN_MARK_ID,
+        payload: { targetId: target.id },
       });
       setActionMode(null);
       return;
@@ -1030,7 +1198,8 @@ export function Game() {
     !boardSelectionPending &&
     actionMode !== "dora" &&
     actionMode !== "tisona" &&
-    actionMode !== "demonDuelist";
+    actionMode !== "demonDuelist" &&
+    actionMode !== "assassinMark";
 
   if (!view || !hasSnapshot) {
     return (
@@ -1176,6 +1345,27 @@ export function Game() {
                     Choose whether to continue the duel.
                   </div>
                 </div>
+              ) : isChikatiloPlacement ? (
+                <div>
+                  <div className="font-semibold">False Trail placement</div>
+                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
+                    Select any empty cell to place Chikatilo.
+                  </div>
+                </div>
+              ) : isChikatiloRevealChoice ? (
+                <div>
+                  <div className="font-semibold">False Trail choice</div>
+                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
+                    Decide whether the token explodes or is removed.
+                  </div>
+                </div>
+              ) : isChikatiloDecoyChoice ? (
+                <div>
+                  <div className="font-semibold">Decoy</div>
+                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
+                    Roll defense or spend 3 charges to take 1 damage.
+                  </div>
+                </div>
               ) : (
                 <div>
                   Pending roll: {getPendingRollLabel(pendingRoll.kind)}. Resolve to continue.
@@ -1304,6 +1494,10 @@ export function Game() {
                 ? "Forest of the Dead"
                 : isDuelistChoice
                 ? "Demon Duelist"
+                : isChikatiloRevealChoice
+                ? "False Trail"
+                : isChikatiloDecoyChoice
+                ? "Decoy"
                 : "Roll required"}
             </div>
             <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
@@ -1312,6 +1506,10 @@ export function Game() {
               pendingRoll.kind === "carpetStrike_berserkerDefenseChoice" ||
               pendingRoll.kind === "vladForest_berserkerDefenseChoice"
                 ? "Choose berserker defense."
+                : isChikatiloDecoyChoice
+                ? "Roll defense or spend 3 charges to take 1 damage."
+                : isChikatiloRevealChoice
+                ? "Explode the token or remove it."
                 : isForestChoice
                 ? "Activate Forest of the Dead or skip."
                 : isDuelistChoice
@@ -1375,6 +1573,34 @@ export function Game() {
                     Auto-dodge (-6)
                   </button>
                 </>
+              ) : isChikatiloDecoyChoice ? (
+                <>
+                  <button
+                    className="flex-1 rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-slate-100 dark:text-slate-900"
+                    onClick={() =>
+                      sendAction({
+                        type: "resolvePendingRoll",
+                        pendingRollId: pendingRoll.id,
+                        choice: "roll",
+                      } as GameAction)
+                    }
+                  >
+                    Roll Defense
+                  </button>
+                  <button
+                    className="flex-1 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-emerald-800/50 dark:text-slate-100 dark:hover:bg-emerald-700/60"
+                    onClick={() =>
+                      sendAction({
+                        type: "resolvePendingRoll",
+                        pendingRollId: pendingRoll.id,
+                        choice: "decoy",
+                      } as GameAction)
+                    }
+                    disabled={decoyCharges < 3}
+                  >
+                    Use Decoy (-3)
+                  </button>
+                </>
               ) : isDuelistChoice ? (
                 <>
                   <button
@@ -1428,6 +1654,33 @@ export function Game() {
                     }
                   >
                     Skip
+                  </button>
+                </>
+              ) : isChikatiloRevealChoice ? (
+                <>
+                  <button
+                    className="flex-1 rounded-lg bg-amber-500 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-amber-400"
+                    onClick={() =>
+                      sendAction({
+                        type: "resolvePendingRoll",
+                        pendingRollId: pendingRoll.id,
+                        choice: "falseTrailExplode",
+                      } as GameAction)
+                    }
+                  >
+                    Explode
+                  </button>
+                  <button
+                    className="flex-1 rounded-lg bg-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
+                    onClick={() =>
+                      sendAction({
+                        type: "resolvePendingRoll",
+                        pendingRollId: pendingRoll.id,
+                        choice: "falseTrailRemove",
+                      } as GameAction)
+                    }
+                  >
+                    Remove
                   </button>
                 </>
               ) : (

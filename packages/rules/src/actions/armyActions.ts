@@ -4,6 +4,7 @@ import { getUnitDefinition } from "../units";
 import { initUnitAbilities } from "../abilities";
 import { getHeroDefinition, heroMatchesClass, type HeroSelection } from "../heroes";
 import { getUnitBaseAttack, getUnitBaseMaxHp } from "./shared";
+import { setupChikatiloFalseTrailForPlacement } from "./heroes/chikatilo";
 
 function applyHeroOverrides(unit: UnitState): UnitState {
   const hero = getHeroDefinition(unit.heroId);
@@ -124,5 +125,5 @@ export function attachArmy(state: GameState, army: UnitState[]): GameState {
   for (const u of army) {
     units[u.id] = u;
   }
-  return { ...state, units };
+  return setupChikatiloFalseTrailForPlacement({ ...state, units });
 }

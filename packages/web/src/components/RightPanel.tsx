@@ -6,6 +6,9 @@ import {
   EL_CID_KOLADA_ID,
   EL_CID_TISONA_ID,
   KAISER_DORA_ID,
+  CHIKATILO_ASSASSIN_MARK_ID,
+  CHIKATILO_ID,
+  FALSE_TRAIL_TOKEN_ID,
   GROZNY_INVADE_TIME_ID,
   GROZNY_TYRANT_ID,
   TRICKSTER_AOE_ID,
@@ -159,7 +162,14 @@ export const RightPanel: FC<RightPanelProps> = ({
   const friendlyUnits = Object.values(view.units).filter(
     (u) => (playerId ? u.owner === playerId : false)
   );
-  const unplacedUnits = friendlyUnits.filter((u) => !u.position);
+  const hasFalseTrailToken = friendlyUnits.some(
+    (u) => u.heroId === FALSE_TRAIL_TOKEN_ID
+  );
+  const unplacedUnits = friendlyUnits.filter((u) => {
+    if (u.position) return false;
+    if (hasFalseTrailToken && u.heroId === CHIKATILO_ID) return false;
+    return true;
+  });
   const selectedUnit = friendlyUnits.find((u) => u.id === selectedUnitId) ?? null;
   const heroDefinition = selectedUnit?.heroId
     ? HERO_CATALOG.find((hero) => hero.id === selectedUnit.heroId)
@@ -293,13 +303,20 @@ export const RightPanel: FC<RightPanelProps> = ({
                 }}
                 disabled={!placementEnabled}
               >
-                {unit.id}
+                {unit.heroId === FALSE_TRAIL_TOKEN_ID ? "False Trail token" : unit.id}
               </button>
             ))}
           </div>
           {actionMode === "place" && placeUnitId && (
             <div className="mt-3 text-xs text-slate-400 dark:text-slate-400">
-              Click a highlighted cell to place {placeUnitId}.
+              {(() => {
+                const selected = friendlyUnits.find((u) => u.id === placeUnitId);
+                const label =
+                  selected?.heroId === FALSE_TRAIL_TOKEN_ID
+                    ? "the False Trail token"
+                    : placeUnitId;
+                return `Click a highlighted cell to place ${label}.`;
+              })()}
             </div>
           )}
           {!joined && (
@@ -668,6 +685,10 @@ export const RightPanel: FC<RightPanelProps> = ({
                   onSetActionMode("invadeTime");
                   return;
                 }
+                if (ability.id === CHIKATILO_ASSASSIN_MARK_ID) {
+                  onSetActionMode("assassinMark");
+                  return;
+                }
                 if (ability.id === EL_CID_TISONA_ID) {
                   onSetActionMode("tisona");
                   return;
@@ -761,6 +782,8 @@ export const RightPanel: FC<RightPanelProps> = ({
                 ? "Dora: select a center cell on the archer line."
                 : actionMode === "invadeTime"
                 ? "Invade Time: select any open cell on the board."
+                : actionMode === "assassinMark"
+                ? "Assassin Mark: select a unit within 2 squares."
                 : actionMode === "tisona"
                 ? "Tisona: select a cell on the same row or column."
                 : actionMode === "demonDuelist"

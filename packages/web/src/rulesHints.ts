@@ -8,11 +8,16 @@ export const VLAD_TEPES_ID = "vladTepes";
 export const EL_CID_COMPEADOR_ID = "elCidCompeador";
 export const GENGHIS_KHAN_ID = "genghisKhan";
 export const GROZNY_ID = "grozny";
+export const CHIKATILO_ID = "chikatilo";
+export const FALSE_TRAIL_TOKEN_ID = "falseTrailToken";
 export const EL_CID_TISONA_ID = "elCidCompeadorTisona";
 export const EL_CID_KOLADA_ID = "elCidCompeadorKolada";
 export const EL_CID_DEMON_DUELIST_ID = "elCidCompeadorDemonDuelist";
 export const GROZNY_INVADE_TIME_ID = "groznyInvadeTime";
 export const GROZNY_TYRANT_ID = "groznyTyrant";
+export const CHIKATILO_ASSASSIN_MARK_ID = "chikatiloAssassinMark";
+export const CHIKATILO_DECOY_ID = "chikatiloDecoy";
+export const FALSE_TRAIL_EXPLOSION_ID = "falseTrailExplosion";
 
 const MAX_HP_BY_CLASS: Record<UnitClass, number> = {
   spearman: 5,
@@ -37,6 +42,9 @@ export function getMaxHp(unitClass: UnitClass, heroId?: string): number {
   }
   if (heroId === GROZNY_ID) {
     base += 3;
+  }
+  if (heroId === CHIKATILO_ID) {
+    base += 1;
   }
   return base;
 }

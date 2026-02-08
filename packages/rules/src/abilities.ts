@@ -16,7 +16,8 @@ import {
   HERO_EL_CID_COMPEADOR_ID, 
   HERO_GROZNY_ID, 
   HERO_LECHY_ID, 
-  HERO_СHIKATILO_ID, 
+  HERO_CHIKATILO_ID,
+  HERO_FALSE_TRAIL_TOKEN_ID,
   HERO_ARTEMIDA_ID,
   HERO_ASGORE_ID,
   HERO_DON_KIHOTE_ID,
@@ -108,9 +109,12 @@ export const ABILITY_GENGHIS_KHAN_MONGOL_CHARGE = "genghisKhanMongolCharge" as c
 export const ABILITY_GROZNY_INVADE_TIME = "groznyInvadeTime" as const;
 export const ABILITY_GROZNY_TYRANT = "groznyTyrant" as const;
 
-export const ABILITY_СHIKATILO_MARK = "chikatiloMark" as const;
-export const ABILITY_CHIKATILO_DUMMY = "chikatiloDummy" as const;
-export const ABILITY_CHIKATILO_FALSE_TRACE = "chikatiloFalseTrace" as const;
+export const ABILITY_CHIKATILO_TOUGH = "chikatiloTough" as const;
+export const ABILITY_CHIKATILO_FALSE_TRAIL = "chikatiloFalseTrail" as const;
+export const ABILITY_CHIKATILO_ASSASSIN_MARK = "chikatiloAssassinMark" as const;
+export const ABILITY_CHIKATILO_DECOY = "chikatiloDecoy" as const;
+export const ABILITY_FALSE_TRAIL_TRAP = "falseTrailTrap" as const;
+export const ABILITY_FALSE_TRAIL_EXPLOSION = "falseTrailExplosion" as const;
 
 export const ABILITY_EL_SID_COMPEADOR_TISONA = "elCidCompeadorTisona" as const;
 export const ABILITY_EL_SID_COMPEADOR_KOLADA = "elCidCompeadorKolada" as const;
@@ -295,17 +299,49 @@ const ABILITY_SPECS: Record<string, AbilitySpec> = {
       consumes: { action: true },
     },
   },
-  [ABILITY_CHIKATILO_FALSE_TRACE]: {
-    id: ABILITY_CHIKATILO_FALSE_TRACE,
-    displayName: "False Trace",
-    kind: "phantasm",
-    description: "At the start of combat, place the False Trail Token in his place. Chikatilo can be placed on any square at the start of combat in stealth status. While stealthed, he is not subject to the three-turn stealth rule. If his invisibility is revealed, the False Trail Token automatically activates its ability. If the False Trail Token dies, Andrei Chikatilo is revealed. He cannot remain stealthed unless there are no more pieces left on the board.",
-  },
-  [ABILITY_СHIKATILO_MARK]: {
-    id: ABILITY_СHIKATILO_MARK,
-    displayName: "Killer Mark",
+  [ABILITY_CHIKATILO_TOUGH]: {
+    id: ABILITY_CHIKATILO_TOUGH,
+    displayName: "Tough",
     kind: "passive",
-    description: "Without revealing his invisibility, Andrei Chikatilo can apply the Killer's Mark to a creature within two squares. Chikatilo gains information about the location of hidden targets at the start of his turn. If Andrei Chikatilo hits this creature, he gains +1 damage to that attack. The Killer's Mark does not stack, but can be applied to multiple heroes.",
+    description: "+1 HP.",
+  },
+  [ABILITY_CHIKATILO_FALSE_TRAIL]: {
+    id: ABILITY_CHIKATILO_FALSE_TRAIL,
+    displayName: "False Trail",
+    kind: "passive",
+    description: "At the start of combat, place the False Trail Token in his place. Chikatilo can be placed on any square at the start of combat in stealth status. While stealthed, he is not subject to the three-turn stealth rule. If his invisibility is revealed, the False Trail Token must either explode or be removed. If the False Trail Token dies, Andrei Chikatilo is revealed. He cannot remain stealthed unless there are other figures on the board.",
+  },
+  [ABILITY_CHIKATILO_ASSASSIN_MARK]: {
+    id: ABILITY_CHIKATILO_ASSASSIN_MARK,
+    displayName: "Assassin Mark",
+    kind: "active",
+    description: "Without revealing his invisibility, Andrei Chikatilo can mark a creature within two squares. Marked targets are revealed to him at the start of his turn. If he hits a marked creature, he gains +1 damage to that attack.",
+    actionCost: {
+      consumes: { action: true },
+    },
+  },
+  [ABILITY_CHIKATILO_DECOY]: {
+    id: ABILITY_CHIKATILO_DECOY,
+    displayName: "Decoy",
+    kind: "active",
+    description: "Spend 3 charges to enter stealth without rolling, or before defending to take 1 damage instead.",
+    maxCharges: 6,
+    chargesPerUse: 3,
+    actionCost: {
+      consumes: { stealth: true },
+    },
+  },
+  [ABILITY_FALSE_TRAIL_TRAP]: {
+    id: ABILITY_FALSE_TRAIL_TRAP,
+    displayName: "False Trail Trap",
+    kind: "passive",
+    description: "When the False Trail Token dies or Chikatilo is revealed, it may strike the revealer for 3 damage on a failed defense.",
+  },
+  [ABILITY_FALSE_TRAIL_EXPLOSION]: {
+    id: ABILITY_FALSE_TRAIL_EXPLOSION,
+    displayName: "False Trail Explosion",
+    kind: "active",
+    description: "The False Trail Token detonates, attacking all units within 1 square. Each unit that fails takes 1 damage.",
     actionCost: {
       consumes: { action: true },
     },
@@ -560,6 +596,9 @@ export function initUnitAbilities(unit: UnitState): UnitState {
     updated = setCharges(updated, ABILITY_GENGHIS_KHAN_KHANS_DECREE, 0);
     updated = setCharges(updated, ABILITY_GENGHIS_KHAN_MONGOL_CHARGE, 0);
   }
+  if (unit.heroId === HERO_CHIKATILO_ID) {
+    updated = setCharges(updated, ABILITY_CHIKATILO_DECOY, 0);
+  }
   if (unit.heroId === HERO_GROZNY_ID) {
     updated = setCharges(updated, ABILITY_GROZNY_INVADE_TIME, 0);
   }
@@ -699,6 +738,7 @@ export function getAbilityViewsForUnit(
 ): AbilityView[] {
   const unit = state.units[unitId];
   if (!unit || !unit.isAlive) return [];
+  if (unit.heroId === HERO_FALSE_TRAIL_TOKEN_ID) return [];
 
   const abilityIds: string[] = [];
 
@@ -743,11 +783,13 @@ export function getAbilityViewsForUnit(
       ABILITY_EL_SID_COMPEADOR_DEMON_DUELIST
     );
   }
-  if (unit.heroId === HERO_СHIKATILO_ID) {
+  if (unit.heroId === HERO_CHIKATILO_ID) {
     abilityIds.push(
-      ABILITY_СHIKATILO_MARK, 
-      ABILITY_CHIKATILO_FALSE_TRACE,
-      ABILITY_CHIKATILO_DUMMY);
+      ABILITY_CHIKATILO_TOUGH,
+      ABILITY_CHIKATILO_FALSE_TRAIL,
+      ABILITY_CHIKATILO_ASSASSIN_MARK,
+      ABILITY_CHIKATILO_DECOY
+    );
   }
   if (unit.heroId === HERO_GROZNY_ID) {
     abilityIds.push(
@@ -977,3 +1019,8 @@ export function getAbilityViewsForUnit(
     })
     .filter((item): item is AbilityView => item !== null);
 }
+
+
+
+
+
