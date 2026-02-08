@@ -65,6 +65,32 @@ function waitForRoomState(
   });
 }
 
+function waitForError(
+  queue: unknown[],
+  predicate: (msg: { type?: string; message?: string }) => boolean,
+  timeoutMs = 2000
+): Promise<unknown> {
+  return new Promise((resolve, reject) => {
+    const start = Date.now();
+    const tick = () => {
+      const msg = queue.find((item) => {
+        const payload = item as { type?: string; message?: string };
+        return payload.type === "error" && predicate(payload);
+      });
+      if (msg) {
+        resolve(msg);
+        return;
+      }
+      if (Date.now() - start > timeoutMs) {
+        reject(new Error("Timed out waiting for matching error message"));
+        return;
+      }
+      setTimeout(tick, 20);
+    };
+    tick();
+  });
+}
+
 async function main() {
   const server = await buildServer();
   await server.listen({ port: 0, host: "127.0.0.1" });
@@ -95,6 +121,15 @@ async function main() {
 
   ws1.send(
     JSON.stringify({
+      type: "resolvePendingRoll",
+      pendingRollId: 123,
+    })
+  );
+
+  await waitForError(queue1, (msg) => msg.message === "Invalid message payload");
+
+  ws1.send(
+    JSON.stringify({
       type: "joinRoom",
       mode: "create",
       role: "P1",
@@ -119,6 +154,16 @@ async function main() {
 
   await waitForType(queue2, "joinAck");
   await waitForType(queue2, "roomState");
+
+  ws1.send(
+    JSON.stringify({
+      type: "resolvePendingRoll",
+      pendingRollId: "chikatilo-test",
+      choice: { type: "chikatiloPlace", position: { col: 0, row: 0 } },
+    })
+  );
+
+  await waitForError(queue1, (msg) => msg.message === "Not your pending roll");
 
   ws1.send(JSON.stringify({ type: "setReady", ready: true }));
   ws2.send(JSON.stringify({ type: "setReady", ready: true }));

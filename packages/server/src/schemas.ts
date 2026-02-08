@@ -47,6 +47,9 @@ const ResolveRollChoiceSchema = z.union([
   z.literal("roll"),
   z.literal("skip"),
   z.literal("activate"),
+  z.literal("decoy"),
+  z.literal("falseTrailExplode"),
+  z.literal("falseTrailRemove"),
   z.object({
     type: z.literal("intimidatePush"),
     to: CoordSchema,
@@ -58,6 +61,10 @@ const ResolveRollChoiceSchema = z.union([
   z.object({
     type: z.literal("forestTarget"),
     center: CoordSchema,
+  }),
+  z.object({
+    type: z.literal("chikatiloPlace"),
+    position: CoordSchema,
   }),
   z.literal("elCidDuelistContinue"),
   z.literal("elCidDuelistStop"),

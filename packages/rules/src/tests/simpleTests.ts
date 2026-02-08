@@ -6475,6 +6475,10 @@ function testChikatiloPlacementListSubstitution() {
   const tokenLegal = getLegalPlacements(state, token.id);
 
   assert(
+    token.owner === chikatilo.owner,
+    "false trail token should keep the same owner as chikatilo"
+  );
+  assert(
     chikatiloLegal.length === 0,
     "chikatilo should not be placeable during normal placement"
   );
@@ -6539,6 +6543,10 @@ function testChikatiloPlacementAfterToken() {
   assert(
     pending?.kind === "chikatiloFalseTrailPlacement",
     "placing token should request chikatilo placement"
+  );
+  assert(
+    pending?.player === chikatilo.owner,
+    "chikatilo placement pending roll should belong to chikatilo owner"
   );
 
   const legal = (pending?.context as any)?.legalPositions as Coord[];
