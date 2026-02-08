@@ -23,6 +23,7 @@ export function makeAttackContext(params: {
     tieBreakDefender: [],
     stage: "initial",
     berserkerChoiceMade: false,
+    chikatiloDecoyChoiceMade: false,
     consumeSlots: params.consumeSlots,
     queueKind: params.queueKind,
   };

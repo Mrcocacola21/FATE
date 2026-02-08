@@ -359,7 +359,11 @@ function applyMongolChargeMove(
         pendingMove: pendingValid ? null : state.pendingMove,
       };
       const events: GameEvent[] = [
-        evStealthRevealed({ unitId: revealed.id, reason: "steppedOnHidden" }),
+        evStealthRevealed({
+          unitId: revealed.id,
+          reason: "steppedOnHidden",
+          revealerId: unit.id,
+        }),
       ];
       return { state: newState, events };
     }
@@ -441,7 +445,11 @@ function applyMongolChargeMove(
       };
 
       events.push(
-        evStealthRevealed({ unitId: revealed.id, reason: "adjacency" })
+        evStealthRevealed({
+          unitId: revealed.id,
+          reason: "adjacency",
+          revealerId: updatedUnit.id,
+        })
       );
     }
   }
@@ -637,7 +645,11 @@ export function applyMove(
         pendingMove: pendingValid ? null : state.pendingMove,
       };
       const events: GameEvent[] = [
-        evStealthRevealed({ unitId: revealed.id, reason: "steppedOnHidden" }),
+        evStealthRevealed({
+          unitId: revealed.id,
+          reason: "steppedOnHidden",
+          revealerId: unit.id,
+        }),
       ];
       return { state: newState, events };
     }
@@ -726,7 +738,11 @@ export function applyMove(
       };
 
       events.push(
-        evStealthRevealed({ unitId: revealed.id, reason: "adjacency" })
+        evStealthRevealed({
+          unitId: revealed.id,
+          reason: "adjacency",
+          revealerId: updatedUnit.id,
+        })
       );
     }
   }

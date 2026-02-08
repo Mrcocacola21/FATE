@@ -15,6 +15,7 @@ export interface AttackRollContext extends Record<string, unknown> {
   tieBreakDefender?: number[];
   stage?: "initial" | "tieBreak";
   berserkerChoiceMade?: boolean;
+  chikatiloDecoyChoiceMade?: boolean;
   consumeSlots?: boolean;
   queueKind?: "normal" | "riderPath" | "aoe";
   elCidDuelist?: {
@@ -66,4 +67,5 @@ export type IntimidateResume =
   | { kind: "forestAoE"; context: Record<string, unknown> }
   | { kind: "elCidTisonaAoE"; context: Record<string, unknown> }
   | { kind: "elCidKoladaAoE"; context: Record<string, unknown> }
+  | { kind: "falseTrailExplosion"; context: Record<string, unknown> }
   | { kind: "elCidDuelist"; context: Record<string, unknown> };

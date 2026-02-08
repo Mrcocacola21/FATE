@@ -1,6 +1,7 @@
 // packages/rules/src/visibility.ts
 import { GameState, UnitState, Coord } from "./model";
 import { getUnitAt } from "./board";
+import { HERO_CHIKATILO_ID } from "./heroes";
 
 /**
  * Может ли конкретный юнит видеть стелс-цели.
@@ -86,6 +87,13 @@ export function canDirectlyTargetUnit(
 
   // Враг в стелсе и мы его не "видим" → нельзя нацелиться
   if (target.isStealthed) {
+    if (
+      source.heroId === HERO_CHIKATILO_ID &&
+      Array.isArray(source.chikatiloMarkedTargets) &&
+      source.chikatiloMarkedTargets.includes(target.id)
+    ) {
+      return true;
+    }
     const known = state.knowledge?.[source.owner]?.[target.id];
     if (!unitCanSeeStealthed(state, source) && !known) {
       return false;

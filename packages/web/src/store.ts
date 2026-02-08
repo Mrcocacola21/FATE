@@ -34,6 +34,7 @@ export type ActionMode =
   | "tisona"
   | "demonDuelist"
   | "invadeTime"
+  | "assassinMark"
   | null;
 export type HoverPreview = { type: "attackRange"; unitId: string } | null;
 

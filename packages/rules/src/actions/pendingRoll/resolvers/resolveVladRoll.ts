@@ -34,6 +34,7 @@ import { advanceDoraAoEQueue } from "./resolveDoraRoll";
 import { advanceCarpetStrikeQueue } from "./resolveCarpetStrikeRoll";
 import { advanceForestAoEQueue } from "./resolveForestRoll";
 import { advanceElCidAoEQueue } from "./resolveElCidRoll";
+import { advanceFalseTrailExplosionQueue } from "./resolveChikatiloRoll";
 
 export function resolveVladIntimidateChoice(
   state: GameState,
@@ -153,6 +154,12 @@ export function resolveVladIntimidateChoice(
         resume.context as unknown as ElCidAoEContext,
         events,
         "elCidKolada_defenderRoll"
+      );
+    case "falseTrailExplosion":
+      return advanceFalseTrailExplosionQueue(
+        updatedState,
+        resume.context as any,
+        events
       );
     case "elCidDuelist": {
       const duelCtx = resume.context as { attackerId?: string; targetId?: string };

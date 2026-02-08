@@ -2,6 +2,7 @@ import type { BaseClass, HeroCatalog } from "./types";
 
 export const HERO_CATALOG: HeroCatalog = [
   { id: "base-assassin", name: "Base Assassin", mainClass: "assassin" },
+  { id: "chikatilo", name: "Andrei Chikatilo", mainClass: "assassin" },
   { id: "base-archer", name: "Base Archer", mainClass: "archer" },
   { id: "grand-kaiser", name: "Grand Kaiser", mainClass: "archer" },
   { id: "base-berserker", name: "Base Berserker", mainClass: "berserker" },

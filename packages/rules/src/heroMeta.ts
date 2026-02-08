@@ -20,9 +20,10 @@ import {
   ABILITY_LECHY_STORM,
   ABILITY_LECHY_CONFUSE_THE_TERRAIN,
   ABILITY_LECHY_GUIDE_THE_TRAVELER,
-  ABILITY_СHIKATILO_MARK,
-  ABILITY_CHIKATILO_DUMMY,
-  ABILITY_CHIKATILO_FALSE_TRACE,
+  ABILITY_CHIKATILO_TOUGH,
+  ABILITY_CHIKATILO_FALSE_TRAIL,
+  ABILITY_CHIKATILO_ASSASSIN_MARK,
+  ABILITY_CHIKATILO_DECOY,
   ABILITY_ARTEMIDA_ACCURATE_ARROW,
   ABILITY_ARTEMIDA_MOONLIGHT_SHINE,
   ABILITY_ARTEMIDA_SILVER_CRESCENT,
@@ -106,7 +107,7 @@ import {
   HERO_EL_CID_COMPEADOR_ID, 
   HERO_GROZNY_ID, 
   HERO_LECHY_ID, 
-  HERO_СHIKATILO_ID, 
+  HERO_CHIKATILO_ID, 
   HERO_ARTEMIDA_ID,
   HERO_ASGORE_ID,
   HERO_DON_KIHOTE_ID,
@@ -247,14 +248,15 @@ const HERO_REGISTRY_LIST: HeroMeta[] = [
       .filter((item): item is AbilityMeta => item !== null),
   },
   {
-    id: HERO_СHIKATILO_ID,
+    id: HERO_CHIKATILO_ID,
     name: "Andrei Chikatilo",
     mainClass: "assassin",
-    baseStats: buildBaseStats("assassin", HERO_СHIKATILO_ID),
+    baseStats: buildBaseStats("assassin", HERO_CHIKATILO_ID),
     abilities: [
-      ABILITY_СHIKATILO_MARK,
-      ABILITY_CHIKATILO_FALSE_TRACE,
-      ABILITY_CHIKATILO_DUMMY,
+      ABILITY_CHIKATILO_TOUGH,
+      ABILITY_CHIKATILO_FALSE_TRAIL,
+      ABILITY_CHIKATILO_ASSASSIN_MARK,
+      ABILITY_CHIKATILO_DECOY,
     ]
       .map(buildAbilityMeta)
       .filter((item): item is AbilityMeta => item !== null),
@@ -608,3 +610,6 @@ export const HERO_REGISTRY: Record<string, HeroMeta> = Object.fromEntries(
 export function getHeroMeta(heroId: string): HeroMeta | undefined {
   return HERO_REGISTRY[heroId];
 }
+
+
+

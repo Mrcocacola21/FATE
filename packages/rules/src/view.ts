@@ -16,6 +16,7 @@ import {
   getLegalIntents,
 } from "./legal";
 import { getAbilityViewsForUnit } from "./abilities";
+import { HERO_CHIKATILO_ID } from "./heroes";
 
 function cloneUnit(unit: UnitState): UnitState {
   const turn = unit.turn ?? makeEmptyTurnEconomy();
@@ -70,6 +71,18 @@ export function makePlayerView(
   const lastKnownPositions: Record<string, Coord> = {};
   const abilitiesByUnitId: Record<string, AbilityView[]> = {};
 
+  const activeUnit =
+    state.activeUnitId && state.units[state.activeUnitId]
+      ? state.units[state.activeUnitId]
+      : null;
+  const activeChikatilo =
+    activeUnit &&
+    activeUnit.owner === playerId &&
+    activeUnit.heroId === HERO_CHIKATILO_ID
+      ? activeUnit
+      : null;
+  const markedTargets = new Set(activeChikatilo?.chikatiloMarkedTargets ?? []);
+
   for (const unit of Object.values(state.units)) {
     if (unit.owner === playerId) {
       units[unit.id] = cloneUnit(unit);
@@ -83,6 +96,10 @@ export function makePlayerView(
     }
 
     if (unit.isStealthed) {
+      if (activeChikatilo && markedTargets.has(unit.id)) {
+        units[unit.id] = maskStealthedEnemy(unit);
+        continue;
+      }
       if (unit.owner !== playerId) {
         const lastKnown = state.lastKnownPositions?.[playerId]?.[unit.id];
         if (lastKnown) {
@@ -156,6 +173,8 @@ export function makePlayerView(
     pendingRoll &&
     (pendingRoll.kind === "tricksterAoE_attackerRoll" ||
       pendingRoll.kind === "tricksterAoE_defenderRoll" ||
+      pendingRoll.kind === "falseTrailExplosion_attackerRoll" ||
+      pendingRoll.kind === "falseTrailExplosion_defenderRoll" ||
       pendingRoll.kind === "elCidTisona_attackerRoll" ||
       pendingRoll.kind === "elCidTisona_defenderRoll" ||
       pendingRoll.kind === "elCidKolada_attackerRoll" ||
@@ -230,6 +249,8 @@ export function makeSpectatorView(state: GameState): PlayerView {
     pendingRoll &&
     (pendingRoll.kind === "tricksterAoE_attackerRoll" ||
       pendingRoll.kind === "tricksterAoE_defenderRoll" ||
+      pendingRoll.kind === "falseTrailExplosion_attackerRoll" ||
+      pendingRoll.kind === "falseTrailExplosion_defenderRoll" ||
       pendingRoll.kind === "elCidTisona_attackerRoll" ||
       pendingRoll.kind === "elCidTisona_defenderRoll" ||
       pendingRoll.kind === "elCidKolada_attackerRoll" ||

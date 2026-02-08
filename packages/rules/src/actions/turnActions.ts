@@ -10,6 +10,7 @@ import type { RNG } from "../rng";
 import { processUnitStartOfTurn } from "../abilities";
 import { processUnitStartOfTurnStealth } from "../stealth";
 import { resetTurnEconomy } from "../turnEconomy";
+import { HERO_FALSE_TRAIL_TOKEN_ID } from "../heroes";
 import {
   maybeTriggerCarpetStrike,
   maybeTriggerEngineeringMiracle,
@@ -137,8 +138,18 @@ export function applyEndTurn(state: GameState, rng: RNG): ApplyResult {
   if (state.phase === "battle") {
     const stateAfterTurn = clearGenghisTurnFlags(state, state.activeUnitId);
     // Р•СЃР»Рё Сѓ РѕРґРЅРѕРіРѕ РёР· РёРіСЂРѕРєРѕРІ РЅРµС‚ Р¶РёРІС‹С… С„РёРіСѓСЂ вЂ” Р·Р°РІРµСЂС€Р°РµРј РёРіСЂСѓ
-    const p1Alive = Object.values(stateAfterTurn.units).some((u) => u.owner === "P1" && u.isAlive);
-    const p2Alive = Object.values(stateAfterTurn.units).some((u) => u.owner === "P2" && u.isAlive);
+    const p1Alive = Object.values(stateAfterTurn.units).some(
+      (u) =>
+        u.owner === "P1" &&
+        u.isAlive &&
+        u.heroId !== HERO_FALSE_TRAIL_TOKEN_ID
+    );
+    const p2Alive = Object.values(stateAfterTurn.units).some(
+      (u) =>
+        u.owner === "P2" &&
+        u.isAlive &&
+        u.heroId !== HERO_FALSE_TRAIL_TOKEN_ID
+    );
     if (!p1Alive || !p2Alive) {
       const winner: PlayerId | null = !p1Alive && p2Alive ? "P2" : p1Alive && !p2Alive ? "P1" : null;
       const endedState: GameState = {

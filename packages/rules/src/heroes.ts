@@ -4,7 +4,8 @@ import { UnitClass } from "./model";
 export const HERO_GRAND_KAISER_ID = "grand-kaiser" as const;
 export const HERO_VLAD_TEPES_ID = "vladTepes" as const;
 export const HERO_GENGHIS_KHAN_ID = "genghisKhan" as const;
-export const HERO_СHIKATILO_ID = "chikatilo" as const;
+export const HERO_CHIKATILO_ID = "chikatilo" as const;
+export const HERO_FALSE_TRAIL_TOKEN_ID = "falseTrailToken" as const;
 export const HERO_GROZNY_ID = "grozny" as const;
 export const HERO_EL_CID_COMPEADOR_ID = "elCidCompeador" as const;
 export const HERO_LECHY_ID = "lechy" as const;
@@ -180,7 +181,7 @@ export const HERO_CATALOG: HeroDefinition[] = [
   },
   
   {
-    id: HERO_СHIKATILO_ID,
+    id: HERO_CHIKATILO_ID,
     name: "Andrei Chikatilo",
     mainClass: "assassin",
     baseHpOverride: 5,
@@ -232,3 +233,7 @@ export function heroMatchesClass(
   if (!hero) return false;
   return hero.mainClass === unitClass;
 }
+
+
+
+

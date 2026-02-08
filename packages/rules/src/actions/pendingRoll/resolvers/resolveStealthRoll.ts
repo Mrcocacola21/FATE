@@ -151,7 +151,11 @@ export function resolveSearchStealthRoll(
     delete lastKnownPositions.P2[updatedHidden.id];
 
     events.push(
-      evStealthRevealed({ unitId: updatedHidden.id, reason: "search" })
+      evStealthRevealed({
+        unitId: updatedHidden.id,
+        reason: "search",
+        revealerId: unit.id,
+      })
     );
   }
 

@@ -8,6 +8,7 @@ import { applyResolvePendingRoll } from "./pendingRollActions";
 import { applyPlaceUnit } from "./placementActions";
 import { applyEnterStealth, applySearchStealth } from "./stealthActions";
 import { applyEndTurn, applyUnitStartTurn } from "./turnActions";
+import { applyChikatiloPostAction } from "./heroes/chikatilo";
 
 export function applyAction(
   state: GameState,
@@ -18,53 +19,73 @@ export function applyAction(
     return { state, events: [] };
   }
 
+  let result: ApplyResult;
+
   switch (action.type) {
     case "rollInitiative":
-      return lobbyHandlers.applyRollInitiative(state, rng);
+      result = lobbyHandlers.applyRollInitiative(state, rng);
+      break;
 
     case "chooseArena":
-      return lobbyHandlers.applyChooseArena(state, action);
+      result = lobbyHandlers.applyChooseArena(state, action);
+      break;
 
     case "lobbyInit":
-      return lobbyHandlers.applyLobbyInit(state, action);
+      result = lobbyHandlers.applyLobbyInit(state, action);
+      break;
 
     case "setReady":
-      return lobbyHandlers.applySetReady(state, action);
+      result = lobbyHandlers.applySetReady(state, action);
+      break;
 
     case "startGame":
-      return lobbyHandlers.applyStartGame(state, action);
+      result = lobbyHandlers.applyStartGame(state, action);
+      break;
 
     case "unitStartTurn":
-      return applyUnitStartTurn(state, action, rng);
+      result = applyUnitStartTurn(state, action, rng);
+      break;
 
     case "placeUnit":
-      return applyPlaceUnit(state, action);
+      result = applyPlaceUnit(state, action);
+      break;
 
     case "move":
-      return applyMove(state, action, rng);
+      result = applyMove(state, action, rng);
+      break;
 
     case "requestMoveOptions":
-      return applyRequestMoveOptions(state, action, rng);
+      result = applyRequestMoveOptions(state, action, rng);
+      break;
 
     case "attack":
-      return applyAttack(state, action, rng);
+      result = applyAttack(state, action, rng);
+      break;
 
     case "enterStealth":
-      return applyEnterStealth(state, action, rng);
+      result = applyEnterStealth(state, action, rng);
+      break;
 
     case "searchStealth":
-      return applySearchStealth(state, action, rng);
+      result = applySearchStealth(state, action, rng);
+      break;
 
     case "useAbility":
-      return applyUseAbility(state, action, rng);
+      result = applyUseAbility(state, action, rng);
+      break;
 
     case "resolvePendingRoll":
-      return applyResolvePendingRoll(state, action, rng);
+      result = applyResolvePendingRoll(state, action, rng);
+      break;
 
     case "endTurn":
-      return applyEndTurn(state, rng);
+      result = applyEndTurn(state, rng);
+      break;
 
     default:
-      return { state, events: [] };
+      result = { state, events: [] };
+      break;
   }
+
+  return applyChikatiloPostAction(result.state, result.events, rng);
 }

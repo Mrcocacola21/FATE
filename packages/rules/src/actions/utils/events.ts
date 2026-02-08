@@ -229,11 +229,13 @@ export function evSearchStealth(params: {
 export function evStealthRevealed(params: {
   unitId: string;
   reason: StealthRevealReason;
+  revealerId?: string;
 }): StealthRevealedEvent {
   return {
     type: "stealthRevealed",
     unitId: params.unitId,
     reason: params.reason,
+    revealerId: params.revealerId,
   };
 }
 

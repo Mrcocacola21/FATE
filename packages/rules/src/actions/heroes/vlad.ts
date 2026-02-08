@@ -18,6 +18,7 @@ import {
 import type { ApplyResult } from "../../model";
 import type { IntimidateResume } from "../types";
 import { evForestActivated, evIntimidateTriggered } from "../utils/events";
+import { HERO_FALSE_TRAIL_TOKEN_ID } from "../../heroes";
 
 export function getPolkovodetsSource(
   state: GameState,
@@ -26,6 +27,7 @@ export function getPolkovodetsSource(
 ): string | null {
   const attacker = state.units[attackerId];
   if (!attacker || !attacker.position) return null;
+  if (attacker.heroId === HERO_FALSE_TRAIL_TOKEN_ID) return null;
   if (isVlad(attacker) || isElCid(attacker) || isGenghis(attacker)) return null;
 
   const origin = positionOverride ?? attacker.position;

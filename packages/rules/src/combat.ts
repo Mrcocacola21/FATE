@@ -16,7 +16,7 @@ import {
   getAbilitySpec,
   getCharges,
 } from "./abilities";
-import { HERO_GENGHIS_KHAN_ID } from "./heroes";
+import { HERO_CHIKATILO_ID, HERO_FALSE_TRAIL_TOKEN_ID, HERO_GENGHIS_KHAN_ID } from "./heroes";
 import { canDirectlyTargetUnit } from "./visibility";
 
 
@@ -67,6 +67,17 @@ function hasLegendOfTheSteppesBonus(
   return lastTurn.includes(defenderId);
 }
 
+function getChikatiloMarkBonus(attacker: UnitState, defenderId: string): number {
+  if (attacker.heroId !== HERO_CHIKATILO_ID) {
+    return 0;
+  }
+  const marked = attacker.chikatiloMarkedTargets;
+  if (!Array.isArray(marked)) {
+    return 0;
+  }
+  return marked.includes(defenderId) ? 1 : 0;
+}
+
 // --- Проверка цели атаки (дистанция / тип) ---
 
 export function canAttackTarget(
@@ -76,12 +87,19 @@ export function canAttackTarget(
 ): boolean {
   if (!attacker.isAlive || !defender.isAlive) return false;
   if (!attacker.position || !defender.position) return false;
+  if (attacker.heroId === HERO_FALSE_TRAIL_TOKEN_ID) return false;
 
   // Нельзя бить союзников обычной атакой
   if (attacker.owner === defender.owner) return false;
 
   // Нельзя прямой таргет по скрытому (его надо сначала найти / снять AoE)
-  if (defender.isStealthed) return false;
+  if (defender.isStealthed) {
+    const marked =
+      attacker.heroId === HERO_CHIKATILO_ID &&
+      Array.isArray(attacker.chikatiloMarkedTargets) &&
+      attacker.chikatiloMarkedTargets.includes(defender.id);
+    if (!marked) return false;
+  }
 
   const attPos = attacker.position;
   const defPos = defender.position;
@@ -174,6 +192,7 @@ export function resolveAttack(
     revealReason?: StealthRevealReason;
     damageBonus?: number;
     damageOverride?: number;
+    ignoreBonuses?: boolean;
     autoHit?: boolean;
     rolls?: {
       attackerDice: number[];
@@ -360,6 +379,7 @@ export function resolveAttack(
         type: "stealthRevealed",
         unitId: defenderAfter.id,
         reason: params.revealReason ?? "attacked",
+        revealerId: attackerAfter.id,
       });
 
       // update working copies
@@ -369,11 +389,10 @@ export function resolveAttack(
   }
 
   if (hit) {
-    if (params.damageOverride !== undefined) {
-      damage = params.damageOverride;
-    } else if (attackerAfter.class === "assassin" && attackerAfter.isStealthed) {
-      // ?????????? ???? ????????????????????: 2 ?????????? ?? ?????????? ???? ????????????
-      damage = 2;
+    const attackerWasStealthed =
+      attackerAfter.class === "assassin" && attackerAfter.isStealthed;
+
+    if (attackerWasStealthed) {
       attackerAfter = {
         ...attackerAfter,
         isStealthed: false,
@@ -381,15 +400,28 @@ export function resolveAttack(
       };
       revealedAttackerPos = attackerAfter.position ?? null;
       attackerRevealedToDefender = true;
+    }
+
+    if (params.damageOverride !== undefined) {
+      damage = params.damageOverride;
+    } else if (attackerWasStealthed) {
+      // ?????????? ???? ????????????????????: 2 ?????????? ?? ?????????? ???? ????????????
+      damage = 2;
     } else {
       damage = attackerAfter.attack;
     }
 
-    if (params.damageBonus) {
-      damage += params.damageBonus;
-    }
-    if (hasLegendOfTheSteppesBonus(attackerAfter, defenderAfter.id)) {
-      damage += 1;
+    if (!params.ignoreBonuses) {
+      if (params.damageBonus) {
+        damage += params.damageBonus;
+      }
+      const markBonus = getChikatiloMarkBonus(attackerAfter, defenderAfter.id);
+      if (markBonus) {
+        damage += markBonus;
+      }
+      if (hasLegendOfTheSteppesBonus(attackerAfter, defenderAfter.id)) {
+        damage += 1;
+      }
     }
 
     if (defenderAfter.bunker?.active) {
@@ -450,6 +482,15 @@ const newHp = Math.max(0, defenderAfter.hp - damage);
       : state.knowledge,
     lastKnownPositions: updatedLastKnown,
   };
+
+  if (attackerRevealedToDefender) {
+    events.push({
+      type: "stealthRevealed",
+      unitId: attackerAfter.id,
+      reason: "attacked",
+      revealerId: attackerAfter.id,
+    });
+  }
 
   events.push({
     type: "attackResolved",

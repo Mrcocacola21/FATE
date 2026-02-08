@@ -4,6 +4,7 @@ import { getUnitDefinition } from "../units";
 import { chebyshev } from "../board";
 import { canSpendSlots, spendSlots } from "../turnEconomy";
 import { isKaiser, isKaiserTransformed } from "./shared";
+import { HERO_FALSE_TRAIL_TOKEN_ID } from "../heroes";
 import { requestRoll } from "./utils/rollUtils";
 import { evSearchStealth, evStealthEntered } from "./utils/events";
 
@@ -18,6 +19,9 @@ export function applyEnterStealth(
 
   const unit = state.units[action.unitId];
   if (!unit || !unit.isAlive || !unit.position) {
+    return { state, events: [] };
+  }
+  if (unit.heroId === HERO_FALSE_TRAIL_TOKEN_ID) {
     return { state, events: [] };
   }
 

@@ -94,6 +94,8 @@ export interface UnitState {
 
   charges: Record<string, number>;
   cooldowns: Record<string, number>;
+  chikatiloMarkedTargets?: string[];
+  chikatiloFalseTrailTokenId?: string;
 
   /** Номер хода, на котором юнит в последний раз заряжал счётчики */
   lastChargedTurn?: number;
@@ -176,7 +178,12 @@ export type RollKind =
   | "vladForestTarget"
   | "vladForest_attackerRoll"
   | "vladForest_defenderRoll"
-  | "vladForest_berserkerDefenseChoice";
+  | "vladForest_berserkerDefenseChoice"
+  | "chikatiloFalseTrailPlacement"
+  | "chikatiloDecoyChoice"
+  | "falseTrailExplosion_attackerRoll"
+  | "falseTrailExplosion_defenderRoll"
+  | "chikatiloFalseTrailRevealChoice";
 
 export interface PendingRoll {
   id: string;
@@ -268,6 +275,7 @@ export type GameEvent =
       type: "stealthRevealed";
       unitId: string;
       reason: StealthRevealReason;
+      revealerId?: string;
     }
   | {
       type: "rollRequested";
@@ -432,11 +440,15 @@ export type ResolveRollChoice =
   | "roll"
   | "skip"
   | "activate"
+  | "decoy"
+  | "falseTrailExplode"
+  | "falseTrailRemove"
   | "elCidDuelistContinue"
   | "elCidDuelistStop"
   | { type: "intimidatePush"; to: Coord }
   | { type: "placeStakes"; positions: Coord[] }
-  | { type: "forestTarget"; center: Coord };
+  | { type: "forestTarget"; center: Coord }
+  | { type: "chikatiloPlace"; position: Coord };
 
     export type GameAction =
     | {

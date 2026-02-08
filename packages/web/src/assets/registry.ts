@@ -28,6 +28,7 @@ const FIGURE_ARTS: Record<string, string> = {
   "elCidCompeador": EL_CID_COMPEADOR_ART,
   "lechy": LECHY_ART,
   "chikatilo": CHIKATILO_ART,
+  "falseTrailToken": CHIKATILO_ART,
   "grozny": GROZNY_ART,
   _missing: FALLBACK_FIGURE,
 };
@@ -39,6 +40,7 @@ const TOKENS: Record<string, string> = {
   "elCidCompeador": EL_CID_COMPEADOR_TOKEN,
   "lechy": LECHY_TOKEN,
   "chikatilo": CHIKATILO_TOKEN,
+  "falseTrailToken": CHIKATILO_TOKEN,
   "grozny": GROZNY_TOKEN,
   _missing: FALLBACK_TOKEN,
 };

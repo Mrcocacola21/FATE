@@ -1,17 +1,18 @@
 ﻿// packages/rules/src/stealth.ts
 
 import {
-    Coord,
-    GameEvent,
-    GameState,
-    UnitState,
-    UnitClass,
-    isInsideBoard,
-    StealthRevealReason,
-  } from "./model";
-  import { RNG, rollD6 } from "./rng";
-  import { getUnitDefinition } from "./units";
-  import { canSpendSlots, spendSlots } from "./turnEconomy";
+  Coord,
+  GameEvent,
+  GameState,
+  UnitState,
+  UnitClass,
+  isInsideBoard,
+  StealthRevealReason,
+} from "./model";
+import { RNG, rollD6 } from "./rng";
+import { getUnitDefinition } from "./units";
+import { canSpendSlots, spendSlots } from "./turnEconomy";
+import { HERO_CHIKATILO_ID, HERO_FALSE_TRAIL_TOKEN_ID } from "./heroes";
   
   // РќР°РїСЂР°РІР»РµРЅРёСЏ РІРѕРєСЂСѓРі РєР»РµС‚РєРё (РЅР°С‡РёРЅР°СЏ СЃ СЃРµРІРµСЂР° РїРѕ С‡Р°СЃРѕРІРѕР№ СЃС‚СЂРµР»РєРµ)
   const NEIGHBOR_OFFSETS: Coord[] = [
@@ -151,7 +152,8 @@ import {
     state: GameState,
     unitId: string,
     reason: StealthRevealReason,
-    rng: RNG
+    rng: RNG,
+    revealerId?: string
   ): { state: GameState; events: GameEvent[] } {
     const unit = state.units[unitId];
     if (!unit || !unit.isAlive || !unit.position || !unit.isStealthed) {
@@ -284,6 +286,7 @@ import {
       type: "stealthRevealed",
       unitId: u.id,
       reason,
+      revealerId,
     });
   
     return { state: nextState, events };
@@ -385,6 +388,26 @@ import {
 
     if (!unit.isStealthed) {
       return { state, events: [] };
+    }
+
+    if (unit.heroId === HERO_CHIKATILO_ID) {
+      const otherRealUnits = Object.values(state.units).filter(
+        (u) =>
+          u.isAlive &&
+          u.id !== unit.id &&
+          u.heroId !== HERO_FALSE_TRAIL_TOKEN_ID
+      );
+      if (otherRealUnits.length === 0) {
+        const res = revealUnit(state, unit.id, "timerExpired", rng);
+        return { state: res.state, events: res.events };
+      }
+
+      const tokenId = unit.chikatiloFalseTrailTokenId;
+      const tokenAlive =
+        tokenId && state.units[tokenId] && state.units[tokenId].isAlive;
+      if (tokenAlive) {
+        return { state, events: [] };
+      }
     }
 
     // Reveal on the 4th own turn start.

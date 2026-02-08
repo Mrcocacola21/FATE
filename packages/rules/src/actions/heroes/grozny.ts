@@ -138,7 +138,13 @@ function revealAdjacentStealthedEnemies(
       lastKnownPositions: updatedLastKnown,
     };
 
-    events.push(evStealthRevealed({ unitId: revealed.id, reason: "adjacency" }));
+    events.push(
+      evStealthRevealed({
+        unitId: revealed.id,
+        reason: "adjacency",
+        revealerId: mover.id,
+      })
+    );
   }
 
   return { state: nextState, events };

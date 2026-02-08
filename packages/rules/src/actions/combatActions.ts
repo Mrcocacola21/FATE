@@ -5,6 +5,7 @@ import { resolveAttack } from "../combat";
 import { canSpendSlots, spendSlots } from "../turnEconomy";
 import { clearPendingRoll, replacePendingRoll, requestRoll } from "./utils/rollUtils";
 import { isKaiser } from "./shared";
+import { HERO_FALSE_TRAIL_TOKEN_ID } from "../heroes";
 import { exitBunkerForUnit } from "./heroes/kaiser";
 import { getPolkovodetsSource } from "./heroes/vlad";
 import type { AttackRollContext } from "./types";
@@ -25,6 +26,9 @@ export function applyAttack(
   const attacker = state.units[action.attackerId];
   const defender = state.units[action.defenderId];
   if (!attacker || !defender) {
+    return { state, events: [] };
+  }
+  if (attacker.heroId === HERO_FALSE_TRAIL_TOKEN_ID) {
     return { state, events: [] };
   }
 
@@ -98,7 +102,8 @@ export function finalizeAttackFromContext(
 
   const sourceId =
     context.damageBonusSourceId ?? getPolkovodetsSource(state, context.attackerId);
-  const damageBonus = sourceId ? 1 : 0;
+  const polkovodetsBonus = sourceId ? 1 : 0;
+  const damageBonus = polkovodetsBonus;
 
   const { nextState, events } = resolveAttack(state, {
     attackerId: context.attackerId,
@@ -123,13 +128,13 @@ export function finalizeAttackFromContext(
     attackEvent &&
     attackEvent.type === "attackResolved" &&
     attackEvent.hit &&
-    damageBonus > 0 &&
+    polkovodetsBonus > 0 &&
     sourceId
   ) {
     updatedEvents.push(
       evDamageBonusApplied({
         unitId: context.attackerId,
-        amount: damageBonus,
+        amount: polkovodetsBonus,
         source: "polkovodets",
         fromUnitId: sourceId,
       })

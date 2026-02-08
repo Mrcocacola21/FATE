@@ -35,6 +35,7 @@ import {
   resolveAttackAttackerRoll,
   resolveAttackDefenderRoll,
   resolveBerserkerDefenseChoiceRoll,
+  resolveChikatiloDecoyChoice,
 } from "./resolvers/resolveAttackRoll";
 import {
   resolveVladForestChoice,
@@ -46,6 +47,12 @@ import {
   resolveEnterStealthRoll,
   resolveSearchStealthRoll,
 } from "./resolvers/resolveStealthRoll";
+import {
+  resolveChikatiloFalseTrailPlacement,
+  resolveChikatiloFalseTrailRevealChoice,
+  resolveFalseTrailExplosionAttackerRoll,
+  resolveFalseTrailExplosionDefenderRoll,
+} from "./resolvers/resolveChikatiloRoll";
 
 export function applyResolvePendingRoll(
   state: GameState,
@@ -153,6 +160,9 @@ export function applyResolvePendingRoll(
         rng
       );
     }
+    case "chikatiloDecoyChoice": {
+      return resolveChikatiloDecoyChoice(state, pending, action.choice, rng);
+    }
     case "dora_berserkerDefenseChoice": {
       return resolveDoraBerserkerDefenseChoice(state, pending, autoRollChoice, rng);
     }
@@ -184,6 +194,18 @@ export function applyResolvePendingRoll(
     }
     case "elCidDuelistChoice": {
       return resolveElCidDuelistChoice(state, pending, action.choice);
+    }
+    case "chikatiloFalseTrailPlacement": {
+      return resolveChikatiloFalseTrailPlacement(state, pending, action.choice);
+    }
+    case "chikatiloFalseTrailRevealChoice": {
+      return resolveChikatiloFalseTrailRevealChoice(state, pending, action.choice);
+    }
+    case "falseTrailExplosion_attackerRoll": {
+      return resolveFalseTrailExplosionAttackerRoll(state, pending, rng);
+    }
+    case "falseTrailExplosion_defenderRoll": {
+      return resolveFalseTrailExplosionDefenderRoll(state, pending, rng);
     }
     default:
       return { state: clearPendingRoll(state), events: [] };
