@@ -6881,12 +6881,16 @@ function testLechyGuideTravelerGatingAndBehavior() {
   const ally = Object.values(state.units).find(
     (u) => u.owner === "P1" && u.id !== lechy.id
   )!;
+  const enemy = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.id !== lechy.id
+  )!;
 
   state = setUnit(state, lechy.id, {
     position: { col: 4, row: 4 },
     charges: { ...lechy.charges, [ABILITY_LECHY_GUIDE_TRAVELER]: 1 },
   });
   state = setUnit(state, ally.id, { position: { col: 5, row: 4 } });
+  state = setUnit(state, enemy.id, { position: { col: 6, row: 4 } });
   state = toBattleState(state, "P1", lechy.id);
   state = initKnowledgeForOwners(state);
 
@@ -6905,6 +6909,47 @@ function testLechyGuideTravelerGatingAndBehavior() {
   assert(
     res.state.units[lechy.id].charges[ABILITY_LECHY_GUIDE_TRAVELER] === 1,
     "guide traveler charges should remain if not enough"
+  );
+
+  state = setUnit(state, lechy.id, {
+    charges: { ...state.units[lechy.id].charges, [ABILITY_LECHY_GUIDE_TRAVELER]: 2 },
+    turn: makeEmptyTurnEconomy(),
+  });
+  state = setUnit(state, ally.id, { position: { col: 8, row: 8 } });
+
+  res = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: lechy.id,
+      abilityId: ABILITY_LECHY_GUIDE_TRAVELER,
+      payload: { targetId: ally.id },
+    } as any,
+    rng
+  );
+  assert(
+    !res.state.pendingRoll,
+    "guide traveler should reject ally outside of range"
+  );
+  assert(
+    res.state.units[lechy.id].charges[ABILITY_LECHY_GUIDE_TRAVELER] === 2,
+    "charges should remain when ally out of range"
+  );
+
+  state = setUnit(state, ally.id, { position: { col: 5, row: 4 } });
+  res = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: lechy.id,
+      abilityId: ABILITY_LECHY_GUIDE_TRAVELER,
+      payload: { targetId: enemy.id },
+    } as any,
+    rng
+  );
+  assert(
+    !res.state.pendingRoll,
+    "guide traveler should reject enemy target"
   );
 
   state = setUnit(state, lechy.id, {
@@ -6961,6 +7006,22 @@ function testLechyGuideTravelerGatingAndBehavior() {
   );
   assert(allInRange, "guide traveler positions should be within trickster range");
 
+  const invalid = { col: lechyPos.col + 4, row: lechyPos.row + 4 };
+  const invalidAttempt = applyAction(
+    moved.state,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: pending!.id,
+      player: pending!.player,
+      choice: { type: "lechyGuideTravelerPlace", position: invalid },
+    } as any,
+    rng
+  );
+  assert(
+    invalidAttempt.state.pendingRoll?.kind === "lechyGuideTravelerPlacement",
+    "invalid placement should keep pending roll"
+  );
+
   const dest = (legalPositions ?? [])[0];
   const placed = applyAction(
     moved.state,
@@ -6990,6 +7051,72 @@ function testLechyGuideTravelerGatingAndBehavior() {
   assert(!placed.state.pendingRoll, "guide traveler pending roll should clear");
 
   console.log("lechy_guide_traveler_gating_and_behavior passed");
+}
+
+function testForestExitRestrictionOnFail() {
+  const rngFail = makeRngSequence([0.01]);
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1"));
+  state = attachArmy(state, createDefaultArmy("P2"));
+
+  const rider = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "rider"
+  )!;
+
+  state = setUnit(state, rider.id, { position: { col: 4, row: 4 } });
+  state = {
+    ...state,
+    forestMarker: { owner: "P1", position: { col: 4, row: 4 } },
+  };
+  state = toBattleState(state, "P1", rider.id);
+  state = initKnowledgeForOwners(state);
+
+  const moved = applyAction(
+    state,
+    { type: "move", unitId: rider.id, to: { col: 4, row: 8 } } as any,
+    rngFail
+  );
+
+  const riderAfter = moved.state.units[rider.id];
+  assert(
+    riderAfter.position?.col === 4 && riderAfter.position?.row === 6,
+    "failed exit roll should stop rider inside aura"
+  );
+
+  console.log("forest_exit_restriction_on_fail passed");
+}
+
+function testForestCrossRestrictionOnFail() {
+  const rngFail = makeRngSequence([0.01]);
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1"));
+  state = attachArmy(state, createDefaultArmy("P2"));
+
+  const rider = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "rider"
+  )!;
+
+  state = setUnit(state, rider.id, { position: { col: 0, row: 4 } });
+  state = {
+    ...state,
+    forestMarker: { owner: "P1", position: { col: 4, row: 4 } },
+  };
+  state = toBattleState(state, "P1", rider.id);
+  state = initKnowledgeForOwners(state);
+
+  const moved = applyAction(
+    state,
+    { type: "move", unitId: rider.id, to: { col: 8, row: 4 } } as any,
+    rngFail
+  );
+
+  const riderAfter = moved.state.units[rider.id];
+  assert(
+    riderAfter.position?.col === 6 && riderAfter.position?.row === 4,
+    "failed crossing roll should stop rider inside aura"
+  );
+
+  console.log("forest_cross_restriction_on_fail passed");
 }
 
 function testLechyConfuseTerrainSingleMarker() {
@@ -9630,6 +9757,8 @@ function main() {
   testLechyHpBonus();
   testLechyNaturalStealthThreshold();
   testLechyGuideTravelerGatingAndBehavior();
+  testForestExitRestrictionOnFail();
+  testForestCrossRestrictionOnFail();
   testLechyConfuseTerrainSingleMarker();
   testLechyStormGatingEffectsAndExemptions();
   testFalseTrailExplosionHitsAlliesAndEnemiesSingleRoll();
