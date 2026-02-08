@@ -313,7 +313,7 @@ const ABILITY_SPECS: Record<string, AbilitySpec> = {
   },
   [ABILITY_CHIKATILO_ASSASSIN_MARK]: {
     id: ABILITY_CHIKATILO_ASSASSIN_MARK,
-    displayName: "Assassin Mark",
+    displayName: "Assassin's Mark",
     kind: "active",
     description: "Without revealing his invisibility, Andrei Chikatilo can mark a creature within two squares. Marked targets are revealed to him at the start of his turn. If he hits a marked creature, he gains +1 damage to that attack.",
     actionCost: {
@@ -339,7 +339,7 @@ const ABILITY_SPECS: Record<string, AbilitySpec> = {
   },
   [ABILITY_FALSE_TRAIL_EXPLOSION]: {
     id: ABILITY_FALSE_TRAIL_EXPLOSION,
-    displayName: "False Trail Explosion",
+    displayName: "Explosion",
     kind: "active",
     description: "The False Trail Token detonates, attacking all units within 1 square. Each unit that fails takes 1 damage.",
     actionCost: {
@@ -738,9 +738,12 @@ export function getAbilityViewsForUnit(
 ): AbilityView[] {
   const unit = state.units[unitId];
   if (!unit || !unit.isAlive) return [];
-  if (unit.heroId === HERO_FALSE_TRAIL_TOKEN_ID) return [];
 
   const abilityIds: string[] = [];
+
+  if (unit.heroId === HERO_FALSE_TRAIL_TOKEN_ID) {
+    abilityIds.push(ABILITY_FALSE_TRAIL_EXPLOSION, ABILITY_FALSE_TRAIL_TRAP);
+  }
 
   if (
     unit.class === "berserker" ||
@@ -968,8 +971,6 @@ export function getAbilityViewsForUnit(
     );
   }
   
-
-
   return abilityIds
     .map((id) => {
       const spec = getAbilitySpec(id);

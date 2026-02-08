@@ -48,7 +48,10 @@ export function applyUseAbility(
   if (!unit || !unit.isAlive || !unit.position) {
     return { state, events: [] };
   }
-  if (unit.heroId === HERO_FALSE_TRAIL_TOKEN_ID) {
+  if (
+    unit.heroId === HERO_FALSE_TRAIL_TOKEN_ID &&
+    action.abilityId !== ABILITY_FALSE_TRAIL_EXPLOSION
+  ) {
     return { state, events: [] };
   }
 
