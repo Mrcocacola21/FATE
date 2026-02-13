@@ -4,19 +4,19 @@ import type {
   GameState,
   PlayerId,
   UnitState,
-} from "../../../model";
-import type { RNG } from "../../../rng";
-import { rollD6 } from "../../../rng";
-import { chebyshev } from "../../../board";
-import { getUnitDefinition } from "../../../units";
-import { HERO_LECHY_ID } from "../../../heroes";
-import { canSpendSlots, spendSlots } from "../../../turnEconomy";
-import { clearPendingRoll } from "../../utils/rollUtils";
+} from "../../model";
+import type { RNG } from "../../rng";
+import { rollD6 } from "../../rng";
+import { chebyshev } from "../../board";
+import { getUnitDefinition } from "../../units";
+import { HERO_LECHY_ID } from "../../heroes";
+import { canSpendSlots, spendSlots } from "../../turnEconomy";
+import { clearPendingRoll } from "../../shared/rollUtils";
 import {
   evSearchStealth,
   evStealthEntered,
   evStealthRevealed,
-} from "../../utils/events";
+} from "../../shared/events";
 
 export function resolveEnterStealthRoll(
   state: GameState,

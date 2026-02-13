@@ -15,7 +15,7 @@ import {
   requestChikatiloPlacement,
   setupChikatiloFalseTrailAtBattleStart,
 } from "./heroes/chikatilo";
-import { evBattleStarted, evUnitPlaced } from "./utils/events";
+import { evBattleStarted, evUnitPlaced } from "../shared/events";
 
 function getOwnerOfStartingUnit(
   state: GameState,

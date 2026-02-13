@@ -10,7 +10,7 @@ import {
 } from "../../abilities";
 import { canSpendSlots, spendSlots } from "../../turnEconomy";
 import { getLegalMovesForUnitModes } from "../../movement";
-import { evAbilityUsed, evMoveOptionsGenerated } from "../utils/events";
+import { evAbilityUsed, evMoveOptionsGenerated } from "../../shared/events";
 
 function buildLineMoves(state: GameState, unit: UnitState, dirs: { col: number; row: number }[]) {
   const res: { col: number; row: number }[] = [];

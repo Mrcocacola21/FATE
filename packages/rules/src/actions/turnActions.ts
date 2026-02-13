@@ -26,7 +26,7 @@ import {
   maybeTriggerVladForestChoice,
   maybeTriggerVladTurnStakes,
 } from "./heroes/vlad";
-import { evGameEnded, evRoundStarted, evTurnStarted } from "./utils/events";
+import { evGameEnded, evRoundStarted, evTurnStarted } from "../shared/events";
 
 function nextPlayer(player: PlayerId): PlayerId {
   return player === "P1" ? "P2" : "P1";

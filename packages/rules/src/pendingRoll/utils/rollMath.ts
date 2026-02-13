@@ -1,5 +1,5 @@
-import type { RNG } from "../../../rng";
-import { rollD6 } from "../../../rng";
+import type { RNG } from "../../rng";
+import { rollD6 } from "../../rng";
 
 export function rollDice(rng: RNG, count: number): number[] {
   const rolls: number[] = [];

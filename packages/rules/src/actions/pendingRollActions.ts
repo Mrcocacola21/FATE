@@ -1,1 +1,1 @@
-export { applyResolvePendingRoll } from "./pendingRoll";
+export { applyResolvePendingRoll } from "../pendingRoll";

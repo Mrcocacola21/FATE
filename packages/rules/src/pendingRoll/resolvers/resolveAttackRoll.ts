@@ -6,26 +6,26 @@ import type {
   ResolveRollChoice,
   RollKind,
   UnitState,
-} from "../../../model";
-import type { RNG } from "../../../rng";
-import { canAttackTarget, resolveAttack } from "../../../combat";
+} from "../../model";
+import type { RNG } from "../../rng";
+import { canAttackTarget, resolveAttack } from "../../combat";
 import {
   ABILITY_BERSERK_AUTO_DEFENSE,
   ABILITY_CHIKATILO_DECOY,
   getCharges,
   spendCharges,
-} from "../../../abilities";
-import { canSpendSlots, spendSlots } from "../../../turnEconomy";
-import { clearPendingRoll, requestRoll } from "../../utils/rollUtils";
-import { getPolkovodetsSource, maybeRequestIntimidate } from "../../heroes/vlad";
-import { isElCid } from "../../shared";
-import { handleGroznyTyrantAfterAttack } from "../../heroes/grozny";
-import { HERO_CHIKATILO_ID } from "../../../heroes";
+} from "../../abilities";
+import { canSpendSlots, spendSlots } from "../../turnEconomy";
+import { clearPendingRoll, requestRoll } from "../../shared/rollUtils";
+import { getPolkovodetsSource, maybeRequestIntimidate } from "../../actions/heroes/vlad";
+import { isElCid } from "../../actions/shared";
+import { handleGroznyTyrantAfterAttack } from "../../actions/heroes/grozny";
+import { HERO_CHIKATILO_ID } from "../../heroes";
 import {
   evAoeResolved,
   evBerserkerDefenseChosen,
   evDamageBonusApplied,
-} from "../../utils/events";
+} from "../../shared/events";
 import type { AttackRollContext } from "../types";
 import { makeAttackContext, replacePendingRoll } from "../builders/buildPendingRoll";
 import { findAttackResolved } from "../utils/attackEvents";

@@ -4,15 +4,15 @@ import type {
   GameState,
   PendingRoll,
   PlayerId,
-} from "../../../model";
-import type { RNG } from "../../../rng";
-import { roll2D6 } from "../../../rng";
-import { clearPendingRoll, requestInitiativeRoll } from "../../utils/rollUtils";
+} from "../../model";
+import type { RNG } from "../../rng";
+import { roll2D6 } from "../../rng";
+import { clearPendingRoll, requestInitiativeRoll } from "../../shared/rollUtils";
 import {
   evInitiativeRolled,
   evInitiativeResolved,
   evPlacementStarted,
-} from "../../utils/events";
+} from "../../shared/events";
 
 export function resolveInitiativeRoll(
   state: GameState,

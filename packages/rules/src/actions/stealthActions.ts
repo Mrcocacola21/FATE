@@ -5,8 +5,8 @@ import { chebyshev } from "../board";
 import { canSpendSlots, spendSlots } from "../turnEconomy";
 import { isKaiser, isKaiserTransformed } from "./shared";
 import { HERO_FALSE_TRAIL_TOKEN_ID, HERO_LECHY_ID } from "../heroes";
-import { requestRoll } from "./utils/rollUtils";
-import { evSearchStealth, evStealthEntered } from "./utils/events";
+import { requestRoll } from "../shared/rollUtils";
+import { evSearchStealth, evStealthEntered } from "../shared/events";
 
 export function applyEnterStealth(
   state: GameState,

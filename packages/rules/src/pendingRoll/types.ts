@@ -1,4 +1,4 @@
-import type { Coord, StealthRevealReason } from "../../model";
+import type { Coord, StealthRevealReason } from "../model";
 
 export interface CarpetStrikeAoEContext extends Record<string, unknown> {
   casterId: string;

@@ -29,8 +29,8 @@ import { canSpendSlots, spendSlots } from "../../turnEconomy";
 import { rollD6 } from "../../rng";
 import { getLegalMovesForUnitModes } from "../../movement";
 import { getMovementModes, unitHasMovementMode } from "../shared";
-import { requestRoll, clearPendingRoll } from "../utils/rollUtils";
-import { evAbilityUsed, evMoveOptionsGenerated, evUnitDied, evUnitMoved } from "../utils/events";
+import { requestRoll, clearPendingRoll } from "../../shared/rollUtils";
+import { evAbilityUsed, evMoveOptionsGenerated, evUnitDied, evUnitMoved } from "../../shared/events";
 
 function getEmptyCellsInAura(state: GameState, origin: Coord): Coord[] {
   const positions: Coord[] = [];

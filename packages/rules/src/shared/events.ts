@@ -6,7 +6,7 @@ import type {
   RollKind,
   SearchStealthMode,
   StealthRevealReason,
-} from "../../model";
+} from "../model";
 
 type RollRequestedEvent = Extract<GameEvent, { type: "rollRequested" }>;
 type InitiativeRollRequestedEvent = Extract<

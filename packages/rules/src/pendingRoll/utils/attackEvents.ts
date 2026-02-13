@@ -1,4 +1,4 @@
-import type { GameEvent } from "../../../model";
+import type { GameEvent } from "../../model";
 
 export function findAttackResolved(
   events: GameEvent[],

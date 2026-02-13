@@ -3,14 +3,14 @@ import type { RNG } from "../rng";
 import { rollD6 } from "../rng";
 import { resolveAttack } from "../combat";
 import { canSpendSlots, spendSlots } from "../turnEconomy";
-import { clearPendingRoll, replacePendingRoll, requestRoll } from "./utils/rollUtils";
+import { clearPendingRoll, replacePendingRoll, requestRoll } from "../shared/rollUtils";
 import { isKaiser } from "./shared";
 import { HERO_FALSE_TRAIL_TOKEN_ID } from "../heroes";
 import { exitBunkerForUnit } from "./heroes/kaiser";
 import { getPolkovodetsSource } from "./heroes/vlad";
 import type { AttackRollContext } from "./types";
-import { makeAttackContext } from "./utils/combatCtx";
-import { evAoeResolved, evDamageBonusApplied } from "./utils/events";
+import { makeAttackContext } from "../shared/combatCtx";
+import { evAoeResolved, evDamageBonusApplied } from "../shared/events";
 
 export { makeAttackContext };
 

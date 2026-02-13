@@ -1,2 +1,2 @@
-export * from "./utils/stakeUtils";
+export * from "../shared/stakeUtils";
 

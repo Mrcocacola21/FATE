@@ -1,2 +1,2 @@
-export * from "./utils/rollUtils";
+export * from "../shared/rollUtils";
 

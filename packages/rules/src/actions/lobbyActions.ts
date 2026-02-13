@@ -1,8 +1,8 @@
 import type { ApplyResult, GameAction, GameEvent, GameState } from "../model";
 import type { RNG } from "../rng";
 import { roll2D6Sum } from "./shared";
-import { requestInitiativeRoll } from "./utils/rollUtils";
-import { evInitiativeResolved, evPlacementStarted } from "./utils/events";
+import { requestInitiativeRoll } from "../shared/rollUtils";
+import { evInitiativeResolved, evPlacementStarted } from "../shared/events";
 
 type LobbyInitPayload = Extract<GameAction, { type: "lobbyInit" }> & {
   seats?: GameState["seats"];

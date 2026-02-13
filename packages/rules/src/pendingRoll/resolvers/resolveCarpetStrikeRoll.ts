@@ -1,19 +1,29 @@
-import type { ApplyResult, GameEvent, GameState, PendingRoll } from "../../../model";
-import type { RNG } from "../../../rng";
-import { resolveAttack } from "../../../combat";
-import { ABILITY_BERSERK_AUTO_DEFENSE } from "../../../abilities";
-import { clearPendingRoll, requestRoll } from "../../utils/rollUtils";
-import { getPolkovodetsSource, maybeRequestIntimidate } from "../../heroes/vlad";
-import type { IntimidateResume } from "../../types";
+import type { ApplyResult, GameEvent, GameState, PendingRoll } from "../../model";
+import type { RNG } from "../../rng";
+import { resolveAoE } from "../../aoe";
+import { resolveAttack } from "../../combat";
+import {
+  ABILITY_BERSERK_AUTO_DEFENSE,
+  ABILITY_KAISER_CARPET_STRIKE,
+} from "../../abilities";
+import { clearPendingRoll, requestRoll } from "../../shared/rollUtils";
+import { maybeRequestIntimidate } from "../../actions/heroes/vlad";
+import { isKaiserTransformed, map2d9ToCoord, rollD9 } from "../../actions/shared";
+import type { IntimidateResume } from "../../actions/types";
 import {
   evAoeResolved,
   evBerserkerDefenseChosen,
-  evDamageBonusApplied,
-} from "../../utils/events";
-import type { ForestAoEContext } from "../types";
-import { rollDice } from "../utils/rollMath";
+  evCarpetStrikeAttackRolled,
+  evCarpetStrikeCenter,
+} from "../../shared/events";
+import type { CarpetStrikeAoEContext } from "../types";
+import { replacePendingRoll } from "../builders/buildPendingRoll";
+import { rollDice, sumDice } from "../utils/rollMath";
 
-function finalizeForestAoE(state: GameState, events: GameEvent[]): ApplyResult {
+function finalizeCarpetStrikeAoE(
+  state: GameState,
+  events: GameEvent[]
+): ApplyResult {
   if (!state.pendingAoE) {
     return { state: clearPendingRoll(state), events };
   }
@@ -39,9 +49,9 @@ function finalizeForestAoE(state: GameState, events: GameEvent[]): ApplyResult {
   };
 }
 
-export function advanceForestAoEQueue(
+export function advanceCarpetStrikeQueue(
   state: GameState,
-  context: ForestAoEContext,
+  context: CarpetStrikeAoEContext,
   events: GameEvent[]
 ): ApplyResult {
   const baseState = clearPendingRoll(state);
@@ -54,69 +64,165 @@ export function advanceForestAoEQueue(
     const targetId = targets[idx];
     const target = baseState.units[targetId];
     if (target && target.isAlive) {
-      const nextCtx: ForestAoEContext = {
+      const nextCtx: CarpetStrikeAoEContext = {
         ...context,
         currentTargetIndex: idx,
       };
+      const attackerDice = Array.isArray(nextCtx.attackerDice)
+        ? nextCtx.attackerDice
+        : [];
       const charges = target.charges?.[ABILITY_BERSERK_AUTO_DEFENSE] ?? 0;
-      if (target.class === "berserker" && charges === 6) {
+      if (target.class === "berserker" && charges === 6 && attackerDice.length >= 2) {
         const requested = requestRoll(
           baseState,
           target.owner,
-          "vladForest_berserkerDefenseChoice",
+          "carpetStrike_berserkerDefenseChoice",
           nextCtx,
           target.id
         );
-        return {
-          state: requested.state,
-          events: [...events, ...requested.events],
-        };
+        return { state: requested.state, events: [...events, ...requested.events] };
       }
       const requested = requestRoll(
         baseState,
         target.owner,
-        "vladForest_defenderRoll",
+        "carpetStrike_defenderRoll",
         nextCtx,
         target.id
       );
-      return {
-        state: requested.state,
-        events: [...events, ...requested.events],
-      };
+      return { state: requested.state, events: [...events, ...requested.events] };
     }
     idx += 1;
   }
 
-  return finalizeForestAoE(baseState, events);
+  return finalizeCarpetStrikeAoE(baseState, events);
 }
 
-export function resolveForestAttackerRoll(
+export function resolveCarpetStrikeCenterRoll(
   state: GameState,
   pending: PendingRoll,
   rng: RNG
 ): ApplyResult {
-  const ctx = pending.context as unknown as ForestAoEContext;
+  const unitId = pending.context.unitId as string | undefined;
+  if (!unitId) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  const caster = state.units[unitId];
+  if (!caster || !caster.isAlive || !caster.position) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  const d1 = rollD9(rng);
+  const d2 = rollD9(rng);
+  const center = map2d9ToCoord(state, d1, d2);
+
+  const aoeRes = resolveAoE(
+    state,
+    caster.id,
+    center,
+    {
+      radius: 2,
+      shape: "chebyshev",
+      revealHidden: true,
+      abilityId: ABILITY_KAISER_CARPET_STRIKE,
+      emitEvent: false,
+    },
+    rng
+  );
+
+  let affectedUnitIds = aoeRes.affectedUnitIds.filter((id) => {
+    const unit = aoeRes.nextState.units[id];
+    if (!unit || !unit.isAlive) return false;
+    if (isKaiserTransformed(unit)) return false;
+    if (unit.id === caster.id && caster.bunker?.active) return false;
+    return true;
+  });
+
+  affectedUnitIds = [...affectedUnitIds].sort();
+
+  const nextState: GameState = {
+    ...aoeRes.nextState,
+    pendingAoE: {
+      casterId: caster.id,
+      abilityId: ABILITY_KAISER_CARPET_STRIKE,
+      center,
+      radius: 2,
+      affectedUnitIds,
+      revealedUnitIds: aoeRes.revealedUnitIds,
+      damagedUnitIds: [],
+      damageByUnitId: {},
+    },
+  };
+
+  const events: GameEvent[] = [
+    ...aoeRes.events,
+    evCarpetStrikeCenter({
+      unitId: caster.id,
+      dice: [d1, d2],
+      sum: d1 + d2,
+      center,
+      area: { shape: "square", radius: 2 },
+    }),
+  ];
+
+  const ctx: CarpetStrikeAoEContext = {
+    casterId: caster.id,
+    center,
+    targetsQueue: affectedUnitIds,
+    currentTargetIndex: 0,
+  };
+
+  const requested = replacePendingRoll(
+    nextState,
+    caster.owner,
+    "kaiserCarpetStrikeAttack",
+    ctx,
+    caster.id
+  );
+
+  return { state: requested.state, events: [...events, ...requested.events] };
+}
+
+export function resolveCarpetStrikeAttackRoll(
+  state: GameState,
+  pending: PendingRoll,
+  rng: RNG
+): ApplyResult {
+  const ctx = pending.context as unknown as CarpetStrikeAoEContext;
   const caster = state.units[ctx.casterId];
   if (!caster) {
     return { state: clearPendingRoll(state), events: [] };
   }
 
   const attackerDice = rollDice(rng, 2);
-  const nextCtx: ForestAoEContext = {
+  const sum = sumDice(attackerDice);
+  const affectedUnitIds = Array.isArray(ctx.targetsQueue) ? ctx.targetsQueue : [];
+
+  const events: GameEvent[] = [
+    evCarpetStrikeAttackRolled({
+      unitId: caster.id,
+      dice: attackerDice,
+      sum,
+      center: ctx.center,
+      affectedUnitIds,
+    }),
+  ];
+
+  const nextCtx: CarpetStrikeAoEContext = {
     ...ctx,
     attackerDice,
     currentTargetIndex: ctx.currentTargetIndex ?? 0,
   };
 
-  return advanceForestAoEQueue(state, nextCtx, []);
+  return advanceCarpetStrikeQueue(state, nextCtx, events);
 }
 
-export function resolveForestDefenderRoll(
+export function resolveCarpetStrikeDefenderRoll(
   state: GameState,
   pending: PendingRoll,
   rng: RNG
 ): ApplyResult {
-  const ctx = pending.context as unknown as ForestAoEContext;
+  const ctx = pending.context as unknown as CarpetStrikeAoEContext;
   const caster = state.units[ctx.casterId];
   if (!caster) {
     return { state: clearPendingRoll(state), events: [] };
@@ -131,22 +237,19 @@ export function resolveForestDefenderRoll(
   const idx = ctx.currentTargetIndex ?? 0;
   const targetId = targets[idx];
   if (!targetId) {
-    return finalizeForestAoE(clearPendingRoll(state), []);
+    return finalizeCarpetStrikeAoE(clearPendingRoll(state), []);
   }
 
   const target = state.units[targetId];
   if (!target || !target.isAlive) {
-    const nextCtx: ForestAoEContext = {
+    const nextCtx: CarpetStrikeAoEContext = {
       ...ctx,
       currentTargetIndex: idx + 1,
-      attackerDice,
     };
-    return advanceForestAoEQueue(state, nextCtx, []);
+    return advanceCarpetStrikeQueue(state, nextCtx, []);
   }
 
   const defenderDice = rollDice(rng, 2);
-  const sourceId = getPolkovodetsSource(state, caster.id);
-  const damageBonus = sourceId ? 1 : 0;
   const { nextState, events } = resolveAttack(state, {
     attackerId: caster.id,
     defenderId: targetId,
@@ -154,14 +257,14 @@ export function resolveForestDefenderRoll(
     ignoreStealth: true,
     revealStealthedAllies: true,
     revealReason: "aoeHit",
-    damageOverride: 2,
-    damageBonus,
+    damageOverride: 1,
     rolls: {
       attackerDice,
       defenderDice,
     },
   });
 
+  let updatedState = nextState;
   let updatedEvents = [...events];
   const attackEvent = events.find(
     (e) =>
@@ -169,45 +272,6 @@ export function resolveForestDefenderRoll(
       e.attackerId === caster.id &&
       e.defenderId === targetId
   );
-
-  if (
-    attackEvent &&
-    attackEvent.type === "attackResolved" &&
-    attackEvent.hit &&
-    damageBonus > 0 &&
-    sourceId
-  ) {
-    updatedEvents.push(
-      evDamageBonusApplied({
-        unitId: caster.id,
-        amount: damageBonus,
-        source: "polkovodets",
-        fromUnitId: sourceId,
-      })
-    );
-  }
-
-  let updatedState = nextState;
-  if (
-    attackEvent &&
-    attackEvent.type === "attackResolved" &&
-    attackEvent.hit
-  ) {
-    const hitUnit = updatedState.units[targetId];
-    if (hitUnit) {
-      updatedState = {
-        ...updatedState,
-        units: {
-          ...updatedState.units,
-          [hitUnit.id]: {
-            ...hitUnit,
-            movementDisabledNextTurn: true,
-          },
-        },
-      };
-    }
-  }
-
   if (attackEvent && attackEvent.type === "attackResolved" && updatedState.pendingAoE) {
     let nextPendingAoE = updatedState.pendingAoE;
     if (attackEvent.damage > 0) {
@@ -241,14 +305,14 @@ export function resolveForestDefenderRoll(
     }
   }
 
-  const nextCtx: ForestAoEContext = {
+  const nextCtx: CarpetStrikeAoEContext = {
     ...ctx,
     currentTargetIndex: idx + 1,
     attackerDice,
   };
 
   const intimidateResume: IntimidateResume = {
-    kind: "forestAoE",
+    kind: "carpetStrike",
     context: nextCtx as unknown as Record<string, unknown>,
   };
   const intimidate = maybeRequestIntimidate(
@@ -262,16 +326,16 @@ export function resolveForestDefenderRoll(
     return { state: intimidate.state, events: intimidate.events };
   }
 
-  return advanceForestAoEQueue(updatedState, nextCtx, updatedEvents);
+  return advanceCarpetStrikeQueue(updatedState, nextCtx, updatedEvents);
 }
 
-export function resolveForestBerserkerDefenseChoice(
+export function resolveCarpetStrikeBerserkerDefenseChoice(
   state: GameState,
   pending: PendingRoll,
   choice: "auto" | "roll" | undefined,
   rng: RNG
 ): ApplyResult {
-  const ctx = pending.context as unknown as ForestAoEContext;
+  const ctx = pending.context as unknown as CarpetStrikeAoEContext;
   const caster = state.units[ctx.casterId];
   if (!caster) {
     return { state: clearPendingRoll(state), events: [] };
@@ -286,17 +350,16 @@ export function resolveForestBerserkerDefenseChoice(
   const idx = ctx.currentTargetIndex ?? 0;
   const targetId = targets[idx];
   if (!targetId) {
-    return finalizeForestAoE(clearPendingRoll(state), []);
+    return finalizeCarpetStrikeAoE(clearPendingRoll(state), []);
   }
 
   const target = state.units[targetId];
   if (!target || !target.isAlive) {
-    const nextCtx: ForestAoEContext = {
+    const nextCtx: CarpetStrikeAoEContext = {
       ...ctx,
       currentTargetIndex: idx + 1,
-      attackerDice,
     };
-    return advanceForestAoEQueue(state, nextCtx, []);
+    return advanceCarpetStrikeQueue(state, nextCtx, []);
   }
 
   let selected: "auto" | "roll" = choice ?? "roll";
@@ -308,7 +371,7 @@ export function resolveForestBerserkerDefenseChoice(
   }
 
   if (selected === "roll") {
-    const nextCtx: ForestAoEContext = {
+    const nextCtx: CarpetStrikeAoEContext = {
       ...ctx,
       currentTargetIndex: idx,
       attackerDice,
@@ -316,7 +379,7 @@ export function resolveForestBerserkerDefenseChoice(
     const requested = requestRoll(
       clearPendingRoll(state),
       target.owner,
-      "vladForest_defenderRoll",
+      "carpetStrike_defenderRoll",
       nextCtx,
       target.id
     );
@@ -327,8 +390,6 @@ export function resolveForestBerserkerDefenseChoice(
     return { state: requested.state, events: choiceEvents };
   }
 
-  const sourceId = getPolkovodetsSource(state, caster.id);
-  const damageBonus = sourceId ? 1 : 0;
   const { nextState, events } = resolveAttack(state, {
     attackerId: caster.id,
     defenderId: target.id,
@@ -337,14 +398,14 @@ export function resolveForestBerserkerDefenseChoice(
     revealStealthedAllies: true,
     revealReason: "aoeHit",
     defenderUseBerserkAutoDefense: true,
-    damageOverride: 2,
-    damageBonus,
+    damageOverride: 1,
     rolls: {
       attackerDice,
       defenderDice: [],
     },
   });
 
+  let updatedState = nextState;
   let updatedEvents: GameEvent[] = [
     evBerserkerDefenseChosen({ defenderId: target.id, choice: "auto" }),
     ...events,
@@ -355,44 +416,6 @@ export function resolveForestBerserkerDefenseChoice(
       e.attackerId === caster.id &&
       e.defenderId === target.id
   );
-  if (
-    attackEvent &&
-    attackEvent.type === "attackResolved" &&
-    attackEvent.hit &&
-    damageBonus > 0 &&
-    sourceId
-  ) {
-    updatedEvents.push(
-      evDamageBonusApplied({
-        unitId: caster.id,
-        amount: damageBonus,
-        source: "polkovodets",
-        fromUnitId: sourceId,
-      })
-    );
-  }
-
-  let updatedState = nextState;
-  if (
-    attackEvent &&
-    attackEvent.type === "attackResolved" &&
-    attackEvent.hit
-  ) {
-    const hitUnit = updatedState.units[target.id];
-    if (hitUnit) {
-      updatedState = {
-        ...updatedState,
-        units: {
-          ...updatedState.units,
-          [hitUnit.id]: {
-            ...hitUnit,
-            movementDisabledNextTurn: true,
-          },
-        },
-      };
-    }
-  }
-
   if (attackEvent && attackEvent.type === "attackResolved" && updatedState.pendingAoE) {
     let nextPendingAoE = updatedState.pendingAoE;
     if (attackEvent.damage > 0) {
@@ -426,14 +449,14 @@ export function resolveForestBerserkerDefenseChoice(
     }
   }
 
-  const nextCtx: ForestAoEContext = {
+  const nextCtx: CarpetStrikeAoEContext = {
     ...ctx,
     currentTargetIndex: idx + 1,
     attackerDice,
   };
 
   const intimidateResume: IntimidateResume = {
-    kind: "forestAoE",
+    kind: "carpetStrike",
     context: nextCtx as unknown as Record<string, unknown>,
   };
   const intimidate = maybeRequestIntimidate(
@@ -447,5 +470,5 @@ export function resolveForestBerserkerDefenseChoice(
     return { state: intimidate.state, events: intimidate.events };
   }
 
-  return advanceForestAoEQueue(updatedState, nextCtx, updatedEvents);
+  return advanceCarpetStrikeQueue(updatedState, nextCtx, updatedEvents);
 }

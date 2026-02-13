@@ -1,6 +1,6 @@
 import type { Coord, GameEvent, GameState, PlayerId, UnitState } from "../../model";
 import { chebyshev, getUnitAt } from "../../board";
-import { clearPendingRoll, requestRoll } from "../utils/rollUtils";
+import { clearPendingRoll, requestRoll } from "../../shared/rollUtils";
 import {
   isVlad,
   isElCid,
@@ -14,10 +14,10 @@ import {
   getStakeMarkersAt,
   hasRevealedStakeAt,
   isStakeBlockedByHiddenUnit,
-} from "../utils/stakeUtils";
+} from "../../shared/stakeUtils";
 import type { ApplyResult } from "../../model";
 import type { IntimidateResume } from "../types";
-import { evForestActivated, evIntimidateTriggered } from "../utils/events";
+import { evForestActivated, evIntimidateTriggered } from "../../shared/events";
 import { HERO_FALSE_TRAIL_TOKEN_ID } from "../../heroes";
 
 export function getPolkovodetsSource(

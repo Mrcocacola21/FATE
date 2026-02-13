@@ -1,4 +1,17 @@
+import type { ApplyResult, GameState, PlayerId, RollKind } from "../../model";
+import { clearPendingRoll, requestRoll } from "../../shared/rollUtils";
 import type { AttackRollContext } from "../types";
+
+export function replacePendingRoll(
+  state: GameState,
+  player: PlayerId,
+  kind: RollKind,
+  context: Record<string, unknown>,
+  actorUnitId?: string
+): ApplyResult {
+  const baseState = clearPendingRoll(state);
+  return requestRoll(baseState, player, kind, context, actorUnitId);
+}
 
 export function makeAttackContext(params: {
   attackerId: string;
@@ -23,7 +36,6 @@ export function makeAttackContext(params: {
     tieBreakDefender: [],
     stage: "initial",
     berserkerChoiceMade: false,
-    chikatiloDecoyChoiceMade: false,
     consumeSlots: params.consumeSlots,
     queueKind: params.queueKind,
   };

@@ -6,21 +6,21 @@ import type {
   PendingRoll,
   PlayerId,
   ResolveRollChoice,
-} from "../../../model";
-import { isInsideBoard } from "../../../model";
-import type { RNG } from "../../../rng";
-import { coordsEqual } from "../../../board";
-import { resolveAoE } from "../../../aoe";
-import { revealUnit } from "../../../stealth";
-import { ABILITY_VLAD_FOREST } from "../../../abilities";
-import { clearPendingRoll, requestRoll } from "../../utils/rollUtils";
-import { applyStakeTriggerIfAny, getLegalStakePositions } from "../../utils/stakeUtils";
+} from "../../model";
+import { isInsideBoard } from "../../model";
+import type { RNG } from "../../rng";
+import { coordsEqual } from "../../board";
+import { resolveAoE } from "../../aoe";
+import { revealUnit } from "../../stealth";
+import { ABILITY_VLAD_FOREST } from "../../abilities";
+import { clearPendingRoll, requestRoll } from "../../shared/rollUtils";
+import { applyStakeTriggerIfAny, getLegalStakePositions } from "../../shared/stakeUtils";
 import {
   activateVladForest,
   requestVladStakesPlacement,
-} from "../../heroes/vlad";
-import type { IntimidateResume } from "../../types";
-import { evAoeResolved, evIntimidateResolved, evStakesPlaced } from "../../utils/events";
+} from "../../actions/heroes/vlad";
+import type { IntimidateResume } from "../../actions/types";
+import { evAoeResolved, evIntimidateResolved, evStakesPlaced } from "../../shared/events";
 import type {
   CarpetStrikeAoEContext,
   DoraAoEContext,

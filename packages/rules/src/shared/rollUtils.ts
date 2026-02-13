@@ -5,7 +5,7 @@ import type {
   PendingRoll,
   PlayerId,
   RollKind,
-} from "../../model";
+} from "../model";
 import { evInitiativeRollRequested, evRollRequested } from "./events";
 
 export function requestRoll(

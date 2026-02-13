@@ -4,16 +4,16 @@ import type {
   GameState,
   MoveMode,
   PendingMove,
-} from "../../../model";
-import type { RNG } from "../../../rng";
-import { rollD6 } from "../../../rng";
+} from "../../model";
+import type { RNG } from "../../rng";
+import { rollD6 } from "../../rng";
 import {
   getBerserkerMovesForRoll,
   getTricksterMovesForRoll,
-} from "../../../movement";
-import { canSpendSlots } from "../../../turnEconomy";
-import { clearPendingRoll } from "../../utils/rollUtils";
-import { evMoveBlocked, evMoveOptionsGenerated } from "../../utils/events";
+} from "../../movement";
+import { canSpendSlots } from "../../turnEconomy";
+import { clearPendingRoll } from "../../shared/rollUtils";
+import { evMoveBlocked, evMoveOptionsGenerated } from "../../shared/events";
 
 export function resolveMoveOptionsRoll(
   state: GameState,

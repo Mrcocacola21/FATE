@@ -1,8 +1,8 @@
-import type { Coord, GameEvent, GameState, StakeMarker, UnitState } from "../../model";
-import { coordsEqual, getUnitAt } from "../../board";
-import { revealUnit } from "../../stealth";
-import type { RNG } from "../../rng";
-import { isUnitVisibleToPlayer } from "../shared";
+import type { Coord, GameEvent, GameState, StakeMarker, UnitState } from "../model";
+import { coordsEqual, getUnitAt } from "../board";
+import { revealUnit } from "../stealth";
+import type { RNG } from "../rng";
+import { isUnitVisibleToPlayer } from "../actions/shared";
 import { evStakeTriggered, evUnitDied } from "./events";
 
 export function getLegalStakePositions(

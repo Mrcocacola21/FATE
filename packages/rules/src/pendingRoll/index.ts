@@ -1,6 +1,6 @@
-import type { ApplyResult, GameAction, GameState } from "../../model";
-import type { RNG } from "../../rng";
-import { clearPendingRoll } from "../utils/rollUtils";
+import type { ApplyResult, GameAction, GameState } from "../model";
+import type { RNG } from "../rng";
+import { clearPendingRoll } from "../shared/rollUtils";
 import { resolveEnterBunkerRoll } from "./resolvers/resolveBunkerRoll";
 import { resolveInitiativeRoll } from "./resolvers/resolveInitiativeRoll";
 import { resolveMoveOptionsRoll } from "./resolvers/resolveMoveOptionsRoll";
@@ -53,11 +53,11 @@ import {
   resolveFalseTrailExplosionAttackerRoll,
   resolveFalseTrailExplosionDefenderRoll,
 } from "./resolvers/resolveChikatiloRoll";
-import { resolveLechyGuideTravelerPlacement } from "../heroes/lechy";
+import { resolveLechyGuideTravelerPlacement } from "../actions/heroes/lechy";
 import {
   resolveForestMoveCheckRoll,
   resolveForestMoveDestinationChoice,
-} from "../movementActions";
+} from "../actions/movementActions";
 
 export function applyResolvePendingRoll(
   state: GameState,

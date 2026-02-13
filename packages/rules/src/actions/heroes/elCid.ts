@@ -13,10 +13,10 @@ import {
   spendCharges,
 } from "../../abilities";
 import { canSpendSlots, spendSlots } from "../../turnEconomy";
-import { requestRoll } from "../utils/rollUtils";
-import { evAbilityUsed, evAoeResolved } from "../utils/events";
+import { requestRoll } from "../../shared/rollUtils";
+import { evAbilityUsed, evAoeResolved } from "../../shared/events";
 import { isElCid } from "../shared";
-import { makeAttackContext } from "../utils/combatCtx";
+import { makeAttackContext } from "../../shared/combatCtx";
 import type { ElCidAoEContext } from "../types";
 
 interface LinePayload {

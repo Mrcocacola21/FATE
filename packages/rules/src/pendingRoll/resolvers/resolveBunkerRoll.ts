@@ -1,9 +1,9 @@
-import type { ApplyResult, GameEvent, GameState, UnitState } from "../../../model";
-import type { RNG } from "../../../rng";
-import { rollD6 } from "../../../rng";
-import { canSpendSlots, spendSlots } from "../../../turnEconomy";
-import { clearPendingRoll } from "../../utils/rollUtils";
-import { evBunkerEntered, evBunkerEnterFailed } from "../../utils/events";
+import type { ApplyResult, GameEvent, GameState, UnitState } from "../../model";
+import type { RNG } from "../../rng";
+import { rollD6 } from "../../rng";
+import { canSpendSlots, spendSlots } from "../../turnEconomy";
+import { clearPendingRoll } from "../../shared/rollUtils";
+import { evBunkerEntered, evBunkerEnterFailed } from "../../shared/events";
 
 export function resolveEnterBunkerRoll(
   state: GameState,

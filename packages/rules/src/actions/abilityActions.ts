@@ -24,8 +24,8 @@ import {
   spendCharges,
 } from "../abilities";
 import { canSpendSlots, spendSlots } from "../turnEconomy";
-import { requestRoll } from "./utils/rollUtils";
-import { evAbilityUsed, evAoeResolved } from "./utils/events";
+import { requestRoll } from "../shared/rollUtils";
+import { evAbilityUsed, evAoeResolved } from "../shared/events";
 import { applyKaiserDora } from "./heroes/kaiser";
 import { applyElCidDemonDuelist, applyElCidTisona } from "./heroes/elCid";
 import { applyKhansDecree, applyMongolCharge } from "./heroes/genghisKhan";

@@ -13,13 +13,13 @@ import {
   spendCharges,
 } from "../../abilities";
 import { canSpendSlots, spendSlots } from "../../turnEconomy";
-import { clearPendingRoll, requestRoll } from "../utils/rollUtils";
+import { clearPendingRoll, requestRoll } from "../../shared/rollUtils";
 import {
   evAbilityUsed,
   evAoeResolved,
   evBunkerExited,
   evCarpetStrikeTriggered,
-} from "../utils/events";
+} from "../../shared/events";
 import {
   getUnitBaseMaxHp,
   isKaiser,

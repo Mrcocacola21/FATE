@@ -6,20 +6,20 @@ import type {
   PendingRoll,
   ResolveRollChoice,
   UnitState,
-} from "../../../model";
-import { isInsideBoard } from "../../../model";
-import type { RNG } from "../../../rng";
-import { getUnitAt } from "../../../board";
-import { resolveAttack } from "../../../combat";
-import { clearPendingRoll, requestRoll } from "../../utils/rollUtils";
-import { evAoeResolved, evUnitPlaced } from "../../utils/events";
-import { applyFalseTrailExplosion, removeFalseTrailToken, requestChikatiloPlacement, requestChikatiloRevealChoice } from "../../heroes/chikatilo";
-import { isVlad } from "../../shared";
-import { activateVladForest, maybeRequestIntimidate, requestVladStakesPlacement } from "../../heroes/vlad";
-import type { IntimidateResume } from "../../types";
+} from "../../model";
+import { isInsideBoard } from "../../model";
+import type { RNG } from "../../rng";
+import { getUnitAt } from "../../board";
+import { resolveAttack } from "../../combat";
+import { clearPendingRoll, requestRoll } from "../../shared/rollUtils";
+import { evAoeResolved, evUnitPlaced } from "../../shared/events";
+import { applyFalseTrailExplosion, removeFalseTrailToken, requestChikatiloPlacement, requestChikatiloRevealChoice } from "../../actions/heroes/chikatilo";
+import { isVlad } from "../../actions/shared";
+import { activateVladForest, maybeRequestIntimidate, requestVladStakesPlacement } from "../../actions/heroes/vlad";
+import type { IntimidateResume } from "../../actions/types";
 import { rollDice } from "../utils/rollMath";
-import { HERO_FALSE_TRAIL_TOKEN_ID } from "../../../heroes";
-import { getUnitDefinition } from "../../../units";
+import { HERO_FALSE_TRAIL_TOKEN_ID } from "../../heroes";
+import { getUnitDefinition } from "../../units";
 
 type FalseTrailExplosionContext = {
   casterId: string;
