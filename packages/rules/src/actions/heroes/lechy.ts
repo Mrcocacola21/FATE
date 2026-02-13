@@ -9,12 +9,19 @@ import type {
 } from "../../model";
 import { isInsideBoard } from "../../model";
 import { getUnitAt } from "../../board";
-import { FOREST_AURA_RADIUS, ARENA_STORM_ID, isStormActive, isStormExempt } from "../../forest";
+import {
+  FOREST_AURA_RADIUS,
+  ARENA_STORM_ID,
+  getForestMarkers,
+  isStormActive,
+  isStormExempt,
+} from "../../forest";
 import { HERO_LECHY_ID } from "../../heroes";
 import {
   ABILITY_LECHY_GUIDE_TRAVELER,
   ABILITY_LECHY_CONFUSE_TERRAIN,
   ABILITY_LECHY_STORM,
+  getCharges,
   getAbilitySpec,
   spendCharges,
 } from "../../abilities";
@@ -169,6 +176,14 @@ export function applyLechyConfuseTerrain(
   const updatedUnit: UnitState = {
     ...afterCharges,
   };
+  const existingMarkers = getForestMarkers(state);
+  const nextMarkers = [
+    ...existingMarkers.filter((marker) => marker.owner !== updatedUnit.owner),
+    {
+      owner: updatedUnit.owner,
+      position: { ...unit.position },
+    },
+  ];
 
   const nextState: GameState = {
     ...state,
@@ -176,10 +191,8 @@ export function applyLechyConfuseTerrain(
       ...state.units,
       [updatedUnit.id]: updatedUnit,
     },
-    forestMarker: {
-      owner: updatedUnit.owner,
-      position: { ...unit.position },
-    },
+    forestMarkers: nextMarkers,
+    forestMarker: nextMarkers[0] ?? null,
   };
 
   const events: GameEvent[] = [
@@ -187,6 +200,32 @@ export function applyLechyConfuseTerrain(
   ];
 
   return { state: nextState, events };
+}
+
+export function maybeTriggerLechyConfuseTerrain(
+  state: GameState,
+  unitId: string
+): ApplyResult {
+  const unit = state.units[unitId];
+  if (!unit || !unit.isAlive || !unit.position || unit.heroId !== HERO_LECHY_ID) {
+    return { state, events: [] };
+  }
+
+  const spec = getAbilitySpec(ABILITY_LECHY_CONFUSE_TERRAIN);
+  if (!spec) {
+    return { state, events: [] };
+  }
+
+  const chargeAmount = spec.chargesPerUse ?? spec.chargeCost ?? 0;
+  if (chargeAmount <= 0) {
+    return { state, events: [] };
+  }
+
+  if (getCharges(unit, spec.id) < chargeAmount) {
+    return { state, events: [] };
+  }
+
+  return applyLechyConfuseTerrain(state, unit);
 }
 
 export function applyLechyStorm(

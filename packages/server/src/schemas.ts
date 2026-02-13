@@ -63,6 +63,10 @@ const ResolveRollChoiceSchema = z.union([
     center: CoordSchema,
   }),
   z.object({
+    type: z.literal("forestMoveDestination"),
+    position: CoordSchema,
+  }),
+  z.object({
     type: z.literal("chikatiloPlace"),
     position: CoordSchema,
   }),

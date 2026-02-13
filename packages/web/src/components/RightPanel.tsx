@@ -9,8 +9,11 @@ import {
   CHIKATILO_ASSASSIN_MARK_ID,
   CHIKATILO_ID,
   FALSE_TRAIL_TOKEN_ID,
+  FOREST_AURA_RADIUS,
   LECHY_GUIDE_TRAVELER_ID,
+  LECHY_CONFUSE_TERRAIN_ID,
   LECHY_ID,
+  ARENA_STORM_ID,
   GROZNY_INVADE_TIME_ID,
   GROZNY_TYRANT_ID,
   TRICKSTER_AOE_ID,
@@ -86,6 +89,14 @@ function formatMoveMode(mode: MoveMode): string {
     default:
       return mode;
   }
+}
+
+function isRangedSingleTargetClass(unitClass: UnitState["class"]): boolean {
+  return (
+    unitClass === "archer" ||
+    unitClass === "spearman" ||
+    unitClass === "trickster"
+  );
 }
 
 type AbilityChargeState = {
@@ -176,11 +187,37 @@ export const RightPanel: FC<RightPanelProps> = ({
   const heroDefinition = selectedUnit?.heroId
     ? HERO_CATALOG.find((hero) => hero.id === selectedUnit.heroId)
     : undefined;
+  const forestMarkers =
+    Array.isArray(view.forestMarkers) && view.forestMarkers.length > 0
+      ? view.forestMarkers
+      : view.forestMarker
+      ? [view.forestMarker]
+      : [];
+  const stormActive = view.arenaId === ARENA_STORM_ID;
+  const selectedInsideForest =
+    !!selectedUnit?.position &&
+    forestMarkers.some(
+      (marker) =>
+        Math.max(
+          Math.abs(selectedUnit.position!.col - marker.position.col),
+          Math.abs(selectedUnit.position!.row - marker.position.row)
+        ) <= FOREST_AURA_RADIUS
+    );
+  const selectedStormExempt =
+    stormActive &&
+    !!selectedUnit &&
+    (selectedUnit.heroId === LECHY_ID || selectedInsideForest);
+  const selectedLegalAttackTargets = selectedUnit
+    ? view.legal?.attackTargetsByUnitId[selectedUnit.id] ?? []
+    : [];
   const abilityViews = selectedUnit
     ? view.abilitiesByUnitId?.[selectedUnit.id] ?? []
     : [];
   const actionableAbilities = abilityViews.filter(
-    (ability) => ability.kind !== "passive" && ability.id !== GROZNY_TYRANT_ID
+    (ability) =>
+      ability.kind !== "passive" &&
+      ability.id !== GROZNY_TYRANT_ID &&
+      ability.id !== LECHY_CONFUSE_TERRAIN_ID
   );
   const moveModeOptions =
     !pendingRoll && moveOptions && selectedUnit && moveOptions.unitId === selectedUnit.id
@@ -219,9 +256,20 @@ export const RightPanel: FC<RightPanelProps> = ({
     selectedUnit?.class === "assassin" ||
     selectedUnit?.class === "archer" ||
     selectedUnit?.heroId === LECHY_ID;
+  const stormRangedAttackBlocked =
+    canAct &&
+    !!selectedUnit?.position &&
+    stormActive &&
+    !selectedStormExempt &&
+    isRangedSingleTargetClass(selectedUnit.class) &&
+    selectedLegalAttackTargets.length === 0;
+  const attackDisabledReason = stormRangedAttackBlocked
+    ? "Storm restricts this unit to adjacent attacks."
+    : undefined;
 
   const moveDisabled = !canAct || economy.moveUsed;
-  const attackDisabled = !canAct || economy.attackUsed || economy.actionUsed;
+  const attackDisabled =
+    !canAct || economy.attackUsed || economy.actionUsed || stormRangedAttackBlocked;
   const stealthDisabled = !canAct || economy.stealthUsed || !canStealth;
   const searchMoveDisabled = !canAct || !legalIntents?.canSearchMove;
   const searchActionDisabled = !canAct || !legalIntents?.canSearchAction;
@@ -247,6 +295,23 @@ export const RightPanel: FC<RightPanelProps> = ({
           <div>Round: {view.roundNumber}</div>
           <div>Turn: {view.turnNumber}</div>
           <div>Active Unit: {view.activeUnitId ?? "-"}</div>
+          <div>Arena: {view.arenaId ?? "-"}</div>
+          {stormActive && (
+            <div className="text-[11px] text-amber-700 dark:text-amber-300">
+              Storm active: non-exempt units can only attack adjacent targets.
+            </div>
+          )}
+          {forestMarkers.length > 0 && (
+            <div className="text-[11px] text-emerald-700 dark:text-emerald-300">
+              Forest markers:{" "}
+              {forestMarkers
+                .map(
+                  (marker) =>
+                    `${marker.owner}:${marker.position.col},${marker.position.row}`
+                )
+                .join(" | ")}
+            </div>
+          )}
           {isSpectator && (
             <div className="text-xs text-amber-600 dark:text-amber-300">
               Spectating
@@ -381,6 +446,22 @@ export const RightPanel: FC<RightPanelProps> = ({
                   ? `${selectedUnit.position.col},${selectedUnit.position.row}`
                   : "-"}
               </div>
+              {forestMarkers.length > 0 && selectedUnit.position && (
+                <div className="text-[10px] text-emerald-700 dark:text-emerald-300">
+                  Forest aura: {selectedInsideForest ? "inside" : "outside"}
+                </div>
+              )}
+              {stormActive && selectedUnit.position && (
+                <div
+                  className={`text-[10px] ${
+                    selectedStormExempt
+                      ? "text-emerald-700 dark:text-emerald-300"
+                      : "text-amber-700 dark:text-amber-300"
+                  }`}
+                >
+                  Storm: {selectedStormExempt ? "exempt" : "restricted"}
+                </div>
+              )}
               {moveRoll !== null && moveRoll !== undefined && (
                 <div className="text-[10px] text-slate-500 dark:text-slate-300">
                   Move roll: {moveRoll}
@@ -471,7 +552,7 @@ export const RightPanel: FC<RightPanelProps> = ({
                         ? "Impulse"
                         : "Phantasm";
                     const kindBadgeClass = isChargeBlocked
-                      ? "rounded-full border border-slate-300 bg-slate-200 px-2 py-0.5 text-[9px] text-slate-500 dark:border-slate-700/60 dark:bg-slate-700/60 dark:text-slate-100"
+                      ? "rounded-full border border-slate-300 bg-slate-200 px-2 py-0.5 text-[9px] text-slate-500 dark:border-slate-700/60 dark:bg-slate-700/60 dark:text-slate-400"
                       : "rounded-full bg-slate-200 px-2 py-0.5 text-[9px] text-slate-700 dark:bg-slate-700/60 dark:text-slate-100";
                     return (
                       <div
@@ -565,9 +646,15 @@ export const RightPanel: FC<RightPanelProps> = ({
               onFocus={() => onHoverAttackRange(selectedUnit?.id ?? null, true)}
               onBlur={() => onHoverAttackRange(selectedUnit?.id ?? null, false)}
               disabled={attackDisabled}
+              title={attackDisabledReason ?? ""}
             >
               Attack
             </button>
+            {attackDisabledReason && (
+              <div className="col-span-2 text-[10px] text-amber-700 dark:text-amber-300">
+                {attackDisabledReason}
+              </div>
+            )}
             <button
               className={`rounded-lg px-2 py-2 shadow-sm transition hover:shadow ${
                 searchMoveDisabled

@@ -37,7 +37,6 @@ import {
   applyFalseTrailExplosion,
 } from "./heroes/chikatilo";
 import {
-  applyLechyConfuseTerrain,
   applyLechyGuideTraveler,
   applyLechyStorm,
 } from "./heroes/lechy";
@@ -125,7 +124,7 @@ export function applyUseAbility(
   }
 
   if (spec.id === ABILITY_LECHY_CONFUSE_TERRAIN) {
-    return applyLechyConfuseTerrain(state, unit);
+    return { state, events: [] };
   }
 
   if (spec.id === ABILITY_LECHY_STORM) {

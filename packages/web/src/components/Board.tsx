@@ -4,6 +4,7 @@ import {
   EL_CID_KOLADA_ID,
   TRICKSTER_AOE_ID,
   TRICKSTER_AOE_RADIUS,
+  FOREST_AURA_RADIUS,
   getMaxHp,
 } from "../rulesHints";
 import { useEffect, useRef, useState, type FC } from "react";
@@ -187,6 +188,37 @@ export const Board: FC<BoardProps> = ({
   > = {};
   const aoeHighlights = new Map<string, "aoe" | "aoeDisabled">();
   const doraPreviewKeys = new Set<string>();
+  const forestAuraKeys = new Set<string>();
+  const forestMarkers =
+    Array.isArray(view.forestMarkers) && view.forestMarkers.length > 0
+      ? view.forestMarkers
+      : view.forestMarker
+      ? [view.forestMarker]
+      : [];
+  const forestMarkerOwnersByKey = new Map<string, PlayerId[]>();
+
+  for (const marker of forestMarkers) {
+    const forestMarkerCoord = marker.position;
+    const markerView = toViewCoord(forestMarkerCoord);
+    const markerKey = coordKey(markerView);
+    const owners = forestMarkerOwnersByKey.get(markerKey) ?? [];
+    owners.push(marker.owner);
+    forestMarkerOwnersByKey.set(markerKey, owners);
+
+    const minCol = Math.max(0, forestMarkerCoord.col - FOREST_AURA_RADIUS);
+    const maxCol = Math.min(maxIndex, forestMarkerCoord.col + FOREST_AURA_RADIUS);
+    const minRow = Math.max(0, forestMarkerCoord.row - FOREST_AURA_RADIUS);
+    const maxRow = Math.min(maxIndex, forestMarkerCoord.row + FOREST_AURA_RADIUS);
+    for (let col = minCol; col <= maxCol; col += 1) {
+      for (let row = minRow; row <= maxRow; row += 1) {
+        const dx = Math.abs(col - forestMarkerCoord.col);
+        const dy = Math.abs(row - forestMarkerCoord.row);
+        if (Math.max(dx, dy) > FOREST_AURA_RADIUS) continue;
+        const viewPos = toViewCoord({ col, row });
+        forestAuraKeys.add(coordKey(viewPos));
+      }
+    }
+  }
 
   for (const unit of Object.values(view.units)) {
     if (!unit.position) continue;
@@ -328,6 +360,9 @@ export const Board: FC<BoardProps> = ({
       const unit = unitsByPos.get(key);
       const isSelected = unit?.id === selectedUnitId;
       const isDoraPreview = doraPreviewKeys.has(key);
+      const isForestAura = forestAuraKeys.has(key);
+      const forestMarkerOwners = forestMarkerOwnersByKey.get(key) ?? [];
+      const isForestMarker = forestMarkerOwners.length > 0;
       const isDark = (row + col) % 2 === 1;
       const highlightKind = viewHighlights[key];
       const aoeKind = aoeHighlights.get(key);
@@ -452,6 +487,12 @@ export const Board: FC<BoardProps> = ({
           onMouseEnter={() => onCellHover?.(gameCoord)}
           onMouseLeave={() => onCellHover?.(null)}
         >
+          {isForestAura && (
+            <div
+              className="pointer-events-none absolute rounded bg-emerald-200/25 ring-1 ring-emerald-200/40 dark:bg-emerald-900/25 dark:ring-emerald-700/40"
+              style={{ inset: highlightInset }}
+            />
+          )}
           {highlightKind && (
             <div
               className={`pointer-events-none absolute rounded dark:ring-1 dark:ring-neutral-800/70 ${getHighlightClass(
@@ -469,6 +510,14 @@ export const Board: FC<BoardProps> = ({
             />
           )}
           {content}
+          {isForestMarker && (
+            <div
+              className="pointer-events-none absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-600 text-[9px] font-bold text-white shadow dark:bg-emerald-400/80 dark:text-emerald-950"
+              title={`Forest marker (${forestMarkerOwners.join("/")})`}
+            >
+              {forestMarkerOwners.length > 1 ? "F2" : "F"}
+            </div>
+          )}
           {stakeMarkersByPos.has(key) && (
             <div
               className={`pointer-events-none absolute left-1 top-1 flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-bold shadow ${

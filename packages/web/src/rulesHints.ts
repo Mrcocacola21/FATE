@@ -3,6 +3,8 @@ import type { UnitClass } from "rules";
 // Keep in sync with packages/rules for UI-only helpers.
 export const TRICKSTER_AOE_ID = "tricksterAoE";
 export const TRICKSTER_AOE_RADIUS = 2;
+export const FOREST_AURA_RADIUS = 2;
+export const ARENA_STORM_ID = "storm";
 export const KAISER_DORA_ID = "kaiserDora";
 export const VLAD_TEPES_ID = "vladTepes";
 export const EL_CID_COMPEADOR_ID = "elCidCompeador";

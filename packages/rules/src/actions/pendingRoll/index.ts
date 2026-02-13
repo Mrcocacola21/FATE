@@ -54,6 +54,10 @@ import {
   resolveFalseTrailExplosionDefenderRoll,
 } from "./resolvers/resolveChikatiloRoll";
 import { resolveLechyGuideTravelerPlacement } from "../heroes/lechy";
+import {
+  resolveForestMoveCheckRoll,
+  resolveForestMoveDestinationChoice,
+} from "../movementActions";
 
 export function applyResolvePendingRoll(
   state: GameState,
@@ -210,6 +214,12 @@ export function applyResolvePendingRoll(
     }
     case "lechyGuideTravelerPlacement": {
       return resolveLechyGuideTravelerPlacement(state, pending, action.choice as any);
+    }
+    case "forestMoveCheck": {
+      return resolveForestMoveCheckRoll(state, pending, rng);
+    }
+    case "forestMoveDestination": {
+      return resolveForestMoveDestinationChoice(state, pending, action.choice, rng);
     }
     default:
       return { state: clearPendingRoll(state), events: [] };

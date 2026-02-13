@@ -3,6 +3,7 @@
 import {
   AbilityView,
   Coord,
+  ForestMarker,
   GameState,
   PlayerId,
   PlayerView,
@@ -17,6 +18,14 @@ import {
 } from "./legal";
 import { getAbilityViewsForUnit } from "./abilities";
 import { HERO_CHIKATILO_ID } from "./heroes";
+import { getForestMarkers } from "./forest";
+
+function cloneForestMarkers(state: GameState): ForestMarker[] {
+  return getForestMarkers(state).map((marker) => ({
+    owner: marker.owner,
+    position: { ...marker.position },
+  }));
+}
 
 function cloneUnit(unit: UnitState): UnitState {
   const turn = unit.turn ?? makeEmptyTurnEconomy();
@@ -165,6 +174,7 @@ export function makePlayerView(
     });
   }
   const stakeMarkers = Array.from(stakeMarkersMap.values());
+  const forestMarkers = cloneForestMarkers(state);
 
   const basePendingCount = pendingCombatQueue?.length ?? 0;
   let pendingCombatQueueCount = basePendingCount;
@@ -203,9 +213,8 @@ export function makePlayerView(
     units,
     knowledge,
     lastKnownPositions,
-    forestMarker: state.forestMarker
-      ? { ...state.forestMarker, position: { ...state.forestMarker.position } }
-      : null,
+    forestMarkers,
+    forestMarker: forestMarkers[0] ?? null,
     pendingRoll: visiblePendingRoll,
     pendingCombatQueueCount,
     pendingAoEPreview,
@@ -288,15 +297,15 @@ export function makeSpectatorView(state: GameState): PlayerView {
     });
   }
   const stakeMarkers = Array.from(stakeMarkersMap.values());
+  const forestMarkers = cloneForestMarkers(state);
 
   return {
     ...baseState,
     units,
     knowledge: { P1: {}, P2: {} },
     lastKnownPositions: {},
-    forestMarker: state.forestMarker
-      ? { ...state.forestMarker, position: { ...state.forestMarker.position } }
-      : null,
+    forestMarkers,
+    forestMarker: forestMarkers[0] ?? null,
     pendingRoll: null,
     pendingCombatQueueCount,
     pendingAoEPreview:

@@ -6,10 +6,11 @@ import type {
   GameState,
   MoveMode,
   PendingMove,
+  ResolveRollChoice,
   UnitState,
 } from "../model";
 import { isInsideBoard } from "../model";
-import { rollD6, type RNG } from "../rng";
+import { type RNG } from "../rng";
 import { coordsEqual, getUnitAt } from "../board";
 import { getLegalAttackTargets } from "../legal";
 import { getLegalMovesForUnitModes } from "../movement";
@@ -29,6 +30,17 @@ import {
   evStealthRevealed,
   evUnitMoved,
 } from "./utils/events";
+
+type MoveActionInternal = Extract<GameAction, { type: "move" }> & {
+  __forestBypass?: true;
+};
+
+type ForestRestrictionKind = "exit" | "cross";
+
+interface ForestRestrictionContext {
+  kind: ForestRestrictionKind;
+  fallbackOptions: Coord[];
+}
 
 export function collectRiderPathTargets(
   state: GameState,
@@ -168,57 +180,229 @@ function buildForestPath(
   return [from, to];
 }
 
-function shouldTriggerForestRestriction(
-  state: GameState,
-  from: Coord,
-  to: Coord,
-  path: Coord[]
-): boolean {
-  if (!state.forestMarker) return false;
-  const insideFrom = isInsideForestAura(state, from);
-  const insideTo = isInsideForestAura(state, to);
-  if (insideFrom && !insideTo) return true;
-  if (!insideFrom && insideTo) return true;
-  if (!insideFrom && !insideTo) {
-    return path.some((cell) => isInsideForestAura(state, cell));
+function uniqueCoords(coords: Coord[]): Coord[] {
+  const seen = new Set<string>();
+  const unique: Coord[] = [];
+  for (const coord of coords) {
+    const key = `${coord.col},${coord.row}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    unique.push({ ...coord });
   }
-  return false;
+  return unique;
 }
 
-function findForestStopCell(
+function buildForestFallbackOptions(
   state: GameState,
   unit: UnitState,
+  from: Coord,
   path: Coord[],
-  from: Coord
-): Coord {
-  for (let i = path.length - 1; i >= 0; i -= 1) {
-    const cell = path[i];
-    if (!isInsideForestAura(state, cell)) continue;
-    if (coordsEqual(cell, from)) return cell;
-    if (canUnitEnterCell(state, unit.id, cell)) return cell;
+  legalMoves: Coord[],
+  kind: ForestRestrictionKind
+): Coord[] {
+  if (kind === "exit") {
+    const options: Coord[] = legalMoves.filter((coord) =>
+      isInsideForestAura(state, coord)
+    );
+    if (isInsideForestAura(state, from)) {
+      options.push(from);
+    }
+    return uniqueCoords(options).filter(
+      (coord) => coordsEqual(coord, from) || canUnitEnterCell(state, unit.id, coord)
+    );
   }
-  return from;
+
+  const legalSet = new Set(legalMoves.map((coord) => `${coord.col},${coord.row}`));
+  const options: Coord[] = [];
+  for (const cell of path) {
+    if (coordsEqual(cell, from)) continue;
+    if (!isInsideForestAura(state, cell)) continue;
+    if (!legalSet.has(`${cell.col},${cell.row}`)) continue;
+    if (!canUnitEnterCell(state, unit.id, cell)) continue;
+    options.push(cell);
+  }
+  return uniqueCoords(options);
 }
 
-function applyForestRestriction(
+function getForestRestrictionContext(
   state: GameState,
   unit: UnitState,
   from: Coord,
   to: Coord,
   line: Coord[] | null,
-  rng: RNG
-): Coord {
+  legalMoves: Coord[]
+): ForestRestrictionContext | null {
   const path = buildForestPath(from, to, line);
-  if (!shouldTriggerForestRestriction(state, from, to, path)) {
-    return to;
+  const insideFrom = isInsideForestAura(state, from);
+  const insideTo = isInsideForestAura(state, to);
+  const pathTouchesAura = path.some((cell) => isInsideForestAura(state, cell));
+
+  if (insideFrom && !insideTo) {
+    return {
+      kind: "exit",
+      fallbackOptions: buildForestFallbackOptions(
+        state,
+        unit,
+        from,
+        path,
+        legalMoves,
+        "exit"
+      ),
+    };
   }
 
-  const roll = rollD6(rng);
+  if (!insideFrom && !insideTo && pathTouchesAura) {
+    return {
+      kind: "cross",
+      fallbackOptions: buildForestFallbackOptions(
+        state,
+        unit,
+        from,
+        path,
+        legalMoves,
+        "cross"
+      ),
+    };
+  }
+
+  return null;
+}
+
+function maybeRequestForestMoveCheck(
+  state: GameState,
+  unit: UnitState,
+  from: Coord,
+  to: Coord,
+  line: Coord[] | null,
+  legalMoves: Coord[]
+): ApplyResult | null {
+  const restriction = getForestRestrictionContext(
+    state,
+    unit,
+    from,
+    to,
+    line,
+    legalMoves
+  );
+  if (!restriction) {
+    return null;
+  }
+
+  return requestRoll(
+    state,
+    unit.owner,
+    "forestMoveCheck",
+    {
+      unitId: unit.id,
+      to: { ...to },
+      restriction: restriction.kind,
+      fallbackOptions: restriction.fallbackOptions.map((coord) => ({ ...coord })),
+    },
+    unit.id
+  );
+}
+
+function parseCoordList(raw: unknown): Coord[] {
+  if (!Array.isArray(raw)) return [];
+  const coords: Coord[] = [];
+  for (const item of raw) {
+    if (!item || typeof item !== "object") continue;
+    const colRaw = (item as { col?: unknown }).col;
+    const rowRaw = (item as { row?: unknown }).row;
+    if (typeof colRaw !== "number" || typeof rowRaw !== "number") continue;
+    coords.push({ col: colRaw, row: rowRaw });
+  }
+  return uniqueCoords(coords);
+}
+
+function parseCoord(raw: unknown): Coord | null {
+  if (!raw || typeof raw !== "object") return null;
+  const colRaw = (raw as { col?: unknown }).col;
+  const rowRaw = (raw as { row?: unknown }).row;
+  if (typeof colRaw !== "number" || typeof rowRaw !== "number") return null;
+  return { col: colRaw, row: rowRaw };
+}
+
+export function resolveForestMoveCheckRoll(
+  state: GameState,
+  pending: { player: UnitState["owner"]; context: Record<string, unknown> },
+  rng: RNG
+): ApplyResult {
+  const unitId = pending.context.unitId as string | undefined;
+  const target = parseCoord(pending.context.to);
+  if (!unitId || !target) {
+    return { state: { ...state, pendingRoll: null }, events: [] };
+  }
+
+  const roll = 1 + Math.floor(rng.next() * 6);
   if (roll >= 5) {
-    return to;
+    return applyMove(
+      { ...state, pendingRoll: null },
+      {
+        type: "move",
+        unitId,
+        to: target,
+        __forestBypass: true,
+      } as MoveActionInternal,
+      rng
+    );
   }
 
-  return findForestStopCell(state, unit, path, from);
+  const fallbackOptions = parseCoordList(pending.context.fallbackOptions);
+  if (fallbackOptions.length === 0) {
+    return { state: { ...state, pendingRoll: null }, events: [] };
+  }
+  const requested = requestRoll(
+    { ...state, pendingRoll: null },
+    pending.player,
+    "forestMoveDestination",
+    {
+      unitId,
+      options: fallbackOptions,
+      originalTo: target,
+    },
+    unitId
+  );
+
+  return requested;
+}
+
+export function resolveForestMoveDestinationChoice(
+  state: GameState,
+  pending: { context: Record<string, unknown> },
+  choice: ResolveRollChoice | undefined,
+  rng: RNG
+): ApplyResult {
+  const unitId = pending.context.unitId as string | undefined;
+  if (!unitId) {
+    return { state: { ...state, pendingRoll: null }, events: [] };
+  }
+
+  const payload =
+    choice && typeof choice === "object" && choice.type === "forestMoveDestination"
+      ? choice
+      : undefined;
+  if (!payload?.position) {
+    return { state, events: [] };
+  }
+
+  const options = parseCoordList(pending.context.options);
+  const key = `${payload.position.col},${payload.position.row}`;
+  const allowed = options.some((coord) => `${coord.col},${coord.row}` === key);
+  if (!allowed) {
+    return { state, events: [] };
+  }
+
+  return applyMove(
+    { ...state, pendingRoll: null },
+    {
+      type: "move",
+      unitId,
+      to: { ...payload.position },
+      __forestBypass: true,
+    } as MoveActionInternal,
+    rng
+  );
 }
 
 export function applyRequestMoveOptions(
@@ -351,7 +535,7 @@ export function applyRequestMoveOptions(
 function applyMongolChargeMove(
   state: GameState,
   unit: UnitState,
-  action: Extract<GameAction, { type: "move" }>,
+  action: MoveActionInternal,
   rng: RNG
 ): ApplyResult {
   const from = unit.position;
@@ -378,18 +562,24 @@ function applyMongolChargeMove(
     return { state, events: [] };
   }
 
-  const forestTo = applyForestRestriction(
-    state,
-    unit,
-    from,
-    action.to,
-    intendedLine,
-    rng
-  );
-  const actualLine = linePath(from, forestTo);
-  const stakePath = actualLine ? actualLine.slice(1) : [forestTo];
+  const bypassForestCheck = action.__forestBypass === true;
+  if (!bypassForestCheck) {
+    const forestCheck = maybeRequestForestMoveCheck(
+      state,
+      unit,
+      from,
+      action.to,
+      intendedLine,
+      pending!.legalTo
+    );
+    if (forestCheck) {
+      return forestCheck;
+    }
+  }
+
+  const stakePath = intendedLine.slice(1);
   const stakeStop = findStakeStopOnPath(state, unit, stakePath);
-  const finalTo = stakeStop ?? forestTo;
+  const finalTo = stakeStop ?? action.to;
   const didMove = !coordsEqual(finalTo, from);
 
   if (!didMove) {
@@ -624,11 +814,12 @@ export function applyMove(
   action: Extract<GameAction, { type: "move" }>,
   rng: RNG
 ): ApplyResult {
+  const moveAction = action as MoveActionInternal;
   if (state.phase !== "battle") {
     return { state, events: [] };
   }
 
-  const unit = state.units[action.unitId];
+  const unit = state.units[moveAction.unitId];
   if (!unit || !unit.isAlive || !unit.position) {
     return { state, events: [] };
   }
@@ -681,13 +872,13 @@ export function applyMove(
     legalMoves = getLegalMovesForUnitModes(state, unit.id, normalModes);
   }
 
-  const isLegal = legalMoves.some((c) => coordsEqual(c, action.to));
+  const isLegal = legalMoves.some((c) => coordsEqual(c, moveAction.to));
   if (!isLegal) {
     return { state, events: [] };
   }
 
   if (isMongolCharge) {
-    return applyMongolChargeMove(state, unit, action, rng);
+    return applyMongolChargeMove(state, unit, moveAction, rng);
   }
 
   const moveMode =
@@ -696,19 +887,25 @@ export function applyMove(
     moveMode === "rider" ||
     (moveMode === "normal" && unit.class === "rider");
 
-  const intendedLine = moveMode === "trickster" ? null : linePath(from, action.to);
-  const forestTo = applyForestRestriction(
-    state,
-    unit,
-    from,
-    action.to,
-    intendedLine,
-    rng
-  );
-  const actualLine = moveMode === "trickster" ? null : linePath(from, forestTo);
-  const stakePath = actualLine ? actualLine.slice(1) : [forestTo];
+  const intendedLine =
+    moveMode === "trickster" ? null : linePath(from, moveAction.to);
+  if (moveAction.__forestBypass !== true) {
+    const forestCheck = maybeRequestForestMoveCheck(
+      state,
+      unit,
+      from,
+      moveAction.to,
+      intendedLine,
+      legalMoves
+    );
+    if (forestCheck) {
+      return forestCheck;
+    }
+  }
+
+  const stakePath = intendedLine ? intendedLine.slice(1) : [moveAction.to];
   const stakeStop = findStakeStopOnPath(state, unit, stakePath);
-  const finalTo = stakeStop ?? forestTo;
+  const finalTo = stakeStop ?? moveAction.to;
   const didMove = !coordsEqual(finalTo, from);
 
   if (didMove) {

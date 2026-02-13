@@ -315,6 +315,10 @@ function getPendingRollLabel(kind?: string | null) {
       return "Trickster move roll";
     case "moveBerserker":
       return "Berserker move roll";
+    case "forestMoveCheck":
+      return "Forest check";
+    case "forestMoveDestination":
+      return "Forest fallback destination";
     case "initiativeRoll":
       return "Initiative roll";
     default:
@@ -377,6 +381,8 @@ export function Game() {
   const isForestTarget = pendingRoll?.kind === "vladForestTarget";
   const isIntimidateChoice = pendingRoll?.kind === "vladIntimidateChoice";
   const isForestChoice = pendingRoll?.kind === "vladForestChoice";
+  const isForestMoveCheck = pendingRoll?.kind === "forestMoveCheck";
+  const isForestMoveDestination = pendingRoll?.kind === "forestMoveDestination";
   const isDuelistChoice = pendingRoll?.kind === "elCidDuelistChoice";
   const isChikatiloPlacement =
     pendingRoll?.kind === "chikatiloFalseTrailPlacement";
@@ -388,6 +394,7 @@ export function Game() {
   const boardSelectionPending =
     isStakePlacement ||
     isForestTarget ||
+    isForestMoveDestination ||
     isIntimidateChoice ||
     isChikatiloPlacement ||
     isGuideTravelerPlacement;
@@ -630,6 +637,16 @@ export function Game() {
   const forestTargetKeys = useMemo(
     () => new Set(forestTargetCenters.map(coordKey)),
     [forestTargetCenters]
+  );
+
+  const forestMoveDestinationOptions = useMemo(() => {
+    if (!isForestMoveDestination) return [] as Coord[];
+    const ctx = pendingRoll?.context as { options?: unknown } | undefined;
+    return normalizeCoordList(ctx?.options);
+  }, [isForestMoveDestination, pendingRoll]);
+  const forestMoveDestinationKeys = useMemo(
+    () => new Set(forestMoveDestinationOptions.map(coordKey)),
+    [forestMoveDestinationOptions]
   );
 
   const chikatiloPlacementCoords = useMemo(() => {
@@ -917,6 +934,13 @@ export function Game() {
       return highlights;
     }
 
+    if (isForestMoveDestination) {
+      for (const coord of forestMoveDestinationOptions) {
+        highlights[coordKey(coord)] = "move";
+      }
+      return highlights;
+    }
+
     if (isChikatiloPlacement) {
       for (const coord of chikatiloPlacementCoords) {
         highlights[coordKey(coord)] = "place";
@@ -1019,7 +1043,8 @@ export function Game() {
       !actionMode &&
       !isStakePlacement &&
       !isIntimidateChoice &&
-      !isForestTarget;
+      !isForestTarget &&
+      !isForestMoveDestination;
 
     if (allowHoverPreview && hoverAttackPreview && view) {
       for (const coord of hoverAttackPreview.rangeCells) {
@@ -1047,6 +1072,8 @@ export function Game() {
     intimidateOptions,
     isForestTarget,
     forestTargetCenters,
+    isForestMoveDestination,
+    forestMoveDestinationOptions,
     isChikatiloPlacement,
     chikatiloPlacementCoords,
     isGuideTravelerPlacement,
@@ -1106,6 +1133,17 @@ export function Game() {
         type: "resolvePendingRoll",
         pendingRollId: pendingRoll.id,
         choice: { type: "forestTarget", center: { col, row } },
+      } as GameAction);
+      return;
+    }
+
+    if (isForestMoveDestination) {
+      const key = coordKey({ col, row });
+      if (!forestMoveDestinationKeys.has(key) || !pendingRoll) return;
+      sendAction({
+        type: "resolvePendingRoll",
+        pendingRollId: pendingRoll.id,
+        choice: { type: "forestMoveDestination", position: { col, row } },
       } as GameAction);
       return;
     }
@@ -1430,11 +1468,25 @@ export function Game() {
                     Select the 3x3 center cell.
                   </div>
                 </div>
+              ) : isForestMoveDestination ? (
+                <div>
+                  <div className="font-semibold">Forest check failed</div>
+                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
+                    Choose a highlighted destination inside the aura.
+                  </div>
+                </div>
               ) : isForestChoice ? (
                 <div>
                   <div className="font-semibold">Forest of the Dead ready</div>
                   <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
                     Decide whether to activate the phantasm.
+                  </div>
+                </div>
+              ) : isForestMoveCheck ? (
+                <div>
+                  <div className="font-semibold">Forest check</div>
+                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
+                    Forest check: roll 5-6 to leave
                   </div>
                 </div>
               ) : isDuelistChoice ? (
@@ -1596,6 +1648,8 @@ export function Game() {
             <div className="text-sm font-semibold text-slate-800 dark:text-slate-100">
               {pendingRoll.kind === "initiativeRoll"
                 ? "Roll initiative"
+                : isForestMoveCheck
+                ? "Forest check"
                 : isForestChoice
                 ? "Forest of the Dead"
                 : isDuelistChoice
@@ -1616,6 +1670,8 @@ export function Game() {
                 ? "Roll defense or spend 3 charges to take 1 damage."
                 : isChikatiloRevealChoice
                 ? "Explode the token or remove it."
+                : isForestMoveCheck
+                ? "Forest check: roll 5-6 to leave"
                 : isForestChoice
                 ? "Activate Forest of the Dead or skip."
                 : isDuelistChoice

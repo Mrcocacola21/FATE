@@ -17,6 +17,7 @@ import { useHeroes } from "../figures/useHeroes";
 import type { AbilityMeta } from "rules";
 import { getFigureArtSrc } from "../assets/registry";
 import { ThemeToggle } from "../components/ThemeToggle";
+import { LECHY_ID } from "../rulesHints";
 
 interface FigureSetPageProps {
   onBack?: () => void;
@@ -24,6 +25,11 @@ interface FigureSetPageProps {
 
 function formatSlotTitle(slot: BaseClass): string {
   return `${slot.toUpperCase()} SLOT`;
+}
+
+function formatClassLabel(value: string): string {
+  if (!value) return value;
+  return `${value.charAt(0).toUpperCase()}${value.slice(1)}`;
 }
 
 export function FigureSetPage({ onBack }: FigureSetPageProps) {
@@ -375,7 +381,7 @@ export function FigureSetPage({ onBack }: FigureSetPageProps) {
                   <div>
                     <div className="text-sm font-semibold">{detailsHero.name}</div>
                     <div className="text-[10px] uppercase text-slate-400 dark:text-slate-500">
-                      Class: {detailsHero.mainClass}
+                      Class: {formatClassLabel(detailsHero.mainClass)}
                     </div>
                     {detailsHero.description && (
                       <div className="mt-2 text-xs text-slate-600 dark:text-slate-300">
@@ -391,6 +397,7 @@ export function FigureSetPage({ onBack }: FigureSetPageProps) {
                     <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
                       <div className="rounded-lg border-ui bg-surface-solid px-2 py-1">
                         HP: {detailsHero.baseStats.hp}
+                        {detailsHero.id === LECHY_ID ? " (includes Giant +3)" : ""}
                       </div>
                       <div className="rounded-lg border-ui bg-surface-solid px-2 py-1">
                         Damage: {detailsHero.baseStats.damage}

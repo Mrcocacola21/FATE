@@ -7066,24 +7066,103 @@ function testForestExitRestrictionOnFail() {
   state = setUnit(state, rider.id, { position: { col: 4, row: 4 } });
   state = {
     ...state,
+    forestMarkers: [{ owner: "P1", position: { col: 4, row: 4 } }],
     forestMarker: { owner: "P1", position: { col: 4, row: 4 } },
   };
   state = toBattleState(state, "P1", rider.id);
   state = initKnowledgeForOwners(state);
 
-  const moved = applyAction(
+  const requested = applyAction(
     state,
     { type: "move", unitId: rider.id, to: { col: 4, row: 8 } } as any,
+    rngFail
+  );
+  assert(
+    requested.state.pendingRoll?.kind === "forestMoveCheck",
+    "leaving forest aura should request forest move check"
+  );
+  assert(
+    requested.state.units[rider.id].position?.col === 4 &&
+      requested.state.units[rider.id].position?.row === 4,
+    "unit should not move before forest check is resolved"
+  );
+
+  const failedRoll = resolvePendingRollOnce(requested.state, rngFail);
+  const pending = failedRoll.state.pendingRoll;
+  assert(
+    pending?.kind === "forestMoveDestination",
+    "failed forest check should request fallback destination selection"
+  );
+
+  const options = ((pending?.context as any)?.options ?? []) as Coord[];
+  assert(options.length > 0, "failed forest check should provide fallback options");
+  const allInside = options.every(
+    (coord) =>
+      Math.max(Math.abs(coord.col - 4), Math.abs(coord.row - 4)) <= 2
+  );
+  assert(allInside, "exit fallback options must remain inside forest aura");
+
+  const chosen = options[0];
+  const moved = applyAction(
+    failedRoll.state,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: pending!.id,
+      player: pending!.player,
+      choice: { type: "forestMoveDestination", position: chosen },
+    } as any,
     rngFail
   );
 
   const riderAfter = moved.state.units[rider.id];
   assert(
-    riderAfter.position?.col === 4 && riderAfter.position?.row === 6,
-    "failed exit roll should stop rider inside aura"
+    riderAfter.position?.col === chosen.col &&
+      riderAfter.position?.row === chosen.row,
+    "failed exit roll should force chosen in-aura destination"
   );
 
   console.log("forest_exit_restriction_on_fail passed");
+}
+
+function testForestExitRestrictionOnSuccess() {
+  const rngSuccess = makeRngSequence([0.99]);
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1"));
+  state = attachArmy(state, createDefaultArmy("P2"));
+
+  const rider = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "rider"
+  )!;
+
+  state = setUnit(state, rider.id, { position: { col: 4, row: 4 } });
+  state = {
+    ...state,
+    forestMarkers: [{ owner: "P1", position: { col: 4, row: 4 } }],
+    forestMarker: { owner: "P1", position: { col: 4, row: 4 } },
+  };
+  state = toBattleState(state, "P1", rider.id);
+  state = initKnowledgeForOwners(state);
+
+  const requested = applyAction(
+    state,
+    { type: "move", unitId: rider.id, to: { col: 4, row: 8 } } as any,
+    rngSuccess
+  );
+  assert(
+    requested.state.pendingRoll?.kind === "forestMoveCheck",
+    "leaving forest aura should request forest check before moving"
+  );
+
+  const resolved = resolvePendingRollOnce(requested.state, rngSuccess);
+  assert(!resolved.state.pendingRoll, "successful forest check should not require fallback choice");
+
+  const riderAfter = resolved.state.units[rider.id];
+  assert(
+    riderAfter.position?.col === 4 && riderAfter.position?.row === 8,
+    "successful forest check should allow intended destination"
+  );
+
+  console.log("forest_exit_restriction_on_success passed");
 }
 
 function testForestCrossRestrictionOnFail() {
@@ -7099,75 +7178,175 @@ function testForestCrossRestrictionOnFail() {
   state = setUnit(state, rider.id, { position: { col: 0, row: 4 } });
   state = {
     ...state,
+    forestMarkers: [{ owner: "P1", position: { col: 4, row: 4 } }],
     forestMarker: { owner: "P1", position: { col: 4, row: 4 } },
   };
   state = toBattleState(state, "P1", rider.id);
   state = initKnowledgeForOwners(state);
 
-  const moved = applyAction(
+  const requested = applyAction(
     state,
     { type: "move", unitId: rider.id, to: { col: 8, row: 4 } } as any,
+    rngFail
+  );
+  assert(
+    requested.state.pendingRoll?.kind === "forestMoveCheck",
+    "crossing forest aura should request forest move check"
+  );
+
+  const failedRoll = resolvePendingRollOnce(requested.state, rngFail);
+  const pending = failedRoll.state.pendingRoll;
+  assert(
+    pending?.kind === "forestMoveDestination",
+    "failed crossing check should request in-path fallback selection"
+  );
+
+  const options = ((pending?.context as any)?.options ?? []) as Coord[];
+  assert(options.length > 0, "crossing failure should offer path stop options");
+
+  const line = linePath({ col: 0, row: 4 }, { col: 8, row: 4 }) ?? [];
+  const lineSet = new Set(line.map((coord) => `${coord.col},${coord.row}`));
+  const allOnPathInside = options.every((coord) => {
+    const inside = Math.max(Math.abs(coord.col - 4), Math.abs(coord.row - 4)) <= 2;
+    return inside && lineSet.has(`${coord.col},${coord.row}`);
+  });
+  assert(
+    allOnPathInside,
+    "crossing fallback options must be inside aura and on movement path"
+  );
+
+  const chosen = options[0];
+  const moved = applyAction(
+    failedRoll.state,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: pending!.id,
+      player: pending!.player,
+      choice: { type: "forestMoveDestination", position: chosen },
+    } as any,
     rngFail
   );
 
   const riderAfter = moved.state.units[rider.id];
   assert(
-    riderAfter.position?.col === 6 && riderAfter.position?.row === 4,
-    "failed crossing roll should stop rider inside aura"
+    riderAfter.position?.col === chosen.col &&
+      riderAfter.position?.row === chosen.row,
+    "failed crossing roll should stop on chosen aura cell from path"
   );
 
   console.log("forest_cross_restriction_on_fail passed");
 }
 
-function testLechyConfuseTerrainSingleMarker() {
-  const rng = new SeededRNG(777);
+function testLechyConfuseTerrainPerSideMarkersAndReplacement() {
+  const rng = makeRngSequence([0.5, 0.5, 0.5]);
   let state = createEmptyGame();
   state = attachArmy(state, createDefaultArmy("P1", { trickster: HERO_LECHY_ID }));
-  state = attachArmy(state, createDefaultArmy("P2"));
+  state = attachArmy(state, createDefaultArmy("P2", { trickster: HERO_LECHY_ID }));
 
-  const lechy = Object.values(state.units).find(
+  const p1Lechy = Object.values(state.units).find(
     (u) => u.owner === "P1" && u.heroId === HERO_LECHY_ID
   )!;
+  const p2Lechy = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.heroId === HERO_LECHY_ID
+  )!;
 
-  state = setUnit(state, lechy.id, {
+  const markersOf = (s: GameState) =>
+    s.forestMarkers.length > 0 ? s.forestMarkers : s.forestMarker ? [s.forestMarker] : [];
+  const markerByOwner = (s: GameState, owner: PlayerId) =>
+    markersOf(s).find((marker) => marker.owner === owner);
+
+  state = setUnit(state, p1Lechy.id, {
     position: { col: 2, row: 2 },
-    charges: { ...lechy.charges, [ABILITY_LECHY_CONFUSE_TERRAIN]: 3 },
+    charges: { ...p1Lechy.charges, [ABILITY_LECHY_CONFUSE_TERRAIN]: 3 },
   });
-  state = toBattleState(state, "P1", lechy.id);
+  state = setUnit(state, p2Lechy.id, {
+    position: { col: 6, row: 6 },
+    charges: { ...p2Lechy.charges, [ABILITY_LECHY_CONFUSE_TERRAIN]: 3 },
+  });
+  state = {
+    ...state,
+    phase: "battle",
+    currentPlayer: "P1",
+    activeUnitId: null,
+    turnQueue: [p1Lechy.id],
+    turnQueueIndex: 0,
+    turnOrder: [p1Lechy.id],
+    turnOrderIndex: 0,
+  };
   state = initKnowledgeForOwners(state);
 
   let res = applyAction(
     state,
-    { type: "useAbility", unitId: lechy.id, abilityId: ABILITY_LECHY_CONFUSE_TERRAIN } as any,
+    { type: "unitStartTurn", unitId: p1Lechy.id } as any,
     rng
   );
-
+  let p1Marker = markerByOwner(res.state, "P1");
   assert(
-    res.state.forestMarker?.position.col === 2 &&
-      res.state.forestMarker?.position.row === 2,
-    "confuse terrain should place forest marker on Leshy"
+    p1Marker?.position.col === 2 && p1Marker?.position.row === 2,
+    "P1 Lechy should place own forest marker via impulse at start turn"
   );
+  assert(markersOf(res.state).length === 1, "only P1 marker should exist after first trigger");
 
-  let next = setUnit(res.state, lechy.id, {
-    position: { col: 4, row: 4 },
-    charges: { ...res.state.units[lechy.id].charges, [ABILITY_LECHY_CONFUSE_TERRAIN]: 3 },
-    turn: makeEmptyTurnEconomy(),
-  });
-  next = { ...next, activeUnitId: lechy.id, currentPlayer: "P1", phase: "battle" };
+  let next = {
+    ...setUnit(res.state, p2Lechy.id, {
+      position: { col: 6, row: 6 },
+      charges: {
+        ...res.state.units[p2Lechy.id].charges,
+        [ABILITY_LECHY_CONFUSE_TERRAIN]: 3,
+      },
+    }),
+    currentPlayer: "P2" as PlayerId,
+    activeUnitId: null,
+    turnQueue: [p2Lechy.id],
+    turnQueueIndex: 0,
+    turnOrder: [p2Lechy.id],
+    turnOrderIndex: 0,
+  };
 
-  res = applyAction(
-    next,
-    { type: "useAbility", unitId: lechy.id, abilityId: ABILITY_LECHY_CONFUSE_TERRAIN } as any,
-    rng
-  );
-
+  res = applyAction(next, { type: "unitStartTurn", unitId: p2Lechy.id } as any, rng);
+  const p2Marker = markerByOwner(res.state, "P2");
+  p1Marker = markerByOwner(res.state, "P1");
   assert(
-    res.state.forestMarker?.position.col === 4 &&
-      res.state.forestMarker?.position.row === 4,
-    "confuse terrain should replace existing forest marker"
+    p2Marker?.position.col === 6 && p2Marker?.position.row === 6,
+    "P2 Lechy should place own forest marker without removing P1 marker"
   );
+  assert(
+    p1Marker?.position.col === 2 && p1Marker?.position.row === 2,
+    "P1 marker should persist when P2 places marker"
+  );
+  assert(markersOf(res.state).length === 2, "both owners should have forest markers simultaneously");
 
-  console.log("lechy_confuse_terrain_single_marker passed");
+  next = {
+    ...setUnit(res.state, p1Lechy.id, {
+      position: { col: 4, row: 4 },
+      charges: {
+        ...res.state.units[p1Lechy.id].charges,
+        [ABILITY_LECHY_CONFUSE_TERRAIN]: 3,
+      },
+      turn: makeEmptyTurnEconomy(),
+    }),
+    currentPlayer: "P1",
+    activeUnitId: null,
+    turnQueue: [p1Lechy.id],
+    turnQueueIndex: 0,
+    turnOrder: [p1Lechy.id],
+    turnOrderIndex: 0,
+  };
+
+  res = applyAction(next, { type: "unitStartTurn", unitId: p1Lechy.id } as any, rng);
+  const replacedP1 = markerByOwner(res.state, "P1");
+  const stillP2 = markerByOwner(res.state, "P2");
+  assert(
+    replacedP1?.position.col === 4 && replacedP1?.position.row === 4,
+    "P1 marker should be replaced by new P1 placement"
+  );
+  assert(
+    stillP2?.position.col === 6 && stillP2?.position.row === 6,
+    "P2 marker should remain unchanged when P1 replaces marker"
+  );
+  assert(markersOf(res.state).length === 2, "replacement should keep one marker per owner");
+
+  console.log("lechy_confuse_terrain_per_side_markers_and_replacement passed");
 }
 
 function testLechyStormGatingEffectsAndExemptions() {
@@ -9758,8 +9937,9 @@ function main() {
   testLechyNaturalStealthThreshold();
   testLechyGuideTravelerGatingAndBehavior();
   testForestExitRestrictionOnFail();
+  testForestExitRestrictionOnSuccess();
   testForestCrossRestrictionOnFail();
-  testLechyConfuseTerrainSingleMarker();
+  testLechyConfuseTerrainPerSideMarkersAndReplacement();
   testLechyStormGatingEffectsAndExemptions();
   testFalseTrailExplosionHitsAlliesAndEnemiesSingleRoll();
   testElCidLongLiverAdds2Hp();

@@ -185,7 +185,9 @@ export type RollKind =
   | "falseTrailExplosion_attackerRoll"
   | "falseTrailExplosion_defenderRoll"
   | "chikatiloFalseTrailRevealChoice"
-  | "lechyGuideTravelerPlacement";
+  | "lechyGuideTravelerPlacement"
+  | "forestMoveCheck"
+  | "forestMoveDestination";
 
 export interface PendingRoll {
   id: string;
@@ -455,6 +457,7 @@ export type ResolveRollChoice =
   | { type: "intimidatePush"; to: Coord }
   | { type: "placeStakes"; positions: Coord[] }
   | { type: "forestTarget"; center: Coord }
+  | { type: "forestMoveDestination"; position: Coord }
   | { type: "chikatiloPlace"; position: Coord }
   | { type: "lechyGuideTravelerPlace"; position: Coord };
 
@@ -565,6 +568,7 @@ export interface GameState {
   rollCounter: number;
   stakeMarkers: StakeMarker[];
   stakeCounter: number;
+  forestMarkers: ForestMarker[];
   forestMarker: ForestMarker | null;
 
   /**

@@ -18,7 +18,10 @@ import {
 } from "./heroes/kaiser";
 import { maybeTriggerElCidKolada } from "./heroes/elCid";
 import { maybeTriggerGroznyTyrant } from "./heroes/grozny";
-import { applyStormStartOfTurn } from "./heroes/lechy";
+import {
+  applyStormStartOfTurn,
+  maybeTriggerLechyConfuseTerrain,
+} from "./heroes/lechy";
 import {
   maybeTriggerVladForestChoice,
   maybeTriggerVladTurnStakes,
@@ -346,8 +349,11 @@ export function applyUnitStartTurn(
   const tyrantResult = koladaResult.state.pendingRoll
     ? { state: koladaResult.state, events: [] }
     : maybeTriggerGroznyTyrant(koladaResult.state, unit.id, rng);
+  const confuseTerrainResult = tyrantResult.state.pendingRoll
+    ? { state: tyrantResult.state, events: [] }
+    : maybeTriggerLechyConfuseTerrain(tyrantResult.state, unit.id);
   const forestResult = maybeTriggerVladForestChoice(
-    tyrantResult.state,
+    confuseTerrainResult.state,
     unit.id,
     true
   );
@@ -372,6 +378,7 @@ export function applyUnitStartTurn(
         ...carpetResult.events,
         ...koladaResult.events,
         ...tyrantResult.events,
+        ...confuseTerrainResult.events,
         ...vladEvents,
       ],
     };
@@ -409,6 +416,7 @@ export function applyUnitStartTurn(
       ...carpetResult.events,
       ...koladaResult.events,
       ...tyrantResult.events,
+      ...confuseTerrainResult.events,
       ...vladEvents,
     ],
   };
