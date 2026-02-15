@@ -1,53 +1,53 @@
 import type { ApplyResult, GameAction, GameState } from "../model";
 import type { RNG } from "../rng";
-import { clearPendingRoll } from "../shared/rollUtils";
-import { resolveEnterBunkerRoll } from "./resolvers/resolveBunkerRoll";
-import { resolveInitiativeRoll } from "./resolvers/resolveInitiativeRoll";
-import { resolveMoveOptionsRoll } from "./resolvers/resolveMoveOptionsRoll";
+import { clearPendingRoll } from "../core";
+import { resolveEnterBunkerRoll } from "./resolvers/heroes/resolveBunkerRoll";
+import { resolveInitiativeRoll } from "./resolvers/core/resolveInitiativeRoll";
+import { resolveMoveOptionsRoll } from "./resolvers/core/resolveMoveOptionsRoll";
 import {
   resolveCarpetStrikeAttackRoll,
   resolveCarpetStrikeBerserkerDefenseChoice,
   resolveCarpetStrikeCenterRoll,
   resolveCarpetStrikeDefenderRoll,
-} from "./resolvers/resolveCarpetStrikeRoll";
+} from "./resolvers/heroes/resolveCarpetStrikeRoll";
 import {
   resolveForestAttackerRoll,
   resolveForestBerserkerDefenseChoice,
   resolveForestDefenderRoll,
-} from "./resolvers/resolveForestRoll";
+} from "./resolvers/heroes/resolveForestRoll";
 import {
   resolveTricksterAoEAttackerRoll,
   resolveTricksterAoEDefenderRoll,
-} from "./resolvers/resolveTricksterRoll";
+} from "./resolvers/heroes/resolveTricksterRoll";
 import {
   resolveElCidDuelistChoice,
   resolveElCidKoladaAttackerRoll,
   resolveElCidKoladaDefenderRoll,
   resolveElCidTisonaAttackerRoll,
   resolveElCidTisonaDefenderRoll,
-} from "./resolvers/resolveElCidRoll";
+} from "./resolvers/heroes/resolveElCidRoll";
 import {
   resolveDoraAttackerRoll,
   resolveDoraBerserkerDefenseChoice,
   resolveDoraDefenderRoll,
-} from "./resolvers/resolveDoraRoll";
+} from "./resolvers/heroes/resolveDoraRoll";
 import {
   resolveJebeHailOfArrowsAttackerRoll,
   resolveJebeHailOfArrowsBerserkerDefenseChoice,
   resolveJebeHailOfArrowsDefenderRoll,
   resolveJebeKhansShooterRicochetRoll,
   resolveJebeKhansShooterTargetChoice,
-} from "./resolvers/resolveJebeRoll";
+} from "./resolvers/heroes/resolveJebeRoll";
 import {
   resolveHassanAssassinOrderSelection,
   resolveHassanTrueEnemyTargetChoice,
-} from "./resolvers/resolveHassanRoll";
+} from "./resolvers/heroes/resolveHassanRoll";
 import {
   resolveLokiChickenTargetChoice,
   resolveLokiLaughtChoice,
   resolveLokiMindControlEnemyChoice,
   resolveLokiMindControlTargetChoice,
-} from "./resolvers/resolveLokiRoll";
+} from "./resolvers/heroes/resolveLokiRoll";
 import {
   resolveFriskGenocideChoice,
   resolveFriskKeenEyeChoice,
@@ -55,7 +55,7 @@ import {
   resolveFriskPacifismHugsTargetChoice,
   resolveFriskWarmWordsHealRoll,
   resolveFriskWarmWordsTargetChoice,
-} from "./resolvers/resolveFriskRoll";
+} from "./resolvers/heroes/resolveFriskRoll";
 import {
   resolveFemtoDivineMoveDestinationChoice,
   resolveFemtoDivineMoveRoll,
@@ -68,23 +68,23 @@ import {
   resolveFriskChildsCryChoiceRoll,
   resolveFriskSubstitutionChoiceRoll,
   resolveOdinMuninnDefenseChoiceRoll,
-} from "./resolvers/resolveAttackRoll";
+} from "./resolvers/core/resolveAttackRoll";
 import {
   resolveVladForestChoice,
   resolveVladForestTarget,
   resolveVladIntimidateChoice,
   resolveVladPlaceStakes,
-} from "./resolvers/resolveVladRoll";
+} from "./resolvers/heroes/resolveVladRoll";
 import {
   resolveEnterStealthRoll,
   resolveSearchStealthRoll,
-} from "./resolvers/resolveStealthRoll";
+} from "./resolvers/core/resolveStealthRoll";
 import {
   resolveChikatiloFalseTrailPlacement,
   resolveChikatiloFalseTrailRevealChoice,
   resolveFalseTrailExplosionAttackerRoll,
   resolveFalseTrailExplosionDefenderRoll,
-} from "./resolvers/resolveChikatiloRoll";
+} from "./resolvers/heroes/resolveChikatiloRoll";
 import { resolveLechyGuideTravelerPlacement } from "../actions/heroes/lechy";
 import {
   resolveForestMoveCheckRoll,
@@ -338,3 +338,4 @@ export function applyResolvePendingRoll(
       return { state: clearPendingRoll(state), events: [] };
   }
 }
+

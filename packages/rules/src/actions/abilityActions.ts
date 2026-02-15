@@ -38,8 +38,8 @@ import {
   spendCharges,
 } from "../abilities";
 import { canSpendSlots, spendSlots } from "../turnEconomy";
-import { requestRoll } from "../shared/rollUtils";
-import { evAbilityUsed, evAoeResolved } from "../shared/events";
+import { requestRoll } from "../core";
+import { evAbilityUsed, evAoeResolved } from "../core";
 import { applyKaiserDora } from "./heroes/kaiser";
 import { applyElCidDemonDuelist, applyElCidTisona } from "./heroes/elCid";
 import { applyKhansDecree, applyMongolCharge } from "./heroes/genghisKhan";
@@ -348,4 +348,5 @@ export function applyUseAbility(
 
   return { state: nextState, events };
 }
+
 

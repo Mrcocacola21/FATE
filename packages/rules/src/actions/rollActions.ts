@@ -1,2 +1,3 @@
-export * from "../shared/rollUtils";
+export * from "../core/rolls/rollUtils";
+
 

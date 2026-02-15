@@ -7,7 +7,7 @@ import {
   spendCharges,
 } from "../../abilities";
 import { HERO_ODIN_ID } from "../../heroes";
-import { evAbilityUsed, evUnitMoved } from "../../shared/events";
+import { evAbilityUsed, evUnitMoved } from "../../core";
 
 interface SleipnirPayload {
   to?: Coord;
@@ -72,3 +72,4 @@ export function applyOdinSleipnir(
 
   return { state: nextState, events };
 }
+

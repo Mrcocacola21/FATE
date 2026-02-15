@@ -17,7 +17,7 @@ import {
   HERO_FALSE_TRAIL_TOKEN_ID,
   HERO_LOKI_ID,
 } from "../../heroes";
-import { requestRoll } from "../../shared/rollUtils";
+import { requestRoll } from "../../core";
 import { canSpendSlots } from "../../turnEconomy";
 
 export const LOKI_LAUGHT_CAP = 15;
@@ -312,3 +312,4 @@ export function pickRandomFromIds(
 export function chebyshevDistance(a: Coord, b: Coord): number {
   return Math.max(Math.abs(a.col - b.col), Math.abs(a.row - b.row));
 }
+

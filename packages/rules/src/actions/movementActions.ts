@@ -18,18 +18,18 @@ import { linePath } from "../path";
 import { canSpendSlots, spendSlots } from "../turnEconomy";
 import { canUnitEnterCell, unitCanSeeStealthed } from "../visibility";
 import { isInsideForestAura } from "../forest";
-import { findStakeStopOnPath, applyStakeTriggerIfAny } from "../shared/stakeUtils";
+import { findStakeStopOnPath, applyStakeTriggerIfAny } from "../core";
 import { getMovementModes, unitHasMovementMode } from "./shared";
 import { getPolkovodetsSource } from "./heroes/vlad";
 import { HERO_LECHY_ID } from "../heroes";
 import { requestLechyGuideTravelerPlacement } from "./heroes/lechy";
-import { makeAttackContext } from "../shared/combatCtx";
-import { requestRoll } from "../shared/rollUtils";
+import { makeAttackContext } from "../core";
+import { requestRoll } from "../core";
 import {
   evMoveOptionsGenerated,
   evStealthRevealed,
   evUnitMoved,
-} from "../shared/events";
+} from "../core";
 
 type MoveActionInternal = Extract<GameAction, { type: "move" }> & {
   __forestBypass?: true;
@@ -1174,6 +1174,7 @@ export function applyMove(
 
   return { state: newState, events };
 }
+
 
 
 

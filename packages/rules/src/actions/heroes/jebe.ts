@@ -19,8 +19,8 @@ import {
 } from "../../abilities";
 import { HERO_JEBE_ID } from "../../heroes";
 import { canSpendSlots, spendSlots } from "../../turnEconomy";
-import { requestRoll } from "../../shared/rollUtils";
-import { evAbilityUsed, evAoeResolved } from "../../shared/events";
+import { requestRoll } from "../../core";
+import { evAbilityUsed, evAoeResolved } from "../../core";
 import type {
   JebeHailOfArrowsAoEContext,
   JebeKhansShooterRicochetContext,
@@ -268,4 +268,5 @@ export function applyJebeKhansShooter(
 
   return { state: requested.state, events: [...events, ...requested.events] };
 }
+
 

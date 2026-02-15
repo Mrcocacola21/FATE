@@ -17,8 +17,8 @@ import {
 } from "../../abilities";
 import { HERO_KALADIN_ID } from "../../heroes";
 import { canSpendSlots, spendSlots } from "../../turnEconomy";
-import { requestRoll } from "../../shared/rollUtils";
-import { evAbilityUsed, evAoeResolved, evUnitHealed } from "../../shared/events";
+import { requestRoll } from "../../core";
+import { evAbilityUsed, evAoeResolved, evUnitHealed } from "../../core";
 import type { TricksterAoEContext } from "../types";
 import { getUnitBaseMaxHp } from "../shared";
 
@@ -269,3 +269,4 @@ export function applyKaladinFifth(
 
   return { state: requested.state, events: [...events, ...requested.events] };
 }
+

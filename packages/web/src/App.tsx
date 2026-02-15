@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Lobby } from "./components/Lobby";
-import { Game } from "./components/Game";
+import { GamePage } from "./pages/GamePage";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { FigureSetPage } from "./pages/FigureSetPage";
 import { useGameStore } from "./store";
@@ -17,7 +17,7 @@ export default function App() {
   return (
     <ErrorBoundary>
       {roomId ? (
-        <Game />
+        <GamePage />
       ) : screen === "figures" ? (
         <FigureSetPage onBack={() => setScreen("rooms")} />
       ) : screen === "heartbreak" ? (

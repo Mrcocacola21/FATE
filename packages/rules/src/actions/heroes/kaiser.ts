@@ -13,13 +13,13 @@ import {
   spendCharges,
 } from "../../abilities";
 import { canSpendSlots, spendSlots } from "../../turnEconomy";
-import { clearPendingRoll, requestRoll } from "../../shared/rollUtils";
+import { clearPendingRoll, requestRoll } from "../../core";
 import {
   evAbilityUsed,
   evAoeResolved,
   evBunkerExited,
   evCarpetStrikeTriggered,
-} from "../../shared/events";
+} from "../../core";
 import {
   getUnitBaseMaxHp,
   isKaiser,
@@ -388,4 +388,5 @@ export function maybeTriggerCarpetStrike(
 
   return { state: requested.state, events };
 }
+
 

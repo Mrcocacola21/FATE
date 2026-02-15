@@ -13,5 +13,6 @@ export * from "./heroMeta";
 export * from "./turnEconomy";
 export * from "./aoe";
 export * from "./view";
+export * from "./core";
 export { linePath } from "./path";
 export * from "./path";

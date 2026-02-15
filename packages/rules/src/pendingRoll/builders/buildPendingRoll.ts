@@ -1,5 +1,5 @@
 import type { ApplyResult, GameState, PlayerId, RollKind } from "../../model";
-import { clearPendingRoll, requestRoll } from "../../shared/rollUtils";
+import { clearPendingRoll, requestRoll } from "../../core";
 import type { AttackRollContext } from "../types";
 
 export function replacePendingRoll(
@@ -53,3 +53,4 @@ export function makeAttackContext(params: {
     queueKind: params.queueKind,
   };
 }
+

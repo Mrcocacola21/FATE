@@ -10,7 +10,7 @@ import {
 } from "../../abilities";
 import { canSpendSlots, spendSlots } from "../../turnEconomy";
 import { getLegalMovesForUnitModes } from "../../movement";
-import { evAbilityUsed, evMoveOptionsGenerated } from "../../shared/events";
+import { evAbilityUsed, evMoveOptionsGenerated } from "../../core";
 
 function buildLineMoves(state: GameState, unit: UnitState, dirs: { col: number; row: number }[]) {
   const res: { col: number; row: number }[] = [];
@@ -150,3 +150,4 @@ export function applyMongolCharge(state: GameState, unit: UnitState): ApplyResul
 
   return { state: nextState, events };
 }
+

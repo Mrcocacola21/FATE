@@ -13,10 +13,10 @@ import {
   spendCharges,
 } from "../../abilities";
 import { canSpendSlots, spendSlots } from "../../turnEconomy";
-import { requestRoll } from "../../shared/rollUtils";
-import { evAbilityUsed, evAoeResolved } from "../../shared/events";
+import { requestRoll } from "../../core";
+import { evAbilityUsed, evAoeResolved } from "../../core";
 import { isElCid } from "../shared";
-import { makeAttackContext } from "../../shared/combatCtx";
+import { makeAttackContext } from "../../core";
 import type { ElCidAoEContext } from "../types";
 
 interface LinePayload {
@@ -380,3 +380,4 @@ export function maybeTriggerElCidKolada(
 
   return { state: requested.state, events: [...events, ...requested.events] };
 }
+

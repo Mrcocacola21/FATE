@@ -19,8 +19,8 @@ import {
 import { HERO_FEMTO_ID, HERO_GRIFFITH_ID } from "../../heroes";
 import { getUnitDefinition } from "../../units";
 import { canSpendSlots, spendSlots } from "../../turnEconomy";
-import { clearPendingRoll, requestRoll } from "../../shared/rollUtils";
-import { evAbilityUsed, evUnitMoved } from "../../shared/events";
+import { clearPendingRoll, requestRoll } from "../../core";
+import { evAbilityUsed, evUnitMoved } from "../../core";
 import { getUnitAt } from "../../board";
 
 export const FEMTO_HP_BONUS = 5;
@@ -287,3 +287,4 @@ export function resolveFemtoDivineMoveDestinationChoice(
     ],
   };
 }
+

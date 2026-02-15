@@ -1,6 +1,6 @@
 import type { Coord, GameEvent, GameState, PlayerId, UnitState } from "../../model";
 import { chebyshev, getUnitAt } from "../../board";
-import { clearPendingRoll, requestRoll } from "../../shared/rollUtils";
+import { clearPendingRoll, requestRoll } from "../../core";
 import {
   isVlad,
   isElCid,
@@ -16,10 +16,10 @@ import {
   getStakeMarkersAt,
   hasRevealedStakeAt,
   isStakeBlockedByHiddenUnit,
-} from "../../shared/stakeUtils";
+} from "../../core";
 import type { ApplyResult } from "../../model";
 import type { IntimidateResume } from "../types";
-import { evForestActivated, evIntimidateTriggered } from "../../shared/events";
+import { evForestActivated, evIntimidateTriggered } from "../../core";
 import { HERO_FALSE_TRAIL_TOKEN_ID } from "../../heroes";
 
 export function getPolkovodetsSource(
@@ -231,4 +231,5 @@ export function maybeTriggerVladTurnStakes(
 
   return requestVladStakesPlacement(state, unit.owner, "turnStart");
 }
+
 

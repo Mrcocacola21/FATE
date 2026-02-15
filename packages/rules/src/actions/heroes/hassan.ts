@@ -16,8 +16,8 @@ import {
 } from "../../abilities";
 import { HERO_FALSE_TRAIL_TOKEN_ID, HERO_HASSAN_ID } from "../../heroes";
 import { canSpendSlots, spendSlots } from "../../turnEconomy";
-import { requestRoll } from "../../shared/rollUtils";
-import { evAbilityUsed } from "../../shared/events";
+import { requestRoll } from "../../core";
+import { evAbilityUsed } from "../../core";
 import type {
   HassanAssassinOrderSelectionContext,
   HassanTrueEnemyTargetChoiceContext,
@@ -217,4 +217,5 @@ export function requestHassanAssassinOrderSelection(
     hassan.id
   );
 }
+
 

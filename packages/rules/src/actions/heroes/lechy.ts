@@ -29,8 +29,8 @@ import { canSpendSlots, spendSlots } from "../../turnEconomy";
 import { rollD6 } from "../../rng";
 import { getLegalMovesForUnitModes } from "../../movement";
 import { getMovementModes, unitHasMovementMode } from "../shared";
-import { requestRoll, clearPendingRoll } from "../../shared/rollUtils";
-import { evAbilityUsed, evMoveOptionsGenerated, evUnitDied, evUnitMoved } from "../../shared/events";
+import { requestRoll, clearPendingRoll } from "../../core";
+import { evAbilityUsed, evMoveOptionsGenerated, evUnitDied, evUnitMoved } from "../../core";
 import { applyGriffithFemtoRebirth } from "../../shared/griffith";
 
 function getEmptyCellsInAura(state: GameState, origin: Coord): Coord[] {
@@ -421,3 +421,4 @@ export function applyStormStartOfTurn(
 
   return { state: nextState, events };
 }
+

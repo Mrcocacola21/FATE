@@ -6,8 +6,8 @@ import { canSpendSlots, spendSlots } from "../turnEconomy";
 import { isKaiser, isKaiserTransformed } from "./shared";
 import { HERO_FALSE_TRAIL_TOKEN_ID, HERO_FRISK_ID } from "../heroes";
 import { getFriskKeenEyeTargetIds } from "./heroes/frisk";
-import { requestRoll } from "../shared/rollUtils";
-import { evSearchStealth, evStealthEntered } from "../shared/events";
+import { requestRoll } from "../core";
+import { evSearchStealth, evStealthEntered } from "../core";
 import { getStealthSuccessMinRoll } from "../stealth";
 
 export function applyEnterStealth(
@@ -224,4 +224,5 @@ export function applySearchStealth(
     unit.id
   );
 }
+
 

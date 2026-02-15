@@ -3,7 +3,7 @@ import type { RNG } from "../rng";
 import { rollD6 } from "../rng";
 import { resolveAttack } from "../combat";
 import { canSpendSlots, spendSlots } from "../turnEconomy";
-import { clearPendingRoll, replacePendingRoll, requestRoll } from "../shared/rollUtils";
+import { clearPendingRoll, replacePendingRoll, requestRoll } from "../core";
 import { isKaiser } from "./shared";
 import { HERO_FALSE_TRAIL_TOKEN_ID } from "../heroes";
 import { exitBunkerForUnit } from "./heroes/kaiser";
@@ -11,8 +11,8 @@ import { applyGutsBerserkAttack } from "./heroes/guts";
 import { markFriskAttackedWhileStealthed } from "./heroes/frisk";
 import { getPolkovodetsSource } from "./heroes/vlad";
 import type { AttackRollContext } from "./types";
-import { makeAttackContext } from "../shared/combatCtx";
-import { evAoeResolved, evDamageBonusApplied } from "../shared/events";
+import { makeAttackContext } from "../core";
+import { evAoeResolved, evDamageBonusApplied } from "../core";
 
 export { makeAttackContext };
 
@@ -313,4 +313,5 @@ export function advanceCombatQueue(
   nextEvents = [...nextEvents, ...requested.events];
   return { state: requested.state, events: nextEvents };
 }
+
 

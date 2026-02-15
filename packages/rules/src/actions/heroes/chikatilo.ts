@@ -19,8 +19,8 @@ import {
   spendCharges,
 } from "../../abilities";
 import { canSpendSlots, spendSlots } from "../../turnEconomy";
-import { clearPendingRoll, requestRoll } from "../../shared/rollUtils";
-import { evAbilityUsed, evUnitDied, evUnitPlaced } from "../../shared/events";
+import { clearPendingRoll, requestRoll } from "../../core";
+import { evAbilityUsed, evUnitDied, evUnitPlaced } from "../../core";
 import { HERO_CHIKATILO_ID, HERO_FALSE_TRAIL_TOKEN_ID } from "../../heroes";
 import type { RNG } from "../../rng";
 import { rollD6 } from "../../rng";
@@ -804,3 +804,4 @@ function performFalseTrailTrap(
 
   return { state: nextState, events };
 }
+

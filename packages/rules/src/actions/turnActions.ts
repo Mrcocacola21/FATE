@@ -34,7 +34,7 @@ import {
   maybeTriggerVladForestChoice,
   maybeTriggerVladTurnStakes,
 } from "./heroes/vlad";
-import { evGameEnded, evRoundStarted, evTurnStarted } from "../shared/events";
+import { evGameEnded, evRoundStarted, evTurnStarted } from "../core";
 
 function nextPlayer(player: PlayerId): PlayerId {
   return player === "P1" ? "P2" : "P1";
@@ -455,6 +455,7 @@ export function applyUnitStartTurn(
     events: baseEvents,
   };
 }
+
 
 
 

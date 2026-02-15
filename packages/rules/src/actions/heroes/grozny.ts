@@ -7,10 +7,10 @@ import { getBerserkerMovesForRoll } from "../../movement";
 import { canUnitEnterCell } from "../../visibility";
 import { ABILITY_GROZNY_INVADE_TIME, ABILITY_GROZNY_TYRANT, getAbilitySpec, spendCharges } from "../../abilities";
 import { canSpendSlots, spendSlots } from "../../turnEconomy";
-import { applyStakeTriggerIfAny } from "../../shared/stakeUtils";
-import { evAbilityUsed, evStealthRevealed, evUnitMoved } from "../../shared/events";
-import { clearPendingRoll, requestRoll } from "../../shared/rollUtils";
-import { makeAttackContext } from "../../shared/combatCtx";
+import { applyStakeTriggerIfAny } from "../../core";
+import { evAbilityUsed, evStealthRevealed, evUnitMoved } from "../../core";
+import { clearPendingRoll, requestRoll } from "../../core";
+import { makeAttackContext } from "../../core";
 import { getUnitBaseMaxHp } from "../shared";
 import type { AttackRollContext } from "../types";
 import type { RNG } from "../../rng";
@@ -420,3 +420,4 @@ export function handleGroznyTyrantAfterAttack(
   nextEvents = [...nextEvents, ...requested.events];
   return { state: requested.state, events: nextEvents, requested: true };
 }
+

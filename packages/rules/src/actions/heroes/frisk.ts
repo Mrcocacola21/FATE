@@ -14,8 +14,8 @@ import {
   setCharges,
 } from "../../abilities";
 import { HERO_FALSE_TRAIL_TOKEN_ID, HERO_FRISK_ID } from "../../heroes";
-import { requestRoll } from "../../shared/rollUtils";
-import { evGameEnded } from "../../shared/events";
+import { requestRoll } from "../../core";
+import { evGameEnded } from "../../core";
 
 const FRISK_COUNTER_CAP = 30;
 
@@ -406,3 +406,4 @@ export function isWithinDistance(
 ): boolean {
   return chebyshev(from, to) <= distance;
 }
+
