@@ -13,6 +13,12 @@ export const GROZNY_ID = "grozny";
 export const CHIKATILO_ID = "chikatilo";
 export const FALSE_TRAIL_TOKEN_ID = "falseTrailToken";
 export const LECHY_ID = "lechy";
+export const JEBE_ID = "jebe";
+export const HASSAN_ID = "hassan";
+export const KALADIN_ID = "kaladin";
+export const GUTS_ID = "guts";
+export const GRIFFITH_ID = "griffith";
+export const FEMTO_ID = "femto";
 export const EL_CID_TISONA_ID = "elCidCompeadorTisona";
 export const EL_CID_KOLADA_ID = "elCidCompeadorKolada";
 export const EL_CID_DEMON_DUELIST_ID = "elCidCompeadorDemonDuelist";
@@ -24,6 +30,17 @@ export const FALSE_TRAIL_EXPLOSION_ID = "falseTrailExplosion";
 export const LECHY_GUIDE_TRAVELER_ID = "lechyGuideTraveler";
 export const LECHY_CONFUSE_TERRAIN_ID = "lechyConfuseTerrain";
 export const LECHY_STORM_ID = "lechyStorm";
+export const JEBE_HAIL_OF_ARROWS_ID = "jebeHailOfArrows";
+export const JEBE_KHANS_SHOOTER_ID = "jebeKhansShooter";
+export const HASSAN_TRUE_ENEMY_ID = "hassanTrueEnemy";
+export const HASSAN_ASSASSIN_ORDER_ID = "hassanAssasinOrder";
+export const KALADIN_FIRST_ID = "kaladinFirst";
+export const KALADIN_FIFTH_ID = "kaladinFifth";
+export const GUTS_ARBALET_ID = "gutsArbalet";
+export const GUTS_CANNON_ID = "gutsCannon";
+export const GUTS_BERSERK_MODE_ID = "gutsBerserkMode";
+export const GUTS_EXIT_BERSERK_ID = "gutsExitBerserk";
+export const FEMTO_DIVINE_MOVE_ID = "femtoDivineMove";
 
 const MAX_HP_BY_CLASS: Record<UnitClass, number> = {
   spearman: 5,
@@ -54,6 +71,21 @@ export function getMaxHp(unitClass: UnitClass, heroId?: string): number {
   }
   if (heroId === LECHY_ID) {
     base += 3;
+  }
+  if (heroId === JEBE_ID) {
+    base += 1;
+  }
+  if (heroId === HASSAN_ID) {
+    base += 1;
+  }
+  if (heroId === KALADIN_ID) {
+    base += 1;
+  }
+  if (heroId === GUTS_ID) {
+    base += 2;
+  }
+  if (heroId === FEMTO_ID) {
+    base = MAX_HP_BY_CLASS.berserker + 5;
   }
   return base;
 }

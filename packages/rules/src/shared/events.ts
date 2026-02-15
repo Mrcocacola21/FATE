@@ -42,6 +42,7 @@ type BunkerEnterFailedEvent = Extract<
 >;
 type BunkerExitedEvent = Extract<GameEvent, { type: "bunkerExited" }>;
 type AbilityUsedEvent = Extract<GameEvent, { type: "abilityUsed" }>;
+type UnitHealedEvent = Extract<GameEvent, { type: "unitHealed" }>;
 type DamageBonusAppliedEvent = Extract<
   GameEvent,
   { type: "damageBonusApplied" }
@@ -313,6 +314,21 @@ export function evAbilityUsed(params: {
     type: "abilityUsed",
     unitId: params.unitId,
     abilityId: params.abilityId,
+  };
+}
+
+export function evUnitHealed(params: {
+  unitId: string;
+  amount: number;
+  hpAfter: number;
+  sourceAbilityId?: string;
+}): UnitHealedEvent {
+  return {
+    type: "unitHealed",
+    unitId: params.unitId,
+    amount: params.amount,
+    hpAfter: params.hpAfter,
+    sourceAbilityId: params.sourceAbilityId,
   };
 }
 

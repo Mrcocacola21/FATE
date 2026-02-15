@@ -26,6 +26,18 @@ import {
   ABILITY_LECHY_CONFUSE_TERRAIN,
   ABILITY_LECHY_GUIDE_TRAVELER,
   ABILITY_LECHY_STORM,
+  ABILITY_GUTS_ARBALET,
+  ABILITY_GUTS_BERSERK_MODE,
+  ABILITY_GUTS_CANNON,
+  ABILITY_GUTS_EXIT_BERSERK,
+  ABILITY_KALADIN_FIRST,
+  ABILITY_KALADIN_FIFTH,
+  ABILITY_TRICKSTER_AOE,
+  ABILITY_GRIFFITH_FEMTO_REBIRTH,
+  ABILITY_FEMTO_DIVINE_MOVE,
+  ABILITY_JEBE_HAIL_OF_ARROWS,
+  ABILITY_JEBE_KHANS_SHOOTER,
+  ABILITY_HASSAN_TRUE_ENEMY,
   ABILITY_TEST_MULTI_SLOT,
   ABILITY_VLAD_FOREST,
   HERO_GRAND_KAISER_ID,
@@ -35,6 +47,12 @@ import {
   HERO_EL_CID_COMPEADOR_ID,
   HERO_GROZNY_ID,
   HERO_LECHY_ID,
+  HERO_GUTS_ID,
+  HERO_GRIFFITH_ID,
+  HERO_FEMTO_ID,
+  HERO_JEBE_ID,
+  HERO_HASSAN_ID,
+  HERO_KALADIN_ID,
   HERO_VLAD_TEPES_ID,
   HERO_REGISTRY,
   getHeroMeta,
@@ -48,6 +66,7 @@ import {
   getLegalAttackTargets,
   getLegalIntents,
   linePath,
+  getStealthSuccessMinRoll,
 } from "../index";
 import { SeededRNG } from "../rng";
 import type { RNG } from "../rng";
@@ -104,6 +123,7 @@ function resolvePendingRollOnce(
   const resolvedChoice =
     pending.kind === "berserkerDefenseChoice" ||
     pending.kind === "dora_berserkerDefenseChoice" ||
+    pending.kind === "jebeHailOfArrows_berserkerDefenseChoice" ||
     pending.kind === "carpetStrike_berserkerDefenseChoice" ||
     pending.kind === "vladForest_berserkerDefenseChoice"
       ? choice ?? "roll"
@@ -6122,6 +6142,1972 @@ function testGenghisMongolChargeSweepTriggersAlliedAttacksInCorridor() {
   );
 }
 
+function setupJebeState() {
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1", { archer: HERO_JEBE_ID }));
+  state = attachArmy(state, createDefaultArmy("P2"));
+
+  const jebe = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.heroId === HERO_JEBE_ID
+  )!;
+
+  return { state, jebe };
+}
+
+function testJebeHpBonus() {
+  const { state, jebe } = setupJebeState();
+  const baseHp = getUnitDefinition("archer").maxHp;
+  const meta = getHeroMeta(HERO_JEBE_ID);
+
+  assert(jebe.hp === baseHp + 1, "Jebe HP should be base archer HP + 1");
+  assert(
+    meta?.baseStats.hp === baseHp + 1,
+    "Jebe hero meta HP should be base archer HP + 1"
+  );
+
+  console.log("jebe_hp_bonus passed");
+}
+
+function testJebeStealthThresholdIs6() {
+  let { state, jebe } = setupJebeState();
+
+  state = setUnit(state, jebe.id, { position: { col: 4, row: 4 } });
+  state = toBattleState(state, "P1", jebe.id);
+  state = initKnowledgeForOwners(state);
+
+  let rng = makeRngSequence([0.8]); // roll 5
+  let res = applyAction(
+    state,
+    { type: "enterStealth", unitId: jebe.id } as any,
+    rng
+  );
+  assert(res.state.pendingRoll?.kind === "enterStealth", "stealth should request roll");
+  res = resolvePendingRollOnce(res.state, rng);
+  assert(
+    res.state.units[jebe.id].isStealthed === false,
+    "Jebe stealth should fail on roll 5"
+  );
+
+  ({ state, jebe } = setupJebeState());
+  state = setUnit(state, jebe.id, { position: { col: 4, row: 4 } });
+  state = toBattleState(state, "P1", jebe.id);
+  state = initKnowledgeForOwners(state);
+
+  rng = makeRngSequence([0.99]); // roll 6
+  res = applyAction(
+    state,
+    { type: "enterStealth", unitId: jebe.id } as any,
+    rng
+  );
+  res = resolvePendingRollOnce(res.state, rng);
+  assert(
+    res.state.units[jebe.id].isStealthed === true,
+    "Jebe stealth should succeed on roll 6"
+  );
+
+  console.log("jebe_stealth_threshold_is_6 passed");
+}
+
+function testJebeHailOfArrowsGatingTargetingAndDamage() {
+  const rng = makeRngSequence([
+    0.99,
+    0.99, // shared attacker roll
+    0.01,
+    0.2, // defender 1
+    0.01,
+    0.2, // defender 2
+    0.01,
+    0.2, // defender 3
+    0.01,
+    0.2, // defender 4
+  ]);
+
+  let { state, jebe } = setupJebeState();
+  const ally1 = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.class === "rider"
+  )!;
+  const ally2 = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.class === "spearman"
+  )!;
+  const enemy1 = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "rider"
+  )!;
+  const enemy2 = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "knight"
+  )!;
+
+  state = setUnit(state, jebe.id, {
+    position: { col: 0, row: 0 },
+    charges: { ...jebe.charges, [ABILITY_JEBE_HAIL_OF_ARROWS]: 1 },
+  });
+  state = setUnit(state, ally1.id, { position: { col: 1, row: 1 } });
+  state = setUnit(state, ally2.id, { position: { col: 2, row: 3 } });
+  state = setUnit(state, enemy1.id, { position: { col: 2, row: 2 } });
+  state = setUnit(state, enemy2.id, { position: { col: 3, row: 1 } });
+  state = toBattleState(state, "P1", jebe.id);
+  state = initKnowledgeForOwners(state);
+
+  let res = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: jebe.id,
+      abilityId: ABILITY_JEBE_HAIL_OF_ARROWS,
+      payload: { center: { col: 2, row: 2 } },
+    } as any,
+    rng
+  );
+  assert(!res.state.pendingRoll, "hail should be blocked below 2 charges");
+  assert(
+    res.state.units[jebe.id].charges[ABILITY_JEBE_HAIL_OF_ARROWS] === 1,
+    "hail charges should remain when blocked by insufficient charges"
+  );
+
+  state = setUnit(state, jebe.id, {
+    charges: { ...state.units[jebe.id].charges, [ABILITY_JEBE_HAIL_OF_ARROWS]: 2 },
+  });
+
+  res = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: jebe.id,
+      abilityId: ABILITY_JEBE_HAIL_OF_ARROWS,
+      payload: { center: { col: 1, row: 2 } },
+    } as any,
+    rng
+  );
+  assert(!res.state.pendingRoll, "center outside attack line should be rejected");
+  assert(
+    res.state.units[jebe.id].charges[ABILITY_JEBE_HAIL_OF_ARROWS] === 2,
+    "illegal center should not spend hail charges"
+  );
+
+  const beforeHp: Record<string, number> = {
+    [ally1.id]: state.units[ally1.id].hp,
+    [ally2.id]: state.units[ally2.id].hp,
+    [enemy1.id]: state.units[enemy1.id].hp,
+    [enemy2.id]: state.units[enemy2.id].hp,
+  };
+
+  res = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: jebe.id,
+      abilityId: ABILITY_JEBE_HAIL_OF_ARROWS,
+      payload: { center: { col: 2, row: 2 } },
+    } as any,
+    rng
+  );
+  assert(
+    res.state.pendingRoll?.kind === "jebeHailOfArrows_attackerRoll",
+    "hail should request a shared attacker roll when valid"
+  );
+  assert(
+    res.state.units[jebe.id].charges[ABILITY_JEBE_HAIL_OF_ARROWS] === 0,
+    "hail should consume exactly 2 charges"
+  );
+
+  const resolved = resolveAllPendingRollsWithEvents(res.state, rng);
+  const events = [...res.events, ...resolved.events];
+  const attackEvents = events.filter(
+    (event) =>
+      event.type === "attackResolved" &&
+      event.attackerId === jebe.id &&
+      [ally1.id, ally2.id, enemy1.id, enemy2.id].includes(event.defenderId)
+  ) as Extract<GameEvent, { type: "attackResolved" }>[];
+  assert(attackEvents.length === 4, "hail should attack every unit in the 3x3 area");
+
+  const attackedIds = attackEvents.map((event) => event.defenderId).sort();
+  assert.deepStrictEqual(
+    attackedIds,
+    [ally1.id, ally2.id, enemy1.id, enemy2.id].sort(),
+    "hail should hit allies and enemies inside area"
+  );
+
+  for (const unitId of [ally1.id, ally2.id, enemy1.id, enemy2.id]) {
+    assert(
+      resolved.state.units[unitId].hp === beforeHp[unitId] - 1,
+      `hail should deal 1 damage to ${unitId}`
+    );
+  }
+
+  console.log("jebe_hail_of_arrows_gating_targeting_and_damage passed");
+}
+
+function testJebeKhansShooterGatingConsumesAndRicochets() {
+  const rng = makeRngSequence([
+    0.2, // ricochet roll = 2 => total 3 attacks
+    0.99,
+    0.99,
+    0.01,
+    0.01, // attack 1
+    0.99,
+    0.99,
+    0.01,
+    0.01, // attack 2
+    0.99,
+    0.99,
+    0.01,
+    0.01, // attack 3
+  ]);
+
+  let { state, jebe } = setupJebeState();
+  const enemy1 = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "rider"
+  )!;
+  const enemy2 = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "spearman"
+  )!;
+  const enemy3 = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "knight"
+  )!;
+
+  state = setUnit(state, jebe.id, {
+    position: { col: 0, row: 0 },
+    charges: { ...jebe.charges, [ABILITY_JEBE_KHANS_SHOOTER]: 5 },
+  });
+  state = setUnit(state, enemy1.id, { position: { col: 2, row: 0 } });
+  state = setUnit(state, enemy2.id, { position: { col: 0, row: 2 } });
+  state = setUnit(state, enemy3.id, { position: { col: 2, row: 2 } });
+  state = toBattleState(state, "P1", jebe.id);
+  state = initKnowledgeForOwners(state);
+
+  let used = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: jebe.id,
+      abilityId: ABILITY_JEBE_KHANS_SHOOTER,
+      payload: { targetId: enemy1.id },
+    } as any,
+    rng
+  );
+  assert(!used.state.pendingRoll, "Khan's Shooter should be blocked below 6 charges");
+  assert(
+    used.state.units[jebe.id].charges[ABILITY_JEBE_KHANS_SHOOTER] === 5,
+    "Khan's Shooter should not spend charges when blocked"
+  );
+
+  state = setUnit(state, jebe.id, {
+    charges: { ...state.units[jebe.id].charges, [ABILITY_JEBE_KHANS_SHOOTER]: 6 },
+  });
+
+  used = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: jebe.id,
+      abilityId: ABILITY_JEBE_KHANS_SHOOTER,
+      payload: { targetId: enemy1.id },
+    } as any,
+    rng
+  );
+
+  assert(
+    used.state.pendingRoll?.kind === "jebeKhansShooterRicochetRoll",
+    "Khan's Shooter should request ricochet roll first"
+  );
+  assert(
+    used.state.units[jebe.id].charges[ABILITY_JEBE_KHANS_SHOOTER] === 0,
+    "Khan's Shooter should consume all 6 charges immediately"
+  );
+
+  let current = used.state;
+  const events: GameEvent[] = [...used.events];
+  const pendingKinds: string[] = [];
+  const plannedTargets = [enemy2.id, enemy3.id];
+
+  while (current.pendingRoll) {
+    const pending = current.pendingRoll;
+    pendingKinds.push(pending.kind);
+
+    if (pending.kind === "jebeKhansShooterTargetChoice") {
+      const nextTarget = plannedTargets.shift() ?? enemy2.id;
+      const step = applyAction(
+        current,
+        {
+          type: "resolvePendingRoll",
+          pendingRollId: pending.id,
+          player: pending.player,
+          choice: { type: "jebeKhansShooterTarget", targetId: nextTarget },
+        } as any,
+        rng
+      );
+      current = step.state;
+      events.push(...step.events);
+      continue;
+    }
+
+    const step = resolvePendingRollOnce(current, rng);
+    current = step.state;
+    events.push(...step.events);
+  }
+
+  const attackEvents = events.filter(
+    (event) =>
+      event.type === "attackResolved" &&
+      event.attackerId === jebe.id &&
+      [enemy1.id, enemy2.id, enemy3.id].includes(event.defenderId)
+  ) as Extract<GameEvent, { type: "attackResolved" }>[];
+
+  assert(
+    attackEvents.length === 3,
+    "Khan's Shooter should perform exactly 1 + N attacks when targets exist"
+  );
+  assert(
+    pendingKinds.includes("attack_attackerRoll") &&
+      pendingKinds.includes("attack_defenderRoll"),
+    "Khan's Shooter should use normal attack roll flow for each hit"
+  );
+  assert(
+    pendingKinds.filter((kind) => kind === "jebeKhansShooterTargetChoice").length === 2,
+    "Khan's Shooter should request a new target for each ricochet"
+  );
+
+  const attackedIds = attackEvents.map((event) => event.defenderId).sort();
+  assert.deepStrictEqual(
+    attackedIds,
+    [enemy1.id, enemy2.id, enemy3.id].sort(),
+    "Khan's Shooter should attack chosen targets in the chain"
+  );
+
+  console.log("jebe_khans_shooter_gating_consumes_and_ricochets passed");
+}
+
+function setupHassanState() {
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1", { assassin: HERO_HASSAN_ID }));
+  state = attachArmy(state, createDefaultArmy("P2"));
+
+  const hassan = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.heroId === HERO_HASSAN_ID
+  )!;
+
+  return { state, hassan };
+}
+
+function testHassanHpBonus() {
+  const { state, hassan } = setupHassanState();
+  const baseHp = getUnitDefinition("assassin").maxHp;
+  const meta = getHeroMeta(HERO_HASSAN_ID);
+
+  assert(hassan.hp === baseHp + 1, "Hassan HP should be base assassin HP + 1");
+  assert(
+    meta?.baseStats.hp === baseHp + 1,
+    "Hassan hero meta HP should be base assassin HP + 1"
+  );
+
+  console.log("hassan_hp_bonus passed");
+}
+
+function testHassanStealthThresholdIs4() {
+  let { state, hassan } = setupHassanState();
+
+  state = setUnit(state, hassan.id, { position: { col: 4, row: 4 } });
+  state = toBattleState(state, "P1", hassan.id);
+  state = initKnowledgeForOwners(state);
+
+  let rng = makeRngSequence([0.34]); // roll 3
+  let res = applyAction(
+    state,
+    { type: "enterStealth", unitId: hassan.id } as any,
+    rng
+  );
+  assert(
+    res.state.pendingRoll?.kind === "enterStealth",
+    "stealth should request roll"
+  );
+  res = resolvePendingRollOnce(res.state, rng);
+  assert(
+    res.state.units[hassan.id].isStealthed === false,
+    "Hassan stealth should fail on roll 3"
+  );
+
+  ({ state, hassan } = setupHassanState());
+  state = setUnit(state, hassan.id, { position: { col: 4, row: 4 } });
+  state = toBattleState(state, "P1", hassan.id);
+  state = initKnowledgeForOwners(state);
+
+  rng = makeRngSequence([0.5]); // roll 4
+  res = applyAction(
+    state,
+    { type: "enterStealth", unitId: hassan.id } as any,
+    rng
+  );
+  res = resolvePendingRollOnce(res.state, rng);
+  assert(
+    res.state.units[hassan.id].isStealthed === true,
+    "Hassan stealth should succeed on roll 4"
+  );
+
+  console.log("hassan_stealth_threshold_is_4 passed");
+}
+
+function testHassanTrueEnemyGatingConsumesAndForcesOneAttack() {
+  const rng = makeAttackWinRng(1);
+  let { state, hassan } = setupHassanState();
+
+  const enemyForcedAttacker = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "rider"
+  )!;
+  const enemyForcedTarget = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "spearman"
+  )!;
+
+  state = setUnit(state, hassan.id, {
+    position: { col: 4, row: 4 },
+    charges: { ...hassan.charges, [ABILITY_HASSAN_TRUE_ENEMY]: 2 },
+  });
+  state = setUnit(state, enemyForcedAttacker.id, {
+    position: { col: 5, row: 4 },
+  });
+  state = setUnit(state, enemyForcedTarget.id, {
+    position: { col: 6, row: 4 },
+  });
+  state = toBattleState(state, "P1", hassan.id);
+  state = initKnowledgeForOwners(state);
+
+  let used = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: hassan.id,
+      abilityId: ABILITY_HASSAN_TRUE_ENEMY,
+      payload: { forcedAttackerId: enemyForcedAttacker.id },
+    } as any,
+    rng
+  );
+  assert(
+    !used.state.pendingRoll,
+    "True Enemy should be blocked below 3 charges"
+  );
+  assert(
+    used.state.units[hassan.id].charges[ABILITY_HASSAN_TRUE_ENEMY] === 2,
+    "True Enemy should not spend charges when blocked"
+  );
+
+  state = setUnit(state, hassan.id, {
+    charges: { ...state.units[hassan.id].charges, [ABILITY_HASSAN_TRUE_ENEMY]: 3 },
+  });
+
+  used = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: hassan.id,
+      abilityId: ABILITY_HASSAN_TRUE_ENEMY,
+      payload: { forcedAttackerId: enemyForcedAttacker.id },
+    } as any,
+    rng
+  );
+
+  assert(
+    used.state.pendingRoll?.kind === "hassanTrueEnemyTargetChoice",
+    "True Enemy should request forced target selection"
+  );
+  assert(
+    used.state.units[hassan.id].charges[ABILITY_HASSAN_TRUE_ENEMY] === 0,
+    "True Enemy should spend exactly 3 charges immediately"
+  );
+  assert(
+    used.state.units[hassan.id].turn.actionUsed,
+    "True Enemy should consume Hassan's action slot"
+  );
+
+  const targetChoice = applyAction(
+    used.state,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: used.state.pendingRoll!.id,
+      player: used.state.pendingRoll!.player,
+      choice: { type: "hassanTrueEnemyTarget", targetId: enemyForcedTarget.id },
+    } as any,
+    rng
+  );
+  assert(
+    targetChoice.state.pendingRoll?.kind === "attack_attackerRoll",
+    "True Enemy should continue into normal attack flow"
+  );
+
+  const resolved = resolveAllPendingRollsWithEvents(targetChoice.state, rng);
+  const events = [...used.events, ...targetChoice.events, ...resolved.events];
+  const forcedAttackEvents = events.filter(
+    (event) =>
+      event.type === "attackResolved" &&
+      event.attackerId === enemyForcedAttacker.id &&
+      event.defenderId === enemyForcedTarget.id
+  ) as Extract<GameEvent, { type: "attackResolved" }>[];
+
+  assert(
+    forcedAttackEvents.length === 1,
+    "True Enemy should force exactly one normal attack"
+  );
+  assert(
+    forcedAttackEvents[0].attackerRoll.dice.length >= 2 &&
+      forcedAttackEvents[0].defenderRoll.dice.length >= 2,
+    "forced attack should use normal attack/defense roll resolution"
+  );
+
+  console.log("hassan_true_enemy_gating_consumes_and_forces_one_attack passed");
+}
+
+function testHassanAssassinOrderBattleStartSelectionAndPerSideIndependence() {
+  const rng = new SeededRNG(870);
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1", { assassin: HERO_HASSAN_ID }));
+  state = attachArmy(state, createDefaultArmy("P2", { assassin: HERO_HASSAN_ID }));
+  state = toPlacementState(state, "P1");
+
+  const p1Coords = ["b0", "c0", "d0", "e0", "f0", "g0", "h0"].map(coordFromNotation);
+  const p2Coords = ["b8", "c8", "d8", "e8", "f8", "g8", "h8"].map(coordFromNotation);
+
+  let p1i = 0;
+  let p2i = 0;
+  while (state.phase === "placement") {
+    const current = state.currentPlayer;
+    const nextUnit = Object.values(state.units).find(
+      (u) => u.owner === current && !u.position && u.isAlive
+    );
+    if (!nextUnit) {
+      state = applyAction(state, { type: "endTurn" } as any, rng).state;
+      continue;
+    }
+    const pos = current === "P1" ? p1Coords[p1i++] : p2Coords[p2i++];
+    state = applyAction(
+      state,
+      { type: "placeUnit", unitId: nextUnit.id, position: pos } as any,
+      rng
+    ).state;
+  }
+
+  assert(
+    state.pendingRoll?.kind === "hassanAssassinOrderSelection",
+    "Assassin Order should trigger at battle start"
+  );
+  assert(
+    state.pendingRoll?.player === "P1",
+    "P1 Assassin Order selection should resolve first"
+  );
+
+  const p1Hassan = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.heroId === HERO_HASSAN_ID
+  )!;
+  const p2Hassan = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.heroId === HERO_HASSAN_ID
+  )!;
+  const p1Archer = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "archer"
+  )!;
+  const p1Rider = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "rider"
+  )!;
+  const p2Archer = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "archer"
+  )!;
+  const p2Rider = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "rider"
+  )!;
+
+  assert(
+    getStealthSuccessMinRoll(state.units[p1Archer.id]) === 6,
+    "base archer should start with stealth threshold 6"
+  );
+  assert(
+    getStealthSuccessMinRoll(state.units[p1Rider.id]) === null,
+    "base rider should start without stealth"
+  );
+  assert(
+    getStealthSuccessMinRoll(state.units[p1Hassan.id]) === 4,
+    "Hassan should keep stealth threshold 4"
+  );
+
+  const firstSelection = applyAction(
+    state,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: state.pendingRoll!.id,
+      player: state.pendingRoll!.player,
+      choice: {
+        type: "hassanAssassinOrderPick",
+        unitIds: [p1Archer.id, p1Rider.id],
+      },
+    } as any,
+    rng
+  );
+
+  assert(
+    firstSelection.state.pendingRoll?.kind === "hassanAssassinOrderSelection",
+    "P2 should receive independent Assassin Order selection"
+  );
+  assert(
+    firstSelection.state.pendingRoll?.player === "P2",
+    "second Assassin Order selection should be owned by P2"
+  );
+  assert(
+    getStealthSuccessMinRoll(firstSelection.state.units[p2Archer.id]) === 6,
+    "P2 archer threshold should remain unchanged before P2 selection"
+  );
+
+  const secondSelection = applyAction(
+    firstSelection.state,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: firstSelection.state.pendingRoll!.id,
+      player: firstSelection.state.pendingRoll!.player,
+      choice: {
+        type: "hassanAssassinOrderPick",
+        unitIds: [p2Archer.id, p2Rider.id],
+      },
+    } as any,
+    rng
+  );
+
+  assert(
+    !secondSelection.state.pendingRoll,
+    "Assassin Order selections should complete for both sides"
+  );
+  assert(
+    getStealthSuccessMinRoll(secondSelection.state.units[p1Archer.id]) === 5,
+    "Assassin Order should upgrade archer stealth threshold from 6 to 5"
+  );
+  assert(
+    getStealthSuccessMinRoll(secondSelection.state.units[p1Rider.id]) === 5,
+    "Assassin Order should grant stealth to non-stealth unit"
+  );
+  assert(
+    getStealthSuccessMinRoll(secondSelection.state.units[p2Archer.id]) === 5,
+    "P2 selection should upgrade P2 archer independently"
+  );
+  assert(
+    getStealthSuccessMinRoll(secondSelection.state.units[p2Rider.id]) === 5,
+    "P2 selection should grant stealth independently"
+  );
+  assert(
+    getStealthSuccessMinRoll(secondSelection.state.units[p2Hassan.id]) === 4,
+    "Hassan should remain at stealth threshold 4"
+  );
+
+  console.log(
+    "hassan_assassin_order_battle_start_selection_and_per_side_independence passed"
+  );
+}
+
+function setupGriffithState() {
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1", { knight: HERO_GRIFFITH_ID }));
+  state = attachArmy(state, createDefaultArmy("P2"));
+
+  const griffith = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.heroId === HERO_GRIFFITH_ID
+  )!;
+
+  return { state, griffith };
+}
+
+function promoteToFemto(state: GameState, unitId: string): GameState {
+  const unit = state.units[unitId];
+  if (!unit) return state;
+  const berserkerHp = getUnitDefinition("berserker").maxHp;
+  const berserkerAttack = getUnitDefinition("berserker").baseAttack;
+  return setUnit(state, unitId, {
+    heroId: HERO_FEMTO_ID,
+    figureId: HERO_FEMTO_ID,
+    transformed: true,
+    hp: berserkerHp + 5,
+    attack: berserkerAttack,
+    charges: {
+      ...unit.charges,
+      [ABILITY_BERSERK_AUTO_DEFENSE]: 6,
+    },
+  });
+}
+
+function testGriffithWretchedManDamageReductionClamped() {
+  let { state, griffith } = setupGriffithState();
+  const enemy = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "rider"
+  )!;
+
+  state = setUnit(state, griffith.id, { position: { col: 4, row: 4 } });
+  state = setUnit(state, enemy.id, { position: { col: 4, row: 5 } });
+  state = initKnowledgeForOwners(state);
+
+  let normal = resolveAttack(state, {
+    attackerId: griffith.id,
+    defenderId: enemy.id,
+    rolls: {
+      attackerDice: [6, 6],
+      defenderDice: [1, 1],
+    },
+  });
+  let normalEvent = normal.events.find(
+    (event) =>
+      event.type === "attackResolved" &&
+      event.attackerId === griffith.id &&
+      event.defenderId === enemy.id
+  ) as Extract<GameEvent, { type: "attackResolved" }> | undefined;
+  assert(normalEvent, "Griffith attack should resolve");
+  assert(
+    normalEvent.damage === state.units[griffith.id].attack - 1,
+    "Wretched Man should reduce Griffith damage by exactly 1"
+  );
+
+  state = setUnit(state, griffith.id, { attack: 1 });
+  const clamped = resolveAttack(state, {
+    attackerId: griffith.id,
+    defenderId: enemy.id,
+    rolls: {
+      attackerDice: [6, 6],
+      defenderDice: [1, 1],
+    },
+  });
+  const clampedEvent = clamped.events.find(
+    (event) =>
+      event.type === "attackResolved" &&
+      event.attackerId === griffith.id &&
+      event.defenderId === enemy.id
+  ) as Extract<GameEvent, { type: "attackResolved" }> | undefined;
+  assert(clampedEvent, "clamped Griffith attack should resolve");
+  assert(clampedEvent.damage === 0, "Wretched Man damage should clamp at 0");
+
+  console.log("griffith_wretched_man_damage_reduction_clamped passed");
+}
+
+function testGriffithWarriorDoubleAutoHit() {
+  let { state, griffith } = setupGriffithState();
+  const enemy = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "rider"
+  )!;
+
+  state = setUnit(state, griffith.id, { position: { col: 4, row: 4 } });
+  state = setUnit(state, enemy.id, { position: { col: 4, row: 5 } });
+  state = initKnowledgeForOwners(state);
+
+  const resolved = resolveAttack(state, {
+    attackerId: griffith.id,
+    defenderId: enemy.id,
+    rolls: {
+      attackerDice: [1, 1], // attacker double
+      defenderDice: [6, 6], // stronger defense sum to prove double override
+    },
+  });
+  const attackEvent = resolved.events.find(
+    (event) =>
+      event.type === "attackResolved" &&
+      event.attackerId === griffith.id &&
+      event.defenderId === enemy.id
+  ) as Extract<GameEvent, { type: "attackResolved" }> | undefined;
+  assert(attackEvent, "Griffith attack should resolve");
+  assert(attackEvent.hit, "Griffith should auto-hit on double attack roll");
+  assert(
+    attackEvent.defenderRoll.sum > attackEvent.attackerRoll.sum,
+    "test setup must keep defender roll stronger to validate warrior double rule"
+  );
+
+  console.log("griffith_warrior_double_auto_hit passed");
+}
+
+function testGriffithFemtoRebirthOnDeath() {
+  const rng = makeAttackWinRng(1);
+  let { state, griffith } = setupGriffithState();
+  const enemy = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "rider"
+  )!;
+
+  for (const unit of Object.values(state.units)) {
+    if (unit.id === griffith.id || unit.id === enemy.id) continue;
+    state = setUnit(state, unit.id, {
+      isAlive: false,
+      hp: 0,
+      position: null,
+    });
+  }
+
+  state = setUnit(state, griffith.id, {
+    hp: 1,
+    position: { col: 4, row: 4 },
+  });
+  state = setUnit(state, enemy.id, { position: { col: 4, row: 5 } });
+  state = toBattleState(state, "P2", enemy.id);
+  state = initKnowledgeForOwners(state);
+
+  const attack = applyAction(
+    state,
+    { type: "attack", attackerId: enemy.id, defenderId: griffith.id } as any,
+    rng
+  );
+  const resolved = resolveAllPendingRollsWithEvents(attack.state, rng);
+  const events = [...attack.events, ...resolved.events];
+
+  const reborn = resolved.state.units[griffith.id];
+  const berserkerHp = getUnitDefinition("berserker").maxHp + 5;
+  assert(reborn.heroId === HERO_FEMTO_ID, "Griffith should transform into Femto");
+  assert(reborn.isAlive, "Femto form should be alive after rebirth");
+  assert(
+    reborn.position?.col === 4 && reborn.position?.row === 4,
+    "Femto should stay in the same cell after rebirth"
+  );
+  assert(reborn.hp === berserkerHp, "Femto should spawn at full berserker+5 HP");
+
+  const deathEvent = events.find(
+    (event) => event.type === "unitDied" && event.unitId === griffith.id
+  );
+  assert(deathEvent, "Griffith death event should still be emitted");
+  const rebirthEvent = events.find(
+    (event) =>
+      event.type === "abilityUsed" &&
+      event.unitId === griffith.id &&
+      event.abilityId === ABILITY_GRIFFITH_FEMTO_REBIRTH
+  );
+  assert(rebirthEvent, "Femto rebirth ability event should be emitted");
+
+  const ended = applyAction(
+    resolved.state,
+    { type: "endTurn" } as any,
+    makeRngSequence([])
+  );
+  assert(
+    ended.state.phase === "battle",
+    "match should not end when Griffith dies if Femto rebirth exists"
+  );
+
+  console.log("griffith_femto_rebirth_on_death passed");
+}
+
+function testFemtoSpearmanReachAndBerserkerDamage() {
+  let { state, griffith } = setupGriffithState();
+  const enemy = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "rider"
+  )!;
+
+  state = setUnit(state, griffith.id, { position: { col: 4, row: 4 } });
+  state = setUnit(state, enemy.id, { position: { col: 4, row: 6 } });
+  state = promoteToFemto(state, griffith.id);
+  state = toBattleState(state, "P1", griffith.id);
+  state = initKnowledgeForOwners(state);
+
+  const legalTargets = getLegalAttackTargets(state, griffith.id);
+  assert(
+    legalTargets.includes(enemy.id),
+    "Femto normal attacks should use spearman reach (distance 2 legal)"
+  );
+
+  const resolved = resolveAttack(state, {
+    attackerId: griffith.id,
+    defenderId: enemy.id,
+    rolls: {
+      attackerDice: [6, 5],
+      defenderDice: [1, 1],
+    },
+  });
+  const attackEvent = resolved.events.find(
+    (event) =>
+      event.type === "attackResolved" &&
+      event.attackerId === griffith.id &&
+      event.defenderId === enemy.id
+  ) as Extract<GameEvent, { type: "attackResolved" }> | undefined;
+  assert(attackEvent, "Femto attack should resolve");
+  assert(
+    attackEvent.damage === getUnitDefinition("berserker").baseAttack,
+    "Femto base damage should equal berserker base damage"
+  );
+
+  console.log("femto_spearman_reach_and_berserker_damage passed");
+}
+
+function testFemtoDivineMoveUsesMoveSlotAndRollRanges() {
+  let { state, griffith } = setupGriffithState();
+  state = setUnit(state, griffith.id, { position: { col: 4, row: 4 } });
+  state = promoteToFemto(state, griffith.id);
+  state = toBattleState(state, "P1", griffith.id);
+  state = initKnowledgeForOwners(state);
+
+  const used = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: griffith.id,
+      abilityId: ABILITY_FEMTO_DIVINE_MOVE,
+    } as any,
+    makeRngSequence([])
+  );
+  assert(
+    used.state.pendingRoll?.kind === "femtoDivineMoveRoll",
+    "Divine Movement should request roll first"
+  );
+  assert(
+    used.state.units[griffith.id].turn.moveUsed,
+    "Divine Movement should consume move slot"
+  );
+  assert(
+    used.state.units[griffith.id].turn.actionUsed === false,
+    "Divine Movement should not consume main action"
+  );
+
+  const shortRange = resolvePendingRollOnce(used.state, makeRngSequence([0.2])); // roll 2
+  assert(
+    shortRange.state.pendingRoll?.kind === "femtoDivineMoveDestination",
+    "low roll should request destination selection"
+  );
+  const shortOptions =
+    (shortRange.state.pendingRoll?.context as { options?: Coord[] } | undefined)
+      ?.options ?? [];
+  assert(shortOptions.length > 0, "low-roll divine move should have destination options");
+  assert(
+    shortOptions.every(
+      (coord) =>
+        Math.max(Math.abs(coord.col - 4), Math.abs(coord.row - 4)) <= 2
+    ),
+    "roll 1-3 divine move options must stay within distance 2"
+  );
+
+  const shortDestination = shortOptions[0];
+  const shortChosen = applyAction(
+    shortRange.state,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: shortRange.state.pendingRoll!.id,
+      player: shortRange.state.pendingRoll!.player,
+      choice: { type: "femtoDivineMoveDestination", position: shortDestination },
+    } as any,
+    makeRngSequence([])
+  );
+  assert(
+    shortChosen.state.units[griffith.id].position?.col === shortDestination.col &&
+      shortChosen.state.units[griffith.id].position?.row === shortDestination.row,
+    "Femto should teleport to selected legal short-range destination"
+  );
+  assert(
+    shortChosen.state.units[griffith.id].turn.actionUsed === false,
+    "Divine Movement destination resolve should still keep action slot free"
+  );
+
+  ({ state, griffith } = setupGriffithState());
+  state = setUnit(state, griffith.id, { position: { col: 4, row: 4 } });
+  state = promoteToFemto(state, griffith.id);
+  state = toBattleState(state, "P1", griffith.id);
+  state = initKnowledgeForOwners(state);
+
+  const usedLong = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: griffith.id,
+      abilityId: ABILITY_FEMTO_DIVINE_MOVE,
+    } as any,
+    makeRngSequence([])
+  );
+  const longRange = resolvePendingRollOnce(usedLong.state, makeRngSequence([0.8])); // roll 5
+  const longOptions =
+    (longRange.state.pendingRoll?.context as { options?: Coord[] } | undefined)
+      ?.options ?? [];
+  assert(
+    longOptions.some(
+      (coord) =>
+        Math.max(Math.abs(coord.col - 4), Math.abs(coord.row - 4)) > 2
+    ),
+    "roll 4-6 divine move should allow full-board destinations"
+  );
+
+  console.log("femto_divine_move_uses_move_slot_and_roll_ranges passed");
+}
+
+function testFemtoBerserkAutoDefenseGatingAndBehavior() {
+  const meta = getHeroMeta(HERO_FEMTO_ID);
+  assert(
+    !!meta?.abilities.some((ability) => ability.id === ABILITY_BERSERK_AUTO_DEFENSE),
+    "Femto hero meta should include Berserk Auto Defense trait"
+  );
+
+  let { state, griffith } = setupGriffithState();
+  const attacker = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "rider"
+  )!;
+
+  state = setUnit(state, griffith.id, { position: { col: 4, row: 4 } });
+  state = setUnit(state, attacker.id, { position: { col: 4, row: 5 } });
+  state = promoteToFemto(state, griffith.id);
+  state = setUnit(state, griffith.id, {
+    charges: {
+      ...state.units[griffith.id].charges,
+      [ABILITY_BERSERK_AUTO_DEFENSE]: 6,
+    },
+  });
+  state = toBattleState(state, "P2", attacker.id);
+  state = initKnowledgeForOwners(state);
+
+  const rngAuto = makeRngSequence([0.99, 0.99]);
+  const started = applyAction(
+    state,
+    { type: "attack", attackerId: attacker.id, defenderId: griffith.id } as any,
+    rngAuto
+  );
+  const afterAttackerRoll = resolvePendingRollOnce(started.state, rngAuto);
+  assert(
+    afterAttackerRoll.state.pendingRoll?.kind === "berserkerDefenseChoice",
+    "Femto with 6 charges should receive berserker auto-defense choice"
+  );
+
+  const choseAuto = applyAction(
+    afterAttackerRoll.state,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: afterAttackerRoll.state.pendingRoll!.id,
+      player: afterAttackerRoll.state.pendingRoll!.player,
+      choice: "auto",
+    } as any,
+    rngAuto
+  );
+  const autoAttackEvent = choseAuto.events.find(
+    (event) =>
+      event.type === "attackResolved" &&
+      event.attackerId === attacker.id &&
+      event.defenderId === griffith.id
+  ) as Extract<GameEvent, { type: "attackResolved" }> | undefined;
+  assert(autoAttackEvent, "auto-defense combat event should resolve");
+  assert(autoAttackEvent.hit === false, "auto-defense should dodge the attack");
+  assert(
+    choseAuto.state.units[griffith.id].charges[ABILITY_BERSERK_AUTO_DEFENSE] === 0,
+    "auto-defense should spend all 6 charges"
+  );
+
+  ({ state, griffith } = setupGriffithState());
+  state = setUnit(state, griffith.id, { position: { col: 4, row: 4 } });
+  state = setUnit(state, attacker.id, { position: { col: 4, row: 5 } });
+  state = promoteToFemto(state, griffith.id);
+  state = setUnit(state, griffith.id, {
+    charges: {
+      ...state.units[griffith.id].charges,
+      [ABILITY_BERSERK_AUTO_DEFENSE]: 5,
+    },
+  });
+  state = toBattleState(state, "P2", attacker.id);
+  state = initKnowledgeForOwners(state);
+
+  const rngRoll = makeRngSequence([0.99, 0.99, 0.01, 0.01]);
+  const startedNoPrompt = applyAction(
+    state,
+    { type: "attack", attackerId: attacker.id, defenderId: griffith.id } as any,
+    rngRoll
+  );
+  const afterAttackerRollNoPrompt = resolvePendingRollOnce(
+    startedNoPrompt.state,
+    rngRoll
+  );
+  assert(
+    afterAttackerRollNoPrompt.state.pendingRoll?.kind === "attack_defenderRoll",
+    "Femto below 6 charges should not receive auto-defense choice prompt"
+  );
+  const finished = resolveAllPendingRolls(afterAttackerRollNoPrompt.state, rngRoll);
+  assert(
+    finished.state.units[griffith.id].charges[ABILITY_BERSERK_AUTO_DEFENSE] === 5,
+    "normal defense path should keep Berserk Auto Defense charges unchanged"
+  );
+
+  console.log("femto_berserk_auto_defense_gating_and_behavior passed");
+}
+
+function setupGutsState() {
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1", { berserker: HERO_GUTS_ID }));
+  state = attachArmy(state, createDefaultArmy("P2"));
+
+  const guts = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.heroId === HERO_GUTS_ID
+  )!;
+
+  return { state, guts };
+}
+
+function testGutsHpBonus() {
+  const { state, guts } = setupGutsState();
+  const baseHp = getUnitDefinition("berserker").maxHp;
+  const meta = getHeroMeta(HERO_GUTS_ID);
+
+  assert(guts.hp === baseHp + 2, "Guts HP should be base berserker HP + 2");
+  assert(
+    meta?.baseStats.hp === baseHp + 2,
+    "Guts hero meta HP should be base berserker HP + 2"
+  );
+
+  console.log("guts_hp_bonus passed");
+}
+
+function testGutsKnightMulticlassMovementAndDoubleAutoHit() {
+  let { state, guts } = setupGutsState();
+  const enemy = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "rider"
+  )!;
+
+  state = setUnit(state, guts.id, { position: { col: 4, row: 4 } });
+  state = setUnit(state, enemy.id, { position: { col: 4, row: 5 } });
+  state = toBattleState(state, "P1", guts.id);
+  state = initKnowledgeForOwners(state);
+
+  const moveModes = applyAction(
+    state,
+    { type: "requestMoveOptions", unitId: guts.id } as any,
+    makeRngSequence([])
+  );
+  const modeEvent = moveModes.events.find(
+    (event) => event.type === "moveOptionsGenerated"
+  );
+  assert(
+    modeEvent &&
+      modeEvent.type === "moveOptionsGenerated" &&
+      (modeEvent.modes ?? []).includes("knight"),
+    "Guts should have Knight movement mode available"
+  );
+
+  const rng = makeRngSequence([0.01, 0.01, 0.99, 0.99]); // attacker double, strong defender
+  const initial = applyAction(
+    state,
+    { type: "attack", attackerId: guts.id, defenderId: enemy.id } as any,
+    rng
+  );
+  assert(
+    initial.state.pendingRoll?.kind === "attack_attackerRoll",
+    "Guts attack should request attacker roll"
+  );
+
+  const resolved = resolveAllPendingRollsWithEvents(initial.state, rng);
+  const events = [...initial.events, ...resolved.events];
+
+  const attackEvent = events.find(
+    (event) =>
+      event.type === "attackResolved" &&
+      event.attackerId === guts.id &&
+      event.defenderId === enemy.id
+  );
+  assert(attackEvent && attackEvent.type === "attackResolved", "attack should resolve");
+  assert(attackEvent.hit, "double attack roll should auto-hit for Guts");
+  assert(
+    attackEvent.defenderRoll.sum > attackEvent.attackerRoll.sum,
+    "test setup should have stronger defender roll to prove knight double override"
+  );
+
+  console.log("guts_knight_multiclass_movement_and_double_auto_hit passed");
+}
+
+function testGutsArbaletRangedFixedDamage() {
+  const rng = makeAttackWinRng(1);
+  let { state, guts } = setupGutsState();
+  const enemy = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "rider"
+  )!;
+
+  state = setUnit(state, guts.id, { position: { col: 0, row: 0 } });
+  state = setUnit(state, enemy.id, { position: { col: 0, row: 2 } });
+  state = toBattleState(state, "P1", guts.id);
+  state = initKnowledgeForOwners(state);
+
+  const beforeHp = state.units[enemy.id].hp;
+  const used = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: guts.id,
+      abilityId: ABILITY_GUTS_ARBALET,
+      payload: { targetId: enemy.id },
+    } as any,
+    rng
+  );
+  assert(
+    used.state.pendingRoll?.kind === "attack_attackerRoll",
+    "Arbalet should use ranged legal target flow and request attack roll"
+  );
+
+  const resolved = resolveAllPendingRollsWithEvents(used.state, rng);
+  const events = [...used.events, ...resolved.events];
+  const attackEvent = events.find(
+    (event) =>
+      event.type === "attackResolved" &&
+      event.attackerId === guts.id &&
+      event.defenderId === enemy.id
+  ) as Extract<GameEvent, { type: "attackResolved" }> | undefined;
+
+  assert(attackEvent, "Arbalet attack should resolve");
+  assert(attackEvent.damage === 1, "Arbalet should always deal exactly 1 damage");
+  assert(
+    resolved.state.units[enemy.id].hp === beforeHp - 1,
+    "Arbalet should reduce HP by exactly 1"
+  );
+
+  console.log("guts_arbalet_ranged_fixed_damage passed");
+}
+
+function testGutsCannonGatingAndChargeSpend() {
+  const rng = makeAttackWinRng(1);
+  let { state, guts } = setupGutsState();
+  const enemy = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "rider"
+  )!;
+
+  state = setUnit(state, guts.id, {
+    position: { col: 0, row: 0 },
+    charges: { ...guts.charges, [ABILITY_GUTS_CANNON]: 1 },
+  });
+  state = setUnit(state, enemy.id, { position: { col: 0, row: 2 } });
+  state = toBattleState(state, "P1", guts.id);
+  state = initKnowledgeForOwners(state);
+
+  let used = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: guts.id,
+      abilityId: ABILITY_GUTS_CANNON,
+      payload: { targetId: enemy.id },
+    } as any,
+    rng
+  );
+  assert(!used.state.pendingRoll, "Cannon should be blocked below 2 charges");
+  assert(
+    used.state.units[guts.id].charges[ABILITY_GUTS_CANNON] === 1,
+    "Cannon should not spend charges when blocked"
+  );
+
+  state = setUnit(state, guts.id, {
+    charges: { ...state.units[guts.id].charges, [ABILITY_GUTS_CANNON]: 2 },
+  });
+  used = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: guts.id,
+      abilityId: ABILITY_GUTS_CANNON,
+      payload: { targetId: enemy.id },
+    } as any,
+    rng
+  );
+  assert(
+    used.state.pendingRoll?.kind === "attack_attackerRoll",
+    "Cannon should request attack roll when charges are enough"
+  );
+  assert(
+    used.state.units[guts.id].charges[ABILITY_GUTS_CANNON] === 0,
+    "Cannon should spend exactly 2 charges immediately"
+  );
+
+  console.log("guts_cannon_gating_and_charge_spend passed");
+}
+
+function testGutsBerserkModeGatingAndActivation() {
+  let { state, guts } = setupGutsState();
+  state = setUnit(state, guts.id, {
+    position: { col: 4, row: 4 },
+    charges: { ...guts.charges, [ABILITY_GUTS_BERSERK_MODE]: 2 },
+  });
+  state = toBattleState(state, "P1", guts.id);
+  state = initKnowledgeForOwners(state);
+
+  let used = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: guts.id,
+      abilityId: ABILITY_GUTS_BERSERK_MODE,
+    } as any,
+    makeRngSequence([])
+  );
+  assert(!used.state.units[guts.id].gutsBerserkModeActive, "Berserk should be blocked below 3 charges");
+  assert(
+    used.state.units[guts.id].charges[ABILITY_GUTS_BERSERK_MODE] === 2,
+    "Berserk should not spend charges when blocked"
+  );
+
+  state = setUnit(state, guts.id, {
+    charges: { ...state.units[guts.id].charges, [ABILITY_GUTS_BERSERK_MODE]: 3 },
+  });
+  used = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: guts.id,
+      abilityId: ABILITY_GUTS_BERSERK_MODE,
+    } as any,
+    makeRngSequence([])
+  );
+  assert(
+    used.state.units[guts.id].gutsBerserkModeActive === true,
+    "Berserk should activate at 3+ charges"
+  );
+  assert(
+    used.state.units[guts.id].charges[ABILITY_GUTS_BERSERK_MODE] === 0,
+    "Berserk should spend all 3 charges on activation"
+  );
+
+  console.log("guts_berserk_mode_gating_and_activation passed");
+}
+
+function testGutsBerserkEndTurnSelfDamage() {
+  let { state, guts } = setupGutsState();
+  state = setUnit(state, guts.id, {
+    position: { col: 4, row: 4 },
+    hp: 6,
+    gutsBerserkModeActive: true,
+  });
+  state = toBattleState(state, "P1", guts.id);
+  state = initKnowledgeForOwners(state);
+
+  const ended = applyAction(state, { type: "endTurn" } as any, makeRngSequence([]));
+  assert(
+    ended.state.units[guts.id].hp === 5,
+    "Berserk should deal 1 direct self-damage at end of Guts turn"
+  );
+
+  console.log("guts_berserk_end_turn_self_damage passed");
+}
+
+function testGutsBerserkMeleeBonusAndRangedNoBonus() {
+  let { state, guts } = setupGutsState();
+  const enemy = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "rider"
+  )!;
+
+  state = setUnit(state, guts.id, {
+    position: { col: 4, row: 4 },
+    gutsBerserkModeActive: true,
+  });
+  state = setUnit(state, enemy.id, { position: { col: 4, row: 5 } });
+  state = initKnowledgeForOwners(state);
+
+  const melee = resolveAttack(state, {
+    attackerId: guts.id,
+    defenderId: enemy.id,
+    rolls: {
+      attackerDice: [6, 5],
+      defenderDice: [1, 1],
+    },
+  });
+  const meleeEvent = melee.events.find(
+    (event) =>
+      event.type === "attackResolved" &&
+      event.attackerId === guts.id &&
+      event.defenderId === enemy.id
+  ) as Extract<GameEvent, { type: "attackResolved" }> | undefined;
+  assert(meleeEvent, "melee attack should resolve");
+  assert(
+    meleeEvent.damage === state.units[guts.id].attack + 1,
+    "Berserk melee attacks should gain +1 damage"
+  );
+
+  const ranged = resolveAttack(state, {
+    attackerId: guts.id,
+    defenderId: enemy.id,
+    ignoreRange: true,
+    rangedAttack: true,
+    rolls: {
+      attackerDice: [6, 5],
+      defenderDice: [1, 1],
+    },
+  });
+  const rangedEvent = ranged.events.find(
+    (event) =>
+      event.type === "attackResolved" &&
+      event.attackerId === guts.id &&
+      event.defenderId === enemy.id
+  ) as Extract<GameEvent, { type: "attackResolved" }> | undefined;
+  assert(rangedEvent, "ranged attack should resolve");
+  assert(
+    rangedEvent.damage === state.units[guts.id].attack,
+    "Berserk bonus should not apply to ranged attacks"
+  );
+
+  console.log("guts_berserk_melee_bonus_and_ranged_no_bonus passed");
+}
+
+function testGutsBerserkMovementAndAoEAndIncomingCap() {
+  const rng = makeRngSequence([
+    0.99,
+    0.99, // shared attacker roll for AoE
+    0.01,
+    0.01, // defender 1
+    0.01,
+    0.01, // defender 2
+    0.01,
+    0.01, // defender 3
+  ]);
+
+  let { state, guts } = setupGutsState();
+  const ally = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.class === "spearman"
+  )!;
+  const enemy1 = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "rider"
+  )!;
+  const enemy2 = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "knight"
+  )!;
+
+  state = setUnit(state, guts.id, {
+    position: { col: 4, row: 4 },
+    gutsBerserkModeActive: true,
+  });
+  state = setUnit(state, ally.id, { position: { col: 5, row: 4 } });
+  state = setUnit(state, enemy1.id, { position: { col: 4, row: 5 } });
+  state = setUnit(state, enemy2.id, { position: { col: 5, row: 5 } });
+  state = toBattleState(state, "P1", guts.id);
+  state = initKnowledgeForOwners(state);
+
+  const moveModes = applyAction(
+    state,
+    { type: "requestMoveOptions", unitId: guts.id } as any,
+    makeRngSequence([])
+  );
+  const modeEvent = moveModes.events.find(
+    (event) => event.type === "moveOptionsGenerated"
+  );
+  assert(
+    modeEvent &&
+      modeEvent.type === "moveOptionsGenerated" &&
+      (modeEvent.modes ?? []).includes("assassin"),
+    "Berserk Guts should have Assassin movement mode available"
+  );
+
+  const assassinMove = applyAction(
+    state,
+    { type: "requestMoveOptions", unitId: guts.id, mode: "assassin" } as any,
+    makeRngSequence([])
+  );
+  const assassinMoveEvent = assassinMove.events.find(
+    (event) => event.type === "moveOptionsGenerated"
+  );
+  assert(
+    assassinMoveEvent &&
+      assassinMoveEvent.type === "moveOptionsGenerated" &&
+      assassinMoveEvent.legalTo.some(
+        (coord) => Math.max(Math.abs(coord.col - 4), Math.abs(coord.row - 4)) === 2
+      ),
+    "Assassin mode should provide distance-2 movement options"
+  );
+
+  const attacked = applyAction(
+    state,
+    { type: "attack", attackerId: guts.id, defenderId: enemy1.id } as any,
+    rng
+  );
+  assert(
+    attacked.state.pendingRoll?.kind === "tricksterAoE_attackerRoll",
+    "Berserk normal attack should become shared-roll adjacent AoE"
+  );
+
+  const resolved = resolveAllPendingRollsWithEvents(attacked.state, rng);
+  const events = [...attacked.events, ...resolved.events];
+  const attackEvents = events.filter(
+    (event) =>
+      event.type === "attackResolved" &&
+      event.attackerId === guts.id &&
+      [ally.id, enemy1.id, enemy2.id].includes(event.defenderId)
+  ) as Extract<GameEvent, { type: "attackResolved" }>[];
+
+  assert(
+    attackEvents.length === 3,
+    "Berserk AoE should hit all adjacent allies and enemies"
+  );
+  const attackedIds = attackEvents.map((event) => event.defenderId).sort();
+  assert.deepStrictEqual(
+    attackedIds,
+    [ally.id, enemy1.id, enemy2.id].sort(),
+    "Berserk AoE should include ally and enemy targets"
+  );
+
+  const attackerRollSignatures = new Set(
+    attackEvents.map((event) => event.attackerRoll.dice.join(","))
+  );
+  assert(
+    attackerRollSignatures.size === 1,
+    "Berserk AoE should use one shared attacker roll for all targets"
+  );
+
+  const incoming = resolveAttack(state, {
+    attackerId: enemy1.id,
+    defenderId: guts.id,
+    damageBonus: 5,
+    rolls: {
+      attackerDice: [6, 5],
+      defenderDice: [1, 1],
+    },
+  });
+  const incomingEvent = incoming.events.find(
+    (event) =>
+      event.type === "attackResolved" &&
+      event.attackerId === enemy1.id &&
+      event.defenderId === guts.id
+  ) as Extract<GameEvent, { type: "attackResolved" }> | undefined;
+  assert(incomingEvent, "incoming attack should resolve");
+  assert(
+    incomingEvent.damage === 1,
+    "Incoming damage against berserk Guts should be capped to 1"
+  );
+
+  console.log("guts_berserk_movement_aoe_and_incoming_cap passed");
+}
+
+function testGutsExitBerserkOnceAndNoReentry() {
+  let { state, guts } = setupGutsState();
+  state = setUnit(state, guts.id, {
+    position: { col: 4, row: 4 },
+    gutsBerserkModeActive: true,
+    gutsBerserkExitUsed: false,
+    charges: { ...guts.charges, [ABILITY_GUTS_BERSERK_MODE]: 3 },
+  });
+  state = toBattleState(state, "P1", guts.id);
+  state = initKnowledgeForOwners(state);
+
+  const exited = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: guts.id,
+      abilityId: ABILITY_GUTS_EXIT_BERSERK,
+    } as any,
+    makeRngSequence([])
+  );
+  assert(
+    exited.state.units[guts.id].gutsBerserkModeActive === false,
+    "Exit Berserk should disable berserk mode"
+  );
+  assert(
+    exited.state.units[guts.id].gutsBerserkExitUsed === true,
+    "Exit Berserk should mark one-time exit as used"
+  );
+
+  let nextState = setUnit(exited.state, guts.id, {
+    turn: makeEmptyTurnEconomy(),
+    charges: {
+      ...exited.state.units[guts.id].charges,
+      [ABILITY_GUTS_BERSERK_MODE]: 3,
+    },
+  });
+  nextState = { ...nextState, activeUnitId: guts.id, currentPlayer: "P1" };
+
+  const reenter = applyAction(
+    nextState,
+    {
+      type: "useAbility",
+      unitId: guts.id,
+      abilityId: ABILITY_GUTS_BERSERK_MODE,
+    } as any,
+    makeRngSequence([])
+  );
+  assert(
+    reenter.state.units[guts.id].gutsBerserkModeActive === false,
+    "Guts should not be able to re-enter berserk after exiting once"
+  );
+  assert(
+    reenter.state.units[guts.id].charges[ABILITY_GUTS_BERSERK_MODE] === 3,
+    "Blocked re-entry should not spend berserk charges"
+  );
+
+  console.log("guts_exit_berserk_once_and_no_reentry passed");
+}
+
+function setupKaladinState() {
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1", { spearman: HERO_KALADIN_ID }));
+  state = attachArmy(state, createDefaultArmy("P2"));
+
+  const kaladin = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.heroId === HERO_KALADIN_ID
+  )!;
+
+  return { state, kaladin };
+}
+
+function testKaladinHpBonus() {
+  const { state, kaladin } = setupKaladinState();
+  const baseHp = getUnitDefinition("spearman").maxHp;
+  const meta = getHeroMeta(HERO_KALADIN_ID);
+
+  assert(kaladin.hp === baseHp + 1, "Kaladin HP should be base spearman HP + 1");
+  assert(
+    meta?.baseStats.hp === baseHp + 1,
+    "Kaladin hero meta HP should be base spearman HP + 1"
+  );
+
+  console.log("kaladin_hp_bonus passed");
+}
+
+function testKaladinFirstOathGatingHealingAndCosts() {
+  let { state, kaladin } = setupKaladinState();
+  state = setUnit(state, kaladin.id, {
+    position: { col: 4, row: 4 },
+    hp: 3,
+    charges: { ...kaladin.charges, [ABILITY_KALADIN_FIRST]: 2 },
+  });
+  state = toBattleState(state, "P1", kaladin.id);
+  state = initKnowledgeForOwners(state);
+
+  let used = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: kaladin.id,
+      abilityId: ABILITY_KALADIN_FIRST,
+    } as any,
+    makeRngSequence([])
+  );
+  assert(
+    used.state.units[kaladin.id].hp === 3,
+    "First Oath should be blocked below 3 charges"
+  );
+  assert(
+    used.state.units[kaladin.id].charges[ABILITY_KALADIN_FIRST] === 2,
+    "First Oath should not spend charges when blocked"
+  );
+
+  state = setUnit(state, kaladin.id, {
+    hp: 3,
+    turn: makeEmptyTurnEconomy(),
+    charges: { ...state.units[kaladin.id].charges, [ABILITY_KALADIN_FIRST]: 3 },
+  });
+  used = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: kaladin.id,
+      abilityId: ABILITY_KALADIN_FIRST,
+    } as any,
+    makeRngSequence([])
+  );
+  assert(
+    used.state.units[kaladin.id].hp === 5,
+    "First Oath should heal exactly 2 HP"
+  );
+  assert(
+    used.state.units[kaladin.id].charges[ABILITY_KALADIN_FIRST] === 0,
+    "First Oath should spend exactly 3 charges"
+  );
+  assert(
+    used.state.units[kaladin.id].turn.actionUsed,
+    "First Oath should consume action slot"
+  );
+  const healEvent = used.events.find(
+    (event) => event.type === "unitHealed" && event.unitId === kaladin.id
+  ) as Extract<GameEvent, { type: "unitHealed" }> | undefined;
+  assert(healEvent, "First Oath should emit heal event");
+  assert(
+    healEvent?.amount === 2 && healEvent.hpAfter === 5,
+    "heal event should include healed amount and resulting HP"
+  );
+
+  state = setUnit(used.state, kaladin.id, {
+    hp: 5,
+    turn: makeEmptyTurnEconomy(),
+    hasMovedThisTurn: false,
+    hasAttackedThisTurn: false,
+    hasActedThisTurn: false,
+    stealthAttemptedThisTurn: false,
+    charges: { ...used.state.units[kaladin.id].charges, [ABILITY_KALADIN_FIRST]: 3 },
+  });
+  const clamped = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: kaladin.id,
+      abilityId: ABILITY_KALADIN_FIRST,
+    } as any,
+    makeRngSequence([])
+  );
+  assert(
+    clamped.state.units[kaladin.id].hp === 6,
+    "First Oath healing should clamp to max HP"
+  );
+
+  console.log("kaladin_first_oath_gating_healing_and_costs passed");
+}
+
+function testKaladinSecondOathTricksterMoveAndAoeTrait() {
+  let { state, kaladin } = setupKaladinState();
+  const enemy = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "rider"
+  )!;
+
+  state = setUnit(state, kaladin.id, { position: { col: 4, row: 4 } });
+  state = setUnit(state, enemy.id, { position: { col: 5, row: 5 } });
+  state = toBattleState(state, "P1", kaladin.id);
+  state = initKnowledgeForOwners(state);
+
+  const moveModes = applyAction(
+    state,
+    { type: "requestMoveOptions", unitId: kaladin.id } as any,
+    makeRngSequence([])
+  );
+  const modeEvent = moveModes.events.find(
+    (event) => event.type === "moveOptionsGenerated"
+  );
+  assert(
+    modeEvent &&
+      modeEvent.type === "moveOptionsGenerated" &&
+      (modeEvent.modes ?? []).includes("trickster"),
+    "Kaladin should have Trickster move mode from Second Oath"
+  );
+
+  const used = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: kaladin.id,
+      abilityId: ABILITY_TRICKSTER_AOE,
+    } as any,
+    makeRngSequence([0.99, 0.99, 0.01, 0.01])
+  );
+  assert(
+    used.state.pendingRoll?.kind === "tricksterAoE_attackerRoll",
+    "Kaladin should be able to use Trickster AoE trait"
+  );
+
+  console.log("kaladin_second_oath_trickster_move_and_aoe_trait passed");
+}
+
+function testKaladinThirdOathSpearmanBonusOnlyOnSpearmanAttack() {
+  let { state, kaladin } = setupKaladinState();
+  const enemySpearmanMode = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "rider"
+  )!;
+  const enemyTricksterMode = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "knight"
+  )!;
+
+  state = setUnit(state, kaladin.id, { position: { col: 4, row: 4 } });
+  state = setUnit(state, enemySpearmanMode.id, { position: { col: 4, row: 5 } });
+  state = setUnit(state, enemyTricksterMode.id, { position: { col: 5, row: 6 } });
+  state = toBattleState(state, "P1", kaladin.id);
+  state = initKnowledgeForOwners(state);
+
+  const legalTargets = getLegalAttackTargets(state, kaladin.id);
+  assert(
+    legalTargets.includes(enemyTricksterMode.id),
+    "Kaladin should reach trickster-pattern targets from Second Oath"
+  );
+
+  const spearmanAttack = resolveAttack(state, {
+    attackerId: kaladin.id,
+    defenderId: enemySpearmanMode.id,
+    rolls: {
+      attackerDice: [6, 5],
+      defenderDice: [1, 1],
+    },
+  });
+  const spearmanEvent = spearmanAttack.events.find(
+    (event) =>
+      event.type === "attackResolved" &&
+      event.attackerId === kaladin.id &&
+      event.defenderId === enemySpearmanMode.id
+  ) as Extract<GameEvent, { type: "attackResolved" }> | undefined;
+  assert(spearmanEvent, "spearman-mode attack should resolve");
+  assert(
+    spearmanEvent.damage === state.units[kaladin.id].attack + 1,
+    "Third Oath should add +1 damage on Spearman-mode attacks"
+  );
+
+  const tricksterAttack = resolveAttack(state, {
+    attackerId: kaladin.id,
+    defenderId: enemyTricksterMode.id,
+    rolls: {
+      attackerDice: [6, 5],
+      defenderDice: [1, 1],
+    },
+  });
+  const tricksterEvent = tricksterAttack.events.find(
+    (event) =>
+      event.type === "attackResolved" &&
+      event.attackerId === kaladin.id &&
+      event.defenderId === enemyTricksterMode.id
+  ) as Extract<GameEvent, { type: "attackResolved" }> | undefined;
+  assert(tricksterEvent, "trickster-mode attack should resolve");
+  assert(
+    tricksterEvent.damage === state.units[kaladin.id].attack,
+    "Third Oath bonus should not apply to Trickster-mode attacks"
+  );
+
+  console.log("kaladin_third_oath_spearman_bonus_only_on_spearman_attack passed");
+}
+
+function testKaladinFourthOathBerserkerTraitMovementMode() {
+  let { state, kaladin } = setupKaladinState();
+  state = setUnit(state, kaladin.id, { position: { col: 4, row: 4 } });
+  state = toBattleState(state, "P1", kaladin.id);
+  state = initKnowledgeForOwners(state);
+
+  const moveModes = applyAction(
+    state,
+    { type: "requestMoveOptions", unitId: kaladin.id } as any,
+    makeRngSequence([])
+  );
+  const modeEvent = moveModes.events.find(
+    (event) => event.type === "moveOptionsGenerated"
+  );
+  assert(
+    modeEvent &&
+      modeEvent.type === "moveOptionsGenerated" &&
+      (modeEvent.modes ?? []).includes("berserker"),
+    "Kaladin should have Berserker movement mode from Fourth Oath"
+  );
+
+  const berserkerRequest = applyAction(
+    state,
+    { type: "requestMoveOptions", unitId: kaladin.id, mode: "berserker" } as any,
+    makeRngSequence([])
+  );
+  assert(
+    berserkerRequest.state.pendingRoll?.kind === "moveBerserker",
+    "Kaladin should reuse Berserker movement roll flow"
+  );
+
+  console.log("kaladin_fourth_oath_berserker_trait_movement_mode passed");
+}
+
+function testKaladinFifthOathGatingDamageAndImmobilizeDuration() {
+  const rng = makeRngSequence([
+    0.99,
+    0.99, // shared attacker roll
+    0.01,
+    0.01, // defender 1
+    0.01,
+    0.01, // defender 2
+  ]);
+
+  let { state, kaladin } = setupKaladinState();
+  const enemy1 = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "rider"
+  )!;
+  const enemy2 = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "knight"
+  )!;
+
+  state = setUnit(state, kaladin.id, {
+    position: { col: 0, row: 0 },
+    charges: { ...kaladin.charges, [ABILITY_KALADIN_FIFTH]: 5 },
+  });
+  state = setUnit(state, enemy1.id, { position: { col: 4, row: 4 } });
+  state = setUnit(state, enemy2.id, { position: { col: 5, row: 5 } });
+  state = toBattleState(state, "P1", kaladin.id);
+  state = initKnowledgeForOwners(state);
+
+  let used = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: kaladin.id,
+      abilityId: ABILITY_KALADIN_FIFTH,
+      payload: { center: { col: 4, row: 4 } },
+    } as any,
+    rng
+  );
+  assert(!used.state.pendingRoll, "Fifth Oath should be blocked below 6 charges");
+  assert(
+    used.state.units[kaladin.id].charges[ABILITY_KALADIN_FIFTH] === 5,
+    "Fifth Oath should not spend charges when blocked"
+  );
+
+  state = setUnit(state, kaladin.id, {
+    turn: makeEmptyTurnEconomy(),
+    charges: { ...state.units[kaladin.id].charges, [ABILITY_KALADIN_FIFTH]: 6 },
+  });
+  used = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: kaladin.id,
+      abilityId: ABILITY_KALADIN_FIFTH,
+      payload: { center: { col: 4, row: 4 } },
+    } as any,
+    rng
+  );
+  assert(
+    used.state.pendingRoll?.kind === "tricksterAoE_attackerRoll",
+    "Fifth Oath should start shared-roll AoE resolution"
+  );
+  assert(
+    used.state.units[kaladin.id].charges[ABILITY_KALADIN_FIFTH] === 0,
+    "Fifth Oath should spend all 6 charges immediately"
+  );
+  assert(
+    used.state.units[kaladin.id].turn.actionUsed,
+    "Fifth Oath should consume action slot"
+  );
+
+  const resolved = resolveAllPendingRollsWithEvents(used.state, rng);
+  const events = [...used.events, ...resolved.events];
+  const attackEvents = events.filter(
+    (event) =>
+      event.type === "attackResolved" &&
+      event.attackerId === kaladin.id &&
+      [enemy1.id, enemy2.id].includes(event.defenderId)
+  ) as Extract<GameEvent, { type: "attackResolved" }>[];
+  assert(attackEvents.length === 2, "Fifth Oath should attack all units in 5x5 area");
+  for (const event of attackEvents) {
+    assert(event.damage === 2, "Fifth Oath should deal fixed 2 damage on failed defense");
+  }
+
+  assert(
+    resolved.state.units[enemy1.id].kaladinMoveLockSources?.includes(kaladin.id),
+    "failed Fifth Oath target should become immobilized"
+  );
+  assert(
+    resolved.state.units[enemy2.id].kaladinMoveLockSources?.includes(kaladin.id),
+    "every failed target should become immobilized"
+  );
+
+  let enemyTurnState = toBattleState(resolved.state, "P2", enemy1.id);
+  enemyTurnState = setUnit(enemyTurnState, enemy1.id, {
+    turn: makeEmptyTurnEconomy(),
+  });
+  const blockedMove = applyAction(
+    enemyTurnState,
+    { type: "requestMoveOptions", unitId: enemy1.id } as any,
+    makeRngSequence([])
+  );
+  assert(
+    blockedMove.events.length === 0 && !blockedMove.state.pendingMove,
+    "immobilized target should not receive move options"
+  );
+
+  const kaladinStartState: GameState = {
+    ...resolved.state,
+    currentPlayer: "P1",
+    activeUnitId: null,
+    turnQueue: [kaladin.id],
+    turnQueueIndex: 0,
+    turnOrder: [kaladin.id],
+    turnOrderIndex: 0,
+    phase: "battle",
+  };
+  const started = applyAction(
+    kaladinStartState,
+    { type: "unitStartTurn", unitId: kaladin.id } as any,
+    makeRngSequence([])
+  );
+  assert(
+    (started.state.units[enemy1.id].kaladinMoveLockSources?.length ?? 0) === 0,
+    "immobilize should clear at the start of Kaladin's next turn"
+  );
+  assert(
+    (started.state.units[enemy2.id].kaladinMoveLockSources?.length ?? 0) === 0,
+    "all Fifth Oath immobilize locks from Kaladin should clear together"
+  );
+
+  let restoredMoveState = toBattleState(started.state, "P2", enemy1.id);
+  restoredMoveState = setUnit(restoredMoveState, enemy1.id, {
+    turn: makeEmptyTurnEconomy(),
+  });
+  const restoredMove = applyAction(
+    restoredMoveState,
+    { type: "requestMoveOptions", unitId: enemy1.id } as any,
+    makeRngSequence([])
+  );
+  const moveEvent = restoredMove.events.find(
+    (event) => event.type === "moveOptionsGenerated"
+  );
+  assert(moveEvent, "movement should be restored after Kaladin starts next turn");
+
+  console.log("kaladin_fifth_oath_gating_damage_and_immobilize_duration passed");
+}
+
 function setupGroznyTyrantState() {
   let state = createEmptyGame();
   const a1 = createDefaultArmy("P1", {
@@ -9921,6 +11907,35 @@ function main() {
   testGenghisMongolChargeRequires4SpendsAll4();
   testGenghisLegendOfSteppesBonusOnlyVsLastTurnTarget();
   testGenghisMongolChargeSweepTriggersAlliedAttacksInCorridor();
+  testJebeHpBonus();
+  testJebeStealthThresholdIs6();
+  testJebeHailOfArrowsGatingTargetingAndDamage();
+  testJebeKhansShooterGatingConsumesAndRicochets();
+  testHassanHpBonus();
+  testHassanStealthThresholdIs4();
+  testHassanTrueEnemyGatingConsumesAndForcesOneAttack();
+  testHassanAssassinOrderBattleStartSelectionAndPerSideIndependence();
+  testGriffithWretchedManDamageReductionClamped();
+  testGriffithWarriorDoubleAutoHit();
+  testGriffithFemtoRebirthOnDeath();
+  testFemtoSpearmanReachAndBerserkerDamage();
+  testFemtoDivineMoveUsesMoveSlotAndRollRanges();
+  testFemtoBerserkAutoDefenseGatingAndBehavior();
+  testGutsHpBonus();
+  testGutsKnightMulticlassMovementAndDoubleAutoHit();
+  testGutsArbaletRangedFixedDamage();
+  testGutsCannonGatingAndChargeSpend();
+  testGutsBerserkModeGatingAndActivation();
+  testGutsBerserkEndTurnSelfDamage();
+  testGutsBerserkMeleeBonusAndRangedNoBonus();
+  testGutsBerserkMovementAndAoEAndIncomingCap();
+  testGutsExitBerserkOnceAndNoReentry();
+  testKaladinHpBonus();
+  testKaladinFirstOathGatingHealingAndCosts();
+  testKaladinSecondOathTricksterMoveAndAoeTrait();
+  testKaladinThirdOathSpearmanBonusOnlyOnSpearmanAttack();
+  testKaladinFourthOathBerserkerTraitMovementMode();
+  testKaladinFifthOathGatingDamageAndImmobilizeDuration();
   testGroznyTyrantDoesNotTriggerIfOnlyBuffWouldMakeKillPossible();
   testGroznyTyrantTriggersAndKillsWhenBaseDamageIsEnough();
   testGroznyTyrantRequiresReachableAttackPositionWithinRoll6();

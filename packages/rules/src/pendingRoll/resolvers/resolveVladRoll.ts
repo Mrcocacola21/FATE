@@ -26,15 +26,21 @@ import type {
   DoraAoEContext,
   ElCidAoEContext,
   ForestAoEContext,
+  JebeHailOfArrowsAoEContext,
   TricksterAoEContext,
 } from "../types";
-import { advanceCombatQueue, requestElCidDuelistChoice } from "./resolveAttackRoll";
+import {
+  advanceCombatQueue,
+  continueJebeKhansShooter,
+  requestElCidDuelistChoice,
+} from "./resolveAttackRoll";
 import { advanceTricksterAoEQueue } from "./resolveTricksterRoll";
 import { advanceDoraAoEQueue } from "./resolveDoraRoll";
 import { advanceCarpetStrikeQueue } from "./resolveCarpetStrikeRoll";
 import { advanceForestAoEQueue } from "./resolveForestRoll";
 import { advanceElCidAoEQueue } from "./resolveElCidRoll";
 import { advanceFalseTrailExplosionQueue } from "./resolveChikatiloRoll";
+import { advanceJebeHailOfArrowsQueue } from "./resolveJebeRoll";
 
 export function resolveVladIntimidateChoice(
   state: GameState,
@@ -161,6 +167,14 @@ export function resolveVladIntimidateChoice(
         resume.context as any,
         events
       );
+    case "jebeHailOfArrowsAoE":
+      return advanceJebeHailOfArrowsQueue(
+        updatedState,
+        resume.context as unknown as JebeHailOfArrowsAoEContext,
+        events
+      );
+    case "jebeKhansShooter":
+      return continueJebeKhansShooter(updatedState, events, resume.context);
     case "elCidDuelist": {
       const duelCtx = resume.context as { attackerId?: string; targetId?: string };
       if (!duelCtx.attackerId || !duelCtx.targetId) {

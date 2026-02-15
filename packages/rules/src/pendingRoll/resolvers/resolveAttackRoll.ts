@@ -9,6 +9,7 @@ import type {
 } from "../../model";
 import type { RNG } from "../../rng";
 import { canAttackTarget, resolveAttack } from "../../combat";
+import { getLegalAttackTargets } from "../../legal";
 import {
   ABILITY_BERSERK_AUTO_DEFENSE,
   ABILITY_CHIKATILO_DECOY,
@@ -20,7 +21,7 @@ import { clearPendingRoll, requestRoll } from "../../shared/rollUtils";
 import { getPolkovodetsSource, maybeRequestIntimidate } from "../../actions/heroes/vlad";
 import { isElCid } from "../../actions/shared";
 import { handleGroznyTyrantAfterAttack } from "../../actions/heroes/grozny";
-import { HERO_CHIKATILO_ID } from "../../heroes";
+import { HERO_CHIKATILO_ID, HERO_FEMTO_ID } from "../../heroes";
 import {
   evAoeResolved,
   evBerserkerDefenseChosen,
@@ -39,6 +40,9 @@ function finalizeAttackFromContext(
   damageOverride?: number,
   ignoreBonuses: boolean = false
 ): ApplyResult {
+  const resolvedDamageOverride =
+    damageOverride !== undefined ? damageOverride : context.damageOverride;
+  const resolvedIgnoreBonuses = ignoreBonuses || context.ignoreBonuses === true;
   const rolls = {
     attackerDice: context.attackerDice ?? [],
     defenderDice: context.defenderDice ?? [],
@@ -54,14 +58,16 @@ function finalizeAttackFromContext(
   const { nextState, events } = resolveAttack(state, {
     attackerId: context.attackerId,
     defenderId: context.defenderId,
+    allowFriendlyTarget: context.allowFriendlyTarget,
     defenderUseBerserkAutoDefense: useAutoDefense,
     ignoreRange: context.ignoreRange,
     ignoreStealth: context.ignoreStealth,
     revealStealthedAllies: context.revealStealthedAllies,
     revealReason: context.revealReason,
+    rangedAttack: context.rangedAttack,
     damageBonus,
-    damageOverride,
-    ignoreBonuses,
+    damageOverride: resolvedDamageOverride,
+    ignoreBonuses: resolvedIgnoreBonuses,
     autoHit,
     rolls,
   });
@@ -78,7 +84,7 @@ function finalizeAttackFromContext(
     attackEvent.type === "attackResolved" &&
     attackEvent.hit &&
     polkovodetsBonus > 0 &&
-    !ignoreBonuses &&
+    !resolvedIgnoreBonuses &&
     sourceId
   ) {
     updatedEvents.push(
@@ -357,6 +363,142 @@ function handleElCidDuelistAfterAttack(
   return requestElCidDuelistChoice(state, events, duel.attackerId, duel.targetId);
 }
 
+export function requestJebeKhansShooterAttack(
+  state: GameState,
+  baseEvents: GameEvent[],
+  casterId: string,
+  targetId: string,
+  remainingAttacks: number
+): ApplyResult {
+  const caster = state.units[casterId];
+  const target = state.units[targetId];
+  if (
+    !caster ||
+    !caster.isAlive ||
+    !caster.position ||
+    !target ||
+    !target.isAlive ||
+    !target.position
+  ) {
+    return { state: clearPendingRoll(state), events: baseEvents };
+  }
+
+  if (!canAttackTarget(state, caster, target)) {
+    return { state: clearPendingRoll(state), events: baseEvents };
+  }
+
+  const ctx: AttackRollContext = {
+    ...makeAttackContext({
+      attackerId: casterId,
+      defenderId: targetId,
+      consumeSlots: false,
+      queueKind: "normal",
+    }),
+    jebeKhansShooter: {
+      casterId,
+      remainingAttacks,
+    },
+  };
+
+  const requested = requestRoll(
+    clearPendingRoll(state),
+    caster.owner,
+    "attack_attackerRoll",
+    ctx,
+    caster.id
+  );
+
+  return { state: requested.state, events: [...baseEvents, ...requested.events] };
+}
+
+export function continueJebeKhansShooter(
+  state: GameState,
+  baseEvents: GameEvent[],
+  context: Record<string, unknown>
+): ApplyResult {
+  const casterId =
+    typeof context.casterId === "string" ? context.casterId : undefined;
+  const remainingAttacks =
+    typeof context.remainingAttacks === "number"
+      ? context.remainingAttacks
+      : undefined;
+  const lastTargetId =
+    typeof context.lastTargetId === "string" ? context.lastTargetId : undefined;
+  if (!casterId || !remainingAttacks || remainingAttacks <= 0) {
+    return { state: clearPendingRoll(state), events: baseEvents };
+  }
+
+  const caster = state.units[casterId];
+  if (!caster || !caster.isAlive || !caster.position) {
+    return { state: clearPendingRoll(state), events: baseEvents };
+  }
+
+  const options = getLegalAttackTargets(state, casterId).filter(
+    (targetId) => targetId !== lastTargetId
+  );
+  if (options.length === 0) {
+    return { state: clearPendingRoll(state), events: baseEvents };
+  }
+
+  const requested = requestRoll(
+    clearPendingRoll(state),
+    caster.owner,
+    "jebeKhansShooterTargetChoice",
+    {
+      casterId,
+      remainingAttacks,
+      options,
+      lastTargetId,
+    },
+    caster.id
+  );
+
+  return { state: requested.state, events: [...baseEvents, ...requested.events] };
+}
+
+function handleJebeKhansShooterAfterAttack(
+  state: GameState,
+  events: GameEvent[],
+  context: AttackRollContext
+): ApplyResult {
+  const shooter = context.jebeKhansShooter;
+  if (!shooter) {
+    return { state, events };
+  }
+
+  const attackEvent = findAttackResolved(
+    events,
+    context.attackerId,
+    context.defenderId
+  );
+  if (!attackEvent) {
+    return { state, events };
+  }
+
+  const remainingAttacks = shooter.remainingAttacks - 1;
+  if (remainingAttacks <= 0) {
+    return { state: clearPendingRoll(state), events };
+  }
+
+  const resumeContext: Record<string, unknown> = {
+    casterId: shooter.casterId,
+    remainingAttacks,
+    lastTargetId: context.defenderId,
+  };
+  const intimidate = maybeRequestIntimidate(
+    state,
+    context.attackerId,
+    context.defenderId,
+    events,
+    { kind: "jebeKhansShooter", context: resumeContext }
+  );
+  if (intimidate.requested) {
+    return { state: intimidate.state, events: intimidate.events };
+  }
+
+  return continueJebeKhansShooter(state, events, resumeContext);
+}
+
 export function resolveAttackAttackerRoll(
   state: GameState,
   pending: PendingRoll,
@@ -409,6 +551,13 @@ export function resolveAttackAttackerRoll(
         resolvedCtx
       );
     }
+    if (resolvedCtx.jebeKhansShooter) {
+      return handleJebeKhansShooterAfterAttack(
+        resolved.state,
+        resolved.events,
+        resolvedCtx
+      );
+    }
     const tyrant = handleTyrantIfNeeded(
       resolved.state,
       resolved.events,
@@ -433,7 +582,7 @@ export function resolveAttackAttackerRoll(
 
   const charges = defender.charges?.[ABILITY_BERSERK_AUTO_DEFENSE] ?? 0;
   if (
-    defender.class === "berserker" &&
+    (defender.class === "berserker" || defender.heroId === HERO_FEMTO_ID) &&
     charges === 6 &&
     !resolvedCtx.berserkerChoiceMade
   ) {
@@ -518,6 +667,13 @@ export function resolveAttackDefenderRoll(
       nextCtx
     );
   }
+  if (nextCtx.jebeKhansShooter) {
+    return handleJebeKhansShooterAfterAttack(
+      resolved.state,
+      resolved.events,
+      nextCtx
+    );
+  }
   const tyrant = handleTyrantIfNeeded(
     resolved.state,
     resolved.events,
@@ -569,6 +725,13 @@ export function resolveBerserkerDefenseChoiceRoll(
     ];
     if (ctx.elCidDuelist) {
       return handleElCidDuelistAfterAttack(resolved.state, choiceEvents, ctx);
+    }
+    if (ctx.jebeKhansShooter) {
+      return handleJebeKhansShooterAfterAttack(
+        resolved.state,
+        choiceEvents,
+        ctx
+      );
     }
     const tyrant = handleTyrantIfNeeded(resolved.state, choiceEvents, ctx, rng);
     if (tyrant.requested) {
@@ -675,6 +838,13 @@ export function resolveChikatiloDecoyChoice(
 
   if (nextCtx.elCidDuelist) {
     return handleElCidDuelistAfterAttack(
+      resolved.state,
+      resolved.events,
+      nextCtx
+    );
+  }
+  if (nextCtx.jebeKhansShooter) {
+    return handleJebeKhansShooterAfterAttack(
       resolved.state,
       resolved.events,
       nextCtx

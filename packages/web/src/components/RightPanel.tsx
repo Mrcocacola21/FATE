@@ -17,6 +17,15 @@ import {
   GROZNY_INVADE_TIME_ID,
   GROZNY_TYRANT_ID,
   TRICKSTER_AOE_ID,
+  JEBE_HAIL_OF_ARROWS_ID,
+  JEBE_KHANS_SHOOTER_ID,
+  HASSAN_ASSASSIN_ORDER_ID,
+  HASSAN_TRUE_ENEMY_ID,
+  KALADIN_FIFTH_ID,
+  KALADIN_ID,
+  GUTS_ARBALET_ID,
+  GUTS_CANNON_ID,
+  FEMTO_ID,
 } from "../rulesHints";
 import type { ActionMode } from "../store";
 import type { PlayerRole } from "../ws";
@@ -134,7 +143,7 @@ function getAbilityChargeState(
     current,
     max,
     enabled,
-    reason: enabled ? undefined : "Not enough charges",
+    reason: enabled ? undefined : "Not Enough charges",
   };
 }
 
@@ -187,6 +196,10 @@ export const RightPanel: FC<RightPanelProps> = ({
   const heroDefinition = selectedUnit?.heroId
     ? HERO_CATALOG.find((hero) => hero.id === selectedUnit.heroId)
     : undefined;
+  const selectedHeroName = selectedUnit
+    ? heroDefinition?.name ??
+      (selectedUnit.heroId === FEMTO_ID ? "Femto" : selectedUnit.id)
+    : null;
   const forestMarkers =
     Array.isArray(view.forestMarkers) && view.forestMarkers.length > 0
       ? view.forestMarkers
@@ -217,7 +230,8 @@ export const RightPanel: FC<RightPanelProps> = ({
     (ability) =>
       ability.kind !== "passive" &&
       ability.id !== GROZNY_TYRANT_ID &&
-      ability.id !== LECHY_CONFUSE_TERRAIN_ID
+      ability.id !== LECHY_CONFUSE_TERRAIN_ID &&
+      ability.id !== HASSAN_ASSASSIN_ORDER_ID
   );
   const moveModeOptions =
     !pendingRoll && moveOptions && selectedUnit && moveOptions.unitId === selectedUnit.id
@@ -429,7 +443,7 @@ export const RightPanel: FC<RightPanelProps> = ({
                 </div>
                 <div>
                   <div className="text-[11px] font-semibold dark:text-slate-100">
-                    {heroDefinition?.name ?? selectedUnit.id}
+                    {selectedHeroName}
                   </div>
                   <div className="text-[10px] text-slate-500 dark:text-slate-300">
                     Class {selectedUnit.class}
@@ -623,6 +637,7 @@ export const RightPanel: FC<RightPanelProps> = ({
                 if (
                   selectedUnit.class === "trickster" ||
                   selectedUnit.class === "berserker" ||
+                  selectedUnit.heroId === KALADIN_ID ||
                   selectedUnit.transformed
                 ) {
                   onMoveRequest(selectedUnit.id);
@@ -759,7 +774,7 @@ export const RightPanel: FC<RightPanelProps> = ({
               const disabled =
                 !canAct || notEnoughCharges || slotDisabled || disabledByActive;
               const chargeWarning = notEnoughCharges
-                ? "Not enough charges"
+                ? "Not Enough charges"
                 : undefined;
               const tooltip =
                 ability.disabledReason ?? slotReason ?? chargeWarning ?? "";
@@ -790,6 +805,30 @@ export const RightPanel: FC<RightPanelProps> = ({
                 }
                 if (ability.id === EL_CID_DEMON_DUELIST_ID) {
                   onSetActionMode("demonDuelist");
+                  return;
+                }
+                if (ability.id === JEBE_HAIL_OF_ARROWS_ID) {
+                  onSetActionMode("jebeHailOfArrows");
+                  return;
+                }
+                if (ability.id === JEBE_KHANS_SHOOTER_ID) {
+                  onSetActionMode("jebeKhansShooter");
+                  return;
+                }
+                if (ability.id === HASSAN_TRUE_ENEMY_ID) {
+                  onSetActionMode("hassanTrueEnemy");
+                  return;
+                }
+                if (ability.id === KALADIN_FIFTH_ID) {
+                  onSetActionMode("kaladinFifth");
+                  return;
+                }
+                if (ability.id === GUTS_ARBALET_ID) {
+                  onSetActionMode("gutsArbalet");
+                  return;
+                }
+                if (ability.id === GUTS_CANNON_ID) {
+                  onSetActionMode("gutsCannon");
                   return;
                 }
                 onSendAction({
@@ -885,6 +924,16 @@ export const RightPanel: FC<RightPanelProps> = ({
                 ? "Tisona: select a cell on the same row or column."
                 : actionMode === "demonDuelist"
                 ? "Demon Duelist: select an enemy in attack range."
+                : actionMode === "jebeHailOfArrows"
+                ? "Hail of Arrows: select a center cell on your attack line."
+                : actionMode === "jebeKhansShooter"
+                ? "Khan's Shooter: select an enemy in attack range."
+                : actionMode === "hassanTrueEnemy"
+                ? "True Enemy: select an enemy within 2 cells."
+                : actionMode === "gutsArbalet"
+                ? "Hand Crossbow: select an enemy in ranged attack line."
+                : actionMode === "gutsCannon"
+                ? "Hand Cannon: select an enemy in ranged attack line."
                 : `Mode: ${actionMode}. Click a highlighted cell to apply.`}
             </div>
           )}

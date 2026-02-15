@@ -31,6 +31,7 @@ import { getLegalMovesForUnitModes } from "../../movement";
 import { getMovementModes, unitHasMovementMode } from "../shared";
 import { requestRoll, clearPendingRoll } from "../../shared/rollUtils";
 import { evAbilityUsed, evMoveOptionsGenerated, evUnitDied, evUnitMoved } from "../../shared/events";
+import { applyGriffithFemtoRebirth } from "../../shared/griffith";
 
 function getEmptyCellsInAura(state: GameState, origin: Coord): Coord[] {
   const positions: Coord[] = [];
@@ -389,6 +390,7 @@ export function applyStormStartOfTurn(
   }
 
   const newHp = Math.max(0, unit.hp - 1);
+  const deathPosition = unit.position ? { ...unit.position } : null;
   let updatedUnit: UnitState = {
     ...unit,
     hp: newHp,
@@ -402,6 +404,11 @@ export function applyStormStartOfTurn(
       position: null,
     };
     events.push(evUnitDied({ unitId: updatedUnit.id, killerId: null }));
+    const rebirth = applyGriffithFemtoRebirth(updatedUnit, deathPosition);
+    if (rebirth.transformed) {
+      updatedUnit = rebirth.unit;
+      events.push(...rebirth.events);
+    }
   }
 
   const nextState: GameState = {

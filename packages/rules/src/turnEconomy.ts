@@ -31,6 +31,9 @@ export function canSpendSlots(
 ): boolean {
   if (!costs) return true;
   const turn = getTurnEconomy(unit);
+  if (costs.move && (unit.kaladinMoveLockSources?.length ?? 0) > 0) {
+    return false;
+  }
   if (costs.move && turn.moveUsed) return false;
   if (costs.attack && turn.attackUsed) return false;
   if (costs.action && turn.actionUsed) return false;

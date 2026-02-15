@@ -23,6 +23,7 @@ import {
   HERO_DON_KIHOTE_ID,
   HERO_DUOLINGO_ID,
   HERO_FRISK_ID,
+  HERO_FEMTO_ID,
   HERO_GRIFFITH_ID,
   HERO_GUTS_ID,
   HERO_JACK_RIPPER_ID,
@@ -126,12 +127,21 @@ export const ABILITY_LECHY_GUIDE_TRAVELER = "lechyGuideTraveler" as const;
 export const ABILITY_LECHY_CONFUSE_TERRAIN = "lechyConfuseTerrain" as const;
 export const ABILITY_LECHY_STORM = "lechyStorm" as const;
 
-export const ABILITY_GRIFFITH_PATHETIC_MAN = "griffithPatheticMan" as const;
-export const ABILITY_GRIFFITH_FEMTO = "griffithFemto" as const;
+export const ABILITY_GRIFFITH_WRETCHED_MAN = "griffithWretchedMan" as const;
+export const ABILITY_GRIFFITH_FEMTO_REBIRTH = "griffithFemtoRebirth" as const;
+export const ABILITY_FEMTO_GOD_HP = "femtoGodHp" as const;
+export const ABILITY_FEMTO_MULTI_BERSERK_SPEAR =
+  "femtoMultiBerserkSpear" as const;
+export const ABILITY_FEMTO_DIVINE_MOVE = "femtoDivineMove" as const;
+
+// Backward-compatible aliases.
+export const ABILITY_GRIFFITH_PATHETIC_MAN = ABILITY_GRIFFITH_WRETCHED_MAN;
+export const ABILITY_GRIFFITH_FEMTO = ABILITY_GRIFFITH_FEMTO_REBIRTH;
 
 export const ABILITY_GUTS_ARBALET = "gutsArbalet" as const;
 export const ABILITY_GUTS_CANNON = "gutsCannon" as const;
 export const ABILITY_GUTS_BERSERK_MODE = "gutsBerserkMode" as const;
+export const ABILITY_GUTS_EXIT_BERSERK = "gutsExitBerserk" as const;
 
 export const ABILITY_ODIN_GUNGNIR = "odinGungnir" as const;
 export const ABILITY_ODIN_HUGINN = "odinHuginn" as const;
@@ -143,6 +153,7 @@ export const ABILITY_LOKI_LAUGHT = "lokiLaught" as const;
 
 export const ABILITY_JEBE_KHANS_SHOOTER = "jebeKhansShooter" as const;
 export const ABILITY_JEBE_HAIL_OF_ARROWS = "jebeHailOfArrows" as const;
+export const ABILITY_JEBE_DURABLE = "jebeDurable" as const;
 
 export const ABILITY_HASSAN_ONE_WITH_SAND = "hassanOneWithSand" as const;
 export const ABILITY_HASSAN_TRUE_ENEMY = "hassanTrueEnemy" as const;
@@ -405,6 +416,184 @@ const ABILITY_SPECS: Record<string, AbilitySpec> = {
       consumes: { move: true },
     },
   },
+  [ABILITY_GRIFFITH_WRETCHED_MAN]: {
+    id: ABILITY_GRIFFITH_WRETCHED_MAN,
+    displayName: "Wretched Man",
+    kind: "passive",
+    description: "Griffith deals -1 damage with all attacks (minimum 0).",
+  },
+  [ABILITY_GRIFFITH_FEMTO_REBIRTH]: {
+    id: ABILITY_GRIFFITH_FEMTO_REBIRTH,
+    displayName: "Femto Rebirth",
+    kind: "phantasm",
+    description:
+      "When Griffith dies, he immediately resurrects as Femto in the same cell.",
+  },
+  [ABILITY_FEMTO_GOD_HP]: {
+    id: ABILITY_FEMTO_GOD_HP,
+    displayName: "God",
+    kind: "passive",
+    description: "Femto gains +5 HP over Berserker base HP.",
+  },
+  [ABILITY_FEMTO_MULTI_BERSERK_SPEAR]: {
+    id: ABILITY_FEMTO_MULTI_BERSERK_SPEAR,
+    displayName: "Multiclass Berserker + Spearman",
+    kind: "passive",
+    description:
+      "Uses Berserker base stats and auto-defense, Spearman reach and defense trait, and Warrior double auto-hit.",
+  },
+  [ABILITY_FEMTO_DIVINE_MOVE]: {
+    id: ABILITY_FEMTO_DIVINE_MOVE,
+    displayName: "Divine Movement",
+    kind: "active",
+    description:
+      "Roll 1d6. On 1-3 teleport within 2 cells, on 4-6 teleport to any empty board cell.",
+    actionCost: {
+      consumes: { move: true },
+    },
+  },
+  [ABILITY_GUTS_ARBALET]: {
+    id: ABILITY_GUTS_ARBALET,
+    displayName: "Hand Crossbow",
+    kind: "active",
+    description:
+      "Archer-like ranged attack that always deals exactly 1 damage.",
+    actionCost: {
+      consumes: { action: true },
+    },
+  },
+  [ABILITY_GUTS_CANNON]: {
+    id: ABILITY_GUTS_CANNON,
+    displayName: "Hand Cannon",
+    kind: "active",
+    description: "Archer-like ranged attack using normal damage.",
+    maxCharges: 2,
+    chargesPerUse: 2,
+    actionCost: {
+      consumes: { action: true },
+    },
+  },
+  [ABILITY_GUTS_BERSERK_MODE]: {
+    id: ABILITY_GUTS_BERSERK_MODE,
+    displayName: "Berserk Mode",
+    kind: "phantasm",
+    description:
+      "Spend 3 charges to enter Berserk Mode. While active: end-turn self-damage, melee-focused bonuses, and altered combat behavior.",
+    maxCharges: 3,
+    chargesPerUse: 3,
+    actionCost: {
+      consumes: { action: true },
+    },
+  },
+  [ABILITY_GUTS_EXIT_BERSERK]: {
+    id: ABILITY_GUTS_EXIT_BERSERK,
+    displayName: "Exit Berserk",
+    kind: "active",
+    description:
+      "Exit Berserk Mode. Can only be used once per game and consumes action.",
+    actionCost: {
+      consumes: { action: true },
+    },
+  },
+  [ABILITY_JEBE_DURABLE]: {
+    id: ABILITY_JEBE_DURABLE,
+    displayName: "Durable",
+    kind: "passive",
+    description: "+1 HP.",
+  },
+  [ABILITY_JEBE_HAIL_OF_ARROWS]: {
+    id: ABILITY_JEBE_HAIL_OF_ARROWS,
+    displayName: "Hail of Arrows",
+    kind: "active",
+    description:
+      "Select a 3x3 area with center on your archer attack line. Attack all units in that area.",
+    maxCharges: 2,
+    chargesPerUse: 2,
+    actionCost: {
+      consumes: { action: true },
+    },
+  },
+  [ABILITY_JEBE_KHANS_SHOOTER]: {
+    id: ABILITY_JEBE_KHANS_SHOOTER,
+    displayName: "Khan's Shooter",
+    kind: "phantasm",
+    description:
+      "Spend all 6 charges. Roll 1d6 ricochets, then chain normal attacks to selected legal targets.",
+    maxCharges: 6,
+    chargesPerUse: 6,
+    actionCost: {
+      consumes: { action: true },
+    },
+  },
+  [ABILITY_HASSAN_ONE_WITH_SAND]: {
+    id: ABILITY_HASSAN_ONE_WITH_SAND,
+    displayName: "One With Sand",
+    kind: "passive",
+    description: "Stealth succeeds on 4-6.",
+  },
+  [ABILITY_HASSAN_TRUE_ENEMY]: {
+    id: ABILITY_HASSAN_TRUE_ENEMY,
+    displayName: "True Enemy",
+    kind: "active",
+    description:
+      "Choose an enemy within 2 cells. That enemy makes one normal attack against a legal target.",
+    maxCharges: 3,
+    chargesPerUse: 3,
+    actionCost: {
+      consumes: { action: true },
+    },
+  },
+  [ABILITY_HASSAN_ASSASIN_ORDER]: {
+    id: ABILITY_HASSAN_ASSASIN_ORDER,
+    displayName: "Assassin Order",
+    kind: "phantasm",
+    description:
+      "At battle start, choose 2 allied heroes (excluding Hassan). They gain stealth threshold 5-6 for this game.",
+  },
+  [ABILITY_KALADIN_FIRST]: {
+    id: ABILITY_KALADIN_FIRST,
+    displayName: "First Oath - The First Ideal",
+    kind: "active",
+    description:
+      "Heal self for 2 HP (up to max HP).",
+    maxCharges: 3,
+    chargesPerUse: 3,
+    actionCost: {
+      consumes: { action: true },
+    },
+  },
+  [ABILITY_KALADIN_SECOND]: {
+    id: ABILITY_KALADIN_SECOND,
+    displayName: "Second Oath - Oath of Protection",
+    kind: "passive",
+    description:
+      "Gain Trickster multiclass: Trickster movement and Trickster AoE attack trait in addition to Spearman kit.",
+  },
+  [ABILITY_KALADIN_THIRD]: {
+    id: ABILITY_KALADIN_THIRD,
+    displayName: "Third Oath - Oath of Acceptance",
+    kind: "passive",
+    description:
+      "+1 damage on Spearman-mode melee attacks.",
+  },
+  [ABILITY_KALADIN_FOURTH]: {
+    id: ABILITY_KALADIN_FOURTH,
+    displayName: "Fourth Oath - Oath of Restriction",
+    kind: "passive",
+    description: "Gain Berserker trait bundle.",
+  },
+  [ABILITY_KALADIN_FIFTH]: {
+    id: ABILITY_KALADIN_FIFTH,
+    displayName: "Fifth Oath - Oath of Liberation",
+    kind: "phantasm",
+    description:
+      "Choose a 5x5 area. Shared-roll AoE hits all units for 2 damage on failed defense and immobilizes them until Kaladin's next turn.",
+    maxCharges: 6,
+    chargesPerUse: 6,
+    actionCost: {
+      consumes: { action: true },
+    },
+  },
 
   [ABILITY_TRICKSTER_AOE]: {
     id: ABILITY_TRICKSTER_AOE,
@@ -621,6 +810,30 @@ export function initUnitAbilities(unit: UnitState): UnitState {
     updated = setCharges(updated, ABILITY_LECHY_CONFUSE_TERRAIN, 0);
     updated = setCharges(updated, ABILITY_LECHY_STORM, 0);
   }
+  if (unit.heroId === HERO_GUTS_ID) {
+    updated = setCharges(updated, ABILITY_GUTS_CANNON, 0);
+    updated = setCharges(updated, ABILITY_GUTS_BERSERK_MODE, 0);
+    updated = {
+      ...updated,
+      gutsBerserkModeActive: false,
+      gutsBerserkExitUsed: false,
+    };
+  }
+  if (unit.heroId === HERO_JEBE_ID) {
+    updated = setCharges(updated, ABILITY_JEBE_HAIL_OF_ARROWS, 0);
+    updated = setCharges(updated, ABILITY_JEBE_KHANS_SHOOTER, 0);
+  }
+  if (unit.heroId === HERO_HASSAN_ID) {
+    updated = setCharges(updated, ABILITY_HASSAN_TRUE_ENEMY, 0);
+    updated = {
+      ...updated,
+      stealthSuccessMinRoll: 4,
+    };
+  }
+  if (unit.heroId === HERO_KALADIN_ID) {
+    updated = setCharges(updated, ABILITY_KALADIN_FIRST, 0);
+    updated = setCharges(updated, ABILITY_KALADIN_FIFTH, 0);
+  }
 
   return updated;
 }
@@ -668,7 +881,10 @@ export function processUnitStartOfTurn(
     lastChargedTurn: state.turnNumber,
   };
 
-  if (updated.heroId === HERO_GENGHIS_KHAN_ID) {
+  if (
+    updated.heroId === HERO_GENGHIS_KHAN_ID ||
+    updated.heroId === HERO_JEBE_ID
+  ) {
     const attackedThisTurn = Array.isArray(updated.genghisKhanAttackedThisTurn)
       ? updated.genghisKhanAttackedThisTurn
       : [];
@@ -731,6 +947,9 @@ function getActiveDisabledReason(
   if (costs?.move && unit.turn?.moveUsed) {
     return "Move slot already used";
   }
+  if (costs?.move && (unit.kaladinMoveLockSources?.length ?? 0) > 0) {
+    return "Movement is blocked";
+  }
   if (costs?.attack && unit.turn?.attackUsed) {
     return "Attack slot already used";
   }
@@ -745,7 +964,7 @@ function getActiveDisabledReason(
     !(spec.id === ABILITY_KAISER_DORA && unit.heroId === HERO_GRAND_KAISER_ID && unit.transformed) &&
     getCharges(unit, spec.id) < required
   ) {
-    return "Not enough charges";
+    return "Not Enough charges";
   }
 
   return undefined;
@@ -766,11 +985,12 @@ export function getAbilityViewsForUnit(
 
   if (
     unit.class === "berserker" ||
-    (unit.heroId === HERO_GRAND_KAISER_ID && unit.transformed)
+    (unit.heroId === HERO_GRAND_KAISER_ID && unit.transformed) ||
+    unit.heroId === HERO_FEMTO_ID
   ) {
     abilityIds.push(ABILITY_BERSERK_AUTO_DEFENSE);
   }
-  if (unit.class === "trickster") {
+  if (unit.class === "trickster" || unit.heroId === HERO_KALADIN_ID) {
     abilityIds.push(ABILITY_TRICKSTER_AOE);
   }
   if (unit.heroId === HERO_GRAND_KAISER_ID) {
@@ -831,16 +1051,26 @@ export function getAbilityViewsForUnit(
   }
   if (unit.heroId === HERO_GRIFFITH_ID) {
     abilityIds.push(
-      ABILITY_GRIFFITH_FEMTO,
-      ABILITY_GRIFFITH_PATHETIC_MAN,
-      ABILITY_VLAD_POLKOVODETS);
+      ABILITY_GRIFFITH_WRETCHED_MAN,
+      ABILITY_VLAD_POLKOVODETS,
+      ABILITY_GRIFFITH_FEMTO_REBIRTH
+    );
+  }
+  if (unit.heroId === HERO_FEMTO_ID) {
+    abilityIds.push(
+      ABILITY_FEMTO_GOD_HP,
+      ABILITY_FEMTO_MULTI_BERSERK_SPEAR,
+      ABILITY_FEMTO_DIVINE_MOVE
+    );
   }
   if (unit.heroId === HERO_GUTS_ID) {
-    abilityIds.push(
-      ABILITY_GUTS_BERSERK_MODE,
-      ABILITY_GUTS_CANNON,
-      ABILITY_GUTS_ARBALET
-    );
+    if (!unit.gutsBerserkModeActive && !unit.gutsBerserkExitUsed) {
+      abilityIds.push(ABILITY_GUTS_BERSERK_MODE);
+    }
+    abilityIds.push(ABILITY_GUTS_CANNON, ABILITY_GUTS_ARBALET);
+    if (unit.gutsBerserkModeActive && !unit.gutsBerserkExitUsed) {
+      abilityIds.push(ABILITY_GUTS_EXIT_BERSERK);
+    }
   }
   if (unit.heroId === HERO_ODIN_ID) {
     abilityIds.push(
@@ -858,6 +1088,7 @@ export function getAbilityViewsForUnit(
   }
   if (unit.heroId === HERO_JEBE_ID) {
     abilityIds.push(
+      ABILITY_JEBE_DURABLE,
       ABILITY_JEBE_KHANS_SHOOTER,
       ABILITY_JEBE_HAIL_OF_ARROWS,
       ABILITY_GENGHIS_KHAN_LEGEND_OF_THE_STEPPES,
@@ -1021,7 +1252,7 @@ export function getAbilityViewsForUnit(
           getCharges(unit, id) < chargeRequired
         ) {
           isAvailable = false;
-          disabledReason = "Not enough charges";
+          disabledReason = "Not Enough charges";
         }
       }
 

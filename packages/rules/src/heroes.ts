@@ -12,6 +12,7 @@ export const HERO_LECHY_ID = "lechy" as const;
 
 //Nik
 export const HERO_GRIFFITH_ID = "griffith" as const;
+export const HERO_FEMTO_ID = "femto" as const;
 export const HERO_GUTS_ID = "guts" as const;
 export const HERO_ODIN_ID = "odin" as const;
 export const HERO_LOKI_ID = "loki" as const;
@@ -60,6 +61,13 @@ export const HERO_CATALOG: HeroDefinition[] = [
     mainClass: "knight",
   },
   {
+    id: HERO_FEMTO_ID,
+    name: "Femto",
+    mainClass: "knight",
+    baseHpOverride: 13,
+    baseAttackOverride: 2,
+  },
+  {
     id: HERO_GUTS_ID,
     name: "Guts",
     mainClass: "berserker",
@@ -87,13 +95,13 @@ export const HERO_CATALOG: HeroDefinition[] = [
     id: HERO_HASSAN_ID,
     name: "Hassan-i Sabbah",
     mainClass: "assassin",
-    baseAttackOverride: 5,
+    baseHpOverride: 5,
   },
   {
     id: HERO_KALADIN_ID,
     name: "Kaladin Stormblessed",
     mainClass: "spearman",
-    baseHpOverride: 7,
+    baseHpOverride: 6,
   },
   {
     id: HERO_LUCHE_ID,
@@ -229,6 +237,9 @@ export function heroMatchesClass(
   heroId: string | undefined,
   unitClass: UnitClass
 ): boolean {
+  if (heroId === HERO_FEMTO_ID) {
+    return false;
+  }
   const hero = getHeroDefinition(heroId);
   if (!hero) return false;
   return hero.mainClass === unitClass;

@@ -74,6 +74,22 @@ const ResolveRollChoiceSchema = z.union([
     type: z.literal("lechyGuideTravelerPlace"),
     position: CoordSchema,
   }),
+  z.object({
+    type: z.literal("jebeKhansShooterTarget"),
+    targetId: z.string().min(1),
+  }),
+  z.object({
+    type: z.literal("hassanTrueEnemyTarget"),
+    targetId: z.string().min(1),
+  }),
+  z.object({
+    type: z.literal("hassanAssassinOrderPick"),
+    unitIds: z.array(z.string().min(1)).length(2),
+  }),
+  z.object({
+    type: z.literal("femtoDivineMoveDestination"),
+    position: CoordSchema,
+  }),
   z.literal("elCidDuelistContinue"),
   z.literal("elCidDuelistStop"),
 ]);

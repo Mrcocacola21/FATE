@@ -1,5 +1,12 @@
-import type { ApplyResult, GameEvent, GameState, PendingRoll } from "../../model";
+import type {
+  ApplyResult,
+  GameEvent,
+  GameState,
+  PendingRoll,
+  ResolveRollChoice,
+} from "../../model";
 import type { RNG } from "../../rng";
+import { rollD6 } from "../../rng";
 import { resolveAttack } from "../../combat";
 import { ABILITY_BERSERK_AUTO_DEFENSE } from "../../abilities";
 import { HERO_FEMTO_ID } from "../../heroes";
@@ -11,10 +18,18 @@ import {
   evBerserkerDefenseChosen,
   evDamageBonusApplied,
 } from "../../shared/events";
-import type { ForestAoEContext } from "../types";
+import type {
+  JebeHailOfArrowsAoEContext,
+  JebeKhansShooterRicochetContext,
+  JebeKhansShooterTargetChoiceContext,
+} from "../types";
 import { rollDice } from "../utils/rollMath";
+import { requestJebeKhansShooterAttack } from "./resolveAttackRoll";
 
-function finalizeForestAoE(state: GameState, events: GameEvent[]): ApplyResult {
+function finalizeJebeHailOfArrows(
+  state: GameState,
+  events: GameEvent[]
+): ApplyResult {
   if (!state.pendingAoE) {
     return { state: clearPendingRoll(state), events };
   }
@@ -40,34 +55,89 @@ function finalizeForestAoE(state: GameState, events: GameEvent[]): ApplyResult {
   };
 }
 
-export function advanceForestAoEQueue(
+function updatePendingAoeFromAttack(
   state: GameState,
-  context: ForestAoEContext,
+  events: GameEvent[],
+  attackerId: string,
+  defenderId: string
+): GameState {
+  if (!state.pendingAoE) {
+    return state;
+  }
+
+  const attackEvent = events.find(
+    (event) =>
+      event.type === "attackResolved" &&
+      event.attackerId === attackerId &&
+      event.defenderId === defenderId
+  );
+  if (!attackEvent || attackEvent.type !== "attackResolved") {
+    return state;
+  }
+
+  let nextPendingAoE = state.pendingAoE;
+  if (attackEvent.damage > 0) {
+    const damaged = nextPendingAoE.damagedUnitIds.includes(attackEvent.defenderId)
+      ? nextPendingAoE.damagedUnitIds
+      : [...nextPendingAoE.damagedUnitIds, attackEvent.defenderId];
+    const damageByUnitId = {
+      ...nextPendingAoE.damageByUnitId,
+      [attackEvent.defenderId]: attackEvent.damage,
+    };
+    nextPendingAoE = {
+      ...nextPendingAoE,
+      damagedUnitIds: damaged,
+      damageByUnitId,
+    };
+  }
+
+  const revealedIds = events
+    .filter((event) => event.type === "stealthRevealed")
+    .map((event) => (event.type === "stealthRevealed" ? event.unitId : ""))
+    .filter((id) => id.length > 0);
+  if (revealedIds.length > 0) {
+    const merged = Array.from(
+      new Set([...nextPendingAoE.revealedUnitIds, ...revealedIds])
+    );
+    nextPendingAoE = { ...nextPendingAoE, revealedUnitIds: merged };
+  }
+
+  if (nextPendingAoE === state.pendingAoE) {
+    return state;
+  }
+  return { ...state, pendingAoE: nextPendingAoE };
+}
+
+export function advanceJebeHailOfArrowsQueue(
+  state: GameState,
+  context: JebeHailOfArrowsAoEContext,
   events: GameEvent[]
 ): ApplyResult {
   const baseState = clearPendingRoll(state);
-  const targets = Array.isArray(context.targetsQueue)
-    ? context.targetsQueue
-    : [];
+  const targets = Array.isArray(context.targetsQueue) ? context.targetsQueue : [];
   let idx = context.currentTargetIndex ?? 0;
 
   while (idx < targets.length) {
     const targetId = targets[idx];
     const target = baseState.units[targetId];
     if (target && target.isAlive) {
-      const nextCtx: ForestAoEContext = {
+      const nextCtx: JebeHailOfArrowsAoEContext = {
         ...context,
         currentTargetIndex: idx,
       };
+      const attackerDice = Array.isArray(nextCtx.attackerDice)
+        ? nextCtx.attackerDice
+        : [];
       const charges = target.charges?.[ABILITY_BERSERK_AUTO_DEFENSE] ?? 0;
       if (
         (target.class === "berserker" || target.heroId === HERO_FEMTO_ID) &&
-        charges === 6
+        charges === 6 &&
+        attackerDice.length >= 2
       ) {
         const requested = requestRoll(
           baseState,
           target.owner,
-          "vladForest_berserkerDefenseChoice",
+          "jebeHailOfArrows_berserkerDefenseChoice",
           nextCtx,
           target.id
         );
@@ -76,51 +146,49 @@ export function advanceForestAoEQueue(
           events: [...events, ...requested.events],
         };
       }
+
       const requested = requestRoll(
         baseState,
         target.owner,
-        "vladForest_defenderRoll",
+        "jebeHailOfArrows_defenderRoll",
         nextCtx,
         target.id
       );
-      return {
-        state: requested.state,
-        events: [...events, ...requested.events],
-      };
+      return { state: requested.state, events: [...events, ...requested.events] };
     }
     idx += 1;
   }
 
-  return finalizeForestAoE(baseState, events);
+  return finalizeJebeHailOfArrows(baseState, events);
 }
 
-export function resolveForestAttackerRoll(
+export function resolveJebeHailOfArrowsAttackerRoll(
   state: GameState,
   pending: PendingRoll,
   rng: RNG
 ): ApplyResult {
-  const ctx = pending.context as unknown as ForestAoEContext;
+  const ctx = pending.context as unknown as JebeHailOfArrowsAoEContext;
   const caster = state.units[ctx.casterId];
   if (!caster) {
     return { state: clearPendingRoll(state), events: [] };
   }
 
   const attackerDice = rollDice(rng, 2);
-  const nextCtx: ForestAoEContext = {
+  const nextCtx: JebeHailOfArrowsAoEContext = {
     ...ctx,
     attackerDice,
     currentTargetIndex: ctx.currentTargetIndex ?? 0,
   };
 
-  return advanceForestAoEQueue(state, nextCtx, []);
+  return advanceJebeHailOfArrowsQueue(state, nextCtx, []);
 }
 
-export function resolveForestDefenderRoll(
+export function resolveJebeHailOfArrowsDefenderRoll(
   state: GameState,
   pending: PendingRoll,
   rng: RNG
 ): ApplyResult {
-  const ctx = pending.context as unknown as ForestAoEContext;
+  const ctx = pending.context as unknown as JebeHailOfArrowsAoEContext;
   const caster = state.units[ctx.casterId];
   if (!caster) {
     return { state: clearPendingRoll(state), events: [] };
@@ -135,17 +203,16 @@ export function resolveForestDefenderRoll(
   const idx = ctx.currentTargetIndex ?? 0;
   const targetId = targets[idx];
   if (!targetId) {
-    return finalizeForestAoE(clearPendingRoll(state), []);
+    return finalizeJebeHailOfArrows(clearPendingRoll(state), []);
   }
 
   const target = state.units[targetId];
   if (!target || !target.isAlive) {
-    const nextCtx: ForestAoEContext = {
+    const nextCtx: JebeHailOfArrowsAoEContext = {
       ...ctx,
       currentTargetIndex: idx + 1,
-      attackerDice,
     };
-    return advanceForestAoEQueue(state, nextCtx, []);
+    return advanceJebeHailOfArrowsQueue(state, nextCtx, []);
   }
 
   const defenderDice = rollDice(rng, 2);
@@ -158,7 +225,6 @@ export function resolveForestDefenderRoll(
     ignoreStealth: true,
     revealStealthedAllies: true,
     revealReason: "aoeHit",
-    damageOverride: 2,
     damageBonus,
     rolls: {
       attackerDice,
@@ -166,14 +232,14 @@ export function resolveForestDefenderRoll(
     },
   });
 
-  let updatedEvents = [...events];
+  let updatedState = nextState;
+  let updatedEvents: GameEvent[] = [...events];
   const attackEvent = events.find(
-    (e) =>
-      e.type === "attackResolved" &&
-      e.attackerId === caster.id &&
-      e.defenderId === targetId
+    (event) =>
+      event.type === "attackResolved" &&
+      event.attackerId === caster.id &&
+      event.defenderId === targetId
   );
-
   if (
     attackEvent &&
     attackEvent.type === "attackResolved" &&
@@ -191,68 +257,20 @@ export function resolveForestDefenderRoll(
     );
   }
 
-  let updatedState = nextState;
-  if (
-    attackEvent &&
-    attackEvent.type === "attackResolved" &&
-    attackEvent.hit
-  ) {
-    const hitUnit = updatedState.units[targetId];
-    if (hitUnit) {
-      updatedState = {
-        ...updatedState,
-        units: {
-          ...updatedState.units,
-          [hitUnit.id]: {
-            ...hitUnit,
-            movementDisabledNextTurn: true,
-          },
-        },
-      };
-    }
-  }
+  updatedState = updatePendingAoeFromAttack(
+    updatedState,
+    events,
+    caster.id,
+    targetId
+  );
 
-  if (attackEvent && attackEvent.type === "attackResolved" && updatedState.pendingAoE) {
-    let nextPendingAoE = updatedState.pendingAoE;
-    if (attackEvent.damage > 0) {
-      const damaged = nextPendingAoE.damagedUnitIds.includes(attackEvent.defenderId)
-        ? nextPendingAoE.damagedUnitIds
-        : [...nextPendingAoE.damagedUnitIds, attackEvent.defenderId];
-      const damageByUnitId = {
-        ...nextPendingAoE.damageByUnitId,
-        [attackEvent.defenderId]: attackEvent.damage,
-      };
-      nextPendingAoE = {
-        ...nextPendingAoE,
-        damagedUnitIds: damaged,
-        damageByUnitId,
-      };
-    }
-
-    const revealedIds = events
-      .filter((e) => e.type === "stealthRevealed")
-      .map((e) => (e.type === "stealthRevealed" ? e.unitId : ""))
-      .filter((id) => id.length > 0);
-    if (revealedIds.length > 0) {
-      const merged = Array.from(
-        new Set([...nextPendingAoE.revealedUnitIds, ...revealedIds])
-      );
-      nextPendingAoE = { ...nextPendingAoE, revealedUnitIds: merged };
-    }
-
-    if (nextPendingAoE !== updatedState.pendingAoE) {
-      updatedState = { ...updatedState, pendingAoE: nextPendingAoE };
-    }
-  }
-
-  const nextCtx: ForestAoEContext = {
+  const nextCtx: JebeHailOfArrowsAoEContext = {
     ...ctx,
     currentTargetIndex: idx + 1,
     attackerDice,
   };
-
   const intimidateResume: IntimidateResume = {
-    kind: "forestAoE",
+    kind: "jebeHailOfArrowsAoE",
     context: nextCtx as unknown as Record<string, unknown>,
   };
   const intimidate = maybeRequestIntimidate(
@@ -266,16 +284,16 @@ export function resolveForestDefenderRoll(
     return { state: intimidate.state, events: intimidate.events };
   }
 
-  return advanceForestAoEQueue(updatedState, nextCtx, updatedEvents);
+  return advanceJebeHailOfArrowsQueue(updatedState, nextCtx, updatedEvents);
 }
 
-export function resolveForestBerserkerDefenseChoice(
+export function resolveJebeHailOfArrowsBerserkerDefenseChoice(
   state: GameState,
   pending: PendingRoll,
   choice: "auto" | "roll" | undefined,
   rng: RNG
 ): ApplyResult {
-  const ctx = pending.context as unknown as ForestAoEContext;
+  const ctx = pending.context as unknown as JebeHailOfArrowsAoEContext;
   const caster = state.units[ctx.casterId];
   if (!caster) {
     return { state: clearPendingRoll(state), events: [] };
@@ -290,17 +308,16 @@ export function resolveForestBerserkerDefenseChoice(
   const idx = ctx.currentTargetIndex ?? 0;
   const targetId = targets[idx];
   if (!targetId) {
-    return finalizeForestAoE(clearPendingRoll(state), []);
+    return finalizeJebeHailOfArrows(clearPendingRoll(state), []);
   }
 
   const target = state.units[targetId];
   if (!target || !target.isAlive) {
-    const nextCtx: ForestAoEContext = {
+    const nextCtx: JebeHailOfArrowsAoEContext = {
       ...ctx,
       currentTargetIndex: idx + 1,
-      attackerDice,
     };
-    return advanceForestAoEQueue(state, nextCtx, []);
+    return advanceJebeHailOfArrowsQueue(state, nextCtx, []);
   }
 
   let selected: "auto" | "roll" = choice ?? "roll";
@@ -312,7 +329,7 @@ export function resolveForestBerserkerDefenseChoice(
   }
 
   if (selected === "roll") {
-    const nextCtx: ForestAoEContext = {
+    const nextCtx: JebeHailOfArrowsAoEContext = {
       ...ctx,
       currentTargetIndex: idx,
       attackerDice,
@@ -320,7 +337,7 @@ export function resolveForestBerserkerDefenseChoice(
     const requested = requestRoll(
       clearPendingRoll(state),
       target.owner,
-      "vladForest_defenderRoll",
+      "jebeHailOfArrows_defenderRoll",
       nextCtx,
       target.id
     );
@@ -341,7 +358,6 @@ export function resolveForestBerserkerDefenseChoice(
     revealStealthedAllies: true,
     revealReason: "aoeHit",
     defenderUseBerserkAutoDefense: true,
-    damageOverride: 2,
     damageBonus,
     rolls: {
       attackerDice,
@@ -349,15 +365,16 @@ export function resolveForestBerserkerDefenseChoice(
     },
   });
 
+  let updatedState = nextState;
   let updatedEvents: GameEvent[] = [
     evBerserkerDefenseChosen({ defenderId: target.id, choice: "auto" }),
     ...events,
   ];
   const attackEvent = events.find(
-    (e) =>
-      e.type === "attackResolved" &&
-      e.attackerId === caster.id &&
-      e.defenderId === target.id
+    (event) =>
+      event.type === "attackResolved" &&
+      event.attackerId === caster.id &&
+      event.defenderId === target.id
   );
   if (
     attackEvent &&
@@ -376,68 +393,21 @@ export function resolveForestBerserkerDefenseChoice(
     );
   }
 
-  let updatedState = nextState;
-  if (
-    attackEvent &&
-    attackEvent.type === "attackResolved" &&
-    attackEvent.hit
-  ) {
-    const hitUnit = updatedState.units[target.id];
-    if (hitUnit) {
-      updatedState = {
-        ...updatedState,
-        units: {
-          ...updatedState.units,
-          [hitUnit.id]: {
-            ...hitUnit,
-            movementDisabledNextTurn: true,
-          },
-        },
-      };
-    }
-  }
+  updatedState = updatePendingAoeFromAttack(
+    updatedState,
+    events,
+    caster.id,
+    target.id
+  );
 
-  if (attackEvent && attackEvent.type === "attackResolved" && updatedState.pendingAoE) {
-    let nextPendingAoE = updatedState.pendingAoE;
-    if (attackEvent.damage > 0) {
-      const damaged = nextPendingAoE.damagedUnitIds.includes(attackEvent.defenderId)
-        ? nextPendingAoE.damagedUnitIds
-        : [...nextPendingAoE.damagedUnitIds, attackEvent.defenderId];
-      const damageByUnitId = {
-        ...nextPendingAoE.damageByUnitId,
-        [attackEvent.defenderId]: attackEvent.damage,
-      };
-      nextPendingAoE = {
-        ...nextPendingAoE,
-        damagedUnitIds: damaged,
-        damageByUnitId,
-      };
-    }
-
-    const revealedIds = events
-      .filter((e) => e.type === "stealthRevealed")
-      .map((e) => (e.type === "stealthRevealed" ? e.unitId : ""))
-      .filter((id) => id.length > 0);
-    if (revealedIds.length > 0) {
-      const merged = Array.from(
-        new Set([...nextPendingAoE.revealedUnitIds, ...revealedIds])
-      );
-      nextPendingAoE = { ...nextPendingAoE, revealedUnitIds: merged };
-    }
-
-    if (nextPendingAoE !== updatedState.pendingAoE) {
-      updatedState = { ...updatedState, pendingAoE: nextPendingAoE };
-    }
-  }
-
-  const nextCtx: ForestAoEContext = {
+  const nextCtx: JebeHailOfArrowsAoEContext = {
     ...ctx,
     currentTargetIndex: idx + 1,
     attackerDice,
   };
 
   const intimidateResume: IntimidateResume = {
-    kind: "forestAoE",
+    kind: "jebeHailOfArrowsAoE",
     context: nextCtx as unknown as Record<string, unknown>,
   };
   const intimidate = maybeRequestIntimidate(
@@ -451,5 +421,65 @@ export function resolveForestBerserkerDefenseChoice(
     return { state: intimidate.state, events: intimidate.events };
   }
 
-  return advanceForestAoEQueue(updatedState, nextCtx, updatedEvents);
+  return advanceJebeHailOfArrowsQueue(updatedState, nextCtx, updatedEvents);
+}
+
+export function resolveJebeKhansShooterRicochetRoll(
+  state: GameState,
+  pending: PendingRoll,
+  rng: RNG
+): ApplyResult {
+  const ctx = pending.context as unknown as JebeKhansShooterRicochetContext;
+  const casterId = ctx.casterId;
+  const initialTargetId = ctx.initialTargetId;
+  if (!casterId || !initialTargetId) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  const ricochets = rollD6(rng);
+  const totalAttacks = 1 + ricochets;
+  return requestJebeKhansShooterAttack(
+    clearPendingRoll(state),
+    [],
+    casterId,
+    initialTargetId,
+    totalAttacks
+  );
+}
+
+export function resolveJebeKhansShooterTargetChoice(
+  state: GameState,
+  pending: PendingRoll,
+  choice: ResolveRollChoice | undefined
+): ApplyResult {
+  const ctx = pending.context as unknown as JebeKhansShooterTargetChoiceContext;
+  const casterId = ctx.casterId;
+  const remainingAttacks = ctx.remainingAttacks;
+  const options = Array.isArray(ctx.options) ? ctx.options : [];
+  if (!casterId || typeof remainingAttacks !== "number" || remainingAttacks <= 0) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  const selected =
+    choice &&
+    typeof choice === "object" &&
+    "type" in choice &&
+    (choice as { type?: string }).type === "jebeKhansShooterTarget"
+      ? (choice as { targetId?: string }).targetId
+      : undefined;
+  if (!selected) {
+    return { state, events: [] };
+  }
+
+  if (!options.includes(selected)) {
+    return { state, events: [] };
+  }
+
+  return requestJebeKhansShooterAttack(
+    clearPendingRoll(state),
+    [],
+    casterId,
+    selected,
+    remainingAttacks
+  );
 }

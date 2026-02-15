@@ -3,6 +3,7 @@ import type { RNG } from "../../rng";
 import { resolveAttack } from "../../combat";
 import { clearPendingRoll, requestRoll } from "../../shared/rollUtils";
 import { getPolkovodetsSource, maybeRequestIntimidate } from "../../actions/heroes/vlad";
+import { addKaladinMoveLock } from "../../actions/heroes/kaladin";
 import type { IntimidateResume } from "../../actions/types";
 import { evAoeResolved, evDamageBonusApplied } from "../../shared/events";
 import type { TricksterAoEContext } from "../types";
@@ -127,6 +128,9 @@ export function resolveTricksterAoEDefenderRoll(
   const defenderDice = rollDice(rng, 2);
   const sourceId = getPolkovodetsSource(state, caster.id);
   const damageBonus = sourceId ? 1 : 0;
+  const damageOverride =
+    typeof ctx.damageOverride === "number" ? ctx.damageOverride : undefined;
+  const ignoreBonuses = ctx.ignoreBonuses === true;
   const { nextState, events } = resolveAttack(state, {
     attackerId: caster.id,
     defenderId: targetId,
@@ -135,6 +139,8 @@ export function resolveTricksterAoEDefenderRoll(
     revealStealthedAllies: true,
     revealReason: "aoeHit",
     damageBonus,
+    damageOverride,
+    ignoreBonuses,
     rolls: {
       attackerDice,
       defenderDice,
@@ -154,6 +160,7 @@ export function resolveTricksterAoEDefenderRoll(
     attackEvent.type === "attackResolved" &&
     attackEvent.hit &&
     damageBonus > 0 &&
+    !ignoreBonuses &&
     sourceId
   ) {
     updatedEvents.push(
@@ -195,6 +202,26 @@ export function resolveTricksterAoEDefenderRoll(
 
     if (nextPendingAoE !== updatedState.pendingAoE) {
       updatedState = { ...updatedState, pendingAoE: nextPendingAoE };
+    }
+  }
+
+  if (attackEvent && attackEvent.type === "attackResolved" && attackEvent.damage > 0) {
+    const immobilizeSourceId =
+      typeof ctx.immobilizeSourceId === "string" ? ctx.immobilizeSourceId : "";
+    if (ctx.immobilizeOnHit && immobilizeSourceId) {
+      const targetAfter = updatedState.units[targetId];
+      if (targetAfter && targetAfter.isAlive) {
+        const locked = addKaladinMoveLock(targetAfter, immobilizeSourceId);
+        if (locked !== targetAfter) {
+          updatedState = {
+            ...updatedState,
+            units: {
+              ...updatedState.units,
+              [locked.id]: locked,
+            },
+          };
+        }
+      }
     }
   }
 

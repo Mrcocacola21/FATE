@@ -12,7 +12,13 @@ import {
 import { RNG, rollD6 } from "./rng";
 import { getUnitDefinition } from "./units";
 import { canSpendSlots, spendSlots } from "./turnEconomy";
-import { HERO_CHIKATILO_ID, HERO_FALSE_TRAIL_TOKEN_ID } from "./heroes";
+import {
+  HERO_CHIKATILO_ID,
+  HERO_FALSE_TRAIL_TOKEN_ID,
+  HERO_HASSAN_ID,
+  HERO_LECHY_ID,
+} from "./heroes";
+import { applyGriffithFemtoRebirth } from "./actions/heroes/griffith";
   
   // РќР°РїСЂР°РІР»РµРЅРёСЏ РІРѕРєСЂСѓРі РєР»РµС‚РєРё (РЅР°С‡РёРЅР°СЏ СЃ СЃРµРІРµСЂР° РїРѕ С‡Р°СЃРѕРІРѕР№ СЃС‚СЂРµР»РєРµ)
   const NEIGHBOR_OFFSETS: Coord[] = [
@@ -27,6 +33,25 @@ import { HERO_CHIKATILO_ID, HERO_FALSE_TRAIL_TOKEN_ID } from "./heroes";
   ];
   
   // use StealthRevealReason from model
+
+export function getStealthSuccessMinRoll(unit: UnitState): number | null {
+  if (typeof unit.stealthSuccessMinRoll === "number") {
+    return unit.stealthSuccessMinRoll;
+  }
+  if (unit.heroId === HERO_HASSAN_ID) {
+    return 4;
+  }
+  if (unit.heroId === HERO_LECHY_ID) {
+    return 5;
+  }
+  if (unit.class === "assassin") {
+    return 5;
+  }
+  if (unit.class === "archer") {
+    return 6;
+  }
+  return null;
+}
   
   /**
    * РџРѕРїС‹С‚РєР° РІРѕР№С‚Рё РІ СЃРєСЂС‹С‚РЅРѕСЃС‚СЊ.
@@ -65,7 +90,8 @@ import { HERO_CHIKATILO_ID, HERO_FALSE_TRAIL_TOKEN_ID } from "./heroes";
     }
 
     const def = getUnitDefinition(unit.class);
-    if (!def.canStealth) {
+    const threshold = getStealthSuccessMinRoll(unit);
+    if (threshold === null) {
       return {
         state: {
           ...state,
@@ -105,19 +131,7 @@ import { HERO_CHIKATILO_ID, HERO_FALSE_TRAIL_TOKEN_ID } from "./heroes";
     }
 
     const roll = rollD6(rng);
-    let success = false;
-
-    // Правила:
-    // Лучник: скрытность при к6 = 6
-    // Убийца: скрытность при к6 = 5–6
-    // Остальные (если появятся canStealth) — по умолчанию на 6
-    if (unit.class === "archer") {
-      success = roll === 6;
-    } else if (unit.class === "assassin") {
-      success = roll >= 5;
-    } else {
-      success = roll === 6;
-    }
+    const success = roll >= threshold;
 
     const newState: GameState = {
       ...state,
@@ -237,6 +251,7 @@ import { HERO_CHIKATILO_ID, HERO_FALSE_TRAIL_TOKEN_ID } from "./heroes";
       } else {
         // РќРµРєСѓРґР° СЃРјРµСЃС‚РёС‚СЊСЃСЏ вЂ” РіРµСЂРѕР№ РїРѕР»СѓС‡Р°РµС‚ 1 СѓСЂРѕРЅ
         const newHp = Math.max(0, u.hp - 1);
+        const deathPosition = u.position ? { ...u.position } : null;
         u = {
           ...u,
           hp: newHp,
@@ -252,6 +267,11 @@ import { HERO_CHIKATILO_ID, HERO_FALSE_TRAIL_TOKEN_ID } from "./heroes";
             unitId: u.id,
             killerId: null,
           });
+          const rebirth = applyGriffithFemtoRebirth(u, deathPosition);
+          if (rebirth.transformed) {
+            u = rebirth.unit;
+            events.push(...rebirth.events);
+          }
         }
       }
     }

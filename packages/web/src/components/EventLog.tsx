@@ -119,6 +119,8 @@ function formatEvent(event: GameEvent): string {
       }`;
     case "abilityUsed":
       return `Ability used: ${event.unitId} (${event.abilityId})`;
+    case "unitHealed":
+      return `Healed: ${event.unitId} +${event.amount} (HP ${event.hpAfter})`;
     case "damageBonusApplied":
       return `Damage bonus: ${event.unitId} +${event.amount} (${event.source})`;
     case "stakesPlaced":

@@ -427,6 +427,10 @@ export function applyRequestMoveOptions(
     return { state, events: [] };
   }
 
+  if ((unit.kaladinMoveLockSources?.length ?? 0) > 0) {
+    return { state, events: [] };
+  }
+
   const canMove = canSpendSlots(unit, { move: true });
   if (!canMove && !unit.genghisKhanDecreeMovePending && !unit.genghisKhanMongolChargeActive) {
     return { state, events: [] };
@@ -829,6 +833,10 @@ export function applyMove(
   }
 
   if (state.activeUnitId !== unit.id) {
+    return { state, events: [] };
+  }
+
+  if ((unit.kaladinMoveLockSources?.length ?? 0) > 0) {
     return { state, events: [] };
   }
 

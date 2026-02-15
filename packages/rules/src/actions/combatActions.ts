@@ -7,6 +7,7 @@ import { clearPendingRoll, replacePendingRoll, requestRoll } from "../shared/rol
 import { isKaiser } from "./shared";
 import { HERO_FALSE_TRAIL_TOKEN_ID } from "../heroes";
 import { exitBunkerForUnit } from "./heroes/kaiser";
+import { applyGutsBerserkAttack } from "./heroes/guts";
 import { getPolkovodetsSource } from "./heroes/vlad";
 import type { AttackRollContext } from "./types";
 import { makeAttackContext } from "../shared/combatCtx";
@@ -38,6 +39,9 @@ export function applyAttack(
 
   if (state.activeUnitId !== attacker.id) {
     return { state, events: [] };
+  }
+  if (attacker.gutsBerserkModeActive) {
+    return applyGutsBerserkAttack(state, attacker, action);
   }
 
   // 🚫 Тратил слот атаки
@@ -108,12 +112,16 @@ export function finalizeAttackFromContext(
   const { nextState, events } = resolveAttack(state, {
     attackerId: context.attackerId,
     defenderId: context.defenderId,
+    allowFriendlyTarget: context.allowFriendlyTarget,
     defenderUseBerserkAutoDefense: useAutoDefense,
     ignoreRange: context.ignoreRange,
     ignoreStealth: context.ignoreStealth,
     revealStealthedAllies: context.revealStealthedAllies,
     revealReason: context.revealReason,
+    rangedAttack: context.rangedAttack,
     damageBonus,
+    damageOverride: context.damageOverride,
+    ignoreBonuses: context.ignoreBonuses,
     rolls,
   });
 
@@ -129,6 +137,7 @@ export function finalizeAttackFromContext(
     attackEvent.type === "attackResolved" &&
     attackEvent.hit &&
     polkovodetsBonus > 0 &&
+    !context.ignoreBonuses &&
     sourceId
   ) {
     updatedEvents.push(

@@ -6,6 +6,7 @@ import {
   ABILITY_BERSERK_AUTO_DEFENSE,
   ABILITY_KAISER_CARPET_STRIKE,
 } from "../../abilities";
+import { HERO_FEMTO_ID } from "../../heroes";
 import { clearPendingRoll, requestRoll } from "../../shared/rollUtils";
 import { maybeRequestIntimidate } from "../../actions/heroes/vlad";
 import { isKaiserTransformed, map2d9ToCoord, rollD9 } from "../../actions/shared";
@@ -72,7 +73,11 @@ export function advanceCarpetStrikeQueue(
         ? nextCtx.attackerDice
         : [];
       const charges = target.charges?.[ABILITY_BERSERK_AUTO_DEFENSE] ?? 0;
-      if (target.class === "berserker" && charges === 6 && attackerDice.length >= 2) {
+      if (
+        (target.class === "berserker" || target.heroId === HERO_FEMTO_ID) &&
+        charges === 6 &&
+        attackerDice.length >= 2
+      ) {
         const requested = requestRoll(
           baseState,
           target.owner,

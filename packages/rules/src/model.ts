@@ -83,6 +83,7 @@ export interface UnitState {
 
   isStealthed: boolean;
   stealthTurnsLeft: number;
+  stealthSuccessMinRoll?: number;
   stealthAttemptedThisTurn: boolean; // уже было
 
   bunker?: { active: boolean; ownTurnsInBunker: number };
@@ -116,6 +117,12 @@ export interface UnitState {
   genghisKhanAttackedThisTurn?: string[];
   /** Genghis Khan: targets attacked during previous turn (for Legend of the Steppes). */
   genghisKhanAttackedLastTurn?: string[];
+  /** Guts: active Berserk Mode flag. */
+  gutsBerserkModeActive?: boolean;
+  /** Guts: exit from Berserk Mode was already consumed once per game. */
+  gutsBerserkExitUsed?: boolean;
+  /** Kaladin: move-consuming actions are blocked while list is non-empty. */
+  kaladinMoveLockSources?: string[];
 
   isAlive: boolean;
 }
@@ -187,7 +194,16 @@ export type RollKind =
   | "chikatiloFalseTrailRevealChoice"
   | "lechyGuideTravelerPlacement"
   | "forestMoveCheck"
-  | "forestMoveDestination";
+  | "forestMoveDestination"
+  | "jebeHailOfArrows_attackerRoll"
+  | "jebeHailOfArrows_defenderRoll"
+  | "jebeHailOfArrows_berserkerDefenseChoice"
+  | "jebeKhansShooterRicochetRoll"
+  | "jebeKhansShooterTargetChoice"
+  | "hassanTrueEnemyTargetChoice"
+  | "hassanAssassinOrderSelection"
+  | "femtoDivineMoveRoll"
+  | "femtoDivineMoveDestination";
 
 export interface PendingRoll {
   id: string;
@@ -404,6 +420,13 @@ export type GameEvent =
       abilityId: string;
     }
   | {
+      type: "unitHealed";
+      unitId: string;
+      amount: number;
+      hpAfter: number;
+      sourceAbilityId?: string;
+    }
+  | {
       type: "aoeResolved";
       sourceUnitId: string;
       abilityId?: string;
@@ -459,7 +482,11 @@ export type ResolveRollChoice =
   | { type: "forestTarget"; center: Coord }
   | { type: "forestMoveDestination"; position: Coord }
   | { type: "chikatiloPlace"; position: Coord }
-  | { type: "lechyGuideTravelerPlace"; position: Coord };
+  | { type: "lechyGuideTravelerPlace"; position: Coord }
+  | { type: "jebeKhansShooterTarget"; targetId: string }
+  | { type: "hassanTrueEnemyTarget"; targetId: string }
+  | { type: "hassanAssassinOrderPick"; unitIds: string[] }
+  | { type: "femtoDivineMoveDestination"; position: Coord };
 
     export type GameAction =
     | {
@@ -713,3 +740,5 @@ export function coordFromNotation(notation: string): Coord {
 export function coordToNotation(c: Coord): string {
   return `${COLS[c.col]}${c.row}`;
 }
+
+

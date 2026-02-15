@@ -5,6 +5,8 @@ import {
   isVlad,
   isElCid,
   isGenghis,
+  isHassan,
+  isJebe,
   getAdjacentEmptyCells,
   isUnitVisibleToPlayer,
 } from "../shared";
@@ -28,7 +30,15 @@ export function getPolkovodetsSource(
   const attacker = state.units[attackerId];
   if (!attacker || !attacker.position) return null;
   if (attacker.heroId === HERO_FALSE_TRAIL_TOKEN_ID) return null;
-  if (isVlad(attacker) || isElCid(attacker) || isGenghis(attacker)) return null;
+  if (
+    isVlad(attacker) ||
+    isElCid(attacker) ||
+    isGenghis(attacker) ||
+    isHassan(attacker) ||
+    isJebe(attacker)
+  ) {
+    return null;
+  }
 
   const origin = positionOverride ?? attacker.position;
   const candidates = Object.values(state.units)
@@ -37,7 +47,11 @@ export function getPolkovodetsSource(
         unit.isAlive &&
         unit.position &&
         unit.owner === attacker.owner &&
-        (isVlad(unit) || isElCid(unit) || isGenghis(unit)) &&
+        (isVlad(unit) ||
+          isElCid(unit) ||
+          isGenghis(unit) ||
+          isHassan(unit) ||
+          isJebe(unit)) &&
         unit.id !== attacker.id &&
         chebyshev(origin, unit.position) <= 1
     )

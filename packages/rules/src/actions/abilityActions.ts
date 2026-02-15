@@ -19,6 +19,16 @@ import {
   ABILITY_LECHY_GUIDE_TRAVELER,
   ABILITY_LECHY_STORM,
   ABILITY_GROZNY_INVADE_TIME,
+  ABILITY_GUTS_ARBALET,
+  ABILITY_GUTS_BERSERK_MODE,
+  ABILITY_GUTS_CANNON,
+  ABILITY_GUTS_EXIT_BERSERK,
+  ABILITY_FEMTO_DIVINE_MOVE,
+  ABILITY_HASSAN_TRUE_ENEMY,
+  ABILITY_KALADIN_FIFTH,
+  ABILITY_KALADIN_FIRST,
+  ABILITY_JEBE_HAIL_OF_ARROWS,
+  ABILITY_JEBE_KHANS_SHOOTER,
   TRICKSTER_AOE_RADIUS,
   getAbilitySpec,
   spendCharges,
@@ -30,7 +40,7 @@ import { applyKaiserDora } from "./heroes/kaiser";
 import { applyElCidDemonDuelist, applyElCidTisona } from "./heroes/elCid";
 import { applyKhansDecree, applyMongolCharge } from "./heroes/genghisKhan";
 import { applyGroznyInvadeTime } from "./heroes/grozny";
-import { HERO_FALSE_TRAIL_TOKEN_ID } from "../heroes";
+import { HERO_FALSE_TRAIL_TOKEN_ID, HERO_KALADIN_ID } from "../heroes";
 import {
   applyChikatiloAssassinMark,
   applyChikatiloDecoyStealth,
@@ -40,6 +50,16 @@ import {
   applyLechyGuideTraveler,
   applyLechyStorm,
 } from "./heroes/lechy";
+import { applyJebeHailOfArrows, applyJebeKhansShooter } from "./heroes/jebe";
+import { applyHassanTrueEnemy } from "./heroes/hassan";
+import { applyKaladinFifth, applyKaladinFirst } from "./heroes/kaladin";
+import {
+  applyGutsArbalet,
+  applyGutsBerserkMode,
+  applyGutsCannon,
+  applyGutsExitBerserk,
+} from "./heroes/guts";
+import { applyFemtoDivineMove } from "./heroes/griffith";
 import type { TricksterAoEContext } from "./types";
 
 export function applyUseAbility(
@@ -135,11 +155,51 @@ export function applyUseAbility(
     return applyGroznyInvadeTime(state, unit, action, rng);
   }
 
+  if (spec.id === ABILITY_JEBE_HAIL_OF_ARROWS) {
+    return applyJebeHailOfArrows(state, unit, action, rng);
+  }
+
+  if (spec.id === ABILITY_JEBE_KHANS_SHOOTER) {
+    return applyJebeKhansShooter(state, unit, action);
+  }
+
+  if (spec.id === ABILITY_HASSAN_TRUE_ENEMY) {
+    return applyHassanTrueEnemy(state, unit, action);
+  }
+
+  if (spec.id === ABILITY_KALADIN_FIRST) {
+    return applyKaladinFirst(state, unit);
+  }
+
+  if (spec.id === ABILITY_KALADIN_FIFTH) {
+    return applyKaladinFifth(state, unit, action, rng);
+  }
+
+  if (spec.id === ABILITY_GUTS_ARBALET) {
+    return applyGutsArbalet(state, unit, action);
+  }
+
+  if (spec.id === ABILITY_GUTS_CANNON) {
+    return applyGutsCannon(state, unit, action);
+  }
+
+  if (spec.id === ABILITY_GUTS_BERSERK_MODE) {
+    return applyGutsBerserkMode(state, unit);
+  }
+
+  if (spec.id === ABILITY_GUTS_EXIT_BERSERK) {
+    return applyGutsExitBerserk(state, unit);
+  }
+
+  if (spec.id === ABILITY_FEMTO_DIVINE_MOVE) {
+    return applyFemtoDivineMove(state, unit);
+  }
+
   const isTricksterAoE = spec.id === ABILITY_TRICKSTER_AOE;
   const aoeCenter = isTricksterAoE ? unit.position : null;
 
   if (isTricksterAoE) {
-    if (unit.class !== "trickster") {
+    if (unit.class !== "trickster" && unit.heroId !== HERO_KALADIN_ID) {
       return { state, events: [] };
     }
     if (!aoeCenter || !isInsideBoard(aoeCenter, state.boardSize)) {

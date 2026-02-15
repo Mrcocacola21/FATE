@@ -1,6 +1,7 @@
 import type { UnitClass } from "./model";
 import { getUnitDefinition } from "./units";
 import {
+  ABILITY_BERSERK_AUTO_DEFENSE,
   ABILITY_KAISER_BUNKER,
   ABILITY_KAISER_CARPET_STRIKE,
   ABILITY_KAISER_DORA,
@@ -35,6 +36,7 @@ import {
   ABILITY_DON_KIHOTE_WINDMILLS,
   ABILITY_JEBE_HAIL_OF_ARROWS,
   ABILITY_JEBE_KHANS_SHOOTER,
+  ABILITY_JEBE_DURABLE,
   ABILITY_HASSAN_ASSASIN_ORDER,
   ABILITY_HASSAN_ONE_WITH_SAND,
   ABILITY_HASSAN_TRUE_ENEMY,
@@ -49,8 +51,11 @@ import {
   ABILITY_FRISK_ONE_WAY,
   ABILITY_FRISK_PACIFIST,
   ABILITY_FRISK_PURE_SOUL,
-  ABILITY_GRIFFITH_FEMTO,
-  ABILITY_GRIFFITH_PATHETIC_MAN,
+  ABILITY_GRIFFITH_WRETCHED_MAN,
+  ABILITY_GRIFFITH_FEMTO_REBIRTH,
+  ABILITY_FEMTO_GOD_HP,
+  ABILITY_FEMTO_MULTI_BERSERK_SPEAR,
+  ABILITY_FEMTO_DIVINE_MOVE,
   ABILITY_GUTS_ARBALET,
   ABILITY_GUTS_BERSERK_MODE,
   ABILITY_GUTS_CANNON,
@@ -114,6 +119,7 @@ import {
   HERO_ASGORE_ID,
   HERO_DON_KIHOTE_ID,
   HERO_DUOLINGO_ID,
+  HERO_FEMTO_ID,
   HERO_FRISK_ID,
   HERO_GRIFFITH_ID,
   HERO_GUTS_ID,
@@ -388,8 +394,27 @@ const HERO_REGISTRY_LIST: HeroMeta[] = [
     mainClass: "knight",
     baseStats: buildBaseStats("knight", HERO_GRIFFITH_ID),
     abilities: [
-      ABILITY_GRIFFITH_PATHETIC_MAN,
-      ABILITY_GRIFFITH_FEMTO,
+      ABILITY_GRIFFITH_WRETCHED_MAN,
+      ABILITY_VLAD_POLKOVODETS,
+      ABILITY_GRIFFITH_FEMTO_REBIRTH,
+    ]
+      .map(buildAbilityMeta)
+      .filter((item): item is AbilityMeta => item !== null),
+  },
+  {    id: HERO_FEMTO_ID,
+    name: "Femto",
+    mainClass: "knight",
+    baseStats: {
+      hp: getUnitDefinition("berserker").maxHp + 5,
+      damage: getUnitDefinition("berserker").baseAttack,
+      moveType: getMoveType("knight"),
+      attackRange: getAttackRange("spearman"),
+    },
+    abilities: [
+      ABILITY_FEMTO_GOD_HP,
+      ABILITY_FEMTO_MULTI_BERSERK_SPEAR,
+      ABILITY_FEMTO_DIVINE_MOVE,
+      ABILITY_BERSERK_AUTO_DEFENSE,
     ]
       .map(buildAbilityMeta)
       .filter((item): item is AbilityMeta => item !== null),
@@ -424,6 +449,7 @@ const HERO_REGISTRY_LIST: HeroMeta[] = [
     mainClass: "archer",
     baseStats: buildBaseStats("archer", HERO_JEBE_ID),
     abilities: [
+      ABILITY_JEBE_DURABLE,
       ABILITY_JEBE_KHANS_SHOOTER,
       ABILITY_JEBE_HAIL_OF_ARROWS,
       ABILITY_GENGHIS_KHAN_LEGEND_OF_THE_STEPPES,

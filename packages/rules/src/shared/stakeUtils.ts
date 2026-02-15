@@ -4,6 +4,7 @@ import { revealUnit } from "../stealth";
 import type { RNG } from "../rng";
 import { isUnitVisibleToPlayer } from "../actions/shared";
 import { evStakeTriggered, evUnitDied } from "./events";
+import { applyGriffithFemtoRebirth } from "../actions/heroes/griffith";
 
 export function getLegalStakePositions(
   state: GameState,
@@ -110,6 +111,7 @@ export function applyStakeTriggerIfAny(
   const events: GameEvent[] = [];
 
   const newHp = Math.max(0, updatedUnit.hp - 1);
+  const deathPosition = updatedUnit.position ? { ...updatedUnit.position } : null;
   updatedUnit = {
     ...updatedUnit,
     hp: newHp,
@@ -127,6 +129,11 @@ export function applyStakeTriggerIfAny(
         killerId: null,
       })
     );
+    const rebirth = applyGriffithFemtoRebirth(updatedUnit, deathPosition);
+    if (rebirth.transformed) {
+      updatedUnit = rebirth.unit;
+      events.push(...rebirth.events);
+    }
   }
 
   nextState = {

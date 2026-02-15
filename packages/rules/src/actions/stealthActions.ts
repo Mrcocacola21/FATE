@@ -1,12 +1,12 @@
 import type { ApplyResult, GameAction, GameEvent, GameState, UnitState } from "../model";
 import type { RNG } from "../rng";
-import { getUnitDefinition } from "../units";
 import { chebyshev } from "../board";
 import { canSpendSlots, spendSlots } from "../turnEconomy";
 import { isKaiser, isKaiserTransformed } from "./shared";
-import { HERO_FALSE_TRAIL_TOKEN_ID, HERO_LECHY_ID } from "../heroes";
+import { HERO_FALSE_TRAIL_TOKEN_ID } from "../heroes";
 import { requestRoll } from "../shared/rollUtils";
 import { evSearchStealth, evStealthEntered } from "../shared/events";
+import { getStealthSuccessMinRoll } from "../stealth";
 
 export function applyEnterStealth(
   state: GameState,
@@ -86,10 +86,7 @@ export function applyEnterStealth(
   }
 
   // Только ассасин и лучник могут в скрытность
-  const canStealth =
-    unit.class === "assassin" ||
-    unit.class === "archer" ||
-    unit.heroId === HERO_LECHY_ID;
+  const canStealth = getStealthSuccessMinRoll(unit) !== null;
 
   if (canStealth) {
     const pos = unit.position!;

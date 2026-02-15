@@ -2,6 +2,7 @@ import type { ApplyResult, GameEvent, GameState, PendingRoll } from "../../model
 import type { RNG } from "../../rng";
 import { resolveAttack } from "../../combat";
 import { ABILITY_BERSERK_AUTO_DEFENSE } from "../../abilities";
+import { HERO_FEMTO_ID } from "../../heroes";
 import { clearPendingRoll, requestRoll } from "../../shared/rollUtils";
 import { getPolkovodetsSource, maybeRequestIntimidate } from "../../actions/heroes/vlad";
 import type { IntimidateResume } from "../../actions/types";
@@ -62,7 +63,11 @@ export function advanceDoraAoEQueue(
         ? nextCtx.attackerDice
         : [];
       const charges = target.charges?.[ABILITY_BERSERK_AUTO_DEFENSE] ?? 0;
-      if (target.class === "berserker" && charges === 6 && attackerDice.length >= 2) {
+      if (
+        (target.class === "berserker" || target.heroId === HERO_FEMTO_ID) &&
+        charges === 6 &&
+        attackerDice.length >= 2
+      ) {
         const requested = requestRoll(
           baseState,
           target.owner,

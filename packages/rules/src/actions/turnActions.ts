@@ -10,12 +10,14 @@ import type { RNG } from "../rng";
 import { processUnitStartOfTurn } from "../abilities";
 import { processUnitStartOfTurnStealth } from "../stealth";
 import { resetTurnEconomy } from "../turnEconomy";
-import { HERO_FALSE_TRAIL_TOKEN_ID } from "../heroes";
+import { HERO_FALSE_TRAIL_TOKEN_ID, HERO_KALADIN_ID } from "../heroes";
 import {
   maybeTriggerCarpetStrike,
   maybeTriggerEngineeringMiracle,
   processUnitStartOfTurnBunker,
 } from "./heroes/kaiser";
+import { applyGutsEndTurnDrain } from "./heroes/guts";
+import { clearKaladinMoveLocksForCaster } from "./heroes/kaladin";
 import { maybeTriggerElCidKolada } from "./heroes/elCid";
 import { maybeTriggerGroznyTyrant } from "./heroes/grozny";
 import {
@@ -160,7 +162,12 @@ export function applyEndTurn(state: GameState, rng: RNG): ApplyResult {
   // 2) Р¤Р°Р·Р° Р±РѕСЏ: РєСЂСѓС‚РёРј РѕС‡РµСЂРµРґСЊ СЋРЅРёС‚РѕРІ
   // -----------------------------
   if (state.phase === "battle") {
-    const stateAfterGenghis = clearGenghisTurnFlags(state, state.activeUnitId);
+    const drained = applyGutsEndTurnDrain(state, state.activeUnitId);
+    const stateAfterDrain = drained.state;
+    const stateAfterGenghis = clearGenghisTurnFlags(
+      stateAfterDrain,
+      stateAfterDrain.activeUnitId
+    );
     const stateAfterTurn = clearLechyGuideTravelerTarget(
       stateAfterGenghis,
       stateAfterGenghis.activeUnitId
@@ -186,7 +193,7 @@ export function applyEndTurn(state: GameState, rng: RNG): ApplyResult {
         activeUnitId: null,
         pendingMove: null,
       };
-      const events: GameEvent[] = [];
+      const events: GameEvent[] = [...drained.events];
       if (winner) {
         events.push(evGameEnded({ winner }));
       }
@@ -195,11 +202,11 @@ export function applyEndTurn(state: GameState, rng: RNG): ApplyResult {
 
     const queue = state.turnQueue.length > 0 ? state.turnQueue : state.turnOrder;
     if (queue.length === 0) {
-      return { state: stateAfterTurn, events: [] };
+      return { state: stateAfterTurn, events: drained.events };
     }
     const prevIndex = state.turnQueue.length > 0 ? state.turnQueueIndex : state.turnOrderIndex;
 
-    const nextIndex = getNextAliveUnitIndex(state, prevIndex, queue);
+    const nextIndex = getNextAliveUnitIndex(stateAfterTurn, prevIndex, queue);
     if (nextIndex === null) {
       // РќРёРєС‚Рѕ Р¶РёРІ РЅРµ РѕСЃС‚Р°Р»СЃСЏ вЂ” РёРіСЂР° РѕРєРѕРЅС‡РµРЅР°
       const ended: GameState = {
@@ -208,7 +215,7 @@ export function applyEndTurn(state: GameState, rng: RNG): ApplyResult {
         activeUnitId: null,
         pendingMove: null,
       };
-      return { state: ended, events: [] };
+      return { state: ended, events: drained.events };
     }
 
     const order = state.turnQueue.length > 0 ? state.turnQueue : state.turnOrder;
@@ -240,7 +247,7 @@ export function applyEndTurn(state: GameState, rng: RNG): ApplyResult {
       evTurnStarted({ player: nextPlayer, turnNumber: baseState.turnNumber })
     );
 
-    return { state: baseState, events };
+    return { state: baseState, events: [...drained.events, ...events] };
   }
 
   // РќР° РІСЃСЏРєРёР№ СЃР»СѓС‡Р°Р№, РµСЃР»Рё РѕРєР°Р¶РµРјСЃСЏ РІ РґСЂСѓРіРѕР№ С„Р°Р·Рµ
@@ -256,10 +263,12 @@ export function applyUnitStartTurn(
     return { state, events: [] };
   }
 
-  const unit = state.units[action.unitId];
-  if (!unit || !unit.isAlive || !unit.position) {
+  const initialUnit = state.units[action.unitId];
+  if (!initialUnit || !initialUnit.isAlive || !initialUnit.position) {
     return { state, events: [] };
   }
+
+  const unit = initialUnit;
 
   // РњРѕР¶РµС‚ С…РѕРґРёС‚СЊ С‚РѕР»СЊРєРѕ РІР»Р°РґРµР»РµС† currentPlayer
   if (unit.owner !== state.currentPlayer) {
@@ -273,7 +282,8 @@ export function applyUnitStartTurn(
 
   // Жёстко: ходить может только фигура из очереди
   const queue = state.turnQueue.length > 0 ? state.turnQueue : state.turnOrder;
-  const queueIndex = state.turnQueue.length > 0 ? state.turnQueueIndex : state.turnOrderIndex;
+  const queueIndex =
+    state.turnQueue.length > 0 ? state.turnQueueIndex : state.turnOrderIndex;
   if (queue.length > 0) {
     const scheduledId = queue[queueIndex];
     if (scheduledId !== unit.id) {
@@ -281,8 +291,13 @@ export function applyUnitStartTurn(
     }
   }
 
+  const stateAfterKaladinCleanup =
+    unit.heroId === HERO_KALADIN_ID
+      ? clearKaladinMoveLocksForCaster(state, unit.id)
+      : state;
+
   const { state: afterStealth, events: stealthEvents } =
-    processUnitStartOfTurnStealth(state, unit.id, rng);
+    processUnitStartOfTurnStealth(stateAfterKaladinCleanup, unit.id, rng);
 
   const unitAfterStealth = afterStealth.units[unit.id];
   if (!unitAfterStealth || !unitAfterStealth.isAlive || !unitAfterStealth.position) {

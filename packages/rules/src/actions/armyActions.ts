@@ -106,6 +106,8 @@ export function createDefaultArmy(
       genghisKhanMongolChargeActive: false,
       genghisKhanAttackedThisTurn: [],
       genghisKhanAttackedLastTurn: [],
+      gutsBerserkModeActive: false,
+      gutsBerserkExitUsed: false,
 
       isAlive: true,
     };

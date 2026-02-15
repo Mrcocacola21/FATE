@@ -2,6 +2,7 @@ import type { Coord, PlayerId, PlayerView } from "rules";
 import {
   EL_CID_COMPEADOR_ID,
   EL_CID_KOLADA_ID,
+  KALADIN_ID,
   TRICKSTER_AOE_ID,
   TRICKSTER_AOE_RADIUS,
   FOREST_AURA_RADIUS,
@@ -257,7 +258,8 @@ export const Board: FC<BoardProps> = ({
       : null;
   const isMyTurn = playerId ? view.currentPlayer === playerId : false;
   const isActive = selectedUnit ? view.activeUnitId === selectedUnit.id : false;
-  const abilityAvailable = selectedUnit?.class === "trickster";
+  const abilityAvailable =
+    selectedUnit?.class === "trickster" || selectedUnit?.heroId === KALADIN_ID;
   const economy = selectedUnit?.turn ?? {
     moveUsed: false,
     attackUsed: false,

@@ -36,6 +36,12 @@ export type ActionMode =
   | "invadeTime"
   | "assassinMark"
   | "guideTraveler"
+  | "jebeHailOfArrows"
+  | "jebeKhansShooter"
+  | "hassanTrueEnemy"
+  | "kaladinFifth"
+  | "gutsArbalet"
+  | "gutsCannon"
   | null;
 export type HoverPreview = { type: "attackRange"; unitId: string } | null;
 

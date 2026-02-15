@@ -9,9 +9,9 @@ import type { RNG } from "../../rng";
 import { rollD6 } from "../../rng";
 import { chebyshev } from "../../board";
 import { getUnitDefinition } from "../../units";
-import { HERO_LECHY_ID } from "../../heroes";
 import { canSpendSlots, spendSlots } from "../../turnEconomy";
 import { clearPendingRoll } from "../../shared/rollUtils";
+import { getStealthSuccessMinRoll } from "../../stealth";
 import {
   evSearchStealth,
   evStealthEntered,
@@ -42,15 +42,8 @@ export function resolveEnterStealthRoll(
 
   const roll = rollD6(rng);
   const def = getUnitDefinition(unit.class);
-  let success = false;
-
-  if (unit.heroId === HERO_LECHY_ID) {
-    success = roll >= 5;
-  } else if (unit.class === "archer") {
-    success = roll === 6;
-  } else if (unit.class === "assassin") {
-    success = roll >= 5;
-  }
+  const threshold = getStealthSuccessMinRoll(unit);
+  const success = threshold !== null && roll >= threshold;
 
   const baseUnit: UnitState = spendSlots(unit, { stealth: true });
   const updated: UnitState = success

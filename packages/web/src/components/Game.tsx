@@ -13,7 +13,16 @@ import {
   GROZNY_INVADE_TIME_ID,
   CHIKATILO_ASSASSIN_MARK_ID,
   CHIKATILO_DECOY_ID,
+  HASSAN_TRUE_ENEMY_ID,
+  KALADIN_FIFTH_ID,
+  KALADIN_ID,
   LECHY_GUIDE_TRAVELER_ID,
+  JEBE_HAIL_OF_ARROWS_ID,
+  JEBE_KHANS_SHOOTER_ID,
+  FEMTO_ID,
+  GUTS_ID,
+  GUTS_ARBALET_ID,
+  GUTS_CANNON_ID,
 } from "../rulesHints";
 
 const DORA_DIRS: Coord[] = [
@@ -47,6 +56,34 @@ function getDoraTargetCenters(view: PlayerView, casterId: string): Coord[] {
       targets.push({ col, row });
       const unit = getUnitAt(view, col, row);
       if (unit && unit.owner !== caster.owner) {
+        break;
+      }
+      col += dir.col;
+      row += dir.row;
+    }
+  }
+
+  return targets;
+}
+
+function getArcherLikeTargetIds(view: PlayerView, casterId: string): string[] {
+  const caster = view.units[casterId];
+  if (!caster?.position) return [];
+  const size = view.boardSize ?? 9;
+  const origin = caster.position;
+  const targets: string[] = [];
+  const seen = new Set<string>();
+
+  for (const dir of DORA_DIRS) {
+    let col = origin.col + dir.col;
+    let row = origin.row + dir.row;
+    while (col >= 0 && row >= 0 && col < size && row < size) {
+      const unit = getUnitAt(view, col, row);
+      if (unit && unit.owner !== caster.owner) {
+        if (!seen.has(unit.id)) {
+          seen.add(unit.id);
+          targets.push(unit.id);
+        }
         break;
       }
       col += dir.col;
@@ -160,6 +197,12 @@ function getAttackRangeCells(view: PlayerView, unitId: string): Coord[] {
   if (!unit?.position) return [];
   const size = view.boardSize ?? 9;
   const origin = unit.position;
+  const isKaladin = unit.heroId === KALADIN_ID;
+  const effectiveClass =
+    unit.heroId === FEMTO_ID ||
+    (unit.heroId === GUTS_ID && unit.gutsBerserkModeActive)
+      ? "spearman"
+      : unit.class;
   const cells: Coord[] = [];
 
   const addCell = (col: number, row: number) => {
@@ -168,7 +211,38 @@ function getAttackRangeCells(view: PlayerView, unitId: string): Coord[] {
     cells.push({ col, row });
   };
 
-  switch (unit.class) {
+  if (isKaladin) {
+    for (let dc = -1; dc <= 1; dc += 1) {
+      for (let dr = -1; dr <= 1; dr += 1) {
+        if (dc === 0 && dr === 0) continue;
+        addCell(origin.col + dc, origin.row + dr);
+      }
+    }
+    const reach2 = [
+      { col: 2, row: 0 },
+      { col: -2, row: 0 },
+      { col: 0, row: 2 },
+      { col: 0, row: -2 },
+      { col: 2, row: 2 },
+      { col: 2, row: -2 },
+      { col: -2, row: 2 },
+      { col: -2, row: -2 },
+    ];
+    for (const offset of reach2) {
+      addCell(origin.col + offset.col, origin.row + offset.row);
+    }
+    for (let dc = -2; dc <= 2; dc += 1) {
+      for (let dr = -2; dr <= 2; dr += 1) {
+        if (dc === 0 && dr === 0) continue;
+        if (Math.max(Math.abs(dc), Math.abs(dr)) <= 2) {
+          addCell(origin.col + dc, origin.row + dr);
+        }
+      }
+    }
+    return cells;
+  }
+
+  switch (effectiveClass) {
     case "archer": {
       for (const dir of DORA_DIRS) {
         let col = origin.col + dir.col;
@@ -271,6 +345,24 @@ function getPendingRollLabel(kind?: string | null) {
       return "Dora defense roll";
     case "dora_berserkerDefenseChoice":
       return "Dora berserker defense choice";
+    case "jebeHailOfArrows_attackerRoll":
+      return "Hail of Arrows attack roll";
+    case "jebeHailOfArrows_defenderRoll":
+      return "Hail of Arrows defense roll";
+    case "jebeHailOfArrows_berserkerDefenseChoice":
+      return "Hail of Arrows berserker defense choice";
+    case "jebeKhansShooterRicochetRoll":
+      return "Khan's Shooter ricochet roll";
+    case "jebeKhansShooterTargetChoice":
+      return "Khan's Shooter target choice";
+    case "hassanTrueEnemyTargetChoice":
+      return "True Enemy forced target choice";
+    case "hassanAssassinOrderSelection":
+      return "Assassin Order selection";
+    case "femtoDivineMoveRoll":
+      return "Divine Movement roll";
+    case "femtoDivineMoveDestination":
+      return "Divine Movement destination";
     case "kaiserCarpetStrikeCenter":
       return "Carpet Strike center roll";
     case "kaiserCarpetStrikeAttack":
@@ -367,8 +459,14 @@ export function Game() {
   } = useGameStore();
 
   const [doraPreviewCenter, setDoraPreviewCenter] = useState<Coord | null>(null);
+  const [jebeHailPreviewCenter, setJebeHailPreviewCenter] =
+    useState<Coord | null>(null);
+  const [kaladinFifthPreviewCenter, setKaladinFifthPreviewCenter] =
+    useState<Coord | null>(null);
   const [forestPreviewCenter, setForestPreviewCenter] = useState<Coord | null>(null);
   const [stakeSelections, setStakeSelections] = useState<Coord[]>([]);
+  const [hassanAssassinOrderSelections, setHassanAssassinOrderSelections] =
+    useState<string[]>([]);
   const [tisonaPreviewCoord, setTisonaPreviewCoord] = useState<Coord | null>(null);
 
   const playerId = getLocalPlayerId(role);
@@ -388,6 +486,14 @@ export function Game() {
     pendingRoll?.kind === "chikatiloFalseTrailPlacement";
   const isGuideTravelerPlacement =
     pendingRoll?.kind === "lechyGuideTravelerPlacement";
+  const isJebeKhansShooterTargetChoice =
+    pendingRoll?.kind === "jebeKhansShooterTargetChoice";
+  const isHassanTrueEnemyTargetChoice =
+    pendingRoll?.kind === "hassanTrueEnemyTargetChoice";
+  const isHassanAssassinOrderSelection =
+    pendingRoll?.kind === "hassanAssassinOrderSelection";
+  const isFemtoDivineMoveDestination =
+    pendingRoll?.kind === "femtoDivineMoveDestination";
   const isChikatiloRevealChoice =
     pendingRoll?.kind === "chikatiloFalseTrailRevealChoice";
   const isChikatiloDecoyChoice = pendingRoll?.kind === "chikatiloDecoyChoice";
@@ -397,7 +503,11 @@ export function Game() {
     isForestMoveDestination ||
     isIntimidateChoice ||
     isChikatiloPlacement ||
-    isGuideTravelerPlacement;
+    isGuideTravelerPlacement ||
+    isJebeKhansShooterTargetChoice ||
+    isHassanTrueEnemyTargetChoice ||
+    isHassanAssassinOrderSelection ||
+    isFemtoDivineMoveDestination;
   const pendingQueueCount = view?.pendingCombatQueueCount ?? 0;
   const attackContext = pendingRoll?.context as
     | {
@@ -422,10 +532,12 @@ export function Game() {
     pendingRoll?.kind === "elCidTisona_defenderRoll" ||
     pendingRoll?.kind === "elCidKolada_defenderRoll" ||
     pendingRoll?.kind === "dora_defenderRoll" ||
+    pendingRoll?.kind === "jebeHailOfArrows_defenderRoll" ||
     pendingRoll?.kind === "carpetStrike_defenderRoll" ||
     pendingRoll?.kind === "vladForest_defenderRoll" ||
     pendingRoll?.kind === "berserkerDefenseChoice" ||
     pendingRoll?.kind === "dora_berserkerDefenseChoice" ||
+    pendingRoll?.kind === "jebeHailOfArrows_berserkerDefenseChoice" ||
     pendingRoll?.kind === "carpetStrike_berserkerDefenseChoice" ||
     pendingRoll?.kind === "vladForest_berserkerDefenseChoice" ||
     pendingRoll?.kind === "chikatiloDecoyChoice";
@@ -436,6 +548,7 @@ export function Game() {
     }
     if (
       pendingRoll.kind === "dora_berserkerDefenseChoice" ||
+      pendingRoll.kind === "jebeHailOfArrows_berserkerDefenseChoice" ||
       pendingRoll.kind === "carpetStrike_berserkerDefenseChoice" ||
       pendingRoll.kind === "vladForest_berserkerDefenseChoice"
     ) {
@@ -649,6 +762,16 @@ export function Game() {
     [forestMoveDestinationOptions]
   );
 
+  const femtoDivineMoveOptions = useMemo(() => {
+    if (!isFemtoDivineMoveDestination) return [] as Coord[];
+    const ctx = pendingRoll?.context as { options?: unknown } | undefined;
+    return normalizeCoordList(ctx?.options);
+  }, [isFemtoDivineMoveDestination, pendingRoll]);
+  const femtoDivineMoveKeys = useMemo(
+    () => new Set(femtoDivineMoveOptions.map(coordKey)),
+    [femtoDivineMoveOptions]
+  );
+
   const chikatiloPlacementCoords = useMemo(() => {
     if (!isChikatiloPlacement) return [] as Coord[];
     const ctx = pendingRoll?.context as
@@ -692,6 +815,56 @@ export function Game() {
     () => new Set(guideTravelerPlacementCoords.map(coordKey)),
     [guideTravelerPlacementCoords]
   );
+  const jebeKhansShooterTargetIds = useMemo(() => {
+    if (!isJebeKhansShooterTargetChoice) return [] as string[];
+    const ctx = pendingRoll?.context as { options?: unknown } | undefined;
+    if (!Array.isArray(ctx?.options)) return [] as string[];
+    return ctx.options.filter((value): value is string => typeof value === "string");
+  }, [isJebeKhansShooterTargetChoice, pendingRoll]);
+  const jebeKhansShooterTargetKeys = useMemo(
+    () =>
+      new Set(
+        jebeKhansShooterTargetIds
+          .map((targetId) => view?.units[targetId]?.position)
+          .filter((coord): coord is Coord => !!coord)
+          .map(coordKey)
+      ),
+    [jebeKhansShooterTargetIds, view]
+  );
+  const hassanTrueEnemyTargetIds = useMemo(() => {
+    if (!isHassanTrueEnemyTargetChoice) return [] as string[];
+    const ctx = pendingRoll?.context as { options?: unknown } | undefined;
+    if (!Array.isArray(ctx?.options)) return [] as string[];
+    return ctx.options.filter((value): value is string => typeof value === "string");
+  }, [isHassanTrueEnemyTargetChoice, pendingRoll]);
+  const hassanTrueEnemyTargetKeys = useMemo(
+    () =>
+      new Set(
+        hassanTrueEnemyTargetIds
+          .map((targetId) => view?.units[targetId]?.position)
+          .filter((coord): coord is Coord => !!coord)
+          .map(coordKey)
+      ),
+    [hassanTrueEnemyTargetIds, view]
+  );
+  const hassanAssassinOrderEligibleIds = useMemo(() => {
+    if (!isHassanAssassinOrderSelection) return [] as string[];
+    const ctx = pendingRoll?.context as { eligibleUnitIds?: unknown } | undefined;
+    if (!Array.isArray(ctx?.eligibleUnitIds)) return [] as string[];
+    return ctx.eligibleUnitIds.filter(
+      (value): value is string => typeof value === "string"
+    );
+  }, [isHassanAssassinOrderSelection, pendingRoll]);
+  const hassanAssassinOrderEligibleKeys = useMemo(
+    () =>
+      new Set(
+        hassanAssassinOrderEligibleIds
+          .map((unitId) => view?.units[unitId]?.position)
+          .filter((coord): coord is Coord => !!coord)
+          .map(coordKey)
+      ),
+    [hassanAssassinOrderEligibleIds, view]
+  );
 
   const doraTargetCenters = useMemo(() => {
     if (!view || actionMode !== "dora" || !selectedUnit?.position) {
@@ -703,6 +876,37 @@ export function Game() {
   const doraTargetKeys = useMemo(
     () => new Set(doraTargetCenters.map(coordKey)),
     [doraTargetCenters]
+  );
+
+  const jebeHailTargetCenters = useMemo(() => {
+    if (!view || actionMode !== "jebeHailOfArrows" || !selectedUnit?.position) {
+      return [] as Coord[];
+    }
+    return getDoraTargetCenters(view, selectedUnit.id);
+  }, [view, actionMode, selectedUnit]);
+
+  const jebeHailTargetKeys = useMemo(
+    () => new Set(jebeHailTargetCenters.map(coordKey)),
+    [jebeHailTargetCenters]
+  );
+
+  const kaladinFifthTargetCenters = useMemo(() => {
+    if (!view || actionMode !== "kaladinFifth") {
+      return [] as Coord[];
+    }
+    const size = view.boardSize ?? 9;
+    const cells: Coord[] = [];
+    for (let col = 0; col < size; col += 1) {
+      for (let row = 0; row < size; row += 1) {
+        cells.push({ col, row });
+      }
+    }
+    return cells;
+  }, [view, actionMode]);
+
+  const kaladinFifthTargetKeys = useMemo(
+    () => new Set(kaladinFifthTargetCenters.map(coordKey)),
+    [kaladinFifthTargetCenters]
   );
 
   const tisonaTargetCells = useMemo(() => {
@@ -768,6 +972,40 @@ export function Game() {
   }, [actionMode, doraPreviewCenter, doraTargetKeys]);
 
   useEffect(() => {
+    if (actionMode !== "jebeHailOfArrows") {
+      setJebeHailPreviewCenter(null);
+      return;
+    }
+    if (!selectedUnitId) {
+      setJebeHailPreviewCenter(null);
+    }
+  }, [actionMode, selectedUnitId]);
+
+  useEffect(() => {
+    if (actionMode !== "jebeHailOfArrows" || !jebeHailPreviewCenter) return;
+    if (!jebeHailTargetKeys.has(coordKey(jebeHailPreviewCenter))) {
+      setJebeHailPreviewCenter(null);
+    }
+  }, [actionMode, jebeHailPreviewCenter, jebeHailTargetKeys]);
+
+  useEffect(() => {
+    if (actionMode !== "kaladinFifth") {
+      setKaladinFifthPreviewCenter(null);
+      return;
+    }
+    if (!selectedUnitId) {
+      setKaladinFifthPreviewCenter(null);
+    }
+  }, [actionMode, selectedUnitId]);
+
+  useEffect(() => {
+    if (actionMode !== "kaladinFifth" || !kaladinFifthPreviewCenter) return;
+    if (!kaladinFifthTargetKeys.has(coordKey(kaladinFifthPreviewCenter))) {
+      setKaladinFifthPreviewCenter(null);
+    }
+  }, [actionMode, kaladinFifthPreviewCenter, kaladinFifthTargetKeys]);
+
+  useEffect(() => {
     if (actionMode !== "tisona") {
       setTisonaPreviewCoord(null);
       return;
@@ -793,6 +1031,14 @@ export function Game() {
   }, [isStakePlacement, pendingRoll?.id]);
 
   useEffect(() => {
+    if (!isHassanAssassinOrderSelection) {
+      setHassanAssassinOrderSelections([]);
+      return;
+    }
+    setHassanAssassinOrderSelections([]);
+  }, [isHassanAssassinOrderSelection, pendingRoll?.id]);
+
+  useEffect(() => {
     if (!isForestTarget) {
       setForestPreviewCenter(null);
       return;
@@ -812,6 +1058,7 @@ export function Game() {
     const isSpecial =
       selectedUnit.class === "trickster" ||
       selectedUnit.class === "berserker" ||
+      selectedUnit.heroId === KALADIN_ID ||
       selectedUnit.transformed;
 
     if (isSpecial) {
@@ -892,6 +1139,51 @@ export function Game() {
       ),
     [guideTravelerTargets]
   );
+  const hassanTrueEnemyCandidateIds = useMemo(() => {
+    if (!view || actionMode !== "hassanTrueEnemy" || !selectedUnit?.position) {
+      return [] as string[];
+    }
+    const origin = selectedUnit.position;
+    return Object.values(view.units)
+      .filter((unit) => {
+        if (!unit?.isAlive || !unit.position) return false;
+        if (unit.owner === selectedUnit.owner) return false;
+        const dx = Math.abs(unit.position.col - origin.col);
+        const dy = Math.abs(unit.position.row - origin.row);
+        return Math.max(dx, dy) <= 2;
+      })
+      .map((unit) => unit.id);
+  }, [view, actionMode, selectedUnit]);
+  const hassanTrueEnemyCandidateKeys = useMemo(
+    () =>
+      new Set(
+        hassanTrueEnemyCandidateIds
+          .map((unitId) => view?.units[unitId]?.position)
+          .filter((coord): coord is Coord => !!coord)
+          .map(coordKey)
+      ),
+    [hassanTrueEnemyCandidateIds, view]
+  );
+  const gutsRangedTargetIds = useMemo(() => {
+    if (
+      !view ||
+      !selectedUnit ||
+      (actionMode !== "gutsArbalet" && actionMode !== "gutsCannon")
+    ) {
+      return [] as string[];
+    }
+    return getArcherLikeTargetIds(view, selectedUnit.id);
+  }, [view, selectedUnit, actionMode]);
+  const gutsRangedTargetKeys = useMemo(
+    () =>
+      new Set(
+        gutsRangedTargetIds
+          .map((unitId) => view?.units[unitId]?.position)
+          .filter((coord): coord is Coord => !!coord)
+          .map(coordKey)
+      ),
+    [gutsRangedTargetIds, view]
+  );
 
   const hoverAttackPreview = useMemo(() => {
     if (!view || hoverPreview?.type !== "attackRange") {
@@ -941,6 +1233,13 @@ export function Game() {
       return highlights;
     }
 
+    if (isFemtoDivineMoveDestination) {
+      for (const coord of femtoDivineMoveOptions) {
+        highlights[coordKey(coord)] = "move";
+      }
+      return highlights;
+    }
+
     if (isChikatiloPlacement) {
       for (const coord of chikatiloPlacementCoords) {
         highlights[coordKey(coord)] = "place";
@@ -951,6 +1250,32 @@ export function Game() {
     if (isGuideTravelerPlacement) {
       for (const coord of guideTravelerPlacementCoords) {
         highlights[coordKey(coord)] = "place";
+      }
+      return highlights;
+    }
+
+    if (isJebeKhansShooterTargetChoice) {
+      for (const key of jebeKhansShooterTargetKeys) {
+        highlights[key] = "attack";
+      }
+      return highlights;
+    }
+
+    if (isHassanTrueEnemyTargetChoice) {
+      for (const key of hassanTrueEnemyTargetKeys) {
+        highlights[key] = "attack";
+      }
+      return highlights;
+    }
+
+    if (isHassanAssassinOrderSelection) {
+      for (const key of hassanAssassinOrderEligibleKeys) {
+        highlights[key] = "place";
+      }
+      for (const unitId of hassanAssassinOrderSelections) {
+        const pos = view?.units[unitId]?.position;
+        if (!pos) continue;
+        highlights[coordKey(pos)] = "move";
       }
       return highlights;
     }
@@ -1022,6 +1347,38 @@ export function Game() {
       }
     }
 
+    if (actionMode === "jebeHailOfArrows") {
+      for (const coord of jebeHailTargetCenters) {
+        highlights[coordKey(coord)] = "dora";
+      }
+    }
+
+    if (actionMode === "kaladinFifth") {
+      for (const coord of kaladinFifthTargetCenters) {
+        highlights[coordKey(coord)] = "dora";
+      }
+    }
+
+    if (actionMode === "jebeKhansShooter" && view) {
+      for (const targetId of legalAttackTargets) {
+        const unit = view.units[targetId];
+        if (!unit?.position) continue;
+        highlights[coordKey(unit.position)] = "attack";
+      }
+    }
+
+    if (actionMode === "gutsArbalet" || actionMode === "gutsCannon") {
+      for (const key of gutsRangedTargetKeys) {
+        highlights[key] = "attack";
+      }
+    }
+
+    if (actionMode === "hassanTrueEnemy") {
+      for (const key of hassanTrueEnemyCandidateKeys) {
+        highlights[key] = "attack";
+      }
+    }
+
     if (actionMode === "tisona" && view && selectedUnit?.position) {
       const size = view.boardSize ?? 9;
       if (tisonaPreviewCoord) {
@@ -1044,7 +1401,10 @@ export function Game() {
       !isStakePlacement &&
       !isIntimidateChoice &&
       !isForestTarget &&
-      !isForestMoveDestination;
+      !isForestMoveDestination &&
+      !isJebeKhansShooterTargetChoice &&
+      !isHassanTrueEnemyTargetChoice &&
+      !isHassanAssassinOrderSelection;
 
     if (allowHoverPreview && hoverAttackPreview && view) {
       for (const coord of hoverAttackPreview.rangeCells) {
@@ -1074,19 +1434,32 @@ export function Game() {
     forestTargetCenters,
     isForestMoveDestination,
     forestMoveDestinationOptions,
+    isFemtoDivineMoveDestination,
+    femtoDivineMoveOptions,
     isChikatiloPlacement,
     chikatiloPlacementCoords,
     isGuideTravelerPlacement,
     guideTravelerPlacementCoords,
+    isJebeKhansShooterTargetChoice,
+    jebeKhansShooterTargetKeys,
+    isHassanTrueEnemyTargetChoice,
+    hassanTrueEnemyTargetKeys,
+    isHassanAssassinOrderSelection,
+    hassanAssassinOrderEligibleKeys,
+    hassanAssassinOrderSelections,
+    hassanTrueEnemyCandidateKeys,
     selectedUnit,
     pendingMoveForSelected,
     moveOptions,
     hoverAttackPreview,
+    jebeHailTargetCenters,
+    kaladinFifthTargetCenters,
     tisonaTargetCells,
     tisonaPreviewCoord,
     assassinMarkTargetKeys,
     guideTravelerTargetKeys,
     invadeTimeTargets,
+    gutsRangedTargetKeys,
   ]);
 
   const handleCellClick = (col: number, row: number) => {
@@ -1148,6 +1521,17 @@ export function Game() {
       return;
     }
 
+    if (isFemtoDivineMoveDestination) {
+      const key = coordKey({ col, row });
+      if (!femtoDivineMoveKeys.has(key) || !pendingRoll) return;
+      sendAction({
+        type: "resolvePendingRoll",
+        pendingRollId: pendingRoll.id,
+        choice: { type: "femtoDivineMoveDestination", position: { col, row } },
+      } as GameAction);
+      return;
+    }
+
     if (isChikatiloPlacement) {
       const key = coordKey({ col, row });
       if (!chikatiloPlacementKeys.has(key) || !pendingRoll) return;
@@ -1167,6 +1551,45 @@ export function Game() {
         pendingRollId: pendingRoll.id,
         choice: { type: "lechyGuideTravelerPlace", position: { col, row } },
       } as GameAction);
+      return;
+    }
+
+    if (isJebeKhansShooterTargetChoice) {
+      const target = getUnitAt(view, col, row);
+      if (!target || !pendingRoll) return;
+      if (!jebeKhansShooterTargetIds.includes(target.id)) return;
+      sendAction({
+        type: "resolvePendingRoll",
+        pendingRollId: pendingRoll.id,
+        choice: { type: "jebeKhansShooterTarget", targetId: target.id },
+      } as GameAction);
+      return;
+    }
+
+    if (isHassanTrueEnemyTargetChoice) {
+      const target = getUnitAt(view, col, row);
+      if (!target || !pendingRoll) return;
+      if (!hassanTrueEnemyTargetIds.includes(target.id)) return;
+      sendAction({
+        type: "resolvePendingRoll",
+        pendingRollId: pendingRoll.id,
+        choice: { type: "hassanTrueEnemyTarget", targetId: target.id },
+      } as GameAction);
+      return;
+    }
+
+    if (isHassanAssassinOrderSelection) {
+      const target = getUnitAt(view, col, row);
+      if (!target) return;
+      if (!hassanAssassinOrderEligibleIds.includes(target.id)) return;
+      setHassanAssassinOrderSelections((prev) => {
+        const exists = prev.includes(target.id);
+        if (exists) {
+          return prev.filter((id) => id !== target.id);
+        }
+        if (prev.length >= 2) return prev;
+        return [...prev, target.id];
+      });
       return;
     }
 
@@ -1203,6 +1626,62 @@ export function Game() {
         unitId: selectedUnitId,
         abilityId: GROZNY_INVADE_TIME_ID,
         payload: { to: { col, row } },
+      });
+      setActionMode(null);
+      return;
+    }
+
+    if (actionMode === "jebeKhansShooter") {
+      const target = getUnitAt(view, col, row);
+      if (!target) return;
+      if (!legalAttackTargets.includes(target.id)) return;
+      sendGameAction({
+        type: "useAbility",
+        unitId: selectedUnitId,
+        abilityId: JEBE_KHANS_SHOOTER_ID,
+        payload: { targetId: target.id },
+      });
+      setActionMode(null);
+      return;
+    }
+
+    if (actionMode === "gutsArbalet") {
+      const target = getUnitAt(view, col, row);
+      if (!target) return;
+      if (!gutsRangedTargetIds.includes(target.id)) return;
+      sendGameAction({
+        type: "useAbility",
+        unitId: selectedUnitId,
+        abilityId: GUTS_ARBALET_ID,
+        payload: { targetId: target.id },
+      });
+      setActionMode(null);
+      return;
+    }
+
+    if (actionMode === "gutsCannon") {
+      const target = getUnitAt(view, col, row);
+      if (!target) return;
+      if (!gutsRangedTargetIds.includes(target.id)) return;
+      sendGameAction({
+        type: "useAbility",
+        unitId: selectedUnitId,
+        abilityId: GUTS_CANNON_ID,
+        payload: { targetId: target.id },
+      });
+      setActionMode(null);
+      return;
+    }
+
+    if (actionMode === "hassanTrueEnemy") {
+      const target = getUnitAt(view, col, row);
+      if (!target) return;
+      if (!hassanTrueEnemyCandidateIds.includes(target.id)) return;
+      sendGameAction({
+        type: "useAbility",
+        unitId: selectedUnitId,
+        abilityId: HASSAN_TRUE_ENEMY_ID,
+        payload: { forcedAttackerId: target.id },
       });
       setActionMode(null);
       return;
@@ -1275,6 +1754,30 @@ export function Game() {
       return;
     }
 
+    if (actionMode === "jebeHailOfArrows") {
+      if (!jebeHailTargetKeys.has(coordKey({ col, row }))) return;
+      sendGameAction({
+        type: "useAbility",
+        unitId: selectedUnitId,
+        abilityId: JEBE_HAIL_OF_ARROWS_ID,
+        payload: { center: { col, row } },
+      });
+      setActionMode(null);
+      return;
+    }
+
+    if (actionMode === "kaladinFifth") {
+      if (!kaladinFifthTargetKeys.has(coordKey({ col, row }))) return;
+      sendGameAction({
+        type: "useAbility",
+        unitId: selectedUnitId,
+        abilityId: KALADIN_FIFTH_ID,
+        payload: { center: { col, row } },
+      });
+      setActionMode(null);
+      return;
+    }
+
     if (actionMode === "tisona") {
       if (!tisonaTargetKeys.has(coordKey({ col, row }))) return;
       sendGameAction({
@@ -1296,6 +1799,26 @@ export function Game() {
       }
       const key = coordKey(coord);
       setDoraPreviewCenter(doraTargetKeys.has(key) ? coord : null);
+      return;
+    }
+
+    if (actionMode === "jebeHailOfArrows") {
+      if (!coord) {
+        setJebeHailPreviewCenter(null);
+        return;
+      }
+      const key = coordKey(coord);
+      setJebeHailPreviewCenter(jebeHailTargetKeys.has(key) ? coord : null);
+      return;
+    }
+
+    if (actionMode === "kaladinFifth") {
+      if (!coord) {
+        setKaladinFifthPreviewCenter(null);
+        return;
+      }
+      const key = coordKey(coord);
+      setKaladinFifthPreviewCenter(kaladinFifthTargetKeys.has(key) ? coord : null);
       return;
     }
 
@@ -1322,6 +1845,10 @@ export function Game() {
   const boardPreviewCenter =
     actionMode === "dora"
       ? doraPreviewCenter
+      : actionMode === "jebeHailOfArrows"
+      ? jebeHailPreviewCenter
+      : actionMode === "kaladinFifth"
+      ? kaladinFifthPreviewCenter
       : isForestTarget
       ? forestPreviewCenter
       : null;
@@ -1333,10 +1860,16 @@ export function Game() {
   const allowUnitPick =
     !boardSelectionPending &&
     actionMode !== "dora" &&
+    actionMode !== "jebeHailOfArrows" &&
+    actionMode !== "kaladinFifth" &&
     actionMode !== "tisona" &&
     actionMode !== "demonDuelist" &&
     actionMode !== "assassinMark" &&
-    actionMode !== "guideTraveler";
+    actionMode !== "guideTraveler" &&
+    actionMode !== "jebeKhansShooter" &&
+    actionMode !== "gutsArbalet" &&
+    actionMode !== "gutsCannon" &&
+    actionMode !== "hassanTrueEnemy";
 
   if (!view || !hasSnapshot) {
     return (
@@ -1389,7 +1922,12 @@ export function Game() {
             highlightedCells={highlightedCells}
             hoveredAbilityId={hoveredAbilityId}
             doraPreview={
-              boardPreviewCenter ? { center: boardPreviewCenter, radius: 1 } : null
+              boardPreviewCenter
+                ? {
+                    center: boardPreviewCenter,
+                    radius: actionMode === "kaladinFifth" ? 2 : 1,
+                  }
+                : null
             }
             allowUnitSelection={allowUnitPick}
             disabled={boardDisabled}
@@ -1508,6 +2046,59 @@ export function Game() {
                   <div className="font-semibold">Guide Traveler placement</div>
                   <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
                     Select an empty cell to place the guided ally.
+                  </div>
+                </div>
+              ) : isJebeKhansShooterTargetChoice ? (
+                <div>
+                  <div className="font-semibold">Khan's Shooter</div>
+                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
+                    Select the next ricochet target.
+                  </div>
+                </div>
+              ) : isHassanTrueEnemyTargetChoice ? (
+                <div>
+                  <div className="font-semibold">True Enemy</div>
+                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
+                    Select a target for the forced enemy attack.
+                  </div>
+                </div>
+              ) : isHassanAssassinOrderSelection ? (
+                <div>
+                  <div className="font-semibold">
+                    Assassin Order: pick 2 allied heroes to gain Stealth (5-6)
+                  </div>
+                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
+                    Selected: {hassanAssassinOrderSelections.length}/2
+                  </div>
+                  {hassanAssassinOrderSelections.length > 0 && (
+                    <div className="mt-1 text-[10px] text-amber-700 dark:text-amber-200">
+                      {hassanAssassinOrderSelections.join(", ")}
+                    </div>
+                  )}
+                  <div className="mt-2 flex gap-2">
+                    <button
+                      className="rounded-lg bg-emerald-600 px-3 py-1 text-[10px] font-semibold text-white shadow-sm transition hover:shadow dark:bg-emerald-800/50 dark:text-slate-100 dark:hover:bg-emerald-700/60"
+                      onClick={() =>
+                        pendingRoll &&
+                        sendAction({
+                          type: "resolvePendingRoll",
+                          pendingRollId: pendingRoll.id,
+                          choice: {
+                            type: "hassanAssassinOrderPick",
+                            unitIds: hassanAssassinOrderSelections,
+                          },
+                        } as GameAction)
+                      }
+                      disabled={hassanAssassinOrderSelections.length !== 2}
+                    >
+                      Confirm
+                    </button>
+                    <button
+                      className="rounded-lg bg-slate-200 px-3 py-1 text-[10px] font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
+                      onClick={() => setHassanAssassinOrderSelections([])}
+                    >
+                      Clear
+                    </button>
                   </div>
                 </div>
               ) : isChikatiloRevealChoice ? (
@@ -1663,6 +2254,7 @@ export function Game() {
             <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
               {pendingRoll.kind === "berserkerDefenseChoice" ||
               pendingRoll.kind === "dora_berserkerDefenseChoice" ||
+              pendingRoll.kind === "jebeHailOfArrows_berserkerDefenseChoice" ||
               pendingRoll.kind === "carpetStrike_berserkerDefenseChoice" ||
               pendingRoll.kind === "vladForest_berserkerDefenseChoice"
                 ? "Choose berserker defense."
@@ -1706,6 +2298,7 @@ export function Game() {
             <div className="mt-4 flex gap-2">
               {pendingRoll.kind === "berserkerDefenseChoice" ||
               pendingRoll.kind === "dora_berserkerDefenseChoice" ||
+              pendingRoll.kind === "jebeHailOfArrows_berserkerDefenseChoice" ||
               pendingRoll.kind === "carpetStrike_berserkerDefenseChoice" ||
               pendingRoll.kind === "vladForest_berserkerDefenseChoice" ? (
                 <>

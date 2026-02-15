@@ -16,9 +16,19 @@ import {
   getAbilitySpec,
   getCharges,
 } from "./abilities";
-import { HERO_CHIKATILO_ID, HERO_FALSE_TRAIL_TOKEN_ID, HERO_GENGHIS_KHAN_ID } from "./heroes";
+import {
+  HERO_CHIKATILO_ID,
+  HERO_FEMTO_ID,
+  HERO_FALSE_TRAIL_TOKEN_ID,
+  HERO_GENGHIS_KHAN_ID,
+  HERO_GRIFFITH_ID,
+  HERO_GUTS_ID,
+  HERO_JEBE_ID,
+  HERO_KALADIN_ID,
+} from "./heroes";
 import { isStormActive, isStormExempt } from "./forest";
 import { canDirectlyTargetUnit } from "./visibility";
+import { applyGriffithFemtoRebirth } from "./actions/heroes/griffith";
 
 
 // --- Вспомогательные функции кубов ---
@@ -39,8 +49,25 @@ function distanceInfo(attPos: Coord, defPos: Coord) {
   return { dx, dy, cheb, sameRow, sameCol };
 }
 
+function isSpearmanReachTarget(attPos: Coord, defPos: Coord): boolean {
+  const { dx, dy, cheb, sameRow, sameCol } = distanceInfo(attPos, defPos);
+  if (cheb === 1) return true;
+  if (cheb !== 2) return false;
+  const isStraight = sameRow || sameCol;
+  const isDiagonal = dx === dy;
+  return isStraight || isDiagonal;
+}
+
+function isTricksterReachTarget(attPos: Coord, defPos: Coord): boolean {
+  const { cheb } = distanceInfo(attPos, defPos);
+  return cheb > 0 && cheb <= 2;
+}
+
 function recordGenghisAttack(attacker: UnitState, defenderId: string): UnitState {
-  if (attacker.heroId !== HERO_GENGHIS_KHAN_ID) {
+  if (
+    attacker.heroId !== HERO_GENGHIS_KHAN_ID &&
+    attacker.heroId !== HERO_JEBE_ID
+  ) {
     return attacker;
   }
   const existing = Array.isArray(attacker.genghisKhanAttackedThisTurn)
@@ -59,7 +86,10 @@ function hasLegendOfTheSteppesBonus(
   attacker: UnitState,
   defenderId: string
 ): boolean {
-  if (attacker.heroId !== HERO_GENGHIS_KHAN_ID) {
+  if (
+    attacker.heroId !== HERO_GENGHIS_KHAN_ID &&
+    attacker.heroId !== HERO_JEBE_ID
+  ) {
     return false;
   }
   const lastTurn = Array.isArray(attacker.genghisKhanAttackedLastTurn)
@@ -84,14 +114,17 @@ function getChikatiloMarkBonus(attacker: UnitState, defenderId: string): number 
 export function canAttackTarget(
   state: GameState,
   attacker: UnitState,
-  defender: UnitState
+  defender: UnitState,
+  options?: { allowFriendlyTarget?: boolean }
 ): boolean {
   if (!attacker.isAlive || !defender.isAlive) return false;
   if (!attacker.position || !defender.position) return false;
   if (attacker.heroId === HERO_FALSE_TRAIL_TOKEN_ID) return false;
 
   // Нельзя бить союзников обычной атакой
-  if (attacker.owner === defender.owner) return false;
+  if (!options?.allowFriendlyTarget && attacker.owner === defender.owner) {
+    return false;
+  }
 
   // Нельзя прямой таргет по скрытому (его надо сначала найти / снять AoE)
   if (defender.isStealthed) {
@@ -105,19 +138,26 @@ export function canAttackTarget(
   const attPos = attacker.position;
   const defPos = defender.position;
   const { dx, dy, cheb, sameRow, sameCol } = distanceInfo(attPos, defPos);
+  const attackerClass =
+    attacker.heroId === HERO_FEMTO_ID ||
+    (attacker.heroId === HERO_GUTS_ID &&
+      attacker.gutsBerserkModeActive &&
+      attacker.class !== "archer")
+      ? "spearman"
+      : attacker.class;
 
   if (isStormActive(state) && !isStormExempt(state, attacker)) {
     if (cheb > 1) return false;
   }
 
-  switch (attacker.class) {
+  switch (attackerClass) {
     case "spearman": {
       // 1 клетка вокруг + ровно 2 по прямой или диагонали
-      if (cheb === 1) return true;
-      if (cheb !== 2) return false;
-      const isStraight = sameRow || sameCol;
-      const isDiagonal = dx === dy;
-      return isStraight || isDiagonal;
+      if (isSpearmanReachTarget(attPos, defPos)) return true;
+      if (attacker.heroId === HERO_KALADIN_ID) {
+        return isTricksterReachTarget(attPos, defPos);
+      }
+      return false;
     }
 
     case "rider":
@@ -185,6 +225,8 @@ export function resolveAttack(
   params: {
     attackerId: string;
     defenderId: string;
+    allowFriendlyTarget?: boolean;
+    rangedAttack?: boolean;
     // на будущее: защитник может решить, хочет ли он тратить заряд авто-защиты берсерка
     defenderUseBerserkAutoDefense?: boolean;
     /** Для спец-кейсов (наездник по пути): не проверять дистанцию/тип атаки */
@@ -228,7 +270,12 @@ export function resolveAttack(
   }
 
   // Проверка дистанции / типа атаки / линии выстрела и т.п.
-  if (!params.ignoreRange && !canAttackTarget(state, attacker, defender)) {
+  if (
+    !params.ignoreRange &&
+    !canAttackTarget(state, attacker, defender, {
+      allowFriendlyTarget: params.allowFriendlyTarget,
+    })
+  ) {
     // Невалидная цель по дистанции / типу — игнорируем
     return { nextState: state, events: [] };
   }
@@ -242,7 +289,11 @@ export function resolveAttack(
   const wantsAutoDefense =
     params.defenderUseBerserkAutoDefense === true;
 
-  if (defenderAfter.class === "berserker" && wantsAutoDefense) {
+  if (
+    (defenderAfter.class === "berserker" ||
+      defenderAfter.heroId === HERO_FEMTO_ID) &&
+    wantsAutoDefense
+  ) {
     const spec = getAbilitySpec(ABILITY_BERSERK_AUTO_DEFENSE);
     const currentCharges = getCharges(
       defenderAfter,
@@ -338,18 +389,27 @@ export function resolveAttack(
 
   // Копейщик на защите: при дубле на защите — авто-уклонение
   // (дубль проверяется только по первым двум кубам).
-  if (!params.autoHit && defenderAfter.class === "spearman" && defenderRoll.isDouble) {
+  if (
+    !params.autoHit &&
+    (defenderAfter.class === "spearman" ||
+      defenderAfter.heroId === HERO_FEMTO_ID) &&
+    defenderRoll.isDouble
+  ) {
     hit = false;
   }
 
   // Рыцарь в атаке: при дубле на атаке — авто-попадание.
   // Защитник всё равно кидал защиту, но дубль рыцаря перетирает результат.
-  if (attackerAfter.class === "knight" && attackerRoll.isDouble) {
+  if (
+    (attackerAfter.class === "knight" || attackerAfter.heroId === HERO_GUTS_ID) &&
+    attackerRoll.isDouble
+  ) {
     hit = true;
   }
 
   // --- Урон / выход из стелса ассасина ---
   let damage = 0;
+  let defenderHpAfterEvent = defenderAfter.hp;
   let attackerRevealedToDefender = false;
   let revealedDefenderPos: Coord | null = null;
   let revealedAttackerPos: Coord | null = null;
@@ -427,19 +487,49 @@ export function resolveAttack(
       if (hasLegendOfTheSteppesBonus(attackerAfter, defenderAfter.id)) {
         damage += 1;
       }
+      if (
+        attackerAfter.heroId === HERO_GUTS_ID &&
+        attackerAfter.gutsBerserkModeActive &&
+        !params.rangedAttack
+      ) {
+        damage += 1;
+      }
+      if (
+        attackerAfter.heroId === HERO_KALADIN_ID &&
+        !params.rangedAttack &&
+        !params.ignoreRange &&
+        attackerAfter.position &&
+        defenderAfter.position &&
+        isSpearmanReachTarget(attackerAfter.position, defenderAfter.position)
+      ) {
+        damage += 1;
+      }
+    }
+
+    if (attackerAfter.heroId === HERO_GRIFFITH_ID) {
+      damage = Math.max(0, damage - 1);
     }
 
     if (defenderAfter.bunker?.active) {
       damage = Math.min(1, damage);
     }
 
-const newHp = Math.max(0, defenderAfter.hp - damage);
+    if (
+      defenderAfter.heroId === HERO_GUTS_ID &&
+      defenderAfter.gutsBerserkModeActive
+    ) {
+      damage = Math.min(1, damage);
+    }
+
+    const newHp = Math.max(0, defenderAfter.hp - damage);
     defenderAfter = {
       ...defenderAfter,
       hp: newHp,
     };
+    defenderHpAfterEvent = newHp;
 
     if (newHp <= 0) {
+      const deathPosition = defenderAfter.position ? { ...defenderAfter.position } : null;
       defenderAfter = {
         ...defenderAfter,
         isAlive: false,
@@ -450,6 +540,11 @@ const newHp = Math.max(0, defenderAfter.hp - damage);
         unitId: defenderAfter.id,
         killerId: attackerAfter.id,
       });
+      const rebirth = applyGriffithFemtoRebirth(defenderAfter, deathPosition);
+      if (rebirth.transformed) {
+        defenderAfter = rebirth.unit;
+        events.push(...rebirth.events);
+      }
     }
   }
 
@@ -509,7 +604,7 @@ const newHp = Math.max(0, defenderAfter.hp - damage);
         : undefined,
     hit,
     damage,
-    defenderHpAfter: defenderAfter.hp,
+    defenderHpAfter: defenderHpAfterEvent,
   });
 
   return { nextState, events };

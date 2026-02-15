@@ -32,6 +32,21 @@ import {
   resolveDoraDefenderRoll,
 } from "./resolvers/resolveDoraRoll";
 import {
+  resolveJebeHailOfArrowsAttackerRoll,
+  resolveJebeHailOfArrowsBerserkerDefenseChoice,
+  resolveJebeHailOfArrowsDefenderRoll,
+  resolveJebeKhansShooterRicochetRoll,
+  resolveJebeKhansShooterTargetChoice,
+} from "./resolvers/resolveJebeRoll";
+import {
+  resolveHassanAssassinOrderSelection,
+  resolveHassanTrueEnemyTargetChoice,
+} from "./resolvers/resolveHassanRoll";
+import {
+  resolveFemtoDivineMoveDestinationChoice,
+  resolveFemtoDivineMoveRoll,
+} from "../actions/heroes/griffith";
+import {
   resolveAttackAttackerRoll,
   resolveAttackDefenderRoll,
   resolveBerserkerDefenseChoiceRoll,
@@ -170,6 +185,43 @@ export function applyResolvePendingRoll(
     }
     case "dora_berserkerDefenseChoice": {
       return resolveDoraBerserkerDefenseChoice(state, pending, autoRollChoice, rng);
+    }
+    case "jebeHailOfArrows_attackerRoll": {
+      return resolveJebeHailOfArrowsAttackerRoll(state, pending, rng);
+    }
+    case "jebeHailOfArrows_defenderRoll": {
+      return resolveJebeHailOfArrowsDefenderRoll(state, pending, rng);
+    }
+    case "jebeHailOfArrows_berserkerDefenseChoice": {
+      return resolveJebeHailOfArrowsBerserkerDefenseChoice(
+        state,
+        pending,
+        autoRollChoice,
+        rng
+      );
+    }
+    case "jebeKhansShooterRicochetRoll": {
+      return resolveJebeKhansShooterRicochetRoll(state, pending, rng);
+    }
+    case "jebeKhansShooterTargetChoice": {
+      return resolveJebeKhansShooterTargetChoice(state, pending, action.choice);
+    }
+    case "hassanTrueEnemyTargetChoice": {
+      return resolveHassanTrueEnemyTargetChoice(state, pending, action.choice);
+    }
+    case "hassanAssassinOrderSelection": {
+      return resolveHassanAssassinOrderSelection(state, pending, action.choice);
+    }
+    case "femtoDivineMoveRoll": {
+      return resolveFemtoDivineMoveRoll(state, pending, rng);
+    }
+    case "femtoDivineMoveDestination": {
+      return resolveFemtoDivineMoveDestinationChoice(
+        state,
+        pending,
+        action.choice,
+        rng
+      );
     }
     case "vladIntimidateChoice": {
       return resolveVladIntimidateChoice(state, pending, action.choice, rng);

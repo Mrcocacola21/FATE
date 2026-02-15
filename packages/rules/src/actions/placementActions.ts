@@ -9,8 +9,9 @@ import type {
 import { isInsideBoard } from "../model";
 import { isCellOccupied } from "../board";
 import { HERO_CHIKATILO_ID, HERO_FALSE_TRAIL_TOKEN_ID } from "../heroes";
-import { isVlad } from "./shared";
+import { isHassan, isVlad } from "./shared";
 import { activateVladForest, requestVladStakesPlacement } from "./heroes/vlad";
+import { requestHassanAssassinOrderSelection } from "./heroes/hassan";
 import {
   requestChikatiloPlacement,
   setupChikatiloFalseTrailAtBattleStart,
@@ -255,6 +256,29 @@ export function applyPlaceUnit(
   }
 
   if (phase === "battle" && !finalState.pendingRoll) {
+    const hassanOwners = Array.from(
+      new Set(
+        Object.values(finalState.units)
+          .filter((u) => u.isAlive && isHassan(u))
+          .map((u) => u.owner)
+      )
+    ).sort() as PlayerId[];
+
+    if (hassanOwners.length > 0) {
+      const [firstOwner, ...queue] = hassanOwners;
+      const requested = requestHassanAssassinOrderSelection(
+        finalState,
+        firstOwner,
+        queue
+      );
+      if (requested.state !== finalState || requested.events.length > 0) {
+        finalState = requested.state;
+        finalEvents = [...finalEvents, ...requested.events];
+      }
+    }
+  }
+
+  if (phase === "battle" && !finalState.pendingRoll) {
     const vladOwners = Array.from(
       new Set(
         Object.values(finalState.units)
@@ -274,7 +298,7 @@ export function applyPlaceUnit(
       if (ownedStakes >= 9 && vladUnit) {
         const forest = activateVladForest(finalState, vladUnit.id, firstOwner);
         finalState = forest.state;
-        finalEvents = [...events, ...forest.events];
+        finalEvents = [...finalEvents, ...forest.events];
       } else {
         const requested = requestVladStakesPlacement(
           finalState,
@@ -283,7 +307,7 @@ export function applyPlaceUnit(
           queue
         );
         finalState = requested.state;
-        finalEvents = [...events, ...requested.events];
+        finalEvents = [...finalEvents, ...requested.events];
       }
     }
   }

@@ -7,6 +7,10 @@ import {
   HERO_VLAD_TEPES_ID,
   HERO_EL_CID_COMPEADOR_ID,
   HERO_GENGHIS_KHAN_ID,
+  HERO_GUTS_ID,
+  HERO_HASSAN_ID,
+  HERO_JEBE_ID,
+  HERO_KALADIN_ID,
   getHeroDefinition,
 } from "../heroes";
 import type { RNG } from "../rng";
@@ -32,6 +36,22 @@ export function isElCid(unit: UnitState): boolean {
 
 export function isGenghis(unit: UnitState): boolean {
   return unit.heroId === HERO_GENGHIS_KHAN_ID;
+}
+
+export function isJebe(unit: UnitState): boolean {
+  return unit.heroId === HERO_JEBE_ID;
+}
+
+export function isHassan(unit: UnitState): boolean {
+  return unit.heroId === HERO_HASSAN_ID;
+}
+
+export function isGuts(unit: UnitState): boolean {
+  return unit.heroId === HERO_GUTS_ID;
+}
+
+export function isKaladin(unit: UnitState): boolean {
+  return unit.heroId === HERO_KALADIN_ID;
 }
 
 export function isKaiserTransformed(unit: UnitState): boolean {
@@ -72,6 +92,15 @@ export function getAdjacentEmptyCells(state: GameState, origin: Coord): Coord[] 
 }
 
 export function getMovementModes(unit: UnitState): UnitState["class"][] {
+  if (isGuts(unit) && unit.gutsBerserkModeActive) {
+    return ["berserker", "knight", "assassin"];
+  }
+  if (isGuts(unit)) {
+    return ["berserker", "knight"];
+  }
+  if (isKaladin(unit)) {
+    return ["spearman", "trickster", "berserker"];
+  }
   if (isKaiserTransformed(unit)) {
     return ["archer", "rider", "berserker"];
   }
