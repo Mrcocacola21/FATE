@@ -29,6 +29,10 @@ import {
   ABILITY_KALADIN_FIRST,
   ABILITY_JEBE_HAIL_OF_ARROWS,
   ABILITY_JEBE_KHANS_SHOOTER,
+  ABILITY_LOKI_LAUGHT,
+  ABILITY_FRISK_GENOCIDE,
+  ABILITY_FRISK_PACIFISM,
+  ABILITY_ODIN_SLEIPNIR,
   TRICKSTER_AOE_RADIUS,
   getAbilitySpec,
   spendCharges,
@@ -53,6 +57,9 @@ import {
 import { applyJebeHailOfArrows, applyJebeKhansShooter } from "./heroes/jebe";
 import { applyHassanTrueEnemy } from "./heroes/hassan";
 import { applyKaladinFifth, applyKaladinFirst } from "./heroes/kaladin";
+import { applyLokiLaught } from "./heroes/loki";
+import { applyFriskGenocide, applyFriskPacifism } from "./heroes/frisk";
+import { applyOdinSleipnir } from "./heroes/odin";
 import {
   applyGutsArbalet,
   applyGutsBerserkMode,
@@ -87,6 +94,9 @@ export function applyUseAbility(
   }
 
   if (state.activeUnitId !== unit.id) {
+    return { state, events: [] };
+  }
+  if ((unit.lokiChickenSources?.length ?? 0) > 0) {
     return { state, events: [] };
   }
 
@@ -165,6 +175,22 @@ export function applyUseAbility(
 
   if (spec.id === ABILITY_HASSAN_TRUE_ENEMY) {
     return applyHassanTrueEnemy(state, unit, action);
+  }
+
+  if (spec.id === ABILITY_LOKI_LAUGHT) {
+    return applyLokiLaught(state, unit);
+  }
+
+  if (spec.id === ABILITY_FRISK_PACIFISM) {
+    return applyFriskPacifism(state, unit);
+  }
+
+  if (spec.id === ABILITY_FRISK_GENOCIDE) {
+    return applyFriskGenocide(state, unit);
+  }
+
+  if (spec.id === ABILITY_ODIN_SLEIPNIR) {
+    return applyOdinSleipnir(state, unit, action);
   }
 
   if (spec.id === ABILITY_KALADIN_FIRST) {

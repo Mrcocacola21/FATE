@@ -23,6 +23,7 @@ import {
   HASSAN_TRUE_ENEMY_ID,
   KALADIN_FIFTH_ID,
   KALADIN_ID,
+  ODIN_SLEIPNIR_ID,
   GUTS_ARBALET_ID,
   GUTS_CANNON_ID,
   FEMTO_ID,
@@ -769,10 +770,12 @@ export const RightPanel: FC<RightPanelProps> = ({
                   : ability.slot === "stealth"
                   ? "Stealth slot already used"
                   : undefined;
-              const disabledByActive =
-                ability.kind === "active" ? !ability.isAvailable : false;
+              const disabledByAvailability = !ability.isAvailable;
               const disabled =
-                !canAct || notEnoughCharges || slotDisabled || disabledByActive;
+                !canAct ||
+                notEnoughCharges ||
+                slotDisabled ||
+                disabledByAvailability;
               const chargeWarning = notEnoughCharges
                 ? "Not Enough charges"
                 : undefined;
@@ -821,6 +824,10 @@ export const RightPanel: FC<RightPanelProps> = ({
                 }
                 if (ability.id === KALADIN_FIFTH_ID) {
                   onSetActionMode("kaladinFifth");
+                  return;
+                }
+                if (ability.id === ODIN_SLEIPNIR_ID) {
+                  onSetActionMode("odinSleipnir");
                   return;
                 }
                 if (ability.id === GUTS_ARBALET_ID) {
@@ -930,6 +937,8 @@ export const RightPanel: FC<RightPanelProps> = ({
                 ? "Khan's Shooter: select an enemy in attack range."
                 : actionMode === "hassanTrueEnemy"
                 ? "True Enemy: select an enemy within 2 cells."
+                : actionMode === "odinSleipnir"
+                ? "Sleipnir: select any empty destination cell."
                 : actionMode === "gutsArbalet"
                 ? "Hand Crossbow: select an enemy in ranged attack line."
                 : actionMode === "gutsCannon"

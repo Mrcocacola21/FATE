@@ -9,6 +9,8 @@ import { applyPlaceUnit } from "./placementActions";
 import { applyEnterStealth, applySearchStealth } from "./stealthActions";
 import { applyEndTurn, applyUnitStartTurn } from "./turnActions";
 import { applyChikatiloPostAction } from "./heroes/chikatilo";
+import { applyFriskPostAction } from "./heroes/frisk";
+import { applyLokiIllusoryDoubleFromEvents } from "./heroes/loki";
 
 export function applyAction(
   state: GameState,
@@ -87,5 +89,14 @@ export function applyAction(
       break;
   }
 
-  return applyChikatiloPostAction(result.state, result.events, rng);
+  const afterChikatilo = applyChikatiloPostAction(
+    result.state,
+    result.events,
+    rng
+  );
+  const afterLoki = applyLokiIllusoryDoubleFromEvents(
+    afterChikatilo.state,
+    afterChikatilo.events
+  );
+  return applyFriskPostAction(afterLoki.state, afterLoki.events);
 }

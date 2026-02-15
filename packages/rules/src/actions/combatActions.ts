@@ -8,6 +8,7 @@ import { isKaiser } from "./shared";
 import { HERO_FALSE_TRAIL_TOKEN_ID } from "../heroes";
 import { exitBunkerForUnit } from "./heroes/kaiser";
 import { applyGutsBerserkAttack } from "./heroes/guts";
+import { markFriskAttackedWhileStealthed } from "./heroes/frisk";
 import { getPolkovodetsSource } from "./heroes/vlad";
 import type { AttackRollContext } from "./types";
 import { makeAttackContext } from "../shared/combatCtx";
@@ -20,6 +21,12 @@ export function applyAttack(
   action: Extract<GameAction, { type: "attack" }>,
   rng: RNG
 ): ApplyResult {
+  const stateWithFriskAttackTracking = markFriskAttackedWhileStealthed(
+    state,
+    action.attackerId
+  );
+  state = stateWithFriskAttackTracking;
+
   if (state.phase !== "battle") {
     return { state, events: [] };
   }

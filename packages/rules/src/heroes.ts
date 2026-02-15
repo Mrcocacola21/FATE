@@ -77,13 +77,13 @@ export const HERO_CATALOG: HeroDefinition[] = [
     id: HERO_ODIN_ID,
     name: "Odin",
     mainClass: "rider",
-    baseAttackOverride: 11,
+    baseHpOverride: 11,
   },
   {
     id: HERO_LOKI_ID,
     name: "Loki",
     mainClass: "trickster",
-    baseAttackOverride: 9,
+    baseHpOverride: 9,
   },
   {
     id: HERO_JEBE_ID,
@@ -143,7 +143,7 @@ export const HERO_CATALOG: HeroDefinition[] = [
     id: HERO_FRISK_ID,
     name: "Frisk",
     mainClass: "assassin",
-    baseAttackOverride: 5,
+    baseHpOverride: 5,
   },
   {
     id: HERO_SANS_ID,

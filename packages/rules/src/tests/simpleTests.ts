@@ -32,6 +32,11 @@ import {
   ABILITY_GUTS_EXIT_BERSERK,
   ABILITY_KALADIN_FIRST,
   ABILITY_KALADIN_FIFTH,
+  ABILITY_FRISK_GENOCIDE,
+  ABILITY_FRISK_PACIFISM,
+  ABILITY_LOKI_LAUGHT,
+  ABILITY_ODIN_MUNINN,
+  ABILITY_ODIN_SLEIPNIR,
   ABILITY_TRICKSTER_AOE,
   ABILITY_GRIFFITH_FEMTO_REBIRTH,
   ABILITY_FEMTO_DIVINE_MOVE,
@@ -53,6 +58,9 @@ import {
   HERO_JEBE_ID,
   HERO_HASSAN_ID,
   HERO_KALADIN_ID,
+  HERO_FRISK_ID,
+  HERO_LOKI_ID,
+  HERO_ODIN_ID,
   HERO_VLAD_TEPES_ID,
   HERO_REGISTRY,
   getHeroMeta,
@@ -122,6 +130,7 @@ function resolvePendingRollOnce(
   const pending = state.pendingRoll;
   const resolvedChoice =
     pending.kind === "berserkerDefenseChoice" ||
+    pending.kind === "odinMuninnDefenseChoice" ||
     pending.kind === "dora_berserkerDefenseChoice" ||
     pending.kind === "jebeHailOfArrows_berserkerDefenseChoice" ||
     pending.kind === "carpetStrike_berserkerDefenseChoice" ||
@@ -8108,6 +8117,1335 @@ function testKaladinFifthOathGatingDamageAndImmobilizeDuration() {
   console.log("kaladin_fifth_oath_gating_damage_and_immobilize_duration passed");
 }
 
+function setupOdinState() {
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1", { rider: HERO_ODIN_ID }));
+  state = attachArmy(state, createDefaultArmy("P2"));
+
+  const odin = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.heroId === HERO_ODIN_ID
+  )!;
+
+  return { state, odin };
+}
+
+function testOdinHpBonus() {
+  const { odin } = setupOdinState();
+  const baseHp = getUnitDefinition("rider").maxHp;
+  const meta = getHeroMeta(HERO_ODIN_ID);
+
+  assert(odin.hp === baseHp + 5, "Odin HP should be base rider HP + 5");
+  assert(
+    meta?.baseStats.hp === baseHp + 5,
+    "Odin hero meta HP should be base rider HP + 5"
+  );
+
+  console.log("odin_hp_bonus passed");
+}
+
+function testOdinGungnirAutoHitOnAttackDouble() {
+  let { state, odin } = setupOdinState();
+  const enemy = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "knight"
+  )!;
+
+  state = setUnit(state, odin.id, { position: { col: 4, row: 4 } });
+  state = setUnit(state, enemy.id, { position: { col: 4, row: 5 } });
+  state = initKnowledgeForOwners(state);
+
+  const direct = resolveAttack(state, {
+    attackerId: odin.id,
+    defenderId: enemy.id,
+    rolls: {
+      attackerDice: [1, 1],
+      defenderDice: [6, 6],
+    },
+  });
+  const directEvent = direct.events.find(
+    (event) =>
+      event.type === "attackResolved" &&
+      event.attackerId === odin.id &&
+      event.defenderId === enemy.id
+  ) as Extract<GameEvent, { type: "attackResolved" }> | undefined;
+  assert(directEvent, "direct Odin attack should resolve");
+  assert(
+    directEvent.hit,
+    "Gungnir should force hit on attack double even against higher defense roll"
+  );
+
+  let battle = toBattleState(state, "P1", odin.id);
+  battle = initKnowledgeForOwners(battle);
+  const started = applyAction(
+    battle,
+    { type: "attack", attackerId: odin.id, defenderId: enemy.id } as any,
+    makeRngSequence([0.01, 0.01, 0.99, 0.99])
+  );
+  const resolved = resolveAllPendingRollsWithEvents(
+    started.state,
+    makeRngSequence([0.01, 0.01, 0.99, 0.99])
+  );
+  const pendingEvent = [...started.events, ...resolved.events].find(
+    (event) =>
+      event.type === "attackResolved" &&
+      event.attackerId === odin.id &&
+      event.defenderId === enemy.id
+  ) as Extract<GameEvent, { type: "attackResolved" }> | undefined;
+  assert(pendingEvent, "pending-flow Odin attack should resolve");
+  assert(
+    pendingEvent.hit,
+    "Gungnir should also apply in pending attack flow for rider attacks"
+  );
+
+  console.log("odin_gungnir_auto_hit_on_attack_double passed");
+}
+
+function testOdinHuginnStealthVisibilityRadius() {
+  let { state, odin } = setupOdinState();
+  const enemy = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "assassin"
+  )!;
+
+  state = setUnit(state, odin.id, { position: { col: 4, row: 4 } });
+  state = setUnit(state, enemy.id, {
+    position: { col: 5, row: 4 },
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
+  state = toBattleState(state, "P1", odin.id);
+  state = initKnowledgeForOwners(state);
+
+  const viewNear = makePlayerView(state, "P1");
+  assert(
+    !!viewNear.units[enemy.id],
+    "Huginn should make adjacent stealthed enemy visible to Odin's owner"
+  );
+  const legalNear = getLegalAttackTargets(state, odin.id);
+  assert(
+    legalNear.includes(enemy.id),
+    "Odin should be able to target adjacent stealthed enemy"
+  );
+
+  state = setUnit(state, enemy.id, {
+    position: { col: 6, row: 4 },
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
+  const viewFar = makePlayerView(state, "P1");
+  assert(
+    !viewFar.units[enemy.id],
+    "Huginn should not reveal stealthed enemies outside radius 1"
+  );
+
+  console.log("odin_huginn_stealth_visibility_radius passed");
+}
+
+function testOdinSleipnirGatingTeleportAndNoMoveSpend() {
+  let { state, odin } = setupOdinState();
+  state = setUnit(state, odin.id, {
+    position: { col: 0, row: 0 },
+    charges: { ...odin.charges, [ABILITY_ODIN_SLEIPNIR]: 2 },
+  });
+  state = toBattleState(state, "P1", odin.id);
+  state = initKnowledgeForOwners(state);
+
+  let used = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: odin.id,
+      abilityId: ABILITY_ODIN_SLEIPNIR,
+      payload: { to: { col: 8, row: 8 } },
+    } as any,
+    makeRngSequence([])
+  );
+  assert(
+    used.state.units[odin.id].position?.col === 0 &&
+      used.state.units[odin.id].position?.row === 0,
+    "Sleipnir should be blocked below 3 charges"
+  );
+  assert(
+    used.state.units[odin.id].charges[ABILITY_ODIN_SLEIPNIR] === 2,
+    "Sleipnir should not spend charges when blocked"
+  );
+
+  state = setUnit(state, odin.id, {
+    turn: makeEmptyTurnEconomy(),
+    charges: { ...state.units[odin.id].charges, [ABILITY_ODIN_SLEIPNIR]: 3 },
+  });
+  used = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: odin.id,
+      abilityId: ABILITY_ODIN_SLEIPNIR,
+      payload: { to: { col: 8, row: 8 } },
+    } as any,
+    makeRngSequence([])
+  );
+  assert(
+    used.state.units[odin.id].position?.col === 8 &&
+      used.state.units[odin.id].position?.row === 8,
+    "Sleipnir should teleport Odin to chosen empty cell"
+  );
+  assert(
+    used.state.units[odin.id].charges[ABILITY_ODIN_SLEIPNIR] === 0,
+    "Sleipnir should spend all 3 charges"
+  );
+  assert(
+    !used.state.units[odin.id].turn.moveUsed,
+    "Sleipnir should not consume move slot"
+  );
+  assert(
+    !used.state.units[odin.id].turn.actionUsed,
+    "Sleipnir should not consume action slot"
+  );
+
+  console.log("odin_sleipnir_gating_teleport_and_no_move_spend passed");
+}
+
+function testOdinMuninnPostDefenseChoice() {
+  let { state, odin } = setupOdinState();
+  const attacker = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "knight"
+  )!;
+  state = setUnit(state, odin.id, {
+    position: { col: 4, row: 4 },
+    charges: { ...odin.charges, [ABILITY_ODIN_MUNINN]: 5 },
+  });
+  state = setUnit(state, attacker.id, { position: { col: 4, row: 5 } });
+  state = toBattleState(state, "P2", attacker.id);
+  state = initKnowledgeForOwners(state);
+
+  let lowStart = applyAction(
+    state,
+    { type: "attack", attackerId: attacker.id, defenderId: odin.id } as any,
+    makeRngSequence([])
+  );
+  lowStart = resolvePendingRollOnce(
+    lowStart.state,
+    makeRngSequence([0.99, 0.99, 0.01, 0.01])
+  );
+  const lowResolved = resolvePendingRollOnce(
+    lowStart.state,
+    makeRngSequence([0.99, 0.99, 0.01, 0.01])
+  );
+  assert(
+    lowResolved.state.pendingRoll?.kind !== "odinMuninnDefenseChoice",
+    "Muninn choice must not appear below 6 charges"
+  );
+  assert(
+    lowResolved.state.units[odin.id].charges[ABILITY_ODIN_MUNINN] === 5,
+    "Muninn charges should stay unchanged when not full"
+  );
+
+  state = setUnit(state, odin.id, {
+    turn: makeEmptyTurnEconomy(),
+    charges: { ...state.units[odin.id].charges, [ABILITY_ODIN_MUNINN]: 6 },
+  });
+  const start = applyAction(
+    state,
+    { type: "attack", attackerId: attacker.id, defenderId: odin.id } as any,
+    makeRngSequence([])
+  );
+  assert(
+    start.state.pendingRoll?.kind === "attack_attackerRoll",
+    "attack should request attacker roll first"
+  );
+
+  const afterAttacker = resolvePendingRollOnce(
+    start.state,
+    makeRngSequence([0.99, 0.99])
+  );
+  assert(
+    afterAttacker.state.pendingRoll?.kind === "attack_defenderRoll",
+    "after attacker roll, defender roll should be requested"
+  );
+
+  const afterDefender = resolvePendingRollOnce(
+    afterAttacker.state,
+    makeRngSequence([0.01, 0.01])
+  );
+  assert(
+    afterDefender.state.pendingRoll?.kind === "odinMuninnDefenseChoice",
+    "Muninn choice should appear after defense roll when charges are full"
+  );
+
+  const choseMuninn = applyAction(
+    afterDefender.state,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: afterDefender.state.pendingRoll!.id,
+      player: afterDefender.state.pendingRoll!.player,
+      choice: "auto",
+    } as any,
+    makeRngSequence([])
+  );
+  assert(!choseMuninn.state.pendingRoll, "Muninn choice should resolve immediately");
+  const attackEvent = choseMuninn.events.find(
+    (event) =>
+      event.type === "attackResolved" &&
+      event.attackerId === attacker.id &&
+      event.defenderId === odin.id
+  ) as Extract<GameEvent, { type: "attackResolved" }> | undefined;
+  assert(attackEvent, "attack should resolve after Muninn choice");
+  assert(!attackEvent.hit, "Muninn auto-defense should force a successful defense");
+  assert(attackEvent.damage === 0, "Muninn auto-defense should negate damage");
+  assert(
+    choseMuninn.state.units[odin.id].charges[ABILITY_ODIN_MUNINN] === 0,
+    "Muninn should spend all 6 charges on use"
+  );
+  const abilityEvent = choseMuninn.events.find(
+    (event) =>
+      event.type === "abilityUsed" &&
+      event.unitId === odin.id &&
+      event.abilityId === ABILITY_ODIN_MUNINN
+  );
+  assert(abilityEvent, "using Muninn should emit abilityUsed event");
+
+  console.log("odin_muninn_post_defense_choice passed");
+}
+
+function setupLokiState() {
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1", { trickster: HERO_LOKI_ID }));
+  state = attachArmy(
+    state,
+    createDefaultArmy("P2", { rider: HERO_GENGHIS_KHAN_ID })
+  );
+
+  const loki = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.heroId === HERO_LOKI_ID
+  )!;
+
+  return { state, loki };
+}
+
+function resolvePendingWithChoice(
+  state: GameState,
+  choice: any,
+  rng: Parameters<typeof applyActionRaw>[2]
+) {
+  const pending = state.pendingRoll;
+  assert(pending, "pending roll should exist");
+  return applyAction(
+    state,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: pending.id,
+      player: pending.player,
+      choice,
+    } as any,
+    rng
+  );
+}
+
+function testLokiLaughterIncrementsOnAnyDouble() {
+  let { state, loki } = setupLokiState();
+  const attacker = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "knight"
+  )!;
+  const defender = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.class === "knight"
+  )!;
+
+  state = setUnit(state, loki.id, {
+    position: { col: 2, row: 2 },
+    charges: { ...loki.charges, [ABILITY_LOKI_LAUGHT]: 0 },
+  });
+  state = setUnit(state, attacker.id, { position: { col: 4, row: 4 } });
+  state = setUnit(state, defender.id, { position: { col: 4, row: 5 } });
+  state = toBattleState(state, "P2", attacker.id);
+  state = initKnowledgeForOwners(state);
+
+  const started = applyAction(
+    state,
+    { type: "attack", attackerId: attacker.id, defenderId: defender.id } as any,
+    makeRngSequence([])
+  );
+  const resolved = resolveAllPendingRollsWithEvents(
+    started.state,
+    makeRngSequence([0.01, 0.01, 0.6, 0.4])
+  );
+
+  assert(
+    resolved.state.units[loki.id].charges[ABILITY_LOKI_LAUGHT] === 1,
+    "Loki should gain 1 laughter from a single attack-roll double"
+  );
+  const chargeEvent = resolved.events.find(
+    (event) =>
+      event.type === "chargesUpdated" &&
+      event.unitId === loki.id &&
+      event.deltas[ABILITY_LOKI_LAUGHT] === 1
+  );
+  assert(chargeEvent, "double-triggered laughter gain should emit chargesUpdated");
+
+  console.log("loki_laughter_increments_on_any_double passed");
+}
+
+function testLokiLaughterSpendingAndGating() {
+  let { state, loki } = setupLokiState();
+  const ally = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.class === "knight"
+  )!;
+
+  state = setUnit(state, loki.id, {
+    position: { col: 4, row: 4 },
+    charges: { ...loki.charges, [ABILITY_LOKI_LAUGHT]: 14 },
+  });
+  state = setUnit(state, ally.id, { position: { col: 5, row: 4 } });
+  state = toBattleState(state, "P1", loki.id);
+  state = initKnowledgeForOwners(state);
+
+  const started = applyAction(
+    state,
+    { type: "useAbility", unitId: loki.id, abilityId: ABILITY_LOKI_LAUGHT } as any,
+    makeRngSequence([])
+  );
+  assert(
+    started.state.pendingRoll?.kind === "lokiLaughtChoice",
+    "Loki laughter should open a menu pending roll"
+  );
+
+  const blocked = resolvePendingWithChoice(
+    started.state,
+    { type: "lokiLaughtOption", option: "greatLokiJoke" },
+    makeRngSequence([])
+  );
+  assert(
+    blocked.state.pendingRoll?.kind === "lokiLaughtChoice",
+    "cost-15 option should stay unavailable below 15 laughter"
+  );
+  assert(
+    blocked.state.units[loki.id].charges[ABILITY_LOKI_LAUGHT] === 14,
+    "failed high-cost choice must not spend laughter"
+  );
+
+  const charged = setUnit(blocked.state, loki.id, {
+    charges: {
+      ...blocked.state.units[loki.id].charges,
+      [ABILITY_LOKI_LAUGHT]: 15,
+    },
+  });
+  const used = resolvePendingWithChoice(
+    charged,
+    { type: "lokiLaughtOption", option: "greatLokiJoke" },
+    makeRngSequence([0.9])
+  );
+  assert(!used.state.pendingRoll, "successful choice should resolve pending roll");
+  assert(
+    used.state.units[loki.id].charges[ABILITY_LOKI_LAUGHT] === 0,
+    "cost-15 option should spend exactly 15 laughter"
+  );
+
+  console.log("loki_laughter_spending_and_gating passed");
+}
+
+function testLokiOptionOneMoveLockDuration() {
+  let { state, loki } = setupLokiState();
+  const ally = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.class === "knight"
+  )!;
+  const enemy = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "knight"
+  )!;
+
+  state = setUnit(state, loki.id, {
+    position: { col: 4, row: 4 },
+    charges: { ...loki.charges, [ABILITY_LOKI_LAUGHT]: 3 },
+  });
+  state = setUnit(state, ally.id, { position: { col: 4, row: 5 } });
+  state = setUnit(state, enemy.id, { position: { col: 5, row: 4 } });
+  state = toBattleState(state, "P1", loki.id);
+  state = initKnowledgeForOwners(state);
+
+  const started = applyAction(
+    state,
+    { type: "useAbility", unitId: loki.id, abilityId: ABILITY_LOKI_LAUGHT } as any,
+    makeRngSequence([])
+  );
+  const applied = resolvePendingWithChoice(
+    started.state,
+    { type: "lokiLaughtOption", option: "againSomeNonsense" },
+    makeRngSequence([0.1, 0.1])
+  );
+
+  assert(
+    (applied.state.units[ally.id].lokiMoveLockSources ?? []).includes(loki.id),
+    "ally in Loki area should receive move lock on failed resist"
+  );
+  assert(
+    (applied.state.units[enemy.id].lokiMoveLockSources ?? []).includes(loki.id),
+    "enemy in Loki area should receive move lock on failed resist"
+  );
+
+  const blockedMoveState = {
+    ...applied.state,
+    currentPlayer: "P2" as const,
+    activeUnitId: enemy.id,
+    pendingRoll: null,
+    pendingMove: null,
+  };
+  const blockedMove = applyAction(
+    blockedMoveState,
+    { type: "requestMoveOptions", unitId: enemy.id } as any,
+    makeRngSequence([])
+  );
+  assert(
+    !blockedMove.state.pendingMove,
+    "move lock should block generating move options"
+  );
+
+  const lokiStartState: GameState = {
+    ...applied.state,
+    currentPlayer: "P1",
+    activeUnitId: null,
+    pendingRoll: null,
+    pendingMove: null,
+    turnQueue: [loki.id],
+    turnQueueIndex: 0,
+    turnOrder: [loki.id],
+    turnOrderIndex: 0,
+  };
+  const lokiStart = applyAction(
+    lokiStartState,
+    { type: "unitStartTurn", unitId: loki.id } as any,
+    makeRngSequence([])
+  );
+  assert(
+    (lokiStart.state.units[enemy.id].lokiMoveLockSources?.length ?? 0) === 0,
+    "move lock should expire at Loki start turn"
+  );
+
+  const restoredMoveState = {
+    ...lokiStart.state,
+    currentPlayer: "P2" as const,
+    activeUnitId: enemy.id,
+    pendingRoll: null,
+    pendingMove: null,
+  };
+  const restoredMove = applyAction(
+    restoredMoveState,
+    { type: "requestMoveOptions", unitId: enemy.id } as any,
+    makeRngSequence([])
+  );
+  assert(
+    !!restoredMove.state.pendingMove,
+    "movement should be restored after Loki start turn cleanup"
+  );
+
+  console.log("loki_option_one_move_lock_duration passed");
+}
+
+function testLokiOptionTwoChickenBlocksAndRestrictsMove() {
+  let { state, loki } = setupLokiState();
+  const enemy = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.heroId === HERO_GENGHIS_KHAN_ID
+  )!;
+  const defender = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.class === "knight"
+  )!;
+
+  state = setUnit(state, loki.id, {
+    position: { col: 4, row: 4 },
+    charges: { ...loki.charges, [ABILITY_LOKI_LAUGHT]: 5 },
+  });
+  state = setUnit(state, enemy.id, {
+    position: { col: 5, row: 4 },
+    charges: {
+      ...enemy.charges,
+      [ABILITY_GENGHIS_KHAN_KHANS_DECREE]: 3,
+    },
+  });
+  state = setUnit(state, defender.id, { position: { col: 5, row: 5 } });
+  state = toBattleState(state, "P1", loki.id);
+  state = initKnowledgeForOwners(state);
+
+  const started = applyAction(
+    state,
+    { type: "useAbility", unitId: loki.id, abilityId: ABILITY_LOKI_LAUGHT } as any,
+    makeRngSequence([])
+  );
+  const option = resolvePendingWithChoice(
+    started.state,
+    { type: "lokiLaughtOption", option: "chicken" },
+    makeRngSequence([])
+  );
+  assert(
+    option.state.pendingRoll?.kind === "lokiChickenTargetChoice",
+    "Chicken option should request target selection"
+  );
+  const applied = resolvePendingWithChoice(
+    option.state,
+    { type: "lokiChickenTarget", targetId: enemy.id },
+    makeRngSequence([])
+  );
+  assert(
+    (applied.state.units[enemy.id].lokiChickenSources ?? []).includes(loki.id),
+    "selected target should gain chicken status"
+  );
+
+  const chickenMoves = getLegalMovesForUnit(applied.state, enemy.id);
+  assert(chickenMoves.length > 0, "chicken unit should still have move options");
+  assert(
+    chickenMoves.every((coord) => {
+      const pos = applied.state.units[enemy.id].position!;
+      return (
+        Math.max(Math.abs(coord.col - pos.col), Math.abs(coord.row - pos.row)) <= 1
+      );
+    }),
+    "chicken move options should be limited to 1 cell"
+  );
+
+  const enemyTurnState = {
+    ...applied.state,
+    currentPlayer: "P2" as const,
+    activeUnitId: enemy.id,
+    pendingRoll: null,
+    pendingMove: null,
+  };
+  const blockedAttack = applyAction(
+    enemyTurnState,
+    { type: "attack", attackerId: enemy.id, defenderId: defender.id } as any,
+    makeRngSequence([])
+  );
+  assert(
+    blockedAttack.events.length === 0 && !blockedAttack.state.pendingRoll,
+    "chicken should block attacks"
+  );
+
+  const blockedAbility = applyAction(
+    enemyTurnState,
+    {
+      type: "useAbility",
+      unitId: enemy.id,
+      abilityId: ABILITY_GENGHIS_KHAN_KHANS_DECREE,
+    } as any,
+    makeRngSequence([])
+  );
+  assert(
+    blockedAbility.events.length === 0,
+    "chicken should block activating abilities"
+  );
+
+  console.log("loki_option_two_chicken_blocks_and_restricts_move passed");
+}
+
+function testLokiOptionThreeMindControlForcedAttackAndSlots() {
+  let { state, loki } = setupLokiState();
+  const controlled = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "spearman"
+  )!;
+  const controlledTarget = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "knight"
+  )!;
+
+  state = setUnit(state, loki.id, {
+    position: { col: 4, row: 4 },
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+    charges: { ...loki.charges, [ABILITY_LOKI_LAUGHT]: 10 },
+  });
+  state = setUnit(state, controlled.id, { position: { col: 5, row: 4 } });
+  state = setUnit(state, controlledTarget.id, { position: { col: 5, row: 5 } });
+  state = toBattleState(state, "P1", loki.id);
+  state = initKnowledgeForOwners(state);
+  const targetHpBefore = state.units[controlledTarget.id].hp;
+
+  const started = applyAction(
+    state,
+    { type: "useAbility", unitId: loki.id, abilityId: ABILITY_LOKI_LAUGHT } as any,
+    makeRngSequence([])
+  );
+  const option = resolvePendingWithChoice(
+    started.state,
+    { type: "lokiLaughtOption", option: "mindControl" },
+    makeRngSequence([])
+  );
+  assert(
+    option.state.pendingRoll?.kind === "lokiMindControlEnemyChoice",
+    "mind control option should request enemy selection"
+  );
+  assert(
+    option.state.units[loki.id].turn.actionUsed,
+    "mind control should consume Loki action slot"
+  );
+
+  const pickedEnemy = resolvePendingWithChoice(
+    option.state,
+    { type: "lokiMindControlEnemy", targetId: controlled.id },
+    makeRngSequence([])
+  );
+  assert(
+    pickedEnemy.state.pendingRoll?.kind === "lokiMindControlTargetChoice",
+    "mind control should request forced target selection"
+  );
+
+  const pickedTarget = resolvePendingWithChoice(
+    pickedEnemy.state,
+    { type: "lokiMindControlTarget", targetId: controlledTarget.id },
+    makeRngSequence([])
+  );
+  assert(
+    pickedTarget.state.pendingRoll?.kind === "attack_attackerRoll",
+    "mind control should transition into a normal attack roll"
+  );
+
+  const resolved = resolveAllPendingRollsWithEvents(
+    pickedTarget.state,
+    makeRngSequence([0.99, 0.99, 0.01, 0.01])
+  );
+  assert(
+    resolved.state.units[controlledTarget.id].hp < targetHpBefore,
+    "forced attack should damage the selected target on successful hit"
+  );
+  assert(
+    resolved.state.units[controlled.id].turn.attackUsed &&
+      resolved.state.units[controlled.id].turn.actionUsed,
+    "controlled enemy should spend attack+action slots"
+  );
+  assert(
+    resolved.state.units[loki.id].isStealthed,
+    "using Loki laughter options should not reveal Loki stealth"
+  );
+
+  console.log("loki_option_three_mind_control_forced_attack_and_slots passed");
+}
+
+function testLokiOptionFiveMassChickenFailOnlyAlliesAndEnemies() {
+  let { state, loki } = setupLokiState();
+  const allyOne = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.class === "knight"
+  )!;
+  const allyTwo = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.class === "rider"
+  )!;
+  const enemyOne = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "knight"
+  )!;
+  const enemyTwo = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "spearman"
+  )!;
+
+  state = setUnit(state, loki.id, {
+    position: { col: 4, row: 4 },
+    charges: { ...loki.charges, [ABILITY_LOKI_LAUGHT]: 15 },
+  });
+  state = setUnit(state, allyOne.id, { position: { col: 4, row: 5 } });
+  state = setUnit(state, allyTwo.id, { position: { col: 3, row: 4 } });
+  state = setUnit(state, enemyOne.id, { position: { col: 5, row: 4 } });
+  state = setUnit(state, enemyTwo.id, { position: { col: 4, row: 3 } });
+  state = toBattleState(state, "P1", loki.id);
+  state = initKnowledgeForOwners(state);
+
+  const started = applyAction(
+    state,
+    { type: "useAbility", unitId: loki.id, abilityId: ABILITY_LOKI_LAUGHT } as any,
+    makeRngSequence([])
+  );
+  const applied = resolvePendingWithChoice(
+    started.state,
+    { type: "lokiLaughtOption", option: "greatLokiJoke" },
+    makeRngSequence([0.1, 0.1, 0.1, 0.99])
+  );
+  assert(!applied.state.pendingRoll, "mass chicken should resolve immediately");
+
+  const targets = [allyOne.id, allyTwo.id, enemyOne.id, enemyTwo.id];
+  const chickenedTargets = targets.filter((unitId) =>
+    (applied.state.units[unitId].lokiChickenSources ?? []).includes(loki.id)
+  );
+  const chickenedAllies = chickenedTargets.filter(
+    (unitId) => applied.state.units[unitId].owner === "P1"
+  );
+  const chickenedEnemies = chickenedTargets.filter(
+    (unitId) => applied.state.units[unitId].owner === "P2"
+  );
+
+  assert(
+    chickenedAllies.length > 0,
+    "great Loki joke should be able to affect allies on failed rolls"
+  );
+  assert(
+    chickenedEnemies.length > 0,
+    "great Loki joke should be able to affect enemies on failed rolls"
+  );
+  assert(
+    chickenedTargets.length < targets.length,
+    "only failed resist rolls should apply chicken"
+  );
+
+  console.log("loki_option_five_mass_chicken_fail_only_allies_and_enemies passed");
+}
+
+function setupFriskState() {
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1", { assassin: HERO_FRISK_ID }));
+  state = attachArmy(state, createDefaultArmy("P2"));
+
+  const frisk = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.heroId === HERO_FRISK_ID
+  )!;
+
+  return { state, frisk };
+}
+
+function testFriskPacifismIncrementsOnMissIncludingCleanSoul() {
+  let { state, frisk } = setupFriskState();
+  const attacker = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "knight"
+  )!;
+
+  state = setUnit(state, frisk.id, {
+    position: { col: 4, row: 4 },
+    friskCleanSoulShield: true,
+    charges: {
+      ...state.units[frisk.id].charges,
+      [ABILITY_FRISK_PACIFISM]: 0,
+      [ABILITY_FRISK_GENOCIDE]: 0,
+    },
+  });
+  state = setUnit(state, attacker.id, { position: { col: 4, row: 5 } });
+  state = toBattleState(state, "P2", attacker.id);
+  state = initKnowledgeForOwners(state);
+
+  const started = applyAction(
+    state,
+    { type: "attack", attackerId: attacker.id, defenderId: frisk.id } as any,
+    makeRngSequence([])
+  );
+  const resolved = resolveAllPendingRollsWithEvents(
+    started.state,
+    makeRngSequence([0.99, 0.99])
+  );
+  const events = [...started.events, ...resolved.events];
+
+  const attackEvent = events.find(
+    (event) =>
+      event.type === "attackResolved" &&
+      event.attackerId === attacker.id &&
+      event.defenderId === frisk.id
+  ) as Extract<GameEvent, { type: "attackResolved" }> | undefined;
+  assert(attackEvent, "attack against Frisk should resolve");
+  assert(!attackEvent.hit, "Clean Soul shield should force the attack to miss");
+
+  const friskAfter = resolved.state.units[frisk.id];
+  assert(
+    friskAfter.charges[ABILITY_FRISK_PACIFISM] === 1,
+    "Frisk should gain +1 Pacifism on miss"
+  );
+  assert(
+    friskAfter.friskCleanSoulShield === false,
+    "Clean Soul shield should be consumed after forcing a miss"
+  );
+
+  console.log("frisk_pacifism_increments_on_miss_including_clean_soul passed");
+}
+
+function testFriskGenocideIncrementsOnHit() {
+  let { state, frisk } = setupFriskState();
+  const target = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "knight"
+  )!;
+
+  state = setUnit(state, frisk.id, {
+    position: { col: 4, row: 4 },
+    charges: {
+      ...state.units[frisk.id].charges,
+      [ABILITY_FRISK_GENOCIDE]: 0,
+    },
+  });
+  state = setUnit(state, target.id, { position: { col: 4, row: 5 } });
+  state = toBattleState(state, "P1", frisk.id);
+  state = initKnowledgeForOwners(state);
+
+  const started = applyAction(
+    state,
+    { type: "attack", attackerId: frisk.id, defenderId: target.id } as any,
+    makeRngSequence([])
+  );
+  const resolved = resolveAllPendingRollsWithEvents(
+    started.state,
+    makeRngSequence([0.99, 0.99, 0.01, 0.01])
+  );
+  const events = [...started.events, ...resolved.events];
+
+  const attackEvent = events.find(
+    (event) =>
+      event.type === "attackResolved" &&
+      event.attackerId === frisk.id &&
+      event.defenderId === target.id
+  ) as Extract<GameEvent, { type: "attackResolved" }> | undefined;
+  assert(attackEvent, "Frisk attack should resolve");
+  assert(attackEvent.hit, "test setup should produce a successful Frisk hit");
+  assert(
+    resolved.state.units[frisk.id].charges[ABILITY_FRISK_GENOCIDE] === 1,
+    "Frisk should gain +1 Genocide on hit"
+  );
+
+  console.log("frisk_genocide_increments_on_hit passed");
+}
+
+function testFriskCleanSoulShieldFlow() {
+  let { state, frisk } = setupFriskState();
+  const attacker = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "knight"
+  )!;
+
+  state = setUnit(state, frisk.id, { position: { col: 4, row: 4 } });
+  state = setUnit(state, attacker.id, { position: { col: 4, row: 5 } });
+  state = toBattleState(state, "P1", frisk.id);
+  state = initKnowledgeForOwners(state);
+
+  const enterStealth = applyAction(
+    state,
+    { type: "enterStealth", unitId: frisk.id } as any,
+    makeRngSequence([])
+  );
+  assert(
+    enterStealth.state.pendingRoll?.kind === "enterStealth",
+    "Frisk stealth attempt should request enterStealth roll"
+  );
+  const entered = resolvePendingRollOnce(enterStealth.state, makeRngSequence([0.99]));
+  assert(entered.state.units[frisk.id].isStealthed, "Frisk should enter stealth");
+
+  let revealState = setUnit(entered.state, frisk.id, {
+    stealthTurnsLeft: 0,
+    friskDidAttackWhileStealthedSinceLastEnter: false,
+  });
+  revealState = {
+    ...revealState,
+    currentPlayer: "P1",
+    activeUnitId: null,
+    pendingRoll: null,
+    pendingMove: null,
+    turnQueue: [frisk.id],
+    turnQueueIndex: 0,
+    turnOrder: [frisk.id],
+    turnOrderIndex: 0,
+  };
+
+  const startTurn = applyAction(
+    revealState,
+    { type: "unitStartTurn", unitId: frisk.id } as any,
+    makeRngSequence([])
+  );
+  const afterReveal = startTurn.state.units[frisk.id];
+  assert(!afterReveal.isStealthed, "Frisk should exit stealth on timer reveal");
+  assert(
+    afterReveal.friskCleanSoulShield === true,
+    "Frisk should gain Clean Soul shield after leaving stealth without attacking"
+  );
+
+  const enemyTurnState = initKnowledgeForOwners(
+    toBattleState(startTurn.state, "P2", attacker.id)
+  );
+  const attacked = applyAction(
+    enemyTurnState,
+    { type: "attack", attackerId: attacker.id, defenderId: frisk.id } as any,
+    makeRngSequence([])
+  );
+  const resolved = resolveAllPendingRollsWithEvents(
+    attacked.state,
+    makeRngSequence([0.99, 0.99])
+  );
+  const events = [...attacked.events, ...resolved.events];
+  const attackEvent = events.find(
+    (event) =>
+      event.type === "attackResolved" &&
+      event.attackerId === attacker.id &&
+      event.defenderId === frisk.id
+  ) as Extract<GameEvent, { type: "attackResolved" }> | undefined;
+  assert(attackEvent, "attack after Clean Soul setup should resolve");
+  assert(!attackEvent.hit, "Clean Soul shield should force the next attack to miss");
+  assert(
+    resolved.state.units[frisk.id].friskCleanSoulShield === false,
+    "Clean Soul shield should be consumed after one use"
+  );
+
+  console.log("frisk_clean_soul_shield_flow passed");
+}
+
+function testFriskChildsCryNegatesDamageAndSpendsPoints() {
+  let { state, frisk } = setupFriskState();
+  const attacker = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "knight"
+  )!;
+
+  state = setUnit(state, frisk.id, {
+    position: { col: 4, row: 4 },
+    friskPacifismDisabled: false,
+    friskCleanSoulShield: false,
+    charges: {
+      ...state.units[frisk.id].charges,
+      [ABILITY_FRISK_PACIFISM]: 5,
+      [ABILITY_FRISK_GENOCIDE]: 0,
+    },
+  });
+  state = setUnit(state, attacker.id, { position: { col: 4, row: 5 } });
+  state = toBattleState(state, "P2", attacker.id);
+  state = initKnowledgeForOwners(state);
+
+  const rng = makeRngSequence([0.99, 0.99, 0.01, 0.01]);
+  const started = applyAction(
+    state,
+    { type: "attack", attackerId: attacker.id, defenderId: frisk.id } as any,
+    rng
+  );
+  const afterAttacker = resolvePendingRollOnce(started.state, rng);
+  const afterDefender = resolvePendingRollOnce(afterAttacker.state, rng);
+
+  assert(
+    afterDefender.state.pendingRoll?.kind === "friskChildsCryChoice",
+    "Child's Cry should be offered after a hit is determined"
+  );
+
+  const activated = applyAction(
+    afterDefender.state,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: afterDefender.state.pendingRoll!.id,
+      player: afterDefender.state.pendingRoll!.player,
+      choice: "activate",
+    } as any,
+    rng
+  );
+  const events = [
+    ...started.events,
+    ...afterAttacker.events,
+    ...afterDefender.events,
+    ...activated.events,
+  ];
+  const attackEvent = events.find(
+    (event) =>
+      event.type === "attackResolved" &&
+      event.attackerId === attacker.id &&
+      event.defenderId === frisk.id
+  ) as Extract<GameEvent, { type: "attackResolved" }> | undefined;
+  assert(attackEvent, "attack should resolve after Child's Cry choice");
+  assert(attackEvent.hit, "Child's Cry keeps hit result but nullifies damage");
+  assert(attackEvent.damage === 0, "Child's Cry should reduce damage to 0");
+  assert(
+    activated.state.units[frisk.id].charges[ABILITY_FRISK_PACIFISM] === 0,
+    "Child's Cry should spend exactly 5 Pacifism points"
+  );
+
+  console.log("frisk_childs_cry_negates_damage_and_spends_points passed");
+}
+
+function testFriskSubstitutionTakesOneDamageBeforeDefenseRoll() {
+  let { state, frisk } = setupFriskState();
+  const attacker = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "knight"
+  )!;
+
+  state = setUnit(state, frisk.id, {
+    position: { col: 4, row: 4 },
+    charges: {
+      ...state.units[frisk.id].charges,
+      [ABILITY_FRISK_GENOCIDE]: 3,
+      [ABILITY_FRISK_PACIFISM]: 0,
+    },
+  });
+  state = setUnit(state, attacker.id, { position: { col: 4, row: 5 } });
+  state = toBattleState(state, "P2", attacker.id);
+  state = initKnowledgeForOwners(state);
+
+  const hpBefore = state.units[frisk.id].hp;
+  const rng = makeRngSequence([0.99, 0.99, 0.01, 0.01]);
+  const started = applyAction(
+    state,
+    { type: "attack", attackerId: attacker.id, defenderId: frisk.id } as any,
+    rng
+  );
+  const afterAttacker = resolvePendingRollOnce(started.state, rng);
+  assert(
+    afterAttacker.state.pendingRoll?.kind === "friskSubstitutionChoice",
+    "Substitution should be offered before defender roll"
+  );
+
+  const activated = applyAction(
+    afterAttacker.state,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: afterAttacker.state.pendingRoll!.id,
+      player: afterAttacker.state.pendingRoll!.player,
+      choice: "activate",
+    } as any,
+    rng
+  );
+  const events = [...started.events, ...afterAttacker.events, ...activated.events];
+  const attackEvent = events.find(
+    (event) =>
+      event.type === "attackResolved" &&
+      event.attackerId === attacker.id &&
+      event.defenderId === frisk.id
+  ) as Extract<GameEvent, { type: "attackResolved" }> | undefined;
+
+  assert(attackEvent, "attack should resolve after Substitution choice");
+  assert(attackEvent.hit, "Substitution should still resolve as a hit");
+  assert(attackEvent.damage === 1, "Substitution should force exactly 1 damage");
+  assert(
+    activated.state.units[frisk.id].hp === hpBefore - 1,
+    "Frisk should lose exactly 1 HP from Substitution"
+  );
+  assert(
+    activated.state.units[frisk.id].charges[ABILITY_FRISK_GENOCIDE] === 0,
+    "Substitution should spend exactly 3 Genocide points"
+  );
+
+  console.log("frisk_substitution_takes_one_damage_before_defense_roll passed");
+}
+
+function testFriskOnePathConvertsAndDisablesPacifism() {
+  let { state, frisk } = setupFriskState();
+  const victim = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "knight"
+  )!;
+  const attacker = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "rider"
+  )!;
+
+  state = setUnit(state, frisk.id, {
+    position: { col: 4, row: 4 },
+    friskPacifismDisabled: false,
+    charges: {
+      ...state.units[frisk.id].charges,
+      [ABILITY_FRISK_PACIFISM]: 4,
+      [ABILITY_FRISK_GENOCIDE]: 0,
+    },
+  });
+  state = setUnit(state, victim.id, { position: { col: 4, row: 5 }, hp: 1 });
+  state = setUnit(state, attacker.id, { position: { col: 5, row: 4 } });
+  state = toBattleState(state, "P1", frisk.id);
+  state = initKnowledgeForOwners(state);
+
+  const killed = applyAction(
+    state,
+    { type: "attack", attackerId: frisk.id, defenderId: victim.id } as any,
+    makeRngSequence([])
+  );
+  const resolvedKill = resolveAllPendingRollsWithEvents(
+    killed.state,
+    makeRngSequence([0.99, 0.99, 0.01, 0.01])
+  );
+  const friskAfterKill = resolvedKill.state.units[frisk.id];
+
+  assert(
+    friskAfterKill.friskPacifismDisabled === true,
+    "One Path should permanently disable Pacifism after first Frisk kill"
+  );
+  assert(
+    friskAfterKill.charges[ABILITY_FRISK_PACIFISM] === 0,
+    "One Path should convert all Pacifism points to 0"
+  );
+  assert(
+    friskAfterKill.charges[ABILITY_FRISK_GENOCIDE] === 5,
+    "One Path should convert Pacifism to Genocide while preserving hit gain"
+  );
+
+  const enemyTurnState: GameState = {
+    ...resolvedKill.state,
+    currentPlayer: "P2",
+    activeUnitId: attacker.id,
+    pendingRoll: null,
+    pendingMove: null,
+  };
+  const missedAttack = applyAction(
+    enemyTurnState,
+    { type: "attack", attackerId: attacker.id, defenderId: frisk.id } as any,
+    makeRngSequence([])
+  );
+  const missedResolved = resolveAllPendingRollsWithEvents(
+    missedAttack.state,
+    makeRngSequence([0.01, 0.01, 0.99, 0.99])
+  );
+  assert(
+    missedResolved.state.units[frisk.id].charges[ABILITY_FRISK_PACIFISM] === 0,
+    "Pacifism should no longer gain points after One Path"
+  );
+
+  const pacifismAttemptState: GameState = {
+    ...missedResolved.state,
+    currentPlayer: "P1",
+    activeUnitId: frisk.id,
+    pendingRoll: null,
+    pendingMove: null,
+    units: {
+      ...missedResolved.state.units,
+      [frisk.id]: {
+        ...missedResolved.state.units[frisk.id],
+        turn: makeEmptyTurnEconomy(),
+      },
+    },
+  };
+  const usePacifism = applyAction(
+    pacifismAttemptState,
+    { type: "useAbility", unitId: frisk.id, abilityId: ABILITY_FRISK_PACIFISM } as any,
+    makeRngSequence([])
+  );
+  assert(
+    !usePacifism.state.pendingRoll,
+    "Pacifism menu should not open after One Path disables Pacifism"
+  );
+
+  console.log("frisk_one_path_converts_and_disables_pacifism passed");
+}
+
+function testFriskKillBonusesFirstAndSecondKill() {
+  let { state, frisk } = setupFriskState();
+  const firstTarget = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "knight"
+  )!;
+  const secondTarget = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "rider"
+  )!;
+
+  const baseAttack = state.units[frisk.id].attack;
+  state = setUnit(state, frisk.id, {
+    position: { col: 4, row: 4 },
+    charges: {
+      ...state.units[frisk.id].charges,
+      [ABILITY_FRISK_PACIFISM]: 0,
+      [ABILITY_FRISK_GENOCIDE]: 0,
+    },
+  });
+  state = setUnit(state, firstTarget.id, { position: { col: 4, row: 5 }, hp: 1 });
+  state = setUnit(state, secondTarget.id, { position: { col: 5, row: 4 }, hp: 1 });
+  state = toBattleState(state, "P1", frisk.id);
+  state = initKnowledgeForOwners(state);
+
+  const firstAttack = applyAction(
+    state,
+    { type: "attack", attackerId: frisk.id, defenderId: firstTarget.id } as any,
+    makeRngSequence([])
+  );
+  const firstResolved = resolveAllPendingRollsWithEvents(
+    firstAttack.state,
+    makeRngSequence([0.99, 0.99, 0.01, 0.01])
+  );
+  const afterFirstKill = firstResolved.state.units[frisk.id];
+  assert(
+    afterFirstKill.attack === baseAttack + 1,
+    "first Frisk kill should increase base damage by +1 exactly once"
+  );
+
+  const genocideAfterFirst = afterFirstKill.charges[ABILITY_FRISK_GENOCIDE];
+  let secondState = setUnit(firstResolved.state, frisk.id, {
+    turn: makeEmptyTurnEconomy(),
+    hasMovedThisTurn: false,
+    hasAttackedThisTurn: false,
+    hasActedThisTurn: false,
+    stealthAttemptedThisTurn: false,
+  });
+  secondState = {
+    ...secondState,
+    currentPlayer: "P1",
+    activeUnitId: frisk.id,
+    pendingRoll: null,
+    pendingMove: null,
+  };
+
+  const secondAttack = applyAction(
+    secondState,
+    { type: "attack", attackerId: frisk.id, defenderId: secondTarget.id } as any,
+    makeRngSequence([])
+  );
+  assert(
+    secondAttack.state.pendingRoll?.kind === "attack_attackerRoll",
+    "second Frisk kill setup should start a normal attack roll sequence"
+  );
+  const secondResolved = resolveAllPendingRollsWithEvents(
+    secondAttack.state,
+    makeRngSequence([0.99, 0.99, 0.01, 0.01])
+  );
+  const secondEvents = [...secondAttack.events, ...secondResolved.events];
+  const afterSecondKill = secondResolved.state.units[frisk.id];
+  const secondTargetAfter = secondResolved.state.units[secondTarget.id];
+  const secondAttackEvent = secondEvents.find(
+    (event) =>
+      event.type === "attackResolved" &&
+      event.attackerId === frisk.id &&
+      event.defenderId === secondTarget.id
+  ) as Extract<GameEvent, { type: "attackResolved" }> | undefined;
+  const genocideDelta =
+    afterSecondKill.charges[ABILITY_FRISK_GENOCIDE] - genocideAfterFirst;
+
+  assert(
+    afterSecondKill.attack === baseAttack + 1,
+    "Frisk damage bonus from kills should not stack beyond +1"
+  );
+  assert(secondAttackEvent, "second Frisk attack should resolve");
+  assert(secondAttackEvent.hit, "second Frisk attack should hit in this setup");
+  assert(
+    !secondTargetAfter.isAlive,
+    "second Frisk kill test setup should actually kill the second target"
+  );
+  assert(
+    genocideDelta >= 3,
+    "second Frisk kill should grant the +3 Genocide kill bonus"
+  );
+
+  console.log("frisk_kill_bonuses_first_and_second_kill passed");
+}
+
+function testFriskPowerOfFriendshipWinCondition() {
+  let { state, frisk } = setupFriskState();
+  const lastEnemy = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "knight"
+  )!;
+
+  state = setUnit(state, frisk.id, {
+    position: { col: 4, row: 4 },
+    friskPacifismDisabled: false,
+    charges: {
+      ...state.units[frisk.id].charges,
+      [ABILITY_FRISK_PACIFISM]: 1,
+      [ABILITY_FRISK_GENOCIDE]: 0,
+    },
+  });
+  state = setUnit(state, lastEnemy.id, { position: { col: 4, row: 5 } });
+
+  for (const unit of Object.values(state.units)) {
+    if (unit.owner !== "P2" || unit.id === lastEnemy.id) continue;
+    state = setUnit(state, unit.id, {
+      isAlive: false,
+      hp: 0,
+      position: null,
+    });
+  }
+
+  state = {
+    ...state,
+    phase: "battle",
+    currentPlayer: "P1",
+    activeUnitId: null,
+    pendingRoll: null,
+    pendingMove: null,
+    turnQueue: [frisk.id],
+    turnQueueIndex: 0,
+    turnOrder: [frisk.id],
+    turnOrderIndex: 0,
+  };
+  state = initKnowledgeForOwners(state);
+
+  const started = applyAction(
+    state,
+    { type: "unitStartTurn", unitId: frisk.id } as any,
+    makeRngSequence([])
+  );
+
+  assert(
+    started.state.phase === "ended",
+    "Power of Friendship should end the game when one enemy remains and Genocide is 0"
+  );
+  const gameEnded = started.events.find(
+    (event) => event.type === "gameEnded"
+  ) as Extract<GameEvent, { type: "gameEnded" }> | undefined;
+  assert(gameEnded, "Power of Friendship should emit gameEnded event");
+  assert(gameEnded.winner === "P1", "Power of Friendship should win for Frisk owner");
+
+  console.log("frisk_power_of_friendship_win_condition passed");
+}
+
 function setupGroznyTyrantState() {
   let state = createEmptyGame();
   const a1 = createDefaultArmy("P1", {
@@ -11936,6 +13274,25 @@ function main() {
   testKaladinThirdOathSpearmanBonusOnlyOnSpearmanAttack();
   testKaladinFourthOathBerserkerTraitMovementMode();
   testKaladinFifthOathGatingDamageAndImmobilizeDuration();
+  testOdinHpBonus();
+  testOdinGungnirAutoHitOnAttackDouble();
+  testOdinHuginnStealthVisibilityRadius();
+  testOdinSleipnirGatingTeleportAndNoMoveSpend();
+  testOdinMuninnPostDefenseChoice();
+  testLokiLaughterIncrementsOnAnyDouble();
+  testLokiLaughterSpendingAndGating();
+  testLokiOptionOneMoveLockDuration();
+  testLokiOptionTwoChickenBlocksAndRestrictsMove();
+  testLokiOptionThreeMindControlForcedAttackAndSlots();
+  testLokiOptionFiveMassChickenFailOnlyAlliesAndEnemies();
+  testFriskPacifismIncrementsOnMissIncludingCleanSoul();
+  testFriskGenocideIncrementsOnHit();
+  testFriskCleanSoulShieldFlow();
+  testFriskChildsCryNegatesDamageAndSpendsPoints();
+  testFriskSubstitutionTakesOneDamageBeforeDefenseRoll();
+  testFriskOnePathConvertsAndDisablesPacifism();
+  testFriskKillBonusesFirstAndSecondKill();
+  testFriskPowerOfFriendshipWinCondition();
   testGroznyTyrantDoesNotTriggerIfOnlyBuffWouldMakeKillPossible();
   testGroznyTyrantTriggersAndKillsWhenBaseDamageIsEnough();
   testGroznyTyrantRequiresReachableAttackPositionWithinRoll6();

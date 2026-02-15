@@ -19,7 +19,11 @@ export interface AttackRollContext extends Record<string, unknown> {
   tieBreakDefender?: number[];
   stage?: "initial" | "tieBreak";
   berserkerChoiceMade?: boolean;
+  odinMuninnChoiceMade?: boolean;
   chikatiloDecoyChoiceMade?: boolean;
+  friskSubstitutionChoiceMade?: boolean;
+  friskChildsCryChoiceMade?: boolean;
+  friskForceMiss?: boolean;
   consumeSlots?: boolean;
   queueKind?: "normal" | "riderPath" | "aoe";
   elCidDuelist?: {
@@ -104,6 +108,33 @@ export interface HassanAssassinOrderSelectionContext
   hassanId: string;
   eligibleUnitIds: string[];
   queue?: ("P1" | "P2")[];
+}
+
+export interface FriskPacifismChoiceContext extends Record<string, unknown> {
+  friskId: string;
+  hugsOptions: string[];
+  warmWordsOptions: string[];
+  canPowerOfFriendship: boolean;
+}
+
+export interface FriskPacifismTargetChoiceContext
+  extends Record<string, unknown> {
+  friskId: string;
+  options: string[];
+}
+
+export interface FriskWarmWordsHealRollContext extends Record<string, unknown> {
+  friskId: string;
+  targetId: string;
+}
+
+export interface FriskGenocideChoiceContext extends Record<string, unknown> {
+  friskId: string;
+}
+
+export interface FriskKeenEyeChoiceContext extends Record<string, unknown> {
+  friskId: string;
+  options: string[];
 }
 
 export type IntimidateResume =

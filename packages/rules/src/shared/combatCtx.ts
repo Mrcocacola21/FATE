@@ -31,7 +31,11 @@ export function makeAttackContext(params: {
     tieBreakDefender: [],
     stage: "initial",
     berserkerChoiceMade: false,
+    odinMuninnChoiceMade: false,
     chikatiloDecoyChoiceMade: false,
+    friskSubstitutionChoiceMade: false,
+    friskChildsCryChoiceMade: false,
+    friskForceMiss: false,
     consumeSlots: params.consumeSlots,
     queueKind: params.queueKind,
   };

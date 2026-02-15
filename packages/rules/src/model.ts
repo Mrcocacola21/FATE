@@ -123,6 +123,20 @@ export interface UnitState {
   gutsBerserkExitUsed?: boolean;
   /** Kaladin: move-consuming actions are blocked while list is non-empty. */
   kaladinMoveLockSources?: string[];
+  /** Loki option 1: move-consuming actions are blocked while list is non-empty. */
+  lokiMoveLockSources?: string[];
+  /** Loki option 2/5: chicken status while list is non-empty. */
+  lokiChickenSources?: string[];
+  /** Frisk: Pacifism branch is permanently disabled after One Path trigger. */
+  friskPacifismDisabled?: boolean;
+  /** Frisk: next incoming attack automatically misses while this shield is active. */
+  friskCleanSoulShield?: boolean;
+  /** Frisk: tracks if Frisk attacked while stealthed since last stealth entry. */
+  friskDidAttackWhileStealthedSinceLastEnter?: boolean;
+  /** Frisk: next attack auto-hits and deals double damage. */
+  friskPrecisionStrikeReady?: boolean;
+  /** Frisk: kill count used by first/second+ kill bonuses. */
+  friskKillCount?: number;
 
   isAlive: boolean;
 }
@@ -164,6 +178,7 @@ export type RollKind =
   | "attack_attackerRoll"
   | "attack_defenderRoll"
   | "berserkerDefenseChoice"
+  | "odinMuninnDefenseChoice"
   | "riderPathAttack_attackerRoll"
   | "riderPathAttack_defenderRoll"
   | "tricksterAoE_attackerRoll"
@@ -202,8 +217,20 @@ export type RollKind =
   | "jebeKhansShooterTargetChoice"
   | "hassanTrueEnemyTargetChoice"
   | "hassanAssassinOrderSelection"
+  | "lokiLaughtChoice"
+  | "lokiChickenTargetChoice"
+  | "lokiMindControlEnemyChoice"
+  | "lokiMindControlTargetChoice"
   | "femtoDivineMoveRoll"
-  | "femtoDivineMoveDestination";
+  | "femtoDivineMoveDestination"
+  | "friskPacifismChoice"
+  | "friskPacifismHugsTargetChoice"
+  | "friskWarmWordsTargetChoice"
+  | "friskWarmWordsHealRoll"
+  | "friskGenocideChoice"
+  | "friskKeenEyeChoice"
+  | "friskSubstitutionChoice"
+  | "friskChildsCryChoice";
 
 export interface PendingRoll {
   id: string;
@@ -486,7 +513,30 @@ export type ResolveRollChoice =
   | { type: "jebeKhansShooterTarget"; targetId: string }
   | { type: "hassanTrueEnemyTarget"; targetId: string }
   | { type: "hassanAssassinOrderPick"; unitIds: string[] }
-  | { type: "femtoDivineMoveDestination"; position: Coord };
+  | {
+      type: "lokiLaughtOption";
+      option:
+        | "againSomeNonsense"
+        | "chicken"
+        | "mindControl"
+        | "spinTheDrum"
+        | "greatLokiJoke";
+    }
+  | { type: "lokiChickenTarget"; targetId: string }
+  | { type: "lokiMindControlEnemy"; targetId: string }
+  | { type: "lokiMindControlTarget"; targetId: string }
+  | { type: "femtoDivineMoveDestination"; position: Coord }
+  | {
+      type: "friskPacifismOption";
+      option: "hugs" | "childsCry" | "warmWords" | "powerOfFriendship";
+    }
+  | { type: "friskPacifismHugsTarget"; targetId: string }
+  | { type: "friskWarmWordsTarget"; targetId: string }
+  | {
+      type: "friskGenocideOption";
+      option: "substitution" | "keenEye" | "precisionStrike";
+    }
+  | { type: "friskKeenEyeTarget"; targetId: string };
 
     export type GameAction =
     | {

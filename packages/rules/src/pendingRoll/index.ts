@@ -43,6 +43,20 @@ import {
   resolveHassanTrueEnemyTargetChoice,
 } from "./resolvers/resolveHassanRoll";
 import {
+  resolveLokiChickenTargetChoice,
+  resolveLokiLaughtChoice,
+  resolveLokiMindControlEnemyChoice,
+  resolveLokiMindControlTargetChoice,
+} from "./resolvers/resolveLokiRoll";
+import {
+  resolveFriskGenocideChoice,
+  resolveFriskKeenEyeChoice,
+  resolveFriskPacifismChoice,
+  resolveFriskPacifismHugsTargetChoice,
+  resolveFriskWarmWordsHealRoll,
+  resolveFriskWarmWordsTargetChoice,
+} from "./resolvers/resolveFriskRoll";
+import {
   resolveFemtoDivineMoveDestinationChoice,
   resolveFemtoDivineMoveRoll,
 } from "../actions/heroes/griffith";
@@ -51,6 +65,9 @@ import {
   resolveAttackDefenderRoll,
   resolveBerserkerDefenseChoiceRoll,
   resolveChikatiloDecoyChoice,
+  resolveFriskChildsCryChoiceRoll,
+  resolveFriskSubstitutionChoiceRoll,
+  resolveOdinMuninnDefenseChoiceRoll,
 } from "./resolvers/resolveAttackRoll";
 import {
   resolveVladForestChoice,
@@ -180,6 +197,20 @@ export function applyResolvePendingRoll(
         rng
       );
     }
+    case "odinMuninnDefenseChoice": {
+      return resolveOdinMuninnDefenseChoiceRoll(
+        state,
+        pending,
+        autoRollChoice,
+        rng
+      );
+    }
+    case "friskSubstitutionChoice": {
+      return resolveFriskSubstitutionChoiceRoll(state, pending, action.choice, rng);
+    }
+    case "friskChildsCryChoice": {
+      return resolveFriskChildsCryChoiceRoll(state, pending, action.choice, rng);
+    }
     case "chikatiloDecoyChoice": {
       return resolveChikatiloDecoyChoice(state, pending, action.choice, rng);
     }
@@ -211,6 +242,36 @@ export function applyResolvePendingRoll(
     }
     case "hassanAssassinOrderSelection": {
       return resolveHassanAssassinOrderSelection(state, pending, action.choice);
+    }
+    case "lokiLaughtChoice": {
+      return resolveLokiLaughtChoice(state, pending, action.choice, rng);
+    }
+    case "lokiChickenTargetChoice": {
+      return resolveLokiChickenTargetChoice(state, pending, action.choice);
+    }
+    case "lokiMindControlEnemyChoice": {
+      return resolveLokiMindControlEnemyChoice(state, pending, action.choice);
+    }
+    case "lokiMindControlTargetChoice": {
+      return resolveLokiMindControlTargetChoice(state, pending, action.choice);
+    }
+    case "friskPacifismChoice": {
+      return resolveFriskPacifismChoice(state, pending, action.choice);
+    }
+    case "friskPacifismHugsTargetChoice": {
+      return resolveFriskPacifismHugsTargetChoice(state, pending, action.choice);
+    }
+    case "friskWarmWordsTargetChoice": {
+      return resolveFriskWarmWordsTargetChoice(state, pending, action.choice);
+    }
+    case "friskWarmWordsHealRoll": {
+      return resolveFriskWarmWordsHealRoll(state, pending, action.choice, rng);
+    }
+    case "friskGenocideChoice": {
+      return resolveFriskGenocideChoice(state, pending, action.choice);
+    }
+    case "friskKeenEyeChoice": {
+      return resolveFriskKeenEyeChoice(state, pending, action.choice, rng);
     }
     case "femtoDivineMoveRoll": {
       return resolveFemtoDivineMoveRoll(state, pending, rng);

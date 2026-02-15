@@ -14,8 +14,13 @@ import {
   CHIKATILO_ASSASSIN_MARK_ID,
   CHIKATILO_DECOY_ID,
   HASSAN_TRUE_ENEMY_ID,
+  FRISK_GENOCIDE_ID,
+  FRISK_PACIFISM_ID,
   KALADIN_FIFTH_ID,
   KALADIN_ID,
+  LOKI_LAUGHT_ID,
+  ODIN_MUNINN_ID,
+  ODIN_SLEIPNIR_ID,
   LECHY_GUIDE_TRAVELER_ID,
   JEBE_HAIL_OF_ARROWS_ID,
   JEBE_KHANS_SHOOTER_ID,
@@ -359,6 +364,30 @@ function getPendingRollLabel(kind?: string | null) {
       return "True Enemy forced target choice";
     case "hassanAssassinOrderSelection":
       return "Assassin Order selection";
+    case "lokiLaughtChoice":
+      return "Loki's Laughter choice";
+    case "lokiChickenTargetChoice":
+      return "Chicken target choice";
+    case "lokiMindControlEnemyChoice":
+      return "Mind Control enemy choice";
+    case "lokiMindControlTargetChoice":
+      return "Mind Control target choice";
+    case "friskPacifismChoice":
+      return "Pacifism choice";
+    case "friskPacifismHugsTargetChoice":
+      return "Hugs target choice";
+    case "friskWarmWordsTargetChoice":
+      return "Warm Words target choice";
+    case "friskWarmWordsHealRoll":
+      return "Warm Words heal roll";
+    case "friskGenocideChoice":
+      return "Genocide choice";
+    case "friskKeenEyeChoice":
+      return "Keen Eye choice";
+    case "friskSubstitutionChoice":
+      return "Substitution defense choice";
+    case "friskChildsCryChoice":
+      return "Child's Cry defense choice";
     case "femtoDivineMoveRoll":
       return "Divine Movement roll";
     case "femtoDivineMoveDestination":
@@ -399,6 +428,8 @@ function getPendingRollLabel(kind?: string | null) {
       return "False Trail explosion defense roll";
     case "berserkerDefenseChoice":
       return "Berserker defense choice";
+    case "odinMuninnDefenseChoice":
+      return "Muninn defense choice";
     case "enterStealth":
       return "Stealth roll";
     case "searchStealth":
@@ -492,6 +523,24 @@ export function Game() {
     pendingRoll?.kind === "hassanTrueEnemyTargetChoice";
   const isHassanAssassinOrderSelection =
     pendingRoll?.kind === "hassanAssassinOrderSelection";
+  const isLokiLaughtChoice = pendingRoll?.kind === "lokiLaughtChoice";
+  const isLokiChickenTargetChoice =
+    pendingRoll?.kind === "lokiChickenTargetChoice";
+  const isLokiMindControlEnemyChoice =
+    pendingRoll?.kind === "lokiMindControlEnemyChoice";
+  const isLokiMindControlTargetChoice =
+    pendingRoll?.kind === "lokiMindControlTargetChoice";
+  const isFriskPacifismChoice = pendingRoll?.kind === "friskPacifismChoice";
+  const isFriskPacifismHugsTargetChoice =
+    pendingRoll?.kind === "friskPacifismHugsTargetChoice";
+  const isFriskWarmWordsTargetChoice =
+    pendingRoll?.kind === "friskWarmWordsTargetChoice";
+  const isFriskGenocideChoice = pendingRoll?.kind === "friskGenocideChoice";
+  const isFriskKeenEyeChoice = pendingRoll?.kind === "friskKeenEyeChoice";
+  const isFriskSubstitutionChoice =
+    pendingRoll?.kind === "friskSubstitutionChoice";
+  const isFriskChildsCryChoice =
+    pendingRoll?.kind === "friskChildsCryChoice";
   const isFemtoDivineMoveDestination =
     pendingRoll?.kind === "femtoDivineMoveDestination";
   const isChikatiloRevealChoice =
@@ -507,6 +556,11 @@ export function Game() {
     isJebeKhansShooterTargetChoice ||
     isHassanTrueEnemyTargetChoice ||
     isHassanAssassinOrderSelection ||
+    isLokiChickenTargetChoice ||
+    isLokiMindControlEnemyChoice ||
+    isLokiMindControlTargetChoice ||
+    isFriskPacifismHugsTargetChoice ||
+    isFriskWarmWordsTargetChoice ||
     isFemtoDivineMoveDestination;
   const pendingQueueCount = view?.pendingCombatQueueCount ?? 0;
   const attackContext = pendingRoll?.context as
@@ -524,6 +578,16 @@ export function Game() {
   const tieBreakAttacker = Array.isArray(attackContext?.tieBreakAttacker)
     ? attackContext?.tieBreakAttacker ?? []
     : [];
+  const isBerserkerDefenseChoice =
+    pendingRoll?.kind === "berserkerDefenseChoice" ||
+    pendingRoll?.kind === "dora_berserkerDefenseChoice" ||
+    pendingRoll?.kind === "jebeHailOfArrows_berserkerDefenseChoice" ||
+    pendingRoll?.kind === "carpetStrike_berserkerDefenseChoice" ||
+    pendingRoll?.kind === "vladForest_berserkerDefenseChoice";
+  const isOdinMuninnDefenseChoice =
+    pendingRoll?.kind === "odinMuninnDefenseChoice";
+  const isFriskDefenseChoice =
+    isFriskSubstitutionChoice || isFriskChildsCryChoice;
   const showAttackerRoll =
     pendingRoll?.kind === "attack_defenderRoll" ||
     pendingRoll?.kind === "riderPathAttack_defenderRoll" ||
@@ -535,15 +599,16 @@ export function Game() {
     pendingRoll?.kind === "jebeHailOfArrows_defenderRoll" ||
     pendingRoll?.kind === "carpetStrike_defenderRoll" ||
     pendingRoll?.kind === "vladForest_defenderRoll" ||
-    pendingRoll?.kind === "berserkerDefenseChoice" ||
-    pendingRoll?.kind === "dora_berserkerDefenseChoice" ||
-    pendingRoll?.kind === "jebeHailOfArrows_berserkerDefenseChoice" ||
-    pendingRoll?.kind === "carpetStrike_berserkerDefenseChoice" ||
-    pendingRoll?.kind === "vladForest_berserkerDefenseChoice" ||
+    isBerserkerDefenseChoice ||
+    isOdinMuninnDefenseChoice ||
+    isFriskDefenseChoice ||
     pendingRoll?.kind === "chikatiloDecoyChoice";
   const defenderId = (() => {
     if (!pendingRoll) return undefined;
-    if (pendingRoll.kind === "berserkerDefenseChoice") {
+    if (
+      pendingRoll.kind === "berserkerDefenseChoice" ||
+      pendingRoll.kind === "odinMuninnDefenseChoice"
+    ) {
       return (pendingRoll.context as { defenderId?: string }).defenderId;
     }
     if (
@@ -562,9 +627,21 @@ export function Game() {
     }
     return undefined;
   })();
-  const defenderCharges =
+  const defenderBerserkCharges =
     defenderId && view?.units[defenderId]
       ? view.units[defenderId].charges?.berserkAutoDefense ?? 0
+      : 0;
+  const defenderMuninnCharges =
+    defenderId && view?.units[defenderId]
+      ? view.units[defenderId].charges?.[ODIN_MUNINN_ID] ?? 0
+      : 0;
+  const defenderFriskPacifismPoints =
+    defenderId && view?.units[defenderId]
+      ? view.units[defenderId].charges?.[FRISK_PACIFISM_ID] ?? 0
+      : 0;
+  const defenderFriskGenocidePoints =
+    defenderId && view?.units[defenderId]
+      ? view.units[defenderId].charges?.[FRISK_GENOCIDE_ID] ?? 0
       : 0;
   const decoyDefenderId = isChikatiloDecoyChoice
     ? (pendingRoll?.context as { defenderId?: string } | undefined)?.defenderId
@@ -581,6 +658,13 @@ export function Game() {
     duelistAttackerId && view?.units[duelistAttackerId]
       ? view.units[duelistAttackerId].hp
       : 0;
+  const lokiCanAgainSomeNonsense = lokiLaughtCurrent >= 3;
+  const lokiCanChicken =
+    lokiLaughtCurrent >= 5 && lokiLaughtChickenOptions.length > 0;
+  const lokiCanMindControl =
+    lokiLaughtCurrent >= 10 && lokiLaughtMindControlEnemyOptions.length > 0;
+  const lokiCanSpinTheDrum = lokiLaughtCurrent >= 12;
+  const lokiCanGreatLokiJoke = lokiLaughtCurrent >= 15;
 
   const handleLeave = () => {
     if (leavingRoom) return;
@@ -865,6 +949,176 @@ export function Game() {
       ),
     [hassanAssassinOrderEligibleIds, view]
   );
+  const friskPacifismContext = isFriskPacifismChoice
+    ? (pendingRoll?.context as
+        | {
+            friskId?: unknown;
+            hugsOptions?: unknown;
+            warmWordsOptions?: unknown;
+            canPowerOfFriendship?: unknown;
+          }
+        | undefined)
+    : undefined;
+  const friskPacifismCasterId =
+    typeof friskPacifismContext?.friskId === "string"
+      ? friskPacifismContext.friskId
+      : "";
+  const friskPacifismPoints =
+    friskPacifismCasterId && view?.units[friskPacifismCasterId]
+      ? view.units[friskPacifismCasterId].charges?.[FRISK_PACIFISM_ID] ?? 0
+      : 0;
+  const friskPacifismDisabled =
+    !!(friskPacifismCasterId &&
+      view?.units[friskPacifismCasterId]?.friskPacifismDisabled);
+  const friskPacifismHugsOptions = useMemo(() => {
+    if (!Array.isArray(friskPacifismContext?.hugsOptions)) return [] as string[];
+    return friskPacifismContext.hugsOptions.filter(
+      (value): value is string => typeof value === "string"
+    );
+  }, [friskPacifismContext]);
+  const friskPacifismWarmWordsOptions = useMemo(() => {
+    if (!Array.isArray(friskPacifismContext?.warmWordsOptions)) {
+      return [] as string[];
+    }
+    return friskPacifismContext.warmWordsOptions.filter(
+      (value): value is string => typeof value === "string"
+    );
+  }, [friskPacifismContext]);
+  const friskPacifismPowerOfFriendshipEnabled =
+    friskPacifismContext?.canPowerOfFriendship === true;
+  const friskPacifismHugsTargetIds = useMemo(() => {
+    if (!isFriskPacifismHugsTargetChoice) return [] as string[];
+    const ctx = pendingRoll?.context as { options?: unknown } | undefined;
+    if (!Array.isArray(ctx?.options)) return [] as string[];
+    return ctx.options.filter((value): value is string => typeof value === "string");
+  }, [isFriskPacifismHugsTargetChoice, pendingRoll]);
+  const friskPacifismHugsTargetKeys = useMemo(
+    () =>
+      new Set(
+        friskPacifismHugsTargetIds
+          .map((targetId) => view?.units[targetId]?.position)
+          .filter((coord): coord is Coord => !!coord)
+          .map(coordKey)
+      ),
+    [friskPacifismHugsTargetIds, view]
+  );
+  const friskWarmWordsTargetIds = useMemo(() => {
+    if (!isFriskWarmWordsTargetChoice) return [] as string[];
+    const ctx = pendingRoll?.context as { options?: unknown } | undefined;
+    if (!Array.isArray(ctx?.options)) return [] as string[];
+    return ctx.options.filter((value): value is string => typeof value === "string");
+  }, [isFriskWarmWordsTargetChoice, pendingRoll]);
+  const friskWarmWordsTargetKeys = useMemo(
+    () =>
+      new Set(
+        friskWarmWordsTargetIds
+          .map((targetId) => view?.units[targetId]?.position)
+          .filter((coord): coord is Coord => !!coord)
+          .map(coordKey)
+      ),
+    [friskWarmWordsTargetIds, view]
+  );
+  const friskGenocideContext = isFriskGenocideChoice
+    ? (pendingRoll?.context as { friskId?: unknown } | undefined)
+    : undefined;
+  const friskGenocideCasterId =
+    typeof friskGenocideContext?.friskId === "string"
+      ? friskGenocideContext.friskId
+      : "";
+  const friskGenocidePoints =
+    friskGenocideCasterId && view?.units[friskGenocideCasterId]
+      ? view.units[friskGenocideCasterId].charges?.[FRISK_GENOCIDE_ID] ?? 0
+      : 0;
+  const friskKeenEyeTargetIds = useMemo(() => {
+    if (!isFriskKeenEyeChoice) return [] as string[];
+    const ctx = pendingRoll?.context as { options?: unknown } | undefined;
+    if (!Array.isArray(ctx?.options)) return [] as string[];
+    return ctx.options.filter((value): value is string => typeof value === "string");
+  }, [isFriskKeenEyeChoice, pendingRoll]);
+  const lokiLaughtContext = isLokiLaughtChoice
+    ? (pendingRoll?.context as
+        | {
+            lokiId?: unknown;
+            chickenOptions?: unknown;
+            mindControlEnemyOptions?: unknown;
+            spinCandidateIds?: unknown;
+          }
+        | undefined)
+    : undefined;
+  const lokiLaughtCasterId =
+    typeof lokiLaughtContext?.lokiId === "string" ? lokiLaughtContext.lokiId : "";
+  const lokiLaughtCurrent =
+    lokiLaughtCasterId && view?.units[lokiLaughtCasterId]
+      ? view.units[lokiLaughtCasterId].charges?.[LOKI_LAUGHT_ID] ?? 0
+      : 0;
+  const lokiLaughtChickenOptions = useMemo(() => {
+    if (!Array.isArray(lokiLaughtContext?.chickenOptions)) return [] as string[];
+    return lokiLaughtContext.chickenOptions.filter(
+      (value): value is string => typeof value === "string"
+    );
+  }, [lokiLaughtContext]);
+  const lokiLaughtMindControlEnemyOptions = useMemo(() => {
+    if (!Array.isArray(lokiLaughtContext?.mindControlEnemyOptions)) {
+      return [] as string[];
+    }
+    return lokiLaughtContext.mindControlEnemyOptions.filter(
+      (value): value is string => typeof value === "string"
+    );
+  }, [lokiLaughtContext]);
+  const lokiLaughtSpinCandidateIds = useMemo(() => {
+    if (!Array.isArray(lokiLaughtContext?.spinCandidateIds)) return [] as string[];
+    return lokiLaughtContext.spinCandidateIds.filter(
+      (value): value is string => typeof value === "string"
+    );
+  }, [lokiLaughtContext]);
+  const lokiChickenTargetIds = useMemo(() => {
+    if (!isLokiChickenTargetChoice) return [] as string[];
+    const ctx = pendingRoll?.context as { options?: unknown } | undefined;
+    if (!Array.isArray(ctx?.options)) return [] as string[];
+    return ctx.options.filter((value): value is string => typeof value === "string");
+  }, [isLokiChickenTargetChoice, pendingRoll]);
+  const lokiChickenTargetKeys = useMemo(
+    () =>
+      new Set(
+        lokiChickenTargetIds
+          .map((unitId) => view?.units[unitId]?.position)
+          .filter((coord): coord is Coord => !!coord)
+          .map(coordKey)
+      ),
+    [lokiChickenTargetIds, view]
+  );
+  const lokiMindControlEnemyIds = useMemo(() => {
+    if (!isLokiMindControlEnemyChoice) return [] as string[];
+    const ctx = pendingRoll?.context as { options?: unknown } | undefined;
+    if (!Array.isArray(ctx?.options)) return [] as string[];
+    return ctx.options.filter((value): value is string => typeof value === "string");
+  }, [isLokiMindControlEnemyChoice, pendingRoll]);
+  const lokiMindControlEnemyKeys = useMemo(
+    () =>
+      new Set(
+        lokiMindControlEnemyIds
+          .map((unitId) => view?.units[unitId]?.position)
+          .filter((coord): coord is Coord => !!coord)
+          .map(coordKey)
+      ),
+    [lokiMindControlEnemyIds, view]
+  );
+  const lokiMindControlTargetIds = useMemo(() => {
+    if (!isLokiMindControlTargetChoice) return [] as string[];
+    const ctx = pendingRoll?.context as { options?: unknown } | undefined;
+    if (!Array.isArray(ctx?.options)) return [] as string[];
+    return ctx.options.filter((value): value is string => typeof value === "string");
+  }, [isLokiMindControlTargetChoice, pendingRoll]);
+  const lokiMindControlTargetKeys = useMemo(
+    () =>
+      new Set(
+        lokiMindControlTargetIds
+          .map((unitId) => view?.units[unitId]?.position)
+          .filter((coord): coord is Coord => !!coord)
+          .map(coordKey)
+      ),
+    [lokiMindControlTargetIds, view]
+  );
 
   const doraTargetCenters = useMemo(() => {
     if (!view || actionMode !== "dora" || !selectedUnit?.position) {
@@ -933,7 +1187,11 @@ export function Game() {
   );
 
   const invadeTimeTargets = useMemo(() => {
-    if (!view || actionMode !== "invadeTime" || !selectedUnit?.position) {
+    if (
+      !view ||
+      (actionMode !== "invadeTime" && actionMode !== "odinSleipnir") ||
+      !selectedUnit?.position
+    ) {
       return [] as Coord[];
     }
     const size = view.boardSize ?? 9;
@@ -1268,6 +1526,41 @@ export function Game() {
       return highlights;
     }
 
+    if (isLokiChickenTargetChoice) {
+      for (const key of lokiChickenTargetKeys) {
+        highlights[key] = "attack";
+      }
+      return highlights;
+    }
+
+    if (isLokiMindControlEnemyChoice) {
+      for (const key of lokiMindControlEnemyKeys) {
+        highlights[key] = "attack";
+      }
+      return highlights;
+    }
+
+    if (isLokiMindControlTargetChoice) {
+      for (const key of lokiMindControlTargetKeys) {
+        highlights[key] = "attack";
+      }
+      return highlights;
+    }
+
+    if (isFriskPacifismHugsTargetChoice) {
+      for (const key of friskPacifismHugsTargetKeys) {
+        highlights[key] = "attack";
+      }
+      return highlights;
+    }
+
+    if (isFriskWarmWordsTargetChoice) {
+      for (const key of friskWarmWordsTargetKeys) {
+        highlights[key] = "attack";
+      }
+      return highlights;
+    }
+
     if (isHassanAssassinOrderSelection) {
       for (const key of hassanAssassinOrderEligibleKeys) {
         highlights[key] = "place";
@@ -1307,7 +1600,7 @@ export function Game() {
       }
     }
 
-    if (actionMode === "invadeTime") {
+    if (actionMode === "invadeTime" || actionMode === "odinSleipnir") {
       for (const coord of invadeTimeTargets) {
         highlights[coordKey(coord)] = "move";
       }
@@ -1404,6 +1697,8 @@ export function Game() {
       !isForestMoveDestination &&
       !isJebeKhansShooterTargetChoice &&
       !isHassanTrueEnemyTargetChoice &&
+      !isFriskPacifismHugsTargetChoice &&
+      !isFriskWarmWordsTargetChoice &&
       !isHassanAssassinOrderSelection;
 
     if (allowHoverPreview && hoverAttackPreview && view) {
@@ -1447,6 +1742,21 @@ export function Game() {
     isHassanAssassinOrderSelection,
     hassanAssassinOrderEligibleKeys,
     hassanAssassinOrderSelections,
+    isLokiChickenTargetChoice,
+    lokiChickenTargetKeys,
+    lokiChickenTargetIds,
+    isLokiMindControlEnemyChoice,
+    lokiMindControlEnemyKeys,
+    lokiMindControlEnemyIds,
+    isLokiMindControlTargetChoice,
+    lokiMindControlTargetKeys,
+    lokiMindControlTargetIds,
+    isFriskPacifismHugsTargetChoice,
+    friskPacifismHugsTargetKeys,
+    friskPacifismHugsTargetIds,
+    isFriskWarmWordsTargetChoice,
+    friskWarmWordsTargetKeys,
+    friskWarmWordsTargetIds,
     hassanTrueEnemyCandidateKeys,
     selectedUnit,
     pendingMoveForSelected,
@@ -1578,6 +1888,66 @@ export function Game() {
       return;
     }
 
+    if (isFriskPacifismHugsTargetChoice) {
+      const target = getUnitAt(view, col, row);
+      if (!target || !pendingRoll) return;
+      if (!friskPacifismHugsTargetIds.includes(target.id)) return;
+      sendAction({
+        type: "resolvePendingRoll",
+        pendingRollId: pendingRoll.id,
+        choice: { type: "friskPacifismHugsTarget", targetId: target.id },
+      } as GameAction);
+      return;
+    }
+
+    if (isFriskWarmWordsTargetChoice) {
+      const target = getUnitAt(view, col, row);
+      if (!target || !pendingRoll) return;
+      if (!friskWarmWordsTargetIds.includes(target.id)) return;
+      sendAction({
+        type: "resolvePendingRoll",
+        pendingRollId: pendingRoll.id,
+        choice: { type: "friskWarmWordsTarget", targetId: target.id },
+      } as GameAction);
+      return;
+    }
+
+    if (isLokiChickenTargetChoice) {
+      const target = getUnitAt(view, col, row);
+      if (!target || !pendingRoll) return;
+      if (!lokiChickenTargetIds.includes(target.id)) return;
+      sendAction({
+        type: "resolvePendingRoll",
+        pendingRollId: pendingRoll.id,
+        choice: { type: "lokiChickenTarget", targetId: target.id },
+      } as GameAction);
+      return;
+    }
+
+    if (isLokiMindControlEnemyChoice) {
+      const target = getUnitAt(view, col, row);
+      if (!target || !pendingRoll) return;
+      if (!lokiMindControlEnemyIds.includes(target.id)) return;
+      sendAction({
+        type: "resolvePendingRoll",
+        pendingRollId: pendingRoll.id,
+        choice: { type: "lokiMindControlEnemy", targetId: target.id },
+      } as GameAction);
+      return;
+    }
+
+    if (isLokiMindControlTargetChoice) {
+      const target = getUnitAt(view, col, row);
+      if (!target || !pendingRoll) return;
+      if (!lokiMindControlTargetIds.includes(target.id)) return;
+      sendAction({
+        type: "resolvePendingRoll",
+        pendingRollId: pendingRoll.id,
+        choice: { type: "lokiMindControlTarget", targetId: target.id },
+      } as GameAction);
+      return;
+    }
+
     if (isHassanAssassinOrderSelection) {
       const target = getUnitAt(view, col, row);
       if (!target) return;
@@ -1625,6 +1995,18 @@ export function Game() {
         type: "useAbility",
         unitId: selectedUnitId,
         abilityId: GROZNY_INVADE_TIME_ID,
+        payload: { to: { col, row } },
+      });
+      setActionMode(null);
+      return;
+    }
+
+    if (actionMode === "odinSleipnir") {
+      if (!invadeTimeKeys.has(coordKey({ col, row }))) return;
+      sendGameAction({
+        type: "useAbility",
+        unitId: selectedUnitId,
+        abilityId: ODIN_SLEIPNIR_ID,
         payload: { to: { col, row } },
       });
       setActionMode(null);
@@ -1869,6 +2251,7 @@ export function Game() {
     actionMode !== "jebeKhansShooter" &&
     actionMode !== "gutsArbalet" &&
     actionMode !== "gutsCannon" &&
+    actionMode !== "odinSleipnir" &&
     actionMode !== "hassanTrueEnemy";
 
   if (!view || !hasSnapshot) {
@@ -2053,6 +2436,34 @@ export function Game() {
                   <div className="font-semibold">Khan's Shooter</div>
                   <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
                     Select the next ricochet target.
+                  </div>
+                </div>
+              ) : isLokiLaughtChoice ? (
+                <div>
+                  <div className="font-semibold">Loki's Laughter</div>
+                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
+                    Choose one trick to activate without revealing Loki.
+                  </div>
+                </div>
+              ) : isLokiChickenTargetChoice ? (
+                <div>
+                  <div className="font-semibold">Chicken</div>
+                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
+                    Select an enemy hero within 2 cells.
+                  </div>
+                </div>
+              ) : isLokiMindControlEnemyChoice ? (
+                <div>
+                  <div className="font-semibold">Mind Control</div>
+                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
+                    Select the enemy hero to control.
+                  </div>
+                </div>
+              ) : isLokiMindControlTargetChoice ? (
+                <div>
+                  <div className="font-semibold">Mind Control</div>
+                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
+                    Select a legal target for the controlled attack.
                   </div>
                 </div>
               ) : isHassanTrueEnemyTargetChoice ? (
@@ -2245,6 +2656,20 @@ export function Game() {
                 ? "Forest of the Dead"
                 : isDuelistChoice
                 ? "Demon Duelist"
+                : isLokiLaughtChoice
+                ? "Loki's Laughter"
+                : isFriskPacifismChoice
+                ? "Frisk: Pacifism"
+                : isFriskGenocideChoice
+                ? "Frisk: Genocide"
+                : isFriskKeenEyeChoice
+                ? "Frisk: Keen Eye"
+                : isFriskSubstitutionChoice
+                ? "Frisk: Substitution"
+                : isFriskChildsCryChoice
+                ? "Frisk: Child's Cry"
+                : isOdinMuninnDefenseChoice
+                ? "Muninn Auto Defense"
                 : isChikatiloRevealChoice
                 ? "False Trail"
                 : isChikatiloDecoyChoice
@@ -2252,12 +2677,22 @@ export function Game() {
                 : "Roll required"}
             </div>
             <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-              {pendingRoll.kind === "berserkerDefenseChoice" ||
-              pendingRoll.kind === "dora_berserkerDefenseChoice" ||
-              pendingRoll.kind === "jebeHailOfArrows_berserkerDefenseChoice" ||
-              pendingRoll.kind === "carpetStrike_berserkerDefenseChoice" ||
-              pendingRoll.kind === "vladForest_berserkerDefenseChoice"
+              {isBerserkerDefenseChoice
                 ? "Choose berserker defense."
+                : isLokiLaughtChoice
+                ? "Pick one Loki trick. Costs Laughter and does not reveal stealth."
+                : isFriskPacifismChoice
+                ? "Pick a Pacifism option. Pacifism abilities do not reveal Frisk stealth."
+                : isFriskGenocideChoice
+                ? "Pick a Genocide option."
+                : isFriskKeenEyeChoice
+                ? "Pick an enemy to reveal with Keen Eye, or attempt normal stealth."
+                : isFriskSubstitutionChoice
+                ? "Use Substitution before defense roll to take exactly 1 damage."
+                : isFriskChildsCryChoice
+                ? "Use Child's Cry after the roll to reduce this hit's damage to 0."
+                : isOdinMuninnDefenseChoice
+                ? "Defense roll is ready. Keep the roll or spend 6 charges for Muninn auto-defense."
                 : isChikatiloDecoyChoice
                 ? "Roll defense or spend 3 charges to take 1 damage."
                 : isChikatiloRevealChoice
@@ -2296,11 +2731,401 @@ export function Game() {
               </div>
             )}
             <div className="mt-4 flex gap-2">
-              {pendingRoll.kind === "berserkerDefenseChoice" ||
-              pendingRoll.kind === "dora_berserkerDefenseChoice" ||
-              pendingRoll.kind === "jebeHailOfArrows_berserkerDefenseChoice" ||
-              pendingRoll.kind === "carpetStrike_berserkerDefenseChoice" ||
-              pendingRoll.kind === "vladForest_berserkerDefenseChoice" ? (
+              {isLokiLaughtChoice ? (
+                <div className="grid w-full grid-cols-1 gap-2">
+                  <div className="text-[11px] text-slate-500 dark:text-slate-300">
+                    Laughter: {lokiLaughtCurrent}/15
+                  </div>
+                  <button
+                    className="w-full rounded-lg bg-slate-900 px-3 py-2 text-left text-xs font-semibold text-white shadow-sm transition hover:shadow disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 dark:bg-slate-100 dark:text-slate-900 dark:disabled:bg-slate-700 dark:disabled:text-slate-400"
+                    onClick={() =>
+                      sendAction({
+                        type: "resolvePendingRoll",
+                        pendingRollId: pendingRoll.id,
+                        choice: {
+                          type: "lokiLaughtOption",
+                          option: "againSomeNonsense",
+                        },
+                      } as GameAction)
+                    }
+                    disabled={!lokiCanAgainSomeNonsense}
+                    title={lokiCanAgainSomeNonsense ? "" : "Not Enough laughter"}
+                  >
+                    Again some nonsense (-3)
+                    {!lokiCanAgainSomeNonsense ? " - Not Enough laughter" : ""}
+                  </button>
+                  <button
+                    className="w-full rounded-lg bg-slate-900 px-3 py-2 text-left text-xs font-semibold text-white shadow-sm transition hover:shadow disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 dark:bg-slate-100 dark:text-slate-900 dark:disabled:bg-slate-700 dark:disabled:text-slate-400"
+                    onClick={() =>
+                      sendAction({
+                        type: "resolvePendingRoll",
+                        pendingRollId: pendingRoll.id,
+                        choice: { type: "lokiLaughtOption", option: "chicken" },
+                      } as GameAction)
+                    }
+                    disabled={!lokiCanChicken}
+                    title={
+                      lokiLaughtCurrent < 5
+                        ? "Not Enough laughter"
+                        : lokiLaughtChickenOptions.length === 0
+                        ? "No valid targets"
+                        : ""
+                    }
+                  >
+                    Chicken (-5)
+                    {lokiLaughtCurrent < 5
+                      ? " - Not Enough laughter"
+                      : lokiLaughtChickenOptions.length === 0
+                      ? " - No valid targets"
+                      : ""}
+                  </button>
+                  <button
+                    className="w-full rounded-lg bg-slate-900 px-3 py-2 text-left text-xs font-semibold text-white shadow-sm transition hover:shadow disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 dark:bg-slate-100 dark:text-slate-900 dark:disabled:bg-slate-700 dark:disabled:text-slate-400"
+                    onClick={() =>
+                      sendAction({
+                        type: "resolvePendingRoll",
+                        pendingRollId: pendingRoll.id,
+                        choice: {
+                          type: "lokiLaughtOption",
+                          option: "mindControl",
+                        },
+                      } as GameAction)
+                    }
+                    disabled={!lokiCanMindControl}
+                    title={
+                      lokiLaughtCurrent < 10
+                        ? "Not Enough laughter"
+                        : lokiLaughtMindControlEnemyOptions.length === 0
+                        ? "No valid targets"
+                        : ""
+                    }
+                  >
+                    Mind Control (-10)
+                    {lokiLaughtCurrent < 10
+                      ? " - Not Enough laughter"
+                      : lokiLaughtMindControlEnemyOptions.length === 0
+                      ? " - No valid targets"
+                      : ""}
+                  </button>
+                  <button
+                    className="w-full rounded-lg bg-slate-900 px-3 py-2 text-left text-xs font-semibold text-white shadow-sm transition hover:shadow disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 dark:bg-slate-100 dark:text-slate-900 dark:disabled:bg-slate-700 dark:disabled:text-slate-400"
+                    onClick={() =>
+                      sendAction({
+                        type: "resolvePendingRoll",
+                        pendingRollId: pendingRoll.id,
+                        choice: {
+                          type: "lokiLaughtOption",
+                          option: "spinTheDrum",
+                        },
+                      } as GameAction)
+                    }
+                    disabled={!lokiCanSpinTheDrum}
+                    title={lokiCanSpinTheDrum ? "" : "Not Enough laughter"}
+                  >
+                    Spin the drum (-12)
+                    {!lokiCanSpinTheDrum ? " - Not Enough laughter" : ""}
+                    {lokiCanSpinTheDrum && lokiLaughtSpinCandidateIds.length === 0
+                      ? " - No allied heroes to spin"
+                      : ""}
+                  </button>
+                  <button
+                    className="w-full rounded-lg bg-slate-900 px-3 py-2 text-left text-xs font-semibold text-white shadow-sm transition hover:shadow disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 dark:bg-slate-100 dark:text-slate-900 dark:disabled:bg-slate-700 dark:disabled:text-slate-400"
+                    onClick={() =>
+                      sendAction({
+                        type: "resolvePendingRoll",
+                        pendingRollId: pendingRoll.id,
+                        choice: {
+                          type: "lokiLaughtOption",
+                          option: "greatLokiJoke",
+                        },
+                      } as GameAction)
+                    }
+                    disabled={!lokiCanGreatLokiJoke}
+                    title={lokiCanGreatLokiJoke ? "" : "Not Enough laughter"}
+                  >
+                    Great Loki joke (-15)
+                    {!lokiCanGreatLokiJoke ? " - Not Enough laughter" : ""}
+                  </button>
+                  <button
+                    className="w-full rounded-lg bg-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
+                    onClick={() =>
+                      sendAction({
+                        type: "resolvePendingRoll",
+                        pendingRollId: pendingRoll.id,
+                        choice: "skip",
+                      } as GameAction)
+                    }
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : isFriskPacifismChoice ? (
+                <div className="grid w-full grid-cols-1 gap-2">
+                  <div className="text-[11px] text-slate-500 dark:text-slate-300">
+                    Pacifism: {friskPacifismPoints}/30
+                  </div>
+                  {friskPacifismDisabled && (
+                    <div className="text-[11px] text-amber-700 dark:text-amber-300">
+                      Pacifism lost (One Path)
+                    </div>
+                  )}
+                  <button
+                    className="w-full rounded-lg bg-slate-900 px-3 py-2 text-left text-xs font-semibold text-white shadow-sm transition hover:shadow disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 dark:bg-slate-100 dark:text-slate-900 dark:disabled:bg-slate-700 dark:disabled:text-slate-400"
+                    onClick={() =>
+                      sendAction({
+                        type: "resolvePendingRoll",
+                        pendingRollId: pendingRoll.id,
+                        choice: { type: "friskPacifismOption", option: "hugs" },
+                      } as GameAction)
+                    }
+                    disabled={
+                      friskPacifismDisabled ||
+                      friskPacifismPoints < 3 ||
+                      friskPacifismHugsOptions.length === 0
+                    }
+                  >
+                    Hugs (-3)
+                    {friskPacifismPoints < 3
+                      ? " - Not Enough charges"
+                      : friskPacifismHugsOptions.length === 0
+                      ? " - No valid targets"
+                      : ""}
+                  </button>
+                  <button
+                    className="w-full rounded-lg bg-slate-900 px-3 py-2 text-left text-xs font-semibold text-white shadow-sm transition hover:shadow disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 dark:bg-slate-100 dark:text-slate-900 dark:disabled:bg-slate-700 dark:disabled:text-slate-400"
+                    onClick={() =>
+                      sendAction({
+                        type: "resolvePendingRoll",
+                        pendingRollId: pendingRoll.id,
+                        choice: {
+                          type: "friskPacifismOption",
+                          option: "childsCry",
+                        },
+                      } as GameAction)
+                    }
+                    disabled={friskPacifismDisabled || friskPacifismPoints < 5}
+                  >
+                    Child&apos;s Cry (-5)
+                    {friskPacifismPoints < 5 ? " - Not Enough charges" : ""}
+                  </button>
+                  <button
+                    className="w-full rounded-lg bg-slate-900 px-3 py-2 text-left text-xs font-semibold text-white shadow-sm transition hover:shadow disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 dark:bg-slate-100 dark:text-slate-900 dark:disabled:bg-slate-700 dark:disabled:text-slate-400"
+                    onClick={() =>
+                      sendAction({
+                        type: "resolvePendingRoll",
+                        pendingRollId: pendingRoll.id,
+                        choice: {
+                          type: "friskPacifismOption",
+                          option: "warmWords",
+                        },
+                      } as GameAction)
+                    }
+                    disabled={
+                      friskPacifismDisabled ||
+                      friskPacifismPoints < 10 ||
+                      friskPacifismWarmWordsOptions.length === 0
+                    }
+                  >
+                    Warm Words (-10)
+                    {friskPacifismPoints < 10
+                      ? " - Not Enough charges"
+                      : friskPacifismWarmWordsOptions.length === 0
+                      ? " - No valid targets"
+                      : ""}
+                  </button>
+                  <button
+                    className="w-full rounded-lg bg-slate-900 px-3 py-2 text-left text-xs font-semibold text-white shadow-sm transition hover:shadow disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 dark:bg-slate-100 dark:text-slate-900 dark:disabled:bg-slate-700 dark:disabled:text-slate-400"
+                    onClick={() =>
+                      sendAction({
+                        type: "resolvePendingRoll",
+                        pendingRollId: pendingRoll.id,
+                        choice: {
+                          type: "friskPacifismOption",
+                          option: "powerOfFriendship",
+                        },
+                      } as GameAction)
+                    }
+                    disabled={
+                      friskPacifismDisabled ||
+                      !friskPacifismPowerOfFriendshipEnabled
+                    }
+                  >
+                    Power of Friendship
+                    {!friskPacifismPowerOfFriendshipEnabled
+                      ? " - Condition not met"
+                      : ""}
+                  </button>
+                  <button
+                    className="w-full rounded-lg bg-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
+                    onClick={() =>
+                      sendAction({
+                        type: "resolvePendingRoll",
+                        pendingRollId: pendingRoll.id,
+                        choice: "skip",
+                      } as GameAction)
+                    }
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : isFriskGenocideChoice ? (
+                <div className="grid w-full grid-cols-1 gap-2">
+                  <div className="text-[11px] text-slate-500 dark:text-slate-300">
+                    Genocide: {friskGenocidePoints}/30
+                  </div>
+                  <button
+                    className="w-full rounded-lg bg-slate-900 px-3 py-2 text-left text-xs font-semibold text-white shadow-sm transition hover:shadow disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 dark:bg-slate-100 dark:text-slate-900 dark:disabled:bg-slate-700 dark:disabled:text-slate-400"
+                    onClick={() =>
+                      sendAction({
+                        type: "resolvePendingRoll",
+                        pendingRollId: pendingRoll.id,
+                        choice: {
+                          type: "friskGenocideOption",
+                          option: "substitution",
+                        },
+                      } as GameAction)
+                    }
+                    disabled={friskGenocidePoints < 3}
+                  >
+                    Substitution (-3)
+                    {friskGenocidePoints < 3 ? " - Not Enough charges" : ""}
+                  </button>
+                  <button
+                    className="w-full rounded-lg bg-slate-900 px-3 py-2 text-left text-xs font-semibold text-white shadow-sm transition hover:shadow disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 dark:bg-slate-100 dark:text-slate-900 dark:disabled:bg-slate-700 dark:disabled:text-slate-400"
+                    onClick={() =>
+                      sendAction({
+                        type: "resolvePendingRoll",
+                        pendingRollId: pendingRoll.id,
+                        choice: { type: "friskGenocideOption", option: "keenEye" },
+                      } as GameAction)
+                    }
+                    disabled={friskGenocidePoints < 5}
+                  >
+                    Keen Eye (-5)
+                    {friskGenocidePoints < 5 ? " - Not Enough charges" : ""}
+                  </button>
+                  <button
+                    className="w-full rounded-lg bg-slate-900 px-3 py-2 text-left text-xs font-semibold text-white shadow-sm transition hover:shadow disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 dark:bg-slate-100 dark:text-slate-900 dark:disabled:bg-slate-700 dark:disabled:text-slate-400"
+                    onClick={() =>
+                      sendAction({
+                        type: "resolvePendingRoll",
+                        pendingRollId: pendingRoll.id,
+                        choice: {
+                          type: "friskGenocideOption",
+                          option: "precisionStrike",
+                        },
+                      } as GameAction)
+                    }
+                    disabled={friskGenocidePoints < 10}
+                  >
+                    Precision Strike (-10)
+                    {friskGenocidePoints < 10 ? " - Not Enough charges" : ""}
+                  </button>
+                  <button
+                    className="w-full rounded-lg bg-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
+                    onClick={() =>
+                      sendAction({
+                        type: "resolvePendingRoll",
+                        pendingRollId: pendingRoll.id,
+                        choice: "skip",
+                      } as GameAction)
+                    }
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : isFriskKeenEyeChoice ? (
+                <div className="grid w-full grid-cols-1 gap-2">
+                  {friskKeenEyeTargetIds.length === 0 && (
+                    <div className="text-[11px] text-slate-500 dark:text-slate-300">
+                      No valid Keen Eye targets.
+                    </div>
+                  )}
+                  {friskKeenEyeTargetIds.map((unitId) => (
+                    <button
+                      key={unitId}
+                      className="w-full rounded-lg bg-slate-900 px-3 py-2 text-left text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-slate-100 dark:text-slate-900"
+                      onClick={() =>
+                        sendAction({
+                          type: "resolvePendingRoll",
+                          pendingRollId: pendingRoll.id,
+                          choice: { type: "friskKeenEyeTarget", targetId: unitId },
+                        } as GameAction)
+                      }
+                    >
+                      Reveal {unitId}
+                    </button>
+                  ))}
+                  <button
+                    className="w-full rounded-lg bg-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
+                    onClick={() =>
+                      sendAction({
+                        type: "resolvePendingRoll",
+                        pendingRollId: pendingRoll.id,
+                        choice: "skip",
+                      } as GameAction)
+                    }
+                  >
+                    Attempt Stealth Instead
+                  </button>
+                </div>
+              ) : isFriskSubstitutionChoice ? (
+                <>
+                  <button
+                    className="flex-1 rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-slate-100 dark:text-slate-900"
+                    onClick={() =>
+                      sendAction({
+                        type: "resolvePendingRoll",
+                        pendingRollId: pendingRoll.id,
+                        choice: "roll",
+                      } as GameAction)
+                    }
+                  >
+                    Roll Defense
+                  </button>
+                  <button
+                    className="flex-1 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-emerald-800/50 dark:text-slate-100 dark:hover:bg-emerald-700/60"
+                    onClick={() =>
+                      sendAction({
+                        type: "resolvePendingRoll",
+                        pendingRollId: pendingRoll.id,
+                        choice: "activate",
+                      } as GameAction)
+                    }
+                    disabled={defenderFriskGenocidePoints < 3}
+                  >
+                    Use Substitution (-3)
+                  </button>
+                </>
+              ) : isFriskChildsCryChoice ? (
+                <>
+                  <button
+                    className="flex-1 rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-slate-100 dark:text-slate-900"
+                    onClick={() =>
+                      sendAction({
+                        type: "resolvePendingRoll",
+                        pendingRollId: pendingRoll.id,
+                        choice: "skip",
+                      } as GameAction)
+                    }
+                  >
+                    Take Damage
+                  </button>
+                  <button
+                    className="flex-1 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-emerald-800/50 dark:text-slate-100 dark:hover:bg-emerald-700/60"
+                    onClick={() =>
+                      sendAction({
+                        type: "resolvePendingRoll",
+                        pendingRollId: pendingRoll.id,
+                        choice: "activate",
+                      } as GameAction)
+                    }
+                    disabled={defenderFriskPacifismPoints < 5}
+                  >
+                    Use Child&apos;s Cry (-5)
+                  </button>
+                </>
+              ) : isBerserkerDefenseChoice ? (
                 <>
                   <button
                     className="flex-1 rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-slate-100 dark:text-slate-900"
@@ -2323,9 +3148,37 @@ export function Game() {
                         choice: "auto",
                       } as GameAction)
                     }
-                    disabled={defenderCharges !== 6}
+                    disabled={defenderBerserkCharges !== 6}
                   >
                     Auto-dodge (-6)
+                  </button>
+                </>
+              ) : isOdinMuninnDefenseChoice ? (
+                <>
+                  <button
+                    className="flex-1 rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-slate-100 dark:text-slate-900"
+                    onClick={() =>
+                      sendAction({
+                        type: "resolvePendingRoll",
+                        pendingRollId: pendingRoll.id,
+                        choice: "roll",
+                      } as GameAction)
+                    }
+                  >
+                    Keep Roll
+                  </button>
+                  <button
+                    className="flex-1 rounded-lg bg-amber-500 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-amber-400"
+                    onClick={() =>
+                      sendAction({
+                        type: "resolvePendingRoll",
+                        pendingRollId: pendingRoll.id,
+                        choice: "auto",
+                      } as GameAction)
+                    }
+                    disabled={defenderMuninnCharges !== 6}
+                  >
+                    Use Muninn (-6)
                   </button>
                 </>
               ) : isChikatiloDecoyChoice ? (

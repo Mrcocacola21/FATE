@@ -25,6 +25,9 @@ export function getLegalMovesForUnitModes(
 ): Coord[] {
   const unit = state.units[unitId];
   if (!unit || !unit.isAlive || !unit.position) return [];
+  if ((unit.lokiChickenSources?.length ?? 0) > 0) {
+    return movesSpearman(state, unit);
+  }
 
   const seen = new Set<string>();
   const result: Coord[] = [];
@@ -74,6 +77,9 @@ export function getLegalMovesForUnit(
 ): Coord[] {
   const unit = state.units[unitId];
   if (!unit || !unit.isAlive || !unit.position) return [];
+  if ((unit.lokiChickenSources?.length ?? 0) > 0) {
+    return movesSpearman(state, unit);
+  }
 
   const modes: UnitClass[] =
     unit.heroId === HERO_GRAND_KAISER_ID && unit.transformed

@@ -10,14 +10,20 @@ import type { RNG } from "../rng";
 import { processUnitStartOfTurn } from "../abilities";
 import { processUnitStartOfTurnStealth } from "../stealth";
 import { resetTurnEconomy } from "../turnEconomy";
-import { HERO_FALSE_TRAIL_TOKEN_ID, HERO_KALADIN_ID } from "../heroes";
+import {
+  HERO_FALSE_TRAIL_TOKEN_ID,
+  HERO_KALADIN_ID,
+  HERO_LOKI_ID,
+} from "../heroes";
 import {
   maybeTriggerCarpetStrike,
   maybeTriggerEngineeringMiracle,
   processUnitStartOfTurnBunker,
 } from "./heroes/kaiser";
 import { applyGutsEndTurnDrain } from "./heroes/guts";
+import { tryApplyFriskPowerOfFriendship } from "./heroes/frisk";
 import { clearKaladinMoveLocksForCaster } from "./heroes/kaladin";
+import { clearLokiEffectsForCaster } from "./heroes/loki";
 import { maybeTriggerElCidKolada } from "./heroes/elCid";
 import { maybeTriggerGroznyTyrant } from "./heroes/grozny";
 import {
@@ -295,9 +301,13 @@ export function applyUnitStartTurn(
     unit.heroId === HERO_KALADIN_ID
       ? clearKaladinMoveLocksForCaster(state, unit.id)
       : state;
+  const stateAfterStatusCleanup =
+    unit.heroId === HERO_LOKI_ID
+      ? clearLokiEffectsForCaster(stateAfterKaladinCleanup, unit.id)
+      : stateAfterKaladinCleanup;
 
   const { state: afterStealth, events: stealthEvents } =
-    processUnitStartOfTurnStealth(stateAfterKaladinCleanup, unit.id, rng);
+    processUnitStartOfTurnStealth(stateAfterStatusCleanup, unit.id, rng);
 
   const unitAfterStealth = afterStealth.units[unit.id];
   if (!unitAfterStealth || !unitAfterStealth.isAlive || !unitAfterStealth.position) {
@@ -420,20 +430,29 @@ export function applyUnitStartTurn(
     activeUnitId: resetUnit.id,
   };
 
+  const baseEvents: GameEvent[] = [
+    ...stealthEvents,
+    ...bunkerEvents,
+    ...stormEvents,
+    ...startEvents,
+    ...engineeringResult.events,
+    ...carpetResult.events,
+    ...koladaResult.events,
+    ...tyrantResult.events,
+    ...confuseTerrainResult.events,
+    ...vladEvents,
+  ];
+  const friendship = tryApplyFriskPowerOfFriendship(newState);
+  if (friendship) {
+    return {
+      state: friendship.state,
+      events: [...baseEvents, ...friendship.events],
+    };
+  }
+
   return {
     state: newState,
-    events: [
-      ...stealthEvents,
-      ...bunkerEvents,
-      ...stormEvents,
-      ...startEvents,
-      ...engineeringResult.events,
-      ...carpetResult.events,
-      ...koladaResult.events,
-      ...tyrantResult.events,
-      ...confuseTerrainResult.events,
-      ...vladEvents,
-    ],
+    events: baseEvents,
   };
 }
 

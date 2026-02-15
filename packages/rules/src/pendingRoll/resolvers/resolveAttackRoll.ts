@@ -13,15 +13,24 @@ import { getLegalAttackTargets } from "../../legal";
 import {
   ABILITY_BERSERK_AUTO_DEFENSE,
   ABILITY_CHIKATILO_DECOY,
+  ABILITY_FRISK_GENOCIDE,
+  ABILITY_FRISK_PACIFISM,
+  ABILITY_ODIN_MUNINN,
   getCharges,
   spendCharges,
 } from "../../abilities";
-import { canSpendSlots, spendSlots } from "../../turnEconomy";
+import { spendSlots } from "../../turnEconomy";
 import { clearPendingRoll, requestRoll } from "../../shared/rollUtils";
 import { getPolkovodetsSource, maybeRequestIntimidate } from "../../actions/heroes/vlad";
 import { isElCid } from "../../actions/shared";
 import { handleGroznyTyrantAfterAttack } from "../../actions/heroes/grozny";
-import { HERO_CHIKATILO_ID, HERO_FEMTO_ID } from "../../heroes";
+import {
+  HERO_CHIKATILO_ID,
+  HERO_FEMTO_ID,
+  HERO_FRISK_ID,
+  HERO_GUTS_ID,
+  HERO_ODIN_ID,
+} from "../../heroes";
 import {
   evAoeResolved,
   evBerserkerDefenseChosen,
@@ -35,10 +44,11 @@ import { isDoubleRoll, rollDice, sumDice } from "../utils/rollMath";
 function finalizeAttackFromContext(
   state: GameState,
   context: AttackRollContext,
-  useAutoDefense: boolean,
+  autoDefenseMode: "none" | "berserk" | "muninn" = "none",
   autoHit: boolean = false,
   damageOverride?: number,
-  ignoreBonuses: boolean = false
+  ignoreBonuses: boolean = false,
+  forceMiss: boolean = false
 ): ApplyResult {
   const resolvedDamageOverride =
     damageOverride !== undefined ? damageOverride : context.damageOverride;
@@ -59,7 +69,8 @@ function finalizeAttackFromContext(
     attackerId: context.attackerId,
     defenderId: context.defenderId,
     allowFriendlyTarget: context.allowFriendlyTarget,
-    defenderUseBerserkAutoDefense: useAutoDefense,
+    defenderUseBerserkAutoDefense: autoDefenseMode === "berserk",
+    defenderUseMuninnAutoDefense: autoDefenseMode === "muninn",
     ignoreRange: context.ignoreRange,
     ignoreStealth: context.ignoreStealth,
     revealStealthedAllies: context.revealStealthedAllies,
@@ -69,6 +80,7 @@ function finalizeAttackFromContext(
     damageOverride: resolvedDamageOverride,
     ignoreBonuses: resolvedIgnoreBonuses,
     autoHit,
+    forceMiss,
     rolls,
   });
 
@@ -499,6 +511,60 @@ function handleJebeKhansShooterAfterAttack(
   return continueJebeKhansShooter(state, events, resumeContext);
 }
 
+function canUseFriskSubstitution(defender: UnitState): boolean {
+  return (
+    defender.heroId === HERO_FRISK_ID &&
+    getCharges(defender, ABILITY_FRISK_GENOCIDE) >= 3
+  );
+}
+
+function canUseFriskChildsCry(defender: UnitState): boolean {
+  return (
+    defender.heroId === HERO_FRISK_ID &&
+    !defender.friskPacifismDisabled &&
+    getCharges(defender, ABILITY_FRISK_PACIFISM) >= 5
+  );
+}
+
+function wouldAttackHitFromContext(
+  ctx: AttackRollContext,
+  attacker: UnitState,
+  defender: UnitState
+): boolean {
+  if (ctx.friskForceMiss) return false;
+
+  const attackerTotal =
+    sumDice(ctx.attackerDice ?? []) + sumDice(ctx.tieBreakAttacker ?? []);
+  const defenderTotal =
+    sumDice(ctx.defenderDice ?? []) + sumDice(ctx.tieBreakDefender ?? []);
+
+  let hit = attackerTotal > defenderTotal;
+  const attackerDice = ctx.attackerDice ?? [];
+  const defenderDice = ctx.defenderDice ?? [];
+  const attackerDouble =
+    attackerDice.length >= 2 && attackerDice[0] === attackerDice[1];
+  const defenderDouble =
+    defenderDice.length >= 2 && defenderDice[0] === defenderDice[1];
+
+  if (
+    (defender.class === "spearman" ||
+      defender.heroId === HERO_FEMTO_ID ||
+      defender.heroId === HERO_ODIN_ID) &&
+    defenderDouble
+  ) {
+    hit = false;
+  }
+  if (
+    (attacker.class === "knight" ||
+      attacker.heroId === HERO_ODIN_ID ||
+      attacker.heroId === HERO_GUTS_ID) &&
+    attackerDouble
+  ) {
+    hit = true;
+  }
+  return hit;
+}
+
 export function resolveAttackAttackerRoll(
   state: GameState,
   pending: PendingRoll,
@@ -513,7 +579,10 @@ export function resolveAttackAttackerRoll(
 
   const stage = ctx.stage ?? "initial";
   const dice = rollDice(rng, stage === "tieBreak" ? 1 : 2);
-  const nextCtx: AttackRollContext = { ...ctx, stage };
+  let nextCtx: AttackRollContext = { ...ctx, stage };
+  let workingState = state;
+  let workingDefender = defender;
+  let workingAttacker = attacker;
 
   if (stage === "tieBreak") {
     nextCtx.tieBreakAttacker = [...(ctx.tieBreakAttacker ?? []), ...dice];
@@ -521,17 +590,43 @@ export function resolveAttackAttackerRoll(
     nextCtx.attackerDice = dice;
   }
 
+  if (
+    workingDefender.heroId === HERO_FRISK_ID &&
+    workingDefender.friskCleanSoulShield
+  ) {
+    workingDefender = {
+      ...workingDefender,
+      friskCleanSoulShield: false,
+    };
+    workingState = {
+      ...workingState,
+      units: {
+        ...workingState.units,
+        [workingDefender.id]: workingDefender,
+      },
+    };
+    nextCtx = {
+      ...nextCtx,
+      friskForceMiss: true,
+      friskSubstitutionChoiceMade: true,
+      friskChildsCryChoiceMade: true,
+      defenderDice: [],
+      tieBreakDefender: [],
+      stage: "initial",
+    };
+  }
+
   const canDecoy =
-    defender.heroId === HERO_CHIKATILO_ID &&
-    getCharges(defender, ABILITY_CHIKATILO_DECOY) >= 3 &&
+    workingDefender.heroId === HERO_CHIKATILO_ID &&
+    getCharges(workingDefender, ABILITY_CHIKATILO_DECOY) >= 3 &&
     !nextCtx.chikatiloDecoyChoiceMade;
   if (canDecoy) {
     return replacePendingRoll(
-      state,
-      defender.owner,
+      workingState,
+      workingDefender.owner,
       "chikatiloDecoyChoice",
       nextCtx,
-      defender.id
+      workingDefender.id
     );
   }
 
@@ -540,10 +635,30 @@ export function resolveAttackAttackerRoll(
     chikatiloDecoyChoiceMade: true,
   };
 
-  const isAutoHit =
-    stage === "initial" && isElCid(attacker) && isDoubleRoll(dice);
-  if (isAutoHit) {
-    const resolved = finalizeAttackFromContext(state, resolvedCtx, false, true);
+  if (
+    !resolvedCtx.friskForceMiss &&
+    canUseFriskSubstitution(workingDefender) &&
+    !resolvedCtx.friskSubstitutionChoiceMade
+  ) {
+    return replacePendingRoll(
+      workingState,
+      workingDefender.owner,
+      "friskSubstitutionChoice",
+      resolvedCtx,
+      workingDefender.id
+    );
+  }
+
+  if (resolvedCtx.friskForceMiss) {
+    const resolved = finalizeAttackFromContext(
+      workingState,
+      resolvedCtx,
+      "none",
+      false,
+      undefined,
+      false,
+      true
+    );
     if (resolvedCtx.elCidDuelist) {
       return handleElCidDuelistAfterAttack(
         resolved.state,
@@ -580,18 +695,121 @@ export function resolveAttackAttackerRoll(
     return advanceCombatQueue(tyrant.state, tyrant.events);
   }
 
-  const charges = defender.charges?.[ABILITY_BERSERK_AUTO_DEFENSE] ?? 0;
+  if (workingAttacker.heroId === HERO_FRISK_ID && workingAttacker.friskPrecisionStrikeReady) {
+    workingAttacker = {
+      ...workingAttacker,
+      friskPrecisionStrikeReady: false,
+    };
+    workingState = {
+      ...workingState,
+      units: {
+        ...workingState.units,
+        [workingAttacker.id]: workingAttacker,
+      },
+    };
+
+    const resolved = finalizeAttackFromContext(
+      workingState,
+      resolvedCtx,
+      "none",
+      true,
+      Math.max(0, workingAttacker.attack * 2),
+      true
+    );
+    if (resolvedCtx.elCidDuelist) {
+      return handleElCidDuelistAfterAttack(
+        resolved.state,
+        resolved.events,
+        resolvedCtx
+      );
+    }
+    if (resolvedCtx.jebeKhansShooter) {
+      return handleJebeKhansShooterAfterAttack(
+        resolved.state,
+        resolved.events,
+        resolvedCtx
+      );
+    }
+    const tyrant = handleTyrantIfNeeded(
+      resolved.state,
+      resolved.events,
+      resolvedCtx,
+      rng
+    );
+    if (tyrant.requested) {
+      return { state: tyrant.state, events: tyrant.events };
+    }
+    const intimidate = maybeRequestIntimidate(
+      tyrant.state,
+      ctx.attackerId,
+      ctx.defenderId,
+      tyrant.events,
+      { kind: "combatQueue" }
+    );
+    if (intimidate.requested) {
+      return { state: intimidate.state, events: intimidate.events };
+    }
+    return advanceCombatQueue(tyrant.state, tyrant.events);
+  }
+
+  const isAutoHit =
+    stage === "initial" && isElCid(workingAttacker) && isDoubleRoll(dice);
+  if (isAutoHit) {
+    const resolved = finalizeAttackFromContext(
+      workingState,
+      resolvedCtx,
+      "none",
+      true
+    );
+    if (resolvedCtx.elCidDuelist) {
+      return handleElCidDuelistAfterAttack(
+        resolved.state,
+        resolved.events,
+        resolvedCtx
+      );
+    }
+    if (resolvedCtx.jebeKhansShooter) {
+      return handleJebeKhansShooterAfterAttack(
+        resolved.state,
+        resolved.events,
+        resolvedCtx
+      );
+    }
+    const tyrant = handleTyrantIfNeeded(
+      resolved.state,
+      resolved.events,
+      resolvedCtx,
+      rng
+    );
+    if (tyrant.requested) {
+      return { state: tyrant.state, events: tyrant.events };
+    }
+    const intimidate = maybeRequestIntimidate(
+      tyrant.state,
+      ctx.attackerId,
+      ctx.defenderId,
+      tyrant.events,
+      { kind: "combatQueue" }
+    );
+    if (intimidate.requested) {
+      return { state: intimidate.state, events: intimidate.events };
+    }
+    return advanceCombatQueue(tyrant.state, tyrant.events);
+  }
+
+  const charges = workingDefender.charges?.[ABILITY_BERSERK_AUTO_DEFENSE] ?? 0;
   if (
-    (defender.class === "berserker" || defender.heroId === HERO_FEMTO_ID) &&
+    (workingDefender.class === "berserker" ||
+      workingDefender.heroId === HERO_FEMTO_ID) &&
     charges === 6 &&
     !resolvedCtx.berserkerChoiceMade
   ) {
     return replacePendingRoll(
-      state,
-      defender.owner,
+      workingState,
+      workingDefender.owner,
       "berserkerDefenseChoice",
       resolvedCtx,
-      defender.id
+      workingDefender.id
     );
   }
 
@@ -601,11 +819,11 @@ export function resolveAttackAttackerRoll(
       : "attack_defenderRoll";
 
   return replacePendingRoll(
-    state,
-    defender.owner,
+    workingState,
+    workingDefender.owner,
     defenderRollKind,
     resolvedCtx,
-    defender.id
+    workingDefender.id
   );
 }
 
@@ -628,6 +846,7 @@ export function resolveAttackDefenderRoll(
     stage,
     berserkerChoiceMade: true,
     chikatiloDecoyChoiceMade: true,
+    friskSubstitutionChoiceMade: true,
   };
 
   if (stage === "tieBreak") {
@@ -659,25 +878,58 @@ export function resolveAttackDefenderRoll(
     );
   }
 
-  const resolved = finalizeAttackFromContext(state, nextCtx, false);
-  if (nextCtx.elCidDuelist) {
+  if (
+    wouldAttackHitFromContext(nextCtx, attacker, defender) &&
+    canUseFriskChildsCry(defender) &&
+    !nextCtx.friskChildsCryChoiceMade
+  ) {
+    return replacePendingRoll(
+      state,
+      defender.owner,
+      "friskChildsCryChoice",
+      nextCtx,
+      defender.id
+    );
+  }
+
+  const muninnCharges = defender.charges?.[ABILITY_ODIN_MUNINN] ?? 0;
+  if (
+    defender.heroId === HERO_ODIN_ID &&
+    muninnCharges === 6 &&
+    !nextCtx.odinMuninnChoiceMade
+  ) {
+    return replacePendingRoll(
+      state,
+      defender.owner,
+      "odinMuninnDefenseChoice",
+      nextCtx,
+      defender.id
+    );
+  }
+
+  const finalizedCtx: AttackRollContext = {
+    ...nextCtx,
+    odinMuninnChoiceMade: true,
+  };
+  const resolved = finalizeAttackFromContext(state, finalizedCtx, "none");
+  if (finalizedCtx.elCidDuelist) {
     return handleElCidDuelistAfterAttack(
       resolved.state,
       resolved.events,
-      nextCtx
+      finalizedCtx
     );
   }
-  if (nextCtx.jebeKhansShooter) {
+  if (finalizedCtx.jebeKhansShooter) {
     return handleJebeKhansShooterAfterAttack(
       resolved.state,
       resolved.events,
-      nextCtx
+      finalizedCtx
     );
   }
   const tyrant = handleTyrantIfNeeded(
     resolved.state,
     resolved.events,
-    nextCtx,
+    finalizedCtx,
     rng
   );
   if (tyrant.requested) {
@@ -718,7 +970,7 @@ export function resolveBerserkerDefenseChoiceRoll(
   }
 
   if (selected === "auto") {
-    const resolved = finalizeAttackFromContext(state, ctx, true);
+    const resolved = finalizeAttackFromContext(state, ctx, "berserk");
     const choiceEvents: GameEvent[] = [
       evBerserkerDefenseChosen({ defenderId: defender.id, choice: "auto" }),
       ...resolved.events,
@@ -772,6 +1024,229 @@ export function resolveBerserkerDefenseChoiceRoll(
   }
 
   return { state: clearPendingRoll(state), events: [] };
+}
+
+export function resolveOdinMuninnDefenseChoiceRoll(
+  state: GameState,
+  pending: PendingRoll,
+  choice: "auto" | "roll" | undefined,
+  rng: RNG
+): ApplyResult {
+  const ctx = pending.context as unknown as AttackRollContext;
+  const attacker = state.units[ctx.attackerId];
+  const defender = state.units[ctx.defenderId];
+  if (!attacker || !defender) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  let selected = choice === "auto" ? "auto" : "roll";
+  if (selected === "auto") {
+    const charges = defender.charges?.[ABILITY_ODIN_MUNINN] ?? 0;
+    if (charges !== 6) {
+      selected = "roll";
+    }
+  }
+
+  const finalizedCtx: AttackRollContext = {
+    ...ctx,
+    odinMuninnChoiceMade: true,
+  };
+
+  const resolved = finalizeAttackFromContext(
+    state,
+    finalizedCtx,
+    selected === "auto" ? "muninn" : "none"
+  );
+
+  if (finalizedCtx.elCidDuelist) {
+    return handleElCidDuelistAfterAttack(
+      resolved.state,
+      resolved.events,
+      finalizedCtx
+    );
+  }
+  if (finalizedCtx.jebeKhansShooter) {
+    return handleJebeKhansShooterAfterAttack(
+      resolved.state,
+      resolved.events,
+      finalizedCtx
+    );
+  }
+  const tyrant = handleTyrantIfNeeded(
+    resolved.state,
+    resolved.events,
+    finalizedCtx,
+    rng
+  );
+  if (tyrant.requested) {
+    return { state: tyrant.state, events: tyrant.events };
+  }
+  const intimidate = maybeRequestIntimidate(
+    tyrant.state,
+    ctx.attackerId,
+    ctx.defenderId,
+    tyrant.events,
+    { kind: "combatQueue" }
+  );
+  if (intimidate.requested) {
+    return { state: intimidate.state, events: intimidate.events };
+  }
+  return advanceCombatQueue(tyrant.state, tyrant.events);
+}
+
+export function resolveFriskSubstitutionChoiceRoll(
+  state: GameState,
+  pending: PendingRoll,
+  choice: ResolveRollChoice | undefined,
+  rng: RNG
+): ApplyResult {
+  const ctx = pending.context as unknown as AttackRollContext;
+  const attacker = state.units[ctx.attackerId];
+  const defender = state.units[ctx.defenderId];
+  if (!attacker || !defender) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  let nextState = state;
+  let selected = choice === "activate" ? "activate" : "roll";
+  if (selected === "activate") {
+    const spent = spendCharges(defender, ABILITY_FRISK_GENOCIDE, 3);
+    if (!spent.ok) {
+      selected = "roll";
+    } else {
+      nextState = {
+        ...state,
+        units: {
+          ...state.units,
+          [defender.id]: spent.unit,
+        },
+      };
+    }
+  }
+
+  const nextCtx: AttackRollContext = {
+    ...ctx,
+    friskSubstitutionChoiceMade: true,
+    friskChildsCryChoiceMade: true,
+  };
+
+  if (selected !== "activate") {
+    const defenderRollKind: RollKind =
+      ctx.queueKind === "riderPath"
+        ? "riderPathAttack_defenderRoll"
+        : "attack_defenderRoll";
+    return replacePendingRoll(
+      nextState,
+      defender.owner,
+      defenderRollKind,
+      nextCtx,
+      defender.id
+    );
+  }
+
+  const resolved = finalizeAttackFromContext(
+    nextState,
+    nextCtx,
+    "none",
+    true,
+    1,
+    true
+  );
+  if (nextCtx.elCidDuelist) {
+    return handleElCidDuelistAfterAttack(resolved.state, resolved.events, nextCtx);
+  }
+  if (nextCtx.jebeKhansShooter) {
+    return handleJebeKhansShooterAfterAttack(
+      resolved.state,
+      resolved.events,
+      nextCtx
+    );
+  }
+  const tyrant = handleTyrantIfNeeded(resolved.state, resolved.events, nextCtx, rng);
+  if (tyrant.requested) {
+    return { state: tyrant.state, events: tyrant.events };
+  }
+  const intimidate = maybeRequestIntimidate(
+    tyrant.state,
+    ctx.attackerId,
+    ctx.defenderId,
+    tyrant.events,
+    { kind: "combatQueue" }
+  );
+  if (intimidate.requested) {
+    return { state: intimidate.state, events: intimidate.events };
+  }
+  return advanceCombatQueue(tyrant.state, tyrant.events);
+}
+
+export function resolveFriskChildsCryChoiceRoll(
+  state: GameState,
+  pending: PendingRoll,
+  choice: ResolveRollChoice | undefined,
+  rng: RNG
+): ApplyResult {
+  const ctx = pending.context as unknown as AttackRollContext;
+  const attacker = state.units[ctx.attackerId];
+  const defender = state.units[ctx.defenderId];
+  if (!attacker || !defender) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  let nextState = state;
+  let selected = choice === "activate" ? "activate" : "roll";
+  if (selected === "activate") {
+    const spent = spendCharges(defender, ABILITY_FRISK_PACIFISM, 5);
+    if (!spent.ok) {
+      selected = "roll";
+    } else {
+      nextState = {
+        ...state,
+        units: {
+          ...state.units,
+          [defender.id]: spent.unit,
+        },
+      };
+    }
+  }
+
+  const nextCtx: AttackRollContext = {
+    ...ctx,
+    friskChildsCryChoiceMade: true,
+  };
+
+  const resolved = finalizeAttackFromContext(
+    nextState,
+    nextCtx,
+    "none",
+    false,
+    selected === "activate" ? 0 : undefined,
+    selected === "activate"
+  );
+  if (nextCtx.elCidDuelist) {
+    return handleElCidDuelistAfterAttack(resolved.state, resolved.events, nextCtx);
+  }
+  if (nextCtx.jebeKhansShooter) {
+    return handleJebeKhansShooterAfterAttack(
+      resolved.state,
+      resolved.events,
+      nextCtx
+    );
+  }
+  const tyrant = handleTyrantIfNeeded(resolved.state, resolved.events, nextCtx, rng);
+  if (tyrant.requested) {
+    return { state: tyrant.state, events: tyrant.events };
+  }
+  const intimidate = maybeRequestIntimidate(
+    tyrant.state,
+    ctx.attackerId,
+    ctx.defenderId,
+    tyrant.events,
+    { kind: "combatQueue" }
+  );
+  if (intimidate.requested) {
+    return { state: intimidate.state, events: intimidate.events };
+  }
+  return advanceCombatQueue(tyrant.state, tyrant.events);
 }
 
 export function resolveChikatiloDecoyChoice(
@@ -830,7 +1305,7 @@ export function resolveChikatiloDecoyChoice(
   const resolved = finalizeAttackFromContext(
     nextState,
     nextCtx,
-    false,
+    "none",
     true,
     1,
     true

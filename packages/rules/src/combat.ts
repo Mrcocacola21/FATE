@@ -11,6 +11,7 @@ import {
 import { getUnitAt } from "./board";
 import {
   ABILITY_BERSERK_AUTO_DEFENSE,
+  ABILITY_ODIN_MUNINN,
   canUseAbility,
   consumeAbilityCharges,
   getAbilitySpec,
@@ -25,9 +26,10 @@ import {
   HERO_GUTS_ID,
   HERO_JEBE_ID,
   HERO_KALADIN_ID,
+  HERO_ODIN_ID,
 } from "./heroes";
 import { isStormActive, isStormExempt } from "./forest";
-import { canDirectlyTargetUnit } from "./visibility";
+import { canDirectlyTargetUnit, canSeeStealthedTarget } from "./visibility";
 import { applyGriffithFemtoRebirth } from "./actions/heroes/griffith";
 
 
@@ -132,7 +134,9 @@ export function canAttackTarget(
       attacker.heroId === HERO_CHIKATILO_ID &&
       Array.isArray(attacker.chikatiloMarkedTargets) &&
       attacker.chikatiloMarkedTargets.includes(defender.id);
-    if (!marked) return false;
+    if (!marked && !canSeeStealthedTarget(state, attacker, defender)) {
+      return false;
+    }
   }
 
   const attPos = attacker.position;
@@ -229,6 +233,7 @@ export function resolveAttack(
     rangedAttack?: boolean;
     // на будущее: защитник может решить, хочет ли он тратить заряд авто-защиты берсерка
     defenderUseBerserkAutoDefense?: boolean;
+    defenderUseMuninnAutoDefense?: boolean;
     /** Для спец-кейсов (наездник по пути): не проверять дистанцию/тип атаки */
     ignoreRange?: boolean;
     /** Для AoE/path attacks: игнорировать стелс и при атаке раскрывать цель */
@@ -241,6 +246,7 @@ export function resolveAttack(
     damageOverride?: number;
     ignoreBonuses?: boolean;
     autoHit?: boolean;
+    forceMiss?: boolean;
     rolls?: {
       attackerDice: number[];
       defenderDice: number[];
@@ -286,18 +292,26 @@ export function resolveAttack(
   const events: GameEvent[] = [];
 
   // ---- Берсерк: авто-уклонение ДО бросков, тратит все заряды Заряд(6) ----
-  const wantsAutoDefense =
+  const wantsBerserkAutoDefense =
     params.defenderUseBerserkAutoDefense === true;
+  const wantsMuninnAutoDefense = params.defenderUseMuninnAutoDefense === true;
 
+  let autoDefenseAbilityId: string | null = null;
   if (
+    wantsBerserkAutoDefense &&
     (defenderAfter.class === "berserker" ||
-      defenderAfter.heroId === HERO_FEMTO_ID) &&
-    wantsAutoDefense
+      defenderAfter.heroId === HERO_FEMTO_ID)
   ) {
-    const spec = getAbilitySpec(ABILITY_BERSERK_AUTO_DEFENSE);
+    autoDefenseAbilityId = ABILITY_BERSERK_AUTO_DEFENSE;
+  } else if (wantsMuninnAutoDefense && defenderAfter.heroId === HERO_ODIN_ID) {
+    autoDefenseAbilityId = ABILITY_ODIN_MUNINN;
+  }
+
+  if (autoDefenseAbilityId) {
+    const spec = getAbilitySpec(autoDefenseAbilityId);
     const currentCharges = getCharges(
       defenderAfter,
-      ABILITY_BERSERK_AUTO_DEFENSE
+      autoDefenseAbilityId
     );
     const requiredCharges =
       spec?.maxCharges ?? spec?.chargesPerUse ?? spec?.chargeCost ?? 0;
@@ -306,11 +320,11 @@ export function resolveAttack(
     if (
       spec &&
       currentCharges === requiredCharges &&
-      canUseAbility(defenderAfter, ABILITY_BERSERK_AUTO_DEFENSE)
+      canUseAbility(defenderAfter, autoDefenseAbilityId)
     ) {
       defenderAfter = consumeAbilityCharges(
         defenderAfter,
-        ABILITY_BERSERK_AUTO_DEFENSE
+        autoDefenseAbilityId
       );
 
       units[attackerAfter.id] = attackerAfter;
@@ -319,7 +333,7 @@ export function resolveAttack(
       events.push({
         type: "abilityUsed",
         unitId: defenderAfter.id,
-        abilityId: ABILITY_BERSERK_AUTO_DEFENSE,
+        abilityId: autoDefenseAbilityId,
       });
 
       // Логируем "атаку без бросков" — просто авто-додж
@@ -373,7 +387,10 @@ export function resolveAttack(
 
   const attackerDice = rollInput.attackerDice ?? [];
   const defenderDice = rollInput.defenderDice ?? [];
-  if (attackerDice.length < 2 || (!params.autoHit && defenderDice.length < 2)) {
+  if (
+    attackerDice.length < 2 ||
+    (!params.autoHit && !params.forceMiss && defenderDice.length < 2)
+  ) {
     return { nextState: state, events: [] };
   }
 
@@ -381,9 +398,19 @@ export function resolveAttack(
   const tieBreakDefender = rollInput.tieBreakDefender ?? [];
 
   const attackerRoll = buildDiceRoll(attackerDice, tieBreakAttacker);
-  const defenderRoll = buildDiceRoll(defenderDice, tieBreakDefender);
+  const defenderRoll = params.forceMiss
+    ? {
+        dice: [],
+        sum: 0,
+        isDouble: false,
+      }
+    : buildDiceRoll(defenderDice, tieBreakDefender);
 
-  let hit = params.autoHit ? true : attackerRoll.sum > defenderRoll.sum;
+  let hit = params.forceMiss
+    ? false
+    : params.autoHit
+    ? true
+    : attackerRoll.sum > defenderRoll.sum;
 
   // --- Пассивки классов ---
 
@@ -391,8 +418,10 @@ export function resolveAttack(
   // (дубль проверяется только по первым двум кубам).
   if (
     !params.autoHit &&
+    !params.forceMiss &&
     (defenderAfter.class === "spearman" ||
-      defenderAfter.heroId === HERO_FEMTO_ID) &&
+      defenderAfter.heroId === HERO_FEMTO_ID ||
+      defenderAfter.heroId === HERO_ODIN_ID) &&
     defenderRoll.isDouble
   ) {
     hit = false;
@@ -401,7 +430,10 @@ export function resolveAttack(
   // Рыцарь в атаке: при дубле на атаке — авто-попадание.
   // Защитник всё равно кидал защиту, но дубль рыцаря перетирает результат.
   if (
-    (attackerAfter.class === "knight" || attackerAfter.heroId === HERO_GUTS_ID) &&
+    !params.forceMiss &&
+    (attackerAfter.class === "knight" ||
+      attackerAfter.heroId === HERO_GUTS_ID ||
+      attackerAfter.heroId === HERO_ODIN_ID) &&
     attackerRoll.isDouble
   ) {
     hit = true;

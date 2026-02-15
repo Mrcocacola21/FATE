@@ -40,6 +40,7 @@ export type ActionMode =
   | "jebeKhansShooter"
   | "hassanTrueEnemy"
   | "kaladinFifth"
+  | "odinSleipnir"
   | "gutsArbalet"
   | "gutsCannon"
   | null;

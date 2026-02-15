@@ -430,11 +430,15 @@ export function applyRequestMoveOptions(
   if ((unit.kaladinMoveLockSources?.length ?? 0) > 0) {
     return { state, events: [] };
   }
+  if ((unit.lokiMoveLockSources?.length ?? 0) > 0) {
+    return { state, events: [] };
+  }
 
   const canMove = canSpendSlots(unit, { move: true });
   if (!canMove && !unit.genghisKhanDecreeMovePending && !unit.genghisKhanMongolChargeActive) {
     return { state, events: [] };
   }
+  const isChicken = (unit.lokiChickenSources?.length ?? 0) > 0;
 
   const existing = state.pendingMove;
   if (
@@ -455,6 +459,32 @@ export function applyRequestMoveOptions(
         ],
       };
     }
+  }
+
+  if (isChicken) {
+    const legalMoves = getLegalMovesForUnitModes(state, unit.id, [unit.class]);
+    const pendingMove: PendingMove = {
+      unitId: unit.id,
+      roll: undefined,
+      legalTo: legalMoves,
+      expiresTurnNumber: state.turnNumber,
+      mode: "normal",
+    };
+    const nextState: GameState = {
+      ...state,
+      pendingMove,
+    };
+    return {
+      state: nextState,
+      events: [
+        evMoveOptionsGenerated({
+          unitId: unit.id,
+          roll: undefined,
+          legalTo: legalMoves,
+          mode: "normal",
+        }),
+      ],
+    };
   }
 
   const movementModes = getMovementModes(unit);
@@ -610,7 +640,7 @@ function applyMongolChargeMove(
     hiddenAtDest.isStealthed
   ) {
     const known = state.knowledge?.[unit.owner]?.[hiddenAtDest.id];
-    const canSee = unitCanSeeStealthed(state, unit);
+    const canSee = unitCanSeeStealthed(state, unit, hiddenAtDest);
     if (!known && !canSee) {
       const revealed: UnitState = {
         ...hiddenAtDest,
@@ -839,11 +869,15 @@ export function applyMove(
   if ((unit.kaladinMoveLockSources?.length ?? 0) > 0) {
     return { state, events: [] };
   }
+  if ((unit.lokiMoveLockSources?.length ?? 0) > 0) {
+    return { state, events: [] };
+  }
 
   // начальная позиция — пригодится для спец-правила наездника
   const from = unit.position;
   const isMongolCharge = unit.genghisKhanMongolChargeActive === true;
   const hasDecreeMove = unit.genghisKhanDecreeMovePending === true;
+  const isChicken = (unit.lokiChickenSources?.length ?? 0) > 0;
 
   // 🚫 уже тратил слот перемещения
   if (!canSpendSlots(unit, { move: true }) && !hasDecreeMove && !isMongolCharge) {
@@ -861,9 +895,10 @@ export function applyMove(
   }
   const movementModes = getMovementModes(unit);
   const requiresPendingMove =
-    movementModes.length > 1 ||
-    unitHasMovementMode(unit, "trickster") ||
-    unitHasMovementMode(unit, "berserker");
+    !isChicken &&
+    (movementModes.length > 1 ||
+      unitHasMovementMode(unit, "trickster") ||
+      unitHasMovementMode(unit, "berserker"));
   if (requiresPendingMove && !pendingValid) {
     return { state, events: [] };
   }
@@ -925,7 +960,7 @@ export function applyMove(
       hiddenAtDest.isStealthed
     ) {
       const known = state.knowledge?.[unit.owner]?.[hiddenAtDest.id];
-      const canSee = unitCanSeeStealthed(state, unit);
+      const canSee = unitCanSeeStealthed(state, unit, hiddenAtDest);
       if (!known && !canSee) {
         const revealed: UnitState = {
           ...hiddenAtDest,

@@ -17,8 +17,29 @@ import {
   getLegalIntents,
 } from "./legal";
 import { getAbilityViewsForUnit } from "./abilities";
-import { HERO_CHIKATILO_ID } from "./heroes";
+import { HERO_CHIKATILO_ID, HERO_ODIN_ID } from "./heroes";
 import { getForestMarkers } from "./forest";
+
+function chebyshevDistance(a: Coord, b: Coord): number {
+  return Math.max(Math.abs(a.col - b.col), Math.abs(a.row - b.row));
+}
+
+function isStealthedEnemyVisibleToPlayer(
+  state: GameState,
+  playerId: PlayerId,
+  enemy: UnitState
+): boolean {
+  if (!enemy.isAlive || !enemy.position || !enemy.isStealthed) return false;
+  for (const unit of Object.values(state.units)) {
+    if (!unit.isAlive || !unit.position) continue;
+    if (unit.owner !== playerId) continue;
+    if (unit.heroId !== HERO_ODIN_ID) continue;
+    if (chebyshevDistance(unit.position, enemy.position) <= 1) {
+      return true;
+    }
+  }
+  return false;
+}
 
 function cloneForestMarkers(state: GameState): ForestMarker[] {
   return getForestMarkers(state).map((marker) => ({
@@ -106,6 +127,10 @@ export function makePlayerView(
 
     if (unit.isStealthed) {
       if (activeChikatilo && markedTargets.has(unit.id)) {
+        units[unit.id] = maskStealthedEnemy(unit);
+        continue;
+      }
+      if (isStealthedEnemyVisibleToPlayer(state, playerId, unit)) {
         units[unit.id] = maskStealthedEnemy(unit);
         continue;
       }

@@ -31,7 +31,14 @@ export function canSpendSlots(
 ): boolean {
   if (!costs) return true;
   const turn = getTurnEconomy(unit);
+  const isChicken = (unit.lokiChickenSources?.length ?? 0) > 0;
+  if (isChicken && (costs.attack || costs.action || costs.stealth)) {
+    return false;
+  }
   if (costs.move && (unit.kaladinMoveLockSources?.length ?? 0) > 0) {
+    return false;
+  }
+  if (costs.move && (unit.lokiMoveLockSources?.length ?? 0) > 0) {
     return false;
   }
   if (costs.move && turn.moveUsed) return false;

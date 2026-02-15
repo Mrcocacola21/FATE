@@ -165,10 +165,15 @@ export const ABILITY_KALADIN_THIRD = "kaladinThird" as const;
 export const ABILITY_KALADIN_FOURTH = "kaladinFourth" as const;
 export const ABILITY_KALADIN_FIFTH = "kaladinFifth" as const;
 
-export const ABILITY_FRISK_PURE_SOUL = "friskPureSoul" as const;
+export const ABILITY_FRISK_CLEAN_SOUL = "friskCleanSoul" as const;
 export const ABILITY_FRISK_GENOCIDE = "friskGenocide" as const;
-export const ABILITY_FRISK_PACIFIST = "friskPacifist" as const;
-export const ABILITY_FRISK_ONE_WAY = "friskOneWay" as const;
+export const ABILITY_FRISK_PACIFISM = "friskPacifism" as const;
+export const ABILITY_FRISK_ONE_PATH = "friskOnePath" as const;
+
+// Backward-compatible aliases.
+export const ABILITY_FRISK_PURE_SOUL = ABILITY_FRISK_CLEAN_SOUL;
+export const ABILITY_FRISK_PACIFIST = ABILITY_FRISK_PACIFISM;
+export const ABILITY_FRISK_ONE_WAY = ABILITY_FRISK_ONE_PATH;
 
 export const ABILITY_SANS_GASTER_BLASTER = "sansGasterBlaster" as const;
 export const ABILITY_SANS_JOKE = "sansJoke" as const;
@@ -495,6 +500,55 @@ const ABILITY_SPECS: Record<string, AbilitySpec> = {
       consumes: { action: true },
     },
   },
+  [ABILITY_ODIN_GUNGNIR]: {
+    id: ABILITY_ODIN_GUNGNIR,
+    displayName: "Gungnir",
+    kind: "passive",
+    description:
+      "Attack doubles become automatic hits across standard attack-roll combat flows.",
+  },
+  [ABILITY_ODIN_HUGINN]: {
+    id: ABILITY_ODIN_HUGINN,
+    displayName: "Raven Huginn",
+    kind: "passive",
+    description:
+      "Can detect and target stealthed enemies within 1 cell (Chebyshev distance).",
+  },
+  [ABILITY_ODIN_MUNINN]: {
+    id: ABILITY_ODIN_MUNINN,
+    displayName: "Raven Muninn",
+    kind: "passive",
+    description:
+      "At full 6 charges, after seeing a defense roll, can spend all charges to convert defense into auto-success.",
+    maxCharges: 6,
+    chargesPerUse: 6,
+  },
+  [ABILITY_ODIN_SLEIPNIR]: {
+    id: ABILITY_ODIN_SLEIPNIR,
+    displayName: "Sleipnir",
+    kind: "phantasm",
+    description:
+      "Spend 3 charges to teleport to any empty board cell. Impulse: does not consume move/action slots.",
+    maxCharges: 3,
+    chargesPerUse: 3,
+  },
+  [ABILITY_LOKI_ILLUSORY_DOUBLE]: {
+    id: ABILITY_LOKI_ILLUSORY_DOUBLE,
+    displayName: "Illusory Double",
+    kind: "passive",
+    description:
+      "Whenever any game roll is a double, Loki gains +1 Laughter (max 15).",
+  },
+  [ABILITY_LOKI_LAUGHT]: {
+    id: ABILITY_LOKI_LAUGHT,
+    displayName: "Loki's Laughter",
+    kind: "phantasm",
+    description:
+      "Spend Laughter on one of Loki's tricks. Using this ability does not reveal Loki.",
+    maxCharges: 15,
+    chargesPerUse: 0,
+    isSpecialCounter: true,
+  },
   [ABILITY_JEBE_DURABLE]: {
     id: ABILITY_JEBE_DURABLE,
     displayName: "Durable",
@@ -593,6 +647,40 @@ const ABILITY_SPECS: Record<string, AbilitySpec> = {
     actionCost: {
       consumes: { action: true },
     },
+  },
+  [ABILITY_FRISK_PACIFISM]: {
+    id: ABILITY_FRISK_PACIFISM,
+    displayName: "Pacifism",
+    kind: "phantasm",
+    description:
+      "Spend Pacifism points on Frisk's pacifist options. These effects do not reveal Frisk stealth.",
+    maxCharges: 30,
+    chargesPerUse: 0,
+    isSpecialCounter: true,
+  },
+  [ABILITY_FRISK_GENOCIDE]: {
+    id: ABILITY_FRISK_GENOCIDE,
+    displayName: "Genocide",
+    kind: "phantasm",
+    description:
+      "Spend Genocide points on Frisk's aggressive options and reactions.",
+    maxCharges: 30,
+    chargesPerUse: 0,
+    isSpecialCounter: true,
+  },
+  [ABILITY_FRISK_CLEAN_SOUL]: {
+    id: ABILITY_FRISK_CLEAN_SOUL,
+    displayName: "Clean Soul",
+    kind: "passive",
+    description:
+      "If Frisk exits stealth without attacking, the next incoming attack against Frisk automatically misses.",
+  },
+  [ABILITY_FRISK_ONE_PATH]: {
+    id: ABILITY_FRISK_ONE_PATH,
+    displayName: "One Path",
+    kind: "phantasm",
+    description:
+      "After Frisk kills, convert all Pacifism into Genocide and permanently lose Pacifism.",
   },
 
   [ABILITY_TRICKSTER_AOE]: {
@@ -819,6 +907,17 @@ export function initUnitAbilities(unit: UnitState): UnitState {
       gutsBerserkExitUsed: false,
     };
   }
+  if (unit.heroId === HERO_ODIN_ID) {
+    updated = setCharges(updated, ABILITY_ODIN_SLEIPNIR, 0);
+    updated = setCharges(updated, ABILITY_ODIN_MUNINN, 0);
+  }
+  if (unit.heroId === HERO_LOKI_ID) {
+    updated = setCharges(updated, ABILITY_LOKI_LAUGHT, 0);
+    updated = {
+      ...updated,
+      stealthSuccessMinRoll: 5,
+    };
+  }
   if (unit.heroId === HERO_JEBE_ID) {
     updated = setCharges(updated, ABILITY_JEBE_HAIL_OF_ARROWS, 0);
     updated = setCharges(updated, ABILITY_JEBE_KHANS_SHOOTER, 0);
@@ -833,6 +932,18 @@ export function initUnitAbilities(unit: UnitState): UnitState {
   if (unit.heroId === HERO_KALADIN_ID) {
     updated = setCharges(updated, ABILITY_KALADIN_FIRST, 0);
     updated = setCharges(updated, ABILITY_KALADIN_FIFTH, 0);
+  }
+  if (unit.heroId === HERO_FRISK_ID) {
+    updated = setCharges(updated, ABILITY_FRISK_PACIFISM, 0);
+    updated = setCharges(updated, ABILITY_FRISK_GENOCIDE, 0);
+    updated = {
+      ...updated,
+      friskPacifismDisabled: false,
+      friskCleanSoulShield: false,
+      friskDidAttackWhileStealthedSinceLastEnter: false,
+      friskPrecisionStrikeReady: false,
+      friskKillCount: 0,
+    };
   }
 
   return updated;
@@ -950,11 +1061,17 @@ function getActiveDisabledReason(
   if (costs?.move && (unit.kaladinMoveLockSources?.length ?? 0) > 0) {
     return "Movement is blocked";
   }
+  if (costs?.move && (unit.lokiMoveLockSources?.length ?? 0) > 0) {
+    return "Movement is blocked";
+  }
   if (costs?.attack && unit.turn?.attackUsed) {
     return "Attack slot already used";
   }
   if (costs?.stealth && unit.turn?.stealthUsed) {
     return "Stealth slot already used";
+  }
+  if ((unit.lokiChickenSources?.length ?? 0) > 0) {
+    return "Chicken: this unit can only move";
   }
 
   const required = getChargeRequired(spec);
@@ -1114,10 +1231,10 @@ export function getAbilityViewsForUnit(
   }
   if (unit.heroId === HERO_FRISK_ID) {
     abilityIds.push(
-      ABILITY_FRISK_PURE_SOUL,
+      ABILITY_FRISK_CLEAN_SOUL,
       ABILITY_FRISK_GENOCIDE,
-      ABILITY_FRISK_PACIFIST,
-      ABILITY_FRISK_ONE_WAY
+      ABILITY_FRISK_PACIFISM,
+      ABILITY_FRISK_ONE_PATH
     );
   } 
   if (unit.heroId === HERO_SANS_ID) {
@@ -1254,6 +1371,21 @@ export function getAbilityViewsForUnit(
           isAvailable = false;
           disabledReason = "Not Enough charges";
         }
+      }
+      if (spec.id === ABILITY_ODIN_MUNINN) {
+        const required = getChargeRequired(spec);
+        if (required !== undefined && getCharges(unit, spec.id) < required) {
+          isAvailable = false;
+          disabledReason = "Not Enough charges";
+        }
+      }
+      if (spec.id === ABILITY_FRISK_PACIFISM && unit.friskPacifismDisabled) {
+        isAvailable = false;
+        disabledReason = "Pacifism lost (One Path)";
+      }
+      if (spec.kind !== "passive" && (unit.lokiChickenSources?.length ?? 0) > 0) {
+        isAvailable = false;
+        disabledReason = "Chicken: this unit can only move";
       }
 
       return {

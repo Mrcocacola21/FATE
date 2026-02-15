@@ -27,6 +27,11 @@ export interface AttackRollContext extends Record<string, unknown> {
   tieBreakDefender?: number[];
   stage?: "initial" | "tieBreak";
   berserkerChoiceMade?: boolean;
+  odinMuninnChoiceMade?: boolean;
+  chikatiloDecoyChoiceMade?: boolean;
+  friskSubstitutionChoiceMade?: boolean;
+  friskChildsCryChoiceMade?: boolean;
+  friskForceMiss?: boolean;
   consumeSlots?: boolean;
   queueKind?: "normal" | "riderPath" | "aoe";
   elCidDuelist?: {
@@ -108,6 +113,31 @@ export interface HassanAssassinOrderSelectionContext
   queue?: ("P1" | "P2")[];
 }
 
+export interface LokiLaughtChoiceContext extends Record<string, unknown> {
+  lokiId: string;
+  chickenOptions: string[];
+  mindControlEnemyOptions: string[];
+  spinCandidateIds: string[];
+}
+
+export interface LokiChickenTargetChoiceContext extends Record<string, unknown> {
+  lokiId: string;
+  options: string[];
+}
+
+export interface LokiMindControlEnemyChoiceContext
+  extends Record<string, unknown> {
+  lokiId: string;
+  options: string[];
+}
+
+export interface LokiMindControlTargetChoiceContext
+  extends Record<string, unknown> {
+  lokiId: string;
+  controlledUnitId: string;
+  options: string[];
+}
+
 export interface FemtoDivineMoveRollContext extends Record<string, unknown> {
   unitId: string;
 }
@@ -117,4 +147,31 @@ export interface FemtoDivineMoveDestinationContext
   unitId: string;
   roll: number;
   options: Coord[];
+}
+
+export interface FriskPacifismChoiceContext extends Record<string, unknown> {
+  friskId: string;
+  hugsOptions: string[];
+  warmWordsOptions: string[];
+  canPowerOfFriendship: boolean;
+}
+
+export interface FriskPacifismTargetChoiceContext
+  extends Record<string, unknown> {
+  friskId: string;
+  options: string[];
+}
+
+export interface FriskWarmWordsHealRollContext extends Record<string, unknown> {
+  friskId: string;
+  targetId: string;
+}
+
+export interface FriskGenocideChoiceContext extends Record<string, unknown> {
+  friskId: string;
+}
+
+export interface FriskKeenEyeChoiceContext extends Record<string, unknown> {
+  friskId: string;
+  options: string[];
 }

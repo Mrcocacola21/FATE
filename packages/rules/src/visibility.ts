@@ -1,24 +1,38 @@
 // packages/rules/src/visibility.ts
-import { GameState, UnitState, Coord } from "./model";
+import { Coord, GameState, UnitState } from "./model";
 import { getUnitAt } from "./board";
-import { HERO_CHIKATILO_ID } from "./heroes";
+import { HERO_CHIKATILO_ID, HERO_ODIN_ID } from "./heroes";
 
-/**
- * Может ли конкретный юнит видеть стелс-цели.
- * Сейчас — всегда false, позже можно завязать на способности/флаг.
- */
-export function unitCanSeeStealthed(
-  state: GameState,
-  viewer: UnitState
+function chebyshevDistance(a: Coord, b: Coord): number {
+  return Math.max(Math.abs(a.col - b.col), Math.abs(a.row - b.row));
+}
+
+export function canSeeStealthedTarget(
+  _state: GameState,
+  viewer: UnitState,
+  target: UnitState
 ): boolean {
-  // TODO: сюда повесим пассивки типа "вижу невидимых"
+  if (!viewer.isAlive || !target.isAlive) return false;
+  if (!viewer.position || !target.position) return false;
+  if (!target.isStealthed) return false;
+
+  // Odin (Huginn): adjacent stealthed enemies are visible for Odin.
+  if (viewer.heroId === HERO_ODIN_ID) {
+    return chebyshevDistance(viewer.position, target.position) <= 1;
+  }
+
   return false;
 }
 
-/**
- * Можно ли юниту unitId ЗАКОНЧИТЬ ход в клетке dest
- * с учётом стелса, союзников и правила "hidden+hidden нельзя".
- */
+export function unitCanSeeStealthed(
+  state: GameState,
+  viewer: UnitState,
+  target?: UnitState
+): boolean {
+  if (!target) return false;
+  return canSeeStealthedTarget(state, viewer, target);
+}
+
 export function canUnitEnterCell(
   state: GameState,
   unitId: string,
@@ -29,46 +43,31 @@ export function canUnitEnterCell(
 
   const occupant = getUnitAt(state, dest);
   if (!occupant || !occupant.isAlive) {
-    // Клетка пустая — ок
     return true;
   }
 
-  // Союзников (видимых и скрытых) топтать нельзя.
   if (occupant.owner === unit.owner) {
     return false;
   }
 
-  // Здесь occupant — враг.
   if (occupant.isStealthed) {
-    // Если юнит пассивно видит невидимых — он знает, что там враг → нельзя.
-    if (unitCanSeeStealthed(state, unit)) {
+    if (unitCanSeeStealthed(state, unit, occupant)) {
       return false;
     }
 
-    // Если движок уже знает об этом враге (knowledge), то блокируем как видимого
     const known = state.knowledge?.[unit.owner]?.[occupant.id];
     if (known) return false;
 
-    // Правило: скрытый герой не может делить клетку с другим скрытым.
     if (unit.isStealthed) {
       return false;
     }
 
-    // Иначе: враг невидим и неизвестен — можно наступить на его клетку.
     return true;
   }
 
-  // Видимый враг — на него нельзя наступить (для обычных ходов).
   return false;
 }
 
-/**
- * Проверка: можно ли НАПРЯМУЮ нацелиться на targetId с sourceId
- * (атака/таргет-абилки).
- *
- * Союзников можно таргетить всегда (включая стелс),
- * врагов в стелсе — только если их видно (unitCanSeeStealthed).
- */
 export function canDirectlyTargetUnit(
   state: GameState,
   sourceId: string,
@@ -80,12 +79,10 @@ export function canDirectlyTargetUnit(
   if (!source || !source.isAlive) return false;
   if (!target || !target.isAlive) return false;
 
-  // Союзник — можно таргетить даже в стелсе (бафы/хилы и т.п.)
   if (source.owner === target.owner) {
     return true;
   }
 
-  // Враг в стелсе и мы его не "видим" → нельзя нацелиться
   if (target.isStealthed) {
     if (
       source.heroId === HERO_CHIKATILO_ID &&
@@ -95,7 +92,7 @@ export function canDirectlyTargetUnit(
       return true;
     }
     const known = state.knowledge?.[source.owner]?.[target.id];
-    if (!unitCanSeeStealthed(state, source) && !known) {
+    if (!canSeeStealthedTarget(state, source, target) && !known) {
       return false;
     }
   }

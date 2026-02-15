@@ -117,8 +117,10 @@ export function getLegalIntents(
   }
 
   const activeUnit = state.units[state.activeUnitId!];
-  const canSearchMove = canSpendSlots(activeUnit, { move: true });
-  const canSearchAction = canSpendSlots(activeUnit, { action: true });
+  const isChicken = (activeUnit.lokiChickenSources?.length ?? 0) > 0;
+  const canSearchMove = !isChicken && canSpendSlots(activeUnit, { move: true });
+  const canSearchAction =
+    !isChicken && canSpendSlots(activeUnit, { action: true });
 
   const canMove = canSpendSlots(activeUnit, { move: true });
   const canAttack = canSpendSlots(activeUnit, { attack: true, action: true });
@@ -127,6 +129,7 @@ export function getLegalIntents(
   const kaiserInBunker =
     activeUnit.heroId === HERO_GRAND_KAISER_ID && activeUnit.bunker?.active;
   const canEnterStealth =
+    !isChicken &&
     canSpendSlots(activeUnit, { stealth: true }) &&
     (activeUnit.class === "assassin" ||
       activeUnit.class === "archer" ||

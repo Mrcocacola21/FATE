@@ -87,6 +87,57 @@ const ResolveRollChoiceSchema = z.union([
     unitIds: z.array(z.string().min(1)).length(2),
   }),
   z.object({
+    type: z.literal("lokiLaughtOption"),
+    option: z.union([
+      z.literal("againSomeNonsense"),
+      z.literal("chicken"),
+      z.literal("mindControl"),
+      z.literal("spinTheDrum"),
+      z.literal("greatLokiJoke"),
+    ]),
+  }),
+  z.object({
+    type: z.literal("lokiChickenTarget"),
+    targetId: z.string().min(1),
+  }),
+  z.object({
+    type: z.literal("lokiMindControlEnemy"),
+    targetId: z.string().min(1),
+  }),
+  z.object({
+    type: z.literal("lokiMindControlTarget"),
+    targetId: z.string().min(1),
+  }),
+  z.object({
+    type: z.literal("friskPacifismOption"),
+    option: z.union([
+      z.literal("hugs"),
+      z.literal("childsCry"),
+      z.literal("warmWords"),
+      z.literal("powerOfFriendship"),
+    ]),
+  }),
+  z.object({
+    type: z.literal("friskPacifismHugsTarget"),
+    targetId: z.string().min(1),
+  }),
+  z.object({
+    type: z.literal("friskWarmWordsTarget"),
+    targetId: z.string().min(1),
+  }),
+  z.object({
+    type: z.literal("friskGenocideOption"),
+    option: z.union([
+      z.literal("substitution"),
+      z.literal("keenEye"),
+      z.literal("precisionStrike"),
+    ]),
+  }),
+  z.object({
+    type: z.literal("friskKeenEyeTarget"),
+    targetId: z.string().min(1),
+  }),
+  z.object({
     type: z.literal("femtoDivineMoveDestination"),
     position: CoordSchema,
   }),

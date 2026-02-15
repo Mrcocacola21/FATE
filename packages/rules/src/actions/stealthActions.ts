@@ -1,9 +1,11 @@
 import type { ApplyResult, GameAction, GameEvent, GameState, UnitState } from "../model";
 import type { RNG } from "../rng";
 import { chebyshev } from "../board";
+import { ABILITY_FRISK_GENOCIDE, getCharges } from "../abilities";
 import { canSpendSlots, spendSlots } from "../turnEconomy";
 import { isKaiser, isKaiserTransformed } from "./shared";
-import { HERO_FALSE_TRAIL_TOKEN_ID } from "../heroes";
+import { HERO_FALSE_TRAIL_TOKEN_ID, HERO_FRISK_ID } from "../heroes";
+import { getFriskKeenEyeTargetIds } from "./heroes/frisk";
 import { requestRoll } from "../shared/rollUtils";
 import { evSearchStealth, evStealthEntered } from "../shared/events";
 import { getStealthSuccessMinRoll } from "../stealth";
@@ -30,6 +32,9 @@ export function applyEnterStealth(
   }
 
   if (state.activeUnitId !== unit.id) {
+    return { state, events: [] };
+  }
+  if ((unit.lokiChickenSources?.length ?? 0) > 0) {
     return { state, events: [] };
   }
 
@@ -89,6 +94,22 @@ export function applyEnterStealth(
   const canStealth = getStealthSuccessMinRoll(unit) !== null;
 
   if (canStealth) {
+    if (
+      unit.heroId === HERO_FRISK_ID &&
+      getCharges(unit, ABILITY_FRISK_GENOCIDE) >= 5
+    ) {
+      const keenEyeOptions = getFriskKeenEyeTargetIds(state, unit.id);
+      if (keenEyeOptions.length > 0) {
+        return requestRoll(
+          state,
+          unit.owner,
+          "friskKeenEyeChoice",
+          { friskId: unit.id, options: keenEyeOptions },
+          unit.id
+        );
+      }
+    }
+
     const pos = unit.position!;
     const hasStealthedOverlap = Object.values(state.units).some((u) => {
       if (!u.isAlive || !u.isStealthed || !u.position) return false;
@@ -151,6 +172,9 @@ export function applySearchStealth(
   }
 
   if (state.activeUnitId !== unit.id) {
+    return { state, events: [] };
+  }
+  if ((unit.lokiChickenSources?.length ?? 0) > 0) {
     return { state, events: [] };
   }
 
