@@ -19,6 +19,9 @@ import {
   ABILITY_LECHY_GUIDE_TRAVELER,
   ABILITY_LECHY_STORM,
   ABILITY_GROZNY_INVADE_TIME,
+  ABILITY_ASGORE_FIREBALL,
+  ABILITY_ASGORE_FIRE_PARADE,
+  ABILITY_ASGORE_SOUL_PARADE,
   ABILITY_GUTS_ARBALET,
   ABILITY_GUTS_BERSERK_MODE,
   ABILITY_GUTS_CANNON,
@@ -32,6 +35,8 @@ import {
   ABILITY_LOKI_LAUGHT,
   ABILITY_FRISK_GENOCIDE,
   ABILITY_FRISK_PACIFISM,
+  ABILITY_RIVER_PERSON_BOATMAN,
+  ABILITY_RIVER_PERSON_TRA_LA_LA,
   ABILITY_ODIN_SLEIPNIR,
   TRICKSTER_AOE_RADIUS,
   getAbilitySpec,
@@ -59,7 +64,9 @@ import { applyHassanTrueEnemy } from "./heroes/hassan";
 import { applyKaladinFifth, applyKaladinFirst } from "./heroes/kaladin";
 import { applyLokiLaught } from "./heroes/loki";
 import { applyFriskGenocide, applyFriskPacifism } from "./heroes/frisk";
+import { applyAsgoreFireball, applyAsgoreFireParade } from "./heroes/asgore";
 import { applyOdinSleipnir } from "./heroes/odin";
+import { applyRiverBoatman, applyRiverTraLaLa } from "./heroes/riverPerson";
 import {
   applyGutsArbalet,
   applyGutsBerserkMode,
@@ -189,8 +196,28 @@ export function applyUseAbility(
     return applyFriskGenocide(state, unit);
   }
 
+  if (spec.id === ABILITY_ASGORE_FIREBALL) {
+    return applyAsgoreFireball(state, unit, action);
+  }
+
+  if (spec.id === ABILITY_ASGORE_FIRE_PARADE) {
+    return applyAsgoreFireParade(state, unit, rng);
+  }
+
+  if (spec.id === ABILITY_ASGORE_SOUL_PARADE) {
+    return { state, events: [] };
+  }
+
   if (spec.id === ABILITY_ODIN_SLEIPNIR) {
     return applyOdinSleipnir(state, unit, action);
+  }
+
+  if (spec.id === ABILITY_RIVER_PERSON_BOATMAN) {
+    return applyRiverBoatman(state, unit);
+  }
+
+  if (spec.id === ABILITY_RIVER_PERSON_TRA_LA_LA) {
+    return applyRiverTraLaLa(state, unit);
   }
 
   if (spec.id === ABILITY_KALADIN_FIRST) {

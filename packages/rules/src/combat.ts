@@ -18,6 +18,7 @@ import {
   getCharges,
 } from "./abilities";
 import {
+  HERO_ASGORE_ID,
   HERO_CHIKATILO_ID,
   HERO_FEMTO_ID,
   HERO_FALSE_TRAIL_TOKEN_ID,
@@ -144,6 +145,7 @@ export function canAttackTarget(
   const { dx, dy, cheb, sameRow, sameCol } = distanceInfo(attPos, defPos);
   const attackerClass =
     attacker.heroId === HERO_FEMTO_ID ||
+    (attacker.heroId === HERO_ASGORE_ID && attacker.class === "knight") ||
     (attacker.heroId === HERO_GUTS_ID &&
       attacker.gutsBerserkModeActive &&
       attacker.class !== "archer")
@@ -421,6 +423,7 @@ export function resolveAttack(
     !params.forceMiss &&
     (defenderAfter.class === "spearman" ||
       defenderAfter.heroId === HERO_FEMTO_ID ||
+      defenderAfter.heroId === HERO_ASGORE_ID ||
       defenderAfter.heroId === HERO_ODIN_ID) &&
     defenderRoll.isDouble
   ) {

@@ -10,6 +10,7 @@ import type {
   UnitState,
 } from "../model";
 import { isInsideBoard } from "../model";
+import type { RiverBoatCarryChoiceContext } from "../pendingRoll/types";
 import { type RNG } from "../rng";
 import { coordsEqual, getUnitAt } from "../board";
 import { getLegalAttackTargets } from "../legal";
@@ -23,10 +24,19 @@ import { getMovementModes, unitHasMovementMode } from "./shared";
 import { getPolkovodetsSource } from "./heroes/vlad";
 import { HERO_LECHY_ID } from "../heroes";
 import { requestLechyGuideTravelerPlacement } from "./heroes/lechy";
+import {
+  filterRiverMovesByCarryDrop,
+  getRiverCarryOptions,
+  getRiverDropOptions,
+  isRiverPerson,
+  requestRiverBoatCarryChoice,
+  requestRiverBoatDropDestination,
+} from "./heroes/riverPerson";
 import { makeAttackContext } from "../core";
 import { requestRoll } from "../core";
 import {
   evMoveOptionsGenerated,
+  evMoveBlocked,
   evStealthRevealed,
   evUnitMoved,
 } from "../core";
@@ -323,6 +333,56 @@ function parseCoord(raw: unknown): Coord | null {
   return { col: colRaw, row: rowRaw };
 }
 
+function parseTargetIdChoice(choice: ResolveRollChoice | undefined): string | null {
+  if (!choice || typeof choice !== "object") return null;
+  const payload = choice as { targetId?: unknown };
+  if (typeof payload.targetId !== "string" || payload.targetId.length === 0) {
+    return null;
+  }
+  return payload.targetId;
+}
+
+function buildRiverMoveOptionsResult(
+  state: GameState,
+  river: UnitState,
+  requestedMode: MoveMode | undefined
+): ApplyResult {
+  const mode = requestedMode ?? "normal";
+  if (mode !== "normal" && mode !== river.class) {
+    return { state, events: [] };
+  }
+  const chosenMode = mode === "normal" ? river.class : mode;
+  let legalTo = getLegalMovesForUnitModes(state, river.id, [chosenMode]);
+  if (river.riverBoatCarryAllyId) {
+    legalTo = filterRiverMovesByCarryDrop(
+      state,
+      legalTo,
+      river.riverBoatCarryAllyId
+    );
+  }
+  const pendingMove: PendingMove = {
+    unitId: river.id,
+    roll: undefined,
+    legalTo,
+    expiresTurnNumber: state.turnNumber,
+    mode,
+  };
+  return {
+    state: {
+      ...state,
+      pendingMove,
+    },
+    events: [
+      evMoveOptionsGenerated({
+        unitId: river.id,
+        roll: undefined,
+        legalTo,
+        mode,
+      }),
+    ],
+  };
+}
+
 export function resolveForestMoveCheckRoll(
   state: GameState,
   pending: { player: UnitState["owner"]; context: Record<string, unknown> },
@@ -405,6 +465,80 @@ export function resolveForestMoveDestinationChoice(
   );
 }
 
+export function resolveRiverBoatCarryChoice(
+  state: GameState,
+  pending: { context: Record<string, unknown> },
+  choice: ResolveRollChoice | undefined
+): ApplyResult {
+  const ctx = pending.context as RiverBoatCarryChoiceContext;
+  const river = state.units[ctx.riverId];
+  if (!river || !river.isAlive || !river.position || !isRiverPerson(river)) {
+    return { state: { ...state, pendingRoll: null }, events: [] };
+  }
+
+  const options = Array.isArray(ctx.options) ? ctx.options : [];
+  const rawMode = ctx.mode;
+  const mode =
+    rawMode === "normal" ||
+    rawMode === "spearman" ||
+    rawMode === "rider" ||
+    rawMode === "knight" ||
+    rawMode === "archer" ||
+    rawMode === "trickster" ||
+    rawMode === "assassin" ||
+    rawMode === "berserker"
+      ? rawMode
+      : undefined;
+  let selectedAllyId: string | undefined = undefined;
+  if (choice === "skip") {
+    selectedAllyId = undefined;
+  } else {
+    const parsed = parseTargetIdChoice(choice);
+    if (!parsed) {
+      return { state, events: [] };
+    }
+    if (!options.includes(parsed)) {
+      return { state, events: [] };
+    }
+    const ally = state.units[parsed];
+    if (!ally || !ally.isAlive || !ally.position || ally.owner !== river.owner) {
+      return { state, events: [] };
+    }
+    const dist = Math.max(
+      Math.abs(ally.position.col - river.position.col),
+      Math.abs(ally.position.row - river.position.row)
+    );
+    if (dist > 1) {
+      return { state, events: [] };
+    }
+    selectedAllyId = parsed;
+  }
+
+  if (selectedAllyId) {
+    const chosenMode = mode && mode !== "normal" ? mode : river.class;
+    let legalTo = getLegalMovesForUnitModes(state, river.id, [chosenMode]);
+    legalTo = filterRiverMovesByCarryDrop(state, legalTo, selectedAllyId);
+    if (legalTo.length === 0) {
+      return { state, events: [] };
+    }
+  }
+
+  const updatedRiver: UnitState = {
+    ...river,
+    riverBoatCarryAllyId: selectedAllyId,
+  };
+  const nextState: GameState = {
+    ...state,
+    pendingRoll: null,
+    units: {
+      ...state.units,
+      [updatedRiver.id]: updatedRiver,
+    },
+  };
+
+  return buildRiverMoveOptionsResult(nextState, updatedRiver, mode);
+}
+
 export function applyRequestMoveOptions(
   state: GameState,
   action: Extract<GameAction, { type: "requestMoveOptions" }>,
@@ -434,8 +568,14 @@ export function applyRequestMoveOptions(
     return { state, events: [] };
   }
 
+  const hasRiverBoatmanMove = unit.riverBoatmanMovePending === true;
   const canMove = canSpendSlots(unit, { move: true });
-  if (!canMove && !unit.genghisKhanDecreeMovePending && !unit.genghisKhanMongolChargeActive) {
+  if (
+    !canMove &&
+    !unit.genghisKhanDecreeMovePending &&
+    !unit.genghisKhanMongolChargeActive &&
+    !hasRiverBoatmanMove
+  ) {
     return { state, events: [] };
   }
   const isChicken = (unit.lokiChickenSources?.length ?? 0) > 0;
@@ -485,6 +625,18 @@ export function applyRequestMoveOptions(
         }),
       ],
     };
+  }
+
+  if (isRiverPerson(unit) && !unit.riverBoatCarryAllyId) {
+    const carryOptions = getRiverCarryOptions(state, unit.id);
+    if (carryOptions.length > 0) {
+      return requestRiverBoatCarryChoice(
+        state,
+        unit,
+        action.mode ?? "normal",
+        carryOptions
+      );
+    }
   }
 
   const movementModes = getMovementModes(unit);
@@ -538,7 +690,14 @@ export function applyRequestMoveOptions(
     );
   }
 
-  const legalMoves = getLegalMovesForUnitModes(state, unit.id, [chosenMode]);
+  let legalMoves = getLegalMovesForUnitModes(state, unit.id, [chosenMode]);
+  if (isRiverPerson(unit) && unit.riverBoatCarryAllyId) {
+    legalMoves = filterRiverMovesByCarryDrop(
+      state,
+      legalMoves,
+      unit.riverBoatCarryAllyId
+    );
+  }
   const modeValue = requestedMode ?? "normal";
 
   const pendingMove: PendingMove = {
@@ -877,10 +1036,17 @@ export function applyMove(
   const from = unit.position;
   const isMongolCharge = unit.genghisKhanMongolChargeActive === true;
   const hasDecreeMove = unit.genghisKhanDecreeMovePending === true;
+  const hasRiverBoatmanMove = unit.riverBoatmanMovePending === true;
   const isChicken = (unit.lokiChickenSources?.length ?? 0) > 0;
+  const carriedAllyId = isRiverPerson(unit) ? unit.riverBoatCarryAllyId : undefined;
 
   // 🚫 уже тратил слот перемещения
-  if (!canSpendSlots(unit, { move: true }) && !hasDecreeMove && !isMongolCharge) {
+  if (
+    !canSpendSlots(unit, { move: true }) &&
+    !hasDecreeMove &&
+    !isMongolCharge &&
+    !hasRiverBoatmanMove
+  ) {
     return { state, events: [] };
   }
 
@@ -927,8 +1093,9 @@ export function applyMove(
   const moveMode =
     pendingValid && pending?.mode ? pending.mode : ("normal" as MoveMode);
   const riderMode =
-    moveMode === "rider" ||
-    (moveMode === "normal" && unit.class === "rider");
+    !isRiverPerson(unit) &&
+    (moveMode === "rider" ||
+      (moveMode === "normal" && unit.class === "rider"));
 
   const intendedLine =
     moveMode === "trickster" ? null : linePath(from, moveAction.to);
@@ -951,6 +1118,28 @@ export function applyMove(
   const finalTo = stakeStop ?? moveAction.to;
   const didMove = !coordsEqual(finalTo, from);
 
+  if (carriedAllyId) {
+    const carried = state.units[carriedAllyId];
+    if (
+      !carried ||
+      !carried.isAlive ||
+      !carried.position ||
+      carried.owner !== unit.owner
+    ) {
+      return { state, events: [] };
+    }
+    const startDist = Math.max(
+      Math.abs(carried.position.col - from.col),
+      Math.abs(carried.position.row - from.row)
+    );
+    if (startDist > 1) {
+      return { state, events: [] };
+    }
+    if (getRiverDropOptions(state, finalTo, carried.id).length === 0) {
+      return { state, events: [] };
+    }
+  }
+
   if (didMove) {
     const hiddenAtDest = getUnitAt(state, finalTo);
     if (
@@ -967,7 +1156,15 @@ export function applyMove(
           isStealthed: false,
           stealthTurnsLeft: 0,
         };
-        let movedUnit: UnitState = spendSlots(unit, { move: true });
+        let movedUnit: UnitState = hasRiverBoatmanMove
+          ? { ...unit, riverBoatmanMovePending: false }
+          : spendSlots(unit, { move: true });
+        if (isRiverPerson(movedUnit)) {
+          movedUnit = {
+            ...movedUnit,
+            riverBoatCarryAllyId: undefined,
+          };
+        }
         if (hasDecreeMove) {
           movedUnit = { ...movedUnit, genghisKhanDecreeMovePending: false };
         }
@@ -1007,7 +1204,15 @@ export function applyMove(
     }
   }
 
-  const movedUnit: UnitState = spendSlots(unit, { move: true });
+  const movedUnitBase: UnitState = hasRiverBoatmanMove
+    ? { ...unit, riverBoatmanMovePending: false }
+    : spendSlots(unit, { move: true });
+  const movedUnit: UnitState = isRiverPerson(movedUnitBase)
+    ? {
+        ...movedUnitBase,
+        riverBoatCarryAllyId: carriedAllyId,
+      }
+    : movedUnitBase;
   let updatedUnit: UnitState = {
     ...movedUnit,
     position: { ...finalTo },
@@ -1153,6 +1358,49 @@ export function applyMove(
         events: [...events, ...requested.events],
       };
     }
+  }
+
+  if (isRiverPerson(updatedUnit) && updatedUnit.riverBoatCarryAllyId && updatedUnit.position) {
+    const allyId = updatedUnit.riverBoatCarryAllyId;
+    const ally = newState.units[allyId];
+    if (!ally || !ally.isAlive || !ally.position || ally.owner !== updatedUnit.owner) {
+      const clearedRiver: UnitState = {
+        ...updatedUnit,
+        riverBoatCarryAllyId: undefined,
+      };
+      return {
+        state: {
+          ...newState,
+          units: {
+            ...newState.units,
+            [clearedRiver.id]: clearedRiver,
+          },
+        },
+        events,
+      };
+    }
+
+    const dropOptions = getRiverDropOptions(newState, updatedUnit.position, allyId);
+    if (dropOptions.length === 0) {
+      return {
+        state: newState,
+        events: [
+          ...events,
+          evMoveBlocked({ unitId: updatedUnit.id, reason: "noLegalDestinations" }),
+        ],
+      };
+    }
+
+    const requestedDrop = requestRiverBoatDropDestination(
+      newState,
+      updatedUnit.id,
+      allyId,
+      dropOptions
+    );
+    return {
+      state: requestedDrop.state,
+      events: [...events, ...requestedDrop.events],
+    };
   }
 
   if (

@@ -24,6 +24,8 @@ import {
   LECHY_GUIDE_TRAVELER_ID,
   JEBE_HAIL_OF_ARROWS_ID,
   JEBE_KHANS_SHOOTER_ID,
+  ASGORE_ID,
+  ASGORE_FIREBALL_ID,
   FEMTO_ID,
   GUTS_ID,
   GUTS_ARBALET_ID,
@@ -205,6 +207,7 @@ function getAttackRangeCells(view: PlayerView, unitId: string): Coord[] {
   const isKaladin = unit.heroId === KALADIN_ID;
   const effectiveClass =
     unit.heroId === FEMTO_ID ||
+    unit.heroId === ASGORE_ID ||
     (unit.heroId === GUTS_ID && unit.gutsBerserkModeActive)
       ? "spearman"
       : unit.class;
@@ -364,6 +367,18 @@ function getPendingRollLabel(kind?: string | null) {
       return "True Enemy forced target choice";
     case "hassanAssassinOrderSelection":
       return "Assassin Order selection";
+    case "asgoreSoulParadeRoll":
+      return "Soul Parade roll";
+    case "asgoreSoulParadePatienceTargetChoice":
+      return "Soul Parade (Patience) target";
+    case "asgoreSoulParadePerseveranceTargetChoice":
+      return "Soul Parade (Perseverance) target";
+    case "asgoreSoulParadeJusticeTargetChoice":
+      return "Soul Parade (Justice) target";
+    case "asgoreSoulParadeIntegrityDestination":
+      return "Soul Parade (Integrity) destination";
+    case "asgoreBraveryDefenseChoice":
+      return "Bravery defense choice";
     case "lokiLaughtChoice":
       return "Loki's Laughter choice";
     case "lokiChickenTargetChoice":
@@ -442,6 +457,14 @@ function getPendingRollLabel(kind?: string | null) {
       return "Forest check";
     case "forestMoveDestination":
       return "Forest fallback destination";
+    case "riverBoatCarryChoice":
+      return "Boat carry choice";
+    case "riverBoatDropDestination":
+      return "Boat drop destination";
+    case "riverTraLaLaTargetChoice":
+      return "Tra-la-la target";
+    case "riverTraLaLaDestinationChoice":
+      return "Tra-la-la destination";
     case "initiativeRoll":
       return "Initiative roll";
     default:
@@ -523,6 +546,14 @@ export function Game() {
     pendingRoll?.kind === "hassanTrueEnemyTargetChoice";
   const isHassanAssassinOrderSelection =
     pendingRoll?.kind === "hassanAssassinOrderSelection";
+  const isAsgoreSoulParadePatienceTargetChoice =
+    pendingRoll?.kind === "asgoreSoulParadePatienceTargetChoice";
+  const isAsgoreSoulParadePerseveranceTargetChoice =
+    pendingRoll?.kind === "asgoreSoulParadePerseveranceTargetChoice";
+  const isAsgoreSoulParadeJusticeTargetChoice =
+    pendingRoll?.kind === "asgoreSoulParadeJusticeTargetChoice";
+  const isAsgoreSoulParadeIntegrityDestination =
+    pendingRoll?.kind === "asgoreSoulParadeIntegrityDestination";
   const isLokiLaughtChoice = pendingRoll?.kind === "lokiLaughtChoice";
   const isLokiChickenTargetChoice =
     pendingRoll?.kind === "lokiChickenTargetChoice";
@@ -543,6 +574,14 @@ export function Game() {
     pendingRoll?.kind === "friskChildsCryChoice";
   const isFemtoDivineMoveDestination =
     pendingRoll?.kind === "femtoDivineMoveDestination";
+  const isRiverBoatCarryChoice =
+    pendingRoll?.kind === "riverBoatCarryChoice";
+  const isRiverBoatDropDestination =
+    pendingRoll?.kind === "riverBoatDropDestination";
+  const isRiverTraLaLaTargetChoice =
+    pendingRoll?.kind === "riverTraLaLaTargetChoice";
+  const isRiverTraLaLaDestinationChoice =
+    pendingRoll?.kind === "riverTraLaLaDestinationChoice";
   const isChikatiloRevealChoice =
     pendingRoll?.kind === "chikatiloFalseTrailRevealChoice";
   const isChikatiloDecoyChoice = pendingRoll?.kind === "chikatiloDecoyChoice";
@@ -561,7 +600,15 @@ export function Game() {
     isLokiMindControlTargetChoice ||
     isFriskPacifismHugsTargetChoice ||
     isFriskWarmWordsTargetChoice ||
-    isFemtoDivineMoveDestination;
+    isAsgoreSoulParadePatienceTargetChoice ||
+    isAsgoreSoulParadePerseveranceTargetChoice ||
+    isAsgoreSoulParadeJusticeTargetChoice ||
+    isAsgoreSoulParadeIntegrityDestination ||
+    isFemtoDivineMoveDestination ||
+    isRiverBoatCarryChoice ||
+    isRiverBoatDropDestination ||
+    isRiverTraLaLaTargetChoice ||
+    isRiverTraLaLaDestinationChoice;
   const pendingQueueCount = view?.pendingCombatQueueCount ?? 0;
   const attackContext = pendingRoll?.context as
     | {
@@ -586,6 +633,8 @@ export function Game() {
     pendingRoll?.kind === "vladForest_berserkerDefenseChoice";
   const isOdinMuninnDefenseChoice =
     pendingRoll?.kind === "odinMuninnDefenseChoice";
+  const isAsgoreBraveryDefenseChoice =
+    pendingRoll?.kind === "asgoreBraveryDefenseChoice";
   const isFriskDefenseChoice =
     isFriskSubstitutionChoice || isFriskChildsCryChoice;
   const showAttackerRoll =
@@ -601,13 +650,15 @@ export function Game() {
     pendingRoll?.kind === "vladForest_defenderRoll" ||
     isBerserkerDefenseChoice ||
     isOdinMuninnDefenseChoice ||
+    isAsgoreBraveryDefenseChoice ||
     isFriskDefenseChoice ||
     pendingRoll?.kind === "chikatiloDecoyChoice";
   const defenderId = (() => {
     if (!pendingRoll) return undefined;
     if (
       pendingRoll.kind === "berserkerDefenseChoice" ||
-      pendingRoll.kind === "odinMuninnDefenseChoice"
+      pendingRoll.kind === "odinMuninnDefenseChoice" ||
+      pendingRoll.kind === "asgoreBraveryDefenseChoice"
     ) {
       return (pendingRoll.context as { defenderId?: string }).defenderId;
     }
@@ -635,6 +686,8 @@ export function Game() {
     defenderId && view?.units[defenderId]
       ? view.units[defenderId].charges?.[ODIN_MUNINN_ID] ?? 0
       : 0;
+  const defenderAsgoreBraveryReady =
+    !!(defenderId && view?.units[defenderId]?.asgoreBraveryAutoDefenseReady);
   const defenderFriskPacifismPoints =
     defenderId && view?.units[defenderId]
       ? view.units[defenderId].charges?.[FRISK_PACIFISM_ID] ?? 0
@@ -855,6 +908,56 @@ export function Game() {
     () => new Set(femtoDivineMoveOptions.map(coordKey)),
     [femtoDivineMoveOptions]
   );
+  const riverBoatCarryOptionIds = useMemo(() => {
+    if (!isRiverBoatCarryChoice) return [] as string[];
+    const ctx = pendingRoll?.context as { options?: unknown } | undefined;
+    if (!Array.isArray(ctx?.options)) return [] as string[];
+    return ctx.options.filter((value): value is string => typeof value === "string");
+  }, [isRiverBoatCarryChoice, pendingRoll]);
+  const riverBoatCarryOptionKeys = useMemo(
+    () =>
+      new Set(
+        riverBoatCarryOptionIds
+          .map((unitId) => view?.units[unitId]?.position)
+          .filter((coord): coord is Coord => !!coord)
+          .map(coordKey)
+      ),
+    [riverBoatCarryOptionIds, view]
+  );
+  const riverBoatDropDestinationOptions = useMemo(() => {
+    if (!isRiverBoatDropDestination) return [] as Coord[];
+    const ctx = pendingRoll?.context as { options?: unknown } | undefined;
+    return normalizeCoordList(ctx?.options);
+  }, [isRiverBoatDropDestination, pendingRoll]);
+  const riverBoatDropDestinationKeys = useMemo(
+    () => new Set(riverBoatDropDestinationOptions.map(coordKey)),
+    [riverBoatDropDestinationOptions]
+  );
+  const riverTraLaLaTargetIds = useMemo(() => {
+    if (!isRiverTraLaLaTargetChoice) return [] as string[];
+    const ctx = pendingRoll?.context as { options?: unknown } | undefined;
+    if (!Array.isArray(ctx?.options)) return [] as string[];
+    return ctx.options.filter((value): value is string => typeof value === "string");
+  }, [isRiverTraLaLaTargetChoice, pendingRoll]);
+  const riverTraLaLaTargetKeys = useMemo(
+    () =>
+      new Set(
+        riverTraLaLaTargetIds
+          .map((unitId) => view?.units[unitId]?.position)
+          .filter((coord): coord is Coord => !!coord)
+          .map(coordKey)
+      ),
+    [riverTraLaLaTargetIds, view]
+  );
+  const riverTraLaLaDestinationOptions = useMemo(() => {
+    if (!isRiverTraLaLaDestinationChoice) return [] as Coord[];
+    const ctx = pendingRoll?.context as { options?: unknown } | undefined;
+    return normalizeCoordList(ctx?.options);
+  }, [isRiverTraLaLaDestinationChoice, pendingRoll]);
+  const riverTraLaLaDestinationKeys = useMemo(
+    () => new Set(riverTraLaLaDestinationOptions.map(coordKey)),
+    [riverTraLaLaDestinationOptions]
+  );
 
   const chikatiloPlacementCoords = useMemo(() => {
     if (!isChikatiloPlacement) return [] as Coord[];
@@ -930,6 +1033,63 @@ export function Game() {
           .map(coordKey)
       ),
     [hassanTrueEnemyTargetIds, view]
+  );
+  const asgorePatienceTargetIds = useMemo(() => {
+    if (!isAsgoreSoulParadePatienceTargetChoice) return [] as string[];
+    const ctx = pendingRoll?.context as { options?: unknown } | undefined;
+    if (!Array.isArray(ctx?.options)) return [] as string[];
+    return ctx.options.filter((value): value is string => typeof value === "string");
+  }, [isAsgoreSoulParadePatienceTargetChoice, pendingRoll]);
+  const asgorePatienceTargetKeys = useMemo(
+    () =>
+      new Set(
+        asgorePatienceTargetIds
+          .map((targetId) => view?.units[targetId]?.position)
+          .filter((coord): coord is Coord => !!coord)
+          .map(coordKey)
+      ),
+    [asgorePatienceTargetIds, view]
+  );
+  const asgorePerseveranceTargetIds = useMemo(() => {
+    if (!isAsgoreSoulParadePerseveranceTargetChoice) return [] as string[];
+    const ctx = pendingRoll?.context as { options?: unknown } | undefined;
+    if (!Array.isArray(ctx?.options)) return [] as string[];
+    return ctx.options.filter((value): value is string => typeof value === "string");
+  }, [isAsgoreSoulParadePerseveranceTargetChoice, pendingRoll]);
+  const asgorePerseveranceTargetKeys = useMemo(
+    () =>
+      new Set(
+        asgorePerseveranceTargetIds
+          .map((targetId) => view?.units[targetId]?.position)
+          .filter((coord): coord is Coord => !!coord)
+          .map(coordKey)
+      ),
+    [asgorePerseveranceTargetIds, view]
+  );
+  const asgoreJusticeTargetIds = useMemo(() => {
+    if (!isAsgoreSoulParadeJusticeTargetChoice) return [] as string[];
+    const ctx = pendingRoll?.context as { options?: unknown } | undefined;
+    if (!Array.isArray(ctx?.options)) return [] as string[];
+    return ctx.options.filter((value): value is string => typeof value === "string");
+  }, [isAsgoreSoulParadeJusticeTargetChoice, pendingRoll]);
+  const asgoreJusticeTargetKeys = useMemo(
+    () =>
+      new Set(
+        asgoreJusticeTargetIds
+          .map((targetId) => view?.units[targetId]?.position)
+          .filter((coord): coord is Coord => !!coord)
+          .map(coordKey)
+      ),
+    [asgoreJusticeTargetIds, view]
+  );
+  const asgoreIntegrityDestinationOptions = useMemo(() => {
+    if (!isAsgoreSoulParadeIntegrityDestination) return [] as Coord[];
+    const ctx = pendingRoll?.context as { options?: unknown } | undefined;
+    return normalizeCoordList(ctx?.options);
+  }, [isAsgoreSoulParadeIntegrityDestination, pendingRoll]);
+  const asgoreIntegrityDestinationKeys = useMemo(
+    () => new Set(asgoreIntegrityDestinationOptions.map(coordKey)),
+    [asgoreIntegrityDestinationOptions]
   );
   const hassanAssassinOrderEligibleIds = useMemo(() => {
     if (!isHassanAssassinOrderSelection) return [] as string[];
@@ -1442,6 +1602,22 @@ export function Game() {
       ),
     [gutsRangedTargetIds, view]
   );
+  const asgoreFireballTargetIds = useMemo(() => {
+    if (!view || !selectedUnit || actionMode !== "asgoreFireball") {
+      return [] as string[];
+    }
+    return getArcherLikeTargetIds(view, selectedUnit.id);
+  }, [view, selectedUnit, actionMode]);
+  const asgoreFireballTargetKeys = useMemo(
+    () =>
+      new Set(
+        asgoreFireballTargetIds
+          .map((unitId) => view?.units[unitId]?.position)
+          .filter((coord): coord is Coord => !!coord)
+          .map(coordKey)
+      ),
+    [asgoreFireballTargetIds, view]
+  );
 
   const hoverAttackPreview = useMemo(() => {
     if (!view || hoverPreview?.type !== "attackRange") {
@@ -1498,6 +1674,34 @@ export function Game() {
       return highlights;
     }
 
+    if (isRiverBoatCarryChoice) {
+      for (const key of riverBoatCarryOptionKeys) {
+        highlights[key] = "place";
+      }
+      return highlights;
+    }
+
+    if (isRiverBoatDropDestination) {
+      for (const coord of riverBoatDropDestinationOptions) {
+        highlights[coordKey(coord)] = "move";
+      }
+      return highlights;
+    }
+
+    if (isRiverTraLaLaTargetChoice) {
+      for (const key of riverTraLaLaTargetKeys) {
+        highlights[key] = "attack";
+      }
+      return highlights;
+    }
+
+    if (isRiverTraLaLaDestinationChoice) {
+      for (const coord of riverTraLaLaDestinationOptions) {
+        highlights[coordKey(coord)] = "move";
+      }
+      return highlights;
+    }
+
     if (isChikatiloPlacement) {
       for (const coord of chikatiloPlacementCoords) {
         highlights[coordKey(coord)] = "place";
@@ -1522,6 +1726,34 @@ export function Game() {
     if (isHassanTrueEnemyTargetChoice) {
       for (const key of hassanTrueEnemyTargetKeys) {
         highlights[key] = "attack";
+      }
+      return highlights;
+    }
+
+    if (isAsgoreSoulParadePatienceTargetChoice) {
+      for (const key of asgorePatienceTargetKeys) {
+        highlights[key] = "attack";
+      }
+      return highlights;
+    }
+
+    if (isAsgoreSoulParadePerseveranceTargetChoice) {
+      for (const key of asgorePerseveranceTargetKeys) {
+        highlights[key] = "attack";
+      }
+      return highlights;
+    }
+
+    if (isAsgoreSoulParadeJusticeTargetChoice) {
+      for (const key of asgoreJusticeTargetKeys) {
+        highlights[key] = "attack";
+      }
+      return highlights;
+    }
+
+    if (isAsgoreSoulParadeIntegrityDestination) {
+      for (const coord of asgoreIntegrityDestinationOptions) {
+        highlights[coordKey(coord)] = "move";
       }
       return highlights;
     }
@@ -1666,6 +1898,12 @@ export function Game() {
       }
     }
 
+    if (actionMode === "asgoreFireball") {
+      for (const key of asgoreFireballTargetKeys) {
+        highlights[key] = "attack";
+      }
+    }
+
     if (actionMode === "hassanTrueEnemy") {
       for (const key of hassanTrueEnemyCandidateKeys) {
         highlights[key] = "attack";
@@ -1697,6 +1935,14 @@ export function Game() {
       !isForestMoveDestination &&
       !isJebeKhansShooterTargetChoice &&
       !isHassanTrueEnemyTargetChoice &&
+      !isAsgoreSoulParadePatienceTargetChoice &&
+      !isAsgoreSoulParadePerseveranceTargetChoice &&
+      !isAsgoreSoulParadeJusticeTargetChoice &&
+      !isAsgoreSoulParadeIntegrityDestination &&
+      !isRiverBoatCarryChoice &&
+      !isRiverBoatDropDestination &&
+      !isRiverTraLaLaTargetChoice &&
+      !isRiverTraLaLaDestinationChoice &&
       !isFriskPacifismHugsTargetChoice &&
       !isFriskWarmWordsTargetChoice &&
       !isHassanAssassinOrderSelection;
@@ -1731,6 +1977,16 @@ export function Game() {
     forestMoveDestinationOptions,
     isFemtoDivineMoveDestination,
     femtoDivineMoveOptions,
+    isRiverBoatCarryChoice,
+    riverBoatCarryOptionKeys,
+    riverBoatCarryOptionIds,
+    isRiverBoatDropDestination,
+    riverBoatDropDestinationOptions,
+    isRiverTraLaLaTargetChoice,
+    riverTraLaLaTargetKeys,
+    riverTraLaLaTargetIds,
+    isRiverTraLaLaDestinationChoice,
+    riverTraLaLaDestinationOptions,
     isChikatiloPlacement,
     chikatiloPlacementCoords,
     isGuideTravelerPlacement,
@@ -1739,6 +1995,14 @@ export function Game() {
     jebeKhansShooterTargetKeys,
     isHassanTrueEnemyTargetChoice,
     hassanTrueEnemyTargetKeys,
+    isAsgoreSoulParadePatienceTargetChoice,
+    asgorePatienceTargetKeys,
+    isAsgoreSoulParadePerseveranceTargetChoice,
+    asgorePerseveranceTargetKeys,
+    isAsgoreSoulParadeJusticeTargetChoice,
+    asgoreJusticeTargetKeys,
+    isAsgoreSoulParadeIntegrityDestination,
+    asgoreIntegrityDestinationOptions,
     isHassanAssassinOrderSelection,
     hassanAssassinOrderEligibleKeys,
     hassanAssassinOrderSelections,
@@ -1770,6 +2034,7 @@ export function Game() {
     guideTravelerTargetKeys,
     invadeTimeTargets,
     gutsRangedTargetKeys,
+    asgoreFireballTargetKeys,
   ]);
 
   const handleCellClick = (col: number, row: number) => {
@@ -1842,6 +2107,52 @@ export function Game() {
       return;
     }
 
+    if (isRiverBoatCarryChoice) {
+      const target = getUnitAt(view, col, row);
+      if (!target || !pendingRoll) return;
+      if (!riverBoatCarryOptionIds.includes(target.id)) return;
+      sendAction({
+        type: "resolvePendingRoll",
+        pendingRollId: pendingRoll.id,
+        choice: { type: "hassanTrueEnemyTarget", targetId: target.id },
+      } as GameAction);
+      return;
+    }
+
+    if (isRiverBoatDropDestination) {
+      const key = coordKey({ col, row });
+      if (!riverBoatDropDestinationKeys.has(key) || !pendingRoll) return;
+      sendAction({
+        type: "resolvePendingRoll",
+        pendingRollId: pendingRoll.id,
+        choice: { type: "forestMoveDestination", position: { col, row } },
+      } as GameAction);
+      return;
+    }
+
+    if (isRiverTraLaLaTargetChoice) {
+      const target = getUnitAt(view, col, row);
+      if (!target || !pendingRoll) return;
+      if (!riverTraLaLaTargetIds.includes(target.id)) return;
+      sendAction({
+        type: "resolvePendingRoll",
+        pendingRollId: pendingRoll.id,
+        choice: { type: "hassanTrueEnemyTarget", targetId: target.id },
+      } as GameAction);
+      return;
+    }
+
+    if (isRiverTraLaLaDestinationChoice) {
+      const key = coordKey({ col, row });
+      if (!riverTraLaLaDestinationKeys.has(key) || !pendingRoll) return;
+      sendAction({
+        type: "resolvePendingRoll",
+        pendingRollId: pendingRoll.id,
+        choice: { type: "forestMoveDestination", position: { col, row } },
+      } as GameAction);
+      return;
+    }
+
     if (isChikatiloPlacement) {
       const key = coordKey({ col, row });
       if (!chikatiloPlacementKeys.has(key) || !pendingRoll) return;
@@ -1884,6 +2195,59 @@ export function Game() {
         type: "resolvePendingRoll",
         pendingRollId: pendingRoll.id,
         choice: { type: "hassanTrueEnemyTarget", targetId: target.id },
+      } as GameAction);
+      return;
+    }
+
+    if (isAsgoreSoulParadePatienceTargetChoice) {
+      const target = getUnitAt(view, col, row);
+      if (!target || !pendingRoll) return;
+      if (!asgorePatienceTargetIds.includes(target.id)) return;
+      sendAction({
+        type: "resolvePendingRoll",
+        pendingRollId: pendingRoll.id,
+        choice: { type: "asgoreSoulParadePatienceTarget", targetId: target.id },
+      } as GameAction);
+      return;
+    }
+
+    if (isAsgoreSoulParadePerseveranceTargetChoice) {
+      const target = getUnitAt(view, col, row);
+      if (!target || !pendingRoll) return;
+      if (!asgorePerseveranceTargetIds.includes(target.id)) return;
+      sendAction({
+        type: "resolvePendingRoll",
+        pendingRollId: pendingRoll.id,
+        choice: {
+          type: "asgoreSoulParadePerseveranceTarget",
+          targetId: target.id,
+        },
+      } as GameAction);
+      return;
+    }
+
+    if (isAsgoreSoulParadeJusticeTargetChoice) {
+      const target = getUnitAt(view, col, row);
+      if (!target || !pendingRoll) return;
+      if (!asgoreJusticeTargetIds.includes(target.id)) return;
+      sendAction({
+        type: "resolvePendingRoll",
+        pendingRollId: pendingRoll.id,
+        choice: { type: "asgoreSoulParadeJusticeTarget", targetId: target.id },
+      } as GameAction);
+      return;
+    }
+
+    if (isAsgoreSoulParadeIntegrityDestination) {
+      const key = coordKey({ col, row });
+      if (!asgoreIntegrityDestinationKeys.has(key) || !pendingRoll) return;
+      sendAction({
+        type: "resolvePendingRoll",
+        pendingRollId: pendingRoll.id,
+        choice: {
+          type: "asgoreSoulParadeIntegrityDestination",
+          position: { col, row },
+        },
       } as GameAction);
       return;
     }
@@ -2049,6 +2413,20 @@ export function Game() {
         type: "useAbility",
         unitId: selectedUnitId,
         abilityId: GUTS_CANNON_ID,
+        payload: { targetId: target.id },
+      });
+      setActionMode(null);
+      return;
+    }
+
+    if (actionMode === "asgoreFireball") {
+      const target = getUnitAt(view, col, row);
+      if (!target) return;
+      if (!asgoreFireballTargetIds.includes(target.id)) return;
+      sendGameAction({
+        type: "useAbility",
+        unitId: selectedUnitId,
+        abilityId: ASGORE_FIREBALL_ID,
         payload: { targetId: target.id },
       });
       setActionMode(null);
@@ -2251,6 +2629,7 @@ export function Game() {
     actionMode !== "jebeKhansShooter" &&
     actionMode !== "gutsArbalet" &&
     actionMode !== "gutsCannon" &&
+    actionMode !== "asgoreFireball" &&
     actionMode !== "odinSleipnir" &&
     actionMode !== "hassanTrueEnemy";
 
@@ -2431,6 +2810,47 @@ export function Game() {
                     Select an empty cell to place the guided ally.
                   </div>
                 </div>
+              ) : isRiverBoatCarryChoice ? (
+                <div>
+                  <div className="font-semibold">Boat carry</div>
+                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
+                    Select an adjacent ally to carry, or move without carrying.
+                  </div>
+                  <button
+                    className="mt-2 rounded-lg bg-slate-200 px-3 py-1 text-[10px] font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
+                    onClick={() =>
+                      pendingRoll &&
+                      sendAction({
+                        type: "resolvePendingRoll",
+                        pendingRollId: pendingRoll.id,
+                        choice: "skip",
+                      } as GameAction)
+                    }
+                  >
+                    Move without carrying
+                  </button>
+                </div>
+              ) : isRiverBoatDropDestination ? (
+                <div>
+                  <div className="font-semibold">Boat drop</div>
+                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
+                    Select an adjacent empty cell to drop the carried ally.
+                  </div>
+                </div>
+              ) : isRiverTraLaLaTargetChoice ? (
+                <div>
+                  <div className="font-semibold">Tra-la-la</div>
+                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
+                    Select an adjacent enemy target.
+                  </div>
+                </div>
+              ) : isRiverTraLaLaDestinationChoice ? (
+                <div>
+                  <div className="font-semibold">Tra-la-la</div>
+                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
+                    Select a highlighted straight-line destination.
+                  </div>
+                </div>
               ) : isJebeKhansShooterTargetChoice ? (
                 <div>
                   <div className="font-semibold">Khan's Shooter</div>
@@ -2471,6 +2891,34 @@ export function Game() {
                   <div className="font-semibold">True Enemy</div>
                   <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
                     Select a target for the forced enemy attack.
+                  </div>
+                </div>
+              ) : isAsgoreSoulParadePatienceTargetChoice ? (
+                <div>
+                  <div className="font-semibold">Soul Parade: Patience</div>
+                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
+                    Select a target in assassin attack range.
+                  </div>
+                </div>
+              ) : isAsgoreSoulParadePerseveranceTargetChoice ? (
+                <div>
+                  <div className="font-semibold">Soul Parade: Perseverance</div>
+                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
+                    Select a target in trickster attack range.
+                  </div>
+                </div>
+              ) : isAsgoreSoulParadeJusticeTargetChoice ? (
+                <div>
+                  <div className="font-semibold">Soul Parade: Justice</div>
+                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
+                    Select a target in archer attack line.
+                  </div>
+                </div>
+              ) : isAsgoreSoulParadeIntegrityDestination ? (
+                <div>
+                  <div className="font-semibold">Soul Parade: Integrity</div>
+                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
+                    Select any highlighted destination cell.
                   </div>
                 </div>
               ) : isHassanAssassinOrderSelection ? (
@@ -2656,6 +3104,10 @@ export function Game() {
                 ? "Forest of the Dead"
                 : isDuelistChoice
                 ? "Demon Duelist"
+                : pendingRoll.kind === "asgoreSoulParadeRoll"
+                ? "Soul Parade"
+                : isAsgoreBraveryDefenseChoice
+                ? "Bravery Auto Defense"
                 : isLokiLaughtChoice
                 ? "Loki's Laughter"
                 : isFriskPacifismChoice
@@ -2693,10 +3145,14 @@ export function Game() {
                 ? "Use Child's Cry after the roll to reduce this hit's damage to 0."
                 : isOdinMuninnDefenseChoice
                 ? "Defense roll is ready. Keep the roll or spend 6 charges for Muninn auto-defense."
+                : isAsgoreBraveryDefenseChoice
+                ? "Defense roll is ready. Keep the roll or consume Bravery for automatic defense."
                 : isChikatiloDecoyChoice
                 ? "Roll defense or spend 3 charges to take 1 damage."
                 : isChikatiloRevealChoice
                 ? "Explode the token or remove it."
+                : pendingRoll.kind === "asgoreSoulParadeRoll"
+                ? "Roll 1d6 to determine Soul Parade effect."
                 : isForestMoveCheck
                 ? "Forest check: roll 5-6 to leave"
                 : isForestChoice
@@ -3179,6 +3635,34 @@ export function Game() {
                     disabled={defenderMuninnCharges !== 6}
                   >
                     Use Muninn (-6)
+                  </button>
+                </>
+              ) : isAsgoreBraveryDefenseChoice ? (
+                <>
+                  <button
+                    className="flex-1 rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-slate-100 dark:text-slate-900"
+                    onClick={() =>
+                      sendAction({
+                        type: "resolvePendingRoll",
+                        pendingRollId: pendingRoll.id,
+                        choice: "roll",
+                      } as GameAction)
+                    }
+                  >
+                    Keep Roll
+                  </button>
+                  <button
+                    className="flex-1 rounded-lg bg-amber-500 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-amber-400"
+                    onClick={() =>
+                      sendAction({
+                        type: "resolvePendingRoll",
+                        pendingRollId: pendingRoll.id,
+                        choice: "auto",
+                      } as GameAction)
+                    }
+                    disabled={!defenderAsgoreBraveryReady}
+                  >
+                    Use Bravery
                   </button>
                 </>
               ) : isChikatiloDecoyChoice ? (

@@ -682,6 +682,75 @@ const ABILITY_SPECS: Record<string, AbilitySpec> = {
     description:
       "After Frisk kills, convert all Pacifism into Genocide and permanently lose Pacifism.",
   },
+  [ABILITY_ASGORE_FIREBALL]: {
+    id: ABILITY_ASGORE_FIREBALL,
+    displayName: "Fireball",
+    kind: "active",
+    description:
+      "Archer-like single-target attack with normal attack resolution.",
+    maxCharges: 2,
+    chargesPerUse: 1,
+    actionCost: {
+      consumes: { action: true },
+    },
+  },
+  [ABILITY_ASGORE_FIRE_PARADE]: {
+    id: ABILITY_ASGORE_FIRE_PARADE,
+    displayName: "Fire Parade",
+    kind: "active",
+    description:
+      "Attack all units in Trickster attack area around Asgore using shared attacker roll.",
+    maxCharges: 5,
+    chargesPerUse: 1,
+    actionCost: {
+      consumes: { action: true },
+    },
+  },
+  [ABILITY_ASGORE_SOUL_PARADE]: {
+    id: ABILITY_ASGORE_SOUL_PARADE,
+    displayName: "Soul Parade",
+    kind: "impulse",
+    description:
+      "When fully charged, triggers at start of turn: roll 1d6 and apply one soul effect.",
+    maxCharges: 3,
+    chargesPerUse: 3,
+  },
+  [ABILITY_RIVER_PERSON_BOAT]: {
+    id: ABILITY_RIVER_PERSON_BOAT,
+    displayName: "Boat",
+    kind: "passive",
+    description:
+      "River Person can carry one adjacent ally during movement and drop it adjacent to the final cell.",
+  },
+  [ABILITY_RIVER_PERSON_BOATMAN]: {
+    id: ABILITY_RIVER_PERSON_BOATMAN,
+    displayName: "Boatman",
+    kind: "active",
+    description:
+      "Spend action to perform a movement without spending the move slot.",
+    actionCost: {
+      consumes: { action: true },
+    },
+  },
+  [ABILITY_RIVER_PERSON_GUIDE_OF_SOULS]: {
+    id: ABILITY_RIVER_PERSON_GUIDE_OF_SOULS,
+    displayName: "Guide of Souls",
+    kind: "passive",
+    description:
+      "Immune to arena storm effects and storm attack restrictions.",
+  },
+  [ABILITY_RIVER_PERSON_TRA_LA_LA]: {
+    id: ABILITY_RIVER_PERSON_TRA_LA_LA,
+    displayName: "Tra-la-la",
+    kind: "phantasm",
+    description:
+      "At full 4 charges: choose adjacent enemy, move in a straight cardinal line, and touched allies that can legally attack strike that enemy once.",
+    maxCharges: 4,
+    chargesPerUse: 4,
+    actionCost: {
+      consumes: { action: true },
+    },
+  },
 
   [ABILITY_TRICKSTER_AOE]: {
     id: ABILITY_TRICKSTER_AOE,
@@ -943,6 +1012,24 @@ export function initUnitAbilities(unit: UnitState): UnitState {
       friskDidAttackWhileStealthedSinceLastEnter: false,
       friskPrecisionStrikeReady: false,
       friskKillCount: 0,
+    };
+  }
+  if (unit.heroId === HERO_ASGORE_ID) {
+    updated = setCharges(updated, ABILITY_ASGORE_FIREBALL, 0);
+    updated = setCharges(updated, ABILITY_ASGORE_FIRE_PARADE, 0);
+    updated = setCharges(updated, ABILITY_ASGORE_SOUL_PARADE, 0);
+    updated = {
+      ...updated,
+      asgorePatienceStealthActive: false,
+      asgoreBraveryAutoDefenseReady: false,
+    };
+  }
+  if (unit.heroId === HERO_RIVER_PERSON_ID) {
+    updated = setCharges(updated, ABILITY_RIVER_PERSON_TRA_LA_LA, 0);
+    updated = {
+      ...updated,
+      riverBoatCarryAllyId: undefined,
+      riverBoatmanMovePending: false,
     };
   }
 

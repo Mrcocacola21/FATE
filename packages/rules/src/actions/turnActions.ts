@@ -22,6 +22,11 @@ import {
 } from "./heroes/kaiser";
 import { applyGutsEndTurnDrain } from "./heroes/guts";
 import { tryApplyFriskPowerOfFriendship } from "./heroes/frisk";
+import {
+  clearAsgoreTurnFlags,
+  maybeTriggerAsgoreSoulParade,
+} from "./heroes/asgore";
+import { clearRiverTurnFlags } from "./heroes/riverPerson";
 import { clearKaladinMoveLocksForCaster } from "./heroes/kaladin";
 import { clearLokiEffectsForCaster } from "./heroes/loki";
 import { maybeTriggerElCidKolada } from "./heroes/elCid";
@@ -174,18 +179,26 @@ export function applyEndTurn(state: GameState, rng: RNG): ApplyResult {
       stateAfterDrain,
       stateAfterDrain.activeUnitId
     );
-    const stateAfterTurn = clearLechyGuideTravelerTarget(
+    const stateAfterLechy = clearLechyGuideTravelerTarget(
       stateAfterGenghis,
       stateAfterGenghis.activeUnitId
     );
+    const stateAfterTurn = clearAsgoreTurnFlags(
+      stateAfterLechy,
+      stateAfterLechy.activeUnitId
+    );
+    const stateAfterRiver = clearRiverTurnFlags(
+      stateAfterTurn,
+      stateAfterTurn.activeUnitId
+    );
     // Р•СЃР»Рё Сѓ РѕРґРЅРѕРіРѕ РёР· РёРіСЂРѕРєРѕРІ РЅРµС‚ Р¶РёРІС‹С… С„РёРіСѓСЂ вЂ” Р·Р°РІРµСЂС€Р°РµРј РёРіСЂСѓ
-    const p1Alive = Object.values(stateAfterTurn.units).some(
+    const p1Alive = Object.values(stateAfterRiver.units).some(
       (u) =>
         u.owner === "P1" &&
         u.isAlive &&
         u.heroId !== HERO_FALSE_TRAIL_TOKEN_ID
     );
-    const p2Alive = Object.values(stateAfterTurn.units).some(
+    const p2Alive = Object.values(stateAfterRiver.units).some(
       (u) =>
         u.owner === "P2" &&
         u.isAlive &&
@@ -194,7 +207,7 @@ export function applyEndTurn(state: GameState, rng: RNG): ApplyResult {
     if (!p1Alive || !p2Alive) {
       const winner: PlayerId | null = !p1Alive && p2Alive ? "P2" : p1Alive && !p2Alive ? "P1" : null;
       const endedState: GameState = {
-        ...stateAfterTurn,
+        ...stateAfterRiver,
         phase: "ended",
         activeUnitId: null,
         pendingMove: null,
@@ -208,15 +221,15 @@ export function applyEndTurn(state: GameState, rng: RNG): ApplyResult {
 
     const queue = state.turnQueue.length > 0 ? state.turnQueue : state.turnOrder;
     if (queue.length === 0) {
-      return { state: stateAfterTurn, events: drained.events };
+      return { state: stateAfterRiver, events: drained.events };
     }
     const prevIndex = state.turnQueue.length > 0 ? state.turnQueueIndex : state.turnOrderIndex;
 
-    const nextIndex = getNextAliveUnitIndex(stateAfterTurn, prevIndex, queue);
+    const nextIndex = getNextAliveUnitIndex(stateAfterRiver, prevIndex, queue);
     if (nextIndex === null) {
       // РќРёРєС‚Рѕ Р¶РёРІ РЅРµ РѕСЃС‚Р°Р»СЃСЏ вЂ” РёРіСЂР° РѕРєРѕРЅС‡РµРЅР°
       const ended: GameState = {
-        ...stateAfterTurn,
+        ...stateAfterRiver,
         phase: "ended",
         activeUnitId: null,
         pendingMove: null,
@@ -226,14 +239,14 @@ export function applyEndTurn(state: GameState, rng: RNG): ApplyResult {
 
     const order = state.turnQueue.length > 0 ? state.turnQueue : state.turnOrder;
     const nextUnitId = order[nextIndex];
-    const nextUnit = stateAfterTurn.units[nextUnitId]!;
+    const nextUnit = stateAfterRiver.units[nextUnitId]!;
     const nextPlayer = nextUnit.owner;
 
     // РќРѕРІС‹Р№ СЂР°СѓРЅРґ, РµСЃР»Рё РІРµСЂРЅСѓР»РёСЃСЊ "РЅР°Р·Р°Рґ" РїРѕ РёРЅРґРµРєСЃСѓ
     const isNewRound = nextIndex <= prevIndex;
 
     let baseState: GameState = {
-      ...stateAfterTurn,
+      ...stateAfterRiver,
       currentPlayer: nextPlayer,
       turnNumber: state.turnNumber + 1,
       roundNumber: state.roundNumber + (isNewRound ? 1 : 0),
@@ -371,9 +384,12 @@ export function applyUnitStartTurn(
   const koladaResult = carpetResult.state.pendingRoll
     ? carpetResult
     : maybeTriggerElCidKolada(carpetResult.state, unit.id, rng);
-  const tyrantResult = koladaResult.state.pendingRoll
-    ? { state: koladaResult.state, events: [] }
-    : maybeTriggerGroznyTyrant(koladaResult.state, unit.id, rng);
+  const asgoreResult = koladaResult.state.pendingRoll
+    ? { state: koladaResult.state, events: [] as GameEvent[] }
+    : maybeTriggerAsgoreSoulParade(koladaResult.state, unit.id);
+  const tyrantResult = asgoreResult.state.pendingRoll
+    ? { state: asgoreResult.state, events: [] }
+    : maybeTriggerGroznyTyrant(asgoreResult.state, unit.id, rng);
   const confuseTerrainResult = tyrantResult.state.pendingRoll
     ? { state: tyrantResult.state, events: [] }
     : maybeTriggerLechyConfuseTerrain(tyrantResult.state, unit.id);
@@ -402,6 +418,7 @@ export function applyUnitStartTurn(
         ...engineeringResult.events,
         ...carpetResult.events,
         ...koladaResult.events,
+        ...asgoreResult.events,
         ...tyrantResult.events,
         ...confuseTerrainResult.events,
         ...vladEvents,
@@ -438,6 +455,7 @@ export function applyUnitStartTurn(
     ...engineeringResult.events,
     ...carpetResult.events,
     ...koladaResult.events,
+    ...asgoreResult.events,
     ...tyrantResult.events,
     ...confuseTerrainResult.events,
     ...vladEvents,

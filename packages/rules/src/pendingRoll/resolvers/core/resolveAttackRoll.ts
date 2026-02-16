@@ -25,6 +25,7 @@ import { getPolkovodetsSource, maybeRequestIntimidate } from "../../../actions/h
 import { isElCid } from "../../../actions/shared";
 import { handleGroznyTyrantAfterAttack } from "../../../actions/heroes/grozny";
 import {
+  HERO_ASGORE_ID,
   HERO_CHIKATILO_ID,
   HERO_FEMTO_ID,
   HERO_FRISK_ID,
@@ -548,6 +549,7 @@ function wouldAttackHitFromContext(
 
   if (
     (defender.class === "spearman" ||
+      defender.heroId === HERO_ASGORE_ID ||
       defender.heroId === HERO_FEMTO_ID ||
       defender.heroId === HERO_ODIN_ID) &&
     defenderDouble
@@ -813,6 +815,20 @@ export function resolveAttackAttackerRoll(
     );
   }
 
+  if (
+    workingDefender.heroId === HERO_ASGORE_ID &&
+    workingDefender.asgoreBraveryAutoDefenseReady &&
+    !resolvedCtx.asgoreBraveryChoiceMade
+  ) {
+    return replacePendingRoll(
+      workingState,
+      workingDefender.owner,
+      "asgoreBraveryDefenseChoice",
+      resolvedCtx,
+      workingDefender.id
+    );
+  }
+
   const defenderRollKind: RollKind =
     pending.kind === "riderPathAttack_attackerRoll"
       ? "riderPathAttack_defenderRoll"
@@ -845,6 +861,7 @@ export function resolveAttackDefenderRoll(
     ...ctx,
     stage,
     berserkerChoiceMade: true,
+    asgoreBraveryChoiceMade: true,
     chikatiloDecoyChoiceMade: true,
     friskSubstitutionChoiceMade: true,
   };
@@ -1076,6 +1093,106 @@ export function resolveOdinMuninnDefenseChoiceRoll(
     resolved.state,
     resolved.events,
     finalizedCtx,
+    rng
+  );
+  if (tyrant.requested) {
+    return { state: tyrant.state, events: tyrant.events };
+  }
+  const intimidate = maybeRequestIntimidate(
+    tyrant.state,
+    ctx.attackerId,
+    ctx.defenderId,
+    tyrant.events,
+    { kind: "combatQueue" }
+  );
+  if (intimidate.requested) {
+    return { state: intimidate.state, events: intimidate.events };
+  }
+  return advanceCombatQueue(tyrant.state, tyrant.events);
+}
+
+export function resolveAsgoreBraveryDefenseChoiceRoll(
+  state: GameState,
+  pending: PendingRoll,
+  choice: "auto" | "roll" | undefined,
+  rng: RNG
+): ApplyResult {
+  const ctx = pending.context as unknown as AttackRollContext;
+  const attacker = state.units[ctx.attackerId];
+  const defender = state.units[ctx.defenderId];
+  if (!attacker || !defender) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  let selected = choice === "auto" ? "auto" : "roll";
+  if (
+    selected === "auto" &&
+    (defender.heroId !== HERO_ASGORE_ID || !defender.asgoreBraveryAutoDefenseReady)
+  ) {
+    selected = "roll";
+  }
+
+  let nextState = state;
+  if (selected === "auto") {
+    const updatedDefender: UnitState = {
+      ...defender,
+      asgoreBraveryAutoDefenseReady: false,
+    };
+    nextState = {
+      ...state,
+      units: {
+        ...state.units,
+        [updatedDefender.id]: updatedDefender,
+      },
+    };
+  }
+
+  const nextCtx: AttackRollContext = {
+    ...ctx,
+    asgoreBraveryChoiceMade: true,
+  };
+
+  if (selected === "roll") {
+    const defenderRollKind: RollKind =
+      nextCtx.queueKind === "riderPath"
+        ? "riderPathAttack_defenderRoll"
+        : "attack_defenderRoll";
+    return replacePendingRoll(
+      nextState,
+      defender.owner,
+      defenderRollKind,
+      nextCtx,
+      defender.id
+    );
+  }
+
+  const resolved = finalizeAttackFromContext(
+    nextState,
+    nextCtx,
+    "none",
+    false,
+    undefined,
+    false,
+    true
+  );
+  if (nextCtx.elCidDuelist) {
+    return handleElCidDuelistAfterAttack(
+      resolved.state,
+      resolved.events,
+      nextCtx
+    );
+  }
+  if (nextCtx.jebeKhansShooter) {
+    return handleJebeKhansShooterAfterAttack(
+      resolved.state,
+      resolved.events,
+      nextCtx
+    );
+  }
+  const tyrant = handleTyrantIfNeeded(
+    resolved.state,
+    resolved.events,
+    nextCtx,
     rng
   );
   if (tyrant.requested) {

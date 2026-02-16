@@ -24,9 +24,12 @@ import {
   KALADIN_FIFTH_ID,
   KALADIN_ID,
   ODIN_SLEIPNIR_ID,
+  ASGORE_FIREBALL_ID,
+  ASGORE_SOUL_PARADE_ID,
   GUTS_ARBALET_ID,
   GUTS_CANNON_ID,
   FEMTO_ID,
+  RIVER_PERSON_ID,
 } from "../../../rulesHints";
 import type { ActionMode } from "../../../store";
 import type { PlayerRole } from "../../../ws";
@@ -220,7 +223,9 @@ export const RightPanelContent: FC<RightPanelProps> = ({
   const selectedStormExempt =
     stormActive &&
     !!selectedUnit &&
-    (selectedUnit.heroId === LECHY_ID || selectedInsideForest);
+    (selectedUnit.heroId === LECHY_ID ||
+      selectedUnit.heroId === RIVER_PERSON_ID ||
+      selectedInsideForest);
   const selectedLegalAttackTargets = selectedUnit
     ? view.legal?.attackTargetsByUnitId[selectedUnit.id] ?? []
     : [];
@@ -232,7 +237,8 @@ export const RightPanelContent: FC<RightPanelProps> = ({
       ability.kind !== "passive" &&
       ability.id !== GROZNY_TYRANT_ID &&
       ability.id !== LECHY_CONFUSE_TERRAIN_ID &&
-      ability.id !== HASSAN_ASSASSIN_ORDER_ID
+      ability.id !== HASSAN_ASSASSIN_ORDER_ID &&
+      ability.id !== ASGORE_SOUL_PARADE_ID
   );
   const moveModeOptions =
     !pendingRoll && moveOptions && selectedUnit && moveOptions.unitId === selectedUnit.id
@@ -270,7 +276,8 @@ export const RightPanelContent: FC<RightPanelProps> = ({
   const canStealth =
     selectedUnit?.class === "assassin" ||
     selectedUnit?.class === "archer" ||
-    selectedUnit?.heroId === LECHY_ID;
+    selectedUnit?.heroId === LECHY_ID ||
+    !!selectedUnit?.asgorePatienceStealthActive;
   const stormRangedAttackBlocked =
     canAct &&
     !!selectedUnit?.position &&
@@ -830,6 +837,10 @@ export const RightPanelContent: FC<RightPanelProps> = ({
                   onSetActionMode("odinSleipnir");
                   return;
                 }
+                if (ability.id === ASGORE_FIREBALL_ID) {
+                  onSetActionMode("asgoreFireball");
+                  return;
+                }
                 if (ability.id === GUTS_ARBALET_ID) {
                   onSetActionMode("gutsArbalet");
                   return;
@@ -939,6 +950,8 @@ export const RightPanelContent: FC<RightPanelProps> = ({
                 ? "True Enemy: select an enemy within 2 cells."
                 : actionMode === "odinSleipnir"
                 ? "Sleipnir: select any empty destination cell."
+                : actionMode === "asgoreFireball"
+                ? "Fireball: select an enemy in ranged attack line."
                 : actionMode === "gutsArbalet"
                 ? "Hand Crossbow: select an enemy in ranged attack line."
                 : actionMode === "gutsCannon"

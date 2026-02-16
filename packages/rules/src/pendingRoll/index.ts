@@ -57,6 +57,13 @@ import {
   resolveFriskWarmWordsTargetChoice,
 } from "./resolvers/heroes/resolveFriskRoll";
 import {
+  resolveAsgoreSoulParadeIntegrityDestinationChoice,
+  resolveAsgoreSoulParadeJusticeTargetChoice,
+  resolveAsgoreSoulParadePatienceTargetChoice,
+  resolveAsgoreSoulParadePerseveranceTargetChoice,
+  resolveAsgoreSoulParadeRoll,
+} from "./resolvers/heroes/resolveAsgoreRoll";
+import {
   resolveFemtoDivineMoveDestinationChoice,
   resolveFemtoDivineMoveRoll,
 } from "../actions/heroes/griffith";
@@ -68,6 +75,7 @@ import {
   resolveFriskChildsCryChoiceRoll,
   resolveFriskSubstitutionChoiceRoll,
   resolveOdinMuninnDefenseChoiceRoll,
+  resolveAsgoreBraveryDefenseChoiceRoll,
 } from "./resolvers/core/resolveAttackRoll";
 import {
   resolveVladForestChoice,
@@ -89,7 +97,13 @@ import { resolveLechyGuideTravelerPlacement } from "../actions/heroes/lechy";
 import {
   resolveForestMoveCheckRoll,
   resolveForestMoveDestinationChoice,
+  resolveRiverBoatCarryChoice,
 } from "../actions/movementActions";
+import {
+  resolveRiverBoatDropDestination,
+  resolveRiverTraLaLaDestinationChoice,
+  resolveRiverTraLaLaTargetChoice,
+} from "../actions/heroes/riverPerson";
 
 export function applyResolvePendingRoll(
   state: GameState,
@@ -211,6 +225,14 @@ export function applyResolvePendingRoll(
     case "friskChildsCryChoice": {
       return resolveFriskChildsCryChoiceRoll(state, pending, action.choice, rng);
     }
+    case "asgoreBraveryDefenseChoice": {
+      return resolveAsgoreBraveryDefenseChoiceRoll(
+        state,
+        pending,
+        autoRollChoice,
+        rng
+      );
+    }
     case "chikatiloDecoyChoice": {
       return resolveChikatiloDecoyChoice(state, pending, action.choice, rng);
     }
@@ -273,6 +295,38 @@ export function applyResolvePendingRoll(
     case "friskKeenEyeChoice": {
       return resolveFriskKeenEyeChoice(state, pending, action.choice, rng);
     }
+    case "asgoreSoulParadeRoll": {
+      return resolveAsgoreSoulParadeRoll(state, pending, rng);
+    }
+    case "asgoreSoulParadePatienceTargetChoice": {
+      return resolveAsgoreSoulParadePatienceTargetChoice(
+        state,
+        pending,
+        action.choice
+      );
+    }
+    case "asgoreSoulParadePerseveranceTargetChoice": {
+      return resolveAsgoreSoulParadePerseveranceTargetChoice(
+        state,
+        pending,
+        action.choice,
+        rng
+      );
+    }
+    case "asgoreSoulParadeJusticeTargetChoice": {
+      return resolveAsgoreSoulParadeJusticeTargetChoice(
+        state,
+        pending,
+        action.choice
+      );
+    }
+    case "asgoreSoulParadeIntegrityDestination": {
+      return resolveAsgoreSoulParadeIntegrityDestinationChoice(
+        state,
+        pending,
+        action.choice
+      );
+    }
     case "femtoDivineMoveRoll": {
       return resolveFemtoDivineMoveRoll(state, pending, rng);
     }
@@ -333,6 +387,18 @@ export function applyResolvePendingRoll(
     }
     case "forestMoveDestination": {
       return resolveForestMoveDestinationChoice(state, pending, action.choice, rng);
+    }
+    case "riverBoatCarryChoice": {
+      return resolveRiverBoatCarryChoice(state, pending, action.choice);
+    }
+    case "riverBoatDropDestination": {
+      return resolveRiverBoatDropDestination(state, pending, action.choice);
+    }
+    case "riverTraLaLaTargetChoice": {
+      return resolveRiverTraLaLaTargetChoice(state, pending, action.choice);
+    }
+    case "riverTraLaLaDestinationChoice": {
+      return resolveRiverTraLaLaDestinationChoice(state, pending, action.choice);
     }
     default:
       return { state: clearPendingRoll(state), events: [] };

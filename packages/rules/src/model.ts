@@ -137,6 +137,14 @@ export interface UnitState {
   friskPrecisionStrikeReady?: boolean;
   /** Frisk: kill count used by first/second+ kill bonuses. */
   friskKillCount?: number;
+  /** Asgore Soul Parade (Patience): temporary stealth threshold (5-6) for current turn. */
+  asgorePatienceStealthActive?: boolean;
+  /** Asgore Soul Parade (Bravery): one-time auto-defense available. */
+  asgoreBraveryAutoDefenseReady?: boolean;
+  /** River Person: selected ally to carry during the next move resolution. */
+  riverBoatCarryAllyId?: string;
+  /** River Person: next move is granted by Boatman and should not spend move slot. */
+  riverBoatmanMovePending?: boolean;
 
   isAlive: boolean;
 }
@@ -210,6 +218,10 @@ export type RollKind =
   | "lechyGuideTravelerPlacement"
   | "forestMoveCheck"
   | "forestMoveDestination"
+  | "riverBoatCarryChoice"
+  | "riverBoatDropDestination"
+  | "riverTraLaLaTargetChoice"
+  | "riverTraLaLaDestinationChoice"
   | "jebeHailOfArrows_attackerRoll"
   | "jebeHailOfArrows_defenderRoll"
   | "jebeHailOfArrows_berserkerDefenseChoice"
@@ -217,6 +229,12 @@ export type RollKind =
   | "jebeKhansShooterTargetChoice"
   | "hassanTrueEnemyTargetChoice"
   | "hassanAssassinOrderSelection"
+  | "asgoreSoulParadeRoll"
+  | "asgoreSoulParadePatienceTargetChoice"
+  | "asgoreSoulParadePerseveranceTargetChoice"
+  | "asgoreSoulParadeJusticeTargetChoice"
+  | "asgoreSoulParadeIntegrityDestination"
+  | "asgoreBraveryDefenseChoice"
   | "lokiLaughtChoice"
   | "lokiChickenTargetChoice"
   | "lokiMindControlEnemyChoice"
@@ -513,6 +531,10 @@ export type ResolveRollChoice =
   | { type: "jebeKhansShooterTarget"; targetId: string }
   | { type: "hassanTrueEnemyTarget"; targetId: string }
   | { type: "hassanAssassinOrderPick"; unitIds: string[] }
+  | { type: "asgoreSoulParadePatienceTarget"; targetId: string }
+  | { type: "asgoreSoulParadePerseveranceTarget"; targetId: string }
+  | { type: "asgoreSoulParadeJusticeTarget"; targetId: string }
+  | { type: "asgoreSoulParadeIntegrityDestination"; position: Coord }
   | {
       type: "lokiLaughtOption";
       option:

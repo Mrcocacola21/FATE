@@ -5,11 +5,11 @@ import { isCellOccupied } from "./board";
 import { canAttackTarget } from "./combat";
 import { canDirectlyTargetUnit } from "./visibility";
 import { canSpendSlots } from "./turnEconomy";
+import { getStealthSuccessMinRoll } from "./stealth";
 import {
   HERO_CHIKATILO_ID,
   HERO_FALSE_TRAIL_TOKEN_ID,
   HERO_GRAND_KAISER_ID,
-  HERO_LECHY_ID,
 } from "./heroes";
 
 export function getLegalPlacements(state: GameState, unitId: string): Coord[] {
@@ -131,9 +131,7 @@ export function getLegalIntents(
   const canEnterStealth =
     !isChicken &&
     canSpendSlots(activeUnit, { stealth: true }) &&
-    (activeUnit.class === "assassin" ||
-      activeUnit.class === "archer" ||
-      activeUnit.heroId === HERO_LECHY_ID) &&
+    getStealthSuccessMinRoll(activeUnit) !== null &&
     !kaiserTransformed &&
     !kaiserInBunker;
   const isFalseTrailToken = activeUnit.heroId === HERO_FALSE_TRAIL_TOKEN_ID;

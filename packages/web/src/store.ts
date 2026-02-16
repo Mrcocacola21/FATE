@@ -38,6 +38,7 @@ export type ActionMode =
   | "guideTraveler"
   | "jebeHailOfArrows"
   | "jebeKhansShooter"
+  | "asgoreFireball"
   | "hassanTrueEnemy"
   | "kaladinFifth"
   | "odinSleipnir"

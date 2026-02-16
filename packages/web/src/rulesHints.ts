@@ -16,8 +16,10 @@ export const LECHY_ID = "lechy";
 export const JEBE_ID = "jebe";
 export const HASSAN_ID = "hassan";
 export const FRISK_ID = "frisk";
+export const ASGORE_ID = "asgore";
 export const KALADIN_ID = "kaladin";
 export const ODIN_ID = "odin";
+export const RIVER_PERSON_ID = "riverPerson";
 export const LOKI_ID = "loki";
 export const GUTS_ID = "guts";
 export const GRIFFITH_ID = "griffith";
@@ -47,11 +49,16 @@ export const FRISK_PACIFISM_ID = "friskPacifism";
 export const FRISK_GENOCIDE_ID = "friskGenocide";
 export const FRISK_CLEAN_SOUL_ID = "friskCleanSoul";
 export const FRISK_ONE_PATH_ID = "friskOnePath";
+export const ASGORE_FIREBALL_ID = "asgoreFireball";
+export const ASGORE_FIRE_PARADE_ID = "asgoreFireParade";
+export const ASGORE_SOUL_PARADE_ID = "asgoreSoulParade";
 export const GUTS_ARBALET_ID = "gutsArbalet";
 export const GUTS_CANNON_ID = "gutsCannon";
 export const GUTS_BERSERK_MODE_ID = "gutsBerserkMode";
 export const GUTS_EXIT_BERSERK_ID = "gutsExitBerserk";
 export const FEMTO_DIVINE_MOVE_ID = "femtoDivineMove";
+export const RIVER_PERSON_BOATMAN_ID = "riverBoatman";
+export const RIVER_PERSON_TRA_LA_LA_ID = "riverTraLaLa";
 
 const MAX_HP_BY_CLASS: Record<UnitClass, number> = {
   spearman: 5,
@@ -92,11 +99,17 @@ export function getMaxHp(unitClass: UnitClass, heroId?: string): number {
   if (heroId === FRISK_ID) {
     base += 1;
   }
+  if (heroId === ASGORE_ID) {
+    base += 3;
+  }
   if (heroId === KALADIN_ID) {
     base += 1;
   }
   if (heroId === ODIN_ID) {
     base += 5;
+  }
+  if (heroId === RIVER_PERSON_ID) {
+    base += 1;
   }
   if (heroId === LOKI_ID) {
     base += 5;

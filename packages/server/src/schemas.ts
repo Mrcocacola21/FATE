@@ -87,6 +87,22 @@ const ResolveRollChoiceSchema = z.union([
     unitIds: z.array(z.string().min(1)).length(2),
   }),
   z.object({
+    type: z.literal("asgoreSoulParadePatienceTarget"),
+    targetId: z.string().min(1),
+  }),
+  z.object({
+    type: z.literal("asgoreSoulParadePerseveranceTarget"),
+    targetId: z.string().min(1),
+  }),
+  z.object({
+    type: z.literal("asgoreSoulParadeJusticeTarget"),
+    targetId: z.string().min(1),
+  }),
+  z.object({
+    type: z.literal("asgoreSoulParadeIntegrityDestination"),
+    position: CoordSchema,
+  }),
+  z.object({
     type: z.literal("lokiLaughtOption"),
     option: z.union([
       z.literal("againSomeNonsense"),

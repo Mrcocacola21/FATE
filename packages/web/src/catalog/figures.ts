@@ -7,11 +7,13 @@ export const HERO_CATALOG: HeroCatalog = [
   { id: "frisk", name: "Frisk", mainClass: "assassin" },
   { id: "base-archer", name: "Base Archer", mainClass: "archer" },
   { id: "grand-kaiser", name: "Grand Kaiser", mainClass: "archer" },
+  { id: "jebe", name: "Jebe", mainClass: "archer" },
   { id: "base-berserker", name: "Base Berserker", mainClass: "berserker" },
   { id: "grozny", name: "Ivan Grozny", mainClass: "berserker" },
   { id: "guts", name: "Guts", mainClass: "berserker" },
   { id: "base-rider", name: "Base Rider", mainClass: "rider" },
   { id: "odin", name: "Odin", mainClass: "rider" },
+  { id: "riverPerson", name: "River Person", mainClass: "rider" },
   { id: "base-spearman", name: "Base Spearman", mainClass: "spearman" },
   { id: "vladTepes", name: "Vlad III Tepes", mainClass: "spearman" },
   { id: "kaladin", name: "Kaladin Stormblessed", mainClass: "spearman" },
@@ -21,6 +23,7 @@ export const HERO_CATALOG: HeroCatalog = [
   { id: "base-knight", name: "Base Knight", mainClass: "knight" },
   { id: "elCidCompeador", name: "El Cid Compeador", mainClass: "knight" },
   { id: "griffith", name: "Griffith", mainClass: "knight" },
+  { id: "asgore", name: "Asgore Dreemurr", mainClass: "knight" },
   { id: "genghisKhan", name: "Genghis Khan", mainClass: "rider" },
 ];
 

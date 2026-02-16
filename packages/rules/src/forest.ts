@@ -1,6 +1,6 @@
 import type { Coord, ForestMarker, GameState, PlayerId, UnitState } from "./model";
 import { chebyshev } from "./board";
-import { HERO_LECHY_ID } from "./heroes";
+import { HERO_LECHY_ID, HERO_RIVER_PERSON_ID } from "./heroes";
 
 export const FOREST_AURA_RADIUS = 2;
 export const ARENA_STORM_ID = "storm";
@@ -64,6 +64,8 @@ export function isStormActive(state: GameState): boolean {
 }
 
 export function isStormExempt(state: GameState, unit: UnitState): boolean {
-  if (unit.heroId === HERO_LECHY_ID) return true;
+  if (unit.heroId === HERO_LECHY_ID || unit.heroId === HERO_RIVER_PERSON_ID) {
+    return true;
+  }
   return isUnitInsideForestAura(state, unit);
 }

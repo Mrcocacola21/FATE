@@ -32,6 +32,7 @@ export function makeAttackContext(params: {
     stage: "initial",
     berserkerChoiceMade: false,
     odinMuninnChoiceMade: false,
+    asgoreBraveryChoiceMade: false,
     chikatiloDecoyChoiceMade: false,
     friskSubstitutionChoiceMade: false,
     friskChildsCryChoiceMade: false,

@@ -20,6 +20,7 @@ export interface AttackRollContext extends Record<string, unknown> {
   stage?: "initial" | "tieBreak";
   berserkerChoiceMade?: boolean;
   odinMuninnChoiceMade?: boolean;
+  asgoreBraveryChoiceMade?: boolean;
   chikatiloDecoyChoiceMade?: boolean;
   friskSubstitutionChoiceMade?: boolean;
   friskChildsCryChoiceMade?: boolean;

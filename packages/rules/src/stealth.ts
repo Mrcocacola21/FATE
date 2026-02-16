@@ -35,6 +35,9 @@ import { applyGriffithFemtoRebirth } from "./actions/heroes/griffith";
   // use StealthRevealReason from model
 
 export function getStealthSuccessMinRoll(unit: UnitState): number | null {
+  if (unit.asgorePatienceStealthActive) {
+    return 5;
+  }
   if (typeof unit.stealthSuccessMinRoll === "number") {
     return unit.stealthSuccessMinRoll;
   }

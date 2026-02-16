@@ -1,4 +1,4 @@
-import type { Coord, StealthRevealReason } from "../model";
+import type { Coord, MoveMode, StealthRevealReason } from "../model";
 
 export interface CarpetStrikeAoEContext extends Record<string, unknown> {
   casterId: string;
@@ -28,6 +28,7 @@ export interface AttackRollContext extends Record<string, unknown> {
   stage?: "initial" | "tieBreak";
   berserkerChoiceMade?: boolean;
   odinMuninnChoiceMade?: boolean;
+  asgoreBraveryChoiceMade?: boolean;
   chikatiloDecoyChoiceMade?: boolean;
   friskSubstitutionChoiceMade?: boolean;
   friskChildsCryChoiceMade?: boolean;
@@ -113,6 +114,22 @@ export interface HassanAssassinOrderSelectionContext
   queue?: ("P1" | "P2")[];
 }
 
+export interface AsgoreSoulParadeRollContext extends Record<string, unknown> {
+  asgoreId: string;
+}
+
+export interface AsgoreSoulParadeTargetChoiceContext
+  extends Record<string, unknown> {
+  asgoreId: string;
+  options: string[];
+}
+
+export interface AsgoreSoulParadeIntegrityDestinationContext
+  extends Record<string, unknown> {
+  asgoreId: string;
+  options: Coord[];
+}
+
 export interface LokiLaughtChoiceContext extends Record<string, unknown> {
   lokiId: string;
   chickenOptions: string[];
@@ -174,4 +191,30 @@ export interface FriskGenocideChoiceContext extends Record<string, unknown> {
 export interface FriskKeenEyeChoiceContext extends Record<string, unknown> {
   friskId: string;
   options: string[];
+}
+
+export interface RiverBoatCarryChoiceContext extends Record<string, unknown> {
+  riverId: string;
+  mode?: MoveMode;
+  options: string[];
+}
+
+export interface RiverBoatDropDestinationContext
+  extends Record<string, unknown> {
+  riverId: string;
+  allyId: string;
+  options: Coord[];
+}
+
+export interface RiverTraLaLaTargetChoiceContext
+  extends Record<string, unknown> {
+  riverId: string;
+  options: string[];
+}
+
+export interface RiverTraLaLaDestinationChoiceContext
+  extends Record<string, unknown> {
+  riverId: string;
+  targetId: string;
+  options: Coord[];
 }

@@ -43,6 +43,11 @@ import {
   ABILITY_JEBE_HAIL_OF_ARROWS,
   ABILITY_JEBE_KHANS_SHOOTER,
   ABILITY_HASSAN_TRUE_ENEMY,
+  ABILITY_ASGORE_FIREBALL,
+  ABILITY_ASGORE_FIRE_PARADE,
+  ABILITY_ASGORE_SOUL_PARADE,
+  ABILITY_RIVER_PERSON_BOATMAN,
+  ABILITY_RIVER_PERSON_TRA_LA_LA,
   ABILITY_TEST_MULTI_SLOT,
   ABILITY_VLAD_FOREST,
   HERO_GRAND_KAISER_ID,
@@ -57,6 +62,8 @@ import {
   HERO_FEMTO_ID,
   HERO_JEBE_ID,
   HERO_HASSAN_ID,
+  HERO_ASGORE_ID,
+  HERO_RIVER_PERSON_ID,
   HERO_KALADIN_ID,
   HERO_FRISK_ID,
   HERO_LOKI_ID,
@@ -131,6 +138,7 @@ function resolvePendingRollOnce(
   const resolvedChoice =
     pending.kind === "berserkerDefenseChoice" ||
     pending.kind === "odinMuninnDefenseChoice" ||
+    pending.kind === "asgoreBraveryDefenseChoice" ||
     pending.kind === "dora_berserkerDefenseChoice" ||
     pending.kind === "jebeHailOfArrows_berserkerDefenseChoice" ||
     pending.kind === "carpetStrike_berserkerDefenseChoice" ||
@@ -8117,6 +8125,610 @@ function testKaladinFifthOathGatingDamageAndImmobilizeDuration() {
   console.log("kaladin_fifth_oath_gating_damage_and_immobilize_duration passed");
 }
 
+function setupAsgoreState() {
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1", { knight: HERO_ASGORE_ID }));
+  state = attachArmy(state, createDefaultArmy("P2"));
+
+  const asgore = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.heroId === HERO_ASGORE_ID
+  )!;
+
+  return { state, asgore };
+}
+
+function startAsgoreSoulParadeTurn(state: GameState, asgoreId: string) {
+  const prepared = initKnowledgeForOwners({
+    ...state,
+    phase: "battle",
+    currentPlayer: "P1",
+    activeUnitId: null,
+    pendingRoll: null,
+    pendingMove: null,
+    turnQueue: [asgoreId],
+    turnQueueIndex: 0,
+    turnOrder: [asgoreId],
+    turnOrderIndex: 0,
+  });
+  return applyAction(
+    prepared,
+    { type: "unitStartTurn", unitId: asgoreId } as any,
+    makeRngSequence([])
+  );
+}
+
+function testAsgoreHpBonus() {
+  const { asgore } = setupAsgoreState();
+  const baseHp = getUnitDefinition("knight").maxHp;
+  const meta = getHeroMeta(HERO_ASGORE_ID);
+
+  assert(asgore.hp === baseHp + 3, "Asgore HP should be base knight HP + 3");
+  assert(
+    meta?.baseStats.hp === baseHp + 3,
+    "Asgore hero meta HP should be base knight HP + 3"
+  );
+
+  console.log("asgore_hp_bonus passed");
+}
+
+function testAsgoreSpearmanReachAndDefenseDouble() {
+  let { state, asgore } = setupAsgoreState();
+  const rangeTarget = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "spearman"
+  )!;
+  const attacker = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "rider"
+  )!;
+
+  state = setUnit(state, asgore.id, { position: { col: 4, row: 4 } });
+  state = setUnit(state, rangeTarget.id, { position: { col: 6, row: 4 } });
+  state = setUnit(state, attacker.id, { position: { col: 4, row: 5 } });
+  state = toBattleState(state, "P1", asgore.id);
+  state = initKnowledgeForOwners(state);
+
+  const legalTargets = getLegalAttackTargets(state, asgore.id);
+  assert(
+    legalTargets.includes(rangeTarget.id),
+    "Asgore should use spearman reach and attack distance-2 targets"
+  );
+
+  const defended = resolveAttack(state, {
+    attackerId: attacker.id,
+    defenderId: asgore.id,
+    rolls: {
+      attackerDice: [6, 6],
+      defenderDice: [1, 1],
+    },
+  });
+  const defendEvent = defended.events.find(
+    (event) =>
+      event.type === "attackResolved" &&
+      event.attackerId === attacker.id &&
+      event.defenderId === asgore.id
+  ) as Extract<GameEvent, { type: "attackResolved" }> | undefined;
+  assert(defendEvent, "incoming attack on Asgore should resolve");
+  assert(
+    !defendEvent.hit,
+    "Asgore should auto-dodge on defense double via spearman multiclass"
+  );
+
+  console.log("asgore_spearman_reach_and_defense_double passed");
+}
+
+function testAsgoreFireballTargetingChargesAndDamage() {
+  let { state, asgore } = setupAsgoreState();
+  const lineTarget = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "knight"
+  )!;
+  const illegalTarget = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "rider"
+  )!;
+
+  state = setUnit(state, asgore.id, {
+    position: { col: 4, row: 4 },
+    charges: { ...asgore.charges, [ABILITY_ASGORE_FIREBALL]: 0 },
+  });
+  state = setUnit(state, lineTarget.id, { position: { col: 4, row: 7 } });
+  state = setUnit(state, illegalTarget.id, { position: { col: 5, row: 6 } });
+  state = toBattleState(state, "P1", asgore.id);
+  state = initKnowledgeForOwners(state);
+
+  const blockedByCharges = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: asgore.id,
+      abilityId: ABILITY_ASGORE_FIREBALL,
+      payload: { targetId: lineTarget.id },
+    } as any,
+    makeRngSequence([])
+  );
+  assert(
+    !blockedByCharges.state.pendingRoll,
+    "Fireball should be blocked when charge is 0"
+  );
+  assert(
+    blockedByCharges.state.units[asgore.id].charges[ABILITY_ASGORE_FIREBALL] === 0,
+    "blocked Fireball should not change charges"
+  );
+
+  state = setUnit(state, asgore.id, {
+    turn: makeEmptyTurnEconomy(),
+    charges: { ...state.units[asgore.id].charges, [ABILITY_ASGORE_FIREBALL]: 1 },
+  });
+  const illegalTargetUse = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: asgore.id,
+      abilityId: ABILITY_ASGORE_FIREBALL,
+      payload: { targetId: illegalTarget.id },
+    } as any,
+    makeRngSequence([])
+  );
+  assert(
+    !illegalTargetUse.state.pendingRoll,
+    "Fireball should reject illegal non-archer-line target"
+  );
+  assert(
+    illegalTargetUse.state.units[asgore.id].charges[ABILITY_ASGORE_FIREBALL] === 1,
+    "illegal Fireball target should not spend charge"
+  );
+
+  const used = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: asgore.id,
+      abilityId: ABILITY_ASGORE_FIREBALL,
+      payload: { targetId: lineTarget.id },
+    } as any,
+    makeRngSequence([])
+  );
+  assert(
+    used.state.pendingRoll?.kind === "attack_attackerRoll",
+    "legal Fireball should start normal attack roll flow"
+  );
+  assert(
+    used.state.units[asgore.id].charges[ABILITY_ASGORE_FIREBALL] === 0,
+    "Fireball should spend exactly 1 charge"
+  );
+  assert(
+    used.state.units[asgore.id].turn.actionUsed,
+    "Fireball should consume action slot"
+  );
+
+  const resolved = resolveAllPendingRollsWithEvents(
+    used.state,
+    makeRngSequence([0.99, 0.99, 0.01, 0.01])
+  );
+  const attackEvent = [...used.events, ...resolved.events].find(
+    (event) =>
+      event.type === "attackResolved" &&
+      event.attackerId === asgore.id &&
+      event.defenderId === lineTarget.id
+  ) as Extract<GameEvent, { type: "attackResolved" }> | undefined;
+  assert(attackEvent, "Fireball attack should resolve");
+  assert(attackEvent.hit, "Fireball should hit with deterministic winning roll");
+
+  console.log("asgore_fireball_targeting_charges_and_damage passed");
+}
+
+function testAsgoreFireParadeAreaResolutionAndChargeSpend() {
+  let { state, asgore } = setupAsgoreState();
+  const ally = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.class === "rider"
+  )!;
+  const enemyNear = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "knight"
+  )!;
+  const enemyFar = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "archer"
+  )!;
+
+  state = setUnit(state, asgore.id, {
+    position: { col: 4, row: 4 },
+    charges: { ...asgore.charges, [ABILITY_ASGORE_FIRE_PARADE]: 0 },
+  });
+  state = setUnit(state, ally.id, { position: { col: 5, row: 4 } });
+  state = setUnit(state, enemyNear.id, { position: { col: 3, row: 4 } });
+  state = setUnit(state, enemyFar.id, { position: { col: 8, row: 8 } });
+  state = toBattleState(state, "P1", asgore.id);
+  state = initKnowledgeForOwners(state);
+
+  const blocked = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: asgore.id,
+      abilityId: ABILITY_ASGORE_FIRE_PARADE,
+    } as any,
+    makeRngSequence([])
+  );
+  assert(!blocked.state.pendingRoll, "Fire Parade should be blocked with 0 charges");
+  assert(
+    blocked.state.units[asgore.id].charges[ABILITY_ASGORE_FIRE_PARADE] === 0,
+    "blocked Fire Parade should keep charges"
+  );
+
+  state = setUnit(state, asgore.id, {
+    turn: makeEmptyTurnEconomy(),
+    charges: { ...state.units[asgore.id].charges, [ABILITY_ASGORE_FIRE_PARADE]: 1 },
+  });
+  const used = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: asgore.id,
+      abilityId: ABILITY_ASGORE_FIRE_PARADE,
+    } as any,
+    makeRngSequence([])
+  );
+  assert(
+    used.state.pendingRoll?.kind === "tricksterAoE_attackerRoll",
+    "Fire Parade should start shared-roll AoE flow"
+  );
+  assert(
+    used.state.units[asgore.id].charges[ABILITY_ASGORE_FIRE_PARADE] === 0,
+    "Fire Parade should spend exactly 1 charge"
+  );
+  assert(
+    used.state.units[asgore.id].turn.actionUsed,
+    "Fire Parade should consume action slot"
+  );
+
+  const resolved = resolveAllPendingRollsWithEvents(
+    used.state,
+    makeRngSequence([0.99, 0.99, 0.01, 0.01, 0.01, 0.01])
+  );
+  const attackEvents = [...used.events, ...resolved.events].filter(
+    (event) =>
+      event.type === "attackResolved" &&
+      event.attackerId === asgore.id &&
+      [ally.id, enemyNear.id].includes(event.defenderId)
+  ) as Extract<GameEvent, { type: "attackResolved" }>[];
+  assert(
+    attackEvents.length === 2,
+    "Fire Parade should hit all units in trickster area around Asgore (including ally)"
+  );
+  const hitIds = attackEvents.map((event) => event.defenderId).sort();
+  assert.deepStrictEqual(
+    hitIds,
+    [ally.id, enemyNear.id].sort(),
+    "Fire Parade should include nearby ally and enemy and skip far targets"
+  );
+  const rollSignatures = new Set(
+    attackEvents.map((event) => event.attackerRoll.dice.join(","))
+  );
+  assert(
+    rollSignatures.size === 1,
+    "Fire Parade should use one shared attacker roll for AoE"
+  );
+  assert(
+    !attackEvents.some((event) => event.defenderId === enemyFar.id),
+    "Fire Parade should not affect units outside trickster area"
+  );
+
+  console.log("asgore_fire_parade_area_resolution_and_charge_spend passed");
+}
+
+function testAsgoreSoulParadePatienceAttackAndTempStealth() {
+  let { state, asgore } = setupAsgoreState();
+  const enemy = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "knight"
+  )!;
+
+  state = setUnit(state, asgore.id, {
+    position: { col: 4, row: 4 },
+    charges: { ...asgore.charges, [ABILITY_ASGORE_SOUL_PARADE]: 2 },
+  });
+  state = setUnit(state, enemy.id, { position: { col: 4, row: 5 } });
+
+  const started = startAsgoreSoulParadeTurn(state, asgore.id);
+  assert(
+    started.state.pendingRoll?.kind === "asgoreSoulParadeRoll",
+    "Soul Parade should trigger at start turn when charges become full"
+  );
+  assert(
+    started.state.units[asgore.id].charges[ABILITY_ASGORE_SOUL_PARADE] === 0,
+    "Soul Parade trigger should spend all 3 charges"
+  );
+
+  const rolled = resolvePendingRollOnce(started.state, makeRngSequence([0.1]));
+  assert(
+    rolled.state.pendingRoll?.kind === "asgoreSoulParadePatienceTargetChoice",
+    "Soul Parade roll=1 should request Patience target"
+  );
+  assert(
+    !!rolled.state.units[asgore.id].asgorePatienceStealthActive,
+    "Patience branch should enable temporary stealth threshold 5-6"
+  );
+
+  const targetPicked = resolvePendingWithChoice(
+    rolled.state,
+    { type: "asgoreSoulParadePatienceTarget", targetId: enemy.id },
+    makeRngSequence([])
+  );
+  assert(
+    targetPicked.state.pendingRoll?.kind === "attack_attackerRoll",
+    "Patience branch should trigger immediate attack flow"
+  );
+  const resolvedAttack = resolveAllPendingRollsWithEvents(
+    targetPicked.state,
+    makeRngSequence([0.99, 0.99, 0.01, 0.01])
+  );
+  const patienceAttack = [...targetPicked.events, ...resolvedAttack.events].find(
+    (event) =>
+      event.type === "attackResolved" &&
+      event.attackerId === asgore.id &&
+      event.defenderId === enemy.id
+  ) as Extract<GameEvent, { type: "attackResolved" }> | undefined;
+  assert(patienceAttack, "Patience branch attack should resolve");
+
+  let stealthState = setUnit(resolvedAttack.state, asgore.id, {
+    turn: makeEmptyTurnEconomy(),
+    hasMovedThisTurn: false,
+    hasActedThisTurn: false,
+    hasAttackedThisTurn: false,
+    stealthAttemptedThisTurn: false,
+  });
+  stealthState = { ...stealthState, currentPlayer: "P1", activeUnitId: asgore.id };
+  const attemptFail = applyAction(
+    stealthState,
+    { type: "enterStealth", unitId: asgore.id } as any,
+    makeRngSequence([])
+  );
+  assert(
+    attemptFail.state.pendingRoll?.kind === "enterStealth",
+    "Patience should allow Asgore to attempt stealth during this turn"
+  );
+  const failedStealth = resolvePendingRollOnce(
+    attemptFail.state,
+    makeRngSequence([0.5])
+  ); // roll 4
+  assert(
+    !failedStealth.state.units[asgore.id].isStealthed,
+    "Patience stealth should fail on roll 4 (threshold 5-6)"
+  );
+
+  let secondAttemptState = setUnit(failedStealth.state, asgore.id, {
+    turn: makeEmptyTurnEconomy(),
+    hasMovedThisTurn: false,
+    hasActedThisTurn: false,
+    hasAttackedThisTurn: false,
+    stealthAttemptedThisTurn: false,
+  });
+  secondAttemptState = {
+    ...secondAttemptState,
+    currentPlayer: "P1",
+    activeUnitId: asgore.id,
+  };
+  const attemptSuccess = applyAction(
+    secondAttemptState,
+    { type: "enterStealth", unitId: asgore.id } as any,
+    makeRngSequence([])
+  );
+  const succeededStealth = resolvePendingRollOnce(
+    attemptSuccess.state,
+    makeRngSequence([0.8])
+  ); // roll 5
+  assert(
+    succeededStealth.state.units[asgore.id].isStealthed,
+    "Patience stealth should succeed on roll 5"
+  );
+
+  console.log("asgore_soul_parade_patience_attack_and_temp_stealth passed");
+}
+
+function testAsgoreSoulParadeBraveryAutoDefenseOneTime() {
+  let { state, asgore } = setupAsgoreState();
+  const attacker = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "knight"
+  )!;
+
+  state = setUnit(state, asgore.id, {
+    position: { col: 4, row: 4 },
+    charges: { ...asgore.charges, [ABILITY_ASGORE_SOUL_PARADE]: 2 },
+  });
+  state = setUnit(state, attacker.id, { position: { col: 4, row: 5 } });
+
+  const started = startAsgoreSoulParadeTurn(state, asgore.id);
+  const rolled = resolvePendingRollOnce(started.state, makeRngSequence([0.2])); // roll 2
+  assert(!rolled.state.pendingRoll, "Bravery branch should resolve immediately");
+  assert(
+    !!rolled.state.units[asgore.id].asgoreBraveryAutoDefenseReady,
+    "Bravery branch should arm one-time auto defense"
+  );
+
+  let defendState = toBattleState(rolled.state, "P2", attacker.id);
+  defendState = initKnowledgeForOwners(defendState);
+  const attackStarted = applyAction(
+    defendState,
+    { type: "attack", attackerId: attacker.id, defenderId: asgore.id } as any,
+    makeRngSequence([])
+  );
+  const afterAttacker = resolvePendingRollOnce(
+    attackStarted.state,
+    makeRngSequence([0.99, 0.99])
+  );
+  assert(
+    afterAttacker.state.pendingRoll?.kind === "asgoreBraveryDefenseChoice",
+    "Bravery choice should appear after attacker roll"
+  );
+
+  const autoChosen = applyAction(
+    afterAttacker.state,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: afterAttacker.state.pendingRoll!.id,
+      player: afterAttacker.state.pendingRoll!.player,
+      choice: "auto",
+    } as any,
+    makeRngSequence([])
+  );
+  const autoEvent = autoChosen.events.find(
+    (event) =>
+      event.type === "attackResolved" &&
+      event.attackerId === attacker.id &&
+      event.defenderId === asgore.id
+  ) as Extract<GameEvent, { type: "attackResolved" }> | undefined;
+  assert(autoEvent, "attack should resolve after Bravery auto-defense");
+  assert(!autoEvent.hit && autoEvent.damage === 0, "Bravery auto-defense should negate hit");
+  assert(
+    !autoChosen.state.units[asgore.id].asgoreBraveryAutoDefenseReady,
+    "Bravery auto-defense should be consumed after one use"
+  );
+
+  let secondDefendState = toBattleState(autoChosen.state, "P2", attacker.id);
+  secondDefendState = initKnowledgeForOwners(secondDefendState);
+  secondDefendState = setUnit(secondDefendState, attacker.id, {
+    turn: makeEmptyTurnEconomy(),
+    hasMovedThisTurn: false,
+    hasActedThisTurn: false,
+    hasAttackedThisTurn: false,
+    stealthAttemptedThisTurn: false,
+  });
+  const secondStart = applyAction(
+    secondDefendState,
+    { type: "attack", attackerId: attacker.id, defenderId: asgore.id } as any,
+    makeRngSequence([])
+  );
+  const secondAfterAttacker = resolvePendingRollOnce(
+    secondStart.state,
+    makeRngSequence([0.99, 0.99])
+  );
+  assert(
+    secondAfterAttacker.state.pendingRoll?.kind === "attack_defenderRoll",
+    "After Bravery is spent, defense should proceed with normal defender roll"
+  );
+
+  console.log("asgore_soul_parade_bravery_auto_defense_one_time passed");
+}
+
+function testAsgoreSoulParadeIntegrityPerseveranceKindnessJustice() {
+  {
+    let { state, asgore } = setupAsgoreState();
+    state = setUnit(state, asgore.id, {
+      position: { col: 4, row: 4 },
+      charges: { ...asgore.charges, [ABILITY_ASGORE_SOUL_PARADE]: 2 },
+    });
+    const started = startAsgoreSoulParadeTurn(state, asgore.id);
+    const rolled = resolvePendingRollOnce(started.state, makeRngSequence([0.4])); // roll 3
+    assert(
+      rolled.state.pendingRoll?.kind === "asgoreSoulParadeIntegrityDestination",
+      "Soul Parade roll=3 should request Integrity destination"
+    );
+    const moved = resolvePendingWithChoice(
+      rolled.state,
+      {
+        type: "asgoreSoulParadeIntegrityDestination",
+        position: { col: 8, row: 8 },
+      },
+      makeRngSequence([])
+    );
+    assert(
+      moved.state.units[asgore.id].position?.col === 8 &&
+        moved.state.units[asgore.id].position?.row === 8,
+      "Integrity should reposition Asgore to selected empty cell"
+    );
+    assert(
+      !moved.state.units[asgore.id].turn.moveUsed,
+      "Integrity reposition should not consume move action"
+    );
+  }
+
+  {
+    let { state, asgore } = setupAsgoreState();
+    const target = Object.values(state.units).find(
+      (unit) => unit.owner === "P2" && unit.class === "knight"
+    )!;
+    state = setUnit(state, asgore.id, {
+      position: { col: 4, row: 4 },
+      charges: { ...asgore.charges, [ABILITY_ASGORE_SOUL_PARADE]: 2 },
+    });
+    state = setUnit(state, target.id, { position: { col: 5, row: 4 } });
+    const started = startAsgoreSoulParadeTurn(state, asgore.id);
+    const rolled = resolvePendingRollOnce(started.state, makeRngSequence([0.55])); // roll 4
+    assert(
+      rolled.state.pendingRoll?.kind === "asgoreSoulParadePerseveranceTargetChoice",
+      "Soul Parade roll=4 should request Perseverance target"
+    );
+    const applied = resolvePendingWithChoice(
+      rolled.state,
+      { type: "asgoreSoulParadePerseveranceTarget", targetId: target.id },
+      makeRngSequence([0.1]) // fail check
+    );
+    assert(
+      !!applied.state.units[target.id].movementDisabledNextTurn,
+      "Perseverance failed check should disable target movement next turn"
+    );
+  }
+
+  {
+    let { state, asgore } = setupAsgoreState();
+    state = setUnit(state, asgore.id, {
+      position: { col: 4, row: 4 },
+      hp: 5,
+      charges: { ...asgore.charges, [ABILITY_ASGORE_SOUL_PARADE]: 2 },
+    });
+    const started = startAsgoreSoulParadeTurn(state, asgore.id);
+    const rolled = resolvePendingRollOnce(started.state, makeRngSequence([0.7])); // roll 5
+    assert(!rolled.state.pendingRoll, "Kindness branch should resolve immediately");
+    assert(
+      rolled.state.units[asgore.id].hp === 7,
+      "Kindness should heal Asgore by 2 HP"
+    );
+  }
+
+  {
+    let { state, asgore } = setupAsgoreState();
+    const target = Object.values(state.units).find(
+      (unit) => unit.owner === "P2" && unit.class === "knight"
+    )!;
+    state = setUnit(state, asgore.id, {
+      position: { col: 4, row: 4 },
+      charges: { ...asgore.charges, [ABILITY_ASGORE_SOUL_PARADE]: 2 },
+    });
+    state = setUnit(state, target.id, { position: { col: 4, row: 6 } });
+    const started = startAsgoreSoulParadeTurn(state, asgore.id);
+    const rolled = resolvePendingRollOnce(started.state, makeRngSequence([0.95])); // roll 6
+    assert(
+      rolled.state.pendingRoll?.kind === "asgoreSoulParadeJusticeTargetChoice",
+      "Soul Parade roll=6 should request Justice target"
+    );
+    const justiceOptions =
+      (rolled.state.pendingRoll?.context as { options?: string[] } | undefined)
+        ?.options ?? [];
+    assert(
+      justiceOptions.includes(target.id),
+      "Justice target options should include archer-legal target"
+    );
+    const picked = resolvePendingWithChoice(
+      rolled.state,
+      { type: "asgoreSoulParadeJusticeTarget", targetId: target.id },
+      makeRngSequence([])
+    );
+    assert(
+      picked.state.pendingRoll?.kind === "attack_attackerRoll",
+      "Justice branch should trigger immediate ranged attack flow"
+    );
+    const resolved = resolveAllPendingRollsWithEvents(
+      picked.state,
+      makeRngSequence([0.99, 0.99, 0.01, 0.01])
+    );
+    const justiceAttack = [...picked.events, ...resolved.events].find(
+      (event) =>
+        event.type === "attackResolved" &&
+        event.attackerId === asgore.id &&
+        event.defenderId === target.id
+    ) as Extract<GameEvent, { type: "attackResolved" }> | undefined;
+    assert(justiceAttack, "Justice branch attack should resolve");
+    assert(justiceAttack.hit, "Justice branch should hit with winning deterministic roll");
+  }
+
+  console.log("asgore_soul_parade_integrity_perseverance_kindness_justice passed");
+}
+
 function setupOdinState() {
   let state = createEmptyGame();
   state = attachArmy(state, createDefaultArmy("P1", { rider: HERO_ODIN_ID }));
@@ -8403,6 +9015,456 @@ function testOdinMuninnPostDefenseChoice() {
   assert(abilityEvent, "using Muninn should emit abilityUsed event");
 
   console.log("odin_muninn_post_defense_choice passed");
+}
+
+function setupRiverPersonState() {
+  let state = createEmptyGame();
+  state = attachArmy(
+    state,
+    createDefaultArmy("P1", { rider: HERO_RIVER_PERSON_ID })
+  );
+  state = attachArmy(state, createDefaultArmy("P2"));
+
+  const river = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.heroId === HERO_RIVER_PERSON_ID
+  )!;
+
+  return { state, river };
+}
+
+function testRiverPersonHpBonus() {
+  const { river } = setupRiverPersonState();
+  const baseHp = getUnitDefinition("rider").maxHp;
+  const meta = getHeroMeta(HERO_RIVER_PERSON_ID);
+
+  assert(river.hp === baseHp + 1, "River Person HP should be base rider HP + 1");
+  assert(
+    meta?.baseStats.hp === baseHp + 1,
+    "River Person hero meta HP should be base rider HP + 1"
+  );
+
+  console.log("river_person_hp_bonus passed");
+}
+
+function testRiverPersonNoRiderPathFeature() {
+  let { state, river } = setupRiverPersonState();
+  const enemy = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "knight"
+  )!;
+
+  state = setUnit(state, river.id, { position: { col: 0, row: 0 } });
+  state = setUnit(state, enemy.id, { position: { col: 0, row: 1 } });
+  state = toBattleState(state, "P1", river.id);
+  state = initKnowledgeForOwners(state);
+
+  const moved = applyAction(
+    state,
+    { type: "move", unitId: river.id, to: { col: 0, row: 4 } } as any,
+    makeRngSequence([])
+  );
+  assert(
+    moved.state.units[river.id].position?.col === 0 &&
+      moved.state.units[river.id].position?.row === 4,
+    "River Person should still use rider baseline movement"
+  );
+  assert(
+    moved.state.pendingRoll?.kind !== "riderPathAttack_attackerRoll",
+    "River Person should not trigger rider path attacks"
+  );
+  const riderPathRequested = moved.events.some(
+    (event) =>
+      event.type === "rollRequested" &&
+      event.kind === "riderPathAttack_attackerRoll"
+  );
+  assert(!riderPathRequested, "River Person movement should not queue rider path roll");
+
+  console.log("river_person_no_rider_path_feature passed");
+}
+
+function testRiverPersonBoatCarryFlowAndConstraints() {
+  {
+    let { state, river } = setupRiverPersonState();
+    state = setUnit(state, river.id, { position: { col: 4, row: 4 } });
+    state = toBattleState(state, "P1", river.id);
+    state = initKnowledgeForOwners(state);
+
+    const requested = applyAction(
+      state,
+      { type: "requestMoveOptions", unitId: river.id } as any,
+      makeRngSequence([])
+    );
+    assert(
+      requested.state.pendingRoll?.kind !== "riverBoatCarryChoice",
+      "Boat carry choice should not be requested without adjacent allies"
+    );
+  }
+
+  {
+    let { state, river } = setupRiverPersonState();
+    const carriedAlly = Object.values(state.units).find(
+      (unit) => unit.owner === "P1" && unit.class === "assassin"
+    )!;
+    const blockA = Object.values(state.units).find(
+      (unit) => unit.owner === "P1" && unit.class === "knight"
+    )!;
+    const blockB = Object.values(state.units).find(
+      (unit) => unit.owner === "P2" && unit.class === "knight"
+    )!;
+    const blockC = Object.values(state.units).find(
+      (unit) => unit.owner === "P2" && unit.class === "archer"
+    )!;
+
+    state = setUnit(state, river.id, { position: { col: 0, row: 3 } });
+    state = setUnit(state, carriedAlly.id, { position: { col: 1, row: 3 } });
+    state = setUnit(state, blockA.id, { position: { col: 0, row: 1 } });
+    state = setUnit(state, blockB.id, { position: { col: 1, row: 0 } });
+    state = setUnit(state, blockC.id, { position: { col: 1, row: 1 } });
+    state = toBattleState(state, "P1", river.id);
+    state = initKnowledgeForOwners(state);
+
+    const requested = applyAction(
+      state,
+      { type: "requestMoveOptions", unitId: river.id } as any,
+      makeRngSequence([])
+    );
+    assert(
+      requested.state.pendingRoll?.kind === "riverBoatCarryChoice",
+      "Boat move should prompt carry choice when adjacent ally exists"
+    );
+
+    const carrySelected = resolvePendingWithChoice(
+      requested.state,
+      { type: "hassanTrueEnemyTarget", targetId: carriedAlly.id },
+      makeRngSequence([])
+    );
+    const legalMoves = carrySelected.state.pendingMove?.legalTo ?? [];
+    assert(
+      !legalMoves.some((coord) => coord.col === 0 && coord.row === 0),
+      "Carry move options should exclude destinations without a legal drop cell"
+    );
+    assert(
+      legalMoves.some((coord) => coord.col === 0 && coord.row === 5),
+      "Carry move options should keep destinations that allow dropping ally"
+    );
+
+    const moved = applyAction(
+      carrySelected.state,
+      { type: "move", unitId: river.id, to: { col: 0, row: 5 } } as any,
+      makeRngSequence([])
+    );
+    assert(
+      moved.state.pendingRoll?.kind === "riverBoatDropDestination",
+      "After carrying move, River Person should request drop destination"
+    );
+
+    const invalidDrop = resolvePendingWithChoice(
+      moved.state,
+      { type: "forestMoveDestination", position: { col: 2, row: 5 } },
+      makeRngSequence([])
+    );
+    assert(
+      invalidDrop.state.pendingRoll?.kind === "riverBoatDropDestination",
+      "Invalid drop destination should be rejected"
+    );
+
+    const dropOptions =
+      (moved.state.pendingRoll?.context as { options?: Coord[] } | undefined)
+        ?.options ?? [];
+    assert(dropOptions.length > 0, "drop options should be provided");
+    const chosenDrop = dropOptions[0];
+    const dropped = resolvePendingWithChoice(
+      moved.state,
+      { type: "forestMoveDestination", position: chosenDrop },
+      makeRngSequence([])
+    );
+
+    const riverAfter = dropped.state.units[river.id];
+    const allyAfter = dropped.state.units[carriedAlly.id];
+    assert(
+      allyAfter.position?.col === chosenDrop.col &&
+        allyAfter.position?.row === chosenDrop.row,
+      "carried ally should be dropped on chosen destination"
+    );
+    assert(
+      Math.max(
+        Math.abs((allyAfter.position?.col ?? 0) - (riverAfter.position?.col ?? 0)),
+        Math.abs((allyAfter.position?.row ?? 0) - (riverAfter.position?.row ?? 0))
+      ) <= 1,
+      "dropped ally cell must be adjacent to River Person"
+    );
+    assert(
+      !(allyAfter.position?.col === riverAfter.position?.col &&
+        allyAfter.position?.row === riverAfter.position?.row),
+      "drop destination must stay unoccupied by River Person"
+    );
+  }
+
+  console.log("river_person_boat_carry_flow_and_constraints passed");
+}
+
+function testRiverPersonBoatmanConvertsActionToMoveAndSupportsCarry() {
+  let { state, river } = setupRiverPersonState();
+  const carriedAlly = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.class === "assassin"
+  )!;
+
+  state = setUnit(state, river.id, {
+    position: { col: 3, row: 3 },
+    turn: {
+      moveUsed: true,
+      attackUsed: false,
+      actionUsed: false,
+      stealthUsed: false,
+    },
+  });
+  state = setUnit(state, carriedAlly.id, { position: { col: 3, row: 4 } });
+  state = toBattleState(state, "P1", river.id);
+  state = initKnowledgeForOwners(state);
+
+  const usedBoatman = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: river.id,
+      abilityId: ABILITY_RIVER_PERSON_BOATMAN,
+    } as any,
+    makeRngSequence([])
+  );
+  assert(
+    usedBoatman.state.units[river.id].turn.actionUsed,
+    "Boatman should consume River Person action slot"
+  );
+  assert(
+    usedBoatman.state.units[river.id].turn.moveUsed,
+    "Boatman should not reset/spend move slot state"
+  );
+  assert(
+    usedBoatman.state.pendingRoll?.kind === "riverBoatCarryChoice",
+    "Boatman movement should use carry choice flow when adjacent ally exists"
+  );
+
+  const carrySelected = resolvePendingWithChoice(
+    usedBoatman.state,
+    { type: "hassanTrueEnemyTarget", targetId: carriedAlly.id },
+    makeRngSequence([])
+  );
+  const destination = carrySelected.state.pendingMove?.legalTo.find(
+    (coord) => coord.col === 3 && coord.row === 5
+  );
+  assert(destination, "Boatman move should provide legal movement destinations");
+
+  const moved = applyAction(
+    carrySelected.state,
+    { type: "move", unitId: river.id, to: destination! } as any,
+    makeRngSequence([])
+  );
+  assert(
+    moved.state.pendingRoll?.kind === "riverBoatDropDestination",
+    "Boatman move with carry should request ally drop destination"
+  );
+  const dropOptions =
+    (moved.state.pendingRoll?.context as { options?: Coord[] } | undefined)
+      ?.options ?? [];
+  assert(dropOptions.length > 0, "Boatman carry should provide drop options");
+  const dropped = resolvePendingWithChoice(
+    moved.state,
+    { type: "forestMoveDestination", position: dropOptions[0] },
+    makeRngSequence([])
+  );
+
+  assert(
+    dropped.state.units[river.id].position?.col === destination!.col &&
+      dropped.state.units[river.id].position?.row === destination!.row,
+    "River Person should move through Boatman even with move slot already spent"
+  );
+  assert(
+    dropped.state.units[carriedAlly.id].position?.col === dropOptions[0].col &&
+      dropped.state.units[carriedAlly.id].position?.row === dropOptions[0].row,
+    "Boat carry should still work when movement is granted by Boatman"
+  );
+  assert(
+    dropped.state.units[river.id].riverBoatmanMovePending !== true,
+    "Boatman move flag should clear after movement resolves"
+  );
+
+  console.log("river_person_boatman_converts_action_to_move_and_supports_carry passed");
+}
+
+function testRiverPersonGuideOfSoulsStormImmunity() {
+  let { state, river } = setupRiverPersonState();
+  state = setUnit(state, river.id, { position: { col: 4, row: 4 }, hp: 7 });
+  state = {
+    ...state,
+    phase: "battle",
+    currentPlayer: "P1",
+    activeUnitId: null,
+    arenaId: "storm",
+    turnQueue: [river.id],
+    turnQueueIndex: 0,
+    turnOrder: [river.id],
+    turnOrderIndex: 0,
+  };
+  state = initKnowledgeForOwners(state);
+
+  const started = applyAction(
+    state,
+    { type: "unitStartTurn", unitId: river.id } as any,
+    makeRngSequence([0.0])
+  );
+  assert(
+    started.state.units[river.id].hp === 7,
+    "Guide of Souls should prevent storm start-turn damage"
+  );
+
+  console.log("river_person_guide_of_souls_storm_immunity passed");
+}
+
+function testRiverPersonTraLaLaGatingAndFlow() {
+  let { state, river } = setupRiverPersonState();
+  const target = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "berserker"
+  )!;
+  const allySpearman = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.class === "spearman"
+  )!;
+  const allyKnight = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.class === "knight"
+  )!;
+  const allyNoHit = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.class === "assassin"
+  )!;
+
+  state = setUnit(state, river.id, {
+    position: { col: 4, row: 4 },
+    charges: { ...river.charges, [ABILITY_RIVER_PERSON_TRA_LA_LA]: 3 },
+  });
+  state = setUnit(state, target.id, { position: { col: 5, row: 4 }, hp: 10 });
+  state = setUnit(state, allySpearman.id, { position: { col: 4, row: 3 } });
+  state = setUnit(state, allyKnight.id, { position: { col: 5, row: 5 } });
+  state = setUnit(state, allyNoHit.id, { position: { col: 3, row: 5 } });
+  state = toBattleState(state, "P1", river.id);
+  state = initKnowledgeForOwners(state);
+
+  let used = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: river.id,
+      abilityId: ABILITY_RIVER_PERSON_TRA_LA_LA,
+    } as any,
+    makeRngSequence([])
+  );
+  assert(
+    used.state.pendingRoll?.kind !== "riverTraLaLaTargetChoice",
+    "Tra-la-la should be unavailable before full 4 charges"
+  );
+  assert(
+    used.state.units[river.id].charges[ABILITY_RIVER_PERSON_TRA_LA_LA] === 3,
+    "Tra-la-la should not spend charges when unavailable"
+  );
+
+  state = setUnit(state, river.id, {
+    turn: makeEmptyTurnEconomy(),
+    charges: {
+      ...state.units[river.id].charges,
+      [ABILITY_RIVER_PERSON_TRA_LA_LA]: 4,
+    },
+  });
+  used = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: river.id,
+      abilityId: ABILITY_RIVER_PERSON_TRA_LA_LA,
+    } as any,
+    makeRngSequence([])
+  );
+  assert(
+    used.state.pendingRoll?.kind === "riverTraLaLaTargetChoice",
+    "Tra-la-la should request adjacent target selection"
+  );
+  assert(
+    used.state.units[river.id].charges[ABILITY_RIVER_PERSON_TRA_LA_LA] === 0,
+    "Tra-la-la should spend all 4 charges on activation"
+  );
+  assert(
+    used.state.units[river.id].turn.actionUsed,
+    "Tra-la-la should consume action slot"
+  );
+
+  const targetSelected = resolvePendingWithChoice(
+    used.state,
+    { type: "hassanTrueEnemyTarget", targetId: target.id },
+    makeRngSequence([])
+  );
+  assert(
+    targetSelected.state.pendingRoll?.kind === "riverTraLaLaDestinationChoice",
+    "Tra-la-la should request destination after target selection"
+  );
+  const destinationOptions =
+    (targetSelected.state.pendingRoll?.context as { options?: Coord[] } | undefined)
+      ?.options ?? [];
+  assert(
+    destinationOptions.some((coord) => coord.col === 4 && coord.row === 7),
+    "Tra-la-la destination options should include straight cardinal cells"
+  );
+  assert(
+    !destinationOptions.some((coord) => coord.col === 5 && coord.row === 5),
+    "Tra-la-la destination options should exclude diagonal cells"
+  );
+
+  const destinationSelected = resolvePendingWithChoice(
+    targetSelected.state,
+    { type: "forestMoveDestination", position: { col: 4, row: 7 } },
+    makeRngSequence([])
+  );
+  assert(
+    destinationSelected.state.units[river.id].position?.col === 4 &&
+      destinationSelected.state.units[river.id].position?.row === 7,
+    "Tra-la-la should move River Person to selected destination"
+  );
+  assert(
+    destinationSelected.state.pendingRoll?.kind === "attack_attackerRoll",
+    "Tra-la-la touched allies should start immediate attack resolution"
+  );
+
+  const queue = destinationSelected.state.pendingCombatQueue ?? [];
+  const attackerIds = queue.map((entry) => entry.attackerId);
+  const uniqueAttackers = Array.from(new Set(attackerIds));
+  assert(
+    uniqueAttackers.length === attackerIds.length,
+    "Each touched ally should attack at most once"
+  );
+  assert(
+    attackerIds.includes(allySpearman.id) && attackerIds.includes(allyKnight.id),
+    "Touched allies that can legally attack must be queued"
+  );
+  assert(
+    !attackerIds.includes(allyNoHit.id),
+    "Touched allies without legal attack must not be queued"
+  );
+  assert(
+    attackerIds[0] === allySpearman.id,
+    "Tra-la-la ally attack order should be deterministic by board reading order"
+  );
+
+  const resolved = resolveAllPendingRollsWithEvents(
+    destinationSelected.state,
+    makeAttackWinRng(uniqueAttackers.length)
+  );
+  const combinedEvents = [...destinationSelected.events, ...resolved.events];
+  const allyAttackEvents = combinedEvents.filter(
+    (event) =>
+      event.type === "attackResolved" &&
+      uniqueAttackers.includes(event.attackerId) &&
+      event.defenderId === target.id
+  );
+  assert(
+    allyAttackEvents.length === uniqueAttackers.length,
+    "Tra-la-la should resolve exactly one attack per queued ally"
+  );
+
+  console.log("river_person_tralala_gating_and_flow passed");
 }
 
 function setupLokiState() {
@@ -13274,11 +14336,24 @@ function main() {
   testKaladinThirdOathSpearmanBonusOnlyOnSpearmanAttack();
   testKaladinFourthOathBerserkerTraitMovementMode();
   testKaladinFifthOathGatingDamageAndImmobilizeDuration();
+  testAsgoreHpBonus();
+  testAsgoreSpearmanReachAndDefenseDouble();
+  testAsgoreFireballTargetingChargesAndDamage();
+  testAsgoreFireParadeAreaResolutionAndChargeSpend();
+  testAsgoreSoulParadePatienceAttackAndTempStealth();
+  testAsgoreSoulParadeBraveryAutoDefenseOneTime();
+  testAsgoreSoulParadeIntegrityPerseveranceKindnessJustice();
   testOdinHpBonus();
   testOdinGungnirAutoHitOnAttackDouble();
   testOdinHuginnStealthVisibilityRadius();
   testOdinSleipnirGatingTeleportAndNoMoveSpend();
   testOdinMuninnPostDefenseChoice();
+  testRiverPersonHpBonus();
+  testRiverPersonNoRiderPathFeature();
+  testRiverPersonBoatCarryFlowAndConstraints();
+  testRiverPersonBoatmanConvertsActionToMoveAndSupportsCarry();
+  testRiverPersonGuideOfSoulsStormImmunity();
+  testRiverPersonTraLaLaGatingAndFlow();
   testLokiLaughterIncrementsOnAnyDouble();
   testLokiLaughterSpendingAndGating();
   testLokiOptionOneMoveLockDuration();
