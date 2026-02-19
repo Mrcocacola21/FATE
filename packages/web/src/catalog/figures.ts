@@ -17,6 +17,7 @@ export const HERO_CATALOG: HeroCatalog = [
   { id: "base-spearman", name: "Base Spearman", mainClass: "spearman" },
   { id: "vladTepes", name: "Vlad III Tepes", mainClass: "spearman" },
   { id: "kaladin", name: "Kaladin Stormblessed", mainClass: "spearman" },
+  { id: "papyrus", name: "Papyrus", mainClass: "spearman" },
   { id: "base-trickster", name: "Base Trickster", mainClass: "trickster" },
   { id: "lechy", name: "Lechy", mainClass: "trickster" },
   { id: "loki", name: "Loki", mainClass: "trickster" },

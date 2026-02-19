@@ -2,7 +2,7 @@ import type { ApplyResult, GameEvent, GameState, PendingRoll } from "../../../mo
 import type { RNG } from "../../../rng";
 import { resolveAttack } from "../../../combat";
 import { ABILITY_BERSERK_AUTO_DEFENSE } from "../../../abilities";
-import { HERO_FEMTO_ID } from "../../../heroes";
+import { HERO_FEMTO_ID, HERO_PAPYRUS_ID } from "../../../heroes";
 import { clearPendingRoll, requestRoll } from "../../../core";
 import { getPolkovodetsSource, maybeRequestIntimidate } from "../../../actions/heroes/vlad";
 import type { IntimidateResume } from "../../../actions/types";
@@ -61,7 +61,10 @@ export function advanceForestAoEQueue(
       };
       const charges = target.charges?.[ABILITY_BERSERK_AUTO_DEFENSE] ?? 0;
       if (
-        (target.class === "berserker" || target.heroId === HERO_FEMTO_ID) &&
+        (target.class === "berserker" ||
+          target.heroId === HERO_FEMTO_ID ||
+          (target.heroId === HERO_PAPYRUS_ID &&
+            target.papyrusUnbelieverActive)) &&
         charges === 6
       ) {
         const requested = requestRoll(

@@ -67,14 +67,14 @@ function waitForRoomState(
 
 function waitForError(
   queue: unknown[],
-  predicate: (msg: { type?: string; message?: string }) => boolean,
+  predicate: (msg: { type?: string; message?: string; code?: string }) => boolean,
   timeoutMs = 2000
 ): Promise<unknown> {
   return new Promise((resolve, reject) => {
     const start = Date.now();
     const tick = () => {
       const msg = queue.find((item) => {
-        const payload = item as { type?: string; message?: string };
+        const payload = item as { type?: string; message?: string; code?: string };
         return payload.type === "error" && predicate(payload);
       });
       if (msg) {
@@ -102,7 +102,7 @@ async function main() {
   }
 
   const wsUrl = `ws://127.0.0.1:${address.port}/ws`;
-  const ws1 = new WebSocket(wsUrl);
+  let ws1 = new WebSocket(wsUrl);
   const ws2 = new WebSocket(wsUrl);
 
   await Promise.all([
@@ -116,7 +116,7 @@ async function main() {
     }),
   ]);
 
-  const queue1 = collectMessages(ws1);
+  let queue1 = collectMessages(ws1);
   const queue2 = collectMessages(ws2);
 
   ws1.send(
@@ -139,8 +139,11 @@ async function main() {
   const joinAck = (await waitForType(queue1, "joinAck")) as {
     type: string;
     roomId: string;
+    resumeToken?: string;
   };
   const roomId = joinAck.roomId;
+  assert(joinAck.resumeToken, "joinAck should include resumeToken");
+  const resumeToken = joinAck.resumeToken!;
   await waitForType(queue1, "roomState");
 
   ws2.send(
@@ -154,6 +157,80 @@ async function main() {
 
   await waitForType(queue2, "joinAck");
   await waitForType(queue2, "roomState");
+
+  ws1.send(JSON.stringify({ type: "switchRole", role: "invalid_role" }));
+  await waitForError(
+    queue1,
+    (msg) =>
+      msg.message === "Invalid message payload" && msg.code === "INVALID_PAYLOAD"
+  );
+
+  ws1.send(
+    JSON.stringify({
+      type: "switchRole",
+      role: "P2",
+    })
+  );
+  await waitForError(queue1, (msg) => msg.code === "role_taken");
+
+  ws1.close();
+  await new Promise((resolve) => setTimeout(resolve, 50));
+
+  const ws3 = new WebSocket(wsUrl);
+  await new Promise<void>((resolve, reject) => {
+    ws3.once("open", () => resolve());
+    ws3.once("error", (err) => reject(err));
+  });
+  const queue3 = collectMessages(ws3);
+  ws3.send(
+    JSON.stringify({
+      type: "joinRoom",
+      mode: "join",
+      roomId,
+      role: "P1",
+    })
+  );
+  const rejected = (await waitForType(queue3, "joinRejected")) as {
+    type: string;
+    reason?: string;
+  };
+  assert(
+    rejected.reason === "role_taken",
+    "seat should remain reserved during reconnect grace window"
+  );
+  ws3.close();
+
+  ws1 = new WebSocket(wsUrl);
+  await new Promise<void>((resolve, reject) => {
+    ws1.once("open", () => resolve());
+    ws1.once("error", (err) => reject(err));
+  });
+  queue1 = collectMessages(ws1);
+  ws1.send(
+    JSON.stringify({
+      type: "joinRoom",
+      mode: "join",
+      roomId,
+      role: "P1",
+      resumeToken,
+    })
+  );
+  const rejoinAck = (await waitForType(queue1, "joinAck")) as {
+    type: string;
+    roomId: string;
+    role: string;
+    seat?: string;
+  };
+  assert(rejoinAck.roomId === roomId, "rejoin should stay in same room");
+  assert(rejoinAck.seat === "P1", "rejoin should restore P1 seat");
+  await waitForType(queue1, "roomState");
+
+  ws1.send(JSON.stringify({ type: "action", action: { type: "endTurn" } }));
+  const rejectedAction = (await waitForType(queue1, "actionResult")) as {
+    type: string;
+    ok?: boolean;
+  };
+  assert(rejectedAction.ok === false, "invalid lobby action must be rejected");
 
   ws1.send(
     JSON.stringify({

@@ -9,6 +9,7 @@ import { HERO_FALSE_TRAIL_TOKEN_ID } from "../heroes";
 import { exitBunkerForUnit } from "./heroes/kaiser";
 import { applyGutsBerserkAttack } from "./heroes/guts";
 import { markFriskAttackedWhileStealthed } from "./heroes/frisk";
+import { maybeApplyPapyrusLongBoneAttack } from "./heroes/papyrus";
 import { getPolkovodetsSource } from "./heroes/vlad";
 import type { AttackRollContext } from "./types";
 import { makeAttackContext } from "../core";
@@ -47,6 +48,16 @@ export function applyAttack(
   if (state.activeUnitId !== attacker.id) {
     return { state, events: [] };
   }
+
+  const papyrusLongBone = maybeApplyPapyrusLongBoneAttack(
+    state,
+    action.attackerId,
+    action.defenderId
+  );
+  if (papyrusLongBone) {
+    return papyrusLongBone;
+  }
+
   if (attacker.gutsBerserkModeActive) {
     return applyGutsBerserkAttack(state, attacker, action);
   }

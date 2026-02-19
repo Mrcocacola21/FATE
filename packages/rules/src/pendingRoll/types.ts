@@ -49,6 +49,10 @@ export interface TricksterAoEContext extends Record<string, unknown> {
   casterId: string;
   targetsQueue: string[];
   currentTargetIndex?: number;
+  allowFriendlyTarget?: boolean;
+  ignoreStealth?: boolean;
+  revealStealthedAllies?: boolean;
+  revealReason?: StealthRevealReason;
   attackerDice?: number[];
   damageOverride?: number;
   ignoreBonuses?: boolean;

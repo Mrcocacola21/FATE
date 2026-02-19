@@ -1,5 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { type Coord, type GameAction, type PlayerView, type MoveMode, type UnitState } from "rules";
+import {
+  type Coord,
+  type GameAction,
+  type MoveMode,
+  type PapyrusLineAxis,
+  type PlayerView,
+  type UnitState,
+} from "rules";
 import { Board } from "../components/Board";
 import { EventLog } from "../components/EventLog";
 import { RightPanel } from "./components/RightPanel/RightPanel";
@@ -30,6 +37,10 @@ import {
   GUTS_ID,
   GUTS_ARBALET_ID,
   GUTS_CANNON_ID,
+  PAPYRUS_COOL_GUY_ID,
+  PAPYRUS_ID,
+  PAPYRUS_LONG_BONE_ID,
+  PAPYRUS_ORANGE_BONE_ID,
 } from "../rulesHints";
 
 const DORA_DIRS: Coord[] = [
@@ -194,6 +205,30 @@ function getOrthogonalLineCells(
     for (let row = 0; row < size; row += 1) {
       if (row === origin.row) continue;
       cells.push({ col: origin.col, row });
+    }
+  }
+  return cells;
+}
+
+function getPapyrusLineCells(
+  size: number,
+  axis: PapyrusLineAxis,
+  anchor: Coord
+): Coord[] {
+  const cells: Coord[] = [];
+  for (let col = 0; col < size; col += 1) {
+    for (let row = 0; row < size; row += 1) {
+      const matches =
+        axis === "row"
+          ? row === anchor.row
+          : axis === "col"
+          ? col === anchor.col
+          : axis === "diagMain"
+          ? col - row === anchor.col - anchor.row
+          : col + row === anchor.col + anchor.row;
+      if (matches) {
+        cells.push({ col, row });
+      }
     }
   }
   return cells;
@@ -522,6 +557,8 @@ export function Game() {
   const [hassanAssassinOrderSelections, setHassanAssassinOrderSelections] =
     useState<string[]>([]);
   const [tisonaPreviewCoord, setTisonaPreviewCoord] = useState<Coord | null>(null);
+  const [papyrusLineAxis, setPapyrusLineAxis] =
+    useState<PapyrusLineAxis>("row");
 
   const playerId = getLocalPlayerId(role);
   const view = roomState;
@@ -711,14 +748,6 @@ export function Game() {
     duelistAttackerId && view?.units[duelistAttackerId]
       ? view.units[duelistAttackerId].hp
       : 0;
-  const lokiCanAgainSomeNonsense = lokiLaughtCurrent >= 3;
-  const lokiCanChicken =
-    lokiLaughtCurrent >= 5 && lokiLaughtChickenOptions.length > 0;
-  const lokiCanMindControl =
-    lokiLaughtCurrent >= 10 && lokiLaughtMindControlEnemyOptions.length > 0;
-  const lokiCanSpinTheDrum = lokiLaughtCurrent >= 12;
-  const lokiCanGreatLokiJoke = lokiLaughtCurrent >= 15;
-
   const handleLeave = () => {
     if (leavingRoom) return;
     const label = roomId ?? "this room";
@@ -835,6 +864,16 @@ export function Game() {
 
   const selectedUnit =
     view && selectedUnitId ? view.units[selectedUnitId] ?? null : null;
+
+  useEffect(() => {
+    if (!selectedUnit || selectedUnit.heroId !== PAPYRUS_ID) {
+      return;
+    }
+    const nextAxis = selectedUnit.papyrusLineAxis ?? "row";
+    if (nextAxis !== papyrusLineAxis) {
+      setPapyrusLineAxis(nextAxis);
+    }
+  }, [selectedUnit, papyrusLineAxis]);
 
   const pendingMoveForSelected =
     view?.pendingMove && view.pendingMove.unitId === selectedUnitId
@@ -1231,6 +1270,13 @@ export function Game() {
       (value): value is string => typeof value === "string"
     );
   }, [lokiLaughtContext]);
+  const lokiCanAgainSomeNonsense = lokiLaughtCurrent >= 3;
+  const lokiCanChicken =
+    lokiLaughtCurrent >= 5 && lokiLaughtChickenOptions.length > 0;
+  const lokiCanMindControl =
+    lokiLaughtCurrent >= 10 && lokiLaughtMindControlEnemyOptions.length > 0;
+  const lokiCanSpinTheDrum = lokiLaughtCurrent >= 12;
+  const lokiCanGreatLokiJoke = lokiLaughtCurrent >= 15;
   const lokiChickenTargetIds = useMemo(() => {
     if (!isLokiChickenTargetChoice) return [] as string[];
     const ctx = pendingRoll?.context as { options?: unknown } | undefined;
@@ -1499,6 +1545,19 @@ export function Game() {
   const legalAttackTargets = useMemo(() => {
     if (!view || !selectedUnit) return [] as string[];
     return view.legal?.attackTargetsByUnitId[selectedUnit.id] ?? [];
+  }, [view, selectedUnit]);
+  const papyrusLongBoneAttackTargetIds = useMemo(() => {
+    if (!view || !selectedUnit) return [] as string[];
+    if (
+      selectedUnit.heroId !== PAPYRUS_ID ||
+      !selectedUnit.papyrusUnbelieverActive ||
+      !selectedUnit.papyrusLongBoneMode
+    ) {
+      return [] as string[];
+    }
+    return Object.values(view.units)
+      .filter((unit) => unit.id !== selectedUnit.id && unit.isAlive && !!unit.position)
+      .map((unit) => unit.id);
   }, [view, selectedUnit]);
 
   const assassinMarkTargets = useMemo(() => {
@@ -1839,7 +1898,11 @@ export function Game() {
     }
 
     if (actionMode === "attack" && view) {
-      for (const targetId of legalAttackTargets) {
+      const targetIds =
+        papyrusLongBoneAttackTargetIds.length > 0
+          ? papyrusLongBoneAttackTargetIds
+          : legalAttackTargets;
+      for (const targetId of targetIds) {
         const unit = view.units[targetId];
         if (!unit?.position) continue;
         highlights[coordKey(unit.position)] = "attack";
@@ -1869,6 +1932,15 @@ export function Game() {
     if (actionMode === "dora") {
       for (const coord of doraTargetCenters) {
         highlights[coordKey(coord)] = "dora";
+      }
+    }
+
+    if (actionMode === "papyrusCoolGuy" && view) {
+      const size = view.boardSize ?? 9;
+      for (let col = 0; col < size; col += 1) {
+        for (let row = 0; row < size; row += 1) {
+          highlights[coordKey({ col, row })] = "dora";
+        }
       }
     }
 
@@ -1964,6 +2036,7 @@ export function Game() {
     legalPlacementCoords,
     legalMoveCoords,
     legalAttackTargets,
+    papyrusLongBoneAttackTargetIds,
     doraTargetCenters,
     view,
     isStakePlacement,
@@ -2377,6 +2450,17 @@ export function Game() {
       return;
     }
 
+    if (actionMode === "papyrusCoolGuy") {
+      sendGameAction({
+        type: "useAbility",
+        unitId: selectedUnitId,
+        abilityId: PAPYRUS_COOL_GUY_ID,
+        payload: { target: { col, row }, axis: papyrusLineAxis },
+      });
+      setActionMode(null);
+      return;
+    }
+
     if (actionMode === "jebeKhansShooter") {
       const target = getUnitAt(view, col, row);
       if (!target) return;
@@ -2464,7 +2548,11 @@ export function Game() {
     if (actionMode === "attack") {
       const target = getUnitAt(view, col, row);
       if (!target) return;
-      if (!legalAttackTargets.includes(target.id)) return;
+      const targetIds =
+        papyrusLongBoneAttackTargetIds.length > 0
+          ? papyrusLongBoneAttackTargetIds
+          : legalAttackTargets;
+      if (!targetIds.includes(target.id)) return;
       sendGameAction({
         type: "attack",
         attackerId: selectedUnitId,
@@ -2617,6 +2705,11 @@ export function Game() {
     isSpectator ||
     view?.phase === "lobby" ||
     (hasBlockingRoll && !boardSelectionPending);
+  const papyrusLongBoneAttackMode =
+    actionMode === "attack" &&
+    selectedUnit?.heroId === PAPYRUS_ID &&
+    !!selectedUnit.papyrusUnbelieverActive &&
+    !!selectedUnit.papyrusLongBoneMode;
   const allowUnitPick =
     !boardSelectionPending &&
     actionMode !== "dora" &&
@@ -2631,7 +2724,9 @@ export function Game() {
     actionMode !== "gutsCannon" &&
     actionMode !== "asgoreFireball" &&
     actionMode !== "odinSleipnir" &&
-    actionMode !== "hassanTrueEnemy";
+    actionMode !== "hassanTrueEnemy" &&
+    actionMode !== "papyrusCoolGuy" &&
+    !papyrusLongBoneAttackMode;
 
   if (!view || !hasSnapshot) {
     return (
@@ -3084,10 +3179,16 @@ export function Game() {
             }}
             onSendAction={(action) => {
               sendGameAction(action);
-              if (action.type !== "requestMoveOptions") {
+              const preserveMode =
+                action.type === "useAbility" &&
+                (action.abilityId === PAPYRUS_ORANGE_BONE_ID ||
+                  action.abilityId === PAPYRUS_LONG_BONE_ID);
+              if (action.type !== "requestMoveOptions" && !preserveMode) {
                 setActionMode(null);
               }
             }}
+            papyrusLineAxis={papyrusLineAxis}
+            onSetPapyrusLineAxis={setPapyrusLineAxis}
           />
           <EventLog events={events} clientLog={clientLog} />
         </div>

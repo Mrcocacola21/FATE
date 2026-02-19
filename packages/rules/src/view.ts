@@ -68,6 +68,13 @@ function cloneUnit(unit: UnitState): UnitState {
     genghisKhanAttackedLastTurn: unit.genghisKhanAttackedLastTurn
       ? [...unit.genghisKhanAttackedLastTurn]
       : unit.genghisKhanAttackedLastTurn,
+    papyrusUnbelieverActive: unit.papyrusUnbelieverActive,
+    papyrusBoneMode: unit.papyrusBoneMode,
+    papyrusLongBoneMode: unit.papyrusLongBoneMode,
+    papyrusLineAxis: unit.papyrusLineAxis,
+    papyrusBoneStatus: unit.papyrusBoneStatus
+      ? { ...unit.papyrusBoneStatus }
+      : unit.papyrusBoneStatus,
   };
 }
 

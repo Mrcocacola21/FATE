@@ -31,6 +31,7 @@ import {
   HERO_FRISK_ID,
   HERO_GUTS_ID,
   HERO_ODIN_ID,
+  HERO_PAPYRUS_ID,
 } from "../../../heroes";
 import {
   evAoeResolved,
@@ -802,7 +803,9 @@ export function resolveAttackAttackerRoll(
   const charges = workingDefender.charges?.[ABILITY_BERSERK_AUTO_DEFENSE] ?? 0;
   if (
     (workingDefender.class === "berserker" ||
-      workingDefender.heroId === HERO_FEMTO_ID) &&
+      workingDefender.heroId === HERO_FEMTO_ID ||
+      (workingDefender.heroId === HERO_PAPYRUS_ID &&
+        workingDefender.papyrusUnbelieverActive)) &&
     charges === 6 &&
     !resolvedCtx.berserkerChoiceMade
   ) {

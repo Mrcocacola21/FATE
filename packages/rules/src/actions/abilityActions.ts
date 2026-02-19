@@ -38,6 +38,10 @@ import {
   ABILITY_RIVER_PERSON_BOATMAN,
   ABILITY_RIVER_PERSON_TRA_LA_LA,
   ABILITY_ODIN_SLEIPNIR,
+  ABILITY_PAPYRUS_COOL_GUY,
+  ABILITY_PAPYRUS_LONG_BONE,
+  ABILITY_PAPYRUS_ORANGE_BONE,
+  ABILITY_PAPYRUS_SPAGHETTI,
   TRICKSTER_AOE_RADIUS,
   getAbilitySpec,
   spendCharges,
@@ -67,6 +71,12 @@ import { applyFriskGenocide, applyFriskPacifism } from "./heroes/frisk";
 import { applyAsgoreFireball, applyAsgoreFireParade } from "./heroes/asgore";
 import { applyOdinSleipnir } from "./heroes/odin";
 import { applyRiverBoatman, applyRiverTraLaLa } from "./heroes/riverPerson";
+import {
+  applyPapyrusCoolGuy,
+  applyPapyrusLongBoneToggle,
+  applyPapyrusOrangeBoneToggle,
+  applyPapyrusSpaghetti,
+} from "./heroes/papyrus";
 import {
   applyGutsArbalet,
   applyGutsBerserkMode,
@@ -246,6 +256,18 @@ export function applyUseAbility(
 
   if (spec.id === ABILITY_FEMTO_DIVINE_MOVE) {
     return applyFemtoDivineMove(state, unit);
+  }
+  if (spec.id === ABILITY_PAPYRUS_SPAGHETTI) {
+    return applyPapyrusSpaghetti(state, unit);
+  }
+  if (spec.id === ABILITY_PAPYRUS_COOL_GUY) {
+    return applyPapyrusCoolGuy(state, unit, action);
+  }
+  if (spec.id === ABILITY_PAPYRUS_ORANGE_BONE) {
+    return applyPapyrusOrangeBoneToggle(state, unit, action);
+  }
+  if (spec.id === ABILITY_PAPYRUS_LONG_BONE) {
+    return applyPapyrusLongBoneToggle(state, unit, action);
   }
 
   const isTricksterAoE = spec.id === ABILITY_TRICKSTER_AOE;

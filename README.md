@@ -1,17 +1,51 @@
 # FATE
 
-A TypeScript monorepo with a deterministic rules engine, an authoritative Fastify server, and a Vite + React client.
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![npm workspaces](https://img.shields.io/badge/npm-workspaces-CB3837?logo=npm&logoColor=white)](https://docs.npmjs.com/cli/v10/using-npm/workspaces)
+[![Node.js](https://img.shields.io/badge/Node.js-22-5FA04E?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
+[![Fastify](https://img.shields.io/badge/Fastify-4-000000?logo=fastify&logoColor=white)](https://fastify.dev/)
+[![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
+[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=1A1A1A)](https://react.dev/)
+
+Deterministic turn-based game stack in a TypeScript monorepo: authoritative rules engine, Fastify + WebSocket server, and Vite + React client.
+
+Follow active progress and implementation notes in the [Developer Log](https://t.me/FATE_Soul_Dev).
+
+## Contents
+
+- [Packages](#packages)
+- [Getting Started](#getting-started)
+- [Build](#build)
+- [Tests](#tests)
+- [Environment Variables (Web)](#environment-variables-web)
+- [Assets (Figure Arts + Tokens)](#assets-figure-arts--tokens)
+- [Server API](#server-api)
+- [WebSocket](#websocket)
+- [Deployment](#deployment)
+- [Common Pitfalls](#common-pitfalls)
+- [Quick Verify](#quick-verify)
+- [Notes](#notes)
+- [Developer Log](#developer-log)
 
 ## Packages
 
-- `packages/rules` - deterministic game engine (authoritative state updates).
-- `packages/server` - Fastify + WebSocket game server.
-- `packages/web` - React client UI.
+| Package | Path | Purpose |
+| --- | --- | --- |
+| `rules` | `packages/rules` | Deterministic game engine (authoritative state updates). |
+| `server` | `packages/server` | Fastify + WebSocket game server. |
+| `web` | `packages/web` | React client UI. |
 
-## Development
+## Getting Started
+
+### Install
 
 ```bash
 npm install
+```
+
+### Run Development Stack
+
+```bash
 npm run dev
 ```
 
@@ -20,13 +54,12 @@ This runs:
 - `server` on `http://localhost:3000`
 - `web` on `http://localhost:5173`
 
-Note: the server now waits for `packages/rules/dist/index.js` to exist before starting,
-to avoid intermittent "Cannot find module ... rules/dist/index.js" crashes during watch startup.
+Note: the server waits for `packages/rules/dist/index.js` before starting to avoid intermittent `Cannot find module ... rules/dist/index.js` crashes during watch startup.
 
 Optional local env file (not required for dev):
 - Copy `.env.example` to `.env` if you want to pin API/WS URLs.
 
-### Dev flow: two tabs in the same room
+### Dev Flow: Two Tabs, Same Room
 
 - Open `http://localhost:5173`
 - Create a room in the Lobby and copy the room id
@@ -45,7 +78,7 @@ npm run build
 npm run test
 ```
 
-## Environment variables (web)
+## Environment Variables (Web)
 
 The frontend reads these at build time. In production builds they are required and the build will fail fast if missing:
 
@@ -57,21 +90,21 @@ Local defaults are provided in `.env.example`.
 ## Assets (Figure Arts + Tokens)
 
 Recommended formats:
-- WEBP preferred (best size/quality).
-- PNG allowed (if transparency is needed).
-- Token transparency: use WEBP/PNG with alpha.
+- WEBP preferred (best size/quality)
+- PNG allowed (if transparency is needed)
+- Token transparency: use WEBP/PNG with alpha
 
 Suggested sizes:
-- Full art: 1024x1536 (2:3) or 1200x1800.
-- Token: 256x256 or 512x512 square.
+- Full art: `1024x1536` (2:3) or `1200x1800`
+- Token: `256x256` or `512x512` square
 
 File naming rules (must match `figureId`):
 - `packages/web/src/assets/figures/<figureId>.webp`
 - `packages/web/src/assets/tokens/<figureId>.webp`
 
 Tips:
-- Try to keep full art under ~300-600 KB if possible.
-- Assets under `src/assets` are bundled by Vite; if we need user uploads later, move them to `/public` or external storage.
+- Try to keep full art under ~300-600 KB if possible
+- Assets under `src/assets` are bundled by Vite; if user uploads are needed later, move them to `/public` or external storage
 
 ## Server API
 
@@ -102,14 +135,16 @@ Tips:
     - `{ type: "moveOptions", unitId, roll, legalTo }`
     - `{ type: "error", message }`
 
-## Render deploy (server)
+## Deployment
+
+Deployment updates are also posted in the [Developer Log](https://t.me/FATE_Soul_Dev).
+
+### Render Deploy (Server)
 
 Render can build from the repo root.
 
-- Build command:
-  - `npm install && npm run -w rules build && npm run -w server build`
-- Start command:
-  - `npm run -w server start`
+- Build command: `npm install && npm run -w rules build && npm run -w server build`
+- Start command: `npm run -w server start`
 
 Environment variables:
 - `PORT` (Render sets this automatically)
@@ -117,10 +152,10 @@ Environment variables:
 - `NODE_VERSION=22` (optional)
 
 Notes:
-- The server binds to `0.0.0.0` and uses `PORT`.
-- WebSockets are available at `wss://<render-host>/ws`.
+- The server binds to `0.0.0.0` and uses `PORT`
+- WebSockets are available at `wss://<render-host>/ws`
 
-## Vercel deploy (web)
+### Vercel Deploy (Web)
 
 Recommended Vercel settings:
 - Framework preset: Vite
@@ -133,20 +168,26 @@ Environment variables (required for production builds):
 - `VITE_API_URL=https://<render-server>.onrender.com`
 - `VITE_WS_URL=wss://<render-server>.onrender.com/ws`
 
-## Common pitfalls
+## Common Pitfalls
 
-- "Failed to fetch" in production usually means `VITE_API_URL` points to localhost.
-- WS connection failures usually mean `VITE_WS_URL` should be `wss://.../ws` in production.
-- CORS errors usually mean `WEB_ORIGIN` is missing or incorrect on Render.
+- `Failed to fetch` in production usually means `VITE_API_URL` points to localhost
+- WS connection failures usually mean `VITE_WS_URL` should be `wss://.../ws` in production
+- CORS errors usually mean `WEB_ORIGIN` is missing or incorrect on Render
 
-## Quick verify
+## Quick Verify
 
-- Open the Vercel site, check Network tab: `/rooms` should hit your Render domain.
-- Confirm WebSocket connects successfully (`wss://<render-host>/ws`).
-- Visit `https://<render-host>/health` and see `{ ok: true }`.
+- Open the Vercel site, check Network tab: `/rooms` should hit your Render domain
+- Confirm WebSocket connects successfully (`wss://<render-host>/ws`)
+- Visit `https://<render-host>/health` and see `{ ok: true }`
 
 ## Notes
 
-- The server is authoritative: the client only sends `GameAction` intents.
-- Per-player visibility is enforced by `makePlayerView` (exported from `rules`).
-- Avoid running Vite with `--host 0.0.0.0` unless you explicitly need LAN access.
+- The server is authoritative: the client only sends `GameAction` intents
+- Per-player visibility is enforced by `makePlayerView` (exported from `rules`)
+- Avoid running Vite with `--host 0.0.0.0` unless you explicitly need LAN access
+
+## Developer Log
+
+Track implementation updates, architecture notes, and release progress in the Telegram channel:
+
+- https://t.me/FATE_Soul_Dev

@@ -7,6 +7,7 @@ import { CreateGameBodySchema, GameActionSchema, PlayerIdSchema } from "./schema
 import { isActionAllowedByPlayer } from "./permissions";
 import { applyGameAction, createGameRoom, getGameRoom, listRoomSummaries } from "./store";
 import { broadcastActionResult, broadcastRoomState } from "./ws";
+import { FATE_CREATE_KEY, enqueueRoomCommand, fateRoomKey } from "./roomQueue";
 
 function parsePlayerId(request: FastifyRequest): PlayerId | null {
   const raw = (request.query as { playerId?: string }).playerId;
@@ -53,7 +54,9 @@ export async function registerRoutes(server: FastifyInstance) {
         return sendValidationError(reply, parsed.error);
       }
 
-      const room = createGameRoom(parsed.data);
+      const room = await enqueueRoomCommand(FATE_CREATE_KEY, () =>
+        createGameRoom(parsed.data)
+      );
       reply.send({ roomId: room.id });
     }
   );
@@ -66,7 +69,9 @@ export async function registerRoutes(server: FastifyInstance) {
         return sendValidationError(reply, parsed.error);
       }
 
-      const room = createGameRoom(parsed.data);
+      const room = await enqueueRoomCommand(FATE_CREATE_KEY, () =>
+        createGameRoom(parsed.data)
+      );
       const views = {
         P1: makePlayerView(room.state, "P1"),
         P2: makePlayerView(room.state, "P2"),
@@ -119,17 +124,6 @@ export async function registerRoutes(server: FastifyInstance) {
     "/api/games/:id/actions",
     async (request: FastifyRequest, reply: FastifyReply) => {
       const gameId = (request.params as { id: string }).id;
-      const room = getGameRoom(gameId);
-      if (!room) {
-        reply.code(404).send({ error: "Game not found" });
-        return;
-      }
-
-      if (room.state.phase === "ended") {
-        reply.code(409).send({ error: "Game has ended" });
-        return;
-      }
-
       const playerId = parsePlayerId(request);
       if (!playerId) {
         reply.code(400).send({ error: "playerId query is required" });
@@ -149,27 +143,62 @@ export async function registerRoutes(server: FastifyInstance) {
               player: parsedAction.player ?? playerId,
             } as GameAction)
           : (parsedAction as GameAction);
-      if (!isActionAllowedByPlayer(room.state, action, playerId)) {
-        reply.code(403).send({ error: "Action not allowed for this player" });
-        return;
-      }
 
-      const { state, events, logIndex } = applyGameAction(
-        room,
-        action,
-        playerId
-      );
+      const outcome = await enqueueRoomCommand(fateRoomKey(gameId), () => {
+        const room = getGameRoom(gameId);
+        if (!room) {
+          return {
+            status: 404,
+            payload: { error: "Game not found" },
+          };
+        }
 
-      broadcastRoomState(room);
-      broadcastActionResult({
-        gameId: room.id,
-        ok: true,
-        events,
-        logIndex,
+        if (room.state.phase === "ended") {
+          return {
+            status: 409,
+            payload: { error: "Game has ended" },
+          };
+        }
+
+        if (!isActionAllowedByPlayer(room.state, action, playerId)) {
+          return {
+            status: 403,
+            payload: { error: "Action not allowed for this player" },
+          };
+        }
+
+        const command = applyGameAction(room, action, playerId);
+        if (!command.ok) {
+          return {
+            status: 409,
+            payload: {
+              error: command.message ?? "Action rejected",
+              code: command.code,
+            },
+          };
+        }
+
+        broadcastRoomState(room);
+        broadcastActionResult({
+          gameId: room.id,
+          ok: true,
+          events: command.events,
+          logIndex: command.logIndex,
+        });
+
+        const view = makePlayerView(room.state, playerId);
+        return {
+          status: 200,
+          payload: {
+            view,
+            events: command.events,
+            logIndex: command.logIndex,
+            revision: command.revision,
+          },
+        };
       });
 
-      const view = makePlayerView(state, playerId);
-      reply.send({ view, events, logIndex });
+      reply.code(outcome.status).send(outcome.payload);
     }
   );
 }

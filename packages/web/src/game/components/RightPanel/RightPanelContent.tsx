@@ -1,5 +1,13 @@
 ﻿import type { FC } from "react";
-import type { AbilityView, GameAction, PlayerId, PlayerView, MoveMode, UnitState } from "rules";
+import type {
+  AbilityView,
+  GameAction,
+  MoveMode,
+  PapyrusLineAxis,
+  PlayerId,
+  PlayerView,
+  UnitState,
+} from "rules";
 import { HERO_CATALOG } from "../../../figures/catalog";
 import {
   EL_CID_DEMON_DUELIST_ID,
@@ -29,6 +37,10 @@ import {
   GUTS_ARBALET_ID,
   GUTS_CANNON_ID,
   FEMTO_ID,
+  PAPYRUS_COOL_GUY_ID,
+  PAPYRUS_ID,
+  PAPYRUS_LONG_BONE_ID,
+  PAPYRUS_ORANGE_BONE_ID,
   RIVER_PERSON_ID,
 } from "../../../rulesHints";
 import type { ActionMode } from "../../../store";
@@ -58,6 +70,8 @@ export interface RightPanelProps {
   onSendAction: (action: GameAction) => void;
   onHoverAbility: (abilityId: string | null) => void;
   onHoverAttackRange: (unitId: string | null, hovering: boolean) => void;
+  papyrusLineAxis: PapyrusLineAxis;
+  onSetPapyrusLineAxis: (axis: PapyrusLineAxis) => void;
 }
 
 function classBadge(unitClass: string): { label: string; marker?: string } {
@@ -182,6 +196,8 @@ export const RightPanelContent: FC<RightPanelProps> = ({
   onSendAction,
   onHoverAbility,
   onHoverAttackRange,
+  papyrusLineAxis,
+  onSetPapyrusLineAxis,
 }) => {
   const playerId: PlayerId | null = role === "P1" || role === "P2" ? role : null;
   const isSpectator = role === "spectator";
@@ -303,6 +319,34 @@ export const RightPanelContent: FC<RightPanelProps> = ({
     (moveOptions && moveOptions.unitId === selectedUnit?.id
       ? moveOptions.roll
       : null);
+
+  const selectedIsPapyrus = selectedUnit?.heroId === PAPYRUS_ID;
+  const selectedPapyrusUnbeliever =
+    selectedIsPapyrus && !!selectedUnit?.papyrusUnbelieverActive;
+  const selectedPapyrusBoneMode = selectedUnit?.papyrusBoneMode ?? "blue";
+  const selectedPapyrusLongBoneMode = !!selectedUnit?.papyrusLongBoneMode;
+  const papyrusAxisOptions: { axis: PapyrusLineAxis; label: string }[] = [
+    { axis: "row", label: "Rows" },
+    { axis: "col", label: "Cols" },
+    { axis: "diagMain", label: "Diag \\" },
+    { axis: "diagAnti", label: "Diag /" },
+  ];
+
+  const setPapyrusAxis = (axis: PapyrusLineAxis) => {
+    onSetPapyrusLineAxis(axis);
+    if (!selectedUnit || !selectedPapyrusUnbeliever || !canAct) {
+      return;
+    }
+    onSendAction({
+      type: "useAbility",
+      unitId: selectedUnit.id,
+      abilityId: PAPYRUS_LONG_BONE_ID,
+      payload: {
+        enabled: selectedPapyrusLongBoneMode,
+        axis,
+      },
+    });
+  };
 
   const placementEnabled =
     joined && !pendingRoll && !isSpectator && isMyTurn && view.phase === "placement";
@@ -849,6 +893,10 @@ export const RightPanelContent: FC<RightPanelProps> = ({
                   onSetActionMode("gutsCannon");
                   return;
                 }
+                if (ability.id === PAPYRUS_COOL_GUY_ID) {
+                  onSetActionMode("papyrusCoolGuy");
+                  return;
+                }
                 onSendAction({
                   type: "useAbility",
                   unitId: selectedUnit.id,
@@ -882,6 +930,95 @@ export const RightPanelContent: FC<RightPanelProps> = ({
                 </div>
               );
             })}
+            {selectedIsPapyrus && (
+              <>
+                <div className="col-span-2 mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+                  Papyrus line axis
+                </div>
+                <div className="col-span-2 grid grid-cols-4 gap-2">
+                  {papyrusAxisOptions.map(({ axis, label }) => (
+                    <button
+                      key={axis}
+                      className={`rounded-lg px-2 py-2 text-[10px] shadow-sm transition hover:shadow ${
+                        papyrusLineAxis === axis
+                          ? "bg-teal-500 text-white dark:bg-teal-800/50 dark:text-slate-100"
+                          : "bg-slate-200 text-slate-700 dark:bg-slate-800/60 dark:text-slate-100 dark:hover:bg-slate-700/60"
+                      }`}
+                      onClick={() => setPapyrusAxis(axis)}
+                      disabled={!canAct && selectedPapyrusUnbeliever}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+            {selectedPapyrusUnbeliever && selectedUnit && (
+              <>
+                <div className="col-span-2 mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+                  Bone type on hit
+                </div>
+                <div className="col-span-2 grid grid-cols-2 gap-2">
+                  <button
+                    className={`rounded-lg px-2 py-2 text-[10px] shadow-sm transition hover:shadow ${
+                      selectedPapyrusBoneMode === "blue"
+                        ? "bg-teal-500 text-white dark:bg-teal-800/50 dark:text-slate-100"
+                        : "bg-slate-200 text-slate-700 dark:bg-slate-800/60 dark:text-slate-100 dark:hover:bg-slate-700/60"
+                    }`}
+                    onClick={() =>
+                      onSendAction({
+                        type: "useAbility",
+                        unitId: selectedUnit.id,
+                        abilityId: PAPYRUS_ORANGE_BONE_ID,
+                        payload: { boneType: "blue" },
+                      })
+                    }
+                    disabled={!canAct}
+                  >
+                    Blue
+                  </button>
+                  <button
+                    className={`rounded-lg px-2 py-2 text-[10px] shadow-sm transition hover:shadow ${
+                      selectedPapyrusBoneMode === "orange"
+                        ? "bg-orange-500 text-white dark:bg-orange-800/60 dark:text-slate-100"
+                        : "bg-slate-200 text-slate-700 dark:bg-slate-800/60 dark:text-slate-100 dark:hover:bg-slate-700/60"
+                    }`}
+                    onClick={() =>
+                      onSendAction({
+                        type: "useAbility",
+                        unitId: selectedUnit.id,
+                        abilityId: PAPYRUS_ORANGE_BONE_ID,
+                        payload: { boneType: "orange" },
+                      })
+                    }
+                    disabled={!canAct}
+                  >
+                    Orange
+                  </button>
+                </div>
+                <button
+                  className={`col-span-2 rounded-lg px-2 py-2 text-left text-[10px] shadow-sm transition hover:shadow ${
+                    selectedPapyrusLongBoneMode
+                      ? "bg-teal-500 text-white dark:bg-teal-800/50 dark:text-slate-100"
+                      : "bg-slate-200 text-slate-700 dark:bg-slate-800/60 dark:text-slate-100 dark:hover:bg-slate-700/60"
+                  }`}
+                  onClick={() =>
+                    onSendAction({
+                      type: "useAbility",
+                      unitId: selectedUnit.id,
+                      abilityId: PAPYRUS_LONG_BONE_ID,
+                      payload: {
+                        enabled: !selectedPapyrusLongBoneMode,
+                        axis: papyrusLineAxis,
+                      },
+                    })
+                  }
+                  disabled={!canAct}
+                >
+                  Long Bone line attack: {selectedPapyrusLongBoneMode ? "ON" : "OFF"}
+                </button>
+              </>
+            )}
             <button
               className={`rounded-lg px-2 py-2 shadow-sm transition hover:shadow ${
                 isMyTurn && joined && !isSpectator
@@ -956,6 +1093,8 @@ export const RightPanelContent: FC<RightPanelProps> = ({
                 ? "Hand Crossbow: select an enemy in ranged attack line."
                 : actionMode === "gutsCannon"
                 ? "Hand Cannon: select an enemy in ranged attack line."
+                : actionMode === "papyrusCoolGuy"
+                ? `Cool Guy: select any cell on the chosen ${papyrusLineAxis} line.`
                 : `Mode: ${actionMode}. Click a highlighted cell to apply.`}
             </div>
           )}

@@ -189,9 +189,16 @@ export const ABILITY_UNDYNE_SWITCH_DIRECTION = "undyneSwitchDirection" as const;
 export const ABILITY_UNDYNE_UNDYING = "undyneUndying" as const;
 
 export const ABILITY_PAPYRUS_BLUE_BONE = "papyrusBlueBone" as const;
-export const ABILITY_PAPYRUS_SPHAGETTI = "papyrusSpaghetti" as const;
-export const ABILITY_PAPYRUS_COOL_DUDE = "papyrusCoolDude" as const;
-export const ABILITY_PAPYRUS_DISBELIEF = "papyrusDisbelief" as const;
+export const ABILITY_PAPYRUS_SPAGHETTI = "papyrusSpaghetti" as const;
+export const ABILITY_PAPYRUS_COOL_GUY = "papyrusCoolGuy" as const;
+export const ABILITY_PAPYRUS_UNBELIEVER = "papyrusUnbeliever" as const;
+export const ABILITY_PAPYRUS_ORANGE_BONE = "papyrusOrangeBone" as const;
+export const ABILITY_PAPYRUS_LONG_BONE = "papyrusLongBone" as const;
+export const ABILITY_PAPYRUS_OSSIFIED = "papyrusOssified" as const;
+// Backward-compatible aliases.
+export const ABILITY_PAPYRUS_SPHAGETTI = ABILITY_PAPYRUS_SPAGHETTI;
+export const ABILITY_PAPYRUS_COOL_DUDE = ABILITY_PAPYRUS_COOL_GUY;
+export const ABILITY_PAPYRUS_DISBELIEF = ABILITY_PAPYRUS_UNBELIEVER;
 
 export const ABILITY_METTATON_RAITING = "mettatonRaiting" as const;
 export const ABILITY_METTATON_POPPINS = "mettatonPoppins" as const;
@@ -715,6 +722,63 @@ const ABILITY_SPECS: Record<string, AbilitySpec> = {
     maxCharges: 3,
     chargesPerUse: 3,
   },
+  [ABILITY_PAPYRUS_BLUE_BONE]: {
+    id: ABILITY_PAPYRUS_BLUE_BONE,
+    displayName: "Blue Bone",
+    kind: "passive",
+    description:
+      "On hit, applies Blue Bone until Papyrus next turn start. If target spends move slot this turn, it immediately takes 1 damage.",
+  },
+  [ABILITY_PAPYRUS_SPAGHETTI]: {
+    id: ABILITY_PAPYRUS_SPAGHETTI,
+    displayName: "Tasty Spaghetti",
+    kind: "active",
+    description: "Spend 3 charges to heal Papyrus for 2 HP.",
+    maxCharges: 3,
+    chargesPerUse: 3,
+    actionCost: {
+      consumes: { action: true },
+    },
+  },
+  [ABILITY_PAPYRUS_COOL_GUY]: {
+    id: ABILITY_PAPYRUS_COOL_GUY,
+    displayName: "Cool Guy",
+    kind: "impulse",
+    description:
+      "Choose a straight line and attack all units on that line. Costs 5 charges (3 in Unbeliever mode).",
+    maxCharges: 5,
+    chargesPerUse: 5,
+    actionCost: {
+      consumes: { action: true },
+    },
+  },
+  [ABILITY_PAPYRUS_UNBELIEVER]: {
+    id: ABILITY_PAPYRUS_UNBELIEVER,
+    displayName: "Unbeliever Papyrus",
+    kind: "passive",
+    description:
+      "After an allied hero dies, Papyrus permanently transforms and unlocks Orange Bone, Long Bone and Ossified.",
+  },
+  [ABILITY_PAPYRUS_ORANGE_BONE]: {
+    id: ABILITY_PAPYRUS_ORANGE_BONE,
+    displayName: "Orange Bone",
+    kind: "passive",
+    description:
+      "Unbeliever toggle: apply Orange Bone on hit instead of Blue Bone. Orange Bone punishes ending turn without spending move slot.",
+  },
+  [ABILITY_PAPYRUS_LONG_BONE]: {
+    id: ABILITY_PAPYRUS_LONG_BONE,
+    displayName: "Long Bone",
+    kind: "passive",
+    description:
+      "Unbeliever toggle: basic attack can become a line attack. Also stores selected line axis for line skills.",
+  },
+  [ABILITY_PAPYRUS_OSSIFIED]: {
+    id: ABILITY_PAPYRUS_OSSIFIED,
+    displayName: "Ossified",
+    kind: "passive",
+    description: "Unbeliever passive: Papyrus gains Berserker auto-defense feature.",
+  },
   [ABILITY_RIVER_PERSON_BOAT]: {
     id: ABILITY_RIVER_PERSON_BOAT,
     displayName: "Boat",
@@ -1024,6 +1088,18 @@ export function initUnitAbilities(unit: UnitState): UnitState {
       asgoreBraveryAutoDefenseReady: false,
     };
   }
+  if (unit.heroId === HERO_PAPYRUS_ID) {
+    updated = setCharges(updated, ABILITY_PAPYRUS_SPAGHETTI, 0);
+    updated = setCharges(updated, ABILITY_PAPYRUS_COOL_GUY, 0);
+    updated = {
+      ...updated,
+      papyrusUnbelieverActive: false,
+      papyrusBoneMode: "blue",
+      papyrusLongBoneMode: false,
+      papyrusLineAxis: "row",
+      papyrusBoneStatus: undefined,
+    };
+  }
   if (unit.heroId === HERO_RIVER_PERSON_ID) {
     updated = setCharges(updated, ABILITY_RIVER_PERSON_TRA_LA_LA, 0);
     updated = {
@@ -1190,7 +1266,8 @@ export function getAbilityViewsForUnit(
   if (
     unit.class === "berserker" ||
     (unit.heroId === HERO_GRAND_KAISER_ID && unit.transformed) ||
-    unit.heroId === HERO_FEMTO_ID
+    unit.heroId === HERO_FEMTO_ID ||
+    (unit.heroId === HERO_PAPYRUS_ID && unit.papyrusUnbelieverActive)
   ) {
     abilityIds.push(ABILITY_BERSERK_AUTO_DEFENSE);
   }
@@ -1349,10 +1426,17 @@ export function getAbilityViewsForUnit(
   if (unit.heroId === HERO_PAPYRUS_ID) {
     abilityIds.push(
       ABILITY_PAPYRUS_BLUE_BONE,
-      ABILITY_PAPYRUS_SPHAGETTI,
-      ABILITY_PAPYRUS_COOL_DUDE,
-      ABILITY_PAPYRUS_DISBELIEF
+      ABILITY_PAPYRUS_SPAGHETTI,
+      ABILITY_PAPYRUS_COOL_GUY,
+      ABILITY_PAPYRUS_UNBELIEVER
     );
+    if (unit.papyrusUnbelieverActive) {
+      abilityIds.push(
+        ABILITY_PAPYRUS_ORANGE_BONE,
+        ABILITY_PAPYRUS_LONG_BONE,
+        ABILITY_PAPYRUS_OSSIFIED
+      );
+    }
   } 
   if (unit.heroId === HERO_METTATON_ID) {
     abilityIds.push(
@@ -1432,10 +1516,14 @@ export function getAbilityViewsForUnit(
       const spec = getAbilitySpec(id);
       if (!spec) return null;
       const chargeRequired = getChargeRequired(spec);
+      const effectiveChargeRequired =
+        id === ABILITY_PAPYRUS_COOL_GUY && unit.papyrusUnbelieverActive
+          ? 3
+          : chargeRequired;
       const hasCharges =
         spec.chargeUnlimited === true ||
         spec.maxCharges !== undefined ||
-        chargeRequired !== undefined;
+        effectiveChargeRequired !== undefined;
       const currentCharges = hasCharges ? getCharges(unit, id) : undefined;
 
       let isAvailable = true;
@@ -1452,8 +1540,8 @@ export function getAbilityViewsForUnit(
           isAvailable = false;
           disabledReason = "Already transformed";
         } else if (
-          chargeRequired !== undefined &&
-          getCharges(unit, id) < chargeRequired
+          effectiveChargeRequired !== undefined &&
+          getCharges(unit, id) < effectiveChargeRequired
         ) {
           isAvailable = false;
           disabledReason = "Not Enough charges";
@@ -1481,7 +1569,7 @@ export function getAbilityViewsForUnit(
         kind: spec.kind,
         description: spec.description,
         slot: getSlotFromCost(spec),
-        chargeRequired,
+        chargeRequired: effectiveChargeRequired,
         maxCharges: spec.maxCharges,
         chargeUnlimited: spec.chargeUnlimited,
         currentCharges,

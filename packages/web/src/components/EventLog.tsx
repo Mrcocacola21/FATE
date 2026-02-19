@@ -8,6 +8,10 @@ const ABILITY_NAME_BY_ID: Record<string, string> = {
   kaiserDora: "Dora",
   kaiserCarpetStrike: "Carpet Strike",
   kaiserEngineeringMiracle: "Engineering Miracle",
+  papyrusSpaghetti: "Tasty Spaghetti",
+  papyrusCoolGuy: "Cool Guy",
+  papyrusOrangeBone: "Orange Bone",
+  papyrusLongBone: "Long Bone",
 };
 
 
@@ -119,6 +123,12 @@ function formatEvent(event: GameEvent): string {
       }`;
     case "abilityUsed":
       return `Ability used: ${event.unitId} (${event.abilityId})`;
+    case "papyrusUnbelieverActivated":
+      return `Unbeliever awakened: ${event.papyrusId} after ${event.fallenAllyId} fell`;
+    case "papyrusBoneApplied":
+      return `Bone applied: ${event.papyrusId} -> ${event.targetId} (${event.boneType})`;
+    case "papyrusBonePunished":
+      return `Bone punishment: ${event.targetId} took ${event.damage} (${event.boneType}, ${event.reason})`;
     case "unitHealed":
       return `Healed: ${event.unitId} +${event.amount} (HP ${event.hpAfter})`;
     case "damageBonusApplied":

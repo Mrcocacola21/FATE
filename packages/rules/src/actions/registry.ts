@@ -11,12 +11,14 @@ import { applyEndTurn, applyUnitStartTurn } from "./turnActions";
 import { applyChikatiloPostAction } from "./heroes/chikatilo";
 import { applyFriskPostAction } from "./heroes/frisk";
 import { applyLokiIllusoryDoubleFromEvents } from "./heroes/loki";
+import { applyPapyrusPostAction } from "./heroes/papyrus";
 
 export function applyAction(
   state: GameState,
   action: GameAction,
   rng: RNG
 ): ApplyResult {
+  const prevState = state;
   if (state.pendingRoll && action.type !== "resolvePendingRoll") {
     return { state, events: [] };
   }
@@ -98,5 +100,11 @@ export function applyAction(
     afterChikatilo.state,
     afterChikatilo.events
   );
-  return applyFriskPostAction(afterLoki.state, afterLoki.events);
+  const afterPapyrus = applyPapyrusPostAction(
+    prevState,
+    action,
+    afterLoki.state,
+    afterLoki.events
+  );
+  return applyFriskPostAction(afterPapyrus.state, afterPapyrus.events);
 }

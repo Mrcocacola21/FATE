@@ -39,6 +39,7 @@ export type ActionMode =
   | "jebeHailOfArrows"
   | "jebeKhansShooter"
   | "asgoreFireball"
+  | "papyrusCoolGuy"
   | "hassanTrueEnemy"
   | "kaladinFifth"
   | "odinSleipnir"
@@ -62,6 +63,7 @@ interface GameStore {
   joined: boolean;
   roomId: string | null;
   role: PlayerRole | null;
+  resumeToken: string | null;
   seat: PlayerId | null;
   isHost: boolean;
   roomMeta: RoomMeta | null;
@@ -131,7 +133,11 @@ interface GameStore {
   resetGameState: () => void;
 }
 
-function buildLeaveResetState(state: GameStore, message?: string): Partial<GameStore> {
+function buildLeaveResetState(
+  state: GameStore,
+  message?: string,
+  preserveResumeToken = false
+): Partial<GameStore> {
   const clientLog = message
     ? [...state.clientLog, message].slice(-50)
     : state.clientLog;
@@ -139,6 +145,7 @@ function buildLeaveResetState(state: GameStore, message?: string): Partial<GameS
     joined: false,
     roomId: null,
     role: null,
+    resumeToken: preserveResumeToken ? state.resumeToken : null,
     seat: null,
     isHost: false,
     roomMeta: defaultRoomMeta,
@@ -179,6 +186,7 @@ function handleServerMessage(
         joined: true,
         roomId: msg.roomId,
         role: msg.role,
+        resumeToken: msg.resumeToken ?? null,
         seat: msg.seat ?? null,
         isHost: msg.isHost,
         joinError: null,
@@ -191,6 +199,7 @@ function handleServerMessage(
         joined: false,
         roomId: null,
         role: null,
+        resumeToken: null,
         seat: null,
         isHost: false,
         roomMeta: defaultRoomMeta,
@@ -342,7 +351,8 @@ function openSocket(set: (fn: (state: GameStore) => Partial<GameStore>) => void,
       set((state) => ({
         ...buildLeaveResetState(
           state,
-          state.joined ? "Disconnected" : undefined
+          state.joined ? "Disconnected" : undefined,
+          true
         ),
         connectionStatus: "disconnected",
       }));
@@ -368,6 +378,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   joined: false,
   roomId: null,
   role: null,
+  resumeToken: null,
   seat: null,
   isHost: false,
   roomMeta: defaultRoomMeta,
@@ -396,7 +407,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set(() => ({ joinError: null }));
     const ws = await openSocket(set, get);
     const selection = loadFigureSetState(HERO_CATALOG).selection;
-    sendJoinRoom(ws, { ...params, figureSet: selection });
+    const resumeToken = get().resumeToken ?? undefined;
+    sendJoinRoom(ws, { ...params, figureSet: selection, resumeToken });
   },
   leaveRoom: () => {
     const state = get();

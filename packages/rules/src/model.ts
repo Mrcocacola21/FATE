@@ -70,6 +70,18 @@ export interface UnitDefinition {
   maxStealthTurns?: number;
 }
 
+export type PapyrusBoneType = "blue" | "orange";
+export type PapyrusLineAxis = "row" | "col" | "diagMain" | "diagAnti";
+
+export interface PapyrusBoneStatus {
+  sourceUnitId: string;
+  kind: PapyrusBoneType;
+  /** Expires when source Papyrus reaches this own-turn counter at turn start. */
+  expiresOnSourceOwnTurn: number;
+  /** Blue Bone: remembers turnNumber when movement punishment already triggered. */
+  bluePunishedTurnNumber?: number;
+}
+
 // Состояние конкретной фигуры в партии
 export interface UnitState {
   id: string;
@@ -145,6 +157,16 @@ export interface UnitState {
   riverBoatCarryAllyId?: string;
   /** River Person: next move is granted by Boatman and should not spend move slot. */
   riverBoatmanMovePending?: boolean;
+  /** Papyrus: one-time transformation state after allied hero death. */
+  papyrusUnbelieverActive?: boolean;
+  /** Papyrus: selected on-hit bone mode in Unbeliever state. */
+  papyrusBoneMode?: PapyrusBoneType;
+  /** Papyrus: whether basic attack is converted to line attack mode. */
+  papyrusLongBoneMode?: boolean;
+  /** Papyrus: selected line axis used by Cool Guy / Long Bone line picks. */
+  papyrusLineAxis?: PapyrusLineAxis;
+  /** Papyrus: active Blue/Orange status received from Papyrus attacks. */
+  papyrusBoneStatus?: PapyrusBoneStatus;
 
   isAlive: boolean;
 }
@@ -463,6 +485,27 @@ export type GameEvent =
       type: "abilityUsed";
       unitId: string;
       abilityId: string;
+    }
+  | {
+      type: "papyrusUnbelieverActivated";
+      papyrusId: string;
+      fallenAllyId: string;
+    }
+  | {
+      type: "papyrusBoneApplied";
+      papyrusId: string;
+      targetId: string;
+      boneType: PapyrusBoneType;
+      expiresOnSourceOwnTurn: number;
+    }
+  | {
+      type: "papyrusBonePunished";
+      papyrusId: string;
+      targetId: string;
+      boneType: PapyrusBoneType;
+      damage: number;
+      reason: "moveSpent" | "moveNotSpent";
+      hpAfter: number;
     }
   | {
       type: "unitHealed";

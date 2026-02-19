@@ -44,6 +44,7 @@ export type ServerMessage =
       role: PlayerRole;
       seat?: PlayerId;
       isHost: boolean;
+      resumeToken?: string;
     }
   | {
       type: "joinRejected";
@@ -83,6 +84,7 @@ export type ClientMessage =
       role: PlayerRole;
       name?: string;
       figureSet?: FigureSetSelection;
+      resumeToken?: string;
     }
   | { type: "setReady"; ready: boolean }
   | { type: "startGame" }
@@ -121,6 +123,7 @@ export function sendJoinRoom(
     role: PlayerRole;
     name?: string;
     figureSet?: FigureSetSelection;
+    resumeToken?: string;
   }
 ) {
   const join: ClientMessage = { type: "joinRoom", ...params };

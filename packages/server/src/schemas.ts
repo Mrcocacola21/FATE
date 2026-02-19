@@ -219,6 +219,7 @@ export const JoinRoomMessageSchema = z.object({
   role: RoleSchema,
   name: z.string().min(1).optional(),
   figureSet: FigureSetSelectionSchema.optional(),
+  resumeToken: z.string().min(1).optional(),
 });
 
 export const ActionMessageSchema = z.object({

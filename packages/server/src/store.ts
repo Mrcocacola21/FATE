@@ -13,12 +13,14 @@ import {
   SeededRNG,
 } from "rules";
 import { randomUUID } from "node:crypto";
+import { accepted, rejected, type CommandResult } from "./commandResult";
 
 export interface ActionLogEntry {
   at: number;
   playerId?: PlayerId;
   action: GameAction;
   events: GameEvent[];
+  revision: number;
 }
 
 export interface GameRoom {
@@ -27,10 +29,12 @@ export interface GameRoom {
   rng: SeededRNG;
   state: GameState;
   actionLog: ActionLogEntry[];
+  revision: number;
   createdAt: number;
   hostConnId: string | null;
   hostSeat: PlayerId;
   seats: { P1: string | null; P2: string | null };
+  seatTokens: { P1: string | null; P2: string | null };
   spectators: Set<string>;
   figureSets: Partial<Record<PlayerId, HeroSelection>>;
 }
@@ -40,12 +44,6 @@ export interface CreateGameOptions {
   arenaId?: string;
   hostSeat?: PlayerId;
   hostConnId?: string | null;
-}
-
-export interface ApplyActionResult {
-  state: GameState;
-  events: GameEvent[];
-  logIndex: number;
 }
 
 export interface RoomSummary {
@@ -109,10 +107,12 @@ export function createGameRoomWithId(
     rng,
     state,
     actionLog: [],
+    revision: 0,
     createdAt: Date.now(),
     hostConnId,
     hostSeat,
     seats,
+    seatTokens: { P1: null, P2: null },
     spectators: new Set<string>(),
     figureSets: {},
   };
@@ -173,20 +173,29 @@ export function applyGameAction(
   room: GameRoom,
   action: GameAction,
   playerId?: PlayerId
-): ApplyActionResult {
-  const result = applyAction(room.state, action, room.rng);
+): CommandResult {
+  const previousState = room.state;
+  const result = applyAction(previousState, action, room.rng);
+  const stateChanged = result.state !== previousState;
+
+  if (!stateChanged && result.events.length === 0) {
+    return rejected("RULES_REJECTED", "Action rejected by rules");
+  }
 
   room.state = result.state;
+  room.revision += 1;
   room.actionLog.push({
     at: Date.now(),
     playerId,
     action,
     events: result.events,
+    revision: room.revision,
   });
 
-  return {
-    state: room.state,
+  return accepted({
+    stateChanged,
     events: result.events,
+    revision: room.revision,
     logIndex: room.actionLog.length - 1,
-  };
+  });
 }

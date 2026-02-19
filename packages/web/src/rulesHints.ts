@@ -24,6 +24,7 @@ export const LOKI_ID = "loki";
 export const GUTS_ID = "guts";
 export const GRIFFITH_ID = "griffith";
 export const FEMTO_ID = "femto";
+export const PAPYRUS_ID = "papyrus";
 export const EL_CID_TISONA_ID = "elCidCompeadorTisona";
 export const EL_CID_KOLADA_ID = "elCidCompeadorKolada";
 export const EL_CID_DEMON_DUELIST_ID = "elCidCompeadorDemonDuelist";
@@ -59,6 +60,13 @@ export const GUTS_EXIT_BERSERK_ID = "gutsExitBerserk";
 export const FEMTO_DIVINE_MOVE_ID = "femtoDivineMove";
 export const RIVER_PERSON_BOATMAN_ID = "riverBoatman";
 export const RIVER_PERSON_TRA_LA_LA_ID = "riverTraLaLa";
+export const PAPYRUS_BLUE_BONE_ID = "papyrusBlueBone";
+export const PAPYRUS_SPAGHETTI_ID = "papyrusSpaghetti";
+export const PAPYRUS_COOL_GUY_ID = "papyrusCoolGuy";
+export const PAPYRUS_UNBELIEVER_ID = "papyrusUnbeliever";
+export const PAPYRUS_ORANGE_BONE_ID = "papyrusOrangeBone";
+export const PAPYRUS_LONG_BONE_ID = "papyrusLongBone";
+export const PAPYRUS_OSSIFIED_ID = "papyrusOssified";
 
 const MAX_HP_BY_CLASS: Record<UnitClass, number> = {
   spearman: 5,
@@ -119,6 +127,9 @@ export function getMaxHp(unitClass: UnitClass, heroId?: string): number {
   }
   if (heroId === FEMTO_ID) {
     base = MAX_HP_BY_CLASS.berserker + 5;
+  }
+  if (heroId === PAPYRUS_ID) {
+    base += 2;
   }
   return base;
 }

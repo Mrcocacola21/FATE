@@ -28,6 +28,7 @@ import {
   HERO_JEBE_ID,
   HERO_KALADIN_ID,
   HERO_ODIN_ID,
+  HERO_PAPYRUS_ID,
 } from "./heroes";
 import { isStormActive, isStormExempt } from "./forest";
 import { canDirectlyTargetUnit, canSeeStealthedTarget } from "./visibility";
@@ -302,7 +303,9 @@ export function resolveAttack(
   if (
     wantsBerserkAutoDefense &&
     (defenderAfter.class === "berserker" ||
-      defenderAfter.heroId === HERO_FEMTO_ID)
+      defenderAfter.heroId === HERO_FEMTO_ID ||
+      (defenderAfter.heroId === HERO_PAPYRUS_ID &&
+        defenderAfter.papyrusUnbelieverActive))
   ) {
     autoDefenseAbilityId = ABILITY_BERSERK_AUTO_DEFENSE;
   } else if (wantsMuninnAutoDefense && defenderAfter.heroId === HERO_ODIN_ID) {
