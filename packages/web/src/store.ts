@@ -46,7 +46,10 @@ export type ActionMode =
   | "gutsArbalet"
   | "gutsCannon"
   | null;
-export type HoverPreview = { type: "attackRange"; unitId: string } | null;
+export type ActionPreviewMode = Exclude<ActionMode, null>;
+export type HoverPreview =
+  | { type: "actionMode"; mode: ActionPreviewMode }
+  | null;
 
 const defaultRoomMeta: RoomMeta = {
   ready: { P1: false, P2: false },

@@ -43,7 +43,7 @@ import {
   PAPYRUS_ORANGE_BONE_ID,
   RIVER_PERSON_ID,
 } from "../../../rulesHints";
-import type { ActionMode } from "../../../store";
+import type { ActionMode, ActionPreviewMode } from "../../../store";
 import type { PlayerRole } from "../../../ws";
 
 export interface RightPanelProps {
@@ -69,7 +69,7 @@ export interface RightPanelProps {
   onMoveRequest: (unitId: string, mode?: MoveMode) => void;
   onSendAction: (action: GameAction) => void;
   onHoverAbility: (abilityId: string | null) => void;
-  onHoverAttackRange: (unitId: string | null, hovering: boolean) => void;
+  onHoverActionMode: (mode: ActionPreviewMode | null) => void;
   papyrusLineAxis: PapyrusLineAxis;
   onSetPapyrusLineAxis: (axis: PapyrusLineAxis) => void;
 }
@@ -180,6 +180,25 @@ function formatChargeLabel(
   return null;
 }
 
+function abilityActionMode(abilityId: string): ActionPreviewMode | null {
+  if (abilityId === KAISER_DORA_ID) return "dora";
+  if (abilityId === GROZNY_INVADE_TIME_ID) return "invadeTime";
+  if (abilityId === CHIKATILO_ASSASSIN_MARK_ID) return "assassinMark";
+  if (abilityId === LECHY_GUIDE_TRAVELER_ID) return "guideTraveler";
+  if (abilityId === EL_CID_TISONA_ID) return "tisona";
+  if (abilityId === EL_CID_DEMON_DUELIST_ID) return "demonDuelist";
+  if (abilityId === JEBE_HAIL_OF_ARROWS_ID) return "jebeHailOfArrows";
+  if (abilityId === JEBE_KHANS_SHOOTER_ID) return "jebeKhansShooter";
+  if (abilityId === HASSAN_TRUE_ENEMY_ID) return "hassanTrueEnemy";
+  if (abilityId === KALADIN_FIFTH_ID) return "kaladinFifth";
+  if (abilityId === ODIN_SLEIPNIR_ID) return "odinSleipnir";
+  if (abilityId === ASGORE_FIREBALL_ID) return "asgoreFireball";
+  if (abilityId === GUTS_ARBALET_ID) return "gutsArbalet";
+  if (abilityId === GUTS_CANNON_ID) return "gutsCannon";
+  if (abilityId === PAPYRUS_COOL_GUY_ID) return "papyrusCoolGuy";
+  return null;
+}
+
 export const RightPanelContent: FC<RightPanelProps> = ({
   view,
   role,
@@ -195,7 +214,7 @@ export const RightPanelContent: FC<RightPanelProps> = ({
   onMoveRequest,
   onSendAction,
   onHoverAbility,
-  onHoverAttackRange,
+  onHoverActionMode,
   papyrusLineAxis,
   onSetPapyrusLineAxis,
 }) => {
@@ -350,6 +369,15 @@ export const RightPanelContent: FC<RightPanelProps> = ({
 
   const placementEnabled =
     joined && !pendingRoll && !isSpectator && isMyTurn && view.phase === "placement";
+
+  const setModePreview = (mode: ActionPreviewMode | null) => {
+    if (actionMode) return;
+    onHoverActionMode(mode);
+  };
+
+  const toggleMode = (mode: ActionPreviewMode) => {
+    onSetActionMode(actionMode === mode ? null : mode);
+  };
 
   return (
     <div className="space-y-6">
@@ -682,10 +710,16 @@ export const RightPanelContent: FC<RightPanelProps> = ({
               className={`rounded-lg px-2 py-2 shadow-sm transition hover:shadow ${
                 moveDisabled
                   ? "bg-slate-100 text-slate-400 dark:bg-slate-900/50 dark:text-slate-500"
+                  : actionMode === "move"
+                  ? "bg-teal-500 text-white dark:bg-teal-800/50 dark:text-slate-100 dark:hover:bg-teal-700/60"
                   : "bg-slate-200 text-slate-700 dark:bg-slate-800/60 dark:text-slate-100 dark:hover:bg-slate-700/60"
               }`}
               onClick={() => {
                 if (!selectedUnit) return;
+                if (actionMode === "move") {
+                  onSetActionMode(null);
+                  return;
+                }
                 if (
                   selectedUnit.class === "trickster" ||
                   selectedUnit.class === "berserker" ||
@@ -695,8 +729,12 @@ export const RightPanelContent: FC<RightPanelProps> = ({
                   onMoveRequest(selectedUnit.id);
                   return;
                 }
-                onSetActionMode("move");
+                toggleMode("move");
               }}
+              onMouseEnter={() => !moveDisabled && setModePreview("move")}
+              onMouseLeave={() => setModePreview(null)}
+              onFocus={() => !moveDisabled && setModePreview("move")}
+              onBlur={() => setModePreview(null)}
               disabled={moveDisabled}
             >
               Move
@@ -705,13 +743,15 @@ export const RightPanelContent: FC<RightPanelProps> = ({
               className={`rounded-lg px-2 py-2 shadow-sm transition hover:shadow ${
                 attackDisabled
                   ? "bg-slate-100 text-slate-400 dark:bg-slate-900/50 dark:text-slate-500"
+                  : actionMode === "attack"
+                  ? "bg-teal-500 text-white dark:bg-teal-800/50 dark:text-slate-100 dark:hover:bg-teal-700/60"
                   : "bg-slate-200 text-slate-700 dark:bg-slate-800/60 dark:text-slate-100 dark:hover:bg-slate-700/60"
               }`}
-              onClick={() => onSetActionMode("attack")}
-              onMouseEnter={() => onHoverAttackRange(selectedUnit?.id ?? null, true)}
-              onMouseLeave={() => onHoverAttackRange(selectedUnit?.id ?? null, false)}
-              onFocus={() => onHoverAttackRange(selectedUnit?.id ?? null, true)}
-              onBlur={() => onHoverAttackRange(selectedUnit?.id ?? null, false)}
+              onClick={() => toggleMode("attack")}
+              onMouseEnter={() => !attackDisabled && setModePreview("attack")}
+              onMouseLeave={() => setModePreview(null)}
+              onFocus={() => !attackDisabled && setModePreview("attack")}
+              onBlur={() => setModePreview(null)}
               disabled={attackDisabled}
               title={attackDisabledReason ?? ""}
             >
@@ -835,66 +875,11 @@ export const RightPanelContent: FC<RightPanelProps> = ({
               const label = `${ability.name}${
                 chargeLabel ? ` (${chargeLabel})` : ""
               }`;
+              const mode = abilityActionMode(ability.id);
               const onClick = () => {
                 if (!selectedUnit || disabled) return;
-                if (ability.id === KAISER_DORA_ID) {
-                  onSetActionMode("dora");
-                  return;
-                }
-                if (ability.id === GROZNY_INVADE_TIME_ID) {
-                  onSetActionMode("invadeTime");
-                  return;
-                }
-                if (ability.id === CHIKATILO_ASSASSIN_MARK_ID) {
-                  onSetActionMode("assassinMark");
-                  return;
-                }
-                if (ability.id === LECHY_GUIDE_TRAVELER_ID) {
-                  onSetActionMode("guideTraveler");
-                  return;
-                }
-                if (ability.id === EL_CID_TISONA_ID) {
-                  onSetActionMode("tisona");
-                  return;
-                }
-                if (ability.id === EL_CID_DEMON_DUELIST_ID) {
-                  onSetActionMode("demonDuelist");
-                  return;
-                }
-                if (ability.id === JEBE_HAIL_OF_ARROWS_ID) {
-                  onSetActionMode("jebeHailOfArrows");
-                  return;
-                }
-                if (ability.id === JEBE_KHANS_SHOOTER_ID) {
-                  onSetActionMode("jebeKhansShooter");
-                  return;
-                }
-                if (ability.id === HASSAN_TRUE_ENEMY_ID) {
-                  onSetActionMode("hassanTrueEnemy");
-                  return;
-                }
-                if (ability.id === KALADIN_FIFTH_ID) {
-                  onSetActionMode("kaladinFifth");
-                  return;
-                }
-                if (ability.id === ODIN_SLEIPNIR_ID) {
-                  onSetActionMode("odinSleipnir");
-                  return;
-                }
-                if (ability.id === ASGORE_FIREBALL_ID) {
-                  onSetActionMode("asgoreFireball");
-                  return;
-                }
-                if (ability.id === GUTS_ARBALET_ID) {
-                  onSetActionMode("gutsArbalet");
-                  return;
-                }
-                if (ability.id === GUTS_CANNON_ID) {
-                  onSetActionMode("gutsCannon");
-                  return;
-                }
-                if (ability.id === PAPYRUS_COOL_GUY_ID) {
-                  onSetActionMode("papyrusCoolGuy");
+                if (mode) {
+                  toggleMode(mode);
                   return;
                 }
                 onSendAction({
@@ -910,13 +895,43 @@ export const RightPanelContent: FC<RightPanelProps> = ({
                     className={`w-full rounded-lg px-2 py-2 text-left shadow-sm transition hover:shadow ${
                       disabled
                         ? "bg-slate-100 text-slate-400 cursor-not-allowed opacity-60 dark:bg-slate-900/50 dark:text-slate-500"
+                        : mode && actionMode === mode
+                        ? "bg-teal-500 text-white dark:bg-teal-800/50 dark:text-slate-100 dark:hover:bg-teal-700/60"
                         : "bg-slate-200 text-slate-700 dark:bg-slate-800/60 dark:text-slate-100 dark:hover:bg-slate-700/60"
                     }`}
                     onClick={onClick}
-                    onMouseEnter={() => hoverable && onHoverAbility(ability.id)}
-                    onMouseLeave={() => hoverable && onHoverAbility(null)}
-                    onFocus={() => hoverable && onHoverAbility(ability.id)}
-                    onBlur={() => hoverable && onHoverAbility(null)}
+                    onMouseEnter={() => {
+                      if (hoverable) {
+                        onHoverAbility(ability.id);
+                      }
+                      if (mode && !disabled) {
+                        setModePreview(mode);
+                      }
+                    }}
+                    onMouseLeave={() => {
+                      if (hoverable) {
+                        onHoverAbility(null);
+                      }
+                      if (mode) {
+                        setModePreview(null);
+                      }
+                    }}
+                    onFocus={() => {
+                      if (hoverable) {
+                        onHoverAbility(ability.id);
+                      }
+                      if (mode && !disabled) {
+                        setModePreview(mode);
+                      }
+                    }}
+                    onBlur={() => {
+                      if (hoverable) {
+                        onHoverAbility(null);
+                      }
+                      if (mode) {
+                        setModePreview(null);
+                      }
+                    }}
                     disabled={disabled}
                     title={tooltip}
                   >
@@ -1033,6 +1048,7 @@ export const RightPanelContent: FC<RightPanelProps> = ({
             <button
               className="rounded-lg bg-slate-100 px-2 py-2 text-slate-600 shadow-sm transition hover:shadow dark:bg-slate-800/60 dark:text-slate-200 dark:hover:bg-slate-700/60"
               onClick={() => {
+                onHoverActionMode(null);
                 onSetActionMode(null);
                 onSelectUnit(null);
               }}

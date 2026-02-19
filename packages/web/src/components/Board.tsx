@@ -22,7 +22,14 @@ interface BoardProps {
   selectedUnitId: string | null;
   highlightedCells: Record<
     string,
-    "place" | "move" | "attack" | "dora" | "attackRange"
+    | "place"
+    | "move"
+    | "attack"
+    | "dora"
+    | "attackRange"
+    | "previewMove"
+    | "previewAttack"
+    | "previewAbility"
   >;
   hoveredAbilityId?: string | null;
   doraPreview?: { center: Coord; radius: number } | null;
@@ -44,7 +51,15 @@ function getClassMarker(unitClass: string): string | null {
 }
 
 function getHighlightClass(
-  kind: "place" | "move" | "attack" | "dora" | "attackRange"
+  kind:
+    | "place"
+    | "move"
+    | "attack"
+    | "dora"
+    | "attackRange"
+    | "previewMove"
+    | "previewAttack"
+    | "previewAbility"
 ) {
   switch (kind) {
     case "place":
@@ -57,6 +72,12 @@ function getHighlightClass(
       return "bg-rose-200/35 dark:bg-rose-500/12";
     case "dora":
       return "bg-amber-300/35 dark:bg-amber-500/15";
+    case "previewMove":
+      return "bg-sky-300/20 ring-1 ring-sky-500/45 dark:bg-sky-400/10 dark:ring-sky-300/45";
+    case "previewAttack":
+      return "bg-rose-300/22 ring-1 ring-rose-500/45 dark:bg-rose-400/10 dark:ring-rose-300/45";
+    case "previewAbility":
+      return "bg-amber-300/22 ring-1 ring-amber-500/45 dark:bg-amber-400/10 dark:ring-amber-300/45";
     default:
       return "";
   }
@@ -185,7 +206,14 @@ export const Board: FC<BoardProps> = ({
   const stakeMarkersByPos = new Map<string, boolean>();
   const viewHighlights: Record<
     string,
-    "place" | "move" | "attack" | "dora" | "attackRange"
+    | "place"
+    | "move"
+    | "attack"
+    | "dora"
+    | "attackRange"
+    | "previewMove"
+    | "previewAttack"
+    | "previewAbility"
   > = {};
   const aoeHighlights = new Map<string, "aoe" | "aoeDisabled">();
   const doraPreviewKeys = new Set<string>();

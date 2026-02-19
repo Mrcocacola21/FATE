@@ -12,7 +12,11 @@ import { EventLog } from "../components/EventLog";
 import { RightPanel } from "./components/RightPanel/RightPanel";
 import { TurnQueueTracker } from "../components/TurnQueueTracker";
 import { ThemeToggle } from "../components/ThemeToggle";
-import { getLocalPlayerId, useGameStore } from "../store";
+import {
+  getLocalPlayerId,
+  useGameStore,
+  type ActionPreviewMode,
+} from "../store";
 import {
   EL_CID_DEMON_DUELIST_ID,
   EL_CID_TISONA_ID,
@@ -511,6 +515,25 @@ function isCoordInList(coords: Coord[], col: number, row: number): boolean {
   return coords.some((c) => c.col === col && c.row === row);
 }
 
+type CellHighlightKind =
+  | "place"
+  | "move"
+  | "attack"
+  | "dora"
+  | "attackRange"
+  | "previewMove"
+  | "previewAttack"
+  | "previewAbility";
+
+function previewKindForActionMode(
+  mode: ActionPreviewMode | null
+): "previewMove" | "previewAttack" | "previewAbility" | null {
+  if (!mode) return null;
+  if (mode === "move") return "previewMove";
+  if (mode === "attack") return "previewAttack";
+  return "previewAbility";
+}
+
 export function Game() {
   const {
     roomId,
@@ -864,6 +887,33 @@ export function Game() {
 
   const selectedUnit =
     view && selectedUnitId ? view.units[selectedUnitId] ?? null : null;
+  const hoverActionMode =
+    hoverPreview?.type === "actionMode" ? hoverPreview.mode : null;
+  const allowActionHoverPreview =
+    !actionMode &&
+    !hasBlockingRoll &&
+    !boardSelectionPending &&
+    !!hoverActionMode &&
+    !!selectedUnit;
+  const effectiveActionMode =
+    actionMode ?? (allowActionHoverPreview ? hoverActionMode : null);
+  const modePreviewKind = allowActionHoverPreview
+    ? previewKindForActionMode(hoverActionMode)
+    : null;
+
+  useEffect(() => {
+    if (hoverPreview?.type !== "actionMode") return;
+    if (actionMode || hasBlockingRoll || boardSelectionPending || !selectedUnit) {
+      setHoverPreview(null);
+    }
+  }, [
+    hoverPreview,
+    actionMode,
+    hasBlockingRoll,
+    boardSelectionPending,
+    selectedUnit,
+    setHoverPreview,
+  ]);
 
   useEffect(() => {
     if (!selectedUnit || selectedUnit.heroId !== PAPYRUS_ID) {
@@ -1327,11 +1377,11 @@ export function Game() {
   );
 
   const doraTargetCenters = useMemo(() => {
-    if (!view || actionMode !== "dora" || !selectedUnit?.position) {
+    if (!view || effectiveActionMode !== "dora" || !selectedUnit?.position) {
       return [] as Coord[];
     }
     return getDoraTargetCenters(view, selectedUnit.id);
-  }, [view, actionMode, selectedUnit]);
+  }, [view, effectiveActionMode, selectedUnit]);
 
   const doraTargetKeys = useMemo(
     () => new Set(doraTargetCenters.map(coordKey)),
@@ -1339,11 +1389,15 @@ export function Game() {
   );
 
   const jebeHailTargetCenters = useMemo(() => {
-    if (!view || actionMode !== "jebeHailOfArrows" || !selectedUnit?.position) {
+    if (
+      !view ||
+      effectiveActionMode !== "jebeHailOfArrows" ||
+      !selectedUnit?.position
+    ) {
       return [] as Coord[];
     }
     return getDoraTargetCenters(view, selectedUnit.id);
-  }, [view, actionMode, selectedUnit]);
+  }, [view, effectiveActionMode, selectedUnit]);
 
   const jebeHailTargetKeys = useMemo(
     () => new Set(jebeHailTargetCenters.map(coordKey)),
@@ -1351,7 +1405,7 @@ export function Game() {
   );
 
   const kaladinFifthTargetCenters = useMemo(() => {
-    if (!view || actionMode !== "kaladinFifth") {
+    if (!view || effectiveActionMode !== "kaladinFifth") {
       return [] as Coord[];
     }
     const size = view.boardSize ?? 9;
@@ -1362,7 +1416,7 @@ export function Game() {
       }
     }
     return cells;
-  }, [view, actionMode]);
+  }, [view, effectiveActionMode]);
 
   const kaladinFifthTargetKeys = useMemo(
     () => new Set(kaladinFifthTargetCenters.map(coordKey)),
@@ -1370,7 +1424,7 @@ export function Game() {
   );
 
   const tisonaTargetCells = useMemo(() => {
-    if (!view || actionMode !== "tisona" || !selectedUnit?.position) {
+    if (!view || effectiveActionMode !== "tisona" || !selectedUnit?.position) {
       return [] as Coord[];
     }
     const size = view.boardSize ?? 9;
@@ -1385,7 +1439,7 @@ export function Game() {
       cells.push({ col: origin.col, row });
     }
     return cells;
-  }, [view, actionMode, selectedUnit]);
+  }, [view, effectiveActionMode, selectedUnit]);
 
   const tisonaTargetKeys = useMemo(
     () => new Set(tisonaTargetCells.map(coordKey)),
@@ -1395,7 +1449,8 @@ export function Game() {
   const invadeTimeTargets = useMemo(() => {
     if (
       !view ||
-      (actionMode !== "invadeTime" && actionMode !== "odinSleipnir") ||
+      (effectiveActionMode !== "invadeTime" &&
+        effectiveActionMode !== "odinSleipnir") ||
       !selectedUnit?.position
     ) {
       return [] as Coord[];
@@ -1411,7 +1466,7 @@ export function Game() {
       }
     }
     return cells;
-  }, [view, actionMode, selectedUnit]);
+  }, [view, effectiveActionMode, selectedUnit]);
 
   const invadeTimeKeys = useMemo(
     () => new Set(invadeTimeTargets.map(coordKey)),
@@ -1546,6 +1601,10 @@ export function Game() {
     if (!view || !selectedUnit) return [] as string[];
     return view.legal?.attackTargetsByUnitId[selectedUnit.id] ?? [];
   }, [view, selectedUnit]);
+  const attackPreviewCells = useMemo(() => {
+    if (!view || !selectedUnit) return [] as Coord[];
+    return getAttackRangeCells(view, selectedUnit.id);
+  }, [view, selectedUnit]);
   const papyrusLongBoneAttackTargetIds = useMemo(() => {
     if (!view || !selectedUnit) return [] as string[];
     if (
@@ -1560,8 +1619,18 @@ export function Game() {
       .map((unit) => unit.id);
   }, [view, selectedUnit]);
 
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    if (hoverActionMode !== "attack" || !allowActionHoverPreview) return;
+    console.debug("attackPreviewCells", attackPreviewCells.length);
+  }, [hoverActionMode, allowActionHoverPreview, attackPreviewCells]);
+
   const assassinMarkTargets = useMemo(() => {
-    if (!view || actionMode !== "assassinMark" || !selectedUnit?.position) {
+    if (
+      !view ||
+      effectiveActionMode !== "assassinMark" ||
+      !selectedUnit?.position
+    ) {
       return [] as UnitState[];
     }
     const origin = selectedUnit.position;
@@ -1572,7 +1641,7 @@ export function Game() {
       const dy = Math.abs(unit.position.row - origin.row);
       return Math.max(dx, dy) <= 2;
     });
-  }, [view, actionMode, selectedUnit]);
+  }, [view, effectiveActionMode, selectedUnit]);
   const assassinMarkTargetIds = useMemo(
     () => assassinMarkTargets.map((unit) => unit.id),
     [assassinMarkTargets]
@@ -1589,7 +1658,11 @@ export function Game() {
   );
 
   const guideTravelerTargets = useMemo(() => {
-    if (!view || actionMode !== "guideTraveler" || !selectedUnit?.position) {
+    if (
+      !view ||
+      effectiveActionMode !== "guideTraveler" ||
+      !selectedUnit?.position
+    ) {
       return [] as UnitState[];
     }
     const origin = selectedUnit.position;
@@ -1601,7 +1674,7 @@ export function Game() {
       const dy = Math.abs(unit.position.row - origin.row);
       return Math.max(dx, dy) <= 2;
     });
-  }, [view, actionMode, selectedUnit]);
+  }, [view, effectiveActionMode, selectedUnit]);
   const guideTravelerTargetIds = useMemo(
     () => guideTravelerTargets.map((unit) => unit.id),
     [guideTravelerTargets]
@@ -1617,7 +1690,11 @@ export function Game() {
     [guideTravelerTargets]
   );
   const hassanTrueEnemyCandidateIds = useMemo(() => {
-    if (!view || actionMode !== "hassanTrueEnemy" || !selectedUnit?.position) {
+    if (
+      !view ||
+      effectiveActionMode !== "hassanTrueEnemy" ||
+      !selectedUnit?.position
+    ) {
       return [] as string[];
     }
     const origin = selectedUnit.position;
@@ -1630,7 +1707,7 @@ export function Game() {
         return Math.max(dx, dy) <= 2;
       })
       .map((unit) => unit.id);
-  }, [view, actionMode, selectedUnit]);
+  }, [view, effectiveActionMode, selectedUnit]);
   const hassanTrueEnemyCandidateKeys = useMemo(
     () =>
       new Set(
@@ -1645,12 +1722,13 @@ export function Game() {
     if (
       !view ||
       !selectedUnit ||
-      (actionMode !== "gutsArbalet" && actionMode !== "gutsCannon")
+      (effectiveActionMode !== "gutsArbalet" &&
+        effectiveActionMode !== "gutsCannon")
     ) {
       return [] as string[];
     }
     return getArcherLikeTargetIds(view, selectedUnit.id);
-  }, [view, selectedUnit, actionMode]);
+  }, [view, selectedUnit, effectiveActionMode]);
   const gutsRangedTargetKeys = useMemo(
     () =>
       new Set(
@@ -1662,11 +1740,11 @@ export function Game() {
     [gutsRangedTargetIds, view]
   );
   const asgoreFireballTargetIds = useMemo(() => {
-    if (!view || !selectedUnit || actionMode !== "asgoreFireball") {
+    if (!view || !selectedUnit || effectiveActionMode !== "asgoreFireball") {
       return [] as string[];
     }
     return getArcherLikeTargetIds(view, selectedUnit.id);
-  }, [view, selectedUnit, actionMode]);
+  }, [view, selectedUnit, effectiveActionMode]);
   const asgoreFireballTargetKeys = useMemo(
     () =>
       new Set(
@@ -1678,22 +1756,10 @@ export function Game() {
     [asgoreFireballTargetIds, view]
   );
 
-  const hoverAttackPreview = useMemo(() => {
-    if (!view || hoverPreview?.type !== "attackRange") {
-      return null;
-    }
-    const unit = view.units[hoverPreview.unitId];
-    if (!unit?.position) return null;
-    const rangeCells = getAttackRangeCells(view, unit.id);
-    const targetIds = view.legal?.attackTargetsByUnitId[unit.id] ?? [];
-    return { rangeCells, targetIds };
-  }, [view, hoverPreview]);
-
   const highlightedCells = useMemo(() => {
-    const highlights: Record<
-      string,
-      "place" | "move" | "attack" | "dora" | "attackRange"
-    > = {};
+    const highlights: Record<string, CellHighlightKind> = {};
+    const modeKind = (fallback: "move" | "attack" | "dora"): CellHighlightKind =>
+      modePreviewKind ?? fallback;
 
     if (isStakePlacement) {
       for (const coord of stakeLegalPositions) {
@@ -1864,13 +1930,13 @@ export function Game() {
       return highlights;
     }
 
-    if (actionMode === "place") {
+    if (effectiveActionMode === "place") {
       for (const coord of legalPlacementCoords) {
         highlights[coordKey(coord)] = "place";
       }
     }
 
-    if (actionMode === "move") {
+    if (effectiveActionMode === "move") {
       const riderMode =
         !!selectedUnit &&
         (selectedUnit.class === "rider" ||
@@ -1881,23 +1947,30 @@ export function Game() {
           const path = linePath(selectedUnit.position, coord);
           const cells = path ? path.slice(1) : [coord];
           for (const cell of cells) {
-            highlights[coordKey(cell)] = "move";
+            highlights[coordKey(cell)] = modeKind("move");
           }
         }
       } else {
         for (const coord of legalMoveCoords) {
-          highlights[coordKey(coord)] = "move";
+          highlights[coordKey(coord)] = modeKind("move");
         }
       }
     }
 
-    if (actionMode === "invadeTime" || actionMode === "odinSleipnir") {
+    if (
+      effectiveActionMode === "invadeTime" ||
+      effectiveActionMode === "odinSleipnir"
+    ) {
       for (const coord of invadeTimeTargets) {
-        highlights[coordKey(coord)] = "move";
+        highlights[coordKey(coord)] = modeKind("move");
       }
     }
 
-    if (actionMode === "attack" && view) {
+    if (effectiveActionMode === "attack" && view) {
+      const attackKind: CellHighlightKind = modePreviewKind ?? "previewAttack";
+      for (const coord of attackPreviewCells) {
+        highlights[coordKey(coord)] = attackKind;
+      }
       const targetIds =
         papyrusLongBoneAttackTargetIds.length > 0
           ? papyrusLongBoneAttackTargetIds
@@ -1905,86 +1978,89 @@ export function Game() {
       for (const targetId of targetIds) {
         const unit = view.units[targetId];
         if (!unit?.position) continue;
-        highlights[coordKey(unit.position)] = "attack";
+        highlights[coordKey(unit.position)] = attackKind;
       }
     }
 
-    if (actionMode === "assassinMark") {
+    if (effectiveActionMode === "assassinMark") {
       for (const key of assassinMarkTargetKeys) {
-        highlights[key] = "attack";
+        highlights[key] = modeKind("attack");
       }
     }
 
-    if (actionMode === "guideTraveler") {
+    if (effectiveActionMode === "guideTraveler") {
       for (const key of guideTravelerTargetKeys) {
-        highlights[key] = "attack";
+        highlights[key] = modeKind("attack");
       }
     }
 
-    if (actionMode === "demonDuelist" && view) {
+    if (effectiveActionMode === "demonDuelist" && view) {
       for (const targetId of legalAttackTargets) {
         const unit = view.units[targetId];
         if (!unit?.position) continue;
-        highlights[coordKey(unit.position)] = "attack";
+        highlights[coordKey(unit.position)] = modeKind("attack");
       }
     }
 
-    if (actionMode === "dora") {
+    if (effectiveActionMode === "dora") {
       for (const coord of doraTargetCenters) {
-        highlights[coordKey(coord)] = "dora";
+        highlights[coordKey(coord)] = modeKind("dora");
       }
     }
 
-    if (actionMode === "papyrusCoolGuy" && view) {
+    if (effectiveActionMode === "papyrusCoolGuy" && view) {
       const size = view.boardSize ?? 9;
       for (let col = 0; col < size; col += 1) {
         for (let row = 0; row < size; row += 1) {
-          highlights[coordKey({ col, row })] = "dora";
+          highlights[coordKey({ col, row })] = modeKind("dora");
         }
       }
     }
 
-    if (actionMode === "jebeHailOfArrows") {
+    if (effectiveActionMode === "jebeHailOfArrows") {
       for (const coord of jebeHailTargetCenters) {
-        highlights[coordKey(coord)] = "dora";
+        highlights[coordKey(coord)] = modeKind("dora");
       }
     }
 
-    if (actionMode === "kaladinFifth") {
+    if (effectiveActionMode === "kaladinFifth") {
       for (const coord of kaladinFifthTargetCenters) {
-        highlights[coordKey(coord)] = "dora";
+        highlights[coordKey(coord)] = modeKind("dora");
       }
     }
 
-    if (actionMode === "jebeKhansShooter" && view) {
+    if (effectiveActionMode === "jebeKhansShooter" && view) {
       for (const targetId of legalAttackTargets) {
         const unit = view.units[targetId];
         if (!unit?.position) continue;
-        highlights[coordKey(unit.position)] = "attack";
+        highlights[coordKey(unit.position)] = modeKind("attack");
       }
     }
 
-    if (actionMode === "gutsArbalet" || actionMode === "gutsCannon") {
+    if (
+      effectiveActionMode === "gutsArbalet" ||
+      effectiveActionMode === "gutsCannon"
+    ) {
       for (const key of gutsRangedTargetKeys) {
-        highlights[key] = "attack";
+        highlights[key] = modeKind("attack");
       }
     }
 
-    if (actionMode === "asgoreFireball") {
+    if (effectiveActionMode === "asgoreFireball") {
       for (const key of asgoreFireballTargetKeys) {
-        highlights[key] = "attack";
+        highlights[key] = modeKind("attack");
       }
     }
 
-    if (actionMode === "hassanTrueEnemy") {
+    if (effectiveActionMode === "hassanTrueEnemy") {
       for (const key of hassanTrueEnemyCandidateKeys) {
-        highlights[key] = "attack";
+        highlights[key] = modeKind("attack");
       }
     }
 
-    if (actionMode === "tisona" && view && selectedUnit?.position) {
+    if (effectiveActionMode === "tisona" && view && selectedUnit?.position) {
       const size = view.boardSize ?? 9;
-      if (tisonaPreviewCoord) {
+      if (tisonaPreviewCoord && !modePreviewKind) {
         const lineCells = getOrthogonalLineCells(
           size,
           selectedUnit.position,
@@ -1995,47 +2071,18 @@ export function Game() {
         }
       }
       for (const coord of tisonaTargetCells) {
-        highlights[coordKey(coord)] = "attack";
-      }
-    }
-
-    const allowHoverPreview =
-      !actionMode &&
-      !isStakePlacement &&
-      !isIntimidateChoice &&
-      !isForestTarget &&
-      !isForestMoveDestination &&
-      !isJebeKhansShooterTargetChoice &&
-      !isHassanTrueEnemyTargetChoice &&
-      !isAsgoreSoulParadePatienceTargetChoice &&
-      !isAsgoreSoulParadePerseveranceTargetChoice &&
-      !isAsgoreSoulParadeJusticeTargetChoice &&
-      !isAsgoreSoulParadeIntegrityDestination &&
-      !isRiverBoatCarryChoice &&
-      !isRiverBoatDropDestination &&
-      !isRiverTraLaLaTargetChoice &&
-      !isRiverTraLaLaDestinationChoice &&
-      !isFriskPacifismHugsTargetChoice &&
-      !isFriskWarmWordsTargetChoice &&
-      !isHassanAssassinOrderSelection;
-
-    if (allowHoverPreview && hoverAttackPreview && view) {
-      for (const coord of hoverAttackPreview.rangeCells) {
-        highlights[coordKey(coord)] = "attackRange";
-      }
-      for (const targetId of hoverAttackPreview.targetIds) {
-        const unit = view.units[targetId];
-        if (!unit?.position) continue;
-        highlights[coordKey(unit.position)] = "attack";
+        highlights[coordKey(coord)] = modeKind("attack");
       }
     }
 
     return highlights;
   }, [
-    actionMode,
+    effectiveActionMode,
+    modePreviewKind,
     legalPlacementCoords,
     legalMoveCoords,
     legalAttackTargets,
+    attackPreviewCells,
     papyrusLongBoneAttackTargetIds,
     doraTargetCenters,
     view,
@@ -2052,7 +2099,6 @@ export function Game() {
     femtoDivineMoveOptions,
     isRiverBoatCarryChoice,
     riverBoatCarryOptionKeys,
-    riverBoatCarryOptionIds,
     isRiverBoatDropDestination,
     riverBoatDropDestinationOptions,
     isRiverTraLaLaTargetChoice,
@@ -2098,7 +2144,6 @@ export function Game() {
     selectedUnit,
     pendingMoveForSelected,
     moveOptions,
-    hoverAttackPreview,
     jebeHailTargetCenters,
     kaladinFifthTargetCenters,
     tisonaTargetCells,
@@ -3153,17 +3198,9 @@ export function Game() {
             joined={joined}
             pendingRoll={hasBlockingRoll}
             onHoverAbility={setHoveredAbilityId}
-            onHoverAttackRange={(unitId, hovering) => {
-              if (hovering) {
-                if (unitId) {
-                  setHoverPreview({ type: "attackRange", unitId });
-                }
-                return;
-              }
-              if (hoverPreview?.type === "attackRange") {
-                setHoverPreview(null);
-              }
-            }}
+            onHoverActionMode={(mode) =>
+              setHoverPreview(mode ? { type: "actionMode", mode } : null)
+            }
             onSelectUnit={(id) => {
               setSelectedUnit(id);
               setActionMode(null);
