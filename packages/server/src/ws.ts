@@ -143,6 +143,19 @@ const WS_RATE_LIMIT_MAX_MESSAGES = Number(process.env.WS_RATE_LIMIT_MAX_MESSAGES
 const RECONNECT_GRACE_MS = Number(process.env.RECONNECT_GRACE_MS ?? 45_000);
 type ClientMessage = z.infer<typeof ClientMessageSchema>;
 
+type SwitchRoleTransition =
+  | {
+      ok: true;
+      nextRoom: GameRoom;
+      nextMeta: ConnectionMeta;
+      previousResumeToken: string;
+    }
+  | {
+      ok: false;
+      code: string;
+      message: string;
+    };
+
 function sendMessage(socket: WebSocket, message: ServerMessage) {
   if (socket.readyState !== WebSocket.OPEN) return;
   socket.send(JSON.stringify(message));
@@ -286,6 +299,106 @@ function vacateSeat(room: GameRoom, seat: PlayerId, connId: string) {
   };
 }
 
+function cloneRoomForSeatMutation(room: GameRoom): GameRoom {
+  return {
+    ...room,
+    state: {
+      ...room.state,
+      seats: { ...room.state.seats },
+      playersReady: { ...room.state.playersReady },
+    },
+    seats: { ...room.seats },
+    seatTokens: { ...room.seatTokens },
+    spectators: new Set(room.spectators),
+  };
+}
+
+function applySeatMutationSnapshot(room: GameRoom, nextRoom: GameRoom) {
+  room.state = nextRoom.state;
+  room.seats = nextRoom.seats;
+  room.seatTokens = nextRoom.seatTokens;
+  room.spectators = nextRoom.spectators;
+  room.hostConnId = nextRoom.hostConnId;
+  room.hostSeat = nextRoom.hostSeat;
+}
+
+function buildSwitchRoleTransition(
+  room: GameRoom,
+  current: ConnectionMeta,
+  requestedRole: PlayerRole
+): SwitchRoleTransition {
+  if (current.role === requestedRole) {
+    return {
+      ok: false,
+      code: "ALREADY_IN_ROLE",
+      message: "Already in requested role",
+    };
+  }
+
+  const targetSeat =
+    requestedRole === "P1" || requestedRole === "P2"
+      ? (requestedRole as PlayerId)
+      : null;
+
+  if (
+    targetSeat &&
+    !canAssignSeat(room, targetSeat, current.connId, current.resumeToken)
+  ) {
+    return {
+      ok: false,
+      code: "role_taken",
+      message: "Requested role is already taken",
+    };
+  }
+
+  const nextRoom = cloneRoomForSeatMutation(room);
+  const previousSeat = current.seat;
+  const previousResumeToken = current.resumeToken;
+  const nextResumeToken = randomUUID();
+
+  if (previousSeat && previousSeat !== targetSeat) {
+    vacateSeat(nextRoom, previousSeat, current.connId);
+  }
+
+  if (targetSeat) {
+    const keepReadyForSeat =
+      room.seats[targetSeat] === current.connId &&
+      room.seatTokens[targetSeat] === previousResumeToken;
+    nextRoom.seats[targetSeat] = current.connId;
+    nextRoom.seatTokens[targetSeat] = nextResumeToken;
+    nextRoom.state = {
+      ...nextRoom.state,
+      seats: { ...nextRoom.state.seats, [targetSeat]: true },
+      playersReady: {
+        ...nextRoom.state.playersReady,
+        [targetSeat]: keepReadyForSeat
+          ? room.state.playersReady[targetSeat]
+          : false,
+      },
+    };
+    if (nextRoom.hostSeat === targetSeat) {
+      nextRoom.hostConnId = current.connId;
+    }
+    nextRoom.spectators.delete(current.connId);
+  } else {
+    nextRoom.spectators.add(current.connId);
+  }
+
+  updateHost(nextRoom);
+
+  return {
+    ok: true,
+    nextRoom,
+    nextMeta: {
+      ...current,
+      role: targetSeat ?? "spectator",
+      seat: targetSeat,
+      resumeToken: nextResumeToken,
+    },
+    previousResumeToken,
+  };
+}
+
 function updateHost(room: GameRoom) {
   const hostConnId = room.hostConnId;
   if (!hostConnId) return;
@@ -331,35 +444,36 @@ function clearSeatGrace(roomId: string, seat: PlayerId) {
 
 function scheduleSeatGrace(room: GameRoom, meta: ConnectionMeta) {
   if (!meta.seat || meta.channel !== "fate") return;
+  const roomId = room.id;
   const seat = meta.seat;
-  clearSeatGraceByToken(meta.resumeToken);
+  const connId = meta.connId;
+  const resumeToken = meta.resumeToken;
+  clearSeatGraceByToken(resumeToken);
 
   const expiresAt = Date.now() + RECONNECT_GRACE_MS;
   const timer = setTimeout(() => {
-    graceByToken.delete(meta.resumeToken);
-    graceBySeat.delete(seatGraceKey(room.id, seat));
-    void enqueueRoomCommand(fateRoomKey(room.id), () => {
-      const current = getGameRoom(room.id);
+    graceByToken.delete(resumeToken);
+    graceBySeat.delete(seatGraceKey(roomId, seat));
+    void enqueueRoomCommand(fateRoomKey(roomId), () => {
+      const current = getGameRoom(roomId);
       if (!current) return;
 
       const stillReserved =
-        current.seats[seat] === meta.connId &&
-        current.seatTokens[seat] === meta.resumeToken;
+        current.seats[seat] === connId && current.seatTokens[seat] === resumeToken;
       if (!stillReserved) return;
 
-      vacateSeat(current, seat, meta.connId);
+      vacateSeat(current, seat, connId);
       updateHost(current);
       broadcastRoomState(current);
       logFate(serverLogger!, {
         tag: "fate:seat:grace_expired",
-        roomId: room.id,
+        roomId,
         seat,
-        resumeToken: meta.resumeToken,
       });
     }).catch((err) => {
       logFate(serverLogger!, {
         tag: "fate:error",
-        roomId: room.id,
+        roomId,
         code: "grace_expiry_failed",
         message: String(err),
       });
@@ -368,17 +482,45 @@ function scheduleSeatGrace(room: GameRoom, meta: ConnectionMeta) {
   timer.unref?.();
 
   const record: SeatGraceRecord = {
-    roomId: room.id,
+    roomId,
     seat,
-    connId: meta.connId,
-    resumeToken: meta.resumeToken,
+    connId,
+    resumeToken,
     expiresAt,
     timer,
   };
 
-  graceByToken.set(meta.resumeToken, record);
-  graceBySeat.set(seatGraceKey(room.id, seat), record);
+  graceByToken.set(resumeToken, record);
+  graceBySeat.set(seatGraceKey(roomId, seat), record);
 }
+
+function clearAllSeatGraceTimers() {
+  for (const record of graceByToken.values()) {
+    clearTimeout(record.timer);
+  }
+  graceByToken.clear();
+  graceBySeat.clear();
+}
+
+function resetWsStateForTests() {
+  clearAllSeatGraceTimers();
+  roomSockets.clear();
+  socketMeta.clear();
+  socketRateState.clear();
+}
+
+export const wsTestHooks = {
+  canAssignSeat,
+  assignSeat,
+  clearSeatGraceByToken,
+  clearSeatGrace,
+  scheduleSeatGrace,
+  buildSwitchRoleTransition,
+  applySeatMutationSnapshot,
+  consumeSocketRateBudget,
+  resetWsStateForTests,
+  hasSeatGraceToken: (resumeToken: string) => graceByToken.has(resumeToken),
+};
 
 function buildRoomMeta(room: GameRoom): RoomMeta {
   const ready = room.state.playersReady ?? { P1: false, P2: false };
@@ -611,7 +753,12 @@ function detachFromFateRoom(
   options: { useGrace: boolean; reason: "leave" | "disconnect" | "switch_room" }
 ) {
   const room = getGameRoom(meta.roomId);
-  if (!room) return;
+  if (!room) {
+    if (meta.seat) {
+      clearSeatGraceByToken(meta.resumeToken);
+    }
+    return;
+  }
 
   if (meta.seat) {
     if (options.useGrace) {
@@ -620,7 +767,6 @@ function detachFromFateRoom(
         tag: "fate:seat:grace_started",
         roomId: room.id,
         seat: meta.seat,
-        resumeToken: meta.resumeToken,
         ttlMs: RECONNECT_GRACE_MS,
       });
       return;
@@ -981,56 +1127,31 @@ export function registerGameWebSocket(server: FastifyInstance) {
               return;
             }
 
-            const targetSeat =
-              msg.role === "P1" || msg.role === "P2" ? (msg.role as PlayerId) : null;
-            if (
-              targetSeat &&
-              !canAssignSeat(room, targetSeat, current.connId, current.resumeToken)
-            ) {
+            const transition = buildSwitchRoleTransition(room, current, msg.role);
+            if (!transition.ok) {
               sendMessage(socket, {
                 type: "error",
-                message: "Requested role is already taken",
-                code: "role_taken",
+                message: transition.message,
+                code: transition.code,
               });
               return;
             }
 
-            clearSeatGraceByToken(current.resumeToken);
-            const previousSeat = current.seat;
-
-            if (targetSeat) {
-              const assigned = assignSeat(
-                room,
-                targetSeat,
-                current.connId,
-                current.resumeToken
-              );
-              if (!assigned) {
-                sendMessage(socket, {
-                  type: "error",
-                  message: "Requested role is already taken",
-                  code: "role_taken",
-                });
-                return;
-              }
-              if (!previousSeat) {
-                room.spectators.delete(current.connId);
-              } else if (previousSeat !== targetSeat) {
-                vacateSeat(room, previousSeat, current.connId);
-              }
-              current.role = targetSeat;
-              current.seat = targetSeat;
-            } else {
-              if (previousSeat) {
-                vacateSeat(room, previousSeat, current.connId);
-              }
-              room.spectators.add(current.connId);
-              current.role = "spectator";
-              current.seat = null;
+            clearSeatGraceByToken(transition.previousResumeToken);
+            if (transition.nextMeta.seat) {
+              clearSeatGrace(room.id, transition.nextMeta.seat);
             }
+            applySeatMutationSnapshot(room, transition.nextRoom);
+            socketMeta.set(socket, transition.nextMeta);
 
-            socketMeta.set(socket, current);
-            updateHost(room);
+            sendMessage(socket, {
+              type: "joinAck",
+              roomId: room.id,
+              role: transition.nextMeta.role,
+              seat: transition.nextMeta.seat ?? undefined,
+              isHost: room.hostConnId === transition.nextMeta.connId,
+              resumeToken: transition.nextMeta.resumeToken,
+            });
             broadcastRoomState(room);
           });
           return;

@@ -59,6 +59,23 @@ export interface RoomSummary {
 // TODO: replace with persistence-backed storage.
 const games = new Map<string, GameRoom>();
 
+function isExplicitlyAcceptedNoop(
+  action: GameAction,
+  previousState: GameState
+): boolean {
+  // Explicitly allow known idempotent commands so they are not misclassified as
+  // rejections when they intentionally produce no state delta and no events.
+  switch (action.type) {
+    case "setReady":
+      return (
+        previousState.phase === "lobby" &&
+        previousState.playersReady[action.player] === action.ready
+      );
+    default:
+      return false;
+  }
+}
+
 function nextSeed(): number {
   return Math.floor(Math.random() * 1_000_000_000) + 1;
 }
@@ -179,6 +196,14 @@ export function applyGameAction(
   const stateChanged = result.state !== previousState;
 
   if (!stateChanged && result.events.length === 0) {
+    // TODO: Temporary heuristic until rules return explicit accepted/rejected
+    // outcomes. Keep rejecting by default, but whitelist valid idempotent no-ops.
+    if (isExplicitlyAcceptedNoop(action, previousState)) {
+      return accepted({
+        stateChanged: false,
+        events: [],
+      });
+    }
     return rejected("RULES_REJECTED", "Action rejected by rules");
   }
 

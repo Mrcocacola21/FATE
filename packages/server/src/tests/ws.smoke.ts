@@ -146,6 +146,9 @@ async function main() {
   const resumeToken = joinAck.resumeToken!;
   await waitForType(queue1, "roomState");
 
+  ws1.send(JSON.stringify({ type: "switchRole", role: "P1" }));
+  await waitForError(queue1, (msg) => msg.code === "ALREADY_IN_ROLE");
+
   ws2.send(
     JSON.stringify({
       type: "joinRoom",

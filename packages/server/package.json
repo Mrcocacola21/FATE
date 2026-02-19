@@ -9,7 +9,7 @@
     "dev": "node ../../scripts/waitForRulesDist.mjs && npm run dev:raw",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
-    "test": "tsx src/tests/view.test.ts && tsx src/tests/ws.smoke.ts"
+    "test": "tsx src/tests/view.test.ts && tsx src/tests/ws.smoke.ts && tsx src/tests/hardening.test.ts"
   },
   "dependencies": {
     "@fastify/cors": "^9.0.1",
