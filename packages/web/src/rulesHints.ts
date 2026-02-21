@@ -25,6 +25,7 @@ export const GUTS_ID = "guts";
 export const GRIFFITH_ID = "griffith";
 export const FEMTO_ID = "femto";
 export const PAPYRUS_ID = "papyrus";
+export const METTATON_ID = "mettaton";
 export const EL_CID_TISONA_ID = "elCidCompeadorTisona";
 export const EL_CID_KOLADA_ID = "elCidCompeadorKolada";
 export const EL_CID_DEMON_DUELIST_ID = "elCidCompeadorDemonDuelist";
@@ -67,6 +68,18 @@ export const PAPYRUS_UNBELIEVER_ID = "papyrusUnbeliever";
 export const PAPYRUS_ORANGE_BONE_ID = "papyrusOrangeBone";
 export const PAPYRUS_LONG_BONE_ID = "papyrusLongBone";
 export const PAPYRUS_OSSIFIED_ID = "papyrusOssified";
+export const METTATON_LONG_LIVER_ID = "mettatonLongLiver";
+export const METTATON_RATING_ID = "mettatonRating";
+export const METTATON_POPPINS_ID = "mettatonPoppins";
+export const METTATON_WORK_ON_CAMERA_ID = "mettatonWorkOnCamera";
+export const METTATON_EX_ID = "mettatonEx";
+export const METTATON_STAGE_PHENOMENON_ID = "mettatonStagePhenomenon";
+export const METTATON_LASER_ID = "mettatonLaser";
+export const METTATON_NEO_ID = "mettatonNeo";
+export const METTATON_RIDER_FEATURE_ID = "mettatonRiderFeature";
+export const METTATON_BERSERKER_MULTICLASS_ID = "mettatonBerserkerMulticlass";
+export const METTATON_GRACE_ID = "mettatonGrace";
+export const METTATON_FINAL_CHORD_ID = "mettatonFinalChord";
 
 const MAX_HP_BY_CLASS: Record<UnitClass, number> = {
   spearman: 5,
@@ -129,6 +142,9 @@ export function getMaxHp(unitClass: UnitClass, heroId?: string): number {
     base = MAX_HP_BY_CLASS.berserker + 5;
   }
   if (heroId === PAPYRUS_ID) {
+    base += 2;
+  }
+  if (heroId === METTATON_ID) {
     base += 2;
   }
   return base;

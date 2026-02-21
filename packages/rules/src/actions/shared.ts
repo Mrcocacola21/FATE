@@ -3,6 +3,10 @@ import { isInsideBoard } from "../model";
 import { getUnitDefinition } from "../units";
 import { addCoord, ALL_DIRS, isCellOccupied } from "../board";
 import {
+  hasMettatonBerserkerFeature,
+  hasMettatonRiderMovement,
+} from "../mettaton";
+import {
   HERO_GRAND_KAISER_ID,
   HERO_VLAD_TEPES_ID,
   HERO_EL_CID_COMPEADOR_ID,
@@ -92,6 +96,11 @@ export function getAdjacentEmptyCells(state: GameState, origin: Coord): Coord[] 
 }
 
 export function getMovementModes(unit: UnitState): UnitState["class"][] {
+  if (hasMettatonRiderMovement(unit)) {
+    return hasMettatonBerserkerFeature(unit)
+      ? ["rider", "berserker"]
+      : ["rider"];
+  }
   if (isGuts(unit) && unit.gutsBerserkModeActive) {
     return ["berserker", "knight", "assassin"];
   }

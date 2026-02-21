@@ -75,6 +75,9 @@ function cloneUnit(unit: UnitState): UnitState {
     papyrusBoneStatus: unit.papyrusBoneStatus
       ? { ...unit.papyrusBoneStatus }
       : unit.papyrusBoneStatus,
+    mettatonRating: unit.mettatonRating,
+    mettatonExUnlocked: unit.mettatonExUnlocked,
+    mettatonNeoUnlocked: unit.mettatonNeoUnlocked,
   };
 }
 

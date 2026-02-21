@@ -20,6 +20,10 @@ import { canSpendSlots, spendSlots } from "../turnEconomy";
 import { canUnitEnterCell, unitCanSeeStealthed } from "../visibility";
 import { isInsideForestAura } from "../forest";
 import { findStakeStopOnPath, applyStakeTriggerIfAny } from "../core";
+import {
+  hasMettatonRiderMovement,
+  hasMettatonRiderPathFeature,
+} from "../mettaton";
 import { getMovementModes, unitHasMovementMode } from "./shared";
 import { getPolkovodetsSource } from "./heroes/vlad";
 import { HERO_LECHY_ID } from "../heroes";
@@ -663,10 +667,14 @@ export function applyRequestMoveOptions(
     };
   }
 
-  const chosenMode =
-    requestedMode && requestedMode !== "normal"
-      ? requestedMode
+  const fallbackMode =
+    movementModes.length > 0
+      ? movementModes.includes(unit.class)
+        ? unit.class
+        : movementModes[0]
       : unit.class;
+  const chosenMode =
+    requestedMode && requestedMode !== "normal" ? requestedMode : fallbackMode;
   if (!movementModes.includes(chosenMode)) {
     return { state, events: [] };
   }
@@ -1092,10 +1100,15 @@ export function applyMove(
 
   const moveMode =
     pendingValid && pending?.mode ? pending.mode : ("normal" as MoveMode);
-  const riderMode =
+  const riderMovementMode =
+    moveMode === "rider" ||
+    (moveMode === "normal" &&
+      (unit.class === "rider" || hasMettatonRiderMovement(unit)));
+  const isMettatonRider = hasMettatonRiderMovement(unit);
+  const riderPathFeatureEnabled =
     !isRiverPerson(unit) &&
-    (moveMode === "rider" ||
-      (moveMode === "normal" && unit.class === "rider"));
+    riderMovementMode &&
+    (!isMettatonRider || hasMettatonRiderPathFeature(unit));
 
   const intendedLine =
     moveMode === "trickster" ? null : linePath(from, moveAction.to);
@@ -1312,7 +1325,7 @@ export function applyMove(
   }
 
   // ---- Rider path attacks: enqueue pending sequential rolls ----
-  if (didMove && riderMode && from) {
+  if (didMove && riderMovementMode && riderPathFeatureEnabled && from) {
     const auraSource =
       getPolkovodetsSource(state, unit.id, from) ??
       getPolkovodetsSource(state, unit.id, finalTo);

@@ -15,6 +15,8 @@ import {
   KAISER_DORA_ID,
   KALADIN_FIFTH_ID,
   LECHY_GUIDE_TRAVELER_ID,
+  METTATON_LASER_ID,
+  METTATON_POPPINS_ID,
   ODIN_SLEIPNIR_ID,
   PAPYRUS_COOL_GUY_ID,
 } from "../../rulesHints";
@@ -103,6 +105,7 @@ export interface CellClickContext {
   papyrusLongBoneAttackTargetIds: string[];
   assassinMarkTargetIds: string[];
   doraTargetKeys: Set<string>;
+  mettatonLineTargetKeys: Set<string>;
   jebeHailTargetKeys: Set<string>;
   kaladinFifthTargetKeys: Set<string>;
   tisonaTargetKeys: Set<string>;
@@ -186,6 +189,7 @@ export function createCellClickHandler(context: CellClickContext) {
     papyrusLongBoneAttackTargetIds,
     assassinMarkTargetIds,
     doraTargetKeys,
+    mettatonLineTargetKeys,
     jebeHailTargetKeys,
     kaladinFifthTargetKeys,
     tisonaTargetKeys,
@@ -685,6 +689,30 @@ export function createCellClickHandler(context: CellClickContext) {
       return;
     }
 
+    if (actionMode === "mettatonPoppins") {
+      if (!mettatonLineTargetKeys.has(coordKey({ col, row }))) return;
+      sendGameAction({
+        type: "useAbility",
+        unitId: selectedUnitId,
+        abilityId: METTATON_POPPINS_ID,
+        payload: { center: { col, row } },
+      });
+      setActionMode(null);
+      return;
+    }
+
+    if (actionMode === "mettatonLaser") {
+      if (!mettatonLineTargetKeys.has(coordKey({ col, row }))) return;
+      sendGameAction({
+        type: "useAbility",
+        unitId: selectedUnitId,
+        abilityId: METTATON_LASER_ID,
+        payload: { target: { col, row } },
+      });
+      setActionMode(null);
+      return;
+    }
+
     if (actionMode === "jebeHailOfArrows") {
       if (!jebeHailTargetKeys.has(coordKey({ col, row }))) return;
       sendGameAction({
@@ -727,11 +755,14 @@ interface CellHoverContext {
   actionMode: ActionMode;
   isForestTarget: boolean;
   doraTargetKeys: Set<string>;
+  mettatonLineTargetKeys: Set<string>;
   jebeHailTargetKeys: Set<string>;
   kaladinFifthTargetKeys: Set<string>;
   tisonaTargetKeys: Set<string>;
   forestTargetKeys: Set<string>;
   setDoraPreviewCenter: Dispatch<SetStateAction<Coord | null>>;
+  setMettatonPoppinsPreviewCenter: Dispatch<SetStateAction<Coord | null>>;
+  setMettatonLaserPreviewTarget: Dispatch<SetStateAction<Coord | null>>;
   setJebeHailPreviewCenter: Dispatch<SetStateAction<Coord | null>>;
   setKaladinFifthPreviewCenter: Dispatch<SetStateAction<Coord | null>>;
   setTisonaPreviewCoord: Dispatch<SetStateAction<Coord | null>>;
@@ -743,11 +774,14 @@ export function createCellHoverHandler(context: CellHoverContext) {
     actionMode,
     isForestTarget,
     doraTargetKeys,
+    mettatonLineTargetKeys,
     jebeHailTargetKeys,
     kaladinFifthTargetKeys,
     tisonaTargetKeys,
     forestTargetKeys,
     setDoraPreviewCenter,
+    setMettatonPoppinsPreviewCenter,
+    setMettatonLaserPreviewTarget,
     setJebeHailPreviewCenter,
     setKaladinFifthPreviewCenter,
     setTisonaPreviewCoord,
@@ -762,6 +796,30 @@ export function createCellHoverHandler(context: CellHoverContext) {
       }
       const key = coordKey(coord);
       setDoraPreviewCenter(doraTargetKeys.has(key) ? coord : null);
+      return;
+    }
+
+    if (actionMode === "mettatonPoppins") {
+      if (!coord) {
+        setMettatonPoppinsPreviewCenter(null);
+        return;
+      }
+      const key = coordKey(coord);
+      setMettatonPoppinsPreviewCenter(
+        mettatonLineTargetKeys.has(key) ? coord : null
+      );
+      return;
+    }
+
+    if (actionMode === "mettatonLaser") {
+      if (!coord) {
+        setMettatonLaserPreviewTarget(null);
+        return;
+      }
+      const key = coordKey(coord);
+      setMettatonLaserPreviewTarget(
+        mettatonLineTargetKeys.has(key) ? coord : null
+      );
       return;
     }
 

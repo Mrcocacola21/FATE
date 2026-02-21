@@ -3,6 +3,7 @@ import type { RNG } from "../../../rng";
 import { resolveAttack } from "../../../combat";
 import { ABILITY_BERSERK_AUTO_DEFENSE } from "../../../abilities";
 import { HERO_FEMTO_ID, HERO_PAPYRUS_ID } from "../../../heroes";
+import { hasMettatonBerserkerFeature } from "../../../mettaton";
 import { clearPendingRoll, requestRoll } from "../../../core";
 import { getPolkovodetsSource, maybeRequestIntimidate } from "../../../actions/heroes/vlad";
 import type { IntimidateResume } from "../../../actions/types";
@@ -67,7 +68,8 @@ export function advanceDoraAoEQueue(
         (target.class === "berserker" ||
           target.heroId === HERO_FEMTO_ID ||
           (target.heroId === HERO_PAPYRUS_ID &&
-            target.papyrusUnbelieverActive)) &&
+            target.papyrusUnbelieverActive) ||
+          hasMettatonBerserkerFeature(target)) &&
         charges === 6 &&
         attackerDice.length >= 2
       ) {

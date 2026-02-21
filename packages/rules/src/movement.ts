@@ -13,8 +13,12 @@ import {
     addCoord,
     isCellOccupied,
   } from "./board";
-  import { canUnitEnterCell } from "./visibility";
+import { canUnitEnterCell } from "./visibility";
 import { HERO_GENGHIS_KHAN_ID, HERO_GRAND_KAISER_ID } from "./heroes";
+import {
+  hasMettatonBerserkerFeature,
+  hasMettatonRiderMovement,
+} from "./mettaton";
 
 
 
@@ -84,6 +88,10 @@ export function getLegalMovesForUnit(
   const modes: UnitClass[] =
     unit.heroId === HERO_GRAND_KAISER_ID && unit.transformed
       ? ["archer", "rider", "berserker"]
+      : hasMettatonRiderMovement(unit)
+      ? hasMettatonBerserkerFeature(unit)
+        ? ["rider", "berserker"]
+        : ["rider"]
       : [unit.class];
 
   return getLegalMovesForUnitModes(state, unitId, modes);

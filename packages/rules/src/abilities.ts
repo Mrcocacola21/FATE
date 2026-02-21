@@ -1,5 +1,5 @@
 // packages/rules/src/abilities.ts
-import {
+import { 
   AbilityKind,
   AbilitySlot,
   AbilityView,
@@ -41,6 +41,13 @@ import {
   HERO_UNDYNE_ID,
   HERO_ZORO_ID
 } from "./heroes";
+import {
+  getMettatonRating,
+  hasMettatonBerserkerFeature,
+  hasMettatonExUnlocked,
+  hasMettatonNeoUnlocked,
+  isMettaton,
+} from "./mettaton";
 
 /**
  * Стоимость способности с точки зрения экономики хода.
@@ -200,11 +207,24 @@ export const ABILITY_PAPYRUS_SPHAGETTI = ABILITY_PAPYRUS_SPAGHETTI;
 export const ABILITY_PAPYRUS_COOL_DUDE = ABILITY_PAPYRUS_COOL_GUY;
 export const ABILITY_PAPYRUS_DISBELIEF = ABILITY_PAPYRUS_UNBELIEVER;
 
-export const ABILITY_METTATON_RAITING = "mettatonRaiting" as const;
+export const ABILITY_METTATON_LONG_LIVER = "mettatonLongLiver" as const;
+export const ABILITY_METTATON_RATING = "mettatonRating" as const;
 export const ABILITY_METTATON_POPPINS = "mettatonPoppins" as const;
-export const ABILITY_METTATON_SHOWTIME = "mettatonShowtime" as const;
+export const ABILITY_METTATON_WORK_ON_CAMERA = "mettatonWorkOnCamera" as const;
+export const ABILITY_METTATON_EX = "mettatonEx" as const;
+export const ABILITY_METTATON_STAGE_PHENOMENON =
+  "mettatonStagePhenomenon" as const;
 export const ABILITY_METTATON_LASER = "mettatonLaser" as const;
-export const ABILITY_METTATON_FINAL_ACCORD = "mettatonFinalAccord" as const;
+export const ABILITY_METTATON_NEO = "mettatonNeo" as const;
+export const ABILITY_METTATON_RIDER_FEATURE = "mettatonRiderFeature" as const;
+export const ABILITY_METTATON_BERSERKER_MULTICLASS =
+  "mettatonBerserkerMulticlass" as const;
+export const ABILITY_METTATON_GRACE = "mettatonGrace" as const;
+export const ABILITY_METTATON_FINAL_CHORD = "mettatonFinalChord" as const;
+// Backward-compatible aliases.
+export const ABILITY_METTATON_RAITING = ABILITY_METTATON_RATING;
+export const ABILITY_METTATON_SHOWTIME = ABILITY_METTATON_EX;
+export const ABILITY_METTATON_FINAL_ACCORD = ABILITY_METTATON_FINAL_CHORD;
 
 export const ABILITY_RIVER_PERSON_BOAT = "riverBoat" as const;
 export const ABILITY_RIVER_PERSON_BOATMAN = "riverBoatman" as const;
@@ -779,6 +799,93 @@ const ABILITY_SPECS: Record<string, AbilitySpec> = {
     kind: "passive",
     description: "Unbeliever passive: Papyrus gains Berserker auto-defense feature.",
   },
+  [ABILITY_METTATON_LONG_LIVER]: {
+    id: ABILITY_METTATON_LONG_LIVER,
+    displayName: "Long-liver",
+    kind: "passive",
+    description: "Mettaton gains +2 max HP.",
+  },
+  [ABILITY_METTATON_RATING]: {
+    id: ABILITY_METTATON_RATING,
+    displayName: "Rating",
+    kind: "passive",
+    description:
+      "Gain +2 Rating per successful hit and +1 Rating per successful defense.",
+  },
+  [ABILITY_METTATON_POPPINS]: {
+    id: ABILITY_METTATON_POPPINS,
+    displayName: "Mettaton Poppins",
+    kind: "active",
+    description:
+      "Spend 3 Rating. Choose a 3x3 center on your attack line and attack all units in that area.",
+    actionCost: {
+      consumes: { action: true },
+    },
+  },
+  [ABILITY_METTATON_WORK_ON_CAMERA]: {
+    id: ABILITY_METTATON_WORK_ON_CAMERA,
+    displayName: "Work on Camera",
+    kind: "passive",
+    description: "Cannot enter stealth. Gains Rider movement pattern.",
+  },
+  [ABILITY_METTATON_EX]: {
+    id: ABILITY_METTATON_EX,
+    displayName: "Mettaton EX",
+    kind: "impulse",
+    description:
+      "Spend 5 Rating to unlock Stage Phenomenon and Laser for this battle.",
+  },
+  [ABILITY_METTATON_STAGE_PHENOMENON]: {
+    id: ABILITY_METTATON_STAGE_PHENOMENON,
+    displayName: "Stage Phenomenon",
+    kind: "passive",
+    description: "After EX: each attack action grants +1 Rating.",
+  },
+  [ABILITY_METTATON_LASER]: {
+    id: ABILITY_METTATON_LASER,
+    displayName: "Laser",
+    kind: "active",
+    description:
+      "After EX, spend 3 Rating. Choose an attack line and attack all units on it.",
+    actionCost: {
+      consumes: { action: true },
+    },
+  },
+  [ABILITY_METTATON_NEO]: {
+    id: ABILITY_METTATON_NEO,
+    displayName: "Mettaton NEO",
+    kind: "impulse",
+    description:
+      "Spend 10 Rating to unlock Rider Feature, Berserker Multiclass, and Grace.",
+  },
+  [ABILITY_METTATON_RIDER_FEATURE]: {
+    id: ABILITY_METTATON_RIDER_FEATURE,
+    displayName: "Rider Feature",
+    kind: "passive",
+    description: "After NEO: path attacks trigger while moving in Rider mode.",
+  },
+  [ABILITY_METTATON_BERSERKER_MULTICLASS]: {
+    id: ABILITY_METTATON_BERSERKER_MULTICLASS,
+    displayName: "Berserker Multiclass",
+    kind: "passive",
+    description: "After NEO: gain Berserker feature bundle.",
+  },
+  [ABILITY_METTATON_GRACE]: {
+    id: ABILITY_METTATON_GRACE,
+    displayName: "Grace",
+    kind: "passive",
+    description: "After NEO: each defense roll attempt grants +1 Rating.",
+  },
+  [ABILITY_METTATON_FINAL_CHORD]: {
+    id: ABILITY_METTATON_FINAL_CHORD,
+    displayName: "Final Chord",
+    kind: "phantasm",
+    description:
+      "Spend 12 Rating. Attack all enemies on all available attack lines for 3 damage on hit.",
+    actionCost: {
+      consumes: { action: true },
+    },
+  },
   [ABILITY_RIVER_PERSON_BOAT]: {
     id: ABILITY_RIVER_PERSON_BOAT,
     displayName: "Boat",
@@ -1100,6 +1207,14 @@ export function initUnitAbilities(unit: UnitState): UnitState {
       papyrusBoneStatus: undefined,
     };
   }
+  if (unit.heroId === HERO_METTATON_ID) {
+    updated = {
+      ...updated,
+      mettatonRating: 0,
+      mettatonExUnlocked: false,
+      mettatonNeoUnlocked: false,
+    };
+  }
   if (unit.heroId === HERO_RIVER_PERSON_ID) {
     updated = setCharges(updated, ABILITY_RIVER_PERSON_TRA_LA_LA, 0);
     updated = {
@@ -1237,6 +1352,33 @@ function getActiveDisabledReason(
     return "Chicken: this unit can only move";
   }
 
+  if (isMettaton(unit)) {
+    if (spec.id === ABILITY_METTATON_LASER && !hasMettatonExUnlocked(unit)) {
+      return "Requires Mettaton EX";
+    }
+    if (
+      (spec.id === ABILITY_METTATON_EX && hasMettatonExUnlocked(unit)) ||
+      (spec.id === ABILITY_METTATON_NEO && hasMettatonNeoUnlocked(unit))
+    ) {
+      return "Already transformed";
+    }
+    const requiredRating =
+      spec.id === ABILITY_METTATON_POPPINS
+        ? 3
+        : spec.id === ABILITY_METTATON_LASER
+        ? 3
+        : spec.id === ABILITY_METTATON_EX
+        ? 5
+        : spec.id === ABILITY_METTATON_NEO
+        ? 10
+        : spec.id === ABILITY_METTATON_FINAL_CHORD
+        ? 12
+        : undefined;
+    if (requiredRating !== undefined && getMettatonRating(unit) < requiredRating) {
+      return `Need Rating ${requiredRating}`;
+    }
+  }
+
   const required = getChargeRequired(spec);
   if (
     required !== undefined &&
@@ -1267,7 +1409,8 @@ export function getAbilityViewsForUnit(
     unit.class === "berserker" ||
     (unit.heroId === HERO_GRAND_KAISER_ID && unit.transformed) ||
     unit.heroId === HERO_FEMTO_ID ||
-    (unit.heroId === HERO_PAPYRUS_ID && unit.papyrusUnbelieverActive)
+    (unit.heroId === HERO_PAPYRUS_ID && unit.papyrusUnbelieverActive) ||
+    hasMettatonBerserkerFeature(unit)
   ) {
     abilityIds.push(ABILITY_BERSERK_AUTO_DEFENSE);
   }
@@ -1440,12 +1583,27 @@ export function getAbilityViewsForUnit(
   } 
   if (unit.heroId === HERO_METTATON_ID) {
     abilityIds.push(
-      ABILITY_METTATON_RAITING,
+      ABILITY_METTATON_LONG_LIVER,
+      ABILITY_METTATON_RATING,
       ABILITY_METTATON_POPPINS,
-      ABILITY_METTATON_SHOWTIME,
-      ABILITY_METTATON_LASER,
-      ABILITY_METTATON_FINAL_ACCORD
+      ABILITY_METTATON_WORK_ON_CAMERA,
+      ABILITY_METTATON_EX,
+      ABILITY_METTATON_NEO,
+      ABILITY_METTATON_FINAL_CHORD
     );
+    if (hasMettatonExUnlocked(unit)) {
+      abilityIds.push(
+        ABILITY_METTATON_STAGE_PHENOMENON,
+        ABILITY_METTATON_LASER
+      );
+    }
+    if (hasMettatonNeoUnlocked(unit)) {
+      abilityIds.push(
+        ABILITY_METTATON_RIDER_FEATURE,
+        ABILITY_METTATON_BERSERKER_MULTICLASS,
+        ABILITY_METTATON_GRACE
+      );
+    }
   }
   if (unit.heroId === HERO_RIVER_PERSON_ID) {
     abilityIds.push(
@@ -1516,15 +1674,32 @@ export function getAbilityViewsForUnit(
       const spec = getAbilitySpec(id);
       if (!spec) return null;
       const chargeRequired = getChargeRequired(spec);
+      const mettatonRatingRequired =
+        isMettaton(unit) && id === ABILITY_METTATON_POPPINS
+          ? 3
+          : isMettaton(unit) && id === ABILITY_METTATON_LASER
+          ? 3
+          : isMettaton(unit) && id === ABILITY_METTATON_EX
+          ? 5
+          : isMettaton(unit) && id === ABILITY_METTATON_NEO
+          ? 10
+          : isMettaton(unit) && id === ABILITY_METTATON_FINAL_CHORD
+          ? 12
+          : undefined;
       const effectiveChargeRequired =
         id === ABILITY_PAPYRUS_COOL_GUY && unit.papyrusUnbelieverActive
           ? 3
-          : chargeRequired;
+          : mettatonRatingRequired ?? chargeRequired;
       const hasCharges =
         spec.chargeUnlimited === true ||
         spec.maxCharges !== undefined ||
-        effectiveChargeRequired !== undefined;
-      const currentCharges = hasCharges ? getCharges(unit, id) : undefined;
+        effectiveChargeRequired !== undefined ||
+        mettatonRatingRequired !== undefined;
+      const currentCharges = hasCharges
+        ? mettatonRatingRequired !== undefined
+          ? getMettatonRating(unit)
+          : getCharges(unit, id)
+        : undefined;
 
       let isAvailable = true;
       let disabledReason: string | undefined = undefined;
@@ -1540,11 +1715,32 @@ export function getAbilityViewsForUnit(
           isAvailable = false;
           disabledReason = "Already transformed";
         } else if (
-          effectiveChargeRequired !== undefined &&
-          getCharges(unit, id) < effectiveChargeRequired
+          isMettaton(unit) &&
+          ((spec.id === ABILITY_METTATON_EX && hasMettatonExUnlocked(unit)) ||
+            (spec.id === ABILITY_METTATON_NEO && hasMettatonNeoUnlocked(unit)))
         ) {
           isAvailable = false;
-          disabledReason = "Not Enough charges";
+          disabledReason = "Already transformed";
+        } else if (
+          effectiveChargeRequired !== undefined &&
+          (currentCharges ?? 0) < effectiveChargeRequired
+        ) {
+          isAvailable = false;
+          disabledReason =
+            mettatonRatingRequired !== undefined
+              ? `Need Rating ${effectiveChargeRequired}`
+              : "Not Enough charges";
+        }
+      } else if (spec.kind === "phantasm") {
+        if (
+          effectiveChargeRequired !== undefined &&
+          (currentCharges ?? 0) < effectiveChargeRequired
+        ) {
+          isAvailable = false;
+          disabledReason =
+            mettatonRatingRequired !== undefined
+              ? `Need Rating ${effectiveChargeRequired}`
+              : "Not Enough charges";
         }
       }
       if (spec.id === ABILITY_ODIN_MUNINN) {

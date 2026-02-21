@@ -7,6 +7,7 @@ import {
   ABILITY_KAISER_CARPET_STRIKE,
 } from "../../../abilities";
 import { HERO_FEMTO_ID, HERO_PAPYRUS_ID } from "../../../heroes";
+import { hasMettatonBerserkerFeature } from "../../../mettaton";
 import { clearPendingRoll, requestRoll } from "../../../core";
 import { maybeRequestIntimidate } from "../../../actions/heroes/vlad";
 import { isKaiserTransformed, map2d9ToCoord, rollD9 } from "../../../actions/shared";
@@ -77,7 +78,8 @@ export function advanceCarpetStrikeQueue(
         (target.class === "berserker" ||
           target.heroId === HERO_FEMTO_ID ||
           (target.heroId === HERO_PAPYRUS_ID &&
-            target.papyrusUnbelieverActive)) &&
+            target.papyrusUnbelieverActive) ||
+          hasMettatonBerserkerFeature(target)) &&
         charges === 6 &&
         attackerDice.length >= 2
       ) {

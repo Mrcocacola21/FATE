@@ -17,6 +17,7 @@ import {
   HERO_FALSE_TRAIL_TOKEN_ID,
   HERO_HASSAN_ID,
   HERO_LECHY_ID,
+  HERO_METTATON_ID,
 } from "./heroes";
 import { applyGriffithFemtoRebirth } from "./actions/heroes/griffith";
   
@@ -35,6 +36,9 @@ import { applyGriffithFemtoRebirth } from "./actions/heroes/griffith";
   // use StealthRevealReason from model
 
 export function getStealthSuccessMinRoll(unit: UnitState): number | null {
+  if (unit.heroId === HERO_METTATON_ID) {
+    return null;
+  }
   if (unit.asgorePatienceStealthActive) {
     return 5;
   }

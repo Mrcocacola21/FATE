@@ -24,6 +24,7 @@ import { clearPendingRoll, requestRoll } from "../../../core";
 import { getPolkovodetsSource, maybeRequestIntimidate } from "../../../actions/heroes/vlad";
 import { isElCid } from "../../../actions/shared";
 import { handleGroznyTyrantAfterAttack } from "../../../actions/heroes/grozny";
+import { hasMettatonBerserkerFeature } from "../../../mettaton";
 import {
   HERO_ASGORE_ID,
   HERO_CHIKATILO_ID,
@@ -805,7 +806,8 @@ export function resolveAttackAttackerRoll(
     (workingDefender.class === "berserker" ||
       workingDefender.heroId === HERO_FEMTO_ID ||
       (workingDefender.heroId === HERO_PAPYRUS_ID &&
-        workingDefender.papyrusUnbelieverActive)) &&
+        workingDefender.papyrusUnbelieverActive) ||
+      hasMettatonBerserkerFeature(workingDefender)) &&
     charges === 6 &&
     !resolvedCtx.berserkerChoiceMade
   ) {

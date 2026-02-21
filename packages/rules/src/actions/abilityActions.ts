@@ -38,6 +38,11 @@ import {
   ABILITY_RIVER_PERSON_BOATMAN,
   ABILITY_RIVER_PERSON_TRA_LA_LA,
   ABILITY_ODIN_SLEIPNIR,
+  ABILITY_METTATON_EX,
+  ABILITY_METTATON_FINAL_CHORD,
+  ABILITY_METTATON_LASER,
+  ABILITY_METTATON_NEO,
+  ABILITY_METTATON_POPPINS,
   ABILITY_PAPYRUS_COOL_GUY,
   ABILITY_PAPYRUS_LONG_BONE,
   ABILITY_PAPYRUS_ORANGE_BONE,
@@ -71,6 +76,13 @@ import { applyFriskGenocide, applyFriskPacifism } from "./heroes/frisk";
 import { applyAsgoreFireball, applyAsgoreFireParade } from "./heroes/asgore";
 import { applyOdinSleipnir } from "./heroes/odin";
 import { applyRiverBoatman, applyRiverTraLaLa } from "./heroes/riverPerson";
+import {
+  applyMettatonEx,
+  applyMettatonFinalChord,
+  applyMettatonLaser,
+  applyMettatonNeo,
+  applyMettatonPoppins,
+} from "./heroes/mettaton";
 import {
   applyPapyrusCoolGuy,
   applyPapyrusLongBoneToggle,
@@ -268,6 +280,21 @@ export function applyUseAbility(
   }
   if (spec.id === ABILITY_PAPYRUS_LONG_BONE) {
     return applyPapyrusLongBoneToggle(state, unit, action);
+  }
+  if (spec.id === ABILITY_METTATON_POPPINS) {
+    return applyMettatonPoppins(state, unit, action, rng);
+  }
+  if (spec.id === ABILITY_METTATON_LASER) {
+    return applyMettatonLaser(state, unit, action);
+  }
+  if (spec.id === ABILITY_METTATON_EX) {
+    return applyMettatonEx(state, unit);
+  }
+  if (spec.id === ABILITY_METTATON_NEO) {
+    return applyMettatonNeo(state, unit);
+  }
+  if (spec.id === ABILITY_METTATON_FINAL_CHORD) {
+    return applyMettatonFinalChord(state, unit);
   }
 
   const isTricksterAoE = spec.id === ABILITY_TRICKSTER_AOE;

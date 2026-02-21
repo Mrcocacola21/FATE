@@ -30,6 +30,14 @@ import {
   HERO_ODIN_ID,
   HERO_PAPYRUS_ID,
 } from "./heroes";
+import {
+  addMettatonRating,
+  buildMettatonRatingChangedEvent,
+  hasMettatonBerserkerFeature,
+  hasMettatonGrace,
+  isMettaton,
+  getMettatonRating,
+} from "./mettaton";
 import { isStormActive, isStormExempt } from "./forest";
 import { canDirectlyTargetUnit, canSeeStealthedTarget } from "./visibility";
 import { applyGriffithFemtoRebirth } from "./actions/heroes/griffith";
@@ -305,7 +313,8 @@ export function resolveAttack(
     (defenderAfter.class === "berserker" ||
       defenderAfter.heroId === HERO_FEMTO_ID ||
       (defenderAfter.heroId === HERO_PAPYRUS_ID &&
-        defenderAfter.papyrusUnbelieverActive))
+        defenderAfter.papyrusUnbelieverActive) ||
+      hasMettatonBerserkerFeature(defenderAfter))
   ) {
     autoDefenseAbilityId = ABILITY_BERSERK_AUTO_DEFENSE;
   } else if (wantsMuninnAutoDefense && defenderAfter.heroId === HERO_ODIN_ID) {
@@ -370,6 +379,22 @@ export function resolveAttack(
         defenderHpAfter: defenderAfter.hp,
       });
 
+      if (isMettaton(defenderAfter)) {
+        const defenseGain = addMettatonRating(defenderAfter, 1);
+        if (defenseGain.applied > 0) {
+          defenderAfter = defenseGain.unit;
+          units[defenderAfter.id] = defenderAfter;
+          events.push(
+            buildMettatonRatingChangedEvent({
+              unitId: defenderAfter.id,
+              delta: defenseGain.applied,
+              now: getMettatonRating(defenderAfter),
+              reason: "defenseSuccess",
+            })
+          );
+        }
+      }
+
       attackerAfter = recordGenghisAttack(attackerAfter, defenderAfter.id);
       units[attackerAfter.id] = attackerAfter;
 
@@ -410,6 +435,26 @@ export function resolveAttack(
         isDouble: false,
       }
     : buildDiceRoll(defenderDice, tieBreakDefender);
+
+  if (
+    !params.forceMiss &&
+    defenderDice.length > 0 &&
+    hasMettatonGrace(defenderAfter)
+  ) {
+    const graceGain = addMettatonRating(defenderAfter, 1);
+    if (graceGain.applied > 0) {
+      defenderAfter = graceGain.unit;
+      units[defenderAfter.id] = defenderAfter;
+      events.push(
+        buildMettatonRatingChangedEvent({
+          unitId: defenderAfter.id,
+          delta: graceGain.applied,
+          now: getMettatonRating(defenderAfter),
+          reason: "defenseRoll",
+        })
+      );
+    }
+  }
 
   let hit = params.forceMiss
     ? false
@@ -591,6 +636,38 @@ export function resolveAttack(
 
   attackerAfter = recordGenghisAttack(attackerAfter, defenderAfter.id);
   units[attackerAfter.id] = attackerAfter;
+  const ratingEvents: GameEvent[] = [];
+
+  if (hit && isMettaton(attackerAfter)) {
+    const hitGain = addMettatonRating(attackerAfter, 2);
+    if (hitGain.applied > 0) {
+      attackerAfter = hitGain.unit;
+      units[attackerAfter.id] = attackerAfter;
+      ratingEvents.push(
+        buildMettatonRatingChangedEvent({
+          unitId: attackerAfter.id,
+          delta: hitGain.applied,
+          now: getMettatonRating(attackerAfter),
+          reason: "attackHit",
+        })
+      );
+    }
+  }
+  if (!hit && isMettaton(defenderAfter)) {
+    const defenseGain = addMettatonRating(defenderAfter, 1);
+    if (defenseGain.applied > 0) {
+      defenderAfter = defenseGain.unit;
+      units[defenderAfter.id] = defenderAfter;
+      ratingEvents.push(
+        buildMettatonRatingChangedEvent({
+          unitId: defenderAfter.id,
+          delta: defenseGain.applied,
+          now: getMettatonRating(defenderAfter),
+          reason: "defenseSuccess",
+        })
+      );
+    }
+  }
 
   const updatedLastKnown = {
     ...state.lastKnownPositions,
@@ -644,6 +721,7 @@ export function resolveAttack(
     damage,
     defenderHpAfter: defenderHpAfterEvent,
   });
+  events.push(...ratingEvents);
 
   return { nextState, events };
 }

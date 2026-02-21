@@ -43,6 +43,8 @@ export type ActionMode =
   | "hassanTrueEnemy"
   | "kaladinFifth"
   | "odinSleipnir"
+  | "mettatonPoppins"
+  | "mettatonLaser"
   | "gutsArbalet"
   | "gutsCannon"
   | null;

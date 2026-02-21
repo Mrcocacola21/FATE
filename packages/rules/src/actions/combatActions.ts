@@ -9,6 +9,7 @@ import { HERO_FALSE_TRAIL_TOKEN_ID } from "../heroes";
 import { exitBunkerForUnit } from "./heroes/kaiser";
 import { applyGutsBerserkAttack } from "./heroes/guts";
 import { markFriskAttackedWhileStealthed } from "./heroes/frisk";
+import { applyMettatonStagePhenomenonOnAttackAction } from "./heroes/mettaton";
 import { maybeApplyPapyrusLongBoneAttack } from "./heroes/papyrus";
 import { getPolkovodetsSource } from "./heroes/vlad";
 import type { AttackRollContext } from "./types";
@@ -77,6 +78,14 @@ export function applyAttack(
     workingAttacker = exited.unit;
     preEvents = exited.events;
   }
+
+  const stageBonus = applyMettatonStagePhenomenonOnAttackAction(
+    workingState,
+    workingAttacker.id
+  );
+  workingState = stageBonus.state;
+  workingAttacker = workingState.units[workingAttacker.id] ?? workingAttacker;
+  preEvents = [...preEvents, ...stageBonus.events];
 
   const auraSource = getPolkovodetsSource(workingState, workingAttacker.id);
   const context = makeAttackContext({

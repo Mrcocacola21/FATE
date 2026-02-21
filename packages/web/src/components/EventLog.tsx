@@ -82,6 +82,20 @@ function formatEvent(event: GameEvent): string {
       const summary = entries.length > 0 ? entries.join(", ") : "-";
       return `Charges: ${event.unitId} ${summary}`;
     }
+    case "mettatonRatingChanged": {
+      const reason =
+        event.reason === "attackHit"
+          ? "attack hit"
+          : event.reason === "defenseSuccess"
+          ? "defense success"
+          : event.reason === "defenseRoll"
+          ? "defense roll"
+          : event.reason === "stagePhenomenon"
+          ? "stage"
+          : "ability";
+      const delta = event.delta >= 0 ? `+${event.delta}` : `${event.delta}`;
+      return `Rating: ${event.unitId} ${delta} -> ${event.now} (${reason})`;
+    }
     case "bunkerEntered":
       return `Bunker entered: ${event.unitId} (roll ${event.roll ?? "-"})`;
     case "bunkerEnterFailed":

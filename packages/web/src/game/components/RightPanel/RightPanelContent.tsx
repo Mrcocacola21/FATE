@@ -41,6 +41,9 @@ import {
   PAPYRUS_ID,
   PAPYRUS_LONG_BONE_ID,
   PAPYRUS_ORANGE_BONE_ID,
+  METTATON_ID,
+  METTATON_LASER_ID,
+  METTATON_POPPINS_ID,
   RIVER_PERSON_ID,
 } from "../../../rulesHints";
 import type { ActionMode, ActionPreviewMode } from "../../../store";
@@ -196,6 +199,8 @@ function abilityActionMode(abilityId: string): ActionPreviewMode | null {
   if (abilityId === GUTS_ARBALET_ID) return "gutsArbalet";
   if (abilityId === GUTS_CANNON_ID) return "gutsCannon";
   if (abilityId === PAPYRUS_COOL_GUY_ID) return "papyrusCoolGuy";
+  if (abilityId === METTATON_POPPINS_ID) return "mettatonPoppins";
+  if (abilityId === METTATON_LASER_ID) return "mettatonLaser";
   return null;
 }
 
@@ -309,10 +314,15 @@ export const RightPanelContent: FC<RightPanelProps> = ({
   const legalIntents = view.legalIntents;
 
   const canStealth =
-    selectedUnit?.class === "assassin" ||
-    selectedUnit?.class === "archer" ||
-    selectedUnit?.heroId === LECHY_ID ||
-    !!selectedUnit?.asgorePatienceStealthActive;
+    selectedUnit?.heroId !== METTATON_ID &&
+    (selectedUnit?.class === "assassin" ||
+      selectedUnit?.class === "archer" ||
+      selectedUnit?.heroId === LECHY_ID ||
+      !!selectedUnit?.asgorePatienceStealthActive);
+  const selectedMettatonRating =
+    selectedUnit?.heroId === METTATON_ID
+      ? Math.max(0, selectedUnit.mettatonRating ?? 0)
+      : null;
   const stormRangedAttackBlocked =
     canAct &&
     !!selectedUnit?.position &&
@@ -532,6 +542,11 @@ export const RightPanelContent: FC<RightPanelProps> = ({
                   <div className="text-[10px] text-slate-500 dark:text-slate-300">
                     HP {selectedUnit.hp}
                   </div>
+                  {selectedMettatonRating !== null && (
+                    <div className="text-[10px] font-semibold text-amber-700 dark:text-amber-300">
+                      Rating {selectedMettatonRating}
+                    </div>
+                  )}
                 </div>
               </div>
               <div>
@@ -1109,9 +1124,13 @@ export const RightPanelContent: FC<RightPanelProps> = ({
                 ? "Hand Crossbow: select an enemy in ranged attack line."
                 : actionMode === "gutsCannon"
                 ? "Hand Cannon: select an enemy in ranged attack line."
-                : actionMode === "papyrusCoolGuy"
-                ? `Cool Guy: select any cell on the chosen ${papyrusLineAxis} line.`
-                : `Mode: ${actionMode}. Click a highlighted cell to apply.`}
+              : actionMode === "papyrusCoolGuy"
+              ? `Cool Guy: select any cell on the chosen ${papyrusLineAxis} line.`
+              : actionMode === "mettatonPoppins"
+              ? "Mettaton Poppins: select a 3x3 center on your attack line."
+              : actionMode === "mettatonLaser"
+              ? "Laser: select a cell on your attack line."
+              : `Mode: ${actionMode}. Click a highlighted cell to apply.`}
             </div>
           )}
         </div>

@@ -30,6 +30,7 @@ const JEBE_TOKEN = new URL("../assets/tokens/jebe.webp", import.meta.url).href;
 const HASSAN_TOKEN = new URL("../assets/tokens/hassan.webp", import.meta.url).href;
 const KALADIN_TOKEN = new URL("../assets/tokens/kalladin.webp", import.meta.url).href;
 const PAPYRUS_TOKEN = new URL("../assets/tokens/papyrus.webp", import.meta.url).href;
+const METTATON_TOKEN = new URL("../assets/tokens/mettaton_ex.webp", import.meta.url).href;
 const LOKI_TOKEN = new URL("../assets/tokens/loki.webp", import.meta.url).href;
 const RIVER_PERSON_TOKEN = new URL("../assets/tokens/riverPerson.webp", import.meta.url).href;
 const ODIN_TOKEN = new URL("../assets/tokens/odin.webp", import.meta.url).href;
@@ -54,6 +55,7 @@ export const FIGURE_ARTS: Record<string, string> = {
   "hassan": HASSAN_ART,
   "kaladin": KALADIN_ART,
   "papyrus": PAPYRUS_ART,
+  "mettaton": FALLBACK_FIGURE,
   "loki": LOKI_ART,
   "riverPerson": RIVER_PERSON_ART,
   "odin": FALLBACK_FIGURE,
@@ -78,6 +80,7 @@ export const TOKENS: Record<string, string> = {
   "hassan": HASSAN_TOKEN,
   "kaladin": KALADIN_TOKEN,
   "papyrus": PAPYRUS_TOKEN,
+  "mettaton": METTATON_TOKEN,
   "loki": LOKI_TOKEN,
   "riverPerson": RIVER_PERSON_TOKEN,
   "odin": ODIN_TOKEN,

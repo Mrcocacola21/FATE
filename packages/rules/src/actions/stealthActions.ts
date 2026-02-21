@@ -4,7 +4,7 @@ import { chebyshev } from "../board";
 import { ABILITY_FRISK_GENOCIDE, getCharges } from "../abilities";
 import { canSpendSlots, spendSlots } from "../turnEconomy";
 import { isKaiser, isKaiserTransformed } from "./shared";
-import { HERO_FALSE_TRAIL_TOKEN_ID, HERO_FRISK_ID } from "../heroes";
+import { HERO_FALSE_TRAIL_TOKEN_ID, HERO_FRISK_ID, HERO_METTATON_ID } from "../heroes";
 import { getFriskKeenEyeTargetIds } from "./heroes/frisk";
 import { requestRoll } from "../core";
 import { evSearchStealth, evStealthEntered } from "../core";
@@ -35,6 +35,9 @@ export function applyEnterStealth(
     return { state, events: [] };
   }
   if ((unit.lokiChickenSources?.length ?? 0) > 0) {
+    return { state, events: [] };
+  }
+  if (unit.heroId === HERO_METTATON_ID) {
     return { state, events: [] };
   }
 

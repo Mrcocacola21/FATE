@@ -167,6 +167,12 @@ export interface UnitState {
   papyrusLineAxis?: PapyrusLineAxis;
   /** Papyrus: active Blue/Orange status received from Papyrus attacks. */
   papyrusBoneStatus?: PapyrusBoneStatus;
+  /** Mettaton: hero-specific Rating counter. */
+  mettatonRating?: number;
+  /** Mettaton EX transformation unlock flag. */
+  mettatonExUnlocked?: boolean;
+  /** Mettaton NEO transformation unlock flag. */
+  mettatonNeoUnlocked?: boolean;
 
   isAlive: boolean;
 }
@@ -485,6 +491,18 @@ export type GameEvent =
       type: "abilityUsed";
       unitId: string;
       abilityId: string;
+    }
+  | {
+      type: "mettatonRatingChanged";
+      unitId: string;
+      delta: number;
+      now: number;
+      reason:
+        | "attackHit"
+        | "defenseSuccess"
+        | "defenseRoll"
+        | "stagePhenomenon"
+        | "abilitySpend";
     }
   | {
       type: "papyrusUnbelieverActivated";

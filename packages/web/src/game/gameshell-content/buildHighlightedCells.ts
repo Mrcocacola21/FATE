@@ -20,6 +20,7 @@ export interface BuildHighlightedCellsArgs {
   attackPreviewCells: Coord[];
   papyrusLongBoneAttackTargetIds: string[];
   doraTargetCenters: Coord[];
+  mettatonLineTargets: Coord[];
   view: PlayerView | null;
   isStakePlacement: boolean;
   stakeLegalPositions: Coord[];
@@ -93,6 +94,7 @@ export function buildHighlightedCells({
   attackPreviewCells,
   papyrusLongBoneAttackTargetIds,
   doraTargetCenters,
+  mettatonLineTargets,
   view,
   isStakePlacement,
   stakeLegalPositions,
@@ -404,6 +406,18 @@ export function buildHighlightedCells({
   if (effectiveActionMode === "dora") {
     for (const coord of doraTargetCenters) {
       highlights[coordKey(coord)] = modeKind("dora");
+    }
+  }
+
+  if (effectiveActionMode === "mettatonPoppins") {
+    for (const coord of mettatonLineTargets) {
+      highlights[coordKey(coord)] = modeKind("dora");
+    }
+  }
+
+  if (effectiveActionMode === "mettatonLaser") {
+    for (const coord of mettatonLineTargets) {
+      highlights[coordKey(coord)] = modeKind("attack");
     }
   }
 

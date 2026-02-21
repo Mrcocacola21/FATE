@@ -41,6 +41,10 @@ type BunkerEnterFailedEvent = Extract<
 >;
 type BunkerExitedEvent = Extract<GameEvent, { type: "bunkerExited" }>;
 type AbilityUsedEvent = Extract<GameEvent, { type: "abilityUsed" }>;
+type MettatonRatingChangedEvent = Extract<
+  GameEvent,
+  { type: "mettatonRatingChanged" }
+>;
 type UnitHealedEvent = Extract<GameEvent, { type: "unitHealed" }>;
 type DamageBonusAppliedEvent = Extract<
   GameEvent,
@@ -313,6 +317,26 @@ export function evAbilityUsed(params: {
     type: "abilityUsed",
     unitId: params.unitId,
     abilityId: params.abilityId,
+  };
+}
+
+export function evMettatonRatingChanged(params: {
+  unitId: string;
+  delta: number;
+  now: number;
+  reason:
+    | "attackHit"
+    | "defenseSuccess"
+    | "defenseRoll"
+    | "stagePhenomenon"
+    | "abilitySpend";
+}): MettatonRatingChangedEvent {
+  return {
+    type: "mettatonRatingChanged",
+    unitId: params.unitId,
+    delta: params.delta,
+    now: params.now,
+    reason: params.reason,
   };
 }
 
