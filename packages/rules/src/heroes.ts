@@ -149,6 +149,7 @@ export const HERO_CATALOG: HeroDefinition[] = [
     id: HERO_SANS_ID,
     name: "Sans",
     mainClass: "trickster",
+    baseHpOverride: 6,
     baseAttackOverride: 6,
   },
   {

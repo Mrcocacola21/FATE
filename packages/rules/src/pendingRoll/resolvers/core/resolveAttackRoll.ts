@@ -33,6 +33,7 @@ import {
   HERO_GUTS_ID,
   HERO_ODIN_ID,
   HERO_PAPYRUS_ID,
+  HERO_SANS_ID,
 } from "../../../heroes";
 import {
   evAoeResolved,
@@ -553,7 +554,8 @@ function wouldAttackHitFromContext(
     (defender.class === "spearman" ||
       defender.heroId === HERO_ASGORE_ID ||
       defender.heroId === HERO_FEMTO_ID ||
-      defender.heroId === HERO_ODIN_ID) &&
+      defender.heroId === HERO_ODIN_ID ||
+      defender.heroId === HERO_SANS_ID) &&
     defenderDouble
   ) {
     hit = false;

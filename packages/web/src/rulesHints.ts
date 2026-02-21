@@ -5,6 +5,7 @@ export const TRICKSTER_AOE_ID = "tricksterAoE";
 export const TRICKSTER_AOE_RADIUS = 2;
 export const FOREST_AURA_RADIUS = 2;
 export const ARENA_STORM_ID = "storm";
+export const ARENA_BONE_FIELD_ID = "boneField";
 export const KAISER_DORA_ID = "kaiserDora";
 export const VLAD_TEPES_ID = "vladTepes";
 export const EL_CID_COMPEADOR_ID = "elCidCompeador";
@@ -16,6 +17,7 @@ export const LECHY_ID = "lechy";
 export const JEBE_ID = "jebe";
 export const HASSAN_ID = "hassan";
 export const FRISK_ID = "frisk";
+export const SANS_ID = "sans";
 export const ASGORE_ID = "asgore";
 export const KALADIN_ID = "kaladin";
 export const ODIN_ID = "odin";
@@ -51,6 +53,14 @@ export const FRISK_PACIFISM_ID = "friskPacifism";
 export const FRISK_GENOCIDE_ID = "friskGenocide";
 export const FRISK_CLEAN_SOUL_ID = "friskCleanSoul";
 export const FRISK_ONE_PATH_ID = "friskOnePath";
+export const SANS_LONG_LIVER_ID = "sansLongLiver";
+export const SANS_GASTER_BLASTER_ID = "sansGasterBlaster";
+export const SANS_BADASS_JOKE_ID = "sansBadassJoke";
+export const SANS_SPEARMAN_FEATURE_ID = "sansSpearmanFeature";
+export const SANS_UNBELIEVER_ID = "sansUnbeliever";
+export const SANS_BONE_FIELD_ID = "sansBoneField";
+export const SANS_SLEEP_ID = "sansSleep";
+export const SANS_LAST_ATTACK_ID = "sansLastAttack";
 export const ASGORE_FIREBALL_ID = "asgoreFireball";
 export const ASGORE_FIRE_PARADE_ID = "asgoreFireParade";
 export const ASGORE_SOUL_PARADE_ID = "asgoreSoulParade";
@@ -119,6 +129,9 @@ export function getMaxHp(unitClass: UnitClass, heroId?: string): number {
   }
   if (heroId === FRISK_ID) {
     base += 1;
+  }
+  if (heroId === SANS_ID) {
+    base += 2;
   }
   if (heroId === ASGORE_ID) {
     base += 3;

@@ -108,6 +108,8 @@ export function Game() {
     useState<Coord | null>(null);
   const [mettatonLaserPreviewTarget, setMettatonLaserPreviewTarget] =
     useState<Coord | null>(null);
+  const [sansGasterBlasterPreviewTarget, setSansGasterBlasterPreviewTarget] =
+    useState<Coord | null>(null);
   const [forestPreviewCenter, setForestPreviewCenter] = useState<Coord | null>(null);
   const [stakeSelections, setStakeSelections] = useState<Coord[]>([]);
   const [hassanAssassinOrderSelections, setHassanAssassinOrderSelections] =
@@ -941,7 +943,8 @@ export function Game() {
     if (
       !view ||
       (effectiveActionMode !== "mettatonPoppins" &&
-        effectiveActionMode !== "mettatonLaser") ||
+        effectiveActionMode !== "mettatonLaser" &&
+        effectiveActionMode !== "sansGasterBlaster") ||
       !selectedUnit?.position
     ) {
       return [] as Coord[];
@@ -1090,6 +1093,25 @@ export function Game() {
       setMettatonLaserPreviewTarget(null);
     }
   }, [actionMode, mettatonLaserPreviewTarget, mettatonLineTargetKeys]);
+
+  useEffect(() => {
+    if (actionMode !== "sansGasterBlaster") {
+      setSansGasterBlasterPreviewTarget(null);
+      return;
+    }
+    if (!selectedUnitId) {
+      setSansGasterBlasterPreviewTarget(null);
+    }
+  }, [actionMode, selectedUnitId]);
+
+  useEffect(() => {
+    if (actionMode !== "sansGasterBlaster" || !sansGasterBlasterPreviewTarget) {
+      return;
+    }
+    if (!mettatonLineTargetKeys.has(coordKey(sansGasterBlasterPreviewTarget))) {
+      setSansGasterBlasterPreviewTarget(null);
+    }
+  }, [actionMode, sansGasterBlasterPreviewTarget, mettatonLineTargetKeys]);
 
   useEffect(() => {
     if (actionMode !== "kaladinFifth") {
@@ -1590,6 +1612,7 @@ export function Game() {
     setDoraPreviewCenter,
     setMettatonPoppinsPreviewCenter,
     setMettatonLaserPreviewTarget,
+    setSansGasterBlasterPreviewTarget,
     setJebeHailPreviewCenter,
     setKaladinFifthPreviewCenter,
     setTisonaPreviewCoord,
@@ -1602,6 +1625,8 @@ export function Game() {
       ? mettatonPoppinsPreviewCenter
       : actionMode === "mettatonLaser"
       ? mettatonLaserPreviewTarget
+      : actionMode === "sansGasterBlaster"
+      ? sansGasterBlasterPreviewTarget
       : actionMode === "jebeHailOfArrows"
       ? jebeHailPreviewCenter
       : actionMode === "kaladinFifth"
@@ -1624,6 +1649,7 @@ export function Game() {
     actionMode !== "dora" &&
     actionMode !== "mettatonPoppins" &&
     actionMode !== "mettatonLaser" &&
+    actionMode !== "sansGasterBlaster" &&
     actionMode !== "jebeHailOfArrows" &&
     actionMode !== "kaladinFifth" &&
     actionMode !== "tisona" &&
@@ -1686,7 +1712,8 @@ export function Game() {
                     radius:
                       actionMode === "kaladinFifth"
                         ? 2
-                        : actionMode === "mettatonLaser"
+                        : actionMode === "mettatonLaser" ||
+                          actionMode === "sansGasterBlaster"
                         ? 0
                         : 1,
                   }

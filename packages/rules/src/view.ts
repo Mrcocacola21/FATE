@@ -75,6 +75,13 @@ function cloneUnit(unit: UnitState): UnitState {
     papyrusBoneStatus: unit.papyrusBoneStatus
       ? { ...unit.papyrusBoneStatus }
       : unit.papyrusBoneStatus,
+    sansUnbelieverUnlocked: unit.sansUnbelieverUnlocked,
+    sansMoveLockArmed: unit.sansMoveLockArmed,
+    sansMoveLockSourceId: unit.sansMoveLockSourceId,
+    sansBoneFieldStatus: unit.sansBoneFieldStatus
+      ? { ...unit.sansBoneFieldStatus }
+      : unit.sansBoneFieldStatus,
+    sansLastAttackCurseSourceId: unit.sansLastAttackCurseSourceId,
     mettatonRating: unit.mettatonRating,
     mettatonExUnlocked: unit.mettatonExUnlocked,
     mettatonNeoUnlocked: unit.mettatonNeoUnlocked,

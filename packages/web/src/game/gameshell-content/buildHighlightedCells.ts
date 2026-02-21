@@ -421,6 +421,12 @@ export function buildHighlightedCells({
     }
   }
 
+  if (effectiveActionMode === "sansGasterBlaster") {
+    for (const coord of mettatonLineTargets) {
+      highlights[coordKey(coord)] = modeKind("attack");
+    }
+  }
+
   if (effectiveActionMode === "papyrusCoolGuy" && view) {
     const size = view.boardSize ?? 9;
     for (let col = 0; col < size; col += 1) {

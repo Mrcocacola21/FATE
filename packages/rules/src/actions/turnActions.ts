@@ -40,6 +40,7 @@ import {
   maybeTriggerVladTurnStakes,
 } from "./heroes/vlad";
 import { evGameEnded, evRoundStarted, evTurnStarted } from "../core";
+import { applySansBoneFieldStartOfTurn } from "./heroes/sans";
 
 function nextPlayer(player: PlayerId): PlayerId {
   return player === "P1" ? "P2" : "P1";
@@ -319,12 +320,15 @@ export function applyUnitStartTurn(
       ? clearLokiEffectsForCaster(stateAfterKaladinCleanup, unit.id)
       : stateAfterKaladinCleanup;
 
+  const { state: afterBoneField, events: boneFieldEvents } =
+    applySansBoneFieldStartOfTurn(stateAfterStatusCleanup, unit.id, rng);
+
   const { state: afterStealth, events: stealthEvents } =
-    processUnitStartOfTurnStealth(stateAfterStatusCleanup, unit.id, rng);
+    processUnitStartOfTurnStealth(afterBoneField, unit.id, rng);
 
   const unitAfterStealth = afterStealth.units[unit.id];
   if (!unitAfterStealth || !unitAfterStealth.isAlive || !unitAfterStealth.position) {
-    return { state: afterStealth, events: stealthEvents };
+    return { state: afterStealth, events: [...boneFieldEvents, ...stealthEvents] };
   }
 
   const { state: afterBunker, events: bunkerEvents } =
@@ -332,7 +336,10 @@ export function applyUnitStartTurn(
 
   const unitAfterBunker = afterBunker.units[unit.id];
   if (!unitAfterBunker) {
-    return { state: afterBunker, events: [...stealthEvents, ...bunkerEvents] };
+    return {
+      state: afterBunker,
+      events: [...boneFieldEvents, ...stealthEvents, ...bunkerEvents],
+    };
   }
 
   const { state: afterStorm, events: stormEvents } = applyStormStartOfTurn(
@@ -345,7 +352,12 @@ export function applyUnitStartTurn(
   if (!unitAfterStorm || !unitAfterStorm.isAlive || !unitAfterStorm.position) {
     return {
       state: afterStorm,
-      events: [...stealthEvents, ...bunkerEvents, ...stormEvents],
+      events: [
+        ...boneFieldEvents,
+        ...stealthEvents,
+        ...bunkerEvents,
+        ...stormEvents,
+      ],
     };
   }
 
@@ -359,7 +371,13 @@ export function applyUnitStartTurn(
   if (!unitAfterStart) {
     return {
       state: afterStart,
-      events: [...stealthEvents, ...bunkerEvents, ...stormEvents, ...startEvents],
+      events: [
+        ...boneFieldEvents,
+        ...stealthEvents,
+        ...bunkerEvents,
+        ...stormEvents,
+        ...startEvents,
+      ],
     };
   }
 
@@ -411,6 +429,7 @@ export function applyUnitStartTurn(
     return {
       state: stakesResult.state,
       events: [
+        ...boneFieldEvents,
         ...stealthEvents,
         ...bunkerEvents,
         ...stormEvents,
@@ -448,6 +467,7 @@ export function applyUnitStartTurn(
   };
 
   const baseEvents: GameEvent[] = [
+    ...boneFieldEvents,
     ...stealthEvents,
     ...bunkerEvents,
     ...stormEvents,

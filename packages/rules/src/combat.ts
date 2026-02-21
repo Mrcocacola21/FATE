@@ -29,6 +29,7 @@ import {
   HERO_KALADIN_ID,
   HERO_ODIN_ID,
   HERO_PAPYRUS_ID,
+  HERO_SANS_ID,
 } from "./heroes";
 import {
   addMettatonRating,
@@ -472,7 +473,8 @@ export function resolveAttack(
     (defenderAfter.class === "spearman" ||
       defenderAfter.heroId === HERO_FEMTO_ID ||
       defenderAfter.heroId === HERO_ASGORE_ID ||
-      defenderAfter.heroId === HERO_ODIN_ID) &&
+      defenderAfter.heroId === HERO_ODIN_ID ||
+      defenderAfter.heroId === HERO_SANS_ID) &&
     defenderRoll.isDouble
   ) {
     hit = false;

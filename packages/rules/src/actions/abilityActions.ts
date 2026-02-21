@@ -47,6 +47,10 @@ import {
   ABILITY_PAPYRUS_LONG_BONE,
   ABILITY_PAPYRUS_ORANGE_BONE,
   ABILITY_PAPYRUS_SPAGHETTI,
+  ABILITY_SANS_BADASS_JOKE,
+  ABILITY_SANS_BONE_FIELD,
+  ABILITY_SANS_GASTER_BLASTER,
+  ABILITY_SANS_SLEEP,
   TRICKSTER_AOE_RADIUS,
   getAbilitySpec,
   spendCharges,
@@ -89,6 +93,12 @@ import {
   applyPapyrusOrangeBoneToggle,
   applyPapyrusSpaghetti,
 } from "./heroes/papyrus";
+import {
+  applySansBadassJoke,
+  applySansBoneField,
+  applySansGasterBlaster,
+  applySansSleep,
+} from "./heroes/sans";
 import {
   applyGutsArbalet,
   applyGutsBerserkMode,
@@ -295,6 +305,18 @@ export function applyUseAbility(
   }
   if (spec.id === ABILITY_METTATON_FINAL_CHORD) {
     return applyMettatonFinalChord(state, unit);
+  }
+  if (spec.id === ABILITY_SANS_GASTER_BLASTER) {
+    return applySansGasterBlaster(state, unit, action);
+  }
+  if (spec.id === ABILITY_SANS_BADASS_JOKE) {
+    return applySansBadassJoke(state, unit, rng);
+  }
+  if (spec.id === ABILITY_SANS_BONE_FIELD) {
+    return applySansBoneField(state, unit, rng);
+  }
+  if (spec.id === ABILITY_SANS_SLEEP) {
+    return applySansSleep(state, unit);
   }
 
   const isTricksterAoE = spec.id === ABILITY_TRICKSTER_AOE;

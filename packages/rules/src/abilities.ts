@@ -48,6 +48,7 @@ import {
   hasMettatonNeoUnlocked,
   isMettaton,
 } from "./mettaton";
+import { hasSansUnbelieverUnlocked, isSans } from "./sans";
 
 /**
  * Стоимость способности с точки зрения экономики хода.
@@ -182,9 +183,17 @@ export const ABILITY_FRISK_PURE_SOUL = ABILITY_FRISK_CLEAN_SOUL;
 export const ABILITY_FRISK_PACIFIST = ABILITY_FRISK_PACIFISM;
 export const ABILITY_FRISK_ONE_WAY = ABILITY_FRISK_ONE_PATH;
 
+export const ABILITY_SANS_LONG_LIVER = "sansLongLiver" as const;
 export const ABILITY_SANS_GASTER_BLASTER = "sansGasterBlaster" as const;
-export const ABILITY_SANS_JOKE = "sansJoke" as const;
-export const ABILITY_SANS_KARMA = "sansKarma" as const;
+export const ABILITY_SANS_BADASS_JOKE = "sansBadassJoke" as const;
+export const ABILITY_SANS_SPEARMAN_FEATURE = "sansSpearmanFeature" as const;
+export const ABILITY_SANS_UNBELIEVER = "sansUnbeliever" as const;
+export const ABILITY_SANS_BONE_FIELD = "sansBoneField" as const;
+export const ABILITY_SANS_SLEEP = "sansSleep" as const;
+export const ABILITY_SANS_LAST_ATTACK = "sansLastAttack" as const;
+// Backward-compatible aliases.
+export const ABILITY_SANS_JOKE = ABILITY_SANS_BADASS_JOKE;
+export const ABILITY_SANS_KARMA = ABILITY_SANS_UNBELIEVER;
 
 export const ABILITY_ASGORE_FIREBALL = "asgoreFireball" as const;
 export const ABILITY_ASGORE_FIRE_PARADE = "asgoreFireParade" as const;
@@ -709,6 +718,71 @@ const ABILITY_SPECS: Record<string, AbilitySpec> = {
     description:
       "After Frisk kills, convert all Pacifism into Genocide and permanently lose Pacifism.",
   },
+  [ABILITY_SANS_LONG_LIVER]: {
+    id: ABILITY_SANS_LONG_LIVER,
+    displayName: "Long-liver",
+    kind: "passive",
+    description: "Sans gains +2 max HP.",
+  },
+  [ABILITY_SANS_GASTER_BLASTER]: {
+    id: ABILITY_SANS_GASTER_BLASTER,
+    displayName: "Gaster Blaster",
+    kind: "impulse",
+    description:
+      "Spend 2 charges. Choose an attack line and attack all units on that shooter line.",
+    maxCharges: 2,
+    chargesPerUse: 2,
+  },
+  [ABILITY_SANS_BADASS_JOKE]: {
+    id: ABILITY_SANS_BADASS_JOKE,
+    displayName: "Badass Joke",
+    kind: "active",
+    description:
+      "Spend 3 charges. Attack enemies in Trickster area; targets that fail defense cannot use movement action on their next turn.",
+    maxCharges: 3,
+    chargesPerUse: 3,
+    actionCost: {
+      consumes: { action: true },
+    },
+  },
+  [ABILITY_SANS_SPEARMAN_FEATURE]: {
+    id: ABILITY_SANS_SPEARMAN_FEATURE,
+    displayName: "Spearman Feature",
+    kind: "passive",
+    description: "Defense doubles grant auto-dodge (Spearman trait).",
+  },
+  [ABILITY_SANS_UNBELIEVER]: {
+    id: ABILITY_SANS_UNBELIEVER,
+    displayName: "Unbeliever Sans",
+    kind: "passive",
+    description:
+      "After an allied hero dies, Sans unlocks Bone Field, Sleep, and Last Attack.",
+  },
+  [ABILITY_SANS_BONE_FIELD]: {
+    id: ABILITY_SANS_BONE_FIELD,
+    displayName: "Bone Field",
+    kind: "impulse",
+    description:
+      "After Unbeliever, roll 1d6+1 and replace arena with Bone Field for that duration.",
+  },
+  [ABILITY_SANS_SLEEP]: {
+    id: ABILITY_SANS_SLEEP,
+    displayName: "Sleep",
+    kind: "active",
+    description: "After Unbeliever, spend 3 charges to heal Sans for 2 HP.",
+    maxCharges: 3,
+    chargesPerUse: 3,
+    actionCost: {
+      consumes: { action: true },
+    },
+  },
+  [ABILITY_SANS_LAST_ATTACK]: {
+    id: ABILITY_SANS_LAST_ATTACK,
+    displayName: "Last Attack",
+    kind: "passive",
+    description:
+      "After Unbeliever, when Sans dies he curses one enemy: it takes 1 damage at turn start until it reaches 1 HP.",
+  },
   [ABILITY_ASGORE_FIREBALL]: {
     id: ABILITY_ASGORE_FIREBALL,
     displayName: "Fireball",
@@ -1185,6 +1259,18 @@ export function initUnitAbilities(unit: UnitState): UnitState {
       friskKillCount: 0,
     };
   }
+  if (unit.heroId === HERO_SANS_ID) {
+    updated = setCharges(updated, ABILITY_SANS_GASTER_BLASTER, 0);
+    updated = setCharges(updated, ABILITY_SANS_BADASS_JOKE, 0);
+    updated = {
+      ...updated,
+      sansUnbelieverUnlocked: false,
+      sansMoveLockArmed: false,
+      sansMoveLockSourceId: undefined,
+      sansBoneFieldStatus: undefined,
+      sansLastAttackCurseSourceId: undefined,
+    };
+  }
   if (unit.heroId === HERO_ASGORE_ID) {
     updated = setCharges(updated, ABILITY_ASGORE_FIREBALL, 0);
     updated = setCharges(updated, ABILITY_ASGORE_FIRE_PARADE, 0);
@@ -1379,6 +1465,16 @@ function getActiveDisabledReason(
     }
   }
 
+  if (isSans(unit)) {
+    if (
+      (spec.id === ABILITY_SANS_BONE_FIELD ||
+        spec.id === ABILITY_SANS_SLEEP) &&
+      !hasSansUnbelieverUnlocked(unit)
+    ) {
+      return "Requires Unbeliever Sans";
+    }
+  }
+
   const required = getChargeRequired(spec);
   if (
     required !== undefined &&
@@ -1546,10 +1642,19 @@ export function getAbilityViewsForUnit(
   } 
   if (unit.heroId === HERO_SANS_ID) {
     abilityIds.push(
+      ABILITY_SANS_LONG_LIVER,
       ABILITY_SANS_GASTER_BLASTER,
-      ABILITY_SANS_JOKE,
-      ABILITY_SANS_KARMA
+      ABILITY_SANS_BADASS_JOKE,
+      ABILITY_SANS_SPEARMAN_FEATURE,
+      ABILITY_SANS_UNBELIEVER
     );
+    if (hasSansUnbelieverUnlocked(unit)) {
+      abilityIds.push(
+        ABILITY_SANS_BONE_FIELD,
+        ABILITY_SANS_SLEEP,
+        ABILITY_SANS_LAST_ATTACK
+      );
+    }
   } 
   if (unit.heroId === HERO_ASGORE_ID) {
     abilityIds.push(
@@ -1711,7 +1816,14 @@ export function getAbilityViewsForUnit(
         spec.kind === "impulse" ||
         spec.id === ABILITY_GENGHIS_KHAN_MONGOL_CHARGE
       ) {
-        if (spec.id === ABILITY_KAISER_ENGINEERING_MIRACLE && unit.transformed) {
+        if (
+          isSans(unit) &&
+          spec.id === ABILITY_SANS_BONE_FIELD &&
+          !hasSansUnbelieverUnlocked(unit)
+        ) {
+          isAvailable = false;
+          disabledReason = "Requires Unbeliever Sans";
+        } else if (spec.id === ABILITY_KAISER_ENGINEERING_MIRACLE && unit.transformed) {
           isAvailable = false;
           disabledReason = "Already transformed";
         } else if (

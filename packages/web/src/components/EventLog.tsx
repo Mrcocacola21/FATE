@@ -12,6 +12,10 @@ const ABILITY_NAME_BY_ID: Record<string, string> = {
   papyrusCoolGuy: "Cool Guy",
   papyrusOrangeBone: "Orange Bone",
   papyrusLongBone: "Long Bone",
+  sansGasterBlaster: "Gaster Blaster",
+  sansBadassJoke: "Badass Joke",
+  sansBoneField: "Bone Field",
+  sansSleep: "Sleep",
 };
 
 
@@ -143,6 +147,24 @@ function formatEvent(event: GameEvent): string {
       return `Bone applied: ${event.papyrusId} -> ${event.targetId} (${event.boneType})`;
     case "papyrusBonePunished":
       return `Bone punishment: ${event.targetId} took ${event.damage} (${event.boneType}, ${event.reason})`;
+    case "sansUnbelieverActivated":
+      return `Unbeliever awakened: ${event.sansId} after ${event.fallenAllyId} fell`;
+    case "sansBadassJokeApplied":
+      return `Badass Joke: ${event.sansId} locked movement for ${event.targetId}`;
+    case "sansMoveDenied":
+      return `Movement denied: ${event.unitId} (source ${event.sourceSansId ?? "-"})`;
+    case "sansBoneFieldActivated":
+      return `Bone Field activated: ${event.sansId} (${event.duration} turns)`;
+    case "sansBoneFieldApplied":
+      return `Bone Field: ${event.unitId} gets ${event.boneType} bone`;
+    case "sansBoneFieldPunished":
+      return `Bone Field punishment: ${event.targetId} took ${event.damage} (${event.boneType}, ${event.reason})`;
+    case "sansLastAttackApplied":
+      return `Last Attack: ${event.sansId} cursed ${event.targetId}`;
+    case "sansLastAttackTick":
+      return `Curse tick: ${event.targetId} took ${event.damage} (HP ${event.hpAfter})`;
+    case "sansLastAttackRemoved":
+      return `Curse removed: ${event.targetId} (${event.reason})`;
     case "unitHealed":
       return `Healed: ${event.unitId} +${event.amount} (HP ${event.hpAfter})`;
     case "damageBonusApplied":

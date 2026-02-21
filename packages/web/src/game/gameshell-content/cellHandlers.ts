@@ -19,6 +19,7 @@ import {
   METTATON_POPPINS_ID,
   ODIN_SLEIPNIR_ID,
   PAPYRUS_COOL_GUY_ID,
+  SANS_GASTER_BLASTER_ID,
 } from "../../rulesHints";
 import { coordKey, getUnitAt, isCoordInList } from "./helpers";
 
@@ -713,6 +714,18 @@ export function createCellClickHandler(context: CellClickContext) {
       return;
     }
 
+    if (actionMode === "sansGasterBlaster") {
+      if (!mettatonLineTargetKeys.has(coordKey({ col, row }))) return;
+      sendGameAction({
+        type: "useAbility",
+        unitId: selectedUnitId,
+        abilityId: SANS_GASTER_BLASTER_ID,
+        payload: { target: { col, row } },
+      });
+      setActionMode(null);
+      return;
+    }
+
     if (actionMode === "jebeHailOfArrows") {
       if (!jebeHailTargetKeys.has(coordKey({ col, row }))) return;
       sendGameAction({
@@ -763,6 +776,7 @@ interface CellHoverContext {
   setDoraPreviewCenter: Dispatch<SetStateAction<Coord | null>>;
   setMettatonPoppinsPreviewCenter: Dispatch<SetStateAction<Coord | null>>;
   setMettatonLaserPreviewTarget: Dispatch<SetStateAction<Coord | null>>;
+  setSansGasterBlasterPreviewTarget: Dispatch<SetStateAction<Coord | null>>;
   setJebeHailPreviewCenter: Dispatch<SetStateAction<Coord | null>>;
   setKaladinFifthPreviewCenter: Dispatch<SetStateAction<Coord | null>>;
   setTisonaPreviewCoord: Dispatch<SetStateAction<Coord | null>>;
@@ -782,6 +796,7 @@ export function createCellHoverHandler(context: CellHoverContext) {
     setDoraPreviewCenter,
     setMettatonPoppinsPreviewCenter,
     setMettatonLaserPreviewTarget,
+    setSansGasterBlasterPreviewTarget,
     setJebeHailPreviewCenter,
     setKaladinFifthPreviewCenter,
     setTisonaPreviewCoord,
@@ -818,6 +833,18 @@ export function createCellHoverHandler(context: CellHoverContext) {
       }
       const key = coordKey(coord);
       setMettatonLaserPreviewTarget(
+        mettatonLineTargetKeys.has(key) ? coord : null
+      );
+      return;
+    }
+
+    if (actionMode === "sansGasterBlaster") {
+      if (!coord) {
+        setSansGasterBlasterPreviewTarget(null);
+        return;
+      }
+      const key = coordKey(coord);
+      setSansGasterBlasterPreviewTarget(
         mettatonLineTargetKeys.has(key) ? coord : null
       );
       return;

@@ -12,6 +12,7 @@ import { applyChikatiloPostAction } from "./heroes/chikatilo";
 import { applyFriskPostAction } from "./heroes/frisk";
 import { applyLokiIllusoryDoubleFromEvents } from "./heroes/loki";
 import { applyPapyrusPostAction } from "./heroes/papyrus";
+import { applySansPostAction } from "./heroes/sans";
 
 export function applyAction(
   state: GameState,
@@ -106,5 +107,11 @@ export function applyAction(
     afterLoki.state,
     afterLoki.events
   );
-  return applyFriskPostAction(afterPapyrus.state, afterPapyrus.events);
+  const afterSans = applySansPostAction(
+    prevState,
+    action,
+    afterPapyrus.state,
+    afterPapyrus.events
+  );
+  return applyFriskPostAction(afterSans.state, afterSans.events);
 }

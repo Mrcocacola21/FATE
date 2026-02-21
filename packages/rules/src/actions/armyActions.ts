@@ -49,6 +49,7 @@ export function createEmptyGame(): GameState {
     initiative: { P1: null, P2: null, winner: null },
     placementFirstPlayer: null,
     arenaId: null,
+    boneFieldTurnsLeft: 0,
     startingUnitId: null,
     unitsPlaced: { P1: 0, P2: 0 },
     knowledge: { P1: {}, P2: {} },

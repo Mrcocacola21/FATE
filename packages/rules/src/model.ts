@@ -82,6 +82,14 @@ export interface PapyrusBoneStatus {
   bluePunishedTurnNumber?: number;
 }
 
+export interface SansBoneFieldStatus {
+  kind: PapyrusBoneType;
+  /** Applies only during this turn number. */
+  turnNumber: number;
+  /** Blue Bone: remembers turnNumber when movement punishment already triggered. */
+  bluePunishedTurnNumber?: number;
+}
+
 // Состояние конкретной фигуры в партии
 export interface UnitState {
   id: string;
@@ -167,6 +175,16 @@ export interface UnitState {
   papyrusLineAxis?: PapyrusLineAxis;
   /** Papyrus: active Blue/Orange status received from Papyrus attacks. */
   papyrusBoneStatus?: PapyrusBoneStatus;
+  /** Sans: one-time Unbeliever transformation unlock after allied hero death. */
+  sansUnbelieverUnlocked?: boolean;
+  /** Sans: movement lock marker from Badass Joke (paired with movementDisabledNextTurn). */
+  sansMoveLockArmed?: boolean;
+  /** Sans: source id for the active movement lock marker. */
+  sansMoveLockSourceId?: string;
+  /** Sans Bone Field: temporary Blue/Orange hazard status for current turn. */
+  sansBoneFieldStatus?: SansBoneFieldStatus;
+  /** Sans Last Attack: cursed source Sans id. */
+  sansLastAttackCurseSourceId?: string;
   /** Mettaton: hero-specific Rating counter. */
   mettatonRating?: number;
   /** Mettaton EX transformation unlock flag. */
@@ -526,6 +544,56 @@ export type GameEvent =
       hpAfter: number;
     }
   | {
+      type: "sansUnbelieverActivated";
+      sansId: string;
+      fallenAllyId: string;
+    }
+  | {
+      type: "sansBadassJokeApplied";
+      sansId: string;
+      targetId: string;
+    }
+  | {
+      type: "sansMoveDenied";
+      unitId: string;
+      sourceSansId?: string;
+    }
+  | {
+      type: "sansBoneFieldActivated";
+      sansId: string;
+      duration: number;
+    }
+  | {
+      type: "sansBoneFieldApplied";
+      unitId: string;
+      boneType: PapyrusBoneType;
+      turnNumber: number;
+    }
+  | {
+      type: "sansBoneFieldPunished";
+      targetId: string;
+      boneType: PapyrusBoneType;
+      damage: number;
+      reason: "moveSpent" | "moveNotSpent";
+      hpAfter: number;
+    }
+  | {
+      type: "sansLastAttackApplied";
+      sansId: string;
+      targetId: string;
+    }
+  | {
+      type: "sansLastAttackTick";
+      targetId: string;
+      damage: number;
+      hpAfter: number;
+    }
+  | {
+      type: "sansLastAttackRemoved";
+      targetId: string;
+      reason: "hpOne" | "targetDead";
+    }
+  | {
       type: "unitHealed";
       unitId: string;
       amount: number;
@@ -782,6 +850,7 @@ export interface GameState {
 
   placementFirstPlayer: PlayerId | null;
   arenaId: string | null;
+  boneFieldTurnsLeft?: number;
 
   /** Первая поставленная фигура — «ходит первой» */
   startingUnitId: string | null;

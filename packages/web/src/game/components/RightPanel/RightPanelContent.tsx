@@ -21,6 +21,7 @@ import {
   LECHY_GUIDE_TRAVELER_ID,
   LECHY_CONFUSE_TERRAIN_ID,
   LECHY_ID,
+  ARENA_BONE_FIELD_ID,
   ARENA_STORM_ID,
   GROZNY_INVADE_TIME_ID,
   GROZNY_TYRANT_ID,
@@ -44,6 +45,7 @@ import {
   METTATON_ID,
   METTATON_LASER_ID,
   METTATON_POPPINS_ID,
+  SANS_GASTER_BLASTER_ID,
   RIVER_PERSON_ID,
 } from "../../../rulesHints";
 import type { ActionMode, ActionPreviewMode } from "../../../store";
@@ -199,6 +201,7 @@ function abilityActionMode(abilityId: string): ActionPreviewMode | null {
   if (abilityId === GUTS_ARBALET_ID) return "gutsArbalet";
   if (abilityId === GUTS_CANNON_ID) return "gutsCannon";
   if (abilityId === PAPYRUS_COOL_GUY_ID) return "papyrusCoolGuy";
+  if (abilityId === SANS_GASTER_BLASTER_ID) return "sansGasterBlaster";
   if (abilityId === METTATON_POPPINS_ID) return "mettatonPoppins";
   if (abilityId === METTATON_LASER_ID) return "mettatonLaser";
   return null;
@@ -400,6 +403,11 @@ export const RightPanelContent: FC<RightPanelProps> = ({
           <div>Turn: {view.turnNumber}</div>
           <div>Active Unit: {view.activeUnitId ?? "-"}</div>
           <div>Arena: {view.arenaId ?? "-"}</div>
+          {view.arenaId === ARENA_BONE_FIELD_ID && (
+            <div className="text-[11px] text-cyan-700 dark:text-cyan-300">
+              Bone Field turns left: {Math.max(0, view.boneFieldTurnsLeft ?? 0)}
+            </div>
+          )}
           {stormActive && (
             <div className="text-[11px] text-amber-700 dark:text-amber-300">
               Storm active: non-exempt units can only attack adjacent targets.
@@ -542,6 +550,21 @@ export const RightPanelContent: FC<RightPanelProps> = ({
                   <div className="text-[10px] text-slate-500 dark:text-slate-300">
                     HP {selectedUnit.hp}
                   </div>
+                  {selectedUnit.sansMoveLockArmed && (
+                    <div className="text-[10px] font-semibold text-rose-700 dark:text-rose-300">
+                      Movement action locked on next turn
+                    </div>
+                  )}
+                  {selectedUnit.sansLastAttackCurseSourceId && (
+                    <div className="text-[10px] font-semibold text-fuchsia-700 dark:text-fuchsia-300">
+                      Cursed: takes 1 damage at turn start (min HP 1)
+                    </div>
+                  )}
+                  {selectedUnit.sansBoneFieldStatus && (
+                    <div className="text-[10px] font-semibold text-cyan-700 dark:text-cyan-300">
+                      Bone Field: {selectedUnit.sansBoneFieldStatus.kind} bone
+                    </div>
+                  )}
                   {selectedMettatonRating !== null && (
                     <div className="text-[10px] font-semibold text-amber-700 dark:text-amber-300">
                       Rating {selectedMettatonRating}
@@ -1130,6 +1153,8 @@ export const RightPanelContent: FC<RightPanelProps> = ({
               ? "Mettaton Poppins: select a 3x3 center on your attack line."
               : actionMode === "mettatonLaser"
               ? "Laser: select a cell on your attack line."
+              : actionMode === "sansGasterBlaster"
+              ? "Gaster Blaster: select a cell on the shooter line."
               : `Mode: ${actionMode}. Click a highlighted cell to apply.`}
             </div>
           )}
