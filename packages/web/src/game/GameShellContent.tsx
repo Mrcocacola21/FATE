@@ -4,7 +4,6 @@ import {
   type GameAction,
   type MoveMode,
   type PapyrusLineAxis,
-  type PlayerView,
   type UnitState,
 } from "rules";
 import { Board } from "../components/Board";
@@ -12,10 +11,17 @@ import { EventLog } from "../components/EventLog";
 import { RightPanel } from "./components/RightPanel/RightPanel";
 import { TurnQueueTracker } from "../components/TurnQueueTracker";
 import { ThemeToggle } from "../components/ThemeToggle";
+import { GameLoadingState } from "./gameshell-content/components/GameLoadingState";
+import { PendingBoardNotice } from "./gameshell-content/components/PendingBoardNotice";
+import { PendingRollModal } from "./gameshell-content/components/PendingRollModal";
+import { buildHighlightedCells } from "./gameshell-content/buildHighlightedCells";
+import {
+  createCellClickHandler,
+  createCellHoverHandler,
+} from "./gameshell-content/cellHandlers";
 import {
   getLocalPlayerId,
   useGameStore,
-  type ActionPreviewMode,
 } from "../store";
 import {
   EL_CID_DEMON_DUELIST_ID,
@@ -46,493 +52,16 @@ import {
   PAPYRUS_LONG_BONE_ID,
   PAPYRUS_ORANGE_BONE_ID,
 } from "../rulesHints";
-
-const DORA_DIRS: Coord[] = [
-  { col: 1, row: 0 },
-  { col: -1, row: 0 },
-  { col: 0, row: 1 },
-  { col: 0, row: -1 },
-  { col: 1, row: 1 },
-  { col: 1, row: -1 },
-  { col: -1, row: 1 },
-  { col: -1, row: -1 },
-];
-
-function getUnitAt(view: PlayerView, col: number, row: number) {
-  return Object.values(view.units).find(
-    (u) => u.position && u.position.col === col && u.position.row === row
-  );
-}
-
-function getDoraTargetCenters(view: PlayerView, casterId: string): Coord[] {
-  const caster = view.units[casterId];
-  if (!caster?.position) return [];
-  const size = view.boardSize ?? 9;
-  const origin = caster.position;
-  const targets: Coord[] = [];
-
-  for (const dir of DORA_DIRS) {
-    let col = origin.col + dir.col;
-    let row = origin.row + dir.row;
-    while (col >= 0 && row >= 0 && col < size && row < size) {
-      targets.push({ col, row });
-      const unit = getUnitAt(view, col, row);
-      if (unit && unit.owner !== caster.owner) {
-        break;
-      }
-      col += dir.col;
-      row += dir.row;
-    }
-  }
-
-  return targets;
-}
-
-function getArcherLikeTargetIds(view: PlayerView, casterId: string): string[] {
-  const caster = view.units[casterId];
-  if (!caster?.position) return [];
-  const size = view.boardSize ?? 9;
-  const origin = caster.position;
-  const targets: string[] = [];
-  const seen = new Set<string>();
-
-  for (const dir of DORA_DIRS) {
-    let col = origin.col + dir.col;
-    let row = origin.row + dir.row;
-    while (col >= 0 && row >= 0 && col < size && row < size) {
-      const unit = getUnitAt(view, col, row);
-      if (unit && unit.owner !== caster.owner) {
-        if (!seen.has(unit.id)) {
-          seen.add(unit.id);
-          targets.push(unit.id);
-        }
-        break;
-      }
-      col += dir.col;
-      row += dir.row;
-    }
-  }
-
-  return targets;
-}
-
-function coordKey(coord: Coord) {
-  return `${coord.col},${coord.row}`;
-}
-
-const COLS = "abcdefghi";
-
-function coordFromNotationSafe(value: string): Coord | null {
-  if (value.length !== 2) return null;
-  const colChar = value[0]?.toLowerCase() ?? "";
-  const rowChar = value[1] ?? "";
-  const col = COLS.indexOf(colChar);
-  const row = Number.parseInt(rowChar, 10);
-  if (col < 0 || Number.isNaN(row)) return null;
-  return { col, row };
-}
-
-function normalizeCoordInput(value: unknown): Coord | null {
-  if (value && typeof value === "object") {
-    const colRaw = (value as { col?: unknown }).col;
-    const rowRaw = (value as { row?: unknown }).row;
-    const col =
-      typeof colRaw === "number"
-        ? colRaw
-        : typeof colRaw === "string"
-        ? Number(colRaw)
-        : NaN;
-    const row =
-      typeof rowRaw === "number"
-        ? rowRaw
-        : typeof rowRaw === "string"
-        ? Number(rowRaw)
-        : NaN;
-    if (Number.isFinite(col) && Number.isFinite(row)) {
-      return { col, row };
-    }
-  }
-  if (typeof value === "string") {
-    return coordFromNotationSafe(value);
-  }
-  return null;
-}
-
-function normalizeCoordList(value: unknown): Coord[] {
-  if (!Array.isArray(value)) return [];
-  const coords: Coord[] = [];
-  for (const item of value) {
-    const parsed = normalizeCoordInput(item);
-    if (parsed) coords.push(parsed);
-  }
-  return coords;
-}
-
-function linePath(start: Coord, end: Coord): Coord[] | null {
-  const dx = end.col - start.col;
-  const dy = end.row - start.row;
-  const absDx = Math.abs(dx);
-  const absDy = Math.abs(dy);
-  if (dx === 0 && dy === 0) {
-    return [{ col: start.col, row: start.row }];
-  }
-  if (!(dx === 0 || dy === 0 || absDx === absDy)) {
-    return null;
-  }
-  const steps = Math.max(absDx, absDy);
-  const stepCol = dx === 0 ? 0 : dx > 0 ? 1 : -1;
-  const stepRow = dy === 0 ? 0 : dy > 0 ? 1 : -1;
-  const path: Coord[] = [];
-  for (let i = 0; i <= steps; i += 1) {
-    path.push({
-      col: start.col + stepCol * i,
-      row: start.row + stepRow * i,
-    });
-  }
-  return path;
-}
-
-function getOrthogonalLineCells(
-  size: number,
-  origin: Coord,
-  target: Coord
-): Coord[] {
-  const cells: Coord[] = [];
-  if (origin.row === target.row) {
-    for (let col = 0; col < size; col += 1) {
-      if (col === origin.col) continue;
-      cells.push({ col, row: origin.row });
-    }
-    return cells;
-  }
-  if (origin.col === target.col) {
-    for (let row = 0; row < size; row += 1) {
-      if (row === origin.row) continue;
-      cells.push({ col: origin.col, row });
-    }
-  }
-  return cells;
-}
-
-function getPapyrusLineCells(
-  size: number,
-  axis: PapyrusLineAxis,
-  anchor: Coord
-): Coord[] {
-  const cells: Coord[] = [];
-  for (let col = 0; col < size; col += 1) {
-    for (let row = 0; row < size; row += 1) {
-      const matches =
-        axis === "row"
-          ? row === anchor.row
-          : axis === "col"
-          ? col === anchor.col
-          : axis === "diagMain"
-          ? col - row === anchor.col - anchor.row
-          : col + row === anchor.col + anchor.row;
-      if (matches) {
-        cells.push({ col, row });
-      }
-    }
-  }
-  return cells;
-}
-
-function getAttackRangeCells(view: PlayerView, unitId: string): Coord[] {
-  const unit = view.units[unitId];
-  if (!unit?.position) return [];
-  const size = view.boardSize ?? 9;
-  const origin = unit.position;
-  const isKaladin = unit.heroId === KALADIN_ID;
-  const effectiveClass =
-    unit.heroId === FEMTO_ID ||
-    unit.heroId === ASGORE_ID ||
-    (unit.heroId === GUTS_ID && unit.gutsBerserkModeActive)
-      ? "spearman"
-      : unit.class;
-  const cells: Coord[] = [];
-
-  const addCell = (col: number, row: number) => {
-    if (col < 0 || row < 0 || col >= size || row >= size) return;
-    if (col === origin.col && row === origin.row) return;
-    cells.push({ col, row });
-  };
-
-  if (isKaladin) {
-    for (let dc = -1; dc <= 1; dc += 1) {
-      for (let dr = -1; dr <= 1; dr += 1) {
-        if (dc === 0 && dr === 0) continue;
-        addCell(origin.col + dc, origin.row + dr);
-      }
-    }
-    const reach2 = [
-      { col: 2, row: 0 },
-      { col: -2, row: 0 },
-      { col: 0, row: 2 },
-      { col: 0, row: -2 },
-      { col: 2, row: 2 },
-      { col: 2, row: -2 },
-      { col: -2, row: 2 },
-      { col: -2, row: -2 },
-    ];
-    for (const offset of reach2) {
-      addCell(origin.col + offset.col, origin.row + offset.row);
-    }
-    for (let dc = -2; dc <= 2; dc += 1) {
-      for (let dr = -2; dr <= 2; dr += 1) {
-        if (dc === 0 && dr === 0) continue;
-        if (Math.max(Math.abs(dc), Math.abs(dr)) <= 2) {
-          addCell(origin.col + dc, origin.row + dr);
-        }
-      }
-    }
-    return cells;
-  }
-
-  switch (effectiveClass) {
-    case "archer": {
-      for (const dir of DORA_DIRS) {
-        let col = origin.col + dir.col;
-        let row = origin.row + dir.row;
-        while (col >= 0 && row >= 0 && col < size && row < size) {
-          cells.push({ col, row });
-          const occupant = getUnitAt(view, col, row);
-          if (occupant && occupant.owner !== unit.owner) {
-            break;
-          }
-          col += dir.col;
-          row += dir.row;
-        }
-      }
-      break;
-    }
-
-    case "spearman": {
-      for (let dc = -1; dc <= 1; dc += 1) {
-        for (let dr = -1; dr <= 1; dr += 1) {
-          if (dc === 0 && dr === 0) continue;
-          addCell(origin.col + dc, origin.row + dr);
-        }
-      }
-      const reach2 = [
-        { col: 2, row: 0 },
-        { col: -2, row: 0 },
-        { col: 0, row: 2 },
-        { col: 0, row: -2 },
-        { col: 2, row: 2 },
-        { col: 2, row: -2 },
-        { col: -2, row: 2 },
-        { col: -2, row: -2 },
-      ];
-      for (const offset of reach2) {
-        addCell(origin.col + offset.col, origin.row + offset.row);
-      }
-      break;
-    }
-
-    case "trickster": {
-      for (let dc = -2; dc <= 2; dc += 1) {
-        for (let dr = -2; dr <= 2; dr += 1) {
-          if (dc === 0 && dr === 0) continue;
-          if (Math.max(Math.abs(dc), Math.abs(dr)) <= 2) {
-            addCell(origin.col + dc, origin.row + dr);
-          }
-        }
-      }
-      break;
-    }
-
-    case "rider":
-    case "knight":
-    case "assassin":
-    case "berserker": {
-      for (let dc = -1; dc <= 1; dc += 1) {
-        for (let dr = -1; dr <= 1; dr += 1) {
-          if (dc === 0 && dr === 0) continue;
-          addCell(origin.col + dc, origin.row + dr);
-        }
-      }
-      break;
-    }
-
-    default:
-      break;
-  }
-
-  return cells;
-}
-
-function getPendingRollLabel(kind?: string | null) {
-  switch (kind) {
-    case "attack_attackerRoll":
-      return "Attack roll (attacker)";
-    case "attack_defenderRoll":
-      return "Defense roll";
-    case "riderPathAttack_attackerRoll":
-      return "Rider path attack roll";
-    case "riderPathAttack_defenderRoll":
-      return "Rider path defense roll";
-    case "tricksterAoE_attackerRoll":
-      return "Trickster AoE attack roll";
-    case "tricksterAoE_defenderRoll":
-      return "Trickster AoE defense roll";
-    case "elCidTisona_attackerRoll":
-      return "Tisona attack roll";
-    case "elCidTisona_defenderRoll":
-      return "Tisona defense roll";
-    case "elCidKolada_attackerRoll":
-      return "Kolada attack roll";
-    case "elCidKolada_defenderRoll":
-      return "Kolada defense roll";
-    case "elCidDuelistChoice":
-      return "Demon Duelist choice";
-    case "dora_attackerRoll":
-      return "Dora attack roll";
-    case "dora_defenderRoll":
-      return "Dora defense roll";
-    case "dora_berserkerDefenseChoice":
-      return "Dora berserker defense choice";
-    case "jebeHailOfArrows_attackerRoll":
-      return "Hail of Arrows attack roll";
-    case "jebeHailOfArrows_defenderRoll":
-      return "Hail of Arrows defense roll";
-    case "jebeHailOfArrows_berserkerDefenseChoice":
-      return "Hail of Arrows berserker defense choice";
-    case "jebeKhansShooterRicochetRoll":
-      return "Khan's Shooter ricochet roll";
-    case "jebeKhansShooterTargetChoice":
-      return "Khan's Shooter target choice";
-    case "hassanTrueEnemyTargetChoice":
-      return "True Enemy forced target choice";
-    case "hassanAssassinOrderSelection":
-      return "Assassin Order selection";
-    case "asgoreSoulParadeRoll":
-      return "Soul Parade roll";
-    case "asgoreSoulParadePatienceTargetChoice":
-      return "Soul Parade (Patience) target";
-    case "asgoreSoulParadePerseveranceTargetChoice":
-      return "Soul Parade (Perseverance) target";
-    case "asgoreSoulParadeJusticeTargetChoice":
-      return "Soul Parade (Justice) target";
-    case "asgoreSoulParadeIntegrityDestination":
-      return "Soul Parade (Integrity) destination";
-    case "asgoreBraveryDefenseChoice":
-      return "Bravery defense choice";
-    case "lokiLaughtChoice":
-      return "Loki's Laughter choice";
-    case "lokiChickenTargetChoice":
-      return "Chicken target choice";
-    case "lokiMindControlEnemyChoice":
-      return "Mind Control enemy choice";
-    case "lokiMindControlTargetChoice":
-      return "Mind Control target choice";
-    case "friskPacifismChoice":
-      return "Pacifism choice";
-    case "friskPacifismHugsTargetChoice":
-      return "Hugs target choice";
-    case "friskWarmWordsTargetChoice":
-      return "Warm Words target choice";
-    case "friskWarmWordsHealRoll":
-      return "Warm Words heal roll";
-    case "friskGenocideChoice":
-      return "Genocide choice";
-    case "friskKeenEyeChoice":
-      return "Keen Eye choice";
-    case "friskSubstitutionChoice":
-      return "Substitution defense choice";
-    case "friskChildsCryChoice":
-      return "Child's Cry defense choice";
-    case "femtoDivineMoveRoll":
-      return "Divine Movement roll";
-    case "femtoDivineMoveDestination":
-      return "Divine Movement destination";
-    case "kaiserCarpetStrikeCenter":
-      return "Carpet Strike center roll";
-    case "kaiserCarpetStrikeAttack":
-      return "Carpet Strike attack roll";
-    case "carpetStrike_defenderRoll":
-      return "Carpet Strike defense roll";
-    case "carpetStrike_berserkerDefenseChoice":
-      return "Carpet Strike berserker defense choice";
-    case "vladPlaceStakes":
-      return "Place stakes";
-    case "vladIntimidateChoice":
-      return "Intimidate choice";
-    case "vladForestChoice":
-      return "Forest choice";
-    case "vladForestTarget":
-      return "Forest target selection";
-    case "vladForest_attackerRoll":
-      return "Forest attack roll";
-    case "vladForest_defenderRoll":
-      return "Forest defense roll";
-    case "vladForest_berserkerDefenseChoice":
-      return "Forest berserker defense choice";
-    case "chikatiloFalseTrailPlacement":
-      return "False Trail placement";
-    case "lechyGuideTravelerPlacement":
-      return "Guide Traveler placement";
-    case "chikatiloDecoyChoice":
-      return "Decoy choice";
-    case "chikatiloFalseTrailRevealChoice":
-      return "False Trail choice";
-    case "falseTrailExplosion_attackerRoll":
-      return "False Trail explosion attack roll";
-    case "falseTrailExplosion_defenderRoll":
-      return "False Trail explosion defense roll";
-    case "berserkerDefenseChoice":
-      return "Berserker defense choice";
-    case "odinMuninnDefenseChoice":
-      return "Muninn defense choice";
-    case "enterStealth":
-      return "Stealth roll";
-    case "searchStealth":
-      return "Search roll";
-    case "moveTrickster":
-      return "Trickster move roll";
-    case "moveBerserker":
-      return "Berserker move roll";
-    case "forestMoveCheck":
-      return "Forest check";
-    case "forestMoveDestination":
-      return "Forest fallback destination";
-    case "riverBoatCarryChoice":
-      return "Boat carry choice";
-    case "riverBoatDropDestination":
-      return "Boat drop destination";
-    case "riverTraLaLaTargetChoice":
-      return "Tra-la-la target";
-    case "riverTraLaLaDestinationChoice":
-      return "Tra-la-la destination";
-    case "initiativeRoll":
-      return "Initiative roll";
-    default:
-      return kind ?? "Roll";
-  }
-}
-
-function isCoordInList(coords: Coord[], col: number, row: number): boolean {
-  return coords.some((c) => c.col === col && c.row === row);
-}
-
-type CellHighlightKind =
-  | "place"
-  | "move"
-  | "attack"
-  | "dora"
-  | "attackRange"
-  | "previewMove"
-  | "previewAttack"
-  | "previewAbility";
-
-function previewKindForActionMode(
-  mode: ActionPreviewMode | null
-): "previewMove" | "previewAttack" | "previewAbility" | null {
-  if (!mode) return null;
-  if (mode === "move") return "previewMove";
-  if (mode === "attack") return "previewAttack";
-  return "previewAbility";
-}
+import {
+  coordKey,
+  getArcherLikeTargetIds,
+  getAttackRangeCells,
+  getDoraTargetCenters,
+  getUnitAt,
+  isCoordInList,
+  normalizeCoordList,
+  previewKindForActionMode,
+} from "./gameshell-content/helpers";
 
 export function Game() {
   const {
@@ -1756,985 +1285,255 @@ export function Game() {
     [asgoreFireballTargetIds, view]
   );
 
-  const highlightedCells = useMemo(() => {
-    const highlights: Record<string, CellHighlightKind> = {};
-    const modeKind = (fallback: "move" | "attack" | "dora"): CellHighlightKind =>
-      modePreviewKind ?? fallback;
-
-    if (isStakePlacement) {
-      for (const coord of stakeLegalPositions) {
-        highlights[coordKey(coord)] = "place";
-      }
-      for (const coord of stakeSelections) {
-        highlights[coordKey(coord)] = "move";
-      }
-      return highlights;
-    }
-
-    if (isIntimidateChoice) {
-      for (const coord of intimidateOptions) {
-        highlights[coordKey(coord)] = "move";
-      }
-      return highlights;
-    }
-
-    if (isForestTarget) {
-      for (const coord of forestTargetCenters) {
-        highlights[coordKey(coord)] = "dora";
-      }
-      return highlights;
-    }
-
-    if (isForestMoveDestination) {
-      for (const coord of forestMoveDestinationOptions) {
-        highlights[coordKey(coord)] = "move";
-      }
-      return highlights;
-    }
-
-    if (isFemtoDivineMoveDestination) {
-      for (const coord of femtoDivineMoveOptions) {
-        highlights[coordKey(coord)] = "move";
-      }
-      return highlights;
-    }
-
-    if (isRiverBoatCarryChoice) {
-      for (const key of riverBoatCarryOptionKeys) {
-        highlights[key] = "place";
-      }
-      return highlights;
-    }
-
-    if (isRiverBoatDropDestination) {
-      for (const coord of riverBoatDropDestinationOptions) {
-        highlights[coordKey(coord)] = "move";
-      }
-      return highlights;
-    }
-
-    if (isRiverTraLaLaTargetChoice) {
-      for (const key of riverTraLaLaTargetKeys) {
-        highlights[key] = "attack";
-      }
-      return highlights;
-    }
-
-    if (isRiverTraLaLaDestinationChoice) {
-      for (const coord of riverTraLaLaDestinationOptions) {
-        highlights[coordKey(coord)] = "move";
-      }
-      return highlights;
-    }
-
-    if (isChikatiloPlacement) {
-      for (const coord of chikatiloPlacementCoords) {
-        highlights[coordKey(coord)] = "place";
-      }
-      return highlights;
-    }
-
-    if (isGuideTravelerPlacement) {
-      for (const coord of guideTravelerPlacementCoords) {
-        highlights[coordKey(coord)] = "place";
-      }
-      return highlights;
-    }
-
-    if (isJebeKhansShooterTargetChoice) {
-      for (const key of jebeKhansShooterTargetKeys) {
-        highlights[key] = "attack";
-      }
-      return highlights;
-    }
-
-    if (isHassanTrueEnemyTargetChoice) {
-      for (const key of hassanTrueEnemyTargetKeys) {
-        highlights[key] = "attack";
-      }
-      return highlights;
-    }
-
-    if (isAsgoreSoulParadePatienceTargetChoice) {
-      for (const key of asgorePatienceTargetKeys) {
-        highlights[key] = "attack";
-      }
-      return highlights;
-    }
-
-    if (isAsgoreSoulParadePerseveranceTargetChoice) {
-      for (const key of asgorePerseveranceTargetKeys) {
-        highlights[key] = "attack";
-      }
-      return highlights;
-    }
-
-    if (isAsgoreSoulParadeJusticeTargetChoice) {
-      for (const key of asgoreJusticeTargetKeys) {
-        highlights[key] = "attack";
-      }
-      return highlights;
-    }
-
-    if (isAsgoreSoulParadeIntegrityDestination) {
-      for (const coord of asgoreIntegrityDestinationOptions) {
-        highlights[coordKey(coord)] = "move";
-      }
-      return highlights;
-    }
-
-    if (isLokiChickenTargetChoice) {
-      for (const key of lokiChickenTargetKeys) {
-        highlights[key] = "attack";
-      }
-      return highlights;
-    }
-
-    if (isLokiMindControlEnemyChoice) {
-      for (const key of lokiMindControlEnemyKeys) {
-        highlights[key] = "attack";
-      }
-      return highlights;
-    }
-
-    if (isLokiMindControlTargetChoice) {
-      for (const key of lokiMindControlTargetKeys) {
-        highlights[key] = "attack";
-      }
-      return highlights;
-    }
-
-    if (isFriskPacifismHugsTargetChoice) {
-      for (const key of friskPacifismHugsTargetKeys) {
-        highlights[key] = "attack";
-      }
-      return highlights;
-    }
-
-    if (isFriskWarmWordsTargetChoice) {
-      for (const key of friskWarmWordsTargetKeys) {
-        highlights[key] = "attack";
-      }
-      return highlights;
-    }
-
-    if (isHassanAssassinOrderSelection) {
-      for (const key of hassanAssassinOrderEligibleKeys) {
-        highlights[key] = "place";
-      }
-      for (const unitId of hassanAssassinOrderSelections) {
-        const pos = view?.units[unitId]?.position;
-        if (!pos) continue;
-        highlights[coordKey(pos)] = "move";
-      }
-      return highlights;
-    }
-
-    if (effectiveActionMode === "place") {
-      for (const coord of legalPlacementCoords) {
-        highlights[coordKey(coord)] = "place";
-      }
-    }
-
-    if (effectiveActionMode === "move") {
-      const riderMode =
-        !!selectedUnit &&
-        (selectedUnit.class === "rider" ||
-          pendingMoveForSelected?.mode === "rider" ||
-          moveOptions?.mode === "rider");
-      if (riderMode && selectedUnit?.position) {
-        for (const coord of legalMoveCoords) {
-          const path = linePath(selectedUnit.position, coord);
-          const cells = path ? path.slice(1) : [coord];
-          for (const cell of cells) {
-            highlights[coordKey(cell)] = modeKind("move");
-          }
-        }
-      } else {
-        for (const coord of legalMoveCoords) {
-          highlights[coordKey(coord)] = modeKind("move");
-        }
-      }
-    }
-
-    if (
-      effectiveActionMode === "invadeTime" ||
-      effectiveActionMode === "odinSleipnir"
-    ) {
-      for (const coord of invadeTimeTargets) {
-        highlights[coordKey(coord)] = modeKind("move");
-      }
-    }
-
-    if (effectiveActionMode === "attack" && view) {
-      const attackKind: CellHighlightKind = modePreviewKind ?? "previewAttack";
-      for (const coord of attackPreviewCells) {
-        highlights[coordKey(coord)] = attackKind;
-      }
-      const targetIds =
-        papyrusLongBoneAttackTargetIds.length > 0
-          ? papyrusLongBoneAttackTargetIds
-          : legalAttackTargets;
-      for (const targetId of targetIds) {
-        const unit = view.units[targetId];
-        if (!unit?.position) continue;
-        highlights[coordKey(unit.position)] = attackKind;
-      }
-    }
-
-    if (effectiveActionMode === "assassinMark") {
-      for (const key of assassinMarkTargetKeys) {
-        highlights[key] = modeKind("attack");
-      }
-    }
-
-    if (effectiveActionMode === "guideTraveler") {
-      for (const key of guideTravelerTargetKeys) {
-        highlights[key] = modeKind("attack");
-      }
-    }
-
-    if (effectiveActionMode === "demonDuelist" && view) {
-      for (const targetId of legalAttackTargets) {
-        const unit = view.units[targetId];
-        if (!unit?.position) continue;
-        highlights[coordKey(unit.position)] = modeKind("attack");
-      }
-    }
-
-    if (effectiveActionMode === "dora") {
-      for (const coord of doraTargetCenters) {
-        highlights[coordKey(coord)] = modeKind("dora");
-      }
-    }
-
-    if (effectiveActionMode === "papyrusCoolGuy" && view) {
-      const size = view.boardSize ?? 9;
-      for (let col = 0; col < size; col += 1) {
-        for (let row = 0; row < size; row += 1) {
-          highlights[coordKey({ col, row })] = modeKind("dora");
-        }
-      }
-    }
-
-    if (effectiveActionMode === "jebeHailOfArrows") {
-      for (const coord of jebeHailTargetCenters) {
-        highlights[coordKey(coord)] = modeKind("dora");
-      }
-    }
-
-    if (effectiveActionMode === "kaladinFifth") {
-      for (const coord of kaladinFifthTargetCenters) {
-        highlights[coordKey(coord)] = modeKind("dora");
-      }
-    }
-
-    if (effectiveActionMode === "jebeKhansShooter" && view) {
-      for (const targetId of legalAttackTargets) {
-        const unit = view.units[targetId];
-        if (!unit?.position) continue;
-        highlights[coordKey(unit.position)] = modeKind("attack");
-      }
-    }
-
-    if (
-      effectiveActionMode === "gutsArbalet" ||
-      effectiveActionMode === "gutsCannon"
-    ) {
-      for (const key of gutsRangedTargetKeys) {
-        highlights[key] = modeKind("attack");
-      }
-    }
-
-    if (effectiveActionMode === "asgoreFireball") {
-      for (const key of asgoreFireballTargetKeys) {
-        highlights[key] = modeKind("attack");
-      }
-    }
-
-    if (effectiveActionMode === "hassanTrueEnemy") {
-      for (const key of hassanTrueEnemyCandidateKeys) {
-        highlights[key] = modeKind("attack");
-      }
-    }
-
-    if (effectiveActionMode === "tisona" && view && selectedUnit?.position) {
-      const size = view.boardSize ?? 9;
-      if (tisonaPreviewCoord && !modePreviewKind) {
-        const lineCells = getOrthogonalLineCells(
-          size,
-          selectedUnit.position,
-          tisonaPreviewCoord
-        );
-        for (const coord of lineCells) {
-          highlights[coordKey(coord)] = "attackRange";
-        }
-      }
-      for (const coord of tisonaTargetCells) {
-        highlights[coordKey(coord)] = modeKind("attack");
-      }
-    }
-
-    return highlights;
-  }, [
-    effectiveActionMode,
-    modePreviewKind,
-    legalPlacementCoords,
-    legalMoveCoords,
-    legalAttackTargets,
-    attackPreviewCells,
-    papyrusLongBoneAttackTargetIds,
-    doraTargetCenters,
+  const highlightedCells = useMemo(
+    () =>
+      buildHighlightedCells({
+        effectiveActionMode,
+        modePreviewKind,
+        legalPlacementCoords,
+        legalMoveCoords,
+        legalAttackTargets,
+        attackPreviewCells,
+        papyrusLongBoneAttackTargetIds,
+        doraTargetCenters,
+        view,
+        isStakePlacement,
+        stakeLegalPositions,
+        stakeSelections,
+        isIntimidateChoice,
+        intimidateOptions,
+        isForestTarget,
+        forestTargetCenters,
+        isForestMoveDestination,
+        forestMoveDestinationOptions,
+        isFemtoDivineMoveDestination,
+        femtoDivineMoveOptions,
+        isRiverBoatCarryChoice,
+        riverBoatCarryOptionKeys,
+        isRiverBoatDropDestination,
+        riverBoatDropDestinationOptions,
+        isRiverTraLaLaTargetChoice,
+        riverTraLaLaTargetKeys,
+        isRiverTraLaLaDestinationChoice,
+        riverTraLaLaDestinationOptions,
+        isChikatiloPlacement,
+        chikatiloPlacementCoords,
+        isGuideTravelerPlacement,
+        guideTravelerPlacementCoords,
+        isJebeKhansShooterTargetChoice,
+        jebeKhansShooterTargetKeys,
+        isHassanTrueEnemyTargetChoice,
+        hassanTrueEnemyTargetKeys,
+        isAsgoreSoulParadePatienceTargetChoice,
+        asgorePatienceTargetKeys,
+        isAsgoreSoulParadePerseveranceTargetChoice,
+        asgorePerseveranceTargetKeys,
+        isAsgoreSoulParadeJusticeTargetChoice,
+        asgoreJusticeTargetKeys,
+        isAsgoreSoulParadeIntegrityDestination,
+        asgoreIntegrityDestinationOptions,
+        isHassanAssassinOrderSelection,
+        hassanAssassinOrderEligibleKeys,
+        hassanAssassinOrderSelections,
+        isLokiChickenTargetChoice,
+        lokiChickenTargetKeys,
+        isLokiMindControlEnemyChoice,
+        lokiMindControlEnemyKeys,
+        isLokiMindControlTargetChoice,
+        lokiMindControlTargetKeys,
+        isFriskPacifismHugsTargetChoice,
+        friskPacifismHugsTargetKeys,
+        isFriskWarmWordsTargetChoice,
+        friskWarmWordsTargetKeys,
+        hassanTrueEnemyCandidateKeys,
+        selectedUnit,
+        pendingMoveForSelected,
+        moveOptions,
+        jebeHailTargetCenters,
+        kaladinFifthTargetCenters,
+        tisonaTargetCells,
+        tisonaPreviewCoord,
+        assassinMarkTargetKeys,
+        guideTravelerTargetKeys,
+        invadeTimeTargets,
+        gutsRangedTargetKeys,
+        asgoreFireballTargetKeys,
+      }),
+    [
+      effectiveActionMode,
+      modePreviewKind,
+      legalPlacementCoords,
+      legalMoveCoords,
+      legalAttackTargets,
+      attackPreviewCells,
+      papyrusLongBoneAttackTargetIds,
+      doraTargetCenters,
+      view,
+      isStakePlacement,
+      stakeLegalPositions,
+      stakeSelections,
+      isIntimidateChoice,
+      intimidateOptions,
+      isForestTarget,
+      forestTargetCenters,
+      isForestMoveDestination,
+      forestMoveDestinationOptions,
+      isFemtoDivineMoveDestination,
+      femtoDivineMoveOptions,
+      isRiverBoatCarryChoice,
+      riverBoatCarryOptionKeys,
+      isRiverBoatDropDestination,
+      riverBoatDropDestinationOptions,
+      isRiverTraLaLaTargetChoice,
+      riverTraLaLaTargetKeys,
+      riverTraLaLaTargetIds,
+      isRiverTraLaLaDestinationChoice,
+      riverTraLaLaDestinationOptions,
+      isChikatiloPlacement,
+      chikatiloPlacementCoords,
+      isGuideTravelerPlacement,
+      guideTravelerPlacementCoords,
+      isJebeKhansShooterTargetChoice,
+      jebeKhansShooterTargetKeys,
+      isHassanTrueEnemyTargetChoice,
+      hassanTrueEnemyTargetKeys,
+      isAsgoreSoulParadePatienceTargetChoice,
+      asgorePatienceTargetKeys,
+      isAsgoreSoulParadePerseveranceTargetChoice,
+      asgorePerseveranceTargetKeys,
+      isAsgoreSoulParadeJusticeTargetChoice,
+      asgoreJusticeTargetKeys,
+      isAsgoreSoulParadeIntegrityDestination,
+      asgoreIntegrityDestinationOptions,
+      isHassanAssassinOrderSelection,
+      hassanAssassinOrderEligibleKeys,
+      hassanAssassinOrderSelections,
+      isLokiChickenTargetChoice,
+      lokiChickenTargetKeys,
+      lokiChickenTargetIds,
+      isLokiMindControlEnemyChoice,
+      lokiMindControlEnemyKeys,
+      lokiMindControlEnemyIds,
+      isLokiMindControlTargetChoice,
+      lokiMindControlTargetKeys,
+      lokiMindControlTargetIds,
+      isFriskPacifismHugsTargetChoice,
+      friskPacifismHugsTargetKeys,
+      friskPacifismHugsTargetIds,
+      isFriskWarmWordsTargetChoice,
+      friskWarmWordsTargetKeys,
+      friskWarmWordsTargetIds,
+      hassanTrueEnemyCandidateKeys,
+      selectedUnit,
+      pendingMoveForSelected,
+      moveOptions,
+      jebeHailTargetCenters,
+      kaladinFifthTargetCenters,
+      tisonaTargetCells,
+      tisonaPreviewCoord,
+      assassinMarkTargetKeys,
+      guideTravelerTargetKeys,
+      invadeTimeTargets,
+      gutsRangedTargetKeys,
+      asgoreFireballTargetKeys,
+    ]
+  );
+  const handleCellClick = createCellClickHandler({
     view,
+    playerId,
+    joined,
+    isSpectator,
+    hasBlockingRoll,
+    boardSelectionPending,
     isStakePlacement,
-    stakeLegalPositions,
-    stakeSelections,
+    stakeLegalKeys,
+    stakeLimit,
+    setStakeSelections,
     isIntimidateChoice,
-    intimidateOptions,
+    intimidateKeys,
+    pendingRoll,
     isForestTarget,
-    forestTargetCenters,
+    forestTargetKeys,
     isForestMoveDestination,
-    forestMoveDestinationOptions,
+    forestMoveDestinationKeys,
     isFemtoDivineMoveDestination,
-    femtoDivineMoveOptions,
+    femtoDivineMoveKeys,
     isRiverBoatCarryChoice,
-    riverBoatCarryOptionKeys,
+    riverBoatCarryOptionIds,
     isRiverBoatDropDestination,
-    riverBoatDropDestinationOptions,
+    riverBoatDropDestinationKeys,
     isRiverTraLaLaTargetChoice,
-    riverTraLaLaTargetKeys,
     riverTraLaLaTargetIds,
     isRiverTraLaLaDestinationChoice,
-    riverTraLaLaDestinationOptions,
+    riverTraLaLaDestinationKeys,
     isChikatiloPlacement,
-    chikatiloPlacementCoords,
+    chikatiloPlacementKeys,
     isGuideTravelerPlacement,
-    guideTravelerPlacementCoords,
+    guideTravelerPlacementKeys,
     isJebeKhansShooterTargetChoice,
-    jebeKhansShooterTargetKeys,
+    jebeKhansShooterTargetIds,
     isHassanTrueEnemyTargetChoice,
-    hassanTrueEnemyTargetKeys,
+    hassanTrueEnemyTargetIds,
     isAsgoreSoulParadePatienceTargetChoice,
-    asgorePatienceTargetKeys,
+    asgorePatienceTargetIds,
     isAsgoreSoulParadePerseveranceTargetChoice,
-    asgorePerseveranceTargetKeys,
+    asgorePerseveranceTargetIds,
     isAsgoreSoulParadeJusticeTargetChoice,
-    asgoreJusticeTargetKeys,
+    asgoreJusticeTargetIds,
     isAsgoreSoulParadeIntegrityDestination,
-    asgoreIntegrityDestinationOptions,
-    isHassanAssassinOrderSelection,
-    hassanAssassinOrderEligibleKeys,
-    hassanAssassinOrderSelections,
-    isLokiChickenTargetChoice,
-    lokiChickenTargetKeys,
-    lokiChickenTargetIds,
-    isLokiMindControlEnemyChoice,
-    lokiMindControlEnemyKeys,
-    lokiMindControlEnemyIds,
-    isLokiMindControlTargetChoice,
-    lokiMindControlTargetKeys,
-    lokiMindControlTargetIds,
+    asgoreIntegrityDestinationKeys,
     isFriskPacifismHugsTargetChoice,
-    friskPacifismHugsTargetKeys,
     friskPacifismHugsTargetIds,
     isFriskWarmWordsTargetChoice,
-    friskWarmWordsTargetKeys,
     friskWarmWordsTargetIds,
-    hassanTrueEnemyCandidateKeys,
-    selectedUnit,
-    pendingMoveForSelected,
-    moveOptions,
-    jebeHailTargetCenters,
-    kaladinFifthTargetCenters,
-    tisonaTargetCells,
-    tisonaPreviewCoord,
-    assassinMarkTargetKeys,
-    guideTravelerTargetKeys,
-    invadeTimeTargets,
-    gutsRangedTargetKeys,
-    asgoreFireballTargetKeys,
-  ]);
+    isLokiChickenTargetChoice,
+    lokiChickenTargetIds,
+    isLokiMindControlEnemyChoice,
+    lokiMindControlEnemyIds,
+    isLokiMindControlTargetChoice,
+    lokiMindControlTargetIds,
+    isHassanAssassinOrderSelection,
+    hassanAssassinOrderEligibleIds,
+    setHassanAssassinOrderSelections,
+    actionMode,
+    placeUnitId,
+    legalPlacementCoords,
+    sendGameAction,
+    setActionMode,
+    setPlaceUnitId,
+    selectedUnitId,
+    legalMoveCoords,
+    setMoveOptions,
+    invadeTimeKeys,
+    legalAttackTargets,
+    gutsRangedTargetIds,
+    asgoreFireballTargetIds,
+    hassanTrueEnemyCandidateIds,
+    guideTravelerTargetIds,
+    papyrusLongBoneAttackTargetIds,
+    assassinMarkTargetIds,
+    doraTargetKeys,
+    jebeHailTargetKeys,
+    kaladinFifthTargetKeys,
+    tisonaTargetKeys,
+    papyrusLineAxis,
+    sendAction,
+  });
 
-  const handleCellClick = (col: number, row: number) => {
-    if (
-      !view ||
-      !playerId ||
-      !joined ||
-      isSpectator ||
-      (hasBlockingRoll && !boardSelectionPending)
-    ) {
-      return;
-    }
-    if (view.phase === "lobby") return;
-
-    if (isStakePlacement) {
-      const key = coordKey({ col, row });
-      if (!stakeLegalKeys.has(key)) return;
-      setStakeSelections((prev) => {
-        const exists = prev.some((c) => coordKey(c) === key);
-        if (exists) {
-          return prev.filter((c) => coordKey(c) !== key);
-        }
-        if (prev.length >= stakeLimit) return prev;
-        return [...prev, { col, row }];
-      });
-      return;
-    }
-
-    if (isIntimidateChoice) {
-      const key = coordKey({ col, row });
-      if (!intimidateKeys.has(key) || !pendingRoll) return;
-      sendAction({
-        type: "resolvePendingRoll",
-        pendingRollId: pendingRoll.id,
-        choice: { type: "intimidatePush", to: { col, row } },
-      } as GameAction);
-      return;
-    }
-
-    if (isForestTarget) {
-      const key = coordKey({ col, row });
-      if (!forestTargetKeys.has(key) || !pendingRoll) return;
-      sendAction({
-        type: "resolvePendingRoll",
-        pendingRollId: pendingRoll.id,
-        choice: { type: "forestTarget", center: { col, row } },
-      } as GameAction);
-      return;
-    }
-
-    if (isForestMoveDestination) {
-      const key = coordKey({ col, row });
-      if (!forestMoveDestinationKeys.has(key) || !pendingRoll) return;
-      sendAction({
-        type: "resolvePendingRoll",
-        pendingRollId: pendingRoll.id,
-        choice: { type: "forestMoveDestination", position: { col, row } },
-      } as GameAction);
-      return;
-    }
-
-    if (isFemtoDivineMoveDestination) {
-      const key = coordKey({ col, row });
-      if (!femtoDivineMoveKeys.has(key) || !pendingRoll) return;
-      sendAction({
-        type: "resolvePendingRoll",
-        pendingRollId: pendingRoll.id,
-        choice: { type: "femtoDivineMoveDestination", position: { col, row } },
-      } as GameAction);
-      return;
-    }
-
-    if (isRiverBoatCarryChoice) {
-      const target = getUnitAt(view, col, row);
-      if (!target || !pendingRoll) return;
-      if (!riverBoatCarryOptionIds.includes(target.id)) return;
-      sendAction({
-        type: "resolvePendingRoll",
-        pendingRollId: pendingRoll.id,
-        choice: { type: "hassanTrueEnemyTarget", targetId: target.id },
-      } as GameAction);
-      return;
-    }
-
-    if (isRiverBoatDropDestination) {
-      const key = coordKey({ col, row });
-      if (!riverBoatDropDestinationKeys.has(key) || !pendingRoll) return;
-      sendAction({
-        type: "resolvePendingRoll",
-        pendingRollId: pendingRoll.id,
-        choice: { type: "forestMoveDestination", position: { col, row } },
-      } as GameAction);
-      return;
-    }
-
-    if (isRiverTraLaLaTargetChoice) {
-      const target = getUnitAt(view, col, row);
-      if (!target || !pendingRoll) return;
-      if (!riverTraLaLaTargetIds.includes(target.id)) return;
-      sendAction({
-        type: "resolvePendingRoll",
-        pendingRollId: pendingRoll.id,
-        choice: { type: "hassanTrueEnemyTarget", targetId: target.id },
-      } as GameAction);
-      return;
-    }
-
-    if (isRiverTraLaLaDestinationChoice) {
-      const key = coordKey({ col, row });
-      if (!riverTraLaLaDestinationKeys.has(key) || !pendingRoll) return;
-      sendAction({
-        type: "resolvePendingRoll",
-        pendingRollId: pendingRoll.id,
-        choice: { type: "forestMoveDestination", position: { col, row } },
-      } as GameAction);
-      return;
-    }
-
-    if (isChikatiloPlacement) {
-      const key = coordKey({ col, row });
-      if (!chikatiloPlacementKeys.has(key) || !pendingRoll) return;
-      sendAction({
-        type: "resolvePendingRoll",
-        pendingRollId: pendingRoll.id,
-        choice: { type: "chikatiloPlace", position: { col, row } },
-      } as GameAction);
-      return;
-    }
-
-    if (isGuideTravelerPlacement) {
-      const key = coordKey({ col, row });
-      if (!guideTravelerPlacementKeys.has(key) || !pendingRoll) return;
-      sendAction({
-        type: "resolvePendingRoll",
-        pendingRollId: pendingRoll.id,
-        choice: { type: "lechyGuideTravelerPlace", position: { col, row } },
-      } as GameAction);
-      return;
-    }
-
-    if (isJebeKhansShooterTargetChoice) {
-      const target = getUnitAt(view, col, row);
-      if (!target || !pendingRoll) return;
-      if (!jebeKhansShooterTargetIds.includes(target.id)) return;
-      sendAction({
-        type: "resolvePendingRoll",
-        pendingRollId: pendingRoll.id,
-        choice: { type: "jebeKhansShooterTarget", targetId: target.id },
-      } as GameAction);
-      return;
-    }
-
-    if (isHassanTrueEnemyTargetChoice) {
-      const target = getUnitAt(view, col, row);
-      if (!target || !pendingRoll) return;
-      if (!hassanTrueEnemyTargetIds.includes(target.id)) return;
-      sendAction({
-        type: "resolvePendingRoll",
-        pendingRollId: pendingRoll.id,
-        choice: { type: "hassanTrueEnemyTarget", targetId: target.id },
-      } as GameAction);
-      return;
-    }
-
-    if (isAsgoreSoulParadePatienceTargetChoice) {
-      const target = getUnitAt(view, col, row);
-      if (!target || !pendingRoll) return;
-      if (!asgorePatienceTargetIds.includes(target.id)) return;
-      sendAction({
-        type: "resolvePendingRoll",
-        pendingRollId: pendingRoll.id,
-        choice: { type: "asgoreSoulParadePatienceTarget", targetId: target.id },
-      } as GameAction);
-      return;
-    }
-
-    if (isAsgoreSoulParadePerseveranceTargetChoice) {
-      const target = getUnitAt(view, col, row);
-      if (!target || !pendingRoll) return;
-      if (!asgorePerseveranceTargetIds.includes(target.id)) return;
-      sendAction({
-        type: "resolvePendingRoll",
-        pendingRollId: pendingRoll.id,
-        choice: {
-          type: "asgoreSoulParadePerseveranceTarget",
-          targetId: target.id,
-        },
-      } as GameAction);
-      return;
-    }
-
-    if (isAsgoreSoulParadeJusticeTargetChoice) {
-      const target = getUnitAt(view, col, row);
-      if (!target || !pendingRoll) return;
-      if (!asgoreJusticeTargetIds.includes(target.id)) return;
-      sendAction({
-        type: "resolvePendingRoll",
-        pendingRollId: pendingRoll.id,
-        choice: { type: "asgoreSoulParadeJusticeTarget", targetId: target.id },
-      } as GameAction);
-      return;
-    }
-
-    if (isAsgoreSoulParadeIntegrityDestination) {
-      const key = coordKey({ col, row });
-      if (!asgoreIntegrityDestinationKeys.has(key) || !pendingRoll) return;
-      sendAction({
-        type: "resolvePendingRoll",
-        pendingRollId: pendingRoll.id,
-        choice: {
-          type: "asgoreSoulParadeIntegrityDestination",
-          position: { col, row },
-        },
-      } as GameAction);
-      return;
-    }
-
-    if (isFriskPacifismHugsTargetChoice) {
-      const target = getUnitAt(view, col, row);
-      if (!target || !pendingRoll) return;
-      if (!friskPacifismHugsTargetIds.includes(target.id)) return;
-      sendAction({
-        type: "resolvePendingRoll",
-        pendingRollId: pendingRoll.id,
-        choice: { type: "friskPacifismHugsTarget", targetId: target.id },
-      } as GameAction);
-      return;
-    }
-
-    if (isFriskWarmWordsTargetChoice) {
-      const target = getUnitAt(view, col, row);
-      if (!target || !pendingRoll) return;
-      if (!friskWarmWordsTargetIds.includes(target.id)) return;
-      sendAction({
-        type: "resolvePendingRoll",
-        pendingRollId: pendingRoll.id,
-        choice: { type: "friskWarmWordsTarget", targetId: target.id },
-      } as GameAction);
-      return;
-    }
-
-    if (isLokiChickenTargetChoice) {
-      const target = getUnitAt(view, col, row);
-      if (!target || !pendingRoll) return;
-      if (!lokiChickenTargetIds.includes(target.id)) return;
-      sendAction({
-        type: "resolvePendingRoll",
-        pendingRollId: pendingRoll.id,
-        choice: { type: "lokiChickenTarget", targetId: target.id },
-      } as GameAction);
-      return;
-    }
-
-    if (isLokiMindControlEnemyChoice) {
-      const target = getUnitAt(view, col, row);
-      if (!target || !pendingRoll) return;
-      if (!lokiMindControlEnemyIds.includes(target.id)) return;
-      sendAction({
-        type: "resolvePendingRoll",
-        pendingRollId: pendingRoll.id,
-        choice: { type: "lokiMindControlEnemy", targetId: target.id },
-      } as GameAction);
-      return;
-    }
-
-    if (isLokiMindControlTargetChoice) {
-      const target = getUnitAt(view, col, row);
-      if (!target || !pendingRoll) return;
-      if (!lokiMindControlTargetIds.includes(target.id)) return;
-      sendAction({
-        type: "resolvePendingRoll",
-        pendingRollId: pendingRoll.id,
-        choice: { type: "lokiMindControlTarget", targetId: target.id },
-      } as GameAction);
-      return;
-    }
-
-    if (isHassanAssassinOrderSelection) {
-      const target = getUnitAt(view, col, row);
-      if (!target) return;
-      if (!hassanAssassinOrderEligibleIds.includes(target.id)) return;
-      setHassanAssassinOrderSelections((prev) => {
-        const exists = prev.includes(target.id);
-        if (exists) {
-          return prev.filter((id) => id !== target.id);
-        }
-        if (prev.length >= 2) return prev;
-        return [...prev, target.id];
-      });
-      return;
-    }
-
-    if (actionMode === "place" && placeUnitId) {
-      if (!isCoordInList(legalPlacementCoords, col, row)) return;
-      sendGameAction({
-        type: "placeUnit",
-        unitId: placeUnitId,
-        position: { col, row },
-      });
-      setActionMode(null);
-      setPlaceUnitId(null);
-      return;
-    }
-
-    if (!selectedUnitId) return;
-
-    if (actionMode === "move") {
-      if (!isCoordInList(legalMoveCoords, col, row)) return;
-      sendGameAction({
-        type: "move",
-        unitId: selectedUnitId,
-        to: { col, row },
-      });
-      setActionMode(null);
-      setMoveOptions(null);
-      return;
-    }
-
-    if (actionMode === "invadeTime") {
-      if (!invadeTimeKeys.has(coordKey({ col, row }))) return;
-      sendGameAction({
-        type: "useAbility",
-        unitId: selectedUnitId,
-        abilityId: GROZNY_INVADE_TIME_ID,
-        payload: { to: { col, row } },
-      });
-      setActionMode(null);
-      return;
-    }
-
-    if (actionMode === "odinSleipnir") {
-      if (!invadeTimeKeys.has(coordKey({ col, row }))) return;
-      sendGameAction({
-        type: "useAbility",
-        unitId: selectedUnitId,
-        abilityId: ODIN_SLEIPNIR_ID,
-        payload: { to: { col, row } },
-      });
-      setActionMode(null);
-      return;
-    }
-
-    if (actionMode === "papyrusCoolGuy") {
-      sendGameAction({
-        type: "useAbility",
-        unitId: selectedUnitId,
-        abilityId: PAPYRUS_COOL_GUY_ID,
-        payload: { target: { col, row }, axis: papyrusLineAxis },
-      });
-      setActionMode(null);
-      return;
-    }
-
-    if (actionMode === "jebeKhansShooter") {
-      const target = getUnitAt(view, col, row);
-      if (!target) return;
-      if (!legalAttackTargets.includes(target.id)) return;
-      sendGameAction({
-        type: "useAbility",
-        unitId: selectedUnitId,
-        abilityId: JEBE_KHANS_SHOOTER_ID,
-        payload: { targetId: target.id },
-      });
-      setActionMode(null);
-      return;
-    }
-
-    if (actionMode === "gutsArbalet") {
-      const target = getUnitAt(view, col, row);
-      if (!target) return;
-      if (!gutsRangedTargetIds.includes(target.id)) return;
-      sendGameAction({
-        type: "useAbility",
-        unitId: selectedUnitId,
-        abilityId: GUTS_ARBALET_ID,
-        payload: { targetId: target.id },
-      });
-      setActionMode(null);
-      return;
-    }
-
-    if (actionMode === "gutsCannon") {
-      const target = getUnitAt(view, col, row);
-      if (!target) return;
-      if (!gutsRangedTargetIds.includes(target.id)) return;
-      sendGameAction({
-        type: "useAbility",
-        unitId: selectedUnitId,
-        abilityId: GUTS_CANNON_ID,
-        payload: { targetId: target.id },
-      });
-      setActionMode(null);
-      return;
-    }
-
-    if (actionMode === "asgoreFireball") {
-      const target = getUnitAt(view, col, row);
-      if (!target) return;
-      if (!asgoreFireballTargetIds.includes(target.id)) return;
-      sendGameAction({
-        type: "useAbility",
-        unitId: selectedUnitId,
-        abilityId: ASGORE_FIREBALL_ID,
-        payload: { targetId: target.id },
-      });
-      setActionMode(null);
-      return;
-    }
-
-    if (actionMode === "hassanTrueEnemy") {
-      const target = getUnitAt(view, col, row);
-      if (!target) return;
-      if (!hassanTrueEnemyCandidateIds.includes(target.id)) return;
-      sendGameAction({
-        type: "useAbility",
-        unitId: selectedUnitId,
-        abilityId: HASSAN_TRUE_ENEMY_ID,
-        payload: { forcedAttackerId: target.id },
-      });
-      setActionMode(null);
-      return;
-    }
-
-    if (actionMode === "guideTraveler") {
-      const target = getUnitAt(view, col, row);
-      if (!target) return;
-      if (!guideTravelerTargetIds.includes(target.id)) return;
-      sendGameAction({
-        type: "useAbility",
-        unitId: selectedUnitId,
-        abilityId: LECHY_GUIDE_TRAVELER_ID,
-        payload: { targetId: target.id },
-      });
-      setActionMode("move");
-      return;
-    }
-
-    if (actionMode === "attack") {
-      const target = getUnitAt(view, col, row);
-      if (!target) return;
-      const targetIds =
-        papyrusLongBoneAttackTargetIds.length > 0
-          ? papyrusLongBoneAttackTargetIds
-          : legalAttackTargets;
-      if (!targetIds.includes(target.id)) return;
-      sendGameAction({
-        type: "attack",
-        attackerId: selectedUnitId,
-        defenderId: target.id,
-      });
-      setActionMode(null);
-      return;
-    }
-
-    if (actionMode === "assassinMark") {
-      const target = getUnitAt(view, col, row);
-      if (!target) return;
-      if (!assassinMarkTargetIds.includes(target.id)) return;
-      sendGameAction({
-        type: "useAbility",
-        unitId: selectedUnitId,
-        abilityId: CHIKATILO_ASSASSIN_MARK_ID,
-        payload: { targetId: target.id },
-      });
-      setActionMode(null);
-      return;
-    }
-
-    if (actionMode === "demonDuelist") {
-      const target = getUnitAt(view, col, row);
-      if (!target) return;
-      if (!legalAttackTargets.includes(target.id)) return;
-      sendGameAction({
-        type: "useAbility",
-        unitId: selectedUnitId,
-        abilityId: EL_CID_DEMON_DUELIST_ID,
-        payload: { targetId: target.id },
-      });
-      setActionMode(null);
-      return;
-    }
-
-    if (actionMode === "dora") {
-      if (!doraTargetKeys.has(coordKey({ col, row }))) return;
-      sendGameAction({
-        type: "useAbility",
-        unitId: selectedUnitId,
-        abilityId: KAISER_DORA_ID,
-        payload: { center: { col, row } },
-      });
-      setActionMode(null);
-      return;
-    }
-
-    if (actionMode === "jebeHailOfArrows") {
-      if (!jebeHailTargetKeys.has(coordKey({ col, row }))) return;
-      sendGameAction({
-        type: "useAbility",
-        unitId: selectedUnitId,
-        abilityId: JEBE_HAIL_OF_ARROWS_ID,
-        payload: { center: { col, row } },
-      });
-      setActionMode(null);
-      return;
-    }
-
-    if (actionMode === "kaladinFifth") {
-      if (!kaladinFifthTargetKeys.has(coordKey({ col, row }))) return;
-      sendGameAction({
-        type: "useAbility",
-        unitId: selectedUnitId,
-        abilityId: KALADIN_FIFTH_ID,
-        payload: { center: { col, row } },
-      });
-      setActionMode(null);
-      return;
-    }
-
-    if (actionMode === "tisona") {
-      if (!tisonaTargetKeys.has(coordKey({ col, row }))) return;
-      sendGameAction({
-        type: "useAbility",
-        unitId: selectedUnitId,
-        abilityId: EL_CID_TISONA_ID,
-        payload: { target: { col, row } },
-      });
-      setActionMode(null);
-      return;
-    }
-  };
-
-  const handleCellHover = (coord: Coord | null) => {
-    if (actionMode === "dora") {
-      if (!coord) {
-        setDoraPreviewCenter(null);
-        return;
-      }
-      const key = coordKey(coord);
-      setDoraPreviewCenter(doraTargetKeys.has(key) ? coord : null);
-      return;
-    }
-
-    if (actionMode === "jebeHailOfArrows") {
-      if (!coord) {
-        setJebeHailPreviewCenter(null);
-        return;
-      }
-      const key = coordKey(coord);
-      setJebeHailPreviewCenter(jebeHailTargetKeys.has(key) ? coord : null);
-      return;
-    }
-
-    if (actionMode === "kaladinFifth") {
-      if (!coord) {
-        setKaladinFifthPreviewCenter(null);
-        return;
-      }
-      const key = coordKey(coord);
-      setKaladinFifthPreviewCenter(kaladinFifthTargetKeys.has(key) ? coord : null);
-      return;
-    }
-
-    if (actionMode === "tisona") {
-      if (!coord) {
-        setTisonaPreviewCoord(null);
-        return;
-      }
-      const key = coordKey(coord);
-      setTisonaPreviewCoord(tisonaTargetKeys.has(key) ? coord : null);
-      return;
-    }
-
-    if (isForestTarget) {
-      if (!coord) {
-        setForestPreviewCenter(null);
-        return;
-      }
-      const key = coordKey(coord);
-      setForestPreviewCenter(forestTargetKeys.has(key) ? coord : null);
-    }
-  };
-
+  const handleCellHover = createCellHoverHandler({
+    actionMode,
+    isForestTarget,
+    doraTargetKeys,
+    jebeHailTargetKeys,
+    kaladinFifthTargetKeys,
+    tisonaTargetKeys,
+    forestTargetKeys,
+    setDoraPreviewCenter,
+    setJebeHailPreviewCenter,
+    setKaladinFifthPreviewCenter,
+    setTisonaPreviewCoord,
+    setForestPreviewCenter,
+  });
   const boardPreviewCenter =
     actionMode === "dora"
       ? doraPreviewCenter
@@ -2775,24 +1574,14 @@ export function Game() {
 
   if (!view || !hasSnapshot) {
     return (
-      <div className="min-h-screen bg-app p-6">
-        <div className="mx-auto max-w-xl rounded-2xl border-ui bg-surface p-6 shadow-sm shadow-slate-900/5 dark:shadow-black/40">
-          <h1 className="text-xl font-semibold text-primary">FATE</h1>
-          <p className="mt-2 text-sm text-muted">
-            Waiting for room state...
-          </p>
-          <div className="mt-4 text-xs text-muted">
-            Connected: {connectionStatus === "connected" ? "yes" : "no"} | Status: {connectionStatus} | Joined: {joined ? "yes" : "no"} | Room: {roomId ?? "-"} | Role: {role ?? "-"}
-          </div>
-          <button
-            className="mt-4 rounded-lg bg-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
-            onClick={handleLeave}
-            disabled={leavingRoom}
-          >
-            {leavingRoom ? "Leaving..." : "Leave"}
-          </button>
-        </div>
-      </div>
+      <GameLoadingState
+        connectionStatus={connectionStatus}
+        joined={joined}
+        roomId={roomId}
+        role={role}
+        leavingRoom={leavingRoom}
+        onLeave={handleLeave}
+      />
     );
   }
 
@@ -2846,285 +1635,73 @@ export function Game() {
             </div>
           )}
           {pendingRoll && (
-            <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-800/60 dark:bg-amber-950/40 dark:text-amber-200">
-              {isStakePlacement ? (
-                <div>
-                  <div className="font-semibold">Place 3 stakes</div>
-                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
-                    Selected: {stakeSelections.length}/{stakeLimit}
-                  </div>
-                  {stakeSelections.length > 0 && (
-                    <div className="mt-1 text-[10px] text-amber-700 dark:text-amber-200">
-                      {stakeSelections.map((pos) => `(${pos.col},${pos.row})`).join(", ")}
-                    </div>
-                  )}
-                  <div className="mt-2 flex gap-2">
-                    <button
-                      className="rounded-lg bg-emerald-600 px-3 py-1 text-[10px] font-semibold text-white shadow-sm transition hover:shadow dark:bg-emerald-800/50 dark:text-slate-100 dark:hover:bg-emerald-700/60"
-                      onClick={() =>
-                        pendingRoll &&
-                        sendAction({
-                          type: "resolvePendingRoll",
-                          pendingRollId: pendingRoll.id,
-                          choice: { type: "placeStakes", positions: stakeSelections },
-                        } as GameAction)
-                      }
-                      disabled={stakeSelections.length !== stakeLimit}
-                    >
-                      Place stakes
-                    </button>
-                    <button
-                      className="rounded-lg bg-slate-200 px-3 py-1 text-[10px] font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
-                      onClick={() => setStakeSelections([])}
-                    >
-                      Clear
-                    </button>
-                  </div>
-                </div>
-              ) : isIntimidateChoice ? (
-                <div>
-                  <div className="font-semibold">Intimidate: choose a push cell</div>
-                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
-                    Click a highlighted cell or skip.
-                  </div>
-                  <button
-                    className="mt-2 rounded-lg bg-slate-200 px-3 py-1 text-[10px] font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
-                    onClick={() =>
-                      pendingRoll &&
-                      sendAction({
-                        type: "resolvePendingRoll",
-                        pendingRollId: pendingRoll.id,
-                        choice: "skip",
-                      } as GameAction)
-                    }
-                  >
-                    Skip
-                  </button>
-                </div>
-              ) : isForestTarget ? (
-                <div>
-                  <div className="font-semibold">Forest of the Dead</div>
-                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
-                    Select the 3x3 center cell.
-                  </div>
-                </div>
-              ) : isForestMoveDestination ? (
-                <div>
-                  <div className="font-semibold">Forest check failed</div>
-                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
-                    Choose a highlighted destination inside the aura.
-                  </div>
-                </div>
-              ) : isForestChoice ? (
-                <div>
-                  <div className="font-semibold">Forest of the Dead ready</div>
-                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
-                    Decide whether to activate the phantasm.
-                  </div>
-                </div>
-              ) : isForestMoveCheck ? (
-                <div>
-                  <div className="font-semibold">Forest check</div>
-                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
-                    Forest check: roll 5-6 to leave
-                  </div>
-                </div>
-              ) : isDuelistChoice ? (
-                <div>
-                  <div className="font-semibold">Demon Duelist</div>
-                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
-                    Choose whether to continue the duel.
-                  </div>
-                </div>
-              ) : isChikatiloPlacement ? (
-                <div>
-                  <div className="font-semibold">False Trail placement</div>
-                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
-                    Select any empty cell to place Chikatilo.
-                  </div>
-                </div>
-              ) : isGuideTravelerPlacement ? (
-                <div>
-                  <div className="font-semibold">Guide Traveler placement</div>
-                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
-                    Select an empty cell to place the guided ally.
-                  </div>
-                </div>
-              ) : isRiverBoatCarryChoice ? (
-                <div>
-                  <div className="font-semibold">Boat carry</div>
-                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
-                    Select an adjacent ally to carry, or move without carrying.
-                  </div>
-                  <button
-                    className="mt-2 rounded-lg bg-slate-200 px-3 py-1 text-[10px] font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
-                    onClick={() =>
-                      pendingRoll &&
-                      sendAction({
-                        type: "resolvePendingRoll",
-                        pendingRollId: pendingRoll.id,
-                        choice: "skip",
-                      } as GameAction)
-                    }
-                  >
-                    Move without carrying
-                  </button>
-                </div>
-              ) : isRiverBoatDropDestination ? (
-                <div>
-                  <div className="font-semibold">Boat drop</div>
-                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
-                    Select an adjacent empty cell to drop the carried ally.
-                  </div>
-                </div>
-              ) : isRiverTraLaLaTargetChoice ? (
-                <div>
-                  <div className="font-semibold">Tra-la-la</div>
-                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
-                    Select an adjacent enemy target.
-                  </div>
-                </div>
-              ) : isRiverTraLaLaDestinationChoice ? (
-                <div>
-                  <div className="font-semibold">Tra-la-la</div>
-                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
-                    Select a highlighted straight-line destination.
-                  </div>
-                </div>
-              ) : isJebeKhansShooterTargetChoice ? (
-                <div>
-                  <div className="font-semibold">Khan's Shooter</div>
-                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
-                    Select the next ricochet target.
-                  </div>
-                </div>
-              ) : isLokiLaughtChoice ? (
-                <div>
-                  <div className="font-semibold">Loki's Laughter</div>
-                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
-                    Choose one trick to activate without revealing Loki.
-                  </div>
-                </div>
-              ) : isLokiChickenTargetChoice ? (
-                <div>
-                  <div className="font-semibold">Chicken</div>
-                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
-                    Select an enemy hero within 2 cells.
-                  </div>
-                </div>
-              ) : isLokiMindControlEnemyChoice ? (
-                <div>
-                  <div className="font-semibold">Mind Control</div>
-                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
-                    Select the enemy hero to control.
-                  </div>
-                </div>
-              ) : isLokiMindControlTargetChoice ? (
-                <div>
-                  <div className="font-semibold">Mind Control</div>
-                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
-                    Select a legal target for the controlled attack.
-                  </div>
-                </div>
-              ) : isHassanTrueEnemyTargetChoice ? (
-                <div>
-                  <div className="font-semibold">True Enemy</div>
-                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
-                    Select a target for the forced enemy attack.
-                  </div>
-                </div>
-              ) : isAsgoreSoulParadePatienceTargetChoice ? (
-                <div>
-                  <div className="font-semibold">Soul Parade: Patience</div>
-                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
-                    Select a target in assassin attack range.
-                  </div>
-                </div>
-              ) : isAsgoreSoulParadePerseveranceTargetChoice ? (
-                <div>
-                  <div className="font-semibold">Soul Parade: Perseverance</div>
-                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
-                    Select a target in trickster attack range.
-                  </div>
-                </div>
-              ) : isAsgoreSoulParadeJusticeTargetChoice ? (
-                <div>
-                  <div className="font-semibold">Soul Parade: Justice</div>
-                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
-                    Select a target in archer attack line.
-                  </div>
-                </div>
-              ) : isAsgoreSoulParadeIntegrityDestination ? (
-                <div>
-                  <div className="font-semibold">Soul Parade: Integrity</div>
-                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
-                    Select any highlighted destination cell.
-                  </div>
-                </div>
-              ) : isHassanAssassinOrderSelection ? (
-                <div>
-                  <div className="font-semibold">
-                    Assassin Order: pick 2 allied heroes to gain Stealth (5-6)
-                  </div>
-                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
-                    Selected: {hassanAssassinOrderSelections.length}/2
-                  </div>
-                  {hassanAssassinOrderSelections.length > 0 && (
-                    <div className="mt-1 text-[10px] text-amber-700 dark:text-amber-200">
-                      {hassanAssassinOrderSelections.join(", ")}
-                    </div>
-                  )}
-                  <div className="mt-2 flex gap-2">
-                    <button
-                      className="rounded-lg bg-emerald-600 px-3 py-1 text-[10px] font-semibold text-white shadow-sm transition hover:shadow dark:bg-emerald-800/50 dark:text-slate-100 dark:hover:bg-emerald-700/60"
-                      onClick={() =>
-                        pendingRoll &&
-                        sendAction({
-                          type: "resolvePendingRoll",
-                          pendingRollId: pendingRoll.id,
-                          choice: {
-                            type: "hassanAssassinOrderPick",
-                            unitIds: hassanAssassinOrderSelections,
-                          },
-                        } as GameAction)
-                      }
-                      disabled={hassanAssassinOrderSelections.length !== 2}
-                    >
-                      Confirm
-                    </button>
-                    <button
-                      className="rounded-lg bg-slate-200 px-3 py-1 text-[10px] font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
-                      onClick={() => setHassanAssassinOrderSelections([])}
-                    >
-                      Clear
-                    </button>
-                  </div>
-                </div>
-              ) : isChikatiloRevealChoice ? (
-                <div>
-                  <div className="font-semibold">False Trail choice</div>
-                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
-                    Decide whether the token explodes or is removed.
-                  </div>
-                </div>
-              ) : isChikatiloDecoyChoice ? (
-                <div>
-                  <div className="font-semibold">Decoy</div>
-                  <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
-                    Roll defense or spend 3 charges to take 1 damage.
-                  </div>
-                </div>
-              ) : (
-                <div>
-                  Pending roll: {getPendingRollLabel(pendingRoll.kind)}. Resolve to continue.
-                </div>
-              )}
-              {!isStakePlacement && pendingQueueCount > 0 && (
-                <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
-                  Pending attacks: {pendingQueueCount}
-                </div>
-              )}
-            </div>
+            <PendingBoardNotice
+              pendingRollKind={pendingRoll.kind}
+              pendingQueueCount={pendingQueueCount}
+              stakeSelections={stakeSelections}
+              stakeLimit={stakeLimit}
+              hassanAssassinOrderSelections={hassanAssassinOrderSelections}
+              isStakePlacement={isStakePlacement}
+              isIntimidateChoice={isIntimidateChoice}
+              isForestTarget={isForestTarget}
+              isForestMoveDestination={isForestMoveDestination}
+              isForestChoice={isForestChoice}
+              isForestMoveCheck={isForestMoveCheck}
+              isDuelistChoice={isDuelistChoice}
+              isChikatiloPlacement={isChikatiloPlacement}
+              isGuideTravelerPlacement={isGuideTravelerPlacement}
+              isRiverBoatCarryChoice={isRiverBoatCarryChoice}
+              isRiverBoatDropDestination={isRiverBoatDropDestination}
+              isRiverTraLaLaTargetChoice={isRiverTraLaLaTargetChoice}
+              isRiverTraLaLaDestinationChoice={isRiverTraLaLaDestinationChoice}
+              isJebeKhansShooterTargetChoice={isJebeKhansShooterTargetChoice}
+              isLokiLaughtChoice={isLokiLaughtChoice}
+              isLokiChickenTargetChoice={isLokiChickenTargetChoice}
+              isLokiMindControlEnemyChoice={isLokiMindControlEnemyChoice}
+              isLokiMindControlTargetChoice={isLokiMindControlTargetChoice}
+              isHassanTrueEnemyTargetChoice={isHassanTrueEnemyTargetChoice}
+              isAsgoreSoulParadePatienceTargetChoice={
+                isAsgoreSoulParadePatienceTargetChoice
+              }
+              isAsgoreSoulParadePerseveranceTargetChoice={
+                isAsgoreSoulParadePerseveranceTargetChoice
+              }
+              isAsgoreSoulParadeJusticeTargetChoice={
+                isAsgoreSoulParadeJusticeTargetChoice
+              }
+              isAsgoreSoulParadeIntegrityDestination={
+                isAsgoreSoulParadeIntegrityDestination
+              }
+              isHassanAssassinOrderSelection={isHassanAssassinOrderSelection}
+              isChikatiloRevealChoice={isChikatiloRevealChoice}
+              isChikatiloDecoyChoice={isChikatiloDecoyChoice}
+              onResolveSkip={() => {
+                sendAction({
+                  type: "resolvePendingRoll",
+                  pendingRollId: pendingRoll.id,
+                  choice: "skip",
+                } as GameAction);
+              }}
+              onConfirmStakePlacement={() => {
+                sendAction({
+                  type: "resolvePendingRoll",
+                  pendingRollId: pendingRoll.id,
+                  choice: { type: "placeStakes", positions: stakeSelections },
+                } as GameAction);
+              }}
+              onClearStakeSelections={() => setStakeSelections([])}
+              onConfirmHassanAssassinOrder={() => {
+                sendAction({
+                  type: "resolvePendingRoll",
+                  pendingRollId: pendingRoll.id,
+                  choice: {
+                    type: "hassanAssassinOrderPick",
+                    unitIds: hassanAssassinOrderSelections,
+                  },
+                } as GameAction);
+              }}
+              onClearHassanAssassinOrder={() => setHassanAssassinOrderSelections([])}
+            />
           )}
         </div>
 
@@ -3231,704 +1808,66 @@ export function Game() {
         </div>
       </div>
       {pendingRoll && playerId && !boardSelectionPending && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 dark:bg-slate-950/70">
-          <div className="w-full max-w-sm rounded-2xl border-ui bg-surface-solid p-5 shadow-lg shadow-slate-900/10 dark:shadow-black/40">
-            <div className="text-sm font-semibold text-slate-800 dark:text-slate-100">
-              {pendingRoll.kind === "initiativeRoll"
-                ? "Roll initiative"
-                : isForestMoveCheck
-                ? "Forest check"
-                : isForestChoice
-                ? "Forest of the Dead"
-                : isDuelistChoice
-                ? "Demon Duelist"
-                : pendingRoll.kind === "asgoreSoulParadeRoll"
-                ? "Soul Parade"
-                : isAsgoreBraveryDefenseChoice
-                ? "Bravery Auto Defense"
-                : isLokiLaughtChoice
-                ? "Loki's Laughter"
-                : isFriskPacifismChoice
-                ? "Frisk: Pacifism"
-                : isFriskGenocideChoice
-                ? "Frisk: Genocide"
-                : isFriskKeenEyeChoice
-                ? "Frisk: Keen Eye"
-                : isFriskSubstitutionChoice
-                ? "Frisk: Substitution"
-                : isFriskChildsCryChoice
-                ? "Frisk: Child's Cry"
-                : isOdinMuninnDefenseChoice
-                ? "Muninn Auto Defense"
-                : isChikatiloRevealChoice
-                ? "False Trail"
-                : isChikatiloDecoyChoice
-                ? "Decoy"
-                : "Roll required"}
-            </div>
-            <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-              {isBerserkerDefenseChoice
-                ? "Choose berserker defense."
-                : isLokiLaughtChoice
-                ? "Pick one Loki trick. Costs Laughter and does not reveal stealth."
-                : isFriskPacifismChoice
-                ? "Pick a Pacifism option. Pacifism abilities do not reveal Frisk stealth."
-                : isFriskGenocideChoice
-                ? "Pick a Genocide option."
-                : isFriskKeenEyeChoice
-                ? "Pick an enemy to reveal with Keen Eye, or attempt normal stealth."
-                : isFriskSubstitutionChoice
-                ? "Use Substitution before defense roll to take exactly 1 damage."
-                : isFriskChildsCryChoice
-                ? "Use Child's Cry after the roll to reduce this hit's damage to 0."
-                : isOdinMuninnDefenseChoice
-                ? "Defense roll is ready. Keep the roll or spend 6 charges for Muninn auto-defense."
-                : isAsgoreBraveryDefenseChoice
-                ? "Defense roll is ready. Keep the roll or consume Bravery for automatic defense."
-                : isChikatiloDecoyChoice
-                ? "Roll defense or spend 3 charges to take 1 damage."
-                : isChikatiloRevealChoice
-                ? "Explode the token or remove it."
-                : pendingRoll.kind === "asgoreSoulParadeRoll"
-                ? "Roll 1d6 to determine Soul Parade effect."
-                : isForestMoveCheck
-                ? "Forest check: roll 5-6 to leave"
-                : isForestChoice
-                ? "Activate Forest of the Dead or skip."
-                : isDuelistChoice
-                ? "Pay 1 HP to continue the duel, or stop."
-                : `Please roll the dice to resolve: ${getPendingRollLabel(
-                    pendingRoll.kind
-                  )}.`}
-            </div>
-            {pendingRoll.kind === "initiativeRoll" && (
-              <div className="mt-3 rounded-lg bg-slate-50 p-2 text-[11px] text-slate-600 dark:bg-slate-800/60 dark:text-slate-200">
-                {pendingRoll.player === "P2" && view.initiative.P1 !== null && (
-                  <div>P1 rolled: {view.initiative.P1}</div>
-                )}
-                {pendingRoll.player === "P1" && view.initiative.P2 !== null && (
-                  <div>P2 rolled: {view.initiative.P2}</div>
-                )}
-                {pendingRoll.player === "P1" &&
-                  view.initiative.P2 === null &&
-                  view.initiative.P1 === null && <div>Awaiting your roll.</div>}
-              </div>
-            )}
-            {showAttackerRoll && attackerDice.length > 0 && (
-              <div className="mt-3 rounded-lg bg-slate-50 p-2 text-[11px] text-slate-600 dark:bg-slate-800/60 dark:text-slate-200">
-                <div>Attacker roll: [{attackerDice.join(", ")}]</div>
-                {tieBreakAttacker.length > 0 && (
-                  <div className="mt-1">
-                    Tie-break: [{tieBreakAttacker.join(", ")}]
-                  </div>
-                )}
-              </div>
-            )}
-            <div className="mt-4 flex gap-2">
-              {isLokiLaughtChoice ? (
-                <div className="grid w-full grid-cols-1 gap-2">
-                  <div className="text-[11px] text-slate-500 dark:text-slate-300">
-                    Laughter: {lokiLaughtCurrent}/15
-                  </div>
-                  <button
-                    className="w-full rounded-lg bg-slate-900 px-3 py-2 text-left text-xs font-semibold text-white shadow-sm transition hover:shadow disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 dark:bg-slate-100 dark:text-slate-900 dark:disabled:bg-slate-700 dark:disabled:text-slate-400"
-                    onClick={() =>
-                      sendAction({
-                        type: "resolvePendingRoll",
-                        pendingRollId: pendingRoll.id,
-                        choice: {
-                          type: "lokiLaughtOption",
-                          option: "againSomeNonsense",
-                        },
-                      } as GameAction)
-                    }
-                    disabled={!lokiCanAgainSomeNonsense}
-                    title={lokiCanAgainSomeNonsense ? "" : "Not Enough laughter"}
-                  >
-                    Again some nonsense (-3)
-                    {!lokiCanAgainSomeNonsense ? " - Not Enough laughter" : ""}
-                  </button>
-                  <button
-                    className="w-full rounded-lg bg-slate-900 px-3 py-2 text-left text-xs font-semibold text-white shadow-sm transition hover:shadow disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 dark:bg-slate-100 dark:text-slate-900 dark:disabled:bg-slate-700 dark:disabled:text-slate-400"
-                    onClick={() =>
-                      sendAction({
-                        type: "resolvePendingRoll",
-                        pendingRollId: pendingRoll.id,
-                        choice: { type: "lokiLaughtOption", option: "chicken" },
-                      } as GameAction)
-                    }
-                    disabled={!lokiCanChicken}
-                    title={
-                      lokiLaughtCurrent < 5
-                        ? "Not Enough laughter"
-                        : lokiLaughtChickenOptions.length === 0
-                        ? "No valid targets"
-                        : ""
-                    }
-                  >
-                    Chicken (-5)
-                    {lokiLaughtCurrent < 5
-                      ? " - Not Enough laughter"
-                      : lokiLaughtChickenOptions.length === 0
-                      ? " - No valid targets"
-                      : ""}
-                  </button>
-                  <button
-                    className="w-full rounded-lg bg-slate-900 px-3 py-2 text-left text-xs font-semibold text-white shadow-sm transition hover:shadow disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 dark:bg-slate-100 dark:text-slate-900 dark:disabled:bg-slate-700 dark:disabled:text-slate-400"
-                    onClick={() =>
-                      sendAction({
-                        type: "resolvePendingRoll",
-                        pendingRollId: pendingRoll.id,
-                        choice: {
-                          type: "lokiLaughtOption",
-                          option: "mindControl",
-                        },
-                      } as GameAction)
-                    }
-                    disabled={!lokiCanMindControl}
-                    title={
-                      lokiLaughtCurrent < 10
-                        ? "Not Enough laughter"
-                        : lokiLaughtMindControlEnemyOptions.length === 0
-                        ? "No valid targets"
-                        : ""
-                    }
-                  >
-                    Mind Control (-10)
-                    {lokiLaughtCurrent < 10
-                      ? " - Not Enough laughter"
-                      : lokiLaughtMindControlEnemyOptions.length === 0
-                      ? " - No valid targets"
-                      : ""}
-                  </button>
-                  <button
-                    className="w-full rounded-lg bg-slate-900 px-3 py-2 text-left text-xs font-semibold text-white shadow-sm transition hover:shadow disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 dark:bg-slate-100 dark:text-slate-900 dark:disabled:bg-slate-700 dark:disabled:text-slate-400"
-                    onClick={() =>
-                      sendAction({
-                        type: "resolvePendingRoll",
-                        pendingRollId: pendingRoll.id,
-                        choice: {
-                          type: "lokiLaughtOption",
-                          option: "spinTheDrum",
-                        },
-                      } as GameAction)
-                    }
-                    disabled={!lokiCanSpinTheDrum}
-                    title={lokiCanSpinTheDrum ? "" : "Not Enough laughter"}
-                  >
-                    Spin the drum (-12)
-                    {!lokiCanSpinTheDrum ? " - Not Enough laughter" : ""}
-                    {lokiCanSpinTheDrum && lokiLaughtSpinCandidateIds.length === 0
-                      ? " - No allied heroes to spin"
-                      : ""}
-                  </button>
-                  <button
-                    className="w-full rounded-lg bg-slate-900 px-3 py-2 text-left text-xs font-semibold text-white shadow-sm transition hover:shadow disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 dark:bg-slate-100 dark:text-slate-900 dark:disabled:bg-slate-700 dark:disabled:text-slate-400"
-                    onClick={() =>
-                      sendAction({
-                        type: "resolvePendingRoll",
-                        pendingRollId: pendingRoll.id,
-                        choice: {
-                          type: "lokiLaughtOption",
-                          option: "greatLokiJoke",
-                        },
-                      } as GameAction)
-                    }
-                    disabled={!lokiCanGreatLokiJoke}
-                    title={lokiCanGreatLokiJoke ? "" : "Not Enough laughter"}
-                  >
-                    Great Loki joke (-15)
-                    {!lokiCanGreatLokiJoke ? " - Not Enough laughter" : ""}
-                  </button>
-                  <button
-                    className="w-full rounded-lg bg-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
-                    onClick={() =>
-                      sendAction({
-                        type: "resolvePendingRoll",
-                        pendingRollId: pendingRoll.id,
-                        choice: "skip",
-                      } as GameAction)
-                    }
-                  >
-                    Cancel
-                  </button>
-                </div>
-              ) : isFriskPacifismChoice ? (
-                <div className="grid w-full grid-cols-1 gap-2">
-                  <div className="text-[11px] text-slate-500 dark:text-slate-300">
-                    Pacifism: {friskPacifismPoints}/30
-                  </div>
-                  {friskPacifismDisabled && (
-                    <div className="text-[11px] text-amber-700 dark:text-amber-300">
-                      Pacifism lost (One Path)
-                    </div>
-                  )}
-                  <button
-                    className="w-full rounded-lg bg-slate-900 px-3 py-2 text-left text-xs font-semibold text-white shadow-sm transition hover:shadow disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 dark:bg-slate-100 dark:text-slate-900 dark:disabled:bg-slate-700 dark:disabled:text-slate-400"
-                    onClick={() =>
-                      sendAction({
-                        type: "resolvePendingRoll",
-                        pendingRollId: pendingRoll.id,
-                        choice: { type: "friskPacifismOption", option: "hugs" },
-                      } as GameAction)
-                    }
-                    disabled={
-                      friskPacifismDisabled ||
-                      friskPacifismPoints < 3 ||
-                      friskPacifismHugsOptions.length === 0
-                    }
-                  >
-                    Hugs (-3)
-                    {friskPacifismPoints < 3
-                      ? " - Not Enough charges"
-                      : friskPacifismHugsOptions.length === 0
-                      ? " - No valid targets"
-                      : ""}
-                  </button>
-                  <button
-                    className="w-full rounded-lg bg-slate-900 px-3 py-2 text-left text-xs font-semibold text-white shadow-sm transition hover:shadow disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 dark:bg-slate-100 dark:text-slate-900 dark:disabled:bg-slate-700 dark:disabled:text-slate-400"
-                    onClick={() =>
-                      sendAction({
-                        type: "resolvePendingRoll",
-                        pendingRollId: pendingRoll.id,
-                        choice: {
-                          type: "friskPacifismOption",
-                          option: "childsCry",
-                        },
-                      } as GameAction)
-                    }
-                    disabled={friskPacifismDisabled || friskPacifismPoints < 5}
-                  >
-                    Child&apos;s Cry (-5)
-                    {friskPacifismPoints < 5 ? " - Not Enough charges" : ""}
-                  </button>
-                  <button
-                    className="w-full rounded-lg bg-slate-900 px-3 py-2 text-left text-xs font-semibold text-white shadow-sm transition hover:shadow disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 dark:bg-slate-100 dark:text-slate-900 dark:disabled:bg-slate-700 dark:disabled:text-slate-400"
-                    onClick={() =>
-                      sendAction({
-                        type: "resolvePendingRoll",
-                        pendingRollId: pendingRoll.id,
-                        choice: {
-                          type: "friskPacifismOption",
-                          option: "warmWords",
-                        },
-                      } as GameAction)
-                    }
-                    disabled={
-                      friskPacifismDisabled ||
-                      friskPacifismPoints < 10 ||
-                      friskPacifismWarmWordsOptions.length === 0
-                    }
-                  >
-                    Warm Words (-10)
-                    {friskPacifismPoints < 10
-                      ? " - Not Enough charges"
-                      : friskPacifismWarmWordsOptions.length === 0
-                      ? " - No valid targets"
-                      : ""}
-                  </button>
-                  <button
-                    className="w-full rounded-lg bg-slate-900 px-3 py-2 text-left text-xs font-semibold text-white shadow-sm transition hover:shadow disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 dark:bg-slate-100 dark:text-slate-900 dark:disabled:bg-slate-700 dark:disabled:text-slate-400"
-                    onClick={() =>
-                      sendAction({
-                        type: "resolvePendingRoll",
-                        pendingRollId: pendingRoll.id,
-                        choice: {
-                          type: "friskPacifismOption",
-                          option: "powerOfFriendship",
-                        },
-                      } as GameAction)
-                    }
-                    disabled={
-                      friskPacifismDisabled ||
-                      !friskPacifismPowerOfFriendshipEnabled
-                    }
-                  >
-                    Power of Friendship
-                    {!friskPacifismPowerOfFriendshipEnabled
-                      ? " - Condition not met"
-                      : ""}
-                  </button>
-                  <button
-                    className="w-full rounded-lg bg-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
-                    onClick={() =>
-                      sendAction({
-                        type: "resolvePendingRoll",
-                        pendingRollId: pendingRoll.id,
-                        choice: "skip",
-                      } as GameAction)
-                    }
-                  >
-                    Cancel
-                  </button>
-                </div>
-              ) : isFriskGenocideChoice ? (
-                <div className="grid w-full grid-cols-1 gap-2">
-                  <div className="text-[11px] text-slate-500 dark:text-slate-300">
-                    Genocide: {friskGenocidePoints}/30
-                  </div>
-                  <button
-                    className="w-full rounded-lg bg-slate-900 px-3 py-2 text-left text-xs font-semibold text-white shadow-sm transition hover:shadow disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 dark:bg-slate-100 dark:text-slate-900 dark:disabled:bg-slate-700 dark:disabled:text-slate-400"
-                    onClick={() =>
-                      sendAction({
-                        type: "resolvePendingRoll",
-                        pendingRollId: pendingRoll.id,
-                        choice: {
-                          type: "friskGenocideOption",
-                          option: "substitution",
-                        },
-                      } as GameAction)
-                    }
-                    disabled={friskGenocidePoints < 3}
-                  >
-                    Substitution (-3)
-                    {friskGenocidePoints < 3 ? " - Not Enough charges" : ""}
-                  </button>
-                  <button
-                    className="w-full rounded-lg bg-slate-900 px-3 py-2 text-left text-xs font-semibold text-white shadow-sm transition hover:shadow disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 dark:bg-slate-100 dark:text-slate-900 dark:disabled:bg-slate-700 dark:disabled:text-slate-400"
-                    onClick={() =>
-                      sendAction({
-                        type: "resolvePendingRoll",
-                        pendingRollId: pendingRoll.id,
-                        choice: { type: "friskGenocideOption", option: "keenEye" },
-                      } as GameAction)
-                    }
-                    disabled={friskGenocidePoints < 5}
-                  >
-                    Keen Eye (-5)
-                    {friskGenocidePoints < 5 ? " - Not Enough charges" : ""}
-                  </button>
-                  <button
-                    className="w-full rounded-lg bg-slate-900 px-3 py-2 text-left text-xs font-semibold text-white shadow-sm transition hover:shadow disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 dark:bg-slate-100 dark:text-slate-900 dark:disabled:bg-slate-700 dark:disabled:text-slate-400"
-                    onClick={() =>
-                      sendAction({
-                        type: "resolvePendingRoll",
-                        pendingRollId: pendingRoll.id,
-                        choice: {
-                          type: "friskGenocideOption",
-                          option: "precisionStrike",
-                        },
-                      } as GameAction)
-                    }
-                    disabled={friskGenocidePoints < 10}
-                  >
-                    Precision Strike (-10)
-                    {friskGenocidePoints < 10 ? " - Not Enough charges" : ""}
-                  </button>
-                  <button
-                    className="w-full rounded-lg bg-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
-                    onClick={() =>
-                      sendAction({
-                        type: "resolvePendingRoll",
-                        pendingRollId: pendingRoll.id,
-                        choice: "skip",
-                      } as GameAction)
-                    }
-                  >
-                    Cancel
-                  </button>
-                </div>
-              ) : isFriskKeenEyeChoice ? (
-                <div className="grid w-full grid-cols-1 gap-2">
-                  {friskKeenEyeTargetIds.length === 0 && (
-                    <div className="text-[11px] text-slate-500 dark:text-slate-300">
-                      No valid Keen Eye targets.
-                    </div>
-                  )}
-                  {friskKeenEyeTargetIds.map((unitId) => (
-                    <button
-                      key={unitId}
-                      className="w-full rounded-lg bg-slate-900 px-3 py-2 text-left text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-slate-100 dark:text-slate-900"
-                      onClick={() =>
-                        sendAction({
-                          type: "resolvePendingRoll",
-                          pendingRollId: pendingRoll.id,
-                          choice: { type: "friskKeenEyeTarget", targetId: unitId },
-                        } as GameAction)
-                      }
-                    >
-                      Reveal {unitId}
-                    </button>
-                  ))}
-                  <button
-                    className="w-full rounded-lg bg-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
-                    onClick={() =>
-                      sendAction({
-                        type: "resolvePendingRoll",
-                        pendingRollId: pendingRoll.id,
-                        choice: "skip",
-                      } as GameAction)
-                    }
-                  >
-                    Attempt Stealth Instead
-                  </button>
-                </div>
-              ) : isFriskSubstitutionChoice ? (
-                <>
-                  <button
-                    className="flex-1 rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-slate-100 dark:text-slate-900"
-                    onClick={() =>
-                      sendAction({
-                        type: "resolvePendingRoll",
-                        pendingRollId: pendingRoll.id,
-                        choice: "roll",
-                      } as GameAction)
-                    }
-                  >
-                    Roll Defense
-                  </button>
-                  <button
-                    className="flex-1 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-emerald-800/50 dark:text-slate-100 dark:hover:bg-emerald-700/60"
-                    onClick={() =>
-                      sendAction({
-                        type: "resolvePendingRoll",
-                        pendingRollId: pendingRoll.id,
-                        choice: "activate",
-                      } as GameAction)
-                    }
-                    disabled={defenderFriskGenocidePoints < 3}
-                  >
-                    Use Substitution (-3)
-                  </button>
-                </>
-              ) : isFriskChildsCryChoice ? (
-                <>
-                  <button
-                    className="flex-1 rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-slate-100 dark:text-slate-900"
-                    onClick={() =>
-                      sendAction({
-                        type: "resolvePendingRoll",
-                        pendingRollId: pendingRoll.id,
-                        choice: "skip",
-                      } as GameAction)
-                    }
-                  >
-                    Take Damage
-                  </button>
-                  <button
-                    className="flex-1 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-emerald-800/50 dark:text-slate-100 dark:hover:bg-emerald-700/60"
-                    onClick={() =>
-                      sendAction({
-                        type: "resolvePendingRoll",
-                        pendingRollId: pendingRoll.id,
-                        choice: "activate",
-                      } as GameAction)
-                    }
-                    disabled={defenderFriskPacifismPoints < 5}
-                  >
-                    Use Child&apos;s Cry (-5)
-                  </button>
-                </>
-              ) : isBerserkerDefenseChoice ? (
-                <>
-                  <button
-                    className="flex-1 rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-slate-100 dark:text-slate-900"
-                    onClick={() =>
-                      sendAction({
-                        type: "resolvePendingRoll",
-                        pendingRollId: pendingRoll.id,
-                        choice: "roll",
-                      } as GameAction)
-                    }
-                  >
-                    Roll Defense
-                  </button>
-                  <button
-                    className="flex-1 rounded-lg bg-amber-500 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-amber-400"
-                    onClick={() =>
-                      sendAction({
-                        type: "resolvePendingRoll",
-                        pendingRollId: pendingRoll.id,
-                        choice: "auto",
-                      } as GameAction)
-                    }
-                    disabled={defenderBerserkCharges !== 6}
-                  >
-                    Auto-dodge (-6)
-                  </button>
-                </>
-              ) : isOdinMuninnDefenseChoice ? (
-                <>
-                  <button
-                    className="flex-1 rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-slate-100 dark:text-slate-900"
-                    onClick={() =>
-                      sendAction({
-                        type: "resolvePendingRoll",
-                        pendingRollId: pendingRoll.id,
-                        choice: "roll",
-                      } as GameAction)
-                    }
-                  >
-                    Keep Roll
-                  </button>
-                  <button
-                    className="flex-1 rounded-lg bg-amber-500 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-amber-400"
-                    onClick={() =>
-                      sendAction({
-                        type: "resolvePendingRoll",
-                        pendingRollId: pendingRoll.id,
-                        choice: "auto",
-                      } as GameAction)
-                    }
-                    disabled={defenderMuninnCharges !== 6}
-                  >
-                    Use Muninn (-6)
-                  </button>
-                </>
-              ) : isAsgoreBraveryDefenseChoice ? (
-                <>
-                  <button
-                    className="flex-1 rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-slate-100 dark:text-slate-900"
-                    onClick={() =>
-                      sendAction({
-                        type: "resolvePendingRoll",
-                        pendingRollId: pendingRoll.id,
-                        choice: "roll",
-                      } as GameAction)
-                    }
-                  >
-                    Keep Roll
-                  </button>
-                  <button
-                    className="flex-1 rounded-lg bg-amber-500 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-amber-400"
-                    onClick={() =>
-                      sendAction({
-                        type: "resolvePendingRoll",
-                        pendingRollId: pendingRoll.id,
-                        choice: "auto",
-                      } as GameAction)
-                    }
-                    disabled={!defenderAsgoreBraveryReady}
-                  >
-                    Use Bravery
-                  </button>
-                </>
-              ) : isChikatiloDecoyChoice ? (
-                <>
-                  <button
-                    className="flex-1 rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-slate-100 dark:text-slate-900"
-                    onClick={() =>
-                      sendAction({
-                        type: "resolvePendingRoll",
-                        pendingRollId: pendingRoll.id,
-                        choice: "roll",
-                      } as GameAction)
-                    }
-                  >
-                    Roll Defense
-                  </button>
-                  <button
-                    className="flex-1 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-emerald-800/50 dark:text-slate-100 dark:hover:bg-emerald-700/60"
-                    onClick={() =>
-                      sendAction({
-                        type: "resolvePendingRoll",
-                        pendingRollId: pendingRoll.id,
-                        choice: "decoy",
-                      } as GameAction)
-                    }
-                    disabled={decoyCharges < 3}
-                  >
-                    Use Decoy (-3)
-                  </button>
-                </>
-              ) : isDuelistChoice ? (
-                <>
-                  <button
-                    className="flex-1 rounded-lg bg-amber-500 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-amber-400"
-                    onClick={() =>
-                      sendAction({
-                        type: "resolvePendingRoll",
-                        pendingRollId: pendingRoll.id,
-                        choice: "elCidDuelistContinue",
-                      } as GameAction)
-                    }
-                    disabled={duelistAttackerHp <= 1}
-                  >
-                    Pay 1 HP
-                  </button>
-                  <button
-                    className="flex-1 rounded-lg bg-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
-                    onClick={() =>
-                      sendAction({
-                        type: "resolvePendingRoll",
-                        pendingRollId: pendingRoll.id,
-                        choice: "elCidDuelistStop",
-                      } as GameAction)
-                    }
-                  >
-                    Stop
-                  </button>
-                </>
-              ) : isForestChoice ? (
-                <>
-                  <button
-                    className="flex-1 rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-slate-100 dark:text-slate-900"
-                    onClick={() =>
-                      sendAction({
-                        type: "resolvePendingRoll",
-                        pendingRollId: pendingRoll.id,
-                        choice: "activate",
-                      } as GameAction)
-                    }
-                  >
-                    Activate
-                  </button>
-                  <button
-                    className="flex-1 rounded-lg bg-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
-                    onClick={() =>
-                      sendAction({
-                        type: "resolvePendingRoll",
-                        pendingRollId: pendingRoll.id,
-                        choice: "skip",
-                      } as GameAction)
-                    }
-                  >
-                    Skip
-                  </button>
-                </>
-              ) : isChikatiloRevealChoice ? (
-                <>
-                  <button
-                    className="flex-1 rounded-lg bg-amber-500 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-amber-400"
-                    onClick={() =>
-                      sendAction({
-                        type: "resolvePendingRoll",
-                        pendingRollId: pendingRoll.id,
-                        choice: "falseTrailExplode",
-                      } as GameAction)
-                    }
-                  >
-                    Explode
-                  </button>
-                  <button
-                    className="flex-1 rounded-lg bg-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
-                    onClick={() =>
-                      sendAction({
-                        type: "resolvePendingRoll",
-                        pendingRollId: pendingRoll.id,
-                        choice: "falseTrailRemove",
-                      } as GameAction)
-                    }
-                  >
-                    Remove
-                  </button>
-                </>
-              ) : (
-                <button
-                  className="w-full rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-slate-100 dark:text-slate-900"
-                  onClick={() =>
-                    sendAction({
-                      type: "resolvePendingRoll",
-                      pendingRollId: pendingRoll.id,
-                    } as GameAction)
-                  }
-                >
-                  Roll
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
+        <PendingRollModal
+          pendingRoll={pendingRoll}
+          view={view}
+          showAttackerRoll={showAttackerRoll}
+          attackerDice={attackerDice}
+          tieBreakAttacker={tieBreakAttacker}
+          isForestMoveCheck={isForestMoveCheck}
+          isForestChoice={isForestChoice}
+          isDuelistChoice={isDuelistChoice}
+          isAsgoreBraveryDefenseChoice={isAsgoreBraveryDefenseChoice}
+          isLokiLaughtChoice={isLokiLaughtChoice}
+          isFriskPacifismChoice={isFriskPacifismChoice}
+          isFriskGenocideChoice={isFriskGenocideChoice}
+          isFriskKeenEyeChoice={isFriskKeenEyeChoice}
+          isFriskSubstitutionChoice={isFriskSubstitutionChoice}
+          isFriskChildsCryChoice={isFriskChildsCryChoice}
+          isOdinMuninnDefenseChoice={isOdinMuninnDefenseChoice}
+          isChikatiloRevealChoice={isChikatiloRevealChoice}
+          isChikatiloDecoyChoice={isChikatiloDecoyChoice}
+          isBerserkerDefenseChoice={isBerserkerDefenseChoice}
+          lokiLaughtCurrent={lokiLaughtCurrent}
+          lokiCanAgainSomeNonsense={lokiCanAgainSomeNonsense}
+          lokiCanChicken={lokiCanChicken}
+          lokiCanMindControl={lokiCanMindControl}
+          lokiCanSpinTheDrum={lokiCanSpinTheDrum}
+          lokiCanGreatLokiJoke={lokiCanGreatLokiJoke}
+          lokiLaughtChickenOptions={lokiLaughtChickenOptions}
+          lokiLaughtMindControlEnemyOptions={lokiLaughtMindControlEnemyOptions}
+          lokiLaughtSpinCandidateIds={lokiLaughtSpinCandidateIds}
+          friskPacifismPoints={friskPacifismPoints}
+          friskPacifismDisabled={friskPacifismDisabled}
+          friskPacifismHugsOptions={friskPacifismHugsOptions}
+          friskPacifismWarmWordsOptions={friskPacifismWarmWordsOptions}
+          friskPacifismPowerOfFriendshipEnabled={
+            friskPacifismPowerOfFriendshipEnabled
+          }
+          friskGenocidePoints={friskGenocidePoints}
+          friskKeenEyeTargetIds={friskKeenEyeTargetIds}
+          defenderFriskGenocidePoints={defenderFriskGenocidePoints}
+          defenderFriskPacifismPoints={defenderFriskPacifismPoints}
+          defenderBerserkCharges={defenderBerserkCharges}
+          defenderMuninnCharges={defenderMuninnCharges}
+          defenderAsgoreBraveryReady={defenderAsgoreBraveryReady}
+          decoyCharges={decoyCharges}
+          duelistAttackerHp={duelistAttackerHp}
+          onResolvePendingRoll={(choice) => {
+            if (choice === undefined) {
+              sendAction({
+                type: "resolvePendingRoll",
+                pendingRollId: pendingRoll.id,
+              } as GameAction);
+              return;
+            }
+            sendAction({
+              type: "resolvePendingRoll",
+              pendingRollId: pendingRoll.id,
+              choice,
+            } as GameAction);
+          }}
+        />
       )}
     </div>
   );

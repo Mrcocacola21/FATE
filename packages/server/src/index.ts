@@ -6,6 +6,12 @@ import websocket from "@fastify/websocket";
 import { registerRoutes } from "./routes";
 import { registerGameWebSocket } from "./ws";
 
+function isLocalDevOrigin(origin: string): boolean {
+  return /^http:\/\/(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\])(:\d+)?$/.test(
+    origin
+  );
+}
+
 export async function buildServer() {
   const logLevel = process.env.LOG_LEVEL ?? "info";
   const server = Fastify({ logger: { level: logLevel } });
@@ -22,6 +28,7 @@ export async function buildServer() {
     origin: (origin, cb) => {
       if (!origin) return cb(null, true);
       if (allow.has(origin)) return cb(null, true);
+      if (isLocalDevOrigin(origin)) return cb(null, true);
       if (/^https:\/\/.*\.vercel\.app$/.test(origin)) return cb(null, true);
       cb(new Error("Not allowed by CORS"), false);
     },
