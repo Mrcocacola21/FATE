@@ -20,6 +20,8 @@ import {
   ODIN_SLEIPNIR_ID,
   PAPYRUS_COOL_GUY_ID,
   SANS_GASTER_BLASTER_ID,
+  UNDYNE_ENERGY_SPEAR_ID,
+  UNDYNE_SPEAR_THROW_ID,
 } from "../../rulesHints";
 import { coordKey, getUnitAt, isCoordInList } from "./helpers";
 
@@ -101,12 +103,14 @@ export interface CellClickContext {
   legalAttackTargets: string[];
   gutsRangedTargetIds: string[];
   asgoreFireballTargetIds: string[];
+  undyneSpearThrowTargetIds: string[];
   hassanTrueEnemyCandidateIds: string[];
   guideTravelerTargetIds: string[];
   papyrusLongBoneAttackTargetIds: string[];
   assassinMarkTargetIds: string[];
   doraTargetKeys: Set<string>;
   mettatonLineTargetKeys: Set<string>;
+  undyneEnergySpearTargetKeys: Set<string>;
   jebeHailTargetKeys: Set<string>;
   kaladinFifthTargetKeys: Set<string>;
   tisonaTargetKeys: Set<string>;
@@ -185,12 +189,14 @@ export function createCellClickHandler(context: CellClickContext) {
     legalAttackTargets,
     gutsRangedTargetIds,
     asgoreFireballTargetIds,
+    undyneSpearThrowTargetIds,
     hassanTrueEnemyCandidateIds,
     guideTravelerTargetIds,
     papyrusLongBoneAttackTargetIds,
     assassinMarkTargetIds,
     doraTargetKeys,
     mettatonLineTargetKeys,
+    undyneEnergySpearTargetKeys,
     jebeHailTargetKeys,
     kaladinFifthTargetKeys,
     tisonaTargetKeys,
@@ -605,6 +611,36 @@ export function createCellClickHandler(context: CellClickContext) {
       return;
     }
 
+    if (actionMode === "undyneSpearThrow") {
+      const target = getUnitAt(view, col, row);
+      if (!target) return;
+      if (!undyneSpearThrowTargetIds.includes(target.id)) return;
+      sendGameAction({
+        type: "useAbility",
+        unitId: selectedUnitId,
+        abilityId: UNDYNE_SPEAR_THROW_ID,
+        payload: { targetId: target.id },
+      });
+      setActionMode(null);
+      return;
+    }
+
+    if (actionMode === "undyneEnergySpear") {
+      const key = coordKey({ col, row });
+      if (!undyneEnergySpearTargetKeys.has(key)) return;
+      sendGameAction({
+        type: "useAbility",
+        unitId: selectedUnitId,
+        abilityId: UNDYNE_ENERGY_SPEAR_ID,
+        payload: {
+          target: { col, row },
+          axis: papyrusLineAxis === "col" ? "col" : "row",
+        },
+      });
+      setActionMode(null);
+      return;
+    }
+
     if (actionMode === "hassanTrueEnemy") {
       const target = getUnitAt(view, col, row);
       if (!target) return;
@@ -769,6 +805,7 @@ interface CellHoverContext {
   isForestTarget: boolean;
   doraTargetKeys: Set<string>;
   mettatonLineTargetKeys: Set<string>;
+  undyneEnergySpearTargetKeys: Set<string>;
   jebeHailTargetKeys: Set<string>;
   kaladinFifthTargetKeys: Set<string>;
   tisonaTargetKeys: Set<string>;
@@ -777,6 +814,7 @@ interface CellHoverContext {
   setMettatonPoppinsPreviewCenter: Dispatch<SetStateAction<Coord | null>>;
   setMettatonLaserPreviewTarget: Dispatch<SetStateAction<Coord | null>>;
   setSansGasterBlasterPreviewTarget: Dispatch<SetStateAction<Coord | null>>;
+  setUndyneEnergySpearPreviewTarget: Dispatch<SetStateAction<Coord | null>>;
   setJebeHailPreviewCenter: Dispatch<SetStateAction<Coord | null>>;
   setKaladinFifthPreviewCenter: Dispatch<SetStateAction<Coord | null>>;
   setTisonaPreviewCoord: Dispatch<SetStateAction<Coord | null>>;
@@ -789,6 +827,7 @@ export function createCellHoverHandler(context: CellHoverContext) {
     isForestTarget,
     doraTargetKeys,
     mettatonLineTargetKeys,
+    undyneEnergySpearTargetKeys,
     jebeHailTargetKeys,
     kaladinFifthTargetKeys,
     tisonaTargetKeys,
@@ -797,6 +836,7 @@ export function createCellHoverHandler(context: CellHoverContext) {
     setMettatonPoppinsPreviewCenter,
     setMettatonLaserPreviewTarget,
     setSansGasterBlasterPreviewTarget,
+    setUndyneEnergySpearPreviewTarget,
     setJebeHailPreviewCenter,
     setKaladinFifthPreviewCenter,
     setTisonaPreviewCoord,
@@ -846,6 +886,18 @@ export function createCellHoverHandler(context: CellHoverContext) {
       const key = coordKey(coord);
       setSansGasterBlasterPreviewTarget(
         mettatonLineTargetKeys.has(key) ? coord : null
+      );
+      return;
+    }
+
+    if (actionMode === "undyneEnergySpear") {
+      if (!coord) {
+        setUndyneEnergySpearPreviewTarget(null);
+        return;
+      }
+      const key = coordKey(coord);
+      setUndyneEnergySpearPreviewTarget(
+        undyneEnergySpearTargetKeys.has(key) ? coord : null
       );
       return;
     }

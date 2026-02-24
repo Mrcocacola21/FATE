@@ -19,6 +19,7 @@ export const HASSAN_ID = "hassan";
 export const FRISK_ID = "frisk";
 export const SANS_ID = "sans";
 export const ASGORE_ID = "asgore";
+export const UNDYNE_ID = "undyne";
 export const KALADIN_ID = "kaladin";
 export const ODIN_ID = "odin";
 export const RIVER_PERSON_ID = "riverPerson";
@@ -64,6 +65,12 @@ export const SANS_LAST_ATTACK_ID = "sansLastAttack";
 export const ASGORE_FIREBALL_ID = "asgoreFireball";
 export const ASGORE_FIRE_PARADE_ID = "asgoreFireParade";
 export const ASGORE_SOUL_PARADE_ID = "asgoreSoulParade";
+export const UNDYNE_TOUGH_ID = "undyneTough";
+export const UNDYNE_SPEARMAN_MULTICLASS_ID = "undyneSpearmanMulticlass";
+export const UNDYNE_SPEAR_THROW_ID = "undyneSpearThrow";
+export const UNDYNE_ENERGY_SPEAR_ID = "undyneEnergySpear";
+export const UNDYNE_SWITCH_DIRECTION_ID = "undyneSwitchDirection";
+export const UNDYNE_UNDYING_ID = "undyneUndying";
 export const GUTS_ARBALET_ID = "gutsArbalet";
 export const GUTS_CANNON_ID = "gutsCannon";
 export const GUTS_BERSERK_MODE_ID = "gutsBerserkMode";
@@ -135,6 +142,9 @@ export function getMaxHp(unitClass: UnitClass, heroId?: string): number {
   }
   if (heroId === ASGORE_ID) {
     base += 3;
+  }
+  if (heroId === UNDYNE_ID) {
+    base += 1;
   }
   if (heroId === KALADIN_ID) {
     base += 1;

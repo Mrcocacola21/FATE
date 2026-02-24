@@ -13,6 +13,7 @@ import { applyFriskPostAction } from "./heroes/frisk";
 import { applyLokiIllusoryDoubleFromEvents } from "./heroes/loki";
 import { applyPapyrusPostAction } from "./heroes/papyrus";
 import { applySansPostAction } from "./heroes/sans";
+import { applyUndynePostAction } from "./heroes/undyne";
 
 export function applyAction(
   state: GameState,
@@ -113,5 +114,11 @@ export function applyAction(
     afterPapyrus.state,
     afterPapyrus.events
   );
-  return applyFriskPostAction(afterSans.state, afterSans.events);
+  const afterUndyne = applyUndynePostAction(
+    prevState,
+    action,
+    afterSans.state,
+    afterSans.events
+  );
+  return applyFriskPostAction(afterUndyne.state, afterUndyne.events);
 }

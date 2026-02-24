@@ -44,6 +44,8 @@ export type ActionMode =
   | "kaladinFifth"
   | "odinSleipnir"
   | "sansGasterBlaster"
+  | "undyneSpearThrow"
+  | "undyneEnergySpear"
   | "mettatonPoppins"
   | "mettatonLaser"
   | "gutsArbalet"

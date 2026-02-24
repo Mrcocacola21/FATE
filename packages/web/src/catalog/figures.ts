@@ -12,6 +12,7 @@ export const HERO_CATALOG: HeroCatalog = [
   { id: "base-berserker", name: "Base Berserker", mainClass: "berserker" },
   { id: "grozny", name: "Ivan Grozny", mainClass: "berserker" },
   { id: "guts", name: "Guts", mainClass: "berserker" },
+  { id: "undyne", name: "Undyne", mainClass: "berserker" },
   { id: "base-rider", name: "Base Rider", mainClass: "rider" },
   { id: "odin", name: "Odin", mainClass: "rider" },
   { id: "riverPerson", name: "River Person", mainClass: "rider" },

@@ -191,6 +191,10 @@ export interface UnitState {
   mettatonExUnlocked?: boolean;
   /** Mettaton NEO transformation unlock flag. */
   mettatonNeoUnlocked?: boolean;
+  /** Undyne: one-time Immortal transformation already consumed. */
+  undyneImmortalUsed?: boolean;
+  /** Undyne: Immortal form is currently active. */
+  undyneImmortalActive?: boolean;
 
   isAlive: boolean;
 }
@@ -323,6 +327,9 @@ export interface PendingCombatQueueEntry {
   ignoreStealth?: boolean;
   damageBonus?: number;
   damageBonusSourceId?: string;
+  rangedAttack?: boolean;
+  damageOverride?: number;
+  ignoreBonuses?: boolean;
   consumeSlots?: boolean;
   kind: "riderPath" | "aoe";
 }

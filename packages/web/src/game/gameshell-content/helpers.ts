@@ -5,6 +5,7 @@ import {
   FEMTO_ID,
   GUTS_ID,
   KALADIN_ID,
+  UNDYNE_ID,
 } from "../../rulesHints";
 
 const DORA_DIRS: Coord[] = [
@@ -206,6 +207,7 @@ export function getAttackRangeCells(view: PlayerView, unitId: string): Coord[] {
   const isKaladin = unit.heroId === KALADIN_ID;
   const effectiveClass =
     unit.heroId === FEMTO_ID ||
+    unit.heroId === UNDYNE_ID ||
     unit.heroId === ASGORE_ID ||
     (unit.heroId === GUTS_ID && unit.gutsBerserkModeActive)
       ? "spearman"

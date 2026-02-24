@@ -313,6 +313,9 @@ export function advanceCombatQueue(
     ignoreStealth: nextEntry.ignoreStealth,
     damageBonus: nextEntry.damageBonus,
     damageBonusSourceId: nextEntry.damageBonusSourceId,
+    rangedAttack: nextEntry.rangedAttack,
+    damageOverride: nextEntry.damageOverride,
+    ignoreBonuses: nextEntry.ignoreBonuses,
     consumeSlots: nextEntry.consumeSlots ?? false,
     queueKind: nextEntry.kind,
   });

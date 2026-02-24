@@ -30,6 +30,7 @@ import {
   HERO_ODIN_ID,
   HERO_PAPYRUS_ID,
   HERO_SANS_ID,
+  HERO_UNDYNE_ID,
 } from "./heroes";
 import {
   addMettatonRating,
@@ -42,6 +43,7 @@ import {
 import { isStormActive, isStormExempt } from "./forest";
 import { canDirectlyTargetUnit, canSeeStealthedTarget } from "./visibility";
 import { applyGriffithFemtoRebirth } from "./actions/heroes/griffith";
+import { hasUndyneImmortalActive } from "./undyne";
 
 
 // --- Вспомогательные функции кубов ---
@@ -155,6 +157,7 @@ export function canAttackTarget(
   const { dx, dy, cheb, sameRow, sameCol } = distanceInfo(attPos, defPos);
   const attackerClass =
     attacker.heroId === HERO_FEMTO_ID ||
+    attacker.heroId === HERO_UNDYNE_ID ||
     (attacker.heroId === HERO_ASGORE_ID && attacker.class === "knight") ||
     (attacker.heroId === HERO_GUTS_ID &&
       attacker.gutsBerserkModeActive &&
@@ -474,7 +477,8 @@ export function resolveAttack(
       defenderAfter.heroId === HERO_FEMTO_ID ||
       defenderAfter.heroId === HERO_ASGORE_ID ||
       defenderAfter.heroId === HERO_ODIN_ID ||
-      defenderAfter.heroId === HERO_SANS_ID) &&
+      defenderAfter.heroId === HERO_SANS_ID ||
+      defenderAfter.heroId === HERO_UNDYNE_ID) &&
     defenderRoll.isDouble
   ) {
     hit = false;
@@ -589,6 +593,15 @@ export function resolveAttack(
       ) {
         damage += 1;
       }
+      if (
+        attackerAfter.heroId === HERO_UNDYNE_ID &&
+        hasUndyneImmortalActive(attackerAfter) &&
+        attackerAfter.position &&
+        defenderAfter.position &&
+        distanceInfo(attackerAfter.position, defenderAfter.position).cheb === 1
+      ) {
+        damage += 1;
+      }
     }
 
     if (attackerAfter.heroId === HERO_GRIFFITH_ID) {
@@ -602,6 +615,12 @@ export function resolveAttack(
     if (
       defenderAfter.heroId === HERO_GUTS_ID &&
       defenderAfter.gutsBerserkModeActive
+    ) {
+      damage = Math.min(1, damage);
+    }
+    if (
+      defenderAfter.heroId === HERO_UNDYNE_ID &&
+      hasUndyneImmortalActive(defenderAfter)
     ) {
       damage = Math.min(1, damage);
     }

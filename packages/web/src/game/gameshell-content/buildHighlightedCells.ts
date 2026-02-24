@@ -83,6 +83,8 @@ export interface BuildHighlightedCellsArgs {
   invadeTimeTargets: Coord[];
   gutsRangedTargetKeys: Set<string>;
   asgoreFireballTargetKeys: Set<string>;
+  undyneEnergySpearTargets: Coord[];
+  undyneSpearThrowTargetKeys: Set<string>;
 }
 
 export function buildHighlightedCells({
@@ -157,6 +159,8 @@ export function buildHighlightedCells({
   invadeTimeTargets,
   gutsRangedTargetKeys,
   asgoreFireballTargetKeys,
+  undyneEnergySpearTargets,
+  undyneSpearThrowTargetKeys,
 }: BuildHighlightedCellsArgs): Record<string, CellHighlightKind> {
   const highlights: Record<string, CellHighlightKind> = {};
   const modeKind = (fallback: "move" | "attack" | "dora"): CellHighlightKind =>
@@ -468,6 +472,18 @@ export function buildHighlightedCells({
   if (effectiveActionMode === "asgoreFireball") {
     for (const key of asgoreFireballTargetKeys) {
       highlights[key] = modeKind("attack");
+    }
+  }
+
+  if (effectiveActionMode === "undyneSpearThrow") {
+    for (const key of undyneSpearThrowTargetKeys) {
+      highlights[key] = modeKind("attack");
+    }
+  }
+
+  if (effectiveActionMode === "undyneEnergySpear") {
+    for (const coord of undyneEnergySpearTargets) {
+      highlights[coordKey(coord)] = modeKind("dora");
     }
   }
 

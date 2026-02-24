@@ -51,6 +51,8 @@ import {
   ABILITY_SANS_BONE_FIELD,
   ABILITY_SANS_GASTER_BLASTER,
   ABILITY_SANS_SLEEP,
+  ABILITY_UNDYNE_ENERGY_SPEAR,
+  ABILITY_UNDYNE_SPEAR_THROW,
   TRICKSTER_AOE_RADIUS,
   getAbilitySpec,
   spendCharges,
@@ -99,6 +101,10 @@ import {
   applySansGasterBlaster,
   applySansSleep,
 } from "./heroes/sans";
+import {
+  applyUndyneEnergySpear,
+  applyUndyneSpearThrow,
+} from "./heroes/undyne";
 import {
   applyGutsArbalet,
   applyGutsBerserkMode,
@@ -317,6 +323,12 @@ export function applyUseAbility(
   }
   if (spec.id === ABILITY_SANS_SLEEP) {
     return applySansSleep(state, unit);
+  }
+  if (spec.id === ABILITY_UNDYNE_SPEAR_THROW) {
+    return applyUndyneSpearThrow(state, unit, action);
+  }
+  if (spec.id === ABILITY_UNDYNE_ENERGY_SPEAR) {
+    return applyUndyneEnergySpear(state, unit, action);
   }
 
   const isTricksterAoE = spec.id === ABILITY_TRICKSTER_AOE;

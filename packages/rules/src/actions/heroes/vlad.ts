@@ -21,6 +21,7 @@ import type { ApplyResult } from "../../model";
 import type { IntimidateResume } from "../types";
 import { evForestActivated, evIntimidateTriggered } from "../../core";
 import { HERO_FALSE_TRAIL_TOKEN_ID } from "../../heroes";
+import { isUndyne } from "../../undyne";
 
 export function getPolkovodetsSource(
   state: GameState,
@@ -100,7 +101,11 @@ export function maybeRequestIntimidate(
     return { state, events: baseEvents, requested: false };
   }
 
-  if (!isVlad(defender) || !defender.isAlive || !defender.position) {
+  if (
+    (!isVlad(defender) && !isUndyne(defender)) ||
+    !defender.isAlive ||
+    !defender.position
+  ) {
     return { state, events: baseEvents, requested: false };
   }
 

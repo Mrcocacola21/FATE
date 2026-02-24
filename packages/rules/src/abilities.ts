@@ -203,6 +203,9 @@ export const ABILITY_UNDYNE_SPEAR_THROW = "undyneSpearThrow" as const;
 export const ABILITY_UNDYNE_ENERGY_SPEAR = "undyneEnergySpear" as const;
 export const ABILITY_UNDYNE_SWITCH_DIRECTION = "undyneSwitchDirection" as const;
 export const ABILITY_UNDYNE_UNDYING = "undyneUndying" as const;
+export const ABILITY_UNDYNE_TOUGH = "undyneTough" as const;
+export const ABILITY_UNDYNE_SPEARMAN_MULTICLASS =
+  "undyneSpearmanMulticlass" as const;
 
 export const ABILITY_PAPYRUS_BLUE_BONE = "papyrusBlueBone" as const;
 export const ABILITY_PAPYRUS_SPAGHETTI = "papyrusSpaghetti" as const;
@@ -783,6 +786,51 @@ const ABILITY_SPECS: Record<string, AbilitySpec> = {
     description:
       "After Unbeliever, when Sans dies he curses one enemy: it takes 1 damage at turn start until it reaches 1 HP.",
   },
+  [ABILITY_UNDYNE_TOUGH]: {
+    id: ABILITY_UNDYNE_TOUGH,
+    displayName: "Tough",
+    kind: "passive",
+    description: "Undyne gains +1 max HP.",
+  },
+  [ABILITY_UNDYNE_SPEARMAN_MULTICLASS]: {
+    id: ABILITY_UNDYNE_SPEARMAN_MULTICLASS,
+    displayName: "Spearman Multiclass",
+    kind: "passive",
+    description: "Undyne gains Spearman defensive features.",
+  },
+  [ABILITY_UNDYNE_SPEAR_THROW]: {
+    id: ABILITY_UNDYNE_SPEAR_THROW,
+    displayName: "Throw Spear",
+    kind: "active",
+    description:
+      "Shooter-like single-target attack that always deals 1 damage on hit.",
+    actionCost: {
+      consumes: { action: true },
+    },
+  },
+  [ABILITY_UNDYNE_ENERGY_SPEAR]: {
+    id: ABILITY_UNDYNE_ENERGY_SPEAR,
+    displayName: "Energy Spear",
+    kind: "impulse",
+    description:
+      "Spend 2 charges. Choose a row or column and attack all units on that line for 1 damage.",
+    maxCharges: 2,
+    chargesPerUse: 2,
+  },
+  [ABILITY_UNDYNE_SWITCH_DIRECTION]: {
+    id: ABILITY_UNDYNE_SWITCH_DIRECTION,
+    displayName: "Direction Shift",
+    kind: "passive",
+    description:
+      "On successful defense, Undyne can force the attacker to move 1 cell to an empty adjacent cell.",
+  },
+  [ABILITY_UNDYNE_UNDYING]: {
+    id: ABILITY_UNDYNE_UNDYING,
+    displayName: "Immortal Undyne",
+    kind: "passive",
+    description:
+      "Once per game on death, revive with 3 HP, cap incoming damage to 1, gain close-range bonus and free Energy Spear, then lose 1 HP at end of own turns.",
+  },
   [ABILITY_ASGORE_FIREBALL]: {
     id: ABILITY_ASGORE_FIREBALL,
     displayName: "Fireball",
@@ -1281,6 +1329,14 @@ export function initUnitAbilities(unit: UnitState): UnitState {
       asgoreBraveryAutoDefenseReady: false,
     };
   }
+  if (unit.heroId === HERO_UNDYNE_ID) {
+    updated = setCharges(updated, ABILITY_UNDYNE_ENERGY_SPEAR, 0);
+    updated = {
+      ...updated,
+      undyneImmortalUsed: false,
+      undyneImmortalActive: false,
+    };
+  }
   if (unit.heroId === HERO_PAPYRUS_ID) {
     updated = setCharges(updated, ABILITY_PAPYRUS_SPAGHETTI, 0);
     updated = setCharges(updated, ABILITY_PAPYRUS_COOL_GUY, 0);
@@ -1665,6 +1721,8 @@ export function getAbilityViewsForUnit(
   } 
   if (unit.heroId === HERO_UNDYNE_ID) {
     abilityIds.push(
+      ABILITY_UNDYNE_TOUGH,
+      ABILITY_UNDYNE_SPEARMAN_MULTICLASS,
       ABILITY_UNDYNE_SPEAR_THROW,
       ABILITY_UNDYNE_ENERGY_SPEAR,
       ABILITY_UNDYNE_SWITCH_DIRECTION,
@@ -1791,10 +1849,16 @@ export function getAbilityViewsForUnit(
           : isMettaton(unit) && id === ABILITY_METTATON_FINAL_CHORD
           ? 12
           : undefined;
+      const undyneEnergySpearRequired =
+        unit.heroId === HERO_UNDYNE_ID &&
+        id === ABILITY_UNDYNE_ENERGY_SPEAR &&
+        unit.undyneImmortalActive
+          ? 0
+          : undefined;
       const effectiveChargeRequired =
         id === ABILITY_PAPYRUS_COOL_GUY && unit.papyrusUnbelieverActive
           ? 3
-          : mettatonRatingRequired ?? chargeRequired;
+          : undyneEnergySpearRequired ?? mettatonRatingRequired ?? chargeRequired;
       const hasCharges =
         spec.chargeUnlimited === true ||
         spec.maxCharges !== undefined ||

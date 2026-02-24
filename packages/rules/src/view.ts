@@ -85,6 +85,8 @@ function cloneUnit(unit: UnitState): UnitState {
     mettatonRating: unit.mettatonRating,
     mettatonExUnlocked: unit.mettatonExUnlocked,
     mettatonNeoUnlocked: unit.mettatonNeoUnlocked,
+    undyneImmortalUsed: unit.undyneImmortalUsed,
+    undyneImmortalActive: unit.undyneImmortalActive,
   };
 }
 

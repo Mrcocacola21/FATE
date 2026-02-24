@@ -34,6 +34,7 @@ import {
   HERO_ODIN_ID,
   HERO_PAPYRUS_ID,
   HERO_SANS_ID,
+  HERO_UNDYNE_ID,
 } from "../../../heroes";
 import {
   evAoeResolved,
@@ -258,6 +259,9 @@ export function advanceCombatQueue(
     ignoreStealth: nextEntry.ignoreStealth,
     damageBonus: nextEntry.damageBonus,
     damageBonusSourceId: nextEntry.damageBonusSourceId,
+    rangedAttack: nextEntry.rangedAttack,
+    damageOverride: nextEntry.damageOverride,
+    ignoreBonuses: nextEntry.ignoreBonuses,
     consumeSlots: nextEntry.consumeSlots ?? false,
     queueKind: nextEntry.kind,
   });
@@ -555,7 +559,8 @@ function wouldAttackHitFromContext(
       defender.heroId === HERO_ASGORE_ID ||
       defender.heroId === HERO_FEMTO_ID ||
       defender.heroId === HERO_ODIN_ID ||
-      defender.heroId === HERO_SANS_ID) &&
+      defender.heroId === HERO_SANS_ID ||
+      defender.heroId === HERO_UNDYNE_ID) &&
     defenderDouble
   ) {
     hit = false;
