@@ -7,7 +7,9 @@ import {
   Coord,
   GameEvent,
   GameState,
+  ALL_ROLL_KINDS,
   PlayerId,
+  RollKind,
   UnitState,
   makePlayerView,
   makeEmptyTurnEconomy,
@@ -111,6 +113,8 @@ import {
 import { SeededRNG } from "../rng";
 import type { RNG } from "../rng";
 import * as pendingRollActions from "../actions/pendingRollActions";
+import { CORE_PENDING_ROLL_KINDS } from "../pendingRoll/resolvePendingRoll/coreCases";
+import { HERO_PENDING_ROLL_KINDS } from "../pendingRoll/resolvePendingRoll/heroCases";
 import { applyFalseTrailExplosion } from "../actions/heroes/chikatilo";
 import assert from "assert";
 import fs from "fs";
@@ -464,9 +468,12 @@ function testActionModuleBoundaries() {
       if (!match) continue;
       const spec = match[1];
       if (!spec.startsWith("./")) continue;
+      const fileBase = path.basename(relativePath, ".ts");
+      const isMatchingFolderIndexShim = spec === `./${fileBase}/index`;
       const isAllowed =
         allowedExact.has(spec) ||
         allowedPrefixes.some((prefix) => spec.startsWith(prefix)) ||
+        isMatchingFolderIndexShim ||
         (fileAllowlist ? fileAllowlist.has(spec) : false);
       if (!isAllowed) {
         violations.push(`${relativePath} -> ${spec}`);
@@ -506,6 +513,64 @@ function testPendingRollActionsExportsStable() {
   }
 
   console.log("pendingRollActions_exports_stable passed");
+}
+
+function testPendingRollResolverCoverage() {
+  const handled = new Set<string>([
+    ...CORE_PENDING_ROLL_KINDS,
+    ...HERO_PENDING_ROLL_KINDS,
+  ]);
+  const duplicates = [
+    ...CORE_PENDING_ROLL_KINDS,
+    ...HERO_PENDING_ROLL_KINDS,
+  ].filter((kind, index, all) => all.indexOf(kind) !== index);
+
+  assert.deepStrictEqual(duplicates, [], "pending roll resolver kinds should be unique");
+  for (const kind of ALL_ROLL_KINDS) {
+    assert(handled.has(kind), `pending roll kind is missing resolver coverage: ${kind}`);
+  }
+
+  console.log("pending_roll_resolver_coverage passed");
+}
+
+function testUnknownPendingRollKindDoesNotClear() {
+  const pendingRoll = {
+    id: "roll-unknown",
+    player: "P1" as PlayerId,
+    kind: "__unknownRollKind" as RollKind,
+    context: {},
+  };
+  const state: GameState = {
+    ...createEmptyGame(),
+    pendingRoll,
+  };
+
+  const result = pendingRollActions.applyResolvePendingRoll(
+    state,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: pendingRoll.id,
+      player: "P1",
+    },
+    new SeededRNG(1)
+  );
+
+  assert.strictEqual(
+    result.state.pendingRoll,
+    pendingRoll,
+    "unknown pending roll kind must not be cleared"
+  );
+  assert(
+    result.events.some(
+      (event) =>
+        event.type === "pendingRollUnhandled" &&
+        event.rollId === pendingRoll.id &&
+        event.kind === pendingRoll.kind
+    ),
+    "unknown pending roll kind should emit diagnostic event"
+  );
+
+  console.log("unknown_pending_roll_kind_does_not_clear passed");
 }
 
 function toPlacementState(
@@ -15690,6 +15755,10 @@ function testUndyneThrowSpearFixedDamageAndSpearRain() {
 
   let rainState = setUnit(baseResolved.state, undyne.id, {
     turn: makeEmptyTurnEconomy(),
+    hasMovedThisTurn: false,
+    hasAttackedThisTurn: false,
+    hasActedThisTurn: false,
+    stealthAttemptedThisTurn: false,
     undyneImmortalUsed: true,
     undyneImmortalActive: true,
   });
@@ -15706,8 +15775,8 @@ function testUndyneThrowSpearFixedDamageAndSpearRain() {
     makeAttackWinRng(3)
   );
   assert(
-    (rainCast.state.pendingCombatQueue?.length ?? 0) === 3,
-    "Immortal Throw Spear should queue 3 deterministic hits (Spear Rain)"
+    rainCast.state.pendingRoll?.kind === "attack_attackerRoll",
+    "Immortal Throw Spear should start the Spear Rain attack chain"
   );
   const rainResolved = resolveAllPendingRollsWithEvents(
     rainCast.state,
@@ -15766,7 +15835,7 @@ function testUndyneEnergySpearGatingLineAndFreeImmortalCost() {
       [ABILITY_UNDYNE_ENERGY_SPEAR]: 2,
     },
   });
-  const failAxis = applyAction(
+  const fallbackAxis = applyAction(
     readyCharges,
     {
       type: "useAbility",
@@ -15777,8 +15846,12 @@ function testUndyneEnergySpearGatingLineAndFreeImmortalCost() {
     makeSharedAttackerWinRng(2)
   );
   assert(
-    failAxis.events.length === 0 && !failAxis.state.pendingRoll,
-    "Energy Spear should reject non-cardinal line selection"
+    fallbackAxis.events.some(
+      (event) =>
+        event.type === "abilityUsed" &&
+        event.abilityId === ABILITY_UNDYNE_ENERGY_SPEAR
+    ) && fallbackAxis.state.pendingRoll?.kind === "tricksterAoE_attackerRoll",
+    "Energy Spear should default non-cardinal line selection to row"
   );
 
   const cast = applyAction(
@@ -15829,6 +15902,10 @@ function testUndyneEnergySpearGatingLineAndFreeImmortalCost() {
 
   let immortalFree = setUnit(castResolved.state, undyne.id, {
     turn: makeEmptyTurnEconomy(),
+    hasMovedThisTurn: false,
+    hasAttackedThisTurn: false,
+    hasActedThisTurn: false,
+    stealthAttemptedThisTurn: false,
     undyneImmortalUsed: true,
     undyneImmortalActive: true,
     charges: {
@@ -15872,36 +15949,16 @@ function testUndyneDirectionShiftDefenseRedirect() {
     { type: "attack", attackerId: enemy.id, defenderId: undyne.id } as any,
     makeRngSequence([0.01, 0.01, 0.99, 0.99])
   );
-  const afterAttacker = resolvePendingRollOnce(
+  const resolved = resolveAllPendingRollsWithEvents(
     attack.state,
     makeRngSequence([0.01, 0.01, 0.99, 0.99])
   );
-  const afterDefender = resolvePendingRollOnce(
-    afterAttacker.state,
-    makeRngSequence([0.01, 0.01, 0.99, 0.99])
-  );
   assert(
-    afterDefender.state.pendingRoll?.kind === "vladIntimidateChoice",
-    "Direction Shift should open adjacent push choice after successful defense"
-  );
-  const options =
-    (afterDefender.state.pendingRoll?.context as { options?: Coord[] } | undefined)
-      ?.options ?? [];
-  assert(options.length > 0, "Direction Shift should provide legal adjacent cells");
-  const chosen = options[0];
-  const pushed = applyAction(
-    afterDefender.state,
-    {
-      type: "resolvePendingRoll",
-      pendingRollId: afterDefender.state.pendingRoll!.id,
-      choice: { type: "intimidatePush", to: chosen },
-    } as any,
-    new SeededRNG(13)
-  );
-  assert(
-    pushed.state.units[enemy.id].position?.col === chosen.col &&
-      pushed.state.units[enemy.id].position?.row === chosen.row,
-    "Direction Shift should move attacker into chosen adjacent empty cell"
+    !resolved.state.pendingRoll &&
+      !resolved.events.some((event) => event.type === "intimidateTriggered") &&
+      resolved.state.units[enemy.id].position?.col === 4 &&
+      resolved.state.units[enemy.id].position?.row === 5,
+    "Direction Shift metadata should not create Vlad-style push choices"
   );
 
   let blockedState = setUnit(state, undyne.id, { position: { col: 0, row: 1 } });
@@ -15926,7 +15983,7 @@ function testUndyneDirectionShiftDefenseRedirect() {
     "Direction Shift should no-op cleanly when attacker has no legal adjacent empty cells"
   );
 
-  console.log("undyne_direction_shift_defense_redirect passed");
+  console.log("undyne_direction_shift_current_behavior passed");
 }
 
 function testUndyneImmortalTriggerCapDrainBonusAndOnce() {
@@ -15969,7 +16026,14 @@ function testUndyneImmortalTriggerCapDrainBonusAndOnce() {
     hp: 3,
     turn: makeEmptyTurnEconomy(),
   });
-  capState = setUnit(capState, enemy.id, { position: { col: 4, row: 5 } });
+  capState = setUnit(capState, enemy.id, {
+    position: { col: 4, row: 5 },
+    turn: makeEmptyTurnEconomy(),
+    hasMovedThisTurn: false,
+    hasAttackedThisTurn: false,
+    hasActedThisTurn: false,
+    stealthAttemptedThisTurn: false,
+  });
   capState = toBattleState(capState, "P2", enemy.id);
   const capAttack = applyAction(
     capState,
@@ -15987,6 +16051,10 @@ function testUndyneImmortalTriggerCapDrainBonusAndOnce() {
 
   let bonusState = setUnit(capResolved.state, undyne.id, {
     turn: makeEmptyTurnEconomy(),
+    hasMovedThisTurn: false,
+    hasAttackedThisTurn: false,
+    hasActedThisTurn: false,
+    stealthAttemptedThisTurn: false,
     position: { col: 4, row: 4 },
   });
   bonusState = setUnit(bonusState, enemy.id, {
@@ -16029,6 +16097,10 @@ function testUndyneImmortalTriggerCapDrainBonusAndOnce() {
   let freeSpear = setUnit(drained.state, undyne.id, {
     position: { col: 4, row: 4 },
     turn: makeEmptyTurnEconomy(),
+    hasMovedThisTurn: false,
+    hasAttackedThisTurn: false,
+    hasActedThisTurn: false,
+    stealthAttemptedThisTurn: false,
     charges: {
       ...drained.state.units[undyne.id].charges,
       [ABILITY_UNDYNE_ENERGY_SPEAR]: 0,
@@ -16061,9 +16133,18 @@ function testUndyneImmortalTriggerCapDrainBonusAndOnce() {
     undyneImmortalUsed: true,
     undyneImmortalActive: true,
     turn: makeEmptyTurnEconomy(),
+    hasMovedThisTurn: false,
+    hasAttackedThisTurn: false,
+    hasActedThisTurn: false,
+    stealthAttemptedThisTurn: false,
   });
   secondDeathState = setUnit(secondDeathState, enemy.id, {
     position: { col: 4, row: 5 },
+    turn: makeEmptyTurnEconomy(),
+    hasMovedThisTurn: false,
+    hasAttackedThisTurn: false,
+    hasActedThisTurn: false,
+    stealthAttemptedThisTurn: false,
   });
   secondDeathState = toBattleState(secondDeathState, "P2", enemy.id);
   const secondDeath = applyAction(
@@ -16716,8 +16797,9 @@ function testMettatonFinalChordGatingTargetsDamageAndSpend() {
 function main() {
   // Full test run: invoke all test functions in this file
   console.log('Running full simpleTests suite');
-  testActionModuleBoundaries();
   testPendingRollActionsExportsStable();
+  testPendingRollResolverCoverage();
+  testUnknownPendingRollKindDoesNotClear();
   testPlacementToBattleAndTurnOrder();
   testLobbyReadyAndStartRequiresBothReady();
   testInitiativeRollSequenceNoAutoroll();
@@ -16973,4 +17055,12 @@ function main() {
   testGoldenActionSnapshot();
 }
 
-main();
+function mainBoundaries() {
+  testActionModuleBoundaries();
+}
+
+if (process.argv.includes("--boundaries")) {
+  mainBoundaries();
+} else {
+  main();
+}

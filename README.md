@@ -76,6 +76,7 @@ npm run build
 
 ```bash
 npm run test
+npm run -w web typecheck
 ```
 
 ## Environment Variables (Web)
@@ -86,6 +87,17 @@ The frontend reads these at build time. In production builds they are required a
 - `VITE_WS_URL` (example: `wss://your-render-app.onrender.com/ws`)
 
 Local defaults are provided in `.env.example`.
+
+## Environment Variables (Server)
+
+- `WEB_ORIGIN` - allowed browser origin for CORS and WebSocket Origin checks, for example `https://your-app.vercel.app`.
+- `FATE_DEBUG_TOKEN` - production-only token for debug REST game views/actions/logs. Send it as `X-FATE-DEBUG-TOKEN: <token>`.
+- `ROOM_TTL_MS` - idle room TTL before cleanup. Default: `86400000` (24 hours).
+- `MAX_ROOMS` - maximum in-memory FATE rooms retained. Default: `100`.
+- `MAX_LOG_EVENTS` - maximum action log entries retained per room. Default: `5000`.
+- `WS_MAX_PAYLOAD_BYTES`, `WS_RATE_LIMIT_WINDOW_MS`, `WS_RATE_LIMIT_MAX_MESSAGES`, `RECONNECT_GRACE_MS` - WebSocket payload, rate, and reconnect controls.
+
+Local development keeps debug REST endpoints open when `NODE_ENV !== "production"`. In production, `GET /api/games/:id`, `POST /api/games/:id/actions`, and `GET /api/games/:id/log` require `X-FATE-DEBUG-TOKEN` to match `FATE_DEBUG_TOKEN`. Browser WebSocket connections must use an allowed Origin; missing Origin is accepted for non-browser clients.
 
 ## Assets (Figure Arts + Tokens)
 
@@ -113,9 +125,9 @@ Tips:
 - `GET /api/health` - health check (legacy)
 - `POST /api/games` - create a game
   - body: `{ "seed"?: number, "arenaId"?: string }`
-- `GET /api/games/:id?playerId=P1|P2` - get player-specific state view
-- `POST /api/games/:id/actions?playerId=P1|P2` - submit a `GameAction`
-- `GET /api/games/:id/log` - action log
+- `GET /api/games/:id?playerId=P1|P2` - debug player-specific state view; production requires `X-FATE-DEBUG-TOKEN`
+- `POST /api/games/:id/actions?playerId=P1|P2` - debug `GameAction` submit; production requires `X-FATE-DEBUG-TOKEN`
+- `GET /api/games/:id/log` - debug action log; production requires `X-FATE-DEBUG-TOKEN`
 - `GET /rooms` - list room summaries
 - `POST /rooms` - create a room (returns `roomId`)
 
@@ -148,7 +160,9 @@ Render can build from the repo root.
 
 Environment variables:
 - `PORT` (Render sets this automatically)
-- `WEB_ORIGIN` (optional; set to your Vercel URL to lock CORS)
+- `WEB_ORIGIN` (set to your Vercel URL for CORS and WebSocket Origin checks)
+- `FATE_DEBUG_TOKEN` (required only if using debug REST endpoints in production)
+- `ROOM_TTL_MS`, `MAX_ROOMS`, `MAX_LOG_EVENTS` (optional in-memory bounds)
 - `NODE_VERSION=22` (optional)
 
 Notes:

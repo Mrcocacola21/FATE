@@ -200,7 +200,7 @@ function formatEvent(event: GameEvent): string {
     case "gameEnded":
       return `Game ended: ${event.winner}`;
     default:
-      return event.type;
+      return String((event as { type?: string }).type ?? "event");
   }
 }
 

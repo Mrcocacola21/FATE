@@ -1,17 +1,17 @@
 import { useEffect, useMemo } from "react";
-import type { Coord, UnitState } from "rules";
+import type { Coord, PlayerView, UnitState } from "rules";
 import { KALADIN_ID, PAPYRUS_ID } from "../../../rulesHints";
 import { coordKey, getArcherLikeTargetIds, getAttackRangeCells } from "../helpers";
 
 interface UseGameShellCombatTargetsParams {
-  view: any;
-  selectedUnit: any;
+  view: PlayerView | null;
+  selectedUnit: UnitState | null;
   selectedUnitId: string | null;
   placeUnitId: string | null;
-  effectiveActionMode: any;
-  pendingMoveForSelected: any;
-  moveOptions: any;
-  hoverActionMode: any;
+  effectiveActionMode: string | null;
+  pendingMoveForSelected: { legalTo: Coord[] } | null;
+  moveOptions: { unitId: string; legalTo: Coord[] } | null;
+  hoverActionMode: string | null;
   allowActionHoverPreview: boolean;
 }
 

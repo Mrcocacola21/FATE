@@ -8,6 +8,7 @@
     "build": "npm run clean && tsc -p tsconfig.json",
     "build:watch": "tsc -p tsconfig.json --watch",
     "test": "ts-node src/tests/simpleTests.ts",
+    "test:boundaries": "ts-node src/tests/simpleTests.ts --boundaries",
     "manual:test": "ts-node src/manualTest.ts"
   },
   "keywords": [],

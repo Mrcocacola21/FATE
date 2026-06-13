@@ -1,6 +1,5 @@
 import type { ApplyResult, GameState } from "../../model";
 import type { RNG } from "../../rng";
-import { clearPendingRoll } from "../../core";
 import { resolveCorePendingRollCase } from "./coreCases";
 import { resolveHeroPendingRollCase } from "./heroCases";
 import type { ResolvePendingRollAction } from "./types";
@@ -45,5 +44,15 @@ export function applyResolvePendingRoll(
     return heroResult;
   }
 
-  return { state: clearPendingRoll(state), events: [] };
+  return {
+    state,
+    events: [
+      {
+        type: "pendingRollUnhandled",
+        rollId: pending.id,
+        kind: String(pending.kind),
+        player: pending.player,
+      },
+    ],
+  };
 }

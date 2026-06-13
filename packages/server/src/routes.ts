@@ -1,12 +1,26 @@
 // packages/server/src/routes.ts
 
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
-import { GameAction, PlayerId, makePlayerView, HERO_REGISTRY, getHeroMeta } from "rules";
+import {
+  GameAction,
+  PlayerId,
+  makePlayerView,
+  projectEventsForRecipient,
+  HERO_REGISTRY,
+  getHeroMeta,
+} from "rules";
 import { z } from "zod";
 import { CreateGameBodySchema, GameActionSchema, PlayerIdSchema } from "./schemas";
 import { isActionAllowedByPlayer } from "./permissions";
-import { applyGameAction, createGameRoom, getGameRoom, listRoomSummaries } from "./store";
-import { broadcastActionResult, broadcastRoomState } from "./ws";
+import {
+  applyGameAction,
+  cleanupGameRooms,
+  createGameRoom,
+  getGameRoom,
+  listRoomSummaries,
+  touchGameRoom,
+} from "./store";
+import { broadcastActionResult, broadcastRoomState, getActiveFateRoomIds } from "./ws";
 import { FATE_CREATE_KEY, enqueueRoomCommand, fateRoomKey } from "./roomQueue";
 
 function parsePlayerId(request: FastifyRequest): PlayerId | null {
@@ -17,6 +31,27 @@ function parsePlayerId(request: FastifyRequest): PlayerId | null {
 
 function sendValidationError(reply: FastifyReply, error: z.ZodError) {
   reply.code(400).send({ error: "Invalid request", details: error.flatten() });
+}
+
+function hasDebugRestAccess(request: FastifyRequest): boolean {
+  if (process.env.NODE_ENV !== "production") return true;
+  const expected = process.env.FATE_DEBUG_TOKEN;
+  const provided = request.headers["x-fate-debug-token"];
+  return (
+    typeof expected === "string" &&
+    expected.length > 0 &&
+    typeof provided === "string" &&
+    provided === expected
+  );
+}
+
+function requireDebugRestAccess(
+  request: FastifyRequest,
+  reply: FastifyReply
+): boolean {
+  if (hasDebugRestAccess(request)) return true;
+  reply.code(401).send({ error: "Debug token required" });
+  return false;
 }
 
 export async function registerRoutes(server: FastifyInstance) {
@@ -44,7 +79,10 @@ export async function registerRoutes(server: FastifyInstance) {
     }
   );
 
-  server.get("/rooms", async () => listRoomSummaries());
+  server.get("/rooms", async () => {
+    cleanupGameRooms({ activeRoomIds: getActiveFateRoomIds() });
+    return listRoomSummaries();
+  });
 
   server.post(
     "/rooms",
@@ -54,9 +92,10 @@ export async function registerRoutes(server: FastifyInstance) {
         return sendValidationError(reply, parsed.error);
       }
 
-      const room = await enqueueRoomCommand(FATE_CREATE_KEY, () =>
-        createGameRoom(parsed.data)
-      );
+      const room = await enqueueRoomCommand(FATE_CREATE_KEY, () => {
+        cleanupGameRooms({ activeRoomIds: getActiveFateRoomIds() });
+        return createGameRoom(parsed.data);
+      });
       reply.send({ roomId: room.id });
     }
   );
@@ -69,9 +108,10 @@ export async function registerRoutes(server: FastifyInstance) {
         return sendValidationError(reply, parsed.error);
       }
 
-      const room = await enqueueRoomCommand(FATE_CREATE_KEY, () =>
-        createGameRoom(parsed.data)
-      );
+      const room = await enqueueRoomCommand(FATE_CREATE_KEY, () => {
+        cleanupGameRooms({ activeRoomIds: getActiveFateRoomIds() });
+        return createGameRoom(parsed.data);
+      });
       const views = {
         P1: makePlayerView(room.state, "P1"),
         P2: makePlayerView(room.state, "P2"),
@@ -88,6 +128,7 @@ export async function registerRoutes(server: FastifyInstance) {
   server.get(
     "/api/games/:id",
     async (request: FastifyRequest, reply: FastifyReply) => {
+      if (!requireDebugRestAccess(request, reply)) return;
       const gameId = (request.params as { id: string }).id;
       const room = getGameRoom(gameId);
       if (!room) {
@@ -102,6 +143,7 @@ export async function registerRoutes(server: FastifyInstance) {
       }
 
       const view = makePlayerView(room.state, playerId);
+      touchGameRoom(room);
       reply.send({ gameId: room.id, seed: room.seed, view });
     }
   );
@@ -109,6 +151,7 @@ export async function registerRoutes(server: FastifyInstance) {
   server.get(
     "/api/games/:id/log",
     async (request: FastifyRequest, reply: FastifyReply) => {
+      if (!requireDebugRestAccess(request, reply)) return;
       const gameId = (request.params as { id: string }).id;
       const room = getGameRoom(gameId);
       if (!room) {
@@ -116,6 +159,7 @@ export async function registerRoutes(server: FastifyInstance) {
         return;
       }
 
+      touchGameRoom(room);
       reply.send({ gameId: room.id, log: room.actionLog });
     }
   );
@@ -123,6 +167,7 @@ export async function registerRoutes(server: FastifyInstance) {
   server.post(
     "/api/games/:id/actions",
     async (request: FastifyRequest, reply: FastifyReply) => {
+      if (!requireDebugRestAccess(request, reply)) return;
       const gameId = (request.params as { id: string }).id;
       const playerId = parsePlayerId(request);
       if (!playerId) {
@@ -191,7 +236,7 @@ export async function registerRoutes(server: FastifyInstance) {
           status: 200,
           payload: {
             view,
-            events: command.events,
+            events: projectEventsForRecipient(room.state, command.events, playerId),
             logIndex: command.logIndex,
             revision: command.revision,
           },

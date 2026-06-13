@@ -49,8 +49,8 @@ const markdownComponents: Components = {
       {children}
     </a>
   ),
-  code: ({ inline, children }) =>
-    inline ? (
+  code: ({ className, children }) =>
+    !className ? (
       <code className="rounded bg-slate-100 px-1 py-0.5 text-[12px] text-slate-800 dark:bg-slate-800 dark:text-slate-100">
         {children}
       </code>

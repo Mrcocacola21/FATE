@@ -1,4 +1,4 @@
-import type { Coord, PlayerId, PlayerView } from "rules";
+import type { Coord, PlayerId, PlayerView, UnitClass } from "rules";
 import {
   EL_CID_COMPEADOR_ID,
   EL_CID_KOLADA_ID,
@@ -577,7 +577,7 @@ export const Board: FC<BoardProps> = ({
               <div style={{ width: hpBarWidth }}>
                 <HpBar
                   current={view.units[unit.id]?.hp ?? 0}
-                  max={getMaxHp(unit.class, view.units[unit.id]?.heroId)}
+                  max={getMaxHp(unit.class as UnitClass, view.units[unit.id]?.heroId)}
                   showText={playerId ? unit.owner === playerId : false}
                   className="w-full"
                 />

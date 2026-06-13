@@ -14,13 +14,22 @@ import type {
   PlayerView,
   RollKind,
 } from "rules";
-import { attachArmy, createDefaultArmy, makePlayerView, makeSpectatorView } from "rules";
+import {
+  attachArmy,
+  createDefaultArmy,
+  makePlayerView,
+  makeSpectatorView,
+  projectEventsForRecipient,
+} from "rules";
 import { ClientMessageSchema } from "./schemas";
+import { isAllowedOrigin } from "./origin";
 import { isActionAllowedByPlayer } from "./permissions";
 import {
   applyGameAction,
+  cleanupGameRooms,
   createGameRoomWithId,
   getGameRoom,
+  touchGameRoom,
   type GameRoom,
 } from "./store";
 import { logFate } from "./fateLogger";
@@ -520,7 +529,16 @@ export const wsTestHooks = {
   consumeSocketRateBudget,
   resetWsStateForTests,
   hasSeatGraceToken: (resumeToken: string) => graceByToken.has(resumeToken),
+  getActiveFateRoomIds: () => getActiveFateRoomIds(),
 };
+
+export function getActiveFateRoomIds(): Set<string> {
+  const active = new Set<string>();
+  for (const [roomId, sockets] of roomSockets) {
+    if (sockets.size > 0) active.add(roomId);
+  }
+  return active;
+}
 
 function buildRoomMeta(room: GameRoom): RoomMeta {
   const ready = room.state.playersReady ?? { P1: false, P2: false };
@@ -591,11 +609,11 @@ export function broadcastActionResult(payload: {
   const room = getGameRoom(payload.gameId);
   for (const socket of sockets) {
     const meta = socketMeta.get(socket);
-    const filteredEvents = filterEventsForRecipient(
-      room,
-      meta ?? null,
-      payload.events
-    );
+    const recipient =
+      meta?.role === "P1" || meta?.role === "P2" ? meta.role : "spectator";
+    const filteredEvents = room
+      ? projectEventsForRecipient(room.state, payload.events, recipient)
+      : [];
     sendMessage(socket, {
       type: "actionResult",
       ok: payload.ok,
@@ -604,26 +622,6 @@ export function broadcastActionResult(payload: {
       logIndex: payload.logIndex,
     });
   }
-}
-
-function filterEventsForRecipient(
-  room: GameRoom | undefined,
-  meta: ConnectionMeta | null,
-  events: GameEvent[]
-): GameEvent[] {
-  if (!meta || !room) return events;
-  const role = meta.role;
-  return events.filter((event) => {
-    if (event.type === "stakesPlaced") {
-      return role === event.owner;
-    }
-    if (event.type === "intimidateTriggered") {
-      const defender = room.state.units[event.defenderId];
-      if (!defender) return false;
-      return role === defender.owner;
-    }
-    return true;
-  });
 }
 
 function sendMoveOptionsIfAny(socket: WebSocket, events: GameEvent[]) {
@@ -801,7 +799,14 @@ function detachFromPongRoom(meta: ConnectionMeta, reason: "leave" | "disconnect"
 
 export function registerGameWebSocket(server: FastifyInstance) {
   serverLogger = server.log;
-  server.get("/ws", { websocket: true }, (socket) => {
+  server.get("/ws", { websocket: true }, (socket, request) => {
+    const rawOrigin = request.headers.origin;
+    const origin = Array.isArray(rawOrigin) ? rawOrigin[0] : rawOrigin;
+    if (!isAllowedOrigin(origin)) {
+      socket.close(1008, "Origin not allowed");
+      return;
+    }
+
     async function detachExistingConnection(
       existing: ConnectionMeta,
       reason: "leave" | "switch_room" | "disconnect"
@@ -1009,6 +1014,7 @@ export function registerGameWebSocket(server: FastifyInstance) {
               }
               const hostSeat: PlayerId = requestedSeat ?? "P1";
               const hostConnForState = requestedSeat ? connId : null;
+              cleanupGameRooms({ activeRoomIds: getActiveFateRoomIds() });
               room = createGameRoomWithId(targetRoomId, {
                 hostSeat,
                 hostConnId: hostConnForState,
@@ -1072,6 +1078,8 @@ export function registerGameWebSocket(server: FastifyInstance) {
                 room.state = { ...room.state, hostPlayerId: requestedSeat };
               }
             }
+
+            touchGameRoom(room);
 
             socketMeta.set(socket, {
               channel: "fate",

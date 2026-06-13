@@ -109,9 +109,15 @@ export function buildRightPanelViewModel(params: RightPanelProps) {
   );
 
   const isMyTurn = playerId ? view.currentPlayer === playerId : false;
-  const isActive = selectedUnit && view.activeUnitId === selectedUnit.id;
-  const canAct =
-    joined && !pendingRoll && !isSpectator && isMyTurn && !!selectedUnit && isActive;
+  const isActive = !!selectedUnit && view.activeUnitId === selectedUnit.id;
+  const canAct = !!(
+    joined &&
+    !pendingRoll &&
+    !isSpectator &&
+    isMyTurn &&
+    selectedUnit &&
+    isActive
+  );
 
   const economy = selectedUnit?.turn ?? DEFAULT_ECONOMY;
   const legalIntents = view.legalIntents;
@@ -126,13 +132,14 @@ export function buildRightPanelViewModel(params: RightPanelProps) {
     selectedUnit?.heroId === METTATON_ID
       ? Math.max(0, selectedUnit.mettatonRating ?? 0)
       : null;
-  const stormRangedAttackBlocked =
+  const stormRangedAttackBlocked = !!(
     canAct &&
-    !!selectedUnit?.position &&
+    selectedUnit?.position &&
     stormActive &&
     !selectedStormExempt &&
     isRangedSingleTargetClass(selectedUnit.class) &&
-    selectedLegalAttackTargets.length === 0;
+    selectedLegalAttackTargets.length === 0
+  );
   const attackDisabledReason = stormRangedAttackBlocked
     ? "Storm restricts this unit to adjacent attacks."
     : undefined;
@@ -157,9 +164,9 @@ export function buildRightPanelViewModel(params: RightPanelProps) {
   const selectedPapyrusUnbeliever =
     selectedIsPapyrus && !!selectedUnit?.papyrusUnbelieverActive;
   const selectedPapyrusBoneMode =
-    selectedUnit?.papyrusBoneMode === "orange" ? "orange" : "blue";
+    selectedUnit?.papyrusBoneMode === "orange" ? ("orange" as const) : ("blue" as const);
   const selectedPapyrusLongBoneMode = !!selectedUnit?.papyrusLongBoneMode;
-  const undyneAxis = papyrusLineAxis === "col" ? "col" : "row";
+  const undyneAxis = papyrusLineAxis === "col" ? ("col" as const) : ("row" as const);
 
   const placementEnabled =
     joined && !pendingRoll && !isSpectator && isMyTurn && view.phase === "placement";

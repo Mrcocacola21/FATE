@@ -9,5 +9,16 @@ interface BoardStageProps {
 }
 
 export const BoardStage: FC<BoardStageProps> = ({ view, selectedCell, onCellClick }) => {
-  return <Board view={view} selectedCell={selectedCell} onCellClick={onCellClick} />;
+  return (
+    <Board
+      view={view}
+      playerId={null}
+      selectedUnitId={null}
+      highlightedCells={
+        selectedCell ? { [`${selectedCell.col},${selectedCell.row}`]: "previewMove" } : {}
+      }
+      onSelectUnit={() => undefined}
+      onCellClick={(col, row) => onCellClick({ col, row })}
+    />
+  );
 };

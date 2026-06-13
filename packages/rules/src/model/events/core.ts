@@ -69,6 +69,12 @@ export type CoreGameEvent =
       actorUnitId?: string;
     }
   | {
+      type: "pendingRollUnhandled";
+      rollId: string;
+      kind: string;
+      player: PlayerId;
+    }
+  | {
       type: "initiativeRollRequested";
       rollId: string;
       player: PlayerId;

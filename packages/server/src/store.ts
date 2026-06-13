@@ -31,6 +31,7 @@ export interface GameRoom {
   actionLog: ActionLogEntry[];
   revision: number;
   createdAt: number;
+  lastActivityAt: number;
   hostConnId: string | null;
   hostSeat: PlayerId;
   seats: { P1: string | null; P2: string | null };
@@ -58,6 +59,23 @@ export interface RoomSummary {
 
 // TODO: replace with persistence-backed storage.
 const games = new Map<string, GameRoom>();
+
+function readPositiveIntEnv(name: string, fallback: number): number {
+  const value = Number(process.env[name]);
+  return Number.isFinite(value) && value > 0 ? Math.floor(value) : fallback;
+}
+
+export function getRoomTtlMs(): number {
+  return readPositiveIntEnv("ROOM_TTL_MS", 24 * 60 * 60 * 1000);
+}
+
+export function getMaxRooms(): number {
+  return readPositiveIntEnv("MAX_ROOMS", 100);
+}
+
+export function getMaxLogEvents(): number {
+  return readPositiveIntEnv("MAX_LOG_EVENTS", 5000);
+}
 
 function isExplicitlyAcceptedNoop(
   action: GameAction,
@@ -118,6 +136,7 @@ export function createGameRoomWithId(
     };
   }
 
+  const now = Date.now();
   const room: GameRoom = {
     id,
     seed,
@@ -125,7 +144,8 @@ export function createGameRoomWithId(
     state,
     actionLog: [],
     revision: 0,
-    createdAt: Date.now(),
+    createdAt: now,
+    lastActivityAt: now,
     hostConnId,
     hostSeat,
     seats,
@@ -146,6 +166,14 @@ export function getGameRoom(id: string): GameRoom | undefined {
   return games.get(id);
 }
 
+export function touchGameRoom(room: GameRoom, now = Date.now()) {
+  room.lastActivityAt = now;
+}
+
+export function deleteGameRoom(id: string): boolean {
+  return games.delete(id);
+}
+
 export function getOrCreateGameRoom(
   id: string,
   options: CreateGameOptions = {}
@@ -157,6 +185,43 @@ export function getOrCreateGameRoom(
 
 export function listGameRooms(): GameRoom[] {
   return Array.from(games.values());
+}
+
+export function cleanupGameRooms(
+  options: {
+    now?: number;
+    roomTtlMs?: number;
+    maxRooms?: number;
+    activeRoomIds?: Set<string>;
+  } = {}
+): string[] {
+  const now = options.now ?? Date.now();
+  const roomTtlMs = options.roomTtlMs ?? getRoomTtlMs();
+  const maxRooms = options.maxRooms ?? getMaxRooms();
+  const activeRoomIds = options.activeRoomIds ?? new Set<string>();
+  const removed: string[] = [];
+
+  for (const room of games.values()) {
+    if (activeRoomIds.has(room.id)) continue;
+    if (now - room.lastActivityAt > roomTtlMs) {
+      games.delete(room.id);
+      removed.push(room.id);
+    }
+  }
+
+  if (games.size <= maxRooms) return removed;
+
+  const inactiveRooms = Array.from(games.values())
+    .filter((room) => !activeRoomIds.has(room.id))
+    .sort((a, b) => a.lastActivityAt - b.lastActivityAt);
+
+  for (const room of inactiveRooms) {
+    if (games.size <= maxRooms) break;
+    games.delete(room.id);
+    removed.push(room.id);
+  }
+
+  return removed;
 }
 
 export function listRoomSummaries(): RoomSummary[] {
@@ -208,6 +273,7 @@ export function applyGameAction(
   }
 
   room.state = result.state;
+  touchGameRoom(room);
   room.revision += 1;
   room.actionLog.push({
     at: Date.now(),
@@ -216,6 +282,10 @@ export function applyGameAction(
     events: result.events,
     revision: room.revision,
   });
+  const maxLogEvents = getMaxLogEvents();
+  if (room.actionLog.length > maxLogEvents) {
+    room.actionLog.splice(0, room.actionLog.length - maxLogEvents);
+  }
 
   return accepted({
     stateChanged,
@@ -224,3 +294,7 @@ export function applyGameAction(
     logIndex: room.actionLog.length - 1,
   });
 }
+
+export const storeTestHooks = {
+  reset: () => games.clear(),
+};

@@ -1,8 +1,24 @@
 import assert from "assert";
 import { randomUUID } from "node:crypto";
 import { mock } from "node:test";
+import {
+  attachArmy,
+  createDefaultArmy,
+  createEmptyGame,
+  projectEventsForRecipient,
+  type GameEvent,
+  type GameState,
+  type UnitState,
+} from "rules";
+import { buildServer } from "../index";
 import { enqueueRoomCommand, fateRoomKey } from "../roomQueue";
-import { applyGameAction, createGameRoomWithId } from "../store";
+import {
+  applyGameAction,
+  cleanupGameRooms,
+  createGameRoomWithId,
+  getGameRoom,
+  storeTestHooks,
+} from "../store";
 import { wsTestHooks } from "../ws";
 
 function flushMicrotasks() {
@@ -22,6 +38,30 @@ function makeSeatedRoom(params: {
   });
   room.seatTokens.P1 = resumeToken;
   return { room, connId, resumeToken };
+}
+
+function setUnit(
+  state: GameState,
+  unitId: string,
+  patch: Partial<UnitState>
+): GameState {
+  const unit = state.units[unitId];
+  assert(unit, `missing unit ${unitId}`);
+  return {
+    ...state,
+    units: {
+      ...state.units,
+      [unitId]: { ...unit, ...patch },
+    },
+  };
+}
+
+function restoreEnv(name: string, previous: string | undefined) {
+  if (previous === undefined) {
+    delete process.env[name];
+  } else {
+    process.env[name] = previous;
+  }
 }
 
 async function testGraceExpiryVacatesSeatAndInvalidatesToken() {
@@ -313,6 +353,169 @@ function testPayloadCapAllowsValidClientCommands() {
   console.log("hardening_payload_cap_headroom passed");
 }
 
+async function testRestDebugEndpointsGatedInProduction() {
+  storeTestHooks.reset();
+  const previousNodeEnv = process.env.NODE_ENV;
+  const previousDebugToken = process.env.FATE_DEBUG_TOKEN;
+  process.env.NODE_ENV = "production";
+  process.env.FATE_DEBUG_TOKEN = "rest-secret";
+
+  const server = await buildServer();
+  try {
+    const room = createGameRoomWithId(`hardening-rest-${randomUUID()}`, {
+      hostSeat: "P1",
+      hostConnId: `conn-${randomUUID()}`,
+    });
+
+    const deniedView = await server.inject({
+      method: "GET",
+      url: `/api/games/${room.id}?playerId=P1`,
+    });
+    assert.equal(deniedView.statusCode, 401);
+
+    const deniedLog = await server.inject({
+      method: "GET",
+      url: `/api/games/${room.id}/log`,
+    });
+    assert.equal(deniedLog.statusCode, 401);
+
+    const deniedAction = await server.inject({
+      method: "POST",
+      url: `/api/games/${room.id}/actions?playerId=P1`,
+      payload: { type: "setReady", player: "P1", ready: true },
+    });
+    assert.equal(deniedAction.statusCode, 401);
+
+    const allowedView = await server.inject({
+      method: "GET",
+      url: `/api/games/${room.id}?playerId=P1`,
+      headers: { "x-fate-debug-token": "rest-secret" },
+    });
+    assert.equal(allowedView.statusCode, 200);
+  } finally {
+    await server.close();
+    restoreEnv("NODE_ENV", previousNodeEnv);
+    restoreEnv("FATE_DEBUG_TOKEN", previousDebugToken);
+    storeTestHooks.reset();
+  }
+
+  process.env.NODE_ENV = "development";
+  const devServer = await buildServer();
+  try {
+    const room = createGameRoomWithId(`hardening-rest-dev-${randomUUID()}`, {
+      hostSeat: "P1",
+      hostConnId: `conn-${randomUUID()}`,
+    });
+    const devView = await devServer.inject({
+      method: "GET",
+      url: `/api/games/${room.id}?playerId=P1`,
+    });
+    assert.equal(devView.statusCode, 200);
+  } finally {
+    await devServer.close();
+    restoreEnv("NODE_ENV", previousNodeEnv);
+    storeTestHooks.reset();
+  }
+
+  console.log("hardening_rest_debug_endpoints_gated passed");
+}
+
+function testIdleRoomCleanupExpiresRoom() {
+  storeTestHooks.reset();
+  mock.timers.enable({ apis: ["Date"] });
+  try {
+    const room = createGameRoomWithId(`hardening-cleanup-idle-${randomUUID()}`);
+    const ttlMs = 1000;
+    mock.timers.tick(ttlMs + 1);
+    const removed = cleanupGameRooms({
+      roomTtlMs: ttlMs,
+      activeRoomIds: new Set(),
+    });
+    assert(removed.includes(room.id), "idle room should be removed after TTL");
+    assert.equal(getGameRoom(room.id), undefined);
+  } finally {
+    mock.timers.reset();
+    storeTestHooks.reset();
+  }
+  console.log("hardening_idle_room_cleanup_expires passed");
+}
+
+function testActiveRoomCleanupDoesNotExpireRoom() {
+  storeTestHooks.reset();
+  mock.timers.enable({ apis: ["Date"] });
+  try {
+    const room = createGameRoomWithId(`hardening-cleanup-active-${randomUUID()}`);
+    const ttlMs = 1000;
+    mock.timers.tick(ttlMs + 1);
+    const removed = cleanupGameRooms({
+      roomTtlMs: ttlMs,
+      activeRoomIds: new Set([room.id]),
+    });
+    assert(!removed.includes(room.id), "active room must not be removed by TTL");
+    assert.equal(getGameRoom(room.id)?.id, room.id);
+  } finally {
+    mock.timers.reset();
+    storeTestHooks.reset();
+  }
+  console.log("hardening_active_room_cleanup_keeps_room passed");
+}
+
+function testActionLogTruncatesToConfiguredLimit() {
+  storeTestHooks.reset();
+  const previousMaxLogEvents = process.env.MAX_LOG_EVENTS;
+  process.env.MAX_LOG_EVENTS = "2";
+  try {
+    const room = createGameRoomWithId(`hardening-log-truncate-${randomUUID()}`, {
+      hostSeat: "P1",
+      hostConnId: `conn-${randomUUID()}`,
+    });
+    applyGameAction(room, { type: "setReady", player: "P1", ready: true }, "P1");
+    applyGameAction(room, { type: "setReady", player: "P1", ready: false }, "P1");
+    applyGameAction(room, { type: "setReady", player: "P1", ready: true }, "P1");
+
+    assert.equal(room.actionLog.length, 2, "action log should keep configured tail");
+    assert.equal(room.actionLog[0].revision, 2);
+    assert.equal(room.actionLog[1].revision, 3);
+  } finally {
+    restoreEnv("MAX_LOG_EVENTS", previousMaxLogEvents);
+    storeTestHooks.reset();
+  }
+  console.log("hardening_action_log_truncates passed");
+}
+
+function testProjectedEventsRedactHiddenUnitPositions() {
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1"));
+  state = attachArmy(state, createDefaultArmy("P2"));
+  const hidden = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.class === "assassin"
+  );
+  assert(hidden, "expected P1 assassin");
+  state = setUnit(state, hidden.id, {
+    position: { col: 2, row: 2 },
+    isStealthed: true,
+    isAlive: true,
+  });
+  const event: GameEvent = {
+    type: "unitMoved",
+    unitId: hidden.id,
+    from: { col: 1, row: 1 },
+    to: { col: 2, row: 2 },
+  };
+
+  const ownerEvents = projectEventsForRecipient(state, [event], "P1");
+  const opponentEvents = projectEventsForRecipient(state, [event], "P2");
+  const spectatorEvents = projectEventsForRecipient(state, [event], "spectator");
+
+  assert.deepEqual(ownerEvents[0], event, "owner should receive full hidden move");
+  assert.equal("from" in (opponentEvents[0] as Record<string, unknown>), false);
+  assert.equal("to" in (opponentEvents[0] as Record<string, unknown>), false);
+  assert.equal("from" in (spectatorEvents[0] as Record<string, unknown>), false);
+  assert.equal("to" in (spectatorEvents[0] as Record<string, unknown>), false);
+
+  console.log("hardening_projected_events_redact_hidden_positions passed");
+}
+
 async function main() {
   await testGraceExpiryVacatesSeatAndInvalidatesToken();
   await testReconnectWithinGraceKeepsSeatAndClearsTimer();
@@ -320,6 +523,11 @@ async function main() {
   testRejectedActionLogAndRevisionInvariants();
   testRateLimitWindowResets();
   testPayloadCapAllowsValidClientCommands();
+  await testRestDebugEndpointsGatedInProduction();
+  testIdleRoomCleanupExpiresRoom();
+  testActiveRoomCleanupDoesNotExpireRoom();
+  testActionLogTruncatesToConfiguredLimit();
+  testProjectedEventsRedactHiddenUnitPositions();
   console.log("hardening tests passed");
 }
 

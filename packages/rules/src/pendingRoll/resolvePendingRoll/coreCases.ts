@@ -24,6 +24,27 @@ import {
 } from "../../actions/movementActions";
 import type { AutoRollChoice, ResolvePendingRollAction } from "./types";
 
+export const CORE_PENDING_ROLL_KINDS = [
+  "initiativeRoll",
+  "enterBunker",
+  "enterStealth",
+  "searchStealth",
+  "moveTrickster",
+  "moveBerserker",
+  "attack_attackerRoll",
+  "riderPathAttack_attackerRoll",
+  "attack_defenderRoll",
+  "riderPathAttack_defenderRoll",
+  "berserkerDefenseChoice",
+  "odinMuninnDefenseChoice",
+  "friskSubstitutionChoice",
+  "friskChildsCryChoice",
+  "asgoreBraveryDefenseChoice",
+  "chikatiloDecoyChoice",
+  "forestMoveCheck",
+  "forestMoveDestination",
+] as const;
+
 export function resolveCorePendingRollCase(
   state: GameState,
   pending: PendingRoll,

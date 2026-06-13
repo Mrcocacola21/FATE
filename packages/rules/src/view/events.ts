@@ -1,0 +1,146 @@
+import type { GameEvent, GameState, PlayerId } from "../model";
+
+export type EventRecipient = PlayerId | "spectator";
+
+const PUBLIC_EVENT_TYPES = new Set<GameEvent["type"]>([
+  "turnStarted",
+  "roundStarted",
+  "attackResolved",
+  "unitDied",
+  "initiativeRollRequested",
+  "initiativeRolled",
+  "initiativeResolved",
+  "placementStarted",
+  "berserkerDefenseChosen",
+  "damageBonusApplied",
+  "chargesUpdated",
+  "bunkerEntered",
+  "bunkerEnterFailed",
+  "bunkerExited",
+  "stakeTriggered",
+  "forestActivated",
+  "carpetStrikeTriggered",
+  "carpetStrikeCenter",
+  "carpetStrikeAttackRolled",
+  "abilityUsed",
+  "unitHealed",
+  "aoeResolved",
+  "moveBlocked",
+  "arenaChosen",
+  "battleStarted",
+  "gameEnded",
+  "mettatonRatingChanged",
+  "papyrusUnbelieverActivated",
+  "papyrusBoneApplied",
+  "papyrusBonePunished",
+  "sansUnbelieverActivated",
+  "sansBadassJokeApplied",
+  "sansMoveDenied",
+  "sansBoneFieldActivated",
+  "sansBoneFieldApplied",
+  "sansBoneFieldPunished",
+  "sansLastAttackApplied",
+  "sansLastAttackTick",
+  "sansLastAttackRemoved",
+]);
+
+function redactedEvent(type: GameEvent["type"]): GameEvent {
+  return { type } as GameEvent;
+}
+
+function isUnitVisibleToRecipient(
+  state: GameState,
+  unitId: string,
+  recipient: EventRecipient
+): boolean {
+  const unit = state.units[unitId];
+  if (!unit) return false;
+  if (recipient !== "spectator" && unit.owner === recipient) return true;
+  if (!unit.isAlive) return true;
+  return !unit.isStealthed;
+}
+
+function unitOwner(state: GameState, unitId: string): PlayerId | null {
+  return state.units[unitId]?.owner ?? null;
+}
+
+function projectEventForRecipient(
+  state: GameState,
+  event: GameEvent,
+  recipient: EventRecipient
+): GameEvent[] {
+  switch (event.type) {
+    case "unitPlaced":
+      if (isUnitVisibleToRecipient(state, event.unitId, recipient)) return [event];
+      return [{ type: event.type, unitId: event.unitId } as GameEvent];
+    case "unitMoved":
+      if (isUnitVisibleToRecipient(state, event.unitId, recipient)) return [event];
+      return [{ type: event.type, unitId: event.unitId } as GameEvent];
+    case "stealthEntered": {
+      const owner = unitOwner(state, event.unitId);
+      if (recipient !== "spectator" && owner === recipient) return [event];
+      if (isUnitVisibleToRecipient(state, event.unitId, recipient)) {
+        return [{ type: event.type, unitId: event.unitId } as GameEvent];
+      }
+      return [redactedEvent(event.type)];
+    }
+    case "searchStealth": {
+      const owner = unitOwner(state, event.unitId);
+      if (recipient !== "spectator" && owner === recipient) return [event];
+      return [{ type: event.type, unitId: event.unitId, mode: event.mode } as GameEvent];
+    }
+    case "stealthRevealed":
+      if (isUnitVisibleToRecipient(state, event.unitId, recipient)) return [event];
+      return [redactedEvent(event.type)];
+    case "rollRequested":
+      if (recipient !== "spectator" && event.player === recipient) return [event];
+      if (
+        event.actorUnitId &&
+        !isUnitVisibleToRecipient(state, event.actorUnitId, recipient)
+      ) {
+        return [
+          {
+            type: event.type,
+            rollId: event.rollId,
+            kind: event.kind,
+            player: event.player,
+          } as GameEvent,
+        ];
+      }
+      return [event];
+    case "pendingRollUnhandled":
+      if (recipient !== "spectator" && event.player === recipient) return [event];
+      return [
+        {
+          type: event.type,
+          rollId: event.rollId,
+          player: event.player,
+          kind: "redacted",
+        } as GameEvent,
+      ];
+    case "moveOptionsGenerated": {
+      const owner = unitOwner(state, event.unitId);
+      if (recipient !== "spectator" && owner === recipient) return [event];
+      return [];
+    }
+    case "stakesPlaced":
+      return recipient !== "spectator" && recipient === event.owner ? [event] : [];
+    case "intimidateTriggered": {
+      const defenderOwner = unitOwner(state, event.defenderId);
+      return recipient !== "spectator" && recipient === defenderOwner ? [event] : [];
+    }
+    case "intimidateResolved":
+      if (isUnitVisibleToRecipient(state, event.attackerId, recipient)) return [event];
+      return [{ type: event.type, attackerId: event.attackerId } as GameEvent];
+    default:
+      return PUBLIC_EVENT_TYPES.has(event.type) ? [event] : [redactedEvent(event.type)];
+  }
+}
+
+export function projectEventsForRecipient(
+  state: GameState,
+  events: GameEvent[],
+  recipient: EventRecipient
+): GameEvent[] {
+  return events.flatMap((event) => projectEventForRecipient(state, event, recipient));
+}

@@ -43,7 +43,7 @@ export const BattleAbilityActions: FC<BattleAbilityActionsProps> = ({
         Ability Actions
       </div>
       {actionableAbilities.map((ability) => {
-        const hideCharges = ability.id === KAISER_DORA_ID && selectedUnit.transformed;
+        const hideCharges = ability.id === KAISER_DORA_ID && !!selectedUnit.transformed;
         const chargeState = getAbilityChargeState(ability.id, selectedUnit, ability);
         const chargeLabel = formatChargeLabel(ability, chargeState, hideCharges);
         const notEnoughCharges = !chargeState.enabled;

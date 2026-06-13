@@ -173,7 +173,7 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
         <div className="mt-2 space-y-2">
           {abilityViews.map((ability) => {
             const hideCharges =
-              ability.id === KAISER_DORA_ID && selectedUnit.transformed;
+              ability.id === KAISER_DORA_ID && !!selectedUnit.transformed;
             const chargeState = getAbilityChargeState(
               ability.id,
               selectedUnit,

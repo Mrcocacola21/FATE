@@ -91,6 +91,33 @@ function waitForError(
   });
 }
 
+function openSocket(wsUrl: string, origin?: string): Promise<WebSocket> {
+  const ws = new WebSocket(
+    wsUrl,
+    origin ? { headers: { Origin: origin } } : undefined
+  );
+  return new Promise((resolve, reject) => {
+    ws.once("open", () => resolve(ws));
+    ws.once("error", (err) => reject(err));
+  });
+}
+
+function waitForClose(ws: WebSocket, timeoutMs = 2000): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error("Timed out waiting for WS close"));
+    }, timeoutMs);
+    ws.once("close", (code) => {
+      clearTimeout(timer);
+      resolve(code);
+    });
+    ws.once("error", (err) => {
+      clearTimeout(timer);
+      reject(err);
+    });
+  });
+}
+
 async function main() {
   const server = await buildServer();
   await server.listen({ port: 0, host: "127.0.0.1" });
@@ -102,6 +129,20 @@ async function main() {
   }
 
   const wsUrl = `ws://127.0.0.1:${address.port}/ws`;
+  const allowedOriginSocket = await openSocket(wsUrl, "http://localhost:5173");
+  allowedOriginSocket.close();
+
+  const disallowedOriginSocket = await openSocket(
+    wsUrl,
+    "https://evil.example"
+  );
+  const disallowedCloseCode = await waitForClose(disallowedOriginSocket);
+  assert.equal(
+    disallowedCloseCode,
+    1008,
+    "disallowed WS Origin should be rejected with policy violation"
+  );
+
   let ws1 = new WebSocket(wsUrl);
   const ws2 = new WebSocket(wsUrl);
 
