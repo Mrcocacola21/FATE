@@ -1,5 +1,7 @@
 import type { FC } from "react";
 import type { ActionMode, ActionPreviewMode } from "../../../../store";
+import { useI18n } from "../../../../i18n";
+import { localizeServerText } from "../../../../i18n/displayMetadata";
 
 interface BattleActionButtonsProps {
   actionMode: ActionMode;
@@ -36,6 +38,7 @@ export const BattleActionButtons: FC<BattleActionButtonsProps> = ({
   onStealthClick,
   onModePreview,
 }) => {
+  const { t } = useI18n();
   return (
     <>
       <button
@@ -55,7 +58,7 @@ export const BattleActionButtons: FC<BattleActionButtonsProps> = ({
         onBlur={() => onModePreview(null)}
         disabled={moveDisabled}
       >
-        Move
+        {t("game.move")}
       </button>
       <button
         type="button"
@@ -75,7 +78,7 @@ export const BattleActionButtons: FC<BattleActionButtonsProps> = ({
         disabled={attackDisabled}
         title={attackDisabledReason ?? ""}
       >
-        Attack
+        {t("game.attack")}
       </button>
       {attackDisabledReason && (
         <div className="col-span-2 text-xs leading-5 text-amber-700 dark:text-amber-300">
@@ -92,7 +95,7 @@ export const BattleActionButtons: FC<BattleActionButtonsProps> = ({
         onClick={onSearchMoveClick}
         disabled={searchMoveDisabled}
       >
-        Search (Move)
+        {t("game.searchMove")}
       </button>
       <button
         type="button"
@@ -104,16 +107,22 @@ export const BattleActionButtons: FC<BattleActionButtonsProps> = ({
         onClick={onSearchActionClick}
         disabled={searchActionDisabled}
       >
-        Search (Action)
+        {t("game.searchAction")}
       </button>
       {searchMoveDisabled && searchMoveReason && (
         <div className="col-span-2 text-xs leading-5 text-slate-500 dark:text-slate-400">
-          Search (Move) disabled: {searchMoveReason}
+          {t("game.searchDisabled", {
+            action: t("game.searchMove"),
+            reason: localizeServerText(searchMoveReason, t),
+          })}
         </div>
       )}
       {searchActionDisabled && searchActionReason && (
         <div className="col-span-2 text-xs leading-5 text-slate-500 dark:text-slate-400">
-          Search (Action) disabled: {searchActionReason}
+          {t("game.searchDisabled", {
+            action: t("game.searchAction"),
+            reason: localizeServerText(searchActionReason, t),
+          })}
         </div>
       )}
       <button
@@ -126,7 +135,7 @@ export const BattleActionButtons: FC<BattleActionButtonsProps> = ({
         onClick={onStealthClick}
         disabled={stealthDisabled}
       >
-        Enter Stealth
+        {t("game.enterStealth")}
       </button>
     </>
   );

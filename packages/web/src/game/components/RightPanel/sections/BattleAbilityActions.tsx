@@ -9,6 +9,8 @@ import {
   shouldHoverAbilityInActionList,
 } from "../rightPanelHelpers";
 import type { TurnEconomyState } from "../types";
+import { useI18n } from "../../../../i18n";
+import { getAbilityDisplay, localizeServerText } from "../../../../i18n/displayMetadata";
 
 interface BattleAbilityActionsProps {
   actionableAbilities: AbilityView[];
@@ -33,6 +35,7 @@ export const BattleAbilityActions: FC<BattleAbilityActionsProps> = ({
   onModePreview,
   onHoverAbility,
 }) => {
+  const { language, t } = useI18n();
   if (!selectedUnit || actionableAbilities.length === 0) {
     return null;
   }
@@ -40,7 +43,7 @@ export const BattleAbilityActions: FC<BattleAbilityActionsProps> = ({
   return (
     <>
       <div className="col-span-2 mt-2 text-xs font-bold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-300">
-        Ability Actions
+        {t("game.abilityActions")}
       </div>
       {actionableAbilities.map((ability) => {
         const hideCharges = ability.id === KAISER_DORA_ID && !!selectedUnit.transformed;
@@ -59,19 +62,26 @@ export const BattleAbilityActions: FC<BattleAbilityActionsProps> = ({
                   : false;
         const slotReason =
           ability.slot === "action"
-            ? "Action slot already used"
+            ? t("game.actionSlotUsed")
             : ability.slot === "move"
-              ? "Move slot already used"
+              ? t("game.moveSlotUsed")
               : ability.slot === "attack"
-                ? "Attack slot already used"
+                ? t("game.attackSlotUsed")
                 : ability.slot === "stealth"
-                  ? "Stealth slot already used"
+                  ? t("game.stealthSlotUsed")
                   : undefined;
         const disabledByAvailability = !ability.isAvailable;
         const disabled = !canAct || notEnoughCharges || slotDisabled || disabledByAvailability;
-        const chargeWarning = notEnoughCharges ? "Not Enough charges" : undefined;
-        const tooltip = ability.disabledReason ?? slotReason ?? chargeWarning ?? "";
-        const label = `${ability.name}${chargeLabel ? ` (${chargeLabel})` : ""}`;
+        const chargeWarning = notEnoughCharges ? t("game.notEnoughCharges") : undefined;
+        const tooltip =
+          localizeServerText(ability.disabledReason, t) || slotReason || chargeWarning || "";
+        const display = getAbilityDisplay(
+          ability.id,
+          ability.name,
+          ability.description,
+          language,
+        );
+        const label = `${display.name}${chargeLabel ? ` (${chargeLabel})` : ""}`;
         const mode = abilityActionMode(ability.id);
         const hoverable = shouldHoverAbilityInActionList(ability.id);
         const enabledClass =

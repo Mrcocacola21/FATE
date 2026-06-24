@@ -19,8 +19,11 @@ import type { ActionPreviewMode } from "../../../store";
 import { DEFAULT_ECONOMY } from "./rightPanelConstants";
 import { isActionableAbility, isRangedSingleTargetClass } from "./rightPanelHelpers";
 import type { RightPanelProps } from "./types";
+import type { Translate } from "../../../i18n";
+import { getHeroDisplayName } from "../../../i18n/displayMetadata";
+import { getLanguage } from "../../../i18n";
 
-export function buildRightPanelViewModel(params: RightPanelProps) {
+export function buildRightPanelViewModel(params: RightPanelProps, t: Translate) {
   const {
     view,
     role,
@@ -56,8 +59,11 @@ export function buildRightPanelViewModel(params: RightPanelProps) {
     ? HERO_CATALOG.find((hero) => hero.id === selectedUnit.heroId)
     : undefined;
   const selectedHeroName = selectedUnit
-    ? heroDefinition?.name ??
-      (selectedUnit.heroId === FEMTO_ID ? "Femto" : selectedUnit.id)
+    ? getHeroDisplayName(
+        selectedUnit.heroId,
+        heroDefinition?.name ?? (selectedUnit.heroId === FEMTO_ID ? "Femto" : selectedUnit.id),
+        getLanguage(),
+      )
     : null;
   const forestMarkers =
     Array.isArray(view.forestMarkers) && view.forestMarkers.length > 0
@@ -140,9 +146,7 @@ export function buildRightPanelViewModel(params: RightPanelProps) {
     isRangedSingleTargetClass(selectedUnit.class) &&
     selectedLegalAttackTargets.length === 0
   );
-  const attackDisabledReason = stormRangedAttackBlocked
-    ? "Storm restricts this unit to adjacent attacks."
-    : undefined;
+  const attackDisabledReason = stormRangedAttackBlocked ? t("game.stormRestriction") : undefined;
 
   const moveDisabled = !canAct || economy.moveUsed;
   const attackDisabled =

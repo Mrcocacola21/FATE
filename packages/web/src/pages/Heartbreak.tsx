@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ThemeToggle } from "../components/ThemeToggle";
+import { LanguageSwitcher } from "../components/LanguageSwitcher";
+import { useI18n } from "../i18n";
 
 const WIDTH = 800;
 const HEIGHT = 450;
@@ -18,6 +20,7 @@ type PongState = {
 };
 
 export function Heartbreak({ onBack }: { onBack?: () => void }) {
+  const { t } = useI18n();
   const [connected, setConnected] = useState(false);
   const [role, setRole] = useState<"P1" | "P2" | "spectator">("spectator");
   const [roomId, setRoomId] = useState("heart-1");
@@ -128,15 +131,16 @@ export function Heartbreak({ onBack }: { onBack?: () => void }) {
       <div className="mx-auto max-w-5xl space-y-4">
         <div className="panel-card flex flex-wrap items-center justify-between gap-3 p-5">
           <div>
-            <div className="text-lg font-semibold text-primary">Heartbreak (Ping-Pong)</div>
-            <div className="text-xs text-muted">Experimental websocket mini-game.</div>
+            <div className="text-lg font-semibold text-primary">{t("heartbreak.title")}</div>
+            <div className="text-xs text-muted">{t("heartbreak.subtitle")}</div>
           </div>
           <div className="flex items-center gap-2">
             {onBack ? (
               <button type="button" className="btn btn-secondary btn-sm" onClick={onBack}>
-                Back to Rooms
+                {t("common.backToRooms")}
               </button>
             ) : null}
+            <LanguageSwitcher />
             <ThemeToggle />
           </div>
         </div>
@@ -144,7 +148,7 @@ export function Heartbreak({ onBack }: { onBack?: () => void }) {
         <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
           <div className="panel-card p-4 text-sm dark:text-neutral-200">
             <label className="block text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
-              Role
+              {t("heartbreak.role")}
             </label>
             <select
               className="field-control mt-1"
@@ -153,11 +157,11 @@ export function Heartbreak({ onBack }: { onBack?: () => void }) {
             >
               <option value="P1">P1</option>
               <option value="P2">P2</option>
-              <option value="spectator">Spectator</option>
+              <option value="spectator">{t("roles.spectator")}</option>
             </select>
 
             <label className="mt-3 block text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
-              Room
+              {t("heartbreak.room")}
             </label>
             <input
               className="field-control mt-1"
@@ -171,7 +175,7 @@ export function Heartbreak({ onBack }: { onBack?: () => void }) {
                   className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-slate-100 dark:text-slate-900"
                   onClick={connect}
                 >
-                  Connect
+                  {t("heartbreak.connect")}
                 </button>
               ) : (
                 <button
@@ -180,7 +184,7 @@ export function Heartbreak({ onBack }: { onBack?: () => void }) {
                     ws?.close();
                   }}
                 >
-                  Disconnect
+                  {t("heartbreak.disconnect")}
                 </button>
               )}
               <button
@@ -188,25 +192,25 @@ export function Heartbreak({ onBack }: { onBack?: () => void }) {
                 onClick={join}
                 disabled={!connected}
               >
-                Join
+                {t("heartbreak.join")}
               </button>
               <button
                 className="rounded-lg bg-emerald-500 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-emerald-800/50 dark:text-slate-100 dark:hover:bg-emerald-700/60"
                 onClick={start}
                 disabled={!connected}
               >
-                Start
+                {t("heartbreak.start")}
               </button>
               <button
                 className="rounded-lg bg-amber-500 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-amber-400"
                 onClick={reset}
                 disabled={!connected}
               >
-                Reset
+                {t("heartbreak.reset")}
               </button>
             </div>
             <div className="mt-3 text-xs text-slate-500 dark:text-slate-400">
-              Use W/S or Up/Down to move. Score shown on canvas.
+              {t("heartbreak.help")}
             </div>
           </div>
 

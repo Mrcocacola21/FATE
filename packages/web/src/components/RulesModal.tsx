@@ -1,6 +1,9 @@
 import { useEffect } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import rulesContent from "../content/rules.md?raw";
+import rulesContentUk from "../content/rules.uk.md?raw";
+import { LanguageSwitcher } from "./LanguageSwitcher";
+import { useI18n } from "../i18n";
 
 interface RulesModalProps {
   open: boolean;
@@ -48,6 +51,7 @@ const markdownComponents: Components = {
 };
 
 export function RulesModal({ open, onClose }: RulesModalProps) {
+  const { language, t } = useI18n();
   useEffect(() => {
     if (!open) return undefined;
     const handleKey = (event: KeyboardEvent) => {
@@ -77,21 +81,26 @@ export function RulesModal({ open, onClose }: RulesModalProps) {
         <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4 dark:border-neutral-800">
           <div>
             <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-              Rulebook
+              {t("rules.rulebook")}
             </div>
             <h2
               id="rules-modal-title"
               className="text-lg font-semibold text-slate-900 dark:text-slate-100"
             >
-              FATE Rules
+              {t("rules.title")}
             </h2>
           </div>
-          <button type="button" className="btn btn-secondary btn-sm" onClick={onClose}>
-            Close
-          </button>
+          <div className="flex items-center gap-2">
+            <LanguageSwitcher />
+            <button type="button" className="btn btn-secondary btn-sm" onClick={onClose}>
+              {t("common.close")}
+            </button>
+          </div>
         </div>
         <div className="scroll-panel max-h-[80vh] overflow-y-auto px-6 pb-6 pt-4 text-sm leading-relaxed text-slate-700 dark:text-slate-200">
-          <ReactMarkdown components={markdownComponents}>{rulesContent}</ReactMarkdown>
+          <ReactMarkdown components={markdownComponents}>
+            {language === "uk" ? rulesContentUk : rulesContent}
+          </ReactMarkdown>
         </div>
       </div>
     </div>

@@ -1,5 +1,6 @@
 import type { FC } from "react";
 import type { PapyrusLineAxis, UnitState } from "rules";
+import { useI18n } from "../../../../i18n";
 
 interface BattleHeroControlsProps {
   selectedUnit: UnitState | null;
@@ -36,12 +37,13 @@ export const BattleHeroControls: FC<BattleHeroControlsProps> = ({
   onSetPapyrusBoneType,
   onTogglePapyrusLongBone,
 }) => {
+  const { t } = useI18n();
   return (
     <>
       {selectedIsPapyrus && (
         <>
           <div className="col-span-2 mt-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
-            Papyrus line axis
+            {t("game.papyrusAxis")}
           </div>
           <div className="col-span-2 grid grid-cols-4 gap-2">
             {papyrusAxisOptions.map(({ axis, label }) => (
@@ -56,7 +58,13 @@ export const BattleHeroControls: FC<BattleHeroControlsProps> = ({
                 onClick={() => onSetPapyrusAxis(axis)}
                 disabled={!canAct && selectedPapyrusUnbeliever}
               >
-                {label}
+                {axis === "row"
+                  ? t("game.rows")
+                  : axis === "col"
+                    ? t("game.columns")
+                    : axis === "diagMain"
+                      ? t("game.diagonalMain")
+                      : t("game.diagonalAnti")}
               </button>
             ))}
           </div>
@@ -65,7 +73,7 @@ export const BattleHeroControls: FC<BattleHeroControlsProps> = ({
       {selectedIsUndyne && (
         <>
           <div className="col-span-2 mt-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
-            Energy Spear axis
+            {t("game.energySpearAxis")}
           </div>
           <div className="col-span-2 grid grid-cols-2 gap-2">
             {undyneAxisOptions.map(({ axis, label }) => (
@@ -79,7 +87,7 @@ export const BattleHeroControls: FC<BattleHeroControlsProps> = ({
                 }`}
                 onClick={() => onSetUndyneAxis(axis)}
               >
-                {label}
+                {axis === "row" ? t("game.rows") : t("game.columns")}
               </button>
             ))}
           </div>
@@ -88,7 +96,7 @@ export const BattleHeroControls: FC<BattleHeroControlsProps> = ({
       {selectedPapyrusUnbeliever && selectedUnit && (
         <>
           <div className="col-span-2 mt-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
-            Bone type on hit
+            {t("game.boneType")}
           </div>
           <div className="col-span-2 grid grid-cols-2 gap-2">
             <button
@@ -101,7 +109,7 @@ export const BattleHeroControls: FC<BattleHeroControlsProps> = ({
               onClick={() => onSetPapyrusBoneType("blue")}
               disabled={!canAct}
             >
-              Blue
+              {t("game.blue")}
             </button>
             <button
               type="button"
@@ -113,7 +121,7 @@ export const BattleHeroControls: FC<BattleHeroControlsProps> = ({
               onClick={() => onSetPapyrusBoneType("orange")}
               disabled={!canAct}
             >
-              Orange
+              {t("game.orange")}
             </button>
           </div>
           <button
@@ -126,7 +134,9 @@ export const BattleHeroControls: FC<BattleHeroControlsProps> = ({
             onClick={onTogglePapyrusLongBone}
             disabled={!canAct}
           >
-            Long Bone line attack: {selectedPapyrusLongBoneMode ? "ON" : "OFF"}
+            {t("game.longBoneMode", {
+              state: selectedPapyrusLongBoneMode ? t("game.on") : t("game.off"),
+            })}
           </button>
         </>
       )}

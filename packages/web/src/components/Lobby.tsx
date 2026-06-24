@@ -4,24 +4,23 @@ import type { PlayerRole } from "../ws";
 import { PanelCard, SectionHeader, StatusBadge } from "./ui";
 import { RulesModal } from "./RulesModal";
 import { ThemeToggle } from "./ThemeToggle";
+import { LanguageSwitcher } from "./LanguageSwitcher";
+import { useI18n } from "../i18n";
+import {
+  getConnectionLabel,
+  getPhaseLabel,
+  localizeServerText,
+} from "../i18n/displayMetadata";
 
 interface LobbyProps {
   onOpenFigures?: () => void;
   onOpenHeartbreak?: () => void;
 }
 
-const roleLabels: Record<PlayerRole, string> = {
-  P1: "Player One",
-  P2: "Player Two",
-  spectator: "Spectator",
-};
-
-function phaseLabel(phase: string) {
-  return `${phase.charAt(0).toUpperCase()}${phase.slice(1)}`;
-}
-
 export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
+  const { t } = useI18n();
   const { connectionStatus, roomsList, joinError, fetchRooms, joinRoom } = useGameStore();
+  const roleLabel = (value: PlayerRole) => t(`roles.${value}`);
 
   const [roomId, setRoomId] = useState("");
   const [role, setRole] = useState<PlayerRole>("P1");
@@ -39,7 +38,7 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
 
   useEffect(() => {
     fetchRooms().catch((err) => {
-      setLocalError(err instanceof Error ? err.message : "Failed to load rooms");
+      setLocalError(localizeServerText(err instanceof Error ? err.message : "", t) || t("errors.loadRooms"));
     });
   }, [fetchRooms]);
 
@@ -49,7 +48,7 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
     try {
       await fetchRooms();
     } catch (err) {
-      setLocalError(err instanceof Error ? err.message : "Failed to load rooms");
+      setLocalError(localizeServerText(err instanceof Error ? err.message : "", t) || t("errors.loadRooms"));
     } finally {
       setRefreshing(false);
     }
@@ -66,7 +65,7 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
       });
       await fetchRooms();
     } catch (err) {
-      setLocalError(err instanceof Error ? err.message : "Failed to create room");
+      setLocalError(localizeServerText(err instanceof Error ? err.message : "", t) || t("errors.createRoom"));
     } finally {
       setBusy(false);
     }
@@ -75,7 +74,7 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
   const handleJoin = async () => {
     const trimmed = roomId.trim();
     if (!trimmed) {
-      setLocalError("Room ID is required.");
+      setLocalError(t("lobby.roomIdRequired"));
       return;
     }
     setLocalError(null);
@@ -87,7 +86,7 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
         name: name.trim() ? name.trim() : undefined,
       });
     } catch (err) {
-      setLocalError(err instanceof Error ? err.message : "Failed to join room");
+      setLocalError(localizeServerText(err instanceof Error ? err.message : "", t) || t("errors.joinRoom"));
     }
   };
 
@@ -105,28 +104,29 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
           <div className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-teal-400/10 blur-3xl dark:bg-teal-400/10" />
           <div className="relative flex min-w-0 flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div className="min-w-0 max-w-2xl">
-              <div className="section-kicker">Online tactical board game</div>
+              <div className="section-kicker">{t("lobby.kicker")}</div>
               <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-950 dark:text-white sm:text-4xl">
-                FATE Command Lobby
+                {t("lobby.title")}
               </h1>
               <p className="mt-3 max-w-xl text-sm leading-6 text-slate-600 dark:text-slate-300 sm:text-base">
-                Assemble your figure set, claim a seat, and enter an authoritative multiplayer
-                match.
+                {t("lobby.subtitle")}
               </p>
               <div className="mt-4 flex flex-wrap items-center gap-2">
                 <StatusBadge tone={connectionTone} dot>
                   {connectionStatus === "connected"
-                    ? "Server connected"
+                    ? t("connection.serverConnected")
                     : connectionStatus === "connecting"
-                      ? "Connecting to server"
-                      : "Connects when you join"}
+                      ? t("connection.connectingToServer")
+                      : t("connection.connectsWhenJoin")}
                 </StatusBadge>
-                <StatusBadge tone="info">{roomsList.length} open rooms</StatusBadge>
+                <StatusBadge tone="info">
+                  {t("lobby.openRooms", { count: roomsList.length })}
+                </StatusBadge>
               </div>
             </div>
             <nav
               className="grid w-full min-w-0 grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center"
-              aria-label="Lobby navigation"
+              aria-label={t("lobby.navLabel")}
             >
               {onOpenFigures ? (
                 <button
@@ -134,7 +134,7 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
                   className="btn btn-strong w-full sm:w-auto"
                   onClick={onOpenFigures}
                 >
-                  Figure Set
+                  {t("lobby.figureSet")}
                 </button>
               ) : null}
               <button
@@ -142,7 +142,7 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
                 className="btn btn-secondary w-full sm:w-auto"
                 onClick={() => setShowRules(true)}
               >
-                Rules
+                {t("lobby.rules")}
               </button>
               {onOpenHeartbreak ? (
                 <button
@@ -150,10 +150,11 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
                   className="btn btn-secondary w-full sm:w-auto"
                   onClick={onOpenHeartbreak}
                 >
-                  Heartbreak
+                  {t("lobby.heartbreak")}
                 </button>
               ) : null}
               <ThemeToggle className="w-full sm:w-auto" />
+              <LanguageSwitcher className="w-full justify-center sm:w-auto" />
             </nav>
           </div>
         </PanelCard>
@@ -161,9 +162,9 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
         <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_380px]">
           <PanelCard className="min-h-[430px] p-5 sm:p-6">
             <SectionHeader
-              kicker="Match browser"
-              title="Available rooms"
-              description="Join an open seat or watch an active match as a spectator."
+              kicker={t("lobby.browserKicker")}
+              title={t("lobby.availableRooms")}
+              description={t("lobby.availableRoomsDescription")}
               action={
                 <button
                   type="button"
@@ -171,7 +172,7 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
                   onClick={handleRefresh}
                   disabled={refreshing}
                 >
-                  {refreshing ? "Refreshing..." : "Refresh"}
+                  {refreshing ? t("common.refreshing") : t("common.refresh")}
                 </button>
               }
             />
@@ -192,11 +193,10 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
                     </svg>
                   </div>
                   <div className="mt-4 text-sm font-semibold text-slate-800 dark:text-slate-100">
-                    No rooms are open
+                    {t("lobby.noRooms")}
                   </div>
                   <p className="mt-1 max-w-sm text-sm leading-6 text-slate-500 dark:text-slate-400">
-                    Create a new room to become the host. It will appear here for the second player
-                    and spectators.
+                    {t("lobby.noRoomsDescription")}
                   </p>
                 </div>
               ) : null}
@@ -213,24 +213,25 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
                           {room.id}
                         </h3>
                         <StatusBadge tone={room.phase === "lobby" ? "success" : "warning"}>
-                          {phaseLabel(room.phase)}
+                          {getPhaseLabel(room.phase, t)}
                         </StatusBadge>
                       </div>
                       <div className="mt-3 flex flex-wrap gap-2">
                         <StatusBadge tone={room.players.P1 ? "neutral" : "success"}>
-                          P1 {room.players.P1 ? "occupied" : "open"}
+                          P1 {room.players.P1 ? t("common.occupied") : t("common.open")}
                         </StatusBadge>
                         <StatusBadge tone={room.players.P2 ? "neutral" : "success"}>
-                          P2 {room.players.P2 ? "occupied" : "open"}
+                          P2 {room.players.P2 ? t("common.occupied") : t("common.open")}
                         </StatusBadge>
                         <StatusBadge tone="info">
-                          {room.spectators} spectator
-                          {room.spectators === 1 ? "" : "s"}
+                          {t("lobby.spectators", { count: room.spectators })}
                         </StatusBadge>
                       </div>
                       <div className="mt-3 text-xs text-slate-500 dark:text-slate-400">
-                        Ready state: P1 {room.ready.P1 ? "ready" : "waiting"} / P2{" "}
-                        {room.ready.P2 ? "ready" : "waiting"}
+                        {t("lobby.readyState", {
+                          p1: room.ready.P1 ? t("common.ready") : t("common.waiting"),
+                          p2: room.ready.P2 ? t("common.ready") : t("common.waiting"),
+                        })}
                       </div>
                     </div>
                     <button
@@ -251,7 +252,7 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
                         });
                       }}
                     >
-                      Join room
+                      {t("lobby.joinRoom")}
                     </button>
                   </div>
                 </article>
@@ -262,9 +263,9 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
           <div className="space-y-5">
             <PanelCard className="p-5 sm:p-6">
               <SectionHeader
-                kicker="Host a match"
-                title="Create room"
-                description={`You will join immediately as ${roleLabels[role].toLowerCase()}.`}
+                kicker={t("lobby.hostKicker")}
+                title={t("lobby.createRoom")}
+                description={t("lobby.createDescription", { role: roleLabel(role).toLowerCase() })}
               />
               <button
                 type="button"
@@ -272,25 +273,25 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
                 onClick={handleCreate}
                 disabled={busy}
               >
-                {busy ? "Creating room..." : "Create new room"}
+                {busy ? t("lobby.creating") : t("lobby.createNew")}
               </button>
             </PanelCard>
 
             <PanelCard className="p-5 sm:p-6">
               <SectionHeader
-                kicker="Direct connection"
-                title="Join by room ID"
-                description="Use an invite ID or choose your default role before creating."
+                kicker={t("lobby.directKicker")}
+                title={t("lobby.joinById")}
+                description={t("lobby.joinByIdDescription")}
               />
               <div className="mt-5 space-y-4">
                 <div>
                   <label className="field-label" htmlFor="room-id">
-                    Room ID
+                    {t("lobby.roomId")}
                   </label>
                   <input
                     id="room-id"
                     className="field-control font-mono"
-                    placeholder="Paste room ID"
+                    placeholder={t("lobby.pasteRoomId")}
                     value={roomId}
                     onChange={(event) => setRoomId(event.target.value)}
                     autoComplete="off"
@@ -298,7 +299,7 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
                 </div>
                 <div>
                   <label className="field-label" htmlFor="lobby-role">
-                    Role
+                    {t("lobby.role")}
                   </label>
                   <select
                     id="lobby-role"
@@ -306,33 +307,34 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
                     value={role}
                     onChange={(event) => setRole(event.target.value as PlayerRole)}
                   >
-                    <option value="P1">Player One (P1)</option>
-                    <option value="P2">Player Two (P2)</option>
-                    <option value="spectator">Spectator</option>
+                    <option value="P1">{roleLabel("P1")} (P1)</option>
+                    <option value="P2">{roleLabel("P2")} (P2)</option>
+                    <option value="spectator">{roleLabel("spectator")}</option>
                   </select>
                 </div>
                 <div>
                   <label className="field-label" htmlFor="player-name">
-                    Display name <span className="font-normal text-slate-400">(optional)</span>
+                    {t("lobby.displayName")}{" "}
+                    <span className="font-normal text-slate-400">({t("common.optional")})</span>
                   </label>
                   <input
                     id="player-name"
                     className="field-control"
-                    placeholder="Commander name"
+                    placeholder={t("lobby.commanderName")}
                     value={name}
                     onChange={(event) => setName(event.target.value)}
                     autoComplete="nickname"
                   />
                 </div>
                 <button type="button" className="btn btn-strong w-full" onClick={handleJoin}>
-                  Join room
+                  {t("lobby.joinRoom")}
                 </button>
                 {localError || joinError ? (
                   <div
                     className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-800 dark:border-amber-800/70 dark:bg-amber-950/45 dark:text-amber-200"
                     role="alert"
                   >
-                    {localError ?? joinError}
+                    {localError ?? localizeServerText(joinError, t)}
                   </div>
                 ) : null}
               </div>
@@ -354,14 +356,14 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
           >
             <PanelCard className="w-full max-w-md p-5 shadow-2xl sm:p-6">
               <SectionHeader
-                kicker="Choose a seat"
-                title={<span id="join-room-title">Join room</span>}
+                kicker={t("lobby.chooseSeat")}
+                title={<span id="join-room-title">{t("lobby.joinRoom")}</span>}
                 description={
                   <span className="break-all font-mono text-xs">{pendingJoinRoom.id}</span>
                 }
               />
               <fieldset className="mt-5 space-y-2">
-                <legend className="sr-only">Room role</legend>
+                <legend className="sr-only">{t("lobby.roomRole")}</legend>
                 {(["P1", "P2", "spectator"] as PlayerRole[]).map((option) => {
                   const taken = option !== "spectator" && pendingJoinRoom.players[option];
                   return (
@@ -383,10 +385,10 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
                           onChange={() => setJoinRole(option)}
                           className="h-4 w-4 accent-teal-600"
                         />
-                        <span className="font-semibold">{roleLabels[option]}</span>
+                        <span className="font-semibold">{roleLabel(option)}</span>
                       </span>
                       <StatusBadge tone={taken ? "neutral" : "success"}>
-                        {taken ? "Taken" : "Available"}
+                        {taken ? t("common.taken") : t("common.available")}
                       </StatusBadge>
                     </label>
                   );
@@ -399,7 +401,7 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
                   onClick={() => setPendingJoinRoom(null)}
                   disabled={joinBusy}
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </button>
                 <button
                   type="button"
@@ -417,7 +419,10 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
                       });
                       setPendingJoinRoom(null);
                     } catch (err) {
-                      setLocalError(err instanceof Error ? err.message : "Failed to join room");
+                      setLocalError(
+                        localizeServerText(err instanceof Error ? err.message : "", t) ||
+                          t("errors.joinRoom"),
+                      );
                     } finally {
                       setJoinBusy(false);
                     }
@@ -428,7 +433,7 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
                     (joinRole === "P2" && pendingJoinRoom.players.P2)
                   }
                 >
-                  {joinBusy ? "Joining..." : "Join"}
+                  {joinBusy ? t("lobby.joining") : t("common.join")}
                 </button>
               </div>
               {localError || joinError ? (
@@ -436,7 +441,7 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
                   className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-800 dark:border-amber-800/70 dark:bg-amber-950/45 dark:text-amber-200"
                   role="alert"
                 >
-                  {localError ?? joinError}
+                  {localError ?? localizeServerText(joinError, t)}
                 </div>
               ) : null}
             </PanelCard>

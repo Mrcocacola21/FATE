@@ -1,4 +1,5 @@
 import type { FC } from "react";
+import { useI18n } from "../../../../i18n";
 
 interface BattleTurnButtonsProps {
   isMyTurn: boolean;
@@ -17,6 +18,7 @@ export const BattleTurnButtons: FC<BattleTurnButtonsProps> = ({
   onEndTurn,
   onClear,
 }) => {
+  const { t } = useI18n();
   return (
     <>
       <button
@@ -29,14 +31,14 @@ export const BattleTurnButtons: FC<BattleTurnButtonsProps> = ({
         onClick={onEndTurn}
         disabled={!isMyTurn || !joined || isSpectator || pendingRoll}
       >
-        End Turn
+        {t("game.endTurn")}
       </button>
       <button
         type="button"
         className="min-h-10 rounded-xl border border-slate-200 bg-white px-2 py-2 text-xs font-semibold text-slate-600 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 focus-visible:ring-4 focus-visible:ring-slate-500/15 dark:border-slate-800 dark:bg-slate-950/45 dark:text-slate-200 dark:hover:border-slate-700 dark:hover:bg-slate-800"
         onClick={onClear}
       >
-        Clear selection
+        {t("game.clearSelection")}
       </button>
     </>
   );

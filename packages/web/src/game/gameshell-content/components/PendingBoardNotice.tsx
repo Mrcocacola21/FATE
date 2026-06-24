@@ -1,5 +1,6 @@
 import type { Coord } from "rules";
 import { getPendingRollLabel } from "../helpers";
+import { useI18n } from "../../../i18n";
 
 interface PendingBoardNoticeProps {
   pendingRollKind: string;
@@ -78,13 +79,15 @@ export function PendingBoardNotice({
   onConfirmHassanAssassinOrder,
   onClearHassanAssassinOrder,
 }: PendingBoardNoticeProps) {
+  const { language, t } = useI18n();
+  const p = (en: string, uk: string) => (language === "uk" ? uk : en);
   return (
     <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 shadow-sm dark:border-amber-800/70 dark:bg-amber-950/40 dark:text-amber-100">
       {isStakePlacement ? (
         <div>
-          <div className="font-semibold">Place 3 stakes</div>
+          <div className="font-semibold">{t("pending.placeStakes")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            Selected: {stakeSelections.length}/{stakeLimit}
+            {t("pending.selectedCount", { current: stakeSelections.length, total: stakeLimit })}
           </div>
           {stakeSelections.length > 0 && (
             <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
@@ -97,189 +100,192 @@ export function PendingBoardNotice({
               onClick={onConfirmStakePlacement}
               disabled={stakeSelections.length !== stakeLimit}
             >
-              Place stakes
+              {t("pending.placeStakesButton")}
             </button>
             <button
               className="rounded-lg bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
               onClick={onClearStakeSelections}
             >
-              Clear
+              {t("common.clear")}
             </button>
           </div>
         </div>
       ) : isIntimidateChoice ? (
         <div>
-          <div className="font-semibold">Intimidate: choose a push cell</div>
+          <div className="font-semibold">{p("Intimidate: choose a push cell", "Залякування: оберіть клітинку відштовхування")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            Click a highlighted cell or skip.
+            {p("Click a highlighted cell or skip.", "Оберіть підсвічену клітинку або пропустіть.")}
           </div>
           <button
             className="mt-2 rounded-lg bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
             onClick={onResolveSkip}
           >
-            Skip
+            {t("common.skip")}
           </button>
         </div>
       ) : isForestTarget ? (
         <div>
-          <div className="font-semibold">Forest of the Dead</div>
+          <div className="font-semibold">{t("pending.forestDead")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            Select the 3x3 center cell.
+            {p("Select the 3x3 center cell.", "Оберіть центральну клітинку області 3×3.")}
           </div>
         </div>
       ) : isForestMoveDestination ? (
         <div>
-          <div className="font-semibold">Forest check failed</div>
+          <div className="font-semibold">{p("Forest check failed", "Перевірка лісу неуспішна")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            Choose a highlighted destination inside the aura.
+            {p("Choose a highlighted destination inside the aura.", "Оберіть підсвічену клітинку всередині аури.")}
           </div>
         </div>
       ) : isForestChoice ? (
         <div>
-          <div className="font-semibold">Forest of the Dead ready</div>
+          <div className="font-semibold">{p("Forest of the Dead ready", "Ліс мертвих готовий")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            Decide whether to activate the phantasm.
+            {p("Decide whether to activate the phantasm.", "Вирішіть, чи активувати фантазм.")}
           </div>
         </div>
       ) : isForestMoveCheck ? (
         <div>
-          <div className="font-semibold">Forest check</div>
+          <div className="font-semibold">{t("pending.forestCheck")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            Forest check: roll 5-6 to leave
+            {p("Forest check: roll 5-6 to leave", "Перевірка лісу: киньте 5–6, щоб вийти")}
           </div>
         </div>
       ) : isDuelistChoice ? (
         <div>
-          <div className="font-semibold">Demon Duelist</div>
+          <div className="font-semibold">{t("pending.demonDuelist")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            Choose whether to continue the duel.
+            {p("Choose whether to continue the duel.", "Оберіть, чи продовжувати дуель.")}
           </div>
         </div>
       ) : isChikatiloPlacement ? (
         <div>
-          <div className="font-semibold">False Trail placement</div>
+          <div className="font-semibold">{p("False Trail placement", "Розміщення Хибного сліду")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            Select any empty cell to place Chikatilo.
+            {p("Select any empty cell to place Chikatilo.", "Оберіть будь-яку вільну клітинку для Чикатило.")}
           </div>
         </div>
       ) : isGuideTravelerPlacement ? (
         <div>
-          <div className="font-semibold">Guide Traveler placement</div>
+          <div className="font-semibold">{p("Guide Traveler placement", "Розміщення Провідника")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            Select an empty cell to place the guided ally.
+            {p("Select an empty cell to place the guided ally.", "Оберіть вільну клітинку для союзника.")}
           </div>
         </div>
       ) : isRiverBoatCarryChoice ? (
         <div>
-          <div className="font-semibold">Boat carry</div>
+          <div className="font-semibold">{p("Boat carry", "Пасажир човна")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            Select an adjacent ally to carry, or move without carrying.
+            {p("Select an adjacent ally to carry, or move without carrying.", "Оберіть сусіднього союзника або рухайтеся без пасажира.")}
           </div>
           <button
             className="mt-2 rounded-lg bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
             onClick={onResolveSkip}
           >
-            Move without carrying
+            {p("Move without carrying", "Рухатися без пасажира")}
           </button>
         </div>
       ) : isRiverBoatDropDestination ? (
         <div>
-          <div className="font-semibold">Boat drop</div>
+          <div className="font-semibold">{p("Boat drop", "Висадка з човна")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            Select an adjacent empty cell to drop the carried ally.
+            {p("Select an adjacent empty cell to drop the carried ally.", "Оберіть сусідню вільну клітинку для висадки союзника.")}
           </div>
         </div>
       ) : isRiverTraLaLaTargetChoice ? (
         <div>
-          <div className="font-semibold">Tra-la-la</div>
+          <div className="font-semibold">{p("Tra-la-la", "Тра-ля-ля")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            Select an adjacent enemy target.
+            {p("Select an adjacent enemy target.", "Оберіть сусіднього ворога.")}
           </div>
         </div>
       ) : isRiverTraLaLaDestinationChoice ? (
         <div>
-          <div className="font-semibold">Tra-la-la</div>
+          <div className="font-semibold">{p("Tra-la-la", "Тра-ля-ля")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            Select a highlighted straight-line destination.
+            {p("Select a highlighted straight-line destination.", "Оберіть підсвічену клітинку на прямій.")}
           </div>
         </div>
       ) : isJebeKhansShooterTargetChoice ? (
         <div>
-          <div className="font-semibold">Khan's Shooter</div>
+          <div className="font-semibold">{p("Khan's Shooter", "Стрілець хана")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            Select the next ricochet target.
+            {p("Select the next ricochet target.", "Оберіть наступну ціль рикошету.")}
           </div>
         </div>
       ) : isLokiLaughtChoice ? (
         <div>
-          <div className="font-semibold">Loki's Laughter</div>
+          <div className="font-semibold">{t("pending.lokiLaughter")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            Choose one trick to activate without revealing Loki.
+            {p("Choose one trick to activate without revealing Loki.", "Оберіть хитрість, не розкриваючи Локі.")}
           </div>
         </div>
       ) : isLokiChickenTargetChoice ? (
         <div>
-          <div className="font-semibold">Chicken</div>
+          <div className="font-semibold">{p("Chicken", "Курка")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            Select an enemy hero within 2 cells.
+            {p("Select an enemy hero within 2 cells.", "Оберіть ворожого героя в радіусі 2.")}
           </div>
         </div>
       ) : isLokiMindControlEnemyChoice ? (
         <div>
-          <div className="font-semibold">Mind Control</div>
+          <div className="font-semibold">{p("Mind Control", "Контроль розуму")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            Select the enemy hero to control.
+            {p("Select the enemy hero to control.", "Оберіть ворожого героя для контролю.")}
           </div>
         </div>
       ) : isLokiMindControlTargetChoice ? (
         <div>
-          <div className="font-semibold">Mind Control</div>
+          <div className="font-semibold">{p("Mind Control", "Контроль розуму")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            Select a legal target for the controlled attack.
+            {p("Select a legal target for the controlled attack.", "Оберіть доступну ціль керованої атаки.")}
           </div>
         </div>
       ) : isHassanTrueEnemyTargetChoice ? (
         <div>
-          <div className="font-semibold">True Enemy</div>
+          <div className="font-semibold">{p("True Enemy", "Справжній ворог")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            Select a target for the forced enemy attack.
+            {p("Select a target for the forced enemy attack.", "Оберіть ціль примусової ворожої атаки.")}
           </div>
         </div>
       ) : isAsgoreSoulParadePatienceTargetChoice ? (
         <div>
-          <div className="font-semibold">Soul Parade: Patience</div>
+          <div className="font-semibold">{p("Soul Parade: Patience", "Парад душ: Терпіння")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            Select a target in assassin attack range.
+            {p("Select a target in assassin attack range.", "Оберіть ціль у дальності атаки вбивці.")}
           </div>
         </div>
       ) : isAsgoreSoulParadePerseveranceTargetChoice ? (
         <div>
-          <div className="font-semibold">Soul Parade: Perseverance</div>
+          <div className="font-semibold">{p("Soul Parade: Perseverance", "Парад душ: Наполегливість")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            Select a target in trickster attack range.
+            {p("Select a target in trickster attack range.", "Оберіть ціль у дальності атаки трикстера.")}
           </div>
         </div>
       ) : isAsgoreSoulParadeJusticeTargetChoice ? (
         <div>
-          <div className="font-semibold">Soul Parade: Justice</div>
+          <div className="font-semibold">{p("Soul Parade: Justice", "Парад душ: Справедливість")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            Select a target in archer attack line.
+            {p("Select a target in archer attack line.", "Оберіть ціль на лінії атаки лучника.")}
           </div>
         </div>
       ) : isAsgoreSoulParadeIntegrityDestination ? (
         <div>
-          <div className="font-semibold">Soul Parade: Integrity</div>
+          <div className="font-semibold">{p("Soul Parade: Integrity", "Парад душ: Цілісність")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            Select any highlighted destination cell.
+            {p("Select any highlighted destination cell.", "Оберіть будь-яку підсвічену клітинку призначення.")}
           </div>
         </div>
       ) : isHassanAssassinOrderSelection ? (
         <div>
           <div className="font-semibold">
-            Assassin Order: pick 2 allied heroes to gain Stealth (5-6)
+            {p("Assassin Order: pick 2 allied heroes to gain Stealth (5-6)", "Орден убивць: оберіть 2 союзних героїв для скритності на 5–6")}
           </div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            Selected: {hassanAssassinOrderSelections.length}/2
+            {t("pending.selectedCount", {
+              current: hassanAssassinOrderSelections.length,
+              total: 2,
+            })}
           </div>
           {hassanAssassinOrderSelections.length > 0 && (
             <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
@@ -292,36 +298,40 @@ export function PendingBoardNotice({
               onClick={onConfirmHassanAssassinOrder}
               disabled={hassanAssassinOrderSelections.length !== 2}
             >
-              Confirm
+              {t("common.confirm")}
             </button>
             <button
               className="rounded-lg bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
               onClick={onClearHassanAssassinOrder}
             >
-              Clear
+              {t("common.clear")}
             </button>
           </div>
         </div>
       ) : isChikatiloRevealChoice ? (
         <div>
-          <div className="font-semibold">False Trail choice</div>
+          <div className="font-semibold">{p("False Trail choice", "Вибір Хибного сліду")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            Decide whether the token explodes or is removed.
+            {p("Decide whether the token explodes or is removed.", "Оберіть: підірвати жетон або прибрати його.")}
           </div>
         </div>
       ) : isChikatiloDecoyChoice ? (
         <div>
-          <div className="font-semibold">Decoy</div>
+          <div className="font-semibold">{t("pending.decoy")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            Roll defense or spend 3 charges to take 1 damage.
+            {p("Roll defense or spend 3 charges to take 1 damage.", "Киньте захист або витратьте 3 заряди, щоб отримати 1 шкоду.")}
           </div>
         </div>
       ) : (
-        <div>Pending roll: {getPendingRollLabel(pendingRollKind)}. Resolve to continue.</div>
+        <div>
+          {t("pending.resolveToContinue", {
+            roll: getPendingRollLabel(pendingRollKind, language),
+          })}
+        </div>
       )}
       {!isStakePlacement && pendingQueueCount > 0 && (
         <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-          Pending attacks: {pendingQueueCount}
+          {t("pending.pendingAttacks", { count: pendingQueueCount })}
         </div>
       )}
     </div>

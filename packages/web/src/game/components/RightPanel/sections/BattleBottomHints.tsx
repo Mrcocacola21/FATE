@@ -2,6 +2,7 @@ import type { FC } from "react";
 import type { MoveMode, PapyrusLineAxis } from "rules";
 import type { ActionMode } from "../../../../store";
 import { formatMoveMode, getActionModeHint } from "../rightPanelHelpers";
+import { useI18n } from "../../../../i18n";
 
 interface BattleBottomHintsProps {
   moveModeOptions: MoveMode[] | null;
@@ -22,12 +23,13 @@ export const BattleBottomHints: FC<BattleBottomHintsProps> = ({
   undyneAxis,
   onMoveRequest,
 }) => {
+  const { language, t } = useI18n();
   return (
     <>
       {moveModeOptions && selectedUnitId && (
         <div className="mt-3 text-xs">
           <div className="text-xs font-semibold text-slate-600 dark:text-slate-300">
-            Choose move mode:
+            {t("game.chooseMoveMode")}
           </div>
           <div className="mt-2 flex flex-wrap gap-2">
             {moveModeOptions.map((mode) => (
@@ -42,7 +44,7 @@ export const BattleBottomHints: FC<BattleBottomHintsProps> = ({
                 onClick={() => onMoveRequest(selectedUnitId, mode)}
                 disabled={moveDisabled}
               >
-                {formatMoveMode(mode)}
+                {formatMoveMode(mode, t)}
               </button>
             ))}
           </div>
@@ -51,7 +53,7 @@ export const BattleBottomHints: FC<BattleBottomHintsProps> = ({
 
       {actionMode && (
         <div className="mt-3 rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-xs leading-5 text-sky-800 dark:border-sky-900/70 dark:bg-sky-950/35 dark:text-sky-200">
-          {getActionModeHint(actionMode, papyrusLineAxis, undyneAxis)}
+          {getActionModeHint(actionMode, papyrusLineAxis, undyneAxis, language)}
         </div>
       )}
     </>

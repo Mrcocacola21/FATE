@@ -1,6 +1,8 @@
 import type { FC } from "react";
 import type { PlayerId, PlayerView } from "rules";
 import { PanelCard, SectionHeader, StatusBadge } from "./ui";
+import { useI18n } from "../i18n";
+import { getClassLabel } from "../i18n/displayMetadata";
 
 interface TurnQueueTrackerProps {
   view: PlayerView;
@@ -29,6 +31,7 @@ function classShort(unitClass: string) {
 }
 
 export const TurnQueueTracker: FC<TurnQueueTrackerProps> = ({ view, playerId }) => {
+  const { t } = useI18n();
   const queue = view.turnQueue?.length ? view.turnQueue : view.turnOrder;
   const queueIndex = view.turnQueue?.length ? view.turnQueueIndex : view.turnOrderIndex;
   const currentUnitId = queue?.[queueIndex] ?? null;
@@ -37,11 +40,13 @@ export const TurnQueueTracker: FC<TurnQueueTrackerProps> = ({ view, playerId }) 
   return (
     <PanelCard className="p-4">
       <SectionHeader
-        kicker="Initiative"
-        title="Turn queue"
+        kicker={t("game.initiative")}
+        title={t("game.turnQueue")}
         action={
           <StatusBadge tone={view.currentPlayer === playerId ? "success" : "neutral"}>
-            {view.currentPlayer ? `${view.currentPlayer} turn` : "Waiting"}
+            {view.currentPlayer
+              ? t("game.playerTurn", { player: view.currentPlayer })
+              : t("common.waiting")}
           </StatusBadge>
         }
       />
@@ -49,7 +54,7 @@ export const TurnQueueTracker: FC<TurnQueueTrackerProps> = ({ view, playerId }) 
       <div className="mt-3 grid grid-cols-2 gap-2">
         <div className="panel-card-muted p-3">
           <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-            Initiative
+            {t("game.initiative")}
           </div>
           <div className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">
             P1 {view.initiative.P1 ?? "-"} / P2 {view.initiative.P2 ?? "-"}
@@ -57,10 +62,12 @@ export const TurnQueueTracker: FC<TurnQueueTrackerProps> = ({ view, playerId }) 
         </div>
         <div className="panel-card-muted p-3">
           <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-            Acting now
+            {t("game.actingNow")}
           </div>
           <div className="mt-1 truncate text-sm font-semibold text-slate-900 dark:text-white">
-            {currentUnit ? `${currentUnit.class} / ${currentUnit.owner}` : (currentUnitId ?? "-")}
+            {currentUnit
+              ? `${getClassLabel(currentUnit.class, t)} / ${currentUnit.owner}`
+              : (currentUnitId ?? "-")}
           </div>
         </div>
       </div>
@@ -96,7 +103,7 @@ export const TurnQueueTracker: FC<TurnQueueTrackerProps> = ({ view, playerId }) 
         })}
       </div>
       <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-        Placement first: {view.placementFirstPlayer ?? "-"}
+        {t("game.placementFirst", { player: view.placementFirstPlayer ?? "-" })}
       </div>
     </PanelCard>
   );

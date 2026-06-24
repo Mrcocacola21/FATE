@@ -8,6 +8,7 @@ import { BattleBottomHints } from "./BattleBottomHints";
 import { BattleHeroControls } from "./BattleHeroControls";
 import { BattleTurnButtons } from "./BattleTurnButtons";
 import { BattleUnitSummary } from "./BattleUnitSummary";
+import { useI18n } from "../../../../i18n";
 
 interface BattleSectionProps {
   selectedUnit: UnitState | null;
@@ -120,11 +121,12 @@ export const BattleSection: FC<BattleSectionProps> = ({
   onEndTurn,
   onClear,
 }) => {
+  const { t } = useI18n();
   return (
     <div className="panel-card p-4">
       <div>
-        <div className="section-kicker">Selected unit</div>
-        <div className="section-title mt-1">Unit controls</div>
+        <div className="section-kicker">{t("game.selectedUnit")}</div>
+        <div className="section-title mt-1">{t("game.unitControls")}</div>
       </div>
       <BattleUnitSummary
         selectedUnit={selectedUnit}

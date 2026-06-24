@@ -19,18 +19,20 @@ import { getFigureArtSrc, getTokenSrc } from "../assets/registry";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { PanelCard, SectionHeader, StatusBadge } from "../components/ui";
 import { LECHY_ID } from "../rulesHints";
+import { LanguageSwitcher } from "../components/LanguageSwitcher";
+import { useI18n } from "../i18n";
+import {
+  getAbilityDisplay,
+  getAbilityTypeLabel,
+  getClassLabel,
+  getHeroDisplayName,
+  getStatLabel,
+  localizeFigureSetError,
+  localizeServerText,
+} from "../i18n/displayMetadata";
 
 interface FigureSetPageProps {
   onBack?: () => void;
-}
-
-function formatSlotTitle(slot: BaseClass): string {
-  return `${slot.toUpperCase()} SLOT`;
-}
-
-function formatClassLabel(value: string): string {
-  if (!value) return value;
-  return `${value.charAt(0).toUpperCase()}${value.slice(1)}`;
 }
 
 function HeroToken({
@@ -60,6 +62,7 @@ function HeroToken({
 }
 
 export function FigureSetPage({ onBack }: FigureSetPageProps) {
+  const { language, t } = useI18n();
   const [state, setState] = useState<FigureSetState>(() => loadFigureSetState(HERO_CATALOG));
   const [activeSlot, setActiveSlot] = useState<BaseClass | null>(null);
   const [detailsSlot, setDetailsSlot] = useState<BaseClass | null>(null);
@@ -102,7 +105,7 @@ export function FigureSetPage({ onBack }: FigureSetPageProps) {
   };
 
   const resetAll = () => {
-    const confirmed = window.confirm("Reset all slots to base heroes?");
+    const confirmed = window.confirm(t("figureSet.resetConfirm"));
     if (!confirmed) return;
     const next = resetToBaseState();
     setState(next);
@@ -132,7 +135,7 @@ export function FigureSetPage({ onBack }: FigureSetPageProps) {
       const content = typeof reader.result === "string" ? reader.result : "";
       const result = importFigureSetState(content, HERO_CATALOG);
       if (!result.ok) {
-        setError(result.error);
+        setError(localizeFigureSetError(result.error, t));
         return;
       }
       setState(result.state);
@@ -140,7 +143,7 @@ export function FigureSetPage({ onBack }: FigureSetPageProps) {
       setError(null);
     };
     reader.onerror = () => {
-      setError("Failed to read file.");
+      setError(t("errors.readFile"));
     };
     reader.readAsText(file);
   };
@@ -156,30 +159,30 @@ export function FigureSetPage({ onBack }: FigureSetPageProps) {
 
   const abilityGroups = useMemo(() => {
     const groups: Array<{ type: AbilityMeta["type"]; label: string }> = [
-      { type: "passive", label: "Passive" },
-      { type: "active", label: "Active" },
-      { type: "impulse", label: "Impulse" },
-      { type: "phantasm", label: "Phantasm" },
+      { type: "passive", label: getAbilityTypeLabel("passive", t) },
+      { type: "active", label: getAbilityTypeLabel("active", t) },
+      { type: "impulse", label: getAbilityTypeLabel("impulse", t) },
+      { type: "phantasm", label: getAbilityTypeLabel("phantasm", t) },
     ];
     const abilities = detailsHero?.abilities ?? [];
     return groups.map((group) => ({
       ...group,
       abilities: abilities.filter((ability) => ability.type === group.type),
     }));
-  }, [detailsHero]);
+  }, [detailsHero, language, t]);
 
   const formatCharge = (ability: AbilityMeta) => {
-    if (ability.chargeRequired === null) return "Charge: Unlimited";
+    if (ability.chargeRequired === null) return t("figureSet.chargeUnlimited");
     if (typeof ability.chargeRequired === "number") {
-      return `Charge: ${ability.chargeRequired}`;
+      return t("figureSet.charge", { value: ability.chargeRequired });
     }
-    return "No charge";
+    return t("figureSet.noCharge");
   };
 
   const formatCost = (ability: AbilityMeta) => {
-    if (ability.consumesAction) return "Consumes Action";
-    if (ability.consumesMove) return "Consumes Movement";
-    return "Free / Impulse";
+    if (ability.consumesAction) return t("figureSet.consumesAction");
+    if (ability.consumesMove) return t("figureSet.consumesMove");
+    return t("figureSet.freeImpulse");
   };
 
   const abilityBadgeClass = (type: AbilityMeta["type"]) => {
@@ -201,52 +204,53 @@ export function FigureSetPage({ onBack }: FigureSetPageProps) {
         <PanelCard as="header" className="p-5 sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <div className="section-kicker">Roster workshop</div>
+              <div className="section-kicker">{t("figureSet.kicker")}</div>
               <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950 dark:text-white">
-                Figure Set
+                {t("figureSet.title")}
               </h1>
               <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                Assign one hero to every base-class slot used when you join a room.
+                {t("figureSet.subtitle")}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <button type="button" className="btn btn-secondary" onClick={() => onBack?.()}>
-                Back to Rooms
+                {t("common.backToRooms")}
               </button>
               <ThemeToggle />
+              <LanguageSwitcher />
             </div>
           </div>
         </PanelCard>
 
         <PanelCard className="p-5">
           <SectionHeader
-            kicker="Manage loadout"
-            title="Search, import, or export"
-            description="Changes save locally as soon as you select a hero."
+            kicker={t("figureSet.manageKicker")}
+            title={t("figureSet.manageTitle")}
+            description={t("figureSet.manageDescription")}
           />
           <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
             <div>
               <label className="field-label" htmlFor="figure-search">
-                Search heroes
+                {t("figureSet.searchHeroes")}
               </label>
               <input
                 id="figure-search"
                 className="field-control"
                 type="search"
-                placeholder="Search by hero name or ID"
+                placeholder={t("figureSet.searchPlaceholder")}
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
               />
             </div>
             <div className="flex flex-wrap gap-2">
               <button type="button" className="btn btn-strong" onClick={handleExport}>
-                Export
+                {t("figureSet.export")}
               </button>
               <button type="button" className="btn btn-secondary" onClick={handleImportClick}>
-                Import
+                {t("figureSet.import")}
               </button>
               <button type="button" className="btn btn-warning" onClick={resetAll}>
-                Reset All to Base
+                {t("figureSet.resetAll")}
               </button>
             </div>
           </div>
@@ -279,28 +283,36 @@ export function FigureSetPage({ onBack }: FigureSetPageProps) {
               const selectedId = state.selection[slot];
               const selected = heroById.get(selectedId) ?? heroById.get(BASE_HERO_IDS[slot]);
               const normalizedSearch = search.trim().toLowerCase();
-              const candidates = (heroesByClass.get(slot) ?? []).filter(
-                (hero) =>
+              const candidates = (heroesByClass.get(slot) ?? []).filter((hero) => {
+                const displayName = getHeroDisplayName(hero.id, hero.name, language);
+                return (
                   !normalizedSearch ||
                   hero.name.toLowerCase().includes(normalizedSearch) ||
-                  hero.id.toLowerCase().includes(normalizedSearch),
-              );
+                  displayName.toLowerCase().includes(normalizedSearch) ||
+                  hero.id.toLowerCase().includes(normalizedSearch)
+                );
+              });
+              const selectedName = selected
+                ? getHeroDisplayName(selected.id, selected.name, language)
+                : t("figureSet.unknownHero");
               return (
                 <PanelCard key={slot} className="p-4">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex min-w-0 items-center gap-3">
                       <HeroToken
                         heroId={selected?.id ?? ""}
-                        label={selected?.name ?? slot}
+                        label={selectedName}
                         className="h-12 w-12 rounded-xl shadow-md"
                       />
                       <div className="min-w-0">
-                        <div className="section-kicker">{formatSlotTitle(slot)}</div>
+                        <div className="section-kicker">
+                          {t("figureSet.slot", { class: getClassLabel(slot, t) })}
+                        </div>
                         <div className="mt-1 truncate text-base font-semibold text-slate-900 dark:text-white">
-                          {selected?.name ?? "Unknown hero"}
+                          {selectedName}
                         </div>
                         <StatusBadge tone="success" className="mt-1.5">
-                          Selected
+                          {t("common.selected")}
                         </StatusBadge>
                       </div>
                     </div>
@@ -310,21 +322,21 @@ export function FigureSetPage({ onBack }: FigureSetPageProps) {
                         className="btn btn-secondary btn-sm"
                         onClick={() => setDetailsSlot(slot)}
                       >
-                        Details
+                        {t("common.details")}
                       </button>
                       <button
                         type="button"
                         className="btn btn-strong btn-sm"
                         onClick={() => setActiveSlot(activeSlot === slot ? null : slot)}
                       >
-                        {activeSlot === slot ? "Close" : "Change"}
+                        {activeSlot === slot ? t("common.close") : t("common.change")}
                       </button>
                       <button
                         type="button"
                         className="btn btn-secondary btn-sm"
                         onClick={() => resetSlot(slot)}
                       >
-                        Reset to Base
+                        {t("figureSet.resetBase")}
                       </button>
                     </div>
                   </div>
@@ -333,7 +345,7 @@ export function FigureSetPage({ onBack }: FigureSetPageProps) {
                     <div className="mt-4 grid gap-2 border-t border-slate-200 pt-4 sm:grid-cols-2 dark:border-slate-800">
                       {candidates.length === 0 ? (
                         <div className="col-span-full rounded-xl border border-dashed border-slate-300 px-4 py-6 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
-                          No heroes in this slot match “{search}”.
+                          {t("figureSet.noMatches", { search })}
                         </div>
                       ) : null}
                       {candidates.map((hero) => (
@@ -352,15 +364,17 @@ export function FigureSetPage({ onBack }: FigureSetPageProps) {
                         >
                           <HeroToken
                             heroId={hero.id}
-                            label={hero.name}
+                            label={getHeroDisplayName(hero.id, hero.name, language)}
                             className="h-10 w-10 rounded-lg"
                           />
                           <span className="min-w-0 flex-1">
-                            <span className="block truncate font-semibold">{hero.name}</span>
+                            <span className="block truncate font-semibold">
+                              {getHeroDisplayName(hero.id, hero.name, language)}
+                            </span>
                             <span className="block truncate text-xs opacity-65">{hero.id}</span>
                           </span>
                           {hero.id === selected?.id ? (
-                            <StatusBadge tone="success">Current</StatusBadge>
+                            <StatusBadge tone="success">{t("common.current")}</StatusBadge>
                           ) : null}
                         </button>
                       ))}
@@ -373,12 +387,17 @@ export function FigureSetPage({ onBack }: FigureSetPageProps) {
 
           <div className="space-y-4 xl:sticky xl:top-5">
             <PanelCard className="p-4">
-              <SectionHeader kicker="Current loadout" title="Selected roster" />
+              <SectionHeader
+                kicker={t("figureSet.currentLoadout")}
+                title={t("figureSet.selectedRoster")}
+              />
               <div className="mt-3 space-y-2 text-xs">
                 {BASE_CLASSES.map((slot) => {
                   const heroId = state.selection[slot];
                   const hero = heroById.get(heroId) ?? heroById.get(BASE_HERO_IDS[slot]);
-                  const label = hero?.name ?? "Unknown hero";
+                  const label = hero
+                    ? getHeroDisplayName(hero.id, hero.name, language)
+                    : t("figureSet.unknownHero");
                   return (
                     <div
                       key={`preview-${slot}`}
@@ -387,7 +406,7 @@ export function FigureSetPage({ onBack }: FigureSetPageProps) {
                       <HeroToken heroId={heroId} label={label} className="h-9 w-9 rounded-lg" />
                       <div className="flex-1">
                         <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                          {slot}
+                          {getClassLabel(slot, t)}
                         </div>
                         <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">
                           {label}
@@ -400,19 +419,21 @@ export function FigureSetPage({ onBack }: FigureSetPageProps) {
             </PanelCard>
 
             <PanelCard className="p-4">
-              <SectionHeader kicker="Reference" title="Hero details" />
+              <SectionHeader kicker={t("figureSet.reference")} title={t("figureSet.heroDetails")} />
               {heroesLoading && (
                 <div className="mt-3 text-sm text-slate-500 dark:text-slate-400">
-                  Loading heroes...
+                  {t("figureSet.loadingHeroes")}
                 </div>
               )}
               {heroesError && (
-                <div className="mt-3 text-sm text-rose-600 dark:text-rose-300">{heroesError}</div>
+                <div className="mt-3 text-sm text-rose-600 dark:text-rose-300">
+                  {localizeServerText(heroesError, t)}
+                </div>
               )}
               {!heroesLoading && detailsSlot && (
                 <div className="mt-3 space-y-2 text-xs text-slate-700 dark:text-slate-200">
                   <div className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                    Full art
+                    {t("figureSet.fullArt")}
                   </div>
                   <div
                     className="overflow-hidden rounded-xl border border-slate-200 bg-slate-100 dark:border-slate-800 dark:bg-slate-950"
@@ -420,7 +441,11 @@ export function FigureSetPage({ onBack }: FigureSetPageProps) {
                   >
                     <img
                       src={detailsArtSrc}
-                      alt={`${detailsHero?.name ?? "Selected hero"} full art`}
+                      alt={t("figureSet.artAlt", {
+                        hero: detailsHero
+                          ? getHeroDisplayName(detailsHero.id, detailsHero.name, language)
+                          : t("common.selected"),
+                      })}
                       className="h-full w-full object-cover"
                     />
                   </div>
@@ -428,56 +453,64 @@ export function FigureSetPage({ onBack }: FigureSetPageProps) {
               )}
               {!heroesLoading && !detailsSlot && (
                 <div className="panel-card-muted mt-3 px-4 py-6 text-center text-sm text-slate-500 dark:text-slate-400">
-                  Select a hero to see details.
+                  {t("figureSet.selectDetails")}
                 </div>
               )}
               {!heroesLoading && detailsSlot && !detailsHero && (
                 <div className="panel-card-muted mt-3 px-4 py-6 text-center text-sm text-slate-500 dark:text-slate-400">
-                  Details unavailable for this hero.
+                  {t("figureSet.unavailableDetails")}
                 </div>
               )}
               {!heroesLoading && detailsSlot && detailsHero && (
                 <div className="mt-4 space-y-4 text-sm text-slate-700 dark:text-slate-200">
                   <div>
-                    <div className="text-lg font-semibold">{detailsHero.name}</div>
+                    <div className="text-lg font-semibold">
+                      {getHeroDisplayName(detailsHero.id, detailsHero.name, language)}
+                    </div>
                     <div className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                      Class: {formatClassLabel(detailsHero.mainClass)}
+                      {t("figureSet.class", { class: getClassLabel(detailsHero.mainClass, t) })}
                     </div>
                     {detailsHero.description && (
                       <div className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
-                        {detailsHero.description}
+                        {detailsHero.description === "Base unit."
+                          ? t("figureSet.subtitle")
+                          : detailsHero.description}
                       </div>
                     )}
                   </div>
 
                   <div>
                     <div className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                      Stats
+                      {t("figureSet.stats")}
                     </div>
                     <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
                       <div className="panel-card-muted px-2.5 py-2">
-                        HP: {detailsHero.baseStats.hp}
-                        {detailsHero.id === LECHY_ID ? " (includes Giant +3)" : ""}
+                        {t("game.hp", { hp: detailsHero.baseStats.hp })}
+                        {detailsHero.id === LECHY_ID ? ` (${t("figureSet.giantBonus")})` : ""}
                       </div>
                       <div className="panel-card-muted px-2.5 py-2">
-                        Damage: {detailsHero.baseStats.damage}
+                        {t("figureSet.damage", { value: detailsHero.baseStats.damage })}
                       </div>
                       <div className="panel-card-muted px-2.5 py-2">
-                        Movement: {detailsHero.baseStats.moveType}
+                        {t("figureSet.movement", {
+                          value: getClassLabel(detailsHero.baseStats.moveType, t),
+                        })}
                       </div>
                       <div className="panel-card-muted px-2.5 py-2">
-                        Attack: {detailsHero.baseStats.attackRange}
+                        {t("figureSet.attack", {
+                          value: getStatLabel(detailsHero.baseStats.attackRange, t),
+                        })}
                       </div>
                     </div>
                   </div>
 
                   <div>
                     <div className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                      Abilities
+                      {t("game.abilities")}
                     </div>
                     {detailsHero.abilities.length === 0 && (
                       <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                        No abilities listed.
+                        {t("figureSet.noAbilities")}
                       </div>
                     )}
                     <div className="mt-2 space-y-3">
@@ -487,8 +520,15 @@ export function FigureSetPage({ onBack }: FigureSetPageProps) {
                             <div className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                               {group.label}
                             </div>
-                            {group.abilities.map((ability) => (
-                              <div
+                            {group.abilities.map((ability) => {
+                              const display = getAbilityDisplay(
+                                ability.id,
+                                ability.name,
+                                ability.description,
+                                language,
+                              );
+                              return (
+                                <div
                                 key={ability.id}
                                 className={`rounded-xl border px-3 py-3 shadow-sm ${
                                   ability.type === "passive"
@@ -502,7 +542,7 @@ export function FigureSetPage({ onBack }: FigureSetPageProps) {
                               >
                                 <div className="flex items-center justify-between">
                                   <div className="text-sm font-semibold text-slate-800 dark:text-slate-100">
-                                    {ability.name}
+                                    {display.name}
                                   </div>
                                   <span
                                     className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${abilityBadgeClass(
@@ -516,10 +556,11 @@ export function FigureSetPage({ onBack }: FigureSetPageProps) {
                                   {formatCharge(ability)} / {formatCost(ability)}
                                 </div>
                                 <div className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
-                                  {ability.description}
+                                  {display.description}
                                 </div>
                               </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         ),
                       )}

@@ -4,20 +4,22 @@ import { TurnQueueTracker } from "../../../components/TurnQueueTracker";
 import { PanelCard, SectionHeader, StatusBadge } from "../../../components/ui";
 import { PAPYRUS_LONG_BONE_ID, PAPYRUS_ORANGE_BONE_ID } from "../../../rulesHints";
 import { RightPanel } from "../../components/RightPanel/RightPanel";
+import { useI18n } from "../../../i18n";
 
 interface GameShellSideColumnProps {
   vm: any;
 }
 
 export const GameShellSideColumn: FC<GameShellSideColumnProps> = ({ vm }) => {
+  const { t } = useI18n();
   return (
     <aside className="scroll-panel min-w-0 space-y-4 xl:sticky xl:top-4 xl:max-h-[calc(100vh-2rem)] xl:overflow-y-auto xl:pr-1">
       {vm.view.phase === "lobby" ? (
         <PanelCard className="p-5">
           <SectionHeader
-            kicker="Staging room"
-            title="Match lobby"
-            description="Both players must occupy a seat and ready up before the host can start."
+            kicker={t("game.stagingRoom")}
+            title={t("game.matchLobby")}
+            description={t("game.matchLobbyDescription")}
           />
           <div className="mt-4 grid grid-cols-2 gap-2">
             {(["P1", "P2"] as const).map((seat) => (
@@ -27,20 +29,22 @@ export const GameShellSideColumn: FC<GameShellSideColumnProps> = ({ vm }) => {
                 </div>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   <StatusBadge tone={vm.roomMeta?.players[seat] ? "success" : "neutral"}>
-                    {vm.roomMeta?.players[seat] ? "Occupied" : "Open"}
+                    {vm.roomMeta?.players[seat] ? t("common.occupied") : t("common.open")}
                   </StatusBadge>
                   <StatusBadge tone={vm.readyStatus[seat] ? "success" : "warning"}>
-                    {vm.readyStatus[seat] ? "Ready" : "Waiting"}
+                    {vm.readyStatus[seat] ? t("common.ready") : t("common.waiting")}
                   </StatusBadge>
                 </div>
               </div>
             ))}
           </div>
           <div className="mt-3 flex flex-wrap gap-2">
-            <StatusBadge tone="info">{vm.roomMeta?.spectators ?? 0} spectators</StatusBadge>
+            <StatusBadge tone="info">
+              {t("lobby.spectators", { count: vm.roomMeta?.spectators ?? 0 })}
+            </StatusBadge>
             <StatusBadge tone={vm.isHost ? "special" : "neutral"}>
-              You: {vm.role ?? "-"}
-              {vm.isHost ? " / Host" : ""}
+              {t("game.you", { role: vm.role ? t(`roles.${vm.role}`) : "-" })}
+              {vm.isHost ? ` / ${t("roles.host")}` : ""}
             </StatusBadge>
           </div>
           {vm.seat ? (
@@ -50,7 +54,7 @@ export const GameShellSideColumn: FC<GameShellSideColumnProps> = ({ vm }) => {
               onClick={() => vm.setReady(!vm.playerReady)}
               disabled={!vm.joined || !!vm.pendingMeta}
             >
-              {vm.playerReady ? "Mark not ready" : "Ready up"}
+              {vm.playerReady ? t("game.markNotReady") : t("game.readyUp")}
             </button>
           ) : null}
           {vm.seat ? (
@@ -60,7 +64,7 @@ export const GameShellSideColumn: FC<GameShellSideColumnProps> = ({ vm }) => {
               onClick={() => vm.switchRole("spectator")}
               disabled={!vm.joined || !!vm.pendingMeta}
             >
-              Switch to spectator
+              {t("game.switchSpectator")}
             </button>
           ) : null}
           {vm.isHost ? (
@@ -69,9 +73,9 @@ export const GameShellSideColumn: FC<GameShellSideColumnProps> = ({ vm }) => {
               className="btn btn-strong mt-3 w-full"
               onClick={() => vm.startGame()}
               disabled={!vm.canStartGame}
-              title={vm.canStartGame ? "Start the match" : "Both players must be seated and ready"}
+              title={vm.canStartGame ? t("game.startMatch") : t("game.startBlocked")}
             >
-              Start game
+              {t("game.startGame")}
             </button>
           ) : null}
         </PanelCard>

@@ -2,6 +2,7 @@ import type { FC } from "react";
 import type { UnitState } from "rules";
 import { FALSE_TRAIL_TOKEN_ID } from "../../../../rulesHints";
 import type { ActionMode } from "../../../../store";
+import { useI18n } from "../../../../i18n";
 
 interface PlacementSectionProps {
   unplacedUnits: UnitState[];
@@ -30,13 +31,14 @@ export const PlacementSection: FC<PlacementSectionProps> = ({
   onSetPlaceUnit,
   onSetActionMode,
 }) => {
+  const { t } = useI18n();
   return (
     <div className="panel-card p-4">
-      <div className="section-kicker">Deployment</div>
-      <div className="section-title mt-1">Place your units</div>
+      <div className="section-kicker">{t("game.deployment")}</div>
+      <div className="section-title mt-1">{t("game.placeUnits")}</div>
       <div className="mt-3 space-y-2">
         {unplacedUnits.length === 0 && (
-          <div className="text-xs text-slate-400 dark:text-slate-400">No unplaced units.</div>
+          <div className="text-xs text-slate-400 dark:text-slate-400">{t("game.noUnplaced")}</div>
         )}
         {unplacedUnits.map((unit) => (
           <button
@@ -52,7 +54,7 @@ export const PlacementSection: FC<PlacementSectionProps> = ({
             }}
             disabled={!placementEnabled}
           >
-            {unit.heroId === FALSE_TRAIL_TOKEN_ID ? "False Trail token" : unit.id}
+            {unit.heroId === FALSE_TRAIL_TOKEN_ID ? t("game.falseTrailToken") : unit.id}
           </button>
         ))}
       </div>
@@ -61,29 +63,29 @@ export const PlacementSection: FC<PlacementSectionProps> = ({
           {(() => {
             const selected = friendlyUnits.find((u) => u.id === placeUnitId);
             const label =
-              selected?.heroId === FALSE_TRAIL_TOKEN_ID ? "the False Trail token" : placeUnitId;
-            return `Click a highlighted cell to place ${label}.`;
+              selected?.heroId === FALSE_TRAIL_TOKEN_ID ? t("game.falseTrailToken") : placeUnitId;
+            return t("game.placeHint", { unit: label });
           })()}
         </div>
       )}
       {!joined && (
         <div className="mt-2 text-xs text-amber-600 dark:text-amber-300">
-          Waiting for room join to place units.
+          {t("game.waitingJoinPlacement")}
         </div>
       )}
       {!pendingRoll && joined && !isSpectator && !isMyTurn && (
         <div className="mt-2 text-xs text-amber-600 dark:text-amber-300">
-          Waiting for the other player to place.
+          {t("game.waitingOtherPlacement")}
         </div>
       )}
       {isSpectator && (
         <div className="mt-2 text-xs text-amber-600 dark:text-amber-300">
-          Spectators cannot place units.
+          {t("game.spectatorPlacementBlocked")}
         </div>
       )}
       {pendingRoll && (
         <div className="mt-2 text-xs text-amber-600 dark:text-amber-300">
-          Resolve the pending roll before placing units.
+          {t("game.pendingPlacementBlocked")}
         </div>
       )}
     </div>

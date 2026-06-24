@@ -27,6 +27,7 @@ import {
   UNDYNE_SPEAR_THROW_ID,
 } from "../../../rulesHints";
 import type { ActionPreviewMode } from "../../../store";
+import type { Translate } from "../../../i18n";
 
 export interface AbilityChargeState {
   current: number;
@@ -63,27 +64,8 @@ export function classBadge(unitClass: string): { label: string; marker?: string 
   }
 }
 
-export function formatMoveMode(mode: MoveMode): string {
-  switch (mode) {
-    case "normal":
-      return "Normal";
-    case "rider":
-      return "Rider";
-    case "berserker":
-      return "Berserker";
-    case "archer":
-      return "Archer";
-    case "trickster":
-      return "Trickster";
-    case "assassin":
-      return "Assassin";
-    case "spearman":
-      return "Spearman";
-    case "knight":
-      return "Knight";
-    default:
-      return mode;
-  }
+export function formatMoveMode(mode: MoveMode, t: Translate): string {
+  return t(`classes.${mode}`);
 }
 
 export function isRangedSingleTargetClass(unitClass: UnitState["class"]): boolean {
@@ -122,7 +104,7 @@ export function getAbilityChargeState(
     current,
     max,
     enabled,
-    reason: enabled ? undefined : "Not Enough charges",
+    reason: enabled ? undefined : "game.notEnoughCharges",
   };
 }
 
@@ -178,48 +160,50 @@ export function shouldHoverAbilityInActionList(abilityId: string): boolean {
 export function getActionModeHint(
   actionMode: ActionPreviewMode,
   papyrusLineAxis: PapyrusLineAxis,
-  undyneAxis: "row" | "col"
+  undyneAxis: "row" | "col",
+  language: "en" | "uk",
 ): string {
+  const uk = language === "uk";
   switch (actionMode) {
     case "dora":
-      return "Dora: select a center cell on the archer line.";
+      return uk ? "Дора: оберіть центральну клітинку на лінії лучника." : "Dora: select a center cell on the archer line.";
     case "invadeTime":
-      return "Invade Time: select any open cell on the board.";
+      return uk ? "Час вторгнення: оберіть будь-яку вільну клітинку." : "Invade Time: select any open cell on the board.";
     case "assassinMark":
-      return "Assassin Mark: select a unit within 2 squares.";
+      return uk ? "Мітка вбивці: оберіть фігуру в радіусі 2." : "Assassin Mark: select a unit within 2 squares.";
     case "guideTraveler":
-      return "Guide Traveler: select an ally within trickster range.";
+      return uk ? "Провідник: оберіть союзника в радіусі трикстера." : "Guide Traveler: select an ally within trickster range.";
     case "tisona":
-      return "Tisona: select a cell on the same row or column.";
+      return uk ? "Тісона: оберіть клітинку в тому самому рядку або стовпці." : "Tisona: select a cell on the same row or column.";
     case "demonDuelist":
-      return "Demon Duelist: select an enemy in attack range.";
+      return uk ? "Демон-дуелянт: оберіть ворога в дальності атаки." : "Demon Duelist: select an enemy in attack range.";
     case "jebeHailOfArrows":
-      return "Hail of Arrows: select a center cell on your attack line.";
+      return uk ? "Град стріл: оберіть центр на лінії атаки." : "Hail of Arrows: select a center cell on your attack line.";
     case "jebeKhansShooter":
-      return "Khan's Shooter: select an enemy in attack range.";
+      return uk ? "Стрілець хана: оберіть ворога в дальності атаки." : "Khan's Shooter: select an enemy in attack range.";
     case "hassanTrueEnemy":
-      return "True Enemy: select an enemy within 2 cells.";
+      return uk ? "Справжній ворог: оберіть ворога в радіусі 2." : "True Enemy: select an enemy within 2 cells.";
     case "odinSleipnir":
-      return "Sleipnir: select any empty destination cell.";
+      return uk ? "Слейпнір: оберіть будь-яку вільну клітинку." : "Sleipnir: select any empty destination cell.";
     case "asgoreFireball":
-      return "Fireball: select an enemy in ranged attack line.";
+      return uk ? "Вогняна куля: оберіть ворога на лінії дальньої атаки." : "Fireball: select an enemy in ranged attack line.";
     case "gutsArbalet":
-      return "Hand Crossbow: select an enemy in ranged attack line.";
+      return uk ? "Ручний арбалет: оберіть ворога на лінії дальньої атаки." : "Hand Crossbow: select an enemy in ranged attack line.";
     case "gutsCannon":
-      return "Hand Cannon: select an enemy in ranged attack line.";
+      return uk ? "Ручна гармата: оберіть ворога на лінії дальньої атаки." : "Hand Cannon: select an enemy in ranged attack line.";
     case "papyrusCoolGuy":
-      return `Cool Guy: select any cell on the chosen ${papyrusLineAxis} line.`;
+      return uk ? `Крутий хлопець: оберіть клітинку на лінії ${papyrusLineAxis}.` : `Cool Guy: select any cell on the chosen ${papyrusLineAxis} line.`;
     case "mettatonPoppins":
-      return "Mettaton Poppins: select a 3x3 center on your attack line.";
+      return uk ? "Меттатон Поппінс: оберіть центр 3×3 на лінії атаки." : "Mettaton Poppins: select a 3x3 center on your attack line.";
     case "mettatonLaser":
-      return "Laser: select a cell on your attack line.";
+      return uk ? "Лазер: оберіть клітинку на лінії атаки." : "Laser: select a cell on your attack line.";
     case "sansGasterBlaster":
-      return "Gaster Blaster: select a cell on the shooter line.";
+      return uk ? "Ґастер-бластер: оберіть клітинку на лінії пострілу." : "Gaster Blaster: select a cell on the shooter line.";
     case "undyneSpearThrow":
-      return "Throw Spear: select an enemy on the shooter line.";
+      return uk ? "Кидок списа: оберіть ворога на лінії пострілу." : "Throw Spear: select an enemy on the shooter line.";
     case "undyneEnergySpear":
-      return `Energy Spear: select any cell on the chosen ${undyneAxis} line.`;
+      return uk ? `Енергетичний спис: оберіть клітинку на лінії ${undyneAxis}.` : `Energy Spear: select any cell on the chosen ${undyneAxis} line.`;
     default:
-      return `Mode: ${actionMode}. Click a highlighted cell to apply.`;
+      return uk ? `Режим: ${actionMode}. Оберіть підсвічену клітинку.` : `Mode: ${actionMode}. Click a highlighted cell to apply.`;
   }
 }

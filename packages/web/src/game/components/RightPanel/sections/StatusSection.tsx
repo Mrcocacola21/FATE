@@ -3,6 +3,12 @@ import type { PlayerView } from "rules";
 import { PanelCard, SectionHeader, StatusBadge } from "../../../../components/ui";
 import { ARENA_BONE_FIELD_ID } from "../../../../rulesHints";
 import type { ForestMarkerView, TurnEconomyState } from "../types";
+import { useI18n } from "../../../../i18n";
+import {
+  getArenaLabel,
+  getPhaseLabel,
+  localizeServerText,
+} from "../../../../i18n/displayMetadata";
 
 interface StatusSectionProps {
   view: PlayerView;
@@ -29,16 +35,17 @@ export const StatusSection: FC<StatusSectionProps> = ({
   pendingRoll,
   onStartTurn,
 }) => {
-  const phase = `${view.phase.charAt(0).toUpperCase()}${view.phase.slice(1)}`;
+  const { t } = useI18n();
+  const phase = getPhaseLabel(view.phase, t);
 
   return (
     <PanelCard className="p-4">
       <SectionHeader
-        kicker="Match state"
-        title="Phase and turn"
+        kicker={t("game.matchState")}
+        title={t("game.phaseAndTurn")}
         action={
           <StatusBadge tone={pendingRoll ? "warning" : "success"} dot>
-            {pendingRoll ? "Choice pending" : "Ready"}
+            {pendingRoll ? t("game.choicePending") : t("common.ready")}
           </StatusBadge>
         }
       />
@@ -46,13 +53,13 @@ export const StatusSection: FC<StatusSectionProps> = ({
       <div className="mt-3 grid grid-cols-2 gap-2">
         <div className="panel-card-muted p-3">
           <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-            Phase
+            {t("game.phase")}
           </div>
           <div className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">{phase}</div>
         </div>
         <div className="panel-card-muted p-3">
           <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-            Current player
+            {t("game.currentPlayer")}
           </div>
           <div className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">
             {view.currentPlayer ?? "-"}
@@ -60,7 +67,7 @@ export const StatusSection: FC<StatusSectionProps> = ({
         </div>
         <div className="panel-card-muted p-3">
           <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-            Round / turn
+            {t("game.roundTurn")}
           </div>
           <div className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">
             {view.roundNumber} / {view.turnNumber}
@@ -68,7 +75,7 @@ export const StatusSection: FC<StatusSectionProps> = ({
         </div>
         <div className="panel-card-muted p-3">
           <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-            Active unit
+            {t("game.activeUnit")}
           </div>
           <div className="mt-1 truncate text-sm font-semibold text-slate-900 dark:text-white">
             {view.activeUnitId ?? expectedUnitId ?? "-"}
@@ -77,18 +84,19 @@ export const StatusSection: FC<StatusSectionProps> = ({
       </div>
 
       <div className="mt-3 flex flex-wrap gap-2">
-        <StatusBadge tone="info">Arena: {view.arenaId ?? "Default"}</StatusBadge>
-        {isSpectator ? <StatusBadge tone="warning">Spectating</StatusBadge> : null}
+        <StatusBadge tone="info">
+          {t("game.arena", { arena: getArenaLabel(view.arenaId, t) })}
+        </StatusBadge>
+        {isSpectator ? <StatusBadge tone="warning">{t("game.spectating")}</StatusBadge> : null}
         {view.arenaId === ARENA_BONE_FIELD_ID ? (
           <StatusBadge tone="info">
-            Bone Field {Math.max(0, view.boneFieldTurnsLeft ?? 0)} turns
+            {t("game.boneFieldTurns", { count: Math.max(0, view.boneFieldTurnsLeft ?? 0) })}
           </StatusBadge>
         ) : null}
-        {stormActive ? <StatusBadge tone="warning">Storm active</StatusBadge> : null}
+        {stormActive ? <StatusBadge tone="warning">{t("game.stormActive")}</StatusBadge> : null}
         {forestMarkers.length > 0 ? (
           <StatusBadge tone="success">
-            {forestMarkers.length} forest marker
-            {forestMarkers.length === 1 ? "" : "s"}
+            {t("game.forestMarkers", { count: forestMarkers.length })}
           </StatusBadge>
         ) : null}
       </div>
@@ -96,14 +104,14 @@ export const StatusSection: FC<StatusSectionProps> = ({
       {view.phase === "battle" ? (
         <div className="mt-4">
           <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-            Turn resources
+            {t("game.turnResources")}
           </div>
           <div className="mt-2 grid grid-cols-4 gap-1.5">
             {[
-              ["Move", economy.moveUsed],
-              ["Attack", economy.attackUsed],
-              ["Action", economy.actionUsed],
-              ["Stealth", economy.stealthUsed],
+              [t("game.move"), economy.moveUsed],
+              [t("game.attack"), economy.attackUsed],
+              [t("game.action"), economy.actionUsed],
+              [t("game.stealth"), economy.stealthUsed],
             ].map(([label, used]) => (
               <div
                 key={String(label)}
@@ -122,15 +130,16 @@ export const StatusSection: FC<StatusSectionProps> = ({
 
       {stormActive ? (
         <p className="mt-3 text-xs leading-5 text-amber-700 dark:text-amber-300">
-          Non-exempt ranged units can only attack adjacent targets.
+          {t("game.stormRestriction")}
         </p>
       ) : null}
       {forestMarkers.length > 0 ? (
         <p className="mt-2 break-words text-xs leading-5 text-emerald-700 dark:text-emerald-300">
-          Forest positions:{" "}
-          {forestMarkers
-            .map((marker) => `${marker.owner} (${marker.position.col},${marker.position.row})`)
-            .join(" / ")}
+          {t("game.forestPositions", {
+            positions: forestMarkers
+              .map((marker) => `${marker.owner} (${marker.position.col},${marker.position.row})`)
+              .join(" / "),
+          })}
         </p>
       ) : null}
 
@@ -140,7 +149,7 @@ export const StatusSection: FC<StatusSectionProps> = ({
           className="btn btn-primary mt-4 w-full"
           onClick={() => onStartTurn(expectedUnitId)}
         >
-          Start turn: {expectedUnitId}
+          {t("game.startTurn", { unit: expectedUnitId })}
         </button>
       ) : null}
 
@@ -149,10 +158,14 @@ export const StatusSection: FC<StatusSectionProps> = ({
       (!legalIntents.canSearchMove || !legalIntents.canSearchAction) ? (
         <div className="mt-3 text-xs leading-5 text-slate-500 dark:text-slate-400">
           {!legalIntents.canSearchMove && legalIntents.searchMoveReason
-            ? `Move search unavailable: ${legalIntents.searchMoveReason}. `
+            ? `${t("game.moveSearchUnavailable", {
+                reason: localizeServerText(legalIntents.searchMoveReason, t),
+              })} `
             : ""}
           {!legalIntents.canSearchAction && legalIntents.searchActionReason
-            ? `Action search unavailable: ${legalIntents.searchActionReason}.`
+            ? t("game.actionSearchUnavailable", {
+                reason: localizeServerText(legalIntents.searchActionReason, t),
+              })
             : ""}
         </div>
       ) : null}

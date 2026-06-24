@@ -1,5 +1,6 @@
 import type { PlayerView } from "rules";
 import { getPendingRollLabel } from "../helpers";
+import { useI18n } from "../../../i18n";
 
 type PendingRoll = NonNullable<PlayerView["pendingRoll"]>;
 
@@ -94,6 +95,8 @@ export function PendingRollModal({
   duelistAttackerHp,
   onResolvePendingRoll,
 }: PendingRollModalProps) {
+  const { language, t } = useI18n();
+  const p = (en: string, uk: string) => (language === "uk" ? uk : en);
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm"
@@ -103,105 +106,107 @@ export function PendingRollModal({
       aria-describedby="pending-roll-description"
     >
       <div className="scroll-panel panel-card max-h-[92vh] w-full max-w-lg overflow-y-auto p-5 shadow-2xl sm:p-6">
-        <div className="section-kicker">Action required</div>
+        <div className="section-kicker">{t("pending.actionRequired")}</div>
         <div
           id="pending-roll-title"
           className="mt-1 text-xl font-semibold tracking-tight text-slate-900 dark:text-white"
         >
           {pendingRoll.kind === "initiativeRoll"
-            ? "Roll initiative"
+            ? t("pending.rollInitiative")
             : isForestMoveCheck
-              ? "Forest check"
+              ? t("pending.forestCheck")
               : isForestChoice
-                ? "Forest of the Dead"
+                ? t("pending.forestDead")
                 : isDuelistChoice
-                  ? "Demon Duelist"
+                  ? t("pending.demonDuelist")
                   : pendingRoll.kind === "asgoreSoulParadeRoll"
-                    ? "Soul Parade"
+                    ? t("pending.soulParade")
                     : isAsgoreBraveryDefenseChoice
-                      ? "Bravery Auto Defense"
+                      ? t("pending.braveryDefense")
                       : isLokiLaughtChoice
-                        ? "Loki's Laughter"
+                        ? t("pending.lokiLaughter")
                         : isFriskPacifismChoice
-                          ? "Frisk: Pacifism"
+                          ? t("pending.friskPacifism")
                           : isFriskGenocideChoice
-                            ? "Frisk: Genocide"
+                            ? t("pending.friskGenocide")
                             : isFriskKeenEyeChoice
-                              ? "Frisk: Keen Eye"
+                              ? t("pending.friskKeenEye")
                               : isFriskSubstitutionChoice
-                                ? "Frisk: Substitution"
+                                ? t("pending.friskSubstitution")
                                 : isFriskChildsCryChoice
-                                  ? "Frisk: Child's Cry"
+                                  ? t("pending.friskChildsCry")
                                   : isOdinMuninnDefenseChoice
-                                    ? "Muninn Auto Defense"
+                                    ? t("pending.muninnDefense")
                                     : isChikatiloRevealChoice
-                                      ? "False Trail"
+                                      ? t("pending.falseTrail")
                                       : isChikatiloDecoyChoice
-                                        ? "Decoy"
-                                        : "Roll required"}
+                                        ? t("pending.decoy")
+                                        : t("pending.rollRequired")}
         </div>
         <div
           id="pending-roll-description"
           className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300"
         >
           {isBerserkerDefenseChoice
-            ? "Choose berserker defense."
+            ? t("pending.chooseBerserkerDefense")
             : isLokiLaughtChoice
-              ? "Pick one Loki trick. Costs Laughter and does not reveal stealth."
+              ? p("Pick one Loki trick. Costs Laughter and does not reveal stealth.", "Оберіть одну хитрість Локі. Вона витрачає Сміх і не розкриває скритність.")
               : isFriskPacifismChoice
-                ? "Pick a Pacifism option. Pacifism abilities do not reveal Frisk stealth."
+                ? p("Pick a Pacifism option. Pacifism abilities do not reveal Frisk stealth.", "Оберіть дію Пацифізму. Вона не розкриває скритність Фріск.")
                 : isFriskGenocideChoice
-                  ? "Pick a Genocide option."
+                  ? p("Pick a Genocide option.", "Оберіть дію Геноциду.")
                   : isFriskKeenEyeChoice
-                    ? "Pick an enemy to reveal with Keen Eye, or attempt normal stealth."
-                    : isFriskSubstitutionChoice
-                      ? "Use Substitution before defense roll to take exactly 1 damage."
+                    ? p("Pick an enemy to reveal with Keen Eye, or attempt normal stealth.", "Оберіть ворога для розкриття Пильним оком або виконайте звичайну спробу скритності.")
+                  : isFriskSubstitutionChoice
+                      ? p("Use Substitution before defense roll to take exactly 1 damage.", "Використайте Підміну до кидка захисту, щоб отримати рівно 1 шкоду.")
                       : isFriskChildsCryChoice
-                        ? "Use Child's Cry after the roll to reduce this hit's damage to 0."
+                        ? p("Use Child's Cry after the roll to reduce this hit's damage to 0.", "Використайте Дитячий плач після кидка, щоб зменшити шкоду до нуля.")
                         : isOdinMuninnDefenseChoice
-                          ? "Defense roll is ready. Keep the roll or spend 6 charges for Muninn auto-defense."
+                          ? p("Defense roll is ready. Keep the roll or spend 6 charges for Muninn auto-defense.", "Кидок захисту готовий. Залиште його або витратьте 6 зарядів на автозахист Мунінном.")
                           : isAsgoreBraveryDefenseChoice
-                            ? "Defense roll is ready. Keep the roll or consume Bravery for automatic defense."
+                            ? p("Defense roll is ready. Keep the roll or consume Bravery for automatic defense.", "Кидок захисту готовий. Залиште його або витратьте Хоробрість на автоматичний захист.")
                             : isChikatiloDecoyChoice
-                              ? "Roll defense or spend 3 charges to take 1 damage."
+                              ? p("Roll defense or spend 3 charges to take 1 damage.", "Киньте захист або витратьте 3 заряди, щоб отримати 1 шкоду.")
                               : isChikatiloRevealChoice
-                                ? "Explode the token or remove it."
+                                ? p("Explode the token or remove it.", "Підірвіть жетон або приберіть його.")
                                 : pendingRoll.kind === "asgoreSoulParadeRoll"
-                                  ? "Roll 1d6 to determine Soul Parade effect."
+                                  ? p("Roll 1d6 to determine Soul Parade effect.", "Киньте 1d6, щоб визначити ефект Параду душ.")
                                   : isForestMoveCheck
-                                    ? "Forest check: roll 5-6 to leave"
+                                    ? p("Forest check: roll 5-6 to leave", "Перевірка лісу: киньте 5–6, щоб вийти")
                                     : isForestChoice
-                                      ? "Activate Forest of the Dead or skip."
+                                      ? p("Activate Forest of the Dead or skip.", "Активуйте Ліс мертвих або пропустіть.")
                                       : isDuelistChoice
-                                        ? "Pay 1 HP to continue the duel, or stop."
-                                        : `Please roll the dice to resolve: ${getPendingRollLabel(pendingRoll.kind)}.`}
+                                        ? p("Pay 1 HP to continue the duel, or stop.", "Сплатіть 1 здоров’я, щоб продовжити дуель, або зупиніться.")
+                                        : t("pending.resolveRoll", {
+                                            roll: getPendingRollLabel(pendingRoll.kind, language),
+                                          })}
         </div>
         <div className="mt-3 flex flex-wrap gap-2">
           <span className="status-pill border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/45 dark:text-amber-200">
-            Pending for {pendingRoll.player}
+            {t("pending.pendingFor", { player: pendingRoll.player })}
           </span>
           <span className="status-pill border-slate-200 bg-slate-100 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
-            {getPendingRollLabel(pendingRoll.kind)}
+            {getPendingRollLabel(pendingRoll.kind, language)}
           </span>
         </div>
         {pendingRoll.kind === "initiativeRoll" && (
           <div className="mt-3 rounded-lg bg-slate-50 p-2 text-xs text-slate-600 dark:bg-slate-800/60 dark:text-slate-200">
             {pendingRoll.player === "P2" && view.initiative.P1 !== null && (
-              <div>P1 rolled: {view.initiative.P1}</div>
+              <div>{t("pending.rolled", { player: "P1", value: view.initiative.P1 })}</div>
             )}
             {pendingRoll.player === "P1" && view.initiative.P2 !== null && (
-              <div>P2 rolled: {view.initiative.P2}</div>
+              <div>{t("pending.rolled", { player: "P2", value: view.initiative.P2 })}</div>
             )}
             {pendingRoll.player === "P1" &&
               view.initiative.P2 === null &&
-              view.initiative.P1 === null && <div>Awaiting your roll.</div>}
+              view.initiative.P1 === null && <div>{t("pending.awaitingRoll")}</div>}
           </div>
         )}
         {showAttackerRoll && attackerDice.length > 0 && (
           <div className="mt-3 rounded-lg bg-slate-50 p-2 text-xs text-slate-600 dark:bg-slate-800/60 dark:text-slate-200">
-            <div>Attacker roll: [{attackerDice.join(", ")}]</div>
+            <div>{t("pending.attackerRoll", { dice: attackerDice.join(", ") })}</div>
             {tieBreakAttacker.length > 0 && (
-              <div className="mt-1">Tie-break: [{tieBreakAttacker.join(", ")}]</div>
+              <div className="mt-1">{t("pending.tieBreak", { dice: tieBreakAttacker.join(", ") })}</div>
             )}
           </div>
         )}
@@ -209,7 +214,7 @@ export function PendingRollModal({
           {isLokiLaughtChoice ? (
             <div className="grid w-full grid-cols-1 gap-2">
               <div className="text-xs text-slate-500 dark:text-slate-300">
-                Laughter: {lokiLaughtCurrent}/15
+                {p("Laughter", "Сміх")}: {lokiLaughtCurrent}/15
               </div>
               <button
                 className="w-full rounded-lg bg-slate-900 px-3 py-2 text-left text-xs font-semibold text-white shadow-sm transition hover:shadow disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 dark:bg-slate-100 dark:text-slate-900 dark:disabled:bg-slate-700 dark:disabled:text-slate-400"
@@ -220,10 +225,10 @@ export function PendingRollModal({
                   })
                 }
                 disabled={!lokiCanAgainSomeNonsense}
-                title={lokiCanAgainSomeNonsense ? "" : "Not Enough laughter"}
+                title={lokiCanAgainSomeNonsense ? "" : p("Not enough Laughter", "Недостатньо Сміху")}
               >
-                Again some nonsense (-3)
-                {!lokiCanAgainSomeNonsense ? " - Not Enough laughter" : ""}
+                {p("Again some nonsense (-3)", "Знову якась нісенітниця (-3)")}
+                {!lokiCanAgainSomeNonsense ? ` — ${p("Not enough Laughter", "Недостатньо Сміху")}` : ""}
               </button>
               <button
                 className="w-full rounded-lg bg-slate-900 px-3 py-2 text-left text-xs font-semibold text-white shadow-sm transition hover:shadow disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 dark:bg-slate-100 dark:text-slate-900 dark:disabled:bg-slate-700 dark:disabled:text-slate-400"
@@ -233,17 +238,17 @@ export function PendingRollModal({
                 disabled={!lokiCanChicken}
                 title={
                   lokiLaughtCurrent < 5
-                    ? "Not Enough laughter"
+                    ? p("Not enough Laughter", "Недостатньо Сміху")
                     : lokiLaughtChickenOptions.length === 0
-                      ? "No valid targets"
+                      ? t("pending.noValidTargets")
                       : ""
                 }
               >
-                Chicken (-5)
+                {p("Chicken (-5)", "Курка (-5)")}
                 {lokiLaughtCurrent < 5
-                  ? " - Not Enough laughter"
+                  ? ` — ${p("Not enough Laughter", "Недостатньо Сміху")}`
                   : lokiLaughtChickenOptions.length === 0
-                    ? " - No valid targets"
+                    ? ` — ${t("pending.noValidTargets")}`
                     : ""}
               </button>
               <button
@@ -257,17 +262,17 @@ export function PendingRollModal({
                 disabled={!lokiCanMindControl}
                 title={
                   lokiLaughtCurrent < 10
-                    ? "Not Enough laughter"
+                    ? p("Not enough Laughter", "Недостатньо Сміху")
                     : lokiLaughtMindControlEnemyOptions.length === 0
-                      ? "No valid targets"
+                      ? t("pending.noValidTargets")
                       : ""
                 }
               >
-                Mind Control (-10)
+                {p("Mind Control (-10)", "Контроль розуму (-10)")}
                 {lokiLaughtCurrent < 10
-                  ? " - Not Enough laughter"
+                  ? ` — ${p("Not enough Laughter", "Недостатньо Сміху")}`
                   : lokiLaughtMindControlEnemyOptions.length === 0
-                    ? " - No valid targets"
+                    ? ` — ${t("pending.noValidTargets")}`
                     : ""}
               </button>
               <button
@@ -279,12 +284,12 @@ export function PendingRollModal({
                   })
                 }
                 disabled={!lokiCanSpinTheDrum}
-                title={lokiCanSpinTheDrum ? "" : "Not Enough laughter"}
+                title={lokiCanSpinTheDrum ? "" : p("Not enough Laughter", "Недостатньо Сміху")}
               >
-                Spin the drum (-12)
-                {!lokiCanSpinTheDrum ? " - Not Enough laughter" : ""}
+                {p("Spin the drum (-12)", "Закрутити барабан (-12)")}
+                {!lokiCanSpinTheDrum ? ` — ${p("Not enough Laughter", "Недостатньо Сміху")}` : ""}
                 {lokiCanSpinTheDrum && lokiLaughtSpinCandidateIds.length === 0
-                  ? " - No allied heroes to spin"
+                  ? ` — ${p("No allied heroes to spin", "Немає союзних героїв")}`
                   : ""}
               </button>
               <button
@@ -296,26 +301,26 @@ export function PendingRollModal({
                   })
                 }
                 disabled={!lokiCanGreatLokiJoke}
-                title={lokiCanGreatLokiJoke ? "" : "Not Enough laughter"}
+                title={lokiCanGreatLokiJoke ? "" : p("Not enough Laughter", "Недостатньо Сміху")}
               >
-                Great Loki joke (-15)
-                {!lokiCanGreatLokiJoke ? " - Not Enough laughter" : ""}
+                {p("Great Loki joke (-15)", "Великий жарт Локі (-15)")}
+                {!lokiCanGreatLokiJoke ? ` — ${p("Not enough Laughter", "Недостатньо Сміху")}` : ""}
               </button>
               <button
                 className="w-full rounded-lg bg-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
                 onClick={() => onResolvePendingRoll("skip")}
               >
-                Cancel
+                {t("common.cancel")}
               </button>
             </div>
           ) : isFriskPacifismChoice ? (
             <div className="grid w-full grid-cols-1 gap-2">
               <div className="text-xs text-slate-500 dark:text-slate-300">
-                Pacifism: {friskPacifismPoints}/30
+                {p("Pacifism", "Пацифізм")}: {friskPacifismPoints}/30
               </div>
               {friskPacifismDisabled && (
                 <div className="text-xs text-amber-700 dark:text-amber-300">
-                  Pacifism lost (One Path)
+                  {p("Pacifism lost (One Path)", "Пацифізм втрачено («Один шлях»)")}
                 </div>
               )}
               <button
@@ -329,11 +334,11 @@ export function PendingRollModal({
                   friskPacifismHugsOptions.length === 0
                 }
               >
-                Hugs (-3)
+                {p("Hugs (-3)", "Обійми (-3)")}
                 {friskPacifismPoints < 3
-                  ? " - Not Enough charges"
+                  ? ` — ${t("game.notEnoughCharges")}`
                   : friskPacifismHugsOptions.length === 0
-                    ? " - No valid targets"
+                    ? ` — ${t("pending.noValidTargets")}`
                     : ""}
               </button>
               <button
@@ -343,8 +348,8 @@ export function PendingRollModal({
                 }
                 disabled={friskPacifismDisabled || friskPacifismPoints < 5}
               >
-                Child&apos;s Cry (-5)
-                {friskPacifismPoints < 5 ? " - Not Enough charges" : ""}
+                {p("Child's Cry (-5)", "Дитячий плач (-5)")}
+                {friskPacifismPoints < 5 ? ` — ${t("game.notEnoughCharges")}` : ""}
               </button>
               <button
                 className="w-full rounded-lg bg-slate-900 px-3 py-2 text-left text-xs font-semibold text-white shadow-sm transition hover:shadow disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 dark:bg-slate-100 dark:text-slate-900 dark:disabled:bg-slate-700 dark:disabled:text-slate-400"
@@ -357,11 +362,11 @@ export function PendingRollModal({
                   friskPacifismWarmWordsOptions.length === 0
                 }
               >
-                Warm Words (-10)
+                {p("Warm Words (-10)", "Теплі слова (-10)")}
                 {friskPacifismPoints < 10
-                  ? " - Not Enough charges"
+                  ? ` — ${t("game.notEnoughCharges")}`
                   : friskPacifismWarmWordsOptions.length === 0
-                    ? " - No valid targets"
+                    ? ` — ${t("pending.noValidTargets")}`
                     : ""}
               </button>
               <button
@@ -374,20 +379,20 @@ export function PendingRollModal({
                 }
                 disabled={friskPacifismDisabled || !friskPacifismPowerOfFriendshipEnabled}
               >
-                Power of Friendship
-                {!friskPacifismPowerOfFriendshipEnabled ? " - Condition not met" : ""}
+                {p("Power of Friendship", "Сила дружби")}
+                {!friskPacifismPowerOfFriendshipEnabled ? ` — ${t("pending.conditionNotMet")}` : ""}
               </button>
               <button
                 className="w-full rounded-lg bg-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
                 onClick={() => onResolvePendingRoll("skip")}
               >
-                Cancel
+                {t("common.cancel")}
               </button>
             </div>
           ) : isFriskGenocideChoice ? (
             <div className="grid w-full grid-cols-1 gap-2">
               <div className="text-xs text-slate-500 dark:text-slate-300">
-                Genocide: {friskGenocidePoints}/30
+                {p("Genocide", "Геноцид")}: {friskGenocidePoints}/30
               </div>
               <button
                 className="w-full rounded-lg bg-slate-900 px-3 py-2 text-left text-xs font-semibold text-white shadow-sm transition hover:shadow disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 dark:bg-slate-100 dark:text-slate-900 dark:disabled:bg-slate-700 dark:disabled:text-slate-400"
@@ -396,8 +401,8 @@ export function PendingRollModal({
                 }
                 disabled={friskGenocidePoints < 3}
               >
-                Substitution (-3)
-                {friskGenocidePoints < 3 ? " - Not Enough charges" : ""}
+                {p("Substitution (-3)", "Підміна (-3)")}
+                {friskGenocidePoints < 3 ? ` — ${t("game.notEnoughCharges")}` : ""}
               </button>
               <button
                 className="w-full rounded-lg bg-slate-900 px-3 py-2 text-left text-xs font-semibold text-white shadow-sm transition hover:shadow disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 dark:bg-slate-100 dark:text-slate-900 dark:disabled:bg-slate-700 dark:disabled:text-slate-400"
@@ -406,8 +411,8 @@ export function PendingRollModal({
                 }
                 disabled={friskGenocidePoints < 5}
               >
-                Keen Eye (-5)
-                {friskGenocidePoints < 5 ? " - Not Enough charges" : ""}
+                {p("Keen Eye (-5)", "Пильне око (-5)")}
+                {friskGenocidePoints < 5 ? ` — ${t("game.notEnoughCharges")}` : ""}
               </button>
               <button
                 className="w-full rounded-lg bg-slate-900 px-3 py-2 text-left text-xs font-semibold text-white shadow-sm transition hover:shadow disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 dark:bg-slate-100 dark:text-slate-900 dark:disabled:bg-slate-700 dark:disabled:text-slate-400"
@@ -419,21 +424,21 @@ export function PendingRollModal({
                 }
                 disabled={friskGenocidePoints < 10}
               >
-                Precision Strike (-10)
-                {friskGenocidePoints < 10 ? " - Not Enough charges" : ""}
+                {p("Precision Strike (-10)", "Точний удар (-10)")}
+                {friskGenocidePoints < 10 ? ` — ${t("game.notEnoughCharges")}` : ""}
               </button>
               <button
                 className="w-full rounded-lg bg-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
                 onClick={() => onResolvePendingRoll("skip")}
               >
-                Cancel
+                {t("common.cancel")}
               </button>
             </div>
           ) : isFriskKeenEyeChoice ? (
             <div className="grid w-full grid-cols-1 gap-2">
               {friskKeenEyeTargetIds.length === 0 && (
                 <div className="text-xs text-slate-500 dark:text-slate-300">
-                  No valid Keen Eye targets.
+                {p("No valid Keen Eye targets.", "Немає доступних цілей для Пильного ока.")}
                 </div>
               )}
               {friskKeenEyeTargetIds.map((unitId) => (
@@ -444,14 +449,14 @@ export function PendingRollModal({
                     onResolvePendingRoll({ type: "friskKeenEyeTarget", targetId: unitId })
                   }
                 >
-                  Reveal {unitId}
+                    {p("Reveal", "Розкрити")} {unitId}
                 </button>
               ))}
               <button
                 className="w-full rounded-lg bg-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
                 onClick={() => onResolvePendingRoll("skip")}
               >
-                Attempt Stealth Instead
+                {p("Attempt Stealth Instead", "Натомість спробувати скритність")}
               </button>
             </div>
           ) : isFriskSubstitutionChoice ? (
@@ -460,14 +465,14 @@ export function PendingRollModal({
                 className="flex-1 rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-slate-100 dark:text-slate-900"
                 onClick={() => onResolvePendingRoll("roll")}
               >
-                Roll Defense
+                {t("pending.rollDefense")}
               </button>
               <button
                 className="flex-1 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-emerald-800/50 dark:text-slate-100 dark:hover:bg-emerald-700/60"
                 onClick={() => onResolvePendingRoll("activate")}
                 disabled={defenderFriskGenocidePoints < 3}
               >
-                Use Substitution (-3)
+                {p("Use Substitution (-3)", "Використати Підміну (-3)")}
               </button>
             </>
           ) : isFriskChildsCryChoice ? (
@@ -476,14 +481,14 @@ export function PendingRollModal({
                 className="flex-1 rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-slate-100 dark:text-slate-900"
                 onClick={() => onResolvePendingRoll("skip")}
               >
-                Take Damage
+                {t("pending.takeDamage")}
               </button>
               <button
                 className="flex-1 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-emerald-800/50 dark:text-slate-100 dark:hover:bg-emerald-700/60"
                 onClick={() => onResolvePendingRoll("activate")}
                 disabled={defenderFriskPacifismPoints < 5}
               >
-                Use Child&apos;s Cry (-5)
+                {p("Use Child's Cry (-5)", "Використати Дитячий плач (-5)")}
               </button>
             </>
           ) : isBerserkerDefenseChoice ? (
@@ -492,14 +497,14 @@ export function PendingRollModal({
                 className="flex-1 rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-slate-100 dark:text-slate-900"
                 onClick={() => onResolvePendingRoll("roll")}
               >
-                Roll Defense
+                {t("pending.rollDefense")}
               </button>
               <button
                 className="flex-1 rounded-lg bg-amber-500 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-amber-400"
                 onClick={() => onResolvePendingRoll("auto")}
                 disabled={defenderBerserkCharges !== 6}
               >
-                Auto-dodge (-6)
+                {t("pending.autoDodge")}
               </button>
             </>
           ) : isOdinMuninnDefenseChoice ? (
@@ -508,14 +513,14 @@ export function PendingRollModal({
                 className="flex-1 rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-slate-100 dark:text-slate-900"
                 onClick={() => onResolvePendingRoll("roll")}
               >
-                Keep Roll
+                {t("pending.keepRoll")}
               </button>
               <button
                 className="flex-1 rounded-lg bg-amber-500 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-amber-400"
                 onClick={() => onResolvePendingRoll("auto")}
                 disabled={defenderMuninnCharges !== 6}
               >
-                Use Muninn (-6)
+                {p("Use Muninn (-6)", "Використати Мунінна (-6)")}
               </button>
             </>
           ) : isAsgoreBraveryDefenseChoice ? (
@@ -524,14 +529,14 @@ export function PendingRollModal({
                 className="flex-1 rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-slate-100 dark:text-slate-900"
                 onClick={() => onResolvePendingRoll("roll")}
               >
-                Keep Roll
+                {t("pending.keepRoll")}
               </button>
               <button
                 className="flex-1 rounded-lg bg-amber-500 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-amber-400"
                 onClick={() => onResolvePendingRoll("auto")}
                 disabled={!defenderAsgoreBraveryReady}
               >
-                Use Bravery
+                {p("Use Bravery", "Використати Хоробрість")}
               </button>
             </>
           ) : isChikatiloDecoyChoice ? (
@@ -540,14 +545,14 @@ export function PendingRollModal({
                 className="flex-1 rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-slate-100 dark:text-slate-900"
                 onClick={() => onResolvePendingRoll("roll")}
               >
-                Roll Defense
+                {t("pending.rollDefense")}
               </button>
               <button
                 className="flex-1 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-emerald-800/50 dark:text-slate-100 dark:hover:bg-emerald-700/60"
                 onClick={() => onResolvePendingRoll("decoy")}
                 disabled={decoyCharges < 3}
               >
-                Use Decoy (-3)
+                {p("Use Decoy (-3)", "Використати Приманку (-3)")}
               </button>
             </>
           ) : isDuelistChoice ? (
@@ -557,13 +562,13 @@ export function PendingRollModal({
                 onClick={() => onResolvePendingRoll("elCidDuelistContinue")}
                 disabled={duelistAttackerHp <= 1}
               >
-                Pay 1 HP
+                {t("pending.payHp")}
               </button>
               <button
                 className="flex-1 rounded-lg bg-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
                 onClick={() => onResolvePendingRoll("elCidDuelistStop")}
               >
-                Stop
+                {t("common.stop")}
               </button>
             </>
           ) : isForestChoice ? (
@@ -572,13 +577,13 @@ export function PendingRollModal({
                 className="flex-1 rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-slate-100 dark:text-slate-900"
                 onClick={() => onResolvePendingRoll("activate")}
               >
-                Activate
+                {t("common.activate")}
               </button>
               <button
                 className="flex-1 rounded-lg bg-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
                 onClick={() => onResolvePendingRoll("skip")}
               >
-                Skip
+                {t("common.skip")}
               </button>
             </>
           ) : isChikatiloRevealChoice ? (
@@ -587,13 +592,13 @@ export function PendingRollModal({
                 className="flex-1 rounded-lg bg-amber-500 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-amber-400"
                 onClick={() => onResolvePendingRoll("falseTrailExplode")}
               >
-                Explode
+                {t("common.explode")}
               </button>
               <button
                 className="flex-1 rounded-lg bg-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
                 onClick={() => onResolvePendingRoll("falseTrailRemove")}
               >
-                Remove
+                {t("common.remove")}
               </button>
             </>
           ) : (
@@ -601,7 +606,7 @@ export function PendingRollModal({
               className="w-full rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-slate-100 dark:text-slate-900"
               onClick={() => onResolvePendingRoll()}
             >
-              Roll
+              {t("pending.rollDice")}
             </button>
           )}
         </div>

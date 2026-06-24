@@ -1,6 +1,7 @@
 import type { FC } from "react";
 import type { UnitState } from "rules";
 import { classBadge } from "../rightPanelHelpers";
+import { useI18n } from "../../../../i18n";
 
 interface FriendlyUnitsSectionProps {
   friendlyUnits: UnitState[];
@@ -13,10 +14,11 @@ export const FriendlyUnitsSection: FC<FriendlyUnitsSectionProps> = ({
   selectedUnitId,
   onSelectUnit,
 }) => {
+  const { t } = useI18n();
   return (
     <div className="panel-card p-4">
-      <div className="section-kicker">Your roster</div>
-      <div className="section-title mt-1">Friendly units</div>
+      <div className="section-kicker">{t("game.yourRoster")}</div>
+      <div className="section-title mt-1">{t("game.friendlyUnits")}</div>
       <div className="mt-2 grid grid-cols-1 gap-2 text-xs">
         {friendlyUnits.map((unit) => {
           const badge = classBadge(unit.class);
@@ -43,13 +45,15 @@ export const FriendlyUnitsSection: FC<FriendlyUnitsSectionProps> = ({
               <div className="flex-1">
                 <div className="text-xs font-semibold">{unit.id}</div>
                 <div className="text-[11px] opacity-75">
-                  HP {unit.hp}
-                  {unit.position ? ` - ${unit.position.col},${unit.position.row}` : " - unplaced"}
+                  {t("game.hp", { hp: unit.hp })}
+                  {unit.position
+                    ? ` - ${unit.position.col},${unit.position.row}`
+                    : ` - ${t("common.unplaced")}`}
                 </div>
               </div>
               {(unit.class === "berserker" || unit.transformed) && (
                 <span className="rounded-full bg-amber-200 px-2 py-1 text-[10px] font-semibold text-amber-900 dark:bg-amber-900/50 dark:text-amber-200">
-                  BD {berserkCharges ?? 0}
+                  {t("game.berserkerDefenseShort")} {berserkCharges ?? 0}
                 </span>
               )}
             </button>

@@ -4,6 +4,14 @@ import { getTokenSrc } from "../../../../assets/registry";
 import { EL_CID_KOLADA_ID, getMaxHp, KAISER_DORA_ID } from "../../../../rulesHints";
 import { classBadge, formatChargeLabel, getAbilityChargeState } from "../rightPanelHelpers";
 import type { ForestMarkerView, TurnEconomyState } from "../types";
+import { useI18n } from "../../../../i18n";
+import {
+  getAbilityDisplay,
+  getAbilityTypeLabel,
+  getClassLabel,
+  getSlotLabel,
+  localizeServerText,
+} from "../../../../i18n/displayMetadata";
 
 interface BattleUnitSummaryProps {
   selectedUnit: UnitState | null;
@@ -70,10 +78,11 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
   abilityViews,
   onHoverAbility,
 }) => {
+  const { language, t } = useI18n();
   if (!selectedUnit) {
     return (
       <div className="panel-card-muted mt-3 px-4 py-6 text-center text-sm text-slate-500 dark:text-slate-400">
-        Select one of your units to inspect stats and available actions.
+        {t("game.selectUnitHint")}
       </div>
     );
   }
@@ -101,7 +110,7 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
             {selectedHeroName}
           </div>
           <div className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-            Class {selectedUnit.class}
+            {t("game.class", { class: getClassLabel(selectedUnit.class, t) })}
             {showUnitIdInClassLabel ? ` (${selectedUnit.id})` : ""}
           </div>
           <div className="mt-2 flex items-center gap-2">
@@ -117,7 +126,7 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
               />
             </div>
             <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
-              {selectedUnit.hp}/{maxHp} HP
+              {selectedUnit.hp}/{maxHp} {t("game.healthShort")}
             </span>
           </div>
         </div>
@@ -125,40 +134,48 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
 
       <div className="flex flex-wrap gap-2">
         <span className="status-pill border-slate-200 bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
-          Position{" "}
-          {selectedUnit.position
-            ? `${selectedUnit.position.col},${selectedUnit.position.row}`
-            : "unplaced"}
+          {t("game.position", {
+            position: selectedUnit.position
+              ? `${selectedUnit.position.col},${selectedUnit.position.row}`
+              : t("common.unplaced"),
+          })}
         </span>
         {selectedUnit.sansMoveLockArmed ? (
           <span className="status-pill border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/45 dark:text-rose-200">
-            Movement locked next turn
+            {t("game.moveLocked")}
           </span>
         ) : null}
         {selectedUnit.sansLastAttackCurseSourceId ? (
           <span className="status-pill border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700 dark:border-fuchsia-800 dark:bg-fuchsia-950/45 dark:text-fuchsia-200">
-            Cursed
+            {t("game.cursed")}
           </span>
         ) : null}
         {selectedUnit.sansBoneFieldStatus ? (
           <span className="status-pill border-cyan-200 bg-cyan-50 text-cyan-700 dark:border-cyan-800 dark:bg-cyan-950/45 dark:text-cyan-200">
-            {selectedUnit.sansBoneFieldStatus.kind} bone
+            {t("game.boneStatus", {
+              bone:
+                selectedUnit.sansBoneFieldStatus.kind === "orange"
+                  ? t("game.orange")
+                  : t("game.blue"),
+            })}
           </span>
         ) : null}
         {selectedMettatonRating !== null ? (
           <span className="status-pill border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/45 dark:text-amber-200">
-            Rating {selectedMettatonRating}
+            {t("game.rating", { rating: selectedMettatonRating })}
           </span>
         ) : null}
         {selectedUnit.undyneImmortalActive ? (
           <span className="status-pill border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/45 dark:text-emerald-200">
-            Immortal
+            {t("game.immortal")}
           </span>
         ) : null}
       </div>
       {forestMarkers.length > 0 && selectedUnit.position && (
         <div className="text-xs text-emerald-700 dark:text-emerald-300">
-          Forest aura: {selectedInsideForest ? "inside" : "outside"}
+          {t("game.forestAura", {
+            state: selectedInsideForest ? t("game.inside") : t("game.outside"),
+          })}
         </div>
       )}
       {stormActive && selectedUnit.position && (
@@ -169,11 +186,15 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
               : "text-amber-700 dark:text-amber-300"
           }`}
         >
-          Storm: {selectedStormExempt ? "exempt" : "restricted"}
+          {t("game.stormState", {
+            state: selectedStormExempt ? t("game.exempt") : t("game.restricted"),
+          })}
         </div>
       )}
       {moveRoll !== null && moveRoll !== undefined && (
-        <div className="text-xs text-slate-500 dark:text-slate-300">Move roll: {moveRoll}</div>
+        <div className="text-xs text-slate-500 dark:text-slate-300">
+          {t("game.moveRoll", { roll: moveRoll })}
+        </div>
       )}
       <div className="flex flex-wrap gap-2 text-xs text-slate-600 dark:text-slate-200">
         <span
@@ -183,7 +204,7 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
               : "bg-emerald-100 dark:bg-emerald-900/40"
           }`}
         >
-          Move {economy.moveUsed ? "X" : "-"}
+          {t("game.move")} {economy.moveUsed ? "X" : "-"}
         </span>
         <span
           className={`rounded-full px-2 py-0.5 ${
@@ -192,7 +213,7 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
               : "bg-emerald-100 dark:bg-emerald-900/40"
           }`}
         >
-          Attack {economy.attackUsed ? "X" : "-"}
+          {t("game.attack")} {economy.attackUsed ? "X" : "-"}
         </span>
         <span
           className={`rounded-full px-2 py-0.5 ${
@@ -201,7 +222,7 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
               : "bg-emerald-100 dark:bg-emerald-900/40"
           }`}
         >
-          Action {economy.actionUsed ? "X" : "-"}
+          {t("game.action")} {economy.actionUsed ? "X" : "-"}
         </span>
         <span
           className={`rounded-full px-2 py-0.5 ${
@@ -210,16 +231,16 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
               : "bg-emerald-100 dark:bg-emerald-900/40"
           }`}
         >
-          Stealth {economy.stealthUsed ? "X" : "-"}
+          {t("game.stealth")} {economy.stealthUsed ? "X" : "-"}
         </span>
       </div>
       <div className="mt-4 border-t border-slate-200 pt-4 dark:border-slate-800">
         <div className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-300">
-          Abilities
+          {t("game.abilities")}
         </div>
         {abilityViews.length === 0 && (
           <div className="mt-2 text-sm text-slate-400 dark:text-slate-400">
-            No abilities available.
+            {t("game.noAbilities")}
           </div>
         )}
         <div className="mt-2 space-y-2">
@@ -230,24 +251,14 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
             const isChargeBlocked = ability.kind !== "passive" && !chargeState.enabled;
             const showChargeWarning =
               !!chargeState.reason && chargeState.reason !== ability.disabledReason;
-            const slotLabel =
-              ability.slot === "none"
-                ? "None"
-                : ability.slot === "action"
-                  ? "Action"
-                  : ability.slot === "move"
-                    ? "Move"
-                    : ability.slot === "attack"
-                      ? "Attack"
-                      : "Stealth";
-            const kindLabel =
-              ability.kind === "passive"
-                ? "Passive"
-                : ability.kind === "active"
-                  ? "Active"
-                  : ability.kind === "impulse"
-                    ? "Impulse"
-                    : "Phantasm";
+            const slotLabel = getSlotLabel(ability.slot, t);
+            const kindLabel = getAbilityTypeLabel(ability.kind, t);
+            const display = getAbilityDisplay(
+              ability.id,
+              ability.name,
+              ability.description,
+              language,
+            );
             const tone = abilityTone(ability.kind, !ability.isAvailable || isChargeBlocked);
             return (
               <div
@@ -255,7 +266,7 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
                 className={`rounded-xl border p-3 text-xs shadow-sm ${tone.card} ${
                   ability.isAvailable ? "" : "opacity-70"
                 }`}
-                title={ability.disabledReason ?? ""}
+                title={localizeServerText(ability.disabledReason, t)}
                 onMouseEnter={() => {
                   if (ability.id === EL_CID_KOLADA_ID) {
                     onHoverAbility(ability.id);
@@ -269,7 +280,7 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
               >
                 <div className="flex items-center justify-between gap-2">
                   <div className="font-semibold text-slate-900 dark:text-slate-100">
-                    {ability.name}
+                    {display.name}
                   </div>
                   <span
                     className={`rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${tone.badge}`}
@@ -278,20 +289,22 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
                   </span>
                 </div>
                 <div className="mt-2 leading-5 text-slate-600 dark:text-slate-300">
-                  {ability.description}
+                  {display.description}
                 </div>
                 <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                  Slot: {slotLabel}
-                  {chargeLabel !== null ? <span>Charges: {chargeLabel}</span> : null}
+                  {t("game.slot", { slot: slotLabel })}
+                  {chargeLabel !== null ? (
+                    <span>{t("game.charges", { charges: chargeLabel })}</span>
+                  ) : null}
                 </div>
                 {ability.disabledReason && (
                   <div className="mt-1 text-amber-700 dark:text-amber-300">
-                    {ability.disabledReason}
+                    {localizeServerText(ability.disabledReason, t)}
                   </div>
                 )}
                 {showChargeWarning && (
                   <div className="mt-1 text-amber-700 dark:text-amber-300">
-                    {chargeState.reason}
+                    {chargeState.reason ? t(chargeState.reason) : ""}
                   </div>
                 )}
               </div>

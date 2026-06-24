@@ -2,33 +2,37 @@ import type { FC } from "react";
 import type { GameAction } from "rules";
 import { Board } from "../../../components/Board";
 import { ThemeToggle } from "../../../components/ThemeToggle";
+import { LanguageSwitcher } from "../../../components/LanguageSwitcher";
 import { PanelCard, StatusBadge } from "../../../components/ui";
 import { PendingBoardNotice } from "./PendingBoardNotice";
+import { useI18n } from "../../../i18n";
+import { getConnectionLabel } from "../../../i18n/displayMetadata";
 
 interface GameShellBoardColumnProps {
   vm: any;
 }
 
 export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm }) => {
+  const { t } = useI18n();
   return (
     <PanelCard className="min-w-0 overflow-hidden">
       <div className="border-b border-slate-200/80 px-4 py-4 dark:border-slate-800 sm:px-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
-            <div className="section-kicker">Tactical arena</div>
+            <div className="section-kicker">{t("game.tacticalArena")}</div>
             <div className="mt-1 flex flex-wrap items-center gap-2">
               <h1 className="text-lg font-semibold tracking-tight text-slate-950 dark:text-white">
-                FATE Match
+                {t("game.matchTitle")}
               </h1>
               <StatusBadge tone={vm.connectionStatus === "connected" ? "success" : "danger"} dot>
-                {vm.connectionStatus}
+                {getConnectionLabel(vm.connectionStatus, t)}
               </StatusBadge>
               <StatusBadge tone={vm.role === "spectator" ? "info" : "neutral"}>
-                {vm.role ?? "No role"}
+                {vm.role ? t(`roles.${vm.role}`) : t("roles.noRole")}
               </StatusBadge>
             </div>
             <div className="mt-1 truncate font-mono text-xs text-slate-500 dark:text-slate-400">
-              Room {vm.roomId ?? "-"}
+              {t("game.room")} {vm.roomId ?? "-"}
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -38,23 +42,24 @@ export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm }) => {
               onClick={vm.handleLeave}
               disabled={vm.leavingRoom}
             >
-              {vm.leavingRoom ? "Leaving..." : "Leave match"}
+              {vm.leavingRoom ? t("game.leaving") : t("game.leaveMatch")}
             </button>
+            <LanguageSwitcher />
             <ThemeToggle />
           </div>
         </div>
         <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-slate-500 dark:text-slate-400">
           <span className="inline-flex items-center gap-1.5">
             <span className="h-2.5 w-2.5 rounded-sm bg-sky-400/80 ring-1 ring-sky-500" />
-            Legal move
+            {t("game.legalMove")}
           </span>
           <span className="inline-flex items-center gap-1.5">
             <span className="h-2.5 w-2.5 rounded-sm bg-rose-400/80 ring-1 ring-rose-500" />
-            Legal attack
+            {t("game.legalAttack")}
           </span>
           <span className="inline-flex items-center gap-1.5">
             <span className="h-2.5 w-2.5 rounded-sm bg-amber-400/80 ring-1 ring-amber-500" />
-            Ability area
+            {t("game.abilityArea")}
           </span>
         </div>
       </div>
@@ -93,8 +98,7 @@ export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm }) => {
 
         {vm.pendingMeta && !vm.pendingRoll ? (
           <div className="mt-4 rounded-xl border border-sky-200 bg-sky-50 p-3 text-sm text-sky-800 dark:border-sky-800/60 dark:bg-sky-950/40 dark:text-sky-200">
-            <span className="font-semibold">{vm.pendingMeta.player}</span> is resolving the current
-            roll.
+            {t("game.resolvingRoll", { player: vm.pendingMeta.player })}
           </div>
         ) : null}
 

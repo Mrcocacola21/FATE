@@ -5,6 +5,7 @@ import {
   FRISK_PACIFISM_ID,
   ODIN_MUNINN_ID,
 } from "../../../rulesHints";
+import { useI18n } from "../../../i18n";
 
 interface UseGameShellPendingStatusParams {
   view: any;
@@ -23,6 +24,7 @@ export function useGameShellPendingStatus({
   leaveRoom,
   seat,
 }: UseGameShellPendingStatusParams) {
+  const { t } = useI18n();
   const pendingRoll = view?.pendingRoll ?? null;
   const pendingMeta = roomMeta?.pendingRoll ?? null;
   const hasBlockingRoll = !!pendingMeta;
@@ -211,12 +213,12 @@ export function useGameShellPendingStatus({
   const handleLeave = useMemo(() => {
     return () => {
       if (leavingRoom) return;
-      const label = roomId ?? "this room";
-      const confirmed = window.confirm(`Leave room ${label}? You will disconnect.`);
+      const label = roomId ?? t("game.room").toLowerCase();
+      const confirmed = window.confirm(t("game.leaveConfirm", { room: label }));
       if (!confirmed) return;
       leaveRoom();
     };
-  }, [leavingRoom, roomId, leaveRoom]);
+  }, [leavingRoom, roomId, leaveRoom, t]);
 
   const readyStatus = roomMeta?.ready ?? { P1: false, P2: false };
   const playerReady = seat ? readyStatus[seat] : false;

@@ -11,6 +11,8 @@ import {
 import { useEffect, useRef, useState, type FC } from "react";
 import { HpBar } from "./HpBar";
 import { getTokenSrc } from "../assets/registry";
+import { useI18n } from "../i18n";
+import { getClassLabel, getHeroDisplayName } from "../i18n/displayMetadata";
 
 const MIN_CELL_SIZE = 26;
 const MAX_CELL_SIZE = 96;
@@ -106,6 +108,7 @@ export const Board: FC<BoardProps> = ({
   onSelectUnit,
   onCellClick,
 }) => {
+  const { language, t } = useI18n();
   const size = view.boardSize ?? 9;
   const maxIndex = size - 1;
   const isFlipped = playerId === "P2";
@@ -455,14 +458,16 @@ export const Board: FC<BoardProps> = ({
                     : "bg-gradient-to-br from-rose-500 to-red-700"
                 }`}
                 style={{ fontSize: pieceFontSize }}
-                aria-label={`${unit.class} token`}
+                aria-label={t("board.tokenAlt", { unit: getClassLabel(unit.class, t) })}
               >
                 {getUnitLabel(unit.class)}
               </div>
             ) : (
               <img
                 src={tokenSrc}
-                alt={`${tokenId} token`}
+                alt={t("board.tokenAlt", {
+                  unit: getHeroDisplayName(tokenId, getClassLabel(unit.class, t), language),
+                })}
                 className="h-full w-full rounded-xl bg-white/90 object-contain shadow-lg shadow-slate-900/20 dark:bg-slate-900/90"
                 draggable={false}
               />
@@ -500,15 +505,16 @@ export const Board: FC<BoardProps> = ({
           className={cellClasses}
           style={{ width: cellSize, height: cellSize }}
           disabled={disabled}
-          aria-label={`Cell ${String.fromCharCode(65 + gameCoord.col)}${gameCoord.row}${
-            unit
-              ? `, ${unit.owner} ${unit.class}${
-                  unit.id === view.activeUnitId ? ", active unit" : ""
-                }${unit.id === selectedUnitId ? ", selected" : ""}`
+          aria-label={t("board.cell", {
+            cell: `${String.fromCharCode(65 + gameCoord.col)}${gameCoord.row}`,
+            details: unit
+              ? `, ${unit.owner} ${getClassLabel(unit.class, t)}${
+                  unit.id === view.activeUnitId ? `, ${t("board.activeUnit")}` : ""
+                }${unit.id === selectedUnitId ? `, ${t("board.selected")}` : ""}`
               : lastKnownCount > 0
-                ? ", last known enemy position"
-                : ""
-          }`}
+                ? `, ${t("board.lastKnown")}`
+                : "",
+          })}
           aria-pressed={isSelected}
           onClick={() => {
             if (disabled) return;
@@ -547,7 +553,7 @@ export const Board: FC<BoardProps> = ({
           {isForestMarker && (
             <div
               className="pointer-events-none absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-600 text-[9px] font-bold text-white shadow dark:bg-emerald-400/80 dark:text-emerald-950"
-              title={`Forest marker (${forestMarkerOwners.join("/")})`}
+              title={t("board.forestMarker", { owners: forestMarkerOwners.join("/") })}
             >
               {forestMarkerOwners.length > 1 ? "F2" : "F"}
             </div>
@@ -559,7 +565,9 @@ export const Board: FC<BoardProps> = ({
                   ? "bg-emerald-500 text-white"
                   : "bg-emerald-200 text-emerald-900 dark:bg-emerald-900/50 dark:text-emerald-200"
               }`}
-              title={stakeMarkersByPos.get(key) ? "Revealed stake marker" : "Hidden stake marker"}
+              title={
+                stakeMarkersByPos.get(key) ? t("board.revealedStake") : t("board.hiddenStake")
+              }
             >
               {stakeMarkersByPos.get(key) ? "R" : "S"}
             </div>
@@ -567,7 +575,7 @@ export const Board: FC<BoardProps> = ({
           {unit?.bunkerActive && (
             <div
               className="pointer-events-none absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-200 text-[9px] font-bold text-amber-900 shadow dark:bg-amber-900/60 dark:text-amber-200"
-              title="In Bunker: incoming hits deal 1 damage."
+              title={t("board.bunker")}
             >
               B
             </div>
@@ -575,7 +583,7 @@ export const Board: FC<BoardProps> = ({
           {unit?.isStealthed && (
             <div
               className="pointer-events-none absolute bottom-3 right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-violet-600 px-1 text-[9px] font-bold text-white shadow dark:bg-violet-400 dark:text-violet-950"
-              title="Unit is in stealth"
+              title={t("board.stealth")}
             >
               S
             </div>
@@ -583,7 +591,7 @@ export const Board: FC<BoardProps> = ({
           {isActiveUnit && (
             <div
               className="pointer-events-none absolute left-1/2 top-0.5 z-20 h-1.5 w-5 -translate-x-1/2 rounded-full bg-amber-400 shadow-sm shadow-amber-900/30 dark:bg-amber-300"
-              title="Active unit"
+              title={t("game.activeUnit")}
             />
           )}
           {unit && (

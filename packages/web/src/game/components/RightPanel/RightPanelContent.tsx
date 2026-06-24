@@ -6,10 +6,12 @@ import { FriendlyUnitsSection } from "./sections/FriendlyUnitsSection";
 import { PlacementSection } from "./sections/PlacementSection";
 import { StatusSection } from "./sections/StatusSection";
 import type { RightPanelProps } from "./types";
+import { useI18n } from "../../../i18n";
 
 export type { RightPanelProps } from "./types";
 
 export const RightPanelContent: FC<RightPanelProps> = (props) => {
+  const { t } = useI18n();
   const {
     view,
     selectedUnitId,
@@ -25,7 +27,7 @@ export const RightPanelContent: FC<RightPanelProps> = (props) => {
     papyrusLineAxis,
   } = props;
 
-  const vm = buildRightPanelViewModel(props);
+  const vm = buildRightPanelViewModel(props, t);
 
   return (
     <div className="space-y-4">

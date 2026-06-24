@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useI18n } from "../i18n";
 
 const STORAGE_KEY = "theme";
 type ThemeMode = "light" | "dark";
@@ -15,6 +16,7 @@ function getSystemTheme(): ThemeMode {
 }
 
 export function ThemeToggle({ className = "" }: { className?: string }) {
+  const { t } = useI18n();
   const [theme, setTheme] = useState<ThemeMode>(() => {
     return getStoredTheme() ?? getSystemTheme();
   });
@@ -44,8 +46,8 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
     return () => media.removeListener?.(handler);
   }, []);
 
-  const label = theme === "dark" ? "Dark" : "Light";
-  const nextLabel = theme === "dark" ? "Light" : "Dark";
+  const label = theme === "dark" ? t("theme.dark") : t("theme.light");
+  const nextLabel = theme === "dark" ? t("theme.light") : t("theme.dark");
 
   return (
     <button
@@ -57,8 +59,8 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
         window.localStorage.setItem(STORAGE_KEY, next);
       }}
       aria-pressed={theme === "dark"}
-      aria-label={`Switch to ${nextLabel} mode`}
-      title={`Theme: ${label} (switch to ${nextLabel})`}
+      aria-label={t("theme.switchTo", { theme: nextLabel })}
+      title={t("theme.title", { current: label, next: nextLabel })}
     >
       {theme === "dark" ? (
         <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
