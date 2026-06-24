@@ -18,7 +18,6 @@ const ABILITY_NAME_BY_ID: Record<string, string> = {
   sansSleep: "Sleep",
 };
 
-
 function formatDice(roll?: DiceRoll | null) {
   if (!roll || !Array.isArray(roll.dice)) {
     return "(-) = -";
@@ -53,12 +52,8 @@ function formatEvent(event: GameEvent): string {
       return `Initiative roll requested: ${event.player ?? "-"}`;
     case "initiativeRolled": {
       const dice =
-        Array.isArray(event.dice) && event.dice.length > 0
-          ? `[${event.dice.join(", ")}]`
-          : "[-]";
-      return `Initiative rolled: ${event.player ?? "-"} ${dice} = ${
-        event.sum ?? "-"
-      }`;
+        Array.isArray(event.dice) && event.dice.length > 0 ? `[${event.dice.join(", ")}]` : "[-]";
+      return `Initiative rolled: ${event.player ?? "-"} ${dice} = ${event.sum ?? "-"}`;
     }
     case "initiativeResolved":
       return `Initiative resolved: P1 ${event.P1sum ?? "-"} / P2 ${
@@ -75,9 +70,7 @@ function formatEvent(event: GameEvent): string {
         const name = ABILITY_NAME_BY_ID[id] ?? id;
         const after = now[id];
         const before =
-          typeof after === "number" && typeof delta === "number"
-            ? after - delta
-            : undefined;
+          typeof after === "number" && typeof delta === "number" ? after - delta : undefined;
         if (typeof before === "number" && typeof after === "number") {
           return `${name} ${before}->${after}`;
         }
@@ -91,12 +84,12 @@ function formatEvent(event: GameEvent): string {
         event.reason === "attackHit"
           ? "attack hit"
           : event.reason === "defenseSuccess"
-          ? "defense success"
-          : event.reason === "defenseRoll"
-          ? "defense roll"
-          : event.reason === "stagePhenomenon"
-          ? "stage"
-          : "ability";
+            ? "defense success"
+            : event.reason === "defenseRoll"
+              ? "defense roll"
+              : event.reason === "stagePhenomenon"
+                ? "stage"
+                : "ability";
       const delta = event.delta >= 0 ? `+${event.delta}` : `${event.delta}`;
       return `Rating: ${event.unitId} ${delta} -> ${event.now} (${reason})`;
     }
@@ -110,32 +103,21 @@ function formatEvent(event: GameEvent): string {
       return `Carpet Strike triggered: ${event.unitId}`;
     case "carpetStrikeCenter": {
       const dice =
-        Array.isArray(event.dice) && event.dice.length > 0
-          ? `[${event.dice.join(", ")}]`
-          : "[-]";
+        Array.isArray(event.dice) && event.dice.length > 0 ? `[${event.dice.join(", ")}]` : "[-]";
       return `Carpet Strike center: ${event.unitId} ${dice} = ${
         event.sum ?? "-"
       } -> (${event.center?.col ?? "-"}, ${event.center?.row ?? "-"})`;
     }
     case "carpetStrikeAttackRolled": {
       const dice =
-        Array.isArray(event.dice) && event.dice.length > 0
-          ? `[${event.dice.join(", ")}]`
-          : "[-]";
-      return `Carpet Strike attack: ${event.unitId} ${dice} = ${
-        event.sum ?? "-"
-      }`;
+        Array.isArray(event.dice) && event.dice.length > 0 ? `[${event.dice.join(", ")}]` : "[-]";
+      return `Carpet Strike attack: ${event.unitId} ${dice} = ${event.sum ?? "-"}`;
     }
     case "searchStealth":
       return `Search stealth: ${event.unitId} (${event.mode})${
         event.rolls && event.rolls.length > 0
           ? ` rolls [${event.rolls
-              .map(
-                (roll) =>
-                  `${roll.targetId}:${roll.roll} ${
-                    roll.success ? "success" : "fail"
-                  }`
-              )
+              .map((roll) => `${roll.targetId}:${roll.roll} ${roll.success ? "success" : "fail"}`)
               .join(", ")}]`
           : ""
       }`;
@@ -222,6 +204,31 @@ function safeFormatEvent(event: GameEvent): string {
   }
 }
 
+function eventTone(event: GameEvent): string {
+  switch (event.type) {
+    case "attackResolved":
+    case "unitDied":
+    case "damageBonusApplied":
+      return "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/70 dark:bg-rose-950/35 dark:text-rose-200";
+    case "turnStarted":
+    case "roundStarted":
+    case "battleStarted":
+    case "placementStarted":
+      return "border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-900/70 dark:bg-sky-950/35 dark:text-sky-200";
+    case "abilityUsed":
+    case "chargesUpdated":
+    case "rollRequested":
+    case "initiativeRollRequested":
+      return "border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-900/70 dark:bg-violet-950/35 dark:text-violet-200";
+    case "unitHealed":
+    case "stealthEntered":
+    case "stealthRevealed":
+      return "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/70 dark:bg-emerald-950/35 dark:text-emerald-200";
+    default:
+      return "border-slate-200 bg-slate-100 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300";
+  }
+}
+
 interface EventLogProps {
   events: GameEvent[];
   clientLog: string[];
@@ -232,22 +239,32 @@ export const EventLog: FC<EventLogProps> = ({ events, clientLog }) => {
   const clientItems = clientLog.slice(-8).reverse();
 
   return (
-    <div className="space-y-2">
-      <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-200">
-        Event Log
-      </h3>
-      <div className="max-h-96 overflow-auto rounded-2xl border-ui bg-surface p-3 text-xs shadow-sm shadow-slate-900/5 dark:shadow-black/40">
+    <section className="panel-card overflow-hidden">
+      <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-800">
+        <div>
+          <div className="section-kicker">Projected history</div>
+          <h3 className="section-title mt-1">Event log</h3>
+        </div>
+        <span className="status-pill border-slate-200 bg-slate-100 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+          {events.length} events
+        </span>
+      </div>
+      <div className="scroll-panel max-h-[32rem] overflow-auto p-3 text-xs">
         {clientItems.length > 0 && (
-          <div className="mb-3 space-y-1 text-[11px] text-amber-700 dark:text-amber-200">
+          <div className="mb-3 space-y-1 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-800 dark:border-amber-900/70 dark:bg-amber-950/35 dark:text-amber-200">
+            <div className="font-semibold">Client notices</div>
             {clientItems.map((msg, index) => (
               <div key={`client-${index}`}>{msg}</div>
             ))}
           </div>
         )}
         {items.length === 0 && clientItems.length === 0 && (
-          <div className="text-slate-400 dark:text-slate-500">No events yet.</div>
+          <div className="panel-card-muted px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
+            Match events will appear here in chronological order.
+          </div>
         )}
         {items.map((event, index) => {
+          const sequence = Math.max(1, events.length - index);
           try {
             if (event.type === "attackResolved") {
               const attacker = event.attackerId ?? "-";
@@ -264,21 +281,26 @@ export const EventLog: FC<EventLogProps> = ({ events, clientLog }) => {
               return (
                 <div
                   key={`${event.type}-${index}`}
-                  className="mb-2 rounded-xl border-ui bg-surface p-2 shadow-sm shadow-slate-900/5 dark:shadow-black/30"
+                  className="mb-2 rounded-xl border border-rose-200 bg-rose-50/70 p-3 shadow-sm dark:border-rose-900/70 dark:bg-rose-950/25"
                 >
-                  <div className="text-[11px] font-semibold text-slate-700 dark:text-slate-100">
-                    Attack: {attacker} to {defender}
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="text-xs font-semibold text-slate-800 dark:text-slate-100">
+                      Attack: {attacker} to {defender}
+                    </div>
+                    <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500">
+                      #{sequence}
+                    </span>
                   </div>
-                  <div className="mt-1 grid grid-cols-2 gap-2 text-[10px] text-slate-600 dark:text-slate-300">
+                  <div className="mt-2 grid grid-cols-2 gap-2 text-[11px] text-slate-600 dark:text-slate-300">
                     <div>Attacker {attackerRoll}</div>
                     <div>Defender {defenderRoll}</div>
                   </div>
                   {event.tieBreakDice && (
-                    <div className="mt-1 text-[10px] text-slate-500 dark:text-slate-400">
+                    <div className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
                       Reroll A [{tieA.join(", ")}] / D [{tieD.join(", ")}]
                     </div>
                   )}
-                  <div className="mt-1 text-[10px] text-slate-600 dark:text-slate-300">
+                  <div className="mt-2 flex flex-wrap gap-2 text-[11px] font-semibold text-slate-700 dark:text-slate-200">
                     {hitLabel} - Damage {damage} - Defender HP {hpAfter}
                   </div>
                 </div>
@@ -288,16 +310,23 @@ export const EventLog: FC<EventLogProps> = ({ events, clientLog }) => {
             return (
               <div
                 key={`${event.type}-${index}`}
-                className="py-1 text-slate-700 dark:text-slate-200"
+                className="mb-2 flex items-start gap-2 rounded-xl border border-slate-200 bg-white p-2.5 text-slate-700 shadow-sm dark:border-slate-800 dark:bg-slate-950/45 dark:text-slate-200"
               >
-                {safeFormatEvent(event)}
+                <span
+                  className={`shrink-0 rounded-lg border px-1.5 py-0.5 text-[10px] font-bold ${eventTone(
+                    event,
+                  )}`}
+                >
+                  #{sequence}
+                </span>
+                <span className="min-w-0 leading-5">{safeFormatEvent(event)}</span>
               </div>
             );
           } catch {
             return (
               <div
                 key={`fallback-${index}`}
-                className="py-1 text-slate-700 dark:text-slate-200"
+                className="mb-2 rounded-xl border border-slate-200 bg-white p-2.5 leading-5 text-slate-700 dark:border-slate-800 dark:bg-slate-950/45 dark:text-slate-200"
               >
                 {formatEventFallback(event)}
               </div>
@@ -305,7 +334,6 @@ export const EventLog: FC<EventLogProps> = ({ events, clientLog }) => {
           }
         })}
       </div>
-    </div>
+    </section>
   );
 };
-

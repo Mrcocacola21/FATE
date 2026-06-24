@@ -1,5 +1,6 @@
-﻿import type { FC } from "react";
+import type { FC } from "react";
 import type { PlayerId, PlayerView } from "rules";
+import { PanelCard, SectionHeader, StatusBadge } from "./ui";
 
 interface TurnQueueTrackerProps {
   view: PlayerView;
@@ -29,67 +30,74 @@ function classShort(unitClass: string) {
 
 export const TurnQueueTracker: FC<TurnQueueTrackerProps> = ({ view, playerId }) => {
   const queue = view.turnQueue?.length ? view.turnQueue : view.turnOrder;
-  const queueIndex = view.turnQueue?.length
-    ? view.turnQueueIndex
-    : view.turnOrderIndex;
-
+  const queueIndex = view.turnQueue?.length ? view.turnQueueIndex : view.turnOrderIndex;
   const currentUnitId = queue?.[queueIndex] ?? null;
   const currentUnit = currentUnitId ? view.units[currentUnitId] : null;
 
   return (
-    <div className="rounded-2xl border-ui bg-surface p-4 shadow-sm shadow-slate-900/5 dark:shadow-black/40">
-      <div className="text-sm text-slate-500 dark:text-slate-400">
-        Initiative & Turn Queue
-      </div>
-      <div className="mt-2 text-xs text-slate-600 dark:text-slate-300">
-        <div>
-          Initiative: P1 {view.initiative.P1 ?? "-"} / P2 {view.initiative.P2 ?? "-"}
+    <PanelCard className="p-4">
+      <SectionHeader
+        kicker="Initiative"
+        title="Turn queue"
+        action={
+          <StatusBadge tone={view.currentPlayer === playerId ? "success" : "neutral"}>
+            {view.currentPlayer ? `${view.currentPlayer} turn` : "Waiting"}
+          </StatusBadge>
+        }
+      />
+
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <div className="panel-card-muted p-3">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            Initiative
+          </div>
+          <div className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">
+            P1 {view.initiative.P1 ?? "-"} / P2 {view.initiative.P2 ?? "-"}
+          </div>
         </div>
-        <div>Placement first: {view.placementFirstPlayer ?? "-"}</div>
+        <div className="panel-card-muted p-3">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            Acting now
+          </div>
+          <div className="mt-1 truncate text-sm font-semibold text-slate-900 dark:text-white">
+            {currentUnit ? `${currentUnit.class} / ${currentUnit.owner}` : (currentUnitId ?? "-")}
+          </div>
+        </div>
       </div>
 
-      <div className="mt-3 text-xs text-slate-600 dark:text-slate-300">
-        Now acting:{" "}
-        {currentUnit
-          ? `${currentUnitId} (${currentUnit.class})`
-          : currentUnitId ?? "-"}
-      </div>
-
-      <div className="mt-3 flex flex-wrap gap-2">
+      <div className="scroll-panel mt-3 flex gap-2 overflow-x-auto pb-1">
         {queue.map((unitId, idx) => {
           const unit = view.units[unitId];
           const isCurrent = idx === queueIndex;
-          const isFriendly = unit
-            ? playerId
-              ? unit.owner === playerId
-              : false
-            : false;
+          const isFriendly = unit ? playerId === unit.owner : false;
           const isDead = unit ? !unit.isAlive : false;
           const label = unit ? classShort(unit.class) : "?";
 
           return (
             <div
               key={`${unitId}-${idx}`}
-              className={`flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] shadow-sm ${
+              className={`flex shrink-0 items-center gap-2 rounded-xl border px-2.5 py-2 text-xs shadow-sm transition ${
                 isCurrent
-                  ? "border-teal-500 bg-teal-50 text-teal-700 dark:bg-teal-900/40 dark:text-teal-200"
-                  : "border-slate-200 bg-white text-slate-500 dark:border-neutral-800 dark:bg-neutral-900/60 dark:text-neutral-300"
-              } ${isDead ? "opacity-50 line-through" : ""}`}
+                  ? "border-amber-400 bg-amber-50 text-amber-900 ring-2 ring-amber-400/15 dark:bg-amber-950/40 dark:text-amber-100"
+                  : "border-slate-200 bg-white text-slate-600 dark:border-slate-800 dark:bg-slate-950/45 dark:text-slate-300"
+              } ${isDead ? "opacity-45 line-through" : ""}`}
               title={unitId}
             >
               <span
-                className={`inline-flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-semibold ${
+                className={`inline-flex h-6 w-6 items-center justify-center rounded-lg text-[10px] font-bold ${
                   isFriendly ? "bg-emerald-500 text-white" : "bg-rose-500 text-white"
                 }`}
               >
                 {label}
               </span>
-              <span>{unit ? unitId : "Unknown"}</span>
+              <span className="max-w-28 truncate">{unitId}</span>
             </div>
           );
         })}
       </div>
-    </div>
+      <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+        Placement first: {view.placementFirstPlayer ?? "-"}
+      </div>
+    </PanelCard>
   );
 };
-

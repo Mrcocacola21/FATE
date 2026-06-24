@@ -6,15 +6,11 @@ interface PendingPromptProps {
   children?: ReactNode;
 }
 
-export const PendingPrompt: FC<PendingPromptProps> = ({
-  title,
-  description,
-  children,
-}) => {
+export const PendingPrompt: FC<PendingPromptProps> = ({ title, description, children }) => {
   return (
-    <div className="rounded-xl border border-zinc-700 bg-zinc-900/80 p-3">
-      <div className="text-xs font-semibold text-zinc-100">{title}</div>
-      <div className="mt-1 text-xs text-zinc-300">{description}</div>
+    <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-900/70 dark:bg-amber-950/35">
+      <div className="text-sm font-semibold text-amber-900 dark:text-amber-100">{title}</div>
+      <div className="mt-1 text-sm leading-5 text-amber-800 dark:text-amber-200">{description}</div>
       {children ? <div className="mt-2">{children}</div> : null}
     </div>
   );

@@ -24,8 +24,8 @@ export const GameShellLayout: FC<GameShellLayoutProps> = ({ vm }) => {
   }
 
   return (
-    <div className="min-h-screen bg-app p-6">
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+    <div className="app-shell px-3 py-4 sm:px-5 lg:px-6">
+      <div className="mx-auto grid max-w-[1680px] items-start gap-4 xl:grid-cols-[minmax(0,1fr)_400px]">
         <GameShellBoardColumn vm={vm} />
         <GameShellSideColumn vm={vm} />
       </div>
@@ -63,9 +63,7 @@ export const GameShellLayout: FC<GameShellLayoutProps> = ({ vm }) => {
           friskPacifismDisabled={vm.friskPacifismDisabled}
           friskPacifismHugsOptions={vm.friskPacifismHugsOptions}
           friskPacifismWarmWordsOptions={vm.friskPacifismWarmWordsOptions}
-          friskPacifismPowerOfFriendshipEnabled={
-            vm.friskPacifismPowerOfFriendshipEnabled
-          }
+          friskPacifismPowerOfFriendshipEnabled={vm.friskPacifismPowerOfFriendshipEnabled}
           friskGenocidePoints={vm.friskGenocidePoints}
           friskKeenEyeTargetIds={vm.friskKeenEyeTargetIds}
           defenderFriskGenocidePoints={vm.defenderFriskGenocidePoints}

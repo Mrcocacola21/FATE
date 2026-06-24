@@ -28,7 +28,7 @@ export const RightPanelContent: FC<RightPanelProps> = (props) => {
   const vm = buildRightPanelViewModel(props);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <StatusSection
         view={view}
         stormActive={vm.stormActive}

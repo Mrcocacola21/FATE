@@ -39,7 +39,7 @@ export const BattleAbilityActions: FC<BattleAbilityActionsProps> = ({
 
   return (
     <>
-      <div className="col-span-2 text-[11px] text-slate-500 dark:text-slate-400">
+      <div className="col-span-2 mt-2 text-xs font-bold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-300">
         Ability Actions
       </div>
       {actionableAbilities.map((ability) => {
@@ -51,40 +51,47 @@ export const BattleAbilityActions: FC<BattleAbilityActionsProps> = ({
           ability.slot === "action"
             ? economy.actionUsed
             : ability.slot === "move"
-            ? economy.moveUsed
-            : ability.slot === "attack"
-            ? economy.attackUsed
-            : ability.slot === "stealth"
-            ? economy.stealthUsed
-            : false;
+              ? economy.moveUsed
+              : ability.slot === "attack"
+                ? economy.attackUsed
+                : ability.slot === "stealth"
+                  ? economy.stealthUsed
+                  : false;
         const slotReason =
           ability.slot === "action"
             ? "Action slot already used"
             : ability.slot === "move"
-            ? "Move slot already used"
-            : ability.slot === "attack"
-            ? "Attack slot already used"
-            : ability.slot === "stealth"
-            ? "Stealth slot already used"
-            : undefined;
+              ? "Move slot already used"
+              : ability.slot === "attack"
+                ? "Attack slot already used"
+                : ability.slot === "stealth"
+                  ? "Stealth slot already used"
+                  : undefined;
         const disabledByAvailability = !ability.isAvailable;
-        const disabled =
-          !canAct || notEnoughCharges || slotDisabled || disabledByAvailability;
+        const disabled = !canAct || notEnoughCharges || slotDisabled || disabledByAvailability;
         const chargeWarning = notEnoughCharges ? "Not Enough charges" : undefined;
         const tooltip = ability.disabledReason ?? slotReason ?? chargeWarning ?? "";
         const label = `${ability.name}${chargeLabel ? ` (${chargeLabel})` : ""}`;
         const mode = abilityActionMode(ability.id);
         const hoverable = shouldHoverAbilityInActionList(ability.id);
+        const enabledClass =
+          ability.kind === "phantasm"
+            ? "border-violet-300 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white hover:from-violet-500 hover:to-fuchsia-500 dark:border-violet-500"
+            : ability.kind === "impulse"
+              ? "border-amber-300 bg-amber-100 text-amber-900 hover:bg-amber-200 dark:border-amber-800 dark:bg-amber-950/45 dark:text-amber-100 dark:hover:bg-amber-900/60"
+              : mode && actionMode === mode
+                ? "border-teal-500 bg-teal-500 text-white dark:text-slate-950"
+                : "border-sky-200 bg-sky-50 text-sky-800 hover:border-sky-300 hover:bg-sky-100 dark:border-sky-900/70 dark:bg-sky-950/35 dark:text-sky-100 dark:hover:border-sky-800 dark:hover:bg-sky-950/55";
 
         return (
           <div key={ability.id} className="space-y-1">
             <button
-              className={`w-full rounded-lg px-2 py-2 text-left shadow-sm transition hover:shadow ${
+              type="button"
+              aria-pressed={mode ? actionMode === mode : undefined}
+              className={`min-h-10 w-full rounded-xl border px-3 py-2.5 text-left text-xs font-semibold shadow-sm transition focus-visible:ring-4 focus-visible:ring-sky-500/15 ${
                 disabled
-                  ? "bg-slate-100 text-slate-400 cursor-not-allowed opacity-60 dark:bg-slate-900/50 dark:text-slate-500"
-                  : mode && actionMode === mode
-                  ? "bg-teal-500 text-white dark:bg-teal-800/50 dark:text-slate-100 dark:hover:bg-teal-700/60"
-                  : "bg-slate-200 text-slate-700 dark:bg-slate-800/60 dark:text-slate-100 dark:hover:bg-slate-700/60"
+                  ? "border-slate-200 bg-slate-100 text-slate-400 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-500"
+                  : enabledClass
               }`}
               onClick={() => {
                 if (disabled) return;
@@ -131,11 +138,11 @@ export const BattleAbilityActions: FC<BattleAbilityActionsProps> = ({
             >
               {label}
             </button>
-            {chargeWarning && (
-              <div className="text-[10px] text-amber-700 dark:text-amber-300">
-                {chargeWarning}
+            {disabled && tooltip ? (
+              <div className="px-1 text-xs leading-5 text-amber-700 dark:text-amber-300">
+                {tooltip}
               </div>
-            )}
+            ) : null}
           </div>
         );
       })}

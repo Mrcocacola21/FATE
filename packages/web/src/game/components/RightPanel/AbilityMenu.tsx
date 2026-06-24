@@ -7,8 +7,10 @@ interface AbilityMenuProps {
 
 export const AbilityMenu: FC<AbilityMenuProps> = ({ title, children }) => {
   return (
-    <div className="rounded-xl border border-zinc-700 bg-zinc-900/80 p-3">
-      <div className="mb-2 text-xs font-semibold text-zinc-100">{title}</div>
+    <div className="panel-card-muted p-3">
+      <div className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-200">
+        {title}
+      </div>
       <div className="space-y-2">{children}</div>
     </div>
   );

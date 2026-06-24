@@ -39,12 +39,14 @@ export const BattleActionButtons: FC<BattleActionButtonsProps> = ({
   return (
     <>
       <button
-        className={`rounded-lg px-2 py-2 shadow-sm transition hover:shadow ${
+        type="button"
+        aria-pressed={actionMode === "move"}
+        className={`min-h-10 rounded-xl border px-2 py-2 text-xs font-semibold shadow-sm transition focus-visible:ring-4 focus-visible:ring-teal-500/15 ${
           moveDisabled
-            ? "bg-slate-100 text-slate-400 dark:bg-slate-900/50 dark:text-slate-500"
+            ? "border-slate-200 bg-slate-100 text-slate-400 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-500"
             : actionMode === "move"
-            ? "bg-teal-500 text-white dark:bg-teal-800/50 dark:text-slate-100 dark:hover:bg-teal-700/60"
-            : "bg-slate-200 text-slate-700 dark:bg-slate-800/60 dark:text-slate-100 dark:hover:bg-slate-700/60"
+              ? "border-teal-500 bg-teal-500 text-white dark:text-slate-950"
+              : "border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300 hover:bg-white dark:border-slate-800 dark:bg-slate-950/45 dark:text-slate-100 dark:hover:border-slate-700 dark:hover:bg-slate-800"
         }`}
         onClick={onMoveClick}
         onMouseEnter={() => !moveDisabled && onModePreview("move")}
@@ -56,12 +58,14 @@ export const BattleActionButtons: FC<BattleActionButtonsProps> = ({
         Move
       </button>
       <button
-        className={`rounded-lg px-2 py-2 shadow-sm transition hover:shadow ${
+        type="button"
+        aria-pressed={actionMode === "attack"}
+        className={`min-h-10 rounded-xl border px-2 py-2 text-xs font-semibold shadow-sm transition focus-visible:ring-4 focus-visible:ring-teal-500/15 ${
           attackDisabled
-            ? "bg-slate-100 text-slate-400 dark:bg-slate-900/50 dark:text-slate-500"
+            ? "border-slate-200 bg-slate-100 text-slate-400 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-500"
             : actionMode === "attack"
-            ? "bg-teal-500 text-white dark:bg-teal-800/50 dark:text-slate-100 dark:hover:bg-teal-700/60"
-            : "bg-slate-200 text-slate-700 dark:bg-slate-800/60 dark:text-slate-100 dark:hover:bg-slate-700/60"
+              ? "border-rose-500 bg-rose-500 text-white"
+              : "border-slate-200 bg-slate-50 text-slate-700 hover:border-rose-300 hover:bg-rose-50 dark:border-slate-800 dark:bg-slate-950/45 dark:text-slate-100 dark:hover:border-rose-800 dark:hover:bg-rose-950/30"
         }`}
         onClick={onAttackClick}
         onMouseEnter={() => !attackDisabled && onModePreview("attack")}
@@ -74,15 +78,16 @@ export const BattleActionButtons: FC<BattleActionButtonsProps> = ({
         Attack
       </button>
       {attackDisabledReason && (
-        <div className="col-span-2 text-[10px] text-amber-700 dark:text-amber-300">
+        <div className="col-span-2 text-xs leading-5 text-amber-700 dark:text-amber-300">
           {attackDisabledReason}
         </div>
       )}
       <button
-        className={`rounded-lg px-2 py-2 shadow-sm transition hover:shadow ${
+        type="button"
+        className={`min-h-10 rounded-xl border px-2 py-2 text-xs font-semibold shadow-sm transition focus-visible:ring-4 focus-visible:ring-teal-500/15 ${
           searchMoveDisabled
-            ? "bg-slate-100 text-slate-400 dark:bg-slate-900/50 dark:text-slate-500"
-            : "bg-slate-200 text-slate-700 dark:bg-slate-800/60 dark:text-slate-100 dark:hover:bg-slate-700/60"
+            ? "border-slate-200 bg-slate-100 text-slate-400 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-500"
+            : "border-slate-200 bg-slate-50 text-slate-700 hover:border-sky-300 hover:bg-sky-50 dark:border-slate-800 dark:bg-slate-950/45 dark:text-slate-100 dark:hover:border-sky-800 dark:hover:bg-sky-950/30"
         }`}
         onClick={onSearchMoveClick}
         disabled={searchMoveDisabled}
@@ -90,10 +95,11 @@ export const BattleActionButtons: FC<BattleActionButtonsProps> = ({
         Search (Move)
       </button>
       <button
-        className={`rounded-lg px-2 py-2 shadow-sm transition hover:shadow ${
+        type="button"
+        className={`min-h-10 rounded-xl border px-2 py-2 text-xs font-semibold shadow-sm transition focus-visible:ring-4 focus-visible:ring-teal-500/15 ${
           searchActionDisabled
-            ? "bg-slate-100 text-slate-400 dark:bg-slate-900/50 dark:text-slate-500"
-            : "bg-slate-200 text-slate-700 dark:bg-slate-800/60 dark:text-slate-100 dark:hover:bg-slate-700/60"
+            ? "border-slate-200 bg-slate-100 text-slate-400 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-500"
+            : "border-slate-200 bg-slate-50 text-slate-700 hover:border-sky-300 hover:bg-sky-50 dark:border-slate-800 dark:bg-slate-950/45 dark:text-slate-100 dark:hover:border-sky-800 dark:hover:bg-sky-950/30"
         }`}
         onClick={onSearchActionClick}
         disabled={searchActionDisabled}
@@ -101,20 +107,21 @@ export const BattleActionButtons: FC<BattleActionButtonsProps> = ({
         Search (Action)
       </button>
       {searchMoveDisabled && searchMoveReason && (
-        <div className="col-span-2 text-[10px] text-slate-400 dark:text-slate-400">
+        <div className="col-span-2 text-xs leading-5 text-slate-500 dark:text-slate-400">
           Search (Move) disabled: {searchMoveReason}
         </div>
       )}
       {searchActionDisabled && searchActionReason && (
-        <div className="col-span-2 text-[10px] text-slate-400 dark:text-slate-400">
+        <div className="col-span-2 text-xs leading-5 text-slate-500 dark:text-slate-400">
           Search (Action) disabled: {searchActionReason}
         </div>
       )}
       <button
-        className={`rounded-lg px-2 py-2 shadow-sm transition hover:shadow ${
+        type="button"
+        className={`min-h-10 rounded-xl border px-2 py-2 text-xs font-semibold shadow-sm transition focus-visible:ring-4 focus-visible:ring-violet-500/15 ${
           stealthDisabled
-            ? "bg-slate-100 text-slate-400 dark:bg-slate-900/50 dark:text-slate-500"
-            : "bg-slate-200 text-slate-700 dark:bg-slate-800/60 dark:text-slate-100 dark:hover:bg-slate-700/60"
+            ? "border-slate-200 bg-slate-100 text-slate-400 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-500"
+            : "border-violet-200 bg-violet-50 text-violet-700 hover:border-violet-300 hover:bg-violet-100 dark:border-violet-900/70 dark:bg-violet-950/30 dark:text-violet-200 dark:hover:border-violet-800 dark:hover:bg-violet-950/50"
         }`}
         onClick={onStealthClick}
         disabled={stealthDisabled}

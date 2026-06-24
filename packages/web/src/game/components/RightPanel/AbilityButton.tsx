@@ -15,10 +15,11 @@ export const AbilityButton: FC<AbilityButtonProps> = ({
 }) => {
   return (
     <button
-      className={`w-full rounded-lg px-2 py-2 text-left shadow-sm transition hover:shadow ${
+      type="button"
+      className={`min-h-10 w-full rounded-xl border px-3 py-2.5 text-left text-sm font-semibold shadow-sm transition focus-visible:ring-4 focus-visible:ring-sky-500/15 ${
         disabled
-          ? "bg-zinc-800 text-zinc-400 cursor-not-allowed"
-          : "bg-zinc-700 text-zinc-100 hover:bg-zinc-600"
+          ? "border-slate-200 bg-slate-100 text-slate-400 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-500"
+          : "border-sky-200 bg-sky-50 text-sky-800 hover:bg-sky-100 dark:border-sky-900/70 dark:bg-sky-950/35 dark:text-sky-100 dark:hover:bg-sky-950/55"
       }`}
       disabled={disabled}
       title={title}

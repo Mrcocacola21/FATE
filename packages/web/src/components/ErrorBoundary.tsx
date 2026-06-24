@@ -10,10 +10,7 @@ type ErrorBoundaryState = {
   message?: string;
 };
 
-export class ErrorBoundary extends Component<
-  ErrorBoundaryProps,
-  ErrorBoundaryState
-> {
+export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   state: ErrorBoundaryState = { hasError: false };
 
   static getDerivedStateFromError(error: Error) {
@@ -27,8 +24,8 @@ export class ErrorBoundary extends Component<
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-app p-6">
-          <div className="mx-auto max-w-lg rounded-2xl border border-amber-200 bg-white/90 p-6 text-sm text-amber-900 shadow-sm shadow-slate-900/5 dark:border-amber-800/60 dark:bg-neutral-900/70 dark:text-amber-200 dark:shadow-black/40">
+        <div className="app-shell p-6">
+          <div className="panel-card mx-auto max-w-lg border-amber-200 p-6 text-sm text-amber-900 dark:border-amber-800/60 dark:text-amber-200">
             <div className="text-base font-semibold">Something went wrong</div>
             <div className="mt-2 text-xs text-amber-700 dark:text-amber-200">
               {this.state.message ?? "The UI crashed unexpectedly."}

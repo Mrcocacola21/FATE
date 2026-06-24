@@ -11,9 +11,7 @@ function getStoredTheme(): ThemeMode | null {
 
 function getSystemTheme(): ThemeMode {
   if (typeof window === "undefined") return "light";
-  return window.matchMedia("(prefers-color-scheme: dark)").matches
-    ? "dark"
-    : "light";
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
 export function ThemeToggle({ className = "" }: { className?: string }) {
@@ -52,7 +50,7 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
   return (
     <button
       type="button"
-      className={`inline-flex items-center gap-2 rounded-full border-ui bg-surface px-3 py-1.5 text-[11px] font-semibold text-slate-600 shadow-sm transition hover:shadow dark:text-slate-200 ${className}`}
+      className={`btn btn-secondary btn-sm rounded-full ${className}`}
       onClick={() => {
         const next = theme === "dark" ? "light" : "dark";
         setTheme(next);
@@ -62,12 +60,20 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
       aria-label={`Switch to ${nextLabel} mode`}
       title={`Theme: ${label} (switch to ${nextLabel})`}
     >
-      <span
-        className={`h-2.5 w-2.5 rounded-full ${
-          theme === "dark" ? "bg-slate-200" : "bg-amber-400"
-        }`}
-      />
-      {label} Mode
+      {theme === "dark" ? (
+        <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
+          <path fill="currentColor" d="M20.4 15.2A8.5 8.5 0 0 1 8.8 3.6 8.5 8.5 0 1 0 20.4 15.2Z" />
+        </svg>
+      ) : (
+        <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
+          <circle cx="12" cy="12" r="4" fill="currentColor" />
+          <path
+            fill="currentColor"
+            d="M11 1h2v3h-2V1Zm0 19h2v3h-2v-3ZM1 11h3v2H1v-2Zm19 0h3v2h-3v-2ZM4.2 5.6l1.4-1.4 2.1 2.1-1.4 1.4-2.1-2.1Zm12.1 12.1 1.4-1.4 2.1 2.1-1.4 1.4-2.1-2.1ZM4.2 18.4l2.1-2.1 1.4 1.4-2.1 2.1-1.4-1.4ZM16.3 6.3l2.1-2.1 1.4 1.4-2.1 2.1-1.4-1.4Z"
+          />
+        </svg>
+      )}
+      <span>{label}</span>
     </button>
   );
 }

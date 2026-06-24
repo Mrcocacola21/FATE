@@ -14,8 +14,9 @@ export const FriendlyUnitsSection: FC<FriendlyUnitsSectionProps> = ({
   onSelectUnit,
 }) => {
   return (
-    <div className="rounded-2xl border-ui bg-surface p-4 shadow-sm shadow-slate-900/5 dark:border-slate-700/60 dark:bg-slate-900/60 dark:shadow-black/40">
-      <div className="text-sm text-slate-500 dark:text-slate-400">Units</div>
+    <div className="panel-card p-4">
+      <div className="section-kicker">Your roster</div>
+      <div className="section-title mt-1">Friendly units</div>
       <div className="mt-2 grid grid-cols-1 gap-2 text-xs">
         {friendlyUnits.map((unit) => {
           const badge = classBadge(unit.class);
@@ -23,10 +24,11 @@ export const FriendlyUnitsSection: FC<FriendlyUnitsSectionProps> = ({
           return (
             <button
               key={unit.id}
-              className={`flex items-center gap-3 rounded-lg px-2 py-2 text-left shadow-sm transition hover:shadow ${
+              type="button"
+              className={`flex items-center gap-3 rounded-xl border px-2.5 py-2.5 text-left shadow-sm transition focus-visible:ring-4 focus-visible:ring-teal-500/15 ${
                 selectedUnitId === unit.id
-                  ? "bg-teal-500 text-white dark:bg-teal-800/50 dark:text-slate-100 dark:hover:bg-teal-700/60"
-                  : "bg-slate-100 text-slate-700 dark:bg-slate-800/60 dark:text-slate-200 dark:hover:bg-slate-700/60"
+                  ? "border-teal-500 bg-teal-500 text-white shadow-teal-950/10 dark:bg-teal-500 dark:text-slate-950"
+                  : "border-slate-200 bg-slate-50 text-slate-700 hover:-translate-y-px hover:border-slate-300 hover:bg-white hover:shadow-md dark:border-slate-800 dark:bg-slate-950/45 dark:text-slate-200 dark:hover:border-slate-700 dark:hover:bg-slate-800"
               }`}
               onClick={() => onSelectUnit(unit.id)}
             >
@@ -39,12 +41,10 @@ export const FriendlyUnitsSection: FC<FriendlyUnitsSectionProps> = ({
                 )}
               </div>
               <div className="flex-1">
-                <div className="text-[11px] font-semibold">{unit.id}</div>
-                <div className="text-[10px] opacity-70">
+                <div className="text-xs font-semibold">{unit.id}</div>
+                <div className="text-[11px] opacity-75">
                   HP {unit.hp}
-                  {unit.position
-                    ? ` - ${unit.position.col},${unit.position.row}`
-                    : " - unplaced"}
+                  {unit.position ? ` - ${unit.position.col},${unit.position.row}` : " - unplaced"}
                 </div>
               </div>
               {(unit.class === "berserker" || unit.transformed) && (

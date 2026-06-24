@@ -40,17 +40,18 @@ export const BattleHeroControls: FC<BattleHeroControlsProps> = ({
     <>
       {selectedIsPapyrus && (
         <>
-          <div className="col-span-2 mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+          <div className="col-span-2 mt-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
             Papyrus line axis
           </div>
           <div className="col-span-2 grid grid-cols-4 gap-2">
             {papyrusAxisOptions.map(({ axis, label }) => (
               <button
                 key={axis}
-                className={`rounded-lg px-2 py-2 text-[10px] shadow-sm transition hover:shadow ${
+                type="button"
+                className={`rounded-xl border px-2 py-2 text-xs font-semibold shadow-sm transition ${
                   papyrusLineAxis === axis
-                    ? "bg-teal-500 text-white dark:bg-teal-800/50 dark:text-slate-100"
-                    : "bg-slate-200 text-slate-700 dark:bg-slate-800/60 dark:text-slate-100 dark:hover:bg-slate-700/60"
+                    ? "border-teal-500 bg-teal-500 text-white dark:text-slate-950"
+                    : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-white dark:border-slate-800 dark:bg-slate-950/45 dark:text-slate-100 dark:hover:bg-slate-800"
                 }`}
                 onClick={() => onSetPapyrusAxis(axis)}
                 disabled={!canAct && selectedPapyrusUnbeliever}
@@ -63,17 +64,18 @@ export const BattleHeroControls: FC<BattleHeroControlsProps> = ({
       )}
       {selectedIsUndyne && (
         <>
-          <div className="col-span-2 mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+          <div className="col-span-2 mt-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
             Energy Spear axis
           </div>
           <div className="col-span-2 grid grid-cols-2 gap-2">
             {undyneAxisOptions.map(({ axis, label }) => (
               <button
                 key={axis}
-                className={`rounded-lg px-2 py-2 text-[10px] shadow-sm transition hover:shadow ${
+                type="button"
+                className={`rounded-xl border px-2 py-2 text-xs font-semibold shadow-sm transition ${
                   undyneAxis === axis
-                    ? "bg-teal-500 text-white dark:bg-teal-800/50 dark:text-slate-100"
-                    : "bg-slate-200 text-slate-700 dark:bg-slate-800/60 dark:text-slate-100 dark:hover:bg-slate-700/60"
+                    ? "border-teal-500 bg-teal-500 text-white dark:text-slate-950"
+                    : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-white dark:border-slate-800 dark:bg-slate-950/45 dark:text-slate-100 dark:hover:bg-slate-800"
                 }`}
                 onClick={() => onSetUndyneAxis(axis)}
               >
@@ -85,15 +87,16 @@ export const BattleHeroControls: FC<BattleHeroControlsProps> = ({
       )}
       {selectedPapyrusUnbeliever && selectedUnit && (
         <>
-          <div className="col-span-2 mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+          <div className="col-span-2 mt-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
             Bone type on hit
           </div>
           <div className="col-span-2 grid grid-cols-2 gap-2">
             <button
-              className={`rounded-lg px-2 py-2 text-[10px] shadow-sm transition hover:shadow ${
+              type="button"
+              className={`rounded-xl border px-2 py-2 text-xs font-semibold shadow-sm transition ${
                 selectedPapyrusBoneMode === "blue"
-                  ? "bg-teal-500 text-white dark:bg-teal-800/50 dark:text-slate-100"
-                  : "bg-slate-200 text-slate-700 dark:bg-slate-800/60 dark:text-slate-100 dark:hover:bg-slate-700/60"
+                  ? "border-sky-500 bg-sky-500 text-white"
+                  : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-white dark:border-slate-800 dark:bg-slate-950/45 dark:text-slate-100 dark:hover:bg-slate-800"
               }`}
               onClick={() => onSetPapyrusBoneType("blue")}
               disabled={!canAct}
@@ -101,10 +104,11 @@ export const BattleHeroControls: FC<BattleHeroControlsProps> = ({
               Blue
             </button>
             <button
-              className={`rounded-lg px-2 py-2 text-[10px] shadow-sm transition hover:shadow ${
+              type="button"
+              className={`rounded-xl border px-2 py-2 text-xs font-semibold shadow-sm transition ${
                 selectedPapyrusBoneMode === "orange"
-                  ? "bg-orange-500 text-white dark:bg-orange-800/60 dark:text-slate-100"
-                  : "bg-slate-200 text-slate-700 dark:bg-slate-800/60 dark:text-slate-100 dark:hover:bg-slate-700/60"
+                  ? "border-orange-500 bg-orange-500 text-white"
+                  : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-white dark:border-slate-800 dark:bg-slate-950/45 dark:text-slate-100 dark:hover:bg-slate-800"
               }`}
               onClick={() => onSetPapyrusBoneType("orange")}
               disabled={!canAct}
@@ -113,10 +117,11 @@ export const BattleHeroControls: FC<BattleHeroControlsProps> = ({
             </button>
           </div>
           <button
-            className={`col-span-2 rounded-lg px-2 py-2 text-left text-[10px] shadow-sm transition hover:shadow ${
+            type="button"
+            className={`col-span-2 rounded-xl border px-3 py-2 text-left text-xs font-semibold shadow-sm transition ${
               selectedPapyrusLongBoneMode
-                ? "bg-teal-500 text-white dark:bg-teal-800/50 dark:text-slate-100"
-                : "bg-slate-200 text-slate-700 dark:bg-slate-800/60 dark:text-slate-100 dark:hover:bg-slate-700/60"
+                ? "border-teal-500 bg-teal-500 text-white dark:text-slate-950"
+                : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-white dark:border-slate-800 dark:bg-slate-950/45 dark:text-slate-100 dark:hover:bg-slate-800"
             }`}
             onClick={onTogglePapyrusLongBone}
             disabled={!canAct}

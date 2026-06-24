@@ -12,7 +12,7 @@ import { useEffect, useRef, useState, type FC } from "react";
 import { HpBar } from "./HpBar";
 import { getTokenSrc } from "../assets/registry";
 
-const MIN_CELL_SIZE = 32;
+const MIN_CELL_SIZE = 26;
 const MAX_CELL_SIZE = 96;
 const LABEL_RATIO = 0.6;
 
@@ -59,7 +59,7 @@ function getHighlightClass(
     | "attackRange"
     | "previewMove"
     | "previewAttack"
-    | "previewAbility"
+    | "previewAbility",
 ) {
   switch (kind) {
     case "place":
@@ -121,27 +121,18 @@ export const Board: FC<BoardProps> = ({
       if (!containerWidth || containerWidth <= 0) return;
 
       const rawCell = Math.floor(containerWidth / (size + LABEL_RATIO));
-      let nextCell = Math.max(
-        MIN_CELL_SIZE,
-        Math.min(MAX_CELL_SIZE, rawCell)
-      );
+      let nextCell = Math.max(MIN_CELL_SIZE, Math.min(MAX_CELL_SIZE, rawCell));
       let nextLabel = Math.round(nextCell * LABEL_RATIO);
       let totalWidth = nextCell * size + nextLabel;
 
       if (totalWidth > containerWidth && nextCell > MIN_CELL_SIZE) {
-        nextCell = Math.max(
-          MIN_CELL_SIZE,
-          Math.min(MAX_CELL_SIZE, nextCell - 1)
-        );
+        nextCell = Math.max(MIN_CELL_SIZE, Math.min(MAX_CELL_SIZE, nextCell - 1));
         nextLabel = Math.round(nextCell * LABEL_RATIO);
         totalWidth = nextCell * size + nextLabel;
         if (totalWidth > containerWidth && nextCell > MIN_CELL_SIZE) {
           const fitCell = Math.max(
             MIN_CELL_SIZE,
-            Math.min(
-              MAX_CELL_SIZE,
-              Math.floor(containerWidth / (size + LABEL_RATIO))
-            )
+            Math.min(MAX_CELL_SIZE, Math.floor(containerWidth / (size + LABEL_RATIO))),
           );
           nextCell = fitCell;
           nextLabel = Math.round(nextCell * LABEL_RATIO);
@@ -184,13 +175,9 @@ export const Board: FC<BoardProps> = ({
   const highlightInset = Math.max(2, Math.round(cellSize * 0.08));
   const missingTokenSrc = getTokenSrc("_missing");
   const toViewCoord = (coord: Coord): Coord =>
-    isFlipped
-      ? { col: maxIndex - coord.col, row: maxIndex - coord.row }
-      : coord;
+    isFlipped ? { col: maxIndex - coord.col, row: maxIndex - coord.row } : coord;
   const toGameCoord = (coord: Coord): Coord =>
-    isFlipped
-      ? { col: maxIndex - coord.col, row: maxIndex - coord.row }
-      : coord;
+    isFlipped ? { col: maxIndex - coord.col, row: maxIndex - coord.row } : coord;
 
   const unitsByPos = new Map<
     string,
@@ -222,8 +209,8 @@ export const Board: FC<BoardProps> = ({
     Array.isArray(view.forestMarkers) && view.forestMarkers.length > 0
       ? view.forestMarkers
       : view.forestMarker
-      ? [view.forestMarker]
-      : [];
+        ? [view.forestMarker]
+        : [];
   const forestMarkerOwnersByKey = new Map<string, PlayerId[]>();
 
   for (const marker of forestMarkers) {
@@ -281,9 +268,7 @@ export const Board: FC<BoardProps> = ({
   }
 
   const selectedUnit =
-    selectedUnitId && view.units[selectedUnitId]
-      ? view.units[selectedUnitId]
-      : null;
+    selectedUnitId && view.units[selectedUnitId] ? view.units[selectedUnitId] : null;
   const isMyTurn = playerId ? view.currentPlayer === playerId : false;
   const isActive = selectedUnit ? view.activeUnitId === selectedUnit.id : false;
   const abilityAvailable =
@@ -310,16 +295,8 @@ export const Board: FC<BoardProps> = ({
     selectedUnit?.position
   ) {
     const kind: "aoe" | "aoeDisabled" = abilityEnabled ? "aoe" : "aoeDisabled";
-    for (
-      let dc = -TRICKSTER_AOE_RADIUS;
-      dc <= TRICKSTER_AOE_RADIUS;
-      dc += 1
-    ) {
-      for (
-        let dr = -TRICKSTER_AOE_RADIUS;
-        dr <= TRICKSTER_AOE_RADIUS;
-        dr += 1
-      ) {
+    for (let dc = -TRICKSTER_AOE_RADIUS; dc <= TRICKSTER_AOE_RADIUS; dc += 1) {
+      for (let dr = -TRICKSTER_AOE_RADIUS; dr <= TRICKSTER_AOE_RADIUS; dr += 1) {
         const col = selectedUnit.position.col + dc;
         const row = selectedUnit.position.row + dr;
         if (col < 0 || row < 0 || col >= size || row >= size) continue;
@@ -348,9 +325,7 @@ export const Board: FC<BoardProps> = ({
   }
 
   const carpetPreview =
-    view.pendingAoEPreview?.abilityId === "kaiserCarpetStrike"
-      ? view.pendingAoEPreview
-      : null;
+    view.pendingAoEPreview?.abilityId === "kaiserCarpetStrike" ? view.pendingAoEPreview : null;
   if (carpetPreview) {
     const kind: "aoe" | "aoeDisabled" = disabled ? "aoeDisabled" : "aoe";
     for (let dc = -carpetPreview.radius; dc <= carpetPreview.radius; dc += 1) {
@@ -389,6 +364,7 @@ export const Board: FC<BoardProps> = ({
       const key = coordKey(viewCoord);
       const unit = unitsByPos.get(key);
       const isSelected = unit?.id === selectedUnitId;
+      const isActiveUnit = unit?.id === view.activeUnitId;
       const isDoraPreview = doraPreviewKeys.has(key);
       const isForestAura = forestAuraKeys.has(key);
       const forestMarkerOwners = forestMarkerOwnersByKey.get(key) ?? [];
@@ -400,14 +376,20 @@ export const Board: FC<BoardProps> = ({
       const cellClasses = [
         "relative",
         "border",
-        "border-slate-200 dark:border-neutral-800",
+        "border-slate-200/90 dark:border-slate-800",
         "flex",
         "items-center",
         "justify-center",
-        "transition-[width,height] duration-150 ease-out",
+        "transition-[width,height,background-color,box-shadow] duration-150 ease-out",
+        "focus-visible:z-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-teal-500",
         disabled ? "cursor-not-allowed opacity-70" : "cursor-pointer",
-        isDark ? "bg-amber-100 dark:bg-neutral-900" : "bg-white dark:bg-neutral-950",
-        isSelected ? "ring-2 ring-teal-500 dark:ring-teal-400/60" : "",
+        isDark
+          ? "bg-slate-100 hover:bg-teal-50 dark:bg-slate-900/85 dark:hover:bg-slate-800"
+          : "bg-white hover:bg-teal-50/70 dark:bg-slate-950 dark:hover:bg-slate-900",
+        isSelected ? "z-10 ring-2 ring-inset ring-teal-500 dark:ring-teal-400" : "",
+        isActiveUnit && !isSelected
+          ? "z-10 ring-2 ring-inset ring-amber-400 dark:ring-amber-300"
+          : "",
       ].join(" ");
 
       let content: JSX.Element | null = null;
@@ -439,6 +421,10 @@ export const Board: FC<BoardProps> = ({
           "flex",
           "items-center",
           "justify-center",
+          "rounded-xl",
+          unit.owner === "P1"
+            ? "ring-2 ring-emerald-400/80 dark:ring-emerald-400/70"
+            : "ring-2 ring-rose-400/80 dark:ring-rose-400/70",
           isDoraPreview ? "ring-2 ring-amber-400" : "",
         ].join(" ");
 
@@ -461,19 +447,25 @@ export const Board: FC<BoardProps> = ({
               height: tokenSize,
             }}
           >
-            <img
-              src={tokenSrc}
-              alt={`${tokenId} token`}
-              className="h-full w-full rounded-lg bg-white/80 object-contain shadow-sm ring-1 ring-slate-200 dark:bg-neutral-900/70 dark:ring-neutral-800"
-              draggable={false}
-            />
-            {isTokenMissing && (
-              <span
-                className="absolute inset-0 flex items-center justify-center font-semibold text-slate-700 dark:text-slate-200"
+            {isTokenMissing ? (
+              <div
+                className={`flex h-full w-full items-center justify-center rounded-xl font-bold text-white shadow-lg shadow-slate-900/20 ${
+                  unit.owner === "P1"
+                    ? "bg-gradient-to-br from-emerald-500 to-teal-700"
+                    : "bg-gradient-to-br from-rose-500 to-red-700"
+                }`}
                 style={{ fontSize: pieceFontSize }}
+                aria-label={`${unit.class} token`}
               >
                 {getUnitLabel(unit.class)}
-              </span>
+              </div>
+            ) : (
+              <img
+                src={tokenSrc}
+                alt={`${tokenId} token`}
+                className="h-full w-full rounded-xl bg-white/90 object-contain shadow-lg shadow-slate-900/20 dark:bg-slate-900/90"
+                draggable={false}
+              />
             )}
             {marker && (
               <span
@@ -502,10 +494,22 @@ export const Board: FC<BoardProps> = ({
       }
 
       cells.push(
-        <div
+        <button
+          type="button"
           key={key}
           className={cellClasses}
           style={{ width: cellSize, height: cellSize }}
+          disabled={disabled}
+          aria-label={`Cell ${String.fromCharCode(65 + gameCoord.col)}${gameCoord.row}${
+            unit
+              ? `, ${unit.owner} ${unit.class}${
+                  unit.id === view.activeUnitId ? ", active unit" : ""
+                }${unit.id === selectedUnitId ? ", selected" : ""}`
+              : lastKnownCount > 0
+                ? ", last known enemy position"
+                : ""
+          }`}
+          aria-pressed={isSelected}
           onClick={() => {
             if (disabled) return;
             if (allowUnitSelection && unit && playerId && unit.owner === playerId) {
@@ -526,7 +530,7 @@ export const Board: FC<BoardProps> = ({
           {highlightKind && (
             <div
               className={`pointer-events-none absolute rounded dark:ring-1 dark:ring-neutral-800/70 ${getHighlightClass(
-                highlightKind
+                highlightKind,
               )}`}
               style={{ inset: highlightInset }}
             />
@@ -534,7 +538,7 @@ export const Board: FC<BoardProps> = ({
           {aoeKind && (
             <div
               className={`pointer-events-none absolute rounded dark:ring-1 dark:ring-neutral-800/70 ${getAoEHighlightClass(
-                aoeKind
+                aoeKind,
               )}`}
               style={{ inset: highlightInset }}
             />
@@ -555,11 +559,7 @@ export const Board: FC<BoardProps> = ({
                   ? "bg-emerald-500 text-white"
                   : "bg-emerald-200 text-emerald-900 dark:bg-emerald-900/50 dark:text-emerald-200"
               }`}
-              title={
-                stakeMarkersByPos.get(key)
-                  ? "Revealed stake marker"
-                  : "Hidden stake marker"
-              }
+              title={stakeMarkersByPos.get(key) ? "Revealed stake marker" : "Hidden stake marker"}
             >
               {stakeMarkersByPos.get(key) ? "R" : "S"}
             </div>
@@ -571,6 +571,20 @@ export const Board: FC<BoardProps> = ({
             >
               B
             </div>
+          )}
+          {unit?.isStealthed && (
+            <div
+              className="pointer-events-none absolute bottom-3 right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-violet-600 px-1 text-[9px] font-bold text-white shadow dark:bg-violet-400 dark:text-violet-950"
+              title="Unit is in stealth"
+            >
+              S
+            </div>
+          )}
+          {isActiveUnit && (
+            <div
+              className="pointer-events-none absolute left-1/2 top-0.5 z-20 h-1.5 w-5 -translate-x-1/2 rounded-full bg-amber-400 shadow-sm shadow-amber-900/30 dark:bg-amber-300"
+              title="Active unit"
+            />
           )}
           {unit && (
             <div className="pointer-events-none absolute bottom-1 left-1 right-1 z-10 flex justify-center">
@@ -584,7 +598,7 @@ export const Board: FC<BoardProps> = ({
               </div>
             </div>
           )}
-        </div>
+        </button>,
       );
     }
     const rowLabel = isFlipped ? maxIndex - row : row;
@@ -597,19 +611,20 @@ export const Board: FC<BoardProps> = ({
           {rowLabel}
         </div>
         {cells}
-      </div>
+      </div>,
     );
   }
 
-  const colLabels = Array.from({ length: size }, (_, idx) =>
-    String.fromCharCode(65 + idx)
-  );
+  const colLabels = Array.from({ length: size }, (_, idx) => String.fromCharCode(65 + idx));
   if (isFlipped) {
     colLabels.reverse();
   }
 
   return (
-    <div ref={boardWrapperRef} className="w-full min-w-0 overflow-x-hidden">
+    <div
+      ref={boardWrapperRef}
+      className="scroll-panel w-full min-w-0 overflow-x-auto rounded-2xl border border-slate-200 bg-slate-200/40 p-1.5 shadow-inner shadow-slate-900/5 dark:border-slate-800 dark:bg-slate-950/55 dark:shadow-black/30"
+    >
       <div className="flex justify-center">
         <div
           className="inline-block transition-[width,height] duration-150 ease-out"

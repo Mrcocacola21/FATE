@@ -21,19 +21,12 @@ export default function App() {
       ) : screen === "figures" ? (
         <FigureSetPage onBack={() => setScreen("rooms")} />
       ) : screen === "heartbreak" ? (
-        <Heartbreak />
+        <Heartbreak onBack={() => setScreen("rooms")} />
       ) : (
-        <>
-          <Lobby onOpenFigures={() => setScreen("figures")} />
-          <div className="mt-4">
-            <button
-              className="rounded-lg bg-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
-              onClick={() => setScreen("heartbreak")}
-            >
-              Open Heartbreak (Ping-Pong)
-            </button>
-          </div>
-        </>
+        <Lobby
+          onOpenFigures={() => setScreen("figures")}
+          onOpenHeartbreak={() => setScreen("heartbreak")}
+        />
       )}
     </ErrorBoundary>
   );

@@ -1,10 +1,5 @@
 import type { FC } from "react";
-import type {
-  AbilityView,
-  MoveMode,
-  PapyrusLineAxis,
-  UnitState,
-} from "rules";
+import type { AbilityView, MoveMode, PapyrusLineAxis, UnitState } from "rules";
 import type { ActionMode, ActionPreviewMode } from "../../../../store";
 import type { ForestMarkerView, TurnEconomyState } from "../types";
 import { BattleAbilityActions } from "./BattleAbilityActions";
@@ -126,9 +121,10 @@ export const BattleSection: FC<BattleSectionProps> = ({
   onClear,
 }) => {
   return (
-    <div className="rounded-2xl border-ui bg-surface p-4 shadow-sm shadow-slate-900/5 dark:border-slate-700/60 dark:bg-slate-900/60 dark:shadow-black/40">
-      <div className="text-sm text-slate-600 dark:text-slate-100">
-        Active Unit Panel
+    <div className="panel-card p-4">
+      <div>
+        <div className="section-kicker">Selected unit</div>
+        <div className="section-title mt-1">Unit controls</div>
       </div>
       <BattleUnitSummary
         selectedUnit={selectedUnit}
@@ -145,7 +141,7 @@ export const BattleSection: FC<BattleSectionProps> = ({
         onHoverAbility={onHoverAbility}
       />
 
-      <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
+      <div className="mt-4 grid grid-cols-2 gap-2 border-t border-slate-200 pt-4 text-xs dark:border-slate-800">
         <BattleActionButtons
           actionMode={actionMode}
           moveDisabled={moveDisabled}
