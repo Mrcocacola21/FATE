@@ -22,6 +22,10 @@ import {
 } from "./store";
 import { broadcastActionResult, broadcastRoomState, getActiveFateRoomIds } from "./ws";
 import { FATE_CREATE_KEY, enqueueRoomCommand, fateRoomKey } from "./roomQueue";
+import {
+  canCreateTestRoom,
+  getTestRoomCapabilities,
+} from "./testRoom";
 
 function parsePlayerId(request: FastifyRequest): PlayerId | null {
   const raw = (request.query as { playerId?: string }).playerId;
@@ -64,6 +68,10 @@ export async function registerRoutes(server: FastifyInstance) {
 
   server.get("/api/health", async () => ({ ok: true }));
 
+  server.get("/api/capabilities", async () => ({
+    testRooms: getTestRoomCapabilities(),
+  }));
+
   server.get("/api/heroes", async () => Object.values(HERO_REGISTRY));
 
   server.get(
@@ -91,12 +99,23 @@ export async function registerRoutes(server: FastifyInstance) {
       if (!parsed.success) {
         return sendValidationError(reply, parsed.error);
       }
+      if (
+        parsed.data.roomMode === "test" &&
+        !canCreateTestRoom(parsed.data.debugToken)
+      ) {
+        reply.code(403).send({ error: "Test rooms are disabled or require a valid debug token" });
+        return;
+      }
 
       const room = await enqueueRoomCommand(FATE_CREATE_KEY, () => {
         cleanupGameRooms({ activeRoomIds: getActiveFateRoomIds() });
-        return createGameRoom(parsed.data);
+        return createGameRoom({
+          seed: parsed.data.seed,
+          arenaId: parsed.data.arenaId,
+          roomMode: parsed.data.roomMode,
+        });
       });
-      reply.send({ roomId: room.id });
+      reply.send({ roomId: room.id, roomMode: room.roomMode });
     }
   );
 
@@ -107,10 +126,21 @@ export async function registerRoutes(server: FastifyInstance) {
       if (!parsed.success) {
         return sendValidationError(reply, parsed.error);
       }
+      if (
+        parsed.data.roomMode === "test" &&
+        !canCreateTestRoom(parsed.data.debugToken)
+      ) {
+        reply.code(403).send({ error: "Test rooms are disabled or require a valid debug token" });
+        return;
+      }
 
       const room = await enqueueRoomCommand(FATE_CREATE_KEY, () => {
         cleanupGameRooms({ activeRoomIds: getActiveFateRoomIds() });
-        return createGameRoom(parsed.data);
+        return createGameRoom({
+          seed: parsed.data.seed,
+          arenaId: parsed.data.arenaId,
+          roomMode: parsed.data.roomMode,
+        });
       });
       const views = {
         P1: makePlayerView(room.state, "P1"),

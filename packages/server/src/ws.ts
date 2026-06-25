@@ -19,6 +19,7 @@ import {
   createDefaultArmy,
   makePlayerView,
   makeSpectatorView,
+  makeTestRoomView,
   projectEventsForRecipient,
 } from "rules";
 import { ClientMessageSchema } from "./schemas";
@@ -28,6 +29,7 @@ import {
   applyGameAction,
   cleanupGameRooms,
   createGameRoomWithId,
+  deleteGameRoom,
   getGameRoom,
   touchGameRoom,
   type GameRoom,
@@ -36,6 +38,11 @@ import { logFate } from "./fateLogger";
 import { rejected, type CommandResult } from "./commandResult";
 import { enqueueRoomCommand, fateRoomKey } from "./roomQueue";
 import type { z } from "zod";
+import {
+  applyTestRoomCommand,
+  canCreateTestRoom,
+  getTestRoomCapabilities,
+} from "./testRoom";
 
 let serverLogger: any = null;
 import { createPongRoom, getPongRoom } from "./pong/rooms";
@@ -44,6 +51,15 @@ import { logPong } from "./pong/logger";
 export type PlayerRole = PlayerId | "spectator";
 
 type RoomMeta = {
+  roomMode: "normal" | "test";
+  revision: number;
+  diceQueue: number[];
+  debugLog: Array<{
+    revision: number;
+    type: string;
+    at: number;
+    diceConsumed?: number[];
+  }>;
   ready: { P1: boolean; P2: boolean };
   players: { P1: boolean; P2: boolean };
   spectators: number;
@@ -60,7 +76,12 @@ type RoomMeta = {
 type RoomStateMessage = {
   type: "roomState";
   roomId: string;
-  you: { role: PlayerRole; seat?: PlayerId; isHost: boolean };
+  you: {
+    role: PlayerRole;
+    seat?: PlayerId;
+    isHost: boolean;
+    canControlTestRoom: boolean;
+  };
   view: PlayerView;
   meta: RoomMeta;
 };
@@ -76,7 +97,11 @@ type JoinAckMessage = {
 
 type JoinRejectedMessage = {
   type: "joinRejected";
-  reason: "room_not_found" | "role_taken" | "room_exists";
+  reason:
+    | "room_not_found"
+    | "role_taken"
+    | "room_exists"
+    | "test_room_disabled";
   message: string;
 };
 
@@ -108,6 +133,11 @@ type LeftRoomMessage = {
   roomId: string | null;
 };
 
+type TestRoomSnapshotMessage = {
+  type: "testRoomSnapshot";
+  snapshot: unknown;
+};
+
 type ServerMessage =
   | RoomStateMessage
   | JoinAckMessage
@@ -115,7 +145,8 @@ type ServerMessage =
   | ActionResultMessage
   | MoveOptionsMessage
   | ErrorMessage
-  | LeftRoomMessage;
+  | LeftRoomMessage
+  | TestRoomSnapshotMessage;
 
 interface ConnectionMeta {
   channel: "fate" | "pong";
@@ -432,6 +463,9 @@ function updateHost(room: GameRoom) {
     ...room.state,
     hostPlayerId: room.hostSeat,
   };
+  if (room.roomMode === "test") {
+    room.testControllerConnId = room.hostConnId;
+  }
 }
 
 function clearSeatGraceByToken(resumeToken: string) {
@@ -540,7 +574,7 @@ export function getActiveFateRoomIds(): Set<string> {
   return active;
 }
 
-function buildRoomMeta(room: GameRoom): RoomMeta {
+function buildRoomMeta(room: GameRoom, canControlTestRoom = false): RoomMeta {
   const ready = room.state.playersReady ?? { P1: false, P2: false };
   const initiative = room.state.initiative ?? {
     P1: null,
@@ -548,6 +582,20 @@ function buildRoomMeta(room: GameRoom): RoomMeta {
     winner: null,
   };
   return {
+    roomMode: room.roomMode,
+    revision: room.revision,
+    diceQueue:
+      canControlTestRoom && room.testDiceRng
+        ? room.testDiceRng.getQueue()
+        : [],
+    debugLog: canControlTestRoom
+      ? room.actionLog.slice(-25).map((entry) => ({
+          revision: entry.revision,
+          type: entry.action.type,
+          at: entry.at,
+          diceConsumed: entry.debugDiceConsumed,
+        }))
+      : [],
     ready: {
       P1: ready.P1 ?? false,
       P2: ready.P2 ?? false,
@@ -574,18 +622,23 @@ function buildRoomMeta(room: GameRoom): RoomMeta {
 function sendRoomState(socket: WebSocket, room: GameRoom) {
   const meta = socketMeta.get(socket);
   if (!meta) return;
-  const view = viewForRole(room.state, meta.role);
+  const canControlTestRoom =
+    room.roomMode === "test" && room.testControllerConnId === meta.connId;
+  const view = canControlTestRoom
+    ? makeTestRoomView(room.state)
+    : viewForRole(room.state, meta.role);
   const you = {
     role: meta.role,
     seat: meta.seat ?? undefined,
     isHost: room.hostConnId === meta.connId,
+    canControlTestRoom,
   };
   sendMessage(socket, {
     type: "roomState",
     roomId: room.id,
     you,
     view,
-    meta: buildRoomMeta(room),
+    meta: buildRoomMeta(room, canControlTestRoom),
   });
 }
 
@@ -656,13 +709,15 @@ function applyRoomAction(
   meta: ConnectionMeta,
   action: GameAction
 ): CommandResult {
+  const isTestController =
+    room.roomMode === "test" && room.testControllerConnId === meta.connId;
   if (meta.role === "spectator" || !meta.seat) {
     const result = rejected("NOT_SEATED", "Spectators cannot act");
     sendActionRejected(socket, result);
     return result;
   }
 
-  if (room.state.phase === "ended") {
+  if (room.state.phase === "ended" && !isTestController) {
     const result = rejected("GAME_ENDED", "Game has ended");
     sendActionRejected(socket, result);
     return result;
@@ -677,7 +732,10 @@ function applyRoomAction(
     return result;
   }
 
-  if (!isActionAllowedByPlayer(room.state, action, meta.seat)) {
+  if (
+    !isTestController &&
+    !isActionAllowedByPlayer(room.state, action, meta.seat)
+  ) {
     const result = rejected(
       "FORBIDDEN",
       "Action not allowed for this player"
@@ -686,7 +744,10 @@ function applyRoomAction(
     return result;
   }
 
-  const command = applyAndBroadcast(room, action, meta.seat, socket, true);
+  const actingPlayer = isTestController
+    ? getTestActionPlayer(room.state, action, meta.seat)
+    : meta.seat;
+  const command = applyAndBroadcast(room, action, actingPlayer, socket, true);
   if (!command.ok) return command;
 
   try {
@@ -700,6 +761,31 @@ function applyRoomAction(
     logFate(serverLogger!, { tag: "fate:error", roomId: room.id, code: "log_error", message: String(e), err: e });
   }
   return command;
+}
+
+function getTestActionPlayer(
+  state: GameState,
+  action: GameAction,
+  fallback: PlayerId
+): PlayerId {
+  if (action.type === "resolvePendingRoll") {
+    return state.pendingRoll?.player ?? fallback;
+  }
+  if (
+    action.type === "placeUnit" ||
+    action.type === "move" ||
+    action.type === "requestMoveOptions" ||
+    action.type === "enterStealth" ||
+    action.type === "searchStealth" ||
+    action.type === "useAbility" ||
+    action.type === "unitStartTurn"
+  ) {
+    return state.units[action.unitId]?.owner ?? fallback;
+  }
+  if (action.type === "attack") {
+    return state.units[action.attackerId]?.owner ?? fallback;
+  }
+  return state.currentPlayer ?? fallback;
 }
 
 function applyAndBroadcast(
@@ -982,8 +1068,21 @@ export function registerGameWebSocket(server: FastifyInstance) {
           if (!targetRoomId) {
             sendMessage(socket, {
               type: "joinRejected",
-              reason: "room_not_found",
+              reason: "test_room_disabled",
               message: "Room not found",
+            });
+            return;
+          }
+          const requestedRoomMode = msg.roomMode ?? "normal";
+          if (
+            msg.mode === "create" &&
+            requestedRoomMode === "test" &&
+            !canCreateTestRoom(msg.debugToken)
+          ) {
+            sendMessage(socket, {
+              type: "joinRejected",
+              reason: "room_not_found",
+              message: "Test rooms are disabled or require a valid debug token",
             });
             return;
           }
@@ -1018,9 +1117,13 @@ export function registerGameWebSocket(server: FastifyInstance) {
               room = createGameRoomWithId(targetRoomId, {
                 hostSeat,
                 hostConnId: hostConnForState,
+                roomMode: requestedRoomMode,
               });
               room.hostConnId = connId;
               room.hostSeat = hostSeat;
+              if (requestedRoomMode === "test") {
+                room.testControllerConnId = connId;
+              }
               room.state = {
                 ...room.state,
                 hostPlayerId: hostSeat,
@@ -1047,6 +1150,21 @@ export function registerGameWebSocket(server: FastifyInstance) {
               return;
             }
 
+            if (
+              msg.mode === "join" &&
+              room.roomMode === "test" &&
+              !room.testControllerConnId &&
+              requestedSeat === room.hostSeat &&
+              !canCreateTestRoom(msg.debugToken)
+            ) {
+              sendMessage(socket, {
+                type: "joinRejected",
+                reason: "test_room_disabled",
+                message: "A valid debug token is required to claim this test room",
+              });
+              return;
+            }
+
             if (requestedSeat) {
               seat = requestedSeat;
               if (!canAssignSeat(room, seat, connId, resumeToken)) {
@@ -1065,6 +1183,13 @@ export function registerGameWebSocket(server: FastifyInstance) {
                   message: "Requested role is already taken",
                 });
                 return;
+              }
+              if (
+                room.roomMode === "test" &&
+                room.hostSeat === seat &&
+                room.hostConnId === connId
+              ) {
+                room.testControllerConnId = connId;
               }
               applyFigureSetToRoom(room, seat, msg.figureSet as HeroSelection | undefined);
             } else {
@@ -1173,6 +1298,102 @@ export function registerGameWebSocket(server: FastifyInstance) {
           }
           await detachExistingConnection(existing, "leave");
           sendMessage(socket, { type: "leftRoom", roomId });
+          return;
+        }
+        case "testRoomCommand": {
+          const meta = socketMeta.get(socket);
+          if (!meta || meta.channel !== "fate") {
+            sendStructuredError(socket, "NOT_SEATED", "Must join a room first");
+            return;
+          }
+          await enqueueRoomCommand(fateRoomKey(meta.roomId), () => {
+            const current = socketMeta.get(socket);
+            if (!current || current.channel !== "fate") {
+              sendStructuredError(socket, "NOT_SEATED", "Must join a room first");
+              return;
+            }
+            const room = getGameRoom(current.roomId);
+            if (!room) {
+              sendStructuredError(socket, "ROOM_NOT_FOUND", "Room not found");
+              return;
+            }
+            if (!getTestRoomCapabilities().enabled) {
+              sendStructuredError(
+                socket,
+                "TEST_ROOMS_DISABLED",
+                "Test rooms are disabled"
+              );
+              return;
+            }
+            if (
+              room.roomMode !== "test" ||
+              room.testControllerConnId !== current.connId
+            ) {
+              sendStructuredError(
+                socket,
+                "FORBIDDEN",
+                "Only the test-room controller can use sandbox commands"
+              );
+              return;
+            }
+
+            if (msg.command.type === "debugDeleteRoom") {
+              const sockets = roomSockets.get(room.id);
+              clearSeatGrace(room.id, "P1");
+              clearSeatGrace(room.id, "P2");
+              deleteGameRoom(room.id);
+              roomSockets.delete(room.id);
+              if (sockets) {
+                for (const roomSocket of sockets) {
+                  socketMeta.delete(roomSocket);
+                  sendMessage(roomSocket, {
+                    type: "leftRoom",
+                    roomId: room.id,
+                  });
+                }
+              }
+              logFate(serverLogger!, {
+                tag: "fate:testRoomDeleted",
+                roomId: room.id,
+              });
+              return;
+            }
+
+            const result = applyTestRoomCommand(room, msg.command);
+            if (!result.command.ok) {
+              sendActionRejected(socket, result.command);
+              logFate(serverLogger!, {
+                tag: "fate:testCommandRejected",
+                roomId: room.id,
+                actionType: msg.command.type,
+                code: result.command.code,
+                message: result.command.message,
+              });
+              return;
+            }
+
+            if (result.snapshot) {
+              sendMessage(socket, {
+                type: "testRoomSnapshot",
+                snapshot: result.snapshot,
+              });
+            }
+            if (result.command.stateChanged) {
+              broadcastRoomState(room);
+              broadcastActionResult({
+                gameId: room.id,
+                ok: true,
+                events: result.command.events,
+                logIndex: result.command.logIndex,
+              });
+            }
+            logFate(serverLogger!, {
+              tag: "fate:testCommandAccepted",
+              roomId: room.id,
+              actionType: msg.command.type,
+              revision: result.command.revision,
+            });
+          });
           return;
         }
         case "setReady": {
@@ -1395,7 +1616,13 @@ export function registerGameWebSocket(server: FastifyInstance) {
               msg.action.type === "resolvePendingRoll"
                 ? {
                     ...msg.action,
-                    player: current.seat ?? (msg.action as any).player,
+                    player:
+                      room.roomMode === "test" &&
+                      room.testControllerConnId === current.connId
+                        ? room.state.pendingRoll?.player ??
+                          current.seat ??
+                          (msg.action as any).player
+                        : current.seat ?? (msg.action as any).player,
                   }
                 : msg.action;
 

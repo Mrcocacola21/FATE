@@ -5,6 +5,8 @@ import { PanelCard, SectionHeader, StatusBadge } from "../../../components/ui";
 import { PAPYRUS_LONG_BONE_ID, PAPYRUS_ORANGE_BONE_ID } from "../../../rulesHints";
 import { RightPanel } from "../../components/RightPanel/RightPanel";
 import { useI18n } from "../../../i18n";
+import { TestRoomPanel } from "../../../testRoom/TestRoomPanel";
+import { shouldShowTestRoomPanel } from "../../../testRoom/testRoomApi";
 
 interface GameShellSideColumnProps {
   vm: any;
@@ -14,6 +16,12 @@ export const GameShellSideColumn: FC<GameShellSideColumnProps> = ({ vm }) => {
   const { t } = useI18n();
   return (
     <aside className="scroll-panel min-w-0 space-y-4 xl:sticky xl:top-4 xl:max-h-[calc(100vh-2rem)] xl:overflow-y-auto xl:pr-1">
+      {shouldShowTestRoomPanel(
+        vm.roomMeta?.roomMode,
+        vm.canControlTestRoom,
+      ) ? (
+        <TestRoomPanel vm={vm} />
+      ) : null}
       {vm.view.phase === "lobby" ? (
         <PanelCard className="p-5">
           <SectionHeader
@@ -86,7 +94,11 @@ export const GameShellSideColumn: FC<GameShellSideColumnProps> = ({ vm }) => {
           <TurnQueueTracker view={vm.view} playerId={vm.playerId} />
           <RightPanel
             view={vm.view}
-            role={vm.role}
+            role={
+              vm.canControlTestRoom && vm.selectedUnit
+                ? vm.selectedUnit.owner
+                : vm.role
+            }
             selectedUnitId={vm.selectedUnitId}
             actionMode={vm.actionMode}
             placeUnitId={vm.placeUnitId}

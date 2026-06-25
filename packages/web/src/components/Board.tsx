@@ -47,6 +47,7 @@ interface BoardProps {
   doraPreview?: { center: Coord; radius: number } | null;
   disabled?: boolean;
   allowUnitSelection?: boolean;
+  allowAnyUnitSelection?: boolean;
   visualEffectsEnabled?: boolean;
   eventBatch?: BoardEventBatch | null;
   effectSessionKey?: string | null;
@@ -117,6 +118,7 @@ export const Board: FC<BoardProps> = ({
   hoveredAbilityId,
   doraPreview = null,
   allowUnitSelection = true,
+  allowAnyUnitSelection = false,
   visualEffectsEnabled = false,
   eventBatch = null,
   effectSessionKey = null,
@@ -645,7 +647,11 @@ export const Board: FC<BoardProps> = ({
           aria-pressed={isSelected}
           onClick={() => {
             if (disabled) return;
-            if (allowUnitSelection && unit && playerId && unit.owner === playerId) {
+            if (
+              allowUnitSelection &&
+              unit &&
+              (allowAnyUnitSelection || (playerId && unit.owner === playerId))
+            ) {
               onSelectUnit(unit.id);
               return;
             }

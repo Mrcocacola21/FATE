@@ -21,10 +21,12 @@ import {
   sendSocketAction,
   sendStartGame,
   sendSwitchRole,
+  sendTestRoomCommand as sendTestRoomCommandMessage,
   type PlayerRole,
   type RoomMeta,
   type ServerMessage,
 } from "./ws";
+import type { TestRoomCommand } from "./testRoom/types";
 import { transitionActionMode } from "./game/selectionState";
 import type { BoardEventBatch } from "./game/effects/types";
 
@@ -59,6 +61,10 @@ export type HoverPreview =
   | null;
 
 const defaultRoomMeta: RoomMeta = {
+  roomMode: "normal",
+  revision: 0,
+  diceQueue: [],
+  debugLog: [],
   ready: { P1: false, P2: false },
   players: { P1: false, P2: false },
   spectators: 0,
@@ -76,6 +82,7 @@ interface GameStore {
   resumeToken: string | null;
   seat: PlayerId | null;
   isHost: boolean;
+  canControlTestRoom: boolean;
   roomMeta: RoomMeta | null;
   joinError: string | null;
   roomsList: RoomSummary[];
@@ -89,6 +96,7 @@ interface GameStore {
   lastLogIndex: number;
   lastActionResult: { ok: boolean; error?: string } | null;
   lastActionResultAt: number;
+  testRoomSnapshot: string | null;
   selectedUnitId: string | null;
   actionMode: ActionMode;
   placeUnitId: string | null;
@@ -109,6 +117,8 @@ interface GameStore {
     roomId?: string;
     role: PlayerRole;
     name?: string;
+    roomMode?: "normal" | "test";
+    debugToken?: string;
   }) => Promise<void>;
   leaveRoom: () => void;
   setReady: (ready: boolean) => void;
@@ -116,6 +126,7 @@ interface GameStore {
   resolvePendingRoll: (pendingRollId: string, choice?: ResolveRollChoice) => void;
   switchRole: (role: PlayerRole) => void;
   sendAction: (action: GameAction) => void;
+  sendTestRoomCommand: (command: TestRoomCommand) => void;
   requestMoveOptions: (unitId: string, mode?: MoveMode) => void;
   setRoomState: (roomId: string, room: PlayerView) => void;
   applyActionResult: (
@@ -141,6 +152,7 @@ interface GameStore {
   ) => void;
   setHoveredAbilityId: (abilityId: string | null) => void;
   setHoverPreview: (preview: HoverPreview) => void;
+  replayLastEffects: () => void;
   resetGameState: () => void;
 }
 
@@ -159,6 +171,7 @@ function buildLeaveResetState(
     resumeToken: preserveResumeToken ? state.resumeToken : null,
     seat: null,
     isHost: false,
+    canControlTestRoom: false,
     roomMeta: defaultRoomMeta,
     joinError: null,
     roomState: null,
@@ -171,6 +184,7 @@ function buildLeaveResetState(
     lastLogIndex: -1,
     lastActionResult: null,
     lastActionResultAt: 0,
+    testRoomSnapshot: null,
     selectedUnitId: null,
     actionMode: null,
     placeUnitId: null,
@@ -214,6 +228,7 @@ function handleServerMessage(
         resumeToken: null,
         seat: null,
         isHost: false,
+        canControlTestRoom: false,
         roomMeta: defaultRoomMeta,
         joinError: msg.message,
         roomState: null,
@@ -275,6 +290,10 @@ function handleServerMessage(
             : prevMeta.initiative.winner ?? null,
       };
       const nextMeta: RoomMeta = {
+        roomMode: incomingMeta.roomMode ?? prevMeta.roomMode ?? "normal",
+        revision: incomingMeta.revision ?? prevMeta.revision ?? 0,
+        diceQueue: incomingMeta.diceQueue ?? prevMeta.diceQueue ?? [],
+        debugLog: incomingMeta.debugLog ?? prevMeta.debugLog ?? [],
         ready: nextReady,
         players: nextPlayers,
         spectators: incomingMeta.spectators ?? prevMeta.spectators ?? 0,
@@ -298,7 +317,14 @@ function handleServerMessage(
         role: msg.you.role,
         seat: msg.you.seat ?? null,
         isHost: msg.you.isHost,
+        canControlTestRoom: msg.you.canControlTestRoom ?? false,
         roomMeta: nextMeta,
+      }));
+      return;
+    }
+    case "testRoomSnapshot": {
+      set(() => ({
+        testRoomSnapshot: JSON.stringify(msg.snapshot, null, 2),
       }));
       return;
     }
@@ -393,6 +419,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   resumeToken: null,
   seat: null,
   isHost: false,
+  canControlTestRoom: false,
   roomMeta: defaultRoomMeta,
   joinError: null,
   roomsList: [],
@@ -406,6 +433,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   lastLogIndex: -1,
   lastActionResult: null,
   lastActionResultAt: 0,
+  testRoomSnapshot: null,
   selectedUnitId: null,
   actionMode: null,
   placeUnitId: null,
@@ -516,6 +544,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
     sendSocketAction(socket, action);
   },
+  sendTestRoomCommand: (command) => {
+    const state = get();
+    if (!state.joined || !state.canControlTestRoom) {
+      state.addClientLog("Sandbox controls are not available.");
+      return;
+    }
+    if (!socket || socket.readyState !== WebSocket.OPEN) {
+      state.addClientLog("WebSocket not connected.");
+      return;
+    }
+    sendTestRoomCommandMessage(socket, command);
+  },
   requestMoveOptions: (unitId, mode) => {
     const state = get();
     if (state.roomMeta?.pendingRoll) {
@@ -573,6 +613,17 @@ export const useGameStore = create<GameStore>((set, get) => ({
   setMoveOptions: (options) => set(() => ({ moveOptions: options })),
   setHoveredAbilityId: (abilityId) => set(() => ({ hoveredAbilityId: abilityId })),
   setHoverPreview: (preview) => set(() => ({ hoverPreview: preview })),
+  replayLastEffects: () =>
+    set((state) =>
+      state.latestEventBatch
+        ? {
+            latestEventBatch: {
+              logIndex: Date.now(),
+              events: [...state.latestEventBatch.events],
+            },
+          }
+        : {},
+    ),
   resetGameState: () =>
     set(() => ({
       roomState: null,
@@ -586,6 +637,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       lastLogIndex: -1,
       lastActionResult: null,
       lastActionResultAt: 0,
+      testRoomSnapshot: null,
       selectedUnitId: null,
       actionMode: null,
       placeUnitId: null,

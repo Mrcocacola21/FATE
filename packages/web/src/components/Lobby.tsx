@@ -11,6 +11,7 @@ import {
   getPhaseLabel,
   localizeServerText,
 } from "../i18n/displayMetadata";
+import { getServerCapabilities } from "../api";
 
 interface LobbyProps {
   onOpenFigures?: () => void;
@@ -35,12 +36,29 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
   } | null>(null);
   const [joinRole, setJoinRole] = useState<PlayerRole>("P1");
   const [joinBusy, setJoinBusy] = useState(false);
+  const [testRoomEnabled, setTestRoomEnabled] = useState(import.meta.env.DEV);
+  const [testRoomRequiresToken, setTestRoomRequiresToken] = useState(false);
+  const [debugToken, setDebugToken] = useState("");
+  const [testBusy, setTestBusy] = useState(false);
 
   useEffect(() => {
     fetchRooms().catch((err) => {
       setLocalError(localizeServerText(err instanceof Error ? err.message : "", t) || t("errors.loadRooms"));
     });
   }, [fetchRooms]);
+
+  useEffect(() => {
+    getServerCapabilities()
+      .then((capabilities) => {
+        const clientEnabled =
+          import.meta.env.DEV || import.meta.env.VITE_ENABLE_TEST_ROOM === "true";
+        setTestRoomEnabled(clientEnabled && capabilities.testRooms.enabled);
+        setTestRoomRequiresToken(capabilities.testRooms.requiresToken);
+      })
+      .catch(() => {
+        setTestRoomEnabled(false);
+      });
+  }, []);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -87,6 +105,28 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
       });
     } catch (err) {
       setLocalError(localizeServerText(err instanceof Error ? err.message : "", t) || t("errors.joinRoom"));
+    }
+  };
+
+  const handleCreateTestRoom = async () => {
+    setTestBusy(true);
+    setLocalError(null);
+    try {
+      await joinRoom({
+        mode: "create",
+        role: "P1",
+        name: name.trim() ? name.trim() : undefined,
+        roomMode: "test",
+        debugToken: debugToken.trim() || undefined,
+      });
+      await fetchRooms();
+    } catch (err) {
+      setLocalError(
+        localizeServerText(err instanceof Error ? err.message : "", t) ||
+          t("errors.createRoom"),
+      );
+    } finally {
+      setTestBusy(false);
     }
   };
 
@@ -215,6 +255,9 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
                         <StatusBadge tone={room.phase === "lobby" ? "success" : "warning"}>
                           {getPhaseLabel(room.phase, t)}
                         </StatusBadge>
+                        {room.roomMode === "test" ? (
+                          <StatusBadge tone="special">{t("testRoom.badge")}</StatusBadge>
+                        ) : null}
                       </div>
                       <div className="mt-3 flex flex-wrap gap-2">
                         <StatusBadge tone={room.players.P1 ? "neutral" : "success"}>
@@ -276,6 +319,39 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
                 {busy ? t("lobby.creating") : t("lobby.createNew")}
               </button>
             </PanelCard>
+
+            {testRoomEnabled ? (
+              <PanelCard className="border-violet-300 p-5 sm:p-6 dark:border-violet-800">
+                <SectionHeader
+                  kicker={t("testRoom.kicker")}
+                  title={t("testRoom.create")}
+                  description={t("testRoom.createDescription")}
+                />
+                {testRoomRequiresToken ? (
+                  <div className="mt-4">
+                    <label className="field-label" htmlFor="test-room-token">
+                      {t("testRoom.debugToken")}
+                    </label>
+                    <input
+                      id="test-room-token"
+                      type="password"
+                      className="field-control font-mono"
+                      value={debugToken}
+                      onChange={(event) => setDebugToken(event.target.value)}
+                      autoComplete="off"
+                    />
+                  </div>
+                ) : null}
+                <button
+                  type="button"
+                  className="btn btn-strong mt-4 w-full"
+                  onClick={handleCreateTestRoom}
+                  disabled={testBusy || (testRoomRequiresToken && !debugToken.trim())}
+                >
+                  {testBusy ? t("testRoom.creating") : t("testRoom.create")}
+                </button>
+              </PanelCard>
+            ) : null}
 
             <PanelCard className="p-5 sm:p-6">
               <SectionHeader

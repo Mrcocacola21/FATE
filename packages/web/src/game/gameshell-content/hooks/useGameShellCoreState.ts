@@ -16,6 +16,7 @@ export function useGameShellCoreState() {
     roomMeta,
     seat,
     isHost,
+    canControlTestRoom,
     events,
     latestEventBatch,
     clientLog,
@@ -27,6 +28,7 @@ export function useGameShellCoreState() {
     moveOptions,
     lastActionResult,
     lastActionResultAt,
+    testRoomSnapshot,
     leavingRoom,
     setSelectedUnit,
     setActionMode,
@@ -34,7 +36,9 @@ export function useGameShellCoreState() {
     setMoveOptions,
     setHoveredAbilityId,
     setHoverPreview,
+    replayLastEffects,
     sendAction,
+    sendTestRoomCommand,
     requestMoveOptions,
     setReady,
     startGame,
@@ -63,8 +67,13 @@ export function useGameShellCoreState() {
   const [papyrusLineAxis, setPapyrusLineAxis] =
     useState<PapyrusLineAxis>("row");
 
-  const playerId = getLocalPlayerId(role);
   const view = roomState;
+  const controllerSelectedUnit =
+    view && selectedUnitId ? view.units[selectedUnitId] ?? null : null;
+  const playerId =
+    canControlTestRoom && controllerSelectedUnit
+      ? controllerSelectedUnit.owner
+      : getLocalPlayerId(role);
   const isSpectator = role === "spectator";
   const pending = useGameShellPendingStatus({
     view,
@@ -159,8 +168,7 @@ export function useGameShellCoreState() {
     requestMoveOptions(unitId, mode);
   };
 
-  const selectedUnit =
-    view && selectedUnitId ? view.units[selectedUnitId] ?? null : null;
+  const selectedUnit = controllerSelectedUnit;
   const hoverActionMode =
     hoverPreview?.type === "actionMode" ? hoverPreview.mode : null;
   const allowActionHoverPreview =
@@ -192,6 +200,7 @@ export function useGameShellCoreState() {
     pending.boardSelectionPending,
     selectedUnit,
     setHoverPreview,
+    replayLastEffects,
   ]);
 
   useEffect(() => {
@@ -217,6 +226,7 @@ export function useGameShellCoreState() {
     roomMeta,
     seat,
     isHost,
+    canControlTestRoom,
     events,
     latestEventBatch,
     clientLog,
@@ -234,11 +244,13 @@ export function useGameShellCoreState() {
     setHoveredAbilityId,
     setHoverPreview,
     sendAction,
+    sendTestRoomCommand,
     requestMoveOptions,
     setReady,
     startGame,
     switchRole,
     playerId,
+    testRoomSnapshot,
     isSpectator,
     pending,
     sendGameAction,

@@ -85,6 +85,7 @@ The frontend reads these at build time. In production builds they are required a
 
 - `VITE_API_URL` (example: `https://your-render-app.onrender.com`)
 - `VITE_WS_URL` (example: `wss://your-render-app.onrender.com/ws`)
+- `VITE_ENABLE_TEST_ROOM=true` - shows the Test Room creator when the server also allows it. Local Vite development enables the entry automatically.
 
 Local defaults are provided in `.env.example`.
 
@@ -92,12 +93,26 @@ Local defaults are provided in `.env.example`.
 
 - `WEB_ORIGIN` - allowed browser origin for CORS and WebSocket Origin checks, for example `https://your-app.vercel.app`.
 - `FATE_DEBUG_TOKEN` - production-only token for debug REST game views/actions/logs. Send it as `X-FATE-DEBUG-TOKEN: <token>`.
+- `ENABLE_TEST_ROOMS=true` - enables authoritative Test/Sandbox rooms. Development enables them by default unless explicitly set to `false`; production requires this flag and a matching `FATE_DEBUG_TOKEN` when creating the room.
 - `ROOM_TTL_MS` - idle room TTL before cleanup. Default: `86400000` (24 hours).
 - `MAX_ROOMS` - maximum in-memory FATE rooms retained. Default: `100`.
 - `MAX_LOG_EVENTS` - maximum action log entries retained per room. Default: `5000`.
 - `WS_MAX_PAYLOAD_BYTES`, `WS_RATE_LIMIT_WINDOW_MS`, `WS_RATE_LIMIT_MAX_MESSAGES`, `RECONNECT_GRACE_MS` - WebSocket payload, rate, and reconnect controls.
 
 Local development keeps debug REST endpoints open when `NODE_ENV !== "production"`. In production, `GET /api/games/:id`, `POST /api/games/:id/actions`, and `GET /api/games/:id/log` require `X-FATE-DEBUG-TOKEN` to match `FATE_DEBUG_TOKEN`. Browser WebSocket connections must use an allowed Origin; missing Origin is accepted for non-browser clients.
+
+## Test Room / Sandbox
+
+Test rooms are server-authoritative manual QA rooms. A single controller can spawn catalog units for either side, edit HP/statuses/charges, force turns and phases, run normal attacks and abilities, queue deterministic d6 results, place stakes/forest markers, inspect pending rolls/state, load deterministic presets, and export/import bounded JSON snapshots.
+
+Enable locally:
+
+```bash
+VITE_ENABLE_TEST_ROOM=true
+ENABLE_TEST_ROOMS=true
+```
+
+In production, `ENABLE_TEST_ROOMS=true` is required and room creation must include the configured `FATE_DEBUG_TOKEN`. Sandbox commands are rejected for normal rooms, disabled deployments, spectators, and non-controller connections. Imported snapshots are capped and validated before replacing test-room state.
 
 ## Assets (Figure Arts + Tokens)
 

@@ -1,6 +1,7 @@
 // packages/server/src/schemas.ts
 
 import { z } from "zod";
+import { TestRoomCommandMessageSchema } from "./testRoom/schemas";
 
 export const PlayerIdSchema = z.union([z.literal("P1"), z.literal("P2")]);
 export const RoleSchema = z.union([
@@ -28,6 +29,8 @@ export const MoveModeSchema = z.union([
 export const CreateGameBodySchema = z.object({
   seed: z.number().int().optional(),
   arenaId: z.string().optional(),
+  roomMode: z.enum(["normal", "test"]).optional(),
+  debugToken: z.string().min(1).max(512).optional(),
 });
 
 export const FigureSetSelectionSchema = z
@@ -231,6 +234,8 @@ export const JoinRoomMessageSchema = z.object({
   name: z.string().min(1).optional(),
   figureSet: FigureSetSelectionSchema.optional(),
   resumeToken: z.string().min(1).optional(),
+  roomMode: z.enum(["normal", "test"]).optional(),
+  debugToken: z.string().min(1).max(512).optional(),
 });
 
 export const ActionMessageSchema = z.object({
@@ -294,6 +299,7 @@ export const ClientMessageSchema = z.discriminatedUnion("type", [
   ResolvePendingRollMessageSchema,
   LeaveRoomMessageSchema,
   SwitchRoleMessageSchema,
+  TestRoomCommandMessageSchema,
   PongJoinMessageSchema,
   PongInputMessageSchema,
   PongStartMessageSchema,

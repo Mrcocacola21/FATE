@@ -10,7 +10,11 @@ import {
   attachArmy,
   createDefaultArmy,
   createEmptyGame,
+  createDebugSandboxState,
+  DebugDiceRNG,
+  type RNG,
   SeededRNG,
+  type DebugStateCommand,
 } from "rules";
 import { randomUUID } from "node:crypto";
 import { accepted, rejected, type CommandResult } from "./commandResult";
@@ -18,15 +22,19 @@ import { accepted, rejected, type CommandResult } from "./commandResult";
 export interface ActionLogEntry {
   at: number;
   playerId?: PlayerId;
-  action: GameAction;
+  action: GameAction | DebugStateCommand | { type: string; [key: string]: unknown };
   events: GameEvent[];
   revision: number;
+  debugDiceConsumed?: number[];
 }
 
 export interface GameRoom {
   id: string;
   seed: number;
-  rng: SeededRNG;
+  rng: RNG;
+  testDiceRng: DebugDiceRNG | null;
+  roomMode: "normal" | "test";
+  testControllerConnId: string | null;
   state: GameState;
   actionLog: ActionLogEntry[];
   revision: number;
@@ -45,6 +53,7 @@ export interface CreateGameOptions {
   arenaId?: string;
   hostSeat?: PlayerId;
   hostConnId?: string | null;
+  roomMode?: "normal" | "test";
 }
 
 export interface RoomSummary {
@@ -55,6 +64,7 @@ export interface RoomSummary {
   spectators: number;
   ready: { P1: boolean; P2: boolean };
   canStart: boolean;
+  roomMode: "normal" | "test";
 }
 
 // TODO: replace with persistence-backed storage.
@@ -104,13 +114,24 @@ export function createGameRoomWithId(
 ): GameRoom {
   const seed = options.seed ?? nextSeed();
   const rng = new SeededRNG(seed);
+  const roomMode = options.roomMode ?? "normal";
   const hostSeat: PlayerId = options.hostSeat ?? "P1";
   const hostConnId = options.hostConnId ?? null;
 
-  let state = createEmptyGame();
-  state = attachArmy(state, createDefaultArmy("P1"));
-  state = attachArmy(state, createDefaultArmy("P2"));
-  state = applyAction(state, { type: "lobbyInit", host: hostSeat }, rng).state;
+  let state =
+    roomMode === "test" ? createDebugSandboxState() : createEmptyGame();
+  if (roomMode === "normal") {
+    state = attachArmy(state, createDefaultArmy("P1"));
+    state = attachArmy(state, createDefaultArmy("P2"));
+    state = applyAction(state, { type: "lobbyInit", host: hostSeat }, rng).state;
+  } else {
+    state = {
+      ...state,
+      seats: { P1: false, P2: false },
+      playersReady: { P1: true, P2: true },
+      hostPlayerId: hostSeat,
+    };
+  }
 
   if (options.arenaId) {
     state = { ...state, arenaId: options.arenaId };
@@ -132,7 +153,10 @@ export function createGameRoomWithId(
     state = {
       ...state,
       seats: { ...state.seats, [hostSeat]: true },
-      playersReady: { ...state.playersReady, [hostSeat]: false },
+      playersReady:
+        roomMode === "test"
+          ? state.playersReady
+          : { ...state.playersReady, [hostSeat]: false },
     };
   }
 
@@ -140,7 +164,11 @@ export function createGameRoomWithId(
   const room: GameRoom = {
     id,
     seed,
-    rng,
+    rng:
+      roomMode === "test" ? new DebugDiceRNG(rng) : rng,
+    testDiceRng: null,
+    roomMode,
+    testControllerConnId: roomMode === "test" ? hostConnId : null,
     state,
     actionLog: [],
     revision: 0,
@@ -153,6 +181,9 @@ export function createGameRoomWithId(
     spectators: new Set<string>(),
     figureSets: {},
   };
+  if (roomMode === "test") {
+    room.testDiceRng = room.rng as DebugDiceRNG;
+  }
 
   games.set(room.id, room);
   return room;
@@ -247,6 +278,7 @@ export function listRoomSummaries(): RoomSummary[] {
       spectators: room.spectators.size,
       ready,
       canStart,
+      roomMode: room.roomMode,
     };
   });
 }
@@ -257,7 +289,13 @@ export function applyGameAction(
   playerId?: PlayerId
 ): CommandResult {
   const previousState = room.state;
+  const diceQueueBefore = room.testDiceRng?.getQueue() ?? [];
   const result = applyAction(previousState, action, room.rng);
+  const diceQueueAfter = room.testDiceRng?.getQueue() ?? [];
+  const debugDiceConsumed =
+    diceQueueBefore.length > diceQueueAfter.length
+      ? diceQueueBefore.slice(0, diceQueueBefore.length - diceQueueAfter.length)
+      : [];
   const stateChanged = result.state !== previousState;
 
   if (!stateChanged && result.events.length === 0) {
@@ -281,6 +319,8 @@ export function applyGameAction(
     action,
     events: result.events,
     revision: room.revision,
+    debugDiceConsumed:
+      debugDiceConsumed.length > 0 ? debugDiceConsumed : undefined,
   });
   const maxLogEvents = getMaxLogEvents();
   if (room.actionLog.length > maxLogEvents) {

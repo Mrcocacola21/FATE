@@ -323,11 +323,19 @@ import {
   testMettatonBerserkerFeatureOnlyAfterNeo,
   testMettatonFinalChordGatingTargetsDamageAndSpend,
 } from "./heroes/mettaton.test";
+import {
+  testDebugChargeAndStatusMutation,
+  testDebugDiceQueueControlsRolls,
+  testDebugSpawnUsesCatalogMetadata,
+} from "./core/debug.test";
 
 function main(): void {
   // Full test run: preserve the historical simpleTests.ts execution order.
   console.log('Running full simpleTests suite');
   testPendingRollActionsExportsStable();
+  testDebugSpawnUsesCatalogMetadata();
+  testDebugChargeAndStatusMutation();
+  testDebugDiceQueueControlsRolls();
   testPendingRollResolverCoverage();
   testUnknownPendingRollKindDoesNotClear();
   testImpulseMetadataAllAutoManaged();

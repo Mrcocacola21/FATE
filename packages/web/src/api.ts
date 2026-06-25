@@ -43,10 +43,19 @@ export interface RoomSummary {
   ready: { P1: boolean; P2: boolean };
   spectators: number;
   canStart: boolean;
+  roomMode: "normal" | "test";
 }
 
 export interface CreateRoomResponse {
   roomId: string;
+  roomMode: "normal" | "test";
+}
+
+export interface ServerCapabilities {
+  testRooms: {
+    enabled: boolean;
+    requiresToken: boolean;
+  };
 }
 
 export async function createGame(params?: {
@@ -111,6 +120,8 @@ export async function listRooms(): Promise<RoomSummary[]> {
 export async function createRoom(params?: {
   seed?: number;
   arenaId?: string;
+  roomMode?: "normal" | "test";
+  debugToken?: string;
 }): Promise<CreateRoomResponse> {
   const res = await fetch(`${API_BASE}/rooms`, {
     method: "POST",
@@ -123,6 +134,14 @@ export async function createRoom(params?: {
   }
 
   return (await res.json()) as CreateRoomResponse;
+}
+
+export async function getServerCapabilities(): Promise<ServerCapabilities> {
+  const res = await fetch(`${API_BASE}/api/capabilities`);
+  if (!res.ok) {
+    throw new Error(`Failed to load capabilities: ${res.status}`);
+  }
+  return (await res.json()) as ServerCapabilities;
 }
 
 export async function listHeroes(): Promise<HeroMeta[]> {

@@ -30,6 +30,9 @@ export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm }) => {
               <StatusBadge tone={vm.role === "spectator" ? "info" : "neutral"}>
                 {vm.role ? t(`roles.${vm.role}`) : t("roles.noRole")}
               </StatusBadge>
+              {vm.roomMeta?.roomMode === "test" ? (
+                <StatusBadge tone="special">{t("testRoom.badgeSandbox")}</StatusBadge>
+              ) : null}
             </div>
             <div className="mt-1 truncate font-mono text-xs text-slate-500 dark:text-slate-400">
               {t("game.room")} {vm.roomId ?? "-"}
@@ -87,6 +90,7 @@ export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm }) => {
               : null
           }
           allowUnitSelection={vm.allowUnitPick}
+          allowAnyUnitSelection={vm.canControlTestRoom}
           visualEffectsEnabled={vm.connectionStatus === "connected" && vm.hasSnapshot}
           eventBatch={vm.latestEventBatch}
           effectSessionKey={vm.roomId}

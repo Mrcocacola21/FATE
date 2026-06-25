@@ -11,10 +11,20 @@ import type {
 } from "rules";
 import { getWsUrl } from "./api";
 import type { FigureSetSelection } from "./figures/types";
+import type { TestRoomCommand } from "./testRoom/types";
 
 export type PlayerRole = PlayerId | "spectator";
 
 export type RoomMeta = {
+  roomMode: "normal" | "test";
+  revision: number;
+  diceQueue: number[];
+  debugLog: Array<{
+    revision: number;
+    type: string;
+    at: number;
+    diceConsumed?: number[];
+  }>;
   ready: { P1: boolean; P2: boolean };
   players: { P1: boolean; P2: boolean };
   spectators: number;
@@ -31,7 +41,12 @@ export type RoomMeta = {
 export type RoomStateMessage = {
   type: "roomState";
   roomId: string;
-  you: { role: PlayerRole; seat?: PlayerId; isHost: boolean };
+  you: {
+    role: PlayerRole;
+    seat?: PlayerId;
+    isHost: boolean;
+    canControlTestRoom: boolean;
+  };
   view: PlayerView;
   meta: RoomMeta;
 };
@@ -48,7 +63,11 @@ export type ServerMessage =
     }
   | {
       type: "joinRejected";
-      reason: "room_not_found" | "role_taken" | "room_exists";
+      reason:
+        | "room_not_found"
+        | "role_taken"
+        | "room_exists"
+        | "test_room_disabled";
       message: string;
     }
   | {
@@ -74,6 +93,10 @@ export type ServerMessage =
       type: "error";
       message: string;
       code?: string;
+    }
+  | {
+      type: "testRoomSnapshot";
+      snapshot: unknown;
     };
 
 export type ClientMessage =
@@ -85,6 +108,8 @@ export type ClientMessage =
       name?: string;
       figureSet?: FigureSetSelection;
       resumeToken?: string;
+      roomMode?: "normal" | "test";
+      debugToken?: string;
     }
   | { type: "setReady"; ready: boolean }
   | { type: "startGame" }
@@ -96,7 +121,8 @@ export type ClientMessage =
   | { type: "action"; action: GameAction }
   | { type: "requestMoveOptions"; unitId: string; mode?: MoveMode }
   | { type: "switchRole"; role: PlayerRole }
-  | { type: "leaveRoom" };
+  | { type: "leaveRoom" }
+  | { type: "testRoomCommand"; command: TestRoomCommand };
 
 export function connectGameSocket(
   onMessage: (msg: ServerMessage) => void
@@ -124,6 +150,8 @@ export function sendJoinRoom(
     name?: string;
     figureSet?: FigureSetSelection;
     resumeToken?: string;
+    roomMode?: "normal" | "test";
+    debugToken?: string;
   }
 ) {
   const join: ClientMessage = { type: "joinRoom", ...params };
@@ -170,5 +198,13 @@ export function sendSwitchRole(socket: WebSocket, role: PlayerRole) {
 
 export function sendLeaveRoom(socket: WebSocket) {
   const msg: ClientMessage = { type: "leaveRoom" };
+  socket.send(JSON.stringify(msg));
+}
+
+export function sendTestRoomCommand(
+  socket: WebSocket,
+  command: TestRoomCommand
+) {
+  const msg: ClientMessage = { type: "testRoomCommand", command };
   socket.send(JSON.stringify(msg));
 }
