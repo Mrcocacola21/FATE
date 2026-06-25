@@ -125,7 +125,7 @@ export const BattleSection: FC<BattleSectionProps> = ({
 }) => {
   const { t } = useI18n();
   return (
-    <div className="panel-card p-4">
+    <div className="panel-card panel-parchment p-4">
       <div>
         <div className="section-kicker">{t("game.selectedUnit")}</div>
         <div className="section-title mt-1">{t("game.unitControls")}</div>
@@ -145,7 +145,7 @@ export const BattleSection: FC<BattleSectionProps> = ({
         onHoverAbility={onHoverAbility}
       />
 
-      <div className="mt-4 grid grid-cols-2 gap-2 border-t border-slate-200 pt-4 text-xs dark:border-slate-800">
+      <div className="mt-4 grid grid-cols-2 gap-2 border-t border-amber-900/10 pt-4 text-xs dark:border-amber-500/15">
         <BattleActionButtons
           actionMode={actionMode}
           moveDisabled={moveDisabled}

@@ -16,14 +16,11 @@ export const GameShellSideColumn: FC<GameShellSideColumnProps> = ({ vm }) => {
   const { t } = useI18n();
   return (
     <aside className="scroll-panel min-w-0 space-y-4 xl:sticky xl:top-4 xl:max-h-[calc(100vh-2rem)] xl:overflow-y-auto xl:pr-1">
-      {shouldShowTestRoomPanel(
-        vm.roomMeta?.roomMode,
-        vm.canControlTestRoom,
-      ) ? (
+      {shouldShowTestRoomPanel(vm.roomMeta?.roomMode, vm.canControlTestRoom) ? (
         <TestRoomPanel vm={vm} />
       ) : null}
       {vm.view.phase === "lobby" ? (
-        <PanelCard className="p-5">
+        <PanelCard variant="parchment" className="p-5">
           <SectionHeader
             kicker={t("game.stagingRoom")}
             title={t("game.matchLobby")}
@@ -94,11 +91,7 @@ export const GameShellSideColumn: FC<GameShellSideColumnProps> = ({ vm }) => {
           <TurnQueueTracker view={vm.view} playerId={vm.playerId} />
           <RightPanel
             view={vm.view}
-            role={
-              vm.canControlTestRoom && vm.selectedUnit
-                ? vm.selectedUnit.owner
-                : vm.role
-            }
+            role={vm.canControlTestRoom && vm.selectedUnit ? vm.selectedUnit.owner : vm.role}
             selectedUnitId={vm.selectedUnitId}
             actionMode={vm.actionMode}
             placeUnitId={vm.placeUnitId}

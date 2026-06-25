@@ -3,6 +3,7 @@ import type { PlayerId, PlayerView } from "rules";
 import { PanelCard, SectionHeader, StatusBadge } from "./ui";
 import { useI18n } from "../i18n";
 import { getClassLabel } from "../i18n/displayMetadata";
+import { getUnitTokenAsset } from "../assets/registry";
 
 interface TurnQueueTrackerProps {
   view: PlayerView;
@@ -38,7 +39,7 @@ export const TurnQueueTracker: FC<TurnQueueTrackerProps> = ({ view, playerId }) 
   const currentUnit = currentUnitId ? view.units[currentUnitId] : null;
 
   return (
-    <PanelCard className="p-4">
+    <PanelCard variant="hud" className="p-4">
       <SectionHeader
         kicker={t("game.initiative")}
         title={t("game.turnQueue")}
@@ -79,6 +80,7 @@ export const TurnQueueTracker: FC<TurnQueueTrackerProps> = ({ view, playerId }) 
           const isFriendly = unit ? playerId === unit.owner : false;
           const isDead = unit ? !unit.isAlive : false;
           const label = unit ? classShort(unit.class) : "?";
+          const tokenAsset = unit ? getUnitTokenAsset(unit) : null;
 
           return (
             <div
@@ -86,17 +88,23 @@ export const TurnQueueTracker: FC<TurnQueueTrackerProps> = ({ view, playerId }) 
               className={`flex shrink-0 items-center gap-2 rounded-xl border px-2.5 py-2 text-xs shadow-sm transition ${
                 isCurrent
                   ? "border-amber-400 bg-amber-50 text-amber-900 ring-2 ring-amber-400/15 dark:bg-amber-950/40 dark:text-amber-100"
-                  : "border-slate-200 bg-white text-slate-600 dark:border-slate-800 dark:bg-slate-950/45 dark:text-slate-300"
+                  : "border-stone-300/70 bg-stone-100/55 text-stone-600 dark:border-stone-800 dark:bg-black/20 dark:text-stone-300"
               } ${isDead ? "opacity-45 line-through" : ""}`}
               title={unitId}
             >
-              <span
-                className={`inline-flex h-6 w-6 items-center justify-center rounded-lg text-[10px] font-bold ${
-                  isFriendly ? "bg-emerald-500 text-white" : "bg-rose-500 text-white"
-                }`}
-              >
-                {label}
-              </span>
+              {tokenAsset ? (
+                <img
+                  src={tokenAsset.src}
+                  alt=""
+                  className={`h-7 w-7 rounded-lg border object-contain ${
+                    isFriendly ? "border-cyan-400" : "border-rose-400"
+                  }`}
+                />
+              ) : (
+                <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-stone-900 text-[10px] font-bold text-white">
+                  {label}
+                </span>
+              )}
               <span className="max-w-28 truncate">{unitId}</span>
             </div>
           );

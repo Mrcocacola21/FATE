@@ -19,10 +19,7 @@ import { useI18n } from "../i18n";
 import { getClassLabel, getHeroDisplayName } from "../i18n/displayMetadata";
 import { BoardEffectsLayer } from "../game/effects/BoardEffectsLayer";
 import { useBoardEffects } from "../game/effects/useBoardEffects";
-import type {
-  BoardEventBatch,
-  BoardPreviewLine,
-} from "../game/effects/types";
+import type { BoardEventBatch, BoardPreviewLine } from "../game/effects/types";
 
 const MIN_CELL_SIZE = 26;
 const MAX_CELL_SIZE = 96;
@@ -80,15 +77,15 @@ function getHighlightClass(
 ) {
   switch (kind) {
     case "place":
-      return "bg-emerald-300/35 dark:bg-emerald-500/15";
+      return "bg-emerald-300/35 ring-2 ring-inset ring-emerald-500/70 shadow-[inset_0_0_18px_rgba(16,185,129,0.28)] dark:bg-emerald-500/15";
     case "move":
-      return "bg-sky-300/35 dark:bg-sky-500/15";
+      return "bg-sky-300/35 ring-2 ring-inset ring-sky-500/70 shadow-[inset_0_0_18px_rgba(14,165,233,0.28)] dark:bg-sky-500/15";
     case "attack":
-      return "bg-rose-300/40 dark:bg-rose-500/18";
+      return "bg-rose-300/40 ring-2 ring-inset ring-rose-500/75 shadow-[inset_0_0_18px_rgba(244,63,94,0.3)] dark:bg-rose-500/18";
     case "attackRange":
-      return "bg-rose-200/35 dark:bg-rose-500/12";
+      return "bg-rose-200/30 ring-1 ring-inset ring-rose-500/45 dark:bg-rose-500/12";
     case "dora":
-      return "bg-amber-300/35 dark:bg-amber-500/15";
+      return "bg-amber-300/35 ring-2 ring-inset ring-amber-500/70 shadow-[inset_0_0_18px_rgba(245,158,11,0.25)] dark:bg-amber-500/15";
     case "previewMove":
       return "bg-sky-300/20 ring-1 ring-sky-500/45 dark:bg-sky-400/10 dark:ring-sky-300/45";
     case "previewAttack":
@@ -271,10 +268,7 @@ export const Board: FC<BoardProps> = ({
   );
 
   const boardPixelSize = cellSize * size;
-  const {
-    effects: boardEffects,
-    reducedMotion,
-  } = useBoardEffects({
+  const { effects: boardEffects, reducedMotion } = useBoardEffects({
     batch: eventBatch,
     view,
     enabled: visualEffectsEnabled,
@@ -468,9 +462,7 @@ export const Board: FC<BoardProps> = ({
       }
     }
   }
-  const doraPreviewCenterKey = doraPreview
-    ? coordKey(toViewCoord(doraPreview.center))
-    : null;
+  const doraPreviewCenterKey = doraPreview ? coordKey(toViewCoord(doraPreview.center)) : null;
 
   const rows = [] as JSX.Element[];
 
@@ -495,19 +487,19 @@ export const Board: FC<BoardProps> = ({
       const cellClasses = [
         "relative",
         "border",
-        "border-slate-200/90 dark:border-slate-800",
+        "border-stone-400/35 dark:border-slate-700/55",
         "flex",
         "items-center",
         "justify-center",
         "transition-[width,height,background-color,box-shadow] duration-150 ease-out",
-        "focus-visible:z-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-teal-500",
+        "focus-visible:z-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-400",
         disabled ? "cursor-not-allowed opacity-70" : "cursor-pointer",
-        isDark
-          ? "bg-slate-100 hover:bg-teal-50 dark:bg-slate-900/85 dark:hover:bg-slate-800"
-          : "bg-white hover:bg-teal-50/70 dark:bg-slate-950 dark:hover:bg-slate-900",
-        isSelected ? "z-10 ring-2 ring-inset ring-teal-500 dark:ring-teal-400" : "",
+        isDark ? "board-cell-dark" : "board-cell-light",
+        isSelected
+          ? "z-10 ring-[3px] ring-inset ring-amber-500 shadow-[inset_0_0_20px_rgba(245,158,11,0.22)] dark:ring-amber-300"
+          : "",
         isActiveUnit && !isSelected
-          ? "z-10 ring-2 ring-inset ring-amber-400 dark:ring-amber-300"
+          ? "z-10 ring-2 ring-inset ring-cyan-400 shadow-[inset_0_0_16px_rgba(34,211,238,0.18)] dark:ring-cyan-300"
           : "",
       ].join(" ");
 
@@ -536,7 +528,7 @@ export const Board: FC<BoardProps> = ({
           "items-center",
           "justify-center",
           "font-semibold",
-          "shadow",
+          "border-2 border-white/70 shadow-lg shadow-black/25 dark:border-stone-950",
           previewRelationClass,
           isFriendly ? "bg-emerald-500 text-white" : "bg-rose-500 text-white",
         ].join(" ");
@@ -546,10 +538,10 @@ export const Board: FC<BoardProps> = ({
           "flex",
           "items-center",
           "justify-center",
-          "rounded-xl",
+          "rounded-xl border border-white/60 shadow-xl shadow-black/25 dark:border-black/70",
           unit.owner === "P1"
-            ? "ring-2 ring-emerald-400/80 dark:ring-emerald-400/70"
-            : "ring-2 ring-rose-400/80 dark:ring-rose-400/70",
+            ? "ring-[3px] ring-cyan-400/90 dark:ring-cyan-300/80"
+            : "ring-[3px] ring-rose-400/90 dark:ring-rose-300/80",
           previewRelationClass,
           isTransforming ? "unit-transforming" : "",
         ].join(" ");
@@ -750,7 +742,7 @@ export const Board: FC<BoardProps> = ({
     rows.push(
       <div key={`row-${row}`} className="flex">
         <div
-          className="flex items-center justify-center font-semibold text-slate-500 dark:text-slate-400"
+          className="flex items-center justify-center font-display font-bold text-stone-500 dark:text-stone-400"
           style={{ width: labelSize, height: cellSize, fontSize: labelFontSize }}
         >
           {rowLabel}
@@ -768,7 +760,7 @@ export const Board: FC<BoardProps> = ({
   return (
     <div
       ref={boardWrapperRef}
-      className="scroll-panel w-full min-w-0 overflow-x-auto rounded-2xl border border-slate-200 bg-slate-200/40 p-1.5 shadow-inner shadow-slate-900/5 dark:border-slate-800 dark:bg-slate-950/55 dark:shadow-black/30"
+      className="battlefield-frame scroll-panel w-full min-w-0 overflow-x-auto"
     >
       <div className="flex justify-center">
         <div
@@ -780,7 +772,7 @@ export const Board: FC<BoardProps> = ({
             {colLabels.map((label, index) => (
               <div
                 key={`col-${label}-${index}`}
-                className="flex items-center justify-center font-semibold text-slate-500 dark:text-slate-400"
+                className="flex items-center justify-center font-display font-bold text-stone-500 dark:text-stone-400"
                 style={{
                   width: cellSize,
                   height: labelSize,
@@ -792,10 +784,7 @@ export const Board: FC<BoardProps> = ({
             ))}
           </div>
           {rows}
-          <div
-            className="pointer-events-none absolute"
-            style={{ left: labelSize, top: labelSize }}
-          >
+          <div className="pointer-events-none absolute" style={{ left: labelSize, top: labelSize }}>
             <BoardEffectsLayer
               effects={boardEffects}
               previewLine={previewLine}

@@ -22,10 +22,10 @@ export function GameLoadingState({
   const { t } = useI18n();
   return (
     <div className="app-shell flex min-h-screen items-center justify-center p-4">
-      <div className="panel-card w-full max-w-xl p-6 text-center sm:p-8">
-        <div className="mx-auto h-10 w-10 animate-pulse rounded-2xl bg-teal-500/20 ring-1 ring-teal-500/40" />
+      <div className="panel-card panel-arcane arcane-prompt w-full max-w-xl p-6 text-center sm:p-8">
+        <div className="brand-sigil mx-auto h-12 w-12 animate-pulse" />
         <div className="section-kicker mt-5">{t("game.loadingKicker")}</div>
-        <h1 className="mt-2 text-2xl font-semibold text-primary">{t("game.loadingTitle")}</h1>
+        <h1 className="fate-brand mt-2 text-2xl">{t("game.loadingTitle")}</h1>
         <p className="mt-2 text-sm text-muted">{t("game.loadingDescription")}</p>
         <div className="panel-card-muted mt-5 grid grid-cols-2 gap-3 p-3 text-left text-xs text-muted sm:grid-cols-4">
           <div>

@@ -9,7 +9,7 @@ export function LanguageSwitcher({ className = "" }: { className?: string }) {
 
   return (
     <div
-      className={`inline-flex items-center rounded-full border border-slate-200 bg-white/80 p-1 shadow-sm dark:border-slate-700 dark:bg-slate-900/80 ${className}`}
+      className={`inline-flex min-w-0 items-center rounded-full border border-amber-500/20 bg-white/65 p-1 shadow-sm dark:bg-black/25 ${className}`}
       role="group"
       aria-label={t("language.switchLabel")}
     >
@@ -17,10 +17,10 @@ export function LanguageSwitcher({ className = "" }: { className?: string }) {
         <button
           key={option.value}
           type="button"
-          className={`rounded-full px-2.5 py-1 text-xs font-bold transition focus-visible:ring-2 focus-visible:ring-teal-500 ${
+          className={`rounded-full px-2.5 py-1 text-xs font-bold transition focus-visible:ring-2 focus-visible:ring-amber-500 ${
             language === option.value
-              ? "bg-teal-500 text-white dark:text-slate-950"
-              : "text-slate-500 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+              ? "bg-amber-500 text-stone-950"
+              : "text-stone-500 hover:bg-amber-500/10 dark:text-stone-300"
           }`}
           aria-pressed={language === option.value}
           aria-label={option.label}

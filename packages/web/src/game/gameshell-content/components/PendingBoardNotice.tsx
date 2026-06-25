@@ -82,7 +82,7 @@ export function PendingBoardNotice({
   const { language, t } = useI18n();
   const p = (en: string, uk: string) => (language === "uk" ? uk : en);
   return (
-    <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 shadow-sm dark:border-amber-800/70 dark:bg-amber-950/40 dark:text-amber-100">
+    <div className="panel-arcane mt-4 rounded-2xl border border-violet-300/70 bg-violet-50/75 p-4 text-sm text-violet-950 shadow-lg shadow-violet-950/5 dark:border-violet-800/70 dark:bg-violet-950/30 dark:text-violet-100">
       {isStakePlacement ? (
         <div>
           <div className="font-semibold">{t("pending.placeStakes")}</div>
@@ -112,7 +112,9 @@ export function PendingBoardNotice({
         </div>
       ) : isIntimidateChoice ? (
         <div>
-          <div className="font-semibold">{p("Intimidate: choose a push cell", "Залякування: оберіть клітинку відштовхування")}</div>
+          <div className="font-semibold">
+            {p("Intimidate: choose a push cell", "Залякування: оберіть клітинку відштовхування")}
+          </div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
             {p("Click a highlighted cell or skip.", "Оберіть підсвічену клітинку або пропустіть.")}
           </div>
@@ -132,14 +134,21 @@ export function PendingBoardNotice({
         </div>
       ) : isForestMoveDestination ? (
         <div>
-          <div className="font-semibold">{p("Forest check failed", "Перевірка лісу неуспішна")}</div>
+          <div className="font-semibold">
+            {p("Forest check failed", "Перевірка лісу неуспішна")}
+          </div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            {p("Choose a highlighted destination inside the aura.", "Оберіть підсвічену клітинку всередині аури.")}
+            {p(
+              "Choose a highlighted destination inside the aura.",
+              "Оберіть підсвічену клітинку всередині аури.",
+            )}
           </div>
         </div>
       ) : isForestChoice ? (
         <div>
-          <div className="font-semibold">{p("Forest of the Dead ready", "Ліс мертвих готовий")}</div>
+          <div className="font-semibold">
+            {p("Forest of the Dead ready", "Ліс мертвих готовий")}
+          </div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
             {p("Decide whether to activate the phantasm.", "Вирішіть, чи активувати фантазм.")}
           </div>
@@ -160,23 +169,36 @@ export function PendingBoardNotice({
         </div>
       ) : isChikatiloPlacement ? (
         <div>
-          <div className="font-semibold">{p("False Trail placement", "Розміщення Хибного сліду")}</div>
+          <div className="font-semibold">
+            {p("False Trail placement", "Розміщення Хибного сліду")}
+          </div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            {p("Select any empty cell to place Chikatilo.", "Оберіть будь-яку вільну клітинку для Чикатило.")}
+            {p(
+              "Select any empty cell to place Chikatilo.",
+              "Оберіть будь-яку вільну клітинку для Чикатило.",
+            )}
           </div>
         </div>
       ) : isGuideTravelerPlacement ? (
         <div>
-          <div className="font-semibold">{p("Guide Traveler placement", "Розміщення Провідника")}</div>
+          <div className="font-semibold">
+            {p("Guide Traveler placement", "Розміщення Провідника")}
+          </div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            {p("Select an empty cell to place the guided ally.", "Оберіть вільну клітинку для союзника.")}
+            {p(
+              "Select an empty cell to place the guided ally.",
+              "Оберіть вільну клітинку для союзника.",
+            )}
           </div>
         </div>
       ) : isRiverBoatCarryChoice ? (
         <div>
           <div className="font-semibold">{p("Boat carry", "Пасажир човна")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            {p("Select an adjacent ally to carry, or move without carrying.", "Оберіть сусіднього союзника або рухайтеся без пасажира.")}
+            {p(
+              "Select an adjacent ally to carry, or move without carrying.",
+              "Оберіть сусіднього союзника або рухайтеся без пасажира.",
+            )}
           </div>
           <button
             className="mt-2 rounded-lg bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
@@ -189,7 +211,10 @@ export function PendingBoardNotice({
         <div>
           <div className="font-semibold">{p("Boat drop", "Висадка з човна")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            {p("Select an adjacent empty cell to drop the carried ally.", "Оберіть сусідню вільну клітинку для висадки союзника.")}
+            {p(
+              "Select an adjacent empty cell to drop the carried ally.",
+              "Оберіть сусідню вільну клітинку для висадки союзника.",
+            )}
           </div>
         </div>
       ) : isRiverTraLaLaTargetChoice ? (
@@ -203,7 +228,10 @@ export function PendingBoardNotice({
         <div>
           <div className="font-semibold">{p("Tra-la-la", "Тра-ля-ля")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            {p("Select a highlighted straight-line destination.", "Оберіть підсвічену клітинку на прямій.")}
+            {p(
+              "Select a highlighted straight-line destination.",
+              "Оберіть підсвічену клітинку на прямій.",
+            )}
           </div>
         </div>
       ) : isJebeKhansShooterTargetChoice ? (
@@ -217,7 +245,10 @@ export function PendingBoardNotice({
         <div>
           <div className="font-semibold">{t("pending.lokiLaughter")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            {p("Choose one trick to activate without revealing Loki.", "Оберіть хитрість, не розкриваючи Локі.")}
+            {p(
+              "Choose one trick to activate without revealing Loki.",
+              "Оберіть хитрість, не розкриваючи Локі.",
+            )}
           </div>
         </div>
       ) : isLokiChickenTargetChoice ? (
@@ -238,48 +269,72 @@ export function PendingBoardNotice({
         <div>
           <div className="font-semibold">{p("Mind Control", "Контроль розуму")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            {p("Select a legal target for the controlled attack.", "Оберіть доступну ціль керованої атаки.")}
+            {p(
+              "Select a legal target for the controlled attack.",
+              "Оберіть доступну ціль керованої атаки.",
+            )}
           </div>
         </div>
       ) : isHassanTrueEnemyTargetChoice ? (
         <div>
           <div className="font-semibold">{p("True Enemy", "Справжній ворог")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            {p("Select a target for the forced enemy attack.", "Оберіть ціль примусової ворожої атаки.")}
+            {p(
+              "Select a target for the forced enemy attack.",
+              "Оберіть ціль примусової ворожої атаки.",
+            )}
           </div>
         </div>
       ) : isAsgoreSoulParadePatienceTargetChoice ? (
         <div>
           <div className="font-semibold">{p("Soul Parade: Patience", "Парад душ: Терпіння")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            {p("Select a target in assassin attack range.", "Оберіть ціль у дальності атаки вбивці.")}
+            {p(
+              "Select a target in assassin attack range.",
+              "Оберіть ціль у дальності атаки вбивці.",
+            )}
           </div>
         </div>
       ) : isAsgoreSoulParadePerseveranceTargetChoice ? (
         <div>
-          <div className="font-semibold">{p("Soul Parade: Perseverance", "Парад душ: Наполегливість")}</div>
+          <div className="font-semibold">
+            {p("Soul Parade: Perseverance", "Парад душ: Наполегливість")}
+          </div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            {p("Select a target in trickster attack range.", "Оберіть ціль у дальності атаки трикстера.")}
+            {p(
+              "Select a target in trickster attack range.",
+              "Оберіть ціль у дальності атаки трикстера.",
+            )}
           </div>
         </div>
       ) : isAsgoreSoulParadeJusticeTargetChoice ? (
         <div>
-          <div className="font-semibold">{p("Soul Parade: Justice", "Парад душ: Справедливість")}</div>
+          <div className="font-semibold">
+            {p("Soul Parade: Justice", "Парад душ: Справедливість")}
+          </div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
             {p("Select a target in archer attack line.", "Оберіть ціль на лінії атаки лучника.")}
           </div>
         </div>
       ) : isAsgoreSoulParadeIntegrityDestination ? (
         <div>
-          <div className="font-semibold">{p("Soul Parade: Integrity", "Парад душ: Цілісність")}</div>
+          <div className="font-semibold">
+            {p("Soul Parade: Integrity", "Парад душ: Цілісність")}
+          </div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            {p("Select any highlighted destination cell.", "Оберіть будь-яку підсвічену клітинку призначення.")}
+            {p(
+              "Select any highlighted destination cell.",
+              "Оберіть будь-яку підсвічену клітинку призначення.",
+            )}
           </div>
         </div>
       ) : isHassanAssassinOrderSelection ? (
         <div>
           <div className="font-semibold">
-            {p("Assassin Order: pick 2 allied heroes to gain Stealth (5-6)", "Орден убивць: оберіть 2 союзних героїв для скритності на 5–6")}
+            {p(
+              "Assassin Order: pick 2 allied heroes to gain Stealth (5-6)",
+              "Орден убивць: оберіть 2 союзних героїв для скритності на 5–6",
+            )}
           </div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
             {t("pending.selectedCount", {
@@ -312,14 +367,20 @@ export function PendingBoardNotice({
         <div>
           <div className="font-semibold">{p("False Trail choice", "Вибір Хибного сліду")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            {p("Decide whether the token explodes or is removed.", "Оберіть: підірвати жетон або прибрати його.")}
+            {p(
+              "Decide whether the token explodes or is removed.",
+              "Оберіть: підірвати жетон або прибрати його.",
+            )}
           </div>
         </div>
       ) : isChikatiloDecoyChoice ? (
         <div>
           <div className="font-semibold">{t("pending.decoy")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            {p("Roll defense or spend 3 charges to take 1 damage.", "Киньте захист або витратьте 3 заряди, щоб отримати 1 шкоду.")}
+            {p(
+              "Roll defense or spend 3 charges to take 1 damage.",
+              "Киньте захист або витратьте 3 заряди, щоб отримати 1 шкоду.",
+            )}
           </div>
         </div>
       ) : (

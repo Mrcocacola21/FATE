@@ -16,6 +16,7 @@ import {
   getSlotLabel,
   localizeServerText,
 } from "../../../../i18n/displayMetadata";
+import { Badge } from "../../../../ui";
 
 interface BattleUnitSummaryProps {
   selectedUnit: UnitState | null;
@@ -43,25 +44,25 @@ function abilityTone(kind: AbilityView["kind"], unavailable: boolean) {
   switch (kind) {
     case "passive":
       return {
-        card: "border-emerald-200 bg-emerald-50/70 dark:border-emerald-900/70 dark:bg-emerald-950/25",
+        card: "border-emerald-300/80 bg-emerald-50/70 text-emerald-700 dark:border-emerald-900/70 dark:bg-emerald-950/25 dark:text-emerald-300",
         badge:
           "border-emerald-200 bg-emerald-100 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200",
       };
     case "impulse":
       return {
-        card: "border-amber-200 bg-amber-50/70 dark:border-amber-900/70 dark:bg-amber-950/25",
+        card: "border-amber-300/80 bg-amber-50/70 text-amber-700 dark:border-amber-900/70 dark:bg-amber-950/25 dark:text-amber-300",
         badge:
           "border-amber-200 bg-amber-100 text-amber-800 dark:border-amber-800 dark:bg-amber-900/50 dark:text-amber-200",
       };
     case "phantasm":
       return {
-        card: "border-violet-300 bg-gradient-to-br from-violet-50 to-fuchsia-50/60 dark:border-violet-800/80 dark:from-violet-950/40 dark:to-fuchsia-950/20",
+        card: "border-violet-300 bg-violet-50/75 text-violet-700 dark:border-violet-800/80 dark:bg-violet-950/35 dark:text-violet-300",
         badge:
           "border-violet-300 bg-violet-100 text-violet-700 dark:border-violet-700 dark:bg-violet-900/60 dark:text-violet-200",
       };
     default:
       return {
-        card: "border-sky-200 bg-sky-50/70 dark:border-sky-900/70 dark:bg-sky-950/25",
+        card: "border-sky-300/80 bg-sky-50/70 text-sky-700 dark:border-sky-900/70 dark:bg-sky-950/25 dark:text-sky-300",
         badge:
           "border-sky-200 bg-sky-100 text-sky-700 dark:border-sky-800 dark:bg-sky-900/50 dark:text-sky-200",
       };
@@ -99,41 +100,49 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
 
   return (
     <div className="mt-3 space-y-3 text-sm text-slate-700 dark:text-slate-200">
-      <div className="panel-card-muted flex items-center gap-3 p-3">
-        <div className="relative h-14 w-14 shrink-0">
-          <img
-            src={tokenAsset.src}
-            alt=""
-            className="h-full w-full rounded-xl bg-white object-contain shadow-md ring-2 ring-teal-400/70 dark:bg-slate-900"
-          />
-          <span className="absolute -bottom-1 -right-1 rounded-lg bg-slate-950 px-1.5 py-0.5 text-[10px] font-bold text-white shadow dark:bg-white dark:text-slate-950">
-            {badge.label}
-            {badge.marker ?? ""}
-          </span>
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="truncate text-base font-semibold text-slate-950 dark:text-white">
-            {selectedHeroName}
-          </div>
-          <div className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-            {t("game.class", { class: getClassLabel(selectedUnit.class, t) })}
-            {showUnitIdInClassLabel ? ` (${selectedUnit.id})` : ""}
-          </div>
-          <div className="mt-2 flex items-center gap-2">
-            <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
-              <div
-                className="h-full rounded-full bg-emerald-500 transition-[width]"
-                style={{
-                  width: `${Math.max(
-                    0,
-                    Math.min(100, Math.round((selectedUnit.hp / maxHp) * 100)),
-                  )}%`,
-                }}
-              />
-            </div>
-            <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
-              {selectedUnit.hp}/{maxHp} {t("game.healthShort")}
+      <div className="panel-card-muted relative overflow-hidden p-3">
+        <div className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-amber-500/70" />
+        <div className="flex items-center gap-3">
+          <div className="relative h-20 w-20 shrink-0">
+            <img
+              src={tokenAsset.src}
+              alt=""
+              className="h-full w-full rounded-xl border border-amber-500/25 bg-white object-contain shadow-xl shadow-black/15 ring-2 ring-amber-500/55 dark:bg-slate-900"
+            />
+            <span className="absolute -bottom-1 -right-1 rounded-lg border border-white/20 bg-stone-950 px-1.5 py-0.5 text-[10px] font-bold text-white shadow dark:bg-amber-400 dark:text-stone-950">
+              {badge.label}
+              {badge.marker ?? ""}
             </span>
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="fate-brand truncate text-lg">{selectedHeroName}</div>
+              <Badge variant={selectedUnit.owner === "P1" ? "ownerP1" : "ownerP2"}>
+                {selectedUnit.owner}
+              </Badge>
+            </div>
+            <div className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+              {t("game.class", { class: getClassLabel(selectedUnit.class, t) })}
+              {showUnitIdInClassLabel ? ` (${selectedUnit.id})` : ""}
+            </div>
+            <div className="mt-3 flex items-center gap-2">
+              <div className="h-3 flex-1 overflow-hidden rounded-full border border-black/10 bg-stone-200 shadow-inner dark:border-white/10 dark:bg-stone-900">
+                <div
+                  className={`h-full rounded-full transition-[width] ${
+                    selectedUnit.hp / maxHp <= 0.3 ? "bg-rose-500" : "bg-emerald-500"
+                  }`}
+                  style={{
+                    width: `${Math.max(
+                      0,
+                      Math.min(100, Math.round((selectedUnit.hp / maxHp) * 100)),
+                    )}%`,
+                  }}
+                />
+              </div>
+              <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
+                {selectedUnit.hp}/{maxHp} {t("game.healthShort")}
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -207,45 +216,26 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
           {t("game.moveRoll", { roll: moveRoll })}
         </div>
       )}
-      <div className="flex flex-wrap gap-2 text-xs text-slate-600 dark:text-slate-200">
-        <span
-          className={`rounded-full px-2 py-0.5 ${
-            economy.moveUsed
-              ? "bg-slate-200 dark:bg-slate-800"
-              : "bg-emerald-100 dark:bg-emerald-900/40"
-          }`}
-        >
-          {t("game.move")} {economy.moveUsed ? "X" : "-"}
-        </span>
-        <span
-          className={`rounded-full px-2 py-0.5 ${
-            economy.attackUsed
-              ? "bg-slate-200 dark:bg-slate-800"
-              : "bg-emerald-100 dark:bg-emerald-900/40"
-          }`}
-        >
-          {t("game.attack")} {economy.attackUsed ? "X" : "-"}
-        </span>
-        <span
-          className={`rounded-full px-2 py-0.5 ${
-            economy.actionUsed
-              ? "bg-slate-200 dark:bg-slate-800"
-              : "bg-emerald-100 dark:bg-emerald-900/40"
-          }`}
-        >
-          {t("game.action")} {economy.actionUsed ? "X" : "-"}
-        </span>
-        <span
-          className={`rounded-full px-2 py-0.5 ${
-            economy.stealthUsed
-              ? "bg-slate-200 dark:bg-slate-800"
-              : "bg-emerald-100 dark:bg-emerald-900/40"
-          }`}
-        >
-          {t("game.stealth")} {economy.stealthUsed ? "X" : "-"}
-        </span>
+      <div className="grid grid-cols-4 gap-1.5 text-[10px] font-bold">
+        {[
+          [t("game.move"), economy.moveUsed],
+          [t("game.attack"), economy.attackUsed],
+          [t("game.action"), economy.actionUsed],
+          [t("game.stealth"), economy.stealthUsed],
+        ].map(([label, used]) => (
+          <span
+            key={String(label)}
+            className={`rounded-lg border px-1 py-2 text-center ${
+              used
+                ? "border-stone-300 bg-stone-100 text-stone-400 line-through dark:border-stone-800 dark:bg-black/20 dark:text-stone-500"
+                : "border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-800/70 dark:bg-emerald-950/35 dark:text-emerald-200"
+            }`}
+          >
+            {label}
+          </span>
+        ))}
       </div>
-      <div className="mt-4 border-t border-slate-200 pt-4 dark:border-slate-800">
+      <div className="mt-4 border-t border-amber-900/10 pt-4 dark:border-amber-500/15">
         <div className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-300">
           {t("game.abilities")}
         </div>
@@ -274,9 +264,7 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
             return (
               <div
                 key={ability.id}
-                className={`rounded-xl border p-3 text-xs shadow-sm ${tone.card} ${
-                  ability.isAvailable ? "" : "opacity-70"
-                }`}
+                className={`ability-card ${tone.card} ${ability.isAvailable ? "" : "opacity-70"}`}
                 title={localizeServerText(ability.disabledReason, t)}
                 onMouseEnter={() => {
                   if (ability.id === EL_CID_KOLADA_ID) {
@@ -308,6 +296,22 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
                     <span>{t("game.charges", { charges: chargeLabel })}</span>
                   ) : null}
                 </div>
+                {chargeState.max !== null && !hideCharges ? (
+                  <div className="ability-charge-track mt-2" aria-hidden="true">
+                    <div
+                      className="ability-charge-fill"
+                      style={{
+                        width: `${Math.max(
+                          0,
+                          Math.min(
+                            100,
+                            Math.round((chargeState.current / Math.max(1, chargeState.max)) * 100),
+                          ),
+                        )}%`,
+                      }}
+                    />
+                  </div>
+                ) : null}
                 {ability.disabledReason && (
                   <div className="mt-1 text-amber-700 dark:text-amber-300">
                     {localizeServerText(ability.disabledReason, t)}

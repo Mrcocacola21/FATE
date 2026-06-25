@@ -205,16 +205,17 @@ export function FigureSetPage({ onBack }: FigureSetPageProps) {
   return (
     <div className="app-shell px-3 py-4 sm:px-6 sm:py-8">
       <div className="mx-auto max-w-7xl space-y-5">
-        <PanelCard as="header" className="p-5 sm:p-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <div className="section-kicker">{t("figureSet.kicker")}</div>
-              <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950 dark:text-white">
-                {t("figureSet.title")}
-              </h1>
-              <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                {t("figureSet.subtitle")}
-              </p>
+        <PanelCard as="header" variant="hud" className="hero-command p-5 sm:p-6">
+          <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-4">
+              <div className="brand-sigil hidden h-14 w-14 sm:flex" aria-hidden="true" />
+              <div>
+                <div className="section-kicker">{t("figureSet.kicker")}</div>
+                <h1 className="fate-brand mt-1 text-3xl">{t("figureSet.title")}</h1>
+                <p className="mt-1 text-sm text-stone-600 dark:text-stone-300">
+                  {t("figureSet.subtitle")}
+                </p>
+              </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <button type="button" className="btn btn-secondary" onClick={() => onBack?.()}>
@@ -226,7 +227,7 @@ export function FigureSetPage({ onBack }: FigureSetPageProps) {
           </div>
         </PanelCard>
 
-        <PanelCard className="p-5">
+        <PanelCard variant="hud" className="p-5">
           <SectionHeader
             kicker={t("figureSet.manageKicker")}
             title={t("figureSet.manageTitle")}
@@ -300,21 +301,19 @@ export function FigureSetPage({ onBack }: FigureSetPageProps) {
                 ? getHeroDisplayName(selected.id, selected.name, language)
                 : t("figureSet.unknownHero");
               return (
-                <PanelCard key={slot} className="p-4">
+                <PanelCard key={slot} variant="parchment" className="overflow-hidden p-4">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex min-w-0 items-center gap-3">
                       <HeroToken
                         heroId={selected?.id ?? ""}
                         label={selectedName}
-                        className="h-12 w-12 rounded-xl shadow-md"
+                        className="h-14 w-14 rounded-xl border border-amber-500/25 shadow-lg ring-2 ring-amber-500/35"
                       />
                       <div className="min-w-0">
                         <div className="section-kicker">
                           {t("figureSet.slot", { class: getClassLabel(slot, t) })}
                         </div>
-                        <div className="mt-1 truncate text-base font-semibold text-slate-900 dark:text-white">
-                          {selectedName}
-                        </div>
+                        <div className="fate-brand mt-1 truncate text-base">{selectedName}</div>
                         <StatusBadge tone="success" className="mt-1.5">
                           {t("common.selected")}
                         </StatusBadge>
@@ -346,7 +345,7 @@ export function FigureSetPage({ onBack }: FigureSetPageProps) {
                   </div>
 
                   {activeSlot === slot && (
-                    <div className="mt-4 grid gap-2 border-t border-slate-200 pt-4 sm:grid-cols-2 dark:border-slate-800">
+                    <div className="mt-4 grid gap-2 border-t border-amber-900/10 pt-4 sm:grid-cols-2 dark:border-amber-500/15">
                       {candidates.length === 0 ? (
                         <div className="col-span-full rounded-xl border border-dashed border-slate-300 px-4 py-6 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
                           {t("figureSet.noMatches", { search })}
@@ -358,8 +357,8 @@ export function FigureSetPage({ onBack }: FigureSetPageProps) {
                           key={hero.id}
                           className={`flex items-center gap-3 rounded-xl border p-2.5 text-left text-sm shadow-sm transition focus-visible:ring-4 focus-visible:ring-teal-500/15 ${
                             hero.id === selected?.id
-                              ? "border-teal-500 bg-teal-50 text-teal-800 ring-2 ring-teal-500/10 dark:bg-teal-950/40 dark:text-teal-100"
-                              : "border-slate-200 bg-slate-50 text-slate-700 hover:-translate-y-px hover:border-slate-300 hover:bg-white hover:shadow-md dark:border-slate-800 dark:bg-slate-950/45 dark:text-slate-200 dark:hover:border-slate-700 dark:hover:bg-slate-800"
+                              ? "border-amber-500 bg-amber-50 text-amber-950 ring-2 ring-amber-500/15 dark:bg-amber-950/35 dark:text-amber-100"
+                              : "border-stone-300/70 bg-stone-100/55 text-stone-700 hover:-translate-y-px hover:border-amber-500/45 hover:bg-white hover:shadow-md dark:border-stone-800 dark:bg-black/20 dark:text-stone-200 dark:hover:border-amber-500/40 dark:hover:bg-stone-900"
                           }`}
                           onClick={() => {
                             updateSelection(slot, hero.id);
@@ -390,7 +389,7 @@ export function FigureSetPage({ onBack }: FigureSetPageProps) {
           </div>
 
           <div className="space-y-4 xl:sticky xl:top-5">
-            <PanelCard className="p-4">
+            <PanelCard variant="hud" className="p-4">
               <SectionHeader
                 kicker={t("figureSet.currentLoadout")}
                 title={t("figureSet.selectedRoster")}
@@ -405,7 +404,7 @@ export function FigureSetPage({ onBack }: FigureSetPageProps) {
                   return (
                     <div
                       key={`preview-${slot}`}
-                      className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 dark:border-slate-800 dark:bg-slate-950/45"
+                      className="flex items-center gap-3 rounded-xl border border-stone-300/70 bg-stone-100/55 px-3 py-2.5 dark:border-stone-800 dark:bg-black/20"
                     >
                       <HeroToken heroId={heroId} label={label} className="h-9 w-9 rounded-lg" />
                       <div className="flex-1">
@@ -422,7 +421,7 @@ export function FigureSetPage({ onBack }: FigureSetPageProps) {
               </div>
             </PanelCard>
 
-            <PanelCard className="p-4">
+            <PanelCard variant="parchment" className="p-4">
               <SectionHeader kicker={t("figureSet.reference")} title={t("figureSet.heroDetails")} />
               {heroesLoading && (
                 <div className="mt-3 text-sm text-slate-500 dark:text-slate-400">
@@ -440,7 +439,7 @@ export function FigureSetPage({ onBack }: FigureSetPageProps) {
                     {t("figureSet.fullArt")}
                   </div>
                   <div
-                    className="overflow-hidden rounded-xl border border-slate-200 bg-slate-100 dark:border-slate-800 dark:bg-slate-950"
+                    className="overflow-hidden rounded-xl border border-amber-500/25 bg-stone-100 shadow-xl shadow-amber-950/10 dark:bg-stone-950"
                     style={{ aspectRatio: "2 / 3" }}
                   >
                     <img
@@ -558,14 +557,14 @@ export function FigureSetPage({ onBack }: FigureSetPageProps) {
                               return (
                                 <div
                                   key={ability.id}
-                                  className={`rounded-xl border px-3 py-3 shadow-sm ${
+                                  className={`ability-card ${
                                     ability.type === "passive"
-                                      ? "border-emerald-200 bg-emerald-50/70 dark:border-emerald-900/70 dark:bg-emerald-950/25"
+                                      ? "border-emerald-300 bg-emerald-50/70 text-emerald-700 dark:border-emerald-900/70 dark:bg-emerald-950/25 dark:text-emerald-300"
                                       : ability.type === "phantasm"
-                                        ? "border-violet-300 bg-gradient-to-br from-violet-50 to-fuchsia-50/60 dark:border-violet-800 dark:from-violet-950/40 dark:to-fuchsia-950/20"
+                                        ? "border-violet-300 bg-violet-50/75 text-violet-700 dark:border-violet-800 dark:bg-violet-950/35 dark:text-violet-300"
                                         : ability.type === "impulse"
-                                          ? "border-amber-200 bg-amber-50/70 dark:border-amber-900/70 dark:bg-amber-950/25"
-                                          : "border-sky-200 bg-sky-50/70 dark:border-sky-900/70 dark:bg-sky-950/25"
+                                          ? "border-amber-300 bg-amber-50/70 text-amber-700 dark:border-amber-900/70 dark:bg-amber-950/25 dark:text-amber-300"
+                                          : "border-sky-300 bg-sky-50/70 text-sky-700 dark:border-sky-900/70 dark:bg-sky-950/25 dark:text-sky-300"
                                   }`}
                                 >
                                   <div className="flex items-center justify-between">

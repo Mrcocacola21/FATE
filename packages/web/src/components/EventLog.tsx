@@ -9,23 +9,48 @@ function eventTone(event: GameEvent): string {
     case "attackResolved":
     case "unitDied":
     case "damageBonusApplied":
-      return "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/70 dark:bg-rose-950/35 dark:text-rose-200";
+      return "border-rose-300/80 bg-rose-50/75 text-rose-700 dark:border-rose-900/70 dark:bg-rose-950/30 dark:text-rose-300";
     case "turnStarted":
     case "roundStarted":
     case "battleStarted":
     case "placementStarted":
-      return "border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-900/70 dark:bg-sky-950/35 dark:text-sky-200";
+      return "border-sky-300/80 bg-sky-50/75 text-sky-700 dark:border-sky-900/70 dark:bg-sky-950/30 dark:text-sky-300";
     case "abilityUsed":
     case "chargesUpdated":
     case "rollRequested":
     case "initiativeRollRequested":
-      return "border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-900/70 dark:bg-violet-950/35 dark:text-violet-200";
+      return "border-violet-300/80 bg-violet-50/75 text-violet-700 dark:border-violet-900/70 dark:bg-violet-950/30 dark:text-violet-300";
     case "unitHealed":
     case "stealthEntered":
     case "stealthRevealed":
-      return "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/70 dark:bg-emerald-950/35 dark:text-emerald-200";
+      return "border-emerald-300/80 bg-emerald-50/75 text-emerald-700 dark:border-emerald-900/70 dark:bg-emerald-950/30 dark:text-emerald-300";
     default:
-      return "border-slate-200 bg-slate-100 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300";
+      return "border-stone-300/80 bg-stone-100/70 text-stone-600 dark:border-stone-800 dark:bg-black/20 dark:text-stone-300";
+  }
+}
+
+function eventGlyph(event: GameEvent): string {
+  switch (event.type) {
+    case "attackResolved":
+    case "unitDied":
+    case "damageBonusApplied":
+      return "⚔";
+    case "unitHealed":
+      return "+";
+    case "abilityUsed":
+    case "chargesUpdated":
+      return "✦";
+    case "rollRequested":
+    case "initiativeRollRequested":
+      return "◆";
+    case "turnStarted":
+    case "roundStarted":
+      return "›";
+    case "stealthEntered":
+    case "stealthRevealed":
+      return "◈";
+    default:
+      return "·";
   }
 }
 
@@ -40,8 +65,8 @@ export const EventLog: FC<EventLogProps> = ({ events, clientLog }) => {
   const clientItems = clientLog.slice(-8).reverse();
 
   return (
-    <section className="panel-card overflow-hidden">
-      <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-800">
+    <section className="panel-card panel-hud overflow-hidden">
+      <div className="flex items-center justify-between border-b border-amber-900/10 px-4 py-3 dark:border-amber-500/15">
         <div>
           <div className="section-kicker">{t("log.kicker")}</div>
           <h3 className="section-title mt-1">{t("log.title")}</h3>
@@ -50,7 +75,7 @@ export const EventLog: FC<EventLogProps> = ({ events, clientLog }) => {
           {t("log.events", { count: events.length })}
         </span>
       </div>
-      <div className="scroll-panel max-h-[32rem] overflow-auto p-3 text-xs">
+      <div className="scroll-panel max-h-[34rem] overflow-auto p-3 text-xs">
         {clientItems.length > 0 ? (
           <div className="mb-3 space-y-1 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-800 dark:border-amber-900/70 dark:bg-amber-950/35 dark:text-amber-200">
             <div className="font-semibold">{t("log.clientNotices")}</div>
@@ -76,7 +101,7 @@ export const EventLog: FC<EventLogProps> = ({ events, clientLog }) => {
             return (
               <div
                 key={`${event.type}-${index}`}
-                className="mb-2 rounded-xl border border-rose-200 bg-rose-50/70 p-3 shadow-sm dark:border-rose-900/70 dark:bg-rose-950/25"
+                className="mb-2 rounded-xl border border-rose-300/80 bg-rose-50/75 p-3 shadow-sm dark:border-rose-900/70 dark:bg-rose-950/25"
               >
                 <div className="flex items-center justify-between gap-2">
                   <div className="text-xs font-semibold text-slate-800 dark:text-slate-100">
@@ -87,9 +112,13 @@ export const EventLog: FC<EventLogProps> = ({ events, clientLog }) => {
                   </div>
                   <span className="text-[11px] font-semibold text-slate-400">#{sequence}</span>
                 </div>
-                <div className="mt-2 grid grid-cols-2 gap-2 text-[11px] text-slate-600 dark:text-slate-300">
-                  <div>{t("log.attacker", { roll: formatDice(event.attackerRoll) })}</div>
-                  <div>{t("log.defender", { roll: formatDice(event.defenderRoll) })}</div>
+                <div className="mt-2 grid grid-cols-2 gap-2 text-[11px] text-stone-600 dark:text-stone-300">
+                  <div className="rounded-lg border border-rose-200/70 bg-white/50 px-2 py-1.5 dark:border-rose-900/50 dark:bg-black/15">
+                    {t("log.attacker", { roll: formatDice(event.attackerRoll) })}
+                  </div>
+                  <div className="rounded-lg border border-rose-200/70 bg-white/50 px-2 py-1.5 dark:border-rose-900/50 dark:bg-black/15">
+                    {t("log.defender", { roll: formatDice(event.defenderRoll) })}
+                  </div>
                 </div>
                 {event.tieBreakDice ? (
                   <div className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
@@ -112,14 +141,17 @@ export const EventLog: FC<EventLogProps> = ({ events, clientLog }) => {
           return (
             <div
               key={`${event.type}-${index}`}
-              className="mb-2 flex items-start gap-2 rounded-xl border border-slate-200 bg-white p-2.5 text-slate-700 shadow-sm dark:border-slate-800 dark:bg-slate-950/45 dark:text-slate-200"
+              className={`chronicle-item mb-2 ${eventTone(event)}`}
             >
-              <span className={`shrink-0 rounded-lg border px-1.5 py-0.5 text-[10px] font-bold ${eventTone(event)}`}>
-                #{sequence}
-              </span>
-              <span className="min-w-0 leading-5">
-                {formatEventMessage(event, language, t)}
-              </span>
+              <div className="flex items-start justify-between gap-2">
+                <span className="min-w-0 leading-5 text-stone-700 dark:text-stone-200">
+                  <span className="mr-1.5 font-black text-current" aria-hidden="true">
+                    {eventGlyph(event)}
+                  </span>
+                  {formatEventMessage(event, language, t)}
+                </span>
+                <span className="shrink-0 text-[10px] font-black opacity-45">#{sequence}</span>
+              </div>
             </div>
           );
         })}

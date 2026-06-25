@@ -75,30 +75,25 @@ export const BattleAbilityActions: FC<BattleAbilityActionsProps> = ({
         const chargeWarning = notEnoughCharges ? t("game.notEnoughCharges") : undefined;
         const tooltip =
           localizeServerText(ability.disabledReason, t) || slotReason || chargeWarning || "";
-        const display = getAbilityDisplay(
-          ability.id,
-          ability.name,
-          ability.description,
-          language,
-        );
+        const display = getAbilityDisplay(ability.id, ability.name, ability.description, language);
         const label = `${display.name}${chargeLabel ? ` (${chargeLabel})` : ""}`;
         const mode = abilityActionMode(ability.id);
         const hoverable = shouldHoverAbilityInActionList(ability.id);
         const enabledClass =
           ability.kind === "phantasm"
-            ? "border-violet-300 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white hover:from-violet-500 hover:to-fuchsia-500 dark:border-violet-500"
+            ? "border-violet-400 bg-violet-600 text-white shadow-violet-950/20 hover:bg-violet-500 dark:border-violet-500"
             : ability.kind === "impulse"
               ? "border-amber-300 bg-amber-100 text-amber-900 hover:bg-amber-200 dark:border-amber-800 dark:bg-amber-950/45 dark:text-amber-100 dark:hover:bg-amber-900/60"
               : mode && actionMode === mode
-                ? "border-teal-500 bg-teal-500 text-white dark:text-slate-950"
-                : "border-sky-200 bg-sky-50 text-sky-800 hover:border-sky-300 hover:bg-sky-100 dark:border-sky-900/70 dark:bg-sky-950/35 dark:text-sky-100 dark:hover:border-sky-800 dark:hover:bg-sky-950/55";
+                ? "border-amber-500 bg-amber-500 text-stone-950"
+                : "border-sky-300 bg-sky-50 text-sky-900 hover:border-sky-400 hover:bg-sky-100 dark:border-sky-900/70 dark:bg-sky-950/35 dark:text-sky-100 dark:hover:border-sky-800 dark:hover:bg-sky-950/55";
 
         return (
           <div key={ability.id} className="space-y-1">
             <button
               type="button"
               aria-pressed={mode ? actionMode === mode : undefined}
-              className={`min-h-10 w-full rounded-xl border px-3 py-2.5 text-left text-xs font-semibold shadow-sm transition focus-visible:ring-4 focus-visible:ring-sky-500/15 ${
+              className={`min-h-10 w-full rounded-lg border px-3 py-2.5 text-left text-xs font-bold shadow-sm transition focus-visible:ring-4 focus-visible:ring-sky-500/15 ${
                 disabled
                   ? "border-slate-200 bg-slate-100 text-slate-400 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-500"
                   : enabledClass

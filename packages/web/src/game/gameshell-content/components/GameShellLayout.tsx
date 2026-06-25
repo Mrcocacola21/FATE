@@ -24,8 +24,8 @@ export const GameShellLayout: FC<GameShellLayoutProps> = ({ vm }) => {
   }
 
   return (
-    <div className="app-shell px-3 py-4 sm:px-5 lg:px-6">
-      <div className="mx-auto grid max-w-[1680px] items-start gap-4 xl:grid-cols-[minmax(0,1fr)_400px]">
+    <div className="app-shell px-2 py-3 sm:px-4 sm:py-4 lg:px-5">
+      <div className="mx-auto grid min-w-0 max-w-[1720px] items-start gap-4 xl:grid-cols-[minmax(0,1fr)_420px]">
         <GameShellBoardColumn vm={vm} />
         <GameShellSideColumn vm={vm} />
       </div>

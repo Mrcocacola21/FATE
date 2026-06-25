@@ -4,11 +4,8 @@ import { PanelCard, SectionHeader, StatusBadge } from "../../../../components/ui
 import { ARENA_BONE_FIELD_ID } from "../../../../rulesHints";
 import type { ForestMarkerView, TurnEconomyState } from "../types";
 import { useI18n } from "../../../../i18n";
-import {
-  getArenaLabel,
-  getPhaseLabel,
-  localizeServerText,
-} from "../../../../i18n/displayMetadata";
+import { getArenaLabel, getPhaseLabel, localizeServerText } from "../../../../i18n/displayMetadata";
+import { StatPill } from "../../../../ui";
 
 interface StatusSectionProps {
   view: PlayerView;
@@ -39,7 +36,7 @@ export const StatusSection: FC<StatusSectionProps> = ({
   const phase = getPhaseLabel(view.phase, t);
 
   return (
-    <PanelCard className="p-4">
+    <PanelCard variant="hud" className="p-4">
       <SectionHeader
         kicker={t("game.matchState")}
         title={t("game.phaseAndTurn")}
@@ -51,36 +48,18 @@ export const StatusSection: FC<StatusSectionProps> = ({
       />
 
       <div className="mt-3 grid grid-cols-2 gap-2">
-        <div className="panel-card-muted p-3">
-          <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-            {t("game.phase")}
-          </div>
-          <div className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">{phase}</div>
-        </div>
-        <div className="panel-card-muted p-3">
-          <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-            {t("game.currentPlayer")}
-          </div>
-          <div className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">
-            {view.currentPlayer ?? "-"}
-          </div>
-        </div>
-        <div className="panel-card-muted p-3">
-          <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-            {t("game.roundTurn")}
-          </div>
-          <div className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">
-            {view.roundNumber} / {view.turnNumber}
-          </div>
-        </div>
-        <div className="panel-card-muted p-3">
-          <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-            {t("game.activeUnit")}
-          </div>
-          <div className="mt-1 truncate text-sm font-semibold text-slate-900 dark:text-white">
-            {view.activeUnitId ?? expectedUnitId ?? "-"}
-          </div>
-        </div>
+        <StatPill label={t("game.phase")} value={phase} tone="amber" />
+        <StatPill label={t("game.currentPlayer")} value={view.currentPlayer ?? "-"} tone="sky" />
+        <StatPill
+          label={t("game.roundTurn")}
+          value={`${view.roundNumber} / ${view.turnNumber}`}
+          tone="neutral"
+        />
+        <StatPill
+          label={t("game.activeUnit")}
+          value={view.activeUnitId ?? expectedUnitId ?? "-"}
+          tone="violet"
+        />
       </div>
 
       <div className="mt-3 flex flex-wrap gap-2">
@@ -115,10 +94,10 @@ export const StatusSection: FC<StatusSectionProps> = ({
             ].map(([label, used]) => (
               <div
                 key={String(label)}
-                className={`rounded-lg border px-1.5 py-2 text-center text-[11px] font-semibold ${
+                className={`rounded-lg border px-1.5 py-2 text-center text-[11px] font-bold ${
                   used
-                    ? "border-slate-200 bg-slate-100 text-slate-400 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-500"
-                    : "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800/60 dark:bg-emerald-950/35 dark:text-emerald-200"
+                    ? "border-stone-300 bg-stone-100 text-stone-400 line-through dark:border-stone-800 dark:bg-black/25 dark:text-stone-500"
+                    : "border-emerald-300 bg-emerald-50 text-emerald-800 shadow-[inset_0_-2px_0_rgba(16,185,129,0.12)] dark:border-emerald-800/70 dark:bg-emerald-950/35 dark:text-emerald-200"
                 }`}
               >
                 {label}

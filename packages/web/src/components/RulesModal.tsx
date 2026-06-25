@@ -12,10 +12,14 @@ interface RulesModalProps {
 
 const markdownComponents: Components = {
   h1: ({ children }) => (
-    <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">{children}</h1>
+    <h1 className="font-display text-3xl font-semibold text-stone-900 dark:text-stone-100">
+      {children}
+    </h1>
   ),
   h2: ({ children }) => (
-    <h2 className="mt-6 text-xl font-semibold text-slate-900 dark:text-slate-100">{children}</h2>
+    <h2 className="font-display mt-7 border-b border-amber-900/10 pb-2 text-2xl font-semibold text-stone-900 dark:border-amber-500/15 dark:text-stone-100">
+      {children}
+    </h2>
   ),
   h3: ({ children }) => (
     <h3 className="mt-4 text-base font-semibold text-slate-800 dark:text-slate-200">{children}</h3>
@@ -67,7 +71,7 @@ export function RulesModal({ open, onClose }: RulesModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4 backdrop-blur-md"
       role="dialog"
       aria-modal="true"
       aria-labelledby="rules-modal-title"
@@ -77,8 +81,8 @@ export function RulesModal({ open, onClose }: RulesModalProps) {
         }
       }}
     >
-      <div className="panel-card w-full max-w-3xl overflow-hidden shadow-2xl">
-        <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4 dark:border-neutral-800">
+      <div className="panel-card panel-parchment w-full max-w-3xl overflow-hidden shadow-2xl">
+        <div className="flex items-center justify-between border-b border-amber-900/10 px-6 py-4 dark:border-amber-500/15">
           <div>
             <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
               {t("rules.rulebook")}

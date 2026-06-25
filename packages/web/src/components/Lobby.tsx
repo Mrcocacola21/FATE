@@ -6,12 +6,9 @@ import { RulesModal } from "./RulesModal";
 import { ThemeToggle } from "./ThemeToggle";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { useI18n } from "../i18n";
-import {
-  getConnectionLabel,
-  getPhaseLabel,
-  localizeServerText,
-} from "../i18n/displayMetadata";
+import { getConnectionLabel, getPhaseLabel, localizeServerText } from "../i18n/displayMetadata";
 import { getServerCapabilities } from "../api";
+import { EmptyState } from "../ui";
 
 interface LobbyProps {
   onOpenFigures?: () => void;
@@ -43,7 +40,9 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
 
   useEffect(() => {
     fetchRooms().catch((err) => {
-      setLocalError(localizeServerText(err instanceof Error ? err.message : "", t) || t("errors.loadRooms"));
+      setLocalError(
+        localizeServerText(err instanceof Error ? err.message : "", t) || t("errors.loadRooms"),
+      );
     });
   }, [fetchRooms]);
 
@@ -66,7 +65,9 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
     try {
       await fetchRooms();
     } catch (err) {
-      setLocalError(localizeServerText(err instanceof Error ? err.message : "", t) || t("errors.loadRooms"));
+      setLocalError(
+        localizeServerText(err instanceof Error ? err.message : "", t) || t("errors.loadRooms"),
+      );
     } finally {
       setRefreshing(false);
     }
@@ -83,7 +84,9 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
       });
       await fetchRooms();
     } catch (err) {
-      setLocalError(localizeServerText(err instanceof Error ? err.message : "", t) || t("errors.createRoom"));
+      setLocalError(
+        localizeServerText(err instanceof Error ? err.message : "", t) || t("errors.createRoom"),
+      );
     } finally {
       setBusy(false);
     }
@@ -104,7 +107,9 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
         name: name.trim() ? name.trim() : undefined,
       });
     } catch (err) {
-      setLocalError(localizeServerText(err instanceof Error ? err.message : "", t) || t("errors.joinRoom"));
+      setLocalError(
+        localizeServerText(err instanceof Error ? err.message : "", t) || t("errors.joinRoom"),
+      );
     }
   };
 
@@ -122,8 +127,7 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
       await fetchRooms();
     } catch (err) {
       setLocalError(
-        localizeServerText(err instanceof Error ? err.message : "", t) ||
-          t("errors.createRoom"),
+        localizeServerText(err instanceof Error ? err.message : "", t) || t("errors.createRoom"),
       );
     } finally {
       setTestBusy(false);
@@ -140,38 +144,38 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
   return (
     <div className="app-shell px-3 py-4 sm:px-6 sm:py-8">
       <div className="mx-auto max-w-6xl space-y-5">
-        <PanelCard as="header" className="relative overflow-hidden p-5 sm:p-7">
-          <div className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-teal-400/10 blur-3xl dark:bg-teal-400/10" />
-          <div className="relative flex min-w-0 flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-            <div className="min-w-0 max-w-2xl">
-              <div className="section-kicker">{t("lobby.kicker")}</div>
-              <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-950 dark:text-white sm:text-4xl">
-                {t("lobby.title")}
-              </h1>
-              <p className="mt-3 max-w-xl text-sm leading-6 text-slate-600 dark:text-slate-300 sm:text-base">
-                {t("lobby.subtitle")}
-              </p>
-              <div className="mt-4 flex flex-wrap items-center gap-2">
-                <StatusBadge tone={connectionTone} dot>
-                  {connectionStatus === "connected"
-                    ? t("connection.serverConnected")
-                    : connectionStatus === "connecting"
-                      ? t("connection.connectingToServer")
-                      : t("connection.connectsWhenJoin")}
-                </StatusBadge>
-                <StatusBadge tone="info">
-                  {t("lobby.openRooms", { count: roomsList.length })}
-                </StatusBadge>
+        <PanelCard as="header" variant="hud" className="hero-command p-5 sm:p-7">
+          <div className="relative z-10 flex min-w-0 flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex min-w-0 items-start gap-4">
+              <div className="brand-sigil mt-1 hidden h-16 w-16 sm:flex" aria-hidden="true" />
+              <div className="min-w-0 max-w-2xl">
+                <div className="section-kicker">{t("lobby.kicker")}</div>
+                <h1 className="fate-brand mt-2 text-3xl sm:text-5xl">{t("lobby.title")}</h1>
+                <p className="mt-3 max-w-xl text-sm leading-6 text-stone-600 dark:text-stone-300 sm:text-base">
+                  {t("lobby.subtitle")}
+                </p>
+                <div className="mt-4 flex flex-wrap items-center gap-2">
+                  <StatusBadge tone={connectionTone} dot>
+                    {connectionStatus === "connected"
+                      ? t("connection.serverConnected")
+                      : connectionStatus === "connecting"
+                        ? t("connection.connectingToServer")
+                        : t("connection.connectsWhenJoin")}
+                  </StatusBadge>
+                  <StatusBadge tone="info">
+                    {t("lobby.openRooms", { count: roomsList.length })}
+                  </StatusBadge>
+                </div>
               </div>
             </div>
             <nav
-              className="grid w-full min-w-0 grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center"
+              className="grid w-full min-w-0 grid-cols-2 gap-2 lg:flex lg:w-auto lg:max-w-md lg:flex-wrap lg:items-center lg:justify-end"
               aria-label={t("lobby.navLabel")}
             >
               {onOpenFigures ? (
                 <button
                   type="button"
-                  className="btn btn-strong w-full sm:w-auto"
+                  className="btn btn-primary w-full lg:w-auto"
                   onClick={onOpenFigures}
                 >
                   {t("lobby.figureSet")}
@@ -179,7 +183,7 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
               ) : null}
               <button
                 type="button"
-                className="btn btn-secondary w-full sm:w-auto"
+                className="btn btn-secondary w-full lg:w-auto"
                 onClick={() => setShowRules(true)}
               >
                 {t("lobby.rules")}
@@ -187,19 +191,19 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
               {onOpenHeartbreak ? (
                 <button
                   type="button"
-                  className="btn btn-secondary w-full sm:w-auto"
+                  className="btn btn-secondary w-full lg:w-auto"
                   onClick={onOpenHeartbreak}
                 >
                   {t("lobby.heartbreak")}
                 </button>
               ) : null}
-              <ThemeToggle className="w-full sm:w-auto" />
-              <LanguageSwitcher className="w-full justify-center sm:w-auto" />
+              <ThemeToggle className="w-full lg:w-auto" />
+              <LanguageSwitcher className="w-full justify-center lg:w-auto" />
             </nav>
           </div>
         </PanelCard>
 
-        <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_380px]">
+        <div className="grid min-w-0 items-start gap-5 lg:grid-cols-[minmax(0,1fr)_380px]">
           <PanelCard className="min-h-[430px] p-5 sm:p-6">
             <SectionHeader
               kicker={t("lobby.browserKicker")}
@@ -219,8 +223,11 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
 
             <div className="mt-5 space-y-3">
               {roomsList.length === 0 ? (
-                <div className="panel-card-muted flex min-h-64 flex-col items-center justify-center px-6 py-10 text-center">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                <EmptyState
+                  title={t("lobby.noRooms")}
+                  description={t("lobby.noRoomsDescription")}
+                  className="min-h-64"
+                  icon={
                     <svg viewBox="0 0 24 24" className="h-6 w-6" aria-hidden="true">
                       <path
                         fill="none"
@@ -231,21 +238,16 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
                         d="M4 7.5h16v10H4zM8 11h.01M16 11h.01M9 16h6"
                       />
                     </svg>
-                  </div>
-                  <div className="mt-4 text-sm font-semibold text-slate-800 dark:text-slate-100">
-                    {t("lobby.noRooms")}
-                  </div>
-                  <p className="mt-1 max-w-sm text-sm leading-6 text-slate-500 dark:text-slate-400">
-                    {t("lobby.noRoomsDescription")}
-                  </p>
-                </div>
+                  }
+                />
               ) : null}
 
               {roomsList.map((room) => (
                 <article
                   key={room.id}
-                  className="group rounded-2xl border border-slate-200 bg-slate-50/70 p-4 transition hover:-translate-y-px hover:border-slate-300 hover:bg-white hover:shadow-lg hover:shadow-slate-900/5 dark:border-slate-800 dark:bg-slate-950/40 dark:hover:border-slate-700 dark:hover:bg-slate-900"
+                  className="group relative overflow-hidden rounded-2xl border border-stone-300/70 bg-stone-100/55 p-4 transition hover:-translate-y-px hover:border-amber-500/50 hover:bg-white hover:shadow-xl hover:shadow-amber-950/5 dark:border-stone-700/70 dark:bg-black/20 dark:hover:border-amber-500/45 dark:hover:bg-stone-900/80"
                 >
+                  <div className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-amber-500/55" />
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
@@ -304,7 +306,7 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
           </PanelCard>
 
           <div className="space-y-5">
-            <PanelCard className="p-5 sm:p-6">
+            <PanelCard variant="parchment" className="p-5 sm:p-6">
               <SectionHeader
                 kicker={t("lobby.hostKicker")}
                 title={t("lobby.createRoom")}
@@ -321,7 +323,7 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
             </PanelCard>
 
             {testRoomEnabled ? (
-              <PanelCard className="border-violet-300 p-5 sm:p-6 dark:border-violet-800">
+              <PanelCard variant="arcane" className="p-5 sm:p-6">
                 <SectionHeader
                   kicker={t("testRoom.kicker")}
                   title={t("testRoom.create")}
@@ -344,7 +346,7 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
                 ) : null}
                 <button
                   type="button"
-                  className="btn btn-strong mt-4 w-full"
+                  className="btn btn-arcane mt-4 w-full"
                   onClick={handleCreateTestRoom}
                   disabled={testBusy || (testRoomRequiresToken && !debugToken.trim())}
                 >
@@ -353,7 +355,7 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
               </PanelCard>
             ) : null}
 
-            <PanelCard className="p-5 sm:p-6">
+            <PanelCard variant="hud" className="p-5 sm:p-6">
               <SectionHeader
                 kicker={t("lobby.directKicker")}
                 title={t("lobby.joinById")}
@@ -430,7 +432,10 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
               }
             }}
           >
-            <PanelCard className="w-full max-w-md p-5 shadow-2xl sm:p-6">
+            <PanelCard
+              variant="arcane"
+              className="arcane-prompt w-full max-w-md p-5 shadow-2xl sm:p-6"
+            >
               <SectionHeader
                 kicker={t("lobby.chooseSeat")}
                 title={<span id="join-room-title">{t("lobby.joinRoom")}</span>}

@@ -6,7 +6,8 @@ import { LanguageSwitcher } from "../../../components/LanguageSwitcher";
 import { PanelCard, StatusBadge } from "../../../components/ui";
 import { PendingBoardNotice } from "./PendingBoardNotice";
 import { useI18n } from "../../../i18n";
-import { getConnectionLabel } from "../../../i18n/displayMetadata";
+import { getConnectionLabel, getPhaseLabel } from "../../../i18n/displayMetadata";
+import { StatPill } from "../../../ui";
 
 interface GameShellBoardColumnProps {
   vm: any;
@@ -15,30 +16,31 @@ interface GameShellBoardColumnProps {
 export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm }) => {
   const { t } = useI18n();
   return (
-    <PanelCard className="min-w-0 overflow-hidden">
-      <div className="border-b border-slate-200/80 px-4 py-4 dark:border-slate-800 sm:px-5">
+    <PanelCard variant="hud" className="min-w-0 overflow-hidden">
+      <div className="border-b border-amber-900/10 px-4 py-4 dark:border-amber-500/15 sm:px-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="min-w-0">
-            <div className="section-kicker">{t("game.tacticalArena")}</div>
-            <div className="mt-1 flex flex-wrap items-center gap-2">
-              <h1 className="text-lg font-semibold tracking-tight text-slate-950 dark:text-white">
-                {t("game.matchTitle")}
-              </h1>
-              <StatusBadge tone={vm.connectionStatus === "connected" ? "success" : "danger"} dot>
-                {getConnectionLabel(vm.connectionStatus, t)}
-              </StatusBadge>
-              <StatusBadge tone={vm.role === "spectator" ? "info" : "neutral"}>
-                {vm.role ? t(`roles.${vm.role}`) : t("roles.noRole")}
-              </StatusBadge>
-              {vm.roomMeta?.roomMode === "test" ? (
-                <StatusBadge tone="special">{t("testRoom.badgeSandbox")}</StatusBadge>
-              ) : null}
-            </div>
-            <div className="mt-1 truncate font-mono text-xs text-slate-500 dark:text-slate-400">
-              {t("game.room")} {vm.roomId ?? "-"}
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="brand-sigil hidden h-11 w-11 sm:flex" aria-hidden="true" />
+            <div className="min-w-0">
+              <div className="section-kicker">{t("game.tacticalArena")}</div>
+              <div className="mt-1 flex flex-wrap items-center gap-2">
+                <h1 className="fate-brand text-xl">{t("game.matchTitle")}</h1>
+                <StatusBadge tone={vm.connectionStatus === "connected" ? "success" : "danger"} dot>
+                  {getConnectionLabel(vm.connectionStatus, t)}
+                </StatusBadge>
+                <StatusBadge tone={vm.role === "spectator" ? "info" : "neutral"}>
+                  {vm.role ? t(`roles.${vm.role}`) : t("roles.noRole")}
+                </StatusBadge>
+                {vm.roomMeta?.roomMode === "test" ? (
+                  <StatusBadge tone="special">{t("testRoom.badgeSandbox")}</StatusBadge>
+                ) : null}
+              </div>
+              <div className="mt-1 max-w-full truncate font-mono text-[11px] text-stone-500 dark:text-stone-400">
+                {t("game.room")} {vm.roomId ?? "-"}
+              </div>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
             <button
               type="button"
               className="btn btn-secondary btn-sm"
@@ -51,19 +53,35 @@ export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm }) => {
             <ThemeToggle />
           </div>
         </div>
-        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-slate-500 dark:text-slate-400">
-          <span className="inline-flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-sm bg-sky-400/80 ring-1 ring-sky-500" />
-            {t("game.legalMove")}
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-sm bg-rose-400/80 ring-1 ring-rose-500" />
-            {t("game.legalAttack")}
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-sm bg-amber-400/80 ring-1 ring-amber-500" />
-            {t("game.abilityArea")}
-          </span>
+        <div className="hud-strip mt-4">
+          <StatPill label={t("game.phase")} value={getPhaseLabel(vm.view.phase, t)} tone="amber" />
+          <StatPill
+            label={t("game.currentPlayer")}
+            value={vm.view.currentPlayer ?? "-"}
+            tone="sky"
+          />
+          <StatPill
+            label={t("game.roundTurn")}
+            value={`${vm.view.roundNumber} / ${vm.view.turnNumber}`}
+            tone="neutral"
+          />
+          <StatPill
+            label={t("game.activeUnit")}
+            value={vm.view.activeUnitId ?? "-"}
+            tone="violet"
+          />
+        </div>
+        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-[11px] font-semibold text-stone-500 dark:text-stone-400">
+          {[
+            [t("game.legalMove"), "bg-sky-400 ring-sky-500"],
+            [t("game.legalAttack"), "bg-rose-400 ring-rose-500"],
+            [t("game.abilityArea"), "bg-amber-400 ring-amber-500"],
+          ].map(([label, color]) => (
+            <span key={label} className="inline-flex items-center gap-1.5">
+              <span className={`h-2.5 w-2.5 rounded-sm ring-1 ${color}`} />
+              {label}
+            </span>
+          ))}
         </div>
       </div>
 

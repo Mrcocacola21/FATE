@@ -2,6 +2,7 @@ import type { FC } from "react";
 import type { UnitState } from "rules";
 import { classBadge } from "../rightPanelHelpers";
 import { useI18n } from "../../../../i18n";
+import { getUnitTokenAsset } from "../../../../assets/registry";
 
 interface FriendlyUnitsSectionProps {
   friendlyUnits: UnitState[];
@@ -16,28 +17,33 @@ export const FriendlyUnitsSection: FC<FriendlyUnitsSectionProps> = ({
 }) => {
   const { t } = useI18n();
   return (
-    <div className="panel-card p-4">
+    <div className="panel-card panel-hud p-4">
       <div className="section-kicker">{t("game.yourRoster")}</div>
       <div className="section-title mt-1">{t("game.friendlyUnits")}</div>
       <div className="mt-2 grid grid-cols-1 gap-2 text-xs">
         {friendlyUnits.map((unit) => {
           const badge = classBadge(unit.class);
           const berserkCharges = unit.charges?.berserkAutoDefense;
+          const tokenAsset = getUnitTokenAsset(unit);
           return (
             <button
               key={unit.id}
               type="button"
               className={`flex items-center gap-3 rounded-xl border px-2.5 py-2.5 text-left shadow-sm transition focus-visible:ring-4 focus-visible:ring-teal-500/15 ${
                 selectedUnitId === unit.id
-                  ? "border-teal-500 bg-teal-500 text-white shadow-teal-950/10 dark:bg-teal-500 dark:text-slate-950"
-                  : "border-slate-200 bg-slate-50 text-slate-700 hover:-translate-y-px hover:border-slate-300 hover:bg-white hover:shadow-md dark:border-slate-800 dark:bg-slate-950/45 dark:text-slate-200 dark:hover:border-slate-700 dark:hover:bg-slate-800"
+                  ? "border-amber-500 bg-amber-50 text-amber-950 ring-2 ring-amber-500/15 dark:bg-amber-950/35 dark:text-amber-100"
+                  : "border-stone-300/70 bg-stone-100/55 text-stone-700 hover:-translate-y-px hover:border-amber-500/45 hover:bg-white hover:shadow-md dark:border-stone-800 dark:bg-black/20 dark:text-stone-200 dark:hover:border-amber-500/40 dark:hover:bg-stone-900"
               }`}
               onClick={() => onSelectUnit(unit.id)}
             >
-              <div className="relative flex h-9 w-9 items-center justify-center rounded-full bg-slate-900 text-[10px] font-semibold text-white shadow-sm dark:bg-slate-100 dark:text-slate-900">
-                {badge.label}
+              <div className="relative flex h-11 w-11 items-center justify-center rounded-xl border border-white/40 bg-stone-950 text-[10px] font-semibold text-white shadow-md dark:border-black/50">
+                <img
+                  src={tokenAsset.src}
+                  alt=""
+                  className="h-full w-full rounded-xl object-contain"
+                />
                 {badge.marker && (
-                  <span className="absolute -right-1 -top-1 rounded-full bg-white px-1 text-[9px] font-bold text-slate-700 shadow dark:bg-slate-200 dark:text-slate-900">
+                  <span className="absolute -right-1 -top-1 rounded-full bg-amber-400 px-1 text-[9px] font-bold text-stone-950 shadow">
                     {badge.marker}
                   </span>
                 )}

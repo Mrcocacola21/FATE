@@ -52,7 +52,7 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
   return (
     <button
       type="button"
-      className={`btn btn-secondary btn-sm rounded-full ${className}`}
+      className={`btn btn-secondary btn-sm rounded-full border-amber-500/20 ${className}`}
       onClick={() => {
         const next = theme === "dark" ? "light" : "dark";
         setTheme(next);
