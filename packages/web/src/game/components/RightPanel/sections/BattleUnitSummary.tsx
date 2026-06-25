@@ -1,6 +1,10 @@
 import type { FC } from "react";
 import type { AbilityView, UnitClass, UnitState } from "rules";
-import { getTokenSrc } from "../../../../assets/registry";
+import {
+  getUnitTokenAsset,
+  getUnitVisualVariant,
+  getUnitVisualVariantLabelKey,
+} from "../../../../assets/registry";
 import { EL_CID_KOLADA_ID, getMaxHp, KAISER_DORA_ID } from "../../../../rulesHints";
 import { classBadge, formatChargeLabel, getAbilityChargeState } from "../rightPanelHelpers";
 import type { ForestMarkerView, TurnEconomyState } from "../types";
@@ -88,7 +92,9 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
   }
 
   const badge = classBadge(selectedUnit.class);
-  const tokenSrc = getTokenSrc(selectedUnit.figureId ?? selectedUnit.heroId ?? selectedUnit.class);
+  const tokenAsset = getUnitTokenAsset(selectedUnit);
+  const visualVariant = getUnitVisualVariant(selectedUnit);
+  const visualVariantLabelKey = getUnitVisualVariantLabelKey(visualVariant);
   const maxHp = getMaxHp(selectedUnit.class as UnitClass, selectedUnit.heroId);
 
   return (
@@ -96,7 +102,7 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
       <div className="panel-card-muted flex items-center gap-3 p-3">
         <div className="relative h-14 w-14 shrink-0">
           <img
-            src={tokenSrc}
+            src={tokenAsset.src}
             alt=""
             className="h-full w-full rounded-xl bg-white object-contain shadow-md ring-2 ring-teal-400/70 dark:bg-slate-900"
           />
@@ -133,6 +139,11 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
       </div>
 
       <div className="flex flex-wrap gap-2">
+        {visualVariantLabelKey ? (
+          <span className="status-pill border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-800 dark:bg-violet-950/45 dark:text-violet-200">
+            {t(visualVariantLabelKey)}
+          </span>
+        ) : null}
         <span className="status-pill border-slate-200 bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
           {t("game.position", {
             position: selectedUnit.position

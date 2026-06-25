@@ -88,8 +88,7 @@ export const uk = {
     openRooms_other: "{{count}} відкритої кімнати",
     browserKicker: "Пошук матчів",
     availableRooms: "Доступні кімнати",
-    availableRoomsDescription:
-      "Займіть вільне місце або спостерігайте за активним матчем.",
+    availableRoomsDescription: "Займіть вільне місце або спостерігайте за активним матчем.",
     noRooms: "Немає відкритих кімнат",
     noRoomsDescription:
       "Створіть нову кімнату. Вона з’явиться тут для другого гравця та спостерігачів.",
@@ -136,8 +135,7 @@ export const uk = {
     resolvingRoll: "{{player}} виконує поточний кидок.",
     stagingRoom: "Підготовча кімната",
     matchLobby: "Лобі матчу",
-    matchLobbyDescription:
-      "Обидва гравці мають зайняти місця й підтвердити готовність.",
+    matchLobbyDescription: "Обидва гравці мають зайняти місця й підтвердити готовність.",
     you: "Ви: {{role}}",
     markNotReady: "Скасувати готовність",
     readyUp: "Готовий",
@@ -244,6 +242,29 @@ export const uk = {
     on: "УВІМК.",
     off: "ВИМК.",
   },
+  visuals: {
+    transform: "Перетворення",
+    forms: {
+      engineeringMiracle: "Інженерне диво",
+      friskGenocide: "Геноцид",
+      gutsBerserk: "Режим берсерка",
+      mettatonEx: "Меттатон EX",
+      mettatonNeo: "Меттатон NEO",
+      papyrusUnbeliever: "Папірус-невіруючий",
+      sansUnbeliever: "Санс-невіруючий",
+      undyneUndying: "Андайн Невмируща",
+      femto: "Фемто",
+    },
+  },
+  effects: {
+    miss: "Промах",
+    dodge: "Ухилення",
+    blocked: "Заблоковано",
+    status: "Статус",
+    revealed: "Викрито",
+    defeated: "Переможено",
+    ability: "Здібність",
+  },
   abilityTypes: {
     passive: "Пасивна",
     active: "Активна",
@@ -300,6 +321,7 @@ export const uk = {
     heroDetails: "Відомості про героя",
     loadingHeroes: "Завантаження героїв...",
     fullArt: "Повне зображення",
+    availableForms: "Доступні форми",
     artAlt: "Повне зображення героя {{hero}}",
     selectDetails: "Оберіть героя, щоб переглянути відомості.",
     unavailableDetails: "Відомості про цього героя недоступні.",

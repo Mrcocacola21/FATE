@@ -10,9 +10,19 @@ import {
 } from "../rulesHints";
 import { useEffect, useRef, useState, type FC } from "react";
 import { HpBar } from "./HpBar";
-import { getTokenSrc } from "../assets/registry";
+import {
+  getUnitTokenAsset,
+  getUnitVisualSignature,
+  getUnitVisualVariant,
+} from "../assets/registry";
 import { useI18n } from "../i18n";
 import { getClassLabel, getHeroDisplayName } from "../i18n/displayMetadata";
+import { BoardEffectsLayer } from "../game/effects/BoardEffectsLayer";
+import { useBoardEffects } from "../game/effects/useBoardEffects";
+import type {
+  BoardEventBatch,
+  BoardPreviewLine,
+} from "../game/effects/types";
 
 const MIN_CELL_SIZE = 26;
 const MAX_CELL_SIZE = 96;
@@ -37,6 +47,10 @@ interface BoardProps {
   doraPreview?: { center: Coord; radius: number } | null;
   disabled?: boolean;
   allowUnitSelection?: boolean;
+  visualEffectsEnabled?: boolean;
+  eventBatch?: BoardEventBatch | null;
+  effectSessionKey?: string | null;
+  previewLine?: BoardPreviewLine | null;
   onCellHover?: (coord: Coord | null) => void;
   onSelectUnit: (unitId: string | null) => void;
   onCellClick: (col: number, row: number) => void;
@@ -103,6 +117,10 @@ export const Board: FC<BoardProps> = ({
   hoveredAbilityId,
   doraPreview = null,
   allowUnitSelection = true,
+  visualEffectsEnabled = false,
+  eventBatch = null,
+  effectSessionKey = null,
+  previewLine = null,
   disabled = false,
   onCellHover,
   onSelectUnit,
@@ -115,6 +133,13 @@ export const Board: FC<BoardProps> = ({
   const boardWrapperRef = useRef<HTMLDivElement | null>(null);
   const [cellSize, setCellSize] = useState(48);
   const [labelSize, setLabelSize] = useState(28);
+  const [transformingUnitIds, setTransformingUnitIds] = useState<Set<string>>(() => new Set());
+  const visualStateRef = useRef<{
+    enabled: boolean;
+    turnNumber: number;
+    units: Map<string, { signature: string; variant: string | null }>;
+  } | null>(null);
+  const visualEffectTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
   useEffect(() => {
     const el = boardWrapperRef.current;
@@ -166,7 +191,93 @@ export const Board: FC<BoardProps> = ({
     return () => window.removeEventListener("resize", handleResize);
   }, [size]);
 
+  useEffect(() => {
+    const nextUnits = new Map<string, { signature: string; variant: string | null }>();
+    for (const unit of Object.values(view.units)) {
+      nextUnits.set(unit.id, {
+        signature: getUnitVisualSignature(unit),
+        variant: getUnitVisualVariant(unit),
+      });
+    }
+
+    const previous = visualStateRef.current;
+    const shouldBaseline =
+      !visualEffectsEnabled ||
+      !previous?.enabled ||
+      view.turnNumber < (previous?.turnNumber ?? view.turnNumber);
+
+    visualStateRef.current = {
+      enabled: visualEffectsEnabled,
+      turnNumber: view.turnNumber,
+      units: nextUnits,
+    };
+
+    if (shouldBaseline) {
+      if (!visualEffectsEnabled && previous?.enabled) {
+        for (const timer of visualEffectTimersRef.current.values()) {
+          clearTimeout(timer);
+        }
+        visualEffectTimersRef.current.clear();
+        setTransformingUnitIds((current) => (current.size > 0 ? new Set() : current));
+      }
+      return;
+    }
+
+    const changedUnitIds: string[] = [];
+    for (const [unitId, next] of nextUnits) {
+      const before = previous.units.get(unitId);
+      if (
+        before &&
+        before.signature !== next.signature &&
+        (before.variant !== null || next.variant !== null)
+      ) {
+        changedUnitIds.push(unitId);
+      }
+    }
+    if (changedUnitIds.length === 0) return;
+
+    setTransformingUnitIds((current) => {
+      const next = new Set(current);
+      changedUnitIds.forEach((unitId) => next.add(unitId));
+      return next;
+    });
+
+    for (const unitId of changedUnitIds) {
+      const existingTimer = visualEffectTimersRef.current.get(unitId);
+      if (existingTimer) clearTimeout(existingTimer);
+      const timer = setTimeout(() => {
+        visualEffectTimersRef.current.delete(unitId);
+        setTransformingUnitIds((current) => {
+          if (!current.has(unitId)) return current;
+          const next = new Set(current);
+          next.delete(unitId);
+          return next;
+        });
+      }, 1100);
+      visualEffectTimersRef.current.set(unitId, timer);
+    }
+  }, [view, visualEffectsEnabled]);
+
+  useEffect(
+    () => () => {
+      for (const timer of visualEffectTimersRef.current.values()) {
+        clearTimeout(timer);
+      }
+      visualEffectTimersRef.current.clear();
+    },
+    [],
+  );
+
   const boardPixelSize = cellSize * size;
+  const {
+    effects: boardEffects,
+    reducedMotion,
+  } = useBoardEffects({
+    batch: eventBatch,
+    view,
+    enabled: visualEffectsEnabled,
+    sessionKey: effectSessionKey,
+  });
   const labelFontSize = Math.max(10, Math.round(cellSize * 0.22));
   const pieceFontSize = Math.max(10, Math.round(cellSize * 0.24));
   const markerFontSize = Math.max(8, Math.round(cellSize * 0.18));
@@ -176,7 +287,6 @@ export const Board: FC<BoardProps> = ({
   const lastKnownSize = Math.round(cellSize * 0.7);
   const hpBarWidth = Math.round(cellSize * 0.7);
   const highlightInset = Math.max(2, Math.round(cellSize * 0.08));
-  const missingTokenSrc = getTokenSrc("_missing");
   const toViewCoord = (coord: Coord): Coord =>
     isFlipped ? { col: maxIndex - coord.col, row: maxIndex - coord.row } : coord;
   const toGameCoord = (coord: Coord): Coord =>
@@ -356,6 +466,9 @@ export const Board: FC<BoardProps> = ({
       }
     }
   }
+  const doraPreviewCenterKey = doraPreview
+    ? coordKey(toViewCoord(doraPreview.center))
+    : null;
 
   const rows = [] as JSX.Element[];
 
@@ -369,6 +482,7 @@ export const Board: FC<BoardProps> = ({
       const isSelected = unit?.id === selectedUnitId;
       const isActiveUnit = unit?.id === view.activeUnitId;
       const isDoraPreview = doraPreviewKeys.has(key);
+      const isDoraPreviewCenter = key === doraPreviewCenterKey;
       const isForestAura = forestAuraKeys.has(key);
       const forestMarkerOwners = forestMarkerOwnersByKey.get(key) ?? [];
       const isForestMarker = forestMarkerOwners.length > 0;
@@ -404,8 +518,14 @@ export const Board: FC<BoardProps> = ({
         const marker = getClassMarker(unit.class);
         const unitView = view.units[unit.id];
         const tokenId = unitView?.figureId ?? unitView?.heroId ?? unit.class;
-        const tokenSrc = getTokenSrc(tokenId);
-        const isTokenMissing = tokenSrc === missingTokenSrc;
+        const tokenAsset = getUnitTokenAsset(unitView);
+        const isTransforming = transformingUnitIds.has(unit.id);
+        const previewRelationClass =
+          isDoraPreview && selectedUnit
+            ? unit.owner === selectedUnit.owner
+              ? "ring-4 ring-emerald-400/80"
+              : "ring-4 ring-rose-400/85"
+            : "";
 
         const badgeClasses = [
           "relative",
@@ -415,7 +535,7 @@ export const Board: FC<BoardProps> = ({
           "justify-center",
           "font-semibold",
           "shadow",
-          isDoraPreview ? "ring-2 ring-amber-400" : "",
+          previewRelationClass,
           isFriendly ? "bg-emerald-500 text-white" : "bg-rose-500 text-white",
         ].join(" ");
 
@@ -428,7 +548,8 @@ export const Board: FC<BoardProps> = ({
           unit.owner === "P1"
             ? "ring-2 ring-emerald-400/80 dark:ring-emerald-400/70"
             : "ring-2 ring-rose-400/80 dark:ring-rose-400/70",
-          isDoraPreview ? "ring-2 ring-amber-400" : "",
+          previewRelationClass,
+          isTransforming ? "unit-transforming" : "",
         ].join(" ");
 
         content = isHiddenEnemy ? (
@@ -450,7 +571,7 @@ export const Board: FC<BoardProps> = ({
               height: tokenSize,
             }}
           >
-            {isTokenMissing ? (
+            {tokenAsset.isFallback ? (
               <div
                 className={`flex h-full w-full items-center justify-center rounded-xl font-bold text-white shadow-lg shadow-slate-900/20 ${
                   unit.owner === "P1"
@@ -464,14 +585,20 @@ export const Board: FC<BoardProps> = ({
               </div>
             ) : (
               <img
-                src={tokenSrc}
+                key={`${unit.id}:${tokenAsset.id}`}
+                src={tokenAsset.src}
                 alt={t("board.tokenAlt", {
                   unit: getHeroDisplayName(tokenId, getClassLabel(unit.class, t), language),
                 })}
-                className="h-full w-full rounded-xl bg-white/90 object-contain shadow-lg shadow-slate-900/20 dark:bg-slate-900/90"
+                className={`h-full w-full rounded-xl bg-white/90 object-contain shadow-lg shadow-slate-900/20 dark:bg-slate-900/90 ${
+                  isTransforming ? "unit-token-changing" : ""
+                }`}
                 draggable={false}
               />
             )}
+            {isTransforming ? (
+              <span className="unit-transform-label">{t("visuals.transform")}</span>
+            ) : null}
             {marker && (
               <span
                 className="absolute -right-1 -top-1 rounded-full bg-white px-1 font-bold text-slate-700 shadow dark:bg-slate-200 dark:text-slate-900"
@@ -549,6 +676,12 @@ export const Board: FC<BoardProps> = ({
               style={{ inset: highlightInset }}
             />
           )}
+          {isDoraPreviewCenter && (
+            <div
+              className="pointer-events-none absolute z-10 rounded ring-2 ring-inset ring-amber-300 shadow-[inset_0_0_18px_rgba(251,191,36,0.45)] dark:ring-amber-200"
+              style={{ inset: highlightInset }}
+            />
+          )}
           {content}
           {isForestMarker && (
             <div
@@ -565,9 +698,7 @@ export const Board: FC<BoardProps> = ({
                   ? "bg-emerald-500 text-white"
                   : "bg-emerald-200 text-emerald-900 dark:bg-emerald-900/50 dark:text-emerald-200"
               }`}
-              title={
-                stakeMarkersByPos.get(key) ? t("board.revealedStake") : t("board.hiddenStake")
-              }
+              title={stakeMarkersByPos.get(key) ? t("board.revealedStake") : t("board.hiddenStake")}
             >
               {stakeMarkersByPos.get(key) ? "R" : "S"}
             </div>
@@ -635,7 +766,7 @@ export const Board: FC<BoardProps> = ({
     >
       <div className="flex justify-center">
         <div
-          className="inline-block transition-[width,height] duration-150 ease-out"
+          className="relative inline-block transition-[width,height] duration-150 ease-out"
           style={{ width: boardPixelSize + labelSize, maxWidth: "100%" }}
         >
           <div className="flex">
@@ -655,6 +786,21 @@ export const Board: FC<BoardProps> = ({
             ))}
           </div>
           {rows}
+          <div
+            className="pointer-events-none absolute"
+            style={{ left: labelSize, top: labelSize }}
+          >
+            <BoardEffectsLayer
+              effects={boardEffects}
+              previewLine={previewLine}
+              view={view}
+              boardSize={size}
+              cellSize={cellSize}
+              isFlipped={isFlipped}
+              reducedMotion={reducedMotion}
+              t={t}
+            />
+          </div>
         </div>
       </div>
     </div>

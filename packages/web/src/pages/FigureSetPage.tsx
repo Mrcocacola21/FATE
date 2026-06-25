@@ -15,7 +15,7 @@ import {
 } from "../figures/storage";
 import { useHeroes } from "../figures/useHeroes";
 import type { AbilityMeta } from "rules";
-import { getFigureArtSrc, getTokenSrc } from "../assets/registry";
+import { getFigureArtSrc, getHeroVisualVariants, getTokenSrc } from "../assets/registry";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { PanelCard, SectionHeader, StatusBadge } from "../components/ui";
 import { LECHY_ID } from "../rulesHints";
@@ -156,6 +156,10 @@ export function FigureSetPage({ onBack }: FigureSetPageProps) {
 
   const detailsFigureId = detailsSlot ? state.selection[detailsSlot] : null;
   const detailsArtSrc = getFigureArtSrc(detailsFigureId ?? "");
+  const detailsVisualVariants = useMemo(
+    () => getHeroVisualVariants(detailsFigureId ?? ""),
+    [detailsFigureId],
+  );
 
   const abilityGroups = useMemo(() => {
     const groups: Array<{ type: AbilityMeta["type"]; label: string }> = [
@@ -449,6 +453,30 @@ export function FigureSetPage({ onBack }: FigureSetPageProps) {
                       className="h-full w-full object-cover"
                     />
                   </div>
+                  {detailsVisualVariants.length > 0 ? (
+                    <div className="pt-2">
+                      <div className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                        {t("figureSet.availableForms")}
+                      </div>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {detailsVisualVariants.map((variant) => (
+                          <div
+                            key={variant.id}
+                            className="flex items-center gap-2 rounded-xl border border-violet-200 bg-violet-50/70 p-2 dark:border-violet-800 dark:bg-violet-950/30"
+                          >
+                            <img
+                              src={variant.token}
+                              alt=""
+                              className="h-10 w-10 rounded-lg bg-white object-contain ring-1 ring-violet-200 dark:bg-slate-900 dark:ring-violet-800"
+                            />
+                            <span className="max-w-28 text-xs font-semibold text-violet-700 dark:text-violet-200">
+                              {t(variant.labelKey)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
               )}
               {!heroesLoading && !detailsSlot && (
@@ -529,36 +557,36 @@ export function FigureSetPage({ onBack }: FigureSetPageProps) {
                               );
                               return (
                                 <div
-                                key={ability.id}
-                                className={`rounded-xl border px-3 py-3 shadow-sm ${
-                                  ability.type === "passive"
-                                    ? "border-emerald-200 bg-emerald-50/70 dark:border-emerald-900/70 dark:bg-emerald-950/25"
-                                    : ability.type === "phantasm"
-                                      ? "border-violet-300 bg-gradient-to-br from-violet-50 to-fuchsia-50/60 dark:border-violet-800 dark:from-violet-950/40 dark:to-fuchsia-950/20"
-                                      : ability.type === "impulse"
-                                        ? "border-amber-200 bg-amber-50/70 dark:border-amber-900/70 dark:bg-amber-950/25"
-                                        : "border-sky-200 bg-sky-50/70 dark:border-sky-900/70 dark:bg-sky-950/25"
-                                }`}
-                              >
-                                <div className="flex items-center justify-between">
-                                  <div className="text-sm font-semibold text-slate-800 dark:text-slate-100">
-                                    {display.name}
+                                  key={ability.id}
+                                  className={`rounded-xl border px-3 py-3 shadow-sm ${
+                                    ability.type === "passive"
+                                      ? "border-emerald-200 bg-emerald-50/70 dark:border-emerald-900/70 dark:bg-emerald-950/25"
+                                      : ability.type === "phantasm"
+                                        ? "border-violet-300 bg-gradient-to-br from-violet-50 to-fuchsia-50/60 dark:border-violet-800 dark:from-violet-950/40 dark:to-fuchsia-950/20"
+                                        : ability.type === "impulse"
+                                          ? "border-amber-200 bg-amber-50/70 dark:border-amber-900/70 dark:bg-amber-950/25"
+                                          : "border-sky-200 bg-sky-50/70 dark:border-sky-900/70 dark:bg-sky-950/25"
+                                  }`}
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <div className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+                                      {display.name}
+                                    </div>
+                                    <span
+                                      className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${abilityBadgeClass(
+                                        ability.type,
+                                      )}`}
+                                    >
+                                      {group.label}
+                                    </span>
                                   </div>
-                                  <span
-                                    className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${abilityBadgeClass(
-                                      ability.type,
-                                    )}`}
-                                  >
-                                    {group.label}
-                                  </span>
+                                  <div className="mt-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+                                    {formatCharge(ability)} / {formatCost(ability)}
+                                  </div>
+                                  <div className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                                    {display.description}
+                                  </div>
                                 </div>
-                                <div className="mt-2 text-xs font-medium text-slate-500 dark:text-slate-400">
-                                  {formatCharge(ability)} / {formatCost(ability)}
-                                </div>
-                                <div className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
-                                  {display.description}
-                                </div>
-                              </div>
                               );
                             })}
                           </div>

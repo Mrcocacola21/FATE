@@ -26,6 +26,7 @@ import {
   type ServerMessage,
 } from "./ws";
 import { transitionActionMode } from "./game/selectionState";
+import type { BoardEventBatch } from "./game/effects/types";
 
 export type ActionMode =
   | "move"
@@ -83,6 +84,7 @@ interface GameStore {
   hoveredAbilityId: string | null;
   hoverPreview: HoverPreview;
   events: GameEvent[];
+  latestEventBatch: BoardEventBatch | null;
   clientLog: string[];
   lastLogIndex: number;
   lastActionResult: { ok: boolean; error?: string } | null;
@@ -164,6 +166,7 @@ function buildLeaveResetState(
     hoveredAbilityId: null,
     hoverPreview: null,
     events: [],
+    latestEventBatch: null,
     clientLog,
     lastLogIndex: -1,
     lastActionResult: null,
@@ -398,6 +401,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   hoveredAbilityId: null,
   hoverPreview: null,
   events: [],
+  latestEventBatch: null,
   clientLog: [],
   lastLogIndex: -1,
   lastActionResult: null,
@@ -550,6 +554,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       }
       return {
         events: [...state.events, ...events].slice(-200),
+        latestEventBatch: { logIndex, events },
         lastLogIndex: logIndex,
         clientLog: error ? [...state.clientLog, error] : state.clientLog,
       };
@@ -576,6 +581,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       hoveredAbilityId: null,
       hoverPreview: null,
       events: [],
+      latestEventBatch: null,
       clientLog: [],
       lastLogIndex: -1,
       lastActionResult: null,

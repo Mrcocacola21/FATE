@@ -1,95 +1,89 @@
 export const FALLBACK_FIGURE = new URL("../assets/figures/_missing.webp", import.meta.url).href;
 export const FALLBACK_TOKEN = new URL("../assets/tokens/_missing.webp", import.meta.url).href;
 
-const GRAND_KAISER_ART = new URL("../assets/figures/grand-kaiser.webp", import.meta.url).href;
-const VLAD_TEPES_ART = new URL("../assets/figures/vladTepes.webp", import.meta.url).href;
-const GENGHIS_KHAN_ART = new URL("../assets/figures/genghisKhan.webp", import.meta.url).href;
-const EL_CID_COMPEADOR_ART = new URL("../assets/figures/elCidCompeador.webp", import.meta.url).href;
-const LECHY_ART = new URL("../assets/figures/lechy.webp", import.meta.url).href;
-const CHIKATILO_ART = new URL("../assets/figures/chikatilo.webp", import.meta.url).href;
-const GROZNY_ART = new URL("../assets/figures/grozny.webp", import.meta.url).href;
-const FRISK_ART = new URL("../assets/figures/frisk.webp", import.meta.url).href;
-const ASGORE_ART = new URL("../assets/figures/asgore.webp", import.meta.url).href;
-const JEBE_ART = new URL("../assets/figures/jebe.webp", import.meta.url).href;
-const HASSAN_ART = new URL("../assets/figures/hassan.webp", import.meta.url).href;
-const KALADIN_ART = new URL("../assets/figures/kalladin.webp", import.meta.url).href;
-const PAPYRUS_ART = new URL("../assets/figures/papyrus.webp", import.meta.url).href;
-const LOKI_ART = new URL("../assets/figures/loki.webp", import.meta.url).href;
-const RIVER_PERSON_ART = new URL("../assets/figures/riverPerson.webp", import.meta.url).href;
-
-const GRAND_KAISER_TOKEN = new URL("../assets/tokens/grand-kaiser.webp", import.meta.url).href;
-const VLAD_TEPES_TOKEN = new URL("../assets/tokens/vladTepes.webp", import.meta.url).href;
-const GENGHIS_KHAN_TOKEN = new URL("../assets/tokens/genghisKhan.webp", import.meta.url).href;
-const EL_CID_COMPEADOR_TOKEN = new URL("../assets/tokens/elCidCompeador.webp", import.meta.url).href;
-const LECHY_TOKEN = new URL("../assets/tokens/lechy.webp", import.meta.url).href;
-const CHIKATILO_TOKEN = new URL("../assets/tokens/chikatilo.webp", import.meta.url).href;
-const GROZNY_TOKEN = new URL("../assets/tokens/grozny.webp", import.meta.url).href;
-const FRISK_TOKEN = new URL("../assets/tokens/frisk.webp", import.meta.url).href;
-const ASGORE_TOKEN = new URL("../assets/tokens/asgore.webp", import.meta.url).href;
-const JEBE_TOKEN = new URL("../assets/tokens/jebe.webp", import.meta.url).href;
-const HASSAN_TOKEN = new URL("../assets/tokens/hassan.webp", import.meta.url).href;
-const KALADIN_TOKEN = new URL("../assets/tokens/kalladin.webp", import.meta.url).href;
-const PAPYRUS_TOKEN = new URL("../assets/tokens/papyrus.webp", import.meta.url).href;
-const METTATON_TOKEN = new URL("../assets/tokens/mettaton_ex.webp", import.meta.url).href;
-const LOKI_TOKEN = new URL("../assets/tokens/loki.webp", import.meta.url).href;
-const RIVER_PERSON_TOKEN = new URL("../assets/tokens/riverPerson.webp", import.meta.url).href;
-const ODIN_TOKEN = new URL("../assets/tokens/odin.webp", import.meta.url).href;
-const GRIFFITH_TOKEN = new URL("../assets/tokens/griffith.webp", import.meta.url).href;
-const FEMTO_TOKEN = new URL("../assets/tokens/femto.webp", import.meta.url).href;
-
 export const FIGURE_ARTS: Record<string, string> = {
-  "grand-kaiser": GRAND_KAISER_ART,
-  "vladTepes": VLAD_TEPES_ART,
-  "genghisKhan": GENGHIS_KHAN_ART,
-  "elCidCompeador": EL_CID_COMPEADOR_ART,
-  "lechy": LECHY_ART,
-  "chikatilo": CHIKATILO_ART,
-  "falseTrailToken": CHIKATILO_ART,
-  "grozny": GROZNY_ART,
-  "frisk": FRISK_ART,
-  "sans": FALLBACK_FIGURE,
-  "asgore": ASGORE_ART,
-  "undyne": FALLBACK_FIGURE,
-  "guts": FALLBACK_FIGURE,
-  "griffith": FALLBACK_FIGURE,
-  "femto": FALLBACK_FIGURE,
-  "jebe": JEBE_ART,
-  "hassan": HASSAN_ART,
-  "kaladin": KALADIN_ART,
-  "papyrus": PAPYRUS_ART,
-  "mettaton": FALLBACK_FIGURE,
-  "loki": LOKI_ART,
-  "riverPerson": RIVER_PERSON_ART,
-  "odin": FALLBACK_FIGURE,
+  "grand-kaiser": new URL("../assets/figures/grand-kaiser.webp", import.meta.url).href,
+  vladTepes: new URL("../assets/figures/vladTepes.webp", import.meta.url).href,
+  genghisKhan: new URL("../assets/figures/genghisKhan.webp", import.meta.url).href,
+  elCidCompeador: new URL("../assets/figures/elCidCompeador.webp", import.meta.url).href,
+  lechy: new URL("../assets/figures/lechy.webp", import.meta.url).href,
+  chikatilo: new URL("../assets/figures/chikatilo.webp", import.meta.url).href,
+  falseTrailToken: new URL("../assets/figures/chikatilo.webp", import.meta.url).href,
+  grozny: new URL("../assets/figures/grozny.webp", import.meta.url).href,
+  frisk: new URL("../assets/figures/frisk.webp", import.meta.url).href,
+  sans: new URL("../assets/figures/sans.webp", import.meta.url).href,
+  asgore: new URL("../assets/figures/asgore.webp", import.meta.url).href,
+  undyne: new URL("../assets/figures/undyne.webp", import.meta.url).href,
+  guts: new URL("../assets/figures/guts.jpg", import.meta.url).href,
+  griffith: new URL("../assets/figures/griffith.png", import.meta.url).href,
+  femto: FALLBACK_FIGURE,
+  jebe: new URL("../assets/figures/jebe.webp", import.meta.url).href,
+  hassan: new URL("../assets/figures/hassan.webp", import.meta.url).href,
+  kaladin: new URL("../assets/figures/kalladin.webp", import.meta.url).href,
+  papyrus: new URL("../assets/figures/papyrus.webp", import.meta.url).href,
+  mettaton: new URL("../assets/figures/mettaton.png", import.meta.url).href,
+  loki: new URL("../assets/figures/loki.webp", import.meta.url).href,
+  riverPerson: new URL("../assets/figures/riverPerson.webp", import.meta.url).href,
+  odin: new URL("../assets/figures/odin.png", import.meta.url).href,
+  duolingo: new URL("../assets/figures/duolingo.webp", import.meta.url).href,
+  jackRipper: new URL("../assets/figures/jackRipper.webp", import.meta.url).href,
+  kaneki: new URL("../assets/figures/kaneki.webp", import.meta.url).href,
+  artemida: FALLBACK_FIGURE,
+  donKihote: FALLBACK_FIGURE,
+  luche: FALLBACK_FIGURE,
+  zoro: FALLBACK_FIGURE,
   _missing: FALLBACK_FIGURE,
 };
 
 export const TOKENS: Record<string, string> = {
-  "grand-kaiser": GRAND_KAISER_TOKEN,
-  "vladTepes": VLAD_TEPES_TOKEN,
-  "genghisKhan": GENGHIS_KHAN_TOKEN,
-  "elCidCompeador": EL_CID_COMPEADOR_TOKEN,
-  "lechy": LECHY_TOKEN,
-  "chikatilo": CHIKATILO_TOKEN,
-  "falseTrailToken": CHIKATILO_TOKEN,
-  "grozny": GROZNY_TOKEN,
-  "frisk": FRISK_TOKEN,
-  "sans": FALLBACK_TOKEN,
-  "asgore": ASGORE_TOKEN,
-  "undyne": FALLBACK_TOKEN,
-  "guts": FALLBACK_TOKEN,
-  "griffith": GRIFFITH_TOKEN,
-  "femto": FEMTO_TOKEN,
-  "jebe": JEBE_TOKEN,
-  "hassan": HASSAN_TOKEN,
-  "kaladin": KALADIN_TOKEN,
-  "papyrus": PAPYRUS_TOKEN,
-  "mettaton": METTATON_TOKEN,
-  "loki": LOKI_TOKEN,
-  "riverPerson": RIVER_PERSON_TOKEN,
-  "odin": ODIN_TOKEN,
+  "grand-kaiser": new URL("../assets/tokens/grand-kaiser.webp", import.meta.url).href,
+  vladTepes: new URL("../assets/tokens/vladTepes.webp", import.meta.url).href,
+  genghisKhan: new URL("../assets/tokens/genghisKhan.webp", import.meta.url).href,
+  elCidCompeador: new URL("../assets/tokens/elCidCompeador.webp", import.meta.url).href,
+  lechy: new URL("../assets/tokens/lechy.webp", import.meta.url).href,
+  chikatilo: new URL("../assets/tokens/chikatilo.webp", import.meta.url).href,
+  falseTrailToken: new URL("../assets/tokens/chikatilo.webp", import.meta.url).href,
+  grozny: new URL("../assets/tokens/grozny.webp", import.meta.url).href,
+  frisk: new URL("../assets/tokens/frisk.webp", import.meta.url).href,
+  sans: new URL("../assets/tokens/sans.webp", import.meta.url).href,
+  asgore: new URL("../assets/tokens/asgore.webp", import.meta.url).href,
+  undyne: new URL("../assets/tokens/undyne.png", import.meta.url).href,
+  guts: new URL("../assets/tokens/guts.png", import.meta.url).href,
+  griffith: new URL("../assets/tokens/griffith.webp", import.meta.url).href,
+  femto: new URL("../assets/tokens/femto.webp", import.meta.url).href,
+  jebe: new URL("../assets/tokens/jebe.webp", import.meta.url).href,
+  hassan: new URL("../assets/tokens/hassan.webp", import.meta.url).href,
+  kaladin: new URL("../assets/tokens/kalladin.webp", import.meta.url).href,
+  papyrus: new URL("../assets/tokens/papyrus.webp", import.meta.url).href,
+  mettaton: new URL("../assets/tokens/mettaton.png", import.meta.url).href,
+  loki: new URL("../assets/tokens/loki.webp", import.meta.url).href,
+  riverPerson: new URL("../assets/tokens/riverPerson.webp", import.meta.url).href,
+  odin: new URL("../assets/tokens/odin.webp", import.meta.url).href,
+  duolingo: new URL("../assets/tokens/duolingo.webp", import.meta.url).href,
+  jackRipper: new URL("../assets/tokens/jackRipper.webp", import.meta.url).href,
+  artemida: new URL("../assets/tokens/artemida.webp", import.meta.url).href,
+  donKihote: new URL("../assets/tokens/donKihote.webp", import.meta.url).href,
+  luche: new URL("../assets/tokens/luche.webp", import.meta.url).href,
+  zoro: new URL("../assets/tokens/zoro.webp", import.meta.url).href,
+  kaneki: FALLBACK_TOKEN,
   _missing: FALLBACK_TOKEN,
 };
+
+export const VARIANT_FIGURE_ARTS = {
+  "undyne-undying": new URL("../assets/figures/undyne_the_undying.png", import.meta.url).href,
+} as const;
+
+export const VARIANT_TOKENS = {
+  "engineering-miracle": new URL("../assets/tokens/kaiser_miracle.png", import.meta.url).href,
+  "frisk-genocide": new URL("../assets/tokens/friskGenocide.png", import.meta.url).href,
+  "guts-berserk": new URL("../assets/tokens/gutsBerserk.png", import.meta.url).href,
+  "mettaton-ex": new URL("../assets/tokens/mettaton_ex.webp", import.meta.url).href,
+  "mettaton-neo": new URL("../assets/tokens/mettaton_neo.png", import.meta.url).href,
+  "papyrus-unbeliever": new URL("../assets/tokens/unbeliever_papyrus.png", import.meta.url).href,
+  "sans-unbeliever": new URL("../assets/tokens/sansBT.png", import.meta.url).href,
+  "undyne-undying": new URL("../assets/tokens/undyne_the_undying.png", import.meta.url).href,
+  femto: new URL("../assets/tokens/femto.webp", import.meta.url).href,
+} as const;
 
 export function getFigureArtSrc(figureId: string): string {
   return FIGURE_ARTS[figureId] ?? FALLBACK_FIGURE;

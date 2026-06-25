@@ -2,6 +2,122 @@
 @tailwind components;
 @tailwind utilities;
 
+@keyframes unit-transform-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgb(167 139 250 / 0.8);
+    transform: scale(0.88);
+  }
+  55% {
+    box-shadow: 0 0 0 10px rgb(167 139 250 / 0);
+    transform: scale(1.08);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgb(167 139 250 / 0);
+    transform: scale(1);
+  }
+}
+
+@keyframes unit-token-change {
+  0% {
+    opacity: 0.2;
+    filter: brightness(1.8) saturate(1.25);
+  }
+  100% {
+    opacity: 1;
+    filter: none;
+  }
+}
+
+@keyframes unit-transform-label {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 4px);
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -18px);
+  }
+}
+
+@keyframes board-effect-pulse {
+  0% {
+    opacity: 0;
+    transform: scale(0.72);
+  }
+  22% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes board-effect-area {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  20%,
+  70% {
+    opacity: 0.78;
+  }
+}
+
+@keyframes board-effect-beam {
+  0% {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+  25% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scaleX(1);
+  }
+}
+
+@keyframes board-effect-float {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 2px) scale(0.86);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -4px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -28px) scale(1);
+  }
+}
+
+@keyframes board-effect-board {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.65;
+  }
+}
+
+@keyframes board-preview-beam {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
 body {
   font-family: "Space Grotesk", "Segoe UI", sans-serif;
   min-height: 100%;
@@ -119,6 +235,246 @@ html.dark {
 
   .pending-choice button {
     @apply min-h-10 rounded-xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-teal-500/20;
+  }
+
+  .unit-transforming {
+    animation: unit-transform-pulse 700ms ease-out both;
+  }
+
+  .unit-token-changing {
+    animation: unit-token-change 450ms ease-out both;
+  }
+
+  .unit-transform-label {
+    @apply pointer-events-none absolute left-1/2 top-0 z-30 -translate-x-1/2 whitespace-nowrap rounded-full bg-violet-600 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white shadow-lg;
+    animation: unit-transform-label 1050ms ease-out both;
+  }
+
+  .board-effect-cell,
+  .board-effect-area,
+  .board-effect-unit,
+  .board-effect-board {
+    animation-delay: var(--effect-delay);
+    animation-duration: var(--effect-duration);
+    animation-fill-mode: both;
+    animation-timing-function: ease-out;
+  }
+
+  .board-effect-cell {
+    border: 2px solid currentColor;
+    box-shadow:
+      inset 0 0 16px currentColor,
+      0 0 18px currentColor;
+    animation-name: board-effect-pulse;
+  }
+
+  .board-effect-cell-attack,
+  .board-effect-cell-warning {
+    color: rgb(251 113 133 / 0.9);
+    background: rgb(244 63 94 / 0.24);
+  }
+
+  .board-effect-cell-heal {
+    color: rgb(74 222 128 / 0.9);
+    background: rgb(34 197 94 / 0.22);
+  }
+
+  .board-effect-cell-move {
+    color: rgb(45 212 191 / 0.9);
+    background: rgb(20 184 166 / 0.2);
+  }
+
+  .board-effect-cell-status {
+    color: rgb(192 132 252 / 0.9);
+    background: rgb(168 85 247 / 0.2);
+  }
+
+  .board-effect-area {
+    border: 1px solid currentColor;
+    animation-name: board-effect-area;
+  }
+
+  .board-effect-area-aoe,
+  .board-effect-area-danger {
+    color: rgb(251 113 133 / 0.85);
+    background: rgb(225 29 72 / 0.3);
+    box-shadow: inset 0 0 14px rgb(251 113 133 / 0.35);
+  }
+
+  .board-effect-area-safe {
+    color: rgb(52 211 153 / 0.85);
+    background: rgb(16 185 129 / 0.24);
+    box-shadow: inset 0 0 14px rgb(52 211 153 / 0.32);
+  }
+
+  .board-effect-beam,
+  .board-effect-trail,
+  .board-preview-beam {
+    display: block;
+    width: 100%;
+    transform-origin: left center;
+    border-radius: 9999px;
+  }
+
+  .board-effect-beam {
+    height: 5px;
+    margin-top: -2.5px;
+    animation: board-effect-beam var(--effect-duration) ease-out
+      var(--effect-delay) both;
+  }
+
+  .board-effect-beam-attack {
+    background: linear-gradient(90deg, #fb7185, #fef2f2, #fb7185);
+    box-shadow: 0 0 10px #fb7185;
+  }
+
+  .board-effect-beam-magic {
+    background: linear-gradient(90deg, #a78bfa, #ecfeff, #22d3ee);
+    box-shadow: 0 0 12px #a78bfa;
+  }
+
+  .board-effect-trail {
+    height: 3px;
+    margin-top: -1.5px;
+    opacity: 0;
+    animation: board-effect-area var(--effect-duration) ease-out
+      var(--effect-delay) both;
+  }
+
+  .board-effect-trail-dot {
+    opacity: 0;
+    animation: board-effect-pulse var(--effect-duration) ease-out
+      var(--effect-delay) both;
+  }
+
+  .board-effect-trail-move {
+    color: #2dd4bf;
+    background: #2dd4bf;
+    box-shadow: 0 0 9px #2dd4bf;
+  }
+
+  .board-effect-trail-teleport {
+    color: #c084fc;
+    background: #c084fc;
+    box-shadow: 0 0 11px #c084fc;
+  }
+
+  .board-effect-trail-push {
+    color: #fb923c;
+    background: #fb923c;
+    box-shadow: 0 0 9px #fb923c;
+  }
+
+  .board-preview-beam {
+    height: 3px;
+    margin-top: -1.5px;
+    animation: board-preview-beam 900ms ease-in-out infinite;
+  }
+
+  .board-preview-beam-attack {
+    background: rgb(251 113 133 / 0.85);
+    box-shadow: 0 0 8px rgb(251 113 133 / 0.8);
+  }
+
+  .board-preview-beam-magic {
+    background: rgb(34 211 238 / 0.85);
+    box-shadow: 0 0 8px rgb(34 211 238 / 0.8);
+  }
+
+  .board-effect-text {
+    @apply pointer-events-none absolute z-10 whitespace-nowrap rounded-full border border-white/20 px-2 py-0.5 text-xs font-black shadow-lg;
+    animation: board-effect-float var(--effect-duration) ease-out
+      var(--effect-delay) both;
+  }
+
+  .board-effect-text-damage {
+    @apply bg-rose-600 text-white;
+  }
+
+  .board-effect-text-heal {
+    @apply bg-emerald-500 text-slate-950;
+  }
+
+  .board-effect-text-miss {
+    @apply bg-slate-700 text-white;
+  }
+
+  .board-effect-text-status {
+    @apply bg-violet-600 text-white;
+  }
+
+  .board-effect-unit {
+    border: 3px solid currentColor;
+    box-shadow:
+      inset 0 0 18px currentColor,
+      0 0 18px currentColor;
+    animation-name: board-effect-pulse;
+  }
+
+  .board-effect-unit-hit,
+  .board-effect-unit-debuff {
+    color: rgb(251 113 133 / 0.9);
+    background: rgb(244 63 94 / 0.18);
+  }
+
+  .board-effect-unit-heal,
+  .board-effect-unit-buff {
+    color: rgb(74 222 128 / 0.9);
+    background: rgb(34 197 94 / 0.16);
+  }
+
+  .board-effect-unit-defend {
+    color: rgb(125 211 252 / 0.95);
+    background: rgb(14 165 233 / 0.16);
+  }
+
+  .board-effect-board {
+    border: 3px solid currentColor;
+    box-shadow: inset 0 0 70px currentColor;
+    animation-name: board-effect-board;
+  }
+
+  .board-effect-board-danger {
+    color: rgb(244 63 94 / 0.45);
+  }
+
+  .board-effect-board-magic {
+    color: rgb(168 85 247 / 0.4);
+  }
+
+  .board-effect-board-status {
+    color: rgb(14 165 233 / 0.35);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .unit-transforming,
+  .unit-token-changing,
+  .unit-transform-label,
+  .board-effect-cell,
+  .board-effect-area,
+  .board-effect-beam,
+  .board-effect-trail,
+  .board-effect-trail-dot,
+  .board-effect-text,
+  .board-effect-unit,
+  .board-effect-board,
+  .board-preview-beam {
+    animation: none;
+  }
+
+  .board-effect-cell,
+  .board-effect-area,
+  .board-effect-unit,
+  .board-effect-board,
+  .board-effect-trail,
+  .board-effect-trail-dot {
+    opacity: 0.65;
+  }
+
+  .board-effect-text {
+    opacity: 1;
+    transform: translate(-50%, -12px);
   }
 }
 

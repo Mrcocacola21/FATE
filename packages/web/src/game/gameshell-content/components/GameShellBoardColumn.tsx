@@ -87,6 +87,22 @@ export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm }) => {
               : null
           }
           allowUnitSelection={vm.allowUnitPick}
+          visualEffectsEnabled={vm.connectionStatus === "connected" && vm.hasSnapshot}
+          eventBatch={vm.latestEventBatch}
+          effectSessionKey={vm.roomId}
+          previewLine={
+            vm.boardPreviewCenter &&
+            vm.selectedUnit?.position &&
+            (vm.actionMode === "mettatonLaser" ||
+              vm.actionMode === "sansGasterBlaster" ||
+              vm.actionMode === "undyneEnergySpear")
+              ? {
+                  from: vm.selectedUnit.position,
+                  to: vm.boardPreviewCenter,
+                  tone: "magic",
+                }
+              : null
+          }
           disabled={vm.boardDisabled}
           onSelectUnit={(id) => {
             vm.setSelectedUnit(id);
