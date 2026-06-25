@@ -6,8 +6,10 @@ import {
   applyAction,
   assert,
   GameState,
+  getHeroMeta,
   getLegalMovesForUnit,
   getUnitDefinition,
+  HERO_SANS_ID,
   initKnowledgeForOwners,
   makeAttackWinRng,
   makeEmptyTurnEconomy,
@@ -19,6 +21,17 @@ import {
   setupSansState,
   toBattleState,
 } from "../helpers/testUtils";
+
+export function testSansBaseDamageIsOne() {
+  const { sans } = setupSansState();
+  const metadata = getHeroMeta(HERO_SANS_ID);
+
+  assert(sans.attack === 1, "Sans should be created with 1 base damage");
+  assert(metadata?.baseStats.damage === 1, "Sans hero metadata should expose 1 base damage");
+
+  console.log("sans_base_damage_is_one passed");
+}
+
 export function testSansLongLiverAndSpearmanFeature() {
   let { state, sans, enemy } = setupSansState();
 

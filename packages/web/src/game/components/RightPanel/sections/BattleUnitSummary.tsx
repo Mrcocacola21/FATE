@@ -10,6 +10,11 @@ import { classBadge, formatChargeLabel, getAbilityChargeState } from "../rightPa
 import type { ForestMarkerView, TurnEconomyState } from "../types";
 import { useI18n } from "../../../../i18n";
 import {
+  getAbilityDisplayDetails,
+  isAbilityDetailStateActive,
+  isResourceAbilityDetails,
+} from "../../../abilityDisplayDetails";
+import {
   getAbilityDisplay,
   getAbilityTypeLabel,
   getClassLabel,
@@ -17,6 +22,8 @@ import {
   localizeServerText,
 } from "../../../../i18n/displayMetadata";
 import { Badge } from "../../../../ui";
+import { AbilityDetails } from "../../../../components/abilities/AbilityDetails";
+import { getAbilityDisplayTone } from "../../../../components/abilities/abilityDisplayTone";
 
 interface BattleUnitSummaryProps {
   selectedUnit: UnitState | null;
@@ -31,42 +38,6 @@ interface BattleUnitSummaryProps {
   economy: TurnEconomyState;
   abilityViews: AbilityView[];
   onHoverAbility: (abilityId: string | null) => void;
-}
-
-function abilityTone(kind: AbilityView["kind"], unavailable: boolean) {
-  if (unavailable) {
-    return {
-      card: "border-slate-200 bg-slate-100/80 dark:border-slate-800 dark:bg-slate-950/45",
-      badge:
-        "border-slate-300 bg-slate-200 text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400",
-    };
-  }
-  switch (kind) {
-    case "passive":
-      return {
-        card: "border-emerald-300/80 bg-emerald-50/70 text-emerald-700 dark:border-emerald-900/70 dark:bg-emerald-950/25 dark:text-emerald-300",
-        badge:
-          "border-emerald-200 bg-emerald-100 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200",
-      };
-    case "impulse":
-      return {
-        card: "border-amber-300/80 bg-amber-50/70 text-amber-700 dark:border-amber-900/70 dark:bg-amber-950/25 dark:text-amber-300",
-        badge:
-          "border-amber-200 bg-amber-100 text-amber-800 dark:border-amber-800 dark:bg-amber-900/50 dark:text-amber-200",
-      };
-    case "phantasm":
-      return {
-        card: "border-violet-300 bg-violet-50/75 text-violet-700 dark:border-violet-800/80 dark:bg-violet-950/35 dark:text-violet-300",
-        badge:
-          "border-violet-300 bg-violet-100 text-violet-700 dark:border-violet-700 dark:bg-violet-900/60 dark:text-violet-200",
-      };
-    default:
-      return {
-        card: "border-sky-300/80 bg-sky-50/70 text-sky-700 dark:border-sky-900/70 dark:bg-sky-950/25 dark:text-sky-300",
-        badge:
-          "border-sky-200 bg-sky-100 text-sky-700 dark:border-sky-800 dark:bg-sky-900/50 dark:text-sky-200",
-      };
-  }
 }
 
 export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
@@ -148,6 +119,9 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
       </div>
 
       <div className="flex flex-wrap gap-2">
+        <span className="status-pill border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/45 dark:text-rose-200">
+          {t("game.damage", { value: selectedUnit.attack })}
+        </span>
         {visualVariantLabelKey ? (
           <span className="status-pill border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-800 dark:bg-violet-950/45 dark:text-violet-200">
             {t(visualVariantLabelKey)}
@@ -246,6 +220,11 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
         )}
         <div className="mt-2 space-y-2">
           {abilityViews.map((ability) => {
+            const details = getAbilityDisplayDetails(ability.id);
+            const structuredResource = isResourceAbilityDetails(details);
+            const structuredStateActive = details
+              ? isAbilityDetailStateActive(details, selectedUnit)
+              : false;
             const hideCharges = ability.id === KAISER_DORA_ID && !!selectedUnit.transformed;
             const chargeState = getAbilityChargeState(ability.id, selectedUnit, ability);
             const chargeLabel = formatChargeLabel(ability, chargeState, hideCharges);
@@ -260,12 +239,20 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
               ability.description,
               language,
             );
-            const tone = abilityTone(ability.kind, !ability.isAvailable || isChargeBlocked);
+            const tone = getAbilityDisplayTone(
+              ability.kind,
+              (!ability.isAvailable && !structuredStateActive) || isChargeBlocked,
+              details?.presentation,
+            );
             return (
               <div
                 key={ability.id}
-                className={`ability-card ${tone.card} ${ability.isAvailable ? "" : "opacity-70"}`}
-                title={localizeServerText(ability.disabledReason, t)}
+                className={`ability-card ${tone.card} ${
+                  ability.isAvailable || structuredStateActive ? "" : "opacity-70"
+                }`}
+                title={
+                  structuredStateActive ? undefined : localizeServerText(ability.disabledReason, t)
+                }
                 onMouseEnter={() => {
                   if (ability.id === EL_CID_KOLADA_ID) {
                     onHoverAbility(ability.id);
@@ -284,19 +271,23 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
                   <span
                     className={`rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${tone.badge}`}
                   >
-                    {kindLabel}
+                    {details?.categoryKey ? t(details.categoryKey) : kindLabel}
                   </span>
                 </div>
-                <div className="mt-2 leading-5 text-slate-600 dark:text-slate-300">
-                  {display.description}
-                </div>
+                {details ? (
+                  <AbilityDetails ability={ability} details={details} unit={selectedUnit} />
+                ) : (
+                  <div className="mt-2 leading-5 text-slate-600 dark:text-slate-300">
+                    {display.description}
+                  </div>
+                )}
                 <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">
                   {t("game.slot", { slot: slotLabel })}
-                  {chargeLabel !== null ? (
+                  {!structuredResource && chargeLabel !== null ? (
                     <span>{t("game.charges", { charges: chargeLabel })}</span>
                   ) : null}
                 </div>
-                {chargeState.max !== null && !hideCharges ? (
+                {chargeState.max !== null && !hideCharges && !structuredResource ? (
                   <div className="ability-charge-track mt-2" aria-hidden="true">
                     <div
                       className="ability-charge-fill"
@@ -312,7 +303,7 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
                     />
                   </div>
                 ) : null}
-                {ability.disabledReason && (
+                {ability.disabledReason && !structuredStateActive && (
                   <div className="mt-1 text-amber-700 dark:text-amber-300">
                     {localizeServerText(ability.disabledReason, t)}
                   </div>

@@ -301,6 +301,7 @@ import {
   testPapyrusOssifiedBerserkerFeatureAfterTransformationOnly,
 } from "./heroes/papyrus.test";
 import {
+  testSansBaseDamageIsOne,
   testSansLongLiverAndSpearmanFeature,
   testSansGasterBlasterGatingLineAndSpend,
   testSansBadassJokeDebuffAndMovementLock,
@@ -511,6 +512,7 @@ function main(): void {
   testPapyrusOrangeBoneToggleAndEndTurnPunish();
   testPapyrusLongBoneAttackAndCoolGuyCostReduction();
   testPapyrusOssifiedBerserkerFeatureAfterTransformationOnly();
+  testSansBaseDamageIsOne();
   testSansLongLiverAndSpearmanFeature();
   testSansGasterBlasterGatingLineAndSpend();
   testSansBadassJokeDebuffAndMovementLock();

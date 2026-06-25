@@ -20,9 +20,9 @@ import { ThemeToggle } from "../components/ThemeToggle";
 import { PanelCard, SectionHeader, StatusBadge } from "../components/ui";
 import { LECHY_ID } from "../rulesHints";
 import { LanguageSwitcher } from "../components/LanguageSwitcher";
+import { FigureSetAbilityCard } from "../components/abilities/FigureSetAbilityCard";
 import { useI18n } from "../i18n";
 import {
-  getAbilityDisplay,
   getAbilityTypeLabel,
   getClassLabel,
   getHeroDisplayName,
@@ -174,33 +174,6 @@ export function FigureSetPage({ onBack }: FigureSetPageProps) {
       abilities: abilities.filter((ability) => ability.type === group.type),
     }));
   }, [detailsHero, language, t]);
-
-  const formatCharge = (ability: AbilityMeta) => {
-    if (ability.chargeRequired === null) return t("figureSet.chargeUnlimited");
-    if (typeof ability.chargeRequired === "number") {
-      return t("figureSet.charge", { value: ability.chargeRequired });
-    }
-    return t("figureSet.noCharge");
-  };
-
-  const formatCost = (ability: AbilityMeta) => {
-    if (ability.consumesAction) return t("figureSet.consumesAction");
-    if (ability.consumesMove) return t("figureSet.consumesMove");
-    return t("figureSet.freeImpulse");
-  };
-
-  const abilityBadgeClass = (type: AbilityMeta["type"]) => {
-    switch (type) {
-      case "active":
-        return "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-200";
-      case "impulse":
-        return "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-200";
-      case "phantasm":
-        return "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-200";
-      default:
-        return "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-200";
-    }
-  };
 
   return (
     <div className="app-shell px-3 py-4 sm:px-6 sm:py-8">
@@ -547,47 +520,9 @@ export function FigureSetPage({ onBack }: FigureSetPageProps) {
                             <div className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                               {group.label}
                             </div>
-                            {group.abilities.map((ability) => {
-                              const display = getAbilityDisplay(
-                                ability.id,
-                                ability.name,
-                                ability.description,
-                                language,
-                              );
-                              return (
-                                <div
-                                  key={ability.id}
-                                  className={`ability-card ${
-                                    ability.type === "passive"
-                                      ? "border-emerald-300 bg-emerald-50/70 text-emerald-700 dark:border-emerald-900/70 dark:bg-emerald-950/25 dark:text-emerald-300"
-                                      : ability.type === "phantasm"
-                                        ? "border-violet-300 bg-violet-50/75 text-violet-700 dark:border-violet-800 dark:bg-violet-950/35 dark:text-violet-300"
-                                        : ability.type === "impulse"
-                                          ? "border-amber-300 bg-amber-50/70 text-amber-700 dark:border-amber-900/70 dark:bg-amber-950/25 dark:text-amber-300"
-                                          : "border-sky-300 bg-sky-50/70 text-sky-700 dark:border-sky-900/70 dark:bg-sky-950/25 dark:text-sky-300"
-                                  }`}
-                                >
-                                  <div className="flex items-center justify-between">
-                                    <div className="text-sm font-semibold text-slate-800 dark:text-slate-100">
-                                      {display.name}
-                                    </div>
-                                    <span
-                                      className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${abilityBadgeClass(
-                                        ability.type,
-                                      )}`}
-                                    >
-                                      {group.label}
-                                    </span>
-                                  </div>
-                                  <div className="mt-2 text-xs font-medium text-slate-500 dark:text-slate-400">
-                                    {formatCharge(ability)} / {formatCost(ability)}
-                                  </div>
-                                  <div className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
-                                    {display.description}
-                                  </div>
-                                </div>
-                              );
-                            })}
+                            {group.abilities.map((ability) => (
+                              <FigureSetAbilityCard key={ability.id} ability={ability} />
+                            ))}
                           </div>
                         ),
                       )}

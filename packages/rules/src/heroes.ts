@@ -150,7 +150,7 @@ export const HERO_CATALOG: HeroDefinition[] = [
     name: "Sans",
     mainClass: "trickster",
     baseHpOverride: 6,
-    baseAttackOverride: 6,
+    baseAttackOverride: 1,
   },
   {
     id: HERO_ASGORE_ID,
@@ -245,7 +245,6 @@ export function heroMatchesClass(
   if (!hero) return false;
   return hero.mainClass === unitClass;
 }
-
 
 
 

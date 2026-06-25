@@ -4,7 +4,7 @@ export function LanguageSwitcher({ className = "" }: { className?: string }) {
   const { language, setLanguage, t } = useI18n();
   const options: Array<{ value: Language; short: string; label: string }> = [
     { value: "en", short: "EN", label: t("language.english") },
-    { value: "uk", short: "UK", label: t("language.ukrainian") },
+    { value: "uk", short: "UA", label: t("language.ukrainian") },
   ];
 
   return (

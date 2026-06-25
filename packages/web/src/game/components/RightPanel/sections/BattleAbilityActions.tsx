@@ -11,6 +11,7 @@ import {
 import type { TurnEconomyState } from "../types";
 import { useI18n } from "../../../../i18n";
 import { getAbilityDisplay, localizeServerText } from "../../../../i18n/displayMetadata";
+import { getAbilityDisplayDetails, isResourceAbilityDetails } from "../../../abilityDisplayDetails";
 
 interface BattleAbilityActionsProps {
   actionableAbilities: AbilityView[];
@@ -79,8 +80,10 @@ export const BattleAbilityActions: FC<BattleAbilityActionsProps> = ({
         const label = `${display.name}${chargeLabel ? ` (${chargeLabel})` : ""}`;
         const mode = abilityActionMode(ability.id);
         const hoverable = shouldHoverAbilityInActionList(ability.id);
-        const enabledClass =
-          ability.kind === "phantasm"
+        const details = getAbilityDisplayDetails(ability.id);
+        const enabledClass = isResourceAbilityDetails(details)
+          ? "border-cyan-300 bg-cyan-50 text-cyan-900 hover:border-cyan-400 hover:bg-cyan-100 dark:border-cyan-900/70 dark:bg-cyan-950/35 dark:text-cyan-100 dark:hover:border-cyan-800 dark:hover:bg-cyan-950/55"
+          : ability.kind === "phantasm"
             ? "border-violet-400 bg-violet-600 text-white shadow-violet-950/20 hover:bg-violet-500 dark:border-violet-500"
             : ability.kind === "impulse"
               ? "border-amber-300 bg-amber-100 text-amber-900 hover:bg-amber-200 dark:border-amber-800 dark:bg-amber-950/45 dark:text-amber-100 dark:hover:bg-amber-900/60"

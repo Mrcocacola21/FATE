@@ -275,6 +275,7 @@ export const en = {
     unitControls: "Unit controls",
     selectUnitHint: "Select one of your units to inspect stats and available actions.",
     class: "Class {{class}}",
+    damage: "Damage: {{value}}",
     position: "Position {{position}}",
     moveLocked: "Movement locked next turn",
     cursed: "Cursed",
@@ -372,6 +373,525 @@ export const en = {
     active: "Active",
     impulse: "Impulse",
     phantasm: "Phantasm",
+  },
+  abilityDetails: {
+    labels: {
+      resourceAbility: "Resource",
+      randomOutcome: "Random outcome",
+      transformation: "Transformation",
+      mode: "Mode",
+      options: "Options",
+      outcomes: "Soul Parade outcomes",
+      details: "Details",
+      stakeRules: "Stake rules",
+      carryFlow: "Carry flow",
+      sequence: "Sequence",
+      afterTransformation: "After transformation",
+      unlockedAbilities: "Unlocked abilities",
+      whileActive: "While active",
+      currentResource: "Current {{resource}}",
+      resourceCapacity: "{{resource}} capacity",
+      howToGain: "How to gain",
+      cost: "Cost: {{amount}} {{resource}}",
+      noManualCost: "No manual cost",
+      roll: "Roll {{roll}}",
+      available: "Available",
+      unavailable: "Unavailable",
+      unlocked: "Unlocked",
+      active: "Active",
+      inactive: "Inactive",
+      activeForm: "Active form",
+      lockedForm: "Not transformed",
+      buildingCharge: "Building charge",
+      readyOnDeath: "Ready on death",
+      showSection: "Show {{section}}",
+      hideSection: "Hide {{section}}",
+    },
+    types: {
+      passive: "Passive",
+      active: "Active",
+      reaction: "Reaction",
+      impulse: "Impulse",
+      phantasm: "Phantasm",
+      automatic: "Automatic",
+      effect: "Effect",
+    },
+    resources: {
+      pacifism: "Pacifism points",
+      genocide: "Genocide points",
+      laughter: "Laughter points",
+      rating: "Rating",
+      engineering: "Engineering charge",
+    },
+    reasons: {
+      notEnoughResource: "Requires {{amount}} {{resource}}.",
+      parentUnavailable: "This option is permanently unavailable.",
+      requiresEx: "Requires Mettaton EX.",
+    },
+    frisk: {
+      pacifism: {
+        summary:
+          "Gain Pacifism points whenever an attack against Frisk misses. During your turn, spend Pacifism points on pacifist options. These effects do not reveal Frisk from stealth.",
+        gain: "Whenever an attack against Frisk misses.",
+        options: {
+          hugs: {
+            name: "Hugs",
+            description:
+              "Choose a creature without revealing Frisk. On its next turn, it cannot spend its movement action.",
+          },
+          childsCry: {
+            name: "Child’s Cry",
+            description:
+              "When an attack would damage Frisk, spend 5 Pacifism points to prevent that damage.",
+          },
+          warmWords: {
+            name: "Warm Words",
+            description: "Choose a creature without revealing Frisk. It heals 1d6 HP.",
+          },
+          powerOfFriendship: {
+            name: "Power of Friendship",
+            description:
+              "If only one enemy figure remains on the board and Frisk has 0 Genocide points, the opponent automatically loses.",
+          },
+        },
+      },
+      genocide: {
+        summary:
+          "Gain Genocide points whenever Frisk hits with an attack. During your turn, spend Genocide points on aggressive options and reactions.",
+        gain: "Whenever Frisk hits with an attack.",
+        killScaling:
+          "After Frisk’s first hero kill, Frisk gains +1 base damage. Starting from the second kill, Frisk also gains +3 Genocide points for each kill.",
+        options: {
+          substitution: {
+            name: "Substitution",
+            description:
+              "Before rolling defense, spend 3 Genocide points to skip the defense roll and take only 1 damage.",
+          },
+          keenEye: {
+            name: "Keen Eye",
+            description: "Instead of attempting stealth, reveal any enemy on the map.",
+          },
+          precisionStrike: {
+            name: "Precision Strike",
+            description: "Frisk’s next attack automatically hits and deals double damage.",
+          },
+        },
+      },
+      onePath: {
+        summary:
+          "After Frisk kills an enemy, all Pacifism points are converted into Genocide points and Pacifism options are permanently lost.",
+      },
+    },
+    loki: {
+      laughter: {
+        summary:
+          "Spend Laughter points on Loki’s tricks. Using these options does not reveal Loki from stealth.",
+        gain: "Whenever any game roll is a double, Loki gains 1 Laughter point, up to 15.",
+        options: {
+          againSomeNonsense: {
+            name: "Again some nonsense",
+            description:
+              "Every other figure in Loki’s 5×5 Trickster area rolls 1d6. On 1–4, it cannot spend its movement action until Loki’s next turn.",
+          },
+          chicken: {
+            name: "Chicken",
+            description:
+              "Choose an enemy in Loki’s Trickster area. Until Loki’s next turn, that figure can only move.",
+          },
+          mindControl: {
+            name: "Mind Control",
+            description:
+              "Spend Loki’s action to choose an enemy in the Trickster area, then make it perform one legal attack against a chosen legal target.",
+          },
+          spinTheDrum: {
+            name: "Spin the drum",
+            description:
+              "Choose a random allied figure and automatically activate the first legal non-passive ability available to it.",
+          },
+          greatLokiJoke: {
+            name: "Great Loki joke",
+            description:
+              "Every other figure in Loki’s 5×5 Trickster area rolls 1d6. On 1–4, it becomes a Chicken until Loki’s next turn.",
+          },
+        },
+      },
+    },
+    asgore: {
+      soulParade: {
+        summary:
+          "At full charge, Soul Parade triggers at the start of Asgore’s turn and applies one of six soul effects.",
+        roll: "Roll 1d6; the result determines the soul effect.",
+        outcomes: {
+          patience: {
+            name: "Patience",
+            description:
+              "Make one Assassin-range attack. For the rest of this turn, Asgore may enter stealth.",
+          },
+          bravery: {
+            name: "Bravery",
+            description: "Asgore’s next defense automatically succeeds.",
+          },
+          integrity: {
+            name: "Integrity",
+            description: "Move Asgore to any empty cell on the board.",
+          },
+          perseverance: {
+            name: "Perseverance",
+            description:
+              "Choose an enemy in Trickster range. It rolls 1d6; on 1–4, it cannot spend its movement action on its next turn.",
+          },
+          kindness: {
+            name: "Kindness",
+            description: "Heal Asgore for 2 HP, up to maximum HP.",
+          },
+          justice: {
+            name: "Justice",
+            description: "Make one Archer-range attack.",
+          },
+        },
+      },
+    },
+    papyrus: {
+      unbeliever: {
+        summary:
+          "After an allied hero dies, Papyrus permanently becomes Unbeliever Papyrus and unlocks a stronger bone kit.",
+        options: {
+          orangeBone: {
+            name: "Orange Bone",
+            description:
+              "Papyrus may apply Orange Bone instead of Blue Bone. Orange Bone deals 1 damage when the target ends its turn without spending movement.",
+          },
+          longBone: {
+            name: "Long Bone",
+            description:
+              "Papyrus may turn basic attacks into line attacks and choose the line axis.",
+          },
+          ossified: {
+            name: "Ossified",
+            description:
+              "Papyrus gains the Berserker auto-defense reaction and starts the form with that counter fully charged.",
+          },
+          coolGuy: {
+            name: "Cool Guy",
+            description: "Cool Guy costs 3 charges instead of 5 in Unbeliever form.",
+          },
+        },
+      },
+    },
+    kaiser: {
+      engineeringMiracle: {
+        summary:
+          "At 4 Engineering charges, Grand Kaiser automatically transforms into Engineering Miracle without spending the counter.",
+        gain: "Gain 1 Engineering charge at the start of each of Kaiser’s turns.",
+        options: {
+          stats: {
+            name: "Cyborg frame",
+            description:
+              "Maximum HP changes to the strongest Archer/Rider/Berserker base and base damage becomes 2 while preserving damage already taken.",
+          },
+          multiclass: {
+            name: "Rider and Berserker multiclass",
+            description:
+              "Kaiser gains Rider and Berserker movement/combat features, including the Berserker defense counter.",
+          },
+          dora: {
+            name: "Dora",
+            description: "Dora no longer costs charges after transformation.",
+          },
+          defenses: {
+            name: "Changed defenses",
+            description:
+              "Kaiser immediately leaves stealth and the Bunker, cannot use either again, and is immune to Carpet Strike.",
+          },
+        },
+      },
+    },
+    guts: {
+      berserk: {
+        summary:
+          "Spend 3 charges and an action to enter Berserk Mode. The mode remains active until Guts uses the one-time Exit Berserk action.",
+        options: {
+          damage: {
+            name: "Melee damage",
+            description: "Melee attacks gain +1 damage; ranged attacks do not.",
+          },
+          movement: {
+            name: "Movement",
+            description: "Guts also gains Assassin movement options.",
+          },
+          aoe: {
+            name: "Adjacent sweep",
+            description:
+              "A normal attack becomes a shared-roll attack against every adjacent figure except Guts, including allies.",
+          },
+          damageCap: {
+            name: "Damage cap",
+            description: "Each incoming hit can deal at most 1 damage.",
+          },
+          drain: {
+            name: "End-turn drain",
+            description: "Guts loses 1 HP at the end of each of his turns.",
+          },
+          exit: {
+            name: "Exit behavior",
+            description:
+              "Exit Berserk consumes an action, can be used once per game, and permanently prevents re-entering Berserk Mode.",
+          },
+        },
+      },
+    },
+    griffith: {
+      rebirth: {
+        summary:
+          "When Griffith dies, he automatically returns as Femto in the same cell with a new permanent ability set.",
+        options: {
+          rebirth: {
+            name: "Immediate rebirth",
+            description:
+              "Femto returns alive in Griffith’s death cell, leaves stealth, clears movement lock, and receives a fresh turn economy.",
+          },
+          stats: {
+            name: "God body",
+            description:
+              "Femto uses Berserker base damage and maximum HP equal to Berserker base HP +5.",
+          },
+          multiclass: {
+            name: "Berserker, Spearman, and Warrior traits",
+            description:
+              "Femto gains Berserker auto-defense, Spearman reach and defense, and automatic hits on attack doubles.",
+          },
+          movement: {
+            name: "Divine Movement",
+            description:
+              "Femto gains a move action that rolls 1d6 to determine the available teleport range.",
+          },
+        },
+      },
+      divineMovement: {
+        summary:
+          "Spend the move slot, roll 1d6, then teleport to an empty cell allowed by the result.",
+        roll: "Roll 1d6 to determine the teleport range.",
+        outcomes: {
+          near: {
+            name: "Near teleport",
+            description: "Teleport to any empty cell within 2 squares.",
+          },
+          far: {
+            name: "Board teleport",
+            description: "Teleport to any empty cell on the board.",
+          },
+        },
+      },
+    },
+    grozny: {
+      tyrant: {
+        summary:
+          "Tyrant automatically targets a weakened ally that Ivan can kill with base damage and rewards successful executions.",
+        options: {
+          trigger: {
+            name: "Trigger",
+            description:
+              "At the impulse check, an allied figure within 2 squares must be weak enough to die from Ivan’s current base damage.",
+          },
+          execution: {
+            name: "Execution attempt",
+            description:
+              "Ivan moves to a reachable attack position as if using a movement roll of 6, without spending movement, then attacks the ally.",
+          },
+          reward: {
+            name: "Successful execution",
+            description: "If the ally dies, Ivan gains +1 damage and heals for the damage dealt.",
+          },
+          scaling: {
+            name: "Movement inheritance",
+            description:
+              "Starting with the second executed ally, Ivan gains the movement modes of every ally he has executed.",
+          },
+        },
+      },
+    },
+    chikatilo: {
+      falseTrail: {
+        summary:
+          "False Trail separates Chikatilo from a visible token during deployment and links their reveal, trap, and explosion behavior.",
+        options: {
+          placement: {
+            name: "Deployment",
+            description:
+              "Place the False Trail token normally, then place Chikatilo on any empty cell in stealth.",
+          },
+          stealth: {
+            name: "Hidden killer",
+            description:
+              "While the token exists, Chikatilo ignores the normal three-turn stealth limit. If the token dies, Chikatilo is revealed.",
+          },
+          trap: {
+            name: "Trap",
+            description:
+              "When the token dies or Chikatilo is revealed by a figure, the token attacks that figure; a failed defense takes 3 damage.",
+          },
+          explosion: {
+            name: "Explosion or removal",
+            description:
+              "When Chikatilo is revealed and the token survives, choose to remove it or detonate it. The explosion attacks every adjacent figure for 1 damage on a failed defense.",
+          },
+        },
+      },
+    },
+    vlad: {
+      stakes: {
+        summary: "Place hidden stakes that stop and damage visible figures crossing their cells.",
+        options: {
+          placement: {
+            name: "Placement timing",
+            description:
+              "Place 3 hidden stakes at battle start and at the start of Vlad’s turns beginning with his second turn, until Vlad owns 9 stakes.",
+          },
+          trigger: {
+            name: "Trigger",
+            description:
+              "A visible figure entering a stake cell stops there, takes 1 damage, and reveals all stakes on that cell.",
+          },
+          persistence: {
+            name: "Persistence",
+            description:
+              "Triggered stakes remain on the board. Hidden figures can block or pass stakes without revealing their position.",
+          },
+        },
+      },
+      forest: {
+        summary: "Consume 9 of Vlad’s oldest stakes to choose a 3×3 area for Forest of the Dead.",
+        options: {
+          cost: {
+            name: "Activation",
+            description:
+              "Forest of the Dead becomes available when Vlad owns 9 stakes and consumes those 9 stakes on activation.",
+          },
+          area: {
+            name: "Forest attack",
+            description:
+              "Reveal figures in the 3×3 area. Failed defenses take 2 damage and lose movement on their next turn.",
+          },
+        },
+      },
+    },
+    river: {
+      boat: {
+        summary:
+          "During River Person’s movement, Boat can carry one adjacent ally and drop it beside the destination.",
+        options: {
+          choose: {
+            name: "Choose passenger",
+            description: "Before moving, choose one adjacent living ally or move alone.",
+          },
+          move: {
+            name: "Travel",
+            description:
+              "River Person moves normally; destinations without a legal drop cell are excluded while carrying.",
+          },
+          drop: {
+            name: "Disembark",
+            description:
+              "After movement, place the carried ally on an empty cell adjacent to River Person’s destination.",
+          },
+        },
+      },
+      tralala: {
+        summary:
+          "At 4 charges, Tra-la-la moves River Person in a straight line and lets touched allies attack one chosen enemy.",
+        options: {
+          target: {
+            name: "Choose target",
+            description: "Choose an adjacent enemy before selecting the destination.",
+          },
+          move: {
+            name: "Sail",
+            description: "Move to an empty destination along a straight cardinal line.",
+          },
+          allies: {
+            name: "Attack chain",
+            description:
+              "Each ally touched by the route that can legally attack the chosen enemy makes one attack and spends its attack and action slots.",
+          },
+        },
+      },
+    },
+    mettaton: {
+      rating: {
+        summary: "Rating is Mettaton’s spendable resource for attacks and form unlocks.",
+        gain: "Gain +2 Rating for each successful hit and +1 for each successful defense.",
+        exBonus: "After EX, each attack action also grants +1 Rating.",
+        neoBonus: "After NEO, every defense roll attempt also grants +1 Rating.",
+        options: {
+          poppins: {
+            name: "Mettaton Poppins",
+            description:
+              "Choose a 3×3 center on an attack line and attack every figure in the area.",
+          },
+          ex: {
+            name: "Mettaton EX",
+            description: "Unlock Stage Phenomenon and Laser for the battle.",
+          },
+          laser: {
+            name: "Laser",
+            description: "Choose an attack line and attack every figure on it.",
+          },
+          neo: {
+            name: "Mettaton NEO",
+            description: "Unlock Rider path attacks, Berserker features, and Grace.",
+          },
+          finalChord: {
+            name: "Final Chord",
+            description:
+              "Attack every enemy on all available attack lines for 3 damage on each hit.",
+          },
+        },
+      },
+    },
+    sans: {
+      unbeliever: {
+        summary: "After an allied hero dies, Sans permanently unlocks the Unbeliever ability set.",
+        options: {
+          boneField: {
+            name: "Bone Field",
+            description: "Roll 1d6+1 and replace the arena with Bone Field for that many turns.",
+          },
+          sleep: {
+            name: "Sleep",
+            description: "Spend 3 charges and an action to heal Sans for 2 HP.",
+          },
+          lastAttack: {
+            name: "Last Attack",
+            description:
+              "When Sans dies, curse one enemy; it loses 1 HP at turn start until it reaches 1 HP.",
+          },
+        },
+      },
+    },
+    undyne: {
+      undying: {
+        summary: "Once per game, Undyne transforms automatically when she would die.",
+        options: {
+          revive: {
+            name: "Revival",
+            description: "Revive immediately with 3 HP.",
+          },
+          damageCap: {
+            name: "Damage cap",
+            description: "Each incoming hit can deal at most 1 damage.",
+          },
+          offense: {
+            name: "Undying offense",
+            description:
+              "Gain the close-range damage bonus and use Energy Spear without charge cost.",
+          },
+          drain: {
+            name: "End-turn drain",
+            description: "Lose 1 HP at the end of each own turn.",
+          },
+        },
+      },
+    },
   },
   slots: {
     none: "None",
