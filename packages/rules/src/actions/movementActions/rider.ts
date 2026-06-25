@@ -8,30 +8,50 @@ export function collectRiderPathTargets(
   from: Coord,
   to: Coord
 ): string[] {
-  const targets: string[] = [];
-
   const dx = to.col - from.col;
   const dy = to.row - from.row;
   const isOrthogonal = (dx === 0 && dy !== 0) || (dy === 0 && dx !== 0);
-  if (!isOrthogonal) {
-    return targets;
+  const isDiagonal =
+    dx !== 0 && dy !== 0 && Math.abs(dx) === Math.abs(dy);
+  if (!isOrthogonal && !isDiagonal) {
+    return [];
   }
 
   const stepCol = dx === 0 ? 0 : dx > 0 ? 1 : -1;
   const stepRow = dy === 0 ? 0 : dy > 0 ? 1 : -1;
   const steps = Math.max(Math.abs(dx), Math.abs(dy));
+  const touchedCells: Coord[] = [];
 
   for (let i = 1; i <= steps; i++) {
-    const cell: Coord = {
+    if (isDiagonal) {
+      touchedCells.push(
+        {
+          col: from.col + stepCol * i,
+          row: from.row + stepRow * (i - 1),
+        },
+        {
+          col: from.col + stepCol * (i - 1),
+          row: from.row + stepRow * i,
+        }
+      );
+    }
+    touchedCells.push({
       col: from.col + stepCol * i,
       row: from.row + stepRow * i,
-    };
+    });
+  }
 
+  const targets: string[] = [];
+  const seen = new Set<string>();
+  for (const cell of touchedCells) {
+    if (!isInsideBoard(cell, state.boardSize)) continue;
     const unitOnCell = getUnitAt(state, cell);
     if (!unitOnCell || !unitOnCell.isAlive) continue;
     if (unitOnCell.owner === rider.owner) continue;
+    if (seen.has(unitOnCell.id)) continue;
 
     // Path attacks hit enemies passed on the path regardless of stealthed state.
+    seen.add(unitOnCell.id);
     targets.push(unitOnCell.id);
   }
 
@@ -42,8 +62,11 @@ export function getRiderPathCells(from: Coord, to: Coord): Coord[] {
   const dx = to.col - from.col;
   const dy = to.row - from.row;
 
-  const isOrthogonal = (dx === 0 && dy !== 0) || (dy === 0 && dx !== 0);
-  if (!isOrthogonal) {
+  const aligned =
+    (dx === 0 && dy !== 0) ||
+    (dy === 0 && dx !== 0) ||
+    (dx !== 0 && dy !== 0 && Math.abs(dx) === Math.abs(dy));
+  if (!aligned) {
     return [];
   }
 

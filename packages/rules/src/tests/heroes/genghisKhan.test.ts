@@ -317,6 +317,90 @@ export function testKhansDecreeAllowsDiagonalMoveThenConsumesMove() {
   console.log("khans_decree_allows_diagonal_move_then_consumes_move passed");
 }
 
+export function testKhansDecreeDiagonalMoveTriggersRiderAttacksForTouchedEnemies() {
+  const rng = makeRngSequence([
+    0.99, 0.99, 0.01, 0.01,
+    0.99, 0.99, 0.01, 0.01,
+  ]);
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1", { rider: HERO_GENGHIS_KHAN_ID }));
+  state = attachArmy(state, createDefaultArmy("P2"));
+
+  const genghis = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "rider"
+  )!;
+  const enemy1 = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "knight"
+  )!;
+  const enemy2 = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "archer"
+  )!;
+
+  state = setUnit(state, genghis.id, {
+    position: { col: 0, row: 0 },
+    charges: {
+      ...genghis.charges,
+      [ABILITY_GENGHIS_KHAN_KHANS_DECREE]: 2,
+    },
+  });
+  state = setUnit(state, enemy1.id, { position: { col: 1, row: 0 } });
+  state = setUnit(state, enemy2.id, { position: { col: 0, row: 1 } });
+  state = toBattleState(state, "P1", genghis.id);
+  state = initKnowledgeForOwners(state);
+
+  const hpBefore = {
+    [enemy1.id]: state.units[enemy1.id].hp,
+    [enemy2.id]: state.units[enemy2.id].hp,
+  };
+  const decree = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: genghis.id,
+      abilityId: ABILITY_GENGHIS_KHAN_KHANS_DECREE,
+    } as any,
+    rng
+  );
+  const moved = applyAction(
+    decree.state,
+    { type: "move", unitId: genghis.id, to: { col: 2, row: 2 } } as any,
+    rng
+  );
+
+  assert(
+    moved.state.pendingRoll?.kind === "riderPathAttack_attackerRoll",
+    "diagonal Decree movement should enter the normal Rider attack pipeline"
+  );
+  const resolved = resolveAllPendingRollsWithEvents(moved.state, rng);
+  const events = [...decree.events, ...moved.events, ...resolved.events];
+
+  for (const enemy of [enemy1, enemy2]) {
+    const attacks = events.filter(
+      (event) =>
+        event.type === "attackResolved" &&
+        event.attackerId === genghis.id &&
+        event.defenderId === enemy.id
+    );
+    assert(attacks.length === 1, `Rider should attack ${enemy.id} at most once`);
+    assert(
+      resolved.state.units[enemy.id].hp < hpBefore[enemy.id],
+      `Rider should damage touched enemy ${enemy.id}`
+    );
+  }
+  const updated = resolved.state.units[genghis.id];
+  assert(updated.turn.moveUsed, "Decree movement should spend the move slot");
+  assert(
+    updated.charges[ABILITY_GENGHIS_KHAN_KHANS_DECREE] === 0,
+    "Decree should spend exactly 2 charges"
+  );
+  assert(
+    updated.genghisKhanDecreeMovePending !== true,
+    "Decree movement pending flag should clear after the move"
+  );
+
+  console.log("khans_decree_diagonal_move_triggers_rider_attacks_for_touched_enemies passed");
+}
+
 
 export function testKhansDecreeCannotBeUsedAfterMove() {
   const rng = new SeededRNG(103);

@@ -12,6 +12,8 @@ interface UseGameShellBoardPendingTargetsParams {
   isForestTarget: boolean;
   isForestMoveDestination: boolean;
   isFemtoDivineMoveDestination: boolean;
+  isOdinSleipnirDestination: boolean;
+  isChargedImpulseTargetChoice: boolean;
   isRiverBoatCarryChoice: boolean;
   isRiverBoatDropDestination: boolean;
   isRiverTraLaLaTargetChoice: boolean;
@@ -36,6 +38,8 @@ export function useGameShellBoardPendingTargets({
   isForestTarget,
   isForestMoveDestination,
   isFemtoDivineMoveDestination,
+  isOdinSleipnirDestination,
+  isChargedImpulseTargetChoice,
   isRiverBoatCarryChoice,
   isRiverBoatDropDestination,
   isRiverTraLaLaTargetChoice,
@@ -116,6 +120,24 @@ export function useGameShellBoardPendingTargets({
   const femtoDivineMoveKeys = useMemo(
     () => new Set(femtoDivineMoveOptions.map(coordKey)),
     [femtoDivineMoveOptions]
+  );
+  const odinSleipnirOptions = useMemo(() => {
+    if (!isOdinSleipnirDestination) return [] as Coord[];
+    const ctx = pendingRoll?.context as { options?: unknown } | undefined;
+    return normalizeCoordList(ctx?.options);
+  }, [isOdinSleipnirDestination, pendingRoll]);
+  const odinSleipnirKeys = useMemo(
+    () => new Set(odinSleipnirOptions.map(coordKey)),
+    [odinSleipnirOptions]
+  );
+  const chargedImpulseTargetOptions = useMemo(() => {
+    if (!isChargedImpulseTargetChoice) return [] as Coord[];
+    const ctx = pendingRoll?.context as { options?: unknown } | undefined;
+    return normalizeCoordList(ctx?.options);
+  }, [isChargedImpulseTargetChoice, pendingRoll]);
+  const chargedImpulseTargetKeys = useMemo(
+    () => new Set(chargedImpulseTargetOptions.map(coordKey)),
+    [chargedImpulseTargetOptions]
   );
   const riverBoatCarryOptionIds = useMemo(() => {
     if (!isRiverBoatCarryChoice) return [] as string[];
@@ -237,6 +259,10 @@ export function useGameShellBoardPendingTargets({
     forestMoveDestinationKeys,
     femtoDivineMoveOptions,
     femtoDivineMoveKeys,
+    odinSleipnirOptions,
+    odinSleipnirKeys,
+    chargedImpulseTargetOptions,
+    chargedImpulseTargetKeys,
     riverBoatCarryOptionIds,
     riverBoatCarryOptionKeys,
     riverBoatDropDestinationOptions,

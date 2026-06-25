@@ -41,6 +41,7 @@ const NON_ACTIONABLE_ABILITY_IDS = new Set<string>([
   LECHY_CONFUSE_TERRAIN_ID,
   HASSAN_ASSASSIN_ORDER_ID,
   ASGORE_SOUL_PARADE_ID,
+  ODIN_SLEIPNIR_ID,
 ]);
 
 export function classBadge(unitClass: string): { label: string; marker?: string } {
@@ -124,7 +125,11 @@ export function formatChargeLabel(
 }
 
 export function isActionableAbility(ability: AbilityView): boolean {
-  return ability.kind !== "passive" && !NON_ACTIONABLE_ABILITY_IDS.has(ability.id);
+  return (
+    ability.kind !== "passive" &&
+    ability.kind !== "impulse" &&
+    !NON_ACTIONABLE_ABILITY_IDS.has(ability.id)
+  );
 }
 
 export function abilityActionMode(

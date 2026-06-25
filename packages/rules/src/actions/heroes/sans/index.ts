@@ -1,6 +1,7 @@
 export {
   applySansBadassJoke,
   applySansBoneField,
+  maybeTriggerSansBoneField,
   applySansBoneFieldStartOfTurn,
   applySansGasterBlaster,
   applySansSleep,

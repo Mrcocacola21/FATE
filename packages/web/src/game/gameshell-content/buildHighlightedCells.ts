@@ -33,6 +33,10 @@ export interface BuildHighlightedCellsArgs {
   forestMoveDestinationOptions: Coord[];
   isFemtoDivineMoveDestination: boolean;
   femtoDivineMoveOptions: Coord[];
+  isOdinSleipnirDestination: boolean;
+  odinSleipnirOptions: Coord[];
+  isChargedImpulseTargetChoice: boolean;
+  chargedImpulseTargetOptions: Coord[];
   isRiverBoatCarryChoice: boolean;
   riverBoatCarryOptionKeys: Set<string>;
   isRiverBoatDropDestination: boolean;
@@ -109,6 +113,10 @@ export function buildHighlightedCells({
   forestMoveDestinationOptions,
   isFemtoDivineMoveDestination,
   femtoDivineMoveOptions,
+  isOdinSleipnirDestination,
+  odinSleipnirOptions,
+  isChargedImpulseTargetChoice,
+  chargedImpulseTargetOptions,
   isRiverBoatCarryChoice,
   riverBoatCarryOptionKeys,
   isRiverBoatDropDestination,
@@ -200,6 +208,20 @@ export function buildHighlightedCells({
   if (isFemtoDivineMoveDestination) {
     for (const coord of femtoDivineMoveOptions) {
       highlights[coordKey(coord)] = "move";
+    }
+    return highlights;
+  }
+
+  if (isOdinSleipnirDestination) {
+    for (const coord of odinSleipnirOptions) {
+      highlights[coordKey(coord)] = "move";
+    }
+    return highlights;
+  }
+
+  if (isChargedImpulseTargetChoice) {
+    for (const coord of chargedImpulseTargetOptions) {
+      highlights[coordKey(coord)] = "attack";
     }
     return highlights;
   }

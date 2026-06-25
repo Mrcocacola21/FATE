@@ -22,7 +22,12 @@ function getSlotFromCost(spec: AbilitySpec): AbilitySlot {
 }
 
 function getChargeRequired(spec: AbilitySpec): number | undefined {
-  return spec.chargesPerUse ?? spec.chargeCost ?? spec.maxCharges;
+  return (
+    spec.chargesPerUse ??
+    spec.chargeCost ??
+    spec.triggerCharges ??
+    spec.maxCharges
+  );
 }
 
 function getActiveDisabledReason(

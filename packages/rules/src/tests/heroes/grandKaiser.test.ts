@@ -929,6 +929,89 @@ export function testKaiserEngineeringMiracleImpulseNoActionNoSpend() {
   console.log("kaiser_engineering_miracle_is_impulse_no_action_no_spend passed");
 }
 
+export function testKaiserEngineeringMiracleTriggersAtFourAndPersistsNextTurn() {
+  const rng = new SeededRNG(54321);
+  let { state, kaiser, enemy } = setupKaiserState();
+
+  state = setUnit(state, kaiser.id, {
+    position: { col: 4, row: 4 },
+    charges: {
+      ...kaiser.charges,
+      [ABILITY_KAISER_DORA]: 0,
+      [ABILITY_KAISER_CARPET_STRIKE]: 0,
+      [ABILITY_KAISER_ENGINEERING_MIRACLE]: 3,
+    },
+  });
+  state = setUnit(state, enemy.id, { position: { col: 4, row: 7 } });
+  state = {
+    ...state,
+    phase: "battle",
+    currentPlayer: "P1",
+    activeUnitId: null,
+    turnQueue: [kaiser.id],
+    turnQueueIndex: 0,
+    turnOrder: [kaiser.id],
+    turnOrderIndex: 0,
+  };
+
+  let started = applyAction(
+    state,
+    { type: "unitStartTurn", unitId: kaiser.id } as any,
+    rng
+  );
+  let updated = started.state.units[kaiser.id];
+  assert(updated.transformed === true, "Kaiser should transform when charge reaches 4");
+  assert(
+    updated.charges[ABILITY_KAISER_ENGINEERING_MIRACLE] === 4,
+    "Engineering Miracle should retain the triggering charge total"
+  );
+  assert(!started.state.pendingRoll, "transformation should not leave a pending lock");
+  assert(
+    started.state.activeUnitId === kaiser.id,
+    "the transformed Kaiser should remain the active unit"
+  );
+
+  const view = makePlayerView(started.state, "P1");
+  const abilities = view.abilitiesByUnitId?.[kaiser.id] ?? [];
+  assert(
+    abilities.some((ability) => ability.id === ABILITY_BERSERK_AUTO_DEFENSE),
+    "post-transform ability view should include Berserker feature"
+  );
+  const dora = abilities.find((ability) => ability.id === ABILITY_KAISER_DORA);
+  assert(dora?.isAvailable, "transformed Dora should be usable without charges");
+
+  const moveModes = applyAction(
+    started.state,
+    { type: "requestMoveOptions", unitId: kaiser.id } as any,
+    rng
+  );
+  const modeEvent = moveModes.events.find(
+    (event) => event.type === "moveOptionsGenerated"
+  );
+  assert(
+    modeEvent?.type === "moveOptionsGenerated" &&
+      modeEvent.modes?.includes("rider") &&
+      modeEvent.modes?.includes("berserker"),
+    "transformed Kaiser should expose Rider and Berserker movement modes"
+  );
+
+  started = applyAction(started.state, { type: "endTurn" } as any, rng);
+  started = applyAction(
+    started.state,
+    { type: "unitStartTurn", unitId: kaiser.id } as any,
+    rng
+  );
+  updated = started.state.units[kaiser.id];
+  assert(updated.transformed === true, "Kaiser transformation should persist next turn");
+  assert(!started.state.pendingRoll, "next turn should not be stuck on a pending roll");
+  assert(
+    started.state.activeUnitId === kaiser.id,
+    "Kaiser should start the next turn normally after transforming"
+  );
+
+  console.log("kaiser_engineering_miracle_triggers_at_four_and_persists_next_turn passed");
+}
+
 
 export function testTransformedKaiserHasDoraAbility() {
   const rng = new SeededRNG(8877);

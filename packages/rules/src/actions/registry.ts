@@ -14,6 +14,7 @@ import { applyLokiIllusoryDoubleFromEvents } from "./heroes/loki";
 import { applyPapyrusPostAction } from "./heroes/papyrus";
 import { applySansPostAction } from "./heroes/sans";
 import { applyUndynePostAction } from "./heroes/undyne";
+import { applyMettatonImpulseUnlocks } from "./heroes/mettaton";
 
 export function applyAction(
   state: GameState,
@@ -120,5 +121,12 @@ export function applyAction(
     afterSans.state,
     afterSans.events
   );
-  return applyFriskPostAction(afterUndyne.state, afterUndyne.events);
+  const afterFrisk = applyFriskPostAction(
+    afterUndyne.state,
+    afterUndyne.events
+  );
+  return applyMettatonImpulseUnlocks(
+    afterFrisk.state,
+    afterFrisk.events
+  );
 }

@@ -145,7 +145,8 @@ const DIRECT_HANDLERS: Record<string, DirectAbilityHandler> = {
   [ABILITY_ASGORE_FIRE_PARADE]: (state, unit, _action, rng) =>
     applyAsgoreFireParade(state, unit, rng),
   [ABILITY_ASGORE_SOUL_PARADE]: (state) => NO_OP_RESULT(state),
-  [ABILITY_ODIN_SLEIPNIR]: (state, unit, action) => applyOdinSleipnir(state, unit, action),
+  [ABILITY_ODIN_SLEIPNIR]: (state, unit, action, rng) =>
+    applyOdinSleipnir(state, unit, action, rng),
   [ABILITY_RIVER_PERSON_BOATMAN]: (state, unit) => applyRiverBoatman(state, unit),
   [ABILITY_RIVER_PERSON_TRA_LA_LA]: (state, unit) => applyRiverTraLaLa(state, unit),
   [ABILITY_KALADIN_FIRST]: (state, unit) => applyKaladinFirst(state, unit),

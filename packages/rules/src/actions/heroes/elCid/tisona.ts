@@ -57,6 +57,7 @@ export function applyElCidTisona(
   const updatedUnit = spendSlots(spent.unit, costs);
   let nextState: GameState = {
     ...state,
+    pendingMove: null,
     units: {
       ...state.units,
       [updatedUnit.id]: updatedUnit,
@@ -67,7 +68,9 @@ export function applyElCidTisona(
     evAbilityUsed({ unitId: updatedUnit.id, abilityId: spec.id }),
   ];
 
-  const affectedUnitIds = collectLineTargets(nextState, updatedUnit, target);
+  const affectedUnitIds = Array.from(
+    new Set(collectLineTargets(nextState, updatedUnit, target))
+  );
   const revealedUnitIds: string[] = [];
 
   if (affectedUnitIds.length === 0) {

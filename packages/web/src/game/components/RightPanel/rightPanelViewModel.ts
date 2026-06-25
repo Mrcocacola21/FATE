@@ -124,6 +124,12 @@ export function buildRightPanelViewModel(params: RightPanelProps, t: Translate) 
     selectedUnit &&
     isActive
   );
+  const canChooseImpulseAxis = !!(
+    selectedUnit &&
+    view.pendingRoll?.kind === "chargedImpulseTargetChoice" &&
+    (view.pendingRoll.context as { unitId?: string } | undefined)?.unitId ===
+      selectedUnit.id
+  );
 
   const economy = selectedUnit?.turn ?? DEFAULT_ECONOMY;
   const legalIntents = view.legalIntents;
@@ -245,6 +251,7 @@ export function buildRightPanelViewModel(params: RightPanelProps, t: Translate) 
     canStartTurn,
     isMyTurn,
     canAct,
+    canChooseImpulseAxis,
     economy,
     legalIntents,
     selectedMettatonRating,

@@ -6,6 +6,7 @@
     "dev": "vite",
     "build": "vite build",
     "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test:gameplay": "tsx --test src/store.selection.test.ts",
     "test:i18n": "tsx --test src/i18n/i18n.test.ts",
     "check:i18n": "npm run typecheck && npm run test:i18n",
     "preview": "vite preview"

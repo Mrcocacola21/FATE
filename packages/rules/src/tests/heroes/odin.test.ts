@@ -196,6 +196,189 @@ export function testOdinSleipnirGatingTeleportAndNoMoveSpend() {
   console.log("odin_sleipnir_gating_teleport_and_no_move_spend passed");
 }
 
+export function testOdinSleipnirAutoPendingAndDestinationStakeTrigger() {
+  let { state, odin } = setupOdinState();
+  const destination = { col: 3, row: 3 };
+  state = setUnit(state, odin.id, {
+    position: { col: 0, row: 0 },
+    charges: { ...odin.charges, [ABILITY_ODIN_SLEIPNIR]: 2 },
+  });
+  state = {
+    ...state,
+    phase: "battle",
+    currentPlayer: "P1",
+    activeUnitId: null,
+    turnQueue: [odin.id],
+    turnQueueIndex: 0,
+    turnOrder: [odin.id],
+    turnOrderIndex: 0,
+    stakeMarkers: [
+      {
+        id: "stake-intermediate",
+        owner: "P2",
+        position: { col: 1, row: 1 },
+        createdAt: 1,
+        isRevealed: false,
+      },
+      {
+        id: "stake-destination",
+        owner: "P2",
+        position: destination,
+        createdAt: 2,
+        isRevealed: false,
+      },
+    ],
+  };
+  state = initKnowledgeForOwners(state);
+
+  const started = applyAction(
+    state,
+    { type: "unitStartTurn", unitId: odin.id } as any,
+    makeRngSequence([])
+  );
+  assert(
+    String(started.state.pendingRoll?.kind) === "odinSleipnirDestination",
+    "Sleipnir should automatically create a destination choice at 3 charges"
+  );
+  assert(
+    started.state.units[odin.id].charges[ABILITY_ODIN_SLEIPNIR] === 3,
+    "Sleipnir charges should remain until the forced destination is resolved"
+  );
+
+  const pending = started.state.pendingRoll!;
+  const hpBefore = started.state.units[odin.id].hp;
+  const resolved = applyAction(
+    started.state,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: pending.id,
+      player: pending.player,
+      choice: { type: "odinSleipnirDestination", position: destination },
+    } as any,
+    makeRngSequence([])
+  );
+  const updated = resolved.state.units[odin.id];
+  assert(
+    updated.position?.col === destination.col &&
+      updated.position?.row === destination.row,
+    "Sleipnir should teleport to the forced destination"
+  );
+  assert(
+    updated.hp === hpBefore - 1,
+    "landing on a Vlad stake should deal exactly 1 damage"
+  );
+  assert(
+    updated.charges[ABILITY_ODIN_SLEIPNIR] === 0,
+    "Sleipnir should spend all 3 charges on resolution"
+  );
+  assert(!resolved.state.pendingRoll, "Sleipnir destination should fully resolve");
+  assert(
+    resolved.events.some(
+      (event) =>
+        event.type === "stakeTriggered" &&
+        event.unitId === odin.id &&
+        event.markerPos.col === destination.col &&
+        event.markerPos.row === destination.row
+    ),
+    "destination stake should reveal and trigger"
+  );
+  assert(
+    resolved.state.stakeMarkers.find((marker) => marker.id === "stake-intermediate")
+      ?.isRevealed === false,
+    "teleport must not trigger intermediate stakes"
+  );
+  assert(
+    !updated.turn.moveUsed && !updated.turn.actionUsed,
+    "Sleipnir impulse should not spend move or action slots"
+  );
+
+  console.log("odin_sleipnir_auto_pending_and_destination_stake_trigger passed");
+}
+
+export function testOdinSleipnirDoesNotLeakUnknownHiddenOccupants() {
+  let { state, odin } = setupOdinState();
+  const hiddenEnemy = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "assassin"
+  )!;
+  const hiddenPosition = { col: 3, row: 3 };
+  state = setUnit(state, odin.id, {
+    position: { col: 0, row: 0 },
+    charges: { ...odin.charges, [ABILITY_ODIN_SLEIPNIR]: 2 },
+  });
+  state = setUnit(state, hiddenEnemy.id, {
+    position: hiddenPosition,
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
+  state = {
+    ...state,
+    phase: "battle",
+    currentPlayer: "P1",
+    activeUnitId: null,
+    turnQueue: [odin.id],
+    turnQueueIndex: 0,
+    turnOrder: [odin.id],
+    turnOrderIndex: 0,
+    knowledge: {
+      ...state.knowledge,
+      P1: {
+        ...state.knowledge.P1,
+        [hiddenEnemy.id]: false,
+      },
+    },
+  };
+
+  const started = applyAction(
+    state,
+    { type: "unitStartTurn", unitId: odin.id } as any,
+    makeRngSequence([])
+  );
+  const pending = started.state.pendingRoll!;
+  const options = Array.isArray(pending.context.options)
+    ? (pending.context.options as { col: number; row: number }[])
+    : [];
+  assert(
+    options.some(
+      (option) =>
+        option.col === hiddenPosition.col && option.row === hiddenPosition.row
+    ),
+    "Sleipnir options must not reveal an unknown hidden occupant by omission"
+  );
+
+  const attempted = applyAction(
+    started.state,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: pending.id,
+      player: pending.player,
+      choice: {
+        type: "odinSleipnirDestination",
+        position: hiddenPosition,
+      },
+    } as any,
+    makeRngSequence([])
+  );
+  assert(
+    attempted.state.units[hiddenEnemy.id].isStealthed === false,
+    "attempting the occupied hidden cell should reveal its occupant"
+  );
+  assert(
+    attempted.state.units[odin.id].position?.col === 0 &&
+      attempted.state.units[odin.id].position?.row === 0,
+    "Odin should not teleport onto an occupied hidden cell"
+  );
+  assert(
+    attempted.state.pendingRoll?.kind === "odinSleipnirDestination",
+    "the forced Sleipnir choice should reopen after revealing the blocker"
+  );
+  assert(
+    attempted.state.units[odin.id].charges[ABILITY_ODIN_SLEIPNIR] === 3,
+    "failed hidden-cell destination must not spend Sleipnir charges"
+  );
+
+  console.log("odin_sleipnir_does_not_leak_unknown_hidden_occupants passed");
+}
+
 
 export function testOdinMuninnPostDefenseChoice() {
   let { state, odin } = setupOdinState();

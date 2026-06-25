@@ -26,16 +26,25 @@ export function applySansBoneField(
   unit: UnitState,
   rng: { next: () => number }
 ): ApplyResult {
-  if (!isSans(unit) || !unit.isAlive || !hasSansUnbelieverUnlocked(unit)) {
+  if (
+    !isSans(unit) ||
+    !unit.isAlive ||
+    !hasSansUnbelieverUnlocked(unit) ||
+    unit.sansBoneFieldActivated
+  ) {
     return { state, events: [] };
   }
 
   const duration = 1 + Math.floor(rng.next() * 6) + 1;
+  const updatedSans: UnitState = {
+    ...unit,
+    sansBoneFieldActivated: true,
+  };
   const updatedState: GameState = {
     ...state,
     units: {
       ...state.units,
-      [unit.id]: unit,
+      [unit.id]: updatedSans,
     },
     arenaId: ARENA_BONE_FIELD_ID,
     boneFieldTurnsLeft: duration,
@@ -51,6 +60,23 @@ export function applySansBoneField(
       },
     ],
   };
+}
+
+export function maybeTriggerSansBoneField(
+  state: GameState,
+  unitId: string,
+  rng: { next: () => number }
+): ApplyResult {
+  const unit = state.units[unitId];
+  if (
+    !unit ||
+    !isSans(unit) ||
+    !hasSansUnbelieverUnlocked(unit) ||
+    unit.sansBoneFieldActivated
+  ) {
+    return { state, events: [] };
+  }
+  return applySansBoneField(state, unit, rng);
 }
 
 export function applySansSleep(

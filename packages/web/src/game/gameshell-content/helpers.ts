@@ -366,6 +366,8 @@ const PENDING_ROLL_LABELS_UK: Record<string, string> = {
   friskChildsCryChoice: "Вибір захисту Дитячим плачем",
   femtoDivineMoveRoll: "Кидок Божественного переміщення",
   femtoDivineMoveDestination: "Призначення Божественного переміщення",
+  odinSleipnirDestination: "Вибір клітинки Слейпніра",
+  chargedImpulseTargetChoice: "Вибір цілі імпульсу",
   kaiserCarpetStrikeCenter: "Кидок центру Килимового удару",
   kaiserCarpetStrikeAttack: "Кидок атаки Килимового удару",
   carpetStrike_defenderRoll: "Захист від Килимового удару",
@@ -485,6 +487,10 @@ export function getPendingRollLabel(kind?: string | null, language: "en" | "uk" 
       return "Divine Movement roll";
     case "femtoDivineMoveDestination":
       return "Divine Movement destination";
+    case "odinSleipnirDestination":
+      return "Sleipnir destination";
+    case "chargedImpulseTargetChoice":
+      return "Impulse target choice";
     case "kaiserCarpetStrikeCenter":
       return "Carpet Strike center roll";
     case "kaiserCarpetStrikeAttack":

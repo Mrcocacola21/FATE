@@ -157,6 +157,17 @@ const ResolveRollChoiceSchema = z.union([
     type: z.literal("femtoDivineMoveDestination"),
     position: CoordSchema,
   }),
+  z.object({
+    type: z.literal("odinSleipnirDestination"),
+    position: CoordSchema,
+  }),
+  z.object({
+    type: z.literal("chargedImpulseTarget"),
+    position: CoordSchema,
+    axis: z
+      .enum(["row", "col", "diagMain", "diagAnti"])
+      .optional(),
+  }),
   z.literal("elCidDuelistContinue"),
   z.literal("elCidDuelistStop"),
 ]);

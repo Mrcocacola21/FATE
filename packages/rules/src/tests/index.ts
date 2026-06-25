@@ -7,6 +7,11 @@ import {
   testUnknownPendingRollKindDoesNotClear,
 } from "./core/pendingRoll.test";
 import {
+  testChargedLineImpulsesCreateForcedPendingAtTurnStart,
+  testEventDrivenImpulsesAutoTrigger,
+  testImpulseMetadataAllAutoManaged,
+} from "./core/impulses.test";
+import {
   testPlacementToBattleAndTurnOrder,
   testLobbyReadyAndStartRequiresBothReady,
   testInitiativeRollSequenceNoAutoroll,
@@ -116,6 +121,7 @@ import {
   testKaiserDoraCenterMustBeOnArcherLine,
   testKaiserEngineeringMiracleTransformsStats,
   testKaiserEngineeringMiracleImpulseNoActionNoSpend,
+  testKaiserEngineeringMiracleTriggersAtFourAndPersistsNextTurn,
   testTransformedKaiserHasDoraAbility,
   testTransformedKaiserHasBerserkerFeatureAndCharges,
   testKaiserInitialChargesStartAtZeroThenIncrementToOneOnFirstTurn,
@@ -157,6 +163,7 @@ import {
   testGenghisHpIs7,
   testKhansDecreeDoesNotConsumeMoveSlot,
   testKhansDecreeAllowsDiagonalMoveThenConsumesMove,
+  testKhansDecreeDiagonalMoveTriggersRiderAttacksForTouchedEnemies,
   testKhansDecreeCannotBeUsedAfterMove,
   testGenghisMongolChargeRequires4SpendsAll4,
   testGenghisLegendOfSteppesBonusOnlyVsLastTurnTarget,
@@ -167,6 +174,7 @@ import {
   testElCidWarriorDoubleIsAutoHitNoDefenderRoll,
   testElCidTisonaIsRayOnlyRightDirection,
   testElCidTisonaIsRayOnlyUpDirection,
+  testElCidTisonaResolvesOnceAndCannotReplayAfterward,
   testElCidKoladaImpulseTriggersAtStartTurnSpends3SharedAttackerRollHitsAllies,
   testElCidDemonDuelistChainHitsUntilMissThenChoicePayHpOrStop,
   testElCidDemonDuelistRequires5AndSpends5,
@@ -243,6 +251,8 @@ import {
   testOdinGungnirAutoHitOnAttackDouble,
   testOdinHuginnStealthVisibilityRadius,
   testOdinSleipnirGatingTeleportAndNoMoveSpend,
+  testOdinSleipnirAutoPendingAndDestinationStakeTrigger,
+  testOdinSleipnirDoesNotLeakUnknownHiddenOccupants,
   testOdinMuninnPostDefenseChoice,
 } from "./heroes/odin.test";
 import {
@@ -320,6 +330,9 @@ function main(): void {
   testPendingRollActionsExportsStable();
   testPendingRollResolverCoverage();
   testUnknownPendingRollKindDoesNotClear();
+  testImpulseMetadataAllAutoManaged();
+  testChargedLineImpulsesCreateForcedPendingAtTurnStart();
+  testEventDrivenImpulsesAutoTrigger();
   testPlacementToBattleAndTurnOrder();
   testLobbyReadyAndStartRequiresBothReady();
   testInitiativeRollSequenceNoAutoroll();
@@ -414,6 +427,7 @@ function main(): void {
   testKaiserDoraCenterMustBeOnArcherLine();
   testKaiserEngineeringMiracleTransformsStats();
   testKaiserEngineeringMiracleImpulseNoActionNoSpend();
+  testKaiserEngineeringMiracleTriggersAtFourAndPersistsNextTurn();
   testTransformedKaiserHasDoraAbility();
   testTransformedKaiserHasBerserkerFeatureAndCharges();
   testBerserkerMoveRequiresPendingRollAndGeneratesOptions();
@@ -427,6 +441,7 @@ function main(): void {
   testGenghisHpIs7();
   testKhansDecreeDoesNotConsumeMoveSlot();
   testKhansDecreeAllowsDiagonalMoveThenConsumesMove();
+  testKhansDecreeDiagonalMoveTriggersRiderAttacksForTouchedEnemies();
   testKhansDecreeCannotBeUsedAfterMove();
   testGenghisMongolChargeRequires4SpendsAll4();
   testGenghisLegendOfSteppesBonusOnlyVsLastTurnTarget();
@@ -471,6 +486,8 @@ function main(): void {
   testOdinGungnirAutoHitOnAttackDouble();
   testOdinHuginnStealthVisibilityRadius();
   testOdinSleipnirGatingTeleportAndNoMoveSpend();
+  testOdinSleipnirAutoPendingAndDestinationStakeTrigger();
+  testOdinSleipnirDoesNotLeakUnknownHiddenOccupants();
   testOdinMuninnPostDefenseChoice();
   testRiverPersonHpBonus();
   testRiverPersonNoRiderPathFeature();
@@ -542,6 +559,7 @@ function main(): void {
   testElCidWarriorDoubleIsAutoHitNoDefenderRoll();
   testElCidTisonaIsRayOnlyRightDirection();
   testElCidTisonaIsRayOnlyUpDirection();
+  testElCidTisonaResolvesOnceAndCannotReplayAfterward();
   testElCidKoladaImpulseTriggersAtStartTurnSpends3SharedAttackerRollHitsAllies();
   testElCidDemonDuelistChainHitsUntilMissThenChoicePayHpOrStop();
   testElCidDemonDuelistRequires5AndSpends5();

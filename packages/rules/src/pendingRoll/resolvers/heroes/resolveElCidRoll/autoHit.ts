@@ -16,8 +16,11 @@ export function resolveElCidAoEAutoHit(
 ): ApplyResult {
   const baseState = clearPendingRoll(state);
   const targets = Array.isArray(context.targetsQueue)
-    ? context.targetsQueue
+    ? Array.from(new Set(context.targetsQueue))
     : [];
+  const resolvedTargetIds = new Set(
+    Array.isArray(context.resolvedTargetIds) ? context.resolvedTargetIds : []
+  );
   let idx = context.currentTargetIndex ?? 0;
   let workingState = baseState;
   let updatedEvents = [...events];
@@ -28,6 +31,10 @@ export function resolveElCidAoEAutoHit(
 
   while (idx < targets.length) {
     const targetId = targets[idx];
+    if (resolvedTargetIds.has(targetId)) {
+      idx += 1;
+      continue;
+    }
     const target = workingState.units[targetId];
     if (!target || !target.isAlive) {
       idx += 1;
@@ -70,6 +77,7 @@ export function resolveElCidAoEAutoHit(
       updatedEvents.push(damageEvent);
     }
 
+    resolvedTargetIds.add(targetId);
     idx += 1;
   }
 

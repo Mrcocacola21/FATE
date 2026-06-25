@@ -250,8 +250,9 @@ export function testMettatonPoppinsGatingAreaAndRating() {
     "Poppins should attack all units in the selected 3x3 area"
   );
   assert(
-    resolved.state.units[mettaton.id].mettatonRating === 6,
-    "Poppins hits should still grant Rating via base passive (+2 per successful hit)"
+    resolved.state.units[mettaton.id].mettatonRating === 1 &&
+      resolved.state.units[mettaton.id].mettatonExUnlocked === true,
+    "Poppins rating gain should auto-trigger EX at 5 and retain overflow Rating"
   );
 
   console.log("mettaton_poppins_gating_area_and_rating passed");

@@ -71,9 +71,9 @@ export const ABILITY_SPECS_PART_2: Record<string, AbilitySpec> = {
   [ids.ABILITY_ODIN_SLEIPNIR]: {
     id: ids.ABILITY_ODIN_SLEIPNIR,
     displayName: "Sleipnir",
-    kind: "phantasm",
+    kind: "impulse",
     description:
-      "Spend 3 charges to teleport to any empty board cell. Impulse: does not consume move/action slots.",
+      "At 3 charges, automatically choose any empty board cell and teleport there without consuming move/action slots.",
     maxCharges: 3,
     chargesPerUse: 3,
   },

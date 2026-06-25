@@ -27,6 +27,8 @@ export type RollKind =
   | "attack_defenderRoll"
   | "berserkerDefenseChoice"
   | "odinMuninnDefenseChoice"
+  | "odinSleipnirDestination"
+  | "chargedImpulseTargetChoice"
   | "riderPathAttack_attackerRoll"
   | "riderPathAttack_defenderRoll"
   | "tricksterAoE_attackerRoll"
@@ -101,6 +103,8 @@ export const ALL_ROLL_KINDS = [
   "attack_defenderRoll",
   "berserkerDefenseChoice",
   "odinMuninnDefenseChoice",
+  "odinSleipnirDestination",
+  "chargedImpulseTargetChoice",
   "riderPathAttack_attackerRoll",
   "riderPathAttack_defenderRoll",
   "tricksterAoE_attackerRoll",

@@ -85,6 +85,7 @@ export const RightPanelContent: FC<RightPanelProps> = (props) => {
           searchMoveReason={vm.legalIntents?.searchMoveReason}
           searchActionReason={vm.legalIntents?.searchActionReason}
           canAct={vm.canAct}
+          canChooseImpulseAxis={vm.canChooseImpulseAxis}
           selectedIsPapyrus={vm.selectedIsPapyrus}
           selectedIsUndyne={vm.selectedIsUndyne}
           selectedPapyrusUnbeliever={vm.selectedPapyrusUnbeliever}

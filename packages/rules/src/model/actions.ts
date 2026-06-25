@@ -1,4 +1,5 @@
 import type { Coord, MoveMode, PlayerId } from "./shared";
+import type { PapyrusLineAxis } from "./unit";
 import type { SearchStealthMode } from "./roll";
 
 export type ResolveRollChoice =
@@ -37,6 +38,12 @@ export type ResolveRollChoice =
   | { type: "lokiMindControlEnemy"; targetId: string }
   | { type: "lokiMindControlTarget"; targetId: string }
   | { type: "femtoDivineMoveDestination"; position: Coord }
+  | { type: "odinSleipnirDestination"; position: Coord }
+  | {
+      type: "chargedImpulseTarget";
+      position: Coord;
+      axis?: PapyrusLineAxis;
+    }
   | {
       type: "friskPacifismOption";
       option: "hugs" | "childsCry" | "warmWords" | "powerOfFriendship";

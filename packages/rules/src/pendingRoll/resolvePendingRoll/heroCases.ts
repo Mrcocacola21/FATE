@@ -75,6 +75,8 @@ import {
   resolveFemtoDivineMoveDestinationChoice,
   resolveFemtoDivineMoveRoll,
 } from "../../actions/heroes/griffith";
+import { resolveOdinSleipnirDestinationChoice } from "../../actions/heroes/odin";
+import { resolveChargedImpulseTargetChoice } from "../../actions/chargedImpulses";
 import { resolveLechyGuideTravelerPlacement } from "../../actions/heroes/lechy";
 import {
   resolveRiverBoatDropDestination,
@@ -122,6 +124,8 @@ export const HERO_PENDING_ROLL_KINDS = [
   "asgoreSoulParadeIntegrityDestination",
   "femtoDivineMoveRoll",
   "femtoDivineMoveDestination",
+  "odinSleipnirDestination",
+  "chargedImpulseTargetChoice",
   "vladIntimidateChoice",
   "vladPlaceStakes",
   "vladForestChoice",
@@ -246,6 +250,19 @@ export function resolveHeroPendingRollCase(
         pending,
         action.choice,
         rng
+      );
+    case "odinSleipnirDestination":
+      return resolveOdinSleipnirDestinationChoice(
+        state,
+        pending,
+        action.choice,
+        rng
+      );
+    case "chargedImpulseTargetChoice":
+      return resolveChargedImpulseTargetChoice(
+        state,
+        pending,
+        action.choice
       );
     case "vladIntimidateChoice":
       return resolveVladIntimidateChoice(state, pending, action.choice, rng);

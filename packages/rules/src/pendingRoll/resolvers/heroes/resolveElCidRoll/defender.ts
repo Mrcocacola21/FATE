@@ -29,7 +29,12 @@ export function resolveElCidDefenderRoll(
     return { state: clearPendingRoll(state), events: [] };
   }
 
-  const targets = Array.isArray(ctx.targetsQueue) ? ctx.targetsQueue : [];
+  const targets = Array.isArray(ctx.targetsQueue)
+    ? Array.from(new Set(ctx.targetsQueue))
+    : [];
+  const resolvedTargetIds = new Set(
+    Array.isArray(ctx.resolvedTargetIds) ? ctx.resolvedTargetIds : []
+  );
   const idx = ctx.currentTargetIndex ?? 0;
   const targetId = targets[idx];
   if (!targetId) {
@@ -40,6 +45,14 @@ export function resolveElCidDefenderRoll(
   if (!target || !target.isAlive) {
     const nextCtx: ElCidAoEContext = {
       ...ctx,
+      currentTargetIndex: idx + 1,
+    };
+    return advanceElCidAoEQueue(state, nextCtx, [], defenderRollKind);
+  }
+  if (resolvedTargetIds.has(targetId)) {
+    const nextCtx: ElCidAoEContext = {
+      ...ctx,
+      targetsQueue: targets,
       currentTargetIndex: idx + 1,
     };
     return advanceElCidAoEQueue(state, nextCtx, [], defenderRollKind);
@@ -83,8 +96,10 @@ export function resolveElCidDefenderRoll(
 
   const nextCtx: ElCidAoEContext = {
     ...ctx,
+    targetsQueue: targets,
     currentTargetIndex: idx + 1,
     attackerDice,
+    resolvedTargetIds: [...resolvedTargetIds, targetId],
   };
 
   const intimidateResume: IntimidateResume = {

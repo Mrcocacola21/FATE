@@ -73,6 +73,10 @@ export function useGameShellPendingStatus({
     pendingRoll?.kind === "friskChildsCryChoice";
   const isFemtoDivineMoveDestination =
     pendingRoll?.kind === "femtoDivineMoveDestination";
+  const isOdinSleipnirDestination =
+    pendingRoll?.kind === "odinSleipnirDestination";
+  const isChargedImpulseTargetChoice =
+    pendingRoll?.kind === "chargedImpulseTargetChoice";
   const isRiverBoatCarryChoice = pendingRoll?.kind === "riverBoatCarryChoice";
   const isRiverBoatDropDestination =
     pendingRoll?.kind === "riverBoatDropDestination";
@@ -103,6 +107,8 @@ export function useGameShellPendingStatus({
     isAsgoreSoulParadeJusticeTargetChoice ||
     isAsgoreSoulParadeIntegrityDestination ||
     isFemtoDivineMoveDestination ||
+    isOdinSleipnirDestination ||
+    isChargedImpulseTargetChoice ||
     isRiverBoatCarryChoice ||
     isRiverBoatDropDestination ||
     isRiverTraLaLaTargetChoice ||
@@ -263,6 +269,8 @@ export function useGameShellPendingStatus({
     isFriskSubstitutionChoice,
     isFriskChildsCryChoice,
     isFemtoDivineMoveDestination,
+    isOdinSleipnirDestination,
+    isChargedImpulseTargetChoice,
     isRiverBoatCarryChoice,
     isRiverBoatDropDestination,
     isRiverTraLaLaTargetChoice,

@@ -161,7 +161,7 @@ export const ABILITY_SPECS_PART_4: Record<string, AbilitySpec> = {
     kind: "impulse",
     description: "You're showing by example what Nazi cyborgs are like. You gain the multi-class of rider and berserker, and the Dora bitch doesn't require more charges. However, you lose the ability to enter stealth and bunkers, and carpet bombings won't affect you in this state.",
     chargeUnlimited: true,
-    triggerCharges: 5,
+    triggerCharges: 4,
   },
   [ids.ABILITY_VLAD_POLKOVODETS]: {
     id: ids.ABILITY_VLAD_POLKOVODETS,

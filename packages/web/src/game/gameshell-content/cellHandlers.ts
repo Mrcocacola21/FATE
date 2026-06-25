@@ -53,6 +53,10 @@ export interface CellClickContext {
   forestMoveDestinationKeys: Set<string>;
   isFemtoDivineMoveDestination: boolean;
   femtoDivineMoveKeys: Set<string>;
+  isOdinSleipnirDestination: boolean;
+  odinSleipnirKeys: Set<string>;
+  isChargedImpulseTargetChoice: boolean;
+  chargedImpulseTargetKeys: Set<string>;
   isRiverBoatCarryChoice: boolean;
   riverBoatCarryOptionIds: string[];
   isRiverBoatDropDestination: boolean;
@@ -139,6 +143,10 @@ export function createCellClickHandler(context: CellClickContext) {
     forestMoveDestinationKeys,
     isFemtoDivineMoveDestination,
     femtoDivineMoveKeys,
+    isOdinSleipnirDestination,
+    odinSleipnirKeys,
+    isChargedImpulseTargetChoice,
+    chargedImpulseTargetKeys,
     isRiverBoatCarryChoice,
     riverBoatCarryOptionIds,
     isRiverBoatDropDestination,
@@ -237,7 +245,7 @@ export function createCellClickHandler(context: CellClickContext) {
         type: "resolvePendingRoll",
         pendingRollId: pendingRoll.id,
         choice: { type: "intimidatePush", to: { col, row } },
-      } as GameAction);
+      } as unknown as GameAction);
       return;
     }
 
@@ -271,6 +279,35 @@ export function createCellClickHandler(context: CellClickContext) {
         pendingRollId: pendingRoll.id,
         choice: { type: "femtoDivineMoveDestination", position: { col, row } },
       } as GameAction);
+      return;
+    }
+
+    if (isOdinSleipnirDestination) {
+      const key = coordKey({ col, row });
+      if (!odinSleipnirKeys.has(key) || !pendingRoll) return;
+      sendAction({
+        type: "resolvePendingRoll",
+        pendingRollId: pendingRoll.id,
+        choice: {
+          type: "odinSleipnirDestination",
+          position: { col, row },
+        },
+      } as unknown as GameAction);
+      return;
+    }
+
+    if (isChargedImpulseTargetChoice) {
+      const key = coordKey({ col, row });
+      if (!chargedImpulseTargetKeys.has(key) || !pendingRoll) return;
+      sendAction({
+        type: "resolvePendingRoll",
+        pendingRollId: pendingRoll.id,
+        choice: {
+          type: "chargedImpulseTarget",
+          position: { col, row },
+          axis: papyrusLineAxis,
+        },
+      } as unknown as GameAction);
       return;
     }
 

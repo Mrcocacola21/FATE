@@ -1,0 +1,26 @@
+import * as ids from "./constants";
+import { ABILITY_SPECS } from "./specs";
+
+export const AUTO_TRIGGERED_IMPULSE_IDS = new Set<string>([
+  ids.ABILITY_LECHY_CONFUSE_TERRAIN,
+  ids.ABILITY_EL_SID_COMPEADOR_KOLADA,
+  ids.ABILITY_GROZNY_TYRANT,
+  ids.ABILITY_SANS_GASTER_BLASTER,
+  ids.ABILITY_SANS_BONE_FIELD,
+  ids.ABILITY_UNDYNE_ENERGY_SPEAR,
+  ids.ABILITY_ASGORE_SOUL_PARADE,
+  ids.ABILITY_PAPYRUS_COOL_GUY,
+  ids.ABILITY_METTATON_EX,
+  ids.ABILITY_METTATON_NEO,
+  ids.ABILITY_KAISER_CARPET_STRIKE,
+  ids.ABILITY_KAISER_ENGINEERING_MIRACLE,
+  ids.ABILITY_VLAD_STAKES,
+  ids.ABILITY_ODIN_SLEIPNIR,
+]);
+
+export function getImpulseAbilityIds(): string[] {
+  return Object.values(ABILITY_SPECS)
+    .filter((spec) => spec.kind === "impulse")
+    .map((spec) => spec.id)
+    .sort();
+}

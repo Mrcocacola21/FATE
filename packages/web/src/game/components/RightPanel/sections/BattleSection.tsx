@@ -34,6 +34,7 @@ interface BattleSectionProps {
   searchMoveReason?: string;
   searchActionReason?: string;
   canAct: boolean;
+  canChooseImpulseAxis: boolean;
   selectedIsPapyrus: boolean;
   selectedIsUndyne: boolean;
   selectedPapyrusUnbeliever: boolean;
@@ -90,6 +91,7 @@ export const BattleSection: FC<BattleSectionProps> = ({
   searchMoveReason,
   searchActionReason,
   canAct,
+  canChooseImpulseAxis,
   selectedIsPapyrus,
   selectedIsUndyne,
   selectedPapyrusUnbeliever,
@@ -164,7 +166,7 @@ export const BattleSection: FC<BattleSectionProps> = ({
         <BattleAbilityActions
           actionableAbilities={actionableAbilities}
           selectedUnit={selectedUnit}
-          canAct={canAct}
+          canAct={canAct || canChooseImpulseAxis}
           economy={economy}
           actionMode={actionMode}
           onUseAbility={onUseAbility}

@@ -245,6 +245,110 @@ export function testElCidTisonaIsRayOnlyUpDirection() {
   console.log("el_cid_tisona_is_ray_only_up_direction passed");
 }
 
+export function testElCidTisonaResolvesOnceAndCannotReplayAfterward() {
+  const rng = makeRngSequence([0.99, 0.99]);
+  let { state, elCid } = setupElCidState();
+  const ally = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "archer"
+  )!;
+  const enemy1 = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "archer"
+  )!;
+  const enemy2 = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "trickster"
+  )!;
+
+  state = setUnit(state, elCid.id, {
+    position: { col: 4, row: 4 },
+    turn: {
+      moveUsed: true,
+      attackUsed: false,
+      actionUsed: false,
+      stealthUsed: false,
+    },
+    charges: {
+      ...elCid.charges,
+      [ABILITY_EL_SID_COMPEADOR_TISONA]: 2,
+    },
+  });
+  state = setUnit(state, ally.id, { position: { col: 5, row: 4 } });
+  state = setUnit(state, enemy1.id, { position: { col: 6, row: 4 } });
+  state = setUnit(state, enemy2.id, { position: { col: 7, row: 4 } });
+  state = toBattleState(state, "P1", elCid.id);
+  state = initKnowledgeForOwners(state);
+
+  const hpBefore = new Map(
+    [ally.id, enemy1.id, enemy2.id].map((id) => [id, state.units[id].hp])
+  );
+  const started = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: elCid.id,
+      abilityId: ABILITY_EL_SID_COMPEADOR_TISONA,
+      payload: { target: { col: 8, row: 4 } },
+    } as any,
+    rng
+  );
+  const resolved = resolveAllPendingRollsWithEvents(started.state, rng);
+  const events = [...started.events, ...resolved.events];
+  const targetIds = [ally.id, enemy1.id, enemy2.id];
+
+  for (const targetId of targetIds) {
+    const targetAttacks = events.filter(
+      (event) =>
+        event.type === "attackResolved" &&
+        event.attackerId === elCid.id &&
+        event.defenderId === targetId
+    );
+    assert(
+      targetAttacks.length === 1,
+      `Tisona should resolve exactly once for ${targetId}`
+    );
+    assert(
+      resolved.state.units[targetId].hp === hpBefore.get(targetId)! - elCid.attack,
+      `Tisona should damage ${targetId} exactly once`
+    );
+  }
+  assert(!resolved.state.pendingRoll, "Tisona should leave no pending roll");
+  assert(!resolved.state.pendingAoE, "Tisona should leave no pending AoE");
+  assert(
+    resolved.state.units[elCid.id].turn.moveUsed,
+    "Tisona must preserve an already-spent move slot"
+  );
+
+  const hpAfter = targetIds.map((id) => resolved.state.units[id].hp);
+  const replayAttempt = applyAction(
+    resolved.state,
+    {
+      type: "useAbility",
+      unitId: elCid.id,
+      abilityId: ABILITY_EL_SID_COMPEADOR_TISONA,
+      payload: { target: { col: 8, row: 4 } },
+    } as any,
+    rng
+  );
+  assert(replayAttempt.events.length === 0, "Tisona must not replay after resolution");
+  assert.deepStrictEqual(
+    targetIds.map((id) => replayAttempt.state.units[id].hp),
+    hpAfter,
+    "a later action must not repeat Tisona damage"
+  );
+
+  const moveAttempt = applyAction(
+    replayAttempt.state,
+    { type: "move", unitId: elCid.id, to: { col: 3, row: 4 } } as any,
+    rng
+  );
+  assert(
+    moveAttempt.state.units[elCid.id].position?.col === 4 &&
+      moveAttempt.state.units[elCid.id].position?.row === 4,
+    "El Cid must not move again after movement was already spent"
+  );
+
+  console.log("el_cid_tisona_resolves_once_and_cannot_replay_afterward passed");
+}
+
 
 export function testElCidKoladaImpulseTriggersAtStartTurnSpends3SharedAttackerRollHitsAllies() {
   const rng = makeRngSequence([0.2, 0.55, 0.01, 0.01, 0.2, 0.4]);

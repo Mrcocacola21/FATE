@@ -77,6 +77,7 @@ export interface ElCidAoEContext extends Record<string, unknown> {
   targetsQueue: string[];
   currentTargetIndex?: number;
   attackerDice?: number[];
+  resolvedTargetIds?: string[];
 }
 
 export interface JebeHailOfArrowsAoEContext extends Record<string, unknown> {

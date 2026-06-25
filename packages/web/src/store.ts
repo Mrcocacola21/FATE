@@ -25,6 +25,7 @@ import {
   type RoomMeta,
   type ServerMessage,
 } from "./ws";
+import { transitionActionMode } from "./game/selectionState";
 
 export type ActionMode =
   | "move"
@@ -558,7 +559,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
   addClientLog: (message) =>
     set((state) => ({ clientLog: [...state.clientLog, message].slice(-50) })),
   setSelectedUnit: (unitId) => set(() => ({ selectedUnitId: unitId })),
-  setActionMode: (mode) => set(() => ({ actionMode: mode })),
+  setActionMode: (mode) =>
+    set((state) => ({
+      ...transitionActionMode(state, mode),
+      hoverPreview: null,
+    })),
   setPlaceUnitId: (unitId) => set(() => ({ placeUnitId: unitId })),
   setMoveOptions: (options) => set(() => ({ moveOptions: options })),
   setHoveredAbilityId: (abilityId) => set(() => ({ hoveredAbilityId: abilityId })),

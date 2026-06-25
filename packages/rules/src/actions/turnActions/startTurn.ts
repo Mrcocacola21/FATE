@@ -29,7 +29,12 @@ import {
   maybeTriggerVladForestChoice,
   maybeTriggerVladTurnStakes,
 } from "../heroes/vlad";
-import { applySansBoneFieldStartOfTurn } from "../heroes/sans";
+import {
+  applySansBoneFieldStartOfTurn,
+  maybeTriggerSansBoneField,
+} from "../heroes/sans";
+import { maybeTriggerOdinSleipnir } from "../heroes/odin";
+import { maybeTriggerChargedImpulseChoice } from "../chargedImpulses";
 
 export function applyUnitStartTurn(
   state: GameState,
@@ -141,10 +146,27 @@ export function applyUnitStartTurn(
     },
   };
 
-  const engineeringResult = maybeTriggerEngineeringMiracle(
+  const boneFieldImpulseResult = maybeTriggerSansBoneField(
     stateAfterTurnCount,
+    initialUnit.id,
+    rng
+  );
+  const sleipnirResult = maybeTriggerOdinSleipnir(
+    boneFieldImpulseResult.state,
     initialUnit.id
   );
+  const chargedChoiceResult = sleipnirResult.state.pendingRoll
+    ? { state: sleipnirResult.state, events: [] as GameEvent[] }
+    : maybeTriggerChargedImpulseChoice(
+        sleipnirResult.state,
+        initialUnit.id
+      );
+  const engineeringResult = chargedChoiceResult.state.pendingRoll
+    ? { state: chargedChoiceResult.state, events: [] as GameEvent[] }
+    : maybeTriggerEngineeringMiracle(
+        chargedChoiceResult.state,
+        initialUnit.id
+      );
   const carpetResult = maybeTriggerCarpetStrike(
     engineeringResult.state,
     initialUnit.id
@@ -184,6 +206,9 @@ export function applyUnitStartTurn(
         ...bunkerEvents,
         ...stormEvents,
         ...startEvents,
+        ...boneFieldImpulseResult.events,
+        ...sleipnirResult.events,
+        ...chargedChoiceResult.events,
         ...engineeringResult.events,
         ...carpetResult.events,
         ...koladaResult.events,
@@ -222,6 +247,9 @@ export function applyUnitStartTurn(
     ...bunkerEvents,
     ...stormEvents,
     ...startEvents,
+    ...boneFieldImpulseResult.events,
+    ...sleipnirResult.events,
+    ...chargedChoiceResult.events,
     ...engineeringResult.events,
     ...carpetResult.events,
     ...koladaResult.events,

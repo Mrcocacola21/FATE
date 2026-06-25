@@ -6,3 +6,4 @@ export {
   applyMettatonNeo,
   applyMettatonFinalChord,
 } from "./actions";
+export { applyMettatonImpulseUnlocks } from "./impulses";

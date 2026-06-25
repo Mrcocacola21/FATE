@@ -74,6 +74,7 @@ export interface UnitState {
   papyrusLineAxis?: PapyrusLineAxis;
   papyrusBoneStatus?: PapyrusBoneStatus;
   sansUnbelieverUnlocked?: boolean;
+  sansBoneFieldActivated?: boolean;
   sansMoveLockArmed?: boolean;
   sansMoveLockSourceId?: string;
   sansBoneFieldStatus?: SansBoneFieldStatus;

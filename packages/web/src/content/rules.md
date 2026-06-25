@@ -105,7 +105,7 @@ Only Archer and Assassin can enter stealth.
 Abilities are categorized by type:
 - Passive: always on or auto-triggered, no player input.
 - Active: used on your turn, consumes listed turn slots.
-- Impulse: triggered by specific events, often reactive.
+- Impulse: triggers automatically when its charge/condition is ready. If it needs a target or destination, that choice becomes blocking and must be resolved before normal actions continue.
 - Phantasm: high impact abilities with larger charge costs.
 
 Charge rules:
