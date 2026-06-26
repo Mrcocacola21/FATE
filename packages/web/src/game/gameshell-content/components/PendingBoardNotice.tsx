@@ -39,6 +39,7 @@ interface PendingBoardNoticeProps {
   onClearStakeSelections: () => void;
   onConfirmHassanAssassinOrder: () => void;
   onClearHassanAssassinOrder: () => void;
+  className?: string;
 }
 
 export function PendingBoardNotice({
@@ -78,11 +79,14 @@ export function PendingBoardNotice({
   onClearStakeSelections,
   onConfirmHassanAssassinOrder,
   onClearHassanAssassinOrder,
+  className = "mt-4",
 }: PendingBoardNoticeProps) {
   const { language, t } = useI18n();
   const p = (en: string, uk: string) => (language === "uk" ? uk : en);
   return (
-    <div className="panel-arcane mt-4 rounded-2xl border border-violet-300/70 bg-violet-50/75 p-4 text-sm text-violet-950 shadow-lg shadow-violet-950/5 dark:border-violet-800/70 dark:bg-violet-950/30 dark:text-violet-100">
+    <div
+      className={`panel-arcane rounded-2xl border border-violet-300/70 bg-violet-50/75 p-4 text-sm text-violet-950 shadow-lg shadow-violet-950/5 dark:border-violet-800/70 dark:bg-violet-950/30 dark:text-violet-100 ${className}`}
+    >
       {isStakePlacement ? (
         <div>
           <div className="font-semibold">{t("pending.placeStakes")}</div>

@@ -1,83 +1,99 @@
-import type { FC } from "react";
-import type { GameAction } from "rules";
+import { useCallback, useEffect, useState, type FC } from "react";
 import { Board } from "../../../components/Board";
-import { ThemeToggle } from "../../../components/ThemeToggle";
-import { LanguageSwitcher } from "../../../components/LanguageSwitcher";
-import { PanelCard, StatusBadge } from "../../../components/ui";
-import { PendingBoardNotice } from "./PendingBoardNotice";
+import { PanelCard } from "../../../components/ui";
+import { clampBoardZoom } from "../../hooks/useBoardFit";
+import { BoardControls } from "./BoardControls";
 import { useI18n } from "../../../i18n";
-import { getConnectionLabel, getPhaseLabel } from "../../../i18n/displayMetadata";
-import { StatPill } from "../../../ui";
-import { getGameModeName } from "../../../modes/modeLabels";
 
 interface GameShellBoardColumnProps {
   vm: any;
 }
 
+const BOARD_ZOOM_STORAGE_KEY = "FATE_BOARD_ZOOM";
+const BOARD_COORDINATES_STORAGE_KEY = "FATE_BOARD_COORDINATES";
+
+function readStoredBoardZoom() {
+  if (typeof window === "undefined") return 1;
+  const stored = window.localStorage.getItem(BOARD_ZOOM_STORAGE_KEY);
+  return stored ? clampBoardZoom(Number(stored)) : 1;
+}
+
+function readStoredBoardCoordinates() {
+  if (typeof window === "undefined") return true;
+  return window.localStorage.getItem(BOARD_COORDINATES_STORAGE_KEY) !== "false";
+}
+
 export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm }) => {
   const { t } = useI18n();
+  const [boardZoom, setBoardZoom] = useState(readStoredBoardZoom);
+  const [showCoordinates, setShowCoordinates] = useState(readStoredBoardCoordinates);
+  const zoomPercent = Math.round(boardZoom * 100);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(BOARD_ZOOM_STORAGE_KEY, String(boardZoom));
+  }, [boardZoom]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(BOARD_COORDINATES_STORAGE_KEY, String(showCoordinates));
+  }, [showCoordinates]);
+
+  const fitBoard = useCallback(() => setBoardZoom(1), []);
+  const zoomIn = useCallback(
+    () => setBoardZoom((current) => clampBoardZoom(Number((current + 0.1).toFixed(2)))),
+    [],
+  );
+  const zoomOut = useCallback(
+    () => setBoardZoom((current) => clampBoardZoom(Number((current - 0.1).toFixed(2)))),
+    [],
+  );
+  const resetView = useCallback(() => {
+    setBoardZoom(1);
+    setShowCoordinates(true);
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.altKey || event.ctrlKey || event.metaKey) return;
+      const target = event.target as HTMLElement | null;
+      const tagName = target?.tagName?.toLowerCase();
+      if (tagName === "input" || tagName === "textarea" || tagName === "select") return;
+      if (event.key === "+" || event.key === "=") {
+        event.preventDefault();
+        zoomIn();
+      } else if (event.key === "-") {
+        event.preventDefault();
+        zoomOut();
+      } else if (event.key === "0") {
+        event.preventDefault();
+        fitBoard();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [fitBoard, zoomIn, zoomOut]);
+
   return (
-    <PanelCard variant="hud" className="min-w-0 overflow-hidden">
-      <div className="border-b border-amber-900/10 px-4 py-4 dark:border-amber-500/15 sm:px-5">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="brand-sigil hidden h-11 w-11 sm:flex" aria-hidden="true" />
-            <div className="min-w-0">
-              <div className="section-kicker">{t("game.tacticalArena")}</div>
-              <div className="mt-1 flex flex-wrap items-center gap-2">
-                <h1 className="fate-brand text-xl">{t("game.matchTitle")}</h1>
-                <StatusBadge tone={vm.connectionStatus === "connected" ? "success" : "danger"} dot>
-                  {getConnectionLabel(vm.connectionStatus, t)}
-                </StatusBadge>
-                <StatusBadge tone={vm.role === "spectator" ? "info" : "neutral"}>
-                  {vm.role ? t(`roles.${vm.role}`) : t("roles.noRole")}
-                </StatusBadge>
-                {vm.roomMeta?.roomMode === "test" ? (
-                  <StatusBadge tone="special">{t("testRoom.badgeSandbox")}</StatusBadge>
-                ) : null}
-                {vm.roomMeta?.roomMode === "normal" ? (
-                  <StatusBadge tone="info">
-                    {getGameModeName(vm.roomMeta?.gameMode ?? "standard", t)}
-                  </StatusBadge>
-                ) : null}
-              </div>
-              <div className="mt-1 max-w-full truncate font-mono text-[11px] text-stone-500 dark:text-stone-400">
-                {t("game.room")} {vm.roomId ?? "-"}
-              </div>
-            </div>
+    <PanelCard variant="hud" className="flex h-full min-w-0 flex-col overflow-hidden">
+      <div className="shrink-0 border-b border-amber-900/10 px-3 py-2 dark:border-amber-500/15 sm:px-4">
+        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <div className="min-w-0">
+            <div className="section-kicker">{t("game.tacticalArena")}</div>
+            <h2 className="section-title mt-0.5 text-base">{t("board.battlefield")}</h2>
           </div>
-          <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <button
-              type="button"
-              className="btn btn-secondary btn-sm"
-              onClick={vm.handleLeave}
-              disabled={vm.leavingRoom}
-            >
-              {vm.leavingRoom ? t("game.leaving") : t("game.leaveMatch")}
-            </button>
-            <LanguageSwitcher />
-            <ThemeToggle />
-          </div>
-        </div>
-        <div className="hud-strip mt-4">
-          <StatPill label={t("game.phase")} value={getPhaseLabel(vm.view.phase, t)} tone="amber" />
-          <StatPill
-            label={t("game.currentPlayer")}
-            value={vm.view.currentPlayer ?? "-"}
-            tone="sky"
-          />
-          <StatPill
-            label={t("game.roundTurn")}
-            value={`${vm.view.roundNumber} / ${vm.view.turnNumber}`}
-            tone="neutral"
-          />
-          <StatPill
-            label={t("game.activeUnit")}
-            value={vm.view.activeUnitId ?? "-"}
-            tone="violet"
+          <BoardControls
+            zoomPercent={zoomPercent}
+            showCoordinates={showCoordinates}
+            onFit={fitBoard}
+            onZoomIn={zoomIn}
+            onZoomOut={zoomOut}
+            onReset={resetView}
+            onToggleCoordinates={() => setShowCoordinates((current) => !current)}
           />
         </div>
-        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-[11px] font-semibold text-stone-500 dark:text-stone-400">
+        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] font-semibold text-stone-500 dark:text-stone-400">
           {[
             [t("game.legalMove"), "bg-sky-400 ring-sky-500"],
             [t("game.legalAttack"), "bg-rose-400 ring-rose-500"],
@@ -91,7 +107,7 @@ export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm }) => {
         </div>
       </div>
 
-      <div className="p-2 sm:p-4">
+      <div className="min-h-0 flex-1 p-2 sm:p-3">
         <Board
           view={vm.view}
           playerId={vm.playerId}
@@ -118,6 +134,8 @@ export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm }) => {
           visualEffectsEnabled={vm.connectionStatus === "connected" && vm.hasSnapshot}
           eventBatch={vm.latestEventBatch}
           effectSessionKey={vm.roomId}
+          zoom={boardZoom}
+          showCoordinates={showCoordinates}
           previewLine={
             vm.boardPreviewCenter &&
             vm.selectedUnit?.position &&
@@ -139,76 +157,6 @@ export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm }) => {
           onCellClick={vm.handleCellClick}
           onCellHover={vm.handleCellHover}
         />
-
-        {vm.pendingMeta && !vm.pendingRoll ? (
-          <div className="mt-4 rounded-xl border border-sky-200 bg-sky-50 p-3 text-sm text-sky-800 dark:border-sky-800/60 dark:bg-sky-950/40 dark:text-sky-200">
-            {t("game.resolvingRoll", { player: vm.pendingMeta.player })}
-          </div>
-        ) : null}
-
-        {vm.pendingRoll ? (
-          <PendingBoardNotice
-            pendingRollKind={vm.pendingRoll.kind}
-            pendingQueueCount={vm.pendingQueueCount}
-            stakeSelections={vm.stakeSelections}
-            stakeLimit={vm.stakeLimit}
-            hassanAssassinOrderSelections={vm.hassanAssassinOrderSelections}
-            isStakePlacement={vm.isStakePlacement}
-            isIntimidateChoice={vm.isIntimidateChoice}
-            isForestTarget={vm.isForestTarget}
-            isForestMoveDestination={vm.isForestMoveDestination}
-            isForestChoice={vm.isForestChoice}
-            isForestMoveCheck={vm.isForestMoveCheck}
-            isDuelistChoice={vm.isDuelistChoice}
-            isChikatiloPlacement={vm.isChikatiloPlacement}
-            isGuideTravelerPlacement={vm.isGuideTravelerPlacement}
-            isRiverBoatCarryChoice={vm.isRiverBoatCarryChoice}
-            isRiverBoatDropDestination={vm.isRiverBoatDropDestination}
-            isRiverTraLaLaTargetChoice={vm.isRiverTraLaLaTargetChoice}
-            isRiverTraLaLaDestinationChoice={vm.isRiverTraLaLaDestinationChoice}
-            isJebeKhansShooterTargetChoice={vm.isJebeKhansShooterTargetChoice}
-            isLokiLaughtChoice={vm.isLokiLaughtChoice}
-            isLokiChickenTargetChoice={vm.isLokiChickenTargetChoice}
-            isLokiMindControlEnemyChoice={vm.isLokiMindControlEnemyChoice}
-            isLokiMindControlTargetChoice={vm.isLokiMindControlTargetChoice}
-            isHassanTrueEnemyTargetChoice={vm.isHassanTrueEnemyTargetChoice}
-            isAsgoreSoulParadePatienceTargetChoice={vm.isAsgoreSoulParadePatienceTargetChoice}
-            isAsgoreSoulParadePerseveranceTargetChoice={
-              vm.isAsgoreSoulParadePerseveranceTargetChoice
-            }
-            isAsgoreSoulParadeJusticeTargetChoice={vm.isAsgoreSoulParadeJusticeTargetChoice}
-            isAsgoreSoulParadeIntegrityDestination={vm.isAsgoreSoulParadeIntegrityDestination}
-            isHassanAssassinOrderSelection={vm.isHassanAssassinOrderSelection}
-            isChikatiloRevealChoice={vm.isChikatiloRevealChoice}
-            isChikatiloDecoyChoice={vm.isChikatiloDecoyChoice}
-            onResolveSkip={() => {
-              vm.sendAction({
-                type: "resolvePendingRoll",
-                pendingRollId: vm.pendingRoll.id,
-                choice: "skip",
-              } as GameAction);
-            }}
-            onConfirmStakePlacement={() => {
-              vm.sendAction({
-                type: "resolvePendingRoll",
-                pendingRollId: vm.pendingRoll.id,
-                choice: { type: "placeStakes", positions: vm.stakeSelections },
-              } as GameAction);
-            }}
-            onClearStakeSelections={() => vm.setStakeSelections([])}
-            onConfirmHassanAssassinOrder={() => {
-              vm.sendAction({
-                type: "resolvePendingRoll",
-                pendingRollId: vm.pendingRoll.id,
-                choice: {
-                  type: "hassanAssassinOrderPick",
-                  unitIds: vm.hassanAssassinOrderSelections,
-                },
-              } as GameAction);
-            }}
-            onClearHassanAssassinOrder={() => vm.setHassanAssassinOrderSelections([])}
-          />
-        ) : null}
       </div>
     </PanelCard>
   );

@@ -19,11 +19,8 @@ import { useI18n } from "../i18n";
 import { getClassLabel, getHeroDisplayName } from "../i18n/displayMetadata";
 import { BoardEffectsLayer } from "../game/effects/BoardEffectsLayer";
 import { useBoardEffects } from "../game/effects/useBoardEffects";
+import { useBoardFit } from "../game/hooks/useBoardFit";
 import type { BoardEventBatch, BoardPreviewLine } from "../game/effects/types";
-
-const MIN_CELL_SIZE = 26;
-const MAX_CELL_SIZE = 96;
-const LABEL_RATIO = 0.6;
 
 interface BoardProps {
   view: PlayerView;
@@ -49,6 +46,9 @@ interface BoardProps {
   eventBatch?: BoardEventBatch | null;
   effectSessionKey?: string | null;
   previewLine?: BoardPreviewLine | null;
+  zoom?: number;
+  showCoordinates?: boolean;
+  className?: string;
   onCellHover?: (coord: Coord | null) => void;
   onSelectUnit: (unitId: string | null) => void;
   onCellClick: (col: number, row: number) => void;
@@ -120,6 +120,9 @@ export const Board: FC<BoardProps> = ({
   eventBatch = null,
   effectSessionKey = null,
   previewLine = null,
+  zoom = 1,
+  showCoordinates = true,
+  className = "",
   disabled = false,
   onCellHover,
   onSelectUnit,
@@ -129,9 +132,10 @@ export const Board: FC<BoardProps> = ({
   const size = view.boardSize ?? 9;
   const maxIndex = size - 1;
   const isFlipped = playerId === "P2";
-  const boardWrapperRef = useRef<HTMLDivElement | null>(null);
-  const [cellSize, setCellSize] = useState(48);
-  const [labelSize, setLabelSize] = useState(28);
+  const {
+    ref: boardWrapperRef,
+    metrics: { cellSize, labelSize, boardPixelSize, totalPixelSize },
+  } = useBoardFit({ boardSize: size, zoom, showCoordinates });
   const [transformingUnitIds, setTransformingUnitIds] = useState<Set<string>>(() => new Set());
   const visualStateRef = useRef<{
     enabled: boolean;
@@ -139,56 +143,6 @@ export const Board: FC<BoardProps> = ({
     units: Map<string, { signature: string; variant: string | null }>;
   } | null>(null);
   const visualEffectTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
-
-  useEffect(() => {
-    const el = boardWrapperRef.current;
-    if (!el) return;
-
-    const computeSizes = (containerWidth: number) => {
-      if (!containerWidth || containerWidth <= 0) return;
-
-      const rawCell = Math.floor(containerWidth / (size + LABEL_RATIO));
-      let nextCell = Math.max(MIN_CELL_SIZE, Math.min(MAX_CELL_SIZE, rawCell));
-      let nextLabel = Math.round(nextCell * LABEL_RATIO);
-      let totalWidth = nextCell * size + nextLabel;
-
-      if (totalWidth > containerWidth && nextCell > MIN_CELL_SIZE) {
-        nextCell = Math.max(MIN_CELL_SIZE, Math.min(MAX_CELL_SIZE, nextCell - 1));
-        nextLabel = Math.round(nextCell * LABEL_RATIO);
-        totalWidth = nextCell * size + nextLabel;
-        if (totalWidth > containerWidth && nextCell > MIN_CELL_SIZE) {
-          const fitCell = Math.max(
-            MIN_CELL_SIZE,
-            Math.min(MAX_CELL_SIZE, Math.floor(containerWidth / (size + LABEL_RATIO))),
-          );
-          nextCell = fitCell;
-          nextLabel = Math.round(nextCell * LABEL_RATIO);
-        }
-      }
-
-      setCellSize(nextCell);
-      setLabelSize(nextLabel);
-    };
-
-    const observer =
-      typeof ResizeObserver !== "undefined"
-        ? new ResizeObserver((entries) => {
-            const width = entries[0]?.contentRect.width ?? 0;
-            computeSizes(width);
-          })
-        : null;
-
-    if (observer) {
-      observer.observe(el);
-      computeSizes(el.clientWidth);
-      return () => observer.disconnect();
-    }
-
-    const handleResize = () => computeSizes(el.clientWidth || window.innerWidth);
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [size]);
 
   useEffect(() => {
     const nextUnits = new Map<string, { signature: string; variant: string | null }>();
@@ -267,7 +221,6 @@ export const Board: FC<BoardProps> = ({
     [],
   );
 
-  const boardPixelSize = cellSize * size;
   const { effects: boardEffects, reducedMotion } = useBoardEffects({
     batch: eventBatch,
     view,
@@ -741,12 +694,14 @@ export const Board: FC<BoardProps> = ({
     const rowLabel = isFlipped ? maxIndex - row : row;
     rows.push(
       <div key={`row-${row}`} className="flex">
-        <div
-          className="flex items-center justify-center font-display font-bold text-stone-500 dark:text-stone-400"
-          style={{ width: labelSize, height: cellSize, fontSize: labelFontSize }}
-        >
-          {rowLabel}
-        </div>
+        {showCoordinates ? (
+          <div
+            className="flex items-center justify-center font-display font-bold text-stone-500 dark:text-stone-400"
+            style={{ width: labelSize, height: cellSize, fontSize: labelFontSize }}
+          >
+            {rowLabel}
+          </div>
+        ) : null}
         {cells}
       </div>,
     );
@@ -760,29 +715,31 @@ export const Board: FC<BoardProps> = ({
   return (
     <div
       ref={boardWrapperRef}
-      className="battlefield-frame scroll-panel w-full min-w-0 overflow-x-auto"
+      className={`battlefield-frame scroll-panel h-full w-full min-w-0 overflow-auto ${className}`}
     >
-      <div className="flex justify-center">
+      <div className="flex min-h-full items-center justify-center">
         <div
           className="relative inline-block transition-[width,height] duration-150 ease-out"
-          style={{ width: boardPixelSize + labelSize, maxWidth: "100%" }}
+          style={{ width: totalPixelSize }}
         >
-          <div className="flex">
-            <div style={{ width: labelSize, height: labelSize }} />
-            {colLabels.map((label, index) => (
-              <div
-                key={`col-${label}-${index}`}
-                className="flex items-center justify-center font-display font-bold text-stone-500 dark:text-stone-400"
-                style={{
-                  width: cellSize,
-                  height: labelSize,
-                  fontSize: labelFontSize,
-                }}
-              >
-                {label}
-              </div>
-            ))}
-          </div>
+          {showCoordinates ? (
+            <div className="flex">
+              <div style={{ width: labelSize, height: labelSize }} />
+              {colLabels.map((label, index) => (
+                <div
+                  key={`col-${label}-${index}`}
+                  className="flex items-center justify-center font-display font-bold text-stone-500 dark:text-stone-400"
+                  style={{
+                    width: cellSize,
+                    height: labelSize,
+                    fontSize: labelFontSize,
+                  }}
+                >
+                  {label}
+                </div>
+              ))}
+            </div>
+          ) : null}
           {rows}
           <div className="pointer-events-none absolute" style={{ left: labelSize, top: labelSize }}>
             <BoardEffectsLayer

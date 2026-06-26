@@ -5,6 +5,7 @@ import { GameShellBoardColumn } from "./GameShellBoardColumn";
 import { GameShellSideColumn } from "./GameShellSideColumn";
 import { PendingRollModal } from "./PendingRollModal";
 import { DraftScreen } from "../../../modes/DraftScreen";
+import { GameTopBar } from "../../components/GameTopBar";
 
 interface GameShellLayoutProps {
   vm: any;
@@ -34,10 +35,13 @@ export const GameShellLayout: FC<GameShellLayoutProps> = ({ vm }) => {
   }
 
   return (
-    <div className="app-shell px-2 py-3 sm:px-4 sm:py-4 lg:px-5">
-      <div className="mx-auto grid min-w-0 max-w-[1720px] items-start gap-4 xl:grid-cols-[minmax(0,1fr)_420px]">
-        <GameShellBoardColumn vm={vm} />
-        <GameShellSideColumn vm={vm} />
+    <div className="app-shell h-dvh overflow-hidden px-2 py-2 sm:px-3">
+      <div className="mx-auto flex h-full min-h-0 max-w-[1800px] flex-col gap-2">
+        <GameTopBar vm={vm} />
+        <div className="grid min-h-0 flex-1 grid-rows-[minmax(0,1fr)_minmax(15rem,38dvh)] gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(320px,390px)] lg:grid-rows-[minmax(0,1fr)] xl:grid-cols-[minmax(0,1fr)_400px]">
+          <GameShellBoardColumn vm={vm} />
+          <GameShellSideColumn vm={vm} />
+        </div>
       </div>
       {vm.pendingRoll && vm.playerId && !vm.boardSelectionPending && (
         <PendingRollModal
