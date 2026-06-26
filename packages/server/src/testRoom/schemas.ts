@@ -9,6 +9,7 @@ const CoordSchema = z.object({
 const UnitIdSchema = z.string().min(1).max(160);
 const HeroIdSchema = z.string().min(1).max(120);
 const RuleDeclarationIdSchema = z.enum([
+  "normal_rule",
   "court",
   "chess_party",
   "moon_game",

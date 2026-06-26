@@ -1,6 +1,7 @@
 import type { Coord, PlayerId } from "../model/shared";
 
 export type RuleDeclarationId =
+  | "normal_rule"
   | "court"
   | "chess_party"
   | "moon_game"
@@ -146,6 +147,7 @@ export type RuleDeclarationChoice =
   | RuleChargeChoice;
 
 export const RULE_DECLARATION_IDS = [
+  "normal_rule",
   "court",
   "chess_party",
   "moon_game",

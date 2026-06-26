@@ -5,6 +5,7 @@ import { useI18n } from "../../../i18n";
 type PendingRoll = NonNullable<PlayerView["pendingRoll"]>;
 
 const RULE_DECLARATION_IDS: RuleDeclarationId[] = [
+  "normal_rule",
   "court",
   "chess_party",
   "moon_game",
@@ -13,6 +14,8 @@ const RULE_DECLARATION_IDS: RuleDeclarationId[] = [
 
 function ruleDeclarationKey(ruleId: RuleDeclarationId) {
   switch (ruleId) {
+    case "normal_rule":
+      return "normalRule";
     case "court":
       return "court";
     case "chess_party":
@@ -362,11 +365,16 @@ export function PendingRollModal({
               {availableRuleIds.map((ruleId) => {
                 const key = ruleDeclarationKey(ruleId);
                 const name = t(`ruleDeclarations.${key}.name`);
+                const isDefaultRule = ruleId === "normal_rule";
                 return (
                   <button
                     key={ruleId}
                     type="button"
-                    className="w-full rounded-lg border border-violet-300/60 bg-white/85 p-3 text-left text-slate-900 shadow-sm transition hover:border-violet-500 hover:shadow dark:border-violet-800/70 dark:bg-slate-950/80 dark:text-slate-100"
+                    className={`w-full rounded-lg border p-3 text-left text-slate-900 shadow-sm transition hover:shadow dark:text-slate-100 ${
+                      isDefaultRule
+                        ? "border-emerald-300/80 bg-emerald-50/90 hover:border-emerald-500 dark:border-emerald-800/80 dark:bg-emerald-950/35"
+                        : "border-violet-300/60 bg-white/85 hover:border-violet-500 dark:border-violet-800/70 dark:bg-slate-950/80"
+                    }`}
                     onClick={() =>
                       onResolvePendingRoll({
                         type: "chooseRuleDeclaration",
@@ -381,8 +389,14 @@ export function PendingRollModal({
                           {t(`ruleDeclarations.${key}.summary`)}
                         </div>
                       </div>
-                      <span className="status-pill badge-special shrink-0">
-                        {ruleId === "chess_party" || ruleId === "advantage_game"
+                      <span
+                        className={`status-pill shrink-0 ${
+                          isDefaultRule ? "badge-success" : "badge-special"
+                        }`}
+                      >
+                        {isDefaultRule
+                          ? t("ruleDeclarations.defaultRule")
+                          : ruleId === "chess_party" || ruleId === "advantage_game"
                           ? t("ruleDeclarations.setupRequired")
                           : t("ruleDeclarations.noSetup")}
                       </span>

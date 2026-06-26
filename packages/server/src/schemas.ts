@@ -28,6 +28,7 @@ export const MoveModeSchema = z.union([
 ]);
 
 const RuleDeclarationIdSchema = z.enum([
+  "normal_rule",
   "court",
   "chess_party",
   "moon_game",

@@ -128,11 +128,11 @@ function mapRule2d9ToCoord(state: GameState, d1: number, d2: number): Coord {
   };
 }
 
-function isRealRosterUnit(unit: UnitState): boolean {
+export function isRealRosterUnit(unit: UnitState): boolean {
   return unit.heroId !== HERO_FALSE_TRAIL_TOKEN_ID && !unit.id.startsWith("debug-marker-");
 }
 
-function livingRealUnits(state: GameState, player: PlayerId): UnitState[] {
+export function livingRealUnits(state: GameState, player: PlayerId): UnitState[] {
   return Object.values(state.units).filter(
     (unit) =>
       unit.owner === player &&
@@ -339,6 +339,16 @@ export function resolveRuleDeclarationChoice(
     }),
   ];
 
+  if (selectedRuleId === "normal_rule") {
+    nextState = withRuleState(nextState, {
+      ...baseRule,
+      setupComplete: true,
+      ruleData: {},
+    });
+    const placement = beginPlacementAfterRuleSetup(nextState);
+    return { state: placement.state, events: [...events, ...placement.events] };
+  }
+
   if (selectedRuleId === "court") {
     const attackerPlayer = pending.player;
     const defenderPlayer = otherPlayer(attackerPlayer);
@@ -387,6 +397,33 @@ export function resolveRuleDeclarationChoice(
     },
   });
   return requestAdvantageThreshold(nextState, pending.player, events);
+}
+
+export function applyNormalVictoryCheck(
+  state: GameState,
+  events: GameEvent[]
+): ApplyResult {
+  if (state.phase === "ended") return { state, events };
+  if (state.phase !== "battle") return { state, events };
+
+  const p1Alive = livingRealUnits(state, "P1").length > 0;
+  const p2Alive = livingRealUnits(state, "P2").length > 0;
+  if (p1Alive && p2Alive) return { state, events };
+
+  const winner: PlayerId | null =
+    !p1Alive && p2Alive ? "P2" : p1Alive && !p2Alive ? "P1" : null;
+  const endedState: GameState = {
+    ...state,
+    phase: "ended",
+    activeUnitId: null,
+    pendingMove: null,
+    pendingRoll: null,
+  };
+  const nextEvents = [...events];
+  if (winner) {
+    nextEvents.push(evGameEnded({ winner }));
+  }
+  return { state: endedState, events: nextEvents };
 }
 
 export function resolveChessKingChoice(
@@ -1580,6 +1617,10 @@ export function applyRuleDeclarationWinChecks(
   const rule = getRuleState(state);
   let nextState = state;
   const nextEvents = [...events];
+
+  if (rule.selectedRuleId === "normal_rule") {
+    return applyNormalVictoryCheck(nextState, nextEvents);
+  }
 
   if (rule.selectedRuleId === "chess_party") {
     const kings = rule.ruleData.chessParty?.kings;

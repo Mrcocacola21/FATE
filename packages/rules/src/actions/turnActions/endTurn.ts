@@ -1,7 +1,6 @@
-import type { ApplyResult, GameEvent, GameState, PlayerId } from "../../model";
+import type { ApplyResult, GameEvent, GameState } from "../../model";
 import type { RNG } from "../../rng";
-import { HERO_FALSE_TRAIL_TOKEN_ID } from "../../heroes";
-import { evGameEnded, evTurnStarted } from "../../core";
+import { evTurnStarted } from "../../core";
 import { applyGutsEndTurnDrain } from "../heroes/guts";
 import { clearAsgoreTurnFlags } from "../heroes/asgore";
 import { clearRiverTurnFlags } from "../heroes/riverPerson";
@@ -11,7 +10,10 @@ import {
   getNextAliveUnitIndex,
   nextPlayer,
 } from "./helpers";
-import { handleRuleDeclarationRoundEnd } from "../../ruleDeclarations";
+import {
+  applyNormalVictoryCheck,
+  handleRuleDeclarationRoundEnd,
+} from "../../ruleDeclarations";
 
 export function applyEndTurn(state: GameState, rng: RNG): ApplyResult {
   if (state.phase === "ended") {
@@ -57,34 +59,8 @@ export function applyEndTurn(state: GameState, rng: RNG): ApplyResult {
     stateAfterTurn.activeUnitId
   );
 
-  const p1Alive = Object.values(stateAfterRiver.units).some(
-    (unit) =>
-      unit.owner === "P1" &&
-      unit.isAlive &&
-      unit.heroId !== HERO_FALSE_TRAIL_TOKEN_ID
-  );
-  const p2Alive = Object.values(stateAfterRiver.units).some(
-    (unit) =>
-      unit.owner === "P2" &&
-      unit.isAlive &&
-      unit.heroId !== HERO_FALSE_TRAIL_TOKEN_ID
-  );
-
-  if (!p1Alive || !p2Alive) {
-    const winner: PlayerId | null =
-      !p1Alive && p2Alive ? "P2" : p1Alive && !p2Alive ? "P1" : null;
-    const endedState: GameState = {
-      ...stateAfterRiver,
-      phase: "ended",
-      activeUnitId: null,
-      pendingMove: null,
-    };
-    const events: GameEvent[] = [...drained.events];
-    if (winner) {
-      events.push(evGameEnded({ winner }));
-    }
-    return { state: endedState, events };
-  }
+  const normalVictory = applyNormalVictoryCheck(stateAfterRiver, drained.events);
+  if (normalVictory.state.phase === "ended") return normalVictory;
 
   const queue = state.turnQueue.length > 0 ? state.turnQueue : state.turnOrder;
   if (queue.length === 0) {

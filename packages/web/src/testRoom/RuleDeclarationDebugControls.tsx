@@ -4,6 +4,7 @@ import { useI18n } from "../i18n";
 import type { TestRoomCommand } from "./types";
 
 const RULE_IDS: RuleDeclarationId[] = [
+  "normal_rule",
   "court",
   "chess_party",
   "moon_game",
@@ -12,6 +13,8 @@ const RULE_IDS: RuleDeclarationId[] = [
 
 function ruleKey(ruleId: RuleDeclarationId) {
   switch (ruleId) {
+    case "normal_rule":
+      return "normalRule";
     case "court":
       return "court";
     case "chess_party":
@@ -37,7 +40,7 @@ export function RuleDeclarationDebugControls({
   send: (command: TestRoomCommand) => void;
 }) {
   const { t } = useI18n();
-  const [ruleId, setRuleId] = useState<RuleDeclarationId>("court");
+  const [ruleId, setRuleId] = useState<RuleDeclarationId>("normal_rule");
   const [chooserPlayer, setChooserPlayer] = useState<PlayerId>("P1");
   const [threshold, setThreshold] = useState(3);
   const [rolls, setRolls] = useState("");

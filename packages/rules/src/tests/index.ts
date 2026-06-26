@@ -24,6 +24,7 @@ import {
   testChessKingDeathAndDraw,
   testCourtRoundEndRollsEffectsAndSwapsRoles,
   testMoonGameStraightMovementBonus,
+  testNormalRuleVictoryAndNoRoundEffect,
   testRuleDeclarationChooserAndPlacementGate,
   testRuleDeclarationSetupBranches,
 } from "./core/ruleDeclarations.test";
@@ -372,6 +373,7 @@ function main(): void {
   testInitiativeWinnerSetsPlacementFirstPlayerAndPhasePlacement();
   testRuleDeclarationChooserAndPlacementGate();
   testRuleDeclarationSetupBranches();
+  testNormalRuleVictoryAndNoRoundEffect();
   testAdvantageThresholdValidationAndWin();
   testChessKingDeathAndDraw();
   testMoonGameStraightMovementBonus();

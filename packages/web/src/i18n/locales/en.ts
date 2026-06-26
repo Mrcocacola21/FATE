@@ -1061,6 +1061,7 @@ export const en = {
     waiting: "Waiting for opponent to choose the rule.",
     setupRequired: "Setup required",
     noSetup: "No setup",
+    defaultRule: "Default",
     chooseRule: "Choose {{rule}}",
     chooseThreshold: "Choose advantage threshold",
     chooseFigure: "Choose figure",
@@ -1074,6 +1075,13 @@ export const en = {
     moonReverse: "Reverse turn order this round",
     chessKings: "Kings: P1 {{p1}} / P2 {{p2}}",
     advantageThreshold: "Advantage threshold: {{threshold}}",
+    normalRule: {
+      name: "Normal Rule",
+      summary: "No additional rule effects. Win by eliminating all enemy figures.",
+      description: "No additional rule effects. Win by eliminating all enemy figures.",
+      timing: "Default battle rule. No special setup or round-end effects.",
+      opponentSelected: "Opponent selected Normal Rule.",
+    },
     court: {
       name: "Court",
       summary: "Attacker and defender roll Court effects at each round end, then swap roles.",

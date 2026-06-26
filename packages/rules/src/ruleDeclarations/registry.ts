@@ -1,9 +1,19 @@
-import type { RuleDeclarationConfig, RuleDeclarationId } from "./types";
+import {
+  RULE_DECLARATION_IDS,
+  type RuleDeclarationConfig,
+  type RuleDeclarationId,
+} from "./types";
 
 export const RULE_DECLARATIONS: Record<
   RuleDeclarationId,
   RuleDeclarationConfig
 > = {
+  normal_rule: {
+    id: "normal_rule",
+    nameKey: "ruleDeclarations.normalRule.name",
+    descriptionKey: "ruleDeclarations.normalRule.description",
+    timingKey: "ruleDeclarations.normalRule.timing",
+  },
   court: {
     id: "court",
     nameKey: "ruleDeclarations.court.name",
@@ -45,5 +55,5 @@ export function getRuleDeclarationConfig(id: RuleDeclarationId) {
 }
 
 export function getAvailableRuleDeclarationIds(): RuleDeclarationId[] {
-  return Object.keys(RULE_DECLARATIONS) as RuleDeclarationId[];
+  return [...RULE_DECLARATION_IDS];
 }

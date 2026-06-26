@@ -16,6 +16,8 @@ interface GameShellSideColumnProps {
 
 function ruleDeclarationKey(ruleId: string | null | undefined) {
   switch (ruleId) {
+    case "normal_rule":
+      return "normalRule";
     case "court":
       return "court";
     case "chess_party":
@@ -45,6 +47,10 @@ function RuleDeclarationStatus({ vm }: { vm: any }) {
   const chess = rule?.ruleData?.chessParty;
   const moon = rule?.ruleData?.moonGame;
   const advantage = rule?.ruleData?.advantageGame;
+  const opponentSelectedNormal =
+    selectedRuleId === "normal_rule" &&
+    rule?.chooserPlayer &&
+    rule.chooserPlayer !== vm.playerId;
 
   return (
     <PanelCard variant="parchment" className="p-4">
@@ -117,6 +123,11 @@ function RuleDeclarationStatus({ vm }: { vm: any }) {
           {t("ruleDeclarations.advantageThreshold", {
             threshold: advantage.threshold,
           })}
+        </p>
+      ) : null}
+      {opponentSelectedNormal ? (
+        <p className="mt-3 text-xs font-semibold leading-5 text-emerald-700 dark:text-emerald-300">
+          {t("ruleDeclarations.normalRule.opponentSelected")}
         </p>
       ) : null}
     </PanelCard>

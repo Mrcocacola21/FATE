@@ -6,6 +6,7 @@ import {
   createDefaultArmy,
   createEmptyGame,
   getLegalMovesForUnit,
+  HERO_FALSE_TRAIL_TOKEN_ID,
   initKnowledgeForOwners,
   makeRngSequence,
   resolveAllPendingRolls,
@@ -70,6 +71,18 @@ export function testRuleDeclarationChooserAndPlacementGate() {
 export function testRuleDeclarationSetupBranches() {
   {
     const { state } = startToRuleChoice();
+    const normal = chooseRule(state, "normal_rule");
+    assert(normal.phase === "placement", "Normal Rule should complete setup immediately");
+    assert(normal.ruleDeclaration.selectedRuleId === "normal_rule", "Normal Rule should be stored");
+    assert(normal.ruleDeclaration.setupComplete, "Normal Rule setup should be complete");
+    assert(!normal.pendingRoll, "Normal Rule should not leave pending setup");
+    assert(
+      Object.keys(normal.ruleDeclaration.ruleData).length === 0,
+      "Normal Rule should not create rule data"
+    );
+  }
+  {
+    const { state } = startToRuleChoice();
     const court = chooseRule(state, "court");
     assert(court.phase === "placement", "Court should complete setup immediately");
     assert(court.ruleDeclaration.ruleData.court?.attackerPlayer === "P2", "Court attacker starts as chooser");
@@ -92,6 +105,106 @@ export function testRuleDeclarationSetupBranches() {
   }
 
   console.log("rule_declaration_setup_branches passed");
+}
+
+export function testNormalRuleVictoryAndNoRoundEffect() {
+  const { state } = startToRuleChoice();
+  const normal = chooseRule(state, "normal_rule");
+  const p1 = Object.values(normal.units).filter((unit) => unit.owner === "P1");
+  const p2 = Object.values(normal.units).filter((unit) => unit.owner === "P2");
+  const active = p1[0]!;
+
+  let battle = toBattleState(normal, "P1", active.id);
+  battle = {
+    ...battle,
+    turnQueue: [active.id],
+    turnOrder: [active.id],
+    turnQueueIndex: 0,
+    turnOrderIndex: 0,
+  };
+
+  const roundEnd = handleRuleDeclarationRoundEnd(
+    battle,
+    {
+      nextRoundNumber: 2,
+      nextTurnNumber: 2,
+      nextIndex: 0,
+      nextUnitId: active.id,
+      nextPlayer: "P1",
+    },
+    makeRngSequence([0.0])
+  );
+  assert(!roundEnd.state.pendingRoll, "Normal Rule should not create a round-end pending roll");
+  assert(
+    !roundEnd.events.some(
+      (event) =>
+        event.type === "courtRollResult" ||
+        event.type === "courtEffectApplied" ||
+        event.type === "moonRollResult" ||
+        event.type === "moonEffectApplied"
+    ),
+    "Normal Rule should not emit Court or Moon round effects"
+  );
+
+  const tokenSource = p2[0]!;
+  const token = {
+    ...tokenSource,
+    id: "falseTrail-normal-rule-test",
+    figureId: HERO_FALSE_TRAIL_TOKEN_ID,
+    heroId: HERO_FALSE_TRAIL_TOKEN_ID,
+    hp: 1,
+    isAlive: true,
+    position: { col: 8, row: 8 },
+  };
+  const marker = {
+    ...tokenSource,
+    id: "debug-marker-normal-rule-test",
+    figureId: undefined,
+    heroId: undefined,
+    hp: 1,
+    isAlive: true,
+    position: { col: 7, row: 8 },
+  };
+
+  battle = {
+    ...battle,
+    units: {
+      ...battle.units,
+      [token.id]: token,
+      [marker.id]: marker,
+    },
+  };
+  for (const unit of p2) {
+    battle = setUnit(battle, unit.id, { isAlive: false, hp: 0, position: null });
+  }
+
+  const checked = applyRuleDeclarationWinChecks(battle, []);
+  assert(checked.state.phase === "ended", "Normal Rule should end when enemy real figures are dead");
+  assert(
+    checked.events.some((event) => event.type === "gameEnded" && event.winner === "P1"),
+    "Normal Rule should award normal victory to the player with living real figures"
+  );
+
+  const noRuleEndTurn = applyAction(
+    {
+      ...battle,
+      ruleDeclaration: {
+        selectedRuleId: null,
+        chooserPlayer: null,
+        setupComplete: false,
+        ruleData: {},
+      },
+    },
+    { type: "endTurn" } as any,
+    makeRngSequence([])
+  );
+  assert(noRuleEndTurn.state.phase === "ended", "existing normal end-turn victory should be preserved");
+  assert(
+    noRuleEndTurn.events.some((event) => event.type === "gameEnded" && event.winner === "P1"),
+    "existing normal end-turn victory should still choose the surviving real-figure player"
+  );
+
+  console.log("normal_rule_victory_and_no_round_effect passed");
 }
 
 export function testAdvantageThresholdValidationAndWin() {
