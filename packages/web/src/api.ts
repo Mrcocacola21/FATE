@@ -1,4 +1,11 @@
-import type { GameAction, PlayerView, PlayerId, GameEvent, HeroMeta } from "rules";
+import type {
+  GameAction,
+  PlayerView,
+  PlayerId,
+  GameEvent,
+  HeroMeta,
+  GameModeId,
+} from "rules";
 
 const isProd = import.meta.env.MODE === "production";
 
@@ -44,11 +51,13 @@ export interface RoomSummary {
   spectators: number;
   canStart: boolean;
   roomMode: "normal" | "test";
+  gameMode: GameModeId;
 }
 
 export interface CreateRoomResponse {
   roomId: string;
   roomMode: "normal" | "test";
+  gameMode: GameModeId;
 }
 
 export interface ServerCapabilities {
@@ -121,6 +130,7 @@ export async function createRoom(params?: {
   seed?: number;
   arenaId?: string;
   roomMode?: "normal" | "test";
+  gameMode?: GameModeId;
   debugToken?: string;
 }): Promise<CreateRoomResponse> {
   const res = await fetch(`${API_BASE}/rooms`, {

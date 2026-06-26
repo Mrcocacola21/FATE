@@ -4,6 +4,7 @@ import { z } from "zod";
 import { TestRoomCommandMessageSchema } from "./testRoom/schemas";
 
 export const PlayerIdSchema = z.union([z.literal("P1"), z.literal("P2")]);
+export const GameModeIdSchema = z.enum(["standard", "draft", "classic"]);
 export const RoleSchema = z.union([
   z.literal("P1"),
   z.literal("P2"),
@@ -30,6 +31,7 @@ export const CreateGameBodySchema = z.object({
   seed: z.number().int().optional(),
   arenaId: z.string().optional(),
   roomMode: z.enum(["normal", "test"]).optional(),
+  gameMode: GameModeIdSchema.optional(),
   debugToken: z.string().min(1).max(512).optional(),
 });
 
@@ -258,6 +260,21 @@ export const StartGameMessageSchema = z.object({
   type: z.literal("startGame"),
 });
 
+export const SetGameModeMessageSchema = z.object({
+  type: z.literal("setGameMode"),
+  mode: z.string().min(1),
+});
+
+export const DraftBanHeroMessageSchema = z.object({
+  type: z.literal("draftBanHero"),
+  heroId: z.string().min(1),
+});
+
+export const DraftPickHeroMessageSchema = z.object({
+  type: z.literal("draftPickHero"),
+  heroId: z.string().min(1),
+});
+
 export const ResolvePendingRollMessageSchema = z.object({
   type: z.literal("resolvePendingRoll"),
   pendingRollId: z.string().min(1),
@@ -296,6 +313,9 @@ export const ClientMessageSchema = z.discriminatedUnion("type", [
   RequestMoveOptionsMessageSchema,
   SetReadyMessageSchema,
   StartGameMessageSchema,
+  SetGameModeMessageSchema,
+  DraftBanHeroMessageSchema,
+  DraftPickHeroMessageSchema,
   ResolvePendingRollMessageSchema,
   LeaveRoomMessageSchema,
   SwitchRoleMessageSchema,

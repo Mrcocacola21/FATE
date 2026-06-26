@@ -4,6 +4,7 @@ import { GameLoadingState } from "./GameLoadingState";
 import { GameShellBoardColumn } from "./GameShellBoardColumn";
 import { GameShellSideColumn } from "./GameShellSideColumn";
 import { PendingRollModal } from "./PendingRollModal";
+import { DraftScreen } from "../../../modes/DraftScreen";
 
 interface GameShellLayoutProps {
   vm: any;
@@ -21,6 +22,15 @@ export const GameShellLayout: FC<GameShellLayoutProps> = ({ vm }) => {
         onLeave={vm.handleLeave}
       />
     );
+  }
+
+  if (
+    vm.roomMeta?.gameMode === "draft" &&
+    vm.roomMeta?.draftState &&
+    vm.roomMeta.draftState.phase !== "complete" &&
+    vm.view.phase === "lobby"
+  ) {
+    return <DraftScreen vm={vm} />;
   }
 
   return (

@@ -526,6 +526,16 @@ export function localizeServerText(value: string | null | undefined, t: Translat
   if (!value) return "";
   const key = serverTextKeys[value];
   if (key) return t(key);
+  if (/^invalid_game_mode$/i.test(value)) return t("errors.invalidGameMode");
+  if (/^not_host$/i.test(value)) return t("errors.notHost");
+  if (/^(mode_locked|game_already_started)$/i.test(value)) return t("errors.modeLocked");
+  if (
+    /^(banned|picked|base_unit_not_allowed|class_slot_already_filled|ban_would_break_class_pool|max_bans_per_class_reached|not_current_player|draft_phase_mismatch|invalid_draft_hero)$/i.test(
+      value
+    )
+  ) {
+    return t(`draft.lockReasons.${value}`);
+  }
   const rating = /^Need Rating (\d+)$/.exec(value);
   if (rating) return t("game.needRating", { rating: rating[1] });
   if (/^Failed to load rooms/.test(value)) return t("errors.loadRooms");

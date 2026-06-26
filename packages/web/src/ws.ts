@@ -8,6 +8,9 @@ import type {
   GamePhase,
   MoveMode,
   ResolveRollChoice,
+  GameModeId,
+  DraftState,
+  HeroDraftMeta,
 } from "rules";
 import { getWsUrl } from "./api";
 import type { FigureSetSelection } from "./figures/types";
@@ -17,6 +20,9 @@ export type PlayerRole = PlayerId | "spectator";
 
 export type RoomMeta = {
   roomMode: "normal" | "test";
+  gameMode: GameModeId;
+  draftState: DraftState | null;
+  draftPool: HeroDraftMeta[];
   revision: number;
   diceQueue: number[];
   debugLog: Array<{
@@ -113,6 +119,9 @@ export type ClientMessage =
     }
   | { type: "setReady"; ready: boolean }
   | { type: "startGame" }
+  | { type: "setGameMode"; mode: GameModeId }
+  | { type: "draftBanHero"; heroId: string }
+  | { type: "draftPickHero"; heroId: string }
   | {
       type: "resolvePendingRoll";
       pendingRollId: string;
@@ -165,6 +174,21 @@ export function sendSetReady(socket: WebSocket, ready: boolean) {
 
 export function sendStartGame(socket: WebSocket) {
   const msg: ClientMessage = { type: "startGame" };
+  socket.send(JSON.stringify(msg));
+}
+
+export function sendSetGameMode(socket: WebSocket, mode: GameModeId) {
+  const msg: ClientMessage = { type: "setGameMode", mode };
+  socket.send(JSON.stringify(msg));
+}
+
+export function sendDraftBanHero(socket: WebSocket, heroId: string) {
+  const msg: ClientMessage = { type: "draftBanHero", heroId };
+  socket.send(JSON.stringify(msg));
+}
+
+export function sendDraftPickHero(socket: WebSocket, heroId: string) {
+  const msg: ClientMessage = { type: "draftPickHero", heroId };
   socket.send(JSON.stringify(msg));
 }
 

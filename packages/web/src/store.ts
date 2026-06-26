@@ -7,6 +7,7 @@ import type {
   PlayerId,
   MoveMode,
   ResolveRollChoice,
+  GameModeId,
 } from "rules";
 import { listRooms, type RoomSummary } from "./api";
 import { HERO_CATALOG } from "./figures/catalog";
@@ -18,8 +19,11 @@ import {
   sendMoveOptionsRequest,
   sendResolvePendingRoll,
   sendSetReady,
+  sendSetGameMode,
   sendSocketAction,
   sendStartGame,
+  sendDraftBanHero,
+  sendDraftPickHero,
   sendSwitchRole,
   sendTestRoomCommand as sendTestRoomCommandMessage,
   type PlayerRole,
@@ -62,6 +66,9 @@ export type HoverPreview =
 
 const defaultRoomMeta: RoomMeta = {
   roomMode: "normal",
+  gameMode: "standard",
+  draftState: null,
+  draftPool: [],
   revision: 0,
   diceQueue: [],
   debugLog: [],
@@ -123,6 +130,9 @@ interface GameStore {
   leaveRoom: () => void;
   setReady: (ready: boolean) => void;
   startGame: () => void;
+  setGameMode: (mode: GameModeId) => void;
+  draftBanHero: (heroId: string) => void;
+  draftPickHero: (heroId: string) => void;
   resolvePendingRoll: (pendingRollId: string, choice?: ResolveRollChoice) => void;
   switchRole: (role: PlayerRole) => void;
   sendAction: (action: GameAction) => void;
@@ -291,6 +301,12 @@ function handleServerMessage(
       };
       const nextMeta: RoomMeta = {
         roomMode: incomingMeta.roomMode ?? prevMeta.roomMode ?? "normal",
+        gameMode: incomingMeta.gameMode ?? prevMeta.gameMode ?? "standard",
+        draftState:
+          incomingMeta.draftState !== undefined
+            ? incomingMeta.draftState
+            : prevMeta.draftState ?? null,
+        draftPool: incomingMeta.draftPool ?? prevMeta.draftPool ?? [],
         revision: incomingMeta.revision ?? prevMeta.revision ?? 0,
         diceQueue: incomingMeta.diceQueue ?? prevMeta.diceQueue ?? [],
         debugLog: incomingMeta.debugLog ?? prevMeta.debugLog ?? [],
@@ -354,7 +370,7 @@ function handleServerMessage(
       return;
     }
     case "error": {
-      get().addClientLog(msg.message);
+      get().addClientLog(msg.code ?? msg.message);
       return;
     }
     default:
@@ -474,6 +490,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
       state.addClientLog("Ready-up is only available in the lobby.");
       return;
     }
+    if (state.roomMeta?.draftState) {
+      state.addClientLog("Ready-up is locked after draft starts.");
+      return;
+    }
     if (!socket || socket.readyState !== WebSocket.OPEN) {
       state.addClientLog("WebSocket not connected.");
       return;
@@ -495,6 +515,50 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return;
     }
     sendStartGame(socket);
+  },
+  setGameMode: (mode) => {
+    const state = get();
+    if (!state.joined) {
+      state.addClientLog("Not joined yet. Please join a room first.");
+      return;
+    }
+    if (!state.isHost) {
+      state.addClientLog("Only the host can change game mode.");
+      return;
+    }
+    if (state.roomState?.phase !== "lobby" || state.roomMeta?.pendingRoll || state.roomMeta?.draftState) {
+      state.addClientLog("Game mode is locked.");
+      return;
+    }
+    if (!socket || socket.readyState !== WebSocket.OPEN) {
+      state.addClientLog("WebSocket not connected.");
+      return;
+    }
+    sendSetGameMode(socket, mode);
+  },
+  draftBanHero: (heroId) => {
+    const state = get();
+    if (!state.joined || !state.roomMeta?.draftState) {
+      state.addClientLog("Draft is not active.");
+      return;
+    }
+    if (!socket || socket.readyState !== WebSocket.OPEN) {
+      state.addClientLog("WebSocket not connected.");
+      return;
+    }
+    sendDraftBanHero(socket, heroId);
+  },
+  draftPickHero: (heroId) => {
+    const state = get();
+    if (!state.joined || !state.roomMeta?.draftState) {
+      state.addClientLog("Draft is not active.");
+      return;
+    }
+    if (!socket || socket.readyState !== WebSocket.OPEN) {
+      state.addClientLog("WebSocket not connected.");
+      return;
+    }
+    sendDraftPickHero(socket, heroId);
   },
   resolvePendingRoll: (pendingRollId, choice) => {
     const state = get();

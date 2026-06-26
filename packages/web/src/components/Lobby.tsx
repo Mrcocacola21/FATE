@@ -9,6 +9,7 @@ import { useI18n } from "../i18n";
 import { getConnectionLabel, getPhaseLabel, localizeServerText } from "../i18n/displayMetadata";
 import { getServerCapabilities } from "../api";
 import { EmptyState } from "../ui";
+import { getGameModeName } from "../modes/modeLabels";
 
 interface LobbyProps {
   onOpenFigures?: () => void;
@@ -259,6 +260,11 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
                         </StatusBadge>
                         {room.roomMode === "test" ? (
                           <StatusBadge tone="special">{t("testRoom.badge")}</StatusBadge>
+                        ) : null}
+                        {room.roomMode === "normal" ? (
+                          <StatusBadge tone="info">
+                            {getGameModeName(room.gameMode ?? "standard", t)}
+                          </StatusBadge>
                         ) : null}
                       </div>
                       <div className="mt-3 flex flex-wrap gap-2">

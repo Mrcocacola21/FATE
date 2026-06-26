@@ -8,6 +8,7 @@ import { PendingBoardNotice } from "./PendingBoardNotice";
 import { useI18n } from "../../../i18n";
 import { getConnectionLabel, getPhaseLabel } from "../../../i18n/displayMetadata";
 import { StatPill } from "../../../ui";
+import { getGameModeName } from "../../../modes/modeLabels";
 
 interface GameShellBoardColumnProps {
   vm: any;
@@ -33,6 +34,11 @@ export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm }) => {
                 </StatusBadge>
                 {vm.roomMeta?.roomMode === "test" ? (
                   <StatusBadge tone="special">{t("testRoom.badgeSandbox")}</StatusBadge>
+                ) : null}
+                {vm.roomMeta?.roomMode === "normal" ? (
+                  <StatusBadge tone="info">
+                    {getGameModeName(vm.roomMeta?.gameMode ?? "standard", t)}
+                  </StatusBadge>
                 ) : null}
               </div>
               <div className="mt-1 max-w-full truncate font-mono text-[11px] text-stone-500 dark:text-stone-400">

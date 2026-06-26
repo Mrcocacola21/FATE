@@ -7,16 +7,19 @@ import type {
   Coord,
   GameAction,
   GameEvent,
+  GameModeId,
   GameState,
   HeroSelection,
   MoveMode,
   PlayerId,
   PlayerView,
   RollKind,
+  DraftState,
+  HeroDraftMeta,
 } from "rules";
 import {
-  attachArmy,
-  createDefaultArmy,
+  DRAFT_HERO_POOL,
+  isGameModeId,
   makePlayerView,
   makeSpectatorView,
   makeTestRoomView,
@@ -43,6 +46,13 @@ import {
   canCreateTestRoom,
   getTestRoomCapabilities,
 } from "./testRoom";
+import { applyDraftBan, applyDraftPick, startDraftSession } from "./modes/draftSession";
+import {
+  isGameModeLocked,
+  rebuildDraftedArmies,
+  rebuildLobbyArmiesForMode,
+  setRoomGameMode,
+} from "./modes/roomModes";
 
 let serverLogger: any = null;
 import { createPongRoom, getPongRoom } from "./pong/rooms";
@@ -52,6 +62,9 @@ export type PlayerRole = PlayerId | "spectator";
 
 type RoomMeta = {
   roomMode: "normal" | "test";
+  gameMode: GameModeId;
+  draftState: DraftState | null;
+  draftPool: HeroDraftMeta[];
   revision: number;
   diceQueue: number[];
   debugLog: Array<{
@@ -324,8 +337,9 @@ function applyFigureSetToRoom(
 ) {
   if (!figureSet) return;
   room.figureSets[seat] = figureSet;
-  if (room.state.phase !== "lobby") return;
-  room.state = attachArmy(room.state, createDefaultArmy(seat, figureSet));
+  if (room.state.phase !== "lobby" || room.draftState) return;
+  if (room.gameMode !== "standard") return;
+  rebuildLobbyArmiesForMode(room);
 }
 
 function vacateSeat(room: GameRoom, seat: PlayerId, connId: string) {
@@ -583,6 +597,9 @@ function buildRoomMeta(room: GameRoom, canControlTestRoom = false): RoomMeta {
   };
   return {
     roomMode: room.roomMode,
+    gameMode: room.gameMode,
+    draftState: room.draftState,
+    draftPool: room.gameMode === "draft" ? DRAFT_HERO_POOL : [],
     revision: room.revision,
     diceQueue:
       canControlTestRoom && room.testDiceRng
@@ -640,6 +657,11 @@ function sendRoomState(socket: WebSocket, room: GameRoom) {
     view,
     meta: buildRoomMeta(room, canControlTestRoom),
   });
+}
+
+function markRoomMetadataChanged(room: GameRoom) {
+  touchGameRoom(room);
+  room.revision += 1;
 }
 
 export function broadcastRoomState(room: GameRoom) {
@@ -1300,6 +1322,121 @@ export function registerGameWebSocket(server: FastifyInstance) {
           sendMessage(socket, { type: "leftRoom", roomId });
           return;
         }
+        case "setGameMode": {
+          const meta = socketMeta.get(socket);
+          if (!meta || meta.channel !== "fate") {
+            sendMessage(socket, { type: "error", message: "Must join a room first" });
+            return;
+          }
+          await enqueueRoomCommand(fateRoomKey(meta.roomId), () => {
+            const current = socketMeta.get(socket);
+            if (!current || current.channel !== "fate") {
+              sendMessage(socket, {
+                type: "error",
+                message: "Must join a room first",
+              });
+              return;
+            }
+            const room = getGameRoom(current.roomId);
+            if (!room) {
+              sendMessage(socket, { type: "error", message: "Room not found" });
+              return;
+            }
+            if (!isGameModeId(msg.mode)) {
+              sendMessage(socket, {
+                type: "error",
+                message: "Invalid game mode",
+                code: "invalid_game_mode",
+              });
+              return;
+            }
+            if (room.hostConnId !== current.connId) {
+              sendMessage(socket, {
+                type: "error",
+                message: "Only the host can change game mode",
+                code: "not_host",
+              });
+              return;
+            }
+            if (isGameModeLocked(room)) {
+              sendMessage(socket, {
+                type: "error",
+                message: "Game mode is locked",
+                code: "mode_locked",
+              });
+              return;
+            }
+
+            setRoomGameMode(room, msg.mode);
+            markRoomMetadataChanged(room);
+            broadcastRoomState(room);
+          });
+          return;
+        }
+        case "draftBanHero":
+        case "draftPickHero": {
+          const meta = socketMeta.get(socket);
+          if (!meta || meta.channel !== "fate" || !meta.seat) {
+            sendMessage(socket, {
+              type: "error",
+              message: "Only seated players can draft",
+              code: "not_seated",
+            });
+            return;
+          }
+          await enqueueRoomCommand(fateRoomKey(meta.roomId), () => {
+            const current = socketMeta.get(socket);
+            if (!current || current.channel !== "fate" || !current.seat) {
+              sendMessage(socket, {
+                type: "error",
+                message: "Only seated players can draft",
+                code: "not_seated",
+              });
+              return;
+            }
+            const room = getGameRoom(current.roomId);
+            if (!room) {
+              sendMessage(socket, { type: "error", message: "Room not found" });
+              return;
+            }
+            if (room.gameMode !== "draft" || !room.draftState) {
+              sendMessage(socket, {
+                type: "error",
+                message: "Draft is not active",
+                code: "draft_phase_mismatch",
+              });
+              return;
+            }
+
+            const result =
+              msg.type === "draftBanHero"
+                ? applyDraftBan(room, current.seat, msg.heroId)
+                : applyDraftPick(room, current.seat, msg.heroId);
+            if (!result.ok) {
+              sendMessage(socket, {
+                type: "error",
+                message: "Draft command rejected",
+                code: result.reason,
+              });
+              return;
+            }
+
+            markRoomMetadataChanged(room);
+            if (msg.type === "draftPickHero" && room.draftState?.phase === "complete") {
+              rebuildDraftedArmies(room);
+              applyAndBroadcast(
+                room,
+                { type: "startGame" },
+                current.seat,
+                socket
+              );
+              return;
+            }
+
+            broadcastRoomState(room);
+          });
+          return;
+        }
         case "testRoomCommand": {
           const meta = socketMeta.get(socket);
           if (!meta || meta.channel !== "fate") {
@@ -1429,6 +1566,14 @@ export function registerGameWebSocket(server: FastifyInstance) {
               });
               return;
             }
+            if (room.draftState) {
+              sendMessage(socket, {
+                type: "error",
+                message: "Ready-up is locked after draft starts",
+                code: "mode_locked",
+              });
+              return;
+            }
 
             const action: GameAction = {
               type: "setReady",
@@ -1497,6 +1642,26 @@ export function registerGameWebSocket(server: FastifyInstance) {
                 code: "not_ready",
               });
               return;
+            }
+
+            if (room.gameMode === "draft") {
+              if (!room.draftState) {
+                startDraftSession(room);
+                markRoomMetadataChanged(room);
+                broadcastRoomState(room);
+                return;
+              }
+              if (room.draftState.phase !== "complete") {
+                sendMessage(socket, {
+                  type: "error",
+                  message: "Draft must complete before placement",
+                  code: "draft_phase_mismatch",
+                });
+                return;
+              }
+              rebuildDraftedArmies(room);
+            } else {
+              rebuildLobbyArmiesForMode(room);
             }
 
             const action: GameAction = { type: "startGame" };

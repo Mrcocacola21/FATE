@@ -15,5 +15,6 @@ export * from "./aoe";
 export * from "./view";
 export * from "./core";
 export * from "./debug";
+export * from "./modes";
 export { linePath } from "./path";
 export * from "./path";

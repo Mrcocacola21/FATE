@@ -7,6 +7,8 @@ import { RightPanel } from "../../components/RightPanel/RightPanel";
 import { useI18n } from "../../../i18n";
 import { TestRoomPanel } from "../../../testRoom/TestRoomPanel";
 import { shouldShowTestRoomPanel } from "../../../testRoom/testRoomApi";
+import { GameModeSelector } from "../../../modes/GameModeSelector";
+import { getGameModeDescription, getGameModeName } from "../../../modes/modeLabels";
 
 interface GameShellSideColumnProps {
   vm: any;
@@ -51,7 +53,28 @@ export const GameShellSideColumn: FC<GameShellSideColumnProps> = ({ vm }) => {
               {t("game.you", { role: vm.role ? t(`roles.${vm.role}`) : "-" })}
               {vm.isHost ? ` / ${t("roles.host")}` : ""}
             </StatusBadge>
+            <StatusBadge tone="info">
+              {getGameModeName(vm.roomMeta?.gameMode ?? "standard", t)}
+            </StatusBadge>
           </div>
+          {vm.roomMeta?.roomMode === "normal" ? (
+            <GameModeSelector
+              value={vm.roomMeta?.gameMode ?? "standard"}
+              isHost={vm.isHost}
+              disabled={!!vm.pendingMeta || !!vm.roomMeta?.draftState || vm.view.phase !== "lobby"}
+              onChange={vm.setGameMode}
+            />
+          ) : null}
+          {vm.roomMeta?.gameMode === "classic" ? (
+            <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-800 dark:border-amber-800/70 dark:bg-amber-950/45 dark:text-amber-200">
+              {t("modes.classic.figureSetWarning")}
+            </div>
+          ) : null}
+          {vm.roomMeta?.gameMode ? (
+            <p className="mt-3 text-xs leading-5 text-slate-500 dark:text-slate-400">
+              {getGameModeDescription(vm.roomMeta.gameMode, t)}
+            </p>
+          ) : null}
           {vm.seat ? (
             <button
               type="button"
@@ -80,7 +103,7 @@ export const GameShellSideColumn: FC<GameShellSideColumnProps> = ({ vm }) => {
               disabled={!vm.canStartGame}
               title={vm.canStartGame ? t("game.startMatch") : t("game.startBlocked")}
             >
-              {t("game.startGame")}
+              {vm.roomMeta?.gameMode === "draft" ? t("draft.startDraft") : t("game.startGame")}
             </button>
           ) : null}
         </PanelCard>

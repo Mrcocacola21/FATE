@@ -4,6 +4,7 @@ import {
   GameAction,
   GameEvent,
   GameState,
+  GameModeId,
   PlayerId,
   HeroSelection,
   applyAction,
@@ -15,6 +16,7 @@ import {
   type RNG,
   SeededRNG,
   type DebugStateCommand,
+  type DraftState,
 } from "rules";
 import { randomUUID } from "node:crypto";
 import { accepted, rejected, type CommandResult } from "./commandResult";
@@ -34,6 +36,8 @@ export interface GameRoom {
   rng: RNG;
   testDiceRng: DebugDiceRNG | null;
   roomMode: "normal" | "test";
+  gameMode: GameModeId;
+  draftState: DraftState | null;
   testControllerConnId: string | null;
   state: GameState;
   actionLog: ActionLogEntry[];
@@ -54,6 +58,7 @@ export interface CreateGameOptions {
   hostSeat?: PlayerId;
   hostConnId?: string | null;
   roomMode?: "normal" | "test";
+  gameMode?: GameModeId;
 }
 
 export interface RoomSummary {
@@ -65,6 +70,7 @@ export interface RoomSummary {
   ready: { P1: boolean; P2: boolean };
   canStart: boolean;
   roomMode: "normal" | "test";
+  gameMode: GameModeId;
 }
 
 // TODO: replace with persistence-backed storage.
@@ -115,6 +121,7 @@ export function createGameRoomWithId(
   const seed = options.seed ?? nextSeed();
   const rng = new SeededRNG(seed);
   const roomMode = options.roomMode ?? "normal";
+  const gameMode = options.gameMode ?? "standard";
   const hostSeat: PlayerId = options.hostSeat ?? "P1";
   const hostConnId = options.hostConnId ?? null;
 
@@ -168,6 +175,8 @@ export function createGameRoomWithId(
       roomMode === "test" ? new DebugDiceRNG(rng) : rng,
     testDiceRng: null,
     roomMode,
+    gameMode,
+    draftState: null,
     testControllerConnId: roomMode === "test" ? hostConnId : null,
     state,
     actionLog: [],
@@ -264,6 +273,7 @@ export function listRoomSummaries(): RoomSummary[] {
     const ready = room.state.playersReady;
     const canStart =
       room.state.phase === "lobby" &&
+      !room.draftState &&
       players.P1 &&
       players.P2 &&
       ready.P1 &&
@@ -279,6 +289,7 @@ export function listRoomSummaries(): RoomSummary[] {
       ready,
       canStart,
       roomMode: room.roomMode,
+      gameMode: room.gameMode,
     };
   });
 }

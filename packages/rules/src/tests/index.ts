@@ -329,6 +329,15 @@ import {
   testDebugDiceQueueControlsRolls,
   testDebugSpawnUsesCatalogMetadata,
 } from "./core/debug.test";
+import {
+  testClassicRosterCreationUsesOnlyBaseUnits,
+  testClassicRosterIgnoresCustomFigureSets,
+  testDraftCompletionCreatesValidRosters,
+  testDraftPickOrderIsSnake,
+  testDraftPoolExcludesBaseUnits,
+  testDraftValidationRulesWork,
+  testGameModeConfigsExposeExpectedModes,
+} from "./core/modes.test";
 
 function main(): void {
   // Full test run: preserve the historical simpleTests.ts execution order.
@@ -342,6 +351,13 @@ function main(): void {
   testImpulseMetadataAllAutoManaged();
   testChargedLineImpulsesCreateForcedPendingAtTurnStart();
   testEventDrivenImpulsesAutoTrigger();
+  testGameModeConfigsExposeExpectedModes();
+  testClassicRosterCreationUsesOnlyBaseUnits();
+  testClassicRosterIgnoresCustomFigureSets();
+  testDraftPoolExcludesBaseUnits();
+  testDraftPickOrderIsSnake();
+  testDraftValidationRulesWork();
+  testDraftCompletionCreatesValidRosters();
   testPlacementToBattleAndTurnOrder();
   testLobbyReadyAndStartRequiresBothReady();
   testInitiativeRollSequenceNoAutoroll();

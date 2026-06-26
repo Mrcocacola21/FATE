@@ -113,9 +113,14 @@ export async function registerRoutes(server: FastifyInstance) {
           seed: parsed.data.seed,
           arenaId: parsed.data.arenaId,
           roomMode: parsed.data.roomMode,
+          gameMode: parsed.data.gameMode,
         });
       });
-      reply.send({ roomId: room.id, roomMode: room.roomMode });
+      reply.send({
+        roomId: room.id,
+        roomMode: room.roomMode,
+        gameMode: room.gameMode,
+      });
     }
   );
 
@@ -140,6 +145,7 @@ export async function registerRoutes(server: FastifyInstance) {
           seed: parsed.data.seed,
           arenaId: parsed.data.arenaId,
           roomMode: parsed.data.roomMode,
+          gameMode: parsed.data.gameMode,
         });
       });
       const views = {
