@@ -22,6 +22,7 @@ import {
   HERO_RIVER_PERSON_ID,
   HERO_SANS_ID,
   HERO_UNDYNE_ID,
+  HERO_VLAD_TEPES_ID,
 } from "../heroes";
 import {
   hasMettatonBerserkerFeature,
@@ -57,6 +58,14 @@ export function collectAbilityIdsForUnit(unit: UnitState): string[] {
       ids.ABILITY_KAISER_DORA,
       ids.ABILITY_KAISER_CARPET_STRIKE,
       ids.ABILITY_KAISER_ENGINEERING_MIRACLE
+    );
+  }
+  if (unit.heroId === HERO_VLAD_TEPES_ID) {
+    abilityIds.push(
+      ids.ABILITY_VLAD_POLKOVODETS,
+      ids.ABILITY_VLAD_INTIMIDATE,
+      ids.ABILITY_VLAD_STAKES,
+      ids.ABILITY_VLAD_FOREST
     );
   }
   if (unit.heroId === HERO_GENGHIS_KHAN_ID) {

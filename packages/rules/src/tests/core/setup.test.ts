@@ -13,7 +13,13 @@ import {
   resolvePendingRollOnce,
   SeededRNG,
   toPlacementState,
+  type GameState,
+  type UnitState,
 } from "../helpers/testUtils";
+import {
+  getAbilityViewsForUnit,
+  HERO_REGISTRY_LIST,
+} from "../../index";
 export function testPlacementToBattleAndTurnOrder() {
   const rng = new SeededRNG(12345);
   let state = createEmptyGame();
@@ -232,4 +238,79 @@ export function testHeroRegistryContainsPlayableHeroes() {
   }
 
   console.log("hero_registry_contains_all_playable_heroes passed");
+}
+
+function makeUnlockedHeroFixture(hero: (typeof HERO_REGISTRY_LIST)[number]): {
+  state: GameState;
+  unit: UnitState;
+} {
+  const unit: UnitState = {
+    id: `P1-${hero.id}`,
+    owner: "P1",
+    class: hero.mainClass,
+    heroId: hero.id,
+    hp: hero.baseStats.hp,
+    attack: hero.baseStats.damage,
+    position: { col: 4, row: 4 },
+    isStealthed: false,
+    stealthTurnsLeft: 0,
+    stealthAttemptedThisTurn: false,
+    turn: {
+      moveUsed: false,
+      attackUsed: false,
+      actionUsed: false,
+      stealthUsed: false,
+    },
+    charges: {},
+    cooldowns: {},
+    hasMovedThisTurn: false,
+    hasAttackedThisTurn: false,
+    hasActedThisTurn: false,
+    gutsBerserkModeActive: false,
+    gutsBerserkExitUsed: false,
+    papyrusUnbelieverActive: true,
+    papyrusBoneMode: "blue",
+    papyrusLongBoneMode: false,
+    papyrusLineAxis: "row",
+    sansUnbelieverUnlocked: true,
+    mettatonRating: 12,
+    mettatonExUnlocked: true,
+    mettatonNeoUnlocked: true,
+    undyneImmortalActive: true,
+    transformed: true,
+    isAlive: true,
+  };
+  const state = {
+    ...createEmptyGame(),
+    phase: "battle" as const,
+    currentPlayer: "P1" as const,
+    activeUnitId: unit.id,
+    units: {
+      [unit.id]: unit,
+    },
+    knowledge: {
+      P1: { [unit.id]: true },
+      P2: { [unit.id]: true },
+    },
+  };
+  return { state, unit };
+}
+
+export function testBattleAbilityViewsCoverHeroRegistryMetadata() {
+  for (const hero of HERO_REGISTRY_LIST) {
+    if (hero.id.startsWith("base-")) continue;
+
+    const { state, unit } = makeUnlockedHeroFixture(hero);
+    const viewIds = new Set(getAbilityViewsForUnit(state, unit.id).map((ability) => ability.id));
+    const missing = hero.abilities
+      .map((ability) => ability.id)
+      .filter((abilityId) => !viewIds.has(abilityId));
+
+    assert(
+      missing.length === 0,
+      `${hero.name} battle ability view should include hero meta abilities: ${missing.join(", ")}`
+    );
+  }
+
+  console.log("battle_ability_views_cover_hero_registry_metadata passed");
 }

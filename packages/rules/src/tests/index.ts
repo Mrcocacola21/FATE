@@ -18,6 +18,7 @@ import {
   testInitiativeWinnerSetsPlacementFirstPlayerAndPhasePlacement,
   testGetHeroMetaReturnsCorrectData,
   testHeroRegistryContainsPlayableHeroes,
+  testBattleAbilityViewsCoverHeroRegistryMetadata,
 } from "./core/setup.test";
 import {
   testAdvantageThresholdValidationAndWin,
@@ -630,6 +631,7 @@ function main(): void {
   testRootBlocksMovementNextTurnOnly();
   testGetHeroMetaReturnsCorrectData();
   testHeroRegistryContainsPlayableHeroes();
+  testBattleAbilityViewsCoverHeroRegistryMetadata();
   testGoldenSnapshotAoeWithIntimidateChain();
   testGoldenSnapshotPendingRollSequence();
   testGoldenActionSnapshot();
