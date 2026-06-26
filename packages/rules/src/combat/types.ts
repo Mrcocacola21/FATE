@@ -16,6 +16,7 @@ export interface ResolveAttackParams {
   ignoreBonuses?: boolean;
   autoHit?: boolean;
   forceMiss?: boolean;
+  pureBloodRedirectTargetId?: string;
   rolls?: {
     attackerDice: number[];
     defenderDice: number[];

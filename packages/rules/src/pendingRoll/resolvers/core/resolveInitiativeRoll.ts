@@ -11,8 +11,8 @@ import { clearPendingRoll, requestInitiativeRoll } from "../../../core";
 import {
   evInitiativeRolled,
   evInitiativeResolved,
-  evPlacementStarted,
 } from "../../../core";
+import { requestRuleDeclarationChoice } from "../../../ruleDeclarations";
 
 export function resolveInitiativeRoll(
   state: GameState,
@@ -63,9 +63,8 @@ export function resolveInitiativeRoll(
   }
 
   const winner: PlayerId = p1 > p2 ? "P1" : "P2";
-  const placementState: GameState = {
+  const resolvedState: GameState = {
     ...nextState,
-    phase: "placement",
     currentPlayer: winner,
     placementFirstPlayer: winner,
     initiative: { ...nextInitiative, winner },
@@ -87,10 +86,10 @@ export function resolveInitiativeRoll(
       P1sum: p1,
       P2sum: p2,
     }),
-    evPlacementStarted({ placementFirstPlayer: winner }),
   ];
 
-  return { state: placementState, events: resolvedEvents };
+  const requested = requestRuleDeclarationChoice(resolvedState, winner);
+  return { state: requested.state, events: [...resolvedEvents, ...requested.events] };
 }
 
 

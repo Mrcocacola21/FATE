@@ -1,5 +1,6 @@
 import type { AbilityView, Coord, PlayerId } from "./shared";
 import type { GameEvent } from "./events";
+import type { RuleDeclarationState } from "../ruleDeclarations/types";
 import type {
   ForestMarker,
   PendingAoEResolution,
@@ -52,6 +53,7 @@ export interface GameState {
     P2: number | null;
     winner: PlayerId | null;
   };
+  ruleDeclaration: RuleDeclarationState;
   placementFirstPlayer: PlayerId | null;
   arenaId: string | null;
   boneFieldTurnsLeft?: number;

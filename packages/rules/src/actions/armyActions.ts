@@ -47,6 +47,12 @@ export function createEmptyGame(): GameState {
     events: [],
 
     initiative: { P1: null, P2: null, winner: null },
+    ruleDeclaration: {
+      selectedRuleId: null,
+      chooserPlayer: null,
+      setupComplete: false,
+      ruleData: {},
+    },
     placementFirstPlayer: null,
     arenaId: null,
     boneFieldTurnsLeft: 0,

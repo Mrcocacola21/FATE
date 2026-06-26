@@ -42,6 +42,17 @@ const PUBLIC_EVENT_TYPES = new Set<GameEvent["type"]>([
   "sansLastAttackApplied",
   "sansLastAttackTick",
   "sansLastAttackRemoved",
+  "ruleDeclarationSelected",
+  "ruleDeclarationSetupCompleted",
+  "courtRolesAssigned",
+  "courtRolesSwapped",
+  "courtRollResult",
+  "chessKingSelected",
+  "chessKingDeathResolved",
+  "gameDraw",
+  "moonRollResult",
+  "advantageThresholdDeclared",
+  "advantageWinTriggered",
 ]);
 
 function redactedEvent(type: GameEvent["type"]): GameEvent {
@@ -132,6 +143,38 @@ function projectEventForRecipient(
     case "intimidateResolved":
       if (isUnitVisibleToRecipient(state, event.attackerId, recipient)) return [event];
       return [{ type: event.type, attackerId: event.attackerId } as GameEvent];
+    case "courtEffectApplied": {
+      const projected = { ...event };
+      if (projected.unitId && !isUnitVisibleToRecipient(state, projected.unitId, recipient)) {
+        delete projected.unitId;
+      }
+      if (projected.targetId && !isUnitVisibleToRecipient(state, projected.targetId, recipient)) {
+        delete projected.targetId;
+      }
+      return [projected as GameEvent];
+    }
+    case "pureBloodRedirected":
+      if (
+        isUnitVisibleToRecipient(state, event.kingId, recipient) &&
+        isUnitVisibleToRecipient(state, event.redirectedToUnitId, recipient)
+      ) {
+        return [event];
+      }
+      return [redactedEvent(event.type)];
+    case "moonEffectApplied": {
+      const filterUnitIds = (ids: string[] | undefined): string[] | undefined => {
+        if (!ids) return ids;
+        return ids.filter((unitId) => isUnitVisibleToRecipient(state, unitId, recipient));
+      };
+      return [
+        {
+          ...event,
+          affectedUnitIds: filterUnitIds(event.affectedUnitIds),
+          damagedUnitIds: filterUnitIds(event.damagedUnitIds),
+          swappedUnitIds: filterUnitIds(event.swappedUnitIds),
+        } as GameEvent,
+      ];
+    }
     default:
       return PUBLIC_EVENT_TYPES.has(event.type) ? [event] : [redactedEvent(event.type)];
   }

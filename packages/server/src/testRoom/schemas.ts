@@ -8,6 +8,12 @@ const CoordSchema = z.object({
 
 const UnitIdSchema = z.string().min(1).max(160);
 const HeroIdSchema = z.string().min(1).max(120);
+const RuleDeclarationIdSchema = z.enum([
+  "court",
+  "chess_party",
+  "moon_game",
+  "advantage_game",
+]);
 
 const DebugStateCommandSchema = z.discriminatedUnion("type", [
   z.object({
@@ -93,6 +99,12 @@ const DebugStateCommandSchema = z.discriminatedUnion("type", [
   }),
   z.object({ type: z.literal("debugClearPendingRoll") }),
   z.object({
+    type: z.literal("debugSetRuleDeclaration"),
+    ruleId: RuleDeclarationIdSchema,
+    chooserPlayer: PlayerIdSchema.optional(),
+    threshold: z.number().int().min(3).max(50).optional(),
+  }),
+  z.object({
     type: z.literal("debugAddMarker"),
     marker: z.object({
       kind: z.enum(["stake", "forest"]),
@@ -136,6 +148,10 @@ export const TestRoomCommandSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("debugSimulateStartTurn"),
     unitId: UnitIdSchema,
+  }),
+  z.object({
+    type: z.literal("debugTriggerRuleRoundEnd"),
+    rolls: z.array(z.number().int().min(1).max(6)).max(12).optional(),
   }),
   z.object({ type: z.literal("debugDeleteRoom") }),
   z.object({ type: z.literal("debugExportSnapshot") }),

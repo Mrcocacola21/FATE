@@ -33,6 +33,8 @@ export interface AttackRollContext extends Record<string, unknown> {
   friskSubstitutionChoiceMade?: boolean;
   friskChildsCryChoiceMade?: boolean;
   friskForceMiss?: boolean;
+  pureBloodRedirected?: boolean;
+  pureBloodRedirectTargetId?: string;
   consumeSlots?: boolean;
   queueKind?: "normal" | "riderPath" | "aoe";
   elCidDuelist?: {

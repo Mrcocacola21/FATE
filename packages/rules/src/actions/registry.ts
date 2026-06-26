@@ -15,6 +15,10 @@ import { applyPapyrusPostAction } from "./heroes/papyrus";
 import { applySansPostAction } from "./heroes/sans";
 import { applyUndynePostAction } from "./heroes/undyne";
 import { applyMettatonImpulseUnlocks } from "./heroes/mettaton";
+import {
+  applyRuleDeclarationAfterAttack,
+  applyRuleDeclarationWinChecks,
+} from "../ruleDeclarations";
 
 export function applyAction(
   state: GameState,
@@ -125,8 +129,16 @@ export function applyAction(
     afterUndyne.state,
     afterUndyne.events
   );
-  return applyMettatonImpulseUnlocks(
+  const afterMettaton = applyMettatonImpulseUnlocks(
     afterFrisk.state,
     afterFrisk.events
+  );
+  const afterRuleAttack = applyRuleDeclarationAfterAttack(
+    afterMettaton.state,
+    afterMettaton.events
+  );
+  return applyRuleDeclarationWinChecks(
+    afterRuleAttack.state,
+    afterRuleAttack.events
   );
 }

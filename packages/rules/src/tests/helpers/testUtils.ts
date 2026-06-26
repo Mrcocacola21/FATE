@@ -168,21 +168,41 @@ export function applyAction(
 export function resolvePendingRollOnce(
   state: GameState,
   rng: Parameters<typeof applyActionRaw>[2],
-  choice?: "auto" | "roll"
+  choice?: unknown
 ) {
   if (!state.pendingRoll) {
     return { state, events: [] as any[] };
   }
   const pending = state.pendingRoll;
+  const firstOption = Array.isArray(pending.context?.options)
+    ? pending.context.options[0]
+    : undefined;
   const resolvedChoice =
-    pending.kind === "berserkerDefenseChoice" ||
-    pending.kind === "odinMuninnDefenseChoice" ||
-    pending.kind === "asgoreBraveryDefenseChoice" ||
-    pending.kind === "dora_berserkerDefenseChoice" ||
-    pending.kind === "jebeHailOfArrows_berserkerDefenseChoice" ||
-    pending.kind === "carpetStrike_berserkerDefenseChoice" ||
-    pending.kind === "vladForest_berserkerDefenseChoice"
-      ? choice ?? "roll"
+    choice !== undefined
+      ? choice
+      : pending.kind === "berserkerDefenseChoice" ||
+        pending.kind === "odinMuninnDefenseChoice" ||
+        pending.kind === "asgoreBraveryDefenseChoice" ||
+        pending.kind === "dora_berserkerDefenseChoice" ||
+        pending.kind === "jebeHailOfArrows_berserkerDefenseChoice" ||
+        pending.kind === "carpetStrike_berserkerDefenseChoice" ||
+        pending.kind === "vladForest_berserkerDefenseChoice"
+      ? "roll"
+      : pending.kind === "ruleDeclarationChoice"
+      ? { type: "chooseRuleDeclaration", ruleId: "moon_game" }
+      : pending.kind === "ruleDeclarationAdvantageThreshold"
+      ? { type: "ruleThreshold", threshold: 3 }
+      : pending.kind === "ruleDeclarationChessKingChoice" && typeof firstOption === "string"
+      ? { type: "ruleUnit", unitId: firstOption }
+      : (pending.kind === "courtEffectUnitChoice" ||
+          pending.kind === "moonCheeseHolesChoice" ||
+          pending.kind === "pureBloodRedirectChoice") &&
+        typeof firstOption === "string"
+      ? { type: "ruleUnit", unitId: firstOption }
+      : pending.kind === "courtEffectChargeChoice" && typeof firstOption === "string"
+      ? { type: "ruleCharge", abilityId: firstOption }
+      : pending.kind === "courtForcedAppearanceDestination" && firstOption
+      ? { type: "ruleCell", position: firstOption }
       : undefined;
   return applyActionRaw(
     state,
@@ -200,7 +220,7 @@ export function resolvePendingRollOnce(
 export function resolveAllPendingRolls(
   state: GameState,
   rng: Parameters<typeof applyActionRaw>[2],
-  choice?: "auto" | "roll"
+  choice?: unknown
 ) {
   let result = { state, events: [] as any[] };
   while (result.state.pendingRoll) {
@@ -213,7 +233,7 @@ export function resolveAllPendingRolls(
 export function resolveAllPendingRollsWithEvents(
   state: GameState,
   rng: Parameters<typeof applyActionRaw>[2],
-  choice?: "auto" | "roll"
+  choice?: unknown
 ) {
   let current = { state, events: [] as any[] };
   const events: any[] = [];

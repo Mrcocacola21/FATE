@@ -3,8 +3,10 @@ import {
   SeededRNG,
   applyDebugStateCommand,
   cloneDebugState,
+  handleRuleDeclarationRoundEnd,
   type DebugStateCommand,
   type GameState,
+  type PendingRoundAdvance,
   type TestRoomSnapshot,
 } from "rules";
 import { accepted, rejected, type CommandResult } from "../commandResult";
@@ -121,6 +123,41 @@ function recordMutation(room: GameRoom, command: TestRoomCommand) {
   }
 }
 
+function recordMutationWithEvents(
+  room: GameRoom,
+  command: TestRoomCommand,
+  events: unknown[]
+) {
+  recordMutation(room, command);
+  const entry = room.actionLog[room.actionLog.length - 1];
+  if (entry) {
+    entry.events = events as never[];
+  }
+}
+
+function buildDebugRoundAdvance(state: GameState): PendingRoundAdvance | null {
+  const queue = (state.turnQueue.length > 0 ? state.turnQueue : state.turnOrder).filter(
+    (unitId) => {
+      const unit = state.units[unitId];
+      return !!unit?.isAlive && !!unit.position;
+    }
+  );
+  const nextUnitId =
+    queue[0] ??
+    Object.values(state.units).find((unit) => unit.isAlive && unit.position)?.id ??
+    null;
+  if (!nextUnitId) return null;
+  const unit = state.units[nextUnitId];
+  if (!unit) return null;
+  return {
+    nextRoundNumber: state.roundNumber + 1,
+    nextTurnNumber: state.turnNumber + 1,
+    nextIndex: Math.max(0, queue.indexOf(nextUnitId)),
+    nextUnitId,
+    nextPlayer: unit.owner,
+  };
+}
+
 export function createTestRoomSnapshot(room: GameRoom): TestRoomSnapshot {
   return {
     version: 1,
@@ -203,6 +240,33 @@ export function applyTestRoomCommand(
         { type: "unitStartTurn", unitId: unit.id },
         unit.owner
       ),
+    };
+  }
+
+  if (command.type === "debugTriggerRuleRoundEnd") {
+    const advance = buildDebugRoundAdvance(room.state);
+    if (!advance) {
+      return {
+        command: rejected("DEBUG_REJECTED", "At least one living placed unit is required"),
+      };
+    }
+    if (command.rolls && command.rolls.length > 0) {
+      room.testDiceRng.setQueue(command.rolls);
+    }
+    const result = handleRuleDeclarationRoundEnd(
+      room.state,
+      advance,
+      room.testDiceRng
+    );
+    room.state = result.state;
+    recordMutationWithEvents(room, command, result.events);
+    return {
+      command: accepted({
+        stateChanged: true,
+        events: result.events,
+        revision: room.revision,
+        logIndex: room.actionLog.length - 1,
+      }),
     };
   }
 

@@ -1,6 +1,7 @@
 import type { Coord, MoveMode, PlayerId } from "./shared";
 import type { PapyrusLineAxis } from "./unit";
 import type { SearchStealthMode } from "./roll";
+import type { RuleDeclarationChoice } from "../ruleDeclarations/types";
 
 export type ResolveRollChoice =
   | "auto"
@@ -54,7 +55,8 @@ export type ResolveRollChoice =
       type: "friskGenocideOption";
       option: "substitution" | "keenEye" | "precisionStrike";
     }
-  | { type: "friskKeenEyeTarget"; targetId: string };
+  | { type: "friskKeenEyeTarget"; targetId: string }
+  | RuleDeclarationChoice;
 
 export type GameAction =
   | {

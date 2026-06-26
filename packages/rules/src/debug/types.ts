@@ -1,4 +1,5 @@
 import type { Coord, GamePhase, GameState, PlayerId } from "../model";
+import type { RuleDeclarationId } from "../ruleDeclarations";
 
 export type DebugChargeMode = "set" | "add" | "fill" | "clear";
 
@@ -70,6 +71,12 @@ export type DebugStateCommand =
   | { type: "debugSetPhase"; phase: GamePhase }
   | { type: "debugResetActions"; unitId?: string }
   | { type: "debugClearPendingRoll" }
+  | {
+      type: "debugSetRuleDeclaration";
+      ruleId: RuleDeclarationId;
+      chooserPlayer?: PlayerId;
+      threshold?: number;
+    }
   | {
       type: "debugAddMarker";
       marker: {

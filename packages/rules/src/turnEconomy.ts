@@ -4,6 +4,13 @@ import { TurnEconomy, TurnSlot, UnitState, makeEmptyTurnEconomy } from "./model"
 
 export type TurnSlotCosts = Partial<Record<TurnSlot, boolean>>;
 
+function actionTypeFromCosts(costs: TurnSlotCosts): "move" | "main" | "stealth" | null {
+  if (costs.move) return "move";
+  if (costs.stealth) return "stealth";
+  if (costs.action || costs.attack) return "main";
+  return null;
+}
+
 function getTurnEconomy(unit: UnitState): TurnEconomy {
   const base = unit.turn ?? makeEmptyTurnEconomy();
   return {
@@ -41,10 +48,25 @@ export function canSpendSlots(
   if (costs.move && (unit.lokiMoveLockSources?.length ?? 0) > 0) {
     return false;
   }
-  if (costs.move && turn.moveUsed) return false;
-  if (costs.attack && turn.attackUsed) return false;
-  if (costs.action && turn.actionUsed) return false;
-  if (costs.stealth && turn.stealthUsed) return false;
+  const restricted = unit.courtProceduralRestriction;
+  const actionType = actionTypeFromCosts(costs);
+  if (restricted?.spentType && actionType && restricted.spentType !== actionType) {
+    return false;
+  }
+  const slotBlocked =
+    (costs.move && turn.moveUsed) ||
+    (costs.attack && turn.attackUsed) ||
+    (costs.action && turn.actionUsed) ||
+    (costs.stealth && turn.stealthUsed);
+  const extra = unit.courtExtraFlexibleAction;
+  if (slotBlocked && extra && !extra.used && actionType) {
+    const blockedByOnlySpentSlot =
+      (costs.move && turn.moveUsed && !costs.attack && !costs.action && !costs.stealth) ||
+      (costs.stealth && turn.stealthUsed && !costs.move && !costs.attack && !costs.action) ||
+      ((costs.action || costs.attack) && turn.actionUsed);
+    if (blockedByOnlySpentSlot) return true;
+  }
+  if (slotBlocked) return false;
   return true;
 }
 
@@ -53,12 +75,38 @@ export function spendSlots(
   costs: TurnSlotCosts | undefined
 ): UnitState {
   if (!costs) return setTurnEconomy(unit, getTurnEconomy(unit));
+  const before = getTurnEconomy(unit);
+  const actionType = actionTypeFromCosts(costs);
   const turn = { ...getTurnEconomy(unit) };
+  let extra = unit.courtExtraFlexibleAction;
+  const shouldUseExtra =
+    !!extra &&
+    !extra.used &&
+    actionType &&
+    ((costs.move && before.moveUsed) ||
+      (costs.stealth && before.stealthUsed) ||
+      ((costs.action || costs.attack) && before.actionUsed));
   if (costs.move) turn.moveUsed = true;
   if (costs.attack) turn.attackUsed = true;
   if (costs.action) turn.actionUsed = true;
   if (costs.stealth) turn.stealthUsed = true;
-  return setTurnEconomy(unit, turn);
+  let updated = setTurnEconomy(unit, turn);
+  if (shouldUseExtra && extra) {
+    updated = {
+      ...updated,
+      courtExtraFlexibleAction: { ...extra, used: true },
+    };
+  }
+  if (unit.courtProceduralRestriction && actionType) {
+    updated = {
+      ...updated,
+      courtProceduralRestriction: {
+        ...unit.courtProceduralRestriction,
+        spentType: unit.courtProceduralRestriction.spentType ?? actionType,
+      },
+    };
+  }
+  return updated;
 }
 
 export function resetTurnEconomy(unit: UnitState): UnitState {

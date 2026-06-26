@@ -4,6 +4,11 @@ import { ALL_DIRS, DIAG_DIRS, ORTHO_DIRS, addCoord } from "../board";
 import { canUnitEnterCell } from "../visibility";
 import { HERO_GENGHIS_KHAN_ID, HERO_GRAND_KAISER_ID } from "../heroes";
 import { hasMettatonBerserkerFeature, hasMettatonRiderMovement } from "../mettaton";
+import {
+  addCourtGlobalMoveOptions,
+  addMoonGameStraightBonusMoves,
+  filterRuleDeclarationMoves,
+} from "../ruleDeclarations";
 
 function movesSpearman(state: GameState, unit: UnitState): Coord[] {
   const result: Coord[] = [];
@@ -14,6 +19,16 @@ function movesSpearman(state: GameState, unit: UnitState): Coord[] {
     result.push(destination);
   }
   return result;
+}
+
+function applyRuleMovementModifiers(
+  state: GameState,
+  unit: UnitState,
+  moves: Coord[]
+): Coord[] {
+  const filtered = filterRuleDeclarationMoves(state, unit, moves);
+  const moonMoves = addMoonGameStraightBonusMoves(state, unit, filtered);
+  return addCourtGlobalMoveOptions(state, unit, moonMoves);
 }
 
 function movesKnight(state: GameState, unit: UnitState): Coord[] {
@@ -174,7 +189,7 @@ export function getLegalMovesForUnitModes(
   const unit = state.units[unitId];
   if (!unit || !unit.isAlive || !unit.position) return [];
   if ((unit.lokiChickenSources?.length ?? 0) > 0) {
-    return movesSpearman(state, unit);
+    return applyRuleMovementModifiers(state, unit, movesSpearman(state, unit));
   }
 
   const seen = new Set<string>();
@@ -216,14 +231,14 @@ export function getLegalMovesForUnitModes(
     }
   }
 
-  return result;
+  return applyRuleMovementModifiers(state, unit, result);
 }
 
 export function getLegalMovesForUnit(state: GameState, unitId: string): Coord[] {
   const unit = state.units[unitId];
   if (!unit || !unit.isAlive || !unit.position) return [];
   if ((unit.lokiChickenSources?.length ?? 0) > 0) {
-    return movesSpearman(state, unit);
+    return applyRuleMovementModifiers(state, unit, movesSpearman(state, unit));
   }
 
   const modes: UnitClass[] =

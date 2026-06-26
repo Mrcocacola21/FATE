@@ -400,6 +400,21 @@ const PENDING_ROLL_LABELS_UK: Record<string, string> = {
   initiativeRoll: "Кидок ініціативи",
 };
 
+Object.assign(PENDING_ROLL_LABELS_UK, {
+  ruleDeclarationChoice: "Оголошення правила",
+  ruleDeclarationChessKingChoice: "Вибір Короля",
+  ruleDeclarationAdvantageThreshold: "Поріг переваги",
+  courtAttackerRoll: "Кидок атакуючого Суду",
+  courtDefenderRoll: "Кидок захисного Суду",
+  courtEffectUnitChoice: "Вибір фігури Суду",
+  courtEffectChargeChoice: "Вибір заряду Суду",
+  courtForcedAppearanceDestination: "Клітинка Суду",
+  moonRoundRoll: "Кидок Місяця",
+  moonCoordinateRoll: "Координати Місяця",
+  moonCheeseHolesChoice: "Таємний вибір фігури",
+  pureBloodRedirectChoice: "Чиста кров",
+});
+
 export function getPendingRollLabel(kind?: string | null, language: "en" | "uk" = "en") {
   if (language === "uk") {
     return (kind && PENDING_ROLL_LABELS_UK[kind]) ?? "Кидок";
@@ -549,6 +564,30 @@ export function getPendingRollLabel(kind?: string | null, language: "en" | "uk" 
       return "Tra-la-la target";
     case "riverTraLaLaDestinationChoice":
       return "Tra-la-la destination";
+    case "ruleDeclarationChoice":
+      return "Rule Declaration";
+    case "ruleDeclarationChessKingChoice":
+      return "King selection";
+    case "ruleDeclarationAdvantageThreshold":
+      return "Advantage threshold";
+    case "courtAttackerRoll":
+      return "Court attacker roll";
+    case "courtDefenderRoll":
+      return "Court defender roll";
+    case "courtEffectUnitChoice":
+      return "Court figure choice";
+    case "courtEffectChargeChoice":
+      return "Court charge choice";
+    case "courtForcedAppearanceDestination":
+      return "Court destination";
+    case "moonRoundRoll":
+      return "Moon roll";
+    case "moonCoordinateRoll":
+      return "Moon coordinate roll";
+    case "moonCheeseHolesChoice":
+      return "Secret figure choice";
+    case "pureBloodRedirectChoice":
+      return "Pure Blood redirect";
     case "initiativeRoll":
       return "Initiative roll";
     default:

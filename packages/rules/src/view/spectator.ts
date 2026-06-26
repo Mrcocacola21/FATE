@@ -5,6 +5,7 @@ import {
   collectSpectatorStakeMarkers,
 } from "./helpers";
 import { buildPendingAoEPreview, getPendingCombatQueueCount } from "./pending";
+import { projectRuleDeclarationState } from "./ruleDeclarations";
 
 export function makeSpectatorView(state: GameState): PlayerView {
   const {
@@ -43,6 +44,7 @@ export function makeSpectatorView(state: GameState): PlayerView {
     pendingAoEPreview: buildPendingAoEPreview(pendingAoE),
     stakeMarkers,
     pendingMove: null,
+    ruleDeclaration: projectRuleDeclarationState(state.ruleDeclaration, "spectator"),
     turnOrder: [...state.turnOrder],
     placementOrder: [...state.placementOrder],
     turnQueue: [...state.turnQueue],

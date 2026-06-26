@@ -16,6 +16,32 @@ export interface SansBoneFieldStatus {
   bluePunishedTurnNumber?: number;
 }
 
+export type CourtActionType = "move" | "main" | "stealth";
+
+export interface CourtRoundStatus {
+  expiresAtRoundEnd: number;
+}
+
+export interface CourtExtraFlexibleActionStatus extends CourtRoundStatus {
+  used: boolean;
+}
+
+export interface CourtGlobalMoveStatus extends CourtRoundStatus {
+  used: boolean;
+}
+
+export interface CourtProceduralRestrictionStatus extends CourtRoundStatus {
+  spentType?: CourtActionType;
+}
+
+export interface CourtAttackDamageStatus extends CourtRoundStatus {
+  used: boolean;
+}
+
+export interface CourtStasisStatus extends CourtRoundStatus {
+  returnPosition: Coord;
+}
+
 export interface UnitState {
   id: string;
   owner: PlayerId;
@@ -84,6 +110,14 @@ export interface UnitState {
   mettatonNeoUnlocked?: boolean;
   undyneImmortalUsed?: boolean;
   undyneImmortalActive?: boolean;
+
+  courtExtraFlexibleAction?: CourtExtraFlexibleActionStatus;
+  courtGlobalMoveOnce?: CourtGlobalMoveStatus;
+  courtProceduralRestriction?: CourtProceduralRestrictionStatus;
+  courtDamageCompensation?: CourtAttackDamageStatus;
+  courtCosts?: CourtAttackDamageStatus;
+  courtStasis?: CourtStasisStatus;
+  cannotStealthUntilRoundEnd?: number;
 
   isAlive: boolean;
 }

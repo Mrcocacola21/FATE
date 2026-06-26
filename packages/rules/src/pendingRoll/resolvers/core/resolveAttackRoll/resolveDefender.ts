@@ -12,6 +12,10 @@ import {
   wouldAttackHitFromContext,
 } from "./shared";
 import { continueAfterAttackResolution } from "./postResolution";
+import {
+  maybeRequestPureBloodRedirect,
+  resolvePureBloodRedirectChoice,
+} from "../../../../ruleDeclarations";
 
 export function resolveAttackDefenderRoll(
   state: GameState,
@@ -79,6 +83,18 @@ export function resolveAttackDefenderRoll(
     );
   }
 
+  if (wouldAttackHitFromContext(nextCtx, attacker, defender)) {
+    const pureBlood = maybeRequestPureBloodRedirect(
+      state,
+      pending,
+      nextCtx,
+      defender.id
+    );
+    if (pureBlood) {
+      return pureBlood;
+    }
+  }
+
   const muninnCharges = defender.charges?.[ABILITY_ODIN_MUNINN] ?? 0;
   if (
     defender.heroId === HERO_ODIN_ID &&
@@ -96,6 +112,34 @@ export function resolveAttackDefenderRoll(
 
   const finalizedCtx: AttackRollContext = {
     ...nextCtx,
+    odinMuninnChoiceMade: true,
+  };
+  const resolved = finalizeAttackFromContext(state, finalizedCtx, "none");
+  return continueAfterAttackResolution(
+    resolved.state,
+    resolved.events,
+    finalizedCtx,
+    rng
+  );
+}
+
+export function resolvePureBloodRedirectRoll(
+  state: GameState,
+  pending: PendingRoll,
+  actionChoice: unknown,
+  rng: RNG
+): ApplyResult {
+  const redirected = resolvePureBloodRedirectChoice(
+    state,
+    pending,
+    actionChoice as any
+  );
+  if (!redirected) {
+    return { state, events: [] };
+  }
+  const ctx = redirected.context as unknown as AttackRollContext;
+  const finalizedCtx: AttackRollContext = {
+    ...ctx,
     odinMuninnChoiceMade: true,
   };
   const resolved = finalizeAttackFromContext(state, finalizedCtx, "none");

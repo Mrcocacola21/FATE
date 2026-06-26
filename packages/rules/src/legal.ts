@@ -6,6 +6,7 @@ import { canAttackTarget } from "./combat";
 import { canDirectlyTargetUnit } from "./visibility";
 import { canSpendSlots } from "./turnEconomy";
 import { getStealthSuccessMinRoll } from "./stealth";
+import { canEnterStealthByRuleDeclaration } from "./ruleDeclarations";
 import {
   HERO_CHIKATILO_ID,
   HERO_FALSE_TRAIL_TOKEN_ID,
@@ -134,6 +135,7 @@ export function getLegalIntents(
     !isChicken &&
     canSpendSlots(activeUnit, { stealth: true }) &&
     getStealthSuccessMinRoll(activeUnit) !== null &&
+    canEnterStealthByRuleDeclaration(state, activeUnit) &&
     !mettatonNoStealth &&
     !kaiserTransformed &&
     !kaiserInBunker;

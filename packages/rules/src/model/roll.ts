@@ -23,6 +23,18 @@ export type RollKind =
   | "moveTrickster"
   | "moveBerserker"
   | "initiativeRoll"
+  | "ruleDeclarationChoice"
+  | "ruleDeclarationChessKingChoice"
+  | "ruleDeclarationAdvantageThreshold"
+  | "courtAttackerRoll"
+  | "courtDefenderRoll"
+  | "courtEffectUnitChoice"
+  | "courtEffectChargeChoice"
+  | "courtForcedAppearanceDestination"
+  | "moonRoundRoll"
+  | "moonCoordinateRoll"
+  | "moonCheeseHolesChoice"
+  | "pureBloodRedirectChoice"
   | "attack_attackerRoll"
   | "attack_defenderRoll"
   | "berserkerDefenseChoice"
@@ -99,6 +111,18 @@ export const ALL_ROLL_KINDS = [
   "moveTrickster",
   "moveBerserker",
   "initiativeRoll",
+  "ruleDeclarationChoice",
+  "ruleDeclarationChessKingChoice",
+  "ruleDeclarationAdvantageThreshold",
+  "courtAttackerRoll",
+  "courtDefenderRoll",
+  "courtEffectUnitChoice",
+  "courtEffectChargeChoice",
+  "courtForcedAppearanceDestination",
+  "moonRoundRoll",
+  "moonCoordinateRoll",
+  "moonCheeseHolesChoice",
+  "pureBloodRedirectChoice",
   "attack_attackerRoll",
   "attack_defenderRoll",
   "berserkerDefenseChoice",

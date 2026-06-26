@@ -9,6 +9,7 @@ import { getFriskKeenEyeTargetIds } from "./heroes/frisk";
 import { requestRoll } from "../core";
 import { evSearchStealth, evStealthEntered } from "../core";
 import { getStealthSuccessMinRoll } from "../stealth";
+import { canEnterStealthByRuleDeclaration } from "../ruleDeclarations";
 
 export function applyEnterStealth(
   state: GameState,
@@ -38,6 +39,9 @@ export function applyEnterStealth(
     return { state, events: [] };
   }
   if (unit.heroId === HERO_METTATON_ID) {
+    return { state, events: [] };
+  }
+  if (!canEnterStealthByRuleDeclaration(state, unit)) {
     return { state, events: [] };
   }
 

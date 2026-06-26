@@ -68,6 +68,7 @@ export function finalizeAttackFromContext(
     ignoreBonuses: resolvedIgnoreBonuses,
     autoHit,
     forceMiss,
+    pureBloodRedirectTargetId: context.pureBloodRedirectTargetId,
     rolls,
   });
 

@@ -161,21 +161,44 @@ export function testInitiativeWinnerSetsPlacementFirstPlayerAndPhasePlacement() 
   ).state;
   state = applyAction(state, { type: "startGame" } as any, rng).state;
 
-  const resolved = resolveAllPendingRolls(state, rng);
-  const finalState = resolved.state;
+  const afterInitiativeP1 = resolvePendingRollOnce(state, rng);
+  const afterInitiativeP2 = resolvePendingRollOnce(afterInitiativeP1.state, rng);
+  const pendingRuleState = afterInitiativeP2.state;
 
-  assert(finalState.phase === "placement", "phase should switch to placement");
   assert(
-    finalState.initiative.winner !== null,
+    pendingRuleState.phase === "lobby",
+    "phase should remain lobby while rule declaration is pending"
+  );
+  assert(
+    pendingRuleState.initiative.winner !== null,
     "initiative winner should be set"
   );
   assert(
-    finalState.placementFirstPlayer === finalState.initiative.winner,
+    pendingRuleState.placementFirstPlayer === pendingRuleState.initiative.winner,
     "placementFirstPlayer should match initiative winner"
   );
   assert(
-    finalState.currentPlayer === finalState.initiative.winner,
+    pendingRuleState.currentPlayer === pendingRuleState.initiative.winner,
     "currentPlayer should start as initiative winner"
+  );
+  assert(
+    pendingRuleState.pendingRoll?.kind === "ruleDeclarationChoice",
+    "initiative loser should choose rule declaration before placement"
+  );
+  assert(
+    pendingRuleState.pendingRoll?.player !== pendingRuleState.initiative.winner,
+    "rule declaration chooser should be initiative loser"
+  );
+
+  const resolved = resolvePendingRollOnce(pendingRuleState, rng, {
+    type: "chooseRuleDeclaration",
+    ruleId: "moon_game",
+  });
+  const finalState = resolved.state;
+  assert(finalState.phase === "placement", "phase should switch to placement after rule choice");
+  assert(
+    finalState.ruleDeclaration.selectedRuleId === "moon_game",
+    "selected rule should be stored"
   );
 
   console.log("testInitiativeWinnerSetsPlacementFirstPlayerAndPhasePlacement passed");

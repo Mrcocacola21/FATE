@@ -27,6 +27,13 @@ export const MoveModeSchema = z.union([
   z.literal("berserker"),
 ]);
 
+const RuleDeclarationIdSchema = z.enum([
+  "court",
+  "chess_party",
+  "moon_game",
+  "advantage_game",
+]);
+
 export const CreateGameBodySchema = z.object({
   seed: z.number().int().optional(),
   arenaId: z.string().optional(),
@@ -172,6 +179,26 @@ const ResolveRollChoiceSchema = z.union([
     axis: z
       .enum(["row", "col", "diagMain", "diagAnti"])
       .optional(),
+  }),
+  z.object({
+    type: z.literal("chooseRuleDeclaration"),
+    ruleId: RuleDeclarationIdSchema,
+  }),
+  z.object({
+    type: z.literal("ruleThreshold"),
+    threshold: z.number().int(),
+  }),
+  z.object({
+    type: z.literal("ruleUnit"),
+    unitId: z.string().min(1),
+  }),
+  z.object({
+    type: z.literal("ruleCell"),
+    position: CoordSchema,
+  }),
+  z.object({
+    type: z.literal("ruleCharge"),
+    abilityId: z.string().min(1),
   }),
   z.literal("elCidDuelistContinue"),
   z.literal("elCidDuelistStop"),

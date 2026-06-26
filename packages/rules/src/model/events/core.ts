@@ -1,5 +1,11 @@
 import type { Coord, MoveMode, PlayerId } from "../shared";
 import type {
+  CourtEffectId,
+  CourtSide,
+  MoonEffectId,
+  RuleDeclarationId,
+} from "../../ruleDeclarations/types";
+import type {
   DiceRoll,
   RollKind,
   SearchStealthMode,
@@ -94,6 +100,88 @@ export type CoreGameEvent =
   | {
       type: "placementStarted";
       placementFirstPlayer: PlayerId;
+    }
+  | {
+      type: "ruleDeclarationSelected";
+      ruleId: RuleDeclarationId;
+      chooserPlayer: PlayerId;
+    }
+  | {
+      type: "ruleDeclarationSetupCompleted";
+      ruleId: RuleDeclarationId;
+    }
+  | {
+      type: "courtRolesAssigned";
+      attackerPlayer: PlayerId;
+      defenderPlayer: PlayerId;
+    }
+  | {
+      type: "courtRolesSwapped";
+      attackerPlayer: PlayerId;
+      defenderPlayer: PlayerId;
+    }
+  | {
+      type: "courtRollResult";
+      side: CourtSide;
+      player: PlayerId;
+      roll: number;
+      effectId: CourtEffectId;
+    }
+  | {
+      type: "courtEffectApplied";
+      effectId: CourtEffectId;
+      player: PlayerId;
+      unitId?: string;
+      targetId?: string;
+      abilityId?: string;
+      position?: Coord;
+    }
+  | {
+      type: "chessKingSelected";
+      player: PlayerId;
+      unitId: string;
+    }
+  | {
+      type: "chessKingDeathResolved";
+      losingPlayer?: PlayerId;
+      winner?: PlayerId;
+      draw?: boolean;
+    }
+  | {
+      type: "gameDraw";
+    }
+  | {
+      type: "pureBloodRedirected";
+      kingId: string;
+      redirectedToUnitId: string;
+      damage: number;
+    }
+  | {
+      type: "moonRollResult";
+      roll: number;
+      effectId: MoonEffectId;
+    }
+  | {
+      type: "moonEffectApplied";
+      effectId: MoonEffectId;
+      center?: Coord;
+      centers?: Coord[];
+      areaRadius?: number;
+      affectedUnitIds?: string[];
+      damagedUnitIds?: string[];
+      swappedUnitIds?: string[];
+    }
+  | {
+      type: "advantageThresholdDeclared";
+      player: PlayerId;
+      threshold: number;
+    }
+  | {
+      type: "advantageWinTriggered";
+      winner: PlayerId;
+      threshold: number;
+      P1living: number;
+      P2living: number;
     }
   | {
       type: "berserkerDefenseChosen";

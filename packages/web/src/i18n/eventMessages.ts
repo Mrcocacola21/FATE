@@ -95,6 +95,90 @@ export function formatEventMessage(
         `Placement started: ${value(event.placementFirstPlayer)}`,
         `Почалося розміщення: ${value(event.placementFirstPlayer)}`,
       );
+    case "ruleDeclarationSelected":
+      return text(
+        language,
+        `Rule selected: ${value(event.ruleId)} by ${value(event.chooserPlayer)}`,
+        `Обрано правило: ${value(event.ruleId)} гравцем ${value(event.chooserPlayer)}`,
+      );
+    case "ruleDeclarationSetupCompleted":
+      return text(
+        language,
+        `Rule setup complete: ${value(event.ruleId)}`,
+        `Налаштування правила завершено: ${value(event.ruleId)}`,
+      );
+    case "courtRolesAssigned":
+      return text(
+        language,
+        `Court roles: attacker ${value(event.attackerPlayer)}, defender ${value(event.defenderPlayer)}`,
+        `Ролі Суду: атака ${value(event.attackerPlayer)}, захист ${value(event.defenderPlayer)}`,
+      );
+    case "courtRolesSwapped":
+      return text(
+        language,
+        `Court roles swapped: attacker ${value(event.attackerPlayer)}, defender ${value(event.defenderPlayer)}`,
+        `Ролі Суду змінено: атака ${value(event.attackerPlayer)}, захист ${value(event.defenderPlayer)}`,
+      );
+    case "courtRollResult":
+      return text(
+        language,
+        `Court roll: ${event.side} ${event.player} rolled ${event.roll} (${event.effectId})`,
+        `Кидок Суду: ${event.side} ${event.player} кинув ${event.roll} (${event.effectId})`,
+      );
+    case "courtEffectApplied": {
+      const target = event.unitId ?? event.targetId ?? (event.position ? `${event.position.col},${event.position.row}` : "-");
+      return text(
+        language,
+        `Court effect: ${event.effectId} (${value(target)})`,
+        `Ефект Суду: ${event.effectId} (${value(target)})`,
+      );
+    }
+    case "chessKingSelected":
+      return text(
+        language,
+        `King selected: ${event.player} ${event.unitId}`,
+        `Обрано Короля: ${event.player} ${event.unitId}`,
+      );
+    case "chessKingDeathResolved":
+      return event.draw
+        ? text(language, "Both Kings died: draw", "Обидва Королі загинули: нічия")
+        : text(
+            language,
+            `King died: winner ${value(event.winner)}`,
+            `Король загинув: переможець ${value(event.winner)}`,
+          );
+    case "gameDraw":
+      return text(language, "Game ended in a draw", "Гра завершилася нічиєю");
+    case "pureBloodRedirected":
+      return text(
+        language,
+        `Pure Blood: ${event.kingId} redirected ${event.damage} damage to ${event.redirectedToUnitId}`,
+        `Чиста кров: ${event.kingId} перенаправив ${event.damage} шкоди на ${event.redirectedToUnitId}`,
+      );
+    case "moonRollResult":
+      return text(
+        language,
+        `Moon roll: ${event.roll} (${event.effectId})`,
+        `Кидок Місяця: ${event.roll} (${event.effectId})`,
+      );
+    case "moonEffectApplied":
+      return text(
+        language,
+        `Moon effect: ${event.effectId}`,
+        `Ефект Місяця: ${event.effectId}`,
+      );
+    case "advantageThresholdDeclared":
+      return text(
+        language,
+        `Advantage threshold: ${event.player} declared ${event.threshold}`,
+        `Поріг переваги: ${event.player} оголосив ${event.threshold}`,
+      );
+    case "advantageWinTriggered":
+      return text(
+        language,
+        `Advantage win: ${event.winner} (${event.P1living}-${event.P2living})`,
+        `Перемога за перевагою: ${event.winner} (${event.P1living}-${event.P2living})`,
+      );
     case "berserkerDefenseChosen":
       return text(
         language,

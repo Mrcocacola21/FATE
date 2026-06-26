@@ -17,15 +17,40 @@ import {
   resolveFriskChildsCryChoiceRoll,
   resolveFriskSubstitutionChoiceRoll,
   resolveOdinMuninnDefenseChoiceRoll,
+  resolvePureBloodRedirectRoll,
 } from "../resolvers/core/resolveAttackRoll";
 import {
   resolveForestMoveCheckRoll,
   resolveForestMoveDestinationChoice,
 } from "../../actions/movementActions";
+import {
+  resolveAdvantageThresholdChoice,
+  resolveChessKingChoice,
+  resolveCourtEffectChargeChoice,
+  resolveCourtEffectUnitChoice,
+  resolveCourtForcedAppearanceDestination,
+  resolveCourtRoll,
+  resolveMoonCheeseHolesChoice,
+  resolveMoonCoordinateRoll,
+  resolveMoonRoundRoll,
+  resolveRuleDeclarationChoice,
+} from "../../ruleDeclarations";
 import type { AutoRollChoice, ResolvePendingRollAction } from "./types";
 
 export const CORE_PENDING_ROLL_KINDS = [
   "initiativeRoll",
+  "ruleDeclarationChoice",
+  "ruleDeclarationChessKingChoice",
+  "ruleDeclarationAdvantageThreshold",
+  "courtAttackerRoll",
+  "courtDefenderRoll",
+  "courtEffectUnitChoice",
+  "courtEffectChargeChoice",
+  "courtForcedAppearanceDestination",
+  "moonRoundRoll",
+  "moonCoordinateRoll",
+  "moonCheeseHolesChoice",
+  "pureBloodRedirectChoice",
   "enterBunker",
   "enterStealth",
   "searchStealth",
@@ -55,6 +80,29 @@ export function resolveCorePendingRollCase(
   switch (pending.kind) {
     case "initiativeRoll":
       return resolveInitiativeRoll(state, pending, rng);
+    case "ruleDeclarationChoice":
+      return resolveRuleDeclarationChoice(state, pending, action.choice);
+    case "ruleDeclarationChessKingChoice":
+      return resolveChessKingChoice(state, pending, action.choice);
+    case "ruleDeclarationAdvantageThreshold":
+      return resolveAdvantageThresholdChoice(state, pending, action.choice);
+    case "courtAttackerRoll":
+    case "courtDefenderRoll":
+      return resolveCourtRoll(state, pending, rng);
+    case "courtEffectUnitChoice":
+      return resolveCourtEffectUnitChoice(state, pending, action.choice, rng);
+    case "courtEffectChargeChoice":
+      return resolveCourtEffectChargeChoice(state, pending, action.choice, rng);
+    case "courtForcedAppearanceDestination":
+      return resolveCourtForcedAppearanceDestination(state, pending, action.choice, rng);
+    case "moonRoundRoll":
+      return resolveMoonRoundRoll(state, pending, rng);
+    case "moonCoordinateRoll":
+      return resolveMoonCoordinateRoll(state, pending, rng);
+    case "moonCheeseHolesChoice":
+      return resolveMoonCheeseHolesChoice(state, pending, action.choice, rng);
+    case "pureBloodRedirectChoice":
+      return resolvePureBloodRedirectRoll(state, pending, action.choice, rng);
     case "enterBunker": {
       const unitId = pending.context.unitId as string | undefined;
       if (!unitId) return { state: clearPendingRoll(state), events: [] };

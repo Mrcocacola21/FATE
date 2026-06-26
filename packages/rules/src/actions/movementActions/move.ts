@@ -29,6 +29,7 @@ import {
   resolveSteppedOnHiddenDestination,
 } from "./postMove";
 import type { MoveActionInternal } from "./types";
+import { markCourtGlobalMoveUsed } from "../../ruleDeclarations";
 
 export function applyMove(
   state: GameState,
@@ -187,9 +188,13 @@ export function applyMove(
     }
   }
 
-  const movedUnitBase: UnitState = hasRiverBoatmanMove
+  const movedUnitBaseRaw: UnitState = hasRiverBoatmanMove
     ? { ...unit, riverBoatmanMovePending: false }
     : spendSlots(unit, { move: true });
+  const movedUnitBase =
+    didMove && unit.courtGlobalMoveOnce && !unit.courtGlobalMoveOnce.used
+      ? markCourtGlobalMoveUsed(movedUnitBaseRaw)
+      : movedUnitBaseRaw;
   const movedUnit: UnitState = isRiverPerson(movedUnitBase)
     ? {
         ...movedUnitBase,

@@ -226,9 +226,14 @@ export function testGoldenSnapshotPendingRollSequence() {
   events.push(...res.events);
   res = resolvePendingRollOnce(res.state, rng as any);
   events.push(...res.events);
+  res = resolvePendingRollOnce(res.state, rng as any, {
+    type: "chooseRuleDeclaration",
+    ruleId: "moon_game",
+  });
+  events.push(...res.events);
   state = res.state;
 
-  assert(state.phase === "placement", "phase should be placement after rolls");
+  assert(state.phase === "placement", "phase should be placement after rule declaration");
 
   const p1Units = Object.values(state.units).filter((u) => u.owner === "P1");
   const p2Units = Object.values(state.units).filter((u) => u.owner === "P2");
@@ -347,6 +352,22 @@ export function testGoldenSnapshotPendingRollSequence() {
         P2sum: 2,
       },
       {
+        type: "rollRequested",
+        rollId: "roll-3",
+        kind: "ruleDeclarationChoice",
+        player: "P2",
+        actorUnitId: undefined,
+      },
+      {
+        type: "ruleDeclarationSelected",
+        ruleId: "moon_game",
+        chooserPlayer: "P2",
+      },
+      {
+        type: "ruleDeclarationSetupCompleted",
+        ruleId: "moon_game",
+      },
+      {
         type: "placementStarted",
         placementFirstPlayer: "P1",
       },
@@ -362,7 +383,7 @@ export function testGoldenSnapshotPendingRollSequence() {
       },
       {
         type: "rollRequested",
-        rollId: "roll-3",
+        rollId: "roll-4",
         kind: "vladPlaceStakes",
         player: "P1",
         actorUnitId: undefined,

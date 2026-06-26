@@ -1,4 +1,10 @@
-import type { Coord, GamePhase, PlayerId, TestRoomSnapshot } from "rules";
+import type {
+  Coord,
+  GamePhase,
+  PlayerId,
+  RuleDeclarationId,
+  TestRoomSnapshot,
+} from "rules";
 
 export type TestRoomCommand =
   | {
@@ -55,6 +61,12 @@ export type TestRoomCommand =
   | { type: "debugResetActions"; unitId?: string }
   | { type: "debugClearPendingRoll" }
   | {
+      type: "debugSetRuleDeclaration";
+      ruleId: RuleDeclarationId;
+      chooserPlayer?: PlayerId;
+      threshold?: number;
+    }
+  | {
       type: "debugAddMarker";
       marker: {
         kind: "stake" | "forest";
@@ -88,6 +100,7 @@ export type TestRoomCommand =
   | { type: "debugSetDiceQueue"; values: number[] }
   | { type: "debugClearDiceQueue" }
   | { type: "debugSimulateStartTurn"; unitId: string }
+  | { type: "debugTriggerRuleRoundEnd"; rolls?: number[] }
   | { type: "debugDeleteRoom" }
   | { type: "debugExportSnapshot" }
   | { type: "debugImportSnapshot"; snapshot: TestRoomSnapshot };

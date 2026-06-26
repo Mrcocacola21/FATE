@@ -15,6 +15,7 @@ import {
   getPendingCombatQueueCount,
   getVisiblePendingRollForPlayer,
 } from "./pending";
+import { projectRuleDeclarationState } from "./ruleDeclarations";
 
 /**
  * Build a player-specific view of the game state.
@@ -133,6 +134,7 @@ export function makePlayerView(
     pendingAoEPreview,
     stakeMarkers,
     pendingMove,
+    ruleDeclaration: projectRuleDeclarationState(state.ruleDeclaration, playerId),
     turnOrder: [...state.turnOrder],
     placementOrder: [...state.placementOrder],
     turnQueue: [...state.turnQueue],

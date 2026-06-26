@@ -272,6 +272,40 @@ export function applyDebugStateCommand(
       pendingAoE: null,
     });
   }
+  if (command.type === "debugSetRuleDeclaration") {
+    const chooserPlayer = command.chooserPlayer ?? state.currentPlayer ?? "P1";
+    const otherPlayer = chooserPlayer === "P1" ? "P2" : "P1";
+    return accept({
+      ...state,
+      ruleDeclaration: {
+        selectedRuleId: command.ruleId,
+        chooserPlayer,
+        setupComplete: true,
+        ruleData: {
+          court:
+            command.ruleId === "court"
+              ? {
+                  attackerPlayer: chooserPlayer,
+                  defenderPlayer: otherPlayer,
+                }
+              : undefined,
+          chessParty:
+            command.ruleId === "chess_party"
+              ? {
+                  kings: { P1: null, P2: null },
+                }
+              : undefined,
+          moonGame: command.ruleId === "moon_game" ? {} : undefined,
+          advantageGame:
+            command.ruleId === "advantage_game"
+              ? {
+                  threshold: Math.max(3, Math.trunc(command.threshold ?? 3)),
+                }
+              : undefined,
+        },
+      },
+    });
+  }
   if (command.type === "debugAddMarker") {
     if (!isInsideBoard(command.marker.coord, state.boardSize)) {
       return reject(state, "Coordinate is outside the board");

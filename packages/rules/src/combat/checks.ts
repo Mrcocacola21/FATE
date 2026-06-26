@@ -13,6 +13,7 @@ import {
 } from "../heroes";
 import { isStormActive, isStormExempt } from "../forest";
 import { canSeeStealthedTarget } from "../visibility";
+import { canAttackAcrossRuleDeclarationBoundary } from "../ruleDeclarations";
 import { distanceInfo, isSpearmanReachTarget, isTricksterReachTarget } from "./math";
 
 export function canAttackTarget(
@@ -26,6 +27,10 @@ export function canAttackTarget(
   if (attacker.heroId === HERO_FALSE_TRAIL_TOKEN_ID) return false;
 
   if (!options?.allowFriendlyTarget && attacker.owner === defender.owner) {
+    return false;
+  }
+
+  if (!canAttackAcrossRuleDeclarationBoundary(state, attacker, defender, false)) {
     return false;
   }
 

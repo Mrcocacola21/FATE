@@ -6,6 +6,7 @@ import { ChargeDebugControls } from "./ChargeDebugControls";
 import { CombatDebugControls } from "./CombatDebugControls";
 import { MarkerDebugControls } from "./MarkerDebugControls";
 import { PendingRollDebugPanel } from "./PendingRollDebugPanel";
+import { RuleDeclarationDebugControls } from "./RuleDeclarationDebugControls";
 import { SnapshotDebugPanel } from "./SnapshotDebugPanel";
 import { TestRoomPresets } from "./TestRoomPresets";
 import { TurnDebugControls } from "./TurnDebugControls";
@@ -119,6 +120,7 @@ export function TestRoomPanel({ vm }: { vm: any }) {
                       sendAction={sendAction}
                     />
                   </div>
+                  <RuleDeclarationDebugControls send={send} />
                 </div>
               </div>
             ) : null}

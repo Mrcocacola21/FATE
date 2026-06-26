@@ -8,7 +8,10 @@ export {
   requestJebeKhansShooterAttack,
 } from "./jebe";
 export { resolveAttackAttackerRoll } from "./resolveAttacker";
-export { resolveAttackDefenderRoll } from "./resolveDefender";
+export {
+  resolveAttackDefenderRoll,
+  resolvePureBloodRedirectRoll,
+} from "./resolveDefender";
 export {
   resolveAsgoreBraveryDefenseChoiceRoll,
   resolveBerserkerDefenseChoiceRoll,

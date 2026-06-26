@@ -20,6 +20,14 @@ import {
   testHeroRegistryContainsPlayableHeroes,
 } from "./core/setup.test";
 import {
+  testAdvantageThresholdValidationAndWin,
+  testChessKingDeathAndDraw,
+  testCourtRoundEndRollsEffectsAndSwapsRoles,
+  testMoonGameStraightMovementBonus,
+  testRuleDeclarationChooserAndPlacementGate,
+  testRuleDeclarationSetupBranches,
+} from "./core/ruleDeclarations.test";
+import {
   testGameEndCondition,
   testBattleTurnOrderFollowsPlacementOrder,
 } from "./core/turnFlow.test";
@@ -362,6 +370,12 @@ function main(): void {
   testLobbyReadyAndStartRequiresBothReady();
   testInitiativeRollSequenceNoAutoroll();
   testInitiativeWinnerSetsPlacementFirstPlayerAndPhasePlacement();
+  testRuleDeclarationChooserAndPlacementGate();
+  testRuleDeclarationSetupBranches();
+  testAdvantageThresholdValidationAndWin();
+  testChessKingDeathAndDraw();
+  testMoonGameStraightMovementBonus();
+  testCourtRoundEndRollsEffectsAndSwapsRoles();
   testRiderPathHitsStealthed();
   testGameEndCondition();
   testBerserkerAutoDefenseEnabled();

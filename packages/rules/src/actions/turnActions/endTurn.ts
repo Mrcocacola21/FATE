@@ -1,7 +1,7 @@
 import type { ApplyResult, GameEvent, GameState, PlayerId } from "../../model";
 import type { RNG } from "../../rng";
 import { HERO_FALSE_TRAIL_TOKEN_ID } from "../../heroes";
-import { evGameEnded, evRoundStarted, evTurnStarted } from "../../core";
+import { evGameEnded, evTurnStarted } from "../../core";
 import { applyGutsEndTurnDrain } from "../heroes/guts";
 import { clearAsgoreTurnFlags } from "../heroes/asgore";
 import { clearRiverTurnFlags } from "../heroes/riverPerson";
@@ -11,6 +11,7 @@ import {
   getNextAliveUnitIndex,
   nextPlayer,
 } from "./helpers";
+import { handleRuleDeclarationRoundEnd } from "../../ruleDeclarations";
 
 export function applyEndTurn(state: GameState, rng: RNG): ApplyResult {
   if (state.phase === "ended") {
@@ -124,7 +125,28 @@ export function applyEndTurn(state: GameState, rng: RNG): ApplyResult {
 
   const events: GameEvent[] = [];
   if (isNewRound) {
-    events.push(evRoundStarted({ roundNumber: baseState.roundNumber }));
+    const ruleRoundEnd = handleRuleDeclarationRoundEnd(
+      {
+        ...baseState,
+        roundNumber: state.roundNumber,
+        turnNumber: state.turnNumber,
+        currentPlayer: stateAfterRiver.currentPlayer,
+        turnOrderIndex: prevIndex,
+        turnQueueIndex: prevIndex,
+      },
+      {
+        nextRoundNumber: baseState.roundNumber,
+        nextTurnNumber: baseState.turnNumber,
+        nextIndex,
+        nextUnitId,
+        nextPlayer: turnOwner,
+      },
+      rng
+    );
+    return {
+      state: ruleRoundEnd.state,
+      events: [...drained.events, ...ruleRoundEnd.events],
+    };
   }
   events.push(
     evTurnStarted({ player: turnOwner, turnNumber: baseState.turnNumber })

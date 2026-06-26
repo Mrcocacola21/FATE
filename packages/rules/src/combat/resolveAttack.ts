@@ -14,6 +14,7 @@ import { applyPostAttackRatings } from "./events";
 import { buildDiceRoll, recordGenghisAttack } from "./helpers";
 import { revealStealthedDefenderIfIgnored, resolveHitDamage, tryResolveAutoDefense } from "./state";
 import type { ResolveAttackParams } from "./types";
+import { evPureBloodRedirected } from "../core";
 
 export function resolveAttack(
   state: GameState,
@@ -157,6 +158,15 @@ export function resolveAttack(
   events = revealDefender.events;
   const revealedDefenderPos = revealDefender.revealedDefenderPos;
 
+  const redirectTarget =
+    hit && params.pureBloodRedirectTargetId
+      ? units[params.pureBloodRedirectTargetId]
+      : null;
+  const originalDefenderId = defenderAfter.id;
+  if (redirectTarget && redirectTarget.isAlive && redirectTarget.position) {
+    defenderAfter = { ...redirectTarget };
+  }
+
   const resolvedHit = resolveHitDamage(
     params,
     attackerAfter,
@@ -214,6 +224,20 @@ export function resolveAttack(
       : state.knowledge,
     lastKnownPositions: updatedLastKnown,
   };
+
+  if (
+    redirectTarget &&
+    redirectTarget.id !== originalDefenderId &&
+    damage > 0
+  ) {
+    events.push(
+      evPureBloodRedirected({
+        kingId: originalDefenderId,
+        redirectedToUnitId: redirectTarget.id,
+        damage,
+      })
+    );
+  }
 
   if (attackerRevealedToDefender) {
     events.push({
