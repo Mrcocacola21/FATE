@@ -1,39 +1,73 @@
 import type { FC } from "react";
-import type { PlayerView } from "rules";
+import type { PlayerView, UnitState } from "rules";
 import { PanelCard, SectionHeader, StatusBadge } from "../../../../components/ui";
 import { ARENA_BONE_FIELD_ID } from "../../../../rulesHints";
-import type { ForestMarkerView, TurnEconomyState } from "../types";
+import type { ForestMarkerView } from "../types";
 import { useI18n } from "../../../../i18n";
 import { getArenaLabel, getPhaseLabel, localizeServerText } from "../../../../i18n/displayMetadata";
 import { StatPill } from "../../../../ui";
+import {
+  getPublicBattleActionBars,
+  type ActionBarState,
+  type PublicBattleActionKind,
+} from "../actionSummaries";
 
 interface StatusSectionProps {
   view: PlayerView;
+  selectedUnit: UnitState | null;
   stormActive: boolean;
   forestMarkers: ForestMarkerView[];
   isSpectator: boolean;
   canStartTurn: boolean;
   expectedUnitId: string | undefined;
   legalIntents: PlayerView["legalIntents"];
-  economy: TurnEconomyState;
   pendingRoll: boolean;
   onStartTurn: (unitId: string) => void;
 }
 
+const publicBarLabelKeys: Record<PublicBattleActionKind, string> = {
+  move: "game.move",
+  attack: "game.attack",
+  stealth: "game.stealth",
+};
+
+function stateLabelKey(state: ActionBarState): string {
+  return state === "not_applicable" ? "actionUi.states.notApplicable" : `actionUi.states.${state}`;
+}
+
+function publicBarClasses(state: ActionBarState) {
+  const byState: Record<ActionBarState, string> = {
+    available:
+      "border-emerald-300 bg-emerald-50 text-emerald-800 shadow-[inset_0_-2px_0_rgba(16,185,129,0.12)] dark:border-emerald-800/70 dark:bg-emerald-950/35 dark:text-emerald-200",
+    spent:
+      "border-stone-300 bg-stone-100 text-stone-400 line-through dark:border-stone-800 dark:bg-black/25 dark:text-stone-500",
+    blocked:
+      "border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-800/70 dark:bg-amber-950/35 dark:text-amber-100",
+    pending:
+      "border-violet-300 bg-violet-50 text-violet-900 dark:border-violet-800/70 dark:bg-violet-950/35 dark:text-violet-100",
+    not_applicable:
+      "border-slate-200 bg-slate-100 text-slate-500 dark:border-slate-800 dark:bg-slate-950/45 dark:text-slate-500",
+  };
+  return `rounded-lg border px-1.5 py-2 text-center text-[11px] font-bold ${byState[state]}`;
+}
+
 export const StatusSection: FC<StatusSectionProps> = ({
   view,
+  selectedUnit,
   stormActive,
   forestMarkers,
   isSpectator,
   canStartTurn,
   expectedUnitId,
   legalIntents,
-  economy,
   pendingRoll,
   onStartTurn,
 }) => {
   const { t } = useI18n();
   const phase = getPhaseLabel(view.phase, t);
+  const battleStatusUnit =
+    selectedUnit ?? (view.activeUnitId ? (view.units[view.activeUnitId] ?? null) : null);
+  const publicBars = getPublicBattleActionBars(battleStatusUnit, view, pendingRoll);
 
   return (
     <PanelCard variant="hud" className="p-4">
@@ -85,24 +119,21 @@ export const StatusSection: FC<StatusSectionProps> = ({
           <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
             {t("game.turnResources")}
           </div>
-          <div className="mt-2 grid grid-cols-4 gap-1.5">
-            {[
-              [t("game.move"), economy.moveUsed],
-              [t("game.attack"), economy.attackUsed],
-              [t("game.action"), economy.actionUsed],
-              [t("game.stealth"), economy.stealthUsed],
-            ].map(([label, used]) => (
-              <div
-                key={String(label)}
-                className={`rounded-lg border px-1.5 py-2 text-center text-[11px] font-bold ${
-                  used
-                    ? "border-stone-300 bg-stone-100 text-stone-400 line-through dark:border-stone-800 dark:bg-black/25 dark:text-stone-500"
-                    : "border-emerald-300 bg-emerald-50 text-emerald-800 shadow-[inset_0_-2px_0_rgba(16,185,129,0.12)] dark:border-emerald-800/70 dark:bg-emerald-950/35 dark:text-emerald-200"
-                }`}
-              >
-                {label}
-              </div>
-            ))}
+          <div className="mt-2 grid grid-cols-3 gap-1.5" data-public-battle-action-bars>
+            {publicBars.map((bar) => {
+              const label = t(publicBarLabelKeys[bar.kind]);
+              const state = t(stateLabelKey(bar.state));
+              return (
+                <div
+                  key={bar.kind}
+                  data-public-action-bar-kind={bar.kind}
+                  className={publicBarClasses(bar.state)}
+                >
+                  <span className="block">{label}</span>
+                  <span className="mt-0.5 block text-[10px] uppercase tracking-wide">{state}</span>
+                </div>
+              );
+            })}
           </div>
         </div>
       ) : null}

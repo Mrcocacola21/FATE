@@ -11,7 +11,10 @@ import { Tabs } from "../../../ui";
 import { TestRoomPanel } from "../../../testRoom/TestRoomPanel";
 import { shouldShowTestRoomPanel } from "../../../testRoom/testRoomApi";
 import { buildRightPanelViewModel } from "../../components/RightPanel/rightPanelViewModel";
-import { PAPYRUS_AXIS_OPTIONS, UNDYNE_AXIS_OPTIONS } from "../../components/RightPanel/rightPanelConstants";
+import {
+  PAPYRUS_AXIS_OPTIONS,
+  UNDYNE_AXIS_OPTIONS,
+} from "../../components/RightPanel/rightPanelConstants";
 import type { RightPanelProps } from "../../components/RightPanel/types";
 import { BattleAbilityActions } from "../../components/RightPanel/sections/BattleAbilityActions";
 import { BattleActionButtons } from "../../components/RightPanel/sections/BattleActionButtons";
@@ -92,7 +95,9 @@ function RosterList({
                 <div className="min-w-0 flex-1">
                   <div className="flex min-w-0 items-center gap-2">
                     <span className="truncate font-semibold">{heroName}</span>
-                    {active ? <StatusBadge tone="warning">{t("common.current")}</StatusBadge> : null}
+                    {active ? (
+                      <StatusBadge tone="warning">{t("common.current")}</StatusBadge>
+                    ) : null}
                   </div>
                   <div className="mt-0.5 truncate text-[11px] opacity-75">
                     {getClassLabel(unit.class, t)} / {unit.id}
@@ -158,8 +163,7 @@ function PlayersRosterSection({
               const position = coord as { col?: number; row?: number };
               return (
                 <StatusBadge key={unitId} tone="neutral">
-                  {unitId}: {position.col ?? "-"},{" "}
-                  {position.row ?? "-"}
+                  {unitId}: {position.col ?? "-"}, {position.row ?? "-"}
                 </StatusBadge>
               );
             })}
@@ -312,8 +316,7 @@ export const SidePanelTabs: FC<SidePanelTabsProps> = ({ vm }) => {
       vm.sendGameAction(action);
       const preserveMode =
         action.type === "useAbility" &&
-        (action.abilityId === PAPYRUS_ORANGE_BONE_ID ||
-          action.abilityId === PAPYRUS_LONG_BONE_ID);
+        (action.abilityId === PAPYRUS_ORANGE_BONE_ID || action.abilityId === PAPYRUS_LONG_BONE_ID);
       if (action.type !== "requestMoveOptions" && !preserveMode) {
         vm.setActionMode(null);
       }
@@ -366,6 +369,12 @@ export const SidePanelTabs: FC<SidePanelTabsProps> = ({ vm }) => {
                 moveRoll={panelVm.moveRoll}
                 economy={panelVm.economy}
                 abilityViews={panelVm.abilityViews}
+                view={vm.view}
+                canAct={panelVm.canAct}
+                pendingRoll={rightPanelProps.pendingRoll}
+                attackDisabledReason={panelVm.attackDisabledReason}
+                legalAttackTargetCount={panelVm.selectedLegalAttackTargets.length}
+                legalMoveCount={panelVm.selectedLegalMoves.length}
                 onHoverAbility={rightPanelProps.onHoverAbility}
               />
             </PanelCard>
@@ -388,13 +397,13 @@ export const SidePanelTabs: FC<SidePanelTabsProps> = ({ vm }) => {
             <RuleDeclarationStatus vm={vm} />
             <StatusSection
               view={vm.view}
+              selectedUnit={panelVm.selectedVisibleUnit}
               stormActive={panelVm.stormActive}
               forestMarkers={panelVm.forestMarkers}
               isSpectator={panelVm.isSpectator}
               canStartTurn={panelVm.canStartTurn}
               expectedUnitId={panelVm.expectedUnitId}
               legalIntents={panelVm.legalIntents}
-              economy={panelVm.economy}
               pendingRoll={rightPanelProps.pendingRoll}
               onStartTurn={panelVm.onStartTurn}
             />

@@ -33,13 +33,13 @@ export const RightPanelContent: FC<RightPanelProps> = (props) => {
     <div className="space-y-4">
       <StatusSection
         view={view}
+        selectedUnit={vm.selectedVisibleUnit}
         stormActive={vm.stormActive}
         forestMarkers={vm.forestMarkers}
         isSpectator={vm.isSpectator}
         canStartTurn={vm.canStartTurn}
         expectedUnitId={vm.expectedUnitId}
         legalIntents={vm.legalIntents}
-        economy={vm.economy}
         pendingRoll={pendingRoll}
         onStartTurn={vm.onStartTurn}
       />
@@ -62,6 +62,7 @@ export const RightPanelContent: FC<RightPanelProps> = (props) => {
 
       {view.phase === "battle" && (
         <BattleSection
+          view={view}
           selectedUnit={vm.selectedUnit}
           selectedUnitId={selectedUnitId}
           selectedHeroName={vm.selectedHeroName}
@@ -79,6 +80,8 @@ export const RightPanelContent: FC<RightPanelProps> = (props) => {
           moveDisabled={vm.moveDisabled}
           attackDisabled={vm.attackDisabled}
           attackDisabledReason={vm.attackDisabledReason}
+          legalAttackTargetCount={vm.selectedLegalAttackTargets.length}
+          legalMoveCount={vm.selectedLegalMoves.length}
           searchMoveDisabled={vm.searchMoveDisabled}
           searchActionDisabled={vm.searchActionDisabled}
           stealthDisabled={vm.stealthDisabled}

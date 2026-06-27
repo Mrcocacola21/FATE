@@ -44,17 +44,16 @@ export function buildRightPanelViewModel(params: RightPanelProps, t: Translate) 
   const playerId: PlayerId | null = role === "P1" || role === "P2" ? role : null;
   const isSpectator = role === "spectator";
   const friendlyUnits = Object.values(view.units).filter((unit) =>
-    playerId ? unit.owner === playerId : false
+    playerId ? unit.owner === playerId : false,
   );
-  const hasFalseTrailToken = friendlyUnits.some(
-    (unit) => unit.heroId === FALSE_TRAIL_TOKEN_ID
-  );
+  const hasFalseTrailToken = friendlyUnits.some((unit) => unit.heroId === FALSE_TRAIL_TOKEN_ID);
   const unplacedUnits = friendlyUnits.filter((unit) => {
     if (unit.position) return false;
     if (hasFalseTrailToken && unit.heroId === CHIKATILO_ID) return false;
     return true;
   });
   const selectedUnit = friendlyUnits.find((unit) => unit.id === selectedUnitId) ?? null;
+  const selectedVisibleUnit = selectedUnitId ? (view.units[selectedUnitId] ?? null) : null;
   const heroDefinition = selectedUnit?.heroId
     ? HERO_CATALOG.find((hero) => hero.id === selectedUnit.heroId)
     : undefined;
@@ -69,8 +68,8 @@ export function buildRightPanelViewModel(params: RightPanelProps, t: Translate) 
     Array.isArray(view.forestMarkers) && view.forestMarkers.length > 0
       ? view.forestMarkers
       : view.forestMarker
-      ? [view.forestMarker]
-      : [];
+        ? [view.forestMarker]
+        : [];
   const stormActive = view.arenaId === ARENA_STORM_ID;
   const selectedInsideForest =
     !!selectedUnit?.position &&
@@ -78,8 +77,8 @@ export function buildRightPanelViewModel(params: RightPanelProps, t: Translate) 
       (marker) =>
         Math.max(
           Math.abs(selectedUnit.position!.col - marker.position.col),
-          Math.abs(selectedUnit.position!.row - marker.position.row)
-        ) <= FOREST_AURA_RADIUS
+          Math.abs(selectedUnit.position!.row - marker.position.row),
+        ) <= FOREST_AURA_RADIUS,
     );
   const selectedStormExempt =
     stormActive &&
@@ -88,21 +87,18 @@ export function buildRightPanelViewModel(params: RightPanelProps, t: Translate) 
       selectedUnit.heroId === RIVER_PERSON_ID ||
       selectedInsideForest);
   const selectedLegalAttackTargets = selectedUnit
-    ? view.legal?.attackTargetsByUnitId[selectedUnit.id] ?? []
+    ? (view.legal?.attackTargetsByUnitId[selectedUnit.id] ?? [])
     : [];
-  const abilityViews = selectedUnit
-    ? view.abilitiesByUnitId?.[selectedUnit.id] ?? []
-    : [];
+  const selectedLegalMoves = selectedUnit ? (view.legal?.movesByUnitId[selectedUnit.id] ?? []) : [];
+  const abilityViews = selectedUnit ? (view.abilitiesByUnitId?.[selectedUnit.id] ?? []) : [];
   const actionableAbilities = abilityViews.filter(isActionableAbility);
   const moveModeOptions =
     !pendingRoll && moveOptions && selectedUnit && moveOptions.unitId === selectedUnit.id
-      ? moveOptions.modes ?? null
+      ? (moveOptions.modes ?? null)
       : null;
 
   const queue = view.turnQueue?.length ? view.turnQueue : view.turnOrder;
-  const queueIndex = view.turnQueue?.length
-    ? view.turnQueueIndex
-    : view.turnOrderIndex;
+  const queueIndex = view.turnQueue?.length ? view.turnQueueIndex : view.turnOrderIndex;
   const expectedUnitId = queue?.[queueIndex];
   const canStartTurn = !!(
     joined &&
@@ -116,19 +112,11 @@ export function buildRightPanelViewModel(params: RightPanelProps, t: Translate) 
 
   const isMyTurn = playerId ? view.currentPlayer === playerId : false;
   const isActive = !!selectedUnit && view.activeUnitId === selectedUnit.id;
-  const canAct = !!(
-    joined &&
-    !pendingRoll &&
-    !isSpectator &&
-    isMyTurn &&
-    selectedUnit &&
-    isActive
-  );
+  const canAct = !!(joined && !pendingRoll && !isSpectator && isMyTurn && selectedUnit && isActive);
   const canChooseImpulseAxis = !!(
     selectedUnit &&
     view.pendingRoll?.kind === "chargedImpulseTargetChoice" &&
-    (view.pendingRoll.context as { unitId?: string } | undefined)?.unitId ===
-      selectedUnit.id
+    (view.pendingRoll.context as { unitId?: string } | undefined)?.unitId === selectedUnit.id
   );
 
   const economy = selectedUnit?.turn ?? DEFAULT_ECONOMY;
@@ -141,9 +129,7 @@ export function buildRightPanelViewModel(params: RightPanelProps, t: Translate) 
       selectedUnit?.heroId === LECHY_ID ||
       !!selectedUnit?.asgorePatienceStealthActive);
   const selectedMettatonRating =
-    selectedUnit?.heroId === METTATON_ID
-      ? Math.max(0, selectedUnit.mettatonRating ?? 0)
-      : null;
+    selectedUnit?.heroId === METTATON_ID ? Math.max(0, selectedUnit.mettatonRating ?? 0) : null;
   const stormRangedAttackBlocked = !!(
     canAct &&
     selectedUnit?.position &&
@@ -164,15 +150,11 @@ export function buildRightPanelViewModel(params: RightPanelProps, t: Translate) 
   const moveRoll =
     (view.pendingMove && view.pendingMove.unitId === selectedUnit?.id
       ? view.pendingMove.roll
-      : null) ??
-    (moveOptions && moveOptions.unitId === selectedUnit?.id
-      ? moveOptions.roll
-      : null);
+      : null) ?? (moveOptions && moveOptions.unitId === selectedUnit?.id ? moveOptions.roll : null);
 
   const selectedIsPapyrus = selectedUnit?.heroId === PAPYRUS_ID;
   const selectedIsUndyne = selectedUnit?.heroId === UNDYNE_ID;
-  const selectedPapyrusUnbeliever =
-    selectedIsPapyrus && !!selectedUnit?.papyrusUnbelieverActive;
+  const selectedPapyrusUnbeliever = selectedIsPapyrus && !!selectedUnit?.papyrusUnbelieverActive;
   const selectedPapyrusBoneMode =
     selectedUnit?.papyrusBoneMode === "orange" ? ("orange" as const) : ("blue" as const);
   const selectedPapyrusLongBoneMode = !!selectedUnit?.papyrusLongBoneMode;
@@ -238,6 +220,7 @@ export function buildRightPanelViewModel(params: RightPanelProps, t: Translate) 
     friendlyUnits,
     unplacedUnits,
     selectedUnit,
+    selectedVisibleUnit,
     selectedHeroName,
     showUnitIdInClassLabel: !!heroDefinition,
     forestMarkers,
@@ -262,6 +245,8 @@ export function buildRightPanelViewModel(params: RightPanelProps, t: Translate) 
     searchMoveDisabled,
     searchActionDisabled,
     moveRoll,
+    selectedLegalAttackTargets,
+    selectedLegalMoves,
     selectedIsPapyrus,
     selectedIsUndyne,
     selectedPapyrusUnbeliever,

@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import type { AbilityView, MoveMode, PapyrusLineAxis, UnitState } from "rules";
+import type { AbilityView, MoveMode, PapyrusLineAxis, PlayerView, UnitState } from "rules";
 import type { ActionMode, ActionPreviewMode } from "../../../../store";
 import type { ForestMarkerView, TurnEconomyState } from "../types";
 import { BattleAbilityActions } from "./BattleAbilityActions";
@@ -11,6 +11,7 @@ import { BattleUnitSummary } from "./BattleUnitSummary";
 import { useI18n } from "../../../../i18n";
 
 interface BattleSectionProps {
+  view: PlayerView;
   selectedUnit: UnitState | null;
   selectedUnitId: string | null;
   selectedHeroName: string | null;
@@ -28,6 +29,8 @@ interface BattleSectionProps {
   moveDisabled: boolean;
   attackDisabled: boolean;
   attackDisabledReason?: string;
+  legalAttackTargetCount?: number;
+  legalMoveCount?: number;
   searchMoveDisabled: boolean;
   searchActionDisabled: boolean;
   stealthDisabled: boolean;
@@ -68,6 +71,7 @@ interface BattleSectionProps {
 }
 
 export const BattleSection: FC<BattleSectionProps> = ({
+  view,
   selectedUnit,
   selectedUnitId,
   selectedHeroName,
@@ -85,6 +89,8 @@ export const BattleSection: FC<BattleSectionProps> = ({
   moveDisabled,
   attackDisabled,
   attackDisabledReason,
+  legalAttackTargetCount,
+  legalMoveCount,
   searchMoveDisabled,
   searchActionDisabled,
   stealthDisabled,
@@ -142,6 +148,12 @@ export const BattleSection: FC<BattleSectionProps> = ({
         moveRoll={moveRoll}
         economy={economy}
         abilityViews={abilityViews}
+        view={view}
+        canAct={canAct}
+        pendingRoll={pendingRoll}
+        attackDisabledReason={attackDisabledReason}
+        legalAttackTargetCount={legalAttackTargetCount}
+        legalMoveCount={legalMoveCount}
         onHoverAbility={onHoverAbility}
       />
 

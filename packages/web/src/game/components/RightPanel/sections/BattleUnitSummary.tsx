@@ -1,5 +1,5 @@
-import type { FC } from "react";
-import type { AbilityView, UnitClass, UnitState } from "rules";
+import { useState, type FC, type ReactNode } from "react";
+import type { AbilityView, PlayerView, UnitClass, UnitState } from "rules";
 import {
   getUnitTokenAsset,
   getUnitVisualVariant,
@@ -24,6 +24,17 @@ import {
 import { Badge } from "../../../../ui";
 import { AbilityDetails } from "../../../../components/abilities/AbilityDetails";
 import { getAbilityDisplayTone } from "../../../../components/abilities/abilityDisplayTone";
+import {
+  getUnitDetailActionBars,
+  type ActionBarState,
+  type AbilityActionSummary,
+  type BasicAttackSummary,
+  type UnitActionSummary,
+  type UnitDetailActionKind,
+  type UnitDetailActionSummary,
+  type UnitMoveSummary,
+  type UnitStealthSummary,
+} from "../actionSummaries";
 
 interface BattleUnitSummaryProps {
   selectedUnit: UnitState | null;
@@ -37,7 +48,307 @@ interface BattleUnitSummaryProps {
   moveRoll: number | null | undefined;
   economy: TurnEconomyState;
   abilityViews: AbilityView[];
+  view?: PlayerView;
+  canAct?: boolean;
+  pendingRoll?: boolean;
+  attackDisabledReason?: string;
+  legalAttackTargetCount?: number;
+  legalMoveCount?: number;
   onHoverAbility: (abilityId: string | null) => void;
+}
+
+const actionKindLabelKeys: Record<UnitDetailActionKind, string> = {
+  action: "game.action",
+  move: "game.move",
+  stealth: "game.stealth",
+};
+
+function stateLabelKey(state: ActionBarState): string {
+  return state === "not_applicable" ? "actionUi.states.notApplicable" : `actionUi.states.${state}`;
+}
+
+function actionBarClasses(state: ActionBarState, expanded: boolean) {
+  const base =
+    "min-h-12 rounded-lg border px-2 py-2 text-left shadow-sm transition focus-visible:ring-4 focus-visible:ring-amber-500/15";
+  const byState: Record<ActionBarState, string> = {
+    available:
+      "border-emerald-300 bg-emerald-50 text-emerald-900 hover:border-emerald-400 dark:border-emerald-800/70 dark:bg-emerald-950/30 dark:text-emerald-100",
+    spent:
+      "border-stone-300 bg-stone-100 text-stone-500 line-through dark:border-stone-800 dark:bg-black/25 dark:text-stone-500",
+    blocked:
+      "border-amber-300 bg-amber-50 text-amber-900 hover:border-amber-400 dark:border-amber-800/70 dark:bg-amber-950/30 dark:text-amber-100",
+    pending:
+      "border-violet-300 bg-violet-50 text-violet-900 hover:border-violet-400 dark:border-violet-800/70 dark:bg-violet-950/30 dark:text-violet-100",
+    not_applicable:
+      "border-slate-200 bg-slate-100 text-slate-500 dark:border-slate-800 dark:bg-slate-950/45 dark:text-slate-500",
+  };
+  return `${base} ${byState[state]} ${
+    expanded ? "ring-2 ring-amber-500/45 dark:ring-amber-400/35" : ""
+  }`;
+}
+
+function stateBadgeClasses(state: ActionBarState) {
+  const byState: Record<ActionBarState, string> = {
+    available:
+      "border-emerald-300 bg-emerald-100 text-emerald-900 dark:border-emerald-700 dark:bg-emerald-900/45 dark:text-emerald-100",
+    spent:
+      "border-stone-300 bg-stone-200 text-stone-600 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-400",
+    blocked:
+      "border-amber-300 bg-amber-100 text-amber-900 dark:border-amber-700 dark:bg-amber-900/45 dark:text-amber-100",
+    pending:
+      "border-violet-300 bg-violet-100 text-violet-900 dark:border-violet-700 dark:bg-violet-900/45 dark:text-violet-100",
+    not_applicable:
+      "border-slate-300 bg-slate-100 text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400",
+  };
+  return `rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${byState[state]}`;
+}
+
+function detailRowClasses(state: ActionBarState) {
+  const byState: Record<ActionBarState, string> = {
+    available: "border-emerald-500/45",
+    spent: "border-stone-400/45 opacity-70",
+    blocked: "border-amber-500/60",
+    pending: "border-violet-500/60",
+    not_applicable: "border-slate-400/45 opacity-80",
+  };
+  return `border-l-2 py-2 pl-3 pr-1 ${byState[state]}`;
+}
+
+function DetailRow({
+  title,
+  state,
+  reason,
+  children,
+}: {
+  title: string;
+  state: ActionBarState;
+  reason?: string;
+  children: ReactNode;
+}) {
+  const { t } = useI18n();
+  return (
+    <div className={detailRowClasses(state)}>
+      <div className="flex items-start justify-between gap-2">
+        <div className="text-xs font-bold text-slate-900 dark:text-slate-100">{title}</div>
+        <span className={stateBadgeClasses(state)}>{t(stateLabelKey(state))}</span>
+      </div>
+      <div className="mt-1 space-y-1 text-[11px] leading-5 text-slate-600 dark:text-slate-300">
+        {children}
+      </div>
+      {reason ? (
+        <div className="mt-1 text-[11px] leading-5 text-amber-700 dark:text-amber-300">
+          {reason}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function reasonText(
+  reasonKey: string | undefined,
+  rawReason: string | undefined,
+  t: ReturnType<typeof useI18n>["t"],
+) {
+  return rawReason ? localizeServerText(rawReason, t) : reasonKey ? t(reasonKey) : "";
+}
+
+function AbilityDetailRow({
+  item,
+  selectedUnit,
+}: {
+  item: AbilityActionSummary;
+  selectedUnit: UnitState;
+}) {
+  const { language, t } = useI18n();
+  const { ability } = item;
+  const hideCharges = ability.id === KAISER_DORA_ID && !!selectedUnit.transformed;
+  const chargeState = getAbilityChargeState(ability.id, selectedUnit, ability);
+  const chargeLabel = formatChargeLabel(ability, chargeState, hideCharges);
+  const display = getAbilityDisplay(ability.id, ability.name, ability.description, language);
+  const reason = reasonText(item.reasonKey, item.reasonText, t);
+  const actionLabel =
+    ability.slot === "move"
+      ? t("actionUi.movementAction")
+      : ability.slot === "stealth"
+        ? t("actionUi.stealthAction")
+        : t("actionUi.usesAction");
+
+  return (
+    <DetailRow
+      title={t("actionUi.abilityLabel", { name: display.name })}
+      state={item.state}
+      reason={reason}
+    >
+      <div>{display.description}</div>
+      <div>{actionLabel}</div>
+      {chargeLabel !== null ? <div>{t("game.charges", { charges: chargeLabel })}</div> : null}
+    </DetailRow>
+  );
+}
+
+function BasicAttackDetails({ attack }: { attack: BasicAttackSummary }) {
+  const { t } = useI18n();
+  const reason = reasonText(attack.reasonKey, attack.reasonText, t);
+  return (
+    <DetailRow title={t("actionUi.basicAttack")} state={attack.state} reason={reason}>
+      <div>{t("actionUi.usesAction")}</div>
+      <div>{t("game.damage", { value: attack.damage })}</div>
+      <div>
+        {t("actionUi.attackPattern", {
+          class: getClassLabel(attack.className, t),
+        })}
+      </div>
+      {attack.legalTargetCount !== undefined ? (
+        <div>{t("actionUi.visibleTargets", { count: attack.legalTargetCount })}</div>
+      ) : null}
+    </DetailRow>
+  );
+}
+
+function ActionDetails({
+  summary,
+  selectedUnit,
+}: {
+  summary: UnitActionSummary;
+  selectedUnit: UnitState;
+}) {
+  const { t } = useI18n();
+  if (!summary.basicAttack && summary.abilities.length === 0) {
+    return (
+      <div className="py-3 text-center text-xs text-slate-500 dark:text-slate-400">
+        {t("actionUi.noAvailableOptions")}
+      </div>
+    );
+  }
+  return (
+    <div className="divide-y divide-slate-200/70 dark:divide-slate-800">
+      {summary.basicAttack ? <BasicAttackDetails attack={summary.basicAttack} /> : null}
+      {summary.abilities.map((item) => (
+        <AbilityDetailRow key={item.ability.id} item={item} selectedUnit={selectedUnit} />
+      ))}
+    </div>
+  );
+}
+
+function MoveDetails({
+  summary,
+  selectedUnit,
+}: {
+  summary: UnitMoveSummary;
+  selectedUnit: UnitState;
+}) {
+  const { t } = useI18n();
+  const reason = reasonText(summary.reasonKey, undefined, t);
+  return (
+    <div className="divide-y divide-slate-200/70 dark:divide-slate-800">
+      <DetailRow title={t("actionUi.normalMovement")} state={summary.state} reason={reason}>
+        <div>{t("actionUi.movementAction")}</div>
+        {summary.className ? (
+          <div>
+            {t("actionUi.movementPattern", {
+              class: getClassLabel(summary.className, t),
+            })}
+          </div>
+        ) : null}
+        {summary.legalMoveCount !== undefined ? (
+          <div>{t("actionUi.legalDestinations", { count: summary.legalMoveCount })}</div>
+        ) : null}
+        {summary.notes.map((note) => (
+          <div key={note}>{t(note)}</div>
+        ))}
+      </DetailRow>
+      {summary.abilities.map((item) => (
+        <AbilityDetailRow key={item.ability.id} item={item} selectedUnit={selectedUnit} />
+      ))}
+    </div>
+  );
+}
+
+function StealthDetails({
+  summary,
+  selectedUnit,
+}: {
+  summary: UnitStealthSummary;
+  selectedUnit: UnitState;
+}) {
+  const { t } = useI18n();
+  const reason = reasonText(summary.reasonKey, undefined, t);
+  return (
+    <div className="divide-y divide-slate-200/70 dark:divide-slate-800">
+      <DetailRow title={t("actionUi.stealthAttempt")} state={summary.state} reason={reason}>
+        <div>{t("actionUi.stealthAction")}</div>
+        {summary.threshold !== null ? (
+          <div>{t("actionUi.requiredRoll", { roll: summary.threshold })}</div>
+        ) : (
+          <div>{t("actionUi.cannotEnterStealth")}</div>
+        )}
+        {summary.notes.map((note) => (
+          <div key={note}>{t(note)}</div>
+        ))}
+      </DetailRow>
+      {summary.abilities.map((item) => (
+        <AbilityDetailRow key={item.ability.id} item={item} selectedUnit={selectedUnit} />
+      ))}
+    </div>
+  );
+}
+
+function UnitActionBars({
+  summaries,
+  selectedUnit,
+}: {
+  summaries: UnitDetailActionSummary[];
+  selectedUnit: UnitState;
+}) {
+  const { t } = useI18n();
+  const [expandedKind, setExpandedKind] = useState<UnitDetailActionKind>("action");
+  const activeSummary = summaries.find((summary) => summary.kind === expandedKind) ?? summaries[0];
+  const panelId = `unit-action-details-${selectedUnit.id}`;
+
+  return (
+    <div className="space-y-2" data-unit-action-bars>
+      <div className="grid grid-cols-3 gap-1.5 text-[11px] font-bold">
+        {summaries.map((summary) => {
+          const label = t(actionKindLabelKeys[summary.kind]);
+          const stateLabel = t(stateLabelKey(summary.state));
+          const expanded = activeSummary.kind === summary.kind;
+          return (
+            <button
+              key={summary.kind}
+              type="button"
+              data-action-bar-kind={summary.kind}
+              aria-expanded={expanded}
+              aria-controls={panelId}
+              aria-label={t("actionUi.barAria", { action: label, state: stateLabel })}
+              title={t("actionUi.clickDetails")}
+              className={actionBarClasses(summary.state, expanded)}
+              onClick={() => setExpandedKind(summary.kind)}
+            >
+              <span className="block truncate text-xs">{label}</span>
+              <span className="mt-1 block text-[10px] uppercase tracking-wide">{stateLabel}</span>
+            </button>
+          );
+        })}
+      </div>
+      <div
+        id={panelId}
+        className="scroll-panel max-h-44 overflow-y-auto rounded-lg border border-slate-200/80 bg-white/65 px-3 py-2 shadow-inner dark:border-slate-800 dark:bg-black/20"
+      >
+        <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
+          {t("actionUi.detailsTitle", {
+            action: t(actionKindLabelKeys[activeSummary.kind]),
+          })}
+        </div>
+        {activeSummary.kind === "action" ? (
+          <ActionDetails summary={activeSummary} selectedUnit={selectedUnit} />
+        ) : activeSummary.kind === "move" ? (
+          <MoveDetails summary={activeSummary} selectedUnit={selectedUnit} />
+        ) : (
+          <StealthDetails summary={activeSummary} selectedUnit={selectedUnit} />
+        )}
+      </div>
+    </div>
+  );
 }
 
 export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
@@ -52,6 +363,12 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
   moveRoll,
   economy,
   abilityViews,
+  view,
+  canAct = false,
+  pendingRoll = false,
+  attackDisabledReason,
+  legalAttackTargetCount,
+  legalMoveCount,
   onHoverAbility,
 }) => {
   const { language, t } = useI18n();
@@ -68,6 +385,17 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
   const visualVariant = getUnitVisualVariant(selectedUnit);
   const visualVariantLabelKey = getUnitVisualVariantLabelKey(visualVariant);
   const maxHp = getMaxHp(selectedUnit.class as UnitClass, selectedUnit.heroId);
+  const actionSummaries = getUnitDetailActionBars({
+    unit: selectedUnit,
+    abilityViews,
+    economy,
+    view,
+    canAct,
+    pendingRoll,
+    attackDisabledReason,
+    legalAttackTargetCount,
+    legalMoveCount,
+  });
 
   return (
     <div className="mt-3 space-y-3 text-sm text-slate-700 dark:text-slate-200">
@@ -190,25 +518,7 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
           {t("game.moveRoll", { roll: moveRoll })}
         </div>
       )}
-      <div className="grid grid-cols-4 gap-1.5 text-[10px] font-bold">
-        {[
-          [t("game.move"), economy.moveUsed],
-          [t("game.attack"), economy.attackUsed],
-          [t("game.action"), economy.actionUsed],
-          [t("game.stealth"), economy.stealthUsed],
-        ].map(([label, used]) => (
-          <span
-            key={String(label)}
-            className={`rounded-lg border px-1 py-2 text-center ${
-              used
-                ? "border-stone-300 bg-stone-100 text-stone-400 line-through dark:border-stone-800 dark:bg-black/20 dark:text-stone-500"
-                : "border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-800/70 dark:bg-emerald-950/35 dark:text-emerald-200"
-            }`}
-          >
-            {label}
-          </span>
-        ))}
-      </div>
+      <UnitActionBars summaries={actionSummaries} selectedUnit={selectedUnit} />
       <div className="mt-4 border-t border-amber-900/10 pt-4 dark:border-amber-500/15">
         <div className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-300">
           {t("game.abilities")}
