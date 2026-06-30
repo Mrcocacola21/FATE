@@ -5,7 +5,9 @@ import {
   createDefaultArmy,
   createEmptyGame,
   getLegalIntents,
+  HERO_ODIN_ID,
   initKnowledgeForOwners,
+  makeRngSequence,
   makePlayerView,
   resolveAllPendingRolls,
   resolveAllPendingRollsWithEvents,
@@ -13,6 +15,9 @@ import {
   setUnit,
   toBattleState,
 } from "../helpers/testUtils";
+import { resolveAoE } from "../../aoe";
+import { projectEventsForRecipient } from "../../view/events";
+
 export function testRiderPathHitsStealthed() {
   const rng = new SeededRNG(42);
   let state = createEmptyGame();
@@ -1071,6 +1076,453 @@ export function testUnknownStealthedEnemyDoesNotBlockArcherLine() {
   assert(resolved.state.knowledge["P1"][hidden.id] !== true, "line scan should not learn hidden enemy");
 
   console.log("unknown_stealthed_enemy_does_not_block_archer_line passed");
+}
+
+export function testStealthEntryClearsOpponentExactKnowledge() {
+  const rng = makeRngSequence([0.99]);
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1"));
+  state = attachArmy(state, createDefaultArmy("P2"));
+
+  const hidden = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "assassin"
+  )!;
+
+  state = setUnit(state, hidden.id, { position: { col: 4, row: 4 } });
+  state = toBattleState(state, "P1", hidden.id);
+  state = initKnowledgeForOwners(state);
+  state = {
+    ...state,
+    knowledge: {
+      ...state.knowledge,
+      P2: { ...state.knowledge.P2, [hidden.id]: true },
+    },
+  };
+  assert(
+    state.knowledge.P2[hidden.id] === true,
+    "opponent should know visible unit before stealth"
+  );
+
+  const initial = applyAction(
+    state,
+    { type: "enterStealth", unitId: hidden.id } as any,
+    rng
+  );
+  const resolved = resolveAllPendingRolls(initial.state, rng);
+
+  assert(resolved.state.units[hidden.id].isStealthed === true, "unit should enter stealth");
+  assert(
+    resolved.state.knowledge.P2[hidden.id] !== true,
+    "opponent exact knowledge should be cleared on stealth entry"
+  );
+  assert.deepStrictEqual(
+    resolved.state.lastKnownPositions.P2[hidden.id],
+    { col: 4, row: 4 },
+    "opponent should retain only a last-known position"
+  );
+
+  const opponentView = makePlayerView(resolved.state, "P2");
+  assert(!opponentView.units[hidden.id], "hidden unit should be omitted from opponent view");
+  assert.deepStrictEqual(
+    opponentView.lastKnownPositions[hidden.id],
+    { col: 4, row: 4 },
+    "opponent view should expose last-known position only"
+  );
+
+  console.log("stealth_entry_clears_opponent_exact_knowledge passed");
+}
+
+export function testPathPassingAdjacentAfterStealthEntryDoesNotReveal() {
+  const rng = makeRngSequence([0.99]);
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1"));
+  state = attachArmy(state, createDefaultArmy("P2"));
+
+  const hidden = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "assassin"
+  )!;
+  const rider = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "rider"
+  )!;
+
+  state = setUnit(state, hidden.id, { position: { col: 4, row: 5 } });
+  state = setUnit(state, rider.id, { position: { col: 2, row: 4 } });
+  state = toBattleState(state, "P1", hidden.id);
+  state = initKnowledgeForOwners(state);
+  state = {
+    ...state,
+    knowledge: {
+      ...state.knowledge,
+      P2: { ...state.knowledge.P2, [hidden.id]: true },
+    },
+  };
+
+  const enterInitial = applyAction(
+    state,
+    { type: "enterStealth", unitId: hidden.id } as any,
+    rng
+  );
+  const entered = resolveAllPendingRolls(enterInitial.state, rng);
+  state = toBattleState(entered.state, "P2", rider.id);
+
+  const moved = applyAction(
+    state,
+    { type: "move", unitId: rider.id, to: { col: 6, row: 4 } } as any,
+    rng
+  );
+
+  assert(
+    moved.state.units[rider.id].position?.col === 6 &&
+      moved.state.units[rider.id].position?.row === 4,
+    "rider should move along a path passing within radius 1"
+  );
+  assert(moved.state.units[hidden.id].isStealthed === true, "hidden unit should stay hidden");
+  assert(
+    !moved.events.some((event) => event.type === "stealthRevealed"),
+    "passing nearby should not emit reveal events"
+  );
+  assert(
+    moved.state.knowledge.P2[hidden.id] !== true,
+    "passing nearby should not restore exact hidden knowledge"
+  );
+
+  console.log("path_passing_adjacent_after_stealth_entry_does_not_reveal passed");
+}
+
+export function testEnemyCanStepOnRealStealthEntryCellWithoutReveal() {
+  const rng = makeRngSequence([0.99]);
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1"));
+  state = attachArmy(state, createDefaultArmy("P2"));
+
+  const hidden = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "assassin"
+  )!;
+  const mover = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "knight"
+  )!;
+
+  state = setUnit(state, hidden.id, { position: { col: 3, row: 4 } });
+  state = setUnit(state, mover.id, { position: { col: 3, row: 3 } });
+  state = toBattleState(state, "P1", hidden.id);
+  state = initKnowledgeForOwners(state);
+  state = {
+    ...state,
+    knowledge: {
+      ...state.knowledge,
+      P2: { ...state.knowledge.P2, [hidden.id]: true },
+    },
+  };
+
+  const enterInitial = applyAction(
+    state,
+    { type: "enterStealth", unitId: hidden.id } as any,
+    rng
+  );
+  const entered = resolveAllPendingRolls(enterInitial.state, rng);
+  state = toBattleState(entered.state, "P2", mover.id);
+
+  const moved = applyAction(
+    state,
+    { type: "move", unitId: mover.id, to: { col: 3, row: 4 } } as any,
+    rng
+  );
+
+  assert(
+    moved.state.units[mover.id].position?.col === 3 &&
+      moved.state.units[mover.id].position?.row === 4,
+    "move onto unknown hidden enemy cell should be accepted"
+  );
+  assert(moved.state.units[hidden.id].isStealthed === true, "hidden unit should remain hidden");
+  assert(
+    !moved.events.some((event) => event.type === "stealthRevealed"),
+    "co-location move should not reveal hidden unit"
+  );
+  assert(
+    moved.state.knowledge.P2[hidden.id] !== true,
+    "co-location move should not leak exact hidden position"
+  );
+
+  console.log("enemy_can_step_on_real_stealth_entry_cell_without_reveal passed");
+}
+
+export function testRevealDisplacesCoLocatedHiddenUnitDeterministically() {
+  const rng = makeRngSequence([0]);
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1"));
+  state = attachArmy(state, createDefaultArmy("P2"));
+
+  const hidden = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "assassin"
+  )!;
+  const visible = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "knight"
+  )!;
+  const caster = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "trickster"
+  )!;
+
+  state = setUnit(state, hidden.id, {
+    position: { col: 3, row: 4 },
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
+  state = setUnit(state, visible.id, { position: { col: 3, row: 4 } });
+  state = setUnit(state, caster.id, { position: { col: 6, row: 6 } });
+  state = toBattleState(state, "P2", caster.id);
+  state = initKnowledgeForOwners(state);
+
+  const aoe = resolveAoE(
+    state,
+    caster.id,
+    { col: 3, row: 4 },
+    {
+      radius: 1,
+      revealHidden: true,
+      abilityId: "testRevealAoe",
+    },
+    rng
+  );
+
+  assert(aoe.nextState.units[hidden.id].isStealthed === false, "hidden unit should reveal");
+  assert.deepStrictEqual(
+    aoe.nextState.units[hidden.id].position,
+    { col: 3, row: 3 },
+    "co-located hidden unit should move to deterministic first free neighbor"
+  );
+  assert.deepStrictEqual(
+    aoe.nextState.units[visible.id].position,
+    { col: 3, row: 4 },
+    "visible unit should remain on the shared cell"
+  );
+  assert(
+    aoe.events.some(
+      (event) =>
+        event.type === "unitMoved" &&
+        event.unitId === hidden.id &&
+        event.to.col === 3 &&
+        event.to.row === 3
+    ),
+    "reveal displacement should emit unitMoved for the hidden unit"
+  );
+  assert(
+    aoe.events.some(
+      (event) => event.type === "stealthRevealed" && event.unitId === hidden.id
+    ),
+    "reveal should emit stealthRevealed for the co-located hidden unit"
+  );
+
+  console.log("reveal_displaces_co_located_hidden_unit_deterministically passed");
+}
+
+export function testRealStealthEntryDoesNotBlockArcherLine() {
+  const rng = makeRngSequence([0.99, 0.9, 0.9, 0.1, 0.1]);
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1"));
+  state = attachArmy(state, createDefaultArmy("P2"));
+
+  const hidden = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "assassin"
+  )!;
+  const visible = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "knight"
+  )!;
+  const archer = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "archer"
+  )!;
+
+  state = setUnit(state, archer.id, { position: { col: 2, row: 2 } });
+  state = setUnit(state, hidden.id, { position: { col: 2, row: 3 } });
+  state = setUnit(state, visible.id, { position: { col: 2, row: 4 } });
+  state = toBattleState(state, "P1", hidden.id);
+  state = initKnowledgeForOwners(state);
+  state = {
+    ...state,
+    knowledge: {
+      ...state.knowledge,
+      P2: { ...state.knowledge.P2, [hidden.id]: true },
+    },
+  };
+
+  const enterInitial = applyAction(
+    state,
+    { type: "enterStealth", unitId: hidden.id } as any,
+    rng
+  );
+  const entered = resolveAllPendingRolls(enterInitial.state, rng);
+  state = toBattleState(entered.state, "P2", archer.id);
+
+  const initial = applyAction(
+    state,
+    { type: "attack", attackerId: archer.id, defenderId: visible.id } as any,
+    rng
+  );
+  const resolved = resolveAllPendingRolls(initial.state, rng);
+  const attackEvent = resolved.events.find(
+    (event) => event.type === "attackResolved" && event.defenderId === visible.id
+  );
+
+  assert(attackEvent, "archer should attack visible target through unknown hidden cell");
+  assert(resolved.state.units[hidden.id].isStealthed === true, "line blocker should stay hidden");
+  assert(
+    !resolved.events.some(
+      (event) => event.type === "stealthRevealed" && event.unitId === hidden.id
+    ),
+    "line validation should not reveal hidden blocker"
+  );
+  assert(
+    resolved.state.knowledge.P2[hidden.id] !== true,
+    "line validation should not leak hidden blocker position"
+  );
+
+  console.log("real_stealth_entry_does_not_block_archer_line passed");
+}
+
+export function testKnownHiddenEnemyBlocksMovementAndArcherLine() {
+  const rng = new SeededRNG(2314);
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1", { rider: HERO_ODIN_ID }));
+  state = attachArmy(state, createDefaultArmy("P2"));
+
+  const odin = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.heroId === HERO_ODIN_ID
+  )!;
+  const mover = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "knight"
+  )!;
+  const archer = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "archer"
+  )!;
+  const hidden = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "assassin"
+  )!;
+  const visible = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "knight"
+  )!;
+
+  state = setUnit(state, odin.id, { position: { col: 3, row: 3 } });
+  state = setUnit(state, hidden.id, {
+    position: { col: 4, row: 3 },
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
+  state = setUnit(state, mover.id, { position: { col: 3, row: 2 } });
+  state = setUnit(state, archer.id, { position: { col: 4, row: 1 } });
+  state = setUnit(state, visible.id, { position: { col: 4, row: 5 } });
+  state = initKnowledgeForOwners(state);
+
+  const moveState = toBattleState(state, "P1", mover.id);
+  const blockedMove = applyAction(
+    moveState,
+    { type: "move", unitId: mover.id, to: { col: 4, row: 3 } } as any,
+    rng
+  );
+  assert(blockedMove.events.length === 0, "known hidden enemy should block movement");
+  assert.deepStrictEqual(
+    blockedMove.state.units[mover.id].position,
+    { col: 3, row: 2 },
+    "mover should stay in place when known hidden cell is occupied"
+  );
+
+  const attackState = toBattleState(state, "P1", archer.id);
+  const attackRng = makeRngSequence([0.9, 0.9, 0.1, 0.1]);
+  const blockedAttack = applyAction(
+    attackState,
+    { type: "attack", attackerId: archer.id, defenderId: visible.id } as any,
+    attackRng
+  );
+  const resolvedBlockedAttack = resolveAllPendingRolls(
+    blockedAttack.state,
+    attackRng
+  );
+  assert(
+    !resolvedBlockedAttack.events.some((event) => event.type === "attackResolved"),
+    "known hidden enemy should block resolved archer attack to a farther target"
+  );
+  assert(
+    !resolvedBlockedAttack.state.pendingRoll,
+    "known hidden line blocker should clear pending attack without resolving"
+  );
+
+  console.log("known_hidden_enemy_blocks_movement_and_archer_line passed");
+}
+
+export function testNonRevealingAoEProjectionRedactsHiddenTargets() {
+  const rng = new SeededRNG(2315);
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1"));
+  state = attachArmy(state, createDefaultArmy("P2"));
+
+  const caster = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "trickster"
+  )!;
+  const hidden = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "assassin"
+  )!;
+
+  state = setUnit(state, caster.id, { position: { col: 4, row: 4 } });
+  state = setUnit(state, hidden.id, {
+    position: { col: 5, row: 5 },
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
+  state = toBattleState(state, "P1", caster.id);
+  state = initKnowledgeForOwners(state);
+  state = {
+    ...state,
+    knowledge: {
+      ...state.knowledge,
+      P1: { ...state.knowledge.P1, [hidden.id]: false },
+    },
+  };
+
+  const aoe = resolveAoE(
+    state,
+    caster.id,
+    { col: 5, row: 5 },
+    {
+      radius: 1,
+      revealHidden: false,
+      abilityId: "testNonRevealAoe",
+    },
+    rng
+  );
+  const aoeEvent = aoe.events.find((event) => event.type === "aoeResolved");
+
+  assert(aoeEvent && aoeEvent.type === "aoeResolved", "aoeResolved should be emitted");
+  assert(aoe.affectedUnitIds.includes(hidden.id), "hidden target should be affected");
+  assert(aoe.nextState.units[hidden.id].isStealthed === true, "hidden target should not be revealed");
+
+  const opponentEvents = projectEventsForRecipient(aoe.nextState, [aoeEvent], "P1");
+  const ownerEvents = projectEventsForRecipient(aoe.nextState, [aoeEvent], "P2");
+  const spectatorEvents = projectEventsForRecipient(aoe.nextState, [aoeEvent], "spectator");
+
+  const opponentAoe = opponentEvents[0];
+  const ownerAoe = ownerEvents[0];
+  const spectatorAoe = spectatorEvents[0];
+  assert(opponentAoe.type === "aoeResolved", "opponent should still see public aoe event");
+  assert(ownerAoe.type === "aoeResolved", "owner should see public aoe event");
+  assert(spectatorAoe.type === "aoeResolved", "spectator should see public aoe event");
+  if (opponentAoe.type === "aoeResolved") {
+    assert(
+      !opponentAoe.affectedUnitIds.includes(hidden.id),
+      "opponent projection should redact hidden affected unit id"
+    );
+  }
+  if (ownerAoe.type === "aoeResolved") {
+    assert(
+      ownerAoe.affectedUnitIds.includes(hidden.id),
+      "owner projection should retain hidden affected unit id"
+    );
+  }
+  if (spectatorAoe.type === "aoeResolved") {
+    assert(
+      !spectatorAoe.affectedUnitIds.includes(hidden.id),
+      "spectator projection should redact hidden affected unit id"
+    );
+  }
+
+  console.log("non_revealing_aoe_projection_redacts_hidden_targets passed");
 }
 
 

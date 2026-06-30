@@ -1,34 +1,20 @@
 import type { GameState, UnitState } from "../model";
-import { getUnitsAt } from "../board";
 import {
   HERO_ASGORE_ID,
-  HERO_CHIKATILO_ID,
   HERO_FEMTO_ID,
   HERO_FALSE_TRAIL_TOKEN_ID,
   HERO_GUTS_ID,
   HERO_KALADIN_ID,
-  HERO_ODIN_ID,
   HERO_SANS_ID,
   HERO_UNDYNE_ID,
 } from "../heroes";
 import { isStormActive, isStormExempt } from "../forest";
-import { canSeeStealthedTarget } from "../visibility";
+import {
+  canUnitKnowUnitExactPosition,
+  getLineBlockersForPlayer,
+} from "../visibility";
 import { canAttackAcrossRuleDeclarationBoundary } from "../ruleDeclarations";
 import { distanceInfo, isSpearmanReachTarget, isTricksterReachTarget } from "./math";
-
-function hiddenEnemyBlocksLine(
-  state: GameState,
-  attacker: UnitState,
-  enemy: UnitState
-): boolean {
-  if (!enemy.isStealthed) return true;
-  const marked =
-    attacker.heroId === HERO_CHIKATILO_ID &&
-    Array.isArray(attacker.chikatiloMarkedTargets) &&
-    attacker.chikatiloMarkedTargets.includes(enemy.id);
-  const known = state.knowledge?.[attacker.owner]?.[enemy.id] === true;
-  return marked || known || canSeeStealthedTarget(state, attacker, enemy);
-}
 
 export function canAttackTarget(
   state: GameState,
@@ -49,11 +35,7 @@ export function canAttackTarget(
   }
 
   if (defender.isStealthed) {
-    const marked =
-      attacker.heroId === HERO_CHIKATILO_ID &&
-      Array.isArray(attacker.chikatiloMarkedTargets) &&
-      attacker.chikatiloMarkedTargets.includes(defender.id);
-    if (!marked && !canSeeStealthedTarget(state, attacker, defender)) {
+    if (!canUnitKnowUnitExactPosition(state, attacker, defender)) {
       return false;
     }
   }
@@ -96,36 +78,14 @@ export function canAttackTarget(
       const isDiagonal = dx === dy;
       if (!isStraight && !isDiagonal) return false;
 
-      const stepCol = Math.sign(defPos.col - attPos.col);
-      const stepRow = Math.sign(defPos.row - attPos.row);
-      if (stepCol === 0 && stepRow === 0) return false;
-
-      let col = attPos.col + stepCol;
-      let row = attPos.row + stepRow;
-      let firstEnemy: UnitState | null = null;
-
-      while (
-        col >= 0 &&
-        col < state.boardSize &&
-        row >= 0 &&
-        row < state.boardSize
-      ) {
-        const unitsOnLine = getUnitsAt(state, { col, row });
-        for (const unitOnLine of unitsOnLine) {
-          if (unitOnLine.owner === attacker.owner) continue;
-          if (!hiddenEnemyBlocksLine(state, attacker, unitOnLine)) continue;
-          firstEnemy = unitOnLine;
-          break;
-        }
-        if (firstEnemy) {
-          break;
-        }
-
-        col += stepCol;
-        row += stepRow;
-      }
-
-      return !!firstEnemy && firstEnemy.id === defender.id;
+      const blockers = getLineBlockersForPlayer(
+        state,
+        attacker.owner,
+        attPos,
+        defPos,
+        attacker.id
+      );
+      return blockers[0] === defender.id;
     }
 
     case "trickster": {

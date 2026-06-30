@@ -96,6 +96,13 @@ import {
   testAllyCannotStepOnStealthedAlly,
   testEnemyCanStepOnUnknownStealthedWithoutReveal,
   testUnknownStealthedEnemyDoesNotBlockArcherLine,
+  testStealthEntryClearsOpponentExactKnowledge,
+  testPathPassingAdjacentAfterStealthEntryDoesNotReveal,
+  testEnemyCanStepOnRealStealthEntryCellWithoutReveal,
+  testRevealDisplacesCoLocatedHiddenUnitDeterministically,
+  testRealStealthEntryDoesNotBlockArcherLine,
+  testKnownHiddenEnemyBlocksMovementAndArcherLine,
+  testNonRevealingAoEProjectionRedactsHiddenTargets,
   testCannotAttackStealthedEnemyDirectly,
   testNoStealthStackingOnEnter,
   testStealthLasts3OwnTurnsThenExpiresOn4thStart,
@@ -416,6 +423,13 @@ function main(): void {
   testAllyCannotStepOnStealthedAlly();
   testEnemyCanStepOnUnknownStealthedWithoutReveal();
   testUnknownStealthedEnemyDoesNotBlockArcherLine();
+  testStealthEntryClearsOpponentExactKnowledge();
+  testPathPassingAdjacentAfterStealthEntryDoesNotReveal();
+  testEnemyCanStepOnRealStealthEntryCellWithoutReveal();
+  testRevealDisplacesCoLocatedHiddenUnitDeterministically();
+  testRealStealthEntryDoesNotBlockArcherLine();
+  testKnownHiddenEnemyBlocksMovementAndArcherLine();
+  testNonRevealingAoEProjectionRedactsHiddenTargets();
   testCannotAttackStealthedEnemyDirectly();
   testNoStealthStackingOnEnter();
   testStealthLasts3OwnTurnsThenExpiresOn4thStart();

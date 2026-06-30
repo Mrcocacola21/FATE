@@ -19,6 +19,7 @@ import { clearPendingRoll, requestRoll } from "../../../core";
 import { evAbilityUsed } from "../../../core";
 import { HERO_CHIKATILO_ID } from "../../../heroes";
 import { getUnitDefinition } from "../../../units";
+import { concealUnitExactPositionFromOpponents } from "../../../visibility";
 import { getEmptyCells, isChikatilo, isFalseTrailToken } from "./helpers";
 import { removeFalseTrailToken } from "./setup";
 
@@ -129,6 +130,7 @@ export function applyChikatiloDecoyStealth(
   }
 
   let updatedUnit = spendSlots(spent.unit, costs);
+  let enteredStealth = false;
 
   if (!updatedUnit.isStealthed) {
     const pos = updatedUnit.position!;
@@ -145,16 +147,20 @@ export function applyChikatiloDecoyStealth(
         isStealthed: true,
         stealthTurnsLeft: def.maxStealthTurns ?? 3,
       };
+      enteredStealth = true;
     }
   }
 
-  const nextState: GameState = {
+  let nextState: GameState = {
     ...state,
     units: {
       ...state.units,
       [updatedUnit.id]: updatedUnit,
     },
   };
+  if (enteredStealth) {
+    nextState = concealUnitExactPositionFromOpponents(nextState, updatedUnit);
+  }
 
   const events: GameEvent[] = [
     evAbilityUsed({ unitId: updatedUnit.id, abilityId: spec.id }),

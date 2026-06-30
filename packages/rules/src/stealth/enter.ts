@@ -4,6 +4,7 @@ import { rollD6 } from "../rng";
 import { getUnitDefinition } from "../units";
 import { canSpendSlots, spendSlots } from "../turnEconomy";
 import { getStealthSuccessMinRoll } from "./checks";
+import { concealUnitExactPositionFromOpponents } from "../visibility";
 
 export function attemptEnterStealth(
   state: GameState,
@@ -92,6 +93,9 @@ export function attemptEnterStealth(
     updated.stealthTurnsLeft = maxTurns;
   }
   nextState.units[updated.id] = updated;
+  const finalState = success
+    ? concealUnitExactPositionFromOpponents(nextState, updated)
+    : nextState;
 
   const events: GameEvent[] = [
     {
@@ -102,5 +106,5 @@ export function attemptEnterStealth(
     },
   ];
 
-  return { state: nextState, events };
+  return { state: finalState, events };
 }

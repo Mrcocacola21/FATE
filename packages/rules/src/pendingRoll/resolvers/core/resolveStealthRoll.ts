@@ -2,7 +2,6 @@ import type {
   ApplyResult,
   GameEvent,
   GameState,
-  PlayerId,
   UnitState,
 } from "../../../model";
 import type { RNG } from "../../../rng";
@@ -17,6 +16,7 @@ import {
   evStealthEntered,
   evStealthRevealed,
 } from "../../../core";
+import { concealUnitExactPositionFromOpponents } from "../../../visibility";
 
 export function resolveEnterStealthRoll(
   state: GameState,
@@ -56,24 +56,16 @@ export function resolveEnterStealthRoll(
         ...baseUnit,
       };
 
-  const otherPlayer: PlayerId = unit.owner === "P1" ? "P2" : "P1";
-  const nextState: GameState = {
+  let nextState: GameState = {
     ...state,
     units: {
       ...state.units,
       [updated.id]: updated,
     },
-    lastKnownPositions:
-      success && updated.position
-        ? {
-            ...state.lastKnownPositions,
-            [otherPlayer]: {
-              ...(state.lastKnownPositions?.[otherPlayer] ?? {}),
-              [updated.id]: { ...updated.position },
-            },
-          }
-        : state.lastKnownPositions,
   };
+  if (success) {
+    nextState = concealUnitExactPositionFromOpponents(nextState, updated);
+  }
 
   const events: GameEvent[] = [
     evStealthEntered({ unitId: updated.id, success, roll }),

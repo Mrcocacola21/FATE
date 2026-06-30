@@ -6,29 +6,17 @@ import {
   UnitState,
   makeEmptyTurnEconomy,
 } from "../model";
-import { HERO_ODIN_ID } from "../heroes";
 import { getForestMarkers } from "../forest";
 import { VisibleStakeMarker } from "./types";
-
-function chebyshevDistance(a: Coord, b: Coord): number {
-  return Math.max(Math.abs(a.col - b.col), Math.abs(a.row - b.row));
-}
+import { canPlayerKnowUnitExactPosition } from "../visibility";
 
 export function isStealthedEnemyVisibleToPlayer(
   state: GameState,
   playerId: PlayerId,
   enemy: UnitState
 ): boolean {
-  if (!enemy.isAlive || !enemy.position || !enemy.isStealthed) return false;
-  for (const unit of Object.values(state.units)) {
-    if (!unit.isAlive || !unit.position) continue;
-    if (unit.owner !== playerId) continue;
-    if (unit.heroId !== HERO_ODIN_ID) continue;
-    if (chebyshevDistance(unit.position, enemy.position) <= 1) {
-      return true;
-    }
-  }
-  return false;
+  if (!enemy.isStealthed) return false;
+  return canPlayerKnowUnitExactPosition(state, playerId, enemy.id);
 }
 
 export function cloneForestMarkers(state: GameState): ForestMarker[] {

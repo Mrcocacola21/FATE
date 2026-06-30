@@ -1,4 +1,5 @@
 import type { GameEvent, GameState, PlayerId } from "../model";
+import { canPlayerKnowUnitExactPosition } from "../visibility";
 
 export type EventRecipient = PlayerId | "spectator";
 
@@ -66,9 +67,9 @@ function isUnitVisibleToRecipient(
 ): boolean {
   const unit = state.units[unitId];
   if (!unit) return false;
-  if (recipient !== "spectator" && unit.owner === recipient) return true;
   if (!unit.isAlive) return true;
-  return !unit.isStealthed;
+  if (recipient === "spectator") return !unit.isStealthed;
+  return canPlayerKnowUnitExactPosition(state, recipient, unitId);
 }
 
 function unitOwner(state: GameState, unitId: string): PlayerId | null {
@@ -80,6 +81,19 @@ function projectEventForRecipient(
   event: GameEvent,
   recipient: EventRecipient
 ): GameEvent[] {
+  const filterVisibleUnitIds = (ids: string[]): string[] =>
+    ids.filter((unitId) => isUnitVisibleToRecipient(state, unitId, recipient));
+  const filterVisibleDamageByUnitId = (
+    damageByUnitId: Record<string, number> | undefined
+  ): Record<string, number> | undefined => {
+    if (!damageByUnitId) return damageByUnitId;
+    return Object.fromEntries(
+      Object.entries(damageByUnitId).filter(([unitId]) =>
+        isUnitVisibleToRecipient(state, unitId, recipient)
+      )
+    );
+  };
+
   switch (event.type) {
     case "unitPlaced":
       if (isUnitVisibleToRecipient(state, event.unitId, recipient)) return [event];
@@ -175,6 +189,23 @@ function projectEventForRecipient(
         } as GameEvent,
       ];
     }
+    case "aoeResolved":
+      return [
+        {
+          ...event,
+          affectedUnitIds: filterVisibleUnitIds(event.affectedUnitIds),
+          revealedUnitIds: filterVisibleUnitIds(event.revealedUnitIds),
+          damagedUnitIds: filterVisibleUnitIds(event.damagedUnitIds),
+          damageByUnitId: filterVisibleDamageByUnitId(event.damageByUnitId),
+        } as GameEvent,
+      ];
+    case "carpetStrikeAttackRolled":
+      return [
+        {
+          ...event,
+          affectedUnitIds: filterVisibleUnitIds(event.affectedUnitIds),
+        } as GameEvent,
+      ];
     case "lechyStormRollResult":
       return isUnitVisibleToRecipient(state, event.unitId, recipient)
         ? [event]

@@ -516,6 +516,85 @@ function testProjectedEventsRedactHiddenUnitPositions() {
   console.log("hardening_projected_events_redact_hidden_positions passed");
 }
 
+function testServerAcceptsMoveIntoUnknownHiddenOccupiedCell() {
+  storeTestHooks.reset();
+  try {
+    const room = createGameRoomWithId(`hardening-hidden-move-${randomUUID()}`, {
+      hostSeat: "P1",
+      hostConnId: `conn-${randomUUID()}`,
+    });
+
+    let state = createEmptyGame();
+    state = attachArmy(state, createDefaultArmy("P1"));
+    state = attachArmy(state, createDefaultArmy("P2"));
+
+    const hidden = Object.values(state.units).find(
+      (unit) => unit.owner === "P1" && unit.class === "assassin"
+    );
+    const mover = Object.values(state.units).find(
+      (unit) => unit.owner === "P2" && unit.class === "knight"
+    );
+    assert(hidden, "expected P1 hidden assassin");
+    assert(mover, "expected P2 mover");
+
+    state = setUnit(state, hidden.id, {
+      position: { col: 3, row: 4 },
+      isStealthed: true,
+      stealthTurnsLeft: 3,
+    });
+    state = setUnit(state, mover.id, {
+      position: { col: 3, row: 3 },
+    });
+    state = {
+      ...state,
+      phase: "battle",
+      currentPlayer: "P2",
+      activeUnitId: mover.id,
+      turnQueue: [mover.id],
+      turnOrder: [mover.id],
+      placementOrder: [mover.id],
+      knowledge: {
+        P1: { [hidden.id]: true },
+        // Mimics stale pre-stealth visibility. Last-known is not exact knowledge.
+        P2: { [mover.id]: true, [hidden.id]: true },
+      },
+      lastKnownPositions: {
+        P1: {},
+        P2: { [hidden.id]: { col: 3, row: 4 } },
+      },
+    };
+    room.state = state;
+
+    const result = applyGameAction(
+      room,
+      { type: "move", unitId: mover.id, to: { col: 3, row: 4 } },
+      "P2"
+    );
+
+    assert.equal(result.ok, true, "server should accept move into unknown hidden cell");
+    assert.deepEqual(
+      room.state.units[mover.id].position,
+      { col: 3, row: 4 },
+      "mover should occupy the hidden unit cell"
+    );
+    assert.equal(
+      room.state.units[hidden.id].isStealthed,
+      true,
+      "hidden unit should remain stealthed"
+    );
+    if (result.ok) {
+      assert(
+        !result.events.some((event) => event.type === "stealthRevealed"),
+        "accepted move should not emit proximity reveal"
+      );
+    }
+  } finally {
+    storeTestHooks.reset();
+  }
+
+  console.log("hardening_server_accepts_move_into_unknown_hidden_cell passed");
+}
+
 async function main() {
   await testGraceExpiryVacatesSeatAndInvalidatesToken();
   await testReconnectWithinGraceKeepsSeatAndClearsTimer();
@@ -528,6 +607,7 @@ async function main() {
   testActiveRoomCleanupDoesNotExpireRoom();
   testActionLogTruncatesToConfiguredLimit();
   testProjectedEventsRedactHiddenUnitPositions();
+  testServerAcceptsMoveIntoUnknownHiddenOccupiedCell();
   console.log("hardening tests passed");
 }
 
