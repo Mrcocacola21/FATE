@@ -261,6 +261,16 @@ export function formatEventMessage(
       return text(language, `Curse: ${event.targetId} took ${event.damage}`, `Прокляття: ${event.targetId} отримує ${event.damage} шкоди`);
     case "sansLastAttackRemoved":
       return text(language, `Curse removed: ${event.targetId}`, `Прокляття знято: ${event.targetId}`);
+    case "lechyStormRollResult":
+      return text(
+        language,
+        `Storm roll: ${value(event.unitId)} rolled ${value(event.roll)}${
+          event.damage > 0 ? ` and took ${event.damage} damage` : " and resisted"
+        }`,
+        `Кидок Бурі: ${value(event.unitId)} кинув ${value(event.roll)}${
+          event.damage > 0 ? ` і отримав ${event.damage} шкоди` : " і встояв"
+        }`,
+      );
     case "unitHealed":
       return text(language, `Healed: ${event.unitId} +${event.amount} (HP ${event.hpAfter})`, `Лікування: ${event.unitId} +${event.amount} (здоров’я ${event.hpAfter})`);
     case "damageBonusApplied":

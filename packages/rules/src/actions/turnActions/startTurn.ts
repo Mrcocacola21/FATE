@@ -25,6 +25,7 @@ import {
   applyStormStartOfTurn,
   maybeTriggerLechyConfuseTerrain,
 } from "../heroes/lechy";
+import { maybeTriggerMettatonThresholdUnlocks } from "../heroes/mettaton";
 import {
   maybeTriggerVladForestChoice,
   maybeTriggerVladTurnStakes,
@@ -98,8 +99,7 @@ export function applyUnitStartTurn(
 
   const { state: afterStorm, events: stormEvents } = applyStormStartOfTurn(
     afterBunker,
-    initialUnit.id,
-    rng
+    initialUnit.id
   );
   const unitAfterStorm = afterStorm.units[initialUnit.id];
   if (!unitAfterStorm || !unitAfterStorm.isAlive || !unitAfterStorm.position) {
@@ -146,8 +146,12 @@ export function applyUnitStartTurn(
     },
   };
 
-  const boneFieldImpulseResult = maybeTriggerSansBoneField(
+  const mettatonThresholdResult = maybeTriggerMettatonThresholdUnlocks(
     stateAfterTurnCount,
+    initialUnit.id
+  );
+  const boneFieldImpulseResult = maybeTriggerSansBoneField(
+    mettatonThresholdResult.state,
     initialUnit.id,
     rng
   );
@@ -206,6 +210,7 @@ export function applyUnitStartTurn(
         ...bunkerEvents,
         ...stormEvents,
         ...startEvents,
+        ...mettatonThresholdResult.events,
         ...boneFieldImpulseResult.events,
         ...sleipnirResult.events,
         ...chargedChoiceResult.events,
@@ -247,6 +252,7 @@ export function applyUnitStartTurn(
     ...bunkerEvents,
     ...stormEvents,
     ...startEvents,
+    ...mettatonThresholdResult.events,
     ...boneFieldImpulseResult.events,
     ...sleipnirResult.events,
     ...chargedChoiceResult.events,

@@ -55,6 +55,7 @@ export const GameShellLayout: FC<GameShellLayoutProps> = ({ vm }) => {
           isDuelistChoice={vm.isDuelistChoice}
           isAsgoreBraveryDefenseChoice={vm.isAsgoreBraveryDefenseChoice}
           isLokiLaughtChoice={vm.isLokiLaughtChoice}
+          isGutsBerserkAttackChoice={vm.isGutsBerserkAttackChoice}
           isFriskPacifismChoice={vm.isFriskPacifismChoice}
           isFriskGenocideChoice={vm.isFriskGenocideChoice}
           isFriskKeenEyeChoice={vm.isFriskKeenEyeChoice}

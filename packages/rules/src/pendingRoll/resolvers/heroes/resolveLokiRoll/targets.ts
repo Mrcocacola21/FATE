@@ -11,7 +11,12 @@ import {
   getLokiForcedAttackTargetIds,
   isLokiChicken,
 } from "../../../../actions/heroes/loki";
-import { getLokiUnit } from "./helpers";
+import {
+  COST_CHICKEN,
+  COST_MIND_CONTROL,
+  getLokiUnit,
+  spendLaughter,
+} from "./helpers";
 
 export function resolveLokiChickenTargetChoice(
   state: GameState,
@@ -20,6 +25,10 @@ export function resolveLokiChickenTargetChoice(
 ): ApplyResult {
   const ctx = pending.context as LokiChickenTargetChoiceContext;
   if (!ctx.lokiId || !getLokiUnit(state, ctx.lokiId)) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  if (choice === "skip") {
     return { state: clearPendingRoll(state), events: [] };
   }
 
@@ -41,16 +50,27 @@ export function resolveLokiChickenTargetChoice(
     return { state, events: [] };
   }
 
-  const updatedTarget = addLokiChicken(target, ctx.lokiId);
+  const loki = getLokiUnit(state, ctx.lokiId);
+  if (!loki || !canSpendSlots(loki, { action: true })) {
+    return { state, events: [] };
+  }
+  const spent = spendLaughter(state, ctx.lokiId, COST_CHICKEN);
+  if (!spent.ok || !spent.loki) {
+    return { state, events: [] };
+  }
+
+  const afterLoki = spendSlots(spent.loki, { action: true });
+  const updatedTarget = addLokiChicken(spent.state.units[target.id], ctx.lokiId);
   return {
     state: clearPendingRoll({
-      ...state,
+      ...spent.state,
       units: {
-        ...state.units,
+        ...spent.state.units,
+        [afterLoki.id]: afterLoki,
         [updatedTarget.id]: updatedTarget,
       },
     }),
-    events: [],
+    events: spent.events,
   };
 }
 
@@ -61,6 +81,10 @@ export function resolveLokiMindControlEnemyChoice(
 ): ApplyResult {
   const ctx = pending.context as LokiMindControlEnemyChoiceContext;
   if (!ctx.lokiId || !getLokiUnit(state, ctx.lokiId)) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  if (choice === "skip") {
     return { state: clearPendingRoll(state), events: [] };
   }
 
@@ -111,6 +135,10 @@ export function resolveLokiMindControlTargetChoice(
     return { state: clearPendingRoll(state), events: [] };
   }
 
+  if (choice === "skip") {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
   const controlled = state.units[ctx.controlledUnitId];
   if (
     !controlled ||
@@ -137,11 +165,21 @@ export function resolveLokiMindControlTargetChoice(
     return { state, events: [] };
   }
 
+  const loki = getLokiUnit(state, ctx.lokiId);
+  if (!loki || !canSpendSlots(loki, { action: true })) {
+    return { state, events: [] };
+  }
+  const spent = spendLaughter(state, ctx.lokiId, COST_MIND_CONTROL);
+  if (!spent.ok || !spent.loki) {
+    return { state, events: [] };
+  }
+  const afterLoki = spendSlots(spent.loki, { action: true });
   const updatedControlled = spendSlots(controlled, { attack: true, action: true });
   const updatedState: GameState = {
-    ...clearPendingRoll(state),
+    ...clearPendingRoll(spent.state),
     units: {
-      ...state.units,
+      ...spent.state.units,
+      [afterLoki.id]: afterLoki,
       [updatedControlled.id]: updatedControlled,
     },
   };
@@ -160,5 +198,5 @@ export function resolveLokiMindControlTargetChoice(
     updatedControlled.id
   );
 
-  return { state: requested.state, events: requested.events };
+  return { state: requested.state, events: [...spent.events, ...requested.events] };
 }

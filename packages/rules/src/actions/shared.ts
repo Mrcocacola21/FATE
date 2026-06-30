@@ -15,6 +15,7 @@ import {
   HERO_HASSAN_ID,
   HERO_JEBE_ID,
   HERO_KALADIN_ID,
+  HERO_UNDYNE_ID,
   getHeroDefinition,
 } from "../heroes";
 import type { RNG } from "../rng";
@@ -109,6 +110,9 @@ export function getMovementModes(unit: UnitState): UnitState["class"][] {
   }
   if (isKaladin(unit)) {
     return ["spearman", "trickster", "berserker"];
+  }
+  if (unit.heroId === HERO_UNDYNE_ID) {
+    return ["berserker", "spearman"];
   }
   if (isKaiserTransformed(unit)) {
     return ["archer", "rider", "berserker"];

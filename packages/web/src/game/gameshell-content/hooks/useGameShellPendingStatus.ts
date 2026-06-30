@@ -37,6 +37,8 @@ export function useGameShellPendingStatus({
   const isDuelistChoice = pendingRoll?.kind === "elCidDuelistChoice";
   const isChikatiloPlacement =
     pendingRoll?.kind === "chikatiloFalseTrailPlacement";
+  const isGroznyTyrantAttackCellChoice =
+    pendingRoll?.kind === "groznyTyrantAttackCellChoice";
   const isGuideTravelerPlacement =
     pendingRoll?.kind === "lechyGuideTravelerPlacement";
   const isJebeKhansShooterTargetChoice =
@@ -60,6 +62,8 @@ export function useGameShellPendingStatus({
     pendingRoll?.kind === "lokiMindControlEnemyChoice";
   const isLokiMindControlTargetChoice =
     pendingRoll?.kind === "lokiMindControlTargetChoice";
+  const isGutsBerserkAttackChoice =
+    pendingRoll?.kind === "gutsBerserkAttackChoice";
   const isFriskPacifismChoice = pendingRoll?.kind === "friskPacifismChoice";
   const isFriskPacifismHugsTargetChoice =
     pendingRoll?.kind === "friskPacifismHugsTargetChoice";
@@ -67,6 +71,8 @@ export function useGameShellPendingStatus({
     pendingRoll?.kind === "friskWarmWordsTargetChoice";
   const isFriskGenocideChoice = pendingRoll?.kind === "friskGenocideChoice";
   const isFriskKeenEyeChoice = pendingRoll?.kind === "friskKeenEyeChoice";
+  const isFriskPrecisionStrikeTargetChoice =
+    pendingRoll?.kind === "friskPrecisionStrikeTargetChoice";
   const isFriskSubstitutionChoice =
     pendingRoll?.kind === "friskSubstitutionChoice";
   const isFriskChildsCryChoice =
@@ -93,6 +99,7 @@ export function useGameShellPendingStatus({
     isForestMoveDestination ||
     isIntimidateChoice ||
     isChikatiloPlacement ||
+    isGroznyTyrantAttackCellChoice ||
     isGuideTravelerPlacement ||
     isJebeKhansShooterTargetChoice ||
     isHassanTrueEnemyTargetChoice ||
@@ -102,6 +109,7 @@ export function useGameShellPendingStatus({
     isLokiMindControlTargetChoice ||
     isFriskPacifismHugsTargetChoice ||
     isFriskWarmWordsTargetChoice ||
+    isFriskPrecisionStrikeTargetChoice ||
     isAsgoreSoulParadePatienceTargetChoice ||
     isAsgoreSoulParadePerseveranceTargetChoice ||
     isAsgoreSoulParadeJusticeTargetChoice ||
@@ -249,6 +257,7 @@ export function useGameShellPendingStatus({
     isForestMoveDestination,
     isDuelistChoice,
     isChikatiloPlacement,
+    isGroznyTyrantAttackCellChoice,
     isGuideTravelerPlacement,
     isJebeKhansShooterTargetChoice,
     isHassanTrueEnemyTargetChoice,
@@ -261,11 +270,13 @@ export function useGameShellPendingStatus({
     isLokiChickenTargetChoice,
     isLokiMindControlEnemyChoice,
     isLokiMindControlTargetChoice,
+    isGutsBerserkAttackChoice,
     isFriskPacifismChoice,
     isFriskPacifismHugsTargetChoice,
     isFriskWarmWordsTargetChoice,
     isFriskGenocideChoice,
     isFriskKeenEyeChoice,
+    isFriskPrecisionStrikeTargetChoice,
     isFriskSubstitutionChoice,
     isFriskChildsCryChoice,
     isFemtoDivineMoveDestination,

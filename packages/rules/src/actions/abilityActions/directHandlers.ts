@@ -75,10 +75,8 @@ import { applyKaladinFifth, applyKaladinFirst } from "../heroes/kaladin";
 import { applyLechyGuideTraveler, applyLechyStorm } from "../heroes/lechy";
 import { applyLokiLaught } from "../heroes/loki";
 import {
-  applyMettatonEx,
   applyMettatonFinalChord,
   applyMettatonLaser,
-  applyMettatonNeo,
   applyMettatonPoppins,
 } from "../heroes/mettaton";
 import { applyOdinSleipnir } from "../heroes/odin";
@@ -167,8 +165,8 @@ const DIRECT_HANDLERS: Record<string, DirectAbilityHandler> = {
   [ABILITY_METTATON_POPPINS]: (state, unit, action, rng) =>
     applyMettatonPoppins(state, unit, action, rng),
   [ABILITY_METTATON_LASER]: (state, unit, action) => applyMettatonLaser(state, unit, action),
-  [ABILITY_METTATON_EX]: (state, unit) => applyMettatonEx(state, unit),
-  [ABILITY_METTATON_NEO]: (state, unit) => applyMettatonNeo(state, unit),
+  [ABILITY_METTATON_EX]: (state) => NO_OP_RESULT(state),
+  [ABILITY_METTATON_NEO]: (state) => NO_OP_RESULT(state),
   [ABILITY_METTATON_FINAL_CHORD]: (state, unit) => applyMettatonFinalChord(state, unit),
   [ABILITY_SANS_GASTER_BLASTER]: (state, unit, action) =>
     applySansGasterBlaster(state, unit, action),

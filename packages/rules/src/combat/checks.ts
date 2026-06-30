@@ -1,5 +1,5 @@
 import type { GameState, UnitState } from "../model";
-import { getUnitAt } from "../board";
+import { getUnitsAt } from "../board";
 import {
   HERO_ASGORE_ID,
   HERO_CHIKATILO_ID,
@@ -15,6 +15,20 @@ import { isStormActive, isStormExempt } from "../forest";
 import { canSeeStealthedTarget } from "../visibility";
 import { canAttackAcrossRuleDeclarationBoundary } from "../ruleDeclarations";
 import { distanceInfo, isSpearmanReachTarget, isTricksterReachTarget } from "./math";
+
+function hiddenEnemyBlocksLine(
+  state: GameState,
+  attacker: UnitState,
+  enemy: UnitState
+): boolean {
+  if (!enemy.isStealthed) return true;
+  const marked =
+    attacker.heroId === HERO_CHIKATILO_ID &&
+    Array.isArray(attacker.chikatiloMarkedTargets) &&
+    attacker.chikatiloMarkedTargets.includes(enemy.id);
+  const known = state.knowledge?.[attacker.owner]?.[enemy.id] === true;
+  return marked || known || canSeeStealthedTarget(state, attacker, enemy);
+}
 
 export function canAttackTarget(
   state: GameState,
@@ -96,12 +110,15 @@ export function canAttackTarget(
         row >= 0 &&
         row < state.boardSize
       ) {
-        const unitOnLine = getUnitAt(state, { col, row });
-        if (unitOnLine) {
-          if (unitOnLine.owner !== attacker.owner) {
-            firstEnemy = unitOnLine;
-            break;
-          }
+        const unitsOnLine = getUnitsAt(state, { col, row });
+        for (const unitOnLine of unitsOnLine) {
+          if (unitOnLine.owner === attacker.owner) continue;
+          if (!hiddenEnemyBlocksLine(state, attacker, unitOnLine)) continue;
+          firstEnemy = unitOnLine;
+          break;
+        }
+        if (firstEnemy) {
+          break;
         }
 
         col += stepCol;

@@ -83,4 +83,12 @@ export type HeroGameEvent =
       type: "sansLastAttackRemoved";
       targetId: string;
       reason: "hpOne" | "targetDead";
+    }
+  | {
+      type: "lechyStormRollResult";
+      unitId: string;
+      roll: number;
+      success: boolean;
+      damage: number;
+      hpAfter: number;
     };

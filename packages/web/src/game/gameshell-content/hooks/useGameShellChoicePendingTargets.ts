@@ -11,6 +11,7 @@ interface UseGameShellChoicePendingTargetsParams {
   isFriskWarmWordsTargetChoice: boolean;
   isFriskGenocideChoice: boolean;
   isFriskKeenEyeChoice: boolean;
+  isFriskPrecisionStrikeTargetChoice: boolean;
   isLokiLaughtChoice: boolean;
   isLokiChickenTargetChoice: boolean;
   isLokiMindControlEnemyChoice: boolean;
@@ -25,6 +26,7 @@ export function useGameShellChoicePendingTargets({
   isFriskWarmWordsTargetChoice,
   isFriskGenocideChoice,
   isFriskKeenEyeChoice,
+  isFriskPrecisionStrikeTargetChoice,
   isLokiLaughtChoice,
   isLokiChickenTargetChoice,
   isLokiMindControlEnemyChoice,
@@ -116,6 +118,22 @@ export function useGameShellChoicePendingTargets({
     if (!Array.isArray(ctx?.options)) return [] as string[];
     return ctx.options.filter((value): value is string => typeof value === "string");
   }, [isFriskKeenEyeChoice, pendingRoll]);
+  const friskPrecisionStrikeTargetIds = useMemo(() => {
+    if (!isFriskPrecisionStrikeTargetChoice) return [] as string[];
+    const ctx = pendingRoll?.context as { options?: unknown } | undefined;
+    if (!Array.isArray(ctx?.options)) return [] as string[];
+    return ctx.options.filter((value): value is string => typeof value === "string");
+  }, [isFriskPrecisionStrikeTargetChoice, pendingRoll]);
+  const friskPrecisionStrikeTargetKeys = useMemo(
+    () =>
+      new Set(
+        friskPrecisionStrikeTargetIds
+          .map((targetId) => view?.units[targetId]?.position)
+          .filter((coord): coord is Coord => !!coord)
+          .map(coordKey)
+      ),
+    [friskPrecisionStrikeTargetIds, view]
+  );
   const lokiLaughtContext = isLokiLaughtChoice
     ? (pendingRoll?.context as
         | {
@@ -220,6 +238,8 @@ export function useGameShellChoicePendingTargets({
     friskWarmWordsTargetKeys,
     friskGenocidePoints,
     friskKeenEyeTargetIds,
+    friskPrecisionStrikeTargetIds,
+    friskPrecisionStrikeTargetKeys,
     lokiLaughtCurrent,
     lokiLaughtChickenOptions,
     lokiLaughtMindControlEnemyOptions,

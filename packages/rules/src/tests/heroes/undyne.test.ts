@@ -31,6 +31,23 @@ export function testUndyneToughSpearmanFeatureAndReach() {
     "Undyne hero meta HP should match Tough passive bonus"
   );
 
+  let moveState = setUnit(state, undyne.id, { position: { col: 4, row: 4 } });
+  moveState = toBattleState(moveState, "P1", undyne.id);
+  const moveModes = applyAction(
+    moveState,
+    { type: "requestMoveOptions", unitId: undyne.id } as any,
+    makeRngSequence([])
+  );
+  const modeEvent = moveModes.events.find(
+    (event) => event.type === "moveOptionsGenerated"
+  );
+  assert(
+    modeEvent &&
+      modeEvent.type === "moveOptionsGenerated" &&
+      (modeEvent.modes ?? []).includes("spearman"),
+    "Undyne should expose Spearman movement mode from multiclass"
+  );
+
   state = setUnit(state, undyne.id, { position: { col: 4, row: 4 } });
   state = setUnit(state, enemy.id, { position: { col: 4, row: 5 } });
   state = toBattleState(state, "P2", enemy.id);

@@ -2,7 +2,7 @@ import type { Coord, GameState, UnitClass, UnitState } from "../model";
 import { isInsideBoard } from "../model";
 import { ALL_DIRS, DIAG_DIRS, ORTHO_DIRS, addCoord } from "../board";
 import { canUnitEnterCell } from "../visibility";
-import { HERO_GENGHIS_KHAN_ID, HERO_GRAND_KAISER_ID } from "../heroes";
+import { HERO_GENGHIS_KHAN_ID, HERO_GRAND_KAISER_ID, HERO_UNDYNE_ID } from "../heroes";
 import { hasMettatonBerserkerFeature, hasMettatonRiderMovement } from "../mettaton";
 import {
   addCourtGlobalMoveOptions,
@@ -244,6 +244,8 @@ export function getLegalMovesForUnit(state: GameState, unitId: string): Coord[] 
   const modes: UnitClass[] =
     unit.heroId === HERO_GRAND_KAISER_ID && unit.transformed
       ? ["archer", "rider", "berserker"]
+      : unit.heroId === HERO_UNDYNE_ID
+      ? ["berserker", "spearman"]
       : hasMettatonRiderMovement(unit)
       ? hasMettatonBerserkerFeature(unit)
         ? ["rider", "berserker"]

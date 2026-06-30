@@ -5,10 +5,16 @@ import type {
   PlayerId,
   ResolveRollChoice,
 } from "../../../model";
+import {
+  ABILITY_HASSAN_TRUE_ENEMY,
+  getAbilitySpec,
+  spendCharges,
+} from "../../../abilities";
 import { canAttackTarget } from "../../../combat";
 import { canDirectlyTargetUnit } from "../../../visibility";
-import { clearPendingRoll, requestRoll } from "../../../core";
+import { clearPendingRoll, evAbilityUsed, requestRoll } from "../../../core";
 import { makeAttackContext } from "../../builders/buildPendingRoll";
+import { canSpendSlots, spendSlots } from "../../../turnEconomy";
 import type {
   HassanAssassinOrderSelectionContext,
   HassanTrueEnemyTargetChoiceContext,
@@ -110,7 +116,12 @@ export function resolveHassanTrueEnemyTargetChoice(
 ): ApplyResult {
   const ctx = pending.context as unknown as HassanTrueEnemyTargetChoiceContext;
   const forcedAttackerId = ctx.forcedAttackerId;
-  if (!forcedAttackerId) {
+  const hassanId = ctx.hassanId;
+  if (!forcedAttackerId || !hassanId) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  if (choice === "skip") {
     return { state: clearPendingRoll(state), events: [] };
   }
 
@@ -127,7 +138,58 @@ export function resolveHassanTrueEnemyTargetChoice(
     return { state, events: [] };
   }
 
-  return requestForcedAttack(state, forcedAttackerId, payload.targetId);
+  const hassan = state.units[hassanId];
+  const attacker = state.units[forcedAttackerId];
+  const target = state.units[payload.targetId];
+  if (
+    !hassan ||
+    !hassan.isAlive ||
+    !hassan.position ||
+    !attacker ||
+    !attacker.isAlive ||
+    !attacker.position ||
+    !target ||
+    !target.isAlive ||
+    !target.position
+  ) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+  if (!canDirectlyTargetUnit(state, attacker.id, target.id)) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+  if (!canAttackTarget(state, attacker, target, { allowFriendlyTarget: true })) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  const spec = getAbilitySpec(ABILITY_HASSAN_TRUE_ENEMY);
+  if (!spec) {
+    return { state, events: [] };
+  }
+  const costs = spec.actionCost?.consumes ?? {};
+  if (!canSpendSlots(hassan, costs)) {
+    return { state, events: [] };
+  }
+  const chargeAmount = spec.chargesPerUse ?? spec.chargeCost ?? 0;
+  const spent = spendCharges(hassan, spec.id, chargeAmount);
+  if (!spent.ok) {
+    return { state, events: [] };
+  }
+  const updatedHassan = spendSlots(spent.unit, costs);
+  const spentState: GameState = {
+    ...state,
+    units: {
+      ...state.units,
+      [updatedHassan.id]: updatedHassan,
+    },
+  };
+  const forced = requestForcedAttack(spentState, forcedAttackerId, payload.targetId);
+  return {
+    state: forced.state,
+    events: [
+      evAbilityUsed({ unitId: updatedHassan.id, abilityId: spec.id }),
+      ...forced.events,
+    ],
+  };
 }
 
 export function resolveHassanAssassinOrderSelection(

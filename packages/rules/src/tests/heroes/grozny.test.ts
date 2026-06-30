@@ -10,6 +10,8 @@ import {
   HERO_GROZNY_ID,
   initKnowledgeForOwners,
   makeAttackWinRng,
+  coordKeys,
+  resolvePendingWithChoice,
   resolveAllPendingRollsWithEvents,
   SeededRNG,
   setUnit,
@@ -83,7 +85,11 @@ export function testGroznyTyrantTriggersAndKillsWhenBaseDamageIsEnough() {
   );
   assert(
     startTrigger.state.pendingRoll,
-    "tyrant should request an attack roll when eligible"
+    "tyrant should request an attack-cell choice when eligible"
+  );
+  assert(
+    startTrigger.state.pendingRoll?.kind === "groznyTyrantAttackCellChoice",
+    "tyrant should let the player choose the attack cell"
   );
 
   const resolved = resolveAllPendingRollsWithEvents(startTrigger.state, rng);
@@ -117,6 +123,180 @@ export function testGroznyTyrantTriggersAndKillsWhenBaseDamageIsEnough() {
   );
 
   console.log("grozny_tyrant_triggers_and_kills_when_base_damage_is_enough passed");
+}
+
+
+export function testGroznyTyrantPromptsForAttackCellAndSkipsWithoutSpending() {
+  const rng = new SeededRNG(742);
+  const { state: baseState, grozny, ally } = setupGroznyTyrantState();
+
+  let state = baseState;
+  state = setUnit(state, grozny.id, {
+    position: { col: 0, row: 0 },
+    attack: 2,
+    hp: 4,
+    charges: {
+      ...grozny.charges,
+      [ABILITY_GROZNY_INVADE_TIME]: 3,
+    },
+  });
+  state = setUnit(state, ally.id, { position: { col: 4, row: 4 }, hp: 2 });
+  state = { ...toBattleState(state, "P1", grozny.id), activeUnitId: null };
+  state = initKnowledgeForOwners(state);
+
+  const started = applyAction(
+    state,
+    { type: "unitStartTurn", unitId: grozny.id } as any,
+    rng
+  );
+
+  assert(
+    started.state.pendingRoll?.kind === "groznyTyrantAttackCellChoice",
+    "tyrant should prompt for an attack cell"
+  );
+  const context = started.state.pendingRoll.context as {
+    allowSkip?: boolean;
+    options?: {
+      targetId: string;
+      mode: "normal" | "invadeTime";
+      position: { col: number; row: number };
+    }[];
+  };
+  assert(context.allowSkip === true, "initial tyrant prompt should allow skip");
+  const invadeOptions = (context.options ?? []).filter(
+    (option) => option.targetId === ally.id && option.mode === "invadeTime"
+  );
+  const expectedCells = [
+    { col: 3, row: 3 },
+    { col: 3, row: 4 },
+    { col: 3, row: 5 },
+    { col: 4, row: 3 },
+    { col: 4, row: 5 },
+    { col: 5, row: 3 },
+    { col: 5, row: 4 },
+    { col: 5, row: 5 },
+  ];
+  const optionKeys = coordKeys(invadeOptions.map((option) => option.position));
+  for (const key of coordKeys(expectedCells)) {
+    assert(
+      optionKeys.includes(key),
+      `tyrant + invade time should include attack cell ${key}`
+    );
+  }
+  assert(
+    started.state.units[grozny.id].charges[ABILITY_GROZNY_INVADE_TIME] === 3,
+    "opening tyrant prompt should not spend invade time charges"
+  );
+  assert(
+    started.state.units[grozny.id].turn.moveUsed === false,
+    "opening tyrant prompt should not spend the move slot"
+  );
+
+  const skipped = resolvePendingWithChoice(started.state, "skip", rng);
+  assert(!skipped.state.pendingRoll, "skip should clear tyrant choice");
+  assert(
+    skipped.state.units[grozny.id].charges[ABILITY_GROZNY_INVADE_TIME] === 3,
+    "skipping tyrant should not spend invade time charges"
+  );
+  assert(
+    skipped.state.units[grozny.id].turn.moveUsed === false,
+    "skipping tyrant should not spend the move slot"
+  );
+  assert(
+    skipped.state.units[grozny.id].position?.col === 0 &&
+      skipped.state.units[grozny.id].position?.row === 0,
+    "skipping tyrant should not move Grozny"
+  );
+
+  console.log(
+    "grozny_tyrant_prompts_for_attack_cell_and_skips_without_spending passed"
+  );
+}
+
+
+export function testGroznyTyrantInvadeTimeOptionSpendsOnlyAfterCellChoice() {
+  const rng = makeAttackWinRng(1);
+  const { state: baseState, grozny, ally } = setupGroznyTyrantState();
+
+  let state = baseState;
+  state = setUnit(state, grozny.id, {
+    position: { col: 0, row: 0 },
+    attack: 2,
+    hp: 4,
+    charges: {
+      ...grozny.charges,
+      [ABILITY_GROZNY_INVADE_TIME]: 3,
+    },
+  });
+  state = setUnit(state, ally.id, { position: { col: 4, row: 4 }, hp: 2 });
+  state = { ...toBattleState(state, "P1", grozny.id), activeUnitId: null };
+  state = initKnowledgeForOwners(state);
+
+  const started = applyAction(
+    state,
+    { type: "unitStartTurn", unitId: grozny.id } as any,
+    rng
+  );
+  assert(
+    started.state.pendingRoll?.kind === "groznyTyrantAttackCellChoice",
+    "tyrant should prompt before spending invade time"
+  );
+
+  const choice = {
+    type: "groznyTyrantAttackCell" as const,
+    mode: "invadeTime" as const,
+    targetId: ally.id,
+    position: { col: 5, row: 5 },
+  };
+  const chosen = resolvePendingWithChoice(started.state, choice, rng);
+
+  assert(
+    chosen.state.pendingRoll?.kind === "attack_attackerRoll",
+    "chosen tyrant cell should start the attack roll"
+  );
+  assert(
+    chosen.state.units[grozny.id].position?.col === 5 &&
+      chosen.state.units[grozny.id].position?.row === 5,
+    "Grozny should move to the selected attack cell"
+  );
+  assert(
+    chosen.state.units[grozny.id].charges[ABILITY_GROZNY_INVADE_TIME] === 0,
+    "confirmed invade time tyrant cell should spend charges"
+  );
+  assert(
+    chosen.state.units[grozny.id].turn.moveUsed === true,
+    "confirmed invade time tyrant cell should spend the move slot"
+  );
+  assert(
+    chosen.events.some(
+      (event) =>
+        event.type === "abilityUsed" &&
+        event.abilityId === ABILITY_GROZNY_INVADE_TIME
+    ),
+    "confirmed tyrant + invade time should log invade time use"
+  );
+  assert(
+    chosen.events.some(
+      (event) =>
+        event.type === "abilityUsed" &&
+        event.abilityId === "groznyTyrant"
+    ),
+    "confirmed tyrant + invade time should log tyrant use"
+  );
+
+  const resolved = resolveAllPendingRollsWithEvents(chosen.state, rng);
+  const attackEvent = resolved.events.find(
+    (event) =>
+      event.type === "attackResolved" &&
+      event.attackerId === grozny.id &&
+      event.defenderId === ally.id
+  ) as Extract<GameEvent, { type: "attackResolved" }> | undefined;
+  assert(attackEvent, "chosen tyrant cell should resolve the ally attack");
+  assert(!resolved.state.units[ally.id].isAlive, "chosen tyrant attack should kill ally");
+
+  console.log(
+    "grozny_tyrant_invade_time_option_spends_only_after_cell_choice passed"
+  );
 }
 
 

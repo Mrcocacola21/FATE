@@ -49,6 +49,7 @@ import {
   resolveFriskKeenEyeChoice,
   resolveFriskPacifismChoice,
   resolveFriskPacifismHugsTargetChoice,
+  resolveFriskPrecisionStrikeTargetChoice,
   resolveFriskWarmWordsHealRoll,
   resolveFriskWarmWordsTargetChoice,
 } from "../resolvers/heroes/resolveFriskRoll";
@@ -77,12 +78,17 @@ import {
 } from "../../actions/heroes/griffith";
 import { resolveOdinSleipnirDestinationChoice } from "../../actions/heroes/odin";
 import { resolveChargedImpulseTargetChoice } from "../../actions/chargedImpulses";
-import { resolveLechyGuideTravelerPlacement } from "../../actions/heroes/lechy";
+import { resolveGroznyTyrantAttackCellChoice } from "../../actions/heroes/grozny";
+import {
+  resolveLechyGuideTravelerPlacement,
+  resolveLechyStormStartTurnRoll,
+} from "../../actions/heroes/lechy";
 import {
   resolveRiverBoatDropDestination,
   resolveRiverTraLaLaDestinationChoice,
   resolveRiverTraLaLaTargetChoice,
 } from "../../actions/heroes/riverPerson";
+import { resolveGutsBerserkAttackChoice } from "../../actions/heroes/guts";
 import { resolveRiverBoatCarryChoice } from "../../actions/movementActions";
 import type { AutoRollChoice, ResolvePendingRollAction } from "./types";
 
@@ -111,12 +117,14 @@ export const HERO_PENDING_ROLL_KINDS = [
   "lokiChickenTargetChoice",
   "lokiMindControlEnemyChoice",
   "lokiMindControlTargetChoice",
+  "gutsBerserkAttackChoice",
   "friskPacifismChoice",
   "friskPacifismHugsTargetChoice",
   "friskWarmWordsTargetChoice",
   "friskWarmWordsHealRoll",
   "friskGenocideChoice",
   "friskKeenEyeChoice",
+  "friskPrecisionStrikeTargetChoice",
   "asgoreSoulParadeRoll",
   "asgoreSoulParadePatienceTargetChoice",
   "asgoreSoulParadePerseveranceTargetChoice",
@@ -138,7 +146,9 @@ export const HERO_PENDING_ROLL_KINDS = [
   "chikatiloFalseTrailRevealChoice",
   "falseTrailExplosion_attackerRoll",
   "falseTrailExplosion_defenderRoll",
+  "groznyTyrantAttackCellChoice",
   "lechyGuideTravelerPlacement",
+  "lechyStormStartTurnRoll",
   "riverBoatCarryChoice",
   "riverBoatDropDestination",
   "riverTraLaLaTargetChoice",
@@ -211,6 +221,8 @@ export function resolveHeroPendingRollCase(
       return resolveLokiMindControlEnemyChoice(state, pending, action.choice);
     case "lokiMindControlTargetChoice":
       return resolveLokiMindControlTargetChoice(state, pending, action.choice);
+    case "gutsBerserkAttackChoice":
+      return resolveGutsBerserkAttackChoice(state, pending, action.choice);
     case "friskPacifismChoice":
       return resolveFriskPacifismChoice(state, pending, action.choice);
     case "friskPacifismHugsTargetChoice":
@@ -223,6 +235,8 @@ export function resolveHeroPendingRollCase(
       return resolveFriskGenocideChoice(state, pending, action.choice);
     case "friskKeenEyeChoice":
       return resolveFriskKeenEyeChoice(state, pending, action.choice, rng);
+    case "friskPrecisionStrikeTargetChoice":
+      return resolveFriskPrecisionStrikeTargetChoice(state, pending, action.choice);
     case "asgoreSoulParadeRoll":
       return resolveAsgoreSoulParadeRoll(state, pending, rng);
     case "asgoreSoulParadePatienceTargetChoice":
@@ -288,8 +302,21 @@ export function resolveHeroPendingRollCase(
       return resolveFalseTrailExplosionAttackerRoll(state, pending, rng);
     case "falseTrailExplosion_defenderRoll":
       return resolveFalseTrailExplosionDefenderRoll(state, pending, rng);
+    case "groznyTyrantAttackCellChoice":
+      return resolveGroznyTyrantAttackCellChoice(
+        state,
+        pending,
+        action.choice,
+        rng
+      );
     case "lechyGuideTravelerPlacement":
       return resolveLechyGuideTravelerPlacement(state, pending, action.choice as any);
+    case "lechyStormStartTurnRoll":
+      return resolveLechyStormStartTurnRoll(
+        state,
+        (pending.context as { unitId?: string }).unitId ?? "",
+        rng
+      );
     case "riverBoatCarryChoice":
       return resolveRiverBoatCarryChoice(state, pending, action.choice);
     case "riverBoatDropDestination":

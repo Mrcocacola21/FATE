@@ -5,14 +5,13 @@ import type {
   UnitState,
 } from "../../model";
 import type { RNG } from "../../rng";
-import { coordsEqual, getUnitAt } from "../../board";
+import { coordsEqual } from "../../board";
 import { getLegalAttackTargets } from "../../legal";
 import { linePath } from "../../path";
 import { canSpendSlots } from "../../turnEconomy";
-import { unitCanSeeStealthed } from "../../visibility";
 import { findStakeStopOnPath, applyStakeTriggerIfAny } from "../../core";
 import { makeAttackContext, requestRoll } from "../../core";
-import { evStealthRevealed, evUnitMoved } from "../../core";
+import { evUnitMoved } from "../../core";
 import { maybeRequestForestMoveCheck } from "./forest";
 import { getMongolChargeCorridor, sortUnitIdsByReadingOrder } from "./rider";
 import type { MoveActionInternal } from "./types";
@@ -83,60 +82,6 @@ export function applyMongolChargeMove(
     return { state: newState, events: [] };
   }
 
-  const hiddenAtDest = getUnitAt(state, finalTo);
-  if (
-    hiddenAtDest &&
-    hiddenAtDest.isAlive &&
-    hiddenAtDest.owner !== unit.owner &&
-    hiddenAtDest.isStealthed
-  ) {
-    const known = state.knowledge?.[unit.owner]?.[hiddenAtDest.id];
-    const canSee = unitCanSeeStealthed(state, unit, hiddenAtDest);
-    if (!known && !canSee) {
-      const revealed: UnitState = {
-        ...hiddenAtDest,
-        isStealthed: false,
-        stealthTurnsLeft: 0,
-      };
-      const updatedUnit: UnitState = {
-        ...unit,
-        genghisKhanMongolChargeActive: false,
-      };
-      const updatedLastKnown = {
-        ...state.lastKnownPositions,
-        P1: { ...(state.lastKnownPositions?.P1 ?? {}) },
-        P2: { ...(state.lastKnownPositions?.P2 ?? {}) },
-      };
-      delete updatedLastKnown.P1[revealed.id];
-      delete updatedLastKnown.P2[revealed.id];
-      const newState: GameState = {
-        ...state,
-        units: {
-          ...state.units,
-          [revealed.id]: revealed,
-          [updatedUnit.id]: updatedUnit,
-        },
-        knowledge: {
-          ...state.knowledge,
-          [unit.owner]: {
-            ...(state.knowledge?.[unit.owner] ?? {}),
-            [revealed.id]: true,
-          },
-        },
-        lastKnownPositions: updatedLastKnown,
-        pendingMove: pendingValid ? null : state.pendingMove,
-      };
-      const events: GameEvent[] = [
-        evStealthRevealed({
-          unitId: revealed.id,
-          reason: "steppedOnHidden",
-          revealerId: unit.id,
-        }),
-      ];
-      return { state: newState, events };
-    }
-  }
-
   let updatedUnit: UnitState = {
     ...unit,
     position: { ...finalTo },
@@ -175,58 +120,6 @@ export function applyMongolChargeMove(
 
   if (!updatedUnit.position) {
     return { state: newState, events };
-  }
-
-  if (didMove) {
-    const moverOwner = updatedUnit.owner;
-    const moverPos = updatedUnit.position;
-    for (const other of Object.values(newState.units)) {
-      if (!other.isAlive || !other.position) continue;
-      if (other.owner === moverOwner) continue;
-      if (!other.isStealthed) continue;
-
-      const dx = Math.abs(other.position.col - moverPos.col);
-      const dy = Math.abs(other.position.row - moverPos.row);
-      const dist = Math.max(dx, dy);
-      if (dist <= 1) {
-        const revealed: UnitState = {
-          ...other,
-          isStealthed: false,
-          stealthTurnsLeft: 0,
-        };
-        const updatedLastKnown = {
-          ...newState.lastKnownPositions,
-          P1: { ...(newState.lastKnownPositions?.P1 ?? {}) },
-          P2: { ...(newState.lastKnownPositions?.P2 ?? {}) },
-        };
-        delete updatedLastKnown.P1[revealed.id];
-        delete updatedLastKnown.P2[revealed.id];
-
-        newState = {
-          ...newState,
-          units: {
-            ...newState.units,
-            [revealed.id]: revealed,
-          },
-          knowledge: {
-            ...newState.knowledge,
-            [moverOwner]: {
-              ...(newState.knowledge?.[moverOwner] ?? {}),
-              [revealed.id]: true,
-            },
-          },
-          lastKnownPositions: updatedLastKnown,
-        };
-
-        events.push(
-          evStealthRevealed({
-            unitId: revealed.id,
-            reason: "adjacency",
-            revealerId: updatedUnit.id,
-          })
-        );
-      }
-    }
   }
 
   const path = linePath(from, updatedUnit.position);

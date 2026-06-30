@@ -32,7 +32,18 @@ export function getFriskWarmWordsTargetIds(
   state: GameState,
   friskId: string
 ): string[] {
-  return getFriskPacifismTargetIds(state, friskId);
+  const frisk = state.units[friskId];
+  if (!isFrisk(frisk) || !frisk.isAlive || !frisk.position) {
+    return [];
+  }
+  return Object.values(state.units)
+    .filter((unit) => {
+      if (!unit.isAlive || !unit.position) return false;
+      if (unit.owner !== frisk.owner) return false;
+      return chebyshev(frisk.position!, unit.position) <= 2;
+    })
+    .map((unit) => unit.id)
+    .sort();
 }
 
 export function getFriskKeenEyeTargetIds(

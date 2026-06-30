@@ -23,7 +23,7 @@ export const ABILITY_SPECS_PART_4: Record<string, AbilitySpec> = {
     displayName: "Mettaton EX",
     kind: "impulse",
     description:
-      "Spend 5 Rating to unlock Stage Phenomenon and Laser for this battle.",
+      "At the start of Mettaton's turn, unlock Stage Phenomenon and Laser when Rating is at least 5. Rating is not spent.",
   },
   [ids.ABILITY_METTATON_STAGE_PHENOMENON]: {
     id: ids.ABILITY_METTATON_STAGE_PHENOMENON,
@@ -46,7 +46,7 @@ export const ABILITY_SPECS_PART_4: Record<string, AbilitySpec> = {
     displayName: "Mettaton NEO",
     kind: "impulse",
     description:
-      "Spend 10 Rating to unlock Rider Feature, Berserker Multiclass, and Grace.",
+      "At the start of Mettaton's turn, unlock Rider Feature, Berserker Multiclass, and Grace when Rating is at least 10. Rating is not spent.",
   },
   [ids.ABILITY_METTATON_RIDER_FEATURE]: {
     id: ids.ABILITY_METTATON_RIDER_FEATURE,

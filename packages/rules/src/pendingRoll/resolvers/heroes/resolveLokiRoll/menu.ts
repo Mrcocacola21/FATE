@@ -5,6 +5,7 @@ import { canSpendSlots, spendSlots } from "../../../../turnEconomy";
 import {
   ABILITY_LOKI_ILLUSORY_DOUBLE,
   ABILITY_LOKI_LAUGHT,
+  getCharges,
   getAbilityViewsForUnit,
 } from "../../../../abilities";
 import { clearPendingRoll, requestRoll } from "../../../../core";
@@ -65,24 +66,27 @@ function resolveAgainSomeNonsense(
 }
 
 function resolveChickenMenuChoice(state: GameState, lokiId: string): ApplyResult {
+  const loki = getLokiUnit(state, lokiId);
+  if (!loki || getCharges(loki, ABILITY_LOKI_LAUGHT) < COST_CHICKEN) {
+    return { state, events: [] };
+  }
+  if (!canSpendSlots(loki, { action: true })) {
+    return { state, events: [] };
+  }
+
   const options = getLokiChickenTargetIds(state, lokiId);
   if (options.length === 0) {
     return { state, events: [] };
   }
 
-  const spent = spendLaughter(state, lokiId, COST_CHICKEN);
-  if (!spent.ok || !spent.loki) {
-    return { state, events: [] };
-  }
-
   const requested = requestRoll(
-    clearPendingRoll(spent.state),
-    spent.loki.owner,
+    clearPendingRoll(state),
+    loki.owner,
     "lokiChickenTargetChoice",
     { lokiId, options } satisfies LokiChickenTargetChoiceContext,
-    spent.loki.id
+    loki.id
   );
-  return { state: requested.state, events: [...spent.events, ...requested.events] };
+  return requested;
 }
 
 function resolveMindControlMenuChoice(state: GameState, lokiId: string): ApplyResult {
@@ -93,34 +97,23 @@ function resolveMindControlMenuChoice(state: GameState, lokiId: string): ApplyRe
   if (!canSpendSlots(loki, { action: true })) {
     return { state, events: [] };
   }
+  if (getCharges(loki, ABILITY_LOKI_LAUGHT) < COST_MIND_CONTROL) {
+    return { state, events: [] };
+  }
 
   const options = getLokiMindControlEnemyIds(state, lokiId);
   if (options.length === 0) {
     return { state, events: [] };
   }
 
-  const spent = spendLaughter(state, lokiId, COST_MIND_CONTROL);
-  if (!spent.ok || !spent.loki) {
-    return { state, events: [] };
-  }
-
-  const afterAction = spendSlots(spent.loki, { action: true });
-  const stateAfterAction: GameState = {
-    ...spent.state,
-    units: {
-      ...spent.state.units,
-      [afterAction.id]: afterAction,
-    },
-  };
-
   const requested = requestRoll(
-    clearPendingRoll(stateAfterAction),
-    afterAction.owner,
+    clearPendingRoll(state),
+    loki.owner,
     "lokiMindControlEnemyChoice",
     { lokiId, options } satisfies LokiMindControlEnemyChoiceContext,
-    afterAction.id
+    loki.id
   );
-  return { state: requested.state, events: [...spent.events, ...requested.events] };
+  return requested;
 }
 
 function tryActivatePickedAbility(

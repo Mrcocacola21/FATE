@@ -22,11 +22,9 @@ import {
 import { maybeRequestForestMoveCheck } from "./forest";
 import { applyMongolChargeMove } from "./mongolCharge";
 import {
-  applyAdjacencyRevealAfterMove,
   maybeHandleLechyGuideTraveler,
   maybeHandleRiverCarryDrop,
   maybeRequestRiderPathAttacks,
-  resolveSteppedOnHiddenDestination,
 } from "./postMove";
 import type { MoveActionInternal } from "./types";
 import { markCourtGlobalMoveUsed } from "../../ruleDeclarations";
@@ -174,20 +172,6 @@ export function applyMove(
     }
   }
 
-  if (didMove) {
-    const revealAtDestination = resolveSteppedOnHiddenDestination(
-      state,
-      unit,
-      finalTo,
-      pendingValid,
-      hasRiverBoatmanMove,
-      hasDecreeMove
-    );
-    if (revealAtDestination) {
-      return revealAtDestination;
-    }
-  }
-
   const movedUnitBaseRaw: UnitState = hasRiverBoatmanMove
     ? { ...unit, riverBoatmanMovePending: false }
     : spendSlots(unit, { move: true });
@@ -240,12 +224,6 @@ export function applyMove(
 
   if (!updatedUnit.position) {
     return { state: newState, events };
-  }
-
-  if (didMove) {
-    const adjacencyReveal = applyAdjacencyRevealAfterMove(newState, updatedUnit, events);
-    newState = adjacencyReveal.state;
-    events = adjacencyReveal.events;
   }
 
   if (didMove && from) {

@@ -9,6 +9,7 @@ function eventTone(event: GameEvent): string {
     case "attackResolved":
     case "unitDied":
     case "damageBonusApplied":
+    case "lechyStormRollResult":
       return "border-rose-300/80 bg-rose-50/75 text-rose-700 dark:border-rose-900/70 dark:bg-rose-950/30 dark:text-rose-300";
     case "turnStarted":
     case "roundStarted":
@@ -33,6 +34,7 @@ function eventGlyph(event: GameEvent): string {
   switch (event.type) {
     case "attackResolved":
     case "unitDied":
+    case "lechyStormRollResult":
     case "damageBonusApplied":
       return "⚔";
     case "unitHealed":

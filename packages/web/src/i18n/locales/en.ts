@@ -613,7 +613,7 @@ export const en = {
       laughter: {
         summary:
           "Spend Laughter points on Loki’s tricks. Using these options does not reveal Loki from stealth.",
-        gain: "Whenever any game roll is a double, Loki gains 1 Laughter point, up to 15.",
+        gain: "Whenever any game roll is a double, Loki gains 1 Laughter point.",
         options: {
           againSomeNonsense: {
             name: "Again some nonsense",
@@ -736,7 +736,7 @@ export const en = {
     guts: {
       berserk: {
         summary:
-          "Spend 3 charges and an action to enter Berserk Mode. The mode remains active until Guts uses the one-time Exit Berserk action.",
+          "Spend 3 charges to enter Berserk Mode without consuming your action. The mode remains active until Guts uses the one-time Exit Berserk command, which also does not consume your action.",
         options: {
           damage: {
             name: "Melee damage",
@@ -762,7 +762,7 @@ export const en = {
           exit: {
             name: "Exit behavior",
             description:
-              "Exit Berserk consumes an action, can be used once per game, and permanently prevents re-entering Berserk Mode.",
+              "Exit Berserk can be used once per game without consuming your action and permanently prevents re-entering Berserk Mode.",
           },
         },
       },
@@ -945,7 +945,8 @@ export const en = {
     },
     mettaton: {
       rating: {
-        summary: "Rating is Mettaton’s spendable resource for attacks and form unlocks.",
+        summary:
+          "Rating fuels Mettaton's attacks and form thresholds. EX and NEO unlock at their thresholds without spending Rating.",
         gain: "Gain +2 Rating for each successful hit and +1 for each successful defense.",
         exBonus: "After EX, each attack action also grants +1 Rating.",
         neoBonus: "After NEO, every defense roll attempt also grants +1 Rating.",
@@ -957,7 +958,8 @@ export const en = {
           },
           ex: {
             name: "Mettaton EX",
-            description: "Unlock Stage Phenomenon and Laser for the battle.",
+            description:
+              "At the start of Mettaton's turn, unlock Stage Phenomenon and Laser when Rating is at least 5. Rating is not spent.",
           },
           laser: {
             name: "Laser",
@@ -965,7 +967,8 @@ export const en = {
           },
           neo: {
             name: "Mettaton NEO",
-            description: "Unlock Rider path attacks, Berserker features, and Grace.",
+            description:
+              "At the start of Mettaton's turn, unlock Rider path attacks, Berserker features, and Grace when Rating is at least 10. Rating is not spent.",
           },
           finalChord: {
             name: "Final Chord",

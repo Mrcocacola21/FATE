@@ -189,9 +189,20 @@ export function testEventDrivenImpulsesAutoTrigger() {
       makeRngSequence([0.99, 0.99, 0.01, 0.01])
     );
     assert(
-      resolved.state.units[mettaton.id].mettatonExUnlocked === true &&
-        resolved.state.units[mettaton.id].mettatonRating === 1,
-      "Mettaton EX should auto-trigger when a rating gain crosses 5"
+      resolved.state.units[mettaton.id].mettatonExUnlocked !== true &&
+        resolved.state.units[mettaton.id].mettatonRating === 6,
+      "Mettaton EX should wait until turn start after a rating gain crosses 5"
+    );
+
+    const started = applyAction(
+      prepareTurnStart(resolved.state, mettaton.id),
+      { type: "unitStartTurn", unitId: mettaton.id } as any,
+      makeRngSequence([])
+    );
+    assert(
+      started.state.units[mettaton.id].mettatonExUnlocked === true &&
+        started.state.units[mettaton.id].mettatonRating === 6,
+      "Mettaton EX should unlock at turn start without spending Rating"
     );
   }
 

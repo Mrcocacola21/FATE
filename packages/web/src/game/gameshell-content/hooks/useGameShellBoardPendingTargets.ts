@@ -19,6 +19,7 @@ interface UseGameShellBoardPendingTargetsParams {
   isRiverTraLaLaTargetChoice: boolean;
   isRiverTraLaLaDestinationChoice: boolean;
   isChikatiloPlacement: boolean;
+  isGroznyTyrantAttackCellChoice: boolean;
   isGuideTravelerPlacement: boolean;
   isJebeKhansShooterTargetChoice: boolean;
   isHassanTrueEnemyTargetChoice: boolean;
@@ -27,6 +28,28 @@ interface UseGameShellBoardPendingTargetsParams {
   isAsgoreSoulParadeJusticeTargetChoice: boolean;
   isAsgoreSoulParadeIntegrityDestination: boolean;
   isHassanAssassinOrderSelection: boolean;
+}
+
+type GroznyTyrantAttackCellOption = {
+  targetId: string;
+  mode: "normal" | "invadeTime";
+  position: Coord;
+};
+
+function isGroznyTyrantAttackCellOption(
+  value: unknown
+): value is GroznyTyrantAttackCellOption {
+  return (
+    !!value &&
+    typeof value === "object" &&
+    typeof (value as { targetId?: unknown }).targetId === "string" &&
+    ((value as { mode?: unknown }).mode === "normal" ||
+      (value as { mode?: unknown }).mode === "invadeTime") &&
+    typeof (value as { position?: { col?: unknown } }).position?.col ===
+      "number" &&
+    typeof (value as { position?: { row?: unknown } }).position?.row ===
+      "number"
+  );
 }
 
 export function useGameShellBoardPendingTargets({
@@ -45,6 +68,7 @@ export function useGameShellBoardPendingTargets({
   isRiverTraLaLaTargetChoice,
   isRiverTraLaLaDestinationChoice,
   isChikatiloPlacement,
+  isGroznyTyrantAttackCellChoice,
   isGuideTravelerPlacement,
   isJebeKhansShooterTargetChoice,
   isHassanTrueEnemyTargetChoice,
@@ -212,6 +236,26 @@ export function useGameShellBoardPendingTargets({
     [chikatiloPlacementCoords]
   );
 
+  const groznyTyrantAttackCellOptions = useMemo(() => {
+    if (!isGroznyTyrantAttackCellChoice) return [] as GroznyTyrantAttackCellOption[];
+    const ctx = pendingRoll?.context as { options?: unknown } | undefined;
+    if (!Array.isArray(ctx?.options)) return [] as GroznyTyrantAttackCellOption[];
+    return ctx.options.filter(isGroznyTyrantAttackCellOption);
+  }, [isGroznyTyrantAttackCellChoice, pendingRoll]);
+  const groznyTyrantAttackCellKeys = useMemo(
+    () =>
+      new Set(
+        groznyTyrantAttackCellOptions.map((option) =>
+          coordKey(option.position)
+        )
+      ),
+    [groznyTyrantAttackCellOptions]
+  );
+  const groznyTyrantAllowSkip =
+    isGroznyTyrantAttackCellChoice &&
+    (pendingRoll?.context as { allowSkip?: unknown } | undefined)?.allowSkip ===
+      true;
+
   const guideTravelerPlacementCoords = useMemo(() => {
     if (!isGuideTravelerPlacement) return [] as Coord[];
     const ctx = pendingRoll?.context as
@@ -273,6 +317,9 @@ export function useGameShellBoardPendingTargets({
     riverTraLaLaDestinationKeys,
     chikatiloPlacementCoords,
     chikatiloPlacementKeys,
+    groznyTyrantAttackCellOptions,
+    groznyTyrantAttackCellKeys,
+    groznyTyrantAllowSkip,
     guideTravelerPlacementCoords,
     guideTravelerPlacementKeys,
     ...actorTargets,

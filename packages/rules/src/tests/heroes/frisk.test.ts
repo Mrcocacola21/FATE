@@ -14,6 +14,25 @@ import {
   setupFriskState,
   toBattleState,
 } from "../helpers/testUtils";
+
+function resolvePendingChoice(
+  state: GameState,
+  choice: unknown,
+  rng = makeRngSequence([])
+) {
+  assert(state.pendingRoll, "expected a pending roll to resolve");
+  return applyAction(
+    state,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: state.pendingRoll.id,
+      player: state.pendingRoll.player,
+      choice,
+    } as any,
+    rng
+  );
+}
+
 export function testFriskPacifismIncrementsOnMissIncludingCleanSoul() {
   let { state, frisk } = setupFriskState();
   const attacker = Object.values(state.units).find(
@@ -25,7 +44,7 @@ export function testFriskPacifismIncrementsOnMissIncludingCleanSoul() {
     friskCleanSoulShield: true,
     charges: {
       ...state.units[frisk.id].charges,
-      [ABILITY_FRISK_PACIFISM]: 0,
+      [ABILITY_FRISK_PACIFISM]: 30,
       [ABILITY_FRISK_GENOCIDE]: 0,
     },
   });
@@ -55,8 +74,8 @@ export function testFriskPacifismIncrementsOnMissIncludingCleanSoul() {
 
   const friskAfter = resolved.state.units[frisk.id];
   assert(
-    friskAfter.charges[ABILITY_FRISK_PACIFISM] === 1,
-    "Frisk should gain +1 Pacifism on miss"
+    friskAfter.charges[ABILITY_FRISK_PACIFISM] === 31,
+    "Frisk should gain Pacifism beyond the old 30-point cap"
   );
   assert(
     friskAfter.friskCleanSoulShield === false,
@@ -77,7 +96,7 @@ export function testFriskGenocideIncrementsOnHit() {
     position: { col: 4, row: 4 },
     charges: {
       ...state.units[frisk.id].charges,
-      [ABILITY_FRISK_GENOCIDE]: 0,
+      [ABILITY_FRISK_GENOCIDE]: 30,
     },
   });
   state = setUnit(state, target.id, { position: { col: 4, row: 5 } });
@@ -104,8 +123,8 @@ export function testFriskGenocideIncrementsOnHit() {
   assert(attackEvent, "Frisk attack should resolve");
   assert(attackEvent.hit, "test setup should produce a successful Frisk hit");
   assert(
-    resolved.state.units[frisk.id].charges[ABILITY_FRISK_GENOCIDE] === 1,
-    "Frisk should gain +1 Genocide on hit"
+    resolved.state.units[frisk.id].charges[ABILITY_FRISK_GENOCIDE] === 31,
+    "Frisk should gain Genocide beyond the old 30-point cap"
   );
 
   console.log("frisk_genocide_increments_on_hit passed");
@@ -258,6 +277,429 @@ export function testFriskChildsCryNegatesDamageAndSpendsPoints() {
   );
 
   console.log("frisk_childs_cry_negates_damage_and_spends_points passed");
+}
+
+
+export function testFriskPacifismActiveOptionsSpendOnResolutionOnly() {
+  let { state, frisk } = setupFriskState();
+  const ally = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.id !== frisk.id
+  )!;
+  const enemy = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "knight"
+  )!;
+
+  state = setUnit(state, frisk.id, {
+    position: { col: 4, row: 4 },
+    charges: {
+      ...state.units[frisk.id].charges,
+      [ABILITY_FRISK_PACIFISM]: 13,
+      [ABILITY_FRISK_GENOCIDE]: 0,
+    },
+    turn: makeEmptyTurnEconomy(),
+  });
+  state = setUnit(state, ally.id, { position: { col: 5, row: 4 }, hp: 1 });
+  state = setUnit(state, enemy.id, { position: { col: 4, row: 5 } });
+  state = initKnowledgeForOwners(toBattleState(state, "P1", frisk.id));
+
+  const opened = applyAction(
+    state,
+    { type: "useAbility", unitId: frisk.id, abilityId: ABILITY_FRISK_PACIFISM } as any,
+    makeRngSequence([])
+  );
+  assert(
+    opened.state.pendingRoll?.kind === "friskPacifismChoice",
+    "Pacifism should open an option menu"
+  );
+  assert(
+    opened.state.units[frisk.id].charges[ABILITY_FRISK_PACIFISM] === 13,
+    "opening Pacifism should not spend points"
+  );
+  assert(
+    opened.state.units[frisk.id].hasActedThisTurn === false,
+    "opening Pacifism should not spend the main action"
+  );
+
+  const hugsChosen = resolvePendingChoice(opened.state, {
+    type: "friskPacifismOption",
+    option: "hugs",
+  });
+  assert(
+    hugsChosen.state.pendingRoll?.kind === "friskPacifismHugsTargetChoice",
+    "Hugs should ask for a board target"
+  );
+  assert(
+    hugsChosen.state.units[frisk.id].charges[ABILITY_FRISK_PACIFISM] === 13,
+    "entering Hugs target selection should not spend points"
+  );
+  assert(
+    hugsChosen.state.units[frisk.id].hasActedThisTurn === false,
+    "entering Hugs target selection should not spend the main action"
+  );
+
+  const canceled = resolvePendingChoice(hugsChosen.state, "skip");
+  assert(!canceled.state.pendingRoll, "cancelling Hugs target selection should clear it");
+  assert(
+    canceled.state.units[frisk.id].charges[ABILITY_FRISK_PACIFISM] === 13,
+    "cancelling Hugs target selection should not spend points"
+  );
+  assert(
+    canceled.state.units[frisk.id].hasActedThisTurn === false,
+    "cancelling Hugs target selection should not spend the main action"
+  );
+
+  const reopened = applyAction(
+    canceled.state,
+    { type: "useAbility", unitId: frisk.id, abilityId: ABILITY_FRISK_PACIFISM } as any,
+    makeRngSequence([])
+  );
+  const hugsAgain = resolvePendingChoice(reopened.state, {
+    type: "friskPacifismOption",
+    option: "hugs",
+  });
+  const hugged = resolvePendingChoice(hugsAgain.state, {
+    type: "friskPacifismHugsTarget",
+    targetId: enemy.id,
+  });
+  assert(!hugged.state.pendingRoll, "Hugs should resolve after picking a target");
+  assert(
+    hugged.state.units[frisk.id].charges[ABILITY_FRISK_PACIFISM] === 10,
+    "Hugs should spend exactly 3 Pacifism points on target resolution"
+  );
+  assert(
+    hugged.state.units[frisk.id].hasActedThisTurn === true,
+    "Hugs should spend the main action on target resolution"
+  );
+  assert(
+    hugged.state.units[enemy.id].movementDisabledNextTurn === true,
+    "Hugs should disable the picked target's next movement"
+  );
+  const blockedAttack = applyAction(
+    hugged.state,
+    { type: "attack", attackerId: frisk.id, defenderId: enemy.id } as any,
+    makeRngSequence([])
+  );
+  assert(
+    !blockedAttack.state.pendingRoll,
+    "Frisk should not be able to attack after Hugs spends the main action"
+  );
+
+  let { state: warmState, frisk: warmFrisk } = setupFriskState();
+  const warmAlly = Object.values(warmState.units).find(
+    (unit) => unit.owner === "P1" && unit.id !== warmFrisk.id
+  )!;
+  const warmEnemy = Object.values(warmState.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "knight"
+  )!;
+
+  warmState = setUnit(warmState, warmFrisk.id, {
+    position: { col: 4, row: 4 },
+    charges: {
+      ...warmState.units[warmFrisk.id].charges,
+      [ABILITY_FRISK_PACIFISM]: 10,
+      [ABILITY_FRISK_GENOCIDE]: 0,
+    },
+    turn: makeEmptyTurnEconomy(),
+  });
+  warmState = setUnit(warmState, warmAlly.id, {
+    position: { col: 5, row: 4 },
+    hp: 1,
+  });
+  warmState = setUnit(warmState, warmEnemy.id, { position: { col: 4, row: 5 } });
+  warmState = initKnowledgeForOwners(toBattleState(warmState, "P1", warmFrisk.id));
+
+  const warmOpened = applyAction(
+    warmState,
+    {
+      type: "useAbility",
+      unitId: warmFrisk.id,
+      abilityId: ABILITY_FRISK_PACIFISM,
+    } as any,
+    makeRngSequence([])
+  );
+  const warmWordsOptions = (warmOpened.state.pendingRoll?.context
+    ?.warmWordsOptions ?? []) as string[];
+  assert(
+    warmWordsOptions.includes(warmFrisk.id),
+    "Warm Words should allow Frisk to target self"
+  );
+  assert(
+    warmWordsOptions.includes(warmAlly.id),
+    "Warm Words should allow allied targets within 2"
+  );
+  assert(
+    !warmWordsOptions.includes(warmEnemy.id),
+    "Warm Words should not allow enemy targets"
+  );
+
+  const warmChosen = resolvePendingChoice(warmOpened.state, {
+    type: "friskPacifismOption",
+    option: "warmWords",
+  });
+  assert(
+    warmChosen.state.pendingRoll?.kind === "friskWarmWordsTargetChoice",
+    "Warm Words should ask for an allied target"
+  );
+  assert(
+    warmChosen.state.units[warmFrisk.id].charges[ABILITY_FRISK_PACIFISM] === 10,
+    "entering Warm Words target selection should not spend points"
+  );
+  assert(
+    warmChosen.state.units[warmFrisk.id].hasActedThisTurn === false,
+    "entering Warm Words target selection should not spend the main action"
+  );
+
+  const warmTargetPicked = resolvePendingChoice(warmChosen.state, {
+    type: "friskWarmWordsTarget",
+    targetId: warmAlly.id,
+  });
+  assert(
+    warmTargetPicked.state.pendingRoll?.kind === "friskWarmWordsHealRoll",
+    "Warm Words should roll healing after target selection"
+  );
+  assert(
+    warmTargetPicked.state.units[warmFrisk.id].charges[ABILITY_FRISK_PACIFISM] === 10,
+    "picking a Warm Words target should not spend before the heal resolves"
+  );
+  assert(
+    warmTargetPicked.state.units[warmFrisk.id].hasActedThisTurn === false,
+    "picking a Warm Words target should not spend the main action before the heal resolves"
+  );
+
+  const healed = resolvePendingChoice(
+    warmTargetPicked.state,
+    undefined,
+    makeRngSequence([0.99])
+  );
+  assert(
+    healed.state.units[warmFrisk.id].charges[ABILITY_FRISK_PACIFISM] === 0,
+    "Warm Words should spend exactly 10 Pacifism points when the heal resolves"
+  );
+  assert(
+    healed.state.units[warmFrisk.id].hasActedThisTurn === true,
+    "Warm Words should spend the main action when the heal resolves"
+  );
+  assert(
+    healed.state.units[warmAlly.id].hp > 1,
+    "Warm Words should heal the picked allied target"
+  );
+
+  console.log("frisk_pacifism_active_options_spend_on_resolution_only passed");
+}
+
+
+export function testFriskGenocideActiveOptionsSpendOnResolutionOnly() {
+  let { state, frisk } = setupFriskState();
+  const hiddenEnemy = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "knight"
+  )!;
+
+  state = setUnit(state, frisk.id, {
+    position: { col: 4, row: 4 },
+    charges: {
+      ...state.units[frisk.id].charges,
+      [ABILITY_FRISK_PACIFISM]: 0,
+      [ABILITY_FRISK_GENOCIDE]: 15,
+    },
+    turn: makeEmptyTurnEconomy(),
+  });
+  state = setUnit(state, hiddenEnemy.id, {
+    position: { col: 4, row: 5 },
+    isStealthed: true,
+    stealthTurnsLeft: 2,
+  });
+  state = initKnowledgeForOwners(toBattleState(state, "P1", frisk.id));
+
+  const opened = applyAction(
+    state,
+    { type: "useAbility", unitId: frisk.id, abilityId: ABILITY_FRISK_GENOCIDE } as any,
+    makeRngSequence([])
+  );
+  assert(
+    opened.state.pendingRoll?.kind === "friskGenocideChoice",
+    "Genocide should open an option menu"
+  );
+  assert(
+    opened.state.units[frisk.id].charges[ABILITY_FRISK_GENOCIDE] === 15,
+    "opening Genocide should not spend points"
+  );
+
+  const keenEyeChosen = resolvePendingChoice(opened.state, {
+    type: "friskGenocideOption",
+    option: "keenEye",
+  });
+  assert(
+    keenEyeChosen.state.pendingRoll?.kind === "friskKeenEyeChoice",
+    "Keen Eye should ask for an enemy target"
+  );
+  assert(
+    keenEyeChosen.state.units[frisk.id].charges[ABILITY_FRISK_GENOCIDE] === 15,
+    "entering Keen Eye target selection should not spend points"
+  );
+  assert(
+    keenEyeChosen.state.units[frisk.id].hasActedThisTurn === false,
+    "entering Keen Eye target selection should not spend the main action"
+  );
+
+  const revealed = resolvePendingChoice(
+    keenEyeChosen.state,
+    { type: "friskKeenEyeTarget", targetId: hiddenEnemy.id },
+    makeRngSequence([0.99])
+  );
+  assert(!revealed.state.pendingRoll, "Keen Eye should resolve after picking a target");
+  assert(
+    revealed.state.units[frisk.id].charges[ABILITY_FRISK_GENOCIDE] === 10,
+    "Keen Eye should spend exactly 5 Genocide points on target resolution"
+  );
+  assert(
+    revealed.state.units[frisk.id].hasActedThisTurn === true,
+    "Keen Eye should spend the main action on target resolution"
+  );
+  assert(
+    revealed.state.units[hiddenEnemy.id].isStealthed === false,
+    "Keen Eye should reveal the picked hidden enemy"
+  );
+  const blockedAttack = applyAction(
+    revealed.state,
+    { type: "attack", attackerId: frisk.id, defenderId: hiddenEnemy.id } as any,
+    makeRngSequence([])
+  );
+  assert(
+    !blockedAttack.state.pendingRoll,
+    "Frisk should not be able to attack after Keen Eye spends the main action"
+  );
+
+  let { state: precisionState, frisk: precisionFrisk } = setupFriskState();
+  const precisionTarget = Object.values(precisionState.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "knight"
+  )!;
+
+  precisionState = setUnit(precisionState, precisionFrisk.id, {
+    position: { col: 4, row: 4 },
+    charges: {
+      ...precisionState.units[precisionFrisk.id].charges,
+      [ABILITY_FRISK_PACIFISM]: 0,
+      [ABILITY_FRISK_GENOCIDE]: 10,
+    },
+    turn: makeEmptyTurnEconomy(),
+  });
+  precisionState = setUnit(precisionState, precisionTarget.id, {
+    position: { col: 4, row: 5 },
+    hp: 20,
+  });
+  precisionState = initKnowledgeForOwners(
+    toBattleState(precisionState, "P1", precisionFrisk.id)
+  );
+  const precisionDamage = precisionState.units[precisionFrisk.id].attack * 2;
+
+  const precisionOpened = applyAction(
+    precisionState,
+    {
+      type: "useAbility",
+      unitId: precisionFrisk.id,
+      abilityId: ABILITY_FRISK_GENOCIDE,
+    } as any,
+    makeRngSequence([])
+  );
+  const precisionChosen = resolvePendingChoice(precisionOpened.state, {
+    type: "friskGenocideOption",
+    option: "precisionStrike",
+  });
+  assert(
+    precisionChosen.state.pendingRoll?.kind === "friskPrecisionStrikeTargetChoice",
+    "Precision Strike should ask for an attack target"
+  );
+  assert(
+    precisionChosen.state.units[precisionFrisk.id].charges[ABILITY_FRISK_GENOCIDE] ===
+      10,
+    "entering Precision Strike target selection should not spend points"
+  );
+  assert(
+    precisionChosen.state.units[precisionFrisk.id].hasActedThisTurn === false &&
+      precisionChosen.state.units[precisionFrisk.id].hasAttackedThisTurn === false,
+    "entering Precision Strike target selection should not spend attack/action slots"
+  );
+
+  const precisionCanceled = resolvePendingChoice(precisionChosen.state, "skip");
+  assert(
+    !precisionCanceled.state.pendingRoll,
+    "cancelling Precision Strike target selection should clear it"
+  );
+  assert(
+    precisionCanceled.state.units[precisionFrisk.id].charges[ABILITY_FRISK_GENOCIDE] ===
+      10,
+    "cancelling Precision Strike target selection should not spend points"
+  );
+  assert(
+    precisionCanceled.state.units[precisionFrisk.id].hasActedThisTurn === false &&
+      precisionCanceled.state.units[precisionFrisk.id].hasAttackedThisTurn === false,
+    "cancelling Precision Strike target selection should not spend attack/action slots"
+  );
+
+  const precisionReopened = applyAction(
+    precisionCanceled.state,
+    {
+      type: "useAbility",
+      unitId: precisionFrisk.id,
+      abilityId: ABILITY_FRISK_GENOCIDE,
+    } as any,
+    makeRngSequence([])
+  );
+  const precisionChosenAgain = resolvePendingChoice(precisionReopened.state, {
+    type: "friskGenocideOption",
+    option: "precisionStrike",
+  });
+  const precisionTargetPicked = resolvePendingChoice(precisionChosenAgain.state, {
+    type: "friskPrecisionStrikeTarget",
+    targetId: precisionTarget.id,
+  });
+  assert(
+    precisionTargetPicked.state.pendingRoll?.kind === "attack_attackerRoll",
+    "Precision Strike target resolution should start the attack"
+  );
+  assert(
+    precisionTargetPicked.state.units[precisionFrisk.id].charges[
+      ABILITY_FRISK_GENOCIDE
+    ] === 0,
+    "Precision Strike should spend exactly 10 Genocide points on target resolution"
+  );
+  assert(
+    precisionTargetPicked.state.units[precisionFrisk.id].hasActedThisTurn === false &&
+      precisionTargetPicked.state.units[precisionFrisk.id].hasAttackedThisTurn === false,
+    "Precision Strike should wait for attack resolution before spending attack/action slots"
+  );
+
+  const precisionResolved = resolveAllPendingRollsWithEvents(
+    precisionTargetPicked.state,
+    makeRngSequence([0.99, 0.99, 0.01, 0.01])
+  );
+  const precisionEvents = [
+    ...precisionTargetPicked.events,
+    ...precisionResolved.events,
+  ];
+  const precisionAttack = precisionEvents.find(
+    (event) =>
+      event.type === "attackResolved" &&
+      event.attackerId === precisionFrisk.id &&
+      event.defenderId === precisionTarget.id
+  ) as Extract<GameEvent, { type: "attackResolved" }> | undefined;
+  assert(precisionAttack, "Precision Strike attack should resolve");
+  assert(precisionAttack.hit, "Precision Strike should auto-hit");
+  assert(
+    precisionAttack.damage === precisionDamage,
+    "Precision Strike should deal double Frisk's attack damage"
+  );
+  assert(
+    precisionResolved.state.units[precisionFrisk.id].hasActedThisTurn === true &&
+      precisionResolved.state.units[precisionFrisk.id].hasAttackedThisTurn === true,
+    "Precision Strike should spend attack/action slots after the attack resolves"
+  );
+  assert(
+    precisionResolved.state.units[precisionFrisk.id].friskPrecisionStrikeReady === false,
+    "Precision Strike readiness should clear after the attack resolves"
+  );
+
+  console.log("frisk_genocide_active_options_spend_on_resolution_only passed");
 }
 
 

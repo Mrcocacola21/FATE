@@ -47,6 +47,8 @@ export interface BuildHighlightedCellsArgs {
   riverTraLaLaDestinationOptions: Coord[];
   isChikatiloPlacement: boolean;
   chikatiloPlacementCoords: Coord[];
+  isGroznyTyrantAttackCellChoice: boolean;
+  groznyTyrantAttackCellKeys: Set<string>;
   isGuideTravelerPlacement: boolean;
   guideTravelerPlacementCoords: Coord[];
   isJebeKhansShooterTargetChoice: boolean;
@@ -74,6 +76,8 @@ export interface BuildHighlightedCellsArgs {
   friskPacifismHugsTargetKeys: Set<string>;
   isFriskWarmWordsTargetChoice: boolean;
   friskWarmWordsTargetKeys: Set<string>;
+  isFriskPrecisionStrikeTargetChoice: boolean;
+  friskPrecisionStrikeTargetKeys: Set<string>;
   hassanTrueEnemyCandidateKeys: Set<string>;
   selectedUnit: UnitState | null;
   pendingMoveForSelected: MoveModeSource | null;
@@ -127,6 +131,8 @@ export function buildHighlightedCells({
   riverTraLaLaDestinationOptions,
   isChikatiloPlacement,
   chikatiloPlacementCoords,
+  isGroznyTyrantAttackCellChoice,
+  groznyTyrantAttackCellKeys,
   isGuideTravelerPlacement,
   guideTravelerPlacementCoords,
   isJebeKhansShooterTargetChoice,
@@ -154,6 +160,8 @@ export function buildHighlightedCells({
   friskPacifismHugsTargetKeys,
   isFriskWarmWordsTargetChoice,
   friskWarmWordsTargetKeys,
+  isFriskPrecisionStrikeTargetChoice,
+  friskPrecisionStrikeTargetKeys,
   hassanTrueEnemyCandidateKeys,
   selectedUnit,
   pendingMoveForSelected,
@@ -261,6 +269,13 @@ export function buildHighlightedCells({
     return highlights;
   }
 
+  if (isGroznyTyrantAttackCellChoice) {
+    for (const key of groznyTyrantAttackCellKeys) {
+      highlights[key] = "move";
+    }
+    return highlights;
+  }
+
   if (isGuideTravelerPlacement) {
     for (const coord of guideTravelerPlacementCoords) {
       highlights[coordKey(coord)] = "place";
@@ -340,6 +355,13 @@ export function buildHighlightedCells({
 
   if (isFriskWarmWordsTargetChoice) {
     for (const key of friskWarmWordsTargetKeys) {
+      highlights[key] = "attack";
+    }
+    return highlights;
+  }
+
+  if (isFriskPrecisionStrikeTargetChoice) {
+    for (const key of friskPrecisionStrikeTargetKeys) {
       highlights[key] = "attack";
     }
     return highlights;

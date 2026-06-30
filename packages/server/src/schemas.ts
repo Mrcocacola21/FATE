@@ -84,6 +84,12 @@ const ResolveRollChoiceSchema = z.union([
     position: CoordSchema,
   }),
   z.object({
+    type: z.literal("groznyTyrantAttackCell"),
+    mode: z.union([z.literal("normal"), z.literal("invadeTime")]),
+    targetId: z.string().min(1),
+    position: CoordSchema,
+  }),
+  z.object({
     type: z.literal("lechyGuideTravelerPlace"),
     position: CoordSchema,
   }),
@@ -138,6 +144,11 @@ const ResolveRollChoiceSchema = z.union([
     targetId: z.string().min(1),
   }),
   z.object({
+    type: z.literal("gutsBerserkAttackMode"),
+    mode: z.union([z.literal("single"), z.literal("aoe")]),
+    targetId: z.string().min(1),
+  }),
+  z.object({
     type: z.literal("friskPacifismOption"),
     option: z.union([
       z.literal("hugs"),
@@ -164,6 +175,10 @@ const ResolveRollChoiceSchema = z.union([
   }),
   z.object({
     type: z.literal("friskKeenEyeTarget"),
+    targetId: z.string().min(1),
+  }),
+  z.object({
+    type: z.literal("friskPrecisionStrikeTarget"),
     targetId: z.string().min(1),
   }),
   z.object({

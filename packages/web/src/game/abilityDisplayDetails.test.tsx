@@ -44,7 +44,7 @@ function makeUnit(charges: Record<string, number>): UnitState {
   };
 }
 
-function makeAbility(id: string, currentCharges: number, maxCharges: number): AbilityView {
+function makeAbility(id: string, currentCharges: number, maxCharges?: number): AbilityView {
   return {
     id,
     name: id,
@@ -116,7 +116,7 @@ test("Asgore Soul Parade display metadata contains all six numbered outcomes", (
 test("resource option availability follows the projected current counter", () => {
   const details = getAbilityDisplayDetails(FRISK_PACIFISM_ID);
   assert(details);
-  const ability = makeAbility(FRISK_PACIFISM_ID, 4, 30);
+  const ability = makeAbility(FRISK_PACIFISM_ID, 4);
   const unit = makeUnit({ [FRISK_PACIFISM_ID]: 4 });
   const options = details.sections?.[0]?.options ?? [];
 
@@ -137,7 +137,7 @@ test("resource option availability follows the projected current counter", () =>
 test("nested ability details render in English and Ukrainian", () => {
   const details = getAbilityDisplayDetails(FRISK_PACIFISM_ID);
   assert(details);
-  const ability = makeAbility(FRISK_PACIFISM_ID, 5, 30);
+  const ability = makeAbility(FRISK_PACIFISM_ID, 5);
   const unit = makeUnit({ [FRISK_PACIFISM_ID]: 5 });
 
   setLanguage("en", { setItem: () => undefined });
@@ -146,7 +146,8 @@ test("nested ability details render in English and Ukrainian", () => {
   );
   assert.match(english, /Hugs/);
   assert.match(english, /Child’s Cry/);
-  assert.match(english, /5<span/);
+  assert.match(english, />5</);
+  assert.doesNotMatch(english, /\/30/);
 
   setLanguage("uk", { setItem: () => undefined });
   const ukrainian = renderToStaticMarkup(
@@ -173,8 +174,9 @@ test("Figure Set ability cards reuse structured read-only details", () => {
   );
 
   assert.match(markup, /Gain Pacifism points whenever an attack against Frisk misses/);
-  assert.match(markup, /Pacifism points capacity/);
-  assert.match(markup, />30</);
+  assert.doesNotMatch(markup, /Pacifism points capacity/);
+  assert.doesNotMatch(markup, />30</);
+  assert.doesNotMatch(markup, /\/30/);
   assert.match(markup, /Hugs/);
   assert.match(markup, /Power of Friendship/);
   assert.doesNotMatch(markup, /legacy summary/);

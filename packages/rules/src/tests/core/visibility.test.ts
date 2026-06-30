@@ -681,7 +681,7 @@ export function testAttackAlreadyRevealedUnit() {
 }
 
 
-export function testAdjacencyRevealAfterMove() {
+export function testAdjacentHiddenEnemyStaysHiddenAfterMove() {
   const rng = new SeededRNG(99);
   let state = createEmptyGame();
   const a1 = createDefaultArmy("P1");
@@ -724,16 +724,21 @@ export function testAdjacencyRevealAfterMove() {
   );
 
   assert(
-    next.units[hidden.id].isStealthed === false,
-    "adjacent hidden unit should be revealed"
+    next.units[mover.id].position!.col === 3 &&
+      next.units[mover.id].position!.row === 4,
+    "mover should complete normal movement"
   );
-  assert(revealEvent, "stealthRevealed event should be emitted");
   assert(
-    next.knowledge["P1"][hidden.id] === true,
-    "mover knowledge should include revealed unit"
+    next.units[hidden.id].isStealthed === true,
+    "adjacent hidden unit should stay hidden"
+  );
+  assert(!revealEvent, "adjacent movement should not emit stealthRevealed");
+  assert(
+    next.knowledge["P1"][hidden.id] !== true,
+    "mover knowledge should not learn adjacent hidden unit"
   );
 
-  console.log("adjacency_reveal_after_move passed");
+  console.log("adjacent_hidden_enemy_stays_hidden_after_move passed");
 }
 
 
@@ -979,7 +984,7 @@ export function testAllyCannotStepOnStealthedAlly() {
 }
 
 
-export function testEnemyStepsOnUnknownStealthedRevealsAndCancels() {
+export function testEnemyCanStepOnUnknownStealthedWithoutReveal() {
   const rng = new SeededRNG(88);
   let state = createEmptyGame();
   const a1 = createDefaultArmy("P1");
@@ -1007,20 +1012,65 @@ export function testEnemyStepsOnUnknownStealthedRevealsAndCancels() {
   );
 
   assert(
-    res.state.units[mover.id].position!.row === 3 &&
+    res.state.units[mover.id].position!.row === 4 &&
       res.state.units[mover.id].position!.col === 3,
-    "mover should stay in place"
+    "mover should complete movement onto an unknown hidden enemy cell"
   );
   assert(res.state.units[mover.id].hasMovedThisTurn === true, "move should be spent");
-  assert(res.state.units[hidden.id].isStealthed === false, "hidden enemy should be revealed");
-  assert(res.state.knowledge["P1"][hidden.id] === true, "mover knowledge should include revealed enemy");
+  assert(res.state.units[hidden.id].isStealthed === true, "hidden enemy should remain stealthed");
+  assert(res.state.knowledge["P1"][hidden.id] !== true, "mover knowledge should not include hidden enemy");
 
   const revealEvent = res.events.find(
-    (e) => e.type === "stealthRevealed" && e.unitId === hidden.id && e.reason === "steppedOnHidden"
+    (e) => e.type === "stealthRevealed" && e.unitId === hidden.id
   );
-  assert(revealEvent, "stealthRevealed should be emitted with steppedOnHidden reason");
+  assert(!revealEvent, "stepping onto unknown hidden enemy should not reveal it");
 
-  console.log("enemy_steps_on_unknown_stealthed_reveals_and_cancels passed");
+  console.log("enemy_can_step_on_unknown_stealthed_without_reveal passed");
+}
+
+
+export function testUnknownStealthedEnemyDoesNotBlockArcherLine() {
+  const rng = new SeededRNG(89);
+  let state = createEmptyGame();
+  const a1 = createDefaultArmy("P1");
+  const a2 = createDefaultArmy("P2");
+  state = attachArmy(state, a1);
+  state = attachArmy(state, a2);
+
+  const archer = Object.values(state.units).find((u) => u.owner === "P1" && u.class === "archer")!;
+  const hidden = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "assassin")!;
+  const visible = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "knight")!;
+
+  state = setUnit(state, archer.id, { position: { col: 2, row: 2 } });
+  state = setUnit(state, hidden.id, {
+    position: { col: 2, row: 3 },
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
+  state = setUnit(state, visible.id, { position: { col: 2, row: 4 } });
+
+  state = toBattleState(state, "P1", archer.id);
+  state = initKnowledgeForOwners(state);
+
+  const initial = applyAction(
+    state,
+    { type: "attack", attackerId: archer.id, defenderId: visible.id } as any,
+    rng
+  );
+  const resolved = resolveAllPendingRolls(initial.state, rng);
+  const attackEvent = resolved.events.find(
+    (e) => e.type === "attackResolved" && e.defenderId === visible.id
+  );
+  const revealEvent = resolved.events.find(
+    (e) => e.type === "stealthRevealed" && e.unitId === hidden.id
+  );
+
+  assert(attackEvent, "archer should be able to attack visible target behind unknown hidden enemy");
+  assert(resolved.state.units[hidden.id].isStealthed === true, "hidden line occupant should stay hidden");
+  assert(!revealEvent, "line scan should not reveal unknown hidden enemy");
+  assert(resolved.state.knowledge["P1"][hidden.id] !== true, "line scan should not learn hidden enemy");
+
+  console.log("unknown_stealthed_enemy_does_not_block_archer_line passed");
 }
 
 

@@ -101,6 +101,14 @@ export interface JebeKhansShooterTargetChoiceContext
   lastTargetId?: string;
 }
 
+export interface GutsBerserkAttackChoiceContext
+  extends Record<string, unknown> {
+  gutsId: string;
+  targetId: string;
+  singleTargetOptions: string[];
+  aoeTargetIds: string[];
+}
+
 export interface HassanTrueEnemyTargetChoiceContext
   extends Record<string, unknown> {
   hassanId: string;

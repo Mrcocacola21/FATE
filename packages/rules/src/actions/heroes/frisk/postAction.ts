@@ -8,15 +8,13 @@ import {
 import { isFrisk } from "./helpers";
 import { tryApplyFriskPowerOfFriendship } from "./friendship";
 
-const FRISK_COUNTER_CAP = 30;
-
 function addFriskCounter(
   unit: UnitState,
   abilityId: string,
   delta: number
 ): UnitState {
   const current = getCharges(unit, abilityId);
-  const next = Math.max(0, Math.min(FRISK_COUNTER_CAP, current + delta));
+  const next = Math.max(0, current + delta);
   if (next === current) return unit;
   return setCharges(unit, abilityId, next);
 }

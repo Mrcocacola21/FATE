@@ -27,6 +27,8 @@ export function useGameShellViewModel() {
     isRiverTraLaLaTargetChoice: core.pending.isRiverTraLaLaTargetChoice,
     isRiverTraLaLaDestinationChoice: core.pending.isRiverTraLaLaDestinationChoice,
     isChikatiloPlacement: core.pending.isChikatiloPlacement,
+    isGroznyTyrantAttackCellChoice:
+      core.pending.isGroznyTyrantAttackCellChoice,
     isGuideTravelerPlacement: core.pending.isGuideTravelerPlacement,
     isJebeKhansShooterTargetChoice: core.pending.isJebeKhansShooterTargetChoice,
     isHassanTrueEnemyTargetChoice: core.pending.isHassanTrueEnemyTargetChoice,
@@ -49,6 +51,8 @@ export function useGameShellViewModel() {
     isFriskWarmWordsTargetChoice: core.pending.isFriskWarmWordsTargetChoice,
     isFriskGenocideChoice: core.pending.isFriskGenocideChoice,
     isFriskKeenEyeChoice: core.pending.isFriskKeenEyeChoice,
+    isFriskPrecisionStrikeTargetChoice:
+      core.pending.isFriskPrecisionStrikeTargetChoice,
     isLokiLaughtChoice: core.pending.isLokiLaughtChoice,
     isLokiChickenTargetChoice: core.pending.isLokiChickenTargetChoice,
     isLokiMindControlEnemyChoice: core.pending.isLokiMindControlEnemyChoice,
@@ -130,6 +134,8 @@ export function useGameShellViewModel() {
     isRiverTraLaLaTargetChoice: core.pending.isRiverTraLaLaTargetChoice,
     isRiverTraLaLaDestinationChoice: core.pending.isRiverTraLaLaDestinationChoice,
     isChikatiloPlacement: core.pending.isChikatiloPlacement,
+    isGroznyTyrantAttackCellChoice:
+      core.pending.isGroznyTyrantAttackCellChoice,
     isGuideTravelerPlacement: core.pending.isGuideTravelerPlacement,
     isJebeKhansShooterTargetChoice: core.pending.isJebeKhansShooterTargetChoice,
     isHassanTrueEnemyTargetChoice: core.pending.isHassanTrueEnemyTargetChoice,
@@ -148,6 +154,8 @@ export function useGameShellViewModel() {
     isLokiMindControlTargetChoice: core.pending.isLokiMindControlTargetChoice,
     isFriskPacifismHugsTargetChoice: core.pending.isFriskPacifismHugsTargetChoice,
     isFriskWarmWordsTargetChoice: core.pending.isFriskWarmWordsTargetChoice,
+    isFriskPrecisionStrikeTargetChoice:
+      core.pending.isFriskPrecisionStrikeTargetChoice,
     selectedUnit: core.selectedUnit,
     pendingMoveForSelected: core.pendingMoveForSelected,
     moveOptions: core.moveOptions,

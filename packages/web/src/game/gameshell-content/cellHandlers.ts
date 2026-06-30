@@ -33,6 +33,12 @@ interface MoveOptionsState {
   roll?: number | null;
 }
 
+type GroznyTyrantAttackCellOption = {
+  targetId: string;
+  mode: "normal" | "invadeTime";
+  position: Coord;
+};
+
 export interface CellClickContext {
   view: PlayerView | null;
   playerId: string | null;
@@ -67,6 +73,9 @@ export interface CellClickContext {
   riverTraLaLaDestinationKeys: Set<string>;
   isChikatiloPlacement: boolean;
   chikatiloPlacementKeys: Set<string>;
+  isGroznyTyrantAttackCellChoice: boolean;
+  groznyTyrantAttackCellOptions: GroznyTyrantAttackCellOption[];
+  groznyTyrantAttackCellKeys: Set<string>;
   isGuideTravelerPlacement: boolean;
   guideTravelerPlacementKeys: Set<string>;
   isJebeKhansShooterTargetChoice: boolean;
@@ -85,6 +94,8 @@ export interface CellClickContext {
   friskPacifismHugsTargetIds: string[];
   isFriskWarmWordsTargetChoice: boolean;
   friskWarmWordsTargetIds: string[];
+  isFriskPrecisionStrikeTargetChoice: boolean;
+  friskPrecisionStrikeTargetIds: string[];
   isLokiChickenTargetChoice: boolean;
   lokiChickenTargetIds: string[];
   isLokiMindControlEnemyChoice: boolean;
@@ -157,6 +168,9 @@ export function createCellClickHandler(context: CellClickContext) {
     riverTraLaLaDestinationKeys,
     isChikatiloPlacement,
     chikatiloPlacementKeys,
+    isGroznyTyrantAttackCellChoice,
+    groznyTyrantAttackCellOptions,
+    groznyTyrantAttackCellKeys,
     isGuideTravelerPlacement,
     guideTravelerPlacementKeys,
     isJebeKhansShooterTargetChoice,
@@ -175,6 +189,8 @@ export function createCellClickHandler(context: CellClickContext) {
     friskPacifismHugsTargetIds,
     isFriskWarmWordsTargetChoice,
     friskWarmWordsTargetIds,
+    isFriskPrecisionStrikeTargetChoice,
+    friskPrecisionStrikeTargetIds,
     isLokiChickenTargetChoice,
     lokiChickenTargetIds,
     isLokiMindControlEnemyChoice,
@@ -368,6 +384,28 @@ export function createCellClickHandler(context: CellClickContext) {
       return;
     }
 
+    if (isGroznyTyrantAttackCellChoice) {
+      const key = coordKey({ col, row });
+      if (!groznyTyrantAttackCellKeys.has(key) || !pendingRoll) return;
+      const options = groznyTyrantAttackCellOptions.filter(
+        (option) => coordKey(option.position) === key
+      );
+      const selected =
+        options.find((option) => option.mode === "normal") ?? options[0];
+      if (!selected) return;
+      sendAction({
+        type: "resolvePendingRoll",
+        pendingRollId: pendingRoll.id,
+        choice: {
+          type: "groznyTyrantAttackCell",
+          mode: selected.mode,
+          targetId: selected.targetId,
+          position: selected.position,
+        },
+      } as GameAction);
+      return;
+    }
+
     if (isGuideTravelerPlacement) {
       const key = coordKey({ col, row });
       if (!guideTravelerPlacementKeys.has(key) || !pendingRoll) return;
@@ -476,6 +514,18 @@ export function createCellClickHandler(context: CellClickContext) {
         type: "resolvePendingRoll",
         pendingRollId: pendingRoll.id,
         choice: { type: "friskWarmWordsTarget", targetId: target.id },
+      } as GameAction);
+      return;
+    }
+
+    if (isFriskPrecisionStrikeTargetChoice) {
+      const target = getUnitAt(view, col, row);
+      if (!target || !pendingRoll) return;
+      if (!friskPrecisionStrikeTargetIds.includes(target.id)) return;
+      sendAction({
+        type: "resolvePendingRoll",
+        pendingRollId: pendingRoll.id,
+        choice: { type: "friskPrecisionStrikeTarget", targetId: target.id },
       } as GameAction);
       return;
     }

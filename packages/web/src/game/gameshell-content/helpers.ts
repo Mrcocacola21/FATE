@@ -356,12 +356,14 @@ const PENDING_ROLL_LABELS_UK: Record<string, string> = {
   lokiChickenTargetChoice: "Ціль Курки",
   lokiMindControlEnemyChoice: "Вибір ворога для Контролю розуму",
   lokiMindControlTargetChoice: "Ціль Контролю розуму",
+  gutsBerserkAttackChoice: "Вибір атаки Берсерка",
   friskPacifismChoice: "Вибір Пацифізму",
   friskPacifismHugsTargetChoice: "Ціль Обіймів",
   friskWarmWordsTargetChoice: "Ціль Теплих слів",
   friskWarmWordsHealRoll: "Кидок лікування Теплими словами",
   friskGenocideChoice: "Вибір Геноциду",
   friskKeenEyeChoice: "Вибір Пильного ока",
+  friskPrecisionStrikeTargetChoice: "Ціль Точного удару",
   friskSubstitutionChoice: "Вибір захисту Підміною",
   friskChildsCryChoice: "Вибір захисту Дитячим плачем",
   femtoDivineMoveRoll: "Кидок Божественного переміщення",
@@ -380,7 +382,9 @@ const PENDING_ROLL_LABELS_UK: Record<string, string> = {
   vladForest_defenderRoll: "Захист від Лісу",
   vladForest_berserkerDefenseChoice: "Захист берсерка від Лісу",
   chikatiloFalseTrailPlacement: "Розміщення Хибного сліду",
+  groznyTyrantAttackCellChoice: "Клітинка атаки Тирана",
   lechyGuideTravelerPlacement: "Розміщення Провідника",
+  lechyStormStartTurnRoll: "Кидок Бурі на початку ходу",
   chikatiloDecoyChoice: "Вибір Приманки",
   chikatiloFalseTrailRevealChoice: "Вибір Хибного сліду",
   falseTrailExplosion_attackerRoll: "Кидок вибуху Хибного сліду",
@@ -482,6 +486,8 @@ export function getPendingRollLabel(kind?: string | null, language: "en" | "uk" 
       return "Mind Control enemy choice";
     case "lokiMindControlTargetChoice":
       return "Mind Control target choice";
+    case "gutsBerserkAttackChoice":
+      return "Berserk attack choice";
     case "friskPacifismChoice":
       return "Pacifism choice";
     case "friskPacifismHugsTargetChoice":
@@ -494,6 +500,8 @@ export function getPendingRollLabel(kind?: string | null, language: "en" | "uk" 
       return "Genocide choice";
     case "friskKeenEyeChoice":
       return "Keen Eye choice";
+    case "friskPrecisionStrikeTargetChoice":
+      return "Precision Strike target choice";
     case "friskSubstitutionChoice":
       return "Substitution defense choice";
     case "friskChildsCryChoice":
@@ -530,8 +538,12 @@ export function getPendingRollLabel(kind?: string | null, language: "en" | "uk" 
       return "Forest berserker defense choice";
     case "chikatiloFalseTrailPlacement":
       return "False Trail placement";
+    case "groznyTyrantAttackCellChoice":
+      return "Tyrant attack cell";
     case "lechyGuideTravelerPlacement":
       return "Guide Traveler placement";
+    case "lechyStormStartTurnRoll":
+      return "Storm start-turn roll";
     case "chikatiloDecoyChoice":
       return "Decoy choice";
     case "chikatiloFalseTrailRevealChoice":

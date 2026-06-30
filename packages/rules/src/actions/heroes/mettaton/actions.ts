@@ -14,6 +14,7 @@ import { resolveAoE } from "../../../aoe";
 import {
   collectMettatonFinalChordTargetIds,
   collectMettatonLineTargetIds,
+  getMettatonRating,
   hasMettatonExUnlocked,
   hasMettatonNeoUnlocked,
   isMettaton,
@@ -24,7 +25,7 @@ import {
 import type { RNG } from "../../../rng";
 import { parseCoord, sortUnitIdsByReadingOrder } from "./helpers";
 import { requestMettatonQueuedAttacks } from "./queue";
-import { applyMettatonRatingSpend, buildActionBaseState } from "./state";
+import { buildActionBaseState } from "./state";
 
 interface CenterPayload {
   center?: Coord;
@@ -108,24 +109,20 @@ export function applyMettatonEx(
   state: GameState,
   unit: UnitState
 ): ApplyResult {
-  if (!isMettaton(unit) || !unit.isAlive || hasMettatonExUnlocked(unit)) {
+  if (
+    !isMettaton(unit) ||
+    !unit.isAlive ||
+    hasMettatonExUnlocked(unit) ||
+    getMettatonRating(unit) < 5
+  ) {
     return { state, events: [] };
   }
 
-  const spent = applyMettatonRatingSpend(state, unit.id, 5);
-  if (!spent.ok) {
-    return { state, events: [] };
-  }
-  const afterSpend = spent.state.units[unit.id];
-  if (!afterSpend) {
-    return { state: spent.state, events: spent.events };
-  }
-
-  const unlocked = unlockMettatonEx(afterSpend);
+  const unlocked = unlockMettatonEx(unit);
   const nextState: GameState = {
-    ...spent.state,
+    ...state,
     units: {
-      ...spent.state.units,
+      ...state.units,
       [unlocked.id]: unlocked,
     },
   };
@@ -134,7 +131,6 @@ export function applyMettatonEx(
     state: nextState,
     events: [
       evAbilityUsed({ unitId: unlocked.id, abilityId: ABILITY_METTATON_EX }),
-      ...spent.events,
     ],
   };
 }
@@ -195,29 +191,25 @@ export function applyMettatonNeo(
   state: GameState,
   unit: UnitState
 ): ApplyResult {
-  if (!isMettaton(unit) || !unit.isAlive || hasMettatonNeoUnlocked(unit)) {
+  if (
+    !isMettaton(unit) ||
+    !unit.isAlive ||
+    hasMettatonNeoUnlocked(unit) ||
+    getMettatonRating(unit) < 10
+  ) {
     return { state, events: [] };
   }
 
-  const spent = applyMettatonRatingSpend(state, unit.id, 10);
-  if (!spent.ok) {
-    return { state, events: [] };
-  }
-  const afterSpend = spent.state.units[unit.id];
-  if (!afterSpend) {
-    return { state: spent.state, events: spent.events };
-  }
-
-  const unlocked = unlockMettatonNeo(afterSpend);
+  const unlocked = unlockMettatonNeo(unit);
   const withBerserkCounter = setCharges(
     unlocked,
     ABILITY_BERSERK_AUTO_DEFENSE,
     unlocked.charges?.[ABILITY_BERSERK_AUTO_DEFENSE] ?? 0
   );
   const nextState: GameState = {
-    ...spent.state,
+    ...state,
     units: {
-      ...spent.state.units,
+      ...state.units,
       [withBerserkCounter.id]: withBerserkCounter,
     },
   };
@@ -226,7 +218,6 @@ export function applyMettatonNeo(
     state: nextState,
     events: [
       evAbilityUsed({ unitId: withBerserkCounter.id, abilityId: ABILITY_METTATON_NEO }),
-      ...spent.events,
     ],
   };
 }

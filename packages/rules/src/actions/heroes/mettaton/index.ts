@@ -6,4 +6,7 @@ export {
   applyMettatonNeo,
   applyMettatonFinalChord,
 } from "./actions";
-export { applyMettatonImpulseUnlocks } from "./impulses";
+export {
+  applyMettatonImpulseUnlocks,
+  maybeTriggerMettatonThresholdUnlocks,
+} from "./impulses";

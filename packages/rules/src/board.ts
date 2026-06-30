@@ -29,20 +29,28 @@ export function getUnitAt(
   state: GameState,
   coord: Coord
 ): UnitState | null {
+  return getUnitsAt(state, coord)[0] ?? null;
+}
+
+export function getUnitsAt(
+  state: GameState,
+  coord: Coord
+): UnitState[] {
+  const units: UnitState[] = [];
   for (const u of Object.values(state.units)) {
     if (!u.isAlive || !u.position) continue;
     if (u.position.col === coord.col && u.position.row === coord.row) {
-      return u;
+      units.push(u);
     }
   }
-  return null;
+  return units;
 }
 
 export function isCellOccupied(
   state: GameState,
   coord: Coord
 ): boolean {
-  return getUnitAt(state, coord) !== null;
+  return getUnitsAt(state, coord).length > 0;
 }
 
 export function isEnemyAt(

@@ -87,14 +87,15 @@ import {
   testSearchMoveWorksBeforeMove,
   testSearchButtonsEnabledOnFreshUnitTurn,
   testAttackAlreadyRevealedUnit,
-  testAdjacencyRevealAfterMove,
+  testAdjacentHiddenEnemyStaysHiddenAfterMove,
   testCannotAttackAfterSearchAction,
   testCannotSearchMoveAfterMove,
   testRiderCannotEnterStealth,
   testAssassinCanEnterStealth,
   testStealthOnlyForUnitsWithAbility,
   testAllyCannotStepOnStealthedAlly,
-  testEnemyStepsOnUnknownStealthedRevealsAndCancels,
+  testEnemyCanStepOnUnknownStealthedWithoutReveal,
+  testUnknownStealthedEnemyDoesNotBlockArcherLine,
   testCannotAttackStealthedEnemyDirectly,
   testNoStealthStackingOnEnter,
   testStealthLasts3OwnTurnsThenExpiresOn4thStart,
@@ -193,6 +194,8 @@ import {
 import {
   testGroznyTyrantDoesNotTriggerIfOnlyBuffWouldMakeKillPossible,
   testGroznyTyrantTriggersAndKillsWhenBaseDamageIsEnough,
+  testGroznyTyrantPromptsForAttackCellAndSkipsWithoutSpending,
+  testGroznyTyrantInvadeTimeOptionSpendsOnlyAfterCellChoice,
   testGroznyTyrantRequiresReachableAttackPositionWithinRoll6,
   testGroznyTyrantChainGrantsExtraMovesFromSecondKill,
   testGroznyInvadeTimeRequiresFullChargesAndConsumesMove,
@@ -238,6 +241,7 @@ import {
   testGutsBerserkEndTurnSelfDamage,
   testGutsBerserkMeleeBonusAndRangedNoBonus,
   testGutsBerserkMovementAndAoEAndIncomingCap,
+  testGutsBerserkAttackChoiceSingleTargetSpearmanRange,
   testGutsExitBerserkOnceAndNoReentry,
 } from "./heroes/guts.test";
 import {
@@ -278,6 +282,8 @@ import {
   testFriskGenocideIncrementsOnHit,
   testFriskCleanSoulShieldFlow,
   testFriskChildsCryNegatesDamageAndSpendsPoints,
+  testFriskPacifismActiveOptionsSpendOnResolutionOnly,
+  testFriskGenocideActiveOptionsSpendOnResolutionOnly,
   testFriskSubstitutionTakesOneDamageBeforeDefenseRoll,
   testFriskOnePathConvertsAndDisablesPacifism,
   testFriskKillBonusesFirstAndSecondKill,
@@ -327,7 +333,7 @@ import {
 } from "./heroes/undyne.test";
 import {
   testMettatonLongLiverCannotHideAndRiderMovement,
-  testMettatonRatingPassiveAndSpend,
+  testMettatonRatingPassiveAndThresholdUnlock,
   testMettatonPoppinsGatingAreaAndRating,
   testMettatonExStageAndLaser,
   testMettatonNeoGraceAndRiderPathUnlocks,
@@ -398,7 +404,7 @@ function main(): void {
   testSearchMoveWorksBeforeMove();
   testSearchButtonsEnabledOnFreshUnitTurn();
   testAttackAlreadyRevealedUnit();
-  testAdjacencyRevealAfterMove();
+  testAdjacentHiddenEnemyStaysHiddenAfterMove();
   testCannotAttackTwicePerTurn();
   testAttackConsumesActionSlot();
   testCannotAttackAfterSearchAction();
@@ -408,7 +414,8 @@ function main(): void {
   testStealthOnlyForUnitsWithAbility();
   testBattleTurnOrderFollowsPlacementOrder();
   testAllyCannotStepOnStealthedAlly();
-  testEnemyStepsOnUnknownStealthedRevealsAndCancels();
+  testEnemyCanStepOnUnknownStealthedWithoutReveal();
+  testUnknownStealthedEnemyDoesNotBlockArcherLine();
   testCannotAttackStealthedEnemyDirectly();
   testNoStealthStackingOnEnter();
   testStealthLasts3OwnTurnsThenExpiresOn4thStart();
@@ -510,6 +517,7 @@ function main(): void {
   testGutsBerserkEndTurnSelfDamage();
   testGutsBerserkMeleeBonusAndRangedNoBonus();
   testGutsBerserkMovementAndAoEAndIncomingCap();
+  testGutsBerserkAttackChoiceSingleTargetSpearmanRange();
   testGutsExitBerserkOnceAndNoReentry();
   testKaladinHpBonus();
   testKaladinFirstOathGatingHealingAndCosts();
@@ -557,7 +565,7 @@ function main(): void {
   testUndyneDirectionShiftDefenseRedirect();
   testUndyneImmortalTriggerCapDrainBonusAndOnce();
   testMettatonLongLiverCannotHideAndRiderMovement();
-  testMettatonRatingPassiveAndSpend();
+  testMettatonRatingPassiveAndThresholdUnlock();
   testMettatonPoppinsGatingAreaAndRating();
   testMettatonExStageAndLaser();
   testMettatonNeoGraceAndRiderPathUnlocks();
@@ -573,12 +581,16 @@ function main(): void {
   testFriskGenocideIncrementsOnHit();
   testFriskCleanSoulShieldFlow();
   testFriskChildsCryNegatesDamageAndSpendsPoints();
+  testFriskPacifismActiveOptionsSpendOnResolutionOnly();
+  testFriskGenocideActiveOptionsSpendOnResolutionOnly();
   testFriskSubstitutionTakesOneDamageBeforeDefenseRoll();
   testFriskOnePathConvertsAndDisablesPacifism();
   testFriskKillBonusesFirstAndSecondKill();
   testFriskPowerOfFriendshipWinCondition();
   testGroznyTyrantDoesNotTriggerIfOnlyBuffWouldMakeKillPossible();
   testGroznyTyrantTriggersAndKillsWhenBaseDamageIsEnough();
+  testGroznyTyrantPromptsForAttackCellAndSkipsWithoutSpending();
+  testGroznyTyrantInvadeTimeOptionSpendsOnlyAfterCellChoice();
   testGroznyTyrantRequiresReachableAttackPositionWithinRoll6();
   testGroznyTyrantChainGrantsExtraMovesFromSecondKill();
   testGroznyInvadeTimeRequiresFullChargesAndConsumesMove();

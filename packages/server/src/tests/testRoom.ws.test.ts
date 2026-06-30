@@ -75,7 +75,7 @@ async function main() {
       type: "testRoomCommand",
       command: {
         type: "debugSpawnUnit",
-        heroId: "guts",
+        heroId: "frisk",
         owner: "P2",
         coord: { col: 4, row: 4 },
       },
@@ -89,6 +89,101 @@ async function main() {
       Object.keys(message.view?.units ?? {}).length === 1
   );
   assert.equal(Object.values(mutated.view.units)[0] && (Object.values(mutated.view.units)[0] as any).owner, "P2");
+
+  testSocket.send(
+    JSON.stringify({
+      type: "testRoomCommand",
+      command: {
+        type: "debugSpawnUnit",
+        heroId: "frisk",
+        owner: "P1",
+        coord: { col: 4, row: 3 },
+      },
+    })
+  );
+  const duel = await waitFor(
+    testMessages,
+    (message) =>
+      message.type === "roomState" &&
+      message.meta?.revision === 2 &&
+      Object.keys(message.view?.units ?? {}).length === 2
+  );
+  const duelUnits = Object.values(duel.view.units) as any[];
+  const attacker = duelUnits.find((unit) => unit.owner === "P1");
+  const defender = duelUnits.find((unit) => unit.owner === "P2");
+  assert(attacker, "test room should expose spawned P1 attacker");
+  assert(defender, "test room should expose spawned P2 defender");
+  assert.equal(
+    duel.view.activeUnitId,
+    attacker.id,
+    "spawning a P1 unit after an enemy should make the P1 unit active"
+  );
+
+  testSocket.send(
+    JSON.stringify({
+      type: "testRoomCommand",
+      command: { type: "debugSetDiceQueue", values: [5, 4, 1, 1] },
+    })
+  );
+  await waitFor(
+    testMessages,
+    (message) => message.type === "roomState" && message.meta?.revision === 3
+  );
+
+  testSocket.send(
+    JSON.stringify({
+      type: "action",
+      action: {
+        type: "attack",
+        attackerId: attacker.id,
+        defenderId: defender.id,
+      },
+    })
+  );
+  const attackerRoll = await waitFor(
+    testMessages,
+    (message) =>
+      message.type === "roomState" &&
+      message.view?.pendingRoll?.kind === "attack_attackerRoll" &&
+      message.view.pendingRoll.context?.attackerId === attacker.id
+  );
+  testSocket.send(
+    JSON.stringify({
+      type: "action",
+      action: {
+        type: "resolvePendingRoll",
+        pendingRollId: attackerRoll.view.pendingRoll.id,
+        player: attackerRoll.view.pendingRoll.player,
+      },
+    })
+  );
+  const defenderRoll = await waitFor(
+    testMessages,
+    (message) =>
+      message.type === "roomState" &&
+      message.view?.pendingRoll?.kind === "attack_defenderRoll"
+  );
+  testSocket.send(
+    JSON.stringify({
+      type: "action",
+      action: {
+        type: "resolvePendingRoll",
+        pendingRollId: defenderRoll.view.pendingRoll.id,
+        player: defenderRoll.view.pendingRoll.player,
+      },
+    })
+  );
+  await waitFor(testMessages, (message) =>
+    message.type === "actionResult" &&
+    message.ok === true &&
+    Array.isArray(message.events) &&
+    message.events.some(
+      (event: any) =>
+        event.type === "attackResolved" &&
+        event.attackerId === attacker.id &&
+        event.defenderId === defender.id
+    )
+  );
 
   const normalSocket = await openSocket(wsUrl);
   const normalMessages = collect(normalSocket);

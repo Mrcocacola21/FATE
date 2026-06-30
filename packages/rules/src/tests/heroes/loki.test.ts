@@ -25,7 +25,7 @@ export function testLokiLaughterIncrementsOnAnyDouble() {
 
   state = setUnit(state, loki.id, {
     position: { col: 2, row: 2 },
-    charges: { ...loki.charges, [ABILITY_LOKI_LAUGHT]: 0 },
+    charges: { ...loki.charges, [ABILITY_LOKI_LAUGHT]: 15 },
   });
   state = setUnit(state, attacker.id, { position: { col: 4, row: 4 } });
   state = setUnit(state, defender.id, { position: { col: 4, row: 5 } });
@@ -43,8 +43,8 @@ export function testLokiLaughterIncrementsOnAnyDouble() {
   );
 
   assert(
-    resolved.state.units[loki.id].charges[ABILITY_LOKI_LAUGHT] === 1,
-    "Loki should gain 1 laughter from a single attack-roll double"
+    resolved.state.units[loki.id].charges[ABILITY_LOKI_LAUGHT] === 16,
+    "Loki should gain Laughter beyond the old 15-point cap"
   );
   const chargeEvent = resolved.events.find(
     (event) =>
@@ -252,14 +252,54 @@ export function testLokiOptionTwoChickenBlocksAndRestrictsMove() {
     option.state.pendingRoll?.kind === "lokiChickenTargetChoice",
     "Chicken option should request target selection"
   );
-  const applied = resolvePendingWithChoice(
+  assert(
+    option.state.units[loki.id].charges[ABILITY_LOKI_LAUGHT] === 5,
+    "entering Chicken target selection should not spend Laughter"
+  );
+  assert(
+    !option.state.units[loki.id].turn.actionUsed,
+    "entering Chicken target selection should not spend Loki's action"
+  );
+  const canceled = resolvePendingWithChoice(
     option.state,
+    "skip",
+    makeRngSequence([])
+  );
+  assert(!canceled.state.pendingRoll, "Chicken target cancel should clear pending");
+  assert(
+    canceled.state.units[loki.id].charges[ABILITY_LOKI_LAUGHT] === 5,
+    "Chicken target cancel should not spend Laughter"
+  );
+  assert(
+    !canceled.state.units[loki.id].turn.actionUsed,
+    "Chicken target cancel should not spend Loki's action"
+  );
+  const reopened = applyAction(
+    canceled.state,
+    { type: "useAbility", unitId: loki.id, abilityId: ABILITY_LOKI_LAUGHT } as any,
+    makeRngSequence([])
+  );
+  const optionAgain = resolvePendingWithChoice(
+    reopened.state,
+    { type: "lokiLaughtOption", option: "chicken" },
+    makeRngSequence([])
+  );
+  const applied = resolvePendingWithChoice(
+    optionAgain.state,
     { type: "lokiChickenTarget", targetId: enemy.id },
     makeRngSequence([])
   );
   assert(
     (applied.state.units[enemy.id].lokiChickenSources ?? []).includes(loki.id),
     "selected target should gain chicken status"
+  );
+  assert(
+    applied.state.units[loki.id].charges[ABILITY_LOKI_LAUGHT] === 0,
+    "Chicken should spend exactly 5 Laughter on target resolution"
+  );
+  assert(
+    applied.state.units[loki.id].turn.actionUsed,
+    "Chicken should spend Loki's action on target resolution"
   );
 
   const chickenMoves = getLegalMovesForUnit(applied.state, enemy.id);
@@ -345,8 +385,12 @@ export function testLokiOptionThreeMindControlForcedAttackAndSlots() {
     "mind control option should request enemy selection"
   );
   assert(
-    option.state.units[loki.id].turn.actionUsed,
-    "mind control should consume Loki action slot"
+    option.state.units[loki.id].charges[ABILITY_LOKI_LAUGHT] === 10,
+    "entering mind control enemy selection should not spend Laughter"
+  );
+  assert(
+    !option.state.units[loki.id].turn.actionUsed,
+    "entering mind control enemy selection should not consume Loki action slot"
   );
 
   const pickedEnemy = resolvePendingWithChoice(
@@ -358,6 +402,14 @@ export function testLokiOptionThreeMindControlForcedAttackAndSlots() {
     pickedEnemy.state.pendingRoll?.kind === "lokiMindControlTargetChoice",
     "mind control should request forced target selection"
   );
+  assert(
+    pickedEnemy.state.units[loki.id].charges[ABILITY_LOKI_LAUGHT] === 10,
+    "picking a controlled enemy should not spend Laughter before attack target resolution"
+  );
+  assert(
+    !pickedEnemy.state.units[loki.id].turn.actionUsed,
+    "picking a controlled enemy should not consume Loki action before attack target resolution"
+  );
 
   const pickedTarget = resolvePendingWithChoice(
     pickedEnemy.state,
@@ -367,6 +419,14 @@ export function testLokiOptionThreeMindControlForcedAttackAndSlots() {
   assert(
     pickedTarget.state.pendingRoll?.kind === "attack_attackerRoll",
     "mind control should transition into a normal attack roll"
+  );
+  assert(
+    pickedTarget.state.units[loki.id].charges[ABILITY_LOKI_LAUGHT] === 0,
+    "mind control should spend exactly 10 Laughter on attack target resolution"
+  );
+  assert(
+    pickedTarget.state.units[loki.id].turn.actionUsed,
+    "mind control should consume Loki action on attack target resolution"
   );
 
   const resolved = resolveAllPendingRollsWithEvents(

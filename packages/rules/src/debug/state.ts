@@ -186,10 +186,13 @@ function updateTurnQueue(state: GameState): GameState {
   const alive = Object.values(state.units)
     .filter((unit) => unit.isAlive && unit.position)
     .map((unit) => unit.id);
+  const currentPlayer = state.currentPlayer ?? "P1";
   const activeUnitId =
-    state.activeUnitId && alive.includes(state.activeUnitId)
+    state.activeUnitId &&
+    alive.includes(state.activeUnitId) &&
+    state.units[state.activeUnitId]?.owner === currentPlayer
       ? state.activeUnitId
-      : alive.find((id) => state.units[id].owner === state.currentPlayer) ?? alive[0] ?? null;
+      : alive.find((id) => state.units[id].owner === currentPlayer) ?? alive[0] ?? null;
   return {
     ...state,
     turnOrder: alive,

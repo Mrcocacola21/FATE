@@ -16,6 +16,8 @@ interface PendingBoardNoticeProps {
   isForestMoveCheck: boolean;
   isDuelistChoice: boolean;
   isChikatiloPlacement: boolean;
+  isGroznyTyrantAttackCellChoice: boolean;
+  groznyTyrantAllowSkip: boolean;
   isGuideTravelerPlacement: boolean;
   isRiverBoatCarryChoice: boolean;
   isRiverBoatDropDestination: boolean;
@@ -34,6 +36,7 @@ interface PendingBoardNoticeProps {
   isHassanAssassinOrderSelection: boolean;
   isChikatiloRevealChoice: boolean;
   isChikatiloDecoyChoice: boolean;
+  isFriskPrecisionStrikeTargetChoice: boolean;
   onResolveSkip: () => void;
   onConfirmStakePlacement: () => void;
   onClearStakeSelections: () => void;
@@ -56,6 +59,8 @@ export function PendingBoardNotice({
   isForestMoveCheck,
   isDuelistChoice,
   isChikatiloPlacement,
+  isGroznyTyrantAttackCellChoice,
+  groznyTyrantAllowSkip,
   isGuideTravelerPlacement,
   isRiverBoatCarryChoice,
   isRiverBoatDropDestination,
@@ -74,6 +79,7 @@ export function PendingBoardNotice({
   isHassanAssassinOrderSelection,
   isChikatiloRevealChoice,
   isChikatiloDecoyChoice,
+  isFriskPrecisionStrikeTargetChoice,
   onResolveSkip,
   onConfirmStakePlacement,
   onClearStakeSelections,
@@ -182,6 +188,26 @@ export function PendingBoardNotice({
               "Оберіть будь-яку вільну клітинку для Чикатило.",
             )}
           </div>
+        </div>
+      ) : isGroznyTyrantAttackCellChoice ? (
+        <div>
+          <div className="font-semibold">
+            {p("Tyrant: choose attack cell", "Тиран: оберіть клітинку атаки")}
+          </div>
+          <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
+            {p(
+              "Оберіть підсвічену клітинку, з якої атакує Грозний, або пропустіть.",
+              "Select the highlighted cell Grozny attacks from, or skip.",
+            )}
+          </div>
+          {groznyTyrantAllowSkip && (
+            <button
+              className="mt-2 rounded-lg bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
+              onClick={onResolveSkip}
+            >
+              {t("common.skip")}
+            </button>
+          )}
         </div>
       ) : isGuideTravelerPlacement ? (
         <div>
@@ -384,6 +410,16 @@ export function PendingBoardNotice({
             {p(
               "Roll defense or spend 3 charges to take 1 damage.",
               "Киньте захист або витратьте 3 заряди, щоб отримати 1 шкоду.",
+            )}
+          </div>
+        </div>
+      ) : isFriskPrecisionStrikeTargetChoice ? (
+        <div>
+          <div className="font-semibold">{p("Precision Strike", "Точний удар")}</div>
+          <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
+            {p(
+              "Choose a highlighted attack target.",
+              "Оберіть підсвічену ціль атаки.",
             )}
           </div>
         </div>

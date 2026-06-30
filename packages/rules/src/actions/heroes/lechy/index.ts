@@ -8,4 +8,4 @@ export {
   requestLechyGuideTravelerPlacement,
   resolveLechyGuideTravelerPlacement,
 } from "./guideTraveler";
-export { applyStormStartOfTurn } from "./storm";
+export { applyStormStartOfTurn, resolveLechyStormStartTurnRoll } from "./storm";

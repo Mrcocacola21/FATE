@@ -1,6 +1,6 @@
 // packages/rules/src/visibility.ts
 import { Coord, GameState, UnitState } from "./model";
-import { getUnitAt } from "./board";
+import { getUnitsAt } from "./board";
 import { HERO_CHIKATILO_ID, HERO_ODIN_ID } from "./heroes";
 
 function chebyshevDistance(a: Coord, b: Coord): number {
@@ -41,31 +41,31 @@ export function canUnitEnterCell(
   const unit = state.units[unitId];
   if (!unit || !unit.isAlive) return false;
 
-  const occupant = getUnitAt(state, dest);
-  if (!occupant || !occupant.isAlive) {
+  const occupants = getUnitsAt(state, dest).filter((occupant) => occupant.id !== unitId);
+  if (occupants.length === 0) {
     return true;
   }
 
-  if (occupant.owner === unit.owner) {
-    return false;
-  }
+  for (const occupant of occupants) {
+    if (occupant.owner === unit.owner) {
+      return false;
+    }
 
-  if (occupant.isStealthed) {
-    if (unitCanSeeStealthed(state, unit, occupant)) {
+    if (!occupant.isStealthed) {
       return false;
     }
 
     const known = state.knowledge?.[unit.owner]?.[occupant.id];
-    if (known) return false;
+    if (known || unitCanSeeStealthed(state, unit, occupant)) {
+      return false;
+    }
 
     if (unit.isStealthed) {
       return false;
     }
-
-    return true;
   }
 
-  return false;
+  return true;
 }
 
 export function canDirectlyTargetUnit(

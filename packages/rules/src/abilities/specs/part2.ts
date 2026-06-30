@@ -28,22 +28,16 @@ export const ABILITY_SPECS_PART_2: Record<string, AbilitySpec> = {
     displayName: "Berserk Mode",
     kind: "phantasm",
     description:
-      "Spend 3 charges to enter Berserk Mode. While active: end-turn self-damage, melee-focused bonuses, and altered combat behavior.",
+      "Spend 3 charges to enter Berserk Mode without consuming your action. While active: end-turn self-damage, melee-focused bonuses, and altered combat behavior.",
     maxCharges: 3,
     chargesPerUse: 3,
-    actionCost: {
-      consumes: { action: true },
-    },
   },
   [ids.ABILITY_GUTS_EXIT_BERSERK]: {
     id: ids.ABILITY_GUTS_EXIT_BERSERK,
     displayName: "Exit Berserk",
     kind: "active",
     description:
-      "Exit Berserk Mode. Can only be used once per game and consumes action.",
-    actionCost: {
-      consumes: { action: true },
-    },
+      "Exit Berserk Mode. Can only be used once per game and does not consume your action.",
   },
   [ids.ABILITY_ODIN_GUNGNIR]: {
     id: ids.ABILITY_ODIN_GUNGNIR,
@@ -82,7 +76,7 @@ export const ABILITY_SPECS_PART_2: Record<string, AbilitySpec> = {
     displayName: "Illusory Double",
     kind: "passive",
     description:
-      "Whenever any game roll is a double, Loki gains +1 Laughter (max 15).",
+      "Whenever any game roll is a double, Loki gains +1 Laughter.",
   },
   [ids.ABILITY_LOKI_LAUGHT]: {
     id: ids.ABILITY_LOKI_LAUGHT,
@@ -90,7 +84,7 @@ export const ABILITY_SPECS_PART_2: Record<string, AbilitySpec> = {
     kind: "phantasm",
     description:
       "Spend Laughter on one of Loki's tricks. Using this ability does not reveal Loki.",
-    maxCharges: 15,
+    chargeUnlimited: true,
     chargesPerUse: 0,
     isSpecialCounter: true,
   },
@@ -199,7 +193,7 @@ export const ABILITY_SPECS_PART_2: Record<string, AbilitySpec> = {
     kind: "phantasm",
     description:
       "Spend Pacifism points on Frisk's pacifist options. These effects do not reveal Frisk stealth.",
-    maxCharges: 30,
+    chargeUnlimited: true,
     chargesPerUse: 0,
     isSpecialCounter: true,
   },
@@ -209,7 +203,7 @@ export const ABILITY_SPECS_PART_2: Record<string, AbilitySpec> = {
     kind: "phantasm",
     description:
       "Spend Genocide points on Frisk's aggressive options and reactions.",
-    maxCharges: 30,
+    chargeUnlimited: true,
     chargesPerUse: 0,
     isSpecialCounter: true,
   },

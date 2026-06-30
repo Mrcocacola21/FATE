@@ -175,6 +175,10 @@ function projectEventForRecipient(
         } as GameEvent,
       ];
     }
+    case "lechyStormRollResult":
+      return isUnitVisibleToRecipient(state, event.unitId, recipient)
+        ? [event]
+        : [redactedEvent(event.type)];
     default:
       return PUBLIC_EVENT_TYPES.has(event.type) ? [event] : [redactedEvent(event.type)];
   }

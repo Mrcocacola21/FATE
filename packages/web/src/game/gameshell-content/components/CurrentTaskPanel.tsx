@@ -41,6 +41,8 @@ export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm }) => {
           isForestMoveCheck={vm.isForestMoveCheck}
           isDuelistChoice={vm.isDuelistChoice}
           isChikatiloPlacement={vm.isChikatiloPlacement}
+          isGroznyTyrantAttackCellChoice={vm.isGroznyTyrantAttackCellChoice}
+          groznyTyrantAllowSkip={vm.groznyTyrantAllowSkip}
           isGuideTravelerPlacement={vm.isGuideTravelerPlacement}
           isRiverBoatCarryChoice={vm.isRiverBoatCarryChoice}
           isRiverBoatDropDestination={vm.isRiverBoatDropDestination}
@@ -61,6 +63,7 @@ export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm }) => {
           isHassanAssassinOrderSelection={vm.isHassanAssassinOrderSelection}
           isChikatiloRevealChoice={vm.isChikatiloRevealChoice}
           isChikatiloDecoyChoice={vm.isChikatiloDecoyChoice}
+          isFriskPrecisionStrikeTargetChoice={vm.isFriskPrecisionStrikeTargetChoice}
           onResolveSkip={() => {
             vm.sendAction({
               type: "resolvePendingRoll",

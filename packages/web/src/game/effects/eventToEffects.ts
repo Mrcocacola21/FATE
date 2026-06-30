@@ -439,6 +439,13 @@ export function effectsFromGameEvent(
     }
     case "sansLastAttackRemoved":
       return unitFlash(event.targetId, "heal", context);
+    case "lechyStormRollResult": {
+      const coord = visibleUnitCoord(event.unitId, context.view, context.previousPositions);
+      return [
+        ...unitFlash(event.unitId, event.damage > 0 ? "hit" : "defend", context),
+        ...(event.damage > 0 ? floatingValue(coord, `-${event.damage}`, "damage") : []),
+      ];
+    }
     case "forestActivated":
       return [
         { kind: "boardPulse", tone: "magic", durationMs: 1100 },

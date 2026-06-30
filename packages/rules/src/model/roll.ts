@@ -69,7 +69,9 @@ export type RollKind =
   | "falseTrailExplosion_attackerRoll"
   | "falseTrailExplosion_defenderRoll"
   | "chikatiloFalseTrailRevealChoice"
+  | "groznyTyrantAttackCellChoice"
   | "lechyGuideTravelerPlacement"
+  | "lechyStormStartTurnRoll"
   | "forestMoveCheck"
   | "forestMoveDestination"
   | "riverBoatCarryChoice"
@@ -93,6 +95,7 @@ export type RollKind =
   | "lokiChickenTargetChoice"
   | "lokiMindControlEnemyChoice"
   | "lokiMindControlTargetChoice"
+  | "gutsBerserkAttackChoice"
   | "femtoDivineMoveRoll"
   | "femtoDivineMoveDestination"
   | "friskPacifismChoice"
@@ -101,6 +104,7 @@ export type RollKind =
   | "friskWarmWordsHealRoll"
   | "friskGenocideChoice"
   | "friskKeenEyeChoice"
+  | "friskPrecisionStrikeTargetChoice"
   | "friskSubstitutionChoice"
   | "friskChildsCryChoice";
 
@@ -157,7 +161,9 @@ export const ALL_ROLL_KINDS = [
   "falseTrailExplosion_attackerRoll",
   "falseTrailExplosion_defenderRoll",
   "chikatiloFalseTrailRevealChoice",
+  "groznyTyrantAttackCellChoice",
   "lechyGuideTravelerPlacement",
+  "lechyStormStartTurnRoll",
   "forestMoveCheck",
   "forestMoveDestination",
   "riverBoatCarryChoice",
@@ -181,6 +187,7 @@ export const ALL_ROLL_KINDS = [
   "lokiChickenTargetChoice",
   "lokiMindControlEnemyChoice",
   "lokiMindControlTargetChoice",
+  "gutsBerserkAttackChoice",
   "femtoDivineMoveRoll",
   "femtoDivineMoveDestination",
   "friskPacifismChoice",
@@ -189,6 +196,7 @@ export const ALL_ROLL_KINDS = [
   "friskWarmWordsHealRoll",
   "friskGenocideChoice",
   "friskKeenEyeChoice",
+  "friskPrecisionStrikeTargetChoice",
   "friskSubstitutionChoice",
   "friskChildsCryChoice",
 ] as const satisfies readonly RollKind[];

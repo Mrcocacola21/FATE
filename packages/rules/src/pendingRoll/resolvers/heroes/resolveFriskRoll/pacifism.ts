@@ -3,8 +3,10 @@ import type { RNG } from "../../../../rng";
 import { rollD6 } from "../../../../rng";
 import {
   ABILITY_FRISK_PACIFISM,
+  getCharges,
   spendCharges,
 } from "../../../../abilities";
+import { canSpendSlots, spendSlots } from "../../../../turnEconomy";
 import { clearPendingRoll, requestRoll, evAbilityUsed } from "../../../../core";
 import { getUnitBaseMaxHp } from "../../../../actions/shared";
 import type {
@@ -54,70 +56,38 @@ export function resolveFriskPacifismChoice(
   }
 
   if (option === "hugs") {
+    if (getCharges(frisk, ABILITY_FRISK_PACIFISM) < FRISK_PACIFISM_HUGS_COST) {
+      return { state, events: [] };
+    }
     const options = Array.isArray(ctx.hugsOptions) ? ctx.hugsOptions : [];
     if (options.length === 0) {
       return { state, events: [] };
     }
-    const spent = spendCharges(frisk, ABILITY_FRISK_PACIFISM, FRISK_PACIFISM_HUGS_COST);
-    if (!spent.ok) {
-      return { state, events: [] };
-    }
-    const stateAfterSpend: GameState = {
-      ...state,
-      units: {
-        ...state.units,
-        [frisk.id]: spent.unit,
-      },
-    };
     const requested = requestRoll(
-      clearPendingRoll(stateAfterSpend),
+      clearPendingRoll(state),
       frisk.owner,
       "friskPacifismHugsTargetChoice",
       { friskId: frisk.id, options } satisfies FriskPacifismTargetChoiceContext,
       frisk.id
     );
-    return {
-      state: requested.state,
-      events: [
-        evAbilityUsed({ unitId: frisk.id, abilityId: ABILITY_FRISK_PACIFISM }),
-        ...requested.events,
-      ],
-    };
+    return requested;
   }
 
   const options = Array.isArray(ctx.warmWordsOptions) ? ctx.warmWordsOptions : [];
+  if (getCharges(frisk, ABILITY_FRISK_PACIFISM) < FRISK_PACIFISM_WARM_WORDS_COST) {
+    return { state, events: [] };
+  }
   if (options.length === 0) {
     return { state, events: [] };
   }
-  const spent = spendCharges(
-    frisk,
-    ABILITY_FRISK_PACIFISM,
-    FRISK_PACIFISM_WARM_WORDS_COST
-  );
-  if (!spent.ok) {
-    return { state, events: [] };
-  }
-  const stateAfterSpend: GameState = {
-    ...state,
-    units: {
-      ...state.units,
-      [frisk.id]: spent.unit,
-    },
-  };
   const requested = requestRoll(
-    clearPendingRoll(stateAfterSpend),
+    clearPendingRoll(state),
     frisk.owner,
     "friskWarmWordsTargetChoice",
     { friskId: frisk.id, options } satisfies FriskPacifismTargetChoiceContext,
     frisk.id
   );
-  return {
-    state: requested.state,
-    events: [
-      evAbilityUsed({ unitId: frisk.id, abilityId: ABILITY_FRISK_PACIFISM }),
-      ...requested.events,
-    ],
-  };
+  return requested;
 }
 
 export function resolveFriskPacifismHugsTargetChoice(
@@ -128,6 +98,10 @@ export function resolveFriskPacifismHugsTargetChoice(
   const ctx = pending.context as unknown as FriskPacifismTargetChoiceContext;
   const frisk = getFriskUnit(state, ctx.friskId);
   if (!frisk) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  if (choice === "skip") {
     return { state: clearPendingRoll(state), events: [] };
   }
 
@@ -149,18 +123,28 @@ export function resolveFriskPacifismHugsTargetChoice(
     return { state, events: [] };
   }
 
+  if (!canSpendSlots(frisk, { action: true })) {
+    return { state, events: [] };
+  }
+  const spent = spendCharges(frisk, ABILITY_FRISK_PACIFISM, FRISK_PACIFISM_HUGS_COST);
+  if (!spent.ok) {
+    return { state, events: [] };
+  }
+  const afterFrisk = spendSlots(spent.unit, { action: true });
+
   return {
     state: clearPendingRoll({
       ...state,
       units: {
         ...state.units,
+        [afterFrisk.id]: afterFrisk,
         [target.id]: {
           ...target,
           movementDisabledNextTurn: true,
         },
       },
     }),
-    events: [],
+    events: [evAbilityUsed({ unitId: afterFrisk.id, abilityId: ABILITY_FRISK_PACIFISM })],
   };
 }
 
@@ -172,6 +156,10 @@ export function resolveFriskWarmWordsTargetChoice(
   const ctx = pending.context as unknown as FriskPacifismTargetChoiceContext;
   const frisk = getFriskUnit(state, ctx.friskId);
   if (!frisk) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  if (choice === "skip") {
     return { state: clearPendingRoll(state), events: [] };
   }
 
@@ -218,33 +206,50 @@ export function resolveFriskWarmWordsHealRoll(
     return { state: clearPendingRoll(state), events: [] };
   }
 
+  if (!canSpendSlots(frisk, { action: true })) {
+    return { state, events: [] };
+  }
+  const spent = spendCharges(
+    frisk,
+    ABILITY_FRISK_PACIFISM,
+    FRISK_PACIFISM_WARM_WORDS_COST
+  );
+  if (!spent.ok) {
+    return { state, events: [] };
+  }
+  const afterFrisk = spendSlots(spent.unit, { action: true });
   const roll = rollD6(rng);
   const maxHp = getUnitBaseMaxHp(target);
   const healedHp = Math.min(maxHp, target.hp + roll);
   const healedAmount = Math.max(0, healedHp - target.hp);
+  const healedTarget =
+    target.id === afterFrisk.id
+      ? { ...afterFrisk, hp: healedHp }
+      : { ...target, hp: healedHp };
+  const units = {
+    ...state.units,
+    [afterFrisk.id]: afterFrisk,
+    [healedTarget.id]: healedTarget,
+  };
 
   return {
     state: clearPendingRoll({
       ...state,
-      units: {
-        ...state.units,
-        [target.id]: {
-          ...target,
-          hp: healedHp,
-        },
-      },
+      units,
     }),
-    events:
-      healedAmount > 0
+    events: [
+      evAbilityUsed({ unitId: afterFrisk.id, abilityId: ABILITY_FRISK_PACIFISM }),
+      ...(healedAmount > 0
         ? [
             {
-              type: "unitHealed",
+              type: "unitHealed" as const,
               unitId: target.id,
               amount: healedAmount,
               hpAfter: healedHp,
               sourceAbilityId: ABILITY_FRISK_PACIFISM,
             },
           ]
-        : [],
+        : []),
+    ],
   };
 }

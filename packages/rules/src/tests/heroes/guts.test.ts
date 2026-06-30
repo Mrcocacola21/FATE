@@ -240,6 +240,11 @@ export function testGutsBerserkModeGatingAndActivation() {
     used.state.units[guts.id].charges[ABILITY_GUTS_BERSERK_MODE] === 0,
     "Berserk should spend all 3 charges on activation"
   );
+  assert(
+    used.state.units[guts.id].turn.actionUsed === false &&
+      used.state.units[guts.id].hasActedThisTurn === false,
+    "Berserk activation should not consume the action slot"
+  );
 
   console.log("guts_berserk_mode_gating_and_activation passed");
 }
@@ -395,12 +400,67 @@ export function testGutsBerserkMovementAndAoEAndIncomingCap() {
     rng
   );
   assert(
-    attacked.state.pendingRoll?.kind === "tricksterAoE_attackerRoll",
-    "Berserk normal attack should become shared-roll adjacent AoE"
+    attacked.state.pendingRoll?.kind === "gutsBerserkAttackChoice",
+    "Berserk attack should prompt for single-target or adjacent AoE mode"
+  );
+  assert(
+    attacked.state.units[guts.id].turn.actionUsed === false &&
+      attacked.state.units[guts.id].turn.attackUsed === false,
+    "opening Berserk attack mode choice should not consume action or attack"
   );
 
-  const resolved = resolveAllPendingRollsWithEvents(attacked.state, rng);
-  const events = [...attacked.events, ...resolved.events];
+  const canceled = applyAction(
+    attacked.state,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: attacked.state.pendingRoll!.id,
+      player: "P1",
+      choice: "skip",
+    } as any,
+    makeRngSequence([])
+  );
+  assert(!canceled.state.pendingRoll, "canceling Berserk attack choice should clear pending");
+  assert(
+    canceled.state.units[guts.id].turn.actionUsed === false &&
+      canceled.state.units[guts.id].turn.attackUsed === false,
+    "canceling Berserk attack choice should not consume action or attack"
+  );
+
+  const restarted = applyAction(
+    state,
+    { type: "attack", attackerId: guts.id, defenderId: enemy1.id } as any,
+    rng
+  );
+  assert(
+    restarted.state.pendingRoll?.kind === "gutsBerserkAttackChoice",
+    "Berserk attack should prompt again after cancel"
+  );
+  const choseAoe = applyAction(
+    restarted.state,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: restarted.state.pendingRoll!.id,
+      player: "P1",
+      choice: {
+        type: "gutsBerserkAttackMode",
+        mode: "aoe",
+        targetId: enemy1.id,
+      },
+    } as any,
+    rng
+  );
+  assert(
+    choseAoe.state.pendingRoll?.kind === "tricksterAoE_attackerRoll",
+    "choosing Berserk AoE should request the shared AoE attacker roll"
+  );
+  assert(
+    choseAoe.state.units[guts.id].turn.actionUsed === true &&
+      choseAoe.state.units[guts.id].turn.attackUsed === true,
+    "Berserk AoE choice should consume action and attack only after mode commit"
+  );
+
+  const resolved = resolveAllPendingRollsWithEvents(choseAoe.state, rng);
+  const events = [...restarted.events, ...choseAoe.events, ...resolved.events];
   const attackEvents = events.filter(
     (event) =>
       event.type === "attackResolved" &&
@@ -452,6 +512,108 @@ export function testGutsBerserkMovementAndAoEAndIncomingCap() {
 }
 
 
+export function testGutsBerserkAttackChoiceSingleTargetSpearmanRange() {
+  const rng = makeRngSequence([
+    0.99,
+    0.99, // attacker roll
+    0.01,
+    0.01, // defender roll
+  ]);
+
+  let { state, guts } = setupGutsState();
+  const ally = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.class === "spearman"
+  )!;
+  const enemy = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "rider"
+  )!;
+
+  state = setUnit(state, guts.id, {
+    position: { col: 4, row: 4 },
+    gutsBerserkModeActive: true,
+  });
+  state = setUnit(state, ally.id, { position: { col: 4, row: 5 } });
+  state = setUnit(state, enemy.id, { position: { col: 4, row: 6 } });
+  state = toBattleState(state, "P1", guts.id);
+  state = initKnowledgeForOwners(state);
+
+  const beforeAllyHp = state.units[ally.id].hp;
+  const beforeEnemyHp = state.units[enemy.id].hp;
+  const attacked = applyAction(
+    state,
+    { type: "attack", attackerId: guts.id, defenderId: enemy.id } as any,
+    rng
+  );
+  assert(
+    attacked.state.pendingRoll?.kind === "gutsBerserkAttackChoice",
+    "Berserk attack at Spearman reach should prompt for attack mode"
+  );
+
+  const context = attacked.state.pendingRoll!.context as {
+    singleTargetOptions?: string[];
+    aoeTargetIds?: string[];
+  };
+  assert(
+    context.singleTargetOptions?.includes(enemy.id),
+    "single-target option should include Spearman-reach target"
+  );
+  assert(
+    !context.aoeTargetIds?.includes(enemy.id),
+    "AoE option should not treat a reach-2 target as adjacent"
+  );
+
+  const choseSingle = applyAction(
+    attacked.state,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: attacked.state.pendingRoll!.id,
+      player: "P1",
+      choice: {
+        type: "gutsBerserkAttackMode",
+        mode: "single",
+        targetId: enemy.id,
+      },
+    } as any,
+    rng
+  );
+  assert(
+    choseSingle.state.pendingRoll?.kind === "attack_attackerRoll",
+    "single-target Berserk attack should use normal attack roll flow"
+  );
+  assert(
+    choseSingle.state.units[guts.id].turn.actionUsed === false &&
+      choseSingle.state.units[guts.id].turn.attackUsed === false,
+    "single-target Berserk attack should not spend slots until attack resolves"
+  );
+
+  const resolved = resolveAllPendingRollsWithEvents(choseSingle.state, rng);
+  const attackEvents = [...choseSingle.events, ...resolved.events].filter(
+    (event) => event.type === "attackResolved" && event.attackerId === guts.id
+  ) as Extract<GameEvent, { type: "attackResolved" }>[];
+
+  assert(attackEvents.length === 1, "single-target Berserk attack should hit one unit");
+  assert(
+    attackEvents[0].defenderId === enemy.id,
+    "single-target Berserk attack should hit the chosen target"
+  );
+  assert(
+    resolved.state.units[ally.id].hp === beforeAllyHp,
+    "single-target Berserk attack should not damage adjacent allies"
+  );
+  assert(
+    resolved.state.units[enemy.id].hp < beforeEnemyHp,
+    "single-target Berserk attack should damage the chosen enemy"
+  );
+  assert(
+    resolved.state.units[guts.id].turn.actionUsed === true &&
+      resolved.state.units[guts.id].turn.attackUsed === true,
+    "single-target Berserk attack should spend action and attack after resolution"
+  );
+
+  console.log("guts_berserk_attack_choice_single_target_spearman_range passed");
+}
+
+
 export function testGutsExitBerserkOnceAndNoReentry() {
   let { state, guts } = setupGutsState();
   state = setUnit(state, guts.id, {
@@ -479,6 +641,11 @@ export function testGutsExitBerserkOnceAndNoReentry() {
   assert(
     exited.state.units[guts.id].gutsBerserkExitUsed === true,
     "Exit Berserk should mark one-time exit as used"
+  );
+  assert(
+    exited.state.units[guts.id].turn.actionUsed === false &&
+      exited.state.units[guts.id].hasActedThisTurn === false,
+    "Exit Berserk should not consume the action slot"
   );
 
   let nextState = setUnit(exited.state, guts.id, {

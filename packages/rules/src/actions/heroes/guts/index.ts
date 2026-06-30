@@ -3,5 +3,6 @@ export {
   applyGutsBerserkMode,
   applyGutsExitBerserk,
   applyGutsBerserkAttack,
+  resolveGutsBerserkAttackChoice,
   applyGutsEndTurnDrain,
 } from "./berserk";

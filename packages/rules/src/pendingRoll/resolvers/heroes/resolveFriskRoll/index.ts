@@ -7,4 +7,5 @@ export {
 export {
   resolveFriskGenocideChoice,
   resolveFriskKeenEyeChoice,
+  resolveFriskPrecisionStrikeTargetChoice,
 } from "./genocide";

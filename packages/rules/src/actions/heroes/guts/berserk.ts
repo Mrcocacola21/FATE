@@ -1,5 +1,14 @@
-import type { ApplyResult, GameAction, GameEvent, GameState, UnitState } from "../../../model";
+import type {
+  ApplyResult,
+  GameAction,
+  GameEvent,
+  GameState,
+  PendingRoll,
+  ResolveRollChoice,
+  UnitState,
+} from "../../../model";
 import { canAttackTarget } from "../../../combat";
+import { canDirectlyTargetUnit } from "../../../visibility";
 import { resolveAoE } from "../../../aoe";
 import {
   ABILITY_GUTS_BERSERK_MODE,
@@ -8,10 +17,140 @@ import {
   spendCharges,
 } from "../../../abilities";
 import { canSpendSlots, spendSlots } from "../../../turnEconomy";
-import { requestRoll, evAbilityUsed } from "../../../core";
-import type { TricksterAoEContext } from "../../types";
+import { clearPendingRoll, makeAttackContext, requestRoll, evAbilityUsed } from "../../../core";
+import type { GutsBerserkAttackChoiceContext, TricksterAoEContext } from "../../types";
 import { applyGriffithFemtoRebirth } from "../../../shared/griffith";
 import { isGuts } from "./helpers";
+
+function chebyshev(a: NonNullable<UnitState["position"]>, b: NonNullable<UnitState["position"]>): number {
+  return Math.max(Math.abs(a.col - b.col), Math.abs(a.row - b.row));
+}
+
+function sortTargetIdsByBoardOrder(state: GameState, ids: string[]): string[] {
+  return [...ids].sort((a, b) => {
+    const unitA = state.units[a];
+    const unitB = state.units[b];
+    const posA = unitA?.position;
+    const posB = unitB?.position;
+    if (posA && posB) {
+      if (posA.row !== posB.row) return posA.row - posB.row;
+      if (posA.col !== posB.col) return posA.col - posB.col;
+    }
+    return a.localeCompare(b);
+  });
+}
+
+function getGutsBerserkSingleTargetIds(
+  state: GameState,
+  unit: UnitState
+): string[] {
+  if (!isGuts(unit) || !unit.gutsBerserkModeActive || !unit.position) return [];
+  const ids = Object.values(state.units)
+    .filter((target) => target.owner !== unit.owner)
+    .filter((target) => canAttackTarget(state, unit, target))
+    .map((target) => target.id);
+  return sortTargetIdsByBoardOrder(state, ids);
+}
+
+function getGutsBerserkAoETargetIds(
+  state: GameState,
+  unit: UnitState
+): string[] {
+  if (!isGuts(unit) || !unit.gutsBerserkModeActive || !unit.position) return [];
+  const ids = Object.values(state.units)
+    .filter((target) => target.id !== unit.id)
+    .filter((target) => target.isAlive && !!target.position)
+    .filter((target) => chebyshev(unit.position!, target.position!) <= 1)
+    .filter((target) => canDirectlyTargetUnit(state, unit.id, target.id))
+    .map((target) => target.id);
+  return sortTargetIdsByBoardOrder(state, ids);
+}
+
+function parseGutsBerserkAttackMode(
+  choice: ResolveRollChoice | undefined
+): { mode: "single" | "aoe"; targetId: string } | null {
+  if (!choice || typeof choice !== "object" || !("type" in choice)) {
+    return null;
+  }
+  const payload = choice as {
+    type?: string;
+    mode?: unknown;
+    targetId?: unknown;
+  };
+  if (payload.type !== "gutsBerserkAttackMode") return null;
+  if (payload.mode !== "single" && payload.mode !== "aoe") return null;
+  if (typeof payload.targetId !== "string" || payload.targetId.length === 0) {
+    return null;
+  }
+  return { mode: payload.mode, targetId: payload.targetId };
+}
+
+function startGutsBerserkAoE(state: GameState, unit: UnitState): ApplyResult {
+  if (!unit.position || !canSpendSlots(unit, { attack: true, action: true })) {
+    return { state, events: [] };
+  }
+
+  const origin = unit.position;
+  const updatedUnit = spendSlots(unit, { attack: true, action: true });
+  let nextState: GameState = {
+    ...state,
+    units: {
+      ...state.units,
+      [updatedUnit.id]: updatedUnit,
+    },
+  };
+
+  const aoeRes = resolveAoE(
+    nextState,
+    updatedUnit.id,
+    origin,
+    {
+      radius: 1,
+      shape: "chebyshev",
+      revealHidden: true,
+      targetFilter: (targetUnit, caster) => targetUnit.id !== caster.id,
+      abilityId: ABILITY_GUTS_BERSERK_MODE,
+      emitEvent: false,
+    },
+    { next: () => 0.5 }
+  );
+
+  nextState = aoeRes.nextState;
+  const events: GameEvent[] = [...aoeRes.events];
+  const affectedUnitIds = aoeRes.affectedUnitIds;
+  const revealedUnitIds = aoeRes.revealedUnitIds;
+  if (affectedUnitIds.length === 0) {
+    return { state: nextState, events };
+  }
+
+  const queuedState: GameState = {
+    ...nextState,
+    pendingCombatQueue: [],
+    pendingAoE: {
+      casterId: updatedUnit.id,
+      abilityId: ABILITY_GUTS_BERSERK_MODE,
+      center: { ...origin },
+      radius: 1,
+      affectedUnitIds,
+      revealedUnitIds,
+      damagedUnitIds: [],
+      damageByUnitId: {},
+    },
+  };
+  const ctx: TricksterAoEContext = {
+    casterId: updatedUnit.id,
+    targetsQueue: affectedUnitIds,
+    currentTargetIndex: 0,
+  };
+  const requested = requestRoll(
+    queuedState,
+    updatedUnit.owner,
+    "tricksterAoE_attackerRoll",
+    ctx,
+    updatedUnit.id
+  );
+  return { state: requested.state, events: [...events, ...requested.events] };
+}
 
 export function applyGutsBerserkMode(
   state: GameState,
@@ -99,77 +238,92 @@ export function applyGutsBerserkAttack(
   if (!isGuts(unit) || !unit.gutsBerserkModeActive || !unit.position) {
     return { state, events: [] };
   }
-  const origin = unit.position;
   const target = state.units[action.defenderId];
   if (!target || !target.isAlive || !target.position) {
-    return { state, events: [] };
-  }
-  if (!canAttackTarget(state, unit, target)) {
     return { state, events: [] };
   }
   if (!canSpendSlots(unit, { attack: true, action: true })) {
     return { state, events: [] };
   }
 
-  const updatedUnit = spendSlots(unit, { attack: true, action: true });
-  let nextState: GameState = {
-    ...state,
-    units: {
-      ...state.units,
-      [updatedUnit.id]: updatedUnit,
-    },
-  };
-
-  const aoeRes = resolveAoE(
-    nextState,
-    updatedUnit.id,
-    origin,
-    {
-      radius: 1,
-      shape: "chebyshev",
-      revealHidden: true,
-      targetFilter: (targetUnit, caster) => targetUnit.id !== caster.id,
-      abilityId: ABILITY_GUTS_BERSERK_MODE,
-      emitEvent: false,
-    },
-    { next: () => 0.5 }
-  );
-
-  nextState = aoeRes.nextState;
-  const events: GameEvent[] = [...aoeRes.events];
-  const affectedUnitIds = aoeRes.affectedUnitIds;
-  const revealedUnitIds = aoeRes.revealedUnitIds;
-  if (affectedUnitIds.length === 0) {
-    return { state: nextState, events };
+  const singleTargetOptions = getGutsBerserkSingleTargetIds(state, unit);
+  const aoeTargetIds = getGutsBerserkAoETargetIds(state, unit);
+  const canUseSingle = singleTargetOptions.includes(target.id);
+  const canUseAoe = aoeTargetIds.includes(target.id);
+  if (!canUseSingle && !canUseAoe) {
+    return { state, events: [] };
   }
 
-  const queuedState: GameState = {
-    ...nextState,
-    pendingCombatQueue: [],
-    pendingAoE: {
-      casterId: updatedUnit.id,
-      abilityId: ABILITY_GUTS_BERSERK_MODE,
-      center: { ...origin },
-      radius: 1,
-      affectedUnitIds,
-      revealedUnitIds,
-      damagedUnitIds: [],
-      damageByUnitId: {},
-    },
-  };
-  const ctx: TricksterAoEContext = {
-    casterId: updatedUnit.id,
-    targetsQueue: affectedUnitIds,
-    currentTargetIndex: 0,
-  };
-  const requested = requestRoll(
-    queuedState,
-    updatedUnit.owner,
-    "tricksterAoE_attackerRoll",
-    ctx,
-    updatedUnit.id
+  return requestRoll(
+    state,
+    unit.owner,
+    "gutsBerserkAttackChoice",
+    {
+      gutsId: unit.id,
+      targetId: target.id,
+      singleTargetOptions,
+      aoeTargetIds,
+    } satisfies GutsBerserkAttackChoiceContext,
+    unit.id
   );
-  return { state: requested.state, events: [...events, ...requested.events] };
+}
+
+export function resolveGutsBerserkAttackChoice(
+  state: GameState,
+  pending: PendingRoll,
+  choice: ResolveRollChoice | undefined
+): ApplyResult {
+  const ctx = pending.context as unknown as GutsBerserkAttackChoiceContext;
+  const guts = state.units[ctx.gutsId];
+  if (!guts || !guts.isAlive || !guts.position || !isGuts(guts)) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+  if (!guts.gutsBerserkModeActive) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  if (choice === "skip") {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  const payload = parseGutsBerserkAttackMode(choice);
+  if (!payload) {
+    return { state, events: [] };
+  }
+  if (!canSpendSlots(guts, { attack: true, action: true })) {
+    return { state, events: [] };
+  }
+
+  const target = state.units[payload.targetId];
+  if (!target || !target.isAlive || !target.position) {
+    return { state, events: [] };
+  }
+
+  if (payload.mode === "single") {
+    const singleTargetOptions = getGutsBerserkSingleTargetIds(state, guts);
+    if (!singleTargetOptions.includes(payload.targetId)) {
+      return { state, events: [] };
+    }
+    const requested = requestRoll(
+      clearPendingRoll(state),
+      guts.owner,
+      "attack_attackerRoll",
+      makeAttackContext({
+        attackerId: guts.id,
+        defenderId: target.id,
+        consumeSlots: true,
+        queueKind: "normal",
+      }),
+      guts.id
+    );
+    return requested;
+  }
+
+  const aoeTargetIds = getGutsBerserkAoETargetIds(state, guts);
+  if (!aoeTargetIds.includes(payload.targetId)) {
+    return { state, events: [] };
+  }
+  return startGutsBerserkAoE(clearPendingRoll(state), guts);
 }
 
 export function applyGutsEndTurnDrain(

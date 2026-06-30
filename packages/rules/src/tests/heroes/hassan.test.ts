@@ -144,20 +144,55 @@ export function testHassanTrueEnemyGatingConsumesAndForcesOneAttack() {
     "True Enemy should request forced target selection"
   );
   assert(
-    used.state.units[hassan.id].charges[ABILITY_HASSAN_TRUE_ENEMY] === 0,
-    "True Enemy should spend exactly 3 charges immediately"
+    used.state.units[hassan.id].charges[ABILITY_HASSAN_TRUE_ENEMY] === 3,
+    "True Enemy should not spend charges before target resolution"
   );
   assert(
-    used.state.units[hassan.id].turn.actionUsed,
-    "True Enemy should consume Hassan's action slot"
+    !used.state.units[hassan.id].turn.actionUsed,
+    "True Enemy should not consume Hassan's action slot before target resolution"
   );
 
-  const targetChoice = applyAction(
+  const canceled = applyAction(
     used.state,
     {
       type: "resolvePendingRoll",
       pendingRollId: used.state.pendingRoll!.id,
       player: used.state.pendingRoll!.player,
+      choice: "skip",
+    } as any,
+    rng
+  );
+  assert(!canceled.state.pendingRoll, "True Enemy skip should clear target selection");
+  assert(
+    canceled.state.units[hassan.id].charges[ABILITY_HASSAN_TRUE_ENEMY] === 3,
+    "True Enemy skip should not spend charges"
+  );
+  assert(
+    !canceled.state.units[hassan.id].turn.actionUsed,
+    "True Enemy skip should not consume Hassan's action slot"
+  );
+
+  const reopened = applyAction(
+    canceled.state,
+    {
+      type: "useAbility",
+      unitId: hassan.id,
+      abilityId: ABILITY_HASSAN_TRUE_ENEMY,
+      payload: { forcedAttackerId: enemyForcedAttacker.id },
+    } as any,
+    rng
+  );
+  assert(
+    reopened.state.pendingRoll?.kind === "hassanTrueEnemyTargetChoice",
+    "True Enemy should reopen target selection after cancel"
+  );
+
+  const targetChoice = applyAction(
+    reopened.state,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: reopened.state.pendingRoll!.id,
+      player: reopened.state.pendingRoll!.player,
       choice: { type: "hassanTrueEnemyTarget", targetId: enemyForcedTarget.id },
     } as any,
     rng
@@ -166,9 +201,17 @@ export function testHassanTrueEnemyGatingConsumesAndForcesOneAttack() {
     targetChoice.state.pendingRoll?.kind === "attack_attackerRoll",
     "True Enemy should continue into normal attack flow"
   );
+  assert(
+    targetChoice.state.units[hassan.id].charges[ABILITY_HASSAN_TRUE_ENEMY] === 0,
+    "True Enemy should spend exactly 3 charges on target resolution"
+  );
+  assert(
+    targetChoice.state.units[hassan.id].turn.actionUsed,
+    "True Enemy should consume Hassan's action slot on target resolution"
+  );
 
   const resolved = resolveAllPendingRollsWithEvents(targetChoice.state, rng);
-  const events = [...used.events, ...targetChoice.events, ...resolved.events];
+  const events = [...reopened.events, ...targetChoice.events, ...resolved.events];
   const forcedAttackEvents = events.filter(
     (event) =>
       event.type === "attackResolved" &&

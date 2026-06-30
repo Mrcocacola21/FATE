@@ -12,6 +12,7 @@ import {
   applyAction,
   assert,
   coordKeys,
+  GameState,
   getLegalMovesForUnit,
   getStealthSuccessMinRoll,
   getUnitDefinition,
@@ -28,6 +29,22 @@ import {
   setupMettatonState,
   toBattleState,
 } from "../helpers/testUtils";
+
+function prepareMettatonStartTurn(state: GameState, unitId: string): GameState {
+  return {
+    ...state,
+    phase: "battle",
+    currentPlayer: state.units[unitId].owner,
+    activeUnitId: null,
+    pendingRoll: null,
+    pendingMove: null,
+    turnQueue: [unitId],
+    turnQueueIndex: 0,
+    turnOrder: [unitId],
+    turnOrderIndex: 0,
+  };
+}
+
 export function testMettatonLongLiverCannotHideAndRiderMovement() {
   let { state, mettaton } = setupMettatonState();
   const enemyArcher = Object.values(state.units).find(
@@ -73,7 +90,7 @@ export function testMettatonLongLiverCannotHideAndRiderMovement() {
 }
 
 
-export function testMettatonRatingPassiveAndSpend() {
+export function testMettatonRatingPassiveAndThresholdUnlock() {
   let { state, mettaton, enemy } = setupMettatonState();
   state = setUnit(state, mettaton.id, { position: { col: 4, row: 4 } });
   state = setUnit(state, enemy.id, { position: { col: 4, row: 5 } });
@@ -115,41 +132,50 @@ export function testMettatonRatingPassiveAndSpend() {
     "Successful defense should grant +1 Rating"
   );
 
-  let spendState = setUnit(defendedResolved.state, mettaton.id, {
+  let manualState = setUnit(defendedResolved.state, mettaton.id, {
     mettatonRating: 2,
     turn: makeEmptyTurnEconomy(),
   });
-  spendState = toBattleState(spendState, "P1", mettaton.id);
+  manualState = toBattleState(manualState, "P1", mettaton.id);
 
   const exFail = applyAction(
-    spendState,
+    manualState,
     { type: "useAbility", unitId: mettaton.id, abilityId: ABILITY_METTATON_EX } as any,
     new SeededRNG(1)
   );
   assert(
     exFail.state.units[mettaton.id].mettatonRating === 2,
-    "Failed spend should not change Rating"
+    "Blocked EX attempt should not change Rating"
   );
 
-  const exOkState = setUnit(spendState, mettaton.id, {
+  const manualReadyState = setUnit(manualState, mettaton.id, {
     mettatonRating: 5,
     turn: makeEmptyTurnEconomy(),
   });
-  const exOk = applyAction(
-    exOkState,
+  const manualEx = applyAction(
+    manualReadyState,
     { type: "useAbility", unitId: mettaton.id, abilityId: ABILITY_METTATON_EX } as any,
     new SeededRNG(2)
   );
   assert(
-    exOk.state.units[mettaton.id].mettatonRating === 0,
-    "EX should spend 5 Rating"
-  );
-  assert(
-    (exOk.state.units[mettaton.id].mettatonRating ?? 0) >= 0,
-    "Rating should never go below 0"
+    manualEx.state.units[mettaton.id].mettatonExUnlocked !== true &&
+      manualEx.state.units[mettaton.id].mettatonRating === 5,
+    "EX should not be manually activated even at threshold"
   );
 
-  console.log("mettaton_rating_passive_and_spend passed");
+  const startReadyState = prepareMettatonStartTurn(manualReadyState, mettaton.id);
+  const started = applyAction(
+    startReadyState,
+    { type: "unitStartTurn", unitId: mettaton.id } as any,
+    new SeededRNG(3)
+  );
+  assert(
+    started.state.units[mettaton.id].mettatonExUnlocked === true &&
+      started.state.units[mettaton.id].mettatonRating === 5,
+    "EX should unlock at turn start without spending Rating"
+  );
+
+  console.log("mettaton_rating_passive_and_threshold_unlock passed");
 }
 
 
@@ -250,9 +276,20 @@ export function testMettatonPoppinsGatingAreaAndRating() {
     "Poppins should attack all units in the selected 3x3 area"
   );
   assert(
-    resolved.state.units[mettaton.id].mettatonRating === 1 &&
-      resolved.state.units[mettaton.id].mettatonExUnlocked === true,
-    "Poppins rating gain should auto-trigger EX at 5 and retain overflow Rating"
+    resolved.state.units[mettaton.id].mettatonRating === 6 &&
+      resolved.state.units[mettaton.id].mettatonExUnlocked !== true,
+    "Poppins rating gain should not unlock EX before Mettaton's next turn start"
+  );
+
+  const nextTurn = applyAction(
+    prepareMettatonStartTurn(resolved.state, mettaton.id),
+    { type: "unitStartTurn", unitId: mettaton.id } as any,
+    new SeededRNG(2)
+  );
+  assert(
+    nextTurn.state.units[mettaton.id].mettatonRating === 6 &&
+      nextTurn.state.units[mettaton.id].mettatonExUnlocked === true,
+    "next Mettaton turn start should unlock EX without spending Poppins Rating"
   );
 
   console.log("mettaton_poppins_gating_area_and_rating passed");
@@ -296,15 +333,30 @@ export function testMettatonExStageAndLaser() {
     "EX should require Rating 5"
   );
 
-  const exOk = applyAction(
-    setUnit(state, mettaton.id, { mettatonRating: 5, turn: makeEmptyTurnEconomy() }),
+  const exReadyState = setUnit(state, mettaton.id, {
+    mettatonRating: 5,
+    turn: makeEmptyTurnEconomy(),
+  });
+  const manualEx = applyAction(
+    exReadyState,
     { type: "useAbility", unitId: mettaton.id, abilityId: ABILITY_METTATON_EX } as any,
     new SeededRNG(4)
   );
   assert(
+    manualEx.state.units[mettaton.id].mettatonExUnlocked !== true &&
+      manualEx.state.units[mettaton.id].mettatonRating === 5,
+    "EX should not be manually activated at threshold"
+  );
+
+  const exOk = applyAction(
+    prepareMettatonStartTurn(exReadyState, mettaton.id),
+    { type: "unitStartTurn", unitId: mettaton.id } as any,
+    new SeededRNG(4)
+  );
+  assert(
     exOk.state.units[mettaton.id].mettatonExUnlocked === true &&
-      exOk.state.units[mettaton.id].mettatonRating === 0,
-    "EX should unlock and spend 5 Rating"
+      exOk.state.units[mettaton.id].mettatonRating === 5,
+    "EX should unlock at turn start without spending Rating"
   );
 
   const exView = makePlayerView(exOk.state, "P1");
@@ -397,15 +449,31 @@ export function testMettatonNeoGraceAndRiderPathUnlocks() {
     "NEO should require Rating 10"
   );
 
-  const neoOk = applyAction(
-    setUnit(state, mettaton.id, { mettatonRating: 10, turn: makeEmptyTurnEconomy() }),
+  const neoReadyState = setUnit(state, mettaton.id, {
+    mettatonRating: 10,
+    turn: makeEmptyTurnEconomy(),
+  });
+  const manualNeo = applyAction(
+    neoReadyState,
     { type: "useAbility", unitId: mettaton.id, abilityId: ABILITY_METTATON_NEO } as any,
     new SeededRNG(9)
   );
   assert(
-    neoOk.state.units[mettaton.id].mettatonNeoUnlocked === true &&
-      neoOk.state.units[mettaton.id].mettatonRating === 0,
-    "NEO should unlock passives and spend 10 Rating"
+    manualNeo.state.units[mettaton.id].mettatonNeoUnlocked !== true &&
+      manualNeo.state.units[mettaton.id].mettatonRating === 10,
+    "NEO should not be manually activated at threshold"
+  );
+
+  const neoOk = applyAction(
+    prepareMettatonStartTurn(neoReadyState, mettaton.id),
+    { type: "unitStartTurn", unitId: mettaton.id } as any,
+    new SeededRNG(9)
+  );
+  assert(
+    neoOk.state.units[mettaton.id].mettatonExUnlocked === true &&
+      neoOk.state.units[mettaton.id].mettatonNeoUnlocked === true &&
+      neoOk.state.units[mettaton.id].mettatonRating === 10,
+    "NEO should unlock passives at turn start without spending Rating"
   );
 
   const neoView = makePlayerView(neoOk.state, "P1");

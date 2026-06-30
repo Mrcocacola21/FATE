@@ -1,4 +1,3 @@
-export { LOKI_LAUGHT_CAP } from "./constants";
 export type { LokiLaughtOption } from "./constants";
 export {
   isLoki,

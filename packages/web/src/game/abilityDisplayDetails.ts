@@ -111,7 +111,6 @@ const detailRegistry: Record<string, AbilityDisplayDetails> = {
     resource: {
       labelKey: "abilityDetails.resources.pacifism",
       source: { kind: "abilityCharges" },
-      max: 30,
     },
     sections: [
       {
@@ -158,7 +157,6 @@ const detailRegistry: Record<string, AbilityDisplayDetails> = {
     resource: {
       labelKey: "abilityDetails.resources.genocide",
       source: { kind: "abilityCharges" },
-      max: 30,
     },
     sections: [
       {
@@ -201,7 +199,6 @@ const detailRegistry: Record<string, AbilityDisplayDetails> = {
     resource: {
       labelKey: "abilityDetails.resources.laughter",
       source: { kind: "abilityCharges" },
-      max: 15,
     },
     sections: [
       {
@@ -715,7 +712,7 @@ const detailRegistry: Record<string, AbilityDisplayDetails> = {
             nameKey: "abilityDetails.mettaton.rating.options.ex.name",
             descriptionKey: "abilityDetails.mettaton.rating.options.ex.description",
             types: ["impulse"],
-            cost: { amount: 5, resourceKey: "abilityDetails.resources.rating" },
+            cost: { amount: null, resourceKey: "abilityDetails.resources.rating" },
             activeWhen: { flag: "mettatonExUnlocked", value: true },
           },
           {
@@ -735,7 +732,7 @@ const detailRegistry: Record<string, AbilityDisplayDetails> = {
             nameKey: "abilityDetails.mettaton.rating.options.neo.name",
             descriptionKey: "abilityDetails.mettaton.rating.options.neo.description",
             types: ["impulse"],
-            cost: { amount: 10, resourceKey: "abilityDetails.resources.rating" },
+            cost: { amount: null, resourceKey: "abilityDetails.resources.rating" },
             activeWhen: { flag: "mettatonNeoUnlocked", value: true },
           },
           {

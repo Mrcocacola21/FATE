@@ -18,6 +18,12 @@ export type ResolveRollChoice =
   | { type: "forestTarget"; center: Coord }
   | { type: "forestMoveDestination"; position: Coord }
   | { type: "chikatiloPlace"; position: Coord }
+  | {
+      type: "groznyTyrantAttackCell";
+      mode: "normal" | "invadeTime";
+      targetId: string;
+      position: Coord;
+    }
   | { type: "lechyGuideTravelerPlace"; position: Coord }
   | { type: "jebeKhansShooterTarget"; targetId: string }
   | { type: "hassanTrueEnemyTarget"; targetId: string }
@@ -38,6 +44,11 @@ export type ResolveRollChoice =
   | { type: "lokiChickenTarget"; targetId: string }
   | { type: "lokiMindControlEnemy"; targetId: string }
   | { type: "lokiMindControlTarget"; targetId: string }
+  | {
+      type: "gutsBerserkAttackMode";
+      mode: "single" | "aoe";
+      targetId: string;
+    }
   | { type: "femtoDivineMoveDestination"; position: Coord }
   | { type: "odinSleipnirDestination"; position: Coord }
   | {
@@ -56,6 +67,7 @@ export type ResolveRollChoice =
       option: "substitution" | "keenEye" | "precisionStrike";
     }
   | { type: "friskKeenEyeTarget"; targetId: string }
+  | { type: "friskPrecisionStrikeTarget"; targetId: string }
   | RuleDeclarationChoice;
 
 export type GameAction =

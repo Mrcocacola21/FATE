@@ -652,8 +652,34 @@ export function testLechyStormGatingEffectsAndExemptions() {
     rngFail
   );
   assert(
-    damaged.state.units[enemy.id].hp === 4,
+    damaged.state.pendingRoll?.kind === "lechyStormStartTurnRoll",
+    "storm should prompt for a start-turn d6 instead of auto-rolling"
+  );
+  assert(
+    damaged.state.units[enemy.id].hp === 5,
+    "storm should not damage before its pending roll resolves"
+  );
+  assert(
+    damaged.events.some(
+      (event) => event.type === "rollRequested" && event.kind === "lechyStormStartTurnRoll"
+    ),
+    "storm should emit a pending roll request"
+  );
+
+  const stormResolved = resolvePendingRollOnce(damaged.state, rngFail);
+  assert(
+    stormResolved.state.units[enemy.id].hp === 4,
     "storm should damage non-exempt unit on failed roll"
+  );
+  assert(
+    stormResolved.events.some(
+      (event) =>
+        event.type === "lechyStormRollResult" &&
+        event.unitId === enemy.id &&
+        event.roll === 1 &&
+        event.damage === 1
+    ),
+    "storm should log the failed roll and damage"
   );
 
   let insideState: GameState = {

@@ -5,9 +5,6 @@ import type {
   GameState,
   UnitState,
 } from "../../model";
-import { getUnitAt } from "../../board";
-import { spendSlots } from "../../turnEconomy";
-import { unitCanSeeStealthed } from "../../visibility";
 import { makeAttackContext, requestRoll } from "../../core";
 import { getPolkovodetsSource } from "../heroes/vlad";
 import { HERO_LECHY_ID } from "../../heroes";
@@ -17,148 +14,8 @@ import {
   requestRiverBoatDropDestination,
 } from "../heroes/riverPerson";
 import { requestLechyGuideTravelerPlacement } from "../heroes/lechy";
-import { evMoveBlocked, evStealthRevealed } from "../../core";
+import { evMoveBlocked } from "../../core";
 import { collectRiderPathTargets } from "./rider";
-
-export function resolveSteppedOnHiddenDestination(
-  state: GameState,
-  unit: UnitState,
-  finalTo: Coord,
-  pendingValid: boolean,
-  hasRiverBoatmanMove: boolean,
-  hasDecreeMove: boolean
-): ApplyResult | null {
-  const hiddenAtDest = getUnitAt(state, finalTo);
-  if (
-    !hiddenAtDest ||
-    !hiddenAtDest.isAlive ||
-    hiddenAtDest.owner === unit.owner ||
-    !hiddenAtDest.isStealthed
-  ) {
-    return null;
-  }
-
-  const known = state.knowledge?.[unit.owner]?.[hiddenAtDest.id];
-  const canSee = unitCanSeeStealthed(state, unit, hiddenAtDest);
-  if (known || canSee) {
-    return null;
-  }
-
-  const revealed: UnitState = {
-    ...hiddenAtDest,
-    isStealthed: false,
-    stealthTurnsLeft: 0,
-  };
-  let movedUnit: UnitState = hasRiverBoatmanMove
-    ? { ...unit, riverBoatmanMovePending: false }
-    : spendSlots(unit, { move: true });
-  if (isRiverPerson(movedUnit)) {
-    movedUnit = {
-      ...movedUnit,
-      riverBoatCarryAllyId: undefined,
-    };
-  }
-  if (hasDecreeMove) {
-    movedUnit = { ...movedUnit, genghisKhanDecreeMovePending: false };
-  }
-  const updatedLastKnown = {
-    ...state.lastKnownPositions,
-    P1: { ...(state.lastKnownPositions?.P1 ?? {}) },
-    P2: { ...(state.lastKnownPositions?.P2 ?? {}) },
-  };
-  delete updatedLastKnown.P1[revealed.id];
-  delete updatedLastKnown.P2[revealed.id];
-  const newState: GameState = {
-    ...state,
-    units: {
-      ...state.units,
-      [revealed.id]: revealed,
-      [movedUnit.id]: movedUnit,
-    },
-    knowledge: {
-      ...state.knowledge,
-      [unit.owner]: {
-        ...(state.knowledge?.[unit.owner] ?? {}),
-        [revealed.id]: true,
-      },
-    },
-    lastKnownPositions: updatedLastKnown,
-    pendingMove: pendingValid ? null : state.pendingMove,
-  };
-  const events: GameEvent[] = [
-    evStealthRevealed({
-      unitId: revealed.id,
-      reason: "steppedOnHidden",
-      revealerId: unit.id,
-    }),
-  ];
-  return { state: newState, events };
-}
-
-export function applyAdjacencyRevealAfterMove(
-  state: GameState,
-  updatedUnit: UnitState,
-  events: GameEvent[]
-): { state: GameState; events: GameEvent[] } {
-  if (!updatedUnit.position) {
-    return { state, events };
-  }
-
-  let newState = state;
-  const nextEvents = [...events];
-  const moverOwner = updatedUnit.owner;
-  const moverPos = updatedUnit.position;
-
-  for (const other of Object.values(newState.units)) {
-    if (!other.isAlive || !other.position) continue;
-    if (other.owner === moverOwner) continue;
-    if (!other.isStealthed) continue;
-
-    const dx = Math.abs(other.position.col - moverPos.col);
-    const dy = Math.abs(other.position.row - moverPos.row);
-    const dist = Math.max(dx, dy);
-    if (dist > 1) continue;
-
-    const revealed: UnitState = {
-      ...other,
-      isStealthed: false,
-      stealthTurnsLeft: 0,
-    };
-    const updatedLastKnown = {
-      ...newState.lastKnownPositions,
-      P1: { ...(newState.lastKnownPositions?.P1 ?? {}) },
-      P2: { ...(newState.lastKnownPositions?.P2 ?? {}) },
-    };
-    delete updatedLastKnown.P1[revealed.id];
-    delete updatedLastKnown.P2[revealed.id];
-
-    newState = {
-      ...newState,
-      units: {
-        ...newState.units,
-        [revealed.id]: revealed,
-      },
-      knowledge: {
-        ...newState.knowledge,
-        [moverOwner]: {
-          ...(newState.knowledge?.[moverOwner] ?? {}),
-          [revealed.id]: true,
-        },
-      },
-      lastKnownPositions: updatedLastKnown,
-    };
-
-    nextEvents.push(
-      evStealthRevealed({
-        unitId: revealed.id,
-        reason: "adjacency",
-        revealerId: updatedUnit.id,
-      })
-    );
-  }
-
-  return { state: newState, events: nextEvents };
-}
 
 export function maybeRequestRiderPathAttacks(
   originalState: GameState,

@@ -161,6 +161,14 @@ export interface LokiMindControlTargetChoiceContext
   options: string[];
 }
 
+export interface GutsBerserkAttackChoiceContext
+  extends Record<string, unknown> {
+  gutsId: string;
+  targetId: string;
+  singleTargetOptions: string[];
+  aoeTargetIds: string[];
+}
+
 export interface FemtoDivineMoveRollContext extends Record<string, unknown> {
   unitId: string;
 }
@@ -199,6 +207,12 @@ export interface FriskKeenEyeChoiceContext extends Record<string, unknown> {
   options: string[];
 }
 
+export interface FriskPrecisionStrikeTargetChoiceContext
+  extends Record<string, unknown> {
+  friskId: string;
+  options: string[];
+}
+
 export interface RiverBoatCarryChoiceContext extends Record<string, unknown> {
   riverId: string;
   mode?: MoveMode;
@@ -223,4 +237,8 @@ export interface RiverTraLaLaDestinationChoiceContext
   riverId: string;
   targetId: string;
   options: Coord[];
+}
+
+export interface LechyStormStartTurnRollContext extends Record<string, unknown> {
+  unitId: string;
 }

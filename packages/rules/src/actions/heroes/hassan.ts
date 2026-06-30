@@ -1,7 +1,6 @@
 import type {
   ApplyResult,
   GameAction,
-  GameEvent,
   GameState,
   PlayerId,
   UnitState,
@@ -12,12 +11,11 @@ import { canDirectlyTargetUnit } from "../../visibility";
 import {
   ABILITY_HASSAN_TRUE_ENEMY,
   getAbilitySpec,
-  spendCharges,
+  getCharges,
 } from "../../abilities";
 import { HERO_FALSE_TRAIL_TOKEN_ID, HERO_HASSAN_ID } from "../../heroes";
-import { canSpendSlots, spendSlots } from "../../turnEconomy";
+import { canSpendSlots } from "../../turnEconomy";
 import { requestRoll } from "../../core";
-import { evAbilityUsed } from "../../core";
 import type {
   HassanAssassinOrderSelectionContext,
   HassanTrueEnemyTargetChoiceContext,
@@ -123,37 +121,23 @@ export function applyHassanTrueEnemy(
   }
 
   const chargeAmount = spec.chargesPerUse ?? spec.chargeCost ?? 0;
-  const spent = spendCharges(unit, spec.id, chargeAmount);
-  if (!spent.ok) {
+  if (getCharges(unit, spec.id) < chargeAmount) {
     return { state, events: [] };
   }
 
-  const updatedHassan = spendSlots(spent.unit, costs);
-  const nextState: GameState = {
-    ...state,
-    units: {
-      ...state.units,
-      [updatedHassan.id]: updatedHassan,
-    },
-  };
-
-  const events: GameEvent[] = [
-    evAbilityUsed({ unitId: updatedHassan.id, abilityId: spec.id }),
-  ];
-
   const ctx: HassanTrueEnemyTargetChoiceContext = {
-    hassanId: updatedHassan.id,
+    hassanId: unit.id,
     forcedAttackerId,
     options: forcedTargets,
   };
   const requested = requestRoll(
-    nextState,
-    updatedHassan.owner,
+    state,
+    unit.owner,
     "hassanTrueEnemyTargetChoice",
     ctx,
-    updatedHassan.id
+    unit.id
   );
-  return { state: requested.state, events: [...events, ...requested.events] };
+  return requested;
 }
 
 export function getHassanAssassinOrderEligibleUnitIds(

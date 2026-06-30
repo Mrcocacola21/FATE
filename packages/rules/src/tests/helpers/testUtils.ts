@@ -203,6 +203,25 @@ export function resolvePendingRollOnce(
       ? { type: "ruleCharge", abilityId: firstOption }
       : pending.kind === "courtForcedAppearanceDestination" && firstOption
       ? { type: "ruleCell", position: firstOption }
+      : pending.kind === "groznyTyrantAttackCellChoice" &&
+        firstOption &&
+        typeof firstOption === "object" &&
+        typeof (firstOption as { targetId?: unknown }).targetId === "string" &&
+        ((firstOption as { mode?: unknown }).mode === "normal" ||
+          (firstOption as { mode?: unknown }).mode === "invadeTime")
+      ? {
+          type: "groznyTyrantAttackCell",
+          mode: (firstOption as { mode: "normal" | "invadeTime" }).mode,
+          targetId: (firstOption as { targetId: string }).targetId,
+          position: (firstOption as { position: Coord }).position,
+        }
+      : pending.kind === "gutsBerserkAttackChoice" &&
+        typeof (pending.context as { targetId?: unknown }).targetId === "string"
+      ? {
+          type: "gutsBerserkAttackMode",
+          mode: "single",
+          targetId: (pending.context as { targetId: string }).targetId,
+        }
       : undefined;
   return applyActionRaw(
     state,
