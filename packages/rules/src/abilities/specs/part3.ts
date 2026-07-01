@@ -221,5 +221,7 @@ export const ABILITY_SPECS_PART_3: Record<string, AbilitySpec> = {
     kind: "passive",
     description:
       "Gain +2 Rating per successful hit and +1 Rating per successful defense.",
+    chargeUnlimited: true,
+    isSpecialCounter: true,
   },
 };

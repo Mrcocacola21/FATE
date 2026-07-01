@@ -34,6 +34,10 @@ import {
   testBattleTurnOrderFollowsPlacementOrder,
 } from "./core/turnFlow.test";
 import {
+  testBoundedCountersStillClamp,
+  testUnboundedCountersExceedCommonChargeLimits,
+} from "./core/counters.test";
+import {
   testCannotMoveTwicePerTurn,
   testTricksterMoveOptionsGeneratedAndUsed,
   testBerserkerMoveOptionsGeneratedAndUsed,
@@ -181,7 +185,9 @@ import {
   testGenghisHpIs7,
   testKhansDecreeDoesNotConsumeMoveSlot,
   testKhansDecreeAllowsDiagonalMoveThenConsumesMove,
+  testKhansDecreeRejectsDiagonalMoveWithoutStatus,
   testKhansDecreeDiagonalMoveTriggersRiderAttacksForTouchedEnemies,
+  testKhansDecreeDiagonalMoveTriggersDestinationHazardOnce,
   testKhansDecreeCannotBeUsedAfterMove,
   testGenghisMongolChargeRequires4SpendsAll4,
   testGenghisLegendOfSteppesBonusOnlyVsLastTurnTarget,
@@ -374,6 +380,8 @@ function main(): void {
   testImpulseMetadataAllAutoManaged();
   testChargedLineImpulsesCreateForcedPendingAtTurnStart();
   testEventDrivenImpulsesAutoTrigger();
+  testUnboundedCountersExceedCommonChargeLimits();
+  testBoundedCountersStillClamp();
   testGameModeConfigsExposeExpectedModes();
   testClassicRosterCreationUsesOnlyBaseUnits();
   testClassicRosterIgnoresCustomFigureSets();
@@ -504,7 +512,9 @@ function main(): void {
   testGenghisHpIs7();
   testKhansDecreeDoesNotConsumeMoveSlot();
   testKhansDecreeAllowsDiagonalMoveThenConsumesMove();
+  testKhansDecreeRejectsDiagonalMoveWithoutStatus();
   testKhansDecreeDiagonalMoveTriggersRiderAttacksForTouchedEnemies();
+  testKhansDecreeDiagonalMoveTriggersDestinationHazardOnce();
   testKhansDecreeCannotBeUsedAfterMove();
   testGenghisMongolChargeRequires4SpendsAll4();
   testGenghisLegendOfSteppesBonusOnlyVsLastTurnTarget();

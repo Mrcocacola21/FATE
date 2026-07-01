@@ -91,14 +91,21 @@ export function getAbilityChargeState(
 ): AbilityChargeState {
   const current =
     abilityMeta?.currentCharges ?? unitState?.charges?.[abilityId] ?? 0;
-  if (abilityMeta?.chargeUnlimited) {
-    return { current, max: null, enabled: true };
-  }
-
   const required =
     typeof abilityMeta?.chargeRequired === "number"
       ? abilityMeta.chargeRequired
       : null;
+  const enabled = required === null || current >= required;
+
+  if (abilityMeta?.chargeUnlimited) {
+    return {
+      current,
+      max: null,
+      enabled,
+      reason: enabled ? undefined : "game.notEnoughCharges",
+    };
+  }
+
   if (required === null) {
     return { current, max: null, enabled: true };
   }
@@ -106,8 +113,7 @@ export function getAbilityChargeState(
   const max =
     typeof abilityMeta?.maxCharges === "number"
       ? abilityMeta.maxCharges
-      : required;
-  const enabled = current >= required;
+      : null;
   return {
     current,
     max,
@@ -128,7 +134,7 @@ export function formatChargeLabel(
   if (chargeState.max !== null) {
     return `${chargeState.current}/${chargeState.max}`;
   }
-  return null;
+  return abilityMeta.currentCharges !== undefined ? `${chargeState.current}` : null;
 }
 
 export function isActionableAbility(ability: AbilityView): boolean {

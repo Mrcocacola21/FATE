@@ -10,16 +10,41 @@ export function getCharges(unit: UnitState, abilityId: string): number {
   return unit.charges[abilityId] ?? 0;
 }
 
+function toChargeInt(value: number): number {
+  if (!Number.isFinite(value)) return 0;
+  return Math.max(0, Math.trunc(value));
+}
+
+export function getChargeLimit(abilityId: string): number | null {
+  const spec = getAbilitySpec(abilityId);
+  if (spec?.chargeUnlimited === true) return null;
+  if (typeof spec?.maxCharges === "number") {
+    return toChargeInt(spec.maxCharges);
+  }
+  return null;
+}
+
+export function isUnboundedChargeCounter(abilityId: string): boolean {
+  return getAbilitySpec(abilityId)?.chargeUnlimited === true;
+}
+
+export function clampCharges(abilityId: string, value: number): number {
+  const next = toChargeInt(value);
+  const limit = getChargeLimit(abilityId);
+  return limit === null ? next : Math.min(next, limit);
+}
+
 export function setCharges(
   unit: UnitState,
   abilityId: string,
   value: number
 ): UnitState {
+  const next = clampCharges(abilityId, value);
   return {
     ...unit,
     charges: {
       ...unit.charges,
-      [abilityId]: value,
+      [abilityId]: next,
     },
   };
 }
@@ -31,14 +56,9 @@ export function addCharges(
 ): UnitState {
   const spec = getAbilitySpec(abilityId);
   const current = getCharges(unit, abilityId);
-  let next = current + delta;
+  if (!spec && delta === 0) return unit;
 
-  if (spec?.maxCharges !== undefined) {
-    next = Math.min(next, spec.maxCharges);
-  }
-  if (next < 0) next = 0;
-
-  return setCharges(unit, abilityId, next);
+  return setCharges(unit, abilityId, current + delta);
 }
 
 export function canUseAbility(unit: UnitState, abilityId: string): boolean {

@@ -3,10 +3,6 @@ import { isInsideBoard } from "../model";
 import { getUnitDefinition } from "../units";
 import { addCoord, ALL_DIRS, isCellOccupied } from "../board";
 import {
-  hasMettatonBerserkerFeature,
-  hasMettatonRiderMovement,
-} from "../mettaton";
-import {
   HERO_GRAND_KAISER_ID,
   HERO_VLAD_TEPES_ID,
   HERO_EL_CID_COMPEADOR_ID,
@@ -15,9 +11,9 @@ import {
   HERO_HASSAN_ID,
   HERO_JEBE_ID,
   HERO_KALADIN_ID,
-  HERO_UNDYNE_ID,
   getHeroDefinition,
 } from "../heroes";
+import { getUnitMovementClasses } from "../movement";
 import type { RNG } from "../rng";
 import { rollD6 } from "../rng";
 
@@ -97,27 +93,7 @@ export function getAdjacentEmptyCells(state: GameState, origin: Coord): Coord[] 
 }
 
 export function getMovementModes(unit: UnitState): UnitState["class"][] {
-  if (hasMettatonRiderMovement(unit)) {
-    return hasMettatonBerserkerFeature(unit)
-      ? ["rider", "berserker"]
-      : ["rider"];
-  }
-  if (isGuts(unit) && unit.gutsBerserkModeActive) {
-    return ["berserker", "knight", "assassin"];
-  }
-  if (isGuts(unit)) {
-    return ["berserker", "knight"];
-  }
-  if (isKaladin(unit)) {
-    return ["spearman", "trickster", "berserker"];
-  }
-  if (unit.heroId === HERO_UNDYNE_ID) {
-    return ["berserker", "spearman"];
-  }
-  if (isKaiserTransformed(unit)) {
-    return ["archer", "rider", "berserker"];
-  }
-  return [unit.class];
+  return getUnitMovementClasses(unit);
 }
 
 export function unitHasMovementMode(

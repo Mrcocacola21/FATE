@@ -11,6 +11,7 @@ import {
   type UnitMoveSummary,
   type UnitStealthSummary,
 } from "./actionSummaries";
+import { formatChargeLabel, getAbilityChargeState } from "./rightPanelHelpers";
 
 function makeUnit(overrides: Partial<UnitState> = {}): UnitState {
   return {
@@ -181,6 +182,39 @@ test("public battle bars keep compact Move, Attack, and Stealth states", () => {
     ["move", "attack", "stealth"],
   );
   assert.equal(bars.find((bar) => bar.kind === "attack")?.state, "spent");
+});
+
+test("charge labels distinguish bounded and unbounded counters", () => {
+  const unbounded = makeAbility({
+    id: "friskPacifism",
+    chargeRequired: 10,
+    maxCharges: undefined,
+    chargeUnlimited: true,
+    currentCharges: 12,
+  });
+  const unboundedState = getAbilityChargeState(unbounded.id, null, unbounded);
+  assert.equal(unboundedState.max, null);
+  assert.equal(formatChargeLabel(unbounded, unboundedState, false), "12");
+
+  const threshold = makeAbility({
+    id: "mettatonNeo",
+    chargeRequired: 10,
+    maxCharges: undefined,
+    currentCharges: 12,
+  });
+  const thresholdState = getAbilityChargeState(threshold.id, null, threshold);
+  assert.equal(thresholdState.max, null);
+  assert.equal(formatChargeLabel(threshold, thresholdState, false), "12");
+
+  const bounded = makeAbility({
+    id: "undyneEnergySpear",
+    chargeRequired: 2,
+    maxCharges: 2,
+    currentCharges: 1,
+  });
+  const boundedState = getAbilityChargeState(bounded.id, null, bounded);
+  assert.equal(boundedState.max, 2);
+  assert.equal(formatChargeLabel(bounded, boundedState, false), "1/2");
 });
 
 test("new action UI i18n keys exist in English and Ukrainian", () => {

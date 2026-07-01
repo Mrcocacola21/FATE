@@ -7,7 +7,7 @@ import {
   hasMettatonNeoUnlocked,
 } from "../mettaton";
 import { hasSansUnbelieverUnlocked, isSans } from "../sans";
-import { getAbilitySpec, getCharges } from "./charges";
+import { getAbilitySpec, getCharges, getChargeLimit } from "./charges";
 import * as ids from "./constants";
 import type { AbilitySpec } from "./types";
 import { collectAbilityIdsForUnit } from "./viewIds";
@@ -146,16 +146,22 @@ export function getAbilityViewsForUnit(
         id === ids.ABILITY_PAPYRUS_COOL_GUY && unit.papyrusUnbelieverActive
           ? 3
           : undyneEnergySpearRequired ?? mettatonRatingRequired ?? chargeRequired;
+      const usesMettatonRating =
+        id === ids.ABILITY_METTATON_RATING ||
+        mettatonRatingRequired !== undefined;
       const hasCharges =
         spec.chargeUnlimited === true ||
-        spec.maxCharges !== undefined ||
+        getChargeLimit(id) !== null ||
         effectiveChargeRequired !== undefined ||
-        mettatonRatingRequired !== undefined;
+        usesMettatonRating;
       const currentCharges = hasCharges
-        ? mettatonRatingRequired !== undefined
+        ? usesMettatonRating
           ? getMettatonRating(unit)
           : getCharges(unit, id)
         : undefined;
+      const maxCharges = getChargeLimit(id) ?? undefined;
+      const chargeUnlimited =
+        spec.chargeUnlimited === true || usesMettatonRating ? true : undefined;
 
       let isAvailable = true;
       let disabledReason: string | undefined = undefined;
@@ -226,8 +232,8 @@ export function getAbilityViewsForUnit(
         description: spec.description,
         slot: getSlotFromCost(spec),
         chargeRequired: effectiveChargeRequired,
-        maxCharges: spec.maxCharges,
-        chargeUnlimited: spec.chargeUnlimited,
+        maxCharges,
+        chargeUnlimited,
         currentCharges,
         isAvailable,
         disabledReason,

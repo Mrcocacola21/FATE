@@ -18,6 +18,8 @@ import {
   setupUndyneState,
   toBattleState,
 } from "../helpers/testUtils";
+import { getUnitMovementClasses } from "../../movement";
+
 export function testUndyneToughSpearmanFeatureAndReach() {
   let { state, undyne, enemy } = setupUndyneState();
 
@@ -46,6 +48,55 @@ export function testUndyneToughSpearmanFeatureAndReach() {
       modeEvent.type === "moveOptionsGenerated" &&
       (modeEvent.modes ?? []).includes("spearman"),
     "Undyne should expose Spearman movement mode from multiclass"
+  );
+  assert(
+    getUnitMovementClasses(moveState.units[undyne.id]).includes("spearman"),
+    "Undyne effective movement classes should include Spearman"
+  );
+  const spearmanMoveOptions = applyAction(
+    moveState,
+    { type: "requestMoveOptions", unitId: undyne.id, mode: "spearman" } as any,
+    makeRngSequence([])
+  );
+  assert(
+    spearmanMoveOptions.state.pendingMove?.mode === "spearman" &&
+      spearmanMoveOptions.state.pendingMove.legalTo.some(
+        (coord) => coord.col === 5 && coord.row === 5
+      ),
+    "Undyne should be able to generate Spearman movement options"
+  );
+  const spearmanMove = applyAction(
+    spearmanMoveOptions.state,
+    { type: "move", unitId: undyne.id, to: { col: 5, row: 5 } } as any,
+    makeRngSequence([])
+  );
+  assert(
+    spearmanMove.state.units[undyne.id].position?.col === 5 &&
+      spearmanMove.state.units[undyne.id].position?.row === 5 &&
+      spearmanMove.state.units[undyne.id].turn.moveUsed === true,
+    "Undyne should resolve a Spearman-mode move through the normal movement action"
+  );
+
+  const nonSpearman = Object.values(moveState.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "knight"
+  )!;
+  let nonSpearmanState = setUnit(moveState, nonSpearman.id, {
+    position: { col: 2, row: 2 },
+  });
+  nonSpearmanState = toBattleState(nonSpearmanState, "P2", nonSpearman.id);
+  const illegalSpearmanMode = applyAction(
+    nonSpearmanState,
+    {
+      type: "requestMoveOptions",
+      unitId: nonSpearman.id,
+      mode: "spearman",
+    } as any,
+    makeRngSequence([])
+  );
+  assert(
+    illegalSpearmanMode.events.length === 0 &&
+      illegalSpearmanMode.state.pendingMove === null,
+    "non-Spearman units should not be granted Spearman movement mode"
   );
 
   state = setUnit(state, undyne.id, { position: { col: 4, row: 4 } });

@@ -317,6 +317,38 @@ export function testKhansDecreeAllowsDiagonalMoveThenConsumesMove() {
   console.log("khans_decree_allows_diagonal_move_then_consumes_move passed");
 }
 
+export function testKhansDecreeRejectsDiagonalMoveWithoutStatus() {
+  const rng = new SeededRNG(104);
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1", { rider: HERO_GENGHIS_KHAN_ID }));
+  state = attachArmy(state, createDefaultArmy("P2"));
+
+  const genghis = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "rider"
+  )!;
+
+  state = setUnit(state, genghis.id, {
+    position: { col: 0, row: 0 },
+    charges: { ...genghis.charges, [ABILITY_GENGHIS_KHAN_KHANS_DECREE]: 2 },
+  });
+  state = toBattleState(state, "P1", genghis.id);
+
+  const rejected = applyAction(
+    state,
+    { type: "move", unitId: genghis.id, to: { col: 2, row: 2 } } as any,
+    rng
+  );
+
+  assert.deepStrictEqual(
+    rejected.state,
+    state,
+    "diagonal move without Decree status should not mutate state"
+  );
+  assert.strictEqual(rejected.events.length, 0);
+
+  console.log("khans_decree_rejects_diagonal_move_without_status passed");
+}
+
 export function testKhansDecreeDiagonalMoveTriggersRiderAttacksForTouchedEnemies() {
   const rng = makeRngSequence([
     0.99, 0.99, 0.01, 0.01,
@@ -399,6 +431,82 @@ export function testKhansDecreeDiagonalMoveTriggersRiderAttacksForTouchedEnemies
   );
 
   console.log("khans_decree_diagonal_move_triggers_rider_attacks_for_touched_enemies passed");
+}
+
+export function testKhansDecreeDiagonalMoveTriggersDestinationHazardOnce() {
+  const rng = new SeededRNG(105);
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1", { rider: HERO_GENGHIS_KHAN_ID }));
+  state = attachArmy(state, createDefaultArmy("P2"));
+
+  const genghis = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "rider"
+  )!;
+
+  state = setUnit(state, genghis.id, {
+    position: { col: 0, row: 0 },
+    charges: {
+      ...genghis.charges,
+      [ABILITY_GENGHIS_KHAN_KHANS_DECREE]: 2,
+    },
+  });
+  state = {
+    ...toBattleState(state, "P1", genghis.id),
+    stakeMarkers: [
+      {
+        id: "decree-stake",
+        owner: "P2",
+        position: { col: 1, row: 1 },
+        createdAt: 1,
+        isRevealed: false,
+      },
+    ],
+  };
+  state = initKnowledgeForOwners(state);
+
+  const decree = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: genghis.id,
+      abilityId: ABILITY_GENGHIS_KHAN_KHANS_DECREE,
+    } as any,
+    rng
+  );
+  const moved = applyAction(
+    decree.state,
+    { type: "move", unitId: genghis.id, to: { col: 2, row: 2 } } as any,
+    rng
+  );
+  const events = [...decree.events, ...moved.events];
+  const updated = moved.state.units[genghis.id];
+
+  assert(
+    updated.position?.col === 1 && updated.position?.row === 1,
+    "Decree diagonal movement should stop on the path stake"
+  );
+  assert.strictEqual(updated.hp, genghis.hp - 1);
+  assert(
+    events.some(
+      (event) =>
+        event.type === "unitMoved" &&
+        event.unitId === genghis.id &&
+        event.to.col === 1 &&
+        event.to.row === 1
+    ),
+    "Decree diagonal movement should emit the normal unitMoved event"
+  );
+  assert.strictEqual(
+    events.filter((event) => event.type === "stakeTriggered").length,
+    1,
+    "Decree diagonal movement should trigger the destination hazard exactly once"
+  );
+  assert(
+    moved.state.stakeMarkers[0].isRevealed,
+    "Decree diagonal movement should reveal the triggered stake"
+  );
+
+  console.log("khans_decree_diagonal_move_triggers_destination_hazard_once passed");
 }
 
 

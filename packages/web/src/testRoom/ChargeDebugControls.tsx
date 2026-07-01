@@ -18,6 +18,13 @@ export function ChargeDebugControls({
   const [values, setValues] = useState<Record<string, number>>({});
   if (!unit) return <div className="text-sm text-slate-500">{t("testRoom.selectUnit")}</div>;
 
+  const formatDebugCharges = (ability: AbilityView) => {
+    const current = ability.currentCharges ?? "—";
+    if (ability.chargeUnlimited) return `${current}`;
+    const max = ability.maxCharges ?? ability.chargeRequired ?? "∞";
+    return `${current} / ${max}`;
+  };
+
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-3 gap-2">
@@ -66,7 +73,7 @@ export function ChargeDebugControls({
               <div className="text-sm font-semibold">{ability.name}</div>
               <div className="font-mono text-[11px] text-slate-500">{ability.id}</div>
               <div className="mt-1 text-xs text-slate-500">
-                {ability.currentCharges ?? "—"} / {ability.maxCharges ?? ability.chargeRequired ?? "∞"}
+                {formatDebugCharges(ability)}
                 {" · "}
                 {ability.isAvailable ? t("testRoom.available") : ability.disabledReason}
               </div>

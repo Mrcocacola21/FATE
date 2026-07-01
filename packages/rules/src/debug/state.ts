@@ -1,7 +1,10 @@
 import {
   ABILITY_BERSERK_AUTO_DEFENSE,
   getAbilitySpec,
+  getChargeLimit,
   getAbilityViewsForUnit,
+  isUnboundedChargeCounter,
+  setCharges,
 } from "../abilities";
 import { createDefaultArmy, createEmptyGame } from "../actions";
 import { getHeroDefinition } from "../heroes";
@@ -166,13 +169,8 @@ function setAllCharges(unit: UnitState, mode: "fill" | "clear"): UnitState {
       charges[ability.id] = 0;
       continue;
     }
-    const spec = getAbilitySpec(ability.id);
-    const maximum =
-      spec?.maxCharges ??
-      spec?.triggerCharges ??
-      spec?.chargesPerUse ??
-      spec?.chargeCost ??
-      0;
+    if (isUnboundedChargeCounter(ability.id)) continue;
+    const maximum = getChargeLimit(ability.id) ?? 0;
     if (maximum > 0) charges[ability.id] = maximum;
   }
   if (mode === "fill" && unit.class === "berserker") {
@@ -489,13 +487,7 @@ export function applyDebugStateCommand(
         command.mode === "add"
           ? current + Math.trunc(command.value ?? 0)
           : Math.trunc(command.value ?? 0);
-      updated = {
-        ...unit,
-        charges: {
-          ...unit.charges,
-          [command.abilityId]: Math.max(0, next),
-        },
-      };
+      updated = setCharges(unit, command.abilityId, next);
     }
     return accept({
       ...state,

@@ -2,7 +2,13 @@ import type { Coord, GameState, UnitClass, UnitState } from "../model";
 import { isInsideBoard } from "../model";
 import { ALL_DIRS, DIAG_DIRS, ORTHO_DIRS, addCoord } from "../board";
 import { canUnitEnterCell } from "../visibility";
-import { HERO_GENGHIS_KHAN_ID, HERO_GRAND_KAISER_ID, HERO_UNDYNE_ID } from "../heroes";
+import {
+  HERO_GENGHIS_KHAN_ID,
+  HERO_GRAND_KAISER_ID,
+  HERO_GUTS_ID,
+  HERO_KALADIN_ID,
+  HERO_UNDYNE_ID,
+} from "../heroes";
 import { hasMettatonBerserkerFeature, hasMettatonRiderMovement } from "../mettaton";
 import {
   addCourtGlobalMoveOptions,
@@ -29,6 +35,41 @@ function applyRuleMovementModifiers(
   const filtered = filterRuleDeclarationMoves(state, unit, moves);
   const moonMoves = addMoonGameStraightBonusMoves(state, unit, filtered);
   return addCourtGlobalMoveOptions(state, unit, moonMoves);
+}
+
+function uniqueModes(modes: UnitClass[]): UnitClass[] {
+  const seen = new Set<UnitClass>();
+  const result: UnitClass[] = [];
+  for (const mode of modes) {
+    if (seen.has(mode)) continue;
+    seen.add(mode);
+    result.push(mode);
+  }
+  return result;
+}
+
+export function getUnitMovementClasses(unit: UnitState): UnitClass[] {
+  if (hasMettatonRiderMovement(unit)) {
+    return hasMettatonBerserkerFeature(unit)
+      ? ["rider", "berserker"]
+      : ["rider"];
+  }
+  if (unit.heroId === HERO_GUTS_ID && unit.gutsBerserkModeActive) {
+    return ["berserker", "knight", "assassin"];
+  }
+  if (unit.heroId === HERO_GUTS_ID) {
+    return ["berserker", "knight"];
+  }
+  if (unit.heroId === HERO_KALADIN_ID) {
+    return ["spearman", "trickster", "berserker"];
+  }
+  if (unit.heroId === HERO_UNDYNE_ID) {
+    return uniqueModes([unit.class, "spearman"]);
+  }
+  if (unit.heroId === HERO_GRAND_KAISER_ID && unit.transformed) {
+    return ["archer", "rider", "berserker"];
+  }
+  return [unit.class];
 }
 
 function movesKnight(state: GameState, unit: UnitState): Coord[] {
@@ -241,16 +282,7 @@ export function getLegalMovesForUnit(state: GameState, unitId: string): Coord[] 
     return applyRuleMovementModifiers(state, unit, movesSpearman(state, unit));
   }
 
-  const modes: UnitClass[] =
-    unit.heroId === HERO_GRAND_KAISER_ID && unit.transformed
-      ? ["archer", "rider", "berserker"]
-      : unit.heroId === HERO_UNDYNE_ID
-      ? ["berserker", "spearman"]
-      : hasMettatonRiderMovement(unit)
-      ? hasMettatonBerserkerFeature(unit)
-        ? ["rider", "berserker"]
-        : ["rider"]
-      : [unit.class];
+  const modes = getUnitMovementClasses(unit);
 
   return getLegalMovesForUnitModes(state, unitId, modes);
 }

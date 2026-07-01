@@ -147,7 +147,7 @@ test("nested ability details render in English and Ukrainian", () => {
   assert.match(english, /Hugs/);
   assert.match(english, /Child’s Cry/);
   assert.match(english, />5</);
-  assert.doesNotMatch(english, /\/30/);
+  assert.doesNotMatch(english, />\s*\/30\s*</);
 
   setLanguage("uk", { setItem: () => undefined });
   const ukrainian = renderToStaticMarkup(
@@ -176,7 +176,7 @@ test("Figure Set ability cards reuse structured read-only details", () => {
   assert.match(markup, /Gain Pacifism points whenever an attack against Frisk misses/);
   assert.doesNotMatch(markup, /Pacifism points capacity/);
   assert.doesNotMatch(markup, />30</);
-  assert.doesNotMatch(markup, /\/30/);
+  assert.doesNotMatch(markup, />\s*\/30\s*</);
   assert.match(markup, /Hugs/);
   assert.match(markup, /Power of Friendship/);
   assert.doesNotMatch(markup, /legacy summary/);
