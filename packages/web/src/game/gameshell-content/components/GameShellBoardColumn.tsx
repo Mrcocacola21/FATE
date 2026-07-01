@@ -114,6 +114,7 @@ export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm }) => {
           selectedUnitId={vm.selectedUnitId}
           highlightedCells={vm.highlightedCells}
           hoveredAbilityId={vm.hoveredAbilityId}
+          boardPreview={vm.boardPreview}
           doraPreview={
             vm.boardPreviewCenter
               ? {

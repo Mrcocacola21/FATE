@@ -5,6 +5,16 @@ import { getLocalPlayerId, useGameStore } from "../../../store";
 import { previewKindForActionMode } from "../helpers";
 import { useGameShellPendingStatus } from "./useGameShellPendingStatus";
 
+const CLEAR_ON_CONFIRMED_ACTION_MODES = new Set([
+  "attack",
+  "assassinMark",
+  "jebeKhansShooter",
+  "asgoreFireball",
+  "hassanTrueEnemy",
+  "gutsArbalet",
+  "gutsCannon",
+]);
+
 export function useGameShellCoreState() {
   const {
     roomId,
@@ -99,6 +109,12 @@ export function useGameShellCoreState() {
       autoBlockedKeyRef.current = autoAttemptKeyRef.current;
     }
   }, [lastActionResultAt, lastActionResult]);
+
+  useEffect(() => {
+    if (!lastActionResultAt || !lastActionResult?.ok || !actionMode) return;
+    if (!CLEAR_ON_CONFIRMED_ACTION_MODES.has(actionMode)) return;
+    setActionMode(null);
+  }, [lastActionResultAt, lastActionResult, actionMode, setActionMode]);
 
   useEffect(() => {
     if (!view || !moveOptions) return;

@@ -652,7 +652,6 @@ export function createCellClickHandler(context: CellClickContext) {
         abilityId: JEBE_KHANS_SHOOTER_ID,
         payload: { targetId: target.id },
       });
-      setActionMode(null);
       return;
     }
 
@@ -666,7 +665,6 @@ export function createCellClickHandler(context: CellClickContext) {
         abilityId: GUTS_ARBALET_ID,
         payload: { targetId: target.id },
       });
-      setActionMode(null);
       return;
     }
 
@@ -680,7 +678,6 @@ export function createCellClickHandler(context: CellClickContext) {
         abilityId: GUTS_CANNON_ID,
         payload: { targetId: target.id },
       });
-      setActionMode(null);
       return;
     }
 
@@ -694,7 +691,6 @@ export function createCellClickHandler(context: CellClickContext) {
         abilityId: ASGORE_FIREBALL_ID,
         payload: { targetId: target.id },
       });
-      setActionMode(null);
       return;
     }
 
@@ -738,7 +734,6 @@ export function createCellClickHandler(context: CellClickContext) {
         abilityId: HASSAN_TRUE_ENEMY_ID,
         payload: { forcedAttackerId: target.id },
       });
-      setActionMode(null);
       return;
     }
 
@@ -769,7 +764,6 @@ export function createCellClickHandler(context: CellClickContext) {
         attackerId: selectedUnitId,
         defenderId: target.id,
       });
-      setActionMode(null);
       return;
     }
 
@@ -783,7 +777,6 @@ export function createCellClickHandler(context: CellClickContext) {
         abilityId: CHIKATILO_ASSASSIN_MARK_ID,
         payload: { targetId: target.id },
       });
-      setActionMode(null);
       return;
     }
 

@@ -1,0 +1,435 @@
+import type { Coord, PendingMove, PlayerView, UnitState } from "rules";
+import type { BoardPreview, TargetRef } from "./previewTypes";
+import {
+  buildArcherLinePreview,
+  buildForcedAttackPreview,
+  buildGutsBerserkChoicePreview,
+  buildLineFromOptionsPreview,
+} from "./buildAbilityPreview";
+import {
+  adjacentCells,
+  boardSize,
+  cellsInRadius,
+  chebyshevDistance,
+  coordKey,
+  lineCellsToTargets,
+  visiblePositionedUnits,
+} from "./previewGeometry";
+import { targetRefsFromIds, visibleUnitTargets } from "./previewVisibility";
+
+function stringList(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is string => typeof item === "string");
+}
+
+function isCoord(value: unknown): value is Coord {
+  return (
+    !!value &&
+    typeof value === "object" &&
+    typeof (value as { col?: unknown }).col === "number" &&
+    typeof (value as { row?: unknown }).row === "number"
+  );
+}
+
+function coordList(value: unknown): Coord[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter(isCoord).map((coord) => ({ col: coord.col, row: coord.row }));
+}
+
+function sourceUnit(view: PlayerView, sourceUnitId: string | null | undefined): UnitState | null {
+  if (!sourceUnitId) return null;
+  const unit = view.units[sourceUnitId];
+  return unit?.isAlive && unit.position ? unit : null;
+}
+
+function compactPreview(layers: Array<BoardPreview | null | undefined>, labelKey?: string): BoardPreview | null {
+  const present = layers.filter((layer): layer is BoardPreview => !!layer);
+  if (present.length === 0) return null;
+  if (present.length === 1) return present[0];
+  return { kind: "compound", layers: present, labelKey };
+}
+
+function buildRadiusOptionsPreview({
+  view,
+  sourceUnitId,
+  optionIds,
+  radius,
+  validLabelKey,
+  includeEnemiesOnly = false,
+}: {
+  view: PlayerView;
+  sourceUnitId: string;
+  optionIds: string[];
+  radius: number;
+  validLabelKey: string;
+  includeEnemiesOnly?: boolean;
+}): BoardPreview | null {
+  const source = sourceUnit(view, sourceUnitId);
+  if (!source?.position) return null;
+  const optionSet = new Set(optionIds);
+  const cells = cellsInRadius(boardSize(view), source.position, radius, true);
+  const invalidTargets = visibleUnitTargets(
+    view,
+    (unit) =>
+      unit.id !== source.id &&
+      !!unit.position &&
+      chebyshevDistance(source.position!, unit.position) <= radius &&
+      !optionSet.has(unit.id) &&
+      (!includeEnemiesOnly || unit.owner !== source.owner),
+    true,
+  );
+  return {
+    kind: "radius",
+    sourceCell: { ...source.position },
+    cells,
+    validTargets: targetRefsFromIds(view, optionIds),
+    invalidTargets,
+    labelKey: validLabelKey,
+  };
+}
+
+export function buildMovementPreview({
+  view,
+  pendingMove,
+  labelKey,
+}: {
+  view: PlayerView;
+  pendingMove: Pick<PendingMove, "unitId" | "legalTo" | "mode">;
+  labelKey?: string;
+}): BoardPreview | null {
+  const unit = sourceUnit(view, pendingMove.unitId);
+  if (!unit?.position) return null;
+  const pathCells =
+    pendingMove.mode === "rider" ||
+    unit.class === "rider" ||
+    unit.genghisKhanDiagonalMoveActive ||
+    unit.genghisKhanDecreeMovePending
+      ? lineCellsToTargets(unit.position, pendingMove.legalTo)
+      : undefined;
+  return {
+    kind: "movement",
+    sourceCell: { ...unit.position },
+    reachableCells: pendingMove.legalTo.map((coord) => ({ ...coord })),
+    pathCells,
+    labelKey:
+      labelKey ??
+      (unit.genghisKhanDiagonalMoveActive || unit.genghisKhanDecreeMovePending
+        ? "preview.labels.diagonalDestinations"
+        : "preview.labels.selectDestination"),
+  };
+}
+
+function buildPickupPreview({
+  view,
+  sourceUnitId,
+  optionIds,
+  labelKey,
+}: {
+  view: PlayerView;
+  sourceUnitId: string;
+  optionIds: string[];
+  labelKey: string;
+}): BoardPreview | null {
+  const source = sourceUnit(view, sourceUnitId);
+  if (!source?.position) return null;
+  return {
+    kind: "pickupDrop",
+    sourceCell: { ...source.position },
+    pickupCells: adjacentCells(boardSize(view), source.position),
+    validTargets: targetRefsFromIds(view, optionIds),
+    labelKey,
+  };
+}
+
+function buildDropPreview({
+  view,
+  sourceUnitId,
+  dropCells,
+  labelKey,
+}: {
+  view: PlayerView;
+  sourceUnitId: string;
+  dropCells: Coord[];
+  labelKey: string;
+}): BoardPreview | null {
+  const source = sourceUnit(view, sourceUnitId);
+  return {
+    kind: "pickupDrop",
+    sourceCell: source?.position ? { ...source.position } : undefined,
+    dropCells,
+    labelKey,
+  };
+}
+
+function buildPendingAoEPreview(view: PlayerView): BoardPreview | null {
+  const preview = view.pendingAoEPreview;
+  if (!preview) return null;
+  const source = sourceUnit(view, preview.casterId);
+  const areaCells = cellsInRadius(boardSize(view), preview.center, preview.radius, true);
+  const areaKeys = new Set(areaCells.map(coordKey));
+  return {
+    kind: "area",
+    sourceCell: source?.position ? { ...source.position } : undefined,
+    centerCell: { ...preview.center },
+    areaCells,
+    affectedTargets: visibleUnitTargets(
+      view,
+      (unit) => !!unit.position && areaKeys.has(coordKey(unit.position)),
+    ),
+    labelKey:
+      preview.abilityId === "asgoreFireParade"
+        ? "preview.labels.fireParadeArea"
+        : "preview.labels.affectedArea",
+  };
+}
+
+function touchedAlliesAlongLines(
+  view: PlayerView,
+  source: UnitState,
+  destinations: Coord[],
+): TargetRef[] {
+  if (!source.position) return [];
+  const touched = new Map<string, TargetRef>();
+  for (const unit of visiblePositionedUnits(view)) {
+    if (unit.id === source.id || unit.owner !== source.owner || !unit.position) continue;
+    for (const destination of destinations) {
+      const lineCells = lineCellsToTargets(source.position, [destination], true);
+      if (lineCells.some((cell) => chebyshevDistance(cell, unit.position!) <= 1)) {
+        const ref: TargetRef = {
+          type: "unit",
+          unitId: unit.id,
+          cell: { ...unit.position },
+        };
+        touched.set(unit.id, ref);
+        break;
+      }
+    }
+  }
+  return Array.from(touched.values());
+}
+
+function buildTraLaLaDestinationPreview({
+  view,
+  riverId,
+  destinations,
+}: {
+  view: PlayerView;
+  riverId: string;
+  destinations: Coord[];
+}): BoardPreview | null {
+  const river = sourceUnit(view, riverId);
+  if (!river?.position) return null;
+  return {
+    kind: "multiStep",
+    step: "riverTraLaLaDestination",
+    sourceCell: { ...river.position },
+    cells: lineCellsToTargets(river.position, destinations),
+    affectedTargets: touchedAlliesAlongLines(view, river, destinations),
+    validTargets: [],
+    cellKind: "validMove",
+    labelKey: "preview.labels.selectStraightDestination",
+  };
+}
+
+function buildLokiChoicePreview(view: PlayerView, context: Record<string, unknown>): BoardPreview | null {
+  const lokiId = typeof context.lokiId === "string" ? context.lokiId : "";
+  const loki = sourceUnit(view, lokiId);
+  if (!loki?.position) return null;
+  const chickenOptions = stringList(context.chickenOptions);
+  const mindControlEnemyOptions = stringList(context.mindControlEnemyOptions);
+  const spinCandidateIds = stringList(context.spinCandidateIds);
+  const areaCells = cellsInRadius(boardSize(view), loki.position, 2, true);
+  const areaKeys = new Set(areaCells.map(coordKey));
+  return compactPreview(
+    [
+      {
+        kind: "area",
+        sourceCell: { ...loki.position },
+        centerCell: { ...loki.position },
+        areaCells,
+        affectedTargets: visibleUnitTargets(
+          view,
+          (unit) =>
+            unit.id !== loki.id &&
+            !!unit.position &&
+            areaKeys.has(coordKey(unit.position)),
+        ),
+        labelKey: "preview.labels.goodLokiJoke",
+      },
+      {
+        kind: "radius",
+        sourceCell: { ...loki.position },
+        cells: areaCells,
+        validTargets: targetRefsFromIds(view, [
+          ...new Set([...chickenOptions, ...mindControlEnemyOptions, ...spinCandidateIds]),
+        ]),
+        labelKey: "preview.labels.lokiOptions",
+      },
+    ],
+    "preview.labels.lokiOptions",
+  );
+}
+
+function buildGroznyOptionsPreview(view: PlayerView, context: Record<string, unknown>): BoardPreview | null {
+  const options = Array.isArray(context.options) ? context.options : [];
+  const cells: Coord[] = [];
+  const targetIds: string[] = [];
+  for (const option of options) {
+    if (!option || typeof option !== "object") continue;
+    const targetId = (option as { targetId?: unknown }).targetId;
+    const position = (option as { position?: unknown }).position;
+    if (typeof targetId === "string") {
+      targetIds.push(targetId);
+    }
+    if (isCoord(position)) {
+      cells.push({ col: position.col, row: position.row });
+    }
+  }
+  const groznyId = typeof context.groznyId === "string" ? context.groznyId : "";
+  const source = sourceUnit(view, groznyId);
+  return {
+    kind: "multiStep",
+    step: "groznyTyrantAttackCell",
+    sourceCell: source?.position ? { ...source.position } : undefined,
+    cells,
+    validTargets: targetRefsFromIds(view, targetIds),
+    cellKind: "validMove",
+    labelKey: "preview.labels.tyrantAttackCell",
+  };
+}
+
+export function buildPendingPreview(view: PlayerView | null | undefined): BoardPreview | null {
+  if (!view) return null;
+  const pending = view.pendingRoll;
+  if (pending) {
+    const context = (pending.context ?? {}) as Record<string, unknown>;
+    switch (pending.kind) {
+      case "jebeKhansShooterTargetChoice": {
+        const casterId = typeof context.casterId === "string" ? context.casterId : "";
+        const lastTargetId = typeof context.lastTargetId === "string" ? context.lastTargetId : "";
+        return buildLineFromOptionsPreview({
+          gameView: view,
+          sourceUnitId: lastTargetId && view.units[lastTargetId] ? lastTargetId : casterId,
+          optionIds: stringList(context.options),
+          labelKey: "preview.labels.selectNextRicochetTarget",
+        });
+      }
+      case "hassanTrueEnemyTargetChoice":
+        return buildForcedAttackPreview({
+          gameView: view,
+          attackerId: typeof context.forcedAttackerId === "string" ? context.forcedAttackerId : "",
+          optionIds: stringList(context.options),
+          labelKey: "preview.labels.selectControlledAttackTarget",
+        });
+      case "lokiMindControlTargetChoice":
+        return buildForcedAttackPreview({
+          gameView: view,
+          attackerId: typeof context.controlledUnitId === "string" ? context.controlledUnitId : "",
+          optionIds: stringList(context.options),
+          labelKey: "preview.labels.selectControlledAttackTarget",
+        });
+      case "lokiMindControlEnemyChoice":
+        return buildRadiusOptionsPreview({
+          view,
+          sourceUnitId: typeof context.lokiId === "string" ? context.lokiId : "",
+          optionIds: stringList(context.options),
+          radius: 2,
+          validLabelKey: "preview.labels.selectControlledUnit",
+          includeEnemiesOnly: true,
+        });
+      case "lokiChickenTargetChoice":
+        return buildRadiusOptionsPreview({
+          view,
+          sourceUnitId: typeof context.lokiId === "string" ? context.lokiId : "",
+          optionIds: stringList(context.options),
+          radius: 2,
+          validLabelKey: "preview.labels.selectTarget",
+          includeEnemiesOnly: true,
+        });
+      case "lokiLaughtChoice":
+        return buildLokiChoicePreview(view, context);
+      case "gutsBerserkAttackChoice":
+        return buildGutsBerserkChoicePreview({
+          gameView: view,
+          gutsId: typeof context.gutsId === "string" ? context.gutsId : "",
+          singleTargetOptions: stringList(context.singleTargetOptions),
+          aoeTargetIds: stringList(context.aoeTargetIds),
+        });
+      case "asgoreSoulParadeJusticeTargetChoice":
+        return buildArcherLinePreview({
+          view,
+          sourceUnitId: typeof context.asgoreId === "string" ? context.asgoreId : "",
+          targetIds: stringList(context.options),
+          labelKey: "preview.labels.asgoreJusticeTarget",
+        });
+      case "asgoreSoulParadePatienceTargetChoice":
+      case "asgoreSoulParadePerseveranceTargetChoice":
+        return buildRadiusOptionsPreview({
+          view,
+          sourceUnitId: typeof context.asgoreId === "string" ? context.asgoreId : "",
+          optionIds: stringList(context.options),
+          radius: 2,
+          validLabelKey: "preview.labels.selectTarget",
+          includeEnemiesOnly: true,
+        });
+      case "asgoreSoulParadeIntegrityDestination":
+        return buildDropPreview({
+          view,
+          sourceUnitId: typeof context.asgoreId === "string" ? context.asgoreId : "",
+          dropCells: coordList(context.options),
+          labelKey: "preview.labels.selectDestination",
+        });
+      case "riverBoatCarryChoice":
+        return buildPickupPreview({
+          view,
+          sourceUnitId: typeof context.riverId === "string" ? context.riverId : "",
+          optionIds: stringList(context.options),
+          labelKey: "preview.labels.selectPassenger",
+        });
+      case "riverBoatDropDestination":
+        return buildDropPreview({
+          view,
+          sourceUnitId: typeof context.riverId === "string" ? context.riverId : "",
+          dropCells: coordList(context.options),
+          labelKey: "preview.labels.selectDropCell",
+        });
+      case "riverTraLaLaTargetChoice":
+        return buildPickupPreview({
+          view,
+          sourceUnitId: typeof context.riverId === "string" ? context.riverId : "",
+          optionIds: stringList(context.options),
+          labelKey: "preview.labels.selectAdjacentTarget",
+        });
+      case "riverTraLaLaDestinationChoice":
+        return buildTraLaLaDestinationPreview({
+          view,
+          riverId: typeof context.riverId === "string" ? context.riverId : "",
+          destinations: coordList(context.options),
+        });
+      case "groznyTyrantAttackCellChoice":
+        return buildGroznyOptionsPreview(view, context);
+      case "lechyGuideTravelerPlacement":
+        return buildDropPreview({
+          view,
+          sourceUnitId: typeof context.lechyId === "string" ? context.lechyId : "",
+          dropCells: coordList(context.legalPositions ?? context.legalCells ?? context.legalTargets ?? context.options),
+          labelKey: "preview.labels.selectDestination",
+        });
+      default:
+        break;
+    }
+  }
+
+  if (view.pendingAoEPreview) {
+    return buildPendingAoEPreview(view);
+  }
+
+  if (view.pendingMove) {
+    return buildMovementPreview({
+      view,
+      pendingMove: view.pendingMove,
+    });
+  }
+
+  return null;
+}

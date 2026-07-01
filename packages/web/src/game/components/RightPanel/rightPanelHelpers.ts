@@ -1,6 +1,7 @@
 import type { AbilityView, MoveMode, PapyrusLineAxis, UnitState } from "rules";
 import {
   ASGORE_FIREBALL_ID,
+  ASGORE_FIRE_PARADE_ID,
   ASGORE_SOUL_PARADE_ID,
   CHIKATILO_ASSASSIN_MARK_ID,
   EL_CID_DEMON_DUELIST_ID,
@@ -8,6 +9,7 @@ import {
   GROZNY_INVADE_TIME_ID,
   GROZNY_TYRANT_ID,
   GUTS_ARBALET_ID,
+  GUTS_BERSERK_MODE_ID,
   GUTS_CANNON_ID,
   HASSAN_ASSASSIN_ORDER_ID,
   HASSAN_TRUE_ENEMY_ID,
@@ -15,12 +17,17 @@ import {
   JEBE_KHANS_SHOOTER_ID,
   KAISER_DORA_ID,
   KALADIN_FIFTH_ID,
+  GENGHIS_KHAN_KHANS_DECREE_ID,
   LECHY_CONFUSE_TERRAIN_ID,
   LECHY_GUIDE_TRAVELER_ID,
+  LOKI_LAUGHT_ID,
   METTATON_LASER_ID,
   METTATON_POPPINS_ID,
   ODIN_SLEIPNIR_ID,
   PAPYRUS_COOL_GUY_ID,
+  RIVER_PERSON_BOAT_ID,
+  RIVER_PERSON_BOATMAN_ID,
+  RIVER_PERSON_TRA_LA_LA_ID,
   SANS_GASTER_BLASTER_ID,
   TRICKSTER_AOE_ID,
   UNDYNE_ENERGY_SPEAR_ID,
@@ -159,7 +166,16 @@ export function abilityActionMode(
 }
 
 export function shouldHoverAbilityInActionList(abilityId: string): boolean {
-  return abilityId === TRICKSTER_AOE_ID;
+  return (
+    abilityId === TRICKSTER_AOE_ID ||
+    abilityId === ASGORE_FIRE_PARADE_ID ||
+    abilityId === GUTS_BERSERK_MODE_ID ||
+    abilityId === LOKI_LAUGHT_ID ||
+    abilityId === RIVER_PERSON_BOAT_ID ||
+    abilityId === RIVER_PERSON_BOATMAN_ID ||
+    abilityId === RIVER_PERSON_TRA_LA_LA_ID ||
+    abilityId === GENGHIS_KHAN_KHANS_DECREE_ID
+  );
 }
 
 export function getActionModeHint(

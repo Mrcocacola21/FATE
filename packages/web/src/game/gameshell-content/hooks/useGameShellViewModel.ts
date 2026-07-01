@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useGameShellAbilityModeTargets } from "./useGameShellAbilityModeTargets";
 import { useGameShellBoardPendingTargets } from "./useGameShellBoardPendingTargets";
+import { useGameShellBoardPreview } from "./useGameShellBoardPreview";
 import { useGameShellBoardUi } from "./useGameShellBoardUi";
 import { useGameShellChoicePendingTargets } from "./useGameShellChoicePendingTargets";
 import { useGameShellCombatTargets } from "./useGameShellCombatTargets";
@@ -162,6 +163,20 @@ export function useGameShellViewModel() {
     tisonaPreviewCoord: core.tisonaPreviewCoord,
   });
 
+  const boardPreview = useGameShellBoardPreview({
+    gameView: core.view,
+    viewerPlayerId: core.playerId,
+    selectedUnitId: core.selectedUnitId,
+    actionMode: core.actionMode,
+    hoverActionMode: core.hoverActionMode,
+    allowActionHoverPreview: core.allowActionHoverPreview,
+    hoveredAbilityId: core.hoveredAbilityId,
+    pendingMoveForSelected: core.pendingMoveForSelected,
+    moveOptions: core.moveOptions,
+    hasBlockingRoll: core.pending.hasBlockingRoll,
+    boardSelectionPending: core.pending.boardSelectionPending,
+  });
+
   const boardUi = useGameShellBoardUi({
     ...core.pending,
     ...boardPending,
@@ -212,7 +227,17 @@ export function useGameShellViewModel() {
       ...combatTargets,
       ...boardUi,
       highlightedCells,
+      boardPreview,
     }),
-    [core, boardPending, choicePending, abilityTargets, combatTargets, boardUi, highlightedCells]
+    [
+      core,
+      boardPending,
+      choicePending,
+      abilityTargets,
+      combatTargets,
+      boardUi,
+      highlightedCells,
+      boardPreview,
+    ]
   );
 }

@@ -2,9 +2,6 @@ import type { Coord, PlayerId, PlayerView, UnitClass } from "rules";
 import {
   EL_CID_COMPEADOR_ID,
   EL_CID_KOLADA_ID,
-  KALADIN_ID,
-  TRICKSTER_AOE_ID,
-  TRICKSTER_AOE_RADIUS,
   FOREST_AURA_RADIUS,
   getMaxHp,
 } from "../rulesHints";
@@ -21,6 +18,12 @@ import { BoardEffectsLayer } from "../game/effects/BoardEffectsLayer";
 import { useBoardEffects } from "../game/effects/useBoardEffects";
 import { useBoardFit } from "../game/hooks/useBoardFit";
 import type { BoardEventBatch, BoardPreviewLine } from "../game/effects/types";
+import {
+  buildPreviewCellMap,
+  type BoardPreview,
+  type PreviewCellKind,
+  type PreviewCellState,
+} from "../game/targeting/previewTypes";
 
 interface BoardProps {
   view: PlayerView;
@@ -38,6 +41,7 @@ interface BoardProps {
     | "previewAbility"
   >;
   hoveredAbilityId?: string | null;
+  boardPreview?: BoardPreview | null;
   doraPreview?: { center: Coord; radius: number } | null;
   disabled?: boolean;
   allowUnitSelection?: boolean;
@@ -103,6 +107,58 @@ function getAoEHighlightClass(kind: "aoe" | "aoeDisabled") {
     : "bg-slate-400/20 dark:bg-neutral-500/10";
 }
 
+function getPreviewCellClass(kind: PreviewCellKind) {
+  switch (kind) {
+    case "source":
+      return "bg-cyan-300/15 ring-2 ring-inset ring-cyan-500/80 dark:bg-cyan-300/10 dark:ring-cyan-200/75";
+    case "validTarget":
+      return "bg-rose-300/24 ring-2 ring-inset ring-rose-500/80 dark:bg-rose-400/12 dark:ring-rose-300/80";
+    case "invalidTarget":
+      return "border-2 border-dashed border-slate-500/70 bg-slate-400/18 ring-1 ring-inset ring-slate-500/45 dark:border-slate-300/60 dark:bg-slate-200/8 dark:ring-slate-300/35";
+    case "validMove":
+      return "border-2 border-dashed border-sky-500/65 bg-sky-300/22 ring-1 ring-inset ring-sky-500/35 dark:border-sky-300/70 dark:bg-sky-400/10 dark:ring-sky-300/35";
+    case "area":
+      return "bg-amber-300/20 ring-1 ring-inset ring-amber-500/45 dark:bg-amber-300/10 dark:ring-amber-200/45";
+    case "line":
+      return "bg-fuchsia-300/16 ring-1 ring-inset ring-fuchsia-500/60 dark:bg-fuchsia-300/8 dark:ring-fuchsia-200/55";
+    case "blocked":
+      return "bg-slate-700/20 ring-2 ring-inset ring-slate-700/75 dark:bg-slate-100/10 dark:ring-slate-200/65";
+    case "pickup":
+      return "bg-emerald-300/20 ring-2 ring-inset ring-emerald-500/70 dark:bg-emerald-300/10 dark:ring-emerald-200/65";
+    case "drop":
+      return "bg-indigo-300/20 ring-2 ring-inset ring-indigo-500/70 dark:bg-indigo-300/10 dark:ring-indigo-200/65";
+    case "danger":
+      return "bg-red-400/20 ring-2 ring-inset ring-red-600/70 dark:bg-red-400/10 dark:ring-red-300/70";
+    case "affected":
+      return "bg-lime-300/18 ring-2 ring-inset ring-lime-600/55 dark:bg-lime-300/10 dark:ring-lime-200/55";
+    default:
+      return "";
+  }
+}
+
+const PREVIEW_KIND_ORDER: PreviewCellKind[] = [
+  "area",
+  "line",
+  "validMove",
+  "pickup",
+  "drop",
+  "affected",
+  "danger",
+  "blocked",
+  "invalidTarget",
+  "validTarget",
+  "source",
+];
+
+function orderedPreviewKinds(state: PreviewCellState | undefined): PreviewCellKind[] {
+  if (!state) return [];
+  return PREVIEW_KIND_ORDER.filter((kind) => state.kinds.includes(kind));
+}
+
+function getPreviewKindLabelKey(kind: PreviewCellKind): string {
+  return `preview.cellKinds.${kind}`;
+}
+
 function coordKey(coord: Coord): string {
   return `${coord.col},${coord.row}`;
 }
@@ -113,6 +169,7 @@ export const Board: FC<BoardProps> = ({
   selectedUnitId,
   highlightedCells,
   hoveredAbilityId,
+  boardPreview = null,
   doraPreview = null,
   allowUnitSelection = true,
   allowAnyUnitSelection = false,
@@ -328,45 +385,34 @@ export const Board: FC<BoardProps> = ({
     const viewPos = toViewCoord({ col, row });
     viewHighlights[coordKey(viewPos)] = kind;
   }
+  const previewHighlights = new Map<string, PreviewCellState>();
+  for (const [key, state] of buildPreviewCellMap(boardPreview)) {
+    const [colRaw, rowRaw] = key.split(",");
+    const col = Number(colRaw);
+    const row = Number(rowRaw);
+    if (Number.isNaN(col) || Number.isNaN(row)) continue;
+    const viewPos = toViewCoord({ col, row });
+    const viewKey = coordKey(viewPos);
+    const existing = previewHighlights.get(viewKey);
+    if (!existing) {
+      previewHighlights.set(viewKey, {
+        kinds: [...state.kinds],
+        labelKeys: [...state.labelKeys],
+      });
+      continue;
+    }
+    for (const kind of state.kinds) {
+      if (!existing.kinds.includes(kind)) existing.kinds.push(kind);
+    }
+    for (const labelKey of state.labelKeys) {
+      if (!existing.labelKeys.includes(labelKey)) existing.labelKeys.push(labelKey);
+    }
+  }
 
   const selectedUnit =
     selectedUnitId && view.units[selectedUnitId] ? view.units[selectedUnitId] : null;
   const isMyTurn = playerId ? view.currentPlayer === playerId : false;
   const isActive = selectedUnit ? view.activeUnitId === selectedUnit.id : false;
-  const abilityAvailable =
-    selectedUnit?.class === "trickster" || selectedUnit?.heroId === KALADIN_ID;
-  const economy = selectedUnit?.turn ?? {
-    moveUsed: false,
-    attackUsed: false,
-    actionUsed: false,
-    stealthUsed: false,
-  };
-  const abilityEnabled =
-    !disabled &&
-    isMyTurn &&
-    isActive &&
-    abilityAvailable &&
-    selectedUnit?.owner === playerId &&
-    !economy.attackUsed &&
-    !economy.actionUsed;
-
-  if (
-    hoveredAbilityId === TRICKSTER_AOE_ID &&
-    isMyTurn &&
-    abilityAvailable &&
-    selectedUnit?.position
-  ) {
-    const kind: "aoe" | "aoeDisabled" = abilityEnabled ? "aoe" : "aoeDisabled";
-    for (let dc = -TRICKSTER_AOE_RADIUS; dc <= TRICKSTER_AOE_RADIUS; dc += 1) {
-      for (let dr = -TRICKSTER_AOE_RADIUS; dr <= TRICKSTER_AOE_RADIUS; dr += 1) {
-        const col = selectedUnit.position.col + dc;
-        const row = selectedUnit.position.row + dr;
-        if (col < 0 || row < 0 || col >= size || row >= size) continue;
-        const viewPos = toViewCoord({ col, row });
-        aoeHighlights.set(coordKey(viewPos), kind);
-      }
-    }
-  }
 
   const showKoladaPreview =
     selectedUnit?.position &&
@@ -436,6 +482,8 @@ export const Board: FC<BoardProps> = ({
       const isDark = (row + col) % 2 === 1;
       const highlightKind = viewHighlights[key];
       const aoeKind = aoeHighlights.get(key);
+      const previewState = previewHighlights.get(key);
+      const previewKinds = orderedPreviewKinds(previewState);
 
       const cellClasses = [
         "relative",
@@ -458,6 +506,23 @@ export const Board: FC<BoardProps> = ({
 
       let content: JSX.Element | null = null;
       const lastKnownCount = lastKnownByPos.get(key) ?? 0;
+      const previewDetails = previewState
+        ? Array.from(
+            new Set([
+              ...previewState.kinds.map((kind) => t(getPreviewKindLabelKey(kind))),
+              ...previewState.labelKeys.map((labelKey) => t(labelKey)),
+            ]),
+          )
+        : [];
+      const cellDetails = unit
+        ? `, ${unit.owner} ${getClassLabel(unit.class, t)}${
+            unit.id === view.activeUnitId ? `, ${t("board.activeUnit")}` : ""
+          }${unit.id === selectedUnitId ? `, ${t("board.selected")}` : ""}`
+        : lastKnownCount > 0
+          ? `, ${t("board.lastKnown")}`
+          : "";
+      const previewDetailsText =
+        previewDetails.length > 0 ? `, ${previewDetails.join(", ")}` : "";
 
       if (unit) {
         const isFriendly = playerId ? unit.owner === playerId : false;
@@ -581,13 +646,7 @@ export const Board: FC<BoardProps> = ({
           disabled={disabled}
           aria-label={t("board.cell", {
             cell: `${String.fromCharCode(65 + gameCoord.col)}${gameCoord.row}`,
-            details: unit
-              ? `, ${unit.owner} ${getClassLabel(unit.class, t)}${
-                  unit.id === view.activeUnitId ? `, ${t("board.activeUnit")}` : ""
-                }${unit.id === selectedUnitId ? `, ${t("board.selected")}` : ""}`
-              : lastKnownCount > 0
-                ? `, ${t("board.lastKnown")}`
-                : "",
+            details: `${cellDetails}${previewDetailsText}`,
           })}
           aria-pressed={isSelected}
           onClick={() => {
@@ -625,6 +684,45 @@ export const Board: FC<BoardProps> = ({
                 aoeKind,
               )}`}
               style={{ inset: highlightInset }}
+            />
+          )}
+          {previewKinds.map((kind) => (
+            <div
+              key={kind}
+              className={`pointer-events-none absolute rounded dark:ring-1 dark:ring-neutral-900/60 ${getPreviewCellClass(
+                kind,
+              )}`}
+              style={{ inset: highlightInset }}
+            />
+          ))}
+          {previewKinds.includes("validTarget") && (
+            <span
+              className="pointer-events-none absolute left-1 top-1 h-2.5 w-2.5 rounded-full bg-rose-500 ring-2 ring-white/80 shadow dark:bg-rose-300 dark:ring-slate-950/80"
+              aria-hidden="true"
+            />
+          )}
+          {previewKinds.includes("invalidTarget") && (
+            <span
+              className="pointer-events-none absolute right-1 top-1 h-3 w-3 rounded-full border-2 border-slate-600 bg-slate-100/70 shadow dark:border-slate-200 dark:bg-slate-950/70"
+              aria-hidden="true"
+            />
+          )}
+          {previewKinds.includes("pickup") && (
+            <span
+              className="pointer-events-none absolute bottom-1 left-1 h-3 w-3 rounded-full border-2 border-emerald-600 bg-emerald-100/80 shadow dark:border-emerald-200 dark:bg-emerald-950/80"
+              aria-hidden="true"
+            />
+          )}
+          {previewKinds.includes("drop") && (
+            <span
+              className="pointer-events-none absolute bottom-1 right-1 h-3 w-3 rotate-45 border-2 border-indigo-600 bg-indigo-100/80 shadow dark:border-indigo-200 dark:bg-indigo-950/80"
+              aria-hidden="true"
+            />
+          )}
+          {previewKinds.includes("blocked") && (
+            <span
+              className="pointer-events-none absolute left-2 right-2 top-1/2 -rotate-45 border-t-2 border-slate-700 shadow dark:border-slate-100"
+              aria-hidden="true"
             />
           )}
           {isDoraPreviewCenter && (
