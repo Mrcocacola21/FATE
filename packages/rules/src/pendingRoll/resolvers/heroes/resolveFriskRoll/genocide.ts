@@ -1,12 +1,11 @@
 import type { ApplyResult, GameEvent, GameState, PendingRoll, ResolveRollChoice } from "../../../../model";
 import type { RNG } from "../../../../rng";
-import { canSpendSlots, spendSlots } from "../../../../turnEconomy";
+import { ABILITY_FRISK_GENOCIDE } from "../../../../abilities";
+import { clearPendingRoll, makeAttackContext, requestRoll } from "../../../../core";
 import {
-  ABILITY_FRISK_GENOCIDE,
-  getCharges,
-  spendCharges,
-} from "../../../../abilities";
-import { clearPendingRoll, makeAttackContext, requestRoll, evAbilityUsed } from "../../../../core";
+  canCommitAbilityCost,
+  commitAbilityCost,
+} from "../../../../actions/abilityCosts";
 import { getLegalAttackTargets } from "../../../../legal";
 import { revealUnit } from "../../../../stealth";
 import type {
@@ -49,10 +48,12 @@ export function resolveFriskGenocideChoice(
     if (frisk.isStealthed) {
       return { state, events: [] };
     }
-    if (getCharges(frisk, ABILITY_FRISK_GENOCIDE) < FRISK_GENOCIDE_KEEN_EYE_COST) {
-      return { state, events: [] };
-    }
-    if (!canSpendSlots(frisk, { action: true })) {
+    if (
+      !canCommitAbilityCost(state, frisk.id, ABILITY_FRISK_GENOCIDE, {
+        costs: { action: true },
+        chargeAmount: FRISK_GENOCIDE_KEEN_EYE_COST,
+      })
+    ) {
       return { state, events: [] };
     }
     const options = getFriskKeenEyeTargetIds(state, frisk.id);
@@ -69,12 +70,11 @@ export function resolveFriskGenocideChoice(
   }
 
   if (
-    getCharges(frisk, ABILITY_FRISK_GENOCIDE) <
-    FRISK_GENOCIDE_PRECISION_STRIKE_COST
+    !canCommitAbilityCost(state, frisk.id, ABILITY_FRISK_GENOCIDE, {
+      costs: { attack: true, action: true },
+      chargeAmount: FRISK_GENOCIDE_PRECISION_STRIKE_COST,
+    })
   ) {
-    return { state, events: [] };
-  }
-  if (!canSpendSlots(frisk, { attack: true, action: true })) {
     return { state, events: [] };
   }
   const options = getLegalAttackTargets(state, frisk.id);
@@ -124,11 +124,7 @@ export function resolveFriskKeenEyeChoice(
     return { state, events: [] };
   }
 
-  if (frisk.isStealthed || !canSpendSlots(frisk, { action: true })) {
-    return { state, events: [] };
-  }
-  const spent = spendCharges(frisk, ABILITY_FRISK_GENOCIDE, FRISK_GENOCIDE_KEEN_EYE_COST);
-  if (!spent.ok) {
+  if (frisk.isStealthed) {
     return { state, events: [] };
   }
 
@@ -137,17 +133,14 @@ export function resolveFriskKeenEyeChoice(
     return { state, events: [] };
   }
 
-  const afterFrisk = spendSlots(spent.unit, { action: true });
-  let nextState: GameState = {
-    ...state,
-    units: {
-      ...state.units,
-      [afterFrisk.id]: afterFrisk,
-    },
-  };
-  let events: GameEvent[] = [
-    evAbilityUsed({ unitId: afterFrisk.id, abilityId: ABILITY_FRISK_GENOCIDE }),
-  ];
+  const committed = commitAbilityCost(state, frisk.id, ABILITY_FRISK_GENOCIDE, {
+    costs: { action: true },
+    chargeAmount: FRISK_GENOCIDE_KEEN_EYE_COST,
+  });
+  if (!committed.ok) return { state, events: [] };
+  const afterFrisk = committed.unit;
+  let nextState: GameState = committed.state;
+  let events: GameEvent[] = committed.events;
 
   if (target.isStealthed) {
     const revealed = revealUnit(
@@ -191,32 +184,25 @@ export function resolveFriskPrecisionStrikeTargetChoice(
   if (!options.includes(payload.targetId)) {
     return { state, events: [] };
   }
-  if (!canSpendSlots(frisk, { attack: true, action: true })) {
-    return { state, events: [] };
-  }
-
   const target = state.units[payload.targetId];
   if (!target || !target.isAlive || !target.position) {
     return { state, events: [] };
   }
 
-  const spent = spendCharges(
-    frisk,
-    ABILITY_FRISK_GENOCIDE,
-    FRISK_GENOCIDE_PRECISION_STRIKE_COST
-  );
-  if (!spent.ok) {
-    return { state, events: [] };
-  }
+  const committed = commitAbilityCost(state, frisk.id, ABILITY_FRISK_GENOCIDE, {
+    costs: {},
+    chargeAmount: FRISK_GENOCIDE_PRECISION_STRIKE_COST,
+  });
+  if (!committed.ok) return { state, events: [] };
 
   const updated = {
-    ...spent.unit,
+    ...committed.unit,
     friskPrecisionStrikeReady: true,
   };
   const stateAfterSpend: GameState = {
-    ...clearPendingRoll(state),
+    ...clearPendingRoll(committed.state),
     units: {
-      ...state.units,
+      ...committed.state.units,
       [updated.id]: updated,
     },
   };
@@ -235,9 +221,6 @@ export function resolveFriskPrecisionStrikeTargetChoice(
 
   return {
     state: requested.state,
-    events: [
-      evAbilityUsed({ unitId: updated.id, abilityId: ABILITY_FRISK_GENOCIDE }),
-      ...requested.events,
-    ],
+    events: [...committed.events, ...requested.events],
   };
 }

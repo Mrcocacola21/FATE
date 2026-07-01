@@ -3,6 +3,8 @@ import { isInsideBoard } from "../../../model";
 import { getUnitAt } from "../../../board";
 import { clearPendingRoll, requestRoll } from "../../../core";
 import { evUnitMoved } from "../../../core";
+import { ABILITY_LECHY_GUIDE_TRAVELER } from "../../../abilities";
+import { commitAbilityCost } from "../../abilityCosts";
 import { getEmptyCellsInAura } from "./helpers";
 
 export function requestLechyGuideTravelerPlacement(
@@ -78,27 +80,41 @@ export function resolveLechyGuideTravelerPlacement(
     return { state: clearPendingRoll(state), events: [] };
   }
 
-  const lechy = state.units[lechyId];
+  const committed = commitAbilityCost(
+    state,
+    lechyId,
+    ABILITY_LECHY_GUIDE_TRAVELER,
+    { costs: {} }
+  );
+  if (!committed.ok) {
+    return { state, events: [] };
+  }
+
+  const lechy = committed.state.units[lechyId];
+  const allyAfterCommit = committed.state.units[allyId] ?? ally;
   const updatedLechy =
     lechy && lechy.lechyGuideTravelerTargetId
       ? { ...lechy, lechyGuideTravelerTargetId: undefined }
       : lechy;
 
   const updatedAlly: UnitState = {
-    ...ally,
+    ...(updatedLechy?.id === allyAfterCommit.id ? updatedLechy : allyAfterCommit),
     position: { ...pos },
   };
 
   const nextState: GameState = clearPendingRoll({
-    ...state,
+    ...committed.state,
     units: {
-      ...state.units,
-      ...(updatedLechy ? { [updatedLechy.id]: updatedLechy } : {}),
+      ...committed.state.units,
+      ...(updatedLechy && updatedLechy.id !== updatedAlly.id
+        ? { [updatedLechy.id]: updatedLechy }
+        : {}),
       [updatedAlly.id]: updatedAlly,
     },
   });
 
   const events: GameEvent[] = [
+    ...committed.events,
     evUnitMoved({ unitId: updatedAlly.id, from: ally.position, to: updatedAlly.position! }),
   ];
 

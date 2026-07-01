@@ -29,6 +29,7 @@ export function buildRightPanelViewModel(params: RightPanelProps, t: Translate) 
     role,
     selectedUnitId,
     actionMode,
+    targetingMode,
     moveOptions,
     joined,
     pendingRoll,
@@ -169,7 +170,8 @@ export function buildRightPanelViewModel(params: RightPanelProps, t: Translate) 
   };
 
   const onToggleMode = (mode: ActionPreviewMode) => {
-    onSetActionMode(actionMode === mode ? null : mode);
+    if (targetingMode || actionMode) return;
+    onSetActionMode(mode);
   };
 
   const onSetPapyrusAxis = (axis: PapyrusLineAxis) => {
@@ -190,10 +192,7 @@ export function buildRightPanelViewModel(params: RightPanelProps, t: Translate) 
 
   const onMoveClick = () => {
     if (!selectedUnit) return;
-    if (actionMode === "move") {
-      onSetActionMode(null);
-      return;
-    }
+    if (targetingMode || actionMode) return;
     if (
       selectedUnit.class === "trickster" ||
       selectedUnit.class === "berserker" ||
@@ -208,6 +207,7 @@ export function buildRightPanelViewModel(params: RightPanelProps, t: Translate) 
 
   const onUseAbility = (abilityId: string) => {
     if (!selectedUnit) return;
+    if (targetingMode || actionMode) return;
     onSendAction({
       type: "useAbility",
       unitId: selectedUnit.id,
@@ -262,6 +262,7 @@ export function buildRightPanelViewModel(params: RightPanelProps, t: Translate) 
     onStartTurn: (unitId: string) => onSendAction({ type: "unitStartTurn", unitId }),
     onSearchMoveClick: () => {
       if (!selectedUnit) return;
+      if (targetingMode || actionMode) return;
       onSendAction({
         type: "searchStealth",
         unitId: selectedUnit.id,
@@ -270,6 +271,7 @@ export function buildRightPanelViewModel(params: RightPanelProps, t: Translate) 
     },
     onSearchActionClick: () => {
       if (!selectedUnit) return;
+      if (targetingMode || actionMode) return;
       onSendAction({
         type: "searchStealth",
         unitId: selectedUnit.id,
@@ -278,6 +280,7 @@ export function buildRightPanelViewModel(params: RightPanelProps, t: Translate) 
     },
     onStealthClick: () => {
       if (!selectedUnit) return;
+      if (targetingMode || actionMode) return;
       onSendAction({ type: "enterStealth", unitId: selectedUnit.id });
     },
     onSetUndyneAxis: (axis: "row" | "col") => onSetPapyrusLineAxis(axis),

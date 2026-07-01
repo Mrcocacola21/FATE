@@ -1,6 +1,7 @@
 import type { FC } from "react";
 import type { AbilityView, MoveMode, PapyrusLineAxis, PlayerView, UnitState } from "rules";
 import type { ActionMode, ActionPreviewMode } from "../../../../store";
+import type { TargetingMode } from "../../../selectionState";
 import type { ForestMarkerView, TurnEconomyState } from "../types";
 import { BattleAbilityActions } from "./BattleAbilityActions";
 import { BattleActionButtons } from "./BattleActionButtons";
@@ -26,6 +27,7 @@ interface BattleSectionProps {
   abilityViews: AbilityView[];
   actionableAbilities: AbilityView[];
   actionMode: ActionMode;
+  targetingMode: TargetingMode | null;
   moveDisabled: boolean;
   attackDisabled: boolean;
   attackDisabledReason?: string;
@@ -68,6 +70,7 @@ interface BattleSectionProps {
   onTogglePapyrusLongBone: () => void;
   onEndTurn: () => void;
   onClear: () => void;
+  onCancelTargeting: () => void;
 }
 
 export const BattleSection: FC<BattleSectionProps> = ({
@@ -86,6 +89,7 @@ export const BattleSection: FC<BattleSectionProps> = ({
   abilityViews,
   actionableAbilities,
   actionMode,
+  targetingMode,
   moveDisabled,
   attackDisabled,
   attackDisabledReason,
@@ -128,6 +132,7 @@ export const BattleSection: FC<BattleSectionProps> = ({
   onTogglePapyrusLongBone,
   onEndTurn,
   onClear,
+  onCancelTargeting,
 }) => {
   const { t } = useI18n();
   return (
@@ -160,6 +165,7 @@ export const BattleSection: FC<BattleSectionProps> = ({
       <div className="mt-4 grid grid-cols-2 gap-2 border-t border-amber-900/10 pt-4 text-xs dark:border-amber-500/15">
         <BattleActionButtons
           actionMode={actionMode}
+          targetingActive={!!targetingMode}
           moveDisabled={moveDisabled}
           attackDisabled={attackDisabled}
           searchMoveDisabled={searchMoveDisabled}
@@ -181,6 +187,7 @@ export const BattleSection: FC<BattleSectionProps> = ({
           canAct={canAct || canChooseImpulseAxis}
           economy={economy}
           actionMode={actionMode}
+          targetingActive={!!targetingMode}
           onUseAbility={onUseAbility}
           onToggleMode={onToggleMode}
           onModePreview={onModePreview}
@@ -213,15 +220,18 @@ export const BattleSection: FC<BattleSectionProps> = ({
         />
       </div>
 
-      <BattleBottomHints
-        moveModeOptions={moveModeOptions}
-        selectedUnitId={selectedUnitId}
-        moveDisabled={moveDisabled}
-        actionMode={actionMode}
-        papyrusLineAxis={papyrusLineAxis}
-        undyneAxis={undyneAxis}
-        onMoveRequest={onMoveRequest}
-      />
+        <BattleBottomHints
+          moveModeOptions={moveModeOptions}
+          selectedUnitId={selectedUnitId}
+          moveDisabled={moveDisabled}
+          actionMode={actionMode}
+          targetingMode={targetingMode}
+          abilityViews={abilityViews}
+          papyrusLineAxis={papyrusLineAxis}
+          undyneAxis={undyneAxis}
+          onMoveRequest={onMoveRequest}
+          onCancelTargeting={onCancelTargeting}
+        />
     </div>
   );
 };

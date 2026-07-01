@@ -11,11 +11,10 @@ import { canDirectlyTargetUnit } from "../../visibility";
 import {
   ABILITY_HASSAN_TRUE_ENEMY,
   getAbilitySpec,
-  getCharges,
 } from "../../abilities";
 import { HERO_FALSE_TRAIL_TOKEN_ID, HERO_HASSAN_ID } from "../../heroes";
-import { canSpendSlots } from "../../turnEconomy";
 import { requestRoll } from "../../core";
+import { canCommitAbilityCost } from "../abilityCosts";
 import type {
   HassanAssassinOrderSelectionContext,
   HassanTrueEnemyTargetChoiceContext,
@@ -115,13 +114,7 @@ export function applyHassanTrueEnemy(
     return { state, events: [] };
   }
 
-  const costs = spec.actionCost?.consumes ?? {};
-  if (!canSpendSlots(unit, costs)) {
-    return { state, events: [] };
-  }
-
-  const chargeAmount = spec.chargesPerUse ?? spec.chargeCost ?? 0;
-  if (getCharges(unit, spec.id) < chargeAmount) {
+  if (!canCommitAbilityCost(state, unit.id, spec.id)) {
     return { state, events: [] };
   }
 

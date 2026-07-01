@@ -1,4 +1,6 @@
 import type { ApplyResult, GameState, ResolveRollChoice, UnitState } from "../../../../model";
+import { ABILITY_ASGORE_SOUL_PARADE } from "../../../../abilities";
+import { commitAbilityCost } from "../../../../actions/abilityCosts";
 import { HERO_ASGORE_ID } from "../../../../heroes";
 import { clearPendingRoll, makeAttackContext, requestRoll } from "../../../../core";
 
@@ -48,4 +50,11 @@ export function parseTargetChoice(
     return null;
   }
   return payload.targetId;
+}
+
+export function commitAsgoreSoulParadeCost(
+  state: GameState,
+  asgoreId: string
+) {
+  return commitAbilityCost(state, asgoreId, ABILITY_ASGORE_SOUL_PARADE);
 }

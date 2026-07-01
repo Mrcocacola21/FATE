@@ -1,11 +1,11 @@
-import type { ApplyResult, GameEvent, GameState } from "../../../model";
+import type { ApplyResult, GameState } from "../../../model";
 import {
   ABILITY_ASGORE_SOUL_PARADE,
   getAbilitySpec,
   getCharges,
-  spendCharges,
 } from "../../../abilities";
-import { requestRoll, evAbilityUsed } from "../../../core";
+import { requestRoll } from "../../../core";
+import { canCommitAbilityCost } from "../../abilityCosts";
 import type { AsgoreSoulParadeRollContext } from "../../../pendingRoll/types";
 import { isAsgore } from "./helpers";
 
@@ -30,13 +30,12 @@ export function maybeTriggerAsgoreSoulParade(
     return { state, events: [] };
   }
 
-  const spent = spendCharges(unit, spec.id, chargeAmount);
-  if (!spent.ok) {
+  if (!canCommitAbilityCost(state, unit.id, spec.id)) {
     return { state, events: [] };
   }
 
   const updatedUnit = {
-    ...spent.unit,
+    ...unit,
     asgorePatienceStealthActive: false,
   };
   const nextState: GameState = {
@@ -46,9 +45,6 @@ export function maybeTriggerAsgoreSoulParade(
       [updatedUnit.id]: updatedUnit,
     },
   };
-  const events: GameEvent[] = [
-    evAbilityUsed({ unitId: updatedUnit.id, abilityId: spec.id }),
-  ];
   const requested = requestRoll(
     nextState,
     updatedUnit.owner,
@@ -56,7 +52,7 @@ export function maybeTriggerAsgoreSoulParade(
     { asgoreId: updatedUnit.id } satisfies AsgoreSoulParadeRollContext,
     updatedUnit.id
   );
-  return { state: requested.state, events: [...events, ...requested.events] };
+  return requested;
 }
 
 export function clearAsgoreTurnFlags(

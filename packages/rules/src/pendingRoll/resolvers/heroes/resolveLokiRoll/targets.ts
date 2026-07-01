@@ -1,5 +1,10 @@
 import type { ApplyResult, GameState, PendingRoll, ResolveRollChoice } from "../../../../model";
 import { canSpendSlots, spendSlots } from "../../../../turnEconomy";
+import {
+  canCommitAbilityCost,
+  commitAbilityCost,
+} from "../../../../actions/abilityCosts";
+import { ABILITY_LOKI_LAUGHT } from "../../../../abilities";
 import { clearPendingRoll, requestRoll, makeAttackContext } from "../../../../core";
 import type {
   LokiChickenTargetChoiceContext,
@@ -15,7 +20,6 @@ import {
   COST_CHICKEN,
   COST_MIND_CONTROL,
   getLokiUnit,
-  spendLaughter,
 } from "./helpers";
 
 export function resolveLokiChickenTargetChoice(
@@ -51,26 +55,33 @@ export function resolveLokiChickenTargetChoice(
   }
 
   const loki = getLokiUnit(state, ctx.lokiId);
-  if (!loki || !canSpendSlots(loki, { action: true })) {
+  if (
+    !loki ||
+    !canCommitAbilityCost(state, loki.id, ABILITY_LOKI_LAUGHT, {
+      costs: { action: true },
+      chargeAmount: COST_CHICKEN,
+    })
+  ) {
     return { state, events: [] };
   }
-  const spent = spendLaughter(state, ctx.lokiId, COST_CHICKEN);
-  if (!spent.ok || !spent.loki) {
+  const committed = commitAbilityCost(state, loki.id, ABILITY_LOKI_LAUGHT, {
+    costs: { action: true },
+    chargeAmount: COST_CHICKEN,
+  });
+  if (!committed.ok) {
     return { state, events: [] };
   }
 
-  const afterLoki = spendSlots(spent.loki, { action: true });
-  const updatedTarget = addLokiChicken(spent.state.units[target.id], ctx.lokiId);
+  const updatedTarget = addLokiChicken(committed.state.units[target.id], ctx.lokiId);
   return {
     state: clearPendingRoll({
-      ...spent.state,
+      ...committed.state,
       units: {
-        ...spent.state.units,
-        [afterLoki.id]: afterLoki,
+        ...committed.state.units,
         [updatedTarget.id]: updatedTarget,
       },
     }),
-    events: spent.events,
+    events: committed.events,
   };
 }
 
@@ -166,20 +177,27 @@ export function resolveLokiMindControlTargetChoice(
   }
 
   const loki = getLokiUnit(state, ctx.lokiId);
-  if (!loki || !canSpendSlots(loki, { action: true })) {
+  if (
+    !loki ||
+    !canCommitAbilityCost(state, loki.id, ABILITY_LOKI_LAUGHT, {
+      costs: { action: true },
+      chargeAmount: COST_MIND_CONTROL,
+    })
+  ) {
     return { state, events: [] };
   }
-  const spent = spendLaughter(state, ctx.lokiId, COST_MIND_CONTROL);
-  if (!spent.ok || !spent.loki) {
+  const committed = commitAbilityCost(state, loki.id, ABILITY_LOKI_LAUGHT, {
+    costs: { action: true },
+    chargeAmount: COST_MIND_CONTROL,
+  });
+  if (!committed.ok) {
     return { state, events: [] };
   }
-  const afterLoki = spendSlots(spent.loki, { action: true });
   const updatedControlled = spendSlots(controlled, { attack: true, action: true });
   const updatedState: GameState = {
-    ...clearPendingRoll(spent.state),
+    ...clearPendingRoll(committed.state),
     units: {
-      ...spent.state.units,
-      [afterLoki.id]: afterLoki,
+      ...committed.state.units,
       [updatedControlled.id]: updatedControlled,
     },
   };
@@ -198,5 +216,5 @@ export function resolveLokiMindControlTargetChoice(
     updatedControlled.id
   );
 
-  return { state: requested.state, events: [...spent.events, ...requested.events] };
+  return { state: requested.state, events: [...committed.events, ...requested.events] };
 }

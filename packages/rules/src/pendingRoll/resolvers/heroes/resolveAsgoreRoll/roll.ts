@@ -15,7 +15,7 @@ import type {
   AsgoreSoulParadeRollContext,
   AsgoreSoulParadeTargetChoiceContext,
 } from "../../../types";
-import { getAsgore } from "./helpers";
+import { commitAsgoreSoulParadeCost, getAsgore } from "./helpers";
 
 export function resolveAsgoreSoulParadeRoll(
   state: GameState,
@@ -31,54 +31,62 @@ export function resolveAsgoreSoulParadeRoll(
   const outcome = rollD6(rng);
 
   if (outcome === 1) {
-    const updatedAsgore: UnitState = {
-      ...asgore,
-      asgorePatienceStealthActive: true,
-    };
-    const stateAfterBuff: GameState = {
-      ...state,
-      units: {
-        ...state.units,
-        [updatedAsgore.id]: updatedAsgore,
-      },
-    };
-    const options = getAsgorePatienceTargetIds(stateAfterBuff, updatedAsgore.id);
+    const options = getAsgorePatienceTargetIds(state, asgore.id);
     if (options.length === 0) {
-      return { state: clearPendingRoll(stateAfterBuff), events: [] };
+      const committed = commitAsgoreSoulParadeCost(state, asgore.id);
+      if (!committed.ok) return { state, events: [] };
+      const updatedAsgore: UnitState = {
+        ...committed.unit,
+        asgorePatienceStealthActive: true,
+      };
+      return {
+        state: clearPendingRoll({
+          ...committed.state,
+          units: {
+            ...committed.state.units,
+            [updatedAsgore.id]: updatedAsgore,
+          },
+        }),
+        events: committed.events,
+      };
     }
     return requestRoll(
-      clearPendingRoll(stateAfterBuff),
-      updatedAsgore.owner,
+      clearPendingRoll(state),
+      asgore.owner,
       "asgoreSoulParadePatienceTargetChoice",
       {
-        asgoreId: updatedAsgore.id,
+        asgoreId: asgore.id,
         options,
       } satisfies AsgoreSoulParadeTargetChoiceContext,
-      updatedAsgore.id
+      asgore.id
     );
   }
 
   if (outcome === 2) {
+    const committed = commitAsgoreSoulParadeCost(state, asgore.id);
+    if (!committed.ok) return { state, events: [] };
     const updatedAsgore: UnitState = {
-      ...asgore,
+      ...committed.unit,
       asgoreBraveryAutoDefenseReady: true,
     };
     return {
       state: clearPendingRoll({
-        ...state,
+        ...committed.state,
         units: {
-          ...state.units,
+          ...committed.state.units,
           [updatedAsgore.id]: updatedAsgore,
         },
       }),
-      events: [],
+      events: committed.events,
     };
   }
 
   if (outcome === 3) {
     const options = getAsgoreIntegrityDestinations(state, asgore.id);
     if (options.length === 0) {
-      return { state: clearPendingRoll(state), events: [] };
+      const committed = commitAsgoreSoulParadeCost(state, asgore.id);
+      if (!committed.ok) return { state, events: [] };
+      return { state: clearPendingRoll(committed.state), events: committed.events };
     }
     return requestRoll(
       clearPendingRoll(state),
@@ -95,7 +103,9 @@ export function resolveAsgoreSoulParadeRoll(
   if (outcome === 4) {
     const options = getAsgorePerseveranceTargetIds(state, asgore.id);
     if (options.length === 0) {
-      return { state: clearPendingRoll(state), events: [] };
+      const committed = commitAsgoreSoulParadeCost(state, asgore.id);
+      if (!committed.ok) return { state, events: [] };
+      return { state: clearPendingRoll(committed.state), events: committed.events };
     }
     return requestRoll(
       clearPendingRoll(state),
@@ -110,24 +120,28 @@ export function resolveAsgoreSoulParadeRoll(
   }
 
   if (outcome === 5) {
+    const committed = commitAsgoreSoulParadeCost(state, asgore.id);
+    if (!committed.ok) return { state, events: [] };
+    const committedAsgore = committed.unit;
     const maxHp = getUnitBaseMaxHp(asgore);
-    const hpAfter = Math.min(maxHp, asgore.hp + 2);
-    const healedAmount = Math.max(0, hpAfter - asgore.hp);
+    const hpAfter = Math.min(maxHp, committedAsgore.hp + 2);
+    const healedAmount = Math.max(0, hpAfter - committedAsgore.hp);
     const updatedAsgore: UnitState = {
-      ...asgore,
+      ...committedAsgore,
       hp: hpAfter,
     };
     return {
       state: clearPendingRoll({
-        ...state,
+        ...committed.state,
         units: {
-          ...state.units,
+          ...committed.state.units,
           [updatedAsgore.id]: updatedAsgore,
         },
       }),
       events:
         healedAmount > 0
           ? [
+              ...committed.events,
               evUnitHealed({
                 unitId: updatedAsgore.id,
                 amount: healedAmount,
@@ -135,13 +149,15 @@ export function resolveAsgoreSoulParadeRoll(
                 sourceAbilityId: ABILITY_ASGORE_SOUL_PARADE,
               }),
             ]
-          : [],
+          : committed.events,
     };
   }
 
   const options = getAsgoreJusticeTargetIds(state, asgore.id);
   if (options.length === 0) {
-    return { state: clearPendingRoll(state), events: [] };
+    const committed = commitAsgoreSoulParadeCost(state, asgore.id);
+    if (!committed.ok) return { state, events: [] };
+    return { state: clearPendingRoll(committed.state), events: committed.events };
   }
   return requestRoll(
     clearPendingRoll(state),

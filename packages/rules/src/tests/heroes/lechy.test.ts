@@ -198,10 +198,18 @@ export function testLechyGuideTravelerGatingAndBehavior() {
     res.state.pendingRoll?.kind === "moveTrickster",
     "guide traveler should request trickster move roll"
   );
+  assert(
+    res.state.units[lechy.id].charges[ABILITY_LECHY_GUIDE_TRAVELER] === 2,
+    "guide traveler should not spend charges when target selection opens"
+  );
 
   const afterRoll = resolvePendingRollOnce(res.state, rng);
   const pendingMove = afterRoll.state.pendingMove;
   assert(pendingMove && pendingMove.legalTo.length > 0, "pending move should exist");
+  assert(
+    afterRoll.state.units[lechy.id].charges[ABILITY_LECHY_GUIDE_TRAVELER] === 2,
+    "guide traveler should not spend charges when movement options resolve"
+  );
 
   const moveTarget =
     pendingMove.legalTo.find((pos) => pos.col === 6 && pos.row === 4) ??
@@ -217,6 +225,10 @@ export function testLechyGuideTravelerGatingAndBehavior() {
   assert(
     pending?.kind === "lechyGuideTravelerPlacement",
     "guide traveler should request placement after move"
+  );
+  assert(
+    moved.state.units[lechy.id].charges[ABILITY_LECHY_GUIDE_TRAVELER] === 2,
+    "guide traveler should not spend charges before ally placement resolves"
   );
 
   const legalPositions = (pending?.context as any)?.legalPositions as Coord[] | undefined;
@@ -246,6 +258,10 @@ export function testLechyGuideTravelerGatingAndBehavior() {
   assert(
     invalidAttempt.state.pendingRoll?.kind === "lechyGuideTravelerPlacement",
     "invalid placement should keep pending roll"
+  );
+  assert(
+    invalidAttempt.state.units[lechy.id].charges[ABILITY_LECHY_GUIDE_TRAVELER] === 2,
+    "invalid guide traveler placement should not spend charges"
   );
 
   const dest = (legalPositions ?? [])[0];

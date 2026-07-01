@@ -87,6 +87,9 @@ export const ABILITY_SPECS_PART_2: Record<string, AbilitySpec> = {
     chargeUnlimited: true,
     chargesPerUse: 0,
     isSpecialCounter: true,
+    actionCost: {
+      consumes: { action: true },
+    },
   },
   [ids.ABILITY_JEBE_DURABLE]: {
     id: ids.ABILITY_JEBE_DURABLE,

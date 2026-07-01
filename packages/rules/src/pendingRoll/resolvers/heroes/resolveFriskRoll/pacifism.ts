@@ -1,13 +1,12 @@
 import type { ApplyResult, GameState, PendingRoll, ResolveRollChoice } from "../../../../model";
 import type { RNG } from "../../../../rng";
 import { rollD6 } from "../../../../rng";
+import { ABILITY_FRISK_PACIFISM } from "../../../../abilities";
+import { clearPendingRoll, requestRoll } from "../../../../core";
 import {
-  ABILITY_FRISK_PACIFISM,
-  getCharges,
-  spendCharges,
-} from "../../../../abilities";
-import { canSpendSlots, spendSlots } from "../../../../turnEconomy";
-import { clearPendingRoll, requestRoll, evAbilityUsed } from "../../../../core";
+  canCommitAbilityCost,
+  commitAbilityCost,
+} from "../../../../actions/abilityCosts";
 import { getUnitBaseMaxHp } from "../../../../actions/shared";
 import type {
   FriskPacifismChoiceContext,
@@ -56,7 +55,12 @@ export function resolveFriskPacifismChoice(
   }
 
   if (option === "hugs") {
-    if (getCharges(frisk, ABILITY_FRISK_PACIFISM) < FRISK_PACIFISM_HUGS_COST) {
+    if (
+      !canCommitAbilityCost(state, frisk.id, ABILITY_FRISK_PACIFISM, {
+        costs: { action: true },
+        chargeAmount: FRISK_PACIFISM_HUGS_COST,
+      })
+    ) {
       return { state, events: [] };
     }
     const options = Array.isArray(ctx.hugsOptions) ? ctx.hugsOptions : [];
@@ -74,7 +78,12 @@ export function resolveFriskPacifismChoice(
   }
 
   const options = Array.isArray(ctx.warmWordsOptions) ? ctx.warmWordsOptions : [];
-  if (getCharges(frisk, ABILITY_FRISK_PACIFISM) < FRISK_PACIFISM_WARM_WORDS_COST) {
+  if (
+    !canCommitAbilityCost(state, frisk.id, ABILITY_FRISK_PACIFISM, {
+      costs: { action: true },
+      chargeAmount: FRISK_PACIFISM_WARM_WORDS_COST,
+    })
+  ) {
     return { state, events: [] };
   }
   if (options.length === 0) {
@@ -123,28 +132,26 @@ export function resolveFriskPacifismHugsTargetChoice(
     return { state, events: [] };
   }
 
-  if (!canSpendSlots(frisk, { action: true })) {
-    return { state, events: [] };
-  }
-  const spent = spendCharges(frisk, ABILITY_FRISK_PACIFISM, FRISK_PACIFISM_HUGS_COST);
-  if (!spent.ok) {
-    return { state, events: [] };
-  }
-  const afterFrisk = spendSlots(spent.unit, { action: true });
+  const committed = commitAbilityCost(state, frisk.id, ABILITY_FRISK_PACIFISM, {
+    costs: { action: true },
+    chargeAmount: FRISK_PACIFISM_HUGS_COST,
+  });
+  if (!committed.ok) return { state, events: [] };
+  const afterFrisk = committed.unit;
 
   return {
     state: clearPendingRoll({
-      ...state,
+      ...committed.state,
       units: {
-        ...state.units,
+        ...committed.state.units,
         [afterFrisk.id]: afterFrisk,
         [target.id]: {
-          ...target,
+          ...committed.state.units[target.id],
           movementDisabledNextTurn: true,
         },
       },
     }),
-    events: [evAbilityUsed({ unitId: afterFrisk.id, abilityId: ABILITY_FRISK_PACIFISM })],
+    events: committed.events,
   };
 }
 
@@ -206,18 +213,12 @@ export function resolveFriskWarmWordsHealRoll(
     return { state: clearPendingRoll(state), events: [] };
   }
 
-  if (!canSpendSlots(frisk, { action: true })) {
-    return { state, events: [] };
-  }
-  const spent = spendCharges(
-    frisk,
-    ABILITY_FRISK_PACIFISM,
-    FRISK_PACIFISM_WARM_WORDS_COST
-  );
-  if (!spent.ok) {
-    return { state, events: [] };
-  }
-  const afterFrisk = spendSlots(spent.unit, { action: true });
+  const committed = commitAbilityCost(state, frisk.id, ABILITY_FRISK_PACIFISM, {
+    costs: { action: true },
+    chargeAmount: FRISK_PACIFISM_WARM_WORDS_COST,
+  });
+  if (!committed.ok) return { state, events: [] };
+  const afterFrisk = committed.unit;
   const roll = rollD6(rng);
   const maxHp = getUnitBaseMaxHp(target);
   const healedHp = Math.min(maxHp, target.hp + roll);
@@ -227,18 +228,18 @@ export function resolveFriskWarmWordsHealRoll(
       ? { ...afterFrisk, hp: healedHp }
       : { ...target, hp: healedHp };
   const units = {
-    ...state.units,
+    ...committed.state.units,
     [afterFrisk.id]: afterFrisk,
     [healedTarget.id]: healedTarget,
   };
 
   return {
     state: clearPendingRoll({
-      ...state,
+      ...committed.state,
       units,
     }),
     events: [
-      evAbilityUsed({ unitId: afterFrisk.id, abilityId: ABILITY_FRISK_PACIFISM }),
+      ...committed.events,
       ...(healedAmount > 0
         ? [
             {

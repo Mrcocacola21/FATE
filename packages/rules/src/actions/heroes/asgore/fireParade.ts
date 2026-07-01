@@ -4,10 +4,9 @@ import {
   ABILITY_ASGORE_FIRE_PARADE,
   TRICKSTER_AOE_RADIUS,
   getAbilitySpec,
-  spendCharges,
 } from "../../../abilities";
-import { canSpendSlots, spendSlots } from "../../../turnEconomy";
-import { requestRoll, evAbilityUsed, evAoeResolved } from "../../../core";
+import { requestRoll, evAoeResolved } from "../../../core";
+import { commitAbilityCost } from "../../abilityCosts";
 import type { TricksterAoEContext } from "../../../pendingRoll/types";
 import { isAsgore } from "./helpers";
 
@@ -25,29 +24,12 @@ export function applyAsgoreFireParade(
     return { state, events: [] };
   }
 
-  const costs = spec.actionCost?.consumes ?? {};
-  if (!canSpendSlots(unit, costs)) {
-    return { state, events: [] };
-  }
+  const committed = commitAbilityCost(state, unit.id, spec.id);
+  if (!committed.ok) return { state, events: [] };
 
-  const chargeAmount = spec.chargesPerUse ?? spec.chargeCost ?? 0;
-  const spent = spendCharges(unit, spec.id, chargeAmount);
-  if (!spent.ok) {
-    return { state, events: [] };
-  }
-
-  const updatedUnit = spendSlots(spent.unit, costs);
-  let nextState: GameState = {
-    ...state,
-    units: {
-      ...state.units,
-      [updatedUnit.id]: updatedUnit,
-    },
-  };
-
-  const events: GameEvent[] = [
-    evAbilityUsed({ unitId: updatedUnit.id, abilityId: spec.id }),
-  ];
+  const updatedUnit = committed.unit;
+  let nextState: GameState = committed.state;
+  const events: GameEvent[] = [...committed.events];
   const center = updatedUnit.position;
   if (!center) {
     return { state: nextState, events };

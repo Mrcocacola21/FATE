@@ -1,10 +1,7 @@
 import type { GameEvent, GameState, ResolveRollChoice } from "../../../../model";
-import {
-  ABILITY_LOKI_LAUGHT,
-  spendCharges,
-} from "../../../../abilities";
-import { evAbilityUsed } from "../../../../core";
 import { isLoki } from "../../../../actions/heroes/loki";
+import { commitAbilityCost } from "../../../../actions/abilityCosts";
+import { ABILITY_LOKI_LAUGHT } from "../../../../abilities";
 
 export const COST_AGAIN_SOME_NONSENSE = 3;
 export const COST_CHICKEN = 5;
@@ -66,22 +63,17 @@ export function spendLaughter(
   if (!loki) {
     return { ok: false, state, loki: null, events: [] };
   }
-  const spent = spendCharges(loki, ABILITY_LOKI_LAUGHT, cost);
-  if (!spent.ok) {
+  const committed = commitAbilityCost(state, loki.id, ABILITY_LOKI_LAUGHT, {
+    costs: { action: true },
+    chargeAmount: cost,
+  });
+  if (!committed.ok) {
     return { ok: false, state, loki, events: [] };
   }
-  const updatedLoki = spent.unit;
-  const nextState: GameState = {
-    ...state,
-    units: {
-      ...state.units,
-      [updatedLoki.id]: updatedLoki,
-    },
-  };
   return {
     ok: true,
-    state: nextState,
-    loki: updatedLoki,
-    events: [evAbilityUsed({ unitId: updatedLoki.id, abilityId: ABILITY_LOKI_LAUGHT })],
+    state: committed.state,
+    loki: committed.unit,
+    events: committed.events,
   };
 }

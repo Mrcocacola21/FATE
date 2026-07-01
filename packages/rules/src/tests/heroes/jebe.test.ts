@@ -136,6 +136,21 @@ export function testJebeHailOfArrowsGatingTargetingAndDamage() {
       type: "useAbility",
       unitId: jebe.id,
       abilityId: ABILITY_JEBE_HAIL_OF_ARROWS,
+    } as any,
+    rng
+  );
+  assert(!res.state.pendingRoll, "hail without a center should not resolve");
+  assert(
+    res.state.units[jebe.id].charges[ABILITY_JEBE_HAIL_OF_ARROWS] === 2,
+    "hail without center confirmation should not spend charges"
+  );
+
+  res = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: jebe.id,
+      abilityId: ABILITY_JEBE_HAIL_OF_ARROWS,
       payload: { center: { col: 1, row: 2 } },
     } as any,
     rng
@@ -264,6 +279,21 @@ export function testJebeKhansShooterGatingConsumesAndRicochets() {
       type: "useAbility",
       unitId: jebe.id,
       abilityId: ABILITY_JEBE_KHANS_SHOOTER,
+    } as any,
+    rng
+  );
+  assert(!used.state.pendingRoll, "Khan's Shooter without a target should not resolve");
+  assert(
+    used.state.units[jebe.id].charges[ABILITY_JEBE_KHANS_SHOOTER] === 6,
+    "Khan's Shooter without target confirmation should not spend charges"
+  );
+
+  used = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: jebe.id,
+      abilityId: ABILITY_JEBE_KHANS_SHOOTER,
       payload: { targetId: enemy1.id },
     } as any,
     rng
@@ -275,7 +305,7 @@ export function testJebeKhansShooterGatingConsumesAndRicochets() {
   );
   assert(
     used.state.units[jebe.id].charges[ABILITY_JEBE_KHANS_SHOOTER] === 0,
-    "Khan's Shooter should consume all 6 charges immediately"
+    "Khan's Shooter should consume all 6 charges on initial target resolution"
   );
 
   let current = used.state;

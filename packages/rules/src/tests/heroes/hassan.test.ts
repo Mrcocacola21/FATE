@@ -210,6 +210,25 @@ export function testHassanTrueEnemyGatingConsumesAndForcesOneAttack() {
     "True Enemy should consume Hassan's action slot on target resolution"
   );
 
+  const duplicateTargetChoice = applyAction(
+    targetChoice.state,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: reopened.state.pendingRoll!.id,
+      player: reopened.state.pendingRoll!.player,
+      choice: { type: "hassanTrueEnemyTarget", targetId: enemyForcedTarget.id },
+    } as any,
+    rng
+  );
+  assert(
+    duplicateTargetChoice.events.length === 0,
+    "duplicate True Enemy target resolution should be rejected without events"
+  );
+  assert(
+    duplicateTargetChoice.state.units[hassan.id].charges[ABILITY_HASSAN_TRUE_ENEMY] === 0,
+    "duplicate True Enemy target resolution should not double-spend charges"
+  );
+
   const resolved = resolveAllPendingRollsWithEvents(targetChoice.state, rng);
   const events = [...reopened.events, ...targetChoice.events, ...resolved.events];
   const forcedAttackEvents = events.filter(

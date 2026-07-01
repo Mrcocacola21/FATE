@@ -19,6 +19,7 @@ interface BattleAbilityActionsProps {
   canAct: boolean;
   economy: TurnEconomyState;
   actionMode: ActionMode;
+  targetingActive: boolean;
   onUseAbility: (abilityId: string) => void;
   onToggleMode: (mode: ActionPreviewMode) => void;
   onModePreview: (mode: ActionPreviewMode | null) => void;
@@ -31,6 +32,7 @@ export const BattleAbilityActions: FC<BattleAbilityActionsProps> = ({
   canAct,
   economy,
   actionMode,
+  targetingActive,
   onUseAbility,
   onToggleMode,
   onModePreview,
@@ -72,10 +74,19 @@ export const BattleAbilityActions: FC<BattleAbilityActionsProps> = ({
                   ? t("game.stealthSlotUsed")
                   : undefined;
         const disabledByAvailability = !ability.isAvailable;
-        const disabled = !canAct || notEnoughCharges || slotDisabled || disabledByAvailability;
+        const disabled =
+          targetingActive ||
+          !canAct ||
+          notEnoughCharges ||
+          slotDisabled ||
+          disabledByAvailability;
         const chargeWarning = notEnoughCharges ? t("game.notEnoughCharges") : undefined;
         const tooltip =
-          localizeServerText(ability.disabledReason, t) || slotReason || chargeWarning || "";
+          (targetingActive ? t("game.cancelTargetingFirst") : "") ||
+          localizeServerText(ability.disabledReason, t) ||
+          slotReason ||
+          chargeWarning ||
+          "";
         const display = getAbilityDisplay(ability.id, ability.name, ability.description, language);
         const label = `${display.name}${chargeLabel ? ` (${chargeLabel})` : ""}`;
         const mode = abilityActionMode(ability.id);

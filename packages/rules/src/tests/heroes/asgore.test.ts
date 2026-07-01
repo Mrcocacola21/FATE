@@ -298,8 +298,8 @@ export function testAsgoreSoulParadePatienceAttackAndTempStealth() {
     "Soul Parade should trigger at start turn when charges become full"
   );
   assert(
-    started.state.units[asgore.id].charges[ABILITY_ASGORE_SOUL_PARADE] === 0,
-    "Soul Parade trigger should spend all 3 charges"
+    started.state.units[asgore.id].charges[ABILITY_ASGORE_SOUL_PARADE] === 3,
+    "Soul Parade trigger should not spend charges before its result resolves"
   );
 
   const rolled = resolvePendingRollOnce(started.state, makeRngSequence([0.1]));
@@ -308,8 +308,12 @@ export function testAsgoreSoulParadePatienceAttackAndTempStealth() {
     "Soul Parade roll=1 should request Patience target"
   );
   assert(
-    !!rolled.state.units[asgore.id].asgorePatienceStealthActive,
-    "Patience branch should enable temporary stealth threshold 5-6"
+    rolled.state.units[asgore.id].charges[ABILITY_ASGORE_SOUL_PARADE] === 3,
+    "Patience target selection should not spend Soul Parade charges"
+  );
+  assert(
+    !rolled.state.units[asgore.id].asgorePatienceStealthActive,
+    "Patience branch should wait to enable temporary stealth until target resolution"
   );
 
   const targetPicked = resolvePendingWithChoice(
@@ -320,6 +324,14 @@ export function testAsgoreSoulParadePatienceAttackAndTempStealth() {
   assert(
     targetPicked.state.pendingRoll?.kind === "attack_attackerRoll",
     "Patience branch should trigger immediate attack flow"
+  );
+  assert(
+    targetPicked.state.units[asgore.id].charges[ABILITY_ASGORE_SOUL_PARADE] === 0,
+    "Patience target resolution should spend Soul Parade charges"
+  );
+  assert(
+    !!targetPicked.state.units[asgore.id].asgorePatienceStealthActive,
+    "Patience target resolution should enable temporary stealth threshold 5-6"
   );
   const resolvedAttack = resolveAllPendingRollsWithEvents(
     targetPicked.state,
@@ -402,8 +414,16 @@ export function testAsgoreSoulParadeBraveryAutoDefenseOneTime() {
   state = setUnit(state, attacker.id, { position: { col: 4, row: 5 } });
 
   const started = startAsgoreSoulParadeTurn(state, asgore.id);
+  assert(
+    started.state.units[asgore.id].charges[ABILITY_ASGORE_SOUL_PARADE] === 3,
+    "Soul Parade trigger should not spend charges before Bravery resolves"
+  );
   const rolled = resolvePendingRollOnce(started.state, makeRngSequence([0.2])); // roll 2
   assert(!rolled.state.pendingRoll, "Bravery branch should resolve immediately");
+  assert(
+    rolled.state.units[asgore.id].charges[ABILITY_ASGORE_SOUL_PARADE] === 0,
+    "Bravery branch should spend Soul Parade charges when it resolves"
+  );
   assert(
     !!rolled.state.units[asgore.id].asgoreBraveryAutoDefenseReady,
     "Bravery branch should arm one-time auto defense"
@@ -488,6 +508,10 @@ export function testAsgoreSoulParadeIntegrityPerseveranceKindnessJustice() {
       rolled.state.pendingRoll?.kind === "asgoreSoulParadeIntegrityDestination",
       "Soul Parade roll=3 should request Integrity destination"
     );
+    assert(
+      rolled.state.units[asgore.id].charges[ABILITY_ASGORE_SOUL_PARADE] === 3,
+      "Integrity destination selection should not spend Soul Parade charges"
+    );
     const moved = resolvePendingWithChoice(
       rolled.state,
       {
@@ -504,6 +528,10 @@ export function testAsgoreSoulParadeIntegrityPerseveranceKindnessJustice() {
     assert(
       !moved.state.units[asgore.id].turn.moveUsed,
       "Integrity reposition should not consume move action"
+    );
+    assert(
+      moved.state.units[asgore.id].charges[ABILITY_ASGORE_SOUL_PARADE] === 0,
+      "Integrity destination resolution should spend Soul Parade charges"
     );
   }
 
@@ -523,6 +551,10 @@ export function testAsgoreSoulParadeIntegrityPerseveranceKindnessJustice() {
       rolled.state.pendingRoll?.kind === "asgoreSoulParadePerseveranceTargetChoice",
       "Soul Parade roll=4 should request Perseverance target"
     );
+    assert(
+      rolled.state.units[asgore.id].charges[ABILITY_ASGORE_SOUL_PARADE] === 3,
+      "Perseverance target selection should not spend Soul Parade charges"
+    );
     const applied = resolvePendingWithChoice(
       rolled.state,
       { type: "asgoreSoulParadePerseveranceTarget", targetId: target.id },
@@ -531,6 +563,10 @@ export function testAsgoreSoulParadeIntegrityPerseveranceKindnessJustice() {
     assert(
       !!applied.state.units[target.id].movementDisabledNextTurn,
       "Perseverance failed check should disable target movement next turn"
+    );
+    assert(
+      applied.state.units[asgore.id].charges[ABILITY_ASGORE_SOUL_PARADE] === 0,
+      "Perseverance target resolution should spend Soul Parade charges"
     );
   }
 
@@ -544,6 +580,10 @@ export function testAsgoreSoulParadeIntegrityPerseveranceKindnessJustice() {
     const started = startAsgoreSoulParadeTurn(state, asgore.id);
     const rolled = resolvePendingRollOnce(started.state, makeRngSequence([0.7])); // roll 5
     assert(!rolled.state.pendingRoll, "Kindness branch should resolve immediately");
+    assert(
+      rolled.state.units[asgore.id].charges[ABILITY_ASGORE_SOUL_PARADE] === 0,
+      "Kindness branch should spend Soul Parade charges when it resolves"
+    );
     assert(
       rolled.state.units[asgore.id].hp === 7,
       "Kindness should heal Asgore by 2 HP"
@@ -566,6 +606,10 @@ export function testAsgoreSoulParadeIntegrityPerseveranceKindnessJustice() {
       rolled.state.pendingRoll?.kind === "asgoreSoulParadeJusticeTargetChoice",
       "Soul Parade roll=6 should request Justice target"
     );
+    assert(
+      rolled.state.units[asgore.id].charges[ABILITY_ASGORE_SOUL_PARADE] === 3,
+      "Justice target selection should not spend Soul Parade charges"
+    );
     const justiceOptions =
       (rolled.state.pendingRoll?.context as { options?: string[] } | undefined)
         ?.options ?? [];
@@ -581,6 +625,10 @@ export function testAsgoreSoulParadeIntegrityPerseveranceKindnessJustice() {
     assert(
       picked.state.pendingRoll?.kind === "attack_attackerRoll",
       "Justice branch should trigger immediate ranged attack flow"
+    );
+    assert(
+      picked.state.units[asgore.id].charges[ABILITY_ASGORE_SOUL_PARADE] === 0,
+      "Justice target resolution should spend Soul Parade charges"
     );
     const resolved = resolveAllPendingRollsWithEvents(
       picked.state,

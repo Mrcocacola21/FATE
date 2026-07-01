@@ -1,11 +1,10 @@
 import type { ApplyResult, GameState, PendingRoll, ResolveRollChoice } from "../../../../model";
 import type { RNG } from "../../../../rng";
 import { rollD6 } from "../../../../rng";
-import { canSpendSlots, spendSlots } from "../../../../turnEconomy";
+import { canCommitAbilityCost } from "../../../../actions/abilityCosts";
 import {
   ABILITY_LOKI_ILLUSORY_DOUBLE,
   ABILITY_LOKI_LAUGHT,
-  getCharges,
   getAbilityViewsForUnit,
 } from "../../../../abilities";
 import { clearPendingRoll, requestRoll } from "../../../../core";
@@ -67,10 +66,13 @@ function resolveAgainSomeNonsense(
 
 function resolveChickenMenuChoice(state: GameState, lokiId: string): ApplyResult {
   const loki = getLokiUnit(state, lokiId);
-  if (!loki || getCharges(loki, ABILITY_LOKI_LAUGHT) < COST_CHICKEN) {
-    return { state, events: [] };
-  }
-  if (!canSpendSlots(loki, { action: true })) {
+  if (
+    !loki ||
+    !canCommitAbilityCost(state, loki.id, ABILITY_LOKI_LAUGHT, {
+      costs: { action: true },
+      chargeAmount: COST_CHICKEN,
+    })
+  ) {
     return { state, events: [] };
   }
 
@@ -91,13 +93,13 @@ function resolveChickenMenuChoice(state: GameState, lokiId: string): ApplyResult
 
 function resolveMindControlMenuChoice(state: GameState, lokiId: string): ApplyResult {
   const loki = getLokiUnit(state, lokiId);
-  if (!loki) {
-    return { state, events: [] };
-  }
-  if (!canSpendSlots(loki, { action: true })) {
-    return { state, events: [] };
-  }
-  if (getCharges(loki, ABILITY_LOKI_LAUGHT) < COST_MIND_CONTROL) {
+  if (
+    !loki ||
+    !canCommitAbilityCost(state, loki.id, ABILITY_LOKI_LAUGHT, {
+      costs: { action: true },
+      chargeAmount: COST_MIND_CONTROL,
+    })
+  ) {
     return { state, events: [] };
   }
 

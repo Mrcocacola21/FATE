@@ -11,6 +11,8 @@ import type { RNG } from "../../rng";
 import { coordsEqual } from "../../board";
 import { linePath } from "../../path";
 import { canSpendSlots, spendSlots } from "../../turnEconomy";
+import { ABILITY_RIVER_PERSON_BOATMAN } from "../../abilities";
+import { commitAbilityCost } from "../abilityCosts";
 import { findStakeStopOnPath, applyStakeTriggerIfAny, evUnitMoved } from "../../core";
 import { getMovementModes, unitHasMovementMode } from "../shared";
 import { hasMettatonRiderMovement, hasMettatonRiderPathFeature } from "../../mettaton";
@@ -172,9 +174,33 @@ export function applyMove(
     }
   }
 
-  const movedUnitBaseRaw: UnitState = hasRiverBoatmanMove
-    ? { ...unit, riverBoatmanMovePending: false }
-    : spendSlots(unit, { move: true });
+  let stateAfterMoveCost = state;
+  let costEvents: GameEvent[] = [];
+  let movedUnitBaseRaw: UnitState;
+  if (hasRiverBoatmanMove) {
+    const committed = commitAbilityCost(
+      state,
+      unit.id,
+      ABILITY_RIVER_PERSON_BOATMAN
+    );
+    if (!committed.ok) {
+      return { state, events: [] };
+    }
+    movedUnitBaseRaw = {
+      ...committed.unit,
+      riverBoatmanMovePending: false,
+    };
+    stateAfterMoveCost = {
+      ...committed.state,
+      units: {
+        ...committed.state.units,
+        [movedUnitBaseRaw.id]: movedUnitBaseRaw,
+      },
+    };
+    costEvents = committed.events;
+  } else {
+    movedUnitBaseRaw = spendSlots(unit, { move: true });
+  }
   const movedUnitBase =
     didMove && unit.courtGlobalMoveOnce && !unit.courtGlobalMoveOnce.used
       ? markCourtGlobalMoveUsed(movedUnitBaseRaw)
@@ -194,18 +220,20 @@ export function applyMove(
   };
 
   let newState: GameState = {
-    ...state,
+    ...stateAfterMoveCost,
     units: {
-      ...state.units,
+      ...stateAfterMoveCost.units,
       [updatedUnit.id]: updatedUnit,
     },
     pendingMove:
-      pendingValid && pending?.unitId === updatedUnit.id ? null : state.pendingMove,
+      pendingValid && pending?.unitId === updatedUnit.id
+        ? null
+        : stateAfterMoveCost.pendingMove,
   };
 
-  let events: GameEvent[] = [];
+  let events: GameEvent[] = [...costEvents];
   if (didMove) {
-    events = [evUnitMoved({ unitId: updatedUnit.id, from, to: updatedUnit.position! })];
+    events.push(evUnitMoved({ unitId: updatedUnit.id, from, to: updatedUnit.position! }));
   }
 
   if (didMove) {

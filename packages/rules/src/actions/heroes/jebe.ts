@@ -15,12 +15,11 @@ import {
   ABILITY_JEBE_HAIL_OF_ARROWS,
   ABILITY_JEBE_KHANS_SHOOTER,
   getAbilitySpec,
-  spendCharges,
 } from "../../abilities";
 import { HERO_JEBE_ID } from "../../heroes";
-import { canSpendSlots, spendSlots } from "../../turnEconomy";
 import { requestRoll } from "../../core";
-import { evAbilityUsed, evAoeResolved } from "../../core";
+import { evAoeResolved } from "../../core";
+import { commitAbilityCost } from "../abilityCosts";
 import type {
   JebeHailOfArrowsAoEContext,
   JebeKhansShooterRicochetContext,
@@ -103,29 +102,12 @@ export function applyJebeHailOfArrows(
     return { state, events: [] };
   }
 
-  const costs = spec.actionCost?.consumes ?? {};
-  if (!canSpendSlots(unit, costs)) {
-    return { state, events: [] };
-  }
+  const committed = commitAbilityCost(state, unit.id, spec.id);
+  if (!committed.ok) return { state, events: [] };
 
-  const chargeAmount = spec.chargesPerUse ?? spec.chargeCost ?? 0;
-  const spent = spendCharges(unit, spec.id, chargeAmount);
-  if (!spent.ok) {
-    return { state, events: [] };
-  }
-
-  const updatedUnit = spendSlots(spent.unit, costs);
-  let nextState: GameState = {
-    ...state,
-    units: {
-      ...state.units,
-      [updatedUnit.id]: updatedUnit,
-    },
-  };
-
-  const events: GameEvent[] = [
-    evAbilityUsed({ unitId: updatedUnit.id, abilityId: spec.id }),
-  ];
+  const updatedUnit = committed.unit;
+  let nextState: GameState = committed.state;
+  const events: GameEvent[] = [...committed.events];
 
   const aoeRes = resolveAoE(
     nextState,
@@ -229,29 +211,9 @@ export function applyJebeKhansShooter(
     return { state, events: [] };
   }
 
-  const costs = spec.actionCost?.consumes ?? {};
-  if (!canSpendSlots(unit, costs)) {
-    return { state, events: [] };
-  }
-
-  const chargeAmount = spec.chargesPerUse ?? spec.chargeCost ?? 0;
-  const spent = spendCharges(unit, spec.id, chargeAmount);
-  if (!spent.ok) {
-    return { state, events: [] };
-  }
-
-  const updatedUnit = spendSlots(spent.unit, costs);
-  const nextState: GameState = {
-    ...state,
-    units: {
-      ...state.units,
-      [updatedUnit.id]: updatedUnit,
-    },
-  };
-
-  const events: GameEvent[] = [
-    evAbilityUsed({ unitId: updatedUnit.id, abilityId: spec.id }),
-  ];
+  const committed = commitAbilityCost(state, unit.id, spec.id);
+  if (!committed.ok) return { state, events: [] };
+  const updatedUnit = committed.unit;
 
   const ctx: JebeKhansShooterRicochetContext = {
     casterId: updatedUnit.id,
@@ -259,14 +221,14 @@ export function applyJebeKhansShooter(
   };
 
   const requested = requestRoll(
-    nextState,
+    committed.state,
     updatedUnit.owner,
     "jebeKhansShooterRicochetRoll",
     ctx,
     updatedUnit.id
   );
 
-  return { state: requested.state, events: [...events, ...requested.events] };
+  return { state: requested.state, events: [...committed.events, ...requested.events] };
 }
 
 

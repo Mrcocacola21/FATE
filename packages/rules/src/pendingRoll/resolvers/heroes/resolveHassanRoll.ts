@@ -7,14 +7,12 @@ import type {
 } from "../../../model";
 import {
   ABILITY_HASSAN_TRUE_ENEMY,
-  getAbilitySpec,
-  spendCharges,
 } from "../../../abilities";
 import { canAttackTarget } from "../../../combat";
 import { canDirectlyTargetUnit } from "../../../visibility";
-import { clearPendingRoll, evAbilityUsed, requestRoll } from "../../../core";
+import { clearPendingRoll, requestRoll } from "../../../core";
 import { makeAttackContext } from "../../builders/buildPendingRoll";
-import { canSpendSlots, spendSlots } from "../../../turnEconomy";
+import { commitAbilityCost } from "../../../actions/abilityCosts";
 import type {
   HassanAssassinOrderSelectionContext,
   HassanTrueEnemyTargetChoiceContext,
@@ -161,34 +159,16 @@ export function resolveHassanTrueEnemyTargetChoice(
     return { state: clearPendingRoll(state), events: [] };
   }
 
-  const spec = getAbilitySpec(ABILITY_HASSAN_TRUE_ENEMY);
-  if (!spec) {
-    return { state, events: [] };
-  }
-  const costs = spec.actionCost?.consumes ?? {};
-  if (!canSpendSlots(hassan, costs)) {
-    return { state, events: [] };
-  }
-  const chargeAmount = spec.chargesPerUse ?? spec.chargeCost ?? 0;
-  const spent = spendCharges(hassan, spec.id, chargeAmount);
-  if (!spent.ok) {
-    return { state, events: [] };
-  }
-  const updatedHassan = spendSlots(spent.unit, costs);
-  const spentState: GameState = {
-    ...state,
-    units: {
-      ...state.units,
-      [updatedHassan.id]: updatedHassan,
-    },
-  };
-  const forced = requestForcedAttack(spentState, forcedAttackerId, payload.targetId);
+  const committed = commitAbilityCost(state, hassan.id, ABILITY_HASSAN_TRUE_ENEMY);
+  if (!committed.ok) return { state, events: [] };
+  const forced = requestForcedAttack(
+    committed.state,
+    forcedAttackerId,
+    payload.targetId
+  );
   return {
     state: forced.state,
-    events: [
-      evAbilityUsed({ unitId: updatedHassan.id, abilityId: spec.id }),
-      ...forced.events,
-    ],
+    events: [...committed.events, ...forced.events],
   };
 }
 

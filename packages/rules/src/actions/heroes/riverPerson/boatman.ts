@@ -13,11 +13,11 @@ import {
   ABILITY_RIVER_PERSON_BOATMAN,
   getAbilitySpec,
 } from "../../../abilities";
-import { canSpendSlots, spendSlots } from "../../../turnEconomy";
+import { canCommitAbilityCost } from "../../abilityCosts";
 import { getLegalMovesForUnitModes } from "../../../movement";
 import { getMovementModes } from "../../shared";
 import { clearPendingRoll, requestRoll } from "../../../core";
-import { evAbilityUsed, evMoveOptionsGenerated, evUnitMoved } from "../../../core";
+import { evMoveOptionsGenerated, evUnitMoved } from "../../../core";
 import type {
   RiverBoatCarryChoiceContext,
   RiverBoatDropDestinationContext,
@@ -65,8 +65,7 @@ export function applyRiverBoatman(
   if (!spec) {
     return { state, events: [] };
   }
-  const costs = spec.actionCost?.consumes ?? {};
-  if (!canSpendSlots(unit, costs)) {
+  if (!canCommitAbilityCost(state, unit.id, spec.id)) {
     return { state, events: [] };
   }
   if ((unit.kaladinMoveLockSources?.length ?? 0) > 0) {
@@ -80,7 +79,7 @@ export function applyRiverBoatman(
   }
 
   const movedAsAction: UnitState = {
-    ...spendSlots(unit, costs),
+    ...unit,
     riverBoatmanMovePending: true,
     riverBoatCarryAllyId: undefined,
   };
@@ -91,9 +90,7 @@ export function applyRiverBoatman(
       [movedAsAction.id]: movedAsAction,
     },
   };
-  const events: GameEvent[] = [
-    evAbilityUsed({ unitId: movedAsAction.id, abilityId: spec.id }),
-  ];
+  const events: GameEvent[] = [];
 
   const carryOptions = getRiverCarryOptions(stateAfterAbility, movedAsAction.id);
   if (carryOptions.length > 0) {

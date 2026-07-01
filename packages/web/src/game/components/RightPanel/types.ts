@@ -5,6 +5,7 @@ import type {
   PlayerView,
 } from "rules";
 import type { ActionMode, ActionPreviewMode } from "../../../store";
+import type { TargetingMode } from "../../selectionState";
 import type { PlayerRole } from "../../../ws";
 
 export type RightPanelMoveOptions =
@@ -22,6 +23,7 @@ export interface RightPanelProps {
   role: PlayerRole | null;
   selectedUnitId: string | null;
   actionMode: ActionMode;
+  targetingMode: TargetingMode | null;
   placeUnitId: string | null;
   moveOptions: RightPanelMoveOptions;
   joined: boolean;

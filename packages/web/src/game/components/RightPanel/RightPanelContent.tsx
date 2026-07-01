@@ -16,6 +16,7 @@ export const RightPanelContent: FC<RightPanelProps> = (props) => {
     view,
     selectedUnitId,
     actionMode,
+    targetingMode,
     placeUnitId,
     joined,
     pendingRoll,
@@ -77,6 +78,7 @@ export const RightPanelContent: FC<RightPanelProps> = (props) => {
           abilityViews={vm.abilityViews}
           actionableAbilities={vm.actionableAbilities}
           actionMode={actionMode}
+          targetingMode={targetingMode}
           moveDisabled={vm.moveDisabled}
           attackDisabled={vm.attackDisabled}
           attackDisabledReason={vm.attackDisabledReason}
@@ -119,6 +121,7 @@ export const RightPanelContent: FC<RightPanelProps> = (props) => {
           onTogglePapyrusLongBone={vm.onTogglePapyrusLongBone}
           onEndTurn={vm.onEndTurn}
           onClear={vm.onClear}
+          onCancelTargeting={() => onSetActionMode(null)}
         />
       )}
 

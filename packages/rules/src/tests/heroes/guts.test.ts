@@ -103,6 +103,21 @@ export function testGutsArbaletRangedFixedDamage() {
   state = toBattleState(state, "P1", guts.id);
   state = initKnowledgeForOwners(state);
 
+  const opened = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: guts.id,
+      abilityId: ABILITY_GUTS_ARBALET,
+    } as any,
+    rng
+  );
+  assert(!opened.state.pendingRoll, "Arbalet without a target should not resolve");
+  assert(
+    !opened.state.units[guts.id].turn.actionUsed,
+    "Arbalet without target confirmation should not spend action"
+  );
+
   const beforeHp = state.units[enemy.id].hp;
   const used = applyAction(
     state,
@@ -173,6 +188,24 @@ export function testGutsCannonGatingAndChargeSpend() {
   state = setUnit(state, guts.id, {
     charges: { ...state.units[guts.id].charges, [ABILITY_GUTS_CANNON]: 2 },
   });
+  const opened = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: guts.id,
+      abilityId: ABILITY_GUTS_CANNON,
+    } as any,
+    rng
+  );
+  assert(!opened.state.pendingRoll, "Cannon without a target should not resolve");
+  assert(
+    opened.state.units[guts.id].charges[ABILITY_GUTS_CANNON] === 2,
+    "Cannon without target confirmation should not spend charges"
+  );
+  assert(
+    !opened.state.units[guts.id].turn.actionUsed,
+    "Cannon without target confirmation should not spend action"
+  );
   used = applyAction(
     state,
     {
@@ -189,7 +222,11 @@ export function testGutsCannonGatingAndChargeSpend() {
   );
   assert(
     used.state.units[guts.id].charges[ABILITY_GUTS_CANNON] === 0,
-    "Cannon should spend exactly 2 charges immediately"
+    "Cannon should spend exactly 2 charges on target resolution"
+  );
+  assert(
+    used.state.units[guts.id].turn.actionUsed,
+    "Cannon should spend action on target resolution"
   );
 
   console.log("guts_cannon_gating_and_charge_spend passed");

@@ -13,6 +13,7 @@ import {
   spendCharges,
 } from "../../../abilities";
 import { canSpendSlots, spendSlots } from "../../../turnEconomy";
+import { canCommitAbilityCost } from "../../abilityCosts";
 import { getLegalMovesForUnitModes } from "../../../movement";
 import { getMovementModes, unitHasMovementMode } from "../../shared";
 import { evAbilityUsed, evMoveOptionsGenerated } from "../../../core";
@@ -56,19 +57,12 @@ export function applyLechyGuideTraveler(
     return { state, events: [] };
   }
 
-  const costs = spec.actionCost?.consumes ?? {};
-  if (!canSpendSlots(unit, costs)) {
-    return { state, events: [] };
-  }
-
-  const chargeAmount = spec.chargesPerUse ?? spec.chargeCost ?? 0;
-  const { unit: afterCharges, ok } = spendCharges(unit, spec.id, chargeAmount);
-  if (!ok) {
+  if (!canCommitAbilityCost(state, unit.id, spec.id)) {
     return { state, events: [] };
   }
 
   const updatedUnit: UnitState = {
-    ...afterCharges,
+    ...unit,
     lechyGuideTravelerTargetId: targetId,
   };
 
@@ -90,7 +84,7 @@ export function applyLechyGuideTraveler(
     );
     return {
       state: requested.state,
-      events: [evAbilityUsed({ unitId: updatedUnit.id, abilityId: spec.id }), ...requested.events],
+      events: requested.events,
     };
   }
 
@@ -115,7 +109,6 @@ export function applyLechyGuideTraveler(
   return {
     state: nextState,
     events: [
-      evAbilityUsed({ unitId: updatedUnit.id, abilityId: spec.id }),
       evMoveOptionsGenerated({
         unitId: updatedUnit.id,
         roll: undefined,

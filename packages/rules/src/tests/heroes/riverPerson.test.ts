@@ -219,8 +219,8 @@ export function testRiverPersonBoatmanConvertsActionToMoveAndSupportsCarry() {
     makeRngSequence([])
   );
   assert(
-    usedBoatman.state.units[river.id].turn.actionUsed,
-    "Boatman should consume River Person action slot"
+    !usedBoatman.state.units[river.id].turn.actionUsed,
+    "Boatman should not consume River Person action slot before movement resolves"
   );
   assert(
     usedBoatman.state.units[river.id].turn.moveUsed,
@@ -249,6 +249,10 @@ export function testRiverPersonBoatmanConvertsActionToMoveAndSupportsCarry() {
   assert(
     moved.state.pendingRoll?.kind === "riverBoatDropDestination",
     "Boatman move with carry should request ally drop destination"
+  );
+  assert(
+    moved.state.units[river.id].turn.actionUsed,
+    "Boatman should consume River Person action slot when movement resolves"
   );
   const dropOptions =
     (moved.state.pendingRoll?.context as { options?: Coord[] } | undefined)
@@ -374,12 +378,12 @@ export function testRiverPersonTraLaLaGatingAndFlow() {
     "Tra-la-la should request adjacent target selection"
   );
   assert(
-    used.state.units[river.id].charges[ABILITY_RIVER_PERSON_TRA_LA_LA] === 0,
-    "Tra-la-la should spend all 4 charges on activation"
+    used.state.units[river.id].charges[ABILITY_RIVER_PERSON_TRA_LA_LA] === 4,
+    "Tra-la-la should not spend charges before target and destination resolution"
   );
   assert(
-    used.state.units[river.id].turn.actionUsed,
-    "Tra-la-la should consume action slot"
+    !used.state.units[river.id].turn.actionUsed,
+    "Tra-la-la should not consume action slot before target and destination resolution"
   );
 
   const targetSelected = resolvePendingWithChoice(
@@ -390,6 +394,14 @@ export function testRiverPersonTraLaLaGatingAndFlow() {
   assert(
     targetSelected.state.pendingRoll?.kind === "riverTraLaLaDestinationChoice",
     "Tra-la-la should request destination after target selection"
+  );
+  assert(
+    targetSelected.state.units[river.id].charges[ABILITY_RIVER_PERSON_TRA_LA_LA] === 4,
+    "Tra-la-la target selection should not spend charges before destination resolution"
+  );
+  assert(
+    !targetSelected.state.units[river.id].turn.actionUsed,
+    "Tra-la-la target selection should not consume action before destination resolution"
   );
   const destinationOptions =
     (targetSelected.state.pendingRoll?.context as { options?: Coord[] } | undefined)
@@ -412,6 +424,14 @@ export function testRiverPersonTraLaLaGatingAndFlow() {
     destinationSelected.state.units[river.id].position?.col === 4 &&
       destinationSelected.state.units[river.id].position?.row === 7,
     "Tra-la-la should move River Person to selected destination"
+  );
+  assert(
+    destinationSelected.state.units[river.id].charges[ABILITY_RIVER_PERSON_TRA_LA_LA] === 0,
+    "Tra-la-la should spend all 4 charges on destination resolution"
+  );
+  assert(
+    destinationSelected.state.units[river.id].turn.actionUsed,
+    "Tra-la-la should consume action slot on destination resolution"
   );
   assert(
     destinationSelected.state.pendingRoll?.kind === "attack_attackerRoll",

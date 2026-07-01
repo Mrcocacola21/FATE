@@ -31,7 +31,10 @@ import {
   type ServerMessage,
 } from "./ws";
 import type { TestRoomCommand } from "./testRoom/types";
-import { transitionActionMode } from "./game/selectionState";
+import {
+  transitionActionMode,
+  type TargetingMode,
+} from "./game/selectionState";
 import type { BoardEventBatch } from "./game/effects/types";
 
 export type ActionMode =
@@ -106,6 +109,7 @@ interface GameStore {
   testRoomSnapshot: string | null;
   selectedUnitId: string | null;
   actionMode: ActionMode;
+  targetingMode: TargetingMode | null;
   placeUnitId: string | null;
   moveOptions:
     | {
@@ -197,6 +201,7 @@ function buildLeaveResetState(
     testRoomSnapshot: null,
     selectedUnitId: null,
     actionMode: null,
+    targetingMode: null,
     placeUnitId: null,
     moveOptions: null,
     leavingRoom: false,
@@ -452,6 +457,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   testRoomSnapshot: null,
   selectedUnitId: null,
   actionMode: null,
+  targetingMode: null,
   placeUnitId: null,
   moveOptions: null,
   leavingRoom: false,
@@ -667,7 +673,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set((state) => ({ events: [...state.events, ...events].slice(-200) })),
   addClientLog: (message) =>
     set((state) => ({ clientLog: [...state.clientLog, message].slice(-50) })),
-  setSelectedUnit: (unitId) => set(() => ({ selectedUnitId: unitId })),
+  setSelectedUnit: (unitId) =>
+    set(() => ({
+      selectedUnitId: unitId,
+      actionMode: null,
+      targetingMode: null,
+      moveOptions: null,
+      hoverPreview: null,
+    })),
   setActionMode: (mode) =>
     set((state) => ({
       ...transitionActionMode(state, mode),
@@ -704,6 +717,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       testRoomSnapshot: null,
       selectedUnitId: null,
       actionMode: null,
+      targetingMode: null,
       placeUnitId: null,
       moveOptions: null,
       leavingRoom: false,

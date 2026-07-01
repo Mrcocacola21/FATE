@@ -17,6 +17,7 @@ import {
 import { canSpendSlots, spendSlots } from "../../../turnEconomy";
 import { clearPendingRoll, requestRoll } from "../../../core";
 import { evAbilityUsed } from "../../../core";
+import { commitAbilityCost } from "../../abilityCosts";
 import { HERO_CHIKATILO_ID } from "../../../heroes";
 import { getUnitDefinition } from "../../../units";
 import { concealUnitExactPositionFromOpponents } from "../../../visibility";
@@ -76,12 +77,10 @@ export function applyChikatiloAssassinMark(
     return { state, events: [] };
   }
 
-  const costs = spec.actionCost?.consumes ?? {};
-  if (!canSpendSlots(unit, costs)) {
-    return { state, events: [] };
-  }
+  const committed = commitAbilityCost(state, unit.id, spec.id);
+  if (!committed.ok) return { state, events: [] };
 
-  const updatedUnit = spendSlots(unit, costs);
+  const updatedUnit = committed.unit;
   const marked = new Set(updatedUnit.chikatiloMarkedTargets ?? []);
   marked.add(targetId);
 
@@ -91,16 +90,14 @@ export function applyChikatiloAssassinMark(
   };
 
   const nextState: GameState = {
-    ...state,
+    ...committed.state,
     units: {
-      ...state.units,
+      ...committed.state.units,
       [nextUnit.id]: nextUnit,
     },
   };
 
-  const events: GameEvent[] = [
-    evAbilityUsed({ unitId: nextUnit.id, abilityId: spec.id }),
-  ];
+  const events: GameEvent[] = committed.events;
 
   return { state: nextState, events };
 }

@@ -1,12 +1,10 @@
-import type { ApplyResult, GameAction, GameEvent, GameState, UnitState } from "../../../model";
+import type { ApplyResult, GameAction, GameState, UnitState } from "../../../model";
 import {
   ABILITY_GUTS_ARBALET,
   ABILITY_GUTS_CANNON,
   getAbilitySpec,
-  spendCharges,
 } from "../../../abilities";
-import { canSpendSlots, spendSlots } from "../../../turnEconomy";
-import { evAbilityUsed } from "../../../core";
+import { commitAbilityCost } from "../../abilityCosts";
 import { canUseArcherLikeAttack, isGuts, requestGutsRangedAttack } from "./helpers";
 import type { TargetPayload } from "./types";
 
@@ -39,28 +37,14 @@ export function applyGutsArbalet(
   if (!spec) {
     return { state, events: [] };
   }
-  const costs = spec.actionCost?.consumes ?? {};
-  if (!canSpendSlots(unit, costs)) {
-    return { state, events: [] };
-  }
+  const committed = commitAbilityCost(state, unit.id, spec.id);
+  if (!committed.ok) return { state, events: [] };
 
-  const updatedUnit = spendSlots(unit, costs);
-  const nextState: GameState = {
-    ...state,
-    units: {
-      ...state.units,
-      [updatedUnit.id]: updatedUnit,
-    },
-  };
-  const events: GameEvent[] = [
-    evAbilityUsed({ unitId: updatedUnit.id, abilityId: spec.id }),
-  ];
-
-  const requested = requestGutsRangedAttack(nextState, updatedUnit, targetId, {
+  const requested = requestGutsRangedAttack(committed.state, committed.unit, targetId, {
     damageOverride: 1,
     ignoreBonuses: true,
   });
-  return { state: requested.state, events: [...events, ...requested.events] };
+  return { state: requested.state, events: [...committed.events, ...requested.events] };
 }
 
 export function applyGutsCannon(
@@ -92,29 +76,13 @@ export function applyGutsCannon(
   if (!spec) {
     return { state, events: [] };
   }
-  const costs = spec.actionCost?.consumes ?? {};
-  if (!canSpendSlots(unit, costs)) {
-    return { state, events: [] };
-  }
+  const committed = commitAbilityCost(state, unit.id, spec.id);
+  if (!committed.ok) return { state, events: [] };
 
-  const chargeAmount = spec.chargesPerUse ?? spec.chargeCost ?? 0;
-  const spent = spendCharges(unit, spec.id, chargeAmount);
-  if (!spent.ok) {
-    return { state, events: [] };
-  }
-
-  const updatedUnit = spendSlots(spent.unit, costs);
-  const nextState: GameState = {
-    ...state,
-    units: {
-      ...state.units,
-      [updatedUnit.id]: updatedUnit,
-    },
-  };
-  const events: GameEvent[] = [
-    evAbilityUsed({ unitId: updatedUnit.id, abilityId: spec.id }),
-  ];
-
-  const requested = requestGutsRangedAttack(nextState, updatedUnit, targetId);
-  return { state: requested.state, events: [...events, ...requested.events] };
+  const requested = requestGutsRangedAttack(
+    committed.state,
+    committed.unit,
+    targetId
+  );
+  return { state: requested.state, events: [...committed.events, ...requested.events] };
 }

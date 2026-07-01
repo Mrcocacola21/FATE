@@ -13,11 +13,11 @@ import { canDirectlyTargetUnit } from "../../../visibility";
 import {
   ABILITY_RIVER_PERSON_TRA_LA_LA,
   getAbilitySpec,
-  spendCharges,
 } from "../../../abilities";
-import { canSpendSlots, spendSlots } from "../../../turnEconomy";
+import { canSpendSlots } from "../../../turnEconomy";
+import { canCommitAbilityCost, commitAbilityCost } from "../../abilityCosts";
 import { clearPendingRoll, makeAttackContext, requestRoll } from "../../../core";
-import { evAbilityUsed, evUnitMoved } from "../../../core";
+import { evUnitMoved } from "../../../core";
 import { linePath } from "../../../path";
 import type {
   RiverTraLaLaDestinationChoiceContext,
@@ -62,8 +62,7 @@ export function applyRiverTraLaLa(
   }
   const spec = getAbilitySpec(ABILITY_RIVER_PERSON_TRA_LA_LA);
   if (!spec) return { state, events: [] };
-  const costs = spec.actionCost?.consumes ?? {};
-  if (!canSpendSlots(unit, costs)) {
+  if (!canCommitAbilityCost(state, unit.id, spec.id)) {
     return { state, events: [] };
   }
 
@@ -72,12 +71,8 @@ export function applyRiverTraLaLa(
     return { state, events: [] };
   }
 
-  const chargeAmount = spec.chargesPerUse ?? spec.chargeCost ?? 0;
-  const spent = spendCharges(unit, spec.id, chargeAmount);
-  if (!spent.ok) return { state, events: [] };
-
   const updatedRiver: UnitState = {
-    ...spendSlots(spent.unit, costs),
+    ...unit,
     riverBoatCarryAllyId: undefined,
   };
   const nextState: GameState = {
@@ -87,9 +82,7 @@ export function applyRiverTraLaLa(
       [updatedRiver.id]: updatedRiver,
     },
   };
-  const events: GameEvent[] = [
-    evAbilityUsed({ unitId: updatedRiver.id, abilityId: spec.id }),
-  ];
+  const events: GameEvent[] = [];
   const requested = requestRoll(
     nextState,
     updatedRiver.owner,
@@ -172,21 +165,30 @@ export function resolveRiverTraLaLaDestinationChoice(
   if (!allowed) return { state, events: [] };
   if (getUnitAt(state, destination)) return { state, events: [] };
 
+  const committed = commitAbilityCost(
+    state,
+    river.id,
+    ABILITY_RIVER_PERSON_TRA_LA_LA
+  );
+  if (!committed.ok) return { state, events: [] };
+
+  const committedRiver = committed.unit;
   const from = { ...river.position };
   const movedRiver: UnitState = {
-    ...river,
+    ...committedRiver,
     position: { ...destination },
     riverBoatCarryAllyId: undefined,
   };
 
   let nextState: GameState = clearPendingRoll({
-    ...state,
+    ...committed.state,
     units: {
-      ...state.units,
+      ...committed.state.units,
       [movedRiver.id]: movedRiver,
     },
   });
   const events: GameEvent[] = [
+    ...committed.events,
     evUnitMoved({ unitId: movedRiver.id, from, to: movedRiver.position! }),
   ];
 

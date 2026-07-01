@@ -244,6 +244,20 @@ export function testChikatiloAssassinMarkDoesNotRevealAndGrantsBonusDamage() {
   state = toBattleState(state, "P1", chikatilo.id);
   state = initKnowledgeForOwners(state);
 
+  const opened = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: chikatilo.id,
+      abilityId: ABILITY_CHIKATILO_ASSASSIN_MARK,
+    } as any,
+    rng
+  ).state;
+  assert(
+    !opened.units[chikatilo.id].turn.actionUsed,
+    "assassin mark without a target should not spend action"
+  );
+
   const marked = applyAction(
     state,
     {
@@ -259,6 +273,10 @@ export function testChikatiloAssassinMarkDoesNotRevealAndGrantsBonusDamage() {
   assert(
     markedUnit.isStealthed === true,
     "assassin mark should not reveal chikatilo"
+  );
+  assert(
+    markedUnit.turn.actionUsed,
+    "assassin mark should spend action when the target is applied"
   );
 
   const reset = setUnit(marked, chikatilo.id, {

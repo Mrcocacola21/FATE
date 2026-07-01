@@ -14,7 +14,12 @@ import type {
   AsgoreSoulParadeIntegrityDestinationContext,
   AsgoreSoulParadeTargetChoiceContext,
 } from "../../../types";
-import { getAsgore, parseTargetChoice, requestAsgoreAttack } from "./helpers";
+import {
+  commitAsgoreSoulParadeCost,
+  getAsgore,
+  parseTargetChoice,
+  requestAsgoreAttack,
+} from "./helpers";
 
 export function resolveAsgoreSoulParadePatienceTargetChoice(
   state: GameState,
@@ -40,7 +45,21 @@ export function resolveAsgoreSoulParadePatienceTargetChoice(
     return { state: clearPendingRoll(state), events: [] };
   }
 
-  return requestAsgoreAttack(state, asgore, targetId);
+  const committed = commitAsgoreSoulParadeCost(state, asgore.id);
+  if (!committed.ok) return { state, events: [] };
+  const updatedAsgore: UnitState = {
+    ...committed.unit,
+    asgorePatienceStealthActive: true,
+  };
+  const stateAfterCommit: GameState = {
+    ...committed.state,
+    units: {
+      ...committed.state.units,
+      [updatedAsgore.id]: updatedAsgore,
+    },
+  };
+  const requested = requestAsgoreAttack(stateAfterCommit, updatedAsgore, targetId);
+  return { state: requested.state, events: [...committed.events, ...requested.events] };
 }
 
 export function resolveAsgoreSoulParadePerseveranceTargetChoice(
@@ -71,23 +90,25 @@ export function resolveAsgoreSoulParadePerseveranceTargetChoice(
     return { state: clearPendingRoll(state), events: [] };
   }
 
+  const committed = commitAsgoreSoulParadeCost(state, asgore.id);
+  if (!committed.ok) return { state, events: [] };
   const check = rollD6(rng);
   if (check >= 5) {
-    return { state: clearPendingRoll(state), events: [] };
+    return { state: clearPendingRoll(committed.state), events: committed.events };
   }
 
   return {
     state: clearPendingRoll({
-      ...state,
+      ...committed.state,
       units: {
-        ...state.units,
+        ...committed.state.units,
         [target.id]: {
-          ...target,
+          ...committed.state.units[target.id],
           movementDisabledNextTurn: true,
         },
       },
     }),
-    events: [],
+    events: committed.events,
   };
 }
 
@@ -115,7 +136,10 @@ export function resolveAsgoreSoulParadeJusticeTargetChoice(
     return { state: clearPendingRoll(state), events: [] };
   }
 
-  return requestAsgoreAttack(state, asgore, targetId);
+  const committed = commitAsgoreSoulParadeCost(state, asgore.id);
+  if (!committed.ok) return { state, events: [] };
+  const requested = requestAsgoreAttack(committed.state, committed.unit, targetId);
+  return { state: requested.state, events: [...committed.events, ...requested.events] };
 }
 
 export function resolveAsgoreSoulParadeIntegrityDestinationChoice(
@@ -151,19 +175,23 @@ export function resolveAsgoreSoulParadeIntegrityDestinationChoice(
     return { state, events: [] };
   }
 
+  const committed = commitAsgoreSoulParadeCost(state, asgore.id);
+  if (!committed.ok) return { state, events: [] };
+  const committedAsgore = committed.unit;
   const movedAsgore: UnitState = {
-    ...asgore,
+    ...committedAsgore,
     position: { ...payload.position },
   };
   return {
     state: clearPendingRoll({
-      ...state,
+      ...committed.state,
       units: {
-        ...state.units,
+        ...committed.state.units,
         [movedAsgore.id]: movedAsgore,
       },
     }),
     events: [
+      ...committed.events,
       evUnitMoved({
         unitId: movedAsgore.id,
         from: { ...asgore.position },

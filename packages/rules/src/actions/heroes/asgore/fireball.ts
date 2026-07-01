@@ -1,12 +1,11 @@
-import type { ApplyResult, GameAction, GameEvent, GameState, UnitState } from "../../../model";
+import type { ApplyResult, GameAction, GameState, UnitState } from "../../../model";
 import {
   ABILITY_ASGORE_FIREBALL,
   getAbilitySpec,
-  spendCharges,
 } from "../../../abilities";
 import { canDirectlyTargetUnit } from "../../../visibility";
-import { canSpendSlots, spendSlots } from "../../../turnEconomy";
-import { makeAttackContext, requestRoll, evAbilityUsed } from "../../../core";
+import { makeAttackContext, requestRoll } from "../../../core";
+import { commitAbilityCost } from "../../abilityCosts";
 import { canUseAsClassAttack, isAsgore } from "./helpers";
 
 interface FireballPayload {
@@ -69,30 +68,13 @@ export function applyAsgoreFireball(
     return { state, events: [] };
   }
 
-  const costs = spec.actionCost?.consumes ?? {};
-  if (!canSpendSlots(unit, costs)) {
-    return { state, events: [] };
-  }
+  const committed = commitAbilityCost(state, unit.id, spec.id);
+  if (!committed.ok) return { state, events: [] };
 
-  const chargeAmount = spec.chargesPerUse ?? spec.chargeCost ?? 0;
-  const spent = spendCharges(unit, spec.id, chargeAmount);
-  if (!spent.ok) {
-    return { state, events: [] };
-  }
-
-  const updatedUnit = spendSlots(spent.unit, costs);
-  const nextState: GameState = {
-    ...state,
-    units: {
-      ...state.units,
-      [updatedUnit.id]: updatedUnit,
-    },
-  };
-
-  const events: GameEvent[] = [
-    evAbilityUsed({ unitId: updatedUnit.id, abilityId: spec.id }),
-  ];
-
-  const requested = requestAsgoreClassAttack(nextState, updatedUnit, targetId);
-  return { state: requested.state, events: [...events, ...requested.events] };
+  const requested = requestAsgoreClassAttack(
+    committed.state,
+    committed.unit,
+    targetId
+  );
+  return { state: requested.state, events: [...committed.events, ...requested.events] };
 }

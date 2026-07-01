@@ -5,11 +5,9 @@ import {
   ABILITY_FALSE_TRAIL_EXPLOSION,
   ABILITY_TRICKSTER_AOE,
   getAbilitySpec,
-  spendCharges,
 } from "../../abilities";
-import { canSpendSlots, spendSlots } from "../../turnEconomy";
-import { evAbilityUsed } from "../../core";
 import { HERO_FALSE_TRAIL_TOKEN_ID, HERO_KALADIN_ID } from "../../heroes";
+import { commitAbilityCost } from "../abilityCosts";
 import { tryApplyDirectAbility } from "./directHandlers";
 import { applyTricksterAoEAfterUse } from "./tricksterAoE";
 import type { UseAbilityAction } from "./types";
@@ -76,29 +74,14 @@ export function applyUseAbility(
     }
   }
 
-  const costs = spec.actionCost?.consumes ?? {};
-  if (!canSpendSlots(unit, costs)) {
+  const committed = commitAbilityCost(state, unit.id, spec.id);
+  if (!committed.ok) {
     return { state, events: [] };
   }
 
-  const chargeAmount = spec.chargesPerUse ?? spec.chargeCost ?? 0;
-  const { unit: afterCharges, ok } = spendCharges(unit, spec.id, chargeAmount);
-  if (!ok || !afterCharges) {
-    return { state, events: [] };
-  }
-
-  const updatedUnit: UnitState = spendSlots(afterCharges, costs);
-  let nextState: GameState = {
-    ...state,
-    units: {
-      ...state.units,
-      [updatedUnit.id]: updatedUnit,
-    },
-  };
-
-  const events: GameEvent[] = [
-    evAbilityUsed({ unitId: updatedUnit.id, abilityId: spec.id }),
-  ];
+  const updatedUnit: UnitState = committed.unit;
+  let nextState: GameState = committed.state;
+  const events: GameEvent[] = committed.events;
 
   if (isTricksterAoE && aoeCenter) {
     const tricksterResult = applyTricksterAoEAfterUse(

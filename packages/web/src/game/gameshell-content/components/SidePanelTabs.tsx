@@ -219,6 +219,7 @@ function ActionTab({
       <div className="mt-4 grid grid-cols-2 gap-2 border-t border-amber-900/10 pt-4 text-xs dark:border-amber-500/15">
         <BattleActionButtons
           actionMode={props.actionMode}
+          targetingActive={!!props.targetingMode}
           moveDisabled={panelVm.moveDisabled}
           attackDisabled={panelVm.attackDisabled}
           searchMoveDisabled={panelVm.searchMoveDisabled}
@@ -240,6 +241,7 @@ function ActionTab({
           canAct={panelVm.canAct || panelVm.canChooseImpulseAxis}
           economy={panelVm.economy}
           actionMode={props.actionMode}
+          targetingActive={!!props.targetingMode}
           onUseAbility={panelVm.onUseAbility}
           onToggleMode={panelVm.onToggleMode}
           onModePreview={panelVm.onModePreview}
@@ -276,9 +278,12 @@ function ActionTab({
         selectedUnitId={props.selectedUnitId}
         moveDisabled={panelVm.moveDisabled}
         actionMode={props.actionMode}
+        targetingMode={props.targetingMode}
+        abilityViews={panelVm.abilityViews}
         papyrusLineAxis={props.papyrusLineAxis}
         undyneAxis={panelVm.undyneAxis}
         onMoveRequest={props.onMoveRequest}
+        onCancelTargeting={() => props.onSetActionMode(null)}
       />
     </PanelCard>
   );
@@ -293,6 +298,7 @@ export const SidePanelTabs: FC<SidePanelTabsProps> = ({ vm }) => {
     role: effectiveRole,
     selectedUnitId: vm.selectedUnitId,
     actionMode: vm.actionMode,
+    targetingMode: vm.targetingMode,
     placeUnitId: vm.placeUnitId,
     moveOptions: vm.moveOptions,
     joined: vm.joined,
