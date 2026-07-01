@@ -2,18 +2,9 @@ import { useEffect, useState, useRef } from "react";
 import type { Coord, GameAction, MoveMode, PapyrusLineAxis } from "rules";
 import { PAPYRUS_ID } from "../../../rulesHints";
 import { getLocalPlayerId, useGameStore } from "../../../store";
+import { shouldClearActionModeAfterConfirmedResult } from "../../selectionState";
 import { previewKindForActionMode } from "../helpers";
 import { useGameShellPendingStatus } from "./useGameShellPendingStatus";
-
-const CLEAR_ON_CONFIRMED_ACTION_MODES = new Set([
-  "attack",
-  "assassinMark",
-  "jebeKhansShooter",
-  "asgoreFireball",
-  "hassanTrueEnemy",
-  "gutsArbalet",
-  "gutsCannon",
-]);
 
 export function useGameShellCoreState() {
   const {
@@ -101,6 +92,7 @@ export function useGameShellCoreState() {
   const autoAttemptKeyRef = useRef<string | null>(null);
   const autoBlockedKeyRef = useRef<string | null>(null);
   const autoInFlightRef = useRef(false);
+  const actionModeStartedAtRef = useRef(0);
 
   useEffect(() => {
     if (!autoInFlightRef.current) return;
@@ -111,8 +103,20 @@ export function useGameShellCoreState() {
   }, [lastActionResultAt, lastActionResult]);
 
   useEffect(() => {
-    if (!lastActionResultAt || !lastActionResult?.ok || !actionMode) return;
-    if (!CLEAR_ON_CONFIRMED_ACTION_MODES.has(actionMode)) return;
+    actionModeStartedAtRef.current = actionMode ? Date.now() : 0;
+  }, [actionMode]);
+
+  useEffect(() => {
+    if (
+      !shouldClearActionModeAfterConfirmedResult({
+        actionMode,
+        lastActionResult,
+        lastActionResultAt,
+        actionModeStartedAt: actionModeStartedAtRef.current,
+      })
+    ) {
+      return;
+    }
     setActionMode(null);
   }, [lastActionResultAt, lastActionResult, actionMode, setActionMode]);
 

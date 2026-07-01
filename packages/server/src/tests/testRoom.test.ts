@@ -1,8 +1,14 @@
 import assert from "assert";
 import { randomUUID } from "node:crypto";
-import { rollD6 } from "rules";
+import {
+  applyDebugStateCommand,
+  createDebugSandboxState,
+  rollD6,
+  type GameAction,
+} from "rules";
 import { buildServer } from "../index";
-import { createGameRoomWithId, storeTestHooks } from "../store";
+import { applyGameAction, createGameRoomWithId, storeTestHooks } from "../store";
+import { isActionAllowedByPlayer } from "../permissions";
 import {
   MAX_TEST_SNAPSHOT_BYTES,
   TestRoomCommandSchema,
@@ -133,12 +139,57 @@ function testInvalidPayloadRejectedBySchema() {
   console.log("test_room_invalid_payload_rejected passed");
 }
 
+function testNormalRoomRejectsOutOfTurnBasicAttack() {
+  storeTestHooks.reset();
+  const room = createGameRoomWithId(`normal-out-of-turn-${randomUUID()}`);
+  let state = createDebugSandboxState();
+  state = applyDebugStateCommand(state, {
+    type: "debugSpawnUnit",
+    heroId: "frisk",
+    owner: "P1",
+    coord: { col: 4, row: 3 },
+  }).state;
+  state = applyDebugStateCommand(state, {
+    type: "debugSpawnUnit",
+    heroId: "frisk",
+    owner: "P2",
+    coord: { col: 4, row: 4 },
+  }).state;
+
+  const units = Object.values(state.units);
+  const defender = units.find((unit) => unit.owner === "P1");
+  const attacker = units.find((unit) => unit.owner === "P2");
+  assert(attacker);
+  assert(defender);
+
+  room.state = {
+    ...state,
+    phase: "battle",
+    currentPlayer: "P1",
+    activeUnitId: defender.id,
+    pendingRoll: null,
+  };
+  const action: GameAction = {
+    type: "attack",
+    attackerId: attacker.id,
+    defenderId: defender.id,
+  };
+
+  assert.equal(isActionAllowedByPlayer(room.state, action, "P2"), false);
+  const result = applyGameAction(room, action, "P2");
+  assert.equal(result.ok, false);
+  assert.equal(room.revision, 0);
+  assert.equal(room.state.units[defender.id].hp, defender.hp);
+  console.log("normal_room_rejects_out_of_turn_basic_attack passed");
+}
+
 async function main() {
   await testProductionDisabledCreationRejected();
   await testProductionEnabledCreationRequiresToken();
   testCommandsAreIsolatedAndRevisioned();
   testDiceQueueAndSnapshotValidation();
   testInvalidPayloadRejectedBySchema();
+  testNormalRoomRejectsOutOfTurnBasicAttack();
   storeTestHooks.reset();
   console.log("test room tests passed");
 }

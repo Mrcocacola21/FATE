@@ -258,6 +258,7 @@ export function useGameShellBoardUi(params: any) {
     !!selectedUnit.papyrusLongBoneMode;
   const allowUnitPick =
     !boardSelectionPending &&
+    actionMode !== "attack" &&
     actionMode !== "dora" &&
     actionMode !== "mettatonPoppins" &&
     actionMode !== "mettatonLaser" &&

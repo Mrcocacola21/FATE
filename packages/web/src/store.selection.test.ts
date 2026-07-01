@@ -2,9 +2,11 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   buildTargetingModeForActionMode,
+  shouldClearActionModeAfterConfirmedResult,
   transitionActionMode,
 } from "./game/selectionState";
 import { isActionableAbility } from "./game/components/RightPanel/rightPanelHelpers";
+import { useGameShellBoardUi } from "./game/gameshell-content/hooks/useGameShellBoardUi";
 
 test("switching from Move to Tisona clears stale move selection", () => {
   const next = transitionActionMode(
@@ -87,5 +89,40 @@ test("Impulse abilities are display-only and not optional action buttons", () =>
       isAvailable: true,
     }),
     false
+  );
+});
+
+test("basic attack targeting routes board unit clicks to the target handler", () => {
+  const boardUi = useGameShellBoardUi({
+    joined: true,
+    isSpectator: false,
+    view: { phase: "battle" },
+    actionMode: "attack",
+    boardSelectionPending: false,
+    selectedUnit: { heroId: "frisk" },
+  });
+
+  assert.equal(boardUi.allowUnitPick, false);
+});
+
+test("stale successful action results do not clear newly entered targeting mode", () => {
+  assert.equal(
+    shouldClearActionModeAfterConfirmedResult({
+      actionMode: "attack",
+      lastActionResult: { ok: true },
+      lastActionResultAt: 100,
+      actionModeStartedAt: 200,
+    }),
+    false
+  );
+
+  assert.equal(
+    shouldClearActionModeAfterConfirmedResult({
+      actionMode: "attack",
+      lastActionResult: { ok: true },
+      lastActionResultAt: 300,
+      actionModeStartedAt: 200,
+    }),
+    true
   );
 });

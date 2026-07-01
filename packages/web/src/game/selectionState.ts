@@ -46,6 +46,36 @@ export interface LocalSelectionState<TMoveOptions = unknown> {
   targetingMode?: TargetingMode | null;
 }
 
+const CLEAR_ON_CONFIRMED_ACTION_MODES = new Set<Exclude<ActionMode, null>>([
+  "attack",
+  "assassinMark",
+  "jebeKhansShooter",
+  "asgoreFireball",
+  "hassanTrueEnemy",
+  "gutsArbalet",
+  "gutsCannon",
+]);
+
+export function shouldClearActionModeAfterConfirmedResult({
+  actionMode,
+  lastActionResult,
+  lastActionResultAt,
+  actionModeStartedAt,
+}: {
+  actionMode: ActionMode;
+  lastActionResult: { ok: boolean; error?: string } | null;
+  lastActionResultAt: number;
+  actionModeStartedAt: number;
+}): boolean {
+  return !!(
+    actionMode &&
+    CLEAR_ON_CONFIRMED_ACTION_MODES.has(actionMode) &&
+    lastActionResult?.ok &&
+    lastActionResultAt > 0 &&
+    lastActionResultAt > actionModeStartedAt
+  );
+}
+
 function abilityIdForActionMode(mode: Exclude<ActionMode, null>): TargetingMode["abilityId"] {
   switch (mode) {
     case "attack":

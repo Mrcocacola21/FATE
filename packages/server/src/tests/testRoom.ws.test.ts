@@ -76,8 +76,8 @@ async function main() {
       command: {
         type: "debugSpawnUnit",
         heroId: "frisk",
-        owner: "P2",
-        coord: { col: 4, row: 4 },
+        owner: "P1",
+        coord: { col: 4, row: 3 },
       },
     })
   );
@@ -88,7 +88,12 @@ async function main() {
       message.meta?.revision === 1 &&
       Object.keys(message.view?.units ?? {}).length === 1
   );
-  assert.equal(Object.values(mutated.view.units)[0] && (Object.values(mutated.view.units)[0] as any).owner, "P2");
+  assert.equal(Object.values(mutated.view.units)[0] && (Object.values(mutated.view.units)[0] as any).owner, "P1");
+  assert.equal(
+    mutated.view.activeUnitId,
+    (Object.values(mutated.view.units)[0] as any).id,
+    "first own spawn should become the active test-room unit"
+  );
 
   testSocket.send(
     JSON.stringify({
@@ -96,8 +101,8 @@ async function main() {
       command: {
         type: "debugSpawnUnit",
         heroId: "frisk",
-        owner: "P1",
-        coord: { col: 4, row: 3 },
+        owner: "P2",
+        coord: { col: 4, row: 4 },
       },
     })
   );
@@ -116,8 +121,9 @@ async function main() {
   assert.equal(
     duel.view.activeUnitId,
     attacker.id,
-    "spawning a P1 unit after an enemy should make the P1 unit active"
+    "spawning an enemy after an own unit should keep the own unit active"
   );
+  const defenderHpBefore = defender.hp;
 
   testSocket.send(
     JSON.stringify({
@@ -184,6 +190,15 @@ async function main() {
         event.defenderId === defender.id
     )
   );
+  const testRoom = getGameRoom(testRoomId);
+  assert(testRoom, "test room should still exist after attack");
+  const attackerAfter = testRoom.state.units[attacker.id];
+  const defenderAfter = testRoom.state.units[defender.id];
+  assert(attackerAfter, "attacker should still be present after attack");
+  assert(defenderAfter, "defender should still be present after attack");
+  assert.equal(attackerAfter.turn.attackUsed, true);
+  assert.equal(attackerAfter.turn.actionUsed, true);
+  assert.equal(defenderAfter.hp, defenderHpBefore - attackerAfter.attack);
 
   const normalSocket = await openSocket(wsUrl);
   const normalMessages = collect(normalSocket);
