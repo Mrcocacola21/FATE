@@ -261,6 +261,24 @@ export function formatEventMessage(
       return text(language, `Curse: ${event.targetId} took ${event.damage}`, `Прокляття: ${event.targetId} отримує ${event.damage} шкоди`);
     case "sansLastAttackRemoved":
       return text(language, `Curse removed: ${event.targetId}`, `Прокляття знято: ${event.targetId}`);
+    case "friskHugsApplied":
+      return text(
+        language,
+        `Hugs: ${event.friskId} chose ${event.targetId}`,
+        `Hugs: ${event.friskId} chose ${event.targetId}`,
+      );
+    case "lokiChickenApplied":
+      return text(
+        language,
+        `Chicken: ${event.targetId} was changed by ${event.lokiId}`,
+        `Chicken: ${event.targetId} was changed by ${event.lokiId}`,
+      );
+    case "controlledAttackDeclared":
+      return text(
+        language,
+        `Controlled attack: ${event.controllerUnitId} forced ${event.controlledUnitId} to attack ${event.targetId}`,
+        `Controlled attack: ${event.controllerUnitId} forced ${event.controlledUnitId} to attack ${event.targetId}`,
+      );
     case "lechyStormRollResult":
       return text(
         language,

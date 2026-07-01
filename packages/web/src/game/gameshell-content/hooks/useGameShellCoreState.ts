@@ -23,6 +23,7 @@ export function useGameShellCoreState() {
     clientLog,
     hoveredAbilityId,
     hoverPreview,
+    pendingLokiLaughtOption,
     selectedUnitId,
     actionMode,
     targetingMode,
@@ -38,6 +39,8 @@ export function useGameShellCoreState() {
     setMoveOptions,
     setHoveredAbilityId,
     setHoverPreview,
+    queueLokiLaughtOption,
+    clearLokiLaughtOption,
     replayLastEffects,
     sendAction,
     sendTestRoomCommand,
@@ -119,6 +122,43 @@ export function useGameShellCoreState() {
     }
     setActionMode(null);
   }, [lastActionResultAt, lastActionResult, actionMode, setActionMode]);
+
+  useEffect(() => {
+    if (!pendingLokiLaughtOption) return;
+    if (
+      lastActionResult &&
+      !lastActionResult.ok &&
+      lastActionResultAt >= pendingLokiLaughtOption.queuedAt
+    ) {
+      clearLokiLaughtOption();
+    }
+  }, [lastActionResultAt, lastActionResult, pendingLokiLaughtOption, clearLokiLaughtOption]);
+
+  useEffect(() => {
+    if (!pendingLokiLaughtOption) return;
+    if (!pending.pendingRoll || pending.pendingRoll.kind !== "lokiLaughtChoice") {
+      return;
+    }
+    const ctx = pending.pendingRoll.context as { lokiId?: unknown } | undefined;
+    if (ctx?.lokiId !== pendingLokiLaughtOption.unitId) {
+      clearLokiLaughtOption();
+      return;
+    }
+    sendAction({
+      type: "resolvePendingRoll",
+      pendingRollId: pending.pendingRoll.id,
+      choice: {
+        type: "lokiLaughtOption",
+        option: pendingLokiLaughtOption.option,
+      },
+    } as GameAction);
+    clearLokiLaughtOption();
+  }, [
+    pending.pendingRoll,
+    pendingLokiLaughtOption,
+    sendAction,
+    clearLokiLaughtOption,
+  ]);
 
   useEffect(() => {
     if (!view || !moveOptions) return;
@@ -256,6 +296,7 @@ export function useGameShellCoreState() {
     clientLog,
     hoveredAbilityId,
     hoverPreview,
+    pendingLokiLaughtOption,
     selectedUnitId,
     actionMode,
     targetingMode,
@@ -268,6 +309,8 @@ export function useGameShellCoreState() {
     setMoveOptions,
     setHoveredAbilityId,
     setHoverPreview,
+    queueLokiLaughtOption,
+    clearLokiLaughtOption,
     sendAction,
     sendTestRoomCommand,
     requestMoveOptions,

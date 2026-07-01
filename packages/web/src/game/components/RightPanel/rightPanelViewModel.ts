@@ -9,13 +9,14 @@ import {
   KALADIN_ID,
   LECHY_ID,
   METTATON_ID,
+  LOKI_LAUGHT_ID,
   PAPYRUS_ID,
   PAPYRUS_LONG_BONE_ID,
   PAPYRUS_ORANGE_BONE_ID,
   RIVER_PERSON_ID,
   UNDYNE_ID,
 } from "../../../rulesHints";
-import type { ActionPreviewMode } from "../../../store";
+import type { ActionPreviewMode, LokiLaughtOption } from "../../../store";
 import { DEFAULT_ECONOMY } from "./rightPanelConstants";
 import { isActionableAbility, isRangedSingleTargetClass } from "./rightPanelHelpers";
 import type { RightPanelProps } from "./types";
@@ -37,6 +38,8 @@ export function buildRightPanelViewModel(params: RightPanelProps, t: Translate) 
     onSetActionMode,
     onMoveRequest,
     onSendAction,
+    pendingLokiLaughtOption,
+    onQueueLokiLaughtOption,
     onHoverActionMode,
     papyrusLineAxis,
     onSetPapyrusLineAxis,
@@ -119,6 +122,7 @@ export function buildRightPanelViewModel(params: RightPanelProps, t: Translate) 
     view.pendingRoll?.kind === "chargedImpulseTargetChoice" &&
     (view.pendingRoll.context as { unitId?: string } | undefined)?.unitId === selectedUnit.id
   );
+  const lokiLaughtOptionQueued = !!pendingLokiLaughtOption;
 
   const economy = selectedUnit?.turn ?? DEFAULT_ECONOMY;
   const legalIntents = view.legalIntents;
@@ -215,6 +219,18 @@ export function buildRightPanelViewModel(params: RightPanelProps, t: Translate) 
     });
   };
 
+  const onUseLokiLaughtOption = (option: LokiLaughtOption) => {
+    if (!selectedUnit) return;
+    if (targetingMode || actionMode) return;
+    if (lokiLaughtOptionQueued) return;
+    onQueueLokiLaughtOption?.(selectedUnit.id, option);
+    onSendAction({
+      type: "useAbility",
+      unitId: selectedUnit.id,
+      abilityId: LOKI_LAUGHT_ID,
+    });
+  };
+
   return {
     isSpectator,
     friendlyUnits,
@@ -235,6 +251,7 @@ export function buildRightPanelViewModel(params: RightPanelProps, t: Translate) 
     isMyTurn,
     canAct,
     canChooseImpulseAxis,
+    lokiLaughtOptionQueued,
     economy,
     legalIntents,
     selectedMettatonRating,
@@ -259,6 +276,7 @@ export function buildRightPanelViewModel(params: RightPanelProps, t: Translate) 
     onSetPapyrusAxis,
     onMoveClick,
     onUseAbility,
+    onUseLokiLaughtOption,
     onStartTurn: (unitId: string) => onSendAction({ type: "unitStartTurn", unitId }),
     onSearchMoveClick: () => {
       if (!selectedUnit) return;

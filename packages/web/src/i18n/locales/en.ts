@@ -609,7 +609,7 @@ export const en = {
           },
           precisionStrike: {
             name: "Precision Strike",
-            description: "Frisk’s next attack automatically hits and deals double damage.",
+            description: "Make an attack. It automatically hits and deals double damage.",
           },
         },
       },
@@ -1252,7 +1252,7 @@ export const en = {
       selectDestination: "Select a destination cell.",
       selectDropCell: "Select a drop cell.",
       selectNextRicochetTarget: "Select the next ricochet target.",
-      selectControlledUnit: "Select a controlled unit.",
+      selectControlledUnit: "Select a unit to control.",
       selectControlledAttackTarget: "Select a target for the controlled attack.",
       archerLine: "Ranged attack line.",
       fireParadeArea: "Fire Parade affected area.",

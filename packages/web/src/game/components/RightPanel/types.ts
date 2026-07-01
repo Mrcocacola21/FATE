@@ -4,7 +4,12 @@ import type {
   PapyrusLineAxis,
   PlayerView,
 } from "rules";
-import type { ActionMode, ActionPreviewMode } from "../../../store";
+import type {
+  ActionMode,
+  ActionPreviewMode,
+  LokiLaughtOption,
+  PendingLokiLaughtOption,
+} from "../../../store";
 import type { TargetingMode } from "../../selectionState";
 import type { PlayerRole } from "../../../ws";
 
@@ -33,6 +38,8 @@ export interface RightPanelProps {
   onSetPlaceUnit: (unitId: string | null) => void;
   onMoveRequest: (unitId: string, mode?: MoveMode) => void;
   onSendAction: (action: GameAction) => void;
+  pendingLokiLaughtOption?: PendingLokiLaughtOption | null;
+  onQueueLokiLaughtOption?: (unitId: string, option: LokiLaughtOption) => void;
   onHoverAbility: (abilityId: string | null) => void;
   onHoverActionMode: (mode: ActionPreviewMode | null) => void;
   papyrusLineAxis: PapyrusLineAxis;

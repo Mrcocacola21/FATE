@@ -210,6 +210,22 @@ function projectEventForRecipient(
       return isUnitVisibleToRecipient(state, event.unitId, recipient)
         ? [event]
         : [redactedEvent(event.type)];
+    case "friskHugsApplied":
+      return isUnitVisibleToRecipient(state, event.friskId, recipient) &&
+        isUnitVisibleToRecipient(state, event.targetId, recipient)
+        ? [event]
+        : [];
+    case "lokiChickenApplied":
+      return isUnitVisibleToRecipient(state, event.lokiId, recipient) &&
+        isUnitVisibleToRecipient(state, event.targetId, recipient)
+        ? [event]
+        : [];
+    case "controlledAttackDeclared":
+      return isUnitVisibleToRecipient(state, event.controllerUnitId, recipient) &&
+        isUnitVisibleToRecipient(state, event.controlledUnitId, recipient) &&
+        isUnitVisibleToRecipient(state, event.targetId, recipient)
+        ? [event]
+        : [];
     default:
       return PUBLIC_EVENT_TYPES.has(event.type) ? [event] : [redactedEvent(event.type)];
   }

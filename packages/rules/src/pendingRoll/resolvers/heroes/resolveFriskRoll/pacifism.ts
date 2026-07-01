@@ -151,7 +151,14 @@ export function resolveFriskPacifismHugsTargetChoice(
         },
       },
     }),
-    events: committed.events,
+    events: [
+      ...committed.events,
+      {
+        type: "friskHugsApplied" as const,
+        friskId: frisk.id,
+        targetId: target.id,
+      },
+    ],
   };
 }
 

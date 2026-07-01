@@ -67,6 +67,19 @@ export type HoverPreview =
   | { type: "actionMode"; mode: ActionPreviewMode }
   | null;
 
+export type LokiLaughtOption =
+  | "againSomeNonsense"
+  | "chicken"
+  | "mindControl"
+  | "spinTheDrum"
+  | "greatLokiJoke";
+
+export interface PendingLokiLaughtOption {
+  unitId: string;
+  option: LokiLaughtOption;
+  queuedAt: number;
+}
+
 const defaultRoomMeta: RoomMeta = {
   roomMode: "normal",
   gameMode: "standard",
@@ -100,6 +113,7 @@ interface GameStore {
   hasSnapshot: boolean;
   hoveredAbilityId: string | null;
   hoverPreview: HoverPreview;
+  pendingLokiLaughtOption: PendingLokiLaughtOption | null;
   events: GameEvent[];
   latestEventBatch: BoardEventBatch | null;
   clientLog: string[];
@@ -166,6 +180,8 @@ interface GameStore {
   ) => void;
   setHoveredAbilityId: (abilityId: string | null) => void;
   setHoverPreview: (preview: HoverPreview) => void;
+  queueLokiLaughtOption: (unitId: string, option: LokiLaughtOption) => void;
+  clearLokiLaughtOption: () => void;
   replayLastEffects: () => void;
   resetGameState: () => void;
 }
@@ -192,6 +208,7 @@ function buildLeaveResetState(
     hasSnapshot: false,
     hoveredAbilityId: null,
     hoverPreview: null,
+    pendingLokiLaughtOption: null,
     events: [],
     latestEventBatch: null,
     clientLog,
@@ -248,6 +265,7 @@ function handleServerMessage(
         joinError: msg.message,
         roomState: null,
         hasSnapshot: false,
+        pendingLokiLaughtOption: null,
         leavingRoom: false,
       }));
       return;
@@ -448,6 +466,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   hasSnapshot: false,
   hoveredAbilityId: null,
   hoverPreview: null,
+  pendingLokiLaughtOption: null,
   events: [],
   latestEventBatch: null,
   clientLog: [],
@@ -680,6 +699,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       targetingMode: null,
       moveOptions: null,
       hoverPreview: null,
+      pendingLokiLaughtOption: null,
     })),
   setActionMode: (mode) =>
     set((state) => ({
@@ -690,6 +710,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
   setMoveOptions: (options) => set(() => ({ moveOptions: options })),
   setHoveredAbilityId: (abilityId) => set(() => ({ hoveredAbilityId: abilityId })),
   setHoverPreview: (preview) => set(() => ({ hoverPreview: preview })),
+  queueLokiLaughtOption: (unitId, option) =>
+    set(() => ({ pendingLokiLaughtOption: { unitId, option, queuedAt: Date.now() } })),
+  clearLokiLaughtOption: () => set(() => ({ pendingLokiLaughtOption: null })),
   replayLastEffects: () =>
     set((state) =>
       state.latestEventBatch
@@ -708,6 +731,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       hasSnapshot: false,
       hoveredAbilityId: null,
       hoverPreview: null,
+      pendingLokiLaughtOption: null,
       events: [],
       latestEventBatch: null,
       clientLog: [],

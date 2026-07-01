@@ -3,7 +3,9 @@ import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { AbilityView, PlayerView, UnitState } from "rules";
 import { setLanguage, translate } from "../../../i18n";
+import { LOKI_LAUGHT_ID } from "../../../rulesHints";
 import { BattleUnitSummary } from "./sections/BattleUnitSummary";
+import { BattleAbilityActions } from "./sections/BattleAbilityActions";
 import {
   getPublicBattleActionBars,
   getUnitDetailActionBars,
@@ -241,4 +243,105 @@ test("new action UI i18n keys exist in English and Ukrainian", () => {
     }
   }
   setLanguage("en", { setItem: () => undefined });
+});
+
+test("Loki Laughter renders separate option buttons with costs and availability", () => {
+  setLanguage("en", { setItem: () => undefined });
+  const loki = makeUnit({
+    id: "P1-trickster-loki",
+    class: "trickster",
+    heroId: "loki",
+    hp: 9,
+    position: { col: 2, row: 2 },
+    charges: { [LOKI_LAUGHT_ID]: 15 },
+  });
+  const ally = makeUnit({
+    id: "P1-knight-1",
+    class: "knight",
+    heroId: undefined,
+    position: { col: 3, row: 2 },
+  });
+  const controlledEnemy = makeUnit({
+    id: "P2-knight-1",
+    owner: "P2",
+    class: "knight",
+    heroId: undefined,
+    position: { col: 1, row: 2 },
+  });
+  const enemyAllyTarget = makeUnit({
+    id: "P2-rider-1",
+    owner: "P2",
+    class: "rider",
+    heroId: undefined,
+    position: { col: 1, row: 3 },
+  });
+  const view: PlayerView = {
+    ...makeView(loki),
+    units: {
+      [loki.id]: loki,
+      [ally.id]: ally,
+      [controlledEnemy.id]: controlledEnemy,
+      [enemyAllyTarget.id]: enemyAllyTarget,
+    },
+  };
+  const ability = makeAbility({
+    id: LOKI_LAUGHT_ID,
+    name: "Loki's Laughter",
+    description: "Pick a trick",
+    slot: "none",
+    chargeRequired: 0,
+    maxCharges: undefined,
+    currentCharges: 15,
+    chargeUnlimited: true,
+    isAvailable: true,
+  });
+
+  const markup = renderToStaticMarkup(
+    <BattleAbilityActions
+      view={view}
+      actionableAbilities={[ability]}
+      selectedUnit={loki}
+      canAct={true}
+      economy={loki.turn}
+      actionMode={null}
+      targetingActive={false}
+      onUseAbility={() => undefined}
+      onUseLokiLaughtOption={() => undefined}
+      onToggleMode={() => undefined}
+      onModePreview={() => undefined}
+      onHoverAbility={() => undefined}
+    />,
+  );
+
+  assert.equal((markup.match(/data-loki-laught-option=/g) ?? []).length, 5);
+  assert.match(markup, /Again some nonsense/);
+  assert.match(markup, /Chicken/);
+  assert.match(markup, /Mind Control/);
+  assert.match(markup, /Spin the drum/);
+  assert.match(markup, /Great Loki joke/);
+  assert.match(markup, /data-loki-laught-cost="3"/);
+  assert.match(markup, /data-loki-laught-cost="5"/);
+  assert.match(markup, /data-loki-laught-cost="10"/);
+  assert.match(markup, /data-loki-laught-cost="12"/);
+  assert.match(markup, /data-loki-laught-cost="15"/);
+  assert.doesNotMatch(markup, />Loki&#x27;s Laughter</);
+
+  const lowChargeMarkup = renderToStaticMarkup(
+    <BattleAbilityActions
+      view={view}
+      actionableAbilities={[{ ...ability, currentCharges: 4 }]}
+      selectedUnit={{ ...loki, charges: { [LOKI_LAUGHT_ID]: 4 } }}
+      canAct={true}
+      economy={loki.turn}
+      actionMode={null}
+      targetingActive={false}
+      onUseAbility={() => undefined}
+      onUseLokiLaughtOption={() => undefined}
+      onToggleMode={() => undefined}
+      onModePreview={() => undefined}
+      onHoverAbility={() => undefined}
+    />,
+  );
+
+  assert.match(lowChargeMarkup, /Not enough charges/);
 });

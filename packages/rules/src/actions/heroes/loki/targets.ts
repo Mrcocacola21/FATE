@@ -4,6 +4,7 @@ import { canAttackTarget } from "../../../combat";
 import { canDirectlyTargetUnit } from "../../../visibility";
 import { HERO_FALSE_TRAIL_TOKEN_ID } from "../../../heroes";
 import { canSpendSlots } from "../../../turnEconomy";
+import { getControlledAttackTargetIds } from "../../controlledAttack";
 import { isLoki } from "./effects";
 
 export function getLokiTricksterAreaTargetIds(
@@ -47,11 +48,15 @@ export function getLokiChickenTargetIds(
 
 export function getLokiForcedAttackTargetIds(
   state: GameState,
-  attackerId: string
+  attackerId: string,
+  controllerPlayerId?: "P1" | "P2"
 ): string[] {
   const attacker = state.units[attackerId];
   if (!attacker || !attacker.isAlive || !attacker.position) {
     return [];
+  }
+  if (controllerPlayerId) {
+    return getControlledAttackTargetIds(state, attackerId, controllerPlayerId);
   }
   if (!canSpendSlots(attacker, { attack: true, action: true })) {
     return [];
@@ -86,7 +91,7 @@ export function getLokiMindControlEnemyIds(
       if (unit.heroId === HERO_FALSE_TRAIL_TOKEN_ID) return false;
       if (chebyshev(loki.position!, unit.position) > 2) return false;
       if (!canSpendSlots(unit, { attack: true, action: true })) return false;
-      return getLokiForcedAttackTargetIds(state, unit.id).length > 0;
+      return getLokiForcedAttackTargetIds(state, unit.id, loki.owner).length > 0;
     })
     .map((unit) => unit.id)
     .sort();

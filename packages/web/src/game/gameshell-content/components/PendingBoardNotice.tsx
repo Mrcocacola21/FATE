@@ -292,7 +292,7 @@ export function PendingBoardNotice({
         <div>
           <div className="font-semibold">{p("Mind Control", "Контроль розуму")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            {p("Select the enemy hero to control.", "Оберіть ворожого героя для контролю.")}
+            {p("Select a unit to control.", "Оберіть фігуру для контролю.")}
           </div>
         </div>
       ) : isLokiMindControlTargetChoice ? (
@@ -300,8 +300,8 @@ export function PendingBoardNotice({
           <div className="font-semibold">{p("Mind Control", "Контроль розуму")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
             {p(
-              "Select a legal target for the controlled attack.",
-              "Оберіть доступну ціль керованої атаки.",
+              "Select a target for the controlled attack.",
+              "Оберіть ціль для контрольованої атаки.",
             )}
           </div>
         </div>
@@ -310,8 +310,8 @@ export function PendingBoardNotice({
           <div className="font-semibold">{p("True Enemy", "Справжній ворог")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
             {p(
-              "Select a target for the forced enemy attack.",
-              "Оберіть ціль примусової ворожої атаки.",
+              "Select a target for the controlled attack.",
+              "Оберіть ціль для контрольованої атаки.",
             )}
           </div>
         </div>

@@ -236,7 +236,7 @@ const detailRegistry: Record<string, AbilityDisplayDetails> = {
             id: "greatLokiJoke",
             nameKey: "abilityDetails.loki.laughter.options.greatLokiJoke.name",
             descriptionKey: "abilityDetails.loki.laughter.options.greatLokiJoke.description",
-            types: ["phantasm"],
+            types: ["active"],
             cost: { amount: 15, resourceKey: "abilityDetails.resources.laughter" },
           },
         ],

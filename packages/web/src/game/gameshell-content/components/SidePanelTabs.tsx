@@ -236,13 +236,16 @@ function ActionTab({
           onModePreview={panelVm.onModePreview}
         />
         <BattleAbilityActions
+          view={props.view}
           actionableAbilities={panelVm.actionableAbilities}
           selectedUnit={panelVm.selectedUnit}
           canAct={panelVm.canAct || panelVm.canChooseImpulseAxis}
           economy={panelVm.economy}
           actionMode={props.actionMode}
           targetingActive={!!props.targetingMode}
+          lokiLaughtOptionQueued={panelVm.lokiLaughtOptionQueued}
           onUseAbility={panelVm.onUseAbility}
+          onUseLokiLaughtOption={panelVm.onUseLokiLaughtOption}
           onToggleMode={panelVm.onToggleMode}
           onModePreview={panelVm.onModePreview}
           onHoverAbility={props.onHoverAbility}
@@ -318,6 +321,8 @@ export const SidePanelTabs: FC<SidePanelTabsProps> = ({ vm }) => {
       }
       vm.setActionMode("move");
     },
+    pendingLokiLaughtOption: vm.pendingLokiLaughtOption,
+    onQueueLokiLaughtOption: vm.queueLokiLaughtOption,
     onSendAction: (action) => {
       vm.sendGameAction(action);
       const preserveMode =

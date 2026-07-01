@@ -91,6 +91,7 @@ export const RightPanelContent: FC<RightPanelProps> = (props) => {
           searchActionReason={vm.legalIntents?.searchActionReason}
           canAct={vm.canAct}
           canChooseImpulseAxis={vm.canChooseImpulseAxis}
+          lokiLaughtOptionQueued={vm.lokiLaughtOptionQueued}
           selectedIsPapyrus={vm.selectedIsPapyrus}
           selectedIsUndyne={vm.selectedIsUndyne}
           selectedPapyrusUnbeliever={vm.selectedPapyrusUnbeliever}
@@ -115,6 +116,7 @@ export const RightPanelContent: FC<RightPanelProps> = (props) => {
           onSearchActionClick={vm.onSearchActionClick}
           onStealthClick={vm.onStealthClick}
           onUseAbility={vm.onUseAbility}
+          onUseLokiLaughtOption={vm.onUseLokiLaughtOption}
           onSetPapyrusAxis={vm.onSetPapyrusAxis}
           onSetUndyneAxis={vm.onSetUndyneAxis}
           onSetPapyrusBoneType={vm.onSetPapyrusBoneType}

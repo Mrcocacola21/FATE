@@ -8,11 +8,13 @@ import type {
 import {
   ABILITY_HASSAN_TRUE_ENEMY,
 } from "../../../abilities";
-import { canAttackTarget } from "../../../combat";
-import { canDirectlyTargetUnit } from "../../../visibility";
 import { clearPendingRoll, requestRoll } from "../../../core";
 import { makeAttackContext } from "../../builders/buildPendingRoll";
 import { commitAbilityCost } from "../../../actions/abilityCosts";
+import { canSpendSlots, spendSlots } from "../../../turnEconomy";
+import {
+  canControlledAttackTarget,
+} from "../../../actions/controlledAttack";
 import type {
   HassanAssassinOrderSelectionContext,
   HassanTrueEnemyTargetChoiceContext,
@@ -60,7 +62,8 @@ function requestBattleStartVladFlowIfNeeded(state: GameState): ApplyResult {
 function requestForcedAttack(
   state: GameState,
   attackerId: string,
-  targetId: string
+  targetId: string,
+  controllerPlayerId: PlayerId
 ): ApplyResult {
   const attacker = state.units[attackerId];
   const target = state.units[targetId];
@@ -74,18 +77,32 @@ function requestForcedAttack(
   ) {
     return { state: clearPendingRoll(state), events: [] };
   }
-  if (!canDirectlyTargetUnit(state, attacker.id, target.id)) {
+  if (!canSpendSlots(attacker, { attack: true, action: true })) {
     return { state: clearPendingRoll(state), events: [] };
   }
-  if (!canAttackTarget(state, attacker, target, { allowFriendlyTarget: true })) {
+  if (
+    !canControlledAttackTarget(
+      state,
+      attacker.id,
+      controllerPlayerId,
+      target.id
+    )
+  ) {
     return { state: clearPendingRoll(state), events: [] };
   }
 
   let nextState = clearPendingRoll(state);
-  let nextAttacker = attacker;
+  let nextAttacker = spendSlots(attacker, { attack: true, action: true });
+  nextState = {
+    ...nextState,
+    units: {
+      ...nextState.units,
+      [nextAttacker.id]: nextAttacker,
+    },
+  };
   let events: ReturnType<typeof requestRoll>["events"] = [];
-  if (isKaiser(attacker) && attacker.bunker?.active) {
-    const exited = exitBunkerForUnit(nextState, attacker, "attacked");
+  if (isKaiser(nextAttacker) && nextAttacker.bunker?.active) {
+    const exited = exitBunkerForUnit(nextState, nextAttacker, "attacked");
     nextState = exited.state;
     nextAttacker = exited.unit;
     events = [...events, ...exited.events];
@@ -152,10 +169,14 @@ export function resolveHassanTrueEnemyTargetChoice(
   ) {
     return { state: clearPendingRoll(state), events: [] };
   }
-  if (!canDirectlyTargetUnit(state, attacker.id, target.id)) {
-    return { state: clearPendingRoll(state), events: [] };
-  }
-  if (!canAttackTarget(state, attacker, target, { allowFriendlyTarget: true })) {
+  if (
+    !canControlledAttackTarget(
+      state,
+      attacker.id,
+      hassan.owner,
+      target.id
+    )
+  ) {
     return { state: clearPendingRoll(state), events: [] };
   }
 
@@ -164,11 +185,22 @@ export function resolveHassanTrueEnemyTargetChoice(
   const forced = requestForcedAttack(
     committed.state,
     forcedAttackerId,
-    payload.targetId
+    payload.targetId,
+    hassan.owner
   );
   return {
     state: forced.state,
-    events: [...committed.events, ...forced.events],
+    events: [
+      ...committed.events,
+      {
+        type: "controlledAttackDeclared" as const,
+        controllerUnitId: hassan.id,
+        controlledUnitId: forcedAttackerId,
+        targetId: payload.targetId,
+        abilityId: ABILITY_HASSAN_TRUE_ENEMY,
+      },
+      ...forced.events,
+    ],
   };
 }
 

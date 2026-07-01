@@ -85,6 +85,24 @@ export type HeroGameEvent =
       reason: "hpOne" | "targetDead";
     }
   | {
+      type: "friskHugsApplied";
+      friskId: string;
+      targetId: string;
+    }
+  | {
+      type: "lokiChickenApplied";
+      lokiId: string;
+      targetId: string;
+      abilityId: string;
+    }
+  | {
+      type: "controlledAttackDeclared";
+      controllerUnitId: string;
+      controlledUnitId: string;
+      targetId: string;
+      abilityId: string;
+    }
+  | {
       type: "lechyStormRollResult";
       unitId: string;
       roll: number;

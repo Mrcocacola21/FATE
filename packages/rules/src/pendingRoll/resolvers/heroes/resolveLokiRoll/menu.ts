@@ -226,17 +226,24 @@ function resolveGreatLokiJoke(
   }
 
   const units = { ...spent.state.units };
+  const events = [...spent.events];
   for (const targetId of targetIds) {
     const target = units[targetId];
     if (!target || !target.isAlive) continue;
     const resistRoll = rollD6(rng);
     if (resistRoll >= 5) continue;
     units[targetId] = addLokiChicken(target, lokiId);
+    events.push({
+      type: "lokiChickenApplied" as const,
+      lokiId,
+      targetId,
+      abilityId: ABILITY_LOKI_LAUGHT,
+    });
   }
 
   return {
     state: clearPendingRoll({ ...spent.state, units }),
-    events: spent.events,
+    events,
   };
 }
 

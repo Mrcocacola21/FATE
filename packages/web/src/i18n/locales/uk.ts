@@ -610,7 +610,8 @@ export const uk = {
           },
           precisionStrike: {
             name: "Точковий удар",
-            description: "Наступна атака Фріска автоматично влучає та завдає подвійної шкоди.",
+            description:
+              "\u0417\u0434\u0456\u0439\u0441\u043d\u0456\u0442\u044c \u0430\u0442\u0430\u043a\u0443. \u0412\u043e\u043d\u0430 \u0430\u0432\u0442\u043e\u043c\u0430\u0442\u0438\u0447\u043d\u043e \u0432\u043b\u0443\u0447\u0430\u0454 \u0442\u0430 \u0437\u0430\u0432\u0434\u0430\u0454 \u043f\u043e\u0434\u0432\u0456\u0439\u043d\u043e\u0457 \u0448\u043a\u043e\u0434\u0438.",
           },
         },
       },
@@ -1260,7 +1261,8 @@ export const uk = {
       selectDestination: "Виберіть клітинку призначення.",
       selectDropCell: "Виберіть клітинку висадки.",
       selectNextRicochetTarget: "Виберіть наступну ціль рикошету.",
-      selectControlledUnit: "Виберіть контрольовану фігуру.",
+      selectControlledUnit:
+        "\u041e\u0431\u0435\u0440\u0456\u0442\u044c \u0444\u0456\u0433\u0443\u0440\u0443 \u0434\u043b\u044f \u043a\u043e\u043d\u0442\u0440\u043e\u043b\u044e.",
       selectControlledAttackTarget: "Виберіть ціль для контрольованої атаки.",
       archerLine: "Лінія дальньої атаки.",
       fireParadeArea: "Область Вогняного параду.",

@@ -6,8 +6,6 @@ import type {
   UnitState,
 } from "../../model";
 import { chebyshev } from "../../board";
-import { canAttackTarget } from "../../combat";
-import { canDirectlyTargetUnit } from "../../visibility";
 import {
   ABILITY_HASSAN_TRUE_ENEMY,
   getAbilitySpec,
@@ -15,6 +13,7 @@ import {
 import { HERO_FALSE_TRAIL_TOKEN_ID, HERO_HASSAN_ID } from "../../heroes";
 import { requestRoll } from "../../core";
 import { canCommitAbilityCost } from "../abilityCosts";
+import { getControlledAttackTargetIds } from "../controlledAttack";
 import type {
   HassanAssassinOrderSelectionContext,
   HassanTrueEnemyTargetChoiceContext,
@@ -36,19 +35,8 @@ export function getHassanForcedAttackTargets(
   if (!attacker || !attacker.isAlive || !attacker.position) {
     return [];
   }
-
-  const targets: string[] = [];
-  for (const target of Object.values(state.units)) {
-    if (!target || !target.isAlive || !target.position) continue;
-    if (target.id === attacker.id) continue;
-    if (!canDirectlyTargetUnit(state, attacker.id, target.id)) continue;
-    if (!canAttackTarget(state, attacker, target, { allowFriendlyTarget: true })) {
-      continue;
-    }
-    targets.push(target.id);
-  }
-
-  return targets.sort();
+  const controllerPlayerId = attacker.owner === "P1" ? "P2" : "P1";
+  return getControlledAttackTargetIds(state, attackerId, controllerPlayerId);
 }
 
 export function getHassanTrueEnemyCandidates(

@@ -6,6 +6,7 @@ import {
 } from "../../../../actions/abilityCosts";
 import { ABILITY_LOKI_LAUGHT } from "../../../../abilities";
 import { clearPendingRoll, requestRoll, makeAttackContext } from "../../../../core";
+import { canControlledAttackTarget } from "../../../../actions/controlledAttack";
 import type {
   LokiChickenTargetChoiceContext,
   LokiMindControlEnemyChoiceContext,
@@ -81,7 +82,15 @@ export function resolveLokiChickenTargetChoice(
         [updatedTarget.id]: updatedTarget,
       },
     }),
-    events: committed.events,
+    events: [
+      ...committed.events,
+      {
+        type: "lokiChickenApplied" as const,
+        lokiId: ctx.lokiId,
+        targetId: target.id,
+        abilityId: ABILITY_LOKI_LAUGHT,
+      },
+    ],
   };
 }
 
@@ -117,7 +126,16 @@ export function resolveLokiMindControlEnemyChoice(
     return { state, events: [] };
   }
 
-  const targetOptions = getLokiForcedAttackTargetIds(state, controlled.id);
+  const loki = getLokiUnit(state, ctx.lokiId);
+  if (!loki) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  const targetOptions = getLokiForcedAttackTargetIds(
+    state,
+    controlled.id,
+    loki.owner
+  );
   if (targetOptions.length === 0) {
     return { state: clearPendingRoll(state), events: [] };
   }
@@ -193,6 +211,16 @@ export function resolveLokiMindControlTargetChoice(
   if (!committed.ok) {
     return { state, events: [] };
   }
+  if (
+    !canControlledAttackTarget(
+      state,
+      controlled.id,
+      loki.owner,
+      payload.targetId
+    )
+  ) {
+    return { state, events: [] };
+  }
   const updatedControlled = spendSlots(controlled, { attack: true, action: true });
   const updatedState: GameState = {
     ...clearPendingRoll(committed.state),
@@ -216,5 +244,18 @@ export function resolveLokiMindControlTargetChoice(
     updatedControlled.id
   );
 
-  return { state: requested.state, events: [...committed.events, ...requested.events] };
+  return {
+    state: requested.state,
+    events: [
+      ...committed.events,
+      {
+        type: "controlledAttackDeclared" as const,
+        controllerUnitId: loki.id,
+        controlledUnitId: controlled.id,
+        targetId: payload.targetId,
+        abilityId: ABILITY_LOKI_LAUGHT,
+      },
+      ...requested.events,
+    ],
+  };
 }

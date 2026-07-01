@@ -1,6 +1,6 @@
 import type { FC } from "react";
 import type { AbilityView, MoveMode, PapyrusLineAxis, PlayerView, UnitState } from "rules";
-import type { ActionMode, ActionPreviewMode } from "../../../../store";
+import type { ActionMode, ActionPreviewMode, LokiLaughtOption } from "../../../../store";
 import type { TargetingMode } from "../../../selectionState";
 import type { ForestMarkerView, TurnEconomyState } from "../types";
 import { BattleAbilityActions } from "./BattleAbilityActions";
@@ -40,6 +40,7 @@ interface BattleSectionProps {
   searchActionReason?: string;
   canAct: boolean;
   canChooseImpulseAxis: boolean;
+  lokiLaughtOptionQueued: boolean;
   selectedIsPapyrus: boolean;
   selectedIsUndyne: boolean;
   selectedPapyrusUnbeliever: boolean;
@@ -64,6 +65,7 @@ interface BattleSectionProps {
   onSearchActionClick: () => void;
   onStealthClick: () => void;
   onUseAbility: (abilityId: string) => void;
+  onUseLokiLaughtOption: (option: LokiLaughtOption) => void;
   onSetPapyrusAxis: (axis: PapyrusLineAxis) => void;
   onSetUndyneAxis: (axis: "row" | "col") => void;
   onSetPapyrusBoneType: (boneType: "blue" | "orange") => void;
@@ -102,6 +104,7 @@ export const BattleSection: FC<BattleSectionProps> = ({
   searchActionReason,
   canAct,
   canChooseImpulseAxis,
+  lokiLaughtOptionQueued,
   selectedIsPapyrus,
   selectedIsUndyne,
   selectedPapyrusUnbeliever,
@@ -126,6 +129,7 @@ export const BattleSection: FC<BattleSectionProps> = ({
   onSearchActionClick,
   onStealthClick,
   onUseAbility,
+  onUseLokiLaughtOption,
   onSetPapyrusAxis,
   onSetUndyneAxis,
   onSetPapyrusBoneType,
@@ -182,13 +186,16 @@ export const BattleSection: FC<BattleSectionProps> = ({
           onModePreview={onModePreview}
         />
         <BattleAbilityActions
+          view={view}
           actionableAbilities={actionableAbilities}
           selectedUnit={selectedUnit}
           canAct={canAct || canChooseImpulseAxis}
           economy={economy}
           actionMode={actionMode}
           targetingActive={!!targetingMode}
+          lokiLaughtOptionQueued={lokiLaughtOptionQueued}
           onUseAbility={onUseAbility}
+          onUseLokiLaughtOption={onUseLokiLaughtOption}
           onToggleMode={onToggleMode}
           onModePreview={onModePreview}
           onHoverAbility={onHoverAbility}

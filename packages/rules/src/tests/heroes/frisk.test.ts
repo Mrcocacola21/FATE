@@ -361,6 +361,13 @@ export function testFriskPacifismActiveOptionsSpendOnResolutionOnly() {
     type: "friskPacifismHugsTarget",
     targetId: enemy.id,
   });
+  const hugsEvent = hugged.events.find(
+    (event) =>
+      event.type === "friskHugsApplied" &&
+      event.friskId === frisk.id &&
+      event.targetId === enemy.id
+  );
+  assert(hugsEvent, "Hugs should log the picked target");
   assert(!hugged.state.pendingRoll, "Hugs should resolve after picking a target");
   assert(
     hugged.state.units[frisk.id].charges[ABILITY_FRISK_PACIFISM] === 10,
@@ -482,6 +489,15 @@ export function testFriskPacifismActiveOptionsSpendOnResolutionOnly() {
   assert(
     healed.state.units[warmAlly.id].hp > 1,
     "Warm Words should heal the picked allied target"
+  );
+  const warmBlockedAttack = applyAction(
+    healed.state,
+    { type: "attack", attackerId: warmFrisk.id, defenderId: warmEnemy.id } as any,
+    makeRngSequence([])
+  );
+  assert(
+    !warmBlockedAttack.state.pendingRoll,
+    "Frisk should not be able to attack after Warm Words spends the main action"
   );
 
   console.log("frisk_pacifism_active_options_spend_on_resolution_only passed");

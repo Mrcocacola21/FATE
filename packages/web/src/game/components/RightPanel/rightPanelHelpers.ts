@@ -209,7 +209,9 @@ export function getActionModeHint(
     case "jebeKhansShooter":
       return uk ? "Стрілець хана: оберіть ворога в дальності атаки." : "Khan's Shooter: select an enemy in attack range.";
     case "hassanTrueEnemy":
-      return uk ? "Справжній ворог: оберіть ворога в радіусі 2." : "True Enemy: select an enemy within 2 cells.";
+      return uk
+        ? "\u0421\u043f\u0440\u0430\u0432\u0436\u043d\u0456\u0439 \u0432\u043e\u0440\u043e\u0433: \u043e\u0431\u0435\u0440\u0456\u0442\u044c \u0444\u0456\u0433\u0443\u0440\u0443 \u0434\u043b\u044f \u043a\u043e\u043d\u0442\u0440\u043e\u043b\u044e."
+        : "True Enemy: select a unit to control.";
     case "odinSleipnir":
       return uk ? "Слейпнір: оберіть будь-яку вільну клітинку." : "Sleipnir: select any empty destination cell.";
     case "asgoreFireball":

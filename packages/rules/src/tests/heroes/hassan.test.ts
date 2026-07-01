@@ -12,6 +12,7 @@ import {
   getUnitDefinition,
   HERO_HASSAN_ID,
   initKnowledgeForOwners,
+  makeEmptyTurnEconomy,
   makeAttackWinRng,
   makeRngSequence,
   resolveAllPendingRollsWithEvents,
@@ -91,6 +92,9 @@ export function testHassanTrueEnemyGatingConsumesAndForcesOneAttack() {
   const enemyForcedTarget = Object.values(state.units).find(
     (unit) => unit.owner === "P2" && unit.class === "spearman"
   )!;
+  const controllerAlly = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.class === "knight"
+  )!;
 
   state = setUnit(state, hassan.id, {
     position: { col: 4, row: 4 },
@@ -101,6 +105,9 @@ export function testHassanTrueEnemyGatingConsumesAndForcesOneAttack() {
   });
   state = setUnit(state, enemyForcedTarget.id, {
     position: { col: 6, row: 4 },
+  });
+  state = setUnit(state, controllerAlly.id, {
+    position: { col: 5, row: 5 },
   });
   state = toBattleState(state, "P1", hassan.id);
   state = initKnowledgeForOwners(state);
@@ -150,6 +157,15 @@ export function testHassanTrueEnemyGatingConsumesAndForcesOneAttack() {
   assert(
     !used.state.units[hassan.id].turn.actionUsed,
     "True Enemy should not consume Hassan's action slot before target resolution"
+  );
+  const options = (used.state.pendingRoll?.context?.options ?? []) as string[];
+  assert(
+    options.includes(enemyForcedTarget.id),
+    "True Enemy should let controlled enemy target its own normal ally"
+  );
+  assert(
+    !options.includes(controllerAlly.id),
+    "True Enemy should treat Hassan-side units as allies during forced attack"
   );
 
   const canceled = applyAction(
@@ -209,6 +225,19 @@ export function testHassanTrueEnemyGatingConsumesAndForcesOneAttack() {
     targetChoice.state.units[hassan.id].turn.actionUsed,
     "True Enemy should consume Hassan's action slot on target resolution"
   );
+  assert(
+    targetChoice.state.units[enemyForcedAttacker.id].turn.attackUsed &&
+      targetChoice.state.units[enemyForcedAttacker.id].turn.actionUsed,
+    "True Enemy should spend the controlled unit's forced attack slots"
+  );
+  const controlledAttackEvent = targetChoice.events.find(
+    (event) =>
+      event.type === "controlledAttackDeclared" &&
+      event.controllerUnitId === hassan.id &&
+      event.controlledUnitId === enemyForcedAttacker.id &&
+      event.targetId === enemyForcedTarget.id
+  );
+  assert(controlledAttackEvent, "True Enemy should log controlled attack details");
 
   const duplicateTargetChoice = applyAction(
     targetChoice.state,
@@ -246,6 +275,35 @@ export function testHassanTrueEnemyGatingConsumesAndForcesOneAttack() {
     forcedAttackEvents[0].attackerRoll.dice.length >= 2 &&
       forcedAttackEvents[0].defenderRoll.dice.length >= 2,
     "forced attack should use normal attack/defense roll resolution"
+  );
+
+  const restoredTurnState = setUnit(
+    {
+      ...resolved.state,
+      currentPlayer: "P2",
+      activeUnitId: enemyForcedAttacker.id,
+      pendingRoll: null,
+      pendingMove: null,
+    },
+    enemyForcedAttacker.id,
+    {
+      turn: makeEmptyTurnEconomy(),
+      hasAttackedThisTurn: false,
+      hasActedThisTurn: false,
+    }
+  );
+  const normalEnemyAttack = applyAction(
+    restoredTurnState,
+    {
+      type: "attack",
+      attackerId: enemyForcedAttacker.id,
+      defenderId: controllerAlly.id,
+    } as any,
+    makeRngSequence([])
+  );
+  assert(
+    normalEnemyAttack.state.pendingRoll?.kind === "attack_attackerRoll",
+    "True Enemy should not permanently alter controlled unit allegiance"
   );
 
   console.log("hassan_true_enemy_gating_consumes_and_forces_one_attack passed");

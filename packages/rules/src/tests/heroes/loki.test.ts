@@ -7,6 +7,7 @@ import {
   getLegalMovesForUnit,
   HERO_GENGHIS_KHAN_ID,
   initKnowledgeForOwners,
+  makeEmptyTurnEconomy,
   makeRngSequence,
   resolveAllPendingRollsWithEvents,
   resolvePendingWithChoice,
@@ -357,6 +358,9 @@ export function testLokiOptionThreeMindControlForcedAttackAndSlots() {
   const controlledTarget = Object.values(state.units).find(
     (unit) => unit.owner === "P2" && unit.class === "knight"
   )!;
+  const controllerAlly = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.class === "knight"
+  )!;
 
   state = setUnit(state, loki.id, {
     position: { col: 4, row: 4 },
@@ -366,6 +370,7 @@ export function testLokiOptionThreeMindControlForcedAttackAndSlots() {
   });
   state = setUnit(state, controlled.id, { position: { col: 5, row: 4 } });
   state = setUnit(state, controlledTarget.id, { position: { col: 5, row: 5 } });
+  state = setUnit(state, controllerAlly.id, { position: { col: 6, row: 4 } });
   state = toBattleState(state, "P1", loki.id);
   state = initKnowledgeForOwners(state);
   const targetHpBefore = state.units[controlledTarget.id].hp;
@@ -410,6 +415,28 @@ export function testLokiOptionThreeMindControlForcedAttackAndSlots() {
     !pickedEnemy.state.units[loki.id].turn.actionUsed,
     "picking a controlled enemy should not consume Loki action before attack target resolution"
   );
+  const options = (pickedEnemy.state.pendingRoll?.context?.options ?? []) as string[];
+  assert(
+    options.includes(controlledTarget.id),
+    "mind control should let controlled unit target its own normal ally"
+  );
+  assert(
+    !options.includes(controllerAlly.id),
+    "mind control should treat controller-side units as allies during forced attack"
+  );
+  const invalidTarget = resolvePendingWithChoice(
+    pickedEnemy.state,
+    { type: "lokiMindControlTarget", targetId: controllerAlly.id },
+    makeRngSequence([])
+  );
+  assert(
+    invalidTarget.state.units[loki.id].charges[ABILITY_LOKI_LAUGHT] === 10,
+    "invalid mind control target should not spend Laughter"
+  );
+  assert(
+    !invalidTarget.state.units[loki.id].turn.actionUsed,
+    "invalid mind control target should not spend Loki action"
+  );
 
   const pickedTarget = resolvePendingWithChoice(
     pickedEnemy.state,
@@ -446,6 +473,39 @@ export function testLokiOptionThreeMindControlForcedAttackAndSlots() {
     resolved.state.units[loki.id].isStealthed,
     "using Loki laughter options should not reveal Loki stealth"
   );
+  const controlledAttackEvent = pickedTarget.events.find(
+    (event) =>
+      event.type === "controlledAttackDeclared" &&
+      event.controllerUnitId === loki.id &&
+      event.controlledUnitId === controlled.id &&
+      event.targetId === controlledTarget.id
+  );
+  assert(controlledAttackEvent, "mind control should log controlled attack details");
+
+  const restoredTurnState = setUnit(
+    {
+      ...resolved.state,
+      currentPlayer: "P2",
+      activeUnitId: controlled.id,
+      pendingRoll: null,
+      pendingMove: null,
+    },
+    controlled.id,
+    {
+      turn: makeEmptyTurnEconomy(),
+      hasAttackedThisTurn: false,
+      hasActedThisTurn: false,
+    }
+  );
+  const normalEnemyAttack = applyAction(
+    restoredTurnState,
+    { type: "attack", attackerId: controlled.id, defenderId: controllerAlly.id } as any,
+    makeRngSequence([])
+  );
+  assert(
+    normalEnemyAttack.state.pendingRoll?.kind === "attack_attackerRoll",
+    "controlled unit allegiance should be normal again after mind control"
+  );
 
   console.log("loki_option_three_mind_control_forced_attack_and_slots passed");
 }
@@ -476,6 +536,12 @@ export function testLokiOptionFiveMassChickenFailOnlyAlliesAndEnemies() {
   state = setUnit(state, enemyTwo.id, { position: { col: 4, row: 3 } });
   state = toBattleState(state, "P1", loki.id);
   state = initKnowledgeForOwners(state);
+  const hpBefore = Object.fromEntries(
+    [allyOne.id, allyTwo.id, enemyOne.id, enemyTwo.id].map((unitId) => [
+      unitId,
+      state.units[unitId].hp,
+    ])
+  );
 
   const started = applyAction(
     state,
@@ -511,6 +577,17 @@ export function testLokiOptionFiveMassChickenFailOnlyAlliesAndEnemies() {
   assert(
     chickenedTargets.length < targets.length,
     "only failed resist rolls should apply chicken"
+  );
+  assert(
+    chickenedTargets.every((unitId) => applied.state.units[unitId].hp === hpBefore[unitId]),
+    "great Loki joke should not deal damage to failed defenders"
+  );
+  const chickenEvents = applied.events.filter(
+    (event) => event.type === "lokiChickenApplied"
+  );
+  assert(
+    chickenEvents.length === chickenedTargets.length,
+    "great Loki joke should log each chicken conversion"
   );
 
   console.log("loki_option_five_mass_chicken_fail_only_allies_and_enemies passed");
