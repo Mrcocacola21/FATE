@@ -1,8 +1,12 @@
 // packages/rules/src/visibility.ts
 import { Coord, GameState, PlayerId, UnitState } from "./model";
 import { getUnitsAt } from "./board";
-import { HERO_CHIKATILO_ID, HERO_ODIN_ID } from "./heroes";
+import { HERO_ODIN_ID } from "./heroes";
 import { linePath } from "./path";
+import {
+  canUnitTrackChikatiloMarkExactPosition,
+  canViewerTrackExactPosition,
+} from "./chikatiloMark";
 
 function chebyshevDistance(a: Coord, b: Coord): number {
   return Math.max(Math.abs(a.col - b.col), Math.abs(a.row - b.row));
@@ -44,6 +48,29 @@ export function canPlayerKnowUnitExactPosition(
   if (target.owner === viewerPlayerId) return true;
   if (!target.isStealthed) return true;
 
+  if (
+    Object.values(state.units).some((viewer) => {
+      if (!viewer.isAlive || !viewer.position) return false;
+      if (viewer.owner !== viewerPlayerId) return false;
+      return canSeeStealthedTarget(state, viewer, target);
+    })
+  ) {
+    return true;
+  }
+
+  return canViewerTrackExactPosition(state, viewerPlayerId, unitId);
+}
+
+function canPlayerKnowUnitExactPositionWithoutChikatiloTracking(
+  state: GameState,
+  viewerPlayerId: PlayerId,
+  unitId: string
+): boolean {
+  const target = state.units[unitId];
+  if (!target || !target.isAlive || !target.position) return false;
+  if (target.owner === viewerPlayerId) return true;
+  if (!target.isStealthed) return true;
+
   return Object.values(state.units).some((viewer) => {
     if (!viewer.isAlive || !viewer.position) return false;
     if (viewer.owner !== viewerPlayerId) return false;
@@ -61,15 +88,15 @@ export function canUnitKnowUnitExactPosition(
   if (viewer.owner === target.owner) return true;
   if (!target.isStealthed) return true;
 
-  if (
-    viewer.heroId === HERO_CHIKATILO_ID &&
-    Array.isArray(viewer.chikatiloMarkedTargets) &&
-    viewer.chikatiloMarkedTargets.includes(target.id)
-  ) {
+  if (canUnitTrackChikatiloMarkExactPosition(state, viewer, target)) {
     return true;
   }
 
-  return canPlayerKnowUnitExactPosition(state, viewer.owner, target.id);
+  return canPlayerKnowUnitExactPositionWithoutChikatiloTracking(
+    state,
+    viewer.owner,
+    target.id
+  );
 }
 
 export function isUnitHiddenFromPlayer(

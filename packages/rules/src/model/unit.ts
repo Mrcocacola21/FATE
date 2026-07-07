@@ -67,6 +67,13 @@ export interface UnitState {
   charges: Record<string, number>;
   cooldowns: Record<string, number>;
   chikatiloMarkedTargets?: string[];
+  chikatiloTrackedTargets?: string[];
+  chikatiloMarkStatus?: {
+    sourceUnitId: string;
+    exactTrackingActive: boolean;
+    trackingStarts: "startOfChikatiloTurn";
+    trackingExpires: "afterMarkedUnitTurn";
+  };
   chikatiloFalseTrailTokenId?: string;
   lechyGuideTravelerTargetId?: string;
   lastChargedTurn?: number;

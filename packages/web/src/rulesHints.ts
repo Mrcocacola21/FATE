@@ -1,4 +1,16 @@
-import type { UnitClass } from "rules";
+import type { PlayerView, UnitClass } from "rules";
+
+export function getProjectedAbilityTargetRange(
+  view: PlayerView | null | undefined,
+  unitId: string | null | undefined,
+  abilityId: string,
+): number | null {
+  if (!view || !unitId) return null;
+  const range = view.abilitiesByUnitId[unitId]?.find(
+    (ability) => ability.id === abilityId,
+  )?.targetRange;
+  return typeof range === "number" ? range : null;
+}
 
 // Keep in sync with packages/rules for UI-only helpers.
 export const TRICKSTER_AOE_ID = "tricksterAoE";

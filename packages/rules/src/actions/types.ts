@@ -11,6 +11,7 @@ export interface AttackRollContext extends Record<string, unknown> {
   damageBonus?: number;
   damageBonusSourceId?: string;
   rangedAttack?: boolean;
+  suppressGutsBerserkBonus?: boolean;
   damageOverride?: number;
   ignoreBonuses?: boolean;
   attackerDice?: number[];
@@ -53,6 +54,7 @@ export interface TricksterAoEContext extends Record<string, unknown> {
   attackerDice?: number[];
   damageOverride?: number;
   ignoreBonuses?: boolean;
+  suppressGutsBerserkBonus?: boolean;
   immobilizeOnHit?: boolean;
   immobilizeSourceId?: string;
 }

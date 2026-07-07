@@ -9,6 +9,10 @@ import {
 import { getForestMarkers } from "../forest";
 import { VisibleStakeMarker } from "./types";
 import { canPlayerKnowUnitExactPosition } from "../visibility";
+import {
+  getChikatiloMarkStatusForViewer,
+  stripChikatiloPrivateState,
+} from "../chikatiloMark";
 
 export function isStealthedEnemyVisibleToPlayer(
   state: GameState,
@@ -69,12 +73,29 @@ export function cloneUnit(unit: UnitState): UnitState {
 }
 
 export function maskStealthedEnemy(unit: UnitState): UnitState {
-  const masked = cloneUnit(unit);
+  const masked = stripChikatiloPrivateState(cloneUnit(unit));
   masked.charges = {};
   masked.cooldowns = {};
   masked.stealthTurnsLeft = 0;
   masked.lastChargedTurn = undefined;
   return masked;
+}
+
+export function clonePublicUnit(unit: UnitState): UnitState {
+  return stripChikatiloPrivateState(cloneUnit(unit));
+}
+
+export function cloneEnemyUnitForPlayer(
+  state: GameState,
+  playerId: PlayerId,
+  unit: UnitState
+): UnitState {
+  const projected = clonePublicUnit(unit);
+  const markStatus = getChikatiloMarkStatusForViewer(state, playerId, unit.id);
+  if (markStatus) {
+    projected.chikatiloMarkStatus = markStatus;
+  }
+  return projected;
 }
 
 function collectVisibleStakeMarkers(

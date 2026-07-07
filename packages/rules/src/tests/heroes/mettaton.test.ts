@@ -147,6 +147,30 @@ export function testMettatonRatingPassiveAndThresholdUnlock() {
     exFail.state.units[mettaton.id].mettatonRating === 2,
     "Blocked EX attempt should not change Rating"
   );
+  assert(
+    exFail.state.units[mettaton.id].turn.actionUsed === false,
+    "Blocked manual EX attempt should not spend action"
+  );
+
+  const belowStartState = setUnit(manualState, mettaton.id, {
+    mettatonRating: 4,
+    turn: makeEmptyTurnEconomy(),
+  });
+  const belowStarted = applyAction(
+    prepareMettatonStartTurn(belowStartState, mettaton.id),
+    { type: "unitStartTurn", unitId: mettaton.id } as any,
+    new SeededRNG(2)
+  );
+  assert(
+    belowStarted.state.units[mettaton.id].mettatonExUnlocked !== true &&
+      belowStarted.state.units[mettaton.id].mettatonRating === 4,
+    "Mettaton should not transform below threshold at turn start"
+  );
+  assert(
+    belowStarted.state.units[mettaton.id].turn.actionUsed === false &&
+      belowStarted.state.units[mettaton.id].turn.moveUsed === false,
+    "below-threshold turn start should keep action and movement available"
+  );
 
   const manualReadyState = setUnit(manualState, mettaton.id, {
     mettatonRating: 5,
@@ -162,6 +186,10 @@ export function testMettatonRatingPassiveAndThresholdUnlock() {
       manualEx.state.units[mettaton.id].mettatonRating === 5,
     "EX should not be manually activated even at threshold"
   );
+  assert(
+    manualEx.state.units[mettaton.id].turn.actionUsed === false,
+    "manual EX command should not spend action at threshold"
+  );
 
   const startReadyState = prepareMettatonStartTurn(manualReadyState, mettaton.id);
   const started = applyAction(
@@ -173,6 +201,11 @@ export function testMettatonRatingPassiveAndThresholdUnlock() {
     started.state.units[mettaton.id].mettatonExUnlocked === true &&
       started.state.units[mettaton.id].mettatonRating === 5,
     "EX should unlock at turn start without spending Rating"
+  );
+  assert(
+    started.state.units[mettaton.id].turn.actionUsed === false &&
+      started.state.units[mettaton.id].turn.moveUsed === false,
+    "automatic EX transform should leave action and movement available"
   );
 
   console.log("mettaton_rating_passive_and_threshold_unlock passed");
@@ -358,6 +391,11 @@ export function testMettatonExStageAndLaser() {
       exOk.state.units[mettaton.id].mettatonRating === 5,
     "EX should unlock at turn start without spending Rating"
   );
+  assert(
+    exOk.state.units[mettaton.id].turn.actionUsed === false &&
+      exOk.state.units[mettaton.id].turn.moveUsed === false,
+    "EX turn-start transform should leave action and movement available"
+  );
 
   const exView = makePlayerView(exOk.state, "P1");
   const exAbilities =
@@ -463,6 +501,10 @@ export function testMettatonNeoGraceAndRiderPathUnlocks() {
       manualNeo.state.units[mettaton.id].mettatonRating === 10,
     "NEO should not be manually activated at threshold"
   );
+  assert(
+    manualNeo.state.units[mettaton.id].turn.actionUsed === false,
+    "manual NEO command should not spend action at threshold"
+  );
 
   const neoOk = applyAction(
     prepareMettatonStartTurn(neoReadyState, mettaton.id),
@@ -474,6 +516,32 @@ export function testMettatonNeoGraceAndRiderPathUnlocks() {
       neoOk.state.units[mettaton.id].mettatonNeoUnlocked === true &&
       neoOk.state.units[mettaton.id].mettatonRating === 10,
     "NEO should unlock passives at turn start without spending Rating"
+  );
+  assert(
+    neoOk.state.units[mettaton.id].turn.actionUsed === false &&
+      neoOk.state.units[mettaton.id].turn.moveUsed === false,
+    "NEO turn-start transform should leave action and movement available"
+  );
+
+  const neoAboveState = setUnit(state, mettaton.id, {
+    mettatonRating: 12,
+    turn: makeEmptyTurnEconomy(),
+  });
+  const neoAbove = applyAction(
+    prepareMettatonStartTurn(neoAboveState, mettaton.id),
+    { type: "unitStartTurn", unitId: mettaton.id } as any,
+    new SeededRNG(10)
+  );
+  assert(
+    neoAbove.state.units[mettaton.id].mettatonExUnlocked === true &&
+      neoAbove.state.units[mettaton.id].mettatonNeoUnlocked === true &&
+      neoAbove.state.units[mettaton.id].mettatonRating === 12,
+    "above-threshold Mettaton should transform at turn start without spending Rating"
+  );
+  assert(
+    neoAbove.state.units[mettaton.id].turn.actionUsed === false &&
+      neoAbove.state.units[mettaton.id].turn.moveUsed === false,
+    "above-threshold automatic transform should leave action and movement available"
   );
 
   const neoView = makePlayerView(neoOk.state, "P1");

@@ -17,6 +17,7 @@ function eventTone(event: GameEvent): string {
     case "placementStarted":
       return "border-sky-300/80 bg-sky-50/75 text-sky-700 dark:border-sky-900/70 dark:bg-sky-950/30 dark:text-sky-300";
     case "abilityUsed":
+    case "chikatiloMarkApplied":
     case "chargesUpdated":
     case "rollRequested":
     case "initiativeRollRequested":
@@ -40,8 +41,9 @@ function eventGlyph(event: GameEvent): string {
     case "unitHealed":
       return "+";
     case "abilityUsed":
+    case "chikatiloMarkApplied":
     case "chargesUpdated":
-      return "✦";
+      return event.type === "chikatiloMarkApplied" ? "M" : "✦";
     case "rollRequested":
     case "initiativeRollRequested":
       return "◆";

@@ -1,5 +1,6 @@
 import type { ApplyResult, GameAction, GameEvent, GameState } from "../../model";
 import type { RNG } from "../../rng";
+import { canAttackTarget } from "../../combat";
 import { canSpendSlots } from "../../turnEconomy";
 import { requestRoll, makeAttackContext } from "../../core";
 import { HERO_FALSE_TRAIL_TOKEN_ID } from "../../heroes";
@@ -16,8 +17,6 @@ export function applyAttack(
   action: Extract<GameAction, { type: "attack" }>,
   rng: RNG
 ): ApplyResult {
-  state = markFriskAttackedWhileStealthed(state, action.attackerId);
-
   if (state.phase !== "battle") {
     return { state, events: [] };
   }
@@ -53,13 +52,19 @@ export function applyAttack(
   if (!canSpendSlots(attacker, { attack: true, action: true })) {
     return { state, events: [] };
   }
+  if (!canAttackTarget(state, attacker, defender)) {
+    return { state, events: [] };
+  }
 
   let workingState = state;
   let workingAttacker = attacker;
   let preEvents: GameEvent[] = [];
 
+  workingState = markFriskAttackedWhileStealthed(workingState, workingAttacker.id);
+  workingAttacker = workingState.units[workingAttacker.id] ?? workingAttacker;
+
   if (isKaiser(attacker) && attacker.bunker?.active) {
-    const exited = exitBunkerForUnit(state, attacker, "attacked");
+    const exited = exitBunkerForUnit(workingState, workingAttacker, "attacked");
     workingState = exited.state;
     workingAttacker = exited.unit;
     preEvents = exited.events;

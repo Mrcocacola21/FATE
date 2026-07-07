@@ -36,6 +36,7 @@ import {
 } from "../heroes/sans";
 import { maybeTriggerOdinSleipnir } from "../heroes/odin";
 import { maybeTriggerChargedImpulseChoice } from "../chargedImpulses";
+import { activateChikatiloTrackingForStartTurn } from "../../chikatiloMark";
 
 export function applyUnitStartTurn(
   state: GameState,
@@ -146,8 +147,13 @@ export function applyUnitStartTurn(
     },
   };
 
-  const mettatonThresholdResult = maybeTriggerMettatonThresholdUnlocks(
+  const stateAfterChikatiloTracking = activateChikatiloTrackingForStartTurn(
     stateAfterTurnCount,
+    initialUnit.id
+  );
+
+  const mettatonThresholdResult = maybeTriggerMettatonThresholdUnlocks(
+    stateAfterChikatiloTracking,
     initialUnit.id
   );
   const boneFieldImpulseResult = maybeTriggerSansBoneField(

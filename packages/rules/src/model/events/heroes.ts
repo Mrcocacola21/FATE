@@ -1,6 +1,15 @@
 import type { PapyrusBoneType } from "../unit";
+import type { PlayerId } from "../shared";
 
 export type HeroGameEvent =
+  | {
+      type: "chikatiloMarkApplied";
+      chikatiloId: string;
+      targetId: string;
+      ownerPlayerId: PlayerId;
+      trackingStarts: "startOfChikatiloTurn";
+      trackingExpires: "afterMarkedUnitTurn";
+    }
   | {
       type: "mettatonRatingChanged";
       unitId: string;

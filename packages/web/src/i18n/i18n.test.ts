@@ -67,6 +67,66 @@ test("event formatter localizes known and unknown events safely", () => {
   assert.equal(formatEventMessage(unknown, "uk", translate), "Невідома подія");
   assert.doesNotMatch(formatEventMessage(unknown, "uk", translate), /secret|futureEvent/);
 
+  const redactedAbility = { type: "abilityUsed" } as GameEvent;
+  assert.equal(formatEventMessage(redactedAbility, "en", translate), "Hidden ability used.");
+  assert.equal(
+    formatEventMessage(
+      { type: "abilityUsed", unitId: "griffith", abilityId: "griffithFemtoRebirth" } as GameEvent,
+      "en",
+      translate,
+    ),
+    "Griffith was reborn as Femto.",
+  );
+  assert.equal(
+    formatEventMessage(
+      { type: "abilityUsed", unitId: "guts", abilityId: "gutsBerserkMode" } as GameEvent,
+      "en",
+      translate,
+    ),
+    "guts entered Berserk Mode.",
+  );
+  assert.equal(
+    formatEventMessage(
+      { type: "abilityUsed", unitId: "guts", abilityId: "gutsExitBerserk" } as GameEvent,
+      "en",
+      translate,
+    ),
+    "guts exited Berserk Mode.",
+  );
+  assert.equal(
+    formatEventMessage(
+      { type: "abilityUsed", unitId: "mettaton", abilityId: "mettatonEx" } as GameEvent,
+      "en",
+      translate,
+    ),
+    "mettaton transformed into Mettaton EX.",
+  );
+  assert.equal(
+    formatEventMessage(
+      { type: "abilityUsed", unitId: "mettaton", abilityId: "mettatonNeo" } as GameEvent,
+      "en",
+      translate,
+    ),
+    "mettaton transformed into Mettaton NEO.",
+  );
+
+  const redactedMark = { type: "chikatiloMarkApplied" } as GameEvent;
+  assert.equal(
+    formatEventMessage(redactedMark, "en", translate),
+    "Assassin's Mark was applied.",
+  );
+
+  const fullMark = {
+    type: "chikatiloMarkApplied",
+    chikatiloId: "chikatilo",
+    targetId: "hidden-target",
+    ownerPlayerId: "P1",
+    trackingStarts: "startOfChikatiloTurn",
+    trackingExpires: "afterMarkedUnitTurn",
+  } as GameEvent;
+  assert.match(formatEventMessage(fullMark, "en", translate), /hidden-target/);
+  assert.match(formatEventMessage(fullMark, "en", translate), /turn start/);
+
   setLanguage("en", { setItem: () => undefined });
 });
 

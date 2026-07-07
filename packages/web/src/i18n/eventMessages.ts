@@ -1,6 +1,13 @@
 import type { DiceRoll, GameEvent } from "rules";
 import type { Language, Translate } from ".";
 import { getAbilityDisplay, getArenaLabel } from "./displayMetadata";
+import {
+  GRIFFITH_FEMTO_REBIRTH_ID,
+  GUTS_BERSERK_MODE_ID,
+  GUTS_EXIT_BERSERK_ID,
+  METTATON_EX_ID,
+  METTATON_NEO_ID,
+} from "../rulesHints";
 
 function text(language: Language, en: string, uk: string) {
   return language === "uk" ? uk : en;
@@ -236,8 +243,64 @@ export function formatEventMessage(
         `Пошук прихованих: ${event.unitId} (${event.mode})`,
       );
     case "abilityUsed": {
+      if (typeof event.abilityId !== "string" || typeof event.unitId !== "string") {
+        return text(
+          language,
+          "Hidden ability used.",
+          "Використано приховану здібність.",
+        );
+      }
+      if (event.abilityId === GRIFFITH_FEMTO_REBIRTH_ID) {
+        return text(
+          language,
+          "Griffith was reborn as Femto.",
+          "Гріффіт переродився у Фемто.",
+        );
+      }
+      if (event.abilityId === GUTS_BERSERK_MODE_ID) {
+        return text(
+          language,
+          `${event.unitId} entered Berserk Mode.`,
+          `${event.unitId} увійшов у Режим берсерка.`,
+        );
+      }
+      if (event.abilityId === GUTS_EXIT_BERSERK_ID) {
+        return text(
+          language,
+          `${event.unitId} exited Berserk Mode.`,
+          `${event.unitId} вийшов із Режиму берсерка.`,
+        );
+      }
+      if (event.abilityId === METTATON_EX_ID) {
+        return text(
+          language,
+          `${event.unitId} transformed into Mettaton EX.`,
+          `${event.unitId} трансформувався у Меттатона EX.`,
+        );
+      }
+      if (event.abilityId === METTATON_NEO_ID) {
+        return text(
+          language,
+          `${event.unitId} transformed into Mettaton NEO.`,
+          `${event.unitId} трансформувався у Меттатона NEO.`,
+        );
+      }
       const ability = getAbilityDisplay(event.abilityId, event.abilityId, "", language).name;
       return text(language, `Ability used: ${event.unitId} (${ability})`, `Використано здібність: ${event.unitId} (${ability})`);
+    }
+    case "chikatiloMarkApplied": {
+      if (typeof event.targetId !== "string") {
+        return text(
+          language,
+          "Assassin's Mark was applied.",
+          "Мітку вбивці накладено.",
+        );
+      }
+      return text(
+        language,
+        `Chikatilo applied Assassin's Mark to ${event.targetId}. Exact location will be tracked from Chikatilo's turn start until the marked target finishes a turn.`,
+        `Чикатило наклав Мітку вбивці на ${event.targetId}. Точне місце буде відстежуватися від початку ходу Чикатила до завершення ходу поміченої цілі.`,
+      );
     }
     case "papyrusUnbelieverActivated":
     case "sansUnbelieverActivated":

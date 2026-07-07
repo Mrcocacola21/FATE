@@ -32,6 +32,7 @@ export function finalizeAttackFromContext(
     revealStealthedAllies: context.revealStealthedAllies,
     revealReason: context.revealReason,
     rangedAttack: context.rangedAttack,
+    suppressGutsBerserkBonus: context.suppressGutsBerserkBonus,
     damageBonus,
     damageOverride: context.damageOverride,
     ignoreBonuses: context.ignoreBonuses,

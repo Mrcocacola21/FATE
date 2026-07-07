@@ -314,12 +314,25 @@ export function effectsFromGameEvent(
       return effects;
     }
     case "abilityUsed":
-      return MAJOR_ABILITY_IDS.has(event.abilityId)
+      return typeof event.abilityId === "string" &&
+        typeof event.unitId === "string" &&
+        MAJOR_ABILITY_IDS.has(event.abilityId)
         ? [
             ...unitFlash(event.unitId, "buff", context),
             ...floatingLabel(
               visibleUnitCoord(event.unitId, context.view, context.previousPositions),
               "ability",
+              "status",
+            ),
+          ]
+        : [];
+    case "chikatiloMarkApplied":
+      return typeof event.targetId === "string"
+        ? [
+            ...unitFlash(event.targetId, "debuff", context),
+            ...floatingLabel(
+              visibleUnitCoord(event.targetId, context.view, context.previousPositions),
+              "status",
               "status",
             ),
           ]

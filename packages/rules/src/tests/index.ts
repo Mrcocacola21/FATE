@@ -220,6 +220,8 @@ import {
   testPlacementFlowWithoutChikatilo,
   testChikatiloTokenDeathRevealsChikatilo,
   testChikatiloAssassinMarkDoesNotRevealAndGrantsBonusDamage,
+  testChikatiloAssassinMarkApplicationFlowAndRedaction,
+  testChikatiloAssassinMarkTrackingProjectionAttackAndExpiry,
   testChikatiloDecoyReducesDamageAndConsumesCharges,
   testFalseTrailExplosionHitsAlliesAndEnemiesSingleRoll,
 } from "./heroes/chikatilo.test";
@@ -255,11 +257,13 @@ import {
   testGutsBerserkMeleeBonusAndRangedNoBonus,
   testGutsBerserkMovementAndAoEAndIncomingCap,
   testGutsBerserkAttackChoiceSingleTargetSpearmanRange,
+  testGutsBerserkAttackChoiceSingleTargetAdjacentBonus,
   testGutsExitBerserkOnceAndNoReentry,
 } from "./heroes/guts.test";
 import {
   testGriffithWretchedManDamageReductionClamped,
   testGriffithWarriorDoubleAutoHit,
+  testGriffithBasicAttackAndReadOnlyRebirth,
   testGriffithFemtoRebirthOnDeath,
   testFemtoSpearmanReachAndBerserkerDamage,
   testFemtoDivineMoveUsesMoveSlotAndRollRanges,
@@ -529,6 +533,7 @@ function main(): void {
   testHassanAssassinOrderBattleStartSelectionAndPerSideIndependence();
   testGriffithWretchedManDamageReductionClamped();
   testGriffithWarriorDoubleAutoHit();
+  testGriffithBasicAttackAndReadOnlyRebirth();
   testGriffithFemtoRebirthOnDeath();
   testFemtoSpearmanReachAndBerserkerDamage();
   testFemtoDivineMoveUsesMoveSlotAndRollRanges();
@@ -542,6 +547,7 @@ function main(): void {
   testGutsBerserkMeleeBonusAndRangedNoBonus();
   testGutsBerserkMovementAndAoEAndIncomingCap();
   testGutsBerserkAttackChoiceSingleTargetSpearmanRange();
+  testGutsBerserkAttackChoiceSingleTargetAdjacentBonus();
   testGutsExitBerserkOnceAndNoReentry();
   testKaladinHpBonus();
   testKaladinFirstOathGatingHealingAndCosts();
@@ -624,6 +630,8 @@ function main(): void {
   testPlacementFlowWithoutChikatilo();
   testChikatiloTokenDeathRevealsChikatilo();
   testChikatiloAssassinMarkDoesNotRevealAndGrantsBonusDamage();
+  testChikatiloAssassinMarkApplicationFlowAndRedaction();
+  testChikatiloAssassinMarkTrackingProjectionAttackAndExpiry();
   testChikatiloDecoyReducesDamageAndConsumesCharges();
   testLechyHpBonus();
   testLechyNaturalStealthThreshold();

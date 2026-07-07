@@ -11,6 +11,7 @@ import {
   GUTS_ARBALET_ID,
   GUTS_BERSERK_MODE_ID,
   GUTS_CANNON_ID,
+  GRIFFITH_FEMTO_REBIRTH_ID,
   HASSAN_ASSASSIN_ORDER_ID,
   HASSAN_TRUE_ENEMY_ID,
   JEBE_HAIL_OF_ARROWS_ID,
@@ -21,7 +22,9 @@ import {
   LECHY_CONFUSE_TERRAIN_ID,
   LECHY_GUIDE_TRAVELER_ID,
   LOKI_LAUGHT_ID,
+  METTATON_EX_ID,
   METTATON_LASER_ID,
+  METTATON_NEO_ID,
   METTATON_POPPINS_ID,
   ODIN_SLEIPNIR_ID,
   PAPYRUS_COOL_GUY_ID,
@@ -49,6 +52,9 @@ const NON_ACTIONABLE_ABILITY_IDS = new Set<string>([
   HASSAN_ASSASSIN_ORDER_ID,
   ASGORE_SOUL_PARADE_ID,
   ODIN_SLEIPNIR_ID,
+  GRIFFITH_FEMTO_REBIRTH_ID,
+  METTATON_EX_ID,
+  METTATON_NEO_ID,
 ]);
 
 export function classBadge(unitClass: string): { label: string; marker?: string } {
@@ -175,6 +181,7 @@ export function shouldHoverAbilityInActionList(abilityId: string): boolean {
   return (
     abilityId === TRICKSTER_AOE_ID ||
     abilityId === ASGORE_FIRE_PARADE_ID ||
+    abilityId === CHIKATILO_ASSASSIN_MARK_ID ||
     abilityId === GUTS_BERSERK_MODE_ID ||
     abilityId === LOKI_LAUGHT_ID ||
     abilityId === RIVER_PERSON_BOAT_ID ||
@@ -197,7 +204,9 @@ export function getActionModeHint(
     case "invadeTime":
       return uk ? "Час вторгнення: оберіть будь-яку вільну клітинку." : "Invade Time: select any open cell on the board.";
     case "assassinMark":
-      return uk ? "Мітка вбивці: оберіть фігуру в радіусі 2." : "Assassin Mark: select a unit within 2 squares.";
+      return uk
+        ? "Оберіть ціль для Мітки вбивці."
+        : "Select a target for Assassin's Mark.";
     case "guideTraveler":
       return uk ? "Провідник: оберіть союзника в радіусі трикстера." : "Guide Traveler: select an ally within trickster range.";
     case "tisona":

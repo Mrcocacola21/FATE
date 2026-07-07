@@ -1,5 +1,6 @@
 import type { AbilitySpec } from "../types";
 import * as ids from "../constants";
+import { CHIKATILO_ASSASSIN_MARK_RANGE } from "../../chikatiloMark";
 
 export const ABILITY_SPECS_PART_1: Record<string, AbilitySpec> = {
   [ids.ABILITY_BERSERK_AUTO_DEFENSE]: {
@@ -104,6 +105,7 @@ export const ABILITY_SPECS_PART_1: Record<string, AbilitySpec> = {
     displayName: "Assassin's Mark",
     kind: "active",
     description: "Without revealing his invisibility, Andrei Chikatilo can mark a creature within two squares. Marked targets are revealed to him at the start of his turn. If he hits a marked creature, he gains +1 damage to that attack.",
+    targetRange: CHIKATILO_ASSASSIN_MARK_RANGE,
     actionCost: {
       consumes: { action: true },
     },
@@ -188,7 +190,7 @@ export const ABILITY_SPECS_PART_1: Record<string, AbilitySpec> = {
   [ids.ABILITY_GRIFFITH_FEMTO_REBIRTH]: {
     id: ids.ABILITY_GRIFFITH_FEMTO_REBIRTH,
     displayName: "Femto Rebirth",
-    kind: "phantasm",
+    kind: "passive",
     description:
       "When Griffith dies, he immediately resurrects as Femto in the same cell.",
   },

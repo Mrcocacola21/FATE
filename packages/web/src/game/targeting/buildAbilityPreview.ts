@@ -18,6 +18,7 @@ import {
   RIVER_PERSON_TRA_LA_LA_ID,
   TRICKSTER_AOE_ID,
   TRICKSTER_AOE_RADIUS,
+  getProjectedAbilityTargetRange,
 } from "../../rulesHints";
 import type { BoardPreview, TargetRef } from "./previewTypes";
 import {
@@ -43,7 +44,6 @@ import {
   visibleUnitTargets,
 } from "./previewVisibility";
 
-const MARK_RADIUS = 2;
 const GUIDE_TRAVELER_RADIUS = 2;
 const LOKI_RADIUS = 2;
 const FIRE_PARADE_RADIUS = TRICKSTER_AOE_RADIUS;
@@ -166,15 +166,10 @@ export function buildArcherLinePreview({
       ? targetIds.filter((targetId) => !!view.units[targetId]?.position)
       : firstVisibleArcherTargets(view, sourceUnitId);
   const lineCells = archerLineCells(view, sourceUnitId);
-  const lineKeys = new Set(lineCells.map(coordKey));
   const legalSet = new Set(legalTargetIds);
   const invalidTargets = visibleUnitTargets(
     view,
-    (unit) =>
-      unit.id !== sourceUnitId &&
-      !!unit.position &&
-      lineKeys.has(coordKey(unit.position)) &&
-      !legalSet.has(unit.id),
+    (unit) => unit.id !== sourceUnitId && !!unit.position && !legalSet.has(unit.id),
     true,
   );
   return {
@@ -417,14 +412,17 @@ export function buildAbilityPreview({
   if (!source?.position) return null;
 
   switch (abilityId) {
-    case CHIKATILO_ASSASSIN_MARK_ID:
+    case CHIKATILO_ASSASSIN_MARK_ID: {
+      const range = getProjectedAbilityTargetRange(gameView, source.id, abilityId);
+      if (range === null) return null;
       return buildRadiusTargetPreview({
         view: gameView,
         source,
-        radius: MARK_RADIUS,
+        radius: range,
         validPredicate: (unit) => unit.id !== source.id,
-        labelKey: "preview.labels.selectTarget",
+        labelKey: "preview.labels.selectAssassinMarkTarget",
       });
+    }
     case LECHY_GUIDE_TRAVELER_ID:
       return buildRadiusTargetPreview({
         view: gameView,

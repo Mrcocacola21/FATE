@@ -131,6 +131,7 @@ export function resolveTricksterAoEDefenderRoll(
   const damageOverride =
     typeof ctx.damageOverride === "number" ? ctx.damageOverride : undefined;
   const ignoreBonuses = ctx.ignoreBonuses === true;
+  const suppressGutsBerserkBonus = ctx.suppressGutsBerserkBonus === true;
   const { nextState, events } = resolveAttack(state, {
     attackerId: caster.id,
     defenderId: targetId,
@@ -142,6 +143,7 @@ export function resolveTricksterAoEDefenderRoll(
     damageBonus,
     damageOverride,
     ignoreBonuses,
+    suppressGutsBerserkBonus,
     rolls: {
       attackerDice,
       defenderDice,

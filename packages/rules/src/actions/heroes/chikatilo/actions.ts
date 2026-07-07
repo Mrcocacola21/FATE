@@ -20,7 +20,15 @@ import { evAbilityUsed } from "../../../core";
 import { commitAbilityCost } from "../../abilityCosts";
 import { HERO_CHIKATILO_ID } from "../../../heroes";
 import { getUnitDefinition } from "../../../units";
-import { concealUnitExactPositionFromOpponents } from "../../../visibility";
+import {
+  canDirectlyTargetUnit,
+  concealUnitExactPositionFromOpponents,
+} from "../../../visibility";
+import {
+  CHIKATILO_ASSASSIN_MARK_RANGE,
+  CHIKATILO_MARK_TRACKING_EXPIRES,
+  CHIKATILO_MARK_TRACKING_STARTS,
+} from "../../../chikatiloMark";
 import { getEmptyCells, isChikatilo, isFalseTrailToken } from "./helpers";
 import { removeFalseTrailToken } from "./setup";
 
@@ -68,7 +76,11 @@ export function applyChikatiloAssassinMark(
     return { state, events: [] };
   }
 
-  if (chebyshev(unit.position, target.position) > 2) {
+  if (!canDirectlyTargetUnit(state, unit.id, target.id)) {
+    return { state, events: [] };
+  }
+
+  if (chebyshev(unit.position, target.position) > CHIKATILO_ASSASSIN_MARK_RANGE) {
     return { state, events: [] };
   }
 
@@ -97,7 +109,17 @@ export function applyChikatiloAssassinMark(
     },
   };
 
-  const events: GameEvent[] = committed.events;
+  const events: GameEvent[] = [
+    ...committed.events,
+    {
+      type: "chikatiloMarkApplied",
+      chikatiloId: nextUnit.id,
+      targetId,
+      ownerPlayerId: nextUnit.owner,
+      trackingStarts: CHIKATILO_MARK_TRACKING_STARTS,
+      trackingExpires: CHIKATILO_MARK_TRACKING_EXPIRES,
+    },
+  ];
 
   return { state: nextState, events };
 }

@@ -360,6 +360,9 @@ export const uk = {
     boneStatus: "{{bone}} кістка",
     rating: "Рейтинг: {{rating}}",
     immortal: "Безсмертна",
+    assassinMark: "Мітка вбивці",
+    assassinMarkTracked:
+      "Мітка вбивці: точне місце відстежується до кінця ходу цієї фігури.",
     forestAura: "Аура лісу: {{state}}",
     inside: "всередині",
     outside: "ззовні",
@@ -1253,10 +1256,14 @@ export const uk = {
     hiddenStake: "Прихований кілок",
     bunker: "У бункері: влучання завдають лише 1 шкоди.",
     stealth: "Фігура у скритності",
+    assassinMark: "Мітка вбивці",
+    assassinMarkTracked:
+      "Мітка вбивці: точне місце відстежується до кінця ходу цієї фігури.",
   },
   preview: {
     labels: {
       selectTarget: "Виберіть ціль.",
+      selectAssassinMarkTarget: "Оберіть ціль для Мітки вбивці.",
       selectAlly: "Виберіть союзника в радіусі.",
       selectDestination: "Виберіть клітинку призначення.",
       selectDropCell: "Виберіть клітинку висадки.",

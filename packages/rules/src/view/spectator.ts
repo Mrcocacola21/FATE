@@ -1,7 +1,7 @@
 import { GameState, PlayerView, UnitState } from "../model";
 import {
+  clonePublicUnit,
   cloneForestMarkers,
-  cloneUnit,
   collectSpectatorStakeMarkers,
 } from "./helpers";
 import { buildPendingAoEPreview, getPendingCombatQueueCount } from "./pending";
@@ -22,7 +22,7 @@ export function makeSpectatorView(state: GameState): PlayerView {
     if (unit.isAlive && unit.isStealthed) {
       continue;
     }
-    units[unit.id] = cloneUnit(unit);
+    units[unit.id] = clonePublicUnit(unit);
   }
 
   const pendingCombatQueueCount = getPendingCombatQueueCount(

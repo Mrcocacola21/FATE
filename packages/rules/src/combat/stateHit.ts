@@ -75,7 +75,11 @@ export function resolveHitDamage(
     if (
       attackerAfter.heroId === HERO_GUTS_ID &&
       attackerAfter.gutsBerserkModeActive &&
-      !params.rangedAttack
+      !params.rangedAttack &&
+      !params.suppressGutsBerserkBonus &&
+      attackerAfter.position &&
+      defenderAfter.position &&
+      distanceInfo(attackerAfter.position, defenderAfter.position).cheb === 1
     ) {
       damage += 1;
     }

@@ -141,6 +141,7 @@ function startGutsBerserkAoE(state: GameState, unit: UnitState): ApplyResult {
     casterId: updatedUnit.id,
     targetsQueue: affectedUnitIds,
     currentTargetIndex: 0,
+    suppressGutsBerserkBonus: true,
   };
   const requested = requestRoll(
     queuedState,

@@ -359,6 +359,9 @@ export const en = {
     boneStatus: "{{bone}} bone",
     rating: "Rating {{rating}}",
     immortal: "Immortal",
+    assassinMark: "Assassin's Mark",
+    assassinMarkTracked:
+      "Assassin's Mark: exact location tracked until this unit finishes a turn.",
     forestAura: "Forest aura: {{state}}",
     inside: "inside",
     outside: "outside",
@@ -1244,10 +1247,14 @@ export const en = {
     hiddenStake: "Hidden stake marker",
     bunker: "In Bunker: incoming hits deal 1 damage.",
     stealth: "Unit is in stealth",
+    assassinMark: "Assassin's Mark",
+    assassinMarkTracked:
+      "Assassin's Mark: exact location tracked until this unit finishes a turn.",
   },
   preview: {
     labels: {
       selectTarget: "Select a target.",
+      selectAssassinMarkTarget: "Select a target for Assassin's Mark.",
       selectAlly: "Select an ally within range.",
       selectDestination: "Select a destination cell.",
       selectDropCell: "Select a drop cell.",

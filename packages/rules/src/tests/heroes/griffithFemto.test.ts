@@ -10,6 +10,7 @@ import {
   getLegalAttackTargets,
   getUnitDefinition,
   HERO_FEMTO_ID,
+  HERO_GRIFFITH_ID,
   initKnowledgeForOwners,
   makeAttackWinRng,
   makeRngSequence,
@@ -22,6 +23,7 @@ import {
   setupGriffithState,
   toBattleState,
 } from "../helpers/testUtils";
+import { getAbilitySpec } from "../../abilities";
 export function testGriffithWretchedManDamageReductionClamped() {
   let { state, griffith } = setupGriffithState();
   const enemy = Object.values(state.units).find(
@@ -109,6 +111,98 @@ export function testGriffithWarriorDoubleAutoHit() {
 }
 
 
+export function testGriffithBasicAttackAndReadOnlyRebirth() {
+  const rng = makeRngSequence([0.99, 0.99, 0.01, 0.01]);
+  let { state, griffith } = setupGriffithState();
+  const enemy = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "rider"
+  )!;
+
+  assert(
+    getAbilitySpec(ABILITY_GRIFFITH_FEMTO_REBIRTH)?.kind === "passive",
+    "Femto Rebirth should be exposed as read-only passive metadata"
+  );
+
+  state = setUnit(state, griffith.id, { position: { col: 4, row: 4 } });
+  state = setUnit(state, enemy.id, { position: { col: 4, row: 5 } });
+  state = toBattleState(state, "P1", griffith.id);
+  state = initKnowledgeForOwners(state);
+
+  const manualRebirth = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: griffith.id,
+      abilityId: ABILITY_GRIFFITH_FEMTO_REBIRTH,
+    } as any,
+    makeRngSequence([])
+  );
+  assert(
+    manualRebirth.events.length === 0 &&
+      manualRebirth.state.units[griffith.id].heroId === HERO_GRIFFITH_ID,
+    "manual Femto Rebirth command should not transform or emit an ability event"
+  );
+  assert(
+    manualRebirth.state.units[griffith.id].turn.actionUsed === false,
+    "manual Femto Rebirth command should not spend action"
+  );
+
+  const invalidState = setUnit(state, enemy.id, { position: { col: 4, row: 6 } });
+  const invalidTargets = getLegalAttackTargets(invalidState, griffith.id);
+  assert(
+    !invalidTargets.includes(enemy.id),
+    "distance-2 target should not be legal for Griffith's normal knight attack"
+  );
+  const invalidAttack = applyAction(
+    invalidState,
+    { type: "attack", attackerId: griffith.id, defenderId: enemy.id } as any,
+    makeRngSequence([])
+  );
+  assert(
+    !invalidAttack.state.pendingRoll &&
+      invalidAttack.state.units[griffith.id].turn.actionUsed === false &&
+      invalidAttack.state.units[griffith.id].turn.attackUsed === false,
+    "invalid Griffith attack should be rejected without spending slots"
+  );
+
+  const legalTargets = getLegalAttackTargets(state, griffith.id);
+  assert(
+    legalTargets.includes(enemy.id),
+    "adjacent enemy should be legal for Griffith's normal attack"
+  );
+  const attacked = applyAction(
+    state,
+    { type: "attack", attackerId: griffith.id, defenderId: enemy.id } as any,
+    rng
+  );
+  assert(
+    attacked.state.pendingRoll?.kind === "attack_attackerRoll",
+    "valid Griffith attack should enter normal attack roll flow"
+  );
+  assert(
+    attacked.state.units[griffith.id].turn.actionUsed === false &&
+      attacked.state.units[griffith.id].turn.attackUsed === false,
+    "Griffith attack should not spend slots before the attack resolves"
+  );
+
+  const resolved = resolveAllPendingRollsWithEvents(attacked.state, rng);
+  const attackEvent = resolved.events.find(
+    (event) =>
+      event.type === "attackResolved" &&
+      event.attackerId === griffith.id &&
+      event.defenderId === enemy.id
+  );
+  assert(attackEvent, "valid Griffith attack should resolve");
+  assert(
+    resolved.state.units[griffith.id].turn.actionUsed === true &&
+      resolved.state.units[griffith.id].turn.attackUsed === true,
+    "resolved Griffith attack should spend action and attack once"
+  );
+
+  console.log("griffith_basic_attack_and_read_only_rebirth passed");
+}
+
+
 export function testGriffithFemtoRebirthOnDeath() {
   const rng = makeAttackWinRng(1);
   let { state, griffith } = setupGriffithState();
@@ -162,6 +256,15 @@ export function testGriffithFemtoRebirthOnDeath() {
       event.abilityId === ABILITY_GRIFFITH_FEMTO_REBIRTH
   );
   assert(rebirthEvent, "Femto rebirth ability event should be emitted");
+  assert(
+    events.filter(
+      (event) =>
+        event.type === "abilityUsed" &&
+        event.unitId === griffith.id &&
+        event.abilityId === ABILITY_GRIFFITH_FEMTO_REBIRTH
+    ).length === 1,
+    "Femto rebirth should be emitted exactly once"
+  );
 
   const ended = applyAction(
     resolved.state,

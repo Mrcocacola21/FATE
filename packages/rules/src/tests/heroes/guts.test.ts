@@ -337,7 +337,28 @@ export function testGutsBerserkMeleeBonusAndRangedNoBonus() {
   assert(meleeEvent, "melee attack should resolve");
   assert(
     meleeEvent.damage === state.units[guts.id].attack + 1,
-    "Berserk melee attacks should gain +1 damage"
+    "Berserk adjacent attacks should gain +1 damage"
+  );
+
+  const reachState = setUnit(state, enemy.id, { position: { col: 4, row: 6 } });
+  const reach = resolveAttack(reachState, {
+    attackerId: guts.id,
+    defenderId: enemy.id,
+    rolls: {
+      attackerDice: [6, 5],
+      defenderDice: [1, 1],
+    },
+  });
+  const reachEvent = reach.events.find(
+    (event) =>
+      event.type === "attackResolved" &&
+      event.attackerId === guts.id &&
+      event.defenderId === enemy.id
+  ) as Extract<GameEvent, { type: "attackResolved" }> | undefined;
+  assert(reachEvent, "Spearman-reach Berserk attack should resolve");
+  assert(
+    reachEvent.damage === state.units[guts.id].attack,
+    "Berserk reach attacks should not gain the adjacent +1 damage"
   );
 
   const ranged = resolveAttack(state, {
@@ -523,6 +544,10 @@ export function testGutsBerserkMovementAndAoEAndIncomingCap() {
     attackerRollSignatures.size === 1,
     "Berserk AoE should use one shared attacker roll for all targets"
   );
+  assert(
+    attackEvents.every((event) => event.damage === state.units[guts.id].attack),
+    "Berserk AoE should not inherit the single-target adjacent +1 damage"
+  );
 
   const incoming = resolveAttack(state, {
     attackerId: enemy1.id,
@@ -634,6 +659,10 @@ export function testGutsBerserkAttackChoiceSingleTargetSpearmanRange() {
     "single-target Berserk attack should hit the chosen target"
   );
   assert(
+    attackEvents[0].damage === state.units[guts.id].attack,
+    "reach-2 single-target Berserk attack should not receive adjacent +1 damage"
+  );
+  assert(
     resolved.state.units[ally.id].hp === beforeAllyHp,
     "single-target Berserk attack should not damage adjacent allies"
   );
@@ -648,6 +677,74 @@ export function testGutsBerserkAttackChoiceSingleTargetSpearmanRange() {
   );
 
   console.log("guts_berserk_attack_choice_single_target_spearman_range passed");
+}
+
+
+export function testGutsBerserkAttackChoiceSingleTargetAdjacentBonus() {
+  const rng = makeRngSequence([
+    0.99,
+    0.99, // attacker roll
+    0.01,
+    0.01, // defender roll
+  ]);
+
+  let { state, guts } = setupGutsState();
+  const enemy = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "rider"
+  )!;
+
+  state = setUnit(state, guts.id, {
+    position: { col: 4, row: 4 },
+    gutsBerserkModeActive: true,
+  });
+  state = setUnit(state, enemy.id, { position: { col: 4, row: 5 } });
+  state = toBattleState(state, "P1", guts.id);
+  state = initKnowledgeForOwners(state);
+
+  const attacked = applyAction(
+    state,
+    { type: "attack", attackerId: guts.id, defenderId: enemy.id } as any,
+    rng
+  );
+  assert(
+    attacked.state.pendingRoll?.kind === "gutsBerserkAttackChoice",
+    "adjacent Berserk attack should prompt for attack mode"
+  );
+
+  const choseSingle = applyAction(
+    attacked.state,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: attacked.state.pendingRoll!.id,
+      player: "P1",
+      choice: {
+        type: "gutsBerserkAttackMode",
+        mode: "single",
+        targetId: enemy.id,
+      },
+    } as any,
+    rng
+  );
+  const resolved = resolveAllPendingRollsWithEvents(choseSingle.state, rng);
+  const attackEvent = [...choseSingle.events, ...resolved.events].find(
+    (event) =>
+      event.type === "attackResolved" &&
+      event.attackerId === guts.id &&
+      event.defenderId === enemy.id
+  ) as Extract<GameEvent, { type: "attackResolved" }> | undefined;
+
+  assert(attackEvent, "adjacent single-target Berserk attack should resolve");
+  assert(
+    attackEvent.damage === state.units[guts.id].attack + 1,
+    "adjacent single-target Berserk attack should receive +1 damage"
+  );
+  assert(
+    resolved.state.units[guts.id].turn.actionUsed === true &&
+      resolved.state.units[guts.id].turn.attackUsed === true,
+    "adjacent single-target Berserk attack should spend action and attack once"
+  );
+
+  console.log("guts_berserk_attack_choice_single_target_adjacent_bonus passed");
 }
 
 

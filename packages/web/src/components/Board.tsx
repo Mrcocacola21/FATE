@@ -1,4 +1,4 @@
-import type { Coord, PlayerId, PlayerView, UnitClass } from "rules";
+import type { Coord, PlayerId, PlayerView, UnitClass, UnitState } from "rules";
 import {
   EL_CID_COMPEADOR_ID,
   EL_CID_KOLADA_ID,
@@ -306,6 +306,7 @@ export const Board: FC<BoardProps> = ({
       class: string;
       isStealthed: boolean;
       bunkerActive: boolean;
+      chikatiloMarkStatus?: UnitState["chikatiloMarkStatus"];
     }
   >();
   const lastKnownByPos = new Map<string, number>();
@@ -364,6 +365,7 @@ export const Board: FC<BoardProps> = ({
       class: unit.class,
       isStealthed: unit.isStealthed,
       bunkerActive: unit.bunker?.active ?? false,
+      chikatiloMarkStatus: unit.chikatiloMarkStatus,
     });
   }
   for (const coord of Object.values(view.lastKnownPositions ?? {})) {
@@ -474,6 +476,7 @@ export const Board: FC<BoardProps> = ({
       const unit = unitsByPos.get(key);
       const isSelected = unit?.id === selectedUnitId;
       const isActiveUnit = unit?.id === view.activeUnitId;
+      const markStatus = unit?.chikatiloMarkStatus;
       const isDoraPreview = doraPreviewKeys.has(key);
       const isDoraPreviewCenter = key === doraPreviewCenterKey;
       const isForestAura = forestAuraKeys.has(key);
@@ -517,7 +520,15 @@ export const Board: FC<BoardProps> = ({
       const cellDetails = unit
         ? `, ${unit.owner} ${getClassLabel(unit.class, t)}${
             unit.id === view.activeUnitId ? `, ${t("board.activeUnit")}` : ""
-          }${unit.id === selectedUnitId ? `, ${t("board.selected")}` : ""}`
+          }${unit.id === selectedUnitId ? `, ${t("board.selected")}` : ""}${
+            markStatus
+              ? `, ${
+                  markStatus.exactTrackingActive
+                    ? t("board.assassinMarkTracked")
+                    : t("board.assassinMark")
+                }`
+              : ""
+          }`
         : lastKnownCount > 0
           ? `, ${t("board.lastKnown")}`
           : "";
@@ -527,6 +538,8 @@ export const Board: FC<BoardProps> = ({
       if (unit) {
         const isFriendly = playerId ? unit.owner === playerId : false;
         const isHiddenEnemy = !isFriendly && unit.isStealthed;
+        const isTrackedHiddenEnemy =
+          isHiddenEnemy && unit.chikatiloMarkStatus?.exactTrackingActive;
         const marker = getClassMarker(unit.class);
         const unitView = view.units[unit.id];
         const tokenId = unitView?.figureId ?? unitView?.heroId ?? unit.class;
@@ -548,7 +561,11 @@ export const Board: FC<BoardProps> = ({
           "font-semibold",
           "border-2 border-white/70 shadow-lg shadow-black/25 dark:border-stone-950",
           previewRelationClass,
-          isFriendly ? "bg-emerald-500 text-white" : "bg-rose-500 text-white",
+          isTrackedHiddenEnemy
+            ? "bg-amber-300 text-amber-950 ring-4 ring-amber-500/85"
+            : isFriendly
+              ? "bg-emerald-500 text-white"
+              : "bg-rose-500 text-white",
         ].join(" ");
 
         const tokenClasses = [
@@ -766,6 +783,24 @@ export const Board: FC<BoardProps> = ({
               title={t("board.stealth")}
             >
               S
+            </div>
+          )}
+          {markStatus && (
+            <div
+              className={`pointer-events-none absolute right-1 ${
+                unit?.isStealthed ? "bottom-8" : "bottom-3"
+              } flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-bold shadow ${
+                markStatus.exactTrackingActive
+                  ? "bg-amber-300 text-amber-950 ring-2 ring-amber-600/60"
+                  : "bg-amber-100 text-amber-900 ring-1 ring-amber-500/50 dark:bg-amber-900 dark:text-amber-100"
+              }`}
+              title={
+                markStatus.exactTrackingActive
+                  ? t("board.assassinMarkTracked")
+                  : t("board.assassinMark")
+              }
+            >
+              M
             </div>
           )}
           {isActiveUnit && (

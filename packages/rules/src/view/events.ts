@@ -23,7 +23,6 @@ const PUBLIC_EVENT_TYPES = new Set<GameEvent["type"]>([
   "carpetStrikeTriggered",
   "carpetStrikeCenter",
   "carpetStrikeAttackRolled",
-  "abilityUsed",
   "unitHealed",
   "aoeResolved",
   "moveBlocked",
@@ -114,6 +113,17 @@ function projectEventForRecipient(
       if (recipient !== "spectator" && owner === recipient) return [event];
       return [{ type: event.type, unitId: event.unitId, mode: event.mode } as GameEvent];
     }
+    case "abilityUsed": {
+      const owner = unitOwner(state, event.unitId);
+      if (recipient !== "spectator" && owner === recipient) return [event];
+      return isUnitVisibleToRecipient(state, event.unitId, recipient)
+        ? [event]
+        : [redactedEvent(event.type)];
+    }
+    case "chikatiloMarkApplied":
+      return recipient !== "spectator" && recipient === event.ownerPlayerId
+        ? [event]
+        : [redactedEvent(event.type)];
     case "stealthRevealed":
       if (isUnitVisibleToRecipient(state, event.unitId, recipient)) return [event];
       return [redactedEvent(event.type)];

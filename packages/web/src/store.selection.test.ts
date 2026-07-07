@@ -92,6 +92,22 @@ test("Impulse abilities are display-only and not optional action buttons", () =>
   );
 });
 
+test("Automatic transformation abilities are not manual action buttons", () => {
+  for (const id of ["griffithFemtoRebirth", "mettatonEx", "mettatonNeo"]) {
+    assert.equal(
+      isActionableAbility({
+        id,
+        name: id,
+        kind: "phantasm",
+        description: "",
+        slot: "action",
+        isAvailable: true,
+      }),
+      false
+    );
+  }
+});
+
 test("basic attack targeting routes board unit clicks to the target handler", () => {
   const boardUi = useGameShellBoardUi({
     joined: true,

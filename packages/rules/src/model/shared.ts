@@ -11,6 +11,7 @@ export interface AbilityView {
   kind: AbilityKind;
   description: string;
   slot: AbilitySlot;
+  targetRange?: number;
   chargeRequired?: number;
   maxCharges?: number;
   chargeUnlimited?: boolean;

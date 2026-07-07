@@ -15,6 +15,8 @@ import {
   initKnowledgeForOwners,
   makeAttackWinRng,
   makeEmptyTurnEconomy,
+  makePlayerView,
+  getLegalAttackTargets,
   resolveAllPendingRolls,
   resolveAllPendingRollsWithEvents,
   SequenceRNG,
@@ -23,6 +25,7 @@ import {
   toBattleState,
   toPlacementState,
 } from "../helpers/testUtils";
+import { makeSpectatorView, projectEventsForRecipient } from "../../view";
 export function testChikatiloPlacementListSubstitution() {
   const { state, chikatilo, token } = setupChikatiloPlacementState(905);
 
@@ -300,6 +303,311 @@ export function testChikatiloAssassinMarkDoesNotRevealAndGrantsBonusDamage() {
   );
 
   console.log("chikatilo_assassin_mark_bonus_damage passed");
+}
+
+
+export function testChikatiloAssassinMarkApplicationFlowAndRedaction() {
+  const rng = makeAttackWinRng(1);
+  let state = createEmptyGame();
+  const a1 = createDefaultArmy("P1", { assassin: HERO_CHIKATILO_ID });
+  const a2 = createDefaultArmy("P2");
+  state = attachArmy(state, a1);
+  state = attachArmy(state, a2);
+
+  const chikatilo = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.heroId === HERO_CHIKATILO_ID
+  )!;
+  const target = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "knight"
+  )!;
+
+  state = setUnit(state, chikatilo.id, {
+    position: { col: 4, row: 4 },
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
+  state = setUnit(state, target.id, { position: { col: 5, row: 4 }, hp: 5 });
+  state = toBattleState(state, "P1", chikatilo.id);
+  state = initKnowledgeForOwners(state);
+
+  const cancel = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: chikatilo.id,
+      abilityId: ABILITY_CHIKATILO_ASSASSIN_MARK,
+    } as any,
+    rng
+  );
+  assert(
+    !cancel.state.units[chikatilo.id].turn.actionUsed,
+    "opening assassin mark targeting should not spend action"
+  );
+  assert(
+    !cancel.state.units[chikatilo.id].chikatiloMarkedTargets?.includes(target.id),
+    "opening assassin mark targeting should not mark a target"
+  );
+
+  const hiddenTargetState = setUnit(state, target.id, {
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
+  const rejected = applyAction(
+    hiddenTargetState,
+    {
+      type: "useAbility",
+      unitId: chikatilo.id,
+      abilityId: ABILITY_CHIKATILO_ASSASSIN_MARK,
+      payload: { targetId: target.id },
+    } as any,
+    rng
+  );
+  assert(
+    !rejected.state.units[chikatilo.id].turn.actionUsed,
+    "invalid hidden mark target should not spend action"
+  );
+  assert(
+    !rejected.state.units[chikatilo.id].chikatiloMarkedTargets?.includes(target.id),
+    "invalid hidden mark target should not mutate marks"
+  );
+
+  const marked = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: chikatilo.id,
+      abilityId: ABILITY_CHIKATILO_ASSASSIN_MARK,
+      payload: { targetId: target.id },
+    } as any,
+    rng
+  );
+
+  const markedChikatilo = marked.state.units[chikatilo.id];
+  assert(
+    markedChikatilo.turn.actionUsed,
+    "successful assassin mark should spend action exactly once"
+  );
+  assert(
+    markedChikatilo.chikatiloMarkedTargets?.filter((id) => id === target.id).length === 1,
+    "successful assassin mark should apply one persistent mark"
+  );
+  assert(
+    !markedChikatilo.chikatiloTrackedTargets?.includes(target.id),
+    "successful assassin mark should not grant exact tracking until chikatilo start turn"
+  );
+  assert(
+    marked.events.some(
+      (event) =>
+        event.type === "chikatiloMarkApplied" &&
+        event.targetId === target.id &&
+        event.ownerPlayerId === "P1"
+    ),
+    "successful assassin mark should emit a mark-applied event"
+  );
+
+  const duplicate = applyAction(
+    marked.state,
+    {
+      type: "useAbility",
+      unitId: chikatilo.id,
+      abilityId: ABILITY_CHIKATILO_ASSASSIN_MARK,
+      payload: { targetId: target.id },
+    } as any,
+    rng
+  );
+  assert(
+    duplicate.events.filter((event) => event.type === "chikatiloMarkApplied").length === 0,
+    "duplicate assassin mark command after cost spend should not emit a second mark event"
+  );
+  assert(
+    duplicate.state.units[chikatilo.id].chikatiloMarkedTargets?.filter(
+      (id) => id === target.id
+    ).length === 1,
+    "duplicate assassin mark command should not duplicate mark state"
+  );
+
+  const ownerEvents = projectEventsForRecipient(marked.state, marked.events, "P1");
+  const opponentEvents = projectEventsForRecipient(marked.state, marked.events, "P2");
+  const spectatorEvents = projectEventsForRecipient(marked.state, marked.events, "spectator");
+  assert(
+    ownerEvents.some(
+      (event) => event.type === "chikatiloMarkApplied" && event.targetId === target.id
+    ),
+    "mark owner should receive the full mark-applied event"
+  );
+  assert(
+    opponentEvents.some(
+      (event) => event.type === "chikatiloMarkApplied" && !("targetId" in event)
+    ),
+    "opponent should receive a redacted mark-applied event"
+  );
+  assert(
+    spectatorEvents.some(
+      (event) => event.type === "chikatiloMarkApplied" && !("targetId" in event)
+    ),
+    "spectator should receive a redacted mark-applied event"
+  );
+  assert(
+    opponentEvents.some(
+      (event) => event.type === "abilityUsed" && !("unitId" in event)
+    ),
+    "hidden chikatilo ability use should be redacted for the opponent"
+  );
+
+  console.log("chikatilo_assassin_mark_application_flow_and_redaction passed");
+}
+
+
+export function testChikatiloAssassinMarkTrackingProjectionAttackAndExpiry() {
+  const rng = makeAttackWinRng(2);
+  let state = createEmptyGame();
+  const a1 = createDefaultArmy("P1", { assassin: HERO_CHIKATILO_ID });
+  const a2 = createDefaultArmy("P2");
+  state = attachArmy(state, a1);
+  state = attachArmy(state, a2);
+
+  const chikatilo = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.heroId === HERO_CHIKATILO_ID
+  )!;
+  const target = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "knight"
+  )!;
+
+  state = setUnit(state, chikatilo.id, {
+    position: { col: 4, row: 4 },
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
+  state = setUnit(state, target.id, { position: { col: 5, row: 4 }, hp: 5 });
+  state = toBattleState(state, "P1", chikatilo.id);
+  state = initKnowledgeForOwners(state);
+
+  const marked = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: chikatilo.id,
+      abilityId: ABILITY_CHIKATILO_ASSASSIN_MARK,
+      payload: { targetId: target.id },
+    } as any,
+    rng
+  ).state;
+  const hiddenTarget = setUnit(marked, target.id, {
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
+
+  const beforeTrackingView = makePlayerView(hiddenTarget, "P1");
+  assert(
+    !beforeTrackingView.units[target.id],
+    "marked hidden target should remain hidden before chikatilo start-turn tracking"
+  );
+  assert(
+    !getLegalAttackTargets(hiddenTarget, chikatilo.id).includes(target.id),
+    "marked hidden target should not be attackable before exact tracking activates"
+  );
+
+  const startReady = {
+    ...hiddenTarget,
+    currentPlayer: "P1" as const,
+    activeUnitId: null,
+    turnOrder: [chikatilo.id, target.id],
+    turnQueue: [chikatilo.id, target.id],
+    turnOrderIndex: 0,
+    turnQueueIndex: 0,
+  };
+  const started = applyAction(
+    startReady,
+    { type: "unitStartTurn", unitId: chikatilo.id } as any,
+    rng
+  ).state;
+  assert(
+    started.units[chikatilo.id].chikatiloTrackedTargets?.includes(target.id),
+    "chikatilo start turn should activate exact tracking for marked targets"
+  );
+
+  const ownerView = makePlayerView(started, "P1");
+  const projectedTarget = ownerView.units[target.id];
+  assert(projectedTarget, "authorized owner should see tracked hidden target");
+  assert(
+    projectedTarget.position?.col === 5 && projectedTarget.position.row === 4,
+    "authorized owner should receive tracked hidden target exact cell"
+  );
+  assert(
+    projectedTarget.chikatiloMarkStatus?.exactTrackingActive === true,
+    "authorized owner should receive active mark tracking metadata"
+  );
+  assert(
+    makePlayerView(started, "P2").units[target.id].chikatiloMarkStatus === undefined,
+    "opposing target owner should not receive chikatilo's private mark metadata"
+  );
+  assert(
+    !makeSpectatorView(started).units[target.id],
+    "spectator should not see the tracked hidden enemy"
+  );
+  assert(
+    ownerView.legal?.attackTargetsByUnitId[chikatilo.id]?.includes(target.id),
+    "authorized chikatilo should receive tracked hidden target as a legal attack target"
+  );
+
+  const attack = applyAction(
+    started,
+    { type: "attack", attackerId: chikatilo.id, defenderId: target.id } as any,
+    rng
+  );
+  assert(
+    attack.state.pendingRoll?.kind === "attack_attackerRoll",
+    "server should accept chikatilo attack against tracked hidden target in legal range"
+  );
+
+  const movedWhileTracked = setUnit(started, target.id, {
+    position: { col: 4, row: 5 },
+  });
+  const movedOwnerView = makePlayerView(movedWhileTracked, "P1");
+  assert(
+    movedOwnerView.units[target.id].position?.col === 4 &&
+      movedOwnerView.units[target.id].position?.row === 5,
+    "authorized owner should receive tracked hidden target movement updates"
+  );
+
+  const targetTurn = {
+    ...movedWhileTracked,
+    currentPlayer: "P2" as const,
+    activeUnitId: target.id,
+    turnOrder: [chikatilo.id, target.id],
+    turnQueue: [chikatilo.id, target.id],
+    turnOrderIndex: 1,
+    turnQueueIndex: 1,
+  };
+  const expired = applyAction(targetTurn, { type: "endTurn" } as any, rng).state;
+  assert(
+    expired.units[chikatilo.id].chikatiloMarkedTargets?.includes(target.id),
+    "persistent mark should survive exact-tracking expiry"
+  );
+  assert(
+    !expired.units[chikatilo.id].chikatiloTrackedTargets?.includes(target.id),
+    "tracked target should expire when the marked unit finishes its turn"
+  );
+  assert(
+    !makePlayerView(expired, "P1").units[target.id],
+    "authorized owner should lose hidden target exact cell after tracking expires"
+  );
+  assert(
+    !getLegalAttackTargets(expired, chikatilo.id).includes(target.id),
+    "tracked hidden target should stop being attackable after tracking expires"
+  );
+
+  const visibleAfterExpiry = setUnit(expired, target.id, {
+    isStealthed: false,
+    stealthTurnsLeft: 0,
+  });
+  const visibleProjection = makePlayerView(visibleAfterExpiry, "P1").units[target.id];
+  assert(
+    visibleProjection.chikatiloMarkStatus?.exactTrackingActive === false,
+    "visible target should keep mark indicator after exact tracking expires"
+  );
+
+  console.log("chikatilo_assassin_mark_tracking_projection_attack_and_expiry passed");
 }
 
 

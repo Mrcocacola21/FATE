@@ -9,6 +9,7 @@ export interface AbilitySpec {
   displayName: string;
   kind: AbilityKind;
   description: string;
+  targetRange?: number;
   maxCharges?: number;
   chargesPerUse?: number;
   chargeCost?: number;

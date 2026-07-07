@@ -63,6 +63,10 @@ export function applyUseAbility(
     return directResult;
   }
 
+  if (spec.kind === "passive" || spec.kind === "impulse") {
+    return { state, events: [] };
+  }
+
   const isTricksterAoE = spec.id === ABILITY_TRICKSTER_AOE;
   const aoeCenter = isTricksterAoE ? unit.position : null;
   if (isTricksterAoE) {

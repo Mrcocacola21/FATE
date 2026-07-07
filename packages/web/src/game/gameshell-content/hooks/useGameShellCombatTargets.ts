@@ -1,6 +1,11 @@
 import { useEffect, useMemo } from "react";
 import type { Coord, PlayerView, UnitState } from "rules";
-import { KALADIN_ID, PAPYRUS_ID } from "../../../rulesHints";
+import {
+  CHIKATILO_ASSASSIN_MARK_ID,
+  KALADIN_ID,
+  PAPYRUS_ID,
+  getProjectedAbilityTargetRange,
+} from "../../../rulesHints";
 import { coordKey, getArcherLikeTargetIds, getAttackRangeCells } from "../helpers";
 
 interface UseGameShellCombatTargetsParams {
@@ -87,13 +92,19 @@ export function useGameShellCombatTargets({
     ) {
       return [] as UnitState[];
     }
+    const range = getProjectedAbilityTargetRange(
+      view,
+      selectedUnit.id,
+      CHIKATILO_ASSASSIN_MARK_ID,
+    );
+    if (range === null) return [] as UnitState[];
     const origin = selectedUnit.position;
     return Object.values(view.units).filter((unit) => {
       if (!unit?.isAlive || !unit.position) return false;
       if (unit.id === selectedUnit.id) return false;
       const dx = Math.abs(unit.position.col - origin.col);
       const dy = Math.abs(unit.position.row - origin.row);
-      return Math.max(dx, dy) <= 2;
+      return Math.max(dx, dy) <= range;
     });
   }, [view, effectiveActionMode, selectedUnit]);
   const assassinMarkTargetIds = useMemo(

@@ -1,6 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import type { Coord, PlayerId, PlayerView, UnitClass, UnitState } from "rules";
+import type {
+  AbilityView,
+  Coord,
+  PlayerId,
+  PlayerView,
+  UnitClass,
+  UnitState,
+} from "rules";
 import {
   ASGORE_FIRE_PARADE_ID,
   CHIKATILO_ASSASSIN_MARK_ID,
@@ -44,6 +51,19 @@ function unit(overrides: Partial<UnitState> & { id: string; owner: PlayerId; pos
     hasActedThisTurn: false,
     isAlive: overrides.isAlive ?? true,
   } as UnitState;
+}
+
+function ability(overrides: Partial<AbilityView> & { id: string }): AbilityView {
+  const { id, name, kind, description, slot, isAvailable, ...rest } = overrides;
+  return {
+    id,
+    name: name ?? id,
+    kind: kind ?? "active",
+    description: description ?? "",
+    slot: slot ?? "action",
+    isAvailable: isAvailable ?? true,
+    ...rest,
+  };
 }
 
 function makeView(
@@ -114,7 +134,21 @@ test("Chikatilo mark preview includes visible radius targets without hidden targ
     owner: "P2",
     position: { col: 6, row: 4 },
   });
-  const view = makeView([chikatilo, visibleEnemy], {
+  const edgeEnemy = unit({
+    id: "edge-enemy",
+    owner: "P2",
+    position: { col: 7, row: 4 },
+  });
+  const projectedRange = 3;
+  const view = makeView([chikatilo, visibleEnemy, edgeEnemy], {
+    abilitiesByUnitId: {
+      [chikatilo.id]: [
+        ability({
+          id: CHIKATILO_ASSASSIN_MARK_ID,
+          targetRange: projectedRange,
+        }),
+      ],
+    },
     lastKnownPositions: { hiddenEnemy: { col: 5, row: 5 } },
   });
 
@@ -125,8 +159,71 @@ test("Chikatilo mark preview includes visible radius targets without hidden targ
     abilityId: CHIKATILO_ASSASSIN_MARK_ID,
   });
 
-  assert.deepEqual(validTargetIds(preview), ["visible-enemy"]);
+  assert.deepEqual(validTargetIds(preview), ["edge-enemy", "visible-enemy"]);
   assert.doesNotMatch(JSON.stringify(preview), /hiddenEnemy/);
+  assert.equal(preview?.kind, "radius");
+  if (preview?.kind === "radius") {
+    assert.equal(preview.labelKey, "preview.labels.selectAssassinMarkTarget");
+    assert.equal(
+      hasKind(
+        preview,
+        { col: chikatilo.position!.col + projectedRange, row: 4 },
+        "validTarget",
+      ),
+      true,
+    );
+    assert.equal(
+      hasKind(
+        preview,
+        { col: chikatilo.position!.col + projectedRange, row: 5 },
+        "area",
+      ),
+      true,
+    );
+  }
+});
+
+test("Chikatilo mark preview includes tracked hidden projection but not unknown hidden positions", () => {
+  const chikatilo = unit({
+    id: "chikatilo",
+    owner: "P1",
+    heroId: "chikatilo",
+    class: "assassin",
+    position: { col: 4, row: 4 },
+  });
+  const trackedHidden = unit({
+    id: "tracked-hidden",
+    owner: "P2",
+    position: { col: 5, row: 4 },
+    isStealthed: true,
+    chikatiloMarkStatus: {
+      sourceUnitId: chikatilo.id,
+      exactTrackingActive: true,
+      trackingStarts: "startOfChikatiloTurn",
+      trackingExpires: "afterMarkedUnitTurn",
+    },
+  });
+  const view = makeView([chikatilo, trackedHidden], {
+    abilitiesByUnitId: {
+      [chikatilo.id]: [
+        ability({
+          id: CHIKATILO_ASSASSIN_MARK_ID,
+          targetRange: 2,
+        }),
+      ],
+    },
+    lastKnownPositions: { unknownHidden: { col: 5, row: 5 } },
+  });
+
+  const preview = buildAbilityPreview({
+    gameView: view,
+    viewerPlayerId: "P1",
+    sourceUnitId: chikatilo.id,
+    abilityId: CHIKATILO_ASSASSIN_MARK_ID,
+  });
+
+  assert.deepEqual(validTargetIds(preview), ["tracked-hidden"]);
+  assert.doesNotMatch(JSON.stringify(preview), /unknownHidden/);
 });
 
 test("Lechy Guide Traveler preview includes ally targets and marks enemies disabled", () => {
@@ -159,7 +256,16 @@ test("active targeting preview overrides unrelated hover preview and cancel clea
     position: { col: 4, row: 4 },
   });
   const enemy = unit({ id: "enemy", owner: "P2", position: { col: 5, row: 4 } });
-  const view = makeView([chikatilo, enemy]);
+  const view = makeView([chikatilo, enemy], {
+    abilitiesByUnitId: {
+      [chikatilo.id]: [
+        ability({
+          id: CHIKATILO_ASSASSIN_MARK_ID,
+          targetRange: 2,
+        }),
+      ],
+    },
+  });
 
   const active = selectBoardPreview({
     gameView: view,
@@ -276,7 +382,12 @@ test("Guts Hand Crossbow and Hand Cannon previews show ranged lines", () => {
     position: { col: 4, row: 4 },
   });
   const enemy = unit({ id: "enemy", owner: "P2", position: { col: 4, row: 8 } });
-  const view = makeView([guts, enemy]);
+  const offLineEnemy = unit({
+    id: "off-line-enemy",
+    owner: "P2",
+    position: { col: 5, row: 8 },
+  });
+  const view = makeView([guts, enemy, offLineEnemy]);
 
   for (const abilityId of [GUTS_ARBALET_ID, GUTS_CANNON_ID]) {
     const preview = buildAbilityPreview({
@@ -287,6 +398,7 @@ test("Guts Hand Crossbow and Hand Cannon previews show ranged lines", () => {
     });
     assert.equal(preview?.kind, "line");
     assert.deepEqual(validTargetIds(preview), ["enemy"]);
+    assert.deepEqual(disabledTargetIds(preview), ["off-line-enemy"]);
     assert.equal(hasKind(preview, { col: 4, row: 7 }, "line"), true);
   }
 });

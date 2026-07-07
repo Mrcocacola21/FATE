@@ -231,6 +231,7 @@ export function getAbilityViewsForUnit(
         kind: spec.kind,
         description: spec.description,
         slot: getSlotFromCost(spec),
+        targetRange: spec.targetRange,
         chargeRequired: effectiveChargeRequired,
         maxCharges,
         chargeUnlimited,

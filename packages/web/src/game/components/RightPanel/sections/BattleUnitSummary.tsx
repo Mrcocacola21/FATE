@@ -482,6 +482,20 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
             })}
           </span>
         ) : null}
+        {selectedUnit.chikatiloMarkStatus ? (
+          <span
+            className="status-pill border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/45 dark:text-amber-200"
+            title={
+              selectedUnit.chikatiloMarkStatus.exactTrackingActive
+                ? t("game.assassinMarkTracked")
+                : t("game.assassinMark")
+            }
+          >
+            {selectedUnit.chikatiloMarkStatus.exactTrackingActive
+              ? t("game.assassinMarkTracked")
+              : t("game.assassinMark")}
+          </span>
+        ) : null}
         {selectedMettatonRating !== null ? (
           <span className="status-pill border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/45 dark:text-amber-200">
             {t("game.rating", { rating: selectedMettatonRating })}

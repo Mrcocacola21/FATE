@@ -5,6 +5,7 @@ export interface ResolveAttackParams {
   defenderId: string;
   allowFriendlyTarget?: boolean;
   rangedAttack?: boolean;
+  suppressGutsBerserkBonus?: boolean;
   defenderUseBerserkAutoDefense?: boolean;
   defenderUseMuninnAutoDefense?: boolean;
   ignoreRange?: boolean;

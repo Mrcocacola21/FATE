@@ -2,13 +2,12 @@ import { AbilityView, Coord, GameState, PlayerId, PlayerView, UnitState } from "
 import { getLegalMovesForUnit } from "../movement";
 import { getLegalAttackTargets, getLegalIntents, getLegalPlacements } from "../legal";
 import { getAbilityViewsForUnit } from "../abilities";
-import { HERO_CHIKATILO_ID } from "../heroes";
 import {
+  cloneEnemyUnitForPlayer,
   cloneForestMarkers,
   cloneUnit,
   collectPlayerStakeMarkers,
   isStealthedEnemyVisibleToPlayer,
-  maskStealthedEnemy,
 } from "./helpers";
 import {
   buildPendingAoEPreview,
@@ -38,18 +37,6 @@ export function makePlayerView(
   const lastKnownPositions: Record<string, Coord> = {};
   const abilitiesByUnitId: Record<string, AbilityView[]> = {};
 
-  const activeUnit =
-    state.activeUnitId && state.units[state.activeUnitId]
-      ? state.units[state.activeUnitId]
-      : null;
-  const activeChikatilo =
-    activeUnit &&
-    activeUnit.owner === playerId &&
-    activeUnit.heroId === HERO_CHIKATILO_ID
-      ? activeUnit
-      : null;
-  const markedTargets = new Set(activeChikatilo?.chikatiloMarkedTargets ?? []);
-
   for (const unit of Object.values(state.units)) {
     if (unit.owner === playerId) {
       units[unit.id] = cloneUnit(unit);
@@ -58,17 +45,18 @@ export function makePlayerView(
     }
 
     if (!unit.isAlive) {
-      units[unit.id] = cloneUnit(unit);
+      units[unit.id] = cloneEnemyUnitForPlayer(state, playerId, unit);
       continue;
     }
 
     if (unit.isStealthed) {
-      if (activeChikatilo && markedTargets.has(unit.id)) {
-        units[unit.id] = maskStealthedEnemy(unit);
-        continue;
-      }
       if (isStealthedEnemyVisibleToPlayer(state, playerId, unit)) {
-        units[unit.id] = maskStealthedEnemy(unit);
+        const projected = cloneEnemyUnitForPlayer(state, playerId, unit);
+        projected.charges = {};
+        projected.cooldowns = {};
+        projected.stealthTurnsLeft = 0;
+        projected.lastChargedTurn = undefined;
+        units[unit.id] = projected;
         continue;
       }
       if (unit.owner !== playerId) {
@@ -80,7 +68,7 @@ export function makePlayerView(
       continue;
     }
 
-    units[unit.id] = cloneUnit(unit);
+    units[unit.id] = cloneEnemyUnitForPlayer(state, playerId, unit);
   }
 
   const knowledge = {
