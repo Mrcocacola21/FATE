@@ -3,6 +3,7 @@ import {
   ASGORE_FIREBALL_ID,
   ASGORE_FIRE_PARADE_ID,
   CHIKATILO_ASSASSIN_MARK_ID,
+  EL_CID_KOLADA_ID,
   GENGHIS_KHAN_KHANS_DECREE_ID,
   GROZNY_INVADE_TIME_ID,
   GROZNY_TYRANT_ID,
@@ -48,6 +49,7 @@ const GUIDE_TRAVELER_RADIUS = 2;
 const LOKI_RADIUS = 2;
 const FIRE_PARADE_RADIUS = TRICKSTER_AOE_RADIUS;
 const GUTS_BERSERK_AOE_RADIUS = 1;
+const EL_CID_KOLADA_RADIUS = 1;
 
 export interface BuildAbilityPreviewArgs {
   gameView: PlayerView | null | undefined;
@@ -448,6 +450,13 @@ export function buildAbilityPreview({
           abilityId === ASGORE_FIRE_PARADE_ID
             ? "preview.labels.fireParadeArea"
             : "preview.labels.affectedArea",
+      });
+    case EL_CID_KOLADA_ID:
+      return buildAreaPreview({
+        view: gameView,
+        source,
+        radius: EL_CID_KOLADA_RADIUS,
+        labelKey: "preview.labels.koladaArea",
       });
     case GUTS_ARBALET_ID:
       return buildArcherLinePreview({

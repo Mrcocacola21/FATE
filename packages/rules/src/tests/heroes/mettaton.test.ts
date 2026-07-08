@@ -207,6 +207,26 @@ export function testMettatonRatingPassiveAndThresholdUnlock() {
       started.state.units[mettaton.id].turn.moveUsed === false,
     "automatic EX transform should leave action and movement available"
   );
+  assert(
+    started.events.filter(
+      (event) =>
+        event.type === "unitTransformed" &&
+        event.unitId === mettaton.id &&
+        event.abilityId === ABILITY_METTATON_EX &&
+        event.reason === "mettatonThreshold" &&
+        event.ratingSpent === false
+    ).length === 1,
+    "automatic EX transform should create exactly one transformation event"
+  );
+  assert(
+    !started.events.some(
+      (event) =>
+        event.type === "abilityUsed" &&
+        event.unitId === mettaton.id &&
+        event.abilityId === ABILITY_METTATON_EX
+    ),
+    "automatic EX transform should not be logged as a manual ability use"
+  );
 
   console.log("mettaton_rating_passive_and_threshold_unlock passed");
 }
@@ -521,6 +541,26 @@ export function testMettatonNeoGraceAndRiderPathUnlocks() {
     neoOk.state.units[mettaton.id].turn.actionUsed === false &&
       neoOk.state.units[mettaton.id].turn.moveUsed === false,
     "NEO turn-start transform should leave action and movement available"
+  );
+  assert(
+    neoOk.events.filter(
+      (event) =>
+        event.type === "unitTransformed" &&
+        event.unitId === mettaton.id &&
+        event.abilityId === ABILITY_METTATON_NEO &&
+        event.reason === "mettatonThreshold" &&
+        event.ratingSpent === false
+    ).length === 1,
+    "automatic NEO transform should create exactly one transformation event"
+  );
+  assert(
+    !neoOk.events.some(
+      (event) =>
+        event.type === "abilityUsed" &&
+        event.unitId === mettaton.id &&
+        event.abilityId === ABILITY_METTATON_NEO
+    ),
+    "automatic NEO transform should not be logged as a manual ability use"
   );
 
   const neoAboveState = setUnit(state, mettaton.id, {

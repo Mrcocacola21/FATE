@@ -1,5 +1,5 @@
 import type { PapyrusBoneType } from "../unit";
-import type { PlayerId } from "../shared";
+import type { Coord, PlayerId } from "../shared";
 
 export type HeroGameEvent =
   | {
@@ -105,11 +105,49 @@ export type HeroGameEvent =
       abilityId: string;
     }
   | {
+      type: "lokiChickenGroupApplied";
+      lokiId?: string;
+      targetIds: string[];
+      abilityId: string;
+    }
+  | {
       type: "controlledAttackDeclared";
       controllerUnitId: string;
       controlledUnitId: string;
       targetId: string;
       abilityId: string;
+    }
+  | {
+      type: "unitTransformed";
+      unitId: string;
+      fromHeroId: string;
+      toHeroId: string;
+      fromFormId?: string;
+      toFormId?: string;
+      reason: "griffithFemtoRebirth" | "mettatonThreshold";
+      abilityId?: string;
+      rating?: number;
+      ratingSpent?: boolean;
+    }
+  | {
+      type: "riverBoatmanGranted";
+      riverId: string;
+      extraMoves: number;
+    }
+  | {
+      type: "riverBoatResolved";
+      riverId: string;
+      passengerId: string;
+      riverDestination: Coord;
+      dropDestination: Coord;
+    }
+  | {
+      type: "riverTraLaLaResolved";
+      riverId: string;
+      targetId: string;
+      riverDestination: Coord;
+      dropDestination: Coord;
+      touchedAttackerIds: string[];
     }
   | {
       type: "asgoreSoulParadeResolved";

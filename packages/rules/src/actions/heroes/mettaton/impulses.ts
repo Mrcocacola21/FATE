@@ -26,10 +26,16 @@ export function maybeTriggerMettatonThresholdUnlocks(
     return { state, events: [] };
   }
 
-  if (!hasMettatonExUnlocked(unit) && getMettatonRating(unit) >= 5) {
+  const rating = getMettatonRating(unit);
+  const willUnlockNeoThisPass =
+    !hasMettatonNeoUnlocked(unit) && rating >= 10;
+
+  if (!hasMettatonExUnlocked(unit) && rating >= 5) {
     const ex = applyMettatonEx(nextState, unit);
     nextState = ex.state;
-    nextEvents.push(...ex.events);
+    if (!willUnlockNeoThisPass) {
+      nextEvents.push(...ex.events);
+    }
     unit = nextState.units[unitId];
   }
   if (

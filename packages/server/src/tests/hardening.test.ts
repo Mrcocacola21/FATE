@@ -19,6 +19,7 @@ import {
   getGameRoom,
   storeTestHooks,
 } from "../store";
+import { GameActionSchema } from "../schemas";
 import { wsTestHooks } from "../ws";
 
 function flushMicrotasks() {
@@ -353,6 +354,38 @@ function testPayloadCapAllowsValidClientCommands() {
   console.log("hardening_payload_cap_headroom passed");
 }
 
+function testGroznyTyrantPendingChoicePayloadsAccepted() {
+  const actions = [
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: "roll-1",
+      choice: { type: "groznyTyrantOption", mode: "invadeTime" },
+    },
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: "roll-1",
+      choice: { type: "groznyTyrantAlly", targetId: "ally-1" },
+    },
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: "roll-1",
+      choice: {
+        type: "groznyTyrantAttackCell",
+        mode: "normal",
+        targetId: "ally-1",
+        position: { col: 4, row: 3 },
+      },
+    },
+  ];
+
+  for (const action of actions) {
+    const parsed = GameActionSchema.safeParse(action);
+    assert.equal(parsed.success, true);
+  }
+
+  console.log("hardening_grozny_tyrant_pending_choice_payloads passed");
+}
+
 async function testRestDebugEndpointsGatedInProduction() {
   storeTestHooks.reset();
   const previousNodeEnv = process.env.NODE_ENV;
@@ -602,6 +635,7 @@ async function main() {
   testRejectedActionLogAndRevisionInvariants();
   testRateLimitWindowResets();
   testPayloadCapAllowsValidClientCommands();
+  testGroznyTyrantPendingChoicePayloadsAccepted();
   await testRestDebugEndpointsGatedInProduction();
   testIdleRoomCleanupExpiresRoom();
   testActiveRoomCleanupDoesNotExpireRoom();

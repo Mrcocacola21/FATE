@@ -1,6 +1,6 @@
 import type { DiceRoll, GameEvent } from "rules";
 import type { Language, Translate } from ".";
-import { getAbilityDisplay, getArenaLabel } from "./displayMetadata";
+import { getAbilityDisplay, getArenaLabel, getHeroDisplayName } from "./displayMetadata";
 import {
   GRIFFITH_FEMTO_REBIRTH_ID,
   GUTS_BERSERK_MODE_ID,
@@ -19,6 +19,35 @@ function value(input: unknown) {
 
 function diceList(input: unknown) {
   return Array.isArray(input) && input.length > 0 ? `[${input.join(", ")}]` : "[-]";
+}
+
+function unitList(ids: string[], language: Language) {
+  if (ids.length === 0) return "-";
+  if (ids.length === 1) return ids[0]!;
+  if (ids.length === 2) {
+    return `${ids[0]} ${text(language, "and", "і")} ${ids[1]}`;
+  }
+  const head = ids.slice(0, -1).join(", ");
+  return `${head}, ${text(language, "and", "і")} ${ids[ids.length - 1]}`;
+}
+
+function coordText(coord: { col?: unknown; row?: unknown } | undefined) {
+  return typeof coord?.col === "number" && typeof coord?.row === "number"
+    ? `${coord.col}:${coord.row}`
+    : "-";
+}
+
+function transformationForm(event: Extract<GameEvent, { type: "unitTransformed" }>, language: Language) {
+  if (event.toFormId === METTATON_EX_ID || event.abilityId === METTATON_EX_ID) {
+    return `${getHeroDisplayName("mettaton", "Mettaton", language)} EX`;
+  }
+  if (event.toFormId === METTATON_NEO_ID || event.abilityId === METTATON_NEO_ID) {
+    return `${getHeroDisplayName("mettaton", "Mettaton", language)} NEO`;
+  }
+  if (event.toHeroId === "femto" || event.toFormId === "femto") {
+    return getHeroDisplayName("femto", "Femto", language);
+  }
+  return getHeroDisplayName(event.toHeroId, event.toHeroId, language);
 }
 
 export function formatDice(roll?: DiceRoll | null) {
@@ -236,12 +265,35 @@ export function formatEventMessage(
         `Carpet Strike attack: ${event.unitId} ${diceList(event.dice)} = ${value(event.sum)}`,
         `Атака Килимового удару: ${event.unitId} ${diceList(event.dice)} = ${value(event.sum)}`,
       );
-    case "searchStealth":
+    case "searchStealth": {
+      const actor = value(event.unitId);
+      const modeLabel =
+        event.mode === "move"
+          ? text(language, "used Movement to Search", "використав Рух для Пошуку")
+          : text(language, "used Search", "використав Пошук");
+      const rolls = Array.isArray(event.rolls) ? event.rolls : null;
+      const revealed =
+        rolls
+          ?.filter(
+            (roll) => roll.success === true && typeof roll.targetId === "string",
+          )
+          .map((roll) => roll.targetId) ?? [];
+      if (!rolls) {
+        return text(language, `${actor} ${modeLabel}.`, `${actor} ${modeLabel}.`);
+      }
+      if (revealed.length > 0) {
+        return text(
+          language,
+          `${actor} ${modeLabel} and revealed ${unitList(revealed, language)}.`,
+          `${actor} ${modeLabel} і розкрив ${unitList(revealed, language)}.`,
+        );
+      }
       return text(
         language,
-        `Stealth search: ${event.unitId} (${event.mode})`,
-        `Пошук прихованих: ${event.unitId} (${event.mode})`,
+        `${actor} ${modeLabel}. No hidden unit was revealed.`,
+        `${actor} ${modeLabel}. Прихованих фігур не розкрито.`,
       );
+    }
     case "abilityUsed": {
       if (typeof event.abilityId !== "string" || typeof event.unitId !== "string") {
         return text(
@@ -336,12 +388,94 @@ export function formatEventMessage(
         `Chicken: ${event.targetId} was changed by ${event.lokiId}`,
         `Chicken: ${event.targetId} was changed by ${event.lokiId}`,
       );
+    case "lokiChickenGroupApplied": {
+      const targets = Array.isArray(event.targetIds) ? event.targetIds : [];
+      const targetText = unitList(targets, language);
+      if (targets.length === 0) {
+        return text(language, "Loki's Good Joke resolved.", "Жарт Локі завершено.");
+      }
+      if (targets.length === 1) {
+        return text(
+          language,
+          `Loki's Good Joke turned ${targetText} into a chicken.`,
+          `Жарт Локі перетворив ${targetText} на курку.`,
+        );
+      }
+      if (targets.length > 3) {
+        return text(
+          language,
+          `Loki's Good Joke turned ${targets.length} units into chickens: ${targetText}.`,
+          `Жарт Локі перетворив ${targets.length} фігури на курей: ${targetText}.`,
+        );
+      }
+      return text(
+        language,
+        `Loki's Good Joke turned ${targetText} into chickens.`,
+        `Жарт Локі перетворив ${targetText} на курей.`,
+      );
+    }
     case "controlledAttackDeclared":
       return text(
         language,
         `Controlled attack: ${event.controllerUnitId} forced ${event.controlledUnitId} to attack ${event.targetId}`,
         `Controlled attack: ${event.controllerUnitId} forced ${event.controlledUnitId} to attack ${event.targetId}`,
       );
+    case "unitTransformed": {
+      if (typeof event.unitId !== "string") {
+        return text(language, "A unit transformed.", "Фігура трансформувалася.");
+      }
+      const form = transformationForm(event, language);
+      if (event.reason === "griffithFemtoRebirth") {
+        const from = getHeroDisplayName("griffith", "Griffith", language);
+        return text(
+          language,
+          `${from} was reborn as ${form}.`,
+          `${from} переродився у ${form}.`,
+        );
+      }
+      if (event.reason === "mettatonThreshold") {
+        return text(
+          language,
+          `Mettaton reached the Rating threshold and transformed into ${form}. Rating was not spent.`,
+          `Меттатон досяг порогу Рейтингу і трансформувався у ${form}. Рейтинг не витрачено.`,
+        );
+      }
+      return text(
+        language,
+        `${event.unitId} transformed into ${form}.`,
+        `${event.unitId} трансформувався у ${form}.`,
+      );
+    }
+    case "riverBoatmanGranted":
+      return text(
+        language,
+        `River Person used Boatman and gained ${value(event.extraMoves)} additional Movement action.`,
+        `Річкова Людина використала Човняра й отримала ${value(event.extraMoves)} додаткову дію Руху.`,
+      );
+    case "riverBoatResolved":
+      return text(
+        language,
+        `River Person transported ${value(event.passengerId)} to ${coordText(event.dropDestination)}.`,
+        `Річкова Людина перевезла ${value(event.passengerId)} до ${coordText(event.dropDestination)}.`,
+      );
+    case "riverTraLaLaResolved": {
+      const attackers = Array.isArray(event.touchedAttackerIds)
+        ? event.touchedAttackerIds
+        : [];
+      const attackText =
+        attackers.length > 0
+          ? ` During Tra-la-la, ${unitList(attackers, language)} attacked ${value(event.targetId)}.`
+          : "";
+      const attackTextUk =
+        attackers.length > 0
+          ? ` Під час Тра-ля-ля ${unitList(attackers, language)} атакували ${value(event.targetId)}.`
+          : "";
+      return text(
+        language,
+        `River Person used Tra-la-la and dragged ${value(event.targetId)} to ${coordText(event.dropDestination)}.${attackText}`,
+        `Річкова Людина використала Тра-ля-ля і перетягнула ${value(event.targetId)} до ${coordText(event.dropDestination)}.${attackTextUk}`,
+      );
+    }
     case "asgoreSoulParadeResolved":
       return text(
         language,

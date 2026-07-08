@@ -36,6 +36,22 @@ function coordList(value: unknown): Coord[] {
   return value.filter(isCoord).map((coord) => ({ col: coord.col, row: coord.row }));
 }
 
+function uniqueStrings(values: string[]): string[] {
+  return Array.from(new Set(values));
+}
+
+function uniqueCoords(coords: Coord[]): Coord[] {
+  const seen = new Set<string>();
+  const result: Coord[] = [];
+  for (const coord of coords) {
+    const key = coordKey(coord);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    result.push(coord);
+  }
+  return result;
+}
+
 function sourceUnit(view: PlayerView, sourceUnitId: string | null | undefined): UnitState | null {
   if (!sourceUnitId) return null;
   const unit = view.units[sourceUnitId];
@@ -276,10 +292,28 @@ function buildLokiChoicePreview(view: PlayerView, context: Record<string, unknow
   );
 }
 
+function buildGroznyAllyPreview(view: PlayerView, context: Record<string, unknown>): BoardPreview | null {
+  const optionIds = stringList(context.options);
+  const targets = targetRefsFromIds(view, optionIds);
+  if (targets.length === 0) return null;
+  const groznyId = typeof context.groznyId === "string" ? context.groznyId : "";
+  const source = sourceUnit(view, groznyId);
+  return {
+    kind: "multiStep",
+    step: "groznyTyrantAlly",
+    sourceCell: source?.position ? { ...source.position } : undefined,
+    cells: targets.map((target) => ({ ...target.cell })),
+    validTargets: targets,
+    cellKind: "validTarget",
+    labelKey: "preview.labels.tyrantAlly",
+  };
+}
+
 function buildGroznyOptionsPreview(view: PlayerView, context: Record<string, unknown>): BoardPreview | null {
   const options = Array.isArray(context.options) ? context.options : [];
   const cells: Coord[] = [];
   const targetIds: string[] = [];
+  const selectedTargetId = typeof context.targetId === "string" ? context.targetId : null;
   for (const option of options) {
     if (!option || typeof option !== "object") continue;
     const targetId = (option as { targetId?: unknown }).targetId;
@@ -297,8 +331,11 @@ function buildGroznyOptionsPreview(view: PlayerView, context: Record<string, unk
     kind: "multiStep",
     step: "groznyTyrantAttackCell",
     sourceCell: source?.position ? { ...source.position } : undefined,
-    cells,
-    validTargets: targetRefsFromIds(view, targetIds),
+    cells: uniqueCoords(cells),
+    validTargets: targetRefsFromIds(
+      view,
+      selectedTargetId ? [selectedTargetId] : uniqueStrings(targetIds),
+    ),
     cellKind: "validMove",
     labelKey: "preview.labels.tyrantAttackCell",
   };
@@ -446,6 +483,10 @@ export function buildPendingPreview(view: PlayerView | null | undefined): BoardP
           dropCells: coordList(context.options),
           labelKey: "preview.labels.selectDropCell",
         });
+      case "groznyTyrantOptionChoice":
+        return null;
+      case "groznyTyrantAllyChoice":
+        return buildGroznyAllyPreview(view, context);
       case "groznyTyrantAttackCellChoice":
         return buildGroznyOptionsPreview(view, context);
       case "lechyGuideTravelerPlacement":

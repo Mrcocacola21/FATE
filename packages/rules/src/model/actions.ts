@@ -19,6 +19,11 @@ export type ResolveRollChoice =
   | { type: "forestMoveDestination"; position: Coord }
   | { type: "chikatiloPlace"; position: Coord }
   | {
+      type: "groznyTyrantOption";
+      mode: "normal" | "invadeTime";
+    }
+  | { type: "groznyTyrantAlly"; targetId: string }
+  | {
       type: "groznyTyrantAttackCell";
       mode: "normal" | "invadeTime";
       targetId: string;

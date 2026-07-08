@@ -51,6 +51,8 @@ export interface BuildHighlightedCellsArgs {
   riverTraLaLaDropDestinationOptions: Coord[];
   isChikatiloPlacement: boolean;
   chikatiloPlacementCoords: Coord[];
+  isGroznyTyrantAllyChoice: boolean;
+  groznyTyrantAllyKeys: Set<string>;
   isGroznyTyrantAttackCellChoice: boolean;
   groznyTyrantAttackCellKeys: Set<string>;
   isGuideTravelerPlacement: boolean;
@@ -139,6 +141,8 @@ export function buildHighlightedCells({
   riverTraLaLaDropDestinationOptions,
   isChikatiloPlacement,
   chikatiloPlacementCoords,
+  isGroznyTyrantAllyChoice,
+  groznyTyrantAllyKeys,
   isGroznyTyrantAttackCellChoice,
   groznyTyrantAttackCellKeys,
   isGuideTravelerPlacement,
@@ -287,6 +291,13 @@ export function buildHighlightedCells({
   if (isChikatiloPlacement) {
     for (const coord of chikatiloPlacementCoords) {
       highlights[coordKey(coord)] = "place";
+    }
+    return highlights;
+  }
+
+  if (isGroznyTyrantAllyChoice) {
+    for (const key of groznyTyrantAllyKeys) {
+      highlights[key] = "attack";
     }
     return highlights;
   }

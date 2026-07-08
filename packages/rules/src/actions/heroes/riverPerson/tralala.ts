@@ -458,6 +458,14 @@ export function resolveRiverTraLaLaDropDestinationChoice(
     river.position,
     movedRiver.position ?? finalRiverPosition
   );
+  events.push({
+    type: "riverTraLaLaResolved" as const,
+    riverId: movedRiver.id,
+    targetId: movedTarget.id,
+    riverDestination: movedRiver.position!,
+    dropDestination: movedTarget.position!,
+    touchedAttackerIds: queue.map((entry) => entry.attackerId),
+  });
   if (queue.length === 0) {
     return { state: nextState, events };
   }

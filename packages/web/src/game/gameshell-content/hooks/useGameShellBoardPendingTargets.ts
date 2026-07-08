@@ -21,6 +21,7 @@ interface UseGameShellBoardPendingTargetsParams {
   isRiverTraLaLaDestinationChoice: boolean;
   isRiverTraLaLaDropDestinationChoice: boolean;
   isChikatiloPlacement: boolean;
+  isGroznyTyrantAllyChoice: boolean;
   isGroznyTyrantAttackCellChoice: boolean;
   isGuideTravelerPlacement: boolean;
   isJebeKhansShooterTargetChoice: boolean;
@@ -72,6 +73,7 @@ export function useGameShellBoardPendingTargets({
   isRiverTraLaLaDestinationChoice,
   isRiverTraLaLaDropDestinationChoice,
   isChikatiloPlacement,
+  isGroznyTyrantAllyChoice,
   isGroznyTyrantAttackCellChoice,
   isGuideTravelerPlacement,
   isJebeKhansShooterTargetChoice,
@@ -258,6 +260,23 @@ export function useGameShellBoardPendingTargets({
     [chikatiloPlacementCoords]
   );
 
+  const groznyTyrantAllyOptionIds = useMemo(() => {
+    if (!isGroznyTyrantAllyChoice) return [] as string[];
+    const ctx = pendingRoll?.context as { options?: unknown } | undefined;
+    if (!Array.isArray(ctx?.options)) return [] as string[];
+    return ctx.options.filter((value): value is string => typeof value === "string");
+  }, [isGroznyTyrantAllyChoice, pendingRoll]);
+  const groznyTyrantAllyKeys = useMemo(
+    () =>
+      new Set(
+        groznyTyrantAllyOptionIds
+          .map((unitId) => view?.units[unitId]?.position)
+          .filter((coord): coord is Coord => !!coord)
+          .map(coordKey)
+      ),
+    [groznyTyrantAllyOptionIds, view]
+  );
+
   const groznyTyrantAttackCellOptions = useMemo(() => {
     if (!isGroznyTyrantAttackCellChoice) return [] as GroznyTyrantAttackCellOption[];
     const ctx = pendingRoll?.context as { options?: unknown } | undefined;
@@ -343,6 +362,8 @@ export function useGameShellBoardPendingTargets({
     riverTraLaLaDropDestinationKeys,
     chikatiloPlacementCoords,
     chikatiloPlacementKeys,
+    groznyTyrantAllyOptionIds,
+    groznyTyrantAllyKeys,
     groznyTyrantAttackCellOptions,
     groznyTyrantAttackCellKeys,
     groznyTyrantAllowSkip,

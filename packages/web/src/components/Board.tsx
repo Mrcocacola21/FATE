@@ -1,7 +1,5 @@
 import type { Coord, PlayerId, PlayerView, UnitClass, UnitState } from "rules";
 import {
-  EL_CID_COMPEADOR_ID,
-  EL_CID_KOLADA_ID,
   FOREST_AURA_RADIUS,
   getMaxHp,
 } from "../rulesHints";
@@ -413,26 +411,6 @@ export const Board: FC<BoardProps> = ({
 
   const selectedUnit =
     selectedUnitId && view.units[selectedUnitId] ? view.units[selectedUnitId] : null;
-  const isMyTurn = playerId ? view.currentPlayer === playerId : false;
-  const isActive = selectedUnit ? view.activeUnitId === selectedUnit.id : false;
-
-  const showKoladaPreview =
-    selectedUnit?.position &&
-    selectedUnit.heroId === EL_CID_COMPEADOR_ID &&
-    (hoveredAbilityId === EL_CID_KOLADA_ID || (isMyTurn && isActive));
-  if (showKoladaPreview && selectedUnit?.position) {
-    const kind: "aoe" | "aoeDisabled" = disabled ? "aoeDisabled" : "aoe";
-    for (let dc = -1; dc <= 1; dc += 1) {
-      for (let dr = -1; dr <= 1; dr += 1) {
-        if (dc === 0 && dr === 0) continue;
-        const col = selectedUnit.position.col + dc;
-        const row = selectedUnit.position.row + dr;
-        if (col < 0 || row < 0 || col >= size || row >= size) continue;
-        const viewPos = toViewCoord({ col, row });
-        aoeHighlights.set(coordKey(viewPos), kind);
-      }
-    }
-  }
 
   const carpetPreview =
     view.pendingAoEPreview?.abilityId === "kaiserCarpetStrike" ? view.pendingAoEPreview : null;

@@ -9,6 +9,7 @@ import {
   getHeroMeta,
   HERO_GROZNY_ID,
   initKnowledgeForOwners,
+  makePlayerView,
   makeAttackWinRng,
   coordKeys,
   resolvePendingWithChoice,
@@ -18,6 +19,51 @@ import {
   setupGroznyTyrantState,
   toBattleState,
 } from "../helpers/testUtils";
+
+function chooseGroznyOption(
+  state: ReturnType<typeof toBattleState>,
+  mode: "normal" | "invadeTime",
+  rng: any
+) {
+  assert(
+    state.pendingRoll?.kind === "groznyTyrantOptionChoice",
+    "expected Grozny Tyrant option choice"
+  );
+  return resolvePendingWithChoice(
+    state,
+    { type: "groznyTyrantOption", mode },
+    rng
+  );
+}
+
+function chooseGroznyAllyIfNeeded(
+  state: ReturnType<typeof toBattleState>,
+  targetId: string,
+  rng: any
+) {
+  if (state.pendingRoll?.kind !== "groznyTyrantAllyChoice") {
+    return { state, events: [] as GameEvent[] };
+  }
+  return resolvePendingWithChoice(
+    state,
+    { type: "groznyTyrantAlly", targetId },
+    rng
+  );
+}
+
+function chooseGroznyModeAndAlly(
+  state: ReturnType<typeof toBattleState>,
+  mode: "normal" | "invadeTime",
+  targetId: string,
+  rng: any
+) {
+  const modeChosen = chooseGroznyOption(state, mode, rng);
+  const allyChosen = chooseGroznyAllyIfNeeded(modeChosen.state, targetId, rng);
+  return {
+    state: allyChosen.state,
+    events: [...modeChosen.events, ...allyChosen.events],
+  };
+}
 export function testGroznyTyrantDoesNotTriggerIfOnlyBuffWouldMakeKillPossible() {
   const rng = new SeededRNG(740);
   const { state: baseState, grozny, commander, ally } = setupGroznyTyrantState();
@@ -85,11 +131,11 @@ export function testGroznyTyrantTriggersAndKillsWhenBaseDamageIsEnough() {
   );
   assert(
     startTrigger.state.pendingRoll,
-    "tyrant should request an attack-cell choice when eligible"
+    "tyrant should request a start-turn option choice when eligible"
   );
   assert(
-    startTrigger.state.pendingRoll?.kind === "groznyTyrantAttackCellChoice",
-    "tyrant should let the player choose the attack cell"
+    startTrigger.state.pendingRoll?.kind === "groznyTyrantOptionChoice",
+    "tyrant should let the player choose how to resolve the flow"
   );
 
   const resolved = resolveAllPendingRollsWithEvents(startTrigger.state, rng);
@@ -151,18 +197,46 @@ export function testGroznyTyrantPromptsForAttackCellAndSkipsWithoutSpending() {
   );
 
   assert(
-    started.state.pendingRoll?.kind === "groznyTyrantAttackCellChoice",
-    "tyrant should prompt for an attack cell"
+    started.state.pendingRoll?.kind === "groznyTyrantOptionChoice",
+    "tyrant should prompt for a mode before showing attack cells"
   );
-  const context = started.state.pendingRoll.context as {
+  const modeContext = started.state.pendingRoll.context as {
     allowSkip?: boolean;
+    options?: ("normal" | "invadeTime")[];
+  };
+  assert(modeContext.allowSkip === true, "initial tyrant prompt should allow skip");
+  assert(
+    (modeContext.options ?? []).includes("invadeTime"),
+    "combined tyrant + invade time option should be offered when legal"
+  );
+  assert(
+    !(modeContext.options ?? []).includes("normal"),
+    "normal tyrant option should be omitted when normal movement cannot reach an attack origin"
+  );
+
+  const afterMode = chooseGroznyModeAndAlly(
+    started.state,
+    "invadeTime",
+    ally.id,
+    rng
+  );
+  assert(
+    afterMode.state.pendingRoll?.kind === "groznyTyrantAttackCellChoice",
+    "choosing invade time should expose attack-origin cells"
+  );
+  const context = afterMode.state.pendingRoll.context as {
+    allowSkip?: boolean;
+    mode?: "normal" | "invadeTime";
+    targetId?: string;
     options?: {
       targetId: string;
       mode: "normal" | "invadeTime";
       position: { col: number; row: number };
     }[];
   };
-  assert(context.allowSkip === true, "initial tyrant prompt should allow skip");
+  assert(context.allowSkip === true, "attack-cell prompt should keep skip legal");
+  assert(context.mode === "invadeTime", "attack-cell prompt should keep selected mode");
+  assert(context.targetId === ally.id, "attack-cell prompt should keep selected ally");
   const invadeOptions = (context.options ?? []).filter(
     (option) => option.targetId === ally.id && option.mode === "invadeTime"
   );
@@ -238,8 +312,26 @@ export function testGroznyTyrantInvadeTimeOptionSpendsOnlyAfterCellChoice() {
     rng
   );
   assert(
-    started.state.pendingRoll?.kind === "groznyTyrantAttackCellChoice",
-    "tyrant should prompt before spending invade time"
+    started.state.pendingRoll?.kind === "groznyTyrantOptionChoice",
+    "tyrant should prompt for mode before spending invade time"
+  );
+  const afterMode = chooseGroznyModeAndAlly(
+    started.state,
+    "invadeTime",
+    ally.id,
+    rng
+  );
+  assert(
+    afterMode.state.pendingRoll?.kind === "groznyTyrantAttackCellChoice",
+    "tyrant should prompt for attack-origin cell after selecting mode"
+  );
+  assert(
+    afterMode.state.units[grozny.id].charges[ABILITY_GROZNY_INVADE_TIME] === 3,
+    "selecting invade time mode should not spend charges"
+  );
+  assert(
+    afterMode.state.units[grozny.id].turn.moveUsed === false,
+    "selecting invade time mode should not spend the move slot"
   );
 
   const choice = {
@@ -248,7 +340,7 @@ export function testGroznyTyrantInvadeTimeOptionSpendsOnlyAfterCellChoice() {
     targetId: ally.id,
     position: { col: 5, row: 5 },
   };
-  const chosen = resolvePendingWithChoice(started.state, choice, rng);
+  const chosen = resolvePendingWithChoice(afterMode.state, choice, rng);
 
   assert(
     chosen.state.pendingRoll?.kind === "attack_attackerRoll",
@@ -297,6 +389,335 @@ export function testGroznyTyrantInvadeTimeOptionSpendsOnlyAfterCellChoice() {
   console.log(
     "grozny_tyrant_invade_time_option_spends_only_after_cell_choice passed"
   );
+}
+
+
+export function testGroznyTyrantOmitsInvadeTimeWhenUnavailableButKeepsNormal() {
+  const rng = new SeededRNG(743);
+  const { state: baseState, grozny, ally } = setupGroznyTyrantState();
+
+  let state = baseState;
+  state = setUnit(state, grozny.id, {
+    position: { col: 4, row: 4 },
+    attack: 2,
+    hp: 4,
+    charges: {
+      ...grozny.charges,
+      [ABILITY_GROZNY_INVADE_TIME]: 0,
+    },
+  });
+  state = setUnit(state, ally.id, { position: { col: 4, row: 7 }, hp: 2 });
+  state = { ...toBattleState(state, "P1", grozny.id), activeUnitId: null };
+  state = initKnowledgeForOwners(state);
+
+  const started = applyAction(
+    state,
+    { type: "unitStartTurn", unitId: grozny.id } as any,
+    rng
+  );
+
+  assert(
+    started.state.pendingRoll?.kind === "groznyTyrantOptionChoice",
+    "tyrant should still prompt when normal mode is legal"
+  );
+  const context = started.state.pendingRoll.context as {
+    options?: ("normal" | "invadeTime")[];
+  };
+  assert.deepEqual(
+    context.options,
+    ["normal"],
+    "invade time option should be omitted when charges are unavailable"
+  );
+
+  const normal = chooseGroznyModeAndAlly(started.state, "normal", ally.id, rng);
+  assert(
+    normal.state.pendingRoll?.kind === "groznyTyrantAttackCellChoice",
+    "normal tyrant should proceed to attack-cell choice"
+  );
+  assert(
+    (normal.state.pendingRoll.context as { mode?: string }).mode === "normal",
+    "normal tyrant attack-cell choice should preserve selected mode"
+  );
+
+  console.log(
+    "grozny_tyrant_omits_invade_time_when_unavailable_but_keeps_normal passed"
+  );
+}
+
+
+export function testGroznyTyrantOffersNormalAndInvadeTimeWhenBothLegal() {
+  const rng = new SeededRNG(746);
+  const { state: baseState, grozny, ally } = setupGroznyTyrantState();
+
+  let state = baseState;
+  state = setUnit(state, grozny.id, {
+    position: { col: 4, row: 4 },
+    attack: 2,
+    hp: 4,
+    charges: {
+      ...grozny.charges,
+      [ABILITY_GROZNY_INVADE_TIME]: 3,
+    },
+  });
+  state = setUnit(state, ally.id, { position: { col: 4, row: 7 }, hp: 2 });
+  state = { ...toBattleState(state, "P1", grozny.id), activeUnitId: null };
+  state = initKnowledgeForOwners(state);
+
+  const started = applyAction(
+    state,
+    { type: "unitStartTurn", unitId: grozny.id } as any,
+    rng
+  );
+
+  assert(
+    started.state.pendingRoll?.kind === "groznyTyrantOptionChoice",
+    "tyrant should prompt when both normal and invade time modes are legal"
+  );
+  const context = started.state.pendingRoll.context as {
+    options?: ("normal" | "invadeTime")[];
+  };
+  assert.deepEqual(
+    context.options,
+    ["normal", "invadeTime"],
+    "prompt should expose normal and invade time only when both are independently legal"
+  );
+
+  const normal = chooseGroznyModeAndAlly(started.state, "normal", ally.id, rng);
+  assert(
+    normal.state.pendingRoll?.kind === "groznyTyrantAttackCellChoice",
+    "normal mode should proceed to attack-origin selection"
+  );
+  assert(
+    (normal.state.pendingRoll.context as { mode?: string }).mode === "normal",
+    "normal mode should be preserved in the attack-origin context"
+  );
+  assert(
+    normal.state.units[grozny.id].charges[ABILITY_GROZNY_INVADE_TIME] === 3,
+    "choosing normal mode should not spend invade time charges"
+  );
+
+  console.log(
+    "grozny_tyrant_offers_normal_and_invade_time_when_both_legal passed"
+  );
+}
+
+
+export function testGroznyTyrantRequiresAllyChoiceWhenMultipleQualify() {
+  const rng = new SeededRNG(744);
+  const { state: baseState, grozny, commander, ally } = setupGroznyTyrantState();
+
+  let state = baseState;
+  state = setUnit(state, grozny.id, {
+    position: { col: 4, row: 4 },
+    attack: 2,
+    hp: 4,
+    charges: {
+      ...grozny.charges,
+      [ABILITY_GROZNY_INVADE_TIME]: 0,
+    },
+  });
+  state = setUnit(state, ally.id, { position: { col: 4, row: 7 }, hp: 2 });
+  state = setUnit(state, commander.id, { position: { col: 7, row: 4 }, hp: 2 });
+  state = { ...toBattleState(state, "P1", grozny.id), activeUnitId: null };
+  state = initKnowledgeForOwners(state);
+
+  const started = applyAction(
+    state,
+    { type: "unitStartTurn", unitId: grozny.id } as any,
+    rng
+  );
+  const afterMode = chooseGroznyOption(started.state, "normal", rng);
+
+  assert(
+    afterMode.state.pendingRoll?.kind === "groznyTyrantAllyChoice",
+    "multiple legal allies should require an ally choice"
+  );
+  const allyContext = afterMode.state.pendingRoll.context as { options?: string[] };
+  assert(
+    (allyContext.options ?? []).includes(ally.id) &&
+      (allyContext.options ?? []).includes(commander.id),
+    "ally choice should include every finishable ally"
+  );
+
+  const afterAlly = resolvePendingWithChoice(
+    afterMode.state,
+    { type: "groznyTyrantAlly", targetId: commander.id },
+    rng
+  );
+  assert(
+    afterAlly.state.pendingRoll?.kind === "groznyTyrantAttackCellChoice",
+    "chosen ally should advance to attack-cell choice"
+  );
+  assert(
+    (afterAlly.state.pendingRoll.context as { targetId?: string }).targetId ===
+      commander.id,
+    "attack-cell choice should preserve the selected ally"
+  );
+
+  console.log("grozny_tyrant_requires_ally_choice_when_multiple_qualify passed");
+}
+
+
+export function testGroznyTyrantRejectsInvalidOriginWithoutSpending() {
+  const rng = makeAttackWinRng(1);
+  const { state: baseState, grozny, ally } = setupGroznyTyrantState();
+
+  let state = baseState;
+  state = setUnit(state, grozny.id, {
+    position: { col: 0, row: 0 },
+    attack: 2,
+    hp: 4,
+    charges: {
+      ...grozny.charges,
+      [ABILITY_GROZNY_INVADE_TIME]: 3,
+    },
+  });
+  state = setUnit(state, ally.id, { position: { col: 4, row: 4 }, hp: 2 });
+  state = { ...toBattleState(state, "P1", grozny.id), activeUnitId: null };
+  state = initKnowledgeForOwners(state);
+
+  const started = applyAction(
+    state,
+    { type: "unitStartTurn", unitId: grozny.id } as any,
+    rng
+  );
+  const afterMode = chooseGroznyModeAndAlly(
+    started.state,
+    "invadeTime",
+    ally.id,
+    rng
+  );
+  const pendingId = afterMode.state.pendingRoll?.id;
+
+  const invalid = resolvePendingWithChoice(
+    afterMode.state,
+    {
+      type: "groznyTyrantAttackCell",
+      mode: "invadeTime",
+      targetId: ally.id,
+      position: { col: 0, row: 1 },
+    },
+    rng
+  );
+
+  assert(
+    invalid.state.pendingRoll?.id === pendingId,
+    "invalid origin should leave the pending choice unresolved"
+  );
+  assert.equal(invalid.events.length, 0, "invalid origin should emit no events");
+  assert(
+    invalid.state.units[grozny.id].charges[ABILITY_GROZNY_INVADE_TIME] === 3,
+    "invalid origin should not spend invade time charges"
+  );
+  assert(
+    invalid.state.units[grozny.id].turn.moveUsed === false,
+    "invalid origin should not spend the move slot"
+  );
+
+  console.log("grozny_tyrant_rejects_invalid_origin_without_spending passed");
+}
+
+
+export function testGroznyTyrantDuplicateOriginResolutionDoesNotRepeatEffects() {
+  const rng = makeAttackWinRng(1);
+  const { state: baseState, grozny, ally } = setupGroznyTyrantState();
+
+  let state = baseState;
+  state = setUnit(state, grozny.id, {
+    position: { col: 0, row: 0 },
+    attack: 2,
+    hp: 4,
+    charges: {
+      ...grozny.charges,
+      [ABILITY_GROZNY_INVADE_TIME]: 3,
+    },
+  });
+  state = setUnit(state, ally.id, { position: { col: 4, row: 4 }, hp: 2 });
+  state = { ...toBattleState(state, "P1", grozny.id), activeUnitId: null };
+  state = initKnowledgeForOwners(state);
+
+  const started = applyAction(
+    state,
+    { type: "unitStartTurn", unitId: grozny.id } as any,
+    rng
+  );
+  const afterMode = chooseGroznyModeAndAlly(
+    started.state,
+    "invadeTime",
+    ally.id,
+    rng
+  );
+  const pendingId = afterMode.state.pendingRoll!.id;
+  const choice = {
+    type: "groznyTyrantAttackCell" as const,
+    mode: "invadeTime" as const,
+    targetId: ally.id,
+    position: { col: 5, row: 5 },
+  };
+  const chosen = resolvePendingWithChoice(afterMode.state, choice, rng);
+  const duplicate = applyAction(
+    chosen.state,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: pendingId,
+      player: "P1",
+      choice,
+    } as any,
+    rng
+  );
+
+  assert.equal(duplicate.events.length, 0, "stale duplicate resolution should emit no events");
+  assert(
+    duplicate.state.units[grozny.id].charges[ABILITY_GROZNY_INVADE_TIME] === 0,
+    "duplicate resolution should not spend charges again"
+  );
+  assert(
+    duplicate.state.units[grozny.id].position?.col === 5 &&
+      duplicate.state.units[grozny.id].position?.row === 5,
+    "duplicate resolution should not move Grozny again"
+  );
+
+  console.log("grozny_tyrant_duplicate_origin_resolution_does_not_repeat_effects passed");
+}
+
+
+export function testGroznyTyrantPendingChoiceProjectsOnlyToOwner() {
+  const rng = new SeededRNG(745);
+  const { state: baseState, grozny, ally } = setupGroznyTyrantState();
+
+  let state = baseState;
+  state = setUnit(state, grozny.id, {
+    position: { col: 0, row: 0 },
+    attack: 2,
+    hp: 4,
+    charges: {
+      ...grozny.charges,
+      [ABILITY_GROZNY_INVADE_TIME]: 3,
+    },
+  });
+  state = setUnit(state, ally.id, { position: { col: 4, row: 4 }, hp: 2 });
+  state = { ...toBattleState(state, "P1", grozny.id), activeUnitId: null };
+  state = initKnowledgeForOwners(state);
+
+  const started = applyAction(
+    state,
+    { type: "unitStartTurn", unitId: grozny.id } as any,
+    rng
+  );
+
+  const ownerView = makePlayerView(started.state, "P1");
+  const opponentView = makePlayerView(started.state, "P2");
+
+  assert(
+    ownerView.pendingRoll?.kind === "groznyTyrantOptionChoice",
+    "owner projection should restore unresolved Grozny choice"
+  );
+  assert(
+    opponentView.pendingRoll === null,
+    "opponent projection should not expose Grozny private pending choice"
+  );
+
+  console.log("grozny_tyrant_pending_choice_projects_only_to_owner passed");
 }
 
 

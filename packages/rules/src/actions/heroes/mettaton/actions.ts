@@ -9,7 +9,7 @@ import {
   ABILITY_METTATON_POPPINS,
   setCharges,
 } from "../../../abilities";
-import { evAbilityUsed } from "../../../core";
+import { HERO_METTATON_ID } from "../../../heroes";
 import { resolveAoE } from "../../../aoe";
 import {
   collectMettatonFinalChordTargetIds,
@@ -130,7 +130,18 @@ export function applyMettatonEx(
   return {
     state: nextState,
     events: [
-      evAbilityUsed({ unitId: unlocked.id, abilityId: ABILITY_METTATON_EX }),
+      {
+        type: "unitTransformed",
+        unitId: unlocked.id,
+        fromHeroId: HERO_METTATON_ID,
+        toHeroId: HERO_METTATON_ID,
+        fromFormId: HERO_METTATON_ID,
+        toFormId: ABILITY_METTATON_EX,
+        reason: "mettatonThreshold",
+        abilityId: ABILITY_METTATON_EX,
+        rating: getMettatonRating(unlocked),
+        ratingSpent: false,
+      },
     ],
   };
 }
@@ -217,7 +228,18 @@ export function applyMettatonNeo(
   return {
     state: nextState,
     events: [
-      evAbilityUsed({ unitId: withBerserkCounter.id, abilityId: ABILITY_METTATON_NEO }),
+      {
+        type: "unitTransformed",
+        unitId: withBerserkCounter.id,
+        fromHeroId: HERO_METTATON_ID,
+        toHeroId: HERO_METTATON_ID,
+        fromFormId: ABILITY_METTATON_EX,
+        toFormId: ABILITY_METTATON_NEO,
+        reason: "mettatonThreshold",
+        abilityId: ABILITY_METTATON_NEO,
+        rating: getMettatonRating(withBerserkCounter),
+        ratingSpent: false,
+      },
     ],
   };
 }

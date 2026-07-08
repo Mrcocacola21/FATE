@@ -78,7 +78,11 @@ import {
 } from "../../actions/heroes/griffith";
 import { resolveOdinSleipnirDestinationChoice } from "../../actions/heroes/odin";
 import { resolveChargedImpulseTargetChoice } from "../../actions/chargedImpulses";
-import { resolveGroznyTyrantAttackCellChoice } from "../../actions/heroes/grozny";
+import {
+  resolveGroznyTyrantAllyChoice,
+  resolveGroznyTyrantAttackCellChoice,
+  resolveGroznyTyrantOptionChoice,
+} from "../../actions/heroes/grozny";
 import {
   resolveLechyGuideTravelerPlacement,
   resolveLechyStormStartTurnRoll,
@@ -148,6 +152,8 @@ export const HERO_PENDING_ROLL_KINDS = [
   "chikatiloFalseTrailRevealChoice",
   "falseTrailExplosion_attackerRoll",
   "falseTrailExplosion_defenderRoll",
+  "groznyTyrantOptionChoice",
+  "groznyTyrantAllyChoice",
   "groznyTyrantAttackCellChoice",
   "lechyGuideTravelerPlacement",
   "lechyStormStartTurnRoll",
@@ -306,6 +312,15 @@ export function resolveHeroPendingRollCase(
       return resolveFalseTrailExplosionAttackerRoll(state, pending, rng);
     case "falseTrailExplosion_defenderRoll":
       return resolveFalseTrailExplosionDefenderRoll(state, pending, rng);
+    case "groznyTyrantOptionChoice":
+      return resolveGroznyTyrantOptionChoice(
+        state,
+        pending,
+        action.choice,
+        rng
+      );
+    case "groznyTyrantAllyChoice":
+      return resolveGroznyTyrantAllyChoice(state, pending, action.choice, rng);
     case "groznyTyrantAttackCellChoice":
       return resolveGroznyTyrantAttackCellChoice(
         state,

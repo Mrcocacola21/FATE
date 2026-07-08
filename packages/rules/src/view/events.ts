@@ -240,12 +240,53 @@ function projectEventForRecipient(
         isUnitVisibleToRecipient(state, event.targetId, recipient)
         ? [event]
         : [];
+    case "lokiChickenGroupApplied": {
+      if (
+        event.lokiId &&
+        !isUnitVisibleToRecipient(state, event.lokiId, recipient)
+      ) {
+        return [];
+      }
+      const targetIds = filterVisibleUnitIds(event.targetIds);
+      if (targetIds.length === 0) return [];
+      return [
+        {
+          ...event,
+          targetIds,
+        } as GameEvent,
+      ];
+    }
     case "controlledAttackDeclared":
       return isUnitVisibleToRecipient(state, event.controllerUnitId, recipient) &&
         isUnitVisibleToRecipient(state, event.controlledUnitId, recipient) &&
         isUnitVisibleToRecipient(state, event.targetId, recipient)
         ? [event]
         : [];
+    case "unitTransformed":
+      return isUnitVisibleToRecipient(state, event.unitId, recipient)
+        ? [event]
+        : [redactedEvent(event.type)];
+    case "riverBoatmanGranted":
+      return isUnitVisibleToRecipient(state, event.riverId, recipient) ? [event] : [];
+    case "riverBoatResolved":
+      return isUnitVisibleToRecipient(state, event.riverId, recipient) &&
+        isUnitVisibleToRecipient(state, event.passengerId, recipient)
+        ? [event]
+        : [];
+    case "riverTraLaLaResolved": {
+      if (
+        !isUnitVisibleToRecipient(state, event.riverId, recipient) ||
+        !isUnitVisibleToRecipient(state, event.targetId, recipient)
+      ) {
+        return [];
+      }
+      return [
+        {
+          ...event,
+          touchedAttackerIds: filterVisibleUnitIds(event.touchedAttackerIds),
+        } as GameEvent,
+      ];
+    }
     default:
       return PUBLIC_EVENT_TYPES.has(event.type) ? [event] : [redactedEvent(event.type)];
   }

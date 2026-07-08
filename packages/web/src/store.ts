@@ -699,6 +699,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       actionMode: null,
       targetingMode: null,
       moveOptions: null,
+      hoveredAbilityId: null,
       hoverPreview: null,
       pendingLokiLaughtOption: null,
     })),

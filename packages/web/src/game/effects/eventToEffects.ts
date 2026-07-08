@@ -326,6 +326,18 @@ export function effectsFromGameEvent(
             ),
           ]
         : [];
+    case "unitTransformed": {
+      const coord = visibleUnitCoord(
+        event.unitId,
+        context.view,
+        context.previousPositions,
+      );
+      return [
+        { kind: "boardPulse", tone: "magic", durationMs: 1000 },
+        ...unitFlash(event.unitId, "buff", context),
+        ...floatingLabel(coord, "status", "status"),
+      ];
+    }
     case "chikatiloMarkApplied":
       return typeof event.targetId === "string"
         ? [
@@ -337,6 +349,34 @@ export function effectsFromGameEvent(
             ),
           ]
         : [];
+    case "lokiChickenGroupApplied":
+      return Array.isArray(event.targetIds)
+        ? event.targetIds.flatMap((targetId) => [
+            ...unitFlash(targetId, "debuff", context),
+            ...floatingLabel(
+              visibleUnitCoord(targetId, context.view, context.previousPositions),
+              "status",
+              "status",
+            ),
+          ])
+        : [];
+    case "riverBoatmanGranted":
+      return unitFlash(event.riverId, "buff", context);
+    case "riverBoatResolved":
+      return [
+        ...unitFlash(event.riverId, "buff", context, 550),
+        ...unitFlash(event.passengerId, "buff", context, 550),
+      ];
+    case "riverTraLaLaResolved":
+      return [
+        ...unitFlash(event.riverId, "buff", context, 550),
+        ...unitFlash(event.targetId, "debuff", context, 700),
+        ...(Array.isArray(event.touchedAttackerIds)
+          ? event.touchedAttackerIds.flatMap((attackerId) =>
+              unitFlash(attackerId, "buff", context, 500),
+            )
+          : []),
+      ];
     case "berserkerDefenseChosen": {
       const coord = visibleUnitCoord(
         event.defenderId,

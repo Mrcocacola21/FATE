@@ -18,6 +18,11 @@ function eventTone(event: GameEvent): string {
       return "border-sky-300/80 bg-sky-50/75 text-sky-700 dark:border-sky-900/70 dark:bg-sky-950/30 dark:text-sky-300";
     case "abilityUsed":
     case "chikatiloMarkApplied":
+    case "lokiChickenGroupApplied":
+    case "unitTransformed":
+    case "riverBoatmanGranted":
+    case "riverBoatResolved":
+    case "riverTraLaLaResolved":
     case "chargesUpdated":
     case "rollRequested":
     case "initiativeRollRequested":
@@ -42,7 +47,21 @@ function eventGlyph(event: GameEvent): string {
       return "+";
     case "abilityUsed":
     case "chikatiloMarkApplied":
+    case "lokiChickenGroupApplied":
+    case "unitTransformed":
+    case "riverBoatmanGranted":
+    case "riverBoatResolved":
+    case "riverTraLaLaResolved":
     case "chargesUpdated":
+      if (event.type === "lokiChickenGroupApplied") return "C";
+      if (event.type === "unitTransformed") return "T";
+      if (
+        event.type === "riverBoatmanGranted" ||
+        event.type === "riverBoatResolved" ||
+        event.type === "riverTraLaLaResolved"
+      ) {
+        return "R";
+      }
       return event.type === "chikatiloMarkApplied" ? "M" : "✦";
     case "rollRequested":
     case "initiativeRollRequested":
@@ -63,9 +82,51 @@ interface EventLogProps {
   clientLog: string[];
 }
 
+function searchEventRevealedUnit(event: GameEvent, unitId: string): boolean {
+  return (
+    event.type === "searchStealth" &&
+    Array.isArray(event.rolls) &&
+    event.rolls.some((roll) => roll.targetId === unitId && roll.success === true)
+  );
+}
+
+function shouldDisplayEvent(event: GameEvent, allEvents: GameEvent[]): boolean {
+  if (
+    event.type === "stealthRevealed" &&
+    event.reason === "search" &&
+    allEvents.some((candidate) => searchEventRevealedUnit(candidate, event.unitId))
+  ) {
+    return false;
+  }
+  if (
+    event.type === "unitDied" &&
+    allEvents.some(
+      (candidate) =>
+        candidate.type === "unitTransformed" &&
+        candidate.unitId === event.unitId &&
+        candidate.reason === "griffithFemtoRebirth",
+    )
+  ) {
+    return false;
+  }
+  if (
+    event.type === "abilityUsed" &&
+    allEvents.some(
+      (candidate) =>
+        candidate.type === "unitTransformed" &&
+        candidate.unitId === event.unitId &&
+        candidate.abilityId === event.abilityId,
+    )
+  ) {
+    return false;
+  }
+  return true;
+}
+
 export const EventLog: FC<EventLogProps> = ({ events, clientLog }) => {
   const { language, t } = useI18n();
-  const items = events.slice(-30).reverse();
+  const displayEvents = events.filter((event) => shouldDisplayEvent(event, events));
+  const items = displayEvents.slice(-30).reverse();
   const clientItems = clientLog.slice(-8).reverse();
 
   return (
@@ -76,7 +137,7 @@ export const EventLog: FC<EventLogProps> = ({ events, clientLog }) => {
           <h3 className="section-title mt-1">{t("log.title")}</h3>
         </div>
         <span className="status-pill border-slate-200 bg-slate-100 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
-          {t("log.events", { count: events.length })}
+          {t("log.events", { count: displayEvents.length })}
         </span>
       </div>
       <div className="scroll-panel max-h-[34rem] overflow-auto p-3 text-xs">
@@ -94,7 +155,7 @@ export const EventLog: FC<EventLogProps> = ({ events, clientLog }) => {
           </div>
         ) : null}
         {items.map((event, index) => {
-          const sequence = Math.max(1, events.length - index);
+          const sequence = Math.max(1, displayEvents.length - index);
           if (event.type === "attackResolved") {
             const result =
               event.hit === true

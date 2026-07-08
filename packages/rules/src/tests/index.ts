@@ -209,6 +209,12 @@ import {
   testGroznyTyrantTriggersAndKillsWhenBaseDamageIsEnough,
   testGroznyTyrantPromptsForAttackCellAndSkipsWithoutSpending,
   testGroznyTyrantInvadeTimeOptionSpendsOnlyAfterCellChoice,
+  testGroznyTyrantOmitsInvadeTimeWhenUnavailableButKeepsNormal,
+  testGroznyTyrantOffersNormalAndInvadeTimeWhenBothLegal,
+  testGroznyTyrantRequiresAllyChoiceWhenMultipleQualify,
+  testGroznyTyrantRejectsInvalidOriginWithoutSpending,
+  testGroznyTyrantDuplicateOriginResolutionDoesNotRepeatEffects,
+  testGroznyTyrantPendingChoiceProjectsOnlyToOwner,
   testGroznyTyrantRequiresReachableAttackPositionWithinRoll6,
   testGroznyTyrantChainGrantsExtraMovesFromSecondKill,
   testGroznyInvadeTimeRequiresFullChargesAndConsumesMove,
@@ -621,6 +627,12 @@ function main(): void {
   testGroznyTyrantTriggersAndKillsWhenBaseDamageIsEnough();
   testGroznyTyrantPromptsForAttackCellAndSkipsWithoutSpending();
   testGroznyTyrantInvadeTimeOptionSpendsOnlyAfterCellChoice();
+  testGroznyTyrantOmitsInvadeTimeWhenUnavailableButKeepsNormal();
+  testGroznyTyrantOffersNormalAndInvadeTimeWhenBothLegal();
+  testGroznyTyrantRequiresAllyChoiceWhenMultipleQualify();
+  testGroznyTyrantRejectsInvalidOriginWithoutSpending();
+  testGroznyTyrantDuplicateOriginResolutionDoesNotRepeatEffects();
+  testGroznyTyrantPendingChoiceProjectsOnlyToOwner();
   testGroznyTyrantRequiresReachableAttackPositionWithinRoll6();
   testGroznyTyrantChainGrantsExtraMovesFromSecondKill();
   testGroznyInvadeTimeRequiresFullChargesAndConsumesMove();

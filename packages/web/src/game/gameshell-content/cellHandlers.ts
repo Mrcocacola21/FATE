@@ -78,6 +78,8 @@ export interface CellClickContext {
   riverTraLaLaDropDestinationKeys: Set<string>;
   isChikatiloPlacement: boolean;
   chikatiloPlacementKeys: Set<string>;
+  isGroznyTyrantAllyChoice: boolean;
+  groznyTyrantAllyOptionIds: string[];
   isGroznyTyrantAttackCellChoice: boolean;
   groznyTyrantAttackCellOptions: GroznyTyrantAttackCellOption[];
   groznyTyrantAttackCellKeys: Set<string>;
@@ -177,6 +179,8 @@ export function createCellClickHandler(context: CellClickContext) {
     riverTraLaLaDropDestinationKeys,
     isChikatiloPlacement,
     chikatiloPlacementKeys,
+    isGroznyTyrantAllyChoice,
+    groznyTyrantAllyOptionIds,
     isGroznyTyrantAttackCellChoice,
     groznyTyrantAttackCellOptions,
     groznyTyrantAttackCellKeys,
@@ -415,14 +419,24 @@ export function createCellClickHandler(context: CellClickContext) {
       return;
     }
 
+    if (isGroznyTyrantAllyChoice) {
+      const target = getUnitAt(view, col, row);
+      if (!target || !pendingRoll) return;
+      if (!groznyTyrantAllyOptionIds.includes(target.id)) return;
+      sendAction({
+        type: "resolvePendingRoll",
+        pendingRollId: pendingRoll.id,
+        choice: { type: "groznyTyrantAlly", targetId: target.id },
+      } as GameAction);
+      return;
+    }
+
     if (isGroznyTyrantAttackCellChoice) {
       const key = coordKey({ col, row });
       if (!groznyTyrantAttackCellKeys.has(key) || !pendingRoll) return;
-      const options = groznyTyrantAttackCellOptions.filter(
+      const selected = groznyTyrantAttackCellOptions.find(
         (option) => coordKey(option.position) === key
       );
-      const selected =
-        options.find((option) => option.mode === "normal") ?? options[0];
       if (!selected) return;
       sendAction({
         type: "resolvePendingRoll",

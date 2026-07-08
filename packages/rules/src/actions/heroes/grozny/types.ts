@@ -14,9 +14,28 @@ export type TyrantAttackCellOption = {
   mode: TyrantMode;
 };
 
+export interface TyrantOptionChoiceContext extends Record<string, unknown> {
+  groznyId: string;
+  options: TyrantMode[];
+  kills: number;
+  remaining: number;
+  allowSkip: boolean;
+}
+
+export interface TyrantAllyChoiceContext extends Record<string, unknown> {
+  groznyId: string;
+  mode: TyrantMode;
+  options: string[];
+  kills: number;
+  remaining: number;
+  allowSkip: boolean;
+}
+
 export interface TyrantAttackCellChoiceContext
   extends Record<string, unknown> {
   groznyId: string;
+  mode: TyrantMode;
+  targetId: string;
   options: TyrantAttackCellOption[];
   kills: number;
   remaining: number;

@@ -127,6 +127,80 @@ test("event formatter localizes known and unknown events safely", () => {
   assert.match(formatEventMessage(fullMark, "en", translate), /hidden-target/);
   assert.match(formatEventMessage(fullMark, "en", translate), /turn start/);
 
+  assert.equal(
+    formatEventMessage(
+      {
+        type: "unitTransformed",
+        unitId: "griffith",
+        fromHeroId: "griffith",
+        toHeroId: "femto",
+        reason: "griffithFemtoRebirth",
+        abilityId: "griffithFemtoRebirth",
+      } as GameEvent,
+      "en",
+      translate,
+    ),
+    "Griffith was reborn as Femto.",
+  );
+  assert.equal(
+    formatEventMessage(
+      {
+        type: "unitTransformed",
+        unitId: "mettaton",
+        fromHeroId: "mettaton",
+        toHeroId: "mettaton",
+        toFormId: "mettatonNeo",
+        reason: "mettatonThreshold",
+        abilityId: "mettatonNeo",
+        rating: 10,
+        ratingSpent: false,
+      } as GameEvent,
+      "en",
+      translate,
+    ),
+    "Mettaton reached the Rating threshold and transformed into Mettaton NEO. Rating was not spent.",
+  );
+  assert.equal(
+    formatEventMessage(
+      {
+        type: "lokiChickenGroupApplied",
+        lokiId: "loki",
+        targetIds: ["Papyrus", "Frisk", "Undyne", "Asgore"],
+        abilityId: "lokiLaught",
+      } as GameEvent,
+      "en",
+      translate,
+    ),
+    "Loki's Good Joke turned 4 units into chickens: Papyrus, Frisk, Undyne, and Asgore.",
+  );
+  assert.equal(
+    formatEventMessage(
+      {
+        type: "searchStealth",
+        unitId: "Frisk",
+        mode: "move",
+        rolls: [{ targetId: "Chikatilo", roll: 5, success: true }],
+      } as GameEvent,
+      "en",
+      translate,
+    ),
+    "Frisk used Movement to Search and revealed Chikatilo.",
+  );
+  assert.equal(
+    formatEventMessage(
+      {
+        type: "riverBoatResolved",
+        riverId: "river",
+        passengerId: "Papyrus",
+        riverDestination: { col: 4, row: 4 },
+        dropDestination: { col: 4, row: 5 },
+      } as GameEvent,
+      "en",
+      translate,
+    ),
+    "River Person transported Papyrus to 4:5.",
+  );
+
   setLanguage("en", { setItem: () => undefined });
 });
 

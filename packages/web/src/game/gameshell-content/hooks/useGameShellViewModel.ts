@@ -31,6 +31,8 @@ export function useGameShellViewModel() {
     isRiverTraLaLaDropDestinationChoice:
       core.pending.isRiverTraLaLaDropDestinationChoice,
     isChikatiloPlacement: core.pending.isChikatiloPlacement,
+    isGroznyTyrantAllyChoice:
+      core.pending.isGroznyTyrantAllyChoice,
     isGroznyTyrantAttackCellChoice:
       core.pending.isGroznyTyrantAttackCellChoice,
     isGuideTravelerPlacement: core.pending.isGuideTravelerPlacement,
@@ -141,6 +143,8 @@ export function useGameShellViewModel() {
     isRiverTraLaLaDropDestinationChoice:
       core.pending.isRiverTraLaLaDropDestinationChoice,
     isChikatiloPlacement: core.pending.isChikatiloPlacement,
+    isGroznyTyrantAllyChoice:
+      core.pending.isGroznyTyrantAllyChoice,
     isGroznyTyrantAttackCellChoice:
       core.pending.isGroznyTyrantAttackCellChoice,
     isGuideTravelerPlacement: core.pending.isGuideTravelerPlacement,

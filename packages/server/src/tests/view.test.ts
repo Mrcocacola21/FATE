@@ -6,6 +6,7 @@ import {
   createDefaultArmy,
   createEmptyGame,
   HERO_CHIKATILO_ID,
+  HERO_LOKI_ID,
   makePlayerView,
   makeSpectatorView,
   projectEventsForRecipient,
@@ -276,11 +277,80 @@ function testChikatiloMarkEventProjectionRedactsPrivateTarget() {
   console.log("view_chikatilo_mark_event_projection_redacts_private_target passed");
 }
 
+function testGroupedSemanticEventProjectionFiltersHiddenTargets() {
+  let state = createEmptyGame();
+  state = attachArmy(
+    state,
+    createDefaultArmy("P1", { trickster: HERO_LOKI_ID })
+  );
+  state = attachArmy(state, createDefaultArmy("P2"));
+
+  const loki = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.heroId === HERO_LOKI_ID
+  );
+  const visibleTarget = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "knight"
+  );
+  const hiddenTarget = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "assassin"
+  );
+  assert(loki, "loki should exist");
+  assert(visibleTarget, "visible target should exist");
+  assert(hiddenTarget, "hidden target should exist");
+
+  state = setUnit(state, loki.id, { position: { col: 4, row: 4 } });
+  state = setUnit(state, visibleTarget.id, { position: { col: 5, row: 4 } });
+  state = setUnit(state, hiddenTarget.id, {
+    position: { col: 3, row: 4 },
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
+
+  const event: GameEvent = {
+    type: "lokiChickenGroupApplied",
+    lokiId: loki.id,
+    targetIds: [visibleTarget.id, hiddenTarget.id],
+    abilityId: "lokiLaught",
+  };
+
+  const ownerEvents = projectEventsForRecipient(state, [event], "P1");
+  const opponentEvents = projectEventsForRecipient(state, [event], "P2");
+  const spectatorEvents = projectEventsForRecipient(state, [event], "spectator");
+
+  const ownerEvent = ownerEvents.find(
+    (item) => item.type === "lokiChickenGroupApplied"
+  ) as Extract<GameEvent, { type: "lokiChickenGroupApplied" }> | undefined;
+  const opponentEvent = opponentEvents.find(
+    (item) => item.type === "lokiChickenGroupApplied"
+  ) as Extract<GameEvent, { type: "lokiChickenGroupApplied" }> | undefined;
+  const spectatorEvent = spectatorEvents.find(
+    (item) => item.type === "lokiChickenGroupApplied"
+  ) as Extract<GameEvent, { type: "lokiChickenGroupApplied" }> | undefined;
+
+  assert.deepEqual(
+    ownerEvent?.targetIds,
+    [visibleTarget.id],
+    "owner should not receive unknown hidden target ids in grouped events"
+  );
+  assert(
+    opponentEvent?.targetIds.includes(hiddenTarget.id),
+    "target owner should still receive their own hidden target in grouped events"
+  );
+  assert.deepEqual(
+    spectatorEvent?.targetIds,
+    [visibleTarget.id],
+    "spectator should not receive hidden target ids in grouped events"
+  );
+
+  console.log("view_grouped_semantic_event_projection_filters_hidden_targets passed");
+}
+
 function main() {
   testHiddenEnemyOmitted();
   testKnownStealthedEnemyUsesLastKnown();
   testChikatiloTrackedHiddenTargetProjectionIsPrivate();
   testChikatiloMarkEventProjectionRedactsPrivateTarget();
+  testGroupedSemanticEventProjectionFiltersHiddenTargets();
 }
 
 main();

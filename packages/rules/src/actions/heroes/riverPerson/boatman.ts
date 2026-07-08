@@ -132,7 +132,14 @@ export function applyRiverBoatman(
         [updatedRiver.id]: updatedRiver,
       },
     },
-    events: committed.events,
+    events: [
+      ...committed.events,
+      {
+        type: "riverBoatmanGranted" as const,
+        riverId: updatedRiver.id,
+        extraMoves: updatedRiver.riverBoatmanExtraMoves ?? 0,
+      },
+    ],
   };
 }
 
@@ -445,6 +452,14 @@ export function resolveRiverBoatDropDestination(
       events = [...events, ...stakeResult.events];
     }
   }
+
+  events.push({
+    type: "riverBoatResolved" as const,
+    riverId: river.id,
+    passengerId: ally.id,
+    riverDestination: movedRiver.position!,
+    dropDestination: movedAlly.position!,
+  });
 
   return { state: nextState, events };
 }

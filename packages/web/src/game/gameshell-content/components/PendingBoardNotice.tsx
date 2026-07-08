@@ -1,6 +1,7 @@
-import type { Coord } from "rules";
+import type { Coord, ResolveRollChoice } from "rules";
 import { getPendingRollLabel } from "../helpers";
 import { useI18n } from "../../../i18n";
+import { getHeroDisplayName } from "../../../i18n/displayMetadata";
 
 interface PendingBoardNoticeProps {
   pendingRollKind: string;
@@ -17,6 +18,8 @@ interface PendingBoardNoticeProps {
   isForestMoveCheck: boolean;
   isDuelistChoice: boolean;
   isChikatiloPlacement: boolean;
+  isGroznyTyrantOptionChoice: boolean;
+  isGroznyTyrantAllyChoice: boolean;
   isGroznyTyrantAttackCellChoice: boolean;
   groznyTyrantAllowSkip: boolean;
   isGuideTravelerPlacement: boolean;
@@ -40,6 +43,7 @@ interface PendingBoardNoticeProps {
   isChikatiloRevealChoice: boolean;
   isChikatiloDecoyChoice: boolean;
   isFriskPrecisionStrikeTargetChoice: boolean;
+  onResolveChoice: (choice: ResolveRollChoice) => void;
   onResolveSkip: () => void;
   onConfirmStakePlacement: () => void;
   onClearStakeSelections: () => void;
@@ -73,6 +77,16 @@ function stringValue(value: unknown): string | null {
   return typeof value === "string" && value.length > 0 ? value : null;
 }
 
+type GroznyTyrantMode = "normal" | "invadeTime";
+
+function groznyModeList(value: unknown): GroznyTyrantMode[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter(
+    (item): item is GroznyTyrantMode =>
+      item === "normal" || item === "invadeTime"
+  );
+}
+
 export function PendingBoardNotice({
   pendingRollKind,
   pendingRollContext = {},
@@ -88,6 +102,8 @@ export function PendingBoardNotice({
   isForestMoveCheck,
   isDuelistChoice,
   isChikatiloPlacement,
+  isGroznyTyrantOptionChoice,
+  isGroznyTyrantAllyChoice,
   isGroznyTyrantAttackCellChoice,
   groznyTyrantAllowSkip,
   isGuideTravelerPlacement,
@@ -111,6 +127,7 @@ export function PendingBoardNotice({
   isChikatiloRevealChoice,
   isChikatiloDecoyChoice,
   isFriskPrecisionStrikeTargetChoice,
+  onResolveChoice,
   onResolveSkip,
   onConfirmStakePlacement,
   onClearStakeSelections,
@@ -120,6 +137,14 @@ export function PendingBoardNotice({
 }: PendingBoardNoticeProps) {
   const { language, t } = useI18n();
   const p = (en: string, uk: string) => (language === "uk" ? uk : en);
+  const groznyModeOptions = groznyModeList(pendingRollContext.options);
+  const groznyAllowSkip = pendingRollContext.allowSkip === true;
+  const groznySelectedMode =
+    pendingRollContext.mode === "invadeTime"
+      ? p("Tyrant with Invade Time", "Тиран разом із Часом вторгнення")
+      : pendingRollContext.mode === "normal"
+      ? p("Tyrant normally", "Тиран звичайним способом")
+      : null;
   const soulContext =
     pendingRollContext.soulResult &&
     typeof pendingRollContext.soulResult === "object"
@@ -259,15 +284,91 @@ export function PendingBoardNotice({
             )}
           </div>
         </div>
+      ) : isGroznyTyrantOptionChoice ? (
+        <div>
+          <div className="font-semibold">
+            {getHeroDisplayName("grozny", "Ivan Grozny", language)}
+          </div>
+          <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
+            {p(
+              "Choose how to use Tyrant before any resources are spent.",
+              "Оберіть спосіб використання Тирана до витрати ресурсів.",
+            )}
+          </div>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {groznyModeOptions.includes("invadeTime") ? (
+              <button
+                className="rounded-lg bg-emerald-600 px-3 py-1 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-emerald-800/50 dark:text-slate-100 dark:hover:bg-emerald-700/60"
+                onClick={() =>
+                  onResolveChoice({
+                    type: "groznyTyrantOption",
+                    mode: "invadeTime",
+                  })
+                }
+              >
+                {p(
+                  "Use Tyrant with Invade Time",
+                  "Використати Тирана разом із Часом вторгнення",
+                )}
+              </button>
+            ) : null}
+            {groznyModeOptions.includes("normal") ? (
+              <button
+                className="rounded-lg bg-emerald-600 px-3 py-1 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-emerald-800/50 dark:text-slate-100 dark:hover:bg-emerald-700/60"
+                onClick={() =>
+                  onResolveChoice({
+                    type: "groznyTyrantOption",
+                    mode: "normal",
+                  })
+                }
+              >
+                {p(
+                  "Use Tyrant normally",
+                  "Використати Тирана звичайним способом",
+                )}
+              </button>
+            ) : null}
+            {groznyAllowSkip ? (
+              <button
+                className="rounded-lg bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
+                onClick={onResolveSkip}
+              >
+                {t("common.skip")}
+              </button>
+            ) : null}
+          </div>
+        </div>
+      ) : isGroznyTyrantAllyChoice ? (
+        <div>
+          <div className="font-semibold">
+            {p("Tyrant: choose ally", "Тиран: оберіть союзника")}
+          </div>
+          <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
+            {groznySelectedMode ? `${groznySelectedMode}. ` : ""}
+            {p(
+              "Select a highlighted allied figure.",
+              "Оберіть підсвічену союзну фігуру.",
+            )}
+          </div>
+          {groznyAllowSkip ? (
+            <button
+              className="mt-2 rounded-lg bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
+              onClick={onResolveSkip}
+            >
+              {t("common.skip")}
+            </button>
+          ) : null}
+        </div>
       ) : isGroznyTyrantAttackCellChoice ? (
         <div>
           <div className="font-semibold">
             {p("Tyrant: choose attack cell", "Тиран: оберіть клітинку атаки")}
           </div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
+            {groznySelectedMode ? `${groznySelectedMode}. ` : ""}
             {p(
-              "Оберіть підсвічену клітинку, з якої атакує Грозний, або пропустіть.",
-              "Select the highlighted cell Grozny attacks from, or skip.",
+              "Select the highlighted cell Ivan Grozny attacks from.",
+              "Оберіть підсвічену клітинку, з якої Іван Грозний атакує.",
             )}
           </div>
           {groznyTyrantAllowSkip && (

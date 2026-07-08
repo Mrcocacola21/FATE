@@ -69,6 +69,8 @@ export type RollKind =
   | "falseTrailExplosion_attackerRoll"
   | "falseTrailExplosion_defenderRoll"
   | "chikatiloFalseTrailRevealChoice"
+  | "groznyTyrantOptionChoice"
+  | "groznyTyrantAllyChoice"
   | "groznyTyrantAttackCellChoice"
   | "lechyGuideTravelerPlacement"
   | "lechyStormStartTurnRoll"
@@ -163,6 +165,8 @@ export const ALL_ROLL_KINDS = [
   "falseTrailExplosion_attackerRoll",
   "falseTrailExplosion_defenderRoll",
   "chikatiloFalseTrailRevealChoice",
+  "groznyTyrantOptionChoice",
+  "groznyTyrantAllyChoice",
   "groznyTyrantAttackCellChoice",
   "lechyGuideTravelerPlacement",
   "lechyStormStartTurnRoll",

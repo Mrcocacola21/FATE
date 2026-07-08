@@ -382,6 +382,8 @@ const PENDING_ROLL_LABELS_UK: Record<string, string> = {
   vladForest_defenderRoll: "Захист від Лісу",
   vladForest_berserkerDefenseChoice: "Захист берсерка від Лісу",
   chikatiloFalseTrailPlacement: "Розміщення Хибного сліду",
+  groznyTyrantOptionChoice: "Вибір Тирана",
+  groznyTyrantAllyChoice: "Ціль Тирана",
   groznyTyrantAttackCellChoice: "Клітинка атаки Тирана",
   lechyGuideTravelerPlacement: "Розміщення Провідника",
   lechyStormStartTurnRoll: "Кидок Бурі на початку ходу",
@@ -540,6 +542,10 @@ export function getPendingRollLabel(kind?: string | null, language: "en" | "uk" 
       return "Forest berserker defense choice";
     case "chikatiloFalseTrailPlacement":
       return "False Trail placement";
+    case "groznyTyrantOptionChoice":
+      return "Tyrant option";
+    case "groznyTyrantAllyChoice":
+      return "Tyrant ally target";
     case "groznyTyrantAttackCellChoice":
       return "Tyrant attack cell";
     case "lechyGuideTravelerPlacement":

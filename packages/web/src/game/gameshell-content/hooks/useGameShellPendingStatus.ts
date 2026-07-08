@@ -37,6 +37,10 @@ export function useGameShellPendingStatus({
   const isDuelistChoice = pendingRoll?.kind === "elCidDuelistChoice";
   const isChikatiloPlacement =
     pendingRoll?.kind === "chikatiloFalseTrailPlacement";
+  const isGroznyTyrantOptionChoice =
+    pendingRoll?.kind === "groznyTyrantOptionChoice";
+  const isGroznyTyrantAllyChoice =
+    pendingRoll?.kind === "groznyTyrantAllyChoice";
   const isGroznyTyrantAttackCellChoice =
     pendingRoll?.kind === "groznyTyrantAttackCellChoice";
   const isGuideTravelerPlacement =
@@ -103,6 +107,7 @@ export function useGameShellPendingStatus({
     isForestMoveDestination ||
     isIntimidateChoice ||
     isChikatiloPlacement ||
+    isGroznyTyrantAllyChoice ||
     isGroznyTyrantAttackCellChoice ||
     isGuideTravelerPlacement ||
     isJebeKhansShooterTargetChoice ||
@@ -263,6 +268,8 @@ export function useGameShellPendingStatus({
     isForestMoveDestination,
     isDuelistChoice,
     isChikatiloPlacement,
+    isGroznyTyrantOptionChoice,
+    isGroznyTyrantAllyChoice,
     isGroznyTyrantAttackCellChoice,
     isGuideTravelerPlacement,
     isJebeKhansShooterTargetChoice,

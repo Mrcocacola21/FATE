@@ -298,6 +298,17 @@ export function testRiverPersonBoatCarryFlowAndConstraints() {
       riverAfter.riverBoatCarryAllyId === undefined,
       "Boat should not leave stale carried state"
     );
+    assert(
+      dropped.events.some(
+        (event) =>
+          event.type === "riverBoatResolved" &&
+          event.riverId === river.id &&
+          event.passengerId === carriedAlly.id &&
+          event.dropDestination.col === chosenDrop.col &&
+          event.dropDestination.row === chosenDrop.row
+      ),
+      "completed Boat should emit one semantic transport event after final drop"
+    );
   }
 
   console.log("river_person_boat_carry_flow_and_constraints passed");
@@ -333,6 +344,15 @@ export function testRiverPersonBoatmanConvertsActionToMoveAndSupportsCarry() {
     assert(
       !usedBoatman.state.pendingRoll,
       "Boatman should not start passenger selection or movement"
+    );
+    assert(
+      usedBoatman.events.some(
+        (event) =>
+          event.type === "riverBoatmanGranted" &&
+          event.riverId === river.id &&
+          event.extraMoves === 1
+      ),
+      "Boatman should emit a semantic extra-movement grant event"
     );
 
     const duplicate = applyAction(
@@ -694,6 +714,24 @@ export function testRiverPersonTraLaLaGatingAndFlow() {
   assert(
     queue.every((entry) => entry.consumeSlots === false),
     "Tra-la-la touched attacks should not consume touched units' normal action slots"
+  );
+  const tralalaEvent = dropped.events.find(
+    (event) => event.type === "riverTraLaLaResolved"
+  );
+  assert(
+    tralalaEvent?.type === "riverTraLaLaResolved" &&
+      tralalaEvent.riverId === river.id &&
+      tralalaEvent.targetId === target.id &&
+      tralalaEvent.dropDestination.col === chosenDrop.col &&
+      tralalaEvent.dropDestination.row === chosenDrop.row,
+    "completed Tra-la-la should emit one semantic drag/drop event"
+  );
+  assert(
+    tralalaEvent?.type === "riverTraLaLaResolved" &&
+      uniqueAttackers.every((unitId) =>
+        tralalaEvent.touchedAttackerIds.includes(unitId)
+      ),
+    "Tra-la-la event should list eligible touched attackers"
   );
 
   const resolved = resolveAllPendingRollsWithEvents(

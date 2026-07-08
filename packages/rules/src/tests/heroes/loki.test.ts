@@ -583,11 +583,22 @@ export function testLokiOptionFiveMassChickenFailOnlyAlliesAndEnemies() {
     "great Loki joke should not deal damage to failed defenders"
   );
   const chickenEvents = applied.events.filter(
-    (event) => event.type === "lokiChickenApplied"
+    (event) => event.type === "lokiChickenGroupApplied"
   );
   assert(
-    chickenEvents.length === chickenedTargets.length,
-    "great Loki joke should log each chicken conversion"
+    chickenEvents.length === 1,
+    "great Loki joke should log one grouped chicken conversion"
+  );
+  const groupedEvent = chickenEvents[0];
+  assert(
+    groupedEvent?.type === "lokiChickenGroupApplied" &&
+      groupedEvent.targetIds.length === chickenedTargets.length &&
+      chickenedTargets.every((unitId) => groupedEvent.targetIds.includes(unitId)),
+    "grouped chicken event should list only failed defenders"
+  );
+  assert(
+    !applied.events.some((event) => event.type === "lokiChickenApplied"),
+    "great Loki joke should not spam one chicken event per target"
   );
 
   console.log("loki_option_five_mass_chicken_fail_only_allies_and_enemies passed");

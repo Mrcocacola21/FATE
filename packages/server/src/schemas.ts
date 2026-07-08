@@ -84,6 +84,14 @@ const ResolveRollChoiceSchema = z.union([
     position: CoordSchema,
   }),
   z.object({
+    type: z.literal("groznyTyrantOption"),
+    mode: z.union([z.literal("normal"), z.literal("invadeTime")]),
+  }),
+  z.object({
+    type: z.literal("groznyTyrantAlly"),
+    targetId: z.string().min(1),
+  }),
+  z.object({
     type: z.literal("groznyTyrantAttackCell"),
     mode: z.union([z.literal("normal"), z.literal("invadeTime")]),
     targetId: z.string().min(1),

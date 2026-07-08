@@ -42,6 +42,8 @@ export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm }) => {
           isForestMoveCheck={vm.isForestMoveCheck}
           isDuelistChoice={vm.isDuelistChoice}
           isChikatiloPlacement={vm.isChikatiloPlacement}
+          isGroznyTyrantOptionChoice={vm.isGroznyTyrantOptionChoice}
+          isGroznyTyrantAllyChoice={vm.isGroznyTyrantAllyChoice}
           isGroznyTyrantAttackCellChoice={vm.isGroznyTyrantAttackCellChoice}
           groznyTyrantAllowSkip={vm.groznyTyrantAllowSkip}
           isGuideTravelerPlacement={vm.isGuideTravelerPlacement}
@@ -67,6 +69,13 @@ export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm }) => {
           isChikatiloRevealChoice={vm.isChikatiloRevealChoice}
           isChikatiloDecoyChoice={vm.isChikatiloDecoyChoice}
           isFriskPrecisionStrikeTargetChoice={vm.isFriskPrecisionStrikeTargetChoice}
+          onResolveChoice={(choice) => {
+            vm.sendAction({
+              type: "resolvePendingRoll",
+              pendingRollId: vm.pendingRoll.id,
+              choice,
+            } as GameAction);
+          }}
           onResolveSkip={() => {
             vm.sendAction({
               type: "resolvePendingRoll",

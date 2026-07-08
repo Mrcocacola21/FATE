@@ -75,10 +75,14 @@ export function applyGriffithFemtoRebirth(
     unit: reborn,
     transformed: true,
     events: [
-      evAbilityUsed({
+      {
+        type: "unitTransformed",
         unitId: reborn.id,
+        fromHeroId: HERO_GRIFFITH_ID,
+        toHeroId: HERO_FEMTO_ID,
+        reason: "griffithFemtoRebirth",
         abilityId: ABILITY_GRIFFITH_FEMTO_REBIRTH,
-      }),
+      },
     ],
   };
 }

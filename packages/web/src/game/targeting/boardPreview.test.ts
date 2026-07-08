@@ -11,6 +11,8 @@ import type {
 import {
   ASGORE_FIRE_PARADE_ID,
   CHIKATILO_ASSASSIN_MARK_ID,
+  EL_CID_COMPEADOR_ID,
+  EL_CID_KOLADA_ID,
   GENGHIS_KHAN_KHANS_DECREE_ID,
   GUTS_ARBALET_ID,
   GUTS_CANNON_ID,
@@ -311,6 +313,196 @@ test("active targeting preview overrides unrelated hover preview and cancel clea
     hoveredAbilityId: null,
   });
   assert.equal(canceled, null);
+});
+
+test("selecting El Cid without hovered or active ability shows no radius preview", () => {
+  const elCid = unit({
+    id: "el-cid",
+    owner: "P1",
+    heroId: EL_CID_COMPEADOR_ID,
+    class: "knight",
+    position: { col: 4, row: 4 },
+  });
+  const preview = selectBoardPreview({
+    gameView: makeView([elCid]),
+    viewerPlayerId: "P1",
+    selectedUnitId: elCid.id,
+    actionMode: null,
+    hoverActionMode: null,
+    allowActionHoverPreview: false,
+    hoveredAbilityId: null,
+  });
+
+  assert.equal(preview, null);
+});
+
+test("El Cid Kolada hover preview appears and ending hover removes it", () => {
+  const elCid = unit({
+    id: "el-cid",
+    owner: "P1",
+    heroId: EL_CID_COMPEADOR_ID,
+    class: "knight",
+    position: { col: 4, row: 4 },
+  });
+  const view = makeView([elCid]);
+
+  const hovered = selectBoardPreview({
+    gameView: view,
+    viewerPlayerId: "P1",
+    selectedUnitId: elCid.id,
+    actionMode: null,
+    hoverActionMode: null,
+    allowActionHoverPreview: false,
+    hoveredAbilityId: EL_CID_KOLADA_ID,
+  });
+
+  assert.equal(hovered?.kind, "area");
+  assert.equal(hasKind(hovered, { col: 5, row: 4 }, "area"), true);
+
+  const cleared = selectBoardPreview({
+    gameView: view,
+    viewerPlayerId: "P1",
+    selectedUnitId: elCid.id,
+    actionMode: null,
+    hoverActionMode: null,
+    allowActionHoverPreview: false,
+    hoveredAbilityId: null,
+  });
+
+  assert.equal(cleared, null);
+});
+
+test("switching from another hero to El Cid does not retain prior hover preview", () => {
+  const chikatilo = unit({
+    id: "chikatilo",
+    owner: "P1",
+    heroId: "chikatilo",
+    class: "assassin",
+    position: { col: 2, row: 2 },
+  });
+  const elCid = unit({
+    id: "el-cid",
+    owner: "P1",
+    heroId: EL_CID_COMPEADOR_ID,
+    class: "knight",
+    position: { col: 4, row: 4 },
+  });
+  const enemy = unit({ id: "enemy", owner: "P2", position: { col: 3, row: 2 } });
+  const view = makeView([chikatilo, elCid, enemy], {
+    abilitiesByUnitId: {
+      [chikatilo.id]: [
+        ability({
+          id: CHIKATILO_ASSASSIN_MARK_ID,
+          targetRange: 2,
+        }),
+      ],
+    },
+  });
+
+  const prior = selectBoardPreview({
+    gameView: view,
+    viewerPlayerId: "P1",
+    selectedUnitId: chikatilo.id,
+    actionMode: null,
+    hoverActionMode: null,
+    allowActionHoverPreview: false,
+    hoveredAbilityId: CHIKATILO_ASSASSIN_MARK_ID,
+  });
+  assert.equal(prior?.kind, "radius");
+
+  const selectedElCid = selectBoardPreview({
+    gameView: view,
+    viewerPlayerId: "P1",
+    selectedUnitId: elCid.id,
+    actionMode: null,
+    hoverActionMode: null,
+    allowActionHoverPreview: false,
+    hoveredAbilityId: null,
+  });
+  assert.equal(selectedElCid, null);
+});
+
+test("Grozny ally choice preview highlights projected legal allies", () => {
+  const grozny = unit({
+    id: "grozny",
+    owner: "P1",
+    heroId: "ivanGrozny",
+    class: "berserker",
+    position: { col: 0, row: 0 },
+  });
+  const ally = unit({
+    id: "ally",
+    owner: "P1",
+    class: "spearman",
+    position: { col: 4, row: 4 },
+  });
+  const preview = buildPendingPreview(
+    makeView([grozny, ally], {
+      pendingRoll: {
+        id: "roll",
+        player: "P1",
+        kind: "groznyTyrantAllyChoice",
+        context: {
+          groznyId: grozny.id,
+          mode: "invadeTime",
+          options: [ally.id],
+        },
+      },
+    }),
+  );
+
+  assert.equal(preview?.kind, "multiStep");
+  assert.deepEqual(validTargetIds(preview), ["ally"]);
+  assert.equal(hasKind(preview, ally.position!, "validTarget"), true);
+  assert.equal(hasKind(preview, grozny.position!, "source"), true);
+});
+
+test("Grozny attack-origin preview highlights every legal projected origin cell", () => {
+  const grozny = unit({
+    id: "grozny",
+    owner: "P1",
+    heroId: "ivanGrozny",
+    class: "berserker",
+    position: { col: 0, row: 0 },
+  });
+  const ally = unit({
+    id: "ally",
+    owner: "P1",
+    class: "spearman",
+    position: { col: 4, row: 4 },
+  });
+  const preview = buildPendingPreview(
+    makeView([grozny, ally], {
+      pendingRoll: {
+        id: "roll",
+        player: "P1",
+        kind: "groznyTyrantAttackCellChoice",
+        context: {
+          groznyId: grozny.id,
+          targetId: ally.id,
+          mode: "invadeTime",
+          options: [
+            {
+              targetId: ally.id,
+              mode: "invadeTime",
+              position: { col: 4, row: 3 },
+            },
+            {
+              targetId: ally.id,
+              mode: "invadeTime",
+              position: { col: 5, row: 4 },
+            },
+          ],
+        },
+      },
+    }),
+  );
+
+  assert.equal(preview?.kind, "multiStep");
+  assert.deepEqual(validTargetIds(preview), ["ally"]);
+  assert.equal(hasKind(preview, { col: 4, row: 3 }, "validMove"), true);
+  assert.equal(hasKind(preview, { col: 5, row: 4 }, "validMove"), true);
+  assert.equal(hasKind(preview, ally.position!, "validTarget"), true);
 });
 
 test("unknown hidden enemy does not appear as a line blocker", () => {

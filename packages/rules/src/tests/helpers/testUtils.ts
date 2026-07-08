@@ -204,6 +204,18 @@ export function resolvePendingRollOnce(
       ? { type: "ruleCharge", abilityId: firstOption }
       : pending.kind === "courtForcedAppearanceDestination" && firstOption
       ? { type: "ruleCell", position: firstOption }
+      : pending.kind === "groznyTyrantOptionChoice" &&
+        (firstOption === "normal" || firstOption === "invadeTime")
+      ? {
+          type: "groznyTyrantOption",
+          mode: firstOption,
+        }
+      : pending.kind === "groznyTyrantAllyChoice" &&
+        typeof firstOption === "string"
+      ? {
+          type: "groznyTyrantAlly",
+          targetId: firstOption,
+        }
       : pending.kind === "groznyTyrantAttackCellChoice" &&
         firstOption &&
         typeof firstOption === "object" &&

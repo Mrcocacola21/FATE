@@ -251,19 +251,29 @@ export function testGriffithFemtoRebirthOnDeath() {
   assert(deathEvent, "Griffith death event should still be emitted");
   const rebirthEvent = events.find(
     (event) =>
-      event.type === "abilityUsed" &&
+      event.type === "unitTransformed" &&
       event.unitId === griffith.id &&
-      event.abilityId === ABILITY_GRIFFITH_FEMTO_REBIRTH
+      event.reason === "griffithFemtoRebirth" &&
+      event.toHeroId === HERO_FEMTO_ID
   );
-  assert(rebirthEvent, "Femto rebirth ability event should be emitted");
+  assert(rebirthEvent, "Femto rebirth transformation event should be emitted");
   assert(
     events.filter(
+      (event) =>
+        event.type === "unitTransformed" &&
+        event.unitId === griffith.id &&
+        event.reason === "griffithFemtoRebirth"
+    ).length === 1,
+    "Femto rebirth transformation should be emitted exactly once"
+  );
+  assert(
+    !events.some(
       (event) =>
         event.type === "abilityUsed" &&
         event.unitId === griffith.id &&
         event.abilityId === ABILITY_GRIFFITH_FEMTO_REBIRTH
-    ).length === 1,
-    "Femto rebirth should be emitted exactly once"
+    ),
+    "Femto rebirth should not be logged as a manual ability use"
   );
 
   const ended = applyAction(
