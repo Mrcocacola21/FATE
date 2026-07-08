@@ -307,6 +307,25 @@ export function testAsgoreSoulParadePatienceAttackAndTempStealth() {
     rolled.state.pendingRoll?.kind === "asgoreSoulParadePatienceTargetChoice",
     "Soul Parade roll=1 should request Patience target"
   );
+  const soulEvent = rolled.events.find(
+    (event) => event.type === "asgoreSoulParadeResolved"
+  ) as Extract<GameEvent, { type: "asgoreSoulParadeResolved" }> | undefined;
+  assert(soulEvent, "Soul Parade roll should emit readable result event");
+  assert(
+    soulEvent.roll === 1 &&
+      soulEvent.soulId === "patience" &&
+      soulEvent.effectDescription.length > 0,
+    "Soul Parade event should include roll, soul, and effect description"
+  );
+  const patienceContext = rolled.state.pendingRoll?.context as
+    | { soulResult?: { roll?: number; soulId?: string; effectDescription?: string } }
+    | undefined;
+  assert(
+    patienceContext?.soulResult?.roll === 1 &&
+      patienceContext.soulResult.soulId === "patience" &&
+      !!patienceContext.soulResult.effectDescription,
+    "Patience pending choice should preserve the resolved Soul Parade result"
+  );
   assert(
     rolled.state.units[asgore.id].charges[ABILITY_ASGORE_SOUL_PARADE] === 3,
     "Patience target selection should not spend Soul Parade charges"
@@ -595,11 +614,15 @@ export function testAsgoreSoulParadeIntegrityPerseveranceKindnessJustice() {
     const target = Object.values(state.units).find(
       (unit) => unit.owner === "P2" && unit.class === "knight"
     )!;
+    const illegalTarget = Object.values(state.units).find(
+      (unit) => unit.owner === "P2" && unit.class === "rider"
+    )!;
     state = setUnit(state, asgore.id, {
       position: { col: 4, row: 4 },
       charges: { ...asgore.charges, [ABILITY_ASGORE_SOUL_PARADE]: 2 },
     });
     state = setUnit(state, target.id, { position: { col: 4, row: 6 } });
+    state = setUnit(state, illegalTarget.id, { position: { col: 5, row: 6 } });
     const started = startAsgoreSoulParadeTurn(state, asgore.id);
     const rolled = resolvePendingRollOnce(started.state, makeRngSequence([0.95])); // roll 6
     assert(
@@ -616,6 +639,27 @@ export function testAsgoreSoulParadeIntegrityPerseveranceKindnessJustice() {
     assert(
       justiceOptions.includes(target.id),
       "Justice target options should include archer-legal target"
+    );
+    const justiceContext = rolled.state.pendingRoll?.context as
+      | { soulResult?: { roll?: number; soulId?: string } }
+      | undefined;
+    assert(
+      justiceContext?.soulResult?.roll === 6 &&
+        justiceContext.soulResult.soulId === "justice",
+      "Justice pending choice should preserve the resolved Soul Parade result"
+    );
+    const illegalPicked = resolvePendingWithChoice(
+      rolled.state,
+      { type: "asgoreSoulParadeJusticeTarget", targetId: illegalTarget.id },
+      makeRngSequence([])
+    );
+    assert(
+      illegalPicked.state.pendingRoll?.kind === "asgoreSoulParadeJusticeTargetChoice",
+      "invalid Justice target should keep pending choice active"
+    );
+    assert(
+      illegalPicked.state.units[asgore.id].charges[ABILITY_ASGORE_SOUL_PARADE] === 3,
+      "invalid Justice target should not spend Soul Parade charges"
     );
     const picked = resolvePendingWithChoice(
       rolled.state,

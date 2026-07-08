@@ -8,6 +8,7 @@ import {
   Coord,
   createDefaultArmy,
   createEmptyGame,
+  GameEvent,
   GameState,
   getLegalAttackTargets,
   getUnitDefinition,
@@ -15,6 +16,7 @@ import {
   initKnowledgeForOwners,
   linePath,
   makeEmptyTurnEconomy,
+  makePlayerView,
   makeRngSequence,
   PlayerId,
   resolvePendingRollOnce,
@@ -597,7 +599,7 @@ export function testLechyConfuseTerrainPerSideMarkersAndReplacement() {
 
 
 export function testLechyStormGatingEffectsAndExemptions() {
-  const rngFail = makeRngSequence([0.01]);
+  const rngFail = makeRngSequence([0.01, 0.01]);
   let state = createEmptyGame();
   state = attachArmy(state, createDefaultArmy("P1", { trickster: HERO_LECHY_ID }));
   state = attachArmy(state, createDefaultArmy("P2"));
@@ -645,6 +647,27 @@ export function testLechyStormGatingEffectsAndExemptions() {
     res.state.units[lechy.id].turn.actionUsed === true,
     "storm should consume action slot"
   );
+  const stormStarted = res.events.find(
+    (event) => event.type === "lechyStormStarted"
+  ) as Extract<GameEvent, { type: "lechyStormStarted" }> | undefined;
+  assert(stormStarted, "storm activation should log duration roll");
+  assert(
+    stormStarted.roll === 1 && stormStarted.duration === 1,
+    "storm duration log should include raw roll and resolved duration"
+  );
+  assert(
+    res.state.arenaEffects?.some(
+      (effect) => effect.effectId === "storm" && effect.remaining === 1
+    ),
+    "storm duration should be stored in active arena effects"
+  );
+  const stormView = makePlayerView(res.state, "P1");
+  assert(
+    stormView.arenaEffects?.some(
+      (effect) => effect.effectId === "storm" && effect.remaining === 1
+    ),
+    "storm duration should survive player projection/reconnect"
+  );
 
   let stormState: GameState = {
     ...res.state,
@@ -672,6 +695,10 @@ export function testLechyStormGatingEffectsAndExemptions() {
     "storm should prompt for a start-turn d6 instead of auto-rolling"
   );
   assert(
+    damaged.state.activeUnitId === null,
+    "storm pending roll should block normal start-turn activation"
+  );
+  assert(
     damaged.state.units[enemy.id].hp === 5,
     "storm should not damage before its pending roll resolves"
   );
@@ -688,6 +715,11 @@ export function testLechyStormGatingEffectsAndExemptions() {
     "storm should damage non-exempt unit on failed roll"
   );
   assert(
+    stormResolved.state.units[enemy.id].stormStartTurnResolvedTurnNumber ===
+      stormResolved.state.turnNumber,
+    "storm roll resolution should mark the unit as resolved for this turn"
+  );
+  assert(
     stormResolved.events.some(
       (event) =>
         event.type === "lechyStormRollResult" &&
@@ -696,6 +728,16 @@ export function testLechyStormGatingEffectsAndExemptions() {
         event.damage === 1
     ),
     "storm should log the failed roll and damage"
+  );
+  const continued = applyAction(
+    stormResolved.state,
+    { type: "unitStartTurn", unitId: enemy.id } as any,
+    rngFail
+  );
+  assert(
+    continued.state.pendingRoll === null &&
+      continued.state.activeUnitId === enemy.id,
+    "unit should continue start turn after resolving Storm without rerolling"
   );
 
   let insideState: GameState = {

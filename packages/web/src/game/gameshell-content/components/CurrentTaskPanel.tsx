@@ -29,6 +29,7 @@ export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm }) => {
         <PendingBoardNotice
           className="mt-0"
           pendingRollKind={vm.pendingRoll.kind}
+          pendingRollContext={(vm.pendingRoll.context ?? {}) as Record<string, unknown>}
           pendingQueueCount={vm.pendingQueueCount}
           stakeSelections={vm.stakeSelections}
           stakeLimit={vm.stakeLimit}
@@ -45,9 +46,11 @@ export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm }) => {
           groznyTyrantAllowSkip={vm.groznyTyrantAllowSkip}
           isGuideTravelerPlacement={vm.isGuideTravelerPlacement}
           isRiverBoatCarryChoice={vm.isRiverBoatCarryChoice}
+          isRiverBoatDestinationChoice={vm.isRiverBoatDestinationChoice}
           isRiverBoatDropDestination={vm.isRiverBoatDropDestination}
           isRiverTraLaLaTargetChoice={vm.isRiverTraLaLaTargetChoice}
           isRiverTraLaLaDestinationChoice={vm.isRiverTraLaLaDestinationChoice}
+          isRiverTraLaLaDropDestinationChoice={vm.isRiverTraLaLaDropDestinationChoice}
           isJebeKhansShooterTargetChoice={vm.isJebeKhansShooterTargetChoice}
           isLokiLaughtChoice={vm.isLokiLaughtChoice}
           isLokiChickenTargetChoice={vm.isLokiChickenTargetChoice}

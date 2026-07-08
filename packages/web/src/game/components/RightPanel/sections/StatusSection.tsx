@@ -51,6 +51,17 @@ function publicBarClasses(state: ActionBarState) {
   return `rounded-lg border px-1.5 py-2 text-center text-[11px] font-bold ${byState[state]}`;
 }
 
+function arenaEffectName(effectId: string, t: ReturnType<typeof useI18n>["t"]): string {
+  return effectId === "storm" ? t("game.arenaEffectStorm") : effectId;
+}
+
+function arenaEffectDescription(
+  effectId: string,
+  t: ReturnType<typeof useI18n>["t"]
+): string {
+  return effectId === "storm" ? t("game.arenaEffectStormDescription") : "";
+}
+
 export const StatusSection: FC<StatusSectionProps> = ({
   view,
   selectedUnit,
@@ -68,6 +79,9 @@ export const StatusSection: FC<StatusSectionProps> = ({
   const battleStatusUnit =
     selectedUnit ?? (view.activeUnitId ? (view.units[view.activeUnitId] ?? null) : null);
   const publicBars = getPublicBattleActionBars(battleStatusUnit, view, pendingRoll);
+  const activeArenaEffects = Array.isArray(view.arenaEffects)
+    ? view.arenaEffects.filter((effect) => effect.remaining > 0)
+    : [];
 
   return (
     <PanelCard variant="hud" className="p-4">
@@ -142,6 +156,42 @@ export const StatusSection: FC<StatusSectionProps> = ({
         <p className="mt-3 text-xs leading-5 text-amber-700 dark:text-amber-300">
           {t("game.stormRestriction")}
         </p>
+      ) : null}
+      {activeArenaEffects.length > 0 ? (
+        <div
+          className="mt-4 rounded-lg border border-amber-300/70 bg-amber-50/80 p-3 text-xs text-amber-950 dark:border-amber-800/70 dark:bg-amber-950/30 dark:text-amber-100"
+          data-active-arena-effects
+        >
+          <div className="font-bold uppercase tracking-wider">
+            {t("game.activeArenaEffects")}
+          </div>
+          <div className="mt-2 space-y-2">
+            {activeArenaEffects.map((effect) => {
+              const sourceLabel =
+                effect.sourceUnitId && view.units[effect.sourceUnitId]
+                  ? effect.sourceUnitId
+                  : t("common.unknown");
+              return (
+                <div key={effect.id} className="rounded-md bg-white/60 p-2 dark:bg-black/20">
+                  <div className="font-semibold">
+                    {arenaEffectName(effect.effectId, t)}
+                  </div>
+                  <div className="mt-1">
+                    {t("game.arenaEffectSource", { source: sourceLabel })}
+                  </div>
+                  <div>
+                    {t("game.arenaEffectRemainingTurns", {
+                      count: Math.max(0, effect.remaining),
+                    })}
+                  </div>
+                  <div className="mt-1 leading-5">
+                    {arenaEffectDescription(effect.effectId, t)}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       ) : null}
       {forestMarkers.length > 0 ? (
         <p className="mt-2 break-words text-xs leading-5 text-emerald-700 dark:text-emerald-300">

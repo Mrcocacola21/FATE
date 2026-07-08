@@ -24,9 +24,12 @@ export function useGameShellViewModel() {
     isOdinSleipnirDestination: core.pending.isOdinSleipnirDestination,
     isChargedImpulseTargetChoice: core.pending.isChargedImpulseTargetChoice,
     isRiverBoatCarryChoice: core.pending.isRiverBoatCarryChoice,
+    isRiverBoatDestinationChoice: core.pending.isRiverBoatDestinationChoice,
     isRiverBoatDropDestination: core.pending.isRiverBoatDropDestination,
     isRiverTraLaLaTargetChoice: core.pending.isRiverTraLaLaTargetChoice,
     isRiverTraLaLaDestinationChoice: core.pending.isRiverTraLaLaDestinationChoice,
+    isRiverTraLaLaDropDestinationChoice:
+      core.pending.isRiverTraLaLaDropDestinationChoice,
     isChikatiloPlacement: core.pending.isChikatiloPlacement,
     isGroznyTyrantAttackCellChoice:
       core.pending.isGroznyTyrantAttackCellChoice,
@@ -131,9 +134,12 @@ export function useGameShellViewModel() {
     isOdinSleipnirDestination: core.pending.isOdinSleipnirDestination,
     isChargedImpulseTargetChoice: core.pending.isChargedImpulseTargetChoice,
     isRiverBoatCarryChoice: core.pending.isRiverBoatCarryChoice,
+    isRiverBoatDestinationChoice: core.pending.isRiverBoatDestinationChoice,
     isRiverBoatDropDestination: core.pending.isRiverBoatDropDestination,
     isRiverTraLaLaTargetChoice: core.pending.isRiverTraLaLaTargetChoice,
     isRiverTraLaLaDestinationChoice: core.pending.isRiverTraLaLaDestinationChoice,
+    isRiverTraLaLaDropDestinationChoice:
+      core.pending.isRiverTraLaLaDropDestinationChoice,
     isChikatiloPlacement: core.pending.isChikatiloPlacement,
     isGroznyTyrantAttackCellChoice:
       core.pending.isGroznyTyrantAttackCellChoice,

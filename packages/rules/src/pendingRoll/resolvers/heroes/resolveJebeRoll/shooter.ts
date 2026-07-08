@@ -2,11 +2,20 @@ import type { ApplyResult, GameState, PendingRoll, ResolveRollChoice } from "../
 import type { RNG } from "../../../../rng";
 import { rollD6 } from "../../../../rng";
 import { clearPendingRoll } from "../../../../core";
+import { ABILITY_JEBE_KHANS_SHOOTER } from "../../../../abilities";
+import { canAttackTarget } from "../../../../combat";
+import { commitAbilityCost } from "../../../../actions/abilityCosts";
 import type {
   JebeKhansShooterRicochetContext,
   JebeKhansShooterTargetChoiceContext,
 } from "../../../types";
 import { requestJebeKhansShooterAttack } from "../../core/resolveAttackRoll";
+
+function stringList(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === "string")
+    : [];
+}
 
 export function resolveJebeKhansShooterRicochetRoll(
   state: GameState,
@@ -19,15 +28,41 @@ export function resolveJebeKhansShooterRicochetRoll(
   if (!casterId || !initialTargetId) {
     return { state: clearPendingRoll(state), events: [] };
   }
+  const caster = state.units[casterId];
+  const target = state.units[initialTargetId];
+  if (
+    !caster ||
+    !caster.isAlive ||
+    !caster.position ||
+    !target ||
+    !target.isAlive ||
+    !target.position ||
+    target.owner === caster.owner ||
+    !canAttackTarget(state, caster, target)
+  ) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
+  const committed = commitAbilityCost(
+    state,
+    casterId,
+    ABILITY_JEBE_KHANS_SHOOTER
+  );
+  if (!committed.ok) return { state, events: [] };
 
   const ricochets = rollD6(rng);
   const totalAttacks = 1 + ricochets;
   return requestJebeKhansShooterAttack(
-    clearPendingRoll(state),
-    [],
+    clearPendingRoll(committed.state),
+    committed.events,
     casterId,
     initialTargetId,
-    totalAttacks
+    totalAttacks,
+    {
+      totalAttacks,
+      selectedTargetIds: [initialTargetId],
+      ricochetRoll: ricochets,
+    }
   );
 }
 
@@ -64,6 +99,13 @@ export function resolveJebeKhansShooterTargetChoice(
     [],
     casterId,
     selected,
-    remainingAttacks
+    remainingAttacks,
+    {
+      totalAttacks:
+        typeof ctx.totalAttacks === "number" ? ctx.totalAttacks : undefined,
+      selectedTargetIds: [...stringList(ctx.selectedTargetIds), selected],
+      ricochetRoll:
+        typeof ctx.ricochetRoll === "number" ? ctx.ricochetRoll : undefined,
+    }
   );
 }

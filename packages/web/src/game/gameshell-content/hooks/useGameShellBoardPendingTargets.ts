@@ -15,9 +15,11 @@ interface UseGameShellBoardPendingTargetsParams {
   isOdinSleipnirDestination: boolean;
   isChargedImpulseTargetChoice: boolean;
   isRiverBoatCarryChoice: boolean;
+  isRiverBoatDestinationChoice: boolean;
   isRiverBoatDropDestination: boolean;
   isRiverTraLaLaTargetChoice: boolean;
   isRiverTraLaLaDestinationChoice: boolean;
+  isRiverTraLaLaDropDestinationChoice: boolean;
   isChikatiloPlacement: boolean;
   isGroznyTyrantAttackCellChoice: boolean;
   isGuideTravelerPlacement: boolean;
@@ -64,9 +66,11 @@ export function useGameShellBoardPendingTargets({
   isOdinSleipnirDestination,
   isChargedImpulseTargetChoice,
   isRiverBoatCarryChoice,
+  isRiverBoatDestinationChoice,
   isRiverBoatDropDestination,
   isRiverTraLaLaTargetChoice,
   isRiverTraLaLaDestinationChoice,
+  isRiverTraLaLaDropDestinationChoice,
   isChikatiloPlacement,
   isGroznyTyrantAttackCellChoice,
   isGuideTravelerPlacement,
@@ -179,6 +183,15 @@ export function useGameShellBoardPendingTargets({
       ),
     [riverBoatCarryOptionIds, view]
   );
+  const riverBoatDestinationOptions = useMemo(() => {
+    if (!isRiverBoatDestinationChoice) return [] as Coord[];
+    const ctx = pendingRoll?.context as { options?: unknown } | undefined;
+    return normalizeCoordList(ctx?.options);
+  }, [isRiverBoatDestinationChoice, pendingRoll]);
+  const riverBoatDestinationKeys = useMemo(
+    () => new Set(riverBoatDestinationOptions.map(coordKey)),
+    [riverBoatDestinationOptions]
+  );
   const riverBoatDropDestinationOptions = useMemo(() => {
     if (!isRiverBoatDropDestination) return [] as Coord[];
     const ctx = pendingRoll?.context as { options?: unknown } | undefined;
@@ -212,6 +225,15 @@ export function useGameShellBoardPendingTargets({
   const riverTraLaLaDestinationKeys = useMemo(
     () => new Set(riverTraLaLaDestinationOptions.map(coordKey)),
     [riverTraLaLaDestinationOptions]
+  );
+  const riverTraLaLaDropDestinationOptions = useMemo(() => {
+    if (!isRiverTraLaLaDropDestinationChoice) return [] as Coord[];
+    const ctx = pendingRoll?.context as { options?: unknown } | undefined;
+    return normalizeCoordList(ctx?.options);
+  }, [isRiverTraLaLaDropDestinationChoice, pendingRoll]);
+  const riverTraLaLaDropDestinationKeys = useMemo(
+    () => new Set(riverTraLaLaDropDestinationOptions.map(coordKey)),
+    [riverTraLaLaDropDestinationOptions]
   );
 
   const chikatiloPlacementCoords = useMemo(() => {
@@ -309,12 +331,16 @@ export function useGameShellBoardPendingTargets({
     chargedImpulseTargetKeys,
     riverBoatCarryOptionIds,
     riverBoatCarryOptionKeys,
+    riverBoatDestinationOptions,
+    riverBoatDestinationKeys,
     riverBoatDropDestinationOptions,
     riverBoatDropDestinationKeys,
     riverTraLaLaTargetIds,
     riverTraLaLaTargetKeys,
     riverTraLaLaDestinationOptions,
     riverTraLaLaDestinationKeys,
+    riverTraLaLaDropDestinationOptions,
+    riverTraLaLaDropDestinationKeys,
     chikatiloPlacementCoords,
     chikatiloPlacementKeys,
     groznyTyrantAttackCellOptions,

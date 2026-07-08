@@ -50,6 +50,7 @@ export type ActionMode =
   | "jebeHailOfArrows"
   | "jebeKhansShooter"
   | "asgoreFireball"
+  | "asgoreFireParade"
   | "papyrusCoolGuy"
   | "hassanTrueEnemy"
   | "kaladinFifth"

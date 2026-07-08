@@ -39,12 +39,16 @@ export interface BuildHighlightedCellsArgs {
   chargedImpulseTargetOptions: Coord[];
   isRiverBoatCarryChoice: boolean;
   riverBoatCarryOptionKeys: Set<string>;
+  isRiverBoatDestinationChoice: boolean;
+  riverBoatDestinationOptions: Coord[];
   isRiverBoatDropDestination: boolean;
   riverBoatDropDestinationOptions: Coord[];
   isRiverTraLaLaTargetChoice: boolean;
   riverTraLaLaTargetKeys: Set<string>;
   isRiverTraLaLaDestinationChoice: boolean;
   riverTraLaLaDestinationOptions: Coord[];
+  isRiverTraLaLaDropDestinationChoice: boolean;
+  riverTraLaLaDropDestinationOptions: Coord[];
   isChikatiloPlacement: boolean;
   chikatiloPlacementCoords: Coord[];
   isGroznyTyrantAttackCellChoice: boolean;
@@ -123,12 +127,16 @@ export function buildHighlightedCells({
   chargedImpulseTargetOptions,
   isRiverBoatCarryChoice,
   riverBoatCarryOptionKeys,
+  isRiverBoatDestinationChoice,
+  riverBoatDestinationOptions,
   isRiverBoatDropDestination,
   riverBoatDropDestinationOptions,
   isRiverTraLaLaTargetChoice,
   riverTraLaLaTargetKeys,
   isRiverTraLaLaDestinationChoice,
   riverTraLaLaDestinationOptions,
+  isRiverTraLaLaDropDestinationChoice,
+  riverTraLaLaDropDestinationOptions,
   isChikatiloPlacement,
   chikatiloPlacementCoords,
   isGroznyTyrantAttackCellChoice,
@@ -241,6 +249,13 @@ export function buildHighlightedCells({
     return highlights;
   }
 
+  if (isRiverBoatDestinationChoice) {
+    for (const coord of riverBoatDestinationOptions) {
+      highlights[coordKey(coord)] = "move";
+    }
+    return highlights;
+  }
+
   if (isRiverBoatDropDestination) {
     for (const coord of riverBoatDropDestinationOptions) {
       highlights[coordKey(coord)] = "move";
@@ -257,6 +272,13 @@ export function buildHighlightedCells({
 
   if (isRiverTraLaLaDestinationChoice) {
     for (const coord of riverTraLaLaDestinationOptions) {
+      highlights[coordKey(coord)] = "move";
+    }
+    return highlights;
+  }
+
+  if (isRiverTraLaLaDropDestinationChoice) {
+    for (const coord of riverTraLaLaDropDestinationOptions) {
       highlights[coordKey(coord)] = "move";
     }
     return highlights;

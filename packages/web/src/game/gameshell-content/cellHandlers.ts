@@ -2,6 +2,7 @@ import type { Dispatch, SetStateAction } from "react";
 import type { Coord, GameAction, PapyrusLineAxis, PlayerView } from "rules";
 import type { ActionMode } from "../../store";
 import {
+  ASGORE_FIRE_PARADE_ID,
   ASGORE_FIREBALL_ID,
   CHIKATILO_ASSASSIN_MARK_ID,
   EL_CID_DEMON_DUELIST_ID,
@@ -65,12 +66,16 @@ export interface CellClickContext {
   chargedImpulseTargetKeys: Set<string>;
   isRiverBoatCarryChoice: boolean;
   riverBoatCarryOptionIds: string[];
+  isRiverBoatDestinationChoice: boolean;
+  riverBoatDestinationKeys: Set<string>;
   isRiverBoatDropDestination: boolean;
   riverBoatDropDestinationKeys: Set<string>;
   isRiverTraLaLaTargetChoice: boolean;
   riverTraLaLaTargetIds: string[];
   isRiverTraLaLaDestinationChoice: boolean;
   riverTraLaLaDestinationKeys: Set<string>;
+  isRiverTraLaLaDropDestinationChoice: boolean;
+  riverTraLaLaDropDestinationKeys: Set<string>;
   isChikatiloPlacement: boolean;
   chikatiloPlacementKeys: Set<string>;
   isGroznyTyrantAttackCellChoice: boolean;
@@ -160,12 +165,16 @@ export function createCellClickHandler(context: CellClickContext) {
     chargedImpulseTargetKeys,
     isRiverBoatCarryChoice,
     riverBoatCarryOptionIds,
+    isRiverBoatDestinationChoice,
+    riverBoatDestinationKeys,
     isRiverBoatDropDestination,
     riverBoatDropDestinationKeys,
     isRiverTraLaLaTargetChoice,
     riverTraLaLaTargetIds,
     isRiverTraLaLaDestinationChoice,
     riverTraLaLaDestinationKeys,
+    isRiverTraLaLaDropDestinationChoice,
+    riverTraLaLaDropDestinationKeys,
     isChikatiloPlacement,
     chikatiloPlacementKeys,
     isGroznyTyrantAttackCellChoice,
@@ -339,6 +348,17 @@ export function createCellClickHandler(context: CellClickContext) {
       return;
     }
 
+    if (isRiverBoatDestinationChoice) {
+      const key = coordKey({ col, row });
+      if (!riverBoatDestinationKeys.has(key) || !pendingRoll) return;
+      sendAction({
+        type: "resolvePendingRoll",
+        pendingRollId: pendingRoll.id,
+        choice: { type: "forestMoveDestination", position: { col, row } },
+      } as GameAction);
+      return;
+    }
+
     if (isRiverBoatDropDestination) {
       const key = coordKey({ col, row });
       if (!riverBoatDropDestinationKeys.has(key) || !pendingRoll) return;
@@ -365,6 +385,17 @@ export function createCellClickHandler(context: CellClickContext) {
     if (isRiverTraLaLaDestinationChoice) {
       const key = coordKey({ col, row });
       if (!riverTraLaLaDestinationKeys.has(key) || !pendingRoll) return;
+      sendAction({
+        type: "resolvePendingRoll",
+        pendingRollId: pendingRoll.id,
+        choice: { type: "forestMoveDestination", position: { col, row } },
+      } as GameAction);
+      return;
+    }
+
+    if (isRiverTraLaLaDropDestinationChoice) {
+      const key = coordKey({ col, row });
+      if (!riverTraLaLaDropDestinationKeys.has(key) || !pendingRoll) return;
       sendAction({
         type: "resolvePendingRoll",
         pendingRollId: pendingRoll.id,
@@ -691,6 +722,19 @@ export function createCellClickHandler(context: CellClickContext) {
         abilityId: ASGORE_FIREBALL_ID,
         payload: { targetId: target.id },
       });
+      return;
+    }
+
+    if (actionMode === "asgoreFireParade") {
+      const source = view.units[selectedUnitId];
+      if (!source?.position) return;
+      if (source.position.col !== col || source.position.row !== row) return;
+      sendGameAction({
+        type: "useAbility",
+        unitId: selectedUnitId,
+        abilityId: ASGORE_FIRE_PARADE_ID,
+      });
+      setActionMode(null);
       return;
     }
 

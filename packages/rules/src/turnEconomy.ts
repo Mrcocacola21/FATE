@@ -21,6 +21,14 @@ function getTurnEconomy(unit: UnitState): TurnEconomy {
   };
 }
 
+function getRiverBoatmanExtraMoves(unit: UnitState): number {
+  return Math.max(0, Math.floor(unit.riverBoatmanExtraMoves ?? 0));
+}
+
+function isMoveOnlyCost(costs: TurnSlotCosts): boolean {
+  return !!costs.move && !costs.attack && !costs.action && !costs.stealth;
+}
+
 export function setTurnEconomy(unit: UnitState, turn: TurnEconomy): UnitState {
   return {
     ...unit,
@@ -58,6 +66,9 @@ export function canSpendSlots(
     (costs.attack && turn.attackUsed) ||
     (costs.action && turn.actionUsed) ||
     (costs.stealth && turn.stealthUsed);
+  if (slotBlocked && isMoveOnlyCost(costs) && getRiverBoatmanExtraMoves(unit) > 0) {
+    return true;
+  }
   const extra = unit.courtExtraFlexibleAction;
   if (slotBlocked && extra && !extra.used && actionType) {
     const blockedByOnlySpentSlot =
@@ -79,10 +90,15 @@ export function spendSlots(
   const actionType = actionTypeFromCosts(costs);
   const turn = { ...getTurnEconomy(unit) };
   let extra = unit.courtExtraFlexibleAction;
+  const shouldUseRiverExtraMove =
+    isMoveOnlyCost(costs) &&
+    before.moveUsed &&
+    getRiverBoatmanExtraMoves(unit) > 0;
   const shouldUseExtra =
     !!extra &&
     !extra.used &&
     actionType &&
+    !shouldUseRiverExtraMove &&
     ((costs.move && before.moveUsed) ||
       (costs.stealth && before.stealthUsed) ||
       ((costs.action || costs.attack) && before.actionUsed));
@@ -95,6 +111,12 @@ export function spendSlots(
     updated = {
       ...updated,
       courtExtraFlexibleAction: { ...extra, used: true },
+    };
+  }
+  if (shouldUseRiverExtraMove) {
+    updated = {
+      ...updated,
+      riverBoatmanExtraMoves: getRiverBoatmanExtraMoves(unit) - 1,
     };
   }
   if (unit.courtProceduralRestriction && actionType) {
@@ -110,5 +132,10 @@ export function spendSlots(
 }
 
 export function resetTurnEconomy(unit: UnitState): UnitState {
-  return setTurnEconomy(unit, makeEmptyTurnEconomy());
+  return {
+    ...setTurnEconomy(unit, makeEmptyTurnEconomy()),
+    riverBoatmanExtraMoves: 0,
+    riverBoatmanMovePending: false,
+    riverBoatCarryAllyId: undefined,
+  };
 }

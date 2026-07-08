@@ -1,5 +1,5 @@
 import type { ApplyResult, GameEvent, GameState, UnitState } from "../../../model";
-import { isStormActive, isStormExempt } from "../../../forest";
+import { ARENA_STORM_ID, isStormActive, isStormExempt } from "../../../forest";
 import { rollD6 } from "../../../rng";
 import { clearPendingRoll, evUnitDied, requestRoll } from "../../../core";
 import { applyGriffithFemtoRebirth } from "../../../shared/griffith";
@@ -17,6 +17,9 @@ export function applyStormStartOfTurn(
     return { state, events: [] };
   }
   if (isStormExempt(state, unit)) {
+    return { state, events: [] };
+  }
+  if (unit.stormStartTurnResolvedTurnNumber === state.turnNumber) {
     return { state, events: [] };
   }
 
@@ -46,6 +49,26 @@ function evLechyStormRollResult(params: {
   };
 }
 
+function markStormResolvedForTurn(
+  state: GameState,
+  unit: UnitState
+): { state: GameState; unit: UnitState } {
+  const updatedUnit: UnitState = {
+    ...unit,
+    stormStartTurnResolvedTurnNumber: state.turnNumber,
+  };
+  return {
+    state: {
+      ...state,
+      units: {
+        ...state.units,
+        [updatedUnit.id]: updatedUnit,
+      },
+    },
+    unit: updatedUnit,
+  };
+}
+
 export function resolveLechyStormStartTurnRoll(
   state: GameState,
   unitId: string,
@@ -63,26 +86,29 @@ export function resolveLechyStormStartTurnRoll(
     return { state: baseState, events: [] };
   }
 
+  const marked = markStormResolvedForTurn(baseState, unit);
+  const markedState = marked.state;
+  const markedUnit = marked.unit;
   const roll = rollD6(rng);
   if (roll >= 4) {
     return {
-      state: baseState,
+      state: markedState,
       events: [
         evLechyStormRollResult({
-          unitId: unit.id,
+          unitId: markedUnit.id,
           roll,
           success: true,
           damage: 0,
-          hpAfter: unit.hp,
+          hpAfter: markedUnit.hp,
         }),
       ],
     };
   }
 
-  const newHp = Math.max(0, unit.hp - 1);
-  const deathPosition = unit.position ? { ...unit.position } : null;
+  const newHp = Math.max(0, markedUnit.hp - 1);
+  const deathPosition = markedUnit.position ? { ...markedUnit.position } : null;
   let updatedUnit: UnitState = {
-    ...unit,
+    ...markedUnit,
     hp: newHp,
   };
 
@@ -111,22 +137,46 @@ export function resolveLechyStormStartTurnRoll(
   }
 
   const nextState: GameState = {
-    ...baseState,
+    ...markedState,
     activeUnitId:
-      baseState.activeUnitId === updatedUnit.id &&
+      markedState.activeUnitId === updatedUnit.id &&
       (!updatedUnit.isAlive || !updatedUnit.position)
         ? null
-        : baseState.activeUnitId,
+        : markedState.activeUnitId,
     pendingMove:
-      baseState.pendingMove?.unitId === updatedUnit.id &&
+      markedState.pendingMove?.unitId === updatedUnit.id &&
       (!updatedUnit.isAlive || !updatedUnit.position)
         ? null
-        : baseState.pendingMove,
+        : markedState.pendingMove,
     units: {
-      ...baseState.units,
+      ...markedState.units,
       [updatedUnit.id]: updatedUnit,
     },
   };
 
   return { state: nextState, events };
+}
+
+export function advanceStormDurationAfterTurn(
+  state: GameState,
+  completedTurnNumber: number
+): GameState {
+  const effects = Array.isArray(state.arenaEffects) ? state.arenaEffects : [];
+  if (effects.length === 0) return state;
+
+  const nextEffects = effects.flatMap((effect) => {
+    if (effect.effectId !== ARENA_STORM_ID) return [{ ...effect }];
+    if (effect.startedTurnNumber === completedTurnNumber) return [{ ...effect }];
+    const remaining = effect.remaining - 1;
+    return remaining > 0 ? [{ ...effect, remaining }] : [];
+  });
+
+  const hasStorm = nextEffects.some(
+    (effect) => effect.effectId === ARENA_STORM_ID && effect.remaining > 0
+  );
+  return {
+    ...state,
+    arenaId: state.arenaId === ARENA_STORM_ID && !hasStorm ? null : state.arenaId,
+    arenaEffects: nextEffects,
+  };
 }

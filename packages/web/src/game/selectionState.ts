@@ -1,5 +1,6 @@
 import type { ActionMode } from "../store";
 import {
+  ASGORE_FIRE_PARADE_ID,
   ASGORE_FIREBALL_ID,
   CHIKATILO_ASSASSIN_MARK_ID,
   EL_CID_DEMON_DUELIST_ID,
@@ -102,6 +103,8 @@ function abilityIdForActionMode(mode: Exclude<ActionMode, null>): TargetingMode[
       return JEBE_KHANS_SHOOTER_ID;
     case "asgoreFireball":
       return ASGORE_FIREBALL_ID;
+    case "asgoreFireParade":
+      return ASGORE_FIRE_PARADE_ID;
     case "papyrusCoolGuy":
       return PAPYRUS_COOL_GUY_ID;
     case "hassanTrueEnemy":

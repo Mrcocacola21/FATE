@@ -11,16 +11,11 @@ import type { RNG } from "../../rng";
 import { coordsEqual } from "../../board";
 import { linePath } from "../../path";
 import { canSpendSlots, spendSlots } from "../../turnEconomy";
-import { ABILITY_RIVER_PERSON_BOATMAN } from "../../abilities";
-import { commitAbilityCost } from "../abilityCosts";
 import { findStakeStopOnPath, applyStakeTriggerIfAny, evUnitMoved } from "../../core";
 import { getMovementModes, unitHasMovementMode } from "../shared";
 import { hasMettatonRiderMovement, hasMettatonRiderPathFeature } from "../../mettaton";
 import { getLegalMovesForUnitModes } from "../../movement";
-import {
-  isRiverPerson,
-  getRiverDropOptions,
-} from "../heroes/riverPerson";
+import { isRiverPerson } from "../heroes/riverPerson";
 import { maybeRequestForestMoveCheck } from "./forest";
 import { applyMongolChargeMove } from "./mongolCharge";
 import {
@@ -64,15 +59,12 @@ export function applyMove(
   const from = unit.position;
   const isMongolCharge = unit.genghisKhanMongolChargeActive === true;
   const hasDecreeMove = unit.genghisKhanDecreeMovePending === true;
-  const hasRiverBoatmanMove = unit.riverBoatmanMovePending === true;
   const isChicken = (unit.lokiChickenSources?.length ?? 0) > 0;
-  const carriedAllyId = isRiverPerson(unit) ? unit.riverBoatCarryAllyId : undefined;
 
   if (
     !canSpendSlots(unit, { move: true }) &&
     !hasDecreeMove &&
-    !isMongolCharge &&
-    !hasRiverBoatmanMove
+    !isMongolCharge
   ) {
     return { state, events: [] };
   }
@@ -152,55 +144,9 @@ export function applyMove(
   const finalTo = stakeStop ?? moveAction.to;
   const didMove = !coordsEqual(finalTo, from);
 
-  if (carriedAllyId) {
-    const carried = state.units[carriedAllyId];
-    if (
-      !carried ||
-      !carried.isAlive ||
-      !carried.position ||
-      carried.owner !== unit.owner
-    ) {
-      return { state, events: [] };
-    }
-    const startDist = Math.max(
-      Math.abs(carried.position.col - from.col),
-      Math.abs(carried.position.row - from.row)
-    );
-    if (startDist > 1) {
-      return { state, events: [] };
-    }
-    if (getRiverDropOptions(state, finalTo, carried.id).length === 0) {
-      return { state, events: [] };
-    }
-  }
-
-  let stateAfterMoveCost = state;
-  let costEvents: GameEvent[] = [];
-  let movedUnitBaseRaw: UnitState;
-  if (hasRiverBoatmanMove) {
-    const committed = commitAbilityCost(
-      state,
-      unit.id,
-      ABILITY_RIVER_PERSON_BOATMAN
-    );
-    if (!committed.ok) {
-      return { state, events: [] };
-    }
-    movedUnitBaseRaw = {
-      ...committed.unit,
-      riverBoatmanMovePending: false,
-    };
-    stateAfterMoveCost = {
-      ...committed.state,
-      units: {
-        ...committed.state.units,
-        [movedUnitBaseRaw.id]: movedUnitBaseRaw,
-      },
-    };
-    costEvents = committed.events;
-  } else {
-    movedUnitBaseRaw = spendSlots(unit, { move: true });
-  }
+  const stateAfterMoveCost = state;
+  const costEvents: GameEvent[] = [];
+  const movedUnitBaseRaw: UnitState = spendSlots(unit, { move: true });
   const movedUnitBase =
     didMove && unit.courtGlobalMoveOnce && !unit.courtGlobalMoveOnce.used
       ? markCourtGlobalMoveUsed(movedUnitBaseRaw)
@@ -208,7 +154,8 @@ export function applyMove(
   const movedUnit: UnitState = isRiverPerson(movedUnitBase)
     ? {
         ...movedUnitBase,
-        riverBoatCarryAllyId: carriedAllyId,
+        riverBoatCarryAllyId: undefined,
+        riverBoatmanMovePending: false,
       }
     : movedUnitBase;
   let updatedUnit: UnitState = {

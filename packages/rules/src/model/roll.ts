@@ -75,9 +75,11 @@ export type RollKind =
   | "forestMoveCheck"
   | "forestMoveDestination"
   | "riverBoatCarryChoice"
+  | "riverBoatDestinationChoice"
   | "riverBoatDropDestination"
   | "riverTraLaLaTargetChoice"
   | "riverTraLaLaDestinationChoice"
+  | "riverTraLaLaDropDestinationChoice"
   | "jebeHailOfArrows_attackerRoll"
   | "jebeHailOfArrows_defenderRoll"
   | "jebeHailOfArrows_berserkerDefenseChoice"
@@ -167,9 +169,11 @@ export const ALL_ROLL_KINDS = [
   "forestMoveCheck",
   "forestMoveDestination",
   "riverBoatCarryChoice",
+  "riverBoatDestinationChoice",
   "riverBoatDropDestination",
   "riverTraLaLaTargetChoice",
   "riverTraLaLaDestinationChoice",
+  "riverTraLaLaDropDestinationChoice",
   "jebeHailOfArrows_attackerRoll",
   "jebeHailOfArrows_defenderRoll",
   "jebeHailOfArrows_berserkerDefenseChoice",

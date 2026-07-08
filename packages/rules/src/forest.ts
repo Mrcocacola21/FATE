@@ -1,4 +1,11 @@
-import type { Coord, ForestMarker, GameState, PlayerId, UnitState } from "./model";
+import type {
+  ArenaEffectState,
+  Coord,
+  ForestMarker,
+  GameState,
+  PlayerId,
+  UnitState,
+} from "./model";
 import { chebyshev } from "./board";
 import { HERO_LECHY_ID, HERO_RIVER_PERSON_ID } from "./heroes";
 
@@ -60,7 +67,34 @@ export function isUnitInsideForestAura(state: GameState, unit: UnitState): boole
 }
 
 export function isStormActive(state: GameState): boolean {
-  return state.arenaId === ARENA_STORM_ID;
+  if (state.arenaId !== ARENA_STORM_ID) return false;
+  const effects = state.arenaEffects;
+  if (!Array.isArray(effects) || effects.length === 0) return true;
+  return effects.some((effect) => effect.effectId === ARENA_STORM_ID && effect.remaining > 0);
+}
+
+export function getActiveStormEffect(state: GameState): ArenaEffectState | null {
+  const effects = state.arenaEffects;
+  if (!Array.isArray(effects)) return null;
+  return (
+    effects.find(
+      (effect) => effect.effectId === ARENA_STORM_ID && effect.remaining > 0
+    ) ?? null
+  );
+}
+
+export function upsertStormArenaEffect(
+  state: GameState,
+  effect: ArenaEffectState
+): GameState {
+  const existing = Array.isArray(state.arenaEffects) ? state.arenaEffects : [];
+  return {
+    ...state,
+    arenaEffects: [
+      ...existing.filter((item) => item.effectId !== ARENA_STORM_ID),
+      { ...effect },
+    ],
+  };
 }
 
 export function isStormExempt(state: GameState, unit: UnitState): boolean {

@@ -1,4 +1,5 @@
 import {
+  ArenaEffectState,
   Coord,
   ForestMarker,
   GameState,
@@ -38,6 +39,7 @@ export function cloneUnit(unit: UnitState): UnitState {
     bunker: unit.bunker ? { ...unit.bunker } : undefined,
     movementDisabledNextTurn: unit.movementDisabledNextTurn,
     ownTurnsStarted: unit.ownTurnsStarted,
+    stormStartTurnResolvedTurnNumber: unit.stormStartTurnResolvedTurnNumber,
     charges: { ...unit.charges },
     cooldowns: { ...unit.cooldowns },
     turn: { ...turn },
@@ -127,4 +129,35 @@ export function collectPlayerStakeMarkers(
 
 export function collectSpectatorStakeMarkers(state: GameState): VisibleStakeMarker[] {
   return collectVisibleStakeMarkers(state, (marker) => marker.isRevealed);
+}
+
+function isArenaEffectSourceVisible(
+  state: GameState,
+  recipient: PlayerId | "spectator",
+  sourceUnitId: string
+): boolean {
+  const unit = state.units[sourceUnitId];
+  if (!unit) return false;
+  if (!unit.isAlive) return true;
+  if (recipient === "spectator") return !unit.isStealthed;
+  return canPlayerKnowUnitExactPosition(state, recipient, sourceUnitId);
+}
+
+export function cloneArenaEffectsForRecipient(
+  state: GameState,
+  recipient: PlayerId | "spectator"
+): ArenaEffectState[] {
+  const effects = Array.isArray(state.arenaEffects) ? state.arenaEffects : [];
+  return effects
+    .filter((effect) => effect.remaining > 0)
+    .map((effect) => {
+      const sourceUnitId = effect.sourceUnitId;
+      return {
+        ...effect,
+        sourceUnitId:
+          sourceUnitId && isArenaEffectSourceVisible(state, recipient, sourceUnitId)
+            ? sourceUnitId
+            : undefined,
+      };
+    });
 }

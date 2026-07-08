@@ -3,7 +3,10 @@ import {
   ARENA_STORM_ID,
   FOREST_AURA_RADIUS,
   getForestMarkers,
+  upsertStormArenaEffect,
 } from "../../../forest";
+import type { RNG } from "../../../rng";
+import { rollD6 } from "../../../rng";
 import {
   ABILITY_LECHY_CONFUSE_TERRAIN,
   ABILITY_LECHY_GUIDE_TRAVELER,
@@ -195,7 +198,8 @@ export function maybeTriggerLechyConfuseTerrain(
 
 export function applyLechyStorm(
   state: GameState,
-  unit: UnitState
+  unit: UnitState,
+  rng: RNG
 ): ApplyResult {
   if (!isLechy(unit) || !unit.position) {
     return { state, events: [] };
@@ -218,8 +222,9 @@ export function applyLechyStorm(
   }
 
   const updatedUnit: UnitState = spendSlots(afterCharges, costs);
+  const durationRoll = rollD6(rng);
 
-  const nextState: GameState = {
+  const baseState: GameState = {
     ...state,
     arenaId: ARENA_STORM_ID,
     units: {
@@ -227,9 +232,25 @@ export function applyLechyStorm(
       [updatedUnit.id]: updatedUnit,
     },
   };
+  const nextState = upsertStormArenaEffect(baseState, {
+    id: ARENA_STORM_ID,
+    effectId: ARENA_STORM_ID,
+    sourceUnitId: updatedUnit.id,
+    sourceAbilityId: spec.id,
+    remaining: durationRoll,
+    durationUnit: "turn",
+    startedTurnNumber: state.turnNumber,
+  });
 
   const events: GameEvent[] = [
     evAbilityUsed({ unitId: updatedUnit.id, abilityId: spec.id }),
+    {
+      type: "lechyStormStarted",
+      sourceUnitId: updatedUnit.id,
+      roll: durationRoll,
+      duration: durationRoll,
+      durationUnit: "turn",
+    },
   ];
 
   return { state: nextState, events };

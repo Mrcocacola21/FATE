@@ -144,18 +144,24 @@ function buildPickupPreview({
 function buildDropPreview({
   view,
   sourceUnitId,
+  sourceCell,
   dropCells,
   labelKey,
 }: {
   view: PlayerView;
   sourceUnitId: string;
+  sourceCell?: Coord;
   dropCells: Coord[];
   labelKey: string;
 }): BoardPreview | null {
   const source = sourceUnit(view, sourceUnitId);
   return {
     kind: "pickupDrop",
-    sourceCell: source?.position ? { ...source.position } : undefined,
+    sourceCell: sourceCell
+      ? { ...sourceCell }
+      : source?.position
+      ? { ...source.position }
+      : undefined,
     dropCells,
     labelKey,
   };
@@ -306,13 +312,18 @@ export function buildPendingPreview(view: PlayerView | null | undefined): BoardP
     switch (pending.kind) {
       case "jebeKhansShooterTargetChoice": {
         const casterId = typeof context.casterId === "string" ? context.casterId : "";
-        const lastTargetId = typeof context.lastTargetId === "string" ? context.lastTargetId : "";
-        return buildLineFromOptionsPreview({
+        const selectedTargetIds = stringList(context.selectedTargetIds);
+        const preview = buildLineFromOptionsPreview({
           gameView: view,
-          sourceUnitId: lastTargetId && view.units[lastTargetId] ? lastTargetId : casterId,
+          sourceUnitId: casterId,
           optionIds: stringList(context.options),
           labelKey: "preview.labels.selectNextRicochetTarget",
         });
+        if (!preview || preview.kind !== "line") return preview;
+        return {
+          ...preview,
+          affectedTargets: targetRefsFromIds(view, selectedTargetIds),
+        };
       }
       case "hassanTrueEnemyTargetChoice":
         return buildForcedAttackPreview({
@@ -386,10 +397,26 @@ export function buildPendingPreview(view: PlayerView | null | undefined): BoardP
           optionIds: stringList(context.options),
           labelKey: "preview.labels.selectPassenger",
         });
+      case "riverBoatDestinationChoice":
+        return buildMovementPreview({
+          view,
+          pendingMove: {
+            unitId: typeof context.riverId === "string" ? context.riverId : "",
+            legalTo: coordList(context.options),
+            mode: "rider",
+          },
+          labelKey: "preview.labels.selectDestination",
+        });
       case "riverBoatDropDestination":
         return buildDropPreview({
           view,
           sourceUnitId: typeof context.riverId === "string" ? context.riverId : "",
+          sourceCell: isCoord(context.riverDestination)
+            ? {
+                col: context.riverDestination.col,
+                row: context.riverDestination.row,
+              }
+            : undefined,
           dropCells: coordList(context.options),
           labelKey: "preview.labels.selectDropCell",
         });
@@ -405,6 +432,19 @@ export function buildPendingPreview(view: PlayerView | null | undefined): BoardP
           view,
           riverId: typeof context.riverId === "string" ? context.riverId : "",
           destinations: coordList(context.options),
+        });
+      case "riverTraLaLaDropDestinationChoice":
+        return buildDropPreview({
+          view,
+          sourceUnitId: typeof context.riverId === "string" ? context.riverId : "",
+          sourceCell: isCoord(context.riverDestination)
+            ? {
+                col: context.riverDestination.col,
+                row: context.riverDestination.row,
+              }
+            : undefined,
+          dropCells: coordList(context.options),
+          labelKey: "preview.labels.selectDropCell",
         });
       case "groznyTyrantAttackCellChoice":
         return buildGroznyOptionsPreview(view, context);

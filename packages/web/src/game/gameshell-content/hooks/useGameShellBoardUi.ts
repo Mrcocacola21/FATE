@@ -28,12 +28,16 @@ export function useGameShellBoardUi(params: any) {
     chargedImpulseTargetKeys,
     isRiverBoatCarryChoice,
     riverBoatCarryOptionIds,
+    isRiverBoatDestinationChoice,
+    riverBoatDestinationKeys,
     isRiverBoatDropDestination,
     riverBoatDropDestinationKeys,
     isRiverTraLaLaTargetChoice,
     riverTraLaLaTargetIds,
     isRiverTraLaLaDestinationChoice,
     riverTraLaLaDestinationKeys,
+    isRiverTraLaLaDropDestinationChoice,
+    riverTraLaLaDropDestinationKeys,
     isChikatiloPlacement,
     chikatiloPlacementKeys,
     isGroznyTyrantAttackCellChoice,
@@ -140,12 +144,16 @@ export function useGameShellBoardUi(params: any) {
     chargedImpulseTargetKeys,
     isRiverBoatCarryChoice,
     riverBoatCarryOptionIds,
+    isRiverBoatDestinationChoice,
+    riverBoatDestinationKeys,
     isRiverBoatDropDestination,
     riverBoatDropDestinationKeys,
     isRiverTraLaLaTargetChoice,
     riverTraLaLaTargetIds,
     isRiverTraLaLaDestinationChoice,
     riverTraLaLaDestinationKeys,
+    isRiverTraLaLaDropDestinationChoice,
+    riverTraLaLaDropDestinationKeys,
     isChikatiloPlacement,
     chikatiloPlacementKeys,
     isGroznyTyrantAttackCellChoice,
@@ -275,6 +283,7 @@ export function useGameShellBoardUi(params: any) {
     actionMode !== "gutsArbalet" &&
     actionMode !== "gutsCannon" &&
     actionMode !== "asgoreFireball" &&
+    actionMode !== "asgoreFireParade" &&
     actionMode !== "odinSleipnir" &&
     actionMode !== "hassanTrueEnemy" &&
     actionMode !== "papyrusCoolGuy" &&

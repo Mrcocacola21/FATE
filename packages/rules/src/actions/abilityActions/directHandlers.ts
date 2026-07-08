@@ -42,6 +42,7 @@ import {
   ABILITY_PAPYRUS_LONG_BONE,
   ABILITY_PAPYRUS_ORANGE_BONE,
   ABILITY_PAPYRUS_SPAGHETTI,
+  ABILITY_RIVER_PERSON_BOAT,
   ABILITY_RIVER_PERSON_BOATMAN,
   ABILITY_RIVER_PERSON_TRA_LA_LA,
   ABILITY_SANS_BADASS_JOKE,
@@ -86,7 +87,11 @@ import {
   applyPapyrusOrangeBoneToggle,
   applyPapyrusSpaghetti,
 } from "../heroes/papyrus";
-import { applyRiverBoatman, applyRiverTraLaLa } from "../heroes/riverPerson";
+import {
+  applyRiverBoat,
+  applyRiverBoatman,
+  applyRiverTraLaLa,
+} from "../heroes/riverPerson";
 import {
   applySansBadassJoke,
   applySansBoneField,
@@ -126,7 +131,8 @@ const DIRECT_HANDLERS: Record<string, DirectAbilityHandler> = {
   [ABILITY_LECHY_GUIDE_TRAVELER]: (state, unit, action) =>
     applyLechyGuideTraveler(state, unit, action),
   [ABILITY_LECHY_CONFUSE_TERRAIN]: (state) => NO_OP_RESULT(state),
-  [ABILITY_LECHY_STORM]: (state, unit) => applyLechyStorm(state, unit),
+  [ABILITY_LECHY_STORM]: (state, unit, _action, rng) =>
+    applyLechyStorm(state, unit, rng),
   [ABILITY_GROZNY_INVADE_TIME]: (state, unit, action, rng) =>
     applyGroznyInvadeTime(state, unit, action, rng),
   [ABILITY_JEBE_HAIL_OF_ARROWS]: (state, unit, action, rng) =>
@@ -145,6 +151,7 @@ const DIRECT_HANDLERS: Record<string, DirectAbilityHandler> = {
   [ABILITY_ASGORE_SOUL_PARADE]: (state) => NO_OP_RESULT(state),
   [ABILITY_ODIN_SLEIPNIR]: (state, unit, action, rng) =>
     applyOdinSleipnir(state, unit, action, rng),
+  [ABILITY_RIVER_PERSON_BOAT]: (state, unit) => applyRiverBoat(state, unit),
   [ABILITY_RIVER_PERSON_BOATMAN]: (state, unit) => applyRiverBoatman(state, unit),
   [ABILITY_RIVER_PERSON_TRA_LA_LA]: (state, unit) => applyRiverTraLaLa(state, unit),
   [ABILITY_KALADIN_FIRST]: (state, unit) => applyKaladinFirst(state, unit),

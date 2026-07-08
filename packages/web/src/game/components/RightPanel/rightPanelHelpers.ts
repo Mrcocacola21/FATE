@@ -166,6 +166,7 @@ export function abilityActionMode(
   if (abilityId === KALADIN_FIFTH_ID) return "kaladinFifth";
   if (abilityId === ODIN_SLEIPNIR_ID) return "odinSleipnir";
   if (abilityId === ASGORE_FIREBALL_ID) return "asgoreFireball";
+  if (abilityId === ASGORE_FIRE_PARADE_ID) return "asgoreFireParade";
   if (abilityId === GUTS_ARBALET_ID) return "gutsArbalet";
   if (abilityId === GUTS_CANNON_ID) return "gutsCannon";
   if (abilityId === PAPYRUS_COOL_GUY_ID) return "papyrusCoolGuy";
@@ -180,7 +181,6 @@ export function abilityActionMode(
 export function shouldHoverAbilityInActionList(abilityId: string): boolean {
   return (
     abilityId === TRICKSTER_AOE_ID ||
-    abilityId === ASGORE_FIRE_PARADE_ID ||
     abilityId === CHIKATILO_ASSASSIN_MARK_ID ||
     abilityId === GUTS_BERSERK_MODE_ID ||
     abilityId === LOKI_LAUGHT_ID ||
@@ -225,6 +225,8 @@ export function getActionModeHint(
       return uk ? "Слейпнір: оберіть будь-яку вільну клітинку." : "Sleipnir: select any empty destination cell.";
     case "asgoreFireball":
       return uk ? "Вогняна куля: оберіть ворога на лінії дальньої атаки." : "Fireball: select an enemy in ranged attack line.";
+    case "asgoreFireParade":
+      return uk ? "Парад вогню: підтвердьте область навколо Асгора." : "Fire Parade: confirm the area around Asgore.";
     case "gutsArbalet":
       return uk ? "Ручний арбалет: оберіть ворога на лінії дальньої атаки." : "Hand Crossbow: select an enemy in ranged attack line.";
     case "gutsCannon":

@@ -1,6 +1,7 @@
 import type { Coord, MoveMode, PlayerId, PlayerView } from "rules";
 import type { ActionMode } from "../../store";
 import {
+  ASGORE_FIRE_PARADE_ID,
   ASGORE_FIREBALL_ID,
   CHIKATILO_ASSASSIN_MARK_ID,
   GROZNY_INVADE_TIME_ID,
@@ -42,6 +43,8 @@ function abilityIdForPreviewActionMode(actionMode: Exclude<ActionMode, null>): s
       return JEBE_KHANS_SHOOTER_ID;
     case "asgoreFireball":
       return ASGORE_FIREBALL_ID;
+    case "asgoreFireParade":
+      return ASGORE_FIRE_PARADE_ID;
     case "hassanTrueEnemy":
       return HASSAN_TRUE_ENEMY_ID;
     case "gutsArbalet":

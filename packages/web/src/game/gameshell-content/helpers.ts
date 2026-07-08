@@ -398,9 +398,11 @@ const PENDING_ROLL_LABELS_UK: Record<string, string> = {
   forestMoveCheck: "Перевірка лісу",
   forestMoveDestination: "Призначення після невдалої перевірки лісу",
   riverBoatCarryChoice: "Вибір пасажира човна",
+  riverBoatDestinationChoice: "Призначення човна",
   riverBoatDropDestination: "Місце висадки з човна",
   riverTraLaLaTargetChoice: "Ціль Тра-ля-ля",
   riverTraLaLaDestinationChoice: "Призначення Тра-ля-ля",
+  riverTraLaLaDropDestinationChoice: "Висадка Тра-ля-ля",
   initiativeRoll: "Кидок ініціативи",
 };
 
@@ -570,12 +572,16 @@ export function getPendingRollLabel(kind?: string | null, language: "en" | "uk" 
       return "Forest fallback destination";
     case "riverBoatCarryChoice":
       return "Boat carry choice";
+    case "riverBoatDestinationChoice":
+      return "Boat destination";
     case "riverBoatDropDestination":
       return "Boat drop destination";
     case "riverTraLaLaTargetChoice":
       return "Tra-la-la target";
     case "riverTraLaLaDestinationChoice":
       return "Tra-la-la destination";
+    case "riverTraLaLaDropDestinationChoice":
+      return "Tra-la-la drop";
     case "ruleDeclarationChoice":
       return "Rule Declaration";
     case "ruleDeclarationChessKingChoice":

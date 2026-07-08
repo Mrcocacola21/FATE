@@ -55,6 +55,7 @@ export function createEmptyGame(): GameState {
     },
     placementFirstPlayer: null,
     arenaId: null,
+    arenaEffects: [],
     boneFieldTurnsLeft: 0,
     startingUnitId: null,
     unitsPlaced: { P1: 0, P2: 0 },

@@ -79,16 +79,16 @@ export const ABILITY_SPECS_PART_4: Record<string, AbilitySpec> = {
   [ids.ABILITY_RIVER_PERSON_BOAT]: {
     id: ids.ABILITY_RIVER_PERSON_BOAT,
     displayName: "Boat",
-    kind: "passive",
+    kind: "active",
     description:
-      "River Person can carry one adjacent ally during movement and drop it adjacent to the final cell.",
+      "Spend one movement action to carry one adjacent ally, move River Person, then drop that ally adjacent to the final cell.",
   },
   [ids.ABILITY_RIVER_PERSON_BOATMAN]: {
     id: ids.ABILITY_RIVER_PERSON_BOATMAN,
     displayName: "Boatman",
     kind: "active",
     description:
-      "Spend action to perform a movement without spending the move slot.",
+      "Spend action to gain one additional movement action this turn.",
     actionCost: {
       consumes: { action: true },
     },
@@ -105,7 +105,7 @@ export const ABILITY_SPECS_PART_4: Record<string, AbilitySpec> = {
     displayName: "Tra-la-la",
     kind: "phantasm",
     description:
-      "At full 4 charges: choose adjacent enemy, move in a straight cardinal line, and touched allies that can legally attack strike that enemy once.",
+      "At full 4 charges: choose adjacent enemy, move in a straight line, touched allies that can legally attack strike that enemy once, then drop the enemy adjacent.",
     maxCharges: 4,
     chargesPerUse: 4,
     actionCost: {

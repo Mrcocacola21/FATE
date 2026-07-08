@@ -84,12 +84,14 @@ import {
   resolveLechyStormStartTurnRoll,
 } from "../../actions/heroes/lechy";
 import {
+  resolveRiverBoatCarryChoice,
+  resolveRiverBoatDestinationChoice,
   resolveRiverBoatDropDestination,
+  resolveRiverTraLaLaDropDestinationChoice,
   resolveRiverTraLaLaDestinationChoice,
   resolveRiverTraLaLaTargetChoice,
 } from "../../actions/heroes/riverPerson";
 import { resolveGutsBerserkAttackChoice } from "../../actions/heroes/guts";
-import { resolveRiverBoatCarryChoice } from "../../actions/movementActions";
 import type { AutoRollChoice, ResolvePendingRollAction } from "./types";
 
 export const HERO_PENDING_ROLL_KINDS = [
@@ -150,9 +152,11 @@ export const HERO_PENDING_ROLL_KINDS = [
   "lechyGuideTravelerPlacement",
   "lechyStormStartTurnRoll",
   "riverBoatCarryChoice",
+  "riverBoatDestinationChoice",
   "riverBoatDropDestination",
   "riverTraLaLaTargetChoice",
   "riverTraLaLaDestinationChoice",
+  "riverTraLaLaDropDestinationChoice",
 ] as const;
 
 export function resolveHeroPendingRollCase(
@@ -319,12 +323,16 @@ export function resolveHeroPendingRollCase(
       );
     case "riverBoatCarryChoice":
       return resolveRiverBoatCarryChoice(state, pending, action.choice);
+    case "riverBoatDestinationChoice":
+      return resolveRiverBoatDestinationChoice(state, pending, action.choice);
     case "riverBoatDropDestination":
-      return resolveRiverBoatDropDestination(state, pending, action.choice);
+      return resolveRiverBoatDropDestination(state, pending, action.choice, rng);
     case "riverTraLaLaTargetChoice":
       return resolveRiverTraLaLaTargetChoice(state, pending, action.choice);
     case "riverTraLaLaDestinationChoice":
       return resolveRiverTraLaLaDestinationChoice(state, pending, action.choice);
+    case "riverTraLaLaDropDestinationChoice":
+      return resolveRiverTraLaLaDropDestinationChoice(state, pending, action.choice, rng);
     default:
       return null;
   }

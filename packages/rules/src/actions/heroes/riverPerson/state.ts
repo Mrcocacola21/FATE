@@ -8,13 +8,18 @@ export function clearRiverTurnFlags(
   if (!unitId) return state;
   const unit = state.units[unitId];
   if (!unit || !isRiverPerson(unit)) return state;
-  if (!unit.riverBoatmanMovePending && !unit.riverBoatCarryAllyId) {
+  if (
+    !unit.riverBoatmanMovePending &&
+    !unit.riverBoatCarryAllyId &&
+    !unit.riverBoatmanExtraMoves
+  ) {
     return state;
   }
   const cleared: UnitState = {
     ...unit,
     riverBoatmanMovePending: false,
     riverBoatCarryAllyId: undefined,
+    riverBoatmanExtraMoves: 0,
   };
   return {
     ...state,

@@ -1,7 +1,8 @@
 import type { Coord, GameState } from "../../../model";
 import { isInsideBoard } from "../../../model";
 import { addCoord, ALL_DIRS, getUnitAt } from "../../../board";
-import { CARDINAL_DIRS, chebyshev, isRiverPerson, sortUnitsByReadingOrder } from "./helpers";
+import { canDirectlyTargetUnit } from "../../../visibility";
+import { chebyshev, isRiverPerson, sortUnitsByReadingOrder } from "./helpers";
 
 export function getRiverCarryOptions(state: GameState, riverId: string): string[] {
   const river = state.units[riverId];
@@ -49,6 +50,7 @@ export function getRiverTraLaLaTargetOptions(
     .filter((unit) => {
       if (!unit.isAlive || !unit.position) return false;
       if (unit.owner === river.owner) return false;
+      if (!canDirectlyTargetUnit(state, river.id, unit.id)) return false;
       return chebyshev(unit.position, river.position!) <= 1;
     })
     .map((unit) => unit.id);
@@ -57,18 +59,27 @@ export function getRiverTraLaLaTargetOptions(
 
 export function getRiverTraLaLaDestinations(
   state: GameState,
-  riverId: string
+  riverId: string,
+  draggedTargetId?: string
 ): Coord[] {
   const river = state.units[riverId];
   if (!river || !river.isAlive || !river.position || !isRiverPerson(river)) {
     return [];
   }
   const options: Coord[] = [];
-  for (const dir of CARDINAL_DIRS) {
+  for (const dir of ALL_DIRS) {
     let cursor = addCoord(river.position, dir);
     while (isInsideBoard(cursor, state.boardSize)) {
-      if (getUnitAt(state, cursor)) break;
-      options.push({ ...cursor });
+      const occupant = getUnitAt(state, cursor);
+      const finalCellAvailable =
+        !occupant || occupant.id === draggedTargetId || !occupant.isAlive;
+      if (
+        finalCellAvailable &&
+        (!draggedTargetId ||
+          getRiverDropOptions(state, cursor, draggedTargetId).length > 0)
+      ) {
+        options.push({ ...cursor });
+      }
       cursor = addCoord(cursor, dir);
     }
   }

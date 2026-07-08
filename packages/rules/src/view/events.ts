@@ -220,6 +220,16 @@ function projectEventForRecipient(
       return isUnitVisibleToRecipient(state, event.unitId, recipient)
         ? [event]
         : [redactedEvent(event.type)];
+    case "asgoreSoulParadeResolved":
+      return event.asgoreId &&
+        !isUnitVisibleToRecipient(state, event.asgoreId, recipient)
+        ? [{ ...event, asgoreId: undefined }]
+        : [event];
+    case "lechyStormStarted":
+      return event.sourceUnitId &&
+        !isUnitVisibleToRecipient(state, event.sourceUnitId, recipient)
+        ? [{ ...event, sourceUnitId: undefined }]
+        : [event];
     case "friskHugsApplied":
       return isUnitVisibleToRecipient(state, event.friskId, recipient) &&
         isUnitVisibleToRecipient(state, event.targetId, recipient)

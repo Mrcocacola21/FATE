@@ -40,6 +40,9 @@ export interface AttackRollContext extends Record<string, unknown> {
   jebeKhansShooter?: {
     casterId: string;
     remainingAttacks: number;
+    totalAttacks?: number;
+    selectedTargetIds?: string[];
+    ricochetRoll?: number;
   };
 }
 
@@ -93,6 +96,7 @@ export interface JebeKhansShooterRicochetContext
   extends Record<string, unknown> {
   casterId: string;
   initialTargetId: string;
+  selectedTargetIds?: string[];
 }
 
 export interface JebeKhansShooterTargetChoiceContext
@@ -101,6 +105,11 @@ export interface JebeKhansShooterTargetChoiceContext
   remainingAttacks: number;
   options: string[];
   lastTargetId?: string;
+  selectedTargetIds?: string[];
+  totalAttacks?: number;
+  ricochetRoll?: number;
+  stepIndex?: number;
+  totalSteps?: number;
 }
 
 export interface GutsBerserkAttackChoiceContext

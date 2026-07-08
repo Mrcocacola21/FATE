@@ -304,8 +304,14 @@ export function testJebeKhansShooterGatingConsumesAndRicochets() {
     "Khan's Shooter should request ricochet roll first"
   );
   assert(
-    used.state.units[jebe.id].charges[ABILITY_JEBE_KHANS_SHOOTER] === 0,
-    "Khan's Shooter should consume all 6 charges on initial target resolution"
+    used.state.units[jebe.id].charges[ABILITY_JEBE_KHANS_SHOOTER] === 6,
+    "Khan's Shooter first target selection should not spend charges before ricochet roll"
+  );
+  assert(
+    (
+      used.state.pendingRoll.context as { selectedTargetIds?: string[] }
+    ).selectedTargetIds?.includes(enemy1.id),
+    "Khan's Shooter ricochet roll should preserve selected first target"
   );
 
   let current = used.state;
@@ -318,6 +324,32 @@ export function testJebeKhansShooterGatingConsumesAndRicochets() {
     pendingKinds.push(pending.kind);
 
     if (pending.kind === "jebeKhansShooterTargetChoice") {
+      const ctx = pending.context as {
+        lastTargetId?: string;
+        selectedTargetIds?: string[];
+        stepIndex?: number;
+        totalSteps?: number;
+      };
+      assert(
+        ctx.stepIndex !== undefined &&
+          ctx.totalSteps === 2 &&
+          (ctx.selectedTargetIds?.length ?? 0) >= 1,
+        "Khan's Shooter target choice should expose step and selected-target context"
+      );
+      const repeated = applyAction(
+        current,
+        {
+          type: "resolvePendingRoll",
+          pendingRollId: pending.id,
+          player: pending.player,
+          choice: { type: "jebeKhansShooterTarget", targetId: ctx.lastTargetId },
+        } as any,
+        rng
+      );
+      assert(
+        repeated.state.pendingRoll?.kind === "jebeKhansShooterTargetChoice",
+        "Khan's Shooter should reject immediate repeated target without advancing"
+      );
       const nextTarget = plannedTargets.shift() ?? enemy2.id;
       const step = applyAction(
         current,
@@ -337,6 +369,12 @@ export function testJebeKhansShooterGatingConsumesAndRicochets() {
     const step = resolvePendingRollOnce(current, rng);
     current = step.state;
     events.push(...step.events);
+    if (pending.kind === "jebeKhansShooterRicochetRoll") {
+      assert(
+        current.units[jebe.id].charges[ABILITY_JEBE_KHANS_SHOOTER] === 0,
+        "Khan's Shooter should spend charges exactly once when ricochet roll resolves"
+      );
+    }
   }
 
   const attackEvents = events.filter(

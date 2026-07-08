@@ -11,6 +11,18 @@ import type {
 import type { PendingMove } from "./shared";
 import type { UnitState } from "./unit";
 
+export type ArenaEffectDurationUnit = "turn";
+
+export interface ArenaEffectState {
+  id: string;
+  effectId: string;
+  sourceUnitId?: string;
+  sourceAbilityId?: string;
+  remaining: number;
+  durationUnit: ArenaEffectDurationUnit;
+  startedTurnNumber: number;
+}
+
 export interface ApplyResult {
   state: GameState;
   events: GameEvent[];
@@ -56,6 +68,7 @@ export interface GameState {
   ruleDeclaration: RuleDeclarationState;
   placementFirstPlayer: PlayerId | null;
   arenaId: string | null;
+  arenaEffects?: ArenaEffectState[];
   boneFieldTurnsLeft?: number;
   startingUnitId: string | null;
   unitsPlaced: {

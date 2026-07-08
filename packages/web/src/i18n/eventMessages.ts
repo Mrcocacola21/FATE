@@ -342,6 +342,18 @@ export function formatEventMessage(
         `Controlled attack: ${event.controllerUnitId} forced ${event.controlledUnitId} to attack ${event.targetId}`,
         `Controlled attack: ${event.controllerUnitId} forced ${event.controlledUnitId} to attack ${event.targetId}`,
       );
+    case "asgoreSoulParadeResolved":
+      return text(
+        language,
+        `${value(event.asgoreId ?? "Asgore")} rolled ${value(event.roll)} for Soul Parade: ${value(event.soulName)} - ${value(event.effectDescription)}`,
+        `${value(event.asgoreId ?? "Асгор")} кинув ${value(event.roll)} для Параду душ: ${value(event.soulName)} - ${value(event.effectDescription)}`,
+      );
+    case "lechyStormStarted":
+      return text(
+        language,
+        `${value(event.sourceUnitId ?? "Lechy")} started Storm. Duration roll: ${value(event.roll)}. Storm will remain active for ${value(event.duration)} turns.`,
+        `${value(event.sourceUnitId ?? "Лісовик")} почав Бурю. Кидок тривалості: ${value(event.roll)}. Буря триватиме ${value(event.duration)} ходів.`,
+      );
     case "lechyStormRollResult":
       return text(
         language,

@@ -163,6 +163,7 @@ export function initUnitAbilities(unit: UnitState): UnitState {
       ...updated,
       riverBoatCarryAllyId: undefined,
       riverBoatmanMovePending: false,
+      riverBoatmanExtraMoves: 0,
     };
   }
 

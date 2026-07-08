@@ -11,8 +11,10 @@ import { getAbilitySpec, getCharges, getChargeLimit } from "./charges";
 import * as ids from "./constants";
 import type { AbilitySpec } from "./types";
 import { collectAbilityIdsForUnit } from "./viewIds";
+import { canSpendSlots } from "../turnEconomy";
 
 function getSlotFromCost(spec: AbilitySpec): AbilitySlot {
+  if (spec.id === ids.ABILITY_RIVER_PERSON_BOAT) return "move";
   const costs = spec.actionCost?.consumes;
   if (costs?.action) return "action";
   if (costs?.move) return "move";
@@ -41,6 +43,17 @@ function getActiveDisabledReason(
   if (state.activeUnitId !== unit.id) return "Not active unit";
 
   const costs = spec.actionCost?.consumes;
+  if (spec.id === ids.ABILITY_RIVER_PERSON_BOAT) {
+    if ((unit.kaladinMoveLockSources?.length ?? 0) > 0) {
+      return "Movement is blocked";
+    }
+    if ((unit.lokiMoveLockSources?.length ?? 0) > 0) {
+      return "Movement is blocked";
+    }
+    if (!canSpendSlots(unit, { move: true })) {
+      return "Move slot already used";
+    }
+  }
   if (costs?.action && unit.turn?.actionUsed) {
     return "Action slot already used";
   }

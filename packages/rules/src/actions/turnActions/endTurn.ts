@@ -15,6 +15,7 @@ import {
   handleRuleDeclarationRoundEnd,
 } from "../../ruleDeclarations";
 import { expireChikatiloTrackingAfterTargetTurn } from "../../chikatiloMark";
+import { advanceStormDurationAfterTurn } from "../heroes/lechy";
 
 export function applyEndTurn(state: GameState, rng: RNG): ApplyResult {
   if (state.phase === "ended") {
@@ -63,29 +64,33 @@ export function applyEndTurn(state: GameState, rng: RNG): ApplyResult {
     stateAfterRiver,
     stateAfterRiver.activeUnitId
   );
+  const stateAfterArenaEffects = advanceStormDurationAfterTurn(
+    stateAfterChikatiloExpiry,
+    state.turnNumber
+  );
 
   const normalVictory = applyNormalVictoryCheck(
-    stateAfterChikatiloExpiry,
+    stateAfterArenaEffects,
     drained.events
   );
   if (normalVictory.state.phase === "ended") return normalVictory;
 
   const queue = state.turnQueue.length > 0 ? state.turnQueue : state.turnOrder;
   if (queue.length === 0) {
-    return { state: stateAfterChikatiloExpiry, events: drained.events };
+    return { state: stateAfterArenaEffects, events: drained.events };
   }
 
   const prevIndex =
     state.turnQueue.length > 0 ? state.turnQueueIndex : state.turnOrderIndex;
   const nextIndex = getNextAliveUnitIndex(
-    stateAfterChikatiloExpiry,
+    stateAfterArenaEffects,
     prevIndex,
     queue
   );
   if (nextIndex === null) {
     return {
       state: {
-        ...stateAfterChikatiloExpiry,
+        ...stateAfterArenaEffects,
         phase: "ended",
         activeUnitId: null,
         pendingMove: null,
@@ -96,12 +101,12 @@ export function applyEndTurn(state: GameState, rng: RNG): ApplyResult {
 
   const order = state.turnQueue.length > 0 ? state.turnQueue : state.turnOrder;
   const nextUnitId = order[nextIndex];
-  const nextUnit = stateAfterChikatiloExpiry.units[nextUnitId]!;
+  const nextUnit = stateAfterArenaEffects.units[nextUnitId]!;
   const turnOwner = nextUnit.owner;
   const isNewRound = nextIndex <= prevIndex;
 
   const baseState: GameState = {
-    ...stateAfterChikatiloExpiry,
+    ...stateAfterArenaEffects,
     currentPlayer: turnOwner,
     turnNumber: state.turnNumber + 1,
     roundNumber: state.roundNumber + (isNewRound ? 1 : 0),
@@ -118,7 +123,7 @@ export function applyEndTurn(state: GameState, rng: RNG): ApplyResult {
         ...baseState,
         roundNumber: state.roundNumber,
         turnNumber: state.turnNumber,
-        currentPlayer: stateAfterChikatiloExpiry.currentPlayer,
+        currentPlayer: stateAfterArenaEffects.currentPlayer,
         turnOrderIndex: prevIndex,
         turnQueueIndex: prevIndex,
       },

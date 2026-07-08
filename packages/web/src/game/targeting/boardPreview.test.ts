@@ -17,6 +17,7 @@ import {
   HASSAN_TRUE_ENEMY_ID,
   LECHY_GUIDE_TRAVELER_ID,
   LOKI_LAUGHT_ID,
+  RIVER_PERSON_BOAT_ID,
   RIVER_PERSON_BOATMAN_ID,
   RIVER_PERSON_TRA_LA_LA_ID,
 } from "../../rulesHints";
@@ -106,6 +107,26 @@ function collectTargets(preview: BoardPreview | null): TargetRef[] {
 function validTargetIds(preview: BoardPreview | null): string[] {
   return collectTargets(preview)
     .filter((target) => !target.disabled)
+    .map((target) => target.unitId)
+    .sort();
+}
+
+function selectableTargetIds(preview: BoardPreview | null): string[] {
+  if (!preview) return [];
+  if (preview.kind === "compound") {
+    return preview.layers.flatMap(selectableTargetIds).sort();
+  }
+  return ("validTargets" in preview ? preview.validTargets ?? [] : [])
+    .map((target) => target.unitId)
+    .sort();
+}
+
+function affectedTargetIds(preview: BoardPreview | null): string[] {
+  if (!preview) return [];
+  if (preview.kind === "compound") {
+    return preview.layers.flatMap(affectedTargetIds).sort();
+  }
+  return ("affectedTargets" in preview ? preview.affectedTargets ?? [] : [])
     .map((target) => target.unitId)
     .sort();
 }
@@ -358,6 +379,17 @@ test("Asgore Fire Parade and Justice previews show area and archer line", () => 
   });
   assert.equal(fireParade?.kind, "area");
   assert.equal(hasKind(fireParade, { col: 5, row: 5 }, "area"), true);
+  const activeFireParade = selectBoardPreview({
+    gameView: view,
+    viewerPlayerId: "P1",
+    selectedUnitId: asgore.id,
+    actionMode: "asgoreFireParade",
+    hoverActionMode: null,
+    allowActionHoverPreview: false,
+    hoveredAbilityId: null,
+  });
+  assert.equal(activeFireParade?.kind, "area");
+  assert.equal(hasKind(activeFireParade, { col: 5, row: 5 }, "area"), true);
 
   const justice = buildPendingPreview(
     makeView([asgore, enemy], {
@@ -449,13 +481,19 @@ test("Jebe Khan's Shooter ricochet preview uses pending next-target options", ()
         id: "roll",
         player: "P1",
         kind: "jebeKhansShooterTargetChoice",
-        context: { casterId: jebe.id, lastTargetId: first.id, options: [next.id] },
+        context: {
+          casterId: jebe.id,
+          lastTargetId: first.id,
+          selectedTargetIds: [first.id],
+          options: [next.id],
+        },
       },
     }),
   );
 
-  assert.deepEqual(validTargetIds(preview), ["next"]);
-  assert.equal(hasKind(preview, { col: 8, row: 7 }, "line"), true);
+  assert.deepEqual(selectableTargetIds(preview), ["next"]);
+  assert.deepEqual(affectedTargetIds(preview), ["first"]);
+  assert.equal(hasKind(preview, { col: 7, row: 7 }, "line"), true);
 });
 
 test("Hassan and Loki second-step previews show controlled-unit attack ranges", () => {
@@ -551,20 +589,38 @@ test("River Person Boat previews pickup and drop cells from pending options", ()
   assert.deepEqual(validTargetIds(pickup), ["ally"]);
   assert.equal(hasKind(pickup, ally.position!, "pickup"), true);
 
+  const destination = buildPendingPreview(
+    makeView([river, ally], {
+      pendingRoll: {
+        id: "roll",
+        player: "P1",
+        kind: "riverBoatDestinationChoice",
+        context: { riverId: river.id, allyId: ally.id, options: [{ col: 4, row: 6 }] },
+      },
+    }),
+  );
+  assert.equal(hasKind(destination, { col: 4, row: 6 }, "validMove"), true);
+
   const drop = buildPendingPreview(
     makeView([river, ally], {
       pendingRoll: {
         id: "roll",
         player: "P1",
         kind: "riverBoatDropDestination",
-        context: { riverId: river.id, allyId: ally.id, options: [{ col: 3, row: 4 }] },
+        context: {
+          riverId: river.id,
+          allyId: ally.id,
+          riverDestination: { col: 4, row: 6 },
+          options: [{ col: 3, row: 6 }],
+        },
       },
     }),
   );
-  assert.equal(hasKind(drop, { col: 3, row: 4 }, "drop"), true);
+  assert.equal(hasKind(drop, { col: 4, row: 6 }, "source"), true);
+  assert.equal(hasKind(drop, { col: 3, row: 6 }, "drop"), true);
 });
 
-test("River Person Tra-la-la previews target and straight-line destination", () => {
+test("River Person Tra-la-la previews target, straight-line destination, and drop", () => {
   const river = unit({
     id: "river",
     owner: "P1",
@@ -593,12 +649,38 @@ test("River Person Tra-la-la previews target and straight-line destination", () 
         id: "roll",
         player: "P1",
         kind: "riverTraLaLaDestinationChoice",
-        context: { riverId: river.id, targetId: enemy.id, options: [{ col: 4, row: 8 }] },
+        context: {
+          riverId: river.id,
+          targetId: enemy.id,
+          options: [
+            { col: 4, row: 8 },
+            { col: 7, row: 7 },
+          ],
+        },
       },
     }),
   );
   assert.equal(hasKind(destination, { col: 4, row: 8 }, "validMove"), true);
+  assert.equal(hasKind(destination, { col: 7, row: 7 }, "validMove"), true);
   assert.deepEqual(validTargetIds(destination), ["ally"]);
+
+  const drop = buildPendingPreview(
+    makeView([river, enemy, ally], {
+      pendingRoll: {
+        id: "roll",
+        player: "P1",
+        kind: "riverTraLaLaDropDestinationChoice",
+        context: {
+          riverId: river.id,
+          targetId: enemy.id,
+          riverDestination: { col: 7, row: 7 },
+          options: [{ col: 6, row: 7 }],
+        },
+      },
+    }),
+  );
+  assert.equal(hasKind(drop, { col: 7, row: 7 }, "source"), true);
+  assert.equal(hasKind(drop, { col: 6, row: 7 }, "drop"), true);
 });
 
 test("Genghis Khan diagonal movement preview uses projected pending move options", () => {
@@ -648,11 +730,19 @@ test("River direct hover previews are available before server choices", () => {
   const enemy = unit({ id: "enemy", owner: "P2", position: { col: 3, row: 4 } });
   const view = makeView([river, ally, enemy]);
 
-  const boat = buildAbilityPreview({
+  const boatman = buildAbilityPreview({
     gameView: view,
     viewerPlayerId: "P1",
     sourceUnitId: river.id,
     abilityId: RIVER_PERSON_BOATMAN_ID,
+  });
+  assert.equal(boatman, null);
+
+  const boat = buildAbilityPreview({
+    gameView: view,
+    viewerPlayerId: "P1",
+    sourceUnitId: river.id,
+    abilityId: RIVER_PERSON_BOAT_ID,
   });
   assert.deepEqual(validTargetIds(boat), ["ally"]);
 

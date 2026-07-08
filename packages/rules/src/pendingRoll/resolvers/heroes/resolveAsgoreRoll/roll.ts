@@ -8,6 +8,7 @@ import {
   getAsgoreJusticeTargetIds,
   getAsgorePatienceTargetIds,
   getAsgorePerseveranceTargetIds,
+  getAsgoreSoulParadeOutcome,
 } from "../../../../actions/heroes/asgore";
 import { getUnitBaseMaxHp } from "../../../../actions/shared";
 import type {
@@ -29,6 +30,15 @@ export function resolveAsgoreSoulParadeRoll(
   }
 
   const outcome = rollD6(rng);
+  const soulResult = getAsgoreSoulParadeOutcome(outcome);
+  const soulEvent = {
+    type: "asgoreSoulParadeResolved" as const,
+    asgoreId: asgore.id,
+    roll: soulResult.roll,
+    soulId: soulResult.soulId,
+    soulName: soulResult.soulName,
+    effectDescription: soulResult.effectDescription,
+  };
 
   if (outcome === 1) {
     const options = getAsgorePatienceTargetIds(state, asgore.id);
@@ -47,19 +57,21 @@ export function resolveAsgoreSoulParadeRoll(
             [updatedAsgore.id]: updatedAsgore,
           },
         }),
-        events: committed.events,
+        events: [soulEvent, ...committed.events],
       };
     }
-    return requestRoll(
+    const requested = requestRoll(
       clearPendingRoll(state),
       asgore.owner,
       "asgoreSoulParadePatienceTargetChoice",
       {
         asgoreId: asgore.id,
         options,
+        soulResult,
       } satisfies AsgoreSoulParadeTargetChoiceContext,
       asgore.id
     );
+    return { state: requested.state, events: [soulEvent, ...requested.events] };
   }
 
   if (outcome === 2) {
@@ -76,8 +88,8 @@ export function resolveAsgoreSoulParadeRoll(
           ...committed.state.units,
           [updatedAsgore.id]: updatedAsgore,
         },
-      }),
-      events: committed.events,
+        }),
+      events: [soulEvent, ...committed.events],
     };
   }
 
@@ -86,18 +98,23 @@ export function resolveAsgoreSoulParadeRoll(
     if (options.length === 0) {
       const committed = commitAsgoreSoulParadeCost(state, asgore.id);
       if (!committed.ok) return { state, events: [] };
-      return { state: clearPendingRoll(committed.state), events: committed.events };
+      return {
+        state: clearPendingRoll(committed.state),
+        events: [soulEvent, ...committed.events],
+      };
     }
-    return requestRoll(
+    const requested = requestRoll(
       clearPendingRoll(state),
       asgore.owner,
       "asgoreSoulParadeIntegrityDestination",
       {
         asgoreId: asgore.id,
         options,
+        soulResult,
       } satisfies AsgoreSoulParadeIntegrityDestinationContext,
       asgore.id
     );
+    return { state: requested.state, events: [soulEvent, ...requested.events] };
   }
 
   if (outcome === 4) {
@@ -105,18 +122,23 @@ export function resolveAsgoreSoulParadeRoll(
     if (options.length === 0) {
       const committed = commitAsgoreSoulParadeCost(state, asgore.id);
       if (!committed.ok) return { state, events: [] };
-      return { state: clearPendingRoll(committed.state), events: committed.events };
+      return {
+        state: clearPendingRoll(committed.state),
+        events: [soulEvent, ...committed.events],
+      };
     }
-    return requestRoll(
+    const requested = requestRoll(
       clearPendingRoll(state),
       asgore.owner,
       "asgoreSoulParadePerseveranceTargetChoice",
       {
         asgoreId: asgore.id,
         options,
+        soulResult,
       } satisfies AsgoreSoulParadeTargetChoiceContext,
       asgore.id
     );
+    return { state: requested.state, events: [soulEvent, ...requested.events] };
   }
 
   if (outcome === 5) {
@@ -141,6 +163,7 @@ export function resolveAsgoreSoulParadeRoll(
       events:
         healedAmount > 0
           ? [
+              soulEvent,
               ...committed.events,
               evUnitHealed({
                 unitId: updatedAsgore.id,
@@ -149,7 +172,7 @@ export function resolveAsgoreSoulParadeRoll(
                 sourceAbilityId: ABILITY_ASGORE_SOUL_PARADE,
               }),
             ]
-          : committed.events,
+          : [soulEvent, ...committed.events],
     };
   }
 
@@ -157,16 +180,21 @@ export function resolveAsgoreSoulParadeRoll(
   if (options.length === 0) {
     const committed = commitAsgoreSoulParadeCost(state, asgore.id);
     if (!committed.ok) return { state, events: [] };
-    return { state: clearPendingRoll(committed.state), events: committed.events };
+    return {
+      state: clearPendingRoll(committed.state),
+      events: [soulEvent, ...committed.events],
+    };
   }
-  return requestRoll(
+  const requested = requestRoll(
     clearPendingRoll(state),
     asgore.owner,
     "asgoreSoulParadeJusticeTargetChoice",
     {
       asgoreId: asgore.id,
       options,
+      soulResult,
     } satisfies AsgoreSoulParadeTargetChoiceContext,
     asgore.id
   );
+  return { state: requested.state, events: [soulEvent, ...requested.events] };
 }

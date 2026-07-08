@@ -112,6 +112,21 @@ export type HeroGameEvent =
       abilityId: string;
     }
   | {
+      type: "asgoreSoulParadeResolved";
+      asgoreId?: string;
+      roll: number;
+      soulId: string;
+      soulName: string;
+      effectDescription: string;
+    }
+  | {
+      type: "lechyStormStarted";
+      sourceUnitId?: string;
+      roll: number;
+      duration: number;
+      durationUnit: "turn";
+    }
+  | {
       type: "lechyStormRollResult";
       unitId: string;
       roll: number;

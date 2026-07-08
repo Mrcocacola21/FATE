@@ -338,6 +338,15 @@ export const en = {
     forestMarkers_other: "{{count}} forest markers",
     turnResources: "Turn resources",
     stormRestriction: "Non-exempt ranged units can only attack adjacent targets.",
+    activeArenaEffects: "Active Arena Effects",
+    arenaEffectStorm: "Storm",
+    arenaEffectSource: "Source: {{source}}",
+    arenaEffectRemainingTurns_one: "Remaining: {{count}} turn",
+    arenaEffectRemainingTurns_few: "Remaining: {{count}} turns",
+    arenaEffectRemainingTurns_many: "Remaining: {{count}} turns",
+    arenaEffectRemainingTurns_other: "Remaining: {{count}} turns",
+    arenaEffectStormDescription:
+      "At the start of an affected figure's turn, its player rolls d6. On 1-3, that figure takes 1 damage; on 4-6, it resists. Non-exempt ranged units can only attack adjacent targets.",
     forestPositions: "Forest positions: {{positions}}",
     startTurn: "Start turn: {{unit}}",
     moveSearchUnavailable: "Move search unavailable: {{reason}}.",
@@ -664,7 +673,7 @@ export const en = {
           patience: {
             name: "Patience",
             description:
-              "Make one Assassin-range attack. For the rest of this turn, Asgore may enter stealth.",
+              "Make one Assassin-range attack. If there is no target, Asgore gains stealth for the rest of this turn.",
           },
           bravery: {
             name: "Bravery",
@@ -685,7 +694,7 @@ export const en = {
           },
           justice: {
             name: "Justice",
-            description: "Make one Archer-range attack.",
+            description: "Make an attack against a target in the Archer attack line.",
           },
         },
       },
@@ -917,27 +926,27 @@ export const en = {
     river: {
       boat: {
         summary:
-          "During River Person’s movement, Boat can carry one adjacent ally and drop it beside the destination.",
+          "Spend one movement action to choose an adjacent ally, move River Person, then drop the passenger adjacent to the destination.",
         options: {
           choose: {
             name: "Choose passenger",
-            description: "Before moving, choose one adjacent living ally or move alone.",
+            description: "Choose one adjacent living ally before movement.",
           },
           move: {
             name: "Travel",
             description:
-              "River Person moves normally; destinations without a legal drop cell are excluded while carrying.",
+              "Passenger selection and destination selection do not spend movement; the movement action is committed after a legal drop cell is chosen.",
           },
           drop: {
             name: "Disembark",
             description:
-              "After movement, place the carried ally on an empty cell adjacent to River Person’s destination.",
+              "After movement, place the passenger on an empty cell adjacent to River Person’s destination.",
           },
         },
       },
       tralala: {
         summary:
-          "At 4 charges, Tra-la-la moves River Person in a straight line and lets touched allies attack one chosen enemy.",
+          "At 4 charges, choose an adjacent enemy, move River Person in a straight line, make touched allies attack, then drop the target adjacent to the destination.",
         options: {
           target: {
             name: "Choose target",
@@ -945,12 +954,13 @@ export const en = {
           },
           move: {
             name: "Sail",
-            description: "Move to an empty destination along a straight cardinal line.",
+            description:
+              "Move along a legal horizontal, vertical, or diagonal straight line, passing through occupied intermediate cells.",
           },
           allies: {
             name: "Attack chain",
             description:
-              "Each ally touched by the route that can legally attack the chosen enemy makes one attack and spends its attack and action slots.",
+              "Each eligible ally within 1 cell of the traveled path attacks the dragged target at most once without spending normal action slots.",
           },
         },
       },
@@ -1195,6 +1205,16 @@ export const en = {
     forestDead: "Forest of the Dead",
     demonDuelist: "Demon Duelist",
     soulParade: "Soul Parade",
+    soulParadeRolled: "Rolled: {{roll}}",
+    soulParadeSoul: "Soul: {{soul}}",
+    soulParadeEffect: "Effect: {{effect}}",
+    stormStartTurn: "Storm",
+    stormStartTurnPrompt:
+      "Storm affects this figure. Roll d6 to resolve the start-of-turn effect.",
+    khansShooter: "Khan's Shooter",
+    khansShooterRicochetStep: "Khan's Shooter: select ricochet target {{current}} of {{total}}.",
+    khansShooterFinalRicochet: "Khan's Shooter: select the final ricochet target.",
+    khansShooterNextRicochet: "Khan's Shooter: select the next valid ricochet target.",
     braveryDefense: "Bravery Auto Defense",
     lokiLaughter: "Loki's Laughter",
     friskPacifism: "Frisk: Pacifism",

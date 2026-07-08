@@ -45,6 +45,9 @@ export interface AttackRollContext extends Record<string, unknown> {
   jebeKhansShooter?: {
     casterId: string;
     remainingAttacks: number;
+    totalAttacks?: number;
+    selectedTargetIds?: string[];
+    ricochetRoll?: number;
   };
 }
 
@@ -97,6 +100,7 @@ export interface JebeKhansShooterRicochetContext
   extends Record<string, unknown> {
   casterId: string;
   initialTargetId: string;
+  selectedTargetIds?: string[];
 }
 
 export interface JebeKhansShooterTargetChoiceContext
@@ -105,6 +109,11 @@ export interface JebeKhansShooterTargetChoiceContext
   remainingAttacks: number;
   options: string[];
   lastTargetId?: string;
+  selectedTargetIds?: string[];
+  totalAttacks?: number;
+  ricochetRoll?: number;
+  stepIndex?: number;
+  totalSteps?: number;
 }
 
 export interface HassanTrueEnemyTargetChoiceContext
@@ -126,16 +135,34 @@ export interface AsgoreSoulParadeRollContext extends Record<string, unknown> {
   asgoreId: string;
 }
 
+export type AsgoreSoulParadeSoulId =
+  | "patience"
+  | "bravery"
+  | "integrity"
+  | "perseverance"
+  | "kindness"
+  | "justice";
+
+export interface AsgoreSoulParadeResultContext
+  extends Record<string, unknown> {
+  roll: number;
+  soulId: AsgoreSoulParadeSoulId;
+  soulName: string;
+  effectDescription: string;
+}
+
 export interface AsgoreSoulParadeTargetChoiceContext
   extends Record<string, unknown> {
   asgoreId: string;
   options: string[];
+  soulResult?: AsgoreSoulParadeResultContext;
 }
 
 export interface AsgoreSoulParadeIntegrityDestinationContext
   extends Record<string, unknown> {
   asgoreId: string;
   options: Coord[];
+  soulResult?: AsgoreSoulParadeResultContext;
 }
 
 export interface LokiLaughtChoiceContext extends Record<string, unknown> {
@@ -221,10 +248,18 @@ export interface RiverBoatCarryChoiceContext extends Record<string, unknown> {
   options: string[];
 }
 
+export interface RiverBoatDestinationChoiceContext
+  extends Record<string, unknown> {
+  riverId: string;
+  allyId: string;
+  options: Coord[];
+}
+
 export interface RiverBoatDropDestinationContext
   extends Record<string, unknown> {
   riverId: string;
   allyId: string;
+  riverDestination?: Coord;
   options: Coord[];
 }
 
@@ -238,6 +273,14 @@ export interface RiverTraLaLaDestinationChoiceContext
   extends Record<string, unknown> {
   riverId: string;
   targetId: string;
+  options: Coord[];
+}
+
+export interface RiverTraLaLaDropDestinationChoiceContext
+  extends Record<string, unknown> {
+  riverId: string;
+  targetId: string;
+  riverDestination: Coord;
   options: Coord[];
 }
 

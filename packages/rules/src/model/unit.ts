@@ -76,6 +76,7 @@ export interface UnitState {
   };
   chikatiloFalseTrailTokenId?: string;
   lechyGuideTravelerTargetId?: string;
+  stormStartTurnResolvedTurnNumber?: number;
   lastChargedTurn?: number;
 
   hasMovedThisTurn: boolean;
@@ -101,6 +102,7 @@ export interface UnitState {
   asgoreBraveryAutoDefenseReady?: boolean;
   riverBoatCarryAllyId?: string;
   riverBoatmanMovePending?: boolean;
+  riverBoatmanExtraMoves?: number;
   papyrusUnbelieverActive?: boolean;
   papyrusBoneMode?: PapyrusBoneType;
   papyrusLongBoneMode?: boolean;

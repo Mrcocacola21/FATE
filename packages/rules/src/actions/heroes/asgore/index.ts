@@ -7,3 +7,4 @@ export {
 export { applyAsgoreFireball } from "./fireball";
 export { applyAsgoreFireParade } from "./fireParade";
 export { maybeTriggerAsgoreSoulParade, clearAsgoreTurnFlags } from "./soulParade";
+export { getAsgoreSoulParadeOutcome } from "./soulParadeOutcomes";

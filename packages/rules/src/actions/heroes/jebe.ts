@@ -19,7 +19,7 @@ import {
 import { HERO_JEBE_ID } from "../../heroes";
 import { requestRoll } from "../../core";
 import { evAoeResolved } from "../../core";
-import { commitAbilityCost } from "../abilityCosts";
+import { canCommitAbilityCost, commitAbilityCost } from "../abilityCosts";
 import type {
   JebeHailOfArrowsAoEContext,
   JebeKhansShooterRicochetContext,
@@ -211,24 +211,25 @@ export function applyJebeKhansShooter(
     return { state, events: [] };
   }
 
-  const committed = commitAbilityCost(state, unit.id, spec.id);
-  if (!committed.ok) return { state, events: [] };
-  const updatedUnit = committed.unit;
+  if (!canCommitAbilityCost(state, unit.id, spec.id)) {
+    return { state, events: [] };
+  }
 
   const ctx: JebeKhansShooterRicochetContext = {
-    casterId: updatedUnit.id,
+    casterId: unit.id,
     initialTargetId: target.id,
+    selectedTargetIds: [target.id],
   };
 
   const requested = requestRoll(
-    committed.state,
-    updatedUnit.owner,
+    state,
+    unit.owner,
     "jebeKhansShooterRicochetRoll",
     ctx,
-    updatedUnit.id
+    unit.id
   );
 
-  return { state: requested.state, events: [...committed.events, ...requested.events] };
+  return { state: requested.state, events: requested.events };
 }
 
 

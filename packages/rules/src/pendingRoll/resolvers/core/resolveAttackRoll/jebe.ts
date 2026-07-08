@@ -7,12 +7,25 @@ import type { AttackRollContext } from "../../../types";
 import { makeAttackContext } from "../../../builders/buildPendingRoll";
 import { findAttackResolved } from "../../../utils/attackEvents";
 
+export interface JebeKhansShooterChainState {
+  totalAttacks?: number;
+  selectedTargetIds?: string[];
+  ricochetRoll?: number;
+}
+
+function stringList(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === "string")
+    : [];
+}
+
 export function requestJebeKhansShooterAttack(
   state: GameState,
   baseEvents: GameEvent[],
   casterId: string,
   targetId: string,
-  remainingAttacks: number
+  remainingAttacks: number,
+  chain: JebeKhansShooterChainState = {}
 ): ApplyResult {
   const caster = state.units[casterId];
   const target = state.units[targetId];
@@ -41,6 +54,9 @@ export function requestJebeKhansShooterAttack(
     jebeKhansShooter: {
       casterId,
       remainingAttacks,
+      totalAttacks: chain.totalAttacks ?? remainingAttacks,
+      selectedTargetIds: chain.selectedTargetIds ?? [targetId],
+      ricochetRoll: chain.ricochetRoll,
     },
   };
 
@@ -68,6 +84,11 @@ export function continueJebeKhansShooter(
       : undefined;
   const lastTargetId =
     typeof context.lastTargetId === "string" ? context.lastTargetId : undefined;
+  const selectedTargetIds = stringList(context.selectedTargetIds);
+  const totalAttacks =
+    typeof context.totalAttacks === "number" ? context.totalAttacks : undefined;
+  const ricochetRoll =
+    typeof context.ricochetRoll === "number" ? context.ricochetRoll : undefined;
   if (!casterId || !remainingAttacks || remainingAttacks <= 0) {
     return { state: clearPendingRoll(state), events: baseEvents };
   }
@@ -93,6 +114,12 @@ export function continueJebeKhansShooter(
       remainingAttacks,
       options,
       lastTargetId,
+      selectedTargetIds,
+      totalAttacks,
+      ricochetRoll,
+      stepIndex: selectedTargetIds.length,
+      totalSteps:
+        typeof totalAttacks === "number" ? Math.max(0, totalAttacks - 1) : undefined,
     },
     caster.id
   );
@@ -123,11 +150,18 @@ export function handleJebeKhansShooterAfterAttack(
   if (remainingAttacks <= 0) {
     return { state: clearPendingRoll(state), events };
   }
+  const selectedTargetIds = stringList(shooter.selectedTargetIds);
+  const targetsSoFar = selectedTargetIds.includes(context.defenderId)
+    ? selectedTargetIds
+    : [...selectedTargetIds, context.defenderId];
 
   const resumeContext: Record<string, unknown> = {
     casterId: shooter.casterId,
     remainingAttacks,
     lastTargetId: context.defenderId,
+    selectedTargetIds: targetsSoFar,
+    totalAttacks: shooter.totalAttacks,
+    ricochetRoll: shooter.ricochetRoll,
   };
   const intimidate = maybeRequestIntimidate(
     state,

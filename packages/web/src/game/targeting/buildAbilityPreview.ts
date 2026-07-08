@@ -500,8 +500,9 @@ export function buildAbilityPreview({
     case LOKI_LAUGHT_ID:
       return buildLokiHover(gameView, source);
     case RIVER_PERSON_BOAT_ID:
-    case RIVER_PERSON_BOATMAN_ID:
       return buildRiverBoatHover(gameView, source);
+    case RIVER_PERSON_BOATMAN_ID:
+      return null;
     case RIVER_PERSON_TRA_LA_LA_ID:
       return buildRiverTraLaLaHover(gameView, source);
     case GENGHIS_KHAN_KHANS_DECREE_ID: {

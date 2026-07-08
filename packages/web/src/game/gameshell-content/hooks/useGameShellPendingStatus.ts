@@ -84,12 +84,16 @@ export function useGameShellPendingStatus({
   const isChargedImpulseTargetChoice =
     pendingRoll?.kind === "chargedImpulseTargetChoice";
   const isRiverBoatCarryChoice = pendingRoll?.kind === "riverBoatCarryChoice";
+  const isRiverBoatDestinationChoice =
+    pendingRoll?.kind === "riverBoatDestinationChoice";
   const isRiverBoatDropDestination =
     pendingRoll?.kind === "riverBoatDropDestination";
   const isRiverTraLaLaTargetChoice =
     pendingRoll?.kind === "riverTraLaLaTargetChoice";
   const isRiverTraLaLaDestinationChoice =
     pendingRoll?.kind === "riverTraLaLaDestinationChoice";
+  const isRiverTraLaLaDropDestinationChoice =
+    pendingRoll?.kind === "riverTraLaLaDropDestinationChoice";
   const isChikatiloRevealChoice =
     pendingRoll?.kind === "chikatiloFalseTrailRevealChoice";
   const isChikatiloDecoyChoice = pendingRoll?.kind === "chikatiloDecoyChoice";
@@ -118,9 +122,11 @@ export function useGameShellPendingStatus({
     isOdinSleipnirDestination ||
     isChargedImpulseTargetChoice ||
     isRiverBoatCarryChoice ||
+    isRiverBoatDestinationChoice ||
     isRiverBoatDropDestination ||
     isRiverTraLaLaTargetChoice ||
-    isRiverTraLaLaDestinationChoice;
+    isRiverTraLaLaDestinationChoice ||
+    isRiverTraLaLaDropDestinationChoice;
   const pendingQueueCount = view?.pendingCombatQueueCount ?? 0;
   const attackContext = pendingRoll?.context as
     | {
@@ -283,9 +289,11 @@ export function useGameShellPendingStatus({
     isOdinSleipnirDestination,
     isChargedImpulseTargetChoice,
     isRiverBoatCarryChoice,
+    isRiverBoatDestinationChoice,
     isRiverBoatDropDestination,
     isRiverTraLaLaTargetChoice,
     isRiverTraLaLaDestinationChoice,
+    isRiverTraLaLaDropDestinationChoice,
     isChikatiloRevealChoice,
     isChikatiloDecoyChoice,
     boardSelectionPending,

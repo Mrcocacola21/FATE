@@ -4,6 +4,7 @@ import { useI18n } from "../../../i18n";
 
 interface PendingBoardNoticeProps {
   pendingRollKind: string;
+  pendingRollContext?: Record<string, unknown>;
   pendingQueueCount: number;
   stakeSelections: Coord[];
   stakeLimit: number;
@@ -20,9 +21,11 @@ interface PendingBoardNoticeProps {
   groznyTyrantAllowSkip: boolean;
   isGuideTravelerPlacement: boolean;
   isRiverBoatCarryChoice: boolean;
+  isRiverBoatDestinationChoice: boolean;
   isRiverBoatDropDestination: boolean;
   isRiverTraLaLaTargetChoice: boolean;
   isRiverTraLaLaDestinationChoice: boolean;
+  isRiverTraLaLaDropDestinationChoice: boolean;
   isJebeKhansShooterTargetChoice: boolean;
   isLokiLaughtChoice: boolean;
   isLokiChickenTargetChoice: boolean;
@@ -45,8 +48,34 @@ interface PendingBoardNoticeProps {
   className?: string;
 }
 
+type SoulId =
+  | "patience"
+  | "bravery"
+  | "integrity"
+  | "perseverance"
+  | "kindness"
+  | "justice";
+
+const SOUL_IDS = new Set<SoulId>([
+  "patience",
+  "bravery",
+  "integrity",
+  "perseverance",
+  "kindness",
+  "justice",
+]);
+
+function numberValue(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function stringValue(value: unknown): string | null {
+  return typeof value === "string" && value.length > 0 ? value : null;
+}
+
 export function PendingBoardNotice({
   pendingRollKind,
+  pendingRollContext = {},
   pendingQueueCount,
   stakeSelections,
   stakeLimit,
@@ -63,9 +92,11 @@ export function PendingBoardNotice({
   groznyTyrantAllowSkip,
   isGuideTravelerPlacement,
   isRiverBoatCarryChoice,
+  isRiverBoatDestinationChoice,
   isRiverBoatDropDestination,
   isRiverTraLaLaTargetChoice,
   isRiverTraLaLaDestinationChoice,
+  isRiverTraLaLaDropDestinationChoice,
   isJebeKhansShooterTargetChoice,
   isLokiLaughtChoice,
   isLokiChickenTargetChoice,
@@ -89,10 +120,49 @@ export function PendingBoardNotice({
 }: PendingBoardNoticeProps) {
   const { language, t } = useI18n();
   const p = (en: string, uk: string) => (language === "uk" ? uk : en);
+  const soulContext =
+    pendingRollContext.soulResult &&
+    typeof pendingRollContext.soulResult === "object"
+      ? (pendingRollContext.soulResult as Record<string, unknown>)
+      : null;
+  const soulId = stringValue(soulContext?.soulId);
+  const validSoulId = soulId && SOUL_IDS.has(soulId as SoulId) ? (soulId as SoulId) : null;
+  const soulRoll = numberValue(soulContext?.roll);
+  const soulName = validSoulId
+    ? t(`abilityDetails.asgore.soulParade.outcomes.${validSoulId}.name`)
+    : stringValue(soulContext?.soulName);
+  const soulEffect = validSoulId
+    ? t(`abilityDetails.asgore.soulParade.outcomes.${validSoulId}.description`)
+    : stringValue(soulContext?.effectDescription);
+  const showSoulSummary =
+    !!soulContext &&
+    (isAsgoreSoulParadePatienceTargetChoice ||
+      isAsgoreSoulParadePerseveranceTargetChoice ||
+      isAsgoreSoulParadeJusticeTargetChoice ||
+      isAsgoreSoulParadeIntegrityDestination);
+  const ricochetStepIndex = numberValue(pendingRollContext.stepIndex);
+  const ricochetTotalSteps = numberValue(pendingRollContext.totalSteps);
+  const ricochetPrompt =
+    ricochetStepIndex && ricochetTotalSteps
+      ? ricochetStepIndex >= ricochetTotalSteps
+        ? t("pending.khansShooterFinalRicochet")
+        : t("pending.khansShooterRicochetStep", {
+            current: ricochetStepIndex,
+            total: ricochetTotalSteps,
+          })
+      : t("pending.khansShooterNextRicochet");
   return (
     <div
       className={`panel-arcane rounded-2xl border border-violet-300/70 bg-violet-50/75 p-4 text-sm text-violet-950 shadow-lg shadow-violet-950/5 dark:border-violet-800/70 dark:bg-violet-950/30 dark:text-violet-100 ${className}`}
     >
+      {showSoulSummary ? (
+        <div className="mb-3 rounded-lg border border-violet-300/70 bg-white/70 p-3 text-xs text-violet-950 dark:border-violet-700/70 dark:bg-violet-950/40 dark:text-violet-100">
+          <div className="font-semibold">{t("pending.soulParade")}</div>
+          <div className="mt-1">{t("pending.soulParadeRolled", { roll: soulRoll ?? "-" })}</div>
+          <div>{t("pending.soulParadeSoul", { soul: soulName ?? "-" })}</div>
+          <div>{t("pending.soulParadeEffect", { effect: soulEffect ?? "-" })}</div>
+        </div>
+      ) : null}
       {isStakePlacement ? (
         <div>
           <div className="font-semibold">{t("pending.placeStakes")}</div>
@@ -226,15 +296,28 @@ export function PendingBoardNotice({
           <div className="font-semibold">{p("Boat carry", "Пасажир човна")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
             {p(
-              "Select an adjacent ally to carry, or move without carrying.",
-              "Оберіть сусіднього союзника або рухайтеся без пасажира.",
+              "Select an adjacent ally to carry.",
+              "Оберіть сусіднього союзника для перевезення.",
             )}
           </div>
           <button
             className="mt-2 rounded-lg bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
             onClick={onResolveSkip}
           >
-            {p("Move without carrying", "Рухатися без пасажира")}
+            {t("common.cancel")}
+          </button>
+        </div>
+      ) : isRiverBoatDestinationChoice ? (
+        <div>
+          <div className="font-semibold">{p("Boat destination", "Призначення човна")}</div>
+          <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
+            {p("Select River Person's destination.", "Оберіть клітинку призначення Лодочника.")}
+          </div>
+          <button
+            className="mt-2 rounded-lg bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
+            onClick={onResolveSkip}
+          >
+            {t("common.cancel")}
           </button>
         </div>
       ) : isRiverBoatDropDestination ? (
@@ -242,10 +325,16 @@ export function PendingBoardNotice({
           <div className="font-semibold">{p("Boat drop", "Висадка з човна")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
             {p(
-              "Select an adjacent empty cell to drop the carried ally.",
-              "Оберіть сусідню вільну клітинку для висадки союзника.",
+              "Select an adjacent empty cell to drop the passenger.",
+              "Оберіть сусідню порожню клітинку для висадки пасажира.",
             )}
           </div>
+          <button
+            className="mt-2 rounded-lg bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
+            onClick={onResolveSkip}
+          >
+            {t("common.cancel")}
+          </button>
         </div>
       ) : isRiverTraLaLaTargetChoice ? (
         <div>
@@ -253,6 +342,12 @@ export function PendingBoardNotice({
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
             {p("Select an adjacent enemy target.", "Оберіть сусіднього ворога.")}
           </div>
+          <button
+            className="mt-2 rounded-lg bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
+            onClick={onResolveSkip}
+          >
+            {t("common.cancel")}
+          </button>
         </div>
       ) : isRiverTraLaLaDestinationChoice ? (
         <div>
@@ -263,12 +358,34 @@ export function PendingBoardNotice({
               "Оберіть підсвічену клітинку на прямій.",
             )}
           </div>
+          <button
+            className="mt-2 rounded-lg bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
+            onClick={onResolveSkip}
+          >
+            {t("common.cancel")}
+          </button>
+        </div>
+      ) : isRiverTraLaLaDropDestinationChoice ? (
+        <div>
+          <div className="font-semibold">{p("Tra-la-la drop", "Висадка Тра-ля-ля")}</div>
+          <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
+            {p(
+              "Select an adjacent empty cell to drop the dragged target.",
+              "Оберіть сусідню порожню клітинку для висадки цілі.",
+            )}
+          </div>
+          <button
+            className="mt-2 rounded-lg bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
+            onClick={onResolveSkip}
+          >
+            {t("common.cancel")}
+          </button>
         </div>
       ) : isJebeKhansShooterTargetChoice ? (
         <div>
-          <div className="font-semibold">{p("Khan's Shooter", "Стрілець хана")}</div>
+          <div className="font-semibold">{t("pending.khansShooter")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            {p("Select the next ricochet target.", "Оберіть наступну ціль рикошету.")}
+            {ricochetPrompt}
           </div>
         </div>
       ) : isLokiLaughtChoice ? (

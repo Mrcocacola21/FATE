@@ -233,6 +233,8 @@ export function PendingRollModal({
                       ? t("pending.demonDuelist")
                       : pendingRoll.kind === "asgoreSoulParadeRoll"
                         ? t("pending.soulParade")
+                        : pendingRoll.kind === "lechyStormStartTurnRoll"
+                          ? t("pending.stormStartTurn")
                         : isAsgoreBraveryDefenseChoice
                           ? t("pending.braveryDefense")
                           : isLokiLaughtChoice
@@ -335,6 +337,8 @@ export function PendingRollModal({
                                       "Roll 1d6 to determine Soul Parade effect.",
                                       "Киньте 1d6, щоб визначити ефект Параду душ.",
                                     )
+                                  : pendingRoll.kind === "lechyStormStartTurnRoll"
+                                    ? t("pending.stormStartTurnPrompt")
                                   : isForestMoveCheck
                                     ? p(
                                         "Forest check: roll 5-6 to leave",

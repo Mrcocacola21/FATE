@@ -12,12 +12,6 @@ import { getLegalMovesForUnitModes } from "../../movement";
 import { getMovementModes } from "../shared";
 import { requestRoll } from "../../core";
 import { evMoveOptionsGenerated } from "../../core";
-import {
-  filterRiverMovesByCarryDrop,
-  getRiverCarryOptions,
-  isRiverPerson,
-  requestRiverBoatCarryChoice,
-} from "../heroes/riverPerson";
 
 export function applyRequestMoveOptions(
   state: GameState,
@@ -48,13 +42,11 @@ export function applyRequestMoveOptions(
     return { state, events: [] };
   }
 
-  const hasRiverBoatmanMove = unit.riverBoatmanMovePending === true;
   const canMove = canSpendSlots(unit, { move: true });
   if (
     !canMove &&
     !unit.genghisKhanDecreeMovePending &&
-    !unit.genghisKhanMongolChargeActive &&
-    !hasRiverBoatmanMove
+    !unit.genghisKhanMongolChargeActive
   ) {
     return { state, events: [] };
   }
@@ -105,18 +97,6 @@ export function applyRequestMoveOptions(
         }),
       ],
     };
-  }
-
-  if (isRiverPerson(unit) && !unit.riverBoatCarryAllyId) {
-    const carryOptions = getRiverCarryOptions(state, unit.id);
-    if (carryOptions.length > 0) {
-      return requestRiverBoatCarryChoice(
-        state,
-        unit,
-        action.mode ?? "normal",
-        carryOptions
-      );
-    }
   }
 
   const movementModes = getMovementModes(unit);
@@ -174,14 +154,7 @@ export function applyRequestMoveOptions(
     );
   }
 
-  let legalMoves = getLegalMovesForUnitModes(state, unit.id, [chosenMode]);
-  if (isRiverPerson(unit) && unit.riverBoatCarryAllyId) {
-    legalMoves = filterRiverMovesByCarryDrop(
-      state,
-      legalMoves,
-      unit.riverBoatCarryAllyId
-    );
-  }
+  const legalMoves = getLegalMovesForUnitModes(state, unit.id, [chosenMode]);
   const modeValue = requestedMode ?? "normal";
 
   const pendingMove: PendingMove = {

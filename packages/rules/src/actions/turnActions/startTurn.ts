@@ -102,6 +102,17 @@ export function applyUnitStartTurn(
     afterBunker,
     initialUnit.id
   );
+  if (afterStorm.pendingRoll) {
+    return {
+      state: afterStorm,
+      events: [
+        ...boneFieldEvents,
+        ...stealthEvents,
+        ...bunkerEvents,
+        ...stormEvents,
+      ],
+    };
+  }
   const unitAfterStorm = afterStorm.units[initialUnit.id];
   if (!unitAfterStorm || !unitAfterStorm.isAlive || !unitAfterStorm.position) {
     return {

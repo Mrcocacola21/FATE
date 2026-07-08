@@ -1,6 +1,7 @@
 import { GameState, PlayerView, UnitState } from "../model";
 import {
   clonePublicUnit,
+  cloneArenaEffectsForRecipient,
   cloneForestMarkers,
   collectSpectatorStakeMarkers,
 } from "./helpers";
@@ -31,6 +32,7 @@ export function makeSpectatorView(state: GameState): PlayerView {
   );
   const stakeMarkers = collectSpectatorStakeMarkers(state);
   const forestMarkers = cloneForestMarkers(state);
+  const arenaEffects = cloneArenaEffectsForRecipient(state, "spectator");
 
   return {
     ...baseState,
@@ -39,6 +41,7 @@ export function makeSpectatorView(state: GameState): PlayerView {
     lastKnownPositions: {},
     forestMarkers,
     forestMarker: forestMarkers[0] ?? null,
+    arenaEffects,
     pendingRoll: null,
     pendingCombatQueueCount,
     pendingAoEPreview: buildPendingAoEPreview(pendingAoE),

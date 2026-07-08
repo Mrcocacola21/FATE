@@ -1,4 +1,5 @@
 import {
+  ABILITY_RIVER_PERSON_BOAT,
   ABILITY_RIVER_PERSON_BOATMAN,
   ABILITY_RIVER_PERSON_TRA_LA_LA,
   applyAction,
@@ -17,6 +18,77 @@ import {
   setupRiverPersonState,
   toBattleState,
 } from "../helpers/testUtils";
+
+function abilityAction(unitId: string, abilityId: string) {
+  return {
+    type: "useAbility",
+    unitId,
+    abilityId,
+  } as any;
+}
+
+function getPendingOptions<T = Coord>(state: ReturnType<typeof setupRiverPersonState>["state"]): T[] {
+  return ((state.pendingRoll?.context as { options?: T[] } | undefined)?.options ??
+    []) as T[];
+}
+
+function expectCoord(options: Coord[], expected: Coord, message: string): void {
+  assert(
+    options.some(
+      (coord) => coord.col === expected.col && coord.row === expected.row
+    ),
+    message
+  );
+}
+
+function completeBoatUse(
+  state: ReturnType<typeof setupRiverPersonState>["state"],
+  riverId: string,
+  allyId: string,
+  destination: Coord,
+  preferredDrop?: Coord
+) {
+  const used = applyAction(
+    state,
+    abilityAction(riverId, ABILITY_RIVER_PERSON_BOAT),
+    makeRngSequence([])
+  );
+  assert(
+    used.state.pendingRoll?.kind === "riverBoatCarryChoice",
+    "Boat should begin with explicit passenger selection"
+  );
+  const carrySelected = resolvePendingWithChoice(
+    used.state,
+    { type: "hassanTrueEnemyTarget", targetId: allyId },
+    makeRngSequence([])
+  );
+  assert(
+    carrySelected.state.pendingRoll?.kind === "riverBoatDestinationChoice",
+    "Boat passenger selection should request River destination"
+  );
+  const destinationSelected = resolvePendingWithChoice(
+    carrySelected.state,
+    { type: "forestMoveDestination", position: destination },
+    makeRngSequence([])
+  );
+  assert(
+    destinationSelected.state.pendingRoll?.kind === "riverBoatDropDestination",
+    "Boat destination selection should request final passenger drop"
+  );
+  const dropOptions = getPendingOptions(destinationSelected.state);
+  const drop =
+    preferredDrop ??
+    dropOptions.find(
+      (coord) => coord.col !== destination.col || coord.row !== destination.row
+    );
+  assert(drop, "Boat drop options should include an adjacent empty cell");
+  return resolvePendingWithChoice(
+    destinationSelected.state,
+    { type: "forestMoveDestination", position: drop },
+    makeRngSequence([])
+  );
+}
+
 export function testRiverPersonHpBonus() {
   const { river } = setupRiverPersonState();
   const baseHp = getUnitDefinition("rider").maxHp;
@@ -30,7 +102,6 @@ export function testRiverPersonHpBonus() {
 
   console.log("river_person_hp_bonus passed");
 }
-
 
 export function testRiverPersonNoRiderPathFeature() {
   let { state, river } = setupRiverPersonState();
@@ -67,7 +138,6 @@ export function testRiverPersonNoRiderPathFeature() {
   console.log("river_person_no_rider_path_feature passed");
 }
 
-
 export function testRiverPersonBoatCarryFlowAndConstraints() {
   {
     let { state, river } = setupRiverPersonState();
@@ -75,15 +145,26 @@ export function testRiverPersonBoatCarryFlowAndConstraints() {
     state = toBattleState(state, "P1", river.id);
     state = initKnowledgeForOwners(state);
 
-    const requested = applyAction(
+    const moveOptions = applyAction(
       state,
       { type: "requestMoveOptions", unitId: river.id } as any,
       makeRngSequence([])
     );
     assert(
-      requested.state.pendingRoll?.kind !== "riverBoatCarryChoice",
-      "Boat carry choice should not be requested without adjacent allies"
+      moveOptions.state.pendingRoll?.kind !== "riverBoatCarryChoice",
+      "Normal move options should not auto-open Boat passenger selection"
     );
+
+    const boat = applyAction(
+      state,
+      abilityAction(river.id, ABILITY_RIVER_PERSON_BOAT),
+      makeRngSequence([])
+    );
+    assert(
+      boat.state.pendingRoll?.kind !== "riverBoatCarryChoice",
+      "Boat should not start without an adjacent allied passenger"
+    );
+    assert(!boat.state.units[river.id].turn.moveUsed, "Rejected Boat should not spend move");
   }
 
   {
@@ -109,58 +190,93 @@ export function testRiverPersonBoatCarryFlowAndConstraints() {
     state = toBattleState(state, "P1", river.id);
     state = initKnowledgeForOwners(state);
 
-    const requested = applyAction(
+    const used = applyAction(
       state,
-      { type: "requestMoveOptions", unitId: river.id } as any,
+      abilityAction(river.id, ABILITY_RIVER_PERSON_BOAT),
       makeRngSequence([])
     );
     assert(
-      requested.state.pendingRoll?.kind === "riverBoatCarryChoice",
-      "Boat move should prompt carry choice when adjacent ally exists"
+      used.state.pendingRoll?.kind === "riverBoatCarryChoice",
+      "Boat should prompt explicit passenger selection"
     );
+    assert(!used.state.units[river.id].turn.moveUsed, "Boat activation should not spend move");
 
+    const canceled = resolvePendingWithChoice(
+      used.state,
+      "skip",
+      makeRngSequence([])
+    );
+    assert(!canceled.state.pendingRoll, "Boat cancel should clear pending state");
+    assert(!canceled.state.units[river.id].turn.moveUsed, "Boat cancel should not spend move");
+
+    const restarted = applyAction(
+      state,
+      abilityAction(river.id, ABILITY_RIVER_PERSON_BOAT),
+      makeRngSequence([])
+    );
     const carrySelected = resolvePendingWithChoice(
-      requested.state,
+      restarted.state,
       { type: "hassanTrueEnemyTarget", targetId: carriedAlly.id },
       makeRngSequence([])
     );
-    const legalMoves = carrySelected.state.pendingMove?.legalTo ?? [];
     assert(
-      !legalMoves.some((coord) => coord.col === 0 && coord.row === 0),
-      "Carry move options should exclude destinations without a legal drop cell"
+      carrySelected.state.pendingRoll?.kind === "riverBoatDestinationChoice",
+      "Boat passenger selection should request destination"
     );
     assert(
-      legalMoves.some((coord) => coord.col === 0 && coord.row === 5),
-      "Carry move options should keep destinations that allow dropping ally"
+      !carrySelected.state.units[river.id].turn.moveUsed,
+      "Boat passenger selection should not spend move"
     );
 
-    const moved = applyAction(
+    const legalDestinations = getPendingOptions(carrySelected.state);
+    assert(
+      !legalDestinations.some((coord) => coord.col === 0 && coord.row === 0),
+      "Boat destination options should exclude destinations without legal drop"
+    );
+    expectCoord(
+      legalDestinations,
+      { col: 0, row: 5 },
+      "Boat destination options should include legal carry destination"
+    );
+
+    const destinationSelected = resolvePendingWithChoice(
       carrySelected.state,
-      { type: "move", unitId: river.id, to: { col: 0, row: 5 } } as any,
+      { type: "forestMoveDestination", position: { col: 0, row: 5 } },
       makeRngSequence([])
     );
     assert(
-      moved.state.pendingRoll?.kind === "riverBoatDropDestination",
-      "After carrying move, River Person should request drop destination"
+      destinationSelected.state.pendingRoll?.kind === "riverBoatDropDestination",
+      "Boat destination should request passenger drop"
+    );
+    assert(
+      destinationSelected.state.units[river.id].position?.row === 3,
+      "Boat destination selection should not move River early"
+    );
+    assert(
+      !destinationSelected.state.units[river.id].turn.moveUsed,
+      "Boat destination selection should not spend move"
     );
 
     const invalidDrop = resolvePendingWithChoice(
-      moved.state,
+      destinationSelected.state,
       { type: "forestMoveDestination", position: { col: 2, row: 5 } },
       makeRngSequence([])
     );
     assert(
       invalidDrop.state.pendingRoll?.kind === "riverBoatDropDestination",
-      "Invalid drop destination should be rejected"
+      "Invalid Boat drop should be rejected without clearing pending state"
+    );
+    assert(
+      invalidDrop.state.units[river.id].position?.row === 3 &&
+        invalidDrop.state.units[carriedAlly.id].position?.row === 3,
+      "Invalid Boat drop should not move or corrupt carried state"
     );
 
-    const dropOptions =
-      (moved.state.pendingRoll?.context as { options?: Coord[] } | undefined)
-        ?.options ?? [];
-    assert(dropOptions.length > 0, "drop options should be provided");
-    const chosenDrop = dropOptions[0];
+    const dropOptions = getPendingOptions(destinationSelected.state);
+    assert(dropOptions.length > 0, "Boat drop options should be provided");
+    const chosenDrop = dropOptions[0]!;
     const dropped = resolvePendingWithChoice(
-      moved.state,
+      destinationSelected.state,
       { type: "forestMoveDestination", position: chosenDrop },
       makeRngSequence([])
     );
@@ -168,120 +284,160 @@ export function testRiverPersonBoatCarryFlowAndConstraints() {
     const riverAfter = dropped.state.units[river.id];
     const allyAfter = dropped.state.units[carriedAlly.id];
     assert(
+      riverAfter.position?.col === 0 && riverAfter.position?.row === 5,
+      "Boat should move River Person on final drop resolution"
+    );
+    assert(
       allyAfter.position?.col === chosenDrop.col &&
         allyAfter.position?.row === chosenDrop.row,
-      "carried ally should be dropped on chosen destination"
+      "Boat should drop passenger on chosen legal cell"
     );
+    assert(riverAfter.turn.moveUsed, "Boat should consume one move after final drop");
+    assert(!riverAfter.turn.actionUsed, "Boat should not consume main action");
     assert(
-      Math.max(
-        Math.abs((allyAfter.position?.col ?? 0) - (riverAfter.position?.col ?? 0)),
-        Math.abs((allyAfter.position?.row ?? 0) - (riverAfter.position?.row ?? 0))
-      ) <= 1,
-      "dropped ally cell must be adjacent to River Person"
-    );
-    assert(
-      !(allyAfter.position?.col === riverAfter.position?.col &&
-        allyAfter.position?.row === riverAfter.position?.row),
-      "drop destination must stay unoccupied by River Person"
+      riverAfter.riverBoatCarryAllyId === undefined,
+      "Boat should not leave stale carried state"
     );
   }
 
   console.log("river_person_boat_carry_flow_and_constraints passed");
 }
 
-
 export function testRiverPersonBoatmanConvertsActionToMoveAndSupportsCarry() {
-  let { state, river } = setupRiverPersonState();
-  const carriedAlly = Object.values(state.units).find(
-    (unit) => unit.owner === "P1" && unit.class === "assassin"
-  )!;
+  {
+    let { state, river } = setupRiverPersonState();
+    const ally = Object.values(state.units).find(
+      (unit) => unit.owner === "P1" && unit.class === "assassin"
+    )!;
+    state = setUnit(state, river.id, { position: { col: 3, row: 3 } });
+    state = setUnit(state, ally.id, { position: { col: 3, row: 4 } });
+    state = toBattleState(state, "P1", river.id);
+    state = initKnowledgeForOwners(state);
 
-  state = setUnit(state, river.id, {
-    position: { col: 3, row: 3 },
-    turn: {
-      moveUsed: true,
-      attackUsed: false,
-      actionUsed: false,
-      stealthUsed: false,
-    },
-  });
-  state = setUnit(state, carriedAlly.id, { position: { col: 3, row: 4 } });
-  state = toBattleState(state, "P1", river.id);
-  state = initKnowledgeForOwners(state);
+    const usedBoatman = applyAction(
+      state,
+      abilityAction(river.id, ABILITY_RIVER_PERSON_BOATMAN),
+      makeRngSequence([])
+    );
+    const riverAfter = usedBoatman.state.units[river.id];
+    assert(riverAfter.turn.actionUsed, "Boatman should consume main action immediately");
+    assert(!riverAfter.turn.moveUsed, "Boatman should not consume normal move slot");
+    assert(
+      riverAfter.riverBoatmanExtraMoves === 1,
+      "Boatman should grant exactly one extra movement action"
+    );
+    assert(
+      riverAfter.position?.col === 3 && riverAfter.position?.row === 3,
+      "Boatman should not move River Person"
+    );
+    assert(
+      !usedBoatman.state.pendingRoll,
+      "Boatman should not start passenger selection or movement"
+    );
 
-  const usedBoatman = applyAction(
-    state,
-    {
-      type: "useAbility",
-      unitId: river.id,
-      abilityId: ABILITY_RIVER_PERSON_BOATMAN,
-    } as any,
-    makeRngSequence([])
-  );
-  assert(
-    !usedBoatman.state.units[river.id].turn.actionUsed,
-    "Boatman should not consume River Person action slot before movement resolves"
-  );
-  assert(
-    usedBoatman.state.units[river.id].turn.moveUsed,
-    "Boatman should not reset/spend move slot state"
-  );
-  assert(
-    usedBoatman.state.pendingRoll?.kind === "riverBoatCarryChoice",
-    "Boatman movement should use carry choice flow when adjacent ally exists"
-  );
+    const duplicate = applyAction(
+      usedBoatman.state,
+      abilityAction(river.id, ABILITY_RIVER_PERSON_BOATMAN),
+      makeRngSequence([])
+    );
+    assert(
+      duplicate.state.units[river.id].riverBoatmanExtraMoves === 1,
+      "Duplicate illegal Boatman activation should not grant another move"
+    );
+    assert(
+      duplicate.state.units[river.id].turn.actionUsed,
+      "Rejected duplicate Boatman should preserve already spent action"
+    );
+  }
 
-  const carrySelected = resolvePendingWithChoice(
-    usedBoatman.state,
-    { type: "hassanTrueEnemyTarget", targetId: carriedAlly.id },
-    makeRngSequence([])
-  );
-  const destination = carrySelected.state.pendingMove?.legalTo.find(
-    (coord) => coord.col === 3 && coord.row === 5
-  );
-  assert(destination, "Boatman move should provide legal movement destinations");
+  {
+    let { state, river } = setupRiverPersonState();
+    const ally = Object.values(state.units).find(
+      (unit) => unit.owner === "P1" && unit.class === "assassin"
+    )!;
+    state = setUnit(state, river.id, { position: { col: 3, row: 3 } });
+    state = setUnit(state, ally.id, { position: { col: 3, row: 4 } });
+    state = toBattleState(state, "P1", river.id);
+    state = initKnowledgeForOwners(state);
 
-  const moved = applyAction(
-    carrySelected.state,
-    { type: "move", unitId: river.id, to: destination! } as any,
-    makeRngSequence([])
-  );
-  assert(
-    moved.state.pendingRoll?.kind === "riverBoatDropDestination",
-    "Boatman move with carry should request ally drop destination"
-  );
-  assert(
-    moved.state.units[river.id].turn.actionUsed,
-    "Boatman should consume River Person action slot when movement resolves"
-  );
-  const dropOptions =
-    (moved.state.pendingRoll?.context as { options?: Coord[] } | undefined)
-      ?.options ?? [];
-  assert(dropOptions.length > 0, "Boatman carry should provide drop options");
-  const dropped = resolvePendingWithChoice(
-    moved.state,
-    { type: "forestMoveDestination", position: dropOptions[0] },
-    makeRngSequence([])
-  );
+    const boatman = applyAction(
+      state,
+      abilityAction(river.id, ABILITY_RIVER_PERSON_BOATMAN),
+      makeRngSequence([])
+    );
+    const firstBoat = completeBoatUse(
+      boatman.state,
+      river.id,
+      ally.id,
+      { col: 3, row: 5 },
+      { col: 4, row: 5 }
+    );
+    assert(
+      firstBoat.state.units[river.id].turn.moveUsed,
+      "First Boat after Boatman should consume the normal move slot"
+    );
+    assert(
+      firstBoat.state.units[river.id].riverBoatmanExtraMoves === 1,
+      "First Boat after Boatman should leave one extra move available"
+    );
 
-  assert(
-    dropped.state.units[river.id].position?.col === destination!.col &&
-      dropped.state.units[river.id].position?.row === destination!.row,
-    "River Person should move through Boatman even with move slot already spent"
-  );
-  assert(
-    dropped.state.units[carriedAlly.id].position?.col === dropOptions[0].col &&
-      dropped.state.units[carriedAlly.id].position?.row === dropOptions[0].row,
-    "Boat carry should still work when movement is granted by Boatman"
-  );
-  assert(
-    dropped.state.units[river.id].riverBoatmanMovePending !== true,
-    "Boatman move flag should clear after movement resolves"
-  );
+    const secondBoat = completeBoatUse(
+      firstBoat.state,
+      river.id,
+      ally.id,
+      { col: 3, row: 7 },
+      { col: 4, row: 7 }
+    );
+    assert(
+      secondBoat.state.units[river.id].riverBoatmanExtraMoves === 0,
+      "Second Boat after Boatman should consume the granted extra move"
+    );
+    assert(
+      secondBoat.state.units[river.id].turn.moveUsed,
+      "Second Boat should share the normal movement budget state"
+    );
+
+    const thirdAttempt = applyAction(
+      secondBoat.state,
+      abilityAction(river.id, ABILITY_RIVER_PERSON_BOAT),
+      makeRngSequence([])
+    );
+    assert(
+      !thirdAttempt.state.pendingRoll,
+      "Third Boat attempt should be rejected after both movement actions are spent"
+    );
+  }
+
+  {
+    let { state, river } = setupRiverPersonState();
+    const ally = Object.values(state.units).find(
+      (unit) => unit.owner === "P1" && unit.class === "assassin"
+    )!;
+    state = setUnit(state, river.id, { position: { col: 3, row: 3 } });
+    state = setUnit(state, ally.id, { position: { col: 3, row: 4 } });
+    state = toBattleState(state, "P1", river.id);
+    state = initKnowledgeForOwners(state);
+
+    const firstBoat = completeBoatUse(
+      state,
+      river.id,
+      ally.id,
+      { col: 3, row: 5 },
+      { col: 4, row: 5 }
+    );
+    const secondAttempt = applyAction(
+      firstBoat.state,
+      abilityAction(river.id, ABILITY_RIVER_PERSON_BOAT),
+      makeRngSequence([])
+    );
+    assert(
+      !secondAttempt.state.pendingRoll,
+      "Without Boatman, only one Boat use should be possible"
+    );
+  }
 
   console.log("river_person_boatman_converts_action_to_move_and_supports_carry passed");
 }
-
 
 export function testRiverPersonGuideOfSoulsStormImmunity() {
   let { state, river } = setupRiverPersonState();
@@ -312,11 +468,13 @@ export function testRiverPersonGuideOfSoulsStormImmunity() {
   console.log("river_person_guide_of_souls_storm_immunity passed");
 }
 
-
 export function testRiverPersonTraLaLaGatingAndFlow() {
   let { state, river } = setupRiverPersonState();
   const target = Object.values(state.units).find(
     (unit) => unit.owner === "P2" && unit.class === "berserker"
+  )!;
+  const enemyPathBlocker = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "knight"
   )!;
   const allySpearman = Object.values(state.units).find(
     (unit) => unit.owner === "P1" && unit.class === "spearman"
@@ -324,8 +482,11 @@ export function testRiverPersonTraLaLaGatingAndFlow() {
   const allyKnight = Object.values(state.units).find(
     (unit) => unit.owner === "P1" && unit.class === "knight"
   )!;
-  const allyNoHit = Object.values(state.units).find(
+  const allyPathBlocker = Object.values(state.units).find(
     (unit) => unit.owner === "P1" && unit.class === "assassin"
+  )!;
+  const deadAlly = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.class === "archer"
   )!;
 
   state = setUnit(state, river.id, {
@@ -333,19 +494,20 @@ export function testRiverPersonTraLaLaGatingAndFlow() {
     charges: { ...river.charges, [ABILITY_RIVER_PERSON_TRA_LA_LA]: 3 },
   });
   state = setUnit(state, target.id, { position: { col: 5, row: 4 }, hp: 10 });
-  state = setUnit(state, allySpearman.id, { position: { col: 4, row: 3 } });
+  state = setUnit(state, enemyPathBlocker.id, { position: { col: 4, row: 6 } });
+  state = setUnit(state, allySpearman.id, { position: { col: 3, row: 4 } });
   state = setUnit(state, allyKnight.id, { position: { col: 5, row: 5 } });
-  state = setUnit(state, allyNoHit.id, { position: { col: 3, row: 5 } });
+  state = setUnit(state, allyPathBlocker.id, { position: { col: 4, row: 5 } });
+  state = setUnit(state, deadAlly.id, {
+    position: { col: 3, row: 5 },
+    isAlive: false,
+  });
   state = toBattleState(state, "P1", river.id);
   state = initKnowledgeForOwners(state);
 
   let used = applyAction(
     state,
-    {
-      type: "useAbility",
-      unitId: river.id,
-      abilityId: ABILITY_RIVER_PERSON_TRA_LA_LA,
-    } as any,
+    abilityAction(river.id, ABILITY_RIVER_PERSON_TRA_LA_LA),
     makeRngSequence([])
   );
   assert(
@@ -354,7 +516,7 @@ export function testRiverPersonTraLaLaGatingAndFlow() {
   );
   assert(
     used.state.units[river.id].charges[ABILITY_RIVER_PERSON_TRA_LA_LA] === 3,
-    "Tra-la-la should not spend charges when unavailable"
+    "Rejected Tra-la-la should not spend charges"
   );
 
   state = setUnit(state, river.id, {
@@ -366,11 +528,7 @@ export function testRiverPersonTraLaLaGatingAndFlow() {
   });
   used = applyAction(
     state,
-    {
-      type: "useAbility",
-      unitId: river.id,
-      abilityId: ABILITY_RIVER_PERSON_TRA_LA_LA,
-    } as any,
+    abilityAction(river.id, ABILITY_RIVER_PERSON_TRA_LA_LA),
     makeRngSequence([])
   );
   assert(
@@ -379,13 +537,23 @@ export function testRiverPersonTraLaLaGatingAndFlow() {
   );
   assert(
     used.state.units[river.id].charges[ABILITY_RIVER_PERSON_TRA_LA_LA] === 4,
-    "Tra-la-la should not spend charges before target and destination resolution"
+    "Tra-la-la activation should not spend charges"
   );
+  assert(!used.state.units[river.id].turn.actionUsed, "Tra-la-la activation should not spend action");
+
+  const canceled = resolvePendingWithChoice(used.state, "skip", makeRngSequence([]));
+  assert(!canceled.state.pendingRoll, "Tra-la-la target cancel should clear pending state");
   assert(
-    !used.state.units[river.id].turn.actionUsed,
-    "Tra-la-la should not consume action slot before target and destination resolution"
+    canceled.state.units[river.id].charges[ABILITY_RIVER_PERSON_TRA_LA_LA] === 4 &&
+      !canceled.state.units[river.id].turn.actionUsed,
+    "Tra-la-la target cancel should spend nothing"
   );
 
+  used = applyAction(
+    state,
+    abilityAction(river.id, ABILITY_RIVER_PERSON_TRA_LA_LA),
+    makeRngSequence([])
+  );
   const targetSelected = resolvePendingWithChoice(
     used.state,
     { type: "hassanTrueEnemyTarget", targetId: target.id },
@@ -393,26 +561,43 @@ export function testRiverPersonTraLaLaGatingAndFlow() {
   );
   assert(
     targetSelected.state.pendingRoll?.kind === "riverTraLaLaDestinationChoice",
-    "Tra-la-la should request destination after target selection"
+    "Tra-la-la should request line destination after target"
   );
   assert(
     targetSelected.state.units[river.id].charges[ABILITY_RIVER_PERSON_TRA_LA_LA] === 4,
-    "Tra-la-la target selection should not spend charges before destination resolution"
+    "Tra-la-la target selection should not spend charges"
+  );
+  assert(!targetSelected.state.units[river.id].turn.actionUsed, "Tra-la-la target selection should not spend action");
+
+  const destinationOptions = getPendingOptions(targetSelected.state);
+  expectCoord(
+    destinationOptions,
+    { col: 7, row: 4 },
+    "Tra-la-la destination options should include horizontal line"
+  );
+  expectCoord(
+    destinationOptions,
+    { col: 4, row: 7 },
+    "Tra-la-la destination options should include vertical line through occupied cells"
+  );
+  expectCoord(
+    destinationOptions,
+    { col: 7, row: 7 },
+    "Tra-la-la destination options should include diagonal line"
+  );
+
+  const invalidDestination = resolvePendingWithChoice(
+    targetSelected.state,
+    { type: "forestMoveDestination", position: { col: 6, row: 7 } },
+    makeRngSequence([])
   );
   assert(
-    !targetSelected.state.units[river.id].turn.actionUsed,
-    "Tra-la-la target selection should not consume action before destination resolution"
-  );
-  const destinationOptions =
-    (targetSelected.state.pendingRoll?.context as { options?: Coord[] } | undefined)
-      ?.options ?? [];
-  assert(
-    destinationOptions.some((coord) => coord.col === 4 && coord.row === 7),
-    "Tra-la-la destination options should include straight cardinal cells"
+    invalidDestination.state.pendingRoll?.kind === "riverTraLaLaDestinationChoice",
+    "Invalid non-straight Tra-la-la destination should be rejected"
   );
   assert(
-    !destinationOptions.some((coord) => coord.col === 5 && coord.row === 5),
-    "Tra-la-la destination options should exclude diagonal cells"
+    invalidDestination.state.units[river.id].charges[ABILITY_RIVER_PERSON_TRA_LA_LA] === 4,
+    "Invalid Tra-la-la destination should not spend resources"
   );
 
   const destinationSelected = resolvePendingWithChoice(
@@ -421,24 +606,67 @@ export function testRiverPersonTraLaLaGatingAndFlow() {
     makeRngSequence([])
   );
   assert(
-    destinationSelected.state.units[river.id].position?.col === 4 &&
-      destinationSelected.state.units[river.id].position?.row === 7,
-    "Tra-la-la should move River Person to selected destination"
+    destinationSelected.state.pendingRoll?.kind === "riverTraLaLaDropDestinationChoice",
+    "Tra-la-la destination should request final dragged-target drop"
   );
   assert(
-    destinationSelected.state.units[river.id].charges[ABILITY_RIVER_PERSON_TRA_LA_LA] === 0,
-    "Tra-la-la should spend all 4 charges on destination resolution"
+    destinationSelected.state.units[river.id].position?.row === 4 &&
+      destinationSelected.state.units[target.id].position?.col === 5,
+    "Tra-la-la destination selection should not move units early"
   );
   assert(
-    destinationSelected.state.units[river.id].turn.actionUsed,
-    "Tra-la-la should consume action slot on destination resolution"
-  );
-  assert(
-    destinationSelected.state.pendingRoll?.kind === "attack_attackerRoll",
-    "Tra-la-la touched allies should start immediate attack resolution"
+    destinationSelected.state.units[river.id].charges[ABILITY_RIVER_PERSON_TRA_LA_LA] === 4 &&
+      !destinationSelected.state.units[river.id].turn.actionUsed,
+    "Tra-la-la destination selection should spend nothing"
   );
 
-  const queue = destinationSelected.state.pendingCombatQueue ?? [];
+  const invalidDrop = resolvePendingWithChoice(
+    destinationSelected.state,
+    { type: "forestMoveDestination", position: { col: 4, row: 6 } },
+    makeRngSequence([])
+  );
+  assert(
+    invalidDrop.state.pendingRoll?.kind === "riverTraLaLaDropDestinationChoice",
+    "Occupied Tra-la-la drop should be rejected"
+  );
+  assert(
+    invalidDrop.state.units[river.id].position?.row === 4,
+    "Invalid Tra-la-la drop should not move River"
+  );
+
+  const dropOptions = getPendingOptions(destinationSelected.state);
+  const chosenDrop =
+    dropOptions.find((coord) => coord.col === 5 && coord.row === 7) ??
+    dropOptions[0]!;
+  const dropped = resolvePendingWithChoice(
+    destinationSelected.state,
+    { type: "forestMoveDestination", position: chosenDrop },
+    makeRngSequence([])
+  );
+  assert(
+    dropped.state.units[river.id].position?.col === 4 &&
+      dropped.state.units[river.id].position?.row === 7,
+    "Tra-la-la should move River on final drop resolution"
+  );
+  assert(
+    dropped.state.units[target.id].position?.col === chosenDrop.col &&
+      dropped.state.units[target.id].position?.row === chosenDrop.row,
+    "Tra-la-la should place dragged target on selected adjacent drop cell"
+  );
+  assert(
+    dropped.state.units[river.id].charges[ABILITY_RIVER_PERSON_TRA_LA_LA] === 0,
+    "Tra-la-la final drop should spend charges exactly once"
+  );
+  assert(
+    dropped.state.units[river.id].turn.actionUsed,
+    "Tra-la-la final drop should consume main action"
+  );
+  assert(
+    dropped.state.pendingRoll?.kind === "attack_attackerRoll",
+    "Tra-la-la touched allies should start forced attack resolution"
+  );
+
+  const queue = dropped.state.pendingCombatQueue ?? [];
   const attackerIds = queue.map((entry) => entry.attackerId);
   const uniqueAttackers = Array.from(new Set(attackerIds));
   assert(
@@ -446,23 +674,33 @@ export function testRiverPersonTraLaLaGatingAndFlow() {
     "Each touched ally should attack at most once"
   );
   assert(
-    attackerIds.includes(allySpearman.id) && attackerIds.includes(allyKnight.id),
-    "Touched allies that can legally attack must be queued"
+    attackerIds.includes(allySpearman.id) &&
+      attackerIds.includes(allyKnight.id) &&
+      attackerIds.includes(allyPathBlocker.id),
+    "All eligible allies within one cell of the path should be queued"
   );
   assert(
-    !attackerIds.includes(allyNoHit.id),
-    "Touched allies without legal attack must not be queued"
+    !attackerIds.includes(deadAlly.id),
+    "Dead or otherwise ineligible touched allies should be skipped"
+  );
+  assert(
+    !attackerIds.includes(enemyPathBlocker.id),
+    "Enemy units touched by the path should not become allied forced attackers"
   );
   assert(
     attackerIds[0] === allySpearman.id,
-    "Tra-la-la ally attack order should be deterministic by board reading order"
+    "Tra-la-la touched attacks should use deterministic first-contact then board order"
+  );
+  assert(
+    queue.every((entry) => entry.consumeSlots === false),
+    "Tra-la-la touched attacks should not consume touched units' normal action slots"
   );
 
   const resolved = resolveAllPendingRollsWithEvents(
-    destinationSelected.state,
+    dropped.state,
     makeAttackWinRng(uniqueAttackers.length)
   );
-  const combinedEvents = [...destinationSelected.events, ...resolved.events];
+  const combinedEvents = [...dropped.events, ...resolved.events];
   const allyAttackEvents = combinedEvents.filter(
     (event) =>
       event.type === "attackResolved" &&
@@ -471,7 +709,7 @@ export function testRiverPersonTraLaLaGatingAndFlow() {
   );
   assert(
     allyAttackEvents.length === uniqueAttackers.length,
-    "Tra-la-la should resolve exactly one attack per queued ally"
+    "Tra-la-la should resolve exactly one attack per queued touched ally"
   );
 
   console.log("river_person_tralala_gating_and_flow passed");

@@ -4,6 +4,7 @@ import { getLegalAttackTargets, getLegalIntents, getLegalPlacements } from "../l
 import { getAbilityViewsForUnit } from "../abilities";
 import {
   cloneEnemyUnitForPlayer,
+  cloneArenaEffectsForRecipient,
   cloneForestMarkers,
   cloneUnit,
   collectPlayerStakeMarkers,
@@ -105,6 +106,7 @@ export function makePlayerView(
   const pendingAoEPreview = buildPendingAoEPreview(pendingAoE);
   const stakeMarkers = collectPlayerStakeMarkers(state, playerId);
   const forestMarkers = cloneForestMarkers(state);
+  const arenaEffects = cloneArenaEffectsForRecipient(state, playerId);
   const pendingCombatQueueCount = getPendingCombatQueueCount(
     pendingCombatQueue,
     pendingRoll
@@ -117,6 +119,7 @@ export function makePlayerView(
     lastKnownPositions,
     forestMarkers,
     forestMarker: forestMarkers[0] ?? null,
+    arenaEffects,
     pendingRoll: visiblePendingRoll,
     pendingCombatQueueCount,
     pendingAoEPreview,
