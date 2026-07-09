@@ -403,6 +403,31 @@ export function buildPendingPreview(view: PlayerView | null | undefined): BoardP
           singleTargetOptions: stringList(context.singleTargetOptions),
           aoeTargetIds: stringList(context.aoeTargetIds),
         });
+      case "friskPacifismHugsTargetChoice":
+        return buildRadiusOptionsPreview({
+          view,
+          sourceUnitId: typeof context.friskId === "string" ? context.friskId : "",
+          optionIds: stringList(context.options),
+          radius: 2,
+          validLabelKey: "preview.labels.friskHugsTarget",
+        });
+      case "friskWarmWordsTargetChoice":
+        return buildRadiusOptionsPreview({
+          view,
+          sourceUnitId: typeof context.friskId === "string" ? context.friskId : "",
+          optionIds: stringList(context.options),
+          radius: 2,
+          validLabelKey: "preview.labels.friskWarmWordsTarget",
+        });
+      case "friskPrecisionStrikeTargetChoice":
+        return buildRadiusOptionsPreview({
+          view,
+          sourceUnitId: typeof context.friskId === "string" ? context.friskId : "",
+          optionIds: stringList(context.options),
+          radius: 1,
+          validLabelKey: "preview.labels.friskPrecisionStrikeTarget",
+          includeEnemiesOnly: true,
+        });
       case "asgoreSoulParadeJusticeTargetChoice":
         return buildArcherLinePreview({
           view,

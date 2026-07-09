@@ -19,7 +19,7 @@ interface BattleBottomHintsProps {
   onCancelTargeting: () => void;
 }
 
-function getUsingName(
+export function getUsingName(
   targetingMode: TargetingMode,
   abilityViews: AbilityView[],
   language: "en" | "uk",
@@ -38,7 +38,7 @@ function getUsingName(
   ).name;
 }
 
-function getCostPreview(
+export function getCostPreview(
   targetingMode: TargetingMode,
   abilityViews: AbilityView[],
   t: ReturnType<typeof useI18n>["t"]

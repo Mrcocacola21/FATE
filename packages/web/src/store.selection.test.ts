@@ -121,7 +121,7 @@ test("basic attack targeting routes board unit clicks to the target handler", ()
   assert.equal(boardUi.allowUnitPick, false);
 });
 
-test("stale successful action results do not clear newly entered targeting mode", () => {
+test("stale action results do not clear newly entered targeting mode", () => {
   assert.equal(
     shouldClearActionModeAfterConfirmedResult({
       actionMode: "attack",
@@ -136,6 +136,16 @@ test("stale successful action results do not clear newly entered targeting mode"
     shouldClearActionModeAfterConfirmedResult({
       actionMode: "attack",
       lastActionResult: { ok: true },
+      lastActionResultAt: 300,
+      actionModeStartedAt: 200,
+    }),
+    true
+  );
+
+  assert.equal(
+    shouldClearActionModeAfterConfirmedResult({
+      actionMode: "attack",
+      lastActionResult: { ok: false, error: "Target is not legal." },
       lastActionResultAt: 300,
       actionModeStartedAt: 200,
     }),

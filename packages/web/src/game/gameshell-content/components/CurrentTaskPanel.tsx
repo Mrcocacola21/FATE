@@ -1,5 +1,11 @@
 import type { FC } from "react";
 import type { GameAction } from "rules";
+import type { ActionPreviewMode } from "../../../store";
+import { getActionModeHint } from "../../components/RightPanel/rightPanelHelpers";
+import {
+  getCostPreview,
+  getUsingName,
+} from "../../components/RightPanel/sections/BattleBottomHints";
 import { PanelCard, SectionHeader, StatusBadge } from "../../../components/ui";
 import { useI18n } from "../../../i18n";
 import { getPendingRollLabel } from "../helpers";
@@ -68,6 +74,8 @@ export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm }) => {
           isHassanAssassinOrderSelection={vm.isHassanAssassinOrderSelection}
           isChikatiloRevealChoice={vm.isChikatiloRevealChoice}
           isChikatiloDecoyChoice={vm.isChikatiloDecoyChoice}
+          isFriskPacifismHugsTargetChoice={vm.isFriskPacifismHugsTargetChoice}
+          isFriskWarmWordsTargetChoice={vm.isFriskWarmWordsTargetChoice}
           isFriskPrecisionStrikeTargetChoice={vm.isFriskPrecisionStrikeTargetChoice}
           onResolveChoice={(choice) => {
             vm.sendAction({
@@ -119,6 +127,51 @@ export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm }) => {
           <p className="mt-2 text-xs leading-5 text-violet-800 dark:text-violet-200">
             {t("game.resolvingRoll", { player: vm.pendingMeta.player })}
           </p>
+        </PanelCard>
+      </div>
+    );
+  }
+
+  if (vm.actionMode && vm.targetingMode) {
+    const abilityViews =
+      vm.selectedUnitId && vm.view.abilitiesByUnitId
+        ? vm.view.abilitiesByUnitId[vm.selectedUnitId] ?? []
+        : [];
+    const undyneAxis =
+      vm.undyneAxis === "col" || vm.papyrusLineAxis === "col" ? "col" : "row";
+
+    return (
+      <div aria-live="polite">
+        <PanelCard variant="hud" className="p-3">
+          <SectionHeader
+            kicker={t("game.currentTask")}
+            title={t("game.usingTargeting", {
+              name: getUsingName(vm.targetingMode, abilityViews, language, t),
+            })}
+            action={<StatusBadge tone="warning">{t("game.boardSelectionActive")}</StatusBadge>}
+          />
+          <p className="mt-2 text-xs leading-5 text-stone-600 dark:text-stone-300">
+            {t("game.targetingInstruction", {
+              instruction: getActionModeHint(
+                vm.actionMode as ActionPreviewMode,
+                vm.papyrusLineAxis ?? "row",
+                undyneAxis,
+                language,
+              ),
+            })}
+          </p>
+          <p className="mt-1 text-xs leading-5 text-sky-700 dark:text-sky-200">
+            {t("game.targetingCost", {
+              cost: getCostPreview(vm.targetingMode, abilityViews, t),
+            })}
+          </p>
+          <button
+            type="button"
+            className="mt-2 rounded-md border border-sky-300 bg-white px-2.5 py-1.5 text-xs font-bold text-sky-800 shadow-sm transition hover:border-sky-400 hover:bg-sky-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 dark:border-sky-800 dark:bg-sky-950/60 dark:text-sky-100 dark:hover:bg-sky-900/50"
+            onClick={() => vm.setActionMode(null)}
+          >
+            {t("common.cancel")}
+          </button>
         </PanelCard>
       </div>
     );

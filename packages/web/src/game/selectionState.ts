@@ -71,7 +71,7 @@ export function shouldClearActionModeAfterConfirmedResult({
   return !!(
     actionMode &&
     CLEAR_ON_CONFIRMED_ACTION_MODES.has(actionMode) &&
-    lastActionResult?.ok &&
+    !!lastActionResult &&
     lastActionResultAt > 0 &&
     lastActionResultAt > actionModeStartedAt
   );

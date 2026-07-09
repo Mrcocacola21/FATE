@@ -1228,6 +1228,13 @@ export const uk = {
     friskPacifism: "Фріск: Пацифізм",
     friskGenocide: "Фріск: Геноцид",
     friskKeenEye: "Фріск: Пильне око",
+    friskHugs: "Фріск: Обійми",
+    friskHugsPrompt: "Обійми: оберіть підсвічену фігуру в радіусі 2.",
+    friskWarmWords: "Фріск: Теплі слова",
+    friskWarmWordsPrompt:
+      "Теплі слова: оберіть підсвіченого союзника в радіусі 2 для лікування.",
+    friskPrecisionStrike: "Точний удар",
+    friskPrecisionStrikePrompt: "Точний удар: оберіть підсвічену ціль атаки.",
     friskSubstitution: "Фріск: Підміна",
     friskChildsCry: "Фріск: Дитячий плач",
     muninnDefense: "Автозахист Мунінном",
@@ -1310,6 +1317,9 @@ export const uk = {
       asgoreJusticeTarget: "Виберіть ціль Справедливості.",
       goodLokiJoke: "Область Доброго жарту Локі.",
       lokiOptions: "Попередній перегляд варіантів Локі.",
+      friskHugsTarget: "Варіанти цілей Обіймів.",
+      friskWarmWordsTarget: "Варіанти союзників для Теплих слів.",
+      friskPrecisionStrikeTarget: "Варіанти цілей Точного удару.",
     },
     cellKinds: {
       source: "джерело перегляду",

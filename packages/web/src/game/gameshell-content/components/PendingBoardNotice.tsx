@@ -42,6 +42,8 @@ interface PendingBoardNoticeProps {
   isHassanAssassinOrderSelection: boolean;
   isChikatiloRevealChoice: boolean;
   isChikatiloDecoyChoice: boolean;
+  isFriskPacifismHugsTargetChoice: boolean;
+  isFriskWarmWordsTargetChoice: boolean;
   isFriskPrecisionStrikeTargetChoice: boolean;
   onResolveChoice: (choice: ResolveRollChoice) => void;
   onResolveSkip: () => void;
@@ -126,6 +128,8 @@ export function PendingBoardNotice({
   isHassanAssassinOrderSelection,
   isChikatiloRevealChoice,
   isChikatiloDecoyChoice,
+  isFriskPacifismHugsTargetChoice,
+  isFriskWarmWordsTargetChoice,
   isFriskPrecisionStrikeTargetChoice,
   onResolveChoice,
   onResolveSkip,
@@ -631,14 +635,25 @@ export function PendingBoardNotice({
             )}
           </div>
         </div>
+      ) : isFriskPacifismHugsTargetChoice ? (
+        <div>
+          <div className="font-semibold">{t("pending.friskHugs")}</div>
+          <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
+            {t("pending.friskHugsPrompt")}
+          </div>
+        </div>
+      ) : isFriskWarmWordsTargetChoice ? (
+        <div>
+          <div className="font-semibold">{t("pending.friskWarmWords")}</div>
+          <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
+            {t("pending.friskWarmWordsPrompt")}
+          </div>
+        </div>
       ) : isFriskPrecisionStrikeTargetChoice ? (
         <div>
-          <div className="font-semibold">{p("Precision Strike", "Точний удар")}</div>
+          <div className="font-semibold">{t("pending.friskPrecisionStrike")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            {p(
-              "Choose a highlighted attack target.",
-              "Оберіть підсвічену ціль атаки.",
-            )}
+            {t("pending.friskPrecisionStrikePrompt")}
           </div>
         </div>
       ) : (

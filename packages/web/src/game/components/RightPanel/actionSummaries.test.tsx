@@ -3,7 +3,14 @@ import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { AbilityView, PlayerView, UnitState } from "rules";
 import { setLanguage, translate } from "../../../i18n";
-import { LOKI_LAUGHT_ID } from "../../../rulesHints";
+import {
+  GRIFFITH_FEMTO_REBIRTH_ID,
+  GUTS_CANNON_ID,
+  LOKI_LAUGHT_ID,
+  METTATON_EX_ID,
+  METTATON_NEO_ID,
+} from "../../../rulesHints";
+import { CurrentTaskPanel } from "../../gameshell-content/components/CurrentTaskPanel";
 import { BattleUnitSummary } from "./sections/BattleUnitSummary";
 import { BattleAbilityActions } from "./sections/BattleAbilityActions";
 import {
@@ -13,7 +20,11 @@ import {
   type UnitMoveSummary,
   type UnitStealthSummary,
 } from "./actionSummaries";
-import { formatChargeLabel, getAbilityChargeState } from "./rightPanelHelpers";
+import {
+  formatChargeLabel,
+  getAbilityChargeState,
+  isActionableAbility,
+} from "./rightPanelHelpers";
 
 function makeUnit(overrides: Partial<UnitState> = {}): UnitState {
   return {
@@ -219,6 +230,139 @@ test("charge labels distinguish bounded and unbounded counters", () => {
   assert.equal(formatChargeLabel(bounded, boundedState, false), "1/2");
 });
 
+test("current task panel shows local targeting name, instruction, cost, and cancel", () => {
+  setLanguage("en", { setItem: () => undefined });
+  const guts = makeUnit({
+    id: "P1-guts",
+    class: "berserker",
+    heroId: "guts",
+    position: { col: 4, row: 4 },
+  });
+  const ability = makeAbility({
+    id: GUTS_CANNON_ID,
+    name: "Hand Cannon",
+    description: "Ranged attack line",
+    chargeRequired: 1,
+    maxCharges: 1,
+    currentCharges: 1,
+  });
+  const view = {
+    ...makeView(guts),
+    abilitiesByUnitId: { [guts.id]: [ability] },
+  };
+
+  const markup = renderToStaticMarkup(
+    <CurrentTaskPanel
+      vm={{
+        view,
+        playerId: "P1",
+        pendingRoll: null,
+        pendingMeta: null,
+        actionMode: "gutsCannon",
+        targetingMode: {
+          sourceUnitId: guts.id,
+          abilityId: GUTS_CANNON_ID,
+          step: "gutsCannon",
+          resourcePreview: { action: true },
+        },
+        selectedUnitId: guts.id,
+        papyrusLineAxis: "row",
+        setActionMode: () => undefined,
+      }}
+    />,
+  );
+
+  assert.match(markup, /Using: Hand Cannon/);
+  assert.match(markup, /Hand Cannon: select an enemy in ranged attack line/);
+  assert.match(markup, /Cost preview: Uses Action/);
+  assert.match(markup, /Cancel/);
+});
+
+test("current task panel shows Frisk board target pending prompts", () => {
+  setLanguage("en", { setItem: () => undefined });
+  const frisk = makeUnit({ id: "P1-frisk", heroId: "frisk" });
+  const markup = renderToStaticMarkup(
+    <CurrentTaskPanel
+      vm={{
+        view: makeView(frisk),
+        playerId: "P1",
+        pendingRoll: {
+          id: "roll",
+          player: "P1",
+          kind: "friskPacifismHugsTargetChoice",
+          context: { friskId: frisk.id, options: [] },
+        },
+        pendingMeta: null,
+        pendingQueueCount: 0,
+        stakeSelections: [],
+        stakeLimit: 0,
+        hassanAssassinOrderSelections: [],
+        isFriskPacifismHugsTargetChoice: true,
+        actionMode: null,
+        targetingMode: null,
+        sendAction: () => undefined,
+        setStakeSelections: () => undefined,
+        setHassanAssassinOrderSelections: () => undefined,
+      }}
+    />,
+  );
+
+  assert.match(markup, /Frisk: Hugs/);
+  assert.match(markup, /Hugs: select a highlighted unit within 2 cells/);
+  assert.match(markup, /Pending for P1/);
+});
+
+test("automatic transformations do not render executable action buttons", () => {
+  setLanguage("en", { setItem: () => undefined });
+  const griffith = makeUnit({
+    id: "P1-griffith",
+    heroId: "griffith",
+    class: "berserker",
+  });
+  const abilities = [
+    makeAbility({
+      id: GRIFFITH_FEMTO_REBIRTH_ID,
+      name: "Femto Rebirth",
+      kind: "phantasm",
+      slot: "action",
+    }),
+    makeAbility({
+      id: METTATON_EX_ID,
+      name: "Mettaton EX",
+      kind: "phantasm",
+      slot: "action",
+    }),
+    makeAbility({
+      id: METTATON_NEO_ID,
+      name: "Mettaton NEO",
+      kind: "phantasm",
+      slot: "action",
+    }),
+  ].filter(isActionableAbility);
+
+  const markup = renderToStaticMarkup(
+    <BattleAbilityActions
+      view={makeView(griffith)}
+      actionableAbilities={abilities}
+      selectedUnit={griffith}
+      canAct={true}
+      economy={griffith.turn}
+      actionMode={null}
+      targetingActive={false}
+      onUseAbility={() => undefined}
+      onUseLokiLaughtOption={() => undefined}
+      onToggleMode={() => undefined}
+      onModePreview={() => undefined}
+      onHoverAbility={() => undefined}
+    />,
+  );
+
+  assert.equal(markup, "");
+  assert.doesNotMatch(markup, /Femto Rebirth/);
+  assert.doesNotMatch(markup, /Mettaton EX/);
+  assert.doesNotMatch(markup, /Mettaton NEO/);
+});
+
 test("new action UI i18n keys exist in English and Ukrainian", () => {
   const keys = [
     "actionUi.states.available",
@@ -234,6 +378,15 @@ test("new action UI i18n keys exist in English and Ukrainian", () => {
     "actionUi.cannotEnterStealth",
     "actionUi.movementBlocked",
     "actionUi.actionAlreadySpent",
+    "pending.friskHugs",
+    "pending.friskHugsPrompt",
+    "pending.friskWarmWords",
+    "pending.friskWarmWordsPrompt",
+    "pending.friskPrecisionStrike",
+    "pending.friskPrecisionStrikePrompt",
+    "preview.labels.friskHugsTarget",
+    "preview.labels.friskWarmWordsTarget",
+    "preview.labels.friskPrecisionStrikeTarget",
   ];
 
   for (const language of ["en", "uk"] as const) {

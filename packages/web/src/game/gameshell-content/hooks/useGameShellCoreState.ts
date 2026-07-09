@@ -124,6 +124,37 @@ export function useGameShellCoreState() {
   }, [lastActionResultAt, lastActionResult, actionMode, setActionMode]);
 
   useEffect(() => {
+    if (!actionMode) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      if (pending.pendingRoll || pending.hasBlockingRoll) return;
+      const target = event.target as HTMLElement | null;
+      const tagName = target?.tagName.toLowerCase();
+      if (
+        tagName === "input" ||
+        tagName === "textarea" ||
+        tagName === "select" ||
+        target?.isContentEditable
+      ) {
+        return;
+      }
+      event.preventDefault();
+      setActionMode(null);
+      setHoveredAbilityId(null);
+      setHoverPreview(null);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [
+    actionMode,
+    pending.pendingRoll,
+    pending.hasBlockingRoll,
+    setActionMode,
+    setHoveredAbilityId,
+    setHoverPreview,
+  ]);
+
+  useEffect(() => {
     if (!pendingLokiLaughtOption) return;
     if (
       lastActionResult &&

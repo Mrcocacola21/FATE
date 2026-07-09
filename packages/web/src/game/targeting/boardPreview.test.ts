@@ -657,6 +657,98 @@ test("Guts Berserk choice preview exposes single-target and radius-1 area option
   assert.deepEqual(validTargetIds(preview), ["enemy", "enemy"]);
 });
 
+test("Frisk target-choice pending previews use projected legal options only", () => {
+  const frisk = unit({
+    id: "frisk",
+    owner: "P1",
+    heroId: "frisk",
+    class: "assassin",
+    position: { col: 4, row: 4 },
+  });
+  const ally = unit({ id: "ally", owner: "P1", position: { col: 5, row: 4 } });
+  const enemy = unit({ id: "enemy", owner: "P2", position: { col: 5, row: 5 } });
+  const blockedEnemy = unit({
+    id: "blocked-enemy",
+    owner: "P2",
+    position: { col: 6, row: 4 },
+  });
+
+  const hugs = buildPendingPreview(
+    makeView([frisk, ally, enemy, blockedEnemy], {
+      pendingRoll: {
+        id: "roll",
+        player: "P1",
+        kind: "friskPacifismHugsTargetChoice",
+        context: { friskId: frisk.id, options: [ally.id, enemy.id] },
+      },
+      lastKnownPositions: { unknownHidden: { col: 4, row: 5 } },
+    }),
+  );
+  assert.deepEqual(validTargetIds(hugs), ["ally", "enemy"]);
+  assert.deepEqual(disabledTargetIds(hugs), ["blocked-enemy"]);
+  assert.equal(hasKind(hugs, { col: 4, row: 5 }, "validTarget"), false);
+  assert.doesNotMatch(JSON.stringify(hugs), /unknownHidden/);
+
+  const warmWords = buildPendingPreview(
+    makeView([frisk, ally, enemy], {
+      pendingRoll: {
+        id: "roll",
+        player: "P1",
+        kind: "friskWarmWordsTargetChoice",
+        context: { friskId: frisk.id, options: [ally.id] },
+      },
+    }),
+  );
+  assert.deepEqual(validTargetIds(warmWords), ["ally"]);
+  assert.deepEqual(disabledTargetIds(warmWords), ["enemy"]);
+
+  const precision = buildPendingPreview(
+    makeView([frisk, ally, enemy], {
+      pendingRoll: {
+        id: "roll",
+        player: "P1",
+        kind: "friskPrecisionStrikeTargetChoice",
+        context: { friskId: frisk.id, options: [enemy.id] },
+      },
+    }),
+  );
+  assert.deepEqual(validTargetIds(precision), ["enemy"]);
+  assert.equal(hasKind(precision, enemy.position!, "validTarget"), true);
+});
+
+test("authoritative Frisk pending preview overrides local targeting and hover previews", () => {
+  const frisk = unit({
+    id: "frisk",
+    owner: "P1",
+    heroId: "frisk",
+    class: "assassin",
+    position: { col: 4, row: 4 },
+  });
+  const target = unit({ id: "target", owner: "P1", position: { col: 5, row: 4 } });
+  const view = makeView([frisk, target], {
+    pendingRoll: {
+      id: "roll",
+      player: "P1",
+      kind: "friskWarmWordsTargetChoice",
+      context: { friskId: frisk.id, options: [target.id] },
+    },
+  });
+
+  const preview = selectBoardPreview({
+    gameView: view,
+    viewerPlayerId: "P1",
+    selectedUnitId: frisk.id,
+    actionMode: "gutsCannon",
+    hoverActionMode: null,
+    allowActionHoverPreview: false,
+    hoveredAbilityId: GUTS_CANNON_ID,
+  });
+
+  assert.equal(preview?.kind, "radius");
+  assert.equal(preview?.labelKey, "preview.labels.friskWarmWordsTarget");
+  assert.deepEqual(validTargetIds(preview), ["target"]);
+});
+
 test("Jebe Khan's Shooter ricochet preview uses pending next-target options", () => {
   const jebe = unit({
     id: "jebe",

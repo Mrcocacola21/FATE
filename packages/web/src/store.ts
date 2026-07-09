@@ -226,6 +226,18 @@ function buildLeaveResetState(
   };
 }
 
+function buildLocalBoardUiResetState(): Partial<GameStore> {
+  return {
+    hoveredAbilityId: null,
+    hoverPreview: null,
+    pendingLokiLaughtOption: null,
+    actionMode: null,
+    targetingMode: null,
+    placeUnitId: null,
+    moveOptions: null,
+  };
+}
+
 let socket: WebSocket | null = null;
 let connectPromise: Promise<WebSocket> | null = null;
 
@@ -348,6 +360,24 @@ function handleServerMessage(
             ? incomingMeta.placementFirstPlayer
             : prevMeta.placementFirstPlayer ?? null,
       };
+      const previousView = current.roomState;
+      const lifecycleChanged =
+        !previousView ||
+        previousView.currentPlayer !== msg.view.currentPlayer ||
+        previousView.roundNumber !== msg.view.roundNumber ||
+        previousView.turnNumber !== msg.view.turnNumber ||
+        previousView.activeUnitId !== msg.view.activeUnitId;
+      const serverBoardPending = !!(
+        msg.view.pendingRoll ||
+        msg.view.pendingMove ||
+        msg.view.pendingAoEPreview ||
+        nextMeta.pendingRoll
+      );
+      const selectedUnitId =
+        current.selectedUnitId && msg.view.units[current.selectedUnitId]
+          ? current.selectedUnitId
+          : null;
+      const selectionLost = !!current.selectedUnitId && !selectedUnitId;
 
       set(() => ({
         roomState: msg.view,
@@ -359,6 +389,10 @@ function handleServerMessage(
         isHost: msg.you.isHost,
         canControlTestRoom: msg.you.canControlTestRoom ?? false,
         roomMeta: nextMeta,
+        selectedUnitId,
+        ...((lifecycleChanged || serverBoardPending || selectionLost)
+          ? buildLocalBoardUiResetState()
+          : {}),
       }));
       return;
     }
@@ -671,12 +705,36 @@ export const useGameStore = create<GameStore>((set, get) => ({
     sendMoveOptionsRequest(socket, unitId, mode);
   },
   setRoomState: (roomId, room) =>
-    set(() => ({
-      roomId,
-      roomState: room,
-      joined: true,
-      hasSnapshot: true,
-    })),
+    set((state) => {
+      const previousView = state.roomState;
+      const lifecycleChanged =
+        !previousView ||
+        state.roomId !== roomId ||
+        previousView.currentPlayer !== room.currentPlayer ||
+        previousView.roundNumber !== room.roundNumber ||
+        previousView.turnNumber !== room.turnNumber ||
+        previousView.activeUnitId !== room.activeUnitId;
+      const serverBoardPending = !!(
+        room.pendingRoll ||
+        room.pendingMove ||
+        room.pendingAoEPreview
+      );
+      const selectedUnitId =
+        state.selectedUnitId && room.units[state.selectedUnitId]
+          ? state.selectedUnitId
+          : null;
+      const selectionLost = !!state.selectedUnitId && !selectedUnitId;
+      return {
+        roomId,
+        roomState: room,
+        joined: true,
+        hasSnapshot: true,
+        selectedUnitId,
+        ...((lifecycleChanged || serverBoardPending || selectionLost)
+          ? buildLocalBoardUiResetState()
+          : {}),
+      };
+    }),
   applyActionResult: (events, logIndex, error) =>
     set((state) => {
       if (logIndex <= state.lastLogIndex) {
@@ -706,6 +764,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   setActionMode: (mode) =>
     set((state) => ({
       ...transitionActionMode(state, mode),
+      hoveredAbilityId: null,
       hoverPreview: null,
     })),
   setPlaceUnitId: (unitId) => set(() => ({ placeUnitId: unitId })),
