@@ -118,6 +118,64 @@
   }
 }
 
+@keyframes vfx-sprite-strip {
+  0% {
+    opacity: 0;
+    background-position-x: 0%;
+    transform: scale(0.84) rotate(-2deg);
+  }
+  14% {
+    opacity: var(--vfx-opacity);
+    transform: scale(1) rotate(0deg);
+  }
+  78% {
+    opacity: var(--vfx-opacity);
+  }
+  100% {
+    opacity: 0;
+    background-position-x: 100%;
+    transform: scale(1.08) rotate(2deg);
+  }
+}
+
+@keyframes vfx-particle-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.72) rotate(-4deg);
+  }
+  22% {
+    opacity: var(--vfx-opacity);
+    transform: scale(1) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.16) rotate(7deg);
+  }
+}
+
+@keyframes vfx-area-wash {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  22%,
+  70% {
+    opacity: var(--vfx-opacity);
+  }
+}
+
+@keyframes vfx-line-flash {
+  0% {
+    opacity: 0;
+  }
+  28% {
+    opacity: var(--vfx-opacity);
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
 body {
   font-family:
     Inter,
@@ -816,6 +874,63 @@ html.dark {
   .board-effect-board-status {
     color: rgb(14 165 233 / 0.35);
   }
+
+  .vfx-sprite {
+    @apply pointer-events-none absolute block select-none;
+    opacity: 0;
+    animation-delay: var(--vfx-delay);
+    animation-duration: var(--vfx-duration);
+    animation-fill-mode: both;
+    animation-timing-function: ease-out;
+    will-change: opacity, transform, background-position;
+  }
+
+  .vfx-sprite-strip {
+    background-repeat: no-repeat;
+    background-position: 0 0;
+    animation-name: vfx-sprite-strip;
+    animation-timing-function: steps(var(--vfx-frames), end);
+  }
+
+  .vfx-sprite-particle {
+    object-fit: contain;
+    animation-name: vfx-particle-pop;
+  }
+
+  .vfx-area {
+    object-fit: cover;
+    border-radius: 8px;
+    animation-name: vfx-area-wash;
+  }
+
+  .vfx-line {
+    @apply pointer-events-none absolute block origin-left rounded-full;
+    height: 7px;
+    margin-top: -3.5px;
+    background-position: center;
+    background-repeat: repeat-x;
+    background-size: auto 42px;
+    opacity: 0;
+    animation: vfx-line-flash var(--vfx-duration) ease-out var(--vfx-delay) both;
+    mix-blend-mode: screen;
+    will-change: opacity, transform;
+  }
+
+  .vfx-fireParade,
+  .vfx-berserkAoE {
+    filter: sepia(1) saturate(4) hue-rotate(330deg);
+  }
+
+  .vfx-storm,
+  .vfx-searchReveal,
+  .vfx-stageSpark {
+    filter: brightness(1.3) saturate(1.2);
+  }
+
+  .vfx-hiddenReveal,
+  .vfx-chicken {
+    filter: brightness(1.05) saturate(0.8);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -830,7 +945,9 @@ html.dark {
   .board-effect-text,
   .board-effect-unit,
   .board-effect-board,
-  .board-preview-beam {
+  .board-preview-beam,
+  .vfx-sprite,
+  .vfx-line {
     animation: none;
   }
 
@@ -846,6 +963,11 @@ html.dark {
   .board-effect-text {
     opacity: 1;
     transform: translate(-50%, -12px);
+  }
+
+  .vfx-sprite,
+  .vfx-line {
+    opacity: min(var(--vfx-opacity), 0.45);
   }
 }
 

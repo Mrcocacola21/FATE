@@ -16,6 +16,8 @@ import { BoardEffectsLayer } from "../game/effects/BoardEffectsLayer";
 import { useBoardEffects } from "../game/effects/useBoardEffects";
 import { useBoardFit } from "../game/hooks/useBoardFit";
 import type { BoardEventBatch, BoardPreviewLine } from "../game/effects/types";
+import { VfxLayer } from "../features/vfx/VfxLayer";
+import { useBoardVfx } from "../features/vfx/useBoardVfx";
 import {
   buildPreviewCellMap,
   type BoardPreview,
@@ -277,6 +279,12 @@ export const Board: FC<BoardProps> = ({
   );
 
   const { effects: boardEffects, reducedMotion } = useBoardEffects({
+    batch: eventBatch,
+    view,
+    enabled: visualEffectsEnabled,
+    sessionKey: effectSessionKey,
+  });
+  const { effects: boardVfx, reducedMotion: vfxReducedMotion } = useBoardVfx({
     batch: eventBatch,
     view,
     enabled: visualEffectsEnabled,
@@ -862,6 +870,14 @@ export const Board: FC<BoardProps> = ({
               isFlipped={isFlipped}
               reducedMotion={reducedMotion}
               t={t}
+            />
+            <VfxLayer
+              effects={boardVfx}
+              view={view}
+              boardSize={size}
+              cellSize={cellSize}
+              isFlipped={isFlipped}
+              reducedMotion={vfxReducedMotion}
             />
           </div>
         </div>
