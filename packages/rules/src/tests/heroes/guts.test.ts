@@ -60,6 +60,31 @@ export function testGutsKnightMulticlassMovementAndDoubleAutoHit() {
     "Guts should have Knight movement mode available"
   );
 
+  const knightOptions = applyAction(
+    state,
+    { type: "requestMoveOptions", unitId: guts.id, mode: "knight" } as any,
+    makeRngSequence([])
+  );
+  const knightDestination = { col: 5, row: 4 };
+  assert(
+    knightOptions.state.pendingMove?.legalTo.some(
+      (coord) =>
+        coord.col === knightDestination.col && coord.row === knightDestination.row
+    ),
+    "Guts Knight movement should expose a legal destination"
+  );
+  const knightMove = applyAction(
+    knightOptions.state,
+    { type: "move", unitId: guts.id, to: knightDestination } as any,
+    makeRngSequence([])
+  );
+  assert(
+    knightMove.state.units[guts.id].position?.col === knightDestination.col &&
+      knightMove.state.units[guts.id].position?.row === knightDestination.row &&
+      knightMove.state.units[guts.id].turn.moveUsed,
+    "Guts should resolve a selected Knight-mode move"
+  );
+
   const rng = makeRngSequence([0.01, 0.01, 0.99, 0.99]); // attacker double, strong defender
   const initial = applyAction(
     state,

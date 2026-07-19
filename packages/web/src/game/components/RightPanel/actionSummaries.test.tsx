@@ -278,6 +278,61 @@ test("current task panel shows local targeting name, instruction, cost, and canc
   assert.match(markup, /Cancel/);
 });
 
+test("current task panel keeps movement intent visible through mode and destination selection", () => {
+  setLanguage("en", { setItem: () => undefined });
+  const undyne = makeUnit({
+    id: "P1-undyne",
+    class: "berserker",
+    heroId: "undyne",
+  });
+  const baseVm = {
+    view: makeView(undyne),
+    playerId: "P1",
+    pendingRoll: null,
+    pendingMeta: null,
+    actionMode: "move",
+    targetingMode: {
+      sourceUnitId: undyne.id,
+      abilityId: "move",
+      step: "move",
+      resourcePreview: { move: true },
+    },
+    selectedUnitId: undyne.id,
+    papyrusLineAxis: "row",
+    setActionMode: () => undefined,
+  };
+
+  const modeMarkup = renderToStaticMarkup(
+    <CurrentTaskPanel
+      vm={{
+        ...baseVm,
+        moveOptions: {
+          unitId: undyne.id,
+          legalTo: [],
+          modes: ["normal", "spearman"],
+        },
+      }}
+    />,
+  );
+  assert.match(modeMarkup, /Choose move mode/);
+  assert.doesNotMatch(modeMarkup, /No forced task/);
+
+  const destinationMarkup = renderToStaticMarkup(
+    <CurrentTaskPanel
+      vm={{
+        ...baseVm,
+        moveOptions: {
+          unitId: undyne.id,
+          legalTo: [{ col: 2, row: 3 }],
+          mode: "spearman",
+        },
+      }}
+    />,
+  );
+  assert.match(destinationMarkup, /Choose a destination/);
+  assert.doesNotMatch(destinationMarkup, /No forced task/);
+});
+
 test("current task panel shows Frisk board target pending prompts", () => {
   setLanguage("en", { setItem: () => undefined });
   const frisk = makeUnit({ id: "P1-frisk", heroId: "frisk" });

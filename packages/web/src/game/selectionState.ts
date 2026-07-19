@@ -47,6 +47,66 @@ export interface LocalSelectionState<TMoveOptions = unknown> {
   targetingMode?: TargetingMode | null;
 }
 
+export function shouldActivateMoveSelection(
+  selectedUnitId: string | null | undefined,
+  options:
+    | {
+        unitId: string;
+        legalTo: unknown[];
+        modes?: unknown[];
+      }
+    | null
+): boolean {
+  return !!(
+    options &&
+    selectedUnitId === options.unitId &&
+    options.legalTo.length > 0 &&
+    (!options.modes || options.modes.length === 0)
+  );
+}
+
+export function transitionMoveOptions<
+  TMoveOptions extends {
+    unitId: string;
+    legalTo: unknown[];
+    modes?: unknown[];
+  },
+>(
+  state: LocalSelectionState<TMoveOptions>,
+  options: TMoveOptions | null
+): Partial<LocalSelectionState<TMoveOptions>> {
+  const next = { moveOptions: options };
+  return shouldActivateMoveSelection(state.selectedUnitId, options)
+    ? {
+        ...next,
+        ...transitionActionMode({ ...state, moveOptions: options }, "move"),
+      }
+    : next;
+}
+
+export function shouldResetLocalBoardUiForSnapshot({
+  lifecycleChanged,
+  selectionLost,
+  view,
+  metaPendingRoll,
+}: {
+  lifecycleChanged: boolean;
+  selectionLost: boolean;
+  view: {
+    pendingRoll?: unknown;
+    pendingMove?: unknown;
+    pendingAoEPreview?: unknown;
+  };
+  metaPendingRoll?: unknown;
+}): boolean {
+  const hasForcedBoardPending = !!(
+    view.pendingRoll ||
+    view.pendingAoEPreview ||
+    metaPendingRoll
+  );
+  return lifecycleChanged || selectionLost || hasForcedBoardPending;
+}
+
 const CLEAR_ON_CONFIRMED_ACTION_MODES = new Set<Exclude<ActionMode, null>>([
   "attack",
   "assassinMark",

@@ -139,25 +139,35 @@ export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm }) => {
         : [];
     const undyneAxis =
       vm.undyneAxis === "col" || vm.papyrusLineAxis === "col" ? "col" : "row";
+    const choosingMoveMode =
+      vm.actionMode === "move" &&
+      Array.isArray(vm.moveOptions?.modes) &&
+      vm.moveOptions.modes.length > 0;
 
     return (
       <div aria-live="polite">
         <PanelCard variant="hud" className="p-3">
           <SectionHeader
             kicker={t("game.currentTask")}
-            title={t("game.usingTargeting", {
-              name: getUsingName(vm.targetingMode, abilityViews, language, t),
-            })}
+            title={
+              choosingMoveMode
+                ? t("game.chooseMoveMode")
+                : t("game.usingTargeting", {
+                    name: getUsingName(vm.targetingMode, abilityViews, language, t),
+                  })
+            }
             action={<StatusBadge tone="warning">{t("game.boardSelectionActive")}</StatusBadge>}
           />
           <p className="mt-2 text-xs leading-5 text-stone-600 dark:text-stone-300">
             {t("game.targetingInstruction", {
-              instruction: getActionModeHint(
-                vm.actionMode as ActionPreviewMode,
-                vm.papyrusLineAxis ?? "row",
-                undyneAxis,
-                language,
-              ),
+              instruction: choosingMoveMode
+                ? t("game.chooseMoveMode")
+                : getActionModeHint(
+                    vm.actionMode as ActionPreviewMode,
+                    vm.papyrusLineAxis ?? "row",
+                    undyneAxis,
+                    language,
+                  ),
             })}
           </p>
           <p className="mt-1 text-xs leading-5 text-sky-700 dark:text-sky-200">

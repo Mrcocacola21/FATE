@@ -32,7 +32,9 @@ import {
 } from "./ws";
 import type { TestRoomCommand } from "./testRoom/types";
 import {
+  shouldResetLocalBoardUiForSnapshot,
   transitionActionMode,
+  transitionMoveOptions,
   type TargetingMode,
 } from "./game/selectionState";
 import type { BoardEventBatch } from "./game/effects/types";
@@ -367,12 +369,6 @@ function handleServerMessage(
         previousView.roundNumber !== msg.view.roundNumber ||
         previousView.turnNumber !== msg.view.turnNumber ||
         previousView.activeUnitId !== msg.view.activeUnitId;
-      const serverBoardPending = !!(
-        msg.view.pendingRoll ||
-        msg.view.pendingMove ||
-        msg.view.pendingAoEPreview ||
-        nextMeta.pendingRoll
-      );
       const selectedUnitId =
         current.selectedUnitId && msg.view.units[current.selectedUnitId]
           ? current.selectedUnitId
@@ -390,7 +386,12 @@ function handleServerMessage(
         canControlTestRoom: msg.you.canControlTestRoom ?? false,
         roomMeta: nextMeta,
         selectedUnitId,
-        ...((lifecycleChanged || serverBoardPending || selectionLost)
+        ...(shouldResetLocalBoardUiForSnapshot({
+          lifecycleChanged,
+          selectionLost,
+          view: msg.view,
+          metaPendingRoll: nextMeta.pendingRoll,
+        })
           ? buildLocalBoardUiResetState()
           : {}),
       }));
@@ -416,15 +417,14 @@ function handleServerMessage(
       return;
     }
     case "moveOptions": {
-      set(() => ({
-        moveOptions: {
-          unitId: msg.unitId,
-          roll: msg.roll,
-          legalTo: msg.legalTo,
-          mode: msg.mode,
-          modes: msg.modes,
-        },
-      }));
+      const moveOptions = {
+        unitId: msg.unitId,
+        roll: msg.roll,
+        legalTo: msg.legalTo,
+        mode: msg.mode,
+        modes: msg.modes,
+      };
+      set((state) => transitionMoveOptions(state, moveOptions));
       return;
     }
     case "error": {
@@ -714,11 +714,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
         previousView.roundNumber !== room.roundNumber ||
         previousView.turnNumber !== room.turnNumber ||
         previousView.activeUnitId !== room.activeUnitId;
-      const serverBoardPending = !!(
-        room.pendingRoll ||
-        room.pendingMove ||
-        room.pendingAoEPreview
-      );
       const selectedUnitId =
         state.selectedUnitId && room.units[state.selectedUnitId]
           ? state.selectedUnitId
@@ -730,7 +725,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
         joined: true,
         hasSnapshot: true,
         selectedUnitId,
-        ...((lifecycleChanged || serverBoardPending || selectionLost)
+        ...(shouldResetLocalBoardUiForSnapshot({
+          lifecycleChanged,
+          selectionLost,
+          view: room,
+        })
           ? buildLocalBoardUiResetState()
           : {}),
       };
@@ -768,7 +767,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       hoverPreview: null,
     })),
   setPlaceUnitId: (unitId) => set(() => ({ placeUnitId: unitId })),
-  setMoveOptions: (options) => set(() => ({ moveOptions: options })),
+  setMoveOptions: (options) =>
+    set((state) => transitionMoveOptions(state, options)),
   setHoveredAbilityId: (abilityId) => set(() => ({ hoveredAbilityId: abilityId })),
   setHoverPreview: (preview) => set(() => ({ hoverPreview: preview })),
   queueLokiLaughtOption: (unitId, option) =>

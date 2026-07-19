@@ -106,6 +106,22 @@ export function testTricksterMoveOptionsGeneratedAndUsed() {
     "pendingMove should be stored for trickster"
   );
 
+  const rejected = applyAction(
+    options.state,
+    { type: "move", unitId: trickster.id, to: { col: 8, row: 8 } } as any,
+    rng
+  );
+  assert.deepStrictEqual(
+    rejected.state,
+    options.state,
+    "illegal Trickster destination should not mutate movement state"
+  );
+  assert(
+    rejected.events.length === 0 &&
+      rejected.state.units[trickster.id].turn.moveUsed === false,
+    "illegal Trickster destination should not consume movement"
+  );
+
   const dest = expected[0];
   const moved = applyAction(
     options.state,

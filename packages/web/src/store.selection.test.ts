@@ -3,7 +3,9 @@ import test from "node:test";
 import {
   buildTargetingModeForActionMode,
   shouldClearActionModeAfterConfirmedResult,
+  shouldResetLocalBoardUiForSnapshot,
   transitionActionMode,
+  transitionMoveOptions,
 } from "./game/selectionState";
 import { isActionableAbility } from "./game/components/RightPanel/rightPanelHelpers";
 import { useGameShellBoardUi } from "./game/gameshell-content/hooks/useGameShellBoardUi";
@@ -151,4 +153,85 @@ test("stale action results do not clear newly entered targeting mode", () => {
     }),
     true
   );
+});
+
+test("authoritative pendingMove snapshots preserve local destination selection", () => {
+  assert.equal(
+    shouldResetLocalBoardUiForSnapshot({
+      lifecycleChanged: false,
+      selectionLost: false,
+      view: {
+        pendingRoll: null,
+        pendingMove: {
+          unitId: "P1-trickster-1",
+          legalTo: [{ col: 5, row: 4 }],
+        },
+        pendingAoEPreview: null,
+      },
+    }),
+    false
+  );
+  assert.equal(
+    shouldResetLocalBoardUiForSnapshot({
+      lifecycleChanged: false,
+      selectionLost: false,
+      view: {
+        pendingRoll: { id: "movement-roll" },
+        pendingMove: null,
+        pendingAoEPreview: null,
+      },
+    }),
+    true
+  );
+});
+
+test("movement options returned after a roll restore local move intent", () => {
+  const unitId = "P1-undyne";
+  const next = transitionMoveOptions(
+    {
+      selectedUnitId: unitId,
+      actionMode: null,
+      targetingMode: null,
+      moveOptions: null,
+    },
+    {
+      unitId,
+      roll: 4,
+      legalTo: [{ col: 4, row: 5 }],
+      mode: "normal",
+    }
+  );
+
+  assert.equal(next.actionMode, "move");
+  assert.deepStrictEqual(next.targetingMode, {
+    sourceUnitId: unitId,
+    abilityId: "move",
+    step: "move",
+    resourcePreview: { move: true },
+  });
+});
+
+test("movement mode choices do not masquerade as destination options", () => {
+  const unitId = "P1-guts";
+  const next = transitionMoveOptions(
+    {
+      selectedUnitId: unitId,
+      actionMode: "move",
+      targetingMode: buildTargetingModeForActionMode("move", unitId),
+      moveOptions: null,
+    },
+    {
+      unitId,
+      legalTo: [],
+      modes: ["normal", "knight"],
+    }
+  );
+
+  assert.deepStrictEqual(next, {
+    moveOptions: {
+      unitId,
+      legalTo: [],
+      modes: ["normal", "knight"],
+    },
+  });
 });

@@ -199,6 +199,8 @@ export function getActionModeHint(
 ): string {
   const uk = language === "uk";
   switch (actionMode) {
+    case "move":
+      return uk ? "Оберіть клітинку призначення." : "Choose a destination.";
     case "dora":
       return uk ? "Дора: оберіть центральну клітинку на лінії лучника." : "Dora: select a center cell on the archer line.";
     case "invadeTime":
