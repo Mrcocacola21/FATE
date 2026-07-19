@@ -9,11 +9,22 @@ import {
   DRAFT_CLASSES,
   DRAFT_HERO_POOL,
   GAME_MODES,
+  getDraftableHeroes,
   getHeroDraftMeta,
   getPickOrder,
+  HERO_ARTEMIDA_ID,
+  HERO_CATALOG,
   HERO_DRAFT_META,
+  HERO_DON_KIHOTE_ID,
+  HERO_DUOLINGO_ID,
+  HERO_JACK_RIPPER_ID,
+  HERO_KANEKI_ID,
+  HERO_LUCHE_ID,
+  HERO_ZORO_ID,
   isGameModeId,
   pickDraftHero,
+  SAFE_CLASS_DRAFT_POOL_VALIDATION,
+  validateDraftPoolForMode,
   type DraftState,
 } from "../..";
 import type { PlayerId, UnitClass, UnitState } from "../../model";
@@ -33,6 +44,26 @@ function firstHero(unitClass: UnitClass): string {
   assert(heroId, `missing hero for ${unitClass}`);
   return heroId;
 }
+
+const STUB_HERO_IDS = [
+  HERO_DUOLINGO_ID,
+  HERO_LUCHE_ID,
+  HERO_DON_KIHOTE_ID,
+  HERO_KANEKI_ID,
+  HERO_JACK_RIPPER_ID,
+  HERO_ZORO_ID,
+  HERO_ARTEMIDA_ID,
+] as const;
+
+const STUB_HERO_ID_VARIANTS = [
+  "donQuixote",
+  "don_quixote",
+  "kanekiKen",
+  "kaneki_ken",
+  "jackTheRipper",
+  "jack_the_ripper",
+  "artemis",
+] as const;
 
 function unitsForPlayer(units: UnitState[], player: PlayerId): UnitState[] {
   return units.filter((unit) => unit.owner === player);
@@ -100,6 +131,140 @@ export function testDraftPoolExcludesBaseUnits() {
     "base units should not be in the draft pool"
   );
   console.log("draft_pool_excludes_base_units passed");
+}
+
+export function testDraftPoolRequiresExplicitImplementedEligibility() {
+  const draftHeroIds = new Set(DRAFT_HERO_POOL.map((hero) => hero.heroId));
+  for (const heroId of STUB_HERO_IDS) {
+    const definition = HERO_CATALOG.find((hero) => hero.id === heroId);
+    const draftMeta = getHeroDraftMeta(heroId);
+    assert(definition, `missing catalog definition for stub ${heroId}`);
+    assert(draftMeta, `missing draft metadata for stub ${heroId}`);
+    assert(!definition.implemented, `${heroId} should be marked unimplemented`);
+    assert(!definition.draftEnabled, `${heroId} should have draft disabled`);
+    assert(!definition.standardEnabled, `${heroId} should have standard disabled`);
+    assert(!definition.figureSetEnabled, `${heroId} should have figure set disabled`);
+    assert(definition.reason === "stub", `${heroId} should have stub reason`);
+    assert(!draftMeta.implemented, `${heroId} draft metadata should be unimplemented`);
+    assert(!draftHeroIds.has(heroId), `${heroId} should not be in the draft pool`);
+  }
+
+  assert(
+    DRAFT_HERO_POOL.every(
+      (hero) =>
+        hero.implemented === true &&
+        hero.draftEnabled === true &&
+        hero.isBase !== true &&
+        DRAFT_CLASSES.includes(hero.primaryClass)
+    ),
+    "every draft hero should have complete explicit eligibility metadata"
+  );
+
+  const missingMetadataHero = {
+    heroId: "missing-availability",
+    primaryClass: "knight" as const,
+    isBase: false,
+  };
+  assert(
+    !getDraftableHeroes([...DRAFT_HERO_POOL, missingMetadataHero]).some(
+      (hero) => hero.heroId === missingMetadataHero.heroId
+    ),
+    "heroes missing implementation/draft metadata must be excluded"
+  );
+  assert(
+    !getDraftableHeroes([
+      {
+        heroId: "missing-base-marker",
+        primaryClass: "knight",
+        implemented: true,
+        draftEnabled: true,
+      },
+    ]).length,
+    "heroes missing the required base marker must be excluded"
+  );
+  console.log("draft_pool_requires_explicit_implemented_eligibility passed");
+}
+
+export function testSafeClassDraftPoolAvailabilityIsValidated() {
+  assert(SAFE_CLASS_DRAFT_POOL_VALIDATION.ok, "current safe draft pool should be valid");
+  if (SAFE_CLASS_DRAFT_POOL_VALIDATION.ok) {
+    for (const unitClass of DRAFT_CLASSES) {
+      assert(
+        SAFE_CLASS_DRAFT_POOL_VALIDATION.counts[unitClass] >= 3,
+        `${unitClass} should have three heroes before a possible class ban`
+      );
+    }
+  }
+
+  const invalidPool = DRAFT_HERO_POOL.filter(
+    (hero) => hero.primaryClass !== "knight"
+  );
+  const invalid = validateDraftPoolForMode(
+    { classes: DRAFT_CLASSES, picksRequiredPerClass: 2, maxBansPerClass: 1 },
+    invalidPool
+  );
+  assert(!invalid.ok, "a class shortage should invalidate safe class draft");
+  if (!invalid.ok) {
+    assert(
+      invalid.shortages.some((shortage) => shortage.primaryClass === "knight"),
+      "validation should report the short class"
+    );
+  }
+  console.log("safe_class_draft_pool_availability_is_validated passed");
+}
+
+export function testStubHeroesAreRejectedWithoutDraftMutation() {
+  const banState = createSafeClassDraftState();
+  const pickState: DraftState = {
+    ...createSafeClassDraftState(),
+    phase: "pick",
+    currentPlayer: "P1",
+  };
+  for (const heroId of STUB_HERO_IDS) {
+    const ban = banDraftHero(banState, "P1", heroId);
+    assert(
+      !ban.ok && ban.reason === "hero_not_draftable",
+      `stub ban should be rejected for ${heroId}`
+    );
+    assert(ban.state === banState, `stub ban should not mutate state for ${heroId}`);
+
+    const pick = pickDraftHero(pickState, "P1", heroId);
+    assert(
+      !pick.ok && pick.reason === "hero_not_draftable",
+      `stub pick should be rejected for ${heroId}`
+    );
+    assert(pick.state === pickState, `stub pick should not mutate state for ${heroId}`);
+  }
+  for (const heroId of STUB_HERO_ID_VARIANTS) {
+    const ban = banDraftHero(banState, "P1", heroId);
+    const pick = pickDraftHero(pickState, "P1", heroId);
+    assert(
+      !ban.ok && ban.reason === "invalid_draft_hero" && ban.state === banState,
+      `unknown stub spelling should be rejected without mutation for ${heroId}`
+    );
+    assert(
+      !pick.ok && pick.reason === "invalid_draft_hero" && pick.state === pickState,
+      `unknown stub spelling should be rejected without mutation for ${heroId}`
+    );
+  }
+  console.log("stub_heroes_are_rejected_without_draft_mutation passed");
+}
+
+export function testStandardRosterRejectsStubFigureSets() {
+  const army = createDefaultArmy("P1", {
+    trickster: HERO_DUOLINGO_ID,
+    spearman: HERO_LUCHE_ID,
+    rider: HERO_DON_KIHOTE_ID,
+    berserker: HERO_KANEKI_ID,
+    assassin: HERO_JACK_RIPPER_ID,
+    knight: HERO_ZORO_ID,
+    archer: HERO_ARTEMIDA_ID,
+  });
+  assert(
+    army.every((unit) => !unit.heroId && !unit.figureId),
+    "forged standard figure sets must not create stub heroes or figures"
+  );
+  console.log("standard_roster_rejects_stub_figure_sets passed");
 }
 
 export function testDraftValidationRulesWork() {

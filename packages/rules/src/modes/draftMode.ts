@@ -1,13 +1,15 @@
 import type { PlayerId, UnitClass } from "../model";
-import { HERO_CATALOG, heroMatchesClass, type HeroSelection } from "../heroes";
+import { HERO_CATALOG, type HeroAvailabilityReason, type HeroSelection } from "../heroes";
 import { createDefaultArmy } from "../actions/armyActions";
 import { HERO_REGISTRY_LIST } from "../heroMeta";
 
 export type HeroDraftMeta = {
   heroId: string;
   primaryClass: UnitClass;
+  implemented: boolean;
   draftEnabled: boolean;
   isBase: boolean;
+  reason?: HeroAvailabilityReason;
 };
 
 export type DraftPlayer = PlayerId;
@@ -17,6 +19,7 @@ export type DraftLockReason =
   | "banned"
   | "picked"
   | "base_unit_not_allowed"
+  | "hero_not_draftable"
   | "class_slot_already_filled"
   | "ban_would_break_class_pool"
   | "max_bans_per_class_reached"
@@ -78,6 +81,77 @@ export const DRAFT_TOTAL_BANS = DRAFT_BAN_ORDER.length;
 export const DRAFT_PICK_COUNT_PER_PLAYER = DRAFT_CLASSES.length;
 export const DRAFT_TOTAL_PICKS = DRAFT_PICK_COUNT_PER_PLAYER * 2;
 
+export type DraftPoolValidationConfig = {
+  classes: readonly UnitClass[];
+  picksRequiredPerClass: number;
+  maxBansPerClass: number;
+};
+
+export type DraftPoolShortage = {
+  primaryClass: UnitClass;
+  available: number;
+  required: number;
+};
+
+export type DraftPoolValidationResult =
+  | { ok: true; counts: Record<UnitClass, number> }
+  | {
+      ok: false;
+      counts: Record<UnitClass, number>;
+      shortages: DraftPoolShortage[];
+      message: string;
+    };
+
+export function isDraftableHero(
+  hero: Partial<HeroDraftMeta>
+): hero is HeroDraftMeta {
+  return (
+    typeof hero.heroId === "string" &&
+    hero.implemented === true &&
+    hero.draftEnabled === true &&
+    hero.isBase === false &&
+    DRAFT_CLASSES.includes(hero.primaryClass as UnitClass)
+  );
+}
+
+export function getDraftableHeroes(
+  heroCatalog: ReadonlyArray<Partial<HeroDraftMeta>>
+): HeroDraftMeta[] {
+  return heroCatalog.filter(isDraftableHero);
+}
+
+export function validateDraftPoolForMode(
+  config: DraftPoolValidationConfig,
+  draftableHeroes: ReadonlyArray<HeroDraftMeta>
+): DraftPoolValidationResult {
+  const counts = Object.fromEntries(
+    DRAFT_CLASSES.map((unitClass) => [unitClass, 0])
+  ) as Record<UnitClass, number>;
+  for (const hero of getDraftableHeroes(draftableHeroes)) {
+    counts[hero.primaryClass] += 1;
+  }
+
+  const required = config.picksRequiredPerClass + config.maxBansPerClass;
+  const shortages = config.classes.flatMap<DraftPoolShortage>((primaryClass) =>
+    counts[primaryClass] < required
+      ? [{ primaryClass, available: counts[primaryClass], required }]
+      : []
+  );
+  if (shortages.length === 0) return { ok: true, counts };
+
+  return {
+    ok: false,
+    counts,
+    shortages,
+    message: `Invalid draft pool: ${shortages
+      .map(
+        ({ primaryClass, available, required: classRequired }) =>
+          `${primaryClass} has ${available}, requires ${classRequired}`
+      )
+      .join("; ")}`,
+  };
+}
+
 const HERO_CLASS_BY_ID = new Map(
   HERO_CATALOG.map((hero) => [hero.id, hero.mainClass])
 );
@@ -89,25 +163,41 @@ const BASE_HERO_IDS = new Set(
 );
 
 export const HERO_DRAFT_META: HeroDraftMeta[] = [
-  ...HERO_CATALOG.filter((hero) => heroMatchesClass(hero.id, hero.mainClass)).map((hero) => ({
+  ...HERO_CATALOG.map((hero) => ({
     heroId: hero.id,
     primaryClass: hero.mainClass,
-    draftEnabled: true,
+    implemented: hero.implemented,
+    draftEnabled: hero.draftEnabled,
     isBase: false,
+    reason: hero.reason,
   })),
   ...HERO_REGISTRY_LIST.filter((hero) => BASE_HERO_IDS.has(hero.id)).map(
     (hero) => ({
       heroId: hero.id,
       primaryClass: hero.mainClass,
+      implemented: true,
       draftEnabled: false,
       isBase: true,
     })
   ),
 ];
 
-export const DRAFT_HERO_POOL: HeroDraftMeta[] = HERO_DRAFT_META.filter(
-  (hero) => hero.draftEnabled && !hero.isBase
+export const DRAFT_HERO_POOL: HeroDraftMeta[] = getDraftableHeroes(
+  HERO_DRAFT_META
 );
+
+export const SAFE_CLASS_DRAFT_POOL_VALIDATION = validateDraftPoolForMode(
+  {
+    classes: DRAFT_CLASSES,
+    picksRequiredPerClass: 2,
+    maxBansPerClass: 1,
+  },
+  DRAFT_HERO_POOL
+);
+
+if (!SAFE_CLASS_DRAFT_POOL_VALIDATION.ok) {
+  throw new Error(SAFE_CLASS_DRAFT_POOL_VALIDATION.message);
+}
 
 const HERO_DRAFT_META_BY_ID = new Map(
   HERO_DRAFT_META.map((hero) => [hero.heroId, hero])
@@ -187,7 +277,8 @@ function availableDraftHeroesForClass(
 function validateDraftHero(heroId: string): HeroDraftMeta | DraftLockReason {
   const meta = getHeroDraftMeta(heroId);
   if (!meta) return "invalid_draft_hero";
-  if (meta.isBase || !meta.draftEnabled) return "base_unit_not_allowed";
+  if (meta.isBase) return "base_unit_not_allowed";
+  if (!isDraftableHero(meta)) return "hero_not_draftable";
   return meta;
 }
 

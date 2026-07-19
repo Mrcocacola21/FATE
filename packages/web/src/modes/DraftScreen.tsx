@@ -8,6 +8,7 @@ import { getTokenSrc } from "../catalog/tokens";
 import { useHeroes } from "../figures/useHeroes";
 import { useI18n } from "../i18n";
 import { getGameModeName } from "./modeLabels";
+import { groupDraftPoolByClass } from "./draftPool";
 
 const DRAFT_CLASSES: UnitClass[] = [
   "knight",
@@ -140,14 +141,7 @@ export function DraftScreen({ vm }: { vm: DraftVm }) {
     [heroes]
   );
   const poolByClass = useMemo(() => {
-    const grouped = new Map<UnitClass, HeroDraftMeta[]>();
-    for (const hero of vm.roomMeta.draftPool) {
-      if (hero.isBase || !hero.draftEnabled) continue;
-      const list = grouped.get(hero.primaryClass) ?? [];
-      list.push(hero);
-      grouped.set(hero.primaryClass, list);
-    }
-    return grouped;
+    return groupDraftPoolByClass(vm.roomMeta.draftPool);
   }, [vm.roomMeta.draftPool]);
 
   const banCount = draft.history.filter((event) => event.type === "ban").length;

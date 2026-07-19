@@ -374,8 +374,12 @@ import {
   testDraftCompletionCreatesValidRosters,
   testDraftPickOrderIsSnake,
   testDraftPoolExcludesBaseUnits,
+  testDraftPoolRequiresExplicitImplementedEligibility,
   testDraftValidationRulesWork,
   testGameModeConfigsExposeExpectedModes,
+  testSafeClassDraftPoolAvailabilityIsValidated,
+  testStandardRosterRejectsStubFigureSets,
+  testStubHeroesAreRejectedWithoutDraftMutation,
 } from "./core/modes.test";
 
 function main(): void {
@@ -396,6 +400,10 @@ function main(): void {
   testClassicRosterCreationUsesOnlyBaseUnits();
   testClassicRosterIgnoresCustomFigureSets();
   testDraftPoolExcludesBaseUnits();
+  testDraftPoolRequiresExplicitImplementedEligibility();
+  testSafeClassDraftPoolAvailabilityIsValidated();
+  testStubHeroesAreRejectedWithoutDraftMutation();
+  testStandardRosterRejectsStubFigureSets();
   testDraftPickOrderIsSnake();
   testDraftValidationRulesWork();
   testDraftCompletionCreatesValidRosters();

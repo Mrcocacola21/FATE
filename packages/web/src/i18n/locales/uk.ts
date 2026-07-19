@@ -120,6 +120,7 @@ export const uk = {
       banned: "Забанено",
       picked: "Обрано",
       base_unit_not_allowed: "Базова фігура",
+      hero_not_draftable: "Герой недоступний для драфту",
       class_slot_already_filled: "Клас заповнено",
       ban_would_break_class_pool: "Пул захищено",
       max_bans_per_class_reached: "Бан класу використано",

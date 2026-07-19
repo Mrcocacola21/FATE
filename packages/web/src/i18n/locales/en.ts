@@ -117,6 +117,7 @@ export const en = {
       banned: "Banned",
       picked: "Picked",
       base_unit_not_allowed: "Base unit",
+      hero_not_draftable: "Hero is not draftable",
       class_slot_already_filled: "Class filled",
       ban_would_break_class_pool: "Pool protected",
       max_bans_per_class_reached: "Class ban used",

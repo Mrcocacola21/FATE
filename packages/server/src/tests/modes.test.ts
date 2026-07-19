@@ -5,12 +5,29 @@ import {
   DRAFT_CLASSES,
   DRAFT_HERO_POOL,
   getPickOrder,
+  HERO_ARTEMIDA_ID,
+  HERO_DON_KIHOTE_ID,
+  HERO_DUOLINGO_ID,
+  HERO_JACK_RIPPER_ID,
+  HERO_KANEKI_ID,
+  HERO_LUCHE_ID,
+  HERO_ZORO_ID,
   type GameModeId,
   type PlayerId,
   type UnitClass,
 } from "rules";
 import { buildServer } from "../index";
-import { createGameRoomWithId, storeTestHooks } from "../store";
+import { createGameRoomWithId, getGameRoom, storeTestHooks } from "../store";
+
+const STUB_HERO_IDS = [
+  HERO_DUOLINGO_ID,
+  HERO_LUCHE_ID,
+  HERO_DON_KIHOTE_ID,
+  HERO_KANEKI_ID,
+  HERO_JACK_RIPPER_ID,
+  HERO_ZORO_ID,
+  HERO_ARTEMIDA_ID,
+] as const;
 
 function collectMessages(ws: WebSocket) {
   const queue: unknown[] = [];
@@ -91,6 +108,33 @@ function waitForError(
       }
       if (Date.now() - start > timeoutMs) {
         reject(new Error(`Timed out waiting for error: ${code}`));
+        return;
+      }
+      setTimeout(tick, 20);
+    };
+    tick();
+  });
+}
+
+function waitForErrorCount(
+  queue: unknown[],
+  code: string,
+  expectedCount: number,
+  timeoutMs = 2000
+): Promise<any> {
+  return new Promise((resolve, reject) => {
+    const start = Date.now();
+    const tick = () => {
+      const matches = queue.filter((item) => {
+        const payload = item as { type?: string; code?: string };
+        return payload.type === "error" && payload.code === code;
+      });
+      if (matches.length >= expectedCount) {
+        resolve(matches[expectedCount - 1]);
+        return;
+      }
+      if (Date.now() - start > timeoutMs) {
+        reject(new Error(`Timed out waiting for error ${code} count ${expectedCount}`));
         return;
       }
       setTimeout(tick, 20);
@@ -219,7 +263,7 @@ async function testHostModeSelectionAndClassicStart(wsUrl: string) {
 
 async function testStandardStartPreservesFigureSets(wsUrl: string) {
   const { ws1, ws2, queue1 } = await joinTwoPlayers(wsUrl, {
-    p1FigureSet: { knight: "griffith", archer: "jebe" },
+    p1FigureSet: { knight: "griffith", archer: "jebe", trickster: HERO_DUOLINGO_ID },
     p2FigureSet: { knight: "asgore", archer: "mettaton" },
   });
 
@@ -235,10 +279,63 @@ async function testStandardStartPreservesFigureSets(wsUrl: string) {
     (unit: any) => unit.owner === "P1" && unit.class === "knight"
   ) as any;
   assert.equal(p1Knight?.heroId, "griffith");
+  const p1Trickster = units.find(
+    (unit: any) => unit.owner === "P1" && unit.class === "trickster"
+  ) as any;
+  assert.equal(p1Trickster?.heroId, undefined);
+  assert.equal(p1Trickster?.figureId, undefined);
 
   ws1.close();
   ws2.close();
   console.log("server_modes_standard_preserves_figure_sets passed");
+}
+
+async function testDraftRejectsEveryStubWithoutMutation(wsUrl: string) {
+  const { ws1, ws2, queue1, queue2, roomId } = await joinTwoPlayers(wsUrl);
+  sendSetMode(ws1, "draft");
+  await waitForRoomState(queue1, (msg) => msg.meta?.gameMode === "draft");
+  sendReadyBoth(ws1, ws2);
+  await waitForRoomState(queue1, (msg) => msg.meta?.ready?.P1 && msg.meta?.ready?.P2);
+  ws1.send(JSON.stringify({ type: "startGame" }));
+  await waitForRoomState(queue1, (msg) => msg.meta?.draftState?.phase === "ban");
+
+  let rejectionCount = 0;
+  for (const heroId of STUB_HERO_IDS) {
+    const room = getGameRoom(roomId);
+    assert(room?.draftState, `draft state should exist before banning ${heroId}`);
+    const before = JSON.stringify(room.draftState);
+    ws1.send(JSON.stringify({ type: "draftBanHero", heroId }));
+    rejectionCount += 1;
+    await waitForErrorCount(queue1, "hero_not_draftable", rejectionCount);
+    assert.equal(JSON.stringify(room.draftState), before, `stub ban mutated state for ${heroId}`);
+  }
+
+  for (let index = 0; index < DRAFT_BAN_ORDER.length; index += 1) {
+    const player = DRAFT_BAN_ORDER[index];
+    const socket = player === "P1" ? ws1 : ws2;
+    const queue = player === "P1" ? queue1 : queue2;
+    socket.send(
+      JSON.stringify({ type: "draftBanHero", heroId: heroForClass(DRAFT_CLASSES[index]) })
+    );
+    await waitForRoomState(
+      queue,
+      (msg) => msg.meta?.draftState?.history?.length === index + 1
+    );
+  }
+
+  for (const heroId of STUB_HERO_IDS) {
+    const room = getGameRoom(roomId);
+    assert(room?.draftState, `draft state should exist before picking ${heroId}`);
+    const before = JSON.stringify(room.draftState);
+    ws1.send(JSON.stringify({ type: "draftPickHero", heroId }));
+    rejectionCount += 1;
+    await waitForErrorCount(queue1, "hero_not_draftable", rejectionCount);
+    assert.equal(JSON.stringify(room.draftState), before, `stub pick mutated state for ${heroId}`);
+  }
+
+  ws1.close();
+  ws2.close();
+  console.log("server_modes_draft_rejects_stub_heroes_without_mutation passed");
 }
 
 async function testDraftFlowStartsPlacement(wsUrl: string) {
@@ -256,8 +353,16 @@ async function testDraftFlowStartsPlacement(wsUrl: string) {
     (msg) => Array.isArray(msg.meta?.draftPool) && msg.meta.draftPool.length > 0
   );
   assert(
-    draftStart.meta.draftPool.every((hero: any) => !hero.isBase && hero.draftEnabled),
+    draftStart.meta.draftPool.every(
+      (hero: any) => hero.implemented && !hero.isBase && hero.draftEnabled
+    ),
     "draft pool should exclude base units"
+  );
+  assert(
+    STUB_HERO_IDS.every(
+      (heroId) => !draftStart.meta.draftPool.some((hero: any) => hero.heroId === heroId)
+    ),
+    "draft pool should exclude all stub heroes"
   );
 
   sendSetMode(ws1, "classic");
@@ -339,6 +444,7 @@ async function main() {
     await testDefaultRoomModeAndRoomList(server);
     await testStandardStartPreservesFigureSets(wsUrl);
     await testHostModeSelectionAndClassicStart(wsUrl);
+    await testDraftRejectsEveryStubWithoutMutation(wsUrl);
     await testDraftFlowStartsPlacement(wsUrl);
   } finally {
     storeTestHooks.reset();

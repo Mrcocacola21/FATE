@@ -2,7 +2,11 @@ import type { GameState, PlayerId, UnitState } from "../model";
 import { makeEmptyTurnEconomy } from "../model";
 import { getUnitDefinition } from "../units";
 import { initUnitAbilities } from "../abilities";
-import { getHeroDefinition, heroMatchesClass, type HeroSelection } from "../heroes";
+import {
+  getHeroDefinition,
+  isHeroSelectableInStandard,
+  type HeroSelection,
+} from "../heroes";
 import { getUnitBaseAttack, getUnitBaseMaxHp } from "./shared";
 import { setupChikatiloFalseTrailForPlacement } from "./heroes/chikatilo";
 
@@ -83,8 +87,11 @@ export function createDefaultArmy(
     const def = getUnitDefinition(cls);
     const id = `${player}-${cls}-${index + 1}`;
     const selectedHero = selection?.[cls];
-    const figureId = selectedHero ?? undefined;
-    const heroId = heroMatchesClass(selectedHero, cls) ? selectedHero : undefined;
+    const selectableHeroId = isHeroSelectableInStandard(selectedHero, cls)
+      ? selectedHero
+      : undefined;
+    const figureId = selectableHeroId;
+    const heroId = selectableHeroId;
 
     let unit: UnitState = {
       id,
