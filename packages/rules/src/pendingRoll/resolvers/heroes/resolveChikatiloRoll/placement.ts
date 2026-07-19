@@ -9,10 +9,12 @@ import { activateVladForest, requestVladStakesPlacement } from "../../../../acti
 import { HERO_FALSE_TRAIL_TOKEN_ID } from "../../../../heroes";
 import { getUnitDefinition } from "../../../../units";
 import {
+  canPlaceRealChikatilo,
+  getLegalRealChikatiloPlacements,
+} from "../../../../legal";
+import {
   coordKey,
-  getLegalEmptyCells,
   insertAfter,
-  isCoordLike,
 } from "./shared";
 
 function maybeRequestVladBattleStartStakes(state: GameState): ApplyResult {
@@ -70,15 +72,18 @@ export function resolveChikatiloFalseTrailPlacement(
   if (!isInsideBoard(pos, state.boardSize)) {
     return { state, events: [] };
   }
+  if (!canPlaceRealChikatilo(pos, state.boardSize)) {
+    return {
+      state,
+      events: [],
+      rejectionReason: "chikatilo_cannot_be_placed_on_deployment_line",
+    };
+  }
   if (getUnitAt(state, pos)) {
     return { state, events: [] };
   }
 
-  const rawLegal = Array.isArray(ctx.legalPositions) ? ctx.legalPositions : null;
-  const legalPositions =
-    rawLegal && rawLegal.length > 0 && rawLegal.every(isCoordLike)
-      ? (rawLegal as Coord[])
-      : getLegalEmptyCells(state);
+  const legalPositions = getLegalRealChikatiloPlacements(state);
   const legalSet = new Set(legalPositions.map(coordKey));
   if (!legalSet.has(coordKey(pos))) {
     return { state, events: [] };

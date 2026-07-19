@@ -9,6 +9,7 @@ import type {
 import { isInsideBoard } from "../model";
 import { isCellOccupied } from "../board";
 import { HERO_CHIKATILO_ID, HERO_FALSE_TRAIL_TOKEN_ID } from "../heroes";
+import { canPlaceFalsePromiseToken, isNormalDeploymentCell } from "../legal";
 import { isHassan, isVlad } from "./shared";
 import { activateVladForest, requestVladStakesPlacement } from "./heroes/vlad";
 import { requestHassanAssassinOrderSelection } from "./heroes/hassan";
@@ -83,14 +84,18 @@ export function applyPlaceUnit(
   }
 
   // РћРіСЂР°РЅРёС‡РµРЅРёРµ: С‚РѕР»СЊРєРѕ bвЂ“h (РєРѕР»РѕРЅРєРё 1..7) Р·Р°РґРЅРµР№ Р»РёРЅРёРё СЃРІРѕРµРіРѕ РёРіСЂРѕРєР°
-  if (unit.heroId !== HERO_FALSE_TRAIL_TOKEN_ID) {
-    const backRow = unit.owner === "P1" ? 0 : state.boardSize - 1;
-    if (pos.row !== backRow) {
-      return { state, events: [] };
-    }
-    if (pos.col < 1 || pos.col > state.boardSize - 2) {
-      return { state, events: [] };
-    }
+  const isLegalDeploymentCell =
+    unit.heroId === HERO_FALSE_TRAIL_TOKEN_ID
+      ? canPlaceFalsePromiseToken(unit.owner, pos, state.boardSize)
+      : isNormalDeploymentCell(unit.owner, pos, state.boardSize);
+  if (!isLegalDeploymentCell) {
+    return unit.heroId === HERO_FALSE_TRAIL_TOKEN_ID
+      ? {
+          state,
+          events: [],
+          rejectionReason: "false_promise_token_must_be_in_deployment_zone",
+        }
+      : { state, events: [] };
   }
 
   const updatedUnit: UnitState = {

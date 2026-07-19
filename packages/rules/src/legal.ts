@@ -14,6 +14,54 @@ import {
   HERO_METTATON_ID,
 } from "./heroes";
 
+export function isNormalDeploymentCell(
+  playerId: PlayerId,
+  coord: Coord,
+  boardSize = 9
+): boolean {
+  const backRow = playerId === "P1" ? 0 : boardSize - 1;
+  return (
+    coord.row === backRow &&
+    coord.col >= 1 &&
+    coord.col <= boardSize - 2
+  );
+}
+
+export function isAnyPlayerDeploymentLine(
+  coord: Coord,
+  boardSize = 9
+): boolean {
+  return coord.row === 0 || coord.row === boardSize - 1;
+}
+
+export function canPlaceFalsePromiseToken(
+  playerId: PlayerId,
+  coord: Coord,
+  boardSize = 9
+): boolean {
+  return isNormalDeploymentCell(playerId, coord, boardSize);
+}
+
+export function canPlaceRealChikatilo(
+  coord: Coord,
+  boardSize = 9
+): boolean {
+  return !isAnyPlayerDeploymentLine(coord, boardSize);
+}
+
+export function getLegalRealChikatiloPlacements(state: GameState): Coord[] {
+  const placements: Coord[] = [];
+  for (let col = 0; col < state.boardSize; col += 1) {
+    for (let row = 0; row < state.boardSize; row += 1) {
+      const dest: Coord = { col, row };
+      if (!canPlaceRealChikatilo(dest, state.boardSize)) continue;
+      if (isCellOccupied(state, dest)) continue;
+      placements.push(dest);
+    }
+  }
+  return placements;
+}
+
 export function getLegalPlacements(state: GameState, unitId: string): Coord[] {
   if (state.phase !== "placement") return [];
 
@@ -38,23 +86,12 @@ export function getLegalPlacements(state: GameState, unitId: string): Coord[] {
     }
   }
 
-  if (unit.heroId === HERO_FALSE_TRAIL_TOKEN_ID) {
-    const res: Coord[] = [];
-    for (let col = 0; col < state.boardSize; col += 1) {
-      for (let row = 0; row < state.boardSize; row += 1) {
-        const dest: Coord = { col, row };
-        if (isCellOccupied(state, dest)) continue;
-        res.push(dest);
-      }
-    }
-    return res;
-  }
-
   const res: Coord[] = [];
   const backRow = unit.owner === "P1" ? 0 : state.boardSize - 1;
 
-  for (let col = 1; col < state.boardSize - 1; col += 1) {
+  for (let col = 0; col < state.boardSize; col += 1) {
     const dest: Coord = { col, row: backRow };
+    if (!isNormalDeploymentCell(unit.owner, dest, state.boardSize)) continue;
     if (isCellOccupied(state, dest)) continue;
     res.push(dest);
   }

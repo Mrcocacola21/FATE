@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import type { Coord } from "rules";
 import { coordKey, normalizeCoordList } from "../helpers";
+import { getPendingChikatiloPlacementCoords } from "../placementTargets";
 import { useGameShellBoardPendingActorTargets } from "./useGameShellBoardPendingActorTargets";
 
 interface UseGameShellBoardPendingTargetsParams {
@@ -240,20 +241,7 @@ export function useGameShellBoardPendingTargets({
 
   const chikatiloPlacementCoords = useMemo(() => {
     if (!isChikatiloPlacement) return [] as Coord[];
-    const ctx = pendingRoll?.context as
-      | {
-          legalPositions?: unknown;
-          legalCells?: unknown;
-          legalTargets?: unknown;
-        }
-      | undefined;
-    const fromPositions = normalizeCoordList(ctx?.legalPositions);
-    if (fromPositions.length > 0) return fromPositions;
-    const fromCells = normalizeCoordList(ctx?.legalCells);
-    if (fromCells.length > 0) return fromCells;
-    const fromTargets = normalizeCoordList(ctx?.legalTargets);
-    if (fromTargets.length > 0) return fromTargets;
-    return [] as Coord[];
+    return getPendingChikatiloPlacementCoords(pendingRoll);
   }, [isChikatiloPlacement, pendingRoll]);
   const chikatiloPlacementKeys = useMemo(
     () => new Set(chikatiloPlacementCoords.map(coordKey)),

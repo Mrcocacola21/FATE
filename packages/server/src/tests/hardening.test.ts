@@ -5,6 +5,8 @@ import {
   attachArmy,
   createDefaultArmy,
   createEmptyGame,
+  HERO_CHIKATILO_ID,
+  HERO_FALSE_TRAIL_TOKEN_ID,
   projectEventsForRecipient,
   type GameEvent,
   type GameState,
@@ -628,6 +630,129 @@ function testServerAcceptsMoveIntoUnknownHiddenOccupiedCell() {
   console.log("hardening_server_accepts_move_into_unknown_hidden_cell passed");
 }
 
+function testServerRejectsInvalidFalsePromisePlacementsWithoutMutation() {
+  storeTestHooks.reset();
+  try {
+    const room = createGameRoomWithId(
+      `hardening-false-promise-placement-${randomUUID()}`,
+      {
+        hostSeat: "P1",
+        hostConnId: `conn-${randomUUID()}`,
+      }
+    );
+
+    let state = createEmptyGame();
+    state = attachArmy(
+      state,
+      createDefaultArmy("P1", { assassin: HERO_CHIKATILO_ID })
+    );
+    state = attachArmy(state, createDefaultArmy("P2"));
+    state = {
+      ...state,
+      phase: "placement",
+      currentPlayer: "P1",
+      placementFirstPlayer: "P1",
+      initiative: { P1: 6, P2: 1, winner: "P1" },
+    };
+    room.state = state;
+
+    const chikatilo = Object.values(state.units).find(
+      (unit) => unit.owner === "P1" && unit.heroId === HERO_CHIKATILO_ID
+    );
+    const token = Object.values(state.units).find(
+      (unit) =>
+        unit.owner === "P1" && unit.heroId === HERO_FALSE_TRAIL_TOKEN_ID
+    );
+    assert(chikatilo, "expected Chikatilo in server placement state");
+    assert(token, "expected False Promise token in server placement state");
+
+    const beforeTokenReject = room.state;
+    const tokenRejected = applyGameAction(
+      room,
+      {
+        type: "placeUnit",
+        unitId: token.id,
+        position: { col: 4, row: 4 },
+      },
+      "P1"
+    );
+    assert.equal(tokenRejected.ok, false);
+    if (!tokenRejected.ok) {
+      assert.equal(
+        tokenRejected.code,
+        "false_promise_token_must_be_in_deployment_zone"
+      );
+    }
+    assert.equal(room.state, beforeTokenReject);
+    assert.equal(room.revision, 0);
+
+    const tokenAccepted = applyGameAction(
+      room,
+      {
+        type: "placeUnit",
+        unitId: token.id,
+        position: { col: 1, row: 0 },
+      },
+      "P1"
+    );
+    assert.equal(tokenAccepted.ok, true);
+    const pending = room.state.pendingRoll;
+    assert.equal(pending?.kind, "chikatiloFalseTrailPlacement");
+
+    for (const position of [
+      { col: 4, row: 0 },
+      { col: 4, row: room.state.boardSize - 1 },
+    ]) {
+      const beforeReject = room.state;
+      const revisionBeforeReject = room.revision;
+      const rejectedPlacement = applyGameAction(
+        room,
+        {
+          type: "resolvePendingRoll",
+          pendingRollId: pending!.id,
+          player: pending!.player,
+          choice: { type: "chikatiloPlace", position },
+        },
+        "P1"
+      );
+      assert.equal(rejectedPlacement.ok, false);
+      if (!rejectedPlacement.ok) {
+        assert.equal(
+          rejectedPlacement.code,
+          "chikatilo_cannot_be_placed_on_deployment_line"
+        );
+      }
+      assert.equal(room.state, beforeReject);
+      assert.equal(room.revision, revisionBeforeReject);
+      assert.equal(room.state.pendingRoll?.id, pending!.id);
+      assert.equal(room.state.units[chikatilo.id].position, null);
+    }
+
+    const realAccepted = applyGameAction(
+      room,
+      {
+        type: "resolvePendingRoll",
+        pendingRollId: pending!.id,
+        player: pending!.player,
+        choice: {
+          type: "chikatiloPlace",
+          position: { col: 4, row: 4 },
+        },
+      },
+      "P1"
+    );
+    assert.equal(realAccepted.ok, true);
+    assert.deepEqual(room.state.units[chikatilo.id].position, {
+      col: 4,
+      row: 4,
+    });
+  } finally {
+    storeTestHooks.reset();
+  }
+
+  console.log("hardening_false_promise_placement_validation passed");
+}
+
 async function main() {
   await testGraceExpiryVacatesSeatAndInvalidatesToken();
   await testReconnectWithinGraceKeepsSeatAndClearsTimer();
@@ -642,6 +767,7 @@ async function main() {
   testActionLogTruncatesToConfiguredLimit();
   testProjectedEventsRedactHiddenUnitPositions();
   testServerAcceptsMoveIntoUnknownHiddenOccupiedCell();
+  testServerRejectsInvalidFalsePromisePlacementsWithoutMutation();
   console.log("hardening tests passed");
 }
 

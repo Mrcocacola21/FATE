@@ -26,6 +26,12 @@ import {
   toPlacementState,
 } from "../helpers/testUtils";
 import { makeSpectatorView, projectEventsForRecipient } from "../../view";
+import {
+  canPlaceFalsePromiseToken,
+  canPlaceRealChikatilo,
+  isAnyPlayerDeploymentLine,
+  isNormalDeploymentCell,
+} from "../../legal";
 export function testChikatiloPlacementListSubstitution() {
   const { state, chikatilo, token } = setupChikatiloPlacementState(905);
 
@@ -57,32 +63,98 @@ export function testFalseTrailTokenPlacementLegalTargets() {
       u.id !== token.id &&
       u.heroId !== HERO_CHIKATILO_ID
   )!;
-  state = setUnit(state, blocker.id, { position: { col: 4, row: 4 } });
+  state = setUnit(state, blocker.id, { position: { col: 4, row: 0 } });
 
   const legal = getLegalPlacements(state, token.id);
-  const expectedEmpty = state.boardSize * state.boardSize - 1;
   assert(
-    legal.length === expectedEmpty,
-    "token should be placeable on all empty cells"
+    legal.length === state.boardSize - 3,
+    "token should use the owner's normal deployment cells minus occupied cells"
   );
   assert(
-    !legal.some((pos) => pos.col === 4 && pos.row === 4),
+    legal.every((pos) => isNormalDeploymentCell(token.owner, pos, state.boardSize)),
+    "token legal placements should stay on the owner's normal deployment zone"
+  );
+  assert(
+    canPlaceFalsePromiseToken(token.owner, { col: 1, row: 0 }, state.boardSize),
+    "token should be allowed on an unoccupied own deployment cell"
+  );
+  assert(
+    !legal.some((pos) => pos.row === state.boardSize - 1),
+    "token legal placements should exclude the enemy deployment zone"
+  );
+  assert(
+    !legal.some((pos) => pos.col === 0 || pos.col === state.boardSize - 1),
+    "token legal placements should exclude side cells"
+  );
+  assert(
+    !legal.some((pos) => pos.col === 4 && pos.row === 0),
     "token legal placements should exclude occupied cells"
   );
 
-  const rejected = applyAction(
+  const originalPlacementOrder = [...state.placementOrder];
+  const originalUnitsPlaced = { ...state.unitsPlaced };
+  for (const position of [
+    { col: 4, row: 4 },
+    { col: 4, row: state.boardSize - 1 },
+    { col: 0, row: 0 },
+  ]) {
+    const rejected = applyAction(
+      state,
+      {
+        type: "placeUnit",
+        unitId: token.id,
+        position,
+      } as any,
+      rng
+    );
+
+    assert(
+      rejected.rejectionReason ===
+        "false_promise_token_must_be_in_deployment_zone",
+      "invalid token placement should return the deployment-zone rejection reason"
+    );
+    assert(rejected.state === state, "invalid token placement should not replace state");
+    assert(
+      rejected.state.units[token.id].position === null,
+      "invalid token placement should not position the token"
+    );
+    assert(
+      JSON.stringify(rejected.state.placementOrder) ===
+        JSON.stringify(originalPlacementOrder) &&
+        JSON.stringify(rejected.state.unitsPlaced) ===
+          JSON.stringify(originalUnitsPlaced),
+      "invalid token placement should not advance placement"
+    );
+  }
+
+  const occupied = applyAction(
     state,
     {
       type: "placeUnit",
       unitId: token.id,
-      position: { col: 4, row: 4 },
+      position: { col: 4, row: 0 },
     } as any,
     rng
-  ).state;
+  );
 
   assert(
-    rejected.units[token.id].position === null,
+    occupied.state.units[token.id].position === null,
     "token placement on occupied cell should be rejected"
+  );
+
+  const accepted = applyAction(
+    state,
+    {
+      type: "placeUnit",
+      unitId: token.id,
+      position: { col: 1, row: 0 },
+    } as any,
+    rng
+  );
+  assert(
+    accepted.state.units[token.id].position?.col === 1 &&
+      accepted.state.units[token.id].position?.row === 0,
+    "token should be accepted on an empty own deployment cell"
   );
 
   console.log("false_trail_token_placement_legal_targets passed");
@@ -91,7 +163,7 @@ export function testFalseTrailTokenPlacementLegalTargets() {
 
 export function testChikatiloPlacementAfterToken() {
   const { state, token, chikatilo, rng } = setupChikatiloPlacementState(909);
-  const tokenPos = { col: 0, row: 0 };
+  const tokenPos = { col: 1, row: 0 };
 
   const placedToken = applyAction(
     state,
@@ -110,14 +182,50 @@ export function testChikatiloPlacementAfterToken() {
   );
 
   const legal = (pending?.context as any)?.legalPositions as Coord[];
-  const expectedEmpty = placedToken.boardSize * placedToken.boardSize - 1;
   assert(
-    legal.length === expectedEmpty,
-    "chikatilo placement should include all empty cells"
+    legal.length === placedToken.boardSize * (placedToken.boardSize - 2),
+    "chikatilo placement should include every empty non-deployment-line cell"
+  );
+  assert(
+    legal.every(
+      (pos) =>
+        canPlaceRealChikatilo(pos, placedToken.boardSize) &&
+        !isAnyPlayerDeploymentLine(pos, placedToken.boardSize)
+    ),
+    "chikatilo legal placements should exclude both deployment lines"
   );
 
-  const target = legal.find((pos) => pos.col === 2 && pos.row === 2) ?? legal[0];
-  const placedChikatilo = applyAction(
+  for (const position of [
+    { col: 4, row: 0 },
+    { col: 0, row: 0 },
+    { col: 4, row: placedToken.boardSize - 1 },
+    { col: placedToken.boardSize - 1, row: placedToken.boardSize - 1 },
+  ]) {
+    const rejected = applyAction(
+      placedToken,
+      {
+        type: "resolvePendingRoll",
+        pendingRollId: pending!.id,
+        player: pending!.player,
+        choice: { type: "chikatiloPlace", position },
+      } as any,
+      rng
+    );
+    assert(
+      rejected.rejectionReason ===
+        "chikatilo_cannot_be_placed_on_deployment_line",
+      "deployment-line Chikatilo placement should return the explicit rejection reason"
+    );
+    assert(
+      rejected.state === placedToken &&
+        rejected.state.pendingRoll?.id === pending!.id &&
+        rejected.state.units[chikatilo.id].position === null,
+      "rejected Chikatilo placement should preserve state and the placement step"
+    );
+  }
+
+  const target = legal.find((pos) => pos.col === 4 && pos.row === 4) ?? legal[0];
+  const placement = applyAction(
     placedToken,
     {
       type: "resolvePendingRoll",
@@ -126,7 +234,8 @@ export function testChikatiloPlacementAfterToken() {
       choice: { type: "chikatiloPlace", position: target },
     } as any,
     rng
-  ).state;
+  );
+  const placedChikatilo = placement.state;
 
   const chikatiloAfter = placedChikatilo.units[chikatilo.id];
   assert(
@@ -145,6 +254,35 @@ export function testChikatiloPlacementAfterToken() {
   assert(
     tokenIndex >= 0 && chikatiloIndex >= 0 && tokenIndex < chikatiloIndex,
     "token should act before chikatilo in placement order"
+  );
+
+  const ownerView = makePlayerView(placedChikatilo, chikatilo.owner);
+  const opponentId = chikatilo.owner === "P1" ? "P2" : "P1";
+  const opponentView = makePlayerView(placedChikatilo, opponentId);
+  assert(
+    ownerView.units[chikatilo.id]?.position?.col === target.col &&
+      ownerView.units[chikatilo.id]?.position?.row === target.row,
+    "owner projection should include real Chikatilo's placement"
+  );
+  assert(
+    !opponentView.units[chikatilo.id],
+    "opponent projection should not include real Chikatilo or his position"
+  );
+  assert(
+    opponentView.pendingRoll === null,
+    "opponent projection should not expose the private Chikatilo placement prompt"
+  );
+  const opponentEvents = projectEventsForRecipient(
+    placedChikatilo,
+    placement.events,
+    opponentId
+  );
+  const placedEvent = opponentEvents.find(
+    (event) => event.type === "unitPlaced" && event.unitId === chikatilo.id
+  );
+  assert(
+    placedEvent?.type === "unitPlaced" && !("position" in placedEvent),
+    "opponent placement event should redact real Chikatilo's position"
   );
 
   console.log("chikatilo_placement_after_token_passed");

@@ -7,6 +7,7 @@ import {
   getProjectedAbilityTargetRange,
 } from "../../../rulesHints";
 import { coordKey, getArcherLikeTargetIds, getAttackRangeCells } from "../helpers";
+import { getProjectedPlacementCoords } from "../placementTargets";
 
 interface UseGameShellCombatTargetsParams {
   view: PlayerView | null;
@@ -52,8 +53,7 @@ export function useGameShellCombatTargets({
   }, [view, selectedUnit, pendingMoveForSelected, moveOptions]);
 
   const legalPlacementCoords = useMemo(() => {
-    if (!view || !placeUnitId) return [] as Coord[];
-    return view.legal?.placementsByUnitId[placeUnitId] ?? [];
+    return getProjectedPlacementCoords(view, placeUnitId);
   }, [view, placeUnitId]);
 
   const legalAttackTargets = useMemo(() => {

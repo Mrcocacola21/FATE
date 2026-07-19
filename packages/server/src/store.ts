@@ -318,6 +318,9 @@ export function applyGameAction(
         events: [],
       });
     }
+    if (result.rejectionReason) {
+      return rejected(result.rejectionReason, result.rejectionReason);
+    }
     return rejected("RULES_REJECTED", "Action rejected by rules");
   }
 

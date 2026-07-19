@@ -98,6 +98,10 @@ export function applyAction(
       break;
   }
 
+  if (result.rejectionReason) {
+    return result;
+  }
+
   const afterChikatilo = applyChikatiloPostAction(
     result.state,
     result.events,

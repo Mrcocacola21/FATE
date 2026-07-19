@@ -29,8 +29,9 @@ import {
   CHIKATILO_MARK_TRACKING_EXPIRES,
   CHIKATILO_MARK_TRACKING_STARTS,
 } from "../../../chikatiloMark";
-import { getEmptyCells, isChikatilo, isFalseTrailToken } from "./helpers";
+import { isChikatilo, isFalseTrailToken } from "./helpers";
 import { removeFalseTrailToken } from "./setup";
+import { getLegalRealChikatiloPlacements } from "../../../legal";
 
 export function requestChikatiloPlacement(
   state: GameState,
@@ -45,7 +46,7 @@ export function requestChikatiloPlacement(
     return { state, events: [] };
   }
 
-  const legalPositions = getEmptyCells(state);
+  const legalPositions = getLegalRealChikatiloPlacements(state);
   const legalCells = legalPositions.map(coordToNotation);
   return requestRoll(
     clearPendingRoll(state),

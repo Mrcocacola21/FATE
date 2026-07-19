@@ -26,6 +26,7 @@ export interface ArenaEffectState {
 export interface ApplyResult {
   state: GameState;
   events: GameEvent[];
+  rejectionReason?: string;
 }
 
 export interface GameState {
