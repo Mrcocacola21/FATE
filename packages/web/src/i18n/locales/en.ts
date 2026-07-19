@@ -1138,7 +1138,8 @@ export const en = {
   },
   ruleDeclarations: {
     title: "Rule Declaration",
-    selected: "Selected rule",
+    selected: "Selected",
+    selectedRule: "Selected: {{rule}}",
     notSelected: "No rule selected",
     chooseTitle: "Choose the battle rule",
     chooseDescription:
@@ -1146,6 +1147,10 @@ export const en = {
     chooser: "Rule chooser: {{player}}",
     initiativeWinner: "Initiative winner: {{player}}",
     waiting: "Waiting for opponent to choose the rule.",
+    selectionInstructions: "Click a rule, read its details, then confirm your choice.",
+    confirmRule: "Confirm rule",
+    confirming: "Confirming...",
+    selectRuleFirst: "Select a rule first",
     setupRequired: "Setup required",
     noSetup: "No setup",
     defaultRule: "Default",

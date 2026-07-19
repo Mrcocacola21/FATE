@@ -46,7 +46,9 @@ export const GameShellLayout: FC<GameShellLayoutProps> = ({ vm }) => {
       {vm.pendingRoll && vm.playerId && !vm.boardSelectionPending && (
         <PendingRollModal
           pendingRoll={vm.pendingRoll}
+          playerId={vm.playerId}
           view={vm.view}
+          lastActionResult={vm.lastActionResult}
           showAttackerRoll={vm.showAttackerRoll}
           attackerDice={vm.attackerDice}
           tieBreakAttacker={vm.tieBreakAttacker}

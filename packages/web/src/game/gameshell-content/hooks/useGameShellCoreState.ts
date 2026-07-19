@@ -333,6 +333,7 @@ export function useGameShellCoreState() {
     targetingMode,
     placeUnitId,
     moveOptions,
+    lastActionResult,
     leavingRoom,
     setSelectedUnit,
     setActionMode,

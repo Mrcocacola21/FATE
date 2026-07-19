@@ -1,35 +1,13 @@
-import type { Coord, PlayerView, RuleDeclarationId } from "rules";
+import type { Coord, PlayerId, PlayerView } from "rules";
 import { getPendingRollLabel } from "../helpers";
 import { useI18n } from "../../../i18n";
+import {
+  isRuleDeclarationId,
+  RULE_DECLARATION_IDS,
+  RuleDeclarationChoicePanel,
+} from "./RuleDeclarationChoicePanel";
 
 type PendingRoll = NonNullable<PlayerView["pendingRoll"]>;
-
-const RULE_DECLARATION_IDS: RuleDeclarationId[] = [
-  "normal_rule",
-  "court",
-  "chess_party",
-  "moon_game",
-  "advantage_game",
-];
-
-function ruleDeclarationKey(ruleId: RuleDeclarationId) {
-  switch (ruleId) {
-    case "normal_rule":
-      return "normalRule";
-    case "court":
-      return "court";
-    case "chess_party":
-      return "chessParty";
-    case "moon_game":
-      return "moonGame";
-    case "advantage_game":
-      return "advantageGame";
-  }
-}
-
-function isRuleDeclarationId(value: unknown): value is RuleDeclarationId {
-  return typeof value === "string" && RULE_DECLARATION_IDS.includes(value as RuleDeclarationId);
-}
 
 function isCoord(value: unknown): value is Coord {
   return (
@@ -42,7 +20,9 @@ function isCoord(value: unknown): value is Coord {
 
 interface PendingRollModalProps {
   pendingRoll: PendingRoll;
+  playerId: PlayerId;
   view: PlayerView;
+  lastActionResult: { ok: boolean; error?: string } | null;
   showAttackerRoll: boolean;
   attackerDice: number[];
   tieBreakAttacker: number[];
@@ -89,7 +69,9 @@ interface PendingRollModalProps {
 
 export function PendingRollModal({
   pendingRoll,
+  playerId,
   view,
+  lastActionResult,
   showAttackerRoll,
   attackerDice,
   tieBreakAttacker,
@@ -391,68 +373,20 @@ export function PendingRollModal({
         )}
         <div className="pending-choice mt-5 flex flex-col gap-2 border-t border-violet-300/40 pt-4 dark:border-violet-800/50 sm:flex-row">
           {isRuleDeclarationChoice ? (
-            <div className="grid w-full grid-cols-1 gap-3">
-              <div className="text-xs text-slate-500 dark:text-slate-300">
-                {t("ruleDeclarations.initiativeWinner", {
-                  player: String(pendingContext.initiativeWinner ?? "-"),
-                })}
-                {" / "}
-                {t("ruleDeclarations.chooser", {
-                  player: String(pendingContext.chooserPlayer ?? pendingRoll.player),
-                })}
-              </div>
-              {availableRuleIds.map((ruleId) => {
-                const key = ruleDeclarationKey(ruleId);
-                const name = t(`ruleDeclarations.${key}.name`);
-                const isDefaultRule = ruleId === "normal_rule";
-                return (
-                  <button
-                    key={ruleId}
-                    type="button"
-                    className={`w-full rounded-lg border p-3 text-left text-slate-900 shadow-sm transition hover:shadow dark:text-slate-100 ${
-                      isDefaultRule
-                        ? "border-emerald-300/80 bg-emerald-50/90 hover:border-emerald-500 dark:border-emerald-800/80 dark:bg-emerald-950/35"
-                        : "border-violet-300/60 bg-white/85 hover:border-violet-500 dark:border-violet-800/70 dark:bg-slate-950/80"
-                    }`}
-                    onClick={() =>
-                      onResolvePendingRoll({
-                        type: "chooseRuleDeclaration",
-                        ruleId,
-                      })
-                    }
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className="text-sm font-bold">{name}</div>
-                        <div className="mt-1 text-xs leading-5 text-slate-600 dark:text-slate-300">
-                          {t(`ruleDeclarations.${key}.summary`)}
-                        </div>
-                      </div>
-                      <span
-                        className={`status-pill shrink-0 ${
-                          isDefaultRule ? "badge-success" : "badge-special"
-                        }`}
-                      >
-                        {isDefaultRule
-                          ? t("ruleDeclarations.defaultRule")
-                          : ruleId === "chess_party" || ruleId === "advantage_game"
-                          ? t("ruleDeclarations.setupRequired")
-                          : t("ruleDeclarations.noSetup")}
-                      </span>
-                    </div>
-                    <details className="mt-2 text-xs leading-5 text-slate-600 dark:text-slate-300">
-                      <summary className="cursor-pointer font-semibold">
-                        {t("common.details")}
-                      </summary>
-                      <div className="mt-1">{t(`ruleDeclarations.${key}.description`)}</div>
-                      <div className="mt-1 font-semibold">
-                        {t(`ruleDeclarations.${key}.timing`)}
-                      </div>
-                    </details>
-                  </button>
-                );
-              })}
-            </div>
+            <RuleDeclarationChoicePanel
+              key={pendingRoll.id}
+              availableRuleIds={availableRuleIds}
+              playerId={playerId}
+              chooserPlayer={
+                pendingContext.chooserPlayer === "P1" || pendingContext.chooserPlayer === "P2"
+                  ? pendingContext.chooserPlayer
+                  : pendingRoll.player
+              }
+              initiativeWinner={String(pendingContext.initiativeWinner ?? "-")}
+              lastActionResult={lastActionResult}
+              t={t}
+              onConfirm={onResolvePendingRoll}
+            />
           ) : isRuleDeclarationThreshold ? (
             <div className="grid w-full grid-cols-1 gap-2">
               <div className="text-xs text-slate-500 dark:text-slate-300">
