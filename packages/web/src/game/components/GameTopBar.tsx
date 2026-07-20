@@ -9,9 +9,10 @@ import { ruleDeclarationKey } from "../gameshell-content/components/RuleDeclarat
 
 interface GameTopBarProps {
   vm: any;
+  compact?: boolean;
 }
 
-export const GameTopBar: FC<GameTopBarProps> = ({ vm }) => {
+export const GameTopBar: FC<GameTopBarProps> = ({ vm, compact = false }) => {
   const { t } = useI18n();
   const selectedRuleKey = ruleDeclarationKey(vm.view?.ruleDeclaration?.selectedRuleId);
   const ruleLabel = selectedRuleKey
@@ -19,7 +20,7 @@ export const GameTopBar: FC<GameTopBarProps> = ({ vm }) => {
     : t("ruleDeclarations.notSelected");
 
   return (
-    <div className="panel-card panel-hud shrink-0 px-3 py-2 sm:px-4">
+    <div className={`panel-card panel-hud shrink-0 px-3 py-2 sm:px-4 ${compact ? "mobile-match-bar" : ""}`}>
       <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex min-w-0 items-center gap-3">
           <div className="brand-sigil hidden h-9 w-9 sm:flex" aria-hidden="true" />
@@ -45,7 +46,9 @@ export const GameTopBar: FC<GameTopBarProps> = ({ vm }) => {
           <StatusBadge tone="info">
             {getGameModeName(vm.roomMeta?.gameMode ?? "standard", t)}
           </StatusBadge>
-          <StatusBadge tone="special">{ruleLabel}</StatusBadge>
+          <div className={compact ? "hidden min-[420px]:inline-flex" : "inline-flex"}>
+            <StatusBadge tone="special">{ruleLabel}</StatusBadge>
+          </div>
           <StatusBadge tone="neutral">{getPhaseLabel(vm.view.phase, t)}</StatusBadge>
           <StatusBadge tone="neutral">
             {t("game.roundTurn")}: {vm.view.roundNumber} / {vm.view.turnNumber}
@@ -55,7 +58,9 @@ export const GameTopBar: FC<GameTopBarProps> = ({ vm }) => {
               ? t("game.playerTurn", { player: vm.view.currentPlayer })
               : t("common.waiting")}
           </StatusBadge>
-          <StatusBadge tone="info">{vm.view.activeUnitId ?? "-"}</StatusBadge>
+          <div className={compact ? "hidden min-[390px]:inline-flex" : "inline-flex"}>
+            <StatusBadge tone="info">{vm.view.activeUnitId ?? "-"}</StatusBadge>
+          </div>
           <button
             type="button"
             className="btn btn-secondary btn-sm"
@@ -64,8 +69,12 @@ export const GameTopBar: FC<GameTopBarProps> = ({ vm }) => {
           >
             {vm.leavingRoom ? t("game.leaving") : t("game.leaveMatch")}
           </button>
-          <LanguageSwitcher />
-          <ThemeToggle />
+          <div className={compact ? "hidden min-[430px]:inline-flex" : "inline-flex"}>
+            <LanguageSwitcher />
+          </div>
+          <div className={compact ? "hidden min-[430px]:inline-flex" : "inline-flex"}>
+            <ThemeToggle />
+          </div>
         </div>
       </div>
     </div>

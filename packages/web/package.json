@@ -15,6 +15,7 @@
     "test:previews": "tsx --test src/game/targeting/*.test.ts",
     "test:ability-details": "tsx --test src/game/abilityDisplayDetails.test.tsx",
     "test:layout": "tsx --test src/game/hooks/useBoardFit.test.ts",
+    "test:mobile": "tsx --test src/game/layout/MobileMatchLayout.test.tsx src/modes/DraftHeroPreview.test.tsx src/game/gameshell-content/components/RuleDeclarationChoicePanel.test.tsx",
     "test:assets": "tsx --test src/assets/unitVisuals.test.ts",
     "test:effects": "tsx --test src/game/effects/*.test.ts src/features/vfx/*.test.ts src/features/vfx/*.test.tsx src/pages/VfxPreviewPage.test.tsx",
     "test:vfx": "tsx --test src/features/vfx/*.test.ts src/features/vfx/*.test.tsx src/pages/VfxPreviewPage.test.tsx",

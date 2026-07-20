@@ -1,17 +1,19 @@
 import type { FC } from "react";
-import type { GameAction } from "rules";
 import { GameLoadingState } from "./GameLoadingState";
 import { GameShellBoardColumn } from "./GameShellBoardColumn";
 import { GameShellSideColumn } from "./GameShellSideColumn";
-import { PendingRollModal } from "./PendingRollModal";
+import { GameShellPendingRoll } from "./GameShellPendingRoll";
 import { DraftScreen } from "../../../modes/DraftScreen";
 import { GameTopBar } from "../../components/GameTopBar";
+import { useIsMobile } from "../../../layout/useIsMobile";
+import { MobileMatchLayout } from "../../layout/MobileMatchLayout";
 
 interface GameShellLayoutProps {
   vm: any;
 }
 
 export const GameShellLayout: FC<GameShellLayoutProps> = ({ vm }) => {
+  const isMobile = useIsMobile();
   if (!vm.view || !vm.hasSnapshot) {
     return (
       <GameLoadingState
@@ -34,6 +36,10 @@ export const GameShellLayout: FC<GameShellLayoutProps> = ({ vm }) => {
     return <DraftScreen vm={vm} />;
   }
 
+  if (isMobile) {
+    return <MobileMatchLayout vm={vm} />;
+  }
+
   return (
     <div className="app-shell h-dvh overflow-hidden px-2 py-2 sm:px-3">
       <div className="mx-auto flex h-full min-h-0 max-w-[1800px] flex-col gap-2">
@@ -43,69 +49,7 @@ export const GameShellLayout: FC<GameShellLayoutProps> = ({ vm }) => {
           <GameShellSideColumn vm={vm} />
         </div>
       </div>
-      {vm.pendingRoll && vm.playerId && !vm.boardSelectionPending && (
-        <PendingRollModal
-          pendingRoll={vm.pendingRoll}
-          playerId={vm.playerId}
-          view={vm.view}
-          lastActionResult={vm.lastActionResult}
-          showAttackerRoll={vm.showAttackerRoll}
-          attackerDice={vm.attackerDice}
-          tieBreakAttacker={vm.tieBreakAttacker}
-          isForestMoveCheck={vm.isForestMoveCheck}
-          isForestChoice={vm.isForestChoice}
-          isDuelistChoice={vm.isDuelistChoice}
-          isAsgoreBraveryDefenseChoice={vm.isAsgoreBraveryDefenseChoice}
-          isLokiLaughtChoice={vm.isLokiLaughtChoice}
-          isGutsBerserkAttackChoice={vm.isGutsBerserkAttackChoice}
-          isFriskPacifismChoice={vm.isFriskPacifismChoice}
-          isFriskGenocideChoice={vm.isFriskGenocideChoice}
-          isFriskKeenEyeChoice={vm.isFriskKeenEyeChoice}
-          isFriskSubstitutionChoice={vm.isFriskSubstitutionChoice}
-          isFriskChildsCryChoice={vm.isFriskChildsCryChoice}
-          isOdinMuninnDefenseChoice={vm.isOdinMuninnDefenseChoice}
-          isChikatiloRevealChoice={vm.isChikatiloRevealChoice}
-          isChikatiloDecoyChoice={vm.isChikatiloDecoyChoice}
-          isBerserkerDefenseChoice={vm.isBerserkerDefenseChoice}
-          lokiLaughtCurrent={vm.lokiLaughtCurrent}
-          lokiCanAgainSomeNonsense={vm.lokiCanAgainSomeNonsense}
-          lokiCanChicken={vm.lokiCanChicken}
-          lokiCanMindControl={vm.lokiCanMindControl}
-          lokiCanSpinTheDrum={vm.lokiCanSpinTheDrum}
-          lokiCanGreatLokiJoke={vm.lokiCanGreatLokiJoke}
-          lokiLaughtChickenOptions={vm.lokiLaughtChickenOptions}
-          lokiLaughtMindControlEnemyOptions={vm.lokiLaughtMindControlEnemyOptions}
-          lokiLaughtSpinCandidateIds={vm.lokiLaughtSpinCandidateIds}
-          friskPacifismPoints={vm.friskPacifismPoints}
-          friskPacifismDisabled={vm.friskPacifismDisabled}
-          friskPacifismHugsOptions={vm.friskPacifismHugsOptions}
-          friskPacifismWarmWordsOptions={vm.friskPacifismWarmWordsOptions}
-          friskPacifismPowerOfFriendshipEnabled={vm.friskPacifismPowerOfFriendshipEnabled}
-          friskGenocidePoints={vm.friskGenocidePoints}
-          friskKeenEyeTargetIds={vm.friskKeenEyeTargetIds}
-          defenderFriskGenocidePoints={vm.defenderFriskGenocidePoints}
-          defenderFriskPacifismPoints={vm.defenderFriskPacifismPoints}
-          defenderBerserkCharges={vm.defenderBerserkCharges}
-          defenderMuninnCharges={vm.defenderMuninnCharges}
-          defenderAsgoreBraveryReady={vm.defenderAsgoreBraveryReady}
-          decoyCharges={vm.decoyCharges}
-          duelistAttackerHp={vm.duelistAttackerHp}
-          onResolvePendingRoll={(choice) => {
-            if (choice === undefined) {
-              vm.sendAction({
-                type: "resolvePendingRoll",
-                pendingRollId: vm.pendingRoll.id,
-              } as GameAction);
-              return;
-            }
-            vm.sendAction({
-              type: "resolvePendingRoll",
-              pendingRollId: vm.pendingRoll.id,
-              choice,
-            } as GameAction);
-          }}
-        />
-      )}
+      <GameShellPendingRoll vm={vm} />
     </div>
   );
 };

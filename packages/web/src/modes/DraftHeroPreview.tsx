@@ -133,6 +133,8 @@ type DraftHeroDetailsViewProps = {
   isConfirming: boolean;
   error: string | null;
   onConfirm: () => void;
+  showConfirmArea?: boolean;
+  collapsibleAbilities?: boolean;
 };
 
 export function DraftHeroDetailsView({
@@ -148,6 +150,8 @@ export function DraftHeroDetailsView({
   isConfirming,
   error,
   onConfirm,
+  showConfirmArea = true,
+  collapsibleAbilities = false,
 }: DraftHeroDetailsViewProps) {
   const heroName = hero
     ? getHeroDisplayName(hero.id, hero.name, language)
@@ -266,9 +270,34 @@ export function DraftHeroDetailsView({
                       <div className="text-[10px] font-black uppercase tracking-wider text-stone-400">
                         {group.label}
                       </div>
-                      {group.abilities.map((ability) => (
-                        <FigureSetAbilityCard key={ability.id} ability={ability} />
-                      ))}
+                      {group.abilities.map((ability) => {
+                        if (!collapsibleAbilities) {
+                          return <FigureSetAbilityCard key={ability.id} ability={ability} />;
+                        }
+                        const abilityName = getAbilityDisplay(
+                          ability.id,
+                          ability.name,
+                          ability.description,
+                          language,
+                        ).name;
+                        return (
+                          <details
+                            key={ability.id}
+                            className="rounded-xl border border-stone-300 bg-white/70 dark:border-stone-700 dark:bg-stone-950/40"
+                          >
+                            <summary className="flex min-h-11 cursor-pointer items-center justify-between gap-2 px-3 py-2 text-sm font-bold">
+                              <span>{abilityName}</span>
+                              <span aria-hidden="true">⌄</span>
+                              <span className="sr-only">
+                                {t("draft.showAbility", { ability: abilityName })}
+                              </span>
+                            </summary>
+                            <div className="border-t border-stone-200 p-2 dark:border-stone-800">
+                              <FigureSetAbilityCard ability={ability} />
+                            </div>
+                          </details>
+                        );
+                      })}
                     </div>
                   ))
                 )}
@@ -278,7 +307,7 @@ export function DraftHeroDetailsView({
         </>
       )}
 
-      <div className="border-t border-amber-900/15 bg-stone-100/80 p-4 dark:bg-stone-950/70">
+      {showConfirmArea ? <div className="border-t border-amber-900/15 bg-stone-100/80 p-4 dark:bg-stone-950/70">
         <div className="text-[11px] font-black uppercase tracking-wider text-stone-500">
           {t("draft.currentAction")}: {t(`draft.phases.${phase}`)}
         </div>
@@ -323,7 +352,7 @@ export function DraftHeroDetailsView({
         <div className="mt-2 text-center text-[11px] text-stone-500">
           {t("draft.readAbilitiesBeforeConfirming")}
         </div>
-      </div>
+      </div> : null}
     </PanelCard>
   );
 }

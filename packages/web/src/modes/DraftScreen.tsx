@@ -16,6 +16,8 @@ import { useI18n, type Translate } from "../i18n";
 import { getHeroDisplayName } from "../i18n/displayMetadata";
 import { DraftHeroCardView, DraftHeroDetailsView } from "./DraftHeroPreview";
 import { getGameModeName } from "./modeLabels";
+import { useIsMobile } from "../layout/useIsMobile";
+import { Tabs } from "../ui";
 import {
   createDraftSubmissionGate,
   getDraftHeroCardState,
@@ -68,6 +70,8 @@ type PendingDraftSubmission = {
   historyLength: number;
   clientLogLength: number;
 };
+
+type MobileDraftTab = "catalog" | "selected" | "rosters" | "history";
 
 function classLabel(unitClass: UnitClass, t: Translate) {
   return t(`classes.${unitClass}`);
@@ -130,11 +134,13 @@ function RosterColumn({
 
 export function DraftScreen({ vm }: { vm: DraftVm }) {
   const { language, t } = useI18n();
+  const isMobile = useIsMobile();
   const { heroes, loading } = useHeroes();
   const draft = vm.roomMeta.draftState;
   const [selectedDraftHeroId, setSelectedDraftHeroId] = useState<string | null>(null);
   const [submission, setSubmission] = useState<PendingDraftSubmission | null>(null);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
+  const [mobileTab, setMobileTab] = useState<MobileDraftTab>("catalog");
   const submissionGate = useRef(createDraftSubmissionGate());
 
   const heroById = useMemo(() => new Map(heroes.map((hero) => [hero.id, hero])), [heroes]);
@@ -188,6 +194,7 @@ export function DraftScreen({ vm }: { vm: DraftVm }) {
   const handleSelectHero = (heroId: string) => {
     setSelectedDraftHeroId(heroId);
     setSubmissionError(null);
+    if (isMobile) setMobileTab("selected");
   };
 
   const handleConfirm = () => {
@@ -222,10 +229,27 @@ export function DraftScreen({ vm }: { vm: DraftVm }) {
         ? getDraftPickOrder()
         : [];
 
+  const mobileTabs = [
+    { value: "catalog" as const, label: t("draft.tabsCatalog") },
+    { value: "selected" as const, label: t("draft.tabsSelected") },
+    { value: "rosters" as const, label: t("draft.tabsRosters") },
+    { value: "history" as const, label: t("draft.tabsHistory") },
+  ];
+  const selectedHeroName = selectedHero
+    ? getHeroDisplayName(selectedHero.id, selectedHero.name, language)
+    : selectedDraftHeroId;
+  const mobileActionLabel =
+    draft.phase === "ban"
+      ? t("draft.confirmBan")
+      : draft.phase === "pick"
+        ? t("draft.confirmPick")
+        : t("draft.phases.complete");
+
   return (
-    <div className="app-shell px-2 py-3 sm:px-4 sm:py-4 lg:px-5">
+    <div className={`app-shell px-2 py-2 sm:px-4 sm:py-4 lg:px-5 ${isMobile ? "pb-28" : ""}`}>
       <div className="mx-auto max-w-[1720px] space-y-4">
-        <PanelCard variant="hud" className="p-4 sm:p-5">
+        <div className={isMobile ? "sticky top-0 z-30 space-y-2" : ""}>
+        <PanelCard variant="hud" className="p-3 sm:p-5">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="min-w-0">
               <div className="section-kicker">{getGameModeName("draft", t)}</div>
@@ -240,7 +264,7 @@ export function DraftScreen({ vm }: { vm: DraftVm }) {
                 </StatusBadge>
               </div>
               {activeOrder.length > 0 ? (
-                <div className="mt-2 flex max-w-full items-center gap-1 overflow-x-auto pb-1" aria-label={t("draft.draftOrder")}>
+                <div className="mt-2 hidden max-w-full items-center gap-1 overflow-x-auto pb-1 sm:flex" aria-label={t("draft.draftOrder")}>
                   <span className="mr-1 shrink-0 text-[10px] font-black uppercase tracking-wider text-stone-500">
                     {t("draft.draftOrder")}
                   </span>
@@ -273,14 +297,24 @@ export function DraftScreen({ vm }: { vm: DraftVm }) {
             </div>
           </div>
         </PanelCard>
+        {isMobile ? (
+          <Tabs
+            value={mobileTab}
+            items={mobileTabs}
+            onChange={setMobileTab}
+            ariaLabel={t("draft.mobileTabs")}
+            className="draft-mobile-tabs bg-stone-100/95 p-1 shadow-lg backdrop-blur dark:bg-stone-950/95"
+          />
+        ) : null}
+        </div>
 
-        <div className="grid items-start gap-4 xl:grid-cols-[230px_minmax(0,1fr)_380px]">
-          <div className="space-y-3">
+        <div className={`grid items-start gap-4 xl:grid-cols-[230px_minmax(0,1fr)_380px] ${isMobile ? "block" : ""}`}>
+          <div className={`space-y-3 ${isMobile && mobileTab !== "rosters" ? "hidden" : ""}`} data-testid="draft-mobile-rosters">
             <RosterColumn player="P1" draft={draft} heroById={heroById} />
             <RosterColumn player="P2" draft={draft} heroById={heroById} />
           </div>
 
-          <PanelCard className="min-w-0 p-4 sm:p-5">
+          <PanelCard className={`min-w-0 p-3 sm:p-5 ${isMobile && mobileTab !== "catalog" ? "hidden" : ""}`} data-testid="draft-mobile-catalog">
             <SectionHeader
               kicker={t("draft.catalogKicker")}
               title={t("draft.heroCatalog")}
@@ -333,7 +367,7 @@ export function DraftScreen({ vm }: { vm: DraftVm }) {
             )}
           </PanelCard>
 
-          <aside className="xl:sticky xl:top-3 xl:max-h-[calc(100vh-1.5rem)] xl:overflow-y-auto xl:pr-1">
+          <aside className={`${isMobile && mobileTab !== "selected" ? "hidden" : ""} xl:sticky xl:top-3 xl:max-h-[calc(100dvh-1.5rem)] xl:overflow-y-auto xl:pr-1`} data-testid="draft-mobile-selected">
             <DraftHeroDetailsView
               hero={selectedHero}
               draftMeta={selectedDraftMeta}
@@ -347,11 +381,13 @@ export function DraftScreen({ vm }: { vm: DraftVm }) {
               isConfirming={!!submission}
               error={submissionError}
               onConfirm={handleConfirm}
+              showConfirmArea={!isMobile}
+              collapsibleAbilities={isMobile}
             />
           </aside>
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className={`grid gap-4 lg:grid-cols-2 ${isMobile && mobileTab !== "history" ? "hidden" : ""}`} data-testid="draft-mobile-history">
           <PanelCard className="p-4">
             <SectionHeader kicker={t("draft.bans")} title={t("draft.history")} description={t("draft.historyDescription")} />
             <div className="mt-3 grid max-h-48 gap-2 overflow-y-auto text-xs sm:grid-cols-2">
@@ -374,6 +410,27 @@ export function DraftScreen({ vm }: { vm: DraftVm }) {
           <EventLog events={vm.events} clientLog={vm.clientLog} />
         </div>
       </div>
+      {isMobile ? (
+        <div className="draft-mobile-confirm" data-testid="draft-mobile-confirm">
+          <div className="min-w-0 flex-1">
+            <div className="section-kicker">{t("draft.currentAction")}</div>
+            <div className="truncate text-sm font-semibold">
+              {selectedHeroName
+                ? t("draft.selectedHero", { hero: selectedHeroName })
+                : t("draft.noHeroSelected")}
+            </div>
+          </div>
+          <button
+            type="button"
+            className={`btn shrink-0 ${draft.phase === "ban" ? "btn-danger" : "btn-strong"}`}
+            data-testid="confirm-draft-hero-mobile"
+            disabled={!canConfirm || !!submission}
+            onClick={handleConfirm}
+          >
+            {submission ? t("draft.confirming") : mobileActionLabel}
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -28,10 +28,14 @@ import { StatusSection } from "../../components/RightPanel/sections/StatusSectio
 import { CurrentTaskPanel } from "./CurrentTaskPanel";
 import { RuleDeclarationStatus } from "./RuleDeclarationStatus";
 
-type MatchSideTab = "unit" | "actions" | "rules" | "players" | "log";
+export type MatchSideTab = "unit" | "actions" | "rules" | "players" | "log";
 
 interface SidePanelTabsProps {
   vm: any;
+  activeTab?: MatchSideTab;
+  onActiveTabChange?: (tab: MatchSideTab) => void;
+  hideTask?: boolean;
+  hideTabs?: boolean;
 }
 
 function unitStatusLabel(unit: UnitState, t: ReturnType<typeof useI18n>["t"]) {
@@ -292,9 +296,20 @@ function ActionTab({
   );
 }
 
-export const SidePanelTabs: FC<SidePanelTabsProps> = ({ vm }) => {
+export const SidePanelTabs: FC<SidePanelTabsProps> = ({
+  vm,
+  activeTab: controlledTab,
+  onActiveTabChange,
+  hideTask = false,
+  hideTabs = false,
+}) => {
   const { t } = useI18n();
-  const [activeTab, setActiveTab] = useState<MatchSideTab>("unit");
+  const [internalTab, setInternalTab] = useState<MatchSideTab>("unit");
+  const activeTab = controlledTab ?? internalTab;
+  const setActiveTab = (tab: MatchSideTab) => {
+    onActiveTabChange?.(tab);
+    if (controlledTab === undefined) setInternalTab(tab);
+  };
   const effectiveRole = vm.canControlTestRoom && vm.selectedUnit ? vm.selectedUnit.owner : vm.role;
   const rightPanelProps: RightPanelProps = {
     view: vm.view,
@@ -353,17 +368,21 @@ export const SidePanelTabs: FC<SidePanelTabsProps> = ({ vm }) => {
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
-      <div className="shrink-0 space-y-3">
-        <CurrentTaskPanel vm={vm} />
-        <Tabs
-          value={activeTab}
-          items={tabs}
-          onChange={setActiveTab}
-          ariaLabel={t("game.sidePanelTabs")}
-        />
-      </div>
+      {!hideTask || !hideTabs ? (
+        <div className="shrink-0 space-y-3">
+          {!hideTask ? <CurrentTaskPanel vm={vm} /> : null}
+          {!hideTabs ? (
+            <Tabs
+              value={activeTab}
+              items={tabs}
+              onChange={setActiveTab}
+              ariaLabel={t("game.sidePanelTabs")}
+            />
+          ) : null}
+        </div>
+      ) : null}
 
-      <div className="scroll-panel mt-3 min-h-0 flex-1 overflow-y-auto pr-1">
+      <div className={`scroll-panel min-h-0 flex-1 overflow-y-auto pr-1 ${hideTask && hideTabs ? "" : "mt-3"}`}>
         {activeTab === "unit" ? (
           vm.view.phase === "battle" ? (
             <PanelCard variant="parchment" className="p-4">

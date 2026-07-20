@@ -15,11 +15,17 @@ export function Panel({
   className = "",
   as: Tag = "section",
   variant = "default",
+  "data-testid": testId,
 }: {
   children: ReactNode;
   className?: string;
   as?: ElementType;
   variant?: PanelVariant;
+  "data-testid"?: string;
 }) {
-  return <Tag className={`${variantClasses[variant]} ${className}`}>{children}</Tag>;
+  return (
+    <Tag className={`${variantClasses[variant]} ${className}`} data-testid={testId}>
+      {children}
+    </Tag>
+  );
 }

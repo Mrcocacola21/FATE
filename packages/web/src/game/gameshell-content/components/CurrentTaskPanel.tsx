@@ -13,14 +13,15 @@ import { PendingBoardNotice } from "./PendingBoardNotice";
 
 interface CurrentTaskPanelProps {
   vm: any;
+  compact?: boolean;
 }
 
-export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm }) => {
+export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm, compact = false }) => {
   const { language, t } = useI18n();
 
   if (vm.pendingRoll) {
     return (
-      <div aria-live="polite">
+      <div aria-live="polite" className={compact ? "mobile-task-content" : ""}>
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
           <div>
             <div className="section-kicker">{t("game.currentTask")}</div>
@@ -117,7 +118,7 @@ export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm }) => {
 
   if (vm.pendingMeta) {
     return (
-      <div aria-live="polite">
+      <div aria-live="polite" className={compact ? "mobile-task-content" : ""}>
         <PanelCard variant="arcane" className="p-3">
           <SectionHeader
             kicker={t("game.currentTask")}
@@ -145,7 +146,7 @@ export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm }) => {
       vm.moveOptions.modes.length > 0;
 
     return (
-      <div aria-live="polite">
+      <div aria-live="polite" className={compact ? "mobile-task-content" : ""}>
         <PanelCard variant="hud" className="p-3">
           <SectionHeader
             kicker={t("game.currentTask")}
@@ -188,7 +189,7 @@ export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm }) => {
   }
 
   return (
-    <div aria-live="polite">
+      <div aria-live="polite" className={compact ? "mobile-task-content" : ""}>
       <PanelCard variant="hud" className="p-3">
         <SectionHeader
           kicker={t("game.currentTask")}

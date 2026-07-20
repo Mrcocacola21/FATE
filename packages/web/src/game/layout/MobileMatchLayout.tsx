@@ -1,0 +1,78 @@
+import { useState } from "react";
+import { useI18n } from "../../i18n";
+import { BottomNav, BottomSheet, type BottomNavItem } from "../../ui";
+import { GameTopBar } from "../components/GameTopBar";
+import { CurrentTaskPanel } from "../gameshell-content/components/CurrentTaskPanel";
+import { GameShellBoardColumn } from "../gameshell-content/components/GameShellBoardColumn";
+import { GameShellSideColumn } from "../gameshell-content/components/GameShellSideColumn";
+import { GameShellPendingRoll } from "../gameshell-content/components/GameShellPendingRoll";
+import {
+  SidePanelTabs,
+  type MatchSideTab,
+} from "../gameshell-content/components/SidePanelTabs";
+import { toggleMobilePanel } from "./mobilePanelState";
+
+export function MobileMatchLayout({ vm }: { vm: any }) {
+  const { t } = useI18n();
+  const [activeTab, setActiveTab] = useState<MatchSideTab>("unit");
+  const [sheetOpen, setSheetOpen] = useState(false);
+
+  if (vm.view.phase === "lobby") {
+    return (
+      <div className="app-shell mobile-room-shell h-dvh overflow-hidden px-2 pt-2">
+        <div className="mx-auto flex h-full min-h-0 max-w-xl flex-col gap-2">
+          <GameTopBar vm={vm} compact />
+          <div className="scroll-panel min-h-0 flex-1 overflow-y-auto pb-[calc(1rem+env(safe-area-inset-bottom))]">
+            <GameShellSideColumn vm={vm} mobile />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const items: BottomNavItem<MatchSideTab>[] = [
+    { value: "unit", label: t("game.tabsUnit"), glyph: "◆" },
+    { value: "actions", label: t("game.tabsActions"), glyph: "⚔" },
+    { value: "rules", label: t("game.tabsRules"), glyph: "§" },
+    { value: "players", label: t("game.tabsPlayers"), glyph: "♟" },
+    { value: "log", label: t("game.tabsLog"), glyph: "≡" },
+  ];
+  const activeLabel = items.find((item) => item.value === activeTab)?.label ?? "";
+
+  const openTab = (tab: MatchSideTab) => {
+    const next = toggleMobilePanel({ activeTab, open: sheetOpen }, tab);
+    setActiveTab(next.activeTab);
+    setSheetOpen(next.open);
+  };
+
+  return (
+    <div className="app-shell mobile-match-shell h-dvh overflow-hidden px-1.5 pt-[max(0.375rem,env(safe-area-inset-top))]">
+      <div className="mx-auto flex h-full min-h-0 max-w-xl flex-col gap-1.5">
+        <GameTopBar vm={vm} compact />
+        <main className="min-h-0 flex-1" data-testid="mobile-board-stage">
+          <GameShellBoardColumn vm={vm} mobile />
+        </main>
+        <div className="mobile-current-task shrink-0" data-testid="mobile-current-task">
+          <CurrentTaskPanel vm={vm} compact />
+        </div>
+        <BottomNav
+          value={sheetOpen ? activeTab : null}
+          items={items}
+          onChange={openTab}
+          ariaLabel={t("game.sidePanelTabs")}
+        />
+      </div>
+
+      <BottomSheet open={sheetOpen} title={activeLabel} onClose={() => setSheetOpen(false)}>
+        <SidePanelTabs
+          vm={vm}
+          activeTab={activeTab}
+          onActiveTabChange={setActiveTab}
+          hideTask
+          hideTabs
+        />
+      </BottomSheet>
+      <GameShellPendingRoll vm={vm} />
+    </div>
+  );
+}

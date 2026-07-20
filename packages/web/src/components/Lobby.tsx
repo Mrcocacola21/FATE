@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useGameStore } from "../store";
 import type { PlayerRole } from "../ws";
 import { PanelCard, SectionHeader, StatusBadge } from "./ui";
@@ -6,10 +6,16 @@ import { RulesModal } from "./RulesModal";
 import { ThemeToggle } from "./ThemeToggle";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { useI18n } from "../i18n";
-import { getConnectionLabel, getPhaseLabel, localizeServerText } from "../i18n/displayMetadata";
+import {
+  getConnectionLabel,
+  getHeroDisplayName,
+  getPhaseLabel,
+  localizeServerText,
+} from "../i18n/displayMetadata";
 import { getServerCapabilities } from "../api";
 import { EmptyState } from "../ui";
 import { getGameModeName } from "../modes/modeLabels";
+import { getSelectedHeroes } from "../figures/getSelectedHeroes";
 
 interface LobbyProps {
   onOpenFigures?: () => void;
@@ -17,7 +23,7 @@ interface LobbyProps {
 }
 
 export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
-  const { t } = useI18n();
+  const { language, t } = useI18n();
   const { connectionStatus, roomsList, joinError, fetchRooms, joinRoom } = useGameStore();
   const roleLabel = (value: PlayerRole) => t(`roles.${value}`);
 
@@ -38,6 +44,8 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
   const [testRoomRequiresToken, setTestRoomRequiresToken] = useState(false);
   const [debugToken, setDebugToken] = useState("");
   const [testBusy, setTestBusy] = useState(false);
+  const [showMobileSettings, setShowMobileSettings] = useState(false);
+  const selectedHeroes = useMemo(() => getSelectedHeroes(), []);
 
   useEffect(() => {
     fetchRooms().catch((err) => {
@@ -143,16 +151,16 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
         : "neutral";
 
   return (
-    <div className="app-shell px-3 py-4 sm:px-6 sm:py-8">
+    <div className="app-shell px-2.5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-6 sm:py-8">
       <div className="mx-auto max-w-6xl space-y-5">
-        <PanelCard as="header" variant="hud" className="hero-command p-5 sm:p-7">
-          <div className="relative z-10 flex min-w-0 flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+        <PanelCard as="header" variant="hud" className="hero-command p-3.5 sm:p-7">
+          <div className="relative z-10 flex min-w-0 flex-col gap-3 sm:gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex min-w-0 items-start gap-4">
               <div className="brand-sigil mt-1 hidden h-16 w-16 sm:flex" aria-hidden="true" />
               <div className="min-w-0 max-w-2xl">
                 <div className="section-kicker">{t("lobby.kicker")}</div>
-                <h1 className="fate-brand mt-2 text-3xl sm:text-5xl">{t("lobby.title")}</h1>
-                <p className="mt-3 max-w-xl text-sm leading-6 text-stone-600 dark:text-stone-300 sm:text-base">
+                <h1 className="fate-brand mt-1 text-2xl sm:mt-2 sm:text-5xl">{t("lobby.title")}</h1>
+                <p className="mt-3 hidden max-w-xl text-sm leading-6 text-stone-600 dark:text-stone-300 sm:block sm:text-base">
                   {t("lobby.subtitle")}
                 </p>
                 <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -169,8 +177,17 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
                 </div>
               </div>
             </div>
+            <button
+              type="button"
+              className="btn btn-secondary w-full lg:hidden"
+              data-testid="mobile-lobby-settings"
+              aria-expanded={showMobileSettings}
+              onClick={() => setShowMobileSettings((current) => !current)}
+            >
+              {t("mobile.settings")}
+            </button>
             <nav
-              className="grid w-full min-w-0 grid-cols-2 gap-2 lg:flex lg:w-auto lg:max-w-md lg:flex-wrap lg:items-center lg:justify-end"
+              className={`${showMobileSettings ? "grid" : "hidden"} w-full min-w-0 grid-cols-2 gap-2 lg:flex lg:w-auto lg:max-w-md lg:flex-wrap lg:items-center lg:justify-end`}
               aria-label={t("lobby.navLabel")}
             >
               {onOpenFigures ? (
@@ -200,12 +217,27 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
               ) : null}
               <ThemeToggle className="w-full lg:w-auto" />
               <LanguageSwitcher className="w-full justify-center lg:w-auto" />
+              <details className="panel-card-muted col-span-2 p-3 text-left lg:hidden">
+                <summary className="min-h-11 cursor-pointer py-2 text-sm font-bold">
+                  {t("mobile.selectedFigureSet")}
+                </summary>
+                <div className="mt-2 grid gap-1.5 text-xs text-stone-600 dark:text-stone-300">
+                  {selectedHeroes.map((hero) => (
+                    <div key={hero.mainClass} className="flex min-w-0 justify-between gap-3">
+                      <span className="font-semibold">{t(`classes.${hero.mainClass}`)}</span>
+                      <span className="truncate">
+                        {getHeroDisplayName(hero.id, hero.name, language)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </details>
             </nav>
           </div>
         </PanelCard>
 
         <div className="grid min-w-0 items-start gap-5 lg:grid-cols-[minmax(0,1fr)_380px]">
-          <PanelCard className="min-h-[430px] p-5 sm:p-6">
+          <PanelCard className="order-2 min-h-[430px] p-4 sm:p-6 lg:order-1">
             <SectionHeader
               kicker={t("lobby.browserKicker")}
               title={t("lobby.availableRooms")}
@@ -268,6 +300,11 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
                         ) : null}
                       </div>
                       <div className="mt-3 flex flex-wrap gap-2">
+                        <StatusBadge tone="info">
+                          {t("mobile.playersCount", {
+                            count: Number(room.players.P1) + Number(room.players.P2),
+                          })}
+                        </StatusBadge>
                         <StatusBadge tone={room.players.P1 ? "neutral" : "success"}>
                           P1 {room.players.P1 ? t("common.occupied") : t("common.open")}
                         </StatusBadge>
@@ -303,7 +340,9 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
                         });
                       }}
                     >
-                      {t("lobby.joinRoom")}
+                      {room.phase !== "lobby" || (room.players.P1 && room.players.P2)
+                        ? t("lobby.spectateRoom")
+                        : t("lobby.joinRoom")}
                     </button>
                   </div>
                 </article>
@@ -311,8 +350,8 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
             </div>
           </PanelCard>
 
-          <div className="space-y-5">
-            <PanelCard variant="parchment" className="p-5 sm:p-6">
+          <div className="order-1 flex flex-col gap-3 sm:gap-5 lg:order-2">
+            <PanelCard variant="parchment" className="order-1 p-4 sm:p-6">
               <SectionHeader
                 kicker={t("lobby.hostKicker")}
                 title={t("lobby.createRoom")}
@@ -321,6 +360,7 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
               <button
                 type="button"
                 className="btn btn-primary mt-5 w-full"
+                data-testid="create-room"
                 onClick={handleCreate}
                 disabled={busy}
               >
@@ -329,7 +369,7 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
             </PanelCard>
 
             {testRoomEnabled ? (
-              <PanelCard variant="arcane" className="p-5 sm:p-6">
+              <PanelCard variant="arcane" className="order-3 p-4 sm:p-6 lg:order-2">
                 <SectionHeader
                   kicker={t("testRoom.kicker")}
                   title={t("testRoom.create")}
@@ -353,6 +393,7 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
                 <button
                   type="button"
                   className="btn btn-arcane mt-4 w-full"
+                  data-testid="create-test-room"
                   onClick={handleCreateTestRoom}
                   disabled={testBusy || (testRoomRequiresToken && !debugToken.trim())}
                 >
@@ -361,7 +402,7 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
               </PanelCard>
             ) : null}
 
-            <PanelCard variant="hud" className="p-5 sm:p-6">
+            <PanelCard variant="hud" className="order-2 p-4 sm:p-6 lg:order-3">
               <SectionHeader
                 kicker={t("lobby.directKicker")}
                 title={t("lobby.joinById")}
@@ -410,7 +451,7 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
                     autoComplete="nickname"
                   />
                 </div>
-                <button type="button" className="btn btn-strong w-full" onClick={handleJoin}>
+                <button type="button" className="btn btn-strong w-full" data-testid="join-by-id" onClick={handleJoin}>
                   {t("lobby.joinRoom")}
                 </button>
                 {localError || joinError ? (

@@ -187,7 +187,7 @@ export function PendingRollModal({
       aria-labelledby="pending-roll-title"
       aria-describedby="pending-roll-description"
     >
-      <div className="arcane-prompt scroll-panel panel-card max-h-[92vh] w-full max-w-lg overflow-y-auto border-violet-400/45 p-5 shadow-2xl shadow-violet-950/30 sm:p-6">
+      <div className="arcane-prompt scroll-panel panel-card max-h-[92dvh] w-full max-w-lg overflow-y-auto border-violet-400/45 p-4 shadow-2xl shadow-violet-950/30 sm:p-6">
         <div className="relative z-10 flex items-start gap-3">
           <div className="brand-sigil mt-0.5 h-11 w-11" aria-hidden="true" />
           <div className="min-w-0">

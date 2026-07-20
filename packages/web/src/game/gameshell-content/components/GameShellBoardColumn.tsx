@@ -7,6 +7,7 @@ import { useI18n } from "../../../i18n";
 
 interface GameShellBoardColumnProps {
   vm: any;
+  mobile?: boolean;
 }
 
 const BOARD_ZOOM_STORAGE_KEY = "FATE_BOARD_ZOOM";
@@ -23,7 +24,7 @@ function readStoredBoardCoordinates() {
   return window.localStorage.getItem(BOARD_COORDINATES_STORAGE_KEY) !== "false";
 }
 
-export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm }) => {
+export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm, mobile = false }) => {
   const { t } = useI18n();
   const [boardZoom, setBoardZoom] = useState(readStoredBoardZoom);
   const [showCoordinates, setShowCoordinates] = useState(readStoredBoardCoordinates);
@@ -76,7 +77,7 @@ export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm }) => {
   }, [fitBoard, zoomIn, zoomOut]);
 
   return (
-    <PanelCard variant="hud" className="flex h-full min-w-0 flex-col overflow-hidden">
+    <PanelCard variant="hud" className={`flex h-full min-w-0 flex-col overflow-hidden ${mobile ? "mobile-board-panel" : ""}`}>
       <div className="shrink-0 border-b border-amber-900/10 px-3 py-2 dark:border-amber-500/15 sm:px-4">
         <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
           <div className="min-w-0">
@@ -93,7 +94,7 @@ export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm }) => {
             onToggleCoordinates={() => setShowCoordinates((current) => !current)}
           />
         </div>
-        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] font-semibold text-stone-500 dark:text-stone-400">
+        <div className={`mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] font-semibold text-stone-500 dark:text-stone-400 ${mobile ? "mobile-board-legend" : ""}`}>
           {[
             [t("game.legalMove"), "bg-sky-400 ring-sky-500"],
             [t("game.legalAttack"), "bg-rose-400 ring-rose-500"],
