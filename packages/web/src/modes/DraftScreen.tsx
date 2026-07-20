@@ -1,14 +1,29 @@
-import { useMemo } from "react";
-import type { DraftState, HeroDraftMeta, HeroMeta, PlayerId, UnitClass } from "rules";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  type DraftState,
+  type HeroDraftMeta,
+  type HeroMeta,
+  type PlayerId,
+  type UnitClass,
+} from "rules";
 import { EventLog } from "../components/EventLog";
 import { LanguageSwitcher } from "../components/LanguageSwitcher";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { PanelCard, SectionHeader, StatusBadge } from "../components/ui";
 import { getTokenSrc } from "../catalog/tokens";
 import { useHeroes } from "../figures/useHeroes";
-import { useI18n } from "../i18n";
+import { useI18n, type Translate } from "../i18n";
+import { getHeroDisplayName } from "../i18n/displayMetadata";
+import { DraftHeroCardView, DraftHeroDetailsView } from "./DraftHeroPreview";
 import { getGameModeName } from "./modeLabels";
-import { groupDraftPoolByClass } from "./draftPool";
+import {
+  createDraftSubmissionGate,
+  getDraftHeroCardState,
+  getDraftHeroLockReason,
+  getPickedHeroOwner,
+  groupDraftPoolByClass,
+  sendDraftCandidateCommand,
+} from "./draftPool";
 
 const DRAFT_CLASSES: UnitClass[] = [
   "knight",
@@ -19,8 +34,16 @@ const DRAFT_CLASSES: UnitClass[] = [
   "trickster",
   "berserker",
 ];
-const DRAFT_TOTAL_BANS = 4;
+const DRAFT_BAN_ORDER: PlayerId[] = ["P1", "P2", "P2", "P1"];
+const DRAFT_TOTAL_BANS = DRAFT_BAN_ORDER.length;
 const DRAFT_TOTAL_PICKS = DRAFT_CLASSES.length * 2;
+
+function getDraftPickOrder(): PlayerId[] {
+  return Array.from({ length: DRAFT_TOTAL_PICKS }, (_, index) => {
+    if (index === 0) return "P1";
+    return Math.floor((index - 1) / 2) % 2 === 0 ? "P2" : "P1";
+  });
+}
 
 type DraftVm = {
   roomId: string | null;
@@ -40,44 +63,21 @@ type DraftVm = {
   draftPickHero: (heroId: string) => void;
 };
 
-function classLabel(unitClass: UnitClass, t: (key: string) => string) {
+type PendingDraftSubmission = {
+  heroId: string;
+  historyLength: number;
+  clientLogLength: number;
+};
+
+function classLabel(unitClass: UnitClass, t: Translate) {
   return t(`classes.${unitClass}`);
 }
 
-function getPickedHeroIds(draft: DraftState): Set<string> {
-  return new Set([
-    ...Object.values(draft.picks.P1).filter(Boolean),
-    ...Object.values(draft.picks.P2).filter(Boolean),
-  ] as string[]);
-}
-
-function getLockReason(params: {
-  draft: DraftState;
-  hero: HeroDraftMeta;
-  seat: PlayerId | null;
-}): string | null {
-  const { draft, hero, seat } = params;
-  if (draft.phase === "complete") return "draft_complete";
-  if (!seat || seat !== draft.currentPlayer) return "not_current_player";
-  if (draft.bannedHeroIds.includes(hero.heroId)) return "banned";
-  if (getPickedHeroIds(draft).has(hero.heroId)) return "picked";
-  if (draft.phase === "pick" && draft.picks[seat][hero.primaryClass]) {
-    return "class_slot_already_filled";
-  }
-  if (
-    draft.phase === "ban" &&
-    draft.bannedHeroIds.some(
-      (heroId) => heroId !== hero.heroId && heroIdForClass(draft, heroId) === hero.primaryClass
-    )
-  ) {
-    return "max_bans_per_class_reached";
-  }
-  return null;
-}
-
-function heroIdForClass(draft: DraftState, heroId: string): UnitClass | null {
-  const event = draft.history.find((item) => item.heroId === heroId);
-  return event?.primaryClass ?? null;
+function localizeDraftRejection(value: string, phase: DraftState["phase"], t: Translate) {
+  const key = `draft.lockReasons.${value}`;
+  const localized = t(key);
+  const reason = localized === key ? value : localized;
+  return `${phase === "ban" ? t("draft.cannotBanHero") : t("draft.cannotPickHero")}: ${reason}`;
 }
 
 function RosterColumn({
@@ -89,7 +89,7 @@ function RosterColumn({
   draft: DraftState;
   heroById: Map<string, HeroMeta>;
 }) {
-  const { t } = useI18n();
+  const { language, t } = useI18n();
   return (
     <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-950/45">
       <div className="flex items-center justify-between gap-2">
@@ -98,27 +98,23 @@ function RosterColumn({
           {draft.currentPlayer === player ? t("draft.current") : t("draft.roster")}
         </StatusBadge>
       </div>
-      <div className="mt-3 grid gap-2">
+      <div className="mt-2 grid gap-1.5">
         {DRAFT_CLASSES.map((unitClass) => {
           const heroId = draft.picks[player][unitClass];
           const hero = heroId ? heroById.get(heroId) : null;
           return (
             <div
               key={unitClass}
-              className="flex min-h-12 items-center gap-2 rounded-lg border border-slate-200 bg-white px-2 py-2 text-xs dark:border-slate-800 dark:bg-slate-900/70"
+              className="flex min-h-9 items-center gap-2 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs dark:border-slate-800 dark:bg-slate-900/70"
             >
-              <span className="w-20 shrink-0 font-semibold text-slate-500 dark:text-slate-400">
+              <span className="w-16 shrink-0 font-semibold text-slate-500 dark:text-slate-400">
                 {classLabel(unitClass, t)}
               </span>
               {hero ? (
                 <>
-                  <img
-                    src={getTokenSrc(hero.id)}
-                    alt=""
-                    className="h-8 w-8 rounded-md object-cover"
-                  />
+                  <img src={getTokenSrc(hero.id)} alt="" className="h-7 w-7 rounded-md object-cover" />
                   <span className="min-w-0 truncate font-semibold text-slate-900 dark:text-white">
-                    {hero.name}
+                    {getHeroDisplayName(hero.id, hero.name, language)}
                   </span>
                 </>
               ) : (
@@ -133,16 +129,83 @@ function RosterColumn({
 }
 
 export function DraftScreen({ vm }: { vm: DraftVm }) {
-  const { t } = useI18n();
+  const { language, t } = useI18n();
   const { heroes, loading } = useHeroes();
   const draft = vm.roomMeta.draftState;
-  const heroById = useMemo(
-    () => new Map(heroes.map((hero) => [hero.id, hero])),
-    [heroes]
+  const [selectedDraftHeroId, setSelectedDraftHeroId] = useState<string | null>(null);
+  const [submission, setSubmission] = useState<PendingDraftSubmission | null>(null);
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
+  const submissionGate = useRef(createDraftSubmissionGate());
+
+  const heroById = useMemo(() => new Map(heroes.map((hero) => [hero.id, hero])), [heroes]);
+  const poolByClass = useMemo(
+    () => groupDraftPoolByClass(vm.roomMeta.draftPool),
+    [vm.roomMeta.draftPool]
   );
-  const poolByClass = useMemo(() => {
-    return groupDraftPoolByClass(vm.roomMeta.draftPool);
-  }, [vm.roomMeta.draftPool]);
+  const selectedDraftMeta = useMemo(
+    () => vm.roomMeta.draftPool.find((hero) => hero.heroId === selectedDraftHeroId) ?? null,
+    [selectedDraftHeroId, vm.roomMeta.draftPool]
+  );
+  const selectedHero = selectedDraftHeroId ? heroById.get(selectedDraftHeroId) ?? null : null;
+  const selectedLockReason = selectedDraftMeta
+    ? getDraftHeroLockReason({
+        draft,
+        draftPool: vm.roomMeta.draftPool,
+        hero: selectedDraftMeta,
+        seat: vm.seat,
+      })
+    : null;
+  const selectedPickedBy = selectedDraftHeroId
+    ? getPickedHeroOwner(draft, selectedDraftHeroId)
+    : null;
+  const isLocalTurn = !!vm.seat && vm.seat === draft.currentPlayer && draft.phase !== "complete";
+  const canConfirm = !!selectedDraftMeta && isLocalTurn && !selectedLockReason && !submission;
+
+  useEffect(() => {
+    if (!submission) return;
+    const accepted = draft.history
+      .slice(submission.historyLength)
+      .some((event) => event.heroId === submission.heroId && event.player === vm.seat);
+    if (accepted) {
+      submissionGate.current.release();
+      setSubmission(null);
+      setSubmissionError(null);
+      setSelectedDraftHeroId((current) =>
+        current === submission.heroId ? null : current
+      );
+      return;
+    }
+
+    const newClientLog = vm.clientLog.slice(submission.clientLogLength);
+    const rejection = newClientLog[newClientLog.length - 1];
+    if (rejection) {
+      submissionGate.current.release();
+      setSubmission(null);
+      setSubmissionError(localizeDraftRejection(rejection, draft.phase, t));
+    }
+  }, [draft.history, draft.phase, submission, t, vm.clientLog, vm.seat]);
+
+  const handleSelectHero = (heroId: string) => {
+    setSelectedDraftHeroId(heroId);
+    setSubmissionError(null);
+  };
+
+  const handleConfirm = () => {
+    const heroId = submissionGate.current.tryStart(selectedDraftHeroId, canConfirm);
+    if (!heroId) return;
+    setSubmissionError(null);
+    setSubmission({
+      heroId,
+      historyLength: draft.history.length,
+      clientLogLength: vm.clientLog.length,
+    });
+    sendDraftCandidateCommand({
+      phase: draft.phase,
+      heroId,
+      ban: vm.draftBanHero,
+      pick: vm.draftPickHero,
+    });
+  };
 
   const banCount = draft.history.filter((event) => event.type === "ban").length;
   const pickCount = draft.history.filter((event) => event.type === "pick").length;
@@ -152,6 +215,12 @@ export function DraftScreen({ vm }: { vm: DraftVm }) {
       : draft.phase === "pick"
         ? `${pickCount}/${DRAFT_TOTAL_PICKS}`
         : `${DRAFT_TOTAL_PICKS}/${DRAFT_TOTAL_PICKS}`;
+  const activeOrder =
+    draft.phase === "ban"
+      ? DRAFT_BAN_ORDER
+      : draft.phase === "pick"
+        ? getDraftPickOrder()
+        : [];
 
   return (
     <div className="app-shell px-2 py-3 sm:px-4 sm:py-4 lg:px-5">
@@ -162,27 +231,41 @@ export function DraftScreen({ vm }: { vm: DraftVm }) {
               <div className="section-kicker">{getGameModeName("draft", t)}</div>
               <h1 className="fate-brand mt-1 text-2xl">{t("draft.safeClassDraft")}</h1>
               <div className="mt-2 flex flex-wrap gap-2">
-                <StatusBadge tone="info">
+                <StatusBadge tone={draft.phase === "ban" ? "danger" : draft.phase === "pick" ? "info" : "success"}>
                   {t(`draft.phases.${draft.phase}`)} {phaseCount}
                 </StatusBadge>
-                <StatusBadge tone="special">
-                  {t("draft.currentPlayer", { player: draft.currentPlayer })}
-                </StatusBadge>
-                <StatusBadge tone={vm.seat === draft.currentPlayer ? "success" : "neutral"}>
-                  {vm.seat === draft.currentPlayer ? t("draft.yourTurn") : t("draft.waitingTurn")}
+                <StatusBadge tone="special">{t("draft.currentPlayer", { player: draft.currentPlayer })}</StatusBadge>
+                <StatusBadge tone={isLocalTurn ? "success" : "neutral"}>
+                  {isLocalTurn ? t("draft.yourTurn") : t("draft.waitingTurn")}
                 </StatusBadge>
               </div>
-              <div className="mt-2 max-w-full truncate font-mono text-[11px] text-stone-500 dark:text-stone-400">
+              {activeOrder.length > 0 ? (
+                <div className="mt-2 flex max-w-full items-center gap-1 overflow-x-auto pb-1" aria-label={t("draft.draftOrder")}>
+                  <span className="mr-1 shrink-0 text-[10px] font-black uppercase tracking-wider text-stone-500">
+                    {t("draft.draftOrder")}
+                  </span>
+                  {activeOrder.map((player, index) => (
+                    <span
+                      key={`${draft.phase}-${index}`}
+                      className={`shrink-0 rounded-md border px-1.5 py-0.5 text-[10px] font-bold ${
+                        index === draft.stepIndex
+                          ? "border-amber-400 bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-100"
+                          : index < draft.stepIndex
+                            ? "border-stone-300 text-stone-400 line-through dark:border-stone-700"
+                            : "border-stone-300 text-stone-600 dark:border-stone-700 dark:text-stone-300"
+                      }`}
+                    >
+                      {index + 1}. {player}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+              <div className="mt-1 max-w-full truncate font-mono text-[11px] text-stone-500 dark:text-stone-400">
                 {t("game.room")} {vm.roomId ?? "-"}
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                className="btn btn-secondary btn-sm"
-                onClick={vm.handleLeave}
-                disabled={vm.leavingRoom}
-              >
+              <button type="button" className="btn btn-secondary btn-sm" onClick={vm.handleLeave} disabled={vm.leavingRoom}>
                 {vm.leavingRoom ? t("game.leaving") : t("game.leaveMatch")}
               </button>
               <LanguageSwitcher />
@@ -191,8 +274,11 @@ export function DraftScreen({ vm }: { vm: DraftVm }) {
           </div>
         </PanelCard>
 
-        <div className="grid gap-4 xl:grid-cols-[320px_minmax(0,1fr)_320px]">
-          <RosterColumn player="P1" draft={draft} heroById={heroById} />
+        <div className="grid items-start gap-4 xl:grid-cols-[230px_minmax(0,1fr)_380px]">
+          <div className="space-y-3">
+            <RosterColumn player="P1" draft={draft} heroById={heroById} />
+            <RosterColumn player="P2" draft={draft} heroById={heroById} />
+          </div>
 
           <PanelCard className="min-w-0 p-4 sm:p-5">
             <SectionHeader
@@ -201,9 +287,7 @@ export function DraftScreen({ vm }: { vm: DraftVm }) {
               description={t("draft.catalogDescription")}
             />
             {loading ? (
-              <div className="mt-5 text-sm text-slate-500 dark:text-slate-400">
-                {t("figureSet.loadingHeroes")}
-              </div>
+              <div className="mt-5 text-sm text-slate-500 dark:text-slate-400">{t("figureSet.loadingHeroes")}</div>
             ) : (
               <div className="mt-5 space-y-5">
                 {DRAFT_CLASSES.map((unitClass) => (
@@ -212,76 +296,34 @@ export function DraftScreen({ vm }: { vm: DraftVm }) {
                       <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                         {classLabel(unitClass, t)}
                       </h2>
-                      <StatusBadge tone="neutral">
-                        {(poolByClass.get(unitClass) ?? []).length}
-                      </StatusBadge>
+                      <StatusBadge tone="neutral">{(poolByClass.get(unitClass) ?? []).length}</StatusBadge>
                     </div>
                     <div className="grid gap-3 md:grid-cols-2 2xl:grid-cols-3">
                       {(poolByClass.get(unitClass) ?? []).map((hero) => {
-                        const meta = heroById.get(hero.heroId);
-                        const reason = getLockReason({ draft, hero, seat: vm.seat });
-                        const banned = draft.bannedHeroIds.includes(hero.heroId);
-                        const picked = getPickedHeroIds(draft).has(hero.heroId);
-                        const disabled = !!reason;
-                        const command =
-                          draft.phase === "ban"
-                            ? () => vm.draftBanHero(hero.heroId)
-                            : () => vm.draftPickHero(hero.heroId);
+                        const lockReason = getDraftHeroLockReason({
+                          draft,
+                          draftPool: vm.roomMeta.draftPool,
+                          hero,
+                          seat: vm.seat,
+                        });
                         return (
-                          <button
+                          <DraftHeroCardView
                             key={hero.heroId}
-                            type="button"
-                            className={`min-h-44 rounded-xl border p-3 text-left transition ${
-                              disabled
-                                ? "border-slate-200 bg-slate-100 text-slate-500 opacity-80 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-400"
-                                : "border-amber-300 bg-white text-slate-900 hover:border-amber-500 hover:shadow-lg hover:shadow-amber-950/5 dark:border-amber-800/70 dark:bg-slate-900 dark:text-white"
-                            }`}
-                            disabled={disabled}
-                            onClick={command}
-                          >
-                            <span className="flex items-start gap-3">
-                              <img
-                                src={getTokenSrc(hero.heroId)}
-                                alt=""
-                                className="h-14 w-14 rounded-lg object-cover"
-                              />
-                              <span className="min-w-0 flex-1">
-                                <span className="block truncate font-bold">
-                                  {meta?.name ?? hero.heroId}
-                                </span>
-                                <span className="mt-1 block text-xs text-slate-500 dark:text-slate-400">
-                                  {classLabel(hero.primaryClass, t)}
-                                </span>
-                                <span className="mt-2 flex flex-wrap gap-1.5">
-                                  <StatusBadge tone={banned ? "danger" : picked ? "warning" : "success"}>
-                                    {banned
-                                      ? t("draft.status.banned")
-                                      : picked
-                                        ? t("draft.status.picked")
-                                        : disabled
-                                          ? t("draft.status.locked")
-                                          : t("draft.status.available")}
-                                  </StatusBadge>
-                                  {reason ? (
-                                    <StatusBadge tone="neutral">
-                                      {t(`draft.lockReasons.${reason}`)}
-                                    </StatusBadge>
-                                  ) : null}
-                                </span>
-                              </span>
-                            </span>
-                            <span className="mt-3 grid grid-cols-2 gap-2 text-xs">
-                              <span className="rounded-lg bg-slate-100 px-2 py-1 dark:bg-slate-800">
-                                {t("game.hp", { hp: meta?.baseStats.hp ?? "-" })}
-                              </span>
-                              <span className="rounded-lg bg-slate-100 px-2 py-1 dark:bg-slate-800">
-                                {t("game.damage", { value: meta?.baseStats.damage ?? "-" })}
-                              </span>
-                            </span>
-                            <span className="mt-3 block min-h-10 text-xs leading-5 text-slate-500 dark:text-slate-400">
-                              {meta?.abilities?.[0]?.description ?? t("figureSet.noAbilities")}
-                            </span>
-                          </button>
+                            hero={hero}
+                            meta={heroById.get(hero.heroId) ?? null}
+                            state={getDraftHeroCardState({
+                              draft,
+                              draftPool: vm.roomMeta.draftPool,
+                              hero,
+                              seat: vm.seat,
+                              selectedHeroId: selectedDraftHeroId,
+                            })}
+                            lockReason={lockReason}
+                            pickedBy={getPickedHeroOwner(draft, hero.heroId)}
+                            language={language}
+                            t={t}
+                            onSelect={handleSelectHero}
+                          />
                         );
                       })}
                     </div>
@@ -291,42 +333,45 @@ export function DraftScreen({ vm }: { vm: DraftVm }) {
             )}
           </PanelCard>
 
-          <div className="space-y-4">
-            <RosterColumn player="P2" draft={draft} heroById={heroById} />
-            <PanelCard className="p-4">
-              <SectionHeader
-                kicker={t("draft.bans")}
-                title={t("draft.history")}
-                description={t("draft.historyDescription")}
-              />
-              <div className="mt-4 space-y-2 text-xs">
-                {draft.history.length === 0 ? (
-                  <div className="text-slate-500 dark:text-slate-400">
-                    {t("draft.noHistory")}
-                  </div>
-                ) : (
-                  draft.history.map((event, index) => {
-                    const hero = heroById.get(event.heroId);
-                    return (
-                      <div
-                        key={`${event.type}-${event.heroId}-${index}`}
-                        className="flex items-center justify-between gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2 py-2 dark:border-slate-800 dark:bg-slate-950/45"
-                      >
-                        <span className="truncate">
-                          {event.player} {t(`draft.eventTypes.${event.type}`)}{" "}
-                          <strong>{hero?.name ?? event.heroId}</strong>
-                        </span>
-                        <StatusBadge tone={event.type === "ban" ? "danger" : "success"}>
-                          {classLabel(event.primaryClass, t)}
-                        </StatusBadge>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            </PanelCard>
-            <EventLog events={vm.events} clientLog={vm.clientLog} />
-          </div>
+          <aside className="xl:sticky xl:top-3 xl:max-h-[calc(100vh-1.5rem)] xl:overflow-y-auto xl:pr-1">
+            <DraftHeroDetailsView
+              hero={selectedHero}
+              draftMeta={selectedDraftMeta}
+              phase={draft.phase}
+              lockReason={selectedLockReason}
+              pickedBy={selectedPickedBy}
+              language={language}
+              t={t}
+              canConfirm={canConfirm}
+              isLocalTurn={isLocalTurn}
+              isConfirming={!!submission}
+              error={submissionError}
+              onConfirm={handleConfirm}
+            />
+          </aside>
+        </div>
+
+        <div className="grid gap-4 lg:grid-cols-2">
+          <PanelCard className="p-4">
+            <SectionHeader kicker={t("draft.bans")} title={t("draft.history")} description={t("draft.historyDescription")} />
+            <div className="mt-3 grid max-h-48 gap-2 overflow-y-auto text-xs sm:grid-cols-2">
+              {draft.history.length === 0 ? (
+                <div className="text-slate-500 dark:text-slate-400">{t("draft.noHistory")}</div>
+              ) : (
+                draft.history.map((event, index) => {
+                  const hero = heroById.get(event.heroId);
+                  const name = hero ? getHeroDisplayName(hero.id, hero.name, language) : event.heroId;
+                  return (
+                    <div key={`${event.type}-${event.heroId}-${index}`} className="flex items-center justify-between gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2 py-2 dark:border-slate-800 dark:bg-slate-950/45">
+                      <span className="truncate">{event.player} {t(`draft.eventTypes.${event.type}`)} <strong>{name}</strong></span>
+                      <StatusBadge tone={event.type === "ban" ? "danger" : "success"}>{classLabel(event.primaryClass, t)}</StatusBadge>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </PanelCard>
+          <EventLog events={vm.events} clientLog={vm.clientLog} />
         </div>
       </div>
     </div>
