@@ -251,7 +251,7 @@ export interface RiverBoatCarryChoiceContext extends Record<string, unknown> {
 export interface RiverBoatDestinationChoiceContext
   extends Record<string, unknown> {
   riverId: string;
-  allyId: string;
+  allyId?: string;
   options: Coord[];
 }
 

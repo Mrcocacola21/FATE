@@ -85,6 +85,7 @@ export interface LegalView {
 }
 
 export interface LegalIntents {
+  movementActionsRemaining: number;
   canSearchMove: boolean;
   canSearchAction: boolean;
   searchMoveReason?: string;

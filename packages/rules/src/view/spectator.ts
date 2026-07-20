@@ -61,6 +61,7 @@ export function makeSpectatorView(state: GameState): PlayerView {
       attackTargetsByUnitId: {},
     },
     legalIntents: {
+      movementActionsRemaining: 0,
       canSearchMove: false,
       canSearchAction: false,
       searchMoveReason: "spectator",

@@ -2,11 +2,15 @@ import assert from "assert";
 import { randomUUID } from "node:crypto";
 import { mock } from "node:test";
 import {
+  ABILITY_RIVER_PERSON_BOAT,
+  ABILITY_RIVER_PERSON_BOATMAN,
   attachArmy,
   createDefaultArmy,
   createEmptyGame,
+  getMovementActionsRemaining,
   HERO_CHIKATILO_ID,
   HERO_FALSE_TRAIL_TOKEN_ID,
+  HERO_RIVER_PERSON_ID,
   projectEventsForRecipient,
   type GameEvent,
   type GameState,
@@ -753,6 +757,121 @@ function testServerRejectsInvalidFalsePromisePlacementsWithoutMutation() {
   console.log("hardening_false_promise_placement_validation passed");
 }
 
+function testRiverBoatmanCommandsPreserveAuthoritativeMovementBudget() {
+  storeTestHooks.reset();
+  try {
+    const room = createGameRoomWithId(`hardening-river-boatman-${randomUUID()}`, {
+      hostSeat: "P1",
+      hostConnId: `conn-${randomUUID()}`,
+    });
+    let state = createEmptyGame();
+    state = attachArmy(
+      state,
+      createDefaultArmy("P1", { rider: HERO_RIVER_PERSON_ID })
+    );
+    state = attachArmy(state, createDefaultArmy("P2"));
+    const river = Object.values(state.units).find(
+      (unit) => unit.owner === "P1" && unit.heroId === HERO_RIVER_PERSON_ID
+    );
+    assert(river, "River Person should exist in server regression state");
+    state = setUnit(state, river.id, { position: { col: 0, row: 0 } });
+    state = {
+      ...state,
+      phase: "battle",
+      currentPlayer: "P1",
+      activeUnitId: river.id,
+      turnOrder: [river.id],
+      turnOrderIndex: 0,
+      turnQueue: [river.id],
+      turnQueueIndex: 0,
+    };
+    room.state = state;
+
+    const boatman = applyGameAction(
+      room,
+      {
+        type: "useAbility",
+        unitId: river.id,
+        abilityId: ABILITY_RIVER_PERSON_BOATMAN,
+      },
+      "P1"
+    );
+    assert.equal(boatman.ok, true, "Boatman should be accepted with Action available");
+    assert.equal(room.state.units[river.id].turn.actionUsed, true);
+    assert.equal(getMovementActionsRemaining(room.state.units[river.id]), 2);
+
+    const beforeDuplicate = room.state;
+    const revisionBeforeDuplicate = room.revision;
+    const duplicate = applyGameAction(
+      room,
+      {
+        type: "useAbility",
+        unitId: river.id,
+        abilityId: ABILITY_RIVER_PERSON_BOATMAN,
+      },
+      "P1"
+    );
+    assert.equal(duplicate.ok, false, "Boatman should be rejected after Action is spent");
+    assert.equal(room.state, beforeDuplicate, "Rejected Boatman must not mutate state");
+    assert.equal(room.revision, revisionBeforeDuplicate);
+    assert.equal(getMovementActionsRemaining(room.state.units[river.id]), 2);
+
+    const moved = applyGameAction(
+      room,
+      { type: "move", unitId: river.id, to: { col: 0, row: 2 } },
+      "P1"
+    );
+    assert.equal(moved.ok, true, "Move should be accepted after Boatman");
+    assert.equal(getMovementActionsRemaining(room.state.units[river.id]), 1);
+
+    const boat = applyGameAction(
+      room,
+      {
+        type: "useAbility",
+        unitId: river.id,
+        abilityId: ABILITY_RIVER_PERSON_BOAT,
+      },
+      "P1"
+    );
+    assert.equal(boat.ok, true, "Boat targeting should be accepted on the granted move");
+    assert.equal(room.state.pendingRoll?.kind, "riverBoatCarryChoice");
+    assert.equal(
+      getMovementActionsRemaining(room.state.units[river.id]),
+      1,
+      "Starting Boat targeting must not spend movement"
+    );
+    const pendingBoat = room.state.pendingRoll!;
+    const canceledBoat = applyGameAction(
+      room,
+      {
+        type: "resolvePendingRoll",
+        pendingRollId: pendingBoat.id,
+        player: pendingBoat.player,
+        choice: "skip",
+      },
+      "P1"
+    );
+    assert.equal(canceledBoat.ok, true, "Canceling Boat targeting should resolve cleanly");
+    assert.equal(getMovementActionsRemaining(room.state.units[river.id]), 1);
+
+    const beforeRejectedMove = room.state;
+    const revisionBeforeRejectedMove = room.revision;
+    const rejectedMove = applyGameAction(
+      room,
+      { type: "move", unitId: river.id, to: { col: 8, row: 8 } },
+      "P1"
+    );
+    assert.equal(rejectedMove.ok, false, "Illegal Move should be rejected");
+    assert.equal(room.state, beforeRejectedMove, "Rejected Move must not mutate budget");
+    assert.equal(room.revision, revisionBeforeRejectedMove);
+    assert.equal(getMovementActionsRemaining(room.state.units[river.id]), 1);
+  } finally {
+    storeTestHooks.reset();
+  }
+
+  console.log("hardening_river_boatman_authoritative_budget passed");
+}
+
 async function main() {
   await testGraceExpiryVacatesSeatAndInvalidatesToken();
   await testReconnectWithinGraceKeepsSeatAndClearsTimer();
@@ -768,6 +887,7 @@ async function main() {
   testProjectedEventsRedactHiddenUnitPositions();
   testServerAcceptsMoveIntoUnknownHiddenOccupiedCell();
   testServerRejectsInvalidFalsePromisePlacementsWithoutMutation();
+  testRiverBoatmanCommandsPreserveAuthoritativeMovementBudget();
   console.log("hardening tests passed");
 }
 

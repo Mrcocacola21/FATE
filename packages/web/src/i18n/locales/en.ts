@@ -464,6 +464,7 @@ export const en = {
     },
     usesAction: "Uses Action",
     movementAction: "Movement Action",
+    movementActionsRemaining: "Movement actions remaining: {{count}}",
     stealthAction: "Stealth Action",
     basicAttack: "Basic Attack",
     abilityLabel: "Ability: {{name}}",
@@ -927,16 +928,16 @@ export const en = {
     river: {
       boat: {
         summary:
-          "Spend one movement action to choose an adjacent ally, move River Person, then drop the passenger adjacent to the destination.",
+          "Spend one movement action to move River Person, optionally carrying an adjacent ally and dropping the passenger adjacent to the destination.",
         options: {
           choose: {
             name: "Choose passenger",
-            description: "Choose one adjacent living ally before movement.",
+            description: "Choose one adjacent living ally before movement, or continue without a passenger.",
           },
           move: {
             name: "Travel",
             description:
-              "Passenger selection and destination selection do not spend movement; the movement action is committed after a legal drop cell is chosen.",
+              "Passenger and destination selection spend nothing; movement is committed only after a legal destination and, when carrying, a legal drop cell are chosen.",
           },
           drop: {
             name: "Disembark",

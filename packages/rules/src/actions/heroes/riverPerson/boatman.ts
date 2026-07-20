@@ -16,7 +16,11 @@ import {
 } from "../../../abilities";
 import { getLegalMovesForUnitModes } from "../../../movement";
 import { linePath } from "../../../path";
-import { canSpendSlots, spendSlots } from "../../../turnEconomy";
+import {
+  canSpendSlots,
+  grantMovementActions,
+  spendSlots,
+} from "../../../turnEconomy";
 import {
   applyStakeTriggerIfAny,
   clearPendingRoll,
@@ -94,6 +98,14 @@ function getBoatDestinationOptions(
   );
 }
 
+function getBoatOnlyDestinationOptions(state: GameState, riverId: string): Coord[] {
+  const river = state.units[riverId];
+  if (!river || !river.isAlive || !river.position || !isRiverPerson(river)) {
+    return [];
+  }
+  return getLegalMovesForUnitModes(state, river.id, getMovementModes(river));
+}
+
 function isCoordAllowed(options: Coord[], coord: Coord): boolean {
   return options.some((option) => coordsEqual(option, coord));
 }
@@ -119,8 +131,7 @@ export function applyRiverBoatman(
   }
 
   const updatedRiver: UnitState = {
-    ...committed.unit,
-    riverBoatmanExtraMoves: (committed.unit.riverBoatmanExtraMoves ?? 0) + 1,
+    ...grantMovementActions(committed.unit),
     riverBoatmanMovePending: false,
     riverBoatCarryAllyId: undefined,
   };
@@ -157,17 +168,18 @@ export function applyRiverBoat(state: GameState, unit: UnitState): ApplyResult {
     return { state, events: [] };
   }
 
-  const carryOptions = getRiverCarryOptions(state, unit.id);
-  if (carryOptions.length === 0) {
-    return { state, events: [] };
-  }
-  return requestRiverBoatCarryChoice(state, unit, "normal", carryOptions);
+  return requestRiverBoatCarryChoice(
+    state,
+    unit,
+    "normal",
+    getRiverCarryOptions(state, unit.id)
+  );
 }
 
 export function requestRiverBoatDestinationChoice(
   state: GameState,
   river: UnitState,
-  allyId: string,
+  allyId: string | undefined,
   options: Coord[]
 ): ApplyResult {
   return requestRoll(
@@ -198,6 +210,23 @@ export function resolveRiverBoatCarryChoice(
   }
   if (!canSpendSlots(river, { move: true })) {
     return { state, events: [] };
+  }
+
+  if (
+    typeof choice === "object" &&
+    choice !== null &&
+    (choice as { type?: unknown }).type === "riverBoatNoPassenger"
+  ) {
+    const destinations = getBoatOnlyDestinationOptions(state, river.id);
+    if (destinations.length === 0) {
+      return { state, events: [] };
+    }
+    return requestRiverBoatDestinationChoice(
+      clearPendingRoll(state),
+      river,
+      undefined,
+      destinations
+    );
   }
 
   const selectedAllyId = parseTargetId(choice);
@@ -231,19 +260,18 @@ export function resolveRiverBoatCarryChoice(
 export function resolveRiverBoatDestinationChoice(
   state: GameState,
   pending: PendingRoll,
-  choice: ResolveRollChoice | undefined
+  choice: ResolveRollChoice | undefined,
+  rng?: RNG
 ): ApplyResult {
   const ctx = pending.context as unknown as RiverBoatDestinationChoiceContext;
   const river = state.units[ctx.riverId];
-  const ally = state.units[ctx.allyId];
+  const ally = ctx.allyId ? state.units[ctx.allyId] : undefined;
   if (
     !river ||
     !river.isAlive ||
     !river.position ||
     !isRiverPerson(river) ||
-    !ally ||
-    !ally.isAlive ||
-    !ally.position
+    (ctx.allyId && (!ally || !ally.isAlive || !ally.position))
   ) {
     return { state: clearPendingRoll(state), events: [] };
   }
@@ -257,12 +285,48 @@ export function resolveRiverBoatDestinationChoice(
   const destination = parsePosition(choice);
   if (!destination) return { state, events: [] };
   const declaredOptions = parseCoordList(ctx.options);
-  const currentOptions = getBoatDestinationOptions(state, river.id, ally.id);
+  const currentOptions = ally
+    ? getBoatDestinationOptions(state, river.id, ally.id)
+    : getBoatOnlyDestinationOptions(state, river.id);
   if (
     !isCoordAllowed(declaredOptions, destination) ||
     !isCoordAllowed(currentOptions, destination)
   ) {
     return { state, events: [] };
+  }
+
+  if (!ally) {
+    const path = linePath(river.position, destination);
+    const stakePath = path ? path.slice(1) : [destination];
+    const stakeStop = rng ? findStakeStopOnPath(state, river, stakePath) : null;
+    const finalPosition = stakeStop ?? destination;
+    const movedRiver: UnitState = {
+      ...spendSlots(river, { move: true }),
+      position: { ...finalPosition },
+      riverBoatmanMovePending: false,
+      riverBoatCarryAllyId: undefined,
+    };
+    let nextState = clearPendingRoll({
+      ...state,
+      units: { ...state.units, [movedRiver.id]: movedRiver },
+    });
+    let events: GameEvent[] = [
+      evAbilityUsed({ unitId: river.id, abilityId: ABILITY_RIVER_PERSON_BOAT }),
+      evUnitMoved({ unitId: river.id, from: river.position, to: finalPosition }),
+    ];
+    if (rng) {
+      const stakeResult = applyStakeTriggerIfAny(
+        nextState,
+        movedRiver,
+        finalPosition,
+        rng
+      );
+      if (stakeResult.triggered) {
+        nextState = stakeResult.state;
+        events = [...events, ...stakeResult.events];
+      }
+    }
+    return { state: nextState, events };
   }
 
   const dropOptions = getRiverDropOptions(state, destination, ally.id);

@@ -4,7 +4,7 @@ import { Coord, GameState, LegalIntents, PlayerId } from "./model";
 import { isCellOccupied } from "./board";
 import { canAttackTarget } from "./combat";
 import { canDirectlyTargetUnit } from "./visibility";
-import { canSpendSlots } from "./turnEconomy";
+import { canSpendSlots, getMovementActionsRemaining } from "./turnEconomy";
 import { getStealthSuccessMinRoll } from "./stealth";
 import { canEnterStealthByRuleDeclaration } from "./ruleDeclarations";
 import {
@@ -145,6 +145,7 @@ export function getLegalIntents(
 
   if (baseBlocked) {
     return {
+      movementActionsRemaining: 0,
       canSearchMove: false,
       canSearchAction: false,
       searchMoveReason: baseBlocked,
@@ -179,6 +180,7 @@ export function getLegalIntents(
   const isFalseTrailToken = activeUnit.heroId === HERO_FALSE_TRAIL_TOKEN_ID;
 
   return {
+    movementActionsRemaining: getMovementActionsRemaining(activeUnit),
     canSearchMove,
     canSearchAction,
     searchMoveReason: canSearchMove ? undefined : "moveSlotUsed",

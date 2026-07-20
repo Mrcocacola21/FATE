@@ -80,6 +80,9 @@ const ResolveRollChoiceSchema = z.union([
     position: CoordSchema,
   }),
   z.object({
+    type: z.literal("riverBoatNoPassenger"),
+  }),
+  z.object({
     type: z.literal("chikatiloPlace"),
     position: CoordSchema,
   }),

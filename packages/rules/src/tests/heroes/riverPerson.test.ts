@@ -18,6 +18,11 @@ import {
   setupRiverPersonState,
   toBattleState,
 } from "../helpers/testUtils";
+import {
+  getAbilityViewsForUnit,
+  getLegalIntents,
+  getMovementActionsRemaining,
+} from "../../index";
 
 function abilityAction(unitId: string, abilityId: string) {
   return {
@@ -85,6 +90,36 @@ function completeBoatUse(
   return resolvePendingWithChoice(
     destinationSelected.state,
     { type: "forestMoveDestination", position: drop },
+    makeRngSequence([])
+  );
+}
+
+function completeBoatWithoutPassenger(
+  state: ReturnType<typeof setupRiverPersonState>["state"],
+  riverId: string,
+  destination: Coord
+) {
+  const used = applyAction(
+    state,
+    abilityAction(riverId, ABILITY_RIVER_PERSON_BOAT),
+    makeRngSequence([])
+  );
+  assert(
+    used.state.pendingRoll?.kind === "riverBoatCarryChoice",
+    "Boat should begin with optional passenger selection"
+  );
+  const withoutPassenger = resolvePendingWithChoice(
+    used.state,
+    { type: "riverBoatNoPassenger" },
+    makeRngSequence([])
+  );
+  assert(
+    withoutPassenger.state.pendingRoll?.kind === "riverBoatDestinationChoice",
+    "Boat without a passenger should request River destination"
+  );
+  return resolvePendingWithChoice(
+    withoutPassenger.state,
+    { type: "forestMoveDestination", position: destination },
     makeRngSequence([])
   );
 }
@@ -161,10 +196,30 @@ export function testRiverPersonBoatCarryFlowAndConstraints() {
       makeRngSequence([])
     );
     assert(
-      boat.state.pendingRoll?.kind !== "riverBoatCarryChoice",
-      "Boat should not start without an adjacent allied passenger"
+      boat.state.pendingRoll?.kind === "riverBoatCarryChoice",
+      "Boat should allow movement without an adjacent passenger"
     );
-    assert(!boat.state.units[river.id].turn.moveUsed, "Rejected Boat should not spend move");
+    assert(!boat.state.units[river.id].turn.moveUsed, "Boat targeting should not spend move");
+
+    const withoutPassenger = resolvePendingWithChoice(
+      boat.state,
+      { type: "riverBoatNoPassenger" },
+      makeRngSequence([])
+    );
+    assert(
+      withoutPassenger.state.pendingRoll?.kind === "riverBoatDestinationChoice",
+      "Boat should offer a destination when no passenger is selected"
+    );
+    const moved = resolvePendingWithChoice(
+      withoutPassenger.state,
+      { type: "forestMoveDestination", position: { col: 4, row: 6 } },
+      makeRngSequence([])
+    );
+    assert(
+      moved.state.units[river.id].position?.row === 6,
+      "Boat should move River Person without a passenger"
+    );
+    assert(moved.state.units[river.id].turn.moveUsed, "Resolved Boat should spend movement");
   }
 
   {
@@ -271,6 +326,10 @@ export function testRiverPersonBoatCarryFlowAndConstraints() {
         invalidDrop.state.units[carriedAlly.id].position?.row === 3,
       "Invalid Boat drop should not move or corrupt carried state"
     );
+    assert(
+      getMovementActionsRemaining(invalidDrop.state.units[river.id]) === 1,
+      "Rejected Boat drop should not consume movement"
+    );
 
     const dropOptions = getPendingOptions(destinationSelected.state);
     assert(dropOptions.length > 0, "Boat drop options should be provided");
@@ -317,6 +376,52 @@ export function testRiverPersonBoatCarryFlowAndConstraints() {
 export function testRiverPersonBoatmanConvertsActionToMoveAndSupportsCarry() {
   {
     let { state, river } = setupRiverPersonState();
+    state = setUnit(state, river.id, { position: { col: 0, row: 0 } });
+    state = toBattleState(state, "P1", river.id);
+    state = initKnowledgeForOwners(state);
+
+    const moved = applyAction(
+      state,
+      { type: "move", unitId: river.id, to: { col: 0, row: 2 } } as any,
+      makeRngSequence([])
+    );
+    assert(
+      getMovementActionsRemaining(moved.state.units[river.id]) === 0,
+      "Normal movement should spend the initial movement action"
+    );
+
+    const boatman = applyAction(
+      moved.state,
+      abilityAction(river.id, ABILITY_RIVER_PERSON_BOATMAN),
+      makeRngSequence([])
+    );
+    const riverAfterBoatman = boatman.state.units[river.id];
+    assert(riverAfterBoatman.turn.actionUsed, "Boatman should spend Action after movement");
+    assert(
+      getMovementActionsRemaining(riverAfterBoatman) === 1,
+      "Boatman should add one movement use after normal movement was spent"
+    );
+    const intents = getLegalIntents(boatman.state, "P1");
+    assert(intents.canMove, "Normal Move should be legal after Boatman");
+    assert(intents.canSearchMove, "Search(Move) should be legal after Boatman");
+    const boatView = getAbilityViewsForUnit(boatman.state, river.id).find(
+      (ability) => ability.id === ABILITY_RIVER_PERSON_BOAT
+    );
+    assert(boatView?.isAvailable, "Boat should be legal after Boatman");
+
+    const boat = completeBoatWithoutPassenger(
+      boatman.state,
+      river.id,
+      { col: 0, row: 4 }
+    );
+    assert(
+      getMovementActionsRemaining(boat.state.units[river.id]) === 0,
+      "Boat should consume the movement action granted after the initial move"
+    );
+  }
+
+  {
+    let { state, river } = setupRiverPersonState();
     const ally = Object.values(state.units).find(
       (unit) => unit.owner === "P1" && unit.class === "assassin"
     )!;
@@ -336,6 +441,10 @@ export function testRiverPersonBoatmanConvertsActionToMoveAndSupportsCarry() {
     assert(
       riverAfter.riverBoatmanExtraMoves === 1,
       "Boatman should grant exactly one extra movement action"
+    );
+    assert(
+      getMovementActionsRemaining(riverAfter) === 2,
+      "Boatman-first should leave the original and granted movement actions"
     );
     assert(
       riverAfter.position?.col === 3 && riverAfter.position?.row === 3,
@@ -368,6 +477,37 @@ export function testRiverPersonBoatmanConvertsActionToMoveAndSupportsCarry() {
       duplicate.state.units[river.id].turn.actionUsed,
       "Rejected duplicate Boatman should preserve already spent action"
     );
+  }
+
+  {
+    let { state, river } = setupRiverPersonState();
+    state = setUnit(state, river.id, { position: { col: 4, row: 4 } });
+    state = toBattleState(state, "P1", river.id);
+    state = initKnowledgeForOwners(state);
+
+    const boatman = applyAction(
+      state,
+      abilityAction(river.id, ABILITY_RIVER_PERSON_BOATMAN),
+      makeRngSequence([])
+    );
+    const searched = applyAction(
+      boatman.state,
+      { type: "searchStealth", unitId: river.id, mode: "move" } as any,
+      makeRngSequence([])
+    );
+    assert(
+      getMovementActionsRemaining(searched.state.units[river.id]) === 1,
+      "Search(Move) should consume exactly one shared movement action"
+    );
+    const intents = getLegalIntents(searched.state, "P1");
+    assert(
+      intents.canMove && intents.canSearchMove,
+      "Move and Search(Move) should remain legal while one granted move remains"
+    );
+    const boatView = getAbilityViewsForUnit(searched.state, river.id).find(
+      (ability) => ability.id === ABILITY_RIVER_PERSON_BOAT
+    );
+    assert(boatView?.isAvailable, "Boat should remain legal after one Search(Move)");
   }
 
   {

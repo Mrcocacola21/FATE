@@ -401,16 +401,24 @@ export function PendingBoardNotice({
           <div className="font-semibold">{p("Boat carry", "Пасажир човна")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
             {p(
-              "Select an adjacent ally to carry.",
-              "Оберіть сусіднього союзника для перевезення.",
+              "Select an adjacent ally to carry, or move without a passenger.",
+              "Оберіть сусіднього союзника або рухайтеся без пасажира.",
             )}
           </div>
-          <button
-            className="mt-2 rounded-lg bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
-            onClick={onResolveSkip}
-          >
-            {t("common.cancel")}
-          </button>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <button
+              className="rounded-lg bg-sky-600 px-3 py-1 text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-sky-800"
+              onClick={() => onResolveChoice({ type: "riverBoatNoPassenger" })}
+            >
+              {p("Move without passenger", "Рух без пасажира")}
+            </button>
+            <button
+              className="rounded-lg bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
+              onClick={onResolveSkip}
+            >
+              {t("common.cancel")}
+            </button>
+          </div>
         </div>
       ) : isRiverBoatDestinationChoice ? (
         <div>

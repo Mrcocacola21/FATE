@@ -25,6 +25,34 @@ function getRiverBoatmanExtraMoves(unit: UnitState): number {
   return Math.max(0, Math.floor(unit.riverBoatmanExtraMoves ?? 0));
 }
 
+/**
+ * Returns the additive number of move-only actions the unit can still pay for.
+ * The normal move slot contributes one use until spent; Boatman grants extra
+ * uses without rewriting that slot. Court's flexible action is included
+ * because it can also pay a move-only cost after the normal budget is spent.
+ */
+export function getMovementActionsRemaining(unit: UnitState): number {
+  const turn = getTurnEconomy(unit);
+  const normalMove = turn.moveUsed ? 0 : 1;
+  const boatmanMoves = getRiverBoatmanExtraMoves(unit);
+  const flexibleMove =
+    unit.courtExtraFlexibleAction && !unit.courtExtraFlexibleAction.used ? 1 : 0;
+  return normalMove + boatmanMoves + flexibleMove;
+}
+
+/** Adds move-only uses without reopening or replacing the normal move slot. */
+export function grantMovementActions(
+  unit: UnitState,
+  amount: number = 1
+): UnitState {
+  const granted = Math.max(0, Math.floor(amount));
+  if (granted === 0) return unit;
+  return {
+    ...unit,
+    riverBoatmanExtraMoves: getRiverBoatmanExtraMoves(unit) + granted,
+  };
+}
+
 function isMoveOnlyCost(costs: TurnSlotCosts): boolean {
   return !!costs.move && !costs.attack && !costs.action && !costs.stealth;
 }
@@ -66,7 +94,7 @@ export function canSpendSlots(
     (costs.attack && turn.attackUsed) ||
     (costs.action && turn.actionUsed) ||
     (costs.stealth && turn.stealthUsed);
-  if (slotBlocked && isMoveOnlyCost(costs) && getRiverBoatmanExtraMoves(unit) > 0) {
+  if (slotBlocked && isMoveOnlyCost(costs) && getMovementActionsRemaining(unit) > 0) {
     return true;
   }
   const extra = unit.courtExtraFlexibleAction;

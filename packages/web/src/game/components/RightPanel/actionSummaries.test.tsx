@@ -9,6 +9,7 @@ import {
   LOKI_LAUGHT_ID,
   METTATON_EX_ID,
   METTATON_NEO_ID,
+  RIVER_PERSON_BOAT_ID,
 } from "../../../rulesHints";
 import { CurrentTaskPanel } from "../../gameshell-content/components/CurrentTaskPanel";
 import { BattleUnitSummary } from "./sections/BattleUnitSummary";
@@ -16,6 +17,7 @@ import { BattleAbilityActions } from "./sections/BattleAbilityActions";
 import {
   getPublicBattleActionBars,
   getUnitDetailActionBars,
+  getUnitMoveSummary,
   type UnitActionSummary,
   type UnitMoveSummary,
   type UnitStealthSummary,
@@ -25,6 +27,7 @@ import {
   getAbilityChargeState,
   isActionableAbility,
 } from "./rightPanelHelpers";
+import { buildRightPanelViewModel } from "./rightPanelViewModel";
 
 function makeUnit(overrides: Partial<UnitState> = {}): UnitState {
   return {
@@ -115,6 +118,7 @@ function makeView(unit: UnitState): PlayerView {
       attackTargetsByUnitId: { [unit.id]: ["P2-rider-1"] },
     },
     legalIntents: {
+      movementActionsRemaining: 1,
       canSearchMove: true,
       canSearchAction: true,
       canMove: true,
@@ -195,6 +199,99 @@ test("public battle bars keep compact Move, Attack, and Stealth states", () => {
     ["move", "attack", "stealth"],
   );
   assert.equal(bars.find((bar) => bar.kind === "attack")?.state, "spent");
+});
+
+test("Boatman movement budget keeps Move, Boat, and Search(Move) available", () => {
+  setLanguage("en", { setItem: () => undefined });
+  const river = makeUnit({
+    id: "P1-river",
+    class: "rider",
+    heroId: "riverPerson",
+    turn: {
+      moveUsed: true,
+      attackUsed: false,
+      actionUsed: true,
+      stealthUsed: false,
+    },
+    hasMovedThisTurn: true,
+    hasActedThisTurn: true,
+    riverBoatmanExtraMoves: 1,
+  });
+  const boat = makeAbility({
+    id: RIVER_PERSON_BOAT_ID,
+    name: "Boat",
+    description: "Move with an optional passenger",
+    slot: "move",
+    chargeRequired: undefined,
+    maxCharges: undefined,
+    currentCharges: undefined,
+    isAvailable: true,
+  });
+  const view = {
+    ...makeView(river),
+    abilitiesByUnitId: { [river.id]: [boat] },
+    legalIntents: {
+      ...makeView(river).legalIntents!,
+      movementActionsRemaining: 1,
+      canMove: true,
+      canSearchMove: true,
+    },
+  };
+  const vm = buildRightPanelViewModel(
+    {
+      view,
+      role: "P1",
+      selectedUnitId: river.id,
+      actionMode: null,
+      targetingMode: null,
+      placeUnitId: null,
+      moveOptions: null,
+      joined: true,
+      pendingRoll: false,
+      onSelectUnit: () => undefined,
+      onSetActionMode: () => undefined,
+      onSetPlaceUnit: () => undefined,
+      onMoveRequest: () => undefined,
+      onSendAction: () => undefined,
+      onHoverAbility: () => undefined,
+      onHoverActionMode: () => undefined,
+      papyrusLineAxis: "row",
+      onSetPapyrusLineAxis: () => undefined,
+    },
+    translate,
+  );
+
+  assert.equal(vm.moveDisabled, false, "Move should use authoritative movement availability");
+  assert.equal(vm.searchMoveDisabled, false, "Search(Move) should share the movement budget");
+
+  const markup = renderToStaticMarkup(
+    <BattleAbilityActions
+      view={view}
+      actionableAbilities={[boat]}
+      selectedUnit={river}
+      canAct={true}
+      economy={river.turn}
+      actionMode={null}
+      targetingActive={false}
+      onUseAbility={() => undefined}
+      onUseLokiLaughtOption={() => undefined}
+      onToggleMode={() => undefined}
+      onModePreview={() => undefined}
+      onHoverAbility={() => undefined}
+    />,
+  );
+  assert.match(markup, /<button(?![^>]*disabled)[^>]*>Boat<\/button>/);
+
+  const moveSummary = getUnitMoveSummary({
+    unit: river,
+    abilityViews: [boat],
+    view,
+    canAct: true,
+    pendingRoll: false,
+  });
+  assert.equal(moveSummary.state, "available");
+  assert.equal(moveSummary.movementActionsRemaining, 1);
+  assert.equal(moveSummary.abilities[0]?.state, "available");
 });
 
 test("charge labels distinguish bounded and unbounded counters", () => {
@@ -331,6 +428,42 @@ test("current task panel keeps movement intent visible through mode and destinat
   );
   assert.match(destinationMarkup, /Choose a destination/);
   assert.doesNotMatch(destinationMarkup, /No forced task/);
+});
+
+test("Boat targeting remains a forced board task and offers cancel without spending", () => {
+  setLanguage("en", { setItem: () => undefined });
+  const river = makeUnit({
+    id: "P1-river",
+    class: "rider",
+    heroId: "riverPerson",
+  });
+  const markup = renderToStaticMarkup(
+    <CurrentTaskPanel
+      vm={{
+        view: makeView(river),
+        playerId: "P1",
+        pendingRoll: {
+          id: "boat-choice",
+          player: "P1",
+          kind: "riverBoatCarryChoice",
+          context: { riverId: river.id, options: [] },
+        },
+        pendingMeta: { id: "boat-choice" },
+        pendingQueueCount: 0,
+        stakeSelections: [],
+        stakeLimit: 0,
+        hassanAssassinOrderSelections: [],
+        isRiverBoatCarryChoice: true,
+        actionMode: null,
+        targetingMode: null,
+        sendAction: () => undefined,
+      }}
+    />,
+  );
+
+  assert.match(markup, /Move without passenger/);
+  assert.match(markup, /Cancel/);
+  assert.doesNotMatch(markup, /No forced task/);
 });
 
 test("current task panel shows Frisk board target pending prompts", () => {

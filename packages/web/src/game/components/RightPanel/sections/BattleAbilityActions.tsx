@@ -241,7 +241,7 @@ export const BattleAbilityActions: FC<BattleAbilityActionsProps> = ({
           ability.slot === "action"
             ? economy.actionUsed
             : ability.slot === "move"
-              ? economy.moveUsed
+              ? !view.legalIntents?.canMove
               : ability.slot === "attack"
                 ? economy.attackUsed
                 : ability.slot === "stealth"

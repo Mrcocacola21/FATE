@@ -38,6 +38,7 @@ export interface UnitMoveSummary {
   kind: "move";
   state: ActionBarState;
   reasonKey?: string;
+  movementActionsRemaining: number;
   legalMoveCount?: number;
   className?: UnitClass;
   notes: string[];
@@ -102,6 +103,14 @@ function movementBlocked(unit: UnitState | null) {
   );
 }
 
+function projectedMovementActionsRemaining(unit: UnitState): number {
+  const normalMove = unit.turn.moveUsed || unit.hasMovedThisTurn ? 0 : 1;
+  const boatmanMoves = Math.max(0, Math.floor(unit.riverBoatmanExtraMoves ?? 0));
+  const flexibleMove =
+    unit.courtExtraFlexibleAction && !unit.courtExtraFlexibleAction.used ? 1 : 0;
+  return normalMove + boatmanMoves + flexibleMove;
+}
+
 function moonBlocksStealth(unit: UnitState | null, view?: PlayerView) {
   const moon = view?.ruleDeclaration?.ruleData?.moonGame;
   return !!(
@@ -157,7 +166,6 @@ function abilityState(ability: AbilityView, economy: TurnEconomyState): ActionBa
   if (
     (ability.slot === "action" && economy.actionUsed) ||
     (ability.slot === "attack" && (economy.actionUsed || economy.attackUsed)) ||
-    (ability.slot === "move" && economy.moveUsed) ||
     (ability.slot === "stealth" && economy.stealthUsed)
   ) {
     return "spent";
@@ -252,13 +260,18 @@ export function getUnitMoveSummary(params: UnitSummaryParams): UnitMoveSummary {
   const notes: string[] = [];
   let state: ActionBarState = "available";
   let reasonKey: string | undefined;
+  const movementActionsRemaining = unit
+    ? view?.activeUnitId === unit.id && view.legalIntents
+      ? view.legalIntents.movementActionsRemaining
+      : projectedMovementActionsRemaining(unit)
+    : 0;
 
   if (!isBattleReady(unit)) {
     state = "not_applicable";
   } else if (pendingForUnit(unit, view, pendingRoll)) {
     state = "pending";
     reasonKey = "actionUi.pendingBlocking";
-  } else if (economy.moveUsed) {
+  } else if (movementActionsRemaining <= 0) {
     state = "spent";
     reasonKey = "game.moveSlotUsed";
   } else if (movementBlocked(unit)) {
@@ -284,6 +297,7 @@ export function getUnitMoveSummary(params: UnitSummaryParams): UnitMoveSummary {
     kind: "move",
     state,
     reasonKey,
+    movementActionsRemaining,
     legalMoveCount,
     className: unit?.class,
     notes,
@@ -359,8 +373,9 @@ export function getPublicBattleActionBars(
   const economy = unit?.turn ?? DEFAULT_ECONOMY;
   const pending = !!(pendingRoll && unit && view?.activeUnitId === unit.id);
   const stealthApplicable = hasPublicStealthOption(unit);
+  const movementActionsRemaining = unit ? projectedMovementActionsRemaining(unit) : 0;
   return [
-    { kind: "move", state: publicSlotState(unit, economy.moveUsed, pending) },
+    { kind: "move", state: publicSlotState(unit, movementActionsRemaining <= 0, pending) },
     {
       kind: "attack",
       state: publicSlotState(unit, economy.actionUsed || economy.attackUsed, pending),

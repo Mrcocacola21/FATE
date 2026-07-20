@@ -449,8 +449,8 @@ export function formatEventMessage(
     case "riverBoatmanGranted":
       return text(
         language,
-        `River Person used Boatman and gained ${value(event.extraMoves)} additional Movement action.`,
-        `Річкова Людина використала Човняра й отримала ${value(event.extraMoves)} додаткову дію Руху.`,
+        "River Person used Boatman and gained an extra Movement action.",
+        "Лодочник використав Boatman і отримав додаткову дію переміщення.",
       );
     case "riverBoatResolved":
       return text(

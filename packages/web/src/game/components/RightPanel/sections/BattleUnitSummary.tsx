@@ -243,6 +243,11 @@ function MoveDetails({
     <div className="divide-y divide-slate-200/70 dark:divide-slate-800">
       <DetailRow title={t("actionUi.normalMovement")} state={summary.state} reason={reason}>
         <div>{t("actionUi.movementAction")}</div>
+        <div>
+          {t("actionUi.movementActionsRemaining", {
+            count: summary.movementActionsRemaining,
+          })}
+        </div>
         {summary.className ? (
           <div>
             {t("actionUi.movementPattern", {

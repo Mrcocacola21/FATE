@@ -339,7 +339,7 @@ export function resolveHeroPendingRollCase(
     case "riverBoatCarryChoice":
       return resolveRiverBoatCarryChoice(state, pending, action.choice);
     case "riverBoatDestinationChoice":
-      return resolveRiverBoatDestinationChoice(state, pending, action.choice);
+      return resolveRiverBoatDestinationChoice(state, pending, action.choice, rng);
     case "riverBoatDropDestination":
       return resolveRiverBoatDropDestination(state, pending, action.choice, rng);
     case "riverTraLaLaTargetChoice":

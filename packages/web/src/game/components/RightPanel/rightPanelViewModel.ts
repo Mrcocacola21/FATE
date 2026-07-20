@@ -145,7 +145,7 @@ export function buildRightPanelViewModel(params: RightPanelProps, t: Translate) 
   );
   const attackDisabledReason = stormRangedAttackBlocked ? t("game.stormRestriction") : undefined;
 
-  const moveDisabled = !canAct || economy.moveUsed;
+  const moveDisabled = !canAct || !legalIntents?.canMove;
   const attackDisabled =
     !canAct || economy.attackUsed || economy.actionUsed || stormRangedAttackBlocked;
   const stealthDisabled = !canAct || economy.stealthUsed || !canStealth;

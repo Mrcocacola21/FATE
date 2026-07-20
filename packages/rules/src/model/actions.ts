@@ -17,6 +17,7 @@ export type ResolveRollChoice =
   | { type: "placeStakes"; positions: Coord[] }
   | { type: "forestTarget"; center: Coord }
   | { type: "forestMoveDestination"; position: Coord }
+  | { type: "riverBoatNoPassenger" }
   | { type: "chikatiloPlace"; position: Coord }
   | {
       type: "groznyTyrantOption";

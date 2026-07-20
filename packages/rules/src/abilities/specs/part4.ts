@@ -81,7 +81,7 @@ export const ABILITY_SPECS_PART_4: Record<string, AbilitySpec> = {
     displayName: "Boat",
     kind: "active",
     description:
-      "Spend one movement action to carry one adjacent ally, move River Person, then drop that ally adjacent to the final cell.",
+      "Spend one movement action to move River Person, optionally carrying one adjacent ally and dropping that ally adjacent to the final cell.",
   },
   [ids.ABILITY_RIVER_PERSON_BOATMAN]: {
     id: ids.ABILITY_RIVER_PERSON_BOATMAN,
