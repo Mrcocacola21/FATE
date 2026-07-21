@@ -804,6 +804,73 @@ html.dark {
     background: rgb(208 197 177 / 0.92);
   }
 
+  .board-field-surface {
+    @apply pointer-events-none absolute overflow-hidden;
+    z-index: 0;
+    isolation: isolate;
+  }
+
+  .board-field-background,
+  .board-field-dim,
+  .board-field-edge {
+    @apply pointer-events-none absolute inset-0;
+    opacity: 0;
+    transition:
+      opacity 180ms ease,
+      filter 180ms ease;
+  }
+
+  .board-field-background {
+    z-index: 0;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    filter: brightness(0.68) contrast(1.12) saturate(0.88);
+  }
+
+  .board-field-background--sans_bone_field {
+    filter: brightness(0.5) contrast(1.04) saturate(0.76);
+  }
+
+  .board-field-dim {
+    z-index: 1;
+    background: rgb(0 0 0 / 0.14);
+  }
+
+  .board-field-surface--sans_bone_field .board-field-dim {
+    background: rgb(0 0 0 / 0.28);
+  }
+
+  .board-field-edge {
+    z-index: 2;
+    box-shadow:
+      inset 0 0 0 1px rgb(255 255 255 / 0.28),
+      inset 0 0 28px rgb(0 0 0 / 0.42);
+  }
+
+  .board-field-surface--lechy_storm[data-active="true"] .board-field-background {
+    opacity: 0.94;
+  }
+
+  .board-field-surface--sans_bone_field[data-active="true"] .board-field-background {
+    opacity: 0.68;
+  }
+
+  .board-field-surface[data-active="true"] .board-field-dim,
+  .board-field-surface[data-active="true"] .board-field-edge {
+    opacity: 1;
+  }
+
+  .board-has-field .board-cell-light {
+    background: rgb(232 226 215 / 0.32);
+    border-color: rgb(255 255 255 / 0.58);
+  }
+
+  .board-has-field .board-cell-dark {
+    background: rgb(28 27 26 / 0.48);
+    border-color: rgb(255 255 255 / 0.54);
+  }
+
   .bone-field-cell {
     @apply pointer-events-none absolute inset-[3px] rounded-sm border border-dashed;
     z-index: 0;
@@ -834,6 +901,16 @@ html.dark {
     background: rgb(13 17 23 / 0.98);
   }
 
+  .dark .board-has-field .board-cell-light {
+    background: rgb(48 55 64 / 0.3);
+    border-color: rgb(226 232 240 / 0.58);
+  }
+
+  .dark .board-has-field .board-cell-dark {
+    background: rgb(5 8 12 / 0.46);
+    border-color: rgb(203 213 225 / 0.54);
+  }
+
   .board-cell-light:hover,
   .board-cell-dark:hover {
     background: rgb(231 211 168 / 0.95);
@@ -842,6 +919,22 @@ html.dark {
   .dark .board-cell-light:hover,
   .dark .board-cell-dark:hover {
     background: rgb(35 43 52 / 0.98);
+  }
+
+  .board-has-field .board-cell-light:hover {
+    background: rgb(242 221 174 / 0.76);
+  }
+
+  .board-has-field .board-cell-dark:hover {
+    background: rgb(112 93 61 / 0.76);
+  }
+
+  .dark .board-has-field .board-cell-light:hover {
+    background: rgb(66 76 88 / 0.82);
+  }
+
+  .dark .board-has-field .board-cell-dark:hover {
+    background: rgb(31 41 55 / 0.84);
   }
 
   .ability-card {
@@ -1678,6 +1771,9 @@ html.dark {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .board-field-background,
+  .board-field-dim,
+  .board-field-edge,
   .unit-transforming,
   .unit-token-changing,
   .unit-transform-label,

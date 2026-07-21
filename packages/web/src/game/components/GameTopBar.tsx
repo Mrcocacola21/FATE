@@ -6,6 +6,7 @@ import { StatusBadge } from "../../components/ui";
 import { getConnectionLabel, getPhaseLabel } from "../../i18n/displayMetadata";
 import { getGameModeName } from "../../modes/modeLabels";
 import { ruleDeclarationKey } from "../gameshell-content/components/RuleDeclarationStatus";
+import { getActiveBoardFieldVisual, getBoardFieldLabelKey } from "../../assets/registry";
 
 interface GameTopBarProps {
   vm: any;
@@ -24,6 +25,7 @@ export const GameTopBar: FC<GameTopBarProps> = ({ vm, compact = false }) => {
       : getPhaseLabel(vm.view.phase, t);
   const initiativePendingPlayer =
     vm.pendingMeta?.kind === "initiativeRoll" ? vm.pendingMeta.player : null;
+  const activeFieldId = getActiveBoardFieldVisual(vm.view);
 
   return (
     <div
@@ -58,6 +60,11 @@ export const GameTopBar: FC<GameTopBarProps> = ({ vm, compact = false }) => {
             <StatusBadge tone="special">{ruleLabel}</StatusBadge>
           </div>
           <StatusBadge tone="neutral">{phaseLabel}</StatusBadge>
+          {activeFieldId ? (
+            <StatusBadge tone="warning">
+              {t("game.activeField")}: {t(getBoardFieldLabelKey(activeFieldId))}
+            </StatusBadge>
+          ) : null}
           <StatusBadge tone="neutral">
             {t("game.roundTurn")}: {vm.view.roundNumber} / {vm.view.turnNumber}
           </StatusBadge>

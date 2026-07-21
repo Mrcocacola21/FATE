@@ -395,6 +395,10 @@ export const en = {
     arenaEffectRemainingTurns_other: "Remaining: {{count}} turns",
     arenaEffectStormDescription:
       "At the start of an affected figure's turn, its player rolls d6. On 1-3, that figure takes 1 damage; on 4-6, it resists. Non-exempt ranged units can only attack adjacent targets.",
+    arenaEffectBoneFieldDescription:
+      "At the start of each non-Sans/non-Papyrus figure's turn, roll d2. Blue Bone deals 1 damage if that figure spends its move action. Orange Bone deals 1 damage if it ends the turn without spending its move action.",
+    activeField: "Active field",
+    fieldRules: "Field rules",
     forestPositions: "Forest positions: {{positions}}",
     startTurn: "Start turn: {{unit}}",
     moveSearchUnavailable: "Move search unavailable: {{reason}}.",

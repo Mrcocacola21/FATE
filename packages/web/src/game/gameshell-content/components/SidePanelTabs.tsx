@@ -27,6 +27,7 @@ import { PlacementSection } from "../../components/RightPanel/sections/Placement
 import { StatusSection } from "../../components/RightPanel/sections/StatusSection";
 import { CurrentTaskPanel } from "./CurrentTaskPanel";
 import { RuleDeclarationStatus } from "./RuleDeclarationStatus";
+import { ActiveFieldInfo } from "../../components/ActiveFieldInfo";
 
 export type MatchSideTab = "unit" | "actions" | "rules" | "players" | "log";
 
@@ -382,7 +383,9 @@ export const SidePanelTabs: FC<SidePanelTabsProps> = ({
         </div>
       ) : null}
 
-      <div className={`scroll-panel min-h-0 flex-1 overflow-y-auto pr-1 ${hideTask && hideTabs ? "" : "mt-3"}`}>
+      <div
+        className={`scroll-panel min-h-0 flex-1 overflow-y-auto pr-1 ${hideTask && hideTabs ? "" : "mt-3"}`}
+      >
         {activeTab === "unit" ? (
           vm.view.phase === "battle" ? (
             <PanelCard variant="parchment" className="p-4">
@@ -423,6 +426,7 @@ export const SidePanelTabs: FC<SidePanelTabsProps> = ({
             {shouldShowTestRoomPanel(vm.roomMeta?.roomMode, vm.canControlTestRoom) ? (
               <TestRoomPanel vm={vm} />
             ) : null}
+            <ActiveFieldInfo view={vm.view} />
             <RuleDeclarationStatus vm={vm} />
             <StatusSection
               view={vm.view}

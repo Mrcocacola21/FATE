@@ -15,6 +15,14 @@ export function getBoardMarkerAsset(id: BoardMarkerAssetId): string {
   return BOARD_MARKER_ASSETS[id];
 }
 
+export {
+  getActiveBoardFieldVisual,
+  getBoardFieldAsset,
+  getBoardFieldDescriptionKey,
+  getBoardFieldLabelKey,
+} from "./boardFields";
+export type { BoardFieldVisualId } from "./boardFields";
+
 export { getFigureArtSrc, getTokenSrc };
 export {
   getHeroVisualVariants,

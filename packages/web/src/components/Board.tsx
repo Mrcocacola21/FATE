@@ -4,6 +4,9 @@ import { useEffect, useRef, useState, type FC } from "react";
 import { HpBar } from "./HpBar";
 import {
   getBoardMarkerAsset,
+  getActiveBoardFieldVisual,
+  getBoardFieldAsset,
+  type BoardFieldVisualId,
   getUnitTokenAsset,
   getUnitVisualSignature,
   getUnitVisualVariant,
@@ -154,6 +157,26 @@ const FOREST_MARKER_ASSET = getBoardMarkerAsset("lechy_forest");
 const JACK_TRAP_MARKER_ASSET = getBoardMarkerAsset("jack_trap");
 const STAKE_MARKER_ASSET = getBoardMarkerAsset("vlad_stake");
 
+const FIELD_FADE_DURATION_MS = 180;
+
+function useRenderedBoardField(
+  activeFieldId: BoardFieldVisualId | null,
+): BoardFieldVisualId | null {
+  const [renderedFieldId, setRenderedFieldId] = useState<BoardFieldVisualId | null>(activeFieldId);
+
+  useEffect(() => {
+    if (activeFieldId) {
+      setRenderedFieldId(activeFieldId);
+      return;
+    }
+    if (!renderedFieldId) return;
+    const timer = setTimeout(() => setRenderedFieldId(null), FIELD_FADE_DURATION_MS);
+    return () => clearTimeout(timer);
+  }, [activeFieldId, renderedFieldId]);
+
+  return renderedFieldId;
+}
+
 function orderedPreviewKinds(state: PreviewCellState | undefined): PreviewCellKind[] {
   if (!state) return [];
   return PREVIEW_KIND_ORDER.filter((kind) => state.kinds.includes(kind));
@@ -191,6 +214,8 @@ export const Board: FC<BoardProps> = ({
 }) => {
   const { language, t } = useI18n();
   const size = view.boardSize ?? 9;
+  const activeFieldId = getActiveBoardFieldVisual(view);
+  const renderedFieldId = useRenderedBoardField(activeFieldId);
   const maxIndex = size - 1;
   const isFlipped = playerId === "P2";
   const {
@@ -963,7 +988,7 @@ export const Board: FC<BoardProps> = ({
     }
     const rowLabel = isFlipped ? maxIndex - row : row;
     rows.push(
-      <div key={`row-${row}`} className="flex">
+      <div key={`row-${row}`} className="relative z-10 flex">
         {showCoordinates ? (
           <div
             className="flex items-center justify-center font-display font-bold text-stone-500 dark:text-stone-400"
@@ -989,11 +1014,34 @@ export const Board: FC<BoardProps> = ({
     >
       <div className="flex min-h-full items-center justify-center">
         <div
-          className="relative inline-block transition-[width,height] duration-150 ease-out"
+          className={`relative inline-block transition-[width,height] duration-150 ease-out ${
+            renderedFieldId ? "board-has-field" : ""
+          }`}
           style={{ width: totalPixelSize }}
         >
+          {renderedFieldId ? (
+            <div
+              className={`board-field-surface board-field-surface--${renderedFieldId}`}
+              style={{
+                left: labelSize,
+                top: labelSize,
+                width: boardPixelSize,
+                height: boardPixelSize,
+              }}
+              data-board-field={renderedFieldId}
+              data-active={activeFieldId === renderedFieldId ? "true" : "false"}
+              aria-hidden="true"
+            >
+              <div
+                className={`board-field-background board-field-background--${renderedFieldId}`}
+                style={{ backgroundImage: `url(${getBoardFieldAsset(renderedFieldId)})` }}
+              />
+              <div className="board-field-dim" />
+              <div className="board-field-edge" />
+            </div>
+          ) : null}
           {showCoordinates ? (
-            <div className="flex">
+            <div className="relative z-10 flex">
               <div style={{ width: labelSize, height: labelSize }} />
               {colLabels.map((label, index) => (
                 <div
