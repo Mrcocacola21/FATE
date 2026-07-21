@@ -4,7 +4,7 @@ import { EventLog } from "../../../components/EventLog";
 import { TurnQueueTracker } from "../../../components/TurnQueueTracker";
 import { PanelCard, SectionHeader, StatusBadge } from "../../../components/ui";
 import { getUnitTokenAsset } from "../../../assets/registry";
-import { getClassLabel, getHeroDisplayName } from "../../../i18n/displayMetadata";
+import { getClassLabel, getUnitFigureDisplayName } from "../../../i18n/displayMetadata";
 import { useI18n } from "../../../i18n";
 import { getMaxHp, PAPYRUS_LONG_BONE_ID, PAPYRUS_ORANGE_BONE_ID } from "../../../rulesHints";
 import { Tabs } from "../../../ui";
@@ -78,7 +78,7 @@ function RosterList({
             const maxHp = getMaxHp(unit.class as UnitClass, unit.heroId);
             const selected = selectedUnitId === unit.id;
             const active = activeUnitId === unit.id;
-            const heroName = getHeroDisplayName(unit.heroId, unit.id, language);
+            const heroName = getUnitFigureDisplayName(unit, { language, t });
 
             return (
               <button
@@ -104,7 +104,7 @@ function RosterList({
                     ) : null}
                   </div>
                   <div className="mt-0.5 truncate text-[11px] opacity-75">
-                    {getClassLabel(unit.class, t)} / {unit.id}
+                    {getClassLabel(unit.class, t)}
                   </div>
                   <div className="mt-1 flex flex-wrap gap-1.5">
                     <StatusBadge tone={unit.isAlive ? "success" : "danger"}>
@@ -163,11 +163,11 @@ function PlayersRosterSection({
         <PanelCard variant="muted" className="p-4">
           <SectionHeader kicker={t("game.intel")} title={t("game.lastKnownPositions")} />
           <div className="mt-3 flex flex-wrap gap-2 text-xs">
-            {lastKnownEntries.map(([unitId, coord]) => {
+            {lastKnownEntries.map(([unitId, coord], index) => {
               const position = coord as { col?: number; row?: number };
               return (
                 <StatusBadge key={unitId} tone="neutral">
-                  {unitId}: {position.col ?? "-"}, {position.row ?? "-"}
+                  {t("common.unknown")} {index + 1}: {position.col ?? "-"}, {position.row ?? "-"}
                 </StatusBadge>
               );
             })}
@@ -390,7 +390,6 @@ export const SidePanelTabs: FC<SidePanelTabsProps> = ({
               <BattleUnitSummary
                 selectedUnit={panelVm.selectedUnit}
                 selectedHeroName={panelVm.selectedHeroName}
-                showUnitIdInClassLabel={panelVm.showUnitIdInClassLabel}
                 selectedMettatonRating={panelVm.selectedMettatonRating}
                 forestMarkers={panelVm.forestMarkers}
                 selectedInsideForest={panelVm.selectedInsideForest}

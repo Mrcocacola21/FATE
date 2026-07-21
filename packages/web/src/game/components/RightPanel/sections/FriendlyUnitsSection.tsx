@@ -3,6 +3,7 @@ import type { UnitState } from "rules";
 import { classBadge } from "../rightPanelHelpers";
 import { useI18n } from "../../../../i18n";
 import { getUnitTokenAsset } from "../../../../assets/registry";
+import { getPlacementUnitLabel } from "../../../../i18n/displayMetadata";
 
 interface FriendlyUnitsSectionProps {
   friendlyUnits: UnitState[];
@@ -15,7 +16,7 @@ export const FriendlyUnitsSection: FC<FriendlyUnitsSectionProps> = ({
   selectedUnitId,
   onSelectUnit,
 }) => {
-  const { t } = useI18n();
+  const { language, t } = useI18n();
   return (
     <div className="panel-card panel-hud p-4">
       <div className="section-kicker">{t("game.yourRoster")}</div>
@@ -49,7 +50,9 @@ export const FriendlyUnitsSection: FC<FriendlyUnitsSectionProps> = ({
                 )}
               </div>
               <div className="flex-1">
-                <div className="text-xs font-semibold">{unit.id}</div>
+                <div className="text-xs font-semibold">
+                  {getPlacementUnitLabel(unit, { language, t })}
+                </div>
                 <div className="text-[11px] opacity-75">
                   {t("game.hp", { hp: unit.hp })}
                   {unit.position

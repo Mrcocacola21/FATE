@@ -16,7 +16,6 @@ interface BattleSectionProps {
   selectedUnit: UnitState | null;
   selectedUnitId: string | null;
   selectedHeroName: string | null;
-  showUnitIdInClassLabel: boolean;
   selectedMettatonRating: number | null;
   forestMarkers: ForestMarkerView[];
   selectedInsideForest: boolean;
@@ -80,7 +79,6 @@ export const BattleSection: FC<BattleSectionProps> = ({
   selectedUnit,
   selectedUnitId,
   selectedHeroName,
-  showUnitIdInClassLabel,
   selectedMettatonRating,
   forestMarkers,
   selectedInsideForest,
@@ -148,7 +146,6 @@ export const BattleSection: FC<BattleSectionProps> = ({
       <BattleUnitSummary
         selectedUnit={selectedUnit}
         selectedHeroName={selectedHeroName}
-        showUnitIdInClassLabel={showUnitIdInClassLabel}
         selectedMettatonRating={selectedMettatonRating}
         forestMarkers={forestMarkers}
         selectedInsideForest={selectedInsideForest}

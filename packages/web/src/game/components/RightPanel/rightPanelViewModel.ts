@@ -1,10 +1,8 @@
 import type { PapyrusLineAxis, PlayerId } from "rules";
-import { HERO_CATALOG } from "../../../figures/catalog";
 import {
   ARENA_STORM_ID,
   CHIKATILO_ID,
   FALSE_TRAIL_TOKEN_ID,
-  FEMTO_ID,
   FOREST_AURA_RADIUS,
   KALADIN_ID,
   LECHY_ID,
@@ -21,7 +19,7 @@ import { DEFAULT_ECONOMY } from "./rightPanelConstants";
 import { isActionableAbility, isRangedSingleTargetClass } from "./rightPanelHelpers";
 import type { RightPanelProps } from "./types";
 import type { Translate } from "../../../i18n";
-import { getHeroDisplayName } from "../../../i18n/displayMetadata";
+import { getUnitFigureDisplayName } from "../../../i18n/displayMetadata";
 import { getLanguage } from "../../../i18n";
 
 export function buildRightPanelViewModel(params: RightPanelProps, t: Translate) {
@@ -58,15 +56,8 @@ export function buildRightPanelViewModel(params: RightPanelProps, t: Translate) 
   });
   const selectedUnit = friendlyUnits.find((unit) => unit.id === selectedUnitId) ?? null;
   const selectedVisibleUnit = selectedUnitId ? (view.units[selectedUnitId] ?? null) : null;
-  const heroDefinition = selectedUnit?.heroId
-    ? HERO_CATALOG.find((hero) => hero.id === selectedUnit.heroId)
-    : undefined;
   const selectedHeroName = selectedUnit
-    ? getHeroDisplayName(
-        selectedUnit.heroId,
-        heroDefinition?.name ?? (selectedUnit.heroId === FEMTO_ID ? "Femto" : selectedUnit.id),
-        getLanguage(),
-      )
+    ? getUnitFigureDisplayName(selectedUnit, { language: getLanguage(), t })
     : null;
   const forestMarkers =
     Array.isArray(view.forestMarkers) && view.forestMarkers.length > 0
@@ -238,7 +229,6 @@ export function buildRightPanelViewModel(params: RightPanelProps, t: Translate) 
     selectedUnit,
     selectedVisibleUnit,
     selectedHeroName,
-    showUnitIdInClassLabel: !!heroDefinition,
     forestMarkers,
     stormActive,
     selectedInsideForest,

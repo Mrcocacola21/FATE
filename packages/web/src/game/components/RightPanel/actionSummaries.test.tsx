@@ -156,7 +156,6 @@ test("unit summary renders three main bars and explains basic attack under Actio
     <BattleUnitSummary
       selectedUnit={unit}
       selectedHeroName="Frisk"
-      showUnitIdInClassLabel={false}
       selectedMettatonRating={null}
       forestMarkers={[]}
       selectedInsideForest={false}

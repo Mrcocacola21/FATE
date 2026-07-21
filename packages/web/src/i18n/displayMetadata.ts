@@ -1,8 +1,13 @@
+import type { UnitState } from "rules";
+import { HERO_CATALOG } from "../figures/catalog";
+import { FALSE_TRAIL_TOKEN_ID } from "../rulesHints";
 import type { Language, Translate } from ".";
 import { en } from "./locales/en";
 import { uk } from "./locales/uk";
 
 type AbilityTranslation = { name: string; description: string };
+
+const heroCatalogById = new Map(HERO_CATALOG.map((hero) => [hero.id, hero]));
 
 const heroNamesUk: Record<string, string> = {
   "base-assassin": "Базовий убивця",
@@ -501,6 +506,62 @@ export function getHeroDisplayName(
   language: Language,
 ) {
   return language === "uk" && id ? (heroNamesUk[id] ?? fallback) : fallback;
+}
+
+export interface UnitDisplayNameOptions {
+  language: Language;
+  t: Translate;
+}
+
+/**
+ * Resolve a projected unit to a player-facing figure name.
+ *
+ * Callers should pass only the UnitState from the recipient's PlayerView. Unknown
+ * figure metadata deliberately falls back to the unit's public base class instead
+ * of exposing the service unit id.
+ */
+export function getUnitFigureDisplayName(
+  unit: UnitState,
+  { language, t }: UnitDisplayNameOptions,
+): string {
+  const projectedFigureIds = [unit.figureId, unit.heroId].filter(
+    (id): id is string => typeof id === "string" && id.length > 0,
+  );
+
+  if (projectedFigureIds.includes(FALSE_TRAIL_TOKEN_ID)) {
+    return t("game.falseTrailToken");
+  }
+
+  const catalogFigure = projectedFigureIds
+    .map((id) => heroCatalogById.get(id))
+    .find((figure) => figure !== undefined);
+  if (catalogFigure) {
+    return getHeroDisplayName(catalogFigure.id, catalogFigure.name, language);
+  }
+
+  // Femto is a visible transformed form rather than a selectable catalog figure.
+  if (projectedFigureIds.includes("femto")) {
+    return getHeroDisplayName("femto", "Femto", language);
+  }
+
+  const baseFigureId = `base-${unit.class}`;
+  const baseFigure = heroCatalogById.get(baseFigureId);
+  const fallback = baseFigure?.name ?? getClassLabel(unit.class, t);
+  return getHeroDisplayName(baseFigureId, fallback, language);
+}
+
+export function getUnitClassDisplayName(
+  unit: Pick<UnitState, "class">,
+  { t }: Pick<UnitDisplayNameOptions, "t">,
+): string {
+  return getClassLabel(unit.class, t);
+}
+
+export function getPlacementUnitLabel(
+  unit: UnitState,
+  options: UnitDisplayNameOptions,
+): string {
+  return `${getUnitFigureDisplayName(unit, options)} (${getUnitClassDisplayName(unit, options)})`;
 }
 
 export function getAbilityDisplay(

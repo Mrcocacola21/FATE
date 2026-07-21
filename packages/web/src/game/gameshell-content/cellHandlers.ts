@@ -140,6 +140,32 @@ export interface CellClickContext {
   sendAction: (action: GameAction) => void;
 }
 
+interface PlacementCellClickContext {
+  actionMode: ActionMode;
+  placeUnitId: string | null;
+  legalPlacementCoords: Coord[];
+  sendGameAction: (action: GameAction) => void;
+  setActionMode: (mode: ActionMode) => void;
+  setPlaceUnitId: (unitId: string | null) => void;
+}
+
+export function handlePlacementCellClick(
+  context: PlacementCellClickContext,
+  position: Coord,
+): boolean {
+  if (context.actionMode !== "place" || !context.placeUnitId) return false;
+  if (!isCoordInList(context.legalPlacementCoords, position.col, position.row)) return true;
+
+  context.sendGameAction({
+    type: "placeUnit",
+    unitId: context.placeUnitId,
+    position,
+  });
+  context.setActionMode(null);
+  context.setPlaceUnitId(null);
+  return true;
+}
+
 export function createCellClickHandler(context: CellClickContext) {
   const {
     view,
@@ -626,15 +652,19 @@ export function createCellClickHandler(context: CellClickContext) {
       return;
     }
 
-    if (actionMode === "place" && placeUnitId) {
-      if (!isCoordInList(legalPlacementCoords, col, row)) return;
-      sendGameAction({
-        type: "placeUnit",
-        unitId: placeUnitId,
-        position: { col, row },
-      });
-      setActionMode(null);
-      setPlaceUnitId(null);
+    if (
+      handlePlacementCellClick(
+        {
+          actionMode,
+          placeUnitId,
+          legalPlacementCoords,
+          sendGameAction,
+          setActionMode,
+          setPlaceUnitId,
+        },
+        { col, row },
+      )
+    ) {
       return;
     }
 

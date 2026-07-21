@@ -67,7 +67,6 @@ export const RightPanelContent: FC<RightPanelProps> = (props) => {
           selectedUnit={vm.selectedUnit}
           selectedUnitId={selectedUnitId}
           selectedHeroName={vm.selectedHeroName}
-          showUnitIdInClassLabel={vm.showUnitIdInClassLabel}
           selectedMettatonRating={vm.selectedMettatonRating}
           forestMarkers={vm.forestMarkers}
           selectedInsideForest={vm.selectedInsideForest}

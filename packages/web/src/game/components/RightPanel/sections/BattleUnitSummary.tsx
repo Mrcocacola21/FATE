@@ -39,7 +39,6 @@ import {
 interface BattleUnitSummaryProps {
   selectedUnit: UnitState | null;
   selectedHeroName: string | null;
-  showUnitIdInClassLabel: boolean;
   selectedMettatonRating: number | null;
   forestMarkers: ForestMarkerView[];
   selectedInsideForest: boolean;
@@ -359,7 +358,6 @@ function UnitActionBars({
 export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
   selectedUnit,
   selectedHeroName,
-  showUnitIdInClassLabel,
   selectedMettatonRating,
   forestMarkers,
   selectedInsideForest,
@@ -427,7 +425,6 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
             </div>
             <div className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
               {t("game.class", { class: getClassLabel(selectedUnit.class, t) })}
-              {showUnitIdInClassLabel ? ` (${selectedUnit.id})` : ""}
             </div>
             <div className="mt-3 flex items-center gap-2">
               <div className="h-3 flex-1 overflow-hidden rounded-full border border-black/10 bg-stone-200 shadow-inner dark:border-white/10 dark:bg-stone-900">
