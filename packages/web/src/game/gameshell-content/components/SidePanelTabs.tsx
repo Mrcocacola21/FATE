@@ -334,8 +334,8 @@ export const SidePanelTabs: FC<SidePanelTabsProps> = ({
       vm.requestMove(unitId, mode);
       if (mode) {
         vm.setMoveOptions(null);
+        vm.setActionMode("move");
       }
-      vm.setActionMode("move");
     },
     pendingLokiLaughtOption: vm.pendingLokiLaughtOption,
     onQueueLokiLaughtOption: vm.queueLokiLaughtOption,

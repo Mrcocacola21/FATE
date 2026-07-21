@@ -185,6 +185,7 @@ export function useGameShellViewModel() {
     moveOptions: core.moveOptions,
     hasBlockingRoll: core.pending.hasBlockingRoll,
     boardSelectionPending: core.pending.boardSelectionPending,
+    targetingCell: core.artemidaPreviewTarget,
   });
 
   const boardUi = useGameShellBoardUi({
@@ -208,6 +209,7 @@ export function useGameShellViewModel() {
     setStakeSelections: core.setStakeSelections,
     setHassanAssassinOrderSelections: core.setHassanAssassinOrderSelections,
     doraPreviewCenter: core.doraPreviewCenter,
+    artemidaPreviewTarget: core.artemidaPreviewTarget,
     mettatonPoppinsPreviewCenter: core.mettatonPoppinsPreviewCenter,
     mettatonLaserPreviewTarget: core.mettatonLaserPreviewTarget,
     sansGasterBlasterPreviewTarget: core.sansGasterBlasterPreviewTarget,
@@ -216,6 +218,7 @@ export function useGameShellViewModel() {
     kaladinFifthPreviewCenter: core.kaladinFifthPreviewCenter,
     forestPreviewCenter: core.forestPreviewCenter,
     setDoraPreviewCenter: core.setDoraPreviewCenter,
+    setArtemidaPreviewTarget: core.setArtemidaPreviewTarget,
     setMettatonPoppinsPreviewCenter: core.setMettatonPoppinsPreviewCenter,
     setMettatonLaserPreviewTarget: core.setMettatonLaserPreviewTarget,
     setSansGasterBlasterPreviewTarget: core.setSansGasterBlasterPreviewTarget,

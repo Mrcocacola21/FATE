@@ -4,7 +4,6 @@ import {
   CHIKATILO_ID,
   FALSE_TRAIL_TOKEN_ID,
   FOREST_AURA_RADIUS,
-  KALADIN_ID,
   LECHY_ID,
   METTATON_ID,
   LOKI_LAUGHT_ID,
@@ -21,6 +20,7 @@ import type { RightPanelProps } from "./types";
 import type { Translate } from "../../../i18n";
 import { getUnitFigureDisplayName } from "../../../i18n/displayMetadata";
 import { getLanguage } from "../../../i18n";
+import { shouldRequestMovementOptions } from "../../movementModes";
 
 export function buildRightPanelViewModel(params: RightPanelProps, t: Translate) {
   const {
@@ -188,12 +188,7 @@ export function buildRightPanelViewModel(params: RightPanelProps, t: Translate) 
   const onMoveClick = () => {
     if (!selectedUnit) return;
     if (targetingMode || actionMode) return;
-    if (
-      selectedUnit.class === "trickster" ||
-      selectedUnit.class === "berserker" ||
-      selectedUnit.heroId === KALADIN_ID ||
-      selectedUnit.transformed
-    ) {
+    if (shouldRequestMovementOptions(selectedUnit, view)) {
       onMoveRequest(selectedUnit.id);
       return;
     }

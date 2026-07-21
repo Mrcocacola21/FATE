@@ -35,6 +35,23 @@ export function useGameShellAbilityModeTargets({
     [doraTargetCenters]
   );
 
+  const artemidaLineTargets = useMemo(() => {
+    if (
+      !view ||
+      (effectiveActionMode !== "artemisMoonInsight" &&
+        effectiveActionMode !== "artemisSilverSickle") ||
+      !selectedUnit?.position
+    ) {
+      return [] as Coord[];
+    }
+    return restrictForBlind(getDoraTargetCenters(view, selectedUnit.id));
+  }, [view, effectiveActionMode, selectedUnit]);
+
+  const artemidaLineTargetKeys = useMemo(
+    () => new Set(artemidaLineTargets.map(coordKey)),
+    [artemidaLineTargets],
+  );
+
   const jebeHailTargetCenters = useMemo(() => {
     if (
       !view ||
@@ -160,6 +177,8 @@ export function useGameShellAbilityModeTargets({
   return {
     doraTargetCenters,
     doraTargetKeys,
+    artemidaLineTargets,
+    artemidaLineTargetKeys,
     jebeHailTargetCenters,
     jebeHailTargetKeys,
     mettatonLineTargets,

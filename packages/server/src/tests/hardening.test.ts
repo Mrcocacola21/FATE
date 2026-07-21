@@ -9,7 +9,9 @@ import {
   createEmptyGame,
   getMovementActionsRemaining,
   HERO_CHIKATILO_ID,
+  HERO_ARTEMIDA_ID,
   HERO_FALSE_TRAIL_TOKEN_ID,
+  HERO_KANEKI_ID,
   HERO_RIVER_PERSON_ID,
   projectEventsForRecipient,
   type GameEvent,
@@ -889,6 +891,126 @@ function testRiverBoatmanCommandsPreserveAuthoritativeMovementBudget() {
   console.log("hardening_river_boatman_authoritative_budget passed");
 }
 
+function testMulticlassMovementCommandsStayAuthoritative() {
+  storeTestHooks.reset();
+  try {
+    for (const mode of ["normal", "trickster"] as const) {
+      const room = createGameRoomWithId(`hardening-artemida-${mode}-${randomUUID()}`, {
+        hostSeat: "P1",
+        hostConnId: `conn-${randomUUID()}`,
+      });
+      let state = createEmptyGame();
+      state = attachArmy(
+        state,
+        createDefaultArmy("P1", { archer: HERO_ARTEMIDA_ID }),
+      );
+      state = attachArmy(state, createDefaultArmy("P2"));
+      const artemida = Object.values(state.units).find(
+        (unit) => unit.owner === "P1" && unit.heroId === HERO_ARTEMIDA_ID,
+      );
+      assert(artemida, "Artemida should exist in server movement regression state");
+      state = setUnit(state, artemida.id, { position: { col: 4, row: 4 } });
+      room.state = {
+        ...state,
+        phase: "battle",
+        currentPlayer: "P1",
+        activeUnitId: artemida.id,
+        turnOrder: [artemida.id],
+        turnOrderIndex: 0,
+        turnQueue: [artemida.id],
+        turnQueueIndex: 0,
+      };
+
+      const requested = applyGameAction(
+        room,
+        { type: "requestMoveOptions", unitId: artemida.id, mode },
+        "P1",
+      );
+      assert.equal(requested.ok, true, `Artemida ${mode} mode should be accepted`);
+      if (room.state.pendingRoll) {
+        const pending = room.state.pendingRoll;
+        const rolled = applyGameAction(
+          room,
+          {
+            type: "resolvePendingRoll",
+            pendingRollId: pending.id,
+            player: pending.player,
+          },
+          "P1",
+        );
+        assert.equal(rolled.ok, true, `Artemida ${mode} roll should resolve`);
+      }
+      const destination = room.state.pendingMove?.legalTo[0];
+      assert(destination, `Artemida ${mode} should receive an authoritative destination`);
+      const moved = applyGameAction(
+        room,
+        { type: "move", unitId: artemida.id, to: destination },
+        "P1",
+      );
+      assert.equal(moved.ok, true, `Artemida ${mode} movement command should resolve`);
+      assert.equal(room.state.units[artemida.id].turn.moveUsed, true);
+    }
+
+    const room = createGameRoomWithId(`hardening-multiclass-invalid-${randomUUID()}`, {
+      hostSeat: "P1",
+      hostConnId: `conn-${randomUUID()}`,
+    });
+    let state = createEmptyGame();
+    state = attachArmy(state, createDefaultArmy("P1", {
+      archer: HERO_ARTEMIDA_ID,
+      berserker: HERO_KANEKI_ID,
+    }));
+    state = attachArmy(state, createDefaultArmy("P2"));
+    const artemida = Object.values(state.units).find(
+      (unit) => unit.owner === "P1" && unit.heroId === HERO_ARTEMIDA_ID,
+    );
+    const kaneki = Object.values(state.units).find(
+      (unit) => unit.owner === "P1" && unit.heroId === HERO_KANEKI_ID,
+    );
+    assert(artemida && kaneki, "Artemida and Kaneki should exist");
+    state = setUnit(state, artemida.id, { position: { col: 4, row: 4 } });
+    state = setUnit(state, kaneki.id, { position: { col: 2, row: 2 } });
+    room.state = {
+      ...state,
+      phase: "battle",
+      currentPlayer: "P1",
+      activeUnitId: artemida.id,
+      turnOrder: [artemida.id],
+      turnOrderIndex: 0,
+      turnQueue: [artemida.id],
+      turnQueueIndex: 0,
+    };
+    const beforeInvalid = room.state;
+    const revisionBeforeInvalid = room.revision;
+    const invalid = applyGameAction(
+      room,
+      { type: "requestMoveOptions", unitId: artemida.id, mode: "rider" },
+      "P1",
+    );
+    assert.equal(invalid.ok, false, "an invalid Artemida mode should be rejected");
+    assert.equal(room.state, beforeInvalid, "invalid mode must not mutate server state");
+    assert.equal(room.revision, revisionBeforeInvalid);
+    assert.equal(room.state.units[artemida.id].turn.moveUsed, false);
+
+    room.state = {
+      ...setUnit(room.state, kaneki.id, { kanekiCentipedeUnlocked: true }),
+      activeUnitId: kaneki.id,
+      turnOrder: [kaneki.id],
+      turnQueue: [kaneki.id],
+    };
+    const kanekiRider = applyGameAction(
+      room,
+      { type: "requestMoveOptions", unitId: kaneki.id, mode: "rider" },
+      "P1",
+    );
+    assert.equal(kanekiRider.ok, true, "Centipede Kaneki Rider mode should validate");
+  } finally {
+    storeTestHooks.reset();
+  }
+
+  console.log("hardening_multiclass_movement_commands passed");
+}
+
 function testPendingBoardChoiceUsesAuthenticatedSeat() {
   const { room } = makeSeatedRoom({
     roomIdPrefix: "hardening-pending-board-choice",
@@ -942,6 +1064,7 @@ async function main() {
   testServerAcceptsMoveIntoUnknownHiddenOccupiedCell();
   testServerRejectsInvalidFalsePromisePlacementsWithoutMutation();
   testRiverBoatmanCommandsPreserveAuthoritativeMovementBudget();
+  testMulticlassMovementCommandsStayAuthoritative();
   testPendingBoardChoiceUsesAuthenticatedSeat();
   console.log("hardening tests passed");
 }

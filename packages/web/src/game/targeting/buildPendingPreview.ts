@@ -1,4 +1,5 @@
 import type { Coord, PendingMove, PlayerView, UnitState } from "rules";
+import { ARTEMIS_MOON_INSIGHT_ID } from "../../rulesHints";
 import type { BoardPreview, TargetRef } from "./previewTypes";
 import {
   buildArcherLinePreview,
@@ -341,12 +342,41 @@ function buildGroznyOptionsPreview(view: PlayerView, context: Record<string, unk
   };
 }
 
-export function buildPendingPreview(view: PlayerView | null | undefined): BoardPreview | null {
+export function buildPendingPreview(
+  view: PlayerView | null | undefined,
+  targetingCell?: Coord | null,
+): BoardPreview | null {
   if (!view) return null;
   const pending = view.pendingRoll;
   if (pending) {
     const context = (pending.context ?? {}) as Record<string, unknown>;
     switch (pending.kind) {
+      case "chargedImpulseTargetChoice": {
+        if (context.abilityId !== ARTEMIS_MOON_INSIGHT_ID) return null;
+        const artemidaId = typeof context.unitId === "string" ? context.unitId : "";
+        const artemida = sourceUnit(view, artemidaId);
+        if (!artemida?.position) return null;
+        const options = coordList(context.options);
+        const optionKeys = new Set(options.map(coordKey));
+        const selectedCenter = targetingCell && optionKeys.has(coordKey(targetingCell))
+          ? targetingCell
+          : null;
+        return compactPreview([
+          {
+            kind: "line",
+            sourceCell: { ...artemida.position },
+            lineCells: options,
+            labelKey: "preview.labels.archerLine",
+          },
+          selectedCenter ? {
+            kind: "area",
+            sourceCell: { ...artemida.position },
+            centerCell: { ...selectedCenter },
+            areaCells: cellsInRadius(boardSize(view), selectedCenter, 1, true),
+            labelKey: "preview.labels.affectedArea",
+          } : null,
+        ]);
+      }
       case "jebeKhansShooterTargetChoice": {
         const casterId = typeof context.casterId === "string" ? context.casterId : "";
         const selectedTargetIds = stringList(context.selectedTargetIds);

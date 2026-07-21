@@ -1068,10 +1068,49 @@ test("new hero previews expose targets, lines, areas, and trap placement without
   const traps = buildAbilityPreview({ gameView: view, viewerPlayerId: "P1", sourceUnitId: source.id, abilityId: JACK_SNARES_ID });
   assert.equal(hasKind(traps, { col: 0, row: 0 }, "validMove"), true);
 
-  const insight = buildAbilityPreview({ gameView: view, viewerPlayerId: "P1", sourceUnitId: source.id, abilityId: ARTEMIS_MOON_INSIGHT_ID });
+  const insightLine = buildAbilityPreview({ gameView: view, viewerPlayerId: "P1", sourceUnitId: source.id, abilityId: ARTEMIS_MOON_INSIGHT_ID });
+  assert.equal(hasKind(insightLine, { col: 6, row: 5 }, "area"), false);
+  const insight = buildAbilityPreview({ gameView: view, viewerPlayerId: "P1", sourceUnitId: source.id, abilityId: ARTEMIS_MOON_INSIGHT_ID, targetingCell: { col: 6, row: 4 } });
   assert.equal(hasKind(insight, { col: 6, row: 5 }, "area"), true);
-  const sickle = buildAbilityPreview({ gameView: view, viewerPlayerId: "P1", sourceUnitId: source.id, abilityId: ARTEMIS_SILVER_SICKLE_ID });
+  assert.equal(hasKind(insight, { col: 6, row: 4 }, "affected"), true);
+  const sickle = buildAbilityPreview({ gameView: view, viewerPlayerId: "P1", sourceUnitId: source.id, abilityId: ARTEMIS_SILVER_SICKLE_ID, targetingCell: { col: 6, row: 4 } });
   assert.equal(hasKind(sickle, { col: 6, row: 5 }, "area"), true);
+  assert.equal(hasKind(sickle, { col: 8, row: 4 }, "line"), true);
+  const offLineSickle = buildAbilityPreview({ gameView: view, viewerPlayerId: "P1", sourceUnitId: source.id, abilityId: ARTEMIS_SILVER_SICKLE_ID, targetingCell: { col: 6, row: 5 } });
+  assert.equal(hasKind(offLineSickle, { col: 8, row: 5 }, "area"), false);
 
   assert.equal(collectTargets(push).some((target) => target.unitId === hiddenEnemy.id), false);
+});
+
+test("Moon Insight pending preview uses authoritative line options and the hovered 3x3 center", () => {
+  const artemida = unit({
+    id: "artemida",
+    owner: "P1",
+    heroId: "artemida",
+    class: "archer",
+    position: { col: 4, row: 4 },
+  });
+  const view = makeView([artemida], {
+    pendingRoll: {
+      id: "moon-insight",
+      player: "P1",
+      kind: "chargedImpulseTargetChoice",
+      context: {
+        unitId: artemida.id,
+        abilityId: ARTEMIS_MOON_INSIGHT_ID,
+        options: [{ col: 6, row: 4 }],
+      },
+    } as PlayerView["pendingRoll"],
+  });
+
+  const lineOnly = buildPendingPreview(view);
+  assert.equal(hasKind(lineOnly, { col: 6, row: 4 }, "line"), true);
+  assert.equal(hasKind(lineOnly, { col: 6, row: 5 }, "area"), false);
+
+  const selected = buildPendingPreview(view, { col: 6, row: 4 });
+  assert.equal(hasKind(selected, { col: 6, row: 4 }, "affected"), true);
+  assert.equal(hasKind(selected, { col: 6, row: 5 }, "area"), true);
+
+  const rejectedLocalPoint = buildPendingPreview(view, { col: 6, row: 5 });
+  assert.equal(hasKind(rejectedLocalPoint, { col: 6, row: 5 }, "area"), false);
 });

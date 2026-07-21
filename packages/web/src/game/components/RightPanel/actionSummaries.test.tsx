@@ -21,6 +21,8 @@ import { createCellClickHandler } from "../../gameshell-content/cellHandlers";
 import { CurrentTaskPanel } from "../../gameshell-content/components/CurrentTaskPanel";
 import { BattleUnitSummary } from "./sections/BattleUnitSummary";
 import { BattleAbilityActions } from "./sections/BattleAbilityActions";
+import { BattleBottomHints } from "./sections/BattleBottomHints";
+import { getAvailableMovementModes } from "../../movementModes";
 import {
   getPublicBattleActionBars,
   getUnitDetailActionBars,
@@ -436,6 +438,48 @@ test("current task panel keeps movement intent visible through mode and destinat
   assert.doesNotMatch(destinationMarkup, /No forced task/);
 });
 
+test("Artemida and Kaneki expose generic multiclass movement choices", () => {
+  setLanguage("en", { setItem: () => undefined });
+  const artemida = makeUnit({
+    id: "P1-artemida",
+    class: "archer",
+    heroId: "artemida",
+  });
+  const kaneki = makeUnit({
+    id: "P1-kaneki",
+    class: "berserker",
+    heroId: "kaneki",
+    kanekiCentipedeUnlocked: true,
+  });
+  assert.deepEqual(
+    getAvailableMovementModes(artemida, makeView(artemida)).map((option) => [option.id, option.classId]),
+    [["normal", "archer"], ["trickster", "trickster"]],
+  );
+  assert.deepEqual(
+    getAvailableMovementModes(kaneki, makeView(kaneki)).map((option) => [option.id, option.classId]),
+    [["normal", "berserker"], ["assassin", "assassin"], ["rider", "rider"]],
+  );
+
+  const requests: string[] = [];
+  const markup = renderToStaticMarkup(
+    <BattleBottomHints
+      moveModeOptions={["normal", "trickster"]}
+      selectedUnitId={artemida.id}
+      selectedUnitClass={artemida.class}
+      moveDisabled={false}
+      actionMode={null}
+      targetingMode={null}
+      abilityViews={[]}
+      papyrusLineAxis="row"
+      undyneAxis="row"
+      onMoveRequest={(_unitId, mode) => requests.push(String(mode))}
+      onCancelTargeting={() => undefined}
+    />,
+  );
+  assert.match(markup, /Move as Archer/);
+  assert.match(markup, /Move as Trickster/);
+});
+
 test("Boat targeting remains a forced board task and offers cancel without spending", () => {
   setLanguage("en", { setItem: () => undefined });
   const river = makeUnit({
@@ -722,6 +766,74 @@ test("Duolingo Push Notification keeps local intent and submits the clicked dest
     abilityId: "duolingoPushNotification",
     payload: { targetId: creature.id, destination: { col: 4, row: 3 } },
   });
+});
+
+test("movement intent submits only an authoritative highlighted destination", () => {
+  const artemida = makeUnit({
+    id: "P1-artemida-move",
+    class: "archer",
+    heroId: "artemida",
+    position: { col: 2, row: 2 },
+  });
+  const sent: unknown[] = [];
+  const context = {
+    view: makeView(artemida),
+    playerId: "P1",
+    joined: true,
+    isSpectator: false,
+    hasBlockingRoll: false,
+    boardSelectionPending: false,
+    actionMode: "move",
+    selectedUnitId: artemida.id,
+    legalMoveCoords: [{ col: 3, row: 2 }],
+    sendGameAction: (action: unknown) => sent.push(action),
+    setActionMode: () => undefined,
+    setMoveOptions: () => undefined,
+    sendAction: () => undefined,
+  };
+
+  createCellClickHandler(context as never)(4, 2);
+  assert.equal(sent.length, 0, "an unhighlighted destination must not submit");
+  createCellClickHandler(context as never)(3, 2);
+  assert.deepEqual(sent, [{
+    type: "move",
+    unitId: artemida.id,
+    to: { col: 3, row: 2 },
+  }]);
+});
+
+test("Artemida ability clicks reject off-line cells before command submission", () => {
+  const artemida = makeUnit({
+    id: "P1-artemida-sickle",
+    class: "archer",
+    heroId: "artemida",
+    position: { col: 2, row: 2 },
+  });
+  const sent: unknown[] = [];
+  const context = {
+    view: makeView(artemida),
+    playerId: "P1",
+    joined: true,
+    isSpectator: false,
+    hasBlockingRoll: false,
+    boardSelectionPending: false,
+    actionMode: "artemisSilverSickle",
+    selectedUnitId: artemida.id,
+    artemidaLineTargetKeys: new Set(["4,2"]),
+    sendGameAction: (action: unknown) => sent.push(action),
+    setActionMode: () => undefined,
+    sendAction: () => undefined,
+  };
+
+  createCellClickHandler(context as never)(4, 3);
+  assert.equal(sent.length, 0, "off-line Silver Moon Sickle point must not submit");
+  createCellClickHandler(context as never)(4, 2);
+  assert.deepEqual(sent, [{
+    type: "useAbility",
+    unitId: artemida.id,
+    abilityId: "artemidaSilverCrescent",
+    payload: { target: { col: 4, row: 2 } },
+  }]);
 });
 
 test("Don board pending choices route cell clicks to the server", () => {

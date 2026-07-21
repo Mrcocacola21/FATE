@@ -4,6 +4,7 @@ import { Children, isValidElement, type ReactElement, type ReactNode } from "rea
 import { renderToStaticMarkup } from "react-dom/server";
 import { BottomNav } from "../../ui/BottomNav";
 import { BottomSheet } from "../../ui/BottomSheet";
+import { setLanguage } from "../../i18n";
 import { ResponsiveMatchLayout } from "../../layout/ResponsiveMatchLayout";
 import { DesktopMatchScaffold, MobileBattleScaffold } from "./MatchScaffolds";
 import {
@@ -75,6 +76,44 @@ test("mobile task visibility omits idle state and includes placement and targeti
   assert.equal(hasActiveMobileTask({ ...idle, actionMode: "attack" }), true);
   assert.equal(hasActiveMobileTask({ view: { phase: "placement" } }), true);
   assert.equal(hasActiveMobileTask({ ...idle, boardSelectionPending: true }), true);
+  assert.equal(
+    hasActiveMobileTask({
+      ...idle,
+      moveOptions: { unitId: "artemida", modes: ["normal", "trickster"] },
+    }),
+    true,
+  );
+});
+
+test("mobile movement chooser remains a cancelable top task before board intent starts", () => {
+  setLanguage("en", { setItem: () => undefined });
+  const artemida = {
+    id: "artemida",
+    owner: "P1",
+    class: "archer",
+    heroId: "artemida",
+    isAlive: true,
+    position: { col: 2, row: 2 },
+  };
+  const markup = renderToStaticMarkup(
+    <CurrentTaskPanel
+      compact
+      vm={{
+        view: { phase: "battle" },
+        pendingRoll: null,
+        pendingMeta: null,
+        actionMode: null,
+        targetingMode: null,
+        selectedUnit: artemida,
+        moveOptions: { unitId: artemida.id, legalTo: [], modes: ["normal", "trickster"] },
+        setMoveOptions: () => undefined,
+        setActionMode: () => undefined,
+      }}
+    />,
+  );
+  assert.match(markup, /Artemis: choose movement mode/);
+  assert.match(markup, /Cancel/);
+  assert.doesNotMatch(markup, /No forced task/);
 });
 
 test("board interaction keys change for placement, targeting, and forced board choices", () => {

@@ -69,6 +69,7 @@ export interface BuildAbilityPreviewArgs {
   sourceUnitId: string | null | undefined;
   abilityId: string | null | undefined;
   targetingStep?: string | null;
+  targetingCell?: Coord | null;
 }
 
 function sourceUnit(view: PlayerView, sourceUnitId: string | null | undefined): UnitState | null {
@@ -428,10 +429,26 @@ function uniqueCells(cells: Coord[]): Coord[] {
   return [...byKey.values()];
 }
 
+function rayCells(size: number, from: Coord, toward: Coord): Coord[] {
+  const dx = toward.col - from.col;
+  const dy = toward.row - from.row;
+  if (dx === 0 && dy === 0) return [];
+  if (dx !== 0 && dy !== 0 && Math.abs(dx) !== Math.abs(dy)) return [];
+  const step = { col: Math.sign(dx), row: Math.sign(dy) };
+  const cells: Coord[] = [];
+  let current = { col: from.col + step.col, row: from.row + step.row };
+  while (current.col >= 0 && current.row >= 0 && current.col < size && current.row < size) {
+    cells.push({ ...current });
+    current = { col: current.col + step.col, row: current.row + step.row };
+  }
+  return cells;
+}
+
 export function buildAbilityPreview({
   gameView,
   sourceUnitId,
   abilityId,
+  targetingCell,
 }: BuildAbilityPreviewArgs): BoardPreview | null {
   if (!gameView || !abilityId) return null;
   const source = sourceUnit(gameView, sourceUnitId);
@@ -657,6 +674,9 @@ export function buildAbilityPreview({
     }
     case ARTEMIS_MOON_INSIGHT_ID: {
       const lineCells = archerLineCells(gameView, source.id);
+      const selectedCenter = targetingCell && lineCells.some(
+        (cell) => coordKey(cell) === coordKey(targetingCell),
+      ) ? targetingCell : null;
       return compactPreview([
         {
           kind: "line",
@@ -664,31 +684,53 @@ export function buildAbilityPreview({
           lineCells,
           labelKey: "preview.labels.archerLine",
         },
-        {
+        selectedCenter ? {
           kind: "area",
           sourceCell: { ...source.position },
-          areaCells: uniqueCells(
-            lineCells.flatMap((cell) => cellsInRadius(boardSize(gameView), cell, 1, true)),
-          ),
+          centerCell: { ...selectedCenter },
+          areaCells: cellsInRadius(boardSize(gameView), selectedCenter, 1, true),
           labelKey: "preview.labels.affectedArea",
-        },
+        } : null,
       ]);
     }
     case ARTEMIS_SILVER_SICKLE_ID: {
       const lineCells = archerLineCells(gameView, source.id);
+      const selectedTarget = targetingCell && lineCells.some(
+        (cell) => coordKey(cell) === coordKey(targetingCell),
+      ) ? targetingCell : null;
+      const selectedRay = selectedTarget
+        ? rayCells(boardSize(gameView), source.position, selectedTarget)
+        : [];
       const affectedCells = uniqueCells(
-        lineCells.flatMap((cell) => cellsInRadius(boardSize(gameView), cell, 1, true)),
+        selectedRay.flatMap((cell) => cellsInRadius(boardSize(gameView), cell, 1, true)),
       );
-      return {
-        kind: "area",
-        sourceCell: { ...source.position },
-        areaCells: affectedCells,
-        affectedTargets: visibleUnitTargets(
-          gameView,
-          (unit) => !!unit.position && affectedCells.some((cell) => coordKey(cell) === coordKey(unit.position!)),
-        ),
-        labelKey: "preview.labels.affectedArea",
-      };
+      return compactPreview([
+        {
+          kind: "line",
+          sourceCell: { ...source.position },
+          lineCells,
+          labelKey: "preview.labels.archerLine",
+        },
+        selectedTarget ? {
+          kind: "line",
+          sourceCell: { ...source.position },
+          lineCells: selectedRay,
+          labelKey: "preview.labels.affectedLine",
+        } : null,
+        selectedTarget ? {
+          kind: "area",
+          sourceCell: { ...source.position },
+          centerCell: { ...selectedTarget },
+          areaCells: affectedCells,
+          affectedTargets: visibleUnitTargets(
+            gameView,
+            (unit) => !!unit.position && affectedCells.some(
+              (cell) => coordKey(cell) === coordKey(unit.position!),
+            ),
+          ),
+          labelKey: "preview.labels.affectedArea",
+        } : null,
+      ]);
     }
     default:
       return null;

@@ -55,6 +55,7 @@ export function useGameShellCoreState() {
   } = useGameStore();
 
   const [doraPreviewCenter, setDoraPreviewCenter] = useState<Coord | null>(null);
+  const [artemidaPreviewTarget, setArtemidaPreviewTarget] = useState<Coord | null>(null);
   const [jebeHailPreviewCenter, setJebeHailPreviewCenter] = useState<Coord | null>(null);
   const [kaladinFifthPreviewCenter, setKaladinFifthPreviewCenter] = useState<Coord | null>(null);
   const [mettatonPoppinsPreviewCenter, setMettatonPoppinsPreviewCenter] = useState<Coord | null>(
@@ -347,6 +348,8 @@ export function useGameShellCoreState() {
     pendingMoveForSelected,
     doraPreviewCenter,
     setDoraPreviewCenter,
+    artemidaPreviewTarget,
+    setArtemidaPreviewTarget,
     jebeHailPreviewCenter,
     setJebeHailPreviewCenter,
     kaladinFifthPreviewCenter,

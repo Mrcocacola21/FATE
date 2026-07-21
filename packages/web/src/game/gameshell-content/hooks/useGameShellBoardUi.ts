@@ -94,6 +94,7 @@ export function useGameShellBoardUi(params: any) {
     papyrusLongBoneAttackTargetIds,
     assassinMarkTargetIds,
     doraTargetKeys,
+    artemidaLineTargetKeys,
     mettatonLineTargetKeys,
     undyneEnergySpearTargetKeys,
     jebeHailTargetKeys,
@@ -110,6 +111,7 @@ export function useGameShellBoardUi(params: any) {
     kaladinFifthPreviewCenter,
     forestPreviewCenter,
     setDoraPreviewCenter,
+    setArtemidaPreviewTarget,
     setMettatonPoppinsPreviewCenter,
     setMettatonLaserPreviewTarget,
     setSansGasterBlasterPreviewTarget,
@@ -127,6 +129,20 @@ export function useGameShellBoardUi(params: any) {
       setNewHeroAbilityTargetId(null);
     }
   }, [actionMode, selectedUnitId]);
+  const isArtemidaMoonInsightChoice = !!(
+    isChargedImpulseTargetChoice &&
+    (pendingRoll?.context as { abilityId?: unknown } | undefined)?.abilityId ===
+      "artemidaMoonlightShot"
+  );
+  useEffect(() => {
+    if (
+      actionMode !== "artemisMoonInsight" &&
+      actionMode !== "artemisSilverSickle" &&
+      !isArtemidaMoonInsightChoice
+    ) {
+      setArtemidaPreviewTarget(null);
+    }
+  }, [actionMode, isArtemidaMoonInsightChoice, setArtemidaPreviewTarget]);
   useEffect(() => {
     if (actionMode !== "attack") setZoroAttackTargetIds([]);
   }, [actionMode, selectedUnitId]);
@@ -226,6 +242,7 @@ export function useGameShellBoardUi(params: any) {
     papyrusLongBoneAttackTargetIds,
     assassinMarkTargetIds,
     doraTargetKeys,
+    artemidaLineTargetKeys,
     mettatonLineTargetKeys,
     undyneEnergySpearTargetKeys,
     jebeHailTargetKeys,
@@ -239,6 +256,9 @@ export function useGameShellBoardUi(params: any) {
     actionMode,
     isForestTarget,
     doraTargetKeys,
+    artemidaLineTargetKeys,
+    isArtemidaMoonInsightChoice,
+    chargedImpulseTargetKeys,
     mettatonLineTargetKeys,
     undyneEnergySpearTargetKeys,
     jebeHailTargetKeys,
@@ -246,6 +266,7 @@ export function useGameShellBoardUi(params: any) {
     tisonaTargetKeys,
     forestTargetKeys,
     setDoraPreviewCenter,
+    setArtemidaPreviewTarget,
     setMettatonPoppinsPreviewCenter,
     setMettatonLaserPreviewTarget,
     setSansGasterBlasterPreviewTarget,
@@ -287,6 +308,8 @@ export function useGameShellBoardUi(params: any) {
     !boardSelectionPending &&
     actionMode !== "attack" &&
     actionMode !== "dora" &&
+    actionMode !== "artemisMoonInsight" &&
+    actionMode !== "artemisSilverSickle" &&
     actionMode !== "mettatonPoppins" &&
     actionMode !== "mettatonLaser" &&
     actionMode !== "sansGasterBlaster" &&

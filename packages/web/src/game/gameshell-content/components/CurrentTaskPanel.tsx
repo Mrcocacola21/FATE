@@ -1,7 +1,10 @@
 import type { FC } from "react";
 import type { GameAction } from "rules";
 import type { ActionPreviewMode } from "../../../store";
-import { getActionModeHint } from "../../components/RightPanel/rightPanelHelpers";
+import {
+  formatMoveMode,
+  getActionModeHint,
+} from "../../components/RightPanel/rightPanelHelpers";
 import {
   getCostPreview,
   getUsingName,
@@ -10,7 +13,10 @@ import { PanelCard, SectionHeader, StatusBadge } from "../../../components/ui";
 import { useI18n } from "../../../i18n";
 import { getPendingRollLabel } from "../helpers";
 import { PendingBoardNotice } from "./PendingBoardNotice";
-import { getPlacementUnitLabel } from "../../../i18n/displayMetadata";
+import {
+  getPlacementUnitLabel,
+  getUnitFigureDisplayName,
+} from "../../../i18n/displayMetadata";
 
 interface CurrentTaskPanelProps {
   vm: any;
@@ -24,6 +30,7 @@ export function hasActiveMobileTask(vm: any): boolean {
     vm.actionMode ||
     vm.targetingMode ||
     vm.boardSelectionPending ||
+    (Array.isArray(vm.moveOptions?.modes) && vm.moveOptions.modes.length > 0) ||
     vm.view?.phase === "placement"
   );
 }
@@ -175,6 +182,39 @@ export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm, compact = fals
     );
   }
 
+  const choosingMoveMode =
+    Array.isArray(vm.moveOptions?.modes) && vm.moveOptions.modes.length > 0;
+  if (choosingMoveMode) {
+    const unitName = vm.selectedUnit
+      ? getUnitFigureDisplayName(vm.selectedUnit, { language, t })
+      : t("game.move");
+    const title = t("game.chooseMoveModeFor", { unit: unitName });
+    if (compact) {
+      return (
+        <MobileTaskStrip
+          title={title}
+          instruction={t("game.chooseMoveMode")}
+          onCancel={() => {
+            vm.setMoveOptions(null);
+            vm.setActionMode(null);
+          }}
+        />
+      );
+    }
+    return (
+      <PanelCard variant="hud" className="p-3">
+        <SectionHeader
+          kicker={t("game.currentTask")}
+          title={title}
+          action={<StatusBadge tone="warning">{t("game.boardSelectionActive")}</StatusBadge>}
+        />
+        <p className="mt-2 text-xs leading-5 text-stone-600 dark:text-stone-300">
+          {t("game.chooseMoveMode")}
+        </p>
+      </PanelCard>
+    );
+  }
+
   if (vm.view.phase === "placement") {
     const selectedPlacementUnit = vm.placeUnitId ? vm.view.units?.[vm.placeUnitId] : null;
     const selectedPlacementLabel = selectedPlacementUnit
@@ -217,17 +257,17 @@ export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm, compact = fals
         : [];
     const undyneAxis =
       vm.undyneAxis === "col" || vm.papyrusLineAxis === "col" ? "col" : "row";
-    const choosingMoveMode =
-      vm.actionMode === "move" &&
-      Array.isArray(vm.moveOptions?.modes) &&
-      vm.moveOptions.modes.length > 0;
+    const selectedMoveLabel =
+      vm.actionMode === "move" && vm.moveOptions?.mode
+        ? formatMoveMode(vm.moveOptions.mode, t, vm.selectedUnit?.class)
+        : null;
 
     if (compact) {
       return (
         <MobileTaskStrip
           title={
-            choosingMoveMode
-              ? t("game.chooseMoveMode")
+            selectedMoveLabel
+              ? `${selectedMoveLabel}: ${getActionModeHint("move", vm.papyrusLineAxis ?? "row", undyneAxis, language)}`
               : vm.targetingMode
                 ? t("game.usingTargeting", {
                     name: getUsingName(vm.targetingMode, abilityViews, language, t),
@@ -235,9 +275,7 @@ export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm, compact = fals
                 : t("game.boardSelectionActive")
           }
           instruction={
-            choosingMoveMode
-              ? t("game.chooseMoveMode")
-              : vm.actionMode
+            vm.actionMode
                 ? getActionModeHint(
                     vm.actionMode as ActionPreviewMode,
                     vm.papyrusLineAxis ?? "row",
@@ -257,8 +295,8 @@ export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm, compact = fals
           <SectionHeader
             kicker={t("game.currentTask")}
             title={
-              choosingMoveMode
-                ? t("game.chooseMoveMode")
+              selectedMoveLabel
+                ? selectedMoveLabel
                 : t("game.usingTargeting", {
                     name: getUsingName(vm.targetingMode, abilityViews, language, t),
                   })
@@ -267,9 +305,7 @@ export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm, compact = fals
           />
           <p className="mt-2 text-xs leading-5 text-stone-600 dark:text-stone-300">
             {t("game.targetingInstruction", {
-              instruction: choosingMoveMode
-                ? t("game.chooseMoveMode")
-                : vm.actionMode === "attack" && vm.selectedUnit?.heroId === "zoro"
+              instruction: vm.actionMode === "attack" && vm.selectedUnit?.heroId === "zoro"
                   ? vm.zoroAttackTargetIds?.length
                     ? t("game.zoroSantoryuNextTarget")
                     : t("game.zoroSantoryuFirstTarget")
@@ -298,28 +334,5 @@ export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm, compact = fals
     );
   }
 
-  if (compact) return null;
-
-  return (
-      <div aria-live="polite" className={compact ? "mobile-task-content" : ""}>
-      <PanelCard variant="hud" className="p-3">
-        <SectionHeader
-          kicker={t("game.currentTask")}
-          title={vm.actionMode ? t("game.boardSelectionActive") : t("game.noCurrentTask")}
-          action={
-            <StatusBadge tone={vm.view.currentPlayer === vm.playerId ? "success" : "neutral"}>
-              {vm.view.currentPlayer
-                ? t("game.playerTurn", { player: vm.view.currentPlayer })
-                : t("common.waiting")}
-            </StatusBadge>
-          }
-        />
-        {vm.actionMode ? (
-          <p className="mt-2 text-xs leading-5 text-stone-600 dark:text-stone-300">
-            {t("game.boardSelectionHint")}
-          </p>
-        ) : null}
-      </PanelCard>
-    </div>
-  );
+  return null;
 };

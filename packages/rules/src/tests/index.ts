@@ -5,6 +5,7 @@ import {
   testNewPlayableBatchLineAndRevealEffects,
   testNewPlayableBatchCombatCountersAndReactions,
   testNewPlayableBatchStatsResourcesAndMovement,
+  testArtemidaAndKanekiMovementModes,
   testNewPlayableBatchTransactionalActives,
 } from "./heroes/newPlayableBatch.test";
 import {
@@ -706,6 +707,7 @@ function main(): void {
   testForestAoeDeals2AndRootsOnFail();
   testRootBlocksMovementNextTurnOnly();
   testNewPlayableBatchStatsResourcesAndMovement();
+  testArtemidaAndKanekiMovementModes();
   testNewPlayableBatchTransactionalActives();
   testNewPlayableBatchLineAndRevealEffects();
   testNewPlayableBatchCombatCountersAndReactions();

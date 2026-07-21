@@ -40,6 +40,7 @@ export interface BuildActionPreviewArgs {
   actionMode: ActionMode;
   moveOptions?: PreviewMoveOptions | null;
   pendingMoveForSelected?: PreviewMoveOptions | null;
+  targetingCell?: Coord | null;
 }
 
 function abilityIdForPreviewActionMode(actionMode: Exclude<ActionMode, null>): string | null {
@@ -112,6 +113,7 @@ export function buildActionPreview({
   actionMode,
   moveOptions,
   pendingMoveForSelected,
+  targetingCell,
 }: BuildActionPreviewArgs): BoardPreview | null {
   if (!gameView || !sourceUnitId || !actionMode) return null;
   const source = gameView.units[sourceUnitId];
@@ -157,5 +159,6 @@ export function buildActionPreview({
     sourceUnitId,
     abilityId,
     targetingStep: actionMode,
+    targetingCell,
   });
 }

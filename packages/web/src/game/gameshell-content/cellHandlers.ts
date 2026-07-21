@@ -150,6 +150,7 @@ export interface CellClickContext {
   papyrusLongBoneAttackTargetIds: string[];
   assassinMarkTargetIds: string[];
   doraTargetKeys: Set<string>;
+  artemidaLineTargetKeys: Set<string>;
   mettatonLineTargetKeys: Set<string>;
   undyneEnergySpearTargetKeys: Set<string>;
   jebeHailTargetKeys: Set<string>;
@@ -302,6 +303,7 @@ export function createCellClickHandler(context: CellClickContext) {
     papyrusLongBoneAttackTargetIds,
     assassinMarkTargetIds,
     doraTargetKeys,
+    artemidaLineTargetKeys,
     mettatonLineTargetKeys,
     undyneEnergySpearTargetKeys,
     jebeHailTargetKeys,
@@ -823,6 +825,10 @@ export function createCellClickHandler(context: CellClickContext) {
       actionMode === "artemisMoonInsight" ||
       actionMode === "artemisSilverSickle"
     ) {
+      if (
+        (actionMode === "artemisMoonInsight" || actionMode === "artemisSilverSickle") &&
+        !artemidaLineTargetKeys.has(coordKey({ col, row }))
+      ) return;
       const source = view.units[selectedUnitId];
       if (
         source?.position &&
@@ -1192,6 +1198,9 @@ interface CellHoverContext {
   actionMode: ActionMode;
   isForestTarget: boolean;
   doraTargetKeys: Set<string>;
+  artemidaLineTargetKeys: Set<string>;
+  isArtemidaMoonInsightChoice: boolean;
+  chargedImpulseTargetKeys: Set<string>;
   mettatonLineTargetKeys: Set<string>;
   undyneEnergySpearTargetKeys: Set<string>;
   jebeHailTargetKeys: Set<string>;
@@ -1199,6 +1208,7 @@ interface CellHoverContext {
   tisonaTargetKeys: Set<string>;
   forestTargetKeys: Set<string>;
   setDoraPreviewCenter: Dispatch<SetStateAction<Coord | null>>;
+  setArtemidaPreviewTarget: Dispatch<SetStateAction<Coord | null>>;
   setMettatonPoppinsPreviewCenter: Dispatch<SetStateAction<Coord | null>>;
   setMettatonLaserPreviewTarget: Dispatch<SetStateAction<Coord | null>>;
   setSansGasterBlasterPreviewTarget: Dispatch<SetStateAction<Coord | null>>;
@@ -1214,6 +1224,9 @@ export function createCellHoverHandler(context: CellHoverContext) {
     actionMode,
     isForestTarget,
     doraTargetKeys,
+    artemidaLineTargetKeys,
+    isArtemidaMoonInsightChoice,
+    chargedImpulseTargetKeys,
     mettatonLineTargetKeys,
     undyneEnergySpearTargetKeys,
     jebeHailTargetKeys,
@@ -1221,6 +1234,7 @@ export function createCellHoverHandler(context: CellHoverContext) {
     tisonaTargetKeys,
     forestTargetKeys,
     setDoraPreviewCenter,
+    setArtemidaPreviewTarget,
     setMettatonPoppinsPreviewCenter,
     setMettatonLaserPreviewTarget,
     setSansGasterBlasterPreviewTarget,
@@ -1232,6 +1246,22 @@ export function createCellHoverHandler(context: CellHoverContext) {
   } = context;
 
   return (coord: Coord | null) => {
+    if (
+      actionMode === "artemisMoonInsight" ||
+      actionMode === "artemisSilverSickle" ||
+      isArtemidaMoonInsightChoice
+    ) {
+      if (!coord) {
+        setArtemidaPreviewTarget(null);
+        return;
+      }
+      const legalKeys = isArtemidaMoonInsightChoice
+        ? chargedImpulseTargetKeys
+        : artemidaLineTargetKeys;
+      setArtemidaPreviewTarget(legalKeys.has(coordKey(coord)) ? coord : null);
+      return;
+    }
+
     if (actionMode === "dora") {
       if (!coord) {
         setDoraPreviewCenter(null);

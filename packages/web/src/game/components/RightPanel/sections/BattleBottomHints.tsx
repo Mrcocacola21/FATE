@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import type { AbilityView, MoveMode, PapyrusLineAxis } from "rules";
+import type { AbilityView, MoveMode, PapyrusLineAxis, UnitClass } from "rules";
 import type { ActionMode } from "../../../../store";
 import type { TargetingMode } from "../../../selectionState";
 import { formatMoveMode, getActionModeHint } from "../rightPanelHelpers";
@@ -9,6 +9,7 @@ import { getAbilityDisplay } from "../../../../i18n/displayMetadata";
 interface BattleBottomHintsProps {
   moveModeOptions: MoveMode[] | null;
   selectedUnitId: string | null;
+  selectedUnitClass?: UnitClass;
   moveDisabled: boolean;
   actionMode: ActionMode;
   targetingMode: TargetingMode | null;
@@ -68,6 +69,7 @@ export function getCostPreview(
 export const BattleBottomHints: FC<BattleBottomHintsProps> = ({
   moveModeOptions,
   selectedUnitId,
+  selectedUnitClass,
   moveDisabled,
   actionMode,
   targetingMode,
@@ -98,7 +100,7 @@ export const BattleBottomHints: FC<BattleBottomHintsProps> = ({
                 onClick={() => onMoveRequest(selectedUnitId, mode)}
                 disabled={moveDisabled}
               >
-                {formatMoveMode(mode, t)}
+                {formatMoveMode(mode, t, selectedUnitClass)}
               </button>
             ))}
           </div>

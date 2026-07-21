@@ -1,4 +1,5 @@
 import type { PlayerId, PlayerView } from "rules";
+import type { Coord } from "rules";
 import type { ActionMode, ActionPreviewMode } from "../../store";
 import type { BoardPreview } from "./previewTypes";
 import { buildActionPreview, type PreviewMoveOptions } from "./buildActionPreview";
@@ -17,6 +18,7 @@ export interface SelectBoardPreviewArgs {
   moveOptions?: PreviewMoveOptions | null;
   hasBlockingRoll?: boolean;
   boardSelectionPending?: boolean;
+  targetingCell?: Coord | null;
 }
 
 export function selectBoardPreview({
@@ -31,10 +33,11 @@ export function selectBoardPreview({
   moveOptions,
   hasBlockingRoll = false,
   boardSelectionPending = false,
+  targetingCell,
 }: SelectBoardPreviewArgs): BoardPreview | null {
   if (!gameView) return null;
 
-  const pendingPreview = buildPendingPreview(gameView);
+  const pendingPreview = buildPendingPreview(gameView, targetingCell);
   if (pendingPreview) return pendingPreview;
 
   const activeActionMode = actionMode ?? (allowActionHoverPreview ? hoverActionMode ?? null : null);
@@ -46,6 +49,7 @@ export function selectBoardPreview({
       actionMode: activeActionMode,
       pendingMoveForSelected,
       moveOptions,
+      targetingCell,
     });
   }
 

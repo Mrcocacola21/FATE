@@ -94,8 +94,13 @@ export function classBadge(unitClass: string): { label: string; marker?: string 
   }
 }
 
-export function formatMoveMode(mode: MoveMode, t: Translate): string {
-  return t(`classes.${mode}`);
+export function formatMoveMode(
+  mode: MoveMode,
+  t: Translate,
+  baseClass?: UnitState["class"],
+): string {
+  const classId = mode === "normal" && baseClass ? baseClass : mode;
+  return t("game.moveAs", { class: t(`classes.${classId}`) });
 }
 
 export function isRangedSingleTargetClass(unitClass: UnitState["class"]): boolean {

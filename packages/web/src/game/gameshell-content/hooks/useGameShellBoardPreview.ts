@@ -14,6 +14,7 @@ export function useGameShellBoardPreview(params: Parameters<typeof selectBoardPr
     moveOptions,
     hasBlockingRoll,
     boardSelectionPending,
+    targetingCell,
   } = params;
 
   return useMemo(
@@ -30,6 +31,7 @@ export function useGameShellBoardPreview(params: Parameters<typeof selectBoardPr
         moveOptions,
         hasBlockingRoll,
         boardSelectionPending,
+        targetingCell,
       }),
     [
       gameView,
@@ -43,6 +45,7 @@ export function useGameShellBoardPreview(params: Parameters<typeof selectBoardPr
       moveOptions,
       hasBlockingRoll,
       boardSelectionPending,
+      targetingCell,
     ],
   );
 }

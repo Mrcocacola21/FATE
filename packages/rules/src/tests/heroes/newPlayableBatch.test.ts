@@ -20,7 +20,9 @@ import {
   HERO_ZORO_ID,
   getHeroMeta,
   getLegalMovesForUnit,
+  getMovementActionsRemaining,
   getUnitDefinition,
+  getUnitMovementClasses,
   makePlayerView,
 } from "../..";
 import {
@@ -114,6 +116,131 @@ export function testNewPlayableBatchStatsResourcesAndMovement() {
   assert(moves.length > 0, "Kaneki should expose Assassin movement through Rinkaku");
   assert(getUnitDefinition("archer").maxHp + 5 === heroes[HERO_ARTEMIDA_ID].hp, "Artemis God should add 5 HP");
   console.log("new_playable_batch_stats_resources_and_movement passed");
+}
+
+export function testArtemidaAndKanekiMovementModes() {
+  {
+    let { state, heroes } = setupBatch();
+    const artemida = heroes[HERO_ARTEMIDA_ID];
+    state = setUnit(state, artemida.id, { position: { col: 4, row: 4 } });
+    state = battleFor(state, state.units[artemida.id]);
+
+    assert(
+      JSON.stringify(getUnitMovementClasses(state.units[artemida.id])) ===
+        JSON.stringify(["archer", "trickster"]),
+      "Artemida should expose Archer and Trickster movement exactly once",
+    );
+    const chooser = applyAction(
+      state,
+      { type: "requestMoveOptions", unitId: artemida.id } as any,
+      makeRngSequence([]),
+    );
+    const chooserEvent = chooser.events.find((event) => event.type === "moveOptionsGenerated");
+    assert(
+      chooserEvent?.type === "moveOptionsGenerated" &&
+        JSON.stringify(chooserEvent.modes) === JSON.stringify(["normal", "trickster"]),
+      "Artemida should receive explicit Archer/Trickster mode choices",
+    );
+
+    const archerOptions = applyAction(
+      state,
+      { type: "requestMoveOptions", unitId: artemida.id, mode: "normal" } as any,
+      makeRngSequence([]),
+    );
+    const archerDestination = archerOptions.state.pendingMove?.legalTo[0];
+    assert(!!archerDestination, "Artemida Archer mode should provide a legal destination");
+    const archerMove = applyAction(
+      archerOptions.state,
+      { type: "move", unitId: artemida.id, to: archerDestination! } as any,
+      makeRngSequence([]),
+    );
+    assert(
+      archerMove.state.units[artemida.id].turn.moveUsed,
+      "a successful Artemida Archer move should spend Movement",
+    );
+
+    const invalidMode = applyAction(
+      state,
+      { type: "requestMoveOptions", unitId: artemida.id, mode: "rider" } as any,
+      makeRngSequence([]),
+    );
+    assert(invalidMode.state === state, "an invalid Artemida movement mode must not mutate state");
+    assert(
+      !invalidMode.state.units[artemida.id].turn.moveUsed,
+      "an invalid Artemida movement mode must not spend Movement",
+    );
+
+    const tricksterRequested = applyAction(
+      state,
+      { type: "requestMoveOptions", unitId: artemida.id, mode: "trickster" } as any,
+      makeRngSequence([0.5]),
+    );
+    const tricksterOptions = resolveAllPendingRollsWithEvents(
+      tricksterRequested.state,
+      makeRngSequence([0.5]),
+    );
+    const tricksterDestination = tricksterOptions.state.pendingMove?.legalTo[0];
+    assert(!!tricksterDestination, "Artemida Trickster mode should provide a rolled destination");
+    const tricksterMove = applyAction(
+      tricksterOptions.state,
+      { type: "move", unitId: artemida.id, to: tricksterDestination! } as any,
+      makeRngSequence([]),
+    );
+    assert(
+      tricksterMove.state.units[artemida.id].turn.moveUsed,
+      "a successful Artemida Trickster move should spend Movement",
+    );
+  }
+
+  {
+    let { state, heroes } = setupBatch();
+    const kaneki = heroes[HERO_KANEKI_ID];
+    state = setUnit(state, kaneki.id, { position: { col: 4, row: 4 } });
+    state = battleFor(state, state.units[kaneki.id]);
+    assert(
+      JSON.stringify(getUnitMovementClasses(state.units[kaneki.id])) ===
+        JSON.stringify(["berserker", "assassin"]),
+      "Kaneki should expose Berserker and Assassin movement before Centipede",
+    );
+
+    state = setUnit(state, kaneki.id, {
+      kanekiCentipedeUnlocked: true,
+      turn: { ...state.units[kaneki.id].turn, moveUsed: true, actionUsed: false },
+      hasMovedThisTurn: true,
+      hasActedThisTurn: false,
+    });
+    assert(
+      JSON.stringify(getUnitMovementClasses(state.units[kaneki.id])) ===
+        JSON.stringify(["berserker", "assassin", "rider"]),
+      "Centipede should add Rider without removing or duplicating Kaneki movement modes",
+    );
+    assert(
+      getMovementActionsRemaining(state.units[kaneki.id]) === 1,
+      "Centipede should expose one action-funded movement after Movement is spent",
+    );
+    const assassinOptions = applyAction(
+      state,
+      { type: "requestMoveOptions", unitId: kaneki.id, mode: "assassin" } as any,
+      makeRngSequence([]),
+    );
+    const destination = assassinOptions.state.pendingMove?.legalTo[0];
+    assert(!!destination, "Centipede Kaneki should retain legal Assassin movement");
+    const moved = applyAction(
+      assassinOptions.state,
+      { type: "move", unitId: kaneki.id, to: destination! } as any,
+      makeRngSequence([]),
+    );
+    assert(
+      moved.state.units[kaneki.id].turn.actionUsed,
+      "Kaneki's extra Centipede movement should spend Action after Movement is used",
+    );
+    assert(
+      getMovementActionsRemaining(moved.state.units[kaneki.id]) === 0,
+      "Kaneki should not retain another action-funded movement after it resolves",
+    );
+  }
+
+  console.log("artemida_and_kaneki_movement_modes passed");
 }
 
 export function testNewPlayableBatchTransactionalActives() {

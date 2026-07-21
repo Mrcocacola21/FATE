@@ -227,6 +227,7 @@ export const BattleSection: FC<BattleSectionProps> = ({
         <BattleBottomHints
           moveModeOptions={moveModeOptions}
           selectedUnitId={selectedUnitId}
+          selectedUnitClass={selectedUnit?.class}
           moveDisabled={moveDisabled}
           actionMode={actionMode}
           targetingMode={targetingMode}
