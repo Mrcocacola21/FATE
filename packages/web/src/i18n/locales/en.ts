@@ -417,6 +417,13 @@ export const en = {
     knownHp: "Known HP: {{target}} = {{hp}}",
     cursed: "Cursed",
     boneStatus: "{{bone}} bone",
+    blueBone: "Blue Bone",
+    orangeBone: "Orange Bone",
+    blueBoneReminder: "If this unit spends its move action during its turn, it takes 1 damage.",
+    orangeBoneReminder:
+      "If this unit ends its turn without spending its move action, it takes 1 damage.",
+    boneSourcePapyrus: "Applied by Papyrus",
+    boneSourceSansField: "Applied by Sans's Bone Field",
     rating: "Rating {{rating}}",
     immortal: "Immortal",
     assassinMark: "Assassin's Mark",
@@ -571,6 +578,8 @@ export const en = {
     revealed: "Revealed",
     defeated: "Defeated",
     ability: "Ability",
+    blueBone: "Blue Bone",
+    orangeBone: "Orange Bone",
   },
   abilityTypes: {
     passive: "Passive",

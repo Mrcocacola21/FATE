@@ -13,6 +13,8 @@ import {
 } from "rules";
 import { getBoardMarkerAsset } from "../assets/registry";
 import { Board } from "./Board";
+import { BoneStatusPanel } from "../game/boneStatus";
+import { setLanguage } from "../i18n";
 
 function markerState(): GameState {
   const state = attachArmy(createEmptyGame(), createDefaultArmy("P1"));
@@ -145,4 +147,186 @@ test("Jack traps render for their owner but not in an opponent projection", () =
   const opponentMarkup = renderBoard(makePlayerView(markerState(), "P2"), "P2");
   assert.doesNotMatch(opponentMarkup, /data-board-marker="jack_trap"/);
   assert.doesNotMatch(opponentMarkup, /board-marker-icon--jack-trap/);
+});
+
+test("Blue and Orange Bone render directly on visible board tokens", () => {
+  const base = markerState();
+  const [first, second] = Object.values(base.units);
+  assert.ok(first);
+  assert.ok(second);
+  const state: GameState = {
+    ...base,
+    units: {
+      ...base.units,
+      [first.id]: {
+        ...first,
+        position: { col: 1, row: 1 },
+        papyrusBoneStatus: {
+          sourceUnitId: "papyrus",
+          kind: "blue",
+          expiresOnSourceOwnTurn: 2,
+        },
+      },
+      [second.id]: {
+        ...second,
+        position: { col: 2, row: 2 },
+        sansBoneFieldStatus: { kind: "orange", turnNumber: base.turnNumber },
+      },
+    },
+  };
+
+  const markup = renderBoard(makePlayerView(state, "P1"), "P1");
+  assert.match(markup, /data-bone-status="blue"/);
+  assert.match(markup, /data-bone-source="papyrus"/);
+  assert.match(markup, /data-bone-status="orange"/);
+  assert.match(markup, /data-bone-source="sansBoneField"/);
+});
+
+test("transformed Papyrus Orange Bone uses the orange token treatment", () => {
+  const base = markerState();
+  const target = Object.values(base.units)[0];
+  assert.ok(target);
+  const state: GameState = {
+    ...base,
+    units: {
+      ...base.units,
+      [target.id]: {
+        ...target,
+        position: { col: 3, row: 3 },
+        papyrusBoneStatus: {
+          sourceUnitId: "unbeliever-papyrus",
+          kind: "orange",
+          expiresOnSourceOwnTurn: 4,
+        },
+      },
+    },
+  };
+
+  const markup = renderBoard(makePlayerView(state, "P1"), "P1");
+  assert.match(markup, /data-bone-status="orange"/);
+  assert.match(markup, /data-bone-source="papyrus"/);
+  assert.match(markup, /unit-bone-status--orange/);
+});
+
+test("the current Sans field status wins if both bone status records coexist", () => {
+  const base = markerState();
+  const target = Object.values(base.units)[0];
+  assert.ok(target);
+  const state: GameState = {
+    ...base,
+    units: {
+      ...base.units,
+      [target.id]: {
+        ...target,
+        position: { col: 4, row: 4 },
+        papyrusBoneStatus: {
+          sourceUnitId: "papyrus",
+          kind: "blue",
+          expiresOnSourceOwnTurn: 3,
+        },
+        sansBoneFieldStatus: { kind: "orange", turnNumber: base.turnNumber },
+      },
+    },
+  };
+
+  const markup = renderBoard(makePlayerView(state, "P1"), "P1");
+  assert.equal((markup.match(/data-bone-status=/g) ?? []).length, 1);
+  assert.match(markup, /data-bone-status="orange"/);
+});
+
+test("bone status does not identify a stealthed enemy token", () => {
+  const base = markerState();
+  const target = Object.values(base.units)[0];
+  assert.ok(target);
+  const state: GameState = {
+    ...base,
+    units: {
+      ...base.units,
+      [target.id]: {
+        ...target,
+        position: { col: 4, row: 4 },
+        isStealthed: true,
+        papyrusBoneStatus: {
+          sourceUnitId: "papyrus",
+          kind: "blue",
+          expiresOnSourceOwnTurn: 3,
+        },
+      },
+    },
+  };
+
+  const markup = renderBoard(makePlayerView(state, "P2"), "P2");
+  assert.doesNotMatch(markup, /data-bone-status=/);
+});
+
+test("Bone Field cells use a faint field pattern distinct from unit badges", () => {
+  const base = markerState();
+  const target = Object.values(base.units)[0];
+  assert.ok(target);
+  const state: GameState = {
+    ...base,
+    arenaId: "boneField",
+    activeUnitId: target.id,
+    units: {
+      ...base.units,
+      [target.id]: {
+        ...target,
+        position: { col: 4, row: 4 },
+        sansBoneFieldStatus: { kind: "blue", turnNumber: base.turnNumber },
+      },
+    },
+  };
+
+  const markup = renderBoard(makePlayerView(state, "P1"), "P1");
+  assert.match(markup, /class="bone-field-cell bone-field-cell--blue"/);
+  assert.match(markup, /data-bone-field-tone="blue"/);
+  assert.match(markup, /data-bone-status="blue"/);
+});
+
+test("the selected-unit bone panel shows explicit localized rules reminders", () => {
+  setLanguage("en", null);
+  const base = markerState();
+  const target = Object.values(base.units)[0];
+  assert.ok(target);
+  const blueMarkup = renderToStaticMarkup(
+    <BoneStatusPanel
+      unit={{
+        ...target,
+        papyrusBoneStatus: {
+          sourceUnitId: "papyrus",
+          kind: "blue",
+          expiresOnSourceOwnTurn: 2,
+        },
+      }}
+    />,
+  );
+  assert.match(blueMarkup, /Blue Bone/);
+  assert.match(blueMarkup, /spends its move action/);
+  assert.match(blueMarkup, /Applied by Papyrus/);
+
+  const orangeMarkup = renderToStaticMarkup(
+    <BoneStatusPanel
+      unit={{
+        ...target,
+        sansBoneFieldStatus: { kind: "orange", turnNumber: base.turnNumber },
+      }}
+    />,
+  );
+  assert.match(orangeMarkup, /Orange Bone/);
+  assert.match(orangeMarkup, /ends its turn without spending/);
+  assert.match(orangeMarkup, /Sans&#x27;s Bone Field/);
+
+  setLanguage("uk", null);
+  const ukrainianMarkup = renderToStaticMarkup(
+    <BoneStatusPanel
+      unit={{
+        ...target,
+        sansBoneFieldStatus: { kind: "blue", turnNumber: base.turnNumber },
+      }}
+    />,
+  );
+  assert.match(ukrainianMarkup, /Синя кістка/);
+  assert.match(ukrainianMarkup, /витрачає дію переміщення/);
+  assert.match(ukrainianMarkup, /Полем кісток Санса/);
+  setLanguage("en", null);
 });

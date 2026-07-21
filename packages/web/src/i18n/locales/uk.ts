@@ -418,6 +418,14 @@ export const uk = {
     knownHp: "Відоме здоров’я: {{target}} = {{hp}}",
     cursed: "Проклятий",
     boneStatus: "{{bone}} кістка",
+    blueBone: "Синя кістка",
+    orangeBone: "Помаранчева кістка",
+    blueBoneReminder:
+      "Якщо ця фігура витрачає дію переміщення під час свого ходу, вона отримує 1 шкоди.",
+    orangeBoneReminder:
+      "Якщо ця фігура завершує хід, не витративши дію переміщення, вона отримує 1 шкоди.",
+    boneSourcePapyrus: "Накладено Папірусом",
+    boneSourceSansField: "Накладено Полем кісток Санса",
     rating: "Рейтинг: {{rating}}",
     immortal: "Безсмертна",
     assassinMark: "Мітка вбивці",
@@ -573,6 +581,8 @@ export const uk = {
     revealed: "Викрито",
     defeated: "Переможено",
     ability: "Здібність",
+    blueBone: "Синя кістка",
+    orangeBone: "Помаранчева кістка",
   },
   abilityTypes: {
     passive: "Пасивна",

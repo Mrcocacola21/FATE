@@ -42,6 +42,27 @@
   }
 }
 
+@keyframes bone-status-breathe {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.18);
+  }
+}
+
+@keyframes bone-status-expire {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.22);
+  }
+}
+
 @keyframes forest-marker-breathe {
   0%,
   100% {
@@ -783,6 +804,28 @@ html.dark {
     background: rgb(208 197 177 / 0.92);
   }
 
+  .bone-field-cell {
+    @apply pointer-events-none absolute inset-[3px] rounded-sm border border-dashed;
+    z-index: 0;
+    opacity: 0.34;
+    background-size: 10px 10px;
+  }
+
+  .bone-field-cell--blue {
+    border-color: rgb(56 189 248 / 0.72);
+    background-image: radial-gradient(circle, rgb(56 189 248 / 0.42) 1px, transparent 1.5px);
+  }
+
+  .bone-field-cell--orange {
+    border-color: rgb(251 146 60 / 0.75);
+    background-image: radial-gradient(circle, rgb(251 146 60 / 0.44) 1px, transparent 1.5px);
+  }
+
+  .bone-field-cell--neutral {
+    border-color: rgb(148 163 184 / 0.5);
+    background-image: radial-gradient(circle, rgb(148 163 184 / 0.28) 1px, transparent 1.5px);
+  }
+
   .dark .board-cell-light {
     background: rgb(24 29 36 / 0.98);
   }
@@ -922,12 +965,7 @@ html.dark {
   .game-pending-modal-card {
     margin-top: max(0.75rem, env(safe-area-inset-top));
     margin-bottom: max(0.75rem, env(safe-area-inset-bottom));
-    max-height: calc(
-      100dvh - max(
-          1.5rem,
-          env(safe-area-inset-top) + env(safe-area-inset-bottom)
-        )
-    );
+    max-height: calc(100dvh - max(1.5rem, env(safe-area-inset-top) + env(safe-area-inset-bottom)));
   }
 
   .mobile-current-task .panel-card {
@@ -1035,6 +1073,72 @@ html.dark {
   .unit-transform-label {
     @apply pointer-events-none absolute left-1/2 top-0 z-30 -translate-x-1/2 whitespace-nowrap rounded-full bg-violet-600 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white shadow-lg;
     animation: unit-transform-label 1050ms ease-out both;
+  }
+
+  .unit-bone-status::after,
+  .unit-bone-expiring::after {
+    content: "";
+    @apply pointer-events-none absolute -inset-1 rounded-[0.9rem] border-2;
+  }
+
+  .unit-bone-status::after {
+    animation: bone-status-breathe 2.4s ease-in-out infinite;
+  }
+
+  .unit-bone-status--blue::after,
+  .unit-bone-expiring--blue::after {
+    border-color: rgb(56 189 248 / 0.9);
+    box-shadow:
+      0 0 10px rgb(14 165 233 / 0.72),
+      inset 0 0 6px rgb(14 165 233 / 0.3);
+  }
+
+  .unit-bone-status--orange::after,
+  .unit-bone-expiring--orange::after {
+    border-color: rgb(251 146 60 / 0.92);
+    box-shadow:
+      0 0 10px rgb(249 115 22 / 0.74),
+      inset 0 0 6px rgb(249 115 22 / 0.3);
+  }
+
+  .unit-bone-expiring::after {
+    animation: bone-status-expire 700ms ease-out both;
+  }
+
+  .unit-bone-badge {
+    @apply pointer-events-none absolute -left-1 -top-1 z-30 flex h-5 w-5 items-center justify-center rounded-full border-2 p-0.5 shadow-lg;
+  }
+
+  .unit-bone-badge--blue {
+    @apply border-sky-100 bg-sky-500 text-white shadow-sky-950/45 dark:border-sky-200 dark:bg-sky-500 dark:text-slate-950;
+  }
+
+  .unit-bone-badge--orange {
+    @apply border-orange-100 bg-orange-500 text-white shadow-orange-950/45 dark:border-orange-200 dark:bg-orange-400 dark:text-stone-950;
+  }
+
+  .bone-status-panel {
+    @apply flex items-start gap-3 rounded-xl border p-3 shadow-sm;
+  }
+
+  .bone-status-panel__icon {
+    @apply flex h-8 w-8 shrink-0 items-center justify-center rounded-full border p-1.5 shadow-sm;
+  }
+
+  .bone-status-panel--blue {
+    @apply border-sky-300 bg-sky-50 text-sky-950 dark:border-sky-700/80 dark:bg-sky-950/45 dark:text-sky-100;
+  }
+
+  .bone-status-panel--blue .bone-status-panel__icon {
+    @apply border-sky-200 bg-sky-500 text-white dark:border-sky-300 dark:text-slate-950;
+  }
+
+  .bone-status-panel--orange {
+    @apply border-orange-300 bg-orange-50 text-orange-950 dark:border-orange-700/80 dark:bg-orange-950/45 dark:text-orange-100;
+  }
+
+  .bone-status-panel--orange .bone-status-panel__icon {
+    @apply border-orange-200 bg-orange-500 text-white dark:border-orange-300 dark:bg-orange-400 dark:text-stone-950;
   }
 
   .board-marker-icon {
@@ -1148,6 +1252,16 @@ html.dark {
     background: rgb(168 85 247 / 0.2);
   }
 
+  .board-effect-cell-boneBlue {
+    color: rgb(56 189 248 / 0.95);
+    background: rgb(14 165 233 / 0.26);
+  }
+
+  .board-effect-cell-boneOrange {
+    color: rgb(251 146 60 / 0.95);
+    background: rgb(249 115 22 / 0.27);
+  }
+
   .board-effect-area {
     border: 1px solid currentColor;
     animation-name: board-effect-area;
@@ -1256,6 +1370,14 @@ html.dark {
 
   .board-effect-text-status {
     @apply bg-violet-600 text-white;
+  }
+
+  .board-effect-text-boneBlue {
+    @apply border-sky-100 bg-sky-500 text-white dark:text-slate-950;
+  }
+
+  .board-effect-text-boneOrange {
+    @apply border-orange-100 bg-orange-500 text-white dark:bg-orange-400 dark:text-stone-950;
   }
 
   .board-effect-unit {
@@ -1559,6 +1681,8 @@ html.dark {
   .unit-transforming,
   .unit-token-changing,
   .unit-transform-label,
+  .unit-bone-status::after,
+  .unit-bone-expiring::after,
   .board-marker-icon--forest,
   .board-marker-icon--stake-revealed,
   .board-effect-cell,

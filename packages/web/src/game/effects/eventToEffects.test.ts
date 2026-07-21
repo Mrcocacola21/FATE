@@ -42,17 +42,11 @@ test("a visible ranged hit maps to a beam, hit flash, and damage text", () => {
   );
 
   assert.ok(effects.some((effect) => effect.kind === "beam"));
-  assert.ok(
-    effects.some(
-      (effect) => effect.kind === "unitFlash" && effect.tone === "hit",
-    ),
-  );
+  assert.ok(effects.some((effect) => effect.kind === "unitFlash" && effect.tone === "hit"));
   assert.ok(
     effects.some(
       (effect) =>
-        effect.kind === "floatingText" &&
-        effect.tone === "damage" &&
-        effect.text === "-2",
+        effect.kind === "floatingText" && effect.tone === "damage" && effect.text === "-2",
     ),
   );
 });
@@ -82,31 +76,21 @@ test("an AoE uses only visible projected units for hit and damage feedback", () 
   const area = effects.find((effect) => effect.kind === "areaHighlight");
   assert.equal(area?.kind === "areaHighlight" ? area.cells.length : 0, 9);
   assert.ok(
-    effects.some(
-      (effect) =>
-        effect.kind === "unitFlash" && effect.unitId === "visible-target",
-    ),
+    effects.some((effect) => effect.kind === "unitFlash" && effect.unitId === "visible-target"),
+  );
+  assert.ok(
+    !effects.some((effect) => effect.kind === "unitFlash" && effect.unitId === "redacted-target"),
   );
   assert.ok(
     !effects.some(
       (effect) =>
-        effect.kind === "unitFlash" && effect.unitId === "redacted-target",
-    ),
-  );
-  assert.ok(
-    !effects.some(
-      (effect) =>
-        effect.kind === "floatingText" &&
-        effect.coord.col === 0 &&
-        effect.coord.row === 0,
+        effect.kind === "floatingText" && effect.coord.col === 0 && effect.coord.row === 0,
     ),
   );
   assert.ok(
     effects.some(
       (effect) =>
-        effect.kind === "floatingText" &&
-        effect.tone === "damage" &&
-        effect.text === "-2",
+        effect.kind === "floatingText" && effect.tone === "damage" && effect.text === "-2",
     ),
   );
 });
@@ -140,4 +124,70 @@ test("an event naming a hidden unit does not use a cached hidden coordinate", ()
   );
 
   assert.deepEqual(effects, []);
+});
+
+test("Papyrus Blue Bone application maps to a blue pulse and localized label", () => {
+  const effects = effectsFromGameEvent(
+    {
+      type: "papyrusBoneApplied",
+      papyrusId: "papyrus",
+      targetId: "target",
+      boneType: "blue",
+      expiresOnSourceOwnTurn: 2,
+    },
+    { view: view([unit("target", { col: 3, row: 4 })]), previousPositions: {} },
+  );
+
+  assert.ok(effects.some((effect) => effect.kind === "cellPulse" && effect.tone === "boneBlue"));
+  assert.ok(
+    effects.some(
+      (effect) =>
+        effect.kind === "floatingText" && effect.label === "blueBone" && effect.tone === "boneBlue",
+    ),
+  );
+});
+
+test("Sans Bone Field Orange Bone application maps to an orange pulse and label", () => {
+  const effects = effectsFromGameEvent(
+    {
+      type: "sansBoneFieldApplied",
+      unitId: "target",
+      boneType: "orange",
+      turnNumber: 7,
+    },
+    { view: view([unit("target", { col: 6, row: 2 })]), previousPositions: {} },
+  );
+
+  assert.ok(effects.some((effect) => effect.kind === "cellPulse" && effect.tone === "boneOrange"));
+  assert.ok(
+    effects.some(
+      (effect) =>
+        effect.kind === "floatingText" &&
+        effect.label === "orangeBone" &&
+        effect.tone === "boneOrange",
+    ),
+  );
+});
+
+test("bone punishment keeps its color cue and shows the exact damage", () => {
+  const effects = effectsFromGameEvent(
+    {
+      type: "papyrusBonePunished",
+      papyrusId: "papyrus",
+      targetId: "target",
+      boneType: "orange",
+      damage: 1,
+      reason: "moveNotSpent",
+      hpAfter: 2,
+    },
+    { view: view([unit("target", { col: 2, row: 5 })]), previousPositions: {} },
+  );
+
+  assert.ok(effects.some((effect) => effect.kind === "cellPulse" && effect.tone === "boneOrange"));
+  assert.ok(
+    effects.some(
+      (effect) =>
+        effect.kind === "floatingText" && effect.tone === "damage" && effect.text === "-1",
+    ),
+  );
 });

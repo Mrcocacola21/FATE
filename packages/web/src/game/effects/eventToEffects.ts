@@ -1,15 +1,6 @@
 import type { Coord, GameEvent, PlayerView } from "rules";
-import {
-  isCoord,
-  linePath,
-  squareArea,
-  uniqueCoords,
-  visibleUnitCoord,
-} from "./boardEffects";
-import type {
-  BoardEffect,
-  VisibleUnitPositions,
-} from "./types";
+import { isCoord, linePath, squareArea, uniqueCoords, visibleUnitCoord } from "./boardEffects";
+import type { BoardEffect, VisibleUnitPositions } from "./types";
 
 interface EventEffectContext {
   view: PlayerView;
@@ -72,9 +63,7 @@ function floatingLabel(
   label: Extract<BoardEffect, { kind: "floatingText" }>["label"],
   tone: Extract<BoardEffect, { kind: "floatingText" }>["tone"],
 ): BoardEffect[] {
-  return coord
-    ? [{ kind: "floatingText", coord, label, tone, durationMs: 950 }]
-    : [];
+  return coord ? [{ kind: "floatingText", coord, label, tone, durationMs: 950 }] : [];
 }
 
 function floatingValue(
@@ -82,9 +71,22 @@ function floatingValue(
   text: string,
   tone: Extract<BoardEffect, { kind: "floatingText" }>["tone"],
 ): BoardEffect[] {
-  return coord
-    ? [{ kind: "floatingText", coord, text, tone, durationMs: 950 }]
-    : [];
+  return coord ? [{ kind: "floatingText", coord, text, tone, durationMs: 950 }] : [];
+}
+
+function boneApplicationEffects(
+  unitId: string,
+  boneType: "blue" | "orange",
+  context: EventEffectContext,
+): BoardEffect[] {
+  const coord = visibleUnitCoord(unitId, context.view, context.previousPositions);
+  if (!coord) return [];
+  const tone = boneType === "blue" ? "boneBlue" : "boneOrange";
+  return [
+    { kind: "cellPulse", cells: [coord], tone, durationMs: 900 },
+    ...unitFlash(unitId, "debuff", context, 800),
+    ...floatingLabel(coord, boneType === "blue" ? "blueBone" : "orangeBone", tone),
+  ];
 }
 
 function effectForAttack(
@@ -139,9 +141,7 @@ function effectForAoe(
   const radius = typeof event.radius === "number" ? Math.max(0, event.radius) : 0;
   const line = radius === 0 && source ? linePath(source, event.center) : null;
   const cells =
-    line && line.length > 1
-      ? line
-      : squareArea(event.center, radius, context.view.boardSize ?? 9);
+    line && line.length > 1 ? line : squareArea(event.center, radius, context.view.boardSize ?? 9);
   const effects: BoardEffect[] = [
     {
       kind: "areaHighlight",
@@ -162,17 +162,11 @@ function effectForAoe(
   }
   effects.push(...unitFlash(event.sourceUnitId, "buff", context, 650));
 
-  const damagedIds = new Set(
-    Array.isArray(event.damagedUnitIds) ? event.damagedUnitIds : [],
-  );
-  const affectedIds = Array.isArray(event.affectedUnitIds)
-    ? event.affectedUnitIds
-    : [];
+  const damagedIds = new Set(Array.isArray(event.damagedUnitIds) ? event.damagedUnitIds : []);
+  const affectedIds = Array.isArray(event.affectedUnitIds) ? event.affectedUnitIds : [];
   for (const unitId of affectedIds) {
     const coord = visibleUnitCoord(unitId, context.view, context.previousPositions);
-    effects.push(
-      ...unitFlash(unitId, damagedIds.has(unitId) ? "hit" : "defend", context, 750),
-    );
+    effects.push(...unitFlash(unitId, damagedIds.has(unitId) ? "hit" : "defend", context, 750));
     const damage = event.damageByUnitId?.[unitId];
     if (damagedIds.has(unitId) && typeof damage === "number" && damage > 0) {
       effects.push(...floatingValue(coord, `-${damage}`, "damage"));
@@ -183,10 +177,7 @@ function effectForAoe(
   return effects;
 }
 
-export function effectsFromGameEvent(
-  event: GameEvent,
-  context: EventEffectContext,
-): BoardEffect[] {
+export function effectsFromGameEvent(event: GameEvent, context: EventEffectContext): BoardEffect[] {
   switch (event.type) {
     case "unitPlaced":
       return isCoord(event.position)
@@ -244,7 +235,14 @@ export function effectsFromGameEvent(
       const coord = visibleUnitCoord(event.unitId, context.view, context.previousPositions);
       return [
         ...(coord
-          ? [{ kind: "cellPulse", cells: [coord], tone: "warning", durationMs: 1000 } as BoardEffect]
+          ? [
+              {
+                kind: "cellPulse",
+                cells: [coord],
+                tone: "warning",
+                durationMs: 1000,
+              } as BoardEffect,
+            ]
           : []),
         ...floatingLabel(coord, "defeated", "status"),
       ];
@@ -329,11 +327,7 @@ export function effectsFromGameEvent(
           ]
         : [];
     case "unitTransformed": {
-      const coord = visibleUnitCoord(
-        event.unitId,
-        context.view,
-        context.previousPositions,
-      );
+      const coord = visibleUnitCoord(event.unitId, context.view, context.previousPositions);
       return [
         { kind: "boardPulse", tone: "magic", durationMs: 1000 },
         ...unitFlash(event.unitId, "buff", context),
@@ -380,11 +374,7 @@ export function effectsFromGameEvent(
           : []),
       ];
     case "berserkerDefenseChosen": {
-      const coord = visibleUnitCoord(
-        event.defenderId,
-        context.view,
-        context.previousPositions,
-      );
+      const coord = visibleUnitCoord(event.defenderId, context.view, context.previousPositions);
       return [
         ...unitFlash(event.defenderId, "defend", context),
         ...floatingLabel(coord, event.choice === "auto" ? "dodge" : "status", "miss"),
@@ -435,11 +425,7 @@ export function effectsFromGameEvent(
       return [
         ...unitFlash(event.unitId, event.delta >= 0 ? "buff" : "debuff", context),
         ...(event.delta !== 0
-          ? floatingValue(
-              coord,
-              `${event.delta > 0 ? "+" : ""}${event.delta}`,
-              "status",
-            )
+          ? floatingValue(coord, `${event.delta > 0 ? "+" : ""}${event.delta}`, "status")
           : []),
       ];
     }
@@ -448,18 +434,15 @@ export function effectsFromGameEvent(
     case "sansUnbelieverActivated":
       return unitFlash(event.sansId, "buff", context);
     case "papyrusBoneApplied":
-      return [
-        ...unitFlash(event.targetId, "debuff", context),
-        ...floatingLabel(
-          visibleUnitCoord(event.targetId, context.view, context.previousPositions),
-          "status",
-          "status",
-        ),
-      ];
+      return boneApplicationEffects(event.targetId, event.boneType, context);
     case "papyrusBonePunished":
     case "sansBoneFieldPunished": {
       const coord = visibleUnitCoord(event.targetId, context.view, context.previousPositions);
+      const tone = event.boneType === "blue" ? "boneBlue" : "boneOrange";
       return [
+        ...(coord
+          ? [{ kind: "cellPulse", cells: [coord], tone, durationMs: 650 } as BoardEffect]
+          : []),
         ...unitFlash(event.targetId, "hit", context),
         ...(typeof event.damage === "number"
           ? floatingValue(coord, `-${event.damage}`, "damage")
@@ -477,7 +460,7 @@ export function effectsFromGameEvent(
         ),
       ];
     case "sansBoneFieldApplied":
-      return unitFlash(event.unitId, "debuff", context);
+      return boneApplicationEffects(event.unitId, event.boneType, context);
     case "sansBoneFieldActivated":
       return [
         { kind: "boardPulse", tone: "magic", durationMs: 900 },
@@ -515,11 +498,7 @@ export function effectsFromGameEvent(
         ? [
             ...unitFlash(event.actorUnitId, "buff", context, 450),
             ...floatingLabel(
-              visibleUnitCoord(
-                event.actorUnitId,
-                context.view,
-                context.previousPositions,
-              ),
+              visibleUnitCoord(event.actorUnitId, context.view, context.previousPositions),
               "status",
               "status",
             ),

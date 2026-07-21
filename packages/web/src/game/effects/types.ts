@@ -1,9 +1,16 @@
 import type { Coord, GameEvent } from "rules";
 
-export type CellEffectTone = "attack" | "heal" | "move" | "status" | "warning";
+export type CellEffectTone =
+  | "attack"
+  | "heal"
+  | "move"
+  | "status"
+  | "warning"
+  | "boneBlue"
+  | "boneOrange";
 export type AreaEffectTone = "aoe" | "danger" | "safe";
 export type BeamEffectTone = "attack" | "magic";
-export type FloatingTextTone = "damage" | "heal" | "miss" | "status";
+export type FloatingTextTone = "damage" | "heal" | "miss" | "status" | "boneBlue" | "boneOrange";
 export type UnitFlashTone = "hit" | "heal" | "defend" | "buff" | "debuff";
 export type BoardPulseTone = "danger" | "magic" | "status";
 export type MovementTrailTone = "move" | "teleport" | "push";
@@ -15,7 +22,9 @@ export type EffectLabel =
   | "status"
   | "revealed"
   | "defeated"
-  | "ability";
+  | "ability"
+  | "blueBone"
+  | "orangeBone";
 
 interface TimedBoardEffect {
   durationMs?: number;

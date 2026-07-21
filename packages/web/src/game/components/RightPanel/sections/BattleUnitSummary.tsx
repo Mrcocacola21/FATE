@@ -24,6 +24,7 @@ import {
 import { Badge } from "../../../../ui";
 import { AbilityDetails } from "../../../../components/abilities/AbilityDetails";
 import { getAbilityDisplayTone } from "../../../../components/abilities/abilityDisplayTone";
+import { BoneStatusPanel } from "../../../boneStatus";
 import {
   getUnitDetailActionBars,
   type ActionBarState,
@@ -484,16 +485,6 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
             {t("game.cursed")}
           </span>
         ) : null}
-        {selectedUnit.sansBoneFieldStatus ? (
-          <span className="status-pill border-cyan-200 bg-cyan-50 text-cyan-700 dark:border-cyan-800 dark:bg-cyan-950/45 dark:text-cyan-200">
-            {t("game.boneStatus", {
-              bone:
-                selectedUnit.sansBoneFieldStatus.kind === "orange"
-                  ? t("game.orange")
-                  : t("game.blue"),
-            })}
-          </span>
-        ) : null}
         {selectedUnit.chikatiloMarkStatus ? (
           <span
             className="status-pill border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/45 dark:text-amber-200"
@@ -515,16 +506,19 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
         ) : null}
         {selectedUnit.heroId === "luche" ? (
           <span className="status-pill border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/45 dark:text-amber-200">
-            {language === "uk" ? "Лічильник Променя світла" : "Light Ray counter"}: {selectedUnit.charges.lucheDivineRay ?? 0}/2
+            {language === "uk" ? "Лічильник Променя світла" : "Light Ray counter"}:{" "}
+            {selectedUnit.charges.lucheDivineRay ?? 0}/2
           </span>
         ) : null}
         {selectedUnit.heroId === "zoro" ? (
           <>
             <span className="status-pill border-rose-200 bg-rose-50 text-rose-800 dark:border-rose-800 dark:bg-rose-950/45 dark:text-rose-200">
-              {language === "uk" ? "Рішучість" : "Determination"}: {selectedUnit.charges.zoroDetermination ?? 0}
+              {language === "uk" ? "Рішучість" : "Determination"}:{" "}
+              {selectedUnit.charges.zoroDetermination ?? 0}
             </span>
             <span className="status-pill border-violet-200 bg-violet-50 text-violet-800 dark:border-violet-800 dark:bg-violet-950/45 dark:text-violet-200">
-              {language === "uk" ? "Лічильник Оні Ґірі" : "Oni Giri counter"}: {selectedUnit.charges.zoroOniGiri ?? 0}/2
+              {language === "uk" ? "Лічильник Оні Ґірі" : "Oni Giri counter"}:{" "}
+              {selectedUnit.charges.zoroOniGiri ?? 0}/2
             </span>
           </>
         ) : null}
@@ -534,6 +528,7 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
           </span>
         ) : null}
       </div>
+      <BoneStatusPanel unit={selectedUnit} />
       {Object.entries(selectedUnit.jackKnownHpByTarget ?? {}).map(([targetId, hp]) => (
         <div key={targetId} className="text-xs text-violet-700 dark:text-violet-300">
           {t("game.knownHp", { target: targetId, hp })}

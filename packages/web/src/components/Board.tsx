@@ -1,8 +1,5 @@
 import type { Coord, PlayerId, PlayerView, UnitClass, UnitState } from "rules";
-import {
-  FOREST_AURA_RADIUS,
-  getMaxHp,
-} from "../rulesHints";
+import { FOREST_AURA_RADIUS, getMaxHp } from "../rulesHints";
 import { useEffect, useRef, useState, type FC } from "react";
 import { HpBar } from "./HpBar";
 import {
@@ -18,6 +15,7 @@ import { useBoardEffects } from "../game/effects/useBoardEffects";
 import { useVisualResolution } from "../game/effects/useVisualResolution";
 import { useBoardFit } from "../game/hooks/useBoardFit";
 import type { BoardEventBatch, BoardPreviewLine } from "../game/effects/types";
+import { BoneIcon, getActiveBoneStatus, type ActiveBoneStatus } from "../game/boneStatus";
 import { VfxLayer } from "../features/vfx/VfxLayer";
 import { useBoardVfx } from "../features/vfx/useBoardVfx";
 import {
@@ -207,12 +205,17 @@ export const Board: FC<BoardProps> = ({
   });
   const renderedUnits = visualResolution.visualUnitsByUnitId;
   const [transformingUnitIds, setTransformingUnitIds] = useState<Set<string>>(() => new Set());
+  const [expiringBoneStatuses, setExpiringBoneStatuses] = useState<
+    Map<string, ActiveBoneStatus["kind"]>
+  >(() => new Map());
   const visualStateRef = useRef<{
     enabled: boolean;
     turnNumber: number;
     units: Map<string, { signature: string; variant: string | null }>;
   } | null>(null);
   const visualEffectTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  const boneStatusRef = useRef<Map<string, ActiveBoneStatus["kind"]> | null>(null);
+  const boneStatusTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
   useEffect(() => {
     const nextUnits = new Map<string, { signature: string; variant: string | null }>();
@@ -281,12 +284,53 @@ export const Board: FC<BoardProps> = ({
     }
   }, [renderedUnits, view.turnNumber, visualEffectsEnabled]);
 
+  useEffect(() => {
+    const nextStatuses = new Map<string, ActiveBoneStatus["kind"]>();
+    for (const unit of Object.values(renderedUnits)) {
+      const status = getActiveBoneStatus(unit);
+      if (status) nextStatuses.set(unit.id, status.kind);
+    }
+    const previousStatuses = boneStatusRef.current;
+    boneStatusRef.current = nextStatuses;
+    if (!visualEffectsEnabled || !previousStatuses) return;
+
+    const removed: Array<[string, ActiveBoneStatus["kind"]]> = [];
+    for (const [unitId, kind] of previousStatuses) {
+      if (!nextStatuses.has(unitId) && renderedUnits[unitId]) removed.push([unitId, kind]);
+    }
+    if (removed.length === 0) return;
+
+    setExpiringBoneStatuses((current) => {
+      const next = new Map(current);
+      removed.forEach(([unitId, kind]) => next.set(unitId, kind));
+      return next;
+    });
+    for (const [unitId] of removed) {
+      const existingTimer = boneStatusTimersRef.current.get(unitId);
+      if (existingTimer) clearTimeout(existingTimer);
+      const timer = setTimeout(() => {
+        boneStatusTimersRef.current.delete(unitId);
+        setExpiringBoneStatuses((current) => {
+          if (!current.has(unitId)) return current;
+          const next = new Map(current);
+          next.delete(unitId);
+          return next;
+        });
+      }, 750);
+      boneStatusTimersRef.current.set(unitId, timer);
+    }
+  }, [renderedUnits, visualEffectsEnabled]);
+
   useEffect(
     () => () => {
       for (const timer of visualEffectTimersRef.current.values()) {
         clearTimeout(timer);
       }
       visualEffectTimersRef.current.clear();
+      for (const timer of boneStatusTimersRef.current.values()) {
+        clearTimeout(timer);
+      }
+      boneStatusTimersRef.current.clear();
     },
     [],
   );
@@ -326,6 +370,7 @@ export const Board: FC<BoardProps> = ({
       isStealthed: boolean;
       bunkerActive: boolean;
       chikatiloMarkStatus?: UnitState["chikatiloMarkStatus"];
+      boneStatus: ActiveBoneStatus | null;
     }
   >();
   const lastKnownByPos = new Map<string, number>();
@@ -386,6 +431,7 @@ export const Board: FC<BoardProps> = ({
       isStealthed: unit.isStealthed,
       bunkerActive: unit.bunker?.active ?? false,
       chikatiloMarkStatus: unit.chikatiloMarkStatus,
+      boneStatus: getActiveBoneStatus(unit),
     });
   }
   for (const coord of Object.values(view.lastKnownPositions ?? {})) {
@@ -436,6 +482,10 @@ export const Board: FC<BoardProps> = ({
 
   const selectedUnit =
     selectedUnitId && view.units[selectedUnitId] ? view.units[selectedUnitId] : null;
+  const activeUnitForBoneField = view.activeUnitId ? renderedUnits[view.activeUnitId] : null;
+  const activeSansBoneFieldTone = activeUnitForBoneField?.position
+    ? (activeUnitForBoneField.sansBoneFieldStatus?.kind ?? null)
+    : null;
 
   const carpetPreview =
     view.pendingAoEPreview?.abilityId === "kaiserCarpetStrike" ? view.pendingAoEPreview : null;
@@ -480,6 +530,7 @@ export const Board: FC<BoardProps> = ({
       const isSelected = unit?.id === selectedUnitId;
       const isActiveUnit = unit?.id === view.activeUnitId;
       const markStatus = unit?.chikatiloMarkStatus;
+      const boneStatus = unit?.boneStatus ?? null;
       const isDoraPreview = doraPreviewKeys.has(key);
       const isDoraPreviewCenter = key === doraPreviewCenterKey;
       const isForestAura = forestAuraKeys.has(key);
@@ -520,6 +571,8 @@ export const Board: FC<BoardProps> = ({
             ]),
           )
         : [];
+      const canExposeUnitStatus =
+        !!unit && (!unit.isStealthed || (!!playerId && unit.owner === playerId));
       const cellDetails = unit
         ? `, ${unit.owner} ${getClassLabel(unit.class, t)}${
             unit.id === view.activeUnitId ? `, ${t("board.activeUnit")}` : ""
@@ -531,23 +584,26 @@ export const Board: FC<BoardProps> = ({
                     : t("board.assassinMark")
                 }`
               : ""
+          }${
+            boneStatus && canExposeUnitStatus
+              ? `, ${t(boneStatus.kind === "blue" ? "game.blueBone" : "game.orangeBone")}`
+              : ""
           }`
         : lastKnownCount > 0
           ? `, ${t("board.lastKnown")}`
           : "";
-      const previewDetailsText =
-        previewDetails.length > 0 ? `, ${previewDetails.join(", ")}` : "";
+      const previewDetailsText = previewDetails.length > 0 ? `, ${previewDetails.join(", ")}` : "";
 
       if (unit) {
         const isFriendly = playerId ? unit.owner === playerId : false;
         const isHiddenEnemy = !isFriendly && unit.isStealthed;
-        const isTrackedHiddenEnemy =
-          isHiddenEnemy && unit.chikatiloMarkStatus?.exactTrackingActive;
+        const isTrackedHiddenEnemy = isHiddenEnemy && unit.chikatiloMarkStatus?.exactTrackingActive;
         const marker = getClassMarker(unit.class);
         const unitView = renderedUnits[unit.id];
         const tokenId = unitView?.figureId ?? unitView?.heroId ?? unit.class;
         const tokenAsset = getUnitTokenAsset(unitView);
         const isTransforming = transformingUnitIds.has(unit.id);
+        const expiringBoneKind = expiringBoneStatuses.get(unit.id);
         const previewRelationClass =
           isDoraPreview && selectedUnit
             ? unit.owner === selectedUnit.owner
@@ -582,6 +638,8 @@ export const Board: FC<BoardProps> = ({
             : "ring-[3px] ring-rose-400/90 dark:ring-rose-300/80",
           previewRelationClass,
           isTransforming ? "unit-transforming" : "",
+          boneStatus ? `unit-bone-status unit-bone-status--${boneStatus.kind}` : "",
+          expiringBoneKind ? `unit-bone-expiring unit-bone-expiring--${expiringBoneKind}` : "",
         ].join(" ");
 
         content = isHiddenEnemy ? (
@@ -630,6 +688,18 @@ export const Board: FC<BoardProps> = ({
             )}
             {isTransforming ? (
               <span className="unit-transform-label">{t("visuals.transform")}</span>
+            ) : null}
+            {boneStatus ? (
+              <span
+                className={`unit-bone-badge unit-bone-badge--${boneStatus.kind}`}
+                role="img"
+                aria-label={t(boneStatus.kind === "blue" ? "game.blueBone" : "game.orangeBone")}
+                title={t(boneStatus.kind === "blue" ? "game.blueBone" : "game.orangeBone")}
+                data-bone-status={boneStatus.kind}
+                data-bone-source={boneStatus.source}
+              >
+                <BoneIcon className="h-full w-full" />
+              </span>
             ) : null}
             {marker && (
               <span
@@ -684,6 +754,13 @@ export const Board: FC<BoardProps> = ({
           onMouseEnter={() => onCellHover?.(gameCoord)}
           onMouseLeave={() => onCellHover?.(null)}
         >
+          {view.arenaId === "boneField" ? (
+            <div
+              className={`bone-field-cell bone-field-cell--${activeSansBoneFieldTone ?? "neutral"}`}
+              data-bone-field-tone={activeSansBoneFieldTone ?? "neutral"}
+              aria-hidden="true"
+            />
+          ) : null}
           {isForestAura && (
             <div
               className="pointer-events-none absolute rounded bg-emerald-200/25 ring-1 ring-emerald-200/40 dark:bg-emerald-900/25 dark:ring-emerald-700/40"
@@ -786,9 +863,7 @@ export const Board: FC<BoardProps> = ({
               aria-label={
                 stakeMarkersByPos.get(key) ? t("board.revealedStake") : t("board.hiddenStake")
               }
-              title={
-                stakeMarkersByPos.get(key) ? t("board.revealedStake") : t("board.hiddenStake")
-              }
+              title={stakeMarkersByPos.get(key) ? t("board.revealedStake") : t("board.hiddenStake")}
               data-board-marker={stakeMarkersByPos.get(key) ? "vlad_stake" : "vlad_stake_hidden"}
             >
               <img src={STAKE_MARKER_ASSET} alt="" draggable={false} />
@@ -819,9 +894,7 @@ export const Board: FC<BoardProps> = ({
                 height: Math.max(16, Math.round(cellSize * 0.23)),
                 fontSize: Math.max(9, Math.round(cellSize * 0.13)),
               }}
-              title={
-                stakeMarkersByPos.get(key) ? t("board.revealedStake") : t("board.hiddenStake")
-              }
+              title={stakeMarkersByPos.get(key) ? t("board.revealedStake") : t("board.hiddenStake")}
               role="img"
               aria-label={
                 stakeMarkersByPos.get(key) ? t("board.revealedStake") : t("board.hiddenStake")
@@ -876,9 +949,7 @@ export const Board: FC<BoardProps> = ({
               <div style={{ width: hpBarWidth }}>
                 <HpBar
                   current={
-                    visualResolution.visualHpByUnitId[unit.id] ??
-                    renderedUnits[unit.id]?.hp ??
-                    0
+                    visualResolution.visualHpByUnitId[unit.id] ?? renderedUnits[unit.id]?.hp ?? 0
                   }
                   max={getMaxHp(unit.class as UnitClass, renderedUnits[unit.id]?.heroId)}
                   showText={playerId ? unit.owner === playerId : false}
