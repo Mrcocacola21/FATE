@@ -1307,6 +1307,8 @@ export const en = {
     pendingFor: "Pending for {{player}}",
     rolled: "{{player}} rolled: {{value}}",
     awaitingRoll: "Awaiting your roll.",
+    preparingRoll: "Preparing your roll.",
+    waitingForOpponentRoll: "Waiting for opponent to roll.",
     attackerRoll: "Attacker roll: [{{dice}}]",
     tieBreak: "Tie-break: [{{dice}}]",
     rollDice: "Roll dice",

@@ -1317,6 +1317,8 @@ export const uk = {
     pendingFor: "Очікується від {{player}}",
     rolled: "{{player}} кинув: {{value}}",
     awaitingRoll: "Очікується ваш кидок.",
+    preparingRoll: "Підготовка вашого кидка.",
+    waitingForOpponentRoll: "Очікуємо, поки суперник кине кубики.",
     attackerRoll: "Кидок нападника: [{{dice}}]",
     tieBreak: "Додатковий кидок: [{{dice}}]",
     rollDice: "Кинути кубик",

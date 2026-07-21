@@ -5,7 +5,11 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { BottomNav } from "../../ui/BottomNav";
 import { ResponsiveMatchLayout } from "../../layout/ResponsiveMatchLayout";
 import { DesktopMatchScaffold, MobileBattleScaffold } from "./MatchScaffolds";
-import { toggleMobilePanel } from "./mobilePanelState";
+import {
+  hasMobileMatchStarted,
+  resetMobilePanel,
+  toggleMobilePanel,
+} from "./mobilePanelState";
 
 function findByPanel(node: ReactNode, panel: string): ReactElement | null {
   if (!isValidElement(node)) return null;
@@ -55,6 +59,23 @@ test("tapping the active mobile panel toggles its sheet closed", () => {
   });
 });
 
+test("starting a match resets stale mobile panel state", () => {
+  assert.deepEqual(resetMobilePanel(), { activeTab: "unit", open: false });
+});
+
+test("an initiative pending roll exits the mobile room lobby before phase changes", () => {
+  assert.equal(hasMobileMatchStarted("lobby", null), false);
+  assert.equal(
+    hasMobileMatchStarted("lobby", {
+      id: "initiative-p1",
+      kind: "initiativeRoll",
+      player: "P1",
+    }),
+    true,
+  );
+  assert.equal(hasMobileMatchStarted("placement", null), true);
+});
+
 function renderMatchSwitchAt(width: number) {
   const originalWindow = Object.getOwnPropertyDescriptor(globalThis, "window");
   Object.defineProperty(globalThis, "window", {
@@ -84,7 +105,6 @@ test("desktop match scaffold keeps its desktop side panel marker", () => {
     topBar: null,
     board: null,
     sidePanel: <div>Panel</div>,
-    pendingRoll: null,
   });
   const markup = renderToStaticMarkup(desktop);
   assert.match(markup, /data-testid="desktop-match-panel"/);
@@ -104,7 +124,6 @@ test("mobile match scaffold keeps the board, current task, and bottom navigation
       />
     ),
     bottomSheet: null,
-    pendingRoll: null,
   });
 
   function findByTestId(node: ReactNode, testId: string): ReactElement | null {

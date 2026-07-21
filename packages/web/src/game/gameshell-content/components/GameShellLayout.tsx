@@ -1,8 +1,8 @@
-import type { FC } from "react";
+import type { FC, ReactNode } from "react";
 import { GameLoadingState } from "./GameLoadingState";
 import { GameShellBoardColumn } from "./GameShellBoardColumn";
 import { GameShellSideColumn } from "./GameShellSideColumn";
-import { GameShellPendingRoll } from "./GameShellPendingRoll";
+import { GlobalPendingTaskLayer } from "./GlobalPendingTaskLayer";
 import { DraftScreen } from "../../../modes/DraftScreen";
 import { GameTopBar } from "../../components/GameTopBar";
 import { MobileMatchLayout } from "../../layout/MobileMatchLayout";
@@ -18,13 +18,14 @@ export const DesktopMatchLayout: FC<GameShellLayoutProps> = ({ vm }) => (
     topBar={<GameTopBar vm={vm} />}
     board={<GameShellBoardColumn vm={vm} />}
     sidePanel={<GameShellSideColumn vm={vm} />}
-    pendingRoll={<GameShellPendingRoll vm={vm} />}
   />
 );
 
 export const GameShellLayout: FC<GameShellLayoutProps> = ({ vm }) => {
+  let content: ReactNode;
+
   if (!vm.view || !vm.hasSnapshot) {
-    return (
+    content = (
       <GameLoadingState
         connectionStatus={vm.connectionStatus}
         joined={vm.joined}
@@ -34,21 +35,26 @@ export const GameShellLayout: FC<GameShellLayoutProps> = ({ vm }) => {
         onLeave={vm.handleLeave}
       />
     );
-  }
-
-  if (
+  } else if (
     vm.roomMeta?.gameMode === "draft" &&
     vm.roomMeta?.draftState &&
     vm.roomMeta.draftState.phase !== "complete" &&
     vm.view.phase === "lobby"
   ) {
-    return <DraftScreen vm={vm} />;
+    content = <DraftScreen vm={vm} />;
+  } else {
+    content = (
+      <ResponsiveMatchLayout
+        mobile={<MobileMatchLayout vm={vm} />}
+        desktop={<DesktopMatchLayout vm={vm} />}
+      />
+    );
   }
 
   return (
-    <ResponsiveMatchLayout
-      mobile={<MobileMatchLayout vm={vm} />}
-      desktop={<DesktopMatchLayout vm={vm} />}
-    />
+    <>
+      {content}
+      <GlobalPendingTaskLayer vm={vm} />
+    </>
   );
 };

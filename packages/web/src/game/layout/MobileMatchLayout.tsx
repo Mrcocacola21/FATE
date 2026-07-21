@@ -1,21 +1,32 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useI18n } from "../../i18n";
 import { BottomNav, BottomSheet, type BottomNavItem } from "../../ui";
 import { GameTopBar } from "../components/GameTopBar";
 import { CurrentTaskPanel } from "../gameshell-content/components/CurrentTaskPanel";
 import { GameShellBoardColumn } from "../gameshell-content/components/GameShellBoardColumn";
 import { GameShellSideColumn } from "../gameshell-content/components/GameShellSideColumn";
-import { GameShellPendingRoll } from "../gameshell-content/components/GameShellPendingRoll";
 import { SidePanelTabs, type MatchSideTab } from "../gameshell-content/components/SidePanelTabs";
-import { toggleMobilePanel } from "./mobilePanelState";
+import {
+  hasMobileMatchStarted,
+  resetMobilePanel,
+  toggleMobilePanel,
+} from "./mobilePanelState";
 import { MobileBattleScaffold } from "./MatchScaffolds";
 
 export function MobileMatchLayout({ vm }: { vm: any }) {
   const { t } = useI18n();
   const [activeTab, setActiveTab] = useState<MatchSideTab>("unit");
   const [sheetOpen, setSheetOpen] = useState(false);
+  const matchStarted = hasMobileMatchStarted(vm.view.phase, vm.pendingMeta);
 
-  if (vm.view.phase === "lobby") {
+  useEffect(() => {
+    if (!matchStarted) return;
+    const reset = resetMobilePanel();
+    setActiveTab(reset.activeTab);
+    setSheetOpen(reset.open);
+  }, [matchStarted]);
+
+  if (!matchStarted) {
     return (
       <div
         className="app-shell mobile-room-shell h-dvh overflow-hidden px-2 pt-2"
@@ -40,6 +51,7 @@ export function MobileMatchLayout({ vm }: { vm: any }) {
     { value: "log", label: t("game.tabsLog"), glyph: "≡" },
   ];
   const activeLabel = items.find((item) => item.value === activeTab)?.label ?? "";
+  const visibleSheetOpen = sheetOpen && !vm.pendingMeta;
 
   const openTab = (tab: MatchSideTab) => {
     const next = toggleMobilePanel({ activeTab, open: sheetOpen }, tab);
@@ -54,14 +66,14 @@ export function MobileMatchLayout({ vm }: { vm: any }) {
       currentTask={<CurrentTaskPanel vm={vm} compact />}
       bottomNav={
         <BottomNav
-          value={sheetOpen ? activeTab : null}
+          value={visibleSheetOpen ? activeTab : null}
           items={items}
           onChange={openTab}
           ariaLabel={t("game.sidePanelTabs")}
         />
       }
       bottomSheet={
-        <BottomSheet open={sheetOpen} title={activeLabel} onClose={() => setSheetOpen(false)}>
+        <BottomSheet open={visibleSheetOpen} title={activeLabel} onClose={() => setSheetOpen(false)}>
           <SidePanelTabs
             vm={vm}
             activeTab={activeTab}
@@ -71,7 +83,6 @@ export function MobileMatchLayout({ vm }: { vm: any }) {
           />
         </BottomSheet>
       }
-      pendingRoll={<GameShellPendingRoll vm={vm} />}
     />
   );
 }

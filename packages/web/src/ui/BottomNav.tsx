@@ -19,6 +19,7 @@ export function BottomNav<T extends string>({
     <nav
       className="mobile-bottom-nav"
       aria-label={ariaLabel}
+      data-layer="bottom-nav"
       data-testid="mobile-bottom-nav"
     >
       {items.map((item) => (

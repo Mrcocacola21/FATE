@@ -6,14 +6,12 @@ export function MobileBattleScaffold({
   currentTask,
   bottomNav,
   bottomSheet,
-  pendingRoll,
 }: {
   topBar: ReactNode;
   board: ReactNode;
   currentTask: ReactNode;
   bottomNav: ReactNode;
   bottomSheet: ReactNode;
-  pendingRoll: ReactNode;
 }) {
   return (
     <div
@@ -32,7 +30,6 @@ export function MobileBattleScaffold({
         {bottomNav}
       </div>
       {bottomSheet}
-      {pendingRoll}
     </div>
   );
 }
@@ -41,12 +38,10 @@ export function DesktopMatchScaffold({
   topBar,
   board,
   sidePanel,
-  pendingRoll,
 }: {
   topBar: ReactNode;
   board: ReactNode;
   sidePanel: ReactNode;
-  pendingRoll: ReactNode;
 }) {
   return (
     <div
@@ -63,7 +58,6 @@ export function DesktopMatchScaffold({
           </div>
         </div>
       </div>
-      {pendingRoll}
     </div>
   );
 }

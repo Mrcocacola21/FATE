@@ -5,6 +5,17 @@ export interface MobilePanelState {
   open: boolean;
 }
 
+export function resetMobilePanel(): MobilePanelState {
+  return { activeTab: "unit", open: false };
+}
+
+export function hasMobileMatchStarted(
+  phase: string,
+  pendingMeta: unknown,
+): boolean {
+  return phase !== "lobby" || !!pendingMeta;
+}
+
 export function toggleMobilePanel(
   state: MobilePanelState,
   nextTab: MatchSideTab,

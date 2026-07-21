@@ -181,13 +181,15 @@ export function PendingRollModal({
     !!gutsBerserkTargetId && gutsBerserkAoeTargetIds.includes(gutsBerserkTargetId);
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-3 backdrop-blur-md sm:p-4"
+      className="game-pending-modal-layer fixed inset-0 flex items-center justify-center overflow-y-auto bg-black/80 px-3 backdrop-blur-md sm:px-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="pending-roll-title"
       aria-describedby="pending-roll-description"
+      data-layer="pending-task"
+      data-testid="pending-roll-overlay"
     >
-      <div className="arcane-prompt scroll-panel panel-card max-h-[92dvh] w-full max-w-lg overflow-y-auto border-violet-400/45 p-4 shadow-2xl shadow-violet-950/30 sm:p-6">
+      <div className="game-pending-modal-card arcane-prompt scroll-panel panel-card w-full max-w-lg overflow-y-auto border-violet-400/45 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl shadow-violet-950/30 sm:p-6">
         <div className="relative z-10 flex items-start gap-3">
           <div className="brand-sigil mt-0.5 h-11 w-11" aria-hidden="true" />
           <div className="min-w-0">

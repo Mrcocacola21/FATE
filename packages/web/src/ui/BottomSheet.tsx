@@ -36,6 +36,7 @@ export function BottomSheet({
       role="dialog"
       aria-modal="false"
       aria-label={title}
+      data-layer="bottom-sheet"
       data-testid="mobile-bottom-sheet"
     >
       <div className="flex shrink-0 items-center gap-2 border-b border-amber-900/15 px-3 py-2 dark:border-amber-500/15">
