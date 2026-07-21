@@ -6,11 +6,9 @@ import { CurrentTaskPanel } from "../gameshell-content/components/CurrentTaskPan
 import { GameShellBoardColumn } from "../gameshell-content/components/GameShellBoardColumn";
 import { GameShellSideColumn } from "../gameshell-content/components/GameShellSideColumn";
 import { GameShellPendingRoll } from "../gameshell-content/components/GameShellPendingRoll";
-import {
-  SidePanelTabs,
-  type MatchSideTab,
-} from "../gameshell-content/components/SidePanelTabs";
+import { SidePanelTabs, type MatchSideTab } from "../gameshell-content/components/SidePanelTabs";
 import { toggleMobilePanel } from "./mobilePanelState";
+import { MobileBattleScaffold } from "./MatchScaffolds";
 
 export function MobileMatchLayout({ vm }: { vm: any }) {
   const { t } = useI18n();
@@ -19,7 +17,11 @@ export function MobileMatchLayout({ vm }: { vm: any }) {
 
   if (vm.view.phase === "lobby") {
     return (
-      <div className="app-shell mobile-room-shell h-dvh overflow-hidden px-2 pt-2">
+      <div
+        className="app-shell mobile-room-shell h-dvh overflow-hidden px-2 pt-2"
+        data-layout="mobile"
+        data-testid="mobile-room-layout"
+      >
         <div className="mx-auto flex h-full min-h-0 max-w-xl flex-col gap-2">
           <GameTopBar vm={vm} compact />
           <div className="scroll-panel min-h-0 flex-1 overflow-y-auto pb-[calc(1rem+env(safe-area-inset-bottom))]">
@@ -46,33 +48,30 @@ export function MobileMatchLayout({ vm }: { vm: any }) {
   };
 
   return (
-    <div className="app-shell mobile-match-shell h-dvh overflow-hidden px-1.5 pt-[max(0.375rem,env(safe-area-inset-top))]">
-      <div className="mx-auto flex h-full min-h-0 max-w-xl flex-col gap-1.5">
-        <GameTopBar vm={vm} compact />
-        <main className="min-h-0 flex-1" data-testid="mobile-board-stage">
-          <GameShellBoardColumn vm={vm} mobile />
-        </main>
-        <div className="mobile-current-task shrink-0" data-testid="mobile-current-task">
-          <CurrentTaskPanel vm={vm} compact />
-        </div>
+    <MobileBattleScaffold
+      topBar={<GameTopBar vm={vm} compact />}
+      board={<GameShellBoardColumn vm={vm} mobile />}
+      currentTask={<CurrentTaskPanel vm={vm} compact />}
+      bottomNav={
         <BottomNav
           value={sheetOpen ? activeTab : null}
           items={items}
           onChange={openTab}
           ariaLabel={t("game.sidePanelTabs")}
         />
-      </div>
-
-      <BottomSheet open={sheetOpen} title={activeLabel} onClose={() => setSheetOpen(false)}>
-        <SidePanelTabs
-          vm={vm}
-          activeTab={activeTab}
-          onActiveTabChange={setActiveTab}
-          hideTask
-          hideTabs
-        />
-      </BottomSheet>
-      <GameShellPendingRoll vm={vm} />
-    </div>
+      }
+      bottomSheet={
+        <BottomSheet open={sheetOpen} title={activeLabel} onClose={() => setSheetOpen(false)}>
+          <SidePanelTabs
+            vm={vm}
+            activeTab={activeTab}
+            onActiveTabChange={setActiveTab}
+            hideTask
+            hideTabs
+          />
+        </BottomSheet>
+      }
+      pendingRoll={<GameShellPendingRoll vm={vm} />}
+    />
   );
 }

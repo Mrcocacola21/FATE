@@ -16,12 +16,12 @@ import { getServerCapabilities } from "../api";
 import { EmptyState } from "../ui";
 import { getGameModeName } from "../modes/modeLabels";
 import { getSelectedHeroes } from "../figures/getSelectedHeroes";
+import { LobbyLayout } from "../layout/LobbyLayouts";
 
 interface LobbyProps {
   onOpenFigures?: () => void;
   onOpenHeartbreak?: () => void;
 }
-
 export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
   const { language, t } = useI18n();
   const { connectionStatus, roomsList, joinError, fetchRooms, joinRoom } = useGameStore();
@@ -151,8 +151,7 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
         : "neutral";
 
   return (
-    <div className="app-shell px-2.5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-6 sm:py-8">
-      <div className="mx-auto max-w-6xl space-y-5">
+    <LobbyLayout>
         <PanelCard as="header" variant="hud" className="hero-command p-3.5 sm:p-7">
           <div className="relative z-10 flex min-w-0 flex-col gap-3 sm:gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div className="hidden items-center gap-2 lg:absolute lg:right-0 lg:top-0 lg:flex">
@@ -581,7 +580,6 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
         ) : null}
 
         <RulesModal open={showRules} onClose={() => setShowRules(false)} />
-      </div>
-    </div>
+    </LobbyLayout>
   );
 }

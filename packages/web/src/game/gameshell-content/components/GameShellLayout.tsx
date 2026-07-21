@@ -5,15 +5,24 @@ import { GameShellSideColumn } from "./GameShellSideColumn";
 import { GameShellPendingRoll } from "./GameShellPendingRoll";
 import { DraftScreen } from "../../../modes/DraftScreen";
 import { GameTopBar } from "../../components/GameTopBar";
-import { useIsMobile } from "../../../layout/useIsMobile";
 import { MobileMatchLayout } from "../../layout/MobileMatchLayout";
+import { DesktopMatchScaffold } from "../../layout/MatchScaffolds";
+import { ResponsiveMatchLayout } from "../../../layout/ResponsiveMatchLayout";
 
 interface GameShellLayoutProps {
   vm: any;
 }
 
+export const DesktopMatchLayout: FC<GameShellLayoutProps> = ({ vm }) => (
+  <DesktopMatchScaffold
+    topBar={<GameTopBar vm={vm} />}
+    board={<GameShellBoardColumn vm={vm} />}
+    sidePanel={<GameShellSideColumn vm={vm} />}
+    pendingRoll={<GameShellPendingRoll vm={vm} />}
+  />
+);
+
 export const GameShellLayout: FC<GameShellLayoutProps> = ({ vm }) => {
-  const isMobile = useIsMobile();
   if (!vm.view || !vm.hasSnapshot) {
     return (
       <GameLoadingState
@@ -36,20 +45,10 @@ export const GameShellLayout: FC<GameShellLayoutProps> = ({ vm }) => {
     return <DraftScreen vm={vm} />;
   }
 
-  if (isMobile) {
-    return <MobileMatchLayout vm={vm} />;
-  }
-
   return (
-    <div className="app-shell h-dvh overflow-hidden px-2 py-2 sm:px-3">
-      <div className="mx-auto flex h-full min-h-0 max-w-[1800px] flex-col gap-2">
-        <GameTopBar vm={vm} />
-        <div className="grid min-h-0 flex-1 grid-rows-[minmax(0,1fr)_minmax(15rem,38dvh)] gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(320px,390px)] lg:grid-rows-[minmax(0,1fr)] xl:grid-cols-[minmax(0,1fr)_400px]">
-          <GameShellBoardColumn vm={vm} />
-          <GameShellSideColumn vm={vm} />
-        </div>
-      </div>
-      <GameShellPendingRoll vm={vm} />
-    </div>
+    <ResponsiveMatchLayout
+      mobile={<MobileMatchLayout vm={vm} />}
+      desktop={<DesktopMatchLayout vm={vm} />}
+    />
   );
 };
