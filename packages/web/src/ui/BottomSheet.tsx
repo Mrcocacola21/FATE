@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { useI18n } from "../i18n";
 
 export function BottomSheet({
@@ -30,7 +31,7 @@ export function BottomSheet({
 
   if (!open) return null;
 
-  return (
+  const sheet = (
     <section
       className={`mobile-bottom-sheet ${expanded ? "mobile-bottom-sheet-expanded" : ""}`}
       role="dialog"
@@ -54,9 +55,11 @@ export function BottomSheet({
           {t("mobile.closePanel")}
         </button>
       </div>
-      <div className="scroll-panel min-h-0 flex-1 overflow-y-auto overscroll-contain p-3 pb-28">
+      <div className="scroll-panel min-h-0 flex-1 overflow-y-auto overscroll-contain p-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
         {children}
       </div>
     </section>
   );
+
+  return typeof document === "undefined" ? sheet : createPortal(sheet, document.body);
 }

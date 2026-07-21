@@ -10,10 +10,52 @@ import { PanelCard, SectionHeader, StatusBadge } from "../../../components/ui";
 import { useI18n } from "../../../i18n";
 import { getPendingRollLabel } from "../helpers";
 import { PendingBoardNotice } from "./PendingBoardNotice";
+import { getPlacementUnitLabel } from "../../../i18n/displayMetadata";
 
 interface CurrentTaskPanelProps {
   vm: any;
   compact?: boolean;
+}
+
+export function hasActiveMobileTask(vm: any): boolean {
+  return !!(
+    vm.pendingRoll ||
+    vm.pendingMeta ||
+    vm.actionMode ||
+    vm.targetingMode ||
+    vm.boardSelectionPending ||
+    vm.view?.phase === "placement"
+  );
+}
+
+function MobileTaskStrip({
+  title,
+  instruction,
+  onCancel,
+}: {
+  title: string;
+  instruction?: string | null;
+  onCancel?: () => void;
+}) {
+  const { t } = useI18n();
+  return (
+    <div className="mobile-active-task-bar" aria-live="polite" data-testid="mobile-active-task-strip">
+      <div className="min-w-0 flex-1">
+        <div className="section-kicker">{t("game.currentTask")}</div>
+        <div className="truncate text-sm font-bold text-stone-900 dark:text-stone-100">{title}</div>
+        {instruction ? (
+          <p className="mt-0.5 line-clamp-2 text-[11px] leading-4 text-stone-600 dark:text-stone-300">
+            {instruction}
+          </p>
+        ) : null}
+      </div>
+      {onCancel ? (
+        <button type="button" className="btn btn-secondary btn-sm shrink-0" onClick={onCancel}>
+          {t("common.cancel")}
+        </button>
+      ) : null}
+    </div>
+  );
 }
 
 export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm, compact = false }) => {
@@ -133,7 +175,42 @@ export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm, compact = fals
     );
   }
 
-  if (vm.actionMode && vm.targetingMode) {
+  if (vm.view.phase === "placement") {
+    const selectedPlacementUnit = vm.placeUnitId ? vm.view.units?.[vm.placeUnitId] : null;
+    const selectedPlacementLabel = selectedPlacementUnit
+      ? getPlacementUnitLabel(selectedPlacementUnit, { language, t })
+      : null;
+
+    if (compact) {
+      return (
+        <MobileTaskStrip
+          title={`${t("game.deployment")}: ${
+            selectedPlacementLabel ??
+            (vm.view.currentPlayer === vm.playerId
+              ? t("game.placeUnits")
+              : t("game.waitingOtherPlacement"))
+          }`}
+          instruction={
+            selectedPlacementLabel
+              ? t("game.placeHint", { unit: selectedPlacementLabel })
+              : vm.view.currentPlayer === vm.playerId
+                ? t("game.placeUnits")
+                : null
+          }
+          onCancel={
+            selectedPlacementLabel
+              ? () => {
+                  vm.setActionMode(null);
+                  vm.setPlaceUnitId(null);
+                }
+              : undefined
+          }
+        />
+      );
+    }
+  }
+
+  if ((compact && (vm.actionMode || vm.targetingMode)) || (vm.actionMode && vm.targetingMode)) {
     const abilityViews =
       vm.selectedUnitId && vm.view.abilitiesByUnitId
         ? vm.view.abilitiesByUnitId[vm.selectedUnitId] ?? []
@@ -144,6 +221,35 @@ export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm, compact = fals
       vm.actionMode === "move" &&
       Array.isArray(vm.moveOptions?.modes) &&
       vm.moveOptions.modes.length > 0;
+
+    if (compact) {
+      return (
+        <MobileTaskStrip
+          title={
+            choosingMoveMode
+              ? t("game.chooseMoveMode")
+              : vm.targetingMode
+                ? t("game.usingTargeting", {
+                    name: getUsingName(vm.targetingMode, abilityViews, language, t),
+                  })
+                : t("game.boardSelectionActive")
+          }
+          instruction={
+            choosingMoveMode
+              ? t("game.chooseMoveMode")
+              : vm.actionMode
+                ? getActionModeHint(
+                    vm.actionMode as ActionPreviewMode,
+                    vm.papyrusLineAxis ?? "row",
+                    undyneAxis,
+                    language,
+                  )
+                : t("game.boardSelectionHint")
+          }
+          onCancel={() => vm.setActionMode(null)}
+        />
+      );
+    }
 
     return (
       <div aria-live="polite" className={compact ? "mobile-task-content" : ""}>
@@ -191,6 +297,8 @@ export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm, compact = fals
       </div>
     );
   }
+
+  if (compact) return null;
 
   return (
       <div aria-live="polite" className={compact ? "mobile-task-content" : ""}>

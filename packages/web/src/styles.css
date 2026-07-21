@@ -382,9 +382,10 @@ body {
 
 :root {
   --z-game-board: 10;
-  --z-game-bottom-nav: 40;
-  --z-game-bottom-sheet: 50;
-  --z-game-current-task: 60;
+  --z-game-board-effects: 20;
+  --z-game-current-task: 40;
+  --z-game-bottom-nav: 50;
+  --z-game-bottom-sheet: 60;
   --z-game-pending-modal: 80;
   --z-game-toast: 90;
 }
@@ -868,7 +869,7 @@ html.dark {
   }
 
   .mobile-bottom-nav {
-    @apply relative grid shrink-0 grid-cols-5 border-t border-amber-900/20 bg-stone-100/95 px-1 pt-1 shadow-[0_-10px_30px_-20px_rgba(0,0,0,0.7)] backdrop-blur dark:border-amber-500/20 dark:bg-stone-950/95;
+    @apply fixed inset-x-0 bottom-0 mx-auto grid w-full max-w-xl grid-cols-5 border-t border-amber-900/20 bg-stone-100/95 px-1 pt-1 shadow-[0_-10px_30px_-20px_rgba(0,0,0,0.7)] backdrop-blur dark:border-amber-500/20 dark:bg-stone-950/95;
     z-index: var(--z-game-bottom-nav);
     padding-bottom: max(0.25rem, env(safe-area-inset-bottom));
   }
@@ -884,13 +885,16 @@ html.dark {
   .mobile-bottom-sheet {
     @apply fixed inset-x-0 flex w-full min-h-0 flex-col overflow-hidden rounded-t-2xl border border-amber-700/30 bg-stone-50/95 shadow-[0_-24px_60px_-24px_rgba(0,0,0,0.75)] backdrop-blur dark:border-amber-500/25 dark:bg-stone-950/95;
     z-index: var(--z-game-bottom-sheet);
-    bottom: calc(3.85rem + env(safe-area-inset-bottom));
+    bottom: calc(4.1rem + env(safe-area-inset-bottom));
+    min-height: 45dvh;
     height: min(52dvh, 34rem);
+    max-height: 85dvh;
   }
 
   .mobile-bottom-sheet-expanded {
-    height: calc(
-      100dvh - max(0.5rem, env(safe-area-inset-top)) - 3.85rem - env(safe-area-inset-bottom)
+    height: min(
+      85dvh,
+      calc(100dvh - max(0.5rem, env(safe-area-inset-top)) - 4.1rem - env(safe-area-inset-bottom))
     );
   }
 
@@ -903,7 +907,7 @@ html.dark {
   }
 
   .mobile-current-task {
-    @apply relative max-h-[32dvh] overflow-y-auto rounded-xl border border-amber-700/25 bg-stone-50/95 p-1.5 shadow-lg backdrop-blur dark:border-amber-500/20 dark:bg-stone-950/95;
+    @apply relative max-h-[34dvh] overflow-y-auto rounded-xl border border-amber-700/25 bg-stone-50/95 shadow-lg backdrop-blur dark:border-amber-500/20 dark:bg-stone-950/95;
     z-index: var(--z-game-current-task);
   }
 
@@ -930,6 +934,14 @@ html.dark {
     @apply rounded-lg border-0 bg-transparent p-2 shadow-none dark:bg-transparent;
   }
 
+  .mobile-current-task .panel-arcane {
+    @apply rounded-lg border-0 bg-transparent p-2 shadow-none dark:bg-transparent;
+  }
+
+  .mobile-active-task-bar {
+    @apply flex min-h-0 items-center gap-2 px-2.5 py-2;
+  }
+
   .mobile-task-content .section-copy,
   .mobile-task-content p {
     @apply text-xs leading-4;
@@ -949,18 +961,46 @@ html.dark {
     @apply gap-1;
   }
 
-  .mobile-board-panel > div:first-child {
-    @apply px-2 py-1.5;
+  .mobile-match-content {
+    padding-bottom: calc(4.1rem + env(safe-area-inset-bottom));
   }
 
+  .mobile-board-panel .mobile-board-header {
+    @apply absolute right-1 top-1 z-20 rounded-xl border border-amber-900/15 bg-stone-50/90 px-1.5 py-1 shadow-lg backdrop-blur dark:border-amber-500/15 dark:bg-stone-950/90;
+  }
+
+  .mobile-board-panel .mobile-board-header > div > div:first-child,
   .mobile-board-panel .section-kicker,
   .mobile-board-panel .mobile-board-legend {
     @apply hidden;
   }
 
+  .mobile-board-panel .mobile-board-canvas {
+    @apply p-0.5;
+  }
+
+  .mobile-board-panel .mobile-board-header > div > div:last-child {
+    @apply flex-nowrap gap-1;
+  }
+
   .mobile-board-panel .btn-sm,
   .mobile-board-panel .icon-button {
     @apply min-h-9;
+  }
+
+  .mobile-board-panel .btn-sm {
+    @apply px-2;
+  }
+
+  .mobile-board-panel .icon-button {
+    min-width: 2.25rem;
+    width: 2.25rem;
+  }
+
+  .mobile-board-panel .status-pill {
+    min-width: 3rem;
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
   }
 
   .draft-mobile-tabs {

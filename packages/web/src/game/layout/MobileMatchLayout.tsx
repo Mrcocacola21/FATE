@@ -1,12 +1,20 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useI18n } from "../../i18n";
 import { BottomNav, BottomSheet, type BottomNavItem } from "../../ui";
 import { GameTopBar } from "../components/GameTopBar";
-import { CurrentTaskPanel } from "../gameshell-content/components/CurrentTaskPanel";
+import {
+  CurrentTaskPanel,
+  hasActiveMobileTask,
+} from "../gameshell-content/components/CurrentTaskPanel";
 import { GameShellBoardColumn } from "../gameshell-content/components/GameShellBoardColumn";
 import { GameShellSideColumn } from "../gameshell-content/components/GameShellSideColumn";
 import { SidePanelTabs, type MatchSideTab } from "../gameshell-content/components/SidePanelTabs";
-import { hasMobileMatchStarted, resetMobilePanel, toggleMobilePanel } from "./mobilePanelState";
+import {
+  getMobileBoardInteractionKey,
+  hasMobileMatchStarted,
+  resetMobilePanel,
+  toggleMobilePanel,
+} from "./mobilePanelState";
 import { MobileBattleScaffold } from "./MatchScaffolds";
 
 export function MobileMatchLayout({ vm }: { vm: any }) {
@@ -14,6 +22,8 @@ export function MobileMatchLayout({ vm }: { vm: any }) {
   const [activeTab, setActiveTab] = useState<MatchSideTab>("unit");
   const [sheetOpen, setSheetOpen] = useState(false);
   const matchStarted = hasMobileMatchStarted(vm.view, vm.pendingMeta);
+  const boardInteractionKey = getMobileBoardInteractionKey(vm);
+  const interactionKeyWhenOpened = useRef<string | null>(null);
 
   useEffect(() => {
     if (!matchStarted) return;
@@ -21,6 +31,16 @@ export function MobileMatchLayout({ vm }: { vm: any }) {
     setActiveTab(reset.activeTab);
     setSheetOpen(reset.open);
   }, [matchStarted]);
+
+  useEffect(() => {
+    if (
+      sheetOpen &&
+      boardInteractionKey &&
+      boardInteractionKey !== interactionKeyWhenOpened.current
+    ) {
+      setSheetOpen(false);
+    }
+  }, [boardInteractionKey, sheetOpen]);
 
   if (!matchStarted) {
     return (
@@ -51,6 +71,9 @@ export function MobileMatchLayout({ vm }: { vm: any }) {
 
   const openTab = (tab: MatchSideTab) => {
     const next = toggleMobilePanel({ activeTab, open: sheetOpen }, tab);
+    if (next.open && !sheetOpen) {
+      interactionKeyWhenOpened.current = boardInteractionKey;
+    }
     setActiveTab(next.activeTab);
     setSheetOpen(next.open);
   };
@@ -59,7 +82,7 @@ export function MobileMatchLayout({ vm }: { vm: any }) {
     <MobileBattleScaffold
       topBar={<GameTopBar vm={vm} compact />}
       board={<GameShellBoardColumn vm={vm} mobile />}
-      currentTask={<CurrentTaskPanel vm={vm} compact />}
+      currentTask={hasActiveMobileTask(vm) ? <CurrentTaskPanel vm={vm} compact /> : null}
       bottomNav={
         <BottomNav
           value={visibleSheetOpen ? activeTab : null}

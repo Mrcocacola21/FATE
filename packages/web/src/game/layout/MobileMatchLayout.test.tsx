@@ -3,9 +3,19 @@ import test from "node:test";
 import { Children, isValidElement, type ReactElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { BottomNav } from "../../ui/BottomNav";
+import { BottomSheet } from "../../ui/BottomSheet";
 import { ResponsiveMatchLayout } from "../../layout/ResponsiveMatchLayout";
 import { DesktopMatchScaffold, MobileBattleScaffold } from "./MatchScaffolds";
-import { hasMobileMatchStarted, resetMobilePanel, toggleMobilePanel } from "./mobilePanelState";
+import {
+  getMobileBoardInteractionKey,
+  hasMobileMatchStarted,
+  resetMobilePanel,
+  toggleMobilePanel,
+} from "./mobilePanelState";
+import {
+  CurrentTaskPanel,
+  hasActiveMobileTask,
+} from "../gameshell-content/components/CurrentTaskPanel";
 
 function findByPanel(node: ReactNode, panel: string): ReactElement | null {
   if (!isValidElement(node)) return null;
@@ -57,6 +67,40 @@ test("tapping the active mobile panel toggles its sheet closed", () => {
 
 test("starting a match resets stale mobile panel state", () => {
   assert.deepEqual(resetMobilePanel(), { activeTab: "unit", open: false });
+});
+
+test("mobile task visibility omits idle state and includes placement and targeting", () => {
+  const idle = { view: { phase: "battle" } };
+  assert.equal(hasActiveMobileTask(idle), false);
+  assert.equal(hasActiveMobileTask({ ...idle, actionMode: "attack" }), true);
+  assert.equal(hasActiveMobileTask({ view: { phase: "placement" } }), true);
+  assert.equal(hasActiveMobileTask({ ...idle, boardSelectionPending: true }), true);
+});
+
+test("board interaction keys change for placement, targeting, and forced board choices", () => {
+  assert.equal(getMobileBoardInteractionKey({}), null);
+  assert.equal(
+    getMobileBoardInteractionKey({ actionMode: "place", placeUnitId: "genghis" }),
+    "place::genghis:",
+  );
+  assert.equal(
+    getMobileBoardInteractionKey({ actionMode: "attack", targetingMode: "attack" }),
+    "attack:attack::",
+  );
+  assert.equal(
+    getMobileBoardInteractionKey({
+      boardSelectionPending: true,
+      pendingRoll: { id: "forced-reposition", kind: "donWindmillsRepositionChoice" },
+    }),
+    "pending:forced-reposition",
+  );
+  assert.notEqual(
+    getMobileBoardInteractionKey({
+      actionMode: "move",
+      moveOptions: { unitId: "rider", modes: ["straight", "diagonal"] },
+    }),
+    getMobileBoardInteractionKey({ actionMode: "move", moveOptions: null }),
+  );
 });
 
 test("an initiative pending roll exits the mobile room lobby before phase changes", () => {
@@ -115,7 +159,7 @@ test("desktop match scaffold keeps its desktop side panel marker", () => {
   assert.match(markup, /data-testid="desktop-match-panel"/);
 });
 
-test("mobile match scaffold keeps the board, current task, and bottom navigation", () => {
+test("mobile match scaffold keeps the board, active task, and bottom navigation", () => {
   const scaffold = MobileBattleScaffold({
     topBar: <div>Top bar</div>,
     board: <div>Board</div>,
@@ -152,4 +196,55 @@ test("mobile match scaffold keeps the board, current task, and bottom navigation
   assert.ok(findByTestId(scaffold, "mobile-board-stage"));
   assert.ok(findByTestId(scaffold, "mobile-current-task"));
   assert.ok(containsBottomNav(scaffold));
+});
+
+test("mobile match scaffold does not reserve task space while idle", () => {
+  const scaffold = MobileBattleScaffold({
+    topBar: <div>Top bar</div>,
+    board: <div>Board</div>,
+    currentTask: null,
+    bottomNav: null,
+    bottomSheet: null,
+  });
+  const markup = renderToStaticMarkup(scaffold);
+  assert.doesNotMatch(markup, /mobile-current-task/);
+});
+
+test("mobile placement task renders as a compact cancelable strip", () => {
+  const markup = renderToStaticMarkup(
+    <CurrentTaskPanel
+      compact
+      vm={{
+        view: {
+          phase: "placement",
+          currentPlayer: "P1",
+          units: {
+            genghis: {
+              id: "genghis",
+              heroId: "genghis_khan",
+              class: "rider",
+              owner: "P1",
+            },
+          },
+        },
+        playerId: "P1",
+        placeUnitId: "genghis",
+        setActionMode: () => undefined,
+        setPlaceUnitId: () => undefined,
+      }}
+    />,
+  );
+  assert.match(markup, /data-testid="mobile-active-task-strip"/);
+  assert.doesNotMatch(markup, /No forced task/);
+  assert.match(markup, /btn btn-secondary btn-sm shrink-0/);
+});
+
+test("mobile bottom sheet exposes its dialog and close control", () => {
+  const markup = renderToStaticMarkup(
+    <BottomSheet open title="Actions" onClose={() => undefined}>
+      <div>Move</div>
+    </BottomSheet>,
+  );
+  assert.match(markup, /data-testid="mobile-bottom-sheet"/);
+  assert.match(markup, /<button type="button" class="btn btn-secondary btn-sm">/);
 });

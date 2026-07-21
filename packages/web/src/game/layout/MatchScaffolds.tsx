@@ -19,16 +19,18 @@ export function MobileBattleScaffold({
       data-layout="mobile"
       data-testid="mobile-match-layout"
     >
-      <div className="mx-auto flex h-full min-h-0 max-w-xl flex-col gap-1.5">
+      <div className="mobile-match-content mx-auto flex h-full min-h-0 max-w-xl flex-col gap-1">
         {topBar}
+        {currentTask ? (
+          <div className="mobile-current-task shrink-0" data-testid="mobile-current-task">
+            {currentTask}
+          </div>
+        ) : null}
         <main className="min-h-0 flex-1" data-testid="mobile-board-stage">
           {board}
         </main>
-        <div className="mobile-current-task shrink-0" data-testid="mobile-current-task">
-          {currentTask}
-        </div>
-        {bottomNav}
       </div>
+      {bottomNav}
       {bottomSheet}
     </div>
   );
