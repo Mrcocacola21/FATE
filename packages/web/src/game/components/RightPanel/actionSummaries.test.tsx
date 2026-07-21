@@ -760,6 +760,134 @@ test("Don board pending choices route cell clicks to the server", () => {
   });
 });
 
+test("Hassan True Enemy unit clicks submit only highlighted targets", () => {
+  const hassan = makeUnit({
+    id: "P1-assassin-hassan",
+    heroId: "hassan",
+    position: { col: 2, row: 2 },
+  });
+  const controlled = makeUnit({
+    id: "P2-rider-controlled",
+    owner: "P2",
+    class: "rider",
+    heroId: undefined,
+    position: { col: 3, row: 2 },
+  });
+  const invalid = makeUnit({
+    id: "P2-knight-invalid",
+    owner: "P2",
+    class: "knight",
+    heroId: undefined,
+    position: { col: 4, row: 2 },
+  });
+  const view = {
+    ...makeView(hassan),
+    units: {
+      [hassan.id]: hassan,
+      [controlled.id]: controlled,
+      [invalid.id]: invalid,
+    },
+  };
+  const sent: unknown[] = [];
+  const common = {
+    view,
+    playerId: "P1",
+    joined: true,
+    isSpectator: false,
+    hasBlockingRoll: false,
+    boardSelectionPending: false,
+    actionMode: "hassanTrueEnemy",
+    selectedUnitId: hassan.id,
+    hassanTrueEnemyCandidateIds: [controlled.id],
+    sendGameAction: (action: unknown) => sent.push(action),
+    sendAction: () => undefined,
+  };
+
+  createCellClickHandler(common as never)(4, 2);
+  assert.equal(sent.length, 0, "non-highlighted unit should not submit");
+  createCellClickHandler(common as never)(3, 2);
+  assert.deepEqual(sent, [
+    {
+      type: "useAbility",
+      unitId: hassan.id,
+      abilityId: "hassanTrueEnemy",
+      payload: { forcedAttackerId: controlled.id },
+    },
+  ]);
+});
+
+test("Hassan and Loki pending unit targets submit authenticated board choices", () => {
+  const caster = makeUnit({ id: "P1-caster", position: { col: 1, row: 1 } });
+  const controlled = makeUnit({
+    id: "P2-controlled",
+    owner: "P2",
+    position: { col: 2, row: 1 },
+  });
+  const attackTarget = makeUnit({
+    id: "P2-target",
+    owner: "P2",
+    class: "knight",
+    position: { col: 3, row: 1 },
+  });
+  const view = {
+    ...makeView(caster),
+    units: {
+      [caster.id]: caster,
+      [controlled.id]: controlled,
+      [attackTarget.id]: attackTarget,
+    },
+  };
+  const cases = [
+    {
+      flag: "isHassanTrueEnemyTargetChoice",
+      ids: "hassanTrueEnemyTargetIds",
+      choiceType: "hassanTrueEnemyTarget",
+    },
+    {
+      flag: "isLokiMindControlEnemyChoice",
+      ids: "lokiMindControlEnemyIds",
+      choiceType: "lokiMindControlEnemy",
+    },
+    {
+      flag: "isLokiMindControlTargetChoice",
+      ids: "lokiMindControlTargetIds",
+      choiceType: "lokiMindControlTarget",
+    },
+  ] as const;
+
+  for (const testCase of cases) {
+    const sent: unknown[] = [];
+    const pendingRollId = `pending-${testCase.choiceType}`;
+    const context = {
+      view,
+      playerId: "P1",
+      joined: true,
+      isSpectator: false,
+      hasBlockingRoll: true,
+      boardSelectionPending: true,
+      [testCase.flag]: true,
+      [testCase.ids]: [attackTarget.id],
+      pendingRoll: { id: pendingRollId, kind: "test", player: "P1", context: {} },
+      actionMode: null,
+      selectedUnitId: caster.id,
+      sendAction: (action: unknown) => sent.push(action),
+      sendGameAction: () => undefined,
+    };
+
+    createCellClickHandler(context as never)(2, 1);
+    assert.equal(sent.length, 0, `${testCase.choiceType} should ignore non-highlighted units`);
+    createCellClickHandler(context as never)(3, 1);
+    assert.deepEqual(sent, [
+      {
+        type: "resolvePendingRoll",
+        pendingRollId,
+        player: "P1",
+        choice: { type: testCase.choiceType, targetId: attackTarget.id },
+      },
+    ]);
+  }
+});
+
 test("Loki Laughter renders separate option buttons with costs and availability", () => {
   setLanguage("en", { setItem: () => undefined });
   const loki = makeUnit({

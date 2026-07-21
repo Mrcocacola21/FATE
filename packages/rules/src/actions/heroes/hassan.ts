@@ -12,6 +12,7 @@ import {
 } from "../../abilities";
 import { HERO_FALSE_TRAIL_TOKEN_ID, HERO_HASSAN_ID } from "../../heroes";
 import { requestRoll } from "../../core";
+import { canDirectlyTargetUnit } from "../../visibility";
 import { canCommitAbilityCost } from "../abilityCosts";
 import { getControlledAttackTargetIds } from "../controlledAttack";
 import type {
@@ -52,6 +53,7 @@ export function getHassanTrueEnemyCandidates(
   for (const unit of Object.values(state.units)) {
     if (!unit || !unit.isAlive || !unit.position) continue;
     if (unit.owner === hassan.owner) continue;
+    if (!canDirectlyTargetUnit(state, hassan.id, unit.id)) continue;
     if (chebyshev(hassan.position, unit.position) > 2) continue;
     const targets = getHassanForcedAttackTargets(state, unit.id);
     if (targets.length === 0) continue;

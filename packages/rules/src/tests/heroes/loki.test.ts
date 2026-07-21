@@ -361,6 +361,9 @@ export function testLokiOptionThreeMindControlForcedAttackAndSlots() {
   const controllerAlly = Object.values(state.units).find(
     (unit) => unit.owner === "P1" && unit.class === "knight"
   )!;
+  const hiddenEnemy = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "assassin"
+  )!;
 
   state = setUnit(state, loki.id, {
     position: { col: 4, row: 4 },
@@ -371,6 +374,11 @@ export function testLokiOptionThreeMindControlForcedAttackAndSlots() {
   state = setUnit(state, controlled.id, { position: { col: 5, row: 4 } });
   state = setUnit(state, controlledTarget.id, { position: { col: 5, row: 5 } });
   state = setUnit(state, controllerAlly.id, { position: { col: 6, row: 4 } });
+  state = setUnit(state, hiddenEnemy.id, {
+    position: { col: 5, row: 3 },
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
   state = toBattleState(state, "P1", loki.id);
   state = initKnowledgeForOwners(state);
   const targetHpBefore = state.units[controlledTarget.id].hp;
@@ -396,6 +404,11 @@ export function testLokiOptionThreeMindControlForcedAttackAndSlots() {
   assert(
     !option.state.units[loki.id].turn.actionUsed,
     "entering mind control enemy selection should not consume Loki action slot"
+  );
+  const enemyOptions = (option.state.pendingRoll?.context?.options ?? []) as string[];
+  assert(
+    !enemyOptions.includes(hiddenEnemy.id),
+    "mind control should not offer an unknown hidden unit to control"
   );
 
   const pickedEnemy = resolvePendingWithChoice(
@@ -423,6 +436,10 @@ export function testLokiOptionThreeMindControlForcedAttackAndSlots() {
   assert(
     !options.includes(controllerAlly.id),
     "mind control should treat controller-side units as allies during forced attack"
+  );
+  assert(
+    !options.includes(hiddenEnemy.id),
+    "mind control should not leak an unknown hidden forced-attack target"
   );
   const invalidTarget = resolvePendingWithChoice(
     pickedEnemy.state,

@@ -1,6 +1,9 @@
 import type { GameState, PlayerId, UnitState } from "../model";
 import { canAttackTarget } from "../combat";
-import { canDirectlyTargetUnit } from "../visibility";
+import {
+  canDirectlyTargetUnit,
+  canPlayerKnowUnitExactPosition,
+} from "../visibility";
 import { canSpendSlots } from "../turnEconomy";
 
 export function canControlledAttackTarget(
@@ -18,6 +21,9 @@ export function canControlledAttackTarget(
   if (controlled.id === target.id) return false;
   if (controlled.owner === controllerPlayerId) return false;
   if (target.owner !== controlled.owner) return false;
+  if (!canPlayerKnowUnitExactPosition(state, controllerPlayerId, target.id)) {
+    return false;
+  }
   if (options.requireSlots !== false) {
     if (!canSpendSlots(controlled, { attack: true, action: true })) {
       return false;

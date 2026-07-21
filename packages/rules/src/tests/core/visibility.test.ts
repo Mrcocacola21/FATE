@@ -18,7 +18,7 @@ import {
 import { resolveAoE } from "../../aoe";
 import { projectEventsForRecipient } from "../../view/events";
 
-export function testRiderPathHitsStealthed() {
+export function testRiderPathIgnoresHiddenEnemies() {
   const rng = new SeededRNG(42);
   let state = createEmptyGame();
   const a1 = createDefaultArmy("P1");
@@ -26,7 +26,7 @@ export function testRiderPathHitsStealthed() {
   state = attachArmy(state, a1);
   state = attachArmy(state, a2);
 
-  // place minimal subset: place rider and two enemies inline
+  // Place the rider and hidden enemies directly on the touched path.
   const rider = Object.values(state.units).find(u => u.owner === "P1" && u.class === "rider")!;
   const enemy1 = Object.values(state.units).find(u => u.owner === "P2" && u.class === "spearman")!;
   const enemy2 = Object.values(state.units).find(u => u.owner === "P2" && u.class === "archer")!;
@@ -40,22 +40,82 @@ export function testRiderPathHitsStealthed() {
 
   // start rider turn
   state = applyAction(state, { type: "unitStartTurn", unitId: rider.id } as any, rng).state;
-  // move across and hit both (path attacks are now pending rolls)
-  let moveRes = applyAction(
+  const hpBefore = {
+    [enemy1.id]: state.units[enemy1.id].hp,
+    [enemy2.id]: state.units[enemy2.id].hp,
+  };
+  const moveRes = applyAction(
     state,
     { type: "move", unitId: rider.id, to: { col: 5, row: 2 } } as any,
     rng
   );
-  moveRes = resolveAllPendingRolls(moveRes.state, rng);
-  state = moveRes.state;
 
-  // Both enemies should have been at least revealed (isStealthed=false) or dead
-  const e1 = state.units[enemy1.id];
-  const e2 = state.units[enemy2.id];
-  assert(e1 == null || e1.isStealthed === false, "enemy1 should be revealed or dead");
-  assert(e2 == null || e2.isStealthed === false, "enemy2 should be revealed or dead");
+  assert(!moveRes.state.pendingRoll, "hidden path occupants should not queue Rider attacks");
+  for (const enemy of [enemy1, enemy2]) {
+    assert(
+      moveRes.state.units[enemy.id].hp === hpBefore[enemy.id],
+      "hidden path occupants should take no Rider damage"
+    );
+    assert(
+      moveRes.state.units[enemy.id].isStealthed === true,
+      "hidden path occupants should remain stealthed"
+    );
+    assert(
+      !moveRes.events.some(
+        (event) =>
+          (event.type === "attackResolved" && event.defenderId === enemy.id) ||
+          (event.type === "stealthRevealed" && event.unitId === enemy.id)
+      ),
+      "Rider movement should emit neither attack nor reveal events for hidden occupants"
+    );
+  }
 
-  console.log("testRiderPathHitsStealthed passed");
+  const projected = projectEventsForRecipient(moveRes.state, moveRes.events, "P1");
+  const serialized = JSON.stringify(projected);
+  assert(!serialized.includes(enemy1.id), "projected events should not mention hidden enemy 1");
+  assert(!serialized.includes(enemy2.id), "projected events should not mention hidden enemy 2");
+
+  console.log("rider_path_ignores_hidden_enemies passed");
+}
+
+export function testRiderPathHitsVisibleEnemy() {
+  const rng = makeRngSequence([0.99, 0.99, 0.01, 0.01]);
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1"));
+  state = attachArmy(state, createDefaultArmy("P2"));
+
+  const rider = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.class === "rider"
+  )!;
+  const enemy = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "spearman"
+  )!;
+  state = setUnit(state, rider.id, { position: { col: 0, row: 2 } });
+  state = setUnit(state, enemy.id, { position: { col: 2, row: 2 } });
+  state = toBattleState(state, "P1", rider.id);
+  state = initKnowledgeForOwners(state);
+
+  const moved = applyAction(
+    state,
+    { type: "move", unitId: rider.id, to: { col: 4, row: 2 } } as any,
+    rng
+  );
+  assert(
+    moved.state.pendingRoll?.kind === "riderPathAttack_attackerRoll",
+    "visible touched enemy should still queue a Rider path attack"
+  );
+  const resolved = resolveAllPendingRollsWithEvents(moved.state, rng);
+  assert(
+    [...moved.events, ...resolved.events].some(
+      (event) =>
+        event.type === "attackResolved" &&
+        event.attackerId === rider.id &&
+        event.defenderId === enemy.id
+    ),
+    "visible touched enemy should resolve through normal Rider combat"
+  );
+
+  console.log("rider_path_hits_visible_enemy passed");
 }
 
 

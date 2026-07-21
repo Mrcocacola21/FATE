@@ -1,5 +1,11 @@
 import type { Dispatch, SetStateAction } from "react";
-import type { Coord, GameAction, PapyrusLineAxis, PlayerView } from "rules";
+import type {
+  Coord,
+  GameAction,
+  PapyrusLineAxis,
+  PlayerId,
+  PlayerView,
+} from "rules";
 import type { ActionMode } from "../../store";
 import {
   ASGORE_FIRE_PARADE_ID,
@@ -51,7 +57,7 @@ type GroznyTyrantAttackCellOption = {
 
 export interface CellClickContext {
   view: PlayerView | null;
-  playerId: string | null;
+  playerId: PlayerId | null;
   joined: boolean;
   isSpectator: boolean;
   hasBlockingRoll: boolean;
@@ -176,6 +182,27 @@ export function handlePlacementCellClick(
   });
   context.setActionMode(null);
   context.setPlaceUnitId(null);
+  return true;
+}
+
+interface UnitTargetClickParams {
+  view: PlayerView;
+  col: number;
+  row: number;
+  validTargetIds: readonly string[];
+  submit: (targetId: string) => void;
+}
+
+export function submitUnitTargetClick({
+  view,
+  col,
+  row,
+  validTargetIds,
+  submit,
+}: UnitTargetClickParams): boolean {
+  const target = getUnitAt(view, col, row);
+  if (!target || !validTargetIds.includes(target.id)) return false;
+  submit(target.id);
   return true;
 }
 
@@ -524,14 +551,20 @@ export function createCellClickHandler(context: CellClickContext) {
     }
 
     if (isHassanTrueEnemyTargetChoice) {
-      const target = getUnitAt(view, col, row);
-      if (!target || !pendingRoll) return;
-      if (!hassanTrueEnemyTargetIds.includes(target.id)) return;
-      sendAction({
-        type: "resolvePendingRoll",
-        pendingRollId: pendingRoll.id,
-        choice: { type: "hassanTrueEnemyTarget", targetId: target.id },
-      } as GameAction);
+      if (!pendingRoll) return;
+      submitUnitTargetClick({
+        view,
+        col,
+        row,
+        validTargetIds: hassanTrueEnemyTargetIds,
+        submit: (targetId) =>
+          sendAction({
+            type: "resolvePendingRoll",
+            pendingRollId: pendingRoll.id,
+            player: playerId,
+            choice: { type: "hassanTrueEnemyTarget", targetId },
+          }),
+      });
       return;
     }
 
@@ -637,26 +670,38 @@ export function createCellClickHandler(context: CellClickContext) {
     }
 
     if (isLokiMindControlEnemyChoice) {
-      const target = getUnitAt(view, col, row);
-      if (!target || !pendingRoll) return;
-      if (!lokiMindControlEnemyIds.includes(target.id)) return;
-      sendAction({
-        type: "resolvePendingRoll",
-        pendingRollId: pendingRoll.id,
-        choice: { type: "lokiMindControlEnemy", targetId: target.id },
-      } as GameAction);
+      if (!pendingRoll) return;
+      submitUnitTargetClick({
+        view,
+        col,
+        row,
+        validTargetIds: lokiMindControlEnemyIds,
+        submit: (targetId) =>
+          sendAction({
+            type: "resolvePendingRoll",
+            pendingRollId: pendingRoll.id,
+            player: playerId,
+            choice: { type: "lokiMindControlEnemy", targetId },
+          }),
+      });
       return;
     }
 
     if (isLokiMindControlTargetChoice) {
-      const target = getUnitAt(view, col, row);
-      if (!target || !pendingRoll) return;
-      if (!lokiMindControlTargetIds.includes(target.id)) return;
-      sendAction({
-        type: "resolvePendingRoll",
-        pendingRollId: pendingRoll.id,
-        choice: { type: "lokiMindControlTarget", targetId: target.id },
-      } as GameAction);
+      if (!pendingRoll) return;
+      submitUnitTargetClick({
+        view,
+        col,
+        row,
+        validTargetIds: lokiMindControlTargetIds,
+        submit: (targetId) =>
+          sendAction({
+            type: "resolvePendingRoll",
+            pendingRollId: pendingRoll.id,
+            player: playerId,
+            choice: { type: "lokiMindControlTarget", targetId },
+          }),
+      });
       return;
     }
 
@@ -964,14 +1009,18 @@ export function createCellClickHandler(context: CellClickContext) {
     }
 
     if (actionMode === "hassanTrueEnemy") {
-      const target = getUnitAt(view, col, row);
-      if (!target) return;
-      if (!hassanTrueEnemyCandidateIds.includes(target.id)) return;
-      sendGameAction({
-        type: "useAbility",
-        unitId: selectedUnitId,
-        abilityId: HASSAN_TRUE_ENEMY_ID,
-        payload: { forcedAttackerId: target.id },
+      submitUnitTargetClick({
+        view,
+        col,
+        row,
+        validTargetIds: hassanTrueEnemyCandidateIds,
+        submit: (targetId) =>
+          sendGameAction({
+            type: "useAbility",
+            unitId: selectedUnitId,
+            abilityId: HASSAN_TRUE_ENEMY_ID,
+            payload: { forcedAttackerId: targetId },
+          }),
       });
       return;
     }

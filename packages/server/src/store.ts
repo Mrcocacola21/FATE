@@ -300,8 +300,12 @@ export function applyGameAction(
   playerId?: PlayerId
 ): CommandResult {
   const previousState = room.state;
+  const authoritativeAction: GameAction =
+    action.type === "resolvePendingRoll" && playerId
+      ? { ...action, player: playerId }
+      : action;
   const diceQueueBefore = room.testDiceRng?.getQueue() ?? [];
-  const result = applyAction(previousState, action, room.rng);
+  const result = applyAction(previousState, authoritativeAction, room.rng);
   const diceQueueAfter = room.testDiceRng?.getQueue() ?? [];
   const debugDiceConsumed =
     diceQueueBefore.length > diceQueueAfter.length
@@ -312,7 +316,7 @@ export function applyGameAction(
   if (!stateChanged && result.events.length === 0) {
     // TODO: Temporary heuristic until rules return explicit accepted/rejected
     // outcomes. Keep rejecting by default, but whitelist valid idempotent no-ops.
-    if (isExplicitlyAcceptedNoop(action, previousState)) {
+    if (isExplicitlyAcceptedNoop(authoritativeAction, previousState)) {
       return accepted({
         stateChanged: false,
         events: [],
@@ -330,7 +334,7 @@ export function applyGameAction(
   room.actionLog.push({
     at: Date.now(),
     playerId,
-    action,
+    action: authoritativeAction,
     events: result.events,
     revision: room.revision,
     debugDiceConsumed:

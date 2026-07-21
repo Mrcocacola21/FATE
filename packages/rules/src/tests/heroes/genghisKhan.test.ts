@@ -433,6 +433,67 @@ export function testKhansDecreeDiagonalMoveTriggersRiderAttacksForTouchedEnemies
   console.log("khans_decree_diagonal_move_triggers_rider_attacks_for_touched_enemies passed");
 }
 
+export function testKhansDecreeIgnoresHiddenTouchedEnemies() {
+  const rng = makeRngSequence([0.99, 0.99, 0.01, 0.01]);
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1", { rider: HERO_GENGHIS_KHAN_ID }));
+  state = attachArmy(state, createDefaultArmy("P2"));
+
+  const genghis = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.class === "rider"
+  )!;
+  const hidden = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "assassin"
+  )!;
+  state = setUnit(state, genghis.id, {
+    position: { col: 0, row: 0 },
+    charges: {
+      ...genghis.charges,
+      [ABILITY_GENGHIS_KHAN_KHANS_DECREE]: 2,
+    },
+  });
+  state = setUnit(state, hidden.id, {
+    position: { col: 1, row: 0 },
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
+  state = toBattleState(state, "P1", genghis.id);
+  state = initKnowledgeForOwners(state);
+  const hpBefore = state.units[hidden.id].hp;
+
+  const decree = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: genghis.id,
+      abilityId: ABILITY_GENGHIS_KHAN_KHANS_DECREE,
+    } as any,
+    rng
+  );
+  const moved = applyAction(
+    decree.state,
+    { type: "move", unitId: genghis.id, to: { col: 2, row: 2 } } as any,
+    rng
+  );
+
+  assert(!moved.state.pendingRoll, "Decree should not queue attacks for hidden touched enemies");
+  assert(moved.state.units[hidden.id].hp === hpBefore, "hidden touched enemy should take no damage");
+  assert(
+    moved.state.units[hidden.id].isStealthed === true,
+    "hidden touched enemy should remain stealthed"
+  );
+  assert(
+    !moved.events.some(
+      (event) =>
+        (event.type === "attackResolved" && event.defenderId === hidden.id) ||
+        (event.type === "stealthRevealed" && event.unitId === hidden.id)
+    ),
+    "Decree movement should emit no attack or reveal event for hidden enemies"
+  );
+
+  console.log("khans_decree_ignores_hidden_touched_enemies passed");
+}
+
 export function testKhansDecreeDiagonalMoveTriggersDestinationHazardOnce() {
   const rng = new SeededRNG(105);
   let state = createEmptyGame();

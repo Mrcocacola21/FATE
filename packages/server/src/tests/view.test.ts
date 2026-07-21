@@ -382,6 +382,41 @@ function testJackTrapProjectionIsOwnerPrivateUntilTriggered() {
   console.log("view_jack_trap_owner_private_until_triggered passed");
 }
 
+function testRiderMovementProjectionDoesNotLeakHiddenTarget() {
+  let state = setupState();
+  const rider = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.class === "rider"
+  )!;
+  const hidden = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "assassin"
+  )!;
+  state = setUnit(state, rider.id, { position: { col: 6, row: 0 } });
+  state = setUnit(state, hidden.id, {
+    position: { col: 3, row: 0 },
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
+
+  const movementOnly: GameEvent[] = [
+    {
+      type: "unitMoved",
+      unitId: rider.id,
+      from: { col: 0, row: 0 },
+      to: { col: 6, row: 0 },
+    },
+  ];
+  const projectedEvents = projectEventsForRecipient(state, movementOnly, "P1");
+  const projectedView = makePlayerView(state, "P1");
+
+  assert(!projectedView.units[hidden.id], "hidden touched unit should remain absent from view");
+  assert(
+    !JSON.stringify(projectedEvents).includes(hidden.id),
+    "rider movement event projection should not mention the hidden target"
+  );
+
+  console.log("view_rider_movement_projection_does_not_leak_hidden_target passed");
+}
+
 function main() {
   testHiddenEnemyOmitted();
   testKnownStealthedEnemyUsesLastKnown();
@@ -390,6 +425,7 @@ function main() {
   testGroupedSemanticEventProjectionFiltersHiddenTargets();
   testJackKnownHpProjectionIsOwnerPrivate();
   testJackTrapProjectionIsOwnerPrivateUntilTriggered();
+  testRiderMovementProjectionDoesNotLeakHiddenTarget();
 }
 
 main();

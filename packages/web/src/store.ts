@@ -409,6 +409,15 @@ function handleServerMessage(
           ? current.selectedUnitId
           : null;
       const selectionLost = !!current.selectedUnitId && !selectedUnitId;
+      const queuedLokiOption = current.pendingLokiLaughtOption;
+      const pendingLokiContext = msg.view.pendingRoll?.context as
+        | { lokiId?: unknown }
+        | undefined;
+      const preserveQueuedLokiOption = !!(
+        queuedLokiOption &&
+        msg.view.pendingRoll?.kind === "lokiLaughtChoice" &&
+        pendingLokiContext?.lokiId === queuedLokiOption.unitId
+      );
 
       set(() => ({
         roomState: msg.view,
@@ -428,6 +437,9 @@ function handleServerMessage(
           metaPendingRoll: nextMeta.pendingRoll,
         })
           ? buildLocalBoardUiResetState()
+          : {}),
+        ...(preserveQueuedLokiOption
+          ? { pendingLokiLaughtOption: queuedLokiOption }
           : {}),
       }));
       const resumeToken = get().resumeToken;

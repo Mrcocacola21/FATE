@@ -1,6 +1,22 @@
 import type { Coord, GameState, UnitState } from "../../model";
 import { isInsideBoard } from "../../model";
-import { getUnitAt } from "../../board";
+import { getUnitsAt } from "../../board";
+import { canDirectlyTargetUnit } from "../../visibility";
+
+export function canRiderMovementAttackTarget(
+  state: GameState,
+  rider: UnitState,
+  target: UnitState
+): boolean {
+  if (!rider.isAlive || !rider.position) return false;
+  if (!target.isAlive || !target.position) return false;
+  if (target.owner === rider.owner) return false;
+
+  // Rider path attacks are incidental single-target attacks, not reveal effects.
+  // Reuse direct-target visibility so an unknown hidden unit cannot become a
+  // candidate merely because its real coordinate intersects the movement path.
+  return canDirectlyTargetUnit(state, rider.id, target.id);
+}
 
 export function collectRiderPathTargets(
   state: GameState,
@@ -45,14 +61,13 @@ export function collectRiderPathTargets(
   const seen = new Set<string>();
   for (const cell of touchedCells) {
     if (!isInsideBoard(cell, state.boardSize)) continue;
-    const unitOnCell = getUnitAt(state, cell);
-    if (!unitOnCell || !unitOnCell.isAlive) continue;
-    if (unitOnCell.owner === rider.owner) continue;
-    if (seen.has(unitOnCell.id)) continue;
+    for (const unitOnCell of getUnitsAt(state, cell)) {
+      if (!canRiderMovementAttackTarget(state, rider, unitOnCell)) continue;
+      if (seen.has(unitOnCell.id)) continue;
 
-    // Path attacks hit enemies passed on the path regardless of stealthed state.
-    seen.add(unitOnCell.id);
-    targets.push(unitOnCell.id);
+      seen.add(unitOnCell.id);
+      targets.push(unitOnCell.id);
+    }
   }
 
   return targets;

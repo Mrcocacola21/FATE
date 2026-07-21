@@ -86,7 +86,8 @@ import {
   testAbilityConsumesMultipleSlots,
 } from "./core/combat.test";
 import {
-  testRiderPathHitsStealthed,
+  testRiderPathIgnoresHiddenEnemies,
+  testRiderPathHitsVisibleEnemy,
   testAssassinAttackFromStealth,
   testAssassinAttackWithoutStealth,
   testSearchRevealsOnlyInRadius,
@@ -194,6 +195,7 @@ import {
   testKhansDecreeAllowsDiagonalMoveThenConsumesMove,
   testKhansDecreeRejectsDiagonalMoveWithoutStatus,
   testKhansDecreeDiagonalMoveTriggersRiderAttacksForTouchedEnemies,
+  testKhansDecreeIgnoresHiddenTouchedEnemies,
   testKhansDecreeDiagonalMoveTriggersDestinationHazardOnce,
   testKhansDecreeCannotBeUsedAfterMove,
   testGenghisMongolChargeRequires4SpendsAll4,
@@ -426,7 +428,8 @@ function main(): void {
   testChessKingDeathAndDraw();
   testMoonGameStraightMovementBonus();
   testCourtRoundEndRollsEffectsAndSwapsRoles();
-  testRiderPathHitsStealthed();
+  testRiderPathIgnoresHiddenEnemies();
+  testRiderPathHitsVisibleEnemy();
   testGameEndCondition();
   testBerserkerAutoDefenseEnabled();
   testBerserkerAutoDefenseDeclined();
@@ -540,6 +543,7 @@ function main(): void {
   testKhansDecreeAllowsDiagonalMoveThenConsumesMove();
   testKhansDecreeRejectsDiagonalMoveWithoutStatus();
   testKhansDecreeDiagonalMoveTriggersRiderAttacksForTouchedEnemies();
+  testKhansDecreeIgnoresHiddenTouchedEnemies();
   testKhansDecreeDiagonalMoveTriggersDestinationHazardOnce();
   testKhansDecreeCannotBeUsedAfterMove();
   testGenghisMongolChargeRequires4SpendsAll4();

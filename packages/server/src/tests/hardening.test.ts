@@ -889,6 +889,42 @@ function testRiverBoatmanCommandsPreserveAuthoritativeMovementBudget() {
   console.log("hardening_river_boatman_authoritative_budget passed");
 }
 
+function testPendingBoardChoiceUsesAuthenticatedSeat() {
+  const { room } = makeSeatedRoom({
+    roomIdPrefix: "hardening-pending-board-choice",
+  });
+  room.state = {
+    ...createEmptyGame(),
+    pendingRoll: {
+      id: "pending-board-choice",
+      kind: "hassanTrueEnemyTargetChoice",
+      player: "P1",
+      context: {},
+    },
+  };
+
+  const result = applyGameAction(
+    room,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: "pending-board-choice",
+      choice: "skip",
+    } as any,
+    "P1"
+  );
+
+  assert.equal(result.ok, true, "authenticated board choice should reach rules");
+  assert.equal(room.state.pendingRoll, null, "pending choice should resolve");
+  const logged = room.actionLog.at(-1)?.action;
+  assert.equal(
+    logged?.type === "resolvePendingRoll" ? logged.player : undefined,
+    "P1",
+    "server should attach the authenticated seat to generic pending commands"
+  );
+
+  console.log("hardening_pending_board_choice_uses_authenticated_seat passed");
+}
+
 async function main() {
   await testGraceExpiryVacatesSeatAndInvalidatesToken();
   await testReconnectWithinGraceKeepsSeatAndClearsTimer();
@@ -906,6 +942,7 @@ async function main() {
   testServerAcceptsMoveIntoUnknownHiddenOccupiedCell();
   testServerRejectsInvalidFalsePromisePlacementsWithoutMutation();
   testRiverBoatmanCommandsPreserveAuthoritativeMovementBudget();
+  testPendingBoardChoiceUsesAuthenticatedSeat();
   console.log("hardening tests passed");
 }
 

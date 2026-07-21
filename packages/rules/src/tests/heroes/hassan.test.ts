@@ -95,6 +95,9 @@ export function testHassanTrueEnemyGatingConsumesAndForcesOneAttack() {
   const controllerAlly = Object.values(state.units).find(
     (unit) => unit.owner === "P1" && unit.class === "knight"
   )!;
+  const hiddenEnemyTarget = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "assassin"
+  )!;
 
   state = setUnit(state, hassan.id, {
     position: { col: 4, row: 4 },
@@ -108,6 +111,11 @@ export function testHassanTrueEnemyGatingConsumesAndForcesOneAttack() {
   });
   state = setUnit(state, controllerAlly.id, {
     position: { col: 5, row: 5 },
+  });
+  state = setUnit(state, hiddenEnemyTarget.id, {
+    position: { col: 6, row: 3 },
+    isStealthed: true,
+    stealthTurnsLeft: 3,
   });
   state = toBattleState(state, "P1", hassan.id);
   state = initKnowledgeForOwners(state);
@@ -166,6 +174,10 @@ export function testHassanTrueEnemyGatingConsumesAndForcesOneAttack() {
   assert(
     !options.includes(controllerAlly.id),
     "True Enemy should treat Hassan-side units as allies during forced attack"
+  );
+  assert(
+    !options.includes(hiddenEnemyTarget.id),
+    "True Enemy should not leak an unknown hidden attack target"
   );
 
   const canceled = applyAction(
