@@ -101,6 +101,14 @@ test("an AoE uses only visible projected units for hit and damage feedback", () 
         effect.coord.row === 0,
     ),
   );
+  assert.ok(
+    effects.some(
+      (effect) =>
+        effect.kind === "floatingText" &&
+        effect.tone === "damage" &&
+        effect.text === "-2",
+    ),
+  );
 });
 
 test("movement maps to a trail between explicit projected coordinates", () => {

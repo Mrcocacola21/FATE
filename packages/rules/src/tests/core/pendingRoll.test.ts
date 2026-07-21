@@ -10,6 +10,35 @@ import {
   RollKind,
   SeededRNG,
 } from "../helpers/testUtils";
+import { getPendingCombatQueueCount } from "../../view/pending";
+
+export function testActiveQueuedRollProjectsAsPending() {
+  const riderPending = {
+    id: "roll-rider-final",
+    player: "P1" as PlayerId,
+    kind: "riderPathAttack_defenderRoll" as RollKind,
+    context: { queueKind: "riderPath" },
+  };
+  assert.strictEqual(
+    getPendingCombatQueueCount([], riderPending),
+    1,
+    "the active final rider-path defense must keep the visual queue pending"
+  );
+
+  const normalPending = {
+    ...riderPending,
+    id: "roll-normal",
+    kind: "attack_defenderRoll" as RollKind,
+    context: { queueKind: "normal" },
+  };
+  assert.strictEqual(
+    getPendingCombatQueueCount([], normalPending),
+    0,
+    "a normal single-target attack must not be projected as a visual queue"
+  );
+
+  console.log("active_queued_roll_projects_as_pending passed");
+}
 export function testPendingRollActionsExportsStable() {
   const expected = ["applyResolvePendingRoll"];
   const exported = Object.keys(pendingRollActions);

@@ -2,6 +2,7 @@ import {
   testActionModuleBoundaries,
 } from "./core/boundaries.test";
 import {
+  testActiveQueuedRollProjectsAsPending,
   testPendingRollActionsExportsStable,
   testPendingRollResolverCoverage,
   testUnknownPendingRollKindDoesNotClear,
@@ -383,6 +384,7 @@ import {
 } from "./core/modes.test";
 
 function main(): void {
+  testActiveQueuedRollProjectsAsPending();
   // Full test run: preserve the historical simpleTests.ts execution order.
   console.log('Running full simpleTests suite');
   testPendingRollActionsExportsStable();

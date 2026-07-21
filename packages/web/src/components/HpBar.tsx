@@ -19,7 +19,10 @@ export const HpBar: FC<HpBarProps> = ({ current, max, showText, className }) => 
         className ?? ""
       }`}
     >
-      <div className={`h-full rounded-full ${tone}`} style={{ width: `${pct}%` }} />
+      <div
+        className={`h-full rounded-full transition-[width] duration-300 ease-out motion-reduce:transition-none ${tone}`}
+        style={{ width: `${pct}%` }}
+      />
       {showText && (
         <div className="absolute inset-0 flex items-center justify-center text-[8px] font-semibold text-slate-900 dark:text-slate-100">
           {clampedCurrent}/{safeMax}

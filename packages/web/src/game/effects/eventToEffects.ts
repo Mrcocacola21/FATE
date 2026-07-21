@@ -176,6 +176,8 @@ function effectForAoe(
     const damage = event.damageByUnitId?.[unitId];
     if (damagedIds.has(unitId) && typeof damage === "number" && damage > 0) {
       effects.push(...floatingValue(coord, `-${damage}`, "damage"));
+    } else {
+      effects.push(...floatingLabel(coord, "miss", "miss"));
     }
   }
   return effects;

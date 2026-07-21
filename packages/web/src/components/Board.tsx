@@ -15,6 +15,7 @@ import { useI18n } from "../i18n";
 import { getClassLabel, getHeroDisplayName } from "../i18n/displayMetadata";
 import { BoardEffectsLayer } from "../game/effects/BoardEffectsLayer";
 import { useBoardEffects } from "../game/effects/useBoardEffects";
+import { useVisualResolution } from "../game/effects/useVisualResolution";
 import { useBoardFit } from "../game/hooks/useBoardFit";
 import type { BoardEventBatch, BoardPreviewLine } from "../game/effects/types";
 import { VfxLayer } from "../features/vfx/VfxLayer";
@@ -197,6 +198,13 @@ export const Board: FC<BoardProps> = ({
     ref: boardWrapperRef,
     metrics: { cellSize, labelSize, boardPixelSize, totalPixelSize },
   } = useBoardFit({ boardSize: size, zoom, showCoordinates });
+  const visualResolution = useVisualResolution({
+    batch: eventBatch,
+    view,
+    enabled: visualEffectsEnabled,
+    sessionKey: effectSessionKey,
+  });
+  const renderedUnits = visualResolution.visualUnitsByUnitId;
   const [transformingUnitIds, setTransformingUnitIds] = useState<Set<string>>(() => new Set());
   const visualStateRef = useRef<{
     enabled: boolean;
@@ -207,7 +215,7 @@ export const Board: FC<BoardProps> = ({
 
   useEffect(() => {
     const nextUnits = new Map<string, { signature: string; variant: string | null }>();
-    for (const unit of Object.values(view.units)) {
+    for (const unit of Object.values(renderedUnits)) {
       nextUnits.set(unit.id, {
         signature: getUnitVisualSignature(unit),
         variant: getUnitVisualVariant(unit),
@@ -270,7 +278,7 @@ export const Board: FC<BoardProps> = ({
       }, 1100);
       visualEffectTimersRef.current.set(unitId, timer);
     }
-  }, [view, visualEffectsEnabled]);
+  }, [renderedUnits, view.turnNumber, visualEffectsEnabled]);
 
   useEffect(
     () => () => {
@@ -283,13 +291,13 @@ export const Board: FC<BoardProps> = ({
   );
 
   const { effects: boardEffects, reducedMotion } = useBoardEffects({
-    batch: eventBatch,
+    batch: visualResolution.batch,
     view,
     enabled: visualEffectsEnabled,
     sessionKey: effectSessionKey,
   });
   const { effects: boardVfx, reducedMotion: vfxReducedMotion } = useBoardVfx({
-    batch: eventBatch,
+    batch: visualResolution.batch,
     view,
     enabled: visualEffectsEnabled,
     sessionKey: effectSessionKey,
@@ -366,7 +374,7 @@ export const Board: FC<BoardProps> = ({
     }
   }
 
-  for (const unit of Object.values(view.units)) {
+  for (const unit of Object.values(renderedUnits)) {
     if (!unit.position) continue;
     const viewPos = toViewCoord(unit.position);
     unitsByPos.set(coordKey(viewPos), {
@@ -531,7 +539,7 @@ export const Board: FC<BoardProps> = ({
         const isTrackedHiddenEnemy =
           isHiddenEnemy && unit.chikatiloMarkStatus?.exactTrackingActive;
         const marker = getClassMarker(unit.class);
-        const unitView = view.units[unit.id];
+        const unitView = renderedUnits[unit.id];
         const tokenId = unitView?.figureId ?? unitView?.heroId ?? unit.class;
         const tokenAsset = getUnitTokenAsset(unitView);
         const isTransforming = transformingUnitIds.has(unit.id);
@@ -850,8 +858,12 @@ export const Board: FC<BoardProps> = ({
             <div className="pointer-events-none absolute bottom-1 left-1 right-1 z-10 flex justify-center">
               <div style={{ width: hpBarWidth }}>
                 <HpBar
-                  current={view.units[unit.id]?.hp ?? 0}
-                  max={getMaxHp(unit.class as UnitClass, view.units[unit.id]?.heroId)}
+                  current={
+                    visualResolution.visualHpByUnitId[unit.id] ??
+                    renderedUnits[unit.id]?.hp ??
+                    0
+                  }
+                  max={getMaxHp(unit.class as UnitClass, renderedUnits[unit.id]?.heroId)}
                   showText={playerId ? unit.owner === playerId : false}
                   className="w-full"
                 />

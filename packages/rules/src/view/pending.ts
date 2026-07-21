@@ -23,6 +23,7 @@ const PENDING_COMBAT_QUEUE_KINDS = new Set<string>([
 type QueuePendingContext = {
   targetsQueue?: string[];
   currentTargetIndex?: number;
+  queueKind?: "normal" | "riderPath" | "aoe";
 };
 
 function getQueuedTargetsRemaining(context: unknown): number {
@@ -41,11 +42,16 @@ export function getPendingCombatQueueCount(
     return basePendingCount;
   }
 
+  const context = pendingRoll.context as QueuePendingContext;
+  if (context.queueKind === "riderPath" || context.queueKind === "aoe") {
+    return Math.max(1, getQueuedTargetsRemaining(context));
+  }
+
   if (!PENDING_COMBAT_QUEUE_KINDS.has(pendingRoll.kind)) {
     return basePendingCount;
   }
 
-  return getQueuedTargetsRemaining(pendingRoll.context);
+  return getQueuedTargetsRemaining(context);
 }
 
 export function getVisiblePendingRollForPlayer(
