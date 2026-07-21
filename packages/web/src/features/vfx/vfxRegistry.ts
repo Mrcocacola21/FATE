@@ -32,20 +32,11 @@ const mysticMarkStrip = new URL(
   "../../assets/vfx/curated/pipoya-mysterious-object/mystic-mark-strip.png",
   import.meta.url,
 ).href;
-const portalGreenStrip = new URL(
-  "../../assets/vfx/curated/pipoya-warp-portal/portal-green-strip.png",
-  import.meta.url,
-).href;
-const portalRedStrip = new URL(
-  "../../assets/vfx/curated/pipoya-warp-portal/portal-red-strip.png",
-  import.meta.url,
-).href;
-
-export type VfxAssetType = "spriteStrip" | "particle" | "lineParticle";
+export type VfxAssetType = "spriteStrip" | "particle" | "lineParticle" | "proceduralPortal";
 
 export interface VfxDefinition {
   id: VfxEffectId;
-  asset: string;
+  asset?: string;
   assetType: VfxAssetType;
   sourcePack: string;
   sourceFile: string;
@@ -167,35 +158,25 @@ export const vfxRegistry = {
   },
   portal: {
     id: "portal",
-    asset: portalGreenStrip,
-    assetType: "spriteStrip",
-    sourcePack: "Pipoya VFX WarpPortal",
-    sourceFile: "192x192/pipo-gate01c192.png",
+    assetType: "proceduralPortal",
+    sourcePack: "FATE procedural VFX",
+    sourceFile: "src/features/vfx/PortalEffect.tsx",
     defaultPlacement: "cell",
-    durationMs: 720,
-    defaultScaleCells: 1.35,
-    opacity: 0.68,
-    frameWidth: 192,
-    frameHeight: 192,
-    frames: 15,
-    fps: 24,
+    durationMs: 820,
+    defaultScaleCells: 1.5,
+    opacity: 0.9,
     blendMode: "screen",
     reducedMotion: "short",
   },
   phantasm: {
     id: "phantasm",
-    asset: portalRedStrip,
-    assetType: "spriteStrip",
-    sourcePack: "Pipoya VFX WarpPortal",
-    sourceFile: "192x192/pipo-gate01a192.png",
+    assetType: "proceduralPortal",
+    sourcePack: "FATE procedural VFX",
+    sourceFile: "src/features/vfx/PortalEffect.tsx",
     defaultPlacement: "cell",
-    durationMs: 720,
-    defaultScaleCells: 1.4,
-    opacity: 0.62,
-    frameWidth: 192,
-    frameHeight: 192,
-    frames: 15,
-    fps: 24,
+    durationMs: 780,
+    defaultScaleCells: 1.5,
+    opacity: 0.84,
     blendMode: "screen",
     reducedMotion: "short",
   },
@@ -227,18 +208,13 @@ export const vfxRegistry = {
   },
   transformation: {
     id: "transformation",
-    asset: portalRedStrip,
-    assetType: "spriteStrip",
-    sourcePack: "Pipoya VFX WarpPortal",
-    sourceFile: "192x192/pipo-gate01a192.png",
+    assetType: "proceduralPortal",
+    sourcePack: "FATE procedural VFX",
+    sourceFile: "src/features/vfx/PortalEffect.tsx",
     defaultPlacement: "unit",
     durationMs: 900,
     defaultScaleCells: 1.55,
-    opacity: 0.66,
-    frameWidth: 192,
-    frameHeight: 192,
-    frames: 15,
-    fps: 24,
+    opacity: 0.86,
     blendMode: "screen",
     reducedMotion: "short",
   },
@@ -257,35 +233,25 @@ export const vfxRegistry = {
   },
   boat: {
     id: "boat",
-    asset: portalGreenStrip,
-    assetType: "spriteStrip",
-    sourcePack: "Pipoya VFX WarpPortal",
-    sourceFile: "192x192/pipo-gate01c192.png",
+    assetType: "proceduralPortal",
+    sourcePack: "FATE procedural VFX",
+    sourceFile: "src/features/vfx/PortalEffect.tsx",
     defaultPlacement: "cell",
-    durationMs: 720,
-    defaultScaleCells: 1.3,
-    opacity: 0.62,
-    frameWidth: 192,
-    frameHeight: 192,
-    frames: 15,
-    fps: 24,
+    durationMs: 780,
+    defaultScaleCells: 1.45,
+    opacity: 0.82,
     blendMode: "screen",
     reducedMotion: "short",
   },
   tralala: {
     id: "tralala",
-    asset: portalGreenStrip,
-    assetType: "spriteStrip",
-    sourcePack: "Pipoya VFX WarpPortal",
-    sourceFile: "192x192/pipo-gate01c192.png",
+    assetType: "proceduralPortal",
+    sourcePack: "FATE procedural VFX",
+    sourceFile: "src/features/vfx/PortalEffect.tsx",
     defaultPlacement: "path",
     durationMs: 850,
-    defaultScaleCells: 1.25,
-    opacity: 0.5,
-    frameWidth: 192,
-    frameHeight: 192,
-    frames: 15,
-    fps: 24,
+    defaultScaleCells: 1.4,
+    opacity: 0.72,
     blendMode: "screen",
     reducedMotion: "short",
   },
@@ -321,7 +287,9 @@ export function validateVfxRegistry(): string[] {
   const errors: string[] = [];
   for (const [id, definition] of Object.entries(vfxRegistry)) {
     if (id !== definition.id) errors.push(`${id}: id mismatch`);
-    if (!definition.asset) errors.push(`${id}: missing asset import`);
+    if (definition.assetType !== "proceduralPortal" && !definition.asset) {
+      errors.push(`${id}: missing asset import`);
+    }
     if (definition.durationMs <= 0) errors.push(`${id}: duration must be positive`);
     if (definition.defaultScaleCells <= 0) {
       errors.push(`${id}: defaultScaleCells must be positive`);

@@ -155,6 +155,10 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
       <div className="mx-auto max-w-6xl space-y-5">
         <PanelCard as="header" variant="hud" className="hero-command p-3.5 sm:p-7">
           <div className="relative z-10 flex min-w-0 flex-col gap-3 sm:gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div className="hidden items-center gap-2 lg:absolute lg:right-0 lg:top-0 lg:flex">
+              <LanguageSwitcher />
+              <ThemeToggle />
+            </div>
             <div className="flex min-w-0 items-start gap-4">
               <div className="brand-sigil mt-1 hidden h-16 w-16 sm:flex" aria-hidden="true" />
               <div className="min-w-0 max-w-2xl">
@@ -215,8 +219,8 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
                   {t("lobby.heartbreak")}
                 </button>
               ) : null}
-              <ThemeToggle className="w-full lg:w-auto" />
-              <LanguageSwitcher className="w-full justify-center lg:w-auto" />
+              <ThemeToggle className="w-full lg:hidden" />
+              <LanguageSwitcher className="w-full justify-center lg:hidden" />
               <details className="panel-card-muted col-span-2 p-3 text-left lg:hidden">
                 <summary className="min-h-11 cursor-pointer py-2 text-sm font-bold">
                   {t("mobile.selectedFigureSet")}

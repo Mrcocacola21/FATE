@@ -6,7 +6,7 @@ import {
   lineBetweenCellsToCssTransform,
   pathCellsToSegments,
 } from "./vfxGeometry";
-import { vfxRegistry } from "./vfxRegistry";
+import { vfxRegistry, type VfxDefinition } from "./vfxRegistry";
 import { VfxSprite } from "./VfxSprite";
 import type { QueuedBoardVfxRequest } from "./vfxTypes";
 
@@ -82,7 +82,7 @@ export const VfxLayer: FC<VfxLayerProps> = ({
       aria-hidden="true"
     >
       {effects.map((effect) => {
-        const definition = vfxRegistry[effect.effectId];
+        const definition = vfxRegistry[effect.effectId] as VfxDefinition;
         const timing = effectTimingStyle(effect);
         const scaleCells = effect.scaleCells ?? definition.defaultScaleCells;
 
@@ -103,7 +103,7 @@ export const VfxLayer: FC<VfxLayerProps> = ({
                 top: line.top,
                 width: line.width,
                 transform: line.transform,
-                backgroundImage: `url(${definition.asset})`,
+                backgroundImage: definition.asset ? `url(${definition.asset})` : undefined,
                 ...timing,
               }}
             />
@@ -111,7 +111,10 @@ export const VfxLayer: FC<VfxLayerProps> = ({
         }
 
         if (effect.placement === "path" && effect.path && effect.path.length > 1) {
-          const segments = pathCellsToSegments(effect.path).slice(0, 10);
+          const segments =
+            definition.assetType === "proceduralPortal"
+              ? []
+              : pathCellsToSegments(effect.path).slice(0, 10);
           const first = effect.path[0];
           const last = effect.path[effect.path.length - 1];
           return (
@@ -133,7 +136,7 @@ export const VfxLayer: FC<VfxLayerProps> = ({
                       top: line.top,
                       width: line.width,
                       transform: line.transform,
-                      backgroundImage: `url(${definition.asset})`,
+                      backgroundImage: definition.asset ? `url(${definition.asset})` : undefined,
                       ...timing,
                     }}
                   />

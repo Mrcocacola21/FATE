@@ -149,12 +149,18 @@ async function captureScenario(browser, scenario) {
     const trigger = page.locator(`[data-vfx-preview-trigger="${scenario.id}"]`);
     await trigger.click();
     log(`Scenario clicked: ${scenario.id}`);
-    await page.waitForSelector(".vfx-sprite, .vfx-line", { state: "attached", timeout: 2_000 });
+    await page.waitForSelector(".vfx-sprite, .vfx-line, .portal-effect", {
+      state: "attached",
+      timeout: 2_000,
+    });
     await page.waitForTimeout(scenario.waitMs);
     await page.locator("[data-vfx-preview-board]").screenshot({ path: screenshotPath });
     log(`Scenario screenshot: ${scenario.id}`);
     await page.waitForTimeout(1_200);
-    await page.waitForSelector(".vfx-sprite, .vfx-line", { state: "detached", timeout: 4_000 });
+    await page.waitForSelector(".vfx-sprite, .vfx-line, .portal-effect", {
+      state: "detached",
+      timeout: 4_000,
+    });
     log(`Scenario detached: ${scenario.id}`);
   } finally {
     await page.close();

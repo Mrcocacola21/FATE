@@ -118,10 +118,18 @@
   }
 }
 
-@keyframes vfx-sprite-strip {
+@keyframes vfx-sprite-frame {
+  from {
+    background-position-x: 0%;
+  }
+  to {
+    background-position-x: 100%;
+  }
+}
+
+@keyframes vfx-sprite-strip-envelope {
   0% {
     opacity: 0;
-    background-position-x: 0%;
     transform: scale(0.84) rotate(-2deg);
   }
   14% {
@@ -133,8 +141,155 @@
   }
   100% {
     opacity: 0;
-    background-position-x: 100%;
     transform: scale(1.08) rotate(2deg);
+  }
+}
+
+@keyframes portal-effect-appearance {
+  0% {
+    opacity: 0;
+    transform: scale(0.15);
+    filter: brightness(1.65);
+  }
+  14% {
+    opacity: calc(var(--vfx-opacity) * 0.82);
+    transform: scale(0.24);
+  }
+  36% {
+    opacity: var(--vfx-opacity);
+    transform: scale(1.03);
+  }
+  55% {
+    opacity: var(--vfx-opacity);
+    transform: scale(0.98);
+    filter: brightness(1.08);
+  }
+  80% {
+    opacity: var(--vfx-opacity);
+    transform: scale(1.02);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.22);
+    filter: brightness(0.8);
+  }
+}
+
+@keyframes portal-effect-spark {
+  0%,
+  5% {
+    opacity: 0;
+    transform: scale(0.1) rotate(-18deg);
+  }
+  14% {
+    opacity: 1;
+    transform: scale(1) rotate(8deg);
+  }
+  30% {
+    opacity: 0.75;
+    transform: scale(3.4) rotate(28deg);
+  }
+  42%,
+  100% {
+    opacity: 0;
+    transform: scale(4.2) rotate(35deg);
+  }
+}
+
+@keyframes portal-effect-ring {
+  0%,
+  16% {
+    opacity: 0;
+    transform: scale(0.32) rotate(-24deg);
+  }
+  36% {
+    opacity: 1;
+    transform: scale(1.05) rotate(12deg);
+  }
+  62% {
+    opacity: 0.88;
+    transform: scale(0.98) rotate(82deg);
+  }
+  86% {
+    opacity: 1;
+    transform: scale(1.03) rotate(148deg);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.55) rotate(190deg);
+  }
+}
+
+@keyframes portal-effect-inner {
+  0%,
+  30% {
+    opacity: 0;
+    transform: scale(0.42) rotate(24deg);
+  }
+  54% {
+    opacity: 0.92;
+    transform: scale(1) rotate(-38deg);
+  }
+  82% {
+    opacity: 0.78;
+    transform: scale(0.97) rotate(-108deg);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.3) rotate(-145deg);
+  }
+}
+
+@keyframes portal-effect-core {
+  0%,
+  25% {
+    opacity: 0;
+    transform: scale(0.18);
+  }
+  52% {
+    opacity: 0.94;
+    transform: scale(1);
+  }
+  78% {
+    opacity: 0.84;
+    transform: scale(0.92);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.15);
+  }
+}
+
+@keyframes portal-effect-particle {
+  0%,
+  26% {
+    opacity: 0;
+    transform: rotate(var(--portal-particle-angle)) scale(0.55);
+  }
+  46% {
+    opacity: 0.95;
+    transform: rotate(calc(var(--portal-particle-angle) + 18deg)) scale(0.88);
+  }
+  78% {
+    opacity: 0.55;
+    transform: rotate(calc(var(--portal-particle-angle) + 58deg)) scale(1.08);
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(calc(var(--portal-particle-angle) + 92deg)) scale(1.2);
+  }
+}
+
+@keyframes portal-effect-reduced {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.75);
+  }
+  30%,
+  72% {
+    opacity: min(var(--vfx-opacity), 0.58);
+    transform: scale(1);
   }
 }
 
@@ -984,8 +1139,8 @@ html.dark {
   .vfx-sprite-strip {
     background-repeat: no-repeat;
     background-position: 0 0;
-    animation-name: vfx-sprite-strip;
-    animation-timing-function: steps(var(--vfx-frames), end);
+    animation-name: vfx-sprite-frame, vfx-sprite-strip-envelope;
+    animation-timing-function: steps(var(--vfx-frame-steps), end), ease-out;
   }
 
   .vfx-sprite-particle {
@@ -1026,6 +1181,170 @@ html.dark {
   .vfx-hiddenReveal,
   .vfx-chicken {
     filter: brightness(1.05) saturate(0.8);
+  }
+
+  .portal-effect {
+    --portal-hot: #f5d0fe;
+    --portal-bright: #c084fc;
+    --portal-mid: #7c3aed;
+    --portal-deep: #2e1065;
+    --portal-void: #07030f;
+    @apply pointer-events-none absolute block select-none;
+    contain: layout paint style;
+    opacity: 0;
+    transform-origin: center;
+    animation: portal-effect-appearance var(--vfx-duration) cubic-bezier(0.2, 0.72, 0.24, 1)
+      var(--vfx-delay) both;
+    will-change: opacity, transform;
+  }
+
+  .portal-effect-phantasm,
+  .portal-effect-transformation {
+    --portal-hot: #fecdd3;
+    --portal-bright: #f472b6;
+    --portal-mid: #a21caf;
+    --portal-deep: #4c0519;
+    --portal-void: #100208;
+  }
+
+  .portal-effect-boat,
+  .portal-effect-tralala {
+    --portal-hot: #ccfbf1;
+    --portal-bright: #5eead4;
+    --portal-mid: #0d9488;
+    --portal-deep: #134e4a;
+    --portal-void: #021413;
+  }
+
+  .portal-effect > span {
+    position: absolute;
+    display: block;
+    pointer-events: none;
+  }
+
+  .portal-effect-glow {
+    inset: 12%;
+    border-radius: 50%;
+    background: radial-gradient(
+      circle,
+      transparent 38%,
+      color-mix(in srgb, var(--portal-mid) 42%, transparent) 62%,
+      transparent 78%
+    );
+    box-shadow:
+      0 0 12px color-mix(in srgb, var(--portal-bright) 78%, transparent),
+      0 0 24px color-mix(in srgb, var(--portal-mid) 48%, transparent);
+    animation: portal-effect-core var(--vfx-duration) ease-out var(--vfx-delay) both;
+  }
+
+  .portal-effect-spark {
+    inset: 43% 45%;
+    border-radius: 48%;
+    background: var(--portal-hot);
+    box-shadow:
+      0 0 5px var(--portal-hot),
+      0 0 13px var(--portal-bright);
+    animation: portal-effect-spark var(--vfx-duration) ease-out var(--vfx-delay) both;
+  }
+
+  .portal-effect-inner {
+    inset: 22%;
+    border-radius: 48% 52% 46% 54%;
+    background:
+      radial-gradient(circle at 52% 48%, var(--portal-void) 0 24%, transparent 46%),
+      conic-gradient(
+        from 20deg,
+        var(--portal-deep),
+        var(--portal-mid),
+        var(--portal-hot),
+        var(--portal-deep),
+        var(--portal-mid),
+        var(--portal-deep)
+      );
+    box-shadow: inset 0 0 13px var(--portal-void);
+    animation: portal-effect-inner var(--vfx-duration) ease-in-out var(--vfx-delay) both;
+  }
+
+  .portal-effect-core {
+    inset: 31%;
+    border-radius: 50%;
+    background: radial-gradient(
+      circle at 44% 40%,
+      color-mix(in srgb, var(--portal-bright) 36%, var(--portal-void)) 0,
+      var(--portal-void) 56%,
+      color-mix(in srgb, var(--portal-deep) 72%, transparent) 100%
+    );
+    box-shadow: inset 0 0 10px var(--portal-deep);
+    animation: portal-effect-core var(--vfx-duration) ease-out var(--vfx-delay) both;
+  }
+
+  .portal-effect-ring,
+  .portal-effect-runes {
+    inset: 13%;
+    border-radius: 50%;
+    -webkit-mask: radial-gradient(farthest-side, transparent 71%, #000 73% 82%, transparent 84%);
+    mask: radial-gradient(farthest-side, transparent 71%, #000 73% 82%, transparent 84%);
+  }
+
+  .portal-effect-ring {
+    background: conic-gradient(
+      from 12deg,
+      transparent 0 4%,
+      var(--portal-hot) 7%,
+      var(--portal-mid) 15%,
+      var(--portal-bright) 25%,
+      transparent 31% 36%,
+      var(--portal-hot) 42%,
+      var(--portal-mid) 58%,
+      transparent 66% 71%,
+      var(--portal-bright) 79%,
+      var(--portal-hot) 91%,
+      transparent 97%
+    );
+    filter: drop-shadow(0 0 3px var(--portal-bright));
+    animation: portal-effect-ring var(--vfx-duration) ease-out var(--vfx-delay) both;
+  }
+
+  .portal-effect-runes {
+    inset: 8%;
+    background: repeating-conic-gradient(
+      from 4deg,
+      transparent 0 8deg,
+      var(--portal-hot) 9deg 11deg,
+      transparent 12deg 27deg
+    );
+    opacity: 0.7;
+    animation: portal-effect-ring var(--vfx-duration) ease-in-out var(--vfx-delay) reverse both;
+  }
+
+  .portal-effect-particle {
+    inset: 4%;
+    transform-origin: center;
+    animation: portal-effect-particle var(--vfx-duration) ease-out
+      calc(var(--vfx-delay) + var(--portal-particle-delay)) both;
+  }
+
+  .portal-effect-particle::after {
+    position: absolute;
+    left: calc(50% - 1.5px);
+    top: 0;
+    width: 3px;
+    height: 3px;
+    border-radius: 9999px;
+    background: var(--portal-hot);
+    box-shadow:
+      0 0 4px var(--portal-hot),
+      0 0 8px var(--portal-bright);
+    content: "";
+  }
+
+  .portal-effect-reduced {
+    animation-name: portal-effect-reduced;
+    animation-timing-function: ease-out;
+  }
+
+  .portal-effect-reduced > span {
+    animation: none;
   }
 }
 
@@ -1096,6 +1415,15 @@ html.dark {
   .vfx-sprite,
   .vfx-line {
     opacity: min(var(--vfx-opacity), 0.45);
+  }
+
+  .portal-effect {
+    animation-name: portal-effect-reduced;
+    animation-timing-function: ease-out;
+  }
+
+  .portal-effect > span {
+    animation: none;
   }
 }
 

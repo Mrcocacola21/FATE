@@ -81,3 +81,64 @@ test("unit-attached VFX follow the current visible unit coordinate", () => {
   assert.match(html, /top:40px/);
   assert.doesNotMatch(html, /top:70px/);
 });
+
+test("portal VFX stays centered on its target cell and scales from cell size", () => {
+  const now = Date.now();
+  const effects: QueuedBoardVfxRequest[] = [
+    {
+      id: "portal-1",
+      effectId: "portal",
+      placement: "cell",
+      sourceCell: { col: 4, row: 4 },
+      startedAt: now,
+      expiresAt: now + 820,
+    },
+  ];
+
+  const html = renderToStaticMarkup(
+    <VfxLayer
+      effects={effects}
+      view={view()}
+      boardSize={9}
+      cellSize={40}
+      isFlipped={false}
+      reducedMotion={false}
+    />,
+  );
+
+  assert.match(html, /data-portal-effect="portal"/);
+  assert.match(html, /left:150px;top:150px;width:60px;height:60px/);
+  assert.doesNotMatch(html, /background-image/);
+});
+
+test("procedural portal paths render only fixed source and destination portals", () => {
+  const now = Date.now();
+  const effects: QueuedBoardVfxRequest[] = [
+    {
+      id: "portal-path",
+      effectId: "tralala",
+      placement: "path",
+      path: [
+        { col: 1, row: 1 },
+        { col: 2, row: 2 },
+        { col: 3, row: 3 },
+      ],
+      startedAt: now,
+      expiresAt: now + 850,
+    },
+  ];
+
+  const html = renderToStaticMarkup(
+    <VfxLayer
+      effects={effects}
+      view={view()}
+      boardSize={9}
+      cellSize={40}
+      isFlipped={false}
+      reducedMotion={false}
+    />,
+  );
+
+  assert.equal(html.match(/data-portal-effect="tralala"/g)?.length, 2);
+  assert.doesNotMatch(html, /vfx-line-tralala/);
+});
