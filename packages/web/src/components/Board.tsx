@@ -6,6 +6,7 @@ import {
 import { useEffect, useRef, useState, type FC } from "react";
 import { HpBar } from "./HpBar";
 import {
+  getBoardMarkerAsset,
   getUnitTokenAsset,
   getUnitVisualSignature,
   getUnitVisualVariant,
@@ -149,6 +150,9 @@ const PREVIEW_KIND_ORDER: PreviewCellKind[] = [
   "validTarget",
   "source",
 ];
+
+const FOREST_MARKER_ASSET = getBoardMarkerAsset("lechy_forest");
+const STAKE_MARKER_ASSET = getBoardMarkerAsset("vlad_stake");
 
 function orderedPreviewKinds(state: PreviewCellState | undefined): PreviewCellKind[] {
   if (!state) return [];
@@ -734,25 +738,72 @@ export const Board: FC<BoardProps> = ({
               style={{ inset: highlightInset }}
             />
           )}
-          {content}
           {isForestMarker && (
             <div
-              className="pointer-events-none absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-600 text-[9px] font-bold text-white shadow dark:bg-emerald-400/80 dark:text-emerald-950"
+              className="board-marker-icon board-marker-icon--forest pointer-events-none absolute left-1/2 top-1/2 flex items-center justify-center"
+              style={{
+                width: Math.round(cellSize * 0.82),
+                height: Math.round(cellSize * 0.82),
+              }}
+              role="img"
+              aria-label={t("board.forestMarker", { owners: forestMarkerOwners.join("/") })}
               title={t("board.forestMarker", { owners: forestMarkerOwners.join("/") })}
+              data-board-marker="lechy_forest"
             >
-              {forestMarkerOwners.length > 1 ? "F2" : "F"}
+              <img src={FOREST_MARKER_ASSET} alt="" draggable={false} />
+              {forestMarkerOwners.length > 1 ? (
+                <span className="board-marker-count" aria-hidden="true">
+                  {forestMarkerOwners.length}
+                </span>
+              ) : null}
             </div>
           )}
           {stakeMarkersByPos.has(key) && (
             <div
-              className={`pointer-events-none absolute left-1 top-1 flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-bold shadow ${
+              className={`board-marker-icon board-marker-icon--stake pointer-events-none absolute left-1/2 top-1/2 flex items-center justify-center ${
                 stakeMarkersByPos.get(key)
-                  ? "bg-emerald-500 text-white"
-                  : "bg-emerald-200 text-emerald-900 dark:bg-emerald-900/50 dark:text-emerald-200"
+                  ? "board-marker-icon--stake-revealed"
+                  : "board-marker-icon--stake-hidden"
               }`}
-              title={stakeMarkersByPos.get(key) ? t("board.revealedStake") : t("board.hiddenStake")}
+              style={{
+                width: Math.round(cellSize * (stakeMarkersByPos.get(key) ? 0.66 : 0.6)),
+                height: Math.round(cellSize * (stakeMarkersByPos.get(key) ? 0.66 : 0.6)),
+              }}
+              role="img"
+              aria-label={
+                stakeMarkersByPos.get(key) ? t("board.revealedStake") : t("board.hiddenStake")
+              }
+              title={
+                stakeMarkersByPos.get(key) ? t("board.revealedStake") : t("board.hiddenStake")
+              }
+              data-board-marker={stakeMarkersByPos.get(key) ? "vlad_stake" : "vlad_stake_hidden"}
             >
-              {stakeMarkersByPos.get(key) ? "R" : "S"}
+              <img src={STAKE_MARKER_ASSET} alt="" draggable={false} />
+            </div>
+          )}
+          {content}
+          {stakeMarkersByPos.has(key) && (
+            <div
+              className={`stake-state-badge pointer-events-none absolute left-1 top-1 z-30 flex items-center justify-center rounded-full font-bold ${
+                stakeMarkersByPos.get(key)
+                  ? "stake-state-badge--revealed"
+                  : "stake-state-badge--hidden"
+              }`}
+              style={{
+                width: Math.max(16, Math.round(cellSize * 0.23)),
+                height: Math.max(16, Math.round(cellSize * 0.23)),
+                fontSize: Math.max(9, Math.round(cellSize * 0.13)),
+              }}
+              title={
+                stakeMarkersByPos.get(key) ? t("board.revealedStake") : t("board.hiddenStake")
+              }
+              role="img"
+              aria-label={
+                stakeMarkersByPos.get(key) ? t("board.revealedStake") : t("board.hiddenStake")
+              }
+              data-stake-state={stakeMarkersByPos.get(key) ? "revealed" : "hidden"}
+            >
+              S
             </div>
           )}
           {unit?.bunkerActive && (

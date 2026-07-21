@@ -3,6 +3,17 @@ import { FIGURE_ARTS, TOKENS, getFigureArtSrc, getTokenSrc } from "../catalog/to
 
 export type AssetInfo = { figureId: string; art: string; token: string };
 
+export type BoardMarkerAssetId = "lechy_forest" | "vlad_stake";
+
+const BOARD_MARKER_ASSETS: Record<BoardMarkerAssetId, string> = {
+  lechy_forest: new URL("./markers/Forest.png", import.meta.url).href,
+  vlad_stake: new URL("./markers/vladStake.webp", import.meta.url).href,
+};
+
+export function getBoardMarkerAsset(id: BoardMarkerAssetId): string {
+  return BOARD_MARKER_ASSETS[id];
+}
+
 export { getFigureArtSrc, getTokenSrc };
 export {
   getHeroVisualVariants,

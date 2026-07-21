@@ -42,6 +42,36 @@
   }
 }
 
+@keyframes forest-marker-breathe {
+  0%,
+  100% {
+    opacity: 0.78;
+    filter: drop-shadow(0 0 5px rgb(34 197 94 / 0.42));
+  }
+  50% {
+    opacity: 0.9;
+    filter: drop-shadow(0 0 9px rgb(74 222 128 / 0.62));
+  }
+}
+
+@keyframes stake-marker-reveal {
+  0% {
+    opacity: 0.45;
+    transform: translate(-50%, -50%) scale(0.86);
+    filter: saturate(0.7) drop-shadow(0 0 0 rgb(127 29 29 / 0));
+  }
+  62% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.035);
+    filter: saturate(1.08) drop-shadow(0 0 9px rgb(220 38 38 / 0.7));
+  }
+  100% {
+    opacity: 0.94;
+    transform: translate(-50%, -50%) scale(1);
+    filter: saturate(1.02) drop-shadow(0 0 5px rgb(127 29 29 / 0.58));
+  }
+}
+
 @keyframes board-effect-pulse {
   0% {
     opacity: 0;
@@ -848,7 +878,9 @@ html.dark {
   }
 
   .mobile-bottom-sheet-expanded {
-    height: calc(100dvh - max(0.5rem, env(safe-area-inset-top)) - 3.85rem - env(safe-area-inset-bottom));
+    height: calc(
+      100dvh - max(0.5rem, env(safe-area-inset-top)) - 3.85rem - env(safe-area-inset-bottom)
+    );
   }
 
   .mobile-sheet-handle {
@@ -932,6 +964,70 @@ html.dark {
   .unit-transform-label {
     @apply pointer-events-none absolute left-1/2 top-0 z-30 -translate-x-1/2 whitespace-nowrap rounded-full bg-violet-600 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white shadow-lg;
     animation: unit-transform-label 1050ms ease-out both;
+  }
+
+  .board-marker-icon {
+    transform: translate(-50%, -50%);
+  }
+
+  .board-marker-icon > img {
+    @apply h-full w-full select-none object-contain;
+  }
+
+  .board-marker-icon--forest {
+    animation: forest-marker-breathe 2.8s ease-in-out infinite;
+  }
+
+  .board-marker-icon--stake {
+    @apply overflow-hidden rounded-md;
+  }
+
+  .board-marker-icon--stake > img {
+    @apply object-fill;
+  }
+
+  .board-marker-icon--stake-hidden {
+    border: 1px dashed rgb(148 163 184 / 0.58);
+    background: rgb(15 23 42 / 0.28);
+    box-shadow: 0 2px 7px rgb(15 23 42 / 0.28);
+    opacity: 0.34;
+    filter: grayscale(1) saturate(0.25) brightness(0.82);
+  }
+
+  .board-marker-icon--stake-revealed {
+    border: 1px solid rgb(254 202 202 / 0.68);
+    background: rgb(69 10 10 / 0.28);
+    box-shadow:
+      0 0 0 2px rgb(127 29 29 / 0.26),
+      0 3px 9px rgb(69 10 10 / 0.42);
+    opacity: 0.94;
+    animation: stake-marker-reveal 360ms cubic-bezier(0.2, 0.82, 0.3, 1) both;
+  }
+
+  .stake-state-badge {
+    border: 1px solid currentColor;
+    line-height: 1;
+  }
+
+  .stake-state-badge--hidden {
+    @apply bg-slate-700 text-slate-100 dark:bg-slate-600 dark:text-white;
+    border-color: rgb(203 213 225 / 0.72);
+    box-shadow:
+      0 1px 3px rgb(15 23 42 / 0.62),
+      0 0 0 1px rgb(15 23 42 / 0.32);
+  }
+
+  .stake-state-badge--revealed {
+    @apply bg-red-700 text-white dark:bg-red-600;
+    border-color: rgb(254 202 202 / 0.88);
+    box-shadow:
+      0 1px 4px rgb(69 10 10 / 0.72),
+      0 0 0 1px rgb(127 29 29 / 0.46),
+      0 0 7px rgb(239 68 68 / 0.55);
+  }
+
+  .board-marker-count {
+    @apply absolute right-0 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-700 px-1 text-[9px] font-bold text-white shadow;
   }
 
   .board-effect-cell,
@@ -1384,6 +1480,8 @@ html.dark {
   .unit-transforming,
   .unit-token-changing,
   .unit-transform-label,
+  .board-marker-icon--forest,
+  .board-marker-icon--stake-revealed,
   .board-effect-cell,
   .board-effect-area,
   .board-effect-beam,
