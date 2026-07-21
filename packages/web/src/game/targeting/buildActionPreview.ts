@@ -4,13 +4,22 @@ import {
   ASGORE_FIRE_PARADE_ID,
   ASGORE_FIREBALL_ID,
   CHIKATILO_ASSASSIN_MARK_ID,
+  ARTEMIS_MOON_INSIGHT_ID,
+  ARTEMIS_SILVER_SICKLE_ID,
+  DON_SORROWFUL_ID,
+  DON_WINDMILLS_ID,
+  DUOLINGO_PUSH_NOTIFICATION_ID,
   GROZNY_INVADE_TIME_ID,
   GUTS_ARBALET_ID,
   GUTS_CANNON_ID,
   HASSAN_TRUE_ENEMY_ID,
+  JACK_HOLY_MOTHER_ID,
+  JACK_SNARES_ID,
   JEBE_KHANS_SHOOTER_ID,
   LECHY_GUIDE_TRAVELER_ID,
+  LUCHE_DIVINE_RAY_ID,
   ODIN_SLEIPNIR_ID,
+  ZORO_ONI_GIRI_ID,
 } from "../../rulesHints";
 import type { BoardPreview } from "./previewTypes";
 import { buildAbilityPreview } from "./buildAbilityPreview";
@@ -55,6 +64,24 @@ function abilityIdForPreviewActionMode(actionMode: Exclude<ActionMode, null>): s
       return GROZNY_INVADE_TIME_ID;
     case "odinSleipnir":
       return ODIN_SLEIPNIR_ID;
+    case "duolingoPush":
+      return DUOLINGO_PUSH_NOTIFICATION_ID;
+    case "lucheLightRay":
+      return LUCHE_DIVINE_RAY_ID;
+    case "zoroOniGiri":
+      return ZORO_ONI_GIRI_ID;
+    case "donReaction":
+      return DON_SORROWFUL_ID;
+    case "donWindmills":
+      return DON_WINDMILLS_ID;
+    case "jackTrap":
+      return JACK_SNARES_ID;
+    case "jackHolyMother":
+      return JACK_HOLY_MOTHER_ID;
+    case "artemisMoonInsight":
+      return ARTEMIS_MOON_INSIGHT_ID;
+    case "artemisSilverSickle":
+      return ARTEMIS_SILVER_SICKLE_ID;
     default:
       return null;
   }

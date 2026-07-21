@@ -1,5 +1,6 @@
 import { createCellClickHandler, createCellHoverHandler } from "../cellHandlers";
 import { PAPYRUS_ID } from "../../../rulesHints";
+import { useEffect, useState } from "react";
 
 export function useGameShellBoardUi(params: any) {
   const {
@@ -119,6 +120,16 @@ export function useGameShellBoardUi(params: any) {
     setForestPreviewCenter,
     selectedUnit,
   } = params;
+  const [newHeroAbilityTargetId, setNewHeroAbilityTargetId] = useState<string | null>(null);
+  const [zoroAttackTargetIds, setZoroAttackTargetIds] = useState<string[]>([]);
+  useEffect(() => {
+    if (actionMode !== "duolingoPush" && actionMode !== "zoroOniGiri") {
+      setNewHeroAbilityTargetId(null);
+    }
+  }, [actionMode, selectedUnitId]);
+  useEffect(() => {
+    if (actionMode !== "attack") setZoroAttackTargetIds([]);
+  }, [actionMode, selectedUnitId]);
 
   const handleCellClick = createCellClickHandler({
     view,
@@ -199,6 +210,10 @@ export function useGameShellBoardUi(params: any) {
     setActionMode,
     setPlaceUnitId,
     selectedUnitId,
+    newHeroAbilityTargetId,
+    setNewHeroAbilityTargetId,
+    zoroAttackTargetIds,
+    setZoroAttackTargetIds,
     legalMoveCoords,
     setMoveOptions,
     invadeTimeKeys,
@@ -291,6 +306,10 @@ export function useGameShellBoardUi(params: any) {
     actionMode !== "odinSleipnir" &&
     actionMode !== "hassanTrueEnemy" &&
     actionMode !== "papyrusCoolGuy" &&
+    actionMode !== "duolingoPush" &&
+    actionMode !== "zoroOniGiri" &&
+    actionMode !== "donWindmills" &&
+    actionMode !== "jackHolyMother" &&
     !papyrusLongBoneAttackMode;
 
   return {
@@ -299,5 +318,6 @@ export function useGameShellBoardUi(params: any) {
     boardPreviewCenter,
     boardDisabled,
     allowUnitPick,
+    zoroAttackTargetIds,
   };
 }

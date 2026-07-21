@@ -24,12 +24,37 @@ function getSlotFromCost(spec: AbilitySpec): AbilitySlot {
 }
 
 function getChargeRequired(spec: AbilitySpec): number | undefined {
+  const external = getExternalResource(spec.id);
+  if (external) return external.required;
   return (
     spec.chargesPerUse ??
     spec.chargeCost ??
     spec.triggerCharges ??
     spec.maxCharges
   );
+}
+
+function getExternalResource(abilityId: string): { abilityId: string; required: number } | null {
+  switch (abilityId) {
+    case ids.ABILITY_DUOLINGO_PUSH_NOTIFICATION:
+      return { abilityId: ids.ABILITY_DUOLINGO_SKIP_CLASSES, required: 3 };
+    case ids.ABILITY_DUOLINGO_BERSERKER:
+      return { abilityId: ids.ABILITY_DUOLINGO_SKIP_CLASSES, required: 12 };
+    case ids.ABILITY_LUCHE_DIVINE_RAY:
+      return { abilityId: ids.ABILITY_LUCHE_SUN_GLORY, required: 2 };
+    case ids.ABILITY_LUCHE_BURNING_SUN:
+      return { abilityId: ids.ABILITY_LUCHE_SUN_GLORY, required: 5 };
+    case ids.ABILITY_KANEKI_REGENERATION:
+      return { abilityId: ids.ABILITY_KANEKI_RC_CELLS, required: 1 };
+    case ids.ABILITY_KANEKI_SCOLOPENDRA:
+      return { abilityId: ids.ABILITY_KANEKI_RC_CELLS, required: 6 };
+    case ids.ABILITY_ZORO_ONI_GIRI:
+      return { abilityId: ids.ABILITY_ZORO_DETERMINATION, required: 2 };
+    case ids.ABILITY_ZORO_ASURA:
+      return { abilityId: ids.ABILITY_ZORO_DETERMINATION, required: 6 };
+    default:
+      return null;
+  }
 }
 
 function getActiveDisabledReason(
@@ -113,11 +138,12 @@ function getActiveDisabledReason(
   }
 
   const required = getChargeRequired(spec);
+  const resourceAbilityId = getExternalResource(spec.id)?.abilityId ?? spec.id;
   if (
     required !== undefined &&
     spec.id !== ids.ABILITY_KAISER_ENGINEERING_MIRACLE &&
     !(spec.id === ids.ABILITY_KAISER_DORA && unit.heroId === HERO_GRAND_KAISER_ID && unit.transformed) &&
-    getCharges(unit, spec.id) < required
+    getCharges(unit, resourceAbilityId) < required
   ) {
     return "Not Enough charges";
   }
@@ -137,6 +163,7 @@ export function getAbilityViewsForUnit(
       const spec = getAbilitySpec(id);
       if (!spec) return null;
       const chargeRequired = getChargeRequired(spec);
+      const externalResource = getExternalResource(id);
       const mettatonRatingRequired =
         isMettaton(unit) && id === ids.ABILITY_METTATON_POPPINS
           ? 3
@@ -163,6 +190,7 @@ export function getAbilityViewsForUnit(
         id === ids.ABILITY_METTATON_RATING ||
         mettatonRatingRequired !== undefined;
       const hasCharges =
+        externalResource !== null ||
         spec.chargeUnlimited === true ||
         getChargeLimit(id) !== null ||
         effectiveChargeRequired !== undefined ||
@@ -170,11 +198,17 @@ export function getAbilityViewsForUnit(
       const currentCharges = hasCharges
         ? usesMettatonRating
           ? getMettatonRating(unit)
-          : getCharges(unit, id)
+          : getCharges(unit, externalResource?.abilityId ?? id)
         : undefined;
-      const maxCharges = getChargeLimit(id) ?? undefined;
+      const maxCharges = getChargeLimit(externalResource?.abilityId ?? id) ?? undefined;
       const chargeUnlimited =
-        spec.chargeUnlimited === true || usesMettatonRating ? true : undefined;
+        spec.chargeUnlimited === true ||
+        (externalResource
+          ? getAbilitySpec(externalResource.abilityId)?.chargeUnlimited === true
+          : false) ||
+        usesMettatonRating
+          ? true
+          : undefined;
 
       let isAvailable = true;
       let disabledReason: string | undefined = undefined;
@@ -236,6 +270,42 @@ export function getAbilityViewsForUnit(
       if (spec.kind !== "passive" && (unit.lokiChickenSources?.length ?? 0) > 0) {
         isAvailable = false;
         disabledReason = "Chicken: this unit can only move";
+      }
+      if (
+        spec.id === ids.ABILITY_DON_KIHOTE_SORROWFUL_COUNTENANCE &&
+        !unit.donSorrowfulReactionAvailable
+      ) {
+        isAvailable = false;
+        disabledReason = "Available only after a failed defense";
+      }
+      if (
+        spec.id === ids.ABILITY_JACK_RIPPER_SNARES &&
+        unit.jackTrapPlacedTurnNumber === state.turnNumber
+      ) {
+        isAvailable = false;
+        disabledReason = "Trap already placed this turn";
+      }
+      if (spec.id === ids.ABILITY_JACK_RIPPER_DISMEMBERMENT) {
+        const hasTargetOnOwnTrap = (state.jackTraps ?? []).some((trap) => {
+          if (trap.sourceUnitId !== unit.id) return false;
+          return Object.values(state.units).some(
+            (target) =>
+              target.isAlive &&
+              target.owner !== unit.owner &&
+              target.position?.col === trap.position.col &&
+              target.position?.row === trap.position.row,
+          );
+        });
+        if (unit.jackHolyMotherUsed || !hasTargetOnOwnTrap) {
+          isAvailable = false;
+          disabledReason = unit.jackHolyMotherUsed
+            ? "Already used this game"
+            : "Requires an enemy on your trap";
+        }
+      }
+      if (spec.id === ids.ABILITY_LUCHE_DIVINE_RAY) {
+        disabledReason = getActiveDisabledReason(state, unit, spec);
+        isAvailable = !disabledReason;
       }
 
       return {

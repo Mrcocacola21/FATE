@@ -64,6 +64,15 @@ export type ActionMode =
   | "mettatonLaser"
   | "gutsArbalet"
   | "gutsCannon"
+  | "duolingoPush"
+  | "lucheLightRay"
+  | "zoroOniGiri"
+  | "donReaction"
+  | "donWindmills"
+  | "jackTrap"
+  | "jackHolyMother"
+  | "artemisMoonInsight"
+  | "artemisSilverSickle"
   | null;
 export type ActionPreviewMode = Exclude<ActionMode, null>;
 export type HoverPreview =

@@ -7,6 +7,7 @@ import {
   createEmptyGame,
   HERO_CHIKATILO_ID,
   HERO_LOKI_ID,
+  HERO_JACK_RIPPER_ID,
   makePlayerView,
   makeSpectatorView,
   projectEventsForRecipient,
@@ -345,12 +346,50 @@ function testGroupedSemanticEventProjectionFiltersHiddenTargets() {
   console.log("view_grouped_semantic_event_projection_filters_hidden_targets passed");
 }
 
+function testJackKnownHpProjectionIsOwnerPrivate() {
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1", { assassin: HERO_JACK_RIPPER_ID }));
+  state = attachArmy(state, createDefaultArmy("P2"));
+  const jack = Object.values(state.units).find((unit) => unit.heroId === HERO_JACK_RIPPER_ID);
+  const target = Object.values(state.units).find((unit) => unit.owner === "P2");
+  assert(jack && target, "Jack projection fixture should exist");
+  state = setUnit(state, jack.id, { jackKnownHpByTarget: { [target.id]: 3 } });
+
+  assert.equal(makePlayerView(state, "P1").units[jack.id].jackKnownHpByTarget?.[target.id], 3);
+  assert.equal(makePlayerView(state, "P2").units[jack.id]?.jackKnownHpByTarget, undefined);
+  assert.equal(makeSpectatorView(state).units[jack.id]?.jackKnownHpByTarget, undefined);
+  console.log("view_jack_known_hp_owner_private passed");
+}
+
+function testJackTrapProjectionIsOwnerPrivateUntilTriggered() {
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1", { assassin: HERO_JACK_RIPPER_ID }));
+  const jack = Object.values(state.units).find((unit) => unit.heroId === HERO_JACK_RIPPER_ID)!;
+  state = {
+    ...state,
+    jackTraps: [
+      { sourceUnitId: jack.id, owner: "P1", position: { col: 2, row: 3 }, isRevealed: false },
+    ],
+  };
+  assert.deepEqual(makePlayerView(state, "P1").jackTraps?.map((trap) => trap.position), [{ col: 2, row: 3 }]);
+  assert.deepEqual(makePlayerView(state, "P2").jackTraps, []);
+  assert.deepEqual(makeSpectatorView(state).jackTraps, []);
+  const revealed = {
+    ...state,
+    jackTraps: state.jackTraps?.map((trap) => ({ ...trap, isRevealed: true })),
+  };
+  assert.deepEqual(makePlayerView(revealed, "P2").jackTraps?.map((trap) => trap.position), [{ col: 2, row: 3 }]);
+  console.log("view_jack_trap_owner_private_until_triggered passed");
+}
+
 function main() {
   testHiddenEnemyOmitted();
   testKnownStealthedEnemyUsesLastKnown();
   testChikatiloTrackedHiddenTargetProjectionIsPrivate();
   testChikatiloMarkEventProjectionRedactsPrivateTarget();
   testGroupedSemanticEventProjectionFiltersHiddenTargets();
+  testJackKnownHpProjectionIsOwnerPrivate();
+  testJackTrapProjectionIsOwnerPrivateUntilTriggered();
 }
 
 main();

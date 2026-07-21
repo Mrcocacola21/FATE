@@ -13,11 +13,21 @@ export function useGameShellAbilityModeTargets({
   effectiveActionMode,
   selectedUnit,
 }: UseGameShellAbilityModeTargetsParams) {
+  const restrictForBlind = (cells: Coord[]): Coord[] => {
+    if (!selectedUnit?.blindUntilOwnTurnStart || !selectedUnit.position) return cells;
+    return cells.filter(
+      (cell) =>
+        Math.max(
+          Math.abs(cell.col - selectedUnit.position.col),
+          Math.abs(cell.row - selectedUnit.position.row),
+        ) <= 1,
+    );
+  };
   const doraTargetCenters = useMemo(() => {
     if (!view || effectiveActionMode !== "dora" || !selectedUnit?.position) {
       return [] as Coord[];
     }
-    return getDoraTargetCenters(view, selectedUnit.id);
+    return restrictForBlind(getDoraTargetCenters(view, selectedUnit.id));
   }, [view, effectiveActionMode, selectedUnit]);
 
   const doraTargetKeys = useMemo(
@@ -33,7 +43,7 @@ export function useGameShellAbilityModeTargets({
     ) {
       return [] as Coord[];
     }
-    return getDoraTargetCenters(view, selectedUnit.id);
+    return restrictForBlind(getDoraTargetCenters(view, selectedUnit.id));
   }, [view, effectiveActionMode, selectedUnit]);
 
   const jebeHailTargetKeys = useMemo(
@@ -51,7 +61,7 @@ export function useGameShellAbilityModeTargets({
     ) {
       return [] as Coord[];
     }
-    return getDoraTargetCenters(view, selectedUnit.id);
+    return restrictForBlind(getDoraTargetCenters(view, selectedUnit.id));
   }, [view, effectiveActionMode, selectedUnit]);
 
   const mettatonLineTargetKeys = useMemo(
@@ -70,8 +80,8 @@ export function useGameShellAbilityModeTargets({
         cells.push({ col, row });
       }
     }
-    return cells;
-  }, [view, effectiveActionMode]);
+    return restrictForBlind(cells);
+  }, [view, effectiveActionMode, selectedUnit]);
 
   const undyneEnergySpearTargetKeys = useMemo(
     () => new Set(undyneEnergySpearTargets.map(coordKey)),
@@ -89,8 +99,8 @@ export function useGameShellAbilityModeTargets({
         cells.push({ col, row });
       }
     }
-    return cells;
-  }, [view, effectiveActionMode]);
+    return restrictForBlind(cells);
+  }, [view, effectiveActionMode, selectedUnit]);
 
   const kaladinFifthTargetKeys = useMemo(
     () => new Set(kaladinFifthTargetCenters.map(coordKey)),
@@ -112,7 +122,7 @@ export function useGameShellAbilityModeTargets({
       if (row === origin.row) continue;
       cells.push({ col: origin.col, row });
     }
-    return cells;
+    return restrictForBlind(cells);
   }, [view, effectiveActionMode, selectedUnit]);
 
   const tisonaTargetKeys = useMemo(

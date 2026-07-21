@@ -2,7 +2,12 @@ import type { Coord, PlayerId, PlayerView, UnitState } from "rules";
 import {
   ASGORE_FIREBALL_ID,
   ASGORE_FIRE_PARADE_ID,
+  ARTEMIS_MOON_INSIGHT_ID,
+  ARTEMIS_SILVER_SICKLE_ID,
   CHIKATILO_ASSASSIN_MARK_ID,
+  DON_SORROWFUL_ID,
+  DON_WINDMILLS_ID,
+  DUOLINGO_PUSH_NOTIFICATION_ID,
   EL_CID_KOLADA_ID,
   GENGHIS_KHAN_KHANS_DECREE_ID,
   GROZNY_INVADE_TIME_ID,
@@ -11,14 +16,21 @@ import {
   GUTS_BERSERK_MODE_ID,
   GUTS_CANNON_ID,
   HASSAN_TRUE_ENEMY_ID,
+  JACK_HOLY_MOTHER_ID,
+  JACK_SNARES_ID,
   JEBE_KHANS_SHOOTER_ID,
   LECHY_GUIDE_TRAVELER_ID,
+  LUCHE_BURNING_SUN_ID,
+  LUCHE_DIVINE_RAY_ID,
   LOKI_LAUGHT_ID,
   RIVER_PERSON_BOAT_ID,
   RIVER_PERSON_BOATMAN_ID,
   RIVER_PERSON_TRA_LA_LA_ID,
+  KANEKI_REGENERATION_ID,
   TRICKSTER_AOE_ID,
   TRICKSTER_AOE_RADIUS,
+  ZORO_ASURA_ID,
+  ZORO_ONI_GIRI_ID,
   getProjectedAbilityTargetRange,
 } from "../../rulesHints";
 import type { BoardPreview, TargetRef } from "./previewTypes";
@@ -404,6 +416,18 @@ function buildGroznyHover(view: PlayerView, grozny: UnitState): BoardPreview | n
   };
 }
 
+function allVisibleEnemyIds(view: PlayerView, source: UnitState): string[] {
+  return visiblePositionedUnits(view)
+    .filter((unit) => unit.id !== source.id && unit.owner !== source.owner)
+    .map((unit) => unit.id);
+}
+
+function uniqueCells(cells: Coord[]): Coord[] {
+  const byKey = new Map<string, Coord>();
+  for (const cell of cells) byKey.set(coordKey(cell), cell);
+  return [...byKey.values()];
+}
+
 export function buildAbilityPreview({
   gameView,
   sourceUnitId,
@@ -525,6 +549,147 @@ export function buildAbilityPreview({
     case GROZNY_TYRANT_ID:
     case GROZNY_INVADE_TIME_ID:
       return buildGroznyHover(gameView, source);
+    case DUOLINGO_PUSH_NOTIFICATION_ID: {
+      const targets = visibleUnitTargets(
+        gameView,
+        (unit) => unit.owner !== source.owner && unit.id !== source.id,
+      );
+      const destinations = uniqueCells(
+        targets.flatMap((target) =>
+          cellsInRadius(boardSize(gameView), target.cell, 2, false),
+        ),
+      ).filter((cell) => openCells(gameView).some((open) => coordKey(open) === coordKey(cell)));
+      return compactPreview([
+        {
+          kind: "radius",
+          sourceCell: { ...source.position },
+          cells: [],
+          validTargets: targets,
+          labelKey: "preview.labels.selectTarget",
+        },
+        {
+          kind: "movement",
+          sourceCell: { ...source.position },
+          reachableCells: destinations,
+          labelKey: "preview.labels.selectDestination",
+        },
+      ]);
+    }
+    case LUCHE_DIVINE_RAY_ID:
+      return {
+        kind: "line",
+        sourceCell: { ...source.position },
+        lineCells: archerLineCells(gameView, source.id),
+        affectedTargets: visibleUnitTargets(
+          gameView,
+          (unit) => unit.id !== source.id && unit.owner !== source.owner,
+        ),
+        labelKey: "preview.labels.archerLine",
+      };
+    case LUCHE_BURNING_SUN_ID:
+    case ZORO_ASURA_ID:
+      return buildAreaPreview({
+        view: gameView,
+        source,
+        radius: 2,
+        labelKey: "preview.labels.affectedArea",
+      });
+    case KANEKI_REGENERATION_ID:
+      return {
+        kind: "area",
+        sourceCell: { ...source.position },
+        centerCell: { ...source.position },
+        areaCells: [{ ...source.position }],
+        labelKey: "preview.labels.affectedArea",
+      };
+    case ZORO_ONI_GIRI_ID:
+    case DON_WINDMILLS_ID: {
+      const targetIds = allVisibleEnemyIds(gameView, source).filter((id) => {
+        const target = gameView.units[id];
+        if (!target?.position) return false;
+        const dx = Math.abs(target.position.col - source.position!.col);
+        const dy = Math.abs(target.position.row - source.position!.row);
+        return dx === 0 || dy === 0 || dx === dy;
+      });
+      return {
+        kind: "line",
+        sourceCell: { ...source.position },
+        lineCells: lineCellsToTargets(source.position, cellsFromTargetIds(gameView, targetIds)),
+        validTargets: targetRefsFromIds(gameView, targetIds),
+        labelKey: "preview.labels.selectTarget",
+      };
+    }
+    case DON_SORROWFUL_ID:
+      return {
+        kind: "movement",
+        sourceCell: { ...source.position },
+        reachableCells: adjacentCells(boardSize(gameView), source.position).filter((cell) =>
+          openCells(gameView).some((open) => coordKey(open) === coordKey(cell)),
+        ),
+        labelKey: "preview.labels.selectDestination",
+      };
+    case JACK_SNARES_ID:
+      return {
+        kind: "movement",
+        sourceCell: { ...source.position },
+        reachableCells: cellsInRadius(boardSize(gameView), source.position, boardSize(gameView), true),
+        labelKey: "preview.labels.selectDestination",
+      };
+    case JACK_HOLY_MOTHER_ID: {
+      const trapKeys = new Set(
+        (gameView.jackTraps ?? [])
+          .filter((trap) => trap.sourceUnitId === source.id)
+          .map((trap) => coordKey(trap.position)),
+      );
+      const targetIds = allVisibleEnemyIds(gameView, source).filter((id) => {
+        const position = gameView.units[id]?.position;
+        return !!position && trapKeys.has(coordKey(position));
+      });
+      return {
+        kind: "area",
+        sourceCell: { ...source.position },
+        areaCells: [...(gameView.jackTraps ?? [])]
+          .filter((trap) => trap.sourceUnitId === source.id)
+          .map((trap) => trap.position),
+        validTargets: targetRefsFromIds(gameView, targetIds),
+        labelKey: "preview.labels.selectTarget",
+      };
+    }
+    case ARTEMIS_MOON_INSIGHT_ID: {
+      const lineCells = archerLineCells(gameView, source.id);
+      return compactPreview([
+        {
+          kind: "line",
+          sourceCell: { ...source.position },
+          lineCells,
+          labelKey: "preview.labels.archerLine",
+        },
+        {
+          kind: "area",
+          sourceCell: { ...source.position },
+          areaCells: uniqueCells(
+            lineCells.flatMap((cell) => cellsInRadius(boardSize(gameView), cell, 1, true)),
+          ),
+          labelKey: "preview.labels.affectedArea",
+        },
+      ]);
+    }
+    case ARTEMIS_SILVER_SICKLE_ID: {
+      const lineCells = archerLineCells(gameView, source.id);
+      const affectedCells = uniqueCells(
+        lineCells.flatMap((cell) => cellsInRadius(boardSize(gameView), cell, 1, true)),
+      );
+      return {
+        kind: "area",
+        sourceCell: { ...source.position },
+        areaCells: affectedCells,
+        affectedTargets: visibleUnitTargets(
+          gameView,
+          (unit) => !!unit.position && affectedCells.some((cell) => coordKey(cell) === coordKey(unit.position!)),
+        ),
+        labelKey: "preview.labels.affectedArea",
+      };
+    }
     default:
       return null;
   }

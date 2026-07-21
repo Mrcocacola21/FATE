@@ -120,6 +120,20 @@ export interface UnitState {
   undyneImmortalUsed?: boolean;
   undyneImmortalActive?: boolean;
 
+  duolingoHitTargetsThisTurn?: string[];
+  duolingoHitTargetsLastTurn?: string[];
+  duolingoBerserkerUnlocked?: boolean;
+  duolingoAttackBatchHit?: boolean;
+  blindUntilOwnTurnStart?: boolean;
+  kanekiCentipedeUnlocked?: boolean;
+  donSorrowfulReactionAvailable?: boolean;
+  donMadDelusionPending?: boolean;
+  donMadDelusionOrigin?: Coord;
+  jackTrapPlacedTurnNumber?: number;
+  jackHolyMotherUsed?: boolean;
+  jackKnownHpByTarget?: Record<string, number>;
+  immobilizedUntilOwnTurnStart?: boolean;
+
   courtExtraFlexibleAction?: CourtExtraFlexibleActionStatus;
   courtGlobalMoveOnce?: CourtGlobalMoveStatus;
   courtProceduralRestriction?: CourtProceduralRestrictionStatus;

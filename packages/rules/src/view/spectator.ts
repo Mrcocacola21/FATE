@@ -36,6 +36,9 @@ export function makeSpectatorView(state: GameState): PlayerView {
 
   return {
     ...baseState,
+    jackTraps: (state.jackTraps ?? [])
+      .filter((trap) => trap.isRevealed === true)
+      .map((trap) => ({ ...trap, position: { ...trap.position } })),
     units,
     knowledge: { P1: {}, P2: {} },
     lastKnownPositions: {},

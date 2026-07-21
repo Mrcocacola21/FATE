@@ -208,6 +208,18 @@ const ResolveRollChoiceSchema = z.union([
       .optional(),
   }),
   z.object({
+    type: z.literal("donMadDelusionDirection"),
+    direction: CoordSchema,
+  }),
+  z.object({
+    type: z.literal("donSorrowfulMove"),
+    destination: CoordSchema,
+  }),
+  z.object({
+    type: z.literal("donWindmillsReposition"),
+    destination: CoordSchema,
+  }),
+  z.object({
     type: z.literal("chooseRuleDeclaration"),
     ruleId: RuleDeclarationIdSchema,
   }),
@@ -256,6 +268,7 @@ export const GameActionSchema = z.discriminatedUnion("type", [
     type: z.literal("attack"),
     attackerId: z.string(),
     defenderId: z.string(),
+    defenderIds: z.array(z.string()).min(1).max(2).optional(),
     defenderUseBerserkAutoDefense: z.boolean().optional(),
   }),
   z.object({ type: z.literal("enterStealth"), unitId: z.string() }),

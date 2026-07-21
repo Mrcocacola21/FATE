@@ -48,6 +48,13 @@ export interface GameState {
   stakeCounter: number;
   forestMarkers: ForestMarker[];
   forestMarker: ForestMarker | null;
+  jackTraps?: Array<{
+    sourceUnitId: string;
+    owner: PlayerId;
+    position: Coord;
+    isRevealed?: boolean;
+    trappedUnitId?: string;
+  }>;
   turnOrder: string[];
   turnOrderIndex: number;
   placementOrder: string[];

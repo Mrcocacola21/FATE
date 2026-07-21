@@ -25,6 +25,8 @@ export function makeAttackContext(params: {
   suppressGutsBerserkBonus?: boolean;
   damageOverride?: number;
   ignoreBonuses?: boolean;
+  blindOnHit?: boolean;
+  sourceAbilityId?: string;
   consumeSlots: boolean;
   queueKind: "normal" | "riderPath" | "aoe";
 }): AttackRollContext {
@@ -40,6 +42,8 @@ export function makeAttackContext(params: {
     suppressGutsBerserkBonus: params.suppressGutsBerserkBonus,
     damageOverride: params.damageOverride,
     ignoreBonuses: params.ignoreBonuses,
+    blindOnHit: params.blindOnHit,
+    sourceAbilityId: params.sourceAbilityId,
     attackerDice: [],
     defenderDice: [],
     tieBreakAttacker: [],

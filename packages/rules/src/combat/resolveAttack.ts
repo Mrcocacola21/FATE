@@ -2,6 +2,7 @@ import type { GameEvent, GameState, UnitState } from "../model";
 import { canDirectlyTargetUnit } from "../visibility";
 import {
   HERO_ASGORE_ID,
+  HERO_ARTEMIDA_ID,
   HERO_FEMTO_ID,
   HERO_GUTS_ID,
   HERO_ODIN_ID,
@@ -137,6 +138,7 @@ export function resolveAttack(
   if (
     !params.forceMiss &&
     (attackerAfter.class === "knight" ||
+      attackerAfter.heroId === HERO_ARTEMIDA_ID ||
       attackerAfter.heroId === HERO_GUTS_ID ||
       attackerAfter.heroId === HERO_ODIN_ID) &&
     attackerRoll.isDouble

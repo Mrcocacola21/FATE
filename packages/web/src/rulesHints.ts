@@ -119,6 +119,20 @@ export const METTATON_RIDER_FEATURE_ID = "mettatonRiderFeature";
 export const METTATON_BERSERKER_MULTICLASS_ID = "mettatonBerserkerMulticlass";
 export const METTATON_GRACE_ID = "mettatonGrace";
 export const METTATON_FINAL_CHORD_ID = "mettatonFinalChord";
+export const DUOLINGO_PUSH_NOTIFICATION_ID = "duolingoPushNotification";
+export const LUCHE_DIVINE_RAY_ID = "lucheDivineRay";
+export const LUCHE_BURNING_SUN_ID = "lucheBurningSun";
+export const KANEKI_REGENERATION_ID = "kanekiRegeneration";
+export const KANEKI_CENTIPEDE_ID = "kanekiScolopendra";
+export const ZORO_ONI_GIRI_ID = "zoroOniGiri";
+export const ZORO_ASURA_ID = "zoroAsura";
+export const DON_SORROWFUL_ID = "donKihoteSorrowfulCountenance";
+export const DON_WINDMILLS_ID = "donKihoteWindmills";
+export const DON_MAD_DELUSION_ID = "donKihoteMadness";
+export const JACK_SNARES_ID = "jackRipperSnares";
+export const JACK_HOLY_MOTHER_ID = "jackRipperDismemberment";
+export const ARTEMIS_MOON_INSIGHT_ID = "artemidaMoonlightShot";
+export const ARTEMIS_SILVER_SICKLE_ID = "artemidaSilverCrescent";
 
 const MAX_HP_BY_CLASS: Record<UnitClass, number> = {
   spearman: 5,
@@ -191,6 +205,15 @@ export function getMaxHp(unitClass: UnitClass, heroId?: string): number {
   }
   if (heroId === METTATON_ID) {
     base += 2;
+  }
+  if (heroId === "duolingo" || heroId === "luche" || heroId === "kaneki" || heroId === "zoro") {
+    base += 2;
+  }
+  if (heroId === "donKihote" || heroId === "jackRipper") {
+    base += 1;
+  }
+  if (heroId === "artemida") {
+    base += 5;
   }
   return base;
 }

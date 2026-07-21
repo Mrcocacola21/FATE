@@ -74,6 +74,9 @@ export type ResolveRollChoice =
     }
   | { type: "friskKeenEyeTarget"; targetId: string }
   | { type: "friskPrecisionStrikeTarget"; targetId: string }
+  | { type: "donMadDelusionDirection"; direction: Coord }
+  | { type: "donSorrowfulMove"; destination: Coord }
+  | { type: "donWindmillsReposition"; destination: Coord }
   | RuleDeclarationChoice;
 
 export type GameAction =
@@ -115,6 +118,7 @@ export type GameAction =
       type: "attack";
       attackerId: string;
       defenderId: string;
+      defenderIds?: string[];
       defenderUseBerserkAutoDefense?: boolean;
     }
   | {

@@ -15,6 +15,7 @@ import { applyPapyrusPostAction } from "./heroes/papyrus";
 import { applySansPostAction } from "./heroes/sans";
 import { applyUndynePostAction } from "./heroes/undyne";
 import { applyMettatonImpulseUnlocks } from "./heroes/mettaton";
+import { applyNewBatchPostAction } from "./heroes/newBatchPost";
 import {
   applyRuleDeclarationAfterAttack,
   applyRuleDeclarationWinChecks,
@@ -137,9 +138,15 @@ export function applyAction(
     afterFrisk.state,
     afterFrisk.events
   );
-  const afterRuleAttack = applyRuleDeclarationAfterAttack(
+  const afterNewBatch = applyNewBatchPostAction(
+    prevState,
     afterMettaton.state,
-    afterMettaton.events
+    afterMettaton.events,
+    rng
+  );
+  const afterRuleAttack = applyRuleDeclarationAfterAttack(
+    afterNewBatch.state,
+    afterNewBatch.events
   );
   return applyRuleDeclarationWinChecks(
     afterRuleAttack.state,

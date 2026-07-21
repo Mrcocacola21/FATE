@@ -163,6 +163,10 @@ export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm, compact = fals
             {t("game.targetingInstruction", {
               instruction: choosingMoveMode
                 ? t("game.chooseMoveMode")
+                : vm.actionMode === "attack" && vm.selectedUnit?.heroId === "zoro"
+                  ? vm.zoroAttackTargetIds?.length
+                    ? t("game.zoroSantoryuNextTarget")
+                    : t("game.zoroSantoryuFirstTarget")
                 : getActionModeHint(
                     vm.actionMode as ActionPreviewMode,
                     vm.papyrusLineAxis ?? "row",

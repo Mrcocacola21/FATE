@@ -200,13 +200,14 @@ export function buildRightPanelViewModel(params: RightPanelProps, t: Translate) 
     onToggleMode("move");
   };
 
-  const onUseAbility = (abilityId: string) => {
+  const onUseAbility = (abilityId: string, payload?: Record<string, unknown>) => {
     if (!selectedUnit) return;
     if (targetingMode || actionMode) return;
     onSendAction({
       type: "useAbility",
       unitId: selectedUnit.id,
       abilityId,
+      payload,
     });
   };
 

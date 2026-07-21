@@ -17,6 +17,7 @@ import { getPolkovodetsSource } from "../../../../actions/heroes/vlad";
 import { handleGroznyTyrantAfterAttack } from "../../../../actions/heroes/grozny";
 import {
   HERO_ASGORE_ID,
+  HERO_ARTEMIDA_ID,
   HERO_FEMTO_ID,
   HERO_FRISK_ID,
   HERO_GUTS_ID,
@@ -50,7 +51,7 @@ export function finalizeAttackFromContext(
   const sourceId =
     context.damageBonusSourceId ?? getPolkovodetsSource(state, context.attackerId);
   const polkovodetsBonus = sourceId ? 1 : 0;
-  const damageBonus = polkovodetsBonus;
+  const damageBonus = (context.damageBonus ?? 0) + polkovodetsBonus;
 
   const { nextState, events } = resolveAttack(state, {
     attackerId: context.attackerId,
@@ -100,6 +101,23 @@ export function finalizeAttackFromContext(
 
   const attackResolved = events.some((e) => e.type === "attackResolved");
   let updatedState = nextState;
+
+  if (
+    attackEvent?.type === "attackResolved" &&
+    attackEvent.hit &&
+    context.blindOnHit
+  ) {
+    const blinded = updatedState.units[attackEvent.defenderId];
+    if (blinded?.isAlive) {
+      updatedState = {
+        ...updatedState,
+        units: {
+          ...updatedState.units,
+          [blinded.id]: { ...blinded, blindUntilOwnTurnStart: true },
+        },
+      };
+    }
+  }
 
   if (attackResolved && context.consumeSlots) {
     const attackerAfter = updatedState.units[context.attackerId];
@@ -222,6 +240,7 @@ export function wouldAttackHitFromContext(
   }
   if (
     (attacker.class === "knight" ||
+      attacker.heroId === HERO_ARTEMIDA_ID ||
       attacker.heroId === HERO_ODIN_ID ||
       attacker.heroId === HERO_GUTS_ID) &&
     attackerDouble

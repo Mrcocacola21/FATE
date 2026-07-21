@@ -180,6 +180,14 @@ export function PendingBoardNotice({
             total: ricochetTotalSteps,
           })
       : t("pending.khansShooterNextRicochet");
+  const chargedAbilityId = stringValue(pendingRollContext.abilityId);
+  const windmillIds = Array.isArray(pendingRollContext.affectedIds)
+    ? pendingRollContext.affectedIds.filter(
+        (value): value is string => typeof value === "string",
+      )
+    : [];
+  const windmillIndex = numberValue(pendingRollContext.index) ?? 0;
+  const windmillUnitId = windmillIds[windmillIndex] ?? "?";
   return (
     <div
       className={`panel-arcane rounded-2xl border border-violet-300/70 bg-violet-50/75 p-4 text-sm text-violet-950 shadow-lg shadow-violet-950/5 dark:border-violet-800/70 dark:bg-violet-950/30 dark:text-violet-100 ${className}`}
@@ -192,7 +200,61 @@ export function PendingBoardNotice({
           <div>{t("pending.soulParadeEffect", { effect: soulEffect ?? "-" })}</div>
         </div>
       ) : null}
-      {isStakePlacement ? (
+      {pendingRollKind === "donWindmillsRepositionChoice" ? (
+        <div>
+          <div className="font-semibold">
+            {p(
+              `Attack on Windmills: choose a highlighted destination for ${windmillUnitId}.`,
+              `Атака на вітряки: виберіть підсвічену клітинку для ${windmillUnitId}.`,
+            )}
+          </div>
+          <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
+            {p("Select directly on the board.", "Виберіть клітинку безпосередньо на полі.")}
+          </div>
+        </div>
+      ) : pendingRollKind === "donSorrowfulMoveChoice" ? (
+        <div>
+          <div className="font-semibold">
+            {p("Knight of the Sorrowful Image: optional reaction move", "Лицар Сумного Образу: необов’язковий рух-реакція")}
+          </div>
+          <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
+            {p("Choose a highlighted adjacent cell on the board, or skip.", "Виберіть підсвічену сусідню клітинку на полі або пропустіть.")}
+          </div>
+          <div className="mt-2">
+            <button
+              className="rounded-lg bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm dark:bg-slate-800 dark:text-slate-200"
+              onClick={onResolveSkip}
+            >
+              {t("common.skip")}
+            </button>
+          </div>
+        </div>
+      ) : pendingRollKind === "chargedImpulseTargetChoice" && chargedAbilityId ? (
+        <div>
+          <div className="font-semibold">
+            {chargedAbilityId === "artemidaMoonlightShot"
+              ? p("Moon Insight", "Місячне прозріння")
+              : chargedAbilityId === "jackRipperSnares"
+                ? p("Maniac Traps", "Силки маніяка")
+                : chargedAbilityId === "lucheDivineRay"
+                  ? p("Light Ray", "Промінь світла")
+                  : chargedAbilityId === "zoroOniGiri"
+                    ? p("Oni Giri", "Оні Ґірі")
+                    : p("Impulse target", "Ціль імпульсу")}
+          </div>
+          <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
+            {chargedAbilityId === "artemidaMoonlightShot"
+              ? p("Choose a 3x3 center on Artemida's attack line.", "Виберіть центр області 3×3 на лінії атаки Артеміди.")
+              : chargedAbilityId === "jackRipperSnares"
+                ? p("Choose a trap cell on the board.", "Виберіть клітинку пастки на полі.")
+                : chargedAbilityId === "zoroOniGiri" && pendingRollContext.step === "destination"
+                  ? p("Choose the highlighted cell before or behind the target.", "Виберіть підсвічену клітинку перед ціллю або позаду неї.")
+                  : chargedAbilityId === "zoroOniGiri"
+                    ? p("Choose an enemy on Zoro's straight attack line.", "Виберіть ворога на прямій лінії атаки Зоро.")
+                    : p("Choose a straight attack line.", "Виберіть пряму лінію атаки.")}
+          </div>
+        </div>
+      ) : isStakePlacement ? (
         <div>
           <div className="font-semibold">{t("pending.placeStakes")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">

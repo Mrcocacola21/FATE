@@ -36,6 +36,7 @@ import {
   resolveRuleDeclarationChoice,
 } from "../../ruleDeclarations";
 import type { AutoRollChoice, ResolvePendingRollAction } from "./types";
+import { resolveDonMadDelusionDirection, resolveDonSorrowfulMove, resolveDonWindmillsReposition } from "../../actions/heroes/newBatchPost";
 
 export const CORE_PENDING_ROLL_KINDS = [
   "initiativeRoll",
@@ -68,6 +69,9 @@ export const CORE_PENDING_ROLL_KINDS = [
   "chikatiloDecoyChoice",
   "forestMoveCheck",
   "forestMoveDestination",
+  "donSorrowfulMoveChoice",
+  "donMadDelusionDirection",
+  "donWindmillsRepositionChoice",
 ] as const;
 
 export function resolveCorePendingRollCase(
@@ -168,6 +172,12 @@ export function resolveCorePendingRollCase(
       return resolveForestMoveCheckRoll(state, pending, rng);
     case "forestMoveDestination":
       return resolveForestMoveDestinationChoice(state, pending, action.choice, rng);
+    case "donSorrowfulMoveChoice":
+      return resolveDonSorrowfulMove(state, pending, action.choice);
+    case "donMadDelusionDirection":
+      return resolveDonMadDelusionDirection(state, pending, action.choice);
+    case "donWindmillsRepositionChoice":
+      return resolveDonWindmillsReposition(state, pending, action.choice);
     default:
       return null;
   }

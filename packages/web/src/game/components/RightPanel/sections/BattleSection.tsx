@@ -63,7 +63,7 @@ interface BattleSectionProps {
   onSearchMoveClick: () => void;
   onSearchActionClick: () => void;
   onStealthClick: () => void;
-  onUseAbility: (abilityId: string) => void;
+  onUseAbility: (abilityId: string, payload?: Record<string, unknown>) => void;
   onUseLokiLaughtOption: (option: LokiLaughtOption) => void;
   onSetPapyrusAxis: (axis: PapyrusLineAxis) => void;
   onSetUndyneAxis: (axis: "row" | "col") => void;

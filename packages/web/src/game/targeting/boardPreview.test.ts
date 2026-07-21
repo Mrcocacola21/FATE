@@ -10,18 +10,25 @@ import type {
 } from "rules";
 import {
   ASGORE_FIRE_PARADE_ID,
+  ARTEMIS_MOON_INSIGHT_ID,
+  ARTEMIS_SILVER_SICKLE_ID,
   CHIKATILO_ASSASSIN_MARK_ID,
+  DON_WINDMILLS_ID,
+  DUOLINGO_PUSH_NOTIFICATION_ID,
   EL_CID_COMPEADOR_ID,
   EL_CID_KOLADA_ID,
   GENGHIS_KHAN_KHANS_DECREE_ID,
   GUTS_ARBALET_ID,
   GUTS_CANNON_ID,
   HASSAN_TRUE_ENEMY_ID,
+  JACK_SNARES_ID,
   LECHY_GUIDE_TRAVELER_ID,
+  LUCHE_DIVINE_RAY_ID,
   LOKI_LAUGHT_ID,
   RIVER_PERSON_BOAT_ID,
   RIVER_PERSON_BOATMAN_ID,
   RIVER_PERSON_TRA_LA_LA_ID,
+  ZORO_ASURA_ID,
 } from "../../rulesHints";
 import { buildAbilityPreview } from "./buildAbilityPreview";
 import { buildPendingPreview } from "./buildPendingPreview";
@@ -1037,4 +1044,34 @@ test("River direct hover previews are available before server choices", () => {
     abilityId: RIVER_PERSON_TRA_LA_LA_ID,
   });
   assert.deepEqual(validTargetIds(tralala), ["enemy"]);
+});
+
+test("new hero previews expose targets, lines, areas, and trap placement without hidden data", () => {
+  const source = unit({ id: "new-hero", owner: "P1", position: { col: 4, row: 4 } });
+  const visibleEnemy = unit({ id: "visible", owner: "P2", position: { col: 6, row: 4 } });
+  const hiddenEnemy = unit({ id: "hidden", owner: "P2", position: { col: 4, row: 7 }, isStealthed: true });
+  const view = makeView([source, visibleEnemy]);
+
+  const push = buildAbilityPreview({ gameView: view, viewerPlayerId: "P1", sourceUnitId: source.id, abilityId: DUOLINGO_PUSH_NOTIFICATION_ID });
+  assert.deepEqual(validTargetIds(push), [visibleEnemy.id]);
+  assert.equal(hasKind(push, { col: 7, row: 4 }, "validMove"), true);
+
+  const ray = buildAbilityPreview({ gameView: view, viewerPlayerId: "P1", sourceUnitId: source.id, abilityId: LUCHE_DIVINE_RAY_ID });
+  assert.equal(hasKind(ray, visibleEnemy.position!, "line"), true);
+
+  const asura = buildAbilityPreview({ gameView: view, viewerPlayerId: "P1", sourceUnitId: source.id, abilityId: ZORO_ASURA_ID });
+  assert.equal(hasKind(asura, visibleEnemy.position!, "affected"), true);
+
+  const windmills = buildAbilityPreview({ gameView: view, viewerPlayerId: "P1", sourceUnitId: source.id, abilityId: DON_WINDMILLS_ID });
+  assert.deepEqual(validTargetIds(windmills), [visibleEnemy.id]);
+
+  const traps = buildAbilityPreview({ gameView: view, viewerPlayerId: "P1", sourceUnitId: source.id, abilityId: JACK_SNARES_ID });
+  assert.equal(hasKind(traps, { col: 0, row: 0 }, "validMove"), true);
+
+  const insight = buildAbilityPreview({ gameView: view, viewerPlayerId: "P1", sourceUnitId: source.id, abilityId: ARTEMIS_MOON_INSIGHT_ID });
+  assert.equal(hasKind(insight, { col: 6, row: 5 }, "area"), true);
+  const sickle = buildAbilityPreview({ gameView: view, viewerPlayerId: "P1", sourceUnitId: source.id, abilityId: ARTEMIS_SILVER_SICKLE_ID });
+  assert.equal(hasKind(sickle, { col: 6, row: 5 }, "area"), true);
+
+  assert.equal(collectTargets(push).some((target) => target.unitId === hiddenEnemy.id), false);
 });

@@ -110,7 +110,10 @@ export type RollKind =
   | "friskKeenEyeChoice"
   | "friskPrecisionStrikeTargetChoice"
   | "friskSubstitutionChoice"
-  | "friskChildsCryChoice";
+  | "friskChildsCryChoice"
+  | "donSorrowfulMoveChoice"
+  | "donMadDelusionDirection"
+  | "donWindmillsRepositionChoice";
 
 export const ALL_ROLL_KINDS = [
   "enterStealth",
@@ -207,6 +210,9 @@ export const ALL_ROLL_KINDS = [
   "friskPrecisionStrikeTargetChoice",
   "friskSubstitutionChoice",
   "friskChildsCryChoice",
+  "donSorrowfulMoveChoice",
+  "donMadDelusionDirection",
+  "donWindmillsRepositionChoice",
 ] as const satisfies readonly RollKind[];
 
 export interface PendingRoll {
@@ -239,6 +245,9 @@ export interface PendingCombatQueueEntry {
   rangedAttack?: boolean;
   damageOverride?: number;
   ignoreBonuses?: boolean;
+  allowFriendlyTarget?: boolean;
+  blindOnHit?: boolean;
+  sourceAbilityId?: string;
   consumeSlots?: boolean;
   kind: "riderPath" | "aoe";
 }

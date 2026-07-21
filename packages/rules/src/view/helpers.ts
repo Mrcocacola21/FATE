@@ -71,6 +71,15 @@ export function cloneUnit(unit: UnitState): UnitState {
     mettatonNeoUnlocked: unit.mettatonNeoUnlocked,
     undyneImmortalUsed: unit.undyneImmortalUsed,
     undyneImmortalActive: unit.undyneImmortalActive,
+    duolingoHitTargetsThisTurn: unit.duolingoHitTargetsThisTurn
+      ? [...unit.duolingoHitTargetsThisTurn]
+      : undefined,
+    duolingoHitTargetsLastTurn: unit.duolingoHitTargetsLastTurn
+      ? [...unit.duolingoHitTargetsLastTurn]
+      : undefined,
+    jackKnownHpByTarget: unit.jackKnownHpByTarget
+      ? { ...unit.jackKnownHpByTarget }
+      : undefined,
   };
 }
 
@@ -84,7 +93,9 @@ export function maskStealthedEnemy(unit: UnitState): UnitState {
 }
 
 export function clonePublicUnit(unit: UnitState): UnitState {
-  return stripChikatiloPrivateState(cloneUnit(unit));
+  const projected = stripChikatiloPrivateState(cloneUnit(unit));
+  projected.jackKnownHpByTarget = undefined;
+  return projected;
 }
 
 export function cloneEnemyUnitForPlayer(

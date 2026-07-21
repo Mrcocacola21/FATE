@@ -2,6 +2,12 @@ import {
   testActionModuleBoundaries,
 } from "./core/boundaries.test";
 import {
+  testNewPlayableBatchLineAndRevealEffects,
+  testNewPlayableBatchCombatCountersAndReactions,
+  testNewPlayableBatchStatsResourcesAndMovement,
+  testNewPlayableBatchTransactionalActives,
+} from "./heroes/newPlayableBatch.test";
+import {
   testActiveQueuedRollProjectsAsPending,
   testPendingRollActionsExportsStable,
   testPendingRollResolverCoverage,
@@ -695,6 +701,10 @@ function main(): void {
   testForestConsumes9AndSkipsStakesPlacementThatTurn();
   testForestAoeDeals2AndRootsOnFail();
   testRootBlocksMovementNextTurnOnly();
+  testNewPlayableBatchStatsResourcesAndMovement();
+  testNewPlayableBatchTransactionalActives();
+  testNewPlayableBatchLineAndRevealEffects();
+  testNewPlayableBatchCombatCountersAndReactions();
   testGetHeroMetaReturnsCorrectData();
   testHeroRegistryContainsPlayableHeroes();
   testBattleAbilityViewsCoverHeroRegistryMetadata();

@@ -409,6 +409,7 @@ const PENDING_ROLL_LABELS_UK: Record<string, string> = {
 };
 
 Object.assign(PENDING_ROLL_LABELS_UK, {
+  donSorrowfulMoveChoice: "Рух Лицаря Сумного Образу",
   ruleDeclarationChoice: "Оголошення правила",
   ruleDeclarationChessKingChoice: "Вибір Короля",
   ruleDeclarationAdvantageThreshold: "Поріг переваги",
@@ -518,6 +519,8 @@ export function getPendingRollLabel(kind?: string | null, language: "en" | "uk" 
       return "Sleipnir destination";
     case "chargedImpulseTargetChoice":
       return "Impulse target choice";
+    case "donSorrowfulMoveChoice":
+      return "Knight of the Sorrowful Image reaction";
     case "kaiserCarpetStrikeCenter":
       return "Carpet Strike center roll";
     case "kaiserCarpetStrikeAttack":
@@ -530,6 +533,8 @@ export function getPendingRollLabel(kind?: string | null, language: "en" | "uk" 
       return "Place stakes";
     case "vladIntimidateChoice":
       return "Intimidate choice";
+    case "donWindmillsRepositionChoice":
+      return "Attack on Windmills reposition";
     case "vladForestChoice":
       return "Forest choice";
     case "vladForestTarget":

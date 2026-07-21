@@ -45,7 +45,7 @@ function firstHero(unitClass: UnitClass): string {
   return heroId;
 }
 
-const STUB_HERO_IDS = [
+const NEW_PLAYABLE_HERO_IDS = [
   HERO_DUOLINGO_ID,
   HERO_LUCHE_ID,
   HERO_DON_KIHOTE_ID,
@@ -135,18 +135,18 @@ export function testDraftPoolExcludesBaseUnits() {
 
 export function testDraftPoolRequiresExplicitImplementedEligibility() {
   const draftHeroIds = new Set(DRAFT_HERO_POOL.map((hero) => hero.heroId));
-  for (const heroId of STUB_HERO_IDS) {
+  for (const heroId of NEW_PLAYABLE_HERO_IDS) {
     const definition = HERO_CATALOG.find((hero) => hero.id === heroId);
     const draftMeta = getHeroDraftMeta(heroId);
-    assert(definition, `missing catalog definition for stub ${heroId}`);
-    assert(draftMeta, `missing draft metadata for stub ${heroId}`);
-    assert(!definition.implemented, `${heroId} should be marked unimplemented`);
-    assert(!definition.draftEnabled, `${heroId} should have draft disabled`);
-    assert(!definition.standardEnabled, `${heroId} should have standard disabled`);
-    assert(!definition.figureSetEnabled, `${heroId} should have figure set disabled`);
-    assert(definition.reason === "stub", `${heroId} should have stub reason`);
-    assert(!draftMeta.implemented, `${heroId} draft metadata should be unimplemented`);
-    assert(!draftHeroIds.has(heroId), `${heroId} should not be in the draft pool`);
+    assert(definition, `missing catalog definition for ${heroId}`);
+    assert(draftMeta, `missing draft metadata for ${heroId}`);
+    assert(definition.implemented, `${heroId} should be implemented`);
+    assert(definition.draftEnabled, `${heroId} should have draft enabled`);
+    assert(definition.standardEnabled, `${heroId} should have standard enabled`);
+    assert(definition.figureSetEnabled, `${heroId} should have figure set enabled`);
+    assert(!definition.reason, `${heroId} should not have an incomplete reason`);
+    assert(draftMeta.implemented, `${heroId} draft metadata should be implemented`);
+    assert(draftHeroIds.has(heroId), `${heroId} should be in the draft pool`);
   }
 
   assert(
@@ -214,27 +214,12 @@ export function testSafeClassDraftPoolAvailabilityIsValidated() {
 }
 
 export function testStubHeroesAreRejectedWithoutDraftMutation() {
-  const banState = createSafeClassDraftState();
-  const pickState: DraftState = {
-    ...createSafeClassDraftState(),
-    phase: "pick",
-    currentPlayer: "P1",
-  };
-  for (const heroId of STUB_HERO_IDS) {
-    const ban = banDraftHero(banState, "P1", heroId);
-    assert(
-      !ban.ok && ban.reason === "hero_not_draftable",
-      `stub ban should be rejected for ${heroId}`
-    );
-    assert(ban.state === banState, `stub ban should not mutate state for ${heroId}`);
-
-    const pick = pickDraftHero(pickState, "P1", heroId);
-    assert(
-      !pick.ok && pick.reason === "hero_not_draftable",
-      `stub pick should be rejected for ${heroId}`
-    );
-    assert(pick.state === pickState, `stub pick should not mutate state for ${heroId}`);
+  const draftIds = new Set(DRAFT_HERO_POOL.map((hero) => hero.heroId));
+  for (const heroId of NEW_PLAYABLE_HERO_IDS) {
+    assert(draftIds.has(heroId), `${heroId} should be accepted by draft eligibility`);
   }
+  const banState = createSafeClassDraftState();
+  const pickState: DraftState = { ...createSafeClassDraftState(), phase: "pick", currentPlayer: "P1" };
   for (const heroId of STUB_HERO_ID_VARIANTS) {
     const ban = banDraftHero(banState, "P1", heroId);
     const pick = pickDraftHero(pickState, "P1", heroId);
@@ -261,8 +246,8 @@ export function testStandardRosterRejectsStubFigureSets() {
     archer: HERO_ARTEMIDA_ID,
   });
   assert(
-    army.every((unit) => !unit.heroId && !unit.figureId),
-    "forged standard figure sets must not create stub heroes or figures"
+    NEW_PLAYABLE_HERO_IDS.every((heroId) => army.some((unit) => unit.heroId === heroId)),
+    "standard figure sets should create every newly playable hero"
   );
   console.log("standard_roster_rejects_stub_figure_sets passed");
 }

@@ -1,6 +1,7 @@
 import type { UnitState } from "../model";
 import {
   HERO_ASGORE_ID,
+  HERO_ARTEMIDA_ID,
   HERO_CHIKATILO_ID,
   HERO_EL_CID_COMPEADOR_ID,
   HERO_FRISK_ID,
@@ -8,17 +9,23 @@ import {
   HERO_GROZNY_ID,
   HERO_GRAND_KAISER_ID,
   HERO_GUTS_ID,
+  HERO_DON_KIHOTE_ID,
+  HERO_DUOLINGO_ID,
   HERO_HASSAN_ID,
   HERO_JEBE_ID,
   HERO_KALADIN_ID,
+  HERO_KANEKI_ID,
+  HERO_JACK_RIPPER_ID,
   HERO_LECHY_ID,
   HERO_LOKI_ID,
+  HERO_LUCHE_ID,
   HERO_METTATON_ID,
   HERO_ODIN_ID,
   HERO_PAPYRUS_ID,
   HERO_RIVER_PERSON_ID,
   HERO_SANS_ID,
   HERO_UNDYNE_ID,
+  HERO_ZORO_ID,
 } from "../heroes";
 import * as ids from "./constants";
 import { getAbilitySpec, setCharges } from "./charges";
@@ -165,6 +172,43 @@ export function initUnitAbilities(unit: UnitState): UnitState {
       riverBoatmanMovePending: false,
       riverBoatmanExtraMoves: 0,
     };
+  }
+
+  if (unit.heroId === HERO_DUOLINGO_ID) {
+    updated = setCharges(updated, ids.ABILITY_DUOLINGO_SKIP_CLASSES, 0);
+    updated = {
+      ...updated,
+      duolingoHitTargetsThisTurn: [],
+      duolingoHitTargetsLastTurn: [],
+      duolingoBerserkerUnlocked: false,
+      duolingoAttackBatchHit: false,
+    };
+  }
+  if (unit.heroId === HERO_LUCHE_ID) {
+    updated = setCharges(updated, ids.ABILITY_LUCHE_SUN_GLORY, 0);
+    updated = setCharges(updated, ids.ABILITY_LUCHE_DIVINE_RAY, 0);
+  }
+  if (unit.heroId === HERO_KANEKI_ID) {
+    updated = setCharges(updated, ids.ABILITY_KANEKI_RC_CELLS, 0);
+    updated = { ...updated, kanekiCentipedeUnlocked: false };
+  }
+  if (unit.heroId === HERO_ZORO_ID) {
+    updated = setCharges(updated, ids.ABILITY_ZORO_DETERMINATION, 0);
+    updated = setCharges(updated, ids.ABILITY_ZORO_ONI_GIRI, 0);
+  }
+  if (unit.heroId === HERO_DON_KIHOTE_ID) {
+    updated = setCharges(updated, ids.ABILITY_DON_KIHOTE_WINDMILLS, 0);
+  }
+  if (unit.heroId === HERO_JACK_RIPPER_ID) {
+    updated = {
+      ...updated,
+      jackHolyMotherUsed: false,
+      jackKnownHpByTarget: {},
+    };
+  }
+  if (unit.heroId === HERO_ARTEMIDA_ID) {
+    updated = setCharges(updated, ids.ABILITY_ARTEMIDA_MOONLIGHT_SHINE, 0);
+    updated = setCharges(updated, ids.ABILITY_ARTEMIDA_SILVER_CRESCENT, 0);
   }
 
   return updated;

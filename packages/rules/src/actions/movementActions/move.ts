@@ -40,6 +40,9 @@ export function applyMove(
   if (!unit || !unit.isAlive || !unit.position) {
     return { state, events: [] };
   }
+  if (unit.immobilizedUntilOwnTurnStart) {
+    return { state, events: [] };
+  }
 
   if (unit.owner !== state.currentPlayer) {
     return { state, events: [] };
@@ -141,7 +144,15 @@ export function applyMove(
 
   const stakePath = intendedLine ? intendedLine.slice(1) : [moveAction.to];
   const stakeStop = findStakeStopOnPath(state, unit, stakePath);
-  const finalTo = stakeStop ?? moveAction.to;
+  const jackTrapStop = stakePath.find((cell) =>
+    (state.jackTraps ?? []).some((trap) => coordsEqual(trap.position, cell)),
+  );
+  const stakeIndex = stakeStop ? stakePath.findIndex((cell) => coordsEqual(cell, stakeStop)) : -1;
+  const trapIndex = jackTrapStop ? stakePath.findIndex((cell) => coordsEqual(cell, jackTrapStop)) : -1;
+  const finalTo =
+    stakeStop && (trapIndex < 0 || stakeIndex <= trapIndex)
+      ? stakeStop
+      : jackTrapStop ?? moveAction.to;
   const didMove = !coordsEqual(finalTo, from);
 
   const stateAfterMoveCost = state;

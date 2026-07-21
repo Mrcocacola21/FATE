@@ -1,4 +1,11 @@
-import type { Coord, GameState, PlayerId, UnitState } from "../model";
+import type {
+  ApplyResult,
+  Coord,
+  GameState,
+  PendingCombatQueueEntry,
+  PlayerId,
+  UnitState,
+} from "../model";
 import { isInsideBoard } from "../model";
 import { getUnitDefinition } from "../units";
 import { addCoord, ALL_DIRS, isCellOccupied } from "../board";
@@ -16,6 +23,91 @@ import {
 import { getUnitMovementClasses } from "../movement";
 import type { RNG } from "../rng";
 import { rollD6 } from "../rng";
+import { makeAttackContext, requestRoll } from "../core";
+
+export interface QueuedHeroAttackOptions {
+  damageOverride?: number;
+  damageBonus?: number;
+  ignoreBonuses?: boolean;
+  allowFriendlyTarget?: boolean;
+  blindOnHit?: boolean;
+  center?: Coord;
+  radius?: number;
+  preserveDuplicates?: boolean;
+}
+
+export function queueHeroAbilityAttacks(
+  state: GameState,
+  caster: UnitState,
+  abilityId: string,
+  targetIds: string[],
+  options: QueuedHeroAttackOptions = {}
+): ApplyResult {
+  const uniqueTargets = options.preserveDuplicates
+    ? [...targetIds]
+    : targetIds.filter((id, index) => targetIds.indexOf(id) === index);
+  if (uniqueTargets.length === 0) {
+    return {
+      state,
+      events: [{
+        type: "aoeResolved",
+        sourceUnitId: caster.id,
+        abilityId,
+        casterId: caster.id,
+        center: options.center ?? caster.position!,
+        radius: options.radius ?? 0,
+        affectedUnitIds: [],
+        revealedUnitIds: [],
+        damagedUnitIds: [],
+        damageByUnitId: {},
+      }],
+    };
+  }
+  const queue: PendingCombatQueueEntry[] = uniqueTargets.map((defenderId) => ({
+    attackerId: caster.id,
+    defenderId,
+    ignoreRange: true,
+    ignoreStealth: true,
+    damageOverride: options.damageOverride,
+    damageBonus: options.damageBonus,
+    ignoreBonuses: options.ignoreBonuses,
+    allowFriendlyTarget: options.allowFriendlyTarget,
+    blindOnHit: options.blindOnHit,
+    sourceAbilityId: abilityId,
+    consumeSlots: false,
+    kind: "aoe",
+  }));
+  const queued: GameState = {
+    ...state,
+    pendingCombatQueue: queue,
+    pendingAoE: {
+      casterId: caster.id,
+      abilityId,
+      center: options.center ?? caster.position!,
+      radius: options.radius ?? 0,
+      affectedUnitIds: [...uniqueTargets],
+      revealedUnitIds: [],
+      damagedUnitIds: [],
+      damageByUnitId: {},
+    },
+  };
+  const first = queue[0];
+  const context = makeAttackContext({
+    attackerId: caster.id,
+    defenderId: first.defenderId,
+    allowFriendlyTarget: options.allowFriendlyTarget,
+    ignoreRange: true,
+    ignoreStealth: true,
+    damageOverride: options.damageOverride,
+    damageBonus: options.damageBonus,
+    ignoreBonuses: options.ignoreBonuses,
+    blindOnHit: options.blindOnHit,
+    sourceAbilityId: abilityId,
+    consumeSlots: false,
+    queueKind: "aoe",
+  });
+  return requestRoll(queued, caster.owner, "attack_attackerRoll", context, caster.id);
+}
 
 export function roll2D6Sum(rng: RNG): number {
   const d1 = rollD6(rng);

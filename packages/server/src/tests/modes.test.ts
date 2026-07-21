@@ -19,7 +19,7 @@ import {
 import { buildServer } from "../index";
 import { createGameRoomWithId, getGameRoom, storeTestHooks } from "../store";
 
-const STUB_HERO_IDS = [
+const NEW_PLAYABLE_HERO_IDS = [
   HERO_DUOLINGO_ID,
   HERO_LUCHE_ID,
   HERO_DON_KIHOTE_ID,
@@ -282,8 +282,8 @@ async function testStandardStartPreservesFigureSets(wsUrl: string) {
   const p1Trickster = units.find(
     (unit: any) => unit.owner === "P1" && unit.class === "trickster"
   ) as any;
-  assert.equal(p1Trickster?.heroId, undefined);
-  assert.equal(p1Trickster?.figureId, undefined);
+  assert.equal(p1Trickster?.heroId, HERO_DUOLINGO_ID);
+  assert.equal(p1Trickster?.figureId, HERO_DUOLINGO_ID);
 
   ws1.close();
   ws2.close();
@@ -291,7 +291,7 @@ async function testStandardStartPreservesFigureSets(wsUrl: string) {
 }
 
 async function testDraftRejectsEveryStubWithoutMutation(wsUrl: string) {
-  const { ws1, ws2, queue1, queue2, roomId } = await joinTwoPlayers(wsUrl);
+  const { ws1, ws2, queue1 } = await joinTwoPlayers(wsUrl);
   sendSetMode(ws1, "draft");
   await waitForRoomState(queue1, (msg) => msg.meta?.gameMode === "draft");
   sendReadyBoth(ws1, ws2);
@@ -299,38 +299,12 @@ async function testDraftRejectsEveryStubWithoutMutation(wsUrl: string) {
   ws1.send(JSON.stringify({ type: "startGame" }));
   await waitForRoomState(queue1, (msg) => msg.meta?.draftState?.phase === "ban");
 
-  let rejectionCount = 0;
-  for (const heroId of STUB_HERO_IDS) {
-    const room = getGameRoom(roomId);
-    assert(room?.draftState, `draft state should exist before banning ${heroId}`);
-    const before = JSON.stringify(room.draftState);
-    ws1.send(JSON.stringify({ type: "draftBanHero", heroId }));
-    rejectionCount += 1;
-    await waitForErrorCount(queue1, "hero_not_draftable", rejectionCount);
-    assert.equal(JSON.stringify(room.draftState), before, `stub ban mutated state for ${heroId}`);
-  }
-
-  for (let index = 0; index < DRAFT_BAN_ORDER.length; index += 1) {
-    const player = DRAFT_BAN_ORDER[index];
-    const socket = player === "P1" ? ws1 : ws2;
-    const queue = player === "P1" ? queue1 : queue2;
-    socket.send(
-      JSON.stringify({ type: "draftBanHero", heroId: heroForClass(DRAFT_CLASSES[index]) })
-    );
-    await waitForRoomState(
-      queue,
-      (msg) => msg.meta?.draftState?.history?.length === index + 1
-    );
-  }
-
-  for (const heroId of STUB_HERO_IDS) {
-    const room = getGameRoom(roomId);
-    assert(room?.draftState, `draft state should exist before picking ${heroId}`);
-    const before = JSON.stringify(room.draftState);
-    ws1.send(JSON.stringify({ type: "draftPickHero", heroId }));
-    rejectionCount += 1;
-    await waitForErrorCount(queue1, "hero_not_draftable", rejectionCount);
-    assert.equal(JSON.stringify(room.draftState), before, `stub pick mutated state for ${heroId}`);
+  const draftStart = await waitForRoomState(
+    queue1,
+    (msg) => Array.isArray(msg.meta?.draftPool) && msg.meta.draftPool.length > 0
+  );
+  for (const heroId of NEW_PLAYABLE_HERO_IDS) {
+    assert(draftStart.meta.draftPool.some((hero: any) => hero.heroId === heroId), `${heroId} missing from server draft pool`);
   }
 
   ws1.close();
@@ -359,10 +333,10 @@ async function testDraftFlowStartsPlacement(wsUrl: string) {
     "draft pool should exclude base units"
   );
   assert(
-    STUB_HERO_IDS.every(
-      (heroId) => !draftStart.meta.draftPool.some((hero: any) => hero.heroId === heroId)
+    NEW_PLAYABLE_HERO_IDS.every(
+      (heroId) => draftStart.meta.draftPool.some((hero: any) => hero.heroId === heroId)
     ),
-    "draft pool should exclude all stub heroes"
+    "draft pool should include all newly playable heroes"
   );
 
   sendSetMode(ws1, "classic");

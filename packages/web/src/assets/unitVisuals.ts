@@ -25,10 +25,12 @@ export interface HeroVisualVariantPreview {
 }
 
 const HERO_VARIANTS: Record<string, UnitVisualVariant[]> = {
+  duolingo: ["duolingo-berserker"],
   "grand-kaiser": ["engineering-miracle"],
   frisk: ["frisk-genocide"],
   griffith: ["femto"],
   guts: ["guts-berserk"],
+  kaneki: ["kaneki-centipede"],
   mettaton: ["mettaton-ex", "mettaton-neo"],
   papyrus: ["papyrus-unbeliever"],
   sans: ["sans-unbeliever"],
@@ -36,9 +38,11 @@ const HERO_VARIANTS: Record<string, UnitVisualVariant[]> = {
 };
 
 const VARIANT_LABEL_KEYS: Record<UnitVisualVariant, string> = {
+  "duolingo-berserker": "visuals.forms.duolingoBerserker",
   "engineering-miracle": "visuals.forms.engineeringMiracle",
   "frisk-genocide": "visuals.forms.friskGenocide",
   "guts-berserk": "visuals.forms.gutsBerserk",
+  "kaneki-centipede": "visuals.forms.kanekiCentipede",
   "mettaton-ex": "visuals.forms.mettatonEx",
   "mettaton-neo": "visuals.forms.mettatonNeo",
   "papyrus-unbeliever": "visuals.forms.papyrusUnbeliever",
@@ -54,8 +58,12 @@ function getBaseAssetId(unit: UnitState | null | undefined): string {
 export function getUnitVisualVariant(unit: UnitState | null | undefined): UnitVisualVariant | null {
   if (!unit) return null;
   if (unit.heroId === "femto") return "femto";
+  if (unit.heroId === "duolingo" && unit.duolingoBerserkerUnlocked) {
+    return "duolingo-berserker";
+  }
   if (unit.heroId === "grand-kaiser" && unit.transformed) return "engineering-miracle";
   if (unit.heroId === "guts" && unit.gutsBerserkModeActive) return "guts-berserk";
+  if (unit.heroId === "kaneki" && unit.kanekiCentipedeUnlocked) return "kaneki-centipede";
   if (unit.heroId === "mettaton" && unit.mettatonNeoUnlocked) return "mettaton-neo";
   if (unit.heroId === "mettaton" && unit.mettatonExUnlocked) return "mettaton-ex";
   if (unit.heroId === "papyrus" && unit.papyrusUnbelieverActive) {

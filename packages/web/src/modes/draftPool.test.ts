@@ -13,7 +13,7 @@ import {
 } from "rules";
 import { groupDraftPoolByClass } from "./draftPool";
 
-const STUB_HERO_IDS = [
+const NEW_PLAYABLE_HERO_IDS = [
   HERO_DUOLINGO_ID,
   HERO_LUCHE_ID,
   HERO_DON_KIHOTE_ID,
@@ -29,8 +29,8 @@ test("Draft UI groups only the authoritative implemented draft pool", () => {
     [...grouped.values()].flat().map((hero) => hero.heroId)
   );
 
-  for (const heroId of STUB_HERO_IDS) {
-    assert.equal(visibleHeroIds.has(heroId), false, `${heroId} must not render`);
+  for (const heroId of NEW_PLAYABLE_HERO_IDS) {
+    assert.equal(visibleHeroIds.has(heroId), true, `${heroId} must render`);
   }
   for (const unitClass of DRAFT_CLASSES) {
     const heroes = grouped.get(unitClass) ?? [];

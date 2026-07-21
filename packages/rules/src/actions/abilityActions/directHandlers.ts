@@ -100,6 +100,7 @@ import {
 } from "../heroes/sans";
 import { applyUndyneEnergySpear, applyUndyneSpearThrow } from "../heroes/undyne";
 import type { UseAbilityAction } from "./types";
+import { applyNewBatchAbility } from "../heroes/newBatch";
 
 type DirectAbilityHandler = (
   state: GameState,
@@ -195,6 +196,8 @@ export function tryApplyDirectAbility(
   rng: RNG,
   abilityId: string
 ): ApplyResult | null {
+  const newBatchResult = applyNewBatchAbility(state, unit, action, rng);
+  if (newBatchResult) return newBatchResult;
   const handler = DIRECT_HANDLERS[abilityId];
   return handler ? handler(state, unit, action, rng) : null;
 }

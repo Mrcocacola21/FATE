@@ -21,6 +21,15 @@ import {
   SANS_GASTER_BLASTER_ID,
   UNDYNE_ENERGY_SPEAR_ID,
   UNDYNE_SPEAR_THROW_ID,
+  DUOLINGO_PUSH_NOTIFICATION_ID,
+  LUCHE_DIVINE_RAY_ID,
+  ZORO_ONI_GIRI_ID,
+  DON_SORROWFUL_ID,
+  DON_WINDMILLS_ID,
+  JACK_SNARES_ID,
+  JACK_HOLY_MOTHER_ID,
+  ARTEMIS_MOON_INSIGHT_ID,
+  ARTEMIS_SILVER_SICKLE_ID,
 } from "../rulesHints";
 
 export interface TargetingMode {
@@ -187,6 +196,24 @@ function abilityIdForActionMode(mode: Exclude<ActionMode, null>): TargetingMode[
       return GUTS_ARBALET_ID;
     case "gutsCannon":
       return GUTS_CANNON_ID;
+    case "duolingoPush":
+      return DUOLINGO_PUSH_NOTIFICATION_ID;
+    case "lucheLightRay":
+      return LUCHE_DIVINE_RAY_ID;
+    case "zoroOniGiri":
+      return ZORO_ONI_GIRI_ID;
+    case "donReaction":
+      return DON_SORROWFUL_ID;
+    case "donWindmills":
+      return DON_WINDMILLS_ID;
+    case "jackTrap":
+      return JACK_SNARES_ID;
+    case "jackHolyMother":
+      return JACK_HOLY_MOTHER_ID;
+    case "artemisMoonInsight":
+      return ARTEMIS_MOON_INSIGHT_ID;
+    case "artemisSilverSickle":
+      return ARTEMIS_SILVER_SICKLE_ID;
   }
 }
 
@@ -197,7 +224,14 @@ function previewForActionMode(
     case "move":
     case "guideTraveler":
     case "invadeTime":
+    case "duolingoPush":
+    case "donWindmills":
       return { move: true };
+    case "donReaction":
+    case "jackTrap":
+    case "lucheLightRay":
+    case "artemisMoonInsight":
+      return undefined;
     case "place":
       return undefined;
     default:

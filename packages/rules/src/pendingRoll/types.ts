@@ -22,6 +22,8 @@ export interface AttackRollContext extends Record<string, unknown> {
   suppressGutsBerserkBonus?: boolean;
   damageOverride?: number;
   ignoreBonuses?: boolean;
+  blindOnHit?: boolean;
+  sourceAbilityId?: string;
   attackerDice?: number[];
   defenderDice?: number[];
   tieBreakAttacker?: number[];

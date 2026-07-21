@@ -132,6 +132,7 @@ export function archerLineCells(view: PlayerView, sourceUnitId: string): Coord[]
       if (occupant && occupant.owner !== source.owner) {
         break;
       }
+      if (source.blindUntilOwnTurnStart) break;
       cursor = {
         col: cursor.col + direction.col,
         row: cursor.row + direction.row,
@@ -200,14 +201,14 @@ export function attackRangeCells(
   }
 
   if (unitClass === "trickster") {
-    return cellsInRadius(size, origin, 2, false);
+    return cellsInRadius(size, origin, unit.blindUntilOwnTurnStart ? 1 : 2, false);
   }
 
   if (unitClass === "spearman") {
     for (const cell of cellsInRadius(size, origin, 1, false)) {
       pushUnique(cells, seen, cell, size, origin);
     }
-    for (const offset of DIRECTIONS_8) {
+    if (!unit.blindUntilOwnTurnStart) for (const offset of DIRECTIONS_8) {
       pushUnique(
         cells,
         seen,

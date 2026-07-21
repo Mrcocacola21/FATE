@@ -3,9 +3,10 @@ import { FIGURE_ARTS, TOKENS, getFigureArtSrc, getTokenSrc } from "../catalog/to
 
 export type AssetInfo = { figureId: string; art: string; token: string };
 
-export type BoardMarkerAssetId = "lechy_forest" | "vlad_stake";
+export type BoardMarkerAssetId = "jack_trap" | "lechy_forest" | "vlad_stake";
 
 const BOARD_MARKER_ASSETS: Record<BoardMarkerAssetId, string> = {
+  jack_trap: new URL("./markers/trap.png", import.meta.url).href,
   lechy_forest: new URL("./markers/Forest.png", import.meta.url).href,
   vlad_stake: new URL("./markers/vladStake.webp", import.meta.url).href,
 };

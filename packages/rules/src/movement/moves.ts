@@ -4,9 +4,12 @@ import { ALL_DIRS, DIAG_DIRS, ORTHO_DIRS, addCoord } from "../board";
 import { canUnitEnterCell } from "../visibility";
 import {
   HERO_GENGHIS_KHAN_ID,
+  HERO_ARTEMIDA_ID,
+  HERO_DUOLINGO_ID,
   HERO_GRAND_KAISER_ID,
   HERO_GUTS_ID,
   HERO_KALADIN_ID,
+  HERO_KANEKI_ID,
   HERO_UNDYNE_ID,
 } from "../heroes";
 import { hasMettatonBerserkerFeature, hasMettatonRiderMovement } from "../mettaton";
@@ -62,6 +65,19 @@ export function getUnitMovementClasses(unit: UnitState): UnitClass[] {
   }
   if (unit.heroId === HERO_KALADIN_ID) {
     return ["spearman", "trickster", "berserker"];
+  }
+  if (unit.heroId === HERO_KANEKI_ID) {
+    return uniqueModes([
+      unit.class,
+      "assassin",
+      ...(unit.kanekiCentipedeUnlocked ? (["rider"] as UnitClass[]) : []),
+    ]);
+  }
+  if (unit.heroId === HERO_DUOLINGO_ID && unit.duolingoBerserkerUnlocked) {
+    return uniqueModes([unit.class, "berserker"]);
+  }
+  if (unit.heroId === HERO_ARTEMIDA_ID) {
+    return uniqueModes([unit.class, "trickster"]);
   }
   if (unit.heroId === HERO_UNDYNE_ID) {
     return uniqueModes([unit.class, "spearman"]);

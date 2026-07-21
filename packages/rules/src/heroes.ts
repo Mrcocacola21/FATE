@@ -148,42 +148,42 @@ export const HERO_CATALOG: HeroDefinition[] = [
     id: HERO_LUCHE_ID,
     name: "Luche",
     mainClass: "spearman",
-    ...STUB_HERO_AVAILABILITY,
+    ...PLAYABLE_HERO_AVAILABILITY,
     baseHpOverride: 7,
   },
   {
     id: HERO_KANEKI_ID,
     name: "Kaneki",
     mainClass: "berserker",
-    ...STUB_HERO_AVAILABILITY,
+    ...PLAYABLE_HERO_AVAILABILITY,
     baseHpOverride: 10,
   },
   {
     id: HERO_ZORO_ID,
     name: "Zoro",
     mainClass: "knight",
-    ...STUB_HERO_AVAILABILITY,
+    ...PLAYABLE_HERO_AVAILABILITY,
     baseHpOverride: 8,
   },
   {
     id: HERO_DON_KIHOTE_ID,
     name: "Don Quixote",
     mainClass: "rider",
-    ...STUB_HERO_AVAILABILITY,
+    ...PLAYABLE_HERO_AVAILABILITY,
     baseHpOverride: 7,
   },
   {
     id: HERO_JACK_RIPPER_ID,
     name: "Jack the Ripper",
     mainClass: "assassin",
-    ...STUB_HERO_AVAILABILITY,
-    baseAttackOverride: 5,
+    ...PLAYABLE_HERO_AVAILABILITY,
+    baseHpOverride: 5,
   },
   {
     id: HERO_ARTEMIDA_ID,
-    name: "Artemida",
+    name: "Artemis",
     mainClass: "archer",
-    ...STUB_HERO_AVAILABILITY,
+    ...PLAYABLE_HERO_AVAILABILITY,
     baseHpOverride: 10,
   },
   {
@@ -240,8 +240,8 @@ export const HERO_CATALOG: HeroDefinition[] = [
     id: HERO_DUOLINGO_ID,
     name: "Duolingo",
     mainClass: "trickster",
-    ...STUB_HERO_AVAILABILITY,
-    baseAttackOverride: 6,
+    ...PLAYABLE_HERO_AVAILABILITY,
+    baseHpOverride: 6,
   },
   
   {
@@ -319,5 +319,4 @@ export function isHeroSelectableInStandard(
     hero.figureSetEnabled === true
   );
 }
-
 

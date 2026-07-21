@@ -20,7 +20,7 @@ export function finalizeAttackFromContext(
   const sourceId =
     context.damageBonusSourceId ?? getPolkovodetsSource(state, context.attackerId);
   const polkovodetsBonus = sourceId ? 1 : 0;
-  const damageBonus = polkovodetsBonus;
+  const damageBonus = (context.damageBonus ?? 0) + polkovodetsBonus;
 
   const { nextState, events } = resolveAttack(state, {
     attackerId: context.attackerId,

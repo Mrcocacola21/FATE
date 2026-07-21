@@ -28,10 +28,10 @@ export const FIGURE_ARTS: Record<string, string> = {
   duolingo: new URL("../assets/figures/duolingo.webp", import.meta.url).href,
   jackRipper: new URL("../assets/figures/jackRipper.webp", import.meta.url).href,
   kaneki: new URL("../assets/figures/kaneki.webp", import.meta.url).href,
-  artemida: FALLBACK_FIGURE,
-  donKihote: FALLBACK_FIGURE,
-  luche: FALLBACK_FIGURE,
-  zoro: FALLBACK_FIGURE,
+  artemida: new URL("../assets/figures/artemida.png", import.meta.url).href,
+  donKihote: new URL("../assets/figures/DonKihote.jpg", import.meta.url).href,
+  luche: new URL("../assets/figures/luche.png", import.meta.url).href,
+  zoro: new URL("../assets/figures/zoro.png", import.meta.url).href,
   _missing: FALLBACK_FIGURE,
 };
 
@@ -65,18 +65,22 @@ export const TOKENS: Record<string, string> = {
   donKihote: new URL("../assets/tokens/donKihote.webp", import.meta.url).href,
   luche: new URL("../assets/tokens/luche.webp", import.meta.url).href,
   zoro: new URL("../assets/tokens/zoro.webp", import.meta.url).href,
-  kaneki: FALLBACK_TOKEN,
+  kaneki: new URL("../assets/tokens/kaneki.png", import.meta.url).href,
   _missing: FALLBACK_TOKEN,
 };
 
 export const VARIANT_FIGURE_ARTS = {
+  "duolingo-berserker": new URL("../assets/tokens/duolingoBerserker.png", import.meta.url).href,
+  "kaneki-centipede": new URL("../assets/tokens/kanekiScolopendra.png", import.meta.url).href,
   "undyne-undying": new URL("../assets/figures/undyne_the_undying.png", import.meta.url).href,
 } as const;
 
 export const VARIANT_TOKENS = {
+  "duolingo-berserker": new URL("../assets/tokens/duolingoBerserker.png", import.meta.url).href,
   "engineering-miracle": new URL("../assets/tokens/kaiser_miracle.png", import.meta.url).href,
   "frisk-genocide": new URL("../assets/tokens/friskGenocide.png", import.meta.url).href,
   "guts-berserk": new URL("../assets/tokens/gutsBerserk.png", import.meta.url).href,
+  "kaneki-centipede": new URL("../assets/tokens/kanekiScolopendra.png", import.meta.url).href,
   "mettaton-ex": new URL("../assets/tokens/mettaton_ex.webp", import.meta.url).href,
   "mettaton-neo": new URL("../assets/tokens/mettaton_neo.png", import.meta.url).href,
   "papyrus-unbeliever": new URL("../assets/tokens/unbeliever_papyrus.png", import.meta.url).href,

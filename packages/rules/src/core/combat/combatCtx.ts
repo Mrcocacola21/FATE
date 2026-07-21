@@ -9,8 +9,11 @@ export function makeAttackContext(params: {
   damageBonus?: number;
   damageBonusSourceId?: string;
   rangedAttack?: boolean;
+  suppressGutsBerserkBonus?: boolean;
   damageOverride?: number;
   ignoreBonuses?: boolean;
+  blindOnHit?: boolean;
+  sourceAbilityId?: string;
   consumeSlots: boolean;
   queueKind: "normal" | "riderPath" | "aoe";
 }): AttackRollContext {
@@ -23,8 +26,11 @@ export function makeAttackContext(params: {
     damageBonus: params.damageBonus,
     damageBonusSourceId: params.damageBonusSourceId,
     rangedAttack: params.rangedAttack,
+    suppressGutsBerserkBonus: params.suppressGutsBerserkBonus,
     damageOverride: params.damageOverride,
     ignoreBonuses: params.ignoreBonuses,
+    blindOnHit: params.blindOnHit,
+    sourceAbilityId: params.sourceAbilityId,
     attackerDice: [],
     defenderDice: [],
     tieBreakAttacker: [],

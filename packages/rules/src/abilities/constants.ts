@@ -147,11 +147,13 @@ export const ABILITY_RIVER_PERSON_GUIDE_OF_SOULS = "riverGuideOfSouls" as const;
 export const ABILITY_RIVER_PERSON_TRA_LA_LA = "riverTraLaLa" as const;
 
 export const ABILITY_DUOLINGO_STRICK = "duolingoStrick" as const;
+export const ABILITY_DUOLINGO_LONG_LIVED = "duolingoLongLived" as const;
 export const ABILITY_DUOLINGO_PUSH_NOTIFICATION = "duolingoPushNotification" as const;
 export const ABILITY_DUOLINGO_SKIP_CLASSES = "duolingoSkipClasses" as const;
 export const ABILITY_DUOLINGO_BERSERKER = "duolingoBerserker" as const;
 
 export const ABILITY_LUCHE_SUN_GLORY = "lucheSunGlory" as const;
+export const ABILITY_LUCHE_LONG_LIVED = "lucheLongLived" as const;
 export const ABILITY_LUCHE_SHINE = "lucheShine" as const;
 export const ABILITY_LUCHE_DIVINE_RAY = "lucheDivineRay" as const;
 export const ABILITY_LUCHE_BURNING_SUN = "lucheBurningSun" as const;
@@ -159,8 +161,11 @@ export const ABILITY_LUCHE_BURNING_SUN = "lucheBurningSun" as const;
 export const ABILITY_KANEKI_RINKAKU_KAGUNE = "kanekiRinkakuKagune" as const;
 export const ABILITY_KANEKI_RC_CELLS = "kanekiRcCells" as const;
 export const ABILITY_KANEKI_SCOLOPENDRA = "kanekiScolopendra" as const;
+export const ABILITY_KANEKI_GHOUL = "kanekiGhoul" as const;
+export const ABILITY_KANEKI_REGENERATION = "kanekiRegeneration" as const;
 
 export const ABILITY_ZORO_DETERMINATION = "zoroDetermination" as const;
+export const ABILITY_ZORO_CHEATED_DEATH = "zoroCheatedDeath" as const;
 export const ABILITY_ZORO_ONI_GIRI = "zoroOniGiri" as const;
 export const ABILITY_ZORO_3_SWORD_STYLE = "zoro3SwordStyle" as const;
 export const ABILITY_ZORO_ASURA = "zoroAsura" as const;
@@ -168,13 +173,17 @@ export const ABILITY_ZORO_ASURA = "zoroAsura" as const;
 export const ABILITY_DON_KIHOTE_SORROWFUL_COUNTENANCE = "donKihoteSorrowfulCountenance" as const;
 export const ABILITY_DON_KIHOTE_WINDMILLS = "donKihoteWindmills" as const;
 export const ABILITY_DON_KIHOTE_MADNESS = "donKihoteMadness" as const;
+export const ABILITY_DON_KIHOTE_HARDY = "donKihoteHardy" as const;
 
 export const ABILITY_JACK_RIPPER_SURGERY = "jackRipperSurgery" as const;
+export const ABILITY_JACK_RIPPER_RESILIENT = "jackRipperResilient" as const;
 export const ABILITY_JACK_RIPPER_SNARES = "jackRipperSnares" as const;
 export const ABILITY_JACK_RIPPER_DISMEMBERMENT = "jackRipperDismemberment" as const;
 export const ABILITY_JACK_RIPPER_LEGEND_KILLER = "jackRipperLegendKiller" as const;
 
 export const ABILITY_ARTEMIDA_ACCURATE_ARROW = "artemidaAccurateArrow" as const;
+export const ABILITY_ARTEMIDA_GOD = "artemidaGod" as const;
+export const ABILITY_ARTEMIDA_STEALTH = "artemidaStealth" as const;
 export const ABILITY_ARTEMIDA_MOONLIGHT_SHINE = "artemidaMoonlightShot" as const;
 export const ABILITY_ARTEMIDA_SILVER_CRESCENT = "artemidaSilverCrescent" as const;
 export const ABILITY_ARTEMIDA_NATURE_MOVEMENT = "artemidaNatureMovement" as const;

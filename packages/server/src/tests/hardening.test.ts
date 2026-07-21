@@ -392,6 +392,23 @@ function testGroznyTyrantPendingChoicePayloadsAccepted() {
   console.log("hardening_grozny_tyrant_pending_choice_payloads passed");
 }
 
+function testNewBatchBoardPendingChoicePayloadsAccepted() {
+  for (const choice of [
+    { type: "donSorrowfulMove", destination: { col: 3, row: 2 } },
+    { type: "donWindmillsReposition", destination: { col: 4, row: 2 } },
+    { type: "chargedImpulseTarget", position: { col: 5, row: 2 } },
+  ]) {
+    const parsed = GameActionSchema.safeParse({
+      type: "resolvePendingRoll",
+      pendingRollId: "roll-new-batch",
+      choice,
+    });
+    assert.equal(parsed.success, true, `${choice.type} must pass the server schema`);
+  }
+
+  console.log("hardening_new_batch_board_pending_choice_payloads passed");
+}
+
 async function testRestDebugEndpointsGatedInProduction() {
   storeTestHooks.reset();
   const previousNodeEnv = process.env.NODE_ENV;
@@ -880,6 +897,7 @@ async function main() {
   testRateLimitWindowResets();
   testPayloadCapAllowsValidClientCommands();
   testGroznyTyrantPendingChoicePayloadsAccepted();
+  testNewBatchBoardPendingChoicePayloadsAccepted();
   await testRestDebugEndpointsGatedInProduction();
   testIdleRoomCleanupExpiresRoom();
   testActiveRoomCleanupDoesNotExpireRoom();

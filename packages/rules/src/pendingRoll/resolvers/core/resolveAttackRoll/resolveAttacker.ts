@@ -12,6 +12,7 @@ import {
   HERO_ASGORE_ID,
   HERO_CHIKATILO_ID,
   HERO_FEMTO_ID,
+  HERO_DUOLINGO_ID,
   HERO_FRISK_ID,
   HERO_GUTS_ID,
   HERO_PAPYRUS_ID,
@@ -180,6 +181,8 @@ export function resolveAttackAttackerRoll(
   if (
     (workingDefender.class === "berserker" ||
       workingDefender.heroId === HERO_FEMTO_ID ||
+      (workingDefender.heroId === HERO_DUOLINGO_ID &&
+        workingDefender.duolingoBerserkerUnlocked) ||
       (workingDefender.heroId === HERO_PAPYRUS_ID &&
         workingDefender.papyrusUnbelieverActive) ||
       hasMettatonBerserkerFeature(workingDefender)) &&

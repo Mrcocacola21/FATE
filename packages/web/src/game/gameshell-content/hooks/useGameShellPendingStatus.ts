@@ -85,8 +85,11 @@ export function useGameShellPendingStatus({
     pendingRoll?.kind === "femtoDivineMoveDestination";
   const isOdinSleipnirDestination =
     pendingRoll?.kind === "odinSleipnirDestination";
+  const isDonSorrowfulMoveChoice = pendingRoll?.kind === "donSorrowfulMoveChoice";
   const isChargedImpulseTargetChoice =
-    pendingRoll?.kind === "chargedImpulseTargetChoice";
+    pendingRoll?.kind === "chargedImpulseTargetChoice" ||
+    isDonSorrowfulMoveChoice ||
+    pendingRoll?.kind === "donWindmillsRepositionChoice";
   const isRiverBoatCarryChoice = pendingRoll?.kind === "riverBoatCarryChoice";
   const isRiverBoatDestinationChoice =
     pendingRoll?.kind === "riverBoatDestinationChoice";
@@ -101,6 +104,8 @@ export function useGameShellPendingStatus({
   const isChikatiloRevealChoice =
     pendingRoll?.kind === "chikatiloFalseTrailRevealChoice";
   const isChikatiloDecoyChoice = pendingRoll?.kind === "chikatiloDecoyChoice";
+  const isDonWindmillsRepositionChoice =
+    pendingRoll?.kind === "donWindmillsRepositionChoice";
   const boardSelectionPending =
     isStakePlacement ||
     isForestTarget ||
@@ -131,7 +136,8 @@ export function useGameShellPendingStatus({
     isRiverBoatDropDestination ||
     isRiverTraLaLaTargetChoice ||
     isRiverTraLaLaDestinationChoice ||
-    isRiverTraLaLaDropDestinationChoice;
+    isRiverTraLaLaDropDestinationChoice ||
+    isDonWindmillsRepositionChoice;
   const pendingQueueCount = view?.pendingCombatQueueCount ?? 0;
   const attackContext = pendingRoll?.context as
     | {
@@ -295,6 +301,7 @@ export function useGameShellPendingStatus({
     isFemtoDivineMoveDestination,
     isOdinSleipnirDestination,
     isChargedImpulseTargetChoice,
+    isDonSorrowfulMoveChoice,
     isRiverBoatCarryChoice,
     isRiverBoatDestinationChoice,
     isRiverBoatDropDestination,

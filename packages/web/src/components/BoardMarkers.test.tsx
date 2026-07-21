@@ -43,6 +43,7 @@ function markerState(): GameState {
         isRevealed: true,
       },
     ],
+    jackTraps: [{ sourceUnitId: unit.id, owner: "P1", position: { col: 2, row: 3 } }],
   };
 }
 
@@ -131,4 +132,17 @@ test("marker images cannot intercept board cell clicks", () => {
     markup,
     /class="board-marker-icon board-marker-icon--stake pointer-events-none absolute[^>]*board-marker-icon--stake-revealed[^>]*>[\s\S]*?<img[^>]*>/,
   );
+});
+
+test("Jack traps render for their owner but not in an opponent projection", () => {
+  const ownerMarkup = renderBoard(makePlayerView(markerState(), "P1"), "P1");
+  assert.match(ownerMarkup, /data-board-marker="jack_trap"/);
+  assert.match(ownerMarkup, /pointer-events-none/);
+  assert.match(ownerMarkup, /board-marker-icon--jack-trap/);
+  assert.ok(ownerMarkup.includes(getBoardMarkerAsset("jack_trap")));
+  assert.doesNotMatch(ownerMarkup, />T<\/div>/);
+
+  const opponentMarkup = renderBoard(makePlayerView(markerState(), "P2"), "P2");
+  assert.doesNotMatch(opponentMarkup, /data-board-marker="jack_trap"/);
+  assert.doesNotMatch(opponentMarkup, /board-marker-icon--jack-trap/);
 });

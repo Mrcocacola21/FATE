@@ -3,7 +3,8 @@ import type { RNG } from "../../rng";
 import { canAttackTarget } from "../../combat";
 import { canSpendSlots } from "../../turnEconomy";
 import { requestRoll, makeAttackContext } from "../../core";
-import { HERO_FALSE_TRAIL_TOKEN_ID } from "../../heroes";
+import { HERO_FALSE_TRAIL_TOKEN_ID, HERO_ZORO_ID } from "../../heroes";
+import { ABILITY_ZORO_3_SWORD_STYLE } from "../../abilities";
 import { isKaiser } from "../shared";
 import { exitBunkerForUnit } from "../heroes/kaiser";
 import { applyGutsBerserkAttack } from "../heroes/guts";
@@ -34,6 +35,57 @@ export function applyAttack(
   }
   if (state.activeUnitId !== attacker.id) {
     return { state, events: [] };
+  }
+
+  const santoryuTargets =
+    attacker.heroId === HERO_ZORO_ID && Array.isArray(action.defenderIds)
+      ? action.defenderIds
+      : [];
+  if (santoryuTargets.length > 0) {
+    const unique = Array.from(new Set(santoryuTargets));
+    if (
+      unique.length !== santoryuTargets.length ||
+      unique.length > 2 ||
+      !unique.includes(action.defenderId) ||
+      !canSpendSlots(attacker, { attack: true, action: true })
+    ) {
+      return { state, events: [] };
+    }
+    const targets = unique.map((id) => state.units[id]);
+    if (targets.some((target) => !target || !canAttackTarget(state, attacker, target))) {
+      return { state, events: [] };
+    }
+    if (unique.length === 2) {
+      const queue = unique.map((defenderId) => ({
+        attackerId: attacker.id,
+        defenderId,
+        consumeSlots: false,
+        sourceAbilityId: ABILITY_ZORO_3_SWORD_STYLE,
+        kind: "aoe" as const,
+      }));
+      const queuedState: GameState = {
+        ...state,
+        pendingCombatQueue: queue,
+        pendingAoE: {
+          casterId: attacker.id,
+          abilityId: ABILITY_ZORO_3_SWORD_STYLE,
+          center: attacker.position!,
+          radius: 1,
+          affectedUnitIds: unique,
+          revealedUnitIds: [],
+          damagedUnitIds: [],
+          damageByUnitId: {},
+        },
+      };
+      const context = makeAttackContext({
+        attackerId: attacker.id,
+        defenderId: unique[0],
+        consumeSlots: true,
+        sourceAbilityId: ABILITY_ZORO_3_SWORD_STYLE,
+        queueKind: "aoe",
+      });
+      return requestRoll(queuedState, attacker.owner, "attack_attackerRoll", context, attacker.id);
+    }
   }
 
   const papyrusLongBone = maybeApplyPapyrusLongBoneAttack(

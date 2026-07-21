@@ -5,20 +5,29 @@ import {
   ASGORE_FIRE_PARADE_ID,
   ASGORE_FIREBALL_ID,
   CHIKATILO_ASSASSIN_MARK_ID,
+  ARTEMIS_MOON_INSIGHT_ID,
+  ARTEMIS_SILVER_SICKLE_ID,
+  DON_SORROWFUL_ID,
+  DON_WINDMILLS_ID,
+  DUOLINGO_PUSH_NOTIFICATION_ID,
   EL_CID_DEMON_DUELIST_ID,
   EL_CID_TISONA_ID,
   GROZNY_INVADE_TIME_ID,
   GUTS_ARBALET_ID,
   GUTS_CANNON_ID,
   HASSAN_TRUE_ENEMY_ID,
+  JACK_HOLY_MOTHER_ID,
+  JACK_SNARES_ID,
   JEBE_HAIL_OF_ARROWS_ID,
   JEBE_KHANS_SHOOTER_ID,
   KAISER_DORA_ID,
+  LUCHE_DIVINE_RAY_ID,
   KALADIN_FIFTH_ID,
   LECHY_GUIDE_TRAVELER_ID,
   METTATON_LASER_ID,
   METTATON_POPPINS_ID,
   ODIN_SLEIPNIR_ID,
+  ZORO_ONI_GIRI_ID,
   PAPYRUS_COOL_GUY_ID,
   SANS_GASTER_BLASTER_ID,
   UNDYNE_ENERGY_SPEAR_ID,
@@ -119,6 +128,10 @@ export interface CellClickContext {
   setActionMode: (mode: ActionMode) => void;
   setPlaceUnitId: (unitId: string | null) => void;
   selectedUnitId: string | null;
+  newHeroAbilityTargetId: string | null;
+  setNewHeroAbilityTargetId: (unitId: string | null) => void;
+  zoroAttackTargetIds: string[];
+  setZoroAttackTargetIds: Dispatch<SetStateAction<string[]>>;
   legalMoveCoords: Coord[];
   setMoveOptions: (options: MoveOptionsState | null) => void;
   invadeTimeKeys: Set<string>;
@@ -246,6 +259,10 @@ export function createCellClickHandler(context: CellClickContext) {
     setActionMode,
     setPlaceUnitId,
     selectedUnitId,
+    newHeroAbilityTargetId,
+    setNewHeroAbilityTargetId,
+    zoroAttackTargetIds,
+    setZoroAttackTargetIds,
     legalMoveCoords,
     setMoveOptions,
     invadeTimeKeys,
@@ -354,14 +371,20 @@ export function createCellClickHandler(context: CellClickContext) {
     if (isChargedImpulseTargetChoice) {
       const key = coordKey({ col, row });
       if (!chargedImpulseTargetKeys.has(key) || !pendingRoll) return;
+      const pendingKind = String(pendingRoll.kind);
+      const choice = pendingKind === "donWindmillsRepositionChoice"
+        ? { type: "donWindmillsReposition", destination: { col, row } }
+        : pendingKind === "donSorrowfulMoveChoice"
+          ? { type: "donSorrowfulMove", destination: { col, row } }
+          : {
+              type: "chargedImpulseTarget",
+              position: { col, row },
+              axis: papyrusLineAxis,
+            };
       sendAction({
         type: "resolvePendingRoll",
         pendingRollId: pendingRoll.id,
-        choice: {
-          type: "chargedImpulseTarget",
-          position: { col, row },
-          axis: papyrusLineAxis,
-        },
+        choice,
       } as unknown as GameAction);
       return;
     }
@@ -670,6 +693,128 @@ export function createCellClickHandler(context: CellClickContext) {
 
     if (!selectedUnitId) return;
 
+    if (actionMode === "duolingoPush" || actionMode === "zoroOniGiri") {
+      if (!newHeroAbilityTargetId) {
+        const target = getUnitAt(view, col, row);
+        const source = view.units[selectedUnitId];
+        if (!target?.isAlive || !target.position || !source?.position) return;
+        if (actionMode === "zoroOniGiri") {
+          if (target.owner === source.owner) return;
+          const colDelta = Math.abs(target.position.col - source.position.col);
+          const rowDelta = Math.abs(target.position.row - source.position.row);
+          if (colDelta !== 0 && rowDelta !== 0 && colDelta !== rowDelta) return;
+          if (source.blindUntilOwnTurnStart && Math.max(colDelta, rowDelta) > 1) return;
+        }
+        setNewHeroAbilityTargetId(target.id);
+        return;
+      }
+      const source = view.units[selectedUnitId];
+      const target = view.units[newHeroAbilityTargetId];
+      if (!source?.position || !target?.position || getUnitAt(view, col, row)) return;
+      if (actionMode === "duolingoPush") {
+        if (
+          Math.max(
+            Math.abs(col - target.position.col),
+            Math.abs(row - target.position.row),
+          ) > 2
+        ) return;
+      } else {
+        const dc = Math.sign(target.position.col - source.position.col);
+        const dr = Math.sign(target.position.row - source.position.row);
+        const before = { col: target.position.col - dc, row: target.position.row - dr };
+        const behind = { col: target.position.col + dc, row: target.position.row + dr };
+        if (
+          (col !== before.col || row !== before.row) &&
+          (col !== behind.col || row !== behind.row)
+        ) return;
+      }
+      sendGameAction({
+        type: "useAbility",
+        unitId: selectedUnitId,
+        abilityId:
+          actionMode === "duolingoPush"
+            ? DUOLINGO_PUSH_NOTIFICATION_ID
+            : ZORO_ONI_GIRI_ID,
+        payload: { targetId: newHeroAbilityTargetId, destination: { col, row } },
+      });
+      setNewHeroAbilityTargetId(null);
+      setActionMode(null);
+      return;
+    }
+
+    if (
+      actionMode === "donWindmills" ||
+      actionMode === "jackHolyMother"
+    ) {
+      const target = getUnitAt(view, col, row);
+      const source = view.units[selectedUnitId];
+      if (!target?.isAlive || !target.position || !source?.position || target.owner === source.owner) return;
+      if (actionMode === "jackHolyMother" && !legalAttackTargets.includes(target.id)) return;
+      if (actionMode === "donWindmills") {
+        if (!target.heroId) return;
+        const colDelta = Math.abs(target.position.col - source.position.col);
+        const rowDelta = Math.abs(target.position.row - source.position.row);
+        if (colDelta !== 0 && rowDelta !== 0 && colDelta !== rowDelta) return;
+        if (source.blindUntilOwnTurnStart && Math.max(colDelta, rowDelta) > 1) return;
+      }
+      const abilityId =
+        actionMode === "donWindmills"
+              ? DON_WINDMILLS_ID
+              : JACK_HOLY_MOTHER_ID;
+      sendGameAction({
+        type: "useAbility",
+        unitId: selectedUnitId,
+        abilityId,
+        payload: { targetId: target.id },
+      });
+      setActionMode(null);
+      return;
+    }
+
+    if (
+      actionMode === "lucheLightRay" ||
+      actionMode === "donReaction" ||
+      actionMode === "jackTrap" ||
+      actionMode === "artemisMoonInsight" ||
+      actionMode === "artemisSilverSickle"
+    ) {
+      const source = view.units[selectedUnitId];
+      if (
+        source?.position &&
+        source.blindUntilOwnTurnStart &&
+        (actionMode === "lucheLightRay" ||
+          actionMode === "artemisMoonInsight" ||
+          actionMode === "artemisSilverSickle") &&
+        Math.max(Math.abs(col - source.position.col), Math.abs(row - source.position.row)) > 1
+      ) return;
+      const abilityId =
+        actionMode === "lucheLightRay"
+          ? LUCHE_DIVINE_RAY_ID
+          : actionMode === "donReaction"
+            ? DON_SORROWFUL_ID
+            : actionMode === "jackTrap"
+              ? JACK_SNARES_ID
+              : actionMode === "artemisMoonInsight"
+                ? ARTEMIS_MOON_INSIGHT_ID
+                : ARTEMIS_SILVER_SICKLE_ID;
+      const payloadKey =
+        actionMode === "donReaction"
+          ? "destination"
+          : actionMode === "jackTrap"
+            ? "position"
+            : actionMode === "artemisMoonInsight"
+              ? "center"
+              : "target";
+      sendGameAction({
+        type: "useAbility",
+        unitId: selectedUnitId,
+        abilityId,
+        payload: { [payloadKey]: { col, row } },
+      });
+      setActionMode(null);
+      return;
+    }
+
     if (actionMode === "move") {
       if (!isCoordInList(legalMoveCoords, col, row)) return;
       sendGameAction({
@@ -707,6 +852,12 @@ export function createCellClickHandler(context: CellClickContext) {
     }
 
     if (actionMode === "papyrusCoolGuy") {
+      const source = view.units[selectedUnitId];
+      if (
+        source?.position &&
+        source.blindUntilOwnTurnStart &&
+        Math.max(Math.abs(col - source.position.col), Math.abs(row - source.position.row)) > 1
+      ) return;
       sendGameAction({
         type: "useAbility",
         unitId: selectedUnitId,
@@ -847,6 +998,26 @@ export function createCellClickHandler(context: CellClickContext) {
           ? papyrusLongBoneAttackTargetIds
           : legalAttackTargets;
       if (!targetIds.includes(target.id)) return;
+      const attacker = view.units[selectedUnitId];
+      if (attacker?.heroId === "zoro") {
+        const firstTargetId = zoroAttackTargetIds[0];
+        if (!firstTargetId) {
+          setZoroAttackTargetIds([target.id]);
+          return;
+        }
+        const defenderIds =
+          firstTargetId === target.id
+            ? [target.id]
+            : [firstTargetId, target.id];
+        sendGameAction({
+          type: "attack",
+          attackerId: selectedUnitId,
+          defenderId: defenderIds[0],
+          defenderIds,
+        });
+        setZoroAttackTargetIds([]);
+        return;
+      }
       sendGameAction({
         type: "attack",
         attackerId: selectedUnitId,

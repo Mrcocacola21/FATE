@@ -2,7 +2,24 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { HERO_CATALOG as RULE_HERO_CATALOG, makeEmptyTurnEconomy } from "rules";
 import type { UnitState } from "rules";
-import { ASSETS, getUnitFigureAsset, getUnitTokenAsset, getUnitVisualVariant } from "./registry";
+import { HERO_CATALOG as FIGURE_SET_HERO_CATALOG } from "../catalog/figures";
+import {
+  ASSETS,
+  getHeroVisualVariants,
+  getUnitFigureAsset,
+  getUnitTokenAsset,
+  getUnitVisualVariant,
+} from "./registry";
+
+const NEW_HERO_IDS = [
+  "duolingo",
+  "luche",
+  "kaneki",
+  "zoro",
+  "donKihote",
+  "jackRipper",
+  "artemida",
+] as const;
 
 function makeUnit(overrides: Partial<UnitState> = {}): UnitState {
   return {
@@ -30,6 +47,23 @@ function makeUnit(overrides: Partial<UnitState> = {}): UnitState {
 test("asset registry contains every rules hero id", () => {
   for (const hero of RULE_HERO_CATALOG) {
     assert.ok(ASSETS[hero.id], `missing asset registry entry for ${hero.id}`);
+  }
+});
+
+test("new playable heroes use real figure and token art in every base registry", () => {
+  const figureSetIds = new Set(FIGURE_SET_HERO_CATALOG.map((hero) => hero.id));
+  for (const heroId of NEW_HERO_IDS) {
+    assert.ok(figureSetIds.has(heroId), `${heroId} is missing from the Figure Set catalog`);
+    assert.equal(
+      getUnitFigureAsset(makeUnit({ heroId, figureId: heroId })).isFallback,
+      false,
+      `${heroId} still uses fallback figure art`,
+    );
+    assert.equal(
+      getUnitTokenAsset(makeUnit({ heroId, figureId: heroId })).isFallback,
+      false,
+      `${heroId} still uses fallback token art`,
+    );
   }
 });
 
@@ -64,10 +98,34 @@ test("visible persistent form state resolves matching token variants", () => {
     ).id,
     "undyne-undying",
   );
+  assert.equal(
+    getUnitTokenAsset(makeUnit({ heroId: "duolingo", duolingoBerserkerUnlocked: true })).id,
+    "duolingo-berserker",
+  );
+  assert.equal(
+    getUnitTokenAsset(makeUnit({ heroId: "kaneki", kanekiCentipedeUnlocked: true })).id,
+    "kaneki-centipede",
+  );
+  assert.equal(
+    getUnitFigureAsset(makeUnit({ heroId: "duolingo", duolingoBerserkerUnlocked: true })).id,
+    "duolingo-berserker",
+  );
+  assert.equal(
+    getUnitFigureAsset(makeUnit({ heroId: "kaneki", kanekiCentipedeUnlocked: true })).id,
+    "kaneki-centipede",
+  );
+  assert.deepEqual(
+    getHeroVisualVariants("duolingo").map((variant) => variant.id),
+    ["duolingo-berserker"],
+  );
+  assert.deepEqual(
+    getHeroVisualVariants("kaneki").map((variant) => variant.id),
+    ["kaneki-centipede"],
+  );
 });
 
 test("missing optional art falls back safely", () => {
-  const asset = getUnitTokenAsset(makeUnit({ heroId: "kaneki", figureId: "kaneki" }));
+  const asset = getUnitTokenAsset(makeUnit({ heroId: "unknownHero", figureId: "unknownHero" }));
   assert.equal(asset.isFallback, true);
 });
 

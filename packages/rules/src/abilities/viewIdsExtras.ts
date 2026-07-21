@@ -16,6 +16,7 @@ export function appendLegacyHeroAbilityIds(
 ): void {
   if (unit.heroId === HERO_DUOLINGO_ID) {
     abilityIds.push(
+      ids.ABILITY_DUOLINGO_LONG_LIVED,
       ids.ABILITY_DUOLINGO_STRICK,
       ids.ABILITY_DUOLINGO_PUSH_NOTIFICATION,
       ids.ABILITY_DUOLINGO_SKIP_CLASSES,
@@ -24,6 +25,7 @@ export function appendLegacyHeroAbilityIds(
   }
   if (unit.heroId === HERO_LUCHE_ID) {
     abilityIds.push(
+      ids.ABILITY_LUCHE_LONG_LIVED,
       ids.ABILITY_LUCHE_SUN_GLORY,
       ids.ABILITY_LUCHE_SHINE,
       ids.ABILITY_LUCHE_DIVINE_RAY,
@@ -32,13 +34,16 @@ export function appendLegacyHeroAbilityIds(
   }
   if (unit.heroId === HERO_KANEKI_ID) {
     abilityIds.push(
+      ids.ABILITY_KANEKI_GHOUL,
       ids.ABILITY_KANEKI_RINKAKU_KAGUNE,
       ids.ABILITY_KANEKI_RC_CELLS,
+      ids.ABILITY_KANEKI_REGENERATION,
       ids.ABILITY_KANEKI_SCOLOPENDRA
     );
   }
   if (unit.heroId === HERO_ZORO_ID) {
     abilityIds.push(
+      ids.ABILITY_ZORO_CHEATED_DEATH,
       ids.ABILITY_ZORO_DETERMINATION,
       ids.ABILITY_ZORO_ONI_GIRI,
       ids.ABILITY_ZORO_3_SWORD_STYLE,
@@ -47,6 +52,7 @@ export function appendLegacyHeroAbilityIds(
   }
   if (unit.heroId === HERO_DON_KIHOTE_ID) {
     abilityIds.push(
+      ids.ABILITY_DON_KIHOTE_HARDY,
       ids.ABILITY_DON_KIHOTE_SORROWFUL_COUNTENANCE,
       ids.ABILITY_DON_KIHOTE_WINDMILLS,
       ids.ABILITY_DON_KIHOTE_MADNESS,
@@ -55,6 +61,7 @@ export function appendLegacyHeroAbilityIds(
   }
   if (unit.heroId === HERO_JACK_RIPPER_ID) {
     abilityIds.push(
+      ids.ABILITY_JACK_RIPPER_RESILIENT,
       ids.ABILITY_JACK_RIPPER_SURGERY,
       ids.ABILITY_JACK_RIPPER_SNARES,
       ids.ABILITY_JACK_RIPPER_DISMEMBERMENT,
@@ -63,10 +70,12 @@ export function appendLegacyHeroAbilityIds(
   }
   if (unit.heroId === HERO_ARTEMIDA_ID) {
     abilityIds.push(
+      ids.ABILITY_ARTEMIDA_GOD,
       ids.ABILITY_ARTEMIDA_ACCURATE_ARROW,
       ids.ABILITY_ARTEMIDA_MOONLIGHT_SHINE,
       ids.ABILITY_ARTEMIDA_SILVER_CRESCENT,
-      ids.ABILITY_ARTEMIDA_NATURE_MOVEMENT
+      ids.ABILITY_ARTEMIDA_NATURE_MOVEMENT,
+      ids.ABILITY_ARTEMIDA_STEALTH
     );
   }
 }

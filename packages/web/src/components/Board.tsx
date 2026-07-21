@@ -153,6 +153,7 @@ const PREVIEW_KIND_ORDER: PreviewCellKind[] = [
 ];
 
 const FOREST_MARKER_ASSET = getBoardMarkerAsset("lechy_forest");
+const JACK_TRAP_MARKER_ASSET = getBoardMarkerAsset("jack_trap");
 const STAKE_MARKER_ASSET = getBoardMarkerAsset("vlad_stake");
 
 function orderedPreviewKinds(state: PreviewCellState | undefined): PreviewCellKind[] {
@@ -329,6 +330,7 @@ export const Board: FC<BoardProps> = ({
   >();
   const lastKnownByPos = new Map<string, number>();
   const stakeMarkersByPos = new Map<string, boolean>();
+  const jackTrapKeys = new Set<string>();
   const viewHighlights: Record<
     string,
     | "place"
@@ -396,6 +398,9 @@ export const Board: FC<BoardProps> = ({
     const key = coordKey(viewPos);
     const existing = stakeMarkersByPos.get(key) ?? false;
     stakeMarkersByPos.set(key, existing || marker.isRevealed);
+  }
+  for (const trap of view.jackTraps ?? []) {
+    jackTrapKeys.add(coordKey(toViewCoord(trap.position)));
   }
   for (const [key, kind] of Object.entries(highlightedCells)) {
     const [colRaw, rowRaw] = key.split(",");
@@ -787,6 +792,18 @@ export const Board: FC<BoardProps> = ({
               data-board-marker={stakeMarkersByPos.get(key) ? "vlad_stake" : "vlad_stake_hidden"}
             >
               <img src={STAKE_MARKER_ASSET} alt="" draggable={false} />
+            </div>
+          )}
+          {jackTrapKeys.has(key) && (
+            <div
+              className="board-marker-icon board-marker-icon--jack-trap pointer-events-none absolute left-1/2 top-1/2 z-20 flex items-center justify-center"
+              style={{ width: Math.round(cellSize * 0.62), height: Math.round(cellSize * 0.62) }}
+              role="img"
+              aria-label={t("board.jackTrap")}
+              title={t("board.jackTrap")}
+              data-board-marker="jack_trap"
+            >
+              <img src={JACK_TRAP_MARKER_ASSET} alt="" draggable={false} />
             </div>
           )}
           {content}

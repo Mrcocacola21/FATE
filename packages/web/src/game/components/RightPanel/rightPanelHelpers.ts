@@ -35,6 +35,20 @@ import {
   TRICKSTER_AOE_ID,
   UNDYNE_ENERGY_SPEAR_ID,
   UNDYNE_SPEAR_THROW_ID,
+  DUOLINGO_PUSH_NOTIFICATION_ID,
+  LUCHE_DIVINE_RAY_ID,
+  ZORO_ONI_GIRI_ID,
+  DON_SORROWFUL_ID,
+  DON_WINDMILLS_ID,
+  JACK_SNARES_ID,
+  JACK_HOLY_MOTHER_ID,
+  ARTEMIS_MOON_INSIGHT_ID,
+  ARTEMIS_SILVER_SICKLE_ID,
+  LUCHE_BURNING_SUN_ID,
+  KANEKI_REGENERATION_ID,
+  KANEKI_CENTIPEDE_ID,
+  ZORO_ASURA_ID,
+  DON_MAD_DELUSION_ID,
 } from "../../../rulesHints";
 import type { ActionPreviewMode } from "../../../store";
 import type { Translate } from "../../../i18n";
@@ -55,6 +69,8 @@ const NON_ACTIONABLE_ABILITY_IDS = new Set<string>([
   GRIFFITH_FEMTO_REBIRTH_ID,
   METTATON_EX_ID,
   METTATON_NEO_ID,
+  KANEKI_CENTIPEDE_ID,
+  DON_MAD_DELUSION_ID,
 ]);
 
 export function classBadge(unitClass: string): { label: string; marker?: string } {
@@ -146,7 +162,8 @@ export function formatChargeLabel(
 export function isActionableAbility(ability: AbilityView): boolean {
   return (
     ability.kind !== "passive" &&
-    ability.kind !== "impulse" &&
+    (ability.kind !== "impulse" ||
+      ability.id === LUCHE_DIVINE_RAY_ID) &&
     !NON_ACTIONABLE_ABILITY_IDS.has(ability.id)
   );
 }
@@ -175,6 +192,15 @@ export function abilityActionMode(
   if (abilityId === UNDYNE_ENERGY_SPEAR_ID) return "undyneEnergySpear";
   if (abilityId === METTATON_POPPINS_ID) return "mettatonPoppins";
   if (abilityId === METTATON_LASER_ID) return "mettatonLaser";
+  if (abilityId === DUOLINGO_PUSH_NOTIFICATION_ID) return "duolingoPush";
+  if (abilityId === LUCHE_DIVINE_RAY_ID) return "lucheLightRay";
+  if (abilityId === ZORO_ONI_GIRI_ID) return "zoroOniGiri";
+  if (abilityId === DON_SORROWFUL_ID) return "donReaction";
+  if (abilityId === DON_WINDMILLS_ID) return "donWindmills";
+  if (abilityId === JACK_SNARES_ID) return "jackTrap";
+  if (abilityId === JACK_HOLY_MOTHER_ID) return "jackHolyMother";
+  if (abilityId === ARTEMIS_MOON_INSIGHT_ID) return "artemisMoonInsight";
+  if (abilityId === ARTEMIS_SILVER_SICKLE_ID) return "artemisSilverSickle";
   return null;
 }
 
@@ -187,7 +213,11 @@ export function shouldHoverAbilityInActionList(abilityId: string): boolean {
     abilityId === RIVER_PERSON_BOAT_ID ||
     abilityId === RIVER_PERSON_BOATMAN_ID ||
     abilityId === RIVER_PERSON_TRA_LA_LA_ID ||
-    abilityId === GENGHIS_KHAN_KHANS_DECREE_ID
+    abilityId === GENGHIS_KHAN_KHANS_DECREE_ID ||
+    abilityId === LUCHE_BURNING_SUN_ID ||
+    abilityId === KANEKI_REGENERATION_ID ||
+    abilityId === ZORO_ASURA_ID ||
+    abilityId === ARTEMIS_SILVER_SICKLE_ID
   );
 }
 

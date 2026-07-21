@@ -1,6 +1,6 @@
-import type { FC } from "react";
+import { useEffect, useState, type FC } from "react";
 import type { AbilityView, PlayerView, UnitState } from "rules";
-import { FALSE_TRAIL_TOKEN_ID, KAISER_DORA_ID, LOKI_LAUGHT_ID } from "../../../../rulesHints";
+import { FALSE_TRAIL_TOKEN_ID, KAISER_DORA_ID, KANEKI_REGENERATION_ID, LOKI_LAUGHT_ID, LUCHE_DIVINE_RAY_ID, ZORO_ONI_GIRI_ID, getMaxHp } from "../../../../rulesHints";
 import type { ActionMode, ActionPreviewMode, LokiLaughtOption } from "../../../../store";
 import {
   abilityActionMode,
@@ -132,7 +132,7 @@ interface BattleAbilityActionsProps {
   actionMode: ActionMode;
   targetingActive: boolean;
   lokiLaughtOptionQueued?: boolean;
-  onUseAbility: (abilityId: string) => void;
+  onUseAbility: (abilityId: string, payload?: Record<string, unknown>) => void;
   onUseLokiLaughtOption: (option: LokiLaughtOption) => void;
   onToggleMode: (mode: ActionPreviewMode) => void;
   onModePreview: (mode: ActionPreviewMode | null) => void;
@@ -155,6 +155,19 @@ export const BattleAbilityActions: FC<BattleAbilityActionsProps> = ({
   onHoverAbility,
 }) => {
   const { language, t } = useI18n();
+  const regenerationMax = selectedUnit?.heroId === "kaneki"
+    ? Math.max(
+        0,
+        Math.min(
+          selectedUnit.charges?.kanekiRcCells ?? 0,
+          getMaxHp(selectedUnit.class, selectedUnit.heroId) - selectedUnit.hp,
+        ),
+      )
+    : 0;
+  const [regenerationAmount, setRegenerationAmount] = useState(1);
+  useEffect(() => {
+    setRegenerationAmount((current) => Math.max(1, Math.min(current, Math.max(1, regenerationMax))));
+  }, [regenerationMax, selectedUnit?.id]);
   if (!selectedUnit || actionableAbilities.length === 0) {
     return null;
   }
@@ -165,6 +178,48 @@ export const BattleAbilityActions: FC<BattleAbilityActionsProps> = ({
         {t("game.abilityActions")}
       </div>
       {actionableAbilities.map((ability) => {
+        if (ability.id === KANEKI_REGENERATION_ID) {
+          const disabled =
+            targetingActive ||
+            !canAct ||
+            economy.actionUsed ||
+            !ability.isAvailable ||
+            regenerationMax < 1;
+          const amount = Math.max(1, Math.min(regenerationAmount, Math.max(1, regenerationMax)));
+          return (
+            <div key={ability.id} className="col-span-2 space-y-2 rounded-lg border border-emerald-300 bg-emerald-50 p-2 dark:border-emerald-900 dark:bg-emerald-950/30" data-kaneki-regeneration>
+              <div className="text-xs font-bold text-emerald-900 dark:text-emerald-100">
+                {getAbilityDisplay(ability.id, ability.name, ability.description, language).name}
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <button type="button" className="rounded bg-slate-200 px-3 py-1 font-bold dark:bg-slate-800" onClick={() => setRegenerationAmount((value) => Math.max(1, value - 1))} disabled={disabled || amount <= 1} aria-label={t("common.decrease")}>−</button>
+                <span className="text-xs font-semibold" data-regeneration-amount={amount}>
+                  {language === "uk"
+                    ? `Витратити ${amount} RC-клітин, щоб відновити ${amount} здоров’я`
+                    : `Spend ${amount} RC Cells to heal ${amount} HP`}
+                </span>
+                <button type="button" className="rounded bg-slate-200 px-3 py-1 font-bold dark:bg-slate-800" onClick={() => setRegenerationAmount((value) => Math.min(regenerationMax, value + 1))} disabled={disabled || amount >= regenerationMax} aria-label={t("common.increase")}>+</button>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  className="rounded-lg border border-slate-300 px-3 py-2 text-xs font-bold dark:border-slate-700"
+                  onClick={() => setRegenerationAmount(1)}
+                >
+                  {t("common.cancel")}
+                </button>
+                <button
+                  type="button"
+                  className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white disabled:bg-slate-300 disabled:text-slate-500 dark:disabled:bg-slate-800"
+                  disabled={disabled}
+                  onClick={() => onUseAbility(ability.id, { amount })}
+                >
+                  {t("common.confirm")}
+                </button>
+              </div>
+            </div>
+          );
+        }
         if (ability.id === LOKI_LAUGHT_ID) {
           const chargeState = getAbilityChargeState(ability.id, selectedUnit, ability);
           const disabledByAvailability = !ability.isAvailable;
@@ -272,7 +327,13 @@ export const BattleAbilityActions: FC<BattleAbilityActionsProps> = ({
           chargeWarning ||
           "";
         const display = getAbilityDisplay(ability.id, ability.name, ability.description, language);
-        const label = `${display.name}${chargeLabel ? ` (${chargeLabel})` : ""}`;
+        const paidVariantName =
+          ability.id === LUCHE_DIVINE_RAY_ID
+            ? `${display.name} — ${language === "uk" ? "витратити Сонце" : "spend Sun"}`
+            : ability.id === ZORO_ONI_GIRI_ID
+              ? `${display.name} — ${language === "uk" ? "Рішучість + Дія + Рух" : "Determination + Action + Move"}`
+              : display.name;
+        const label = `${paidVariantName}${chargeLabel ? ` (${chargeLabel})` : ""}`;
         const mode = abilityActionMode(ability.id);
         const hoverable = shouldHoverAbilityInActionList(ability.id);
         const details = getAbilityDisplayDetails(ability.id);

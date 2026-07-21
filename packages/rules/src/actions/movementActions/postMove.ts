@@ -34,7 +34,6 @@ export function maybeRequestRiderPathAttacks(
   const auraSource =
     getPolkovodetsSource(originalState, unit.id, from) ??
     getPolkovodetsSource(originalState, unit.id, finalTo);
-  const damageBonus = auraSource ? 1 : 0;
   const targetIds = collectRiderPathTargets(originalState, unit, from, finalTo);
   if (targetIds.length === 0) {
     return null;
@@ -45,7 +44,6 @@ export function maybeRequestRiderPathAttacks(
     defenderId,
     ignoreRange: true,
     ignoreStealth: true,
-    damageBonus: damageBonus > 0 ? damageBonus : undefined,
     damageBonusSourceId: auraSource ?? undefined,
     kind: "riderPath" as const,
   }));
@@ -60,7 +58,6 @@ export function maybeRequestRiderPathAttacks(
     defenderId: queue[0].defenderId,
     ignoreRange: true,
     ignoreStealth: true,
-    damageBonus: damageBonus > 0 ? damageBonus : undefined,
     damageBonusSourceId: auraSource ?? undefined,
     consumeSlots: false,
     queueKind: "riderPath",

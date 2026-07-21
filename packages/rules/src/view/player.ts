@@ -114,6 +114,9 @@ export function makePlayerView(
 
   return {
     ...baseState,
+    jackTraps: (state.jackTraps ?? [])
+      .filter((trap) => trap.owner === playerId || trap.isRevealed === true)
+      .map((trap) => ({ ...trap, position: { ...trap.position } })),
     units,
     knowledge,
     lastKnownPositions,

@@ -286,7 +286,8 @@ export function resolveHeroPendingRollCase(
       return resolveChargedImpulseTargetChoice(
         state,
         pending,
-        action.choice
+        action.choice,
+        rng
       );
     case "vladIntimidateChoice":
       return resolveVladIntimidateChoice(state, pending, action.choice, rng);

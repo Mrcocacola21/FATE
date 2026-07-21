@@ -9,6 +9,7 @@ import {
 } from "../abilities";
 import {
   HERO_FEMTO_ID,
+  HERO_DUOLINGO_ID,
   HERO_ODIN_ID,
   HERO_PAPYRUS_ID,
 } from "../heroes";
@@ -39,6 +40,7 @@ export function tryResolveAutoDefense(
     wantsBerserkAutoDefense &&
     (defenderAfter.class === "berserker" ||
       defenderAfter.heroId === HERO_FEMTO_ID ||
+      (defenderAfter.heroId === HERO_DUOLINGO_ID && defenderAfter.duolingoBerserkerUnlocked) ||
       (defenderAfter.heroId === HERO_PAPYRUS_ID &&
         defenderAfter.papyrusUnbelieverActive) ||
       hasMettatonBerserkerFeature(defenderAfter))

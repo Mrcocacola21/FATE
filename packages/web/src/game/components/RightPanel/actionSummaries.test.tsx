@@ -4,13 +4,20 @@ import { renderToStaticMarkup } from "react-dom/server";
 import type { AbilityView, PlayerView, UnitState } from "rules";
 import { setLanguage, translate } from "../../../i18n";
 import {
+  ARTEMIS_MOON_INSIGHT_ID,
+  DON_SORROWFUL_ID,
   GRIFFITH_FEMTO_REBIRTH_ID,
   GUTS_CANNON_ID,
+  JACK_SNARES_ID,
+  KANEKI_REGENERATION_ID,
   LOKI_LAUGHT_ID,
+  LUCHE_DIVINE_RAY_ID,
   METTATON_EX_ID,
   METTATON_NEO_ID,
   RIVER_PERSON_BOAT_ID,
+  getMaxHp,
 } from "../../../rulesHints";
+import { createCellClickHandler } from "../../gameshell-content/cellHandlers";
 import { CurrentTaskPanel } from "../../gameshell-content/components/CurrentTaskPanel";
 import { BattleUnitSummary } from "./sections/BattleUnitSummary";
 import { BattleAbilityActions } from "./sections/BattleAbilityActions";
@@ -583,6 +590,174 @@ test("new action UI i18n keys exist in English and Ukrainian", () => {
     }
   }
   setLanguage("en", { setItem: () => undefined });
+});
+
+test("new-batch passive and start-turn impulse abilities are not normal action buttons", () => {
+  for (const id of [ARTEMIS_MOON_INSIGHT_ID, DON_SORROWFUL_ID, JACK_SNARES_ID]) {
+    assert.equal(
+      isActionableAbility(makeAbility({
+        id,
+        kind: id === DON_SORROWFUL_ID ? "passive" : "impulse",
+      })),
+      false,
+      `${id} must not render as a manual action`,
+    );
+  }
+
+  assert.equal(
+    isActionableAbility(makeAbility({
+      id: LUCHE_DIVINE_RAY_ID,
+      kind: "impulse",
+      slot: "action",
+      isAvailable: true,
+    })),
+    true,
+    "Light Ray keeps only its paid Action/Sun variant",
+  );
+});
+
+test("Kaneki Regeneration renders a confirmed partial-RC selector", () => {
+  setLanguage("en", { setItem: () => undefined });
+  const kaneki = makeUnit({
+    id: "P1-berserker-kaneki",
+    class: "berserker",
+    heroId: "kaneki",
+    hp: 7,
+    charges: { kanekiRcCells: 4 },
+  });
+  const markup = renderToStaticMarkup(
+    <BattleAbilityActions
+      view={makeView(kaneki)}
+      actionableAbilities={[makeAbility({
+        id: KANEKI_REGENERATION_ID,
+        name: "Regeneration",
+        currentCharges: 4,
+        chargeRequired: 1,
+      })]}
+      selectedUnit={kaneki}
+      canAct={true}
+      economy={kaneki.turn}
+      actionMode={null}
+      targetingActive={false}
+      onUseAbility={() => undefined}
+      onUseLokiLaughtOption={() => undefined}
+      onToggleMode={() => undefined}
+      onModePreview={() => undefined}
+      onHoverAbility={() => undefined}
+    />,
+  );
+
+  assert.match(markup, /Spend 1 RC Cells to heal 1 HP/);
+  assert.match(markup, /Confirm/);
+  assert.match(markup, /data-regeneration-amount="1"/);
+});
+
+test("new-batch HP passives are reflected by every web HP bar", () => {
+  const cases = [
+    ["duolingo", "trickster", 2],
+    ["luche", "spearman", 2],
+    ["kaneki", "berserker", 2],
+    ["zoro", "knight", 2],
+    ["donKihote", "rider", 1],
+    ["jackRipper", "assassin", 1],
+    ["artemida", "archer", 5],
+  ] as const;
+
+  for (const [heroId, unitClass, bonus] of cases) {
+    const ordinary = makeUnit({ class: unitClass, heroId: undefined });
+    const hero = makeUnit({ class: unitClass, heroId });
+    assert.equal(
+      getMaxHp(hero.class, hero.heroId),
+      getMaxHp(ordinary.class, ordinary.heroId) + bonus,
+      heroId,
+    );
+  }
+  assert.equal(getMaxHp("archer", "artemida"), 10);
+});
+
+test("Duolingo Push Notification keeps local intent and submits the clicked destination", () => {
+  const duolingo = makeUnit({
+    id: "P1-trickster-duolingo",
+    class: "trickster",
+    heroId: "duolingo",
+    position: { col: 1, row: 1 },
+  });
+  const creature = makeUnit({
+    id: "P2-knight-target",
+    owner: "P2",
+    class: "knight",
+    heroId: undefined,
+    position: { col: 3, row: 3 },
+  });
+  const view = {
+    ...makeView(duolingo),
+    units: { [duolingo.id]: duolingo, [creature.id]: creature },
+  };
+  let selectedTarget: string | null = null;
+  let sent: unknown = null;
+  const common = {
+    view,
+    playerId: "P1",
+    joined: true,
+    isSpectator: false,
+    hasBlockingRoll: false,
+    boardSelectionPending: false,
+    actionMode: "duolingoPush",
+    selectedUnitId: duolingo.id,
+    newHeroAbilityTargetId: null,
+    setNewHeroAbilityTargetId: (id: string | null) => { selectedTarget = id; },
+    sendGameAction: (action: unknown) => { sent = action; },
+    setActionMode: () => undefined,
+    legalPlacementCoords: [],
+    sendAction: () => undefined,
+  };
+
+  createCellClickHandler(common as never)(3, 3);
+  assert.equal(selectedTarget, creature.id);
+
+  createCellClickHandler({ ...common, newHeroAbilityTargetId: creature.id } as never)(4, 3);
+  assert.deepEqual(sent, {
+    type: "useAbility",
+    unitId: duolingo.id,
+    abilityId: "duolingoPushNotification",
+    payload: { targetId: creature.id, destination: { col: 4, row: 3 } },
+  });
+});
+
+test("Don board pending choices route cell clicks to the server", () => {
+  const don = makeUnit({
+    id: "P1-rider-don",
+    class: "rider",
+    heroId: "donKihote",
+    position: { col: 2, row: 2 },
+  });
+  let sent: unknown = null;
+  createCellClickHandler({
+    view: makeView(don),
+    playerId: "P1",
+    joined: true,
+    isSpectator: false,
+    hasBlockingRoll: true,
+    boardSelectionPending: true,
+    isChargedImpulseTargetChoice: true,
+    chargedImpulseTargetKeys: new Set(["3,2"]),
+    pendingRoll: {
+      id: "pending-don-move",
+      kind: "donSorrowfulMoveChoice",
+      playerId: "P1",
+      context: {},
+    },
+    actionMode: null,
+    selectedUnitId: don.id,
+    sendAction: (action: unknown) => { sent = action; },
+    sendGameAction: () => undefined,
+  } as never)(3, 2);
+
+  assert.deepEqual(sent, {
+    type: "resolvePendingRoll",
+    pendingRollId: "pending-don-move",
+    choice: { type: "donSorrowfulMove", destination: { col: 3, row: 2 } },
+  });
 });
 
 test("Loki Laughter renders separate option buttons with costs and availability", () => {

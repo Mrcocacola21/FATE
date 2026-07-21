@@ -37,7 +37,9 @@ export function getMovementActionsRemaining(unit: UnitState): number {
   const boatmanMoves = getRiverBoatmanExtraMoves(unit);
   const flexibleMove =
     unit.courtExtraFlexibleAction && !unit.courtExtraFlexibleAction.used ? 1 : 0;
-  return normalMove + boatmanMoves + flexibleMove;
+  const centipedeActionMove =
+    unit.kanekiCentipedeUnlocked && !turn.actionUsed ? 1 : 0;
+  return normalMove + boatmanMoves + flexibleMove + centipedeActionMove;
 }
 
 /** Adds move-only uses without reopening or replacing the normal move slot. */
@@ -122,15 +124,23 @@ export function spendSlots(
     isMoveOnlyCost(costs) &&
     before.moveUsed &&
     getRiverBoatmanExtraMoves(unit) > 0;
+  const shouldUseCentipedeAction =
+    isMoveOnlyCost(costs) &&
+    before.moveUsed &&
+    !shouldUseRiverExtraMove &&
+    unit.kanekiCentipedeUnlocked === true &&
+    !before.actionUsed;
   const shouldUseExtra =
     !!extra &&
     !extra.used &&
     actionType &&
     !shouldUseRiverExtraMove &&
+    !shouldUseCentipedeAction &&
     ((costs.move && before.moveUsed) ||
       (costs.stealth && before.stealthUsed) ||
       ((costs.action || costs.attack) && before.actionUsed));
   if (costs.move) turn.moveUsed = true;
+  if (shouldUseCentipedeAction) turn.actionUsed = true;
   if (costs.attack) turn.attackUsed = true;
   if (costs.action) turn.actionUsed = true;
   if (costs.stealth) turn.stealthUsed = true;

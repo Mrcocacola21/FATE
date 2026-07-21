@@ -74,6 +74,9 @@ export function advanceCombatQueue(
     rangedAttack: nextEntry.rangedAttack,
     damageOverride: nextEntry.damageOverride,
     ignoreBonuses: nextEntry.ignoreBonuses,
+    allowFriendlyTarget: nextEntry.allowFriendlyTarget,
+    blindOnHit: nextEntry.blindOnHit,
+    sourceAbilityId: nextEntry.sourceAbilityId,
     consumeSlots: nextEntry.consumeSlots ?? false,
     queueKind: nextEntry.kind,
   });
