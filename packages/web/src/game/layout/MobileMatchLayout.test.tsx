@@ -5,11 +5,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { BottomNav } from "../../ui/BottomNav";
 import { ResponsiveMatchLayout } from "../../layout/ResponsiveMatchLayout";
 import { DesktopMatchScaffold, MobileBattleScaffold } from "./MatchScaffolds";
-import {
-  hasMobileMatchStarted,
-  resetMobilePanel,
-  toggleMobilePanel,
-} from "./mobilePanelState";
+import { hasMobileMatchStarted, resetMobilePanel, toggleMobilePanel } from "./mobilePanelState";
 
 function findByPanel(node: ReactNode, panel: string): ReactElement | null {
   if (!isValidElement(node)) return null;
@@ -64,16 +60,25 @@ test("starting a match resets stale mobile panel state", () => {
 });
 
 test("an initiative pending roll exits the mobile room lobby before phase changes", () => {
-  assert.equal(hasMobileMatchStarted("lobby", null), false);
+  const lobbyView = {
+    phase: "lobby",
+    pendingRoll: null,
+    initiative: { P1: null, P2: null, winner: null },
+  } as any;
+  assert.equal(hasMobileMatchStarted(lobbyView, null), false);
   assert.equal(
-    hasMobileMatchStarted("lobby", {
+    hasMobileMatchStarted(lobbyView, {
       id: "initiative-p1",
       kind: "initiativeRoll",
       player: "P1",
     }),
     true,
   );
-  assert.equal(hasMobileMatchStarted("placement", null), true);
+  assert.equal(hasMobileMatchStarted({ ...lobbyView, phase: "placement" }, null), true);
+  assert.equal(
+    hasMobileMatchStarted({ ...lobbyView, initiative: { P1: 11, P2: null, winner: null } }, null),
+    true,
+  );
 });
 
 function renderMatchSwitchAt(width: number) {

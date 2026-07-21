@@ -16,11 +16,7 @@ function collectMessages(ws: WebSocket) {
   return queue;
 }
 
-function waitForType(
-  queue: unknown[],
-  type: string,
-  timeoutMs = 2000
-): Promise<unknown> {
+function waitForType(queue: unknown[], type: string, timeoutMs = 2000): Promise<unknown> {
   return new Promise((resolve, reject) => {
     const start = Date.now();
     const tick = () => {
@@ -41,14 +37,14 @@ function waitForType(
 
 function waitForRoomState(
   queue: unknown[],
-  predicate: (msg: { type?: string; meta?: any }) => boolean,
-  timeoutMs = 2000
+  predicate: (msg: { type?: string; meta?: any; view?: any; you?: any }) => boolean,
+  timeoutMs = 2000,
 ): Promise<unknown> {
   return new Promise((resolve, reject) => {
     const start = Date.now();
     const tick = () => {
       const msg = queue.find((item) => {
-        const payload = item as { type?: string; meta?: any };
+        const payload = item as { type?: string; meta?: any; view?: any; you?: any };
         return payload.type === "roomState" && predicate(payload);
       });
       if (msg) {
@@ -68,7 +64,7 @@ function waitForRoomState(
 function waitForError(
   queue: unknown[],
   predicate: (msg: { type?: string; message?: string; code?: string }) => boolean,
-  timeoutMs = 2000
+  timeoutMs = 2000,
 ): Promise<unknown> {
   return new Promise((resolve, reject) => {
     const start = Date.now();
@@ -92,10 +88,7 @@ function waitForError(
 }
 
 function openSocket(wsUrl: string, origin?: string): Promise<WebSocket> {
-  const ws = new WebSocket(
-    wsUrl,
-    origin ? { headers: { Origin: origin } } : undefined
-  );
+  const ws = new WebSocket(wsUrl, origin ? { headers: { Origin: origin } } : undefined);
   return new Promise((resolve, reject) => {
     ws.once("open", () => resolve(ws));
     ws.once("error", (err) => reject(err));
@@ -132,15 +125,12 @@ async function main() {
   const allowedOriginSocket = await openSocket(wsUrl, "http://localhost:5173");
   allowedOriginSocket.close();
 
-  const disallowedOriginSocket = await openSocket(
-    wsUrl,
-    "https://evil.example"
-  );
+  const disallowedOriginSocket = await openSocket(wsUrl, "https://evil.example");
   const disallowedCloseCode = await waitForClose(disallowedOriginSocket);
   assert.equal(
     disallowedCloseCode,
     1008,
-    "disallowed WS Origin should be rejected with policy violation"
+    "disallowed WS Origin should be rejected with policy violation",
   );
 
   let ws1 = new WebSocket(wsUrl);
@@ -164,7 +154,7 @@ async function main() {
     JSON.stringify({
       type: "resolvePendingRoll",
       pendingRollId: 123,
-    })
+    }),
   );
 
   await waitForError(queue1, (msg) => msg.message === "Invalid message payload");
@@ -174,7 +164,7 @@ async function main() {
       type: "joinRoom",
       mode: "create",
       role: "P1",
-    })
+    }),
   );
 
   const joinAck = (await waitForType(queue1, "joinAck")) as {
@@ -196,7 +186,7 @@ async function main() {
       mode: "join",
       roomId,
       role: "P2",
-    })
+    }),
   );
 
   await waitForType(queue2, "joinAck");
@@ -205,15 +195,14 @@ async function main() {
   ws1.send(JSON.stringify({ type: "switchRole", role: "invalid_role" }));
   await waitForError(
     queue1,
-    (msg) =>
-      msg.message === "Invalid message payload" && msg.code === "INVALID_PAYLOAD"
+    (msg) => msg.message === "Invalid message payload" && msg.code === "INVALID_PAYLOAD",
   );
 
   ws1.send(
     JSON.stringify({
       type: "switchRole",
       role: "P2",
-    })
+    }),
   );
   await waitForError(queue1, (msg) => msg.code === "role_taken");
 
@@ -232,7 +221,7 @@ async function main() {
       mode: "join",
       roomId,
       role: "P1",
-    })
+    }),
   );
   const rejected = (await waitForType(queue3, "joinRejected")) as {
     type: string;
@@ -240,7 +229,7 @@ async function main() {
   };
   assert(
     rejected.reason === "role_taken",
-    "seat should remain reserved during reconnect grace window"
+    "seat should remain reserved during reconnect grace window",
   );
   ws3.close();
 
@@ -257,7 +246,7 @@ async function main() {
       roomId,
       role: "P1",
       resumeToken,
-    })
+    }),
   );
   const rejoinAck = (await waitForType(queue1, "joinAck")) as {
     type: string;
@@ -281,7 +270,7 @@ async function main() {
       type: "resolvePendingRoll",
       pendingRollId: "chikatilo-test",
       choice: { type: "chikatiloPlace", position: { col: 0, row: 0 } },
-    })
+    }),
   );
 
   await waitForError(queue1, (msg) => msg.message === "Not your pending roll");
@@ -297,31 +286,89 @@ async function main() {
   ws1.send(
     JSON.stringify({
       type: "startGame",
-    })
+    }),
   );
 
   const pendingState = (await waitForRoomState(queue1, (msg) => {
-    return msg.meta?.pendingRoll?.player === "P1";
+    return msg.meta?.pendingRoll?.player === "P1" && msg.view?.pendingRoll?.player === "P1";
   })) as {
     type: string;
     meta: { pendingRoll?: { id: string; kind: string; player: string } };
+    view: { pendingRoll?: { id: string; kind: string; player: string } };
   };
 
   assert(
     pendingState.meta.pendingRoll?.kind === "initiativeRoll",
-    "initiative roll should be requested after startGame"
+    "initiative roll should be requested after startGame",
   );
   assert(pendingState.meta.pendingRoll?.id, "pending roll id should be present");
+
+  const p2WaitingForP1 = (await waitForRoomState(queue2, (msg) => {
+    return msg.meta?.pendingRoll?.player === "P1";
+  })) as {
+    you: { role: string; seat?: string };
+    meta: { pendingRoll: { player: string } };
+    view: { pendingRoll: unknown };
+  };
+  assert.equal(p2WaitingForP1.you.role, "P2");
+  assert.equal(p2WaitingForP1.you.seat, "P2");
+  assert.equal(
+    p2WaitingForP1.view.pendingRoll,
+    null,
+    "P2 must not receive P1's private pending-roll context",
+  );
 
   ws1.send(
     JSON.stringify({
       type: "resolvePendingRoll",
       pendingRollId: pendingState.meta.pendingRoll?.id,
-    })
+    }),
   );
 
-  await waitForRoomState(queue1, (msg) => {
+  const p1WaitingForP2 = (await waitForRoomState(queue1, (msg) => {
     return msg.meta?.pendingRoll?.player === "P2";
+  })) as {
+    view: { pendingRoll: unknown; initiative: { P1: number | null } };
+  };
+  assert.equal(
+    p1WaitingForP2.view.pendingRoll,
+    null,
+    "P1 must see public waiting state without P2's roll context",
+  );
+  assert.equal(typeof p1WaitingForP2.view.initiative.P1, "number");
+
+  const p2Pending = (await waitForRoomState(queue2, (msg) => {
+    return msg.meta?.pendingRoll?.player === "P2" && msg.view?.pendingRoll?.player === "P2";
+  })) as {
+    you: { role: string; seat?: string };
+    meta: {
+      revision: number;
+      pendingRoll: { id: string; kind: string; player: string };
+    };
+    view: {
+      pendingRoll: { id: string; kind: string; player: string; context?: unknown };
+      initiative: { P1: number | null; P2: number | null };
+    };
+  };
+  assert.equal(p2Pending.you.role, "P2");
+  assert.equal(p2Pending.you.seat, "P2");
+  assert.equal(p2Pending.meta.pendingRoll.kind, "initiativeRoll");
+  assert.equal(p2Pending.view.pendingRoll.id, p2Pending.meta.pendingRoll.id);
+  assert.equal(p2Pending.view.pendingRoll.player, "P2");
+  assert.equal(typeof p2Pending.view.initiative.P1, "number");
+
+  ws2.send(
+    JSON.stringify({
+      type: "resolvePendingRoll",
+      pendingRollId: p2Pending.view.pendingRoll.id,
+    }),
+  );
+
+  await waitForRoomState(queue2, (msg) => {
+    return (
+      msg.meta?.revision > p2Pending.meta.revision &&
+      msg.meta?.pendingRoll?.id !== p2Pending.view.pendingRoll.id
+    );
   });
 
   ws1.close();

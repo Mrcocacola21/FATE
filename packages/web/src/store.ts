@@ -38,6 +38,13 @@ import {
   type TargetingMode,
 } from "./game/selectionState";
 import type { BoardEventBatch } from "./game/effects/types";
+import { getPlayerIdForViewer } from "./game/pendingState";
+import {
+  clearRoomSession,
+  loadRoomSession,
+  saveRoomSession,
+  type RoomSession,
+} from "./roomSession";
 
 export type ActionMode =
   | "move"
@@ -75,9 +82,7 @@ export type ActionMode =
   | "artemisSilverSickle"
   | null;
 export type ActionPreviewMode = Exclude<ActionMode, null>;
-export type HoverPreview =
-  | { type: "actionMode"; mode: ActionPreviewMode }
-  | null;
+export type HoverPreview = { type: "actionMode"; mode: ActionPreviewMode } | null;
 
 export type LokiLaughtOption =
   | "againSomeNonsense"
@@ -137,17 +142,16 @@ interface GameStore {
   actionMode: ActionMode;
   targetingMode: TargetingMode | null;
   placeUnitId: string | null;
-  moveOptions:
-    | {
-        unitId: string;
-        roll?: number | null;
-        legalTo: Coord[];
-        mode?: MoveMode;
-        modes?: MoveMode[];
-      }
-    | null;
+  moveOptions: {
+    unitId: string;
+    roll?: number | null;
+    legalTo: Coord[];
+    mode?: MoveMode;
+    modes?: MoveMode[];
+  } | null;
   leavingRoom: boolean;
   connect: () => Promise<WebSocket>;
+  resumeRoom: (options?: { force?: boolean }) => Promise<void>;
   fetchRooms: () => Promise<void>;
   joinRoom: (params: {
     mode: "create" | "join";
@@ -169,26 +173,20 @@ interface GameStore {
   sendTestRoomCommand: (command: TestRoomCommand) => void;
   requestMoveOptions: (unitId: string, mode?: MoveMode) => void;
   setRoomState: (roomId: string, room: PlayerView) => void;
-  applyActionResult: (
-    events: GameEvent[],
-    logIndex: number,
-    error?: string
-  ) => void;
+  applyActionResult: (events: GameEvent[], logIndex: number, error?: string) => void;
   addEvents: (events: GameEvent[]) => void;
   addClientLog: (message: string) => void;
   setSelectedUnit: (unitId: string | null) => void;
   setActionMode: (mode: ActionMode) => void;
   setPlaceUnitId: (unitId: string | null) => void;
   setMoveOptions: (
-    options:
-      | {
-          unitId: string;
-          roll?: number | null;
-          legalTo: Coord[];
-          mode?: MoveMode;
-          modes?: MoveMode[];
-        }
-      | null
+    options: {
+      unitId: string;
+      roll?: number | null;
+      legalTo: Coord[];
+      mode?: MoveMode;
+      modes?: MoveMode[];
+    } | null,
   ) => void;
   setHoveredAbilityId: (abilityId: string | null) => void;
   setHoverPreview: (preview: HoverPreview) => void;
@@ -201,17 +199,15 @@ interface GameStore {
 function buildLeaveResetState(
   state: GameStore,
   message?: string,
-  preserveResumeToken = false
+  preserveRoomSession = false,
 ): Partial<GameStore> {
-  const clientLog = message
-    ? [...state.clientLog, message].slice(-50)
-    : state.clientLog;
+  const clientLog = message ? [...state.clientLog, message].slice(-50) : state.clientLog;
   return {
     joined: false,
-    roomId: null,
-    role: null,
-    resumeToken: preserveResumeToken ? state.resumeToken : null,
-    seat: null,
+    roomId: preserveRoomSession ? state.roomId : null,
+    role: preserveRoomSession ? state.role : null,
+    resumeToken: preserveRoomSession ? state.resumeToken : null,
+    seat: preserveRoomSession ? state.seat : null,
     isHost: false,
     canControlTestRoom: false,
     roomMeta: defaultRoomMeta,
@@ -251,24 +247,51 @@ function buildLocalBoardUiResetState(): Partial<GameStore> {
 
 let socket: WebSocket | null = null;
 let connectPromise: Promise<WebSocket> | null = null;
+let reconnectPromise: Promise<void> | null = null;
+let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+let reconnectAttempts = 0;
+let suppressAutoReconnect = false;
+let intentionalLeave = false;
+const initialRoomSession = loadRoomSession();
 
-function roleToPlayerId(role: PlayerRole | null): PlayerId | null {
-  if (role === "P1" || role === "P2") return role;
-  return null;
+function roomSessionFromState(state: GameStore): RoomSession | null {
+  if (state.roomId && state.role && state.resumeToken) {
+    return {
+      roomId: state.roomId,
+      role: state.role,
+      seat: state.seat,
+      resumeToken: state.resumeToken,
+    };
+  }
+  return loadRoomSession();
 }
 
 function handleServerMessage(
   msg: ServerMessage,
   set: (fn: (state: GameStore) => Partial<GameStore>) => void,
-  get: () => GameStore
+  get: () => GameStore,
 ) {
   switch (msg.type) {
     case "joinAck": {
+      reconnectAttempts = 0;
+      if (reconnectTimer) {
+        clearTimeout(reconnectTimer);
+        reconnectTimer = null;
+      }
+      const resumeToken = msg.resumeToken ?? get().resumeToken;
+      if (resumeToken) {
+        saveRoomSession({
+          roomId: msg.roomId,
+          role: msg.role,
+          seat: msg.seat ?? null,
+          resumeToken,
+        });
+      }
       set(() => ({
         joined: true,
         roomId: msg.roomId,
         role: msg.role,
-        resumeToken: msg.resumeToken ?? null,
+        resumeToken: resumeToken ?? null,
         seat: msg.seat ?? null,
         isHost: msg.isHost,
         joinError: null,
@@ -277,6 +300,7 @@ function handleServerMessage(
       return;
     }
     case "joinRejected": {
+      clearRoomSession();
       set(() => ({
         joined: false,
         roomId: null,
@@ -295,6 +319,8 @@ function handleServerMessage(
       return;
     }
     case "leftRoom": {
+      clearRoomSession();
+      intentionalLeave = false;
       const { fetchRooms, addClientLog } = get();
       set((state) => ({
         ...buildLeaveResetState(state),
@@ -336,15 +362,15 @@ function handleServerMessage(
         P1:
           incomingInitiative && "P1" in incomingInitiative
             ? incomingInitiative.P1
-            : prevMeta.initiative.P1 ?? null,
+            : (prevMeta.initiative.P1 ?? null),
         P2:
           incomingInitiative && "P2" in incomingInitiative
             ? incomingInitiative.P2
-            : prevMeta.initiative.P2 ?? null,
+            : (prevMeta.initiative.P2 ?? null),
         winner:
           incomingInitiative && "winner" in incomingInitiative
             ? incomingInitiative.winner
-            : prevMeta.initiative.winner ?? null,
+            : (prevMeta.initiative.winner ?? null),
       };
       const nextMeta: RoomMeta = {
         roomMode: incomingMeta.roomMode ?? prevMeta.roomMode ?? "normal",
@@ -352,7 +378,7 @@ function handleServerMessage(
         draftState:
           incomingMeta.draftState !== undefined
             ? incomingMeta.draftState
-            : prevMeta.draftState ?? null,
+            : (prevMeta.draftState ?? null),
         draftPool: incomingMeta.draftPool ?? prevMeta.draftPool ?? [],
         revision: incomingMeta.revision ?? prevMeta.revision ?? 0,
         diceQueue: incomingMeta.diceQueue ?? prevMeta.diceQueue ?? [],
@@ -364,12 +390,12 @@ function handleServerMessage(
         pendingRoll:
           incomingMeta.pendingRoll !== undefined
             ? incomingMeta.pendingRoll
-            : prevMeta.pendingRoll ?? null,
+            : (prevMeta.pendingRoll ?? null),
         initiative: nextInitiative,
         placementFirstPlayer:
           incomingMeta.placementFirstPlayer !== undefined
             ? incomingMeta.placementFirstPlayer
-            : prevMeta.placementFirstPlayer ?? null,
+            : (prevMeta.placementFirstPlayer ?? null),
       };
       const previousView = current.roomState;
       const lifecycleChanged =
@@ -404,6 +430,15 @@ function handleServerMessage(
           ? buildLocalBoardUiResetState()
           : {}),
       }));
+      const resumeToken = get().resumeToken;
+      if (resumeToken) {
+        saveRoomSession({
+          roomId: msg.roomId,
+          role: msg.you.role,
+          seat: msg.you.seat ?? null,
+          resumeToken,
+        });
+      }
       return;
     }
     case "testRoomSnapshot": {
@@ -445,7 +480,10 @@ function handleServerMessage(
   }
 }
 
-function openSocket(set: (fn: (state: GameStore) => Partial<GameStore>) => void, get: () => GameStore) {
+function openSocket(
+  set: (fn: (state: GameStore) => Partial<GameStore>) => void,
+  get: () => GameStore,
+) {
   if (socket && socket.readyState === WebSocket.OPEN) {
     return Promise.resolve(socket);
   }
@@ -453,39 +491,42 @@ function openSocket(set: (fn: (state: GameStore) => Partial<GameStore>) => void,
   if (connectPromise) return connectPromise;
 
   set(() => ({ connectionStatus: "connecting" }));
-  socket = connectGameSocket((msg) => handleServerMessage(msg, set, get));
+  const openedSocket = connectGameSocket((msg) => handleServerMessage(msg, set, get));
+  socket = openedSocket;
 
   connectPromise = new Promise((resolve, reject) => {
-    if (!socket) {
-      reject(new Error("Socket not initialized"));
-      return;
-    }
-
-    socket.onopen = () => {
+    openedSocket.onopen = () => {
+      if (socket !== openedSocket) return;
       set(() => ({ connectionStatus: "connected" }));
-      resolve(socket as WebSocket);
+      resolve(openedSocket);
     };
 
-    socket.onclose = () => {
+    openedSocket.onclose = () => {
+      if (socket !== openedSocket) return;
       connectPromise = null;
       socket = null;
       set((state) => ({
-        ...buildLeaveResetState(
-          state,
-          state.joined ? "Disconnected" : undefined,
-          true
-        ),
+        ...buildLeaveResetState(state, state.joined ? "Disconnected" : undefined, true),
         connectionStatus: "disconnected",
       }));
       const { fetchRooms, addClientLog } = get();
       fetchRooms().catch((err) => {
         addClientLog(err instanceof Error ? err.message : "Failed to refresh rooms");
       });
+      if (!suppressAutoReconnect && !intentionalLeave && loadRoomSession()) {
+        const delay = Math.min(500 * 2 ** reconnectAttempts, 10_000);
+        reconnectAttempts += 1;
+        if (reconnectTimer) clearTimeout(reconnectTimer);
+        reconnectTimer = setTimeout(() => {
+          reconnectTimer = null;
+          void get().resumeRoom();
+        }, delay);
+      }
     };
 
-    socket.onerror = (err) => {
+    openedSocket.onerror = (err) => {
+      if (socket !== openedSocket) return;
       connectPromise = null;
-      socket = null;
       set(() => ({ connectionStatus: "disconnected" }));
       reject(err);
     };
@@ -494,13 +535,40 @@ function openSocket(set: (fn: (state: GameStore) => Partial<GameStore>) => void,
   return connectPromise;
 }
 
+async function closeSocketForReconnect(): Promise<void> {
+  const activeSocket = socket;
+  if (!activeSocket || activeSocket.readyState === WebSocket.CLOSED) {
+    socket = null;
+    connectPromise = null;
+    return;
+  }
+
+  suppressAutoReconnect = true;
+  await new Promise<void>((resolve) => {
+    let finished = false;
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      if (socket === activeSocket) {
+        socket = null;
+        connectPromise = null;
+      }
+      resolve();
+    };
+    activeSocket.addEventListener("close", finish, { once: true });
+    activeSocket.close(4000, "Refresh room snapshot");
+    setTimeout(finish, 1_000);
+  });
+  suppressAutoReconnect = false;
+}
+
 export const useGameStore = create<GameStore>((set, get) => ({
   connectionStatus: "disconnected",
   joined: false,
-  roomId: null,
-  role: null,
-  resumeToken: null,
-  seat: null,
+  roomId: initialRoomSession?.roomId ?? null,
+  role: initialRoomSession?.role ?? null,
+  resumeToken: initialRoomSession?.resumeToken ?? null,
+  seat: initialRoomSession?.seat ?? null,
   isHost: false,
   canControlTestRoom: false,
   roomMeta: defaultRoomMeta,
@@ -525,11 +593,42 @@ export const useGameStore = create<GameStore>((set, get) => ({
   moveOptions: null,
   leavingRoom: false,
   connect: async () => openSocket(set, get),
+  resumeRoom: async (options) => {
+    if (reconnectPromise) return reconnectPromise;
+    const session = roomSessionFromState(get());
+    if (!session) return;
+
+    reconnectPromise = (async () => {
+      if (reconnectTimer) {
+        clearTimeout(reconnectTimer);
+        reconnectTimer = null;
+      }
+      if (options?.force) await closeSocketForReconnect();
+      const ws = await openSocket(set, get);
+      const selection = loadFigureSetState(HERO_CATALOG).selection;
+      sendJoinRoom(ws, {
+        mode: "join",
+        roomId: session.roomId,
+        role: session.role,
+        figureSet: selection,
+        resumeToken: session.resumeToken,
+      });
+    })();
+
+    try {
+      await reconnectPromise;
+    } catch (error) {
+      get().addClientLog(error instanceof Error ? error.message : "Failed to reconnect to room");
+    } finally {
+      reconnectPromise = null;
+    }
+  },
   fetchRooms: async () => {
     const rooms = await listRooms();
     set(() => ({ roomsList: rooms }));
   },
   joinRoom: async (params) => {
+    intentionalLeave = false;
     set(() => ({ joinError: null }));
     const ws = await openSocket(set, get);
     const selection = loadFigureSetState(HERO_CATALOG).selection;
@@ -539,11 +638,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
   leaveRoom: () => {
     const state = get();
     if (state.leavingRoom) return;
+    intentionalLeave = true;
     if (!socket || socket.readyState !== WebSocket.OPEN) {
+      clearRoomSession();
       set((current) => ({
         ...buildLeaveResetState(current, "Disconnected"),
         connectionStatus: "disconnected",
       }));
+      intentionalLeave = false;
       return;
     }
     set(() => ({ leavingRoom: true }));
@@ -595,7 +697,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
       state.addClientLog("Only the host can change game mode.");
       return;
     }
-    if (state.roomState?.phase !== "lobby" || state.roomMeta?.pendingRoll || state.roomMeta?.draftState) {
+    if (
+      state.roomState?.phase !== "lobby" ||
+      state.roomMeta?.pendingRoll ||
+      state.roomMeta?.draftState
+    ) {
       state.addClientLog("Game mode is locked.");
       return;
     }
@@ -724,9 +830,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         previousView.turnNumber !== room.turnNumber ||
         previousView.activeUnitId !== room.activeUnitId;
       const selectedUnitId =
-        state.selectedUnitId && room.units[state.selectedUnitId]
-          ? state.selectedUnitId
-          : null;
+        state.selectedUnitId && room.units[state.selectedUnitId] ? state.selectedUnitId : null;
       const selectionLost = !!state.selectedUnitId && !selectedUnitId;
       return {
         roomId,
@@ -755,8 +859,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         clientLog: error ? [...state.clientLog, error] : state.clientLog,
       };
     }),
-  addEvents: (events) =>
-    set((state) => ({ events: [...state.events, ...events].slice(-200) })),
+  addEvents: (events) => set((state) => ({ events: [...state.events, ...events].slice(-200) })),
   addClientLog: (message) =>
     set((state) => ({ clientLog: [...state.clientLog, message].slice(-50) })),
   setSelectedUnit: (unitId) =>
@@ -776,8 +879,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       hoverPreview: null,
     })),
   setPlaceUnitId: (unitId) => set(() => ({ placeUnitId: unitId })),
-  setMoveOptions: (options) =>
-    set((state) => transitionMoveOptions(state, options)),
+  setMoveOptions: (options) => set((state) => transitionMoveOptions(state, options)),
   setHoveredAbilityId: (abilityId) => set(() => ({ hoveredAbilityId: abilityId })),
   setHoverPreview: (preview) => set(() => ({ hoverPreview: preview })),
   queueLokiLaughtOption: (unitId, option) =>
@@ -818,6 +920,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
     })),
 }));
 
-export function getLocalPlayerId(role: PlayerRole | null): PlayerId | null {
-  return roleToPlayerId(role);
+export function getLocalPlayerId(
+  role: PlayerRole | null,
+  seat: PlayerId | null = null,
+): PlayerId | null {
+  return getPlayerIdForViewer(role, seat);
 }

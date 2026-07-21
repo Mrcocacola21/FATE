@@ -55,33 +55,29 @@ export function useGameShellCoreState() {
   } = useGameStore();
 
   const [doraPreviewCenter, setDoraPreviewCenter] = useState<Coord | null>(null);
-  const [jebeHailPreviewCenter, setJebeHailPreviewCenter] =
-    useState<Coord | null>(null);
-  const [kaladinFifthPreviewCenter, setKaladinFifthPreviewCenter] =
-    useState<Coord | null>(null);
-  const [mettatonPoppinsPreviewCenter, setMettatonPoppinsPreviewCenter] =
-    useState<Coord | null>(null);
-  const [mettatonLaserPreviewTarget, setMettatonLaserPreviewTarget] =
-    useState<Coord | null>(null);
+  const [jebeHailPreviewCenter, setJebeHailPreviewCenter] = useState<Coord | null>(null);
+  const [kaladinFifthPreviewCenter, setKaladinFifthPreviewCenter] = useState<Coord | null>(null);
+  const [mettatonPoppinsPreviewCenter, setMettatonPoppinsPreviewCenter] = useState<Coord | null>(
+    null,
+  );
+  const [mettatonLaserPreviewTarget, setMettatonLaserPreviewTarget] = useState<Coord | null>(null);
   const [sansGasterBlasterPreviewTarget, setSansGasterBlasterPreviewTarget] =
     useState<Coord | null>(null);
   const [undyneEnergySpearPreviewTarget, setUndyneEnergySpearPreviewTarget] =
     useState<Coord | null>(null);
   const [forestPreviewCenter, setForestPreviewCenter] = useState<Coord | null>(null);
   const [stakeSelections, setStakeSelections] = useState<Coord[]>([]);
-  const [hassanAssassinOrderSelections, setHassanAssassinOrderSelections] =
-    useState<string[]>([]);
+  const [hassanAssassinOrderSelections, setHassanAssassinOrderSelections] = useState<string[]>([]);
   const [tisonaPreviewCoord, setTisonaPreviewCoord] = useState<Coord | null>(null);
-  const [papyrusLineAxis, setPapyrusLineAxis] =
-    useState<PapyrusLineAxis>("row");
+  const [papyrusLineAxis, setPapyrusLineAxis] = useState<PapyrusLineAxis>("row");
 
   const view = roomState;
   const controllerSelectedUnit =
-    view && selectedUnitId ? view.units[selectedUnitId] ?? null : null;
+    view && selectedUnitId ? (view.units[selectedUnitId] ?? null) : null;
   const playerId =
     canControlTestRoom && controllerSelectedUnit
       ? controllerSelectedUnit.owner
-      : getLocalPlayerId(role);
+      : getLocalPlayerId(role, seat);
   const isSpectator = role === "spectator";
   const pending = useGameShellPendingStatus({
     view,
@@ -90,6 +86,7 @@ export function useGameShellCoreState() {
     leavingRoom,
     leaveRoom,
     seat,
+    playerId,
   });
 
   const autoAttemptKeyRef = useRef<string | null>(null);
@@ -184,12 +181,7 @@ export function useGameShellCoreState() {
       },
     } as GameAction);
     clearLokiLaughtOption();
-  }, [
-    pending.pendingRoll,
-    pendingLokiLaughtOption,
-    sendAction,
-    clearLokiLaughtOption,
-  ]);
+  }, [pending.pendingRoll, pendingLokiLaughtOption, sendAction, clearLokiLaughtOption]);
 
   useEffect(() => {
     if (!view || !moveOptions) return;
@@ -216,9 +208,7 @@ export function useGameShellCoreState() {
 
     if (view.currentPlayer !== playerId) return;
     const queue = view.turnQueue?.length ? view.turnQueue : view.turnOrder;
-    const queueIndex = view.turnQueue?.length
-      ? view.turnQueueIndex
-      : view.turnOrderIndex;
+    const queueIndex = view.turnQueue?.length ? view.turnQueueIndex : view.turnOrderIndex;
     const expectedUnitId = queue?.[queueIndex];
     if (!expectedUnitId) return;
 
@@ -264,28 +254,21 @@ export function useGameShellCoreState() {
   };
 
   const selectedUnit = controllerSelectedUnit;
-  const hoverActionMode =
-    hoverPreview?.type === "actionMode" ? hoverPreview.mode : null;
+  const hoverActionMode = hoverPreview?.type === "actionMode" ? hoverPreview.mode : null;
   const allowActionHoverPreview =
     !actionMode &&
     !pending.hasBlockingRoll &&
     !pending.boardSelectionPending &&
     !!hoverActionMode &&
     !!selectedUnit;
-  const effectiveActionMode =
-    actionMode ?? (allowActionHoverPreview ? hoverActionMode : null);
+  const effectiveActionMode = actionMode ?? (allowActionHoverPreview ? hoverActionMode : null);
   const modePreviewKind = allowActionHoverPreview
     ? previewKindForActionMode(hoverActionMode)
     : null;
 
   useEffect(() => {
     if (hoverPreview?.type !== "actionMode") return;
-    if (
-      actionMode ||
-      pending.hasBlockingRoll ||
-      pending.boardSelectionPending ||
-      !selectedUnit
-    ) {
+    if (actionMode || pending.hasBlockingRoll || pending.boardSelectionPending || !selectedUnit) {
       setHoverPreview(null);
     }
   }, [
@@ -307,9 +290,7 @@ export function useGameShellCoreState() {
   }, [selectedUnit, papyrusLineAxis]);
 
   const pendingMoveForSelected =
-    view?.pendingMove && view.pendingMove.unitId === selectedUnitId
-      ? view.pendingMove
-      : null;
+    view?.pendingMove && view.pendingMove.unitId === selectedUnitId ? view.pendingMove : null;
 
   return {
     roomId,

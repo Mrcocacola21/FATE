@@ -1,4 +1,7 @@
 import type { MatchSideTab } from "../gameshell-content/components/SidePanelTabs";
+import type { PlayerView } from "rules";
+import type { RoomMeta } from "../../ws";
+import { hasAuthoritativeMatchStarted } from "../pendingState";
 
 export interface MobilePanelState {
   activeTab: MatchSideTab;
@@ -10,10 +13,10 @@ export function resetMobilePanel(): MobilePanelState {
 }
 
 export function hasMobileMatchStarted(
-  phase: string,
-  pendingMeta: unknown,
+  view: Pick<PlayerView, "phase" | "pendingRoll" | "initiative">,
+  pendingMeta: RoomMeta["pendingRoll"],
 ): boolean {
-  return phase !== "lobby" || !!pendingMeta;
+  return hasAuthoritativeMatchStarted(view, pendingMeta);
 }
 
 export function toggleMobilePanel(

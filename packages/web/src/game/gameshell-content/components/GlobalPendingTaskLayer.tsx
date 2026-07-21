@@ -7,7 +7,7 @@ import { GameShellPendingRoll } from "./GameShellPendingRoll";
 function PendingRollWaitingOverlay({ vm }: { vm: any }) {
   const { language, t } = useI18n();
   const pending = vm.pendingMeta;
-  const isLocalPending = pending.player === vm.playerId;
+  const isLocalPending = vm.pendingForLocalPlayer;
   const title =
     pending.kind === "initiativeRoll"
       ? t("pending.rollInitiative")
@@ -40,9 +40,7 @@ function PendingRollWaitingOverlay({ vm }: { vm: any }) {
           className="relative z-10 mt-3 text-sm leading-6 text-stone-600 dark:text-stone-300"
           aria-live="polite"
         >
-          {isLocalPending
-            ? t("pending.preparingRoll")
-            : t("pending.waitingForOpponentRoll")}
+          {isLocalPending ? t("pending.preparingRoll") : t("pending.waitingForOpponentRoll")}
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           <span className="status-pill badge-warning">
@@ -73,8 +71,7 @@ function PendingRollWaitingOverlay({ vm }: { vm: any }) {
 
 export function GlobalPendingTaskLayer({ vm }: { vm: any }) {
   const showAction = !!vm.pendingRoll && !!vm.playerId && !vm.boardSelectionPending;
-  const showWaiting =
-    !!vm.pendingMeta && !!vm.playerId && !vm.pendingRoll && !vm.isSpectator;
+  const showWaiting = !!vm.pendingMeta && !!vm.playerId && !vm.pendingRoll && !vm.isSpectator;
   const active = showAction || showWaiting;
 
   useEffect(() => {

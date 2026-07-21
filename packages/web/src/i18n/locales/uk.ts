@@ -361,6 +361,7 @@ export const uk = {
     resolvingRoll: "{{player}} виконує поточний кидок.",
     stagingRoom: "Підготовча кімната",
     matchLobby: "Лобі матчу",
+    rollingInitiative: "Кидок ініціативи",
     matchLobbyDescription: "Обидва гравці мають зайняти місця й підтвердити готовність.",
     you: "Ви: {{role}}",
     markNotReady: "Скасувати готовність",
@@ -420,8 +421,7 @@ export const uk = {
     rating: "Рейтинг: {{rating}}",
     immortal: "Безсмертна",
     assassinMark: "Мітка вбивці",
-    assassinMarkTracked:
-      "Мітка вбивці: точне місце відстежується до кінця ходу цієї фігури.",
+    assassinMarkTracked: "Мітка вбивці: точне місце відстежується до кінця ходу цієї фігури.",
     forestAura: "Аура лісу: {{state}}",
     inside: "всередині",
     outside: "ззовні",
@@ -448,7 +448,8 @@ export const uk = {
     stealth: "Скритність",
     usingTargeting: "Використовується: {{name}}",
     targetingInstruction: "Інструкція: {{instruction}}",
-    zoroSantoryuFirstTarget: "Оберіть першу ціль. Зоро може атакувати одну або дві цілі за одну дію.",
+    zoroSantoryuFirstTarget:
+      "Оберіть першу ціль. Зоро може атакувати одну або дві цілі за одну дію.",
     zoroSantoryuNextTarget: "Оберіть другу ціль або натисніть першу ще раз, щоб атакувати лише її.",
     targetingCost: "Попередня вартість: {{cost}}",
     usesAction: "Використовує дію",
@@ -1302,8 +1303,7 @@ export const uk = {
     friskHugs: "Фріск: Обійми",
     friskHugsPrompt: "Обійми: оберіть підсвічену фігуру в радіусі 2.",
     friskWarmWords: "Фріск: Теплі слова",
-    friskWarmWordsPrompt:
-      "Теплі слова: оберіть підсвіченого союзника в радіусі 2 для лікування.",
+    friskWarmWordsPrompt: "Теплі слова: оберіть підсвіченого союзника в радіусі 2 для лікування.",
     friskPrecisionStrike: "Точний удар",
     friskPrecisionStrikePrompt: "Точний удар: оберіть підсвічену ціль атаки.",
     friskSubstitution: "Фріск: Підміна",
@@ -1358,8 +1358,7 @@ export const uk = {
     bunker: "У бункері: влучання завдають лише 1 шкоди.",
     stealth: "Фігура у скритності",
     assassinMark: "Мітка вбивці",
-    assassinMarkTracked:
-      "Мітка вбивці: точне місце відстежується до кінця ходу цієї фігури.",
+    assassinMarkTracked: "Мітка вбивці: точне місце відстежується до кінця ходу цієї фігури.",
   },
   preview: {
     labels: {

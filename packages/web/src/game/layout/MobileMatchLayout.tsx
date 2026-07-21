@@ -6,18 +6,14 @@ import { CurrentTaskPanel } from "../gameshell-content/components/CurrentTaskPan
 import { GameShellBoardColumn } from "../gameshell-content/components/GameShellBoardColumn";
 import { GameShellSideColumn } from "../gameshell-content/components/GameShellSideColumn";
 import { SidePanelTabs, type MatchSideTab } from "../gameshell-content/components/SidePanelTabs";
-import {
-  hasMobileMatchStarted,
-  resetMobilePanel,
-  toggleMobilePanel,
-} from "./mobilePanelState";
+import { hasMobileMatchStarted, resetMobilePanel, toggleMobilePanel } from "./mobilePanelState";
 import { MobileBattleScaffold } from "./MatchScaffolds";
 
 export function MobileMatchLayout({ vm }: { vm: any }) {
   const { t } = useI18n();
   const [activeTab, setActiveTab] = useState<MatchSideTab>("unit");
   const [sheetOpen, setSheetOpen] = useState(false);
-  const matchStarted = hasMobileMatchStarted(vm.view.phase, vm.pendingMeta);
+  const matchStarted = hasMobileMatchStarted(vm.view, vm.pendingMeta);
 
   useEffect(() => {
     if (!matchStarted) return;
@@ -73,7 +69,11 @@ export function MobileMatchLayout({ vm }: { vm: any }) {
         />
       }
       bottomSheet={
-        <BottomSheet open={visibleSheetOpen} title={activeLabel} onClose={() => setSheetOpen(false)}>
+        <BottomSheet
+          open={visibleSheetOpen}
+          title={activeLabel}
+          onClose={() => setSheetOpen(false)}
+        >
           <SidePanelTabs
             vm={vm}
             activeTab={activeTab}

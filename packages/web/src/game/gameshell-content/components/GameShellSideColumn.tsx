@@ -9,6 +9,7 @@ import { getSelectedHeroes } from "../../../figures/getSelectedHeroes";
 import { getHeroDisplayName } from "../../../i18n/displayMetadata";
 import { RuleDeclarationStatus } from "./RuleDeclarationStatus";
 import { SidePanelTabs } from "./SidePanelTabs";
+import { hasAuthoritativeMatchStarted } from "../../pendingState";
 
 interface GameShellSideColumnProps {
   vm: any;
@@ -18,7 +19,7 @@ interface GameShellSideColumnProps {
 export const GameShellSideColumn: FC<GameShellSideColumnProps> = ({ vm, mobile = false }) => {
   const { language, t } = useI18n();
   const [roomCodeCopied, setRoomCodeCopied] = useState(false);
-  if (vm.view.phase !== "lobby") {
+  if (hasAuthoritativeMatchStarted(vm.view, vm.pendingMeta)) {
     return (
       <aside className="h-full min-h-0 min-w-0 overflow-hidden">
         <SidePanelTabs vm={vm} />
@@ -27,7 +28,9 @@ export const GameShellSideColumn: FC<GameShellSideColumnProps> = ({ vm, mobile =
   }
 
   return (
-    <aside className={`scroll-panel h-full min-h-0 min-w-0 space-y-3 overflow-y-auto ${mobile ? "pb-3" : "pr-1"}`}>
+    <aside
+      className={`scroll-panel h-full min-h-0 min-w-0 space-y-3 overflow-y-auto ${mobile ? "pb-3" : "pr-1"}`}
+    >
       {shouldShowTestRoomPanel(vm.roomMeta?.roomMode, vm.canControlTestRoom) ? (
         <TestRoomPanel vm={vm} />
       ) : null}

@@ -359,6 +359,7 @@ export const en = {
     resolvingRoll: "{{player}} is resolving the current roll.",
     stagingRoom: "Staging room",
     matchLobby: "Match lobby",
+    rollingInitiative: "Rolling initiative",
     matchLobbyDescription:
       "Both players must occupy a seat and ready up before the host can start.",
     you: "You: {{role}}",
@@ -419,8 +420,7 @@ export const en = {
     rating: "Rating {{rating}}",
     immortal: "Immortal",
     assassinMark: "Assassin's Mark",
-    assassinMarkTracked:
-      "Assassin's Mark: exact location tracked until this unit finishes a turn.",
+    assassinMarkTracked: "Assassin's Mark: exact location tracked until this unit finishes a turn.",
     forestAura: "Forest aura: {{state}}",
     inside: "inside",
     outside: "outside",
@@ -447,7 +447,8 @@ export const en = {
     stealth: "Stealth",
     usingTargeting: "Using: {{name}}",
     targetingInstruction: "Instruction: {{instruction}}",
-    zoroSantoryuFirstTarget: "Choose the first target. Zoro may attack one or two targets with one action.",
+    zoroSantoryuFirstTarget:
+      "Choose the first target. Zoro may attack one or two targets with one action.",
     zoroSantoryuNextTarget: "Choose a second target, or click the first again to attack only it.",
     targetingCost: "Cost preview: {{cost}}",
     usesAction: "Uses Action",
@@ -995,7 +996,8 @@ export const en = {
         options: {
           choose: {
             name: "Choose passenger",
-            description: "Choose one adjacent living ally before movement, or continue without a passenger.",
+            description:
+              "Choose one adjacent living ally before movement, or continue without a passenger.",
           },
           move: {
             name: "Travel",
@@ -1279,8 +1281,7 @@ export const en = {
     soulParadeSoul: "Soul: {{soul}}",
     soulParadeEffect: "Effect: {{effect}}",
     stormStartTurn: "Storm",
-    stormStartTurnPrompt:
-      "Storm affects this figure. Roll d6 to resolve the start-of-turn effect.",
+    stormStartTurnPrompt: "Storm affects this figure. Roll d6 to resolve the start-of-turn effect.",
     khansShooter: "Khan's Shooter",
     khansShooterRicochetStep: "Khan's Shooter: select ricochet target {{current}} of {{total}}.",
     khansShooterFinalRicochet: "Khan's Shooter: select the final ricochet target.",
@@ -1348,8 +1349,7 @@ export const en = {
     bunker: "In Bunker: incoming hits deal 1 damage.",
     stealth: "Unit is in stealth",
     assassinMark: "Assassin's Mark",
-    assassinMarkTracked:
-      "Assassin's Mark: exact location tracked until this unit finishes a turn.",
+    assassinMarkTracked: "Assassin's Mark: exact location tracked until this unit finishes a turn.",
   },
   preview: {
     labels: {

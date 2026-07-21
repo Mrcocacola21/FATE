@@ -18,9 +18,17 @@ export const GameTopBar: FC<GameTopBarProps> = ({ vm, compact = false }) => {
   const ruleLabel = selectedRuleKey
     ? t(`ruleDeclarations.${selectedRuleKey}.name`)
     : t("ruleDeclarations.notSelected");
+  const phaseLabel =
+    vm.pendingMeta?.kind === "initiativeRoll"
+      ? t("game.rollingInitiative")
+      : getPhaseLabel(vm.view.phase, t);
+  const initiativePendingPlayer =
+    vm.pendingMeta?.kind === "initiativeRoll" ? vm.pendingMeta.player : null;
 
   return (
-    <div className={`panel-card panel-hud shrink-0 px-3 py-2 sm:px-4 ${compact ? "mobile-match-bar" : ""}`}>
+    <div
+      className={`panel-card panel-hud shrink-0 px-3 py-2 sm:px-4 ${compact ? "mobile-match-bar" : ""}`}
+    >
       <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex min-w-0 items-center gap-3">
           <div className="brand-sigil hidden h-9 w-9 sm:flex" aria-hidden="true" />
@@ -49,14 +57,22 @@ export const GameTopBar: FC<GameTopBarProps> = ({ vm, compact = false }) => {
           <div className={compact ? "hidden min-[420px]:inline-flex" : "inline-flex"}>
             <StatusBadge tone="special">{ruleLabel}</StatusBadge>
           </div>
-          <StatusBadge tone="neutral">{getPhaseLabel(vm.view.phase, t)}</StatusBadge>
+          <StatusBadge tone="neutral">{phaseLabel}</StatusBadge>
           <StatusBadge tone="neutral">
             {t("game.roundTurn")}: {vm.view.roundNumber} / {vm.view.turnNumber}
           </StatusBadge>
-          <StatusBadge tone={vm.view.currentPlayer === vm.playerId ? "success" : "neutral"}>
-            {vm.view.currentPlayer
-              ? t("game.playerTurn", { player: vm.view.currentPlayer })
-              : t("common.waiting")}
+          <StatusBadge
+            tone={
+              (initiativePendingPlayer ?? vm.view.currentPlayer) === vm.playerId
+                ? "success"
+                : "neutral"
+            }
+          >
+            {initiativePendingPlayer
+              ? t("pending.pendingFor", { player: initiativePendingPlayer })
+              : vm.view.currentPlayer
+                ? t("game.playerTurn", { player: vm.view.currentPlayer })
+                : t("common.waiting")}
           </StatusBadge>
           <div className={compact ? "hidden min-[390px]:inline-flex" : "inline-flex"}>
             <StatusBadge tone="info">{vm.view.activeUnitId ?? "-"}</StatusBadge>
