@@ -40,7 +40,12 @@ import {
   UNDYNE_ENERGY_SPEAR_ID,
   UNDYNE_SPEAR_THROW_ID,
 } from "../../rulesHints";
-import { coordKey, getUnitAt, isCoordInList } from "./helpers";
+import {
+  coordKey,
+  getSelectableAttackTargetsAtCell,
+  getUnitAt,
+  isCoordInList,
+} from "./helpers";
 import { getDonMadnessDirectionForCell } from "../targeting/donMadnessDirection";
 
 interface MoveOptionsState {
@@ -194,6 +199,7 @@ interface UnitTargetClickParams {
   col: number;
   row: number;
   validTargetIds: readonly string[];
+  preferredTargetId?: string;
   submit: (targetId: string) => void;
 }
 
@@ -202,10 +208,16 @@ export function submitUnitTargetClick({
   col,
   row,
   validTargetIds,
+  preferredTargetId,
   submit,
 }: UnitTargetClickParams): boolean {
-  const target = getUnitAt(view, col, row);
-  if (!target || !validTargetIds.includes(target.id)) return false;
+  const targets = getSelectableAttackTargetsAtCell(view, col, row, validTargetIds);
+  const target = preferredTargetId
+    ? targets.find((candidate) => candidate.id === preferredTargetId)
+    : targets.length === 1
+      ? targets[0]
+      : undefined;
+  if (!target) return false;
   submit(target.id);
   return true;
 }
@@ -317,7 +329,7 @@ export function createCellClickHandler(context: CellClickContext) {
     sendAction,
   } = context;
 
-  return (col: number, row: number) => {
+  return (col: number, row: number, preferredTargetId?: string) => {
     if (
       !view ||
       !playerId ||
@@ -1055,13 +1067,17 @@ export function createCellClickHandler(context: CellClickContext) {
     }
 
     if (actionMode === "attack") {
-      const target = getUnitAt(view, col, row);
-      if (!target) return;
       const targetIds =
         papyrusLongBoneAttackTargetIds.length > 0
           ? papyrusLongBoneAttackTargetIds
           : legalAttackTargets;
-      if (!targetIds.includes(target.id)) return;
+      const targets = getSelectableAttackTargetsAtCell(view, col, row, targetIds);
+      const target = preferredTargetId
+        ? targets.find((candidate) => candidate.id === preferredTargetId)
+        : targets.length === 1
+          ? targets[0]
+          : undefined;
+      if (!target) return;
       const attacker = view.units[selectedUnitId];
       if (attacker?.heroId === "zoro") {
         const firstTargetId = zoroAttackTargetIds[0];

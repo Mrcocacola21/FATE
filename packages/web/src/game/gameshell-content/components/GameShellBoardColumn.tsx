@@ -4,7 +4,9 @@ import { PanelCard } from "../../../components/ui";
 import { clampBoardZoom } from "../../hooks/useBoardFit";
 import { BoardControls } from "./BoardControls";
 import { useI18n } from "../../../i18n";
+import { getClassLabel, getHeroDisplayName } from "../../../i18n/displayMetadata";
 import { getOniGiriPreviewLines } from "../../targeting/oniGiriPreviewLines";
+import { getSelectableAttackTargetsAtCell } from "../helpers";
 
 interface GameShellBoardColumnProps {
   vm: any;
@@ -26,10 +28,52 @@ function readStoredBoardCoordinates() {
 }
 
 export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm, mobile = false }) => {
-  const { t } = useI18n();
+  const { language, t } = useI18n();
   const [boardZoom, setBoardZoom] = useState(readStoredBoardZoom);
   const [showCoordinates, setShowCoordinates] = useState(readStoredBoardCoordinates);
+  const [attackTargetPicker, setAttackTargetPicker] = useState<{
+    col: number;
+    row: number;
+    targetIds: string[];
+  } | null>(null);
   const zoomPercent = Math.round(boardZoom * 100);
+
+  const selectableAttackTargetIds: string[] =
+    vm.actionMode === "attack"
+      ? vm.papyrusLongBoneAttackTargetIds?.length > 0
+        ? vm.papyrusLongBoneAttackTargetIds
+        : vm.legalAttackTargets ?? []
+      : [];
+
+  useEffect(() => {
+    setAttackTargetPicker(null);
+  }, [vm.actionMode, vm.selectedUnitId]);
+
+  const handleBoardCellClick = (col: number, row: number) => {
+    if (vm.actionMode === "attack") {
+      const targets = getSelectableAttackTargetsAtCell(
+        vm.view,
+        col,
+        row,
+        selectableAttackTargetIds,
+      );
+      if (targets.length > 1) {
+        setAttackTargetPicker({ col, row, targetIds: targets.map((target) => target.id) });
+        return;
+      }
+      setAttackTargetPicker(null);
+      vm.handleCellClick(col, row, targets[0]?.id);
+      return;
+    }
+    setAttackTargetPicker(null);
+    vm.handleCellClick(col, row);
+  };
+
+  const chooseAttackTarget = (targetId: string) => {
+    if (!attackTargetPicker) return;
+    vm.handleCellClick(attackTargetPicker.col, attackTargetPicker.row, targetId);
+    setAttackTargetPicker(null);
+  };
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -134,6 +178,7 @@ export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm, mobile
           highlightedCells={vm.highlightedCells}
           hoveredAbilityId={vm.hoveredAbilityId}
           boardPreview={vm.boardPreview}
+          preferredUnitIds={selectableAttackTargetIds}
           doraPreview={
             vm.boardPreviewCenter
               ? {
@@ -162,10 +207,45 @@ export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm, mobile
             vm.setSelectedUnit(id);
             vm.setActionMode(null);
           }}
-          onCellClick={vm.handleCellClick}
+          onCellClick={handleBoardCellClick}
           onCellHover={vm.handleCellHover}
         />
       </div>
+      {attackTargetPicker ? (
+        <div
+          className="absolute bottom-4 left-1/2 z-50 w-max max-w-[calc(100%_-_2rem)] -translate-x-1/2 rounded-xl border border-rose-400/60 bg-stone-50/95 p-2 shadow-2xl backdrop-blur dark:bg-stone-950/95"
+          data-attack-target-picker
+          role="dialog"
+          aria-label={t("game.selectTarget")}
+        >
+          <div className="mb-1 text-center text-xs font-bold text-stone-600 dark:text-stone-300">
+            {t("game.selectTarget")}
+          </div>
+          <div className="flex flex-wrap justify-center gap-2">
+            {attackTargetPicker.targetIds.map((targetId) => {
+              const target = vm.view.units[targetId];
+              if (!target) return null;
+              const fallback = getClassLabel(target.class, t);
+              const name = getHeroDisplayName(
+                target.figureId ?? target.heroId ?? target.class,
+                fallback,
+                language,
+              );
+              return (
+                <button
+                  key={targetId}
+                  type="button"
+                  className="btn btn-danger min-h-10 px-3 py-2 text-sm"
+                  data-attack-target-id={targetId}
+                  onClick={() => chooseAttackTarget(targetId)}
+                >
+                  {name}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
     </PanelCard>
   );
 };

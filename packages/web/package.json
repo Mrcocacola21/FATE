@@ -8,6 +8,7 @@
     "generate:favicons": "node scripts/generate-favicons.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test:gameplay": "tsx --test src/store.selection.test.ts",
+    "test:shared-cell-targeting": "tsx --test src/game/gameshell-content/cellHandlers.test.tsx",
     "test:draft": "tsx --test src/modes/draftPool.test.ts src/modes/DraftHeroPreview.test.tsx",
     "test:action-ui": "tsx --test src/game/components/RightPanel/actionSummaries.test.tsx",
     "test:rule-declaration": "tsx --test src/game/gameshell-content/components/RuleDeclarationChoicePanel.test.tsx",

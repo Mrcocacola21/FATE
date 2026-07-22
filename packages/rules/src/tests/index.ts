@@ -117,6 +117,7 @@ import {
   testStealthOnlyForUnitsWithAbility,
   testAllyCannotStepOnStealthedAlly,
   testEnemyCanStepOnUnknownStealthedWithoutReveal,
+  testHiddenAllyOnEnemyCellDoesNotBlockAttackOrReveal,
   testUnknownStealthedEnemyDoesNotBlockArcherLine,
   testStealthEntryClearsOpponentExactKnowledge,
   testPathPassingAdjacentAfterStealthEntryDoesNotReveal,
@@ -495,6 +496,7 @@ function main(): void {
   testBattleTurnOrderFollowsPlacementOrder();
   testAllyCannotStepOnStealthedAlly();
   testEnemyCanStepOnUnknownStealthedWithoutReveal();
+  testHiddenAllyOnEnemyCellDoesNotBlockAttackOrReveal();
   testUnknownStealthedEnemyDoesNotBlockArcherLine();
   testStealthEntryClearsOpponentExactKnowledge();
   testPathPassingAdjacentAfterStealthEntryDoesNotReveal();

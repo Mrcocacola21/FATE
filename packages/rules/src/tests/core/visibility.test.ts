@@ -4,6 +4,7 @@ import {
   attachArmy,
   createDefaultArmy,
   createEmptyGame,
+  getLegalAttackTargets,
   getLegalIntents,
   HERO_ODIN_ID,
   initKnowledgeForOwners,
@@ -1240,6 +1241,83 @@ export function testEnemyCanStepOnUnknownStealthedWithoutReveal() {
   assert(!revealEvent, "stepping onto unknown hidden enemy should not reveal it");
 
   console.log("enemy_can_step_on_unknown_stealthed_without_reveal passed");
+}
+
+export function testHiddenAllyOnEnemyCellDoesNotBlockAttackOrReveal() {
+  const rng = makeRngSequence([0.01, 0.01, 0.99, 0.99]);
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1"));
+  state = attachArmy(state, createDefaultArmy("P2"));
+
+  const attacker = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.class === "assassin"
+  )!;
+  const hiddenAlly = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.class === "knight"
+  )!;
+  const visibleEnemy = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "spearman"
+  )!;
+
+  state = setUnit(state, attacker.id, { position: { col: 3, row: 3 } });
+  state = setUnit(state, hiddenAlly.id, {
+    position: { col: 4, row: 4 },
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
+  state = setUnit(state, visibleEnemy.id, { position: { col: 4, row: 4 } });
+  state = toBattleState(state, "P1", attacker.id);
+  state = initKnowledgeForOwners(state);
+
+  assert.deepStrictEqual(
+    state.units[hiddenAlly.id].position,
+    state.units[visibleEnemy.id].position,
+    "hidden ally and visible enemy should remain legally co-located"
+  );
+  assert(
+    getLegalAttackTargets(state, attacker.id).includes(visibleEnemy.id),
+    "the visible enemy id should remain an authoritative legal target"
+  );
+
+  const declared = applyAction(
+    state,
+    { type: "attack", attackerId: attacker.id, defenderId: visibleEnemy.id } as any,
+    rng
+  );
+  assert(
+    declared.state.pendingRoll?.kind === "attack_attackerRoll",
+    "attack validation should use the selected defender id, not allied cell occupancy"
+  );
+
+  const resolved = resolveAllPendingRollsWithEvents(declared.state, rng);
+  const attackEvent = resolved.events.find(
+    (event) => event.type === "attackResolved" && event.defenderId === visibleEnemy.id
+  );
+  assert(attackEvent, "the attack against the visible enemy should resolve");
+  assert(
+    attackEvent.type === "attackResolved" && attackEvent.hit === false,
+    "the forced miss should follow normal single-target attack resolution"
+  );
+  assert(
+    resolved.state.units[hiddenAlly.id].isStealthed,
+    "a single-target attack on the enemy must not reveal the hidden ally"
+  );
+  assert(
+    !resolved.events.some(
+      (event) => event.type === "stealthRevealed" && event.unitId === hiddenAlly.id
+    ),
+    "the shared-cell hidden ally must not emit a reveal event"
+  );
+
+  const opponentView = makePlayerView(resolved.state, "P2");
+  const opponentEvents = projectEventsForRecipient(resolved.state, resolved.events, "P2");
+  assert(!opponentView.units[hiddenAlly.id], "opponent projection must keep the ally hidden");
+  assert(
+    !JSON.stringify(opponentEvents).includes(hiddenAlly.id),
+    "projected attack events must not mention the hidden ally"
+  );
+
+  console.log("hidden_ally_on_enemy_cell_does_not_block_attack_or_reveal passed");
 }
 
 

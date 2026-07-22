@@ -45,6 +45,7 @@ interface BoardProps {
   >;
   hoveredAbilityId?: string | null;
   boardPreview?: BoardPreview | null;
+  preferredUnitIds?: readonly string[];
   doraPreview?: { center: Coord; radius: number } | null;
   disabled?: boolean;
   allowUnitSelection?: boolean;
@@ -58,7 +59,7 @@ interface BoardProps {
   className?: string;
   onCellHover?: (coord: Coord | null) => void;
   onSelectUnit: (unitId: string | null) => void;
-  onCellClick: (col: number, row: number) => void;
+  onCellClick: (col: number, row: number, preferredTargetId?: string) => void;
 }
 
 function getUnitLabel(unitClass: string): string {
@@ -197,6 +198,7 @@ export const Board: FC<BoardProps> = ({
   highlightedCells,
   hoveredAbilityId,
   boardPreview = null,
+  preferredUnitIds = [],
   doraPreview = null,
   allowUnitSelection = true,
   allowAnyUnitSelection = false,
@@ -388,7 +390,7 @@ export const Board: FC<BoardProps> = ({
 
   const unitsByPos = new Map<
     string,
-    {
+    Array<{
       id: string;
       owner: PlayerId;
       class: string;
@@ -396,7 +398,7 @@ export const Board: FC<BoardProps> = ({
       bunkerActive: boolean;
       chikatiloMarkStatus?: UnitState["chikatiloMarkStatus"];
       boneStatus: ActiveBoneStatus | null;
-    }
+    }>
   >();
   const lastKnownByPos = new Map<string, number>();
   const stakeMarkersByPos = new Map<string, boolean>();
@@ -449,7 +451,9 @@ export const Board: FC<BoardProps> = ({
   for (const unit of Object.values(renderedUnits)) {
     if (!unit.position) continue;
     const viewPos = toViewCoord(unit.position);
-    unitsByPos.set(coordKey(viewPos), {
+    const key = coordKey(viewPos);
+    const occupants = unitsByPos.get(key) ?? [];
+    occupants.push({
       id: unit.id,
       owner: unit.owner,
       class: unit.class,
@@ -458,6 +462,7 @@ export const Board: FC<BoardProps> = ({
       chikatiloMarkStatus: unit.chikatiloMarkStatus,
       boneStatus: getActiveBoneStatus(unit),
     });
+    unitsByPos.set(key, occupants);
   }
   for (const coord of Object.values(view.lastKnownPositions ?? {})) {
     const viewPos = toViewCoord(coord);
@@ -544,6 +549,7 @@ export const Board: FC<BoardProps> = ({
   const doraPreviewCenterKey = doraPreview ? coordKey(toViewCoord(doraPreview.center)) : null;
 
   const rows = [] as JSX.Element[];
+  const preferredUnitIdSet = new Set(preferredUnitIds);
 
   for (let row = size - 1; row >= 0; row -= 1) {
     const cells: JSX.Element[] = [];
@@ -551,7 +557,10 @@ export const Board: FC<BoardProps> = ({
       const viewCoord = { col, row };
       const gameCoord = toGameCoord(viewCoord);
       const key = coordKey(viewCoord);
-      const unit = unitsByPos.get(key);
+      const occupants = unitsByPos.get(key) ?? [];
+      const unit =
+        occupants.find((occupant) => preferredUnitIdSet.has(occupant.id)) ??
+        occupants[occupants.length - 1];
       const isSelected = unit?.id === selectedUnitId;
       const isActiveUnit = unit?.id === view.activeUnitId;
       const markStatus = unit?.chikatiloMarkStatus;
@@ -764,6 +773,7 @@ export const Board: FC<BoardProps> = ({
             details: `${cellDetails}${previewDetailsText}`,
           })}
           aria-pressed={isSelected}
+          data-unit-id={unit?.id}
           onClick={() => {
             if (disabled) return;
             if (

@@ -20,9 +20,28 @@ const DORA_DIRS: Coord[] = [
 ];
 
 export function getUnitAt(view: PlayerView, col: number, row: number) {
-  return Object.values(view.units).find(
+  return getUnitsAt(view, col, row)[0];
+}
+
+export function getUnitsAt(view: PlayerView, col: number, row: number) {
+  return Object.values(view.units).filter(
     (u) => u.position && u.position.col === col && u.position.row === row
   );
+}
+
+/**
+ * Resolves only projected, authoritative unit targets at a cell. Callers pass
+ * target ids from the player view, so private occupants can neither block the
+ * result nor be inferred through this helper.
+ */
+export function getSelectableAttackTargetsAtCell(
+  view: PlayerView,
+  col: number,
+  row: number,
+  legalTargetIds: readonly string[],
+) {
+  const legalIds = new Set(legalTargetIds);
+  return getUnitsAt(view, col, row).filter((unit) => legalIds.has(unit.id));
 }
 
 export function getDoraTargetCenters(view: PlayerView, casterId: string): Coord[] {
