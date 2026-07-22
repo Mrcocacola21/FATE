@@ -992,12 +992,13 @@ export const en = {
         },
       },
       forest: {
-        summary: "Consume 9 of Vlad’s oldest stakes to choose a 3×3 area for Forest of the Dead.",
+        summary:
+          "Automatic phantasm/impulse: at the start of Vlad’s turn, 9 owned stakes are consumed and a pending 3×3 area choice is created.",
         options: {
           cost: {
-            name: "Activation",
+            name: "Automatic activation",
             description:
-              "Forest of the Dead becomes available when Vlad owns 9 stakes and consumes those 9 stakes on activation.",
+              "Forest of the Dead triggers automatically when Vlad starts his turn with 9 stakes. It consumes the 9 oldest stakes and is never pressed as a normal action.",
           },
           area: {
             name: "Forest attack",

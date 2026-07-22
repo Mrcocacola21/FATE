@@ -92,7 +92,8 @@ const abilitiesUk: Record<string, AbilityTranslation> = {
   },
   vladForest: {
     name: "Ліс мертвих",
-    description: "Витрачає 9 кілків: атака області 3×3 завдає 2 шкоди й укорінює цілі.",
+    description:
+      "Автоматичний фантазм-імпульс: на початку ходу Влада, коли він має 9 кілків, витрачає 9 найстаріших кілків і пропонує обрати область 3×3.",
   },
   genghisKhanLegendOfTheSteppes: {
     name: "Легенда степів",

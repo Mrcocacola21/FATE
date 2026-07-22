@@ -15,6 +15,7 @@ import {
   METTATON_EX_ID,
   METTATON_NEO_ID,
   RIVER_PERSON_BOAT_ID,
+  VLAD_FOREST_ID,
   getMaxHp,
 } from "../../../rulesHints";
 import { createCellClickHandler } from "../../gameshell-content/cellHandlers";
@@ -35,6 +36,7 @@ import {
   formatChargeLabel,
   getAbilityChargeState,
   isActionableAbility,
+  shouldRenderManualAbilityButton,
 } from "./rightPanelHelpers";
 import { buildRightPanelViewModel } from "./rightPanelViewModel";
 
@@ -599,6 +601,105 @@ test("automatic transformations do not render executable action buttons", () => 
   assert.doesNotMatch(markup, /Femto Rebirth/);
   assert.doesNotMatch(markup, /Mettaton EX/);
   assert.doesNotMatch(markup, /Mettaton NEO/);
+});
+
+test("Forest of the Dead stays in Cepesh details but not desktop or mobile action buttons", () => {
+  setLanguage("en", { setItem: () => undefined });
+  const vlad = makeUnit({
+    id: "P1-vlad",
+    heroId: "vladTepes",
+    class: "spearman",
+  });
+  const forest = makeAbility({
+    id: VLAD_FOREST_ID,
+    name: "Forest of the Dead",
+    kind: "impulse",
+    description: "Automatic phantasm",
+    slot: "none",
+    chargeRequired: undefined,
+    maxCharges: undefined,
+    currentCharges: undefined,
+  });
+
+  assert.equal(shouldRenderManualAbilityButton(forest), false);
+  const actionableAbilities = [forest].filter(shouldRenderManualAbilityButton);
+  const sharedDesktopAndMobileActions = renderToStaticMarkup(
+    <BattleAbilityActions
+      view={makeView(vlad)}
+      actionableAbilities={actionableAbilities}
+      selectedUnit={vlad}
+      canAct={true}
+      economy={vlad.turn}
+      actionMode={null}
+      targetingActive={false}
+      onUseAbility={() => undefined}
+      onUseLokiLaughtOption={() => undefined}
+      onToggleMode={() => undefined}
+      onModePreview={() => undefined}
+      onHoverAbility={() => undefined}
+    />,
+  );
+  assert.equal(sharedDesktopAndMobileActions, "");
+  assert.doesNotMatch(sharedDesktopAndMobileActions, /Forest of the Dead/);
+
+  const detailsMarkup = renderToStaticMarkup(
+    <BattleUnitSummary
+      selectedUnit={vlad}
+      selectedHeroName="Vlad III Tepes"
+      selectedMettatonRating={null}
+      forestMarkers={[]}
+      selectedInsideForest={false}
+      stormActive={false}
+      selectedStormExempt={false}
+      moveRoll={null}
+      economy={vlad.turn}
+      abilityViews={[forest]}
+      view={makeView(vlad)}
+      canAct={true}
+      pendingRoll={false}
+      legalAttackTargetCount={1}
+      legalMoveCount={1}
+      onHoverAbility={() => undefined}
+    />,
+  );
+  assert.match(detailsMarkup, /Forest of the Dead/);
+  assert.match(detailsMarkup, /Automatic phantasm\/impulse/);
+  assert.match(detailsMarkup, /Phantasm/);
+  assert.match(detailsMarkup, /Impulse/);
+  assert.match(detailsMarkup, /Automatic/);
+  assert.match(detailsMarkup, /Basic Attack/);
+});
+
+test("Forest impulse target choice appears in the compact current-task UI", () => {
+  setLanguage("en", { setItem: () => undefined });
+  const vlad = makeUnit({ id: "P1-vlad", heroId: "vladTepes", class: "spearman" });
+  const markup = renderToStaticMarkup(
+    <CurrentTaskPanel
+      compact
+      vm={{
+        view: makeView(vlad),
+        playerId: "P1",
+        pendingRoll: {
+          id: "vlad-forest-target",
+          player: "P1",
+          kind: "vladForestTarget",
+          context: { unitId: vlad.id, owner: "P1" },
+        },
+        pendingQueueCount: 0,
+        stakeSelections: [],
+        stakeLimit: 0,
+        hassanAssassinOrderSelections: [],
+        isForestTarget: true,
+        sendAction: () => undefined,
+        setStakeSelections: () => undefined,
+        setHassanAssassinOrderSelections: () => undefined,
+      }}
+    />,
+  );
+
+  assert.match(markup, /mobile-task-content/);
+  assert.match(markup, /Forest of the Dead/);
+  assert.match(markup, /Select the 3x3 center cell/);
 });
 
 test("new action UI i18n keys exist in English and Ukrainian", () => {

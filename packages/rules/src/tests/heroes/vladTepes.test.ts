@@ -1,5 +1,6 @@
 import {
   applyAction,
+  ABILITY_VLAD_FOREST,
   assert,
   attachArmy,
   Coord,
@@ -10,6 +11,7 @@ import {
   initKnowledgeForOwners,
   linePath,
   makeRngSequence,
+  makePlayerView,
   path,
   resolvePendingRollOnce,
   SeededRNG,
@@ -18,6 +20,47 @@ import {
   toBattleState,
   toPlacementState,
 } from "../helpers/testUtils";
+
+export function testForestIsAutomaticImpulseAndRejectsManualUse() {
+  const rng = new SeededRNG(80);
+  let { state, vlad } = setupVladState();
+  state = setUnit(state, vlad.id, { position: { col: 4, row: 4 }, ownTurnsStarted: 1 });
+  state = {
+    ...toBattleState(state, "P1", vlad.id),
+    stakeMarkers: Array.from({ length: 9 }, (_, idx) => ({
+      id: `stake-${idx + 1}`,
+      owner: "P1" as const,
+      position: { col: idx % 3, row: Math.floor(idx / 3) },
+      createdAt: idx + 1,
+      isRevealed: false,
+    })),
+  };
+
+  const forestView = makePlayerView(state, "P1").abilitiesByUnitId[vlad.id].find(
+    (ability) => ability.id === ABILITY_VLAD_FOREST
+  );
+  assert(forestView, "Forest of the Dead should remain projected in Vlad's ability details");
+  assert(forestView.name === "Forest of the Dead", "Forest should retain its display name");
+  assert(forestView.kind === "impulse", "Forest should be projected as an impulse");
+  assert(forestView.slot === "none", "Forest should not claim a normal action slot");
+
+  const rejected = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: vlad.id,
+      abilityId: ABILITY_VLAD_FOREST,
+    } as any,
+    rng
+  );
+  assert(rejected.state === state, "manual Forest activation should be rejected without mutation");
+  assert(rejected.events.length === 0, "manual Forest activation should emit no events");
+  assert(!rejected.state.pendingRoll, "rejected manual activation should create no pending state");
+  assert(rejected.state.stakeMarkers.length === 9, "rejected manual activation should consume no stakes");
+  assert(!rejected.state.units[vlad.id].turn.actionUsed, "Forest should never consume a normal action");
+
+  console.log("forest_is_automatic_impulse_and_rejects_manual_use passed");
+}
 export function testIntimidateTriggersOncePerSuccessfulDefense() {
   const rng = makeRngSequence([0.001, 0.001, 0.99, 0.99]);
   let { state, vlad, enemy } = setupVladState();
@@ -1058,11 +1101,63 @@ export function testForestConsumes9AndSkipsStakesPlacementThatTurn() {
   );
   assert(res.state.stakeMarkers.length === 0, "forest should consume 9 stakes");
   assert(
+    !res.state.units[vlad.id].turn.actionUsed,
+    "automatic forest activation should not consume Vlad's normal action"
+  );
+  assert(
     res.events.some((e) => e.type === "forestActivated"),
     "forest should emit forestActivated"
   );
 
   console.log("forest_consumes_9_and_skips_stakes_placement_that_turn passed");
+}
+
+
+export function testForestEmptyAreaClearsPendingState() {
+  const rng = new SeededRNG(821);
+  let { state, vlad } = setupVladState();
+  state = setUnit(state, vlad.id, { position: { col: 4, row: 4 }, ownTurnsStarted: 1 });
+  state = {
+    ...state,
+    phase: "battle",
+    currentPlayer: "P1",
+    activeUnitId: null,
+    turnQueue: [vlad.id],
+    turnQueueIndex: 0,
+    turnOrder: [vlad.id],
+    turnOrderIndex: 0,
+    stakeMarkers: Array.from({ length: 9 }, (_, idx) => ({
+      id: `stake-${idx + 1}`,
+      owner: "P1" as const,
+      position: { col: (idx + 1) % 3, row: Math.floor(idx / 3) },
+      createdAt: idx + 1,
+      isRevealed: false,
+    })),
+  };
+
+  const started = applyAction(
+    state,
+    { type: "unitStartTurn", unitId: vlad.id } as any,
+    rng
+  );
+  const pending = started.state.pendingRoll;
+  assert(pending?.kind === "vladForestTarget", "forest should request its area choice");
+
+  const resolved = applyAction(
+    started.state,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: pending!.id,
+      player: pending!.player,
+      choice: { type: "forestTarget", center: { col: 0, row: 0 } },
+    } as any,
+    rng
+  );
+  assert(!resolved.state.pendingRoll, "an empty forest area should not leave a pending roll");
+  assert(!resolved.state.pendingAoE, "an empty forest area should not leave pending combat");
+  assert(!resolved.state.units[vlad.id].turn.actionUsed, "an empty forest area should spend no action");
+
+  console.log("forest_empty_area_clears_pending_state passed");
 }
 
 

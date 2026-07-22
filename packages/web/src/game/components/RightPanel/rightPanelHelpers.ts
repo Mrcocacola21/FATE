@@ -164,7 +164,7 @@ export function formatChargeLabel(
   return abilityMeta.currentCharges !== undefined ? `${chargeState.current}` : null;
 }
 
-export function isActionableAbility(ability: AbilityView): boolean {
+export function shouldRenderManualAbilityButton(ability: AbilityView): boolean {
   return (
     ability.kind !== "passive" &&
     (ability.kind !== "impulse" ||
@@ -172,6 +172,10 @@ export function isActionableAbility(ability: AbilityView): boolean {
     !NON_ACTIONABLE_ABILITY_IDS.has(ability.id)
   );
 }
+
+// Compatibility name for existing consumers. Manual action surfaces on desktop
+// and mobile both flow through this predicate.
+export const isActionableAbility = shouldRenderManualAbilityButton;
 
 export function abilityActionMode(
   abilityId: string

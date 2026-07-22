@@ -184,8 +184,8 @@ export const ABILITY_SPECS_PART_4: Record<string, AbilitySpec> = {
   [ids.ABILITY_VLAD_FOREST]: {
     id: ids.ABILITY_VLAD_FOREST,
     displayName: "Forest of the Dead",
-    kind: "phantasm",
-    description: "Consume 9 stakes to unleash 3x3 AoE (2 dmg, root).",
+    kind: "impulse",
+    description: "Automatic phantasm: at the start of Vlad's turn, when he owns 9 stakes, consume the 9 oldest stakes and choose a 3x3 area (2 damage and root).",
   },
   [ids.ABILITY_DUOLINGO_LONG_LIVED]: {
     id: ids.ABILITY_DUOLINGO_LONG_LIVED,

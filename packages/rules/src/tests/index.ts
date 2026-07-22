@@ -164,6 +164,7 @@ import {
   testIntimidateTriggersOncePerSuccessfulDefense,
   testTricksterAoEDoesNotDuplicateDefenderRollsWithIntimidate,
   testVladForestDoesNotDuplicateDefenderRollsWithIntimidate,
+  testForestIsAutomaticImpulseAndRejectsManualUse,
   testVladIntimidatePromptsAfterSuccessfulDefense,
   testVladIntimidatePushesAttackerOneCell,
   testVladIntimidateNoOptionsAutoSkips,
@@ -184,6 +185,7 @@ import {
   testTriggerRevealsAllStakesOnCell,
   testForestRequires9Stakes,
   testForestConsumes9AndSkipsStakesPlacementThatTurn,
+  testForestEmptyAreaClearsPendingState,
   testForestAoeDeals2AndRootsOnFail,
   testRootBlocksMovementNextTurnOnly,
 } from "./heroes/vladTepes.test";
@@ -702,8 +704,10 @@ function main(): void {
   testStakesDoNotGetRemovedOnTriggerOnlyRevealed();
   testTwoTepesHiddenStakesSameCellDamageOnly1();
   testTriggerRevealsAllStakesOnCell();
+  testForestIsAutomaticImpulseAndRejectsManualUse();
   testForestRequires9Stakes();
   testForestConsumes9AndSkipsStakesPlacementThatTurn();
+  testForestEmptyAreaClearsPendingState();
   testForestAoeDeals2AndRootsOnFail();
   testRootBlocksMovementNextTurnOnly();
   testNewPlayableBatchStatsResourcesAndMovement();
