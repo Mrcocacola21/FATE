@@ -2,6 +2,7 @@ import assert from "assert";
 import { randomUUID } from "node:crypto";
 import { mock } from "node:test";
 import {
+  ABILITY_ARTEMIDA_SILVER_CRESCENT,
   ABILITY_RIVER_PERSON_BOAT,
   ABILITY_RIVER_PERSON_BOATMAN,
   attachArmy,
@@ -13,6 +14,7 @@ import {
   HERO_FALSE_TRAIL_TOKEN_ID,
   HERO_KANEKI_ID,
   HERO_RIVER_PERSON_ID,
+  makePlayerView,
   projectEventsForRecipient,
   type GameEvent,
   type GameState,
@@ -1011,6 +1013,87 @@ function testMulticlassMovementCommandsStayAuthoritative() {
   console.log("hardening_multiclass_movement_commands passed");
 }
 
+function testArtemidaSickleEndpointCommandsStayAuthoritative() {
+  storeTestHooks.reset();
+  try {
+    const room = createGameRoomWithId(`hardening-artemida-sickle-${randomUUID()}`, {
+      hostSeat: "P1",
+      hostConnId: `conn-${randomUUID()}`,
+    });
+    let state = createEmptyGame();
+    state = attachArmy(state, createDefaultArmy("P1", { archer: HERO_ARTEMIDA_ID }));
+    state = attachArmy(state, createDefaultArmy("P2"));
+    const artemida = Object.values(state.units).find(
+      (unit) => unit.owner === "P1" && unit.heroId === HERO_ARTEMIDA_ID,
+    );
+    const hiddenBeyondEndpoint = Object.values(state.units).find(
+      (unit) => unit.owner === "P2",
+    );
+    assert(artemida && hiddenBeyondEndpoint, "Artemida and an enemy should exist");
+    state = setUnit(state, artemida.id, {
+      position: { col: 4, row: 4 },
+      charges: {
+        ...artemida.charges,
+        [ABILITY_ARTEMIDA_SILVER_CRESCENT]: 5,
+      },
+    });
+    state = setUnit(state, hiddenBeyondEndpoint.id, {
+      position: { col: 8, row: 4 },
+      isStealthed: true,
+      stealthTurnsLeft: 2,
+    });
+    room.state = {
+      ...state,
+      phase: "battle",
+      currentPlayer: "P1",
+      activeUnitId: artemida.id,
+      turnOrder: [artemida.id],
+      turnOrderIndex: 0,
+      turnQueue: [artemida.id],
+      turnQueueIndex: 0,
+    };
+
+    const projected = makePlayerView(room.state, "P1");
+    assert.equal(projected.units[hiddenBeyondEndpoint.id], undefined, "Sickle targeting projection must not reveal a hidden enemy");
+    assert.equal(
+      projected.abilitiesByUnitId[artemida.id]?.find(
+        (ability) => ability.id === ABILITY_ARTEMIDA_SILVER_CRESCENT,
+      )?.isAvailable,
+      true,
+      "the authoritative projection should expose a paid, unused Sickle as available",
+    );
+
+    const beforeInvalid = room.state;
+    const revisionBeforeInvalid = room.revision;
+    const invalid = applyGameAction(room, {
+      type: "useAbility",
+      unitId: artemida.id,
+      abilityId: ABILITY_ARTEMIDA_SILVER_CRESCENT,
+      payload: { target: { col: 6, row: 5 } },
+    }, "P1");
+    assert.equal(invalid.ok, false, "the server must reject an off-line Sickle endpoint");
+    assert.equal(room.state, beforeInvalid, "an invalid endpoint must not mutate authoritative state");
+    assert.equal(room.revision, revisionBeforeInvalid, "an invalid endpoint must not advance room revision");
+    assert.equal(room.state.units[artemida.id].charges[ABILITY_ARTEMIDA_SILVER_CRESCENT], 5);
+    assert.equal(room.state.units[artemida.id].turn.actionUsed, false);
+
+    const accepted = applyGameAction(room, {
+      type: "useAbility",
+      unitId: artemida.id,
+      abilityId: ABILITY_ARTEMIDA_SILVER_CRESCENT,
+      payload: { target: { col: 6, row: 4 } },
+    }, "P1");
+    assert.equal(accepted.ok, true, "the server should accept a closer endpoint on Artemida's attack line");
+    assert.equal(room.state.units[artemida.id].charges[ABILITY_ARTEMIDA_SILVER_CRESCENT], 0);
+    assert.equal(room.state.units[artemida.id].turn.actionUsed, true);
+    assert.equal(room.state.units[hiddenBeyondEndpoint.id].isStealthed, true, "a hidden enemy beyond the endpoint must remain untouched and hidden");
+  } finally {
+    storeTestHooks.reset();
+  }
+
+  console.log("hardening_artemida_sickle_endpoint_commands passed");
+}
+
 function testPendingBoardChoiceUsesAuthenticatedSeat() {
   const { room } = makeSeatedRoom({
     roomIdPrefix: "hardening-pending-board-choice",
@@ -1065,6 +1148,7 @@ async function main() {
   testServerRejectsInvalidFalsePromisePlacementsWithoutMutation();
   testRiverBoatmanCommandsPreserveAuthoritativeMovementBudget();
   testMulticlassMovementCommandsStayAuthoritative();
+  testArtemidaSickleEndpointCommandsStayAuthoritative();
   testPendingBoardChoiceUsesAuthenticatedSeat();
   console.log("hardening tests passed");
 }

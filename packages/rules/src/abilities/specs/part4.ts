@@ -415,7 +415,7 @@ export const ABILITY_SPECS_PART_4: Record<string, AbilitySpec> = {
     id: ids.ABILITY_ARTEMIDA_SILVER_CRESCENT,
     displayName: "Silver Moon Sickle",
     kind: "phantasm",
-    description: "Spend 5 charges and Action. Choose an attack direction and attack every unit on its line and adjacent cells for 2 damage on failed defense.",
+    description: "Spend 5 charges and Action. Choose an endpoint on a legal attack line and attack every unit on the line up to that endpoint and adjacent cells for 2 damage on failed defense.",
     maxCharges: 5,
     chargesPerUse: 5,
     actionCost: { consumes: { action: true } },

@@ -6,6 +6,7 @@ import {
   testNewPlayableBatchCombatCountersAndReactions,
   testNewPlayableBatchStatsResourcesAndMovement,
   testArtemidaAndKanekiMovementModes,
+  testArtemidaSilverSickleStopsAtSelectedEndpoint,
   testNewPlayableBatchTransactionalActives,
 } from "./heroes/newPlayableBatch.test";
 import {
@@ -712,6 +713,7 @@ function main(): void {
   testRootBlocksMovementNextTurnOnly();
   testNewPlayableBatchStatsResourcesAndMovement();
   testArtemidaAndKanekiMovementModes();
+  testArtemidaSilverSickleStopsAtSelectedEndpoint();
   testNewPlayableBatchTransactionalActives();
   testNewPlayableBatchLineAndRevealEffects();
   testNewPlayableBatchCombatCountersAndReactions();

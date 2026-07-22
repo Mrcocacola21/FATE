@@ -243,6 +243,84 @@ export function testArtemidaAndKanekiMovementModes() {
   console.log("artemida_and_kaneki_movement_modes passed");
 }
 
+export function testArtemidaSilverSickleStopsAtSelectedEndpoint() {
+  {
+    let { state, heroes, enemies } = setupBatch();
+    const artemida = heroes[HERO_ARTEMIDA_ID];
+    const insideCorridor = enemies[0];
+    const immediatelyBeyondEndpoint = enemies[1];
+    state = setUnit(state, artemida.id, {
+      position: { col: 1, row: 1 },
+      charges: { ...artemida.charges, [ABILITY_ARTEMIDA_SILVER_CRESCENT]: 5 },
+    });
+    state = setUnit(state, insideCorridor.id, { position: { col: 3, row: 2 } });
+    state = setUnit(state, immediatelyBeyondEndpoint.id, { position: { col: 5, row: 1 } });
+    state = battleFor(state, state.units[artemida.id]);
+
+    const used = applyAction(state, {
+      type: "useAbility",
+      unitId: artemida.id,
+      abilityId: ABILITY_ARTEMIDA_SILVER_CRESCENT,
+      payload: { target: { col: 4, row: 1 } },
+    } as any, makeRngSequence([]));
+
+    const affectedIds = used.state.pendingAoE?.affectedUnitIds ?? [];
+    assert(used.state !== state, "Silver Moon Sickle should accept a middle endpoint on a legal attack line");
+    assert(used.state.units[artemida.id].charges[ABILITY_ARTEMIDA_SILVER_CRESCENT] === 0, "a resolved Sickle should spend five charges");
+    assert(used.state.units[artemida.id].turn.actionUsed, "a resolved Sickle should spend Action");
+    assert(affectedIds.includes(insideCorridor.id), "Sickle should affect the selected line corridor up to its endpoint");
+    assert(!affectedIds.includes(immediatelyBeyondEndpoint.id), "Sickle must not affect the next line cell beyond its selected endpoint");
+  }
+
+  {
+    let { state, heroes, enemies } = setupBatch();
+    const artemida = heroes[HERO_ARTEMIDA_ID];
+    const insideCorridor = enemies[0];
+    const boardEdgeEnemy = enemies[1];
+    state = setUnit(state, artemida.id, {
+      position: { col: 1, row: 1 },
+      charges: { ...artemida.charges, [ABILITY_ARTEMIDA_SILVER_CRESCENT]: 5 },
+    });
+    state = setUnit(state, insideCorridor.id, { position: { col: 6, row: 2 } });
+    state = setUnit(state, boardEdgeEnemy.id, { position: { col: 8, row: 1 } });
+    state = battleFor(state, state.units[artemida.id]);
+
+    const used = applyAction(state, {
+      type: "useAbility",
+      unitId: artemida.id,
+      abilityId: ABILITY_ARTEMIDA_SILVER_CRESCENT,
+      payload: { target: { col: 7, row: 1 } },
+    } as any, makeRngSequence([]));
+
+    const affectedIds = used.state.pendingAoE?.affectedUnitIds ?? [];
+    assert(affectedIds.includes(insideCorridor.id), "Sickle should affect cells before an endpoint one cell short of the edge");
+    assert(!affectedIds.includes(boardEdgeEnemy.id), "an endpoint one cell before the board edge must not extend to the edge");
+  }
+
+  {
+    let { state, heroes } = setupBatch();
+    const artemida = heroes[HERO_ARTEMIDA_ID];
+    state = setUnit(state, artemida.id, {
+      position: { col: 1, row: 1 },
+      charges: { ...artemida.charges, [ABILITY_ARTEMIDA_SILVER_CRESCENT]: 5 },
+    });
+    state = battleFor(state, state.units[artemida.id]);
+
+    const rejected = applyAction(state, {
+      type: "useAbility",
+      unitId: artemida.id,
+      abilityId: ABILITY_ARTEMIDA_SILVER_CRESCENT,
+      payload: { target: { col: 4, row: 2 } },
+    } as any, makeRngSequence([]));
+
+    assert(rejected.state === state, "an off-line Sickle endpoint must be rejected without mutation");
+    assert(rejected.state.units[artemida.id].charges[ABILITY_ARTEMIDA_SILVER_CRESCENT] === 5, "an invalid endpoint must not spend charges");
+    assert(!rejected.state.units[artemida.id].turn.actionUsed, "an invalid endpoint must not spend Action");
+  }
+
+  console.log("artemida_silver_sickle_stops_at_selected_endpoint passed");
+}
+
 export function testNewPlayableBatchTransactionalActives() {
   const rng = makeRngSequence([0.99, 0.99, 0.01, 0.01, 0.99, 0.99, 0.01, 0.01]);
 

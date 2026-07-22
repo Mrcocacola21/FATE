@@ -20,6 +20,7 @@ export interface BuildHighlightedCellsArgs {
   attackPreviewCells: Coord[];
   papyrusLongBoneAttackTargetIds: string[];
   doraTargetCenters: Coord[];
+  artemidaLineTargets: Coord[];
   mettatonLineTargets: Coord[];
   view: PlayerView | null;
   isStakePlacement: boolean;
@@ -110,6 +111,7 @@ export function buildHighlightedCells({
   attackPreviewCells,
   papyrusLongBoneAttackTargetIds,
   doraTargetCenters,
+  artemidaLineTargets,
   mettatonLineTargets,
   view,
   isStakePlacement,
@@ -486,6 +488,15 @@ export function buildHighlightedCells({
 
   if (effectiveActionMode === "dora") {
     for (const coord of doraTargetCenters) {
+      highlights[coordKey(coord)] = modeKind("dora");
+    }
+  }
+
+  if (
+    effectiveActionMode === "artemisMoonInsight" ||
+    effectiveActionMode === "artemisSilverSickle"
+  ) {
+    for (const coord of artemidaLineTargets) {
       highlights[coordKey(coord)] = modeKind("dora");
     }
   }

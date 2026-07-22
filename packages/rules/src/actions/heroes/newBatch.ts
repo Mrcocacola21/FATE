@@ -113,6 +113,19 @@ function rayCells(state: GameState, from: Coord, toward: Coord): Coord[] {
   return result;
 }
 
+function lineCellsToEndpoint(from: Coord, endpoint: Coord): Coord[] {
+  return linePath(from, endpoint)?.slice(1) ?? [];
+}
+
+function isBeyondEndpointOnRay(from: Coord, endpoint: Coord, cell: Coord): boolean {
+  const endpointDirection = directionFrom(from, endpoint);
+  const cellDirection = directionFrom(from, cell);
+  if (!endpointDirection || !cellDirection || !coordsEqual(endpointDirection, cellDirection)) {
+    return false;
+  }
+  return chebyshev(from, cell) > chebyshev(from, endpoint);
+}
+
 function unitIdsInCells(state: GameState, cells: Coord[], caster: UnitState, enemiesOnly: boolean): string[] {
   const keys = new Set(cells.map((cell) => `${cell.col},${cell.row}`));
   return Object.values(state.units)
@@ -341,13 +354,17 @@ function applyArtemisSickle(state: GameState, unit: UnitState, action: AbilityAc
   if (!spent.ok) return { state, events: [] };
   const updated = spendSlots(spent.unit, spec.actionCost?.consumes);
   const base = { ...state, units: { ...state.units, [unit.id]: updated } };
-  const line = rayCells(state, unit.position, toward);
+  const line = lineCellsToEndpoint(unit.position, toward);
   const affected: Coord[] = [];
   for (const cell of line) {
     affected.push(cell);
     for (const dir of ALL_DIRS) {
       const adjacent = { col: cell.col + dir.col, row: cell.row + dir.row };
-      if (isInsideBoard(adjacent, state.boardSize)) affected.push(adjacent);
+      if (
+        isInsideBoard(adjacent, state.boardSize) &&
+        !coordsEqual(adjacent, unit.position) &&
+        !isBeyondEndpointOnRay(unit.position, toward, adjacent)
+      ) affected.push(adjacent);
     }
   }
   const targets = unitIdsInCells(base, affected, updated, false);

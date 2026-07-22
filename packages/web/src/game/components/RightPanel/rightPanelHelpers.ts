@@ -242,6 +242,14 @@ export function getActionModeHint(
       return uk ? "Оберіть клітинку призначення." : "Choose a destination.";
     case "dora":
       return uk ? "Дора: оберіть центральну клітинку на лінії лучника." : "Dora: select a center cell on the archer line.";
+    case "artemisMoonInsight":
+      return uk
+        ? "Місячне прозріння: оберіть центр 3×3 на лінії атаки."
+        : "Moon Insight: choose a 3x3 center on Artemida's attack line.";
+    case "artemisSilverSickle":
+      return uk
+        ? "Срібний місячний серп: оберіть кінцеву клітинку на лінії атаки."
+        : "Silver Moon Sickle: choose an endpoint on the attack line.";
     case "invadeTime":
       return uk ? "Час вторгнення: оберіть будь-яку вільну клітинку." : "Invade Time: select any open cell on the board.";
     case "assassinMark":

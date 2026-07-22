@@ -1075,11 +1075,49 @@ test("new hero previews expose targets, lines, areas, and trap placement without
   assert.equal(hasKind(insight, { col: 6, row: 4 }, "affected"), true);
   const sickle = buildAbilityPreview({ gameView: view, viewerPlayerId: "P1", sourceUnitId: source.id, abilityId: ARTEMIS_SILVER_SICKLE_ID, targetingCell: { col: 6, row: 4 } });
   assert.equal(hasKind(sickle, { col: 6, row: 5 }, "area"), true);
-  assert.equal(hasKind(sickle, { col: 8, row: 4 }, "line"), true);
+  assert.equal(hasKind(sickle, { col: 5, row: 4 }, "affected"), true);
+  assert.equal(hasKind(sickle, { col: 6, row: 4 }, "affected"), true);
+  assert.equal(hasKind(sickle, { col: 7, row: 4 }, "area"), false);
+  assert.equal(hasKind(sickle, { col: 8, row: 4 }, "line"), false);
   const offLineSickle = buildAbilityPreview({ gameView: view, viewerPlayerId: "P1", sourceUnitId: source.id, abilityId: ARTEMIS_SILVER_SICKLE_ID, targetingCell: { col: 6, row: 5 } });
   assert.equal(hasKind(offLineSickle, { col: 8, row: 5 }, "area"), false);
 
   assert.equal(collectTargets(push).some((target) => target.unitId === hiddenEnemy.id), false);
+});
+
+test("Silver Moon Sickle keeps farther legal endpoints faint while the affected preview stops at hover", () => {
+  const artemida = unit({
+    id: "artemida-sickle-preview",
+    owner: "P1",
+    heroId: "artemida",
+    class: "archer",
+    position: { col: 4, row: 4 },
+  });
+  const view = makeView([artemida]);
+
+  const lineOnly = buildAbilityPreview({
+    gameView: view,
+    viewerPlayerId: "P1",
+    sourceUnitId: artemida.id,
+    abilityId: ARTEMIS_SILVER_SICKLE_ID,
+  });
+  assert.equal(hasKind(lineOnly, { col: 5, row: 4 }, "line"), true);
+  assert.equal(hasKind(lineOnly, { col: 8, row: 4 }, "line"), true);
+  assert.equal(hasKind(lineOnly, { col: 5, row: 4 }, "affected"), false);
+
+  const hovered = buildAbilityPreview({
+    gameView: view,
+    viewerPlayerId: "P1",
+    sourceUnitId: artemida.id,
+    abilityId: ARTEMIS_SILVER_SICKLE_ID,
+    targetingCell: { col: 6, row: 4 },
+  });
+  assert.equal(hasKind(hovered, { col: 5, row: 4 }, "affected"), true);
+  assert.equal(hasKind(hovered, { col: 6, row: 4 }, "affected"), true);
+  assert.equal(hasKind(hovered, { col: 7, row: 4 }, "affected"), false);
+  assert.equal(hasKind(hovered, { col: 7, row: 4 }, "area"), false);
+  assert.equal(hasKind(hovered, { col: 8, row: 4 }, "line"), true);
+  assert.equal(hasKind(hovered, { col: 8, row: 4 }, "affected"), false);
 });
 
 test("Moon Insight pending preview uses authoritative line options and the hovered 3x3 center", () => {

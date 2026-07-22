@@ -140,6 +140,40 @@ test("board interaction keys change for placement, targeting, and forced board c
     }),
     getMobileBoardInteractionKey({ actionMode: "move", moveOptions: null }),
   );
+  assert.equal(
+    getMobileBoardInteractionKey({
+      actionMode: "artemisSilverSickle",
+      targetingMode: "artemidaSilverCrescent",
+    }),
+    "artemisSilverSickle:artemidaSilverCrescent::",
+  );
+});
+
+test("mobile Silver Moon Sickle task asks for an endpoint and remains cancelable", () => {
+  setLanguage("en", { setItem: () => undefined });
+  const markup = renderToStaticMarkup(
+    <CurrentTaskPanel
+      compact
+      vm={{
+        view: { phase: "battle", abilitiesByUnitId: { artemida: [] } },
+        pendingRoll: null,
+        pendingMeta: null,
+        actionMode: "artemisSilverSickle",
+        targetingMode: {
+          sourceUnitId: "artemida",
+          abilityId: "artemidaSilverCrescent",
+          step: "artemisSilverSickle",
+        },
+        selectedUnitId: "artemida",
+        papyrusLineAxis: "row",
+        undyneAxis: "row",
+        setActionMode: () => undefined,
+      }}
+    />,
+  );
+  assert.match(markup, /Silver Moon Sickle/);
+  assert.match(markup, /choose an endpoint on the attack line/i);
+  assert.match(markup, /Cancel/);
 });
 
 test("an initiative pending roll exits the mobile room lobby before phase changes", () => {

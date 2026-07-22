@@ -45,6 +45,7 @@ import {
   coordKey,
   diagonalDestinations,
   firstVisibleArcherTargets,
+  linePath,
   lineCellsToTargets,
   openCells,
   straightLineDestinations,
@@ -429,19 +430,21 @@ function uniqueCells(cells: Coord[]): Coord[] {
   return [...byKey.values()];
 }
 
-function rayCells(size: number, from: Coord, toward: Coord): Coord[] {
-  const dx = toward.col - from.col;
-  const dy = toward.row - from.row;
-  if (dx === 0 && dy === 0) return [];
-  if (dx !== 0 && dy !== 0 && Math.abs(dx) !== Math.abs(dy)) return [];
-  const step = { col: Math.sign(dx), row: Math.sign(dy) };
-  const cells: Coord[] = [];
-  let current = { col: from.col + step.col, row: from.row + step.row };
-  while (current.col >= 0 && current.row >= 0 && current.col < size && current.row < size) {
-    cells.push({ ...current });
-    current = { col: current.col + step.col, row: current.row + step.row };
-  }
-  return cells;
+function isBeyondEndpointOnRay(from: Coord, endpoint: Coord, cell: Coord): boolean {
+  const endpointPath = linePath(from, endpoint);
+  const cellPath = linePath(from, cell);
+  if (!endpointPath || !cellPath || endpointPath.length < 2 || cellPath.length < 2) return false;
+  const endpointStep = {
+    col: endpointPath[1].col - from.col,
+    row: endpointPath[1].row - from.row,
+  };
+  const cellStep = {
+    col: cellPath[1].col - from.col,
+    row: cellPath[1].row - from.row,
+  };
+  return endpointStep.col === cellStep.col &&
+    endpointStep.row === cellStep.row &&
+    cellPath.length > endpointPath.length;
 }
 
 export function buildAbilityPreview({
@@ -699,10 +702,13 @@ export function buildAbilityPreview({
         (cell) => coordKey(cell) === coordKey(targetingCell),
       ) ? targetingCell : null;
       const selectedRay = selectedTarget
-        ? rayCells(boardSize(gameView), source.position, selectedTarget)
+        ? linePath(source.position, selectedTarget)?.slice(1) ?? []
         : [];
       const affectedCells = uniqueCells(
         selectedRay.flatMap((cell) => cellsInRadius(boardSize(gameView), cell, 1, true)),
+      ).filter((cell) =>
+        coordKey(cell) !== coordKey(source.position!) &&
+        (!selectedTarget || !isBeyondEndpointOnRay(source.position!, selectedTarget, cell)),
       );
       return compactPreview([
         {
@@ -712,9 +718,11 @@ export function buildAbilityPreview({
           labelKey: "preview.labels.archerLine",
         },
         selectedTarget ? {
-          kind: "line",
+          kind: "multiStep",
+          step: "selectedEndpointLine",
           sourceCell: { ...source.position },
-          lineCells: selectedRay,
+          cells: selectedRay,
+          cellKind: "affected",
           labelKey: "preview.labels.affectedLine",
         } : null,
         selectedTarget ? {
