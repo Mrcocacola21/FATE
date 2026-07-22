@@ -229,7 +229,9 @@ export const PassiveImpulseInfo: FC<{ unit: UnitState | null; abilities: Ability
   if (!unit) return null;
   const infoAbilities = abilities.filter(
     (ability) =>
-      (ability.kind === "passive" || ability.kind === "impulse") &&
+      (ability.kind === "passive" ||
+        ability.kind === "impulse" ||
+        ability.kind === "phantasm") &&
       !shouldRenderManualAbilityButton(ability),
   );
   if (infoAbilities.length === 0) return null;

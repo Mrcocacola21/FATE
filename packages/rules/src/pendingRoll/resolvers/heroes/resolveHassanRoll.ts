@@ -6,9 +6,10 @@ import type {
   ResolveRollChoice,
 } from "../../../model";
 import {
+  ABILITY_HASSAN_ASSASIN_ORDER,
   ABILITY_HASSAN_TRUE_ENEMY,
 } from "../../../abilities";
-import { clearPendingRoll, requestRoll } from "../../../core";
+import { clearPendingRoll, evAbilityUsed, requestRoll } from "../../../core";
 import { makeAttackContext } from "../../builders/buildPendingRoll";
 import { commitAbilityCost } from "../../../actions/abilityCosts";
 import { canSpendSlots, spendSlots } from "../../../turnEconomy";
@@ -27,7 +28,7 @@ import {
   activateVladForest,
   requestVladStakesPlacement,
 } from "../../../actions/heroes/vlad";
-import { isVlad, isKaiser } from "../../../actions/shared";
+import { isHassan, isVlad, isKaiser } from "../../../actions/shared";
 import { exitBunkerForUnit } from "../../../actions/heroes/kaiser";
 
 const ASSASSIN_ORDER_MIN_STEALTH = 5;
@@ -216,6 +217,16 @@ export function resolveHassanAssassinOrderSelection(
     return { state: clearPendingRoll(state), events: [] };
   }
 
+  const hassan = state.units[hassanId];
+  if (
+    !hassan ||
+    !hassan.isAlive ||
+    !isHassan(hassan) ||
+    hassan.owner !== owner
+  ) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+
   const payload =
     choice && typeof choice === "object" && "type" in choice
       ? (choice as { type?: string; unitIds?: string[] })
@@ -257,17 +268,30 @@ export function resolveHassanAssassinOrderSelection(
   }
 
   const cleared: GameState = clearPendingRoll({ ...state, units });
+  const events = [
+    evAbilityUsed({
+      unitId: hassan.id,
+      abilityId: ABILITY_HASSAN_ASSASIN_ORDER,
+    }),
+  ];
   const queue = Array.isArray(ctx.queue) ? ctx.queue : [];
   if (queue.length > 0) {
     const [nextOwner, ...rest] = queue;
-    return requestHassanAssassinOrderSelection(cleared, nextOwner, rest);
+    const requested = requestHassanAssassinOrderSelection(cleared, nextOwner, rest);
+    return {
+      state: requested.state,
+      events: [...events, ...requested.events],
+    };
   }
 
   const vladFlow = requestBattleStartVladFlowIfNeeded(cleared);
   if (vladFlow.state !== cleared || vladFlow.events.length > 0) {
-    return vladFlow;
+    return {
+      state: vladFlow.state,
+      events: [...events, ...vladFlow.events],
+    };
   }
-  return { state: cleared, events: [] };
+  return { state: cleared, events };
 }
 
 

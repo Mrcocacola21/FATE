@@ -5,6 +5,7 @@ import {
   ABILITY_ARTEMIDA_SILVER_CRESCENT,
   ABILITY_EL_SID_COMPEADOR_TISONA,
   ABILITY_FALSE_TRAIL_EXPLOSION,
+  ABILITY_HASSAN_ASSASIN_ORDER,
   ABILITY_JEBE_HAIL_OF_ARROWS,
   ABILITY_KAISER_DORA,
   ABILITY_KALADIN_FIFTH,
@@ -94,6 +95,13 @@ export function applyUseAbility(
   const spec = getAbilitySpec(action.abilityId);
   if (!spec) {
     return { state, events: [] };
+  }
+  if (spec.id === ABILITY_HASSAN_ASSASIN_ORDER) {
+    return {
+      state,
+      events: [],
+      rejectionReason: "ability_triggers_automatically_at_battle_start",
+    };
   }
   if (!blindCenterIsLegal(unit, action)) {
     return { state, events: [] };

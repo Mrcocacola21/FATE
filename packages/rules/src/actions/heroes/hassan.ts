@@ -185,4 +185,23 @@ export function requestHassanAssassinOrderSelection(
   );
 }
 
+export function requestHassanAssassinOrderBattleStart(
+  state: GameState
+): ApplyResult {
+  const owners = Array.from(
+    new Set(
+      Object.values(state.units)
+        .filter((unit) => unit.isAlive && isHassan(unit))
+        .map((unit) => unit.owner)
+    )
+  ).sort() as PlayerId[];
+
+  if (owners.length === 0) {
+    return { state, events: [] };
+  }
+
+  const [firstOwner, ...queue] = owners;
+  return requestHassanAssassinOrderSelection(state, firstOwner, queue);
+}
+
 

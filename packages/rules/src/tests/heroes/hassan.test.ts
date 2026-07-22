@@ -1,4 +1,7 @@
 import {
+  ABILITY_HASSAN_ASSASIN_ORDER,
+} from "../../abilities";
+import {
   ABILITY_HASSAN_TRUE_ENEMY,
   applyAction,
   assert,
@@ -11,7 +14,9 @@ import {
   getStealthSuccessMinRoll,
   getUnitDefinition,
   HERO_HASSAN_ID,
+  HERO_CHIKATILO_ID,
   initKnowledgeForOwners,
+  makePlayerView,
   makeEmptyTurnEconomy,
   makeAttackWinRng,
   makeRngSequence,
@@ -460,5 +465,154 @@ export function testHassanAssassinOrderBattleStartSelectionAndPerSideIndependenc
 
   console.log(
     "hassan_assassin_order_battle_start_selection_and_per_side_independence passed"
+  );
+}
+
+export function testHassanAssassinOrderResumesAfterChikatiloAndRejectsSafely() {
+  const rng = new SeededRNG(871);
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1", { assassin: HERO_HASSAN_ID }));
+  state = attachArmy(state, createDefaultArmy("P2", { assassin: HERO_CHIKATILO_ID }));
+
+  const hassan = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.heroId === HERO_HASSAN_ID
+  )!;
+  const chikatilo = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.heroId === HERO_CHIKATILO_ID
+  )!;
+
+  const p1Units = Object.values(state.units)
+    .filter((unit) => unit.owner === "P1")
+    .sort((a, b) => a.id.localeCompare(b.id));
+  const p2Units = Object.values(state.units)
+    .filter((unit) => unit.owner === "P2" && unit.id !== chikatilo.id)
+    .sort((a, b) => a.id.localeCompare(b.id));
+  p1Units.forEach((unit, index) => {
+    state = setUnit(state, unit.id, { position: { col: index + 1, row: 0 } });
+  });
+  p2Units.forEach((unit, index) => {
+    state = setUnit(state, unit.id, { position: { col: index + 1, row: 8 } });
+  });
+  state = setUnit(state, chikatilo.id, { position: null });
+  state = {
+    ...state,
+    phase: "battle",
+    currentPlayer: "P1",
+    activeUnitId: null,
+    pendingRoll: {
+      id: "chikatilo-battle-start-placement",
+      kind: "chikatiloFalseTrailPlacement",
+      player: "P2",
+      context: {
+        chikatiloId: chikatilo.id,
+        legalPositions: [{ col: 4, row: 4 }],
+        queue: [],
+      },
+    },
+  };
+  state = initKnowledgeForOwners(state);
+
+  const chikatiloPlaced = applyAction(
+    state,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: state.pendingRoll!.id,
+      player: "P2",
+      choice: { type: "chikatiloPlace", position: { col: 4, row: 4 } },
+    } as any,
+    rng
+  );
+  assert(
+    chikatiloPlaced.state.pendingRoll?.kind === "hassanAssassinOrderSelection",
+    "Assassin Order should resume after Chikatilo's battle-start placement"
+  );
+  assert(
+    chikatiloPlaced.state.pendingRoll?.player === "P1",
+    "the Hassan owner should receive the resumed Assassin Order task"
+  );
+
+  const ownerView = makePlayerView(chikatiloPlaced.state, "P1");
+  const opponentView = makePlayerView(chikatiloPlaced.state, "P2");
+  const eligibleIds = (ownerView.pendingRoll?.context?.eligibleUnitIds ?? []) as string[];
+  assert(
+    eligibleIds.length >= 2 && eligibleIds.every((id) => ownerView.units[id]?.owner === "P1"),
+    "the owner projection should contain only allied eligible targets"
+  );
+  assert(
+    opponentView.pendingRoll === null,
+    "Assassin Order target options must remain private from the opponent"
+  );
+
+  const beforeInvalid = chikatiloPlaced.state;
+  const invalid = applyAction(
+    beforeInvalid,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: beforeInvalid.pendingRoll!.id,
+      player: "P1",
+      choice: {
+        type: "hassanAssassinOrderPick",
+        unitIds: [eligibleIds[0], chikatilo.id],
+      },
+    } as any,
+    rng
+  );
+  assert(invalid.state === beforeInvalid, "invalid Assassin Order targets must not mutate state");
+  assert(invalid.events.length === 0, "invalid Assassin Order targets must not emit events");
+
+  const selectedIds = eligibleIds.slice(0, 2);
+  const resolved = applyAction(
+    beforeInvalid,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: beforeInvalid.pendingRoll!.id,
+      player: "P1",
+      choice: {
+        type: "hassanAssassinOrderPick",
+        unitIds: selectedIds,
+      },
+    } as any,
+    rng
+  );
+  assert(!resolved.state.pendingRoll, "Assassin Order should clear after a valid selection");
+  assert(
+    selectedIds.every(
+      (unitId) => getStealthSuccessMinRoll(resolved.state.units[unitId]) === 5
+    ),
+    "the resumed Assassin Order should grant Stealth on 5-6"
+  );
+  assert(
+    resolved.events.some(
+      (event) =>
+        event.type === "abilityUsed" &&
+        event.unitId === hassan.id &&
+        event.abilityId === ABILITY_HASSAN_ASSASIN_ORDER
+    ),
+    "Assassin Order resolution should emit the existing ability-used event"
+  );
+
+  const battleState = {
+    ...resolved.state,
+    currentPlayer: "P1" as const,
+    activeUnitId: hassan.id,
+  };
+  const manual = applyAction(
+    battleState,
+    {
+      type: "useAbility",
+      unitId: hassan.id,
+      abilityId: ABILITY_HASSAN_ASSASIN_ORDER,
+    } as any,
+    rng
+  );
+  assert(
+    manual.rejectionReason === "ability_triggers_automatically_at_battle_start",
+    "manual Assassin Order use should be rejected with a useful reason"
+  );
+  assert(manual.state === battleState, "manual Assassin Order rejection must not mutate state");
+  assert(!manual.state.units[hassan.id].turn.actionUsed, "manual rejection must not spend Action");
+
+  console.log(
+    "hassan_assassin_order_resumes_after_chikatilo_and_rejects_safely passed"
   );
 }

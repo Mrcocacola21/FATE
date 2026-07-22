@@ -266,6 +266,7 @@ import {
   testHassanStealthThresholdIs4,
   testHassanTrueEnemyGatingConsumesAndForcesOneAttack,
   testHassanAssassinOrderBattleStartSelectionAndPerSideIndependence,
+  testHassanAssassinOrderResumesAfterChikatiloAndRejectsSafely,
 } from "./heroes/hassan.test";
 import {
   testGutsHpBonus,
@@ -563,6 +564,7 @@ function main(): void {
   testHassanStealthThresholdIs4();
   testHassanTrueEnemyGatingConsumesAndForcesOneAttack();
   testHassanAssassinOrderBattleStartSelectionAndPerSideIndependence();
+  testHassanAssassinOrderResumesAfterChikatiloAndRejectsSafely();
   testGriffithWretchedManDamageReductionClamped();
   testGriffithWarriorDoubleAutoHit();
   testGriffithBasicAttackAndReadOnlyRebirth();

@@ -89,6 +89,14 @@ export function useGameShellCoreState() {
     seat,
     playerId,
   });
+  const hassanAssassinOrderPendingId =
+    pending.pendingRoll?.kind === "hassanAssassinOrderSelection"
+      ? pending.pendingRoll.id
+      : null;
+
+  useEffect(() => {
+    setHassanAssassinOrderSelections([]);
+  }, [hassanAssassinOrderPendingId]);
 
   const autoAttemptKeyRef = useRef<string | null>(null);
   const autoBlockedKeyRef = useRef<string | null>(null);

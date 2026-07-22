@@ -602,7 +602,7 @@ export const en = {
     specialResources: "Special resources",
     primaryActions: "Actions",
     abilityActions: "Abilities",
-    passiveImpulseInfo: "Info · Passive / Impulse",
+    passiveImpulseInfo: "Info · Passive / Automatic",
     abilityCounter: "Ability counter",
     available: "Available",
     spent: "Spent",
@@ -1370,6 +1370,9 @@ export const en = {
     payHp: "Pay 1 HP",
     placeStakes: "Place 3 stakes",
     selectedCount: "Selected: {{current}}/{{total}}",
+    hassanAssassinOrderTitle: "Assassin Order: choose 2 allied heroes",
+    hassanAssassinOrderInstruction:
+      "Choose highlighted allies. They gain Stealth on 5–6 for this game.",
     placeStakesButton: "Place stakes",
     pendingAttacks: "Pending attacks: {{count}}",
     resolveToContinue: "Pending roll: {{roll}}. Resolve to continue.",

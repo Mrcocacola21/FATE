@@ -242,6 +242,13 @@ test("board interaction keys change for placement, targeting, and forced board c
     }),
     "pending:forced-reposition",
   );
+  assert.equal(
+    getMobileBoardInteractionKey({
+      boardSelectionPending: true,
+      pendingRoll: { id: "hassan-order", kind: "hassanAssassinOrderSelection" },
+    }),
+    "pending:hassan-order",
+  );
   assert.notEqual(
     getMobileBoardInteractionKey({
       actionMode: "move",

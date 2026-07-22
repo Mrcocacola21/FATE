@@ -4,6 +4,7 @@ import { getUnitAt } from "../../../../board";
 import { clearPendingRoll } from "../../../../core";
 import { evUnitPlaced } from "../../../../core";
 import { requestChikatiloPlacement } from "../../../../actions/heroes/chikatilo";
+import { requestHassanAssassinOrderBattleStart } from "../../../../actions/heroes/hassan";
 import { isVlad } from "../../../../actions/shared";
 import { activateVladForest, requestVladStakesPlacement } from "../../../../actions/heroes/vlad";
 import { HERO_FALSE_TRAIL_TOKEN_ID } from "../../../../heroes";
@@ -169,6 +170,11 @@ export function resolveChikatiloFalseTrailPlacement(
   }
 
   if (nextState.phase === "battle" && !nextState.pendingRoll) {
+    const hassan = requestHassanAssassinOrderBattleStart(nextState);
+    if (hassan.state !== nextState || hassan.events.length > 0) {
+      return { state: hassan.state, events: [...events, ...hassan.events] };
+    }
+
     const vlad = maybeRequestVladBattleStartStakes(nextState);
     if (vlad.state !== nextState || vlad.events.length > 0) {
       return { state: vlad.state, events: [...events, ...vlad.events] };

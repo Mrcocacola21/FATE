@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { mock } from "node:test";
 import {
   ABILITY_ARTEMIDA_SILVER_CRESCENT,
+  ABILITY_HASSAN_ASSASIN_ORDER,
   ABILITY_RIVER_PERSON_BOAT,
   ABILITY_RIVER_PERSON_BOATMAN,
   attachArmy,
@@ -13,8 +14,10 @@ import {
   HERO_ARTEMIDA_ID,
   HERO_FALSE_TRAIL_TOKEN_ID,
   HERO_KANEKI_ID,
+  HERO_HASSAN_ID,
   HERO_RIVER_PERSON_ID,
   makePlayerView,
+  getStealthSuccessMinRoll,
   projectEventsForRecipient,
   type GameEvent,
   type GameState,
@@ -1131,6 +1134,108 @@ function testPendingBoardChoiceUsesAuthenticatedSeat() {
   console.log("hardening_pending_board_choice_uses_authenticated_seat passed");
 }
 
+function testHassanAssassinOrderCommandAndProjectionAreAuthoritative() {
+  const { room } = makeSeatedRoom({
+    roomIdPrefix: "hardening-hassan-assassin-order",
+  });
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1", { assassin: HERO_HASSAN_ID }));
+  state = attachArmy(state, createDefaultArmy("P2"));
+  const hassan = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.heroId === HERO_HASSAN_ID,
+  );
+  const allies = Object.values(state.units).filter(
+    (unit) => unit.owner === "P1" && unit.id !== hassan?.id,
+  );
+  const enemy = Object.values(state.units).find((unit) => unit.owner === "P2");
+  assert(hassan && allies.length >= 2 && enemy, "Hassan targets should exist");
+  state = setUnit(state, hassan.id, { position: { col: 1, row: 0 } });
+  state = setUnit(state, allies[0].id, { position: { col: 2, row: 0 } });
+  state = setUnit(state, allies[1].id, { position: { col: 3, row: 0 } });
+  state = setUnit(state, enemy.id, { position: { col: 1, row: 8 } });
+  room.state = {
+    ...state,
+    phase: "battle",
+    currentPlayer: "P1",
+    pendingRoll: {
+      id: "hassan-assassin-order",
+      kind: "hassanAssassinOrderSelection",
+      player: "P1",
+      context: {
+        owner: "P1",
+        hassanId: hassan.id,
+        eligibleUnitIds: [allies[0].id, allies[1].id],
+        queue: [],
+      },
+    },
+  };
+
+  const validPayload = GameActionSchema.safeParse({
+    type: "resolvePendingRoll",
+    pendingRollId: "hassan-assassin-order",
+    choice: {
+      type: "hassanAssassinOrderPick",
+      unitIds: [allies[0].id, allies[1].id],
+    },
+  });
+  const invalidPayload = GameActionSchema.safeParse({
+    type: "resolvePendingRoll",
+    pendingRollId: "hassan-assassin-order",
+    choice: {
+      type: "hassanAssassinOrderPick",
+      unitIds: [allies[0].id],
+    },
+  });
+  assert(validPayload.success, "the valid Assassin Order payload should match schema");
+  assert.equal(invalidPayload.success, false, "the schema should reject a one-target payload");
+
+  const ownerView = makePlayerView(room.state, "P1");
+  const opponentView = makePlayerView(room.state, "P2");
+  assert.equal(ownerView.pendingRoll?.kind, "hassanAssassinOrderSelection");
+  assert.deepEqual(ownerView.pendingRoll?.context.eligibleUnitIds, [allies[0].id, allies[1].id]);
+  assert.equal(opponentView.pendingRoll, null, "the opponent must not receive Hassan target options");
+  const projectedAbility = ownerView.abilitiesByUnitId[hassan.id]?.find(
+    (ability) => ability.id === ABILITY_HASSAN_ASSASIN_ORDER,
+  );
+  assert.equal(projectedAbility?.kind, "phantasm");
+  assert.equal(projectedAbility?.slot, "none");
+
+  const beforeInvalid = room.state;
+  const revisionBeforeInvalid = room.revision;
+  const rejectedChoice = applyGameAction(
+    room,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: "hassan-assassin-order",
+      choice: {
+        type: "hassanAssassinOrderPick",
+        unitIds: [allies[0].id, enemy.id],
+      },
+    } as any,
+    "P1",
+  );
+  assert.equal(rejectedChoice.ok, false, "the server should reject an ineligible target");
+  assert.equal(room.state, beforeInvalid, "a rejected Assassin Order command must not mutate state");
+  assert.equal(room.revision, revisionBeforeInvalid, "rejection must not advance revision");
+
+  const acceptedChoice = applyGameAction(room, validPayload.data as any, "P1");
+  assert(acceptedChoice.ok, "the server should accept a valid Assassin Order choice");
+  assert.equal(room.state.pendingRoll, null, "the valid choice should clear the pending task");
+  assert.equal(getStealthSuccessMinRoll(room.state.units[allies[0].id]), 5);
+  assert.equal(getStealthSuccessMinRoll(room.state.units[allies[1].id]), 5);
+  assert(
+    acceptedChoice.events.some(
+      (event) =>
+        event.type === "abilityUsed" &&
+        event.unitId === hassan.id &&
+        event.abilityId === ABILITY_HASSAN_ASSASIN_ORDER,
+    ),
+    "accepted Assassin Order should be visible in the authoritative event log",
+  );
+
+  console.log("hardening_hassan_assassin_order_authoritative passed");
+}
+
 async function main() {
   await testGraceExpiryVacatesSeatAndInvalidatesToken();
   await testReconnectWithinGraceKeepsSeatAndClearsTimer();
@@ -1151,6 +1256,7 @@ async function main() {
   testMulticlassMovementCommandsStayAuthoritative();
   testArtemidaSickleEndpointCommandsStayAuthoritative();
   testPendingBoardChoiceUsesAuthenticatedSeat();
+  testHassanAssassinOrderCommandAndProjectionAreAuthoritative();
   console.log("hardening tests passed");
 }
 

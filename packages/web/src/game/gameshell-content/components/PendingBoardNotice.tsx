@@ -659,11 +659,9 @@ export function PendingBoardNotice({
         </div>
       ) : isHassanAssassinOrderSelection ? (
         <div>
-          <div className="font-semibold">
-            {p(
-              "Assassin Order: pick 2 allied heroes to gain Stealth (5-6)",
-              "Орден убивць: оберіть 2 союзних героїв для скритності на 5–6",
-            )}
+          <div className="font-semibold">{t("pending.hassanAssassinOrderTitle")}</div>
+          <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
+            {t("pending.hassanAssassinOrderInstruction")}
           </div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
             {t("pending.selectedCount", {

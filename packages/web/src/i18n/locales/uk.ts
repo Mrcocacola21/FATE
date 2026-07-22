@@ -605,7 +605,7 @@ export const uk = {
     specialResources: "Особливі ресурси",
     primaryActions: "Дії",
     abilityActions: "Здібності",
-    passiveImpulseInfo: "Інфо · Пасивні / імпульсні",
+    passiveImpulseInfo: "Інфо · Пасивні / автоматичні",
     abilityCounter: "Лічильник здібності",
     available: "Доступно",
     spent: "Витрачено",
@@ -1380,6 +1380,9 @@ export const uk = {
     payHp: "Сплатити 1 здоров’я",
     placeStakes: "Розмістіть 3 кілки",
     selectedCount: "Обрано: {{current}}/{{total}}",
+    hassanAssassinOrderTitle: "Орден убивць: оберіть 2 союзних героїв",
+    hassanAssassinOrderInstruction:
+      "Оберіть підсвічених союзників. Вони отримають скритність на 5–6 до кінця гри.",
     placeStakesButton: "Розмістити кілки",
     pendingAttacks: "Очікувані атаки: {{count}}",
     resolveToContinue: "Очікуваний кидок: {{roll}}. Завершіть його, щоб продовжити.",

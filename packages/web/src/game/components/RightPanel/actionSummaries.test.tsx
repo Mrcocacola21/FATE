@@ -8,6 +8,7 @@ import {
   DON_SORROWFUL_ID,
   GRIFFITH_FEMTO_REBIRTH_ID,
   GUTS_CANNON_ID,
+  HASSAN_ASSASSIN_ORDER_ID,
   JACK_SNARES_ID,
   KANEKI_REGENERATION_ID,
   LOKI_LAUGHT_ID,
@@ -1245,6 +1246,124 @@ test("Hassan True Enemy unit clicks submit only highlighted targets", () => {
       payload: { forcedAttackerId: controlled.id },
     },
   ]);
+});
+
+test("Hassan Assassin Order uses highlighted allied board targets without inspect fallthrough", () => {
+  const hassan = makeUnit({
+    id: "P1-assassin-hassan",
+    heroId: "hassan",
+    position: { col: 2, row: 0 },
+  });
+  const ally = makeUnit({
+    id: "P1-rider-ally",
+    class: "rider",
+    heroId: undefined,
+    position: { col: 3, row: 0 },
+  });
+  const enemy = makeUnit({
+    id: "P2-rider-enemy",
+    owner: "P2",
+    class: "rider",
+    heroId: undefined,
+    position: { col: 3, row: 8 },
+  });
+  const view = {
+    ...makeView(hassan),
+    units: { [hassan.id]: hassan, [ally.id]: ally, [enemy.id]: enemy },
+  };
+  let selections: string[] = [];
+  let inspected = false;
+  const handler = createCellClickHandler({
+    view,
+    playerId: "P1",
+    joined: true,
+    isSpectator: false,
+    hasBlockingRoll: true,
+    boardSelectionPending: true,
+    isHassanAssassinOrderSelection: true,
+    hassanAssassinOrderEligibleIds: [ally.id],
+    pendingRoll: {
+      id: "hassan-assassin-order",
+      kind: "hassanAssassinOrderSelection",
+      player: "P1",
+      context: { eligibleUnitIds: [ally.id] },
+    },
+    actionMode: null,
+    selectedUnitId: hassan.id,
+    setHassanAssassinOrderSelections: (
+      update: string[] | ((previous: string[]) => string[]),
+    ) => {
+      selections = typeof update === "function" ? update(selections) : update;
+    },
+    setSelectedUnit: () => {
+      inspected = true;
+    },
+    sendAction: () => undefined,
+    sendGameAction: () => undefined,
+  } as never);
+
+  handler(3, 8);
+  assert.deepEqual(selections, [], "non-highlighted enemy clicks should be ignored");
+  assert.equal(inspected, false, "a pending board choice must not fall through to inspect");
+  handler(3, 0);
+  assert.deepEqual(selections, [ally.id]);
+  assert.equal(inspected, false, "the highlighted target click must remain in the pending flow");
+  handler(3, 0);
+  assert.deepEqual(selections, [], "clicking a selected ally again should cancel that selection");
+});
+
+test("Hassan Assassin Order is automatic info and has a mobile-safe pending instruction", () => {
+  setLanguage("en", { setItem: () => undefined });
+  const hassan = makeUnit({
+    id: "P1-assassin-hassan",
+    heroId: "hassan",
+    position: { col: 2, row: 0 },
+  });
+  const phantasm = makeAbility({
+    id: HASSAN_ASSASSIN_ORDER_ID,
+    name: "Assassin Order",
+    kind: "phantasm",
+    description: "At battle start, choose 2 allied heroes.",
+    slot: "none",
+  });
+  assert.equal(shouldRenderManualAbilityButton(phantasm), false);
+
+  const infoMarkup = renderToStaticMarkup(
+    <PassiveImpulseInfo unit={hassan} abilities={[phantasm]} />,
+  );
+  assert.match(infoMarkup, /data-ability-info-id="hassanAssasinOrder"/);
+  assert.match(infoMarkup, /Assassin Order/);
+  assert.match(infoMarkup, /Phantasm/);
+  assert.match(infoMarkup, /Triggers automatically/);
+  assert.doesNotMatch(infoMarkup, /<button/);
+
+  const taskMarkup = renderToStaticMarkup(
+    <CurrentTaskPanel
+      compact
+      vm={{
+        view: makeView(hassan),
+        playerId: "P1",
+        pendingRoll: {
+          id: "hassan-assassin-order",
+          player: "P1",
+          kind: "hassanAssassinOrderSelection",
+          context: { eligibleUnitIds: ["P1-rider", "P1-knight"] },
+        },
+        pendingQueueCount: 0,
+        stakeSelections: [],
+        stakeLimit: 0,
+        hassanAssassinOrderSelections: [],
+        isHassanAssassinOrderSelection: true,
+        sendAction: () => undefined,
+        setStakeSelections: () => undefined,
+        setHassanAssassinOrderSelections: () => undefined,
+      }}
+    />,
+  );
+  assert.match(taskMarkup, /Assassin Order selection/);
+  assert.match(taskMarkup, /Choose highlighted allies/);
+  assert.match(taskMarkup, /Selected: 0\/2/);
+  assert.doesNotMatch(taskMarkup, /Roll dice/);
 });
 
 test("Hassan and Loki pending unit targets submit authenticated board choices", () => {
