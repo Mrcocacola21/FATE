@@ -47,6 +47,7 @@ interface BoardProps {
   boardPreview?: BoardPreview | null;
   preferredUnitIds?: readonly string[];
   doraPreview?: { center: Coord; radius: number } | null;
+  linePreview?: { target: Coord; axis: "row" | "col" } | null;
   disabled?: boolean;
   allowUnitSelection?: boolean;
   allowAnyUnitSelection?: boolean;
@@ -190,6 +191,18 @@ function coordKey(coord: Coord): string {
   return `${coord.col},${coord.row}`;
 }
 
+export function getBoardLinePreviewCells(
+  size: number,
+  target: Coord,
+  axis: "row" | "col",
+): Coord[] {
+  return Array.from({ length: size }, (_, index) =>
+    axis === "row"
+      ? { col: index, row: target.row }
+      : { col: target.col, row: index },
+  );
+}
+
 export const Board: FC<BoardProps> = ({
   view,
   playerId,
@@ -199,6 +212,7 @@ export const Board: FC<BoardProps> = ({
   boardPreview = null,
   preferredUnitIds = [],
   doraPreview = null,
+  linePreview = null,
   allowUnitSelection = true,
   allowAnyUnitSelection = false,
   visualEffectsEnabled = false,
@@ -545,6 +559,17 @@ export const Board: FC<BoardProps> = ({
         aoeHighlights.set(key, kind);
         doraPreviewKeys.add(key);
       }
+    }
+  }
+
+  if (linePreview) {
+    const kind: "aoe" | "aoeDisabled" = disabled ? "aoeDisabled" : "aoe";
+    for (const coord of getBoardLinePreviewCells(
+      size,
+      linePreview.target,
+      linePreview.axis,
+    )) {
+      aoeHighlights.set(coordKey(toViewCoord(coord)), kind);
     }
   }
   const doraPreviewCenterKey = doraPreview ? coordKey(toViewCoord(doraPreview.center)) : null;

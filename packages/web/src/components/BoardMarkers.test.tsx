@@ -12,7 +12,7 @@ import {
   type PlayerView,
 } from "rules";
 import { getBoardMarkerAsset } from "../assets/registry";
-import { Board } from "./Board";
+import { Board, getBoardLinePreviewCells } from "./Board";
 import { BoneStatusPanel } from "../game/boneStatus";
 import { setLanguage } from "../i18n";
 
@@ -79,6 +79,21 @@ function renderBoard(view: PlayerView, playerId: PlayerId): string {
     />,
   );
 }
+
+test("line previews cover the selected row or column instead of the path to it", () => {
+  assert.deepEqual(getBoardLinePreviewCells(4, { col: 2, row: 1 }, "row"), [
+    { col: 0, row: 1 },
+    { col: 1, row: 1 },
+    { col: 2, row: 1 },
+    { col: 3, row: 1 },
+  ]);
+  assert.deepEqual(getBoardLinePreviewCells(4, { col: 2, row: 1 }, "col"), [
+    { col: 2, row: 0 },
+    { col: 2, row: 1 },
+    { col: 2, row: 2 },
+    { col: 2, row: 3 },
+  ]);
+});
 
 test("forest markers use the centered forest asset in the decorative marker layer", () => {
   const markup = renderBoard(makePlayerView(markerState(), "P1"), "P1");

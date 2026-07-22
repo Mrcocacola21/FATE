@@ -106,8 +106,7 @@ export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm, mobile
     ...(vm.boardPreviewCenter &&
     vm.selectedUnit?.position &&
     (vm.actionMode === "mettatonLaser" ||
-      vm.actionMode === "sansGasterBlaster" ||
-      vm.actionMode === "undyneEnergySpear")
+      vm.actionMode === "sansGasterBlaster")
       ? [{
           from: vm.selectedUnit.position,
           to: vm.boardPreviewCenter,
@@ -180,17 +179,24 @@ export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm, mobile
           boardPreview={vm.boardPreview}
           preferredUnitIds={selectableAttackTargetIds}
           doraPreview={
-            vm.boardPreviewCenter
+            vm.boardPreviewCenter && vm.actionMode !== "undyneEnergySpear"
               ? {
                   center: vm.boardPreviewCenter,
                   radius:
                     vm.actionMode === "kaladinFifth"
                       ? 2
                       : vm.actionMode === "mettatonLaser" ||
-                          vm.actionMode === "sansGasterBlaster" ||
-                          vm.actionMode === "undyneEnergySpear"
+                          vm.actionMode === "sansGasterBlaster"
                         ? 0
                         : 1,
+                }
+              : null
+          }
+          linePreview={
+            vm.actionMode === "undyneEnergySpear" && vm.boardPreviewCenter
+              ? {
+                  target: vm.boardPreviewCenter,
+                  axis: vm.papyrusLineAxis === "col" ? "col" : "row",
                 }
               : null
           }
