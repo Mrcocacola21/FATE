@@ -1,4 +1,4 @@
-import type { AbilityView, Coord, PlayerId } from "./shared";
+import type { AbilityView, Coord, GameOverResult, PlayerId } from "./shared";
 import type { GameEvent } from "./events";
 import type { RuleDeclarationState } from "../ruleDeclarations/types";
 import type {
@@ -32,6 +32,7 @@ export interface ApplyResult {
 export interface GameState {
   boardSize: number;
   phase: "lobby" | "placement" | "battle" | "ended";
+  gameOver: GameOverResult | null;
   hostPlayerId: PlayerId | null;
   playersReady: { P1: boolean; P2: boolean };
   seats: { P1: boolean; P2: boolean };

@@ -24,6 +24,7 @@ export function createEmptyGame(): GameState {
   return {
     boardSize: 9,
     phase: "lobby",
+    gameOver: null,
     hostPlayerId: null,
     playersReady: { P1: false, P2: false },
     seats: { P1: false, P2: false },

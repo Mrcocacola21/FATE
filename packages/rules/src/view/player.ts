@@ -6,6 +6,7 @@ import {
   cloneEnemyUnitForPlayer,
   cloneArenaEffectsForRecipient,
   cloneForestMarkers,
+  clonePublicUnit,
   cloneUnit,
   collectPlayerStakeMarkers,
   isStealthedEnemyVisibleToPlayer,
@@ -39,6 +40,10 @@ export function makePlayerView(
   const abilitiesByUnitId: Record<string, AbilityView[]> = {};
 
   for (const unit of Object.values(state.units)) {
+    if (state.phase === "ended") {
+      units[unit.id] = clonePublicUnit(unit);
+      continue;
+    }
     if (unit.owner === playerId) {
       units[unit.id] = cloneUnit(unit);
       abilitiesByUnitId[unit.id] = getAbilityViewsForUnit(state, unit.id);

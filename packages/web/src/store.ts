@@ -108,6 +108,7 @@ const defaultRoomMeta: RoomMeta = {
   debugLog: [],
   ready: { P1: false, P2: false },
   players: { P1: false, P2: false },
+  playerNames: { P1: null, P2: null },
   spectators: 0,
   phase: "lobby",
   pendingRoll: null,
@@ -386,6 +387,7 @@ function handleServerMessage(
         debugLog: incomingMeta.debugLog ?? prevMeta.debugLog ?? [],
         ready: nextReady,
         players: nextPlayers,
+        playerNames: incomingMeta.playerNames ?? prevMeta.playerNames ?? { P1: null, P2: null },
         spectators: incomingMeta.spectators ?? prevMeta.spectators ?? 0,
         phase: incomingMeta.phase ?? prevMeta.phase ?? "lobby",
         pendingRoll:
@@ -774,6 +776,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
   sendAction: (action) => {
     const state = get();
+    if (state.roomState?.phase === "ended") {
+      state.addClientLog("Game is already over.");
+      return;
+    }
     if (state.roomMeta?.pendingRoll && action.type !== "resolvePendingRoll") {
       state.addClientLog("Resolve the pending roll before acting.");
       return;
@@ -810,6 +816,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
   requestMoveOptions: (unitId, mode) => {
     const state = get();
+    if (state.roomState?.phase === "ended") {
+      state.addClientLog("Game is already over.");
+      return;
+    }
     if (state.roomMeta?.pendingRoll) {
       state.addClientLog("Resolve the pending roll before acting.");
       return;

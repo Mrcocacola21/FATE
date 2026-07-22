@@ -10,10 +10,7 @@ import {
   getNextAliveUnitIndex,
   nextPlayer,
 } from "./helpers";
-import {
-  applyNormalVictoryCheck,
-  handleRuleDeclarationRoundEnd,
-} from "../../ruleDeclarations";
+import { handleRuleDeclarationRoundEnd } from "../../ruleDeclarations";
 import { expireChikatiloTrackingAfterTargetTurn } from "../../chikatiloMark";
 import { advanceStormDurationAfterTurn } from "../heroes/lechy";
 
@@ -69,12 +66,6 @@ export function applyEndTurn(state: GameState, rng: RNG): ApplyResult {
     state.turnNumber
   );
 
-  const normalVictory = applyNormalVictoryCheck(
-    stateAfterArenaEffects,
-    drained.events
-  );
-  if (normalVictory.state.phase === "ended") return normalVictory;
-
   const queue = state.turnQueue.length > 0 ? state.turnQueue : state.turnOrder;
   if (queue.length === 0) {
     return { state: stateAfterArenaEffects, events: drained.events };
@@ -91,7 +82,6 @@ export function applyEndTurn(state: GameState, rng: RNG): ApplyResult {
     return {
       state: {
         ...stateAfterArenaEffects,
-        phase: "ended",
         activeUnitId: null,
         pendingMove: null,
       },

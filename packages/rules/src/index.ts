@@ -18,5 +18,6 @@ export * from "./debug";
 export * from "./modes";
 export * from "./ruleDeclarations";
 export * from "./chikatiloMark";
+export * from "./gameOver";
 export { linePath } from "./path";
 export * from "./path";

@@ -252,13 +252,13 @@ export function useGameShellCoreState() {
 
   const sendGameAction = (action: GameAction) => {
     if (!joined || isSpectator || pending.hasBlockingRoll) return;
-    if (!view || view.phase === "lobby") return;
+    if (!view || view.phase === "lobby" || view.phase === "ended") return;
     sendAction(action);
   };
 
   const requestMove = (unitId: string, mode?: MoveMode) => {
     if (!joined || isSpectator || pending.hasBlockingRoll) return;
-    if (!view || view.phase === "lobby") return;
+    if (!view || view.phase === "lobby" || view.phase === "ended") return;
     requestMoveOptions(unitId, mode);
   };
 

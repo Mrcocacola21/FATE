@@ -221,7 +221,11 @@ export function applyDebugStateCommand(
     });
   }
   if (command.type === "debugSetPhase") {
-    return accept({ ...state, phase: command.phase as GamePhase });
+    return accept({
+      ...state,
+      phase: command.phase as GamePhase,
+      gameOver: command.phase === "ended" ? state.gameOver : null,
+    });
   }
   if (command.type === "debugSetTurn") {
     const unitId =

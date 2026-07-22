@@ -20,12 +20,16 @@ import {
   applyRuleDeclarationAfterAttack,
   applyRuleDeclarationWinChecks,
 } from "../ruleDeclarations";
+import { GAME_OVER_REJECTION } from "../gameOver";
 
 export function applyAction(
   state: GameState,
   action: GameAction,
   rng: RNG
 ): ApplyResult {
+  if (state.phase === "ended") {
+    return { state, events: [], rejectionReason: GAME_OVER_REJECTION };
+  }
   const prevState = state;
   if (state.pendingRoll && action.type !== "resolvePendingRoll") {
     return { state, events: [] };
@@ -134,6 +138,7 @@ export function applyAction(
     afterUndyne.state,
     afterUndyne.events
   );
+  if (afterFrisk.state.phase === "ended") return afterFrisk;
   const afterMettaton = applyMettatonImpulseUnlocks(
     afterFrisk.state,
     afterFrisk.events

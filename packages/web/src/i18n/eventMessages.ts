@@ -531,7 +531,12 @@ export function formatEventMessage(
         `Обрано арену: ${getArenaLabel(event.arenaId, t)}`,
       );
     case "gameEnded":
-      return text(language, `Game ended: ${event.winner}`, `Гру завершено. Переможець: ${event.winner}`);
+      const winner = t(`roles.${event.winner}`);
+      return text(
+        language,
+        `Battle ended. ${winner} wins.`,
+        `Бій завершено. ${winner} переміг.`,
+      );
     default:
       return t("log.unknownEvent");
   }

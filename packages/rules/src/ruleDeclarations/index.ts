@@ -30,7 +30,6 @@ import {
   evCourtRolesSwapped,
   evCourtRollResult,
   evGameDraw,
-  evGameEnded,
   evMoonEffectApplied,
   evMoonRollResult,
   evPureBloodRedirected,
@@ -43,6 +42,7 @@ import {
   requestRoll,
   replacePendingRoll,
 } from "../core";
+import { endGameWithWinner, hasPendingBattleResolution } from "../gameOver";
 import {
   getAvailableRuleDeclarationIds,
 } from "./registry";
@@ -128,6 +128,11 @@ function mapRule2d9ToCoord(state: GameState, d1: number, d2: number): Coord {
   };
 }
 
+/**
+ * Victory counts real roster heroes only. Tokens (including False Trail) and
+ * debug board markers never keep an army alive unless a future rule opts them
+ * into this predicate explicitly.
+ */
 export function isRealRosterUnit(unit: UnitState): boolean {
   return unit.heroId !== HERO_FALSE_TRAIL_TOKEN_ID && !unit.id.startsWith("debug-marker-");
 }
@@ -405,6 +410,7 @@ export function applyNormalVictoryCheck(
 ): ApplyResult {
   if (state.phase === "ended") return { state, events };
   if (state.phase !== "battle") return { state, events };
+  if (hasPendingBattleResolution(state)) return { state, events };
 
   const p1Alive = livingRealUnits(state, "P1").length > 0;
   const p2Alive = livingRealUnits(state, "P2").length > 0;
@@ -412,18 +418,27 @@ export function applyNormalVictoryCheck(
 
   const winner: PlayerId | null =
     !p1Alive && p2Alive ? "P2" : p1Alive && !p2Alive ? "P1" : null;
-  const endedState: GameState = {
-    ...state,
-    phase: "ended",
-    activeUnitId: null,
-    pendingMove: null,
-    pendingRoll: null,
-  };
-  const nextEvents = [...events];
   if (winner) {
-    nextEvents.push(evGameEnded({ winner }));
+    return endGameWithWinner(
+      state,
+      events,
+      winner,
+      "allEnemyUnitsDefeated"
+    );
   }
-  return { state: endedState, events: nextEvents };
+  return {
+    state: {
+      ...state,
+      phase: "ended",
+      gameOver: null,
+      activeUnitId: null,
+      pendingMove: null,
+      pendingRoll: null,
+      pendingCombatQueue: [],
+      pendingAoE: null,
+    },
+    events,
+  };
 }
 
 export function resolveChessKingChoice(
@@ -1614,11 +1629,12 @@ export function applyRuleDeclarationWinChecks(
   events: GameEvent[]
 ): ApplyResult {
   if (state.phase === "ended") return { state, events };
+  if (hasPendingBattleResolution(state)) return { state, events };
   const rule = getRuleState(state);
   let nextState = state;
   const nextEvents = [...events];
 
-  if (rule.selectedRuleId === "normal_rule") {
+  if (rule.selectedRuleId === "normal_rule" || rule.selectedRuleId === null) {
     return applyNormalVictoryCheck(nextState, nextEvents);
   }
 
@@ -1642,18 +1658,12 @@ export function applyRuleDeclarationWinChecks(
     if (deadKings.length === 1) {
       const losingPlayer = deadKings[0];
       const winner = otherPlayer(losingPlayer);
-      nextState = {
-        ...nextState,
-        phase: "ended",
-        activeUnitId: null,
-        pendingMove: null,
-        pendingRoll: null,
-      };
-      nextEvents.push(
-        evChessKingDeathResolved({ losingPlayer, winner }),
-        evGameEnded({ winner })
+      return endGameWithWinner(
+        nextState,
+        [...nextEvents, evChessKingDeathResolved({ losingPlayer, winner })],
+        winner,
+        "unknown"
       );
-      return { state: nextState, events: nextEvents };
     }
   }
 
@@ -1665,21 +1675,16 @@ export function applyRuleDeclarationWinChecks(
       const winner =
         p1 - p2 >= threshold ? "P1" : p2 - p1 >= threshold ? "P2" : null;
       if (winner) {
-        nextState = {
-          ...nextState,
-          phase: "ended",
-          activeUnitId: null,
-          pendingMove: null,
-          pendingRoll: null,
-        };
-        nextEvents.push(
-          evAdvantageWinTriggered({
+        return endGameWithWinner(
+          nextState,
+          [...nextEvents, evAdvantageWinTriggered({
             winner,
             threshold,
             P1living: p1,
             P2living: p2,
-          }),
-          evGameEnded({ winner })
+          })],
+          winner,
+          "unknown"
         );
       }
     }

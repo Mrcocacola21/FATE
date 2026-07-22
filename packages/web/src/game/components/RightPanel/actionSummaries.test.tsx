@@ -97,6 +97,7 @@ function makeAbility(overrides: Partial<AbilityView> = {}): AbilityView {
 function makeView(unit: UnitState): PlayerView {
   return {
     phase: "battle",
+    gameOver: null,
     currentPlayer: "P1",
     activeUnitId: unit.id,
     boardSize: 9,

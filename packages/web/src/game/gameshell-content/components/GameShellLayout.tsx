@@ -8,6 +8,7 @@ import { GameTopBar } from "../../components/GameTopBar";
 import { MobileMatchLayout } from "../../layout/MobileMatchLayout";
 import { DesktopMatchScaffold } from "../../layout/MatchScaffolds";
 import { ResponsiveMatchLayout } from "../../../layout/ResponsiveMatchLayout";
+import { BattleEndScreen } from "./BattleEndScreen";
 
 interface GameShellLayoutProps {
   vm: any;
@@ -55,6 +56,7 @@ export const GameShellLayout: FC<GameShellLayoutProps> = ({ vm }) => {
     <>
       {content}
       <GlobalPendingTaskLayer vm={vm} />
+      <BattleEndScreen vm={vm} />
     </>
   );
 };

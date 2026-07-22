@@ -33,6 +33,7 @@ export type RoomMeta = {
   }>;
   ready: { P1: boolean; P2: boolean };
   players: { P1: boolean; P2: boolean };
+  playerNames: { P1: string | null; P2: string | null };
   spectators: number;
   phase: GamePhase;
   pendingRoll: { id: string; kind: RollKind; player: PlayerId } | null;

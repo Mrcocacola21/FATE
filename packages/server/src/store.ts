@@ -328,9 +328,21 @@ export function applyGameAction(
     return rejected("RULES_REJECTED", "Action rejected by rules");
   }
 
-  room.state = result.state;
+  const nextRevision = room.revision + 1;
+  room.state =
+    previousState.phase !== "ended" &&
+    result.state.phase === "ended" &&
+    result.state.gameOver
+      ? {
+          ...result.state,
+          gameOver: {
+            ...result.state.gameOver,
+            endedAtRevision: nextRevision,
+          },
+        }
+      : result.state;
   touchGameRoom(room);
-  room.revision += 1;
+  room.revision = nextRevision;
   room.actionLog.push({
     at: Date.now(),
     playerId,

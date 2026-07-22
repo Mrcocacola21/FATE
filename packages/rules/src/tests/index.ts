@@ -43,6 +43,11 @@ import {
   testBattleTurnOrderFollowsPlacementOrder,
 } from "./core/turnFlow.test";
 import {
+  testActionsRejectedAfterGameOver,
+  testAuthoritativeGameOverResultAndTokenRule,
+  testVictoryWaitsForPendingDeathResolution,
+} from "./core/gameOver.test";
+import {
   testBoundedCountersStillClamp,
   testUnboundedCountersExceedCommonChargeLimits,
 } from "./core/counters.test";
@@ -448,6 +453,9 @@ function main(): void {
   testRiderPathIgnoresHiddenEnemies();
   testRiderPathHitsVisibleEnemy();
   testGameEndCondition();
+  testAuthoritativeGameOverResultAndTokenRule();
+  testVictoryWaitsForPendingDeathResolution();
+  testActionsRejectedAfterGameOver();
   testBerserkerAutoDefenseEnabled();
   testBerserkerAutoDefenseDeclined();
   testBerserkerAutoDefenseNoCharges();

@@ -84,6 +84,22 @@ export interface PendingMove {
 
 export type GamePhase = "lobby" | "placement" | "battle" | "ended";
 
+export type GameOverReason =
+  | "allEnemyUnitsDefeated"
+  | "surrender"
+  | "disconnect"
+  | "debug"
+  | "unknown";
+
+export interface GameOverResult {
+  winnerPlayerId: PlayerId;
+  loserPlayerId: PlayerId;
+  reason: GameOverReason;
+  /** Stamped by the authoritative server; zero in standalone rules simulations. */
+  endedAtRevision: number;
+  endedAtTurn?: number;
+}
+
 export interface UnitDefinition {
   class: UnitClass;
   maxHp: number;

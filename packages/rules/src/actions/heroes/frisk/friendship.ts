@@ -1,7 +1,7 @@
 import type { ApplyResult, GameState, PlayerId, UnitState } from "../../../model";
 import { ABILITY_FRISK_GENOCIDE, getCharges } from "../../../abilities";
 import { HERO_FALSE_TRAIL_TOKEN_ID } from "../../../heroes";
-import { evGameEnded } from "../../../core";
+import { endGameWithWinner } from "../../../gameOver";
 import { isFrisk } from "./helpers";
 
 export function canTriggerPowerOfFriendshipForFrisk(
@@ -40,14 +40,5 @@ export function tryApplyFriskPowerOfFriendship(
 ): ApplyResult | null {
   const winner = getPowerOfFriendshipWinner(state);
   if (!winner) return null;
-  return {
-    state: {
-      ...state,
-      phase: "ended",
-      activeUnitId: null,
-      pendingMove: null,
-      pendingRoll: null,
-    },
-    events: [evGameEnded({ winner })],
-  };
+  return endGameWithWinner(state, [], winner, "unknown");
 }

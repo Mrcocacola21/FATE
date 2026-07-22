@@ -2,12 +2,14 @@ import {
   DebugDiceRNG,
   SeededRNG,
   applyDebugStateCommand,
+  applyNormalVictoryCheck,
   cloneDebugState,
   handleRuleDeclarationRoundEnd,
   type DebugStateCommand,
   type GameState,
   type PendingRoundAdvance,
   type TestRoomSnapshot,
+  livingRealUnits,
 } from "rules";
 import { accepted, rejected, type CommandResult } from "../commandResult";
 import {
@@ -110,6 +112,12 @@ function recordMutation(room: GameRoom, command: TestRoomCommand) {
       : command;
   touchGameRoom(room);
   room.revision += 1;
+  if (room.state.gameOver?.endedAtRevision === 0) {
+    room.state = {
+      ...room.state,
+      gameOver: { ...room.state.gameOver, endedAtRevision: room.revision },
+    };
+  }
   room.actionLog.push({
     at: Date.now(),
     playerId: room.hostSeat,
@@ -302,6 +310,9 @@ export function applyTestRoomCommand(
     };
   }
 
+  const hadBothArmies =
+    livingRealUnits(room.state, "P1").length > 0 &&
+    livingRealUnits(room.state, "P2").length > 0;
   const result = applyDebugStateCommand(
     room.state,
     command as DebugStateCommand
@@ -311,12 +322,24 @@ export function applyTestRoomCommand(
       command: rejected("DEBUG_REJECTED", result.error ?? "Debug command rejected"),
     };
   }
-  room.state = result.state;
-  recordMutation(room, command);
+  let nextState = result.state;
+  let events: never[] = [];
+  if (
+    hadBothArmies &&
+    (command.type === "debugSetHp" ||
+      command.type === "debugDirectDamage" ||
+      command.type === "debugRemoveUnit")
+  ) {
+    const victory = applyNormalVictoryCheck(nextState, []);
+    nextState = victory.state;
+    events = victory.events as never[];
+  }
+  room.state = nextState;
+  recordMutationWithEvents(room, command, events);
   return {
     command: accepted({
       stateChanged: true,
-      events: [],
+      events,
       revision: room.revision,
       logIndex: room.actionLog.length - 1,
     }),

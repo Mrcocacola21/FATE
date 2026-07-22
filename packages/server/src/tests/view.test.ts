@@ -138,6 +138,54 @@ function testKnownStealthedEnemyUsesLastKnown() {
   console.log("view_known_stealthed_enemy_uses_last_known passed");
 }
 
+function testFinalBoardRevealOnlyAfterGameOver() {
+  let state = setupState();
+  const hidden = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "assassin"
+  )!;
+  state = setUnit(state, hidden.id, {
+    position: { col: 4, row: 4 },
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
+  state = { ...state, phase: "battle" };
+
+  assert.equal(
+    makePlayerView(state, "P1").units[hidden.id],
+    undefined,
+    "hidden enemy must remain hidden before game over"
+  );
+  assert.equal(
+    makeSpectatorView(state).units[hidden.id],
+    undefined,
+    "spectator must not see hidden units before game over"
+  );
+
+  const ended: GameState = {
+    ...state,
+    phase: "ended",
+    gameOver: {
+      winnerPlayerId: "P1",
+      loserPlayerId: "P2",
+      reason: "allEnemyUnitsDefeated",
+      endedAtRevision: 8,
+      endedAtTurn: 5,
+    },
+  };
+  assert.deepEqual(makePlayerView(ended, "P1").units[hidden.id].position, {
+    col: 4,
+    row: 4,
+  });
+  assert.equal(makePlayerView(ended, "P1").phase, "ended");
+  assert.equal(makePlayerView(ended, "P2").phase, "ended");
+  assert.equal(makePlayerView(ended, "P2").gameOver?.winnerPlayerId, "P1");
+  assert.deepEqual(makeSpectatorView(ended).units[hidden.id].position, {
+    col: 4,
+    row: 4,
+  });
+  console.log("view_final_board_reveal_only_after_game_over passed");
+}
+
 function testChikatiloTrackedHiddenTargetProjectionIsPrivate() {
   let state = createEmptyGame();
   state = attachArmy(
@@ -513,6 +561,7 @@ function testDonMadnessDirectionProjectionIsOwnerPrivateAndValid() {
 function main() {
   testHiddenEnemyOmitted();
   testKnownStealthedEnemyUsesLastKnown();
+  testFinalBoardRevealOnlyAfterGameOver();
   testChikatiloTrackedHiddenTargetProjectionIsPrivate();
   testChikatiloMarkEventProjectionRedactsPrivateTarget();
   testGroupedSemanticEventProjectionFiltersHiddenTargets();

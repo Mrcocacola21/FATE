@@ -1,7 +1,9 @@
 import assert from "assert";
 import { randomUUID } from "node:crypto";
 import {
+  attachArmy,
   applyDebugStateCommand,
+  createDefaultArmy,
   createDebugSandboxState,
   rollD6,
   type GameAction,
@@ -39,6 +41,63 @@ async function testProductionDisabledCreationRejected() {
     restoreEnv("ENABLE_TEST_ROOMS", previousEnabled);
   }
   console.log("test_room_production_disabled_creation_rejected passed");
+}
+
+function testStoreStampsGameOverRevisionAndRejectsFurtherActions() {
+  const room = createGameRoomWithId(randomUUID(), { seed: 44 });
+  room.state = {
+    ...room.state,
+    phase: "battle",
+    currentPlayer: "P1",
+    ruleDeclaration: {
+      ...room.state.ruleDeclaration,
+      selectedRuleId: "normal_rule",
+      setupComplete: true,
+    },
+    units: Object.fromEntries(
+      Object.entries(room.state.units).map(([id, unit]) => [
+        id,
+        unit.owner === "P2" ? { ...unit, hp: 0, isAlive: false } : unit,
+      ])
+    ),
+  };
+  const ended = applyGameAction(room, { type: "endTurn" }, "P1");
+  assert.equal(ended.ok, true);
+  assert.equal(room.state.phase, "ended");
+  assert.equal(room.state.gameOver?.winnerPlayerId, "P1");
+  assert.equal(room.state.gameOver?.endedAtRevision, room.revision);
+  assert.equal(room.state.gameOver?.endedAtRevision, 1);
+
+  const revision = room.revision;
+  const rejected = applyGameAction(room, { type: "endTurn" }, "P1");
+  assert.equal(rejected.ok, false);
+  assert.equal("message" in rejected ? rejected.message : null, "Game is already over.");
+  assert.equal(room.revision, revision);
+  console.log("store_stamps_game_over_revision_and_rejects_further_actions passed");
+}
+
+function testDebugDamageFinalizesBattleButResetCommandsRemainAvailable() {
+  const room = createGameRoomWithId(randomUUID(), { roomMode: "test", seed: 45 });
+  room.state = attachArmy(room.state, createDefaultArmy("P1"));
+  room.state = attachArmy(room.state, createDefaultArmy("P2"));
+  const p2Units = Object.values(room.state.units).filter((unit) => unit.owner === "P2");
+  for (const unit of p2Units) {
+    const result = applyTestRoomCommand(room, {
+      type: "debugSetHp",
+      unitId: unit.id,
+      hp: 0,
+    });
+    assert.equal(result.command.ok, true);
+  }
+  assert.equal(room.state.phase, "ended");
+  assert.equal(room.state.gameOver?.winnerPlayerId, "P1");
+  assert.equal(room.state.gameOver?.endedAtRevision, room.revision);
+
+  const reset = applyTestRoomCommand(room, { type: "debugClearBoard" });
+  assert.equal(reset.command.ok, true);
+  assert.equal(room.state.phase, "battle");
+  assert.equal(room.state.gameOver, null);
+  console.log("debug_damage_finalizes_battle_but_reset_remains_available passed");
 }
 
 async function testProductionEnabledCreationRequiresToken() {
@@ -190,6 +249,8 @@ async function main() {
   testDiceQueueAndSnapshotValidation();
   testInvalidPayloadRejectedBySchema();
   testNormalRoomRejectsOutOfTurnBasicAttack();
+  testStoreStampsGameOverRevisionAndRejectsFurtherActions();
+  testDebugDamageFinalizesBattleButResetCommandsRemainAvailable();
   storeTestHooks.reset();
   console.log("test room tests passed");
 }

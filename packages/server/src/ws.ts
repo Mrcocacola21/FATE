@@ -75,6 +75,7 @@ type RoomMeta = {
   }>;
   ready: { P1: boolean; P2: boolean };
   players: { P1: boolean; P2: boolean };
+  playerNames: { P1: string | null; P2: string | null };
   spectators: number;
   phase: GameState["phase"];
   pendingRoll: { id: string; kind: RollKind; player: PlayerId } | null;
@@ -618,6 +619,16 @@ function buildRoomMeta(room: GameRoom, canControlTestRoom = false): RoomMeta {
       P2: ready.P2 ?? false,
     },
     players: { P1: !!room.seats.P1, P2: !!room.seats.P2 },
+    playerNames: {
+      P1:
+        Array.from(socketMeta.values()).find(
+          (meta) => meta.connId === room.seats.P1
+        )?.name ?? null,
+      P2:
+        Array.from(socketMeta.values()).find(
+          (meta) => meta.connId === room.seats.P2
+        )?.name ?? null,
+    },
     spectators: room.spectators.size,
     phase: room.state.phase ?? "lobby",
     pendingRoll: room.state.pendingRoll
@@ -739,8 +750,8 @@ function applyRoomAction(
     return result;
   }
 
-  if (room.state.phase === "ended" && !isTestController) {
-    const result = rejected("GAME_ENDED", "Game has ended");
+  if (room.state.phase === "ended") {
+    const result = rejected("GAME_ENDED", "Game is already over.");
     sendActionRejected(socket, result);
     return result;
   }

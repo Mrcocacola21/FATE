@@ -20,7 +20,7 @@ export function makeSpectatorView(state: GameState): PlayerView {
 
   for (const unit of Object.values(state.units)) {
     if (!unit) continue;
-    if (unit.isAlive && unit.isStealthed) {
+    if (state.phase !== "ended" && unit.isAlive && unit.isStealthed) {
       continue;
     }
     units[unit.id] = clonePublicUnit(unit);
