@@ -1,4 +1,4 @@
-import type { DraftPhase, HeroDraftMeta, HeroMeta, PlayerId } from "rules";
+import type { DraftPhase, HeroDraftMeta, HeroMeta, PlayerId, UnitClass } from "rules";
 import { getFigureArtSrc, getHeroVisualVariants, getTokenSrc } from "../assets/registry";
 import { FigureSetAbilityCard } from "../components/abilities/FigureSetAbilityCard";
 import { PanelCard, SectionHeader, StatusBadge } from "../components/ui";
@@ -133,9 +133,144 @@ type DraftHeroDetailsViewProps = {
   isConfirming: boolean;
   error: string | null;
   onConfirm: () => void;
+  onClear?: () => void;
+  currentPlayer?: PlayerId;
   showConfirmArea?: boolean;
   collapsibleAbilities?: boolean;
 };
+
+type DraftConfirmBarProps = {
+  heroName: string | null;
+  heroClass: UnitClass | null;
+  phase: DraftPhase;
+  lockReason: DraftHeroLockReason | null;
+  t: Translate;
+  canConfirm: boolean;
+  isLocalTurn: boolean;
+  isConfirming: boolean;
+  error: string | null;
+  onConfirm: () => void;
+  onClear?: () => void;
+  currentPlayer?: PlayerId;
+  mobile?: boolean;
+  testId?: string;
+  confirmTestId?: string;
+};
+
+export function DraftConfirmBar({
+  heroName,
+  heroClass,
+  phase,
+  lockReason,
+  t,
+  canConfirm,
+  isLocalTurn,
+  isConfirming,
+  error,
+  onConfirm,
+  onClear,
+  currentPlayer,
+  mobile = false,
+  testId = "draft-confirm-bar",
+  confirmTestId = "confirm-draft-hero",
+}: DraftConfirmBarProps) {
+  const actionLabel =
+    phase === "ban"
+      ? t("draft.confirmBan")
+      : phase === "pick"
+        ? t("draft.confirmPick")
+        : t("draft.phases.complete");
+  const cannotLabel = phase === "ban" ? t("draft.cannotBanHero") : t("draft.cannotPickHero");
+  const heroClassLabel = heroClass ? getClassLabel(heroClass, t) : null;
+  const disabledReason = isConfirming
+    ? null
+    : !heroName
+      ? t("draft.selectHeroFirst")
+      : phase === "complete"
+        ? t("draft.lockReasons.draft_complete")
+        : lockReason === "not_current_player" || !isLocalTurn
+          ? t("draft.notYourTurn")
+          : lockReason
+            ? `${cannotLabel}: ${t(`draft.lockReasons.${lockReason}`)}`
+            : !canConfirm
+              ? t("draft.cannotConfirmHero")
+              : null;
+  const actionDescription = disabledReason
+    ? disabledReason
+    : phase === "ban"
+      ? t("draft.willBanHero", { hero: heroName ?? "" })
+      : phase === "pick"
+        ? t("draft.willAddHeroToSlot", {
+            hero: heroName ?? "",
+            class: heroClassLabel ?? "",
+          })
+        : t("draft.lockReasons.draft_complete");
+
+  return (
+    <div
+      className={
+        mobile
+          ? "draft-mobile-confirm"
+          : "draft-confirm-bar shrink-0 border-t border-amber-900/20 bg-stone-100/90 p-4 backdrop-blur dark:border-amber-400/20 dark:bg-stone-950/85"
+      }
+      data-testid={testId}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="text-[11px] font-black uppercase tracking-wider text-stone-500">
+            {t("draft.currentAction")}: {t(`draft.phases.${phase}`)}
+            {currentPlayer ? ` · ${t("draft.currentPlayer", { player: currentPlayer })}` : null}
+          </div>
+          <div className="mt-1 truncate text-sm font-semibold text-stone-800 dark:text-stone-100">
+            {heroName
+              ? `${t("draft.selected")}: ${heroName}${heroClassLabel ? ` (${heroClassLabel})` : ""}`
+              : t("draft.noHeroSelected")}
+          </div>
+        </div>
+      </div>
+
+      <div
+        className={`mt-1 text-xs leading-5 ${
+          disabledReason
+            ? "font-semibold text-rose-700 dark:text-rose-300"
+            : "text-stone-600 dark:text-stone-300"
+        }`}
+        data-testid={disabledReason ? "draft-confirm-disabled-reason" : undefined}
+        aria-live="polite"
+      >
+        {actionDescription}
+      </div>
+
+      {error ? (
+        <div role="alert" className="mt-2 rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-xs text-rose-800 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-200">
+          {error}
+        </div>
+      ) : null}
+
+      <div className="mt-3 flex gap-2">
+        {heroName && onClear ? (
+          <button
+            type="button"
+            className="btn btn-secondary min-h-11 shrink-0"
+            disabled={isConfirming}
+            onClick={onClear}
+          >
+            {t("draft.clearSelection")}
+          </button>
+        ) : null}
+        <button
+          type="button"
+          data-testid={confirmTestId}
+          className={`btn min-h-11 flex-1 ${phase === "ban" ? "btn-danger" : "btn-strong"}`}
+          disabled={!canConfirm || isConfirming}
+          onClick={onConfirm}
+        >
+          {isConfirming ? t("draft.confirming") : actionLabel}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export function DraftHeroDetailsView({
   hero,
@@ -150,6 +285,8 @@ export function DraftHeroDetailsView({
   isConfirming,
   error,
   onConfirm,
+  onClear,
+  currentPlayer,
   showConfirmArea = true,
   collapsibleAbilities = false,
 }: DraftHeroDetailsViewProps) {
@@ -165,32 +302,31 @@ export function DraftHeroDetailsView({
       abilities: abilities.filter((ability) => ability.type === type),
     }))
     .filter((group) => group.abilities.length > 0);
-  const actionLabel =
-    phase === "ban"
-      ? t("draft.confirmBan")
-      : phase === "pick"
-        ? t("draft.confirmPick")
-        : t("draft.phases.complete");
-  const cannotLabel = phase === "ban" ? t("draft.cannotBanHero") : t("draft.cannotPickHero");
 
   return (
-    <PanelCard className="overflow-hidden p-0" variant="parchment">
-      <div className="p-4">
+    <PanelCard
+      className="flex h-full min-h-0 flex-col overflow-hidden p-0"
+      variant="parchment"
+      data-testid="selected-draft-hero-panel"
+    >
+      <div className="shrink-0 p-4">
         <SectionHeader kicker={t("draft.heroPreview")} title={t("draft.heroDetails")} />
       </div>
 
       {!draftMeta ? (
-        <div className="mx-4 mb-4 rounded-xl border border-dashed border-stone-300 px-4 py-8 text-center dark:border-stone-700">
-          <div className="font-semibold text-stone-700 dark:text-stone-200">
-            {t("draft.noHeroSelected")}
-          </div>
-          <div className="mt-1 text-xs text-stone-500 dark:text-stone-400">
-            {t("draft.selectHeroFirst")}
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-6" data-testid="draft-hero-details-scroll">
+          <div className="mx-4 mb-4 rounded-xl border border-dashed border-stone-300 px-4 py-8 text-center dark:border-stone-700">
+            <div className="font-semibold text-stone-700 dark:text-stone-200">
+              {t("draft.noHeroSelected")}
+            </div>
+            <div className="mt-1 text-xs text-stone-500 dark:text-stone-400">
+              {t("draft.selectHeroFirst")}
+            </div>
           </div>
         </div>
       ) : (
         <>
-          <div className="relative h-40 overflow-hidden border-y border-amber-900/15 bg-stone-900">
+          <div className="relative h-40 shrink-0 overflow-hidden border-y border-amber-900/15 bg-stone-900">
             <img
               src={getFigureArtSrc(draftMeta.heroId)}
               alt={heroName ?? draftMeta.heroId}
@@ -212,7 +348,10 @@ export function DraftHeroDetailsView({
             </div>
           </div>
 
-          <div className="space-y-4 p-4">
+          <div
+            className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain p-4 pb-6"
+            data-testid="draft-hero-details-scroll"
+          >
             <div className="flex flex-wrap gap-2">
               <StatusBadge tone={lockReason === "banned" ? "danger" : pickedBy ? "warning" : lockReason ? "neutral" : "success"}>
                 {lockReason ? t(`draft.lockReasons.${lockReason}`) : t("draft.status.available")}
@@ -307,52 +446,22 @@ export function DraftHeroDetailsView({
         </>
       )}
 
-      {showConfirmArea ? <div className="border-t border-amber-900/15 bg-stone-100/80 p-4 dark:bg-stone-950/70">
-        <div className="text-[11px] font-black uppercase tracking-wider text-stone-500">
-          {t("draft.currentAction")}: {t(`draft.phases.${phase}`)}
-        </div>
-        <div className="mt-1 text-sm font-semibold text-stone-800 dark:text-stone-100">
-          {heroName ? t("draft.selectedHero", { hero: heroName }) : t("draft.noHeroSelected")}
-        </div>
-        <div className="mt-2 text-xs leading-5 text-stone-600 dark:text-stone-300">
-          {!isLocalTurn && phase !== "complete" ? (
-            <>
-              <strong>{t("draft.waitingForOpponent")}</strong>{" "}
-              {t("draft.inspectWhileWaiting")}
-            </>
-          ) : !heroName ? (
-            t("draft.selectHeroFirst")
-          ) : lockReason ? (
-            `${cannotLabel}: ${t(`draft.lockReasons.${lockReason}`)}`
-          ) : phase === "ban" ? (
-            t("draft.willBanHero", { hero: heroName })
-          ) : phase === "pick" ? (
-            t("draft.willAddHeroToSlot", {
-              hero: heroName,
-              class: getClassLabel(draftMeta?.primaryClass ?? "knight", t),
-            })
-          ) : (
-            t("draft.lockReasons.draft_complete")
-          )}
-        </div>
-        {error ? (
-          <div role="alert" className="mt-3 rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-xs text-rose-800 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-200">
-            {error}
-          </div>
-        ) : null}
-        <button
-          type="button"
-          data-testid="confirm-draft-hero"
-          className={`btn mt-3 w-full ${phase === "ban" ? "btn-danger" : "btn-strong"}`}
-          disabled={!canConfirm || isConfirming}
-          onClick={onConfirm}
-        >
-          {isConfirming ? t("draft.confirming") : actionLabel}
-        </button>
-        <div className="mt-2 text-center text-[11px] text-stone-500">
-          {t("draft.readAbilitiesBeforeConfirming")}
-        </div>
-      </div> : null}
+      {showConfirmArea ? (
+        <DraftConfirmBar
+          heroName={heroName}
+          heroClass={draftMeta?.primaryClass ?? null}
+          phase={phase}
+          lockReason={lockReason}
+          t={t}
+          canConfirm={canConfirm}
+          isLocalTurn={isLocalTurn}
+          isConfirming={isConfirming}
+          error={error}
+          onConfirm={onConfirm}
+          onClear={onClear}
+          currentPlayer={currentPlayer}
+        />
+      ) : null}
     </PanelCard>
   );
 }

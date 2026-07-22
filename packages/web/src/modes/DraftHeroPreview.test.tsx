@@ -7,7 +7,11 @@ import {
   type HeroMeta,
 } from "rules";
 import type { Translate } from "../i18n";
-import { DraftHeroCardView, DraftHeroDetailsView } from "./DraftHeroPreview";
+import {
+  DraftConfirmBar,
+  DraftHeroCardView,
+  DraftHeroDetailsView,
+} from "./DraftHeroPreview";
 import {
   createDraftSubmissionGate,
   getDraftHeroCardState,
@@ -46,6 +50,35 @@ function findByTestId(node: ReactNode, testId: string): ReactElement | null {
     if (found) return found;
   }
   return null;
+}
+
+function findByType(node: ReactNode, type: unknown): ReactElement | null {
+  if (!isValidElement(node)) return null;
+  const element = node as ReactElement<Record<string, unknown>>;
+  if (element.type === type) return element;
+  for (const child of Children.toArray(element.props.children as ReactNode)) {
+    const found = findByType(child, type);
+    if (found) return found;
+  }
+  return null;
+}
+
+function renderConfirmBar(
+  overrides: Partial<Parameters<typeof DraftConfirmBar>[0]> = {},
+) {
+  return DraftConfirmBar({
+    heroName: heroMeta.name,
+    heroClass: draftHero.primaryClass,
+    phase: "pick",
+    lockReason: null,
+    t,
+    canConfirm: true,
+    isLocalTurn: true,
+    isConfirming: false,
+    error: null,
+    onConfirm: () => undefined,
+    ...overrides,
+  });
 }
 
 test("clicking a Draft hero card only selects and highlights it locally", () => {
@@ -88,21 +121,14 @@ test("clicking a Draft hero card only selects and highlights it locally", () => 
 });
 
 test("Confirm is disabled with no selected hero and for an inspecting opponent", () => {
-  const emptyView = DraftHeroDetailsView({
-    hero: null,
-    draftMeta: null,
+  const emptyBar = renderConfirmBar({
+    heroName: null,
+    heroClass: null,
     phase: "ban",
-    lockReason: null,
-    pickedBy: null,
-    language: "en",
-    t,
     canConfirm: false,
-    isLocalTurn: true,
-    isConfirming: false,
-    error: null,
-    onConfirm: () => undefined,
   });
-  assert.equal(findByTestId(emptyView, "confirm-draft-hero")?.props.disabled, true);
+  assert.equal(findByTestId(emptyBar, "confirm-draft-hero")?.props.disabled, true);
+  assert.ok(findByTestId(emptyBar, "draft-confirm-disabled-reason"));
 
   const draft = createSafeClassDraftState();
   const reason = getDraftHeroLockReason({
@@ -113,43 +139,125 @@ test("Confirm is disabled with no selected hero and for an inspecting opponent",
   });
   assert.equal(reason, "not_current_player");
 
-  const waitingView = DraftHeroDetailsView({
-    hero: heroMeta,
-    draftMeta: draftHero,
+  const waitingBar = renderConfirmBar({
     phase: "ban",
     lockReason: reason,
+    canConfirm: false,
+    isLocalTurn: false,
+  });
+  assert.equal(findByTestId(waitingBar, "confirm-draft-hero")?.props.disabled, true);
+  assert.ok(findByTestId(waitingBar, "draft-confirm-disabled-reason"));
+});
+
+test("selected hero details scroll separately from the persistent confirmation bar", () => {
+  const view = DraftHeroDetailsView({
+    hero: {
+      ...heroMeta,
+      description: "A long hero description. ".repeat(50),
+      abilities: Array.from({ length: 8 }, (_, index) => ({
+        ...heroMeta.abilities[0],
+        id: `preview-ability-${index}`,
+      })),
+    },
+    draftMeta: draftHero,
+    phase: "pick",
+    lockReason: null,
     pickedBy: null,
     language: "en",
     t,
-    canConfirm: false,
-    isLocalTurn: false,
+    canConfirm: true,
+    isLocalTurn: true,
     isConfirming: false,
     error: null,
     onConfirm: () => undefined,
   });
-  assert.equal(findByTestId(waitingView, "confirm-draft-hero")?.props.disabled, true);
+
+  const panel = findByTestId(view, "selected-draft-hero-panel");
+  const scrollArea = findByTestId(view, "draft-hero-details-scroll");
+  const confirmBar = findByType(view, DraftConfirmBar);
+  assert.ok(panel);
+  assert.match(String(panel.props.className), /flex.*flex-col/);
+  assert.ok(scrollArea);
+  assert.match(String(scrollArea.props.className), /flex-1/);
+  assert.match(String(scrollArea.props.className), /overflow-y-auto/);
+  assert.ok(findByTestId(scrollArea, "draft-ability-details"));
+  assert.equal(findByType(scrollArea, DraftConfirmBar), null);
+  assert.ok(confirmBar, "confirmation bar is a sibling outside the scroll area");
+  const renderedConfirmBar = DraftConfirmBar(
+    confirmBar.props as Parameters<typeof DraftConfirmBar>[0],
+  );
+  assert.ok(findByTestId(renderedConfirmBar, "draft-confirm-bar"));
 });
 
-test("Ban and Pick confirmation dispatch only their existing command", () => {
+test("clicking Confirm dispatches only the existing command for the current phase", () => {
   const bans: string[] = [];
   const picks: string[] = [];
-  sendDraftCandidateCommand({
+  const banBar = renderConfirmBar({
     phase: "ban",
-    heroId: draftHero.heroId,
-    ban: (heroId) => bans.push(heroId),
-    pick: (heroId) => picks.push(heroId),
+    onConfirm: () => {
+      sendDraftCandidateCommand({
+        phase: "ban",
+        heroId: draftHero.heroId,
+        ban: (heroId) => bans.push(heroId),
+        pick: (heroId) => picks.push(heroId),
+      });
+    },
   });
+  (findByTestId(banBar, "confirm-draft-hero")?.props.onClick as () => void)();
   assert.deepEqual(bans, [draftHero.heroId]);
   assert.equal(picks.length, 0);
 
-  sendDraftCandidateCommand({
+  const pickBar = renderConfirmBar({
     phase: "pick",
-    heroId: draftHero.heroId,
-    ban: (heroId) => bans.push(heroId),
-    pick: (heroId) => picks.push(heroId),
+    onConfirm: () => {
+      sendDraftCandidateCommand({
+        phase: "pick",
+        heroId: draftHero.heroId,
+        ban: (heroId) => bans.push(heroId),
+        pick: (heroId) => picks.push(heroId),
+      });
+    },
   });
+  (findByTestId(pickBar, "confirm-draft-hero")?.props.onClick as () => void)();
   assert.deepEqual(bans, [draftHero.heroId]);
   assert.deepEqual(picks, [draftHero.heroId]);
+});
+
+test("mobile confirmation uses the fixed safe-area bar and touch-sized controls", () => {
+  const mobileBar = renderConfirmBar({
+    mobile: true,
+    testId: "draft-mobile-confirm",
+    confirmTestId: "confirm-draft-hero-mobile",
+  });
+  assert.match(String(mobileBar.props.className), /draft-mobile-confirm/);
+  const confirm = findByTestId(mobileBar, "confirm-draft-hero-mobile");
+  assert.ok(confirm);
+  assert.match(String(confirm.props.className), /min-h-11/);
+});
+
+test("clear selection is separate from confirmation", () => {
+  let cleared = 0;
+  let confirmed = 0;
+  const bar = renderConfirmBar({
+    onClear: () => {
+      cleared += 1;
+    },
+    onConfirm: () => {
+      confirmed += 1;
+    },
+  });
+  const buttons: ReactElement<Record<string, unknown>>[] = [];
+  const visit = (node: ReactNode) => {
+    if (!isValidElement(node)) return;
+    const element = node as ReactElement<Record<string, unknown>>;
+    if (element.type === "button") buttons.push(element);
+    Children.forEach(element.props.children as ReactNode, visit);
+  };
+  visit(bar);
+  assert.equal(buttons.length, 2);
+  (buttons[0].props.onClick as () => void)();
+  assert.equal(cleared, 1);
+  assert.equal(confirmed, 0);
 });
 
 test("ability-detail interaction is isolated from Draft confirmation", () => {

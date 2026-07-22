@@ -1147,7 +1147,7 @@ html.dark {
   }
 
   .draft-mobile-confirm {
-    @apply fixed inset-x-2 bottom-0 z-40 flex items-center gap-2 rounded-t-2xl border border-amber-700/30 bg-stone-50/95 p-2.5 shadow-[0_-16px_40px_-24px_rgba(0,0,0,0.8)] backdrop-blur dark:border-amber-500/25 dark:bg-stone-950/95;
+    @apply fixed inset-x-2 bottom-0 z-40 block rounded-t-2xl border border-amber-700/30 bg-stone-50/95 p-2.5 shadow-[0_-16px_40px_-24px_rgba(0,0,0,0.8)] backdrop-blur dark:border-amber-500/25 dark:bg-stone-950/95;
     padding-bottom: max(0.625rem, env(safe-area-inset-bottom));
   }
 

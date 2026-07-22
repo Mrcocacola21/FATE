@@ -14,7 +14,7 @@ import { getTokenSrc } from "../catalog/tokens";
 import { useHeroes } from "../figures/useHeroes";
 import { useI18n, type Translate } from "../i18n";
 import { getHeroDisplayName } from "../i18n/displayMetadata";
-import { DraftHeroCardView, DraftHeroDetailsView } from "./DraftHeroPreview";
+import { DraftConfirmBar, DraftHeroCardView, DraftHeroDetailsView } from "./DraftHeroPreview";
 import { getGameModeName } from "./modeLabels";
 import { useIsMobile } from "../layout/useIsMobile";
 import { Tabs } from "../ui";
@@ -197,6 +197,13 @@ export function DraftScreen({ vm }: { vm: DraftVm }) {
     if (isMobile) setMobileTab("selected");
   };
 
+  const handleClearSelection = () => {
+    if (submission) return;
+    setSelectedDraftHeroId(null);
+    setSubmissionError(null);
+    if (isMobile) setMobileTab("catalog");
+  };
+
   const handleConfirm = () => {
     const heroId = submissionGate.current.tryStart(selectedDraftHeroId, canConfirm);
     if (!heroId) return;
@@ -238,15 +245,9 @@ export function DraftScreen({ vm }: { vm: DraftVm }) {
   const selectedHeroName = selectedHero
     ? getHeroDisplayName(selectedHero.id, selectedHero.name, language)
     : selectedDraftHeroId;
-  const mobileActionLabel =
-    draft.phase === "ban"
-      ? t("draft.confirmBan")
-      : draft.phase === "pick"
-        ? t("draft.confirmPick")
-        : t("draft.phases.complete");
 
   return (
-    <div className={`app-shell px-2 py-2 sm:px-4 sm:py-4 lg:px-5 ${isMobile ? "pb-28" : ""}`}>
+    <div className={`app-shell px-2 py-2 sm:px-4 sm:py-4 lg:px-5 ${isMobile ? "pb-44" : ""}`}>
       <div className="mx-auto max-w-[1720px] space-y-4">
         <div className={isMobile ? "sticky top-0 z-30 space-y-2" : ""}>
         <PanelCard variant="hud" className="p-3 sm:p-5">
@@ -367,7 +368,7 @@ export function DraftScreen({ vm }: { vm: DraftVm }) {
             )}
           </PanelCard>
 
-          <aside className={`${isMobile && mobileTab !== "selected" ? "hidden" : ""} xl:sticky xl:top-3 xl:max-h-[calc(100dvh-1.5rem)] xl:overflow-y-auto xl:pr-1`} data-testid="draft-mobile-selected">
+          <aside className={`min-h-0 ${isMobile && mobileTab !== "selected" ? "hidden" : ""} md:sticky md:top-3 md:h-[calc(100dvh-12rem)] xl:pr-1`} data-testid="draft-mobile-selected">
             <DraftHeroDetailsView
               hero={selectedHero}
               draftMeta={selectedDraftMeta}
@@ -381,6 +382,8 @@ export function DraftScreen({ vm }: { vm: DraftVm }) {
               isConfirming={!!submission}
               error={submissionError}
               onConfirm={handleConfirm}
+              onClear={handleClearSelection}
+              currentPlayer={draft.currentPlayer}
               showConfirmArea={!isMobile}
               collapsibleAbilities={isMobile}
             />
@@ -411,25 +414,23 @@ export function DraftScreen({ vm }: { vm: DraftVm }) {
         </div>
       </div>
       {isMobile ? (
-        <div className="draft-mobile-confirm" data-testid="draft-mobile-confirm">
-          <div className="min-w-0 flex-1">
-            <div className="section-kicker">{t("draft.currentAction")}</div>
-            <div className="truncate text-sm font-semibold">
-              {selectedHeroName
-                ? t("draft.selectedHero", { hero: selectedHeroName })
-                : t("draft.noHeroSelected")}
-            </div>
-          </div>
-          <button
-            type="button"
-            className={`btn shrink-0 ${draft.phase === "ban" ? "btn-danger" : "btn-strong"}`}
-            data-testid="confirm-draft-hero-mobile"
-            disabled={!canConfirm || !!submission}
-            onClick={handleConfirm}
-          >
-            {submission ? t("draft.confirming") : mobileActionLabel}
-          </button>
-        </div>
+        <DraftConfirmBar
+          heroName={selectedHeroName}
+          heroClass={selectedDraftMeta?.primaryClass ?? null}
+          phase={draft.phase}
+          lockReason={selectedLockReason}
+          t={t}
+          canConfirm={canConfirm}
+          isLocalTurn={isLocalTurn}
+          isConfirming={!!submission}
+          error={submissionError}
+          onConfirm={handleConfirm}
+          onClear={handleClearSelection}
+          currentPlayer={draft.currentPlayer}
+          mobile
+          testId="draft-mobile-confirm"
+          confirmTestId="confirm-draft-hero-mobile"
+        />
       ) : null}
     </div>
   );
