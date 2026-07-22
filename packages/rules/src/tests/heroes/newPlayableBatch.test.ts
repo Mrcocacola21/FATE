@@ -359,7 +359,7 @@ export function testNewPlayableBatchTransactionalActives() {
         [ABILITY_DUOLINGO_PUSH_NOTIFICATION]: 3,
         [ABILITY_DUOLINGO_SKIP_CLASSES]: 3,
       },
-      turn: { ...state.units[duo.id].turn, moveUsed: true },
+      turn: { ...state.units[duo.id].turn, moveUsed: false },
     });
     const rejectedCounterUse = applyAction(counterState, {
       type: "useAbility",
@@ -384,7 +384,21 @@ export function testNewPlayableBatchTransactionalActives() {
     } as any, rng);
     assert(counterUse.state.units[duo.id].charges[ABILITY_DUOLINGO_PUSH_NOTIFICATION] === 0, "counter Push should spend its own three charges");
     assert(counterUse.state.units[duo.id].charges[ABILITY_DUOLINGO_SKIP_CLASSES] === 3, "counter Push must not spend Missed Lessons");
-    assert(counterUse.state.units[duo.id].turn.moveUsed, "counter Push must remain usable after Movement was already spent");
+    assert(counterUse.state.units[duo.id].turn.moveUsed, "counter Push must consume Movement");
+    const counterWithoutMove = setUnit(counterState, duo.id, {
+      turn: { ...counterState.units[duo.id].turn, moveUsed: true },
+    });
+    const rejectedWithoutMove = applyAction(counterWithoutMove, {
+      type: "useAbility",
+      unitId: duo.id,
+      abilityId: ABILITY_DUOLINGO_PUSH_NOTIFICATION,
+      payload: {
+        targetId: target.id,
+        destination: { col: 4, row: 4 },
+        source: { type: "abilityCounter", counterId: ABILITY_DUOLINGO_PUSH_NOTIFICATION },
+      },
+    } as any, rng);
+    assert(rejectedWithoutMove.state === counterWithoutMove, "counter Push without Movement must reject without spending");
   }
 
   {
@@ -709,23 +723,25 @@ export function testNewPlayableBatchLineAndRevealEffects() {
     type: "useAbility",
     unitId: impulseLuche.id,
     abilityId: ABILITY_LUCHE_DIVINE_RAY,
-    payload: { target: { col: 5, row: 2 }, impulse: true },
-  } as any, makeRngSequence([]));
-  assert(forgedLight.state === forgedLightState, "a client cannot forge the free Light Ray variant");
-  const lucheStarted = applyAction(startTurnFor(state, state.units[impulseLuche.id]), { type: "unitStartTurn", unitId: impulseLuche.id } as any, makeRngSequence([]));
-  assert(lucheStarted.state.units[impulseLuche.id].charges[ABILITY_LUCHE_DIVINE_RAY] === 2, "Light Ray own counter should gain +1 at Luche turn start");
-  const lucheImpulse = applyAction(lucheStarted.state, {
-    type: "useAbility",
-    unitId: impulseLuche.id,
-    abilityId: ABILITY_LUCHE_DIVINE_RAY,
     payload: {
       target: { col: 5, row: 2 },
       source: { type: "abilityCounter", counterId: ABILITY_LUCHE_DIVINE_RAY },
     },
   } as any, makeRngSequence([]));
+  assert(forgedLight.state === forgedLightState, "Light Ray counter source cannot be invoked manually");
+  const lucheStarted = applyAction(startTurnFor(state, state.units[impulseLuche.id]), { type: "unitStartTurn", unitId: impulseLuche.id } as any, makeRngSequence([]));
+  assert(lucheStarted.state.units[impulseLuche.id].charges[ABILITY_LUCHE_DIVINE_RAY] === 2, "Light Ray own counter should gain +1 at Luche turn start");
+  assert(lucheStarted.state.pendingRoll?.kind === "chargedImpulseTargetChoice", "full Light Ray counter should activate a start-turn impulse choice");
+  const lightPending = lucheStarted.state.pendingRoll!;
+  const lucheImpulse = applyAction(lucheStarted.state, {
+    type: "resolvePendingRoll",
+    pendingRollId: lightPending.id,
+    player: lightPending.player,
+    choice: { type: "chargedImpulseTarget", position: { col: 5, row: 2 } },
+  } as any, makeRngSequence([]));
   assert(lucheImpulse.state.units[impulseLuche.id].charges[ABILITY_LUCHE_DIVINE_RAY] === 0, "impulse Light Ray should spend its own counter");
   assert(lucheImpulse.state.units[impulseLuche.id].charges[ABILITY_LUCHE_SUN_GLORY] === 0, "impulse Light Ray must not spend Sun");
-  assert(!lucheImpulse.state.units[impulseLuche.id].turn.actionUsed, "impulse Light Ray must not consume Action");
+  assert(!lucheImpulse.state.units[impulseLuche.id].turn.actionUsed && !lucheImpulse.state.units[impulseLuche.id].turn.moveUsed, "impulse Light Ray must not consume Action or Movement");
 
   ({ state, heroes, enemies } = setupBatch());
   const impulseZoro = heroes[HERO_ZORO_ID];
@@ -760,6 +776,20 @@ export function testNewPlayableBatchLineAndRevealEffects() {
   assert(zoroStarted.state.units[impulseZoro.id].charges[ABILITY_ZORO_ONI_GIRI] === 2, "Oni Giri own counter should gain +1 at Zoro turn start");
   const duplicateStart = applyAction(zoroStarted.state, { type: "unitStartTurn", unitId: impulseZoro.id } as any, makeRngSequence([]));
   assert(duplicateStart.state === zoroStarted.state, "duplicate start-turn commands must not increment Oni Giri again");
+  const counterOniWithoutMove = setUnit(zoroStarted.state, impulseZoro.id, {
+    turn: { ...zoroStarted.state.units[impulseZoro.id].turn, moveUsed: true },
+  });
+  const rejectedCounterOni = applyAction(counterOniWithoutMove, {
+    type: "useAbility",
+    unitId: impulseZoro.id,
+    abilityId: ABILITY_ZORO_ONI_GIRI,
+    payload: {
+      targetId: impulseZoroTarget.id,
+      destination: { col: 2, row: 1 },
+      source: { type: "abilityCounter", counterId: ABILITY_ZORO_ONI_GIRI },
+    },
+  } as any, makeRngSequence([]));
+  assert(rejectedCounterOni.state === counterOniWithoutMove, "counter Oni Giri without Movement must reject without spending Action or charges");
   const zoroImpulse = applyAction(zoroStarted.state, {
     type: "useAbility",
     unitId: impulseZoro.id,
@@ -772,7 +802,7 @@ export function testNewPlayableBatchLineAndRevealEffects() {
   } as any, makeRngSequence([]));
   assert(zoroImpulse.state.units[impulseZoro.id].charges[ABILITY_ZORO_ONI_GIRI] === 0, "Oni Giri impulse should spend only its own counter");
   assert(zoroImpulse.state.units[impulseZoro.id].charges[ABILITY_ZORO_DETERMINATION] === 0, "Oni Giri impulse must not spend Determination");
-  assert(!zoroImpulse.state.units[impulseZoro.id].turn.actionUsed && !zoroImpulse.state.units[impulseZoro.id].turn.moveUsed, "Oni Giri impulse must not consume Action or Movement");
+  assert(zoroImpulse.state.units[impulseZoro.id].turn.actionUsed && zoroImpulse.state.units[impulseZoro.id].turn.moveUsed, "counter Oni Giri must consume Action and Movement");
   console.log("new_playable_batch_line_and_reveal_effects passed");
 }
 

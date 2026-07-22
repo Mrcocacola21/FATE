@@ -34,6 +34,7 @@ import {
 import { buildAbilityPreview } from "./buildAbilityPreview";
 import { buildPendingPreview } from "./buildPendingPreview";
 import { buildPreviewCellMap, previewCoordKey, type BoardPreview, type TargetRef } from "./previewTypes";
+import { getOniGiriPreviewLines } from "./oniGiriPreviewLines";
 import { selectBoardPreview } from "./selectBoardPreview";
 
 function unit(overrides: Partial<UnitState> & { id: string; owner: PlayerId; position: Coord }): UnitState {
@@ -1112,6 +1113,38 @@ test("new hero previews expose targets, lines, areas, and trap placement without
   assert.equal(hasKind(offLineSickle, { col: 8, row: 5 }, "area"), false);
 
   assert.equal(collectTargets(push).some((target) => target.unitId === hiddenEnemy.id), false);
+});
+
+test("Oni Giri draws attack beams only to authoritative legal targets", () => {
+  const source = unit({ id: "zoro-lines", owner: "P1", position: { col: 4, row: 4 } });
+  const rowEnemy = unit({ id: "row-enemy", owner: "P2", position: { col: 7, row: 4 } });
+  const diagonalEnemy = unit({ id: "diagonal-enemy", owner: "P2", position: { col: 1, row: 7 } });
+  const illegalEnemy = unit({ id: "illegal-enemy", owner: "P2", position: { col: 6, row: 5 } });
+  const view = makeView([source, rowEnemy, diagonalEnemy, illegalEnemy]);
+  view.abilitiesByUnitId[source.id] = [{
+    id: ZORO_ONI_GIRI_ID,
+    targeting: {
+      targetIds: [rowEnemy.id, diagonalEnemy.id],
+      destinationsByTargetId: {
+        [rowEnemy.id]: [{ col: 6, row: 4 }],
+        [diagonalEnemy.id]: [{ col: 2, row: 6 }],
+      },
+    },
+  } as any];
+
+  assert.deepEqual(
+    getOniGiriPreviewLines(view, source.id).map((line) => line.to),
+    [rowEnemy.position, diagonalEnemy.position],
+  );
+  assert.deepEqual(
+    getOniGiriPreviewLines(view, source.id, rowEnemy.id).map((line) => line.to),
+    [rowEnemy.position],
+  );
+  assert.equal(
+    getOniGiriPreviewLines(view, source.id).some((line) =>
+      line.to.col === illegalEnemy.position!.col && line.to.row === illegalEnemy.position!.row),
+    false,
+  );
 });
 
 test("Silver Moon Sickle keeps farther legal endpoints faint while the affected preview stops at hover", () => {

@@ -52,7 +52,7 @@ interface BoardProps {
   visualEffectsEnabled?: boolean;
   eventBatch?: BoardEventBatch | null;
   effectSessionKey?: string | null;
-  previewLine?: BoardPreviewLine | null;
+  previewLines?: readonly BoardPreviewLine[];
   zoom?: number;
   showCoordinates?: boolean;
   className?: string;
@@ -203,7 +203,7 @@ export const Board: FC<BoardProps> = ({
   visualEffectsEnabled = false,
   eventBatch = null,
   effectSessionKey = null,
-  previewLine = null,
+  previewLines = [],
   zoom = 1,
   showCoordinates = true,
   className = "",
@@ -1062,7 +1062,7 @@ export const Board: FC<BoardProps> = ({
           <div className="pointer-events-none absolute" style={{ left: labelSize, top: labelSize }}>
             <BoardEffectsLayer
               effects={boardEffects}
-              previewLine={previewLine}
+              previewLines={previewLines}
               view={view}
               boardSize={size}
               cellSize={cellSize}

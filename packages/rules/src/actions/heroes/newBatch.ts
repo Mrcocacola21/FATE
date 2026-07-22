@@ -178,7 +178,7 @@ function applyDuolingoPush(state: GameState, unit: UnitState, action: AbilityAct
     ids.ABILITY_DUOLINGO_PUSH_NOTIFICATION,
     useCounter ? ids.ABILITY_DUOLINGO_PUSH_NOTIFICATION : ids.ABILITY_DUOLINGO_SKIP_CLASSES,
     3,
-    useCounter ? {} : { move: true },
+    { move: true },
   );
   if (!committed) return { state, events: [] };
   const moved: UnitState = { ...committed.unit, position: destination, isStealthed: false, stealthTurnsLeft: 0 };
@@ -191,7 +191,7 @@ function applyLucheLine(state: GameState, unit: UnitState, action: AbilityAction
   const data = payload(action);
   const target = parseCoord(data.target ?? data.center ?? data.line);
   if (unit.heroId !== HERO_LUCHE_ID || !unit.position || !target) return { state, events: [] };
-  const useCounter = isImpulse || hasAbilityCounterSource(data, ids.ABILITY_LUCHE_DIVINE_RAY);
+  const useCounter = isImpulse;
   const useSun = !isImpulse && hasHeroResourceSource(data, ids.ABILITY_LUCHE_SUN_GLORY, 2);
   if (!useCounter && !useSun) return { state, events: [] };
   const cells = getLucheLightRayLine(state, unit, target);
@@ -250,7 +250,7 @@ function applyZoroOniGiri(state: GameState, unit: UnitState, action: AbilityActi
     ids.ABILITY_ZORO_ONI_GIRI,
     useCounter ? ids.ABILITY_ZORO_ONI_GIRI : ids.ABILITY_ZORO_DETERMINATION,
     2,
-    useCounter ? {} : { action: true, move: true },
+    { action: true, move: true },
   );
   if (!committed) return { state, events: [] };
   const moved = { ...committed.unit, position: destination };

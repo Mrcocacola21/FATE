@@ -780,7 +780,7 @@ test("Oni Giri renders separate counter and Determination source options", () =>
         sourceName: "Oni Giri",
         currentCharges: 2,
         chargeRequired: 2,
-        consumes: {},
+        consumes: { action: true, move: true },
         isAvailable: true,
       },
       {
@@ -810,7 +810,7 @@ test("Oni Giri renders separate counter and Determination source options", () =>
       onHoverAbility={() => undefined}
     />,
   );
-  assert.match(markup, /Oni Giri.*Counter/);
+  assert.match(markup, /Oni Giri.*Counter.*Action.*Move/);
   assert.match(markup, /Oni Giri.*Spend Determination.*Action.*Move/);
   assert.match(markup, /data-ability-use-source="abilityCounter"/);
   assert.match(markup, /data-ability-use-source="heroResource"/);
@@ -834,7 +834,7 @@ test("Push Notification renders separate counter and Missed Lessons source optio
         sourceName: "Push Notification",
         currentCharges: 3,
         chargeRequired: 3,
-        consumes: {},
+        consumes: { move: true },
         isAvailable: true,
       },
       {
@@ -864,7 +864,7 @@ test("Push Notification renders separate counter and Missed Lessons source optio
       onHoverAbility={() => undefined}
     />,
   );
-  assert.match(markup, /Push Notification.*Counter/);
+  assert.match(markup, /Push Notification.*Counter.*Move/);
   assert.match(markup, /Push Notification.*Spend Missed Lessons.*Move/);
   assert.match(markup, /data-ability-use-source="abilityCounter"/);
   assert.match(markup, /data-ability-use-source="heroResource"/);

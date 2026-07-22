@@ -359,7 +359,7 @@ export function getAbilityViewsForUnit(
             sourceName: spec.displayName,
             currentCharges: getCharges(unit, spec.id),
             chargeRequired: 2,
-            consumes: {},
+            consumes: { action: true, move: true },
             hasLegalTargets,
           }),
           buildUseOption(state, unit, {
@@ -374,15 +374,6 @@ export function getAbilityViewsForUnit(
         ];
       } else if (spec.id === ids.ABILITY_LUCHE_DIVINE_RAY) {
         useOptions = [
-          buildUseOption(state, unit, {
-            id: "abilityCounter",
-            source: { type: "abilityCounter", counterId: spec.id },
-            sourceName: spec.displayName,
-            currentCharges: getCharges(unit, spec.id),
-            chargeRequired: 2,
-            consumes: {},
-            hasLegalTargets,
-          }),
           buildUseOption(state, unit, {
             id: "heroResource",
             source: { type: "heroResource", resourceId: ids.ABILITY_LUCHE_SUN_GLORY, amount: 2 },
@@ -401,7 +392,7 @@ export function getAbilityViewsForUnit(
             sourceName: spec.displayName,
             currentCharges: getCharges(unit, spec.id),
             chargeRequired: 3,
-            consumes: {},
+            consumes: { move: true },
             hasLegalTargets,
           }),
           buildUseOption(state, unit, {

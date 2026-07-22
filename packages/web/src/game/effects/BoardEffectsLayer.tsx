@@ -9,7 +9,7 @@ import type {
 
 interface BoardEffectsLayerProps {
   effects: QueuedBoardEffect[];
-  previewLine?: BoardPreviewLine | null;
+  previewLines?: readonly BoardPreviewLine[];
   view: PlayerView;
   boardSize: number;
   cellSize: number;
@@ -107,7 +107,7 @@ function Segment({
 
 export const BoardEffectsLayer: FC<BoardEffectsLayerProps> = ({
   effects,
-  previewLine,
+  previewLines = [],
   view,
   boardSize,
   cellSize,
@@ -123,8 +123,9 @@ export const BoardEffectsLayer: FC<BoardEffectsLayerProps> = ({
       style={{ width: boardSize * cellSize, height: boardSize * cellSize }}
       aria-hidden="true"
     >
-      {previewLine ? (
+      {previewLines.map((previewLine, index) => (
         <Segment
+          key={`${previewLine.from.col},${previewLine.from.row}-${previewLine.to.col},${previewLine.to.row}-${index}`}
           from={previewLine.from}
           to={previewLine.to}
           boardSize={boardSize}
@@ -132,7 +133,7 @@ export const BoardEffectsLayer: FC<BoardEffectsLayerProps> = ({
           isFlipped={isFlipped}
           className={`board-preview-beam board-preview-beam-${previewLine.tone}`}
         />
-      ) : null}
+      ))}
       {effects.map((effect) => {
         const style = effectStyle(effect);
         switch (effect.kind) {

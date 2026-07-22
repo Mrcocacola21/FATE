@@ -20,6 +20,7 @@ import {
 import {
   HERO_ARTEMIDA_ID,
   HERO_JACK_RIPPER_ID,
+  HERO_LUCHE_ID,
   HERO_PAPYRUS_ID,
   HERO_SANS_ID,
   HERO_UNDYNE_ID,
@@ -79,6 +80,11 @@ function getReadyImpulseAbilityId(unit: UnitState): string | null {
   }
   if (unit.heroId === HERO_JACK_RIPPER_ID) {
     return ABILITY_JACK_RIPPER_SNARES;
+  }
+  if (unit.heroId === HERO_LUCHE_ID) {
+    return getCharges(unit, ABILITY_LUCHE_DIVINE_RAY) >= 2
+      ? ABILITY_LUCHE_DIVINE_RAY
+      : null;
   }
   if (unit.heroId === HERO_SANS_ID) {
     const spec = getAbilitySpec(ABILITY_SANS_GASTER_BLASTER);

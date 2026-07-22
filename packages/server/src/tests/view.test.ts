@@ -455,13 +455,16 @@ function testNewBatchAbilitySourceProjection() {
   const push = view.abilitiesByUnitId[duo.id].find((ability) => ability.id === ABILITY_DUOLINGO_PUSH_NOTIFICATION)!;
   assert.deepEqual(oni.useOptions?.map((option) => option.source.type), ["abilityCounter", "heroResource"]);
   assert(oni.targeting?.targetIds?.includes(enemy.id), "Oni Giri projection should include an authoritative legal target");
-  assert.deepEqual(light.useOptions?.map((option) => option.source.type), ["abilityCounter", "heroResource"]);
+  assert.deepEqual(light.useOptions?.map((option) => option.source.type), ["heroResource"]);
+  assert(light.useOptions?.[0].source.type === "heroResource" && light.useOptions[0].source.resourceId === ABILITY_LUCHE_SUN_GLORY);
   assert((light.targeting?.cells?.length ?? 0) > 0, "Light Ray projection should include authoritative line cells");
   assert.deepEqual(push.useOptions?.map((option) => option.source.type), ["abilityCounter", "heroResource"]);
   assert(push.useOptions?.[0].source.type === "abilityCounter" && push.useOptions[0].source.counterId === ABILITY_DUOLINGO_PUSH_NOTIFICATION);
   assert(push.useOptions?.[1].source.type === "heroResource" && push.useOptions[1].source.resourceId === ABILITY_DUOLINGO_SKIP_CLASSES);
   assert(view.units[duo.id].charges[ABILITY_DUOLINGO_PUSH_NOTIFICATION] === 3, "Push Notification counter should project separately");
   assert(view.units[duo.id].charges[ABILITY_DUOLINGO_SKIP_CLASSES] === 3, "Missed Lessons should project separately");
+  assert(oni.useOptions?.every((option) => option.consumes?.action && option.consumes?.move), "both Oni Giri sources should consume Action and Movement");
+  assert(push.useOptions?.every((option) => option.consumes?.move), "both Push Notification sources should consume Movement");
   console.log("view_new_batch_ability_source_projection passed");
 }
 

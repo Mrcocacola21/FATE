@@ -4,6 +4,7 @@ import { PanelCard } from "../../../components/ui";
 import { clampBoardZoom } from "../../hooks/useBoardFit";
 import { BoardControls } from "./BoardControls";
 import { useI18n } from "../../../i18n";
+import { getOniGiriPreviewLines } from "../../targeting/oniGiriPreviewLines";
 
 interface GameShellBoardColumnProps {
   vm: any;
@@ -53,6 +54,23 @@ export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm, mobile
     setBoardZoom(1);
     setShowCoordinates(true);
   }, []);
+
+  const previewLines = [
+    ...(vm.actionMode === "zoroOniGiri" && vm.selectedUnitId
+      ? getOniGiriPreviewLines(vm.view, vm.selectedUnitId, vm.newHeroAbilityTargetId)
+      : []),
+    ...(vm.boardPreviewCenter &&
+    vm.selectedUnit?.position &&
+    (vm.actionMode === "mettatonLaser" ||
+      vm.actionMode === "sansGasterBlaster" ||
+      vm.actionMode === "undyneEnergySpear")
+      ? [{
+          from: vm.selectedUnit.position,
+          to: vm.boardPreviewCenter,
+          tone: "magic" as const,
+        }]
+      : []),
+  ];
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -138,19 +156,7 @@ export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm, mobile
           effectSessionKey={vm.roomId}
           zoom={boardZoom}
           showCoordinates={showCoordinates}
-          previewLine={
-            vm.boardPreviewCenter &&
-            vm.selectedUnit?.position &&
-            (vm.actionMode === "mettatonLaser" ||
-              vm.actionMode === "sansGasterBlaster" ||
-              vm.actionMode === "undyneEnergySpear")
-              ? {
-                  from: vm.selectedUnit.position,
-                  to: vm.boardPreviewCenter,
-                  tone: "magic",
-                }
-              : null
-          }
+          previewLines={previewLines}
           disabled={vm.boardDisabled}
           onSelectUnit={(id) => {
             vm.setSelectedUnit(id);
