@@ -352,7 +352,7 @@ export const ABILITY_SPECS_PART_4: Record<string, AbilitySpec> = {
   },
   [ids.ABILITY_DON_KIHOTE_MADNESS]: {
     id: ids.ABILITY_DON_KIHOTE_MADNESS,
-    displayName: "Mad Delusion",
+    displayName: "Madness of the Knight",
     kind: "phantasm",
     description: "On death, choose a straight direction and make a final +1 damage attack against every enemy on that line.",
   },

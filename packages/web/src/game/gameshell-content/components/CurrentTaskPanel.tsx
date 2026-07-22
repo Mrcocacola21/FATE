@@ -175,7 +175,9 @@ export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm, compact = fals
             action={<StatusBadge tone="warning">{vm.pendingMeta.player}</StatusBadge>}
           />
           <p className="mt-2 text-xs leading-5 text-violet-800 dark:text-violet-200">
-            {t("game.resolvingRoll", { player: vm.pendingMeta.player })}
+            {vm.pendingMeta.kind === "donMadDelusionDirection"
+              ? t("game.resolvingChoice", { player: vm.pendingMeta.player })
+              : t("game.resolvingRoll", { player: vm.pendingMeta.player })}
           </p>
         </PanelCard>
       </div>

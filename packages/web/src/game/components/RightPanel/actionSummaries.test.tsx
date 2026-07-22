@@ -1153,6 +1153,42 @@ test("Don board pending choices route cell clicks to the server", () => {
     pendingRollId: "pending-don-move",
     choice: { type: "donSorrowfulMove", destination: { col: 3, row: 2 } },
   });
+
+  sent = null;
+  createCellClickHandler({
+    view: makeView(don),
+    playerId: "P1",
+    joined: true,
+    isSpectator: false,
+    hasBlockingRoll: true,
+    boardSelectionPending: true,
+    isChargedImpulseTargetChoice: true,
+    chargedImpulseTargetKeys: new Set(["5,5"]),
+    pendingRoll: {
+      id: "pending-don-madness",
+      kind: "donMadDelusionDirection",
+      player: "P1",
+      context: {
+        origin: { col: 2, row: 2 },
+        options: [
+          { col: 1, row: 1 },
+          { col: 1, row: 0 },
+        ],
+      },
+    },
+    actionMode: null,
+    selectedUnitId: don.id,
+    sendAction: (action: unknown) => {
+      sent = action;
+    },
+    sendGameAction: () => undefined,
+  } as never)(5, 5);
+
+  assert.deepEqual(sent, {
+    type: "resolvePendingRoll",
+    pendingRollId: "pending-don-madness",
+    choice: { type: "donMadDelusionDirection", direction: { col: 1, row: 1 } },
+  });
 });
 
 test("Hassan True Enemy unit clicks submit only highlighted targets", () => {

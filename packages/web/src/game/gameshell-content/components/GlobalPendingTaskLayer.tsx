@@ -8,6 +8,7 @@ function PendingRollWaitingOverlay({ vm }: { vm: any }) {
   const { language, t } = useI18n();
   const pending = vm.pendingMeta;
   const isLocalPending = vm.pendingForLocalPlayer;
+  const isDonMadnessDirection = pending.kind === "donMadDelusionDirection";
   const title =
     pending.kind === "initiativeRoll"
       ? t("pending.rollInitiative")
@@ -40,7 +41,13 @@ function PendingRollWaitingOverlay({ vm }: { vm: any }) {
           className="relative z-10 mt-3 text-sm leading-6 text-stone-600 dark:text-stone-300"
           aria-live="polite"
         >
-          {isLocalPending ? t("pending.preparingRoll") : t("pending.waitingForOpponentRoll")}
+          {isDonMadnessDirection
+            ? isLocalPending
+              ? t("pending.preparingChoice")
+              : t("pending.waitingForOpponentChoice")
+            : isLocalPending
+              ? t("pending.preparingRoll")
+              : t("pending.waitingForOpponentRoll")}
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           <span className="status-pill badge-warning">

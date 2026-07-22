@@ -149,6 +149,7 @@ import {
   testKaiserCarpetStrikeHitsAlliesAndEnemies,
   testKaiserDoraDoesNotRequireBunker,
   testKaiserDoraOneAttackerRollManyDefenders,
+  testKaiserDoraTriggersDonMadnessDirectionBeforeFinalAttack,
   testKaiserDoraDoesNotDuplicateDefenderRollsWithIntimidate,
   testKaiserDoraCenterMustBeOnArcherLine,
   testKaiserEngineeringMiracleTransformsStats,
@@ -524,6 +525,7 @@ function main(): void {
   testKaiserCarpetStrikeHitsAlliesAndEnemies();
   testKaiserDoraDoesNotRequireBunker();
   testKaiserDoraOneAttackerRollManyDefenders();
+  testKaiserDoraTriggersDonMadnessDirectionBeforeFinalAttack();
   testKaiserDoraDoesNotDuplicateDefenderRollsWithIntimidate();
   testIntimidateTriggersOncePerSuccessfulDefense();
   testTricksterAoEDoesNotDuplicateDefenderRollsWithIntimidate();

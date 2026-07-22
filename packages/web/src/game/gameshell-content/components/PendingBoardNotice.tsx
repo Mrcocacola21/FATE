@@ -200,7 +200,14 @@ export function PendingBoardNotice({
           <div>{t("pending.soulParadeEffect", { effect: soulEffect ?? "-" })}</div>
         </div>
       ) : null}
-      {pendingRollKind === "donWindmillsRepositionChoice" ? (
+      {pendingRollKind === "donMadDelusionDirection" ? (
+        <div>
+          <div className="font-semibold">{t("pending.donMadnessTitle")}</div>
+          <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
+            {t("pending.donMadnessDirection")}
+          </div>
+        </div>
+      ) : pendingRollKind === "donWindmillsRepositionChoice" ? (
         <div>
           <div className="font-semibold">
             {p(

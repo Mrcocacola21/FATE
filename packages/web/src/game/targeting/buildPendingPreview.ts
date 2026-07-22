@@ -1,6 +1,7 @@
 import type { Coord, PendingMove, PlayerView, UnitState } from "rules";
 import { ARTEMIS_MOON_INSIGHT_ID } from "../../rulesHints";
 import type { BoardPreview, TargetRef } from "./previewTypes";
+import { getDonMadnessRayCells } from "./donMadnessDirection";
 import {
   buildArcherLinePreview,
   buildForcedAttackPreview,
@@ -351,6 +352,16 @@ export function buildPendingPreview(
   if (pending) {
     const context = (pending.context ?? {}) as Record<string, unknown>;
     switch (pending.kind) {
+      case "donMadDelusionDirection": {
+        if (!isCoord(context.origin)) return null;
+        const origin = { col: context.origin.col, row: context.origin.row };
+        return {
+          kind: "line",
+          sourceCell: origin,
+          lineCells: getDonMadnessRayCells(context, boardSize(view)),
+          labelKey: "preview.labels.donMadnessDirection",
+        };
+      }
       case "chargedImpulseTargetChoice": {
         if (context.abilityId !== ARTEMIS_MOON_INSIGHT_ID) return null;
         const artemidaId = typeof context.unitId === "string" ? context.unitId : "";

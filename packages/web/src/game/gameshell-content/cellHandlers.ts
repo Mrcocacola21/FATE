@@ -41,6 +41,7 @@ import {
   UNDYNE_SPEAR_THROW_ID,
 } from "../../rulesHints";
 import { coordKey, getUnitAt, isCoordInList } from "./helpers";
+import { getDonMadnessDirectionForCell } from "../targeting/donMadnessDirection";
 
 interface MoveOptionsState {
   unitId: string;
@@ -404,10 +405,22 @@ export function createCellClickHandler(context: CellClickContext) {
       const key = coordKey({ col, row });
       if (!chargedImpulseTargetKeys.has(key) || !pendingRoll) return;
       const pendingKind = String(pendingRoll.kind);
+      const madnessDirection = pendingKind === "donMadDelusionDirection"
+        ? getDonMadnessDirectionForCell(
+            (pendingRoll.context ?? {}) as Record<string, unknown>,
+            { col, row },
+          )
+        : null;
+      if (pendingKind === "donMadDelusionDirection" && !madnessDirection) return;
       const choice = pendingKind === "donWindmillsRepositionChoice"
         ? { type: "donWindmillsReposition", destination: { col, row } }
         : pendingKind === "donSorrowfulMoveChoice"
           ? { type: "donSorrowfulMove", destination: { col, row } }
+          : pendingKind === "donMadDelusionDirection"
+            ? {
+                type: "donMadDelusionDirection",
+                direction: madnessDirection!,
+              }
           : {
               type: "chargedImpulseTarget",
               position: { col, row },

@@ -73,9 +73,11 @@ export function useGameShellPendingStatus({
   const isFemtoDivineMoveDestination = pendingRoll?.kind === "femtoDivineMoveDestination";
   const isOdinSleipnirDestination = pendingRoll?.kind === "odinSleipnirDestination";
   const isDonSorrowfulMoveChoice = pendingRoll?.kind === "donSorrowfulMoveChoice";
+  const isDonMadnessDirectionChoice = pendingRoll?.kind === "donMadDelusionDirection";
   const isChargedImpulseTargetChoice =
     pendingRoll?.kind === "chargedImpulseTargetChoice" ||
     isDonSorrowfulMoveChoice ||
+    isDonMadnessDirectionChoice ||
     pendingRoll?.kind === "donWindmillsRepositionChoice";
   const isRiverBoatCarryChoice = pendingRoll?.kind === "riverBoatCarryChoice";
   const isRiverBoatDestinationChoice = pendingRoll?.kind === "riverBoatDestinationChoice";
@@ -280,6 +282,7 @@ export function useGameShellPendingStatus({
     isOdinSleipnirDestination,
     isChargedImpulseTargetChoice,
     isDonSorrowfulMoveChoice,
+    isDonMadnessDirectionChoice,
     isRiverBoatCarryChoice,
     isRiverBoatDestinationChoice,
     isRiverBoatDropDestination,

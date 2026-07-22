@@ -410,6 +410,7 @@ const PENDING_ROLL_LABELS_UK: Record<string, string> = {
 
 Object.assign(PENDING_ROLL_LABELS_UK, {
   donSorrowfulMoveChoice: "Рух Лицаря Сумного Образу",
+  donMadDelusionDirection: "Безумство лицаря",
   ruleDeclarationChoice: "Оголошення правила",
   ruleDeclarationChessKingChoice: "Вибір Короля",
   ruleDeclarationAdvantageThreshold: "Поріг переваги",
@@ -521,6 +522,8 @@ export function getPendingRollLabel(kind?: string | null, language: "en" | "uk" 
       return "Impulse target choice";
     case "donSorrowfulMoveChoice":
       return "Knight of the Sorrowful Image reaction";
+    case "donMadDelusionDirection":
+      return "Madness of the Knight";
     case "kaiserCarpetStrikeCenter":
       return "Carpet Strike center roll";
     case "kaiserCarpetStrikeAttack":

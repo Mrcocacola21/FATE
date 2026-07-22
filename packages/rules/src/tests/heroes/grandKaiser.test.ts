@@ -23,6 +23,11 @@ import {
   setupKaiserState,
   toBattleState,
 } from "../helpers/testUtils";
+import {
+  ABILITY_DON_KIHOTE_MADNESS,
+  HERO_DON_KIHOTE_ID,
+} from "../..";
+import { applyNewBatchPostAction } from "../../actions/heroes/newBatchPost";
 export function testKaiserBunkerVisibleAndDamageClampedTo1() {
   const rng = makeRngSequence([0.8]);
   let { state, kaiser, enemy } = setupKaiserState();
@@ -693,6 +698,174 @@ export function testKaiserDoraOneAttackerRollManyDefenders() {
   assert(!res.state.pendingRoll, "Dora should finish after all defenders");
 
   console.log("kaiser_dora_one_attacker_roll_many_defenders_roll_separately passed");
+}
+
+export function testKaiserDoraTriggersDonMadnessDirectionBeforeFinalAttack() {
+  const rng = makeRngSequence([
+    0.99, 0.8, 0, 0.2,
+    0.99, 0.8, 0, 0.2,
+    0.99, 0.8, 0, 0.2,
+  ]);
+  let state = createEmptyGame();
+  state = attachArmy(
+    state,
+    createDefaultArmy("P1", { archer: HERO_GRAND_KAISER_ID }),
+  );
+  state = attachArmy(
+    state,
+    createDefaultArmy("P2", { rider: HERO_DON_KIHOTE_ID }),
+  );
+
+  const kaiser = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.heroId === HERO_GRAND_KAISER_ID,
+  )!;
+  const don = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.heroId === HERO_DON_KIHOTE_ID,
+  )!;
+  const lineEnemies = Object.values(state.units)
+    .filter((unit) => unit.owner === "P1" && unit.id !== kaiser.id)
+    .slice(0, 2);
+  const offLineEnemy = Object.values(state.units).find(
+    (unit) =>
+      unit.owner === "P1" &&
+      unit.id !== kaiser.id &&
+      !lineEnemies.some((candidate) => candidate.id === unit.id),
+  )!;
+  const lineAlly = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.id !== don.id,
+  )!;
+
+  state = setUnit(state, kaiser.id, {
+    position: { col: 4, row: 1 },
+    charges: { ...kaiser.charges, [ABILITY_KAISER_DORA]: 2 },
+  });
+  state = setUnit(state, don.id, { position: { col: 4, row: 4 }, hp: 1 });
+  state = setUnit(state, lineAlly.id, { position: { col: 6, row: 4 } });
+  state = setUnit(state, lineEnemies[0].id, { position: { col: 7, row: 4 } });
+  state = setUnit(state, lineEnemies[1].id, { position: { col: 8, row: 4 } });
+  state = setUnit(state, offLineEnemy.id, { position: { col: 5, row: 6 } });
+  state = initKnowledgeForOwners(toBattleState(state, "P1", kaiser.id));
+
+  let result = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: kaiser.id,
+      abilityId: ABILITY_KAISER_DORA,
+      payload: { center: { col: 4, row: 4 } },
+    } as any,
+    rng,
+  );
+  assert(result.state.pendingRoll?.kind === "dora_attackerRoll", "Dora should start normally");
+  result = resolvePendingRollOnce(result.state, rng);
+  assert(result.state.pendingRoll?.kind === "dora_defenderRoll", "Don should defend against Dora");
+  result = resolvePendingRollOnce(result.state, rng);
+
+  const triggered = result;
+  const pending = triggered.state.pendingRoll;
+  assert(
+    pending?.kind === "donMadDelusionDirection",
+    `lethal Dora damage must request Madness of the Knight direction, got ${pending?.kind ?? "none"}`,
+  );
+  assert(pending.player === "P2", "Don's owner must control the direction choice");
+  assert(triggered.state.pendingAoE === null, "Dora AoE state must finish before Don's choice");
+  assert(
+    triggered.state.units[don.id].isAlive &&
+      triggered.state.units[don.id].hp === 0 &&
+      triggered.state.units[don.id].position?.col === 4,
+    "Don must remain on his death cell as the final attack source",
+  );
+  assert(
+    triggered.events.some(
+      (event) =>
+        event.type === "abilityUsed" &&
+        event.unitId === don.id &&
+        event.abilityId === ABILITY_DON_KIHOTE_MADNESS,
+    ),
+    "the death trigger should log Madness of the Knight immediately",
+  );
+
+  const invalid = applyAction(
+    triggered.state,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: pending.id,
+      player: "P2",
+      choice: { type: "donMadDelusionDirection", direction: { col: 2, row: 0 } },
+    } as any,
+    rng,
+  );
+  assert(invalid.state === triggered.state, "an invalid direction must preserve the pending state");
+
+  const wrongOwner = applyAction(
+    triggered.state,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: pending.id,
+      player: "P1",
+      choice: { type: "donMadDelusionDirection", direction: { col: 1, row: 0 } },
+    } as any,
+    rng,
+  );
+  assert(wrongOwner.state === triggered.state, "the opponent must not resolve Don's direction choice");
+
+  const duplicateDeathCheck = applyNewBatchPostAction(
+    triggered.state,
+    triggered.state,
+    [{ type: "unitDied", unitId: don.id, killerId: kaiser.id }],
+    rng,
+  );
+  assert(duplicateDeathCheck.state === triggered.state, "repeat death checks must not replace the choice");
+  assert(
+    !duplicateDeathCheck.events.some((event) => event.type === "abilityUsed"),
+    "repeat death checks must not trigger Madness twice",
+  );
+
+  const hpBefore = Object.fromEntries(
+    [lineAlly, ...lineEnemies, offLineEnemy].map((unit) => [
+      unit.id,
+      triggered.state.units[unit.id].hp,
+    ]),
+  );
+  result = applyAction(
+    triggered.state,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: pending.id,
+      player: "P2",
+      choice: { type: "donMadDelusionDirection", direction: { col: 1, row: 0 } },
+    } as any,
+    rng,
+  );
+  assert(result.state.pendingRoll?.kind === "attack_attackerRoll", "combat rolls start only after direction selection");
+  assert(result.state.pendingRoll?.context.defenderId === lineEnemies[0].id, "nearest enemy must be attacked first");
+  assert(result.state.pendingRoll?.context.damageBonus === 1, "the final attacks must carry +1 damage");
+  assert(
+    result.state.pendingRoll?.context.sourceAbilityId === ABILITY_DON_KIHOTE_MADNESS,
+    "the final attacks must retain their phantasm source",
+  );
+
+  result = resolvePendingRollOnce(result.state, rng);
+  result = resolvePendingRollOnce(result.state, rng);
+  const firstDamage = result.events.find(
+    (event) => event.type === "attackResolved" && event.defenderId === lineEnemies[0].id,
+  );
+  assert(firstDamage?.type === "attackResolved" && firstDamage.damage === don.attack + 1, "the first line target should take Don's attack plus one damage");
+  assert(result.state.pendingRoll?.context.defenderId === lineEnemies[1].id, "farther enemy must be attacked second");
+
+  result = resolvePendingRollOnce(result.state, rng);
+  result = resolvePendingRollOnce(result.state, rng);
+  const firstAfter = result.state.units[lineEnemies[0].id];
+  const secondAfter = result.state.units[lineEnemies[1].id];
+  assert(firstAfter.hp === Math.max(0, hpBefore[lineEnemies[0].id] - (don.attack + 1)), "nearest line enemy should be damaged");
+  assert(secondAfter.hp === Math.max(0, hpBefore[lineEnemies[1].id] - (don.attack + 1)), "farther line enemy should be damaged");
+  assert(result.state.units[lineAlly.id].hp === hpBefore[lineAlly.id], "allies on the line must not be attacked");
+  assert(result.state.units[offLineEnemy.id].hp === hpBefore[offLineEnemy.id], "off-line enemies must not be attacked");
+  assert(!result.state.units[don.id].isAlive && result.state.units[don.id].position === null, "Don must die after the final line attack resolves");
+  assert(!result.state.units[don.id].donMadDelusionPending, "the death phantasm flag must be cleared");
+  assert(!result.state.pendingRoll, "the completed phantasm must leave no stale pending roll");
+
+  console.log("kaiser_dora_triggers_don_madness_direction_before_final_attack passed");
 }
 
 

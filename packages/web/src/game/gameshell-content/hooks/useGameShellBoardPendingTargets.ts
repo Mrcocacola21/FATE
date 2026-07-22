@@ -3,6 +3,7 @@ import type { Coord } from "rules";
 import { coordKey, normalizeCoordList } from "../helpers";
 import { getPendingChikatiloPlacementCoords } from "../placementTargets";
 import { useGameShellBoardPendingActorTargets } from "./useGameShellBoardPendingActorTargets";
+import { getDonMadnessRayCells } from "../../targeting/donMadnessDirection";
 
 interface UseGameShellBoardPendingTargetsParams {
   view: any;
@@ -164,8 +165,14 @@ export function useGameShellBoardPendingTargets({
   const chargedImpulseTargetOptions = useMemo(() => {
     if (!isChargedImpulseTargetChoice) return [] as Coord[];
     const ctx = pendingRoll?.context as { options?: unknown } | undefined;
+    if (pendingRoll?.kind === "donMadDelusionDirection") {
+      return getDonMadnessRayCells(
+        (pendingRoll.context ?? {}) as Record<string, unknown>,
+        view?.boardSize ?? 9,
+      );
+    }
     return normalizeCoordList(ctx?.options);
-  }, [isChargedImpulseTargetChoice, pendingRoll]);
+  }, [isChargedImpulseTargetChoice, pendingRoll, view?.boardSize]);
   const chargedImpulseTargetKeys = useMemo(
     () => new Set(chargedImpulseTargetOptions.map(coordKey)),
     [chargedImpulseTargetOptions]

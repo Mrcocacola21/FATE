@@ -38,9 +38,30 @@ function requestMadDelusionIfReady(state: GameState): ApplyResult {
     state,
     don.owner,
     "donMadDelusionDirection",
-    { unitId: don.id, origin: don.donMadDelusionOrigin ?? don.position, options: ALL_DIRS },
+    {
+      abilityId: ids.ABILITY_DON_KIHOTE_MADNESS,
+      unitId: don.id,
+      origin: don.donMadDelusionOrigin ?? don.position,
+      options: ALL_DIRS,
+    },
     don.id
   );
+}
+
+function finishDonMadnessDeath(state: GameState, don: UnitState): GameState {
+  const nextState = updateUnit(state, {
+    ...don,
+    isAlive: false,
+    position: null,
+    donMadDelusionPending: false,
+    donMadDelusionOrigin: undefined,
+  });
+  return {
+    ...nextState,
+    activeUnitId: nextState.activeUnitId === don.id ? null : nextState.activeUnitId,
+    pendingMove:
+      nextState.pendingMove?.unitId === don.id ? null : nextState.pendingMove,
+  };
 }
 
 function getDonReactionOptions(state: GameState, don: UnitState): Coord[] {
@@ -152,6 +173,8 @@ export function applyNewBatchPostAction(
         event.hit &&
         event.damage > 0 &&
         defender.isAlive &&
+        defender.hp > 0 &&
+        !defender.donMadDelusionPending &&
         attacker &&
         attacker.owner !== defender.owner
       ) {
@@ -185,6 +208,7 @@ export function applyNewBatchPostAction(
           donMadDelusionOrigin: { ...before.position },
         };
         nextState = updateUnit(nextState, pendingDon);
+        nextEvents.push(abilityUsed(pendingDon.id, ids.ABILITY_DON_KIHOTE_MADNESS));
       }
     }
 
@@ -214,22 +238,16 @@ export function applyNewBatchPostAction(
     if (event.type === "aoeResolved" && event.abilityId === ids.ABILITY_DON_KIHOTE_MADNESS) {
       const don = nextState.units[event.sourceUnitId];
       if (don?.donMadDelusionPending) {
-        nextState = updateUnit(nextState, {
-          ...don,
-          isAlive: false,
-          position: null,
-          donMadDelusionPending: false,
-          donMadDelusionOrigin: undefined,
-        });
+        nextState = finishDonMadnessDeath(nextState, don);
       }
     }
   }
 
-  const donReaction = requestDonReactionIfReady(nextState);
-  const requested = requestMadDelusionIfReady(donReaction.state);
+  const requested = requestMadDelusionIfReady(nextState);
+  const donReaction = requestDonReactionIfReady(requested.state);
   return {
-    state: requested.state,
-    events: [...nextEvents, ...donReaction.events, ...requested.events],
+    state: donReaction.state,
+    events: [...nextEvents, ...requested.events, ...donReaction.events],
   };
 }
 
@@ -300,12 +318,12 @@ export function resolveDonMadDelusionDirection(
   const base = clearPendingRoll(state);
   if (targetIds.length === 0) {
     return {
-      state: updateUnit(base, { ...don, isAlive: false, position: null, donMadDelusionPending: false, donMadDelusionOrigin: undefined }),
-      events: [abilityUsed(don.id, ids.ABILITY_DON_KIHOTE_MADNESS)],
+      state: finishDonMadnessDeath(base, don),
+      events: [],
     };
   }
   const queued = queueNewHeroAttacks(base, don, ids.ABILITY_DON_KIHOTE_MADNESS, targetIds, { damageBonus: 1, center: don.position });
-  return { state: queued.state, events: [abilityUsed(don.id, ids.ABILITY_DON_KIHOTE_MADNESS), ...queued.events] };
+  return queued;
 }
 
 export function resolveDonWindmillsReposition(

@@ -11,6 +11,7 @@ import {
   HERO_ZORO_ID,
   HERO_LUCHE_ID,
   HERO_DUOLINGO_ID,
+  HERO_DON_KIHOTE_ID,
   ABILITY_ZORO_ONI_GIRI,
   ABILITY_ZORO_DETERMINATION,
   ABILITY_LUCHE_DIVINE_RAY,
@@ -468,6 +469,47 @@ function testNewBatchAbilitySourceProjection() {
   console.log("view_new_batch_ability_source_projection passed");
 }
 
+function testDonMadnessDirectionProjectionIsOwnerPrivateAndValid() {
+  let state = setupState();
+  const donBase = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "rider",
+  )!;
+  const don = initUnitAbilities({
+    ...donBase,
+    heroId: HERO_DON_KIHOTE_ID,
+    hp: 0,
+    isAlive: true,
+    position: { col: 4, row: 4 },
+    donMadDelusionPending: true,
+    donMadDelusionOrigin: { col: 4, row: 4 },
+  });
+  state = {
+    ...state,
+    phase: "battle",
+    units: { ...state.units, [don.id]: don },
+    pendingRoll: {
+      id: "don-madness-direction",
+      player: "P2",
+      kind: "donMadDelusionDirection",
+      context: {
+        abilityId: "donKihoteMadness",
+        unitId: don.id,
+        origin: { col: 4, row: 4 },
+        options: [{ col: 1, row: 0 }],
+      },
+    },
+  };
+
+  const ownerView = makePlayerView(state, "P2");
+  const opponentView = makePlayerView(state, "P1");
+  assert.equal(ownerView.pendingRoll?.kind, "donMadDelusionDirection");
+  assert.equal(ownerView.pendingRoll?.player, "P2");
+  assert.equal(ownerView.pendingRoll?.context.unitId, don.id);
+  assert.equal(ownerView.units[don.id]?.position?.col, 4, "the pending source must remain projectable");
+  assert.equal(opponentView.pendingRoll, null, "the opponent should receive only public waiting metadata");
+  console.log("view_don_madness_direction_projection_is_owner_private_and_valid passed");
+}
+
 function main() {
   testHiddenEnemyOmitted();
   testKnownStealthedEnemyUsesLastKnown();
@@ -478,6 +520,7 @@ function main() {
   testJackTrapProjectionIsOwnerPrivateUntilTriggered();
   testRiderMovementProjectionDoesNotLeakHiddenTarget();
   testNewBatchAbilitySourceProjection();
+  testDonMadnessDirectionProjectionIsOwnerPrivateAndValid();
 }
 
 main();

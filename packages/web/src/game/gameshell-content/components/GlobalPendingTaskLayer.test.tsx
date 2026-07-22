@@ -6,6 +6,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { setLanguage } from "../../../i18n";
 import { GameShellPendingRoll } from "./GameShellPendingRoll";
 import { GlobalPendingTaskLayer } from "./GlobalPendingTaskLayer";
+import { CurrentTaskPanel } from "./CurrentTaskPanel";
 
 const initiativePending = {
   id: "initiative-p1",
@@ -120,6 +121,50 @@ test("initiative roll action preserves the resolvePendingRoll command payload", 
   assert.deepEqual(sent, [
     { type: "resolvePendingRoll", pendingRollId: "initiative-p1" },
   ]);
+});
+
+test("Madness of the Knight is a board direction task and never renders a roll action", () => {
+  setLanguage("en", null);
+  const pending = {
+    id: "don-madness",
+    kind: "donMadDelusionDirection",
+    player: "P1",
+    context: {
+      unitId: "don",
+      origin: { col: 4, row: 4 },
+      options: [{ col: 1, row: 0 }],
+    },
+  };
+  const vm = makeVm({
+    pendingRoll: pending,
+    pendingMeta: pending,
+    boardSelectionPending: true,
+    pendingQueueCount: 0,
+    view: { phase: "battle", units: {} },
+  });
+
+  const overlayMarkup = renderToStaticMarkup(<GlobalPendingTaskLayer vm={vm} />);
+  const taskMarkup = renderToStaticMarkup(<CurrentTaskPanel vm={vm} compact />);
+  assert.equal(overlayMarkup, "", "board direction choices must not open the dice modal");
+  assert.match(taskMarkup, /Madness of the Knight/);
+  assert.match(taskMarkup, /Choose a direction for Don Kihote&#x27;s final dash/);
+  assert.doesNotMatch(taskMarkup, /Roll dice/);
+  assert.doesNotMatch(taskMarkup, />Cancel</);
+
+  const waitingMarkup = renderToStaticMarkup(
+    <GlobalPendingTaskLayer
+      vm={makeVm({
+        pendingRoll: null,
+        pendingMeta: pending,
+        playerId: "P2",
+        pendingForLocalPlayer: false,
+        boardSelectionPending: false,
+        view: { phase: "battle", units: {} },
+      })}
+    />,
+  );
+  assert.match(waitingMarkup, /Waiting for opponent to choose/);
+  assert.doesNotMatch(waitingMarkup, /Waiting for opponent to roll/);
 });
 
 test("gameplay layer tokens keep pending tasks above sheets, navigation, and task bars", () => {

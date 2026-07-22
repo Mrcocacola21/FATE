@@ -1214,3 +1214,40 @@ test("Moon Insight pending preview uses authoritative line options and the hover
   const rejectedLocalPoint = buildPendingPreview(view, { col: 6, row: 5 });
   assert.equal(hasKind(rejectedLocalPoint, { col: 6, row: 5 }, "area"), false);
 });
+
+test("Madness of the Knight pending preview exposes all straight direction rays", () => {
+  const don = unit({
+    id: "don",
+    owner: "P1",
+    heroId: "donKihote",
+    class: "rider",
+    position: { col: 4, row: 4 },
+  });
+  const view = makeView([don], {
+    pendingRoll: {
+      id: "don-madness",
+      player: "P1",
+      kind: "donMadDelusionDirection",
+      context: {
+        unitId: don.id,
+        origin: { col: 4, row: 4 },
+        options: [
+          { col: 0, row: -1 },
+          { col: 0, row: 1 },
+          { col: -1, row: 0 },
+          { col: 1, row: 0 },
+          { col: -1, row: -1 },
+          { col: 1, row: -1 },
+          { col: -1, row: 1 },
+          { col: 1, row: 1 },
+        ],
+      },
+    } as PlayerView["pendingRoll"],
+  });
+
+  const preview = buildPendingPreview(view);
+  assert.equal(hasKind(preview, { col: 4, row: 0 }, "line"), true);
+  assert.equal(hasKind(preview, { col: 8, row: 4 }, "line"), true);
+  assert.equal(hasKind(preview, { col: 8, row: 8 }, "line"), true);
+  assert.equal(hasKind(preview, { col: 6, row: 5 }, "line"), false);
+});

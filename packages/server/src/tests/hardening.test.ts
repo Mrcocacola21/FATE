@@ -398,6 +398,7 @@ function testGroznyTyrantPendingChoicePayloadsAccepted() {
 
 function testNewBatchBoardPendingChoicePayloadsAccepted() {
   for (const choice of [
+    { type: "donMadDelusionDirection", direction: { col: 1, row: -1 } },
     { type: "donSorrowfulMove", destination: { col: 3, row: 2 } },
     { type: "donWindmillsReposition", destination: { col: 4, row: 2 } },
     { type: "chargedImpulseTarget", position: { col: 5, row: 2 } },
