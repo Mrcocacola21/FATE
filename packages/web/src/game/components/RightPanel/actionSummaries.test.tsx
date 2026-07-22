@@ -23,7 +23,15 @@ import { createCellClickHandler } from "../../gameshell-content/cellHandlers";
 import { CurrentTaskPanel } from "../../gameshell-content/components/CurrentTaskPanel";
 import { BattleUnitSummary } from "./sections/BattleUnitSummary";
 import { BattleAbilityActions } from "./sections/BattleAbilityActions";
+import { BattleActionButtons } from "./sections/BattleActionButtons";
 import { BattleBottomHints } from "./sections/BattleBottomHints";
+import {
+  CoreResourceStrip,
+  PassiveImpulseInfo,
+  SelectedUnitHeader,
+  SpecialHeroResourceStrip,
+} from "./ActionMenu";
+import { getSpecialHeroResourceViews } from "../../specialHeroResources";
 import { getAvailableMovementModes } from "../../movementModes";
 import {
   getPublicBattleActionBars,
@@ -291,7 +299,8 @@ test("Boatman movement budget keeps Move, Boat, and Search(Move) available", () 
       onHoverAbility={() => undefined}
     />,
   );
-  assert.match(markup, /<button(?![^>]*disabled)[^>]*>Boat<\/button>/);
+  assert.match(markup, /data-ability-action-id="riverBoat"(?![^>]*disabled)/);
+  assert.doesNotMatch(markup, /title="Move slot already used"/);
 
   const moveSummary = getUnitMoveSummary({
     unit: river,
@@ -455,12 +464,25 @@ test("Artemida and Kaneki expose generic multiclass movement choices", () => {
     kanekiCentipedeUnlocked: true,
   });
   assert.deepEqual(
-    getAvailableMovementModes(artemida, makeView(artemida)).map((option) => [option.id, option.classId]),
-    [["normal", "archer"], ["trickster", "trickster"]],
+    getAvailableMovementModes(artemida, makeView(artemida)).map((option) => [
+      option.id,
+      option.classId,
+    ]),
+    [
+      ["normal", "archer"],
+      ["trickster", "trickster"],
+    ],
   );
   assert.deepEqual(
-    getAvailableMovementModes(kaneki, makeView(kaneki)).map((option) => [option.id, option.classId]),
-    [["normal", "berserker"], ["assassin", "assassin"], ["rider", "rider"]],
+    getAvailableMovementModes(kaneki, makeView(kaneki)).map((option) => [
+      option.id,
+      option.classId,
+    ]),
+    [
+      ["normal", "berserker"],
+      ["assassin", "assassin"],
+      ["rider", "rider"],
+    ],
   );
 
   const requests: string[] = [];
@@ -718,6 +740,17 @@ test("new action UI i18n keys exist in English and Ukrainian", () => {
     "actionUi.cannotEnterStealth",
     "actionUi.movementBlocked",
     "actionUi.actionAlreadySpent",
+    "actionMenu.specialResources",
+    "actionMenu.abilityCounter",
+    "actionMenu.counterCompact",
+    "actionMenu.chargesCost",
+    "actionMenu.available",
+    "actionMenu.spent",
+    "actionMenu.hidden",
+    "actionMenu.revealed",
+    "actionMenu.notEnoughResource",
+    "actionMenu.actionAlreadySpent",
+    "actionMenu.movementAlreadySpent",
     "pending.friskHugs",
     "pending.friskHugsPrompt",
     "pending.friskWarmWords",
@@ -741,22 +774,26 @@ test("new action UI i18n keys exist in English and Ukrainian", () => {
 test("new-batch passive and start-turn impulse abilities are not normal action buttons", () => {
   for (const id of [ARTEMIS_MOON_INSIGHT_ID, DON_SORROWFUL_ID, JACK_SNARES_ID]) {
     assert.equal(
-      isActionableAbility(makeAbility({
-        id,
-        kind: id === DON_SORROWFUL_ID ? "passive" : "impulse",
-      })),
+      isActionableAbility(
+        makeAbility({
+          id,
+          kind: id === DON_SORROWFUL_ID ? "passive" : "impulse",
+        }),
+      ),
       false,
       `${id} must not render as a manual action`,
     );
   }
 
   assert.equal(
-    isActionableAbility(makeAbility({
-      id: LUCHE_DIVINE_RAY_ID,
-      kind: "impulse",
-      slot: "action",
-      isAvailable: true,
-    })),
+    isActionableAbility(
+      makeAbility({
+        id: LUCHE_DIVINE_RAY_ID,
+        kind: "impulse",
+        slot: "action",
+        isAvailable: true,
+      }),
+    ),
     true,
     "Light Ray keeps only its paid Action/Sun variant",
   );
@@ -814,6 +851,9 @@ test("Oni Giri renders separate counter and Determination source options", () =>
   assert.match(markup, /Oni Giri.*Spend Determination.*Action.*Move/);
   assert.match(markup, /data-ability-use-source="abilityCounter"/);
   assert.match(markup, /data-ability-use-source="heroResource"/);
+  assert.match(markup, /data-ability-card-id="zoroOniGiri"/);
+  assert.match(markup, /data-testid="ability-counter-zoroOniGiri"/);
+  assert.match(markup, /Counter 2\/2/);
 });
 
 test("Push Notification renders separate counter and Missed Lessons source options", () => {
@@ -882,12 +922,14 @@ test("Kaneki Regeneration renders a confirmed partial-RC selector", () => {
   const markup = renderToStaticMarkup(
     <BattleAbilityActions
       view={makeView(kaneki)}
-      actionableAbilities={[makeAbility({
-        id: KANEKI_REGENERATION_ID,
-        name: "Regeneration",
-        currentCharges: 4,
-        chargeRequired: 1,
-      })]}
+      actionableAbilities={[
+        makeAbility({
+          id: KANEKI_REGENERATION_ID,
+          name: "Regeneration",
+          currentCharges: 4,
+          chargeRequired: 1,
+        }),
+      ]}
       selectedUnit={kaneki}
       canAct={true}
       economy={kaneki.turn}
@@ -947,13 +989,15 @@ test("Duolingo Push Notification keeps local intent and submits the clicked dest
     ...makeView(duolingo),
     units: { [duolingo.id]: duolingo, [creature.id]: creature },
     abilitiesByUnitId: {
-      [duolingo.id]: [{
-        id: "duolingoPushNotification",
-        targeting: {
-          targetIds: [creature.id],
-          destinationsByTargetId: { [creature.id]: [{ col: 4, row: 3 }] },
+      [duolingo.id]: [
+        {
+          id: "duolingoPushNotification",
+          targeting: {
+            targetIds: [creature.id],
+            destinationsByTargetId: { [creature.id]: [{ col: 4, row: 3 }] },
+          },
         },
-      }],
+      ],
     },
   };
   let selectedTarget: string | null = null;
@@ -974,8 +1018,12 @@ test("Duolingo Push Notification keeps local intent and submits the clicked dest
     },
     selectedUnitId: duolingo.id,
     newHeroAbilityTargetId: null,
-    setNewHeroAbilityTargetId: (id: string | null) => { selectedTarget = id; },
-    sendGameAction: (action: unknown) => { sent = action; },
+    setNewHeroAbilityTargetId: (id: string | null) => {
+      selectedTarget = id;
+    },
+    sendGameAction: (action: unknown) => {
+      sent = action;
+    },
     setActionMode: () => undefined,
     legalPlacementCoords: [],
     sendAction: () => undefined,
@@ -1024,11 +1072,13 @@ test("movement intent submits only an authoritative highlighted destination", ()
   createCellClickHandler(context as never)(4, 2);
   assert.equal(sent.length, 0, "an unhighlighted destination must not submit");
   createCellClickHandler(context as never)(3, 2);
-  assert.deepEqual(sent, [{
-    type: "move",
-    unitId: artemida.id,
-    to: { col: 3, row: 2 },
-  }]);
+  assert.deepEqual(sent, [
+    {
+      type: "move",
+      unitId: artemida.id,
+      to: { col: 3, row: 2 },
+    },
+  ]);
 });
 
 test("Artemida ability clicks reject off-line cells before command submission", () => {
@@ -1057,12 +1107,14 @@ test("Artemida ability clicks reject off-line cells before command submission", 
   createCellClickHandler(context as never)(4, 3);
   assert.equal(sent.length, 0, "off-line Silver Moon Sickle point must not submit");
   createCellClickHandler(context as never)(4, 2);
-  assert.deepEqual(sent, [{
-    type: "useAbility",
-    unitId: artemida.id,
-    abilityId: "artemidaSilverCrescent",
-    payload: { target: { col: 4, row: 2 } },
-  }]);
+  assert.deepEqual(sent, [
+    {
+      type: "useAbility",
+      unitId: artemida.id,
+      abilityId: "artemidaSilverCrescent",
+      payload: { target: { col: 4, row: 2 } },
+    },
+  ]);
 });
 
 test("Don board pending choices route cell clicks to the server", () => {
@@ -1090,7 +1142,9 @@ test("Don board pending choices route cell clicks to the server", () => {
     },
     actionMode: null,
     selectedUnitId: don.id,
-    sendAction: (action: unknown) => { sent = action; },
+    sendAction: (action: unknown) => {
+      sent = action;
+    },
     sendGameAction: () => undefined,
   } as never)(3, 2);
 
@@ -1328,4 +1382,393 @@ test("Loki Laughter renders separate option buttons with costs and availability"
   );
 
   assert.match(lowChargeMarkup, /Not enough charges/);
+});
+
+test("Action Menu core strip always renders Action, Move, and Stealth", () => {
+  setLanguage("en", { setItem: () => undefined });
+  const markup = renderToStaticMarkup(
+    <CoreResourceStrip
+      unit={null}
+      economy={{ actionUsed: false, moveUsed: false, attackUsed: false, stealthUsed: false }}
+    />,
+  );
+
+  assert.match(markup, /data-testid="core-resource-action"/);
+  assert.match(markup, /data-testid="core-resource-move"/);
+  assert.match(markup, /data-testid="core-resource-stealth"/);
+  assert.match(markup, />Action</);
+  assert.match(markup, />Move</);
+  assert.match(markup, />Stealth</);
+  assert.match(markup, /min-h-10/);
+  assert.doesNotMatch(markup, /min-h-14/);
+});
+
+test("Action Menu renders a compact selected unit header", () => {
+  setLanguage("en", { setItem: () => undefined });
+  const kaiser = makeUnit({
+    id: "P1-grand-kaiser-header",
+    heroId: "grand-kaiser",
+    class: "archer",
+    hp: 5,
+  });
+  const markup = renderToStaticMarkup(<SelectedUnitHeader unit={kaiser} heroName="Grand Kaiser" />);
+
+  assert.match(markup, /data-testid="compact-selected-unit-header"/);
+  assert.match(markup, /Grand Kaiser/);
+  assert.match(markup, new RegExp(`HP 5\/${getMaxHp("archer", "grand-kaiser")}`));
+  assert.match(markup, /Archer/);
+  assert.match(markup, /h-10 w-10/);
+  assert.doesNotMatch(markup, /h-12 w-12/);
+});
+
+test("special resource row stays hidden when a hero has no global resource", () => {
+  const kaiser = makeUnit({
+    id: "P1-grand-kaiser-no-special",
+    heroId: "grand-kaiser",
+    class: "archer",
+    charges: { kaiserDora: 2, kaiserEngineeringMiracle: 3 },
+  });
+  const markup = renderToStaticMarkup(
+    <SpecialHeroResourceStrip unit={kaiser} view={makeView(kaiser)} viewerRole="P1" />,
+  );
+
+  assert.equal(markup, "");
+});
+
+test("special resource strip renders the six required hero-wide resources", () => {
+  setLanguage("en", { setItem: () => undefined });
+  const cases = [
+    ["chikatilo", "chikatiloDecoy", "Decoy", 4],
+    ["duolingo", "duolingoSkipClasses", "Missed Lessons", 3],
+    ["mettaton", "mettatonRating", "Rating", 7],
+    ["zoro", "zoroDetermination", "Determination", 2],
+    ["luche", "lucheSunGlory", "Glory of the Sun", 2],
+    ["kaneki", "kanekiRcCells", "RC Cells", 5],
+  ] as const;
+
+  for (const [heroId, resourceId, name, value] of cases) {
+    const unit = makeUnit({
+      id: `P1-${heroId}`,
+      heroId,
+      charges: heroId === "mettaton" ? {} : { [resourceId]: value },
+      mettatonRating: heroId === "mettaton" ? value : undefined,
+    });
+    const resourceAbility = makeAbility({
+      id: resourceId,
+      name,
+      kind: "passive",
+      slot: "none",
+      isSpecialCounter: resourceId !== "chikatiloDecoy",
+      currentCharges: value,
+      chargeUnlimited: resourceId !== "chikatiloDecoy",
+      maxCharges: resourceId === "chikatiloDecoy" ? 6 : undefined,
+    });
+    const view = { ...makeView(unit), abilitiesByUnitId: { [unit.id]: [resourceAbility] } };
+    const resources = getSpecialHeroResourceViews(unit, view, "P1");
+    assert.deepEqual(
+      resources.map((resource) => resource.id),
+      [resourceId],
+    );
+
+    const markup = renderToStaticMarkup(
+      <SpecialHeroResourceStrip unit={unit} view={view} viewerRole="P1" />,
+    );
+    assert.match(markup, new RegExp(`data-special-resource-id="${resourceId}"`));
+    assert.match(markup, new RegExp(name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  }
+});
+
+test("ordinary Oni Giri, Light Ray, and Engineering Miracle counters never enter special resources", () => {
+  const cases = [
+    {
+      heroId: "zoro",
+      specialId: "zoroDetermination",
+      counterId: "zoroOniGiri",
+      specialName: "Determination",
+    },
+    {
+      heroId: "luche",
+      specialId: "lucheSunGlory",
+      counterId: "lucheDivineRay",
+      specialName: "Glory of the Sun",
+    },
+    {
+      heroId: "grand-kaiser",
+      specialId: null,
+      counterId: "kaiserEngineeringMiracle",
+      specialName: "",
+    },
+  ] as const;
+
+  for (const item of cases) {
+    const charges = {
+      [item.counterId]: 2,
+      ...(item.specialId ? { [item.specialId]: 3 } : {}),
+    };
+    const unit = makeUnit({ id: `P1-${item.heroId}`, heroId: item.heroId, charges });
+    const abilities = [
+      ...(item.specialId
+        ? [
+            makeAbility({
+              id: item.specialId,
+              name: item.specialName,
+              kind: "passive",
+              slot: "none",
+              isSpecialCounter: true,
+              currentCharges: 3,
+            }),
+          ]
+        : []),
+      makeAbility({
+        id: item.counterId,
+        name: item.counterId,
+        kind: "impulse",
+        slot: "none",
+        isSpecialCounter: false,
+        currentCharges: 2,
+      }),
+    ];
+    const view = { ...makeView(unit), abilitiesByUnitId: { [unit.id]: abilities } };
+    const ids = getSpecialHeroResourceViews(unit, view, "P1").map((resource) => resource.id);
+    assert.equal(ids.includes(item.counterId), false, `${item.counterId} is an ability counter`);
+    assert.deepEqual(ids, item.specialId ? [item.specialId] : []);
+  }
+});
+
+test("Light Ray counter renders inside its paid ability card", () => {
+  setLanguage("en", { setItem: () => undefined });
+  const luche = makeUnit({
+    id: "P1-luche-counter",
+    heroId: "luche",
+    class: "spearman",
+    charges: { lucheDivineRay: 2, lucheSunGlory: 2 },
+  });
+  const lightRay = makeAbility({
+    id: LUCHE_DIVINE_RAY_ID,
+    name: "Light Ray",
+    kind: "impulse",
+    slot: "action",
+    currentCharges: 2,
+    useOptions: [
+      {
+        id: "heroResource",
+        source: { type: "heroResource", resourceId: "lucheSunGlory", amount: 2 },
+        sourceName: "Sun",
+        currentCharges: 2,
+        chargeRequired: 2,
+        consumes: { action: true },
+        isAvailable: true,
+      },
+    ],
+  });
+  const markup = renderToStaticMarkup(
+    <BattleAbilityActions
+      view={makeView(luche)}
+      actionableAbilities={[lightRay]}
+      selectedUnit={luche}
+      canAct
+      economy={luche.turn}
+      actionMode={null}
+      targetingActive={false}
+      onUseAbility={() => undefined}
+      onUseLokiLaughtOption={() => undefined}
+      onToggleMode={() => undefined}
+      onModePreview={() => undefined}
+      onHoverAbility={() => undefined}
+    />,
+  );
+
+  assert.match(markup, /data-ability-card-id="lucheDivineRay"/);
+  assert.match(markup, /data-testid="ability-counter-lucheDivineRay"/);
+  assert.match(markup, /Counter 2\/2/);
+  assert.match(markup, /Spend Sun.*Action.*Sun 2/);
+});
+
+test("Engineering Miracle counter renders only in its impulse info card", () => {
+  setLanguage("en", { setItem: () => undefined });
+  const kaiser = makeUnit({
+    id: "P1-grand-kaiser",
+    heroId: "grand-kaiser",
+    class: "archer",
+    charges: { kaiserEngineeringMiracle: 3 },
+  });
+  const engineering = makeAbility({
+    id: "kaiserEngineeringMiracle",
+    name: "Engineering Miracle",
+    kind: "impulse",
+    slot: "none",
+    chargeUnlimited: true,
+    currentCharges: 3,
+    isSpecialCounter: false,
+  });
+  const markup = renderToStaticMarkup(
+    <PassiveImpulseInfo unit={kaiser} abilities={[engineering]} />,
+  );
+
+  assert.match(markup, /data-ability-info-id="kaiserEngineeringMiracle"/);
+  assert.match(markup, /data-testid="ability-counter-kaiserEngineeringMiracle"/);
+  assert.match(markup, /Counter 3\/4/);
+  assert.doesNotMatch(markup, /<button/);
+  assert.match(markup, /^<details/);
+  assert.doesNotMatch(markup, /^<details[^>]*\sopen(?:=|\s|>)/);
+});
+
+test("Dora disabled state is one compact row without a nested duplicate button", () => {
+  setLanguage("en", { setItem: () => undefined });
+  const kaiser = makeUnit({
+    id: "P1-grand-kaiser-dora",
+    heroId: "grand-kaiser",
+    class: "archer",
+    charges: { kaiserDora: 0, kaiserEngineeringMiracle: 0 },
+  });
+  const dora = makeAbility({
+    id: "kaiserDora",
+    name: "Dora",
+    kind: "active",
+    slot: "action",
+    currentCharges: 0,
+    chargeRequired: 2,
+    maxCharges: 2,
+    isAvailable: false,
+    disabledReason: "Not Enough charges",
+  });
+  const markup = renderToStaticMarkup(
+    <BattleAbilityActions
+      view={makeView(kaiser)}
+      actionableAbilities={[dora]}
+      selectedUnit={kaiser}
+      canAct
+      economy={kaiser.turn}
+      actionMode={null}
+      targetingActive={false}
+      onUseAbility={() => undefined}
+      onUseLokiLaughtOption={() => undefined}
+      onToggleMode={() => undefined}
+      onModePreview={() => undefined}
+      onHoverAbility={() => undefined}
+    />,
+  );
+
+  assert.match(markup, /data-compact-ability-row="kaiserDora"/);
+  assert.match(markup, /data-ability-action-id="kaiserDora"[^>]*disabled/);
+  assert.equal(markup.match(/<button/g)?.length, 1);
+  assert.doesNotMatch(markup, /class="[^"]*ability-card/);
+  assert.match(markup, /Action \+ 2 charges/);
+  assert.match(markup, /Counter 0\/2/);
+  assert.match(markup, /Not enough charges/i);
+  assert.match(markup, /<details data-ability-details="kaiserDora"/);
+  assert.doesNotMatch(markup, /<details data-ability-details="kaiserDora"[^>]*\sopen/);
+});
+
+test("private enemy hero resources are suppressed while public Rating remains visible", () => {
+  const zoro = makeUnit({
+    id: "P2-zoro-private",
+    owner: "P2",
+    heroId: "zoro",
+    charges: { zoroDetermination: 5 },
+  });
+  assert.deepEqual(getSpecialHeroResourceViews(zoro, makeView(zoro), "P1"), []);
+
+  const mettaton = makeUnit({
+    id: "P2-mettaton-public",
+    owner: "P2",
+    heroId: "mettaton",
+    mettatonRating: 9,
+  });
+  assert.deepEqual(
+    getSpecialHeroResourceViews(mettaton, makeView(mettaton), "P1").map((resource) => [
+      resource.id,
+      resource.value,
+    ]),
+    [["mettatonRating", 9]],
+  );
+});
+
+test("hero audit does not infer special resources from ordinary counters", () => {
+  const auditedHeroIds = [
+    "grand-kaiser",
+    "papyrus",
+    "sans",
+    "artemida",
+    "donKihote",
+    "jackRipper",
+    "vladTepes",
+    "lechy",
+    "guts",
+    "hassan",
+    "riverPerson",
+    "asgore",
+    "odin",
+    "kaladin",
+    "genghisKhan",
+    "elCidCompeador",
+    "jebe",
+    "griffith",
+    "femto",
+  ];
+  for (const heroId of auditedHeroIds) {
+    const counterId = `${heroId}OrdinaryCounter`;
+    const unit = makeUnit({ id: `P1-audit-${heroId}`, heroId, charges: { [counterId]: 4 } });
+    const counter = makeAbility({
+      id: counterId,
+      name: "Ordinary counter",
+      kind: "impulse",
+      slot: "none",
+      currentCharges: 4,
+      maxCharges: 4,
+      isSpecialCounter: false,
+    });
+    const view = { ...makeView(unit), abilitiesByUnitId: { [unit.id]: [counter] } };
+    assert.deepEqual(getSpecialHeroResourceViews(unit, view, "P1"), [], heroId);
+  }
+});
+
+test("rules-marked Frisk and Loki currencies remain special resources", () => {
+  const cases = [
+    ["frisk", "friskPacifism", "Pacifism"],
+    ["frisk", "friskGenocide", "Genocide"],
+    ["loki", "lokiLaught", "Loki's Laughter"],
+  ] as const;
+  for (const [heroId, resourceId, name] of cases) {
+    const unit = makeUnit({ id: `P1-${resourceId}`, heroId, charges: { [resourceId]: 6 } });
+    const resource = makeAbility({
+      id: resourceId,
+      name,
+      kind: "phantasm",
+      slot: "none",
+      currentCharges: 6,
+      isSpecialCounter: true,
+      chargeUnlimited: true,
+    });
+    const view = { ...makeView(unit), abilitiesByUnitId: { [unit.id]: [resource] } };
+    assert.deepEqual(
+      getSpecialHeroResourceViews(unit, view, "P1").map((item) => item.id),
+      [resourceId],
+    );
+  }
+});
+
+test("disabled primary actions show readable reasons", () => {
+  setLanguage("en", { setItem: () => undefined });
+  const markup = renderToStaticMarkup(
+    <BattleActionButtons
+      actionMode={null}
+      targetingActive={false}
+      moveDisabled
+      attackDisabled
+      searchMoveDisabled
+      searchActionDisabled
+      stealthDisabled
+      attackDisabledReason="No legal target"
+      onMoveClick={() => undefined}
+      onAttackClick={() => undefined}
+      onSearchMoveClick={() => undefined}
+      onSearchActionClick={() => undefined}
+      onStealthClick={() => undefined}
+      onModePreview={() => undefined}
+    />,
+  );
+  assert.match(markup, /Movement already spent/);
+  assert.match(markup, /No legal target/);
+  assert.match(markup, /Condition not met/);
 });

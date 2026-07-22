@@ -1,22 +1,31 @@
 import { useEffect, useState, type FC } from "react";
 import type { AbilityUseSource, AbilityView, PlayerView, UnitState } from "rules";
-import { FALSE_TRAIL_TOKEN_ID, KAISER_DORA_ID, KANEKI_REGENERATION_ID, LOKI_LAUGHT_ID, LUCHE_DIVINE_RAY_ID, ZORO_ONI_GIRI_ID, getMaxHp } from "../../../../rulesHints";
+import {
+  FALSE_TRAIL_TOKEN_ID,
+  KAISER_DORA_ID,
+  KANEKI_REGENERATION_ID,
+  LOKI_LAUGHT_ID,
+  getMaxHp,
+} from "../../../../rulesHints";
 import type { ActionMode, ActionPreviewMode, LokiLaughtOption } from "../../../../store";
 import {
   abilityActionMode,
-  formatChargeLabel,
   getAbilityChargeState,
   shouldHoverAbilityInActionList,
 } from "../rightPanelHelpers";
 import type { TurnEconomyState } from "../types";
 import { attackRangeCells, chebyshevDistance, coordKey } from "../../../targeting/previewGeometry";
 import { useI18n } from "../../../../i18n";
-import { getAbilityDisplay, localizeServerText } from "../../../../i18n/displayMetadata";
+import {
+  getAbilityDisplay,
+  getAbilityTypeLabel,
+  localizeServerText,
+} from "../../../../i18n/displayMetadata";
 import {
   getAbilityDisplayDetails,
-  isResourceAbilityDetails,
   type AbilityDisplayOption,
 } from "../../../abilityDisplayDetails";
+import { getOrdinaryAbilityCounterView } from "../ActionMenu";
 
 const LOKI_RADIUS = 2;
 
@@ -52,7 +61,10 @@ function getLokiLaughtOptions(): AbilityDisplayOption[] {
     nameKey: `abilityDetails.loki.laughter.options.${id}.name`,
     descriptionKey: `abilityDetails.loki.laughter.options.${id}.description`,
     types: ["active"],
-    cost: { amount: LOKI_LAUGHT_FALLBACK_COSTS[id], resourceKey: "abilityDetails.resources.laughter" },
+    cost: {
+      amount: LOKI_LAUGHT_FALLBACK_COSTS[id],
+      resourceKey: "abilityDetails.resources.laughter",
+    },
   }));
 }
 
@@ -112,9 +124,7 @@ function getProjectedLokiOptionTargetCount(
     case "spinTheDrum":
       return units.filter(
         (unit) =>
-          unit.owner === loki.owner &&
-          unit.id !== loki.id &&
-          unit.heroId !== FALSE_TRAIL_TOKEN_ID,
+          unit.owner === loki.owner && unit.id !== loki.id && unit.heroId !== FALSE_TRAIL_TOKEN_ID,
       ).length;
   }
 }
@@ -155,18 +165,21 @@ export const BattleAbilityActions: FC<BattleAbilityActionsProps> = ({
   onHoverAbility,
 }) => {
   const { language, t } = useI18n();
-  const regenerationMax = selectedUnit?.heroId === "kaneki"
-    ? Math.max(
-        0,
-        Math.min(
-          selectedUnit.charges?.kanekiRcCells ?? 0,
-          getMaxHp(selectedUnit.class, selectedUnit.heroId) - selectedUnit.hp,
-        ),
-      )
-    : 0;
+  const regenerationMax =
+    selectedUnit?.heroId === "kaneki"
+      ? Math.max(
+          0,
+          Math.min(
+            selectedUnit.charges?.kanekiRcCells ?? 0,
+            getMaxHp(selectedUnit.class, selectedUnit.heroId) - selectedUnit.hp,
+          ),
+        )
+      : 0;
   const [regenerationAmount, setRegenerationAmount] = useState(1);
   useEffect(() => {
-    setRegenerationAmount((current) => Math.max(1, Math.min(current, Math.max(1, regenerationMax))));
+    setRegenerationAmount((current) =>
+      Math.max(1, Math.min(current, Math.max(1, regenerationMax))),
+    );
   }, [regenerationMax, selectedUnit?.id]);
   if (!selectedUnit || actionableAbilities.length === 0) {
     return null;
@@ -174,77 +187,130 @@ export const BattleAbilityActions: FC<BattleAbilityActionsProps> = ({
 
   return (
     <>
-      <div className="col-span-2 mt-2 text-xs font-bold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-300">
-        {t("game.abilityActions")}
-      </div>
       {actionableAbilities.map((ability) => {
         if (ability.useOptions?.length) {
-          const display = getAbilityDisplay(ability.id, ability.name, ability.description, language);
+          const display = getAbilityDisplay(
+            ability.id,
+            ability.name,
+            ability.description,
+            language,
+          );
           const mode = abilityActionMode(ability.id);
-          const availableOptions = ability.useOptions.filter((option) => option.isAvailable);
-          const visibleOptions = availableOptions.length > 0 ? availableOptions : ability.useOptions;
-          return visibleOptions.map((option) => {
-            const disabled = targetingActive || !canAct || !option.isAvailable;
-            const sourceLabel = option.source.type === "abilityCounter"
-              ? (language === "uk" ? "Лічильник" : "Counter")
-              : language === "uk"
-                ? `Витратити ${option.sourceName}`
-                : `Spend ${option.sourceName}`;
-            const costs = [
-              option.consumes?.action ? (language === "uk" ? "Дія" : "Action") : null,
-              option.consumes?.move ? (language === "uk" ? "Рух" : "Move") : null,
-            ].filter((value): value is string => !!value);
-            const chargeLabel = option.chargeRequired === undefined
-              ? ""
-              : ` (${option.currentCharges ?? 0}/${option.chargeRequired})`;
-            const label = `${display.name} — ${sourceLabel}${costs.length ? ` + ${costs.join(" + ")}` : ""}${chargeLabel}`;
-            const tooltip =
-              (targetingActive ? t("game.cancelTargetingFirst") : "") ||
-              (!canAct ? t("pending.conditionNotMet") : "") ||
-              localizeServerText(option.disabledReason, t) ||
-              "";
-            return (
-              <div
-                key={`${ability.id}:${option.id}`}
-                className="space-y-1"
-                data-ability-use-source={option.source.type}
-                data-ability-id={ability.id}
-              >
-                <button
-                  type="button"
-                  className={`min-h-10 w-full rounded-lg border px-3 py-2.5 text-left text-xs font-bold shadow-sm transition focus-visible:ring-4 focus-visible:ring-sky-500/15 ${
-                    disabled
-                      ? "border-slate-200 bg-slate-100 text-slate-400 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-500"
-                      : "border-sky-300 bg-sky-50 text-sky-900 hover:border-sky-400 hover:bg-sky-100 dark:border-sky-900/70 dark:bg-sky-950/35 dark:text-sky-100 dark:hover:border-sky-800 dark:hover:bg-sky-950/55"
-                  }`}
-                  disabled={disabled}
-                  title={tooltip}
-                  onClick={() => {
-                    if (!disabled && mode) onToggleMode(mode, option.source);
-                  }}
-                  onMouseEnter={() => {
-                    if (mode && !disabled) onModePreview(mode);
-                  }}
-                  onMouseLeave={() => {
-                    if (mode) onModePreview(null);
-                  }}
-                  onFocus={() => {
-                    if (mode && !disabled) onModePreview(mode);
-                  }}
-                  onBlur={() => {
-                    if (mode) onModePreview(null);
-                  }}
-                >
-                  {label}
-                </button>
-                {disabled && tooltip ? (
-                  <div className="px-1 text-xs leading-5 text-amber-700 dark:text-amber-300">
-                    {tooltip}
-                  </div>
+          // Keep every authoritative source visible so players can understand
+          // both the ordinary counter path and any hero-resource alternative.
+          const visibleOptions = ability.useOptions;
+          const counter = getOrdinaryAbilityCounterView(ability, selectedUnit);
+          return (
+            <div
+              key={ability.id}
+              className="py-1.5"
+              data-ability-id={ability.id}
+              data-ability-card-id={ability.id}
+            >
+              <div className="flex items-center justify-between gap-2 px-1">
+                <div className="min-w-0 truncate font-bold text-slate-950 dark:text-slate-50">
+                  {display.name}
+                </div>
+                <span className="shrink-0 text-[9px] font-bold uppercase tracking-wide text-sky-700 dark:text-sky-300">
+                  {getAbilityTypeLabel(ability.kind, t)}
+                </span>
+              </div>
+              <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 px-1 text-[10px] text-slate-500 dark:text-slate-400">
+                {counter ? (
+                  <span
+                    data-testid={`ability-counter-${ability.id}`}
+                    className="font-semibold text-violet-700 dark:text-violet-200"
+                  >
+                    {t("actionMenu.counterCompact", {
+                      current: counter.current,
+                      max: counter.max ?? "∞",
+                    })}
+                  </span>
+                ) : null}
+                {ability.kind === "impulse" && counter ? (
+                  <span className="text-amber-700 dark:text-amber-300">
+                    {t("actionMenu.triggersAutomatically")}
+                  </span>
                 ) : null}
               </div>
-            );
-          });
+              <div className="mt-1 grid gap-1 sm:grid-cols-2">
+                {visibleOptions.map((option) => {
+                  const disabled = targetingActive || !canAct || !option.isAvailable;
+                  const sourceDisplayName =
+                    option.source.type === "heroResource"
+                      ? getAbilityDisplay(option.source.resourceId, option.sourceName, "", language)
+                          .name
+                      : option.sourceName;
+                  const sourceLabel =
+                    option.source.type === "abilityCounter"
+                      ? t("actionMenu.useCounter")
+                      : t("actionMenu.spendResource", { resource: sourceDisplayName });
+                  const costs = [
+                    option.consumes?.action ? t("game.action") : null,
+                    option.consumes?.move ? t("game.move") : null,
+                    option.consumes?.attack ? t("game.attack") : null,
+                    option.consumes?.stealth ? t("game.stealth") : null,
+                  ].filter((value): value is string => !!value);
+                  const tooltip =
+                    (targetingActive ? t("game.cancelTargetingFirst") : "") ||
+                    (!canAct ? t("pending.conditionNotMet") : "") ||
+                    localizeServerText(option.disabledReason, t) ||
+                    "";
+                  return (
+                    <button
+                      key={option.id}
+                      type="button"
+                      className={`min-h-11 rounded-md px-2.5 py-1.5 text-left text-[10px] transition focus-visible:ring-2 focus-visible:ring-sky-500/25 ${
+                        disabled
+                          ? "bg-stone-500/[0.06] text-stone-600 ring-1 ring-inset ring-stone-500/10 dark:text-stone-400"
+                          : "bg-sky-500/10 text-sky-900 ring-1 ring-inset ring-sky-500/20 hover:bg-sky-500/15 dark:text-sky-100"
+                      }`}
+                      data-ability-use-source={option.source.type}
+                      disabled={disabled}
+                      title={tooltip}
+                      onClick={() => {
+                        if (!disabled && mode) onToggleMode(mode, option.source);
+                      }}
+                      onMouseEnter={() => {
+                        if (mode && !disabled) onModePreview(mode);
+                      }}
+                      onMouseLeave={() => {
+                        if (mode) onModePreview(null);
+                      }}
+                      onFocus={() => {
+                        if (mode && !disabled) onModePreview(mode);
+                      }}
+                      onBlur={() => {
+                        if (mode) onModePreview(null);
+                      }}
+                    >
+                      <span className="block font-bold">{sourceLabel}</span>
+                      <span className="mt-0.5 block font-semibold opacity-75">
+                        {costs.length ? costs.join(" + ") : t("game.noCommitCost")}
+                        {option.source.type === "heroResource"
+                          ? ` + ${sourceDisplayName} ${option.source.amount}`
+                          : ""}
+                      </span>
+                      {disabled && tooltip ? (
+                        <span className="mt-0.5 block leading-tight text-amber-700 dark:text-amber-300">
+                          {tooltip}
+                        </span>
+                      ) : null}
+                    </button>
+                  );
+                })}
+              </div>
+              <details
+                data-ability-details={ability.id}
+                className="mt-1 px-1 text-[10px] text-slate-600 dark:text-slate-300"
+              >
+                <summary className="cursor-pointer font-semibold text-slate-400 hover:text-amber-700 dark:hover:text-amber-300">
+                  {t("actionMenu.details")}
+                </summary>
+                <p className="mt-1 leading-4">{display.description}</p>
+              </details>
+            </div>
+          );
         }
         if (ability.id === KANEKI_REGENERATION_ID) {
           const disabled =
@@ -255,36 +321,70 @@ export const BattleAbilityActions: FC<BattleAbilityActionsProps> = ({
             regenerationMax < 1;
           const amount = Math.max(1, Math.min(regenerationAmount, Math.max(1, regenerationMax)));
           return (
-            <div key={ability.id} className="col-span-2 space-y-2 rounded-lg border border-emerald-300 bg-emerald-50 p-2 dark:border-emerald-900 dark:bg-emerald-950/30" data-kaneki-regeneration>
-              <div className="text-xs font-bold text-emerald-900 dark:text-emerald-100">
-                {getAbilityDisplay(ability.id, ability.name, ability.description, language).name}
-              </div>
-              <div className="flex items-center justify-between gap-2">
-                <button type="button" className="rounded bg-slate-200 px-3 py-1 font-bold dark:bg-slate-800" onClick={() => setRegenerationAmount((value) => Math.max(1, value - 1))} disabled={disabled || amount <= 1} aria-label={t("common.decrease")}>−</button>
-                <span className="text-xs font-semibold" data-regeneration-amount={amount}>
-                  {language === "uk"
-                    ? `Витратити ${amount} RC-клітин, щоб відновити ${amount} здоров’я`
-                    : `Spend ${amount} RC Cells to heal ${amount} HP`}
+            <div
+              key={ability.id}
+              className="py-1.5"
+              data-kaneki-regeneration
+              data-ability-card-id={ability.id}
+            >
+              <div className="flex items-center justify-between gap-2 px-1">
+                <span className="font-bold text-emerald-900 dark:text-emerald-100">
+                  {getAbilityDisplay(ability.id, ability.name, ability.description, language).name}
                 </span>
-                <button type="button" className="rounded bg-slate-200 px-3 py-1 font-bold dark:bg-slate-800" onClick={() => setRegenerationAmount((value) => Math.min(regenerationMax, value + 1))} disabled={disabled || amount >= regenerationMax} aria-label={t("common.increase")}>+</button>
+                <span className="text-[9px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
+                  {getAbilityTypeLabel(ability.kind, t)}
+                </span>
               </div>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="mt-1 flex items-center gap-1">
                 <button
                   type="button"
-                  className="rounded-lg border border-slate-300 px-3 py-2 text-xs font-bold dark:border-slate-700"
-                  onClick={() => setRegenerationAmount(1)}
+                  className="min-h-11 min-w-11 rounded-md bg-stone-500/10 px-3 py-2 font-bold disabled:opacity-35"
+                  onClick={() => setRegenerationAmount((value) => Math.max(1, value - 1))}
+                  disabled={disabled || amount <= 1}
+                  aria-label={t("common.decrease")}
                 >
-                  {t("common.cancel")}
+                  −
+                </button>
+                <span
+                  className="min-w-0 flex-1 text-center text-[10px] font-semibold"
+                  data-regeneration-amount={amount}
+                >
+                  {t("actionMenu.regenerationSpend", { amount })}
+                </span>
+                <button
+                  type="button"
+                  className="min-h-11 min-w-11 rounded-md bg-stone-500/10 px-3 py-2 font-bold disabled:opacity-35"
+                  onClick={() =>
+                    setRegenerationAmount((value) => Math.min(regenerationMax, value + 1))
+                  }
+                  disabled={disabled || amount >= regenerationMax}
+                  aria-label={t("common.increase")}
+                >
+                  +
                 </button>
                 <button
                   type="button"
-                  className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white disabled:bg-slate-300 disabled:text-slate-500 dark:disabled:bg-slate-800"
+                  className="min-h-11 rounded-md bg-emerald-600 px-3 py-2 text-[10px] font-bold text-white disabled:bg-stone-500/10 disabled:text-stone-400"
                   disabled={disabled}
                   onClick={() => onUseAbility(ability.id, { amount })}
                 >
                   {t("common.confirm")}
                 </button>
               </div>
+              <details
+                data-ability-details={ability.id}
+                className="mt-1 px-1 text-[10px] text-slate-600 dark:text-slate-300"
+              >
+                <summary className="cursor-pointer font-semibold text-slate-400">
+                  {t("actionMenu.details")}
+                </summary>
+                <p className="mt-1 leading-4">
+                  {
+                    getAbilityDisplay(ability.id, ability.name, ability.description, language)
+                      .description
+                  }
+                </p>
+              </details>
             </div>
           );
         }
@@ -320,16 +420,16 @@ export const BattleAbilityActions: FC<BattleAbilityActionsProps> = ({
             return (
               <div
                 key={`${ability.id}:${optionId}`}
-                className="space-y-1"
+                className="py-1"
                 data-loki-laught-option={optionId}
                 data-loki-laught-cost={cost}
               >
                 <button
                   type="button"
-                  className={`min-h-10 w-full rounded-lg border px-3 py-2.5 text-left text-xs font-bold shadow-sm transition focus-visible:ring-4 focus-visible:ring-sky-500/15 ${
+                  className={`min-h-11 w-full rounded-md px-2.5 py-1.5 text-left text-[10px] font-bold transition focus-visible:ring-2 focus-visible:ring-sky-500/25 ${
                     disabled
-                      ? "border-slate-200 bg-slate-100 text-slate-400 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-500"
-                      : "border-sky-300 bg-sky-50 text-sky-900 hover:border-sky-400 hover:bg-sky-100 dark:border-sky-900/70 dark:bg-sky-950/35 dark:text-sky-100 dark:hover:border-sky-800 dark:hover:bg-sky-950/55"
+                      ? "bg-stone-500/[0.06] text-stone-600 ring-1 ring-inset ring-stone-500/10 dark:text-stone-400"
+                      : "bg-sky-500/10 text-sky-900 ring-1 ring-inset ring-sky-500/20 hover:bg-sky-500/15 dark:text-sky-100"
                   }`}
                   onClick={() => {
                     if (disabled) return;
@@ -346,19 +446,18 @@ export const BattleAbilityActions: FC<BattleAbilityActionsProps> = ({
                     <span className="min-w-0 truncate">{optionName}</span>
                     <span className="shrink-0 text-[11px] opacity-75">-{cost}</span>
                   </span>
+                  {disabled && reason ? (
+                    <span className="mt-0.5 block font-semibold leading-tight text-amber-700 dark:text-amber-300">
+                      {reason}
+                    </span>
+                  ) : null}
                 </button>
-                {disabled && reason ? (
-                  <div className="px-1 text-xs leading-5 text-amber-700 dark:text-amber-300">
-                    {reason}
-                  </div>
-                ) : null}
               </div>
             );
           });
         }
         const hideCharges = ability.id === KAISER_DORA_ID && !!selectedUnit.transformed;
         const chargeState = getAbilityChargeState(ability.id, selectedUnit, ability);
-        const chargeLabel = formatChargeLabel(ability, chargeState, hideCharges);
         const notEnoughCharges = !chargeState.enabled;
         const slotDisabled =
           ability.slot === "action"
@@ -370,8 +469,8 @@ export const BattleAbilityActions: FC<BattleAbilityActionsProps> = ({
                 : ability.slot === "stealth"
                   ? economy.stealthUsed
                   : false;
-        const slotReason =
-          ability.slot === "action"
+        const slotReason = slotDisabled
+          ? ability.slot === "action"
             ? t("game.actionSlotUsed")
             : ability.slot === "move"
               ? t("game.moveSlotUsed")
@@ -379,14 +478,11 @@ export const BattleAbilityActions: FC<BattleAbilityActionsProps> = ({
                 ? t("game.attackSlotUsed")
                 : ability.slot === "stealth"
                   ? t("game.stealthSlotUsed")
-                  : undefined;
+                  : undefined
+          : undefined;
         const disabledByAvailability = !ability.isAvailable;
         const disabled =
-          targetingActive ||
-          !canAct ||
-          notEnoughCharges ||
-          slotDisabled ||
-          disabledByAvailability;
+          targetingActive || !canAct || notEnoughCharges || slotDisabled || disabledByAvailability;
         const chargeWarning = notEnoughCharges ? t("game.notEnoughCharges") : undefined;
         const tooltip =
           (targetingActive ? t("game.cancelTargetingFirst") : "") ||
@@ -395,35 +491,39 @@ export const BattleAbilityActions: FC<BattleAbilityActionsProps> = ({
           chargeWarning ||
           "";
         const display = getAbilityDisplay(ability.id, ability.name, ability.description, language);
-        const paidVariantName =
-          ability.id === LUCHE_DIVINE_RAY_ID
-            ? `${display.name} — ${language === "uk" ? "витратити Сонце" : "spend Sun"}`
-            : ability.id === ZORO_ONI_GIRI_ID
-              ? `${display.name} — ${language === "uk" ? "Рішучість + Дія + Рух" : "Determination + Action + Move"}`
-              : display.name;
-        const label = `${paidVariantName}${chargeLabel ? ` (${chargeLabel})` : ""}`;
+        const counter = getOrdinaryAbilityCounterView(ability, selectedUnit);
+        const costParts = [
+          ability.slot === "action" ? t("game.action") : null,
+          ability.slot === "move" ? t("game.move") : null,
+          ability.slot === "attack" ? t("game.attack") : null,
+          ability.slot === "stealth" ? t("game.stealth") : null,
+          !hideCharges && ability.chargeRequired !== undefined
+            ? t("actionMenu.chargesCost", { amount: ability.chargeRequired })
+            : null,
+        ].filter((part): part is string => !!part);
         const mode = abilityActionMode(ability.id);
         const hoverable = shouldHoverAbilityInActionList(ability.id);
-        const details = getAbilityDisplayDetails(ability.id);
-        const enabledClass = isResourceAbilityDetails(details)
-          ? "border-cyan-300 bg-cyan-50 text-cyan-900 hover:border-cyan-400 hover:bg-cyan-100 dark:border-cyan-900/70 dark:bg-cyan-950/35 dark:text-cyan-100 dark:hover:border-cyan-800 dark:hover:bg-cyan-950/55"
-          : ability.kind === "phantasm"
-            ? "border-violet-400 bg-violet-600 text-white shadow-violet-950/20 hover:bg-violet-500 dark:border-violet-500"
-            : ability.kind === "impulse"
-              ? "border-amber-300 bg-amber-100 text-amber-900 hover:bg-amber-200 dark:border-amber-800 dark:bg-amber-950/45 dark:text-amber-100 dark:hover:bg-amber-900/60"
-              : mode && actionMode === mode
-                ? "border-amber-500 bg-amber-500 text-stone-950"
-                : "border-sky-300 bg-sky-50 text-sky-900 hover:border-sky-400 hover:bg-sky-100 dark:border-sky-900/70 dark:bg-sky-950/35 dark:text-sky-100 dark:hover:border-sky-800 dark:hover:bg-sky-950/55";
+        const selected = !!mode && actionMode === mode;
 
         return (
-          <div key={ability.id} className="space-y-1">
+          <div
+            key={ability.id}
+            data-ability-card-id={ability.id}
+            data-compact-ability-row={ability.id}
+            className="py-1.5"
+          >
             <button
               type="button"
+              data-ability-action-id={ability.id}
               aria-pressed={mode ? actionMode === mode : undefined}
-              className={`min-h-10 w-full rounded-lg border px-3 py-2.5 text-left text-xs font-bold shadow-sm transition focus-visible:ring-4 focus-visible:ring-sky-500/15 ${
+              className={`min-h-11 w-full rounded-md px-2.5 py-1.5 text-left transition focus-visible:ring-2 focus-visible:ring-sky-500/25 ${
                 disabled
-                  ? "border-slate-200 bg-slate-100 text-slate-400 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-500"
-                  : enabledClass
+                  ? "bg-stone-500/[0.06] text-stone-600 ring-1 ring-inset ring-stone-500/10 dark:text-stone-400"
+                  : selected
+                    ? "bg-amber-500 text-stone-950 ring-1 ring-inset ring-amber-600/40"
+                    : ability.kind === "phantasm"
+                      ? "bg-violet-600 text-white ring-1 ring-inset ring-violet-400/30 hover:bg-violet-500"
+                      : "bg-sky-500/10 text-sky-950 ring-1 ring-inset ring-sky-500/20 hover:bg-sky-500/15 dark:text-sky-50"
               }`}
               onClick={() => {
                 if (disabled) return;
@@ -468,13 +568,42 @@ export const BattleAbilityActions: FC<BattleAbilityActionsProps> = ({
               disabled={disabled}
               title={tooltip}
             >
-              {label}
+              <span className="flex items-center justify-between gap-2">
+                <span className="min-w-0 truncate text-xs font-bold">{display.name}</span>
+                <span className="shrink-0 text-[9px] font-bold uppercase tracking-wide opacity-65">
+                  {getAbilityTypeLabel(ability.kind, t)}
+                </span>
+              </span>
+              <span className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[10px] font-semibold opacity-75">
+                <span>{costParts.length ? costParts.join(" + ") : t("game.noCommitCost")}</span>
+                {counter ? (
+                  <span
+                    data-testid={`ability-counter-${ability.id}`}
+                    className="text-violet-700 dark:text-violet-200"
+                  >
+                    ·{" "}
+                    {t("actionMenu.counterCompact", {
+                      current: counter.current,
+                      max: counter.max ?? "∞",
+                    })}
+                  </span>
+                ) : null}
+              </span>
+              {disabled && tooltip ? (
+                <span className="mt-0.5 block text-[10px] font-semibold leading-tight text-amber-700 dark:text-amber-300">
+                  {tooltip}
+                </span>
+              ) : null}
             </button>
-            {disabled && tooltip ? (
-              <div className="px-1 text-xs leading-5 text-amber-700 dark:text-amber-300">
-                {tooltip}
-              </div>
-            ) : null}
+            <details
+              data-ability-details={ability.id}
+              className="mt-1 px-1 text-[10px] text-slate-600 dark:text-slate-300"
+            >
+              <summary className="cursor-pointer font-semibold text-slate-400 hover:text-amber-700 dark:hover:text-amber-300">
+                {t("actionMenu.details")}
+              </summary>
+              <p className="mt-1 leading-4">{display.description}</p>
+            </details>
           </div>
         );
       })}

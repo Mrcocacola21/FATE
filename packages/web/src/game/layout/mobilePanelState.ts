@@ -48,11 +48,12 @@ export function getMobileBoardInteractionKey(state: MobileBoardInteractionState)
     return `pending:${state.pendingRoll.id ?? state.pendingRoll.kind ?? "board"}`;
   }
   if (state.actionMode || state.targetingMode || state.placeUnitId) {
-    const moveStep = Array.isArray(state.moveOptions?.modes) && state.moveOptions.modes.length > 0
-      ? `choose-${state.moveOptions.modes.join("-")}`
-      : state.moveOptions?.mode
-        ? `mode-${state.moveOptions.mode}`
-        : "board";
+    const moveStep =
+      Array.isArray(state.moveOptions?.modes) && state.moveOptions.modes.length > 0
+        ? `choose-${state.moveOptions.modes.join("-")}`
+        : state.moveOptions?.mode
+          ? `mode-${state.moveOptions.mode}`
+          : "board";
     return [
       state.actionMode ?? "",
       state.targetingMode ?? "",
@@ -61,4 +62,16 @@ export function getMobileBoardInteractionKey(state: MobileBoardInteractionState)
     ].join(":");
   }
   return null;
+}
+
+export function shouldCloseMobileSheetForBoardInteraction(params: {
+  sheetOpen: boolean;
+  interactionKeyWhenOpened: string | null;
+  boardInteractionKey: string | null;
+}): boolean {
+  return !!(
+    params.sheetOpen &&
+    params.boardInteractionKey &&
+    params.boardInteractionKey !== params.interactionKeyWhenOpened
+  );
 }

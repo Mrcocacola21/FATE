@@ -13,7 +13,7 @@ function renderLobbyAt(width: number) {
   try {
     return renderToStaticMarkup(
       <LobbyLayout>
-        <span>Lobby content</span>
+        <span>{"Lobby content"}</span>
       </LobbyLayout>,
     );
   } finally {

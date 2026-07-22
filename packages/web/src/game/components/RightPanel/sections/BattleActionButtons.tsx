@@ -46,12 +46,35 @@ export const BattleActionButtons: FC<BattleActionButtonsProps> = ({
   const searchMoveBlocked = searchMoveDisabled || targetingActive;
   const searchActionBlocked = searchActionDisabled || targetingActive;
   const stealthBlocked = stealthDisabled || targetingActive;
+  const moveReason = targetingActive
+    ? t("game.cancelTargetingFirst")
+    : moveDisabled
+      ? t("actionMenu.movementAlreadySpent")
+      : "";
+  const attackReason = targetingActive
+    ? t("game.cancelTargetingFirst")
+    : attackDisabledReason || (attackDisabled ? t("actionMenu.actionAlreadySpent") : "");
+  const stealthReason = targetingActive
+    ? t("game.cancelTargetingFirst")
+    : stealthDisabled
+      ? t("pending.conditionNotMet")
+      : "";
+  const compactSearchMoveReason = targetingActive
+    ? t("game.cancelTargetingFirst")
+    : searchMoveDisabled && searchMoveReason
+      ? localizeServerText(searchMoveReason, t)
+      : "";
+  const compactSearchActionReason = targetingActive
+    ? t("game.cancelTargetingFirst")
+    : searchActionDisabled && searchActionReason
+      ? localizeServerText(searchActionReason, t)
+      : "";
   return (
     <>
       <button
         type="button"
         aria-pressed={actionMode === "move"}
-        className={`min-h-10 rounded-lg border px-2 py-2 text-xs font-bold shadow-sm transition focus-visible:ring-4 focus-visible:ring-amber-500/15 ${
+        className={`min-h-11 rounded-lg border px-2.5 py-2 text-left text-xs font-bold transition focus-visible:ring-2 focus-visible:ring-amber-500/25 ${
           moveBlocked
             ? "border-slate-200 bg-slate-100 text-slate-400 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-500"
             : actionMode === "move"
@@ -64,14 +87,17 @@ export const BattleActionButtons: FC<BattleActionButtonsProps> = ({
         onFocus={() => !moveBlocked && onModePreview("move")}
         onBlur={() => onModePreview(null)}
         disabled={moveBlocked}
-        title={targetingActive ? t("game.cancelTargetingFirst") : ""}
+        title={moveReason}
       >
-        {t("game.move")}
+        <span className="block">{t("game.move")}</span>
+        {moveReason ? (
+          <span className="mt-0.5 block text-[10px] font-semibold opacity-80">{moveReason}</span>
+        ) : null}
       </button>
       <button
         type="button"
         aria-pressed={actionMode === "attack"}
-        className={`min-h-10 rounded-lg border px-2 py-2 text-xs font-bold shadow-sm transition focus-visible:ring-4 focus-visible:ring-rose-500/15 ${
+        className={`min-h-11 rounded-lg border px-2.5 py-2 text-left text-xs font-bold transition focus-visible:ring-2 focus-visible:ring-rose-500/25 ${
           attackBlocked
             ? "border-slate-200 bg-slate-100 text-slate-400 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-500"
             : actionMode === "attack"
@@ -84,69 +110,64 @@ export const BattleActionButtons: FC<BattleActionButtonsProps> = ({
         onFocus={() => !attackBlocked && onModePreview("attack")}
         onBlur={() => onModePreview(null)}
         disabled={attackBlocked}
-        title={targetingActive ? t("game.cancelTargetingFirst") : attackDisabledReason ?? ""}
+        title={attackReason}
       >
-        {t("game.attack")}
+        <span className="block">{t("game.attack")}</span>
+        {attackReason ? (
+          <span className="mt-0.5 block text-[10px] font-semibold opacity-80">{attackReason}</span>
+        ) : null}
       </button>
-      {attackDisabledReason && (
-        <div className="col-span-2 text-xs leading-5 text-amber-700 dark:text-amber-300">
-          {attackDisabledReason}
-        </div>
-      )}
       <button
         type="button"
-        className={`min-h-10 rounded-lg border px-2 py-2 text-xs font-bold shadow-sm transition focus-visible:ring-4 focus-visible:ring-sky-500/15 ${
+        className={`min-h-11 rounded-lg border px-2.5 py-2 text-left text-xs font-bold transition focus-visible:ring-2 focus-visible:ring-sky-500/25 ${
           searchMoveBlocked
             ? "border-slate-200 bg-slate-100 text-slate-400 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-500"
             : "border-stone-300 bg-stone-100/70 text-stone-700 hover:border-sky-300 hover:bg-sky-50 dark:border-stone-800 dark:bg-black/20 dark:text-stone-100 dark:hover:border-sky-800 dark:hover:bg-sky-950/30"
         }`}
         onClick={onSearchMoveClick}
         disabled={searchMoveBlocked}
-        title={targetingActive ? t("game.cancelTargetingFirst") : ""}
+        title={compactSearchMoveReason}
       >
-        {t("game.searchMove")}
+        <span className="block">{t("game.searchMove")}</span>
+        {compactSearchMoveReason ? (
+          <span className="mt-0.5 block text-[9px] font-semibold leading-tight opacity-75">
+            {compactSearchMoveReason}
+          </span>
+        ) : null}
       </button>
       <button
         type="button"
-        className={`min-h-10 rounded-lg border px-2 py-2 text-xs font-bold shadow-sm transition focus-visible:ring-4 focus-visible:ring-sky-500/15 ${
+        className={`min-h-11 rounded-lg border px-2.5 py-2 text-left text-xs font-bold transition focus-visible:ring-2 focus-visible:ring-sky-500/25 ${
           searchActionBlocked
             ? "border-slate-200 bg-slate-100 text-slate-400 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-500"
             : "border-stone-300 bg-stone-100/70 text-stone-700 hover:border-sky-300 hover:bg-sky-50 dark:border-stone-800 dark:bg-black/20 dark:text-stone-100 dark:hover:border-sky-800 dark:hover:bg-sky-950/30"
         }`}
         onClick={onSearchActionClick}
         disabled={searchActionBlocked}
-        title={targetingActive ? t("game.cancelTargetingFirst") : ""}
+        title={compactSearchActionReason}
       >
-        {t("game.searchAction")}
+        <span className="block">{t("game.searchAction")}</span>
+        {compactSearchActionReason ? (
+          <span className="mt-0.5 block text-[9px] font-semibold leading-tight opacity-75">
+            {compactSearchActionReason}
+          </span>
+        ) : null}
       </button>
-      {searchMoveDisabled && searchMoveReason && (
-        <div className="col-span-2 text-xs leading-5 text-slate-500 dark:text-slate-400">
-          {t("game.searchDisabled", {
-            action: t("game.searchMove"),
-            reason: localizeServerText(searchMoveReason, t),
-          })}
-        </div>
-      )}
-      {searchActionDisabled && searchActionReason && (
-        <div className="col-span-2 text-xs leading-5 text-slate-500 dark:text-slate-400">
-          {t("game.searchDisabled", {
-            action: t("game.searchAction"),
-            reason: localizeServerText(searchActionReason, t),
-          })}
-        </div>
-      )}
       <button
         type="button"
-        className={`min-h-10 rounded-lg border px-2 py-2 text-xs font-bold shadow-sm transition focus-visible:ring-4 focus-visible:ring-violet-500/15 ${
+        className={`min-h-11 rounded-lg border px-2.5 py-2 text-left text-xs font-bold transition focus-visible:ring-2 focus-visible:ring-violet-500/25 ${
           stealthBlocked
             ? "border-slate-200 bg-slate-100 text-slate-400 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-500"
             : "border-violet-200 bg-violet-50 text-violet-700 hover:border-violet-300 hover:bg-violet-100 dark:border-violet-900/70 dark:bg-violet-950/30 dark:text-violet-200 dark:hover:border-violet-800 dark:hover:bg-violet-950/50"
         }`}
         onClick={onStealthClick}
         disabled={stealthBlocked}
-        title={targetingActive ? t("game.cancelTargetingFirst") : ""}
+        title={stealthReason}
       >
-        {t("game.enterStealth")}
+        <span className="block">{t("game.enterStealth")}</span>
+        {stealthReason ? (
+          <span className="mt-0.5 block text-[10px] font-semibold opacity-80">{stealthReason}</span>
+        ) : null}
       </button>
     </>
   );

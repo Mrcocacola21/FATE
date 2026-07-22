@@ -42,6 +42,8 @@ export interface AbilityView {
   chargeRequired?: number;
   maxCharges?: number;
   chargeUnlimited?: boolean;
+  /** Hero-wide currency/resource, distinct from this ability's ordinary counter. */
+  isSpecialCounter?: boolean;
   currentCharges?: number;
   isAvailable: boolean;
   disabledReason?: string;

@@ -1,4 +1,10 @@
-import type { AbilitySlot, AbilityUseOptionView, AbilityView, GameState, UnitState } from "../model";
+import type {
+  AbilitySlot,
+  AbilityUseOptionView,
+  AbilityView,
+  GameState,
+  UnitState,
+} from "../model";
 import { HERO_GRAND_KAISER_ID, HERO_UNDYNE_ID } from "../heroes";
 import {
   getMettatonRating,
@@ -31,12 +37,7 @@ function getSlotFromCost(spec: AbilitySpec): AbilitySlot {
 function getChargeRequired(spec: AbilitySpec): number | undefined {
   const external = getExternalResource(spec.id);
   if (external) return external.required;
-  return (
-    spec.chargesPerUse ??
-    spec.chargeCost ??
-    spec.triggerCharges ??
-    spec.maxCharges
-  );
+  return spec.chargesPerUse ?? spec.chargeCost ?? spec.triggerCharges ?? spec.maxCharges;
 }
 
 function getExternalResource(abilityId: string): { abilityId: string; required: number } | null {
@@ -100,13 +101,16 @@ function getCommonDisabledReason(
 function getActiveDisabledReason(
   state: GameState,
   unit: UnitState,
-  spec: AbilitySpec
+  spec: AbilitySpec,
 ): string | undefined {
   const costs = spec.actionCost?.consumes;
   const commonReason = getCommonDisabledReason(state, unit, costs);
   if (commonReason) return commonReason;
   if (spec.id === ids.ABILITY_RIVER_PERSON_BOAT) {
-    if ((unit.kaladinMoveLockSources?.length ?? 0) > 0 || (unit.lokiMoveLockSources?.length ?? 0) > 0) {
+    if (
+      (unit.kaladinMoveLockSources?.length ?? 0) > 0 ||
+      (unit.lokiMoveLockSources?.length ?? 0) > 0
+    ) {
       return "Movement is blocked";
     }
     if (!canSpendSlots(unit, { move: true })) {
@@ -128,14 +132,14 @@ function getActiveDisabledReason(
       spec.id === ids.ABILITY_METTATON_POPPINS
         ? 3
         : spec.id === ids.ABILITY_METTATON_LASER
-        ? 3
-        : spec.id === ids.ABILITY_METTATON_EX
-        ? 5
-        : spec.id === ids.ABILITY_METTATON_NEO
-        ? 10
-        : spec.id === ids.ABILITY_METTATON_FINAL_CHORD
-        ? 12
-        : undefined;
+          ? 3
+          : spec.id === ids.ABILITY_METTATON_EX
+            ? 5
+            : spec.id === ids.ABILITY_METTATON_NEO
+              ? 10
+              : spec.id === ids.ABILITY_METTATON_FINAL_CHORD
+                ? 12
+                : undefined;
     if (requiredRating !== undefined && getMettatonRating(unit) < requiredRating) {
       return `Need Rating ${requiredRating}`;
     }
@@ -155,7 +159,11 @@ function getActiveDisabledReason(
   if (
     required !== undefined &&
     spec.id !== ids.ABILITY_KAISER_ENGINEERING_MIRACLE &&
-    !(spec.id === ids.ABILITY_KAISER_DORA && unit.heroId === HERO_GRAND_KAISER_ID && unit.transformed) &&
+    !(
+      spec.id === ids.ABILITY_KAISER_DORA &&
+      unit.heroId === HERO_GRAND_KAISER_ID &&
+      unit.transformed
+    ) &&
     getCharges(unit, resourceAbilityId) < required
   ) {
     return "Not Enough charges";
@@ -173,19 +181,16 @@ function buildUseOption(
 ): AbilityUseOptionView {
   const commonReason = getCommonDisabledReason(state, unit, params.consumes);
   const chargeReason =
-    params.chargeRequired !== undefined &&
-    (params.currentCharges ?? 0) < params.chargeRequired
+    params.chargeRequired !== undefined && (params.currentCharges ?? 0) < params.chargeRequired
       ? "Not Enough charges"
       : undefined;
-  const disabledReason = commonReason ?? chargeReason ?? (!params.hasLegalTargets ? "No legal targets" : undefined);
+  const disabledReason =
+    commonReason ?? chargeReason ?? (!params.hasLegalTargets ? "No legal targets" : undefined);
   const { hasLegalTargets: _hasLegalTargets, ...option } = params;
   return { ...option, isAvailable: !disabledReason, disabledReason };
 }
 
-export function getAbilityViewsForUnit(
-  state: GameState,
-  unitId: string
-): AbilityView[] {
+export function getAbilityViewsForUnit(state: GameState, unitId: string): AbilityView[] {
   const unit = state.units[unitId];
   if (!unit || !unit.isAlive) return [];
 
@@ -199,14 +204,14 @@ export function getAbilityViewsForUnit(
         isMettaton(unit) && id === ids.ABILITY_METTATON_POPPINS
           ? 3
           : isMettaton(unit) && id === ids.ABILITY_METTATON_LASER
-          ? 3
-          : isMettaton(unit) && id === ids.ABILITY_METTATON_EX
-          ? 5
-          : isMettaton(unit) && id === ids.ABILITY_METTATON_NEO
-          ? 10
-          : isMettaton(unit) && id === ids.ABILITY_METTATON_FINAL_CHORD
-          ? 12
-          : undefined;
+            ? 3
+            : isMettaton(unit) && id === ids.ABILITY_METTATON_EX
+              ? 5
+              : isMettaton(unit) && id === ids.ABILITY_METTATON_NEO
+                ? 10
+                : isMettaton(unit) && id === ids.ABILITY_METTATON_FINAL_CHORD
+                  ? 12
+                  : undefined;
       const undyneEnergySpearRequired =
         unit.heroId === HERO_UNDYNE_ID &&
         id === ids.ABILITY_UNDYNE_ENERGY_SPEAR &&
@@ -216,10 +221,9 @@ export function getAbilityViewsForUnit(
       const effectiveChargeRequired =
         id === ids.ABILITY_PAPYRUS_COOL_GUY && unit.papyrusUnbelieverActive
           ? 3
-          : undyneEnergySpearRequired ?? mettatonRatingRequired ?? chargeRequired;
+          : (undyneEnergySpearRequired ?? mettatonRatingRequired ?? chargeRequired);
       const usesMettatonRating =
-        id === ids.ABILITY_METTATON_RATING ||
-        mettatonRatingRequired !== undefined;
+        id === ids.ABILITY_METTATON_RATING || mettatonRatingRequired !== undefined;
       const hasCharges =
         externalResource !== null ||
         spec.chargeUnlimited === true ||
@@ -365,7 +369,8 @@ export function getAbilityViewsForUnit(
           buildUseOption(state, unit, {
             id: "heroResource",
             source: { type: "heroResource", resourceId: ids.ABILITY_ZORO_DETERMINATION, amount: 2 },
-            sourceName: getAbilitySpec(ids.ABILITY_ZORO_DETERMINATION)?.displayName ?? "Determination",
+            sourceName:
+              getAbilitySpec(ids.ABILITY_ZORO_DETERMINATION)?.displayName ?? "Determination",
             currentCharges: getCharges(unit, ids.ABILITY_ZORO_DETERMINATION),
             chargeRequired: 2,
             consumes: { action: true, move: true },
@@ -377,7 +382,8 @@ export function getAbilityViewsForUnit(
           buildUseOption(state, unit, {
             id: "heroResource",
             source: { type: "heroResource", resourceId: ids.ABILITY_LUCHE_SUN_GLORY, amount: 2 },
-            sourceName: getAbilitySpec(ids.ABILITY_LUCHE_SUN_GLORY)?.displayName ?? "Glory of the Sun",
+            sourceName:
+              getAbilitySpec(ids.ABILITY_LUCHE_SUN_GLORY)?.displayName ?? "Glory of the Sun",
             currentCharges: getCharges(unit, ids.ABILITY_LUCHE_SUN_GLORY),
             chargeRequired: 2,
             consumes: { action: true },
@@ -397,8 +403,13 @@ export function getAbilityViewsForUnit(
           }),
           buildUseOption(state, unit, {
             id: "heroResource",
-            source: { type: "heroResource", resourceId: ids.ABILITY_DUOLINGO_SKIP_CLASSES, amount: 3 },
-            sourceName: getAbilitySpec(ids.ABILITY_DUOLINGO_SKIP_CLASSES)?.displayName ?? "Missed Lessons",
+            source: {
+              type: "heroResource",
+              resourceId: ids.ABILITY_DUOLINGO_SKIP_CLASSES,
+              amount: 3,
+            },
+            sourceName:
+              getAbilitySpec(ids.ABILITY_DUOLINGO_SKIP_CLASSES)?.displayName ?? "Missed Lessons",
             currentCharges: getCharges(unit, ids.ABILITY_DUOLINGO_SKIP_CLASSES),
             chargeRequired: 3,
             consumes: { move: true },
@@ -421,6 +432,7 @@ export function getAbilityViewsForUnit(
         chargeRequired: effectiveChargeRequired,
         maxCharges,
         chargeUnlimited,
+        isSpecialCounter: spec.isSpecialCounter === true,
         currentCharges,
         isAvailable,
         disabledReason,

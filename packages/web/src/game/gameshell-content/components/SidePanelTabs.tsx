@@ -22,6 +22,7 @@ import { BattleBottomHints } from "../../components/RightPanel/sections/BattleBo
 import { BattleHeroControls } from "../../components/RightPanel/sections/BattleHeroControls";
 import { BattleTurnButtons } from "../../components/RightPanel/sections/BattleTurnButtons";
 import { BattleUnitSummary } from "../../components/RightPanel/sections/BattleUnitSummary";
+import { ActionMenu } from "../../components/RightPanel/ActionMenu";
 import { FriendlyUnitsSection } from "../../components/RightPanel/sections/FriendlyUnitsSection";
 import { PlacementSection } from "../../components/RightPanel/sections/PlacementSection";
 import { StatusSection } from "../../components/RightPanel/sections/StatusSection";
@@ -219,80 +220,97 @@ function ActionTab({
   }
 
   return (
-    <PanelCard variant="parchment" className="p-4">
-      <SectionHeader kicker={t("game.actions")} title={t("game.actionPanel")} />
-      <div className="mt-4 grid grid-cols-2 gap-2 border-t border-amber-900/10 pt-4 text-xs dark:border-amber-500/15">
-        <BattleActionButtons
-          actionMode={props.actionMode}
-          targetingActive={!!props.targetingMode}
-          moveDisabled={panelVm.moveDisabled}
-          attackDisabled={panelVm.attackDisabled}
-          searchMoveDisabled={panelVm.searchMoveDisabled}
-          searchActionDisabled={panelVm.searchActionDisabled}
-          stealthDisabled={panelVm.stealthDisabled}
-          attackDisabledReason={panelVm.attackDisabledReason}
-          searchMoveReason={panelVm.legalIntents?.searchMoveReason}
-          searchActionReason={panelVm.legalIntents?.searchActionReason}
-          onMoveClick={panelVm.onMoveClick}
-          onAttackClick={() => panelVm.onToggleMode("attack")}
-          onSearchMoveClick={panelVm.onSearchMoveClick}
-          onSearchActionClick={panelVm.onSearchActionClick}
-          onStealthClick={panelVm.onStealthClick}
-          onModePreview={panelVm.onModePreview}
-        />
-        <BattleAbilityActions
+    <PanelCard variant="parchment" className="p-3">
+      <div>
+        <ActionMenu
+          unit={panelVm.selectedUnit}
+          heroName={panelVm.selectedHeroName}
           view={props.view}
-          actionableAbilities={panelVm.actionableAbilities}
-          selectedUnit={panelVm.selectedUnit}
-          canAct={panelVm.canAct || panelVm.canChooseImpulseAxis}
+          viewerRole={props.role}
           economy={panelVm.economy}
-          actionMode={props.actionMode}
-          targetingActive={!!props.targetingMode}
-          lokiLaughtOptionQueued={panelVm.lokiLaughtOptionQueued}
-          onUseAbility={panelVm.onUseAbility}
-          onUseLokiLaughtOption={panelVm.onUseLokiLaughtOption}
-          onToggleMode={panelVm.onToggleMode}
-          onModePreview={panelVm.onModePreview}
-          onHoverAbility={props.onHoverAbility}
-        />
-        <BattleHeroControls
-          selectedUnit={panelVm.selectedUnit}
-          selectedIsPapyrus={panelVm.selectedIsPapyrus}
-          selectedIsUndyne={panelVm.selectedIsUndyne}
-          papyrusLineAxis={props.papyrusLineAxis}
-          papyrusAxisOptions={PAPYRUS_AXIS_OPTIONS}
-          undyneAxis={panelVm.undyneAxis}
-          undyneAxisOptions={UNDYNE_AXIS_OPTIONS}
-          selectedPapyrusUnbeliever={panelVm.selectedPapyrusUnbeliever}
-          selectedPapyrusBoneMode={panelVm.selectedPapyrusBoneMode}
-          selectedPapyrusLongBoneMode={panelVm.selectedPapyrusLongBoneMode}
-          canAct={panelVm.canAct}
-          onSetPapyrusAxis={panelVm.onSetPapyrusAxis}
-          onSetUndyneAxis={panelVm.onSetUndyneAxis}
-          onSetPapyrusBoneType={panelVm.onSetPapyrusBoneType}
-          onTogglePapyrusLongBone={panelVm.onTogglePapyrusLongBone}
-        />
-        <BattleTurnButtons
-          isMyTurn={panelVm.isMyTurn}
-          joined={props.joined}
-          isSpectator={panelVm.isSpectator}
-          pendingRoll={props.pendingRoll}
-          onEndTurn={panelVm.onEndTurn}
-          onClear={panelVm.onClear}
+          abilityViews={panelVm.abilityViews}
+          primaryActions={
+            <BattleActionButtons
+              actionMode={props.actionMode}
+              targetingActive={!!props.targetingMode}
+              moveDisabled={panelVm.moveDisabled}
+              attackDisabled={panelVm.attackDisabled}
+              searchMoveDisabled={panelVm.searchMoveDisabled}
+              searchActionDisabled={panelVm.searchActionDisabled}
+              stealthDisabled={panelVm.stealthDisabled}
+              attackDisabledReason={panelVm.attackDisabledReason}
+              searchMoveReason={panelVm.legalIntents?.searchMoveReason}
+              searchActionReason={panelVm.legalIntents?.searchActionReason}
+              onMoveClick={panelVm.onMoveClick}
+              onAttackClick={() => panelVm.onToggleMode("attack")}
+              onSearchMoveClick={panelVm.onSearchMoveClick}
+              onSearchActionClick={panelVm.onSearchActionClick}
+              onStealthClick={panelVm.onStealthClick}
+              onModePreview={panelVm.onModePreview}
+            />
+          }
+          abilityActions={
+            <BattleAbilityActions
+              view={props.view}
+              actionableAbilities={panelVm.actionableAbilities}
+              selectedUnit={panelVm.selectedUnit}
+              canAct={panelVm.canAct || panelVm.canChooseImpulseAxis}
+              economy={panelVm.economy}
+              actionMode={props.actionMode}
+              targetingActive={!!props.targetingMode}
+              lokiLaughtOptionQueued={panelVm.lokiLaughtOptionQueued}
+              onUseAbility={panelVm.onUseAbility}
+              onUseLokiLaughtOption={panelVm.onUseLokiLaughtOption}
+              onToggleMode={panelVm.onToggleMode}
+              onModePreview={panelVm.onModePreview}
+              onHoverAbility={props.onHoverAbility}
+            />
+          }
+          heroControls={
+            <BattleHeroControls
+              selectedUnit={panelVm.selectedUnit}
+              selectedIsPapyrus={panelVm.selectedIsPapyrus}
+              selectedIsUndyne={panelVm.selectedIsUndyne}
+              papyrusLineAxis={props.papyrusLineAxis}
+              papyrusAxisOptions={PAPYRUS_AXIS_OPTIONS}
+              undyneAxis={panelVm.undyneAxis}
+              undyneAxisOptions={UNDYNE_AXIS_OPTIONS}
+              selectedPapyrusUnbeliever={panelVm.selectedPapyrusUnbeliever}
+              selectedPapyrusBoneMode={panelVm.selectedPapyrusBoneMode}
+              selectedPapyrusLongBoneMode={panelVm.selectedPapyrusLongBoneMode}
+              canAct={panelVm.canAct}
+              onSetPapyrusAxis={panelVm.onSetPapyrusAxis}
+              onSetUndyneAxis={panelVm.onSetUndyneAxis}
+              onSetPapyrusBoneType={panelVm.onSetPapyrusBoneType}
+              onTogglePapyrusLongBone={panelVm.onTogglePapyrusLongBone}
+            />
+          }
+          turnActions={
+            <BattleTurnButtons
+              isMyTurn={panelVm.isMyTurn}
+              joined={props.joined}
+              isSpectator={panelVm.isSpectator}
+              pendingRoll={props.pendingRoll}
+              onEndTurn={panelVm.onEndTurn}
+              onClear={panelVm.onClear}
+            />
+          }
+          footer={
+            <BattleBottomHints
+              moveModeOptions={panelVm.moveModeOptions}
+              selectedUnitId={props.selectedUnitId}
+              moveDisabled={panelVm.moveDisabled}
+              actionMode={props.actionMode}
+              targetingMode={props.targetingMode}
+              abilityViews={panelVm.abilityViews}
+              papyrusLineAxis={props.papyrusLineAxis}
+              undyneAxis={panelVm.undyneAxis}
+              onMoveRequest={props.onMoveRequest}
+              onCancelTargeting={() => props.onSetActionMode(null)}
+            />
+          }
         />
       </div>
-      <BattleBottomHints
-        moveModeOptions={panelVm.moveModeOptions}
-        selectedUnitId={props.selectedUnitId}
-        moveDisabled={panelVm.moveDisabled}
-        actionMode={props.actionMode}
-        targetingMode={props.targetingMode}
-        abilityViews={panelVm.abilityViews}
-        papyrusLineAxis={props.papyrusLineAxis}
-        undyneAxis={panelVm.undyneAxis}
-        onMoveRequest={props.onMoveRequest}
-        onCancelTargeting={() => props.onSetActionMode(null)}
-      />
     </PanelCard>
   );
 }

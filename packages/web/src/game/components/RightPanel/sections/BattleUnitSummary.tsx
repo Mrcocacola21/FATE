@@ -504,24 +504,6 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
             {t("game.rating", { rating: selectedMettatonRating })}
           </span>
         ) : null}
-        {selectedUnit.heroId === "luche" ? (
-          <span className="status-pill border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/45 dark:text-amber-200">
-            {language === "uk" ? "Лічильник Променя світла" : "Light Ray counter"}:{" "}
-            {selectedUnit.charges.lucheDivineRay ?? 0}/2
-          </span>
-        ) : null}
-        {selectedUnit.heroId === "zoro" ? (
-          <>
-            <span className="status-pill border-rose-200 bg-rose-50 text-rose-800 dark:border-rose-800 dark:bg-rose-950/45 dark:text-rose-200">
-              {language === "uk" ? "Рішучість" : "Determination"}:{" "}
-              {selectedUnit.charges.zoroDetermination ?? 0}
-            </span>
-            <span className="status-pill border-violet-200 bg-violet-50 text-violet-800 dark:border-violet-800 dark:bg-violet-950/45 dark:text-violet-200">
-              {language === "uk" ? "Лічильник Оні Ґірі" : "Oni Giri counter"}:{" "}
-              {selectedUnit.charges.zoroOniGiri ?? 0}/2
-            </span>
-          </>
-        ) : null}
         {selectedUnit.undyneImmortalActive ? (
           <span className="status-pill border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/45 dark:text-emerald-200">
             {t("game.immortal")}

@@ -13,6 +13,7 @@ import {
   getMobileBoardInteractionKey,
   hasMobileMatchStarted,
   resetMobilePanel,
+  shouldCloseMobileSheetForBoardInteraction,
   toggleMobilePanel,
 } from "./mobilePanelState";
 import { MobileBattleScaffold } from "./MatchScaffolds";
@@ -34,9 +35,11 @@ export function MobileMatchLayout({ vm }: { vm: any }) {
 
   useEffect(() => {
     if (
-      sheetOpen &&
-      boardInteractionKey &&
-      boardInteractionKey !== interactionKeyWhenOpened.current
+      shouldCloseMobileSheetForBoardInteraction({
+        sheetOpen,
+        boardInteractionKey,
+        interactionKeyWhenOpened: interactionKeyWhenOpened.current,
+      })
     ) {
       setSheetOpen(false);
     }

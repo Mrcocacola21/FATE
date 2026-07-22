@@ -11,6 +11,7 @@ import {
   getMobileBoardInteractionKey,
   hasMobileMatchStarted,
   resetMobilePanel,
+  shouldCloseMobileSheetForBoardInteraction,
   toggleMobilePanel,
 } from "./mobilePanelState";
 import {
@@ -133,15 +134,19 @@ test("mobile targeting strip names the selected Oni Giri source and keeps cancel
         view: {
           phase: "battle",
           abilitiesByUnitId: {
-            [zoro.id]: [{
-              id: "zoroOniGiri",
-              name: "Oni Giri",
-              useOptions: [{
-                id: "heroResource",
-                source: { type: "heroResource", resourceId: "zoroDetermination", amount: 2 },
-                sourceName: "Determination",
-              }],
-            }],
+            [zoro.id]: [
+              {
+                id: "zoroOniGiri",
+                name: "Oni Giri",
+                useOptions: [
+                  {
+                    id: "heroResource",
+                    source: { type: "heroResource", resourceId: "zoroDetermination", amount: 2 },
+                    sourceName: "Determination",
+                  },
+                ],
+              },
+            ],
           },
         },
         pendingRoll: null,
@@ -183,15 +188,19 @@ test("mobile targeting strip names the selected Push Notification source", () =>
         view: {
           phase: "battle",
           abilitiesByUnitId: {
-            [duolingo.id]: [{
-              id: "duolingoPushNotification",
-              name: "Push Notification",
-              useOptions: [{
-                id: "heroResource",
-                source: { type: "heroResource", resourceId: "duolingoSkipClasses", amount: 3 },
-                sourceName: "Missed Lessons",
-              }],
-            }],
+            [duolingo.id]: [
+              {
+                id: "duolingoPushNotification",
+                name: "Push Notification",
+                useOptions: [
+                  {
+                    id: "heroResource",
+                    source: { type: "heroResource", resourceId: "duolingoSkipClasses", amount: 3 },
+                    sourceName: "Missed Lessons",
+                  },
+                ],
+              },
+            ],
           },
         },
         pendingRoll: null,
@@ -246,6 +255,32 @@ test("board interaction keys change for placement, targeting, and forced board c
       targetingMode: "artemidaSilverCrescent",
     }),
     "artemisSilverSickle:artemidaSilverCrescent::",
+  );
+});
+
+test("mobile action sheet closes after selecting a board-targeted action", () => {
+  const openedKey = getMobileBoardInteractionKey({});
+  const targetingKey = getMobileBoardInteractionKey({
+    actionMode: "zoroOniGiri",
+    targetingMode: "zoroOniGiri",
+  });
+  assert.equal(openedKey, null);
+  assert.ok(targetingKey);
+  assert.equal(
+    shouldCloseMobileSheetForBoardInteraction({
+      sheetOpen: true,
+      interactionKeyWhenOpened: openedKey,
+      boardInteractionKey: targetingKey,
+    }),
+    true,
+  );
+  assert.equal(
+    shouldCloseMobileSheetForBoardInteraction({
+      sheetOpen: false,
+      interactionKeyWhenOpened: openedKey,
+      boardInteractionKey: targetingKey,
+    }),
+    false,
   );
 });
 
@@ -326,7 +361,7 @@ test("desktop match scaffold keeps its desktop side panel marker", () => {
   const desktop = DesktopMatchScaffold({
     topBar: null,
     board: null,
-    sidePanel: <div>Panel</div>,
+    sidePanel: <div>{"Panel"}</div>,
   });
   const markup = renderToStaticMarkup(desktop);
   assert.match(markup, /data-testid="desktop-match-panel"/);
@@ -334,9 +369,9 @@ test("desktop match scaffold keeps its desktop side panel marker", () => {
 
 test("mobile match scaffold keeps the board, active task, and bottom navigation", () => {
   const scaffold = MobileBattleScaffold({
-    topBar: <div>Top bar</div>,
-    board: <div>Board</div>,
-    currentTask: <div>Current task</div>,
+    topBar: <div>{"Top bar"}</div>,
+    board: <div>{"Board"}</div>,
+    currentTask: <div>{"Current task"}</div>,
     bottomNav: (
       <BottomNav
         value={null}
@@ -373,8 +408,8 @@ test("mobile match scaffold keeps the board, active task, and bottom navigation"
 
 test("mobile match scaffold does not reserve task space while idle", () => {
   const scaffold = MobileBattleScaffold({
-    topBar: <div>Top bar</div>,
-    board: <div>Board</div>,
+    topBar: <div>{"Top bar"}</div>,
+    board: <div>{"Board"}</div>,
     currentTask: null,
     bottomNav: null,
     bottomSheet: null,
@@ -414,8 +449,8 @@ test("mobile placement task renders as a compact cancelable strip", () => {
 
 test("mobile bottom sheet exposes its dialog and close control", () => {
   const markup = renderToStaticMarkup(
-    <BottomSheet open title="Actions" onClose={() => undefined}>
-      <div>Move</div>
+    <BottomSheet open title={"Actions"} onClose={() => undefined}>
+      <div>{"Move"}</div>
     </BottomSheet>,
   );
   assert.match(markup, /data-testid="mobile-bottom-sheet"/);
