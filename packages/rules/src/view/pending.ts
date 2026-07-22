@@ -1,4 +1,5 @@
 import { GameState, PlayerId, PlayerView } from "../model";
+import { canPlayerKnowUnitExactPosition } from "../visibility";
 
 const PENDING_COMBAT_QUEUE_KINDS = new Set<string>([
   "tricksterAoE_attackerRoll",
@@ -55,10 +56,32 @@ export function getPendingCombatQueueCount(
 }
 
 export function getVisiblePendingRollForPlayer(
+  state: GameState,
   pendingRoll: GameState["pendingRoll"],
   playerId: PlayerId
 ): GameState["pendingRoll"] {
-  return pendingRoll && pendingRoll.player === playerId ? pendingRoll : null;
+  if (!pendingRoll || pendingRoll.player !== playerId) return null;
+  const context = { ...(pendingRoll.context ?? {}) } as Record<string, unknown>;
+  const unitIdLists = [
+    "targetsQueue",
+    "targetIds",
+    "affectedUnitIds",
+    "chickenOptions",
+    "mindControlEnemyOptions",
+    "spinCandidateIds",
+    "options",
+  ];
+  for (const key of unitIdLists) {
+    const value = context[key];
+    if (!Array.isArray(value)) continue;
+    context[key] = value.filter(
+      (item) =>
+        typeof item !== "string" ||
+        !state.units[item] ||
+        canPlayerKnowUnitExactPosition(state, playerId, item)
+    );
+  }
+  return { ...pendingRoll, context };
 }
 
 export function buildPendingAoEPreview(

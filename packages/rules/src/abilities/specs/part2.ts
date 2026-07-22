@@ -80,10 +80,10 @@ export const ABILITY_SPECS_PART_2: Record<string, AbilitySpec> = {
   },
   [ids.ABILITY_LOKI_LAUGHT]: {
     id: ids.ABILITY_LOKI_LAUGHT,
-    displayName: "Loki's Laughter",
+    displayName: "Loki's Laugh",
     kind: "phantasm",
     description:
-      "Spend Laughter on one of Loki's tricks. Using this ability does not reveal Loki.",
+      "Spend Laugh on one of Loki's tricks. Again Some Bullshit and Chicken do not reveal Loki; other attack-like effects follow normal stealth rules.",
     chargeUnlimited: true,
     chargesPerUse: 0,
     isSpecialCounter: true,

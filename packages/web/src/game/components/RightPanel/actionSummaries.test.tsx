@@ -204,6 +204,34 @@ test("unit summary renders three main bars and explains basic attack under Actio
   assert.match(markup, /Ability: Tisona/);
 });
 
+test("unit summary renders Entangled and Chicken status badges", () => {
+  setLanguage("en", { setItem: () => undefined });
+  const unit = makeUnit({
+    lokiMoveLockSources: ["loki"],
+    lokiChickenSources: ["loki"],
+  });
+  const markup = renderToStaticMarkup(
+    <BattleUnitSummary
+      selectedUnit={unit}
+      selectedHeroName="Target"
+      selectedMettatonRating={null}
+      forestMarkers={[]}
+      selectedInsideForest={false}
+      stormActive={false}
+      selectedStormExempt={false}
+      moveRoll={null}
+      economy={unit.turn}
+      abilityViews={[]}
+      view={makeView(unit)}
+      canAct={false}
+      pendingRoll={false}
+      onHoverAbility={() => undefined}
+    />,
+  );
+  assert.match(markup, /Entangled/);
+  assert.match(markup, /Chicken/);
+});
+
 test("public battle bars keep compact Move, Attack, and Stealth states", () => {
   const unit = makeUnit({
     turn: {
@@ -1480,7 +1508,7 @@ test("Loki Laughter renders separate option buttons with costs and availability"
   };
   const ability = makeAbility({
     id: LOKI_LAUGHT_ID,
-    name: "Loki's Laughter",
+    name: "Loki's Laugh",
     description: "Pick a trick",
     slot: "none",
     chargeRequired: 0,
@@ -1488,6 +1516,7 @@ test("Loki Laughter renders separate option buttons with costs and availability"
     currentCharges: 15,
     chargeUnlimited: true,
     isAvailable: true,
+    kind: "phantasm",
   });
 
   const markup = renderToStaticMarkup(
@@ -1508,17 +1537,18 @@ test("Loki Laughter renders separate option buttons with costs and availability"
   );
 
   assert.equal((markup.match(/data-loki-laught-option=/g) ?? []).length, 5);
-  assert.match(markup, /Again some nonsense/);
+  assert.match(markup, /Again Some Bullshit/);
   assert.match(markup, /Chicken/);
-  assert.match(markup, /Mind Control/);
-  assert.match(markup, /Spin the drum/);
-  assert.match(markup, /Great Loki joke/);
+  assert.match(markup, /Mind Capture/);
+  assert.match(markup, /Spin the Wheel/);
+  assert.match(markup, /Amazing Loki Joke/);
   assert.match(markup, /data-loki-laught-cost="3"/);
   assert.match(markup, /data-loki-laught-cost="5"/);
   assert.match(markup, /data-loki-laught-cost="10"/);
   assert.match(markup, /data-loki-laught-cost="12"/);
   assert.match(markup, /data-loki-laught-cost="15"/);
-  assert.doesNotMatch(markup, />Loki&#x27;s Laughter</);
+  assert.match(markup, />Loki&#x27;s Laugh</);
+  assert.match(markup, /Phantasm · Active/);
 
   const lowChargeMarkup = renderToStaticMarkup(
     <BattleAbilityActions
@@ -1537,7 +1567,7 @@ test("Loki Laughter renders separate option buttons with costs and availability"
     />,
   );
 
-  assert.match(lowChargeMarkup, /Not enough charges/);
+  assert.match(lowChargeMarkup, /Not enough Laugh/);
 });
 
 test("Action Menu core strip always renders Action, Move, and Stealth", () => {

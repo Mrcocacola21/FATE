@@ -501,6 +501,7 @@ const serverTextKeys: Record<string, string> = {
   "Attack slot already used": "game.attackSlotUsed",
   "Stealth slot already used": "game.stealthSlotUsed",
   "Not Enough charges": "game.notEnoughCharges",
+  "Not enough Laugh": "game.notEnoughLaugh",
   "No legal targets": "pending.noValidTargets",
   "WebSocket not connected.": "errors.socketDisconnected",
   "Not joined yet. Please join a room first.": "errors.notJoined",

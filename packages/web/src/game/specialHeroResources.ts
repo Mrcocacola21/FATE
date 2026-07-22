@@ -88,7 +88,7 @@ const RESOURCE_DEFINITIONS: ResourceDefinition[] = [
   {
     heroId: "loki",
     abilityId: LOKI_LAUGHT_ID,
-    fallbackLabel: "Loki's Laughter",
+    fallbackLabel: "Laugh",
     isPrivate: true,
   },
 ];
@@ -131,7 +131,7 @@ export function getSpecialHeroResourceViews(
     resources.push({
       id: definition.abilityId,
       label:
-        definition.abilityId === CHIKATILO_DECOY_ID
+        definition.abilityId === CHIKATILO_DECOY_ID || definition.abilityId === LOKI_LAUGHT_ID
           ? definition.fallbackLabel
           : ability?.name ?? definition.fallbackLabel,
       value,

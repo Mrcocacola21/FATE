@@ -1,6 +1,5 @@
 import type { ApplyResult, GameState, PendingRoll, ResolveRollChoice } from "../../../../model";
 import type { RNG } from "../../../../rng";
-import { rollD6 } from "../../../../rng";
 import { canCommitAbilityCost } from "../../../../actions/abilityCosts";
 import {
   ABILITY_LOKI_ILLUSORY_DOUBLE,
@@ -9,14 +8,14 @@ import {
 } from "../../../../abilities";
 import { clearPendingRoll, requestRoll } from "../../../../core";
 import { applyUseAbility } from "../../../../actions/abilityActions";
+import { applyTricksterAoEAfterUse } from "../../../../actions/abilityActions/tricksterAoE";
 import type {
   LokiChickenTargetChoiceContext,
   LokiLaughtChoiceContext,
   LokiMindControlEnemyChoiceContext,
+  LokiSpinAbilityChoiceContext,
 } from "../../../types";
 import {
-  addLokiChicken,
-  addLokiMoveLock,
   getLokiChickenTargetIds,
   getLokiMindControlEnemyIds,
   getLokiSpinCandidateIds,
@@ -39,29 +38,30 @@ function resolveAgainSomeNonsense(
   lokiId: string,
   rng: RNG
 ): ApplyResult {
+  const targetIds = getLokiTricksterAreaTargetIds(state, lokiId);
+  if (targetIds.length === 0) {
+    return { state, events: [] };
+  }
   const spent = spendLaughter(state, lokiId, COST_AGAIN_SOME_NONSENSE);
   if (!spent.ok || !spent.loki) {
     return { state, events: [] };
   }
 
-  const targetIds = getLokiTricksterAreaTargetIds(spent.state, lokiId);
-  if (targetIds.length === 0) {
-    return { state: clearPendingRoll(spent.state), events: spent.events };
-  }
-
-  const units = { ...spent.state.units };
-  for (const targetId of targetIds) {
-    const target = units[targetId];
-    if (!target || !target.isAlive) continue;
-    const resistRoll = rollD6(rng);
-    if (resistRoll >= 5) continue;
-    units[targetId] = addLokiMoveLock(target, lokiId);
-  }
-
-  return {
-    state: clearPendingRoll({ ...spent.state, units }),
-    events: spent.events,
-  };
+  const queued = applyTricksterAoEAfterUse(
+    clearPendingRoll(spent.state),
+    spent.loki,
+    spent.loki.position!,
+    ABILITY_LOKI_LAUGHT,
+    rng,
+    {
+      damageOverride: 0,
+      ignoreBonuses: true,
+      preserveAttackerStealth: true,
+      lokiStatusOnHit: "entangled",
+      lokiStatusSourceId: lokiId,
+    }
+  );
+  return { state: queued.state, events: [...spent.events, ...queued.events] };
 }
 
 function resolveChickenMenuChoice(state: GameState, lokiId: string): ApplyResult {
@@ -165,6 +165,9 @@ function resolveSpinTheDrum(
   rng: RNG
 ): ApplyResult {
   const candidates = getLokiSpinCandidateIds(state, lokiId);
+  if (candidates.length === 0) {
+    return { state, events: [] };
+  }
   const spent = spendLaughter(state, lokiId, COST_SPIN_THE_DRUM);
   if (!spent.ok || !spent.loki) {
     return { state, events: [] };
@@ -181,6 +184,7 @@ function resolveSpinTheDrum(
   )
     .filter(
       (ability) =>
+        ability.isAvailable &&
         ability.kind !== "passive" &&
         ability.id !== ABILITY_LOKI_LAUGHT &&
         ability.id !== ABILITY_LOKI_ILLUSORY_DOUBLE
@@ -192,7 +196,7 @@ function resolveSpinTheDrum(
       return a.id.localeCompare(b.id);
     });
 
-  for (const ability of abilityViews) {
+  for (const ability of abilityViews.filter((item) => item.kind === "phantasm")) {
     const activated = tryActivatePickedAbility(
       clearPendingRoll(spent.state),
       lokiId,
@@ -207,7 +211,74 @@ function resolveSpinTheDrum(
     };
   }
 
-  return { state: clearPendingRoll(spent.state), events: spent.events };
+  const fallbackOptions = abilityViews
+    .filter((ability) => ability.kind === "active")
+    .map((ability) => ability.id);
+  if (fallbackOptions.length === 0) {
+    return { state: clearPendingRoll(spent.state), events: spent.events };
+  }
+  const requested = requestRoll(
+    clearPendingRoll(spent.state),
+    spent.loki.owner,
+    "lokiSpinAbilityChoice",
+    {
+      lokiId,
+      selectedUnitId: picked,
+      options: fallbackOptions,
+    } satisfies LokiSpinAbilityChoiceContext,
+    picked
+  );
+  return { state: requested.state, events: [...spent.events, ...requested.events] };
+}
+
+export function resolveLokiSpinAbilityChoice(
+  state: GameState,
+  pending: PendingRoll,
+  choice: ResolveRollChoice | undefined,
+  rng: RNG
+): ApplyResult {
+  const ctx = pending.context as LokiSpinAbilityChoiceContext;
+  const loki = getLokiUnit(state, ctx.lokiId);
+  const picked = state.units[ctx.selectedUnitId];
+  if (!loki || !picked || !picked.isAlive || picked.owner !== loki.owner) {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+  if (choice === "skip") {
+    return { state: clearPendingRoll(state), events: [] };
+  }
+  const payload =
+    choice && typeof choice === "object" && "type" in choice
+      ? (choice as { type?: string; abilityId?: string })
+      : undefined;
+  if (
+    !payload ||
+    payload.type !== "lokiSpinAbility" ||
+    !payload.abilityId ||
+    !ctx.options.includes(payload.abilityId)
+  ) {
+    return { state, events: [] };
+  }
+  const currentView = getAbilityViewsForUnit(
+    { ...state, activeUnitId: picked.id, pendingRoll: null },
+    picked.id
+  ).find(
+    (ability) =>
+      ability.id === payload.abilityId &&
+      ability.kind === "active" &&
+      ability.isAvailable
+  );
+  if (!currentView) {
+    return { state, events: [] };
+  }
+  return (
+    tryActivatePickedAbility(
+      clearPendingRoll(state),
+      loki.id,
+      picked.id,
+      currentView.id,
+      rng
+    ) ?? { state, events: [] }
+  );
 }
 
 function resolveGreatLokiJoke(
@@ -215,41 +286,29 @@ function resolveGreatLokiJoke(
   lokiId: string,
   rng: RNG
 ): ApplyResult {
+  const targetIds = getLokiTricksterAreaTargetIds(state, lokiId);
+  if (targetIds.length === 0) {
+    return { state, events: [] };
+  }
   const spent = spendLaughter(state, lokiId, COST_GREAT_LOKI_JOKE);
   if (!spent.ok || !spent.loki) {
     return { state, events: [] };
   }
 
-  const targetIds = getLokiTricksterAreaTargetIds(spent.state, lokiId);
-  if (targetIds.length === 0) {
-    return { state: clearPendingRoll(spent.state), events: spent.events };
-  }
-
-  const units = { ...spent.state.units };
-  const events = [...spent.events];
-  const convertedTargetIds: string[] = [];
-  for (const targetId of targetIds) {
-    const target = units[targetId];
-    if (!target || !target.isAlive) continue;
-    const resistRoll = rollD6(rng);
-    if (resistRoll >= 5) continue;
-    units[targetId] = addLokiChicken(target, lokiId);
-    convertedTargetIds.push(targetId);
-  }
-
-  if (convertedTargetIds.length > 0) {
-    events.push({
-      type: "lokiChickenGroupApplied" as const,
-      lokiId,
-      targetIds: convertedTargetIds,
-      abilityId: ABILITY_LOKI_LAUGHT,
-    });
-  }
-
-  return {
-    state: clearPendingRoll({ ...spent.state, units }),
-    events,
-  };
+  const queued = applyTricksterAoEAfterUse(
+    clearPendingRoll(spent.state),
+    spent.loki,
+    spent.loki.position!,
+    ABILITY_LOKI_LAUGHT,
+    rng,
+    {
+      damageOverride: 0,
+      ignoreBonuses: true,
+      lokiStatusOnHit: "chicken",
+      lokiStatusSourceId: lokiId,
+    }
+  );
+  return { state: queued.state, events: [...spent.events, ...queued.events] };
 }
 
 export function resolveLokiLaughtChoice(

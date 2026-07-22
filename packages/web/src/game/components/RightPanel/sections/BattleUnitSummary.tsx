@@ -470,6 +470,16 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
             {t("game.moveLocked")}
           </span>
         ) : null}
+        {(selectedUnit.lokiMoveLockSources?.length ?? 0) > 0 ? (
+          <span className="status-pill border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/45 dark:text-rose-200">
+            {t("game.statusEntangled")}
+          </span>
+        ) : null}
+        {(selectedUnit.lokiChickenSources?.length ?? 0) > 0 ? (
+          <span className="status-pill border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/45 dark:text-amber-200">
+            {t("game.statusChicken")}
+          </span>
+        ) : null}
         {selectedUnit.blindUntilOwnTurnStart ? (
           <span className="status-pill border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/45 dark:text-amber-200">
             {t("game.blind")}

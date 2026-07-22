@@ -356,6 +356,7 @@ const PENDING_ROLL_LABELS_UK: Record<string, string> = {
   lokiChickenTargetChoice: "Ціль Курки",
   lokiMindControlEnemyChoice: "Вибір ворога для Контролю розуму",
   lokiMindControlTargetChoice: "Ціль Контролю розуму",
+  lokiSpinAbilityChoice: "Запасна здібність Крутите барабан",
   gutsBerserkAttackChoice: "Вибір атаки Берсерка",
   friskPacifismChoice: "Вибір Пацифізму",
   friskPacifismHugsTargetChoice: "Ціль Обіймів",
@@ -492,6 +493,8 @@ export function getPendingRollLabel(kind?: string | null, language: "en" | "uk" 
       return "Mind Control enemy choice";
     case "lokiMindControlTargetChoice":
       return "Mind Control target choice";
+    case "lokiSpinAbilityChoice":
+      return "Spin the Wheel fallback ability";
     case "gutsBerserkAttackChoice":
       return "Berserk attack choice";
     case "friskPacifismChoice":

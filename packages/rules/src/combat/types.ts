@@ -10,6 +10,8 @@ export interface ResolveAttackParams {
   defenderUseMuninnAutoDefense?: boolean;
   ignoreRange?: boolean;
   ignoreStealth?: boolean;
+  /** Resolve an attack-like effect without applying the normal attacker reveal. */
+  preserveAttackerStealth?: boolean;
   revealStealthedAllies?: boolean;
   revealReason?: StealthRevealReason;
   damageBonus?: number;

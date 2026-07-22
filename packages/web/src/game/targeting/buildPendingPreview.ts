@@ -418,14 +418,20 @@ export function buildPendingPreview(
           labelKey: "preview.labels.selectControlledAttackTarget",
         });
       case "lokiMindControlEnemyChoice":
-        return buildRadiusOptionsPreview({
-          view,
-          sourceUnitId: typeof context.lokiId === "string" ? context.lokiId : "",
-          optionIds: stringList(context.options),
-          radius: 2,
-          validLabelKey: "preview.labels.selectControlledUnit",
-          includeEnemiesOnly: true,
-        });
+        {
+          const lokiId = typeof context.lokiId === "string" ? context.lokiId : "";
+          const source = sourceUnit(view, lokiId);
+          const targets = targetRefsFromIds(view, stringList(context.options));
+          return {
+            kind: "multiStep",
+            step: "lokiMindCaptureUnit",
+            sourceCell: source?.position ? { ...source.position } : undefined,
+            cells: targets.map((target) => ({ ...target.cell })),
+            validTargets: targets,
+            cellKind: "validTarget",
+            labelKey: "preview.labels.selectControlledUnit",
+          };
+        }
       case "lokiChickenTargetChoice":
         return buildRadiusOptionsPreview({
           view,

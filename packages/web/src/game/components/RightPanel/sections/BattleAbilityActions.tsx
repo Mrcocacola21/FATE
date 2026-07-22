@@ -118,7 +118,6 @@ function getProjectedLokiOptionTargetCount(
         (unit) =>
           unit.owner !== loki.owner &&
           unit.heroId !== FALSE_TRAIL_TOKEN_ID &&
-          isInLokiRadius(loki, unit) &&
           hasProjectedControlledAttackTarget(view, unit),
       ).length;
     case "spinTheDrum":
@@ -404,57 +403,90 @@ export const BattleAbilityActions: FC<BattleAbilityActionsProps> = ({
             localizeServerText(ability.disabledReason, t) ||
             (!canAct ? t("pending.conditionNotMet") : "");
 
-          return getLokiLaughtOptions().map((option) => {
-            const optionId = option.id as LokiLaughtOption;
-            const cost = option.cost?.amount ?? LOKI_LAUGHT_FALLBACK_COSTS[optionId];
-            const notEnoughCharges = chargeState.current < cost;
-            const targetCount = getProjectedLokiOptionTargetCount(view, selectedUnit, optionId);
-            const noVisibleTarget = optionNeedsVisibleTarget(optionId) && targetCount === 0;
-            const disabled = baseDisabled || notEnoughCharges || noVisibleTarget;
-            const reason =
-              baseReason ||
-              (notEnoughCharges ? t("game.notEnoughCharges") : "") ||
-              (noVisibleTarget ? t("pending.noValidTargets") : "");
-            const optionName = t(option.nameKey);
-
-            return (
-              <div
-                key={`${ability.id}:${optionId}`}
-                className="py-1"
-                data-loki-laught-option={optionId}
-                data-loki-laught-cost={cost}
-              >
-                <button
-                  type="button"
-                  className={`min-h-11 w-full rounded-md px-2.5 py-1.5 text-left text-[10px] font-bold transition focus-visible:ring-2 focus-visible:ring-sky-500/25 ${
-                    disabled
-                      ? "bg-stone-500/[0.06] text-stone-600 ring-1 ring-inset ring-stone-500/10 dark:text-stone-400"
-                      : "bg-sky-500/10 text-sky-900 ring-1 ring-inset ring-sky-500/20 hover:bg-sky-500/15 dark:text-sky-100"
-                  }`}
-                  onClick={() => {
-                    if (disabled) return;
-                    onUseLokiLaughtOption(optionId);
-                  }}
-                  onMouseEnter={() => onHoverAbility(LOKI_LAUGHT_ID)}
-                  onMouseLeave={() => onHoverAbility(null)}
-                  onFocus={() => onHoverAbility(LOKI_LAUGHT_ID)}
-                  onBlur={() => onHoverAbility(null)}
-                  disabled={disabled}
-                  title={reason}
-                >
-                  <span className="flex min-w-0 items-center justify-between gap-2">
-                    <span className="min-w-0 truncate">{optionName}</span>
-                    <span className="shrink-0 text-[11px] opacity-75">-{cost}</span>
-                  </span>
-                  {disabled && reason ? (
-                    <span className="mt-0.5 block font-semibold leading-tight text-amber-700 dark:text-amber-300">
-                      {reason}
-                    </span>
-                  ) : null}
-                </button>
+          const display = getAbilityDisplay(
+            ability.id,
+            ability.name,
+            ability.description,
+            language,
+          );
+          return (
+            <div key={ability.id} className="py-1.5" data-ability-card-id={ability.id}>
+              <div className="flex items-center justify-between gap-2 px-1">
+                <span className="font-bold text-sky-900 dark:text-sky-100">{display.name}</span>
+                <span className="text-[9px] font-bold uppercase tracking-wide text-sky-700 dark:text-sky-300">
+                  {getAbilityTypeLabel(ability.kind, t)} · {getAbilityTypeLabel("active", t)}
+                </span>
               </div>
-            );
-          });
+              <div className="mt-1">
+                {getLokiLaughtOptions().map((option) => {
+                  const optionId = option.id as LokiLaughtOption;
+                  const projectedOption = ability.useOptions?.find((item) => item.id === optionId);
+                  const cost =
+                    projectedOption?.chargeRequired ??
+                    option.cost?.amount ??
+                    LOKI_LAUGHT_FALLBACK_COSTS[optionId];
+                  const targetCount = getProjectedLokiOptionTargetCount(view, selectedUnit, optionId);
+                  const noVisibleTarget = optionNeedsVisibleTarget(optionId) && targetCount === 0;
+                  const notEnoughLaugh = !projectedOption && chargeState.current < cost;
+                  const disabled =
+                    baseDisabled ||
+                    projectedOption?.isAvailable === false ||
+                    notEnoughLaugh ||
+                    noVisibleTarget;
+                  const reason =
+                    baseReason ||
+                    localizeServerText(projectedOption?.disabledReason, t) ||
+                    (notEnoughLaugh ? t("game.notEnoughLaugh") : "") ||
+                    (noVisibleTarget ? t("pending.noValidTargets") : "");
+                  return (
+                    <div
+                      key={`${ability.id}:${optionId}`}
+                      className="py-1"
+                      data-loki-laught-option={optionId}
+                      data-loki-laught-cost={cost}
+                    >
+                      <button
+                        type="button"
+                        className={`min-h-11 w-full rounded-md px-2.5 py-1.5 text-left text-[10px] font-bold transition focus-visible:ring-2 focus-visible:ring-sky-500/25 ${
+                          disabled
+                            ? "bg-stone-500/[0.06] text-stone-600 ring-1 ring-inset ring-stone-500/10 dark:text-stone-400"
+                            : "bg-sky-500/10 text-sky-900 ring-1 ring-inset ring-sky-500/20 hover:bg-sky-500/15 dark:text-sky-100"
+                        }`}
+                        onClick={() => !disabled && onUseLokiLaughtOption(optionId)}
+                        onMouseEnter={() => onHoverAbility(LOKI_LAUGHT_ID)}
+                        onMouseLeave={() => onHoverAbility(null)}
+                        onFocus={() => onHoverAbility(LOKI_LAUGHT_ID)}
+                        onBlur={() => onHoverAbility(null)}
+                        disabled={disabled}
+                        title={reason}
+                      >
+                        <span className="flex min-w-0 items-center justify-between gap-2">
+                          <span className="min-w-0 truncate">{t(option.nameKey)}</span>
+                          <span className="shrink-0 text-[11px] opacity-75">
+                            {cost} {t("abilityDetails.resources.laughter")}
+                          </span>
+                        </span>
+                        {disabled && reason ? (
+                          <span className="mt-0.5 block font-semibold leading-tight text-amber-700 dark:text-amber-300">
+                            {reason}
+                          </span>
+                        ) : null}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+              <details
+                data-ability-details={ability.id}
+                className="mt-1 px-1 text-[10px] text-slate-600 dark:text-slate-300"
+              >
+                <summary className="cursor-pointer font-semibold text-slate-400">
+                  {t("actionMenu.details")}
+                </summary>
+                <p className="mt-1 leading-4">{display.description}</p>
+              </details>
+            </div>
+          );
         }
         const hideCharges = ability.id === KAISER_DORA_ID && !!selectedUnit.transformed;
         const chargeState = getAbilityChargeState(ability.id, selectedUnit, ability);

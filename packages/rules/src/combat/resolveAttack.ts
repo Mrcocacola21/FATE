@@ -49,7 +49,9 @@ export function resolveAttack(
   }
 
   const stateBeforeAttempt = state;
-  const attemptReveal = revealAttackerOnAttackAttempt(state, attacker.id);
+  const attemptReveal = params.preserveAttackerStealth
+    ? { state, events: [], wasStealthed: attacker.isStealthed }
+    : revealAttackerOnAttackAttempt(state, attacker.id);
   state = attemptReveal.state;
 
   let units: Record<string, UnitState> = { ...state.units };

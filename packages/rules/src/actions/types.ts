@@ -1,4 +1,4 @@
-import type { Coord, StealthRevealReason } from "../model";
+import type { Coord, PlayerId, StealthRevealReason } from "../model";
 
 export interface AttackRollContext extends Record<string, unknown> {
   attackerId: string;
@@ -6,6 +6,7 @@ export interface AttackRollContext extends Record<string, unknown> {
   allowFriendlyTarget?: boolean;
   ignoreRange?: boolean;
   ignoreStealth?: boolean;
+  preserveAttackerStealth?: boolean;
   revealStealthedAllies?: boolean;
   revealReason?: StealthRevealReason;
   damageBonus?: number;
@@ -28,6 +29,9 @@ export interface AttackRollContext extends Record<string, unknown> {
   friskForceMiss?: boolean;
   consumeSlots?: boolean;
   queueKind?: "normal" | "riderPath" | "aoe";
+  controllerPlayerId?: PlayerId;
+  lokiStatusOnHit?: "chicken";
+  lokiStatusSourceId?: string;
   elCidDuelist?: {
     attackerId: string;
     targetId: string;
@@ -52,6 +56,7 @@ export interface TricksterAoEContext extends Record<string, unknown> {
   currentTargetIndex?: number;
   allowFriendlyTarget?: boolean;
   ignoreStealth?: boolean;
+  preserveAttackerStealth?: boolean;
   revealStealthedAllies?: boolean;
   revealReason?: StealthRevealReason;
   attackerDice?: number[];
@@ -60,6 +65,9 @@ export interface TricksterAoEContext extends Record<string, unknown> {
   suppressGutsBerserkBonus?: boolean;
   immobilizeOnHit?: boolean;
   immobilizeSourceId?: string;
+  lokiStatusOnHit?: "entangled" | "chicken";
+  lokiStatusSourceId?: string;
+  lokiStatusAppliedTargetIds?: string[];
 }
 
 export interface DoraAoEContext extends Record<string, unknown> {

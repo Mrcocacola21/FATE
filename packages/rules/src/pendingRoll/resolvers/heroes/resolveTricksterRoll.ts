@@ -4,6 +4,8 @@ import { resolveAttack } from "../../../combat";
 import { clearPendingRoll, requestRoll } from "../../../core";
 import { getPolkovodetsSource, maybeRequestIntimidate } from "../../../actions/heroes/vlad";
 import { addKaladinMoveLock } from "../../../actions/heroes/kaladin";
+import { addLokiChicken, addLokiMoveLock } from "../../../actions/heroes/loki";
+import { ABILITY_LOKI_LAUGHT } from "../../../abilities";
 import type { IntimidateResume } from "../../../actions/types";
 import { evAoeResolved, evDamageBonusApplied } from "../../../core";
 import type { TricksterAoEContext } from "../../types";
@@ -11,7 +13,8 @@ import { rollDice } from "../../utils/rollMath";
 
 function finalizeTricksterAoE(
   state: GameState,
-  events: GameEvent[]
+  events: GameEvent[],
+  context?: TricksterAoEContext
 ): ApplyResult {
   if (!state.pendingAoE) {
     return { state: clearPendingRoll(state), events };
@@ -19,10 +22,23 @@ function finalizeTricksterAoE(
 
   const aoe = state.pendingAoE;
   const nextState: GameState = { ...state, pendingAoE: null };
+  const statusTargetIds = context?.lokiStatusAppliedTargetIds ?? [];
+  const statusEvents: GameEvent[] =
+    context?.lokiStatusOnHit === "chicken" &&
+    context.lokiStatusSourceId &&
+    statusTargetIds.length > 0
+      ? [{
+          type: "lokiChickenGroupApplied",
+          lokiId: context.lokiStatusSourceId,
+          targetIds: [...statusTargetIds],
+          abilityId: ABILITY_LOKI_LAUGHT,
+        }]
+      : [];
   return {
     state: clearPendingRoll(nextState),
     events: [
       ...events,
+      ...statusEvents,
       evAoeResolved({
         sourceUnitId: aoe.casterId,
         abilityId: aoe.abilityId,
@@ -69,7 +85,7 @@ export function advanceTricksterAoEQueue(
     idx += 1;
   }
 
-  return finalizeTricksterAoE(baseState, events);
+  return finalizeTricksterAoE(baseState, events, context);
 }
 
 export function resolveTricksterAoEAttackerRoll(
@@ -138,6 +154,7 @@ export function resolveTricksterAoEDefenderRoll(
     allowFriendlyTarget: ctx.allowFriendlyTarget,
     ignoreRange: true,
     ignoreStealth: ctx.ignoreStealth ?? true,
+    preserveAttackerStealth: ctx.preserveAttackerStealth,
     revealStealthedAllies: ctx.revealStealthedAllies ?? true,
     revealReason: ctx.revealReason ?? "aoeHit",
     damageBonus,
@@ -158,6 +175,28 @@ export function resolveTricksterAoEDefenderRoll(
       e.attackerId === caster.id &&
       e.defenderId === targetId
   );
+  let statusAppliedTargetIds = ctx.lokiStatusAppliedTargetIds ?? [];
+  if (
+    attackEvent?.type === "attackResolved" &&
+    attackEvent.hit &&
+    ctx.lokiStatusOnHit &&
+    ctx.lokiStatusSourceId
+  ) {
+    const targetAfter = updatedState.units[attackEvent.defenderId];
+    if (targetAfter?.isAlive) {
+      const affected =
+        ctx.lokiStatusOnHit === "chicken"
+          ? addLokiChicken(targetAfter, ctx.lokiStatusSourceId)
+          : addLokiMoveLock(targetAfter, ctx.lokiStatusSourceId);
+      updatedState = {
+        ...updatedState,
+        units: { ...updatedState.units, [affected.id]: affected },
+      };
+      statusAppliedTargetIds = statusAppliedTargetIds.includes(affected.id)
+        ? statusAppliedTargetIds
+        : [...statusAppliedTargetIds, affected.id];
+    }
+  }
   if (
     attackEvent &&
     attackEvent.type === "attackResolved" &&
@@ -232,6 +271,7 @@ export function resolveTricksterAoEDefenderRoll(
     ...ctx,
     currentTargetIndex: idx + 1,
     attackerDice,
+    lokiStatusAppliedTargetIds: statusAppliedTargetIds,
   };
 
   const intimidateResume: IntimidateResume = {

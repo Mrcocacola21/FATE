@@ -102,14 +102,14 @@ export function makePlayerView(
     }
   }
 
-  const visiblePendingRoll = getVisiblePendingRollForPlayer(pendingRoll, playerId);
+  const visiblePendingRoll = getVisiblePendingRollForPlayer(state, pendingRoll, playerId);
   const pendingAoEPreview = buildPendingAoEPreview(pendingAoE);
   const stakeMarkers = collectPlayerStakeMarkers(state, playerId);
   const forestMarkers = cloneForestMarkers(state);
   const arenaEffects = cloneArenaEffectsForRecipient(state, playerId);
   const pendingCombatQueueCount = getPendingCombatQueueCount(
     pendingCombatQueue,
-    pendingRoll
+    visiblePendingRoll
   );
 
   return {

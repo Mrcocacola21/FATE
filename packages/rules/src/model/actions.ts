@@ -50,6 +50,7 @@ export type ResolveRollChoice =
   | { type: "lokiChickenTarget"; targetId: string }
   | { type: "lokiMindControlEnemy"; targetId: string }
   | { type: "lokiMindControlTarget"; targetId: string }
+  | { type: "lokiSpinAbility"; abilityId: string }
   | {
       type: "gutsBerserkAttackMode";
       mode: "single" | "aoe";

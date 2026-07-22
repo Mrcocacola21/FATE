@@ -6,6 +6,7 @@ import {
   ABILITY_CHIKATILO_DECOY,
   ABILITY_ARTEMIDA_SILVER_CRESCENT,
   ABILITY_HASSAN_ASSASIN_ORDER,
+  ABILITY_LOKI_LAUGHT,
   ABILITY_RIVER_PERSON_BOAT,
   ABILITY_RIVER_PERSON_BOATMAN,
   attachArmy,
@@ -41,6 +42,28 @@ import { wsTestHooks } from "../ws";
 
 function flushMicrotasks() {
   return Promise.resolve().then(() => Promise.resolve());
+}
+
+function testLokiLaughPayloadSchemas() {
+  const optionPayload = GameActionSchema.safeParse({
+    type: "resolvePendingRoll",
+    pendingRollId: "loki-laugh-option",
+    choice: { type: "lokiLaughtOption", option: "chicken" },
+  });
+  const spinFallbackPayload = GameActionSchema.safeParse({
+    type: "resolvePendingRoll",
+    pendingRollId: "loki-spin-fallback",
+    choice: { type: "lokiSpinAbility", abilityId: ABILITY_LOKI_LAUGHT },
+  });
+  const invalidOption = GameActionSchema.safeParse({
+    type: "resolvePendingRoll",
+    pendingRollId: "loki-laugh-option",
+    choice: { type: "lokiLaughtOption", option: "mostExpensiveAvailable" },
+  });
+  assert(optionPayload.success, "server schema should accept a specific Loki Laugh option");
+  assert(spinFallbackPayload.success, "server schema should accept Spin fallback ability choice");
+  assert.equal(invalidOption.success, false, "server schema must reject ambiguous Loki options");
+  console.log("hardening_loki_laugh_payload_schemas passed");
 }
 
 function makeSeatedRoom(params: {
@@ -1441,6 +1464,7 @@ function testChikatiloCommandsAndResourcesAreAuthoritative() {
 }
 
 async function main() {
+  testLokiLaughPayloadSchemas();
   await testGraceExpiryVacatesSeatAndInvalidatesToken();
   await testReconnectWithinGraceKeepsSeatAndClearsTimer();
   await testConcurrentSwitchRoleSerialization();

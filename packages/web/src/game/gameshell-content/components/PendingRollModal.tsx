@@ -130,6 +130,7 @@ export function PendingRollModal({
     pendingRoll.kind === "courtEffectChargeChoice";
   const isRuleDeclarationCellChoice =
     pendingRoll.kind === "courtForcedAppearanceDestination";
+  const isLokiSpinAbilityChoice = pendingRoll.kind === "lokiSpinAbilityChoice";
   const availableRuleIds = Array.isArray(pendingContext.availableRuleIds)
     ? pendingContext.availableRuleIds.filter(isRuleDeclarationId)
     : RULE_DECLARATION_IDS;
@@ -153,6 +154,14 @@ export function PendingRollModal({
     return unit ? `${unitId} (${unit.class})` : unitId;
   };
   const coordLabel = (coord: Coord) => `${coord.col},${coord.row}`;
+  const lokiSpinSelectedUnitId =
+    typeof pendingContext.selectedUnitId === "string" ? pendingContext.selectedUnitId : "";
+  const lokiSpinAbilityIds = Array.isArray(pendingContext.options)
+    ? pendingContext.options.filter((value): value is string => typeof value === "string")
+    : [];
+  const lokiSpinAbilityLabel = (abilityId: string) =>
+    view.abilitiesByUnitId?.[lokiSpinSelectedUnitId]?.find((ability) => ability.id === abilityId)
+      ?.name ?? abilityId;
   const gutsBerserkContext = pendingContext as {
     targetId?: unknown;
     singleTargetOptions?: unknown;
@@ -221,6 +230,8 @@ export function PendingRollModal({
                           ? t("pending.stormStartTurn")
                         : isAsgoreBraveryDefenseChoice
                           ? t("pending.braveryDefense")
+                          : isLokiSpinAbilityChoice
+                            ? p("Spin the Wheel: choose fallback ability", "Крутите барабан: оберіть здібність")
                           : isLokiLaughtChoice
                             ? t("pending.lokiLaughter")
                             : isGutsBerserkAttackChoice
@@ -266,8 +277,8 @@ export function PendingRollModal({
                     })
             : isLokiLaughtChoice
               ? p(
-                  "Pick one Loki trick. Costs Laughter and does not reveal stealth.",
-                  "Оберіть одну хитрість Локі. Вона витрачає Сміх і не розкриває скритність.",
+                  "Pick one Loki's Laugh option. Again Some Bullshit and Chicken preserve stealth.",
+                  "Оберіть одну опцію Сміху Локі. Опять какая-то хуйня та Курица зберігають скритність.",
                 )
               : isGutsBerserkAttackChoice
                 ? p(
@@ -479,10 +490,34 @@ export function PendingRollModal({
                 </button>
               ))}
             </div>
+          ) : isLokiSpinAbilityChoice ? (
+            <div className="grid w-full grid-cols-1 gap-2">
+              <div className="text-xs text-slate-500 dark:text-slate-300">
+                {p("Selected ally", "Обраний союзник")}: {unitLabel(lokiSpinSelectedUnitId)}
+              </div>
+              {lokiSpinAbilityIds.map((abilityId) => (
+                <button
+                  key={abilityId}
+                  type="button"
+                  className="w-full rounded-lg bg-slate-900 px-3 py-2 text-left text-xs font-semibold text-white shadow-sm transition hover:shadow dark:bg-slate-100 dark:text-slate-900"
+                  onClick={() =>
+                    onResolvePendingRoll({ type: "lokiSpinAbility", abilityId })
+                  }
+                >
+                  {lokiSpinAbilityLabel(abilityId)}
+                </button>
+              ))}
+              <button
+                className="w-full rounded-lg bg-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
+                onClick={() => onResolvePendingRoll("skip")}
+              >
+                {t("common.cancel")}
+              </button>
+            </div>
           ) : isLokiLaughtChoice ? (
             <div className="grid w-full grid-cols-1 gap-2">
               <div className="text-xs text-slate-500 dark:text-slate-300">
-                {p("Laughter", "Сміх")}: {lokiLaughtCurrent}
+                {p("Laugh", "Сміх")}: {lokiLaughtCurrent}
               </div>
               <button
                 className="w-full rounded-lg bg-slate-900 px-3 py-2 text-left text-xs font-semibold text-white shadow-sm transition hover:shadow disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 dark:bg-slate-100 dark:text-slate-900 dark:disabled:bg-slate-700 dark:disabled:text-slate-400"
@@ -494,12 +529,12 @@ export function PendingRollModal({
                 }
                 disabled={!lokiCanAgainSomeNonsense}
                 title={
-                  lokiCanAgainSomeNonsense ? "" : p("Not enough Laughter", "Недостатньо Сміху")
+                  lokiCanAgainSomeNonsense ? "" : p("Not enough Laugh", "Недостатньо Сміху")
                 }
               >
-                {p("Again some nonsense (-3)", "Знову якась нісенітниця (-3)")}
+                {p("Again Some Bullshit — 3 Laugh", "Опять какая-то хуйня — 3 Сміху")}
                 {!lokiCanAgainSomeNonsense
-                  ? ` — ${p("Not enough Laughter", "Недостатньо Сміху")}`
+                  ? ` — ${p("Not enough Laugh", "Недостатньо Сміху")}`
                   : ""}
               </button>
               <button
@@ -510,15 +545,15 @@ export function PendingRollModal({
                 disabled={!lokiCanChicken}
                 title={
                   lokiLaughtCurrent < 5
-                    ? p("Not enough Laughter", "Недостатньо Сміху")
+                    ? p("Not enough Laugh", "Недостатньо Сміху")
                     : lokiLaughtChickenOptions.length === 0
                       ? t("pending.noValidTargets")
                       : ""
                 }
               >
-                {p("Chicken (-5)", "Курка (-5)")}
+                {p("Chicken — 5 Laugh", "Курица — 5 Сміху")}
                 {lokiLaughtCurrent < 5
-                  ? ` — ${p("Not enough Laughter", "Недостатньо Сміху")}`
+                  ? ` — ${p("Not enough Laugh", "Недостатньо Сміху")}`
                   : lokiLaughtChickenOptions.length === 0
                     ? ` — ${t("pending.noValidTargets")}`
                     : ""}
@@ -534,15 +569,15 @@ export function PendingRollModal({
                 disabled={!lokiCanMindControl}
                 title={
                   lokiLaughtCurrent < 10
-                    ? p("Not enough Laughter", "Недостатньо Сміху")
+                    ? p("Not enough Laugh", "Недостатньо Сміху")
                     : lokiLaughtMindControlEnemyOptions.length === 0
                       ? t("pending.noValidTargets")
                       : ""
                 }
               >
-                {p("Mind Control (-10)", "Контроль розуму (-10)")}
+                {p("Mind Capture — 10 Laugh", "Захват разума — 10 Сміху")}
                 {lokiLaughtCurrent < 10
-                  ? ` — ${p("Not enough Laughter", "Недостатньо Сміху")}`
+                  ? ` — ${p("Not enough Laugh", "Недостатньо Сміху")}`
                   : lokiLaughtMindControlEnemyOptions.length === 0
                     ? ` — ${t("pending.noValidTargets")}`
                     : ""}
@@ -556,10 +591,10 @@ export function PendingRollModal({
                   })
                 }
                 disabled={!lokiCanSpinTheDrum}
-                title={lokiCanSpinTheDrum ? "" : p("Not enough Laughter", "Недостатньо Сміху")}
+                title={lokiCanSpinTheDrum ? "" : p("Not enough Laugh", "Недостатньо Сміху")}
               >
-                {p("Spin the drum (-12)", "Закрутити барабан (-12)")}
-                {!lokiCanSpinTheDrum ? ` — ${p("Not enough Laughter", "Недостатньо Сміху")}` : ""}
+                {p("Spin the Wheel — 12 Laugh", "Крутите барабан — 12 Сміху")}
+                {!lokiCanSpinTheDrum ? ` — ${p("Not enough Laugh", "Недостатньо Сміху")}` : ""}
                 {lokiCanSpinTheDrum && lokiLaughtSpinCandidateIds.length === 0
                   ? ` — ${p("No allied heroes to spin", "Немає союзних героїв")}`
                   : ""}
@@ -573,10 +608,10 @@ export function PendingRollModal({
                   })
                 }
                 disabled={!lokiCanGreatLokiJoke}
-                title={lokiCanGreatLokiJoke ? "" : p("Not enough Laughter", "Недостатньо Сміху")}
+                title={lokiCanGreatLokiJoke ? "" : p("Not enough Laugh", "Недостатньо Сміху")}
               >
-                {p("Great Loki joke (-15)", "Великий жарт Локі (-15)")}
-                {!lokiCanGreatLokiJoke ? ` — ${p("Not enough Laughter", "Недостатньо Сміху")}` : ""}
+                {p("Amazing Loki Joke — 15 Laugh", "Ахуительная шутка Локи — 15 Сміху")}
+                {!lokiCanGreatLokiJoke ? ` — ${p("Not enough Laugh", "Недостатньо Сміху")}` : ""}
               </button>
               <button
                 className="w-full rounded-lg bg-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"

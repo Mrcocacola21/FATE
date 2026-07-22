@@ -33,6 +33,12 @@ import {
 } from "../chikatiloMark";
 import { chebyshev } from "../board";
 import { canDirectlyTargetUnit } from "../visibility";
+import {
+  getLokiChickenTargetIds,
+  getLokiMindControlEnemyIds,
+  getLokiSpinCandidateIds,
+  getLokiTricksterAreaTargetIds,
+} from "../actions/heroes/loki/targets";
 
 function getLegalChikatiloMarkTargetIds(
   state: GameState,
@@ -229,6 +235,37 @@ function buildUseOption(
     commonReason ?? chargeReason ?? (!params.hasLegalTargets ? "No legal targets" : undefined);
   const { hasLegalTargets: _hasLegalTargets, ...option } = params;
   return { ...option, isAvailable: !disabledReason, disabledReason };
+}
+
+function buildLokiLaughOption(
+  state: GameState,
+  unit: UnitState,
+  id: string,
+  cost: number,
+  hasLegalTargets: boolean,
+): AbilityUseOptionView {
+  const currentCharges = getCharges(unit, ids.ABILITY_LOKI_LAUGHT);
+  const disabledReason =
+    getCommonDisabledReason(state, unit, { action: true }) ??
+    (currentCharges < cost
+      ? "Not enough Laugh"
+      : !hasLegalTargets
+        ? "No legal targets"
+        : undefined);
+  return {
+    id,
+    source: {
+      type: "heroResource",
+      resourceId: ids.ABILITY_LOKI_LAUGHT,
+      amount: cost,
+    },
+    sourceName: "Laugh",
+    currentCharges,
+    chargeRequired: cost,
+    consumes: { action: true },
+    isAvailable: !disabledReason,
+    disabledReason,
+  };
 }
 
 export function getAbilityViewsForUnit(state: GameState, unitId: string): AbilityView[] {
@@ -466,6 +503,44 @@ export function getAbilityViewsForUnit(state: GameState, unitId: string): Abilit
             consumes: { move: true },
             hasLegalTargets,
           }),
+        ];
+      } else if (spec.id === ids.ABILITY_LOKI_LAUGHT) {
+        useOptions = [
+          buildLokiLaughOption(
+            state,
+            unit,
+            "againSomeNonsense",
+            3,
+            getLokiTricksterAreaTargetIds(state, unit.id).length > 0,
+          ),
+          buildLokiLaughOption(
+            state,
+            unit,
+            "chicken",
+            5,
+            getLokiChickenTargetIds(state, unit.id).length > 0,
+          ),
+          buildLokiLaughOption(
+            state,
+            unit,
+            "mindControl",
+            10,
+            getLokiMindControlEnemyIds(state, unit.id).length > 0,
+          ),
+          buildLokiLaughOption(
+            state,
+            unit,
+            "spinTheDrum",
+            12,
+            getLokiSpinCandidateIds(state, unit.id).length > 0,
+          ),
+          buildLokiLaughOption(
+            state,
+            unit,
+            "greatLokiJoke",
+            15,
+            getLokiTricksterAreaTargetIds(state, unit.id).length > 0,
+          ),
         ];
       }
       if (useOptions) {

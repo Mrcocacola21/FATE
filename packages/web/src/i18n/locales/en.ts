@@ -332,6 +332,7 @@ export const en = {
     statusMettatonNeo: "Mettaton NEO",
     statusUndyne: "Undyne immortal",
     statusChicken: "Chicken",
+    statusEntangled: "Entangled",
   },
   game: {
     loadingKicker: "Synchronizing match",
@@ -456,6 +457,7 @@ export const en = {
     attackSlotUsed: "Attack slot already used",
     stealthSlotUsed: "Stealth slot already used",
     notEnoughCharges: "Not enough charges",
+    notEnoughLaugh: "Not enough Laugh",
     move: "Move",
     attack: "Attack",
     action: "Action",
@@ -669,7 +671,7 @@ export const en = {
     resources: {
       pacifism: "Pacifism points",
       genocide: "Genocide points",
-      laughter: "Laughter points",
+      laughter: "Laugh",
       rating: "Rating",
       engineering: "Engineering charge",
       missedLessons: "Missed Lessons",
@@ -745,33 +747,33 @@ export const en = {
     loki: {
       laughter: {
         summary:
-          "Spend Laughter points on Loki’s tricks. Using these options does not reveal Loki from stealth.",
-        gain: "Whenever any game roll is a double, Loki gains 1 Laughter point.",
+          "Spend Laugh on one of Loki's tricks. Again Some Bullshit and Chicken do not reveal Loki from stealth.",
+        gain: "Whenever any game roll is a double, Loki gains 1 Laugh.",
         options: {
           againSomeNonsense: {
-            name: "Again some nonsense",
+            name: "Again Some Bullshit",
             description:
-              "Every other figure in Loki’s 5×5 Trickster area rolls 1d6. On 1–4, it cannot spend its movement action until Loki’s next turn.",
+              "Attack every other figure in Loki's Trickster area. Failed defenders become Entangled until Loki's next turn. Loki stays hidden.",
           },
           chicken: {
             name: "Chicken",
             description:
-              "Choose an enemy in Loki’s Trickster area. Until Loki’s next turn, that figure can only move.",
+              "Attack an enemy hero within 2 cells. On a hit, it becomes a Chicken until Loki's next turn. Loki stays hidden.",
           },
           mindControl: {
-            name: "Mind Control",
+            name: "Mind Capture",
             description:
-              "Spend Loki’s action to choose an enemy in the Trickster area, then make it perform one legal attack against a chosen legal target.",
+              "Choose an enemy hero anywhere on the board, then make it perform one legal attack against its own side.",
           },
           spinTheDrum: {
-            name: "Spin the drum",
+            name: "Spin the Wheel",
             description:
-              "Choose a random allied figure and automatically activate the first legal non-passive ability available to it.",
+              "Randomly select a living ally other than Loki. Activate its phantasm, or choose one of its available abilities as a fallback.",
           },
           greatLokiJoke: {
-            name: "Great Loki joke",
+            name: "Amazing Loki Joke",
             description:
-              "Every other figure in Loki’s 5×5 Trickster area rolls 1d6. On 1–4, it becomes a Chicken until Loki’s next turn.",
+              "Attack every other figure in Loki's Trickster area. Failed defenders become Chickens until Loki's next turn. Normal stealth reveal rules apply.",
           },
         },
       },
@@ -1336,7 +1338,7 @@ export const en = {
     donMadnessTitle: "Madness of the Knight",
     donMadnessDirection: "Choose a direction for Don Kihote's final dash on the highlighted board rays.",
     braveryDefense: "Bravery Auto Defense",
-    lokiLaughter: "Loki's Laughter",
+    lokiLaughter: "Loki's Laugh",
     friskPacifism: "Frisk: Pacifism",
     friskGenocide: "Frisk: Genocide",
     friskKeenEye: "Frisk: Keen Eye",

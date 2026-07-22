@@ -62,7 +62,7 @@ export function resolveAttackDefenderRoll(
 
     return replacePendingRoll(
       state,
-      attacker.owner,
+      nextCtx.controllerPlayerId ?? attacker.owner,
       attackerRollKind,
       nextCtx,
       attacker.id

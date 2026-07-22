@@ -575,8 +575,8 @@ export function PendingBoardNotice({
           <div className="font-semibold">{t("pending.lokiLaughter")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
             {p(
-              "Choose one trick to activate without revealing Loki.",
-              "Оберіть хитрість, не розкриваючи Локі.",
+              "Choose a Loki's Laugh option. The 3- and 5-Laugh options preserve stealth.",
+              "Оберіть опцію Сміху Локі. Опції за 3 і 5 Сміху зберігають скритність.",
             )}
           </div>
         </div>
@@ -589,14 +589,14 @@ export function PendingBoardNotice({
         </div>
       ) : isLokiMindControlEnemyChoice ? (
         <div>
-          <div className="font-semibold">{p("Mind Control", "Контроль розуму")}</div>
+          <div className="font-semibold">{p("Mind Capture", "Захват разума")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
             {p("Select a unit to control.", "Оберіть фігуру для контролю.")}
           </div>
         </div>
       ) : isLokiMindControlTargetChoice ? (
         <div>
-          <div className="font-semibold">{p("Mind Control", "Контроль розуму")}</div>
+          <div className="font-semibold">{p("Mind Capture", "Захват разума")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
             {p(
               "Select a target for the controlled attack.",

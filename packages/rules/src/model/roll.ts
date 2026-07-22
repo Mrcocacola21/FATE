@@ -99,6 +99,7 @@ export type RollKind =
   | "lokiChickenTargetChoice"
   | "lokiMindControlEnemyChoice"
   | "lokiMindControlTargetChoice"
+  | "lokiSpinAbilityChoice"
   | "gutsBerserkAttackChoice"
   | "femtoDivineMoveRoll"
   | "femtoDivineMoveDestination"
@@ -198,6 +199,7 @@ export const ALL_ROLL_KINDS = [
   "lokiChickenTargetChoice",
   "lokiMindControlEnemyChoice",
   "lokiMindControlTargetChoice",
+  "lokiSpinAbilityChoice",
   "gutsBerserkAttackChoice",
   "femtoDivineMoveRoll",
   "femtoDivineMoveDestination",

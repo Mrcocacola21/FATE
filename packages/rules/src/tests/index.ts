@@ -319,9 +319,11 @@ import {
 import {
   testLokiLaughterIncrementsOnAnyDouble,
   testLokiLaughterSpendingAndGating,
+  testLokiLaughOptionAvailabilityThresholds,
   testLokiOptionOneMoveLockDuration,
   testLokiOptionTwoChickenBlocksAndRestrictsMove,
   testLokiOptionThreeMindControlForcedAttackAndSlots,
+  testLokiSpinWheelPoolFallbackAndCost,
   testLokiOptionFiveMassChickenFailOnlyAlliesAndEnemies,
 } from "./heroes/loki.test";
 import {
@@ -649,9 +651,11 @@ function main(): void {
   testMettatonFinalChordGatingTargetsDamageAndSpend();
   testLokiLaughterIncrementsOnAnyDouble();
   testLokiLaughterSpendingAndGating();
+  testLokiLaughOptionAvailabilityThresholds();
   testLokiOptionOneMoveLockDuration();
   testLokiOptionTwoChickenBlocksAndRestrictsMove();
   testLokiOptionThreeMindControlForcedAttackAndSlots();
+  testLokiSpinWheelPoolFallbackAndCost();
   testLokiOptionFiveMassChickenFailOnlyAlliesAndEnemies();
   testFriskPacifismIncrementsOnMissIncludingCleanSoul();
   testFriskGenocideIncrementsOnHit();

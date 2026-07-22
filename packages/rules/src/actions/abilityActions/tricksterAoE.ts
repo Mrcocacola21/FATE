@@ -10,7 +10,8 @@ export function applyTricksterAoEAfterUse(
   unit: UnitState,
   center: { col: number; row: number },
   abilityId: string,
-  rng: RNG
+  rng: RNG,
+  contextOverrides: Partial<TricksterAoEContext> = {}
 ): ApplyResult {
   const res = resolveAoE(
     state,
@@ -66,6 +67,7 @@ export function applyTricksterAoEAfterUse(
   };
 
   const ctx: TricksterAoEContext = {
+    ...contextOverrides,
     casterId: unit.id,
     targetsQueue: affectedUnitIds,
     currentTargetIndex: 0,

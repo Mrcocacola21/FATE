@@ -43,6 +43,7 @@ import {
   resolveLokiLaughtChoice,
   resolveLokiMindControlEnemyChoice,
   resolveLokiMindControlTargetChoice,
+  resolveLokiSpinAbilityChoice,
 } from "../resolvers/heroes/resolveLokiRoll";
 import {
   resolveFriskGenocideChoice,
@@ -123,6 +124,7 @@ export const HERO_PENDING_ROLL_KINDS = [
   "lokiChickenTargetChoice",
   "lokiMindControlEnemyChoice",
   "lokiMindControlTargetChoice",
+  "lokiSpinAbilityChoice",
   "gutsBerserkAttackChoice",
   "friskPacifismChoice",
   "friskPacifismHugsTargetChoice",
@@ -231,6 +233,8 @@ export function resolveHeroPendingRollCase(
       return resolveLokiMindControlEnemyChoice(state, pending, action.choice);
     case "lokiMindControlTargetChoice":
       return resolveLokiMindControlTargetChoice(state, pending, action.choice);
+    case "lokiSpinAbilityChoice":
+      return resolveLokiSpinAbilityChoice(state, pending, action.choice, rng);
     case "gutsBerserkAttackChoice":
       return resolveGutsBerserkAttackChoice(state, pending, action.choice);
     case "friskPacifismChoice":

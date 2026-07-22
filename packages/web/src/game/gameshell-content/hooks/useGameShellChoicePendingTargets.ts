@@ -175,7 +175,8 @@ export function useGameShellChoicePendingTargets({
     lokiLaughtCurrent >= 5 && lokiLaughtChickenOptions.length > 0;
   const lokiCanMindControl =
     lokiLaughtCurrent >= 10 && lokiLaughtMindControlEnemyOptions.length > 0;
-  const lokiCanSpinTheDrum = lokiLaughtCurrent >= 12;
+  const lokiCanSpinTheDrum =
+    lokiLaughtCurrent >= 12 && lokiLaughtSpinCandidateIds.length > 0;
   const lokiCanGreatLokiJoke = lokiLaughtCurrent >= 15;
   const lokiChickenTargetIds = useMemo(() => {
     if (!isLokiChickenTargetChoice) return [] as string[];

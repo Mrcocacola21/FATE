@@ -346,7 +346,6 @@ function buildLokiHover(view: PlayerView, loki: UnitState): BoardPreview | null 
       unit.id !== loki.id &&
       unit.owner !== loki.owner &&
       !!unit.position &&
-      areaKeys.has(coordKey(unit.position)) &&
       visibleAttackTargetIds(view, unit.id, true).length > 0,
   );
   const affectedTargets = visibleUnitTargets(

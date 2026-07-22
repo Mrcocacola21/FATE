@@ -334,6 +334,7 @@ export const uk = {
     statusMettatonNeo: "Меттатон NEO",
     statusUndyne: "Безсмертна Андайн",
     statusChicken: "Курка",
+    statusEntangled: "Заплутаний",
   },
   game: {
     loadingKicker: "Синхронізація матчу",
@@ -458,6 +459,7 @@ export const uk = {
     attackSlotUsed: "Комірку атаки вже використано",
     stealthSlotUsed: "Комірку скритності вже використано",
     notEnoughCharges: "Недостатньо зарядів",
+    notEnoughLaugh: "Недостатньо Сміху",
     move: "Переміщення",
     attack: "Атака",
     action: "Дія",

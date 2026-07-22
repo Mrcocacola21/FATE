@@ -155,6 +155,10 @@ const ResolveRollChoiceSchema = z.union([
     targetId: z.string().min(1),
   }),
   z.object({
+    type: z.literal("lokiSpinAbility"),
+    abilityId: z.string().min(1),
+  }),
+  z.object({
     type: z.literal("gutsBerserkAttackMode"),
     mode: z.union([z.literal("single"), z.literal("aoe")]),
     targetId: z.string().min(1),

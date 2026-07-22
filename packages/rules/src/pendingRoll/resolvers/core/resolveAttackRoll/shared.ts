@@ -9,6 +9,7 @@ import { resolveAttack } from "../../../../combat";
 import {
   ABILITY_FRISK_GENOCIDE,
   ABILITY_FRISK_PACIFISM,
+  ABILITY_LOKI_LAUGHT,
   getCharges,
 } from "../../../../abilities";
 import { spendSlots } from "../../../../turnEconomy";
@@ -28,6 +29,7 @@ import {
 import { evDamageBonusApplied } from "../../../../core";
 import type { AttackRollContext } from "../../../types";
 import { sumDice } from "../../../utils/rollMath";
+import { addLokiChicken } from "../../../../actions/heroes/loki";
 
 export function finalizeAttackFromContext(
   state: GameState,
@@ -61,6 +63,7 @@ export function finalizeAttackFromContext(
     defenderUseMuninnAutoDefense: autoDefenseMode === "muninn",
     ignoreRange: context.ignoreRange,
     ignoreStealth: context.ignoreStealth,
+    preserveAttackerStealth: context.preserveAttackerStealth,
     revealStealthedAllies: context.revealStealthedAllies,
     revealReason: context.revealReason,
     rangedAttack: context.rangedAttack,
@@ -101,6 +104,28 @@ export function finalizeAttackFromContext(
 
   const attackResolved = events.some((e) => e.type === "attackResolved");
   let updatedState = nextState;
+
+  if (
+    attackEvent?.type === "attackResolved" &&
+    attackEvent.hit &&
+    context.lokiStatusOnHit === "chicken" &&
+    context.lokiStatusSourceId
+  ) {
+    const target = updatedState.units[attackEvent.defenderId];
+    if (target?.isAlive) {
+      const chicken = addLokiChicken(target, context.lokiStatusSourceId);
+      updatedState = {
+        ...updatedState,
+        units: { ...updatedState.units, [chicken.id]: chicken },
+      };
+      updatedEvents.push({
+        type: "lokiChickenApplied",
+        lokiId: context.lokiStatusSourceId,
+        targetId: chicken.id,
+        abilityId: context.sourceAbilityId ?? ABILITY_LOKI_LAUGHT,
+      });
+    }
+  }
 
   if (
     attackEvent?.type === "attackResolved" &&

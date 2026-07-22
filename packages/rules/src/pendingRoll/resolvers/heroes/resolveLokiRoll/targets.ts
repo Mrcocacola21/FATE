@@ -13,7 +13,7 @@ import type {
   LokiMindControlTargetChoiceContext,
 } from "../../../types";
 import {
-  addLokiChicken,
+  getLokiChickenTargetIds,
   getLokiForcedAttackTargetIds,
   isLokiChicken,
 } from "../../../../actions/heroes/loki";
@@ -46,7 +46,8 @@ export function resolveLokiChickenTargetChoice(
   }
 
   const options = Array.isArray(ctx.options) ? ctx.options : [];
-  if (!options.includes(payload.targetId)) {
+  const currentOptions = getLokiChickenTargetIds(state, ctx.lokiId);
+  if (!options.includes(payload.targetId) || !currentOptions.includes(payload.targetId)) {
     return { state, events: [] };
   }
 
@@ -73,24 +74,28 @@ export function resolveLokiChickenTargetChoice(
     return { state, events: [] };
   }
 
-  const updatedTarget = addLokiChicken(committed.state.units[target.id], ctx.lokiId);
-  return {
-    state: clearPendingRoll({
-      ...committed.state,
-      units: {
-        ...committed.state.units,
-        [updatedTarget.id]: updatedTarget,
-      },
+  const requested = requestRoll(
+    clearPendingRoll(committed.state),
+    loki.owner,
+    "attack_attackerRoll",
+    makeAttackContext({
+      attackerId: loki.id,
+      defenderId: target.id,
+      ignoreRange: true,
+      damageOverride: 0,
+      ignoreBonuses: true,
+      preserveAttackerStealth: true,
+      sourceAbilityId: ABILITY_LOKI_LAUGHT,
+      lokiStatusOnHit: "chicken",
+      lokiStatusSourceId: loki.id,
+      consumeSlots: false,
+      queueKind: "normal",
     }),
-    events: [
-      ...committed.events,
-      {
-        type: "lokiChickenApplied" as const,
-        lokiId: ctx.lokiId,
-        targetId: target.id,
-        abilityId: ABILITY_LOKI_LAUGHT,
-      },
-    ],
+    loki.id
+  );
+  return {
+    state: requested.state,
+    events: [...committed.events, ...requested.events],
   };
 }
 
@@ -232,12 +237,13 @@ export function resolveLokiMindControlTargetChoice(
 
   const requested = requestRoll(
     updatedState,
-    updatedControlled.owner,
+    loki.owner,
     "attack_attackerRoll",
     makeAttackContext({
       attackerId: updatedControlled.id,
       defenderId: payload.targetId,
       allowFriendlyTarget: true,
+      controllerPlayerId: loki.owner,
       consumeSlots: false,
       queueKind: "normal",
     }),

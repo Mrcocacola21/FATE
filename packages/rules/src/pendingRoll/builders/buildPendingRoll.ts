@@ -19,6 +19,7 @@ export function makeAttackContext(params: {
   allowFriendlyTarget?: boolean;
   ignoreRange?: boolean;
   ignoreStealth?: boolean;
+  preserveAttackerStealth?: boolean;
   damageBonus?: number;
   damageBonusSourceId?: string;
   rangedAttack?: boolean;
@@ -27,6 +28,9 @@ export function makeAttackContext(params: {
   ignoreBonuses?: boolean;
   blindOnHit?: boolean;
   sourceAbilityId?: string;
+  controllerPlayerId?: import("../../model").PlayerId;
+  lokiStatusOnHit?: "chicken";
+  lokiStatusSourceId?: string;
   consumeSlots: boolean;
   queueKind: "normal" | "riderPath" | "aoe";
 }): AttackRollContext {
@@ -36,6 +40,7 @@ export function makeAttackContext(params: {
     allowFriendlyTarget: params.allowFriendlyTarget,
     ignoreRange: params.ignoreRange,
     ignoreStealth: params.ignoreStealth,
+    preserveAttackerStealth: params.preserveAttackerStealth,
     damageBonus: params.damageBonus,
     damageBonusSourceId: params.damageBonusSourceId,
     rangedAttack: params.rangedAttack,
@@ -44,6 +49,9 @@ export function makeAttackContext(params: {
     ignoreBonuses: params.ignoreBonuses,
     blindOnHit: params.blindOnHit,
     sourceAbilityId: params.sourceAbilityId,
+    controllerPlayerId: params.controllerPlayerId,
+    lokiStatusOnHit: params.lokiStatusOnHit,
+    lokiStatusSourceId: params.lokiStatusSourceId,
     attackerDice: [],
     defenderDice: [],
     tieBreakAttacker: [],
