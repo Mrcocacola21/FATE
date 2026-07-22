@@ -124,6 +124,7 @@ export function resolveFalseTrailExplosionDefenderRoll(
     revealReason: "aoeHit",
     damageOverride: 1,
     ignoreBonuses: true,
+    attackerRollIsNew: idx === 0,
     rolls: {
       attackerDice,
       defenderDice,

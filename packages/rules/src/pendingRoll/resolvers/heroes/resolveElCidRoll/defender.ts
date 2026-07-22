@@ -69,6 +69,7 @@ export function resolveElCidDefenderRoll(
     revealStealthedAllies: true,
     revealReason: "aoeHit",
     damageBonus,
+    attackerRollIsNew: idx === 0,
     rolls: {
       attackerDice,
       defenderDice,

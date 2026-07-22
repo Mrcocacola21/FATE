@@ -39,6 +39,8 @@ export type CoreGameEvent =
       defenderId: string;
       attackerRoll: DiceRoll;
       defenderRoll: DiceRoll;
+      /** False when an AoE event repeats an attacker roll already logged for another target. */
+      attackerRollIsNew?: boolean;
       tieBreakDice?: { attacker: number[]; defender: number[] };
       hit: boolean;
       damage: number;

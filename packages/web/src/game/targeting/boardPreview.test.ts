@@ -860,6 +860,11 @@ test("Hassan and Loki second-step previews show controlled-unit attack ranges", 
   );
   assert.deepEqual(validTargetIds(hassanPreview), ["target"]);
   assert.equal(hasKind(hassanPreview, controlled.position!, "source"), true);
+  assert.equal(
+    hasKind(hassanPreview, { col: 5, row: 6 }, "area"),
+    true,
+    "Hassan preview should show the controlled spearman's full attack pattern, not only the path to a target",
+  );
 
   const lokiPreview = buildPendingPreview(
     makeView([loki, controlled, target], {
@@ -873,6 +878,11 @@ test("Hassan and Loki second-step previews show controlled-unit attack ranges", 
   );
   assert.deepEqual(validTargetIds(lokiPreview), ["target"]);
   assert.equal(hasKind(lokiPreview, controlled.position!, "source"), true);
+  assert.equal(
+    hasKind(lokiPreview, { col: 5, row: 6 }, "area"),
+    true,
+    "Loki preview should show the controlled spearman's full attack pattern, not only the path to a target",
+  );
 });
 
 test("Loki Laughter hover shows option preview without command state", () => {

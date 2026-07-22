@@ -255,6 +255,21 @@ const ResolveRollChoiceSchema = z.union([
   z.literal("elCidDuelistStop"),
 ]);
 
+const LokiLaughOptionIdSchema = z.enum([
+  "againSomeNonsense",
+  "chicken",
+  "mindControl",
+  "spinTheDrum",
+  "greatLokiJoke",
+]);
+
+const UseAbilityActionSchema = z.object({
+  type: z.literal("useAbility"),
+  unitId: z.string(),
+  abilityId: z.string(),
+  payload: z.unknown().optional(),
+});
+
 export const GameActionSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("rollInitiative") }),
   z.object({ type: z.literal("chooseArena"), arenaId: z.string() }),
@@ -289,12 +304,7 @@ export const GameActionSchema = z.discriminatedUnion("type", [
     unitId: z.string(),
     mode: z.union([z.literal("action"), z.literal("move")]),
   }),
-  z.object({
-    type: z.literal("useAbility"),
-    unitId: z.string(),
-    abilityId: z.string(),
-    payload: z.unknown().optional(),
-  }),
+  UseAbilityActionSchema,
   z.object({
     type: z.literal("resolvePendingRoll"),
     pendingRollId: z.string().min(1),
@@ -303,7 +313,23 @@ export const GameActionSchema = z.discriminatedUnion("type", [
   }),
   z.object({ type: z.literal("endTurn") }),
   z.object({ type: z.literal("unitStartTurn"), unitId: z.string() }),
-]);
+]).superRefine((action, ctx) => {
+  if (
+    action.type !== "useAbility" ||
+    action.abilityId !== "lokiLaught" ||
+    action.payload === undefined
+  ) {
+    return;
+  }
+  const parsed = z.object({ optionId: LokiLaughOptionIdSchema }).safeParse(action.payload);
+  if (!parsed.success) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["payload", "optionId"],
+      message: "Invalid Loki's Laugh option",
+    });
+  }
+});
 
 export type GameActionInput = z.infer<typeof GameActionSchema>;
 

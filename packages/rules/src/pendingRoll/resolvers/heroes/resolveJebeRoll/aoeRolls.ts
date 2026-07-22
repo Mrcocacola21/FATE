@@ -107,6 +107,7 @@ export function resolveJebeHailOfArrowsDefenderRoll(
     revealStealthedAllies: true,
     revealReason: "aoeHit",
     damageBonus,
+    attackerRollIsNew: idx === 0,
     rolls: {
       attackerDice,
       defenderDice,
@@ -222,6 +223,7 @@ export function resolveJebeHailOfArrowsBerserkerDefenseChoice(
     revealReason: "aoeHit",
     defenderUseBerserkAutoDefense: true,
     damageBonus,
+    attackerRollIsNew: idx === 0,
     rolls: {
       attackerDice,
       defenderDice: [],

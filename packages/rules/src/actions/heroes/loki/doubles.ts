@@ -10,7 +10,7 @@ function countDoubles(events: GameEvent[]): number {
   let total = 0;
   for (const event of events) {
     if (event.type === "attackResolved") {
-      if (event.attackerRoll?.isDouble) total += 1;
+      if (event.attackerRoll?.isDouble && event.attackerRollIsNew !== false) total += 1;
       if (event.defenderRoll?.isDouble) total += 1;
       continue;
     }

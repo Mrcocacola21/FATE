@@ -78,6 +78,7 @@ export function resolveDoraDefenderRoll(
     revealStealthedAllies: true,
     revealReason: "aoeHit",
     damageBonus,
+    attackerRollIsNew: idx === 0,
     rolls: {
       attackerDice,
       defenderDice,
@@ -194,6 +195,7 @@ export function resolveDoraBerserkerDefenseChoice(
     revealReason: "aoeHit",
     defenderUseBerserkAutoDefense: true,
     damageBonus,
+    attackerRollIsNew: idx === 0,
     rolls: {
       attackerDice,
       defenderDice: [],

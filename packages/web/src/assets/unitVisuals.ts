@@ -38,6 +38,7 @@ const HERO_VARIANTS: Record<string, UnitVisualVariant[]> = {
 };
 
 const VARIANT_LABEL_KEYS: Record<UnitVisualVariant, string> = {
+  chicken: "visuals.forms.chicken",
   "duolingo-berserker": "visuals.forms.duolingoBerserker",
   "engineering-miracle": "visuals.forms.engineeringMiracle",
   "frisk-genocide": "visuals.forms.friskGenocide",
@@ -57,6 +58,7 @@ function getBaseAssetId(unit: UnitState | null | undefined): string {
 
 export function getUnitVisualVariant(unit: UnitState | null | undefined): UnitVisualVariant | null {
   if (!unit) return null;
+  if ((unit.lokiChickenSources?.length ?? 0) > 0) return "chicken";
   if (unit.heroId === "femto") return "femto";
   if (unit.heroId === "duolingo" && unit.duolingoBerserkerUnlocked) {
     return "duolingo-berserker";

@@ -209,11 +209,11 @@ export function buildRightPanelViewModel(params: RightPanelProps, t: Translate) 
     if (!selectedUnit) return;
     if (targetingMode || actionMode) return;
     if (lokiLaughtOptionQueued) return;
-    onQueueLokiLaughtOption?.(selectedUnit.id, option);
     onSendAction({
       type: "useAbility",
       unitId: selectedUnit.id,
       abilityId: LOKI_LAUGHT_ID,
+      payload: { optionId: option },
     });
   };
 

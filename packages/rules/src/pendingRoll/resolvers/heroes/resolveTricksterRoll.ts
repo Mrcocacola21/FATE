@@ -161,6 +161,7 @@ export function resolveTricksterAoEDefenderRoll(
     damageOverride,
     ignoreBonuses,
     suppressGutsBerserkBonus,
+    attackerRollIsNew: idx === 0,
     rolls: {
       attackerDice,
       defenderDice,

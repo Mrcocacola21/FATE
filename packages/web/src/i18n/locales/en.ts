@@ -595,6 +595,7 @@ export const en = {
   visuals: {
     transform: "Transform",
     forms: {
+      chicken: "Chicken",
       duolingoBerserker: "Duolingo Berserker",
       kanekiCentipede: "Centipede",
       engineeringMiracle: "Engineering Miracle",

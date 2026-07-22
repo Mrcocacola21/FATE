@@ -56,7 +56,9 @@ export function getLokiForcedAttackTargetIds(
     return [];
   }
   if (controllerPlayerId) {
-    return getControlledAttackTargetIds(state, attackerId, controllerPlayerId);
+    return getControlledAttackTargetIds(state, attackerId, controllerPlayerId, {
+      requireSlots: false,
+    });
   }
   if (!canSpendSlots(attacker, { attack: true, action: true })) {
     return [];
@@ -90,7 +92,6 @@ export function getLokiMindControlEnemyIds(
       if (unit.owner === loki.owner) return false;
       if (unit.heroId === HERO_FALSE_TRAIL_TOKEN_ID) return false;
       if (!canDirectlyTargetUnit(state, loki.id, unit.id)) return false;
-      if (!canSpendSlots(unit, { attack: true, action: true })) return false;
       return getLokiForcedAttackTargetIds(state, unit.id, loki.owner).length > 0;
     })
     .map((unit) => unit.id)

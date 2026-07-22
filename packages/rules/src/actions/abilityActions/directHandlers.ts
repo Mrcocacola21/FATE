@@ -140,7 +140,8 @@ const DIRECT_HANDLERS: Record<string, DirectAbilityHandler> = {
     applyJebeKhansShooter(state, unit, action),
   [ABILITY_HASSAN_TRUE_ENEMY]: (state, unit, action) =>
     applyHassanTrueEnemy(state, unit, action),
-  [ABILITY_LOKI_LAUGHT]: (state, unit) => applyLokiLaught(state, unit),
+  [ABILITY_LOKI_LAUGHT]: (state, unit, action, rng) =>
+    applyLokiLaught(state, unit, action, rng),
   [ABILITY_FRISK_PACIFISM]: (state, unit) => applyFriskPacifism(state, unit),
   [ABILITY_FRISK_GENOCIDE]: (state, unit) => applyFriskGenocide(state, unit),
   [ABILITY_ASGORE_FIREBALL]: (state, unit, action) =>

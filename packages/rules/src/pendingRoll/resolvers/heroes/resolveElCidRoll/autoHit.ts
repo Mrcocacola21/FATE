@@ -52,6 +52,7 @@ export function resolveElCidAoEAutoHit(
       revealReason: "aoeHit",
       damageBonus,
       autoHit: true,
+      attackerRollIsNew: resolvedTargetIds.size === 0,
       rolls: {
         attackerDice,
         defenderDice: [],

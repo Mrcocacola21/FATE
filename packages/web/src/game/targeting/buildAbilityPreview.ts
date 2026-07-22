@@ -839,13 +839,11 @@ export function buildForcedAttackPreview({
   const attacker = sourceUnit(gameView, attackerId);
   if (!attacker?.position) return null;
   const cells = attackRangeCells(gameView, attackerId);
-  const lineTargets = targetCells(targetRefsFromIds(gameView, optionIds));
-  const pathCells = lineCellsToTargets(attacker.position, lineTargets);
   return {
     kind: "multiStep",
     step: "forcedAttack",
     sourceCell: { ...attacker.position },
-    cells: pathCells.length > 0 ? pathCells : cells,
+    cells,
     validTargets: targetRefsFromIds(gameView, optionIds),
     cellKind: attacker.class === "archer" ? "line" : "area",
     labelKey,

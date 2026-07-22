@@ -10,13 +10,82 @@ import {
   makeEmptyTurnEconomy,
   makePlayerView,
   makeRngSequence,
+  resolvePendingRollOnce,
   resolveAllPendingRollsWithEvents,
   resolvePendingWithChoice,
   setUnit,
   setupLokiState,
   toBattleState,
 } from "../helpers/testUtils";
-import { getAbilityViewsForUnit } from "../../abilities";
+import {
+  ABILITY_LOKI_NATURAL_STEALTH,
+  getAbilityViewsForUnit,
+} from "../../abilities";
+
+export function testLokiNaturalStealthThresholdAndPassiveView() {
+  for (const roll of [1, 2, 3, 4, 5, 6]) {
+    let { state, loki } = setupLokiState();
+    state = setUnit(state, loki.id, { position: { col: 4, row: 4 } });
+    state = initKnowledgeForOwners(toBattleState(state, "P1", loki.id));
+    const rng = makeRngSequence([(roll - 0.5) / 6]);
+    const attempt = applyAction(
+      state,
+      { type: "enterStealth", unitId: loki.id } as any,
+      rng
+    );
+    assert(
+      attempt.state.pendingRoll?.kind === "enterStealth",
+      `Loki should be able to attempt stealth for forced roll ${roll}`
+    );
+    const resolved = resolvePendingRollOnce(attempt.state, rng);
+    assert(
+      resolved.state.units[loki.id].isStealthed === (roll >= 5),
+      `Loki stealth should ${roll >= 5 ? "succeed" : "fail"} on ${roll}`
+    );
+  }
+
+  const { state, loki } = setupLokiState();
+  const passive = getAbilityViewsForUnit(state, loki.id).find(
+    (ability) => ability.id === ABILITY_LOKI_NATURAL_STEALTH
+  );
+  assert(passive?.kind === "passive", "Natural Stealth must be passive information");
+
+  console.log("loki_natural_stealth_threshold_and_passive_view passed");
+}
+
+export function testLokiLaughDirectOptionPayloadStartsResolution() {
+  let { state, loki } = setupLokiState();
+  const enemy = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "knight"
+  )!;
+  state = setUnit(state, loki.id, {
+    position: { col: 4, row: 4 },
+    charges: { ...loki.charges, [ABILITY_LOKI_LAUGHT]: 5 },
+  });
+  state = setUnit(state, enemy.id, { position: { col: 5, row: 4 } });
+  state = initKnowledgeForOwners(toBattleState(state, "P1", loki.id));
+
+  const direct = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: loki.id,
+      abilityId: ABILITY_LOKI_LAUGHT,
+      payload: { optionId: "chicken" },
+    } as any,
+    makeRngSequence([])
+  );
+  assert(
+    direct.state.pendingRoll?.kind === "lokiChickenTargetChoice",
+    "a direct Loki option payload should immediately start its target flow"
+  );
+  assert(
+    direct.state.units[loki.id].charges[ABILITY_LOKI_LAUGHT] === 5,
+    "starting direct target selection must not spend Laugh"
+  );
+
+  console.log("loki_laugh_direct_option_payload_starts_resolution passed");
+}
 export function testLokiLaughterIncrementsOnAnyDouble() {
   let { state, loki } = setupLokiState();
   const attacker = Object.values(state.units).find(
@@ -140,7 +209,9 @@ export function testLokiLaughOptionAvailabilityThresholds() {
   )!;
   state = setUnit(state, loki.id, { position: { col: 4, row: 4 } });
   state = setUnit(state, ally.id, { position: { col: 3, row: 4 } });
-  state = setUnit(state, controlled.id, { position: { col: 5, row: 4 } });
+  state = setUnit(state, controlled.id, {
+    position: { col: 5, row: 4 },
+  });
   state = setUnit(state, controlledTarget.id, { position: { col: 5, row: 5 } });
   state = initKnowledgeForOwners(toBattleState(state, "P1", loki.id));
 
@@ -230,7 +301,7 @@ export function testLokiOptionOneMoveLockDuration() {
     queued.state,
     makeRngSequence([
       0.5,
-      0.7,
+      0.5,
       ...orderedAreaTargets.flatMap((targetId) =>
         targetId === successfulDefender.id ? [0.99, 0.8] : [0.01, 0.2]
       ),
@@ -238,6 +309,10 @@ export function testLokiOptionOneMoveLockDuration() {
   );
 
   assert(applied.state.units[loki.id].isStealthed, "entangle must preserve Loki stealth");
+  assert(
+    applied.state.units[loki.id].charges[ABILITY_LOKI_LAUGHT] === 1,
+    "the shared Trickster AoE attacker double must charge Laugh exactly once"
+  );
 
   const attackEvents = applied.events.filter(
     (event) => event.type === "attackResolved" && event.attackerId === loki.id
@@ -577,6 +652,10 @@ export function testLokiOptionThreeMindControlForcedAttackAndSlots() {
   });
   state = toBattleState(state, "P1", loki.id);
   state = initKnowledgeForOwners(state);
+  state = setUnit(state, controlled.id, {
+    turn: { ...state.units[controlled.id].turn, actionUsed: true },
+    hasActedThisTurn: true,
+  });
   const targetHpBefore = state.units[controlledTarget.id].hp;
 
   const started = applyAction(
@@ -602,6 +681,10 @@ export function testLokiOptionThreeMindControlForcedAttackAndSlots() {
     "entering mind control enemy selection should not consume Loki action slot"
   );
   const enemyOptions = (option.state.pendingRoll?.context?.options ?? []) as string[];
+  assert(
+    enemyOptions.includes(controlled.id),
+    "mind control should offer an enemy that already spent its action"
+  );
   assert(
     !enemyOptions.includes(hiddenEnemy.id),
     "mind control should not offer an unknown hidden unit to control"
@@ -678,9 +761,11 @@ export function testLokiOptionThreeMindControlForcedAttackAndSlots() {
     "forced attack should damage the selected target on successful hit"
   );
   assert(
-    resolved.state.units[controlled.id].turn.attackUsed &&
-      resolved.state.units[controlled.id].turn.actionUsed,
-    "controlled enemy should spend attack+action slots"
+    resolved.state.units[controlled.id].turn.actionUsed &&
+      !resolved.state.units[controlled.id].turn.attackUsed &&
+      resolved.state.units[controlled.id].hasActedThisTurn &&
+      !resolved.state.units[controlled.id].hasAttackedThisTurn,
+    "mind control should work after the enemy acted and preserve its turn slots"
   );
   assert(
     resolved.state.units[loki.id].isStealthed,

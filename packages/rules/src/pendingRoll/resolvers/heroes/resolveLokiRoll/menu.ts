@@ -20,8 +20,8 @@ import {
   getLokiMindControlEnemyIds,
   getLokiSpinCandidateIds,
   getLokiTricksterAreaTargetIds,
-  pickRandomFromIds,
-} from "../../../../actions/heroes/loki";
+} from "../../../../actions/heroes/loki/targets";
+import { pickRandomFromIds } from "../../../../actions/heroes/loki/utils";
 import {
   COST_AGAIN_SOME_NONSENSE,
   COST_CHICKEN,
@@ -29,6 +29,7 @@ import {
   COST_MIND_CONTROL,
   COST_SPIN_THE_DRUM,
   getLokiUnit,
+  type LokiLaughtChoiceOption,
   parseChoiceOption,
   spendLaughter,
 } from "./helpers";
@@ -332,6 +333,15 @@ export function resolveLokiLaughtChoice(
     return { state, events: [] };
   }
 
+  return resolveLokiLaughtOption(state, lokiId, option, rng);
+}
+
+export function resolveLokiLaughtOption(
+  state: GameState,
+  lokiId: string,
+  option: LokiLaughtChoiceOption,
+  rng: RNG
+): ApplyResult {
   switch (option) {
     case "againSomeNonsense":
       return resolveAgainSomeNonsense(state, lokiId, rng);

@@ -51,6 +51,7 @@ export function resolveCarpetStrikeDefenderRoll(
     revealStealthedAllies: true,
     revealReason: "aoeHit",
     damageOverride: 1,
+    attackerRollIsNew: false,
     rolls: {
       attackerDice,
       defenderDice,
@@ -159,6 +160,7 @@ export function resolveCarpetStrikeBerserkerDefenseChoice(
     revealReason: "aoeHit",
     defenderUseBerserkAutoDefense: true,
     damageOverride: 1,
+    attackerRollIsNew: false,
     rolls: {
       attackerDice,
       defenderDice: [],

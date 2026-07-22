@@ -113,6 +113,7 @@ export function resolveForestDefenderRoll(
     revealReason: "aoeHit",
     damageOverride: 2,
     damageBonus,
+    attackerRollIsNew: idx === 0,
     rolls: {
       attackerDice,
       defenderDice,
@@ -232,6 +233,7 @@ export function resolveForestBerserkerDefenseChoice(
     defenderUseBerserkAutoDefense: true,
     damageOverride: 2,
     damageBonus,
+    attackerRollIsNew: idx === 0,
     rolls: {
       attackerDice,
       defenderDice: [],

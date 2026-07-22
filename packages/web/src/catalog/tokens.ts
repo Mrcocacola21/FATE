@@ -70,12 +70,14 @@ export const TOKENS: Record<string, string> = {
 };
 
 export const VARIANT_FIGURE_ARTS = {
+  chicken: new URL("../assets/tokens/chicken.png", import.meta.url).href,
   "duolingo-berserker": new URL("../assets/tokens/duolingoBerserker.png", import.meta.url).href,
   "kaneki-centipede": new URL("../assets/tokens/kanekiScolopendra.png", import.meta.url).href,
   "undyne-undying": new URL("../assets/figures/undyne_the_undying.png", import.meta.url).href,
 } as const;
 
 export const VARIANT_TOKENS = {
+  chicken: new URL("../assets/tokens/chicken.png", import.meta.url).href,
   "duolingo-berserker": new URL("../assets/tokens/duolingoBerserker.png", import.meta.url).href,
   "engineering-miracle": new URL("../assets/tokens/kaiser_miracle.png", import.meta.url).href,
   "frisk-genocide": new URL("../assets/tokens/friskGenocide.png", import.meta.url).href,

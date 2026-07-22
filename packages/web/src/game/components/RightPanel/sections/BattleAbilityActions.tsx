@@ -83,8 +83,6 @@ function isInLokiRadius(loki: UnitState, unit: UnitState): boolean {
 
 function hasProjectedControlledAttackTarget(view: PlayerView, controlled: UnitState): boolean {
   if (!controlled.position) return false;
-  if (controlled.turn.attackUsed || controlled.turn.actionUsed) return false;
-  if (controlled.hasAttackedThisTurn || controlled.hasActedThisTurn) return false;
   const rangeKeys = new Set(attackRangeCells(view, controlled.id).map(coordKey));
   return Object.values(view.units).some(
     (unit) =>
@@ -461,11 +459,8 @@ export const BattleAbilityActions: FC<BattleAbilityActionsProps> = ({
                         disabled={disabled}
                         title={reason}
                       >
-                        <span className="flex min-w-0 items-center justify-between gap-2">
-                          <span className="min-w-0 truncate">{t(option.nameKey)}</span>
-                          <span className="shrink-0 text-[11px] opacity-75">
-                            {cost} {t("abilityDetails.resources.laughter")}
-                          </span>
+                        <span className="block min-w-0 truncate">
+                          {t(option.nameKey)} ({cost})
                         </span>
                         {disabled && reason ? (
                           <span className="mt-0.5 block font-semibold leading-tight text-amber-700 dark:text-amber-300">

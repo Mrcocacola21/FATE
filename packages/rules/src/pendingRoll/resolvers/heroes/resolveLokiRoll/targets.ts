@@ -1,5 +1,4 @@
 import type { ApplyResult, GameState, PendingRoll, ResolveRollChoice } from "../../../../model";
-import { canSpendSlots, spendSlots } from "../../../../turnEconomy";
 import {
   canCommitAbilityCost,
   commitAbilityCost,
@@ -182,10 +181,6 @@ export function resolveLokiMindControlTargetChoice(
   ) {
     return { state: clearPendingRoll(state), events: [] };
   }
-  if (!canSpendSlots(controlled, { attack: true, action: true })) {
-    return { state: clearPendingRoll(state), events: [] };
-  }
-
   const payload =
     choice && typeof choice === "object" && "type" in choice
       ? (choice as { type?: string; targetId?: string })
@@ -221,33 +216,26 @@ export function resolveLokiMindControlTargetChoice(
       state,
       controlled.id,
       loki.owner,
-      payload.targetId
+      payload.targetId,
+      { requireSlots: false }
     )
   ) {
     return { state, events: [] };
   }
-  const updatedControlled = spendSlots(controlled, { attack: true, action: true });
-  const updatedState: GameState = {
-    ...clearPendingRoll(committed.state),
-    units: {
-      ...committed.state.units,
-      [updatedControlled.id]: updatedControlled,
-    },
-  };
 
   const requested = requestRoll(
-    updatedState,
+    clearPendingRoll(committed.state),
     loki.owner,
     "attack_attackerRoll",
     makeAttackContext({
-      attackerId: updatedControlled.id,
+      attackerId: controlled.id,
       defenderId: payload.targetId,
       allowFriendlyTarget: true,
       controllerPlayerId: loki.owner,
       consumeSlots: false,
       queueKind: "normal",
     }),
-    updatedControlled.id
+    controlled.id
   );
 
   return {

@@ -124,6 +124,10 @@ export function testHassanTrueEnemyGatingConsumesAndForcesOneAttack() {
   });
   state = toBattleState(state, "P1", hassan.id);
   state = initKnowledgeForOwners(state);
+  state = setUnit(state, enemyForcedAttacker.id, {
+    turn: { ...state.units[enemyForcedAttacker.id].turn, actionUsed: true },
+    hasActedThisTurn: true,
+  });
 
   let used = applyAction(
     state,
@@ -239,6 +243,10 @@ export function testHassanTrueEnemyGatingConsumesAndForcesOneAttack() {
     "True Enemy should continue into normal attack flow"
   );
   assert(
+    targetChoice.state.pendingRoll?.player === hassan.owner,
+    "Hassan's owner must control the forced attack roll"
+  );
+  assert(
     targetChoice.state.units[hassan.id].charges[ABILITY_HASSAN_TRUE_ENEMY] === 0,
     "True Enemy should spend exactly 3 charges on target resolution"
   );
@@ -247,9 +255,11 @@ export function testHassanTrueEnemyGatingConsumesAndForcesOneAttack() {
     "True Enemy should consume Hassan's action slot on target resolution"
   );
   assert(
-    targetChoice.state.units[enemyForcedAttacker.id].turn.attackUsed &&
-      targetChoice.state.units[enemyForcedAttacker.id].turn.actionUsed,
-    "True Enemy should spend the controlled unit's forced attack slots"
+    targetChoice.state.units[enemyForcedAttacker.id].turn.actionUsed &&
+      !targetChoice.state.units[enemyForcedAttacker.id].turn.attackUsed &&
+      targetChoice.state.units[enemyForcedAttacker.id].hasActedThisTurn &&
+      !targetChoice.state.units[enemyForcedAttacker.id].hasAttackedThisTurn,
+    "True Enemy should work after the controlled unit acted and preserve its turn slots"
   );
   const controlledAttackEvent = targetChoice.events.find(
     (event) =>

@@ -20,6 +20,8 @@ export interface ResolveAttackParams {
   autoHit?: boolean;
   forceMiss?: boolean;
   pureBloodRedirectTargetId?: string;
+  /** False for later targets sharing the same authoritative AoE attacker roll. */
+  attackerRollIsNew?: boolean;
   rolls?: {
     attackerDice: number[];
     defenderDice: number[];

@@ -226,6 +226,10 @@ const abilitiesUk: Record<string, AbilityTranslation> = {
     description:
       "За 3 заряди телепортує на будь-яку вільну клітинку без витрати переміщення чи дії.",
   },
+  lokiNaturalStealth: {
+    name: "Природна скритність",
+    description: "Локі входить у скритність на результаті 5-6.",
+  },
   lokiIllusoryDouble: {
     name: "Ілюзорний двійник",
     description: "Кожен дубль у будь-якому ігровому кидку додає Локі 1 Сміх, максимум 15.",

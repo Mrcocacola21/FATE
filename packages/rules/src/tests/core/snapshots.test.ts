@@ -145,6 +145,7 @@ export function testGoldenSnapshotAoeWithIntimidateChain() {
         defenderId: "P2-spearman-2",
         attackerRoll: { dice: [1, 1], sum: 2, isDouble: true },
         defenderRoll: { dice: [4, 4], sum: 8, isDouble: true },
+        attackerRollIsNew: false,
         hit: false,
         damage: 0,
         defenderHpAfter: 7,

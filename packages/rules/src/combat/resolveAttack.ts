@@ -264,6 +264,7 @@ export function resolveAttack(
     defenderId: defenderAfter.id,
     attackerRoll,
     defenderRoll,
+    ...(params.attackerRollIsNew === false ? { attackerRollIsNew: false } : {}),
     tieBreakDice:
       tieBreakAttacker.length > 0
         ? { attacker: tieBreakAttacker, defender: tieBreakDefender }

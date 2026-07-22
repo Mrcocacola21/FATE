@@ -50,6 +50,18 @@ function flushMicrotasks() {
 }
 
 function testLokiLaughPayloadSchemas() {
+  const directOptionPayload = GameActionSchema.safeParse({
+    type: "useAbility",
+    unitId: "P1-trickster-loki",
+    abilityId: ABILITY_LOKI_LAUGHT,
+    payload: { optionId: "mindControl" },
+  });
+  const invalidDirectOption = GameActionSchema.safeParse({
+    type: "useAbility",
+    unitId: "P1-trickster-loki",
+    abilityId: ABILITY_LOKI_LAUGHT,
+    payload: { optionId: "freeEverything" },
+  });
   const optionPayload = GameActionSchema.safeParse({
     type: "resolvePendingRoll",
     pendingRollId: "loki-laugh-option",
@@ -66,6 +78,8 @@ function testLokiLaughPayloadSchemas() {
     choice: { type: "lokiLaughtOption", option: "mostExpensiveAvailable" },
   });
   assert(optionPayload.success, "server schema should accept a specific Loki Laugh option");
+  assert(directOptionPayload.success, "server schema should accept a direct Loki option payload");
+  assert.equal(invalidDirectOption.success, false, "server schema must reject invalid direct Loki options");
   assert(spinFallbackPayload.success, "server schema should accept Spin fallback ability choice");
   assert.equal(invalidOption.success, false, "server schema must reject ambiguous Loki options");
   console.log("hardening_loki_laugh_payload_schemas passed");

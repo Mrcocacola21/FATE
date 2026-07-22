@@ -12,7 +12,6 @@ import {
 import { clearPendingRoll, evAbilityUsed, requestRoll } from "../../../core";
 import { makeAttackContext } from "../../builders/buildPendingRoll";
 import { commitAbilityCost } from "../../../actions/abilityCosts";
-import { canSpendSlots, spendSlots } from "../../../turnEconomy";
 import {
   canControlledAttackTarget,
 } from "../../../actions/controlledAttack";
@@ -78,29 +77,20 @@ function requestForcedAttack(
   ) {
     return { state: clearPendingRoll(state), events: [] };
   }
-  if (!canSpendSlots(attacker, { attack: true, action: true })) {
-    return { state: clearPendingRoll(state), events: [] };
-  }
   if (
     !canControlledAttackTarget(
       state,
       attacker.id,
       controllerPlayerId,
-      target.id
+      target.id,
+      { requireSlots: false }
     )
   ) {
     return { state: clearPendingRoll(state), events: [] };
   }
 
   let nextState = clearPendingRoll(state);
-  let nextAttacker = spendSlots(attacker, { attack: true, action: true });
-  nextState = {
-    ...nextState,
-    units: {
-      ...nextState.units,
-      [nextAttacker.id]: nextAttacker,
-    },
-  };
+  let nextAttacker = attacker;
   let events: ReturnType<typeof requestRoll>["events"] = [];
   if (isKaiser(nextAttacker) && nextAttacker.bunker?.active) {
     const exited = exitBunkerForUnit(nextState, nextAttacker, "attacked");
@@ -111,12 +101,13 @@ function requestForcedAttack(
 
   const requested = requestRoll(
     nextState,
-    nextAttacker.owner,
+    controllerPlayerId,
     "attack_attackerRoll",
     makeAttackContext({
       attackerId: nextAttacker.id,
       defenderId: target.id,
       allowFriendlyTarget: true,
+      controllerPlayerId,
       consumeSlots: false,
       queueKind: "normal",
     }),
@@ -175,7 +166,8 @@ export function resolveHassanTrueEnemyTargetChoice(
       state,
       attacker.id,
       hassan.owner,
-      target.id
+      target.id,
+      { requireSlots: false }
     )
   ) {
     return { state: clearPendingRoll(state), events: [] };

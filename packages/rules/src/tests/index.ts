@@ -335,6 +335,8 @@ import {
 } from "./heroes/odin.test";
 import {
   testLokiLaughterIncrementsOnAnyDouble,
+  testLokiNaturalStealthThresholdAndPassiveView,
+  testLokiLaughDirectOptionPayloadStartsResolution,
   testLokiLaughterSpendingAndGating,
   testLokiLaughOptionAvailabilityThresholds,
   testLokiOptionOneMoveLockDuration,
@@ -681,6 +683,8 @@ function main(): void {
   testMettatonNeoGraceAndRiderPathUnlocks();
   testMettatonBerserkerFeatureOnlyAfterNeo();
   testMettatonFinalChordGatingTargetsDamageAndSpend();
+  testLokiNaturalStealthThresholdAndPassiveView();
+  testLokiLaughDirectOptionPayloadStartsResolution();
   testLokiLaughterIncrementsOnAnyDouble();
   testLokiLaughterSpendingAndGating();
   testLokiLaughOptionAvailabilityThresholds();

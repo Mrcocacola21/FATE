@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
-import type { AbilityView, PlayerView, UnitState } from "rules";
+import type { AbilityView, GameAction, PlayerView, UnitState } from "rules";
 import { setLanguage, translate } from "../../../i18n";
 import {
   ARTEMIS_MOON_INSIGHT_ID,
@@ -1852,6 +1852,8 @@ test("Loki Laughter renders separate option buttons with costs and availability"
     class: "knight",
     heroId: undefined,
     position: { col: 1, row: 2 },
+    turn: { actionUsed: true, moveUsed: false, attackUsed: false, stealthUsed: false },
+    hasActedThisTurn: true,
   });
   const enemyAllyTarget = makeUnit({
     id: "P2-rider-1",
@@ -1905,6 +1907,23 @@ test("Loki Laughter renders separate option buttons with costs and availability"
   assert.match(markup, /Mind Capture/);
   assert.match(markup, /Spin the Wheel/);
   assert.match(markup, /Amazing Loki Joke/);
+  assert.match(markup, /Again Some Bullshit \(3\)/);
+  assert.match(markup, /Chicken \(5\)/);
+  assert.match(markup, /Mind Capture \(10\)/);
+  assert.match(markup, /Spin the Wheel \(12\)/);
+  assert.match(markup, /Amazing Loki Joke \(15\)/);
+  const mindCaptureStart = markup.indexOf('data-loki-laught-option="mindControl"');
+  const mindCaptureMarkup = markup.slice(
+    mindCaptureStart,
+    markup.indexOf("</div>", mindCaptureStart),
+  );
+  const mindCaptureButton = mindCaptureMarkup.match(/<button[^>]*>/)?.[0];
+  assert.ok(mindCaptureButton, "Mind Capture button should render");
+  assert.doesNotMatch(
+    mindCaptureButton,
+    /disabled/,
+    "Mind Capture should stay enabled when the controlled enemy already spent its action",
+  );
   assert.match(markup, /data-loki-laught-cost="3"/);
   assert.match(markup, /data-loki-laught-cost="5"/);
   assert.match(markup, /data-loki-laught-cost="10"/);
@@ -1931,6 +1950,42 @@ test("Loki Laughter renders separate option buttons with costs and availability"
   );
 
   assert.match(lowChargeMarkup, /Not enough Laugh/);
+
+  const sent: GameAction[] = [];
+  const naturalStealth = makeAbility({
+    id: "lokiNaturalStealth",
+    name: "Natural Stealth",
+    description: "Stealth succeeds on 5-6.",
+    kind: "passive",
+    slot: "none",
+    chargeRequired: undefined,
+    maxCharges: undefined,
+    currentCharges: undefined,
+  });
+  const vm = buildRightPanelViewModel(
+    {
+      ...makeRightPanelProps(
+        { ...view, abilitiesByUnitId: { [loki.id]: [naturalStealth, ability] } },
+        loki.id,
+      ),
+      onSendAction: (action) => sent.push(action),
+    },
+    translate,
+  );
+  vm.onUseLokiLaughtOption("chicken");
+  assert.deepEqual(sent, [
+    {
+      type: "useAbility",
+      unitId: loki.id,
+      abilityId: LOKI_LAUGHT_ID,
+      payload: { optionId: "chicken" },
+    },
+  ]);
+  assert.equal(
+    vm.actionableAbilities.some((item) => item.id === "lokiNaturalStealth"),
+    false,
+    "Natural Stealth should remain passive info, not a manual button",
+  );
 });
 
 test("Action Menu core strip always renders Action, Move, and Stealth", () => {

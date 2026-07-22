@@ -71,6 +71,7 @@ export const ODIN_SLEIPNIR_ID = "odinSleipnir";
 export const ODIN_MUNINN_ID = "odinMuninn";
 export const LOKI_LAUGHT_ID = "lokiLaught";
 export const LOKI_ILLUSORY_DOUBLE_ID = "lokiIllusoryDouble";
+export const LOKI_NATURAL_STEALTH_ID = "lokiNaturalStealth";
 export const FRISK_PACIFISM_ID = "friskPacifism";
 export const FRISK_GENOCIDE_ID = "friskGenocide";
 export const FRISK_CLEAN_SOUL_ID = "friskCleanSoul";

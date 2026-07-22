@@ -598,6 +598,7 @@ export const uk = {
   visuals: {
     transform: "Перетворення",
     forms: {
+      chicken: "Курка",
       duolingoBerserker: "Дуелінго-берсерк",
       kanekiCentipede: "Сороконіжка",
       engineeringMiracle: "Інженерне диво",

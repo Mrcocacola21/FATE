@@ -1,5 +1,5 @@
 import type { GameEvent, GameState, ResolveRollChoice } from "../../../../model";
-import { isLoki } from "../../../../actions/heroes/loki";
+import { isLoki } from "../../../../actions/heroes/loki/effects";
 import { commitAbilityCost } from "../../../../actions/abilityCosts";
 import { ABILITY_LOKI_LAUGHT } from "../../../../abilities";
 

@@ -114,6 +114,7 @@ export function tryResolveAutoDefense(
     defenderId: defenderAfter.id,
     attackerRoll,
     defenderRoll,
+    ...(params.attackerRollIsNew === false ? { attackerRollIsNew: false } : {}),
     hit: false,
     damage: 0,
     defenderHpAfter: defenderAfter.hp,

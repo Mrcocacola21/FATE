@@ -142,7 +142,11 @@ export function collectAbilityIdsForUnit(unit: UnitState): string[] {
     );
   }
   if (unit.heroId === HERO_LOKI_ID) {
-    abilityIds.push(ids.ABILITY_LOKI_LAUGHT, ids.ABILITY_LOKI_ILLUSORY_DOUBLE);
+    abilityIds.push(
+      ids.ABILITY_LOKI_NATURAL_STEALTH,
+      ids.ABILITY_LOKI_LAUGHT,
+      ids.ABILITY_LOKI_ILLUSORY_DOUBLE
+    );
   }
   if (unit.heroId === HERO_JEBE_ID) {
     abilityIds.push(

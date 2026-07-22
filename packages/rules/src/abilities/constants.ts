@@ -60,6 +60,7 @@ export const ABILITY_ODIN_MUNINN = "odinMuninn" as const;
 export const ABILITY_ODIN_SLEIPNIR = "odinSleipnir" as const;
 
 export const ABILITY_LOKI_ILLUSORY_DOUBLE = "lokiIllusoryDouble" as const;
+export const ABILITY_LOKI_NATURAL_STEALTH = "lokiNaturalStealth" as const;
 export const ABILITY_LOKI_LAUGHT = "lokiLaught" as const;
 
 export const ABILITY_JEBE_KHANS_SHOOTER = "jebeKhansShooter" as const;

@@ -37,7 +37,9 @@ export function getHassanForcedAttackTargets(
     return [];
   }
   const controllerPlayerId = attacker.owner === "P1" ? "P2" : "P1";
-  return getControlledAttackTargetIds(state, attackerId, controllerPlayerId);
+  return getControlledAttackTargetIds(state, attackerId, controllerPlayerId, {
+    requireSlots: false,
+  });
 }
 
 export function getHassanTrueEnemyCandidates(

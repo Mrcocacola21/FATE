@@ -68,6 +68,11 @@ test("new playable heroes use real figure and token art in every base registry",
 });
 
 test("visible persistent form state resolves matching token variants", () => {
+  const chicken = makeUnit({ lokiChickenSources: ["P1-trickster-loki"] });
+  assert.equal(getUnitVisualVariant(chicken), "chicken");
+  assert.equal(getUnitTokenAsset(chicken).id, "chicken");
+  assert.equal(getUnitTokenAsset(chicken).isFallback, false);
+  assert.equal(getUnitFigureAsset(chicken).id, "chicken");
   assert.equal(getUnitTokenAsset(makeUnit({ transformed: true })).id, "engineering-miracle");
   assert.equal(
     getUnitTokenAsset(makeUnit({ heroId: "guts", class: "berserker", gutsBerserkModeActive: true }))
@@ -135,4 +140,11 @@ test("a redacted or absent form flag cannot reveal a transformed token", () => {
   assert.equal(getUnitTokenAsset(projectedUnit).id, "grand-kaiser");
   assert.equal(getUnitVisualVariant(undefined), null);
   assert.equal(getUnitTokenAsset(undefined).isFallback, true);
+});
+
+test("expired Chicken status restores original unit art", () => {
+  const transformed = makeUnit({ heroId: "loki", figureId: "loki", lokiChickenSources: ["loki"] });
+  const restored = { ...transformed, lokiChickenSources: undefined };
+  assert.equal(getUnitTokenAsset(transformed).id, "chicken");
+  assert.equal(getUnitTokenAsset(restored).id, "loki");
 });

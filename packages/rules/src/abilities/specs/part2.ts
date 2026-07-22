@@ -78,6 +78,12 @@ export const ABILITY_SPECS_PART_2: Record<string, AbilitySpec> = {
     description:
       "Whenever any game roll is a double, Loki gains +1 Laughter.",
   },
+  [ids.ABILITY_LOKI_NATURAL_STEALTH]: {
+    id: ids.ABILITY_LOKI_NATURAL_STEALTH,
+    displayName: "Natural Stealth",
+    kind: "passive",
+    description: "Stealth succeeds on 5-6.",
+  },
   [ids.ABILITY_LOKI_LAUGHT]: {
     id: ids.ABILITY_LOKI_LAUGHT,
     displayName: "Loki's Laugh",
