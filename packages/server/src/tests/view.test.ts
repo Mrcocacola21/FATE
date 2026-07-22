@@ -427,10 +427,22 @@ function testJackTrapProjectionIsOwnerPrivateUntilTriggered() {
   state = {
     ...state,
     jackTraps: [
-      { sourceUnitId: jack.id, owner: "P1", position: { col: 2, row: 3 }, isRevealed: false },
+      {
+        id: "jack-snare-P1-1",
+        sourceUnitId: jack.id,
+        owner: "P1",
+        position: { col: 2, row: 3 },
+        isRevealed: false,
+        triggeredTargetIds: [],
+      },
     ],
   };
   assert.deepEqual(makePlayerView(state, "P1").jackTraps?.map((trap) => trap.position), [{ col: 2, row: 3 }]);
+  assert.equal(
+    "triggeredTargetIds" in makePlayerView(state, "P1").jackTraps[0],
+    false,
+    "trigger history is authoritative metadata and must not be projected",
+  );
   assert.deepEqual(makePlayerView(state, "P2").jackTraps, []);
   assert.deepEqual(makeSpectatorView(state).jackTraps, []);
   const revealed = {
@@ -438,7 +450,86 @@ function testJackTrapProjectionIsOwnerPrivateUntilTriggered() {
     jackTraps: state.jackTraps?.map((trap) => ({ ...trap, isRevealed: true })),
   };
   assert.deepEqual(makePlayerView(revealed, "P2").jackTraps?.map((trap) => trap.position), [{ col: 2, row: 3 }]);
+  assert.equal(
+    makePlayerView(revealed, "P2").jackTraps[0]?.sourceUnitId,
+    undefined,
+    "a revealed enemy snare must not project private source metadata",
+  );
   console.log("view_jack_trap_owner_private_until_triggered passed");
+}
+
+function testCoveringTracksProjectionRedactsPendingAndHiddenExplosionTargets() {
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1", { assassin: HERO_JACK_RIPPER_ID }));
+  state = attachArmy(state, createDefaultArmy("P2"));
+  const jack = Object.values(state.units).find((unit) => unit.heroId === HERO_JACK_RIPPER_ID)!;
+  const hidden = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "assassin",
+  )!;
+  const visible = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "knight",
+  )!;
+  state = setUnit(state, jack.id, {
+    position: { col: 8, row: 8 },
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
+  state = setUnit(state, hidden.id, {
+    position: { col: 1, row: 1 },
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
+  state = setUnit(state, visible.id, { position: { col: 2, row: 1 } });
+  state = {
+    ...state,
+    phase: "battle",
+    pendingRoll: {
+      id: "covering-tracks-choice",
+      player: "P1",
+      kind: "chargedImpulseTargetChoice",
+      context: {
+        unitId: jack.id,
+        abilityId: "jackRipperSnares",
+        step: "coveringTracks",
+        placement: { col: 0, row: 8 },
+        options: [{ col: 1, row: 1 }],
+      },
+    },
+  };
+  assert.equal(makePlayerView(state, "P1").pendingRoll?.context.step, "coveringTracks");
+  assert.equal(makePlayerView(state, "P2").pendingRoll, null);
+
+  const explosion: GameEvent = {
+    type: "aoeResolved",
+    sourceUnitId: jack.id,
+    casterId: jack.id,
+    abilityId: "jackRipperCoveringTracks",
+    center: { col: 1, row: 1 },
+    radius: 1,
+    affectedUnitIds: [hidden.id, visible.id],
+    revealedUnitIds: [],
+    damagedUnitIds: [hidden.id, visible.id],
+    damageByUnitId: { [hidden.id]: 1, [visible.id]: 1 },
+    rollsByUnitId: { [hidden.id]: 2, [visible.id]: 4 },
+  };
+  const projected = projectEventsForRecipient(state, [explosion], "P1")[0];
+  assert.equal(projected.type, "aoeResolved");
+  if (projected.type === "aoeResolved") {
+    assert.deepEqual(projected.affectedUnitIds, [visible.id]);
+    assert.deepEqual(projected.damagedUnitIds, [visible.id]);
+    assert.deepEqual(projected.damageByUnitId, { [visible.id]: 1 });
+    assert.deepEqual(projected.rollsByUnitId, { [visible.id]: 4 });
+  }
+  const opponentEvent = projectEventsForRecipient(state, [explosion], "P2")[0];
+  if (opponentEvent.type === "aoeResolved") {
+    assert.equal(
+      opponentEvent.sourceUnitId,
+      undefined,
+      "the explosion log must not identify a hidden Jack to the opponent",
+    );
+    assert.equal(opponentEvent.casterId, undefined);
+  }
+  console.log("view_covering_tracks_pending_and_hidden_result_projection passed");
 }
 
 function testRiderMovementProjectionDoesNotLeakHiddenTarget() {
@@ -612,6 +703,7 @@ function main() {
   testGroupedSemanticEventProjectionFiltersHiddenTargets();
   testJackKnownHpProjectionIsOwnerPrivate();
   testJackTrapProjectionIsOwnerPrivateUntilTriggered();
+  testCoveringTracksProjectionRedactsPendingAndHiddenExplosionTargets();
   testRiderMovementProjectionDoesNotLeakHiddenTarget();
   testNewBatchAbilitySourceProjection();
   testDonMadnessDirectionProjectionIsOwnerPrivateAndValid();

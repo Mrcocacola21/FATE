@@ -14,6 +14,7 @@ import {
   HERO_ZORO_ID,
 } from "../../heroes";
 import { queueHeroAbilityAttacks as queueNewHeroAttacks } from "../shared";
+import { canJackTrapTriggerForTarget, cleanupJackTrapsForDeaths } from "../../jackSnares";
 
 function chargeEvent(unit: UnitState, abilityId: string, delta: number): GameEvent {
   return {
@@ -107,7 +108,7 @@ export function applyNewBatchPostAction(
   events: GameEvent[],
   _rng: RNG
 ): ApplyResult {
-  let nextState = state;
+  let nextState = cleanupJackTrapsForDeaths(state, events);
   const nextEvents = [...events];
 
   for (const event of events) {
@@ -215,7 +216,9 @@ export function applyNewBatchPostAction(
     if (event.type === "unitMoved") {
       const moved = nextState.units[event.unitId];
       const trapIndex = (nextState.jackTraps ?? []).findIndex(
-        (trap) => !trap.trappedUnitId && coordsEqual(trap.position, event.to),
+        (trap) =>
+          canJackTrapTriggerForTarget(trap, event.unitId) &&
+          coordsEqual(trap.position, event.to),
       );
       if (moved && trapIndex >= 0) {
         const traps = [...(nextState.jackTraps ?? [])];
@@ -223,6 +226,9 @@ export function applyNewBatchPostAction(
           ...traps[trapIndex],
           isRevealed: true,
           trappedUnitId: moved.id,
+          triggeredTargetIds: Array.from(
+            new Set([...(traps[trapIndex].triggeredTargetIds ?? []), moved.id]),
+          ),
         };
         nextState = {
           ...nextState,

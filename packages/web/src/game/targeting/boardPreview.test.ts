@@ -1332,6 +1332,41 @@ test("Moon Insight pending preview uses authoritative line options and the hover
   assert.equal(hasKind(rejectedLocalPoint, { col: 6, row: 5 }, "area"), false);
 });
 
+test("Covering Tracks highlights existing snares and previews only visible radius-1 creatures", () => {
+  const jack = unit({
+    id: "jack",
+    owner: "P1",
+    heroId: "jackRipper",
+    class: "assassin",
+    position: { col: 8, row: 8 },
+  });
+  const visible = unit({ id: "visible", owner: "P2", position: { col: 2, row: 1 } });
+  const view = makeView([jack, visible], {
+    pendingRoll: {
+      id: "covering-tracks",
+      player: "P1",
+      kind: "chargedImpulseTargetChoice",
+      context: {
+        unitId: jack.id,
+        abilityId: JACK_SNARES_ID,
+        step: "coveringTracks",
+        placement: { col: 0, row: 8 },
+        options: [{ col: 1, row: 1 }, { col: 5, row: 5 }],
+      },
+    } as PlayerView["pendingRoll"],
+  });
+
+  const options = buildPendingPreview(view);
+  assert.equal(hasKind(options, { col: 1, row: 1 }, "validTarget"), true);
+  assert.equal(hasKind(options, { col: 5, row: 5 }, "validTarget"), true);
+  assert.equal(hasKind(options, { col: 2, row: 1 }, "area"), false);
+
+  const hovered = buildPendingPreview(view, { col: 1, row: 1 });
+  assert.equal(hasKind(hovered, { col: 2, row: 1 }, "area"), true);
+  assert.equal(hasKind(hovered, { col: 2, row: 1 }, "affected"), true);
+  assert.equal(hasKind(hovered, { col: 3, row: 1 }, "area"), false);
+});
+
 test("Madness of the Knight pending preview exposes all straight direction rays", () => {
   const don = unit({
     id: "don",

@@ -135,6 +135,7 @@ export const DON_SORROWFUL_ID = "donKihoteSorrowfulCountenance";
 export const DON_WINDMILLS_ID = "donKihoteWindmills";
 export const DON_MAD_DELUSION_ID = "donKihoteMadness";
 export const JACK_SNARES_ID = "jackRipperSnares";
+export const JACK_COVERING_TRACKS_ID = "jackRipperCoveringTracks";
 export const JACK_HOLY_MOTHER_ID = "jackRipperDismemberment";
 export const ARTEMIS_MOON_INSIGHT_ID = "artemidaMoonlightShot";
 export const ARTEMIS_SILVER_SICKLE_ID = "artemidaSilverCrescent";

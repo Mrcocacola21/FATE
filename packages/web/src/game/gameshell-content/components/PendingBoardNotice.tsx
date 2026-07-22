@@ -239,7 +239,9 @@ export function PendingBoardNotice({
       ) : pendingRollKind === "chargedImpulseTargetChoice" && chargedAbilityId ? (
         <div>
           <div className="font-semibold">
-            {chargedAbilityId === "artemidaMoonlightShot"
+            {chargedAbilityId === "jackRipperSnares" && pendingRollContext.step === "coveringTracks"
+              ? p("Covering Tracks", "Заметання слідів")
+              : chargedAbilityId === "artemidaMoonlightShot"
               ? p("Moon Insight", "Місячне прозріння")
               : chargedAbilityId === "jackRipperSnares"
                 ? p("Maniac Traps", "Силки маніяка")
@@ -250,7 +252,12 @@ export function PendingBoardNotice({
                     : p("Impulse target", "Ціль імпульсу")}
           </div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            {chargedAbilityId === "artemidaMoonlightShot"
+            {chargedAbilityId === "jackRipperSnares" && pendingRollContext.step === "coveringTracks"
+              ? p(
+                  "Covering Tracks: choose a snare to explode before placing a new one.",
+                  "Заметання слідів: оберіть силок, який слід підірвати перед розміщенням нового.",
+                )
+              : chargedAbilityId === "artemidaMoonlightShot"
               ? p("Choose a 3x3 center on Artemida's attack line.", "Виберіть центр області 3×3 на лінії атаки Артеміди.")
               : chargedAbilityId === "jackRipperSnares"
                 ? p("Choose a trap cell on the board.", "Виберіть клітинку пастки на полі.")

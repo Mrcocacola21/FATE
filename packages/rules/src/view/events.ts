@@ -203,10 +203,18 @@ function projectEventForRecipient(
       return [
         {
           ...event,
+          sourceUnitId: isUnitVisibleToRecipient(state, event.sourceUnitId, recipient)
+            ? event.sourceUnitId
+            : undefined,
+          casterId:
+            event.casterId && isUnitVisibleToRecipient(state, event.casterId, recipient)
+              ? event.casterId
+              : undefined,
           affectedUnitIds: filterVisibleUnitIds(event.affectedUnitIds),
           revealedUnitIds: filterVisibleUnitIds(event.revealedUnitIds),
           damagedUnitIds: filterVisibleUnitIds(event.damagedUnitIds),
           damageByUnitId: filterVisibleDamageByUnitId(event.damageByUnitId),
+          rollsByUnitId: filterVisibleDamageByUnitId(event.rollsByUnitId),
         } as GameEvent,
       ];
     case "carpetStrikeAttackRolled":

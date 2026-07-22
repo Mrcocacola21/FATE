@@ -1246,14 +1246,6 @@ html.dark {
     animation: forest-marker-breathe 2.8s ease-in-out infinite;
   }
 
-  .board-marker-icon--jack-trap {
-    filter: drop-shadow(0 3px 4px rgb(15 23 42 / 0.62));
-  }
-
-  .board-marker-icon--jack-trap > img {
-    transform: scale(1.35);
-  }
-
   .board-marker-icon--stake {
     @apply overflow-hidden rounded-md;
   }

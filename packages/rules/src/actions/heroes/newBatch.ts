@@ -26,6 +26,7 @@ import {
 } from "../../heroes";
 import { getUnitDefinition } from "../../units";
 import { queueHeroAbilityAttacks as queueNewHeroAttacks } from "../shared";
+import { applyJackTrapPlacement } from "../../jackSnares";
 
 type AbilityAction = Extract<GameAction, { type: "useAbility" }>;
 
@@ -329,14 +330,11 @@ function applyDonWindmills(state: GameState, unit: UnitState, action: AbilityAct
   return { state: queued.state, events: [...events, ...queued.events] };
 }
 
-function applyJackTrap(state: GameState, unit: UnitState, action: AbilityAction, isImpulse: boolean): ApplyResult {
+function applyJackTrap(state: GameState, unit: UnitState, action: AbilityAction, isImpulse: boolean, rng: { next: () => number }): ApplyResult {
   const position = parseCoord(payload(action).position ?? payload(action).center);
+  const explodePosition = parseCoord(payload(action).explodePosition);
   if (!isImpulse || unit.heroId !== HERO_JACK_RIPPER_ID || !position || !isInsideBoard(position, state.boardSize)) return { state, events: [] };
-  if (unit.jackTrapPlacedTurnNumber === state.turnNumber) return { state, events: [] };
-  const traps = state.jackTraps ?? [];
-  if (traps.some((trap) => trap.sourceUnitId === unit.id && coordsEqual(trap.position, position))) return { state, events: [] };
-  const updated = { ...unit, jackTrapPlacedTurnNumber: state.turnNumber };
-  return { state: { ...state, units: { ...state.units, [unit.id]: updated }, jackTraps: [...traps, { sourceUnitId: unit.id, owner: unit.owner, position, isRevealed: false }] }, events: [abilityUsed(unit.id, ids.ABILITY_JACK_RIPPER_SNARES)] };
+  return applyJackTrapPlacement(state, unit, position, explodePosition, rng);
 }
 
 function applyJackHolyMother(state: GameState, unit: UnitState, action: AbilityAction): ApplyResult {
@@ -420,7 +418,7 @@ export function applyNewBatchAbility(
     case ids.ABILITY_ZORO_ASURA: return applyZoroAsura(state, unit);
     case ids.ABILITY_DON_KIHOTE_SORROWFUL_COUNTENANCE: return applyDonReaction(state, unit, action);
     case ids.ABILITY_DON_KIHOTE_WINDMILLS: return applyDonWindmills(state, unit, action);
-    case ids.ABILITY_JACK_RIPPER_SNARES: return applyJackTrap(state, unit, action, isStartTurnImpulse);
+    case ids.ABILITY_JACK_RIPPER_SNARES: return applyJackTrap(state, unit, action, isStartTurnImpulse, rng);
     case ids.ABILITY_JACK_RIPPER_DISMEMBERMENT: return applyJackHolyMother(state, unit, action);
     case ids.ABILITY_ARTEMIDA_MOONLIGHT_SHINE: return applyArtemisInsight(state, unit, action, rng, isStartTurnImpulse);
     case ids.ABILITY_ARTEMIDA_SILVER_CRESCENT: return applyArtemisSickle(state, unit, action);

@@ -179,7 +179,7 @@ export const ABILITY_JACK_RIPPER_SURGERY = "jackRipperSurgery" as const;
 export const ABILITY_JACK_RIPPER_RESILIENT = "jackRipperResilient" as const;
 export const ABILITY_JACK_RIPPER_SNARES = "jackRipperSnares" as const;
 export const ABILITY_JACK_RIPPER_DISMEMBERMENT = "jackRipperDismemberment" as const;
-export const ABILITY_JACK_RIPPER_LEGEND_KILLER = "jackRipperLegendKiller" as const;
+export const ABILITY_JACK_RIPPER_COVERING_TRACKS = "jackRipperCoveringTracks" as const;
 
 export const ABILITY_ARTEMIDA_ACCURATE_ARROW = "artemidaAccurateArrow" as const;
 export const ABILITY_ARTEMIDA_GOD = "artemidaGod" as const;

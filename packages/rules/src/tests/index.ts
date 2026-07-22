@@ -10,6 +10,12 @@ import {
   testNewPlayableBatchTransactionalActives,
 } from "./heroes/newPlayableBatch.test";
 import {
+  testJackCoveringTracksSixthSnareFlow,
+  testJackKeepsAssassinStealthBaseDamageWithoutOldBonus,
+  testJackSnareActivatesOncePerTarget,
+  testJackSnareIsRemovedWithDeadTarget,
+} from "./heroes/jack.test";
+import {
   testActiveQueuedRollProjectsAsPending,
   testPendingRollActionsExportsStable,
   testPendingRollResolverCoverage,
@@ -769,6 +775,10 @@ function main(): void {
   testNewPlayableBatchTransactionalActives();
   testNewPlayableBatchLineAndRevealEffects();
   testNewPlayableBatchCombatCountersAndReactions();
+  testJackSnareActivatesOncePerTarget();
+  testJackSnareIsRemovedWithDeadTarget();
+  testJackCoveringTracksSixthSnareFlow();
+  testJackKeepsAssassinStealthBaseDamageWithoutOldBonus();
   testGetHeroMetaReturnsCorrectData();
   testHeroRegistryContainsPlayableHeroes();
   testBattleAbilityViewsCoverHeroRegistryMetadata();

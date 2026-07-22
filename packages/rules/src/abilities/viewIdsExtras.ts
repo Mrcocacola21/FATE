@@ -65,7 +65,7 @@ export function appendLegacyHeroAbilityIds(
       ids.ABILITY_JACK_RIPPER_SURGERY,
       ids.ABILITY_JACK_RIPPER_SNARES,
       ids.ABILITY_JACK_RIPPER_DISMEMBERMENT,
-      ids.ABILITY_JACK_RIPPER_LEGEND_KILLER
+      ids.ABILITY_JACK_RIPPER_COVERING_TRACKS
     );
   }
   if (unit.heroId === HERO_ARTEMIDA_ID) {

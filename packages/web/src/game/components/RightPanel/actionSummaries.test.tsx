@@ -9,6 +9,7 @@ import {
   GRIFFITH_FEMTO_REBIRTH_ID,
   GUTS_CANNON_ID,
   HASSAN_ASSASSIN_ORDER_ID,
+  JACK_COVERING_TRACKS_ID,
   JACK_SNARES_ID,
   KANEKI_REGENERATION_ID,
   LOKI_LAUGHT_ID,
@@ -51,6 +52,7 @@ import {
   shouldRenderManualAbilityButton,
 } from "./rightPanelHelpers";
 import { buildRightPanelViewModel } from "./rightPanelViewModel";
+import { getAbilityDisplay } from "../../../i18n/displayMetadata";
 
 function makeUnit(overrides: Partial<UnitState> = {}): UnitState {
   return {
@@ -113,6 +115,7 @@ function makeView(unit: UnitState): PlayerView {
     pendingAoEPreview: null,
     rollCounter: 0,
     stakeMarkers: [],
+    jackTraps: [],
     forestMarkers: [],
     forestMarker: null,
     turnOrder: [unit.id],
@@ -1070,6 +1073,33 @@ test("new-batch passive and start-turn impulse abilities are not normal action b
     true,
     "Light Ray keeps only its paid Action/Sun variant",
   );
+
+  const coveringTracks = makeAbility({
+    id: JACK_COVERING_TRACKS_ID,
+    name: "Covering Tracks",
+    kind: "passive",
+    description: "Choose a snare to explode before placing a sixth snare.",
+  });
+  assert.equal(isActionableAbility(coveringTracks), false);
+  assert.equal(shouldRenderManualAbilityButton(coveringTracks), false);
+  assert.equal(
+    getAbilityDisplay(
+      coveringTracks.id,
+      coveringTracks.name,
+      coveringTracks.description,
+      "en",
+    ).name,
+    "Covering Tracks",
+  );
+  assert.equal(
+    getAbilityDisplay(
+      coveringTracks.id,
+      coveringTracks.name,
+      coveringTracks.description,
+      "uk",
+    ).name,
+    "Заметання слідів",
+  );
 });
 
 test("Oni Giri renders separate counter and Determination source options", () => {
@@ -1461,6 +1491,51 @@ test("Don board pending choices route cell clicks to the server", () => {
     type: "resolvePendingRoll",
     pendingRollId: "pending-don-madness",
     choice: { type: "donMadDelusionDirection", direction: { col: 1, row: 1 } },
+  });
+});
+
+test("Covering Tracks board selection submits the highlighted snare on shared mobile/desktop handling", () => {
+  const jack = makeUnit({
+    id: "P1-assassin-jack",
+    heroId: "jackRipper",
+    position: { col: 8, row: 8 },
+  });
+  let sent: unknown = null;
+  const handler = createCellClickHandler({
+    view: makeView(jack),
+    playerId: "P1",
+    joined: true,
+    isSpectator: false,
+    hasBlockingRoll: true,
+    boardSelectionPending: true,
+    isChargedImpulseTargetChoice: true,
+    chargedImpulseTargetKeys: new Set(["2,2"]),
+    pendingRoll: {
+      id: "covering-tracks",
+      kind: "chargedImpulseTargetChoice",
+      player: "P1",
+      context: {
+        unitId: jack.id,
+        abilityId: JACK_SNARES_ID,
+        step: "coveringTracks",
+        options: [{ col: 2, row: 2 }],
+      },
+    },
+    actionMode: null,
+    selectedUnitId: jack.id,
+    sendAction: (action: unknown) => {
+      sent = action;
+    },
+    sendGameAction: () => undefined,
+  } as never);
+
+  handler(3, 3);
+  assert.equal(sent, null, "an unhighlighted mobile tap must not silently select a snare");
+  handler(2, 2);
+  assert.deepEqual(sent, {
+    type: "resolvePendingRoll",
+    pendingRollId: "covering-tracks",
+    choice: { type: "chargedImpulseTarget", position: { col: 2, row: 2 }, axis: undefined },
   });
 });
 

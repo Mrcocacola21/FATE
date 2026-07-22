@@ -122,7 +122,12 @@ export function makePlayerView(
     ...baseState,
     jackTraps: (state.jackTraps ?? [])
       .filter((trap) => trap.owner === playerId || trap.isRevealed === true)
-      .map((trap) => ({ ...trap, position: { ...trap.position } })),
+      .map((trap) => ({
+        id: trap.id,
+        sourceUnitId: trap.owner === playerId ? trap.sourceUnitId : undefined,
+        position: { ...trap.position },
+        isRevealed: trap.isRevealed === true,
+      })),
     units,
     knowledge,
     lastKnownPositions,

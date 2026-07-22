@@ -17,6 +17,7 @@ export type VfxEffectId =
   | "boat"
   | "tralala"
   | "muzzle"
+  | "snareExplosion"
   | "berserkAoE";
 
 export type VfxPlacement = "cell" | "unit" | "area" | "line" | "path";

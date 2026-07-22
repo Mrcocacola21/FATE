@@ -63,6 +63,29 @@ test("public AoE ability events map to area VFX using affected radius geometry",
   assert.equal(effects[0]?.cells?.length, 25);
 });
 
+test("Covering Tracks maps to a small explosion on the selected snare cell", () => {
+  const effects = map(
+    [
+      {
+        type: "aoeResolved",
+        sourceUnitId: "jack",
+        abilityId: "jackRipperCoveringTracks",
+        center: { col: 4, row: 4 },
+        radius: 1,
+        affectedUnitIds: [],
+        revealedUnitIds: [],
+        damagedUnitIds: [],
+      } as GameEvent,
+    ],
+    view([unit("jack", { col: 8, row: 8 })]),
+  );
+  assert.equal(effects.length, 1);
+  assert.equal(effects[0]?.effectId, "snareExplosion");
+  assert.equal(effects[0]?.placement, "cell");
+  assert.deepEqual(effects[0]?.sourceCell, { col: 4, row: 4 });
+  assert.equal(effects[0]?.scaleCells, 0.9);
+});
+
 test("private mark VFX only plays when projected event and target coordinate are visible", () => {
   const visible = map(
     [

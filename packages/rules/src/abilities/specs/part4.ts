@@ -362,11 +362,11 @@ export const ABILITY_SPECS_PART_4: Record<string, AbilitySpec> = {
     kind: "passive",
     description: "Jack gains +1 max HP.",
   },
-  [ids.ABILITY_JACK_RIPPER_LEGEND_KILLER]: {
-    id: ids.ABILITY_JACK_RIPPER_LEGEND_KILLER,
-    displayName: "Legendary Killer",
+  [ids.ABILITY_JACK_RIPPER_COVERING_TRACKS]: {
+    id: ids.ABILITY_JACK_RIPPER_COVERING_TRACKS,
+    displayName: "Covering Tracks",
     kind: "passive",
-    description: "Jack deals +1 damage when attacking from stealth.",
+    description: "If Jack would place a 6th snare while 5 snares are already on the board, choose one existing snare to explode. Creatures within radius 1 roll 1d6; on 1-4 they take 1 damage, on 5-6 they avoid it.",
   },
   [ids.ABILITY_JACK_RIPPER_SURGERY]: {
     id: ids.ABILITY_JACK_RIPPER_SURGERY,

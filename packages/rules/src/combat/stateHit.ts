@@ -3,7 +3,6 @@ import {
   HERO_DUOLINGO_ID,
   HERO_GRIFFITH_ID,
   HERO_GUTS_ID,
-  HERO_JACK_RIPPER_ID,
   HERO_KALADIN_ID,
   HERO_UNDYNE_ID,
 } from "../heroes";
@@ -57,9 +56,6 @@ export function resolveHitDamage(
   if (!params.ignoreBonuses) {
     if (params.damageBonus) {
       damage += params.damageBonus;
-    }
-    if (attackerWasStealthed && attackerAfter.heroId === HERO_JACK_RIPPER_ID) {
-      damage += 1;
     }
     if (
       attackerAfter.heroId === HERO_DUOLINGO_ID &&

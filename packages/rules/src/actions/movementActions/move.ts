@@ -25,6 +25,7 @@ import {
 } from "./postMove";
 import type { MoveActionInternal } from "./types";
 import { markCourtGlobalMoveUsed } from "../../ruleDeclarations";
+import { canJackTrapTriggerForTarget } from "../../jackSnares";
 
 export function applyMove(
   state: GameState,
@@ -145,7 +146,11 @@ export function applyMove(
   const stakePath = intendedLine ? intendedLine.slice(1) : [moveAction.to];
   const stakeStop = findStakeStopOnPath(state, unit, stakePath);
   const jackTrapStop = stakePath.find((cell) =>
-    (state.jackTraps ?? []).some((trap) => coordsEqual(trap.position, cell)),
+    (state.jackTraps ?? []).some(
+      (trap) =>
+        canJackTrapTriggerForTarget(trap, unit.id) &&
+        coordsEqual(trap.position, cell),
+    ),
   );
   const stakeIndex = stakeStop ? stakePath.findIndex((cell) => coordsEqual(cell, stakeStop)) : -1;
   const trapIndex = jackTrapStop ? stakePath.findIndex((cell) => coordsEqual(cell, jackTrapStop)) : -1;

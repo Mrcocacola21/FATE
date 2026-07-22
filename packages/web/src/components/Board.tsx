@@ -155,7 +155,6 @@ const PREVIEW_KIND_ORDER: PreviewCellKind[] = [
 ];
 
 const FOREST_MARKER_ASSET = getBoardMarkerAsset("lechy_forest");
-const JACK_TRAP_MARKER_ASSET = getBoardMarkerAsset("jack_trap");
 const STAKE_MARKER_ASSET = getBoardMarkerAsset("vlad_stake");
 
 const FIELD_FADE_DURATION_MS = 180;
@@ -402,7 +401,7 @@ export const Board: FC<BoardProps> = ({
   >();
   const lastKnownByPos = new Map<string, number>();
   const stakeMarkersByPos = new Map<string, boolean>();
-  const jackTrapKeys = new Set<string>();
+  const jackTrapStatesByPos = new Map<string, boolean>();
   const viewHighlights: Record<
     string,
     | "place"
@@ -476,7 +475,9 @@ export const Board: FC<BoardProps> = ({
     stakeMarkersByPos.set(key, existing || marker.isRevealed);
   }
   for (const trap of view.jackTraps ?? []) {
-    jackTrapKeys.add(coordKey(toViewCoord(trap.position)));
+    const key = coordKey(toViewCoord(trap.position));
+    const existing = jackTrapStatesByPos.get(key) ?? false;
+    jackTrapStatesByPos.set(key, existing || trap.isRevealed);
   }
   for (const [key, kind] of Object.entries(highlightedCells)) {
     const [colRaw, rowRaw] = key.split(",");
@@ -904,16 +905,29 @@ export const Board: FC<BoardProps> = ({
               <img src={STAKE_MARKER_ASSET} alt="" draggable={false} />
             </div>
           )}
-          {jackTrapKeys.has(key) && (
+          {jackTrapStatesByPos.has(key) && (
             <div
-              className="board-marker-icon board-marker-icon--jack-trap pointer-events-none absolute left-1/2 top-1/2 z-20 flex items-center justify-center"
-              style={{ width: Math.round(cellSize * 0.62), height: Math.round(cellSize * 0.62) }}
+              className={`stake-state-badge pointer-events-none absolute left-1 ${
+                jackTrapStatesByPos.has(key) ? "top-6" : "top-1"
+              } z-30 flex items-center justify-center rounded-full font-bold ${
+                jackTrapStatesByPos.get(key)
+                  ? "stake-state-badge--revealed"
+                  : "stake-state-badge--hidden"
+              }`}
+              style={{
+                width: Math.max(16, Math.round(cellSize * 0.23)),
+                height: Math.max(16, Math.round(cellSize * 0.23)),
+                fontSize: Math.max(9, Math.round(cellSize * 0.13)),
+              }}
               role="img"
               aria-label={t("board.jackTrap")}
               title={t("board.jackTrap")}
-              data-board-marker="jack_trap"
+              data-board-marker={
+                jackTrapStatesByPos.get(key) ? "jack_snare_revealed" : "jack_snare_hidden"
+              }
+              data-snare-state={jackTrapStatesByPos.get(key) ? "revealed" : "hidden"}
             >
-              <img src={JACK_TRAP_MARKER_ASSET} alt="" draggable={false} />
+              S
             </div>
           )}
           {content}

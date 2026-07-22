@@ -19,6 +19,7 @@ import { applySansPostAction } from "./heroes/sans";
 import { applyUndynePostAction } from "./heroes/undyne";
 import { applyMettatonImpulseUnlocks } from "./heroes/mettaton";
 import { applyNewBatchPostAction } from "./heroes/newBatchPost";
+import { cleanupJackTrapsForDeaths } from "../jackSnares";
 import {
   applyRuleDeclarationAfterAttack,
   applyRuleDeclarationWinChecks,
@@ -185,10 +186,14 @@ export function applyAction(
     afterUndyne.state,
     afterUndyne.events
   );
-  if (afterFrisk.state.phase === "ended") return afterFrisk;
+  const afterJackDeathCleanup = {
+    ...afterFrisk,
+    state: cleanupJackTrapsForDeaths(afterFrisk.state, afterFrisk.events),
+  };
+  if (afterJackDeathCleanup.state.phase === "ended") return afterJackDeathCleanup;
   const afterMettaton = applyMettatonImpulseUnlocks(
-    afterFrisk.state,
-    afterFrisk.events
+    afterJackDeathCleanup.state,
+    afterJackDeathCleanup.events
   );
   const afterNewBatch = applyNewBatchPostAction(
     prevState,

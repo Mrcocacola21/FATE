@@ -14,6 +14,7 @@ const ABILITY_GUTS_ARBALET = "gutsArbalet";
 const ABILITY_GUTS_CANNON = "gutsCannon";
 const ABILITY_GUTS_BERSERK_MODE = "gutsBerserkMode";
 const ABILITY_GROZNY_INVADE_TIME = "groznyInvadeTime";
+const ABILITY_JACK_COVERING_TRACKS = "jackRipperCoveringTracks";
 
 function requestId(
   context: VfxMapperContext,
@@ -145,6 +146,13 @@ function mapAoeResolved(
 ): BoardVfxRequest[] {
   if (!isCoord(event.center) || typeof event.radius !== "number") return [];
   const cells = radiusCellsToOverlay(event.center, event.radius, context.view.boardSize ?? 9);
+  if (event.abilityId === ABILITY_JACK_COVERING_TRACKS) {
+    return cellRequest(context, event, "snareExplosion", event.center, "center", {
+      durationMs: 520,
+      scaleCells: 0.9,
+      opacity: 0.58,
+    });
+  }
   if (event.abilityId === ABILITY_ASGORE_FIRE_PARADE) {
     return [
       {

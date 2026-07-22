@@ -7,6 +7,7 @@ import {
   ABILITY_KAISER_BUNKER,
   ABILITY_ARTEMIDA_SILVER_CRESCENT,
   ABILITY_HASSAN_ASSASIN_ORDER,
+  ABILITY_JACK_RIPPER_SNARES,
   ABILITY_LOKI_LAUGHT,
   ABILITY_RIVER_PERSON_BOAT,
   ABILITY_RIVER_PERSON_BOATMAN,
@@ -21,6 +22,7 @@ import {
   HERO_HASSAN_ID,
   HERO_DUOLINGO_ID,
   HERO_GRAND_KAISER_ID,
+  HERO_JACK_RIPPER_ID,
   HERO_PAPYRUS_ID,
   HERO_RIVER_PERSON_ID,
   makePlayerView,
@@ -353,6 +355,77 @@ function testRejectedActionLogAndRevisionInvariants() {
     "rejected action after accepted one must not append log"
   );
   console.log("hardening_rejected_action_log_invariants passed");
+}
+
+function testInvalidCoveringTracksSelectionIsRejectedWithoutMutation() {
+  const room = createGameRoomWithId(`hardening-covering-tracks-${randomUUID()}`, {
+    hostSeat: "P1",
+    hostConnId: `conn-${randomUUID()}`,
+  });
+  let state = attachArmy(
+    createEmptyGame(),
+    createDefaultArmy("P1", { assassin: HERO_JACK_RIPPER_ID }),
+  );
+  state = attachArmy(state, createDefaultArmy("P2"));
+  const jack = Object.values(state.units).find(
+    (unit) => unit.heroId === HERO_JACK_RIPPER_ID,
+  );
+  assert(jack);
+  state = setUnit(state, jack.id, { position: { col: 8, row: 8 } });
+  const positions = [
+    { col: 1, row: 1 },
+    { col: 2, row: 2 },
+    { col: 3, row: 3 },
+    { col: 4, row: 4 },
+    { col: 5, row: 5 },
+  ];
+  room.state = {
+    ...state,
+    phase: "battle",
+    activeUnitId: jack.id,
+    jackTrapCounter: 5,
+    jackTraps: positions.map((position, index) => ({
+      id: `jack-snare-P1-${index + 1}`,
+      sourceUnitId: jack.id,
+      owner: "P1" as const,
+      position,
+      isRevealed: false,
+      triggeredTargetIds: [],
+    })),
+    pendingRoll: {
+      id: "covering-tracks-choice",
+      player: "P1",
+      kind: "chargedImpulseTargetChoice",
+      context: {
+        unitId: jack.id,
+        abilityId: ABILITY_JACK_RIPPER_SNARES,
+        step: "coveringTracks",
+        placement: { col: 0, row: 8 },
+        options: positions,
+      },
+    },
+  };
+  const stateBefore = room.state;
+  const revisionBefore = room.revision;
+  const logLengthBefore = room.actionLog.length;
+
+  const result = applyGameAction(
+    room,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: "covering-tracks-choice",
+      player: "P1",
+      choice: { type: "chargedImpulseTarget", position: { col: 8, row: 0 } },
+    },
+    "P1",
+  );
+
+  assert.equal(result.ok, false, "an unlisted snare must be rejected by the server");
+  if (!result.ok) assert.equal(result.code, "RULES_REJECTED");
+  assert.equal(room.state, stateBefore, "rejection must preserve the authoritative state object");
+  assert.equal(room.revision, revisionBefore, "rejection must not increment the revision");
+  assert.equal(room.actionLog.length, logLengthBefore, "rejection must not append an action log entry");
+  console.log("hardening_invalid_covering_tracks_selection_no_mutation passed");
 }
 
 function testTransformedKaiserStealthCommandAndProjectionAreRejected() {
@@ -1815,6 +1888,7 @@ async function main() {
   await testReconnectWithinGraceKeepsSeatAndClearsTimer();
   await testConcurrentSwitchRoleSerialization();
   testRejectedActionLogAndRevisionInvariants();
+  testInvalidCoveringTracksSelectionIsRejectedWithoutMutation();
   testTransformedKaiserStealthCommandAndProjectionAreRejected();
   testRateLimitWindowResets();
   testPayloadCapAllowsValidClientCommands();

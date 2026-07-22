@@ -1,6 +1,6 @@
 import type { Coord, PendingMove, PlayerView, UnitState } from "rules";
 import { getMongolChargeInfluenceCells } from "../../../../rules/src/movement/mongolCharge";
-import { ARTEMIS_MOON_INSIGHT_ID } from "../../rulesHints";
+import { ARTEMIS_MOON_INSIGHT_ID, JACK_SNARES_ID } from "../../rulesHints";
 import type { BoardPreview, TargetRef } from "./previewTypes";
 import { getDonMadnessRayCells } from "./donMadnessDirection";
 import {
@@ -451,6 +451,47 @@ export function buildPendingPreview(
         };
       }
       case "chargedImpulseTargetChoice": {
+        if (
+          context.abilityId === JACK_SNARES_ID &&
+          context.step === "coveringTracks"
+        ) {
+          const jackId = typeof context.unitId === "string" ? context.unitId : "";
+          const jack = sourceUnit(view, jackId);
+          const options = coordList(context.options);
+          const optionKeys = new Set(options.map(coordKey));
+          const selectedCenter = targetingCell && optionKeys.has(coordKey(targetingCell))
+            ? targetingCell
+            : null;
+          const affectedIds = selectedCenter
+            ? Object.values(view.units)
+                .filter(
+                  (unit) =>
+                    unit.isAlive &&
+                    !!unit.position &&
+                    chebyshevDistance(selectedCenter, unit.position) <= 1,
+                )
+                .map((unit) => unit.id)
+            : [];
+          return compactPreview([
+            {
+              kind: "multiStep",
+              step: "coveringTracks",
+              sourceCell: jack?.position ? { ...jack.position } : undefined,
+              cells: options,
+              cellKind: "validTarget",
+              labelKey: "preview.labels.affectedArea",
+            },
+            selectedCenter
+              ? {
+                  kind: "area",
+                  centerCell: { ...selectedCenter },
+                  areaCells: cellsInRadius(boardSize(view), selectedCenter, 1, true),
+                  affectedTargets: targetRefsFromIds(view, affectedIds),
+                  labelKey: "preview.labels.affectedArea",
+                }
+              : null,
+          ]);
+        }
         if (context.abilityId !== ARTEMIS_MOON_INSIGHT_ID) return null;
         const artemidaId = typeof context.unitId === "string" ? context.unitId : "";
         const artemida = sourceUnit(view, artemidaId);

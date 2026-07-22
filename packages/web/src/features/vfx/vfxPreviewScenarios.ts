@@ -306,6 +306,27 @@ export const VFX_PREVIEW_SCENARIOS: VfxPreviewScenario[] = [
     ],
   },
   {
+    id: "covering-tracks",
+    label: "Covering Tracks snare explosion",
+    group: "Area",
+    expectedEffectIds: ["snareExplosion"],
+    waitMs: 220,
+    events: [
+      {
+        type: "aoeResolved",
+        sourceUnitId: "preview-searcher",
+        abilityId: "jackRipperCoveringTracks",
+        center: { col: 3, row: 3 },
+        radius: 1,
+        affectedUnitIds: ["preview-hidden"],
+        damagedUnitIds: ["preview-hidden"],
+        revealedUnitIds: [],
+        damageByUnitId: { "preview-hidden": 1 },
+        rollsByUnitId: { "preview-hidden": 2 },
+      } as GameEvent,
+    ],
+  },
+  {
     id: "griffith-transformation",
     label: "Griffith to Femto",
     group: "Transform",

@@ -12,6 +12,23 @@ import type {
 import type { PendingMove } from "./shared";
 import type { UnitState } from "./unit";
 
+export interface JackTrapMarker {
+  id: string;
+  sourceUnitId: string;
+  owner: PlayerId;
+  position: Coord;
+  isRevealed: boolean;
+  trappedUnitId?: string;
+  triggeredTargetIds: string[];
+}
+
+export interface VisibleJackTrapMarker {
+  id: string;
+  sourceUnitId?: string;
+  position: Coord;
+  isRevealed: boolean;
+}
+
 export type ArenaEffectDurationUnit = "turn";
 
 export interface ArenaEffectState {
@@ -52,13 +69,8 @@ export interface GameState {
   stakeCounter: number;
   forestMarkers: ForestMarker[];
   forestMarker: ForestMarker | null;
-  jackTraps?: Array<{
-    sourceUnitId: string;
-    owner: PlayerId;
-    position: Coord;
-    isRevealed?: boolean;
-    trappedUnitId?: string;
-  }>;
+  jackTraps?: JackTrapMarker[];
+  jackTrapCounter?: number;
   turnOrder: string[];
   turnOrderIndex: number;
   placementOrder: string[];
@@ -124,6 +136,8 @@ export type PlayerView = Omit<
   | "pendingPapyrusBoneChoices"
   | "stakeMarkers"
   | "stakeCounter"
+  | "jackTraps"
+  | "jackTrapCounter"
 > & {
   knowledge: {
     [playerId in PlayerId]: { [unitId: string]: boolean };
@@ -133,6 +147,7 @@ export type PlayerView = Omit<
   pendingCombatQueueCount: number;
   pendingAoEPreview: AoEPreview | null;
   stakeMarkers: { position: Coord; isRevealed: boolean }[];
+  jackTraps: VisibleJackTrapMarker[];
   abilitiesByUnitId: Record<string, AbilityView[]>;
   legal?: LegalView;
   legalIntents?: LegalIntents;

@@ -45,7 +45,24 @@ function markerState(): GameState {
         isRevealed: true,
       },
     ],
-    jackTraps: [{ sourceUnitId: unit.id, owner: "P1", position: { col: 2, row: 3 } }],
+    jackTraps: [
+      {
+        id: "jack-snare-P1-1",
+        sourceUnitId: unit.id,
+        owner: "P1",
+        position: { col: 2, row: 3 },
+        isRevealed: false,
+        triggeredTargetIds: [],
+      },
+      {
+        id: "jack-snare-P1-2",
+        sourceUnitId: unit.id,
+        owner: "P1",
+        position: { col: 5, row: 6 },
+        isRevealed: true,
+        triggeredTargetIds: ["P2-target"],
+      },
+    ],
   };
 }
 
@@ -136,17 +153,28 @@ test("marker images cannot intercept board cell clicks", () => {
   );
 });
 
-test("Jack traps render for their owner but not in an opponent projection", () => {
+test("Jack snares use private gray and revealed red S badges without leaking hidden markers", () => {
   const ownerMarkup = renderBoard(makePlayerView(markerState(), "P1"), "P1");
-  assert.match(ownerMarkup, /data-board-marker="jack_trap"/);
+  assert.match(ownerMarkup, /data-board-marker="jack_snare_hidden"/);
+  assert.match(ownerMarkup, /data-snare-state="hidden"/);
+  assert.match(ownerMarkup, /stake-state-badge--hidden/);
+  assert.match(ownerMarkup, /data-board-marker="jack_snare_revealed"/);
+  assert.match(ownerMarkup, /data-snare-state="revealed"/);
+  assert.match(ownerMarkup, /stake-state-badge--revealed/);
   assert.match(ownerMarkup, /pointer-events-none/);
-  assert.match(ownerMarkup, /board-marker-icon--jack-trap/);
-  assert.ok(ownerMarkup.includes(getBoardMarkerAsset("jack_trap")));
-  assert.doesNotMatch(ownerMarkup, />T<\/div>/);
+  assert.match(ownerMarkup, /absolute left-1 top-1 z-30/);
+  assert.match(ownerMarkup, />S<\/div>/);
+  assert.match(
+    ownerMarkup,
+    /stake-state-badge pointer-events-none absolute left-1 top-6 z-30/,
+    "a co-located Vlad stake is offset below Jack's top-left snare badge",
+  );
 
   const opponentMarkup = renderBoard(makePlayerView(markerState(), "P2"), "P2");
-  assert.doesNotMatch(opponentMarkup, /data-board-marker="jack_trap"/);
-  assert.doesNotMatch(opponentMarkup, /board-marker-icon--jack-trap/);
+  assert.doesNotMatch(opponentMarkup, /data-board-marker="jack_snare_hidden"/);
+  assert.doesNotMatch(opponentMarkup, /data-snare-state="hidden"/);
+  assert.match(opponentMarkup, /data-board-marker="jack_snare_revealed"/);
+  assert.match(opponentMarkup, /data-snare-state="revealed"/);
 });
 
 test("Blue and Orange Bone render directly on visible board tokens", () => {

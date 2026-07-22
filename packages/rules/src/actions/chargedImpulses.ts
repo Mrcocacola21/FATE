@@ -193,10 +193,35 @@ export function resolveChargedImpulseTargetChoice(
       (option) => option.col === target.col && option.row === target.row
     )
   ) {
+    if (
+      abilityId === ABILITY_JACK_RIPPER_SNARES &&
+      pending.context.step === "coveringTracks"
+    ) {
+      return { state, events: [], rejectionReason: "RULES_REJECTED" };
+    }
     return { state, events: [] };
   }
 
   const baseState = clearPendingRoll(state);
+  if (
+    abilityId === ABILITY_JACK_RIPPER_SNARES &&
+    pending.context.step === "coveringTracks"
+  ) {
+    const placement = pending.context.placement as Coord | undefined;
+    if (!placement) return { state, events: [] };
+    return applyNewBatchAbility(
+      baseState,
+      unit,
+      {
+        type: "useAbility",
+        unitId: unit.id,
+        abilityId,
+        payload: { position: placement, explodePosition: target },
+      },
+      rng,
+      { startTurnImpulse: true },
+    ) ?? { state, events: [] };
+  }
   if (abilityId === ABILITY_ZORO_ONI_GIRI) {
     const step = pending.context.step === "destination" ? "destination" : "target";
     if (step === "target") {

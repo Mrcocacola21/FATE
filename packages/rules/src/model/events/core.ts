@@ -290,6 +290,7 @@ export type CoreGameEvent =
       revealedUnitIds: string[];
       damagedUnitIds: string[];
       damageByUnitId?: Record<string, number>;
+      rollsByUnitId?: Record<string, number>;
     }
   | {
       type: "moveOptionsGenerated";

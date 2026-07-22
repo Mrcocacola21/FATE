@@ -40,6 +40,8 @@ export function createEmptyGame(): GameState {
     rollCounter: 0,
     stakeMarkers: [],
     stakeCounter: 0,
+    jackTraps: [],
+    jackTrapCounter: 0,
     forestMarkers: [],
     forestMarker: null,
     turnOrder: [],
