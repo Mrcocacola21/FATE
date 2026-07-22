@@ -182,6 +182,7 @@ export function resolvePendingRollOnce(
     choice !== undefined
       ? choice
       : pending.kind === "berserkerDefenseChoice" ||
+        pending.kind === "tricksterAoE_berserkerDefenseChoice" ||
         pending.kind === "odinMuninnDefenseChoice" ||
         pending.kind === "asgoreBraveryDefenseChoice" ||
         pending.kind === "dora_berserkerDefenseChoice" ||

@@ -33,6 +33,21 @@ export function testOdinHpBonus() {
   console.log("odin_hp_bonus passed");
 }
 
+export function testOdinMuninnStartsFullyCharged() {
+  const { odin } = setupOdinState();
+
+  assert(
+    odin.charges[ABILITY_ODIN_MUNINN] === 6,
+    "Muninn should start the battle fully charged"
+  );
+  assert(
+    odin.charges[ABILITY_ODIN_SLEIPNIR] === 0,
+    "Muninn's initial charge must not affect Sleipnir"
+  );
+
+  console.log("odin_muninn_starts_fully_charged passed");
+}
+
 
 export function testOdinGungnirAutoHitOnAttackDouble() {
   let { state, odin } = setupOdinState();

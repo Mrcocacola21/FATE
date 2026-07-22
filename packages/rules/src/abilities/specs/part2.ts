@@ -61,6 +61,7 @@ export const ABILITY_SPECS_PART_2: Record<string, AbilitySpec> = {
       "At full 6 charges, after seeing a defense roll, can spend all charges to convert defense into auto-success.",
     maxCharges: 6,
     chargesPerUse: 6,
+    startsFull: true,
   },
   [ids.ABILITY_ODIN_SLEIPNIR]: {
     id: ids.ABILITY_ODIN_SLEIPNIR,

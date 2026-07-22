@@ -5,9 +5,22 @@ import { clearPendingRoll, requestRoll } from "../../../core";
 import { getPolkovodetsSource, maybeRequestIntimidate } from "../../../actions/heroes/vlad";
 import { addKaladinMoveLock } from "../../../actions/heroes/kaladin";
 import { addLokiChicken, addLokiMoveLock } from "../../../actions/heroes/loki";
-import { ABILITY_LOKI_LAUGHT } from "../../../abilities";
+import {
+  ABILITY_BERSERK_AUTO_DEFENSE,
+  ABILITY_LOKI_LAUGHT,
+} from "../../../abilities";
+import {
+  HERO_DUOLINGO_ID,
+  HERO_FEMTO_ID,
+  HERO_PAPYRUS_ID,
+} from "../../../heroes";
+import { hasMettatonBerserkerFeature } from "../../../mettaton";
 import type { IntimidateResume } from "../../../actions/types";
-import { evAoeResolved, evDamageBonusApplied } from "../../../core";
+import {
+  evAoeResolved,
+  evBerserkerDefenseChosen,
+  evDamageBonusApplied,
+} from "../../../core";
 import type { TricksterAoEContext } from "../../types";
 import { rollDice } from "../../utils/rollMath";
 
@@ -73,6 +86,32 @@ export function advanceTricksterAoEQueue(
         ...context,
         currentTargetIndex: idx,
       };
+      const attackerDice = Array.isArray(nextCtx.attackerDice)
+        ? nextCtx.attackerDice
+        : [];
+      const charges = target.charges?.[ABILITY_BERSERK_AUTO_DEFENSE] ?? 0;
+      const hasBerserkerDefense =
+        target.class === "berserker" ||
+        target.heroId === HERO_FEMTO_ID ||
+        (target.heroId === HERO_DUOLINGO_ID &&
+          target.duolingoBerserkerUnlocked) ||
+        (target.heroId === HERO_PAPYRUS_ID &&
+          target.papyrusUnbelieverActive) ||
+        hasMettatonBerserkerFeature(target);
+      if (
+        hasBerserkerDefense &&
+        charges === 6 &&
+        attackerDice.length >= 2
+      ) {
+        const requested = requestRoll(
+          baseState,
+          target.owner,
+          "tricksterAoE_berserkerDefenseChoice",
+          nextCtx,
+          target.id
+        );
+        return { state: requested.state, events: [...events, ...requested.events] };
+      }
       const requested = requestRoll(
         baseState,
         target.owner,
@@ -114,6 +153,15 @@ export function resolveTricksterAoEDefenderRoll(
   pending: PendingRoll,
   rng: RNG
 ): ApplyResult {
+  return resolveTricksterAoEDefense(state, pending, rng, false);
+}
+
+function resolveTricksterAoEDefense(
+  state: GameState,
+  pending: PendingRoll,
+  rng: RNG,
+  useBerserkAutoDefense: boolean
+): ApplyResult {
   const ctx = pending.context as unknown as TricksterAoEContext;
   const caster = state.units[ctx.casterId];
   if (!caster) {
@@ -141,7 +189,7 @@ export function resolveTricksterAoEDefenderRoll(
     return advanceTricksterAoEQueue(state, nextCtx, []);
   }
 
-  const defenderDice = rollDice(rng, 2);
+  const defenderDice = useBerserkAutoDefense ? [] : rollDice(rng, 2);
   const sourceId = getPolkovodetsSource(state, caster.id);
   const damageBonus = sourceId ? 1 : 0;
   const damageOverride =
@@ -161,6 +209,7 @@ export function resolveTricksterAoEDefenderRoll(
     damageOverride,
     ignoreBonuses,
     suppressGutsBerserkBonus,
+    defenderUseBerserkAutoDefense: useBerserkAutoDefense,
     attackerRollIsNew: idx === 0,
     rolls: {
       attackerDice,
@@ -293,4 +342,50 @@ export function resolveTricksterAoEDefenderRoll(
   return advanceTricksterAoEQueue(updatedState, nextCtx, updatedEvents);
 }
 
+export function resolveTricksterAoEBerserkerDefenseChoice(
+  state: GameState,
+  pending: PendingRoll,
+  choice: "auto" | "roll" | undefined,
+  rng: RNG,
+): ApplyResult {
+  const ctx = pending.context as unknown as TricksterAoEContext;
+  const targets = Array.isArray(ctx.targetsQueue) ? ctx.targetsQueue : [];
+  const idx = ctx.currentTargetIndex ?? 0;
+  const targetId = targets[idx];
+  const target = targetId ? state.units[targetId] : undefined;
 
+  if (!target || !target.isAlive) {
+    const nextCtx: TricksterAoEContext = {
+      ...ctx,
+      currentTargetIndex: idx + 1,
+    };
+    return advanceTricksterAoEQueue(state, nextCtx, []);
+  }
+
+  const canUseAuto = (target.charges?.[ABILITY_BERSERK_AUTO_DEFENSE] ?? 0) === 6;
+  if (choice !== "auto" || !canUseAuto) {
+    const requested = requestRoll(
+      clearPendingRoll(state),
+      target.owner,
+      "tricksterAoE_defenderRoll",
+      ctx,
+      target.id,
+    );
+    return {
+      state: requested.state,
+      events: [
+        evBerserkerDefenseChosen({ defenderId: target.id, choice: "roll" }),
+        ...requested.events,
+      ],
+    };
+  }
+
+  const resolved = resolveTricksterAoEDefense(state, pending, rng, true);
+  return {
+    state: resolved.state,
+    events: [
+      evBerserkerDefenseChosen({ defenderId: target.id, choice: "auto" }),
+      ...resolved.events,
+    ],
+  };
+}

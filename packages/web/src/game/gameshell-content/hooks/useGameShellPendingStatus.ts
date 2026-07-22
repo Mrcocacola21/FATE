@@ -143,6 +143,7 @@ export function useGameShellPendingStatus({
     : [];
   const isBerserkerDefenseChoice =
     pendingRoll?.kind === "berserkerDefenseChoice" ||
+    pendingRoll?.kind === "tricksterAoE_berserkerDefenseChoice" ||
     pendingRoll?.kind === "dora_berserkerDefenseChoice" ||
     pendingRoll?.kind === "jebeHailOfArrows_berserkerDefenseChoice" ||
     pendingRoll?.kind === "carpetStrike_berserkerDefenseChoice" ||
@@ -176,6 +177,7 @@ export function useGameShellPendingStatus({
       return (pendingRoll.context as { defenderId?: string }).defenderId;
     }
     if (
+      pendingRoll.kind === "tricksterAoE_berserkerDefenseChoice" ||
       pendingRoll.kind === "dora_berserkerDefenseChoice" ||
       pendingRoll.kind === "jebeHailOfArrows_berserkerDefenseChoice" ||
       pendingRoll.kind === "carpetStrike_berserkerDefenseChoice" ||

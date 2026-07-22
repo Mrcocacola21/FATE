@@ -47,6 +47,7 @@ export type RollKind =
   | "riderPathAttack_defenderRoll"
   | "tricksterAoE_attackerRoll"
   | "tricksterAoE_defenderRoll"
+  | "tricksterAoE_berserkerDefenseChoice"
   | "elCidTisona_attackerRoll"
   | "elCidTisona_defenderRoll"
   | "elCidKolada_attackerRoll"
@@ -149,6 +150,7 @@ export const ALL_ROLL_KINDS = [
   "riderPathAttack_defenderRoll",
   "tricksterAoE_attackerRoll",
   "tricksterAoE_defenderRoll",
+  "tricksterAoE_berserkerDefenseChoice",
   "elCidTisona_attackerRoll",
   "elCidTisona_defenderRoll",
   "elCidKolada_attackerRoll",

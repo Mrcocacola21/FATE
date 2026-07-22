@@ -303,6 +303,7 @@ import {
   testGutsBerserkEndTurnSelfDamage,
   testGutsBerserkMeleeBonusAndRangedNoBonus,
   testGutsBerserkMovementAndAoEAndIncomingCap,
+  testGutsBerserkAoEOffersAlliedBerserkerAutoDefense,
   testGutsBerserkAttackChoiceSingleTargetSpearmanRange,
   testGutsBerserkAttackChoiceSingleTargetAdjacentBonus,
   testGutsExitBerserkOnceAndNoReentry,
@@ -326,6 +327,7 @@ import {
 } from "./heroes/kaladin.test";
 import {
   testOdinHpBonus,
+  testOdinMuninnStartsFullyCharged,
   testOdinGungnirAutoHitOnAttackDouble,
   testOdinHuginnStealthVisibilityRadius,
   testOdinSleipnirGatingTeleportAndNoMoveSpend,
@@ -625,6 +627,7 @@ function main(): void {
   testGutsBerserkEndTurnSelfDamage();
   testGutsBerserkMeleeBonusAndRangedNoBonus();
   testGutsBerserkMovementAndAoEAndIncomingCap();
+  testGutsBerserkAoEOffersAlliedBerserkerAutoDefense();
   testGutsBerserkAttackChoiceSingleTargetSpearmanRange();
   testGutsBerserkAttackChoiceSingleTargetAdjacentBonus();
   testGutsExitBerserkOnceAndNoReentry();
@@ -642,6 +645,7 @@ function main(): void {
   testAsgoreSoulParadeBraveryAutoDefenseOneTime();
   testAsgoreSoulParadeIntegrityPerseveranceKindnessJustice();
   testOdinHpBonus();
+  testOdinMuninnStartsFullyCharged();
   testOdinGungnirAutoHitOnAttackDouble();
   testOdinHuginnStealthVisibilityRadius();
   testOdinSleipnirGatingTeleportAndNoMoveSpend();

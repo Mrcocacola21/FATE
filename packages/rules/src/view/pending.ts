@@ -4,6 +4,7 @@ import { canPlayerKnowUnitExactPosition } from "../visibility";
 const PENDING_COMBAT_QUEUE_KINDS = new Set<string>([
   "tricksterAoE_attackerRoll",
   "tricksterAoE_defenderRoll",
+  "tricksterAoE_berserkerDefenseChoice",
   "falseTrailExplosion_attackerRoll",
   "falseTrailExplosion_defenderRoll",
   "elCidTisona_attackerRoll",

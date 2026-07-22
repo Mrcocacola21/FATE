@@ -78,7 +78,16 @@ export function initUnitAbilities(unit: UnitState): UnitState {
   }
   if (unit.heroId === HERO_ODIN_ID) {
     updated = setCharges(updated, ids.ABILITY_ODIN_SLEIPNIR, 0);
-    updated = setCharges(updated, ids.ABILITY_ODIN_MUNINN, 0);
+    const muninnSpec = getAbilitySpec(ids.ABILITY_ODIN_MUNINN)!;
+    const muninnStartCharges =
+      muninnSpec.startsFull || muninnSpec.startsCharged
+        ? muninnSpec.maxCharges ?? 0
+        : 0;
+    updated = setCharges(
+      updated,
+      ids.ABILITY_ODIN_MUNINN,
+      muninnStartCharges
+    );
   }
   if (unit.heroId === HERO_LOKI_ID) {
     updated = setCharges(updated, ids.ABILITY_LOKI_LAUGHT, 0);

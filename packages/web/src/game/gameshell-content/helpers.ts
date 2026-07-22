@@ -350,6 +350,7 @@ const PENDING_ROLL_LABELS_UK: Record<string, string> = {
   riderPathAttack_defenderRoll: "Захист від атаки вершника на шляху",
   tricksterAoE_attackerRoll: "Кидок атаки області трикстера",
   tricksterAoE_defenderRoll: "Захист від області трикстера",
+  tricksterAoE_berserkerDefenseChoice: "Захист берсерка від атаки області",
   elCidTisona_attackerRoll: "Кидок атаки Тісони",
   elCidTisona_defenderRoll: "Захист від Тісони",
   elCidKolada_attackerRoll: "Кидок атаки Колади",
@@ -464,6 +465,8 @@ export function getPendingRollLabel(kind?: string | null, language: "en" | "uk" 
       return "Trickster AoE attack roll";
     case "tricksterAoE_defenderRoll":
       return "Trickster AoE defense roll";
+    case "tricksterAoE_berserkerDefenseChoice":
+      return "AoE berserker defense choice";
     case "elCidTisona_attackerRoll":
       return "Tisona attack roll";
     case "elCidTisona_defenderRoll":

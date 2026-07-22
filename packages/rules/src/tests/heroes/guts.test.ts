@@ -1,4 +1,5 @@
 import {
+  ABILITY_BERSERK_AUTO_DEFENSE,
   ABILITY_GUTS_ARBALET,
   ABILITY_GUTS_BERSERK_MODE,
   ABILITY_GUTS_CANNON,
@@ -598,6 +599,99 @@ export function testGutsBerserkMovementAndAoEAndIncomingCap() {
   console.log("guts_berserk_movement_aoe_and_incoming_cap passed");
 }
 
+
+export function testGutsBerserkAoEOffersAlliedBerserkerAutoDefense() {
+  let { state, guts } = setupGutsState();
+  const ally = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.class === "spearman",
+  )!;
+  const enemy = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "rider",
+  )!;
+
+  state = setUnit(state, guts.id, {
+    position: { col: 4, row: 4 },
+    gutsBerserkModeActive: true,
+  });
+  state = setUnit(state, ally.id, {
+    class: "berserker",
+    position: { col: 4, row: 3 },
+    charges: {
+      ...ally.charges,
+      [ABILITY_BERSERK_AUTO_DEFENSE]: 6,
+    },
+  });
+  state = setUnit(state, enemy.id, { position: { col: 4, row: 5 } });
+  state = toBattleState(state, "P1", guts.id);
+  state = initKnowledgeForOwners(state);
+
+  const opened = applyAction(
+    state,
+    { type: "attack", attackerId: guts.id, defenderId: enemy.id } as any,
+    makeRngSequence([]),
+  );
+  const choseAoe = applyAction(
+    opened.state,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: opened.state.pendingRoll!.id,
+      player: "P1",
+      choice: {
+        type: "gutsBerserkAttackMode",
+        mode: "aoe",
+        targetId: enemy.id,
+      },
+    } as any,
+    makeRngSequence([]),
+  );
+  const attackerRolled = applyAction(
+    choseAoe.state,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: choseAoe.state.pendingRoll!.id,
+      player: "P1",
+    } as any,
+    makeRngSequence([0.99, 0.99]),
+  );
+
+  assert(
+    attackerRolled.state.pendingRoll?.kind === "tricksterAoE_berserkerDefenseChoice",
+    "Berserk AoE should offer auto-defense to an allied berserker caught in the area",
+  );
+  assert(
+    attackerRolled.state.pendingRoll?.player === "P1",
+    "the allied berserker owner should control the auto-defense choice",
+  );
+
+  const choseAuto = applyAction(
+    attackerRolled.state,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: attackerRolled.state.pendingRoll!.id,
+      player: "P1",
+      choice: "auto",
+    } as any,
+    makeRngSequence([]),
+  );
+  const allyAttack = choseAuto.events.find(
+    (event) => event.type === "attackResolved" && event.defenderId === ally.id,
+  );
+  assert(
+    allyAttack?.type === "attackResolved" && !allyAttack.hit,
+    "allied berserker auto-defense should dodge the AoE hit",
+  );
+  assert(
+    choseAuto.state.units[ally.id].charges[ABILITY_BERSERK_AUTO_DEFENSE] === 0,
+    "allied berserker auto-defense should spend all six charges",
+  );
+  assert(
+    choseAuto.state.pendingRoll?.kind === "tricksterAoE_defenderRoll" &&
+      choseAuto.state.pendingRoll.player === "P2",
+    "the AoE queue should continue to the next defender after auto-defense",
+  );
+
+  console.log("guts_berserk_aoe_allied_berserker_auto_defense passed");
+}
 
 export function testGutsBerserkAttackChoiceSingleTargetSpearmanRange() {
   const rng = makeRngSequence([

@@ -13,6 +13,7 @@ import {
 } from "../resolvers/heroes/resolveForestRoll";
 import {
   resolveTricksterAoEAttackerRoll,
+  resolveTricksterAoEBerserkerDefenseChoice,
   resolveTricksterAoEDefenderRoll,
 } from "../resolvers/heroes/resolveTricksterRoll";
 import {
@@ -108,6 +109,7 @@ export const HERO_PENDING_ROLL_KINDS = [
   "carpetStrike_berserkerDefenseChoice",
   "tricksterAoE_attackerRoll",
   "tricksterAoE_defenderRoll",
+  "tricksterAoE_berserkerDefenseChoice",
   "elCidTisona_attackerRoll",
   "elCidTisona_defenderRoll",
   "elCidKolada_attackerRoll",
@@ -196,6 +198,13 @@ export function resolveHeroPendingRollCase(
       return resolveTricksterAoEAttackerRoll(state, pending, rng);
     case "tricksterAoE_defenderRoll":
       return resolveTricksterAoEDefenderRoll(state, pending, rng);
+    case "tricksterAoE_berserkerDefenseChoice":
+      return resolveTricksterAoEBerserkerDefenseChoice(
+        state,
+        pending,
+        autoRollChoice,
+        rng
+      );
     case "elCidTisona_attackerRoll":
       return resolveElCidTisonaAttackerRoll(state, pending, rng);
     case "elCidTisona_defenderRoll":
