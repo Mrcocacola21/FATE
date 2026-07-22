@@ -35,6 +35,7 @@ interface BattleSectionProps {
   searchMoveDisabled: boolean;
   searchActionDisabled: boolean;
   stealthDisabled: boolean;
+  showStealthAction: boolean;
   searchMoveReason?: string;
   searchActionReason?: string;
   canAct: boolean;
@@ -96,6 +97,7 @@ export const BattleSection: FC<BattleSectionProps> = ({
   searchMoveDisabled,
   searchActionDisabled,
   stealthDisabled,
+  showStealthAction,
   searchMoveReason,
   searchActionReason,
   canAct,
@@ -168,6 +170,7 @@ export const BattleSection: FC<BattleSectionProps> = ({
           searchMoveDisabled={searchMoveDisabled}
           searchActionDisabled={searchActionDisabled}
           stealthDisabled={stealthDisabled}
+          showStealthAction={showStealthAction}
           attackDisabledReason={attackDisabledReason}
           searchMoveReason={searchMoveReason}
           searchActionReason={searchActionReason}

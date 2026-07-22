@@ -170,7 +170,8 @@ export const BattleAbilityActions: FC<BattleAbilityActionsProps> = ({
           0,
           Math.min(
             selectedUnit.charges?.kanekiRcCells ?? 0,
-            getMaxHp(selectedUnit.class, selectedUnit.heroId) - selectedUnit.hp,
+            getMaxHp(selectedUnit.class, selectedUnit.heroId, selectedUnit.transformed) -
+              selectedUnit.hp,
           ),
         )
       : 0;

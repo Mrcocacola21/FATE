@@ -1,11 +1,15 @@
 import type { UnitState } from "../model";
 import {
+  HERO_GRAND_KAISER_ID,
   HERO_HASSAN_ID,
   HERO_LECHY_ID,
   HERO_METTATON_ID,
 } from "../heroes";
 
 export function getStealthSuccessMinRoll(unit: UnitState): number | null {
+  if (unit.heroId === HERO_GRAND_KAISER_ID && unit.transformed) {
+    return null;
+  }
   if (unit.heroId === HERO_METTATON_ID) {
     return null;
   }

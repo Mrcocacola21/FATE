@@ -86,6 +86,7 @@ export const RightPanelContent: FC<RightPanelProps> = (props) => {
           searchMoveDisabled={vm.searchMoveDisabled}
           searchActionDisabled={vm.searchActionDisabled}
           stealthDisabled={vm.stealthDisabled}
+          showStealthAction={vm.showStealthAction}
           searchMoveReason={vm.legalIntents?.searchMoveReason}
           searchActionReason={vm.legalIntents?.searchActionReason}
           canAct={vm.canAct}

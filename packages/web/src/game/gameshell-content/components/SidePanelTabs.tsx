@@ -77,7 +77,7 @@ function RosterList({
         <div className="mt-3 space-y-2">
           {units.map((unit) => {
             const tokenAsset = getUnitTokenAsset(unit);
-            const maxHp = getMaxHp(unit.class as UnitClass, unit.heroId);
+            const maxHp = getMaxHp(unit.class as UnitClass, unit.heroId, unit.transformed);
             const selected = selectedUnitId === unit.id;
             const active = activeUnitId === unit.id;
             const heroName = getUnitFigureDisplayName(unit, { language, t });
@@ -238,6 +238,7 @@ function ActionTab({
               searchMoveDisabled={panelVm.searchMoveDisabled}
               searchActionDisabled={panelVm.searchActionDisabled}
               stealthDisabled={panelVm.stealthDisabled}
+              showStealthAction={panelVm.showStealthAction}
               attackDisabledReason={panelVm.attackDisabledReason}
               searchMoveReason={panelVm.legalIntents?.searchMoveReason}
               searchActionReason={panelVm.legalIntents?.searchActionReason}

@@ -22,6 +22,7 @@ export const KAISER_BUNKER_ID = "kaiserBunker";
 export const KAISER_DORA_ID = "kaiserDora";
 export const KAISER_CARPET_STRIKE_ID = "kaiserCarpetStrike";
 export const KAISER_ENGINEERING_MIRACLE_ID = "kaiserEngineeringMiracle";
+export const GRAND_KAISER_ID = "grand-kaiser";
 export const VLAD_TEPES_ID = "vladTepes";
 export const EL_CID_COMPEADOR_ID = "elCidCompeador";
 export const GENGHIS_KHAN_ID = "genghisKhan";
@@ -148,8 +149,11 @@ const MAX_HP_BY_CLASS: Record<UnitClass, number> = {
   berserker: 8,
 };
 
-export function getMaxHp(unitClass: UnitClass, heroId?: string): number {
+export function getMaxHp(unitClass: UnitClass, heroId?: string, transformed = false): number {
   let base = MAX_HP_BY_CLASS[unitClass] ?? 1;
+  if (heroId === GRAND_KAISER_ID && transformed) {
+    base = MAX_HP_BY_CLASS.berserker;
+  }
   if (heroId === VLAD_TEPES_ID) {
     base += 2;
   }

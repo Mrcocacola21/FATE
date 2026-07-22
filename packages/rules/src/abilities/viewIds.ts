@@ -53,8 +53,10 @@ export function collectAbilityIdsForUnit(unit: UnitState): string[] {
     abilityIds.push(ids.ABILITY_TRICKSTER_AOE);
   }
   if (unit.heroId === HERO_GRAND_KAISER_ID) {
+    if (!unit.transformed) {
+      abilityIds.push(ids.ABILITY_KAISER_BUNKER);
+    }
     abilityIds.push(
-      ids.ABILITY_KAISER_BUNKER,
       ids.ABILITY_KAISER_DORA,
       ids.ABILITY_KAISER_CARPET_STRIKE,
       ids.ABILITY_KAISER_ENGINEERING_MIRACLE

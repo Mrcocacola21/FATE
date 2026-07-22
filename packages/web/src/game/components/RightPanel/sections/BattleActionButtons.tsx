@@ -11,6 +11,7 @@ interface BattleActionButtonsProps {
   searchMoveDisabled: boolean;
   searchActionDisabled: boolean;
   stealthDisabled: boolean;
+  showStealthAction?: boolean;
   attackDisabledReason?: string;
   searchMoveReason?: string;
   searchActionReason?: string;
@@ -30,6 +31,7 @@ export const BattleActionButtons: FC<BattleActionButtonsProps> = ({
   searchMoveDisabled,
   searchActionDisabled,
   stealthDisabled,
+  showStealthAction = true,
   attackDisabledReason,
   searchMoveReason,
   searchActionReason,
@@ -153,22 +155,27 @@ export const BattleActionButtons: FC<BattleActionButtonsProps> = ({
           </span>
         ) : null}
       </button>
-      <button
-        type="button"
-        className={`min-h-11 rounded-lg border px-2.5 py-2 text-left text-xs font-bold transition focus-visible:ring-2 focus-visible:ring-violet-500/25 ${
-          stealthBlocked
-            ? "border-slate-200 bg-slate-100 text-slate-400 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-500"
-            : "border-violet-200 bg-violet-50 text-violet-700 hover:border-violet-300 hover:bg-violet-100 dark:border-violet-900/70 dark:bg-violet-950/30 dark:text-violet-200 dark:hover:border-violet-800 dark:hover:bg-violet-950/50"
-        }`}
-        onClick={onStealthClick}
-        disabled={stealthBlocked}
-        title={stealthReason}
-      >
-        <span className="block">{t("game.enterStealth")}</span>
-        {stealthReason ? (
-          <span className="mt-0.5 block text-[10px] font-semibold opacity-80">{stealthReason}</span>
-        ) : null}
-      </button>
+      {showStealthAction ? (
+        <button
+          type="button"
+          data-testid="enter-stealth-action"
+          className={`min-h-11 rounded-lg border px-2.5 py-2 text-left text-xs font-bold transition focus-visible:ring-2 focus-visible:ring-violet-500/25 ${
+            stealthBlocked
+              ? "border-slate-200 bg-slate-100 text-slate-400 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-500"
+              : "border-violet-200 bg-violet-50 text-violet-700 hover:border-violet-300 hover:bg-violet-100 dark:border-violet-900/70 dark:bg-violet-950/30 dark:text-violet-200 dark:hover:border-violet-800 dark:hover:bg-violet-950/50"
+          }`}
+          onClick={onStealthClick}
+          disabled={stealthBlocked}
+          title={stealthReason}
+        >
+          <span className="block">{t("game.enterStealth")}</span>
+          {stealthReason ? (
+            <span className="mt-0.5 block text-[10px] font-semibold opacity-80">
+              {stealthReason}
+            </span>
+          ) : null}
+        </button>
+      ) : null}
     </>
   );
 };

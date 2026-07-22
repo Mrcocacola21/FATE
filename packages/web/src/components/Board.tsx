@@ -976,7 +976,11 @@ export const Board: FC<BoardProps> = ({
                   current={
                     visualResolution.visualHpByUnitId[unit.id] ?? renderedUnits[unit.id]?.hp ?? 0
                   }
-                  max={getMaxHp(unit.class as UnitClass, renderedUnits[unit.id]?.heroId)}
+                  max={getMaxHp(
+                    unit.class as UnitClass,
+                    renderedUnits[unit.id]?.heroId,
+                    renderedUnits[unit.id]?.transformed,
+                  )}
                   showText={playerId ? unit.owner === playerId : false}
                   className="w-full"
                 />

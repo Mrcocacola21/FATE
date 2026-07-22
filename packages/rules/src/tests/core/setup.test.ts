@@ -17,6 +17,7 @@ import {
   type UnitState,
 } from "../helpers/testUtils";
 import {
+  ABILITY_KAISER_BUNKER,
   getAbilityViewsForUnit,
   HERO_REGISTRY_LIST,
 } from "../../index";
@@ -303,7 +304,15 @@ export function testBattleAbilityViewsCoverHeroRegistryMetadata() {
     const viewIds = new Set(getAbilityViewsForUnit(state, unit.id).map((ability) => ability.id));
     const missing = hero.abilities
       .map((ability) => ability.id)
-      .filter((abilityId) => !viewIds.has(abilityId));
+      .filter((abilityId) => !viewIds.has(abilityId))
+      .filter(
+        (abilityId) =>
+          !(
+            hero.id === HERO_GRAND_KAISER_ID &&
+            unit.transformed &&
+            abilityId === ABILITY_KAISER_BUNKER
+          )
+      );
 
     assert(
       missing.length === 0,

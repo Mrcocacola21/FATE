@@ -4,6 +4,8 @@ import {
   CHIKATILO_ID,
   FALSE_TRAIL_TOKEN_ID,
   FOREST_AURA_RADIUS,
+  GRAND_KAISER_ID,
+  KAISER_BUNKER_ID,
   LECHY_ID,
   METTATON_ID,
   LOKI_LAUGHT_ID,
@@ -58,6 +60,8 @@ export function buildRightPanelViewModel(params: RightPanelProps, t: Translate) 
   const selectedHeroName = selectedUnit
     ? getUnitFigureDisplayName(selectedUnit, { language: getLanguage(), t })
     : null;
+  const transformedKaiser =
+    selectedUnit?.heroId === GRAND_KAISER_ID && selectedUnit.transformed === true;
   const forestMarkers =
     Array.isArray(view.forestMarkers) && view.forestMarkers.length > 0
       ? view.forestMarkers
@@ -84,7 +88,11 @@ export function buildRightPanelViewModel(params: RightPanelProps, t: Translate) 
     ? (view.legal?.attackTargetsByUnitId[selectedUnit.id] ?? [])
     : [];
   const selectedLegalMoves = selectedUnit ? (view.legal?.movesByUnitId[selectedUnit.id] ?? []) : [];
-  const abilityViews = selectedUnit ? (view.abilitiesByUnitId?.[selectedUnit.id] ?? []) : [];
+  const abilityViews = selectedUnit
+    ? (view.abilitiesByUnitId?.[selectedUnit.id] ?? []).filter(
+        (ability) => !(transformedKaiser && ability.id === KAISER_BUNKER_ID),
+      )
+    : [];
   const actionableAbilities = abilityViews.filter(isActionableAbility);
   const moveModeOptions =
     !pendingRoll && moveOptions && selectedUnit && moveOptions.unitId === selectedUnit.id
@@ -117,12 +125,6 @@ export function buildRightPanelViewModel(params: RightPanelProps, t: Translate) 
   const economy = selectedUnit?.turn ?? DEFAULT_ECONOMY;
   const legalIntents = view.legalIntents;
 
-  const canStealth =
-    selectedUnit?.heroId !== METTATON_ID &&
-    (selectedUnit?.class === "assassin" ||
-      selectedUnit?.class === "archer" ||
-      selectedUnit?.heroId === LECHY_ID ||
-      !!selectedUnit?.asgorePatienceStealthActive);
   const selectedMettatonRating =
     selectedUnit?.heroId === METTATON_ID ? Math.max(0, selectedUnit.mettatonRating ?? 0) : null;
   const stormRangedAttackBlocked = !!(
@@ -138,7 +140,7 @@ export function buildRightPanelViewModel(params: RightPanelProps, t: Translate) 
   const moveDisabled = !canAct || !legalIntents?.canMove;
   const attackDisabled =
     !canAct || economy.attackUsed || economy.actionUsed || stormRangedAttackBlocked;
-  const stealthDisabled = !canAct || economy.stealthUsed || !canStealth;
+  const stealthDisabled = !canAct || !legalIntents?.canEnterStealth;
   const searchMoveDisabled = !canAct || !legalIntents?.canSearchMove;
   const searchActionDisabled = !canAct || !legalIntents?.canSearchAction;
 
@@ -242,6 +244,7 @@ export function buildRightPanelViewModel(params: RightPanelProps, t: Translate) 
     moveDisabled,
     attackDisabled,
     stealthDisabled,
+    showStealthAction: !transformedKaiser,
     searchMoveDisabled,
     searchActionDisabled,
     moveRoll,

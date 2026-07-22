@@ -5,7 +5,12 @@ import {
   getUnitVisualVariant,
   getUnitVisualVariantLabelKey,
 } from "../../../../assets/registry";
-import { EL_CID_KOLADA_ID, getMaxHp, KAISER_DORA_ID } from "../../../../rulesHints";
+import {
+  EL_CID_KOLADA_ID,
+  GRAND_KAISER_ID,
+  getMaxHp,
+  KAISER_DORA_ID,
+} from "../../../../rulesHints";
 import { classBadge, formatChargeLabel, getAbilityChargeState } from "../rightPanelHelpers";
 import type { ForestMarkerView, TurnEconomyState } from "../types";
 import { useI18n } from "../../../../i18n";
@@ -397,11 +402,20 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
     );
   }
 
-  const badge = classBadge(selectedUnit.class);
+  const transformedKaiser =
+    selectedUnit.heroId === GRAND_KAISER_ID && selectedUnit.transformed === true;
+  const badge = transformedKaiser ? { label: "Rd+Be" } : classBadge(selectedUnit.class);
+  const classLabel = transformedKaiser
+    ? `${getClassLabel("rider", t)} + ${getClassLabel("berserker", t)}`
+    : getClassLabel(selectedUnit.class, t);
   const tokenAsset = getUnitTokenAsset(selectedUnit);
   const visualVariant = getUnitVisualVariant(selectedUnit);
   const visualVariantLabelKey = getUnitVisualVariantLabelKey(visualVariant);
-  const maxHp = getMaxHp(selectedUnit.class as UnitClass, selectedUnit.heroId);
+  const maxHp = getMaxHp(
+    selectedUnit.class as UnitClass,
+    selectedUnit.heroId,
+    selectedUnit.transformed,
+  );
   const actionSummaries = getUnitDetailActionBars({
     unit: selectedUnit,
     abilityViews,
@@ -438,7 +452,7 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
               </Badge>
             </div>
             <div className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-              {t("game.class", { class: getClassLabel(selectedUnit.class, t) })}
+              {t("game.class", { class: classLabel })}
             </div>
             <div className="mt-3 flex items-center gap-2">
               <div className="h-3 flex-1 overflow-hidden rounded-full border border-black/10 bg-stone-200 shadow-inner dark:border-white/10 dark:bg-stone-900">

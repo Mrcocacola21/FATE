@@ -152,6 +152,143 @@ function makeView(unit: UnitState): PlayerView {
   } as PlayerView;
 }
 
+function makeRightPanelProps(view: PlayerView, selectedUnitId: string) {
+  return {
+    view,
+    role: "P1" as const,
+    selectedUnitId,
+    actionMode: null,
+    targetingMode: null,
+    placeUnitId: null,
+    moveOptions: null,
+    joined: true,
+    pendingRoll: false,
+    onSelectUnit: () => undefined,
+    onSetActionMode: () => undefined,
+    onSetPlaceUnit: () => undefined,
+    onMoveRequest: () => undefined,
+    onSendAction: () => undefined,
+    onHoverAbility: () => undefined,
+    onHoverActionMode: () => undefined,
+    papyrusLineAxis: "row" as const,
+    onSetPapyrusLineAxis: () => undefined,
+  };
+}
+
+function renderPrimaryActions(showStealthAction: boolean) {
+  return renderToStaticMarkup(
+    <BattleActionButtons
+      actionMode={null}
+      targetingActive={false}
+      moveDisabled={false}
+      attackDisabled={false}
+      searchMoveDisabled={false}
+      searchActionDisabled={false}
+      stealthDisabled={false}
+      showStealthAction={showStealthAction}
+      onMoveClick={() => undefined}
+      onAttackClick={() => undefined}
+      onSearchMoveClick={() => undefined}
+      onSearchActionClick={() => undefined}
+      onStealthClick={() => undefined}
+      onModePreview={() => undefined}
+    />,
+  );
+}
+
+test("Grand Kaiser Action Menu loses stealth and Bunker after transformation", () => {
+  setLanguage("en", { setItem: () => undefined });
+  const baseKaiser = makeUnit({
+    id: "P1-grand-kaiser-stealth",
+    heroId: "grand-kaiser",
+    class: "archer",
+    bunker: { active: false, ownTurnsInBunker: 0 },
+  });
+  const bunker = makeAbility({
+    id: "kaiserBunker",
+    name: "Bunker",
+    kind: "passive",
+    slot: "none",
+    chargeRequired: undefined,
+    maxCharges: undefined,
+    currentCharges: undefined,
+  });
+  const beforeView = {
+    ...makeView(baseKaiser),
+    abilitiesByUnitId: { [baseKaiser.id]: [bunker] },
+  };
+  const beforeVm = buildRightPanelViewModel(
+    makeRightPanelProps(beforeView, baseKaiser.id),
+    translate,
+  );
+
+  assert.equal(beforeVm.showStealthAction, true);
+  assert.match(renderPrimaryActions(beforeVm.showStealthAction), /Enter Stealth/);
+  assert.equal(beforeVm.abilityViews.some((ability) => ability.id === "kaiserBunker"), true);
+
+  const transformedKaiser = {
+    ...baseKaiser,
+    transformed: true,
+    isStealthed: false,
+    stealthTurnsLeft: 0,
+  };
+  const transformedView = {
+    ...makeView(transformedKaiser),
+    abilitiesByUnitId: { [transformedKaiser.id]: [bunker] },
+    legalIntents: {
+      ...makeView(transformedKaiser).legalIntents!,
+      canEnterStealth: false,
+    },
+  };
+  const transformedVm = buildRightPanelViewModel(
+    makeRightPanelProps(transformedView, transformedKaiser.id),
+    translate,
+  );
+  const transformedActions = renderPrimaryActions(transformedVm.showStealthAction);
+  const transformedResources = renderToStaticMarkup(
+    <CoreResourceStrip unit={transformedKaiser} economy={transformedKaiser.turn} />,
+  );
+  const transformedHeader = renderToStaticMarkup(
+    <SelectedUnitHeader unit={transformedKaiser} heroName="Grand Kaiser" />,
+  );
+  const transformedSummary = getUnitDetailActionBars({
+    unit: transformedKaiser,
+    abilityViews: transformedVm.abilityViews,
+    view: transformedView,
+    canAct: true,
+    pendingRoll: false,
+  }).find((summary) => summary.kind === "stealth") as UnitStealthSummary;
+
+  assert.equal(transformedVm.stealthDisabled, true);
+  assert.equal(transformedVm.showStealthAction, false);
+  assert.doesNotMatch(transformedActions, /Enter Stealth/);
+  assert.doesNotMatch(transformedActions, /data-testid="enter-stealth-action"/);
+  assert.match(transformedResources, /No stealth/);
+  assert.match(transformedHeader, /Rider \+ Berserker/);
+  assert.doesNotMatch(transformedHeader, />Archer</);
+  assert.equal(transformedSummary.state, "not_applicable");
+  assert.equal(transformedSummary.threshold, null);
+  assert.equal(
+    transformedVm.abilityViews.some((ability) => ability.id === "kaiserBunker"),
+    false,
+    "stale Bunker projection must not render as usable after transformation",
+  );
+  assert.equal(
+    renderToStaticMarkup(
+      <PassiveImpulseInfo unit={transformedKaiser} abilities={transformedVm.abilityViews} />,
+    ),
+    "",
+  );
+});
+
+test("shared mobile and desktop primary actions omit transformed Kaiser stealth", () => {
+  setLanguage("en", { setItem: () => undefined });
+  const sharedActionMarkup = renderPrimaryActions(false);
+  assert.doesNotMatch(sharedActionMarkup, /Enter Stealth/);
+  assert.match(sharedActionMarkup, /Move/);
+  assert.match(sharedActionMarkup, /Attack/);
+});
+
 test("unit detail summaries expose Action, Move, and Stealth without a main Attack bar", () => {
   const unit = makeUnit();
   const summaries = getUnitDetailActionBars({

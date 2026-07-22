@@ -83,7 +83,7 @@ export function getUnitMovementClasses(unit: UnitState): UnitClass[] {
     return uniqueModes([unit.class, "spearman"]);
   }
   if (unit.heroId === HERO_GRAND_KAISER_ID && unit.transformed) {
-    return ["archer", "rider", "berserker"];
+    return ["rider", "berserker"];
   }
   return [unit.class];
 }

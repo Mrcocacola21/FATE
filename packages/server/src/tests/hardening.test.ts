@@ -4,6 +4,7 @@ import { mock } from "node:test";
 import {
   ABILITY_CHIKATILO_ASSASSIN_MARK,
   ABILITY_CHIKATILO_DECOY,
+  ABILITY_KAISER_BUNKER,
   ABILITY_ARTEMIDA_SILVER_CRESCENT,
   ABILITY_HASSAN_ASSASIN_ORDER,
   ABILITY_LOKI_LAUGHT,
@@ -19,6 +20,7 @@ import {
   HERO_KANEKI_ID,
   HERO_HASSAN_ID,
   HERO_DUOLINGO_ID,
+  HERO_GRAND_KAISER_ID,
   HERO_PAPYRUS_ID,
   HERO_RIVER_PERSON_ID,
   makePlayerView,
@@ -351,6 +353,73 @@ function testRejectedActionLogAndRevisionInvariants() {
     "rejected action after accepted one must not append log"
   );
   console.log("hardening_rejected_action_log_invariants passed");
+}
+
+function testTransformedKaiserStealthCommandAndProjectionAreRejected() {
+  const room = createGameRoomWithId(`hardening-kaiser-stealth-${randomUUID()}`, {
+    hostSeat: "P1",
+    hostConnId: `conn-${randomUUID()}`,
+  });
+  let state = createEmptyGame();
+  state = attachArmy(
+    state,
+    createDefaultArmy("P1", { archer: HERO_GRAND_KAISER_ID }),
+  );
+  state = attachArmy(state, createDefaultArmy("P2"));
+  const kaiser = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.heroId === HERO_GRAND_KAISER_ID,
+  );
+  assert(kaiser, "Grand Kaiser fixture should exist");
+
+  state = setUnit(state, kaiser.id, {
+    position: { col: 4, row: 4 },
+    transformed: true,
+    isStealthed: false,
+    stealthTurnsLeft: 0,
+    bunker: { active: false, ownTurnsInBunker: 0 },
+    turn: makeEmptyTurnEconomy(),
+  });
+  room.state = {
+    ...state,
+    phase: "battle",
+    currentPlayer: "P1",
+    activeUnitId: kaiser.id,
+    pendingRoll: null,
+  };
+
+  const projected = makePlayerView(room.state, "P1");
+  assert.equal(projected.legalIntents?.canEnterStealth, false);
+  assert.equal(
+    projected.abilitiesByUnitId[kaiser.id]?.some(
+      (ability) => ability.id === ABILITY_KAISER_BUNKER,
+    ),
+    false,
+    "transformed projection must omit the lost Bunker passive",
+  );
+
+  const stateBefore = room.state;
+  const turnBefore = room.state.units[kaiser.id].turn;
+  const revisionBefore = room.revision;
+  const logLengthBefore = room.actionLog.length;
+  const rejectedCommand = applyGameAction(
+    room,
+    { type: "enterStealth", unitId: kaiser.id },
+    "P1",
+  );
+
+  assert.equal(rejectedCommand.ok, false);
+  if (!rejectedCommand.ok) {
+    assert.equal(
+      rejectedCommand.message,
+      "Grand Kaiser cannot enter stealth after transformation.",
+    );
+  }
+  assert.equal(room.state, stateBefore, "rejected stealth must preserve authoritative state");
+  assert.equal(room.state.units[kaiser.id].turn, turnBefore, "no slot may be spent");
+  assert.equal(room.revision, revisionBefore, "rejection must not advance revision");
+  assert.equal(room.actionLog.length, logLengthBefore, "rejection must not append a log entry");
+
+  console.log("hardening_transformed_kaiser_stealth_rejected passed");
 }
 
 function testRateLimitWindowResets() {
@@ -1670,6 +1739,7 @@ async function main() {
   await testReconnectWithinGraceKeepsSeatAndClearsTimer();
   await testConcurrentSwitchRoleSerialization();
   testRejectedActionLogAndRevisionInvariants();
+  testTransformedKaiserStealthCommandAndProjectionAreRejected();
   testRateLimitWindowResets();
   testPayloadCapAllowsValidClientCommands();
   testGroznyTyrantPendingChoicePayloadsAccepted();

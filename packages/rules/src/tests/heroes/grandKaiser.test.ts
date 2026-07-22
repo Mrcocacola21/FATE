@@ -24,7 +24,10 @@ import {
   toBattleState,
 } from "../helpers/testUtils";
 import {
+  ABILITY_KAISER_BUNKER,
   ABILITY_DON_KIHOTE_MADNESS,
+  getStealthSuccessMinRoll,
+  getUnitMovementClasses,
   HERO_DON_KIHOTE_ID,
 } from "../..";
 import { applyNewBatchPostAction } from "../../actions/heroes/newBatchPost";
@@ -65,6 +68,76 @@ export function testKaiserBunkerVisibleAndDamageClampedTo1() {
   );
 
   console.log("kaiser_bunker_visible_and_damage_clamped_to_1 passed");
+}
+
+export function testTransformedKaiserHasNoStealthOrBunkerActions() {
+  const rng = new SeededRNG(91234);
+  let { state, kaiser } = setupKaiserState();
+
+  state = setUnit(state, kaiser.id, {
+    position: { col: 4, row: 4 },
+  });
+  state = toBattleState(state, "P1", kaiser.id);
+
+  const beforeView = makePlayerView(state, "P1");
+  assert(
+    beforeView.legalIntents?.canEnterStealth === true,
+    "base Grand Kaiser should expose the current bunker-entry stealth action"
+  );
+  assert(
+    getStealthSuccessMinRoll(state.units[kaiser.id]) === 6,
+    "base Grand Kaiser should retain Archer stealth metadata before transformation"
+  );
+
+  state = setUnit(state, kaiser.id, {
+    transformed: true,
+    isStealthed: false,
+    stealthTurnsLeft: 0,
+    bunker: { active: false, ownTurnsInBunker: 0 },
+  });
+  const transformed = state.units[kaiser.id];
+  const transformedView = makePlayerView(state, "P1");
+
+  assert(
+    transformedView.legalIntents?.canEnterStealth === false,
+    "transformed Grand Kaiser must not project enterStealth as available"
+  );
+  assert(
+    getStealthSuccessMinRoll(transformed) === null,
+    "transformation must override stale Archer stealth metadata"
+  );
+  assert(
+    !(transformedView.abilitiesByUnitId[kaiser.id] ?? []).some(
+      (ability) => ability.id === ABILITY_KAISER_BUNKER
+    ),
+    "transformed Grand Kaiser must not project Bunker as an active passive"
+  );
+  assert(
+    JSON.stringify(getUnitMovementClasses(transformed)) ===
+      JSON.stringify(["rider", "berserker"]),
+    "transformed Grand Kaiser should have only Rider and Berserker movement classes"
+  );
+
+  const turnBefore = transformed.turn;
+  const rejected = applyAction(
+    state,
+    { type: "enterStealth", unitId: kaiser.id } as any,
+    rng
+  );
+  assert(rejected.state === state, "rejected transformed stealth must not mutate state");
+  assert(rejected.events.length === 0, "rejected transformed stealth must emit no events");
+  assert(
+    rejected.rejectionReason ===
+      "Grand Kaiser cannot enter stealth after transformation.",
+    "transformed stealth rejection should explain the transformation rule"
+  );
+  assert(!rejected.state.pendingRoll, "rejected transformed stealth must not request a roll");
+  assert(
+    rejected.state.units[kaiser.id].turn === turnBefore,
+    "rejected transformed stealth must not spend any turn slot"
+  );
+
+  console.log("transformed_kaiser_has_no_stealth_or_bunker_actions passed");
 }
 
 

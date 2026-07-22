@@ -15,6 +15,7 @@ import type { TurnEconomyState } from "./types";
 import { shouldRenderManualAbilityButton } from "./rightPanelHelpers";
 import {
   CHIKATILO_DECOY_ID,
+  GRAND_KAISER_ID,
   KAISER_ENGINEERING_MIRACLE_ID,
   LUCHE_DIVINE_RAY_ID,
   ZORO_ONI_GIRI_ID,
@@ -54,7 +55,11 @@ export const SelectedUnitHeader: FC<{ unit: UnitState | null; heroName: string |
     );
   }
   const token = getUnitTokenAsset(unit);
-  const maxHp = getMaxHp(unit.class, unit.heroId);
+  const maxHp = getMaxHp(unit.class, unit.heroId, unit.transformed);
+  const classLabel =
+    unit.heroId === GRAND_KAISER_ID && unit.transformed
+      ? `${t("classes.rider")} + ${t("classes.berserker")}`
+      : t(`classes.${unit.class}`);
   return (
     <header
       data-testid="compact-selected-unit-header"
@@ -76,7 +81,7 @@ export const SelectedUnitHeader: FC<{ unit: UnitState | null; heroName: string |
             {t("game.healthShort")} {unit.hp}/{maxHp}
           </span>
           <span aria-hidden="true">·</span>
-          <span className="truncate">{t(`classes.${unit.class}`)}</span>
+          <span className="truncate">{classLabel}</span>
           {unit.isStealthed ? (
             <span className="rounded bg-violet-500/10 px-1.5 py-0.5 text-violet-700 dark:text-violet-200">
               {t("actionMenu.hidden")}

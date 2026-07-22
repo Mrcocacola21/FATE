@@ -146,6 +146,7 @@ import {
 } from "./core/snapshots.test";
 import {
   testKaiserBunkerVisibleAndDamageClampedTo1,
+  testTransformedKaiserHasNoStealthOrBunkerActions,
   testKaiserBunkerExpiresOnFourthOwnTurn,
   testKaiserBunkerExitOnAttackButNotDoraOrImpulse,
   testCarpetStrikeRollsCenterThenAttackThenDefenders,
@@ -544,6 +545,7 @@ function main(): void {
   testBerserkerMoveRequiresManualRollNoAutoroll();
   testTricksterMoveRequiresPendingOptions();
   testKaiserBunkerVisibleAndDamageClampedTo1();
+  testTransformedKaiserHasNoStealthOrBunkerActions();
   testKaiserBunkerExpiresOnFourthOwnTurn();
   testKaiserBunkerExitOnAttackButNotDoraOrImpulse();
   testCarpetStrikeRollsCenterThenAttackThenDefenders();

@@ -1,5 +1,11 @@
 import type { AbilityView, PlayerView, UnitClass, UnitState } from "rules";
-import { FALSE_TRAIL_TOKEN_ID, HASSAN_ID, LECHY_ID, METTATON_ID } from "../../../rulesHints";
+import {
+  FALSE_TRAIL_TOKEN_ID,
+  GRAND_KAISER_ID,
+  HASSAN_ID,
+  LECHY_ID,
+  METTATON_ID,
+} from "../../../rulesHints";
 import { isActionableAbility } from "./rightPanelHelpers";
 import { DEFAULT_ECONOMY } from "./rightPanelConstants";
 import type { TurnEconomyState } from "./types";
@@ -132,6 +138,7 @@ function unitBlocksStealth(unit: UnitState | null, view?: PlayerView) {
 
 export function getProjectedStealthThreshold(unit: UnitState | null): number | null {
   if (!unit || unit.heroId === METTATON_ID) return null;
+  if (unit.heroId === GRAND_KAISER_ID && unit.transformed) return null;
   if (unit.asgorePatienceStealthActive) return 5;
   if (typeof unit.stealthSuccessMinRoll === "number") return unit.stealthSuccessMinRoll;
   if (unit.heroId === HASSAN_ID) return 4;
@@ -142,17 +149,19 @@ export function getProjectedStealthThreshold(unit: UnitState | null): number | n
 }
 
 function hasStealthOption(unit: UnitState | null, abilityViews: AbilityView[]) {
+  if (unit?.heroId === GRAND_KAISER_ID && unit.transformed) return false;
   return (
     !!unit &&
     unit.heroId !== FALSE_TRAIL_TOKEN_ID &&
     (getProjectedStealthThreshold(unit) !== null ||
       abilityViews.some((ability) => isActionableAbility(ability) && ability.slot === "stealth") ||
-      !!unit.bunker)
+      !!unit.bunker?.active)
   );
 }
 
 function hasPublicStealthOption(unit: UnitState | null | undefined) {
   if (!unit || unit.heroId === FALSE_TRAIL_TOKEN_ID || unit.heroId === METTATON_ID) return false;
+  if (unit.heroId === GRAND_KAISER_ID && unit.transformed) return false;
   return (
     unit.class === "assassin" ||
     unit.class === "archer" ||

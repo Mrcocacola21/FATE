@@ -11,6 +11,9 @@ import { evSearchStealth, evStealthEntered } from "../core";
 import { getStealthSuccessMinRoll } from "../stealth";
 import { canEnterStealthByRuleDeclaration } from "../ruleDeclarations";
 
+export const KAISER_TRANSFORMED_STEALTH_REJECTION =
+  "Grand Kaiser cannot enter stealth after transformation.";
+
 export function applyEnterStealth(
   state: GameState,
   action: Extract<GameAction, { type: "enterStealth" }>,
@@ -47,7 +50,11 @@ export function applyEnterStealth(
 
   if (isKaiser(unit)) {
     if (isKaiserTransformed(unit)) {
-      return { state, events: [] };
+      return {
+        state,
+        events: [],
+        rejectionReason: KAISER_TRANSFORMED_STEALTH_REJECTION,
+      };
     }
 
     if (!canSpendSlots(unit, { stealth: true })) {

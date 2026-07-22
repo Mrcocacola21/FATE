@@ -164,8 +164,6 @@ export function getLegalIntents(
 
   const canMove = canSpendSlots(activeUnit, { move: true });
   const canAttack = canSpendSlots(activeUnit, { attack: true, action: true });
-  const kaiserTransformed =
-    activeUnit.heroId === HERO_GRAND_KAISER_ID && activeUnit.transformed;
   const kaiserInBunker =
     activeUnit.heroId === HERO_GRAND_KAISER_ID && activeUnit.bunker?.active;
   const mettatonNoStealth = activeUnit.heroId === HERO_METTATON_ID;
@@ -175,7 +173,6 @@ export function getLegalIntents(
     getStealthSuccessMinRoll(activeUnit) !== null &&
     canEnterStealthByRuleDeclaration(state, activeUnit) &&
     !mettatonNoStealth &&
-    !kaiserTransformed &&
     !kaiserInBunker;
   const isFalseTrailToken = activeUnit.heroId === HERO_FALSE_TRAIL_TOKEN_ID;
 
