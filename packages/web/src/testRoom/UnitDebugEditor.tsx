@@ -10,8 +10,6 @@ const statuses = [
   ["bunker", "testRoom.statusBunker"],
   ["gutsBerserkModeActive", "testRoom.statusGuts"],
   ["papyrusUnbelieverActive", "testRoom.statusPapyrus"],
-  ["papyrusBoneBlue", "testRoom.statusBlueBone"],
-  ["papyrusBoneOrange", "testRoom.statusOrangeBone"],
   ["sansUnbelieverUnlocked", "testRoom.statusSans"],
   ["mettatonExUnlocked", "testRoom.statusMettatonEx"],
   ["mettatonNeoUnlocked", "testRoom.statusMettatonNeo"],
@@ -25,10 +23,6 @@ function statusValue(unit: UnitState, status: (typeof statuses)[number][0]) {
       return unit.bunker?.active === true;
     case "chicken":
       return (unit.lokiChickenSources?.length ?? 0) > 0;
-    case "papyrusBoneBlue":
-      return unit.papyrusBoneMode === "blue";
-    case "papyrusBoneOrange":
-      return unit.papyrusBoneMode === "orange";
     default:
       return unit[status] === true;
   }

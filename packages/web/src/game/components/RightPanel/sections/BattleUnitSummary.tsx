@@ -309,9 +309,22 @@ function UnitActionBars({
   const [expandedKind, setExpandedKind] = useState<UnitDetailActionKind>("action");
   const activeSummary = summaries.find((summary) => summary.kind === expandedKind) ?? summaries[0];
   const panelId = `unit-action-details-${selectedUnit.id}`;
+  const hasUnresolvedOrangeBone =
+    (selectedUnit.sansBoneFieldStatus?.kind === "orange" ||
+      selectedUnit.papyrusBoneStatus?.kind === "orange") &&
+    !selectedUnit.orangeBoneFirstMoveSatisfied &&
+    !selectedUnit.orangeBonePenaltyAppliedThisTurn;
 
   return (
     <div className="space-y-2" data-unit-action-bars>
+      {hasUnresolvedOrangeBone ? (
+        <div
+          className="rounded-md border border-orange-300 bg-orange-50 px-2.5 py-1.5 text-[11px] font-semibold text-orange-900 dark:border-orange-800 dark:bg-orange-950/35 dark:text-orange-200"
+          data-orange-bone-warning
+        >
+          {t("actionUi.orangeBoneMoveWarning")}
+        </div>
+      ) : null}
       <div className="grid grid-cols-3 gap-1.5 text-[11px] font-bold">
         {summaries.map((summary) => {
           const label = t(actionKindLabelKeys[summary.kind]);

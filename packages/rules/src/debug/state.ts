@@ -132,10 +132,6 @@ function setUnitStatus(
       return { ...unit, gutsBerserkModeActive: value };
     case "papyrusUnbelieverActive":
       return { ...unit, papyrusUnbelieverActive: value };
-    case "papyrusBoneBlue":
-      return { ...unit, papyrusBoneMode: value ? "blue" : unit.papyrusBoneMode };
-    case "papyrusBoneOrange":
-      return { ...unit, papyrusBoneMode: value ? "orange" : unit.papyrusBoneMode };
     case "sansUnbelieverUnlocked":
       return { ...unit, sansUnbelieverUnlocked: value };
     case "mettatonExUnlocked":

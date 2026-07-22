@@ -370,10 +370,13 @@ import {
   testPapyrusSpaghettiGatingHealingClampAndChargeSpend,
   testPapyrusCoolGuyGatingLineHitsAndBlueBone,
   testPapyrusUnbelieverTriggersOnAlliedHeroDeathAndPersists,
-  testPapyrusOrangeBoneToggleAndEndTurnPunish,
+  testPapyrusOrangeBoneToggleAndFirstNonMovePunish,
+  testPapyrusTransformedAoeQueuesPerTargetBoneChoices,
+  testPapyrusTransformedMissCreatesNoBoneChoice,
   testPapyrusLongBoneAttackAndCoolGuyCostReduction,
   testPapyrusOssifiedBerserkerFeatureAfterTransformationOnly,
 } from "./heroes/papyrus.test";
+import { testOrangeBoneRequiresMovementFirst } from "./heroes/orangeBone.test";
 import {
   testSansBaseDamageIsOne,
   testSansLongLiverAndSpearmanFeature,
@@ -644,7 +647,10 @@ function main(): void {
   testPapyrusSpaghettiGatingHealingClampAndChargeSpend();
   testPapyrusCoolGuyGatingLineHitsAndBlueBone();
   testPapyrusUnbelieverTriggersOnAlliedHeroDeathAndPersists();
-  testPapyrusOrangeBoneToggleAndEndTurnPunish();
+  testPapyrusOrangeBoneToggleAndFirstNonMovePunish();
+  testPapyrusTransformedAoeQueuesPerTargetBoneChoices();
+  testPapyrusTransformedMissCreatesNoBoneChoice();
+  testOrangeBoneRequiresMovementFirst();
   testPapyrusLongBoneAttackAndCoolGuyCostReduction();
   testPapyrusOssifiedBerserkerFeatureAfterTransformationOnly();
   testSansBaseDamageIsOne();

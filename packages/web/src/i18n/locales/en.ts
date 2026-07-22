@@ -427,7 +427,7 @@ export const en = {
     arenaEffectStormDescription:
       "At the start of an affected figure's turn, its player rolls d6. On 1-3, that figure takes 1 damage; on 4-6, it resists. Non-exempt ranged units can only attack adjacent targets.",
     arenaEffectBoneFieldDescription:
-      "At the start of each non-Sans/non-Papyrus figure's turn, roll d2. Blue Bone deals 1 damage if that figure spends its move action. Orange Bone deals 1 damage if it ends the turn without spending its move action.",
+      "At the start of each non-Sans/non-Papyrus figure's turn, roll d2. Blue Bone deals 1 damage if that figure spends its move action. Orange Bone deals 1 damage if the figure starts a non-movement action before spending Movement.",
     activeField: "Active field",
     fieldRules: "Field rules",
     forestPositions: "Forest positions: {{positions}}",
@@ -456,7 +456,7 @@ export const en = {
     orangeBone: "Orange Bone",
     blueBoneReminder: "If this unit spends its move action during its turn, it takes 1 damage.",
     orangeBoneReminder:
-      "If this unit ends its turn without spending its move action, it takes 1 damage.",
+      "Orange Bone: the first action this unit takes on its turn must be Movement. If it attacks, uses an ability, spends Action, or attempts Stealth before moving, it takes 1 damage.",
     boneSourcePapyrus: "Applied by Papyrus",
     boneSourceSansField: "Applied by Sans's Bone Field",
     rating: "Rating {{rating}}",
@@ -590,7 +590,7 @@ export const en = {
     diagonalMoveActive: "Diagonal movement is active.",
     decreeMovePending: "Khan's Decree movement is pending.",
     blueBoneMoveWarning: "Blue Bone can punish movement.",
-    orangeBoneMoveWarning: "Orange Bone punishes ending the turn without movement.",
+    orangeBoneMoveWarning: "Orange Bone: move first or take 1 damage.",
   },
   visuals: {
     transform: "Transform",
@@ -847,7 +847,7 @@ export const en = {
           orangeBone: {
             name: "Orange Bone",
             description:
-              "Papyrus may apply Orange Bone instead of Blue Bone. Orange Bone deals 1 damage when the target ends its turn without spending movement.",
+              "After each successful hit, choose Blue Bone or Orange Bone for that target. Each AoE target is chosen separately.",
           },
           longBone: {
             name: "Long Bone",
@@ -1379,6 +1379,11 @@ export const en = {
     muninnDefense: "Muninn Auto Defense",
     falseTrail: "False Trail",
     decoy: "Decoy",
+    papyrusBoneTitle: "Papyrus bone effect",
+    papyrusBonePrompt: "Target {{current}} of {{total}}: {{target}}. Choose a bone effect for this hit.",
+    chooseBlueBone: "Blue Bone",
+    chooseOrangeBone: "Orange Bone",
+    hiddenTarget: "hit target",
     rollRequired: "Roll required",
     chooseBerserkerDefense: "Choose berserker defense.",
     resolveRoll: "Please roll the dice to resolve: {{roll}}.",
@@ -1436,6 +1441,7 @@ export const en = {
   preview: {
     labels: {
       selectTarget: "Select a target.",
+      papyrusBoneTarget: "Papyrus bone target.",
       selectAssassinMarkTarget: "Select a target for Killer's Mark.",
       selectAlly: "Select an ally within range.",
       selectDestination: "Select a destination cell.",

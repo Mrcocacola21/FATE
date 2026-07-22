@@ -313,7 +313,7 @@ test("the selected-unit bone panel shows explicit localized rules reminders", ()
     />,
   );
   assert.match(orangeMarkup, /Orange Bone/);
-  assert.match(orangeMarkup, /ends its turn without spending/);
+  assert.match(orangeMarkup, /first action this unit takes on its turn must be Movement/);
   assert.match(orangeMarkup, /Sans&#x27;s Bone Field/);
 
   setLanguage("uk", null);

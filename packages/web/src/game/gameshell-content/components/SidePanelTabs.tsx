@@ -6,7 +6,7 @@ import { PanelCard, SectionHeader, StatusBadge } from "../../../components/ui";
 import { getUnitTokenAsset } from "../../../assets/registry";
 import { getClassLabel, getUnitFigureDisplayName } from "../../../i18n/displayMetadata";
 import { useI18n } from "../../../i18n";
-import { getMaxHp, PAPYRUS_LONG_BONE_ID, PAPYRUS_ORANGE_BONE_ID } from "../../../rulesHints";
+import { getMaxHp, PAPYRUS_LONG_BONE_ID } from "../../../rulesHints";
 import { Tabs } from "../../../ui";
 import { TestRoomPanel } from "../../../testRoom/TestRoomPanel";
 import { shouldShowTestRoomPanel } from "../../../testRoom/testRoomApi";
@@ -276,12 +276,10 @@ function ActionTab({
               undyneAxis={panelVm.undyneAxis}
               undyneAxisOptions={UNDYNE_AXIS_OPTIONS}
               selectedPapyrusUnbeliever={panelVm.selectedPapyrusUnbeliever}
-              selectedPapyrusBoneMode={panelVm.selectedPapyrusBoneMode}
               selectedPapyrusLongBoneMode={panelVm.selectedPapyrusLongBoneMode}
               canAct={panelVm.canAct}
               onSetPapyrusAxis={panelVm.onSetPapyrusAxis}
               onSetUndyneAxis={panelVm.onSetUndyneAxis}
-              onSetPapyrusBoneType={panelVm.onSetPapyrusBoneType}
               onTogglePapyrusLongBone={panelVm.onTogglePapyrusLongBone}
             />
           }
@@ -361,7 +359,7 @@ export const SidePanelTabs: FC<SidePanelTabsProps> = ({
       vm.sendGameAction(action);
       const preserveMode =
         action.type === "useAbility" &&
-        (action.abilityId === PAPYRUS_ORANGE_BONE_ID || action.abilityId === PAPYRUS_LONG_BONE_ID);
+        action.abilityId === PAPYRUS_LONG_BONE_ID;
       if (action.type !== "requestMoveOptions" && !preserveMode) {
         vm.setActionMode(null);
       }

@@ -14,6 +14,7 @@ export function makeSpectatorView(state: GameState): PlayerView {
     rollCounter,
     pendingCombatQueue,
     pendingAoE,
+    pendingPapyrusBoneChoices: _pendingPapyrusBoneChoices,
     ...baseState
   } = state;
   const units: Record<string, UnitState> = {};

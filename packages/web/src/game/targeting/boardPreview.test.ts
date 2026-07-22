@@ -1368,3 +1368,44 @@ test("Madness of the Knight pending preview exposes all straight direction rays"
   assert.equal(hasKind(preview, { col: 8, row: 8 }, "line"), true);
   assert.equal(hasKind(preview, { col: 6, row: 5 }, "line"), false);
 });
+
+test("Papyrus bone choice highlights only its current hit target", () => {
+  const papyrus = unit({
+    id: "papyrus",
+    owner: "P1",
+    heroId: "papyrus",
+    position: { col: 1, row: 1 },
+  });
+  const current = unit({
+    id: "duolingo",
+    owner: "P2",
+    position: { col: 4, row: 4 },
+  });
+  const later = unit({
+    id: "zoro",
+    owner: "P2",
+    position: { col: 6, row: 4 },
+  });
+  const preview = buildPendingPreview(
+    makeView([papyrus, current, later], {
+      pendingRoll: {
+        id: "papyrus-bone-1",
+        player: "P1",
+        kind: "papyrusBoneChoice",
+        context: {
+          papyrusUnitId: papyrus.id,
+          targetUnitId: current.id,
+          targetIds: [current.id, later.id],
+          currentTargetIndex: 0,
+          targetIndex: 1,
+          targetCount: 2,
+          availableBones: ["blue", "orange"],
+        },
+      },
+    }),
+  );
+
+  assert.equal(hasKind(preview, current.position!, "affected"), true);
+  assert.equal(hasKind(preview, later.position!, "affected"), false);
+  assert.equal(hasKind(preview, papyrus.position!, "source"), true);
+});

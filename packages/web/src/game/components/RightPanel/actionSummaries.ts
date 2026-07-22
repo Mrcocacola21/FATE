@@ -291,7 +291,6 @@ export function getUnitMoveSummary(params: UnitSummaryParams): UnitMoveSummary {
     notes.push("actionUi.moonMoveBonus");
   }
   if (unit?.sansBoneFieldStatus?.kind === "blue") notes.push("actionUi.blueBoneMoveWarning");
-  if (unit?.sansBoneFieldStatus?.kind === "orange") notes.push("actionUi.orangeBoneMoveWarning");
 
   return {
     kind: "move",

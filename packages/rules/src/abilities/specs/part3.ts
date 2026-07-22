@@ -194,7 +194,7 @@ export const ABILITY_SPECS_PART_3: Record<string, AbilitySpec> = {
     displayName: "Orange Bone",
     kind: "passive",
     description:
-      "Unbeliever toggle: apply Orange Bone on hit instead of Blue Bone. Orange Bone punishes ending turn without spending move slot.",
+      "After transforming, choose Blue Bone or Orange Bone separately for every target Papyrus successfully hits.",
   },
   [ids.ABILITY_PAPYRUS_LONG_BONE]: {
     id: ids.ABILITY_PAPYRUS_LONG_BONE,

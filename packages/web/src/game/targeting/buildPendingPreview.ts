@@ -422,6 +422,24 @@ export function buildPendingPreview(
   if (pending) {
     const context = (pending.context ?? {}) as Record<string, unknown>;
     switch (pending.kind) {
+      case "papyrusBoneChoice": {
+        const papyrusId =
+          typeof context.papyrusUnitId === "string" ? context.papyrusUnitId : "";
+        const targetId =
+          typeof context.targetUnitId === "string" ? context.targetUnitId : "";
+        const source = sourceUnit(view, papyrusId);
+        const targets = targetRefsFromIds(view, targetId ? [targetId] : []);
+        if (targets.length === 0) return null;
+        return {
+          kind: "multiStep",
+          step: "papyrusBoneChoice",
+          sourceCell: source?.position ? { ...source.position } : undefined,
+          cells: targets.map((target) => ({ ...target.cell })),
+          affectedTargets: targets,
+          cellKind: "affected",
+          labelKey: "preview.labels.papyrusBoneTarget",
+        };
+      }
       case "donMadDelusionDirection": {
         if (!isCoord(context.origin)) return null;
         const origin = { col: context.origin.col, row: context.origin.row };

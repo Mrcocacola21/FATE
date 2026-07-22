@@ -478,9 +478,9 @@ export function testSansUnbelieverBoneFieldAndSleep() {
     ended.state.units[enemy2.id].hp === beforeOrangeHp - 1 &&
       ended.events.some(
         (event) =>
-          event.type === "sansBoneFieldPunished" && event.reason === "moveNotSpent"
+          event.type === "sansBoneFieldPunished" && event.reason === "nonMoveFirst"
       ),
-    "Orange hazard should deal 1 damage when turn ends without movement"
+    "End Turn should trigger the Orange hazard as the first non-movement action"
   );
 
   let sleepReady = setUnit(killSecondResolved.state, sans.id, {

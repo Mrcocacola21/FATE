@@ -5,6 +5,7 @@ import type {
   ForestMarker,
   PendingAoEResolution,
   PendingCombatQueueEntry,
+  PendingPapyrusBoneChoice,
   PendingRoll,
   StakeMarker,
 } from "./roll";
@@ -44,6 +45,8 @@ export interface GameState {
   pendingRoll: PendingRoll | null;
   pendingCombatQueue: PendingCombatQueueEntry[];
   pendingAoE: PendingAoEResolution | null;
+  /** Successful transformed-Papyrus hits waiting for an authoritative choice. */
+  pendingPapyrusBoneChoices?: PendingPapyrusBoneChoice[];
   rollCounter: number;
   stakeMarkers: StakeMarker[];
   stakeCounter: number;
@@ -118,6 +121,7 @@ export type PlayerView = Omit<
   | "rollCounter"
   | "pendingCombatQueue"
   | "pendingAoE"
+  | "pendingPapyrusBoneChoices"
   | "stakeMarkers"
   | "stakeCounter"
 > & {

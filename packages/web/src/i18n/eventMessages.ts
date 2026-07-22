@@ -358,7 +358,11 @@ export function formatEventMessage(
     case "sansUnbelieverActivated":
       return text(language, "Unbeliever awakened", "Невіруючий пробудився");
     case "papyrusBoneApplied":
-      return text(language, `Bone applied: ${event.papyrusId} → ${event.targetId}`, `Кістку накладено: ${event.papyrusId} → ${event.targetId}`);
+      return text(
+        language,
+        `${event.papyrusId} applied ${event.boneType === "blue" ? "Blue Bone" : "Orange Bone"} to ${event.targetId}.`,
+        `${event.papyrusId} наклав ${event.boneType === "blue" ? "Синю кістку" : "Помаранчеву кістку"} на ${event.targetId}.`,
+      );
     case "papyrusBonePunished":
     case "sansBoneFieldPunished":
       return text(language, `Bone punishment: ${event.targetId} took ${event.damage}`, `Покарання кісткою: ${event.targetId} отримує ${event.damage} шкоди`);

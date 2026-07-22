@@ -191,7 +191,7 @@ export function createDebugPreset(presetId: DebugPresetId): GameState {
           heroId: HERO_PAPYRUS_ID,
           owner: "P1",
           coord: { col: 4, row: 4 },
-          patch: { hp: 3, papyrusBoneMode: "orange" },
+          patch: { hp: 3 },
         },
         {
           heroId: HERO_GUTS_ID,

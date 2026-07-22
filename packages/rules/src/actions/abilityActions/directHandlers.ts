@@ -40,7 +40,6 @@ import {
   ABILITY_ODIN_SLEIPNIR,
   ABILITY_PAPYRUS_COOL_GUY,
   ABILITY_PAPYRUS_LONG_BONE,
-  ABILITY_PAPYRUS_ORANGE_BONE,
   ABILITY_PAPYRUS_SPAGHETTI,
   ABILITY_RIVER_PERSON_BOAT,
   ABILITY_RIVER_PERSON_BOATMAN,
@@ -84,7 +83,6 @@ import { applyOdinSleipnir } from "../heroes/odin";
 import {
   applyPapyrusCoolGuy,
   applyPapyrusLongBoneToggle,
-  applyPapyrusOrangeBoneToggle,
   applyPapyrusSpaghetti,
 } from "../heroes/papyrus";
 import {
@@ -166,8 +164,6 @@ const DIRECT_HANDLERS: Record<string, DirectAbilityHandler> = {
   [ABILITY_PAPYRUS_SPAGHETTI]: (state, unit) => applyPapyrusSpaghetti(state, unit),
   [ABILITY_PAPYRUS_COOL_GUY]: (state, unit, action) =>
     applyPapyrusCoolGuy(state, unit, action),
-  [ABILITY_PAPYRUS_ORANGE_BONE]: (state, unit, action) =>
-    applyPapyrusOrangeBoneToggle(state, unit, action),
   [ABILITY_PAPYRUS_LONG_BONE]: (state, unit, action) =>
     applyPapyrusLongBoneToggle(state, unit, action),
   [ABILITY_METTATON_POPPINS]: (state, unit, action, rng) =>

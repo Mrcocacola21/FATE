@@ -76,6 +76,7 @@ export type ResolveRollChoice =
     }
   | { type: "friskKeenEyeTarget"; targetId: string }
   | { type: "friskPrecisionStrikeTarget"; targetId: string }
+  | { type: "papyrusBoneChoice"; boneType: "blue" | "orange" }
   | { type: "donMadDelusionDirection"; direction: Coord }
   | { type: "donSorrowfulMove"; destination: Coord }
   | { type: "donWindmillsReposition"; destination: Coord }

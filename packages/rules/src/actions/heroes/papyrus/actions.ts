@@ -3,14 +3,12 @@ import type {
   GameAction,
   GameEvent,
   GameState,
-  PapyrusBoneType,
   UnitState,
 } from "../../../model";
 import { isInsideBoard } from "../../../model";
 import {
   ABILITY_PAPYRUS_COOL_GUY,
   ABILITY_PAPYRUS_LONG_BONE,
-  ABILITY_PAPYRUS_ORANGE_BONE,
   ABILITY_PAPYRUS_SPAGHETTI,
   getAbilitySpec,
   getCharges,
@@ -26,7 +24,7 @@ import {
   parseCoord,
 } from "./helpers";
 import { startPapyrusLineAttack } from "./lineAttack";
-import type { LinePayload, LongBonePayload, OrangeBonePayload } from "./types";
+import type { LinePayload, LongBonePayload } from "./types";
 
 export function applyPapyrusSpaghetti(
   state: GameState,
@@ -149,46 +147,6 @@ export function applyPapyrusCoolGuy(
   return {
     state: lineAttack.state,
     events: [...events, ...lineAttack.events],
-  };
-}
-
-export function applyPapyrusOrangeBoneToggle(
-  state: GameState,
-  unit: UnitState,
-  action: Extract<GameAction, { type: "useAbility" }>
-): ApplyResult {
-  if (!isPapyrus(unit) || !unit.papyrusUnbelieverActive) {
-    return { state, events: [] };
-  }
-
-  const payload = (action.payload ?? {}) as OrangeBonePayload;
-  let boneMode: PapyrusBoneType;
-  if (payload.boneType === "blue" || payload.boneType === "orange") {
-    boneMode = payload.boneType;
-  } else if (typeof payload.enabled === "boolean") {
-    boneMode = payload.enabled ? "orange" : "blue";
-  } else {
-    boneMode = unit.papyrusBoneMode === "orange" ? "blue" : "orange";
-  }
-
-  const updatedUnit: UnitState = {
-    ...unit,
-    papyrusBoneMode: boneMode,
-  };
-  return {
-    state: {
-      ...state,
-      units: {
-        ...state.units,
-        [updatedUnit.id]: updatedUnit,
-      },
-    },
-    events: [
-      evAbilityUsed({
-        unitId: updatedUnit.id,
-        abilityId: ABILITY_PAPYRUS_ORANGE_BONE,
-      }),
-    ],
   };
 }
 

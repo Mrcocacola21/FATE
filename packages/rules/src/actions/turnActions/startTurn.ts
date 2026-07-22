@@ -288,7 +288,12 @@ export function applyUnitStartTurn(
     };
   }
 
-  let resetUnit: UnitState = resetTurnEconomy(unitAfter);
+  let resetUnit: UnitState = {
+    ...resetTurnEconomy(unitAfter),
+    orangeBoneFirstMoveSatisfied: false,
+    orangeBonePenaltyAppliedThisTurn: false,
+    hasSpentMeaningfulTurnAction: false,
+  };
   if (resetUnit.movementDisabledNextTurn) {
     resetUnit = {
       ...resetUnit,

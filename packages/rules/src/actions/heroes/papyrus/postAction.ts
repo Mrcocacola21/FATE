@@ -41,23 +41,6 @@ export function applyPapyrusPostAction(
     }
   }
 
-  if (action.type === "endTurn") {
-    const endingUnitId = prevState.activeUnitId;
-    if (endingUnitId) {
-      const endingUnitBefore = prevState.units[endingUnitId];
-      if (endingUnitBefore && !endingUnitBefore.turn.moveUsed) {
-        const punished = applyPapyrusBonePunish(
-          nextState,
-          endingUnitId,
-          "orange",
-          "moveNotSpent"
-        );
-        nextState = punished.state;
-        nextEvents = [...nextEvents, ...punished.events];
-      }
-    }
-  }
-
   const appliedBones = applyPapyrusBoneOnHits(nextState, nextEvents);
   nextState = appliedBones.state;
   nextEvents = [...nextEvents, ...appliedBones.events];

@@ -33,6 +33,7 @@ export function makePlayerView(
     rollCounter,
     pendingCombatQueue,
     pendingAoE,
+    pendingPapyrusBoneChoices: _pendingPapyrusBoneChoices,
     ...baseState
   } = state;
   const units: Record<string, UnitState> = {};

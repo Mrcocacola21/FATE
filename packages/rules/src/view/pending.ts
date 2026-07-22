@@ -82,6 +82,14 @@ export function getVisiblePendingRollForPlayer(
         canPlayerKnowUnitExactPosition(state, playerId, item)
     );
   }
+  if (
+    pendingRoll.kind === "papyrusBoneChoice" &&
+    typeof context.targetUnitId === "string" &&
+    state.units[context.targetUnitId] &&
+    !canPlayerKnowUnitExactPosition(state, playerId, context.targetUnitId)
+  ) {
+    delete context.targetUnitId;
+  }
   return { ...pendingRoll, context };
 }
 

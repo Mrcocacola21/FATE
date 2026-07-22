@@ -19,6 +19,7 @@ import {
   HERO_KANEKI_ID,
   HERO_HASSAN_ID,
   HERO_DUOLINGO_ID,
+  HERO_PAPYRUS_ID,
   HERO_RIVER_PERSON_ID,
   makePlayerView,
   makeEmptyTurnEconomy,
@@ -64,6 +65,24 @@ function testLokiLaughPayloadSchemas() {
   assert(spinFallbackPayload.success, "server schema should accept Spin fallback ability choice");
   assert.equal(invalidOption.success, false, "server schema must reject ambiguous Loki options");
   console.log("hardening_loki_laugh_payload_schemas passed");
+}
+
+function testPapyrusBoneChoicePayloadSchema() {
+  for (const boneType of ["blue", "orange"] as const) {
+    const parsed = GameActionSchema.safeParse({
+      type: "resolvePendingRoll",
+      pendingRollId: "papyrus-bone-choice",
+      choice: { type: "papyrusBoneChoice", boneType },
+    });
+    assert(parsed.success, `server schema should accept ${boneType} bone choice`);
+  }
+  const invalid = GameActionSchema.safeParse({
+    type: "resolvePendingRoll",
+    pendingRollId: "papyrus-bone-choice",
+    choice: { type: "papyrusBoneChoice", boneType: "green" },
+  });
+  assert.equal(invalid.success, false, "server schema should reject unknown bones");
+  console.log("hardening_papyrus_bone_choice_payload_schema passed");
 }
 
 function makeSeatedRoom(params: {
@@ -605,6 +624,105 @@ function testProjectedEventsRedactHiddenUnitPositions() {
   assert.equal("to" in (spectatorEvents[0] as Record<string, unknown>), false);
 
   console.log("hardening_projected_events_redact_hidden_positions passed");
+}
+
+function testOrangeBoneDamageIsAuthoritativeAtActionStart() {
+  storeTestHooks.reset();
+  try {
+    const room = createGameRoomWithId(
+      `hardening-orange-bone-${randomUUID()}`,
+      {
+        hostSeat: "P1",
+        hostConnId: `conn-${randomUUID()}`,
+      }
+    );
+    let state = createEmptyGame();
+    state = attachArmy(
+      state,
+      createDefaultArmy("P1", { spearman: HERO_PAPYRUS_ID })
+    );
+    state = attachArmy(state, createDefaultArmy("P2"));
+    const papyrus = Object.values(state.units).find(
+      (unit) => unit.owner === "P1" && unit.heroId === HERO_PAPYRUS_ID
+    )!;
+    const defender = Object.values(state.units).find(
+      (unit) => unit.owner === "P1" && unit.class === "knight"
+    )!;
+    const actor = Object.values(state.units).find(
+      (unit) => unit.owner === "P2" && unit.class === "knight"
+    )!;
+
+    state = setUnit(state, papyrus.id, {
+      position: { col: 1, row: 1 },
+      ownTurnsStarted: 0,
+    });
+    state = setUnit(state, defender.id, { position: { col: 4, row: 5 } });
+    state = setUnit(state, actor.id, {
+      position: { col: 4, row: 4 },
+      hp: 6,
+      turn: makeEmptyTurnEconomy(),
+      papyrusBoneStatus: {
+        sourceUnitId: papyrus.id,
+        kind: "orange",
+        expiresOnSourceOwnTurn: 1,
+      },
+      orangeBoneFirstMoveSatisfied: false,
+      orangeBonePenaltyAppliedThisTurn: false,
+      hasSpentMeaningfulTurnAction: false,
+    });
+    room.state = {
+      ...state,
+      phase: "battle",
+      currentPlayer: "P2",
+      activeUnitId: actor.id,
+      turnQueue: [actor.id, defender.id],
+      turnQueueIndex: 0,
+      turnOrder: [actor.id, defender.id],
+      turnOrderIndex: 0,
+    };
+
+    const revisionBeforeInvalid = room.revision;
+    const invalid = applyGameAction(
+      room,
+      {
+        type: "attack",
+        attackerId: actor.id,
+        defenderId: "missing-unit",
+      },
+      "P2"
+    );
+    assert.equal(invalid.ok, false, "invalid pre-resolution commands stay rejected");
+    assert.equal(room.revision, revisionBeforeInvalid);
+    assert.equal(room.state.units[actor.id].hp, 6);
+
+    const attacked = applyGameAction(
+      room,
+      {
+        type: "attack",
+        attackerId: actor.id,
+        defenderId: defender.id,
+      },
+      "P2"
+    );
+    assert.equal(attacked.ok, true, "legal attack should be accepted");
+    assert.equal(
+      room.state.units[actor.id].hp,
+      5,
+      "authoritative HP should update before the pending attack resolves"
+    );
+    assert(room.state.pendingRoll, "the surviving actor should continue into attack resolution");
+    const logEntry = room.actionLog.at(-1)!;
+    assert.equal(logEntry.events[0]?.type, "papyrusBonePunished");
+    assert.equal(logEntry.events[1]?.type, "rollRequested");
+    const ownerView = makePlayerView(room.state, "P2");
+    assert.equal(ownerView.units[actor.id].hp, 5, "the owner projection must update immediately");
+    const projected = projectEventsForRecipient(room.state, logEntry.events, "P2");
+    assert.equal(projected[0]?.type, "papyrusBonePunished");
+
+    console.log("hardening_orange_bone_damage_is_authoritative_at_action_start passed");
+  } finally {
+    storeTestHooks.reset();
+  }
 }
 
 function testServerAcceptsMoveIntoUnknownHiddenOccupiedCell() {
@@ -1547,6 +1665,7 @@ function testChikatiloCommandsAndResourcesAreAuthoritative() {
 
 async function main() {
   testLokiLaughPayloadSchemas();
+  testPapyrusBoneChoicePayloadSchema();
   await testGraceExpiryVacatesSeatAndInvalidatesToken();
   await testReconnectWithinGraceKeepsSeatAndClearsTimer();
   await testConcurrentSwitchRoleSerialization();
@@ -1560,6 +1679,7 @@ async function main() {
   testActiveRoomCleanupDoesNotExpireRoom();
   testActionLogTruncatesToConfiguredLimit();
   testProjectedEventsRedactHiddenUnitPositions();
+  testOrangeBoneDamageIsAuthoritativeAtActionStart();
   testServerAcceptsMoveIntoUnknownHiddenOccupiedCell();
   testServerRejectsInvalidFalsePromisePlacementsWithoutMutation();
   testRiverBoatmanCommandsPreserveAuthoritativeMovementBudget();

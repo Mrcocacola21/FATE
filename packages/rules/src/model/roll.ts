@@ -35,6 +35,7 @@ export type RollKind =
   | "moonCoordinateRoll"
   | "moonCheeseHolesChoice"
   | "pureBloodRedirectChoice"
+  | "papyrusBoneChoice"
   | "attack_attackerRoll"
   | "attack_defenderRoll"
   | "berserkerDefenseChoice"
@@ -136,6 +137,7 @@ export const ALL_ROLL_KINDS = [
   "moonCoordinateRoll",
   "moonCheeseHolesChoice",
   "pureBloodRedirectChoice",
+  "papyrusBoneChoice",
   "attack_attackerRoll",
   "attack_defenderRoll",
   "berserkerDefenseChoice",
@@ -224,6 +226,11 @@ export interface PendingRoll {
   player: PlayerId;
   kind: RollKind;
   context: Record<string, unknown>;
+}
+
+export interface PendingPapyrusBoneChoice {
+  papyrusUnitId: string;
+  targetUnitId: string;
 }
 
 export interface StakeMarker {

@@ -40,8 +40,6 @@ export type TestRoomCommand =
         | "bunker"
         | "gutsBerserkModeActive"
         | "papyrusUnbelieverActive"
-        | "papyrusBoneBlue"
-        | "papyrusBoneOrange"
         | "sansUnbelieverUnlocked"
         | "mettatonExUnlocked"
         | "mettatonNeoUnlocked"

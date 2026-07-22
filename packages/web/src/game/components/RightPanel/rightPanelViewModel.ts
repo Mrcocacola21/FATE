@@ -9,7 +9,6 @@ import {
   LOKI_LAUGHT_ID,
   PAPYRUS_ID,
   PAPYRUS_LONG_BONE_ID,
-  PAPYRUS_ORANGE_BONE_ID,
   RIVER_PERSON_ID,
   UNDYNE_ID,
 } from "../../../rulesHints";
@@ -151,8 +150,6 @@ export function buildRightPanelViewModel(params: RightPanelProps, t: Translate) 
   const selectedIsPapyrus = selectedUnit?.heroId === PAPYRUS_ID;
   const selectedIsUndyne = selectedUnit?.heroId === UNDYNE_ID;
   const selectedPapyrusUnbeliever = selectedIsPapyrus && !!selectedUnit?.papyrusUnbelieverActive;
-  const selectedPapyrusBoneMode =
-    selectedUnit?.papyrusBoneMode === "orange" ? ("orange" as const) : ("blue" as const);
   const selectedPapyrusLongBoneMode = !!selectedUnit?.papyrusLongBoneMode;
   const undyneAxis = papyrusLineAxis === "col" ? ("col" as const) : ("row" as const);
 
@@ -253,7 +250,6 @@ export function buildRightPanelViewModel(params: RightPanelProps, t: Translate) 
     selectedIsPapyrus,
     selectedIsUndyne,
     selectedPapyrusUnbeliever,
-    selectedPapyrusBoneMode,
     selectedPapyrusLongBoneMode,
     undyneAxis,
     placementEnabled,
@@ -288,15 +284,6 @@ export function buildRightPanelViewModel(params: RightPanelProps, t: Translate) 
       onSendAction({ type: "enterStealth", unitId: selectedUnit.id });
     },
     onSetUndyneAxis: (axis: "row" | "col") => onSetPapyrusLineAxis(axis),
-    onSetPapyrusBoneType: (boneType: "blue" | "orange") => {
-      if (!selectedUnit) return;
-      onSendAction({
-        type: "useAbility",
-        unitId: selectedUnit.id,
-        abilityId: PAPYRUS_ORANGE_BONE_ID,
-        payload: { boneType },
-      });
-    },
     onTogglePapyrusLongBone: () => {
       if (!selectedUnit) return;
       onSendAction({

@@ -43,24 +43,6 @@ export function applySansPostAction(
     }
   }
 
-  if (action.type === "endTurn") {
-    const endingUnitId = prevState.activeUnitId;
-    if (endingUnitId) {
-      const endingUnitBefore = prevState.units[endingUnitId];
-      if (endingUnitBefore && !endingUnitBefore.turn.moveUsed) {
-        const punished = applySansBoneFieldPunish(
-          nextState,
-          endingUnitId,
-          "orange",
-          "moveNotSpent",
-          prevState.turnNumber
-        );
-        nextState = punished.state;
-        nextEvents = [...nextEvents, ...punished.events];
-      }
-    }
-  }
-
   const badJoke = applySansBadassJokeDebuffs(nextState, prevState, nextEvents);
   nextState = badJoke.state;
   nextEvents = [...nextEvents, ...badJoke.events];

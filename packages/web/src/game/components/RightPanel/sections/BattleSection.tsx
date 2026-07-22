@@ -43,7 +43,6 @@ interface BattleSectionProps {
   selectedIsPapyrus: boolean;
   selectedIsUndyne: boolean;
   selectedPapyrusUnbeliever: boolean;
-  selectedPapyrusBoneMode: "blue" | "orange";
   selectedPapyrusLongBoneMode: boolean;
   papyrusLineAxis: PapyrusLineAxis;
   papyrusAxisOptions: { axis: PapyrusLineAxis; label: string }[];
@@ -67,7 +66,6 @@ interface BattleSectionProps {
   onUseLokiLaughtOption: (option: LokiLaughtOption) => void;
   onSetPapyrusAxis: (axis: PapyrusLineAxis) => void;
   onSetUndyneAxis: (axis: "row" | "col") => void;
-  onSetPapyrusBoneType: (boneType: "blue" | "orange") => void;
   onTogglePapyrusLongBone: () => void;
   onEndTurn: () => void;
   onClear: () => void;
@@ -106,7 +104,6 @@ export const BattleSection: FC<BattleSectionProps> = ({
   selectedIsPapyrus,
   selectedIsUndyne,
   selectedPapyrusUnbeliever,
-  selectedPapyrusBoneMode,
   selectedPapyrusLongBoneMode,
   papyrusLineAxis,
   papyrusAxisOptions,
@@ -130,7 +127,6 @@ export const BattleSection: FC<BattleSectionProps> = ({
   onUseLokiLaughtOption,
   onSetPapyrusAxis,
   onSetUndyneAxis,
-  onSetPapyrusBoneType,
   onTogglePapyrusLongBone,
   onEndTurn,
   onClear,
@@ -206,12 +202,10 @@ export const BattleSection: FC<BattleSectionProps> = ({
           undyneAxis={undyneAxis}
           undyneAxisOptions={undyneAxisOptions}
           selectedPapyrusUnbeliever={selectedPapyrusUnbeliever}
-          selectedPapyrusBoneMode={selectedPapyrusBoneMode}
           selectedPapyrusLongBoneMode={selectedPapyrusLongBoneMode}
           canAct={canAct}
           onSetPapyrusAxis={onSetPapyrusAxis}
           onSetUndyneAxis={onSetUndyneAxis}
-          onSetPapyrusBoneType={onSetPapyrusBoneType}
           onTogglePapyrusLongBone={onTogglePapyrusLongBone}
         />
         <BattleTurnButtons

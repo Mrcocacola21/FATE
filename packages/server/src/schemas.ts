@@ -201,6 +201,10 @@ const ResolveRollChoiceSchema = z.union([
     targetId: z.string().min(1),
   }),
   z.object({
+    type: z.literal("papyrusBoneChoice"),
+    boneType: z.union([z.literal("blue"), z.literal("orange")]),
+  }),
+  z.object({
     type: z.literal("femtoDivineMoveDestination"),
     position: CoordSchema,
   }),

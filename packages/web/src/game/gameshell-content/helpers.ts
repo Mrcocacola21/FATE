@@ -425,6 +425,7 @@ Object.assign(PENDING_ROLL_LABELS_UK, {
   moonCoordinateRoll: "Координати Місяця",
   moonCheeseHolesChoice: "Таємний вибір фігури",
   pureBloodRedirectChoice: "Чиста кров",
+  papyrusBoneChoice: "Вибір кістки Папіруса",
 });
 
 export function getPendingRollLabel(kind?: string | null, language: "en" | "uk" = "en") {
@@ -626,6 +627,8 @@ export function getPendingRollLabel(kind?: string | null, language: "en" | "uk" 
       return "Secret figure choice";
     case "pureBloodRedirectChoice":
       return "Pure Blood redirect";
+    case "papyrusBoneChoice":
+      return "Papyrus bone choice";
     case "initiativeRoll":
       return "Initiative roll";
     default:

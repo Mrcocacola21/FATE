@@ -120,7 +120,7 @@ export function applySansBoneFieldPunish(
   state: GameState,
   targetId: string,
   expectedBoneType: PapyrusBoneType,
-  reason: "moveSpent" | "moveNotSpent",
+  reason: "moveSpent" | "nonMoveFirst",
   expectedTurnNumber: number
 ): ApplyResult {
   const target = state.units[targetId];
@@ -139,6 +139,13 @@ export function applySansBoneFieldPunish(
   ) {
     return { state, events: [] };
   }
+  if (
+    expectedBoneType === "orange" &&
+    (target.orangeBoneFirstMoveSatisfied ||
+      target.orangeBonePenaltyAppliedThisTurn)
+  ) {
+    return { state, events: [] };
+  }
 
   const hpAfter = Math.max(0, target.hp - 1);
   const updatedStatus = {
@@ -152,6 +159,14 @@ export function applySansBoneFieldPunish(
     ...target,
     hp: hpAfter,
     sansBoneFieldStatus: updatedStatus,
+    orangeBonePenaltyAppliedThisTurn:
+      expectedBoneType === "orange"
+        ? true
+        : target.orangeBonePenaltyAppliedThisTurn,
+    hasSpentMeaningfulTurnAction:
+      expectedBoneType === "orange"
+        ? true
+        : target.hasSpentMeaningfulTurnAction,
   };
   const events: GameEvent[] = [
     {

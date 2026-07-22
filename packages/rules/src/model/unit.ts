@@ -83,6 +83,11 @@ export interface UnitState {
   hasAttackedThisTurn: boolean;
   hasActedThisTurn: boolean;
 
+  /** Orange Bone resolves once, against the first meaningful turn resource use. */
+  orangeBoneFirstMoveSatisfied?: boolean;
+  orangeBonePenaltyAppliedThisTurn?: boolean;
+  hasSpentMeaningfulTurnAction?: boolean;
+
   genghisKhanDiagonalMoveActive?: boolean;
   genghisKhanDecreeMovePending?: boolean;
   genghisKhanMongolChargeActive?: boolean;
@@ -104,7 +109,6 @@ export interface UnitState {
   riverBoatmanMovePending?: boolean;
   riverBoatmanExtraMoves?: number;
   papyrusUnbelieverActive?: boolean;
-  papyrusBoneMode?: PapyrusBoneType;
   papyrusLongBoneMode?: boolean;
   papyrusLineAxis?: PapyrusLineAxis;
   papyrusBoneStatus?: PapyrusBoneStatus;

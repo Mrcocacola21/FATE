@@ -40,7 +40,7 @@ export type HeroGameEvent =
       targetId: string;
       boneType: PapyrusBoneType;
       damage: number;
-      reason: "moveSpent" | "moveNotSpent";
+      reason: "moveSpent" | "nonMoveFirst";
       hpAfter: number;
     }
   | {
@@ -74,7 +74,7 @@ export type HeroGameEvent =
       targetId: string;
       boneType: PapyrusBoneType;
       damage: number;
-      reason: "moveSpent" | "moveNotSpent";
+      reason: "moveSpent" | "nonMoveFirst";
       hpAfter: number;
     }
   | {

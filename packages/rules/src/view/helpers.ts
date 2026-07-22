@@ -53,7 +53,6 @@ export function cloneUnit(unit: UnitState): UnitState {
       ? [...unit.genghisKhanAttackedLastTurn]
       : unit.genghisKhanAttackedLastTurn,
     papyrusUnbelieverActive: unit.papyrusUnbelieverActive,
-    papyrusBoneMode: unit.papyrusBoneMode,
     papyrusLongBoneMode: unit.papyrusLongBoneMode,
     papyrusLineAxis: unit.papyrusLineAxis,
     papyrusBoneStatus: unit.papyrusBoneStatus

@@ -9,6 +9,8 @@ function PendingRollWaitingOverlay({ vm }: { vm: any }) {
   const pending = vm.pendingMeta;
   const isLocalPending = vm.pendingForLocalPlayer;
   const isDonMadnessDirection = pending.kind === "donMadDelusionDirection";
+  const isDirectChoice =
+    isDonMadnessDirection || pending.kind === "papyrusBoneChoice";
   const title =
     pending.kind === "initiativeRoll"
       ? t("pending.rollInitiative")
@@ -41,7 +43,7 @@ function PendingRollWaitingOverlay({ vm }: { vm: any }) {
           className="relative z-10 mt-3 text-sm leading-6 text-stone-600 dark:text-stone-300"
           aria-live="polite"
         >
-          {isDonMadnessDirection
+          {isDirectChoice
             ? isLocalPending
               ? t("pending.preparingChoice")
               : t("pending.waitingForOpponentChoice")

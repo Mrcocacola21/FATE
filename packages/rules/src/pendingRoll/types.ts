@@ -77,6 +77,16 @@ export interface TricksterAoEContext extends Record<string, unknown> {
   lokiStatusAppliedTargetIds?: string[];
 }
 
+export interface PapyrusBoneChoiceContext extends Record<string, unknown> {
+  papyrusUnitId: string;
+  targetUnitId: string;
+  targetIds: string[];
+  currentTargetIndex: number;
+  targetIndex: number;
+  targetCount: number;
+  availableBones: Array<"blue" | "orange">;
+}
+
 export interface DoraAoEContext extends Record<string, unknown> {
   casterId: string;
   targetsQueue: string[];

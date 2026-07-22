@@ -558,6 +558,51 @@ function testDonMadnessDirectionProjectionIsOwnerPrivateAndValid() {
   console.log("view_don_madness_direction_projection_is_owner_private_and_valid passed");
 }
 
+function testPapyrusBoneChoiceProjectionIsOwnerPrivate() {
+  let state = setupState();
+  const papyrus = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.class === "spearman",
+  )!;
+  const target = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "knight",
+  )!;
+  state = setUnit(state, papyrus.id, { position: { col: 3, row: 3 } });
+  state = setUnit(state, target.id, { position: { col: 4, row: 4 } });
+  state = {
+    ...state,
+    phase: "battle",
+    pendingPapyrusBoneChoices: [
+      { papyrusUnitId: papyrus.id, targetUnitId: target.id },
+    ],
+    pendingRoll: {
+      id: "papyrus-bone-choice",
+      player: "P1",
+      kind: "papyrusBoneChoice",
+      context: {
+        papyrusUnitId: papyrus.id,
+        targetUnitId: target.id,
+        targetIds: [target.id],
+        currentTargetIndex: 0,
+        targetIndex: 1,
+        targetCount: 1,
+        availableBones: ["blue", "orange"],
+      },
+    },
+  };
+
+  const ownerView = makePlayerView(state, "P1");
+  const opponentView = makePlayerView(state, "P2");
+  assert.equal(ownerView.pendingRoll?.kind, "papyrusBoneChoice");
+  assert.equal(ownerView.pendingRoll?.context.targetUnitId, target.id);
+  assert.equal(opponentView.pendingRoll, null);
+  assert.equal(
+    "pendingPapyrusBoneChoices" in ownerView,
+    false,
+    "the internal hit queue must never be projected",
+  );
+  console.log("view_papyrus_bone_choice_projection_is_owner_private passed");
+}
+
 function main() {
   testHiddenEnemyOmitted();
   testKnownStealthedEnemyUsesLastKnown();
@@ -570,6 +615,7 @@ function main() {
   testRiderMovementProjectionDoesNotLeakHiddenTarget();
   testNewBatchAbilitySourceProjection();
   testDonMadnessDirectionProjectionIsOwnerPrivateAndValid();
+  testPapyrusBoneChoiceProjectionIsOwnerPrivate();
 }
 
 main();

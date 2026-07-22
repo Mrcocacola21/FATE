@@ -26,6 +26,7 @@ import { BattleUnitSummary } from "./sections/BattleUnitSummary";
 import { BattleAbilityActions } from "./sections/BattleAbilityActions";
 import { BattleActionButtons } from "./sections/BattleActionButtons";
 import { BattleBottomHints } from "./sections/BattleBottomHints";
+import { BattleHeroControls } from "./sections/BattleHeroControls";
 import {
   CoreResourceStrip,
   getOrdinaryAbilityCounterView,
@@ -203,6 +204,110 @@ test("unit summary renders three main bars and explains basic attack under Actio
   assert.match(markup, /Basic Attack/);
   assert.match(markup, /Uses Action/);
   assert.match(markup, /Ability: Tisona/);
+});
+
+test("Orange Bone status and compact move-first warning follow per-turn tracking", () => {
+  setLanguage("en", { setItem: () => undefined });
+  const unit = makeUnit({
+    papyrusBoneStatus: {
+      sourceUnitId: "P2-papyrus",
+      kind: "orange",
+      expiresOnSourceOwnTurn: 2,
+    },
+    orangeBoneFirstMoveSatisfied: false,
+    orangeBonePenaltyAppliedThisTurn: false,
+    hasSpentMeaningfulTurnAction: false,
+  });
+  const renderSummary = (selectedUnit: UnitState) =>
+    renderToStaticMarkup(
+      <BattleUnitSummary
+        selectedUnit={selectedUnit}
+        selectedHeroName="Frisk"
+        selectedMettatonRating={null}
+        forestMarkers={[]}
+        selectedInsideForest={false}
+        stormActive={false}
+        selectedStormExempt={false}
+        moveRoll={null}
+        economy={selectedUnit.turn}
+        abilityViews={[makeAbility()]}
+        view={makeView(selectedUnit)}
+        canAct={true}
+        pendingRoll={false}
+        legalAttackTargetCount={1}
+        legalMoveCount={1}
+        onHoverAbility={() => undefined}
+      />,
+    );
+
+  const unresolvedMarkup = renderSummary(unit);
+  assert.match(unresolvedMarkup, /data-unit-bone-status="orange"/);
+  assert.match(unresolvedMarkup, /the first action this unit takes on its turn must be Movement/);
+  assert.match(unresolvedMarkup, /data-orange-bone-warning/);
+  assert.match(unresolvedMarkup, /Orange Bone: move first or take 1 damage/);
+
+  const satisfiedMarkup = renderSummary({
+    ...unit,
+    orangeBoneFirstMoveSatisfied: true,
+    hasSpentMeaningfulTurnAction: true,
+  });
+  assert.match(
+    satisfiedMarkup,
+    /data-unit-bone-status="orange"/,
+    "the active status badge should remain visible after Movement satisfies the turn",
+  );
+  assert.doesNotMatch(satisfiedMarkup, /data-orange-bone-warning/);
+
+  const penalizedMarkup = renderSummary({
+    ...unit,
+    hp: 3,
+    stealthAttemptedThisTurn: true,
+    turn: { ...unit.turn, stealthUsed: true },
+    orangeBonePenaltyAppliedThisTurn: true,
+    hasSpentMeaningfulTurnAction: true,
+  });
+  assert.match(penalizedMarkup, /3\/5/);
+  assert.match(penalizedMarkup, /data-unit-bone-status="orange"/);
+  assert.doesNotMatch(
+    penalizedMarkup,
+    /data-orange-bone-warning/,
+    "a projected Stealth-first penalty should update HP and clear the one-shot warning",
+  );
+});
+
+test("Papyrus controls never render a global Blue or Orange bone mode toggle", () => {
+  setLanguage("en", { setItem: () => undefined });
+  const papyrus = makeUnit({
+    heroId: "papyrus",
+    papyrusUnbelieverActive: true,
+    papyrusLongBoneMode: false,
+  });
+  const markup = renderToStaticMarkup(
+    <BattleHeroControls
+      selectedUnit={papyrus}
+      selectedIsPapyrus={true}
+      selectedIsUndyne={false}
+      papyrusLineAxis="row"
+      papyrusAxisOptions={[
+        { axis: "row", label: "Rows" },
+        { axis: "col", label: "Columns" },
+        { axis: "diagMain", label: "Main diagonal" },
+        { axis: "diagAnti", label: "Anti diagonal" },
+      ]}
+      undyneAxis="row"
+      undyneAxisOptions={[]}
+      selectedPapyrusUnbeliever={true}
+      selectedPapyrusLongBoneMode={false}
+      canAct={true}
+      onSetPapyrusAxis={() => undefined}
+      onSetUndyneAxis={() => undefined}
+      onTogglePapyrusLongBone={() => undefined}
+    />,
+  );
+
+  assert.doesNotMatch(markup, />Blue</);
+  assert.doesNotMatch(markup, />Orange</);
+  assert.match(markup, /Long Bone/);
 });
 
 test("unit summary renders Entangled and Chicken status badges", () => {

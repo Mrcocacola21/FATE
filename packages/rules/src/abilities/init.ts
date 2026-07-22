@@ -150,7 +150,6 @@ export function initUnitAbilities(unit: UnitState): UnitState {
     updated = {
       ...updated,
       papyrusUnbelieverActive: false,
-      papyrusBoneMode: "blue",
       papyrusLongBoneMode: false,
       papyrusLineAxis: "row",
       papyrusBoneStatus: undefined,

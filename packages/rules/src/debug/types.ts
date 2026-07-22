@@ -10,8 +10,6 @@ export type DebugUnitStatus =
   | "bunker"
   | "gutsBerserkModeActive"
   | "papyrusUnbelieverActive"
-  | "papyrusBoneBlue"
-  | "papyrusBoneOrange"
   | "sansUnbelieverUnlocked"
   | "mettatonExUnlocked"
   | "mettatonNeoUnlocked"

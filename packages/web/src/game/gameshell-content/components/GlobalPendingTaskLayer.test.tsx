@@ -123,6 +123,48 @@ test("initiative roll action preserves the resolvePendingRoll command payload", 
   ]);
 });
 
+test("transformed Papyrus hit opens a large per-target bone popup", () => {
+  setLanguage("en", null);
+  const pending = {
+    id: "papyrus-bone-1",
+    kind: "papyrusBoneChoice",
+    player: "P1",
+    context: {
+      papyrusUnitId: "papyrus",
+      targetUnitId: "duolingo",
+      targetIds: ["duolingo", "zoro"],
+      currentTargetIndex: 0,
+      targetIndex: 1,
+      targetCount: 2,
+      availableBones: ["blue", "orange"],
+    },
+  };
+  const markup = renderToStaticMarkup(
+    <GlobalPendingTaskLayer
+      vm={makeVm({
+        pendingRoll: pending,
+        pendingMeta: pending,
+        view: {
+          phase: "battle",
+          units: {
+            papyrus: { id: "papyrus", figureId: "Papyrus" },
+            duolingo: { id: "duolingo", figureId: "Duolingo" },
+          },
+          initiative: { P1: 8, P2: 4, winner: "P1" },
+        },
+      })}
+    />,
+  );
+
+  assert.match(markup, /data-testid="papyrus-bone-choice"/);
+  assert.match(markup, /data-target-unit-id="duolingo"/);
+  assert.match(markup, /Target 1 of 2: Duolingo/);
+  assert.match(markup, />Blue Bone</);
+  assert.match(markup, />Orange Bone</);
+  assert.match(markup, /min-h-12/, "mobile buttons should remain touch-sized");
+  assert.doesNotMatch(markup, />Roll dice</);
+});
+
 test("Madness of the Knight is a board direction task and never renders a roll action", () => {
   setLanguage("en", null);
   const pending = {

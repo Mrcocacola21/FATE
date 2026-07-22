@@ -177,7 +177,7 @@ test("bone punishment keeps its color cue and shows the exact damage", () => {
       targetId: "target",
       boneType: "orange",
       damage: 1,
-      reason: "moveNotSpent",
+      reason: "nonMoveFirst",
       hpAfter: 2,
     },
     { view: view([unit("target", { col: 2, row: 5 })]), previousPositions: {} },

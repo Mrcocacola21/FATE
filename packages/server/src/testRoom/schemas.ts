@@ -64,8 +64,6 @@ const DebugStateCommandSchema = z.discriminatedUnion("type", [
       "bunker",
       "gutsBerserkModeActive",
       "papyrusUnbelieverActive",
-      "papyrusBoneBlue",
-      "papyrusBoneOrange",
       "sansUnbelieverUnlocked",
       "mettatonExUnlocked",
       "mettatonNeoUnlocked",

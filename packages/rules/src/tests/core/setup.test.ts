@@ -269,7 +269,6 @@ function makeUnlockedHeroFixture(hero: (typeof HERO_REGISTRY_LIST)[number]): {
     gutsBerserkModeActive: false,
     gutsBerserkExitUsed: false,
     papyrusUnbelieverActive: true,
-    papyrusBoneMode: "blue",
     papyrusLongBoneMode: false,
     papyrusLineAxis: "row",
     sansUnbelieverUnlocked: true,

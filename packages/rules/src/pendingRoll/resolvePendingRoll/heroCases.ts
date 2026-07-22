@@ -97,6 +97,7 @@ import {
   resolveRiverTraLaLaTargetChoice,
 } from "../../actions/heroes/riverPerson";
 import { resolveGutsBerserkAttackChoice } from "../../actions/heroes/guts";
+import { resolvePapyrusBoneChoice } from "../resolvers/heroes/resolvePapyrusRoll";
 import { resolveMongolChargeAllyAttackTarget } from "../../actions/movementActions/mongolCharge";
 import type { AutoRollChoice, ResolvePendingRollAction } from "./types";
 
@@ -127,6 +128,7 @@ export const HERO_PENDING_ROLL_KINDS = [
   "lokiMindControlTargetChoice",
   "lokiSpinAbilityChoice",
   "gutsBerserkAttackChoice",
+  "papyrusBoneChoice",
   "friskPacifismChoice",
   "friskPacifismHugsTargetChoice",
   "friskWarmWordsTargetChoice",
@@ -239,6 +241,8 @@ export function resolveHeroPendingRollCase(
       return resolveLokiSpinAbilityChoice(state, pending, action.choice, rng);
     case "gutsBerserkAttackChoice":
       return resolveGutsBerserkAttackChoice(state, pending, action.choice);
+    case "papyrusBoneChoice":
+      return resolvePapyrusBoneChoice(state, pending, action.choice);
     case "friskPacifismChoice":
       return resolveFriskPacifismChoice(state, pending, action.choice);
     case "friskPacifismHugsTargetChoice":

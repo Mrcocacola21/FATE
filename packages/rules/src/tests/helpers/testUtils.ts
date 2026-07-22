@@ -235,6 +235,8 @@ export function resolvePendingRollOnce(
           mode: "single",
           targetId: (pending.context as { targetId: string }).targetId,
         }
+      : pending.kind === "papyrusBoneChoice"
+      ? { type: "papyrusBoneChoice", boneType: "blue" }
       : undefined;
   return applyActionRaw(
     state,

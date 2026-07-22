@@ -79,6 +79,10 @@ export function testPapyrusBlueBoneApplyPunishRefreshAndExpiry() {
     "default Papyrus hit should apply Blue Bone"
   );
   assert(
+    state.pendingRoll?.kind !== "papyrusBoneChoice",
+    "base Papyrus should never create a bone choice"
+  );
+  assert(
     firstStatus?.expiresOnSourceOwnTurn === 1,
     "blue bone should expire on Papyrus next own turn start"
   );
@@ -503,7 +507,7 @@ export function testPapyrusUnbelieverTriggersOnAlliedHeroDeathAndPersists() {
 }
 
 
-export function testPapyrusOrangeBoneToggleAndEndTurnPunish() {
+export function testPapyrusOrangeBoneToggleAndFirstNonMovePunish() {
   const rng = makeRngSequence([0.99, 0.99, 0.01, 0.01]);
   let state = createEmptyGame();
   const a1 = createDefaultArmy("P1", { spearman: HERO_PAPYRUS_ID });
@@ -521,13 +525,12 @@ export function testPapyrusOrangeBoneToggleAndEndTurnPunish() {
   state = setUnit(state, papyrus.id, {
     position: { col: 4, row: 4 },
     papyrusUnbelieverActive: true,
-    papyrusBoneMode: "blue",
   });
   state = setUnit(state, enemy.id, { position: { col: 4, row: 5 } });
   state = toBattleState(state, "P1", papyrus.id);
   state = initKnowledgeForOwners(state);
 
-  const toggle = applyAction(
+  const removedToggle = applyAction(
     state,
     {
       type: "useAbility",
@@ -538,22 +541,87 @@ export function testPapyrusOrangeBoneToggleAndEndTurnPunish() {
     rng
   );
   assert(
-    toggle.state.units[papyrus.id].papyrusBoneMode === "orange",
-    "Orange Bone toggle should switch Papyrus to orange mode"
+    removedToggle.state === state && removedToggle.events.length === 0,
+    "the removed global bone-mode command must not mutate rules state"
   );
 
   const attack = applyAction(
-    toggle.state,
+    state,
     { type: "attack", attackerId: papyrus.id, defenderId: enemy.id } as any,
     rng
   );
-  const resolved = resolveAllPendingRollsWithEvents(attack.state, rng);
-  state = resolved.state;
+  const attackerRoll = resolvePendingRollOnce(attack.state, rng);
+  const defenderRoll = resolvePendingRollOnce(attackerRoll.state, rng);
+  assert(
+    defenderRoll.state.pendingRoll?.kind === "papyrusBoneChoice",
+    "a transformed Papyrus hit should create a per-target bone choice"
+  );
+  assert(
+    defenderRoll.state.pendingRoll?.player === papyrus.owner,
+    "the bone choice should belong to Papyrus owner"
+  );
+  assert(
+    defenderRoll.state.pendingRoll?.context.targetUnitId === enemy.id,
+    "the pending choice should identify the successfully hit target"
+  );
+  assert(
+    defenderRoll.state.units[enemy.id].papyrusBoneStatus === undefined,
+    "no bone should be applied before the owner chooses"
+  );
+
+  const staleTargetState = setUnit(defenderRoll.state, enemy.id, {
+    isAlive: false,
+    position: null,
+  });
+  const staleTarget = applyAction(
+    staleTargetState,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: staleTargetState.pendingRoll!.id,
+      player: papyrus.owner,
+      choice: { type: "papyrusBoneChoice", boneType: "blue" },
+    } as any,
+    rng
+  );
+  assert(
+    staleTarget.state === staleTargetState &&
+      staleTarget.rejectionReason === "invalid_papyrus_bone_target",
+    "a stale/dead pending target should be rejected without mutation"
+  );
+
+  const invalid = applyAction(
+    defenderRoll.state,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: defenderRoll.state.pendingRoll!.id,
+      player: papyrus.owner,
+      choice: { type: "papyrusBoneChoice", boneType: "green" },
+    } as any,
+    rng
+  );
+  assert(
+    invalid.state === defenderRoll.state &&
+      invalid.rejectionReason === "invalid_papyrus_bone_choice",
+    "an invalid bone choice should be rejected without mutation"
+  );
+
+  const chosen = applyAction(
+    defenderRoll.state,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: defenderRoll.state.pendingRoll!.id,
+      player: papyrus.owner,
+      choice: { type: "papyrusBoneChoice", boneType: "orange" },
+    } as any,
+    rng
+  );
+  state = chosen.state;
   const orangeStatus = state.units[enemy.id].papyrusBoneStatus;
   assert(
     orangeStatus?.kind === "orange",
-    "Orange Bone mode should apply orange status on hit"
+    "choosing Orange Bone should apply it to that hit target"
   );
+  assert(!state.pendingRoll, "single-target bone choice should clear after answer");
 
   state = {
     ...state,
@@ -575,19 +643,175 @@ export function testPapyrusOrangeBoneToggleAndEndTurnPunish() {
   const endTurn = applyAction(state, { type: "endTurn" } as any, rng);
   assert(
     endTurn.state.units[enemy.id].hp === hpBeforeEnd - 1,
-    "Orange Bone should punish ending turn without spending move slot"
+    "End Turn should count as the first non-movement action under Orange Bone"
   );
   assert(
     endTurn.events.some(
       (event) =>
         event.type === "papyrusBonePunished" &&
         event.targetId === enemy.id &&
-        event.reason === "moveNotSpent"
+        event.reason === "nonMoveFirst"
     ),
-    "Orange Bone end-turn punishment event should be emitted"
+    "Orange Bone first-non-move punishment event should be emitted"
   );
 
-  console.log("papyrus_orange_bone_toggle_and_end_turn_punish passed");
+  console.log("papyrus_per_hit_bone_choice_and_first_non_move_punish passed");
+}
+
+export function testPapyrusTransformedAoeQueuesPerTargetBoneChoices() {
+  const rng = makeRngSequence([
+    0.99, 0.99,
+    0.01, 0.01,
+    0.01, 0.01,
+  ]);
+  let state = createEmptyGame();
+  state = attachArmy(
+    state,
+    createDefaultArmy("P1", { spearman: HERO_PAPYRUS_ID })
+  );
+  state = attachArmy(state, createDefaultArmy("P2"));
+
+  const papyrus = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.heroId === HERO_PAPYRUS_ID
+  )!;
+  const targets = Object.values(state.units)
+    .filter(
+      (unit) =>
+        unit.owner === "P2" &&
+        (unit.class === "knight" || unit.class === "rider")
+    )
+    .sort((a, b) => a.id.localeCompare(b.id));
+  const targetA = targets[0];
+  const targetB = targets[1];
+
+  state = setUnit(state, papyrus.id, {
+    position: { col: 0, row: 0 },
+    papyrusUnbelieverActive: true,
+    charges: {
+      ...papyrus.charges,
+      [ABILITY_PAPYRUS_COOL_GUY]: 3,
+    },
+  });
+  state = setUnit(state, targetA.id, {
+    position: { col: 2, row: 4 },
+    hp: 6,
+  });
+  state = setUnit(state, targetB.id, {
+    position: { col: 5, row: 4 },
+    hp: 6,
+  });
+  state = toBattleState(state, "P1", papyrus.id);
+  state = initKnowledgeForOwners(state);
+
+  let result = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: papyrus.id,
+      abilityId: ABILITY_PAPYRUS_COOL_GUY,
+      payload: { target: { col: 4, row: 4 }, axis: "row" },
+    } as any,
+    rng
+  );
+  while (result.state.pendingRoll?.kind !== "papyrusBoneChoice") {
+    assert(result.state.pendingRoll, "AoE combat should remain pending until resolved");
+    result = resolvePendingRollOnce(result.state, rng);
+  }
+
+  const firstPending = result.state.pendingRoll;
+  assert(
+    firstPending?.context.targetCount === 2 &&
+      firstPending.context.targetIndex === 1,
+    "AoE should expose the first of two sequential bone choices"
+  );
+  const firstTargetId = String(firstPending?.context.targetUnitId);
+  const firstChosen = applyAction(
+    result.state,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: firstPending!.id,
+      player: papyrus.owner,
+      choice: { type: "papyrusBoneChoice", boneType: "blue" },
+    } as any,
+    rng
+  );
+  assert(
+    firstChosen.state.units[firstTargetId].papyrusBoneStatus?.kind === "blue",
+    "the first AoE target should receive its selected Blue Bone"
+  );
+  assert(
+    firstChosen.state.pendingRoll?.kind === "papyrusBoneChoice" &&
+      firstChosen.state.pendingRoll.context.targetIndex === 2,
+    "answering target one should advance to target two"
+  );
+
+  const secondPending = firstChosen.state.pendingRoll!;
+  const secondTargetId = String(secondPending.context.targetUnitId);
+  assert(
+    secondTargetId !== firstTargetId,
+    "each successful AoE hit target should be prompted exactly once"
+  );
+  const secondChosen = applyAction(
+    firstChosen.state,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: secondPending.id,
+      player: papyrus.owner,
+      choice: { type: "papyrusBoneChoice", boneType: "orange" },
+    } as any,
+    rng
+  );
+  assert(
+    secondChosen.state.units[secondTargetId].papyrusBoneStatus?.kind === "orange",
+    "the second AoE target should independently receive Orange Bone"
+  );
+  assert(
+    secondChosen.state.units[papyrus.id].charges[ABILITY_PAPYRUS_COOL_GUY] === 0,
+    "bone choices must not spend the AoE ability cost again"
+  );
+  assert(
+    !secondChosen.state.pendingRoll &&
+      (secondChosen.state.pendingPapyrusBoneChoices?.length ?? 0) === 0,
+    "the AoE choice queue should be empty after all targets are answered"
+  );
+
+  console.log("papyrus_transformed_aoe_per_target_bone_choices passed");
+}
+
+export function testPapyrusTransformedMissCreatesNoBoneChoice() {
+  const rng = makeRngSequence([0.01, 0.01, 0.99, 0.99]);
+  let state = createEmptyGame();
+  state = attachArmy(
+    state,
+    createDefaultArmy("P1", { spearman: HERO_PAPYRUS_ID })
+  );
+  state = attachArmy(state, createDefaultArmy("P2"));
+  const papyrus = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.heroId === HERO_PAPYRUS_ID
+  )!;
+  const target = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "knight"
+  )!;
+  state = setUnit(state, papyrus.id, {
+    position: { col: 4, row: 4 },
+    papyrusUnbelieverActive: true,
+  });
+  state = setUnit(state, target.id, { position: { col: 4, row: 5 } });
+  state = initKnowledgeForOwners(toBattleState(state, "P1", papyrus.id));
+
+  const attack = applyAction(
+    state,
+    { type: "attack", attackerId: papyrus.id, defenderId: target.id } as any,
+    rng
+  );
+  const resolved = resolveAllPendingRollsWithEvents(attack.state, rng);
+  assert(
+    !resolved.state.pendingRoll &&
+      resolved.state.units[target.id].papyrusBoneStatus === undefined,
+    "a missed transformed-Papyrus attack should create no choice and apply no bone"
+  );
+
+  console.log("papyrus_transformed_miss_creates_no_bone_choice passed");
 }
 
 

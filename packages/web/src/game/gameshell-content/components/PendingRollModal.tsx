@@ -131,6 +131,7 @@ export function PendingRollModal({
   const isRuleDeclarationCellChoice =
     pendingRoll.kind === "courtForcedAppearanceDestination";
   const isLokiSpinAbilityChoice = pendingRoll.kind === "lokiSpinAbilityChoice";
+  const isPapyrusBoneChoice = pendingRoll.kind === "papyrusBoneChoice";
   const availableRuleIds = Array.isArray(pendingContext.availableRuleIds)
     ? pendingContext.availableRuleIds.filter(isRuleDeclarationId)
     : RULE_DECLARATION_IDS;
@@ -188,6 +189,18 @@ export function PendingRollModal({
     gutsBerserkSingleTargetIds.includes(gutsBerserkTargetId);
   const gutsCanAoe =
     !!gutsBerserkTargetId && gutsBerserkAoeTargetIds.includes(gutsBerserkTargetId);
+  const papyrusBoneTargetId =
+    typeof pendingContext.targetUnitId === "string" ? pendingContext.targetUnitId : "";
+  const papyrusBoneTarget = view.units[papyrusBoneTargetId];
+  const papyrusBoneTargetLabel =
+    (papyrusBoneTarget?.figureId ??
+      papyrusBoneTarget?.heroId ??
+      papyrusBoneTargetId) ||
+    t("pending.hiddenTarget");
+  const papyrusBoneTargetIndex =
+    typeof pendingContext.targetIndex === "number" ? pendingContext.targetIndex : 1;
+  const papyrusBoneTargetCount =
+    typeof pendingContext.targetCount === "number" ? pendingContext.targetCount : 1;
   return (
     <div
       className="game-pending-modal-layer fixed inset-0 flex items-center justify-center overflow-y-auto bg-black/80 px-3 backdrop-blur-md sm:px-4"
@@ -216,8 +229,10 @@ export function PendingRollModal({
                       ? t("ruleDeclarations.chooseFigure")
                       : isRuleDeclarationChargeChoice
                         ? t("ruleDeclarations.chooseCounter")
-                        : isRuleDeclarationCellChoice
+                    : isRuleDeclarationCellChoice
                           ? t("ruleDeclarations.chooseCell")
+                        : isPapyrusBoneChoice
+                          ? t("pending.papyrusBoneTitle")
                 : isForestMoveCheck
                   ? t("pending.forestCheck")
                   : isForestChoice
@@ -275,6 +290,12 @@ export function PendingRollModal({
                   ? t("pending.resolveRoll", {
                       roll: getPendingRollLabel(pendingRoll.kind, language),
                     })
+            : isPapyrusBoneChoice
+              ? t("pending.papyrusBonePrompt", {
+                  target: papyrusBoneTargetLabel,
+                  current: papyrusBoneTargetIndex,
+                  total: papyrusBoneTargetCount,
+                })
             : isLokiLaughtChoice
               ? p(
                   "Pick one Loki's Laugh option. Again Some Bullshit and Chicken preserve stealth.",
@@ -385,7 +406,38 @@ export function PendingRollModal({
           </div>
         )}
         <div className="pending-choice mt-5 flex flex-col gap-2 border-t border-violet-300/40 pt-4 dark:border-violet-800/50 sm:flex-row">
-          {isRuleDeclarationChoice ? (
+          {isPapyrusBoneChoice ? (
+            <div
+              className="grid w-full grid-cols-2 gap-3"
+              data-testid="papyrus-bone-choice"
+              data-target-unit-id={papyrusBoneTargetId}
+            >
+              <button
+                type="button"
+                className="min-h-12 rounded-xl border border-sky-300 bg-sky-600 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-sky-950/20 transition hover:bg-sky-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300"
+                onClick={() =>
+                  onResolvePendingRoll({
+                    type: "papyrusBoneChoice",
+                    boneType: "blue",
+                  })
+                }
+              >
+                {t("pending.chooseBlueBone")}
+              </button>
+              <button
+                type="button"
+                className="min-h-12 rounded-xl border border-orange-300 bg-orange-600 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-orange-950/20 transition hover:bg-orange-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300"
+                onClick={() =>
+                  onResolvePendingRoll({
+                    type: "papyrusBoneChoice",
+                    boneType: "orange",
+                  })
+                }
+              >
+                {t("pending.chooseOrangeBone")}
+              </button>
+            </div>
+          ) : isRuleDeclarationChoice ? (
             <RuleDeclarationChoicePanel
               key={pendingRoll.id}
               availableRuleIds={availableRuleIds}

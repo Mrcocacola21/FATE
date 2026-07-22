@@ -12,14 +12,14 @@ import {
   setCharges,
 } from "../../../abilities";
 import { HERO_FALSE_TRAIL_TOKEN_ID } from "../../../heroes";
-import { evUnitDied } from "../../../core";
+import { evUnitDied, requestRoll } from "../../../core";
 import { isPapyrus, isPapyrusBoneStatusActive } from "./helpers";
 
 export function applyPapyrusBonePunish(
   state: GameState,
   targetId: string,
   expectedBoneType: PapyrusBoneType,
-  reason: "moveSpent" | "moveNotSpent"
+  reason: "moveSpent" | "nonMoveFirst"
 ): ApplyResult {
   const target = state.units[targetId];
   if (!target || !target.isAlive) return { state, events: [] };
@@ -36,6 +36,13 @@ export function applyPapyrusBonePunish(
   ) {
     return { state, events: [] };
   }
+  if (
+    expectedBoneType === "orange" &&
+    (target.orangeBoneFirstMoveSatisfied ||
+      target.orangeBonePenaltyAppliedThisTurn)
+  ) {
+    return { state, events: [] };
+  }
 
   const hpAfter = Math.max(0, target.hp - 1);
   const updatedStatus: PapyrusBoneStatus = {
@@ -47,6 +54,14 @@ export function applyPapyrusBonePunish(
     ...target,
     hp: hpAfter,
     papyrusBoneStatus: updatedStatus,
+    orangeBonePenaltyAppliedThisTurn:
+      expectedBoneType === "orange"
+        ? true
+        : target.orangeBonePenaltyAppliedThisTurn,
+    hasSpentMeaningfulTurnAction:
+      expectedBoneType === "orange"
+        ? true
+        : target.hasSpentMeaningfulTurnAction,
   };
   const events: GameEvent[] = [
     {
@@ -86,12 +101,60 @@ export function applyPapyrusBonePunish(
   };
 }
 
+export function applyPapyrusBoneStatus(
+  state: GameState,
+  papyrusId: string,
+  targetId: string,
+  boneType: PapyrusBoneType
+): ApplyResult {
+  const papyrus = state.units[papyrusId];
+  const target = state.units[targetId];
+  if (!isPapyrus(papyrus) || !papyrus.isAlive || !target?.isAlive) {
+    return { state, events: [] };
+  }
+
+  const expiresOnSourceOwnTurn = (papyrus.ownTurnsStarted ?? 0) + 1;
+  const status: PapyrusBoneStatus = {
+    sourceUnitId: papyrus.id,
+    kind: boneType,
+    expiresOnSourceOwnTurn,
+    bluePunishedTurnNumber: undefined,
+  };
+  return {
+    state: {
+      ...state,
+      units: {
+        ...state.units,
+        [target.id]: {
+          ...target,
+          papyrusBoneStatus: status,
+        },
+      },
+    },
+    events: [
+      {
+        type: "papyrusBoneApplied",
+        papyrusId: papyrus.id,
+        targetId: target.id,
+        boneType,
+        expiresOnSourceOwnTurn,
+      },
+    ],
+  };
+}
+
+/**
+ * Pre-transformation hits apply Blue Bone immediately. Transformed hits are
+ * queued while combat (including every AoE defense) finishes, then exposed as
+ * one authoritative choice at a time.
+ */
 export function applyPapyrusBoneOnHits(
   state: GameState,
   events: GameEvent[]
 ): ApplyResult {
   let nextState = state;
   const nextEvents: GameEvent[] = [];
+  const queued = [...(state.pendingPapyrusBoneChoices ?? [])];
 
   for (const event of events) {
     if (event.type !== "attackResolved" || !event.hit) continue;
@@ -101,38 +164,100 @@ export function applyPapyrusBoneOnHits(
     const target = nextState.units[event.defenderId];
     if (!target || !target.isAlive) continue;
 
-    const boneType: PapyrusBoneType =
-      papyrus.papyrusUnbelieverActive && papyrus.papyrusBoneMode === "orange"
-        ? "orange"
-        : "blue";
-    const expiresOnSourceOwnTurn = (papyrus.ownTurnsStarted ?? 0) + 1;
-    const status: PapyrusBoneStatus = {
-      sourceUnitId: papyrus.id,
-      kind: boneType,
-      expiresOnSourceOwnTurn,
-      bluePunishedTurnNumber: undefined,
-    };
+    if (!papyrus.papyrusUnbelieverActive) {
+      const applied = applyPapyrusBoneStatus(
+        nextState,
+        papyrus.id,
+        target.id,
+        "blue"
+      );
+      nextState = applied.state;
+      nextEvents.push(...applied.events);
+      continue;
+    }
 
-    nextState = {
-      ...nextState,
-      units: {
-        ...nextState.units,
-        [target.id]: {
-          ...target,
-          papyrusBoneStatus: status,
-        },
-      },
-    };
-    nextEvents.push({
-      type: "papyrusBoneApplied",
-      papyrusId: papyrus.id,
-      targetId: target.id,
-      boneType,
-      expiresOnSourceOwnTurn,
-    });
+    if (
+      !queued.some(
+        (choice) =>
+          choice.papyrusUnitId === papyrus.id &&
+          choice.targetUnitId === target.id
+      )
+    ) {
+      queued.push({ papyrusUnitId: papyrus.id, targetUnitId: target.id });
+    }
+  }
+
+  const previousQueue = state.pendingPapyrusBoneChoices ?? [];
+  if (
+    queued.length !== previousQueue.length ||
+    queued.some((choice, index) => choice !== previousQueue[index])
+  ) {
+    nextState = { ...nextState, pendingPapyrusBoneChoices: queued };
   }
 
   return { state: nextState, events: nextEvents };
+}
+
+export function maybeRequestPapyrusBoneChoice(state: GameState): ApplyResult {
+  if (state.pendingRoll) return { state, events: [] };
+
+  const queue = state.pendingPapyrusBoneChoices ?? [];
+  let firstIndex = -1;
+  for (let index = 0; index < queue.length; index += 1) {
+    const entry = queue[index];
+    const papyrus = state.units[entry.papyrusUnitId];
+    const target = state.units[entry.targetUnitId];
+    if (
+      isPapyrus(papyrus) &&
+      papyrus.isAlive &&
+      papyrus.papyrusUnbelieverActive &&
+      target?.isAlive
+    ) {
+      firstIndex = index;
+      break;
+    }
+  }
+
+  if (firstIndex < 0) {
+    return queue.length > 0
+      ? { state: { ...state, pendingPapyrusBoneChoices: [] }, events: [] }
+      : { state, events: [] };
+  }
+
+  const first = queue[firstIndex];
+  const targetIds = queue
+    .filter((entry) => entry.papyrusUnitId === first.papyrusUnitId)
+    .map((entry) => entry.targetUnitId)
+    .filter((targetId, index, ids) => ids.indexOf(targetId) === index)
+    .filter((targetId) => state.units[targetId]?.isAlive === true);
+  const remainingQueue = queue.filter(
+    (entry) => entry.papyrusUnitId !== first.papyrusUnitId
+  );
+  const baseState: GameState = {
+    ...state,
+    pendingPapyrusBoneChoices: remainingQueue,
+  };
+  if (targetIds.length === 0) {
+    return maybeRequestPapyrusBoneChoice(baseState);
+  }
+
+  const papyrus = state.units[first.papyrusUnitId];
+  const requested = requestRoll(
+    baseState,
+    papyrus.owner,
+    "papyrusBoneChoice",
+    {
+      papyrusUnitId: papyrus.id,
+      targetUnitId: targetIds[0],
+      targetIds,
+      currentTargetIndex: 0,
+      targetIndex: 1,
+      targetCount: targetIds.length,
+      availableBones: ["blue", "orange"],
+    },
+    papyrus.id
+  );
+  return requested;
 }
 
 export function applyPapyrusUnbelieverFromDeaths(
@@ -173,7 +298,6 @@ export function applyPapyrusUnbelieverFromDeaths(
     let transformedPapyrus: UnitState = {
       ...papyrus,
       papyrusUnbelieverActive: true,
-      papyrusBoneMode: papyrus.papyrusBoneMode ?? "blue",
       papyrusLongBoneMode: papyrus.papyrusLongBoneMode ?? false,
       papyrusLineAxis: papyrus.papyrusLineAxis ?? "row",
     };

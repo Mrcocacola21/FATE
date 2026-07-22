@@ -94,7 +94,6 @@ export const RightPanelContent: FC<RightPanelProps> = (props) => {
           selectedIsPapyrus={vm.selectedIsPapyrus}
           selectedIsUndyne={vm.selectedIsUndyne}
           selectedPapyrusUnbeliever={vm.selectedPapyrusUnbeliever}
-          selectedPapyrusBoneMode={vm.selectedPapyrusBoneMode}
           selectedPapyrusLongBoneMode={vm.selectedPapyrusLongBoneMode}
           papyrusLineAxis={papyrusLineAxis}
           papyrusAxisOptions={PAPYRUS_AXIS_OPTIONS}
@@ -118,7 +117,6 @@ export const RightPanelContent: FC<RightPanelProps> = (props) => {
           onUseLokiLaughtOption={vm.onUseLokiLaughtOption}
           onSetPapyrusAxis={vm.onSetPapyrusAxis}
           onSetUndyneAxis={vm.onSetUndyneAxis}
-          onSetPapyrusBoneType={vm.onSetPapyrusBoneType}
           onTogglePapyrusLongBone={vm.onTogglePapyrusLongBone}
           onEndTurn={vm.onEndTurn}
           onClear={vm.onClear}

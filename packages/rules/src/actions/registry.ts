@@ -11,7 +11,10 @@ import { applyEndTurn, applyUnitStartTurn } from "./turnActions";
 import { applyChikatiloPostAction } from "./heroes/chikatilo";
 import { applyFriskPostAction } from "./heroes/frisk";
 import { applyLokiIllusoryDoubleFromEvents } from "./heroes/loki";
-import { applyPapyrusPostAction } from "./heroes/papyrus";
+import {
+  applyPapyrusPostAction,
+  maybeRequestPapyrusBoneChoice,
+} from "./heroes/papyrus";
 import { applySansPostAction } from "./heroes/sans";
 import { applyUndynePostAction } from "./heroes/undyne";
 import { applyMettatonImpulseUnlocks } from "./heroes/mettaton";
@@ -21,6 +24,80 @@ import {
   applyRuleDeclarationWinChecks,
 } from "../ruleDeclarations";
 import { GAME_OVER_REJECTION } from "../gameOver";
+import {
+  applyOrangeBoneNonMovePenalty,
+  canStartOrangeBoneNonMove,
+  markOrangeBoneMoveFirstSatisfied,
+} from "./orangeBone";
+
+class RecordingRng implements RNG {
+  readonly values: number[] = [];
+
+  constructor(private readonly source: RNG) {}
+
+  next(): number {
+    const value = this.source.next();
+    this.values.push(value);
+    return value;
+  }
+}
+
+class ReplayRng implements RNG {
+  private index = 0;
+
+  constructor(
+    private readonly values: readonly number[],
+    private readonly source: RNG
+  ) {}
+
+  next(): number {
+    if (this.index < this.values.length) {
+      return this.values[this.index++];
+    }
+    return this.source.next();
+  }
+}
+
+function applyCoreAction(
+  state: GameState,
+  action: GameAction,
+  rng: RNG
+): ApplyResult {
+  switch (action.type) {
+    case "rollInitiative":
+      return lobbyHandlers.applyRollInitiative(state, rng);
+    case "chooseArena":
+      return lobbyHandlers.applyChooseArena(state, action);
+    case "lobbyInit":
+      return lobbyHandlers.applyLobbyInit(state, action);
+    case "setReady":
+      return lobbyHandlers.applySetReady(state, action);
+    case "startGame":
+      return lobbyHandlers.applyStartGame(state, action);
+    case "unitStartTurn":
+      return applyUnitStartTurn(state, action, rng);
+    case "placeUnit":
+      return applyPlaceUnit(state, action);
+    case "move":
+      return applyMove(state, action, rng);
+    case "requestMoveOptions":
+      return applyRequestMoveOptions(state, action, rng);
+    case "attack":
+      return applyAttack(state, action, rng);
+    case "enterStealth":
+      return applyEnterStealth(state, action, rng);
+    case "searchStealth":
+      return applySearchStealth(state, action, rng);
+    case "useAbility":
+      return applyUseAbility(state, action, rng);
+    case "resolvePendingRoll":
+      return applyResolvePendingRoll(state, action, rng);
+    case "endTurn":
+      return applyEndTurn(state, rng);
+    default:
+      return { state, events: [] };
+  }
+}
 
 export function applyAction(
   state: GameState,
@@ -36,76 +113,46 @@ export function applyAction(
   }
 
   let result: ApplyResult;
+  if (canStartOrangeBoneNonMove(state, action)) {
+    // Probe with recorded random values so ordinary command validation remains
+    // authoritative. A rejected command never receives the penalty.
+    const recordingRng = new RecordingRng(rng);
+    const probe = applyCoreAction(state, action, recordingRng);
+    const accepted =
+      !probe.rejectionReason &&
+      (probe.state !== state || probe.events.length > 0);
 
-  switch (action.type) {
-    case "rollInitiative":
-      result = lobbyHandlers.applyRollInitiative(state, rng);
-      break;
-
-    case "chooseArena":
-      result = lobbyHandlers.applyChooseArena(state, action);
-      break;
-
-    case "lobbyInit":
-      result = lobbyHandlers.applyLobbyInit(state, action);
-      break;
-
-    case "setReady":
-      result = lobbyHandlers.applySetReady(state, action);
-      break;
-
-    case "startGame":
-      result = lobbyHandlers.applyStartGame(state, action);
-      break;
-
-    case "unitStartTurn":
-      result = applyUnitStartTurn(state, action, rng);
-      break;
-
-    case "placeUnit":
-      result = applyPlaceUnit(state, action);
-      break;
-
-    case "move":
-      result = applyMove(state, action, rng);
-      break;
-
-    case "requestMoveOptions":
-      result = applyRequestMoveOptions(state, action, rng);
-      break;
-
-    case "attack":
-      result = applyAttack(state, action, rng);
-      break;
-
-    case "enterStealth":
-      result = applyEnterStealth(state, action, rng);
-      break;
-
-    case "searchStealth":
-      result = applySearchStealth(state, action, rng);
-      break;
-
-    case "useAbility":
-      result = applyUseAbility(state, action, rng);
-      break;
-
-    case "resolvePendingRoll":
-      result = applyResolvePendingRoll(state, action, rng);
-      break;
-
-    case "endTurn":
-      result = applyEndTurn(state, rng);
-      break;
-
-    default:
-      result = { state, events: [] };
-      break;
+    if (!accepted) {
+      result = probe;
+    } else {
+      const penalty = applyOrangeBoneNonMovePenalty(state, action);
+      const actorId = state.activeUnitId;
+      const actorSurvived = actorId
+        ? penalty.state.units[actorId]?.isAlive === true
+        : true;
+      if (!actorSurvived) {
+        result = penalty;
+      } else {
+        const resolved = applyCoreAction(
+          penalty.state,
+          action,
+          new ReplayRng(recordingRng.values, rng)
+        );
+        result = {
+          state: resolved.state,
+          events: [...penalty.events, ...resolved.events],
+        };
+      }
+    }
+  } else {
+    result = applyCoreAction(state, action, rng);
   }
 
   if (result.rejectionReason) {
     return result;
   }
+
+  result = markOrangeBoneMoveFirstSatisfied(prevState, result);
 
   const afterChikatilo = applyChikatiloPostAction(
     result.state,
@@ -153,8 +200,23 @@ export function applyAction(
     afterNewBatch.state,
     afterNewBatch.events
   );
-  return applyRuleDeclarationWinChecks(
+  const afterWinChecks = applyRuleDeclarationWinChecks(
     afterRuleAttack.state,
     afterRuleAttack.events
   );
+  if (afterWinChecks.state.phase === "ended") {
+    return {
+      ...afterWinChecks,
+      state: {
+        ...afterWinChecks.state,
+        pendingPapyrusBoneChoices: [],
+      },
+    };
+  }
+
+  const papyrusBoneChoice = maybeRequestPapyrusBoneChoice(afterWinChecks.state);
+  return {
+    state: papyrusBoneChoice.state,
+    events: [...afterWinChecks.events, ...papyrusBoneChoice.events],
+  };
 }
