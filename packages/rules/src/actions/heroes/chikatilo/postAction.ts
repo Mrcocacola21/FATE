@@ -8,7 +8,7 @@ import { evUnitDied } from "../../../core";
 import { HERO_CHIKATILO_ID, HERO_FALSE_TRAIL_TOKEN_ID } from "../../../heroes";
 import type { RNG } from "../../../rng";
 import { rollContest } from "./helpers";
-import { requestChikatiloRevealChoice } from "./actions";
+import { applyFalseTrailExplosionImmediately } from "./actions";
 
 function revealChikatiloImmediately(
   state: GameState,
@@ -129,98 +129,74 @@ export function applyChikatiloPostAction(
   let nextState = state;
   let nextEvents = [...events];
 
-  const diedTokens = events
-    .filter((e) => e.type === "unitDied")
-    .map((e) => (e.type === "unitDied" ? e.unitId : ""))
-    .filter((id) => id.length > 0);
+  const processedTokenDeaths = new Set<string>();
+  const processedChikatiloReveals = new Set<string>();
+  let changed = true;
 
-  for (const tokenId of diedTokens) {
-    const tokenUnit = state.units[tokenId];
-    const isToken =
-      tokenUnit?.heroId === HERO_FALSE_TRAIL_TOKEN_ID ||
-      Object.values(state.units).some(
-        (unit) => unit.chikatiloFalseTrailTokenId === tokenId
+  while (changed) {
+    changed = false;
+
+    for (const event of [...nextEvents]) {
+      if (event.type !== "unitDied" || processedTokenDeaths.has(event.unitId)) continue;
+      const tokenUnit = nextState.units[event.unitId] ?? state.units[event.unitId];
+      const isToken =
+        tokenUnit?.heroId === HERO_FALSE_TRAIL_TOKEN_ID ||
+        Object.values(nextState.units).some(
+          (unit) => unit.chikatiloFalseTrailTokenId === event.unitId
+        );
+      if (!isToken) continue;
+      processedTokenDeaths.add(event.unitId);
+
+      const owner = Object.values(nextState.units).find(
+        (unit) => unit.chikatiloFalseTrailTokenId === event.unitId
       );
-    if (!isToken) continue;
+      if (owner?.isStealthed) {
+        const revealed = revealChikatiloImmediately(nextState, owner.id);
+        nextState = revealed.state;
+        nextEvents.push(...revealed.events);
+        changed = changed || revealed.events.length > 0;
+      }
+      if (event.killerId) {
+        const trap = performFalseTrailTrap(nextState, event.unitId, event.killerId, rng);
+        nextState = trap.state;
+        nextEvents.push(...trap.events);
+        changed = changed || trap.events.length > 0;
+      }
+    }
 
-    const owner = Object.values(nextState.units).find(
-      (unit) => unit.chikatiloFalseTrailTokenId === tokenId
-    );
-    if (owner && owner.isStealthed) {
-      const revealed = revealChikatiloImmediately(nextState, owner.id);
+    for (const chikatilo of Object.values(nextState.units)) {
+      if (!chikatilo.isAlive || !chikatilo.isStealthed || chikatilo.heroId !== HERO_CHIKATILO_ID) {
+        continue;
+      }
+      const hasOtherRealUnit = Object.values(nextState.units).some(
+        (unit) =>
+          unit.isAlive &&
+          unit.id !== chikatilo.id &&
+          unit.heroId !== HERO_FALSE_TRAIL_TOKEN_ID
+      );
+      if (hasOtherRealUnit) continue;
+      const revealed = revealChikatiloImmediately(nextState, chikatilo.id);
       nextState = revealed.state;
       nextEvents.push(...revealed.events);
+      changed = changed || revealed.events.length > 0;
     }
 
-    const killerId = events.find(
-      (e) => e.type === "unitDied" && e.unitId === tokenId
-    ) as Extract<GameEvent, { type: "unitDied" }> | undefined;
-    if (killerId?.killerId) {
-      const trap = performFalseTrailTrap(nextState, tokenId, killerId.killerId, rng);
-      nextState = trap.state;
-      nextEvents.push(...trap.events);
+    for (const event of [...nextEvents]) {
+      if (event.type !== "stealthRevealed" || processedChikatiloReveals.has(event.unitId)) {
+        continue;
+      }
+      const chikatilo = nextState.units[event.unitId];
+      if (!chikatilo || chikatilo.heroId !== HERO_CHIKATILO_ID) continue;
+      processedChikatiloReveals.add(event.unitId);
+      const tokenId = chikatilo.chikatiloFalseTrailTokenId;
+      const token = tokenId ? nextState.units[tokenId] : undefined;
+      if (!token?.isAlive || !token.position) continue;
+
+      const explosion = applyFalseTrailExplosionImmediately(nextState, token, rng);
+      nextState = explosion.state;
+      nextEvents.push(...explosion.events);
+      changed = changed || explosion.events.length > 0;
     }
-  }
-
-  const stealthedChikatilos = Object.values(nextState.units).filter(
-    (unit) => unit.isAlive && unit.isStealthed && unit.heroId === HERO_CHIKATILO_ID
-  );
-  for (const chikatilo of stealthedChikatilos) {
-    const otherRealUnits = Object.values(nextState.units).filter(
-      (unit) =>
-        unit.isAlive &&
-        unit.id !== chikatilo.id &&
-        unit.heroId !== HERO_FALSE_TRAIL_TOKEN_ID
-    );
-    if (otherRealUnits.length > 0) continue;
-    const revealed = revealChikatiloImmediately(nextState, chikatilo.id);
-    nextState = revealed.state;
-    nextEvents.push(...revealed.events);
-  }
-
-  const revealEvents = nextEvents.filter(
-    (e) => e.type === "stealthRevealed"
-  ) as Extract<GameEvent, { type: "stealthRevealed" }>[];
-
-  for (const reveal of revealEvents) {
-    const revealedUnit = nextState.units[reveal.unitId];
-    if (!revealedUnit || revealedUnit.heroId !== HERO_CHIKATILO_ID) {
-      continue;
-    }
-
-    const tokenId = revealedUnit.chikatiloFalseTrailTokenId;
-    if (!tokenId) {
-      continue;
-    }
-    const token = nextState.units[tokenId];
-    if (!token || !token.isAlive) {
-      continue;
-    }
-
-    if (reveal.revealerId) {
-      const trap = performFalseTrailTrap(nextState, tokenId, reveal.revealerId, rng);
-      nextState = trap.state;
-      nextEvents.push(...trap.events);
-    }
-  }
-
-  const pendingRevealChoices = revealEvents
-    .map((e) => e.unitId)
-    .filter((id) => {
-      const unit = nextState.units[id];
-      if (!unit || unit.heroId !== HERO_CHIKATILO_ID) return false;
-      const tokenId = unit.chikatiloFalseTrailTokenId;
-      const token = tokenId ? nextState.units[tokenId] : null;
-      return !!token && token.isAlive;
-    })
-    .sort();
-
-  if (pendingRevealChoices.length > 0 && !nextState.pendingRoll) {
-    const first = pendingRevealChoices[0]!;
-    const rest = pendingRevealChoices.slice(1);
-    const requested = requestChikatiloRevealChoice(nextState, first, rest);
-    nextState = requested.state;
-    nextEvents = [...nextEvents, ...requested.events];
   }
 
   return { state: nextState, events: nextEvents };

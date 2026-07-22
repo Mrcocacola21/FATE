@@ -2,6 +2,8 @@ import assert from "assert";
 import { randomUUID } from "node:crypto";
 import { mock } from "node:test";
 import {
+  ABILITY_CHIKATILO_ASSASSIN_MARK,
+  ABILITY_CHIKATILO_DECOY,
   ABILITY_ARTEMIDA_SILVER_CRESCENT,
   ABILITY_HASSAN_ASSASIN_ORDER,
   ABILITY_RIVER_PERSON_BOAT,
@@ -15,8 +17,10 @@ import {
   HERO_FALSE_TRAIL_TOKEN_ID,
   HERO_KANEKI_ID,
   HERO_HASSAN_ID,
+  HERO_DUOLINGO_ID,
   HERO_RIVER_PERSON_ID,
   makePlayerView,
+  makeEmptyTurnEconomy,
   getStealthSuccessMinRoll,
   projectEventsForRecipient,
   type GameEvent,
@@ -1236,6 +1240,206 @@ function testHassanAssassinOrderCommandAndProjectionAreAuthoritative() {
   console.log("hardening_hassan_assassin_order_authoritative passed");
 }
 
+function testMissedHiddenAttackRevealIsAuthoritative() {
+  const { room } = makeSeatedRoom({
+    roomIdPrefix: "hardening-hidden-attack-reveal",
+  });
+  let state = createEmptyGame();
+  state = attachArmy(
+    state,
+    createDefaultArmy("P1", { assassin: HERO_HASSAN_ID }),
+  );
+  state = attachArmy(
+    state,
+    createDefaultArmy("P2", { trickster: HERO_DUOLINGO_ID }),
+  );
+  const hassan = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.heroId === HERO_HASSAN_ID,
+  );
+  const duolingo = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.heroId === HERO_DUOLINGO_ID,
+  );
+  assert(hassan && duolingo, "Hassan and Duolingo fixtures should exist");
+  state = setUnit(state, hassan.id, {
+    position: { col: 4, row: 4 },
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
+  state = setUnit(state, duolingo.id, { position: { col: 4, row: 5 } });
+  room.state = {
+    ...state,
+    phase: "battle",
+    currentPlayer: "P1",
+    activeUnitId: hassan.id,
+    knowledge: {
+      P1: { [hassan.id]: true },
+      P2: { [duolingo.id]: true },
+    },
+  };
+  const rolls = [0.01, 0.01, 0.99, 0.99];
+  room.rng = {
+    next: () => rolls.shift() ?? 0.5,
+  };
+
+  const declared = applyGameAction(
+    room,
+    { type: "attack", attackerId: hassan.id, defenderId: duolingo.id } as any,
+    "P1",
+  );
+  assert(declared.ok, "server should accept the legal hidden attack");
+  assert.equal(room.state.pendingRoll?.kind, "attack_attackerRoll");
+
+  const attackerRollId = room.state.pendingRoll!.id;
+  const attackerRolled = applyGameAction(
+    room,
+    { type: "resolvePendingRoll", pendingRollId: attackerRollId } as any,
+    "P1",
+  );
+  assert(attackerRolled.ok, "server should accept the attacker roll");
+  assert.equal(room.state.pendingRoll?.kind, "attack_defenderRoll");
+
+  const defenderRollId = room.state.pendingRoll!.id;
+  const defenderRolled = applyGameAction(
+    room,
+    { type: "resolvePendingRoll", pendingRollId: defenderRollId } as any,
+    "P2",
+  );
+  assert(defenderRolled.ok, "server should accept the defender roll");
+  assert(
+    defenderRolled.events.some(
+      (event) => event.type === "attackResolved" && !event.hit,
+    ),
+    "the queued dice should produce the reported miss",
+  );
+  assert.equal(
+    room.state.units[hassan.id].isStealthed,
+    false,
+    "authoritative state must reveal Hassan after the miss",
+  );
+  assert.equal(
+    room.actionLog
+      .flatMap((entry) => entry.events)
+      .filter(
+        (event) => event.type === "stealthRevealed" && event.unitId === hassan.id,
+      ).length,
+    1,
+    "the server event log should contain one safe reveal event",
+  );
+
+  const p1View = makePlayerView(room.state, "P1");
+  const p2View = makePlayerView(room.state, "P2");
+  assert.equal(p1View.units[hassan.id]?.isStealthed, false);
+  assert.equal(p2View.units[hassan.id]?.isStealthed, false);
+
+  console.log("hardening_missed_hidden_attack_reveal_is_authoritative passed");
+}
+
+function testChikatiloCommandsAndResourcesAreAuthoritative() {
+  const { room } = makeSeatedRoom({ roomIdPrefix: "hardening-chikatilo" });
+  let state = attachArmy(
+    attachArmy(createEmptyGame(), createDefaultArmy("P1", { assassin: HERO_CHIKATILO_ID })),
+    createDefaultArmy("P2")
+  );
+  const chikatilo = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.heroId === HERO_CHIKATILO_ID
+  );
+  const target = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "knight"
+  );
+  assert(chikatilo && target, "expected Chikatilo and mark target");
+  state = setUnit(state, chikatilo.id, {
+    position: { col: 4, row: 4 },
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+    charges: { ...chikatilo.charges, [ABILITY_CHIKATILO_DECOY]: 12 },
+  });
+  state = setUnit(state, target.id, { position: { col: 5, row: 4 } });
+  room.state = {
+    ...state,
+    phase: "battle",
+    currentPlayer: "P1",
+    activeUnitId: chikatilo.id,
+    turnOrder: [chikatilo.id],
+    turnOrderIndex: 0,
+    turnQueue: [chikatilo.id],
+    turnQueueIndex: 0,
+    knowledge: {
+      P1: { [chikatilo.id]: true, [target.id]: true },
+      P2: { [target.id]: true },
+    },
+  };
+
+  const ownerBefore = makePlayerView(room.state, "P1");
+  const decoyView = ownerBefore.abilitiesByUnitId[chikatilo.id]?.find(
+    (ability) => ability.id === ABILITY_CHIKATILO_DECOY
+  );
+  assert.equal(decoyView?.chargeUnlimited, true);
+  assert.equal(decoyView?.isSpecialCounter, true);
+  assert.equal(decoyView?.maxCharges, undefined);
+  assert(
+    ownerBefore.abilitiesByUnitId[chikatilo.id]
+      ?.find((ability) => ability.id === ABILITY_CHIKATILO_ASSASSIN_MARK)
+      ?.targeting?.targetIds?.includes(target.id),
+    "owner projection should expose the authoritative legal Killer's Mark target"
+  );
+  assert.equal(
+    makePlayerView(room.state, "P2").units[chikatilo.id],
+    undefined,
+    "opponent projection must not expose hidden Chikatilo coordinates"
+  );
+
+  const marked = applyGameAction(
+    room,
+    {
+      type: "useAbility",
+      unitId: chikatilo.id,
+      abilityId: ABILITY_CHIKATILO_ASSASSIN_MARK,
+      payload: { targetId: target.id },
+    },
+    "P1"
+  );
+  assert.equal(marked.ok, true, "server should accept a legal Killer's Mark");
+  assert.equal(room.state.units[chikatilo.id].isStealthed, true);
+
+  room.state = setUnit(room.state, chikatilo.id, { turn: makeEmptyTurnEconomy() });
+  const beforeDuplicate = room.state;
+  const revisionBeforeDuplicate = room.revision;
+  const duplicate = applyGameAction(
+    room,
+    {
+      type: "useAbility",
+      unitId: chikatilo.id,
+      abilityId: ABILITY_CHIKATILO_ASSASSIN_MARK,
+      payload: { targetId: target.id },
+    },
+    "P1"
+  );
+  assert.equal(duplicate.ok, false, "duplicate Killer's Mark should be rejected");
+  assert.equal(room.state, beforeDuplicate, "duplicate Mark must not mutate state");
+  assert.equal(room.revision, revisionBeforeDuplicate);
+
+  room.state = setUnit(room.state, chikatilo.id, {
+    isStealthed: false,
+    stealthTurnsLeft: 0,
+    turn: makeEmptyTurnEconomy(),
+  });
+  const decoy = applyGameAction(
+    room,
+    {
+      type: "useAbility",
+      unitId: chikatilo.id,
+      abilityId: ABILITY_CHIKATILO_DECOY,
+    },
+    "P1"
+  );
+  assert.equal(decoy.ok, true, "server should accept legal Decoy Stealth");
+  assert.equal(room.state.units[chikatilo.id].isStealthed, true);
+  assert.equal(room.state.units[chikatilo.id].turn.stealthUsed, true);
+  assert.equal(room.state.units[chikatilo.id].charges[ABILITY_CHIKATILO_DECOY], 9);
+
+  console.log("hardening_chikatilo_commands_and_resources_authoritative passed");
+}
+
 async function main() {
   await testGraceExpiryVacatesSeatAndInvalidatesToken();
   await testReconnectWithinGraceKeepsSeatAndClearsTimer();
@@ -1257,6 +1461,8 @@ async function main() {
   testArtemidaSickleEndpointCommandsStayAuthoritative();
   testPendingBoardChoiceUsesAuthenticatedSeat();
   testHassanAssassinOrderCommandAndProjectionAreAuthoritative();
+  testMissedHiddenAttackRevealIsAuthoritative();
+  testChikatiloCommandsAndResourcesAreAuthoritative();
   console.log("hardening tests passed");
 }
 

@@ -14,6 +14,7 @@ import { getProjectedStealthThreshold } from "./actionSummaries";
 import type { TurnEconomyState } from "./types";
 import { shouldRenderManualAbilityButton } from "./rightPanelHelpers";
 import {
+  CHIKATILO_DECOY_ID,
   KAISER_ENGINEERING_MIRACLE_ID,
   LUCHE_DIVINE_RAY_ID,
   ZORO_ONI_GIRI_ID,
@@ -175,7 +176,11 @@ export const SpecialHeroResourceStrip: FC<{
             className="rounded-md bg-violet-500/10 px-2 py-1 text-[10px] text-violet-900 ring-1 ring-inset ring-violet-500/20 dark:text-violet-100"
             title={display.description || undefined}
           >
-            <span className="font-semibold">{display.name}</span>{" "}
+            <span className="font-semibold">
+              {resource.id === CHIKATILO_DECOY_ID
+                ? t("actionMenu.decoyPoints")
+                : display.name}
+            </span>{" "}
             <span className="font-black tabular-nums">
               {resource.value}
               {resource.max !== undefined ? `/${resource.max}` : ""}

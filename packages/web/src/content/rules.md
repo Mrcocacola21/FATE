@@ -88,7 +88,7 @@ Only Archer and Assassin can enter stealth.
 - Move: 1 or 2 squares in any straight or diagonal direction.
 - Attack: melee (adjacent).
 - Stealth: can attempt to enter stealth on 1d6 = 5-6.
-- From stealth, a successful attack deals 2 damage and reveals the Assassin.
+- From stealth, a successful attack deals 2 damage. Any attack attempt reveals the attacker, even on a miss.
 
 ### Berserker
 - Move: roll 1d6 to determine the allowed arc.

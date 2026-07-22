@@ -344,13 +344,13 @@ export function formatEventMessage(
       if (typeof event.targetId !== "string") {
         return text(
           language,
-          "Assassin's Mark was applied.",
+          "Killer's Mark was applied.",
           "Мітку вбивці накладено.",
         );
       }
       return text(
         language,
-        `Chikatilo applied Assassin's Mark to ${event.targetId}. Exact location will be tracked from Chikatilo's turn start until the marked target finishes a turn.`,
+        `Chikatilo applied Killer's Mark to ${event.targetId}. Exact location will be tracked from Chikatilo's turn start until the marked target finishes a turn.`,
         `Чикатило наклав Мітку вбивці на ${event.targetId}. Точне місце буде відстежуватися від початку ходу Чикатила до завершення ходу поміченої цілі.`,
       );
     }

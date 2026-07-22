@@ -150,6 +150,7 @@ export function resolveChikatiloDecoyChoice(
 
   let selection = choice === "decoy" ? "decoy" : "roll";
   let nextState: GameState = state;
+  const costEvents: ApplyResult["events"] = [];
 
   if (selection === "decoy") {
     const spent = spendCharges(defender, ABILITY_CHIKATILO_DECOY, 3);
@@ -164,6 +165,15 @@ export function resolveChikatiloDecoyChoice(
           [updatedDefender.id]: updatedDefender,
         },
       };
+      costEvents.push({
+        type: "chargesUpdated",
+        unitId: updatedDefender.id,
+        deltas: { [ABILITY_CHIKATILO_DECOY]: -3 },
+        now: {
+          [ABILITY_CHIKATILO_DECOY]:
+            updatedDefender.charges[ABILITY_CHIKATILO_DECOY] ?? 0,
+        },
+      });
     }
   }
 
@@ -196,10 +206,14 @@ export function resolveChikatiloDecoyChoice(
     1,
     true
   );
-  return continueAfterAttackResolution(
+  const continued = continueAfterAttackResolution(
     resolved.state,
     resolved.events,
     nextCtx,
     rng
   );
+  return {
+    state: continued.state,
+    events: [...costEvents, ...continued.events],
+  };
 }

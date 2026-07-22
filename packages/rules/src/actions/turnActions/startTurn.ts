@@ -6,10 +6,20 @@ import type {
   UnitState,
 } from "../../model";
 import type { RNG } from "../../rng";
-import { processUnitStartOfTurn } from "../../abilities";
+import {
+  ABILITY_CHIKATILO_DECOY,
+  addCharges,
+  getCharges,
+  processUnitStartOfTurn,
+} from "../../abilities";
 import { processUnitStartOfTurnStealth } from "../../stealth";
 import { resetTurnEconomy } from "../../turnEconomy";
-import { HERO_KALADIN_ID, HERO_LOKI_ID } from "../../heroes";
+import {
+  HERO_CHIKATILO_ID,
+  HERO_FALSE_TRAIL_TOKEN_ID,
+  HERO_KALADIN_ID,
+  HERO_LOKI_ID,
+} from "../../heroes";
 import {
   maybeTriggerCarpetStrike,
   maybeTriggerEngineeringMiracle,
@@ -158,10 +168,45 @@ export function applyUnitStartTurn(
     },
   };
 
-  const stateAfterChikatiloTracking = activateChikatiloTrackingForStartTurn(
+  let stateAfterChikatiloTracking = activateChikatiloTrackingForStartTurn(
     stateAfterTurnCount,
     initialUnit.id
   );
+  const chikatiloResourceEvents: GameEvent[] = [];
+  if (updatedForTurnCount.heroId === HERO_CHIKATILO_ID) {
+    const markedEnemyHeroes = new Set(
+      (updatedForTurnCount.chikatiloMarkedTargets ?? []).filter((targetId) => {
+        const target = stateAfterChikatiloTracking.units[targetId];
+        return !!(
+          target?.isAlive &&
+          target.position &&
+          target.owner !== updatedForTurnCount.owner &&
+          target.heroId &&
+          target.heroId !== HERO_FALSE_TRAIL_TOKEN_ID
+        );
+      })
+    );
+    const gained = markedEnemyHeroes.size;
+    if (gained > 0) {
+      const current = stateAfterChikatiloTracking.units[updatedForTurnCount.id];
+      const before = getCharges(current, ABILITY_CHIKATILO_DECOY);
+      const resourceUnit = addCharges(current, ABILITY_CHIKATILO_DECOY, gained);
+      const after = getCharges(resourceUnit, ABILITY_CHIKATILO_DECOY);
+      stateAfterChikatiloTracking = {
+        ...stateAfterChikatiloTracking,
+        units: {
+          ...stateAfterChikatiloTracking.units,
+          [resourceUnit.id]: resourceUnit,
+        },
+      };
+      chikatiloResourceEvents.push({
+        type: "chargesUpdated",
+        unitId: resourceUnit.id,
+        deltas: { [ABILITY_CHIKATILO_DECOY]: after - before },
+        now: { [ABILITY_CHIKATILO_DECOY]: after },
+      });
+    }
+  }
 
   const mettatonThresholdResult = maybeTriggerMettatonThresholdUnlocks(
     stateAfterChikatiloTracking,
@@ -227,6 +272,7 @@ export function applyUnitStartTurn(
         ...bunkerEvents,
         ...stormEvents,
         ...startEvents,
+        ...chikatiloResourceEvents,
         ...mettatonThresholdResult.events,
         ...boneFieldImpulseResult.events,
         ...sleipnirResult.events,
@@ -269,6 +315,7 @@ export function applyUnitStartTurn(
     ...bunkerEvents,
     ...stormEvents,
     ...startEvents,
+    ...chikatiloResourceEvents,
     ...mettatonThresholdResult.events,
     ...boneFieldImpulseResult.events,
     ...sleipnirResult.events,

@@ -98,10 +98,17 @@ export function useGameShellCombatTargets({
       CHIKATILO_ASSASSIN_MARK_ID,
     );
     if (range === null) return [] as UnitState[];
+    const projectedTargets = view.abilitiesByUnitId?.[selectedUnit.id]?.find(
+      (ability) => ability.id === CHIKATILO_ASSASSIN_MARK_ID,
+    )?.targeting?.targetIds;
+    const legalTargetIds = projectedTargets
+      ? new Set(projectedTargets)
+      : null;
     const origin = selectedUnit.position;
     return Object.values(view.units).filter((unit) => {
       if (!unit?.isAlive || !unit.position) return false;
       if (unit.id === selectedUnit.id) return false;
+      if (legalTargetIds && !legalTargetIds.has(unit.id)) return false;
       const dx = Math.abs(unit.position.col - origin.col);
       const dy = Math.abs(unit.position.row - origin.row);
       return Math.max(dx, dy) <= range;

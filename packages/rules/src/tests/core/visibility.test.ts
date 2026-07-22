@@ -9,6 +9,7 @@ import {
   initKnowledgeForOwners,
   makeRngSequence,
   makePlayerView,
+  resolveAttack,
   resolveAllPendingRolls,
   resolveAllPendingRollsWithEvents,
   SeededRNG,
@@ -17,6 +18,7 @@ import {
 } from "../helpers/testUtils";
 import { resolveAoE } from "../../aoe";
 import { projectEventsForRecipient } from "../../view/events";
+import { HERO_DUOLINGO_ID, HERO_HASSAN_ID } from "../../heroes";
 
 export function testRiderPathIgnoresHiddenEnemies() {
   const rng = new SeededRNG(42);
@@ -178,6 +180,153 @@ export function testAssassinAttackFromStealth() {
   );
 
   console.log("assassin_attack_from_stealth passed");
+}
+
+function setupHiddenHassanAgainstDuolingo() {
+  let state = createEmptyGame();
+  state = attachArmy(
+    state,
+    createDefaultArmy("P1", { assassin: HERO_HASSAN_ID })
+  );
+  state = attachArmy(
+    state,
+    createDefaultArmy("P2", { trickster: HERO_DUOLINGO_ID })
+  );
+  const hassan = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.heroId === HERO_HASSAN_ID
+  )!;
+  const duolingo = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.heroId === HERO_DUOLINGO_ID
+  )!;
+  state = setUnit(state, hassan.id, {
+    position: { col: 4, row: 4 },
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
+  state = setUnit(state, duolingo.id, { position: { col: 4, row: 5 } });
+  state = initKnowledgeForOwners(toBattleState(state, "P1", hassan.id));
+  return { state, hassan, duolingo };
+}
+
+export function testHiddenHassanMissesDuolingoAndReveals() {
+  const { state, hassan, duolingo } = setupHiddenHassanAgainstDuolingo();
+  const rejected = resolveAttack(state, {
+    attackerId: hassan.id,
+    defenderId: duolingo.id,
+    rolls: { attackerDice: [1], defenderDice: [6, 6] },
+  });
+  assert(rejected.nextState === state, "an invalid attack resolution must not mutate state");
+  assert(rejected.events.length === 0, "an invalid attack resolution must emit no events");
+  assert(
+    state.units[hassan.id].isStealthed,
+    "a rejected attack must not consume Hassan's stealth"
+  );
+
+  const rng = makeRngSequence([0.01, 0.01, 0.99, 0.99]);
+  const declared = applyAction(
+    state,
+    { type: "attack", attackerId: hassan.id, defenderId: duolingo.id } as any,
+    rng
+  );
+  const resolved = resolveAllPendingRollsWithEvents(declared.state, rng);
+  const events = [...declared.events, ...resolved.events];
+  const attack = events.find(
+    (event) => event.type === "attackResolved"
+  );
+  const reveals = events.filter(
+    (event) => event.type === "stealthRevealed" && event.unitId === hassan.id
+  );
+
+  assert(attack?.type === "attackResolved" && !attack.hit, "Hassan should miss");
+  assert(
+    resolved.state.units[hassan.id].isStealthed === false,
+    "hidden Hassan must reveal after a missed attack"
+  );
+  assert(reveals.length === 1, "a missed attack should emit one attacker reveal event");
+  assert(
+    resolved.state.knowledge.P1[hassan.id] === true &&
+      resolved.state.knowledge.P2[hassan.id] === true,
+    "both projections should know the revealed attacker"
+  );
+  assert(
+    makePlayerView(resolved.state, "P1").units[hassan.id]?.isStealthed === false &&
+      makePlayerView(resolved.state, "P2").units[hassan.id]?.isStealthed === false,
+    "both player views should project Hassan as revealed"
+  );
+
+  console.log("hidden_hassan_misses_duolingo_and_reveals passed");
+}
+
+export function testHiddenHassanHitsDuolingoAndReveals() {
+  const { state, hassan, duolingo } = setupHiddenHassanAgainstDuolingo();
+  const rng = makeRngSequence([0.99, 0.99, 0.01, 0.01]);
+  const declared = applyAction(
+    state,
+    { type: "attack", attackerId: hassan.id, defenderId: duolingo.id } as any,
+    rng
+  );
+  const resolved = resolveAllPendingRollsWithEvents(declared.state, rng);
+  const events = [...declared.events, ...resolved.events];
+  const attack = events.find(
+    (event) => event.type === "attackResolved"
+  );
+
+  assert(attack?.type === "attackResolved" && attack.hit, "Hassan should hit");
+  assert(attack.damage === 2, "the successful attack should retain stealth damage");
+  assert(
+    resolved.state.units[hassan.id].isStealthed === false,
+    "hidden Hassan must reveal after a successful attack"
+  );
+  assert(
+    events.filter(
+      (event) => event.type === "stealthRevealed" && event.unitId === hassan.id
+    ).length === 1,
+    "a hit should emit one attacker reveal event"
+  );
+
+  console.log("hidden_hassan_hits_duolingo_and_reveals passed");
+}
+
+export function testHiddenAttackAutoDefendedStillReveals() {
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1"));
+  state = attachArmy(state, createDefaultArmy("P2"));
+  const attacker = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.class === "assassin"
+  )!;
+  const defender = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "berserker"
+  )!;
+  state = setUnit(state, attacker.id, {
+    position: { col: 4, row: 4 },
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
+  state = setUnit(state, defender.id, {
+    position: { col: 4, row: 5 },
+    charges: { ...defender.charges, berserkerAutoDefense: 6 },
+  });
+  state = initKnowledgeForOwners(toBattleState(state, "P1", attacker.id));
+
+  const defended = resolveAttack(state, {
+    attackerId: attacker.id,
+    defenderId: defender.id,
+    defenderUseBerserkAutoDefense: true,
+    rolls: { attackerDice: [6, 5], defenderDice: [] },
+  });
+
+  assert(
+    defended.events.some(
+      (event) => event.type === "attackResolved" && !event.hit
+    ),
+    "automatic defense should resolve the attack as a miss"
+  );
+  assert(
+    defended.nextState.units[attacker.id].isStealthed === false,
+    "automatic defense must not preserve attacker stealth"
+  );
+
+  console.log("hidden_attack_auto_defended_still_reveals passed");
 }
 
 

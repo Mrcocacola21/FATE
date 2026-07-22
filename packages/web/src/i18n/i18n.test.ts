@@ -113,7 +113,7 @@ test("event formatter localizes known and unknown events safely", () => {
   const redactedMark = { type: "chikatiloMarkApplied" } as GameEvent;
   assert.equal(
     formatEventMessage(redactedMark, "en", translate),
-    "Assassin's Mark was applied.",
+    "Killer's Mark was applied.",
   );
 
   const fullMark = {

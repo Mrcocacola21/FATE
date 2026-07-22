@@ -98,13 +98,13 @@ export const ABILITY_SPECS_PART_1: Record<string, AbilitySpec> = {
     id: ids.ABILITY_CHIKATILO_FALSE_TRAIL,
     displayName: "False Trail",
     kind: "passive",
-    description: "At the start of combat, place the False Trail Token in his place. Chikatilo can be placed on any square at the start of combat in stealth status. While stealthed, he is not subject to the three-turn stealth rule. If his invisibility is revealed, the False Trail Token must either explode or be removed. If the False Trail Token dies, Andrei Chikatilo is revealed. He cannot remain stealthed unless there are other figures on the board.",
+    description: "At the start of combat, place the False Trail Token in his place. Chikatilo can be placed on any legal non-deployment cell in stealth. While the token lives and another figure remains, this stealth ignores the normal three-turn limit. Revealing Chikatilo automatically detonates the token; killing the token reveals Chikatilo.",
   },
   [ids.ABILITY_CHIKATILO_ASSASSIN_MARK]: {
     id: ids.ABILITY_CHIKATILO_ASSASSIN_MARK,
-    displayName: "Assassin's Mark",
+    displayName: "Killer's Mark",
     kind: "active",
-    description: "Without revealing his invisibility, Andrei Chikatilo can mark a creature within two squares. Marked targets are revealed to him at the start of his turn. If he hits a marked creature, he gains +1 damage to that attack.",
+    description: "Without revealing stealth, Chikatilo marks a creature within 2 cells. At the start of his turn, his owner learns the exact locations of marked hidden targets. A marked target takes +1 damage when Chikatilo attacks it from stealth.",
     targetRange: CHIKATILO_ASSASSIN_MARK_RANGE,
     actionCost: {
       consumes: { action: true },
@@ -112,10 +112,11 @@ export const ABILITY_SPECS_PART_1: Record<string, AbilitySpec> = {
   },
   [ids.ABILITY_CHIKATILO_DECOY]: {
     id: ids.ABILITY_CHIKATILO_DECOY,
-    displayName: "Decoy",
+    displayName: "Decoy Stealth",
     kind: "active",
-    description: "Spend 3 charges to enter stealth without rolling, or before defending to take 1 damage instead.",
-    maxCharges: 6,
+    description: "Spend 3 Decoy Points and a Stealth attempt to enter stealth without rolling. Before defense dice, spend 3 Decoy Points to substitute and take exactly 1 damage.",
+    chargeUnlimited: true,
+    isSpecialCounter: true,
     chargesPerUse: 3,
     actionCost: {
       consumes: { stealth: true },
@@ -125,7 +126,7 @@ export const ABILITY_SPECS_PART_1: Record<string, AbilitySpec> = {
     id: ids.ABILITY_FALSE_TRAIL_TRAP,
     displayName: "False Trail Trap",
     kind: "passive",
-    description: "When the False Trail Token dies or Chikatilo is revealed, it may strike the revealer for 3 damage on a failed defense.",
+    description: "When the False Trail Token dies, it attacks the creature that killed it with 2d6 against 2d6 defense. A failed defense takes 3 damage.",
   },
   [ids.ABILITY_FALSE_TRAIL_EXPLOSION]: {
     id: ids.ABILITY_FALSE_TRAIL_EXPLOSION,

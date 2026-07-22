@@ -16,6 +16,7 @@ import { buildDiceRoll, recordGenghisAttack } from "./helpers";
 import { revealStealthedDefenderIfIgnored, resolveHitDamage, tryResolveAutoDefense } from "./state";
 import type { ResolveAttackParams } from "./types";
 import { evPureBloodRedirected } from "../core";
+import { revealAttackerOnAttackAttempt } from "../stealth";
 
 export function resolveAttack(
   state: GameState,
@@ -47,10 +48,14 @@ export function resolveAttack(
     return { nextState: state, events: [] };
   }
 
+  const stateBeforeAttempt = state;
+  const attemptReveal = revealAttackerOnAttackAttempt(state, attacker.id);
+  state = attemptReveal.state;
+
   let units: Record<string, UnitState> = { ...state.units };
-  let attackerAfter: UnitState = { ...attacker };
+  let attackerAfter: UnitState = { ...state.units[attacker.id] };
   let defenderAfter: UnitState = { ...defender };
-  let events: GameEvent[] = [];
+  let events: GameEvent[] = [...attemptReveal.events];
 
   const autoDefense = tryResolveAutoDefense(
     state,
@@ -80,7 +85,7 @@ export function resolveAttack(
     attackerDice.length < 2 ||
     (!params.autoHit && !params.forceMiss && defenderDice.length < 2)
   ) {
-    return { nextState: state, events: [] };
+    return { nextState: stateBeforeAttempt, events: [] };
   }
 
   const tieBreakAttacker = rollInput.tieBreakAttacker ?? [];
@@ -175,7 +180,8 @@ export function resolveAttack(
     defenderAfter,
     units,
     events,
-    hit
+    hit,
+    attemptReveal.wasStealthed
   );
   attackerAfter = resolvedHit.attackerAfter;
   defenderAfter = resolvedHit.defenderAfter;

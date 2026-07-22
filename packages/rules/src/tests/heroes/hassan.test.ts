@@ -220,8 +220,12 @@ export function testHassanTrueEnemyGatingConsumesAndForcesOneAttack() {
     "True Enemy should reopen target selection after cancel"
   );
 
+  const hiddenControlledState = setUnit(reopened.state, enemyForcedAttacker.id, {
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
   const targetChoice = applyAction(
-    reopened.state,
+    hiddenControlledState,
     {
       type: "resolvePendingRoll",
       pendingRollId: reopened.state.pendingRoll!.id,
@@ -292,6 +296,18 @@ export function testHassanTrueEnemyGatingConsumesAndForcesOneAttack() {
     forcedAttackEvents[0].attackerRoll.dice.length >= 2 &&
       forcedAttackEvents[0].defenderRoll.dice.length >= 2,
     "forced attack should use normal attack/defense roll resolution"
+  );
+  assert(
+    resolved.state.units[enemyForcedAttacker.id].isStealthed === false,
+    "the hidden controlled unit that actually attacks should reveal"
+  );
+  assert(
+    [...targetChoice.events, ...resolved.events].filter(
+      (event) =>
+        event.type === "stealthRevealed" &&
+        event.unitId === enemyForcedAttacker.id
+    ).length === 1,
+    "the controlled attack should emit one reveal for its actual attacker"
   );
 
   const restoredTurnState = setUnit(

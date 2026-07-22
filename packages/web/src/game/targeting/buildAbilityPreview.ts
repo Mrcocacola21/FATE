@@ -463,11 +463,21 @@ export function buildAbilityPreview({
     case CHIKATILO_ASSASSIN_MARK_ID: {
       const range = getProjectedAbilityTargetRange(gameView, source.id, abilityId);
       if (range === null) return null;
+      const projectedTargets = gameView.abilitiesByUnitId?.[source.id]?.find(
+        (ability) => ability.id === abilityId,
+      )?.targeting?.targetIds;
+      const legalTargetIds = projectedTargets
+        ? new Set(projectedTargets)
+        : null;
       return buildRadiusTargetPreview({
         view: gameView,
         source,
         radius: range,
-        validPredicate: (unit) => unit.id !== source.id,
+        validPredicate: (unit) =>
+          legalTargetIds ? legalTargetIds.has(unit.id) : unit.id !== source.id,
+        invalidPredicate: legalTargetIds
+          ? (unit) => unit.id !== source.id && !legalTargetIds.has(unit.id)
+          : undefined,
         labelKey: "preview.labels.selectAssassinMarkTarget",
       });
     }

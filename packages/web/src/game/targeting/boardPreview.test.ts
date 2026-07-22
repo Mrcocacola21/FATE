@@ -258,6 +258,42 @@ test("Chikatilo mark preview includes tracked hidden projection but not unknown 
   assert.doesNotMatch(JSON.stringify(preview), /unknownHidden/);
 });
 
+test("Chikatilo mark preview follows authoritative target ids and disables an existing mark", () => {
+  const chikatilo = unit({
+    id: "chikatilo",
+    owner: "P1",
+    heroId: "chikatilo",
+    class: "assassin",
+    position: { col: 4, row: 4 },
+  });
+  const legal = unit({ id: "legal", owner: "P2", position: { col: 5, row: 4 } });
+  const alreadyMarked = unit({
+    id: "already-marked",
+    owner: "P2",
+    position: { col: 4, row: 5 },
+  });
+  const view = makeView([chikatilo, legal, alreadyMarked], {
+    abilitiesByUnitId: {
+      [chikatilo.id]: [
+        ability({
+          id: CHIKATILO_ASSASSIN_MARK_ID,
+          targetRange: 2,
+          targeting: { targetIds: [legal.id] },
+        }),
+      ],
+    },
+  });
+
+  const preview = buildAbilityPreview({
+    gameView: view,
+    viewerPlayerId: "P1",
+    sourceUnitId: chikatilo.id,
+    abilityId: CHIKATILO_ASSASSIN_MARK_ID,
+  });
+  assert.deepEqual(validTargetIds(preview), [legal.id]);
+  assert.deepEqual(disabledTargetIds(preview), [alreadyMarked.id]);
+});
+
 test("Lechy Guide Traveler preview includes ally targets and marks enemies disabled", () => {
   const lechy = unit({
     id: "lechy",

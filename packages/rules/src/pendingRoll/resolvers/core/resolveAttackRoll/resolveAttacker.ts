@@ -80,6 +80,11 @@ export function resolveAttackAttackerRoll(
   const canDecoy =
     workingDefender.heroId === HERO_CHIKATILO_ID &&
     getCharges(workingDefender, ABILITY_CHIKATILO_DECOY) >= 3 &&
+    (workingDefender.isStealthed ||
+      !!(
+        workingDefender.chikatiloFalseTrailTokenId &&
+        workingState.units[workingDefender.chikatiloFalseTrailTokenId]?.isAlive
+      )) &&
     !nextCtx.chikatiloDecoyChoiceMade;
   if (canDecoy) {
     return replacePendingRoll(

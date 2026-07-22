@@ -5,7 +5,11 @@ import type {
   GameState,
   UnitState,
 } from "../model";
-import { HERO_GRAND_KAISER_ID, HERO_UNDYNE_ID } from "../heroes";
+import {
+  HERO_FALSE_TRAIL_TOKEN_ID,
+  HERO_GRAND_KAISER_ID,
+  HERO_UNDYNE_ID,
+} from "../heroes";
 import {
   getMettatonRating,
   isMettaton,
@@ -23,6 +27,32 @@ import {
   getLucheLightRayCells,
   getZoroOniGiriTargeting,
 } from "./newBatchTargeting";
+import {
+  CHIKATILO_ASSASSIN_MARK_RANGE,
+  getChikatiloMarkedTargetIds,
+} from "../chikatiloMark";
+import { chebyshev } from "../board";
+import { canDirectlyTargetUnit } from "../visibility";
+
+function getLegalChikatiloMarkTargetIds(
+  state: GameState,
+  unit: UnitState
+): string[] {
+  if (!unit.position) return [];
+  const marked = new Set(getChikatiloMarkedTargetIds(unit));
+  return Object.values(state.units)
+    .filter(
+      (target) =>
+        target.id !== unit.id &&
+        target.isAlive &&
+        !!target.position &&
+        !marked.has(target.id) &&
+        canDirectlyTargetUnit(state, unit.id, target.id) &&
+        chebyshev(unit.position!, target.position) <= CHIKATILO_ASSASSIN_MARK_RANGE
+    )
+    .map((target) => target.id)
+    .sort();
+}
 
 function getSlotFromCost(spec: AbilitySpec): AbilitySlot {
   if (spec.id === ids.ABILITY_RIVER_PERSON_BOAT) return "move";
@@ -167,6 +197,17 @@ function getActiveDisabledReason(
     getCharges(unit, resourceAbilityId) < required
   ) {
     return "Not Enough charges";
+  }
+
+  if (spec.id === ids.ABILITY_CHIKATILO_DECOY) {
+    if (unit.isStealthed) return "Already in stealth";
+    const hasOtherFigure = Object.values(state.units).some(
+      (other) =>
+        other.isAlive &&
+        other.id !== unit.id &&
+        other.heroId !== HERO_FALSE_TRAIL_TOKEN_ID
+    );
+    if (!hasOtherFigure) return "Cannot hide while no other figures remain";
   }
 
   return undefined;
@@ -346,6 +387,8 @@ export function getAbilityViewsForUnit(state: GameState, unitId: string): Abilit
       const targeting =
         spec.id === ids.ABILITY_DUOLINGO_PUSH_NOTIFICATION
           ? getDuolingoPushTargeting(state, unit)
+          : spec.id === ids.ABILITY_CHIKATILO_ASSASSIN_MARK
+            ? { targetIds: getLegalChikatiloMarkTargetIds(state, unit) }
           : spec.id === ids.ABILITY_ZORO_ONI_GIRI
             ? getZoroOniGiriTargeting(state, unit)
             : spec.id === ids.ABILITY_LUCHE_DIVINE_RAY
@@ -354,6 +397,14 @@ export function getAbilityViewsForUnit(state: GameState, unitId: string): Abilit
       const hasLegalTargets = targeting
         ? (targeting.targetIds?.length ?? targeting.cells?.length ?? 0) > 0
         : true;
+      if (
+        spec.id === ids.ABILITY_CHIKATILO_ASSASSIN_MARK &&
+        !hasLegalTargets &&
+        isAvailable
+      ) {
+        isAvailable = false;
+        disabledReason = "No legal targets";
+      }
       let useOptions: AbilityUseOptionView[] | undefined;
       if (spec.id === ids.ABILITY_ZORO_ONI_GIRI) {
         useOptions = [

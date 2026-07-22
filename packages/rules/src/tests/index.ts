@@ -91,6 +91,9 @@ import {
   testRiderPathIgnoresHiddenEnemies,
   testRiderPathHitsVisibleEnemy,
   testAssassinAttackFromStealth,
+  testHiddenHassanMissesDuolingoAndReveals,
+  testHiddenHassanHitsDuolingoAndReveals,
+  testHiddenAttackAutoDefendedStillReveals,
   testAssassinAttackWithoutStealth,
   testSearchRevealsOnlyInRadius,
   testSearchUpdatesOnlyPlayerKnowledge,
@@ -244,6 +247,12 @@ import {
   testChikatiloAssassinMarkTrackingProjectionAttackAndExpiry,
   testChikatiloDecoyReducesDamageAndConsumesCharges,
   testFalseTrailExplosionHitsAlliesAndEnemiesSingleRoll,
+  testChikatiloMarkOnlyBonusesStealthAttack,
+  testChikatiloDecoyPointsGainAndStealthTransaction,
+  testFalseTrailRevealAutoExplodesWithoutChoice,
+  testFalseTrailTokenRestrictedActionSet,
+  testFalseTrailStealthTimerAndLastFigureRule,
+  testFalseTrailExplosionSuccessfulDefenseAvoidsDamage,
 } from "./heroes/chikatilo.test";
 import {
   testLechyHpBonus,
@@ -444,6 +453,9 @@ function main(): void {
   testBerserkerDefenseChoiceRollUsesNormalCombat();
   testCannotAutoDodgeIfChargesNot6();
   testAssassinAttackFromStealth();
+  testHiddenHassanMissesDuolingoAndReveals();
+  testHiddenHassanHitsDuolingoAndReveals();
+  testHiddenAttackAutoDefendedStillReveals();
   testAssassinAttackWithoutStealth();
   testSearchRevealsOnlyInRadius();
   testSearchUpdatesOnlyPlayerKnowledge();
@@ -673,6 +685,12 @@ function main(): void {
   testChikatiloAssassinMarkApplicationFlowAndRedaction();
   testChikatiloAssassinMarkTrackingProjectionAttackAndExpiry();
   testChikatiloDecoyReducesDamageAndConsumesCharges();
+  testChikatiloMarkOnlyBonusesStealthAttack();
+  testChikatiloDecoyPointsGainAndStealthTransaction();
+  testFalseTrailRevealAutoExplodesWithoutChoice();
+  testFalseTrailTokenRestrictedActionSet();
+  testFalseTrailStealthTimerAndLastFigureRule();
+  testFalseTrailExplosionSuccessfulDefenseAvoidsDamage();
   testLechyHpBonus();
   testLechyNaturalStealthThreshold();
   testLechyGuideTravelerGatingAndBehavior();

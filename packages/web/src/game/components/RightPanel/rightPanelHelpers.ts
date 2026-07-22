@@ -255,7 +255,7 @@ export function getActionModeHint(
     case "assassinMark":
       return uk
         ? "Оберіть ціль для Мітки вбивці."
-        : "Select a target for Assassin's Mark.";
+        : "Select a target for Killer's Mark.";
     case "guideTraveler":
       return uk ? "Провідник: оберіть союзника в радіусі трикстера." : "Guide Traveler: select an ally within trickster range.";
     case "tisona":

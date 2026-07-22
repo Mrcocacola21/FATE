@@ -28,6 +28,7 @@ import { BattleActionButtons } from "./sections/BattleActionButtons";
 import { BattleBottomHints } from "./sections/BattleBottomHints";
 import {
   CoreResourceStrip,
+  getOrdinaryAbilityCounterView,
   PassiveImpulseInfo,
   SelectedUnitHeader,
   SpecialHeroResourceStrip,
@@ -1558,6 +1559,36 @@ test("Action Menu core strip always renders Action, Move, and Stealth", () => {
   assert.doesNotMatch(markup, /min-h-14/);
 });
 
+test("server reveal updates the Action Menu stealth chip and selected-unit badge", () => {
+  setLanguage("en", { setItem: () => undefined });
+  const hiddenHassan = makeUnit({
+    heroId: "hassan",
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
+  const revealedHassan = {
+    ...hiddenHassan,
+    isStealthed: false,
+    stealthTurnsLeft: 0,
+  };
+  const hiddenMarkup = renderToStaticMarkup(
+    <>
+      <SelectedUnitHeader unit={hiddenHassan} heroName="Hassan" />
+      <CoreResourceStrip unit={hiddenHassan} economy={hiddenHassan.turn} />
+    </>,
+  );
+  const revealedMarkup = renderToStaticMarkup(
+    <>
+      <SelectedUnitHeader unit={revealedHassan} heroName="Hassan" />
+      <CoreResourceStrip unit={revealedHassan} economy={revealedHassan.turn} />
+    </>,
+  );
+
+  assert.match(hiddenMarkup, />Hidden</);
+  assert.match(revealedMarkup, />Revealed</);
+  assert.doesNotMatch(revealedMarkup, />Hidden</);
+});
+
 test("Action Menu renders a compact selected unit header", () => {
   setLanguage("en", { setItem: () => undefined });
   const kaiser = makeUnit({
@@ -1593,15 +1624,15 @@ test("special resource row stays hidden when a hero has no global resource", () 
 test("special resource strip renders the six required hero-wide resources", () => {
   setLanguage("en", { setItem: () => undefined });
   const cases = [
-    ["chikatilo", "chikatiloDecoy", "Decoy", 4],
-    ["duolingo", "duolingoSkipClasses", "Missed Lessons", 3],
-    ["mettaton", "mettatonRating", "Rating", 7],
-    ["zoro", "zoroDetermination", "Determination", 2],
-    ["luche", "lucheSunGlory", "Glory of the Sun", 2],
-    ["kaneki", "kanekiRcCells", "RC Cells", 5],
+    ["chikatilo", "chikatiloDecoy", "Decoy Stealth", "Decoy Points", 14],
+    ["duolingo", "duolingoSkipClasses", "Missed Lessons", "Missed Lessons", 3],
+    ["mettaton", "mettatonRating", "Rating", "Rating", 7],
+    ["zoro", "zoroDetermination", "Determination", "Determination", 2],
+    ["luche", "lucheSunGlory", "Glory of the Sun", "Glory of the Sun", 2],
+    ["kaneki", "kanekiRcCells", "RC Cells", "RC Cells", 5],
   ] as const;
 
-  for (const [heroId, resourceId, name, value] of cases) {
+  for (const [heroId, resourceId, name, expectedLabel, value] of cases) {
     const unit = makeUnit({
       id: `P1-${heroId}`,
       heroId,
@@ -1613,10 +1644,9 @@ test("special resource strip renders the six required hero-wide resources", () =
       name,
       kind: "passive",
       slot: "none",
-      isSpecialCounter: resourceId !== "chikatiloDecoy",
+      isSpecialCounter: true,
       currentCharges: value,
-      chargeUnlimited: resourceId !== "chikatiloDecoy",
-      maxCharges: resourceId === "chikatiloDecoy" ? 6 : undefined,
+      chargeUnlimited: true,
     });
     const view = { ...makeView(unit), abilitiesByUnitId: { [unit.id]: [resourceAbility] } };
     const resources = getSpecialHeroResourceViews(unit, view, "P1");
@@ -1629,8 +1659,29 @@ test("special resource strip renders the six required hero-wide resources", () =
       <SpecialHeroResourceStrip unit={unit} view={view} viewerRole="P1" />,
     );
     assert.match(markup, new RegExp(`data-special-resource-id="${resourceId}"`));
-    assert.match(markup, new RegExp(name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+    assert.match(markup, new RegExp(expectedLabel.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+    if (resourceId === "chikatiloDecoy") {
+      assert.doesNotMatch(markup, /14\/\d+/);
+    }
   }
+});
+
+test("Chikatilo Decoy is both an uncapped resource and a manual stealth action", () => {
+  const decoy = makeAbility({
+    id: "chikatiloDecoy",
+    name: "Decoy Stealth",
+    kind: "active",
+    slot: "stealth",
+    isSpecialCounter: true,
+    chargeUnlimited: true,
+    chargeRequired: 3,
+    currentCharges: 8,
+  });
+  assert.equal(shouldRenderManualAbilityButton(decoy), true);
+  assert.equal(getOrdinaryAbilityCounterView(decoy, makeUnit({
+    heroId: "chikatilo",
+    charges: { chikatiloDecoy: 8 },
+  })), null);
 });
 
 test("ordinary Oni Giri, Light Ray, and Engineering Miracle counters never enter special resources", () => {

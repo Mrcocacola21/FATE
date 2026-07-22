@@ -48,9 +48,10 @@ export function hasLegendOfTheSteppesBonus(
 
 export function getChikatiloMarkBonus(
   attacker: UnitState,
-  defenderId: string
+  defenderId: string,
+  attackerWasStealthedAtAttempt: boolean
 ): number {
-  if (attacker.heroId !== HERO_CHIKATILO_ID) {
+  if (attacker.heroId !== HERO_CHIKATILO_ID || !attackerWasStealthedAtAttempt) {
     return 0;
   }
   const marked = attacker.chikatiloMarkedTargets;

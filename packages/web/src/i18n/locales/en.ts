@@ -434,8 +434,8 @@ export const en = {
     boneSourceSansField: "Applied by Sans's Bone Field",
     rating: "Rating {{rating}}",
     immortal: "Immortal",
-    assassinMark: "Assassin's Mark",
-    assassinMarkTracked: "Assassin's Mark: exact location tracked until this unit finishes a turn.",
+    assassinMark: "Killer's Mark",
+    assassinMarkTracked: "Killer's Mark: exact location tracked until this unit finishes a turn.",
     forestAura: "Forest aura: {{state}}",
     inside: "inside",
     outside: "outside",
@@ -554,7 +554,7 @@ export const en = {
     legalDestinations: "Legal destinations: {{count}}",
     requiredRoll: "Required roll: {{roll}}+",
     alreadyHidden: "Already hidden",
-    attackRevealsStealth: "Attacking or damaging effects may reveal stealth.",
+    attackRevealsStealth: "An attack attempt reveals the attacker, even if it misses.",
     bunkerActive: "Bunker is active.",
     courtExposure: "Court Exposure blocks stealth this round.",
     moonMoveBonus: "Moon Game: +1 straight movement is active.",
@@ -600,6 +600,7 @@ export const en = {
   actionMenu: {
     coreResources: "Core resources",
     specialResources: "Special resources",
+    decoyPoints: "Decoy Points",
     primaryActions: "Actions",
     abilityActions: "Abilities",
     passiveImpulseInfo: "Info · Passive / Automatic",
@@ -977,7 +978,7 @@ export const en = {
           placement: {
             name: "Deployment",
             description:
-              "Place the False Trail token normally, then place Chikatilo on any empty cell in stealth.",
+              "Place the False Trail token normally, then place Chikatilo on any legal non-deployment cell in stealth.",
           },
           stealth: {
             name: "Hidden killer",
@@ -987,12 +988,12 @@ export const en = {
           trap: {
             name: "Trap",
             description:
-              "When the token dies or Chikatilo is revealed by a figure, the token attacks that figure; a failed defense takes 3 damage.",
+              "When the token dies, it attacks the creature that killed it with 2d6 against 2d6 defense; a failed defense takes 3 damage.",
           },
           explosion: {
-            name: "Explosion or removal",
+            name: "Automatic explosion",
             description:
-              "When Chikatilo is revealed and the token survives, choose to remove it or detonate it. The explosion attacks every adjacent figure for 1 damage on a failed defense.",
+              "When Chikatilo is revealed and the token survives, it automatically detonates. The explosion attacks every adjacent figure for 1 damage on a failed defense.",
           },
         },
       },
@@ -1401,13 +1402,13 @@ export const en = {
     hiddenStake: "Hidden stake",
     bunker: "In Bunker: incoming hits deal 1 damage.",
     stealth: "Unit is in stealth",
-    assassinMark: "Assassin's Mark",
-    assassinMarkTracked: "Assassin's Mark: exact location tracked until this unit finishes a turn.",
+    assassinMark: "Killer's Mark",
+    assassinMarkTracked: "Killer's Mark: exact location tracked until this unit finishes a turn.",
   },
   preview: {
     labels: {
       selectTarget: "Select a target.",
-      selectAssassinMarkTarget: "Select a target for Assassin's Mark.",
+      selectAssassinMarkTarget: "Select a target for Killer's Mark.",
       selectAlly: "Select an ally within range.",
       selectDestination: "Select a destination cell.",
       selectDropCell: "Select a drop cell.",

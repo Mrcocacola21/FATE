@@ -39,8 +39,7 @@ const RESOURCE_DEFINITIONS: ResourceDefinition[] = [
   {
     heroId: "chikatilo",
     abilityId: CHIKATILO_DECOY_ID,
-    fallbackLabel: "Decoy",
-    max: 6,
+    fallbackLabel: "Decoy Points",
     isPrivate: true,
   },
   {
@@ -131,9 +130,14 @@ export function getSpecialHeroResourceViews(
 
     resources.push({
       id: definition.abilityId,
-      label: ability?.name ?? definition.fallbackLabel,
+      label:
+        definition.abilityId === CHIKATILO_DECOY_ID
+          ? definition.fallbackLabel
+          : ability?.name ?? definition.fallbackLabel,
       value,
-      max: definition.max ?? ability?.maxCharges,
+      max:
+        definition.max ??
+        (ability?.chargeUnlimited ? undefined : ability?.maxCharges),
       description: ability?.description,
       isPrivate: definition.isPrivate,
     });

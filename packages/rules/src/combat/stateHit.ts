@@ -22,7 +22,8 @@ export function resolveHitDamage(
   defenderAfter: UnitState,
   units: Record<string, UnitState>,
   events: GameEvent[],
-  hit: boolean
+  hit: boolean,
+  attackerWasStealthedAtAttempt: boolean
 ): HitResolution {
   let damage = 0;
   let defenderHpAfterEvent = defenderAfter.hp;
@@ -43,17 +44,7 @@ export function resolveHitDamage(
   }
 
   const attackerWasStealthed =
-    attackerAfter.class === "assassin" && attackerAfter.isStealthed;
-
-  if (attackerWasStealthed) {
-    attackerAfter = {
-      ...attackerAfter,
-      isStealthed: false,
-      stealthTurnsLeft: 0,
-    };
-    revealedAttackerPos = attackerAfter.position ?? null;
-    attackerRevealedToDefender = true;
-  }
+    attackerAfter.class === "assassin" && attackerWasStealthedAtAttempt;
 
   if (params.damageOverride !== undefined) {
     damage = params.damageOverride;
@@ -76,7 +67,11 @@ export function resolveHitDamage(
     ) {
       damage += 1;
     }
-    const markBonus = getChikatiloMarkBonus(attackerAfter, defenderAfter.id);
+    const markBonus = getChikatiloMarkBonus(
+      attackerAfter,
+      defenderAfter.id,
+      attackerWasStealthedAtAttempt
+    );
     if (markBonus) {
       damage += markBonus;
     }
