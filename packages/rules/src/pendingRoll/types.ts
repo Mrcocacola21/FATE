@@ -133,6 +133,17 @@ export interface HassanTrueEnemyTargetChoiceContext
   options: string[];
 }
 
+export interface MongolChargeAllyAttackTargetContext
+  extends Record<string, unknown> {
+  sourceUnitId: string;
+  controllerUnitId: string;
+  legalTargetIds: string[];
+  /** Standard pending-target alias used by projections and board targeting. */
+  options: string[];
+  remainingAllyIds: string[];
+  queuedAttacks: import("../model").PendingCombatQueueEntry[];
+}
+
 export interface HassanAssassinOrderSelectionContext
   extends Record<string, unknown> {
   owner: "P1" | "P2";

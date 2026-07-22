@@ -97,6 +97,7 @@ import {
   resolveRiverTraLaLaTargetChoice,
 } from "../../actions/heroes/riverPerson";
 import { resolveGutsBerserkAttackChoice } from "../../actions/heroes/guts";
+import { resolveMongolChargeAllyAttackTarget } from "../../actions/movementActions/mongolCharge";
 import type { AutoRollChoice, ResolvePendingRollAction } from "./types";
 
 export const HERO_PENDING_ROLL_KINDS = [
@@ -142,6 +143,7 @@ export const HERO_PENDING_ROLL_KINDS = [
   "femtoDivineMoveDestination",
   "odinSleipnirDestination",
   "chargedImpulseTargetChoice",
+  "mongolChargeAllyAttackTarget",
   "vladIntimidateChoice",
   "vladPlaceStakes",
   "vladForestChoice",
@@ -293,6 +295,8 @@ export function resolveHeroPendingRollCase(
         action.choice,
         rng
       );
+    case "mongolChargeAllyAttackTarget":
+      return resolveMongolChargeAllyAttackTarget(state, pending, action.choice);
     case "vladIntimidateChoice":
       return resolveVladIntimidateChoice(state, pending, action.choice, rng);
     case "vladPlaceStakes":

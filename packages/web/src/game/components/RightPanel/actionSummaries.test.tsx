@@ -1396,7 +1396,7 @@ test("Hassan Assassin Order is automatic info and has a mobile-safe pending inst
   assert.doesNotMatch(taskMarkup, /Roll dice/);
 });
 
-test("Hassan and Loki pending unit targets submit authenticated board choices", () => {
+test("Hassan, Loki, and Mongol Charge pending unit targets submit authenticated board choices", () => {
   const caster = makeUnit({ id: "P1-caster", position: { col: 1, row: 1 } });
   const controlled = makeUnit({
     id: "P2-controlled",
@@ -1422,16 +1422,25 @@ test("Hassan and Loki pending unit targets submit authenticated board choices", 
       flag: "isHassanTrueEnemyTargetChoice",
       ids: "hassanTrueEnemyTargetIds",
       choiceType: "hassanTrueEnemyTarget",
+      pendingKind: "hassanTrueEnemyTargetChoice",
+    },
+    {
+      flag: "isHassanTrueEnemyTargetChoice",
+      ids: "hassanTrueEnemyTargetIds",
+      choiceType: "mongolChargeAllyAttackTarget",
+      pendingKind: "mongolChargeAllyAttackTarget",
     },
     {
       flag: "isLokiMindControlEnemyChoice",
       ids: "lokiMindControlEnemyIds",
       choiceType: "lokiMindControlEnemy",
+      pendingKind: "lokiMindControlEnemyChoice",
     },
     {
       flag: "isLokiMindControlTargetChoice",
       ids: "lokiMindControlTargetIds",
       choiceType: "lokiMindControlTarget",
+      pendingKind: "lokiMindControlTargetChoice",
     },
   ] as const;
 
@@ -1447,7 +1456,12 @@ test("Hassan and Loki pending unit targets submit authenticated board choices", 
       boardSelectionPending: true,
       [testCase.flag]: true,
       [testCase.ids]: [attackTarget.id],
-      pendingRoll: { id: pendingRollId, kind: "test", player: "P1", context: {} },
+      pendingRoll: {
+        id: pendingRollId,
+        kind: testCase.pendingKind,
+        player: "P1",
+        context: {},
+      },
       actionMode: null,
       selectedUnitId: caster.id,
       sendAction: (action: unknown) => sent.push(action),
@@ -1466,6 +1480,37 @@ test("Hassan and Loki pending unit targets submit authenticated board choices", 
       },
     ]);
   }
+});
+
+test("Mongol Charge compact task shows a board-target instruction", () => {
+  const ally = makeUnit({ id: "P1-ally", position: { col: 3, row: 3 } });
+  const markup = renderToStaticMarkup(
+    <CurrentTaskPanel
+      compact
+      vm={{
+        view: makeView(ally),
+        playerId: "P1",
+        pendingRoll: {
+          id: "mongol-choice",
+          player: "P1",
+          kind: "mongolChargeAllyAttackTarget",
+          context: {
+            sourceUnitId: ally.id,
+            legalTargetIds: ["P2-target"],
+          },
+        },
+        pendingQueueCount: 0,
+        stakeSelections: [],
+        stakeLimit: 0,
+        isHassanTrueEnemyTargetChoice: true,
+        sendAction: () => undefined,
+        setStakeSelections: () => undefined,
+      }}
+    />,
+  );
+  assert.match(markup, /Mongol Charge: choose ally attack target/);
+  assert.match(markup, /Choose a target for the allied attack/);
+  assert.doesNotMatch(markup, /No forced task/);
 });
 
 test("Loki Laughter renders separate option buttons with costs and availability", () => {

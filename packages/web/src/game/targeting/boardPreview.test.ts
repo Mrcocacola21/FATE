@@ -1047,6 +1047,87 @@ test("Genghis Khan diagonal movement preview uses projected pending move options
   assert.equal(hasKind(preview, { col: 6, row: 6 }, "validMove"), true);
 });
 
+test("Mongol Charge movement preview shows the selected path, side influence, allies, and targets", () => {
+  const genghis = unit({
+    id: "genghis",
+    owner: "P1",
+    heroId: "genghisKhan",
+    class: "rider",
+    position: { col: 1, row: 1 },
+    genghisKhanMongolChargeActive: true,
+  });
+  const ally = unit({
+    id: "ally",
+    owner: "P1",
+    class: "knight",
+    position: { col: 3, row: 0 },
+  });
+  const enemyA = unit({ id: "enemy-a", owner: "P2", position: { col: 2, row: 0 } });
+  const enemyB = unit({ id: "enemy-b", owner: "P2", position: { col: 4, row: 0 } });
+  const view = makeView([genghis, ally, enemyA, enemyB], {
+    pendingMove: {
+      unitId: genghis.id,
+      legalTo: [{ col: 5, row: 1 }],
+      expiresTurnNumber: 1,
+      mode: "rider",
+    },
+    legal: {
+      placementsByUnitId: {},
+      movesByUnitId: {},
+      attackTargetsByUnitId: {
+        [ally.id]: [enemyA.id, enemyB.id],
+      },
+    },
+  });
+
+  const preview = selectBoardPreview({
+    gameView: view,
+    viewerPlayerId: "P1",
+    selectedUnitId: genghis.id,
+    actionMode: null,
+    hoverActionMode: null,
+    allowActionHoverPreview: false,
+    hoveredAbilityId: null,
+    targetingCell: { col: 5, row: 1 },
+  });
+
+  assert.equal(hasKind(preview, { col: 3, row: 1 }, "line"), true);
+  assert.equal(hasKind(preview, { col: 5, row: 1 }, "line"), true);
+  assert.equal(hasKind(preview, { col: 2, row: 0 }, "area"), true);
+  assert.equal(hasKind(preview, { col: 4, row: 2 }, "area"), true);
+  assert.deepEqual(affectedTargetIds(preview), [ally.id]);
+  assert.deepEqual(selectableTargetIds(preview), [enemyA.id, enemyB.id]);
+});
+
+test("Mongol Charge pending target preview highlights every legal enemy", () => {
+  const ally = unit({
+    id: "ally",
+    owner: "P1",
+    class: "knight",
+    position: { col: 3, row: 0 },
+  });
+  const enemyA = unit({ id: "enemy-a", owner: "P2", position: { col: 2, row: 0 } });
+  const enemyB = unit({ id: "enemy-b", owner: "P2", position: { col: 4, row: 0 } });
+  const view = makeView([ally, enemyA, enemyB], {
+    pendingRoll: {
+      id: "mongol-choice",
+      player: "P1",
+      kind: "mongolChargeAllyAttackTarget",
+      context: {
+        sourceUnitId: ally.id,
+        controllerUnitId: "genghis",
+        legalTargetIds: [enemyA.id, enemyB.id],
+        options: [enemyA.id, enemyB.id],
+      },
+    },
+  });
+
+  const preview = buildPendingPreview(view);
+  assert.deepEqual(selectableTargetIds(preview), [enemyA.id, enemyB.id]);
+  assert.equal(hasKind(preview, enemyA.position!, "validTarget"), true);
+  assert.equal(hasKind(preview, enemyB.position!, "validTarget"), true);
+});
+
 test("River direct hover previews are available before server choices", () => {
   const river = unit({
     id: "river",

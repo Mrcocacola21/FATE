@@ -33,6 +33,7 @@ export type ResolveRollChoice =
   | { type: "lechyGuideTravelerPlace"; position: Coord }
   | { type: "jebeKhansShooterTarget"; targetId: string }
   | { type: "hassanTrueEnemyTarget"; targetId: string }
+  | { type: "mongolChargeAllyAttackTarget"; targetId: string }
   | { type: "hassanAssassinOrderPick"; unitIds: string[] }
   | { type: "asgoreSoulParadePatienceTarget"; targetId: string }
   | { type: "asgoreSoulParadePerseveranceTarget"; targetId: string }

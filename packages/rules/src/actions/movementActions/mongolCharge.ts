@@ -2,6 +2,9 @@ import type {
   ApplyResult,
   GameEvent,
   GameState,
+  PendingCombatQueueEntry,
+  PendingRoll,
+  ResolveRollChoice,
   UnitState,
 } from "../../model";
 import type { RNG } from "../../rng";
@@ -10,10 +13,12 @@ import { getLegalAttackTargets } from "../../legal";
 import { linePath } from "../../path";
 import { canSpendSlots } from "../../turnEconomy";
 import { findStakeStopOnPath, applyStakeTriggerIfAny } from "../../core";
-import { makeAttackContext, requestRoll } from "../../core";
+import { clearPendingRoll, makeAttackContext, requestRoll } from "../../core";
 import { evUnitMoved } from "../../core";
 import { maybeRequestForestMoveCheck } from "./forest";
-import { getMongolChargeCorridor, sortUnitIdsByReadingOrder } from "./rider";
+import { getMongolChargeInfluenceCells } from "../../movement/mongolCharge";
+import { sortUnitIdsByReadingOrder } from "./rider";
+import type { MongolChargeAllyAttackTargetContext } from "../../pendingRoll/types";
 import type { MoveActionInternal } from "./types";
 
 export function applyMongolChargeMove(
@@ -127,7 +132,7 @@ export function applyMongolChargeMove(
     return { state: newState, events };
   }
 
-  const corridor = getMongolChargeCorridor(path, newState.boardSize);
+  const corridor = getMongolChargeInfluenceCells(path, newState.boardSize);
   const corridorSet = new Set(corridor.map((cell) => `${cell.col},${cell.row}`));
   const allies = Object.values(newState.units).filter(
     (other) =>
@@ -138,51 +143,172 @@ export function applyMongolChargeMove(
       corridorSet.has(`${other.position.col},${other.position.row}`)
   );
 
-  const orderedAllies = [...allies].sort((a, b) => a.id.localeCompare(b.id));
-  const queue = orderedAllies.flatMap((ally) => {
-    if (!ally.position) return [];
-    if (!canSpendSlots(ally, { attack: true, action: true })) return [];
-    const targets = getLegalAttackTargets(newState, ally.id);
-    if (targets.length === 0) return [];
-    const sortedTargets = sortUnitIdsByReadingOrder(newState, targets);
-    const defenderId = sortedTargets[0];
-    if (!defenderId) return [];
-    return [
-      {
-        attackerId: ally.id,
-        defenderId,
-        damageBonusSourceId: unit.id,
-        consumeSlots: true,
-        kind: "aoe" as const,
-      },
-    ];
-  });
+  // Preserve the established Mongol Charge ordering so replays stay stable.
+  const orderedAllyIds = [...allies]
+    .sort((a, b) => a.id.localeCompare(b.id))
+    .map((ally) => ally.id);
 
-  if (queue.length === 0) {
-    return { state: newState, events };
-  }
+  const continued = continueMongolChargeAlliedAttacks(
+    newState,
+    unit.id,
+    orderedAllyIds,
+    []
+  );
+  return { state: continued.state, events: [...events, ...continued.events] };
+}
 
-  const queuedState: GameState = {
-    ...newState,
-    pendingCombatQueue: queue,
+function makeMongolChargeQueueEntry(
+  controllerUnitId: string,
+  sourceUnitId: string,
+  targetId: string
+): PendingCombatQueueEntry {
+  return {
+    attackerId: sourceUnitId,
+    defenderId: targetId,
+    damageBonusSourceId: controllerUnitId,
+    consumeSlots: true,
+    kind: "aoe",
   };
+}
 
+function startMongolChargeAttackQueue(
+  state: GameState,
+  queue: PendingCombatQueueEntry[]
+): ApplyResult {
   const first = queue[0];
-  const ctx = makeAttackContext({
-    attackerId: first.attackerId,
-    defenderId: first.defenderId,
-    damageBonusSourceId: first.damageBonusSourceId,
-    consumeSlots: first.consumeSlots ?? false,
-    queueKind: "aoe",
-  });
+  if (!first) return { state, events: [] };
+  const attacker = state.units[first.attackerId];
+  if (!attacker) return { state, events: [] };
 
-  const requested = requestRoll(
+  const queuedState: GameState = { ...state, pendingCombatQueue: queue };
+  return requestRoll(
     queuedState,
-    newState.units[first.attackerId].owner,
+    attacker.owner,
     "attack_attackerRoll",
-    ctx,
+    makeAttackContext({
+      attackerId: first.attackerId,
+      defenderId: first.defenderId,
+      damageBonusSourceId: first.damageBonusSourceId,
+      consumeSlots: first.consumeSlots ?? false,
+      queueKind: "aoe",
+    }),
     first.attackerId
   );
+}
 
-  return { state: requested.state, events: [...events, ...requested.events] };
+function getCurrentMongolChargeTargets(
+  state: GameState,
+  controllerUnitId: string,
+  sourceUnitId: string
+): string[] {
+  const controller = state.units[controllerUnitId];
+  const source = state.units[sourceUnitId];
+  if (
+    !controller ||
+    !source ||
+    !source.isAlive ||
+    !source.position ||
+    source.owner !== controller.owner ||
+    !canSpendSlots(source, { attack: true, action: true })
+  ) {
+    return [];
+  }
+  return sortUnitIdsByReadingOrder(state, getLegalAttackTargets(state, source.id));
+}
+
+function continueMongolChargeAlliedAttacks(
+  state: GameState,
+  controllerUnitId: string,
+  allyIds: string[],
+  queuedAttacks: PendingCombatQueueEntry[]
+): ApplyResult {
+  const controller = state.units[controllerUnitId];
+  if (!controller) return { state, events: [] };
+
+  const queue = [...queuedAttacks];
+  for (let index = 0; index < allyIds.length; index += 1) {
+    const sourceUnitId = allyIds[index]!;
+    const legalTargetIds = getCurrentMongolChargeTargets(
+      state,
+      controllerUnitId,
+      sourceUnitId
+    );
+    if (legalTargetIds.length === 0) continue;
+    if (legalTargetIds.length === 1) {
+      queue.push(
+        makeMongolChargeQueueEntry(controllerUnitId, sourceUnitId, legalTargetIds[0]!)
+      );
+      continue;
+    }
+
+    const context: MongolChargeAllyAttackTargetContext = {
+      sourceUnitId,
+      controllerUnitId,
+      legalTargetIds,
+      options: legalTargetIds,
+      remainingAllyIds: allyIds.slice(index + 1),
+      queuedAttacks: queue,
+    };
+    return requestRoll(
+      state,
+      controller.owner,
+      "mongolChargeAllyAttackTarget",
+      context,
+      sourceUnitId
+    );
+  }
+
+  return startMongolChargeAttackQueue(state, queue);
+}
+
+export function resolveMongolChargeAllyAttackTarget(
+  state: GameState,
+  pending: PendingRoll,
+  choice: ResolveRollChoice | undefined
+): ApplyResult {
+  const context = pending.context as MongolChargeAllyAttackTargetContext;
+  if (
+    !choice ||
+    typeof choice !== "object" ||
+    choice.type !== "mongolChargeAllyAttackTarget"
+  ) {
+    return { state, events: [] };
+  }
+
+  const declaredTargets = Array.isArray(context.legalTargetIds)
+    ? context.legalTargetIds
+    : [];
+  const currentTargets = getCurrentMongolChargeTargets(
+    state,
+    context.controllerUnitId,
+    context.sourceUnitId
+  );
+  if (
+    !declaredTargets.includes(choice.targetId) ||
+    !currentTargets.includes(choice.targetId)
+  ) {
+    return { state, events: [] };
+  }
+
+  const queuedAttacks = Array.isArray(context.queuedAttacks)
+    ? context.queuedAttacks
+    : [];
+  const nextQueue = [
+    ...queuedAttacks,
+    makeMongolChargeQueueEntry(
+      context.controllerUnitId,
+      context.sourceUnitId,
+      choice.targetId
+    ),
+  ];
+  const remainingAllyIds = Array.isArray(context.remainingAllyIds)
+    ? context.remainingAllyIds.filter((id): id is string => typeof id === "string")
+    : [];
+
+  return continueMongolChargeAlliedAttacks(
+    clearPendingRoll(state),
+    context.controllerUnitId,
+    remainingAllyIds,
+    nextQueue
+  );
 }

@@ -570,6 +570,7 @@ export function createCellClickHandler(context: CellClickContext) {
 
     if (isHassanTrueEnemyTargetChoice) {
       if (!pendingRoll) return;
+      const isMongolCharge = pendingRoll.kind === "mongolChargeAllyAttackTarget";
       submitUnitTargetClick({
         view,
         col,
@@ -580,7 +581,9 @@ export function createCellClickHandler(context: CellClickContext) {
             type: "resolvePendingRoll",
             pendingRollId: pendingRoll.id,
             player: playerId,
-            choice: { type: "hassanTrueEnemyTarget", targetId },
+            choice: isMongolCharge
+              ? { type: "mongolChargeAllyAttackTarget", targetId }
+              : { type: "hassanTrueEnemyTarget", targetId },
           }),
       });
       return;

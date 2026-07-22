@@ -1161,6 +1161,88 @@ function testPendingBoardChoiceUsesAuthenticatedSeat() {
   console.log("hardening_pending_board_choice_uses_authenticated_seat passed");
 }
 
+function testMongolChargePendingChoiceIsAuthoritative() {
+  const { room } = makeSeatedRoom({
+    roomIdPrefix: "hardening-mongol-charge-choice",
+  });
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1"));
+  state = attachArmy(state, createDefaultArmy("P2"));
+  const controller = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.class === "rider",
+  )!;
+  const ally = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.class === "knight",
+  )!;
+  const enemies = Object.values(state.units).filter((unit) => unit.owner === "P2");
+  const [enemyA, enemyB] = enemies;
+  state = setUnit(state, controller.id, { position: { col: 1, row: 1 } });
+  state = setUnit(state, ally.id, { position: { col: 3, row: 0 } });
+  state = setUnit(state, enemyA.id, { position: { col: 2, row: 0 } });
+  state = setUnit(state, enemyB.id, { position: { col: 4, row: 0 } });
+  room.state = {
+    ...state,
+    phase: "battle",
+    currentPlayer: "P1",
+    activeUnitId: controller.id,
+    pendingRoll: {
+      id: "mongol-charge-choice",
+      kind: "mongolChargeAllyAttackTarget",
+      player: "P1",
+      context: {
+        sourceUnitId: ally.id,
+        controllerUnitId: controller.id,
+        legalTargetIds: [enemyA.id, enemyB.id],
+        options: [enemyA.id, enemyB.id],
+        remainingAllyIds: [],
+        queuedAttacks: [],
+      },
+    },
+  };
+
+  const payload = GameActionSchema.safeParse({
+    type: "resolvePendingRoll",
+    pendingRollId: "mongol-charge-choice",
+    choice: {
+      type: "mongolChargeAllyAttackTarget",
+      targetId: enemyB.id,
+    },
+  });
+  assert(payload.success, "server schema should accept a Mongol Charge target response");
+
+  const ownerView = makePlayerView(room.state, "P1");
+  const opponentView = makePlayerView(room.state, "P2");
+  assert.equal(ownerView.pendingRoll?.kind, "mongolChargeAllyAttackTarget");
+  assert.deepEqual(ownerView.pendingRoll?.context.legalTargetIds, [enemyA.id, enemyB.id]);
+  assert.equal(opponentView.pendingRoll, null, "Mongol Charge target options must be owner-private");
+
+  const beforeInvalid = room.state;
+  const revisionBeforeInvalid = room.revision;
+  const rejected = applyGameAction(
+    room,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: "mongol-charge-choice",
+      choice: {
+        type: "mongolChargeAllyAttackTarget",
+        targetId: controller.id,
+      },
+    } as any,
+    "P1",
+  );
+  assert.equal(rejected.ok, false);
+  assert.equal(room.state, beforeInvalid, "illegal Mongol Charge target must not mutate state");
+  assert.equal(room.revision, revisionBeforeInvalid, "illegal target must not advance revision");
+
+  const accepted = applyGameAction(room, payload.data as any, "P1");
+  assert.equal(accepted.ok, true);
+  assert.equal(room.revision, revisionBeforeInvalid + 1);
+  assert.equal(room.state.pendingRoll?.kind, "attack_attackerRoll");
+  assert.equal(room.state.pendingRoll?.context.attackerId, ally.id);
+  assert.equal(room.state.pendingRoll?.context.defenderId, enemyB.id);
+  console.log("hardening_mongol_charge_pending_choice_is_authoritative passed");
+}
+
 function testHassanAssassinOrderCommandAndProjectionAreAuthoritative() {
   const { room } = makeSeatedRoom({
     roomIdPrefix: "hardening-hassan-assassin-order",
@@ -1484,6 +1566,7 @@ async function main() {
   testMulticlassMovementCommandsStayAuthoritative();
   testArtemidaSickleEndpointCommandsStayAuthoritative();
   testPendingBoardChoiceUsesAuthenticatedSeat();
+  testMongolChargePendingChoiceIsAuthoritative();
   testHassanAssassinOrderCommandAndProjectionAreAuthoritative();
   testMissedHiddenAttackRevealIsAuthoritative();
   testChikatiloCommandsAndResourcesAreAuthoritative();

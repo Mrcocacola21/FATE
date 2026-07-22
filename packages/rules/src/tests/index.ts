@@ -214,6 +214,10 @@ import {
   testGenghisMongolChargeRequires4SpendsAll4,
   testGenghisLegendOfSteppesBonusOnlyVsLastTurnTarget,
   testGenghisMongolChargeSweepTriggersAlliedAttacksInCorridor,
+  testGenghisMongolChargeInfluenceIncludesFullPathAndSides,
+  testGenghisMongolChargeMultipleTargetsCreatesChoiceAndResolves,
+  testGenghisMongolChargeSkipsAlliesWithoutTargets,
+  testGenghisMongolChargeMultipleAlliesPauseInStableOrder,
 } from "./heroes/genghisKhan.test";
 import {
   testElCidLongLiverAdds2Hp,
@@ -578,6 +582,10 @@ function main(): void {
   testGenghisMongolChargeRequires4SpendsAll4();
   testGenghisLegendOfSteppesBonusOnlyVsLastTurnTarget();
   testGenghisMongolChargeSweepTriggersAlliedAttacksInCorridor();
+  testGenghisMongolChargeInfluenceIncludesFullPathAndSides();
+  testGenghisMongolChargeMultipleTargetsCreatesChoiceAndResolves();
+  testGenghisMongolChargeSkipsAlliesWithoutTargets();
+  testGenghisMongolChargeMultipleAlliesPauseInStableOrder();
   testJebeHpBonus();
   testJebeStealthThresholdIs6();
   testJebeHailOfArrowsGatingTargetingAndDamage();

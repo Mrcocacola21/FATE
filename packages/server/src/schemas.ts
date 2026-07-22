@@ -113,6 +113,10 @@ const ResolveRollChoiceSchema = z.union([
     targetId: z.string().min(1),
   }),
   z.object({
+    type: z.literal("mongolChargeAllyAttackTarget"),
+    targetId: z.string().min(1),
+  }),
+  z.object({
     type: z.literal("hassanAssassinOrderPick"),
     unitIds: z.array(z.string().min(1)).length(2),
   }),

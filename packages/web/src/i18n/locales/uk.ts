@@ -1454,6 +1454,10 @@ export const uk = {
       selectControlledUnit:
         "\u041e\u0431\u0435\u0440\u0456\u0442\u044c \u0444\u0456\u0433\u0443\u0440\u0443 \u0434\u043b\u044f \u043a\u043e\u043d\u0442\u0440\u043e\u043b\u044e.",
       selectControlledAttackTarget: "Виберіть ціль для контрольованої атаки.",
+      mongolChargePath: "Шлях Монгольського ривка.",
+      mongolChargeInfluence: "Шлях і бічна зона Монгольського ривка.",
+      mongolChargeTargets: "Вороги, яких можуть атакувати зачеплені союзники.",
+      mongolChargeChooseTarget: "Монгольський ривок: оберіть ціль для атаки союзника.",
       archerLine: "Лінія дальньої атаки.",
       affectedLine: "Обрана лінія атаки.",
       fireParadeArea: "Область Вогняного параду.",

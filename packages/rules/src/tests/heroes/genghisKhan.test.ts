@@ -19,6 +19,35 @@ import {
   setupVladState,
   toBattleState,
 } from "../helpers/testUtils";
+import { getMongolChargeInfluenceCells } from "../../movement";
+
+export function testGenghisMongolChargeInfluenceIncludesFullPathAndSides() {
+  const influence = getMongolChargeInfluenceCells(
+    [
+      { col: 1, row: 1 },
+      { col: 2, row: 1 },
+      { col: 3, row: 1 },
+    ],
+    9
+  );
+  assert.deepStrictEqual(influence, [
+    { col: 1, row: 1 },
+    { col: 1, row: 0 },
+    { col: 1, row: 2 },
+    { col: 2, row: 1 },
+    { col: 2, row: 0 },
+    { col: 2, row: 2 },
+    { col: 3, row: 1 },
+    { col: 3, row: 0 },
+    { col: 3, row: 2 },
+  ]);
+  assert.equal(
+    new Set(influence.map((cell) => `${cell.col},${cell.row}`)).size,
+    influence.length,
+    "Mongol Charge influence cells should be deduplicated"
+  );
+  console.log("genghis_mongol_charge_influence_includes_full_path_and_sides passed");
+}
 export function testPolkovodetsAppliesToAdjacentAlliesNotSelf() {
   let { state, vlad, enemy } = setupVladState();
   const ally = Object.values(state.units).find(
@@ -866,4 +895,266 @@ export function testGenghisMongolChargeSweepTriggersAlliedAttacksInCorridor() {
   console.log(
     "genghis_mongol_charge_sweep_triggers_allied_attacks_in_3wide_corridor passed"
   );
+}
+
+export function testGenghisMongolChargeMultipleTargetsCreatesChoiceAndResolves() {
+  const rng = makeRngSequence([0.99, 0.99, 0.01, 0.2]);
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1", { rider: HERO_GENGHIS_KHAN_ID }));
+  state = attachArmy(state, createDefaultArmy("P2"));
+
+  const genghis = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.class === "rider"
+  )!;
+  const ally = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.class === "assassin"
+  )!;
+  const enemies = Object.values(state.units).filter(
+    (unit) => unit.owner === "P2"
+  );
+  const [enemyA, enemyB, illegalEnemy] = enemies;
+
+  state = setUnit(state, genghis.id, {
+    position: { col: 1, row: 1 },
+    charges: { ...genghis.charges, [ABILITY_GENGHIS_KHAN_MONGOL_CHARGE]: 4 },
+  });
+  state = setUnit(state, ally.id, {
+    position: { col: 3, row: 0 },
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
+  state = setUnit(state, enemyA.id, { position: { col: 2, row: 0 } });
+  state = setUnit(state, enemyB.id, { position: { col: 4, row: 0 } });
+  state = setUnit(state, illegalEnemy.id, {
+    position: { col: 3, row: 1 },
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
+  state = initKnowledgeForOwners(toBattleState(state, "P1", genghis.id));
+
+  let result = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: genghis.id,
+      abilityId: ABILITY_GENGHIS_KHAN_MONGOL_CHARGE,
+    } as any,
+    rng
+  );
+  result = applyAction(
+    result.state,
+    { type: "move", unitId: genghis.id, to: { col: 5, row: 1 } } as any,
+    rng
+  );
+
+  const pending = result.state.pendingRoll;
+  assert.equal(pending?.kind, "mongolChargeAllyAttackTarget");
+  assert.equal(pending?.player, "P1");
+  assert.equal(pending?.context.sourceUnitId, ally.id);
+  assert.equal(pending?.context.controllerUnitId, genghis.id);
+  assert.deepStrictEqual(
+    pending?.context.legalTargetIds,
+    [enemyA.id, enemyB.id].sort(),
+    "all legal visible targets, but no unknown hidden target, should be projected"
+  );
+
+  const pendingState = result.state;
+  const invalid = applyAction(
+    pendingState,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: pending!.id,
+      player: "P1",
+      choice: {
+        type: "mongolChargeAllyAttackTarget",
+        targetId: illegalEnemy.id,
+      },
+    } as any,
+    rng
+  );
+  assert.strictEqual(
+    invalid.state,
+    pendingState,
+    "an illegal Mongol Charge target must not mutate or clear pending state"
+  );
+
+  const chosen = applyAction(
+    pendingState,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: pending!.id,
+      player: "P1",
+      choice: {
+        type: "mongolChargeAllyAttackTarget",
+        targetId: enemyB.id,
+      },
+    } as any,
+    rng
+  );
+  assert.equal(chosen.state.pendingRoll?.kind, "attack_attackerRoll");
+  assert.equal(chosen.state.pendingRoll?.context.attackerId, ally.id);
+  assert.equal(chosen.state.pendingRoll?.context.defenderId, enemyB.id);
+
+  const resolved = resolveAllPendingRollsWithEvents(chosen.state, rng);
+  const attack = resolved.events.find(
+    (event) =>
+      event.type === "attackResolved" &&
+      event.attackerId === ally.id &&
+      event.defenderId === enemyB.id
+  );
+  assert(attack, "the selected target should be attacked by the affected ally");
+  assert.equal(
+    resolved.state.units[ally.id].isStealthed,
+    false,
+    "a hidden affected ally should reveal through the normal attack-attempt pipeline"
+  );
+  assert(
+    resolved.events.some(
+      (event) =>
+        event.type === "stealthRevealed" &&
+        event.unitId === ally.id &&
+        event.reason === "attacked"
+    ),
+    "the triggered attack should emit the global attacked stealth reveal"
+  );
+  assert.equal(resolved.state.pendingRoll, null, "no stale target choice should remain");
+  assert.equal(resolved.state.pendingCombatQueue?.length ?? 0, 0);
+  console.log("genghis_mongol_charge_multiple_targets_creates_choice_and_resolves passed");
+}
+
+export function testGenghisMongolChargeSkipsAlliesWithoutTargets() {
+  const rng = new SeededRNG(101);
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1", { rider: HERO_GENGHIS_KHAN_ID }));
+  state = attachArmy(state, createDefaultArmy("P2"));
+  const genghis = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.class === "rider"
+  )!;
+  const ally = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.class === "knight"
+  )!;
+  state = setUnit(state, genghis.id, {
+    position: { col: 1, row: 1 },
+    charges: { ...genghis.charges, [ABILITY_GENGHIS_KHAN_MONGOL_CHARGE]: 4 },
+  });
+  state = setUnit(state, ally.id, { position: { col: 3, row: 0 } });
+  state = initKnowledgeForOwners(toBattleState(state, "P1", genghis.id));
+
+  let result = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: genghis.id,
+      abilityId: ABILITY_GENGHIS_KHAN_MONGOL_CHARGE,
+    } as any,
+    rng
+  );
+  result = applyAction(
+    result.state,
+    { type: "move", unitId: genghis.id, to: { col: 5, row: 1 } } as any,
+    rng
+  );
+  assert.equal(result.state.pendingRoll, null);
+  assert.equal(result.state.pendingCombatQueue?.length ?? 0, 0);
+  console.log("genghis_mongol_charge_skips_allies_without_targets passed");
+}
+
+export function testGenghisMongolChargeMultipleAlliesPauseInStableOrder() {
+  const runScenario = (multiTargetFirst: boolean) => {
+    const rng = makeRngSequence([
+      0.99, 0.99, 0.01, 0.2,
+      0.99, 0.99, 0.01, 0.2,
+    ]);
+    let state = createEmptyGame();
+    state = attachArmy(state, createDefaultArmy("P1", { rider: HERO_GENGHIS_KHAN_ID }));
+    state = attachArmy(state, createDefaultArmy("P2"));
+    const genghis = Object.values(state.units).find(
+      (unit) => unit.owner === "P1" && unit.class === "rider"
+    )!;
+    const firstAlly = Object.values(state.units).find(
+      (unit) => unit.owner === "P1" && unit.class === "spearman"
+    )!;
+    const secondAlly = Object.values(state.units).find(
+      (unit) => unit.owner === "P1" && unit.class === "knight"
+    )!;
+    const enemies = Object.values(state.units).filter((unit) => unit.owner === "P2");
+    const [enemyA, enemyB, enemyC] = enemies;
+
+    state = setUnit(state, genghis.id, {
+      position: { col: 1, row: 1 },
+      charges: { ...genghis.charges, [ABILITY_GENGHIS_KHAN_MONGOL_CHARGE]: 4 },
+    });
+    state = setUnit(state, firstAlly.id, { position: { col: 2, row: 0 } });
+    state = setUnit(state, secondAlly.id, { position: { col: 4, row: 2 } });
+    if (multiTargetFirst) {
+      state = setUnit(state, enemyA.id, { position: { col: 1, row: 0 } });
+      state = setUnit(state, enemyB.id, { position: { col: 3, row: 0 } });
+      state = setUnit(state, enemyC.id, { position: { col: 5, row: 2 } });
+    } else {
+      state = setUnit(state, enemyA.id, { position: { col: 1, row: 0 } });
+      state = setUnit(state, enemyB.id, { position: { col: 3, row: 2 } });
+      state = setUnit(state, enemyC.id, { position: { col: 5, row: 2 } });
+    }
+    state = initKnowledgeForOwners(toBattleState(state, "P1", genghis.id));
+
+    let result = applyAction(
+      state,
+      {
+        type: "useAbility",
+        unitId: genghis.id,
+        abilityId: ABILITY_GENGHIS_KHAN_MONGOL_CHARGE,
+      } as any,
+      rng
+    );
+    result = applyAction(
+      result.state,
+      { type: "move", unitId: genghis.id, to: { col: 5, row: 1 } } as any,
+      rng
+    );
+
+    const pending = result.state.pendingRoll!;
+    const expectedPendingAlly = multiTargetFirst ? firstAlly : secondAlly;
+    assert.equal(pending.kind, "mongolChargeAllyAttackTarget");
+    assert.equal(pending.context.sourceUnitId, expectedPendingAlly.id);
+    assert.deepStrictEqual(
+      (pending.context.queuedAttacks as { attackerId: string }[]).map(
+        (entry) => entry.attackerId
+      ),
+      multiTargetFirst ? [secondAlly.id] : [],
+      "single-target allies before a choice should remain queued in stable unit-id order"
+    );
+
+    const selectedTarget = (pending.context.legalTargetIds as string[])[0]!;
+    const chosen = applyAction(
+      result.state,
+      {
+        type: "resolvePendingRoll",
+        pendingRollId: pending.id,
+        player: "P1",
+        choice: {
+          type: "mongolChargeAllyAttackTarget",
+          targetId: selectedTarget,
+        },
+      } as any,
+      rng
+    );
+    assert.deepStrictEqual(
+      chosen.state.pendingCombatQueue?.map((entry) => entry.attackerId),
+      [secondAlly.id, firstAlly.id],
+      "all affected allies should enter combat in deterministic unit-id order"
+    );
+
+    const resolved = resolveAllPendingRollsWithEvents(chosen.state, rng);
+    assert.deepStrictEqual(
+      resolved.events
+        .filter((event) => event.type === "attackResolved")
+        .map((event) => event.type === "attackResolved" ? event.attackerId : ""),
+      [secondAlly.id, firstAlly.id]
+    );
+    assert.equal(resolved.state.pendingRoll, null);
+  };
+
+  runScenario(true);
+  runScenario(false);
+  console.log("genghis_mongol_charge_multiple_allies_pause_in_stable_order passed");
 }

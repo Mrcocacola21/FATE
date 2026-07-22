@@ -70,6 +70,7 @@ export function getVisiblePendingRollForPlayer(
     "mindControlEnemyOptions",
     "spinCandidateIds",
     "options",
+    "legalTargetIds",
   ];
   for (const key of unitIdLists) {
     const value = context[key];

@@ -604,6 +604,16 @@ export function PendingBoardNotice({
             )}
           </div>
         </div>
+      ) : pendingRollKind === "mongolChargeAllyAttackTarget" ? (
+        <div>
+          <div className="font-semibold">Mongol Charge</div>
+          <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
+            {p(
+              "Choose a target for the allied attack.",
+              "Монгольський ривок: оберіть ціль для атаки союзника.",
+            )}
+          </div>
+        </div>
       ) : isHassanTrueEnemyTargetChoice ? (
         <div>
           <div className="font-semibold">{p("True Enemy", "Справжній ворог")}</div>

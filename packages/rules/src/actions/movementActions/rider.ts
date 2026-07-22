@@ -100,54 +100,6 @@ export function getRiderPathCells(from: Coord, to: Coord): Coord[] {
   return path;
 }
 
-export function getMongolChargeCorridor(
-  path: Coord[],
-  boardSize: number
-): Coord[] {
-  if (path.length === 0) return [];
-  const start = path[0];
-  const end = path[path.length - 1];
-  const stepCol = Math.sign(end.col - start.col);
-  const stepRow = Math.sign(end.row - start.row);
-
-  let offsets: Coord[] = [];
-  if (stepCol === 0 && stepRow !== 0) {
-    offsets = [
-      { col: -1, row: 0 },
-      { col: 1, row: 0 },
-    ];
-  } else if (stepRow === 0 && stepCol !== 0) {
-    offsets = [
-      { col: 0, row: -1 },
-      { col: 0, row: 1 },
-    ];
-  } else if (Math.abs(stepCol) === 1 && Math.abs(stepRow) === 1) {
-    offsets = [
-      { col: stepCol, row: 0 },
-      { col: 0, row: stepRow },
-    ];
-  }
-
-  const seen = new Set<string>();
-  const corridor: Coord[] = [];
-  const pushCell = (cell: Coord) => {
-    if (!isInsideBoard(cell, boardSize)) return;
-    const key = `${cell.col},${cell.row}`;
-    if (seen.has(key)) return;
-    seen.add(key);
-    corridor.push(cell);
-  };
-
-  for (const cell of path) {
-    pushCell(cell);
-    for (const offset of offsets) {
-      pushCell({ col: cell.col + offset.col, row: cell.row + offset.row });
-    }
-  }
-
-  return corridor;
-}
-
 export function sortUnitIdsByReadingOrder(
   state: GameState,
   unitIds: string[]

@@ -345,6 +345,7 @@ const PENDING_ROLL_LABELS_UK: Record<string, string> = {
   jebeKhansShooterRicochetRoll: "Кидок рикошетів Стрільця хана",
   jebeKhansShooterTargetChoice: "Вибір цілі Стрільця хана",
   hassanTrueEnemyTargetChoice: "Вибір цілі Справжнього ворога",
+  mongolChargeAllyAttackTarget: "Монгольський ривок: оберіть ціль для атаки союзника",
   hassanAssassinOrderSelection: "Вибір Ордену убивць",
   asgoreSoulParadeRoll: "Кидок Параду душ",
   asgoreSoulParadePatienceTargetChoice: "Ціль Терпіння",
@@ -471,6 +472,8 @@ export function getPendingRollLabel(kind?: string | null, language: "en" | "uk" 
       return "Khan's Shooter target choice";
     case "hassanTrueEnemyTargetChoice":
       return "True Enemy forced target choice";
+    case "mongolChargeAllyAttackTarget":
+      return "Mongol Charge: choose ally attack target";
     case "hassanAssassinOrderSelection":
       return "Assassin Order selection";
     case "asgoreSoulParadeRoll":

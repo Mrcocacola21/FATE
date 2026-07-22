@@ -1,4 +1,5 @@
 import type { Coord, PendingMove, PlayerView, UnitState } from "rules";
+import { getMongolChargeInfluenceCells } from "../../../../rules/src/movement/mongolCharge";
 import { ARTEMIS_MOON_INSIGHT_ID } from "../../rulesHints";
 import type { BoardPreview, TargetRef } from "./previewTypes";
 import { getDonMadnessRayCells } from "./donMadnessDirection";
@@ -14,6 +15,7 @@ import {
   cellsInRadius,
   chebyshevDistance,
   coordKey,
+  linePath,
   lineCellsToTargets,
   visiblePositionedUnits,
 } from "./previewGeometry";
@@ -110,31 +112,99 @@ export function buildMovementPreview({
   view,
   pendingMove,
   labelKey,
+  targetingCell,
 }: {
   view: PlayerView;
   pendingMove: Pick<PendingMove, "unitId" | "legalTo" | "mode">;
   labelKey?: string;
+  targetingCell?: Coord | null;
 }): BoardPreview | null {
   const unit = sourceUnit(view, pendingMove.unitId);
   if (!unit?.position) return null;
+  const isMongolCharge = unit.genghisKhanMongolChargeActive === true;
+  const hoveredDestination =
+    targetingCell &&
+    pendingMove.legalTo.some(
+      (coord) => coord.col === targetingCell.col && coord.row === targetingCell.row,
+    )
+      ? targetingCell
+      : null;
+  const previewDestinations = hoveredDestination
+    ? [hoveredDestination]
+    : pendingMove.legalTo;
   const pathCells =
     pendingMove.mode === "rider" ||
     unit.class === "rider" ||
     unit.genghisKhanDiagonalMoveActive ||
     unit.genghisKhanDecreeMovePending
-      ? lineCellsToTargets(unit.position, pendingMove.legalTo)
+      ? lineCellsToTargets(unit.position, previewDestinations)
       : undefined;
-  return {
+  const movement: BoardPreview = {
     kind: "movement",
     sourceCell: { ...unit.position },
     reachableCells: pendingMove.legalTo.map((coord) => ({ ...coord })),
     pathCells,
     labelKey:
       labelKey ??
-      (unit.genghisKhanDiagonalMoveActive || unit.genghisKhanDecreeMovePending
+      (isMongolCharge
+        ? "preview.labels.mongolChargePath"
+        : unit.genghisKhanDiagonalMoveActive || unit.genghisKhanDecreeMovePending
         ? "preview.labels.diagonalDestinations"
         : "preview.labels.selectDestination"),
   };
+
+  if (!isMongolCharge) return movement;
+
+  const influenceCells = uniqueCoords(
+    previewDestinations.flatMap((destination) => {
+      const path = linePath(unit.position!, destination);
+      return path
+        ? getMongolChargeInfluenceCells(path, boardSize(view))
+        : [];
+    }),
+  );
+  const influenceKeys = new Set(influenceCells.map(coordKey));
+  const affectedAllies = visiblePositionedUnits(view).filter(
+    (candidate) =>
+      candidate.id !== unit.id &&
+      candidate.owner === unit.owner &&
+      !!candidate.position &&
+      !candidate.turn.attackUsed &&
+      !candidate.turn.actionUsed &&
+      influenceKeys.has(coordKey(candidate.position)),
+  );
+  const possibleTargetIds = uniqueStrings(
+    affectedAllies.flatMap(
+      (ally) => view.legal?.attackTargetsByUnitId[ally.id] ?? [],
+    ),
+  );
+
+  return compactPreview(
+    [
+      {
+        kind: "area",
+        sourceCell: { ...unit.position },
+        areaCells: influenceCells,
+        affectedTargets: targetRefsFromIds(
+          view,
+          affectedAllies.map((ally) => ally.id),
+        ),
+        labelKey: "preview.labels.mongolChargeInfluence",
+      },
+      movement,
+      possibleTargetIds.length > 0
+        ? {
+            kind: "multiStep",
+            step: "mongolChargeAllyTargets",
+            sourceCell: { ...unit.position },
+            cells: [],
+            validTargets: targetRefsFromIds(view, possibleTargetIds),
+            labelKey: "preview.labels.mongolChargeTargets",
+          }
+        : null,
+    ],
+    "preview.labels.mongolChargeInfluence",
+  );
 }
 
 function buildPickupPreview({
@@ -410,6 +480,14 @@ export function buildPendingPreview(
           optionIds: stringList(context.options),
           labelKey: "preview.labels.selectControlledAttackTarget",
         });
+      case "mongolChargeAllyAttackTarget":
+        return buildForcedAttackPreview({
+          gameView: view,
+          attackerId:
+            typeof context.sourceUnitId === "string" ? context.sourceUnitId : "",
+          optionIds: stringList(context.legalTargetIds ?? context.options),
+          labelKey: "preview.labels.mongolChargeChooseTarget",
+        });
       case "lokiMindControlTargetChoice":
         return buildForcedAttackPreview({
           gameView: view,
@@ -581,6 +659,7 @@ export function buildPendingPreview(
     return buildMovementPreview({
       view,
       pendingMove: view.pendingMove,
+      targetingCell,
     });
   }
 

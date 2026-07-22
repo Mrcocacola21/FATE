@@ -47,6 +47,10 @@ export function useGameShellPendingStatus({
   const isGuideTravelerPlacement = pendingRoll?.kind === "lechyGuideTravelerPlacement";
   const isJebeKhansShooterTargetChoice = pendingRoll?.kind === "jebeKhansShooterTargetChoice";
   const isHassanTrueEnemyTargetChoice = pendingRoll?.kind === "hassanTrueEnemyTargetChoice";
+  const isMongolChargeAllyAttackTarget =
+    pendingRoll?.kind === "mongolChargeAllyAttackTarget";
+  const isForcedAttackTargetChoice =
+    isHassanTrueEnemyTargetChoice || isMongolChargeAllyAttackTarget;
   const isHassanAssassinOrderSelection = pendingRoll?.kind === "hassanAssassinOrderSelection";
   const isAsgoreSoulParadePatienceTargetChoice =
     pendingRoll?.kind === "asgoreSoulParadePatienceTargetChoice";
@@ -99,7 +103,7 @@ export function useGameShellPendingStatus({
     isGroznyTyrantAttackCellChoice ||
     isGuideTravelerPlacement ||
     isJebeKhansShooterTargetChoice ||
-    isHassanTrueEnemyTargetChoice ||
+    isForcedAttackTargetChoice ||
     isHassanAssassinOrderSelection ||
     isLokiChickenTargetChoice ||
     isLokiMindControlEnemyChoice ||
@@ -259,7 +263,8 @@ export function useGameShellPendingStatus({
     isGroznyTyrantAttackCellChoice,
     isGuideTravelerPlacement,
     isJebeKhansShooterTargetChoice,
-    isHassanTrueEnemyTargetChoice,
+    isHassanTrueEnemyTargetChoice: isForcedAttackTargetChoice,
+    isMongolChargeAllyAttackTarget,
     isHassanAssassinOrderSelection,
     isAsgoreSoulParadePatienceTargetChoice,
     isAsgoreSoulParadePerseveranceTargetChoice,
