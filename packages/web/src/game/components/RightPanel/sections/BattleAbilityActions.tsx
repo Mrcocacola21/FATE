@@ -1,5 +1,5 @@
 import { useEffect, useState, type FC } from "react";
-import type { AbilityView, PlayerView, UnitState } from "rules";
+import type { AbilityUseSource, AbilityView, PlayerView, UnitState } from "rules";
 import { FALSE_TRAIL_TOKEN_ID, KAISER_DORA_ID, KANEKI_REGENERATION_ID, LOKI_LAUGHT_ID, LUCHE_DIVINE_RAY_ID, ZORO_ONI_GIRI_ID, getMaxHp } from "../../../../rulesHints";
 import type { ActionMode, ActionPreviewMode, LokiLaughtOption } from "../../../../store";
 import {
@@ -134,7 +134,7 @@ interface BattleAbilityActionsProps {
   lokiLaughtOptionQueued?: boolean;
   onUseAbility: (abilityId: string, payload?: Record<string, unknown>) => void;
   onUseLokiLaughtOption: (option: LokiLaughtOption) => void;
-  onToggleMode: (mode: ActionPreviewMode) => void;
+  onToggleMode: (mode: ActionPreviewMode, useSource?: AbilityUseSource) => void;
   onModePreview: (mode: ActionPreviewMode | null) => void;
   onHoverAbility: (abilityId: string | null) => void;
 }
@@ -178,6 +178,74 @@ export const BattleAbilityActions: FC<BattleAbilityActionsProps> = ({
         {t("game.abilityActions")}
       </div>
       {actionableAbilities.map((ability) => {
+        if (ability.useOptions?.length) {
+          const display = getAbilityDisplay(ability.id, ability.name, ability.description, language);
+          const mode = abilityActionMode(ability.id);
+          const availableOptions = ability.useOptions.filter((option) => option.isAvailable);
+          const visibleOptions = availableOptions.length > 0 ? availableOptions : ability.useOptions;
+          return visibleOptions.map((option) => {
+            const disabled = targetingActive || !canAct || !option.isAvailable;
+            const sourceLabel = option.source.type === "abilityCounter"
+              ? (language === "uk" ? "Лічильник" : "Counter")
+              : language === "uk"
+                ? `Витратити ${option.sourceName}`
+                : `Spend ${option.sourceName}`;
+            const costs = [
+              option.consumes?.action ? (language === "uk" ? "Дія" : "Action") : null,
+              option.consumes?.move ? (language === "uk" ? "Рух" : "Move") : null,
+            ].filter((value): value is string => !!value);
+            const chargeLabel = option.chargeRequired === undefined
+              ? ""
+              : ` (${option.currentCharges ?? 0}/${option.chargeRequired})`;
+            const label = `${display.name} — ${sourceLabel}${costs.length ? ` + ${costs.join(" + ")}` : ""}${chargeLabel}`;
+            const tooltip =
+              (targetingActive ? t("game.cancelTargetingFirst") : "") ||
+              (!canAct ? t("pending.conditionNotMet") : "") ||
+              localizeServerText(option.disabledReason, t) ||
+              "";
+            return (
+              <div
+                key={`${ability.id}:${option.id}`}
+                className="space-y-1"
+                data-ability-use-source={option.source.type}
+                data-ability-id={ability.id}
+              >
+                <button
+                  type="button"
+                  className={`min-h-10 w-full rounded-lg border px-3 py-2.5 text-left text-xs font-bold shadow-sm transition focus-visible:ring-4 focus-visible:ring-sky-500/15 ${
+                    disabled
+                      ? "border-slate-200 bg-slate-100 text-slate-400 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-500"
+                      : "border-sky-300 bg-sky-50 text-sky-900 hover:border-sky-400 hover:bg-sky-100 dark:border-sky-900/70 dark:bg-sky-950/35 dark:text-sky-100 dark:hover:border-sky-800 dark:hover:bg-sky-950/55"
+                  }`}
+                  disabled={disabled}
+                  title={tooltip}
+                  onClick={() => {
+                    if (!disabled && mode) onToggleMode(mode, option.source);
+                  }}
+                  onMouseEnter={() => {
+                    if (mode && !disabled) onModePreview(mode);
+                  }}
+                  onMouseLeave={() => {
+                    if (mode) onModePreview(null);
+                  }}
+                  onFocus={() => {
+                    if (mode && !disabled) onModePreview(mode);
+                  }}
+                  onBlur={() => {
+                    if (mode) onModePreview(null);
+                  }}
+                >
+                  {label}
+                </button>
+                {disabled && tooltip ? (
+                  <div className="px-1 text-xs leading-5 text-amber-700 dark:text-amber-300">
+                    {tooltip}
+                  </div>
+                ) : null}
+              </div>
+            );
+          });
+        }
         if (ability.id === KANEKI_REGENERATION_ID) {
           const disabled =
             targetingActive ||

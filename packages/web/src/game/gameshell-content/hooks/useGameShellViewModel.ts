@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useGameShellAbilityModeTargets } from "./useGameShellAbilityModeTargets";
 import { useGameShellBoardPendingTargets } from "./useGameShellBoardPendingTargets";
 import { useGameShellBoardPreview } from "./useGameShellBoardPreview";
@@ -11,6 +11,20 @@ import { useGameShellPreviewEffects } from "./useGameShellPreviewEffects";
 
 export function useGameShellViewModel() {
   const core = useGameShellCoreState();
+  const [newHeroAbilityTargetId, setNewHeroAbilityTargetId] = useState<string | null>(null);
+  const [newHeroAbilityPreviewCell, setNewHeroAbilityPreviewCell] = useState<import("rules").Coord | null>(null);
+  useEffect(() => {
+    if (core.actionMode !== "duolingoPush" && core.actionMode !== "zoroOniGiri") {
+      setNewHeroAbilityTargetId(null);
+    }
+    if (
+      core.actionMode !== "duolingoPush" &&
+      core.actionMode !== "zoroOniGiri" &&
+      core.actionMode !== "lucheLightRay"
+    ) {
+      setNewHeroAbilityPreviewCell(null);
+    }
+  }, [core.actionMode, core.selectedUnitId]);
 
   const boardPending = useGameShellBoardPendingTargets({
     view: core.view,
@@ -185,7 +199,13 @@ export function useGameShellViewModel() {
     moveOptions: core.moveOptions,
     hasBlockingRoll: core.pending.hasBlockingRoll,
     boardSelectionPending: core.pending.boardSelectionPending,
-    targetingCell: core.artemidaPreviewTarget,
+    targetingCell:
+      core.actionMode === "duolingoPush" ||
+      core.actionMode === "zoroOniGiri" ||
+      core.actionMode === "lucheLightRay"
+        ? newHeroAbilityPreviewCell
+        : core.artemidaPreviewTarget,
+    selectedTargetId: newHeroAbilityTargetId,
   });
 
   const boardUi = useGameShellBoardUi({
@@ -199,6 +219,7 @@ export function useGameShellViewModel() {
     joined: core.joined,
     isSpectator: core.isSpectator,
     actionMode: core.actionMode,
+    targetingMode: core.targetingMode,
     placeUnitId: core.placeUnitId,
     sendGameAction: core.sendGameAction,
     setActionMode: core.setActionMode,
@@ -228,6 +249,9 @@ export function useGameShellViewModel() {
     setTisonaPreviewCoord: core.setTisonaPreviewCoord,
     setForestPreviewCenter: core.setForestPreviewCenter,
     selectedUnit: core.selectedUnit,
+    newHeroAbilityTargetId,
+    setNewHeroAbilityTargetId,
+    setNewHeroAbilityPreviewCell,
   });
 
   return useMemo(
@@ -239,6 +263,7 @@ export function useGameShellViewModel() {
       ...abilityTargets,
       ...combatTargets,
       ...boardUi,
+      newHeroAbilityTargetId,
       highlightedCells,
       boardPreview,
     }),

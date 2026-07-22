@@ -76,6 +76,7 @@ export function useGameShellBoardUi(params: any) {
     hassanAssassinOrderEligibleIds,
     setHassanAssassinOrderSelections,
     actionMode,
+    targetingMode,
     placeUnitId,
     legalPlacementCoords,
     sendGameAction,
@@ -121,8 +122,10 @@ export function useGameShellBoardUi(params: any) {
     setTisonaPreviewCoord,
     setForestPreviewCenter,
     selectedUnit,
+    newHeroAbilityTargetId,
+    setNewHeroAbilityTargetId,
+    setNewHeroAbilityPreviewCell,
   } = params;
-  const [newHeroAbilityTargetId, setNewHeroAbilityTargetId] = useState<string | null>(null);
   const [zoroAttackTargetIds, setZoroAttackTargetIds] = useState<string[]>([]);
   useEffect(() => {
     if (actionMode !== "duolingoPush" && actionMode !== "zoroOniGiri") {
@@ -220,6 +223,7 @@ export function useGameShellBoardUi(params: any) {
     hassanAssassinOrderEligibleIds,
     setHassanAssassinOrderSelections,
     actionMode,
+    targetingMode,
     placeUnitId,
     legalPlacementCoords,
     sendGameAction,
@@ -275,6 +279,7 @@ export function useGameShellBoardUi(params: any) {
     setKaladinFifthPreviewCenter,
     setTisonaPreviewCoord,
     setForestPreviewCenter,
+    setNewHeroAbilityPreviewCell,
   });
   const boardPreviewCenter =
     actionMode === "dora"

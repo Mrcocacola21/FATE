@@ -7,6 +7,7 @@ import type {
   PlayerView,
 } from "rules";
 import type { ActionMode } from "../../store";
+import type { TargetingMode } from "../selectionState";
 import {
   ASGORE_FIRE_PARADE_ID,
   ASGORE_FIREBALL_ID,
@@ -128,6 +129,7 @@ export interface CellClickContext {
   hassanAssassinOrderEligibleIds: string[];
   setHassanAssassinOrderSelections: Dispatch<SetStateAction<string[]>>;
   actionMode: ActionMode;
+  targetingMode: TargetingMode | null;
   placeUnitId: string | null;
   legalPlacementCoords: Coord[];
   sendGameAction: (action: GameAction) => void;
@@ -281,6 +283,7 @@ export function createCellClickHandler(context: CellClickContext) {
     hassanAssassinOrderEligibleIds,
     setHassanAssassinOrderSelections,
     actionMode,
+    targetingMode,
     placeUnitId,
     legalPlacementCoords,
     sendGameAction,
@@ -741,48 +744,27 @@ export function createCellClickHandler(context: CellClickContext) {
     if (!selectedUnitId) return;
 
     if (actionMode === "duolingoPush" || actionMode === "zoroOniGiri") {
+      const abilityId = actionMode === "duolingoPush"
+        ? DUOLINGO_PUSH_NOTIFICATION_ID
+        : ZORO_ONI_GIRI_ID;
+      const targeting = view.abilitiesByUnitId?.[selectedUnitId]?.find((ability) => ability.id === abilityId)?.targeting;
       if (!newHeroAbilityTargetId) {
         const target = getUnitAt(view, col, row);
-        const source = view.units[selectedUnitId];
-        if (!target?.isAlive || !target.position || !source?.position) return;
-        if (actionMode === "zoroOniGiri") {
-          if (target.owner === source.owner) return;
-          const colDelta = Math.abs(target.position.col - source.position.col);
-          const rowDelta = Math.abs(target.position.row - source.position.row);
-          if (colDelta !== 0 && rowDelta !== 0 && colDelta !== rowDelta) return;
-          if (source.blindUntilOwnTurnStart && Math.max(colDelta, rowDelta) > 1) return;
-        }
+        if (!target?.isAlive || !target.position || !targeting?.targetIds?.includes(target.id)) return;
         setNewHeroAbilityTargetId(target.id);
         return;
       }
-      const source = view.units[selectedUnitId];
-      const target = view.units[newHeroAbilityTargetId];
-      if (!source?.position || !target?.position || getUnitAt(view, col, row)) return;
-      if (actionMode === "duolingoPush") {
-        if (
-          Math.max(
-            Math.abs(col - target.position.col),
-            Math.abs(row - target.position.row),
-          ) > 2
-        ) return;
-      } else {
-        const dc = Math.sign(target.position.col - source.position.col);
-        const dr = Math.sign(target.position.row - source.position.row);
-        const before = { col: target.position.col - dc, row: target.position.row - dr };
-        const behind = { col: target.position.col + dc, row: target.position.row + dr };
-        if (
-          (col !== before.col || row !== before.row) &&
-          (col !== behind.col || row !== behind.row)
-        ) return;
-      }
+      const destinations = targeting?.destinationsByTargetId?.[newHeroAbilityTargetId] ?? [];
+      if (!isCoordInList(destinations, col, row)) return;
       sendGameAction({
         type: "useAbility",
         unitId: selectedUnitId,
-        abilityId:
-          actionMode === "duolingoPush"
-            ? DUOLINGO_PUSH_NOTIFICATION_ID
-            : ZORO_ONI_GIRI_ID,
-        payload: { targetId: newHeroAbilityTargetId, destination: { col, row } },
+        abilityId,
+        payload: {
+          targetId: newHeroAbilityTargetId,
+          destination: { col, row },
+          ...(targetingMode?.useSource ? { source: targetingMode.useSource } : {}),
+        },
       });
       setNewHeroAbilityTargetId(null);
       setActionMode(null);
@@ -825,6 +807,12 @@ export function createCellClickHandler(context: CellClickContext) {
       actionMode === "artemisMoonInsight" ||
       actionMode === "artemisSilverSickle"
     ) {
+      if (actionMode === "lucheLightRay") {
+        const legalCells = view.abilitiesByUnitId?.[selectedUnitId]
+          ?.find((ability) => ability.id === LUCHE_DIVINE_RAY_ID)
+          ?.targeting?.cells ?? [];
+        if (!isCoordInList(legalCells, col, row)) return;
+      }
       if (
         (actionMode === "artemisMoonInsight" || actionMode === "artemisSilverSickle") &&
         !artemidaLineTargetKeys.has(coordKey({ col, row }))
@@ -860,7 +848,12 @@ export function createCellClickHandler(context: CellClickContext) {
         type: "useAbility",
         unitId: selectedUnitId,
         abilityId,
-        payload: { [payloadKey]: { col, row } },
+        payload: {
+          [payloadKey]: { col, row },
+          ...(actionMode === "lucheLightRay" && targetingMode?.useSource
+            ? { source: targetingMode.useSource }
+            : {}),
+        },
       });
       setActionMode(null);
       return;
@@ -1217,6 +1210,7 @@ interface CellHoverContext {
   setKaladinFifthPreviewCenter: Dispatch<SetStateAction<Coord | null>>;
   setTisonaPreviewCoord: Dispatch<SetStateAction<Coord | null>>;
   setForestPreviewCenter: Dispatch<SetStateAction<Coord | null>>;
+  setNewHeroAbilityPreviewCell: Dispatch<SetStateAction<Coord | null>>;
 }
 
 export function createCellHoverHandler(context: CellHoverContext) {
@@ -1243,9 +1237,18 @@ export function createCellHoverHandler(context: CellHoverContext) {
     setKaladinFifthPreviewCenter,
     setTisonaPreviewCoord,
     setForestPreviewCenter,
+    setNewHeroAbilityPreviewCell,
   } = context;
 
   return (coord: Coord | null) => {
+    if (
+      actionMode === "duolingoPush" ||
+      actionMode === "zoroOniGiri" ||
+      actionMode === "lucheLightRay"
+    ) {
+      setNewHeroAbilityPreviewCell(coord);
+      return;
+    }
     if (
       actionMode === "artemisMoonInsight" ||
       actionMode === "artemisSilverSickle" ||

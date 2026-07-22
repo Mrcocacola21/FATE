@@ -105,7 +105,8 @@ export function testNewPlayableBatchStatsResourcesAndMovement() {
     assert(meta?.baseStats.hp === hp, `${heroId} metadata max HP should match its spawn HP`);
     assert(meta?.abilities.length, `${heroId} should expose readable ability metadata`);
   }
-  assert(heroes[HERO_DUOLINGO_ID].charges[ABILITY_DUOLINGO_SKIP_CLASSES] === 0, "Duolingo counter should initialize");
+  assert(heroes[HERO_DUOLINGO_ID].charges[ABILITY_DUOLINGO_SKIP_CLASSES] === 0, "Missed Lessons should initialize separately");
+  assert(heroes[HERO_DUOLINGO_ID].charges[ABILITY_DUOLINGO_PUSH_NOTIFICATION] === 0, "Push Notification own counter should initialize separately");
   assert(heroes[HERO_LUCHE_ID].charges[ABILITY_LUCHE_SUN_GLORY] === 0, "Sun should initialize");
   assert(heroes[HERO_KANEKI_ID].charges[ABILITY_KANEKI_RC_CELLS] === 0, "RC Cells should initialize");
   assert(heroes[HERO_ZORO_ID].charges[ABILITY_ZORO_DETERMINATION] === 0, "Determination should initialize");
@@ -328,7 +329,7 @@ export function testNewPlayableBatchTransactionalActives() {
     let { state, heroes, enemies } = setupBatch();
     const duo = heroes[HERO_DUOLINGO_ID];
     const target = enemies[0];
-    state = setUnit(state, duo.id, { position: { col: 0, row: 0 }, isStealthed: true, stealthTurnsLeft: 2, charges: { ...duo.charges, [ABILITY_DUOLINGO_SKIP_CLASSES]: 3 } });
+    state = setUnit(state, duo.id, { position: { col: 0, row: 0 }, isStealthed: true, stealthTurnsLeft: 2, charges: { ...duo.charges, [ABILITY_DUOLINGO_PUSH_NOTIFICATION]: 0, [ABILITY_DUOLINGO_SKIP_CLASSES]: 3 } });
     state = setUnit(state, target.id, { position: { col: 5, row: 5 } });
     state = battleFor(state, state.units[duo.id]);
     const rejected = applyAction(state, { type: "useAbility", unitId: duo.id, abilityId: ABILITY_DUOLINGO_PUSH_NOTIFICATION, payload: { targetId: target.id, destination: { col: 8, row: 8 } } } as any, rng);
@@ -338,7 +339,52 @@ export function testNewPlayableBatchTransactionalActives() {
     assert(accepted.state.units[duo.id].position?.col === 4, "Push should reposition Duolingo");
     assert(accepted.state.units[duo.id].turn.moveUsed, "Push should spend movement");
     assert(accepted.state.units[duo.id].charges[ABILITY_DUOLINGO_SKIP_CLASSES] === 0, "Push should spend three Missed Lessons");
+    assert(accepted.state.units[duo.id].charges[ABILITY_DUOLINGO_PUSH_NOTIFICATION] === 0, "Missed Lessons Push must not spend its own counter");
     assert(!accepted.state.units[duo.id].isStealthed, "successful Push should reveal Duolingo");
+    const invalidSource = applyAction(state, {
+      type: "useAbility",
+      unitId: duo.id,
+      abilityId: ABILITY_DUOLINGO_PUSH_NOTIFICATION,
+      payload: {
+        targetId: target.id,
+        destination: { col: 4, row: 4 },
+        source: { type: "abilityCounter", counterId: ABILITY_DUOLINGO_SKIP_CLASSES },
+      },
+    } as any, rng);
+    assert(invalidSource.state === state, "Push Notification must reject a mismatched counter source without mutation");
+
+    const counterState = setUnit(state, duo.id, {
+      charges: {
+        ...state.units[duo.id].charges,
+        [ABILITY_DUOLINGO_PUSH_NOTIFICATION]: 3,
+        [ABILITY_DUOLINGO_SKIP_CLASSES]: 3,
+      },
+      turn: { ...state.units[duo.id].turn, moveUsed: true },
+    });
+    const rejectedCounterUse = applyAction(counterState, {
+      type: "useAbility",
+      unitId: duo.id,
+      abilityId: ABILITY_DUOLINGO_PUSH_NOTIFICATION,
+      payload: {
+        targetId: target.id,
+        destination: { col: 8, row: 8 },
+        source: { type: "abilityCounter", counterId: ABILITY_DUOLINGO_PUSH_NOTIFICATION },
+      },
+    } as any, rng);
+    assert(rejectedCounterUse.state === counterState, "invalid counter Push must reject without spending or moving");
+    const counterUse = applyAction(counterState, {
+      type: "useAbility",
+      unitId: duo.id,
+      abilityId: ABILITY_DUOLINGO_PUSH_NOTIFICATION,
+      payload: {
+        targetId: target.id,
+        destination: { col: 4, row: 4 },
+        source: { type: "abilityCounter", counterId: ABILITY_DUOLINGO_PUSH_NOTIFICATION },
+      },
+    } as any, rng);
+    assert(counterUse.state.units[duo.id].charges[ABILITY_DUOLINGO_PUSH_NOTIFICATION] === 0, "counter Push should spend its own three charges");
+    assert(counterUse.state.units[duo.id].charges[ABILITY_DUOLINGO_SKIP_CLASSES] === 3, "counter Push must not spend Missed Lessons");
+    assert(counterUse.state.units[duo.id].turn.moveUsed, "counter Push must remain usable after Movement was already spent");
   }
 
   {
@@ -391,6 +437,17 @@ export function testNewPlayableBatchTransactionalActives() {
     });
     const rejected = applyAction(withoutMove, { type: "useAbility", unitId: zoro.id, abilityId: ABILITY_ZORO_ONI_GIRI, payload: { targetId: target.id, destination: { col: 2, row: 1 } } } as any, rng);
     assert(rejected.state === withoutMove, "manual Oni Giri without Movement must reject without spending Determination or Action");
+    const invalidSource = applyAction(state, {
+      type: "useAbility",
+      unitId: zoro.id,
+      abilityId: ABILITY_ZORO_ONI_GIRI,
+      payload: {
+        targetId: target.id,
+        destination: { col: 2, row: 1 },
+        source: { type: "abilityCounter", counterId: ABILITY_LUCHE_DIVINE_RAY },
+      },
+    } as any, rng);
+    assert(invalidSource.state === state, "Oni Giri must reject a mismatched source without mutation");
   }
 
   {
@@ -523,6 +580,16 @@ export function testNewPlayableBatchLineAndRevealEffects() {
   const fired = applyAction(state, { type: "useAbility", unitId: luche.id, abilityId: ABILITY_LUCHE_DIVINE_RAY, payload: { target: { col: 8, row: 2 } } } as any, makeRngSequence([]));
   assert(fired.state.units[luche.id].charges[ABILITY_LUCHE_SUN_GLORY] === 0, "Light Ray should spend two Sun");
   assert(fired.state.units[luche.id].turn.actionUsed, "manual Sun-paid Light Ray should consume Action");
+  const invalidLightSource = applyAction(state, {
+    type: "useAbility",
+    unitId: luche.id,
+    abilityId: ABILITY_LUCHE_DIVINE_RAY,
+    payload: {
+      target: { col: 8, row: 2 },
+      source: { type: "heroResource", resourceId: ABILITY_LUCHE_SUN_GLORY, amount: 1 },
+    },
+  } as any, makeRngSequence([]));
+  assert(invalidLightSource.state === state, "Light Ray must reject a forged Sun amount without mutation");
   const resolved = resolveAllPendingRollsWithEvents(fired.state, makeRngSequence([0.99, 0.8, 0.01, 0.2]));
   assert(resolved.state.units[enemy.id].blindUntilOwnTurnStart, "failed defense against Light Ray should apply Blind");
 
@@ -595,6 +662,28 @@ export function testNewPlayableBatchLineAndRevealEffects() {
   assert(revealed.state.units[artemis.id].charges[ABILITY_ARTEMIDA_MOONLIGHT_SHINE] === 0, "Moon Insight should spend three charges");
 
   ({ state, heroes, enemies } = setupBatch());
+  const impulseDuolingo = heroes[HERO_DUOLINGO_ID];
+  const impulseDuolingoTarget = enemies[0];
+  state = setUnit(state, impulseDuolingo.id, {
+    position: { col: 1, row: 1 },
+    charges: {
+      ...impulseDuolingo.charges,
+      [ABILITY_DUOLINGO_PUSH_NOTIFICATION]: 2,
+      [ABILITY_DUOLINGO_SKIP_CLASSES]: 3,
+    },
+  });
+  state = setUnit(state, impulseDuolingoTarget.id, { position: { col: 3, row: 3 } });
+  const duolingoStarted = applyAction(
+    startTurnFor(state, state.units[impulseDuolingo.id]),
+    { type: "unitStartTurn", unitId: impulseDuolingo.id } as any,
+    makeRngSequence([]),
+  );
+  assert(duolingoStarted.state.units[impulseDuolingo.id].charges[ABILITY_DUOLINGO_PUSH_NOTIFICATION] === 3, "Push Notification own counter should gain +1 at Duolingo turn start");
+  assert(duolingoStarted.state.units[impulseDuolingo.id].charges[ABILITY_DUOLINGO_SKIP_CLASSES] === 3, "Push Notification start-turn charge must not alter Missed Lessons");
+  const duplicateDuolingoStart = applyAction(duolingoStarted.state, { type: "unitStartTurn", unitId: impulseDuolingo.id } as any, makeRngSequence([]));
+  assert(duplicateDuolingoStart.state === duolingoStarted.state, "duplicate start-turn commands must not increment Push Notification again");
+
+  ({ state, heroes, enemies } = setupBatch());
   const impulseLuche = heroes[HERO_LUCHE_ID];
   const impulseLucheTarget = enemies[0];
   state = setUnit(state, impulseLuche.id, {
@@ -625,13 +714,14 @@ export function testNewPlayableBatchLineAndRevealEffects() {
   assert(forgedLight.state === forgedLightState, "a client cannot forge the free Light Ray variant");
   const lucheStarted = applyAction(startTurnFor(state, state.units[impulseLuche.id]), { type: "unitStartTurn", unitId: impulseLuche.id } as any, makeRngSequence([]));
   assert(lucheStarted.state.units[impulseLuche.id].charges[ABILITY_LUCHE_DIVINE_RAY] === 2, "Light Ray own counter should gain +1 at Luche turn start");
-  assert(lucheStarted.state.pendingRoll?.kind === "chargedImpulseTargetChoice", "ready Light Ray should create a start-turn line choice");
-  const luchePending = lucheStarted.state.pendingRoll!;
   const lucheImpulse = applyAction(lucheStarted.state, {
-    type: "resolvePendingRoll",
-    pendingRollId: luchePending.id,
-    player: luchePending.player,
-    choice: { type: "chargedImpulseTarget", position: { col: 5, row: 2 } },
+    type: "useAbility",
+    unitId: impulseLuche.id,
+    abilityId: ABILITY_LUCHE_DIVINE_RAY,
+    payload: {
+      target: { col: 5, row: 2 },
+      source: { type: "abilityCounter", counterId: ABILITY_LUCHE_DIVINE_RAY },
+    },
   } as any, makeRngSequence([]));
   assert(lucheImpulse.state.units[impulseLuche.id].charges[ABILITY_LUCHE_DIVINE_RAY] === 0, "impulse Light Ray should spend its own counter");
   assert(lucheImpulse.state.units[impulseLuche.id].charges[ABILITY_LUCHE_SUN_GLORY] === 0, "impulse Light Ray must not spend Sun");
@@ -668,21 +758,17 @@ export function testNewPlayableBatchLineAndRevealEffects() {
   assert(forgedOni.state === forgedOniState, "a client cannot forge the free Oni Giri variant");
   const zoroStarted = applyAction(startTurnFor(state, state.units[impulseZoro.id]), { type: "unitStartTurn", unitId: impulseZoro.id } as any, makeRngSequence([]));
   assert(zoroStarted.state.units[impulseZoro.id].charges[ABILITY_ZORO_ONI_GIRI] === 2, "Oni Giri own counter should gain +1 at Zoro turn start");
-  const zoroTargetPending = zoroStarted.state.pendingRoll!;
-  const zoroDestinationChoice = applyAction(zoroStarted.state, {
-    type: "resolvePendingRoll",
-    pendingRollId: zoroTargetPending.id,
-    player: zoroTargetPending.player,
-    choice: { type: "chargedImpulseTarget", position: { col: 3, row: 1 } },
-  } as any, makeRngSequence([]));
-  assert(zoroDestinationChoice.state.pendingRoll?.context.step === "destination", "Oni Giri impulse should request its destination after target selection");
-  const zoroDestinationPending = zoroDestinationChoice.state.pendingRoll!;
-  const zoroDestination = (zoroDestinationPending.context.options as any[])[0];
-  const zoroImpulse = applyAction(zoroDestinationChoice.state, {
-    type: "resolvePendingRoll",
-    pendingRollId: zoroDestinationPending.id,
-    player: zoroDestinationPending.player,
-    choice: { type: "chargedImpulseTarget", position: zoroDestination },
+  const duplicateStart = applyAction(zoroStarted.state, { type: "unitStartTurn", unitId: impulseZoro.id } as any, makeRngSequence([]));
+  assert(duplicateStart.state === zoroStarted.state, "duplicate start-turn commands must not increment Oni Giri again");
+  const zoroImpulse = applyAction(zoroStarted.state, {
+    type: "useAbility",
+    unitId: impulseZoro.id,
+    abilityId: ABILITY_ZORO_ONI_GIRI,
+    payload: {
+      targetId: impulseZoroTarget.id,
+      destination: { col: 2, row: 1 },
+      source: { type: "abilityCounter", counterId: ABILITY_ZORO_ONI_GIRI },
+    },
   } as any, makeRngSequence([]));
   assert(zoroImpulse.state.units[impulseZoro.id].charges[ABILITY_ZORO_ONI_GIRI] === 0, "Oni Giri impulse should spend only its own counter");
   assert(zoroImpulse.state.units[impulseZoro.id].charges[ABILITY_ZORO_DETERMINATION] === 0, "Oni Giri impulse must not spend Determination");

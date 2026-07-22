@@ -20,11 +20,9 @@ import {
 import {
   HERO_ARTEMIDA_ID,
   HERO_JACK_RIPPER_ID,
-  HERO_LUCHE_ID,
   HERO_PAPYRUS_ID,
   HERO_SANS_ID,
   HERO_UNDYNE_ID,
-  HERO_ZORO_ID,
 } from "../heroes";
 import type { RNG } from "../rng";
 import { coordsEqual, isCellOccupied } from "../board";
@@ -74,16 +72,6 @@ function allLineCells(state: GameState, unit: UnitState): Coord[] {
 }
 
 function getReadyImpulseAbilityId(unit: UnitState): string | null {
-  if (unit.heroId === HERO_LUCHE_ID) {
-    return getCharges(unit, ABILITY_LUCHE_DIVINE_RAY) >= 2
-      ? ABILITY_LUCHE_DIVINE_RAY
-      : null;
-  }
-  if (unit.heroId === HERO_ZORO_ID) {
-    return getCharges(unit, ABILITY_ZORO_ONI_GIRI) >= 2
-      ? ABILITY_ZORO_ONI_GIRI
-      : null;
-  }
   if (unit.heroId === HERO_ARTEMIDA_ID) {
     return getCharges(unit, ABILITY_ARTEMIDA_MOONLIGHT_SHINE) >= 3
       ? ABILITY_ARTEMIDA_MOONLIGHT_SHINE

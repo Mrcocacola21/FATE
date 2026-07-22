@@ -176,6 +176,7 @@ export function initUnitAbilities(unit: UnitState): UnitState {
 
   if (unit.heroId === HERO_DUOLINGO_ID) {
     updated = setCharges(updated, ids.ABILITY_DUOLINGO_SKIP_CLASSES, 0);
+    updated = setCharges(updated, ids.ABILITY_DUOLINGO_PUSH_NOTIFICATION, 0);
     updated = {
       ...updated,
       duolingoHitTargetsThisTurn: [],

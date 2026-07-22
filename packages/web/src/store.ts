@@ -8,6 +8,7 @@ import type {
   MoveMode,
   ResolveRollChoice,
   GameModeId,
+  AbilityUseSource,
 } from "rules";
 import { listRooms, type RoomSummary } from "./api";
 import { HERO_CATALOG } from "./figures/catalog";
@@ -177,7 +178,7 @@ interface GameStore {
   addEvents: (events: GameEvent[]) => void;
   addClientLog: (message: string) => void;
   setSelectedUnit: (unitId: string | null) => void;
-  setActionMode: (mode: ActionMode) => void;
+  setActionMode: (mode: ActionMode, useSource?: AbilityUseSource) => void;
   setPlaceUnitId: (unitId: string | null) => void;
   setMoveOptions: (
     options: {
@@ -884,9 +885,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
       hoverPreview: null,
       pendingLokiLaughtOption: null,
     })),
-  setActionMode: (mode) =>
+  setActionMode: (mode, useSource) =>
     set((state) => ({
-      ...transitionActionMode(state, mode),
+      ...transitionActionMode(state, mode, useSource),
       hoveredAbilityId: null,
       hoverPreview: null,
     })),

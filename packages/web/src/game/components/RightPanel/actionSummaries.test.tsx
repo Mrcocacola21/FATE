@@ -16,6 +16,7 @@ import {
   METTATON_NEO_ID,
   RIVER_PERSON_BOAT_ID,
   VLAD_FOREST_ID,
+  ZORO_ONI_GIRI_ID,
   getMaxHp,
 } from "../../../rulesHints";
 import { createCellClickHandler } from "../../gameshell-content/cellHandlers";
@@ -761,6 +762,114 @@ test("new-batch passive and start-turn impulse abilities are not normal action b
   );
 });
 
+test("Oni Giri renders separate counter and Determination source options", () => {
+  setLanguage("en", { setItem: () => undefined });
+  const zoro = makeUnit({
+    id: "P1-knight-zoro",
+    class: "knight",
+    heroId: "zoro",
+    charges: { zoroOniGiri: 2, zoroDetermination: 2 },
+  });
+  const oni = makeAbility({
+    id: ZORO_ONI_GIRI_ID,
+    name: "Oni Giri",
+    useOptions: [
+      {
+        id: "abilityCounter",
+        source: { type: "abilityCounter", counterId: ZORO_ONI_GIRI_ID },
+        sourceName: "Oni Giri",
+        currentCharges: 2,
+        chargeRequired: 2,
+        consumes: {},
+        isAvailable: true,
+      },
+      {
+        id: "heroResource",
+        source: { type: "heroResource", resourceId: "zoroDetermination", amount: 2 },
+        sourceName: "Determination",
+        currentCharges: 2,
+        chargeRequired: 2,
+        consumes: { action: true, move: true },
+        isAvailable: true,
+      },
+    ],
+  });
+  const markup = renderToStaticMarkup(
+    <BattleAbilityActions
+      view={makeView(zoro)}
+      actionableAbilities={[oni]}
+      selectedUnit={zoro}
+      canAct={true}
+      economy={zoro.turn}
+      actionMode={null}
+      targetingActive={false}
+      onUseAbility={() => undefined}
+      onUseLokiLaughtOption={() => undefined}
+      onToggleMode={() => undefined}
+      onModePreview={() => undefined}
+      onHoverAbility={() => undefined}
+    />,
+  );
+  assert.match(markup, /Oni Giri.*Counter/);
+  assert.match(markup, /Oni Giri.*Spend Determination.*Action.*Move/);
+  assert.match(markup, /data-ability-use-source="abilityCounter"/);
+  assert.match(markup, /data-ability-use-source="heroResource"/);
+});
+
+test("Push Notification renders separate counter and Missed Lessons source options", () => {
+  setLanguage("en", { setItem: () => undefined });
+  const duolingo = makeUnit({
+    id: "P1-trickster-duolingo-options",
+    class: "trickster",
+    heroId: "duolingo",
+    charges: { duolingoPushNotification: 3, duolingoSkipClasses: 3 },
+  });
+  const push = makeAbility({
+    id: "duolingoPushNotification",
+    name: "Push Notification",
+    useOptions: [
+      {
+        id: "abilityCounter",
+        source: { type: "abilityCounter", counterId: "duolingoPushNotification" },
+        sourceName: "Push Notification",
+        currentCharges: 3,
+        chargeRequired: 3,
+        consumes: {},
+        isAvailable: true,
+      },
+      {
+        id: "heroResource",
+        source: { type: "heroResource", resourceId: "duolingoSkipClasses", amount: 3 },
+        sourceName: "Missed Lessons",
+        currentCharges: 3,
+        chargeRequired: 3,
+        consumes: { move: true },
+        isAvailable: true,
+      },
+    ],
+  });
+  const markup = renderToStaticMarkup(
+    <BattleAbilityActions
+      view={makeView(duolingo)}
+      actionableAbilities={[push]}
+      selectedUnit={duolingo}
+      canAct={true}
+      economy={duolingo.turn}
+      actionMode={null}
+      targetingActive={false}
+      onUseAbility={() => undefined}
+      onUseLokiLaughtOption={() => undefined}
+      onToggleMode={() => undefined}
+      onModePreview={() => undefined}
+      onHoverAbility={() => undefined}
+    />,
+  );
+  assert.match(markup, /Push Notification.*Counter/);
+  assert.match(markup, /Push Notification.*Spend Missed Lessons.*Move/);
+  assert.match(markup, /data-ability-use-source="abilityCounter"/);
+  assert.match(markup, /data-ability-use-source="heroResource"/);
+});
+
 test("Kaneki Regeneration renders a confirmed partial-RC selector", () => {
   setLanguage("en", { setItem: () => undefined });
   const kaneki = makeUnit({
@@ -837,6 +946,15 @@ test("Duolingo Push Notification keeps local intent and submits the clicked dest
   const view = {
     ...makeView(duolingo),
     units: { [duolingo.id]: duolingo, [creature.id]: creature },
+    abilitiesByUnitId: {
+      [duolingo.id]: [{
+        id: "duolingoPushNotification",
+        targeting: {
+          targetIds: [creature.id],
+          destinationsByTargetId: { [creature.id]: [{ col: 4, row: 3 }] },
+        },
+      }],
+    },
   };
   let selectedTarget: string | null = null;
   let sent: unknown = null;
@@ -848,6 +966,12 @@ test("Duolingo Push Notification keeps local intent and submits the clicked dest
     hasBlockingRoll: false,
     boardSelectionPending: false,
     actionMode: "duolingoPush",
+    targetingMode: {
+      sourceUnitId: duolingo.id,
+      abilityId: "duolingoPushNotification",
+      step: "duolingoPush",
+      useSource: { type: "heroResource", resourceId: "duolingoSkipClasses", amount: 3 },
+    },
     selectedUnitId: duolingo.id,
     newHeroAbilityTargetId: null,
     setNewHeroAbilityTargetId: (id: string | null) => { selectedTarget = id; },
@@ -865,7 +989,11 @@ test("Duolingo Push Notification keeps local intent and submits the clicked dest
     type: "useAbility",
     unitId: duolingo.id,
     abilityId: "duolingoPushNotification",
-    payload: { targetId: creature.id, destination: { col: 4, row: 3 } },
+    payload: {
+      targetId: creature.id,
+      destination: { col: 4, row: 3 },
+      source: { type: "heroResource", resourceId: "duolingoSkipClasses", amount: 3 },
+    },
   });
 });
 

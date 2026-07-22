@@ -8,6 +8,16 @@ import {
   HERO_CHIKATILO_ID,
   HERO_LOKI_ID,
   HERO_JACK_RIPPER_ID,
+  HERO_ZORO_ID,
+  HERO_LUCHE_ID,
+  HERO_DUOLINGO_ID,
+  ABILITY_ZORO_ONI_GIRI,
+  ABILITY_ZORO_DETERMINATION,
+  ABILITY_LUCHE_DIVINE_RAY,
+  ABILITY_LUCHE_SUN_GLORY,
+  ABILITY_DUOLINGO_PUSH_NOTIFICATION,
+  ABILITY_DUOLINGO_SKIP_CLASSES,
+  initUnitAbilities,
   makePlayerView,
   makeSpectatorView,
   projectEventsForRecipient,
@@ -417,6 +427,44 @@ function testRiderMovementProjectionDoesNotLeakHiddenTarget() {
   console.log("view_rider_movement_projection_does_not_leak_hidden_target passed");
 }
 
+function testNewBatchAbilitySourceProjection() {
+  let state = setupState();
+  const zoroBase = Object.values(state.units).find((unit) => unit.owner === "P1" && unit.class === "knight")!;
+  const lucheBase = Object.values(state.units).find((unit) => unit.owner === "P1" && unit.class === "spearman")!;
+  const duoBase = Object.values(state.units).find((unit) => unit.owner === "P1" && unit.class === "trickster")!;
+  const enemy = Object.values(state.units).find((unit) => unit.owner === "P2")!;
+  const zoro = initUnitAbilities({ ...zoroBase, heroId: HERO_ZORO_ID, position: { col: 1, row: 1 } });
+  const luche = initUnitAbilities({ ...lucheBase, heroId: HERO_LUCHE_ID, position: { col: 1, row: 3 } });
+  const duo = initUnitAbilities({ ...duoBase, heroId: HERO_DUOLINGO_ID, position: { col: 1, row: 5 } });
+  state = {
+    ...state,
+    phase: "battle",
+    currentPlayer: "P1",
+    activeUnitId: zoro.id,
+    units: {
+      ...state.units,
+      [zoro.id]: { ...zoro, charges: { ...zoro.charges, [ABILITY_ZORO_ONI_GIRI]: 2, [ABILITY_ZORO_DETERMINATION]: 2 } },
+      [luche.id]: { ...luche, charges: { ...luche.charges, [ABILITY_LUCHE_DIVINE_RAY]: 2, [ABILITY_LUCHE_SUN_GLORY]: 2 } },
+      [duo.id]: { ...duo, charges: { ...duo.charges, [ABILITY_DUOLINGO_PUSH_NOTIFICATION]: 3, [ABILITY_DUOLINGO_SKIP_CLASSES]: 3 } },
+      [enemy.id]: { ...enemy, position: { col: 3, row: 1 } },
+    },
+  };
+  const view = makePlayerView(state, "P1");
+  const oni = view.abilitiesByUnitId[zoro.id].find((ability) => ability.id === ABILITY_ZORO_ONI_GIRI)!;
+  const light = view.abilitiesByUnitId[luche.id].find((ability) => ability.id === ABILITY_LUCHE_DIVINE_RAY)!;
+  const push = view.abilitiesByUnitId[duo.id].find((ability) => ability.id === ABILITY_DUOLINGO_PUSH_NOTIFICATION)!;
+  assert.deepEqual(oni.useOptions?.map((option) => option.source.type), ["abilityCounter", "heroResource"]);
+  assert(oni.targeting?.targetIds?.includes(enemy.id), "Oni Giri projection should include an authoritative legal target");
+  assert.deepEqual(light.useOptions?.map((option) => option.source.type), ["abilityCounter", "heroResource"]);
+  assert((light.targeting?.cells?.length ?? 0) > 0, "Light Ray projection should include authoritative line cells");
+  assert.deepEqual(push.useOptions?.map((option) => option.source.type), ["abilityCounter", "heroResource"]);
+  assert(push.useOptions?.[0].source.type === "abilityCounter" && push.useOptions[0].source.counterId === ABILITY_DUOLINGO_PUSH_NOTIFICATION);
+  assert(push.useOptions?.[1].source.type === "heroResource" && push.useOptions[1].source.resourceId === ABILITY_DUOLINGO_SKIP_CLASSES);
+  assert(view.units[duo.id].charges[ABILITY_DUOLINGO_PUSH_NOTIFICATION] === 3, "Push Notification counter should project separately");
+  assert(view.units[duo.id].charges[ABILITY_DUOLINGO_SKIP_CLASSES] === 3, "Missed Lessons should project separately");
+  console.log("view_new_batch_ability_source_projection passed");
+}
+
 function main() {
   testHiddenEnemyOmitted();
   testKnownStealthedEnemyUsesLastKnown();
@@ -426,6 +474,7 @@ function main() {
   testJackKnownHpProjectionIsOwnerPrivate();
   testJackTrapProjectionIsOwnerPrivateUntilTriggered();
   testRiderMovementProjectionDoesNotLeakHiddenTarget();
+  testNewBatchAbilitySourceProjection();
 }
 
 main();

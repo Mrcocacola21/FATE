@@ -290,6 +290,12 @@ export function getActionModeHint(
       return uk ? "Ґастер-бластер: оберіть клітинку на лінії пострілу." : "Gaster Blaster: select a cell on the shooter line.";
     case "undyneSpearThrow":
       return uk ? "Кидок списа: оберіть ворога на лінії пострілу." : "Throw Spear: select an enemy on the shooter line.";
+    case "duolingoPush":
+      return uk ? "Push Notification: оберіть істоту, потім клітинку призначення в межах 2." : "Push Notification: choose a creature, then a destination within 2 cells.";
+    case "lucheLightRay":
+      return uk ? "Промінь світла: оберіть підсвічену пряму лінію." : "Light Ray: choose a highlighted straight line.";
+    case "zoroOniGiri":
+      return uk ? "Оні Ґірі: оберіть ворога на прямій, потім клітинку перед або позаду нього." : "Oni Giri: choose an enemy on a straight line, then a cell before or behind it.";
     case "undyneEnergySpear":
       return uk ? `Енергетичний спис: оберіть клітинку на лінії ${undyneAxis}.` : `Energy Spear: select any cell on the chosen ${undyneAxis} line.`;
     default:

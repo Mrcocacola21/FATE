@@ -116,6 +116,106 @@ test("mobile movement chooser remains a cancelable top task before board intent 
   assert.doesNotMatch(markup, /No forced task/);
 });
 
+test("mobile targeting strip names the selected Oni Giri source and keeps cancel visible", () => {
+  setLanguage("en", { setItem: () => undefined });
+  const zoro = {
+    id: "zoro",
+    owner: "P1",
+    class: "knight",
+    heroId: "zoro",
+    isAlive: true,
+    position: { col: 1, row: 1 },
+  };
+  const markup = renderToStaticMarkup(
+    <CurrentTaskPanel
+      compact
+      vm={{
+        view: {
+          phase: "battle",
+          abilitiesByUnitId: {
+            [zoro.id]: [{
+              id: "zoroOniGiri",
+              name: "Oni Giri",
+              useOptions: [{
+                id: "heroResource",
+                source: { type: "heroResource", resourceId: "zoroDetermination", amount: 2 },
+                sourceName: "Determination",
+              }],
+            }],
+          },
+        },
+        pendingRoll: null,
+        pendingMeta: null,
+        actionMode: "zoroOniGiri",
+        targetingMode: {
+          sourceUnitId: zoro.id,
+          abilityId: "zoroOniGiri",
+          step: "zoroOniGiri",
+          useSource: { type: "heroResource", resourceId: "zoroDetermination", amount: 2 },
+        },
+        selectedUnitId: zoro.id,
+        selectedUnit: zoro,
+        newHeroAbilityTargetId: null,
+        setActionMode: () => undefined,
+        papyrusLineAxis: "row",
+      }}
+    />,
+  );
+  assert.match(markup, /Oni Giri.*Determination/);
+  assert.match(markup, /choose an enemy on a straight line/i);
+  assert.match(markup, /Cancel/);
+});
+
+test("mobile targeting strip names the selected Push Notification source", () => {
+  setLanguage("en", { setItem: () => undefined });
+  const duolingo = {
+    id: "duolingo",
+    owner: "P1",
+    class: "trickster",
+    heroId: "duolingo",
+    isAlive: true,
+    position: { col: 1, row: 1 },
+  };
+  const markup = renderToStaticMarkup(
+    <CurrentTaskPanel
+      compact
+      vm={{
+        view: {
+          phase: "battle",
+          abilitiesByUnitId: {
+            [duolingo.id]: [{
+              id: "duolingoPushNotification",
+              name: "Push Notification",
+              useOptions: [{
+                id: "heroResource",
+                source: { type: "heroResource", resourceId: "duolingoSkipClasses", amount: 3 },
+                sourceName: "Missed Lessons",
+              }],
+            }],
+          },
+        },
+        pendingRoll: null,
+        pendingMeta: null,
+        actionMode: "duolingoPush",
+        targetingMode: {
+          sourceUnitId: duolingo.id,
+          abilityId: "duolingoPushNotification",
+          step: "duolingoPush",
+          useSource: { type: "heroResource", resourceId: "duolingoSkipClasses", amount: 3 },
+        },
+        selectedUnitId: duolingo.id,
+        selectedUnit: duolingo,
+        newHeroAbilityTargetId: null,
+        setActionMode: () => undefined,
+        papyrusLineAxis: "row",
+      }}
+    />,
+  );
+  assert.match(markup, /Push Notification.*Missed Lessons/);
+  assert.match(markup, /choose a creature/i);
+  assert.match(markup, /Cancel/);
+});
+
 test("board interaction keys change for placement, targeting, and forced board choices", () => {
   assert.equal(getMobileBoardInteractionKey({}), null);
   assert.equal(

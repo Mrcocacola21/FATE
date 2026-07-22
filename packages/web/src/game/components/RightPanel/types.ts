@@ -1,5 +1,6 @@
 import type {
   GameAction,
+  AbilityUseSource,
   MoveMode,
   PapyrusLineAxis,
   PlayerView,
@@ -34,7 +35,7 @@ export interface RightPanelProps {
   joined: boolean;
   pendingRoll: boolean;
   onSelectUnit: (unitId: string | null) => void;
-  onSetActionMode: (mode: ActionMode) => void;
+  onSetActionMode: (mode: ActionMode, useSource?: AbilityUseSource) => void;
   onSetPlaceUnit: (unitId: string | null) => void;
   onMoveRequest: (unitId: string, mode?: MoveMode) => void;
   onSendAction: (action: GameAction) => void;

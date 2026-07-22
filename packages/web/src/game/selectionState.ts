@@ -1,3 +1,4 @@
+import type { AbilityUseSource } from "rules";
 import type { ActionMode } from "../store";
 import {
   ASGORE_FIRE_PARADE_ID,
@@ -41,6 +42,7 @@ export interface TargetingMode {
     | "place"
     | "search";
   step: string;
+  useSource?: AbilityUseSource;
   resourcePreview?: {
     action?: boolean;
     move?: boolean;
@@ -218,8 +220,25 @@ function abilityIdForActionMode(mode: Exclude<ActionMode, null>): TargetingMode[
 }
 
 function previewForActionMode(
-  mode: Exclude<ActionMode, null>
+  mode: Exclude<ActionMode, null>,
+  useSource?: AbilityUseSource,
 ): TargetingMode["resourcePreview"] {
+  if (useSource?.type === "abilityCounter") {
+    return { charges: [{ counterId: useSource.counterId, amount: 2 }] };
+  }
+  if (useSource?.type === "heroResource") {
+    const slotPreview = mode === "zoroOniGiri"
+      ? { action: true, move: true }
+      : mode === "lucheLightRay"
+        ? { action: true }
+        : mode === "duolingoPush"
+          ? { move: true }
+          : {};
+    return {
+      ...slotPreview,
+      charges: [{ counterId: useSource.resourceId, amount: useSource.amount }],
+    };
+  }
   switch (mode) {
     case "move":
     case "guideTraveler":
@@ -241,20 +260,23 @@ function previewForActionMode(
 
 export function buildTargetingModeForActionMode(
   mode: ActionMode,
-  sourceUnitId: string | null | undefined
+  sourceUnitId: string | null | undefined,
+  useSource?: AbilityUseSource,
 ): TargetingMode | null {
   if (!mode || !sourceUnitId) return null;
   return {
     sourceUnitId,
     abilityId: abilityIdForActionMode(mode),
     step: mode,
-    resourcePreview: previewForActionMode(mode),
+    useSource,
+    resourcePreview: previewForActionMode(mode, useSource),
   };
 }
 
 export function transitionActionMode<TMoveOptions>(
   state: LocalSelectionState<TMoveOptions>,
-  mode: ActionMode
+  mode: ActionMode,
+  useSource?: AbilityUseSource,
 ): Partial<LocalSelectionState<TMoveOptions>> {
   const next: Partial<LocalSelectionState<TMoveOptions>> = {
     actionMode: mode,
@@ -263,7 +285,8 @@ export function transitionActionMode<TMoveOptions>(
   if ("targetingMode" in state) {
     next.targetingMode = buildTargetingModeForActionMode(
       mode,
-      state.selectedUnitId
+      state.selectedUnitId,
+      useSource,
     );
   }
   return next;

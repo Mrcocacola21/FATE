@@ -8,6 +8,11 @@ import { revealStealthedInArea } from "../../stealth";
 import { canSpendSlots, spendSlots } from "../../turnEconomy";
 import { requestRoll } from "../../core";
 import { getAbilitySpec, getCharges, spendCharges } from "../../abilities";
+import {
+  getDuolingoPushDestinations,
+  getLucheLightRayLine,
+  getZoroOniGiriDestinations,
+} from "../../abilities/newBatchTargeting";
 import * as ids from "../../abilities/constants";
 import {
   HERO_ARTEMIDA_ID,
@@ -35,6 +40,26 @@ function payload(action: AbilityAction): Record<string, unknown> {
   return action.payload && typeof action.payload === "object"
     ? (action.payload as Record<string, unknown>)
     : {};
+}
+
+function hasAbilityCounterSource(data: Record<string, unknown>, counterId: string): boolean {
+  const source = data.source;
+  return !!source && typeof source === "object" &&
+    (source as { type?: unknown }).type === "abilityCounter" &&
+    (source as { counterId?: unknown }).counterId === counterId;
+}
+
+function hasHeroResourceSource(
+  data: Record<string, unknown>,
+  resourceId: string,
+  amount: number,
+): boolean {
+  if (data.source === undefined) return true;
+  const source = data.source;
+  return !!source && typeof source === "object" &&
+    (source as { type?: unknown }).type === "heroResource" &&
+    (source as { resourceId?: unknown }).resourceId === resourceId &&
+    (source as { amount?: unknown }).amount === amount;
 }
 
 function abilityUsed(unitId: string, abilityId: string): GameEvent {
@@ -142,11 +167,19 @@ function applyDuolingoPush(state: GameState, unit: UnitState, action: AbilityAct
   let destination = parseCoord(data.destination ?? data.position);
   const target = state.units[targetId];
   if (!target || !target.isAlive || !target.position) return { state, events: [] };
-  if (!canDirectlyTargetUnit(state, unit.id, target.id)) return { state, events: [] };
+  const useCounter = hasAbilityCounterSource(data, ids.ABILITY_DUOLINGO_PUSH_NOTIFICATION);
+  const useMissedLessons = hasHeroResourceSource(data, ids.ABILITY_DUOLINGO_SKIP_CLASSES, 3);
+  if (!useCounter && !useMissedLessons) return { state, events: [] };
   if (!destination) return { state, events: [] };
-  if (!isInsideBoard(destination, state.boardSize) || isCellOccupied(state, destination)) return { state, events: [] };
-  if (chebyshev(destination, target.position) > 2) return { state, events: [] };
-  const committed = commitNamedResource(state, unit, ids.ABILITY_DUOLINGO_PUSH_NOTIFICATION, ids.ABILITY_DUOLINGO_SKIP_CLASSES, 3);
+  if (!getDuolingoPushDestinations(state, unit, target).some((cell) => coordsEqual(cell, destination!))) return { state, events: [] };
+  const committed = commitNamedResource(
+    state,
+    unit,
+    ids.ABILITY_DUOLINGO_PUSH_NOTIFICATION,
+    useCounter ? ids.ABILITY_DUOLINGO_PUSH_NOTIFICATION : ids.ABILITY_DUOLINGO_SKIP_CLASSES,
+    3,
+    useCounter ? {} : { move: true },
+  );
   if (!committed) return { state, events: [] };
   const moved: UnitState = { ...committed.unit, position: destination, isStealthed: false, stealthTurnsLeft: 0 };
   const events = [...committed.events, { type: "unitMoved", unitId: moved.id, from: unit.position, to: destination } as GameEvent];
@@ -157,17 +190,19 @@ function applyDuolingoPush(state: GameState, unit: UnitState, action: AbilityAct
 function applyLucheLine(state: GameState, unit: UnitState, action: AbilityAction, isImpulse: boolean): ApplyResult {
   const data = payload(action);
   const target = parseCoord(data.target ?? data.center ?? data.line);
-  if (unit.heroId !== HERO_LUCHE_ID || !unit.position || !target || !isInsideBoard(target, state.boardSize)) return { state, events: [] };
-  if (unit.blindUntilOwnTurnStart && chebyshev(unit.position, target) > 1) return { state, events: [] };
-  const cells = rayCells(state, unit.position, target);
+  if (unit.heroId !== HERO_LUCHE_ID || !unit.position || !target) return { state, events: [] };
+  const useCounter = isImpulse || hasAbilityCounterSource(data, ids.ABILITY_LUCHE_DIVINE_RAY);
+  const useSun = !isImpulse && hasHeroResourceSource(data, ids.ABILITY_LUCHE_SUN_GLORY, 2);
+  if (!useCounter && !useSun) return { state, events: [] };
+  const cells = getLucheLightRayLine(state, unit, target);
   if (cells.length === 0) return { state, events: [] };
   const committed = commitNamedResource(
     state,
     unit,
     ids.ABILITY_LUCHE_DIVINE_RAY,
-    isImpulse ? ids.ABILITY_LUCHE_DIVINE_RAY : ids.ABILITY_LUCHE_SUN_GLORY,
+    useCounter ? ids.ABILITY_LUCHE_DIVINE_RAY : ids.ABILITY_LUCHE_SUN_GLORY,
     2,
-    isImpulse ? {} : { action: true },
+    useCounter ? {} : { action: true },
   );
   if (!committed) return { state, events: [] };
   const queued = queueNewHeroAttacks(committed.state, committed.unit, ids.ABILITY_LUCHE_DIVINE_RAY, unitIdsInCells(committed.state, cells, committed.unit, true), { blindOnHit: true, center: target });
@@ -204,22 +239,18 @@ function applyZoroOniGiri(state: GameState, unit: UnitState, action: AbilityActi
   let destination = parseCoord(data.destination ?? data.position);
   const target = state.units[targetId];
   if (!target || !target.isAlive || !target.position || target.owner === unit.owner) return { state, events: [] };
-  if (unit.blindUntilOwnTurnStart && chebyshev(unit.position, target.position) > 1) return { state, events: [] };
-  if (!canDirectlyTargetUnit(state, unit.id, target.id)) return { state, events: [] };
-  const dir = directionFrom(unit.position, target.position);
-  if (!dir) return { state, events: [] };
-  const before = { col: target.position.col - dir.col, row: target.position.row - dir.row };
-  const behind = { col: target.position.col + dir.col, row: target.position.row + dir.row };
+  const useCounter = isImpulse || hasAbilityCounterSource(data, ids.ABILITY_ZORO_ONI_GIRI);
+  const useDetermination = !isImpulse && hasHeroResourceSource(data, ids.ABILITY_ZORO_DETERMINATION, 2);
+  if (!useCounter && !useDetermination) return { state, events: [] };
   if (!destination) return { state, events: [] };
-  if (!coordsEqual(destination, before) && !coordsEqual(destination, behind)) return { state, events: [] };
-  if (!isInsideBoard(destination, state.boardSize) || isCellOccupied(state, destination)) return { state, events: [] };
+  if (!getZoroOniGiriDestinations(state, unit, target).some((cell) => coordsEqual(cell, destination!))) return { state, events: [] };
   const committed = commitNamedResource(
     state,
     unit,
     ids.ABILITY_ZORO_ONI_GIRI,
-    isImpulse ? ids.ABILITY_ZORO_ONI_GIRI : ids.ABILITY_ZORO_DETERMINATION,
+    useCounter ? ids.ABILITY_ZORO_ONI_GIRI : ids.ABILITY_ZORO_DETERMINATION,
     2,
-    isImpulse ? {} : { action: true, move: true },
+    useCounter ? {} : { action: true, move: true },
   );
   if (!committed) return { state, events: [] };
   const moved = { ...committed.unit, position: destination };

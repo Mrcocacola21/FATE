@@ -1,4 +1,4 @@
-import type { PapyrusLineAxis, PlayerId } from "rules";
+import type { AbilityUseSource, PapyrusLineAxis, PlayerId } from "rules";
 import {
   ARENA_STORM_ID,
   CHIKATILO_ID,
@@ -164,9 +164,9 @@ export function buildRightPanelViewModel(params: RightPanelProps, t: Translate) 
     onHoverActionMode(mode);
   };
 
-  const onToggleMode = (mode: ActionPreviewMode) => {
+  const onToggleMode = (mode: ActionPreviewMode, useSource?: AbilityUseSource) => {
     if (targetingMode || actionMode) return;
-    onSetActionMode(mode);
+    onSetActionMode(mode, useSource);
   };
 
   const onSetPapyrusAxis = (axis: PapyrusLineAxis) => {

@@ -1,4 +1,4 @@
-import type { AbilitySlot, AbilityView, GameState, UnitState } from "../model";
+import type { AbilitySlot, AbilityUseOptionView, AbilityView, GameState, UnitState } from "../model";
 import { HERO_GRAND_KAISER_ID, HERO_UNDYNE_ID } from "../heroes";
 import {
   getMettatonRating,
@@ -9,9 +9,14 @@ import {
 import { hasSansUnbelieverUnlocked, isSans } from "../sans";
 import { getAbilitySpec, getCharges, getChargeLimit } from "./charges";
 import * as ids from "./constants";
-import type { AbilitySpec } from "./types";
+import type { AbilityCost, AbilitySpec } from "./types";
 import { collectAbilityIdsForUnit } from "./viewIds";
 import { canSpendSlots } from "../turnEconomy";
+import {
+  getDuolingoPushTargeting,
+  getLucheLightRayCells,
+  getZoroOniGiriTargeting,
+} from "./newBatchTargeting";
 
 function getSlotFromCost(spec: AbilitySpec): AbilitySlot {
   if (spec.id === ids.ABILITY_RIVER_PERSON_BOAT) return "move";
@@ -57,28 +62,16 @@ function getExternalResource(abilityId: string): { abilityId: string; required: 
   }
 }
 
-function getActiveDisabledReason(
+function getCommonDisabledReason(
   state: GameState,
   unit: UnitState,
-  spec: AbilitySpec
+  costs?: AbilityCost["consumes"],
 ): string | undefined {
   if (state.pendingRoll) return "Pending roll must be resolved";
   if (state.phase !== "battle") return "Not in battle";
   if (unit.owner !== state.currentPlayer) return "Not your turn";
   if (state.activeUnitId !== unit.id) return "Not active unit";
 
-  const costs = spec.actionCost?.consumes;
-  if (spec.id === ids.ABILITY_RIVER_PERSON_BOAT) {
-    if ((unit.kaladinMoveLockSources?.length ?? 0) > 0) {
-      return "Movement is blocked";
-    }
-    if ((unit.lokiMoveLockSources?.length ?? 0) > 0) {
-      return "Movement is blocked";
-    }
-    if (!canSpendSlots(unit, { move: true })) {
-      return "Move slot already used";
-    }
-  }
   if (costs?.action && unit.turn?.actionUsed) {
     return "Action slot already used";
   }
@@ -99,6 +92,26 @@ function getActiveDisabledReason(
   }
   if ((unit.lokiChickenSources?.length ?? 0) > 0) {
     return "Chicken: this unit can only move";
+  }
+
+  return undefined;
+}
+
+function getActiveDisabledReason(
+  state: GameState,
+  unit: UnitState,
+  spec: AbilitySpec
+): string | undefined {
+  const costs = spec.actionCost?.consumes;
+  const commonReason = getCommonDisabledReason(state, unit, costs);
+  if (commonReason) return commonReason;
+  if (spec.id === ids.ABILITY_RIVER_PERSON_BOAT) {
+    if ((unit.kaladinMoveLockSources?.length ?? 0) > 0 || (unit.lokiMoveLockSources?.length ?? 0) > 0) {
+      return "Movement is blocked";
+    }
+    if (!canSpendSlots(unit, { move: true })) {
+      return "Move slot already used";
+    }
   }
 
   if (isMettaton(unit)) {
@@ -149,6 +162,24 @@ function getActiveDisabledReason(
   }
 
   return undefined;
+}
+
+function buildUseOption(
+  state: GameState,
+  unit: UnitState,
+  params: Omit<AbilityUseOptionView, "isAvailable" | "disabledReason"> & {
+    hasLegalTargets: boolean;
+  },
+): AbilityUseOptionView {
+  const commonReason = getCommonDisabledReason(state, unit, params.consumes);
+  const chargeReason =
+    params.chargeRequired !== undefined &&
+    (params.currentCharges ?? 0) < params.chargeRequired
+      ? "Not Enough charges"
+      : undefined;
+  const disabledReason = commonReason ?? chargeReason ?? (!params.hasLegalTargets ? "No legal targets" : undefined);
+  const { hasLegalTargets: _hasLegalTargets, ...option } = params;
+  return { ...option, isAvailable: !disabledReason, disabledReason };
 }
 
 export function getAbilityViewsForUnit(
@@ -308,6 +339,87 @@ export function getAbilityViewsForUnit(
         isAvailable = !disabledReason;
       }
 
+      const targeting =
+        spec.id === ids.ABILITY_DUOLINGO_PUSH_NOTIFICATION
+          ? getDuolingoPushTargeting(state, unit)
+          : spec.id === ids.ABILITY_ZORO_ONI_GIRI
+            ? getZoroOniGiriTargeting(state, unit)
+            : spec.id === ids.ABILITY_LUCHE_DIVINE_RAY
+              ? { cells: getLucheLightRayCells(state, unit) }
+              : undefined;
+      const hasLegalTargets = targeting
+        ? (targeting.targetIds?.length ?? targeting.cells?.length ?? 0) > 0
+        : true;
+      let useOptions: AbilityUseOptionView[] | undefined;
+      if (spec.id === ids.ABILITY_ZORO_ONI_GIRI) {
+        useOptions = [
+          buildUseOption(state, unit, {
+            id: "abilityCounter",
+            source: { type: "abilityCounter", counterId: spec.id },
+            sourceName: spec.displayName,
+            currentCharges: getCharges(unit, spec.id),
+            chargeRequired: 2,
+            consumes: {},
+            hasLegalTargets,
+          }),
+          buildUseOption(state, unit, {
+            id: "heroResource",
+            source: { type: "heroResource", resourceId: ids.ABILITY_ZORO_DETERMINATION, amount: 2 },
+            sourceName: getAbilitySpec(ids.ABILITY_ZORO_DETERMINATION)?.displayName ?? "Determination",
+            currentCharges: getCharges(unit, ids.ABILITY_ZORO_DETERMINATION),
+            chargeRequired: 2,
+            consumes: { action: true, move: true },
+            hasLegalTargets,
+          }),
+        ];
+      } else if (spec.id === ids.ABILITY_LUCHE_DIVINE_RAY) {
+        useOptions = [
+          buildUseOption(state, unit, {
+            id: "abilityCounter",
+            source: { type: "abilityCounter", counterId: spec.id },
+            sourceName: spec.displayName,
+            currentCharges: getCharges(unit, spec.id),
+            chargeRequired: 2,
+            consumes: {},
+            hasLegalTargets,
+          }),
+          buildUseOption(state, unit, {
+            id: "heroResource",
+            source: { type: "heroResource", resourceId: ids.ABILITY_LUCHE_SUN_GLORY, amount: 2 },
+            sourceName: getAbilitySpec(ids.ABILITY_LUCHE_SUN_GLORY)?.displayName ?? "Glory of the Sun",
+            currentCharges: getCharges(unit, ids.ABILITY_LUCHE_SUN_GLORY),
+            chargeRequired: 2,
+            consumes: { action: true },
+            hasLegalTargets,
+          }),
+        ];
+      } else if (spec.id === ids.ABILITY_DUOLINGO_PUSH_NOTIFICATION) {
+        useOptions = [
+          buildUseOption(state, unit, {
+            id: "abilityCounter",
+            source: { type: "abilityCounter", counterId: spec.id },
+            sourceName: spec.displayName,
+            currentCharges: getCharges(unit, spec.id),
+            chargeRequired: 3,
+            consumes: {},
+            hasLegalTargets,
+          }),
+          buildUseOption(state, unit, {
+            id: "heroResource",
+            source: { type: "heroResource", resourceId: ids.ABILITY_DUOLINGO_SKIP_CLASSES, amount: 3 },
+            sourceName: getAbilitySpec(ids.ABILITY_DUOLINGO_SKIP_CLASSES)?.displayName ?? "Missed Lessons",
+            currentCharges: getCharges(unit, ids.ABILITY_DUOLINGO_SKIP_CLASSES),
+            chargeRequired: 3,
+            consumes: { move: true },
+            hasLegalTargets,
+          }),
+        ];
+      }
+      if (useOptions) {
+        isAvailable = useOptions.some((option) => option.isAvailable);
+        disabledReason = isAvailable ? undefined : useOptions[0]?.disabledReason;
+      }
+
       return {
         id,
         name: spec.displayName,
@@ -321,6 +433,8 @@ export function getAbilityViewsForUnit(
         currentCharges,
         isAvailable,
         disabledReason,
+        useOptions,
+        targeting,
       } as AbilityView;
     })
     .filter((item): item is AbilityView => item !== null);

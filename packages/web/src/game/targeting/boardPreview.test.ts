@@ -29,6 +29,7 @@ import {
   RIVER_PERSON_BOATMAN_ID,
   RIVER_PERSON_TRA_LA_LA_ID,
   ZORO_ASURA_ID,
+  ZORO_ONI_GIRI_ID,
 } from "../../rulesHints";
 import { buildAbilityPreview } from "./buildAbilityPreview";
 import { buildPendingPreview } from "./buildPendingPreview";
@@ -1051,13 +1052,41 @@ test("new hero previews expose targets, lines, areas, and trap placement without
   const visibleEnemy = unit({ id: "visible", owner: "P2", position: { col: 6, row: 4 } });
   const hiddenEnemy = unit({ id: "hidden", owner: "P2", position: { col: 4, row: 7 }, isStealthed: true });
   const view = makeView([source, visibleEnemy]);
+  view.abilitiesByUnitId[source.id] = [
+    {
+      id: DUOLINGO_PUSH_NOTIFICATION_ID,
+      targeting: {
+        targetIds: [visibleEnemy.id],
+        destinationsByTargetId: { [visibleEnemy.id]: [{ col: 7, row: 4 }] },
+      },
+    } as any,
+    {
+      id: LUCHE_DIVINE_RAY_ID,
+      targeting: { cells: [{ col: 5, row: 4 }, { col: 6, row: 4 }, { col: 7, row: 4 }] },
+    } as any,
+    {
+      id: ZORO_ONI_GIRI_ID,
+      targeting: {
+        targetIds: [visibleEnemy.id],
+        destinationsByTargetId: { [visibleEnemy.id]: [{ col: 5, row: 4 }, { col: 7, row: 4 }] },
+      },
+    } as any,
+  ];
 
   const push = buildAbilityPreview({ gameView: view, viewerPlayerId: "P1", sourceUnitId: source.id, abilityId: DUOLINGO_PUSH_NOTIFICATION_ID });
   assert.deepEqual(validTargetIds(push), [visibleEnemy.id]);
-  assert.equal(hasKind(push, { col: 7, row: 4 }, "validMove"), true);
+  const pushDestinations = buildAbilityPreview({ gameView: view, viewerPlayerId: "P1", sourceUnitId: source.id, abilityId: DUOLINGO_PUSH_NOTIFICATION_ID, selectedTargetId: visibleEnemy.id });
+  assert.equal(hasKind(pushDestinations, { col: 7, row: 4 }, "validMove"), true);
 
-  const ray = buildAbilityPreview({ gameView: view, viewerPlayerId: "P1", sourceUnitId: source.id, abilityId: LUCHE_DIVINE_RAY_ID });
+  const ray = buildAbilityPreview({ gameView: view, viewerPlayerId: "P1", sourceUnitId: source.id, abilityId: LUCHE_DIVINE_RAY_ID, targetingCell: { col: 7, row: 4 } });
   assert.equal(hasKind(ray, visibleEnemy.position!, "line"), true);
+  assert.deepEqual(affectedTargetIds(ray), [visibleEnemy.id]);
+
+  const oniTargets = buildAbilityPreview({ gameView: view, viewerPlayerId: "P1", sourceUnitId: source.id, abilityId: ZORO_ONI_GIRI_ID });
+  assert.deepEqual(validTargetIds(oniTargets), [visibleEnemy.id]);
+  const oniDestinations = buildAbilityPreview({ gameView: view, viewerPlayerId: "P1", sourceUnitId: source.id, abilityId: ZORO_ONI_GIRI_ID, selectedTargetId: visibleEnemy.id, targetingCell: { col: 5, row: 4 } });
+  assert.equal(hasKind(oniDestinations, { col: 5, row: 4 }, "validMove"), true);
+  assert.deepEqual(affectedTargetIds(oniDestinations), [visibleEnemy.id]);
 
   const asura = buildAbilityPreview({ gameView: view, viewerPlayerId: "P1", sourceUnitId: source.id, abilityId: ZORO_ASURA_ID });
   assert.equal(hasKind(asura, visibleEnemy.position!, "affected"), true);

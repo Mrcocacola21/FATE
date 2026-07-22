@@ -71,6 +71,7 @@ export interface BuildAbilityPreviewArgs {
   abilityId: string | null | undefined;
   targetingStep?: string | null;
   targetingCell?: Coord | null;
+  selectedTargetId?: string | null;
 }
 
 function sourceUnit(view: PlayerView, sourceUnitId: string | null | undefined): UnitState | null {
@@ -452,6 +453,7 @@ export function buildAbilityPreview({
   sourceUnitId,
   abilityId,
   targetingCell,
+  selectedTargetId,
 }: BuildAbilityPreviewArgs): BoardPreview | null {
   if (!gameView || !abilityId) return null;
   const source = sourceUnit(gameView, sourceUnitId);
@@ -570,42 +572,73 @@ export function buildAbilityPreview({
     case GROZNY_INVADE_TIME_ID:
       return buildGroznyHover(gameView, source);
     case DUOLINGO_PUSH_NOTIFICATION_ID: {
-      const targets = visibleUnitTargets(
-        gameView,
-        (unit) => unit.owner !== source.owner && unit.id !== source.id,
-      );
-      const destinations = uniqueCells(
-        targets.flatMap((target) =>
-          cellsInRadius(boardSize(gameView), target.cell, 2, false),
-        ),
-      ).filter((cell) => openCells(gameView).some((open) => coordKey(open) === coordKey(cell)));
-      return compactPreview([
-        {
+      const targeting = gameView.abilitiesByUnitId?.[source.id]?.find((ability) => ability.id === abilityId)?.targeting;
+      const targetIds = targeting?.targetIds ?? [];
+      const hoveredTarget = targetingCell
+        ? Object.values(gameView.units).find((unit) => unit.position && coordKey(unit.position) === coordKey(targetingCell) && targetIds.includes(unit.id))?.id
+        : undefined;
+      const activeTargetId = selectedTargetId ?? hoveredTarget;
+      if (!activeTargetId) {
+        return {
           kind: "radius",
           sourceCell: { ...source.position },
           cells: [],
-          validTargets: targets,
+          validTargets: targetRefsFromIds(gameView, targetIds),
+          invalidTargets: visibleUnitTargets(gameView, (unit) => unit.id !== source.id && !targetIds.includes(unit.id), true),
           labelKey: "preview.labels.selectTarget",
-        },
+        };
+      }
+      const destinations = targeting?.destinationsByTargetId?.[activeTargetId] ?? [];
+      const hoveredDestination = targetingCell && destinations.some((cell) => coordKey(cell) === coordKey(targetingCell))
+        ? targetingCell
+        : null;
+      return compactPreview([
         {
           kind: "movement",
           sourceCell: { ...source.position },
           reachableCells: destinations,
+          pathCells: hoveredDestination ? [{ ...hoveredDestination }] : undefined,
+          labelKey: "preview.labels.selectDestination",
+        },
+        {
+          kind: "multiStep",
+          step: "pushNotificationDestination",
+          sourceCell: hoveredDestination ? { ...hoveredDestination } : { ...source.position },
+          cells: [],
+          affectedTargets: targetRefsFromIds(gameView, [activeTargetId]),
           labelKey: "preview.labels.selectDestination",
         },
       ]);
     }
-    case LUCHE_DIVINE_RAY_ID:
+    case LUCHE_DIVINE_RAY_ID: {
+      const targeting = gameView.abilitiesByUnitId?.[source.id]?.find((ability) => ability.id === abilityId)?.targeting;
+      const legalCells = targeting?.cells ?? [];
+      const selectedCell = targetingCell && legalCells.some((cell) => coordKey(cell) === coordKey(targetingCell))
+        ? targetingCell
+        : null;
+      const selectedPath = selectedCell ? linePath(source.position, selectedCell) : null;
+      const step = selectedPath && selectedPath.length > 1
+        ? { col: selectedPath[1].col - source.position.col, row: selectedPath[1].row - source.position.row }
+        : null;
+      const rayCells = step
+        ? legalCells.filter((cell) => {
+            const path = linePath(source.position!, cell);
+            return !!path && path.length > 1 &&
+              path[1].col - source.position!.col === step.col &&
+              path[1].row - source.position!.row === step.row;
+          })
+        : legalCells;
+      const rayKeys = new Set(rayCells.map(coordKey));
       return {
         kind: "line",
         sourceCell: { ...source.position },
-        lineCells: archerLineCells(gameView, source.id),
-        affectedTargets: visibleUnitTargets(
-          gameView,
-          (unit) => unit.id !== source.id && unit.owner !== source.owner,
-        ),
+        lineCells: rayCells,
+        affectedTargets: selectedCell
+          ? visibleUnitTargets(gameView, (unit) => unit.owner !== source.owner && !!unit.position && rayKeys.has(coordKey(unit.position)))
+          : [],
         labelKey: "preview.labels.archerLine",
       };
+    }
     case LUCHE_BURNING_SUN_ID:
     case ZORO_ASURA_ID:
       return buildAreaPreview({
@@ -622,7 +655,45 @@ export function buildAbilityPreview({
         areaCells: [{ ...source.position }],
         labelKey: "preview.labels.affectedArea",
       };
-    case ZORO_ONI_GIRI_ID:
+    case ZORO_ONI_GIRI_ID: {
+      const targeting = gameView.abilitiesByUnitId?.[source.id]?.find((ability) => ability.id === abilityId)?.targeting;
+      const targetIds = targeting?.targetIds ?? [];
+      const hoveredTarget = targetingCell
+        ? Object.values(gameView.units).find((unit) => unit.position && coordKey(unit.position) === coordKey(targetingCell) && targetIds.includes(unit.id))?.id
+        : undefined;
+      const activeTargetId = selectedTargetId ?? hoveredTarget;
+      if (!activeTargetId) {
+        return {
+          kind: "line",
+          sourceCell: { ...source.position },
+          lineCells: lineCellsToTargets(source.position, cellsFromTargetIds(gameView, targetIds)),
+          validTargets: targetRefsFromIds(gameView, targetIds),
+          invalidTargets: visibleUnitTargets(gameView, (unit) => unit.owner !== source.owner && !targetIds.includes(unit.id), true),
+          labelKey: "preview.labels.selectTarget",
+        };
+      }
+      const destinations = targeting?.destinationsByTargetId?.[activeTargetId] ?? [];
+      const hoveredDestination = targetingCell && destinations.some((cell) => coordKey(cell) === coordKey(targetingCell))
+        ? targetingCell
+        : null;
+      return compactPreview([
+        {
+          kind: "movement",
+          sourceCell: { ...source.position },
+          reachableCells: destinations,
+          pathCells: hoveredDestination ? [{ ...hoveredDestination }] : undefined,
+          labelKey: "preview.labels.selectDestination",
+        },
+        {
+          kind: "multiStep",
+          step: "oniGiriAttack",
+          sourceCell: hoveredDestination ? { ...hoveredDestination } : { ...source.position },
+          cells: [],
+          affectedTargets: targetRefsFromIds(gameView, [activeTargetId]),
+          labelKey: "preview.labels.selectDestination",
+        },
+      ]);
+    }
     case DON_WINDMILLS_ID: {
       const targetIds = allVisibleEnemyIds(gameView, source).filter((id) => {
         const target = gameView.units[id];

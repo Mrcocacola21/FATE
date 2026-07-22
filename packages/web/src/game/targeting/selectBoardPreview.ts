@@ -19,6 +19,7 @@ export interface SelectBoardPreviewArgs {
   hasBlockingRoll?: boolean;
   boardSelectionPending?: boolean;
   targetingCell?: Coord | null;
+  selectedTargetId?: string | null;
 }
 
 export function selectBoardPreview({
@@ -34,6 +35,7 @@ export function selectBoardPreview({
   hasBlockingRoll = false,
   boardSelectionPending = false,
   targetingCell,
+  selectedTargetId,
 }: SelectBoardPreviewArgs): BoardPreview | null {
   if (!gameView) return null;
 
@@ -50,6 +52,7 @@ export function selectBoardPreview({
       pendingMoveForSelected,
       moveOptions,
       targetingCell,
+      selectedTargetId,
     });
   }
 

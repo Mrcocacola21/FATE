@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import type { AbilityView, MoveMode, PapyrusLineAxis, PlayerView, UnitState } from "rules";
+import type { AbilityUseSource, AbilityView, MoveMode, PapyrusLineAxis, PlayerView, UnitState } from "rules";
 import type { ActionMode, ActionPreviewMode, LokiLaughtOption } from "../../../../store";
 import type { TargetingMode } from "../../../selectionState";
 import type { ForestMarkerView, TurnEconomyState } from "../types";
@@ -57,7 +57,7 @@ interface BattleSectionProps {
   onMoveRequest: (unitId: string, mode?: MoveMode) => void;
   onHoverAbility: (abilityId: string | null) => void;
   onModePreview: (mode: ActionPreviewMode | null) => void;
-  onToggleMode: (mode: ActionPreviewMode) => void;
+  onToggleMode: (mode: ActionPreviewMode, useSource?: AbilityUseSource) => void;
   onMoveClick: () => void;
   onAttackClick: () => void;
   onSearchMoveClick: () => void;

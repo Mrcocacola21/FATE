@@ -5,6 +5,33 @@ export type TurnSlot = "move" | "attack" | "action" | "stealth";
 export type AbilityKind = "passive" | "active" | "impulse" | "phantasm";
 export type AbilitySlot = "none" | "action" | "move" | "attack" | "stealth";
 
+export type AbilityUseSource =
+  | { type: "abilityCounter"; counterId: string }
+  | { type: "heroResource"; resourceId: string; amount: number }
+  | { type: "freeImpulse" };
+
+export interface AbilityUseOptionView {
+  id: string;
+  source: AbilityUseSource;
+  sourceName: string;
+  currentCharges?: number;
+  chargeRequired?: number;
+  consumes?: {
+    action?: boolean;
+    move?: boolean;
+    attack?: boolean;
+    stealth?: boolean;
+  };
+  isAvailable: boolean;
+  disabledReason?: string;
+}
+
+export interface AbilityTargetingView {
+  targetIds?: string[];
+  cells?: Coord[];
+  destinationsByTargetId?: Record<string, Coord[]>;
+}
+
 export interface AbilityView {
   id: string;
   name: string;
@@ -18,6 +45,8 @@ export interface AbilityView {
   currentCharges?: number;
   isAvailable: boolean;
   disabledReason?: string;
+  useOptions?: AbilityUseOptionView[];
+  targeting?: AbilityTargetingView;
 }
 
 export interface TurnEconomy {

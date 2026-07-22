@@ -261,6 +261,29 @@ export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm, compact = fals
       vm.actionMode === "move" && vm.moveOptions?.mode
         ? formatMoveMode(vm.moveOptions.mode, t, vm.selectedUnit?.class)
         : null;
+    const usingName = vm.targetingMode
+      ? getUsingName(vm.targetingMode, abilityViews, language, t)
+      : null;
+    const selectedSource = vm.targetingMode?.useSource;
+    const selectedOption = selectedSource
+      ? abilityViews.flatMap((ability: any) => ability.useOptions ?? []).find((option: any) =>
+          option.source?.type === selectedSource.type &&
+          (selectedSource.type === "abilityCounter"
+            ? option.source.counterId === selectedSource.counterId
+            : selectedSource.type === "heroResource"
+              ? option.source.resourceId === selectedSource.resourceId
+              : true),
+        )
+      : null;
+    const sourceSuffix = selectedSource?.type === "abilityCounter"
+      ? (language === "uk" ? "Лічильник" : "Counter")
+      : selectedSource?.type === "heroResource"
+        ? selectedOption?.sourceName ?? selectedSource.resourceId
+        : null;
+    const sourceAwareName = usingName && sourceSuffix ? `${usingName} — ${sourceSuffix}` : usingName;
+    const newHeroDestinationStep =
+      (vm.actionMode === "duolingoPush" || vm.actionMode === "zoroOniGiri") &&
+      !!vm.newHeroAbilityTargetId;
 
     if (compact) {
       return (
@@ -270,12 +293,14 @@ export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm, compact = fals
               ? `${selectedMoveLabel}: ${getActionModeHint("move", vm.papyrusLineAxis ?? "row", undyneAxis, language)}`
               : vm.targetingMode
                 ? t("game.usingTargeting", {
-                    name: getUsingName(vm.targetingMode, abilityViews, language, t),
+                    name: sourceAwareName,
                   })
                 : t("game.boardSelectionActive")
           }
           instruction={
-            vm.actionMode
+            newHeroDestinationStep
+              ? (language === "uk" ? "Оберіть підсвічену клітинку призначення." : "Choose a highlighted destination cell.")
+              : vm.actionMode
                 ? getActionModeHint(
                     vm.actionMode as ActionPreviewMode,
                     vm.papyrusLineAxis ?? "row",
