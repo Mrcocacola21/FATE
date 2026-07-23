@@ -21,6 +21,7 @@ import type { BoardEventBatch, BoardPreviewLine } from "../game/effects/types";
 import { BoneIcon, getActiveBoneStatus, type ActiveBoneStatus } from "../game/boneStatus";
 import { VfxLayer } from "../features/vfx/VfxLayer";
 import { useBoardVfx } from "../features/vfx/useBoardVfx";
+import { useBoardSfx } from "../features/sfx/useBoardSfx";
 import {
   buildPreviewCellMap,
   type BoardPreview,
@@ -382,6 +383,12 @@ export const Board: FC<BoardProps> = ({
     sessionKey: effectSessionKey,
   });
   const { effects: boardVfx, reducedMotion: vfxReducedMotion } = useBoardVfx({
+    batch: visualResolution.batch,
+    view,
+    enabled: visualEffectsEnabled,
+    sessionKey: effectSessionKey,
+  });
+  useBoardSfx({
     batch: visualResolution.batch,
     view,
     enabled: visualEffectsEnabled,

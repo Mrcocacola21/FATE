@@ -20,6 +20,7 @@
     "test:assets": "tsx --test src/assets/unitVisuals.test.ts src/assets/boardFields.test.tsx src/components/BoardMarkers.test.tsx",
     "test:placement": "tsx --test src/game/components/RightPanel/sections/PlacementSection.test.tsx",
     "test:effects": "tsx --test src/game/effects/*.test.ts src/features/vfx/*.test.ts src/features/vfx/*.test.tsx src/pages/VfxPreviewPage.test.tsx",
+    "test:sfx": "tsx --test src/assets/sfx/*.test.ts src/features/sfx/*.test.ts",
     "test:vfx": "tsx --test src/features/vfx/*.test.ts src/features/vfx/*.test.tsx src/pages/VfxPreviewPage.test.tsx",
     "test:vfx:visual": "node scripts/capture-vfx.mjs --no-video --no-gif",
     "test:test-room": "tsx --test src/testRoom/*.test.ts",
