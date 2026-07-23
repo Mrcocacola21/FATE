@@ -223,11 +223,61 @@ export const ALL_ROLL_KINDS = [
   "donWindmillsRepositionChoice",
 ] as const satisfies readonly RollKind[];
 
+export type PendingRollPresentationKind =
+  | "attack"
+  | "defense"
+  | "stealth"
+  | "statusSave"
+  | "trap"
+  | "explosion"
+  | "ability"
+  | "phantasm"
+  | "reaction"
+  | "unknown";
+
+/**
+ * Player-facing, structured context for a pending task.
+ *
+ * Resolution data remains in `PendingRoll.context`; this object is descriptive
+ * only and must never be used to decide a roll result.
+ */
+export interface PendingRollContext {
+  title: string;
+  reason: string;
+  rollKind: PendingRollPresentationKind;
+
+  actorUnitId?: string;
+  actorName?: string;
+  sourceUnitId?: string;
+  sourceName?: string;
+  targetUnitId?: string;
+  targetName?: string;
+
+  abilityId?: string;
+  abilityName?: string;
+
+  diceLabel: string;
+  successRule?: string;
+  successText?: string;
+  failureText?: string;
+
+  requestedPlayerId: PlayerId;
+  requestedPlayerLabel?: string;
+
+  opponentRollTotal?: number;
+  comparedAgainst?: string;
+
+  isPrivate?: boolean;
+  isControlledRoll?: boolean;
+}
+
 export interface PendingRoll {
   id: string;
   player: PlayerId;
   kind: RollKind;
   context: Record<string, unknown>;
+  /** Optional for compatibility with saved games created before contextual roll UI. */
+  presentation?: PendingRollContext;
 }
 
 export interface PendingPapyrusBoneChoice {

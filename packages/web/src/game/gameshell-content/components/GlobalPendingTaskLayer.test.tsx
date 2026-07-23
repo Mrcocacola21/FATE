@@ -5,7 +5,12 @@ import { isValidElement, type ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { setLanguage } from "../../../i18n";
 import { GameShellPendingRoll } from "./GameShellPendingRoll";
-import { GlobalPendingTaskLayer } from "./GlobalPendingTaskLayer";
+import {
+  CollapsedPendingRollChip,
+  GlobalPendingTaskLayer,
+  isPendingRollCollapsed,
+  nextPendingRollCollapseState,
+} from "./GlobalPendingTaskLayer";
 import { CurrentTaskPanel } from "./CurrentTaskPanel";
 
 const initiativePending = {
@@ -13,6 +18,14 @@ const initiativePending = {
   kind: "initiativeRoll",
   player: "P1",
   context: { step: "P1" },
+  presentation: {
+    title: "Initiative Roll",
+    reason: "Determine who takes the first turn.",
+    rollKind: "ability",
+    diceLabel: "1d6",
+    requestedPlayerId: "P1",
+    requestedPlayerLabel: "Player 1",
+  },
 };
 
 function makeVm(overrides: Record<string, unknown> = {}) {
@@ -81,7 +94,8 @@ test("global pending task layer renders the initial initiative action above layo
   assert.match(markup, /data-testid="pending-roll-overlay"/);
   assert.match(markup, /data-layer="pending-task"/);
   assert.match(markup, /Roll initiative/);
-  assert.match(markup, />Roll dice</);
+  assert.match(markup, />Roll 1d6</);
+  assert.match(markup, />Collapse</);
 });
 
 test("global pending task layer shows the opponent waiting state", () => {
@@ -101,7 +115,7 @@ test("global pending task layer shows the opponent waiting state", () => {
   );
 
   assert.match(markup, /data-testid="pending-roll-waiting-overlay"/);
-  assert.match(markup, /Waiting for opponent to roll\./);
+  assert.match(markup, /Waiting for Player 1 to roll Roll initiative\./);
   assert.match(markup, /P1 rolled: 8/);
   assert.doesNotMatch(markup, />Roll dice</);
 });
@@ -118,9 +132,128 @@ test("initiative roll action preserves the resolvePendingRoll command payload", 
   }>;
   modal.props.onResolvePendingRoll();
 
-  assert.deepEqual(sent, [
-    { type: "resolvePendingRoll", pendingRollId: "initiative-p1" },
-  ]);
+  assert.deepEqual(sent, [{ type: "resolvePendingRoll", pendingRollId: "initiative-p1" }]);
+});
+
+test("pending roll card renders structured purpose, units, dice, and outcomes", () => {
+  setLanguage("en", null);
+  const attackPending = {
+    id: "attack-1",
+    kind: "attack_defenderRoll",
+    player: "P1",
+    context: { attackerDice: [5, 3] },
+    presentation: {
+      title: "Defense Roll",
+      reason: "Hassan attacks Duolingo.",
+      rollKind: "defense",
+      actorUnitId: "duolingo",
+      actorName: "Duolingo",
+      sourceUnitId: "hassan",
+      sourceName: "Hassan",
+      targetUnitId: "duolingo",
+      targetName: "Duolingo",
+      diceLabel: "2d6",
+      successRule: "Roll higher than 8",
+      successText: "Block or avoid the attack.",
+      failureText: "Take 2 damage.",
+      opponentRollTotal: 8,
+      comparedAgainst: "Hassan's attack roll 8",
+      requestedPlayerId: "P1",
+    },
+  };
+  const markup = renderToStaticMarkup(
+    <GlobalPendingTaskLayer
+      vm={makeVm({
+        pendingRoll: attackPending,
+        pendingMeta: attackPending,
+        view: { phase: "battle", units: {}, initiative: { P1: 8, P2: 4 } },
+      })}
+    />,
+  );
+
+  assert.match(markup, /Defense Roll/);
+  assert.match(markup, /You are rolling for Duolingo/);
+  assert.match(markup, /Hassan attacks Duolingo/);
+  assert.match(markup, /Hassan&#x27;s attack roll 8/);
+  assert.match(markup, /Block or avoid the attack/);
+  assert.match(markup, /Take 2 damage/);
+  assert.match(markup, />Roll 2d6</);
+});
+
+test("controlled attack context explicitly explains who the player controls", () => {
+  const controlledPending = {
+    ...initiativePending,
+    id: "controlled-roll",
+    kind: "attack_attackerRoll",
+    presentation: {
+      ...initiativePending.presentation,
+      title: "Attack Roll",
+      reason: "Duolingo attacks Zoro.",
+      rollKind: "attack",
+      actorName: "Duolingo",
+      sourceName: "Duolingo",
+      targetName: "Zoro",
+      diceLabel: "2d6",
+      isControlledRoll: true,
+    },
+  };
+  const markup = renderToStaticMarkup(
+    <GlobalPendingTaskLayer
+      vm={makeVm({ pendingRoll: controlledPending, pendingMeta: controlledPending })}
+    />,
+  );
+  assert.match(markup, /You are rolling for controlled Duolingo/);
+});
+
+test("collapsed chip keeps roll and open actions accessible without a board overlay", () => {
+  setLanguage("en", null);
+  const markup = renderToStaticMarkup(
+    <CollapsedPendingRollChip
+      pending={initiativePending as any}
+      active
+      onOpen={() => undefined}
+      onRoll={() => undefined}
+    />,
+  );
+  assert.match(markup, /data-testid="pending-roll-collapsed"/);
+  assert.match(markup, /pointer-events-none/);
+  assert.match(markup, /pointer-events-auto/);
+  assert.match(markup, />Roll</);
+  assert.match(markup, />Open</);
+  assert.doesNotMatch(markup, /fixed inset-0/);
+});
+
+test("collapse preference stays with one roll id and clears on open or resolution", () => {
+  const collapsed = nextPendingRollCollapseState(null, {
+    type: "collapse",
+    rollId: "roll-a",
+  });
+  assert.equal(isPendingRollCollapsed(collapsed, "roll-a"), true);
+  assert.equal(
+    isPendingRollCollapsed(collapsed, "roll-b"),
+    false,
+    "a new pending roll must default to expanded",
+  );
+  assert.equal(nextPendingRollCollapseState(collapsed, { type: "open" }), null);
+  assert.equal(nextPendingRollCollapseState(collapsed, { type: "resolved" }), null);
+});
+
+test("minimal legacy pending roll uses the safe fallback card", () => {
+  setLanguage("en", null);
+  const minimalPending = {
+    id: "old-roll",
+    kind: "attack_attackerRoll",
+    player: "P1",
+    context: {},
+  };
+  const markup = renderToStaticMarkup(
+    <GlobalPendingTaskLayer
+      vm={makeVm({ pendingRoll: minimalPending, pendingMeta: minimalPending })}
+    />,
+  );
+  assert.match(markup, /Roll required/);
+  assert.match(markup, /Roll dice to continue resolving the current effect/);
+  assert.match(markup, />Roll 1d6</);
 });
 
 test("transformed Papyrus hit opens a large per-target bone popup", () => {
@@ -211,6 +344,8 @@ test("Madness of the Knight is a board direction task and never renders a roll a
 
 test("gameplay layer tokens keep pending tasks above sheets, navigation, and task bars", () => {
   const styles = readFileSync(new URL("../../../styles.css", import.meta.url), "utf8");
+  const boardUi = readFileSync(new URL("../hooks/useGameShellBoardUi.ts", import.meta.url), "utf8");
+  const boardColumn = readFileSync(new URL("./GameShellBoardColumn.tsx", import.meta.url), "utf8");
   const layer = (name: string) => {
     const match = styles.match(new RegExp(`--z-game-${name}:\\s*(\\d+)`));
     assert.ok(match, `${name} layer token should exist`);
@@ -222,4 +357,17 @@ test("gameplay layer tokens keep pending tasks above sheets, navigation, and tas
   assert.ok(pending > layer("bottom-sheet"));
   assert.ok(pending > layer("current-task"));
   assert.match(styles, /\.pending-choice button\s*\{[^}]*min-height:\s*44px/s);
+  assert.match(styles, /\.pending-roll-chip-layer\s*\{[^}]*z-index:/s);
+  assert.match(styles, /\.pending-roll-chip\s*\{[^}]*max-w-/s);
+  assert.match(styles, /\.pending-roll-chip__open\s*\{[^}]*min-h-10/s);
+  assert.doesNotMatch(
+    boardUi,
+    /boardDisabled\s*=[\s\S]{0,160}hasBlockingRoll/,
+    "pending rolls must not disable board inspection",
+  );
+  assert.match(
+    boardColumn,
+    /allowAnyUnitSelection=\{vm\.canControlTestRoom \|\| vm\.hasBlockingRoll\}/,
+    "visible enemy units should remain inspectable while a roll blocks actions",
+  );
 });

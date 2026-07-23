@@ -23,6 +23,8 @@ import {
   makePlayerView,
   makeSpectatorView,
   projectEventsForRecipient,
+  createPendingRollContext,
+  projectPendingRollPresentation,
   type GameEvent,
   type GameState,
   type UnitState,
@@ -35,11 +37,7 @@ function setupState() {
   return state;
 }
 
-function setUnit(
-  state: GameState,
-  unitId: string,
-  patch: Partial<UnitState>
-): GameState {
+function setUnit(state: GameState, unitId: string, patch: Partial<UnitState>): GameState {
   const unit = state.units[unitId];
   assert(unit, `missing unit ${unitId}`);
   return {
@@ -53,9 +51,7 @@ function setUnit(
 
 function testHiddenEnemyOmitted() {
   let state = setupState();
-  const enemy = Object.values(state.units).find(
-    (u) => u.owner === "P2" && u.class === "assassin"
-  );
+  const enemy = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "assassin");
   assert(enemy, "enemy unit should exist");
 
   state = {
@@ -79,15 +75,12 @@ function testHiddenEnemyOmitted() {
   };
 
   const view = makePlayerView(state, "P1");
-  assert(
-    !view.units[enemy!.id],
-    "stealthed unknown enemy should be omitted from view"
-  );
+  assert(!view.units[enemy!.id], "stealthed unknown enemy should be omitted from view");
   assert(
     view.lastKnownPositions[enemy!.id] &&
       view.lastKnownPositions[enemy!.id].col === 4 &&
       view.lastKnownPositions[enemy!.id].row === 4,
-    "lastKnownPositions should include hidden enemy position"
+    "lastKnownPositions should include hidden enemy position",
   );
 
   console.log("view_hidden_enemy_omitted passed");
@@ -95,9 +88,7 @@ function testHiddenEnemyOmitted() {
 
 function testKnownStealthedEnemyUsesLastKnown() {
   let state = setupState();
-  const enemy = Object.values(state.units).find(
-    (u) => u.owner === "P2" && u.class === "assassin"
-  );
+  const enemy = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "assassin");
   assert(enemy, "enemy unit should exist");
 
   state = {
@@ -125,15 +116,12 @@ function testKnownStealthedEnemyUsesLastKnown() {
   };
 
   const view = makePlayerView(state, "P1");
-  assert(
-    !view.units[enemy!.id],
-    "stealthed enemy should be hidden even if previously known"
-  );
+  assert(!view.units[enemy!.id], "stealthed enemy should be hidden even if previously known");
   assert(
     view.lastKnownPositions[enemy!.id] &&
       view.lastKnownPositions[enemy!.id].col === 4 &&
       view.lastKnownPositions[enemy!.id].row === 4,
-    "lastKnownPositions should include hidden enemy position"
+    "lastKnownPositions should include hidden enemy position",
   );
 
   console.log("view_known_stealthed_enemy_uses_last_known passed");
@@ -142,7 +130,7 @@ function testKnownStealthedEnemyUsesLastKnown() {
 function testFinalBoardRevealOnlyAfterGameOver() {
   let state = setupState();
   const hidden = Object.values(state.units).find(
-    (unit) => unit.owner === "P2" && unit.class === "assassin"
+    (unit) => unit.owner === "P2" && unit.class === "assassin",
   )!;
   state = setUnit(state, hidden.id, {
     position: { col: 4, row: 4 },
@@ -154,12 +142,12 @@ function testFinalBoardRevealOnlyAfterGameOver() {
   assert.equal(
     makePlayerView(state, "P1").units[hidden.id],
     undefined,
-    "hidden enemy must remain hidden before game over"
+    "hidden enemy must remain hidden before game over",
   );
   assert.equal(
     makeSpectatorView(state).units[hidden.id],
     undefined,
-    "spectator must not see hidden units before game over"
+    "spectator must not see hidden units before game over",
   );
 
   const ended: GameState = {
@@ -189,18 +177,13 @@ function testFinalBoardRevealOnlyAfterGameOver() {
 
 function testChikatiloTrackedHiddenTargetProjectionIsPrivate() {
   let state = createEmptyGame();
-  state = attachArmy(
-    state,
-    createDefaultArmy("P1", { assassin: HERO_CHIKATILO_ID })
-  );
+  state = attachArmy(state, createDefaultArmy("P1", { assassin: HERO_CHIKATILO_ID }));
   state = attachArmy(state, createDefaultArmy("P2"));
 
   const chikatilo = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.heroId === HERO_CHIKATILO_ID
+    (u) => u.owner === "P1" && u.heroId === HERO_CHIKATILO_ID,
   );
-  const target = Object.values(state.units).find(
-    (u) => u.owner === "P2" && u.class === "knight"
-  );
+  const target = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "knight");
   assert(chikatilo, "chikatilo should exist");
   assert(target, "target should exist");
 
@@ -230,36 +213,36 @@ function testChikatiloTrackedHiddenTargetProjectionIsPrivate() {
   assert.equal(targetProjection.chikatiloMarkStatus?.exactTrackingActive, true);
   assert(
     ownerView.legal?.attackTargetsByUnitId[chikatilo.id]?.includes(target.id),
-    "owner projection should expose legal attack targetability"
+    "owner projection should expose legal attack targetability",
   );
 
   const opponentView = makePlayerView(state, "P2");
   assert.equal(
     opponentView.units[target.id].chikatiloMarkStatus,
     undefined,
-    "opponent should not receive chikatilo private mark metadata"
+    "opponent should not receive chikatilo private mark metadata",
   );
   assert.equal(
     opponentView.units[chikatilo.id]?.chikatiloMarkedTargets,
     undefined,
-    "opponent should not receive chikatilo private marked target list"
+    "opponent should not receive chikatilo private marked target list",
   );
   assert.equal(
     opponentView.units[chikatilo.id]?.chikatiloTrackedTargets,
     undefined,
-    "opponent should not receive chikatilo private tracked target list"
+    "opponent should not receive chikatilo private tracked target list",
   );
 
   const spectatorView = makeSpectatorView(state);
   assert.equal(
     spectatorView.units[target.id],
     undefined,
-    "spectator should not see the tracked hidden target"
+    "spectator should not see the tracked hidden target",
   );
   assert.equal(
     spectatorView.units[chikatilo.id]?.chikatiloMarkedTargets,
     undefined,
-    "spectator should not receive chikatilo private marked target list"
+    "spectator should not receive chikatilo private marked target list",
   );
 
   console.log("view_chikatilo_tracked_hidden_target_private passed");
@@ -267,18 +250,13 @@ function testChikatiloTrackedHiddenTargetProjectionIsPrivate() {
 
 function testChikatiloMarkEventProjectionRedactsPrivateTarget() {
   let state = createEmptyGame();
-  state = attachArmy(
-    state,
-    createDefaultArmy("P1", { assassin: HERO_CHIKATILO_ID })
-  );
+  state = attachArmy(state, createDefaultArmy("P1", { assassin: HERO_CHIKATILO_ID }));
   state = attachArmy(state, createDefaultArmy("P2"));
 
   const chikatilo = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.heroId === HERO_CHIKATILO_ID
+    (u) => u.owner === "P1" && u.heroId === HERO_CHIKATILO_ID,
   );
-  const target = Object.values(state.units).find(
-    (u) => u.owner === "P2" && u.class === "knight"
-  );
+  const target = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "knight");
   assert(chikatilo, "chikatilo should exist");
   assert(target, "target should exist");
 
@@ -311,28 +289,23 @@ function testChikatiloMarkEventProjectionRedactsPrivateTarget() {
   const spectatorEvents = projectEventsForRecipient(state, events, "spectator");
 
   assert.equal(
-    (ownerEvents.find((event) => event.type === "chikatiloMarkApplied") as any)
-      ?.targetId,
+    (ownerEvents.find((event) => event.type === "chikatiloMarkApplied") as any)?.targetId,
     target.id,
-    "owner should receive full mark target identity"
+    "owner should receive full mark target identity",
   );
   assert(
-    opponentEvents.some(
-      (event) => event.type === "abilityUsed" && !("unitId" in event)
-    ),
-    "hidden chikatilo ability use should be redacted for opponent"
+    opponentEvents.some((event) => event.type === "abilityUsed" && !("unitId" in event)),
+    "hidden chikatilo ability use should be redacted for opponent",
   );
   assert(
-    opponentEvents.some(
-      (event) => event.type === "chikatiloMarkApplied" && !("targetId" in event)
-    ),
-    "opponent should not receive private mark target identity"
+    opponentEvents.some((event) => event.type === "chikatiloMarkApplied" && !("targetId" in event)),
+    "opponent should not receive private mark target identity",
   );
   assert(
     spectatorEvents.some(
-      (event) => event.type === "chikatiloMarkApplied" && !("targetId" in event)
+      (event) => event.type === "chikatiloMarkApplied" && !("targetId" in event),
     ),
-    "spectator should not receive private mark target identity"
+    "spectator should not receive private mark target identity",
   );
 
   console.log("view_chikatilo_mark_event_projection_redacts_private_target passed");
@@ -340,20 +313,17 @@ function testChikatiloMarkEventProjectionRedactsPrivateTarget() {
 
 function testGroupedSemanticEventProjectionFiltersHiddenTargets() {
   let state = createEmptyGame();
-  state = attachArmy(
-    state,
-    createDefaultArmy("P1", { trickster: HERO_LOKI_ID })
-  );
+  state = attachArmy(state, createDefaultArmy("P1", { trickster: HERO_LOKI_ID }));
   state = attachArmy(state, createDefaultArmy("P2"));
 
   const loki = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.heroId === HERO_LOKI_ID
+    (u) => u.owner === "P1" && u.heroId === HERO_LOKI_ID,
   );
   const visibleTarget = Object.values(state.units).find(
-    (u) => u.owner === "P2" && u.class === "knight"
+    (u) => u.owner === "P2" && u.class === "knight",
   );
   const hiddenTarget = Object.values(state.units).find(
-    (u) => u.owner === "P2" && u.class === "assassin"
+    (u) => u.owner === "P2" && u.class === "assassin",
   );
   assert(loki, "loki should exist");
   assert(visibleTarget, "visible target should exist");
@@ -378,29 +348,29 @@ function testGroupedSemanticEventProjectionFiltersHiddenTargets() {
   const opponentEvents = projectEventsForRecipient(state, [event], "P2");
   const spectatorEvents = projectEventsForRecipient(state, [event], "spectator");
 
-  const ownerEvent = ownerEvents.find(
-    (item) => item.type === "lokiChickenGroupApplied"
-  ) as Extract<GameEvent, { type: "lokiChickenGroupApplied" }> | undefined;
-  const opponentEvent = opponentEvents.find(
-    (item) => item.type === "lokiChickenGroupApplied"
-  ) as Extract<GameEvent, { type: "lokiChickenGroupApplied" }> | undefined;
-  const spectatorEvent = spectatorEvents.find(
-    (item) => item.type === "lokiChickenGroupApplied"
-  ) as Extract<GameEvent, { type: "lokiChickenGroupApplied" }> | undefined;
+  const ownerEvent = ownerEvents.find((item) => item.type === "lokiChickenGroupApplied") as
+    | Extract<GameEvent, { type: "lokiChickenGroupApplied" }>
+    | undefined;
+  const opponentEvent = opponentEvents.find((item) => item.type === "lokiChickenGroupApplied") as
+    | Extract<GameEvent, { type: "lokiChickenGroupApplied" }>
+    | undefined;
+  const spectatorEvent = spectatorEvents.find((item) => item.type === "lokiChickenGroupApplied") as
+    | Extract<GameEvent, { type: "lokiChickenGroupApplied" }>
+    | undefined;
 
   assert.deepEqual(
     ownerEvent?.targetIds,
     [visibleTarget.id],
-    "owner should not receive unknown hidden target ids in grouped events"
+    "owner should not receive unknown hidden target ids in grouped events",
   );
   assert(
     opponentEvent?.targetIds.includes(hiddenTarget.id),
-    "target owner should still receive their own hidden target in grouped events"
+    "target owner should still receive their own hidden target in grouped events",
   );
   assert.deepEqual(
     spectatorEvent?.targetIds,
     [visibleTarget.id],
-    "spectator should not receive hidden target ids in grouped events"
+    "spectator should not receive hidden target ids in grouped events",
   );
 
   console.log("view_grouped_semantic_event_projection_filters_hidden_targets passed");
@@ -438,7 +408,10 @@ function testJackTrapProjectionIsOwnerPrivateUntilTriggered() {
       },
     ],
   };
-  assert.deepEqual(makePlayerView(state, "P1").jackTraps?.map((trap) => trap.position), [{ col: 2, row: 3 }]);
+  assert.deepEqual(
+    makePlayerView(state, "P1").jackTraps?.map((trap) => trap.position),
+    [{ col: 2, row: 3 }],
+  );
   assert.equal(
     "triggeredTargetIds" in makePlayerView(state, "P1").jackTraps[0],
     false,
@@ -450,7 +423,10 @@ function testJackTrapProjectionIsOwnerPrivateUntilTriggered() {
     ...state,
     jackTraps: state.jackTraps?.map((trap) => ({ ...trap, isRevealed: true })),
   };
-  assert.deepEqual(makePlayerView(revealed, "P2").jackTraps?.map((trap) => trap.position), [{ col: 2, row: 3 }]);
+  assert.deepEqual(
+    makePlayerView(revealed, "P2").jackTraps?.map((trap) => trap.position),
+    [{ col: 2, row: 3 }],
+  );
   assert.equal(
     makePlayerView(revealed, "P2").jackTraps[0]?.sourceUnitId,
     undefined,
@@ -536,10 +512,10 @@ function testCoveringTracksProjectionRedactsPendingAndHiddenExplosionTargets() {
 function testRiderMovementProjectionDoesNotLeakHiddenTarget() {
   let state = setupState();
   const rider = Object.values(state.units).find(
-    (unit) => unit.owner === "P1" && unit.class === "rider"
+    (unit) => unit.owner === "P1" && unit.class === "rider",
   )!;
   const hidden = Object.values(state.units).find(
-    (unit) => unit.owner === "P2" && unit.class === "assassin"
+    (unit) => unit.owner === "P2" && unit.class === "assassin",
   )!;
   state = setUnit(state, rider.id, { position: { col: 6, row: 0 } });
   state = setUnit(state, hidden.id, {
@@ -562,7 +538,7 @@ function testRiderMovementProjectionDoesNotLeakHiddenTarget() {
   assert(!projectedView.units[hidden.id], "hidden touched unit should remain absent from view");
   assert(
     !JSON.stringify(projectedEvents).includes(hidden.id),
-    "rider movement event projection should not mention the hidden target"
+    "rider movement event projection should not mention the hidden target",
   );
 
   console.log("view_rider_movement_projection_does_not_leak_hidden_target passed");
@@ -570,13 +546,31 @@ function testRiderMovementProjectionDoesNotLeakHiddenTarget() {
 
 function testNewBatchAbilitySourceProjection() {
   let state = setupState();
-  const zoroBase = Object.values(state.units).find((unit) => unit.owner === "P1" && unit.class === "knight")!;
-  const lucheBase = Object.values(state.units).find((unit) => unit.owner === "P1" && unit.class === "spearman")!;
-  const duoBase = Object.values(state.units).find((unit) => unit.owner === "P1" && unit.class === "trickster")!;
+  const zoroBase = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.class === "knight",
+  )!;
+  const lucheBase = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.class === "spearman",
+  )!;
+  const duoBase = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.class === "trickster",
+  )!;
   const enemy = Object.values(state.units).find((unit) => unit.owner === "P2")!;
-  const zoro = initUnitAbilities({ ...zoroBase, heroId: HERO_ZORO_ID, position: { col: 1, row: 1 } });
-  const luche = initUnitAbilities({ ...lucheBase, heroId: HERO_LUCHE_ID, position: { col: 1, row: 3 } });
-  const duo = initUnitAbilities({ ...duoBase, heroId: HERO_DUOLINGO_ID, position: { col: 1, row: 5 } });
+  const zoro = initUnitAbilities({
+    ...zoroBase,
+    heroId: HERO_ZORO_ID,
+    position: { col: 1, row: 1 },
+  });
+  const luche = initUnitAbilities({
+    ...lucheBase,
+    heroId: HERO_LUCHE_ID,
+    position: { col: 1, row: 3 },
+  });
+  const duo = initUnitAbilities({
+    ...duoBase,
+    heroId: HERO_DUOLINGO_ID,
+    position: { col: 1, row: 5 },
+  });
   state = {
     ...state,
     phase: "battle",
@@ -584,9 +578,22 @@ function testNewBatchAbilitySourceProjection() {
     activeUnitId: zoro.id,
     units: {
       ...state.units,
-      [zoro.id]: { ...zoro, charges: { ...zoro.charges, [ABILITY_ZORO_ONI_GIRI]: 2, [ABILITY_ZORO_DETERMINATION]: 2 } },
-      [luche.id]: { ...luche, charges: { ...luche.charges, [ABILITY_LUCHE_DIVINE_RAY]: 2, [ABILITY_LUCHE_SUN_GLORY]: 2 } },
-      [duo.id]: { ...duo, charges: { ...duo.charges, [ABILITY_DUOLINGO_PUSH_NOTIFICATION]: 3, [ABILITY_DUOLINGO_SKIP_CLASSES]: 3 } },
+      [zoro.id]: {
+        ...zoro,
+        charges: { ...zoro.charges, [ABILITY_ZORO_ONI_GIRI]: 2, [ABILITY_ZORO_DETERMINATION]: 2 },
+      },
+      [luche.id]: {
+        ...luche,
+        charges: { ...luche.charges, [ABILITY_LUCHE_DIVINE_RAY]: 2, [ABILITY_LUCHE_SUN_GLORY]: 2 },
+      },
+      [duo.id]: {
+        ...duo,
+        charges: {
+          ...duo.charges,
+          [ABILITY_DUOLINGO_PUSH_NOTIFICATION]: 3,
+          [ABILITY_DUOLINGO_SKIP_CLASSES]: 3,
+        },
+      },
       [enemy.id]: {
         ...enemy,
         position: { col: 3, row: 1 },
@@ -596,14 +603,35 @@ function testNewBatchAbilitySourceProjection() {
     },
   };
   const view = makePlayerView(state, "P1");
-  const oni = view.abilitiesByUnitId[zoro.id].find((ability) => ability.id === ABILITY_ZORO_ONI_GIRI)!;
-  const light = view.abilitiesByUnitId[luche.id].find((ability) => ability.id === ABILITY_LUCHE_DIVINE_RAY)!;
-  const push = view.abilitiesByUnitId[duo.id].find((ability) => ability.id === ABILITY_DUOLINGO_PUSH_NOTIFICATION)!;
-  assert.deepEqual(oni.useOptions?.map((option) => option.source.type), ["abilityCounter", "heroResource"]);
-  assert(oni.targeting?.targetIds?.includes(enemy.id), "Oni Giri projection should include an authoritative legal target");
-  assert.deepEqual(light.useOptions?.map((option) => option.source.type), ["heroResource"]);
-  assert(light.useOptions?.[0].source.type === "heroResource" && light.useOptions[0].source.resourceId === ABILITY_LUCHE_SUN_GLORY);
-  assert((light.targeting?.cells?.length ?? 0) > 0, "Light Ray projection should include authoritative line cells");
+  const oni = view.abilitiesByUnitId[zoro.id].find(
+    (ability) => ability.id === ABILITY_ZORO_ONI_GIRI,
+  )!;
+  const light = view.abilitiesByUnitId[luche.id].find(
+    (ability) => ability.id === ABILITY_LUCHE_DIVINE_RAY,
+  )!;
+  const push = view.abilitiesByUnitId[duo.id].find(
+    (ability) => ability.id === ABILITY_DUOLINGO_PUSH_NOTIFICATION,
+  )!;
+  assert.deepEqual(
+    oni.useOptions?.map((option) => option.source.type),
+    ["abilityCounter", "heroResource"],
+  );
+  assert(
+    oni.targeting?.targetIds?.includes(enemy.id),
+    "Oni Giri projection should include an authoritative legal target",
+  );
+  assert.deepEqual(
+    light.useOptions?.map((option) => option.source.type),
+    ["heroResource"],
+  );
+  assert(
+    light.useOptions?.[0].source.type === "heroResource" &&
+      light.useOptions[0].source.resourceId === ABILITY_LUCHE_SUN_GLORY,
+  );
+  assert(
+    (light.targeting?.cells?.length ?? 0) > 0,
+    "Light Ray projection should include authoritative line cells",
+  );
   assert(
     (light.targeting?.modes?.line?.cells.length ?? 0) > 0,
     "Light Ray projection should expose line-mode cells",
@@ -622,13 +650,34 @@ function testNewBatchAbilitySourceProjection() {
     true,
     "Blind status should survive player projection",
   );
-  assert.deepEqual(push.useOptions?.map((option) => option.source.type), ["abilityCounter", "heroResource"]);
-  assert(push.useOptions?.[0].source.type === "abilityCounter" && push.useOptions[0].source.counterId === ABILITY_DUOLINGO_PUSH_NOTIFICATION);
-  assert(push.useOptions?.[1].source.type === "heroResource" && push.useOptions[1].source.resourceId === ABILITY_DUOLINGO_SKIP_CLASSES);
-  assert(view.units[duo.id].charges[ABILITY_DUOLINGO_PUSH_NOTIFICATION] === 3, "Push Notification counter should project separately");
-  assert(view.units[duo.id].charges[ABILITY_DUOLINGO_SKIP_CLASSES] === 3, "Missed Lessons should project separately");
-  assert(oni.useOptions?.every((option) => option.consumes?.action && option.consumes?.move), "both Oni Giri sources should consume Action and Movement");
-  assert(push.useOptions?.every((option) => option.consumes?.move), "both Push Notification sources should consume Movement");
+  assert.deepEqual(
+    push.useOptions?.map((option) => option.source.type),
+    ["abilityCounter", "heroResource"],
+  );
+  assert(
+    push.useOptions?.[0].source.type === "abilityCounter" &&
+      push.useOptions[0].source.counterId === ABILITY_DUOLINGO_PUSH_NOTIFICATION,
+  );
+  assert(
+    push.useOptions?.[1].source.type === "heroResource" &&
+      push.useOptions[1].source.resourceId === ABILITY_DUOLINGO_SKIP_CLASSES,
+  );
+  assert(
+    view.units[duo.id].charges[ABILITY_DUOLINGO_PUSH_NOTIFICATION] === 3,
+    "Push Notification counter should project separately",
+  );
+  assert(
+    view.units[duo.id].charges[ABILITY_DUOLINGO_SKIP_CLASSES] === 3,
+    "Missed Lessons should project separately",
+  );
+  assert(
+    oni.useOptions?.every((option) => option.consumes?.action && option.consumes?.move),
+    "both Oni Giri sources should consume Action and Movement",
+  );
+  assert(
+    push.useOptions?.every((option) => option.consumes?.move),
+    "both Push Notification sources should consume Movement",
+  );
 
   const hidden = Object.values(state.units).find(
     (unit) => unit.owner === "P2" && unit.id !== enemy.id,
@@ -716,8 +765,16 @@ function testDonMadnessDirectionProjectionIsOwnerPrivateAndValid() {
   assert.equal(ownerView.pendingRoll?.kind, "donMadDelusionDirection");
   assert.equal(ownerView.pendingRoll?.player, "P2");
   assert.equal(ownerView.pendingRoll?.context.unitId, don.id);
-  assert.equal(ownerView.units[don.id]?.position?.col, 4, "the pending source must remain projectable");
-  assert.equal(opponentView.pendingRoll, null, "the opponent should receive only public waiting metadata");
+  assert.equal(
+    ownerView.units[don.id]?.position?.col,
+    4,
+    "the pending source must remain projectable",
+  );
+  assert.equal(
+    opponentView.pendingRoll,
+    null,
+    "the opponent should receive only public waiting metadata",
+  );
   console.log("view_don_madness_direction_projection_is_owner_private_and_valid passed");
 }
 
@@ -734,9 +791,7 @@ function testPapyrusBoneChoiceProjectionIsOwnerPrivate() {
   state = {
     ...state,
     phase: "battle",
-    pendingPapyrusBoneChoices: [
-      { papyrusUnitId: papyrus.id, targetUnitId: target.id },
-    ],
+    pendingPapyrusBoneChoices: [{ papyrusUnitId: papyrus.id, targetUnitId: target.id }],
     pendingRoll: {
       id: "papyrus-bone-choice",
       player: "P1",
@@ -766,6 +821,74 @@ function testPapyrusBoneChoiceProjectionIsOwnerPrivate() {
   console.log("view_papyrus_bone_choice_projection_is_owner_private passed");
 }
 
+function testPendingRollPresentationProjectionIsHiddenSafeAndBackwardCompatible() {
+  let state = setupState();
+  const actor = Object.values(state.units).find((unit) => unit.owner === "P1")!;
+  const hiddenTarget = Object.values(state.units).find((unit) => unit.owner === "P2")!;
+  state = setUnit(state, actor.id, { position: { col: 2, row: 2 } });
+  state = setUnit(state, hiddenTarget.id, {
+    position: { col: 3, row: 3 },
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+    figureId: "Secret Defender",
+  });
+  const resolutionContext = {
+    attackerId: actor.id,
+    defenderId: hiddenTarget.id,
+    attackerDice: [6, 2],
+    stage: "initial",
+    queueKind: "normal",
+  };
+  const presentation = createPendingRollContext({
+    state,
+    requestedPlayerId: actor.owner,
+    kind: "attack_attackerRoll",
+    resolutionContext,
+    actorUnitId: actor.id,
+  });
+  state = {
+    ...state,
+    pendingRoll: {
+      id: "hidden-context-roll",
+      player: actor.owner,
+      kind: "attack_attackerRoll",
+      context: resolutionContext,
+      presentation,
+    },
+  };
+
+  const ownerView = makePlayerView(state, actor.owner);
+  assert.equal(ownerView.pendingRoll?.context.defenderId, undefined);
+  assert.equal(ownerView.pendingRoll?.presentation?.targetUnitId, undefined);
+  assert.equal(ownerView.pendingRoll?.presentation?.targetName, "Unknown target");
+  assert(
+    !JSON.stringify(ownerView.pendingRoll?.presentation).includes("Secret Defender"),
+    "projected presentation must not leak a hidden unit name",
+  );
+
+  const waitingSummary = projectPendingRollPresentation(state, presentation, hiddenTarget.owner);
+  assert.equal(waitingSummary?.sourceUnitId, actor.id);
+  assert.equal(
+    waitingSummary?.targetName,
+    "Secret Defender",
+    "an owner may see their own hidden unit without revealing it to the opponent",
+  );
+
+  const legacyState: GameState = {
+    ...state,
+    pendingRoll: {
+      id: "legacy-minimal-roll",
+      player: actor.owner,
+      kind: "initiativeRoll",
+      context: {},
+    },
+  };
+  const legacyView = makePlayerView(legacyState, actor.owner);
+  assert.equal(legacyView.pendingRoll?.id, "legacy-minimal-roll");
+  assert.equal(legacyView.pendingRoll?.presentation, undefined);
+  console.log("pending_roll_presentation_projection_is_hidden_safe passed");
+}
+
 function main() {
   testHiddenEnemyOmitted();
   testKnownStealthedEnemyUsesLastKnown();
@@ -780,6 +903,7 @@ function main() {
   testNewBatchAbilitySourceProjection();
   testDonMadnessDirectionProjectionIsOwnerPrivateAndValid();
   testPapyrusBoneChoiceProjectionIsOwnerPrivate();
+  testPendingRollPresentationProjectionIsHiddenSafeAndBackwardCompatible();
 }
 
 main();

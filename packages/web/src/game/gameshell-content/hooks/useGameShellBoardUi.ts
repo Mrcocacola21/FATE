@@ -285,25 +285,21 @@ export function useGameShellBoardUi(params: any) {
     actionMode === "dora"
       ? doraPreviewCenter
       : actionMode === "mettatonPoppins"
-      ? mettatonPoppinsPreviewCenter
-      : actionMode === "mettatonLaser"
-      ? mettatonLaserPreviewTarget
-      : actionMode === "sansGasterBlaster"
-      ? sansGasterBlasterPreviewTarget
-      : actionMode === "undyneEnergySpear"
-      ? undyneEnergySpearPreviewTarget
-      : actionMode === "jebeHailOfArrows"
-      ? jebeHailPreviewCenter
-      : actionMode === "kaladinFifth"
-      ? kaladinFifthPreviewCenter
-      : isForestTarget
-      ? forestPreviewCenter
-      : null;
-  const boardDisabled =
-    !joined ||
-    isSpectator ||
-    view?.phase === "lobby" ||
-    (hasBlockingRoll && !boardSelectionPending);
+        ? mettatonPoppinsPreviewCenter
+        : actionMode === "mettatonLaser"
+          ? mettatonLaserPreviewTarget
+          : actionMode === "sansGasterBlaster"
+            ? sansGasterBlasterPreviewTarget
+            : actionMode === "undyneEnergySpear"
+              ? undyneEnergySpearPreviewTarget
+              : actionMode === "jebeHailOfArrows"
+                ? jebeHailPreviewCenter
+                : actionMode === "kaladinFifth"
+                  ? kaladinFifthPreviewCenter
+                  : isForestTarget
+                    ? forestPreviewCenter
+                    : null;
+  const boardDisabled = !joined || isSpectator || view?.phase === "lobby";
   const papyrusLongBoneAttackMode =
     actionMode === "attack" &&
     selectedUnit?.heroId === PAPYRUS_ID &&

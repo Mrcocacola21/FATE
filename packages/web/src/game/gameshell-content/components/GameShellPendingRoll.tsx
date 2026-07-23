@@ -1,7 +1,13 @@
 import type { GameAction } from "rules";
 import { PendingRollModal } from "./PendingRollModal";
 
-export function GameShellPendingRoll({ vm }: { vm: any }) {
+export function GameShellPendingRoll({
+  vm,
+  onCollapse = () => undefined,
+}: {
+  vm: any;
+  onCollapse?: () => void;
+}) {
   if (!vm.pendingRoll || !vm.playerId || vm.boardSelectionPending) return null;
 
   return (
@@ -65,6 +71,7 @@ export function GameShellPendingRoll({ vm }: { vm: any }) {
           choice,
         } as GameAction);
       }}
+      onCollapse={onCollapse}
     />
   );
 }

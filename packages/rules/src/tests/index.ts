@@ -1,6 +1,4 @@
-import {
-  testActionModuleBoundaries,
-} from "./core/boundaries.test";
+import { testActionModuleBoundaries } from "./core/boundaries.test";
 import {
   testNewPlayableBatchLineAndRevealEffects,
   testNewPlayableBatchCombatCountersAndReactions,
@@ -20,6 +18,7 @@ import {
   testActiveQueuedRollProjectsAsPending,
   testPendingRollActionsExportsStable,
   testPendingRollResolverCoverage,
+  testPendingRollPresentationMetadata,
   testUnknownPendingRollKindDoesNotClear,
 } from "./core/pendingRoll.test";
 import {
@@ -436,12 +435,13 @@ import {
 function main(): void {
   testActiveQueuedRollProjectsAsPending();
   // Full test run: preserve the historical simpleTests.ts execution order.
-  console.log('Running full simpleTests suite');
+  console.log("Running full simpleTests suite");
   testPendingRollActionsExportsStable();
   testDebugSpawnUsesCatalogMetadata();
   testDebugChargeAndStatusMutation();
   testDebugDiceQueueControlsRolls();
   testPendingRollResolverCoverage();
+  testPendingRollPresentationMetadata();
   testUnknownPendingRollKindDoesNotClear();
   testImpulseMetadataAllAutoManaged();
   testChargedLineImpulsesCreateForcedPendingAtTurnStart();

@@ -1061,6 +1061,98 @@ html.dark {
     max-height: calc(100dvh - max(1.5rem, env(safe-area-inset-top) + env(safe-area-inset-bottom)));
   }
 
+  .pending-roll-context {
+    @apply relative z-10 pr-8;
+  }
+
+  .pending-roll-sigil {
+    @apply flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-amber-300/50 bg-gradient-to-br from-amber-300 via-amber-500 to-orange-800 text-xl text-stone-950 shadow-lg shadow-amber-950/30;
+  }
+
+  .pending-roll-unit {
+    @apply max-w-full truncate rounded-md border border-amber-400/25 bg-amber-100/70 px-2.5 py-1 font-extrabold text-amber-950 dark:bg-amber-950/55 dark:text-amber-100;
+  }
+
+  .pending-roll-ability {
+    @apply max-w-full truncate rounded-full border border-violet-400/30 bg-violet-100/70 px-2.5 py-1 text-xs font-bold text-violet-900 dark:bg-violet-950/60 dark:text-violet-100;
+  }
+
+  .pending-roll-facts {
+    @apply grid overflow-hidden rounded-xl border border-stone-300/70 bg-stone-100/75 text-sm shadow-inner dark:border-stone-700/70 dark:bg-stone-950/45;
+  }
+
+  .pending-roll-facts > div {
+    @apply flex min-w-0 items-center justify-between gap-4 border-b border-stone-300/60 px-3 py-2.5 last:border-b-0 dark:border-stone-700/60;
+  }
+
+  .pending-roll-facts span {
+    @apply shrink-0 text-xs font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400;
+  }
+
+  .pending-roll-facts strong {
+    @apply min-w-0 text-right text-stone-900 dark:text-stone-100;
+  }
+
+  .pending-roll-dice {
+    @apply rounded-md border border-amber-300 bg-amber-400 px-2.5 py-1 font-mono text-base font-black text-stone-950 shadow-sm;
+  }
+
+  .pending-roll-outcome {
+    @apply rounded-xl border p-3;
+  }
+
+  .pending-roll-outcome > span {
+    @apply text-[10px] font-black uppercase tracking-[0.16em];
+  }
+
+  .pending-roll-outcome > p {
+    @apply mt-1 text-sm font-semibold leading-5;
+  }
+
+  .pending-roll-outcome--success {
+    @apply border-emerald-400/35 bg-emerald-100/60 text-emerald-950 dark:bg-emerald-950/45 dark:text-emerald-100;
+  }
+
+  .pending-roll-outcome--failure {
+    @apply border-rose-400/35 bg-rose-100/60 text-rose-950 dark:bg-rose-950/45 dark:text-rose-100;
+  }
+
+  .pending-roll-reason {
+    @apply border-l-2 border-violet-400/60 pl-3 text-xs text-stone-600 dark:text-stone-300;
+  }
+
+  .pending-roll-reason > span {
+    @apply font-black uppercase tracking-wider text-violet-700 dark:text-violet-300;
+  }
+
+  .pending-roll-reason > p {
+    @apply mt-0.5 leading-5;
+  }
+
+  .pending-roll-collapse-icon {
+    @apply absolute right-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-lg border border-stone-300/70 bg-stone-100/80 text-xl font-black text-stone-600 transition hover:bg-stone-200 focus-visible:ring-2 focus-visible:ring-amber-400 dark:border-stone-700 dark:bg-stone-900/80 dark:text-stone-200 dark:hover:bg-stone-800;
+  }
+
+  .pending-roll-collapse-button {
+    @apply mt-3 flex min-h-11 w-full items-center justify-center gap-1.5 rounded-lg border border-stone-300/70 bg-stone-100/60 px-3 py-2 text-xs font-bold text-stone-700 transition hover:bg-stone-200 focus-visible:ring-2 focus-visible:ring-amber-400 dark:border-stone-700 dark:bg-stone-900/55 dark:text-stone-200 dark:hover:bg-stone-800;
+  }
+
+  .pending-roll-chip-layer {
+    z-index: var(--z-game-pending-modal);
+  }
+
+  .pending-roll-chip {
+    @apply flex min-h-14 w-full max-w-[min(34rem,calc(100vw-1.5rem))] items-center gap-2 overflow-hidden rounded-xl border border-amber-400/45 bg-stone-950/95 px-3 py-2 shadow-2xl shadow-black/55 backdrop-blur-md;
+  }
+
+  .pending-roll-chip__roll {
+    @apply min-h-10 shrink-0 rounded-lg bg-amber-400 px-3 text-xs font-black text-stone-950 transition hover:bg-amber-300 focus-visible:ring-2 focus-visible:ring-amber-200;
+  }
+
+  .pending-roll-chip__open {
+    @apply min-h-10 shrink-0 rounded-lg border border-stone-600 bg-stone-900 px-3 text-xs font-bold text-stone-100 transition hover:bg-stone-800 focus-visible:ring-2 focus-visible:ring-amber-300;
+  }
+
   .mobile-current-task .panel-card {
     @apply rounded-lg border-0 bg-transparent p-2 shadow-none dark:bg-transparent;
   }

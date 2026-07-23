@@ -3,6 +3,7 @@ import type {
   GameEvent,
   PlayerId,
   PlayerView,
+  PendingRollContext,
   Coord,
   RollKind,
   GamePhase,
@@ -36,7 +37,12 @@ export type RoomMeta = {
   playerNames: { P1: string | null; P2: string | null };
   spectators: number;
   phase: GamePhase;
-  pendingRoll: { id: string; kind: RollKind; player: PlayerId } | null;
+  pendingRoll: {
+    id: string;
+    kind: RollKind;
+    player: PlayerId;
+    presentation?: PendingRollContext;
+  } | null;
   initiative: {
     P1: number | null;
     P2: number | null;
@@ -70,11 +76,7 @@ export type ServerMessage =
     }
   | {
       type: "joinRejected";
-      reason:
-        | "room_not_found"
-        | "role_taken"
-        | "room_exists"
-        | "test_room_disabled";
+      reason: "room_not_found" | "role_taken" | "room_exists" | "test_room_disabled";
       message: string;
     }
   | {
@@ -134,9 +136,7 @@ export type ClientMessage =
   | { type: "leaveRoom" }
   | { type: "testRoomCommand"; command: TestRoomCommand };
 
-export function connectGameSocket(
-  onMessage: (msg: ServerMessage) => void
-): WebSocket {
+export function connectGameSocket(onMessage: (msg: ServerMessage) => void): WebSocket {
   const socket = new WebSocket(getWsUrl());
 
   socket.onmessage = (event) => {
@@ -162,7 +162,7 @@ export function sendJoinRoom(
     resumeToken?: string;
     roomMode?: "normal" | "test";
     debugToken?: string;
-  }
+  },
 ) {
   const join: ClientMessage = { type: "joinRoom", ...params };
   socket.send(JSON.stringify(join));
@@ -196,7 +196,7 @@ export function sendDraftPickHero(socket: WebSocket, heroId: string) {
 export function sendResolvePendingRoll(
   socket: WebSocket,
   pendingRollId: string,
-  choice?: ResolveRollChoice
+  choice?: ResolveRollChoice,
 ) {
   const msg: ClientMessage = { type: "resolvePendingRoll", pendingRollId, choice };
   socket.send(JSON.stringify(msg));
@@ -207,11 +207,7 @@ export function sendSocketAction(socket: WebSocket, action: GameAction) {
   socket.send(JSON.stringify(msg));
 }
 
-export function sendMoveOptionsRequest(
-  socket: WebSocket,
-  unitId: string,
-  mode?: MoveMode
-) {
+export function sendMoveOptionsRequest(socket: WebSocket, unitId: string, mode?: MoveMode) {
   const msg: ClientMessage = { type: "requestMoveOptions", unitId, mode };
   socket.send(JSON.stringify(msg));
 }
@@ -226,10 +222,7 @@ export function sendLeaveRoom(socket: WebSocket) {
   socket.send(JSON.stringify(msg));
 }
 
-export function sendTestRoomCommand(
-  socket: WebSocket,
-  command: TestRoomCommand
-) {
+export function sendTestRoomCommand(socket: WebSocket, command: TestRoomCommand) {
   const msg: ClientMessage = { type: "testRoomCommand", command };
   socket.send(JSON.stringify(msg));
 }

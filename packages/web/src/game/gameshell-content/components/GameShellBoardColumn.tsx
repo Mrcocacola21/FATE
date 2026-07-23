@@ -42,7 +42,7 @@ export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm, mobile
     vm.actionMode === "attack"
       ? vm.papyrusLongBoneAttackTargetIds?.length > 0
         ? vm.papyrusLongBoneAttackTargetIds
-        : vm.legalAttackTargets ?? []
+        : (vm.legalAttackTargets ?? [])
       : [];
 
   useEffect(() => {
@@ -105,13 +105,14 @@ export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm, mobile
       : []),
     ...(vm.boardPreviewCenter &&
     vm.selectedUnit?.position &&
-    (vm.actionMode === "mettatonLaser" ||
-      vm.actionMode === "sansGasterBlaster")
-      ? [{
-          from: vm.selectedUnit.position,
-          to: vm.boardPreviewCenter,
-          tone: "magic" as const,
-        }]
+    (vm.actionMode === "mettatonLaser" || vm.actionMode === "sansGasterBlaster")
+      ? [
+          {
+            from: vm.selectedUnit.position,
+            to: vm.boardPreviewCenter,
+            tone: "magic" as const,
+          },
+        ]
       : []),
   ];
 
@@ -138,7 +139,10 @@ export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm, mobile
   }, [fitBoard, zoomIn, zoomOut]);
 
   return (
-    <PanelCard variant="hud" className={`relative flex h-full min-w-0 flex-col overflow-hidden ${mobile ? "mobile-board-panel" : ""}`}>
+    <PanelCard
+      variant="hud"
+      className={`relative flex h-full min-w-0 flex-col overflow-hidden ${mobile ? "mobile-board-panel" : ""}`}
+    >
       <div className="mobile-board-header shrink-0 border-b border-amber-900/10 px-3 py-2 dark:border-amber-500/15 sm:px-4">
         <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
           <div className="min-w-0">
@@ -155,7 +159,9 @@ export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm, mobile
             onToggleCoordinates={() => setShowCoordinates((current) => !current)}
           />
         </div>
-        <div className={`mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] font-semibold text-stone-500 dark:text-stone-400 ${mobile ? "mobile-board-legend" : ""}`}>
+        <div
+          className={`mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] font-semibold text-stone-500 dark:text-stone-400 ${mobile ? "mobile-board-legend" : ""}`}
+        >
           {[
             [t("game.legalMove"), "bg-sky-400 ring-sky-500"],
             [t("game.legalAttack"), "bg-rose-400 ring-rose-500"],
@@ -185,8 +191,7 @@ export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm, mobile
                   radius:
                     vm.actionMode === "kaladinFifth"
                       ? 2
-                      : vm.actionMode === "mettatonLaser" ||
-                          vm.actionMode === "sansGasterBlaster"
+                      : vm.actionMode === "mettatonLaser" || vm.actionMode === "sansGasterBlaster"
                         ? 0
                         : 1,
                 }
@@ -201,7 +206,7 @@ export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm, mobile
               : null
           }
           allowUnitSelection={vm.allowUnitPick}
-          allowAnyUnitSelection={vm.canControlTestRoom}
+          allowAnyUnitSelection={vm.canControlTestRoom || vm.hasBlockingRoll}
           visualEffectsEnabled={vm.connectionStatus === "connected" && vm.hasSnapshot}
           eventBatch={vm.latestEventBatch}
           effectSessionKey={vm.roomId}

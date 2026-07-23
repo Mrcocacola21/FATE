@@ -13,6 +13,7 @@ import type {
   MoveMode,
   PlayerId,
   PlayerView,
+  PendingRollContext,
   RollKind,
   DraftState,
   HeroDraftMeta,
@@ -24,6 +25,7 @@ import {
   makeSpectatorView,
   makeTestRoomView,
   projectEventsForRecipient,
+  projectPendingRollPresentation,
 } from "rules";
 import { ClientMessageSchema } from "./schemas";
 import { isAllowedOrigin } from "./origin";
@@ -41,11 +43,7 @@ import { logFate } from "./fateLogger";
 import { rejected, type CommandResult } from "./commandResult";
 import { enqueueRoomCommand, fateRoomKey } from "./roomQueue";
 import type { z } from "zod";
-import {
-  applyTestRoomCommand,
-  canCreateTestRoom,
-  getTestRoomCapabilities,
-} from "./testRoom";
+import { applyTestRoomCommand, canCreateTestRoom, getTestRoomCapabilities } from "./testRoom";
 import { applyDraftBan, applyDraftPick, startDraftSession } from "./modes/draftSession";
 import {
   isGameModeLocked,
@@ -78,7 +76,12 @@ type RoomMeta = {
   playerNames: { P1: string | null; P2: string | null };
   spectators: number;
   phase: GameState["phase"];
-  pendingRoll: { id: string; kind: RollKind; player: PlayerId } | null;
+  pendingRoll: {
+    id: string;
+    kind: RollKind;
+    player: PlayerId;
+    presentation?: PendingRollContext;
+  } | null;
   initiative: {
     P1: number | null;
     P2: number | null;
@@ -111,11 +114,7 @@ type JoinAckMessage = {
 
 type JoinRejectedMessage = {
   type: "joinRejected";
-  reason:
-    | "room_not_found"
-    | "role_taken"
-    | "room_exists"
-    | "test_room_disabled";
+  reason: "room_not_found" | "role_taken" | "room_exists" | "test_room_disabled";
   message: string;
 };
 
@@ -174,10 +173,7 @@ interface ConnectionMeta {
 
 const roomSockets = new Map<string, Set<WebSocket>>();
 const socketMeta = new Map<WebSocket, ConnectionMeta>();
-const socketRateState = new Map<
-  WebSocket,
-  { windowStartMs: number; messageCount: number }
->();
+const socketRateState = new Map<WebSocket, { windowStartMs: number; messageCount: number }>();
 
 interface SeatGraceRecord {
   roomId: string;
@@ -215,11 +211,7 @@ function sendMessage(socket: WebSocket, message: ServerMessage) {
   socket.send(JSON.stringify(message));
 }
 
-function sendStructuredError(
-  socket: WebSocket,
-  code: string,
-  message: string
-) {
+function sendStructuredError(socket: WebSocket, code: string, message: string) {
   sendMessage(socket, {
     type: "error",
     code,
@@ -297,7 +289,7 @@ function canAssignSeat(
   room: GameRoom,
   seat: PlayerId,
   connId: string,
-  resumeToken: string
+  resumeToken: string,
 ): boolean {
   const currentConnId = room.seats[seat];
   if (!currentConnId) return true;
@@ -305,15 +297,9 @@ function canAssignSeat(
   return room.seatTokens[seat] === resumeToken;
 }
 
-function assignSeat(
-  room: GameRoom,
-  seat: PlayerId,
-  connId: string,
-  resumeToken: string
-): boolean {
+function assignSeat(room: GameRoom, seat: PlayerId, connId: string, resumeToken: string): boolean {
   if (!canAssignSeat(room, seat, connId, resumeToken)) return false;
-  const wasSameOccupant =
-    room.seatTokens[seat] === resumeToken && room.seats[seat] !== null;
+  const wasSameOccupant = room.seatTokens[seat] === resumeToken && room.seats[seat] !== null;
 
   room.seats[seat] = connId;
   room.seatTokens[seat] = resumeToken;
@@ -331,11 +317,7 @@ function assignSeat(
   return true;
 }
 
-function applyFigureSetToRoom(
-  room: GameRoom,
-  seat: PlayerId,
-  figureSet?: HeroSelection
-) {
+function applyFigureSetToRoom(room: GameRoom, seat: PlayerId, figureSet?: HeroSelection) {
   if (!figureSet) return;
   room.figureSets[seat] = figureSet;
   if (room.state.phase !== "lobby" || room.draftState) return;
@@ -380,7 +362,7 @@ function applySeatMutationSnapshot(room: GameRoom, nextRoom: GameRoom) {
 function buildSwitchRoleTransition(
   room: GameRoom,
   current: ConnectionMeta,
-  requestedRole: PlayerRole
+  requestedRole: PlayerRole,
 ): SwitchRoleTransition {
   if (current.role === requestedRole) {
     return {
@@ -391,14 +373,9 @@ function buildSwitchRoleTransition(
   }
 
   const targetSeat =
-    requestedRole === "P1" || requestedRole === "P2"
-      ? (requestedRole as PlayerId)
-      : null;
+    requestedRole === "P1" || requestedRole === "P2" ? (requestedRole as PlayerId) : null;
 
-  if (
-    targetSeat &&
-    !canAssignSeat(room, targetSeat, current.connId, current.resumeToken)
-  ) {
+  if (targetSeat && !canAssignSeat(room, targetSeat, current.connId, current.resumeToken)) {
     return {
       ok: false,
       code: "role_taken",
@@ -426,9 +403,7 @@ function buildSwitchRoleTransition(
       seats: { ...nextRoom.state.seats, [targetSeat]: true },
       playersReady: {
         ...nextRoom.state.playersReady,
-        [targetSeat]: keepReadyForSeat
-          ? room.state.playersReady[targetSeat]
-          : false,
+        [targetSeat]: keepReadyForSeat ? room.state.playersReady[targetSeat] : false,
       },
     };
     if (nextRoom.hostSeat === targetSeat) {
@@ -458,9 +433,7 @@ function updateHost(room: GameRoom) {
   const hostConnId = room.hostConnId;
   if (!hostConnId) return;
   const stillConnected =
-    room.seats.P1 === hostConnId ||
-    room.seats.P2 === hostConnId ||
-    room.spectators.has(hostConnId);
+    room.seats.P1 === hostConnId || room.seats.P2 === hostConnId || room.spectators.has(hostConnId);
   if (stillConnected) return;
 
   if (room.seats.P1) {
@@ -589,7 +562,11 @@ export function getActiveFateRoomIds(): Set<string> {
   return active;
 }
 
-function buildRoomMeta(room: GameRoom, canControlTestRoom = false): RoomMeta {
+function buildRoomMeta(
+  room: GameRoom,
+  canControlTestRoom = false,
+  viewerRole: PlayerRole = "spectator",
+): RoomMeta {
   const ready = room.state.playersReady ?? { P1: false, P2: false };
   const initiative = room.state.initiative ?? {
     P1: null,
@@ -602,10 +579,7 @@ function buildRoomMeta(room: GameRoom, canControlTestRoom = false): RoomMeta {
     draftState: room.draftState,
     draftPool: room.gameMode === "draft" ? DRAFT_HERO_POOL : [],
     revision: room.revision,
-    diceQueue:
-      canControlTestRoom && room.testDiceRng
-        ? room.testDiceRng.getQueue()
-        : [],
+    diceQueue: canControlTestRoom && room.testDiceRng ? room.testDiceRng.getQueue() : [],
     debugLog: canControlTestRoom
       ? room.actionLog.slice(-25).map((entry) => ({
           revision: entry.revision,
@@ -621,13 +595,9 @@ function buildRoomMeta(room: GameRoom, canControlTestRoom = false): RoomMeta {
     players: { P1: !!room.seats.P1, P2: !!room.seats.P2 },
     playerNames: {
       P1:
-        Array.from(socketMeta.values()).find(
-          (meta) => meta.connId === room.seats.P1
-        )?.name ?? null,
+        Array.from(socketMeta.values()).find((meta) => meta.connId === room.seats.P1)?.name ?? null,
       P2:
-        Array.from(socketMeta.values()).find(
-          (meta) => meta.connId === room.seats.P2
-        )?.name ?? null,
+        Array.from(socketMeta.values()).find((meta) => meta.connId === room.seats.P2)?.name ?? null,
     },
     spectators: room.spectators.size,
     phase: room.state.phase ?? "lobby",
@@ -636,6 +606,20 @@ function buildRoomMeta(room: GameRoom, canControlTestRoom = false): RoomMeta {
           id: room.state.pendingRoll.id,
           kind: room.state.pendingRoll.kind,
           player: room.state.pendingRoll.player,
+          presentation: (() => {
+            const projected = projectPendingRollPresentation(
+              room.state,
+              room.state.pendingRoll?.presentation,
+              viewerRole === "P1" || viewerRole === "P2" ? viewerRole : null,
+            );
+            if (!projected) return undefined;
+            const requestedConnectionId = room.seats[room.state.pendingRoll!.player];
+            const requestedPlayerLabel =
+              Array.from(socketMeta.values()).find(
+                (entry) => entry.connId === requestedConnectionId,
+              )?.name ?? room.state.pendingRoll!.player;
+            return { ...projected, requestedPlayerLabel };
+          })(),
         }
       : null,
     initiative: {
@@ -650,8 +634,7 @@ function buildRoomMeta(room: GameRoom, canControlTestRoom = false): RoomMeta {
 function sendRoomState(socket: WebSocket, room: GameRoom) {
   const meta = socketMeta.get(socket);
   if (!meta) return;
-  const canControlTestRoom =
-    room.roomMode === "test" && room.testControllerConnId === meta.connId;
+  const canControlTestRoom = room.roomMode === "test" && room.testControllerConnId === meta.connId;
   const view = canControlTestRoom
     ? makeTestRoomView(room.state)
     : viewForRole(room.state, meta.role);
@@ -666,7 +649,7 @@ function sendRoomState(socket: WebSocket, room: GameRoom) {
     roomId: room.id,
     you,
     view,
-    meta: buildRoomMeta(room, canControlTestRoom),
+    meta: buildRoomMeta(room, canControlTestRoom, meta.role),
   });
 }
 
@@ -695,8 +678,7 @@ export function broadcastActionResult(payload: {
   const room = getGameRoom(payload.gameId);
   for (const socket of sockets) {
     const meta = socketMeta.get(socket);
-    const recipient =
-      meta?.role === "P1" || meta?.role === "P2" ? meta.role : "spectator";
+    const recipient = meta?.role === "P1" || meta?.role === "P2" ? meta.role : "spectator";
     const filteredEvents = room
       ? projectEventsForRecipient(room.state, payload.events, recipient)
       : [];
@@ -711,9 +693,7 @@ export function broadcastActionResult(payload: {
 }
 
 function sendMoveOptionsIfAny(socket: WebSocket, events: GameEvent[]) {
-  const moveEvent = events.find(
-    (item) => item.type === "moveOptionsGenerated"
-  );
+  const moveEvent = events.find((item) => item.type === "moveOptionsGenerated");
   if (!moveEvent || moveEvent.type !== "moveOptionsGenerated") return;
   sendMessage(socket, {
     type: "moveOptions",
@@ -726,8 +706,7 @@ function sendMoveOptionsIfAny(socket: WebSocket, events: GameEvent[]) {
 }
 
 function sendActionRejected(socket: WebSocket, result: CommandResult) {
-  const message =
-    result.ok ? undefined : result.message ?? "Action rejected";
+  const message = result.ok ? undefined : (result.message ?? "Action rejected");
   sendMessage(socket, {
     type: "actionResult",
     ok: false,
@@ -740,10 +719,9 @@ function applyRoomAction(
   socket: WebSocket,
   room: GameRoom,
   meta: ConnectionMeta,
-  action: GameAction
+  action: GameAction,
 ): CommandResult {
-  const isTestController =
-    room.roomMode === "test" && room.testControllerConnId === meta.connId;
+  const isTestController = room.roomMode === "test" && room.testControllerConnId === meta.connId;
   if (meta.role === "spectator" || !meta.seat) {
     const result = rejected("NOT_SEATED", "Spectators cannot act");
     sendActionRejected(socket, result);
@@ -757,22 +735,13 @@ function applyRoomAction(
   }
 
   if (room.state.pendingRoll && action.type !== "resolvePendingRoll") {
-    const result = rejected(
-      "PENDING_ROLL_REQUIRED",
-      "Pending roll must be resolved"
-    );
+    const result = rejected("PENDING_ROLL_REQUIRED", "Pending roll must be resolved");
     sendActionRejected(socket, result);
     return result;
   }
 
-  if (
-    !isTestController &&
-    !isActionAllowedByPlayer(room.state, action, meta.seat)
-  ) {
-    const result = rejected(
-      "FORBIDDEN",
-      "Action not allowed for this player"
-    );
+  if (!isTestController && !isActionAllowedByPlayer(room.state, action, meta.seat)) {
+    const result = rejected("FORBIDDEN", "Action not allowed for this player");
     sendActionRejected(socket, result);
     return result;
   }
@@ -785,22 +754,28 @@ function applyRoomAction(
 
   try {
     for (const ev of command.events) {
-      const summary: Record<string, any> = { tag: "fate:event", roomId: room.id, eventType: ev.type };
+      const summary: Record<string, any> = {
+        tag: "fate:event",
+        roomId: room.id,
+        eventType: ev.type,
+      };
       if ((ev as any).attackerId) summary.playerId = (ev as any).attackerId;
       if ((ev as any).defenderId) summary.unitId = (ev as any).defenderId;
       logFate(serverLogger!, summary);
     }
   } catch (e) {
-    logFate(serverLogger!, { tag: "fate:error", roomId: room.id, code: "log_error", message: String(e), err: e });
+    logFate(serverLogger!, {
+      tag: "fate:error",
+      roomId: room.id,
+      code: "log_error",
+      message: String(e),
+      err: e,
+    });
   }
   return command;
 }
 
-function getTestActionPlayer(
-  state: GameState,
-  action: GameAction,
-  fallback: PlayerId
-): PlayerId {
+function getTestActionPlayer(state: GameState, action: GameAction, fallback: PlayerId): PlayerId {
   if (action.type === "resolvePendingRoll") {
     return state.pendingRoll?.player ?? fallback;
   }
@@ -826,7 +801,7 @@ function applyAndBroadcast(
   action: GameAction,
   playerId: PlayerId,
   socketForErrors?: WebSocket,
-  sendMoveOptions = false
+  sendMoveOptions = false,
 ): CommandResult {
   const command = applyGameAction(room, action, playerId);
   if (!command.ok) {
@@ -867,7 +842,7 @@ function applyAndBroadcast(
 
 function detachFromFateRoom(
   meta: ConnectionMeta,
-  options: { useGrace: boolean; reason: "leave" | "disconnect" | "switch_room" }
+  options: { useGrace: boolean; reason: "leave" | "disconnect" | "switch_room" },
 ) {
   const room = getGameRoom(meta.roomId);
   if (!room) {
@@ -928,7 +903,7 @@ export function registerGameWebSocket(server: FastifyInstance) {
 
     async function detachExistingConnection(
       existing: ConnectionMeta,
-      reason: "leave" | "switch_room" | "disconnect"
+      reason: "leave" | "switch_room" | "disconnect",
     ) {
       const key = queueKey(existing.channel, existing.roomId);
       await enqueueRoomCommand(key, () => {
@@ -942,8 +917,8 @@ export function registerGameWebSocket(server: FastifyInstance) {
               reason === "switch_room"
                 ? "switch_room"
                 : reason === "disconnect"
-                ? "disconnect"
-                : "leave",
+                  ? "disconnect"
+                  : "leave",
           });
           logFate(serverLogger!, {
             tag: "fate:leave",
@@ -982,7 +957,7 @@ export function registerGameWebSocket(server: FastifyInstance) {
                   if (s.readyState === WebSocket.OPEN) s.send(JSON.stringify(payload));
                 }
               },
-              server.log
+              server.log,
             );
             addSocketToRoom(roomId, socket);
             socketMeta.set(socket, {
@@ -1005,10 +980,7 @@ export function registerGameWebSocket(server: FastifyInstance) {
               type: "joinAck",
               roomId,
               role: msg.role,
-              seat:
-                msg.role === "P1" || msg.role === "P2"
-                  ? msg.role
-                  : undefined,
+              seat: msg.role === "P1" || msg.role === "P2" ? msg.role : undefined,
               isHost: false,
             });
             try {
@@ -1097,7 +1069,7 @@ export function registerGameWebSocket(server: FastifyInstance) {
           return;
         }
         case "joinRoom": {
-          const targetRoomId = msg.mode === "create" ? msg.roomId ?? randomUUID() : msg.roomId;
+          const targetRoomId = msg.mode === "create" ? (msg.roomId ?? randomUUID()) : msg.roomId;
           if (!targetRoomId) {
             sendMessage(socket, {
               type: "joinRejected",
@@ -1435,12 +1407,7 @@ export function registerGameWebSocket(server: FastifyInstance) {
             markRoomMetadataChanged(room);
             if (msg.type === "draftPickHero" && room.draftState?.phase === "complete") {
               rebuildDraftedArmies(room);
-              applyAndBroadcast(
-                room,
-                { type: "startGame" },
-                current.seat,
-                socket
-              );
+              applyAndBroadcast(room, { type: "startGame" }, current.seat, socket);
               return;
             }
 
@@ -1466,21 +1433,14 @@ export function registerGameWebSocket(server: FastifyInstance) {
               return;
             }
             if (!getTestRoomCapabilities().enabled) {
-              sendStructuredError(
-                socket,
-                "TEST_ROOMS_DISABLED",
-                "Test rooms are disabled"
-              );
+              sendStructuredError(socket, "TEST_ROOMS_DISABLED", "Test rooms are disabled");
               return;
             }
-            if (
-              room.roomMode !== "test" ||
-              room.testControllerConnId !== current.connId
-            ) {
+            if (room.roomMode !== "test" || room.testControllerConnId !== current.connId) {
               sendStructuredError(
                 socket,
                 "FORBIDDEN",
-                "Only the test-room controller can use sandbox commands"
+                "Only the test-room controller can use sandbox commands",
               );
               return;
             }
@@ -1641,12 +1601,7 @@ export function registerGameWebSocket(server: FastifyInstance) {
             }
 
             const playersReady = room.state.playersReady;
-            if (
-              !room.seats.P1 ||
-              !room.seats.P2 ||
-              !playersReady.P1 ||
-              !playersReady.P2
-            ) {
+            if (!room.seats.P1 || !room.seats.P2 || !playersReady.P1 || !playersReady.P2) {
               sendMessage(socket, {
                 type: "error",
                 message: "Both players must be seated and ready",
@@ -1793,12 +1748,11 @@ export function registerGameWebSocket(server: FastifyInstance) {
                 ? {
                     ...msg.action,
                     player:
-                      room.roomMode === "test" &&
-                      room.testControllerConnId === current.connId
-                        ? room.state.pendingRoll?.player ??
+                      room.roomMode === "test" && room.testControllerConnId === current.connId
+                        ? (room.state.pendingRoll?.player ??
                           current.seat ??
-                          (msg.action as any).player
-                        : current.seat ?? (msg.action as any).player,
+                          (msg.action as any).player)
+                        : (current.seat ?? (msg.action as any).player),
                   }
                 : msg.action;
 
@@ -1875,4 +1829,3 @@ export function registerGameWebSocket(server: FastifyInstance) {
     });
   });
 }
-
