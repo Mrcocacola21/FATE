@@ -803,25 +803,38 @@ export function createCellClickHandler(context: CellClickContext) {
       actionMode === "donWindmills" ||
       actionMode === "jackHolyMother"
     ) {
-      const target = getUnitAt(view, col, row);
       const source = view.units[selectedUnitId];
-      if (!target?.isAlive || !target.position || !source?.position || target.owner === source.owner) return;
-      if (actionMode === "jackHolyMother" && !legalAttackTargets.includes(target.id)) return;
       if (actionMode === "donWindmills") {
-        if (!target.heroId) return;
-        const colDelta = Math.abs(target.position.col - source.position.col);
-        const rowDelta = Math.abs(target.position.row - source.position.row);
-        if (colDelta !== 0 && rowDelta !== 0 && colDelta !== rowDelta) return;
-        if (source.blindUntilOwnTurnStart && Math.max(colDelta, rowDelta) > 1) return;
+        if (!source?.position) return;
+        const targetIds =
+          view.abilitiesByUnitId?.[selectedUnitId]?.find(
+            (ability) => ability.id === DON_WINDMILLS_ID,
+          )?.targeting?.targetIds ?? [];
+        submitUnitTargetClick({
+          view,
+          col,
+          row,
+          validTargetIds: targetIds,
+          preferredTargetId,
+          submit: (targetUnitId) => {
+            sendGameAction({
+              type: "useAbility",
+              unitId: selectedUnitId,
+              abilityId: DON_WINDMILLS_ID,
+              payload: { targetUnitId },
+            });
+            setActionMode(null);
+          },
+        });
+        return;
       }
-      const abilityId =
-        actionMode === "donWindmills"
-              ? DON_WINDMILLS_ID
-              : JACK_HOLY_MOTHER_ID;
+      const target = getUnitAt(view, col, row);
+      if (!target?.isAlive || !target.position || !source?.position || target.owner === source.owner) return;
+      if (!legalAttackTargets.includes(target.id)) return;
       sendGameAction({
         type: "useAbility",
         unitId: selectedUnitId,
-        abilityId,
+        abilityId: JACK_HOLY_MOTHER_ID,
         payload: { targetId: target.id },
       });
       setActionMode(null);

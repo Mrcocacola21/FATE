@@ -6,6 +6,7 @@ import { setLanguage, translate } from "../../../i18n";
 import {
   ARTEMIS_MOON_INSIGHT_ID,
   DON_SORROWFUL_ID,
+  DON_WINDMILLS_ID,
   GRIFFITH_FEMTO_REBIRTH_ID,
   GUTS_CANNON_ID,
   HASSAN_ASSASSIN_ORDER_ID,
@@ -592,6 +593,47 @@ test("Boatman movement budget keeps Move, Boat, and Search(Move) available", () 
   assert.equal(moveSummary.state, "available");
   assert.equal(moveSummary.movementActionsRemaining, 1);
   assert.equal(moveSummary.abilities[0]?.state, "available");
+});
+
+test("Windmills renders as an enabled board-targeting action", () => {
+  const don = makeUnit({
+    id: "P1-rider-don",
+    class: "rider",
+    heroId: "donKihote",
+    charges: { [DON_WINDMILLS_ID]: 3 },
+  });
+  const windmills = makeAbility({
+    id: DON_WINDMILLS_ID,
+    name: "Attack on Windmills",
+    slot: "move",
+    chargeRequired: 3,
+    maxCharges: 3,
+    currentCharges: 3,
+    isAvailable: true,
+    targeting: { targetIds: ["P2-knight-target"] },
+  });
+  const markup = renderToStaticMarkup(
+    <BattleAbilityActions
+      view={makeView(don)}
+      actionableAbilities={[windmills]}
+      selectedUnit={don}
+      canAct={true}
+      economy={don.turn}
+      actionMode={null}
+      targetingActive={false}
+      onUseAbility={() => undefined}
+      onUseLokiLaughtOption={() => undefined}
+      onToggleMode={() => undefined}
+      onModePreview={() => undefined}
+      onHoverAbility={() => undefined}
+    />,
+  );
+
+  assert.match(markup, new RegExp(`data-ability-action-id="${DON_WINDMILLS_ID}"`));
+  assert.doesNotMatch(
+    markup,
+    new RegExp(`data-ability-action-id="${DON_WINDMILLS_ID}"[^>]*disabled`),
+  );
 });
 
 test("charge labels distinguish bounded and unbounded counters", () => {

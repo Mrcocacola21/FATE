@@ -2,6 +2,7 @@ import assert from "assert";
 import { randomUUID } from "node:crypto";
 import { mock } from "node:test";
 import {
+  ABILITY_DON_KIHOTE_WINDMILLS,
   ABILITY_CHIKATILO_ASSASSIN_MARK,
   ABILITY_CHIKATILO_DECOY,
   ABILITY_KAISER_BUNKER,
@@ -22,6 +23,7 @@ import {
   HERO_KANEKI_ID,
   HERO_HASSAN_ID,
   HERO_DUOLINGO_ID,
+  HERO_DON_KIHOTE_ID,
   HERO_GRAND_KAISER_ID,
   HERO_JACK_RIPPER_ID,
   HERO_PAPYRUS_ID,
@@ -113,6 +115,31 @@ function testLightRayModePayloadSchemas() {
     );
   }
   console.log("hardening_light_ray_mode_payload_schemas passed");
+}
+
+function testWindmillsPayloadSchema() {
+  const canonical = GameActionSchema.safeParse({
+    type: "useAbility",
+    unitId: "P1-rider-donKihote",
+    abilityId: ABILITY_DON_KIHOTE_WINDMILLS,
+    payload: { targetUnitId: "P2-knight-zoro" },
+  });
+  const legacy = GameActionSchema.safeParse({
+    type: "useAbility",
+    unitId: "P1-rider-donKihote",
+    abilityId: ABILITY_DON_KIHOTE_WINDMILLS,
+    payload: { targetId: "P2-knight-zoro" },
+  });
+  const missingTarget = GameActionSchema.safeParse({
+    type: "useAbility",
+    unitId: "P1-rider-donKihote",
+    abilityId: ABILITY_DON_KIHOTE_WINDMILLS,
+    payload: { targetCell: { col: 5, row: 5 } },
+  });
+  assert(canonical.success, "server schema should accept canonical Windmills targetUnitId");
+  assert(legacy.success, "server schema should retain legacy Windmills targetId compatibility");
+  assert.equal(missingTarget.success, false, "server schema should reject Windmills without a unit target");
+  console.log("hardening_windmills_payload_schema passed");
 }
 
 function testPapyrusBoneChoicePayloadSchema() {
@@ -1925,9 +1952,94 @@ function testChikatiloCommandsAndResourcesAreAuthoritative() {
   console.log("hardening_chikatilo_commands_and_resources_authoritative passed");
 }
 
+function testWindmillsCommandsAreAuthoritative() {
+  const setup = (targetPosition: { col: number; row: number }) => {
+    const { room } = makeSeatedRoom({ roomIdPrefix: "hardening-windmills" });
+    let state = attachArmy(
+      attachArmy(
+        createEmptyGame(),
+        createDefaultArmy("P1", { rider: HERO_DON_KIHOTE_ID }),
+      ),
+      createDefaultArmy("P2", { berserker: HERO_KANEKI_ID }),
+    );
+    const don = Object.values(state.units).find(
+      (unit) => unit.owner === "P1" && unit.heroId === HERO_DON_KIHOTE_ID,
+    );
+    const target = Object.values(state.units).find(
+      (unit) => unit.owner === "P2" && !!unit.heroId,
+    );
+    assert(don && target, "expected Don Kihote and an enemy hero");
+    state = setUnit(state, don.id, {
+      position: { col: 4, row: 4 },
+      charges: { ...don.charges, [ABILITY_DON_KIHOTE_WINDMILLS]: 3 },
+      turn: makeEmptyTurnEconomy(),
+    });
+    state = setUnit(state, target.id, { position: targetPosition });
+    room.state = {
+      ...state,
+      phase: "battle",
+      currentPlayer: "P1",
+      activeUnitId: don.id,
+      pendingRoll: null,
+      turnOrder: [don.id],
+      turnOrderIndex: 0,
+      turnQueue: [don.id],
+      turnQueueIndex: 0,
+    };
+    return { room, don, target };
+  };
+
+  for (const targetPosition of [
+    { col: 5, row: 4 },
+    { col: 5, row: 5 },
+  ]) {
+    const { room, don, target } = setup(targetPosition);
+    const result = applyGameAction(
+      room,
+      {
+        type: "useAbility",
+        unitId: don.id,
+        abilityId: ABILITY_DON_KIHOTE_WINDMILLS,
+        payload: { targetUnitId: target.id },
+      },
+      "P1",
+    );
+    assert.equal(result.ok, true, "server should accept legal adjacent Windmills targets");
+    assert.equal(room.state.pendingRoll?.kind, "attack_attackerRoll");
+    assert.equal(room.state.pendingRoll?.context.defenderId, target.id);
+    assert.equal(room.state.units[don.id].turn.moveUsed, true);
+  }
+
+  const { room, don, target } = setup({ col: 6, row: 5 });
+  const stateBefore = room.state;
+  const revisionBefore = room.revision;
+  const logLengthBefore = room.actionLog.length;
+  const rejected = applyGameAction(
+    room,
+    {
+      type: "useAbility",
+      unitId: don.id,
+      abilityId: ABILITY_DON_KIHOTE_WINDMILLS,
+      payload: { targetUnitId: target.id },
+    },
+    "P1",
+  );
+  assert.equal(rejected.ok, false, "server should reject invalid Windmills geometry");
+  if (!rejected.ok) {
+    assert.equal(rejected.code, "windmills_target_not_legal");
+    assert.equal(rejected.message, "windmills_target_not_legal");
+  }
+  assert.equal(room.state, stateBefore, "rejected Windmills must preserve authoritative state");
+  assert.equal(room.revision, revisionBefore, "rejected Windmills must preserve revision");
+  assert.equal(room.actionLog.length, logLengthBefore, "rejected Windmills must not append action log");
+
+  console.log("hardening_windmills_commands_authoritative passed");
+}
+
 async function main() {
   testLokiLaughPayloadSchemas();
   testLightRayModePayloadSchemas();
+  testWindmillsPayloadSchema();
   testPapyrusBoneChoicePayloadSchema();
   await testGraceExpiryVacatesSeatAndInvalidatesToken();
   await testReconnectWithinGraceKeepsSeatAndClearsTimer();
@@ -1956,6 +2068,7 @@ async function main() {
   testHassanAssassinOrderCommandAndProjectionAreAuthoritative();
   testMissedHiddenAttackRevealIsAuthoritative();
   testChikatiloCommandsAndResourcesAreAuthoritative();
+  testWindmillsCommandsAreAuthoritative();
   console.log("hardening tests passed");
 }
 

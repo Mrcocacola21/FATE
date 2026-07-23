@@ -658,6 +658,154 @@ export function testNewPlayableBatchTransactionalActives() {
   console.log("new_playable_batch_transactional_actives passed");
 }
 
+export function testDonWindmillsAdjacentTargetsAndResolution() {
+  const directions = [
+    { col: 0, row: -1 },
+    { col: 0, row: 1 },
+    { col: -1, row: 0 },
+    { col: 1, row: 0 },
+    { col: -1, row: -1 },
+    { col: 1, row: -1 },
+    { col: -1, row: 1 },
+    { col: 1, row: 1 },
+  ];
+
+  for (const direction of directions) {
+    let { state, heroes, enemies } = setupBatch();
+    const don = heroes[HERO_DON_KIHOTE_ID];
+    const target = enemies.find((enemy) => enemy.heroId === HERO_ZORO_ID)!;
+    const origin = { col: 4, row: 4 };
+    const targetPosition = {
+      col: origin.col + direction.col,
+      row: origin.row + direction.row,
+    };
+    state = setUnit(state, don.id, {
+      position: origin,
+      charges: { ...don.charges, [ABILITY_DON_KIHOTE_WINDMILLS]: 3 },
+    });
+    state = setUnit(state, target.id, { position: targetPosition });
+    state = battleFor(state, state.units[don.id]);
+
+    const projectedTargets = makePlayerView(state, "P1").abilitiesByUnitId[don.id]
+      .find((ability) => ability.id === ABILITY_DON_KIHOTE_WINDMILLS)
+      ?.targeting?.targetIds ?? [];
+    assert(
+      projectedTargets.includes(target.id),
+      `Windmills should project adjacent target at ${direction.col},${direction.row}`,
+    );
+
+    const used = applyAction(state, {
+      type: "useAbility",
+      unitId: don.id,
+      abilityId: ABILITY_DON_KIHOTE_WINDMILLS,
+      payload: { targetUnitId: target.id },
+    } as any, makeRngSequence([]));
+    assert(
+      used.state.pendingRoll?.kind === "attack_attackerRoll",
+      `Windmills should attack adjacent target at ${direction.col},${direction.row}`,
+    );
+    assert(
+      used.state.pendingRoll?.context.defenderId === target.id,
+      "Windmills should preserve the selected adjacent Giant as defender",
+    );
+    assert(
+      used.state.units[don.id].position?.col === origin.col &&
+        used.state.units[don.id].position?.row === origin.row,
+      "an adjacent Windmills attack should not emit a self-dash",
+    );
+    assert(used.state.units[don.id].turn.moveUsed, "a legal adjacent Windmills attack spends Movement");
+    assert(
+      used.state.units[don.id].charges[ABILITY_DON_KIHOTE_WINDMILLS] === 0,
+      "a legal adjacent Windmills attack spends three charges",
+    );
+
+    if (direction.col === 1 && direction.row === -1) {
+      const hpBefore = target.hp;
+      const resolved = resolveAllPendingRollsWithEvents(
+        used.state,
+        makeRngSequence([0.99, 0.99, 0.01, 0.01]),
+      );
+      assert(!resolved.state.pendingRoll, "diagonal Windmills combat should fully resolve");
+      assert(
+        resolved.state.units[target.id].hp < hpBefore,
+        "a successful diagonal Windmills attack should damage the Giant",
+      );
+    }
+  }
+
+  {
+    let { state, heroes, enemies } = setupBatch();
+    const don = heroes[HERO_DON_KIHOTE_ID];
+    const target = enemies[0];
+    state = setUnit(state, don.id, {
+      position: { col: 4, row: 4 },
+      charges: { ...don.charges, [ABILITY_DON_KIHOTE_WINDMILLS]: 3 },
+    });
+    state = setUnit(state, target.id, { position: { col: 6, row: 5 } });
+    state = battleFor(state, state.units[don.id]);
+    const rejected = applyAction(state, {
+      type: "useAbility",
+      unitId: don.id,
+      abilityId: ABILITY_DON_KIHOTE_WINDMILLS,
+      payload: { targetUnitId: target.id },
+    } as any, makeRngSequence([]));
+    assert(rejected.state === state, "Windmills should reject a target outside its eight straight directions");
+    assert(
+      rejected.rejectionReason === "windmills_target_not_legal",
+      "invalid Windmills geometry should report an actionable rules reason",
+    );
+    assert(
+      state.units[don.id].charges[ABILITY_DON_KIHOTE_WINDMILLS] === 3 &&
+        !state.units[don.id].turn.moveUsed,
+      "rejected Windmills geometry must not spend charges or Movement",
+    );
+  }
+
+  {
+    let { state, heroes } = setupBatch();
+    const don = heroes[HERO_DON_KIHOTE_ID];
+    const ally = heroes[HERO_ZORO_ID];
+    state = setUnit(state, don.id, {
+      position: { col: 4, row: 4 },
+      charges: { ...don.charges, [ABILITY_DON_KIHOTE_WINDMILLS]: 3 },
+    });
+    state = setUnit(state, ally.id, { position: { col: 5, row: 5 } });
+    state = battleFor(state, state.units[don.id]);
+    const rejected = applyAction(state, {
+      type: "useAbility",
+      unitId: don.id,
+      abilityId: ABILITY_DON_KIHOTE_WINDMILLS,
+      payload: { targetUnitId: ally.id },
+    } as any, makeRngSequence([]));
+    assert(rejected.state === state, "Windmills should reject an adjacent ally without mutation");
+  }
+
+  {
+    let { state, heroes, enemies } = setupBatch();
+    const don = heroes[HERO_DON_KIHOTE_ID];
+    const deadTarget = enemies[0];
+    state = setUnit(state, don.id, {
+      position: { col: 4, row: 4 },
+      charges: { ...don.charges, [ABILITY_DON_KIHOTE_WINDMILLS]: 3 },
+    });
+    state = setUnit(state, deadTarget.id, {
+      isAlive: false,
+      hp: 0,
+      position: { col: 3, row: 3 },
+    });
+    state = battleFor(state, state.units[don.id]);
+    const rejected = applyAction(state, {
+      type: "useAbility",
+      unitId: don.id,
+      abilityId: ABILITY_DON_KIHOTE_WINDMILLS,
+      payload: { targetUnitId: deadTarget.id },
+    } as any, makeRngSequence([]));
+    assert(rejected.state === state, "Windmills should reject a dead adjacent target without mutation");
+  }
+
+  console.log("don_windmills_adjacent_targets_and_resolution passed");
+}
+
 export function testNewPlayableBatchLineAndRevealEffects() {
   let { state, heroes, enemies } = setupBatch();
   const luche = heroes[HERO_LUCHE_ID];

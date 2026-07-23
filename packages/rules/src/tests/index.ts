@@ -5,6 +5,7 @@ import {
   testCombatVisualMetadataProjectionDoesNotLeakHiddenUnits,
 } from "./core/combatVisualChain.test";
 import {
+  testDonWindmillsAdjacentTargetsAndResolution,
   testNewPlayableBatchLineAndRevealEffects,
   testNewPlayableBatchCombatCountersAndReactions,
   testNewPlayableBatchStatsResourcesAndMovement,
@@ -790,6 +791,7 @@ function main(): void {
   testArtemidaAndKanekiMovementModes();
   testArtemidaSilverSickleStopsAtSelectedEndpoint();
   testNewPlayableBatchTransactionalActives();
+  testDonWindmillsAdjacentTargetsAndResolution();
   testNewPlayableBatchLineAndRevealEffects();
   testLucheRadiancePassiveAndLightRayModes();
   testNewPlayableBatchCombatCountersAndReactions();

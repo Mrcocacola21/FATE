@@ -1218,6 +1218,10 @@ test("new hero previews expose targets, lines, areas, and trap placement without
         destinationsByTargetId: { [visibleEnemy.id]: [{ col: 5, row: 4 }, { col: 7, row: 4 }] },
       },
     } as any,
+    {
+      id: DON_WINDMILLS_ID,
+      targeting: { targetIds: [visibleEnemy.id] },
+    } as any,
   ];
 
   const push = buildAbilityPreview({ gameView: view, viewerPlayerId: "P1", sourceUnitId: source.id, abilityId: DUOLINGO_PUSH_NOTIFICATION_ID });
@@ -1275,6 +1279,64 @@ test("new hero previews expose targets, lines, areas, and trap placement without
   assert.equal(hasKind(offLineSickle, { col: 8, row: 5 }, "area"), false);
 
   assert.equal(collectTargets(push).some((target) => target.unitId === hiddenEnemy.id), false);
+});
+
+test("Windmills preview uses authoritative orthogonal and diagonal unit targets", () => {
+  const don = unit({
+    id: "don-windmills",
+    owner: "P1",
+    heroId: "donKihote",
+    class: "rider",
+    position: { col: 4, row: 4 },
+  });
+  const targets = [
+    unit({ id: "north", owner: "P2", heroId: "zoro", position: { col: 4, row: 3 } }),
+    unit({ id: "south", owner: "P2", heroId: "zoro", position: { col: 4, row: 5 } }),
+    unit({ id: "west", owner: "P2", heroId: "zoro", position: { col: 3, row: 4 } }),
+    unit({ id: "east", owner: "P2", heroId: "zoro", position: { col: 5, row: 4 } }),
+    unit({ id: "north-west", owner: "P2", heroId: "zoro", position: { col: 3, row: 3 } }),
+    unit({ id: "north-east", owner: "P2", heroId: "zoro", position: { col: 5, row: 3 } }),
+    unit({ id: "south-west", owner: "P2", heroId: "zoro", position: { col: 3, row: 5 } }),
+    unit({ id: "south-east", owner: "P2", heroId: "zoro", position: { col: 5, row: 5 } }),
+  ];
+  const invalidEnemy = unit({
+    id: "off-line",
+    owner: "P2",
+    heroId: "zoro",
+    position: { col: 6, row: 5 },
+  });
+  const view = makeView([don, ...targets, invalidEnemy]);
+  view.abilitiesByUnitId[don.id] = [{
+    id: DON_WINDMILLS_ID,
+    targeting: { targetIds: targets.map((target) => target.id) },
+  } as any];
+
+  const preview = buildAbilityPreview({
+    gameView: view,
+    viewerPlayerId: "P1",
+    sourceUnitId: don.id,
+    abilityId: DON_WINDMILLS_ID,
+  });
+  assert.deepEqual(validTargetIds(preview).sort(), targets.map((target) => target.id).sort());
+  for (const target of targets) {
+    assert.equal(
+      hasKind(preview, target.position!, "validTarget"),
+      true,
+      `${target.id} should be highlighted as a legal Windmills target`,
+    );
+  }
+  assert.equal(hasKind(preview, invalidEnemy.position!, "invalidTarget"), true);
+
+  const hovered = buildAbilityPreview({
+    gameView: view,
+    viewerPlayerId: "P1",
+    sourceUnitId: don.id,
+    abilityId: DON_WINDMILLS_ID,
+    targetingCell: { col: 5, row: 3 },
+  });
+  assert.equal(hasKind(hovered, { col: 5, row: 3 }, "line"), true);
+  assert.equal(hasKind(hovered, { col: 5, row: 3 }, "affected"), true);
+  assert.deepEqual(affectedTargetIds(hovered), ["north-east"]);
 });
 
 test("Oni Giri draws attack beams only to authoritative legal targets", () => {

@@ -9,6 +9,7 @@ import { canSpendSlots, spendSlots } from "../../turnEconomy";
 import { requestRoll } from "../../core";
 import { getAbilitySpec, getCharges, spendCharges } from "../../abilities";
 import {
+  getDonWindmillsPath,
   getDuolingoPushDestinations,
   getLucheLightRayAroundSelfCells,
   getLucheLightRayLine,
@@ -296,25 +297,41 @@ function applyDonReaction(state: GameState, unit: UnitState, action: AbilityActi
 }
 
 function applyDonWindmills(state: GameState, unit: UnitState, action: AbilityAction): ApplyResult {
-  if (unit.heroId !== HERO_DON_KIHOTE_ID || !unit.position) return { state, events: [] };
-  const targetId = typeof payload(action).targetId === "string" ? payload(action).targetId as string : "";
+  if (unit.heroId !== HERO_DON_KIHOTE_ID || !unit.position) {
+    return { state, events: [], rejectionReason: "invalid_windmills_user" };
+  }
+  const data = payload(action);
+  const targetId =
+    typeof data.targetUnitId === "string"
+      ? data.targetUnitId
+      : typeof data.targetId === "string"
+        ? data.targetId
+        : "";
   const target = state.units[targetId];
-  if (!target || !target.isAlive || !target.position || !target.heroId || target.owner === unit.owner || !canDirectlyTargetUnit(state, unit.id, target.id)) return { state, events: [] };
-  if (unit.blindUntilOwnTurnStart && chebyshev(unit.position, target.position) > 1) return { state, events: [] };
-  const path = linePath(unit.position, target.position);
-  if (!path || path.length < 2) return { state, events: [] };
+  if (!target) {
+    return { state, events: [], rejectionReason: "invalid_windmills_target" };
+  }
+  const path = getDonWindmillsPath(state, unit, target);
+  if (!path) {
+    return { state, events: [], rejectionReason: "windmills_target_not_legal" };
+  }
   const crossed = path.slice(1, -1).map((cell) => getUnitAt(state, cell)).filter((candidate): candidate is UnitState => !!candidate && candidate.owner !== unit.owner);
   const destination = path[path.length - 2];
-  const occupyingDestination = getUnitAt(state, destination);
-  if (occupyingDestination) return { state, events: [] };
   const spec = getAbilitySpec(ids.ABILITY_DON_KIHOTE_WINDMILLS);
-  if (!spec || !canSpendSlots(unit, spec.actionCost?.consumes)) return { state, events: [] };
+  if (!spec || !canSpendSlots(unit, spec.actionCost?.consumes)) {
+    return { state, events: [], rejectionReason: "windmills_move_unavailable" };
+  }
   const chargeSpend = spendCharges(unit, spec.id, 3);
-  if (!chargeSpend.ok) return { state, events: [] };
+  if (!chargeSpend.ok) {
+    return { state, events: [], rejectionReason: "windmills_not_enough_charges" };
+  }
   let moved = spendSlots(chargeSpend.unit, spec.actionCost?.consumes);
   moved = { ...moved, position: destination };
   let units = { ...state.units, [moved.id]: moved };
-  const events: GameEvent[] = [abilityUsed(moved.id, spec.id), { type: "unitMoved", unitId: moved.id, from: unit.position, to: destination }];
+  const events: GameEvent[] = [abilityUsed(moved.id, spec.id)];
+  if (!coordsEqual(unit.position, destination)) {
+    events.push({ type: "unitMoved", unitId: moved.id, from: unit.position, to: destination });
+  }
   events.push({ type: "chargesUpdated", unitId: moved.id, deltas: { [spec.id]: -3 }, now: { [spec.id]: getCharges(moved, spec.id) } });
   for (const passed of crossed) {
     const damaged = { ...passed, hp: Math.max(0, passed.hp - 1) };
@@ -344,7 +361,7 @@ function applyDonWindmills(state: GameState, unit: UnitState, action: AbilityAct
       return { state: requested.state, events: [...events, ...requested.events] };
     }
   }
-  const queued = queueNewHeroAttacks(movedState, moved, spec.id, [target.id], { center: target.position });
+  const queued = queueNewHeroAttacks(movedState, moved, spec.id, [target.id], { center: target.position! });
   return { state: queued.state, events: [...events, ...queued.events] };
 }
 

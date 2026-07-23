@@ -23,6 +23,7 @@ import type { AbilityCost, AbilitySpec } from "./types";
 import { collectAbilityIdsForUnit } from "./viewIds";
 import { canSpendSlots } from "../turnEconomy";
 import {
+  getDonWindmillsTargeting,
   getDuolingoPushTargeting,
   getLucheLightRayTargeting,
   getZoroOniGiriTargeting,
@@ -428,6 +429,8 @@ export function getAbilityViewsForUnit(state: GameState, unitId: string): Abilit
             ? { targetIds: getLegalChikatiloMarkTargetIds(state, unit) }
           : spec.id === ids.ABILITY_ZORO_ONI_GIRI
             ? getZoroOniGiriTargeting(state, unit)
+            : spec.id === ids.ABILITY_DON_KIHOTE_WINDMILLS
+              ? getDonWindmillsTargeting(state, unit)
             : spec.id === ids.ABILITY_LUCHE_DIVINE_RAY
               ? getLucheLightRayTargeting(state, unit)
               : undefined;

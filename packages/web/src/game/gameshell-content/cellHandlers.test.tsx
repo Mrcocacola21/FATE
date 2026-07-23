@@ -174,3 +174,83 @@ test("basic attack preview marks the shared cell and board renders the legal ene
   assert.match(markup, new RegExp(`data-unit-id="${enemies[0].id}"`));
   assert.doesNotMatch(markup, new RegExp(`data-unit-id="${hiddenAlly.id}"`));
 });
+
+test("Windmills click and mobile tap submit canonical authoritative unit targets", () => {
+  const don = unit({
+    id: "don",
+    owner: "P1",
+    heroId: "donKihote",
+    class: "rider",
+    position: { col: 4, row: 4 },
+  });
+  const orthogonal = unit({
+    id: "orthogonal-enemy",
+    owner: "P2",
+    heroId: "zoro",
+    position: { col: 5, row: 4 },
+  });
+  const diagonal = unit({
+    id: "diagonal-enemy",
+    owner: "P2",
+    heroId: "zoro",
+    position: { col: 5, row: 5 },
+  });
+  const invalid = unit({
+    id: "invalid-enemy",
+    owner: "P2",
+    heroId: "zoro",
+    position: { col: 6, row: 5 },
+  });
+  const view = {
+    ...sharedCellView().view,
+    activeUnitId: don.id,
+    units: {
+      [don.id]: don,
+      [orthogonal.id]: orthogonal,
+      [diagonal.id]: diagonal,
+      [invalid.id]: invalid,
+    },
+    abilitiesByUnitId: {
+      [don.id]: [{
+        id: "donKihoteWindmills",
+        targeting: { targetIds: [orthogonal.id, diagonal.id] },
+      }],
+    },
+  } as PlayerView;
+  const sent: unknown[] = [];
+  const clearedModes: unknown[] = [];
+  const makeHandler = () => createCellClickHandler({
+    view,
+    playerId: "P1",
+    joined: true,
+    isSpectator: false,
+    hasBlockingRoll: false,
+    boardSelectionPending: false,
+    actionMode: "donWindmills",
+    selectedUnitId: don.id,
+    legalAttackTargets: [],
+    sendGameAction: (action: unknown) => sent.push(action),
+    setActionMode: (mode: unknown) => clearedModes.push(mode),
+    sendAction: () => undefined,
+  } as never);
+
+  makeHandler()(5, 4);
+  makeHandler()(5, 5);
+  makeHandler()(6, 5);
+
+  assert.deepEqual(sent, [
+    {
+      type: "useAbility",
+      unitId: don.id,
+      abilityId: "donKihoteWindmills",
+      payload: { targetUnitId: orthogonal.id },
+    },
+    {
+      type: "useAbility",
+      unitId: don.id,
+      abilityId: "donKihoteWindmills",
+      payload: { targetUnitId: diagonal.id },
+    },
+  ]);
+  assert.deepEqual(clearedModes, [null, null]);
+});

@@ -723,18 +723,41 @@ export function buildAbilityPreview({
       ]);
     }
     case DON_WINDMILLS_ID: {
-      const targetIds = allVisibleEnemyIds(gameView, source).filter((id) => {
-        const target = gameView.units[id];
-        if (!target?.position) return false;
-        const dx = Math.abs(target.position.col - source.position!.col);
-        const dy = Math.abs(target.position.row - source.position!.row);
-        return dx === 0 || dy === 0 || dx === dy;
-      });
+      const targetIds =
+        gameView.abilitiesByUnitId?.[source.id]?.find(
+          (ability) => ability.id === DON_WINDMILLS_ID,
+        )?.targeting?.targetIds ?? [];
+      const hoveredTargetId =
+        selectedTargetId && targetIds.includes(selectedTargetId)
+          ? selectedTargetId
+          : targetingCell
+            ? Object.values(gameView.units).find(
+                (unit) =>
+                  !!unit.position &&
+                  coordKey(unit.position) === coordKey(targetingCell) &&
+                  targetIds.includes(unit.id),
+              )?.id
+            : undefined;
+      const previewTargetIds = hoveredTargetId ? [hoveredTargetId] : targetIds;
       return {
         kind: "line",
         sourceCell: { ...source.position },
-        lineCells: lineCellsToTargets(source.position, cellsFromTargetIds(gameView, targetIds)),
+        lineCells: lineCellsToTargets(
+          source.position,
+          cellsFromTargetIds(gameView, previewTargetIds),
+        ),
         validTargets: targetRefsFromIds(gameView, targetIds),
+        invalidTargets: visibleUnitTargets(
+          gameView,
+          (unit) =>
+            unit.id !== source.id &&
+            unit.owner !== source.owner &&
+            !targetIds.includes(unit.id),
+          true,
+        ),
+        affectedTargets: hoveredTargetId
+          ? targetRefsFromIds(gameView, [hoveredTargetId])
+          : undefined,
         labelKey: "preview.labels.selectTarget",
       };
     }

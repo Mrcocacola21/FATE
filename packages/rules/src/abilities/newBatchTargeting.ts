@@ -1,5 +1,5 @@
 import type { AbilityTargetingView, Coord, GameState, UnitState } from "../model";
-import { chebyshev, isCellOccupied } from "../board";
+import { chebyshev, coordsEqual, isCellOccupied } from "../board";
 import { isInsideBoard } from "../model";
 import { linePath } from "../path";
 import { canDirectlyTargetUnit } from "../visibility";
@@ -148,5 +148,52 @@ export function getZoroOniGiriTargeting(state: GameState, unit: UnitState): Abil
   return {
     targetIds: Object.keys(destinationsByTargetId),
     destinationsByTargetId,
+  };
+}
+
+export function isAdjacent8(from: Coord, to: Coord): boolean {
+  return chebyshev(from, to) === 1;
+}
+
+export function getDonWindmillsPath(
+  state: GameState,
+  unit: UnitState,
+  target: UnitState,
+): Coord[] | null {
+  if (
+    !unit.position ||
+    !target.isAlive ||
+    !target.position ||
+    !target.heroId ||
+    target.owner === unit.owner ||
+    !canDirectlyTargetUnit(state, unit.id, target.id) ||
+    (unit.blindUntilOwnTurnStart && !isAdjacent8(unit.position, target.position))
+  ) {
+    return null;
+  }
+
+  const path = linePath(unit.position, target.position);
+  if (!path || path.length < 2) return null;
+
+  // When the Giant is adjacent, the cell immediately before it is Don's own
+  // cell. That is a legal no-distance dash, not a blocked destination.
+  const destination = path[path.length - 2];
+  if (
+    !coordsEqual(destination, unit.position) &&
+    isCellOccupied(state, destination)
+  ) {
+    return null;
+  }
+  return path;
+}
+
+export function getDonWindmillsTargeting(
+  state: GameState,
+  unit: UnitState,
+): AbilityTargetingView {
+  return {
+    targetIds: Object.values(state.units)
+      .filter((target) => !!getDonWindmillsPath(state, unit, target))
+      .map((target) => target.id),
   };
 }

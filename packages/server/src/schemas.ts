@@ -270,6 +270,12 @@ const UseAbilityActionSchema = z.object({
   payload: z.unknown().optional(),
 });
 
+const WindmillsPayloadSchema = z.union([
+  z.object({ targetUnitId: z.string().min(1) }).passthrough(),
+  // Compatibility for commands created by clients predating targetUnitId.
+  z.object({ targetId: z.string().min(1) }).passthrough(),
+]);
+
 export const GameActionSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("rollInitiative") }),
   z.object({ type: z.literal("chooseArena"), arenaId: z.string() }),
@@ -314,6 +320,19 @@ export const GameActionSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("endTurn") }),
   z.object({ type: z.literal("unitStartTurn"), unitId: z.string() }),
 ]).superRefine((action, ctx) => {
+  if (
+    action.type === "useAbility" &&
+    action.abilityId === "donKihoteWindmills"
+  ) {
+    if (!WindmillsPayloadSchema.safeParse(action.payload).success) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["payload", "targetUnitId"],
+        message: "Windmills requires a target unit",
+      });
+    }
+    return;
+  }
   if (
     action.type === "useAbility" &&
     action.abilityId === "lucheDivineRay"
