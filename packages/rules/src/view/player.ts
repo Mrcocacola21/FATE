@@ -30,6 +30,7 @@ export function makePlayerView(
 ): PlayerView {
   const {
     pendingRoll,
+    combatResolutionChain: _combatResolutionChain,
     rollCounter,
     pendingCombatQueue,
     pendingAoE,

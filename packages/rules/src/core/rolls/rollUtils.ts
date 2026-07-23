@@ -8,6 +8,7 @@ import type {
 } from "../../model";
 import { evInitiativeRollRequested, evRollRequested } from "../events/combatEvents";
 import { createPendingRollContext } from "./pendingRollContext";
+import { getOrCreateCombatResolutionChain } from "./combatVisualChain";
 
 export function requestRoll(
   state: GameState,
@@ -21,11 +22,22 @@ export function requestRoll(
   }
   const nextCounter = (state.rollCounter ?? 0) + 1;
   const rollId = `roll-${nextCounter}`;
+  const combatChain = getOrCreateCombatResolutionChain({
+    state,
+    kind,
+    context,
+    nextRollCounter: nextCounter,
+  });
   const pendingRoll: PendingRoll = {
     id: rollId,
     player,
     kind,
     context,
+    chainId: combatChain?.chainId,
+    visualBatchId: combatChain?.chainId,
+    chainSource: combatChain?.source,
+    pendingRollsRemaining: combatChain?.pendingRollsRemaining,
+    deferVisuals: combatChain ? true : undefined,
     presentation: createPendingRollContext({
       state,
       requestedPlayerId: player,
@@ -38,6 +50,7 @@ export function requestRoll(
     ...state,
     pendingRoll,
     rollCounter: nextCounter,
+    combatResolutionChain: combatChain,
   };
   const events: GameEvent[] = [evRollRequested({ rollId, kind, player, actorUnitId })];
   return { state: nextState, events };

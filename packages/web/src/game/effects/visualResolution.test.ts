@@ -57,6 +57,29 @@ function aoe(): GameEvent {
   };
 }
 
+function deferred(
+  event: GameEvent,
+  chainId: string,
+): GameEvent {
+  return {
+    ...event,
+    chainId,
+    visualBatchId: chainId,
+    deferVisuals: true,
+    isChainComplete: false,
+  } as GameEvent;
+}
+
+function complete(chainId: string): GameEvent {
+  return {
+    type: "combatVisualBatchReady",
+    chainId,
+    visualBatchId: chainId,
+    deferVisuals: false,
+    isChainComplete: true,
+  };
+}
+
 test("an incomplete AoE buffers result events and freezes visual HP", () => {
   let state = createVisualResolutionState({
     batch: { logIndex: 0, events: [] },
@@ -206,4 +229,92 @@ test("a single-target attack stays responsive and reconnect baselines safely", (
   });
   assert.equal(state.visualHpByUnitId.target, 2);
   assert.equal(state.visualBatch, null, "reconnect must not replay historical VFX");
+});
+
+test("Rider pass buffers every attack until its explicit chain completion marker", () => {
+  const chainId = "combat-chain-rider";
+  let state = createVisualResolutionState({
+    batch: { logIndex: 0, events: [] },
+    view: view({ hp: 5 }),
+    enabled: true,
+  });
+
+  state = advanceVisualResolution(state, {
+    batch: { logIndex: 1, events: [deferred(attack(1, 4), chainId)] },
+    view: view({ hp: 4 }),
+    enabled: true,
+  });
+  assert.equal(state.visualBatch, null);
+  assert.equal(state.visualHpByUnitId.target, 5);
+  assert.equal(state.deferredVisualsByChainId.get(chainId)?.length, 1);
+
+  state = advanceVisualResolution(state, {
+    batch: {
+      logIndex: 2,
+      events: [deferred(attack(1, 3), chainId), complete(chainId)],
+    },
+    view: view({ hp: 3 }),
+    enabled: true,
+  });
+  assert.equal(state.visualHpByUnitId.target, 3);
+  assert.equal(state.deferredVisualsByChainId.size, 0);
+  assert.equal(
+    state.visualBatch?.events.filter((event) => event.type === "attackResolved").length,
+    2,
+  );
+});
+
+test("El Cid and Jack chains remain deferred without queue-shaped view metadata", () => {
+  for (const chainId of ["combat-chain-el-cid", "combat-chain-jack"]) {
+    let state = createVisualResolutionState({
+      batch: { logIndex: 0, events: [] },
+      view: view({ hp: 5 }),
+      enabled: true,
+    });
+    state = advanceVisualResolution(state, {
+      batch: { logIndex: 1, events: [deferred(attack(2, 3), chainId)] },
+      view: view({ hp: 3 }),
+      enabled: true,
+    });
+    assert.equal(state.visualBatch, null);
+    assert.equal(state.visualHpByUnitId.target, 5);
+
+    state = advanceVisualResolution(state, {
+      batch: { logIndex: 2, events: [complete(chainId)] },
+      view: view({ hp: 3 }),
+      enabled: true,
+    });
+    assert.equal(state.visualBatch?.events[0]?.type, "attackResolved");
+    assert.equal(state.visualHpByUnitId.target, 3);
+    assert.equal(state.deferredVisualsByChainId.size, 0);
+  }
+});
+
+test("an explicit deferred batch is not replayed and reconnect clears stale buffers", () => {
+  const chainId = "combat-chain-reconnect";
+  let state = createVisualResolutionState({
+    batch: { logIndex: 0, events: [] },
+    view: view({ hp: 5 }),
+    enabled: true,
+  });
+  state = advanceVisualResolution(state, {
+    batch: { logIndex: 1, events: [deferred(attack(1, 4), chainId)] },
+    view: view({ hp: 4 }),
+    enabled: true,
+  });
+  const same = advanceVisualResolution(state, {
+    batch: { logIndex: 1, events: [deferred(attack(1, 4), chainId)] },
+    view: view({ hp: 4 }),
+    enabled: true,
+  });
+  assert.strictEqual(same, state);
+  assert.equal(same.deferredVisualsByChainId.get(chainId)?.length, 1);
+
+  const reconnected = createVisualResolutionState({
+    batch: { logIndex: 5, events: [complete(chainId)] },
+    view: view({ hp: 4 }),
+    enabled: true,
+  });
+  assert.equal(reconnected.deferredVisualsByChainId.size, 0);
+  assert.equal(reconnected.visualBatch, null);
 });

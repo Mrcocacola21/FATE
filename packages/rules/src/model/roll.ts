@@ -1,5 +1,28 @@
 import type { Coord, PlayerId } from "./shared";
 
+export type CombatChainSource =
+  | "riderPass"
+  | "elCidUltimate"
+  | "jackRipperUltimate"
+  | "aoe"
+  | "multiAttack"
+  | "controlledAttack"
+  | "normal";
+
+export interface CombatResolutionChain {
+  chainId: string;
+  source: CombatChainSource;
+  pendingRollsRemaining: number;
+  isComplete: boolean;
+}
+
+export interface CombatVisualEventMetadata extends Record<string, unknown> {
+  chainId?: string;
+  visualBatchId?: string;
+  isChainComplete?: boolean;
+  deferVisuals?: boolean;
+}
+
 export interface DiceRoll {
   dice: number[];
   sum: number;
@@ -276,6 +299,11 @@ export interface PendingRoll {
   player: PlayerId;
   kind: RollKind;
   context: Record<string, unknown>;
+  chainId?: string;
+  visualBatchId?: string;
+  chainSource?: CombatChainSource;
+  pendingRollsRemaining?: number;
+  deferVisuals?: boolean;
   /** Optional for compatibility with saved games created before contextual roll UI. */
   presentation?: PendingRollContext;
 }

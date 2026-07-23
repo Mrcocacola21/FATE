@@ -14,6 +14,13 @@ import type {
 
 export type CoreGameEvent =
   | {
+      type: "combatVisualBatchReady";
+      chainId: string;
+      visualBatchId: string;
+      isChainComplete: true;
+      deferVisuals: false;
+    }
+  | {
       type: "turnStarted";
       player: PlayerId;
       turnNumber: number;

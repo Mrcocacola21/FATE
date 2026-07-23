@@ -35,6 +35,7 @@ export function createEmptyGame(): GameState {
     activeUnitId: null,
     pendingMove: null,
     pendingRoll: null,
+    combatResolutionChain: null,
     pendingCombatQueue: [],
     pendingAoE: null,
     rollCounter: 0,

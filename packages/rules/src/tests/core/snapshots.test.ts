@@ -100,8 +100,14 @@ export function testGoldenSnapshotAoeWithIntimidateChain() {
     otherHp: currentState.units[other.id]?.hp ?? null,
   };
 
+  const expectedChainMetadata = {
+    chainId: "combat-chain-1",
+    visualBatchId: "combat-chain-1",
+    deferVisuals: true,
+    isChainComplete: false,
+  };
   const expected = {
-    events: [
+    events: ([
       {
         type: "abilityUsed",
         unitId: "P1-trickster-3",
@@ -185,7 +191,15 @@ export function testGoldenSnapshotAoeWithIntimidateChain() {
         damagedUnitIds: [],
         damageByUnitId: {},
       },
-    ],
+    ] as any[])
+      .map((event) => ({ ...event, ...expectedChainMetadata }))
+      .concat({
+        type: "combatVisualBatchReady",
+        chainId: "combat-chain-1",
+        visualBatchId: "combat-chain-1",
+        deferVisuals: false,
+        isChainComplete: true,
+      }),
     phase: "battle",
     turnNumber: 1,
     pendingRoll: { kind: "vladIntimidateChoice", player: "P2", resumeIndex: 2 },

@@ -25,6 +25,7 @@ import {
   applyRuleDeclarationWinChecks,
 } from "../ruleDeclarations";
 import { GAME_OVER_REJECTION } from "../gameOver";
+import { finalizeCombatVisualChain } from "../core";
 import {
   applyOrangeBoneNonMovePenalty,
   canStartOrangeBoneNonMove,
@@ -98,6 +99,12 @@ function applyCoreAction(
     default:
       return { state, events: [] };
   }
+}
+
+function finalizeVisuals(result: ApplyResult): ApplyResult {
+  if (result.rejectionReason) return result;
+  const finalized = finalizeCombatVisualChain(result.state, result.events);
+  return { ...result, ...finalized };
 }
 
 export function applyAction(
@@ -190,7 +197,9 @@ export function applyAction(
     ...afterFrisk,
     state: cleanupJackTrapsForDeaths(afterFrisk.state, afterFrisk.events),
   };
-  if (afterJackDeathCleanup.state.phase === "ended") return afterJackDeathCleanup;
+  if (afterJackDeathCleanup.state.phase === "ended") {
+    return finalizeVisuals(afterJackDeathCleanup);
+  }
   const afterMettaton = applyMettatonImpulseUnlocks(
     afterJackDeathCleanup.state,
     afterJackDeathCleanup.events
@@ -210,18 +219,18 @@ export function applyAction(
     afterRuleAttack.events
   );
   if (afterWinChecks.state.phase === "ended") {
-    return {
+    return finalizeVisuals({
       ...afterWinChecks,
       state: {
         ...afterWinChecks.state,
         pendingPapyrusBoneChoices: [],
       },
-    };
+    });
   }
 
   const papyrusBoneChoice = maybeRequestPapyrusBoneChoice(afterWinChecks.state);
-  return {
+  return finalizeVisuals({
     state: papyrusBoneChoice.state,
     events: [...afterWinChecks.events, ...papyrusBoneChoice.events],
-  };
+  });
 }

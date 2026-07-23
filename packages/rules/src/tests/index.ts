@@ -1,5 +1,10 @@
 import { testActionModuleBoundaries } from "./core/boundaries.test";
 import {
+  testCombatVisualChainCompletesOnlyAfterNestedFollowups,
+  testCombatVisualChainIdsStayStableAcrossRelatedRolls,
+  testCombatVisualMetadataProjectionDoesNotLeakHiddenUnits,
+} from "./core/combatVisualChain.test";
+import {
   testNewPlayableBatchLineAndRevealEffects,
   testNewPlayableBatchCombatCountersAndReactions,
   testNewPlayableBatchStatsResourcesAndMovement,
@@ -437,6 +442,9 @@ function main(): void {
   // Full test run: preserve the historical simpleTests.ts execution order.
   console.log("Running full simpleTests suite");
   testPendingRollActionsExportsStable();
+  testCombatVisualChainIdsStayStableAcrossRelatedRolls();
+  testCombatVisualChainCompletesOnlyAfterNestedFollowups();
+  testCombatVisualMetadataProjectionDoesNotLeakHiddenUnits();
   testDebugSpawnUsesCatalogMetadata();
   testDebugChargeAndStatusMutation();
   testDebugDiceQueueControlsRolls();

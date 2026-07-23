@@ -5,6 +5,7 @@ export type EventRecipient = PlayerId | "spectator";
 
 const PUBLIC_EVENT_TYPES = new Set<GameEvent["type"]>([
   "turnStarted",
+  "combatVisualBatchReady",
   "roundStarted",
   "attackResolved",
   "unitDied",
@@ -305,5 +306,31 @@ export function projectEventsForRecipient(
   events: GameEvent[],
   recipient: EventRecipient
 ): GameEvent[] {
-  return events.flatMap((event) => projectEventForRecipient(state, event, recipient));
+  return events.flatMap((event) =>
+    projectEventForRecipient(state, event, recipient).map(
+      (projected) => {
+        if (
+          event.chainId === undefined &&
+          event.visualBatchId === undefined &&
+          event.isChainComplete === undefined &&
+          event.deferVisuals === undefined
+        ) {
+          return projected;
+        }
+        return {
+          ...projected,
+          ...(event.chainId !== undefined ? { chainId: event.chainId } : {}),
+          ...(event.visualBatchId !== undefined
+            ? { visualBatchId: event.visualBatchId }
+            : {}),
+          ...(event.isChainComplete !== undefined
+            ? { isChainComplete: event.isChainComplete }
+            : {}),
+          ...(event.deferVisuals !== undefined
+            ? { deferVisuals: event.deferVisuals }
+            : {}),
+        } as GameEvent;
+      },
+    ),
+  );
 }

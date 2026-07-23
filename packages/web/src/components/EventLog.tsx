@@ -91,6 +91,9 @@ function searchEventRevealedUnit(event: GameEvent, unitId: string): boolean {
 }
 
 function shouldDisplayEvent(event: GameEvent, allEvents: GameEvent[]): boolean {
+  if (event.type === "combatVisualBatchReady") {
+    return false;
+  }
   if (
     event.type === "stealthRevealed" &&
     event.reason === "search" &&

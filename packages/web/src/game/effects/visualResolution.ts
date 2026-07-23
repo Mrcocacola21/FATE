@@ -9,6 +9,8 @@ export interface VisualResolutionState {
   enabled: boolean;
   lastProcessedLogIndex: number;
   groupActive: boolean;
+  deferredVisualsByChainId: Map<string, GameEvent[]>;
+  /** Compatibility buffer for older servers that expose only pending queue state. */
   bufferedEvents: GameEvent[];
   visualBatch: BoardEventBatch | null;
   visualHpByUnitId: VisualHpByUnitId;
@@ -97,6 +99,7 @@ export function createVisualResolutionState(
     enabled: input.enabled,
     lastProcessedLogIndex: input.batch?.logIndex ?? -1,
     groupActive: input.enabled && isVisualResolutionPending(input.view),
+    deferredVisualsByChainId: new Map(),
     bufferedEvents: [],
     visualBatch: null,
     visualHpByUnitId: snapshotVisualHp(input.view),
@@ -117,7 +120,10 @@ export function advanceVisualResolution(
     input.batch && input.batch.logIndex > state.lastProcessedLogIndex
       ? input.batch
       : null;
-  const groupActive = state.groupActive || pending;
+  const groupActive =
+    state.groupActive ||
+    pending ||
+    state.deferredVisualsByChainId.size > 0;
 
   if (!freshBatch) {
     return groupActive === state.groupActive
@@ -125,36 +131,81 @@ export function advanceVisualResolution(
       : { ...state, groupActive, visualBatch: null };
   }
 
-  if (pending) {
+  const deferredVisualsByChainId = new Map(state.deferredVisualsByChainId);
+  let legacyBufferedEvents = [...state.bufferedEvents];
+  const playableEvents: GameEvent[] = [];
+  let explicitChainEventSeen = false;
+
+  for (const event of freshBatch.events) {
+    const chainId = event.chainId ?? event.visualBatchId;
+    if (chainId && event.isChainComplete) {
+      explicitChainEventSeen = true;
+      playableEvents.push(...(deferredVisualsByChainId.get(chainId) ?? []));
+      deferredVisualsByChainId.delete(chainId);
+      continue;
+    }
+    if (chainId && event.deferVisuals) {
+      explicitChainEventSeen = true;
+      const buffered = deferredVisualsByChainId.get(chainId) ?? [];
+      deferredVisualsByChainId.set(chainId, [...buffered, event]);
+      continue;
+    }
+    playableEvents.push(event);
+  }
+
+  if (explicitChainEventSeen) {
+    if (legacyBufferedEvents.length > 0 && !pending) {
+      playableEvents.unshift(...legacyBufferedEvents);
+      legacyBufferedEvents = [];
+    }
+  } else if (pending) {
+    legacyBufferedEvents.push(...playableEvents.splice(0));
+  } else if (groupActive && legacyBufferedEvents.length > 0) {
+    playableEvents.unshift(...legacyBufferedEvents);
+    legacyBufferedEvents = [];
+  }
+
+  const nextGroupActive =
+    pending ||
+    deferredVisualsByChainId.size > 0 ||
+    legacyBufferedEvents.length > 0;
+
+  if (playableEvents.length === 0) {
     return {
       ...state,
       lastProcessedLogIndex: freshBatch.logIndex,
-      groupActive: true,
-      bufferedEvents: [...state.bufferedEvents, ...freshBatch.events],
+      groupActive: nextGroupActive,
+      deferredVisualsByChainId,
+      bufferedEvents: legacyBufferedEvents,
       visualBatch: null,
     };
   }
 
-  if (groupActive) {
-    const events = collapseCompletedVisualResolutionEvents([
-      ...state.bufferedEvents,
-      ...freshBatch.events,
-    ]);
+  if (groupActive || explicitChainEventSeen) {
+    const events = collapseCompletedVisualResolutionEvents(playableEvents);
     return {
       ...state,
       lastProcessedLogIndex: freshBatch.logIndex,
-      groupActive: false,
-      bufferedEvents: [],
+      groupActive: nextGroupActive,
+      deferredVisualsByChainId,
+      bufferedEvents: legacyBufferedEvents,
       visualBatch: { logIndex: freshBatch.logIndex, events },
-      visualHpByUnitId: snapshotVisualHp(input.view),
-      visualUnitsByUnitId: snapshotVisualUnits(input.view),
+      visualHpByUnitId: nextGroupActive
+        ? state.visualHpByUnitId
+        : snapshotVisualHp(input.view),
+      visualUnitsByUnitId: nextGroupActive
+        ? state.visualUnitsByUnitId
+        : snapshotVisualUnits(input.view),
     };
   }
 
   return {
     ...state,
     lastProcessedLogIndex: freshBatch.logIndex,
-    visualBatch: freshBatch,
+    groupActive: nextGroupActive,
+    deferredVisualsByChainId,
+    bufferedEvents: legacyBufferedEvents,
+    visualBatch: { logIndex: freshBatch.logIndex, events: playableEvents },
     visualHpByUnitId: snapshotVisualHp(input.view),
     visualUnitsByUnitId: snapshotVisualUnits(input.view),
   };

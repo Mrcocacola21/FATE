@@ -4,6 +4,7 @@ import {
   ABILITY_DON_KIHOTE_WINDMILLS,
   ABILITY_DUOLINGO_PUSH_NOTIFICATION,
   ABILITY_DUOLINGO_SKIP_CLASSES,
+  ABILITY_JACK_RIPPER_DISMEMBERMENT,
   ABILITY_JACK_RIPPER_SNARES,
   ABILITY_KANEKI_RC_CELLS,
   ABILITY_KANEKI_REGENERATION,
@@ -37,6 +38,7 @@ import {
   makeEmptyTurnEconomy,
   makeRngSequence,
   resolveAllPendingRollsWithEvents,
+  resolvePendingRollOnce,
   setUnit,
   toBattleState,
   type GameState,
@@ -482,6 +484,76 @@ export function testNewPlayableBatchTransactionalActives() {
     }, rng);
     assert(used.state.pendingRoll?.kind === "attack_attackerRoll", "Santoryu should begin one shared two-target attack sequence");
     assert(used.state.pendingCombatQueue?.length === 2, "Santoryu should queue both unique legal targets");
+  }
+
+  {
+    let { state, heroes, enemies } = setupBatch();
+    const jack = heroes[HERO_JACK_RIPPER_ID];
+    const target = enemies.find((unit) => unit.class === "archer")!;
+    state = setUnit(state, jack.id, {
+      position: { col: 1, row: 1 },
+      turn: makeEmptyTurnEconomy(),
+    });
+    state = setUnit(state, target.id, { position: { col: 2, row: 1 } });
+    state = battleFor(
+      {
+        ...state,
+        jackTraps: [
+          {
+            id: "jack-chain-trap",
+            sourceUnitId: jack.id,
+            owner: jack.owner,
+            position: { col: 2, row: 1 },
+            isRevealed: true,
+            triggeredTargetIds: [],
+          },
+        ],
+      },
+      state.units[jack.id],
+    );
+    const chainRng = makeRngSequence([
+      0.99, 0.99, 0.01, 0.01,
+      0.99, 0.99, 0.01, 0.01,
+      0.99, 0.99, 0.01, 0.01,
+      0.99, 0.99, 0.01, 0.01,
+    ]);
+    let step = applyAction(state, {
+      type: "useAbility",
+      unitId: jack.id,
+      abilityId: ABILITY_JACK_RIPPER_DISMEMBERMENT,
+      payload: { targetId: target.id },
+    } as any, chainRng);
+    const chainId = step.state.pendingRoll?.chainId;
+    assert(chainId, "Jack's four-hit phantasm should start one visual chain");
+    assert(
+      step.state.pendingRoll?.chainSource === "jackRipperUltimate",
+      "Jack's repeated attacks should expose the correct chain source",
+    );
+    const chainEvents = [...step.events];
+    while (step.state.pendingRoll) {
+      step = resolvePendingRollOnce(step.state, chainRng);
+      const completeBeforePendingEnded = step.events.some(
+        (event) => event.type === "combatVisualBatchReady",
+      );
+      assert(
+        !step.state.pendingRoll || !completeBeforePendingEnded,
+        "Jack's chain must not emit its completion marker between rolls",
+      );
+      chainEvents.push(...step.events);
+    }
+    assert(
+      chainEvents
+        .filter((event) => event.type !== "combatVisualBatchReady")
+        .every(
+          (event) => event.chainId === chainId && event.deferVisuals === true,
+        ),
+      "all Jack attack, damage, status, and death events should stay deferred together",
+    );
+    assert(
+      chainEvents.filter((event) => event.type === "combatVisualBatchReady")
+        .length === 1,
+      "Jack's full phantasm should emit exactly one final visual batch marker",
+    );
   }
 
   {

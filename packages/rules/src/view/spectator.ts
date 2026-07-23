@@ -11,6 +11,7 @@ import { projectRuleDeclarationState } from "./ruleDeclarations";
 export function makeSpectatorView(state: GameState): PlayerView {
   const {
     pendingRoll,
+    combatResolutionChain: _combatResolutionChain,
     rollCounter,
     pendingCombatQueue,
     pendingAoE,

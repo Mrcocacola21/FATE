@@ -2,6 +2,7 @@ import type { AbilityView, Coord, GameOverResult, PlayerId } from "./shared";
 import type { GameEvent } from "./events";
 import type { RuleDeclarationState } from "../ruleDeclarations/types";
 import type {
+  CombatResolutionChain,
   ForestMarker,
   PendingAoEResolution,
   PendingCombatQueueEntry,
@@ -60,6 +61,8 @@ export interface GameState {
   activeUnitId: string | null;
   pendingMove: PendingMove | null;
   pendingRoll: PendingRoll | null;
+  /** Internal authoritative visual boundary; omitted from projected player views. */
+  combatResolutionChain?: CombatResolutionChain | null;
   pendingCombatQueue: PendingCombatQueueEntry[];
   pendingAoE: PendingAoEResolution | null;
   /** Successful transformed-Papyrus hits waiting for an authoritative choice. */
@@ -130,6 +133,7 @@ export type PlayerView = Omit<
   | "knowledge"
   | "lastKnownPositions"
   | "pendingRoll"
+  | "combatResolutionChain"
   | "rollCounter"
   | "pendingCombatQueue"
   | "pendingAoE"
