@@ -1,24 +1,16 @@
 import type { GameEvent, GameState, UnitState } from "../model";
+import { clearUnitStealth } from "./state";
 
 export function revealAttackerOnAttackAttempt(
   state: GameState,
-  attackerId: string
+  attackerId: string,
 ): { state: GameState; events: GameEvent[]; wasStealthed: boolean } {
   const attacker = state.units[attackerId];
-  if (
-    !attacker ||
-    !attacker.isAlive ||
-    !attacker.position ||
-    !attacker.isStealthed
-  ) {
+  if (!attacker || !attacker.isAlive || !attacker.position || !attacker.isStealthed) {
     return { state, events: [], wasStealthed: false };
   }
 
-  const revealed: UnitState = {
-    ...attacker,
-    isStealthed: false,
-    stealthTurnsLeft: 0,
-  };
+  const revealed: UnitState = clearUnitStealth(attacker);
   const lastKnownPositions = {
     ...state.lastKnownPositions,
     P1: { ...(state.lastKnownPositions?.P1 ?? {}) },

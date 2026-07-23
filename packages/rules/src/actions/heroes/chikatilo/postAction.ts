@@ -1,18 +1,14 @@
-import type {
-  ApplyResult,
-  GameEvent,
-  GameState,
-  UnitState,
-} from "../../../model";
+import type { ApplyResult, GameEvent, GameState, UnitState } from "../../../model";
 import { evUnitDied } from "../../../core";
 import { HERO_CHIKATILO_ID, HERO_FALSE_TRAIL_TOKEN_ID } from "../../../heroes";
 import type { RNG } from "../../../rng";
 import { rollContest } from "./helpers";
 import { applyFalseTrailExplosionImmediately } from "./actions";
+import { clearUnitStealth } from "../../../stealth";
 
 function revealChikatiloImmediately(
   state: GameState,
-  chikatiloId: string
+  chikatiloId: string,
 ): { state: GameState; events: GameEvent[] } {
   const chikatilo = state.units[chikatiloId];
   if (!chikatilo || !chikatilo.isAlive || !chikatilo.position) {
@@ -22,11 +18,7 @@ function revealChikatiloImmediately(
     return { state, events: [] };
   }
 
-  const updated: UnitState = {
-    ...chikatilo,
-    isStealthed: false,
-    stealthTurnsLeft: 0,
-  };
+  const updated: UnitState = clearUnitStealth(chikatilo);
 
   const nextState: GameState = {
     ...state,
@@ -68,7 +60,7 @@ function performFalseTrailTrap(
   state: GameState,
   tokenId: string,
   targetId: string,
-  rng: RNG
+  rng: RNG,
 ): { state: GameState; events: GameEvent[] } {
   const target = state.units[targetId];
   if (!target || !target.isAlive) {
@@ -124,7 +116,7 @@ function performFalseTrailTrap(
 export function applyChikatiloPostAction(
   state: GameState,
   events: GameEvent[],
-  rng: RNG
+  rng: RNG,
 ): ApplyResult {
   let nextState = state;
   let nextEvents = [...events];
@@ -142,13 +134,13 @@ export function applyChikatiloPostAction(
       const isToken =
         tokenUnit?.heroId === HERO_FALSE_TRAIL_TOKEN_ID ||
         Object.values(nextState.units).some(
-          (unit) => unit.chikatiloFalseTrailTokenId === event.unitId
+          (unit) => unit.chikatiloFalseTrailTokenId === event.unitId,
         );
       if (!isToken) continue;
       processedTokenDeaths.add(event.unitId);
 
       const owner = Object.values(nextState.units).find(
-        (unit) => unit.chikatiloFalseTrailTokenId === event.unitId
+        (unit) => unit.chikatiloFalseTrailTokenId === event.unitId,
       );
       if (owner?.isStealthed) {
         const revealed = revealChikatiloImmediately(nextState, owner.id);
@@ -170,9 +162,7 @@ export function applyChikatiloPostAction(
       }
       const hasOtherRealUnit = Object.values(nextState.units).some(
         (unit) =>
-          unit.isAlive &&
-          unit.id !== chikatilo.id &&
-          unit.heroId !== HERO_FALSE_TRAIL_TOKEN_ID
+          unit.isAlive && unit.id !== chikatilo.id && unit.heroId !== HERO_FALSE_TRAIL_TOKEN_ID,
       );
       if (hasOtherRealUnit) continue;
       const revealed = revealChikatiloImmediately(nextState, chikatilo.id);

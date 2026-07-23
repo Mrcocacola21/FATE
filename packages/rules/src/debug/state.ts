@@ -8,27 +8,15 @@ import {
 } from "../abilities";
 import { createDefaultArmy, createEmptyGame } from "../actions";
 import { getHeroDefinition } from "../heroes";
-import {
-  HERO_GRAND_KAISER_ID,
-  HERO_GRIFFITH_ID,
-} from "../heroes";
-import type {
-  Coord,
-  GamePhase,
-  GameState,
-  PlayerId,
-  UnitState,
-} from "../model";
+import { HERO_GRAND_KAISER_ID, HERO_GRIFFITH_ID } from "../heroes";
+import type { Coord, GamePhase, GameState, PlayerId, UnitState } from "../model";
 import { isInsideBoard, makeEmptyTurnEconomy } from "../model";
 import { getHeroMeta } from "../heroMeta";
-import type {
-  DebugMutationResult,
-  DebugStateCommand,
-  DebugUnitStatus,
-} from "./types";
+import type { DebugMutationResult, DebugStateCommand, DebugUnitStatus } from "./types";
 import { createDebugPreset } from "./presets";
 import { applyKaiserEngineeringMiracle } from "../actions/heroes/kaiser";
 import { applyGriffithFemtoRebirth } from "../actions/heroes/griffith";
+import { clearUnitStealth, enterUnitStealth } from "../stealth";
 
 function cloneState<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
@@ -48,7 +36,7 @@ function occupied(state: GameState, coord: Coord, exceptUnitId?: string): boolea
       unit.id !== exceptUnitId &&
       unit.isAlive &&
       unit.position?.col === coord.col &&
-      unit.position?.row === coord.row
+      unit.position?.row === coord.row,
   );
 }
 
@@ -63,7 +51,7 @@ export function createDebugUnit(
   state: GameState,
   heroId: string,
   owner: PlayerId,
-  coord: Coord
+  coord: Coord,
 ): UnitState | null {
   const meta = getHeroMeta(heroId);
   if (!meta) return null;
@@ -71,7 +59,7 @@ export function createDebugUnit(
   const hero = getHeroDefinition(heroId);
   const selection = hero ? { [meta.mainClass]: heroId } : undefined;
   const template = createDefaultArmy(owner, selection).find(
-    (unit) => unit.class === meta.mainClass
+    (unit) => unit.class === meta.mainClass,
   );
   if (!template) return null;
 
@@ -106,27 +94,18 @@ function resetActions(unit: UnitState): UnitState {
   };
 }
 
-function setUnitStatus(
-  unit: UnitState,
-  status: DebugUnitStatus,
-  value: boolean
-): UnitState {
+function setUnitStatus(unit: UnitState, status: DebugUnitStatus, value: boolean): UnitState {
   switch (status) {
     case "isStealthed":
-      return {
-        ...unit,
-        isStealthed: value,
-        stealthTurnsLeft: value ? Math.max(unit.stealthTurnsLeft, 3) : 0,
-      };
+      return value ? enterUnitStealth(unit) : clearUnitStealth(unit);
     case "movementDisabledNextTurn":
       return { ...unit, movementDisabledNextTurn: value };
     case "transformed":
       return { ...unit, transformed: value };
     case "bunker":
       return {
-        ...unit,
+        ...(value ? clearUnitStealth(unit) : unit),
         bunker: { active: value, ownTurnsInBunker: 0 },
-        isStealthed: value ? false : unit.isStealthed,
       };
     case "gutsBerserkModeActive":
       return { ...unit, gutsBerserkModeActive: value };
@@ -157,7 +136,7 @@ function setAllCharges(unit: UnitState, mode: "fill" | "clear"): UnitState {
       activeUnitId: unit.id,
       currentPlayer: unit.owner,
     },
-    unit.id
+    unit.id,
   );
   const charges = { ...unit.charges };
   for (const ability of abilities) {
@@ -186,7 +165,7 @@ function updateTurnQueue(state: GameState): GameState {
     alive.includes(state.activeUnitId) &&
     state.units[state.activeUnitId]?.owner === currentPlayer
       ? state.activeUnitId
-      : alive.find((id) => state.units[id].owner === currentPlayer) ?? alive[0] ?? null;
+      : (alive.find((id) => state.units[id].owner === currentPlayer) ?? alive[0] ?? null);
   return {
     ...state,
     turnOrder: alive,
@@ -200,7 +179,7 @@ function updateTurnQueue(state: GameState): GameState {
 
 export function applyDebugStateCommand(
   state: GameState,
-  command: DebugStateCommand
+  command: DebugStateCommand,
 ): DebugMutationResult {
   if (command.type === "debugApplyPreset") {
     return accept(createDebugPreset(command.presetId));
@@ -226,9 +205,9 @@ export function applyDebugStateCommand(
   if (command.type === "debugSetTurn") {
     const unitId =
       command.unitId === undefined
-        ? Object.values(state.units).find(
-            (unit) => unit.isAlive && unit.owner === command.player && unit.position
-          )?.id ?? null
+        ? (Object.values(state.units).find(
+            (unit) => unit.isAlive && unit.owner === command.player && unit.position,
+          )?.id ?? null)
         : command.unitId;
     if (unitId && !state.units[unitId]) return reject(state, "Unit not found");
     return accept({
@@ -356,7 +335,7 @@ export function applyDebugStateCommand(
           command.coord &&
           marker.position.col === command.coord.col &&
           marker.position.row === command.coord.row
-        )
+        ),
     );
     return accept({
       ...state,
@@ -381,13 +360,13 @@ export function applyDebugStateCommand(
       unit = setAllCharges(unit, command.options.charges === "full" ? "fill" : "clear");
     }
     let spawnedState = updateTurnQueue({
-        ...state,
-        units: { ...state.units, [unit.id]: unit },
-        knowledge: {
-          P1: { ...state.knowledge.P1, [unit.id]: true },
-          P2: { ...state.knowledge.P2, [unit.id]: true },
-        },
-      });
+      ...state,
+      units: { ...state.units, [unit.id]: unit },
+      knowledge: {
+        P1: { ...state.knowledge.P1, [unit.id]: true },
+        P2: { ...state.knowledge.P2, [unit.id]: true },
+      },
+    });
     if (command.options?.transformed) {
       spawnedState = applyDebugStateCommand(spawnedState, {
         type: "debugSetStatus",

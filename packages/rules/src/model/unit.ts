@@ -42,6 +42,20 @@ export interface CourtStasisStatus extends CourtRoundStatus {
   returnPosition: Coord;
 }
 
+export interface StealthDurationState {
+  /** Number of this figure's own turn starts completed while it remained hidden. */
+  ownTurnStartsWhileHidden: number;
+  /** Normal stealth remains active through this many own turn starts. */
+  maxOwnTurnStartsHidden: number;
+  /**
+   * Own-turn ordinal already processed for duration. This makes turn-start
+   * continuation after a pending choice idempotent.
+   */
+  lastProcessedOwnTurnStart?: number;
+  /** False Trail is explicitly exempt from the normal duration limit. */
+  kind: "normal" | "falseTrail";
+}
+
 export interface UnitState {
   id: string;
   owner: PlayerId;
@@ -53,6 +67,9 @@ export interface UnitState {
   position: Coord | null;
 
   isStealthed: boolean;
+  /** Authoritative per-figure duration metadata. Optional for legacy saves. */
+  stealthDuration?: StealthDurationState;
+  /** Legacy compatibility field, derived from stealthDuration for normal stealth. */
   stealthTurnsLeft: number;
   stealthSuccessMinRoll?: number;
   stealthAttemptedThisTurn: boolean;

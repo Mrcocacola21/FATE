@@ -1,28 +1,14 @@
-import type {
-  ApplyResult,
-  GameEvent,
-  GameState,
-  UnitState,
-} from "../../../model";
+import type { ApplyResult, GameEvent, GameState, UnitState } from "../../../model";
 import type { RNG } from "../../../rng";
 import { rollD6 } from "../../../rng";
 import { chebyshev } from "../../../board";
-import { getUnitDefinition } from "../../../units";
 import { canSpendSlots, spendSlots } from "../../../turnEconomy";
 import { clearPendingRoll } from "../../../core";
-import { getStealthSuccessMinRoll } from "../../../stealth";
-import {
-  evSearchStealth,
-  evStealthEntered,
-  evStealthRevealed,
-} from "../../../core";
+import { clearUnitStealth, enterUnitStealth, getStealthSuccessMinRoll } from "../../../stealth";
+import { evSearchStealth, evStealthEntered, evStealthRevealed } from "../../../core";
 import { concealUnitExactPositionFromOpponents } from "../../../visibility";
 
-export function resolveEnterStealthRoll(
-  state: GameState,
-  unitId: string,
-  rng: RNG
-): ApplyResult {
+export function resolveEnterStealthRoll(state: GameState, unitId: string, rng: RNG): ApplyResult {
   const unit = state.units[unitId];
   if (!unit || !unit.isAlive || !unit.position) {
     return { state: clearPendingRoll(state), events: [] };
@@ -41,20 +27,11 @@ export function resolveEnterStealthRoll(
   }
 
   const roll = rollD6(rng);
-  const def = getUnitDefinition(unit.class);
   const threshold = getStealthSuccessMinRoll(unit);
   const success = threshold !== null && roll >= threshold;
 
   const baseUnit: UnitState = spendSlots(unit, { stealth: true });
-  const updated: UnitState = success
-    ? {
-        ...baseUnit,
-        isStealthed: true,
-        stealthTurnsLeft: def.maxStealthTurns ?? 3,
-      }
-    : {
-        ...baseUnit,
-      };
+  const updated: UnitState = success ? enterUnitStealth(baseUnit) : { ...baseUnit };
 
   let nextState: GameState = {
     ...state,
@@ -67,9 +44,7 @@ export function resolveEnterStealthRoll(
     nextState = concealUnitExactPositionFromOpponents(nextState, updated);
   }
 
-  const events: GameEvent[] = [
-    evStealthEntered({ unitId: updated.id, success, roll }),
-  ];
+  const events: GameEvent[] = [evStealthEntered({ unitId: updated.id, success, roll })];
 
   return { state: clearPendingRoll(nextState), events };
 }
@@ -78,7 +53,7 @@ export function resolveSearchStealthRoll(
   state: GameState,
   unitId: string,
   mode: "action" | "move",
-  rng: RNG
+  rng: RNG,
 ): ApplyResult {
   const unit = state.units[unitId];
   if (!unit || !unit.isAlive || !unit.position) {
@@ -128,11 +103,7 @@ export function resolveSearchStealthRoll(
     rollResults.push({ targetId: candidate.id, roll, success });
     if (!success) continue;
 
-    const updatedHidden: UnitState = {
-      ...candidate,
-      isStealthed: false,
-      stealthTurnsLeft: 0,
-    };
+    const updatedHidden: UnitState = clearUnitStealth(candidate);
 
     units[updatedHidden.id] = updatedHidden;
     delete lastKnownPositions.P1[updatedHidden.id];
@@ -143,7 +114,7 @@ export function resolveSearchStealthRoll(
         unitId: updatedHidden.id,
         reason: "search",
         revealerId: unit.id,
-      })
+      }),
     );
   }
 
@@ -157,13 +128,13 @@ export function resolveSearchStealthRoll(
       ...state.knowledge,
       [unit.owner]: {
         ...(state.knowledge?.[unit.owner] ?? {}),
-        ...(Object.values(units)
+        ...Object.values(units)
           .filter((u) => !u.isStealthed && u.owner !== unit.owner)
           .reduce<Record<string, boolean>>((acc, u) => {
             if (state.knowledge?.[unit.owner]?.[u.id]) return acc;
             acc[u.id] = true;
             return acc;
-          }, {})),
+          }, {}),
       },
     },
     lastKnownPositions,
@@ -174,10 +145,8 @@ export function resolveSearchStealthRoll(
       unitId: updatedSearcher.id,
       mode,
       rolls: rollResults,
-    })
+    }),
   );
 
   return { state: clearPendingRoll(newState), events };
 }
-
-

@@ -2185,11 +2185,17 @@ test("server reveal updates the Action Menu stealth chip and selected-unit badge
     heroId: "hassan",
     isStealthed: true,
     stealthTurnsLeft: 3,
+    stealthDuration: {
+      ownTurnStartsWhileHidden: 2,
+      maxOwnTurnStartsHidden: 3,
+      kind: "normal",
+    },
   });
   const revealedHassan = {
     ...hiddenHassan,
     isStealthed: false,
     stealthTurnsLeft: 0,
+    stealthDuration: undefined,
   };
   const hiddenMarkup = renderToStaticMarkup(
     <>
@@ -2205,8 +2211,28 @@ test("server reveal updates the Action Menu stealth chip and selected-unit badge
   );
 
   assert.match(hiddenMarkup, />Hidden</);
+  assert.match(hiddenMarkup, /Turns hidden: 2\/3/);
+  assert.match(hiddenMarkup, /4th own turn/);
   assert.match(revealedMarkup, />Revealed</);
   assert.doesNotMatch(revealedMarkup, />Hidden</);
+  assert.doesNotMatch(revealedMarkup, /Turns hidden/);
+});
+
+test("private stealth counter is omitted when projection redacts its metadata", () => {
+  setLanguage("en", { setItem: () => undefined });
+  const trackedEnemy = makeUnit({
+    id: "P2-loki-tracked",
+    owner: "P2",
+    heroId: "loki",
+    class: "trickster",
+    isStealthed: true,
+    stealthTurnsLeft: 0,
+    stealthDuration: undefined,
+  });
+  const markup = renderToStaticMarkup(<SelectedUnitHeader unit={trackedEnemy} heroName="Loki" />);
+  assert.match(markup, />Hidden</);
+  assert.doesNotMatch(markup, /Turns hidden/);
+  assert.doesNotMatch(markup, /own turn/);
 });
 
 test("Action Menu renders a compact selected unit header", () => {

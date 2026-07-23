@@ -1,10 +1,4 @@
-import type {
-  ApplyResult,
-  GameAction,
-  GameEvent,
-  GameState,
-  UnitState,
-} from "../../../model";
+import type { ApplyResult, GameAction, GameEvent, GameState, UnitState } from "../../../model";
 import { coordToNotation } from "../../../model";
 import { chebyshev } from "../../../board";
 import {
@@ -19,11 +13,7 @@ import { clearPendingRoll, requestRoll } from "../../../core";
 import { evAbilityUsed } from "../../../core";
 import { commitAbilityCost } from "../../abilityCosts";
 import { HERO_CHIKATILO_ID, HERO_FALSE_TRAIL_TOKEN_ID } from "../../../heroes";
-import { getUnitDefinition } from "../../../units";
-import {
-  canDirectlyTargetUnit,
-  concealUnitExactPositionFromOpponents,
-} from "../../../visibility";
+import { canDirectlyTargetUnit, concealUnitExactPositionFromOpponents } from "../../../visibility";
 import {
   CHIKATILO_ASSASSIN_MARK_RANGE,
   CHIKATILO_MARK_TRACKING_EXPIRES,
@@ -35,11 +25,12 @@ import { getLegalRealChikatiloPlacements } from "../../../legal";
 import type { RNG } from "../../../rng";
 import { rollD6 } from "../../../rng";
 import { resolveAttack } from "../../../combat";
+import { enterUnitStealth } from "../../../stealth";
 
 export function requestChikatiloPlacement(
   state: GameState,
   chikatiloId: string,
-  queue: string[] = []
+  queue: string[] = [],
 ): ApplyResult {
   if (state.pendingRoll) {
     return { state, events: [] };
@@ -56,14 +47,14 @@ export function requestChikatiloPlacement(
     unit.owner,
     "chikatiloFalseTrailPlacement",
     { chikatiloId: unit.id, owner: unit.owner, legalPositions, legalCells, queue },
-    unit.id
+    unit.id,
   );
 }
 
 export function applyChikatiloAssassinMark(
   state: GameState,
   unit: UnitState,
-  action: Extract<GameAction, { type: "useAbility" }>
+  action: Extract<GameAction, { type: "useAbility" }>,
 ): ApplyResult {
   if (!isChikatilo(unit) || !unit.position) {
     return { state, events: [] };
@@ -136,10 +127,7 @@ export function applyChikatiloAssassinMark(
   return { state: nextState, events };
 }
 
-export function applyChikatiloDecoyStealth(
-  state: GameState,
-  unit: UnitState
-): ApplyResult {
+export function applyChikatiloDecoyStealth(state: GameState, unit: UnitState): ApplyResult {
   if (!isChikatilo(unit) || !unit.position) {
     return { state, events: [] };
   }
@@ -169,10 +157,7 @@ export function applyChikatiloDecoyStealth(
   }
 
   const hasOtherFigure = Object.values(state.units).some(
-    (other) =>
-      other.isAlive &&
-      other.id !== unit.id &&
-      other.heroId !== HERO_FALSE_TRAIL_TOKEN_ID
+    (other) => other.isAlive && other.id !== unit.id && other.heroId !== HERO_FALSE_TRAIL_TOKEN_ID,
   );
   if (!hasOtherFigure) {
     return { state, events: [] };
@@ -184,12 +169,7 @@ export function applyChikatiloDecoyStealth(
     return { state, events: [] };
   }
 
-  const def = getUnitDefinition(spent.unit.class);
-  const updatedUnit: UnitState = {
-    ...spendSlots(spent.unit, costs),
-    isStealthed: true,
-    stealthTurnsLeft: def.maxStealthTurns ?? 3,
-  };
+  const updatedUnit: UnitState = enterUnitStealth(spendSlots(spent.unit, costs));
 
   let nextState: GameState = {
     ...state,
@@ -216,7 +196,7 @@ export function applyChikatiloDecoyStealth(
 export function applyFalseTrailExplosionImmediately(
   state: GameState,
   unit: UnitState,
-  rng: RNG
+  rng: RNG,
 ): ApplyResult {
   if (state.phase !== "battle" || !isFalseTrailToken(unit) || !unit.position || !unit.isAlive) {
     return { state, events: [] };
@@ -228,7 +208,7 @@ export function applyFalseTrailExplosionImmediately(
         target.isAlive &&
         !!target.position &&
         target.id !== unit.id &&
-        chebyshev(unit.position!, target.position) <= 1
+        chebyshev(unit.position!, target.position) <= 1,
     )
     .map((target) => target.id)
     .sort();
@@ -262,7 +242,7 @@ export function applyFalseTrailExplosionImmediately(
       (event) =>
         event.type === "attackResolved" &&
         event.attackerId === unit.id &&
-        event.defenderId === targetId
+        event.defenderId === targetId,
     );
     if (attack?.type === "attackResolved" && attack.damage > 0) {
       damagedUnitIds.push(targetId);
@@ -297,7 +277,7 @@ export function applyFalseTrailExplosionImmediately(
 export function applyFalseTrailExplosion(
   state: GameState,
   unit: UnitState,
-  options?: { ignoreEconomy?: boolean; revealQueue?: string[] }
+  options?: { ignoreEconomy?: boolean; revealQueue?: string[] },
 ): ApplyResult {
   if (state.phase !== "battle") {
     return { state, events: [] };
@@ -384,7 +364,7 @@ export function applyFalseTrailExplosion(
     unit.owner,
     "falseTrailExplosion_attackerRoll",
     ctx,
-    unit.id
+    unit.id,
   );
 
   return { state: requested.state, events: [...events, ...requested.events] };
@@ -393,7 +373,7 @@ export function applyFalseTrailExplosion(
 export function requestChikatiloRevealChoice(
   state: GameState,
   chikatiloId: string,
-  queue: string[] = []
+  queue: string[] = [],
 ): ApplyResult {
   if (state.pendingRoll) {
     return { state, events: [] };
@@ -416,6 +396,6 @@ export function requestChikatiloRevealChoice(
     chikatilo.owner,
     "chikatiloFalseTrailRevealChoice",
     { chikatiloId, tokenId, queue },
-    chikatilo.id
+    chikatilo.id,
   );
 }

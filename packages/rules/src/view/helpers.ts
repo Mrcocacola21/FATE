@@ -10,15 +10,12 @@ import {
 import { getForestMarkers } from "../forest";
 import { VisibleStakeMarker } from "./types";
 import { canPlayerKnowUnitExactPosition } from "../visibility";
-import {
-  getChikatiloMarkStatusForViewer,
-  stripChikatiloPrivateState,
-} from "../chikatiloMark";
+import { getChikatiloMarkStatusForViewer, stripChikatiloPrivateState } from "../chikatiloMark";
 
 export function isStealthedEnemyVisibleToPlayer(
   state: GameState,
   playerId: PlayerId,
-  enemy: UnitState
+  enemy: UnitState,
 ): boolean {
   if (!enemy.isStealthed) return false;
   return canPlayerKnowUnitExactPosition(state, playerId, enemy.id);
@@ -76,9 +73,7 @@ export function cloneUnit(unit: UnitState): UnitState {
     duolingoHitTargetsLastTurn: unit.duolingoHitTargetsLastTurn
       ? [...unit.duolingoHitTargetsLastTurn]
       : undefined,
-    jackKnownHpByTarget: unit.jackKnownHpByTarget
-      ? { ...unit.jackKnownHpByTarget }
-      : undefined,
+    jackKnownHpByTarget: unit.jackKnownHpByTarget ? { ...unit.jackKnownHpByTarget } : undefined,
   };
 }
 
@@ -87,6 +82,7 @@ export function maskStealthedEnemy(unit: UnitState): UnitState {
   masked.charges = {};
   masked.cooldowns = {};
   masked.stealthTurnsLeft = 0;
+  masked.stealthDuration = undefined;
   masked.lastChargedTurn = undefined;
   return masked;
 }
@@ -100,7 +96,7 @@ export function clonePublicUnit(unit: UnitState): UnitState {
 export function cloneEnemyUnitForPlayer(
   state: GameState,
   playerId: PlayerId,
-  unit: UnitState
+  unit: UnitState,
 ): UnitState {
   const projected = clonePublicUnit(unit);
   const markStatus = getChikatiloMarkStatusForViewer(state, playerId, unit.id);
@@ -112,7 +108,7 @@ export function cloneEnemyUnitForPlayer(
 
 function collectVisibleStakeMarkers(
   state: GameState,
-  isVisible: (marker: GameState["stakeMarkers"][number]) => boolean
+  isVisible: (marker: GameState["stakeMarkers"][number]) => boolean,
 ): VisibleStakeMarker[] {
   const stakeMarkersMap = new Map<string, VisibleStakeMarker>();
   for (const marker of state.stakeMarkers) {
@@ -129,11 +125,11 @@ function collectVisibleStakeMarkers(
 
 export function collectPlayerStakeMarkers(
   state: GameState,
-  playerId: PlayerId
+  playerId: PlayerId,
 ): VisibleStakeMarker[] {
   return collectVisibleStakeMarkers(
     state,
-    (marker) => marker.owner === playerId || marker.isRevealed
+    (marker) => marker.owner === playerId || marker.isRevealed,
   );
 }
 
@@ -144,7 +140,7 @@ export function collectSpectatorStakeMarkers(state: GameState): VisibleStakeMark
 function isArenaEffectSourceVisible(
   state: GameState,
   recipient: PlayerId | "spectator",
-  sourceUnitId: string
+  sourceUnitId: string,
 ): boolean {
   const unit = state.units[sourceUnitId];
   if (!unit) return false;
@@ -155,7 +151,7 @@ function isArenaEffectSourceVisible(
 
 export function cloneArenaEffectsForRecipient(
   state: GameState,
-  recipient: PlayerId | "spectator"
+  recipient: PlayerId | "spectator",
 ): ArenaEffectState[] {
   const effects = Array.isArray(state.arenaEffects) ? state.arenaEffects : [];
   return effects

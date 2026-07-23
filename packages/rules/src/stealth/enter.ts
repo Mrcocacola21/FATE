@@ -1,15 +1,15 @@
 import type { GameEvent, GameState, UnitState } from "../model";
 import type { RNG } from "../rng";
 import { rollD6 } from "../rng";
-import { getUnitDefinition } from "../units";
 import { canSpendSlots, spendSlots } from "../turnEconomy";
 import { getStealthSuccessMinRoll } from "./checks";
 import { concealUnitExactPositionFromOpponents } from "../visibility";
+import { enterUnitStealth } from "./state";
 
 export function attemptEnterStealth(
   state: GameState,
   unitId: string,
-  rng: RNG
+  rng: RNG,
 ): { state: GameState; events: GameEvent[] } {
   const unit = state.units[unitId];
   if (!unit || !unit.isAlive || !unit.position) {
@@ -35,7 +35,6 @@ export function attemptEnterStealth(
     };
   }
 
-  const definition = getUnitDefinition(unit.class);
   const threshold = getStealthSuccessMinRoll(unit);
   if (threshold === null) {
     return {
@@ -60,10 +59,7 @@ export function attemptEnterStealth(
   const hasStealthedOverlap = Object.values(state.units).some((otherUnit) => {
     if (!otherUnit.isAlive || !otherUnit.isStealthed || !otherUnit.position) return false;
     if (otherUnit.id === unit.id) return false;
-    return (
-      otherUnit.position.col === position.col &&
-      otherUnit.position.row === position.row
-    );
+    return otherUnit.position.col === position.col && otherUnit.position.row === position.row;
   });
   if (hasStealthedOverlap) {
     return {
@@ -86,12 +82,7 @@ export function attemptEnterStealth(
     units: { ...state.units },
   };
 
-  const updated: UnitState = { ...baseUnit };
-  if (success) {
-    updated.isStealthed = true;
-    const maxTurns = definition.maxStealthTurns ?? 3;
-    updated.stealthTurnsLeft = maxTurns;
-  }
+  const updated: UnitState = success ? enterUnitStealth(baseUnit) : { ...baseUnit };
   nextState.units[updated.id] = updated;
   const finalState = success
     ? concealUnitExactPositionFromOpponents(nextState, updated)

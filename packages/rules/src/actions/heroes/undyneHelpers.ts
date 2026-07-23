@@ -12,11 +12,7 @@ import { requestRoll } from "../../core";
 import { evAbilityUsed, evUnitDied, evUnitHealed } from "../../core";
 import { ABILITY_UNDYNE_UNDYING } from "../../abilities";
 import { getUnitBaseMaxHp } from "../shared";
-import {
-  hasUndyneImmortalActive,
-  hasUndyneImmortalUsed,
-  isUndyne,
-} from "../../undyne";
+import { hasUndyneImmortalActive, hasUndyneImmortalUsed, isUndyne } from "../../undyne";
 
 export function parseCoord(value: unknown): Coord | null {
   if (!value || typeof value !== "object") return null;
@@ -29,7 +25,7 @@ export function parseCoord(value: unknown): Coord | null {
 export function canUseShooterLikeAttack(
   state: GameState,
   attacker: UnitState,
-  target: UnitState
+  target: UnitState,
 ): boolean {
   const archerLikeAttacker: UnitState = {
     ...attacker,
@@ -44,7 +40,7 @@ export function canUseShooterLikeAttack(
 export function requestUndyneThrowAttack(
   state: GameState,
   unit: UnitState,
-  targetId: string
+  targetId: string,
 ): ApplyResult {
   const requested = requestRoll(
     state,
@@ -72,7 +68,7 @@ export function requestUndyneThrowAttack(
       consumeSlots: false,
       queueKind: "normal",
     },
-    unit.id
+    unit.id,
   );
   return requested;
 }
@@ -80,7 +76,7 @@ export function requestUndyneThrowAttack(
 export function requestUndyneSpearRain(
   state: GameState,
   unit: UnitState,
-  targetId: string
+  targetId: string,
 ): ApplyResult {
   const queue: PendingCombatQueueEntry[] = Array.from({ length: 3 }, () => ({
     attackerId: unit.id,
@@ -123,7 +119,7 @@ export function requestUndyneSpearRain(
       consumeSlots: false,
       queueKind: "aoe",
     },
-    unit.id
+    unit.id,
   );
   return requested;
 }
@@ -131,7 +127,7 @@ export function requestUndyneSpearRain(
 export function applyUndyneImmortalFromDeaths(
   state: GameState,
   prevState: GameState,
-  events: GameEvent[]
+  events: GameEvent[],
 ): ApplyResult {
   const deadUndyneIds = events
     .filter((event) => event.type === "unitDied")
@@ -160,7 +156,7 @@ export function applyUndyneImmortalFromDeaths(
         candidate.id !== unit.id &&
         candidate.isAlive &&
         candidate.position?.col === prevUnit.position!.col &&
-        candidate.position?.row === prevUnit.position!.row
+        candidate.position?.row === prevUnit.position!.row,
     );
     if (occupiedByOther) {
       continue;
@@ -175,6 +171,7 @@ export function applyUndyneImmortalFromDeaths(
       position: { ...prevUnit.position },
       isStealthed: false,
       stealthTurnsLeft: 0,
+      stealthDuration: undefined,
       movementDisabledNextTurn: false,
       undyneImmortalUsed: true,
       undyneImmortalActive: true,
@@ -186,9 +183,7 @@ export function applyUndyneImmortalFromDeaths(
         [revived.id]: revived,
       },
     };
-    nextEvents.push(
-      evAbilityUsed({ unitId: revived.id, abilityId: ABILITY_UNDYNE_UNDYING })
-    );
+    nextEvents.push(evAbilityUsed({ unitId: revived.id, abilityId: ABILITY_UNDYNE_UNDYING }));
     if (hpAfter > 0) {
       nextEvents.push(
         evUnitHealed({
@@ -196,7 +191,7 @@ export function applyUndyneImmortalFromDeaths(
           amount: hpAfter,
           hpAfter,
           sourceAbilityId: ABILITY_UNDYNE_UNDYING,
-        })
+        }),
       );
     }
   }
@@ -207,7 +202,7 @@ export function applyUndyneImmortalFromDeaths(
 export function applyUndyneImmortalEndTurnDrain(
   state: GameState,
   prevState: GameState,
-  action: GameAction
+  action: GameAction,
 ): ApplyResult {
   if (action.type !== "endTurn") {
     return { state, events: [] };

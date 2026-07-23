@@ -1,4 +1,12 @@
-import type { ApplyResult, Coord, GameEvent, GameState, PendingRoll, ResolveRollChoice, UnitState } from "../../../../model";
+import type {
+  ApplyResult,
+  Coord,
+  GameEvent,
+  GameState,
+  PendingRoll,
+  ResolveRollChoice,
+  UnitState,
+} from "../../../../model";
 import { isInsideBoard } from "../../../../model";
 import { getUnitAt } from "../../../../board";
 import { clearPendingRoll } from "../../../../core";
@@ -8,23 +16,17 @@ import { requestHassanAssassinOrderBattleStart } from "../../../../actions/heroe
 import { isVlad } from "../../../../actions/shared";
 import { activateVladForest, requestVladStakesPlacement } from "../../../../actions/heroes/vlad";
 import { HERO_FALSE_TRAIL_TOKEN_ID } from "../../../../heroes";
-import { getUnitDefinition } from "../../../../units";
-import {
-  canPlaceRealChikatilo,
-  getLegalRealChikatiloPlacements,
-} from "../../../../legal";
-import {
-  coordKey,
-  insertAfter,
-} from "./shared";
+import { canPlaceRealChikatilo, getLegalRealChikatiloPlacements } from "../../../../legal";
+import { coordKey, insertAfter } from "./shared";
+import { enterUnitStealth } from "../../../../stealth";
 
 function maybeRequestVladBattleStartStakes(state: GameState): ApplyResult {
   const vladOwners = Array.from(
     new Set(
       Object.values(state.units)
         .filter((u) => u.isAlive && isVlad(u))
-        .map((u) => u.owner)
-    )
+        .map((u) => u.owner),
+    ),
   ).sort();
 
   if (vladOwners.length === 0) {
@@ -32,11 +34,9 @@ function maybeRequestVladBattleStartStakes(state: GameState): ApplyResult {
   }
 
   const [firstOwner, ...queue] = vladOwners;
-  const ownedStakes = state.stakeMarkers.filter(
-    (marker) => marker.owner === firstOwner
-  ).length;
+  const ownedStakes = state.stakeMarkers.filter((marker) => marker.owner === firstOwner).length;
   const vladUnit = Object.values(state.units).find(
-    (u) => u.isAlive && isVlad(u) && u.owner === firstOwner
+    (u) => u.isAlive && isVlad(u) && u.owner === firstOwner,
   );
 
   if (ownedStakes >= 9 && vladUnit) {
@@ -49,7 +49,7 @@ function maybeRequestVladBattleStartStakes(state: GameState): ApplyResult {
 export function resolveChikatiloFalseTrailPlacement(
   state: GameState,
   pending: PendingRoll,
-  choice: ResolveRollChoice | undefined
+  choice: ResolveRollChoice | undefined,
 ): ApplyResult {
   const ctx = pending.context as {
     chikatiloId?: string;
@@ -95,13 +95,15 @@ export function resolveChikatiloFalseTrailPlacement(
     return { state: clearPendingRoll(state), events: [] };
   }
 
-  const def = getUnitDefinition("assassin");
-  const updatedUnit: UnitState = {
-    ...unit,
-    position: { ...pos },
-    isStealthed: true,
-    stealthTurnsLeft: def.maxStealthTurns ?? 3,
-  };
+  const updatedUnit: UnitState = enterUnitStealth(
+    {
+      ...unit,
+      position: { ...pos },
+    },
+    {
+      kind: "falseTrail",
+    },
+  );
 
   const owner = updatedUnit.owner;
   const other = owner === "P1" ? "P2" : "P1";
@@ -123,10 +125,7 @@ export function resolveChikatiloFalseTrailPlacement(
   const tokenId =
     updatedUnit.chikatiloFalseTrailTokenId ??
     Object.values(state.units).find(
-      (u) =>
-        u.isAlive &&
-        u.owner === owner &&
-        u.heroId === HERO_FALSE_TRAIL_TOKEN_ID
+      (u) => u.isAlive && u.owner === owner && u.heroId === HERO_FALSE_TRAIL_TOKEN_ID,
     )?.id ??
     null;
 

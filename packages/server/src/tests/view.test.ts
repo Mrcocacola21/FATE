@@ -196,6 +196,11 @@ function testChikatiloTrackedHiddenTargetProjectionIsPrivate() {
     position: { col: 5, row: 4 },
     isStealthed: true,
     stealthTurnsLeft: 3,
+    stealthDuration: {
+      ownTurnStartsWhileHidden: 2,
+      maxOwnTurnStartsHidden: 3,
+      kind: "normal",
+    },
   });
   state = {
     ...state,
@@ -211,12 +216,27 @@ function testChikatiloTrackedHiddenTargetProjectionIsPrivate() {
   assert(targetProjection, "owner projection should include tracked hidden target");
   assert.deepEqual(targetProjection.position, { col: 5, row: 4 });
   assert.equal(targetProjection.chikatiloMarkStatus?.exactTrackingActive, true);
+  assert.equal(
+    targetProjection.stealthDuration,
+    undefined,
+    "tracked hidden enemies must not leak private stealth duration metadata",
+  );
+  assert.equal(
+    targetProjection.stealthTurnsLeft,
+    0,
+    "tracked hidden enemies must not leak the legacy duration projection",
+  );
   assert(
     ownerView.legal?.attackTargetsByUnitId[chikatilo.id]?.includes(target.id),
     "owner projection should expose legal attack targetability",
   );
 
   const opponentView = makePlayerView(state, "P2");
+  assert.equal(
+    opponentView.units[target.id].stealthDuration?.ownTurnStartsWhileHidden,
+    2,
+    "the hidden unit owner should retain the duration counter across projection/reconnect",
+  );
   assert.equal(
     opponentView.units[target.id].chikatiloMarkStatus,
     undefined,

@@ -24,10 +24,7 @@ import { projectRuleDeclarationState } from "./ruleDeclarations";
  * - Enemy stealthed units are hidden (no real position leaks).
  * - Last-known positions for hidden enemies are provided separately.
  */
-export function makePlayerView(
-  state: GameState,
-  playerId: PlayerId
-): PlayerView {
+export function makePlayerView(state: GameState, playerId: PlayerId): PlayerView {
   const {
     pendingRoll,
     combatResolutionChain: _combatResolutionChain,
@@ -63,6 +60,7 @@ export function makePlayerView(
         projected.charges = {};
         projected.cooldowns = {};
         projected.stealthTurnsLeft = 0;
+        projected.stealthDuration = undefined;
         projected.lastChargedTurn = undefined;
         units[unit.id] = projected;
         continue;
@@ -116,7 +114,7 @@ export function makePlayerView(
   const arenaEffects = cloneArenaEffectsForRecipient(state, playerId);
   const pendingCombatQueueCount = getPendingCombatQueueCount(
     pendingCombatQueue,
-    visiblePendingRoll
+    visiblePendingRoll,
   );
 
   return {

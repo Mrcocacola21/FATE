@@ -43,55 +43,45 @@ export function testChikatiloPlacementListSubstitution() {
 
   assert(
     token.owner === chikatilo.owner,
-    "false trail token should keep the same owner as chikatilo"
+    "false trail token should keep the same owner as chikatilo",
   );
-  assert(
-    chikatiloLegal.length === 0,
-    "chikatilo should not be placeable during normal placement"
-  );
-  assert(
-    tokenLegal.length > 0,
-    "false trail token should be placeable during normal placement"
-  );
+  assert(chikatiloLegal.length === 0, "chikatilo should not be placeable during normal placement");
+  assert(tokenLegal.length > 0, "false trail token should be placeable during normal placement");
 
   console.log("chikatilo_false_trail_token_replaces_chikatilo_in_placement passed");
 }
 
-
 export function testFalseTrailTokenPlacementLegalTargets() {
   let { state, token, rng } = setupChikatiloPlacementState(907);
   const blocker = Object.values(state.units).find(
-    (u) =>
-      u.owner === token.owner &&
-      u.id !== token.id &&
-      u.heroId !== HERO_CHIKATILO_ID
+    (u) => u.owner === token.owner && u.id !== token.id && u.heroId !== HERO_CHIKATILO_ID,
   )!;
   state = setUnit(state, blocker.id, { position: { col: 4, row: 0 } });
 
   const legal = getLegalPlacements(state, token.id);
   assert(
     legal.length === state.boardSize - 3,
-    "token should use the owner's normal deployment cells minus occupied cells"
+    "token should use the owner's normal deployment cells minus occupied cells",
   );
   assert(
     legal.every((pos) => isNormalDeploymentCell(token.owner, pos, state.boardSize)),
-    "token legal placements should stay on the owner's normal deployment zone"
+    "token legal placements should stay on the owner's normal deployment zone",
   );
   assert(
     canPlaceFalsePromiseToken(token.owner, { col: 1, row: 0 }, state.boardSize),
-    "token should be allowed on an unoccupied own deployment cell"
+    "token should be allowed on an unoccupied own deployment cell",
   );
   assert(
     !legal.some((pos) => pos.row === state.boardSize - 1),
-    "token legal placements should exclude the enemy deployment zone"
+    "token legal placements should exclude the enemy deployment zone",
   );
   assert(
     !legal.some((pos) => pos.col === 0 || pos.col === state.boardSize - 1),
-    "token legal placements should exclude side cells"
+    "token legal placements should exclude side cells",
   );
   assert(
     !legal.some((pos) => pos.col === 4 && pos.row === 0),
-    "token legal placements should exclude occupied cells"
+    "token legal placements should exclude occupied cells",
   );
 
   const originalPlacementOrder = [...state.placementOrder];
@@ -108,25 +98,22 @@ export function testFalseTrailTokenPlacementLegalTargets() {
         unitId: token.id,
         position,
       } as any,
-      rng
+      rng,
     );
 
     assert(
-      rejected.rejectionReason ===
-        "false_promise_token_must_be_in_deployment_zone",
-      "invalid token placement should return the deployment-zone rejection reason"
+      rejected.rejectionReason === "false_promise_token_must_be_in_deployment_zone",
+      "invalid token placement should return the deployment-zone rejection reason",
     );
     assert(rejected.state === state, "invalid token placement should not replace state");
     assert(
       rejected.state.units[token.id].position === null,
-      "invalid token placement should not position the token"
+      "invalid token placement should not position the token",
     );
     assert(
-      JSON.stringify(rejected.state.placementOrder) ===
-        JSON.stringify(originalPlacementOrder) &&
-        JSON.stringify(rejected.state.unitsPlaced) ===
-          JSON.stringify(originalUnitsPlaced),
-      "invalid token placement should not advance placement"
+      JSON.stringify(rejected.state.placementOrder) === JSON.stringify(originalPlacementOrder) &&
+        JSON.stringify(rejected.state.unitsPlaced) === JSON.stringify(originalUnitsPlaced),
+      "invalid token placement should not advance placement",
     );
   }
 
@@ -137,12 +124,12 @@ export function testFalseTrailTokenPlacementLegalTargets() {
       unitId: token.id,
       position: { col: 4, row: 0 },
     } as any,
-    rng
+    rng,
   );
 
   assert(
     occupied.state.units[token.id].position === null,
-    "token placement on occupied cell should be rejected"
+    "token placement on occupied cell should be rejected",
   );
 
   const accepted = applyAction(
@@ -152,17 +139,16 @@ export function testFalseTrailTokenPlacementLegalTargets() {
       unitId: token.id,
       position: { col: 1, row: 0 },
     } as any,
-    rng
+    rng,
   );
   assert(
     accepted.state.units[token.id].position?.col === 1 &&
       accepted.state.units[token.id].position?.row === 0,
-    "token should be accepted on an empty own deployment cell"
+    "token should be accepted on an empty own deployment cell",
   );
 
   console.log("false_trail_token_placement_legal_targets passed");
 }
-
 
 export function testChikatiloPlacementAfterToken() {
   const { state, token, chikatilo, rng } = setupChikatiloPlacementState(909);
@@ -171,31 +157,31 @@ export function testChikatiloPlacementAfterToken() {
   const placedToken = applyAction(
     state,
     { type: "placeUnit", unitId: token.id, position: tokenPos } as any,
-    rng
+    rng,
   ).state;
 
   const pending = placedToken.pendingRoll;
   assert(
     pending?.kind === "chikatiloFalseTrailPlacement",
-    "placing token should request chikatilo placement"
+    "placing token should request chikatilo placement",
   );
   assert(
     pending?.player === chikatilo.owner,
-    "chikatilo placement pending roll should belong to chikatilo owner"
+    "chikatilo placement pending roll should belong to chikatilo owner",
   );
 
   const legal = (pending?.context as any)?.legalPositions as Coord[];
   assert(
     legal.length === placedToken.boardSize * (placedToken.boardSize - 2),
-    "chikatilo placement should include every empty non-deployment-line cell"
+    "chikatilo placement should include every empty non-deployment-line cell",
   );
   assert(
     legal.every(
       (pos) =>
         canPlaceRealChikatilo(pos, placedToken.boardSize) &&
-        !isAnyPlayerDeploymentLine(pos, placedToken.boardSize)
+        !isAnyPlayerDeploymentLine(pos, placedToken.boardSize),
     ),
-    "chikatilo legal placements should exclude both deployment lines"
+    "chikatilo legal placements should exclude both deployment lines",
   );
 
   for (const position of [
@@ -212,18 +198,17 @@ export function testChikatiloPlacementAfterToken() {
         player: pending!.player,
         choice: { type: "chikatiloPlace", position },
       } as any,
-      rng
+      rng,
     );
     assert(
-      rejected.rejectionReason ===
-        "chikatilo_cannot_be_placed_on_deployment_line",
-      "deployment-line Chikatilo placement should return the explicit rejection reason"
+      rejected.rejectionReason === "chikatilo_cannot_be_placed_on_deployment_line",
+      "deployment-line Chikatilo placement should return the explicit rejection reason",
     );
     assert(
       rejected.state === placedToken &&
         rejected.state.pendingRoll?.id === pending!.id &&
         rejected.state.units[chikatilo.id].position === null,
-      "rejected Chikatilo placement should preserve state and the placement step"
+      "rejected Chikatilo placement should preserve state and the placement step",
     );
   }
 
@@ -236,27 +221,23 @@ export function testChikatiloPlacementAfterToken() {
       player: pending!.player,
       choice: { type: "chikatiloPlace", position: target },
     } as any,
-    rng
+    rng,
   );
   const placedChikatilo = placement.state;
 
   const chikatiloAfter = placedChikatilo.units[chikatilo.id];
   assert(
-    chikatiloAfter.position?.col === target.col &&
-      chikatiloAfter.position?.row === target.row,
-    "chikatilo should be placed on chosen cell"
+    chikatiloAfter.position?.col === target.col && chikatiloAfter.position?.row === target.row,
+    "chikatilo should be placed on chosen cell",
   );
-  assert(
-    chikatiloAfter.isStealthed === true,
-    "chikatilo should start stealthed after placement"
-  );
+  assert(chikatiloAfter.isStealthed === true, "chikatilo should start stealthed after placement");
   assert(!placedChikatilo.pendingRoll, "pending roll should clear after placement");
 
   const tokenIndex = placedChikatilo.placementOrder.indexOf(token.id);
   const chikatiloIndex = placedChikatilo.placementOrder.indexOf(chikatilo.id);
   assert(
     tokenIndex >= 0 && chikatiloIndex >= 0 && tokenIndex < chikatiloIndex,
-    "token should act before chikatilo in placement order"
+    "token should act before chikatilo in placement order",
   );
 
   const ownerView = makePlayerView(placedChikatilo, chikatilo.owner);
@@ -265,32 +246,27 @@ export function testChikatiloPlacementAfterToken() {
   assert(
     ownerView.units[chikatilo.id]?.position?.col === target.col &&
       ownerView.units[chikatilo.id]?.position?.row === target.row,
-    "owner projection should include real Chikatilo's placement"
+    "owner projection should include real Chikatilo's placement",
   );
   assert(
     !opponentView.units[chikatilo.id],
-    "opponent projection should not include real Chikatilo or his position"
+    "opponent projection should not include real Chikatilo or his position",
   );
   assert(
     opponentView.pendingRoll === null,
-    "opponent projection should not expose the private Chikatilo placement prompt"
+    "opponent projection should not expose the private Chikatilo placement prompt",
   );
-  const opponentEvents = projectEventsForRecipient(
-    placedChikatilo,
-    placement.events,
-    opponentId
-  );
+  const opponentEvents = projectEventsForRecipient(placedChikatilo, placement.events, opponentId);
   const placedEvent = opponentEvents.find(
-    (event) => event.type === "unitPlaced" && event.unitId === chikatilo.id
+    (event) => event.type === "unitPlaced" && event.unitId === chikatilo.id,
   );
   assert(
     placedEvent?.type === "unitPlaced" && !("position" in placedEvent),
-    "opponent placement event should redact real Chikatilo's position"
+    "opponent placement event should redact real Chikatilo's position",
   );
 
   console.log("chikatilo_placement_after_token_passed");
 }
-
 
 export function testPlacementFlowWithoutChikatilo() {
   let state = createEmptyGame();
@@ -305,12 +281,11 @@ export function testPlacementFlowWithoutChikatilo() {
   assert(tokens.length === 0, "no false trail token should be added");
   assert(
     p1Units.filter((u) => !u.position).length === 7,
-    "placement flow should keep 7 normal units"
+    "placement flow should keep 7 normal units",
   );
 
   console.log("placement_flow_without_chikatilo_unchanged passed");
 }
-
 
 export function testChikatiloTokenDeathRevealsChikatilo() {
   const rng = makeAttackWinRng(2);
@@ -321,11 +296,9 @@ export function testChikatiloTokenDeathRevealsChikatilo() {
   state = attachArmy(state, a2);
 
   const chikatilo = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.heroId === HERO_CHIKATILO_ID
+    (u) => u.owner === "P1" && u.heroId === HERO_CHIKATILO_ID,
   )!;
-  const killer = Object.values(state.units).find(
-    (u) => u.owner === "P2" && u.class === "knight"
-  )!;
+  const killer = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "knight")!;
 
   state = setUnit(state, chikatilo.id, {
     position: { col: 4, row: 0 },
@@ -351,29 +324,28 @@ export function testChikatiloTokenDeathRevealsChikatilo() {
   const attack = applyAction(
     state,
     { type: "attack", attackerId: killer.id, defenderId: tokenId } as any,
-    rng
+    rng,
   );
   const resolved = resolveAllPendingRollsWithEvents(attack.state, rng);
   const chikatiloAfter = resolved.state.units[chikatilo.id];
-  assert(
-    chikatiloAfter.isStealthed === false,
-    "chikatilo should be revealed when token dies"
-  );
+  assert(chikatiloAfter.isStealthed === false, "chikatilo should be revealed when token dies");
   const trapEvents = resolved.events.filter(
     (event) =>
       event.type === "attackResolved" &&
       event.attackerId === tokenId &&
-      event.defenderId === killer.id
+      event.defenderId === killer.id,
   );
-  assert(trapEvents.length === 1, "token death should trigger Trap exactly once against its killer");
+  assert(
+    trapEvents.length === 1,
+    "token death should trigger Trap exactly once against its killer",
+  );
   assert(
     resolved.state.units[killer.id].hp === killer.hp - 3,
-    "a failed 2d6 defense against Trap should take 3 damage"
+    "a failed 2d6 defense against Trap should take 3 damage",
   );
 
   console.log("chikatilo_token_death_reveals_chikatilo passed");
 }
-
 
 export function testChikatiloAssassinMarkDoesNotRevealAndGrantsBonusDamage() {
   const rng = makeAttackWinRng(1);
@@ -384,11 +356,9 @@ export function testChikatiloAssassinMarkDoesNotRevealAndGrantsBonusDamage() {
   state = attachArmy(state, a2);
 
   const chikatilo = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.heroId === HERO_CHIKATILO_ID
+    (u) => u.owner === "P1" && u.heroId === HERO_CHIKATILO_ID,
   )!;
-  const target = Object.values(state.units).find(
-    (u) => u.owner === "P2" && u.class === "knight"
-  )!;
+  const target = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "knight")!;
 
   state = setUnit(state, chikatilo.id, {
     position: { col: 4, row: 4 },
@@ -406,11 +376,11 @@ export function testChikatiloAssassinMarkDoesNotRevealAndGrantsBonusDamage() {
       unitId: chikatilo.id,
       abilityId: ABILITY_CHIKATILO_ASSASSIN_MARK,
     } as any,
-    rng
+    rng,
   ).state;
   assert(
     !opened.units[chikatilo.id].turn.actionUsed,
-    "assassin mark without a target should not spend action"
+    "assassin mark without a target should not spend action",
   );
 
   const marked = applyAction(
@@ -421,17 +391,14 @@ export function testChikatiloAssassinMarkDoesNotRevealAndGrantsBonusDamage() {
       abilityId: ABILITY_CHIKATILO_ASSASSIN_MARK,
       payload: { targetId: target.id },
     } as any,
-    rng
+    rng,
   ).state;
 
   const markedUnit = marked.units[chikatilo.id];
-  assert(
-    markedUnit.isStealthed === true,
-    "assassin mark should not reveal chikatilo"
-  );
+  assert(markedUnit.isStealthed === true, "assassin mark should not reveal chikatilo");
   assert(
     markedUnit.turn.actionUsed,
-    "assassin mark should spend action when the target is applied"
+    "assassin mark should spend action when the target is applied",
   );
 
   const reset = setUnit(marked, chikatilo.id, {
@@ -445,18 +412,14 @@ export function testChikatiloAssassinMarkDoesNotRevealAndGrantsBonusDamage() {
   const attack = applyAction(
     reset,
     { type: "attack", attackerId: chikatilo.id, defenderId: target.id } as any,
-    rng
+    rng,
   );
   const resolved = resolveAllPendingRolls(attack.state, rng);
   const targetAfter = resolved.state.units[target.id];
-  assert(
-    targetAfter.hp === 2,
-    "marked target should take +1 damage on hit (3 total)"
-  );
+  assert(targetAfter.hp === 2, "marked target should take +1 damage on hit (3 total)");
 
   console.log("chikatilo_assassin_mark_bonus_damage passed");
 }
-
 
 export function testChikatiloAssassinMarkApplicationFlowAndRedaction() {
   const rng = makeAttackWinRng(1);
@@ -467,13 +430,11 @@ export function testChikatiloAssassinMarkApplicationFlowAndRedaction() {
   state = attachArmy(state, a2);
 
   const chikatilo = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.heroId === HERO_CHIKATILO_ID
+    (u) => u.owner === "P1" && u.heroId === HERO_CHIKATILO_ID,
   )!;
-  const target = Object.values(state.units).find(
-    (u) => u.owner === "P2" && u.class === "knight"
-  )!;
+  const target = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "knight")!;
   const secondTarget = Object.values(state.units).find(
-    (u) => u.owner === "P2" && u.id !== target.id && u.class === "rider"
+    (u) => u.owner === "P2" && u.id !== target.id && u.class === "rider",
   )!;
 
   state = setUnit(state, chikatilo.id, {
@@ -493,15 +454,15 @@ export function testChikatiloAssassinMarkApplicationFlowAndRedaction() {
       unitId: chikatilo.id,
       abilityId: ABILITY_CHIKATILO_ASSASSIN_MARK,
     } as any,
-    rng
+    rng,
   );
   assert(
     !cancel.state.units[chikatilo.id].turn.actionUsed,
-    "opening assassin mark targeting should not spend action"
+    "opening assassin mark targeting should not spend action",
   );
   assert(
     !cancel.state.units[chikatilo.id].chikatiloMarkedTargets?.includes(target.id),
-    "opening assassin mark targeting should not mark a target"
+    "opening assassin mark targeting should not mark a target",
   );
 
   const hiddenTargetState = setUnit(state, target.id, {
@@ -516,15 +477,15 @@ export function testChikatiloAssassinMarkApplicationFlowAndRedaction() {
       abilityId: ABILITY_CHIKATILO_ASSASSIN_MARK,
       payload: { targetId: target.id },
     } as any,
-    rng
+    rng,
   );
   assert(
     !rejected.state.units[chikatilo.id].turn.actionUsed,
-    "invalid hidden mark target should not spend action"
+    "invalid hidden mark target should not spend action",
   );
   assert(
     !rejected.state.units[chikatilo.id].chikatiloMarkedTargets?.includes(target.id),
-    "invalid hidden mark target should not mutate marks"
+    "invalid hidden mark target should not mutate marks",
   );
 
   const marked = applyAction(
@@ -535,30 +496,30 @@ export function testChikatiloAssassinMarkApplicationFlowAndRedaction() {
       abilityId: ABILITY_CHIKATILO_ASSASSIN_MARK,
       payload: { targetId: target.id },
     } as any,
-    rng
+    rng,
   );
 
   const markedChikatilo = marked.state.units[chikatilo.id];
   assert(
     markedChikatilo.turn.actionUsed,
-    "successful assassin mark should spend action exactly once"
+    "successful assassin mark should spend action exactly once",
   );
   assert(
     markedChikatilo.chikatiloMarkedTargets?.filter((id) => id === target.id).length === 1,
-    "successful assassin mark should apply one persistent mark"
+    "successful assassin mark should apply one persistent mark",
   );
   assert(
     !markedChikatilo.chikatiloTrackedTargets?.includes(target.id),
-    "successful assassin mark should not grant exact tracking until chikatilo start turn"
+    "successful assassin mark should not grant exact tracking until chikatilo start turn",
   );
   assert(
     marked.events.some(
       (event) =>
         event.type === "chikatiloMarkApplied" &&
         event.targetId === target.id &&
-        event.ownerPlayerId === "P1"
+        event.ownerPlayerId === "P1",
     ),
-    "successful assassin mark should emit a mark-applied event"
+    "successful assassin mark should emit a mark-applied event",
   );
 
   const duplicateReady = setUnit(marked.state, chikatilo.id, {
@@ -573,21 +534,20 @@ export function testChikatiloAssassinMarkApplicationFlowAndRedaction() {
       abilityId: ABILITY_CHIKATILO_ASSASSIN_MARK,
       payload: { targetId: target.id },
     } as any,
-    rng
+    rng,
   );
   assert(
     !duplicate.state.units[chikatilo.id].turn.actionUsed,
-    "duplicate Killer's Mark must not spend Action"
+    "duplicate Killer's Mark must not spend Action",
   );
   assert(
     duplicate.events.filter((event) => event.type === "chikatiloMarkApplied").length === 0,
-    "duplicate assassin mark command after cost spend should not emit a second mark event"
+    "duplicate assassin mark command after cost spend should not emit a second mark event",
   );
   assert(
-    duplicate.state.units[chikatilo.id].chikatiloMarkedTargets?.filter(
-      (id) => id === target.id
-    ).length === 1,
-    "duplicate assassin mark command should not duplicate mark state"
+    duplicate.state.units[chikatilo.id].chikatiloMarkedTargets?.filter((id) => id === target.id)
+      .length === 1,
+    "duplicate assassin mark command should not duplicate mark state",
   );
 
   const tooFar = applyAction(
@@ -598,11 +558,11 @@ export function testChikatiloAssassinMarkApplicationFlowAndRedaction() {
       abilityId: ABILITY_CHIKATILO_ASSASSIN_MARK,
       payload: { targetId: secondTarget.id },
     } as any,
-    rng
+    rng,
   );
   assert(
     !tooFar.state.units[chikatilo.id].turn.actionUsed,
-    "Killer's Mark beyond range 2 must be rejected without spending"
+    "Killer's Mark beyond range 2 must be rejected without spending",
   );
   const secondInRange = setUnit(duplicateReady, secondTarget.id, {
     position: { col: 6, row: 4 },
@@ -615,12 +575,12 @@ export function testChikatiloAssassinMarkApplicationFlowAndRedaction() {
       abilityId: ABILITY_CHIKATILO_ASSASSIN_MARK,
       payload: { targetId: secondTarget.id },
     } as any,
-    rng
+    rng,
   );
   assert(
     multiMarked.state.units[chikatilo.id].chikatiloMarkedTargets?.includes(target.id) &&
       multiMarked.state.units[chikatilo.id].chikatiloMarkedTargets?.includes(secondTarget.id),
-    "Killer's Mark should remain active on multiple different creatures"
+    "Killer's Mark should remain active on multiple different creatures",
   );
 
   const ownerEvents = projectEventsForRecipient(marked.state, marked.events, "P1");
@@ -628,32 +588,27 @@ export function testChikatiloAssassinMarkApplicationFlowAndRedaction() {
   const spectatorEvents = projectEventsForRecipient(marked.state, marked.events, "spectator");
   assert(
     ownerEvents.some(
-      (event) => event.type === "chikatiloMarkApplied" && event.targetId === target.id
+      (event) => event.type === "chikatiloMarkApplied" && event.targetId === target.id,
     ),
-    "mark owner should receive the full mark-applied event"
+    "mark owner should receive the full mark-applied event",
   );
   assert(
-    opponentEvents.some(
-      (event) => event.type === "chikatiloMarkApplied" && !("targetId" in event)
-    ),
-    "opponent should receive a redacted mark-applied event"
+    opponentEvents.some((event) => event.type === "chikatiloMarkApplied" && !("targetId" in event)),
+    "opponent should receive a redacted mark-applied event",
   );
   assert(
     spectatorEvents.some(
-      (event) => event.type === "chikatiloMarkApplied" && !("targetId" in event)
+      (event) => event.type === "chikatiloMarkApplied" && !("targetId" in event),
     ),
-    "spectator should receive a redacted mark-applied event"
+    "spectator should receive a redacted mark-applied event",
   );
   assert(
-    opponentEvents.some(
-      (event) => event.type === "abilityUsed" && !("unitId" in event)
-    ),
-    "hidden chikatilo ability use should be redacted for the opponent"
+    opponentEvents.some((event) => event.type === "abilityUsed" && !("unitId" in event)),
+    "hidden chikatilo ability use should be redacted for the opponent",
   );
 
   console.log("chikatilo_assassin_mark_application_flow_and_redaction passed");
 }
-
 
 export function testChikatiloAssassinMarkTrackingProjectionAttackAndExpiry() {
   const rng = makeAttackWinRng(2);
@@ -664,11 +619,9 @@ export function testChikatiloAssassinMarkTrackingProjectionAttackAndExpiry() {
   state = attachArmy(state, a2);
 
   const chikatilo = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.heroId === HERO_CHIKATILO_ID
+    (u) => u.owner === "P1" && u.heroId === HERO_CHIKATILO_ID,
   )!;
-  const target = Object.values(state.units).find(
-    (u) => u.owner === "P2" && u.class === "knight"
-  )!;
+  const target = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "knight")!;
 
   state = setUnit(state, chikatilo.id, {
     position: { col: 4, row: 4 },
@@ -687,7 +640,7 @@ export function testChikatiloAssassinMarkTrackingProjectionAttackAndExpiry() {
       abilityId: ABILITY_CHIKATILO_ASSASSIN_MARK,
       payload: { targetId: target.id },
     } as any,
-    rng
+    rng,
   ).state;
   const hiddenTarget = setUnit(marked, target.id, {
     isStealthed: true,
@@ -697,11 +650,11 @@ export function testChikatiloAssassinMarkTrackingProjectionAttackAndExpiry() {
   const beforeTrackingView = makePlayerView(hiddenTarget, "P1");
   assert(
     !beforeTrackingView.units[target.id],
-    "marked hidden target should remain hidden before chikatilo start-turn tracking"
+    "marked hidden target should remain hidden before chikatilo start-turn tracking",
   );
   assert(
     !getLegalAttackTargets(hiddenTarget, chikatilo.id).includes(target.id),
-    "marked hidden target should not be attackable before exact tracking activates"
+    "marked hidden target should not be attackable before exact tracking activates",
   );
 
   const startReady = {
@@ -716,11 +669,11 @@ export function testChikatiloAssassinMarkTrackingProjectionAttackAndExpiry() {
   const started = applyAction(
     startReady,
     { type: "unitStartTurn", unitId: chikatilo.id } as any,
-    rng
+    rng,
   ).state;
   assert(
     started.units[chikatilo.id].chikatiloTrackedTargets?.includes(target.id),
-    "chikatilo start turn should activate exact tracking for marked targets"
+    "chikatilo start turn should activate exact tracking for marked targets",
   );
 
   const ownerView = makePlayerView(started, "P1");
@@ -728,33 +681,33 @@ export function testChikatiloAssassinMarkTrackingProjectionAttackAndExpiry() {
   assert(projectedTarget, "authorized owner should see tracked hidden target");
   assert(
     projectedTarget.position?.col === 5 && projectedTarget.position.row === 4,
-    "authorized owner should receive tracked hidden target exact cell"
+    "authorized owner should receive tracked hidden target exact cell",
   );
   assert(
     projectedTarget.chikatiloMarkStatus?.exactTrackingActive === true,
-    "authorized owner should receive active mark tracking metadata"
+    "authorized owner should receive active mark tracking metadata",
   );
   assert(
     makePlayerView(started, "P2").units[target.id].chikatiloMarkStatus === undefined,
-    "opposing target owner should not receive chikatilo's private mark metadata"
+    "opposing target owner should not receive chikatilo's private mark metadata",
   );
   assert(
     !makeSpectatorView(started).units[target.id],
-    "spectator should not see the tracked hidden enemy"
+    "spectator should not see the tracked hidden enemy",
   );
   assert(
     ownerView.legal?.attackTargetsByUnitId[chikatilo.id]?.includes(target.id),
-    "authorized chikatilo should receive tracked hidden target as a legal attack target"
+    "authorized chikatilo should receive tracked hidden target as a legal attack target",
   );
 
   const attack = applyAction(
     started,
     { type: "attack", attackerId: chikatilo.id, defenderId: target.id } as any,
-    rng
+    rng,
   );
   assert(
     attack.state.pendingRoll?.kind === "attack_attackerRoll",
-    "server should accept chikatilo attack against tracked hidden target in legal range"
+    "server should accept chikatilo attack against tracked hidden target in legal range",
   );
 
   const movedWhileTracked = setUnit(started, target.id, {
@@ -764,7 +717,7 @@ export function testChikatiloAssassinMarkTrackingProjectionAttackAndExpiry() {
   assert(
     movedOwnerView.units[target.id].position?.col === 4 &&
       movedOwnerView.units[target.id].position?.row === 5,
-    "authorized owner should receive tracked hidden target movement updates"
+    "authorized owner should receive tracked hidden target movement updates",
   );
 
   const targetTurn = {
@@ -779,19 +732,19 @@ export function testChikatiloAssassinMarkTrackingProjectionAttackAndExpiry() {
   const expired = applyAction(targetTurn, { type: "endTurn" } as any, rng).state;
   assert(
     expired.units[chikatilo.id].chikatiloMarkedTargets?.includes(target.id),
-    "persistent mark should survive exact-tracking expiry"
+    "persistent mark should survive exact-tracking expiry",
   );
   assert(
     !expired.units[chikatilo.id].chikatiloTrackedTargets?.includes(target.id),
-    "tracked target should expire when the marked unit finishes its turn"
+    "tracked target should expire when the marked unit finishes its turn",
   );
   assert(
     !makePlayerView(expired, "P1").units[target.id],
-    "authorized owner should lose hidden target exact cell after tracking expires"
+    "authorized owner should lose hidden target exact cell after tracking expires",
   );
   assert(
     !getLegalAttackTargets(expired, chikatilo.id).includes(target.id),
-    "tracked hidden target should stop being attackable after tracking expires"
+    "tracked hidden target should stop being attackable after tracking expires",
   );
 
   const visibleAfterExpiry = setUnit(expired, target.id, {
@@ -801,12 +754,11 @@ export function testChikatiloAssassinMarkTrackingProjectionAttackAndExpiry() {
   const visibleProjection = makePlayerView(visibleAfterExpiry, "P1").units[target.id];
   assert(
     visibleProjection.chikatiloMarkStatus?.exactTrackingActive === false,
-    "visible target should keep mark indicator after exact tracking expires"
+    "visible target should keep mark indicator after exact tracking expires",
   );
 
   console.log("chikatilo_assassin_mark_tracking_projection_attack_and_expiry passed");
 }
-
 
 export function testChikatiloDecoyReducesDamageAndConsumesCharges() {
   const rng = makeAttackWinRng(1);
@@ -817,10 +769,10 @@ export function testChikatiloDecoyReducesDamageAndConsumesCharges() {
   state = attachArmy(state, a2);
 
   const chikatilo = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.heroId === HERO_CHIKATILO_ID
+    (u) => u.owner === "P1" && u.heroId === HERO_CHIKATILO_ID,
   )!;
   const attacker = Object.values(state.units).find(
-    (u) => u.owner === "P2" && u.class === "knight"
+    (u) => u.owner === "P2" && u.class === "knight",
   )!;
 
   state = setUnit(state, chikatilo.id, {
@@ -835,7 +787,7 @@ export function testChikatiloDecoyReducesDamageAndConsumesCharges() {
   let res = applyAction(
     state,
     { type: "attack", attackerId: attacker.id, defenderId: chikatilo.id } as any,
-    rng
+    rng,
   );
   const firstPending = res.state.pendingRoll;
   assert(firstPending?.kind === "attack_attackerRoll", "attacker roll should be pending");
@@ -847,7 +799,7 @@ export function testChikatiloDecoyReducesDamageAndConsumesCharges() {
       pendingRollId: firstPending!.id,
       player: firstPending!.player,
     } as any,
-    rng
+    rng,
   );
   const decoyPending = res.state.pendingRoll;
   assert(decoyPending?.kind === "chikatiloDecoyChoice", "decoy choice should be pending");
@@ -860,24 +812,18 @@ export function testChikatiloDecoyReducesDamageAndConsumesCharges() {
       player: decoyPending!.player,
       choice: "decoy",
     } as any,
-    rng
+    rng,
   );
 
   const chikatiloAfter = res.state.units[chikatilo.id];
-  assert(
-    chikatiloAfter.hp === 4,
-    "decoy should reduce damage to exactly 1"
-  );
-  assert(
-    chikatiloAfter.charges[ABILITY_CHIKATILO_DECOY] === 0,
-    "decoy should consume 3 charges"
-  );
+  assert(chikatiloAfter.hp === 4, "decoy should reduce damage to exactly 1");
+  assert(chikatiloAfter.charges[ABILITY_CHIKATILO_DECOY] === 0, "decoy should consume 3 charges");
 
   const cancelRng = makeAttackWinRng(1);
   let canceled = applyAction(
     state,
     { type: "attack", attackerId: attacker.id, defenderId: chikatilo.id } as any,
-    cancelRng
+    cancelRng,
   );
   canceled = applyAction(
     canceled.state,
@@ -886,7 +832,7 @@ export function testChikatiloDecoyReducesDamageAndConsumesCharges() {
       pendingRollId: canceled.state.pendingRoll!.id,
       player: canceled.state.pendingRoll!.player,
     } as any,
-    cancelRng
+    cancelRng,
   );
   canceled = applyAction(
     canceled.state,
@@ -896,15 +842,15 @@ export function testChikatiloDecoyReducesDamageAndConsumesCharges() {
       player: canceled.state.pendingRoll!.player,
       choice: "roll",
     } as any,
-    cancelRng
+    cancelRng,
   );
   assert(
     canceled.state.units[chikatilo.id].charges[ABILITY_CHIKATILO_DECOY] === 3,
-    "declining defensive substitute must spend no Decoy Points"
+    "declining defensive substitute must spend no Decoy Points",
   );
   assert(
     canceled.state.pendingRoll?.kind === "attack_defenderRoll",
-    "declining substitute should proceed to the normal defense roll"
+    "declining substitute should proceed to the normal defense roll",
   );
 
   const lowPointsState = setUnit(state, chikatilo.id, {
@@ -913,7 +859,7 @@ export function testChikatiloDecoyReducesDamageAndConsumesCharges() {
   let lowPoints = applyAction(
     lowPointsState,
     { type: "attack", attackerId: attacker.id, defenderId: chikatilo.id } as any,
-    makeAttackWinRng(1)
+    makeAttackWinRng(1),
   );
   lowPoints = applyAction(
     lowPoints.state,
@@ -922,16 +868,15 @@ export function testChikatiloDecoyReducesDamageAndConsumesCharges() {
       pendingRollId: lowPoints.state.pendingRoll!.id,
       player: lowPoints.state.pendingRoll!.player,
     } as any,
-    makeAttackWinRng(1)
+    makeAttackWinRng(1),
   );
   assert(
     lowPoints.state.pendingRoll?.kind === "attack_defenderRoll",
-    "defensive substitute should be unavailable below 3 Decoy Points"
+    "defensive substitute should be unavailable below 3 Decoy Points",
   );
 
   console.log("chikatilo_decoy_reduces_damage_and_consumes_charges passed");
 }
-
 
 export function testFalseTrailExplosionHitsAlliesAndEnemiesSingleRoll() {
   const rng = new SequenceRNG([0.99, 0.99, 0.01, 0.01, 0.01, 0.01]);
@@ -942,16 +887,12 @@ export function testFalseTrailExplosionHitsAlliesAndEnemiesSingleRoll() {
   state = attachArmy(state, a2);
 
   const chikatilo = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.heroId === HERO_CHIKATILO_ID
+    (u) => u.owner === "P1" && u.heroId === HERO_CHIKATILO_ID,
   )!;
-  const ally = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.class === "knight"
-  )!;
-  const enemy = Object.values(state.units).find(
-    (u) => u.owner === "P2" && u.class === "knight"
-  )!;
+  const ally = Object.values(state.units).find((u) => u.owner === "P1" && u.class === "knight")!;
+  const enemy = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "knight")!;
   const outside = Object.values(state.units).find(
-    (u) => u.owner === "P2" && u.id !== enemy.id && u.class === "spearman"
+    (u) => u.owner === "P2" && u.id !== enemy.id && u.class === "spearman",
   )!;
 
   state = setUnit(state, chikatilo.id, { position: { col: 4, row: 0 }, isStealthed: true });
@@ -979,19 +920,14 @@ export function testFalseTrailExplosionHitsAlliesAndEnemiesSingleRoll() {
     (e) =>
       e.type === "attackResolved" &&
       e.attackerId === tokenId &&
-      [ally.id, enemy.id].includes(e.defenderId)
+      [ally.id, enemy.id].includes(e.defenderId),
   ) as Extract<GameEvent, { type: "attackResolved" }>[];
 
-  assert(
-    attackEvents.length === 2,
-    "explosion should attack both ally and enemy"
-  );
+  assert(attackEvents.length === 2, "explosion should attack both ally and enemy");
   const attackerRoll = attackEvents[0]?.attackerRoll?.dice?.join(",");
   assert(
-    attackEvents.every(
-      (evt) => evt.attackerRoll?.dice?.join(",") === attackerRoll
-    ),
-    "explosion should use a single attacker roll for all targets"
+    attackEvents.every((evt) => evt.attackerRoll?.dice?.join(",") === attackerRoll),
+    "explosion should use a single attacker roll for all targets",
   );
 
   const allyAfter = resolved.state.units[ally.id];
@@ -1000,7 +936,7 @@ export function testFalseTrailExplosionHitsAlliesAndEnemiesSingleRoll() {
   assert(enemyAfter.hp === 4, "enemy should take 1 damage from explosion");
   assert(
     resolved.state.units[outside.id].hp === 5,
-    "a creature outside Explosion radius 1 must not be attacked"
+    "a creature outside Explosion radius 1 must not be attacked",
   );
 
   const tokenAfter = resolved.state.units[tokenId];
@@ -1013,13 +949,13 @@ export function testFalseTrailExplosionSuccessfulDefenseAvoidsDamage() {
   const rng = new SequenceRNG([0.01, 0.01, 0.99, 0.99]);
   let state = attachArmy(
     attachArmy(createEmptyGame(), createDefaultArmy("P1", { assassin: HERO_CHIKATILO_ID })),
-    createDefaultArmy("P2")
+    createDefaultArmy("P2"),
   );
   const chikatilo = Object.values(state.units).find(
-    (unit) => unit.owner === "P1" && unit.heroId === HERO_CHIKATILO_ID
+    (unit) => unit.owner === "P1" && unit.heroId === HERO_CHIKATILO_ID,
   )!;
   const target = Object.values(state.units).find(
-    (unit) => unit.owner === "P2" && unit.class === "knight"
+    (unit) => unit.owner === "P2" && unit.class === "knight",
   )!;
   const tokenId = chikatilo.chikatiloFalseTrailTokenId!;
   state = setUnit(state, tokenId, { position: { col: 4, row: 4 }, isAlive: true });
@@ -1030,9 +966,12 @@ export function testFalseTrailExplosionSuccessfulDefenseAvoidsDamage() {
   const resolved = resolveAllPendingRollsWithEvents(used.state, rng);
   assert(
     resolved.state.units[target.id].hp === 5,
-    "successful 2d6 defense against Explosion should avoid damage"
+    "successful 2d6 defense against Explosion should avoid damage",
   );
-  assert(!resolved.state.pendingRoll, "manual Explosion should clear pending rolls after resolution");
+  assert(
+    !resolved.state.pendingRoll,
+    "manual Explosion should clear pending rolls after resolution",
+  );
 
   console.log("false_trail_explosion_successful_defense_avoids_damage passed");
 }
@@ -1041,13 +980,13 @@ export function testChikatiloMarkOnlyBonusesStealthAttack() {
   const rng = makeAttackWinRng(1);
   let state = attachArmy(
     attachArmy(createEmptyGame(), createDefaultArmy("P1", { assassin: HERO_CHIKATILO_ID })),
-    createDefaultArmy("P2")
+    createDefaultArmy("P2"),
   );
   const chikatilo = Object.values(state.units).find(
-    (unit) => unit.owner === "P1" && unit.heroId === HERO_CHIKATILO_ID
+    (unit) => unit.owner === "P1" && unit.heroId === HERO_CHIKATILO_ID,
   )!;
   const target = Object.values(state.units).find(
-    (unit) => unit.owner === "P2" && unit.class === "knight"
+    (unit) => unit.owner === "P2" && unit.class === "knight",
   )!;
   state = setUnit(state, chikatilo.id, {
     position: { col: 4, row: 4 },
@@ -1060,12 +999,12 @@ export function testChikatiloMarkOnlyBonusesStealthAttack() {
   const attack = applyAction(
     state,
     { type: "attack", attackerId: chikatilo.id, defenderId: target.id } as any,
-    rng
+    rng,
   );
   const resolved = resolveAllPendingRolls(attack.state, rng);
   assert(
     resolved.state.units[target.id].hp === 4,
-    "a visible Chikatilo attack must not receive Killer's Mark bonus"
+    "a visible Chikatilo attack must not receive Killer's Mark bonus",
   );
 
   console.log("chikatilo_mark_only_bonuses_stealth_attack passed");
@@ -1075,12 +1014,14 @@ export function testChikatiloDecoyPointsGainAndStealthTransaction() {
   const rng = makeAttackWinRng(3);
   let state = attachArmy(
     attachArmy(createEmptyGame(), createDefaultArmy("P1", { assassin: HERO_CHIKATILO_ID })),
-    createDefaultArmy("P2")
+    createDefaultArmy("P2"),
   );
   const chikatilo = Object.values(state.units).find(
-    (unit) => unit.owner === "P1" && unit.heroId === HERO_CHIKATILO_ID
+    (unit) => unit.owner === "P1" && unit.heroId === HERO_CHIKATILO_ID,
   )!;
-  const enemies = Object.values(state.units).filter((unit) => unit.owner === "P2").slice(0, 3);
+  const enemies = Object.values(state.units)
+    .filter((unit) => unit.owner === "P2")
+    .slice(0, 3);
   state = setUnit(state, chikatilo.id, {
     position: { col: 4, row: 4 },
     charges: { ...chikatilo.charges, [ABILITY_CHIKATILO_DECOY]: 11 },
@@ -1099,6 +1040,12 @@ export function testChikatiloDecoyPointsGainAndStealthTransaction() {
     isAlive: false,
     heroId: "guts",
   });
+  if (chikatilo.chikatiloFalseTrailTokenId) {
+    state = setUnit(state, chikatilo.chikatiloFalseTrailTokenId, {
+      isAlive: false,
+      position: null,
+    });
+  }
   state = {
     ...toBattleState(state, "P1", chikatilo.id),
     activeUnitId: null,
@@ -1107,14 +1054,10 @@ export function testChikatiloDecoyPointsGainAndStealthTransaction() {
     turnOrderIndex: 0,
     turnQueueIndex: 0,
   };
-  const started = applyAction(
-    state,
-    { type: "unitStartTurn", unitId: chikatilo.id } as any,
-    rng
-  );
+  const started = applyAction(state, { type: "unitStartTurn", unitId: chikatilo.id } as any, rng);
   assert(
     started.state.units[chikatilo.id].charges[ABILITY_CHIKATILO_DECOY] === 13,
-    "Chikatilo should gain one uncapped Decoy Point per live marked enemy hero"
+    "Chikatilo should gain one uncapped Decoy Point per live marked enemy hero",
   );
 
   const entered = applyAction(
@@ -1124,18 +1067,23 @@ export function testChikatiloDecoyPointsGainAndStealthTransaction() {
       unitId: chikatilo.id,
       abilityId: ABILITY_CHIKATILO_DECOY,
     } as any,
-    rng
+    rng,
   );
   const after = entered.state.units[chikatilo.id];
   assert(after.isStealthed, "Decoy Stealth should enter stealth without a roll");
+  assert(
+    after.stealthDuration?.kind === "normal" &&
+      after.stealthDuration.ownTurnStartsWhileHidden === 0,
+    "Decoy Stealth should initialize the shared normal own-turn duration",
+  );
   assert(after.turn.stealthUsed, "Decoy Stealth should consume the stealth attempt");
   assert(
     !after.turn.actionUsed && !after.turn.moveUsed,
-    "Decoy Stealth must not spend Action or Move"
+    "Decoy Stealth must not spend Action or Move",
   );
   assert(
     after.charges[ABILITY_CHIKATILO_DECOY] === 10,
-    "Decoy Stealth should spend exactly 3 Decoy Points"
+    "Decoy Stealth should spend exactly 3 Decoy Points",
   );
 
   const rejected = applyAction(
@@ -1145,12 +1093,37 @@ export function testChikatiloDecoyPointsGainAndStealthTransaction() {
       unitId: chikatilo.id,
       abilityId: ABILITY_CHIKATILO_DECOY,
     } as any,
-    rng
+    rng,
   );
   assert(
     rejected.state.units[chikatilo.id].charges[ABILITY_CHIKATILO_DECOY] === 10,
-    "an invalid repeated Decoy Stealth use must spend nothing"
+    "an invalid repeated Decoy Stealth use must spend nothing",
   );
+
+  let durationState = rejected.state;
+  for (let ownTurn = 1; ownTurn <= 4; ownTurn += 1) {
+    const turnStart = applyAction(
+      {
+        ...durationState,
+        currentPlayer: chikatilo.owner,
+        activeUnitId: null,
+        pendingRoll: null,
+        turnOrder: [chikatilo.id],
+        turnQueue: [chikatilo.id],
+        turnOrderIndex: 0,
+        turnQueueIndex: 0,
+      },
+      { type: "unitStartTurn", unitId: chikatilo.id } as any,
+      rng,
+    );
+    assert(
+      turnStart.state.units[chikatilo.id].isStealthed === ownTurn <= 3,
+      `normal Decoy Stealth should ${
+        ownTurn <= 3 ? "remain hidden" : "reveal"
+      } on own turn start ${ownTurn}`,
+    );
+    durationState = turnStart.state;
+  }
 
   console.log("chikatilo_decoy_points_gain_and_stealth_transaction passed");
 }
@@ -1159,16 +1132,16 @@ export function testFalseTrailRevealAutoExplodesWithoutChoice() {
   const rng = makeAttackWinRng(7);
   let state = attachArmy(
     attachArmy(createEmptyGame(), createDefaultArmy("P1", { assassin: HERO_CHIKATILO_ID })),
-    createDefaultArmy("P2")
+    createDefaultArmy("P2"),
   );
   const chikatilo = Object.values(state.units).find(
-    (unit) => unit.owner === "P1" && unit.heroId === HERO_CHIKATILO_ID
+    (unit) => unit.owner === "P1" && unit.heroId === HERO_CHIKATILO_ID,
   )!;
   const defender = Object.values(state.units).find(
-    (unit) => unit.owner === "P2" && unit.class === "knight"
+    (unit) => unit.owner === "P2" && unit.class === "knight",
   )!;
   const nearby = Object.values(state.units).find(
-    (unit) => unit.owner === "P2" && unit.id !== defender.id
+    (unit) => unit.owner === "P2" && unit.id !== defender.id,
   )!;
   const tokenId = chikatilo.chikatiloFalseTrailTokenId!;
   state = setUnit(state, chikatilo.id, {
@@ -1184,19 +1157,17 @@ export function testFalseTrailRevealAutoExplodesWithoutChoice() {
   const attack = applyAction(
     state,
     { type: "attack", attackerId: chikatilo.id, defenderId: defender.id } as any,
-    rng
+    rng,
   );
   const resolved = resolveAllPendingRollsWithEvents(attack.state, rng);
   assert(!resolved.state.units[tokenId].isAlive, "revealing Chikatilo should consume the token");
   assert(
-    resolved.events.some(
-      (event) => event.type === "aoeResolved" && event.sourceUnitId === tokenId
-    ),
-    "revealing Chikatilo should automatically resolve token Explosion"
+    resolved.events.some((event) => event.type === "aoeResolved" && event.sourceUnitId === tokenId),
+    "revealing Chikatilo should automatically resolve token Explosion",
   );
   assert(
     resolved.state.pendingRoll?.kind !== "chikatiloFalseTrailRevealChoice",
-    "automatic Explosion must not leave the obsolete reveal choice pending"
+    "automatic Explosion must not leave the obsolete reveal choice pending",
   );
 
   console.log("false_trail_reveal_auto_explodes_without_choice passed");
@@ -1206,10 +1177,10 @@ export function testFalseTrailTokenRestrictedActionSet() {
   const rng = makeAttackWinRng(9);
   let state = attachArmy(
     attachArmy(createEmptyGame(), createDefaultArmy("P1", { assassin: HERO_CHIKATILO_ID })),
-    createDefaultArmy("P2")
+    createDefaultArmy("P2"),
   );
   const chikatilo = Object.values(state.units).find(
-    (unit) => unit.owner === "P1" && unit.heroId === HERO_CHIKATILO_ID
+    (unit) => unit.owner === "P1" && unit.heroId === HERO_CHIKATILO_ID,
   )!;
   const tokenId = chikatilo.chikatiloFalseTrailTokenId!;
   state = setUnit(state, tokenId, { position: { col: 4, row: 4 }, isAlive: true });
@@ -1222,7 +1193,7 @@ export function testFalseTrailTokenRestrictedActionSet() {
   const abilities = getAbilityViewsForUnit(state, tokenId);
   assert(
     abilities.some((ability) => ability.id === "falseTrailExplosion" && ability.kind === "active"),
-    "False Trail token should expose Explosion as its active ability"
+    "False Trail token should expose Explosion as its active ability",
   );
 
   void rng;
@@ -1233,28 +1204,60 @@ export function testFalseTrailStealthTimerAndLastFigureRule() {
   const rng = makeAttackWinRng(1);
   let state = attachArmy(
     attachArmy(createEmptyGame(), createDefaultArmy("P1", { assassin: HERO_CHIKATILO_ID })),
-    createDefaultArmy("P2")
+    createDefaultArmy("P2"),
   );
   const chikatilo = Object.values(state.units).find(
-    (unit) => unit.owner === "P1" && unit.heroId === HERO_CHIKATILO_ID
+    (unit) => unit.owner === "P1" && unit.heroId === HERO_CHIKATILO_ID,
   )!;
   const other = Object.values(state.units).find(
-    (unit) => unit.owner === "P2" && unit.class === "knight"
+    (unit) => unit.owner === "P2" && unit.class === "knight",
   )!;
   const tokenId = chikatilo.chikatiloFalseTrailTokenId!;
   state = setUnit(state, chikatilo.id, {
     position: { col: 4, row: 4 },
     isStealthed: true,
     stealthTurnsLeft: 0,
+    stealthDuration: {
+      ownTurnStartsWhileHidden: 3,
+      maxOwnTurnStartsHidden: 3,
+      kind: "falseTrail",
+    },
   });
   state = setUnit(state, tokenId, { position: { col: 1, row: 1 }, isAlive: true });
   state = setUnit(state, other.id, { position: { col: 7, row: 7 }, isAlive: true });
-  state = toBattleState(state, "P1", chikatilo.id);
+  state = {
+    ...toBattleState(state, "P1", chikatilo.id),
+    activeUnitId: null,
+    turnQueue: [chikatilo.id],
+    turnQueueIndex: 0,
+    turnOrder: [chikatilo.id],
+    turnOrderIndex: 0,
+  };
 
-  const ignoredTimer = processUnitStartOfTurnStealth(state, chikatilo.id, rng);
+  let ignoredTimer = { state, events: [] as GameEvent[] };
+  for (let ownTurn = 1; ownTurn <= 4; ownTurn += 1) {
+    ignoredTimer = applyAction(
+      {
+        ...ignoredTimer.state,
+        currentPlayer: chikatilo.owner,
+        activeUnitId: null,
+        pendingRoll: null,
+        turnQueue: [chikatilo.id],
+        turnQueueIndex: 0,
+        turnOrder: [chikatilo.id],
+        turnOrderIndex: 0,
+      },
+      { type: "unitStartTurn", unitId: chikatilo.id } as any,
+      rng,
+    );
+    assert(
+      ignoredTimer.state.units[chikatilo.id].isStealthed,
+      `False Trail should ignore the normal timer on Chikatilo own turn ${ownTurn}`,
+    );
+  }
   assert(
     ignoredTimer.state.units[chikatilo.id].isStealthed,
-    "living False Trail token should suppress Chikatilo's normal three-turn stealth timer"
+    "living False Trail token should suppress Chikatilo's normal three-turn stealth timer",
   );
 
   let lastFigure = ignoredTimer.state;
@@ -1265,7 +1268,7 @@ export function testFalseTrailStealthTimerAndLastFigureRule() {
   const forcedReveal = processUnitStartOfTurnStealth(lastFigure, chikatilo.id, rng);
   assert(
     !forcedReveal.state.units[chikatilo.id].isStealthed,
-    "Chikatilo cannot remain hidden when no other real figure remains"
+    "Chikatilo cannot remain hidden when no other real figure remains",
   );
 
   console.log("false_trail_stealth_timer_and_last_figure_rule passed");

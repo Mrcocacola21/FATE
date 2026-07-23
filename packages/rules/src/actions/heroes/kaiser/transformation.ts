@@ -10,10 +10,7 @@ import { evAbilityUsed, evBunkerExited } from "../../../core";
 import { HERO_GRAND_KAISER_ID } from "../../../heroes";
 import { getUnitBaseMaxHp, isKaiser, isKaiserTransformed } from "../../shared";
 
-export function applyKaiserEngineeringMiracle(
-  state: GameState,
-  unit: UnitState
-): ApplyResult {
+export function applyKaiserEngineeringMiracle(state: GameState, unit: UnitState): ApplyResult {
   if (!isKaiser(unit)) {
     return { state, events: [] };
   }
@@ -26,7 +23,7 @@ export function applyKaiserEngineeringMiracle(
   const newMax = Math.max(
     getUnitDefinition("archer").maxHp,
     getUnitDefinition("rider").maxHp,
-    getUnitDefinition("berserker").maxHp
+    getUnitDefinition("berserker").maxHp,
   );
   const missing = Math.max(0, baseMax - unit.hp);
   const nextHp = Math.max(0, newMax - missing);
@@ -39,6 +36,7 @@ export function applyKaiserEngineeringMiracle(
     attack: 2,
     isStealthed: false,
     stealthTurnsLeft: 0,
+    stealthDuration: undefined,
     bunker: { active: false, ownTurnsInBunker: 0 },
     charges: {
       ...unit.charges,
@@ -56,25 +54,20 @@ export function applyKaiserEngineeringMiracle(
 
   const events: GameEvent[] = [];
   if (unit.bunker?.active) {
-    events.push(
-      evBunkerExited({ unitId: updatedUnit.id, reason: "transformed" })
-    );
+    events.push(evBunkerExited({ unitId: updatedUnit.id, reason: "transformed" }));
   }
 
   events.push(
     evAbilityUsed({
       unitId: updatedUnit.id,
       abilityId: ABILITY_KAISER_ENGINEERING_MIRACLE,
-    })
+    }),
   );
 
   return { state: nextState, events };
 }
 
-export function maybeTriggerEngineeringMiracle(
-  state: GameState,
-  unitId: string
-): ApplyResult {
+export function maybeTriggerEngineeringMiracle(state: GameState, unitId: string): ApplyResult {
   const unit = state.units[unitId];
   if (!unit || !unit.isAlive || unit.heroId !== HERO_GRAND_KAISER_ID) {
     return { state, events: [] };
@@ -86,10 +79,7 @@ export function maybeTriggerEngineeringMiracle(
 
   const spec = getAbilitySpec(ABILITY_KAISER_ENGINEERING_MIRACLE);
   const triggerCharges = spec?.triggerCharges ?? 0;
-  if (
-    triggerCharges > 0 &&
-    getCharges(unit, ABILITY_KAISER_ENGINEERING_MIRACLE) < triggerCharges
-  ) {
+  if (triggerCharges > 0 && getCharges(unit, ABILITY_KAISER_ENGINEERING_MIRACLE) < triggerCharges) {
     return { state, events: [] };
   }
 

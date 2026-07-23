@@ -153,6 +153,13 @@ import {
   testSearchStealthSlots,
 } from "./core/visibility.test";
 import {
+  testHassanGrantedStealthUsesGrantedUnitsOwnTurns,
+  testLokiStealthUsesOwnTurnDuration,
+  testNormalStealthCountsOnlyHiddenFiguresOwnTurnStarts,
+  testStealthLegacyFallbackAndDebugInitialization,
+  testStealthTurnStartContinuationIsIdempotent,
+} from "./core/stealthDuration.test";
+import {
   testGoldenSnapshotAoeWithIntimidateChain,
   testGoldenSnapshotPendingRollSequence,
   testGoldenActionSnapshot,
@@ -529,6 +536,11 @@ function main(): void {
   testCannotAttackStealthedEnemyDirectly();
   testNoStealthStackingOnEnter();
   testStealthLasts3OwnTurnsThenExpiresOn4thStart();
+  testNormalStealthCountsOnlyHiddenFiguresOwnTurnStarts();
+  testLokiStealthUsesOwnTurnDuration();
+  testHassanGrantedStealthUsesGrantedUnitsOwnTurns();
+  testStealthLegacyFallbackAndDebugInitialization();
+  testStealthTurnStartContinuationIsIdempotent();
   testStealthRollLogged();
   testLastKnownPositionsInView();
   testLastKnownPositionPersistsWhileHidden();

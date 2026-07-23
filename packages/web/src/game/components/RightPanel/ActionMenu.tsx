@@ -42,6 +42,26 @@ function resourceStateClass(available: boolean) {
     : "bg-stone-500/10 text-stone-500 ring-1 ring-inset ring-stone-500/15 dark:text-stone-400";
 }
 
+export function getStealthStatusTitle(
+  unit: UnitState,
+  t: ReturnType<typeof useI18n>["t"],
+): string | undefined {
+  if (!unit.isStealthed || !unit.stealthDuration) return undefined;
+  if (unit.stealthDuration.kind === "falseTrail") {
+    return `${t("actionMenu.hidden")}\n${t("actionMenu.falseTrailDurationExempt")}`;
+  }
+  return [
+    t("actionMenu.hidden"),
+    t("actionMenu.turnsHidden", {
+      current: unit.stealthDuration.ownTurnStartsWhileHidden,
+      max: unit.stealthDuration.maxOwnTurnStartsHidden,
+    }),
+    t("actionMenu.stealthExpiryTiming", {
+      turn: unit.stealthDuration.maxOwnTurnStartsHidden + 1,
+    }),
+  ].join("\n");
+}
+
 export const SelectedUnitHeader: FC<{ unit: UnitState | null; heroName: string | null }> = ({
   unit,
   heroName,
@@ -83,7 +103,10 @@ export const SelectedUnitHeader: FC<{ unit: UnitState | null; heroName: string |
           <span aria-hidden="true">·</span>
           <span className="truncate">{classLabel}</span>
           {unit.isStealthed ? (
-            <span className="rounded bg-violet-500/10 px-1.5 py-0.5 text-violet-700 dark:text-violet-200">
+            <span
+              className="rounded bg-violet-500/10 px-1.5 py-0.5 text-violet-700 dark:text-violet-200"
+              title={getStealthStatusTitle(unit, t)}
+            >
               {t("actionMenu.hidden")}
             </span>
           ) : null}
@@ -126,6 +149,7 @@ export const CoreResourceStrip: FC<{
             ? t("actionMenu.noStealth")
             : t("actionMenu.revealed"),
       available: !!unit && (unit.isStealthed || getProjectedStealthThreshold(unit) !== null),
+      title: unit?.isStealthed ? getStealthStatusTitle(unit, t) : undefined,
     },
   ];
 
@@ -136,6 +160,7 @@ export const CoreResourceStrip: FC<{
           <div
             key={item.id}
             data-testid={`core-resource-${item.id}`}
+            title={"title" in item ? item.title : undefined}
             className={`flex min-h-10 min-w-0 flex-col justify-center rounded-md px-1.5 py-1 text-center ${resourceStateClass(item.available)}`}
           >
             <div className="text-[8px] font-black uppercase leading-tight tracking-[0.08em] sm:text-[9px] sm:tracking-[0.12em]">
@@ -182,9 +207,7 @@ export const SpecialHeroResourceStrip: FC<{
             title={display.description || undefined}
           >
             <span className="font-semibold">
-              {resource.id === CHIKATILO_DECOY_ID
-                ? t("actionMenu.decoyPoints")
-                : display.name}
+              {resource.id === CHIKATILO_DECOY_ID ? t("actionMenu.decoyPoints") : display.name}
             </span>{" "}
             <span className="font-black tabular-nums">
               {resource.value}
@@ -239,9 +262,7 @@ export const PassiveImpulseInfo: FC<{ unit: UnitState | null; abilities: Ability
   if (!unit) return null;
   const infoAbilities = abilities.filter(
     (ability) =>
-      (ability.kind === "passive" ||
-        ability.kind === "impulse" ||
-        ability.kind === "phantasm") &&
+      (ability.kind === "passive" || ability.kind === "impulse" || ability.kind === "phantasm") &&
       !shouldRenderManualAbilityButton(ability),
   );
   if (infoAbilities.length === 0) return null;

@@ -1,5 +1,6 @@
 import type { Coord, GameEvent, GameState, UnitState } from "../model";
 import type { ResolveAttackParams } from "./types";
+import { clearUnitStealth } from "../stealth/state";
 
 export function revealStealthedDefenderIfIgnored(
   state: GameState,
@@ -7,7 +8,7 @@ export function revealStealthedDefenderIfIgnored(
   attackerAfter: UnitState,
   defenderAfter: UnitState,
   units: Record<string, UnitState>,
-  events: GameEvent[]
+  events: GameEvent[],
 ): {
   state: GameState;
   defenderAfter: UnitState;
@@ -21,11 +22,7 @@ export function revealStealthedDefenderIfIgnored(
     const shouldReveal =
       params.revealStealthedAllies || attackerAfter.owner !== defenderAfter.owner;
     if (shouldReveal) {
-      defenderAfter = {
-        ...defenderAfter,
-        isStealthed: false,
-        stealthTurnsLeft: 0,
-      };
+      defenderAfter = clearUnitStealth(defenderAfter);
       revealedDefenderPos = defenderAfter.position ?? null;
 
       const attackerOwner = attackerAfter.owner;

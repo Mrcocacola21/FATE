@@ -1,16 +1,10 @@
 import type { GameEvent, GameState, PlayerId, UnitState } from "../../../model";
-import { getUnitDefinition } from "../../../units";
 import { evUnitDied, evUnitPlaced } from "../../../core";
 import { HERO_CHIKATILO_ID } from "../../../heroes";
-import {
-  createFalseTrailToken,
-  getFalseTrailTokenId,
-  insertTokenBefore,
-} from "./helpers";
+import { createFalseTrailToken, getFalseTrailTokenId, insertTokenBefore } from "./helpers";
+import { enterUnitStealth } from "../../../stealth";
 
-export function setupChikatiloFalseTrailForPlacement(
-  state: GameState
-): GameState {
+export function setupChikatiloFalseTrailForPlacement(state: GameState): GameState {
   const units = { ...state.units };
   let changed = false;
 
@@ -36,7 +30,7 @@ export function setupChikatiloFalseTrailForPlacement(
 
 function clearTokenReference(state: GameState, tokenId: string): GameState {
   const owner = Object.values(state.units).find(
-    (unit) => unit.chikatiloFalseTrailTokenId === tokenId
+    (unit) => unit.chikatiloFalseTrailTokenId === tokenId,
   );
   if (!owner) return state;
   const updatedOwner: UnitState = {
@@ -54,7 +48,7 @@ function clearTokenReference(state: GameState, tokenId: string): GameState {
 
 export function removeFalseTrailToken(
   state: GameState,
-  tokenId: string
+  tokenId: string,
 ): { state: GameState; events: GameEvent[] } {
   const token = state.units[tokenId];
   if (!token) return { state, events: [] };
@@ -74,17 +68,17 @@ export function removeFalseTrailToken(
         [updatedToken.id]: updatedToken,
       },
     },
-    tokenId
+    tokenId,
   );
-  const events: GameEvent[] = [
-    evUnitDied({ unitId: updatedToken.id, killerId: null }),
-  ];
+  const events: GameEvent[] = [evUnitDied({ unitId: updatedToken.id, killerId: null })];
   return { state: nextState, events };
 }
 
-export function setupChikatiloFalseTrailAtBattleStart(
-  state: GameState
-): { state: GameState; events: GameEvent[]; placementQueue: string[] } {
+export function setupChikatiloFalseTrailAtBattleStart(state: GameState): {
+  state: GameState;
+  events: GameEvent[];
+  placementQueue: string[];
+} {
   const chikatilos = Object.values(state.units)
     .filter((unit) => unit.isAlive && unit.position && unit.heroId === HERO_CHIKATILO_ID)
     .sort((a, b) => a.id.localeCompare(b.id));
@@ -126,17 +120,19 @@ export function setupChikatiloFalseTrailAtBattleStart(
     const token = createFalseTrailToken(chikatilo, chikatilo.position);
     units[token.id] = token;
 
-    const def = getUnitDefinition("assassin");
-    const updatedChikatilo: UnitState = {
-      ...chikatilo,
-      position: null,
-      isStealthed: true,
-      stealthTurnsLeft: def.maxStealthTurns ?? 3,
-      chikatiloFalseTrailTokenId: token.id,
-      chikatiloMarkedTargets: Array.isArray(chikatilo.chikatiloMarkedTargets)
-        ? chikatilo.chikatiloMarkedTargets
-        : [],
-    };
+    const updatedChikatilo: UnitState = enterUnitStealth(
+      {
+        ...chikatilo,
+        position: null,
+        chikatiloFalseTrailTokenId: token.id,
+        chikatiloMarkedTargets: Array.isArray(chikatilo.chikatiloMarkedTargets)
+          ? chikatilo.chikatiloMarkedTargets
+          : [],
+      },
+      {
+        kind: "falseTrail",
+      },
+    );
     units[updatedChikatilo.id] = updatedChikatilo;
 
     turnQueue = insertTokenBefore(turnQueue, token.id, updatedChikatilo.id);

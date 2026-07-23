@@ -37,7 +37,10 @@ function coordText(coord: { col?: unknown; row?: unknown } | undefined) {
     : "-";
 }
 
-function transformationForm(event: Extract<GameEvent, { type: "unitTransformed" }>, language: Language) {
+function transformationForm(
+  event: Extract<GameEvent, { type: "unitTransformed" }>,
+  language: Language,
+) {
   if (event.toFormId === METTATON_EX_ID || event.abilityId === METTATON_EX_ID) {
     return `${getHeroDisplayName("mettaton", "Mettaton", language)} EX`;
   }
@@ -55,11 +58,7 @@ export function formatDice(roll?: DiceRoll | null) {
   return `(${roll.dice.length ? roll.dice.join(", ") : "-"}) = ${roll.sum ?? "-"}`;
 }
 
-export function formatEventMessage(
-  event: GameEvent,
-  language: Language,
-  t: Translate,
-): string {
+export function formatEventMessage(event: GameEvent, language: Language, t: Translate): string {
   switch (event.type) {
     case "turnStarted":
       return text(
@@ -68,7 +67,11 @@ export function formatEventMessage(
         `Почався хід ${event.player} (хід ${event.turnNumber})`,
       );
     case "roundStarted":
-      return text(language, `Round ${event.roundNumber} started`, `Почався раунд ${event.roundNumber}`);
+      return text(
+        language,
+        `Round ${event.roundNumber} started`,
+        `Почався раунд ${event.roundNumber}`,
+      );
     case "unitPlaced":
       return text(language, `Unit placed: ${event.unitId}`, `Розміщено фігуру: ${event.unitId}`);
     case "unitMoved":
@@ -88,7 +91,8 @@ export function formatEventMessage(
           : event.success === false
             ? text(language, "failed", "невдача")
             : text(language, "unknown", "невідомо");
-      const roll = typeof event.roll === "number" ? ` ${text(language, "rolled", "кидок")} ${event.roll}` : "";
+      const roll =
+        typeof event.roll === "number" ? ` ${text(language, "rolled", "кидок")} ${event.roll}` : "";
       return text(
         language,
         `Stealth attempt: ${event.unitId}${roll} (${result})`,
@@ -96,6 +100,13 @@ export function formatEventMessage(
       );
     }
     case "stealthRevealed":
+      if (event.reason === "timerExpired") {
+        return text(
+          language,
+          `${event.unitId} reveals because stealth duration expired.`,
+          `${event.unitId} розкривається, бо сплинула тривалість скритності.`,
+        );
+      }
       return text(
         language,
         `Stealth revealed: ${event.unitId}`,
@@ -162,7 +173,10 @@ export function formatEventMessage(
         `Кидок Суду: ${event.side} ${event.player} кинув ${event.roll} (${event.effectId})`,
       );
     case "courtEffectApplied": {
-      const target = event.unitId ?? event.targetId ?? (event.position ? `${event.position.col},${event.position.row}` : "-");
+      const target =
+        event.unitId ??
+        event.targetId ??
+        (event.position ? `${event.position.col},${event.position.row}` : "-");
       return text(
         language,
         `Court effect: ${event.effectId} (${value(target)})`,
@@ -198,11 +212,7 @@ export function formatEventMessage(
         `Кидок Місяця: ${event.roll} (${event.effectId})`,
       );
     case "moonEffectApplied":
-      return text(
-        language,
-        `Moon effect: ${event.effectId}`,
-        `Ефект Місяця: ${event.effectId}`,
-      );
+      return text(language, `Moon effect: ${event.effectId}`, `Ефект Місяця: ${event.effectId}`);
     case "advantageThresholdDeclared":
       return text(
         language,
@@ -246,13 +256,25 @@ export function formatEventMessage(
       );
     }
     case "bunkerEntered":
-      return text(language, `Bunker entered: ${event.unitId} (roll ${value(event.roll)})`, `Вхід у бункер: ${event.unitId} (кидок ${value(event.roll)})`);
+      return text(
+        language,
+        `Bunker entered: ${event.unitId} (roll ${value(event.roll)})`,
+        `Вхід у бункер: ${event.unitId} (кидок ${value(event.roll)})`,
+      );
     case "bunkerEnterFailed":
-      return text(language, `Bunker failed: ${event.unitId} (roll ${value(event.roll)})`, `Не вдалося увійти в бункер: ${event.unitId} (кидок ${value(event.roll)})`);
+      return text(
+        language,
+        `Bunker failed: ${event.unitId} (roll ${value(event.roll)})`,
+        `Не вдалося увійти в бункер: ${event.unitId} (кидок ${value(event.roll)})`,
+      );
     case "bunkerExited":
       return text(language, `Bunker exited: ${event.unitId}`, `Вихід із бункера: ${event.unitId}`);
     case "carpetStrikeTriggered":
-      return text(language, `Carpet Strike triggered: ${event.unitId}`, `Килимовий удар активовано: ${event.unitId}`);
+      return text(
+        language,
+        `Carpet Strike triggered: ${event.unitId}`,
+        `Килимовий удар активовано: ${event.unitId}`,
+      );
     case "carpetStrikeCenter":
       return text(
         language,
@@ -274,9 +296,7 @@ export function formatEventMessage(
       const rolls = Array.isArray(event.rolls) ? event.rolls : null;
       const revealed =
         rolls
-          ?.filter(
-            (roll) => roll.success === true && typeof roll.targetId === "string",
-          )
+          ?.filter((roll) => roll.success === true && typeof roll.targetId === "string")
           .map((roll) => roll.targetId) ?? [];
       if (!rolls) {
         return text(language, `${actor} ${modeLabel}.`, `${actor} ${modeLabel}.`);
@@ -296,18 +316,10 @@ export function formatEventMessage(
     }
     case "abilityUsed": {
       if (typeof event.abilityId !== "string" || typeof event.unitId !== "string") {
-        return text(
-          language,
-          "Hidden ability used.",
-          "Використано приховану здібність.",
-        );
+        return text(language, "Hidden ability used.", "Використано приховану здібність.");
       }
       if (event.abilityId === GRIFFITH_FEMTO_REBIRTH_ID) {
-        return text(
-          language,
-          "Griffith was reborn as Femto.",
-          "Гріффіт переродився у Фемто.",
-        );
+        return text(language, "Griffith was reborn as Femto.", "Гріффіт переродився у Фемто.");
       }
       if (event.abilityId === GUTS_BERSERK_MODE_ID) {
         return text(
@@ -338,15 +350,15 @@ export function formatEventMessage(
         );
       }
       const ability = getAbilityDisplay(event.abilityId, event.abilityId, "", language).name;
-      return text(language, `Ability used: ${event.unitId} (${ability})`, `Використано здібність: ${event.unitId} (${ability})`);
+      return text(
+        language,
+        `Ability used: ${event.unitId} (${ability})`,
+        `Використано здібність: ${event.unitId} (${ability})`,
+      );
     }
     case "chikatiloMarkApplied": {
       if (typeof event.targetId !== "string") {
-        return text(
-          language,
-          "Killer's Mark was applied.",
-          "Мітку вбивці накладено.",
-        );
+        return text(language, "Killer's Mark was applied.", "Мітку вбивці накладено.");
       }
       return text(
         language,
@@ -365,21 +377,53 @@ export function formatEventMessage(
       );
     case "papyrusBonePunished":
     case "sansBoneFieldPunished":
-      return text(language, `Bone punishment: ${event.targetId} took ${event.damage}`, `Покарання кісткою: ${event.targetId} отримує ${event.damage} шкоди`);
+      return text(
+        language,
+        `Bone punishment: ${event.targetId} took ${event.damage}`,
+        `Покарання кісткою: ${event.targetId} отримує ${event.damage} шкоди`,
+      );
     case "sansBadassJokeApplied":
-      return text(language, `Movement locked: ${event.targetId}`, `Переміщення заблоковано: ${event.targetId}`);
+      return text(
+        language,
+        `Movement locked: ${event.targetId}`,
+        `Переміщення заблоковано: ${event.targetId}`,
+      );
     case "sansMoveDenied":
-      return text(language, `Movement denied: ${event.unitId}`, `Переміщення заборонено: ${event.unitId}`);
+      return text(
+        language,
+        `Movement denied: ${event.unitId}`,
+        `Переміщення заборонено: ${event.unitId}`,
+      );
     case "sansBoneFieldActivated":
-      return text(language, `Bone Field activated: ${event.sansId} (${event.duration} turns)`, `Поле кісток активовано: ${event.sansId} (${event.duration} ходів)`);
+      return text(
+        language,
+        `Bone Field activated: ${event.sansId} (${event.duration} turns)`,
+        `Поле кісток активовано: ${event.sansId} (${event.duration} ходів)`,
+      );
     case "sansBoneFieldApplied":
-      return text(language, `Bone Field applied to ${event.unitId}`, `Поле кісток діє на ${event.unitId}`);
+      return text(
+        language,
+        `Bone Field applied to ${event.unitId}`,
+        `Поле кісток діє на ${event.unitId}`,
+      );
     case "sansLastAttackApplied":
-      return text(language, `Curse applied: ${event.targetId}`, `Прокляття накладено: ${event.targetId}`);
+      return text(
+        language,
+        `Curse applied: ${event.targetId}`,
+        `Прокляття накладено: ${event.targetId}`,
+      );
     case "sansLastAttackTick":
-      return text(language, `Curse: ${event.targetId} took ${event.damage}`, `Прокляття: ${event.targetId} отримує ${event.damage} шкоди`);
+      return text(
+        language,
+        `Curse: ${event.targetId} took ${event.damage}`,
+        `Прокляття: ${event.targetId} отримує ${event.damage} шкоди`,
+      );
     case "sansLastAttackRemoved":
-      return text(language, `Curse removed: ${event.targetId}`, `Прокляття знято: ${event.targetId}`);
+      return text(
+        language,
+        `Curse removed: ${event.targetId}`,
+        `Прокляття знято: ${event.targetId}`,
+      );
     case "friskHugsApplied":
       return text(
         language,
@@ -431,11 +475,7 @@ export function formatEventMessage(
       const form = transformationForm(event, language);
       if (event.reason === "griffithFemtoRebirth") {
         const from = getHeroDisplayName("griffith", "Griffith", language);
-        return text(
-          language,
-          `${from} was reborn as ${form}.`,
-          `${from} переродився у ${form}.`,
-        );
+        return text(language, `${from} was reborn as ${form}.`, `${from} переродився у ${form}.`);
       }
       if (event.reason === "mettatonThreshold") {
         return text(
@@ -463,9 +503,7 @@ export function formatEventMessage(
         `Річкова Людина перевезла ${value(event.passengerId)} до ${coordText(event.dropDestination)}.`,
       );
     case "riverTraLaLaResolved": {
-      const attackers = Array.isArray(event.touchedAttackerIds)
-        ? event.touchedAttackerIds
-        : [];
+      const attackers = Array.isArray(event.touchedAttackerIds) ? event.touchedAttackerIds : [];
       const attackText =
         attackers.length > 0
           ? ` During Tra-la-la, ${unitList(attackers, language)} attacked ${value(event.targetId)}.`
@@ -503,17 +541,37 @@ export function formatEventMessage(
         }`,
       );
     case "unitHealed":
-      return text(language, `Healed: ${event.unitId} +${event.amount} (HP ${event.hpAfter})`, `Лікування: ${event.unitId} +${event.amount} (здоров’я ${event.hpAfter})`);
+      return text(
+        language,
+        `Healed: ${event.unitId} +${event.amount} (HP ${event.hpAfter})`,
+        `Лікування: ${event.unitId} +${event.amount} (здоров’я ${event.hpAfter})`,
+      );
     case "damageBonusApplied":
-      return text(language, `Damage bonus: ${event.unitId} +${event.amount}`, `Бонус шкоди: ${event.unitId} +${event.amount}`);
+      return text(
+        language,
+        `Damage bonus: ${event.unitId} +${event.amount}`,
+        `Бонус шкоди: ${event.unitId} +${event.amount}`,
+      );
     case "stakesPlaced":
-      return text(language, `Stakes placed: ${event.owner} (${event.positions?.length ?? 0})`, `Кілки розміщено: ${event.owner} (${event.positions?.length ?? 0})`);
+      return text(
+        language,
+        `Stakes placed: ${event.owner} (${event.positions?.length ?? 0})`,
+        `Кілки розміщено: ${event.owner} (${event.positions?.length ?? 0})`,
+      );
     case "stakeTriggered":
       return text(language, `Stake triggered: ${event.unitId}`, `Кілок спрацював: ${event.unitId}`);
     case "intimidateTriggered":
-      return text(language, `Intimidate: ${event.defenderId} vs ${event.attackerId}`, `Залякування: ${event.defenderId} проти ${event.attackerId}`);
+      return text(
+        language,
+        `Intimidate: ${event.defenderId} vs ${event.attackerId}`,
+        `Залякування: ${event.defenderId} проти ${event.attackerId}`,
+      );
     case "intimidateResolved":
-      return text(language, `Intimidate push: ${event.attackerId}`, `Відштовхування залякуванням: ${event.attackerId}`);
+      return text(
+        language,
+        `Intimidate push: ${event.attackerId}`,
+        `Відштовхування залякуванням: ${event.attackerId}`,
+      );
     case "forestActivated":
       return text(language, `Forest activated: ${event.vladId}`, `Ліс активовано: ${event.vladId}`);
     case "aoeResolved":
@@ -523,11 +581,23 @@ export function formatEventMessage(
         `Атаку області завершено: ${event.sourceUnitId} (${event.affectedUnitIds?.length ?? 0} цілей)`,
       );
     case "moveOptionsGenerated":
-      return text(language, `Move options: ${event.unitId}`, `Варіанти переміщення: ${event.unitId}`);
+      return text(
+        language,
+        `Move options: ${event.unitId}`,
+        `Варіанти переміщення: ${event.unitId}`,
+      );
     case "moveBlocked":
-      return text(language, `Move blocked: ${event.unitId}`, `Переміщення заблоковано: ${event.unitId}`);
+      return text(
+        language,
+        `Move blocked: ${event.unitId}`,
+        `Переміщення заблоковано: ${event.unitId}`,
+      );
     case "battleStarted":
-      return text(language, `Battle started: ${event.startingPlayer}`, `Бій почався: ${event.startingPlayer}`);
+      return text(
+        language,
+        `Battle started: ${event.startingPlayer}`,
+        `Бій почався: ${event.startingPlayer}`,
+      );
     case "arenaChosen":
       return text(
         language,
@@ -536,11 +606,7 @@ export function formatEventMessage(
       );
     case "gameEnded":
       const winner = t(`roles.${event.winner}`);
-      return text(
-        language,
-        `Battle ended. ${winner} wins.`,
-        `Бій завершено. ${winner} переміг.`,
-      );
+      return text(language, `Battle ended. ${winner} wins.`, `Бій завершено. ${winner} переміг.`);
     default:
       return t("log.unknownEvent");
   }

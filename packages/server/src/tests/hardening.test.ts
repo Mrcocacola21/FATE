@@ -1998,6 +1998,78 @@ function testMissedHiddenAttackRevealIsAuthoritative() {
   console.log("hardening_missed_hidden_attack_reveal_is_authoritative passed");
 }
 
+function testStealthDurationExpiryIsAuthoritative() {
+  const { room } = makeSeatedRoom({
+    roomIdPrefix: "hardening-stealth-duration-expiry",
+  });
+  let state = attachArmy(
+    attachArmy(createEmptyGame(), createDefaultArmy("P1")),
+    createDefaultArmy("P2"),
+  );
+  const hidden = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.class === "assassin",
+  );
+  assert(hidden, "expected Assassin duration fixture");
+  state = setUnit(state, hidden.id, {
+    position: { col: 4, row: 4 },
+    isStealthed: true,
+    stealthTurnsLeft: 0,
+    stealthDuration: {
+      ownTurnStartsWhileHidden: 3,
+      maxOwnTurnStartsHidden: 3,
+      lastProcessedOwnTurnStart: 3,
+      kind: "normal",
+    },
+    ownTurnsStarted: 3,
+  });
+  room.state = {
+    ...state,
+    phase: "battle",
+    currentPlayer: "P1",
+    activeUnitId: null,
+    pendingRoll: null,
+    turnOrder: [hidden.id],
+    turnOrderIndex: 0,
+    turnQueue: [hidden.id],
+    turnQueueIndex: 0,
+  };
+
+  const result = applyGameAction(room, { type: "unitStartTurn", unitId: hidden.id } as any, "P1");
+  assert.equal(result.ok, true, "server should accept the fourth own turn start");
+  if (!result.ok) {
+    throw new Error("server rejected the fourth own turn start");
+  }
+  assert.equal(
+    room.state.units[hidden.id].isStealthed,
+    false,
+    "authoritative state should reveal exactly on the fourth own start",
+  );
+  assert(
+    result.events.some(
+      (event) =>
+        event.type === "stealthRevealed" &&
+        event.unitId === hidden.id &&
+        event.reason === "timerExpired",
+    ),
+    "accepted command should return the duration expiry event",
+  );
+  assert(
+    room.actionLog
+      .at(-1)
+      ?.events.some(
+        (event) =>
+          event.type === "stealthRevealed" &&
+          event.unitId === hidden.id &&
+          event.reason === "timerExpired",
+      ),
+    "authoritative event log should persist the duration expiry event",
+  );
+  assert.equal(makePlayerView(room.state, "P1").units[hidden.id].isStealthed, false);
+  assert.equal(makePlayerView(room.state, "P2").units[hidden.id].isStealthed, false);
+
+  console.log("hardening_stealth_duration_expiry_is_authoritative passed");
+}
+
 function testChikatiloCommandsAndResourcesAreAuthoritative() {
   const { room } = makeSeatedRoom({ roomIdPrefix: "hardening-chikatilo" });
   let state = attachArmy(
@@ -2219,6 +2291,7 @@ async function main() {
   testMongolChargePendingChoiceIsAuthoritative();
   testHassanAssassinOrderCommandAndProjectionAreAuthoritative();
   testMissedHiddenAttackRevealIsAuthoritative();
+  testStealthDurationExpiryIsAuthoritative();
   testChikatiloCommandsAndResourcesAreAuthoritative();
   testWindmillsCommandsAreAuthoritative();
   console.log("hardening tests passed");

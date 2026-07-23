@@ -43,14 +43,13 @@ export function getFemtoBaseAttack(): number {
 
 export function applyGriffithFemtoRebirth(
   unit: UnitState,
-  deathPosition: Coord | null
+  deathPosition: Coord | null,
 ): { unit: UnitState; events: GameEvent[]; transformed: boolean } {
   if (!isGriffith(unit) || !deathPosition) {
     return { unit, events: [], transformed: false };
   }
 
-  const autoDefenseCharges =
-    getAbilitySpec(ABILITY_BERSERK_AUTO_DEFENSE)?.maxCharges ?? 6;
+  const autoDefenseCharges = getAbilitySpec(ABILITY_BERSERK_AUTO_DEFENSE)?.maxCharges ?? 6;
   const reborn: UnitState = {
     ...unit,
     heroId: HERO_FEMTO_ID,
@@ -64,6 +63,7 @@ export function applyGriffithFemtoRebirth(
     movementDisabledNextTurn: false,
     isStealthed: false,
     stealthTurnsLeft: 0,
+    stealthDuration: undefined,
     stealthSuccessMinRoll: undefined,
     charges: {
       ...unit.charges,
@@ -87,11 +87,7 @@ export function applyGriffithFemtoRebirth(
   };
 }
 
-function getFemtoDivineMoveOptions(
-  state: GameState,
-  unit: UnitState,
-  roll: number
-): Coord[] {
+function getFemtoDivineMoveOptions(state: GameState, unit: UnitState, roll: number): Coord[] {
   if (!unit.position) return [];
   const origin = unit.position;
   const options: Coord[] = [];
@@ -110,10 +106,7 @@ function getFemtoDivineMoveOptions(
     for (let col = 0; col < state.boardSize; col += 1) {
       for (let row = 0; row < state.boardSize; row += 1) {
         const coord = { col, row };
-        const cheb = Math.max(
-          Math.abs(coord.col - origin.col),
-          Math.abs(coord.row - origin.row)
-        );
+        const cheb = Math.max(Math.abs(coord.col - origin.col), Math.abs(coord.row - origin.row));
         if (cheb > 2) continue;
         if (!canUseCell(coord)) continue;
         options.push(coord);
@@ -155,10 +148,7 @@ function parseCoordList(raw: unknown): Coord[] {
   return result;
 }
 
-export function applyFemtoDivineMove(
-  state: GameState,
-  unit: UnitState
-): ApplyResult {
+export function applyFemtoDivineMove(state: GameState, unit: UnitState): ApplyResult {
   if (!isFemto(unit) || !unit.position) {
     return { state, events: [] };
   }
@@ -181,16 +171,14 @@ export function applyFemtoDivineMove(
       [updatedUnit.id]: updatedUnit,
     },
   };
-  const events: GameEvent[] = [
-    evAbilityUsed({ unitId: updatedUnit.id, abilityId: spec.id }),
-  ];
+  const events: GameEvent[] = [evAbilityUsed({ unitId: updatedUnit.id, abilityId: spec.id })];
 
   const requested = requestRoll(
     nextState,
     updatedUnit.owner,
     "femtoDivineMoveRoll",
     { unitId: updatedUnit.id },
-    updatedUnit.id
+    updatedUnit.id,
   );
 
   return { state: requested.state, events: [...events, ...requested.events] };
@@ -199,10 +187,9 @@ export function applyFemtoDivineMove(
 export function resolveFemtoDivineMoveRoll(
   state: GameState,
   pending: PendingRoll,
-  rng: RNG
+  rng: RNG,
 ): ApplyResult {
-  const unitId =
-    typeof pending.context.unitId === "string" ? pending.context.unitId : null;
+  const unitId = typeof pending.context.unitId === "string" ? pending.context.unitId : null;
   if (!unitId) {
     return { state: clearPendingRoll(state), events: [] };
   }
@@ -224,7 +211,7 @@ export function resolveFemtoDivineMoveRoll(
     unit.owner,
     "femtoDivineMoveDestination",
     { unitId: unit.id, roll, options },
-    unit.id
+    unit.id,
   );
 }
 
@@ -232,10 +219,9 @@ export function resolveFemtoDivineMoveDestinationChoice(
   state: GameState,
   pending: PendingRoll,
   choice: ResolveRollChoice | undefined,
-  rng: RNG
+  rng: RNG,
 ): ApplyResult {
-  const unitId =
-    typeof pending.context.unitId === "string" ? pending.context.unitId : null;
+  const unitId = typeof pending.context.unitId === "string" ? pending.context.unitId : null;
   if (!unitId) {
     return { state: clearPendingRoll(state), events: [] };
   }
@@ -255,7 +241,7 @@ export function resolveFemtoDivineMoveDestinationChoice(
   }
 
   const allowed = options.some(
-    (coord) => coord.col === destination.col && coord.row === destination.row
+    (coord) => coord.col === destination.col && coord.row === destination.row,
   );
   if (!allowed) {
     return { state, events: [] };
@@ -291,4 +277,3 @@ export function resolveFemtoDivineMoveDestinationChoice(
     ],
   };
 }
-

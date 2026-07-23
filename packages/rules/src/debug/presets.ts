@@ -1,7 +1,4 @@
-import {
-  ABILITY_EL_SID_COMPEADOR_KOLADA,
-  ABILITY_KAISER_ENGINEERING_MIRACLE,
-} from "../abilities";
+import { ABILITY_EL_SID_COMPEADOR_KOLADA, ABILITY_KAISER_ENGINEERING_MIRACLE } from "../abilities";
 import {
   HERO_ASGORE_ID,
   HERO_EL_CID_COMPEADOR_ID,
@@ -123,7 +120,15 @@ export function createDebugPreset(presetId: DebugPresetId): GameState {
           heroId: HERO_GRIFFITH_ID,
           owner: "P2",
           coord: { col: 6, row: 4 },
-          patch: { isStealthed: true, stealthTurnsLeft: 3 },
+          patch: {
+            isStealthed: true,
+            stealthTurnsLeft: 3,
+            stealthDuration: {
+              ownTurnStartsWhileHidden: 0,
+              maxOwnTurnStartsHidden: 3,
+              kind: "normal",
+            },
+          },
         },
         { heroId: HERO_KALADIN_ID, owner: "P2", coord: { col: 7, row: 6 } },
       ]);

@@ -43,9 +43,8 @@ import {
   replacePendingRoll,
 } from "../core";
 import { endGameWithWinner, hasPendingBattleResolution } from "../gameOver";
-import {
-  getAvailableRuleDeclarationIds,
-} from "./registry";
+import { clearUnitStealth, enterUnitStealth } from "../stealth";
+import { getAvailableRuleDeclarationIds } from "./registry";
 import type {
   AdvantageGameState,
   CourtEffectId,
@@ -103,10 +102,7 @@ function getRuleState(state: GameState): RuleDeclarationState {
   return state.ruleDeclaration ?? emptyRuleState();
 }
 
-function withRuleState(
-  state: GameState,
-  ruleDeclaration: RuleDeclarationState
-): GameState {
+function withRuleState(state: GameState, ruleDeclaration: RuleDeclarationState): GameState {
   return { ...state, ruleDeclaration };
 }
 
@@ -139,10 +135,7 @@ export function isRealRosterUnit(unit: UnitState): boolean {
 
 export function livingRealUnits(state: GameState, player: PlayerId): UnitState[] {
   return Object.values(state.units).filter(
-    (unit) =>
-      unit.owner === player &&
-      unit.isAlive &&
-      isRealRosterUnit(unit)
+    (unit) => unit.owner === player && unit.isAlive && isRealRosterUnit(unit),
   );
 }
 
@@ -195,16 +188,12 @@ function cloneRuleData(state: GameState): RuleDeclarationState["ruleData"] {
 }
 
 function maxAdvantageThreshold(state: GameState): number {
-  return Math.max(
-    3,
-    livingRealUnits(state, "P1").length,
-    livingRealUnits(state, "P2").length
-  );
+  return Math.max(3, livingRealUnits(state, "P1").length, livingRealUnits(state, "P2").length);
 }
 
 export function requestRuleDeclarationChoice(
   state: GameState,
-  initiativeWinner: PlayerId
+  initiativeWinner: PlayerId,
 ): ApplyResult {
   const chooser = otherPlayer(initiativeWinner);
   const nextState = withRuleState(
@@ -218,7 +207,7 @@ export function requestRuleDeclarationChoice(
       chooserPlayer: chooser,
       setupComplete: false,
       ruleData: {},
-    }
+    },
   );
 
   return requestRoll(
@@ -230,7 +219,7 @@ export function requestRuleDeclarationChoice(
       initiativeWinner,
       availableRuleIds: getAvailableRuleDeclarationIds(),
     },
-    undefined
+    undefined,
   );
 }
 
@@ -270,7 +259,7 @@ function requestChessKingChoice(
   state: GameState,
   player: PlayerId,
   queue: PlayerId[],
-  events: GameEvent[]
+  events: GameEvent[],
 ): ApplyResult {
   const requested = replacePendingRoll(
     state,
@@ -281,7 +270,7 @@ function requestChessKingChoice(
       queue,
       options: selectableOwnUnits(state, player),
     },
-    undefined
+    undefined,
   );
   return { state: requested.state, events: [...events, ...requested.events] };
 }
@@ -289,7 +278,7 @@ function requestChessKingChoice(
 function requestAdvantageThreshold(
   state: GameState,
   player: PlayerId,
-  events: GameEvent[]
+  events: GameEvent[],
 ): ApplyResult {
   const max = maxAdvantageThreshold(state);
   const requested = replacePendingRoll(
@@ -301,7 +290,7 @@ function requestAdvantageThreshold(
       min: 3,
       max,
     },
-    undefined
+    undefined,
   );
   return { state: requested.state, events: [...events, ...requested.events] };
 }
@@ -309,7 +298,7 @@ function requestAdvantageThreshold(
 export function resolveRuleDeclarationChoice(
   state: GameState,
   pending: PendingRoll,
-  choice: ResolveRollChoice | undefined
+  choice: ResolveRollChoice | undefined,
 ): ApplyResult {
   const rule = getRuleState(state);
   if (pending.kind !== "ruleDeclarationChoice") {
@@ -404,10 +393,7 @@ export function resolveRuleDeclarationChoice(
   return requestAdvantageThreshold(nextState, pending.player, events);
 }
 
-export function applyNormalVictoryCheck(
-  state: GameState,
-  events: GameEvent[]
-): ApplyResult {
+export function applyNormalVictoryCheck(state: GameState, events: GameEvent[]): ApplyResult {
   if (state.phase === "ended") return { state, events };
   if (state.phase !== "battle") return { state, events };
   if (hasPendingBattleResolution(state)) return { state, events };
@@ -416,15 +402,9 @@ export function applyNormalVictoryCheck(
   const p2Alive = livingRealUnits(state, "P2").length > 0;
   if (p1Alive && p2Alive) return { state, events };
 
-  const winner: PlayerId | null =
-    !p1Alive && p2Alive ? "P2" : p1Alive && !p2Alive ? "P1" : null;
+  const winner: PlayerId | null = !p1Alive && p2Alive ? "P2" : p1Alive && !p2Alive ? "P1" : null;
   if (winner) {
-    return endGameWithWinner(
-      state,
-      events,
-      winner,
-      "allEnemyUnitsDefeated"
-    );
+    return endGameWithWinner(state, events, winner, "allEnemyUnitsDefeated");
   }
   return {
     state: {
@@ -444,7 +424,7 @@ export function applyNormalVictoryCheck(
 export function resolveChessKingChoice(
   state: GameState,
   pending: PendingRoll,
-  choice: ResolveRollChoice | undefined
+  choice: ResolveRollChoice | undefined,
 ): ApplyResult {
   if (pending.kind !== "ruleDeclarationChessKingChoice") {
     return { state, events: [] };
@@ -487,7 +467,7 @@ export function resolveChessKingChoice(
 export function resolveAdvantageThresholdChoice(
   state: GameState,
   pending: PendingRoll,
-  choice: ResolveRollChoice | undefined
+  choice: ResolveRollChoice | undefined,
 ): ApplyResult {
   if (pending.kind !== "ruleDeclarationAdvantageThreshold") {
     return { state, events: [] };
@@ -524,10 +504,7 @@ function getPendingRoundAdvance(state: GameState): PendingRoundAdvance | null {
   return getRuleState(state).ruleData.pendingRoundAdvance ?? null;
 }
 
-function setPendingRoundAdvance(
-  state: GameState,
-  advance: PendingRoundAdvance | null
-): GameState {
+function setPendingRoundAdvance(state: GameState, advance: PendingRoundAdvance | null): GameState {
   const rule = getRuleState(state);
   return withRuleState(state, {
     ...rule,
@@ -550,19 +527,15 @@ function nearestEmptyCell(state: GameState, origin: Coord): Coord | null {
   return cells[0] ?? null;
 }
 
-function clearExpiredRuleStatusesAtRoundEnd(
-  state: GameState,
-  endedRound: number
-): ApplyResult {
+function clearExpiredRuleStatusesAtRoundEnd(state: GameState, endedRound: number): ApplyResult {
   let units = state.units;
   const events: GameEvent[] = [];
   let changed = false;
 
   for (const unit of Object.values(units)) {
     let updated = unit;
-    const clear =
-      (status?: { expiresAtRoundEnd: number }) =>
-        !!status && status.expiresAtRoundEnd <= endedRound;
+    const clear = (status?: { expiresAtRoundEnd: number }) =>
+      !!status && status.expiresAtRoundEnd <= endedRound;
 
     if (clear(updated.courtExtraFlexibleAction)) {
       updated = { ...updated, courtExtraFlexibleAction: undefined };
@@ -644,7 +617,7 @@ function clearExpiredRuleStatusesAtRoundEnd(
 
 export function completePendingRoundAdvance(
   state: GameState,
-  leadingEvents: GameEvent[] = []
+  leadingEvents: GameEvent[] = [],
 ): ApplyResult {
   const advance = getPendingRoundAdvance(state);
   if (!advance || state.phase !== "battle") {
@@ -689,7 +662,7 @@ export function completePendingRoundAdvance(
         ...rule.ruleData,
         pendingRoundAdvance: null,
       },
-    }
+    },
   );
 
   return {
@@ -702,10 +675,7 @@ export function completePendingRoundAdvance(
   };
 }
 
-function requestCourtAttackerRoll(
-  state: GameState,
-  events: GameEvent[]
-): ApplyResult {
+function requestCourtAttackerRoll(state: GameState, events: GameEvent[]): ApplyResult {
   const court = getRuleState(state).ruleData.court;
   if (!court) return completePendingRoundAdvance(state, events);
   const requested = requestRoll(
@@ -713,27 +683,21 @@ function requestCourtAttackerRoll(
     court.attackerPlayer,
     "courtAttackerRoll",
     { side: "attacker" },
-    undefined
+    undefined,
   );
   return { state: requested.state, events: [...events, ...requested.events] };
 }
 
 function requestMoonRoundRoll(state: GameState, events: GameEvent[]): ApplyResult {
   const player = getRuleState(state).chooserPlayer ?? state.currentPlayer;
-  const requested = requestRoll(
-    state,
-    player,
-    "moonRoundRoll",
-    {},
-    undefined
-  );
+  const requested = requestRoll(state, player, "moonRoundRoll", {}, undefined);
   return { state: requested.state, events: [...events, ...requested.events] };
 }
 
 export function handleRuleDeclarationRoundEnd(
   state: GameState,
   advance: PendingRoundAdvance,
-  rng: RNG
+  rng: RNG,
 ): ApplyResult {
   void rng;
   const cleaned = clearExpiredRuleStatusesAtRoundEnd(state, state.roundNumber);
@@ -754,15 +718,11 @@ export function handleRuleDeclarationRoundEnd(
 
 function courtEffectForRoll(side: "attacker" | "defender", roll: number): CourtEffectId {
   return side === "attacker"
-    ? COURT_ATTACKER_EFFECTS[roll] ?? "judicialManeuver"
-    : COURT_DEFENDER_EFFECTS[roll] ?? "proceduralRestrictions";
+    ? (COURT_ATTACKER_EFFECTS[roll] ?? "judicialManeuver")
+    : (COURT_DEFENDER_EFFECTS[roll] ?? "proceduralRestrictions");
 }
 
-export function resolveCourtRoll(
-  state: GameState,
-  pending: PendingRoll,
-  rng: RNG
-): ApplyResult {
+export function resolveCourtRoll(state: GameState, pending: PendingRoll, rng: RNG): ApplyResult {
   const rule = getRuleState(state);
   const court = rule.ruleData.court;
   if (rule.selectedRuleId !== "court" || !court) {
@@ -808,9 +768,7 @@ export function resolveCourtRoll(
     ...rule,
     ruleData: data,
   });
-  const events: GameEvent[] = [
-    evCourtRollResult({ side, player, roll, effectId }),
-  ];
+  const events: GameEvent[] = [evCourtRollResult({ side, player, roll, effectId })];
 
   if (side === "attacker") {
     const requested = requestRoll(
@@ -818,7 +776,7 @@ export function resolveCourtRoll(
       court.defenderPlayer,
       "courtDefenderRoll",
       { side: "defender" },
-      undefined
+      undefined,
     );
     return { state: requested.state, events: [...events, ...requested.events] };
   }
@@ -866,7 +824,7 @@ function courtUnitOptions(state: GameState, effect: CourtPendingEffect): string[
       return selectableEnemyUnits(state, effect.player);
     case "exposure": {
       const hidden = selectableOwnUnits(state, effect.player).filter(
-        (unitId) => state.units[unitId]?.isStealthed
+        (unitId) => state.units[unitId]?.isStealthed,
       );
       return hidden.length > 0 ? hidden : selectableOwnUnits(state, effect.player);
     }
@@ -921,11 +879,7 @@ function finishCourtCycle(state: GameState, events: GameEvent[]): ApplyResult {
   ]);
 }
 
-function requestNextCourtEffect(
-  state: GameState,
-  events: GameEvent[],
-  rng: RNG
-): ApplyResult {
+function requestNextCourtEffect(state: GameState, events: GameEvent[], rng: RNG): ApplyResult {
   void rng;
   const court = getRuleState(state).ruleData.court;
   const next = court?.pendingEffects?.[0] ?? null;
@@ -935,17 +889,18 @@ function requestNextCourtEffect(
   const options = courtUnitOptions(state, next);
   if (options.length === 0) {
     const popped = popCourtEffect(state);
-    return requestNextCourtEffect(popped.state, [
-      ...events,
-      evCourtEffectApplied({ effectId: next.effectId, player: next.player }),
-    ], rng);
+    return requestNextCourtEffect(
+      popped.state,
+      [...events, evCourtEffectApplied({ effectId: next.effectId, player: next.player })],
+      rng,
+    );
   }
   const requested = replacePendingRoll(
     state,
     next.player,
     "courtEffectUnitChoice",
     { effect: next, options },
-    undefined
+    undefined,
   );
   return { state: requested.state, events: [...events, ...requested.events] };
 }
@@ -953,11 +908,7 @@ function requestNextCourtEffect(
 function revealUnit(state: GameState, unitId: string): ApplyResult {
   const unit = state.units[unitId];
   if (!unit || !unit.isAlive) return { state, events: [] };
-  const updated = {
-    ...unit,
-    isStealthed: false,
-    stealthTurnsLeft: 0,
-  };
+  const updated = clearUnitStealth(unit);
   return {
     state: {
       ...state,
@@ -971,17 +922,11 @@ function revealUnit(state: GameState, unitId: string): ApplyResult {
         P2: { ...(state.lastKnownPositions?.P2 ?? {}) },
       },
     },
-    events: unit.isStealthed
-      ? [evStealthRevealed({ unitId, reason: "forcedDisplacement" })]
-      : [],
+    events: unit.isStealthed ? [evStealthRevealed({ unitId, reason: "forcedDisplacement" })] : [],
   };
 }
 
-function putInStasis(
-  state: GameState,
-  unitId: string,
-  expiresAtRoundEnd: number
-): GameState {
+function putInStasis(state: GameState, unitId: string, expiresAtRoundEnd: number): GameState {
   const unit = state.units[unitId];
   if (!unit || !unit.position) return state;
   return {
@@ -1000,12 +945,7 @@ function putInStasis(
   };
 }
 
-function moveUnitTo(
-  state: GameState,
-  unitId: string,
-  to: Coord,
-  rng: RNG
-): ApplyResult {
+function moveUnitTo(state: GameState, unitId: string, to: Coord, rng: RNG): ApplyResult {
   const unit = state.units[unitId];
   if (!unit || !unit.isAlive || !unit.position || isCellOccupied(state, to)) {
     return { state, events: [] };
@@ -1037,7 +977,7 @@ function applyCourtUnitEffect(
   state: GameState,
   effect: CourtPendingEffect,
   unitId: string,
-  rng: RNG
+  rng: RNG,
 ): ApplyResult {
   const unit = state.units[unitId];
   if (!unit || !unit.isAlive) return { state, events: [] };
@@ -1058,7 +998,9 @@ function applyCourtUnitEffect(
           },
         },
       };
-      events.push(evCourtEffectApplied({ effectId: effect.effectId, player: effect.player, unitId }));
+      events.push(
+        evCourtEffectApplied({ effectId: effect.effectId, player: effect.player, unitId }),
+      );
       break;
     case "escortTransfer":
       nextState = {
@@ -1071,12 +1013,20 @@ function applyCourtUnitEffect(
           },
         },
       };
-      events.push(evCourtEffectApplied({ effectId: effect.effectId, player: effect.player, unitId }));
+      events.push(
+        evCourtEffectApplied({ effectId: effect.effectId, player: effect.player, unitId }),
+      );
       break;
     case "detention":
     case "falseAlibi":
       nextState = putInStasis(state, unitId, expiresAtRoundEnd);
-      events.push(evCourtEffectApplied({ effectId: effect.effectId, player: effect.player, targetId: unitId }));
+      events.push(
+        evCourtEffectApplied({
+          effectId: effect.effectId,
+          player: effect.player,
+          targetId: unitId,
+        }),
+      );
       break;
     case "damageCompensation":
       nextState = {
@@ -1089,14 +1039,20 @@ function applyCourtUnitEffect(
           },
         },
       };
-      events.push(evCourtEffectApplied({ effectId: effect.effectId, player: effect.player, unitId }));
+      events.push(
+        evCourtEffectApplied({ effectId: effect.effectId, player: effect.player, unitId }),
+      );
       break;
     case "crimeScene": {
       const revealed = revealUnit(state, unitId);
       nextState = revealed.state;
       events.push(
-        evCourtEffectApplied({ effectId: effect.effectId, player: effect.player, targetId: unitId }),
-        ...revealed.events
+        evCourtEffectApplied({
+          effectId: effect.effectId,
+          player: effect.player,
+          targetId: unitId,
+        }),
+        ...revealed.events,
       );
       break;
     }
@@ -1111,7 +1067,9 @@ function applyCourtUnitEffect(
           },
         },
       };
-      events.push(evCourtEffectApplied({ effectId: effect.effectId, player: effect.player, unitId }));
+      events.push(
+        evCourtEffectApplied({ effectId: effect.effectId, player: effect.player, unitId }),
+      );
       break;
     case "forcedAppearance": {
       const options = emptyCells(state);
@@ -1122,7 +1080,7 @@ function applyCourtUnitEffect(
         chooser,
         "courtForcedAppearanceDestination",
         { effect, unitId, options },
-        undefined
+        undefined,
       );
       return { state: requested.state, events: requested.events };
     }
@@ -1137,7 +1095,9 @@ function applyCourtUnitEffect(
           },
         },
       };
-      events.push(evCourtEffectApplied({ effectId: effect.effectId, player: effect.player, unitId }));
+      events.push(
+        evCourtEffectApplied({ effectId: effect.effectId, player: effect.player, unitId }),
+      );
       break;
     case "exposure": {
       if (unit.isStealthed) {
@@ -1156,17 +1116,19 @@ function applyCourtUnitEffect(
           },
         };
       }
-      events.push(evCourtEffectApplied({ effectId: effect.effectId, player: effect.player, unitId }));
+      events.push(
+        evCourtEffectApplied({ effectId: effect.effectId, player: effect.player, unitId }),
+      );
       break;
     }
     case "maximumSentence":
     case "sentenceAnnulment": {
       const options =
-        effect.effectId === "maximumSentence"
-          ? boundedChargeIds(unit)
-          : anyChargeIds(unit);
+        effect.effectId === "maximumSentence" ? boundedChargeIds(unit) : anyChargeIds(unit);
       if (options.length === 0) {
-        events.push(evCourtEffectApplied({ effectId: effect.effectId, player: effect.player, unitId }));
+        events.push(
+          evCourtEffectApplied({ effectId: effect.effectId, player: effect.player, unitId }),
+        );
         break;
       }
       const requested = replacePendingRoll(
@@ -1174,7 +1136,7 @@ function applyCourtUnitEffect(
         effect.player,
         "courtEffectChargeChoice",
         { effect, unitId, options },
-        undefined
+        undefined,
       );
       return { state: requested.state, events: requested.events };
     }
@@ -1187,7 +1149,7 @@ export function resolveCourtEffectUnitChoice(
   state: GameState,
   pending: PendingRoll,
   choice: ResolveRollChoice | undefined,
-  rng: RNG
+  rng: RNG,
 ): ApplyResult {
   if (pending.kind !== "courtEffectUnitChoice") return { state, events: [] };
   if (!choice || typeof choice !== "object" || choice.type !== "ruleUnit") {
@@ -1210,7 +1172,7 @@ export function resolveCourtEffectChargeChoice(
   state: GameState,
   pending: PendingRoll,
   choice: ResolveRollChoice | undefined,
-  rng: RNG
+  rng: RNG,
 ): ApplyResult {
   if (pending.kind !== "courtEffectChargeChoice") return { state, events: [] };
   void rng;
@@ -1228,8 +1190,7 @@ export function resolveCourtEffectChargeChoice(
   const unit = state.units[unitId];
   if (!unit) return { state, events: [] };
   const spec = getAbilitySpec(choice.abilityId);
-  const nextValue =
-    effect.effectId === "maximumSentence" ? spec?.maxCharges ?? 0 : 0;
+  const nextValue = effect.effectId === "maximumSentence" ? (spec?.maxCharges ?? 0) : 0;
   const updated = setCharges(unit, choice.abilityId, nextValue);
   const nextState = clearPendingRoll({
     ...state,
@@ -1263,7 +1224,7 @@ export function resolveCourtForcedAppearanceDestination(
   state: GameState,
   pending: PendingRoll,
   choice: ResolveRollChoice | undefined,
-  rng: RNG
+  rng: RNG,
 ): ApplyResult {
   if (pending.kind !== "courtForcedAppearanceDestination") {
     return { state, events: [] };
@@ -1285,15 +1246,19 @@ export function resolveCourtForcedAppearanceDestination(
     return { state, events: [] };
   }
   const moved = moveUnitTo(clearPendingRoll(state), unitId, choice.position, rng);
-  return requestNextCourtEffect(moved.state, [
-    evCourtEffectApplied({
-      effectId: effect.effectId,
-      player: effect.player,
-      unitId,
-      position: choice.position,
-    }),
-    ...moved.events,
-  ], rng);
+  return requestNextCourtEffect(
+    moved.state,
+    [
+      evCourtEffectApplied({
+        effectId: effect.effectId,
+        player: effect.player,
+        unitId,
+        position: choice.position,
+      }),
+      ...moved.events,
+    ],
+    rng,
+  );
 }
 
 function setMoonData(state: GameState, moonGame: MoonGameState): GameState {
@@ -1310,7 +1275,7 @@ function setMoonData(state: GameState, moonGame: MoonGameState): GameState {
 export function resolveMoonRoundRoll(
   state: GameState,
   pending: PendingRoll,
-  rng: RNG
+  rng: RNG,
 ): ApplyResult {
   if (pending.kind !== "moonRoundRoll") return { state, events: [] };
   const rule = getRuleState(state);
@@ -1330,7 +1295,7 @@ export function resolveMoonRoundRoll(
       pending.player,
       "moonCoordinateRoll",
       { effectId, count: 1, centers: [] },
-      undefined
+      undefined,
     );
     return { state: requested.state, events: [...events, ...requested.events] };
   }
@@ -1340,7 +1305,7 @@ export function resolveMoonRoundRoll(
       pending.player,
       "moonCoordinateRoll",
       { effectId, count: 3, centers: [] },
-      undefined
+      undefined,
     );
     return { state: requested.state, events: [...events, ...requested.events] };
   }
@@ -1352,7 +1317,7 @@ export function resolveMoonRoundRoll(
       "P1",
       "moonCheeseHolesChoice",
       { player: "P1", queue: ["P2"], options: selectableOwnUnits(nextState, "P1") },
-      undefined
+      undefined,
     );
     return { state: requested.state, events: [...events, ...requested.events] };
   }
@@ -1363,16 +1328,13 @@ export function resolveMoonRoundRoll(
     moon = { ...moon, reverseTurnOrderUntilRoundEnd: targetRound };
   }
   nextState = setMoonData(nextState, moon);
-  return completePendingRoundAdvance(nextState, [
-    ...events,
-    evMoonEffectApplied({ effectId }),
-  ]);
+  return completePendingRoundAdvance(nextState, [...events, evMoonEffectApplied({ effectId })]);
 }
 
 export function resolveMoonCoordinateRoll(
   state: GameState,
   pending: PendingRoll,
-  rng: RNG
+  rng: RNG,
 ): ApplyResult {
   if (pending.kind !== "moonCoordinateRoll") return { state, events: [] };
   const effectId = pending.context.effectId as MoonEffectId | undefined;
@@ -1391,7 +1353,7 @@ export function resolveMoonCoordinateRoll(
       pending.player,
       "moonCoordinateRoll",
       { effectId, count, centers },
-      undefined
+      undefined,
     );
     return { state: requested.state, events: requested.events };
   }
@@ -1406,11 +1368,7 @@ export function resolveMoonCoordinateRoll(
     const affectedUnitIds: string[] = [];
     for (const unit of Object.values(units)) {
       if (!unit.isAlive || !unit.position || !isUnitInArea(unit, area)) continue;
-      units[unit.id] = {
-        ...unit,
-        isStealthed: true,
-        stealthTurnsLeft: Math.max(unit.stealthTurnsLeft ?? 0, 3),
-      };
+      units[unit.id] = enterUnitStealth(unit);
       affectedUnitIds.push(unit.id);
     }
     nextState = { ...nextState, units };
@@ -1420,7 +1378,7 @@ export function resolveMoonCoordinateRoll(
         center,
         areaRadius: 2,
         affectedUnitIds,
-      })
+      }),
     );
   } else if (effectId === "meteorFall") {
     const affected = new Set<string>();
@@ -1447,7 +1405,7 @@ export function resolveMoonCoordinateRoll(
         areaRadius: 1,
         damagedUnitIds,
         affectedUnitIds: damagedUnitIds,
-      })
+      }),
     );
   } else if (effectId === "crater") {
     const center = centers[0];
@@ -1459,9 +1417,7 @@ export function resolveMoonCoordinateRoll(
         expiresAtRoundStart: activeTargetRound(nextState) + 1,
       },
     });
-    events.push(
-      evMoonEffectApplied({ effectId, center, areaRadius: 2 })
-    );
+    events.push(evMoonEffectApplied({ effectId, center, areaRadius: 2 }));
   }
 
   return completePendingRoundAdvance(nextState, events);
@@ -1471,7 +1427,7 @@ export function resolveMoonCheeseHolesChoice(
   state: GameState,
   pending: PendingRoll,
   choice: ResolveRollChoice | undefined,
-  rng: RNG
+  rng: RNG,
 ): ApplyResult {
   if (pending.kind !== "moonCheeseHolesChoice") return { state, events: [] };
   void rng;
@@ -1502,7 +1458,7 @@ export function resolveMoonCheeseHolesChoice(
       nextPlayer,
       "moonCheeseHolesChoice",
       { player: nextPlayer, queue, options: selectableOwnUnits(nextState, nextPlayer) },
-      undefined
+      undefined,
     );
     return { state: requested.state, events: requested.events };
   }
@@ -1529,7 +1485,7 @@ export function resolveMoonCheeseHolesChoice(
         swappedUnitIds: [p1.id, p2.id],
       }),
       evUnitMoved({ unitId: p1.id, from: p1Pos, to: p2Pos }),
-      evUnitMoved({ unitId: p2.id, from: p2Pos, to: p1Pos })
+      evUnitMoved({ unitId: p2.id, from: p2Pos, to: p1Pos }),
     );
   } else {
     events.push(evMoonEffectApplied({ effectId: "cheeseHoles" }));
@@ -1542,7 +1498,7 @@ function applyDirectDamage(
   state: GameState,
   unitId: string,
   amount: number,
-  killerId: string | null
+  killerId: string | null,
 ): ApplyResult {
   const unit = state.units[unitId];
   if (!unit || !unit.isAlive || amount <= 0) return { state, events: [] };
@@ -1568,7 +1524,7 @@ function applyDirectDamage(
 
 export function applyRuleDeclarationAfterAttack(
   state: GameState,
-  events: GameEvent[]
+  events: GameEvent[],
 ): ApplyResult {
   let nextState = state;
   let nextEvents = [...events];
@@ -1601,7 +1557,7 @@ export function applyRuleDeclarationAfterAttack(
           amount: Math.max(0, hpAfter - attacker.hp),
           hpAfter,
           sourceAbilityId: "courtDamageCompensation",
-        })
+        }),
       );
       continue;
     }
@@ -1624,10 +1580,7 @@ export function applyRuleDeclarationAfterAttack(
   return { state: nextState, events: nextEvents };
 }
 
-export function applyRuleDeclarationWinChecks(
-  state: GameState,
-  events: GameEvent[]
-): ApplyResult {
+export function applyRuleDeclarationWinChecks(state: GameState, events: GameEvent[]): ApplyResult {
   if (state.phase === "ended") return { state, events };
   if (hasPendingBattleResolution(state)) return { state, events };
   const rule = getRuleState(state);
@@ -1662,7 +1615,7 @@ export function applyRuleDeclarationWinChecks(
         nextState,
         [...nextEvents, evChessKingDeathResolved({ losingPlayer, winner })],
         winner,
-        "unknown"
+        "unknown",
       );
     }
   }
@@ -1672,19 +1625,21 @@ export function applyRuleDeclarationWinChecks(
     if (threshold && threshold >= 3) {
       const p1 = livingRealUnits(nextState, "P1").length;
       const p2 = livingRealUnits(nextState, "P2").length;
-      const winner =
-        p1 - p2 >= threshold ? "P1" : p2 - p1 >= threshold ? "P2" : null;
+      const winner = p1 - p2 >= threshold ? "P1" : p2 - p1 >= threshold ? "P2" : null;
       if (winner) {
         return endGameWithWinner(
           nextState,
-          [...nextEvents, evAdvantageWinTriggered({
-            winner,
-            threshold,
-            P1living: p1,
-            P2living: p2,
-          })],
+          [
+            ...nextEvents,
+            evAdvantageWinTriggered({
+              winner,
+              threshold,
+              P1living: p1,
+              P2living: p2,
+            }),
+          ],
           winner,
-          "unknown"
+          "unknown",
         );
       }
     }
@@ -1711,7 +1666,7 @@ function isInsideCrater(coord: Coord, crater: NonNullable<MoonGameState["crater"
 export function filterRuleDeclarationMoves(
   state: GameState,
   unit: UnitState,
-  moves: Coord[]
+  moves: Coord[],
 ): Coord[] {
   let result = moves;
   const crater = activeMoonCrater(state);
@@ -1725,7 +1680,7 @@ function pathClearForMoonBonus(
   state: GameState,
   unit: UnitState,
   dir: Coord,
-  steps: number
+  steps: number,
 ): Coord | null {
   if (!unit.position || steps <= 0) return null;
   let current = unit.position;
@@ -1742,7 +1697,7 @@ function pathClearForMoonBonus(
 export function addMoonGameStraightBonusMoves(
   state: GameState,
   unit: UnitState,
-  baseMoves: Coord[]
+  baseMoves: Coord[],
 ): Coord[] {
   if (!isMoonGameActive(state) || !unit.position) return baseMoves;
   const seen = new Set(baseMoves.map(coordKey));
@@ -1771,7 +1726,7 @@ export function addMoonGameStraightBonusMoves(
 export function addCourtGlobalMoveOptions(
   state: GameState,
   unit: UnitState,
-  baseMoves: Coord[]
+  baseMoves: Coord[],
 ): Coord[] {
   if (!unit.courtGlobalMoveOnce || unit.courtGlobalMoveOnce.used) {
     return baseMoves;
@@ -1791,7 +1746,7 @@ export function isCourtGlobalMoveDestination(
   state: GameState,
   unit: UnitState,
   to: Coord,
-  normalLegalMoves: Coord[]
+  normalLegalMoves: Coord[],
 ): boolean {
   if (!unit.courtGlobalMoveOnce || unit.courtGlobalMoveOnce.used) return false;
   if (normalLegalMoves.some((coord) => coordsEqual(coord, to))) return false;
@@ -1809,15 +1764,9 @@ export function markCourtGlobalMoveUsed(unit: UnitState): UnitState {
   };
 }
 
-export function canEnterStealthByRuleDeclaration(
-  state: GameState,
-  unit: UnitState
-): boolean {
+export function canEnterStealthByRuleDeclaration(state: GameState, unit: UnitState): boolean {
   const moon = getRuleState(state).ruleData.moonGame;
-  if (
-    moon?.noStealthUntilRoundEnd &&
-    moon.noStealthUntilRoundEnd >= state.roundNumber
-  ) {
+  if (moon?.noStealthUntilRoundEnd && moon.noStealthUntilRoundEnd >= state.roundNumber) {
     return false;
   }
   if (
@@ -1833,7 +1782,7 @@ export function canAttackAcrossRuleDeclarationBoundary(
   state: GameState,
   attacker: UnitState,
   defender: UnitState,
-  isAoE = false
+  isAoE = false,
 ): boolean {
   if (isAoE) return true;
   const crater = activeMoonCrater(state);
@@ -1841,10 +1790,7 @@ export function canAttackAcrossRuleDeclarationBoundary(
   return isInsideCrater(attacker.position, crater) === isInsideCrater(defender.position, crater);
 }
 
-export function getPureBloodRedirectOptions(
-  state: GameState,
-  kingId: string
-): string[] {
+export function getPureBloodRedirectOptions(state: GameState, kingId: string): string[] {
   const rule = getRuleState(state);
   if (rule.selectedRuleId !== "chess_party") return [];
   const king = state.units[kingId];
@@ -1857,7 +1803,7 @@ export function getPureBloodRedirectOptions(
         unit.id !== king.id &&
         unit.isAlive &&
         !!unit.position &&
-        chebyshev(unit.position, king.position!) <= 1
+        chebyshev(unit.position, king.position!) <= 1,
     )
     .map((unit) => unit.id)
     .sort();
@@ -1867,7 +1813,7 @@ export function maybeRequestPureBloodRedirect(
   state: GameState,
   pending: PendingRoll,
   context: Record<string, unknown>,
-  defenderId: string
+  defenderId: string,
 ): ApplyResult | null {
   if (context.pureBloodRedirected === true) return null;
   const options = getPureBloodRedirectOptions(state, defenderId);
@@ -1879,14 +1825,14 @@ export function maybeRequestPureBloodRedirect(
     defender.owner,
     "pureBloodRedirectChoice",
     { ...context, options, kingId: defenderId, sourcePendingKind: pending.kind },
-    defenderId
+    defenderId,
   );
 }
 
 export function resolvePureBloodRedirectChoice(
   state: GameState,
   pending: PendingRoll,
-  choice: ResolveRollChoice | undefined
+  choice: ResolveRollChoice | undefined,
 ): { context: Record<string, unknown> } | null {
   if (pending.kind !== "pureBloodRedirectChoice") return null;
   if (!choice || typeof choice !== "object" || choice.type !== "ruleUnit") {
@@ -1911,7 +1857,7 @@ export function resolvePureBloodRedirectChoice(
 export function buildPureBloodRedirectEvent(
   kingId: string,
   redirectedToUnitId: string,
-  damage: number
+  damage: number,
 ): GameEvent {
   return evPureBloodRedirected({ kingId, redirectedToUnitId, damage });
 }

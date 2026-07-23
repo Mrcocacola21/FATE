@@ -5,11 +5,7 @@ import { canSpendSlots, spendSlots } from "../../../turnEconomy";
 import { clearPendingRoll } from "../../../core";
 import { evBunkerEntered, evBunkerEnterFailed } from "../../../core";
 
-export function resolveEnterBunkerRoll(
-  state: GameState,
-  unitId: string,
-  rng: RNG
-): ApplyResult {
+export function resolveEnterBunkerRoll(state: GameState, unitId: string, rng: RNG): ApplyResult {
   const unit = state.units[unitId];
   if (!unit || !unit.isAlive || !unit.position) {
     return { state: clearPendingRoll(state), events: [] };
@@ -35,6 +31,7 @@ export function resolveEnterBunkerRoll(
         ...baseUnit,
         isStealthed: false,
         stealthTurnsLeft: 0,
+        stealthDuration: undefined,
         bunker: { active: true, ownTurnsInBunker: 0 },
       }
     : {
@@ -58,5 +55,3 @@ export function resolveEnterBunkerRoll(
 
   return { state: clearPendingRoll(nextState), events };
 }
-
-

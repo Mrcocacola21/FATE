@@ -1,21 +1,16 @@
-import type {
-  Coord,
-  GameEvent,
-  GameState,
-  StealthRevealReason,
-  UnitState,
-} from "../model";
+import type { Coord, GameEvent, GameState, StealthRevealReason, UnitState } from "../model";
 import { isInsideBoard } from "../model";
 import type { RNG } from "../rng";
 import { applyGriffithFemtoRebirth } from "../actions/heroes/griffith";
 import { NEIGHBOR_OFFSETS } from "./constants";
+import { clearUnitStealth } from "./state";
 
 export function revealUnit(
   state: GameState,
   unitId: string,
   reason: StealthRevealReason,
   rng: RNG,
-  revealerId?: string
+  revealerId?: string,
 ): { state: GameState; events: GameEvent[] } {
   const unit = state.units[unitId];
   if (!unit || !unit.isAlive || !unit.position || !unit.isStealthed) {
@@ -28,11 +23,7 @@ export function revealUnit(
     units: { ...state.units },
   };
 
-  let updated: UnitState = {
-    ...unit,
-    isStealthed: false,
-    stealthTurnsLeft: 0,
-  };
+  let updated: UnitState = clearUnitStealth(unit);
 
   const basePos: Coord = updated.position!;
 
@@ -58,10 +49,7 @@ export function revealUnit(
       for (const other of Object.values(nextState.units)) {
         if (!other.isAlive || !other.position) continue;
         if (other.id === updated.id) continue;
-        if (
-          other.position.col === candidate.col &&
-          other.position.row === candidate.row
-        ) {
+        if (other.position.col === candidate.col && other.position.row === candidate.row) {
           occupied = true;
           break;
         }
@@ -149,7 +137,7 @@ export function revealStealthedInArea(
   center: Coord,
   radius: number,
   rng: RNG,
-  targetFilter?: (unit: UnitState) => boolean
+  targetFilter?: (unit: UnitState) => boolean,
 ): { state: GameState; events: GameEvent[] } {
   let nextState: GameState = state;
   const events: GameEvent[] = [];
