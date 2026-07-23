@@ -655,6 +655,8 @@ export const uk = {
     chargesCost: "{{amount}} заряди",
     selected: "Обрано",
     regenerationSpend: "Витратити {{amount}} RC-клітин, щоб відновити {{amount}} здоров’я",
+    lightRayLine: "Лінія",
+    lightRayAroundSelf: "Навколо себе",
   },
   abilityDetails: {
     labels: {

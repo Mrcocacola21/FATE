@@ -201,6 +201,7 @@ function abilityIdForActionMode(mode: Exclude<ActionMode, null>): TargetingMode[
     case "duolingoPush":
       return DUOLINGO_PUSH_NOTIFICATION_ID;
     case "lucheLightRay":
+    case "lucheLightRayAround":
       return LUCHE_DIVINE_RAY_ID;
     case "zoroOniGiri":
       return ZORO_ONI_GIRI_ID;
@@ -229,7 +230,7 @@ function previewForActionMode(
   if (useSource?.type === "heroResource") {
     const slotPreview = mode === "zoroOniGiri"
       ? { action: true, move: true }
-      : mode === "lucheLightRay"
+      : mode === "lucheLightRay" || mode === "lucheLightRayAround"
         ? { action: true }
         : mode === "duolingoPush"
           ? { move: true }
@@ -249,6 +250,7 @@ function previewForActionMode(
     case "donReaction":
     case "jackTrap":
     case "lucheLightRay":
+    case "lucheLightRayAround":
     case "artemisMoonInsight":
       return undefined;
     case "place":

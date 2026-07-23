@@ -69,6 +69,7 @@ function abilityIdForPreviewActionMode(actionMode: Exclude<ActionMode, null>): s
     case "duolingoPush":
       return DUOLINGO_PUSH_NOTIFICATION_ID;
     case "lucheLightRay":
+    case "lucheLightRayAround":
       return LUCHE_DIVINE_RAY_ID;
     case "zoroOniGiri":
       return ZORO_ONI_GIRI_ID;

@@ -10,6 +10,7 @@ import { requestRoll } from "../../core";
 import { getAbilitySpec, getCharges, spendCharges } from "../../abilities";
 import {
   getDuolingoPushDestinations,
+  getLucheLightRayAroundSelfCells,
   getLucheLightRayLine,
   getZoroOniGiriDestinations,
 } from "../../abilities/newBatchTargeting";
@@ -188,14 +189,24 @@ function applyDuolingoPush(state: GameState, unit: UnitState, action: AbilityAct
   return { state: { ...committed.state, units: { ...committed.state.units, [moved.id]: moved } }, events };
 }
 
-function applyLucheLine(state: GameState, unit: UnitState, action: AbilityAction, isImpulse: boolean): ApplyResult {
+function applyLucheLightRay(state: GameState, unit: UnitState, action: AbilityAction, isImpulse: boolean): ApplyResult {
   const data = payload(action);
-  const target = parseCoord(data.target ?? data.center ?? data.line);
-  if (unit.heroId !== HERO_LUCHE_ID || !unit.position || !target) return { state, events: [] };
+  const mode = data.mode;
+  if (
+    unit.heroId !== HERO_LUCHE_ID ||
+    !unit.position ||
+    (mode !== "line" && mode !== "aroundSelf")
+  ) return { state, events: [] };
   const useCounter = isImpulse;
   const useSun = !isImpulse && hasHeroResourceSource(data, ids.ABILITY_LUCHE_SUN_GLORY, 2);
   if (!useCounter && !useSun) return { state, events: [] };
-  const cells = getLucheLightRayLine(state, unit, target);
+  const target =
+    mode === "line" ? parseCoord(data.target ?? data.center ?? data.line) : null;
+  if (mode === "line" && !target) return { state, events: [] };
+  const cells =
+    mode === "line"
+      ? getLucheLightRayLine(state, unit, target!)
+      : getLucheLightRayAroundSelfCells(state, unit);
   if (cells.length === 0) return { state, events: [] };
   const committed = commitNamedResource(
     state,
@@ -206,7 +217,14 @@ function applyLucheLine(state: GameState, unit: UnitState, action: AbilityAction
     useCounter ? {} : { action: true },
   );
   if (!committed) return { state, events: [] };
-  const queued = queueNewHeroAttacks(committed.state, committed.unit, ids.ABILITY_LUCHE_DIVINE_RAY, unitIdsInCells(committed.state, cells, committed.unit, true), { blindOnHit: true, center: target });
+  const center = mode === "line" ? target! : unit.position;
+  const queued = queueNewHeroAttacks(
+    committed.state,
+    committed.unit,
+    ids.ABILITY_LUCHE_DIVINE_RAY,
+    unitIdsInCells(committed.state, cells, committed.unit, true),
+    { blindOnHit: true, center, ...(mode === "aroundSelf" ? { radius: 1 } : {}) },
+  );
   return { state: queued.state, events: [...committed.events, ...queued.events] };
 }
 
@@ -411,7 +429,7 @@ export function applyNewBatchAbility(
   const isStartTurnImpulse = execution?.startTurnImpulse === true;
   switch (action.abilityId) {
     case ids.ABILITY_DUOLINGO_PUSH_NOTIFICATION: return applyDuolingoPush(state, unit, action);
-    case ids.ABILITY_LUCHE_DIVINE_RAY: return applyLucheLine(state, unit, action, isStartTurnImpulse);
+    case ids.ABILITY_LUCHE_DIVINE_RAY: return applyLucheLightRay(state, unit, action, isStartTurnImpulse);
     case ids.ABILITY_LUCHE_BURNING_SUN: return applyLucheFallingSun(state, unit);
     case ids.ABILITY_KANEKI_REGENERATION: return applyKanekiRegeneration(state, unit, action);
     case ids.ABILITY_ZORO_ONI_GIRI: return applyZoroOniGiri(state, unit, action, isStartTurnImpulse);

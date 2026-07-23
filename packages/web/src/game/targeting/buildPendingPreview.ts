@@ -1,10 +1,15 @@
 import type { Coord, PendingMove, PlayerView, UnitState } from "rules";
 import { getMongolChargeInfluenceCells } from "../../../../rules/src/movement/mongolCharge";
-import { ARTEMIS_MOON_INSIGHT_ID, JACK_SNARES_ID } from "../../rulesHints";
+import {
+  ARTEMIS_MOON_INSIGHT_ID,
+  JACK_SNARES_ID,
+  LUCHE_DIVINE_RAY_ID,
+} from "../../rulesHints";
 import type { BoardPreview, TargetRef } from "./previewTypes";
 import { getDonMadnessRayCells } from "./donMadnessDirection";
 import {
   buildArcherLinePreview,
+  buildAbilityPreview,
   buildForcedAttackPreview,
   buildGutsBerserkChoicePreview,
   buildLineFromOptionsPreview,
@@ -491,6 +496,37 @@ export function buildPendingPreview(
                 }
               : null,
           ]);
+        }
+        if (context.abilityId === LUCHE_DIVINE_RAY_ID) {
+          const lucheId = typeof context.unitId === "string" ? context.unitId : "";
+          const luche = sourceUnit(view, lucheId);
+          if (!luche?.position) return null;
+          const options = coordList(context.options);
+          const optionKeys = new Set(options.map(coordKey));
+          const selected = targetingCell && optionKeys.has(coordKey(targetingCell))
+            ? targetingCell
+            : null;
+          if (selected) {
+            const aroundSelf = coordKey(selected) === coordKey(luche.position);
+            return buildAbilityPreview({
+              gameView: view,
+              viewerPlayerId: pending.player,
+              sourceUnitId: luche.id,
+              abilityId: LUCHE_DIVINE_RAY_ID,
+              targetingStep: aroundSelf
+                ? "lucheLightRayAround"
+                : "lucheLightRay",
+              targetingCell: aroundSelf ? null : selected,
+            });
+          }
+          return {
+            kind: "multiStep",
+            step: "lightRayMode",
+            sourceCell: { ...luche.position },
+            cells: options,
+            cellKind: "validTarget",
+            labelKey: "preview.labels.selectTarget",
+          };
         }
         if (context.abilityId !== ARTEMIS_MOON_INSIGHT_ID) return null;
         const artemidaId = typeof context.unitId === "string" ? context.unitId : "";

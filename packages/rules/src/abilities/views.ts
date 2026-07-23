@@ -24,7 +24,7 @@ import { collectAbilityIdsForUnit } from "./viewIds";
 import { canSpendSlots } from "../turnEconomy";
 import {
   getDuolingoPushTargeting,
-  getLucheLightRayCells,
+  getLucheLightRayTargeting,
   getZoroOniGiriTargeting,
 } from "./newBatchTargeting";
 import {
@@ -429,7 +429,7 @@ export function getAbilityViewsForUnit(state: GameState, unitId: string): Abilit
           : spec.id === ids.ABILITY_ZORO_ONI_GIRI
             ? getZoroOniGiriTargeting(state, unit)
             : spec.id === ids.ABILITY_LUCHE_DIVINE_RAY
-              ? { cells: getLucheLightRayCells(state, unit) }
+              ? getLucheLightRayTargeting(state, unit)
               : undefined;
       const hasLegalTargets = targeting
         ? (targeting.targetIds?.length ?? targeting.cells?.length ?? 0) > 0

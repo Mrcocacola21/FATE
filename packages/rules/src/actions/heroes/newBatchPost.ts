@@ -15,6 +15,7 @@ import {
 } from "../../heroes";
 import { queueHeroAbilityAttacks as queueNewHeroAttacks } from "../shared";
 import { canJackTrapTriggerForTarget, cleanupJackTrapsForDeaths } from "../../jackSnares";
+import { applyBlindUntilEndOfNextTurn } from "../../blind";
 
 function chargeEvent(unit: UnitState, abilityId: string, delta: number): GameEvent {
   return {
@@ -168,6 +169,11 @@ export function applyNewBatchPostAction(
         defender = addCharges(defender, ids.ABILITY_LUCHE_SUN_GLORY, 1);
         nextState = updateUnit(nextState, defender);
         nextEvents.push(chargeEvent(defender, ids.ABILITY_LUCHE_SUN_GLORY, 1));
+      }
+      if (defender?.heroId === HERO_LUCHE_ID && event.hit && attacker) {
+        attacker = applyBlindUntilEndOfNextTurn(attacker);
+        nextState = updateUnit(nextState, attacker);
+        nextEvents.push(abilityUsed(defender.id, ids.ABILITY_LUCHE_SHINE));
       }
       if (
         defender?.heroId === HERO_DON_KIHOTE_ID &&

@@ -51,6 +51,41 @@ export function getLucheLightRayLine(
   return cells;
 }
 
+export function getLucheLightRayAroundSelfCells(
+  state: GameState,
+  unit: UnitState,
+): Coord[] {
+  if (!unit.position) return [];
+  const cells: Coord[] = [];
+  for (let dc = -1; dc <= 1; dc += 1) {
+    for (let dr = -1; dr <= 1; dr += 1) {
+      if (dc === 0 && dr === 0) continue;
+      const cell = {
+        col: unit.position.col + dc,
+        row: unit.position.row + dr,
+      };
+      if (isInsideBoard(cell, state.boardSize)) cells.push(cell);
+    }
+  }
+  return cells;
+}
+
+export function getLucheLightRayTargeting(
+  state: GameState,
+  unit: UnitState,
+): AbilityTargetingView {
+  const line = getLucheLightRayCells(state, unit);
+  const aroundSelf = getLucheLightRayAroundSelfCells(state, unit);
+  return {
+    // Retained for older clients; mode-aware clients use modes.
+    cells: line,
+    modes: {
+      line: { cells: line },
+      aroundSelf: { cells: aroundSelf },
+    },
+  };
+}
+
 export function getDuolingoPushDestinations(
   state: GameState,
   unit: UnitState,

@@ -263,8 +263,13 @@ export function PendingBoardNotice({
                 ? p("Choose a trap cell on the board.", "Виберіть клітинку пастки на полі.")
                 : chargedAbilityId === "zoroOniGiri" && pendingRollContext.step === "destination"
                   ? p("Choose the highlighted cell before or behind the target.", "Виберіть підсвічену клітинку перед ціллю або позаду неї.")
-                  : chargedAbilityId === "zoroOniGiri"
-                    ? p("Choose an enemy on Zoro's straight attack line.", "Виберіть ворога на прямій лінії атаки Зоро.")
+                : chargedAbilityId === "zoroOniGiri"
+                  ? p("Choose an enemy on Zoro's straight attack line.", "Виберіть ворога на прямій лінії атаки Зоро.")
+                  : chargedAbilityId === "lucheDivineRay"
+                    ? p(
+                        "Choose a line target, or choose Luche for Around Self.",
+                        "Оберіть ціль лінії або самого Луче для режиму «Навколо себе».",
+                      )
                     : p("Choose a straight attack line.", "Виберіть пряму лінію атаки.")}
           </div>
         </div>

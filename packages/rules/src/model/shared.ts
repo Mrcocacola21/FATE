@@ -30,6 +30,10 @@ export interface AbilityTargetingView {
   targetIds?: string[];
   cells?: Coord[];
   destinationsByTargetId?: Record<string, Coord[]>;
+  modes?: {
+    line?: { cells: Coord[] };
+    aroundSelf?: { cells: Coord[] };
+  };
 }
 
 export interface AbilityView {

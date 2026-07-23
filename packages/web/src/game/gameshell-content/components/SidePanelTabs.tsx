@@ -115,6 +115,9 @@ function RosterList({
                     <StatusBadge tone={unit.isStealthed ? "special" : "neutral"}>
                       {unitStatusLabel(unit, t)}
                     </StatusBadge>
+                    {unit.blindUntilOwnTurnStart ? (
+                      <StatusBadge tone="warning">{t("game.blind")}</StatusBadge>
+                    ) : null}
                   </div>
                 </div>
               </button>

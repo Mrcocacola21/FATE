@@ -8,6 +8,7 @@ import {
   testArtemidaAndKanekiMovementModes,
   testArtemidaSilverSickleStopsAtSelectedEndpoint,
   testNewPlayableBatchTransactionalActives,
+  testLucheRadiancePassiveAndLightRayModes,
 } from "./heroes/newPlayableBatch.test";
 import {
   testJackCoveringTracksSixthSnareFlow,
@@ -782,6 +783,7 @@ function main(): void {
   testArtemidaSilverSickleStopsAtSelectedEndpoint();
   testNewPlayableBatchTransactionalActives();
   testNewPlayableBatchLineAndRevealEffects();
+  testLucheRadiancePassiveAndLightRayModes();
   testNewPlayableBatchCombatCountersAndReactions();
   testJackSnareActivatesOncePerTarget();
   testJackSnareIsRemovedWithDeadTarget();

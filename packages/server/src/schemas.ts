@@ -315,6 +315,22 @@ export const GameActionSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("unitStartTurn"), unitId: z.string() }),
 ]).superRefine((action, ctx) => {
   if (
+    action.type === "useAbility" &&
+    action.abilityId === "lucheDivineRay"
+  ) {
+    const parsed = z.object({
+      mode: z.union([z.literal("line"), z.literal("aroundSelf")]),
+    }).passthrough().safeParse(action.payload);
+    if (!parsed.success) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["payload", "mode"],
+        message: "Invalid Light Ray mode",
+      });
+    }
+    return;
+  }
+  if (
     action.type !== "useAbility" ||
     action.abilityId !== "lokiLaught" ||
     action.payload === undefined

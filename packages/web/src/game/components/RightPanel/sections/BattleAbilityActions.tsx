@@ -4,6 +4,7 @@ import {
   FALSE_TRAIL_TOKEN_ID,
   KAISER_DORA_ID,
   KANEKI_REGENERATION_ID,
+  LUCHE_DIVINE_RAY_ID,
   LOKI_LAUGHT_ID,
   getMaxHp,
 } from "../../../../rulesHints";
@@ -254,6 +255,69 @@ export const BattleAbilityActions: FC<BattleAbilityActionsProps> = ({
                     (!canAct ? t("pending.conditionNotMet") : "") ||
                     localizeServerText(option.disabledReason, t) ||
                     "";
+                  if (ability.id === LUCHE_DIVINE_RAY_ID) {
+                    const rayModes: Array<{
+                      mode: ActionPreviewMode;
+                      label: string;
+                    }> = [
+                      { mode: "lucheLightRay", label: t("actionMenu.lightRayLine") },
+                      {
+                        mode: "lucheLightRayAround",
+                        label: t("actionMenu.lightRayAroundSelf"),
+                      },
+                    ];
+                    return (
+                      <div
+                        key={option.id}
+                        className="grid gap-1 sm:col-span-2 sm:grid-cols-2"
+                        data-testid="light-ray-mode-picker"
+                      >
+                        {rayModes.map((rayMode) => (
+                          <button
+                            key={rayMode.mode}
+                            type="button"
+                            className={`min-h-11 rounded-md px-2.5 py-1.5 text-left text-[10px] transition focus-visible:ring-2 focus-visible:ring-sky-500/25 ${
+                              disabled
+                                ? "bg-stone-500/[0.06] text-stone-600 ring-1 ring-inset ring-stone-500/10 dark:text-stone-400"
+                                : "bg-sky-500/10 text-sky-900 ring-1 ring-inset ring-sky-500/20 hover:bg-sky-500/15 dark:text-sky-100"
+                            }`}
+                            data-ability-use-source={option.source.type}
+                            data-light-ray-mode={
+                              rayMode.mode === "lucheLightRay" ? "line" : "aroundSelf"
+                            }
+                            disabled={disabled}
+                            title={tooltip}
+                            onClick={() => {
+                              if (!disabled) onToggleMode(rayMode.mode, option.source);
+                            }}
+                            onMouseEnter={() => {
+                              if (!disabled) onModePreview(rayMode.mode);
+                            }}
+                            onMouseLeave={() => onModePreview(null)}
+                            onFocus={() => {
+                              if (!disabled) onModePreview(rayMode.mode);
+                            }}
+                            onBlur={() => onModePreview(null)}
+                          >
+                            <span className="block font-bold">{rayMode.label}</span>
+                            <span className="mt-0.5 block font-semibold opacity-75">
+                              {sourceLabel}
+                              {" · "}
+                              {costs.length ? costs.join(" + ") : t("game.noCommitCost")}
+                              {option.source.type === "heroResource"
+                                ? ` + ${sourceDisplayName} ${option.source.amount}`
+                                : ""}
+                            </span>
+                            {disabled && tooltip ? (
+                              <span className="mt-0.5 block leading-tight text-amber-700 dark:text-amber-300">
+                                {tooltip}
+                              </span>
+                            ) : null}
+                          </button>
+                        ))}
+                      </div>
+                    );
+                  }
                   return (
                     <button
                       key={option.id}

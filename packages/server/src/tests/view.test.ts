@@ -15,6 +15,7 @@ import {
   ABILITY_ZORO_ONI_GIRI,
   ABILITY_ZORO_DETERMINATION,
   ABILITY_LUCHE_DIVINE_RAY,
+  ABILITY_LUCHE_SHINE,
   ABILITY_LUCHE_SUN_GLORY,
   ABILITY_DUOLINGO_PUSH_NOTIFICATION,
   ABILITY_DUOLINGO_SKIP_CLASSES,
@@ -586,7 +587,12 @@ function testNewBatchAbilitySourceProjection() {
       [zoro.id]: { ...zoro, charges: { ...zoro.charges, [ABILITY_ZORO_ONI_GIRI]: 2, [ABILITY_ZORO_DETERMINATION]: 2 } },
       [luche.id]: { ...luche, charges: { ...luche.charges, [ABILITY_LUCHE_DIVINE_RAY]: 2, [ABILITY_LUCHE_SUN_GLORY]: 2 } },
       [duo.id]: { ...duo, charges: { ...duo.charges, [ABILITY_DUOLINGO_PUSH_NOTIFICATION]: 3, [ABILITY_DUOLINGO_SKIP_CLASSES]: 3 } },
-      [enemy.id]: { ...enemy, position: { col: 3, row: 1 } },
+      [enemy.id]: {
+        ...enemy,
+        position: { col: 3, row: 1 },
+        blindUntilOwnTurnStart: true,
+        blindExpiresAfterOwnTurn: 2,
+      },
     },
   };
   const view = makePlayerView(state, "P1");
@@ -598,6 +604,24 @@ function testNewBatchAbilitySourceProjection() {
   assert.deepEqual(light.useOptions?.map((option) => option.source.type), ["heroResource"]);
   assert(light.useOptions?.[0].source.type === "heroResource" && light.useOptions[0].source.resourceId === ABILITY_LUCHE_SUN_GLORY);
   assert((light.targeting?.cells?.length ?? 0) > 0, "Light Ray projection should include authoritative line cells");
+  assert(
+    (light.targeting?.modes?.line?.cells.length ?? 0) > 0,
+    "Light Ray projection should expose line-mode cells",
+  );
+  assert.equal(
+    light.targeting?.modes?.aroundSelf?.cells.length,
+    8,
+    "Light Ray projection should expose radius-1 Around Self cells",
+  );
+  const radiance = view.abilitiesByUnitId[luche.id].find(
+    (ability) => ability.id === ABILITY_LUCHE_SHINE,
+  );
+  assert.equal(radiance?.kind, "passive", "Radiance should project as passive");
+  assert.equal(
+    view.units[enemy.id].blindUntilOwnTurnStart,
+    true,
+    "Blind status should survive player projection",
+  );
   assert.deepEqual(push.useOptions?.map((option) => option.source.type), ["abilityCounter", "heroResource"]);
   assert(push.useOptions?.[0].source.type === "abilityCounter" && push.useOptions[0].source.counterId === ABILITY_DUOLINGO_PUSH_NOTIFICATION);
   assert(push.useOptions?.[1].source.type === "heroResource" && push.useOptions[1].source.resourceId === ABILITY_DUOLINGO_SKIP_CLASSES);
@@ -605,6 +629,54 @@ function testNewBatchAbilitySourceProjection() {
   assert(view.units[duo.id].charges[ABILITY_DUOLINGO_SKIP_CLASSES] === 3, "Missed Lessons should project separately");
   assert(oni.useOptions?.every((option) => option.consumes?.action && option.consumes?.move), "both Oni Giri sources should consume Action and Movement");
   assert(push.useOptions?.every((option) => option.consumes?.move), "both Push Notification sources should consume Movement");
+
+  const hidden = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.id !== enemy.id,
+  )!;
+  const hiddenPendingState: GameState = {
+    ...state,
+    units: {
+      ...state.units,
+      [hidden.id]: {
+        ...hidden,
+        position: { col: 2, row: 3 },
+        isStealthed: true,
+        stealthTurnsLeft: 3,
+      },
+    },
+    pendingRoll: {
+      id: "light-ray-hidden-attacker-roll",
+      player: "P1",
+      kind: "attack_attackerRoll",
+      context: {
+        attackerId: luche.id,
+        defenderId: hidden.id,
+        sourceAbilityId: ABILITY_LUCHE_DIVINE_RAY,
+        queueKind: "aoe",
+      },
+    },
+    pendingAoE: {
+      casterId: luche.id,
+      abilityId: ABILITY_LUCHE_DIVINE_RAY,
+      center: { ...luche.position! },
+      radius: 1,
+      affectedUnitIds: [hidden.id],
+      revealedUnitIds: [],
+      damagedUnitIds: [],
+      damageByUnitId: {},
+    },
+  };
+  const hiddenSafeView = makePlayerView(hiddenPendingState, "P1");
+  assert.equal(hiddenSafeView.units[hidden.id], undefined);
+  assert.equal(
+    hiddenSafeView.pendingRoll?.context.defenderId,
+    undefined,
+    "Light Ray pending projection must redact a hidden defender id",
+  );
+  assert(
+    !JSON.stringify(hiddenSafeView.pendingAoEPreview).includes(hidden.id),
+    "Light Ray area preview must not include hidden target ids",
+  );
   console.log("view_new_batch_ability_source_projection passed");
 }
 

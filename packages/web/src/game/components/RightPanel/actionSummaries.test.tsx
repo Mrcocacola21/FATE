@@ -315,7 +315,10 @@ test("unit detail summaries expose Action, Move, and Stealth without a main Atta
 
 test("unit summary renders three main bars and explains basic attack under Action", () => {
   setLanguage("en", { setItem: () => undefined });
-  const unit = makeUnit();
+  const unit = makeUnit({
+    blindUntilOwnTurnStart: true,
+    blindExpiresAfterOwnTurn: 1,
+  });
   const markup = renderToStaticMarkup(
     <BattleUnitSummary
       selectedUnit={unit}
@@ -344,6 +347,7 @@ test("unit summary renders three main bars and explains basic attack under Actio
   assert.match(markup, /Basic Attack/);
   assert.match(markup, /Uses Action/);
   assert.match(markup, /Ability: Tisona/);
+  assert.match(markup, /Blind: targeting limited to radius 1/);
 });
 
 test("Orange Bone status and compact move-first warning follow per-turn tracking", () => {
@@ -1073,6 +1077,21 @@ test("new-batch passive and start-turn impulse abilities are not normal action b
     true,
     "Light Ray keeps only its paid Action/Sun variant",
   );
+
+  const radiance = makeAbility({
+    id: "lucheShine",
+    name: "Radiance",
+    kind: "passive",
+    description:
+      "Radiance — Passive. When a figure successfully hits Luche, that figure becomes Blinded until the end of its next turn.",
+  });
+  assert.equal(isActionableAbility(radiance), false);
+  const radianceMarkup = renderToStaticMarkup(
+    <PassiveImpulseInfo unit={makeUnit({ heroId: "luche" })} abilities={[radiance]} />,
+  );
+  assert.match(radianceMarkup, /data-ability-info-id="lucheShine"/);
+  assert.match(radianceMarkup, /Passive/);
+  assert.doesNotMatch(radianceMarkup, /data-ability-use-source/);
 
   const coveringTracks = makeAbility({
     id: JACK_COVERING_TRACKS_ID,
@@ -2235,7 +2254,89 @@ test("Light Ray counter renders inside its paid ability card", () => {
   assert.match(markup, /data-ability-card-id="lucheDivineRay"/);
   assert.match(markup, /data-testid="ability-counter-lucheDivineRay"/);
   assert.match(markup, /Counter 2\/2/);
+  assert.match(markup, /data-testid="light-ray-mode-picker"/);
+  assert.match(markup, /data-light-ray-mode="line"/);
+  assert.match(markup, /data-light-ray-mode="aroundSelf"/);
+  assert.match(markup, /Line/);
+  assert.match(markup, /Around Self/);
   assert.match(markup, /Spend Sun.*Action.*Sun 2/);
+});
+
+test("Light Ray line and around-self board flows submit explicit authoritative modes", () => {
+  const luche = makeUnit({
+    id: "P1-luche-modes",
+    heroId: "luche",
+    class: "spearman",
+    position: { col: 4, row: 4 },
+  });
+  const view = makeView(luche);
+  view.abilitiesByUnitId[luche.id] = [
+    makeAbility({
+      id: LUCHE_DIVINE_RAY_ID,
+      targeting: {
+        cells: [{ col: 8, row: 4 }],
+        modes: {
+          line: { cells: [{ col: 8, row: 4 }] },
+          aroundSelf: { cells: [{ col: 5, row: 4 }] },
+        },
+      },
+    }),
+  ];
+  const sent: unknown[] = [];
+  const common = {
+    view,
+    playerId: "P1",
+    joined: true,
+    isSpectator: false,
+    hasBlockingRoll: false,
+    boardSelectionPending: false,
+    selectedUnitId: luche.id,
+    sendGameAction: (action: unknown) => sent.push(action),
+    setActionMode: () => undefined,
+    sendAction: () => undefined,
+  };
+  createCellClickHandler({
+    ...common,
+    actionMode: "lucheLightRay",
+    targetingMode: {
+      sourceUnitId: luche.id,
+      abilityId: LUCHE_DIVINE_RAY_ID,
+      step: "lucheLightRay",
+      useSource: { type: "heroResource", resourceId: "lucheSunGlory", amount: 2 },
+    },
+  } as never)(8, 4);
+  createCellClickHandler({
+    ...common,
+    actionMode: "lucheLightRayAround",
+    targetingMode: {
+      sourceUnitId: luche.id,
+      abilityId: LUCHE_DIVINE_RAY_ID,
+      step: "lucheLightRayAround",
+      useSource: { type: "heroResource", resourceId: "lucheSunGlory", amount: 2 },
+    },
+  } as never)(5, 4);
+  assert.deepEqual(sent, [
+    {
+      type: "useAbility",
+      unitId: luche.id,
+      abilityId: LUCHE_DIVINE_RAY_ID,
+      payload: {
+        target: { col: 8, row: 4 },
+        source: { type: "heroResource", resourceId: "lucheSunGlory", amount: 2 },
+        mode: "line",
+      },
+    },
+    {
+      type: "useAbility",
+      unitId: luche.id,
+      abilityId: LUCHE_DIVINE_RAY_ID,
+      payload: {
+        target: { col: 5, row: 4 },
+        source: { type: "heroResource", resourceId: "lucheSunGlory", amount: 2 },
+        mode: "aroundSelf",
+      },
+    },
+  ]);
 });
 
 test("Engineering Miracle counter renders only in its impulse info card", () => {

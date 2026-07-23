@@ -294,6 +294,8 @@ export function getActionModeHint(
       return uk ? "Push Notification: оберіть істоту, потім клітинку призначення в межах 2." : "Push Notification: choose a creature, then a destination within 2 cells.";
     case "lucheLightRay":
       return uk ? "Промінь світла: оберіть підсвічену пряму лінію." : "Light Ray: choose a highlighted straight line.";
+    case "lucheLightRayAround":
+      return uk ? "Промінь світла: підтвердьте спалах навколо Луче." : "Light Ray: confirm the blast around Luche.";
     case "zoroOniGiri":
       return uk ? "Оні Ґірі: оберіть ворога на прямій, потім клітинку перед або позаду нього." : "Oni Giri: choose an enemy on a straight line, then a cell before or behind it.";
     case "undyneEnergySpear":

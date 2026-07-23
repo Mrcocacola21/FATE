@@ -240,14 +240,14 @@ export const ABILITY_SPECS_PART_4: Record<string, AbilitySpec> = {
   [ids.ABILITY_LUCHE_SHINE]: {
     id: ids.ABILITY_LUCHE_SHINE,
     displayName: "Radiance",
-    kind: "impulse",
-    description: "At the start of Luche's turn, reveal stealthed enemies within 1 cell.",
+    kind: "passive",
+    description: "Radiance — Passive. When a figure successfully hits Luche, that figure becomes Blinded until the end of its next turn.",
   },
   [ids.ABILITY_LUCHE_DIVINE_RAY]: {
     id: ids.ABILITY_LUCHE_DIVINE_RAY,
     displayName: "Light Ray",
     kind: "impulse",
-    description: "Its own counter gains +1 at the start of Luche's turn. At 2, it activates as a start-turn impulse without spending Sun or Action. During Luche's turn it may instead spend 2 Sun and Action. Attack every enemy on the chosen line; failed defenses apply Blind until that enemy's next turn.",
+    description: "Its own counter gains +1 at the start of Luche's turn. At 2, it activates as a start-turn impulse without spending Sun or Action. During Luche's turn it may instead spend 2 Sun and Action. Choose a straight line or the area around Luche; failed defenses apply Blind until the end of that enemy's next turn.",
     maxCharges: 2,
     chargesPerUse: 2,
     actionCost: { consumes: { action: true } },

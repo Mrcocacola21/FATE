@@ -129,6 +129,8 @@ export interface UnitState {
   duolingoBerserkerUnlocked?: boolean;
   duolingoAttackBatchHit?: boolean;
   blindUntilOwnTurnStart?: boolean;
+  /** Own-turn ordinal after whose end Blind expires. */
+  blindExpiresAfterOwnTurn?: number;
   kanekiCentipedeUnlocked?: boolean;
   donSorrowfulReactionAvailable?: boolean;
   donMadDelusionPending?: boolean;

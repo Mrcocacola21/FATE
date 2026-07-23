@@ -20,7 +20,8 @@ export function useGameShellViewModel() {
     if (
       core.actionMode !== "duolingoPush" &&
       core.actionMode !== "zoroOniGiri" &&
-      core.actionMode !== "lucheLightRay"
+      core.actionMode !== "lucheLightRay" &&
+      core.actionMode !== "lucheLightRayAround"
     ) {
       setNewHeroAbilityPreviewCell(null);
     }
@@ -202,7 +203,8 @@ export function useGameShellViewModel() {
     targetingCell:
       core.actionMode === "duolingoPush" ||
       core.actionMode === "zoroOniGiri" ||
-      core.actionMode === "lucheLightRay"
+      core.actionMode === "lucheLightRay" ||
+      core.actionMode === "lucheLightRayAround"
         ? newHeroAbilityPreviewCell
         : core.artemidaPreviewTarget,
     selectedTargetId: newHeroAbilityTargetId,

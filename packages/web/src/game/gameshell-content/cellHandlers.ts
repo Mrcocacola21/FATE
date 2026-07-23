@@ -830,6 +830,7 @@ export function createCellClickHandler(context: CellClickContext) {
 
     if (
       actionMode === "lucheLightRay" ||
+      actionMode === "lucheLightRayAround" ||
       actionMode === "donReaction" ||
       actionMode === "jackTrap" ||
       actionMode === "artemisMoonInsight" ||
@@ -838,8 +839,18 @@ export function createCellClickHandler(context: CellClickContext) {
       if (actionMode === "lucheLightRay") {
         const legalCells = view.abilitiesByUnitId?.[selectedUnitId]
           ?.find((ability) => ability.id === LUCHE_DIVINE_RAY_ID)
-          ?.targeting?.cells ?? [];
+          ?.targeting?.modes?.line?.cells ??
+          view.abilitiesByUnitId?.[selectedUnitId]
+            ?.find((ability) => ability.id === LUCHE_DIVINE_RAY_ID)
+            ?.targeting?.cells ??
+          [];
         if (!isCoordInList(legalCells, col, row)) return;
+      }
+      if (actionMode === "lucheLightRayAround") {
+        const aroundCells = view.abilitiesByUnitId?.[selectedUnitId]
+          ?.find((ability) => ability.id === LUCHE_DIVINE_RAY_ID)
+          ?.targeting?.modes?.aroundSelf?.cells ?? [];
+        if (!isCoordInList(aroundCells, col, row)) return;
       }
       if (
         (actionMode === "artemisMoonInsight" || actionMode === "artemisSilverSickle") &&
@@ -850,12 +861,13 @@ export function createCellClickHandler(context: CellClickContext) {
         source?.position &&
         source.blindUntilOwnTurnStart &&
         (actionMode === "lucheLightRay" ||
+          actionMode === "lucheLightRayAround" ||
           actionMode === "artemisMoonInsight" ||
           actionMode === "artemisSilverSickle") &&
         Math.max(Math.abs(col - source.position.col), Math.abs(row - source.position.row)) > 1
       ) return;
       const abilityId =
-        actionMode === "lucheLightRay"
+        actionMode === "lucheLightRay" || actionMode === "lucheLightRayAround"
           ? LUCHE_DIVINE_RAY_ID
           : actionMode === "donReaction"
             ? DON_SORROWFUL_ID
@@ -878,9 +890,16 @@ export function createCellClickHandler(context: CellClickContext) {
         abilityId,
         payload: {
           [payloadKey]: { col, row },
-          ...(actionMode === "lucheLightRay" && targetingMode?.useSource
+          ...((actionMode === "lucheLightRay" ||
+            actionMode === "lucheLightRayAround") &&
+          targetingMode?.useSource
             ? { source: targetingMode.useSource }
             : {}),
+          ...(actionMode === "lucheLightRay"
+            ? { mode: "line" }
+            : actionMode === "lucheLightRayAround"
+              ? { mode: "aroundSelf" }
+              : {}),
         },
       });
       setActionMode(null);
@@ -1276,7 +1295,8 @@ export function createCellHoverHandler(context: CellHoverContext) {
     if (
       actionMode === "duolingoPush" ||
       actionMode === "zoroOniGiri" ||
-      actionMode === "lucheLightRay"
+      actionMode === "lucheLightRay" ||
+      actionMode === "lucheLightRayAround"
     ) {
       setNewHeroAbilityPreviewCell(coord);
       return;

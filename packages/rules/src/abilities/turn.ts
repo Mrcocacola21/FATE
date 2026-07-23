@@ -5,11 +5,9 @@ import {
   HERO_GENGHIS_KHAN_ID,
   HERO_JEBE_ID,
   HERO_KANEKI_ID,
-  HERO_LUCHE_ID,
 } from "../heroes";
 import { addCharges, getAbilitySpec, getCharges } from "./charges";
-import { revealStealthedInArea } from "../stealth";
-import { ABILITY_BERSERK_AUTO_DEFENSE, ABILITY_DUOLINGO_SKIP_CLASSES, ABILITY_LUCHE_SHINE, ABILITY_KANEKI_RC_CELLS } from "./constants";
+import { ABILITY_BERSERK_AUTO_DEFENSE, ABILITY_DUOLINGO_SKIP_CLASSES, ABILITY_KANEKI_RC_CELLS } from "./constants";
 import { setCharges } from "./charges";
 
 export function processUnitStartOfTurn(
@@ -52,7 +50,12 @@ export function processUnitStartOfTurn(
   updated = {
     ...updated,
     lastChargedTurn: state.turnNumber,
-    blindUntilOwnTurnStart: false,
+    // Tracked Blind lasts through the end of the affected unit's next turn.
+    // Legacy boolean-only states retain their old start-turn cleanup behavior.
+    blindUntilOwnTurnStart:
+      updated.blindExpiresAfterOwnTurn === undefined
+        ? false
+        : updated.blindUntilOwnTurnStart,
     immobilizedUntilOwnTurnStart: false,
   };
 
@@ -100,7 +103,7 @@ export function processUnitStartOfTurn(
     });
   }
 
-  let nextState: GameState = {
+  const nextState: GameState = {
       ...state,
       jackTraps: (state.jackTraps ?? []).filter(
         (trap) => trap.trappedUnitId !== updated.id
@@ -110,17 +113,5 @@ export function processUnitStartOfTurn(
         [updated.id]: updated,
       },
     };
-  if (updated.heroId === HERO_LUCHE_ID && updated.position) {
-    const radiance = revealStealthedInArea(
-      nextState,
-      updated.position,
-      1,
-      rng,
-      (target) => target.owner !== updated.owner
-    );
-    nextState = radiance.state;
-    events.push({ type: "abilityUsed", unitId: updated.id, abilityId: ABILITY_LUCHE_SHINE });
-    events.push(...radiance.events);
-  }
   return { state: nextState, events };
 }

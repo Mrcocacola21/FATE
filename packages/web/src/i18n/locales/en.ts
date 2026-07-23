@@ -652,6 +652,8 @@ export const en = {
     chargesCost: "{{amount}} charges",
     selected: "Selected",
     regenerationSpend: "Spend {{amount}} RC Cells to heal {{amount}} HP",
+    lightRayLine: "Line",
+    lightRayAroundSelf: "Around Self",
   },
   abilityDetails: {
     labels: {

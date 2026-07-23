@@ -451,6 +451,7 @@ export function buildAbilityPreview({
   gameView,
   sourceUnitId,
   abilityId,
+  targetingStep,
   targetingCell,
   selectedTargetId,
 }: BuildAbilityPreviewArgs): BoardPreview | null {
@@ -621,7 +622,25 @@ export function buildAbilityPreview({
     }
     case LUCHE_DIVINE_RAY_ID: {
       const targeting = gameView.abilitiesByUnitId?.[source.id]?.find((ability) => ability.id === abilityId)?.targeting;
-      const legalCells = targeting?.cells ?? [];
+      if (targetingStep === "lucheLightRayAround") {
+        const areaCells = targeting?.modes?.aroundSelf?.cells ?? [];
+        const areaKeys = new Set(areaCells.map(coordKey));
+        return {
+          kind: "area",
+          sourceCell: { ...source.position },
+          centerCell: { ...source.position },
+          areaCells,
+          affectedTargets: visibleUnitTargets(
+            gameView,
+            (unit) =>
+              unit.owner !== source.owner &&
+              !!unit.position &&
+              areaKeys.has(coordKey(unit.position)),
+          ),
+          labelKey: "preview.labels.affectedArea",
+        };
+      }
+      const legalCells = targeting?.modes?.line?.cells ?? targeting?.cells ?? [];
       const selectedCell = targetingCell && legalCells.some((cell) => coordKey(cell) === coordKey(targetingCell))
         ? targetingCell
         : null;

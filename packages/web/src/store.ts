@@ -74,6 +74,7 @@ export type ActionMode =
   | "gutsCannon"
   | "duolingoPush"
   | "lucheLightRay"
+  | "lucheLightRayAround"
   | "zoroOniGiri"
   | "donReaction"
   | "donWindmills"

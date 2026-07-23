@@ -1190,7 +1190,26 @@ test("new hero previews expose targets, lines, areas, and trap placement without
     } as any,
     {
       id: LUCHE_DIVINE_RAY_ID,
-      targeting: { cells: [{ col: 5, row: 4 }, { col: 6, row: 4 }, { col: 7, row: 4 }] },
+      targeting: {
+        cells: [{ col: 5, row: 4 }, { col: 6, row: 4 }, { col: 7, row: 4 }],
+        modes: {
+          line: {
+            cells: [{ col: 5, row: 4 }, { col: 6, row: 4 }, { col: 7, row: 4 }],
+          },
+          aroundSelf: {
+            cells: [
+              { col: 3, row: 3 },
+              { col: 3, row: 4 },
+              { col: 3, row: 5 },
+              { col: 4, row: 3 },
+              { col: 4, row: 5 },
+              { col: 5, row: 3 },
+              { col: 5, row: 4 },
+              { col: 5, row: 5 },
+            ],
+          },
+        },
+      },
     } as any,
     {
       id: ZORO_ONI_GIRI_ID,
@@ -1209,6 +1228,22 @@ test("new hero previews expose targets, lines, areas, and trap placement without
   const ray = buildAbilityPreview({ gameView: view, viewerPlayerId: "P1", sourceUnitId: source.id, abilityId: LUCHE_DIVINE_RAY_ID, targetingCell: { col: 7, row: 4 } });
   assert.equal(hasKind(ray, visibleEnemy.position!, "line"), true);
   assert.deepEqual(affectedTargetIds(ray), [visibleEnemy.id]);
+  const aroundEnemy = unit({ id: "around-visible", owner: "P2", position: { col: 5, row: 4 } });
+  const aroundView = makeView([source, aroundEnemy]);
+  aroundView.abilitiesByUnitId[source.id] = view.abilitiesByUnitId[source.id];
+  const aroundRay = buildAbilityPreview({
+    gameView: aroundView,
+    viewerPlayerId: "P1",
+    sourceUnitId: source.id,
+    abilityId: LUCHE_DIVINE_RAY_ID,
+    targetingStep: "lucheLightRayAround",
+  });
+  assert.equal(hasKind(aroundRay, { col: 5, row: 5 }, "area"), true);
+  assert.deepEqual(affectedTargetIds(aroundRay), [aroundEnemy.id]);
+  assert.equal(
+    collectTargets(aroundRay).some((target) => target.unitId === hiddenEnemy.id),
+    false,
+  );
 
   const oniTargets = buildAbilityPreview({ gameView: view, viewerPlayerId: "P1", sourceUnitId: source.id, abilityId: ZORO_ONI_GIRI_ID });
   assert.deepEqual(validTargetIds(oniTargets), [visibleEnemy.id]);
@@ -1340,6 +1375,56 @@ test("Moon Insight pending preview uses authoritative line options and the hover
 
   const rejectedLocalPoint = buildPendingPreview(view, { col: 6, row: 5 });
   assert.equal(hasKind(rejectedLocalPoint, { col: 6, row: 5 }, "area"), false);
+});
+
+test("charged Light Ray previews line and Around Self from the same projected modes", () => {
+  const luche = unit({
+    id: "luche",
+    owner: "P1",
+    heroId: "luche",
+    class: "spearman",
+    position: { col: 4, row: 4 },
+  });
+  const enemy = unit({ id: "enemy", owner: "P2", position: { col: 6, row: 4 } });
+  const view = makeView([luche, enemy], {
+    pendingRoll: {
+      id: "light-ray-mode",
+      player: "P1",
+      kind: "chargedImpulseTargetChoice",
+      context: {
+        unitId: luche.id,
+        abilityId: LUCHE_DIVINE_RAY_ID,
+        options: [{ col: 4, row: 4 }, { col: 6, row: 4 }],
+      },
+    } as PlayerView["pendingRoll"],
+  });
+  view.abilitiesByUnitId[luche.id] = [{
+    id: LUCHE_DIVINE_RAY_ID,
+    targeting: {
+      modes: {
+        line: { cells: [{ col: 5, row: 4 }, { col: 6, row: 4 }, { col: 7, row: 4 }] },
+        aroundSelf: {
+          cells: [
+            { col: 3, row: 3 },
+            { col: 3, row: 4 },
+            { col: 3, row: 5 },
+            { col: 4, row: 3 },
+            { col: 4, row: 5 },
+            { col: 5, row: 3 },
+            { col: 5, row: 4 },
+            { col: 5, row: 5 },
+          ],
+        },
+      },
+    },
+  } as any];
+
+  const choices = buildPendingPreview(view);
+  assert.equal(hasKind(choices, luche.position!, "validTarget"), true);
+  const around = buildPendingPreview(view, luche.position);
+  assert.equal(hasKind(around, { col: 5, row: 5 }, "area"), true);
+  const line = buildPendingPreview(view, enemy.position);
+  assert.equal(hasKind(line, { col: 7, row: 4 }, "line"), true);
 });
 
 test("Covering Tracks highlights existing snares and previews only visible radius-1 creatures", () => {

@@ -225,6 +225,27 @@ test("Blue and Orange Bone render directly on visible board tokens", () => {
   assert.match(markup, /data-bone-source="sansBoneField"/);
 });
 
+test("Blind renders as a visible status badge on the affected board figure", () => {
+  setLanguage("en", null);
+  const base = markerState();
+  const unit = Object.values(base.units)[0];
+  assert.ok(unit);
+  const state: GameState = {
+    ...base,
+    units: {
+      ...base.units,
+      [unit.id]: {
+        ...unit,
+        blindUntilOwnTurnStart: true,
+        blindExpiresAfterOwnTurn: 1,
+      },
+    },
+  };
+  const markup = renderBoard(makePlayerView(state, "P1"), "P1");
+  assert.match(markup, /data-blind-status="active"/);
+  assert.match(markup, /aria-label="Blind: targeting limited to radius 1"/);
+});
+
 test("transformed Papyrus Orange Bone uses the orange token treatment", () => {
   const base = markerState();
   const target = Object.values(base.units)[0];

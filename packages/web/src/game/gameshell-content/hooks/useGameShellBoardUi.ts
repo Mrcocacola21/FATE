@@ -336,6 +336,8 @@ export function useGameShellBoardUi(params: any) {
     actionMode !== "papyrusCoolGuy" &&
     actionMode !== "duolingoPush" &&
     actionMode !== "zoroOniGiri" &&
+    actionMode !== "lucheLightRay" &&
+    actionMode !== "lucheLightRayAround" &&
     actionMode !== "donWindmills" &&
     actionMode !== "jackHolyMother" &&
     !papyrusLongBoneAttackMode;

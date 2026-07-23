@@ -44,6 +44,12 @@ function blindCenterIsLegal(unit: UnitState, action: UseAbilityAction): boolean 
     return true;
   }
   const payload = action.payload as Record<string, unknown> | undefined;
+  if (
+    action.abilityId === ABILITY_LUCHE_DIVINE_RAY &&
+    payload?.mode === "aroundSelf"
+  ) {
+    return true;
+  }
   const raw = payload?.center ?? payload?.target ?? payload?.line;
   if (!raw || typeof raw !== "object") return false;
   const coord = raw as { col?: unknown; row?: unknown };

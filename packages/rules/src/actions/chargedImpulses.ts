@@ -131,7 +131,21 @@ export function maybeTriggerChargedImpulseChoice(
       ? lineCells.filter((position) => isArtemidaAttackLineCell(state, unit, position))
       : abilityId === ABILITY_SANS_GASTER_BLASTER
         ? lineCells
-      : abilityId === ABILITY_LUCHE_DIVINE_RAY || abilityId === ABILITY_ZORO_ONI_GIRI
+      : abilityId === ABILITY_LUCHE_DIVINE_RAY
+        ? [
+            { ...unit.position },
+            ...Object.values(state.units)
+              .filter(
+                (target) =>
+                  target.isAlive &&
+                  target.owner !== unit.owner &&
+                  !!target.position &&
+                  canDirectlyTargetUnit(state, unit.id, target.id) &&
+                  lineKeys.has(`${target.position.col},${target.position.row}`),
+              )
+              .map((target) => ({ ...target.position! })),
+          ]
+      : abilityId === ABILITY_ZORO_ONI_GIRI
         ? Object.values(state.units)
             .filter(
               (target) =>
@@ -273,7 +287,9 @@ export function resolveChargedImpulseTargetChoice(
       ? { position: target }
       : abilityId === ABILITY_ARTEMIDA_MOONLIGHT_SHINE
         ? { center: target }
-        : { target };
+        : coordsEqual(target, unit.position)
+          ? { mode: "aroundSelf" }
+          : { mode: "line", target };
     return applyNewBatchAbility(
       baseState,
       unit,

@@ -9,6 +9,7 @@ import {
   ABILITY_HASSAN_ASSASIN_ORDER,
   ABILITY_JACK_RIPPER_SNARES,
   ABILITY_LOKI_LAUGHT,
+  ABILITY_LUCHE_DIVINE_RAY,
   ABILITY_RIVER_PERSON_BOAT,
   ABILITY_RIVER_PERSON_BOATMAN,
   attachArmy,
@@ -83,6 +84,35 @@ function testLokiLaughPayloadSchemas() {
   assert(spinFallbackPayload.success, "server schema should accept Spin fallback ability choice");
   assert.equal(invalidOption.success, false, "server schema must reject ambiguous Loki options");
   console.log("hardening_loki_laugh_payload_schemas passed");
+}
+
+function testLightRayModePayloadSchemas() {
+  for (const mode of ["line", "aroundSelf"] as const) {
+    const parsed = GameActionSchema.safeParse({
+      type: "useAbility",
+      unitId: "P1-spearman-luche",
+      abilityId: ABILITY_LUCHE_DIVINE_RAY,
+      payload:
+        mode === "line"
+          ? { mode, target: { col: 8, row: 2 } }
+          : { mode },
+    });
+    assert(parsed.success, `server schema should accept Light Ray ${mode} mode`);
+  }
+  for (const payload of [{ mode: "cone" }, {}, undefined]) {
+    const parsed = GameActionSchema.safeParse({
+      type: "useAbility",
+      unitId: "P1-spearman-luche",
+      abilityId: ABILITY_LUCHE_DIVINE_RAY,
+      ...(payload === undefined ? {} : { payload }),
+    });
+    assert.equal(
+      parsed.success,
+      false,
+      "server schema should reject missing or invalid Light Ray modes",
+    );
+  }
+  console.log("hardening_light_ray_mode_payload_schemas passed");
 }
 
 function testPapyrusBoneChoicePayloadSchema() {
@@ -1897,6 +1927,7 @@ function testChikatiloCommandsAndResourcesAreAuthoritative() {
 
 async function main() {
   testLokiLaughPayloadSchemas();
+  testLightRayModePayloadSchemas();
   testPapyrusBoneChoicePayloadSchema();
   await testGraceExpiryVacatesSeatAndInvalidatesToken();
   await testReconnectWithinGraceKeepsSeatAndClearsTimer();

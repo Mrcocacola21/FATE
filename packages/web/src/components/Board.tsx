@@ -409,6 +409,7 @@ export const Board: FC<BoardProps> = ({
       class: string;
       isStealthed: boolean;
       bunkerActive: boolean;
+      blindUntilOwnTurnStart?: boolean;
       chikatiloMarkStatus?: UnitState["chikatiloMarkStatus"];
       boneStatus: ActiveBoneStatus | null;
     }>
@@ -472,6 +473,7 @@ export const Board: FC<BoardProps> = ({
       class: unit.class,
       isStealthed: unit.isStealthed,
       bunkerActive: unit.bunker?.active ?? false,
+      blindUntilOwnTurnStart: unit.blindUntilOwnTurnStart,
       chikatiloMarkStatus: unit.chikatiloMarkStatus,
       boneStatus: getActiveBoneStatus(unit),
     });
@@ -648,6 +650,10 @@ export const Board: FC<BoardProps> = ({
             boneStatus && canExposeUnitStatus
               ? `, ${t(boneStatus.kind === "blue" ? "game.blueBone" : "game.orangeBone")}`
               : ""
+          }${
+            unit.blindUntilOwnTurnStart && canExposeUnitStatus
+              ? `, ${t("game.blind")}`
+              : ""
           }`
         : lastKnownCount > 0
           ? `, ${t("board.lastKnown")}`
@@ -759,6 +765,16 @@ export const Board: FC<BoardProps> = ({
                 data-bone-source={boneStatus.source}
               >
                 <BoneIcon className="h-full w-full" />
+              </span>
+            ) : null}
+            {unit.blindUntilOwnTurnStart && canExposeUnitStatus ? (
+              <span
+                className="pointer-events-none absolute -bottom-1 -right-1 z-30 rounded-full border border-amber-200 bg-amber-500 px-1 py-0.5 text-[8px] font-black leading-none text-amber-950 shadow"
+                aria-label={t("game.blind")}
+                title={t("game.blind")}
+                data-blind-status="active"
+              >
+                BL
               </span>
             ) : null}
             {marker && (

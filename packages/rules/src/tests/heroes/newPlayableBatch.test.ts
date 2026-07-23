@@ -8,6 +8,7 @@ import {
   ABILITY_KANEKI_RC_CELLS,
   ABILITY_KANEKI_REGENERATION,
   ABILITY_LUCHE_DIVINE_RAY,
+  ABILITY_LUCHE_SHINE,
   ABILITY_LUCHE_SUN_GLORY,
   ABILITY_ZORO_DETERMINATION,
   ABILITY_ZORO_ONI_GIRI,
@@ -19,6 +20,7 @@ import {
   HERO_LUCHE_ID,
   HERO_ZORO_ID,
   getHeroMeta,
+  getAbilitySpec,
   getLegalMovesForUnit,
   getMovementActionsRemaining,
   getUnitDefinition,
@@ -591,7 +593,7 @@ export function testNewPlayableBatchLineAndRevealEffects() {
   state = setUnit(state, luche.id, { position: { col: 2, row: 2 }, charges: { ...luche.charges, [ABILITY_LUCHE_SUN_GLORY]: 2 } });
   state = setUnit(state, enemy.id, { position: { col: 5, row: 2 } });
   state = battleFor(state, state.units[luche.id]);
-  const fired = applyAction(state, { type: "useAbility", unitId: luche.id, abilityId: ABILITY_LUCHE_DIVINE_RAY, payload: { target: { col: 8, row: 2 } } } as any, makeRngSequence([]));
+  const fired = applyAction(state, { type: "useAbility", unitId: luche.id, abilityId: ABILITY_LUCHE_DIVINE_RAY, payload: { mode: "line", target: { col: 8, row: 2 } } } as any, makeRngSequence([]));
   assert(fired.state.units[luche.id].charges[ABILITY_LUCHE_SUN_GLORY] === 0, "Light Ray should spend two Sun");
   assert(fired.state.units[luche.id].turn.actionUsed, "manual Sun-paid Light Ray should consume Action");
   const invalidLightSource = applyAction(state, {
@@ -599,6 +601,7 @@ export function testNewPlayableBatchLineAndRevealEffects() {
     unitId: luche.id,
     abilityId: ABILITY_LUCHE_DIVINE_RAY,
     payload: {
+      mode: "line",
       target: { col: 8, row: 2 },
       source: { type: "heroResource", resourceId: ABILITY_LUCHE_SUN_GLORY, amount: 1 },
     },
@@ -621,7 +624,7 @@ export function testNewPlayableBatchLineAndRevealEffects() {
     type: "useAbility",
     unitId: blindedLuche.id,
     abilityId: ABILITY_LUCHE_DIVINE_RAY,
-    payload: { target: { col: 8, row: 2 } },
+    payload: { mode: "line", target: { col: 8, row: 2 } },
   } as any, makeRngSequence([]));
   assert(!rejectedLine.state.pendingRoll, "Blind should reject a mass-attack center beyond radius 1");
   assert(rejectedLine.state.units[blindedLuche.id].charges[ABILITY_LUCHE_SUN_GLORY] === 2, "rejected Blind targeting must not spend Sun");
@@ -724,6 +727,7 @@ export function testNewPlayableBatchLineAndRevealEffects() {
     unitId: impulseLuche.id,
     abilityId: ABILITY_LUCHE_DIVINE_RAY,
     payload: {
+      mode: "line",
       target: { col: 5, row: 2 },
       source: { type: "abilityCounter", counterId: ABILITY_LUCHE_DIVINE_RAY },
     },
@@ -804,6 +808,221 @@ export function testNewPlayableBatchLineAndRevealEffects() {
   assert(zoroImpulse.state.units[impulseZoro.id].charges[ABILITY_ZORO_DETERMINATION] === 0, "Oni Giri impulse must not spend Determination");
   assert(zoroImpulse.state.units[impulseZoro.id].turn.actionUsed && zoroImpulse.state.units[impulseZoro.id].turn.moveUsed, "counter Oni Giri must consume Action and Movement");
   console.log("new_playable_batch_line_and_reveal_effects passed");
+}
+
+export function testLucheRadiancePassiveAndLightRayModes() {
+  let { state, heroes, enemies } = setupBatch();
+  const luche = heroes[HERO_LUCHE_ID];
+  const attacker = enemies[0];
+  state = setUnit(state, luche.id, { position: { col: 2, row: 2 } });
+  state = setUnit(state, attacker.id, {
+    position: { col: 3, row: 2 },
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
+  const started = applyAction(
+    startTurnFor(state, state.units[luche.id]),
+    { type: "unitStartTurn", unitId: luche.id } as any,
+    makeRngSequence([]),
+  );
+  assert(
+    started.state.units[attacker.id].isStealthed,
+    "Radiance must not reveal a nearby hidden enemy at Luche turn start",
+  );
+  assert(
+    !started.events.some(
+      (event) =>
+        event.type === "stealthRevealed" ||
+        (event.type === "abilityUsed" && event.abilityId === ABILITY_LUCHE_SHINE),
+    ),
+    "Radiance turn start must not emit reveal or ability-use events",
+  );
+  assert(
+    started.state.pendingRoll?.context.abilityId !== ABILITY_LUCHE_SHINE,
+    "Radiance must not create an impulse pending task",
+  );
+  assert(
+    getAbilitySpec(ABILITY_LUCHE_SHINE)?.kind === "passive",
+    "Radiance metadata must be passive",
+  );
+
+  ({ state, heroes, enemies } = setupBatch());
+  const passiveLuche = heroes[HERO_LUCHE_ID];
+  const actualAttacker = enemies[0];
+  const otherUnit = enemies[1];
+  const miss = applyNewBatchPostAction(
+    state,
+    state,
+    [{
+      type: "attackResolved",
+      attackerId: actualAttacker.id,
+      defenderId: passiveLuche.id,
+      hit: false,
+      damage: 0,
+      defenderHpAfter: passiveLuche.hp,
+    }] as any,
+    makeRngSequence([]),
+  );
+  assert(
+    !miss.state.units[actualAttacker.id].blindUntilOwnTurnStart,
+    "a figure that misses Luche must not become Blinded",
+  );
+
+  const hit = applyNewBatchPostAction(
+    state,
+    state,
+    [{
+      type: "attackResolved",
+      attackerId: actualAttacker.id,
+      defenderId: passiveLuche.id,
+      hit: true,
+      damage: 0,
+      defenderHpAfter: passiveLuche.hp,
+    }] as any,
+    makeRngSequence([]),
+  );
+  assert(
+    hit.state.units[actualAttacker.id].blindUntilOwnTurnStart,
+    "the actual figure that successfully hits Luche must become Blinded",
+  );
+  assert(
+    !hit.state.units[otherUnit.id].blindUntilOwnTurnStart,
+    "Radiance must not Blind a different unit or commanding player surrogate",
+  );
+
+  const nextTurnOrdinal = hit.state.units[actualAttacker.id].blindExpiresAfterOwnTurn;
+  assert(nextTurnOrdinal === 1, "Blind should track the attacker's next own turn");
+  const duringNextTurn = setUnit(
+    {
+      ...hit.state,
+      phase: "battle",
+      currentPlayer: actualAttacker.owner,
+      activeUnitId: actualAttacker.id,
+      turnQueue: [actualAttacker.id, passiveLuche.id],
+      turnQueueIndex: 0,
+      turnOrder: [actualAttacker.id, passiveLuche.id],
+      turnOrderIndex: 0,
+    },
+    actualAttacker.id,
+    { ownTurnsStarted: 1 },
+  );
+  const expired = applyAction(duringNextTurn, { type: "endTurn" }, makeRngSequence([]));
+  assert(
+    !expired.state.units[actualAttacker.id].blindUntilOwnTurnStart,
+    "Radiance Blind must expire at the end of the attacker's next turn",
+  );
+
+  const refreshed = applyNewBatchPostAction(
+    duringNextTurn,
+    duringNextTurn,
+    [{
+      type: "attackResolved",
+      attackerId: actualAttacker.id,
+      defenderId: passiveLuche.id,
+      hit: true,
+      damage: 1,
+      defenderHpAfter: Math.max(0, passiveLuche.hp - 1),
+    }] as any,
+    makeRngSequence([]),
+  );
+  assert(
+    refreshed.state.units[actualAttacker.id].blindExpiresAfterOwnTurn === 2,
+    "a repeated hit should refresh Blind through the following own turn",
+  );
+  const notExpired = applyAction(refreshed.state, { type: "endTurn" }, makeRngSequence([]));
+  assert(
+    notExpired.state.units[actualAttacker.id].blindUntilOwnTurnStart,
+    "refreshed Blind must not expire at the end of the current turn",
+  );
+
+  ({ state, heroes, enemies } = setupBatch());
+  const rayLuche = heroes[HERO_LUCHE_ID];
+  const adjacent = enemies[0];
+  const distant = enemies[1];
+  state = setUnit(state, rayLuche.id, {
+    position: { col: 4, row: 4 },
+    charges: { ...rayLuche.charges, [ABILITY_LUCHE_SUN_GLORY]: 2 },
+  });
+  state = setUnit(state, adjacent.id, { position: { col: 5, row: 5 } });
+  state = setUnit(state, distant.id, { position: { col: 6, row: 4 } });
+  state = battleFor(state, state.units[rayLuche.id]);
+  const invalidMode = applyAction(state, {
+    type: "useAbility",
+    unitId: rayLuche.id,
+    abilityId: ABILITY_LUCHE_DIVINE_RAY,
+    payload: { mode: "cone", target: { col: 8, row: 4 } },
+  } as any, makeRngSequence([]));
+  assert(invalidMode.state === state, "invalid Light Ray mode must reject without mutation");
+  assert(
+    invalidMode.state.units[rayLuche.id].charges[ABILITY_LUCHE_SUN_GLORY] === 2,
+    "invalid Light Ray mode must not spend Sun",
+  );
+  const around = applyAction(state, {
+    type: "useAbility",
+    unitId: rayLuche.id,
+    abilityId: ABILITY_LUCHE_DIVINE_RAY,
+    payload: { mode: "aroundSelf" },
+  } as any, makeRngSequence([]));
+  assert(
+    around.state.units[rayLuche.id].charges[ABILITY_LUCHE_SUN_GLORY] === 0,
+    "Around Self Light Ray should spend the same two Sun as Line",
+  );
+  assert(
+    around.state.pendingRoll?.context.defenderId === adjacent.id,
+    "Around Self Light Ray should attack an adjacent target",
+  );
+  assert(
+    !(around.state.pendingCombatQueue ?? []).some((entry) => entry.defenderId === distant.id),
+    "Around Self Light Ray must use radius 1",
+  );
+  const targeting = makePlayerView(state, "P1").abilitiesByUnitId[rayLuche.id]
+    .find((ability) => ability.id === ABILITY_LUCHE_DIVINE_RAY)?.targeting;
+  assert(
+    targeting?.modes?.aroundSelf?.cells.length === 8,
+    "projected Around Self geometry should contain the eight radius-1 cells",
+  );
+
+  ({ state, heroes, enemies } = setupBatch());
+  const impulseLuche = heroes[HERO_LUCHE_ID];
+  const impulseAdjacent = enemies[0];
+  state = setUnit(state, impulseLuche.id, {
+    position: { col: 4, row: 4 },
+    charges: {
+      ...impulseLuche.charges,
+      [ABILITY_LUCHE_DIVINE_RAY]: 1,
+      [ABILITY_LUCHE_SUN_GLORY]: 0,
+    },
+  });
+  state = setUnit(state, impulseAdjacent.id, { position: { col: 5, row: 4 } });
+  const impulseStarted = applyAction(
+    startTurnFor(state, state.units[impulseLuche.id]),
+    { type: "unitStartTurn", unitId: impulseLuche.id } as any,
+    makeRngSequence([]),
+  );
+  const impulsePending = impulseStarted.state.pendingRoll!;
+  assert(
+    (impulsePending.context.options as any[]).some(
+      (cell) => cell.col === 4 && cell.row === 4,
+    ),
+    "charged Light Ray should offer Luche's cell as the Around Self mode",
+  );
+  const impulseAround = applyAction(impulseStarted.state, {
+    type: "resolvePendingRoll",
+    pendingRollId: impulsePending.id,
+    player: impulsePending.player,
+    choice: { type: "chargedImpulseTarget", position: { col: 4, row: 4 } },
+  } as any, makeRngSequence([]));
+  assert(
+    impulseAround.state.units[impulseLuche.id].charges[ABILITY_LUCHE_DIVINE_RAY] === 0,
+    "Around Self impulse should spend Light Ray's own counter",
+  );
+  assert(
+    impulseAround.state.units[impulseLuche.id].charges[ABILITY_LUCHE_SUN_GLORY] === 0 &&
+      !impulseAround.state.units[impulseLuche.id].turn.actionUsed,
+    "Around Self impulse must spend neither Sun nor Action",
+  );
+
+  console.log("luche_radiance_passive_and_light_ray_modes passed");
 }
 
 export function testNewPlayableBatchCombatCountersAndReactions() {
