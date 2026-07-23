@@ -2,22 +2,21 @@ import type { GameEvent, GameState, ResolveRollChoice } from "../../../../model"
 import { isLoki } from "../../../../actions/heroes/loki/effects";
 import { commitAbilityCost } from "../../../../actions/abilityCosts";
 import { ABILITY_LOKI_LAUGHT } from "../../../../abilities";
+import {
+  LOKI_LAUGHT_OPTION_COSTS,
+  type LokiLaughtOption,
+} from "../../../../actions/heroes/loki/constants";
 
-export const COST_AGAIN_SOME_NONSENSE = 3;
-export const COST_CHICKEN = 5;
-export const COST_MIND_CONTROL = 10;
-export const COST_SPIN_THE_DRUM = 12;
-export const COST_GREAT_LOKI_JOKE = 15;
+export const COST_AGAIN_SOME_NONSENSE = LOKI_LAUGHT_OPTION_COSTS.againSomeNonsense;
+export const COST_CHICKEN = LOKI_LAUGHT_OPTION_COSTS.chicken;
+export const COST_MIND_CONTROL = LOKI_LAUGHT_OPTION_COSTS.mindControl;
+export const COST_SPIN_THE_DRUM = LOKI_LAUGHT_OPTION_COSTS.spinTheDrum;
+export const COST_GREAT_LOKI_JOKE = LOKI_LAUGHT_OPTION_COSTS.greatLokiJoke;
 
-export type LokiLaughtChoiceOption =
-  | "againSomeNonsense"
-  | "chicken"
-  | "mindControl"
-  | "spinTheDrum"
-  | "greatLokiJoke";
+export type LokiLaughtChoiceOption = LokiLaughtOption;
 
 export function parseChoiceOption(
-  choice: ResolveRollChoice | undefined
+  choice: ResolveRollChoice | undefined,
 ): LokiLaughtChoiceOption | null {
   if (choice === "skip") {
     return null;
@@ -52,7 +51,7 @@ export function getLokiUnit(state: GameState, lokiId: string) {
 export function spendLaughter(
   state: GameState,
   lokiId: string,
-  cost: number
+  cost: number,
 ): {
   ok: boolean;
   state: GameState;

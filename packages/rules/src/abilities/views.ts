@@ -5,11 +5,7 @@ import type {
   GameState,
   UnitState,
 } from "../model";
-import {
-  HERO_FALSE_TRAIL_TOKEN_ID,
-  HERO_GRAND_KAISER_ID,
-  HERO_UNDYNE_ID,
-} from "../heroes";
+import { HERO_FALSE_TRAIL_TOKEN_ID, HERO_GRAND_KAISER_ID, HERO_UNDYNE_ID } from "../heroes";
 import {
   getMettatonRating,
   isMettaton,
@@ -28,10 +24,7 @@ import {
   getLucheLightRayTargeting,
   getZoroOniGiriTargeting,
 } from "./newBatchTargeting";
-import {
-  CHIKATILO_ASSASSIN_MARK_RANGE,
-  getChikatiloMarkedTargetIds,
-} from "../chikatiloMark";
+import { CHIKATILO_ASSASSIN_MARK_RANGE, getChikatiloMarkedTargetIds } from "../chikatiloMark";
 import { chebyshev } from "../board";
 import { canDirectlyTargetUnit } from "../visibility";
 import {
@@ -40,11 +33,9 @@ import {
   getLokiSpinCandidateIds,
   getLokiTricksterAreaTargetIds,
 } from "../actions/heroes/loki/targets";
+import { LOKI_LAUGHT_OPTION_COSTS } from "../actions/heroes/loki/constants";
 
-function getLegalChikatiloMarkTargetIds(
-  state: GameState,
-  unit: UnitState
-): string[] {
+function getLegalChikatiloMarkTargetIds(state: GameState, unit: UnitState): string[] {
   if (!unit.position) return [];
   const marked = new Set(getChikatiloMarkedTargetIds(unit));
   return Object.values(state.units)
@@ -55,7 +46,7 @@ function getLegalChikatiloMarkTargetIds(
         !!target.position &&
         !marked.has(target.id) &&
         canDirectlyTargetUnit(state, unit.id, target.id) &&
-        chebyshev(unit.position!, target.position) <= CHIKATILO_ASSASSIN_MARK_RANGE
+        chebyshev(unit.position!, target.position) <= CHIKATILO_ASSASSIN_MARK_RANGE,
     )
     .map((target) => target.id)
     .sort();
@@ -210,9 +201,7 @@ function getActiveDisabledReason(
     if (unit.isStealthed) return "Already in stealth";
     const hasOtherFigure = Object.values(state.units).some(
       (other) =>
-        other.isAlive &&
-        other.id !== unit.id &&
-        other.heroId !== HERO_FALSE_TRAIL_TOKEN_ID
+        other.isAlive && other.id !== unit.id && other.heroId !== HERO_FALSE_TRAIL_TOKEN_ID,
     );
     if (!hasOtherFigure) return "Cannot hide while no other figures remain";
   }
@@ -427,21 +416,17 @@ export function getAbilityViewsForUnit(state: GameState, unitId: string): Abilit
           ? getDuolingoPushTargeting(state, unit)
           : spec.id === ids.ABILITY_CHIKATILO_ASSASSIN_MARK
             ? { targetIds: getLegalChikatiloMarkTargetIds(state, unit) }
-          : spec.id === ids.ABILITY_ZORO_ONI_GIRI
-            ? getZoroOniGiriTargeting(state, unit)
-            : spec.id === ids.ABILITY_DON_KIHOTE_WINDMILLS
-              ? getDonWindmillsTargeting(state, unit)
-            : spec.id === ids.ABILITY_LUCHE_DIVINE_RAY
-              ? getLucheLightRayTargeting(state, unit)
-              : undefined;
+            : spec.id === ids.ABILITY_ZORO_ONI_GIRI
+              ? getZoroOniGiriTargeting(state, unit)
+              : spec.id === ids.ABILITY_DON_KIHOTE_WINDMILLS
+                ? getDonWindmillsTargeting(state, unit)
+                : spec.id === ids.ABILITY_LUCHE_DIVINE_RAY
+                  ? getLucheLightRayTargeting(state, unit)
+                  : undefined;
       const hasLegalTargets = targeting
         ? (targeting.targetIds?.length ?? targeting.cells?.length ?? 0) > 0
         : true;
-      if (
-        spec.id === ids.ABILITY_CHIKATILO_ASSASSIN_MARK &&
-        !hasLegalTargets &&
-        isAvailable
-      ) {
+      if (spec.id === ids.ABILITY_CHIKATILO_ASSASSIN_MARK && !hasLegalTargets && isAvailable) {
         isAvailable = false;
         disabledReason = "No legal targets";
       }
@@ -513,35 +498,35 @@ export function getAbilityViewsForUnit(state: GameState, unitId: string): Abilit
             state,
             unit,
             "againSomeNonsense",
-            3,
+            LOKI_LAUGHT_OPTION_COSTS.againSomeNonsense,
             getLokiTricksterAreaTargetIds(state, unit.id).length > 0,
           ),
           buildLokiLaughOption(
             state,
             unit,
             "chicken",
-            5,
+            LOKI_LAUGHT_OPTION_COSTS.chicken,
             getLokiChickenTargetIds(state, unit.id).length > 0,
           ),
           buildLokiLaughOption(
             state,
             unit,
             "mindControl",
-            10,
+            LOKI_LAUGHT_OPTION_COSTS.mindControl,
             getLokiMindControlEnemyIds(state, unit.id).length > 0,
           ),
           buildLokiLaughOption(
             state,
             unit,
             "spinTheDrum",
-            12,
+            LOKI_LAUGHT_OPTION_COSTS.spinTheDrum,
             getLokiSpinCandidateIds(state, unit.id).length > 0,
           ),
           buildLokiLaughOption(
             state,
             unit,
             "greatLokiJoke",
-            15,
+            LOKI_LAUGHT_OPTION_COSTS.greatLokiJoke,
             getLokiTricksterAreaTargetIds(state, unit.id).length > 0,
           ),
         ];

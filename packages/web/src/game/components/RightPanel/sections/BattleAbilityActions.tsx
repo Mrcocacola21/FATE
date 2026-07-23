@@ -30,7 +30,7 @@ import { getOrdinaryAbilityCounterView } from "../ActionMenu";
 
 const LOKI_RADIUS = 2;
 
-const LOKI_LAUGHT_OPTION_IDS: LokiLaughtOption[] = [
+const LOKI_LAUGHT_OPTION_IDS: readonly LokiLaughtOption[] = [
   "againSomeNonsense",
   "chicken",
   "mindControl",
@@ -47,7 +47,7 @@ const LOKI_LAUGHT_FALLBACK_COSTS: Record<LokiLaughtOption, number> = {
 };
 
 function isLokiLaughtOptionId(optionId: string): optionId is LokiLaughtOption {
-  return LOKI_LAUGHT_OPTION_IDS.includes(optionId as LokiLaughtOption);
+  return (LOKI_LAUGHT_OPTION_IDS as readonly string[]).includes(optionId);
 }
 
 function getLokiLaughtOptions(): AbilityDisplayOption[] {
@@ -131,6 +131,35 @@ function optionNeedsVisibleTarget(option: LokiLaughtOption): boolean {
   return option === "chicken" || option === "mindControl" || option === "spinTheDrum";
 }
 
+function logLokiLaughtOptionInteraction(
+  interaction: "hover" | "click",
+  params: {
+    unitId: string;
+    optionId: LokiLaughtOption;
+    cost: number;
+    currentLaugh: number;
+    enabled: boolean;
+    disabledReason: string;
+  },
+) {
+  const env = (import.meta as ImportMeta & { env?: { DEV?: boolean } }).env;
+  if (!env?.DEV) return;
+  console.debug("Loki Laugh option availability:", {
+    interaction,
+    optionId: params.optionId,
+    cost: params.cost,
+    currentLaugh: params.currentLaugh,
+    enabled: params.enabled,
+    disabledReason: params.disabledReason || undefined,
+    clickPayload: {
+      type: "useAbility",
+      unitId: params.unitId,
+      abilityId: LOKI_LAUGHT_ID,
+      payload: { optionId: params.optionId },
+    },
+  });
+}
+
 interface BattleAbilityActionsProps {
   view: PlayerView;
   actionableAbilities: AbilityView[];
@@ -187,7 +216,10 @@ export const BattleAbilityActions: FC<BattleAbilityActionsProps> = ({
   return (
     <>
       {actionableAbilities.map((ability) => {
-        if (ability.useOptions?.length) {
+        // Loki's options are actions, not interchangeable payment sources. Keep
+        // them out of the generic useOptions renderer so each option can invoke
+        // its own authoritative flow with an optionId.
+        if (ability.useOptions?.length && ability.id !== LOKI_LAUGHT_ID) {
           const display = getAbilityDisplay(
             ability.id,
             ability.name,
@@ -488,7 +520,11 @@ export const BattleAbilityActions: FC<BattleAbilityActionsProps> = ({
                     projectedOption?.chargeRequired ??
                     option.cost?.amount ??
                     LOKI_LAUGHT_FALLBACK_COSTS[optionId];
-                  const targetCount = getProjectedLokiOptionTargetCount(view, selectedUnit, optionId);
+                  const targetCount = getProjectedLokiOptionTargetCount(
+                    view,
+                    selectedUnit,
+                    optionId,
+                  );
                   const noVisibleTarget = optionNeedsVisibleTarget(optionId) && targetCount === 0;
                   const notEnoughLaugh = !projectedOption && chargeState.current < cost;
                   const disabled =
@@ -501,6 +537,14 @@ export const BattleAbilityActions: FC<BattleAbilityActionsProps> = ({
                     localizeServerText(projectedOption?.disabledReason, t) ||
                     (notEnoughLaugh ? t("game.notEnoughLaugh") : "") ||
                     (noVisibleTarget ? t("pending.noValidTargets") : "");
+                  const diagnostic = {
+                    unitId: selectedUnit.id,
+                    optionId,
+                    cost,
+                    currentLaugh: chargeState.current,
+                    enabled: !disabled,
+                    disabledReason: reason,
+                  };
                   return (
                     <div
                       key={`${ability.id}:${optionId}`}
@@ -515,8 +559,14 @@ export const BattleAbilityActions: FC<BattleAbilityActionsProps> = ({
                             ? "bg-stone-500/[0.06] text-stone-600 ring-1 ring-inset ring-stone-500/10 dark:text-stone-400"
                             : "bg-sky-500/10 text-sky-900 ring-1 ring-inset ring-sky-500/20 hover:bg-sky-500/15 dark:text-sky-100"
                         }`}
-                        onClick={() => !disabled && onUseLokiLaughtOption(optionId)}
-                        onMouseEnter={() => onHoverAbility(LOKI_LAUGHT_ID)}
+                        onClick={() => {
+                          logLokiLaughtOptionInteraction("click", diagnostic);
+                          if (!disabled) onUseLokiLaughtOption(optionId);
+                        }}
+                        onMouseEnter={() => {
+                          logLokiLaughtOptionInteraction("hover", diagnostic);
+                          onHoverAbility(LOKI_LAUGHT_ID);
+                        }}
                         onMouseLeave={() => onHoverAbility(null)}
                         onFocus={() => onHoverAbility(LOKI_LAUGHT_ID)}
                         onBlur={() => onHoverAbility(null)}

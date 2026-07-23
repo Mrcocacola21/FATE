@@ -228,7 +228,10 @@ test("Grand Kaiser Action Menu loses stealth and Bunker after transformation", (
 
   assert.equal(beforeVm.showStealthAction, true);
   assert.match(renderPrimaryActions(beforeVm.showStealthAction), /Enter Stealth/);
-  assert.equal(beforeVm.abilityViews.some((ability) => ability.id === "kaiserBunker"), true);
+  assert.equal(
+    beforeVm.abilityViews.some((ability) => ability.id === "kaiserBunker"),
+    true,
+  );
 
   const transformedKaiser = {
     ...baseKaiser,
@@ -1144,21 +1147,13 @@ test("new-batch passive and start-turn impulse abilities are not normal action b
   assert.equal(isActionableAbility(coveringTracks), false);
   assert.equal(shouldRenderManualAbilityButton(coveringTracks), false);
   assert.equal(
-    getAbilityDisplay(
-      coveringTracks.id,
-      coveringTracks.name,
-      coveringTracks.description,
-      "en",
-    ).name,
+    getAbilityDisplay(coveringTracks.id, coveringTracks.name, coveringTracks.description, "en")
+      .name,
     "Covering Tracks",
   );
   assert.equal(
-    getAbilityDisplay(
-      coveringTracks.id,
-      coveringTracks.name,
-      coveringTracks.description,
-      "uk",
-    ).name,
+    getAbilityDisplay(coveringTracks.id, coveringTracks.name, coveringTracks.description, "uk")
+      .name,
     "Заметання слідів",
   );
 });
@@ -1698,9 +1693,7 @@ test("Hassan Assassin Order uses highlighted allied board targets without inspec
     },
     actionMode: null,
     selectedUnitId: hassan.id,
-    setHassanAssassinOrderSelections: (
-      update: string[] | ((previous: string[]) => string[]),
-    ) => {
+    setHassanAssassinOrderSelections: (update: string[] | ((previous: string[]) => string[])) => {
       selections = typeof update === "function" ? update(selections) : update;
     },
     setSelectedUnit: () => {
@@ -1943,6 +1936,53 @@ test("Loki Laughter renders separate option buttons with costs and availability"
     chargeUnlimited: true,
     isAvailable: true,
     kind: "phantasm",
+    useOptions: [
+      {
+        id: "againSomeNonsense",
+        source: { type: "heroResource", resourceId: LOKI_LAUGHT_ID, amount: 3 },
+        sourceName: "Laugh",
+        currentCharges: 15,
+        chargeRequired: 3,
+        consumes: { action: true },
+        isAvailable: true,
+      },
+      {
+        id: "chicken",
+        source: { type: "heroResource", resourceId: LOKI_LAUGHT_ID, amount: 5 },
+        sourceName: "Laugh",
+        currentCharges: 15,
+        chargeRequired: 5,
+        consumes: { action: true },
+        isAvailable: true,
+      },
+      {
+        id: "mindControl",
+        source: { type: "heroResource", resourceId: LOKI_LAUGHT_ID, amount: 10 },
+        sourceName: "Laugh",
+        currentCharges: 15,
+        chargeRequired: 10,
+        consumes: { action: true },
+        isAvailable: true,
+      },
+      {
+        id: "spinTheDrum",
+        source: { type: "heroResource", resourceId: LOKI_LAUGHT_ID, amount: 12 },
+        sourceName: "Laugh",
+        currentCharges: 15,
+        chargeRequired: 12,
+        consumes: { action: true },
+        isAvailable: true,
+      },
+      {
+        id: "greatLokiJoke",
+        source: { type: "heroResource", resourceId: LOKI_LAUGHT_ID, amount: 15 },
+        sourceName: "Laugh",
+        currentCharges: 15,
+        chargeRequired: 15,
+        consumes: { action: true },
+        isAvailable: true,
+      },
+    ],
   });
 
   const markup = renderToStaticMarkup(
@@ -1996,7 +2036,18 @@ test("Loki Laughter renders separate option buttons with costs and availability"
   const lowChargeMarkup = renderToStaticMarkup(
     <BattleAbilityActions
       view={view}
-      actionableAbilities={[{ ...ability, currentCharges: 4 }]}
+      actionableAbilities={[
+        {
+          ...ability,
+          currentCharges: 4,
+          useOptions: ability.useOptions?.map((option) => ({
+            ...option,
+            currentCharges: 4,
+            isAvailable: (option.chargeRequired ?? 0) <= 4,
+            disabledReason: (option.chargeRequired ?? 0) <= 4 ? undefined : "Not enough Laugh",
+          })),
+        },
+      ]}
       selectedUnit={{ ...loki, charges: { [LOKI_LAUGHT_ID]: 4 } }}
       canAct={true}
       economy={loki.turn}
@@ -2011,6 +2062,66 @@ test("Loki Laughter renders separate option buttons with costs and availability"
   );
 
   assert.match(lowChargeMarkup, /Not enough Laugh/);
+
+  const tenLaughOptions = ability.useOptions?.map((option) => ({
+    ...option,
+    currentCharges: 10,
+    isAvailable: (option.chargeRequired ?? 0) <= 10,
+    disabledReason: (option.chargeRequired ?? 0) <= 10 ? undefined : "Not enough Laugh",
+  }));
+  const tenLaughMarkup = renderToStaticMarkup(
+    <BattleAbilityActions
+      view={{
+        ...view,
+        units: {
+          ...view.units,
+          [loki.id]: { ...loki, charges: { [LOKI_LAUGHT_ID]: 10 } },
+        },
+      }}
+      actionableAbilities={[{ ...ability, currentCharges: 10, useOptions: tenLaughOptions }]}
+      selectedUnit={{ ...loki, charges: { [LOKI_LAUGHT_ID]: 10 } }}
+      canAct={true}
+      economy={loki.turn}
+      actionMode={null}
+      targetingActive={false}
+      onUseAbility={() => undefined}
+      onUseLokiLaughtOption={() => undefined}
+      onToggleMode={() => undefined}
+      onModePreview={() => undefined}
+      onHoverAbility={() => undefined}
+    />,
+  );
+  for (const optionId of ["againSomeNonsense", "chicken", "mindControl"]) {
+    const optionStart = tenLaughMarkup.indexOf(`data-loki-laught-option="${optionId}"`);
+    const optionMarkup = tenLaughMarkup.slice(
+      optionStart,
+      tenLaughMarkup.indexOf("</div>", optionStart),
+    );
+    assert(optionStart >= 0, `${optionId} should render as a Loki action option`);
+    assert.doesNotMatch(
+      optionMarkup.match(/<button[^>]*>/)?.[0] ?? "",
+      /disabled/,
+      `${optionId} should be clickable with 10 Laugh`,
+    );
+  }
+  for (const optionId of ["spinTheDrum", "greatLokiJoke"]) {
+    const optionStart = tenLaughMarkup.indexOf(`data-loki-laught-option="${optionId}"`);
+    const optionMarkup = tenLaughMarkup.slice(
+      optionStart,
+      tenLaughMarkup.indexOf("</div>", optionStart),
+    );
+    assert.match(
+      optionMarkup.match(/<button[^>]*>/)?.[0] ?? "",
+      /disabled/,
+      `${optionId} should be disabled with 10 Laugh`,
+    );
+    assert.match(optionMarkup, /Not enough Laugh/);
+  }
+  assert.doesNotMatch(
+    tenLaughMarkup,
+    /data-ability-use-source=/,
+    "Loki options must not fall through to the generic payment-source renderer",
+  );
 
   const sent: GameAction[] = [];
   const naturalStealth = makeAbility({
@@ -2187,10 +2298,16 @@ test("Chikatilo Decoy is both an uncapped resource and a manual stealth action",
     currentCharges: 8,
   });
   assert.equal(shouldRenderManualAbilityButton(decoy), true);
-  assert.equal(getOrdinaryAbilityCounterView(decoy, makeUnit({
-    heroId: "chikatilo",
-    charges: { chikatiloDecoy: 8 },
-  })), null);
+  assert.equal(
+    getOrdinaryAbilityCounterView(
+      decoy,
+      makeUnit({
+        heroId: "chikatilo",
+        charges: { chikatiloDecoy: 8 },
+      }),
+    ),
+    null,
+  );
 });
 
 test("ordinary Oni Giri, Light Ray, and Engineering Miracle counters never enter special resources", () => {

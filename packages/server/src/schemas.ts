@@ -1,15 +1,12 @@
 // packages/server/src/schemas.ts
 
 import { z } from "zod";
+import { LOKI_LAUGHT_OPTION_IDS } from "rules";
 import { TestRoomCommandMessageSchema } from "./testRoom/schemas";
 
 export const PlayerIdSchema = z.union([z.literal("P1"), z.literal("P2")]);
 export const GameModeIdSchema = z.enum(["standard", "draft", "classic"]);
-export const RoleSchema = z.union([
-  z.literal("P1"),
-  z.literal("P2"),
-  z.literal("spectator"),
-]);
+export const RoleSchema = z.union([z.literal("P1"), z.literal("P2"), z.literal("spectator")]);
 
 export const CoordSchema = z.object({
   col: z.number().int(),
@@ -138,13 +135,7 @@ const ResolveRollChoiceSchema = z.union([
   }),
   z.object({
     type: z.literal("lokiLaughtOption"),
-    option: z.union([
-      z.literal("againSomeNonsense"),
-      z.literal("chicken"),
-      z.literal("mindControl"),
-      z.literal("spinTheDrum"),
-      z.literal("greatLokiJoke"),
-    ]),
+    option: z.enum(LOKI_LAUGHT_OPTION_IDS),
   }),
   z.object({
     type: z.literal("lokiChickenTarget"),
@@ -215,9 +206,7 @@ const ResolveRollChoiceSchema = z.union([
   z.object({
     type: z.literal("chargedImpulseTarget"),
     position: CoordSchema,
-    axis: z
-      .enum(["row", "col", "diagMain", "diagAnti"])
-      .optional(),
+    axis: z.enum(["row", "col", "diagMain", "diagAnti"]).optional(),
   }),
   z.object({
     type: z.literal("donMadDelusionDirection"),
@@ -255,13 +244,7 @@ const ResolveRollChoiceSchema = z.union([
   z.literal("elCidDuelistStop"),
 ]);
 
-const LokiLaughOptionIdSchema = z.enum([
-  "againSomeNonsense",
-  "chicken",
-  "mindControl",
-  "spinTheDrum",
-  "greatLokiJoke",
-]);
+const LokiLaughOptionIdSchema = z.enum(LOKI_LAUGHT_OPTION_IDS);
 
 const UseAbilityActionSchema = z.object({
   type: z.literal("useAbility"),
@@ -276,95 +259,94 @@ const WindmillsPayloadSchema = z.union([
   z.object({ targetId: z.string().min(1) }).passthrough(),
 ]);
 
-export const GameActionSchema = z.discriminatedUnion("type", [
-  z.object({ type: z.literal("rollInitiative") }),
-  z.object({ type: z.literal("chooseArena"), arenaId: z.string() }),
-  z.object({ type: z.literal("lobbyInit"), host: PlayerIdSchema }),
-  z.object({
-    type: z.literal("setReady"),
-    player: PlayerIdSchema,
-    ready: z.boolean(),
-  }),
-  z.object({ type: z.literal("startGame") }),
-  z.object({
-    type: z.literal("placeUnit"),
-    unitId: z.string(),
-    position: CoordSchema,
-  }),
-  z.object({ type: z.literal("move"), unitId: z.string(), to: CoordSchema }),
-  z.object({
-    type: z.literal("requestMoveOptions"),
-    unitId: z.string(),
-    mode: MoveModeSchema.optional(),
-  }),
-  z.object({
-    type: z.literal("attack"),
-    attackerId: z.string(),
-    defenderId: z.string(),
-    defenderIds: z.array(z.string()).min(1).max(2).optional(),
-    defenderUseBerserkAutoDefense: z.boolean().optional(),
-  }),
-  z.object({ type: z.literal("enterStealth"), unitId: z.string() }),
-  z.object({
-    type: z.literal("searchStealth"),
-    unitId: z.string(),
-    mode: z.union([z.literal("action"), z.literal("move")]),
-  }),
-  UseAbilityActionSchema,
-  z.object({
-    type: z.literal("resolvePendingRoll"),
-    pendingRollId: z.string().min(1),
-    choice: ResolveRollChoiceSchema.optional(),
-    player: PlayerIdSchema.optional(),
-  }),
-  z.object({ type: z.literal("endTurn") }),
-  z.object({ type: z.literal("unitStartTurn"), unitId: z.string() }),
-]).superRefine((action, ctx) => {
-  if (
-    action.type === "useAbility" &&
-    action.abilityId === "donKihoteWindmills"
-  ) {
-    if (!WindmillsPayloadSchema.safeParse(action.payload).success) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["payload", "targetUnitId"],
-        message: "Windmills requires a target unit",
-      });
+export const GameActionSchema = z
+  .discriminatedUnion("type", [
+    z.object({ type: z.literal("rollInitiative") }),
+    z.object({ type: z.literal("chooseArena"), arenaId: z.string() }),
+    z.object({ type: z.literal("lobbyInit"), host: PlayerIdSchema }),
+    z.object({
+      type: z.literal("setReady"),
+      player: PlayerIdSchema,
+      ready: z.boolean(),
+    }),
+    z.object({ type: z.literal("startGame") }),
+    z.object({
+      type: z.literal("placeUnit"),
+      unitId: z.string(),
+      position: CoordSchema,
+    }),
+    z.object({ type: z.literal("move"), unitId: z.string(), to: CoordSchema }),
+    z.object({
+      type: z.literal("requestMoveOptions"),
+      unitId: z.string(),
+      mode: MoveModeSchema.optional(),
+    }),
+    z.object({
+      type: z.literal("attack"),
+      attackerId: z.string(),
+      defenderId: z.string(),
+      defenderIds: z.array(z.string()).min(1).max(2).optional(),
+      defenderUseBerserkAutoDefense: z.boolean().optional(),
+    }),
+    z.object({ type: z.literal("enterStealth"), unitId: z.string() }),
+    z.object({
+      type: z.literal("searchStealth"),
+      unitId: z.string(),
+      mode: z.union([z.literal("action"), z.literal("move")]),
+    }),
+    UseAbilityActionSchema,
+    z.object({
+      type: z.literal("resolvePendingRoll"),
+      pendingRollId: z.string().min(1),
+      choice: ResolveRollChoiceSchema.optional(),
+      player: PlayerIdSchema.optional(),
+    }),
+    z.object({ type: z.literal("endTurn") }),
+    z.object({ type: z.literal("unitStartTurn"), unitId: z.string() }),
+  ])
+  .superRefine((action, ctx) => {
+    if (action.type === "useAbility" && action.abilityId === "donKihoteWindmills") {
+      if (!WindmillsPayloadSchema.safeParse(action.payload).success) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["payload", "targetUnitId"],
+          message: "Windmills requires a target unit",
+        });
+      }
+      return;
     }
-    return;
-  }
-  if (
-    action.type === "useAbility" &&
-    action.abilityId === "lucheDivineRay"
-  ) {
-    const parsed = z.object({
-      mode: z.union([z.literal("line"), z.literal("aroundSelf")]),
-    }).passthrough().safeParse(action.payload);
+    if (action.type === "useAbility" && action.abilityId === "lucheDivineRay") {
+      const parsed = z
+        .object({
+          mode: z.union([z.literal("line"), z.literal("aroundSelf")]),
+        })
+        .passthrough()
+        .safeParse(action.payload);
+      if (!parsed.success) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["payload", "mode"],
+          message: "Invalid Light Ray mode",
+        });
+      }
+      return;
+    }
+    if (
+      action.type !== "useAbility" ||
+      action.abilityId !== "lokiLaught" ||
+      action.payload === undefined
+    ) {
+      return;
+    }
+    const parsed = z.object({ optionId: LokiLaughOptionIdSchema }).safeParse(action.payload);
     if (!parsed.success) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        path: ["payload", "mode"],
-        message: "Invalid Light Ray mode",
+        path: ["payload", "optionId"],
+        message: "Invalid Loki's Laugh option",
       });
     }
-    return;
-  }
-  if (
-    action.type !== "useAbility" ||
-    action.abilityId !== "lokiLaught" ||
-    action.payload === undefined
-  ) {
-    return;
-  }
-  const parsed = z.object({ optionId: LokiLaughOptionIdSchema }).safeParse(action.payload);
-  if (!parsed.success) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ["payload", "optionId"],
-      message: "Invalid Loki's Laugh option",
-    });
-  }
-});
+  });
 
 export type GameActionInput = z.infer<typeof GameActionSchema>;
 

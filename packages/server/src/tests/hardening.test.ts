@@ -26,6 +26,7 @@ import {
   HERO_DON_KIHOTE_ID,
   HERO_GRAND_KAISER_ID,
   HERO_JACK_RIPPER_ID,
+  HERO_LOKI_ID,
   HERO_PAPYRUS_ID,
   HERO_RIVER_PERSON_ID,
   makePlayerView,
@@ -82,10 +83,179 @@ function testLokiLaughPayloadSchemas() {
   });
   assert(optionPayload.success, "server schema should accept a specific Loki Laugh option");
   assert(directOptionPayload.success, "server schema should accept a direct Loki option payload");
-  assert.equal(invalidDirectOption.success, false, "server schema must reject invalid direct Loki options");
+  assert.equal(
+    invalidDirectOption.success,
+    false,
+    "server schema must reject invalid direct Loki options",
+  );
   assert(spinFallbackPayload.success, "server schema should accept Spin fallback ability choice");
   assert.equal(invalidOption.success, false, "server schema must reject ambiguous Loki options");
   console.log("hardening_loki_laugh_payload_schemas passed");
+}
+
+function testLokiLaughCommandsAreAuthoritative() {
+  const setup = () => {
+    const room = createGameRoomWithId(`hardening-loki-laugh-${randomUUID()}`, {
+      hostSeat: "P1",
+      hostConnId: `conn-${randomUUID()}`,
+    });
+    let state = createEmptyGame();
+    state = attachArmy(state, createDefaultArmy("P1", { trickster: HERO_LOKI_ID }));
+    state = attachArmy(state, createDefaultArmy("P2"));
+    const loki = Object.values(state.units).find(
+      (unit) => unit.owner === "P1" && unit.heroId === HERO_LOKI_ID,
+    );
+    const controlled = Object.values(state.units).find(
+      (unit) => unit.owner === "P2" && unit.class === "spearman",
+    );
+    const controlledTarget = Object.values(state.units).find(
+      (unit) => unit.owner === "P2" && unit.class === "knight",
+    );
+    assert(loki && controlled && controlledTarget, "expected Loki and two enemy fixtures");
+    state = setUnit(state, loki.id, {
+      position: { col: 4, row: 4 },
+      charges: { ...loki.charges, [ABILITY_LOKI_LAUGHT]: 10 },
+      turn: makeEmptyTurnEconomy(),
+    });
+    state = setUnit(state, controlled.id, { position: { col: 5, row: 4 } });
+    state = setUnit(state, controlledTarget.id, { position: { col: 5, row: 5 } });
+    room.state = {
+      ...state,
+      phase: "battle",
+      currentPlayer: "P1",
+      activeUnitId: loki.id,
+      pendingRoll: null,
+      turnOrder: [loki.id],
+      turnOrderIndex: 0,
+      turnQueue: [loki.id],
+      turnQueueIndex: 0,
+    };
+    return { room, loki, controlled, controlledTarget };
+  };
+
+  for (const [optionId, pendingKind] of [
+    ["againSomeNonsense", "tricksterAoE_attackerRoll"],
+    ["chicken", "lokiChickenTargetChoice"],
+    ["mindControl", "lokiMindControlEnemyChoice"],
+  ] as const) {
+    const { room, loki, controlled, controlledTarget } = setup();
+    const accepted = applyGameAction(
+      room,
+      {
+        type: "useAbility",
+        unitId: loki.id,
+        abilityId: ABILITY_LOKI_LAUGHT,
+        payload: { optionId },
+      },
+      "P1",
+    );
+    assert.equal(accepted.ok, true, `${optionId} should be accepted with 10 Laugh`);
+    assert.equal(
+      room.state.pendingRoll?.kind,
+      pendingKind,
+      `${optionId} should start its expected flow`,
+    );
+    if (optionId === "againSomeNonsense") {
+      assert.equal(
+        room.state.units[loki.id].charges[ABILITY_LOKI_LAUGHT],
+        7,
+        "Again Some Bullshit should spend 3 Laugh at valid AoE start",
+      );
+    } else if (optionId === "chicken") {
+      const targetChoice = applyGameAction(
+        room,
+        {
+          type: "resolvePendingRoll",
+          pendingRollId: room.state.pendingRoll!.id,
+          player: "P1",
+          choice: { type: "lokiChickenTarget", targetId: controlled.id },
+        },
+        "P1",
+      );
+      assert.equal(targetChoice.ok, true, "server should accept a valid Chicken target");
+      assert.equal(room.state.pendingRoll?.kind, "attack_attackerRoll");
+      assert.equal(
+        room.state.units[loki.id].charges[ABILITY_LOKI_LAUGHT],
+        5,
+        "Chicken should spend exactly 5 Laugh after target validation",
+      );
+    } else {
+      const enemyChoice = applyGameAction(
+        room,
+        {
+          type: "resolvePendingRoll",
+          pendingRollId: room.state.pendingRoll!.id,
+          player: "P1",
+          choice: { type: "lokiMindControlEnemy", targetId: controlled.id },
+        },
+        "P1",
+      );
+      assert.equal(enemyChoice.ok, true, "server should accept a valid Mind Capture hero");
+      assert.equal(room.state.pendingRoll?.kind, "lokiMindControlTargetChoice");
+      const attackChoice = applyGameAction(
+        room,
+        {
+          type: "resolvePendingRoll",
+          pendingRollId: room.state.pendingRoll!.id,
+          player: "P1",
+          choice: {
+            type: "lokiMindControlTarget",
+            targetId: controlledTarget.id,
+          },
+        },
+        "P1",
+      );
+      assert.equal(
+        attackChoice.ok,
+        true,
+        "server should accept a valid Mind Capture attack target",
+      );
+      assert.equal(room.state.pendingRoll?.kind, "attack_attackerRoll");
+      assert.equal(
+        room.state.units[loki.id].charges[ABILITY_LOKI_LAUGHT],
+        0,
+        "Mind Capture should spend exactly 10 Laugh at controlled attack start",
+      );
+    }
+  }
+
+  for (const optionId of ["spinTheDrum", "greatLokiJoke"] as const) {
+    const { room, loki } = setup();
+    const rejected = applyGameAction(
+      room,
+      {
+        type: "useAbility",
+        unitId: loki.id,
+        abilityId: ABILITY_LOKI_LAUGHT,
+        payload: { optionId },
+      },
+      "P1",
+    );
+    assert.equal(rejected.ok, false, `${optionId} should reject 10 Laugh`);
+    if (!rejected.ok) {
+      assert.equal(rejected.code, "Not enough Laugh.");
+      assert.equal(rejected.message, "Not enough Laugh.");
+    }
+  }
+
+  const { room, loki } = setup();
+  const invalid = applyGameAction(
+    room,
+    {
+      type: "useAbility",
+      unitId: loki.id,
+      abilityId: ABILITY_LOKI_LAUGHT,
+      payload: { optionId: "freeEverything" },
+    },
+    "P1",
+  );
+  assert.equal(invalid.ok, false, "invalid Loki option should be rejected");
+  if (!invalid.ok) {
+    assert.equal(invalid.code, "Invalid Loki's Laugh option.");
+    assert.equal(invalid.message, "Invalid Loki's Laugh option.");
+  }
+
+  console.log("hardening_loki_laugh_commands_authoritative passed");
 }
 
 function testLightRayModePayloadSchemas() {
@@ -94,10 +264,7 @@ function testLightRayModePayloadSchemas() {
       type: "useAbility",
       unitId: "P1-spearman-luche",
       abilityId: ABILITY_LUCHE_DIVINE_RAY,
-      payload:
-        mode === "line"
-          ? { mode, target: { col: 8, row: 2 } }
-          : { mode },
+      payload: mode === "line" ? { mode, target: { col: 8, row: 2 } } : { mode },
     });
     assert(parsed.success, `server schema should accept Light Ray ${mode} mode`);
   }
@@ -138,7 +305,11 @@ function testWindmillsPayloadSchema() {
   });
   assert(canonical.success, "server schema should accept canonical Windmills targetUnitId");
   assert(legacy.success, "server schema should retain legacy Windmills targetId compatibility");
-  assert.equal(missingTarget.success, false, "server schema should reject Windmills without a unit target");
+  assert.equal(
+    missingTarget.success,
+    false,
+    "server schema should reject Windmills without a unit target",
+  );
   console.log("hardening_windmills_payload_schema passed");
 }
 
@@ -160,11 +331,7 @@ function testPapyrusBoneChoicePayloadSchema() {
   console.log("hardening_papyrus_bone_choice_payload_schema passed");
 }
 
-function makeSeatedRoom(params: {
-  roomIdPrefix: string;
-  connId?: string;
-  resumeToken?: string;
-}) {
+function makeSeatedRoom(params: { roomIdPrefix: string; connId?: string; resumeToken?: string }) {
   const connId = params.connId ?? `conn-${randomUUID()}`;
   const resumeToken = params.resumeToken ?? `token-${randomUUID()}`;
   const room = createGameRoomWithId(`${params.roomIdPrefix}-${randomUUID()}`, {
@@ -175,11 +342,7 @@ function makeSeatedRoom(params: {
   return { room, connId, resumeToken };
 }
 
-function setUnit(
-  state: GameState,
-  unitId: string,
-  patch: Partial<UnitState>
-): GameState {
+function setUnit(state: GameState, unitId: string, patch: Partial<UnitState>): GameState {
   const unit = state.units[unitId];
   assert(unit, `missing unit ${unitId}`);
   return {
@@ -222,10 +385,10 @@ async function testGraceExpiryVacatesSeatAndInvalidatesToken() {
         room,
         "P1",
         `intruder-${randomUUID()}`,
-        `intruder-token-${randomUUID()}`
+        `intruder-token-${randomUUID()}`,
       ),
       false,
-      "seat must remain reserved during grace"
+      "seat must remain reserved during grace",
     );
 
     const graceMs = Number(process.env.RECONNECT_GRACE_MS ?? 45_000);
@@ -237,7 +400,7 @@ async function testGraceExpiryVacatesSeatAndInvalidatesToken() {
     assert.equal(
       wsTestHooks.hasSeatGraceToken(resumeToken),
       false,
-      "grace token record must be removed after expiry"
+      "grace token record must be removed after expiry",
     );
 
     const newcomerConn = `newcomer-${randomUUID()}`;
@@ -245,12 +408,12 @@ async function testGraceExpiryVacatesSeatAndInvalidatesToken() {
     assert.equal(
       wsTestHooks.assignSeat(room, "P1", newcomerConn, newcomerToken),
       true,
-      "vacated seat should be claimable as a fresh join"
+      "vacated seat should be claimable as a fresh join",
     );
     assert.equal(
       wsTestHooks.canAssignSeat(room, "P1", `stale-${randomUUID()}`, resumeToken),
       false,
-      "stale token must not reclaim a re-occupied seat"
+      "stale token must not reclaim a re-occupied seat",
     );
   } finally {
     mock.timers.reset();
@@ -283,13 +446,13 @@ async function testReconnectWithinGraceKeepsSeatAndClearsTimer() {
     assert.equal(
       wsTestHooks.hasSeatGraceToken(resumeToken),
       false,
-      "reconnect path must clear pending grace timer"
+      "reconnect path must clear pending grace timer",
     );
 
     assert.equal(
       wsTestHooks.assignSeat(room, "P1", reconnectConnId, resumeToken),
       true,
-      "reconnect with valid token should restore seat"
+      "reconnect with valid token should restore seat",
     );
 
     const graceMs = Number(process.env.RECONNECT_GRACE_MS ?? 45_000);
@@ -297,11 +460,7 @@ async function testReconnectWithinGraceKeepsSeatAndClearsTimer() {
     await flushMicrotasks();
 
     assert.equal(room.seats.P1, reconnectConnId, "reconnected seat must stay occupied");
-    assert.equal(
-      room.seatTokens.P1,
-      resumeToken,
-      "reconnected seat must keep the reconnect token"
-    );
+    assert.equal(room.seatTokens.P1, resumeToken, "reconnected seat must keep the reconnect token");
   } finally {
     mock.timers.reset();
     wsTestHooks.resetWsStateForTests();
@@ -371,9 +530,7 @@ async function testConcurrentSwitchRoleSerialization() {
   ]);
   assert.equal(room.seats.P1, null);
   assert.equal(room.seats.P2, connId);
-  const occupiedByConn = (["P1", "P2"] as const).filter(
-    (seat) => room.seats[seat] === connId
-  );
+  const occupiedByConn = (["P1", "P2"] as const).filter((seat) => room.seats[seat] === connId);
   assert.equal(occupiedByConn.length, 1, "socket must never end up in two seats");
 
   const sameRole = wsTestHooks.buildSwitchRoleTransition(room, meta as any, "P2");
@@ -401,11 +558,7 @@ function testRejectedActionLogAndRevisionInvariants() {
   assert.equal(room.revision, revision0, "rejected action must not change revision");
   assert.equal(room.actionLog.length, logLen0, "rejected action must not append log");
 
-  const accepted = applyGameAction(
-    room,
-    { type: "setReady", player: "P1", ready: true },
-    "P1"
-  );
+  const accepted = applyGameAction(room, { type: "setReady", player: "P1", ready: true }, "P1");
   assert.equal(accepted.ok, true);
   if (accepted.ok) {
     assert.equal(accepted.logIndex, logLen0, "accepted action should expose log index");
@@ -418,12 +571,12 @@ function testRejectedActionLogAndRevisionInvariants() {
   assert.equal(
     room.revision,
     revision0 + 1,
-    "rejected action after accepted one must keep revision stable"
+    "rejected action after accepted one must keep revision stable",
   );
   assert.equal(
     room.actionLog.length,
     logLen0 + 1,
-    "rejected action after accepted one must not append log"
+    "rejected action after accepted one must not append log",
   );
   console.log("hardening_rejected_action_log_invariants passed");
 }
@@ -438,9 +591,7 @@ function testInvalidCoveringTracksSelectionIsRejectedWithoutMutation() {
     createDefaultArmy("P1", { assassin: HERO_JACK_RIPPER_ID }),
   );
   state = attachArmy(state, createDefaultArmy("P2"));
-  const jack = Object.values(state.units).find(
-    (unit) => unit.heroId === HERO_JACK_RIPPER_ID,
-  );
+  const jack = Object.values(state.units).find((unit) => unit.heroId === HERO_JACK_RIPPER_ID);
   assert(jack);
   state = setUnit(state, jack.id, { position: { col: 8, row: 8 } });
   const positions = [
@@ -495,7 +646,11 @@ function testInvalidCoveringTracksSelectionIsRejectedWithoutMutation() {
   if (!result.ok) assert.equal(result.code, "RULES_REJECTED");
   assert.equal(room.state, stateBefore, "rejection must preserve the authoritative state object");
   assert.equal(room.revision, revisionBefore, "rejection must not increment the revision");
-  assert.equal(room.actionLog.length, logLengthBefore, "rejection must not append an action log entry");
+  assert.equal(
+    room.actionLog.length,
+    logLengthBefore,
+    "rejection must not append an action log entry",
+  );
   console.log("hardening_invalid_covering_tracks_selection_no_mutation passed");
 }
 
@@ -505,10 +660,7 @@ function testTransformedKaiserStealthCommandAndProjectionAreRejected() {
     hostConnId: `conn-${randomUUID()}`,
   });
   let state = createEmptyGame();
-  state = attachArmy(
-    state,
-    createDefaultArmy("P1", { archer: HERO_GRAND_KAISER_ID }),
-  );
+  state = attachArmy(state, createDefaultArmy("P1", { archer: HERO_GRAND_KAISER_ID }));
   state = attachArmy(state, createDefaultArmy("P2"));
   const kaiser = Object.values(state.units).find(
     (unit) => unit.owner === "P1" && unit.heroId === HERO_GRAND_KAISER_ID,
@@ -534,9 +686,7 @@ function testTransformedKaiserStealthCommandAndProjectionAreRejected() {
   const projected = makePlayerView(room.state, "P1");
   assert.equal(projected.legalIntents?.canEnterStealth, false);
   assert.equal(
-    projected.abilitiesByUnitId[kaiser.id]?.some(
-      (ability) => ability.id === ABILITY_KAISER_BUNKER,
-    ),
+    projected.abilitiesByUnitId[kaiser.id]?.some((ability) => ability.id === ABILITY_KAISER_BUNKER),
     false,
     "transformed projection must omit the lost Bunker passive",
   );
@@ -545,11 +695,7 @@ function testTransformedKaiserStealthCommandAndProjectionAreRejected() {
   const turnBefore = room.state.units[kaiser.id].turn;
   const revisionBefore = room.revision;
   const logLengthBefore = room.actionLog.length;
-  const rejectedCommand = applyGameAction(
-    room,
-    { type: "enterStealth", unitId: kaiser.id },
-    "P1",
-  );
+  const rejectedCommand = applyGameAction(room, { type: "enterStealth", unitId: kaiser.id }, "P1");
 
   assert.equal(rejectedCommand.ok, false);
   if (!rejectedCommand.ok) {
@@ -578,20 +724,20 @@ function testRateLimitWindowResets() {
       assert.equal(
         wsTestHooks.consumeSocketRateBudget(socket),
         true,
-        "messages up to the window budget should pass"
+        "messages up to the window budget should pass",
       );
     }
     assert.equal(
       wsTestHooks.consumeSocketRateBudget(socket),
       false,
-      "message over the window budget should be limited"
+      "message over the window budget should be limited",
     );
 
     mock.timers.tick(windowMs + 1);
     assert.equal(
       wsTestHooks.consumeSocketRateBudget(socket),
       true,
-      "budget should reset after the rate-limit window"
+      "budget should reset after the rate-limit window",
     );
   } finally {
     mock.timers.reset();
@@ -621,7 +767,7 @@ function testPayloadCapAllowsValidClientCommands() {
   assert.equal(
     Buffer.byteLength(representativeJoinMessage) < payloadCapBytes,
     true,
-    "payload cap should keep headroom for normal join/action command sizes"
+    "payload cap should keep headroom for normal join/action command sizes",
   );
   console.log("hardening_payload_cap_headroom passed");
 }
@@ -811,7 +957,7 @@ function testProjectedEventsRedactHiddenUnitPositions() {
   state = attachArmy(state, createDefaultArmy("P1"));
   state = attachArmy(state, createDefaultArmy("P2"));
   const hidden = Object.values(state.units).find(
-    (unit) => unit.owner === "P1" && unit.class === "assassin"
+    (unit) => unit.owner === "P1" && unit.class === "assassin",
   );
   assert(hidden, "expected P1 assassin");
   state = setUnit(state, hidden.id, {
@@ -842,27 +988,21 @@ function testProjectedEventsRedactHiddenUnitPositions() {
 function testOrangeBoneDamageIsAuthoritativeAtActionStart() {
   storeTestHooks.reset();
   try {
-    const room = createGameRoomWithId(
-      `hardening-orange-bone-${randomUUID()}`,
-      {
-        hostSeat: "P1",
-        hostConnId: `conn-${randomUUID()}`,
-      }
-    );
+    const room = createGameRoomWithId(`hardening-orange-bone-${randomUUID()}`, {
+      hostSeat: "P1",
+      hostConnId: `conn-${randomUUID()}`,
+    });
     let state = createEmptyGame();
-    state = attachArmy(
-      state,
-      createDefaultArmy("P1", { spearman: HERO_PAPYRUS_ID })
-    );
+    state = attachArmy(state, createDefaultArmy("P1", { spearman: HERO_PAPYRUS_ID }));
     state = attachArmy(state, createDefaultArmy("P2"));
     const papyrus = Object.values(state.units).find(
-      (unit) => unit.owner === "P1" && unit.heroId === HERO_PAPYRUS_ID
+      (unit) => unit.owner === "P1" && unit.heroId === HERO_PAPYRUS_ID,
     )!;
     const defender = Object.values(state.units).find(
-      (unit) => unit.owner === "P1" && unit.class === "knight"
+      (unit) => unit.owner === "P1" && unit.class === "knight",
     )!;
     const actor = Object.values(state.units).find(
-      (unit) => unit.owner === "P2" && unit.class === "knight"
+      (unit) => unit.owner === "P2" && unit.class === "knight",
     )!;
 
     state = setUnit(state, papyrus.id, {
@@ -902,7 +1042,7 @@ function testOrangeBoneDamageIsAuthoritativeAtActionStart() {
         attackerId: actor.id,
         defenderId: "missing-unit",
       },
-      "P2"
+      "P2",
     );
     assert.equal(invalid.ok, false, "invalid pre-resolution commands stay rejected");
     assert.equal(room.revision, revisionBeforeInvalid);
@@ -915,13 +1055,13 @@ function testOrangeBoneDamageIsAuthoritativeAtActionStart() {
         attackerId: actor.id,
         defenderId: defender.id,
       },
-      "P2"
+      "P2",
     );
     assert.equal(attacked.ok, true, "legal attack should be accepted");
     assert.equal(
       room.state.units[actor.id].hp,
       5,
-      "authoritative HP should update before the pending attack resolves"
+      "authoritative HP should update before the pending attack resolves",
     );
     assert(room.state.pendingRoll, "the surviving actor should continue into attack resolution");
     const logEntry = room.actionLog.at(-1)!;
@@ -951,10 +1091,10 @@ function testServerAcceptsMoveIntoUnknownHiddenOccupiedCell() {
     state = attachArmy(state, createDefaultArmy("P2"));
 
     const hidden = Object.values(state.units).find(
-      (unit) => unit.owner === "P1" && unit.class === "assassin"
+      (unit) => unit.owner === "P1" && unit.class === "assassin",
     );
     const mover = Object.values(state.units).find(
-      (unit) => unit.owner === "P2" && unit.class === "knight"
+      (unit) => unit.owner === "P2" && unit.class === "knight",
     );
     assert(hidden, "expected P1 hidden assassin");
     assert(mover, "expected P2 mover");
@@ -990,24 +1130,24 @@ function testServerAcceptsMoveIntoUnknownHiddenOccupiedCell() {
     const result = applyGameAction(
       room,
       { type: "move", unitId: mover.id, to: { col: 3, row: 4 } },
-      "P2"
+      "P2",
     );
 
     assert.equal(result.ok, true, "server should accept move into unknown hidden cell");
     assert.deepEqual(
       room.state.units[mover.id].position,
       { col: 3, row: 4 },
-      "mover should occupy the hidden unit cell"
+      "mover should occupy the hidden unit cell",
     );
     assert.equal(
       room.state.units[hidden.id].isStealthed,
       true,
-      "hidden unit should remain stealthed"
+      "hidden unit should remain stealthed",
     );
     if (result.ok) {
       assert(
         !result.events.some((event) => event.type === "stealthRevealed"),
-        "accepted move should not emit proximity reveal"
+        "accepted move should not emit proximity reveal",
       );
     }
   } finally {
@@ -1021,16 +1161,16 @@ function testServerTargetsVisibleEnemyOnHiddenAllySharedCell() {
   const { room } = makeSeatedRoom({ roomIdPrefix: "hardening-shared-cell-attack" });
   let state = attachArmy(
     attachArmy(createEmptyGame(), createDefaultArmy("P1")),
-    createDefaultArmy("P2")
+    createDefaultArmy("P2"),
   );
   const attacker = Object.values(state.units).find(
-    (unit) => unit.owner === "P1" && unit.class === "knight"
+    (unit) => unit.owner === "P1" && unit.class === "knight",
   );
   const hiddenAlly = Object.values(state.units).find(
-    (unit) => unit.owner === "P1" && unit.class === "assassin"
+    (unit) => unit.owner === "P1" && unit.class === "assassin",
   );
   const visibleEnemy = Object.values(state.units).find(
-    (unit) => unit.owner === "P2" && unit.class === "spearman"
+    (unit) => unit.owner === "P2" && unit.class === "spearman",
   );
   assert(attacker && hiddenAlly && visibleEnemy, "shared-cell attack fixtures should exist");
 
@@ -1063,7 +1203,7 @@ function testServerTargetsVisibleEnemyOnHiddenAllySharedCell() {
   const illegal = applyGameAction(
     room,
     { type: "attack", attackerId: attacker.id, defenderId: hiddenAlly.id },
-    "P1"
+    "P1",
   );
   assert.equal(illegal.ok, false, "an allied target id must remain illegal");
   assert.equal(room.revision, revisionBeforeIllegal, "illegal target id must not mutate the room");
@@ -1071,7 +1211,7 @@ function testServerTargetsVisibleEnemyOnHiddenAllySharedCell() {
   const accepted = applyGameAction(
     room,
     { type: "attack", attackerId: attacker.id, defenderId: visibleEnemy.id },
-    "P1"
+    "P1",
   );
   assert(accepted.ok, "server should accept the visible enemy target id");
   assert.equal(room.state.pendingRoll?.kind, "attack_attackerRoll");
@@ -1082,13 +1222,13 @@ function testServerTargetsVisibleEnemyOnHiddenAllySharedCell() {
   assert.equal(
     opponentView.units[hiddenAlly.id],
     undefined,
-    "attack declaration projection must not expose the hidden ally"
+    "attack declaration projection must not expose the hidden ally",
   );
   assert(
     !JSON.stringify(projectEventsForRecipient(room.state, accepted.events, "P2")).includes(
-      hiddenAlly.id
+      hiddenAlly.id,
     ),
-    "attack declaration events must not mention the hidden ally"
+    "attack declaration events must not mention the hidden ally",
   );
   console.log("hardening_server_targets_visible_enemy_on_hidden_ally_shared_cell passed");
 }
@@ -1096,19 +1236,13 @@ function testServerTargetsVisibleEnemyOnHiddenAllySharedCell() {
 function testServerRejectsInvalidFalsePromisePlacementsWithoutMutation() {
   storeTestHooks.reset();
   try {
-    const room = createGameRoomWithId(
-      `hardening-false-promise-placement-${randomUUID()}`,
-      {
-        hostSeat: "P1",
-        hostConnId: `conn-${randomUUID()}`,
-      }
-    );
+    const room = createGameRoomWithId(`hardening-false-promise-placement-${randomUUID()}`, {
+      hostSeat: "P1",
+      hostConnId: `conn-${randomUUID()}`,
+    });
 
     let state = createEmptyGame();
-    state = attachArmy(
-      state,
-      createDefaultArmy("P1", { assassin: HERO_CHIKATILO_ID })
-    );
+    state = attachArmy(state, createDefaultArmy("P1", { assassin: HERO_CHIKATILO_ID }));
     state = attachArmy(state, createDefaultArmy("P2"));
     state = {
       ...state,
@@ -1120,11 +1254,10 @@ function testServerRejectsInvalidFalsePromisePlacementsWithoutMutation() {
     room.state = state;
 
     const chikatilo = Object.values(state.units).find(
-      (unit) => unit.owner === "P1" && unit.heroId === HERO_CHIKATILO_ID
+      (unit) => unit.owner === "P1" && unit.heroId === HERO_CHIKATILO_ID,
     );
     const token = Object.values(state.units).find(
-      (unit) =>
-        unit.owner === "P1" && unit.heroId === HERO_FALSE_TRAIL_TOKEN_ID
+      (unit) => unit.owner === "P1" && unit.heroId === HERO_FALSE_TRAIL_TOKEN_ID,
     );
     assert(chikatilo, "expected Chikatilo in server placement state");
     assert(token, "expected False Promise token in server placement state");
@@ -1137,14 +1270,11 @@ function testServerRejectsInvalidFalsePromisePlacementsWithoutMutation() {
         unitId: token.id,
         position: { col: 4, row: 4 },
       },
-      "P1"
+      "P1",
     );
     assert.equal(tokenRejected.ok, false);
     if (!tokenRejected.ok) {
-      assert.equal(
-        tokenRejected.code,
-        "false_promise_token_must_be_in_deployment_zone"
-      );
+      assert.equal(tokenRejected.code, "false_promise_token_must_be_in_deployment_zone");
     }
     assert.equal(room.state, beforeTokenReject);
     assert.equal(room.revision, 0);
@@ -1156,7 +1286,7 @@ function testServerRejectsInvalidFalsePromisePlacementsWithoutMutation() {
         unitId: token.id,
         position: { col: 1, row: 0 },
       },
-      "P1"
+      "P1",
     );
     assert.equal(tokenAccepted.ok, true);
     const pending = room.state.pendingRoll;
@@ -1176,14 +1306,11 @@ function testServerRejectsInvalidFalsePromisePlacementsWithoutMutation() {
           player: pending!.player,
           choice: { type: "chikatiloPlace", position },
         },
-        "P1"
+        "P1",
       );
       assert.equal(rejectedPlacement.ok, false);
       if (!rejectedPlacement.ok) {
-        assert.equal(
-          rejectedPlacement.code,
-          "chikatilo_cannot_be_placed_on_deployment_line"
-        );
+        assert.equal(rejectedPlacement.code, "chikatilo_cannot_be_placed_on_deployment_line");
       }
       assert.equal(room.state, beforeReject);
       assert.equal(room.revision, revisionBeforeReject);
@@ -1202,7 +1329,7 @@ function testServerRejectsInvalidFalsePromisePlacementsWithoutMutation() {
           position: { col: 4, row: 4 },
         },
       },
-      "P1"
+      "P1",
     );
     assert.equal(realAccepted.ok, true);
     assert.deepEqual(room.state.units[chikatilo.id].position, {
@@ -1224,13 +1351,10 @@ function testRiverBoatmanCommandsPreserveAuthoritativeMovementBudget() {
       hostConnId: `conn-${randomUUID()}`,
     });
     let state = createEmptyGame();
-    state = attachArmy(
-      state,
-      createDefaultArmy("P1", { rider: HERO_RIVER_PERSON_ID })
-    );
+    state = attachArmy(state, createDefaultArmy("P1", { rider: HERO_RIVER_PERSON_ID }));
     state = attachArmy(state, createDefaultArmy("P2"));
     const river = Object.values(state.units).find(
-      (unit) => unit.owner === "P1" && unit.heroId === HERO_RIVER_PERSON_ID
+      (unit) => unit.owner === "P1" && unit.heroId === HERO_RIVER_PERSON_ID,
     );
     assert(river, "River Person should exist in server regression state");
     state = setUnit(state, river.id, { position: { col: 0, row: 0 } });
@@ -1253,7 +1377,7 @@ function testRiverBoatmanCommandsPreserveAuthoritativeMovementBudget() {
         unitId: river.id,
         abilityId: ABILITY_RIVER_PERSON_BOATMAN,
       },
-      "P1"
+      "P1",
     );
     assert.equal(boatman.ok, true, "Boatman should be accepted with Action available");
     assert.equal(room.state.units[river.id].turn.actionUsed, true);
@@ -1268,7 +1392,7 @@ function testRiverBoatmanCommandsPreserveAuthoritativeMovementBudget() {
         unitId: river.id,
         abilityId: ABILITY_RIVER_PERSON_BOATMAN,
       },
-      "P1"
+      "P1",
     );
     assert.equal(duplicate.ok, false, "Boatman should be rejected after Action is spent");
     assert.equal(room.state, beforeDuplicate, "Rejected Boatman must not mutate state");
@@ -1278,7 +1402,7 @@ function testRiverBoatmanCommandsPreserveAuthoritativeMovementBudget() {
     const moved = applyGameAction(
       room,
       { type: "move", unitId: river.id, to: { col: 0, row: 2 } },
-      "P1"
+      "P1",
     );
     assert.equal(moved.ok, true, "Move should be accepted after Boatman");
     assert.equal(getMovementActionsRemaining(room.state.units[river.id]), 1);
@@ -1290,14 +1414,14 @@ function testRiverBoatmanCommandsPreserveAuthoritativeMovementBudget() {
         unitId: river.id,
         abilityId: ABILITY_RIVER_PERSON_BOAT,
       },
-      "P1"
+      "P1",
     );
     assert.equal(boat.ok, true, "Boat targeting should be accepted on the granted move");
     assert.equal(room.state.pendingRoll?.kind, "riverBoatCarryChoice");
     assert.equal(
       getMovementActionsRemaining(room.state.units[river.id]),
       1,
-      "Starting Boat targeting must not spend movement"
+      "Starting Boat targeting must not spend movement",
     );
     const pendingBoat = room.state.pendingRoll!;
     const canceledBoat = applyGameAction(
@@ -1308,7 +1432,7 @@ function testRiverBoatmanCommandsPreserveAuthoritativeMovementBudget() {
         player: pendingBoat.player,
         choice: "skip",
       },
-      "P1"
+      "P1",
     );
     assert.equal(canceledBoat.ok, true, "Canceling Boat targeting should resolve cleanly");
     assert.equal(getMovementActionsRemaining(room.state.units[river.id]), 1);
@@ -1318,7 +1442,7 @@ function testRiverBoatmanCommandsPreserveAuthoritativeMovementBudget() {
     const rejectedMove = applyGameAction(
       room,
       { type: "move", unitId: river.id, to: { col: 8, row: 8 } },
-      "P1"
+      "P1",
     );
     assert.equal(rejectedMove.ok, false, "Illegal Move should be rejected");
     assert.equal(room.state, beforeRejectedMove, "Rejected Move must not mutate budget");
@@ -1340,10 +1464,7 @@ function testMulticlassMovementCommandsStayAuthoritative() {
         hostConnId: `conn-${randomUUID()}`,
       });
       let state = createEmptyGame();
-      state = attachArmy(
-        state,
-        createDefaultArmy("P1", { archer: HERO_ARTEMIDA_ID }),
-      );
+      state = attachArmy(state, createDefaultArmy("P1", { archer: HERO_ARTEMIDA_ID }));
       state = attachArmy(state, createDefaultArmy("P2"));
       const artemida = Object.values(state.units).find(
         (unit) => unit.owner === "P1" && unit.heroId === HERO_ARTEMIDA_ID,
@@ -1396,10 +1517,13 @@ function testMulticlassMovementCommandsStayAuthoritative() {
       hostConnId: `conn-${randomUUID()}`,
     });
     let state = createEmptyGame();
-    state = attachArmy(state, createDefaultArmy("P1", {
-      archer: HERO_ARTEMIDA_ID,
-      berserker: HERO_KANEKI_ID,
-    }));
+    state = attachArmy(
+      state,
+      createDefaultArmy("P1", {
+        archer: HERO_ARTEMIDA_ID,
+        berserker: HERO_KANEKI_ID,
+      }),
+    );
     state = attachArmy(state, createDefaultArmy("P2"));
     const artemida = Object.values(state.units).find(
       (unit) => unit.owner === "P1" && unit.heroId === HERO_ARTEMIDA_ID,
@@ -1464,9 +1588,7 @@ function testArtemidaSickleEndpointCommandsStayAuthoritative() {
     const artemida = Object.values(state.units).find(
       (unit) => unit.owner === "P1" && unit.heroId === HERO_ARTEMIDA_ID,
     );
-    const hiddenBeyondEndpoint = Object.values(state.units).find(
-      (unit) => unit.owner === "P2",
-    );
+    const hiddenBeyondEndpoint = Object.values(state.units).find((unit) => unit.owner === "P2");
     assert(artemida && hiddenBeyondEndpoint, "Artemida and an enemy should exist");
     state = setUnit(state, artemida.id, {
       position: { col: 4, row: 4 },
@@ -1492,7 +1614,11 @@ function testArtemidaSickleEndpointCommandsStayAuthoritative() {
     };
 
     const projected = makePlayerView(room.state, "P1");
-    assert.equal(projected.units[hiddenBeyondEndpoint.id], undefined, "Sickle targeting projection must not reveal a hidden enemy");
+    assert.equal(
+      projected.units[hiddenBeyondEndpoint.id],
+      undefined,
+      "Sickle targeting projection must not reveal a hidden enemy",
+    );
     assert.equal(
       projected.abilitiesByUnitId[artemida.id]?.find(
         (ability) => ability.id === ABILITY_ARTEMIDA_SILVER_CRESCENT,
@@ -1503,28 +1629,52 @@ function testArtemidaSickleEndpointCommandsStayAuthoritative() {
 
     const beforeInvalid = room.state;
     const revisionBeforeInvalid = room.revision;
-    const invalid = applyGameAction(room, {
-      type: "useAbility",
-      unitId: artemida.id,
-      abilityId: ABILITY_ARTEMIDA_SILVER_CRESCENT,
-      payload: { target: { col: 6, row: 5 } },
-    }, "P1");
+    const invalid = applyGameAction(
+      room,
+      {
+        type: "useAbility",
+        unitId: artemida.id,
+        abilityId: ABILITY_ARTEMIDA_SILVER_CRESCENT,
+        payload: { target: { col: 6, row: 5 } },
+      },
+      "P1",
+    );
     assert.equal(invalid.ok, false, "the server must reject an off-line Sickle endpoint");
-    assert.equal(room.state, beforeInvalid, "an invalid endpoint must not mutate authoritative state");
-    assert.equal(room.revision, revisionBeforeInvalid, "an invalid endpoint must not advance room revision");
+    assert.equal(
+      room.state,
+      beforeInvalid,
+      "an invalid endpoint must not mutate authoritative state",
+    );
+    assert.equal(
+      room.revision,
+      revisionBeforeInvalid,
+      "an invalid endpoint must not advance room revision",
+    );
     assert.equal(room.state.units[artemida.id].charges[ABILITY_ARTEMIDA_SILVER_CRESCENT], 5);
     assert.equal(room.state.units[artemida.id].turn.actionUsed, false);
 
-    const accepted = applyGameAction(room, {
-      type: "useAbility",
-      unitId: artemida.id,
-      abilityId: ABILITY_ARTEMIDA_SILVER_CRESCENT,
-      payload: { target: { col: 6, row: 4 } },
-    }, "P1");
-    assert.equal(accepted.ok, true, "the server should accept a closer endpoint on Artemida's attack line");
+    const accepted = applyGameAction(
+      room,
+      {
+        type: "useAbility",
+        unitId: artemida.id,
+        abilityId: ABILITY_ARTEMIDA_SILVER_CRESCENT,
+        payload: { target: { col: 6, row: 4 } },
+      },
+      "P1",
+    );
+    assert.equal(
+      accepted.ok,
+      true,
+      "the server should accept a closer endpoint on Artemida's attack line",
+    );
     assert.equal(room.state.units[artemida.id].charges[ABILITY_ARTEMIDA_SILVER_CRESCENT], 0);
     assert.equal(room.state.units[artemida.id].turn.actionUsed, true);
-    assert.equal(room.state.units[hiddenBeyondEndpoint.id].isStealthed, true, "a hidden enemy beyond the endpoint must remain untouched and hidden");
+    assert.equal(
+      room.state.units[hiddenBeyondEndpoint.id].isStealthed,
+      true,
+      "a hidden enemy beyond the endpoint must remain untouched and hidden",
+    );
   } finally {
     storeTestHooks.reset();
   }
@@ -1553,7 +1703,7 @@ function testPendingBoardChoiceUsesAuthenticatedSeat() {
       pendingRollId: "pending-board-choice",
       choice: "skip",
     } as any,
-    "P1"
+    "P1",
   );
 
   assert.equal(result.ok, true, "authenticated board choice should reach rules");
@@ -1562,7 +1712,7 @@ function testPendingBoardChoiceUsesAuthenticatedSeat() {
   assert.equal(
     logged?.type === "resolvePendingRoll" ? logged.player : undefined,
     "P1",
-    "server should attach the authenticated seat to generic pending commands"
+    "server should attach the authenticated seat to generic pending commands",
   );
 
   console.log("hardening_pending_board_choice_uses_authenticated_seat passed");
@@ -1621,7 +1771,11 @@ function testMongolChargePendingChoiceIsAuthoritative() {
   const opponentView = makePlayerView(room.state, "P2");
   assert.equal(ownerView.pendingRoll?.kind, "mongolChargeAllyAttackTarget");
   assert.deepEqual(ownerView.pendingRoll?.context.legalTargetIds, [enemyA.id, enemyB.id]);
-  assert.equal(opponentView.pendingRoll, null, "Mongol Charge target options must be owner-private");
+  assert.equal(
+    opponentView.pendingRoll,
+    null,
+    "Mongol Charge target options must be owner-private",
+  );
 
   const beforeInvalid = room.state;
   const revisionBeforeInvalid = room.revision;
@@ -1709,7 +1863,11 @@ function testHassanAssassinOrderCommandAndProjectionAreAuthoritative() {
   const opponentView = makePlayerView(room.state, "P2");
   assert.equal(ownerView.pendingRoll?.kind, "hassanAssassinOrderSelection");
   assert.deepEqual(ownerView.pendingRoll?.context.eligibleUnitIds, [allies[0].id, allies[1].id]);
-  assert.equal(opponentView.pendingRoll, null, "the opponent must not receive Hassan target options");
+  assert.equal(
+    opponentView.pendingRoll,
+    null,
+    "the opponent must not receive Hassan target options",
+  );
   const projectedAbility = ownerView.abilitiesByUnitId[hassan.id]?.find(
     (ability) => ability.id === ABILITY_HASSAN_ASSASIN_ORDER,
   );
@@ -1731,7 +1889,11 @@ function testHassanAssassinOrderCommandAndProjectionAreAuthoritative() {
     "P1",
   );
   assert.equal(rejectedChoice.ok, false, "the server should reject an ineligible target");
-  assert.equal(room.state, beforeInvalid, "a rejected Assassin Order command must not mutate state");
+  assert.equal(
+    room.state,
+    beforeInvalid,
+    "a rejected Assassin Order command must not mutate state",
+  );
   assert.equal(room.revision, revisionBeforeInvalid, "rejection must not advance revision");
 
   const acceptedChoice = applyGameAction(room, validPayload.data as any, "P1");
@@ -1757,14 +1919,8 @@ function testMissedHiddenAttackRevealIsAuthoritative() {
     roomIdPrefix: "hardening-hidden-attack-reveal",
   });
   let state = createEmptyGame();
-  state = attachArmy(
-    state,
-    createDefaultArmy("P1", { assassin: HERO_HASSAN_ID }),
-  );
-  state = attachArmy(
-    state,
-    createDefaultArmy("P2", { trickster: HERO_DUOLINGO_ID }),
-  );
+  state = attachArmy(state, createDefaultArmy("P1", { assassin: HERO_HASSAN_ID }));
+  state = attachArmy(state, createDefaultArmy("P2", { trickster: HERO_DUOLINGO_ID }));
   const hassan = Object.values(state.units).find(
     (unit) => unit.owner === "P1" && unit.heroId === HERO_HASSAN_ID,
   );
@@ -1818,9 +1974,7 @@ function testMissedHiddenAttackRevealIsAuthoritative() {
   );
   assert(defenderRolled.ok, "server should accept the defender roll");
   assert(
-    defenderRolled.events.some(
-      (event) => event.type === "attackResolved" && !event.hit,
-    ),
+    defenderRolled.events.some((event) => event.type === "attackResolved" && !event.hit),
     "the queued dice should produce the reported miss",
   );
   assert.equal(
@@ -1831,9 +1985,7 @@ function testMissedHiddenAttackRevealIsAuthoritative() {
   assert.equal(
     room.actionLog
       .flatMap((entry) => entry.events)
-      .filter(
-        (event) => event.type === "stealthRevealed" && event.unitId === hassan.id,
-      ).length,
+      .filter((event) => event.type === "stealthRevealed" && event.unitId === hassan.id).length,
     1,
     "the server event log should contain one safe reveal event",
   );
@@ -1850,13 +2002,13 @@ function testChikatiloCommandsAndResourcesAreAuthoritative() {
   const { room } = makeSeatedRoom({ roomIdPrefix: "hardening-chikatilo" });
   let state = attachArmy(
     attachArmy(createEmptyGame(), createDefaultArmy("P1", { assassin: HERO_CHIKATILO_ID })),
-    createDefaultArmy("P2")
+    createDefaultArmy("P2"),
   );
   const chikatilo = Object.values(state.units).find(
-    (unit) => unit.owner === "P1" && unit.heroId === HERO_CHIKATILO_ID
+    (unit) => unit.owner === "P1" && unit.heroId === HERO_CHIKATILO_ID,
   );
   const target = Object.values(state.units).find(
-    (unit) => unit.owner === "P2" && unit.class === "knight"
+    (unit) => unit.owner === "P2" && unit.class === "knight",
   );
   assert(chikatilo && target, "expected Chikatilo and mark target");
   state = setUnit(state, chikatilo.id, {
@@ -1883,7 +2035,7 @@ function testChikatiloCommandsAndResourcesAreAuthoritative() {
 
   const ownerBefore = makePlayerView(room.state, "P1");
   const decoyView = ownerBefore.abilitiesByUnitId[chikatilo.id]?.find(
-    (ability) => ability.id === ABILITY_CHIKATILO_DECOY
+    (ability) => ability.id === ABILITY_CHIKATILO_DECOY,
   );
   assert.equal(decoyView?.chargeUnlimited, true);
   assert.equal(decoyView?.isSpecialCounter, true);
@@ -1892,12 +2044,12 @@ function testChikatiloCommandsAndResourcesAreAuthoritative() {
     ownerBefore.abilitiesByUnitId[chikatilo.id]
       ?.find((ability) => ability.id === ABILITY_CHIKATILO_ASSASSIN_MARK)
       ?.targeting?.targetIds?.includes(target.id),
-    "owner projection should expose the authoritative legal Killer's Mark target"
+    "owner projection should expose the authoritative legal Killer's Mark target",
   );
   assert.equal(
     makePlayerView(room.state, "P2").units[chikatilo.id],
     undefined,
-    "opponent projection must not expose hidden Chikatilo coordinates"
+    "opponent projection must not expose hidden Chikatilo coordinates",
   );
 
   const marked = applyGameAction(
@@ -1908,7 +2060,7 @@ function testChikatiloCommandsAndResourcesAreAuthoritative() {
       abilityId: ABILITY_CHIKATILO_ASSASSIN_MARK,
       payload: { targetId: target.id },
     },
-    "P1"
+    "P1",
   );
   assert.equal(marked.ok, true, "server should accept a legal Killer's Mark");
   assert.equal(room.state.units[chikatilo.id].isStealthed, true);
@@ -1924,7 +2076,7 @@ function testChikatiloCommandsAndResourcesAreAuthoritative() {
       abilityId: ABILITY_CHIKATILO_ASSASSIN_MARK,
       payload: { targetId: target.id },
     },
-    "P1"
+    "P1",
   );
   assert.equal(duplicate.ok, false, "duplicate Killer's Mark should be rejected");
   assert.equal(room.state, beforeDuplicate, "duplicate Mark must not mutate state");
@@ -1942,7 +2094,7 @@ function testChikatiloCommandsAndResourcesAreAuthoritative() {
       unitId: chikatilo.id,
       abilityId: ABILITY_CHIKATILO_DECOY,
     },
-    "P1"
+    "P1",
   );
   assert.equal(decoy.ok, true, "server should accept legal Decoy Stealth");
   assert.equal(room.state.units[chikatilo.id].isStealthed, true);
@@ -1956,18 +2108,13 @@ function testWindmillsCommandsAreAuthoritative() {
   const setup = (targetPosition: { col: number; row: number }) => {
     const { room } = makeSeatedRoom({ roomIdPrefix: "hardening-windmills" });
     let state = attachArmy(
-      attachArmy(
-        createEmptyGame(),
-        createDefaultArmy("P1", { rider: HERO_DON_KIHOTE_ID }),
-      ),
+      attachArmy(createEmptyGame(), createDefaultArmy("P1", { rider: HERO_DON_KIHOTE_ID })),
       createDefaultArmy("P2", { berserker: HERO_KANEKI_ID }),
     );
     const don = Object.values(state.units).find(
       (unit) => unit.owner === "P1" && unit.heroId === HERO_DON_KIHOTE_ID,
     );
-    const target = Object.values(state.units).find(
-      (unit) => unit.owner === "P2" && !!unit.heroId,
-    );
+    const target = Object.values(state.units).find((unit) => unit.owner === "P2" && !!unit.heroId);
     assert(don && target, "expected Don Kihote and an enemy hero");
     state = setUnit(state, don.id, {
       position: { col: 4, row: 4 },
@@ -2031,13 +2178,18 @@ function testWindmillsCommandsAreAuthoritative() {
   }
   assert.equal(room.state, stateBefore, "rejected Windmills must preserve authoritative state");
   assert.equal(room.revision, revisionBefore, "rejected Windmills must preserve revision");
-  assert.equal(room.actionLog.length, logLengthBefore, "rejected Windmills must not append action log");
+  assert.equal(
+    room.actionLog.length,
+    logLengthBefore,
+    "rejected Windmills must not append action log",
+  );
 
   console.log("hardening_windmills_commands_authoritative passed");
 }
 
 async function main() {
   testLokiLaughPayloadSchemas();
+  testLokiLaughCommandsAreAuthoritative();
   testLightRayModePayloadSchemas();
   testWindmillsPayloadSchema();
   testPapyrusBoneChoicePayloadSchema();

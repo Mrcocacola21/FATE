@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type {
   GameAction,
+  LokiLaughtOption as RulesLokiLaughtOption,
   GameEvent,
   PlayerView,
   Coord,
@@ -86,12 +87,7 @@ export type ActionMode =
 export type ActionPreviewMode = Exclude<ActionMode, null>;
 export type HoverPreview = { type: "actionMode"; mode: ActionPreviewMode } | null;
 
-export type LokiLaughtOption =
-  | "againSomeNonsense"
-  | "chicken"
-  | "mindControl"
-  | "spinTheDrum"
-  | "greatLokiJoke";
+export type LokiLaughtOption = RulesLokiLaughtOption;
 
 export interface PendingLokiLaughtOption {
   unitId: string;
@@ -414,9 +410,7 @@ function handleServerMessage(
           : null;
       const selectionLost = !!current.selectedUnitId && !selectedUnitId;
       const queuedLokiOption = current.pendingLokiLaughtOption;
-      const pendingLokiContext = msg.view.pendingRoll?.context as
-        | { lokiId?: unknown }
-        | undefined;
+      const pendingLokiContext = msg.view.pendingRoll?.context as { lokiId?: unknown } | undefined;
       const preserveQueuedLokiOption = !!(
         queuedLokiOption &&
         msg.view.pendingRoll?.kind === "lokiLaughtChoice" &&
@@ -442,9 +436,7 @@ function handleServerMessage(
         })
           ? buildLocalBoardUiResetState()
           : {}),
-        ...(preserveQueuedLokiOption
-          ? { pendingLokiLaughtOption: queuedLokiOption }
-          : {}),
+        ...(preserveQueuedLokiOption ? { pendingLokiLaughtOption: queuedLokiOption } : {}),
       }));
       const resumeToken = get().resumeToken;
       if (resumeToken) {

@@ -345,6 +345,7 @@ import {
   testLokiLaughterIncrementsOnAnyDouble,
   testLokiNaturalStealthThresholdAndPassiveView,
   testLokiLaughDirectOptionPayloadStartsResolution,
+  testLokiLaughDirectOptionsSpendOnlyAfterValidStart,
   testLokiLaughterSpendingAndGating,
   testLokiLaughOptionAvailabilityThresholds,
   testLokiOptionOneMoveLockDuration,
@@ -699,6 +700,7 @@ function main(): void {
   testMettatonFinalChordGatingTargetsDamageAndSpend();
   testLokiNaturalStealthThresholdAndPassiveView();
   testLokiLaughDirectOptionPayloadStartsResolution();
+  testLokiLaughDirectOptionsSpendOnlyAfterValidStart();
   testLokiLaughterIncrementsOnAnyDouble();
   testLokiLaughterSpendingAndGating();
   testLokiLaughOptionAvailabilityThresholds();

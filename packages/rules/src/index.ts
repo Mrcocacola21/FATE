@@ -3,6 +3,12 @@ export * from "./units";
 export * from "./rng";
 export * from "./combat";
 export * from "./actions";
+export {
+  LOKI_LAUGHT_OPTION_COSTS,
+  LOKI_LAUGHT_OPTION_IDS,
+  LOKI_LAUGHT_REJECTIONS,
+  type LokiLaughtOption,
+} from "./actions/heroes/loki/constants";
 export * from "./board";
 export * from "./movement";
 export * from "./legal";

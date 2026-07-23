@@ -1,4 +1,9 @@
-export type { LokiLaughtOption } from "./constants";
+export {
+  LOKI_LAUGHT_OPTION_COSTS,
+  LOKI_LAUGHT_OPTION_IDS,
+  LOKI_LAUGHT_REJECTIONS,
+  type LokiLaughtOption,
+} from "./constants";
 export {
   isLoki,
   isLokiChicken,
