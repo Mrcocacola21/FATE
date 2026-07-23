@@ -12,6 +12,7 @@ import { markFriskAttackedWhileStealthed } from "../heroes/frisk";
 import { applyMettatonStagePhenomenonOnAttackAction } from "../heroes/mettaton";
 import { maybeApplyPapyrusLongBoneAttack } from "../heroes/papyrus";
 import { getPolkovodetsSource } from "../heroes/vlad";
+import { canDirectlyTargetUnit } from "../../visibility";
 
 export function applyAttack(
   state: GameState,
@@ -104,8 +105,19 @@ export function applyAttack(
   if (!canSpendSlots(attacker, { attack: true, action: true })) {
     return { state, events: [] };
   }
+  if (!canDirectlyTargetUnit(state, attacker.id, defender.id)) {
+    return {
+      state,
+      events: [],
+      rejectionReason: "Target is hidden from you.",
+    };
+  }
   if (!canAttackTarget(state, attacker, defender)) {
-    return { state, events: [] };
+    return {
+      state,
+      events: [],
+      rejectionReason: "Target is not legal for this attack.",
+    };
   }
 
   let workingState = state;

@@ -7,7 +7,7 @@ import type {
 } from "../../../../model";
 import type { RNG } from "../../../../rng";
 import { coordsEqual } from "../../../../board";
-import { revealUnit } from "../../../../stealth";
+import { revealUnit, resolveHiddenOverlapsAfterTransitions } from "../../../../stealth";
 import { clearPendingRoll, applyStakeTriggerIfAny } from "../../../../core";
 import { evIntimidateResolved } from "../../../../core";
 import type {
@@ -72,6 +72,13 @@ export function resolveVladIntimidateChoice(
       },
     };
     events.push(evIntimidateResolved({ attackerId, from, to }));
+
+    const collision = resolveHiddenOverlapsAfterTransitions(state, updatedState, rng, {
+      entrantUnitIds: [updatedAttacker.id],
+    });
+    updatedState = collision.state;
+    events.push(...collision.events);
+    updatedAttacker = updatedState.units[updatedAttacker.id] ?? updatedAttacker;
 
     if (updatedAttacker.isStealthed) {
       const revealed = revealUnit(

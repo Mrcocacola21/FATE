@@ -9,6 +9,7 @@ import type {
 import { isInsideBoard } from "../model";
 import { getUnitDefinition } from "../units";
 import { addCoord, ALL_DIRS, isCellOccupied } from "../board";
+import { isCellBlockedForPlayer } from "../visibility";
 import {
   HERO_GRAND_KAISER_ID,
   HERO_VLAD_TEPES_ID,
@@ -179,6 +180,21 @@ export function getAdjacentEmptyCells(state: GameState, origin: Coord): Coord[] 
     const dest = addCoord(origin, dir);
     if (!isInsideBoard(dest, state.boardSize)) continue;
     if (isCellOccupied(state, dest)) continue;
+    options.push(dest);
+  }
+  return options;
+}
+
+export function getAdjacentCellsAvailableToPlayer(
+  state: GameState,
+  origin: Coord,
+  player: PlayerId,
+): Coord[] {
+  const options: Coord[] = [];
+  for (const dir of ALL_DIRS) {
+    const dest = addCoord(origin, dir);
+    if (!isInsideBoard(dest, state.boardSize)) continue;
+    if (isCellBlockedForPlayer(state, player, dest)) continue;
     options.push(dest);
   }
   return options;

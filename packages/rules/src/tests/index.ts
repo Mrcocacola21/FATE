@@ -130,10 +130,13 @@ import {
   testAllyCannotStepOnStealthedAlly,
   testEnemyCanStepOnUnknownStealthedWithoutReveal,
   testHiddenAllyOnEnemyCellDoesNotBlockAttackOrReveal,
+  testTwoVisibleEnemiesOnFirstArcherCellAreBothLegalById,
   testUnknownStealthedEnemyDoesNotBlockArcherLine,
   testStealthEntryClearsOpponentExactKnowledge,
   testPathPassingAdjacentAfterStealthEntryDoesNotReveal,
   testEnemyCanStepOnRealStealthEntryCellWithoutReveal,
+  testHiddenCollisionClockwiseFilteringAndAuthoritativeRoll,
+  testHiddenCollisionNoFreeCellsDealsExactlyOneDamageSafely,
   testRevealDisplacesCoLocatedHiddenUnitDeterministically,
   testRealStealthEntryDoesNotBlockArcherLine,
   testKnownHiddenEnemyBlocksMovementAndArcherLine,
@@ -198,6 +201,7 @@ import {
   testForestIsAutomaticImpulseAndRejectsManualUse,
   testVladIntimidatePromptsAfterSuccessfulDefense,
   testVladIntimidatePushesAttackerOneCell,
+  testVladIntimidateHiddenAllyCollisionKeepsUndyneTargetable,
   testVladIntimidateNoOptionsAutoSkips,
   testVladStakesPromptOnBattleStart,
   testVladStakesPromptOnSecondOwnTurnStart,
@@ -207,6 +211,7 @@ import {
   testLinePathDiagonalIsExact,
   testTricksterTeleportDoesNotTriggerIntermediateStakes,
   testRiderStopsOnStakeInPath,
+  testRiderStakeDestinationResolvesHiddenOverlapBeforeTrigger,
   testStakeDoesNotTriggerOnHiddenUnitCell,
   testStakeTriggersOnVisibleUnitStopsAndDamagesAndReveals,
   testStakeDoesNotTriggerOnUnknownStealthedUnit,
@@ -525,10 +530,13 @@ function main(): void {
   testAllyCannotStepOnStealthedAlly();
   testEnemyCanStepOnUnknownStealthedWithoutReveal();
   testHiddenAllyOnEnemyCellDoesNotBlockAttackOrReveal();
+  testTwoVisibleEnemiesOnFirstArcherCellAreBothLegalById();
   testUnknownStealthedEnemyDoesNotBlockArcherLine();
   testStealthEntryClearsOpponentExactKnowledge();
   testPathPassingAdjacentAfterStealthEntryDoesNotReveal();
   testEnemyCanStepOnRealStealthEntryCellWithoutReveal();
+  testHiddenCollisionClockwiseFilteringAndAuthoritativeRoll();
+  testHiddenCollisionNoFreeCellsDealsExactlyOneDamageSafely();
   testRevealDisplacesCoLocatedHiddenUnitDeterministically();
   testRealStealthEntryDoesNotBlockArcherLine();
   testKnownHiddenEnemyBlocksMovementAndArcherLine();
@@ -779,6 +787,7 @@ function main(): void {
   testElCidTisonaAndKoladaHitAllies();
   testVladIntimidatePromptsAfterSuccessfulDefense();
   testVladIntimidatePushesAttackerOneCell();
+  testVladIntimidateHiddenAllyCollisionKeepsUndyneTargetable();
   testVladIntimidateNoOptionsAutoSkips();
   testVladStakesPromptOnBattleStart();
   testVladStakesPromptOnSecondOwnTurnStart();
@@ -788,6 +797,7 @@ function main(): void {
   testLinePathDiagonalIsExact();
   testTricksterTeleportDoesNotTriggerIntermediateStakes();
   testRiderStopsOnStakeInPath();
+  testRiderStakeDestinationResolvesHiddenOverlapBeforeTrigger();
   testStakeDoesNotTriggerOnHiddenUnitCell();
   testStakeTriggersOnVisibleUnitStopsAndDamagesAndReveals();
   testStakeDoesNotTriggerOnUnknownStealthedUnit();

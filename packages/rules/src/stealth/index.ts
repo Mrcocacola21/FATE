@@ -1,5 +1,10 @@
 export { getStealthSuccessMinRoll } from "./checks";
 export { attemptEnterStealth } from "./enter";
+export {
+  getHiddenCollisionFreeCells,
+  resolveHiddenOverlapCollision,
+  resolveHiddenOverlapsAfterTransitions,
+} from "./collision";
 export { revealAttackerOnAttackAttempt } from "./revealAttack";
 export { revealStealthedInArea, revealUnit } from "./reveal";
 export { performSearchStealth } from "./search";

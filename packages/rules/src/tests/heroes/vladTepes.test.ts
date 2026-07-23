@@ -8,12 +8,14 @@ import {
   createDefaultArmy,
   createEmptyGame,
   HERO_VLAD_TEPES_ID,
+  HERO_UNDYNE_ID,
   initKnowledgeForOwners,
   linePath,
   makeRngSequence,
   makePlayerView,
   path,
   resolvePendingRollOnce,
+  resolveAllPendingRollsWithEvents,
   SeededRNG,
   setUnit,
   setupVladState,
@@ -322,6 +324,136 @@ export function testVladIntimidatePushesAttackerOneCell() {
   );
 
   console.log("vlad_intimidate_pushes_attacker_one_cell passed");
+}
+
+export function testVladIntimidateHiddenAllyCollisionKeepsUndyneTargetable() {
+  let state = createEmptyGame();
+  state = attachArmy(
+    state,
+    createDefaultArmy("P1", { spearman: HERO_VLAD_TEPES_ID }),
+  );
+  state = attachArmy(
+    state,
+    createDefaultArmy("P2", { berserker: HERO_UNDYNE_ID }),
+  );
+  const vlad = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.heroId === HERO_VLAD_TEPES_ID,
+  )!;
+  const undyne = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.heroId === HERO_UNDYNE_ID,
+  )!;
+  const hiddenAlly = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "assassin",
+  )!;
+
+  state = setUnit(state, vlad.id, { position: { col: 4, row: 4 } });
+  state = setUnit(state, undyne.id, {
+    position: { col: 4, row: 5 },
+    class: "spearman",
+  });
+  state = setUnit(state, hiddenAlly.id, {
+    position: { col: 5, row: 5 },
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
+  state = toBattleState(state, "P2", undyne.id);
+  state = initKnowledgeForOwners(state);
+
+  const rng = makeRngSequence([
+    0.01,
+    0.01, // Undyne misses.
+    0.99,
+    0.99, // Vlad defends and triggers Intimidate.
+    0, // Hidden collision chooses the first free clockwise cell.
+    0.99,
+    0.99, // Vlad attack.
+    0.01,
+    0.01, // Undyne defense.
+  ]);
+  let attackedVlad = applyAction(
+    state,
+    { type: "attack", attackerId: undyne.id, defenderId: vlad.id } as any,
+    rng,
+  );
+  attackedVlad = resolvePendingRollOnce(attackedVlad.state, rng);
+  attackedVlad = resolvePendingRollOnce(attackedVlad.state, rng);
+  const pending = attackedVlad.state.pendingRoll;
+  assert(pending?.kind === "vladIntimidateChoice", "Intimidate choice should be pending");
+  const hiddenDestination = { col: 5, row: 5 };
+  const options = (pending.context as { options?: Coord[] }).options ?? [];
+  assert(
+    options.some((option) => option.col === 5 && option.row === 5),
+    "Vlad's hidden-safe options should include the unknown occupied cell",
+  );
+
+  const pushed = applyAction(
+    attackedVlad.state,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: pending.id,
+      player: pending.player,
+      choice: { type: "intimidatePush", to: hiddenDestination },
+    } as any,
+    rng,
+  );
+  assert.deepStrictEqual(
+    pushed.state.units[undyne.id].position,
+    hiddenDestination,
+    "Undyne should occupy the selected destination",
+  );
+  assert(
+    pushed.events.some(
+      (event) =>
+        event.type === "hiddenCollisionResolved" &&
+        event.displacedUnitId === hiddenAlly.id,
+    ),
+    "the hidden allied occupant should be displaced",
+  );
+  assert(pushed.state.units[hiddenAlly.id].isStealthed, "collision must not reveal the hidden ally");
+
+  const vladTurn = toBattleState(pushed.state, "P1", vlad.id);
+  const vladView = makePlayerView(vladTurn, "P1");
+  assert(vladView.units[undyne.id], "Undyne must remain visible in Vlad's projection");
+  assert(!vladView.units[hiddenAlly.id], "the displaced hidden ally must stay absent");
+  assert(
+    vladView.legal?.attackTargetsByUnitId[vlad.id]?.includes(undyne.id),
+    "Undyne must remain a legal unit-id target after Intimidate",
+  );
+  assert(
+    !vladView.legal?.attackTargetsByUnitId[vlad.id]?.includes(hiddenAlly.id),
+    "the hidden ally must not be projected as selectable",
+  );
+
+  const attackRng = makeRngSequence([0.99, 0.99, 0.01, 0.01]);
+  const declared = applyAction(
+    vladTurn,
+    { type: "attack", attackerId: vlad.id, defenderId: undyne.id } as any,
+    attackRng,
+  );
+  assert(
+    declared.state.pendingRoll?.kind === "attack_attackerRoll",
+    "server validation should accept Undyne's targetUnitId",
+  );
+  const resolved = resolveAllPendingRollsWithEvents(declared.state, attackRng);
+  const hit = resolved.events.find(
+    (event) => event.type === "attackResolved" && event.defenderId === undyne.id,
+  );
+  assert(
+    hit?.type === "attackResolved",
+    "Vlad should resolve a normal attack against the selected Undyne id",
+  );
+  assert(
+    resolved.state.units[hiddenAlly.id].hp === pushed.state.units[hiddenAlly.id].hp,
+    "the single-target attack must not damage the hidden ally",
+  );
+  assert(
+    !resolved.events.some(
+      (event) => event.type === "stealthRevealed" && event.unitId === hiddenAlly.id,
+    ),
+    "the attack must not reveal the hidden ally",
+  );
+
+  console.log("vlad_intimidate_hidden_ally_collision_keeps_undyne_targetable passed");
 }
 
 
@@ -673,6 +805,75 @@ export function testRiderStopsOnStakeInPath() {
   );
 
   console.log("rider_stops_on_stake_in_path passed");
+}
+
+export function testRiderStakeDestinationResolvesHiddenOverlapBeforeTrigger() {
+  const rng = makeRngSequence([0]);
+  let { state } = setupVladState();
+  const rider = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "rider",
+  )!;
+  const hidden = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.class === "assassin",
+  )!;
+
+  state = setUnit(state, rider.id, { position: { col: 0, row: 0 } });
+  state = setUnit(state, hidden.id, {
+    position: { col: 0, row: 2 },
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
+  state = {
+    ...toBattleState(state, "P2", rider.id),
+    stakeMarkers: [
+      {
+        id: "stake-hidden-overlap",
+        owner: "P1",
+        position: { col: 0, row: 2 },
+        createdAt: 1,
+        isRevealed: false,
+      },
+    ],
+  };
+  state = initKnowledgeForOwners(state);
+
+  const moved = applyAction(
+    state,
+    { type: "move", unitId: rider.id, to: { col: 0, row: 2 } } as any,
+    rng,
+  );
+  assert.deepStrictEqual(
+    moved.state.units[rider.id].position,
+    { col: 0, row: 2 },
+    "Rider should finish on the requested destination",
+  );
+  assert.deepStrictEqual(
+    moved.state.units[hidden.id].position,
+    { col: 0, row: 1 },
+    "the unknown hidden occupant should be displaced north first",
+  );
+  assert(moved.state.units[hidden.id].isStealthed, "the hidden occupant must stay hidden");
+  assert(
+    moved.events.some(
+      (event) =>
+        event.type === "hiddenCollisionResolved" &&
+        event.displacedUnitId === hidden.id,
+    ),
+    "Rider's endpoint overlap should use the collision resolver",
+  );
+  assert(
+    moved.events.some(
+      (event) => event.type === "stakeTriggered" && event.unitId === rider.id,
+    ),
+    "the stake should trigger after the hidden occupant is displaced",
+  );
+  assert(
+    moved.state.units[rider.id].hp === rider.hp - 1,
+    "the stake should still deal its normal 1 damage",
+  );
+  assert(!moved.state.pendingRoll, "hidden collision must not leave a stale Rider task");
+
+  console.log("rider_stake_destination_resolves_hidden_overlap_before_trigger passed");
 }
 
 

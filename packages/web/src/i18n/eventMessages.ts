@@ -75,7 +75,32 @@ export function formatEventMessage(event: GameEvent, language: Language, t: Tran
     case "unitPlaced":
       return text(language, `Unit placed: ${event.unitId}`, `Розміщено фігуру: ${event.unitId}`);
     case "unitMoved":
-      return text(language, `Unit moved: ${event.unitId}`, `Фігуру переміщено: ${event.unitId}`);
+      return event.unitId
+        ? text(language, `Unit moved: ${event.unitId}`, `Фігуру переміщено: ${event.unitId}`)
+        : text(
+            language,
+            "A hidden movement was resolved.",
+            "Приховане переміщення завершено.",
+          );
+    case "hiddenCollisionResolved":
+      if (!event.displacedUnitId) {
+        return text(
+          language,
+          "A hidden collision was resolved.",
+          "Приховане зіткнення завершено.",
+        );
+      }
+      return event.damage === 1
+        ? text(
+            language,
+            `${event.displacedUnitId} had no free adjacent cell and took 1 damage.`,
+            `${event.displacedUnitId} не мав вільної сусідньої клітинки та отримав 1 шкоди.`,
+          )
+        : text(
+            language,
+            `Hidden collision: ${event.displacedUnitId} rolled ${event.roll} on 1d${event.dieSides}.`,
+            `Приховане зіткнення: ${event.displacedUnitId} викинув ${event.roll} на 1d${event.dieSides}.`,
+          );
     case "attackResolved":
       return text(
         language,

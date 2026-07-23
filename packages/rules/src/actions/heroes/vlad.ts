@@ -7,7 +7,7 @@ import {
   isGenghis,
   isHassan,
   isJebe,
-  getAdjacentEmptyCells,
+  getAdjacentCellsAvailableToPlayer,
   isUnitVisibleToPlayer,
 } from "../shared";
 import {
@@ -114,7 +114,14 @@ export function maybeRequestIntimidate(
     return { state, events: baseEvents, requested: false };
   }
 
-  const options = getAdjacentEmptyCells(state, attacker.position);
+  // Intimidate's chooser may force the attacker into a cell whose hidden
+  // occupant is unknown to the chooser. The hidden occupant is displaced
+  // authoritatively after the move.
+  const options = getAdjacentCellsAvailableToPlayer(
+    state,
+    attacker.position,
+    defender.owner,
+  );
   if (options.length === 0) {
     return { state, events: baseEvents, requested: false };
   }

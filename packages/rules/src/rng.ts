@@ -34,6 +34,13 @@ export function rollD6(rng: RNG = defaultRng): number {
   return 1 + Math.floor(rng.next() * 6);
 }
 
+export function rollDie(rng: RNG, sides: number): number {
+  if (!Number.isInteger(sides) || sides < 1) {
+    throw new Error(`rollDie requires a positive integer number of sides, received ${sides}`);
+  }
+  return 1 + Math.floor(rng.next() * sides);
+}
+
 // Бросок nd6
 export function rollNd6(n: number, rng: RNG = defaultRng): DiceRoll {
   const dice: number[] = [];

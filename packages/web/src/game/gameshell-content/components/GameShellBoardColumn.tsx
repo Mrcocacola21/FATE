@@ -38,35 +38,28 @@ export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm, mobile
   } | null>(null);
   const zoomPercent = Math.round(boardZoom * 100);
 
-  const selectableAttackTargetIds: string[] =
-    vm.actionMode === "attack"
+  const selectableUnitTargetIds: string[] =
+    vm.activeUnitTargetIds ??
+    (vm.actionMode === "attack"
       ? vm.papyrusLongBoneAttackTargetIds?.length > 0
         ? vm.papyrusLongBoneAttackTargetIds
         : (vm.legalAttackTargets ?? [])
-      : [];
+      : []);
 
   useEffect(() => {
     setAttackTargetPicker(null);
-  }, [vm.actionMode, vm.selectedUnitId]);
+  }, [vm.actionMode, vm.selectedUnitId, vm.pendingRoll?.id]);
 
   const handleBoardCellClick = (col: number, row: number) => {
-    if (vm.actionMode === "attack") {
-      const targets = getSelectableAttackTargetsAtCell(
-        vm.view,
-        col,
-        row,
-        selectableAttackTargetIds,
-      );
-      if (targets.length > 1) {
-        setAttackTargetPicker({ col, row, targetIds: targets.map((target) => target.id) });
-        return;
-      }
-      setAttackTargetPicker(null);
-      vm.handleCellClick(col, row, targets[0]?.id);
+    const targets =
+      vm.getUnitTargetsAtCell?.(col, row) ??
+      getSelectableAttackTargetsAtCell(vm.view, col, row, selectableUnitTargetIds);
+    if (targets.length > 1) {
+      setAttackTargetPicker({ col, row, targetIds: targets.map((target: { id: string }) => target.id) });
       return;
     }
     setAttackTargetPicker(null);
-    vm.handleCellClick(col, row);
+    vm.handleCellClick(col, row, targets[0]?.id);
   };
 
   const chooseAttackTarget = (targetId: string) => {
@@ -183,7 +176,7 @@ export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm, mobile
           highlightedCells={vm.highlightedCells}
           hoveredAbilityId={vm.hoveredAbilityId}
           boardPreview={vm.boardPreview}
-          preferredUnitIds={selectableAttackTargetIds}
+          preferredUnitIds={selectableUnitTargetIds}
           doraPreview={
             vm.boardPreviewCenter && vm.actionMode !== "undyneEnergySpear"
               ? {

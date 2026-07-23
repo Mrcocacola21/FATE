@@ -20,6 +20,10 @@ import {
 import { resolveAoE } from "../../aoe";
 import { projectEventsForRecipient } from "../../view/events";
 import { HERO_DUOLINGO_ID, HERO_HASSAN_ID } from "../../heroes";
+import {
+  getHiddenCollisionFreeCells,
+  resolveHiddenOverlapCollision,
+} from "../../stealth";
 
 export function testRiderPathIgnoresHiddenEnemies() {
   const rng = new SeededRNG(42);
@@ -1121,7 +1125,7 @@ export function testAllyCannotStepOnStealthedAlly() {
 }
 
 export function testEnemyCanStepOnUnknownStealthedWithoutReveal() {
-  const rng = new SeededRNG(88);
+  const rng = makeRngSequence([0]);
   let state = createEmptyGame();
   const a1 = createDefaultArmy("P1");
   const a2 = createDefaultArmy("P2");
@@ -1155,6 +1159,21 @@ export function testEnemyCanStepOnUnknownStealthedWithoutReveal() {
   );
   assert(res.state.units[mover.id].hasMovedThisTurn === true, "move should be spent");
   assert(res.state.units[hidden.id].isStealthed === true, "hidden enemy should remain stealthed");
+  assert.deepStrictEqual(
+    res.state.units[hidden.id].position,
+    { col: 3, row: 3 },
+    "the hidden occupant should be displaced to the first free clockwise cell",
+  );
+  assert(
+    res.events.some(
+      (event) =>
+        event.type === "hiddenCollisionResolved" &&
+        event.displacedUnitId === hidden.id &&
+        event.dieSides === 8 &&
+        event.roll === 1,
+    ),
+    "movement should resolve the hidden overlap with an authoritative 1d8 roll",
+  );
   assert(
     res.state.knowledge["P1"][hidden.id] !== true,
     "mover knowledge should not include hidden enemy",
@@ -1243,6 +1262,41 @@ export function testHiddenAllyOnEnemyCellDoesNotBlockAttackOrReveal() {
   );
 
   console.log("hidden_ally_on_enemy_cell_does_not_block_attack_or_reveal passed");
+}
+
+export function testTwoVisibleEnemiesOnFirstArcherCellAreBothLegalById() {
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1"));
+  state = attachArmy(state, createDefaultArmy("P2"));
+  const archer = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.class === "archer",
+  )!;
+  const enemies = Object.values(state.units)
+    .filter((unit) => unit.owner === "P2")
+    .slice(0, 2);
+  state = setUnit(state, archer.id, { position: { col: 2, row: 2 } });
+  for (const enemy of enemies) {
+    state = setUnit(state, enemy.id, { position: { col: 2, row: 4 } });
+  }
+  state = initKnowledgeForOwners(toBattleState(state, "P1", archer.id));
+
+  const legal = getLegalAttackTargets(state, archer.id);
+  assert(
+    enemies.every((enemy) => legal.includes(enemy.id)),
+    "all visible enemies tied on the first occupied line cell should be legal unit-id targets",
+  );
+  const selected = enemies[1]!;
+  const declared = applyAction(
+    state,
+    { type: "attack", attackerId: archer.id, defenderId: selected.id } as any,
+    makeRngSequence([0.99]),
+  );
+  assert(
+    declared.state.pendingRoll?.context.defenderId === selected.id,
+    "cell occupancy order must not replace the explicitly selected targetUnitId",
+  );
+
+  console.log("two_visible_enemies_on_first_archer_cell_are_both_legal_by_id passed");
 }
 
 export function testUnknownStealthedEnemyDoesNotBlockArcherLine() {
@@ -1399,7 +1453,7 @@ export function testPathPassingAdjacentAfterStealthEntryDoesNotReveal() {
 }
 
 export function testEnemyCanStepOnRealStealthEntryCellWithoutReveal() {
-  const rng = makeRngSequence([0.99]);
+  const rng = makeRngSequence([0.99, 0]);
   let state = createEmptyGame();
   state = attachArmy(state, createDefaultArmy("P1"));
   state = attachArmy(state, createDefaultArmy("P2"));
@@ -1437,6 +1491,11 @@ export function testEnemyCanStepOnRealStealthEntryCellWithoutReveal() {
     "move onto unknown hidden enemy cell should be accepted",
   );
   assert(moved.state.units[hidden.id].isStealthed === true, "hidden unit should remain hidden");
+  assert.deepStrictEqual(
+    moved.state.units[hidden.id].position,
+    { col: 3, row: 3 },
+    "the successfully hidden occupant should be displaced north without revealing",
+  );
   assert(
     !moved.events.some((event) => event.type === "stealthRevealed"),
     "co-location move should not reveal hidden unit",
@@ -1447,6 +1506,123 @@ export function testEnemyCanStepOnRealStealthEntryCellWithoutReveal() {
   );
 
   console.log("enemy_can_step_on_real_stealth_entry_cell_without_reveal passed");
+}
+
+export function testHiddenCollisionClockwiseFilteringAndAuthoritativeRoll() {
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1"));
+  state = attachArmy(state, createDefaultArmy("P2"));
+  const units = Object.values(state.units);
+  const hidden = units.find((unit) => unit.owner === "P1" && unit.class === "assassin")!;
+  const entrant = units.find((unit) => unit.owner === "P2" && unit.class === "knight")!;
+  const blockers = units.filter((unit) => unit.id !== hidden.id && unit.id !== entrant.id);
+
+  state = setUnit(state, hidden.id, {
+    position: { col: 4, row: 4 },
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
+  state = setUnit(state, entrant.id, { position: { col: 4, row: 4 } });
+
+  // Leave exactly North, East, and South-West free. The retained numbering is:
+  // 1 = North, 2 = East, 3 = South-West.
+  const occupiedNeighbors = [
+    { col: 5, row: 3 }, // NE
+    { col: 5, row: 5 }, // SE
+    { col: 4, row: 5 }, // S
+    { col: 3, row: 4 }, // W
+    { col: 3, row: 3 }, // NW
+  ];
+  occupiedNeighbors.forEach((position, index) => {
+    state = setUnit(state, blockers[index]!.id, { position });
+  });
+
+  assert.deepStrictEqual(
+    getHiddenCollisionFreeCells(state, hidden.id),
+    [
+      { col: 4, row: 3 },
+      { col: 5, row: 4 },
+      { col: 3, row: 5 },
+    ],
+    "valid cells must retain north-to-clockwise ordering after filtering",
+  );
+
+  const resolved = resolveHiddenOverlapCollision(state, hidden.id, makeRngSequence([0.5]));
+  assert.deepStrictEqual(
+    resolved.state.units[hidden.id].position,
+    { col: 5, row: 4 },
+    "rolling 2 on 1d3 should select East",
+  );
+  const collision = resolved.events.find(
+    (event) => event.type === "hiddenCollisionResolved",
+  );
+  assert(
+    collision?.type === "hiddenCollisionResolved" &&
+      collision.dieSides === 3 &&
+      collision.roll === 2,
+    "the server-side die must have exactly the number of filtered free cells",
+  );
+
+  console.log("hidden_collision_clockwise_filtering_and_authoritative_roll passed");
+}
+
+export function testHiddenCollisionNoFreeCellsDealsExactlyOneDamageSafely() {
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1"));
+  state = attachArmy(state, createDefaultArmy("P2"));
+  const units = Object.values(state.units);
+  const hidden = units.find((unit) => unit.owner === "P1" && unit.class === "assassin")!;
+  const entrant = units.find((unit) => unit.owner === "P2" && unit.class === "knight")!;
+  const blockers = units.filter((unit) => unit.id !== hidden.id && unit.id !== entrant.id);
+
+  state = setUnit(state, hidden.id, {
+    position: { col: 4, row: 4 },
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
+  state = setUnit(state, entrant.id, { position: { col: 4, row: 4 } });
+  const clockwiseNeighbors = [
+    { col: 4, row: 3 },
+    { col: 5, row: 3 },
+    { col: 5, row: 4 },
+    { col: 5, row: 5 },
+    { col: 4, row: 5 },
+    { col: 3, row: 5 },
+    { col: 3, row: 4 },
+    { col: 3, row: 3 },
+  ];
+  clockwiseNeighbors.forEach((position, index) => {
+    state = setUnit(state, blockers[index]!.id, { position });
+  });
+
+  let rngCalls = 0;
+  const hpBefore = hidden.hp;
+  const resolved = resolveHiddenOverlapCollision(state, hidden.id, {
+    next: () => {
+      rngCalls += 1;
+      return 0;
+    },
+  });
+  assert(resolved.state.units[hidden.id].hp === hpBefore - 1, "exactly 1 damage is required");
+  assert(rngCalls === 0, "no die should be rolled when there are no free cells");
+  assert(resolved.state.units[hidden.id].isStealthed, "collision damage must not reveal the unit");
+  assert(
+    resolved.events.some(
+      (event) =>
+        event.type === "hiddenCollisionResolved" &&
+        event.displacedUnitId === hidden.id &&
+        event.dieSides === 0 &&
+        event.damage === 1,
+    ),
+    "the no-free-cell result should be explicit in the authoritative event",
+  );
+  const projected = projectEventsForRecipient(resolved.state, resolved.events, "P2");
+  assert(
+    !JSON.stringify(projected).includes(hidden.id),
+    "opponent collision events must not leak the hidden unit id",
+  );
+
+  console.log("hidden_collision_no_free_cells_deals_exactly_one_damage_safely passed");
 }
 
 export function testRevealDisplacesCoLocatedHiddenUnitDeterministically() {

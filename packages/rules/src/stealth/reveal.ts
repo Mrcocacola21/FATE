@@ -1,8 +1,6 @@
 import type { Coord, GameEvent, GameState, StealthRevealReason, UnitState } from "../model";
-import { isInsideBoard } from "../model";
 import type { RNG } from "../rng";
-import { applyGriffithFemtoRebirth } from "../actions/heroes/griffith";
-import { NEIGHBOR_OFFSETS } from "./constants";
+import { resolveHiddenOverlapCollision } from "./collision";
 import { clearUnitStealth } from "./state";
 
 export function revealUnit(
@@ -24,81 +22,12 @@ export function revealUnit(
   };
 
   let updated: UnitState = clearUnitStealth(unit);
-
-  const basePos: Coord = updated.position!;
-
-  const overlapping: UnitState[] = [];
-  for (const other of Object.values(nextState.units)) {
-    if (!other.isAlive || !other.position) continue;
-    if (other.id === updated.id) continue;
-    if (other.position.col === basePos.col && other.position.row === basePos.row) {
-      overlapping.push(other);
-    }
-  }
-
-  if (overlapping.length > 0) {
-    const freeNeighbors: Coord[] = [];
-    for (const offset of NEIGHBOR_OFFSETS) {
-      const candidate: Coord = {
-        col: basePos.col + offset.col,
-        row: basePos.row + offset.row,
-      };
-      if (!isInsideBoard(candidate, nextState.boardSize)) continue;
-
-      let occupied = false;
-      for (const other of Object.values(nextState.units)) {
-        if (!other.isAlive || !other.position) continue;
-        if (other.id === updated.id) continue;
-        if (other.position.col === candidate.col && other.position.row === candidate.row) {
-          occupied = true;
-          break;
-        }
-      }
-
-      if (!occupied) {
-        freeNeighbors.push(candidate);
-      }
-    }
-
-    if (freeNeighbors.length > 0) {
-      const index = Math.floor(rng.next() * freeNeighbors.length);
-      const destination = freeNeighbors[index];
-      const from: Coord = basePos;
-      updated = { ...updated, position: destination };
-      events.push({
-        type: "unitMoved",
-        unitId: updated.id,
-        from,
-        to: destination,
-      });
-    } else {
-      const newHp = Math.max(0, updated.hp - 1);
-      const deathPosition = updated.position ? { ...updated.position } : null;
-      updated = {
-        ...updated,
-        hp: newHp,
-      };
-      if (newHp <= 0) {
-        updated = {
-          ...updated,
-          isAlive: false,
-          position: null,
-        };
-        events.push({
-          type: "unitDied",
-          unitId: updated.id,
-          killerId: null,
-        });
-        const rebirth = applyGriffithFemtoRebirth(updated, deathPosition);
-        if (rebirth.transformed) {
-          updated = rebirth.unit;
-          events = [...events, ...rebirth.events];
-        }
-      }
-    }
-  }
-
   nextState.units[updated.id] = updated;
+
+  const collision = resolveHiddenOverlapCollision(nextState, updated.id, rng);
+  let resolvedState = collision.state;
+  events.push(...collision.events);
+  updated = resolvedState.units[updated.id] ?? updated;
 
   if (
     reason === "timerExpired" ||
@@ -106,21 +35,27 @@ export function revealUnit(
     reason === "forcedDisplacement" ||
     reason === "stakeTriggered"
   ) {
-    nextState.knowledge = {
-      ...nextState.knowledge,
-      P1: { ...(nextState.knowledge?.P1 ?? {}), [updated.id]: true },
-      P2: { ...(nextState.knowledge?.P2 ?? {}), [updated.id]: true },
+    resolvedState = {
+      ...resolvedState,
+      knowledge: {
+        ...resolvedState.knowledge,
+        P1: { ...(resolvedState.knowledge?.P1 ?? {}), [updated.id]: true },
+        P2: { ...(resolvedState.knowledge?.P2 ?? {}), [updated.id]: true },
+      },
     };
   }
 
   const clearedLastKnown = {
-    ...nextState.lastKnownPositions,
-    P1: { ...(nextState.lastKnownPositions?.P1 ?? {}) },
-    P2: { ...(nextState.lastKnownPositions?.P2 ?? {}) },
+    ...resolvedState.lastKnownPositions,
+    P1: { ...(resolvedState.lastKnownPositions?.P1 ?? {}) },
+    P2: { ...(resolvedState.lastKnownPositions?.P2 ?? {}) },
   };
   delete clearedLastKnown.P1[updated.id];
   delete clearedLastKnown.P2[updated.id];
-  nextState.lastKnownPositions = clearedLastKnown;
+  resolvedState = {
+    ...resolvedState,
+    lastKnownPositions: clearedLastKnown,
+  };
 
   events.push({
     type: "stealthRevealed",
@@ -129,7 +64,7 @@ export function revealUnit(
     revealerId,
   });
 
-  return { state: nextState, events };
+  return { state: resolvedState, events };
 }
 
 export function revealStealthedInArea(

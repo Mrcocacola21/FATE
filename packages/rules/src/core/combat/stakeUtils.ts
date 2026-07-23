@@ -1,5 +1,5 @@
 import type { Coord, GameEvent, GameState, StakeMarker, UnitState } from "../../model";
-import { coordsEqual, getUnitAt } from "../../board";
+import { coordsEqual, getUnitsAt } from "../../board";
 import { revealUnit } from "../../stealth";
 import type { RNG } from "../../rng";
 import { isUnitVisibleToPlayer } from "../../actions/shared";
@@ -17,8 +17,8 @@ export function getLegalStakePositions(
       if (hasRevealedStakeAt(state, pos)) {
         continue;
       }
-      const unit = getUnitAt(state, pos);
-      if (unit && !unit.isStealthed) {
+      const units = getUnitsAt(state, pos);
+      if (units.some((unit) => !unit.isStealthed)) {
         continue;
       }
       positions.push(pos);
@@ -45,14 +45,12 @@ export function isStakeBlockedByHiddenUnit(
   position: Coord,
   ignoreUnitId?: string
 ): boolean {
-  const occupant = getUnitAt(state, position);
-  if (!occupant || !occupant.isAlive || !occupant.isStealthed) {
-    return false;
-  }
-  if (ignoreUnitId && occupant.id === ignoreUnitId) {
-    return false;
-  }
-  return true;
+  return getUnitsAt(state, position).some(
+    (occupant) =>
+      occupant.isAlive &&
+      occupant.isStealthed &&
+      (!ignoreUnitId || occupant.id !== ignoreUnitId),
+  );
 }
 
 export function findStakeStopOnPath(

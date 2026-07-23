@@ -41,6 +41,15 @@ export type CoreGameEvent =
       to: Coord;
     }
   | {
+      type: "hiddenCollisionResolved";
+      displacedUnitId: string;
+      from: Coord;
+      to?: Coord;
+      dieSides: number;
+      roll?: number;
+      damage: 0 | 1;
+    }
+  | {
       type: "attackResolved";
       attackerId: string;
       defenderId: string;

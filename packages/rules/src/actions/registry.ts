@@ -31,6 +31,7 @@ import {
   canStartOrangeBoneNonMove,
   markOrangeBoneMoveFirstSatisfied,
 } from "./orangeBone";
+import { resolveHiddenOverlapsAfterTransitions } from "../stealth";
 
 class RecordingRng implements RNG {
   readonly values: number[] = [];
@@ -160,6 +161,22 @@ export function applyAction(
     return result;
   }
 
+  const collisionResolvedIds = new Set(
+    result.events
+      .filter((event) => event.type === "hiddenCollisionResolved")
+      .map((event) => event.displacedUnitId),
+  );
+  const collisionSafetyNet = resolveHiddenOverlapsAfterTransitions(
+    prevState,
+    result.state,
+    rng,
+    { alreadyResolvedUnitIds: collisionResolvedIds },
+  );
+  result = {
+    state: collisionSafetyNet.state,
+    events: [...result.events, ...collisionSafetyNet.events],
+  };
+
   result = markOrangeBoneMoveFirstSatisfied(prevState, result);
 
   const afterChikatilo = applyChikatiloPostAction(
@@ -210,9 +227,27 @@ export function applyAction(
     afterMettaton.events,
     rng
   );
-  const afterRuleAttack = applyRuleDeclarationAfterAttack(
-    afterNewBatch.state,
+  const postActionCollisionIds = new Set(
     afterNewBatch.events
+      .filter((event) => event.type === "hiddenCollisionResolved")
+      .map((event) => event.displacedUnitId),
+  );
+  const afterPostActionCollisions = resolveHiddenOverlapsAfterTransitions(
+    result.state,
+    afterNewBatch.state,
+    rng,
+    { alreadyResolvedUnitIds: postActionCollisionIds },
+  );
+  const afterPostActionCollisionCleanup = {
+    state: cleanupJackTrapsForDeaths(
+      afterPostActionCollisions.state,
+      afterPostActionCollisions.events,
+    ),
+    events: [...afterNewBatch.events, ...afterPostActionCollisions.events],
+  };
+  const afterRuleAttack = applyRuleDeclarationAfterAttack(
+    afterPostActionCollisionCleanup.state,
+    afterPostActionCollisionCleanup.events
   );
   const afterWinChecks = applyRuleDeclarationWinChecks(
     afterRuleAttack.state,

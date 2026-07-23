@@ -1137,17 +1137,36 @@ function testServerAcceptsMoveIntoUnknownHiddenOccupiedCell() {
     assert.deepEqual(
       room.state.units[mover.id].position,
       { col: 3, row: 4 },
-      "mover should occupy the hidden unit cell",
+      "mover should keep the entered destination",
     );
     assert.equal(
       room.state.units[hidden.id].isStealthed,
       true,
       "hidden unit should remain stealthed",
     );
+    assert.notDeepEqual(
+      room.state.units[hidden.id].position,
+      room.state.units[mover.id].position,
+      "the authoritative resolver must not leave the units broken-stacked",
+    );
     if (result.ok) {
+      assert(
+        result.events.some(
+          (event) =>
+            event.type === "hiddenCollisionResolved" &&
+            event.displacedUnitId === hidden.id,
+        ),
+        "accepted move should include the server-authoritative collision result",
+      );
       assert(
         !result.events.some((event) => event.type === "stealthRevealed"),
         "accepted move should not emit proximity reveal",
+      );
+      assert(
+        !JSON.stringify(
+          projectEventsForRecipient(room.state, result.events, "P2"),
+        ).includes(hidden.id),
+        "the mover's projected events must not reveal the displaced hidden unit",
       );
     }
   } finally {
@@ -1157,7 +1176,7 @@ function testServerAcceptsMoveIntoUnknownHiddenOccupiedCell() {
   console.log("hardening_server_accepts_move_into_unknown_hidden_cell passed");
 }
 
-function testServerTargetsVisibleEnemyOnHiddenAllySharedCell() {
+function testServerTargetsVisibleEnemyOnHiddenEnemySharedCell() {
   const { room } = makeSeatedRoom({ roomIdPrefix: "hardening-shared-cell-attack" });
   let state = attachArmy(
     attachArmy(createEmptyGame(), createDefaultArmy("P1")),
@@ -1166,19 +1185,19 @@ function testServerTargetsVisibleEnemyOnHiddenAllySharedCell() {
   const attacker = Object.values(state.units).find(
     (unit) => unit.owner === "P1" && unit.class === "knight",
   );
-  const hiddenAlly = Object.values(state.units).find(
-    (unit) => unit.owner === "P1" && unit.class === "assassin",
+  const hiddenEnemy = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "assassin",
   );
   const visibleEnemy = Object.values(state.units).find(
     (unit) => unit.owner === "P2" && unit.class === "spearman",
   );
-  assert(attacker && hiddenAlly && visibleEnemy, "shared-cell attack fixtures should exist");
+  assert(attacker && hiddenEnemy && visibleEnemy, "shared-cell attack fixtures should exist");
 
   state = setUnit(state, attacker.id, {
     position: { col: 3, row: 3 },
     turn: makeEmptyTurnEconomy(),
   });
-  state = setUnit(state, hiddenAlly.id, {
+  state = setUnit(state, hiddenEnemy.id, {
     position: { col: 4, row: 4 },
     isStealthed: true,
     stealthTurnsLeft: 3,
@@ -1194,18 +1213,21 @@ function testServerTargetsVisibleEnemyOnHiddenAllySharedCell() {
     turnQueue: [attacker.id, visibleEnemy.id],
     turnQueueIndex: 0,
     knowledge: {
-      P1: { [attacker.id]: true, [hiddenAlly.id]: true, [visibleEnemy.id]: true },
-      P2: { [visibleEnemy.id]: true },
+      P1: { [attacker.id]: true, [visibleEnemy.id]: true },
+      P2: { [hiddenEnemy.id]: true, [visibleEnemy.id]: true },
     },
   };
 
   const revisionBeforeIllegal = room.revision;
   const illegal = applyGameAction(
     room,
-    { type: "attack", attackerId: attacker.id, defenderId: hiddenAlly.id },
+    { type: "attack", attackerId: attacker.id, defenderId: hiddenEnemy.id },
     "P1",
   );
-  assert.equal(illegal.ok, false, "an allied target id must remain illegal");
+  assert.equal(illegal.ok, false, "an unseen hidden target id must remain illegal");
+  if (!illegal.ok) {
+    assert.equal(illegal.code, "Target is hidden from you.");
+  }
   assert.equal(room.revision, revisionBeforeIllegal, "illegal target id must not mutate the room");
 
   const accepted = applyGameAction(
@@ -1216,21 +1238,21 @@ function testServerTargetsVisibleEnemyOnHiddenAllySharedCell() {
   assert(accepted.ok, "server should accept the visible enemy target id");
   assert.equal(room.state.pendingRoll?.kind, "attack_attackerRoll");
   assert.equal(room.state.pendingRoll?.context.defenderId, visibleEnemy.id);
-  assert.equal(room.state.units[hiddenAlly.id].isStealthed, true);
+  assert.equal(room.state.units[hiddenEnemy.id].isStealthed, true);
 
-  const opponentView = makePlayerView(room.state, "P2");
+  const attackerView = makePlayerView(room.state, "P1");
   assert.equal(
-    opponentView.units[hiddenAlly.id],
+    attackerView.units[hiddenEnemy.id],
     undefined,
-    "attack declaration projection must not expose the hidden ally",
+    "attack declaration projection must not expose the hidden enemy",
   );
   assert(
-    !JSON.stringify(projectEventsForRecipient(room.state, accepted.events, "P2")).includes(
-      hiddenAlly.id,
+    !JSON.stringify(projectEventsForRecipient(room.state, accepted.events, "P1")).includes(
+      hiddenEnemy.id,
     ),
-    "attack declaration events must not mention the hidden ally",
+    "attack declaration events must not mention the hidden enemy",
   );
-  console.log("hardening_server_targets_visible_enemy_on_hidden_ally_shared_cell passed");
+  console.log("hardening_server_targets_visible_enemy_on_hidden_enemy_shared_cell passed");
 }
 
 function testServerRejectsInvalidFalsePromisePlacementsWithoutMutation() {
@@ -2282,7 +2304,7 @@ async function main() {
   testProjectedEventsRedactHiddenUnitPositions();
   testOrangeBoneDamageIsAuthoritativeAtActionStart();
   testServerAcceptsMoveIntoUnknownHiddenOccupiedCell();
-  testServerTargetsVisibleEnemyOnHiddenAllySharedCell();
+  testServerTargetsVisibleEnemyOnHiddenEnemySharedCell();
   testServerRejectsInvalidFalsePromisePlacementsWithoutMutation();
   testRiverBoatmanCommandsPreserveAuthoritativeMovementBudget();
   testMulticlassMovementCommandsStayAuthoritative();

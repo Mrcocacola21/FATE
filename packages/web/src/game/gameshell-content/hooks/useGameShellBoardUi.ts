@@ -1,4 +1,10 @@
-import { createCellClickHandler, createCellHoverHandler } from "../cellHandlers";
+import {
+  createCellClickHandler,
+  createCellHoverHandler,
+  getActiveUnitTargetIds,
+  getSelectableUnitTargetsForCell,
+  type CellClickContext,
+} from "../cellHandlers";
 import { PAPYRUS_ID } from "../../../rulesHints";
 import { useEffect, useState } from "react";
 
@@ -150,7 +156,7 @@ export function useGameShellBoardUi(params: any) {
     if (actionMode !== "attack") setZoroAttackTargetIds([]);
   }, [actionMode, selectedUnitId]);
 
-  const handleCellClick = createCellClickHandler({
+  const cellClickContext: CellClickContext = {
     view,
     playerId,
     joined,
@@ -254,7 +260,11 @@ export function useGameShellBoardUi(params: any) {
     tisonaTargetKeys,
     papyrusLineAxis,
     sendAction,
-  });
+  };
+  const handleCellClick = createCellClickHandler(cellClickContext);
+  const activeUnitTargetIds = getActiveUnitTargetIds(cellClickContext);
+  const getUnitTargetsAtCell = (col: number, row: number) =>
+    getSelectableUnitTargetsForCell(cellClickContext, col, row);
 
   const handleCellHover = createCellHoverHandler({
     actionMode,
@@ -340,6 +350,8 @@ export function useGameShellBoardUi(params: any) {
 
   return {
     handleCellClick,
+    activeUnitTargetIds,
+    getUnitTargetsAtCell,
     handleCellHover,
     boardPreviewCenter,
     boardDisabled,

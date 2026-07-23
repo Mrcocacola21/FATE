@@ -43,7 +43,6 @@ import {
 import {
   coordKey,
   getSelectableAttackTargetsAtCell,
-  getUnitAt,
   isCoordInList,
 } from "./helpers";
 import { getDonMadnessDirectionForCell } from "../targeting/donMadnessDirection";
@@ -222,6 +221,74 @@ export function submitUnitTargetClick({
   return true;
 }
 
+export function getActiveUnitTargetIds(context: CellClickContext): string[] {
+  if (context.isRiverBoatCarryChoice) return context.riverBoatCarryOptionIds;
+  if (context.isRiverTraLaLaTargetChoice) return context.riverTraLaLaTargetIds;
+  if (context.isGroznyTyrantAllyChoice) return context.groznyTyrantAllyOptionIds;
+  if (context.isJebeKhansShooterTargetChoice) return context.jebeKhansShooterTargetIds;
+  if (context.isHassanTrueEnemyTargetChoice) return context.hassanTrueEnemyTargetIds;
+  if (context.isAsgoreSoulParadePatienceTargetChoice) return context.asgorePatienceTargetIds;
+  if (context.isAsgoreSoulParadePerseveranceTargetChoice) {
+    return context.asgorePerseveranceTargetIds;
+  }
+  if (context.isAsgoreSoulParadeJusticeTargetChoice) return context.asgoreJusticeTargetIds;
+  if (context.isFriskPacifismHugsTargetChoice) return context.friskPacifismHugsTargetIds;
+  if (context.isFriskWarmWordsTargetChoice) return context.friskWarmWordsTargetIds;
+  if (context.isFriskPrecisionStrikeTargetChoice) return context.friskPrecisionStrikeTargetIds;
+  if (context.isLokiChickenTargetChoice) return context.lokiChickenTargetIds;
+  if (context.isLokiMindControlEnemyChoice) return context.lokiMindControlEnemyIds;
+  if (context.isLokiMindControlTargetChoice) return context.lokiMindControlTargetIds;
+  if (context.isHassanAssassinOrderSelection) return context.hassanAssassinOrderEligibleIds;
+
+  const attackTargets =
+    context.papyrusLongBoneAttackTargetIds.length > 0
+      ? context.papyrusLongBoneAttackTargetIds
+      : context.legalAttackTargets;
+  if (context.actionMode === "attack") return attackTargets;
+  if (context.actionMode === "jebeKhansShooter") return context.legalAttackTargets;
+  if (context.actionMode === "gutsArbalet" || context.actionMode === "gutsCannon") {
+    return context.gutsRangedTargetIds;
+  }
+  if (context.actionMode === "asgoreFireball") return context.asgoreFireballTargetIds;
+  if (context.actionMode === "undyneSpearThrow") return context.undyneSpearThrowTargetIds;
+  if (context.actionMode === "hassanTrueEnemy") return context.hassanTrueEnemyCandidateIds;
+  if (context.actionMode === "guideTraveler") return context.guideTravelerTargetIds;
+  if (context.actionMode === "assassinMark") return context.assassinMarkTargetIds;
+  if (context.actionMode === "demonDuelist") return context.legalAttackTargets;
+
+  const abilityId =
+    context.actionMode === "donWindmills"
+      ? DON_WINDMILLS_ID
+      : context.actionMode === "duolingoPush"
+        ? DUOLINGO_PUSH_NOTIFICATION_ID
+        : context.actionMode === "zoroOniGiri"
+          ? ZORO_ONI_GIRI_ID
+          : context.actionMode === "lucheLightRay" ||
+              context.actionMode === "lucheLightRayAround"
+            ? LUCHE_DIVINE_RAY_ID
+            : null;
+  if (!abilityId || !context.selectedUnitId) return [];
+  return (
+    context.view?.abilitiesByUnitId?.[context.selectedUnitId]?.find(
+      (ability) => ability.id === abilityId,
+    )?.targeting?.targetIds ?? []
+  );
+}
+
+export function getSelectableUnitTargetsForCell(
+  context: CellClickContext,
+  col: number,
+  row: number,
+) {
+  if (!context.view) return [];
+  return getSelectableAttackTargetsAtCell(
+    context.view,
+    col,
+    row,
+    getActiveUnitTargetIds(context),
+  );
+}
+
 export function createCellClickHandler(context: CellClickContext) {
   const {
     view,
@@ -340,6 +407,14 @@ export function createCellClickHandler(context: CellClickContext) {
       return;
     }
     if (view.phase === "lobby") return;
+    const targetFor = (validTargetIds: readonly string[]) => {
+      const targets = getSelectableAttackTargetsAtCell(view, col, row, validTargetIds);
+      return preferredTargetId
+        ? targets.find((candidate) => candidate.id === preferredTargetId)
+        : targets.length === 1
+          ? targets[0]
+          : undefined;
+    };
 
     if (isStakePlacement) {
       const key = coordKey({ col, row });
@@ -447,9 +522,8 @@ export function createCellClickHandler(context: CellClickContext) {
     }
 
     if (isRiverBoatCarryChoice) {
-      const target = getUnitAt(view, col, row);
+      const target = targetFor(riverBoatCarryOptionIds);
       if (!target || !pendingRoll) return;
-      if (!riverBoatCarryOptionIds.includes(target.id)) return;
       sendAction({
         type: "resolvePendingRoll",
         pendingRollId: pendingRoll.id,
@@ -481,9 +555,8 @@ export function createCellClickHandler(context: CellClickContext) {
     }
 
     if (isRiverTraLaLaTargetChoice) {
-      const target = getUnitAt(view, col, row);
+      const target = targetFor(riverTraLaLaTargetIds);
       if (!target || !pendingRoll) return;
-      if (!riverTraLaLaTargetIds.includes(target.id)) return;
       sendAction({
         type: "resolvePendingRoll",
         pendingRollId: pendingRoll.id,
@@ -526,9 +599,8 @@ export function createCellClickHandler(context: CellClickContext) {
     }
 
     if (isGroznyTyrantAllyChoice) {
-      const target = getUnitAt(view, col, row);
+      const target = targetFor(groznyTyrantAllyOptionIds);
       if (!target || !pendingRoll) return;
-      if (!groznyTyrantAllyOptionIds.includes(target.id)) return;
       sendAction({
         type: "resolvePendingRoll",
         pendingRollId: pendingRoll.id,
@@ -569,9 +641,8 @@ export function createCellClickHandler(context: CellClickContext) {
     }
 
     if (isJebeKhansShooterTargetChoice) {
-      const target = getUnitAt(view, col, row);
+      const target = targetFor(jebeKhansShooterTargetIds);
       if (!target || !pendingRoll) return;
-      if (!jebeKhansShooterTargetIds.includes(target.id)) return;
       sendAction({
         type: "resolvePendingRoll",
         pendingRollId: pendingRoll.id,
@@ -588,6 +659,7 @@ export function createCellClickHandler(context: CellClickContext) {
         col,
         row,
         validTargetIds: hassanTrueEnemyTargetIds,
+        preferredTargetId,
         submit: (targetId) =>
           sendAction({
             type: "resolvePendingRoll",
@@ -602,9 +674,8 @@ export function createCellClickHandler(context: CellClickContext) {
     }
 
     if (isAsgoreSoulParadePatienceTargetChoice) {
-      const target = getUnitAt(view, col, row);
+      const target = targetFor(asgorePatienceTargetIds);
       if (!target || !pendingRoll) return;
-      if (!asgorePatienceTargetIds.includes(target.id)) return;
       sendAction({
         type: "resolvePendingRoll",
         pendingRollId: pendingRoll.id,
@@ -614,9 +685,8 @@ export function createCellClickHandler(context: CellClickContext) {
     }
 
     if (isAsgoreSoulParadePerseveranceTargetChoice) {
-      const target = getUnitAt(view, col, row);
+      const target = targetFor(asgorePerseveranceTargetIds);
       if (!target || !pendingRoll) return;
-      if (!asgorePerseveranceTargetIds.includes(target.id)) return;
       sendAction({
         type: "resolvePendingRoll",
         pendingRollId: pendingRoll.id,
@@ -629,9 +699,8 @@ export function createCellClickHandler(context: CellClickContext) {
     }
 
     if (isAsgoreSoulParadeJusticeTargetChoice) {
-      const target = getUnitAt(view, col, row);
+      const target = targetFor(asgoreJusticeTargetIds);
       if (!target || !pendingRoll) return;
-      if (!asgoreJusticeTargetIds.includes(target.id)) return;
       sendAction({
         type: "resolvePendingRoll",
         pendingRollId: pendingRoll.id,
@@ -655,9 +724,8 @@ export function createCellClickHandler(context: CellClickContext) {
     }
 
     if (isFriskPacifismHugsTargetChoice) {
-      const target = getUnitAt(view, col, row);
+      const target = targetFor(friskPacifismHugsTargetIds);
       if (!target || !pendingRoll) return;
-      if (!friskPacifismHugsTargetIds.includes(target.id)) return;
       sendAction({
         type: "resolvePendingRoll",
         pendingRollId: pendingRoll.id,
@@ -667,9 +735,8 @@ export function createCellClickHandler(context: CellClickContext) {
     }
 
     if (isFriskWarmWordsTargetChoice) {
-      const target = getUnitAt(view, col, row);
+      const target = targetFor(friskWarmWordsTargetIds);
       if (!target || !pendingRoll) return;
-      if (!friskWarmWordsTargetIds.includes(target.id)) return;
       sendAction({
         type: "resolvePendingRoll",
         pendingRollId: pendingRoll.id,
@@ -679,9 +746,8 @@ export function createCellClickHandler(context: CellClickContext) {
     }
 
     if (isFriskPrecisionStrikeTargetChoice) {
-      const target = getUnitAt(view, col, row);
+      const target = targetFor(friskPrecisionStrikeTargetIds);
       if (!target || !pendingRoll) return;
-      if (!friskPrecisionStrikeTargetIds.includes(target.id)) return;
       sendAction({
         type: "resolvePendingRoll",
         pendingRollId: pendingRoll.id,
@@ -691,9 +757,8 @@ export function createCellClickHandler(context: CellClickContext) {
     }
 
     if (isLokiChickenTargetChoice) {
-      const target = getUnitAt(view, col, row);
+      const target = targetFor(lokiChickenTargetIds);
       if (!target || !pendingRoll) return;
-      if (!lokiChickenTargetIds.includes(target.id)) return;
       sendAction({
         type: "resolvePendingRoll",
         pendingRollId: pendingRoll.id,
@@ -709,6 +774,7 @@ export function createCellClickHandler(context: CellClickContext) {
         col,
         row,
         validTargetIds: lokiMindControlEnemyIds,
+        preferredTargetId,
         submit: (targetId) =>
           sendAction({
             type: "resolvePendingRoll",
@@ -727,6 +793,7 @@ export function createCellClickHandler(context: CellClickContext) {
         col,
         row,
         validTargetIds: lokiMindControlTargetIds,
+        preferredTargetId,
         submit: (targetId) =>
           sendAction({
             type: "resolvePendingRoll",
@@ -739,9 +806,8 @@ export function createCellClickHandler(context: CellClickContext) {
     }
 
     if (isHassanAssassinOrderSelection) {
-      const target = getUnitAt(view, col, row);
+      const target = targetFor(hassanAssassinOrderEligibleIds);
       if (!target) return;
-      if (!hassanAssassinOrderEligibleIds.includes(target.id)) return;
       setHassanAssassinOrderSelections((prev) => {
         const exists = prev.includes(target.id);
         if (exists) {
@@ -777,8 +843,8 @@ export function createCellClickHandler(context: CellClickContext) {
         : ZORO_ONI_GIRI_ID;
       const targeting = view.abilitiesByUnitId?.[selectedUnitId]?.find((ability) => ability.id === abilityId)?.targeting;
       if (!newHeroAbilityTargetId) {
-        const target = getUnitAt(view, col, row);
-        if (!target?.isAlive || !target.position || !targeting?.targetIds?.includes(target.id)) return;
+        const target = targetFor(targeting?.targetIds ?? []);
+        if (!target?.isAlive || !target.position) return;
         setNewHeroAbilityTargetId(target.id);
         return;
       }
@@ -828,9 +894,8 @@ export function createCellClickHandler(context: CellClickContext) {
         });
         return;
       }
-      const target = getUnitAt(view, col, row);
+      const target = targetFor(legalAttackTargets);
       if (!target?.isAlive || !target.position || !source?.position || target.owner === source.owner) return;
-      if (!legalAttackTargets.includes(target.id)) return;
       sendGameAction({
         type: "useAbility",
         unitId: selectedUnitId,
@@ -973,9 +1038,8 @@ export function createCellClickHandler(context: CellClickContext) {
     }
 
     if (actionMode === "jebeKhansShooter") {
-      const target = getUnitAt(view, col, row);
+      const target = targetFor(legalAttackTargets);
       if (!target) return;
-      if (!legalAttackTargets.includes(target.id)) return;
       sendGameAction({
         type: "useAbility",
         unitId: selectedUnitId,
@@ -986,9 +1050,8 @@ export function createCellClickHandler(context: CellClickContext) {
     }
 
     if (actionMode === "gutsArbalet") {
-      const target = getUnitAt(view, col, row);
+      const target = targetFor(gutsRangedTargetIds);
       if (!target) return;
-      if (!gutsRangedTargetIds.includes(target.id)) return;
       sendGameAction({
         type: "useAbility",
         unitId: selectedUnitId,
@@ -999,9 +1062,8 @@ export function createCellClickHandler(context: CellClickContext) {
     }
 
     if (actionMode === "gutsCannon") {
-      const target = getUnitAt(view, col, row);
+      const target = targetFor(gutsRangedTargetIds);
       if (!target) return;
-      if (!gutsRangedTargetIds.includes(target.id)) return;
       sendGameAction({
         type: "useAbility",
         unitId: selectedUnitId,
@@ -1012,9 +1074,8 @@ export function createCellClickHandler(context: CellClickContext) {
     }
 
     if (actionMode === "asgoreFireball") {
-      const target = getUnitAt(view, col, row);
+      const target = targetFor(asgoreFireballTargetIds);
       if (!target) return;
-      if (!asgoreFireballTargetIds.includes(target.id)) return;
       sendGameAction({
         type: "useAbility",
         unitId: selectedUnitId,
@@ -1038,9 +1099,8 @@ export function createCellClickHandler(context: CellClickContext) {
     }
 
     if (actionMode === "undyneSpearThrow") {
-      const target = getUnitAt(view, col, row);
+      const target = targetFor(undyneSpearThrowTargetIds);
       if (!target) return;
-      if (!undyneSpearThrowTargetIds.includes(target.id)) return;
       sendGameAction({
         type: "useAbility",
         unitId: selectedUnitId,
@@ -1073,6 +1133,7 @@ export function createCellClickHandler(context: CellClickContext) {
         col,
         row,
         validTargetIds: hassanTrueEnemyCandidateIds,
+        preferredTargetId,
         submit: (targetId) =>
           sendGameAction({
             type: "useAbility",
@@ -1085,9 +1146,8 @@ export function createCellClickHandler(context: CellClickContext) {
     }
 
     if (actionMode === "guideTraveler") {
-      const target = getUnitAt(view, col, row);
+      const target = targetFor(guideTravelerTargetIds);
       if (!target) return;
-      if (!guideTravelerTargetIds.includes(target.id)) return;
       sendGameAction({
         type: "useAbility",
         unitId: selectedUnitId,
@@ -1139,9 +1199,8 @@ export function createCellClickHandler(context: CellClickContext) {
     }
 
     if (actionMode === "assassinMark") {
-      const target = getUnitAt(view, col, row);
+      const target = targetFor(assassinMarkTargetIds);
       if (!target) return;
-      if (!assassinMarkTargetIds.includes(target.id)) return;
       sendGameAction({
         type: "useAbility",
         unitId: selectedUnitId,
@@ -1152,9 +1211,8 @@ export function createCellClickHandler(context: CellClickContext) {
     }
 
     if (actionMode === "demonDuelist") {
-      const target = getUnitAt(view, col, row);
+      const target = targetFor(legalAttackTargets);
       if (!target) return;
-      if (!legalAttackTargets.includes(target.id)) return;
       sendGameAction({
         type: "useAbility",
         unitId: selectedUnitId,

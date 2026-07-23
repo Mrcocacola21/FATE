@@ -909,6 +909,53 @@ function testPendingRollPresentationProjectionIsHiddenSafeAndBackwardCompatible(
   console.log("pending_roll_presentation_projection_is_hidden_safe passed");
 }
 
+function testHiddenCollisionProjectionIsOwnerDetailedAndOpponentSafe() {
+  let state = setupState();
+  const hidden = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "assassin",
+  );
+  assert(hidden, "hidden collision unit should exist");
+  state = setUnit(state, hidden.id, {
+    position: { col: 4, row: 3 },
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
+  const events: GameEvent[] = [
+    {
+      type: "hiddenCollisionResolved",
+      displacedUnitId: hidden.id,
+      from: { col: 4, row: 4 },
+      to: { col: 4, row: 3 },
+      dieSides: 5,
+      roll: 1,
+      damage: 0,
+    },
+    {
+      type: "unitMoved",
+      unitId: hidden.id,
+      from: { col: 4, row: 4 },
+      to: { col: 4, row: 3 },
+    },
+  ];
+
+  const ownerEvents = projectEventsForRecipient(state, events, "P2");
+  assert.deepEqual(ownerEvents, events, "owner should receive the detailed collision result");
+  for (const recipient of ["P1", "spectator"] as const) {
+    const projected = projectEventsForRecipient(state, events, recipient);
+    const serialized = JSON.stringify(projected);
+    assert(!serialized.includes(hidden.id), `${recipient} must not receive the hidden unit id`);
+    assert(!serialized.includes('"col":4'), `${recipient} must not receive hidden coordinates`);
+    assert.deepEqual(
+      projected.map((event) => event.type),
+      ["hiddenCollisionResolved", "unitMoved"],
+      `${recipient} should receive only safe semantic event types`,
+    );
+  }
+  assert(!makePlayerView(state, "P1").units[hidden.id], "collision must not reveal the unit");
+
+  console.log("hidden_collision_projection_is_owner_detailed_and_opponent_safe passed");
+}
+
 function main() {
   testHiddenEnemyOmitted();
   testKnownStealthedEnemyUsesLastKnown();
@@ -924,6 +971,7 @@ function main() {
   testDonMadnessDirectionProjectionIsOwnerPrivateAndValid();
   testPapyrusBoneChoiceProjectionIsOwnerPrivate();
   testPendingRollPresentationProjectionIsHiddenSafeAndBackwardCompatible();
+  testHiddenCollisionProjectionIsOwnerDetailedAndOpponentSafe();
 }
 
 main();

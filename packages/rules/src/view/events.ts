@@ -100,7 +100,13 @@ function projectEventForRecipient(
       return [{ type: event.type, unitId: event.unitId } as GameEvent];
     case "unitMoved":
       if (isUnitVisibleToRecipient(state, event.unitId, recipient)) return [event];
-      return [{ type: event.type, unitId: event.unitId } as GameEvent];
+      return [redactedEvent(event.type)];
+    case "hiddenCollisionResolved": {
+      const owner = unitOwner(state, event.displacedUnitId);
+      if (recipient !== "spectator" && recipient === owner) return [event];
+      if (isUnitVisibleToRecipient(state, event.displacedUnitId, recipient)) return [event];
+      return [redactedEvent(event.type)];
+    }
     case "stealthEntered": {
       const owner = unitOwner(state, event.unitId);
       if (recipient !== "spectator" && owner === recipient) return [event];

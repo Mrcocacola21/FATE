@@ -56,8 +56,8 @@ export function getDoraTargetCenters(view: PlayerView, casterId: string): Coord[
     let row = origin.row + dir.row;
     while (col >= 0 && row >= 0 && col < size && row < size) {
       targets.push({ col, row });
-      const unit = getUnitAt(view, col, row);
-      if (unit && unit.owner !== caster.owner) {
+      const units = getUnitsAt(view, col, row);
+      if (units.some((unit) => unit.owner !== caster.owner)) {
         break;
       }
       col += dir.col;
@@ -80,11 +80,15 @@ export function getArcherLikeTargetIds(view: PlayerView, casterId: string): stri
     let col = origin.col + dir.col;
     let row = origin.row + dir.row;
     while (col >= 0 && row >= 0 && col < size && row < size) {
-      const unit = getUnitAt(view, col, row);
-      if (unit && unit.owner !== caster.owner) {
-        if (!seen.has(unit.id)) {
-          seen.add(unit.id);
-          targets.push(unit.id);
+      const enemies = getUnitsAt(view, col, row).filter(
+        (unit) => unit.owner !== caster.owner,
+      );
+      if (enemies.length > 0) {
+        for (const enemy of enemies) {
+          if (!seen.has(enemy.id)) {
+            seen.add(enemy.id);
+            targets.push(enemy.id);
+          }
         }
         break;
       }
@@ -277,8 +281,8 @@ export function getAttackRangeCells(view: PlayerView, unitId: string): Coord[] {
         let row = origin.row + dir.row;
         while (col >= 0 && row >= 0 && col < size && row < size) {
           cells.push({ col, row });
-          const occupant = getUnitAt(view, col, row);
-          if (occupant && occupant.owner !== unit.owner) {
+          const occupants = getUnitsAt(view, col, row);
+          if (occupants.some((occupant) => occupant.owner !== unit.owner)) {
             break;
           }
           col += dir.col;

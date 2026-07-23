@@ -13,6 +13,7 @@ import {
   canUnitKnowUnitExactPosition,
   getLineBlockersForPlayer,
 } from "../visibility";
+import { coordsEqual } from "../board";
 import { canAttackAcrossRuleDeclarationBoundary } from "../ruleDeclarations";
 import { distanceInfo, isSpearmanReachTarget, isTricksterReachTarget } from "./math";
 
@@ -86,7 +87,8 @@ export function canAttackTarget(
         defPos,
         attacker.id
       );
-      return blockers[0] === defender.id;
+      const firstBlocker = blockers[0] ? state.units[blockers[0]] : undefined;
+      return !!firstBlocker?.position && coordsEqual(firstBlocker.position, defPos);
     }
 
     case "trickster": {

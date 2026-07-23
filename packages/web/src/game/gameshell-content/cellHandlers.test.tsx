@@ -5,8 +5,15 @@ import type { PlayerView, UnitState } from "rules";
 import { Board } from "../../components/Board";
 import { buildActionPreview } from "../targeting/buildActionPreview";
 import { buildPreviewCellMap } from "../targeting/previewTypes";
-import { createCellClickHandler } from "./cellHandlers";
-import { getSelectableAttackTargetsAtCell } from "./helpers";
+import {
+  createCellClickHandler,
+  getActiveUnitTargetIds,
+  getSelectableUnitTargetsForCell,
+} from "./cellHandlers";
+import {
+  getArcherLikeTargetIds,
+  getSelectableAttackTargetsAtCell,
+} from "./helpers";
 
 function unit(overrides: Partial<UnitState> & Pick<UnitState, "id" | "owner" | "position">) {
   return {
@@ -108,6 +115,40 @@ test("basic attack click selects the legal enemy above a hidden ally", () => {
   ]);
 });
 
+test("visible enemy stays directly targetable when an unseen hidden enemy is omitted", () => {
+  const { view, attacker, hiddenAlly, enemies } = sharedCellView();
+  hiddenAlly.owner = "P2";
+  delete view.units[hiddenAlly.id];
+  const sent: unknown[] = [];
+  const context = {
+    view,
+    playerId: "P1",
+    joined: true,
+    isSpectator: false,
+    hasBlockingRoll: false,
+    boardSelectionPending: false,
+    actionMode: "attack",
+    selectedUnitId: attacker.id,
+    legalAttackTargets: [enemies[0].id],
+    papyrusLongBoneAttackTargetIds: [],
+    zoroAttackTargetIds: [],
+    setZoroAttackTargetIds: () => undefined,
+    sendGameAction: (action: unknown) => sent.push(action),
+    sendAction: () => undefined,
+  } as never;
+
+  assert.deepEqual(
+    getSelectableUnitTargetsForCell(context, 4, 4).map((target) => target.id),
+    [enemies[0].id],
+    "projected targeting must count only the visible legal unit",
+  );
+  createCellClickHandler(context)(4, 4);
+  assert.deepEqual(sent, [
+    { type: "attack", attackerId: attacker.id, defenderId: enemies[0].id },
+  ]);
+  assert.equal(JSON.stringify(view).includes(hiddenAlly.id), false, "the hidden id must not leak");
+});
+
 test("shared-cell target resolution excludes hidden allies and requires a choice for enemies", () => {
   const { view, attacker, hiddenAlly, enemies } = sharedCellView(1);
   const legalIds = enemies.map((enemy) => enemy.id);
@@ -145,6 +186,51 @@ test("shared-cell target resolution excludes hidden allies and requires a choice
   handler(4, 4, enemies[1].id);
   assert.deepEqual(sent, [
     { type: "attack", attackerId: attacker.id, defenderId: enemies[1].id },
+  ]);
+});
+
+test("ability target chooser uses visible legal unit ids on desktop and mobile taps", () => {
+  const { view, attacker, enemies } = sharedCellView(1);
+  const sent: unknown[] = [];
+  const context = {
+    view,
+    playerId: "P1",
+    joined: true,
+    isSpectator: false,
+    hasBlockingRoll: false,
+    boardSelectionPending: false,
+    actionMode: "gutsArbalet",
+    selectedUnitId: attacker.id,
+    gutsRangedTargetIds: enemies.map((enemy) => enemy.id),
+    legalAttackTargets: [],
+    papyrusLongBoneAttackTargetIds: [],
+    sendGameAction: (action: unknown) => sent.push(action),
+    sendAction: () => undefined,
+  } as never;
+
+  assert.deepEqual(getActiveUnitTargetIds(context), enemies.map((enemy) => enemy.id));
+  assert.deepEqual(
+    getArcherLikeTargetIds(view, attacker.id),
+    enemies.map((enemy) => enemy.id),
+    "ranged target discovery must keep every visible enemy on the first occupied cell",
+  );
+  assert.deepEqual(
+    getSelectableUnitTargetsForCell(context, 4, 4).map((target) => target.id),
+    enemies.map((enemy) => enemy.id),
+    "both visible legal ability targets should be offered to the shared picker",
+  );
+
+  const handler = createCellClickHandler(context);
+  handler(4, 4);
+  assert.equal(sent.length, 0, "ambiguous ability tap should wait for a target choice");
+  handler(4, 4, enemies[1].id);
+  assert.deepEqual(sent, [
+    {
+      type: "useAbility",
+      unitId: attacker.id,
+      abilityId: "gutsArbalet",
+      payload: { targetId: enemies[1].id },
+    },
   ]);
 });
 
