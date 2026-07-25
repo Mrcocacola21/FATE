@@ -528,6 +528,7 @@ export const en = {
     intel: "Intel",
     lastKnownPositions: "Last known positions",
     hp: "HP {{hp}}",
+    hpHidden: "HP hidden",
     healthShort: "HP",
     berserkerDefenseShort: "BD",
     rows: "Rows",

@@ -13,6 +13,34 @@ import type {
 import type { PendingMove } from "./shared";
 import type { UnitState } from "./unit";
 
+export interface ProjectedUnitForRoster {
+  id: string;
+  owner: PlayerId;
+  class: UnitState["class"];
+  figureId?: string;
+  heroId?: string;
+  transformed?: boolean;
+  isAlive: boolean;
+  isPlaced: boolean;
+  isStealthed: boolean;
+  blindUntilOwnTurnStart?: boolean;
+  isChicken?: boolean;
+  duolingoBerserkerUnlocked?: boolean;
+  gutsBerserkModeActive?: boolean;
+  kanekiCentipedeUnlocked?: boolean;
+  mettatonExUnlocked?: boolean;
+  mettatonNeoUnlocked?: boolean;
+  papyrusUnbelieverActive?: boolean;
+  sansUnbelieverUnlocked?: boolean;
+  undyneImmortalActive?: boolean;
+  friskPacifismDisabled?: boolean;
+  hpVisibility: "exact" | "hidden";
+  /** Present only when hpVisibility is "exact". */
+  hp?: number;
+  /** Present only when hpVisibility is "exact". */
+  maxHp?: number;
+}
+
 export interface JackTrapMarker {
   id: string;
   sourceUnitId: string;
@@ -152,6 +180,8 @@ export type PlayerView = Omit<
   pendingAoEPreview: AoEPreview | null;
   stakeMarkers: { position: Coord; isRevealed: boolean }[];
   jackTraps: VisibleJackTrapMarker[];
+  /** Viewer-safe unit summaries for roster/Players-tab UI. */
+  rosterUnits: Record<string, ProjectedUnitForRoster>;
   abilitiesByUnitId: Record<string, AbilityView[]>;
   legal?: LegalView;
   legalIntents?: LegalIntents;

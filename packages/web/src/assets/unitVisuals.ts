@@ -24,6 +24,26 @@ export interface HeroVisualVariantPreview {
   figure: string | null;
 }
 
+export type UnitVisualInput = Pick<UnitState, "class" | "figureId" | "heroId"> &
+  Partial<
+    Pick<
+      UnitState,
+      | "lokiChickenSources"
+      | "duolingoBerserkerUnlocked"
+      | "transformed"
+      | "gutsBerserkModeActive"
+      | "kanekiCentipedeUnlocked"
+      | "mettatonNeoUnlocked"
+      | "mettatonExUnlocked"
+      | "papyrusUnbelieverActive"
+      | "sansUnbelieverUnlocked"
+      | "undyneImmortalActive"
+      | "friskPacifismDisabled"
+    >
+  > & {
+    isChicken?: boolean;
+  };
+
 const HERO_VARIANTS: Record<string, UnitVisualVariant[]> = {
   duolingo: ["duolingo-berserker"],
   "grand-kaiser": ["engineering-miracle"],
@@ -52,13 +72,15 @@ const VARIANT_LABEL_KEYS: Record<UnitVisualVariant, string> = {
   femto: "visuals.forms.femto",
 };
 
-function getBaseAssetId(unit: UnitState | null | undefined): string {
+function getBaseAssetId(unit: UnitVisualInput | null | undefined): string {
   return unit?.figureId ?? unit?.heroId ?? unit?.class ?? "_missing";
 }
 
-export function getUnitVisualVariant(unit: UnitState | null | undefined): UnitVisualVariant | null {
+export function getUnitVisualVariant(
+  unit: UnitVisualInput | null | undefined,
+): UnitVisualVariant | null {
   if (!unit) return null;
-  if ((unit.lokiChickenSources?.length ?? 0) > 0) return "chicken";
+  if (unit.isChicken || (unit.lokiChickenSources?.length ?? 0) > 0) return "chicken";
   if (unit.heroId === "femto") return "femto";
   if (unit.heroId === "duolingo" && unit.duolingoBerserkerUnlocked) {
     return "duolingo-berserker";
@@ -77,7 +99,7 @@ export function getUnitVisualVariant(unit: UnitState | null | undefined): UnitVi
   return null;
 }
 
-export function getUnitTokenAsset(unit: UnitState | null | undefined): UnitVisualAsset {
+export function getUnitTokenAsset(unit: UnitVisualInput | null | undefined): UnitVisualAsset {
   const variant = getUnitVisualVariant(unit);
   if (variant) {
     return {
@@ -93,7 +115,7 @@ export function getUnitTokenAsset(unit: UnitState | null | undefined): UnitVisua
   return { id, src, variant: null, isFallback: src === FALLBACK_TOKEN };
 }
 
-export function getUnitFigureAsset(unit: UnitState | null | undefined): UnitVisualAsset {
+export function getUnitFigureAsset(unit: UnitVisualInput | null | undefined): UnitVisualAsset {
   const variant = getUnitVisualVariant(unit);
   const variantFigure =
     variant && variant in VARIANT_FIGURE_ARTS
@@ -113,7 +135,7 @@ export function getUnitFigureAsset(unit: UnitState | null | undefined): UnitVisu
   return { id, src, variant, isFallback: src === FALLBACK_FIGURE };
 }
 
-export function getUnitVisualSignature(unit: UnitState | null | undefined): string {
+export function getUnitVisualSignature(unit: UnitVisualInput | null | undefined): string {
   const asset = getUnitTokenAsset(unit);
   return `${getBaseAssetId(unit)}:${asset.id}`;
 }

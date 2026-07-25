@@ -1,12 +1,9 @@
-import { useEffect, useMemo, useState, type FC } from "react";
-import type { UnitClass, UnitState } from "rules";
+import { useEffect, useState, type FC } from "react";
 import { EventLog } from "../../../components/EventLog";
 import { TurnQueueTracker } from "../../../components/TurnQueueTracker";
-import { PanelCard, SectionHeader, StatusBadge } from "../../../components/ui";
-import { getUnitTokenAsset } from "../../../assets/registry";
-import { getClassLabel, getUnitFigureDisplayName } from "../../../i18n/displayMetadata";
+import { PanelCard, SectionHeader } from "../../../components/ui";
 import { useI18n } from "../../../i18n";
-import { getMaxHp, PAPYRUS_LONG_BONE_ID } from "../../../rulesHints";
+import { PAPYRUS_LONG_BONE_ID } from "../../../rulesHints";
 import { Tabs } from "../../../ui";
 import { TestRoomPanel } from "../../../testRoom/TestRoomPanel";
 import { shouldShowTestRoomPanel } from "../../../testRoom/testRoomApi";
@@ -29,6 +26,7 @@ import { StatusSection } from "../../components/RightPanel/sections/StatusSectio
 import { CurrentTaskPanel } from "./CurrentTaskPanel";
 import { RuleDeclarationStatus } from "./RuleDeclarationStatus";
 import { ActiveFieldInfo } from "../../components/ActiveFieldInfo";
+import { PlayersRosterSection } from "./PlayersRosterSection";
 
 export type MatchSideTab = "unit" | "actions" | "rules" | "players" | "log";
 
@@ -38,149 +36,6 @@ interface SidePanelTabsProps {
   onActiveTabChange?: (tab: MatchSideTab) => void;
   hideTask?: boolean;
   hideTabs?: boolean;
-}
-
-function unitStatusLabel(unit: UnitState, t: ReturnType<typeof useI18n>["t"]) {
-  if (!unit.isAlive) return t("game.statusDefeated");
-  if (!unit.position) return t("common.unplaced");
-  if (unit.isStealthed) return t("game.statusHidden");
-  return t("game.statusAlive");
-}
-
-function RosterList({
-  owner,
-  units,
-  activeUnitId,
-  selectedUnitId,
-  onSelectUnit,
-}: {
-  owner: "P1" | "P2";
-  units: UnitState[];
-  activeUnitId: string | null | undefined;
-  selectedUnitId: string | null;
-  onSelectUnit: (unitId: string | null) => void;
-}) {
-  const { language, t } = useI18n();
-
-  return (
-    <PanelCard variant="hud" className="p-4">
-      <SectionHeader
-        kicker={t("game.roster")}
-        title={owner}
-        action={<StatusBadge tone={owner === "P1" ? "info" : "danger"}>{units.length}</StatusBadge>}
-      />
-      {units.length === 0 ? (
-        <div className="panel-card-muted mt-3 px-4 py-6 text-center text-sm text-slate-500 dark:text-slate-400">
-          {t("game.noVisibleUnits")}
-        </div>
-      ) : (
-        <div className="mt-3 space-y-2">
-          {units.map((unit) => {
-            const tokenAsset = getUnitTokenAsset(unit);
-            const maxHp = getMaxHp(unit.class as UnitClass, unit.heroId, unit.transformed);
-            const selected = selectedUnitId === unit.id;
-            const active = activeUnitId === unit.id;
-            const heroName = getUnitFigureDisplayName(unit, { language, t });
-
-            return (
-              <button
-                key={unit.id}
-                type="button"
-                className={`flex w-full items-center gap-3 rounded-xl border px-2.5 py-2.5 text-left text-xs shadow-sm transition focus-visible:ring-4 focus-visible:ring-amber-500/15 ${
-                  selected
-                    ? "border-amber-500 bg-amber-50 text-amber-950 ring-2 ring-amber-500/15 dark:bg-amber-950/35 dark:text-amber-100"
-                    : "border-stone-300/70 bg-stone-100/55 text-stone-700 hover:border-amber-500/45 hover:bg-white dark:border-stone-800 dark:bg-black/20 dark:text-stone-200 dark:hover:border-amber-500/40 dark:hover:bg-stone-900"
-                } ${!unit.isAlive ? "opacity-55" : ""}`}
-                onClick={() => onSelectUnit(unit.id)}
-              >
-                <img
-                  src={tokenAsset.src}
-                  alt=""
-                  className="h-10 w-10 shrink-0 rounded-lg border border-white/40 bg-stone-950 object-contain shadow dark:border-black/50"
-                />
-                <div className="min-w-0 flex-1">
-                  <div className="flex min-w-0 items-center gap-2">
-                    <span className="truncate font-semibold">{heroName}</span>
-                    {active ? (
-                      <StatusBadge tone="warning">{t("common.current")}</StatusBadge>
-                    ) : null}
-                  </div>
-                  <div className="mt-0.5 truncate text-[11px] opacity-75">
-                    {getClassLabel(unit.class, t)}
-                  </div>
-                  <div className="mt-1 flex flex-wrap gap-1.5">
-                    <StatusBadge tone={unit.isAlive ? "success" : "danger"}>
-                      {unit.hp}/{maxHp} {t("game.healthShort")}
-                    </StatusBadge>
-                    <StatusBadge tone={unit.isStealthed ? "special" : "neutral"}>
-                      {unitStatusLabel(unit, t)}
-                    </StatusBadge>
-                    {unit.blindUntilOwnTurnStart ? (
-                      <StatusBadge tone="warning">{t("game.blind")}</StatusBadge>
-                    ) : null}
-                  </div>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      )}
-    </PanelCard>
-  );
-}
-
-function PlayersRosterSection({
-  view,
-  selectedUnitId,
-  onSelectUnit,
-}: {
-  view: any;
-  selectedUnitId: string | null;
-  onSelectUnit: (unitId: string | null) => void;
-}) {
-  const { t } = useI18n();
-  const unitsByOwner = useMemo(() => {
-    const entries = Object.values(view.units ?? {}) as UnitState[];
-    return {
-      P1: entries.filter((unit) => unit.owner === "P1"),
-      P2: entries.filter((unit) => unit.owner === "P2"),
-    };
-  }, [view.units]);
-  const lastKnownEntries = Object.entries(view.lastKnownPositions ?? {});
-
-  return (
-    <div className="space-y-3">
-      <RosterList
-        owner="P1"
-        units={unitsByOwner.P1}
-        activeUnitId={view.activeUnitId}
-        selectedUnitId={selectedUnitId}
-        onSelectUnit={onSelectUnit}
-      />
-      <RosterList
-        owner="P2"
-        units={unitsByOwner.P2}
-        activeUnitId={view.activeUnitId}
-        selectedUnitId={selectedUnitId}
-        onSelectUnit={onSelectUnit}
-      />
-      {lastKnownEntries.length > 0 ? (
-        <PanelCard variant="muted" className="p-4">
-          <SectionHeader kicker={t("game.intel")} title={t("game.lastKnownPositions")} />
-          <div className="mt-3 flex flex-wrap gap-2 text-xs">
-            {lastKnownEntries.map(([unitId, coord], index) => {
-              const position = coord as { col?: number; row?: number };
-              return (
-                <StatusBadge key={unitId} tone="neutral">
-                  {t("common.unknown")} {index + 1}: {position.col ?? "-"}, {position.row ?? "-"}
-                </StatusBadge>
-              );
-            })}
-          </div>
-        </PanelCard>
-      ) : null}
-    </div>
-  );
 }
 
 function ActionTab({
@@ -466,11 +321,6 @@ export const SidePanelTabs: FC<SidePanelTabsProps> = ({
 
         {activeTab === "players" ? (
           <div className="space-y-3">
-            <FriendlyUnitsSection
-              friendlyUnits={panelVm.friendlyUnits}
-              selectedUnitId={vm.selectedUnitId}
-              onSelectUnit={rightPanelProps.onSelectUnit}
-            />
             <PlayersRosterSection
               view={vm.view}
               selectedUnitId={vm.selectedUnitId}

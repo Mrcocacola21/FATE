@@ -259,6 +259,104 @@ function testFinalBoardRevealOnlyAfterGameOver() {
   console.log("view_final_board_reveal_only_after_game_over passed");
 }
 
+function testRosterHpProjectionIsViewerSafe() {
+  let state = setupState();
+  const p1Unit = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.class === "archer",
+  )!;
+  const p2Unit = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "rider",
+  )!;
+  const hiddenP2Unit = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "assassin",
+  )!;
+
+  state = setUnit(state, p1Unit.id, { hp: 4 });
+  state = setUnit(state, p2Unit.id, { hp: 3 });
+  state = setUnit(state, hiddenP2Unit.id, {
+    hp: 2,
+    position: { col: 4, row: 4 },
+    isStealthed: true,
+    stealthTurnsLeft: 3,
+  });
+  state = { ...state, phase: "battle" };
+
+  const p1View = makePlayerView(state, "P1");
+  const p2View = makePlayerView(state, "P2");
+
+  assert.equal(p1View.rosterUnits[p1Unit.id].hpVisibility, "exact");
+  assert.equal(p1View.rosterUnits[p1Unit.id].hp, 4);
+  assert.equal(typeof p1View.rosterUnits[p1Unit.id].maxHp, "number");
+  assert.equal(p1View.rosterUnits[p2Unit.id].hpVisibility, "hidden");
+  assert.equal("hp" in p1View.rosterUnits[p2Unit.id], false);
+  assert.equal("maxHp" in p1View.rosterUnits[p2Unit.id], false);
+
+  assert.equal(p2View.rosterUnits[p2Unit.id].hpVisibility, "exact");
+  assert.equal(p2View.rosterUnits[p2Unit.id].hp, 3);
+  assert.equal(typeof p2View.rosterUnits[p2Unit.id].maxHp, "number");
+  assert.equal(p2View.rosterUnits[p1Unit.id].hpVisibility, "hidden");
+  assert.equal("hp" in p2View.rosterUnits[p1Unit.id], false);
+  assert.equal("maxHp" in p2View.rosterUnits[p1Unit.id], false);
+
+  assert.equal(
+    p1View.rosterUnits[hiddenP2Unit.id],
+    undefined,
+    "an unknown hidden enemy must not be introduced by the roster projection",
+  );
+  assert.equal(p2View.rosterUnits[hiddenP2Unit.id].hp, 2);
+
+  const beforeDamage = p1View.rosterUnits[p2Unit.id];
+  const damaged = setUnit(state, p2Unit.id, { hp: 1 });
+  const afterDamage = makePlayerView(damaged, "P1").rosterUnits[p2Unit.id];
+  assert.deepEqual(
+    afterDamage,
+    beforeDamage,
+    "enemy roster data must not change in a way that reveals HP damage",
+  );
+  assert.equal(
+    makePlayerView(damaged, "P1").units[p2Unit.id].hp,
+    1,
+    "the shared board projection remains unchanged for intentional board consumers",
+  );
+
+  const defeated = setUnit(damaged, p2Unit.id, { hp: 0, isAlive: false });
+  const defeatedRoster = makePlayerView(defeated, "P1").rosterUnits[p2Unit.id];
+  assert.equal(defeatedRoster.isAlive, false);
+  assert.equal(defeatedRoster.hpVisibility, "hidden");
+  assert.equal("hp" in defeatedRoster, false);
+  assert.equal("maxHp" in defeatedRoster, false);
+
+  const ended: GameState = {
+    ...defeated,
+    phase: "ended",
+    gameOver: {
+      winnerPlayerId: "P1",
+      loserPlayerId: "P2",
+      reason: "allEnemyUnitsDefeated",
+      endedAtRevision: 9,
+      endedAtTurn: 4,
+    },
+  };
+  const endedView = makePlayerView(ended, "P1");
+  assert.equal(
+    endedView.units[p2Unit.id].hp,
+    0,
+    "the documented final board reveal remains available outside the Players roster",
+  );
+  assert.equal(endedView.rosterUnits[p2Unit.id].hpVisibility, "hidden");
+  assert.equal("hp" in endedView.rosterUnits[p2Unit.id], false);
+
+  const spectatorRoster = makeSpectatorView(ended).rosterUnits;
+  assert(
+    Object.values(spectatorRoster).every(
+      (unit) => unit.hpVisibility === "hidden" && !("hp" in unit) && !("maxHp" in unit),
+    ),
+    "spectators have no own roster and must not receive roster HP",
+  );
+
+  console.log("view_roster_hp_projection_is_viewer_safe passed");
+}
+
 function testChikatiloTrackedHiddenTargetProjectionIsPrivate() {
   let state = createEmptyGame();
   state = attachArmy(state, createDefaultArmy("P1", { assassin: HERO_CHIKATILO_ID }));
@@ -1045,6 +1143,7 @@ function main() {
   testHiddenEnemyOmitted();
   testKnownStealthedEnemyUsesLastKnown();
   testFinalBoardRevealOnlyAfterGameOver();
+  testRosterHpProjectionIsViewerSafe();
   testChikatiloTrackedHiddenTargetProjectionIsPrivate();
   testChikatiloMarkEventProjectionRedactsPrivateTarget();
   testGroupedSemanticEventProjectionFiltersHiddenTargets();

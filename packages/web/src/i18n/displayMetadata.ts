@@ -696,7 +696,7 @@ export interface UnitDisplayNameOptions {
  * of exposing the service unit id.
  */
 export function getUnitFigureDisplayName(
-  unit: UnitState,
+  unit: Pick<UnitState, "class" | "figureId" | "heroId">,
   { language, t }: UnitDisplayNameOptions,
 ): string {
   const projectedFigureIds = [unit.figureId, unit.heroId].filter(

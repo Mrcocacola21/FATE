@@ -125,6 +125,7 @@ function makeView(unit: UnitState): PlayerView {
     turnQueue: [unit.id],
     turnQueueIndex: 0,
     units: { [unit.id]: unit },
+    rosterUnits: {},
     events: [],
     knowledge: { P1: {}, P2: {} },
     lastKnownPositions: {},

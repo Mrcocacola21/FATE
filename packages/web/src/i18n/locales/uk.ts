@@ -530,6 +530,7 @@ export const uk = {
     intel: "Розвіддані",
     lastKnownPositions: "Останні відомі позиції",
     hp: "Здоров’я: {{hp}}",
+    hpHidden: "ОЗ приховано",
     healthShort: "ОЗ",
     berserkerDefenseShort: "АБ",
     rows: "Рядки",

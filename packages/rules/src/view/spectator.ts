@@ -7,6 +7,7 @@ import {
 } from "./helpers";
 import { buildPendingAoEPreview, getPendingCombatQueueCount } from "./pending";
 import { projectRuleDeclarationState } from "./ruleDeclarations";
+import { projectRosterUnits } from "./roster";
 
 export function makeSpectatorView(state: GameState): PlayerView {
   const {
@@ -46,6 +47,7 @@ export function makeSpectatorView(state: GameState): PlayerView {
         isRevealed: true,
       })),
     units,
+    rosterUnits: projectRosterUnits(units, "spectator"),
     knowledge: { P1: {}, P2: {} },
     lastKnownPositions: {},
     forestMarkers,

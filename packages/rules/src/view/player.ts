@@ -17,6 +17,7 @@ import {
   getVisiblePendingRollForPlayer,
 } from "./pending";
 import { projectRuleDeclarationState } from "./ruleDeclarations";
+import { projectRosterUnits } from "./roster";
 
 /**
  * Build a player-specific view of the game state.
@@ -128,6 +129,7 @@ export function makePlayerView(state: GameState, playerId: PlayerId): PlayerView
         isRevealed: trap.isRevealed === true,
       })),
     units,
+    rosterUnits: projectRosterUnits(units, playerId),
     knowledge,
     lastKnownPositions,
     forestMarkers,

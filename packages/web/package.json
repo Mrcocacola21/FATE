@@ -19,6 +19,7 @@
     "test:mobile": "tsx --test src/layout/*.test.tsx src/game/pendingState.test.ts src/roomSession.test.ts src/game/layout/MobileMatchLayout.test.tsx src/game/gameshell-content/components/GlobalPendingTaskLayer.test.tsx src/game/gameshell-content/components/BattleEndScreen.test.tsx src/modes/DraftHeroPreview.test.tsx src/game/gameshell-content/components/RuleDeclarationChoicePanel.test.tsx",
     "test:assets": "tsx --test src/assets/unitVisuals.test.ts src/assets/boardFields.test.tsx src/components/BoardMarkers.test.tsx",
     "test:placement": "tsx --test src/game/components/RightPanel/sections/PlacementSection.test.tsx",
+    "test:players": "tsx --test src/game/gameshell-content/components/SidePanelTabs.test.tsx",
     "test:effects": "tsx --test src/game/effects/*.test.ts src/features/vfx/*.test.ts src/features/vfx/*.test.tsx src/pages/VfxPreviewPage.test.tsx",
     "test:sfx": "tsx --test src/assets/sfx/*.test.ts src/features/sfx/*.test.ts",
     "test:vfx": "tsx --test src/features/vfx/*.test.ts src/features/vfx/*.test.tsx src/pages/VfxPreviewPage.test.tsx",
