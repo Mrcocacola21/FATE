@@ -1,4 +1,4 @@
-export type { TyrantChainState } from "./types";
+export type { TyrantResolutionState } from "./types";
 export {
   findGroznyTyrantAttempt,
   findGroznyTyrantAttempts,

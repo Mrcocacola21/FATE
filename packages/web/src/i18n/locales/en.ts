@@ -633,6 +633,9 @@ export const en = {
     primaryActions: "Actions",
     abilityActions: "Abilities",
     passiveImpulseInfo: "Info · Passive / Automatic",
+    tyrantMovementRule:
+      "After the second ally finished by Tyrant, Grozny gains movement options from all allies finished by Tyrant.",
+    tyrantMovementSources: "Tyrant movement sources: {{sources}}",
     abilityCounter: "Ability counter",
     available: "Available",
     spent: "Spent",
@@ -990,7 +993,7 @@ export const en = {
           execution: {
             name: "Execution attempt",
             description:
-              "Ivan moves to a reachable attack position as if using a movement roll of 6, without spending movement, then attacks the ally.",
+              "Ivan moves to a reachable attack position as if using a movement roll of 6, without spending movement, then attacks one ally. That Tyrant resolution ends after this target.",
           },
           reward: {
             name: "Successful execution",

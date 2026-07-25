@@ -1,4 +1,10 @@
-import type { Coord, GameState, UnitClass, UnitState } from "../model";
+import type {
+  Coord,
+  GameState,
+  GroznyTyrantMovementSource,
+  UnitClass,
+  UnitState,
+} from "../model";
 import { isInsideBoard } from "../model";
 import { ALL_DIRS, DIAG_DIRS, ORTHO_DIRS, addCoord } from "../board";
 import { canUnitEnterCell } from "../visibility";
@@ -7,6 +13,7 @@ import {
   HERO_ARTEMIDA_ID,
   HERO_DUOLINGO_ID,
   HERO_GRAND_KAISER_ID,
+  HERO_GROZNY_ID,
   HERO_GUTS_ID,
   HERO_KALADIN_ID,
   HERO_KANEKI_ID,
@@ -51,7 +58,7 @@ function uniqueModes(modes: UnitClass[]): UnitClass[] {
   return result;
 }
 
-export function getUnitMovementClasses(unit: UnitState): UnitClass[] {
+function getIntrinsicUnitMovementClasses(unit: UnitState): UnitClass[] {
   if (hasMettatonRiderMovement(unit)) {
     return hasMettatonBerserkerFeature(unit)
       ? ["rider", "berserker"]
@@ -86,6 +93,53 @@ export function getUnitMovementClasses(unit: UnitState): UnitClass[] {
     return ["rider", "berserker"];
   }
   return [unit.class];
+}
+
+export function getGroznyTyrantMovementSources(
+  game: GameState,
+  groznyUnit: UnitState,
+): GroznyTyrantMovementSource[] {
+  if (groznyUnit.heroId !== HERO_GROZNY_ID) return [];
+
+  const sourceIds = [...new Set(groznyUnit.tyrantFinishedAllyIds ?? [])];
+  const snapshots = new Map(
+    (groznyUnit.tyrantMovementSources ?? []).map((source) => [source.unitId, source]),
+  );
+
+  return sourceIds.flatMap((unitId) => {
+    const snapshot = snapshots.get(unitId);
+    if (snapshot) {
+      return [{
+        ...snapshot,
+        movementClasses: uniqueModes(snapshot.movementClasses),
+      }];
+    }
+
+    const sourceUnit = game.units[unitId];
+    if (!sourceUnit) return [];
+    return [{
+      unitId,
+      class: sourceUnit.class,
+      figureId: sourceUnit.figureId,
+      heroId: sourceUnit.heroId,
+      movementClasses: getIntrinsicUnitMovementClasses(sourceUnit),
+    }];
+  });
+}
+
+export function getUnitMovementClasses(unit: UnitState): UnitClass[] {
+  const intrinsic = getIntrinsicUnitMovementClasses(unit);
+  if (
+    unit.heroId !== HERO_GROZNY_ID ||
+    new Set(unit.tyrantFinishedAllyIds ?? []).size < 2
+  ) {
+    return intrinsic;
+  }
+
+  const inherited = (unit.tyrantMovementSources ?? []).flatMap(
+    (source) => source.movementClasses,
+  );
+  return uniqueModes([...intrinsic, ...inherited]);
 }
 
 function movesKnight(state: GameState, unit: UnitState): Coord[] {

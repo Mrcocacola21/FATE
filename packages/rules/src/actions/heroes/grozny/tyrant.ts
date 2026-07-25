@@ -8,7 +8,10 @@ import type {
   UnitState,
 } from "../../../model";
 import { isInsideBoard } from "../../../model";
-import { getBerserkerMovesForRoll } from "../../../movement";
+import {
+  getBerserkerMovesForRoll,
+  getUnitMovementClasses,
+} from "../../../movement";
 import { canUnitEnterCell } from "../../../visibility";
 import {
   ABILITY_GROZNY_INVADE_TIME,
@@ -30,7 +33,7 @@ import type {
   TyrantAttackCellChoiceContext,
   TyrantAttackCellOption,
   TyrantAttempt,
-  TyrantChainState,
+  TyrantResolutionState,
   TyrantMode,
   TyrantOptionChoiceContext,
 } from "./types";
@@ -200,16 +203,6 @@ export function getGroznyFinishableAllies(
     });
 }
 
-function attemptsToOptions(
-  attempts: TyrantAttempt[]
-): TyrantAttackCellOption[] {
-  return attempts.map((attempt) => ({
-    targetId: attempt.targetId,
-    position: attempt.moveTo,
-    mode: attempt.mode,
-  }));
-}
-
 function getTyrantModes(
   state: GameState,
   grozny: UnitState,
@@ -229,24 +222,10 @@ function getTyrantModes(
   return modes;
 }
 
-function getTyrantChoiceOptions(
-  state: GameState,
-  grozny: UnitState,
-  includeInvadeTime: boolean
-): TyrantAttackCellOption[] {
-  const options: TyrantAttackCellOption[] = [];
-  for (const mode of getTyrantModes(state, grozny, includeInvadeTime)) {
-    options.push(...attemptsToOptions(findGroznyTyrantAttempts(state, grozny, mode)));
-  }
-  return options;
-}
-
 function requestTyrantOptionChoice(
   state: GameState,
   grozny: UnitState,
   options: TyrantMode[],
-  kills: number,
-  remaining: number,
   allowSkip: boolean
 ): ApplyResult {
   if (options.length === 0) {
@@ -255,8 +234,6 @@ function requestTyrantOptionChoice(
   const context: TyrantOptionChoiceContext = {
     groznyId: grozny.id,
     options,
-    kills,
-    remaining,
     allowSkip,
   };
   return requestRoll(
@@ -273,8 +250,6 @@ function requestTyrantAllyChoice(
   grozny: UnitState,
   mode: TyrantMode,
   options: string[],
-  kills: number,
-  remaining: number,
   allowSkip: boolean
 ): ApplyResult {
   if (options.length === 0) {
@@ -284,8 +259,6 @@ function requestTyrantAllyChoice(
     groznyId: grozny.id,
     mode,
     options,
-    kills,
-    remaining,
     allowSkip,
   };
   return requestRoll(
@@ -303,8 +276,6 @@ function requestTyrantAttackCellChoice(
   mode: TyrantMode,
   targetId: string,
   cells: Coord[],
-  kills: number,
-  remaining: number,
   allowSkip: boolean
 ): ApplyResult {
   if (cells.length === 0) {
@@ -320,8 +291,6 @@ function requestTyrantAttackCellChoice(
     mode,
     targetId,
     options,
-    kills,
-    remaining,
     allowSkip,
   };
   return requestRoll(
@@ -339,8 +308,6 @@ function continueTyrantFlow(
   params: {
     mode?: TyrantMode;
     targetId?: string;
-    kills: number;
-    remaining: number;
     allowSkip: boolean;
     includeInvadeTime: boolean;
   }
@@ -361,8 +328,6 @@ function continueTyrantFlow(
         state,
         currentGrozny,
         modes,
-        params.kills,
-        params.remaining,
         params.allowSkip
       );
     }
@@ -382,8 +347,6 @@ function continueTyrantFlow(
         currentGrozny,
         mode,
         allies.map((ally) => ally.id),
-        params.kills,
-        params.remaining,
         params.allowSkip
       );
     }
@@ -405,8 +368,6 @@ function continueTyrantFlow(
     mode,
     targetId,
     cells,
-    params.kills,
-    params.remaining,
     params.allowSkip
   );
 }
@@ -461,7 +422,7 @@ export function maybeTriggerGroznyTyrant(
     return { state, events: [] };
   }
 
-  return requestTyrantOptionChoice(state, unit, modes, 0, 0, true);
+  return requestTyrantOptionChoice(state, unit, modes, true);
 }
 
 function isTyrantOptionPayload(
@@ -552,8 +513,6 @@ export function resolveGroznyTyrantOptionChoice(
 
   return continueTyrantFlow(clearPendingRoll(state), grozny, {
     mode: choice.mode,
-    kills: context.kills,
-    remaining: context.remaining,
     allowSkip: context.allowSkip,
     includeInvadeTime: choice.mode === "invadeTime",
   });
@@ -591,8 +550,6 @@ export function resolveGroznyTyrantAllyChoice(
   return continueTyrantFlow(clearPendingRoll(state), grozny, {
     mode: context.mode,
     targetId: choice.targetId,
-    kills: context.kills,
-    remaining: context.remaining,
     allowSkip: context.allowSkip,
     includeInvadeTime: context.mode === "invadeTime",
   });
@@ -703,9 +660,8 @@ export function resolveGroznyTyrantAttackCellChoice(
     }),
     tyrant: {
       groznyId: movedUnit.id,
-      kills: context.kills,
-      remaining: Math.max(0, context.remaining - 1),
-    } as TyrantChainState,
+      targetId: choice.targetId,
+    } as TyrantResolutionState,
   };
 
   const requested = requestRoll(
@@ -729,8 +685,14 @@ export function handleGroznyTyrantAfterAttack(
   rng: RNG
 ): { state: GameState; events: GameEvent[]; requested: boolean } {
   void rng;
-  const tyrant = context.tyrant as TyrantChainState | undefined;
+  const tyrant = context.tyrant as TyrantResolutionState | undefined;
   if (!tyrant) {
+    return { state, events, requested: false };
+  }
+  if (
+    tyrant.groznyId !== context.attackerId ||
+    tyrant.targetId !== context.defenderId
+  ) {
     return { state, events, requested: false };
   }
 
@@ -744,62 +706,60 @@ export function handleGroznyTyrantAfterAttack(
     return { state, events, requested: false };
   }
 
-  let nextState = state;
-  let kills = tyrant.kills;
-  let remaining = tyrant.remaining;
-
-  const attacker = nextState.units[context.attackerId];
-  if (!attacker) {
-    return { state: nextState, events, requested: false };
+  const attacker = state.units[context.attackerId];
+  const defender = state.units[context.defenderId];
+  if (
+    !attacker ||
+    !defender ||
+    !isGrozny(attacker) ||
+    defender.owner !== attacker.owner ||
+    defender.id === attacker.id
+  ) {
+    return { state, events, requested: false };
   }
 
-  if (attackEvent.hit && attackEvent.defenderHpAfter <= 0) {
-    const maxHp = getUnitBaseMaxHp(attacker);
-    const healed = Math.min(maxHp, attacker.hp + attackEvent.damage);
-    const boosted: UnitState = {
-      ...attacker,
-      attack: attacker.attack + 1,
-      hp: healed,
-    };
-    nextState = {
-      ...nextState,
+  if (!attackEvent.hit || attackEvent.defenderHpAfter > 0) {
+    return { state, events, requested: false };
+  }
+
+  const maxHp = getUnitBaseMaxHp(attacker);
+  const healed = Math.min(maxHp, attacker.hp + attackEvent.damage);
+  const finishedIds = [...new Set([
+    ...(attacker.tyrantFinishedAllyIds ?? []),
+    defender.id,
+  ])];
+  const existingSources = attacker.tyrantMovementSources ?? [];
+  const tyrantMovementSources = existingSources.some(
+    (source) => source.unitId === defender.id,
+  )
+    ? existingSources
+    : [
+        ...existingSources,
+        {
+          unitId: defender.id,
+          class: defender.class,
+          figureId: defender.figureId,
+          heroId: defender.heroId,
+          movementClasses: getUnitMovementClasses(defender),
+        },
+      ];
+
+  const boosted: UnitState = {
+    ...attacker,
+    attack: attacker.attack + 1,
+    hp: healed,
+    tyrantFinishedAllyIds: finishedIds,
+    tyrantMovementSources,
+  };
+  return {
+    state: {
+      ...state,
       units: {
-        ...nextState.units,
+        ...state.units,
         [boosted.id]: boosted,
       },
-    };
-
-    kills += 1;
-    remaining += 1;
-    if (kills >= 2) {
-      remaining += 1;
-    }
-  }
-
-  if (remaining <= 0) {
-    return { state: nextState, events, requested: false };
-  }
-
-  const grozny = nextState.units[context.attackerId];
-  if (!grozny || !grozny.isAlive || !grozny.position) {
-    return { state: nextState, events, requested: false };
-  }
-
-  const options = getTyrantChoiceOptions(nextState, grozny, false);
-  if (options.length === 0) {
-    return { state: nextState, events, requested: false };
-  }
-
-  const requested = continueTyrantFlow(nextState, grozny, {
-    kills,
-    remaining,
-    allowSkip: false,
-    includeInvadeTime: false,
-  });
-
-  return {
-    state: requested.state,
-    events: [...events, ...requested.events],
-    requested: requested.state !== nextState || requested.events.length > 0,
+    },
+    events,
+    requested: false,
   };
 }

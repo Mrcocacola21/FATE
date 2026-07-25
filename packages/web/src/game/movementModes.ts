@@ -12,31 +12,45 @@ function uniqueClasses(classes: UnitClass[]): UnitClass[] {
 }
 
 function movementClassesForProjectedUnit(unit: UnitState): UnitClass[] {
+  let intrinsic: UnitClass[];
   if (unit.heroId === "mettaton") {
-    return unit.mettatonNeoUnlocked ? ["rider", "berserker"] : ["rider"];
-  }
-  if (unit.heroId === "guts") {
-    return unit.gutsBerserkModeActive
+    intrinsic = unit.mettatonNeoUnlocked ? ["rider", "berserker"] : ["rider"];
+  } else if (unit.heroId === "guts") {
+    intrinsic = unit.gutsBerserkModeActive
       ? ["berserker", "knight", "assassin"]
       : ["berserker", "knight"];
-  }
-  if (unit.heroId === "kaladin") return ["spearman", "trickster", "berserker"];
-  if (unit.heroId === "kaneki") {
-    return uniqueClasses([
+  } else if (unit.heroId === "kaladin") {
+    intrinsic = ["spearman", "trickster", "berserker"];
+  } else if (unit.heroId === "kaneki") {
+    intrinsic = uniqueClasses([
       unit.class,
       "assassin",
       ...(unit.kanekiCentipedeUnlocked ? (["rider"] as UnitClass[]) : []),
     ]);
+  } else if (unit.heroId === "duolingo" && unit.duolingoBerserkerUnlocked) {
+    intrinsic = uniqueClasses([unit.class, "berserker"]);
+  } else if (unit.heroId === "artemida") {
+    intrinsic = uniqueClasses([unit.class, "trickster"]);
+  } else if (unit.heroId === "undyne") {
+    intrinsic = uniqueClasses([unit.class, "spearman"]);
+  } else if (unit.heroId === "grand-kaiser" && unit.transformed) {
+    intrinsic = ["archer", "rider", "berserker"];
+  } else {
+    intrinsic = [unit.class];
   }
-  if (unit.heroId === "duolingo" && unit.duolingoBerserkerUnlocked) {
-    return uniqueClasses([unit.class, "berserker"]);
+
+  if (
+    unit.heroId !== "grozny" ||
+    new Set(unit.tyrantFinishedAllyIds ?? []).size < 2
+  ) {
+    return intrinsic;
   }
-  if (unit.heroId === "artemida") return uniqueClasses([unit.class, "trickster"]);
-  if (unit.heroId === "undyne") return uniqueClasses([unit.class, "spearman"]);
-  if (unit.heroId === "grand-kaiser" && unit.transformed) {
-    return ["archer", "rider", "berserker"];
-  }
-  return [unit.class];
+  return uniqueClasses([
+    ...intrinsic,
+    ...(unit.tyrantMovementSources ?? []).flatMap(
+      (source) => source.movementClasses,
+    ),
+  ]);
 }
 
 /**

@@ -264,11 +264,12 @@ import {
   testGroznyTyrantOmitsInvadeTimeWhenUnavailableButKeepsNormal,
   testGroznyTyrantOffersNormalAndInvadeTimeWhenBothLegal,
   testGroznyTyrantRequiresAllyChoiceWhenMultipleQualify,
+  testGroznyTyrantRejectsEnemySelfAndDeadTargetsWithoutMutation,
   testGroznyTyrantRejectsInvalidOriginWithoutSpending,
   testGroznyTyrantDuplicateOriginResolutionDoesNotRepeatEffects,
   testGroznyTyrantPendingChoiceProjectsOnlyToOwner,
   testGroznyTyrantRequiresReachableAttackPositionWithinRoll6,
-  testGroznyTyrantChainGrantsExtraMovesFromSecondKill,
+  testGroznyTyrantSingleUseTracksAndGainsCumulativeMovement,
   testGroznyInvadeTimeRequiresFullChargesAndConsumesMove,
 } from "./heroes/grozny.test";
 import {
@@ -748,11 +749,12 @@ function main(): void {
   testGroznyTyrantOmitsInvadeTimeWhenUnavailableButKeepsNormal();
   testGroznyTyrantOffersNormalAndInvadeTimeWhenBothLegal();
   testGroznyTyrantRequiresAllyChoiceWhenMultipleQualify();
+  testGroznyTyrantRejectsEnemySelfAndDeadTargetsWithoutMutation();
   testGroznyTyrantRejectsInvalidOriginWithoutSpending();
   testGroznyTyrantDuplicateOriginResolutionDoesNotRepeatEffects();
   testGroznyTyrantPendingChoiceProjectsOnlyToOwner();
   testGroznyTyrantRequiresReachableAttackPositionWithinRoll6();
-  testGroznyTyrantChainGrantsExtraMovesFromSecondKill();
+  testGroznyTyrantSingleUseTracksAndGainsCumulativeMovement();
   testGroznyInvadeTimeRequiresFullChargesAndConsumesMove();
   testChikatiloPlacementListSubstitution();
   testFalseTrailTokenPlacementLegalTargets();

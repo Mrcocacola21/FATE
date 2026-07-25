@@ -38,8 +38,7 @@ export interface AttackRollContext extends Record<string, unknown> {
   };
   tyrant?: {
     groznyId: string;
-    kills: number;
-    remaining: number;
+    targetId: string;
   };
   jebeKhansShooter?: {
     casterId: string;

@@ -6,6 +6,7 @@ import { useI18n } from "../../../i18n";
 import {
   getAbilityDisplay,
   getAbilityTypeLabel,
+  getUnitFigureDisplayName,
   localizeServerText,
 } from "../../../i18n/displayMetadata";
 import { getAbilityDisplayDetails, getAbilityResourceMax } from "../../abilityDisplayDetails";
@@ -16,6 +17,7 @@ import { shouldRenderManualAbilityButton } from "./rightPanelHelpers";
 import {
   CHIKATILO_DECOY_ID,
   GRAND_KAISER_ID,
+  GROZNY_TYRANT_ID,
   KAISER_ENGINEERING_MIRACLE_ID,
   LUCHE_DIVINE_RAY_ID,
   ZORO_ONI_GIRI_ID,
@@ -254,9 +256,14 @@ export function getOrdinaryAbilityCounterView(
   return { current, max: max ?? undefined };
 }
 
-export const PassiveImpulseInfo: FC<{ unit: UnitState | null; abilities: AbilityView[] }> = ({
+export const PassiveImpulseInfo: FC<{
+  unit: UnitState | null;
+  abilities: AbilityView[];
+  view?: PlayerView;
+}> = ({
   unit,
   abilities,
+  view,
 }) => {
   const { language, t } = useI18n();
   if (!unit) return null;
@@ -287,6 +294,19 @@ export const PassiveImpulseInfo: FC<{ unit: UnitState | null; abilities: Ability
             language,
           );
           const counter = getOrdinaryAbilityCounterView(ability, unit);
+          const tyrantSourceNames =
+            ability.id === GROZNY_TYRANT_ID
+              ? [...new Set(unit.tyrantFinishedAllyIds ?? [])].flatMap((unitId) => {
+                  const projected = view?.units[unitId];
+                  if (projected) {
+                    return [getUnitFigureDisplayName(projected, { language, t })];
+                  }
+                  const snapshot = unit.tyrantMovementSources?.find(
+                    (source) => source.unitId === unitId,
+                  );
+                  return snapshot ? [t(`classes.${snapshot.class}`)] : [];
+                })
+              : [];
           return (
             <details
               key={ability.id}
@@ -315,6 +335,18 @@ export const PassiveImpulseInfo: FC<{ unit: UnitState | null; abilities: Ability
                   : t("actionMenu.triggersAutomatically")}
               </p>
               <p className="mt-1 leading-4">{display.description}</p>
+              {ability.id === GROZNY_TYRANT_ID ? (
+                <p className="mt-1 leading-4" data-testid="tyrant-movement-rule">
+                  {t("actionMenu.tyrantMovementRule")}
+                </p>
+              ) : null}
+              {ability.id === GROZNY_TYRANT_ID && tyrantSourceNames.length >= 2 ? (
+                <p className="mt-1 leading-4" data-testid="tyrant-movement-sources">
+                  {t("actionMenu.tyrantMovementSources", {
+                    sources: tyrantSourceNames.join(", "),
+                  })}
+                </p>
+              ) : null}
               {ability.disabledReason ? (
                 <p className="mt-1 text-amber-700 dark:text-amber-300">
                   {localizeServerText(ability.disabledReason, t)}
@@ -374,7 +406,7 @@ export const ActionMenu: FC<ActionMenuProps> = ({
       {heroControls ? (
         <section className="grid grid-cols-2 gap-1.5 text-xs">{heroControls}</section>
       ) : null}
-      <PassiveImpulseInfo unit={unit} abilities={abilityViews} />
+      <PassiveImpulseInfo unit={unit} abilities={abilityViews} view={view} />
       {footer}
     </div>
   );

@@ -152,7 +152,7 @@ export const ABILITY_SPECS_PART_1: Record<string, AbilitySpec> = {
     id: ids.ABILITY_GROZNY_TYRANT,
     displayName: "Tyrant",
     kind: "impulse",
-    description: "If Ivan the Terrible has a weak ally within two squares of him that he can finish off with his BASE DAMAGE, he moves to them (as if he rolled a 6, but without spending any movement) and attempts to finish them off. If he succeeds in finishing them off, he gains +1 damage and regains HP equal to the damage dealt. Starting with the second ally, he gains the movement of all his finished off allies.",
+    description: "If Ivan the Terrible has a weak ally within two squares of him that he can finish off with his BASE DAMAGE, he moves to one such ally (as if he rolled a 6, but without spending any movement) and attempts to finish them off. This Tyrant resolution ends after that one ally. If he succeeds in finishing them off, he gains +1 damage and regains HP equal to the damage dealt. Starting with the second ally finished across separate Tyrant resolutions, he gains the movement of all allies he has finished through Tyrant.",
   },
   [ids.ABILITY_GENGHIS_KHAN_MONGOL_CHARGE]: {
     id: ids.ABILITY_GENGHIS_KHAN_MONGOL_CHARGE,

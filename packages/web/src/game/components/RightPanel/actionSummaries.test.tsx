@@ -830,6 +830,113 @@ test("Artemida and Kaneki expose generic multiclass movement choices", () => {
   assert.match(markup, /Move as Trickster/);
 });
 
+test("Grozny Tyrant movement modes activate on the second tracked ally and deduplicate", () => {
+  const oneSource = makeUnit({
+    id: "P1-grozny",
+    class: "berserker",
+    heroId: "grozny",
+    tyrantFinishedAllyIds: ["ally-archer"],
+    tyrantMovementSources: [
+      {
+        unitId: "ally-archer",
+        class: "archer",
+        movementClasses: ["archer"],
+      },
+    ],
+  });
+  assert.deepEqual(
+    getAvailableMovementModes(oneSource, makeView(oneSource)).map(
+      (option) => option.classId,
+    ),
+    ["berserker"],
+    "one Tyrant-finished ally should leave Grozny on normal movement only",
+  );
+
+  const active = {
+    ...oneSource,
+    tyrantFinishedAllyIds: ["ally-archer", "ally-rider"],
+    tyrantMovementSources: [
+      ...oneSource.tyrantMovementSources!,
+      {
+        unitId: "ally-rider",
+        class: "rider" as const,
+        movementClasses: ["rider" as const, "archer" as const],
+      },
+    ],
+  };
+  assert.deepEqual(
+    getAvailableMovementModes(active, makeView(active)).map((option) => [
+      option.id,
+      option.classId,
+    ]),
+    [
+      ["normal", "berserker"],
+      ["archer", "archer"],
+      ["rider", "rider"],
+    ],
+    "the second source should expose all unique inherited movement modes",
+  );
+});
+
+test("Grozny Tyrant info shows the threshold rule and active movement sources", () => {
+  setLanguage("en", { setItem: () => undefined });
+  const grozny = makeUnit({
+    id: "P1-grozny",
+    class: "berserker",
+    heroId: "grozny",
+    tyrantFinishedAllyIds: ["ally-archer", "ally-rider"],
+    tyrantMovementSources: [
+      {
+        unitId: "ally-archer",
+        class: "archer",
+        movementClasses: ["archer"],
+      },
+      {
+        unitId: "ally-rider",
+        class: "rider",
+        movementClasses: ["rider"],
+      },
+    ],
+  });
+  const archer = makeUnit({
+    id: "ally-archer",
+    class: "archer",
+    heroId: undefined,
+    isAlive: false,
+    position: null,
+  });
+  const rider = makeUnit({
+    id: "ally-rider",
+    class: "rider",
+    heroId: undefined,
+    isAlive: false,
+    position: null,
+  });
+  const view = makeView(grozny);
+  view.units = {
+    [grozny.id]: grozny,
+    [archer.id]: archer,
+    [rider.id]: rider,
+  };
+  const tyrant: AbilityView = {
+    id: "groznyTyrant",
+    name: "Tyrant",
+    kind: "impulse",
+    description: "Finish one weakened allied figure.",
+    slot: "none",
+    isAvailable: true,
+  };
+  const markup = renderToStaticMarkup(
+    <PassiveImpulseInfo unit={grozny} abilities={[tyrant]} view={view} />,
+  );
+  assert.match(
+    markup,
+    /After the second ally finished by Tyrant/,
+    "the Action Menu should explain when inherited movement activates",
+  );
+  assert.match(markup, /Tyrant movement sources: Base Archer, Base Rider/);
+});
+
 test("Boat targeting remains a forced board task and offers cancel without spending", () => {
   setLanguage("en", { setItem: () => undefined });
   const river = makeUnit({

@@ -472,7 +472,7 @@ test("Grozny ally choice preview highlights projected legal allies", () => {
   const grozny = unit({
     id: "grozny",
     owner: "P1",
-    heroId: "ivanGrozny",
+    heroId: "grozny",
     class: "berserker",
     position: { col: 0, row: 0 },
   });
@@ -507,7 +507,7 @@ test("Grozny attack-origin preview highlights every legal projected origin cell"
   const grozny = unit({
     id: "grozny",
     owner: "P1",
-    heroId: "ivanGrozny",
+    heroId: "grozny",
     class: "berserker",
     position: { col: 0, row: 0 },
   });

@@ -12,6 +12,7 @@ import {
   HERO_LUCHE_ID,
   HERO_DUOLINGO_ID,
   HERO_DON_KIHOTE_ID,
+  HERO_GROZNY_ID,
   ABILITY_ZORO_ONI_GIRI,
   ABILITY_ZORO_DETERMINATION,
   ABILITY_LUCHE_DIVINE_RAY,
@@ -84,6 +85,89 @@ function testHiddenEnemyOmitted() {
   );
 
   console.log("view_hidden_enemy_omitted passed");
+}
+
+function testGroznyTyrantMovementProjectionAndReconnect() {
+  let state = createEmptyGame();
+  state = attachArmy(
+    state,
+    createDefaultArmy("P1", { berserker: HERO_GROZNY_ID }),
+  );
+  state = attachArmy(state, createDefaultArmy("P2"));
+  const grozny = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.heroId === HERO_GROZNY_ID,
+  );
+  const archer = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.class === "archer",
+  );
+  const rider = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.class === "rider",
+  );
+  assert(grozny && archer && rider, "Grozny projection test units should exist");
+
+  state = setUnit(state, grozny.id, {
+    position: { col: 4, row: 4 },
+    tyrantFinishedAllyIds: [archer.id, rider.id],
+    tyrantMovementSources: [
+      {
+        unitId: archer.id,
+        class: archer.class,
+        movementClasses: ["archer"],
+      },
+      {
+        unitId: rider.id,
+        class: rider.class,
+        movementClasses: ["rider"],
+      },
+    ],
+  });
+  state = {
+    ...state,
+    phase: "battle",
+    currentPlayer: "P1",
+    activeUnitId: grozny.id,
+  };
+
+  const ownerView = makePlayerView(state, "P1");
+  assert.deepEqual(
+    ownerView.units[grozny.id].tyrantFinishedAllyIds,
+    [archer.id, rider.id],
+    "owner projection should include Tyrant movement source tracking",
+  );
+  assert(
+    ownerView.legal?.movesByUnitId[grozny.id].some(
+      (cell) => cell.col === 4 && cell.row === 8,
+    ),
+    "owner projection should include inherited Rider movement destinations",
+  );
+
+  const opponentView = makePlayerView(state, "P2");
+  assert.equal(
+    opponentView.units[grozny.id].tyrantFinishedAllyIds,
+    undefined,
+    "opponent projection should not expose Tyrant source ids",
+  );
+  assert.equal(
+    opponentView.units[grozny.id].tyrantMovementSources,
+    undefined,
+    "opponent projection should not expose Tyrant movement snapshots",
+  );
+
+  const reconnectedState = JSON.parse(JSON.stringify(state)) as GameState;
+  const reconnectView = makePlayerView(reconnectedState, "P1");
+  assert.deepEqual(
+    reconnectView.units[grozny.id].tyrantFinishedAllyIds,
+    [archer.id, rider.id],
+    "serialized authoritative state should restore Tyrant tracking on reconnect",
+  );
+  assert(
+    reconnectView.legal?.movesByUnitId[grozny.id].some(
+      (cell) => cell.col === 4 && cell.row === 8,
+    ),
+    "reconnect projection should preserve inherited movement options",
+  );
+
+  console.log("grozny_tyrant_movement_projection_and_reconnect passed");
 }
 
 function testKnownStealthedEnemyUsesLastKnown() {
@@ -957,6 +1041,7 @@ function testHiddenCollisionProjectionIsOwnerDetailedAndOpponentSafe() {
 }
 
 function main() {
+  testGroznyTyrantMovementProjectionAndReconnect();
   testHiddenEnemyOmitted();
   testKnownStealthedEnemyUsesLastKnown();
   testFinalBoardRevealOnlyAfterGameOver();

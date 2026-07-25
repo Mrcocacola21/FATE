@@ -56,6 +56,14 @@ export interface StealthDurationState {
   kind: "normal" | "falseTrail";
 }
 
+export interface GroznyTyrantMovementSource {
+  unitId: string;
+  class: UnitClass;
+  figureId?: string;
+  heroId?: string;
+  movementClasses: UnitClass[];
+}
+
 export interface UnitState {
   id: string;
   owner: PlayerId;
@@ -95,6 +103,13 @@ export interface UnitState {
   lechyGuideTravelerTargetId?: string;
   stormStartTurnResolvedTurnNumber?: number;
   lastChargedTurn?: number;
+  /** Allied figures this Grozny has successfully finished through Tyrant. */
+  tyrantFinishedAllyIds?: string[];
+  /**
+   * Movement-only snapshots captured when Tyrant finishes an ally. Keeping the
+   * profile on Grozny makes the inherited movement resilient to unit removal.
+   */
+  tyrantMovementSources?: GroznyTyrantMovementSource[];
 
   hasMovedThisTurn: boolean;
   hasAttackedThisTurn: boolean;

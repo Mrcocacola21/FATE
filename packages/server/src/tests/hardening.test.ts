@@ -26,6 +26,7 @@ import {
   HERO_DUOLINGO_ID,
   HERO_DON_KIHOTE_ID,
   HERO_GRAND_KAISER_ID,
+  HERO_GROZNY_ID,
   HERO_JACK_RIPPER_ID,
   HERO_LOKI_ID,
   HERO_METTATON_ID,
@@ -804,6 +805,116 @@ function testGroznyTyrantPendingChoicePayloadsAccepted() {
   }
 
   console.log("hardening_grozny_tyrant_pending_choice_payloads passed");
+}
+
+function testGroznyTyrantCommandsRemainSingleTargetAndAuthoritative() {
+  const makeRoom = () => {
+    const room = createGameRoomWithId(`hardening-grozny-${randomUUID()}`);
+    let state = createEmptyGame();
+    state = attachArmy(
+      state,
+      createDefaultArmy("P1", { berserker: HERO_GROZNY_ID }),
+    );
+    state = attachArmy(state, createDefaultArmy("P2"));
+    const grozny = Object.values(state.units).find(
+      (unit) => unit.owner === "P1" && unit.heroId === HERO_GROZNY_ID,
+    );
+    const ally = Object.values(state.units).find(
+      (unit) => unit.owner === "P1" && unit.class === "archer",
+    );
+    const enemy = Object.values(state.units).find(
+      (unit) => unit.owner === "P2" && unit.class === "archer",
+    );
+    assert(grozny && ally && enemy, "expected Grozny command fixtures");
+    state = setUnit(state, grozny.id, {
+      position: { col: 4, row: 4 },
+      attack: 2,
+    });
+    state = setUnit(state, ally.id, { position: { col: 4, row: 7 }, hp: 2 });
+    state = setUnit(state, enemy.id, { position: { col: 0, row: 0 }, hp: 1 });
+    room.state = {
+      ...state,
+      phase: "battle",
+      currentPlayer: "P1",
+      activeUnitId: null,
+      pendingRoll: {
+        id: "grozny-single-target",
+        player: "P1",
+        kind: "groznyTyrantAllyChoice",
+        context: {
+          groznyId: grozny.id,
+          mode: "normal",
+          options: [ally.id],
+          allowSkip: true,
+        },
+      },
+    };
+    return { room, grozny, ally, enemy };
+  };
+
+  const invalidSetup = makeRoom();
+  const invalidRevision = invalidSetup.room.revision;
+  const invalid = applyGameAction(
+    invalidSetup.room,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: "grozny-single-target",
+      player: "P1",
+      choice: {
+        type: "groznyTyrantAlly",
+        targetId: invalidSetup.enemy.id,
+      },
+    } as any,
+    "P1",
+  );
+  assert.equal(invalid.ok, false, "server should reject an enemy Tyrant target");
+  assert.equal(
+    invalidSetup.room.revision,
+    invalidRevision,
+    "rejected Tyrant targets must not mutate or revise the room",
+  );
+
+  const validSetup = makeRoom();
+  const valid = applyGameAction(
+    validSetup.room,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: "grozny-single-target",
+      player: "P1",
+      choice: {
+        type: "groznyTyrantAlly",
+        targetId: validSetup.ally.id,
+      },
+    } as any,
+    "P1",
+  );
+  assert.equal(valid.ok, true, "server should accept one valid allied Tyrant target");
+  assert.equal(
+    validSetup.room.state.pendingRoll?.kind,
+    "groznyTyrantAttackCellChoice",
+    "a valid target should advance only to its attack-origin choice",
+  );
+
+  const staleFollowUp = applyGameAction(
+    validSetup.room,
+    {
+      type: "resolvePendingRoll",
+      pendingRollId: "grozny-single-target",
+      player: "P1",
+      choice: {
+        type: "groznyTyrantAlly",
+        targetId: validSetup.ally.id,
+      },
+    } as any,
+    "P1",
+  );
+  assert.equal(
+    staleFollowUp.ok,
+    false,
+    "the server should reject a stale follow-up ally command from the same resolution",
+  );
+
+  console.log("hardening_grozny_tyrant_single_target_commands passed");
 }
 
 function testNewBatchBoardPendingChoicePayloadsAccepted() {
@@ -2426,6 +2537,7 @@ async function main() {
   testRateLimitWindowResets();
   testPayloadCapAllowsValidClientCommands();
   testGroznyTyrantPendingChoicePayloadsAccepted();
+  testGroznyTyrantCommandsRemainSingleTargetAndAuthoritative();
   testNewBatchBoardPendingChoicePayloadsAccepted();
   await testRestDebugEndpointsGatedInProduction();
   testIdleRoomCleanupExpiresRoom();

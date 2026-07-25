@@ -37,6 +37,13 @@ export function cloneUnit(unit: UnitState): UnitState {
     movementDisabledNextTurn: unit.movementDisabledNextTurn,
     ownTurnsStarted: unit.ownTurnsStarted,
     stormStartTurnResolvedTurnNumber: unit.stormStartTurnResolvedTurnNumber,
+    tyrantFinishedAllyIds: unit.tyrantFinishedAllyIds
+      ? [...unit.tyrantFinishedAllyIds]
+      : undefined,
+    tyrantMovementSources: unit.tyrantMovementSources?.map((source) => ({
+      ...source,
+      movementClasses: [...source.movementClasses],
+    })),
     charges: { ...unit.charges },
     cooldowns: { ...unit.cooldowns },
     turn: { ...turn },
@@ -90,6 +97,8 @@ export function maskStealthedEnemy(unit: UnitState): UnitState {
 export function clonePublicUnit(unit: UnitState): UnitState {
   const projected = stripChikatiloPrivateState(cloneUnit(unit));
   projected.jackKnownHpByTarget = undefined;
+  projected.tyrantFinishedAllyIds = undefined;
+  projected.tyrantMovementSources = undefined;
   return projected;
 }
 

@@ -19,6 +19,12 @@ import {
   setupGroznyTyrantState,
   toBattleState,
 } from "../helpers/testUtils";
+import {
+  getUnitMovementClasses,
+} from "../../movement";
+import {
+  maybeTriggerGroznyTyrant,
+} from "../../actions/heroes/grozny";
 
 function chooseGroznyOption(
   state: ReturnType<typeof toBattleState>,
@@ -557,6 +563,66 @@ export function testGroznyTyrantRequiresAllyChoiceWhenMultipleQualify() {
   console.log("grozny_tyrant_requires_ally_choice_when_multiple_qualify passed");
 }
 
+export function testGroznyTyrantRejectsEnemySelfAndDeadTargetsWithoutMutation() {
+  const rng = new SeededRNG(747);
+  const { state: baseState, grozny, commander, ally } = setupGroznyTyrantState();
+  const enemy = Object.values(baseState.units).find((unit) => unit.owner === "P2")!;
+
+  let state = setUnit(baseState, grozny.id, {
+    position: { col: 4, row: 4 },
+    attack: 2,
+  });
+  state = setUnit(state, commander.id, { position: { col: 7, row: 4 }, hp: 2 });
+  state = setUnit(state, ally.id, { position: { col: 4, row: 7 }, hp: 2 });
+  state = setUnit(state, enemy.id, { position: { col: 0, row: 0 }, hp: 1 });
+  state = { ...toBattleState(state, "P1", grozny.id), activeUnitId: null };
+
+  const triggered = maybeTriggerGroznyTyrant(state, grozny.id, rng);
+  const afterMode = chooseGroznyOption(triggered.state, "normal", rng);
+  assert(
+    afterMode.state.pendingRoll?.kind === "groznyTyrantAllyChoice",
+    "two living selectable allies should create an ally choice",
+  );
+  const context = afterMode.state.pendingRoll.context as { options: string[] };
+  assert(!context.options.includes(enemy.id), "enemy targets must not be projected as selectable");
+  assert(!context.options.includes(grozny.id), "Grozny must not be projected as his own target");
+
+  for (const targetId of [enemy.id, grozny.id]) {
+    const before = JSON.stringify(afterMode.state);
+    const rejected = resolvePendingWithChoice(
+      afterMode.state,
+      { type: "groznyTyrantAlly", targetId },
+      rng,
+    );
+    assert.equal(rejected.events.length, 0, "an invalid Tyrant target should emit no events");
+    assert.equal(
+      JSON.stringify(rejected.state),
+      before,
+      "an invalid Tyrant target must not mutate authoritative state",
+    );
+  }
+
+  const deadState = setUnit(afterMode.state, ally.id, {
+    hp: 0,
+    isAlive: false,
+    position: null,
+  });
+  const beforeDeadChoice = JSON.stringify(deadState);
+  const deadRejected = resolvePendingWithChoice(
+    deadState,
+    { type: "groznyTyrantAlly", targetId: ally.id },
+    rng,
+  );
+  assert.equal(deadRejected.events.length, 0, "a dead Tyrant target should emit no events");
+  assert.equal(
+    JSON.stringify(deadRejected.state),
+    beforeDeadChoice,
+    "a target that died after projection must be revalidated without mutation",
+  );
+
+  console.log("grozny_tyrant_rejects_enemy_self_and_dead_targets_without_mutation passed");
+}
+
 
 export function testGroznyTyrantRejectsInvalidOriginWithoutSpending() {
   const rng = makeAttackWinRng(1);
@@ -762,7 +828,51 @@ export function testGroznyTyrantRequiresReachableAttackPositionWithinRoll6() {
 }
 
 
-export function testGroznyTyrantChainGrantsExtraMovesFromSecondKill() {
+function resolveOneTyrantUse(
+  state: ReturnType<typeof toBattleState>,
+  groznyId: string,
+  targetId: string,
+  rng: any,
+) {
+  const triggered = maybeTriggerGroznyTyrant(state, groznyId, rng);
+  assert(
+    triggered.state.pendingRoll?.kind === "groznyTyrantOptionChoice",
+    "each separate Tyrant proc should begin with one mode choice",
+  );
+  const modeChosen = chooseGroznyOption(triggered.state, "normal", rng);
+  const allyChosen = chooseGroznyAllyIfNeeded(modeChosen.state, targetId, rng);
+  assert(
+    allyChosen.state.pendingRoll?.kind === "groznyTyrantAttackCellChoice",
+    "the selected ally should lead to one attack-origin choice",
+  );
+  const cellContext = allyChosen.state.pendingRoll.context as {
+    options: {
+      targetId: string;
+      mode: "normal";
+      position: { col: number; row: number };
+    }[];
+  };
+  const option = cellContext.options.find((entry) => entry.targetId === targetId);
+  assert(option, "the selected ally should have a legal Tyrant attack origin");
+  const attackRequested = resolvePendingWithChoice(
+    allyChosen.state,
+    { type: "groznyTyrantAttackCell", ...option },
+    rng,
+  );
+  const resolved = resolveAllPendingRollsWithEvents(attackRequested.state, rng);
+  return {
+    state: resolved.state,
+    events: [
+      ...triggered.events,
+      ...modeChosen.events,
+      ...allyChosen.events,
+      ...attackRequested.events,
+      ...resolved.events,
+    ],
+  };
+}
+
+export function testGroznyTyrantSingleUseTracksAndGainsCumulativeMovement() {
   const rng = makeAttackWinRng(3);
   let state = createEmptyGame();
   const a1 = createDefaultArmy("P1", { berserker: HERO_GROZNY_ID });
@@ -773,13 +883,13 @@ export function testGroznyTyrantChainGrantsExtraMovesFromSecondKill() {
   const grozny = Object.values(state.units).find(
     (u) => u.owner === "P1" && u.class === "berserker"
   )!;
-  const ally1 = Object.values(state.units).find(
+  const archer = Object.values(state.units).find(
     (u) => u.owner === "P1" && u.class === "archer"
   )!;
-  const ally2 = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.class === "knight"
+  const rider = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "rider"
   )!;
-  const ally3 = Object.values(state.units).find(
+  const assassin = Object.values(state.units).find(
     (u) => u.owner === "P1" && u.class === "assassin"
   )!;
 
@@ -788,38 +898,114 @@ export function testGroznyTyrantChainGrantsExtraMovesFromSecondKill() {
     attack: 2,
     hp: 3,
   });
-  state = setUnit(state, ally1.id, { position: { col: 6, row: 4 }, hp: 2 });
-  state = setUnit(state, ally2.id, { position: { col: 7, row: 4 }, hp: 2 });
-  state = setUnit(state, ally3.id, { position: { col: 8, row: 4 }, hp: 2 });
+  state = setUnit(state, archer.id, { position: { col: 6, row: 4 }, hp: 2 });
+  state = setUnit(state, rider.id, { position: { col: 7, row: 4 }, hp: 2 });
+  state = setUnit(state, assassin.id, { position: { col: 8, row: 4 }, hp: 2 });
   state = { ...toBattleState(state, "P1", grozny.id), activeUnitId: null };
   state = initKnowledgeForOwners(state);
 
-  const started = applyAction(
+  const first = resolveOneTyrantUse(
     state,
-    { type: "unitStartTurn", unitId: grozny.id } as any,
-    rng
+    grozny.id,
+    archer.id,
+    rng,
   );
-  assert(started.state.pendingRoll, "tyrant should start an attack chain");
+  assert(!first.state.pendingRoll, "one Tyrant kill must end the current resolution");
+  assert(!first.state.units[archer.id].isAlive, "the selected first ally should die");
+  assert(first.state.units[rider.id].isAlive, "Tyrant must not continue to a second ally");
+  assert(first.state.units[assassin.id].isAlive, "Tyrant must not continue to a third ally");
+  assert.deepEqual(
+    first.state.units[grozny.id].tyrantFinishedAllyIds,
+    [archer.id],
+    "the first successful Tyrant target should be tracked once",
+  );
+  assert.deepEqual(
+    getUnitMovementClasses(first.state.units[grozny.id]),
+    ["berserker"],
+    "one finished ally must not grant inherited movement yet",
+  );
 
-  const resolved = resolveAllPendingRollsWithEvents(started.state, rng);
-  const groznyAfter = resolved.state.units[grozny.id];
-  const ally1After = resolved.state.units[ally1.id];
-  const ally2After = resolved.state.units[ally2.id];
-  const ally3After = resolved.state.units[ally3.id];
-  const attackEvents = resolved.events.filter(
-    (e) =>
-      e.type === "attackResolved" &&
-      e.attackerId === grozny.id &&
-      [ally1.id, ally2.id, ally3.id].includes(e.defenderId)
+  const second = resolveOneTyrantUse(
+    first.state,
+    grozny.id,
+    rider.id,
+    rng,
+  );
+  assert(!second.state.pendingRoll, "the second separate Tyrant use must also end after one ally");
+  assert(!second.state.units[rider.id].isAlive, "the selected second ally should die");
+  assert(second.state.units[assassin.id].isAlive, "the second use must not chain to a third ally");
+  assert.deepEqual(
+    second.state.units[grozny.id].tyrantFinishedAllyIds,
+    [archer.id, rider.id],
+    "separate Tyrant uses should accumulate unique finished ally ids",
+  );
+  assert.deepEqual(
+    getUnitMovementClasses(second.state.units[grozny.id]),
+    ["berserker", "archer", "rider"],
+    "the second finished ally should unlock movement from both finished allies",
+  );
+
+  const third = resolveOneTyrantUse(
+    second.state,
+    grozny.id,
+    assassin.id,
+    rng,
+  );
+  const groznyAfter = third.state.units[grozny.id];
+  assert(!third.state.pendingRoll, "the third separate Tyrant use must end without another picker");
+  assert(!third.state.units[assassin.id].isAlive, "the selected third ally should die");
+  assert.deepEqual(
+    groznyAfter.tyrantFinishedAllyIds,
+    [archer.id, rider.id, assassin.id],
+    "a later Tyrant use should add its ally to persistent tracking",
+  );
+  assert.deepEqual(
+    getUnitMovementClasses(groznyAfter),
+    ["berserker", "archer", "rider", "assassin"],
+    "later Tyrant uses should retain movement from every finished ally",
+  );
+  const duplicatedProfiles = {
+    ...groznyAfter,
+    tyrantFinishedAllyIds: [
+      ...(groznyAfter.tyrantFinishedAllyIds ?? []),
+      archer.id,
+    ],
+    tyrantMovementSources: (groznyAfter.tyrantMovementSources ?? []).map(
+      (source) =>
+        source.unitId === rider.id
+          ? {
+              ...source,
+              movementClasses: [...source.movementClasses, "archer" as const],
+            }
+          : source,
+    ),
+  };
+  assert.deepEqual(
+    getUnitMovementClasses(duplicatedProfiles),
+    ["berserker", "archer", "rider", "assassin"],
+    "duplicate ids and inherited movement modes should be merged only once",
+  );
+  const stateWithoutFinishedUnits = {
+    ...third.state,
+    units: Object.fromEntries(
+      Object.entries(third.state.units).filter(
+        ([unitId]) => ![archer.id, rider.id, assassin.id].includes(unitId),
+      ),
+    ),
+  };
+  assert.deepEqual(
+    getUnitMovementClasses(stateWithoutFinishedUnits.units[grozny.id]),
+    ["berserker", "archer", "rider", "assassin"],
+    "movement snapshots should survive removal of finished unit records",
+  );
+
+  const attackEvents = [...first.events, ...second.events, ...third.events].filter(
+    (event) => event.type === "attackResolved" && event.attackerId === grozny.id,
   ) as Extract<GameEvent, { type: "attackResolved" }>[];
-
-  assert(attackEvents.length >= 3, "tyrant should attempt multiple kills in a chain");
-  assert(ally1After && !ally1After.isAlive, "first ally should die in chain");
-  assert(ally2After && !ally2After.isAlive, "second ally should die in chain");
-  assert(ally3After && !ally3After.isAlive, "third ally should die in chain");
+  assert.equal(attackEvents.length, 3, "three separate Tyrant uses should log three attacks");
   assert(
     groznyAfter.attack === state.units[grozny.id].attack + 3,
-    "grozny should gain +1 base damage per tyrant kill"
+    "Grozny should retain +1 base damage per successful separate Tyrant use"
   );
   const maxHp = getHeroMeta(HERO_GROZNY_ID)?.baseStats.hp ?? groznyAfter.hp;
   const damageSum = attackEvents.reduce((sum, e) => sum + e.damage, 0);
@@ -829,15 +1015,45 @@ export function testGroznyTyrantChainGrantsExtraMovesFromSecondKill() {
   );
   assert(
     groznyAfter.hp === expectedHp,
-    "grozny should heal by total damage dealt during tyrant chain"
+    "Grozny should heal by total damage dealt across separate Tyrant uses"
   );
   assert(
     groznyAfter.turn.moveUsed === false,
-    "tyrant chain should not consume move action"
+    "normal Tyrant uses should not consume the move action"
+  );
+
+  const moveState = {
+    ...third.state,
+    activeUnitId: grozny.id,
+    pendingMove: null,
+  };
+  const requestedAssassinMove = applyAction(
+    moveState,
+    { type: "requestMoveOptions", unitId: grozny.id, mode: "assassin" } as any,
+    rng,
+  );
+  const inheritedDestination = requestedAssassinMove.state.pendingMove?.legalTo.find(
+    (cell) =>
+      groznyAfter.position &&
+      Math.max(
+        Math.abs(cell.col - groznyAfter.position.col),
+        Math.abs(cell.row - groznyAfter.position.row),
+      ) === 2,
+  );
+  assert(inheritedDestination, "inherited Assassin movement should generate distance-two moves");
+  const moved = applyAction(
+    requestedAssassinMove.state,
+    { type: "move", unitId: grozny.id, to: inheritedDestination } as any,
+    rng,
+  );
+  assert.deepEqual(
+    moved.state.units[grozny.id].position,
+    inheritedDestination,
+    "normal movement execution should authorize the same inherited mode as preview",
   );
 
   console.log(
-    "grozny_tyrant_chain_grants_extra_moves_from_second_kill passed"
+    "grozny_tyrant_single_use_tracks_and_gains_cumulative_movement passed"
   );
 }
 
