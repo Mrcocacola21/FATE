@@ -25,6 +25,7 @@ import {
   LECHY_GUIDE_TRAVELER_ID,
   LUCHE_DIVINE_RAY_ID,
   LOKI_LAUGHT_ID,
+  METTATON_LASER_ID,
   RIVER_PERSON_BOAT_ID,
   RIVER_PERSON_BOATMAN_ID,
   RIVER_PERSON_TRA_LA_LA_ID,
@@ -1279,6 +1280,72 @@ test("new hero previews expose targets, lines, areas, and trap placement without
   assert.equal(hasKind(offLineSickle, { col: 8, row: 5 }, "area"), false);
 
   assert.equal(collectTargets(push).some((target) => target.unitId === hiddenEnemy.id), false);
+});
+
+test("Mettaton Laser preview passes through the first unit and marks the full selected ray", () => {
+  const mettaton = unit({
+    id: "mettaton",
+    owner: "P1",
+    heroId: "mettaton",
+    class: "archer",
+    position: { col: 4, row: 4 },
+  });
+  const firstEnemy = unit({
+    id: "first-enemy",
+    owner: "P2",
+    position: { col: 5, row: 4 },
+  });
+  const ally = unit({
+    id: "ally",
+    owner: "P1",
+    position: { col: 6, row: 4 },
+  });
+  const enemyBehind = unit({
+    id: "enemy-behind",
+    owner: "P2",
+    position: { col: 7, row: 4 },
+  });
+  const offLineEnemy = unit({
+    id: "off-line-enemy",
+    owner: "P2",
+    position: { col: 7, row: 5 },
+  });
+  const view = makeView([
+    mettaton,
+    firstEnemy,
+    ally,
+    enemyBehind,
+    offLineEnemy,
+  ]);
+
+  const preview = buildAbilityPreview({
+    gameView: view,
+    viewerPlayerId: "P1",
+    sourceUnitId: mettaton.id,
+    abilityId: METTATON_LASER_ID,
+    // The first enemy selects a direction; it is not a beam blocker.
+    targetingCell: firstEnemy.position,
+  });
+
+  assert.deepEqual(
+    affectedTargetIds(preview),
+    [ally.id, enemyBehind.id, firstEnemy.id].sort(),
+  );
+  assert.equal(hasKind(preview, { col: 8, row: 4 }, "line"), true);
+  assert.equal(hasKind(preview, enemyBehind.position!, "affected"), true);
+  assert.equal(hasKind(preview, offLineEnemy.position!, "affected"), false);
+
+  const legalPreview = buildAbilityPreview({
+    gameView: view,
+    viewerPlayerId: "P1",
+    sourceUnitId: mettaton.id,
+    abilityId: METTATON_LASER_ID,
+  });
+  assert.equal(
+    hasKind(legalPreview, enemyBehind.position!, "line"),
+    true,
+    "legal endpoint preview must continue beyond the first visible enemy",
+  );
 });
 
 test("Windmills preview uses authoritative orthogonal and diagonal unit targets", () => {

@@ -428,6 +428,7 @@ import {
   testMettatonRatingPassiveAndThresholdUnlock,
   testMettatonPoppinsGatingAreaAndRating,
   testMettatonExStageAndLaser,
+  testMettatonLaserFullLineRegression,
   testMettatonNeoGraceAndRiderPathUnlocks,
   testMettatonBerserkerFeatureOnlyAfterNeo,
   testMettatonFinalChordGatingTargetsDamageAndSpend,
@@ -715,6 +716,7 @@ function main(): void {
   testMettatonRatingPassiveAndThresholdUnlock();
   testMettatonPoppinsGatingAreaAndRating();
   testMettatonExStageAndLaser();
+  testMettatonLaserFullLineRegression();
   testMettatonNeoGraceAndRiderPathUnlocks();
   testMettatonBerserkerFeatureOnlyAfterNeo();
   testMettatonFinalChordGatingTargetsDamageAndSpend();

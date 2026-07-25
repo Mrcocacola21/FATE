@@ -13,12 +13,13 @@ import { HERO_METTATON_ID } from "../../../heroes";
 import { resolveAoE } from "../../../aoe";
 import {
   collectMettatonFinalChordTargetIds,
-  collectMettatonLineTargetIds,
+  collectMettatonFullLineTargetIds,
   getMettatonRating,
   hasMettatonExUnlocked,
   hasMettatonNeoUnlocked,
   isMettaton,
   isMettatonCenterOnAttackLine,
+  isMettatonFullLineEndpoint,
   unlockMettatonEx,
   unlockMettatonNeo,
 } from "../../../mettaton";
@@ -166,10 +167,18 @@ export function applyMettatonLaser(
     parseCoord(payload.line) ??
     parseCoord(payload.center);
   if (!target || !isInsideBoard(target, state.boardSize)) {
-    return { state, events: [] };
+    return {
+      state,
+      events: [],
+      rejectionReason: "mettaton_laser_requires_valid_endpoint",
+    };
   }
-  if (!isMettatonCenterOnAttackLine(state, unit, target)) {
-    return { state, events: [] };
+  if (!isMettatonFullLineEndpoint(state, unit, target)) {
+    return {
+      state,
+      events: [],
+      rejectionReason: "mettaton_laser_requires_straight_line_endpoint",
+    };
   }
 
   const prepared = buildActionBaseState(state, unit, ABILITY_METTATON_LASER, 3);
@@ -182,7 +191,11 @@ export function applyMettatonLaser(
     return { state: prepared.state, events: prepared.events };
   }
 
-  const targets = collectMettatonLineTargetIds(prepared.state, caster, target);
+  const targets = collectMettatonFullLineTargetIds(
+    prepared.state,
+    caster,
+    target
+  );
   const queued = requestMettatonQueuedAttacks(
     prepared.state,
     caster,

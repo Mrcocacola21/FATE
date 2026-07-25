@@ -12,6 +12,7 @@ import {
 } from "./cellHandlers";
 import {
   getArcherLikeTargetIds,
+  getFullLineTargetCells,
   getSelectableAttackTargetsAtCell,
 } from "./helpers";
 
@@ -339,4 +340,72 @@ test("Windmills click and mobile tap submit canonical authoritative unit targets
     },
   ]);
   assert.deepEqual(clearedModes, [null, null]);
+});
+
+test("Mettaton Laser desktop click and mobile tap send a line endpoint payload", () => {
+  const mettaton = unit({
+    id: "mettaton",
+    owner: "P1",
+    heroId: "mettaton",
+    class: "archer",
+    position: { col: 4, row: 4 },
+  });
+  const enemyBehind = unit({
+    id: "enemy-behind",
+    owner: "P2",
+    position: { col: 7, row: 4 },
+  });
+  const view = {
+    ...sharedCellView().view,
+    activeUnitId: mettaton.id,
+    units: {
+      [mettaton.id]: mettaton,
+      [enemyBehind.id]: enemyBehind,
+    },
+  } as PlayerView;
+  const sent: unknown[] = [];
+  const endpointKey = "7,4";
+  assert.equal(
+    getFullLineTargetCells(view, mettaton.id).some(
+      (cell) => cell.col === enemyBehind.position!.col && cell.row === enemyBehind.position!.row,
+    ),
+    true,
+    "Laser endpoint discovery must continue beyond visible units",
+  );
+  const makeHandler = () =>
+    createCellClickHandler({
+      view,
+      playerId: "P1",
+      joined: true,
+      isSpectator: false,
+      hasBlockingRoll: false,
+      boardSelectionPending: false,
+      actionMode: "mettatonLaser",
+      selectedUnitId: mettaton.id,
+      legalAttackTargets: [],
+      mettatonLineTargetKeys: new Set([endpointKey]),
+      sendGameAction: (action: unknown) => sent.push(action),
+      setActionMode: () => undefined,
+      sendAction: () => undefined,
+    } as never);
+
+  // Desktop and mobile share this board-cell command path.
+  makeHandler()(7, 4);
+  makeHandler()(7, 4);
+  makeHandler()(7, 5);
+
+  assert.deepEqual(sent, [
+    {
+      type: "useAbility",
+      unitId: mettaton.id,
+      abilityId: "mettatonLaser",
+      payload: { target: { col: 7, row: 4 } },
+    },
+    {
+      type: "useAbility",
+      unitId: mettaton.id,
+      abilityId: "mettatonLaser",
+      payload: { target: { col: 7, row: 4 } },
+    },
+  ]);
 });

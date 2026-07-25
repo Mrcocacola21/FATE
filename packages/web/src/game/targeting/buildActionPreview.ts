@@ -18,6 +18,7 @@ import {
   JEBE_KHANS_SHOOTER_ID,
   LECHY_GUIDE_TRAVELER_ID,
   LUCHE_DIVINE_RAY_ID,
+  METTATON_LASER_ID,
   ODIN_SLEIPNIR_ID,
   ZORO_ONI_GIRI_ID,
 } from "../../rulesHints";
@@ -71,6 +72,8 @@ function abilityIdForPreviewActionMode(actionMode: Exclude<ActionMode, null>): s
     case "lucheLightRay":
     case "lucheLightRayAround":
       return LUCHE_DIVINE_RAY_ID;
+    case "mettatonLaser":
+      return METTATON_LASER_ID;
     case "zoroOniGiri":
       return ZORO_ONI_GIRI_ID;
     case "donReaction":

@@ -23,6 +23,7 @@ import {
   LUCHE_BURNING_SUN_ID,
   LUCHE_DIVINE_RAY_ID,
   LOKI_LAUGHT_ID,
+  METTATON_LASER_ID,
   RIVER_PERSON_BOAT_ID,
   RIVER_PERSON_BOATMAN_ID,
   RIVER_PERSON_TRA_LA_LA_ID,
@@ -45,6 +46,7 @@ import {
   coordKey,
   diagonalDestinations,
   firstVisibleArcherTargets,
+  fullStraightLineCells,
   linePath,
   lineCellsToTargets,
   openCells,
@@ -665,6 +667,55 @@ export function buildAbilityPreview({
           ? visibleUnitTargets(gameView, (unit) => unit.owner !== source.owner && !!unit.position && rayKeys.has(coordKey(unit.position)))
           : [],
         labelKey: "preview.labels.archerLine",
+      };
+    }
+    case METTATON_LASER_ID: {
+      const legalCells = fullStraightLineCells(
+        boardSize(gameView),
+        source.position,
+        source.blindUntilOwnTurnStart ? 1 : undefined,
+      );
+      const selectedCell =
+        targetingCell &&
+        legalCells.some((cell) => coordKey(cell) === coordKey(targetingCell))
+          ? targetingCell
+          : null;
+      const selectedPath = selectedCell
+        ? linePath(source.position, selectedCell)
+        : null;
+      const step =
+        selectedPath && selectedPath.length > 1
+          ? {
+              col: selectedPath[1].col - source.position.col,
+              row: selectedPath[1].row - source.position.row,
+            }
+          : null;
+      const beamCells = step
+        ? legalCells.filter((cell) => {
+            const path = linePath(source.position!, cell);
+            return (
+              !!path &&
+              path.length > 1 &&
+              path[1].col - source.position!.col === step.col &&
+              path[1].row - source.position!.row === step.row
+            );
+          })
+        : legalCells;
+      const beamKeys = new Set(beamCells.map(coordKey));
+      return {
+        kind: "line",
+        sourceCell: { ...source.position },
+        lineCells: beamCells,
+        affectedTargets: selectedCell
+          ? visibleUnitTargets(
+              gameView,
+              (unit) =>
+                unit.id !== source.id &&
+                !!unit.position &&
+                beamKeys.has(coordKey(unit.position)),
+            )
+          : [],
+        labelKey: "preview.labels.affectedLine",
       };
     }
     case LUCHE_BURNING_SUN_ID:

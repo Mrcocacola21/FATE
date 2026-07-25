@@ -247,6 +247,33 @@ export function lineCellsToTargets(
   return cells;
 }
 
+export function fullStraightLineCells(
+  size: number,
+  source: Coord,
+  maxDistance?: number,
+): Coord[] {
+  const cells: Coord[] = [];
+  for (const direction of DIRECTIONS_8) {
+    let distance = 1;
+    let cursor = {
+      col: source.col + direction.col,
+      row: source.row + direction.row,
+    };
+    while (
+      isInsideBoard(cursor, size) &&
+      (maxDistance === undefined || distance <= maxDistance)
+    ) {
+      cells.push({ ...cursor });
+      distance += 1;
+      cursor = {
+        col: cursor.col + direction.col,
+        row: cursor.row + direction.row,
+      };
+    }
+  }
+  return cells;
+}
+
 export function openCells(view: PlayerView): Coord[] {
   const size = boardSize(view);
   const occupied = new Set(

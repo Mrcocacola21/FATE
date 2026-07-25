@@ -229,6 +229,44 @@ export function getMettatonAttackLineCells(
   return cells;
 }
 
+/**
+ * Returns the complete ray selected by an endpoint/direction. Unlike the
+ * normal archer-style attack line above, units do not obstruct this ray.
+ */
+export function getMettatonFullLineCells(
+  state: GameState,
+  caster: UnitState,
+  endpoint: Coord
+): Coord[] {
+  if (!caster.position || !isAttackLineDirection(caster.position, endpoint)) {
+    return [];
+  }
+
+  const stepCol = Math.sign(endpoint.col - caster.position.col);
+  const stepRow = Math.sign(endpoint.row - caster.position.row);
+  const cells: Coord[] = [];
+  let col = caster.position.col + stepCol;
+  let row = caster.position.row + stepRow;
+
+  while (isInsideBoard({ col, row }, state.boardSize)) {
+    cells.push({ col, row });
+    col += stepCol;
+    row += stepRow;
+  }
+
+  return cells;
+}
+
+export function isMettatonFullLineEndpoint(
+  state: GameState,
+  caster: UnitState,
+  endpoint: Coord
+): boolean {
+  return getMettatonFullLineCells(state, caster, endpoint).some(
+    (cell) => cell.col === endpoint.col && cell.row === endpoint.row
+  );
+}
+
 export function isMettatonCenterOnAttackLine(
   state: GameState,
   caster: UnitState,
@@ -252,6 +290,30 @@ export function collectMettatonLineTargetIds(
     ids.push(unit.id);
   }
   return sortUnitIdsByReadingOrder(state, Array.from(new Set(ids)));
+}
+
+export function collectMettatonFullLineTargetIds(
+  state: GameState,
+  caster: UnitState,
+  target: Coord
+): string[] {
+  const lineCells = getMettatonFullLineCells(state, caster, target);
+  const ids: string[] = [];
+  const seen = new Set<string>();
+  for (const cell of lineCells) {
+    const unit = getUnitAt(state, cell);
+    if (
+      !unit ||
+      !unit.isAlive ||
+      unit.id === caster.id ||
+      seen.has(unit.id)
+    ) {
+      continue;
+    }
+    seen.add(unit.id);
+    ids.push(unit.id);
+  }
+  return ids;
 }
 
 export function collectMettatonFinalChordTargetIds(

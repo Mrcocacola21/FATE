@@ -474,6 +474,160 @@ export function testMettatonExStageAndLaser() {
   console.log("mettaton_ex_stage_and_laser passed");
 }
 
+export function testMettatonLaserFullLineRegression() {
+  let { state, mettaton, enemy } = setupMettatonState();
+  const ally = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.id !== mettaton.id && unit.class === "knight"
+  )!;
+  const enemyBehind = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.id !== enemy.id && unit.class === "knight"
+  )!;
+
+  state = setUnit(state, mettaton.id, {
+    position: { col: 6, row: 4 },
+    mettatonRating: 10,
+    mettatonExUnlocked: true,
+    turn: makeEmptyTurnEconomy(),
+  });
+  state = setUnit(state, enemy.id, { position: { col: 5, row: 4 } });
+  state = setUnit(state, ally.id, { position: { col: 4, row: 4 } });
+  state = setUnit(state, enemyBehind.id, { position: { col: 2, row: 4 } });
+  state = toBattleState(state, "P1", mettaton.id);
+  state = initKnowledgeForOwners(state);
+
+  const beforeInvalid = state;
+  const invalid = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: mettaton.id,
+      abilityId: ABILITY_METTATON_LASER,
+      payload: { target: { col: 4, row: 3 } },
+    } as any,
+    makeSharedAttackerWinRng(3)
+  );
+  assert(
+    invalid.rejectionReason === "mettaton_laser_requires_straight_line_endpoint",
+    "Laser should reject a non-straight endpoint with a useful reason"
+  );
+  assert(
+    invalid.state === beforeInvalid &&
+      invalid.state.units[mettaton.id].mettatonRating === 10 &&
+      invalid.state.units[mettaton.id].turn.actionUsed === false,
+    "invalid Laser endpoint should not spend Rating or action"
+  );
+
+  const laser = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: mettaton.id,
+      abilityId: ABILITY_METTATON_LASER,
+      // Clicking the first enemy selects the ray; it must not terminate the beam.
+      payload: { target: { col: 5, row: 4 } },
+    } as any,
+    makeSharedAttackerWinRng(3)
+  );
+  const queuedIds = (laser.state.pendingRoll?.context as {
+    targetsQueue?: string[];
+  })?.targetsQueue;
+  assert(
+    JSON.stringify(queuedIds) ===
+      JSON.stringify([enemy.id, ally.id, enemyBehind.id]),
+    "Laser targets should pass through units and be queued nearest to farthest"
+  );
+  const chainId = laser.state.pendingRoll?.chainId;
+  assert(chainId, "multi-target Laser should create one combat visual chain");
+
+  const beforeHp = {
+    near: state.units[enemy.id].hp,
+    ally: state.units[ally.id].hp,
+    far: state.units[enemyBehind.id].hp,
+  };
+  const resolved = resolveAllPendingRollsWithEvents(
+    laser.state,
+    makeSharedAttackerWinRng(3)
+  );
+  assert(
+    resolved.state.units[enemy.id].hp === beforeHp.near - 1 &&
+      resolved.state.units[ally.id].hp === beforeHp.ally - 1 &&
+      resolved.state.units[enemyBehind.id].hp === beforeHp.far - 1,
+    "Laser should affect every valid unit on the full selected ray"
+  );
+  const aoe = resolved.events.find((event) => event.type === "aoeResolved");
+  assert(
+    aoe?.type === "aoeResolved" &&
+      JSON.stringify(aoe.affectedUnitIds) ===
+        JSON.stringify([enemy.id, ally.id, enemyBehind.id]),
+    "Laser aggregate event should preserve deterministic near-to-far target order"
+  );
+  assert(
+    resolved.events.filter((event) => event.type === "combatVisualBatchReady")
+      .length === 1 &&
+      resolved.state.pendingRoll === null &&
+      resolved.state.pendingAoE === null &&
+      resolved.state.combatResolutionChain === null,
+    "Laser should finish without stale rolls and release VFX once for the full chain"
+  );
+
+  let diagonalState = setUnit(state, mettaton.id, {
+    turn: makeEmptyTurnEconomy(),
+    mettatonRating: 10,
+  });
+  diagonalState = setUnit(diagonalState, enemy.id, {
+    position: { col: 5, row: 3 },
+  });
+  diagonalState = setUnit(diagonalState, ally.id, { position: null });
+  diagonalState = setUnit(diagonalState, enemyBehind.id, {
+    position: { col: 3, row: 1 },
+  });
+  const diagonal = applyAction(
+    diagonalState,
+    {
+      type: "useAbility",
+      unitId: mettaton.id,
+      abilityId: ABILITY_METTATON_LASER,
+      payload: { target: { col: 5, row: 3 } },
+    } as any,
+    makeSharedAttackerWinRng(2)
+  );
+  assert(
+    JSON.stringify(
+      (diagonal.state.pendingRoll?.context as { targetsQueue?: string[] })
+        ?.targetsQueue
+    ) === JSON.stringify([enemy.id, enemyBehind.id]),
+    "Laser should support diagonal full-line beams"
+  );
+
+  let emptyState = setUnit(state, mettaton.id, {
+    turn: makeEmptyTurnEconomy(),
+    mettatonRating: 10,
+  });
+  emptyState = setUnit(emptyState, enemy.id, { position: null });
+  emptyState = setUnit(emptyState, ally.id, { position: null });
+  emptyState = setUnit(emptyState, enemyBehind.id, { position: null });
+  const empty = applyAction(
+    emptyState,
+    {
+      type: "useAbility",
+      unitId: mettaton.id,
+      abilityId: ABILITY_METTATON_LASER,
+      payload: { target: { col: 7, row: 4 } },
+    } as any,
+    makeSharedAttackerWinRng(1)
+  );
+  assert(
+    empty.state.pendingRoll === null &&
+      empty.events.some(
+        (event) =>
+          event.type === "aoeResolved" && event.affectedUnitIds.length === 0
+      ),
+    "Laser should resolve an empty valid line safely"
+  );
+
+  console.log("mettaton_laser_full_line_regression passed");
+}
+
 
 export function testMettatonNeoGraceAndRiderPathUnlocks() {
   let { state, mettaton, enemy } = setupMettatonState();

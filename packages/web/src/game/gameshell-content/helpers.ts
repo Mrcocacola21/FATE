@@ -68,6 +68,26 @@ export function getDoraTargetCenters(view: PlayerView, casterId: string): Coord[
   return targets;
 }
 
+export function getFullLineTargetCells(view: PlayerView, casterId: string): Coord[] {
+  const caster = view.units[casterId];
+  if (!caster?.position) return [];
+  const size = view.boardSize ?? 9;
+  const targets: Coord[] = [];
+
+  for (const dir of DORA_DIRS) {
+    let col = caster.position.col + dir.col;
+    let row = caster.position.row + dir.row;
+    while (col >= 0 && row >= 0 && col < size && row < size) {
+      targets.push({ col, row });
+      if (caster.blindUntilOwnTurnStart) break;
+      col += dir.col;
+      row += dir.row;
+    }
+  }
+
+  return targets;
+}
+
 export function getArcherLikeTargetIds(view: PlayerView, casterId: string): string[] {
   const caster = view.units[casterId];
   if (!caster?.position) return [];

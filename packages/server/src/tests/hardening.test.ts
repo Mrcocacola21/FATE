@@ -11,6 +11,7 @@ import {
   ABILITY_JACK_RIPPER_SNARES,
   ABILITY_LOKI_LAUGHT,
   ABILITY_LUCHE_DIVINE_RAY,
+  ABILITY_METTATON_LASER,
   ABILITY_RIVER_PERSON_BOAT,
   ABILITY_RIVER_PERSON_BOATMAN,
   attachArmy,
@@ -27,6 +28,7 @@ import {
   HERO_GRAND_KAISER_ID,
   HERO_JACK_RIPPER_ID,
   HERO_LOKI_ID,
+  HERO_METTATON_ID,
   HERO_PAPYRUS_ID,
   HERO_RIVER_PERSON_ID,
   makePlayerView,
@@ -1704,6 +1706,134 @@ function testArtemidaSickleEndpointCommandsStayAuthoritative() {
   console.log("hardening_artemida_sickle_endpoint_commands passed");
 }
 
+function testMettatonLaserEndpointCommandsStayAuthoritative() {
+  const validPayload = GameActionSchema.safeParse({
+    type: "useAbility",
+    unitId: "P1-archer-mettaton",
+    abilityId: ABILITY_METTATON_LASER,
+    payload: { target: { col: 5, row: 4 } },
+  });
+  const firstTargetOnlyPayload = GameActionSchema.safeParse({
+    type: "useAbility",
+    unitId: "P1-archer-mettaton",
+    abilityId: ABILITY_METTATON_LASER,
+    payload: { targetUnitId: "P2-knight-1" },
+  });
+  assert.equal(validPayload.success, true, "server schema should accept a Laser endpoint");
+  assert.equal(
+    firstTargetOnlyPayload.success,
+    false,
+    "server schema must not reduce Laser to a first-target unit payload",
+  );
+
+  storeTestHooks.reset();
+  try {
+    const room = createGameRoomWithId(`hardening-mettaton-laser-${randomUUID()}`, {
+      hostSeat: "P1",
+      hostConnId: `conn-${randomUUID()}`,
+    });
+    let state = createEmptyGame();
+    state = attachArmy(state, createDefaultArmy("P1", { archer: HERO_METTATON_ID }));
+    state = attachArmy(state, createDefaultArmy("P2"));
+    const mettaton = Object.values(state.units).find(
+      (unit) => unit.owner === "P1" && unit.heroId === HERO_METTATON_ID,
+    );
+    const enemies = Object.values(state.units).filter(
+      (unit) => unit.owner === "P2",
+    );
+    const [firstEnemy, enemyBehind] = enemies;
+    assert(mettaton && firstEnemy && enemyBehind, "Mettaton and two enemies should exist");
+
+    state = setUnit(state, mettaton.id, {
+      position: { col: 4, row: 4 },
+      mettatonRating: 10,
+      mettatonExUnlocked: true,
+      turn: makeEmptyTurnEconomy(),
+    });
+    state = setUnit(state, firstEnemy.id, { position: { col: 5, row: 4 } });
+    state = setUnit(state, enemyBehind.id, {
+      position: { col: 7, row: 4 },
+      isStealthed: true,
+      stealthTurnsLeft: 2,
+    });
+    room.state = {
+      ...state,
+      phase: "battle",
+      currentPlayer: "P1",
+      activeUnitId: mettaton.id,
+      turnOrder: [mettaton.id],
+      turnOrderIndex: 0,
+      turnQueue: [mettaton.id],
+      turnQueueIndex: 0,
+    };
+
+    const projectedBefore = makePlayerView(room.state, "P1");
+    assert.equal(
+      projectedBefore.units[enemyBehind.id],
+      undefined,
+      "Laser endpoint projection must not reveal a hidden unit behind the first enemy",
+    );
+
+    const beforeInvalid = room.state;
+    const revisionBeforeInvalid = room.revision;
+    const invalid = applyGameAction(
+      room,
+      {
+        type: "useAbility",
+        unitId: mettaton.id,
+        abilityId: ABILITY_METTATON_LASER,
+        payload: { target: { col: 6, row: 5 } },
+      },
+      "P1",
+    );
+    assert.equal(invalid.ok, false, "server must reject a non-straight Laser endpoint");
+    if (invalid.ok) {
+      throw new Error("expected the non-straight Laser endpoint to be rejected");
+    }
+    assert.equal(
+      invalid.code,
+      "mettaton_laser_requires_straight_line_endpoint",
+      "invalid Laser endpoint should return the authoritative reason",
+    );
+    assert.equal(room.state, beforeInvalid, "invalid Laser must not mutate state");
+    assert.equal(room.revision, revisionBeforeInvalid);
+    assert.equal(room.state.units[mettaton.id].mettatonRating, 10);
+    assert.equal(room.state.units[mettaton.id].turn.actionUsed, false);
+
+    const accepted = applyGameAction(
+      room,
+      {
+        type: "useAbility",
+        unitId: mettaton.id,
+        abilityId: ABILITY_METTATON_LASER,
+        // Selecting the first occupied cell chooses the whole ray.
+        payload: { target: { col: 5, row: 4 } },
+      },
+      "P1",
+    );
+    assert.equal(accepted.ok, true, "server should accept a straight Laser endpoint");
+    assert.deepEqual(
+      (room.state.pendingRoll?.context as { targetsQueue?: string[] })
+        ?.targetsQueue,
+      [firstEnemy.id, enemyBehind.id],
+      "authoritative rules should collect every target behind the selected endpoint",
+    );
+    assert.equal(room.state.units[mettaton.id].mettatonRating, 8);
+    assert.equal(room.state.units[mettaton.id].turn.actionUsed, true);
+
+    const projectedDuring = makePlayerView(room.state, "P1");
+    assert.equal(
+      JSON.stringify(projectedDuring).includes(enemyBehind.id),
+      false,
+      "pending Laser projections must not leak a hidden target id",
+    );
+  } finally {
+    storeTestHooks.reset();
+  }
+
+  console.log("hardening_mettaton_laser_endpoint_commands passed");
+}
+
 function testPendingBoardChoiceUsesAuthenticatedSeat() {
   const { room } = makeSeatedRoom({
     roomIdPrefix: "hardening-pending-board-choice",
@@ -2309,6 +2439,7 @@ async function main() {
   testRiverBoatmanCommandsPreserveAuthoritativeMovementBudget();
   testMulticlassMovementCommandsStayAuthoritative();
   testArtemidaSickleEndpointCommandsStayAuthoritative();
+  testMettatonLaserEndpointCommandsStayAuthoritative();
   testPendingBoardChoiceUsesAuthenticatedSeat();
   testMongolChargePendingChoiceIsAuthoritative();
   testHassanAssassinOrderCommandAndProjectionAreAuthoritative();

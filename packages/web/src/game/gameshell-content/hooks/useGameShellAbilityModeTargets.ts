@@ -1,6 +1,11 @@
 import { useMemo } from "react";
 import type { Coord } from "rules";
-import { getDoraTargetCenters, getUnitAt, coordKey } from "../helpers";
+import {
+  getDoraTargetCenters,
+  getFullLineTargetCells,
+  getUnitAt,
+  coordKey,
+} from "../helpers";
 
 interface UseGameShellAbilityModeTargetsParams {
   view: any;
@@ -78,7 +83,9 @@ export function useGameShellAbilityModeTargets({
     ) {
       return [] as Coord[];
     }
-    return restrictForBlind(getDoraTargetCenters(view, selectedUnit.id));
+    return effectiveActionMode === "mettatonLaser"
+      ? restrictForBlind(getFullLineTargetCells(view, selectedUnit.id))
+      : restrictForBlind(getDoraTargetCenters(view, selectedUnit.id));
   }, [view, effectiveActionMode, selectedUnit]);
 
   const mettatonLineTargetKeys = useMemo(

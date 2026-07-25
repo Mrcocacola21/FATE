@@ -259,6 +259,12 @@ const WindmillsPayloadSchema = z.union([
   z.object({ targetId: z.string().min(1) }).passthrough(),
 ]);
 
+const MettatonLaserPayloadSchema = z
+  .object({
+    target: CoordSchema,
+  })
+  .passthrough();
+
 export const GameActionSchema = z
   .discriminatedUnion("type", [
     z.object({ type: z.literal("rollInitiative") }),
@@ -305,6 +311,16 @@ export const GameActionSchema = z
     z.object({ type: z.literal("unitStartTurn"), unitId: z.string() }),
   ])
   .superRefine((action, ctx) => {
+    if (action.type === "useAbility" && action.abilityId === "mettatonLaser") {
+      if (!MettatonLaserPayloadSchema.safeParse(action.payload).success) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["payload", "target"],
+          message: "Mettaton Laser requires a target line endpoint",
+        });
+      }
+      return;
+    }
     if (action.type === "useAbility" && action.abilityId === "donKihoteWindmills") {
       if (!WindmillsPayloadSchema.safeParse(action.payload).success) {
         ctx.addIssue({
