@@ -84,6 +84,11 @@ export function testJackSnareActivatesOncePerTarget() {
     firstTrap?.triggeredTargetIds.join(",") === first.id,
     "the serialized marker should record the triggered snare/target pair exactly once",
   );
+  assert(
+    makePlayerView(triggered.state, "P1").jackTraps.some((trap) => trap.isTriggered) &&
+      makePlayerView(triggered.state, "P2").jackTraps.length === 0,
+    "triggered snares should stay owner-private for mechanics and leave the opponent marker projection",
+  );
 
   const recheckState = {
     ...triggered.state,

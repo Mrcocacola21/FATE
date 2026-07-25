@@ -93,6 +93,21 @@
   }
 }
 
+@keyframes snared-overlay-settle {
+  0% {
+    opacity: 0;
+    transform: scale(1.18) rotate(-4deg);
+  }
+  65% {
+    opacity: 1;
+    transform: scale(0.96) rotate(1deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
+}
+
 @keyframes board-effect-pulse {
   0% {
     opacity: 0;
@@ -1364,6 +1379,60 @@ html.dark {
     animation: stake-marker-reveal 360ms cubic-bezier(0.2, 0.82, 0.3, 1) both;
   }
 
+  .board-marker-icon--jack-trap {
+    @apply select-none;
+    z-index: 4;
+  }
+
+  .board-marker-icon--jack-trap > img {
+    @apply object-contain;
+    filter: drop-shadow(0 3px 4px rgb(15 23 42 / 0.72));
+  }
+
+  .board-marker-icon--jack-trap-hidden {
+    opacity: 0.62;
+    filter: saturate(0.72) brightness(0.82);
+  }
+
+  .board-marker-icon--jack-trap-revealed {
+    opacity: 0.94;
+    filter: saturate(1.1) brightness(1.06);
+  }
+
+  .snared-overlay {
+    transform-origin: center;
+    filter: drop-shadow(0 1px 1px rgb(15 23 42 / 0.9));
+    animation: snared-overlay-settle 360ms cubic-bezier(0.2, 0.82, 0.3, 1) both;
+  }
+
+  .snared-overlay__rope-shadow,
+  .snared-overlay__rope,
+  .snared-overlay__rope-highlight {
+    fill: none;
+    stroke-linecap: round;
+  }
+
+  .snared-overlay__rope-shadow {
+    stroke: rgb(15 23 42 / 0.88);
+    stroke-width: 9;
+  }
+
+  .snared-overlay__rope {
+    stroke: #9a6b37;
+    stroke-width: 6;
+  }
+
+  .snared-overlay__rope-highlight {
+    stroke: rgb(250 204 124 / 0.72);
+    stroke-width: 1.7;
+  }
+
+  .snared-overlay__knot {
+    fill: #8a5b2d;
+    stroke: #3f2a18;
+    stroke-width: 2;
+  }
+
   .stake-state-badge {
     border: 1px solid currentColor;
     line-height: 1;
@@ -1863,6 +1932,7 @@ html.dark {
   .unit-transform-label,
   .unit-bone-status::after,
   .unit-bone-expiring::after,
+  .snared-overlay,
   .board-marker-icon--forest,
   .board-marker-icon--stake-revealed,
   .board-effect-cell,

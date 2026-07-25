@@ -89,10 +89,7 @@ function testHiddenEnemyOmitted() {
 
 function testGroznyTyrantMovementProjectionAndReconnect() {
   let state = createEmptyGame();
-  state = attachArmy(
-    state,
-    createDefaultArmy("P1", { berserker: HERO_GROZNY_ID }),
-  );
+  state = attachArmy(state, createDefaultArmy("P1", { berserker: HERO_GROZNY_ID }));
   state = attachArmy(state, createDefaultArmy("P2"));
   const grozny = Object.values(state.units).find(
     (unit) => unit.owner === "P1" && unit.heroId === HERO_GROZNY_ID,
@@ -135,9 +132,7 @@ function testGroznyTyrantMovementProjectionAndReconnect() {
     "owner projection should include Tyrant movement source tracking",
   );
   assert(
-    ownerView.legal?.movesByUnitId[grozny.id].some(
-      (cell) => cell.col === 4 && cell.row === 8,
-    ),
+    ownerView.legal?.movesByUnitId[grozny.id].some((cell) => cell.col === 4 && cell.row === 8),
     "owner projection should include inherited Rider movement destinations",
   );
 
@@ -161,9 +156,7 @@ function testGroznyTyrantMovementProjectionAndReconnect() {
     "serialized authoritative state should restore Tyrant tracking on reconnect",
   );
   assert(
-    reconnectView.legal?.movesByUnitId[grozny.id].some(
-      (cell) => cell.col === 4 && cell.row === 8,
-    ),
+    reconnectView.legal?.movesByUnitId[grozny.id].some((cell) => cell.col === 4 && cell.row === 8),
     "reconnect projection should preserve inherited movement options",
   );
 
@@ -614,6 +607,7 @@ function testJackTrapProjectionIsOwnerPrivateUntilTriggered() {
     makePlayerView(state, "P1").jackTraps?.map((trap) => trap.position),
     [{ col: 2, row: 3 }],
   );
+  assert.equal(makePlayerView(state, "P1").jackTraps[0]?.isTriggered, false);
   assert.equal(
     "triggeredTargetIds" in makePlayerView(state, "P1").jackTraps[0],
     false,
@@ -629,10 +623,44 @@ function testJackTrapProjectionIsOwnerPrivateUntilTriggered() {
     makePlayerView(revealed, "P2").jackTraps?.map((trap) => trap.position),
     [{ col: 2, row: 3 }],
   );
+  assert.equal(makePlayerView(revealed, "P2").jackTraps[0]?.isTriggered, false);
   assert.equal(
     makePlayerView(revealed, "P2").jackTraps[0]?.sourceUnitId,
     undefined,
     "a revealed enemy snare must not project private source metadata",
+  );
+
+  const trappedUnit = Object.values(state.units).find((unit) => unit.id !== jack.id)!;
+  const triggered: GameState = {
+    ...state,
+    units: {
+      ...state.units,
+      [trappedUnit.id]: {
+        ...trappedUnit,
+        position: { col: 2, row: 3 },
+        immobilizedUntilOwnTurnStart: true,
+      },
+    },
+    jackTraps: state.jackTraps?.map((trap) => ({
+      ...trap,
+      isRevealed: true,
+      trappedUnitId: trappedUnit.id,
+      triggeredTargetIds: [trappedUnit.id],
+    })),
+  };
+  const triggeredOwnerView = makePlayerView(triggered, "P1");
+  assert.equal(triggeredOwnerView.jackTraps[0]?.isTriggered, true);
+  assert.equal(triggeredOwnerView.units[trappedUnit.id]?.immobilizedUntilOwnTurnStart, true);
+  assert.deepEqual(makePlayerView(triggered, "P2").jackTraps, []);
+  assert.deepEqual(makeSpectatorView(triggered).jackTraps, []);
+
+  const reconnected = JSON.parse(JSON.stringify(triggered)) as GameState;
+  assert.equal(makePlayerView(reconnected, "P1").jackTraps[0]?.isTriggered, true);
+  assert.deepEqual(makePlayerView(reconnected, "P2").jackTraps, []);
+  assert.equal(
+    makePlayerView(reconnected, "P2").units[trappedUnit.id]?.immobilizedUntilOwnTurnStart,
+    true,
+    "reconnect should restore the public wrapped-unit status without restoring a trap marker",
   );
   console.log("view_jack_trap_owner_private_until_triggered passed");
 }

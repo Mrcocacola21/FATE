@@ -56,6 +56,8 @@ export interface VisibleJackTrapMarker {
   sourceUnitId?: string;
   position: Coord;
   isRevealed: boolean;
+  /** Triggered snares remain owner-private for follow-up mechanics, but are not board markers. */
+  isTriggered: boolean;
 }
 
 export type ArenaEffectDurationUnit = "turn";

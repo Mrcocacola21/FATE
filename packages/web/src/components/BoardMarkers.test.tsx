@@ -60,13 +60,43 @@ function markerState(): GameState {
         owner: "P1",
         position: { col: 5, row: 6 },
         isRevealed: true,
-        triggeredTargetIds: ["P2-target"],
+        triggeredTargetIds: [],
       },
     ],
   };
 }
 
-function renderBoard(view: PlayerView, playerId: PlayerId): string {
+function triggeredMarkerState(): GameState {
+  const state = markerState();
+  const [sourceUnit, trappedUnit] = Object.values(state.units);
+  assert.ok(sourceUnit);
+  assert.ok(trappedUnit);
+  return {
+    ...state,
+    units: {
+      ...state.units,
+      [trappedUnit.id]: {
+        ...trappedUnit,
+        position: { col: 4, row: 4 },
+        immobilizedUntilOwnTurnStart: true,
+      },
+    },
+    jackTraps: [
+      ...(state.jackTraps ?? []),
+      {
+        id: "jack-snare-P1-3",
+        sourceUnitId: sourceUnit.id,
+        owner: "P1",
+        position: { col: 4, row: 4 },
+        isRevealed: true,
+        trappedUnitId: trappedUnit.id,
+        triggeredTargetIds: [trappedUnit.id],
+      },
+    ],
+  };
+}
+
+function renderBoard(view: PlayerView, playerId: PlayerId, zoom = 1): string {
   return renderToStaticMarkup(
     <Board
       view={view}
@@ -74,6 +104,7 @@ function renderBoard(view: PlayerView, playerId: PlayerId): string {
       selectedUnitId={null}
       highlightedCells={{}}
       showCoordinates={false}
+      zoom={zoom}
       onSelectUnit={() => undefined}
       onCellClick={() => undefined}
     />,
@@ -168,28 +199,111 @@ test("marker images cannot intercept board cell clicks", () => {
   );
 });
 
-test("Jack snares use private gray and revealed red S badges without leaking hidden markers", () => {
-  const ownerMarkup = renderBoard(makePlayerView(markerState(), "P1"), "P1");
+test("Jack snares use the trap asset while triggered snares move to a wrapped-unit overlay", () => {
+  setLanguage("en", null);
+  const state = triggeredMarkerState();
+  const ownerView = makePlayerView(state, "P1");
+  const ownerMarkup = renderBoard(ownerView, "P1");
+
+  assert.equal(
+    ownerView.jackTraps.length,
+    3,
+    "Jack retains private triggered state for follow-up rules",
+  );
+  assert.equal(ownerView.jackTraps.filter((trap) => trap.isTriggered).length, 1);
   assert.match(ownerMarkup, /data-board-marker="jack_snare_hidden"/);
   assert.match(ownerMarkup, /data-snare-state="hidden"/);
-  assert.match(ownerMarkup, /stake-state-badge--hidden/);
   assert.match(ownerMarkup, /data-board-marker="jack_snare_revealed"/);
   assert.match(ownerMarkup, /data-snare-state="revealed"/);
-  assert.match(ownerMarkup, /stake-state-badge--revealed/);
+  assert.equal(
+    (ownerMarkup.match(/data-board-marker="jack_snare_/g) ?? []).length,
+    2,
+    "the triggered snare must not remain as a third board marker",
+  );
+  assert.equal(
+    (
+      ownerMarkup.match(
+        new RegExp(getBoardMarkerAsset("jack_trap").replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"),
+      ) ?? []
+    ).length,
+    2,
+    "every active snare marker uses the exact trap asset",
+  );
+  assert.match(ownerMarkup, /data-unit-overlay="snared"/);
+  assert.match(ownerMarkup, /aria-label="Wrapped in snares"/);
+  assert.match(ownerMarkup, /snared-overlay pointer-events-none absolute inset-0 z-20/);
   assert.match(ownerMarkup, /pointer-events-none/);
-  assert.match(ownerMarkup, /absolute left-1 top-1 z-30/);
-  assert.match(ownerMarkup, />S<\/div>/);
   assert.match(
     ownerMarkup,
-    /stake-state-badge pointer-events-none absolute left-1 top-6 z-30/,
-    "a co-located Vlad stake is offset below Jack's top-left snare badge",
+    /<button[^>]*data-unit-id="[^"]+"[^>]*>[\s\S]*?data-unit-overlay="snared"/,
+    "the wrapped visual remains inside the clickable unit cell",
   );
 
-  const opponentMarkup = renderBoard(makePlayerView(markerState(), "P2"), "P2");
+  const opponentView = makePlayerView(state, "P2");
+  const opponentMarkup = renderBoard(opponentView, "P2");
+  assert.equal(
+    opponentView.jackTraps.length,
+    1,
+    "only the explicitly revealed, untriggered marker may reach an opponent",
+  );
   assert.doesNotMatch(opponentMarkup, /data-board-marker="jack_snare_hidden"/);
   assert.doesNotMatch(opponentMarkup, /data-snare-state="hidden"/);
   assert.match(opponentMarkup, /data-board-marker="jack_snare_revealed"/);
   assert.match(opponentMarkup, /data-snare-state="revealed"/);
+  assert.match(opponentMarkup, /data-unit-overlay="snared"/);
+});
+
+test("wrapped overlay expires with immobilization and scales at mobile board zoom", () => {
+  const state = triggeredMarkerState();
+  const trappedUnit = Object.values(state.units).find((unit) => unit.immobilizedUntilOwnTurnStart);
+  assert.ok(trappedUnit);
+
+  const mobileMarkup = renderBoard(makePlayerView(state, "P1"), "P1", 0.75);
+  assert.match(mobileMarkup, /data-unit-overlay="snared"/);
+  assert.match(mobileMarkup, /viewBox="0 0 100 100"/);
+
+  const expired: GameState = {
+    ...state,
+    units: {
+      ...state.units,
+      [trappedUnit.id]: {
+        ...trappedUnit,
+        immobilizedUntilOwnTurnStart: false,
+      },
+    },
+    jackTraps: state.jackTraps?.filter((trap) => trap.trappedUnitId !== trappedUnit.id),
+  };
+  const expiredMarkup = renderBoard(makePlayerView(expired, "P1"), "P1");
+  assert.doesNotMatch(expiredMarkup, /data-unit-overlay="snared"/);
+  assert.equal(
+    (expiredMarkup.match(/data-board-marker="jack_snare_/g) ?? []).length,
+    2,
+    "expiring one triggered snare leaves the other active markers intact",
+  );
+});
+
+test("a hidden enemy that is snared leaks neither its overlay nor triggered cell", () => {
+  const state = triggeredMarkerState();
+  const trappedUnit = Object.values(state.units).find((unit) => unit.immobilizedUntilOwnTurnStart);
+  assert.ok(trappedUnit);
+  const hidden: GameState = {
+    ...state,
+    units: {
+      ...state.units,
+      [trappedUnit.id]: {
+        ...trappedUnit,
+        isStealthed: true,
+        stealthTurnsLeft: 2,
+      },
+    },
+  };
+
+  const opponentView = makePlayerView(hidden, "P2");
+  const opponentMarkup = renderBoard(opponentView, "P2");
+  assert.equal(opponentView.units[trappedUnit.id], undefined);
+  assert.equal(opponentView.jackTraps.length, 1);
+  assert.doesNotMatch(opponentMarkup, /data-unit-overlay="snared"/);
+  assert.doesNotMatch(opponentMarkup, /Wrapped in snares/);
 });
 
 test("Blue and Orange Bone render directly on visible board tokens", () => {

@@ -591,9 +591,17 @@ export function testNewPlayableBatchTransactionalActives() {
     );
     assert(triggered.state.units[victim.id].immobilizedUntilOwnTurnStart, "stepping on Jack's trap should immobilize the unit");
     assert(triggered.state.jackTraps?.some((trap) => trap.trappedUnitId === victim.id && trap.isRevealed), "triggered trap should remain revealed until the victim's turn");
-    assert((makePlayerView(triggered.state, "P1").jackTraps ?? []).length === 1, "trap owner should see the trap");
+    assert(
+      (makePlayerView(triggered.state, "P1").jackTraps ?? []).some(
+        (trap) => trap.isTriggered,
+      ),
+      "trap owner should retain private triggered state for Jack's follow-up mechanics",
+    );
     assert((makePlayerView(trapped.state, "P2").jackTraps ?? []).length === 0, "opponent must not receive hidden trap coordinates");
-    assert((makePlayerView(triggered.state, "P2").jackTraps ?? []).length === 1, "triggered trap may be projected after reveal");
+    assert(
+      (makePlayerView(triggered.state, "P2").jackTraps ?? []).length === 0,
+      "triggered trap must stop projecting as an opponent board marker",
+    );
     const victimTurn = initKnowledgeForOwners({
       ...triggered.state,
       currentPlayer: victim.owner,

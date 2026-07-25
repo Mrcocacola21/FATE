@@ -22,6 +22,7 @@ import { BoneIcon, getActiveBoneStatus, type ActiveBoneStatus } from "../game/bo
 import { VfxLayer } from "../features/vfx/VfxLayer";
 import { useBoardVfx } from "../features/vfx/useBoardVfx";
 import { useBoardSfx } from "../features/sfx/useBoardSfx";
+import { SnaredOverlay } from "./SnaredOverlay";
 import {
   buildPreviewCellMap,
   type BoardPreview,
@@ -158,6 +159,7 @@ const PREVIEW_KIND_ORDER: PreviewCellKind[] = [
 
 const FOREST_MARKER_ASSET = getBoardMarkerAsset("lechy_forest");
 const STAKE_MARKER_ASSET = getBoardMarkerAsset("vlad_stake");
+const JACK_TRAP_MARKER_ASSET = getBoardMarkerAsset("jack_trap");
 
 const FIELD_FADE_DURATION_MS = 180;
 
@@ -198,9 +200,7 @@ export function getBoardLinePreviewCells(
   axis: "row" | "col",
 ): Coord[] {
   return Array.from({ length: size }, (_, index) =>
-    axis === "row"
-      ? { col: index, row: target.row }
-      : { col: target.col, row: index },
+    axis === "row" ? { col: index, row: target.row } : { col: target.col, row: index },
   );
 }
 
@@ -417,6 +417,7 @@ export const Board: FC<BoardProps> = ({
       isStealthed: boolean;
       bunkerActive: boolean;
       blindUntilOwnTurnStart?: boolean;
+      immobilizedUntilOwnTurnStart?: boolean;
       chikatiloMarkStatus?: UnitState["chikatiloMarkStatus"];
       boneStatus: ActiveBoneStatus | null;
     }>
@@ -481,6 +482,7 @@ export const Board: FC<BoardProps> = ({
       isStealthed: unit.isStealthed,
       bunkerActive: unit.bunker?.active ?? false,
       blindUntilOwnTurnStart: unit.blindUntilOwnTurnStart,
+      immobilizedUntilOwnTurnStart: unit.immobilizedUntilOwnTurnStart,
       chikatiloMarkStatus: unit.chikatiloMarkStatus,
       boneStatus: getActiveBoneStatus(unit),
     });
@@ -498,6 +500,7 @@ export const Board: FC<BoardProps> = ({
     stakeMarkersByPos.set(key, existing || marker.isRevealed);
   }
   for (const trap of view.jackTraps ?? []) {
+    if (trap.isTriggered) continue;
     const key = coordKey(toViewCoord(trap.position));
     const existing = jackTrapStatesByPos.get(key) ?? false;
     jackTrapStatesByPos.set(key, existing || trap.isRevealed);
@@ -573,11 +576,7 @@ export const Board: FC<BoardProps> = ({
 
   if (linePreview) {
     const kind: "aoe" | "aoeDisabled" = disabled ? "aoeDisabled" : "aoe";
-    for (const coord of getBoardLinePreviewCells(
-      size,
-      linePreview.target,
-      linePreview.axis,
-    )) {
+    for (const coord of getBoardLinePreviewCells(size, linePreview.target, linePreview.axis)) {
       aoeHighlights.set(coordKey(toViewCoord(coord)), kind);
     }
   }
@@ -657,9 +656,9 @@ export const Board: FC<BoardProps> = ({
             boneStatus && canExposeUnitStatus
               ? `, ${t(boneStatus.kind === "blue" ? "game.blueBone" : "game.orangeBone")}`
               : ""
-          }${
-            unit.blindUntilOwnTurnStart && canExposeUnitStatus
-              ? `, ${t("game.blind")}`
+          }${unit.blindUntilOwnTurnStart && canExposeUnitStatus ? `, ${t("game.blind")}` : ""}${
+            unit.immobilizedUntilOwnTurnStart && canExposeUnitStatus
+              ? `, ${t("board.wrappedInSnares")}`
               : ""
           }`
         : lastKnownCount > 0
@@ -773,6 +772,9 @@ export const Board: FC<BoardProps> = ({
               >
                 <BoneIcon className="h-full w-full" />
               </span>
+            ) : null}
+            {unit.immobilizedUntilOwnTurnStart && canExposeUnitStatus ? (
+              <SnaredOverlay label={t("board.wrappedInSnares")} />
             ) : null}
             {unit.blindUntilOwnTurnStart && canExposeUnitStatus ? (
               <span
@@ -955,27 +957,24 @@ export const Board: FC<BoardProps> = ({
           )}
           {jackTrapStatesByPos.has(key) && (
             <div
-              className={`stake-state-badge pointer-events-none absolute left-1 ${
-                jackTrapStatesByPos.has(key) ? "top-6" : "top-1"
-              } z-30 flex items-center justify-center rounded-full font-bold ${
+              className={`board-marker-icon board-marker-icon--jack-trap pointer-events-none absolute left-1/2 top-1/2 flex items-center justify-center ${
                 jackTrapStatesByPos.get(key)
-                  ? "stake-state-badge--revealed"
-                  : "stake-state-badge--hidden"
+                  ? "board-marker-icon--jack-trap-revealed"
+                  : "board-marker-icon--jack-trap-hidden"
               }`}
               style={{
-                width: Math.max(16, Math.round(cellSize * 0.23)),
-                height: Math.max(16, Math.round(cellSize * 0.23)),
-                fontSize: Math.max(9, Math.round(cellSize * 0.13)),
+                width: Math.round(cellSize * 0.72),
+                height: Math.round(cellSize * 0.72),
               }}
               role="img"
-              aria-label={t("board.jackTrap")}
-              title={t("board.jackTrap")}
+              aria-label={t("board.snare")}
+              title={t("board.snare")}
               data-board-marker={
                 jackTrapStatesByPos.get(key) ? "jack_snare_revealed" : "jack_snare_hidden"
               }
               data-snare-state={jackTrapStatesByPos.get(key) ? "revealed" : "hidden"}
             >
-              S
+              <img src={JACK_TRAP_MARKER_ASSET} alt="" draggable={false} />
             </div>
           )}
           {content}

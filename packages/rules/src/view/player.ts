@@ -121,12 +121,16 @@ export function makePlayerView(state: GameState, playerId: PlayerId): PlayerView
   return {
     ...baseState,
     jackTraps: (state.jackTraps ?? [])
-      .filter((trap) => trap.owner === playerId || trap.isRevealed === true)
+      .filter(
+        (trap) =>
+          trap.owner === playerId || (trap.isRevealed === true && trap.trappedUnitId === undefined),
+      )
       .map((trap) => ({
         id: trap.id,
         sourceUnitId: trap.owner === playerId ? trap.sourceUnitId : undefined,
         position: { ...trap.position },
         isRevealed: trap.isRevealed === true,
+        isTriggered: trap.trappedUnitId !== undefined,
       })),
     units,
     rosterUnits: projectRosterUnits(units, playerId),
