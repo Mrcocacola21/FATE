@@ -80,6 +80,8 @@ export type QueuedBoardEffect = BoardEffect & {
 export interface BoardEventBatch {
   logIndex: number;
   events: GameEvent[];
+  /** Client-only deterministic playback offsets. Never sent to the rules engine. */
+  eventDelaysMs?: number[];
 }
 
 export interface BoardPreviewLine {

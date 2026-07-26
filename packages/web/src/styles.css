@@ -28,6 +28,63 @@
   }
 }
 
+@keyframes unit-visual-attack {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  52% {
+    transform: translate3d(0, -3%, 0) scale(1.07);
+    filter: brightness(1.2) saturate(1.12);
+  }
+}
+
+@keyframes unit-visual-damage {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+    filter: none;
+  }
+  18% {
+    transform: translate3d(-5%, 0, 0) scale(0.98);
+    filter: brightness(1.55) sepia(0.35) saturate(1.8);
+  }
+  38% {
+    transform: translate3d(4%, 0, 0) scale(1.02);
+  }
+  58% {
+    transform: translate3d(-2%, 0, 0);
+  }
+}
+
+@keyframes unit-visual-death {
+  0% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: brightness(1) saturate(1);
+  }
+  16% {
+    opacity: 1;
+    transform: translate3d(-3%, 0, 0) scale(1.04);
+    filter: brightness(1.35) sepia(0.5) saturate(1.75);
+    box-shadow: 0 0 16px rgb(127 29 29 / 0.82);
+  }
+  31% {
+    transform: translate3d(3%, 0, 0) scale(1.01);
+  }
+  48% {
+    opacity: 0.92;
+    transform: translate3d(-1%, 0, 0) scale(0.98);
+    filter: brightness(0.82) grayscale(0.35) saturate(0.65);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(0, 7%, 0) scale(0.82);
+    filter: brightness(0.35) grayscale(0.8) blur(1.5px);
+    box-shadow: 0 0 0 rgb(69 10 10 / 0);
+  }
+}
+
 @keyframes unit-transform-label {
   0% {
     opacity: 0;
@@ -1270,6 +1327,23 @@ html.dark {
     animation: unit-token-change 450ms ease-out both;
   }
 
+  .unit-visual-attacking {
+    animation: unit-visual-attack 275ms cubic-bezier(0.2, 0.75, 0.25, 1) both;
+    will-change: transform, filter;
+  }
+
+  .unit-visual-takingDamage {
+    animation: unit-visual-damage 260ms ease-out both;
+    will-change: transform, filter;
+  }
+
+  .unit-visual-dying {
+    pointer-events: none;
+    animation: unit-visual-death 520ms cubic-bezier(0.25, 0.7, 0.25, 1) both;
+    transform-origin: 50% 70%;
+    will-change: transform, opacity, filter;
+  }
+
   .unit-transform-label {
     @apply pointer-events-none absolute left-1/2 top-0 z-30 -translate-x-1/2 whitespace-nowrap rounded-full bg-violet-600 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white shadow-lg;
     animation: unit-transform-label 1050ms ease-out both;
@@ -1930,6 +2004,8 @@ html.dark {
   .unit-transforming,
   .unit-token-changing,
   .unit-transform-label,
+  .unit-visual-attacking,
+  .unit-visual-takingDamage,
   .unit-bone-status::after,
   .unit-bone-expiring::after,
   .snared-overlay,
@@ -1947,6 +2023,15 @@ html.dark {
   .vfx-sprite,
   .vfx-line {
     animation: none;
+  }
+
+  .unit-visual-attacking,
+  .unit-visual-takingDamage {
+    filter: brightness(1.18);
+  }
+
+  .unit-visual-dying {
+    animation: unit-visual-death 180ms ease-out both;
   }
 
   .board-effect-cell,

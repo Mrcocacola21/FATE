@@ -12,6 +12,7 @@ import {
   HERO_DUOLINGO_ID,
   HERO_ODIN_ID,
   HERO_PAPYRUS_ID,
+  getHeroDefinition,
 } from "../heroes";
 import {
   addMettatonRating,
@@ -22,6 +23,7 @@ import {
 } from "../mettaton";
 import { buildDiceRoll, recordGenghisAttack } from "./helpers";
 import type { AutoDefenseResolution, ResolveAttackParams } from "./types";
+import { getUnitDefinition } from "../units";
 
 export function tryResolveAutoDefense(
   state: GameState,
@@ -118,6 +120,11 @@ export function tryResolveAutoDefense(
     hit: false,
     damage: 0,
     defenderHpAfter: defenderAfter.hp,
+    previousHp: defenderAfter.hp,
+    nextHp: defenderAfter.hp,
+    maxHp:
+      getHeroDefinition(defenderAfter.heroId)?.baseHpOverride ??
+      getUnitDefinition(defenderAfter.class).maxHp,
   });
 
   if (isMettaton(defenderAfter)) {

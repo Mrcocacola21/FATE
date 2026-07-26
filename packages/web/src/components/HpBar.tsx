@@ -20,7 +20,7 @@ export const HpBar: FC<HpBarProps> = ({ current, max, showText, className }) => 
       }`}
     >
       <div
-        className={`h-full rounded-full transition-[width] duration-300 ease-out motion-reduce:transition-none ${tone}`}
+        className={`h-full rounded-full transition-[width] duration-150 ease-linear motion-reduce:duration-75 ${tone}`}
         style={{ width: `${pct}%` }}
       />
       {showText && (

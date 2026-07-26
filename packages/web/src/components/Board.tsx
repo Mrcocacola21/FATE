@@ -16,6 +16,7 @@ import { getClassLabel, getHeroDisplayName } from "../i18n/displayMetadata";
 import { BoardEffectsLayer } from "../game/effects/BoardEffectsLayer";
 import { useBoardEffects } from "../game/effects/useBoardEffects";
 import { useVisualResolution } from "../game/effects/useVisualResolution";
+import { isGameplayProjectedUnit } from "../game/effects/combatPlayback";
 import { useBoardFit } from "../game/hooks/useBoardFit";
 import type { BoardEventBatch, BoardPreviewLine } from "../game/effects/types";
 import { BoneIcon, getActiveBoneStatus, type ActiveBoneStatus } from "../game/boneStatus";
@@ -414,6 +415,7 @@ export const Board: FC<BoardProps> = ({
       id: string;
       owner: PlayerId;
       class: string;
+      isVisualOnly: boolean;
       isStealthed: boolean;
       bunkerActive: boolean;
       blindUntilOwnTurnStart?: boolean;
@@ -479,6 +481,7 @@ export const Board: FC<BoardProps> = ({
       id: unit.id,
       owner: unit.owner,
       class: unit.class,
+      isVisualOnly: !isGameplayProjectedUnit(view, unit.id),
       isStealthed: unit.isStealthed,
       bunkerActive: unit.bunker?.active ?? false,
       blindUntilOwnTurnStart: unit.blindUntilOwnTurnStart,
@@ -593,10 +596,15 @@ export const Board: FC<BoardProps> = ({
       const key = coordKey(viewCoord);
       const occupants = unitsByPos.get(key) ?? [];
       const unit =
-        occupants.find((occupant) => preferredUnitIdSet.has(occupant.id)) ??
+        occupants.find(
+          (occupant) =>
+            !occupant.isVisualOnly && preferredUnitIdSet.has(occupant.id),
+        ) ??
+        [...occupants].reverse().find((occupant) => !occupant.isVisualOnly) ??
         occupants[occupants.length - 1];
-      const isSelected = unit?.id === selectedUnitId;
-      const isActiveUnit = unit?.id === view.activeUnitId;
+      const isGameplayUnit = !!unit && !unit.isVisualOnly;
+      const isSelected = isGameplayUnit && unit.id === selectedUnitId;
+      const isActiveUnit = isGameplayUnit && unit.id === view.activeUnitId;
       const markStatus = unit?.chikatiloMarkStatus;
       const boneStatus = unit?.boneStatus ?? null;
       const isDoraPreview = doraPreviewKeys.has(key);
@@ -675,6 +683,8 @@ export const Board: FC<BoardProps> = ({
         const tokenId = unitView?.figureId ?? unitView?.heroId ?? unit.class;
         const tokenAsset = getUnitTokenAsset(unitView);
         const isTransforming = transformingUnitIds.has(unit.id);
+        const unitVisualState =
+          visualResolution.visualStateByUnitId[unit.id] ?? "idle";
         const expiringBoneKind = expiringBoneStatuses.get(unit.id);
         const previewRelationClass =
           isDoraPreview && selectedUnit
@@ -712,6 +722,7 @@ export const Board: FC<BoardProps> = ({
           isTransforming ? "unit-transforming" : "",
           boneStatus ? `unit-bone-status unit-bone-status--${boneStatus.kind}` : "",
           expiringBoneKind ? `unit-bone-expiring unit-bone-expiring--${expiringBoneKind}` : "",
+          `unit-visual-${unitVisualState}`,
         ].join(" ");
 
         content = isHiddenEnemy ? (
@@ -732,6 +743,8 @@ export const Board: FC<BoardProps> = ({
               width: tokenSize,
               height: tokenSize,
             }}
+            data-unit-visual-state={unitVisualState}
+            data-visual-ghost={unit.isVisualOnly ? "true" : undefined}
           >
             {tokenAsset.isFallback ? (
               <div
@@ -825,11 +838,12 @@ export const Board: FC<BoardProps> = ({
           })}
           aria-pressed={isSelected}
           data-unit-id={unit?.id}
+          data-visual-ghost={unit?.isVisualOnly ? "true" : undefined}
           onClick={() => {
             if (disabled) return;
             if (
               allowUnitSelection &&
-              unit &&
+              isGameplayUnit &&
               (allowAnyUnitSelection || (playerId && unit.owner === playerId))
             ) {
               onSelectUnit(unit.id);

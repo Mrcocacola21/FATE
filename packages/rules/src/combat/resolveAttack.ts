@@ -8,6 +8,7 @@ import {
   HERO_ODIN_ID,
   HERO_SANS_ID,
   HERO_UNDYNE_ID,
+  getHeroDefinition,
 } from "../heroes";
 import { addMettatonRating, buildMettatonRatingChangedEvent, getMettatonRating, hasMettatonGrace } from "../mettaton";
 import { canAttackTarget } from "./checks";
@@ -17,6 +18,7 @@ import { revealStealthedDefenderIfIgnored, resolveHitDamage, tryResolveAutoDefen
 import type { ResolveAttackParams } from "./types";
 import { evPureBloodRedirected } from "../core";
 import { revealAttackerOnAttackAttempt } from "../stealth";
+import { getUnitDefinition } from "../units";
 
 export function resolveAttack(
   state: GameState,
@@ -175,6 +177,10 @@ export function resolveAttack(
   if (redirectTarget && redirectTarget.isAlive && redirectTarget.position) {
     defenderAfter = { ...redirectTarget };
   }
+  const defenderHpBefore = defenderAfter.hp;
+  const defenderMaxHp =
+    getHeroDefinition(defenderAfter.heroId)?.baseHpOverride ??
+    getUnitDefinition(defenderAfter.class).maxHp;
 
   const resolvedHit = resolveHitDamage(
     params,
@@ -258,6 +264,15 @@ export function resolveAttack(
     });
   }
 
+  const deferredDeathEvents = events.filter(
+    (event) =>
+      event.type === "unitDied" && event.unitId === defenderAfter.id,
+  );
+  events = events.filter(
+    (event) =>
+      !(event.type === "unitDied" && event.unitId === defenderAfter.id),
+  );
+
   events.push({
     type: "attackResolved",
     attackerId: attackerAfter.id,
@@ -272,7 +287,11 @@ export function resolveAttack(
     hit,
     damage,
     defenderHpAfter: defenderHpAfterEvent,
+    previousHp: defenderHpBefore,
+    nextHp: defenderHpAfterEvent,
+    maxHp: defenderMaxHp,
   });
+  events.push(...deferredDeathEvents);
   events.push(...ratingEvents);
 
   return { nextState, events };

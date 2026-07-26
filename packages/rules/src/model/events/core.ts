@@ -61,11 +61,16 @@ export type CoreGameEvent =
       hit: boolean;
       damage: number;
       defenderHpAfter: number;
+      /** Visual snapshot metadata; authoritative HP remains on unit state. */
+      previousHp?: number;
+      nextHp?: number;
+      maxHp?: number;
     }
   | {
       type: "unitDied";
       unitId: string;
       killerId: string | null;
+      cause?: string;
     }
   | {
       type: "stealthEntered";

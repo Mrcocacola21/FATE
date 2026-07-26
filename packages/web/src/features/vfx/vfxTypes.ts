@@ -45,6 +45,7 @@ export type QueuedBoardVfxRequest = BoardVfxRequest & {
 export interface BoardVfxEventBatch {
   logIndex: number;
   events: GameEvent[];
+  eventDelaysMs?: number[];
 }
 
 export type VisibleUnitPositions = Record<string, Coord>;

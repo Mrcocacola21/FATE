@@ -104,7 +104,7 @@ test("an incomplete AoE buffers result events and freezes visual HP", () => {
   assert.equal(state.bufferedEvents.length, 1);
 });
 
-test("AoE completion releases one aggregate batch and final HP", () => {
+test("AoE completion releases its ordered hits plus one aggregate marker", () => {
   let state = createVisualResolutionState({
     batch: { logIndex: 0, events: [] },
     view: view({ hp: 5, pendingAoE: true }),
@@ -134,7 +134,7 @@ test("AoE completion releases one aggregate batch and final HP", () => {
   assert.equal(state.visualUnitsByUnitId.target.hp, 1);
   assert.deepEqual(
     state.visualBatch?.events.map((event) => event.type),
-    ["aoeResolved"],
+    ["attackResolved", "attackResolved", "aoeResolved"],
   );
 
   const sameState = advanceVisualResolution(state, {

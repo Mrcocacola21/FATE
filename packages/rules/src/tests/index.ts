@@ -81,6 +81,7 @@ import {
   testBerserkerAutoDefenseEnabled,
   testBerserkerAutoDefenseDeclined,
   testBerserkerAutoDefenseNoCharges,
+  testDamageVisualMetadataAndDeathOrdering,
   testBerserkerDefenseChoiceAutoDodgeSpends6,
   testBerserkerDefenseChoiceRollUsesNormalCombat,
   testCannotAutoDodgeIfChargesNot6,
@@ -503,6 +504,7 @@ function main(): void {
   testBerserkerAutoDefenseEnabled();
   testBerserkerAutoDefenseDeclined();
   testBerserkerAutoDefenseNoCharges();
+  testDamageVisualMetadataAndDeathOrdering();
   testBerserkerDefenseChoiceAutoDodgeSpends6();
   testBerserkerDefenseChoiceRollUsesNormalCombat();
   testCannotAutoDodgeIfChargesNot6();

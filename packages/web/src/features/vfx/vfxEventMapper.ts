@@ -359,9 +359,11 @@ export function mapEventBatchToVfx(params: {
   view: PlayerView;
   previousPositions: VfxMapperContext["previousPositions"];
   logIndex: number;
+  eventDelaysMs?: readonly number[];
 }): BoardVfxRequest[] {
   const effects: BoardVfxRequest[] = [];
   params.events.forEach((event, eventIndex) => {
+    const baseDelay = params.eventDelaysMs?.[eventIndex] ?? 0;
     effects.push(
       ...mapGameEventToVfx(event, {
         view: params.view,
@@ -369,7 +371,10 @@ export function mapEventBatchToVfx(params: {
         logIndex: params.logIndex,
         events: params.events,
         eventIndex,
-      }),
+      }).map((request) => ({
+        ...request,
+        delayMs: (request.delayMs ?? 0) + baseDelay,
+      })),
     );
   });
   return effects;

@@ -114,9 +114,19 @@ function effectForAttack(
   }
 
   if (event.hit === true) {
-    effects.push(...unitFlash(event.defenderId, "hit", context));
+    effects.push(
+      ...unitFlash(event.defenderId, "hit", context).map((effect) => ({
+        ...effect,
+        delayMs: (effect.delayMs ?? 0) + 180,
+      })),
+    );
     if (defender && typeof event.damage === "number" && event.damage > 0) {
-      effects.push(...floatingValue(defender, `-${event.damage}`, "damage"));
+      effects.push(
+        ...floatingValue(defender, `-${event.damage}`, "damage").map((effect) => ({
+          ...effect,
+          delayMs: (effect.delayMs ?? 0) + 180,
+        })),
+      );
     } else {
       effects.push(...floatingLabel(defender, "blocked", "miss"));
     }
@@ -209,6 +219,24 @@ export function effectsFromGameEvent(event: GameEvent, context: EventEffectConte
           durationMs: 850,
         },
         { kind: "cellPulse", cells: [event.to], tone: "move", durationMs: 650 },
+      ];
+    }
+    case "hiddenCollisionResolved": {
+      if (
+        typeof event.displacedUnitId !== "string" ||
+        typeof event.damage !== "number" ||
+        event.damage <= 0
+      ) {
+        return [];
+      }
+      const coord = visibleUnitCoord(
+        event.displacedUnitId,
+        context.view,
+        context.previousPositions,
+      );
+      return [
+        ...unitFlash(event.displacedUnitId, "hit", context),
+        ...floatingValue(coord, `-${event.damage}`, "damage"),
       ];
     }
     case "intimidateResolved":
@@ -512,19 +540,49 @@ export function effectsFromGameEvent(event: GameEvent, context: EventEffectConte
 export function effectsFromEventBatch(
   events: GameEvent[],
   context: EventEffectContext,
+  eventDelaysMs?: readonly number[],
 ): BoardEffect[] {
   let sequenceDelay = 0;
   const effects: BoardEffect[] = [];
-  for (const event of events) {
-    const mapped = effectsFromGameEvent(event, context).map((effect) => ({
+  const attackTargetIds = new Set(
+    events
+      .filter(
+        (event): event is Extract<GameEvent, { type: "attackResolved" }> =>
+          event.type === "attackResolved",
+      )
+      .map((event) => event.defenderId),
+  );
+  events.forEach((event, eventIndex) => {
+    const eventEffects =
+      event.type === "aoeResolved" && attackTargetIds.size > 0
+        ? effectForAoe(
+            {
+              ...event,
+              affectedUnitIds: event.affectedUnitIds.filter(
+                (unitId) => !attackTargetIds.has(unitId),
+              ),
+              damagedUnitIds: event.damagedUnitIds.filter(
+                (unitId) => !attackTargetIds.has(unitId),
+              ),
+              damageByUnitId: Object.fromEntries(
+                Object.entries(event.damageByUnitId ?? {}).filter(
+                  ([unitId]) => !attackTargetIds.has(unitId),
+                ),
+              ),
+            },
+            context,
+          )
+        : effectsFromGameEvent(event, context);
+    const baseDelay = eventDelaysMs?.[eventIndex] ?? sequenceDelay;
+    const mapped = eventEffects.map((effect) => ({
       ...effect,
-      delayMs: (effect.delayMs ?? 0) + sequenceDelay,
+      delayMs: (effect.delayMs ?? 0) + baseDelay,
     }));
     effects.push(...mapped);
-    if (mapped.length > 0) {
+    if (!eventDelaysMs && mapped.length > 0) {
       sequenceDelay = Math.min(sequenceDelay + 90, 540);
     }
-  }
+  });
 
   const seen = new Set<string>();
   return effects.filter((effect) => {

@@ -86,7 +86,7 @@ export function useBoardEffects(params: {
     let incoming = effectsFromEventBatch(batch.events, {
       view,
       previousPositions,
-    });
+    }, batch.eventDelaysMs);
     if (reducedMotion) {
       incoming = simplifyEffectsForReducedMotion(incoming);
     }

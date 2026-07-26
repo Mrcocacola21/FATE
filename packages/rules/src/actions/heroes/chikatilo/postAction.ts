@@ -1,10 +1,15 @@
 import type { ApplyResult, GameEvent, GameState, UnitState } from "../../../model";
 import { evUnitDied } from "../../../core";
-import { HERO_CHIKATILO_ID, HERO_FALSE_TRAIL_TOKEN_ID } from "../../../heroes";
+import {
+  HERO_CHIKATILO_ID,
+  HERO_FALSE_TRAIL_TOKEN_ID,
+  getHeroDefinition,
+} from "../../../heroes";
 import type { RNG } from "../../../rng";
 import { rollContest } from "./helpers";
 import { applyFalseTrailExplosionImmediately } from "./actions";
 import { clearUnitStealth } from "../../../stealth";
+import { getUnitDefinition } from "../../../units";
 
 function revealChikatiloImmediately(
   state: GameState,
@@ -108,6 +113,11 @@ function performFalseTrailTrap(
     hit,
     damage,
     defenderHpAfter: updatedTarget.hp,
+    previousHp: target.hp,
+    nextHp: updatedTarget.hp,
+    maxHp:
+      getHeroDefinition(target.heroId)?.baseHpOverride ??
+      getUnitDefinition(target.class).maxHp,
   });
 
   return { state: nextState, events };

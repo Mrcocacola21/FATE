@@ -112,6 +112,7 @@ export function testBerserkerAutoDefenseDeclined() {
   state = toBattleState(state, "P1", attacker.id);
   state = initKnowledgeForOwners(state);
   const knowledgeBefore = JSON.parse(JSON.stringify(state.knowledge));
+  const defenderHpBefore = state.units[defender.id].hp;
 
   const initial = applyAction(
     state,
@@ -137,6 +138,16 @@ export function testBerserkerAutoDefenseDeclined() {
   if (attackEvent && attackEvent.type === "attackResolved") {
     assert(attackEvent.hit === true, "attack should resolve normally");
     assert(attackEvent.damage === attacker.attack, "damage should be base attack");
+    assert(
+      attackEvent.previousHp === defenderHpBefore &&
+        attackEvent.nextHp === attackEvent.defenderHpAfter,
+      "damage visual metadata should include the exact previous and next HP",
+    );
+    assert(
+      typeof attackEvent.maxHp === "number" &&
+        attackEvent.maxHp >= defenderHpBefore,
+      "damage visual metadata should include max HP",
+    );
   }
 
   assert(
@@ -208,6 +219,56 @@ export function testBerserkerAutoDefenseNoCharges() {
   assert.deepStrictEqual(next.knowledge, knowledgeBefore, "knowledge unchanged");
 
   console.log("berserker_auto_defense_no_charges passed");
+}
+
+export function testDamageVisualMetadataAndDeathOrdering() {
+  const rng = new SeededRNG(12);
+  let state = createEmptyGame();
+  state = attachArmy(state, createDefaultArmy("P1"));
+  state = attachArmy(state, createDefaultArmy("P2"));
+  const attacker = Object.values(state.units).find(
+    (unit) => unit.owner === "P1" && unit.class === "knight",
+  )!;
+  const defender = Object.values(state.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "berserker",
+  )!;
+  state = setUnit(state, attacker.id, { position: { col: 4, row: 4 } });
+  state = setUnit(state, defender.id, {
+    hp: 1,
+    position: { col: 4, row: 5 },
+    charges: { ...defender.charges, [ABILITY_BERSERK_AUTO_DEFENSE]: 0 },
+  });
+  state = initKnowledgeForOwners(toBattleState(state, "P1", attacker.id));
+
+  const initial = applyAction(
+    state,
+    {
+      type: "attack",
+      attackerId: attacker.id,
+      defenderId: defender.id,
+      defenderUseBerserkAutoDefense: true,
+    } as any,
+    rng,
+  );
+  const resolved = resolveAllPendingRolls(initial.state, rng, "roll");
+  const attackIndex = resolved.events.findIndex(
+    (event) =>
+      event.type === "attackResolved" && event.defenderId === defender.id,
+  );
+  const deathIndex = resolved.events.findIndex(
+    (event) => event.type === "unitDied" && event.unitId === defender.id,
+  );
+  const attackEvent = resolved.events[attackIndex];
+
+  assert(attackIndex >= 0 && deathIndex > attackIndex, "death must follow damage in its visual batch");
+  assert(
+    attackEvent?.type === "attackResolved" &&
+      attackEvent.previousHp === 1 &&
+      attackEvent.nextHp === 0 &&
+      typeof attackEvent.maxHp === "number",
+    "lethal damage must carry exact visual HP snapshots",
+  );
+  console.log("damage_visual_metadata_and_death_ordering passed");
 }
 
 

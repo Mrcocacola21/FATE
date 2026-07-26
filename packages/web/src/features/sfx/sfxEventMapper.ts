@@ -133,6 +133,7 @@ export function mapEventBatchToSfx(params: {
   events: GameEvent[];
   view: PlayerView;
   logIndex: number;
+  eventDelaysMs?: readonly number[];
 }): SfxPlaybackRequest[] {
   const requests: SfxPlaybackRequest[] = [];
   params.events.forEach((gameEvent, eventIndex) => {
@@ -142,7 +143,9 @@ export function mapEventBatchToSfx(params: {
       requests.push({
         id: `${params.logIndex}:${eventIndex}:${gameEvent.type}:${sfxEvent.type}:${sfxIndex}`,
         src,
-        delayMs: sfxEvent.type === "unitHit" ? 120 : 0,
+        delayMs:
+          (params.eventDelaysMs?.[eventIndex] ?? 0) +
+          (sfxEvent.type === "unitHit" ? 180 : 0),
       });
     });
   });

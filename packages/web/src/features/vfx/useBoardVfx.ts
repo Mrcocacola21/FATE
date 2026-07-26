@@ -69,6 +69,7 @@ export function useBoardVfx(params: {
       view,
       previousPositions,
       logIndex: batch.logIndex,
+      eventDelaysMs: batch.eventDelaysMs,
     });
     if (reducedMotion) {
       incoming = simplifyVfxForReducedMotion(incoming);

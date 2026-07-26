@@ -62,6 +62,7 @@ export function useBoardSfx(params: {
       events: batch.events,
       view,
       logIndex: batch.logIndex,
+      eventDelaysMs: batch.eventDelaysMs,
     }).filter((request) => !processedRequestIdsRef.current.has(request.id));
 
     for (const request of incoming) {

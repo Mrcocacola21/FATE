@@ -64,10 +64,10 @@ export function isVisualResolutionPending(view: PlayerView): boolean {
 }
 
 /**
- * AoE resolution already contains the aggregate hit/miss/damage result. Keeping
- * its per-target attack events would render every result twice when a buffered
- * group is finally released. Other queued attacks have no aggregate event, so
- * their individual attackResolved events are intentionally preserved.
+ * Remove only bookkeeping events duplicated by the aggregate AoE marker.
+ * Per-target attack events are retained because they carry the ordered HP
+ * snapshots needed by gradual playback. The effects mapper suppresses the
+ * aggregate event's duplicate target flashes while keeping its area/ability VFX.
  */
 export function collapseCompletedVisualResolutionEvents(
   events: GameEvent[],
@@ -79,16 +79,9 @@ export function collapseCompletedVisualResolutionEvents(
   if (aggregateEvents.length === 0) {
     return events;
   }
-  const aggregatedTargetIds = new Set(
-    aggregateEvents.flatMap((event) => event.affectedUnitIds ?? []),
+  return events.filter(
+    (event) => !REDUNDANT_AGGREGATED_EVENT_TYPES.has(event.type),
   );
-  return events.filter((event) => {
-    if (REDUNDANT_AGGREGATED_EVENT_TYPES.has(event.type)) return false;
-    if (event.type === "attackResolved") {
-      return !aggregatedTargetIds.has(event.defenderId);
-    }
-    return true;
-  });
 }
 
 export function createVisualResolutionState(
