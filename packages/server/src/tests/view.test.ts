@@ -586,7 +586,7 @@ function testJackKnownHpProjectionIsOwnerPrivate() {
   console.log("view_jack_known_hp_owner_private passed");
 }
 
-function testJackTrapProjectionIsOwnerPrivateUntilTriggered() {
+function testJackTrapProjectionIsAlwaysOwnerPrivate() {
   let state = createEmptyGame();
   state = attachArmy(state, createDefaultArmy("P1", { assassin: HERO_JACK_RIPPER_ID }));
   const jack = Object.values(state.units).find((unit) => unit.heroId === HERO_JACK_RIPPER_ID)!;
@@ -619,16 +619,13 @@ function testJackTrapProjectionIsOwnerPrivateUntilTriggered() {
     ...state,
     jackTraps: state.jackTraps?.map((trap) => ({ ...trap, isRevealed: true })),
   };
+  assert.equal(makePlayerView(revealed, "P1").jackTraps[0]?.isTriggered, false);
   assert.deepEqual(
-    makePlayerView(revealed, "P2").jackTraps?.map((trap) => trap.position),
-    [{ col: 2, row: 3 }],
+    makePlayerView(revealed, "P2").jackTraps,
+    [],
+    "even a revealed active snare marker must stay private to Jack's owner",
   );
-  assert.equal(makePlayerView(revealed, "P2").jackTraps[0]?.isTriggered, false);
-  assert.equal(
-    makePlayerView(revealed, "P2").jackTraps[0]?.sourceUnitId,
-    undefined,
-    "a revealed enemy snare must not project private source metadata",
-  );
+  assert.deepEqual(makeSpectatorView(revealed).jackTraps, []);
 
   const trappedUnit = Object.values(state.units).find((unit) => unit.id !== jack.id)!;
   const triggered: GameState = {
@@ -662,7 +659,7 @@ function testJackTrapProjectionIsOwnerPrivateUntilTriggered() {
     true,
     "reconnect should restore the public wrapped-unit status without restoring a trap marker",
   );
-  console.log("view_jack_trap_owner_private_until_triggered passed");
+  console.log("view_jack_trap_always_owner_private passed");
 }
 
 function testCoveringTracksProjectionRedactsPendingAndHiddenExplosionTargets() {
@@ -1176,7 +1173,7 @@ function main() {
   testChikatiloMarkEventProjectionRedactsPrivateTarget();
   testGroupedSemanticEventProjectionFiltersHiddenTargets();
   testJackKnownHpProjectionIsOwnerPrivate();
-  testJackTrapProjectionIsOwnerPrivateUntilTriggered();
+  testJackTrapProjectionIsAlwaysOwnerPrivate();
   testCoveringTracksProjectionRedactsPendingAndHiddenExplosionTargets();
   testRiderMovementProjectionDoesNotLeakHiddenTarget();
   testNewBatchAbilitySourceProjection();

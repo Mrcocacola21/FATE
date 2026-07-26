@@ -121,10 +121,7 @@ export function makePlayerView(state: GameState, playerId: PlayerId): PlayerView
   return {
     ...baseState,
     jackTraps: (state.jackTraps ?? [])
-      .filter(
-        (trap) =>
-          trap.owner === playerId || (trap.isRevealed === true && trap.trappedUnitId === undefined),
-      )
+      .filter((trap) => trap.owner === playerId)
       .map((trap) => ({
         id: trap.id,
         sourceUnitId: trap.owner === playerId ? trap.sourceUnitId : undefined,

@@ -229,6 +229,16 @@ test("Jack snares use the trap asset while triggered snares move to a wrapped-un
     2,
     "every active snare marker uses the exact trap asset",
   );
+  assert.equal(
+    (ownerMarkup.match(/data-snare-badge="owner-private"/g) ?? []).length,
+    2,
+    "every active owner-visible snare has a matching S badge",
+  );
+  assert.match(
+    ownerMarkup,
+    /stake-state-badge stake-state-badge--hidden pointer-events-none absolute left-1 top-6[^>]*data-snare-badge="owner-private"[^>]*>S<\/div>/,
+    "the gray snare S badge follows the stake badge style and is offset when both markers share a cell",
+  );
   assert.match(ownerMarkup, /data-unit-overlay="snared"/);
   assert.match(ownerMarkup, /aria-label="Wrapped in snares"/);
   assert.match(ownerMarkup, /snared-overlay pointer-events-none absolute inset-0 z-20/);
@@ -241,15 +251,12 @@ test("Jack snares use the trap asset while triggered snares move to a wrapped-un
 
   const opponentView = makePlayerView(state, "P2");
   const opponentMarkup = renderBoard(opponentView, "P2");
-  assert.equal(
-    opponentView.jackTraps.length,
-    1,
-    "only the explicitly revealed, untriggered marker may reach an opponent",
-  );
+  assert.equal(opponentView.jackTraps.length, 0, "all Jack snare markers stay owner-private");
   assert.doesNotMatch(opponentMarkup, /data-board-marker="jack_snare_hidden"/);
   assert.doesNotMatch(opponentMarkup, /data-snare-state="hidden"/);
-  assert.match(opponentMarkup, /data-board-marker="jack_snare_revealed"/);
-  assert.match(opponentMarkup, /data-snare-state="revealed"/);
+  assert.doesNotMatch(opponentMarkup, /data-board-marker="jack_snare_revealed"/);
+  assert.doesNotMatch(opponentMarkup, /data-snare-state="revealed"/);
+  assert.doesNotMatch(opponentMarkup, /data-snare-badge="owner-private"/);
   assert.match(opponentMarkup, /data-unit-overlay="snared"/);
 });
 
@@ -301,9 +308,10 @@ test("a hidden enemy that is snared leaks neither its overlay nor triggered cell
   const opponentView = makePlayerView(hidden, "P2");
   const opponentMarkup = renderBoard(opponentView, "P2");
   assert.equal(opponentView.units[trappedUnit.id], undefined);
-  assert.equal(opponentView.jackTraps.length, 1);
+  assert.equal(opponentView.jackTraps.length, 0);
   assert.doesNotMatch(opponentMarkup, /data-unit-overlay="snared"/);
   assert.doesNotMatch(opponentMarkup, /Wrapped in snares/);
+  assert.doesNotMatch(opponentMarkup, /data-snare-badge="owner-private"/);
 });
 
 test("Blue and Orange Bone render directly on visible board tokens", () => {

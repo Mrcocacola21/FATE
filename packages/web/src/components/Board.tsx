@@ -978,6 +978,24 @@ export const Board: FC<BoardProps> = ({
             </div>
           )}
           {content}
+          {jackTrapStatesByPos.has(key) && (
+            <div
+              className={`stake-state-badge stake-state-badge--hidden pointer-events-none absolute left-1 ${
+                stakeMarkersByPos.has(key) ? "top-6" : "top-1"
+              } z-30 flex items-center justify-center rounded-full font-bold`}
+              style={{
+                width: Math.max(16, Math.round(cellSize * 0.23)),
+                height: Math.max(16, Math.round(cellSize * 0.23)),
+                fontSize: Math.max(9, Math.round(cellSize * 0.13)),
+              }}
+              title={t("board.snare")}
+              role="img"
+              aria-label={t("board.snare")}
+              data-snare-badge="owner-private"
+            >
+              S
+            </div>
+          )}
           {stakeMarkersByPos.has(key) && (
             <div
               className={`stake-state-badge pointer-events-none absolute left-1 top-1 z-30 flex items-center justify-center rounded-full font-bold ${
