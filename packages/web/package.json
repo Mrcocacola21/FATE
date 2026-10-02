@@ -9,6 +9,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test:auth": "tsx --test src/auth/*.test.ts src/auth/*.test.tsx",
     "test:shell": "tsx --test src/layout/AppShell.test.tsx src/lobby/*.test.tsx",
+    "test:figures": "tsx --test src/pages/FigureSetPage.test.tsx",
+    "test:figures:e2e": "node scripts/figure-set-smoke.mjs",
     "test:shell:e2e": "node scripts/app-shell-smoke.mjs",
     "test:auth:e2e": "node scripts/auth-smoke.mjs",
     "test:multiplayer:e2e": "node scripts/multiplayer-smoke.mjs",

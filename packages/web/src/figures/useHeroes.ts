@@ -6,16 +6,19 @@ interface UseHeroesResult {
   heroes: HeroMeta[];
   loading: boolean;
   error: string | null;
+  retry: () => void;
 }
 
 export function useHeroes(): UseHeroesResult {
   const [heroes, setHeroes] = useState<HeroMeta[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
+    setError(null);
     listHeroes()
       .then((data) => {
         if (cancelled) return;
@@ -24,8 +27,7 @@ export function useHeroes(): UseHeroesResult {
       })
       .catch((err: unknown) => {
         if (cancelled) return;
-        const message =
-          err instanceof Error ? err.message : "Failed to load heroes.";
+        const message = err instanceof Error ? err.message : "Failed to load heroes.";
         setError(message);
       })
       .finally(() => {
@@ -36,7 +38,7 @@ export function useHeroes(): UseHeroesResult {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [attempt]);
 
-  return { heroes, loading, error };
+  return { heroes, loading, error, retry: () => setAttempt((value) => value + 1) };
 }
