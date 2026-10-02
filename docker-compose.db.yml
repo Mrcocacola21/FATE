@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: fate
+      POSTGRES_USER: fate
+      POSTGRES_PASSWORD: fate
+    ports:
+      - "5432:5432"
+    volumes:
+      - fate-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fate -d fate"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  fate-postgres-data:

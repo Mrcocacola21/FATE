@@ -6,6 +6,7 @@ import websocket from "@fastify/websocket";
 import { registerRoutes } from "./routes";
 import { registerGameWebSocket } from "./ws";
 import { isAllowedOrigin } from "./origin";
+import { disconnectDatabase } from "./db/client";
 
 export async function buildServer() {
   const logLevel = process.env.LOG_LEVEL ?? "info";
@@ -20,6 +21,10 @@ export async function buildServer() {
   });
 
   await server.register(websocket);
+
+  server.addHook("onClose", async () => {
+    await disconnectDatabase();
+  });
 
   await registerRoutes(server);
   registerGameWebSocket(server);

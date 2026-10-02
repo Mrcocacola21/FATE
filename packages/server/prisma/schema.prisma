@@ -1,0 +1,156 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum MatchStatus {
+  WAITING
+  IN_PROGRESS
+  FINISHED
+  CANCELLED
+}
+
+enum MatchSeat {
+  P1
+  P2
+}
+
+model User {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email        String   @unique @db.VarChar(320)
+  passwordHash String?  @db.Text
+  createdAt    DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime @updatedAt @db.Timestamptz(3)
+
+  profile           Profile?
+  rating            Rating?
+  ratingHistory     RatingHistory[]
+  matchParticipants MatchParticipant[]
+  createdMatches    Match[]            @relation("MatchCreator")
+  wonMatches        Match[]            @relation("MatchWinner")
+  matchActions      MatchAction[]      @relation("MatchActionActor")
+}
+
+model Profile {
+  userId      String   @id @db.Uuid
+  username    String   @unique @db.VarChar(50)
+  displayName String?  @db.VarChar(100)
+  avatarUrl   String?  @db.Text
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Match {
+  id            String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  roomId        String?     @unique @db.Text
+  status        MatchStatus @default(WAITING)
+  gameMode      String      @db.VarChar(50)
+  seed          Int
+  createdById   String?     @db.Uuid
+  createdAt     DateTime    @default(now()) @db.Timestamptz(3)
+  startedAt     DateTime?   @db.Timestamptz(3)
+  finishedAt    DateTime?   @db.Timestamptz(3)
+  winnerUserId  String?     @db.Uuid
+  finishReason  String?     @db.Text
+  finalRevision Int?
+  updatedAt     DateTime    @updatedAt @db.Timestamptz(3)
+
+  createdBy     User?              @relation("MatchCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  winner        User?              @relation("MatchWinner", fields: [winnerUserId], references: [id], onDelete: SetNull)
+  participants  MatchParticipant[]
+  actions       MatchAction[]
+  snapshots     MatchSnapshot[]
+  ratingHistory RatingHistory[]
+
+  @@index([status, createdAt])
+  @@index([createdById])
+  @@index([winnerUserId])
+}
+
+model MatchParticipant {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  matchId             String    @db.Uuid
+  userId              String?   @db.Uuid
+  seat                MatchSeat
+  displayNameSnapshot String    @db.VarChar(100)
+  createdAt           DateTime  @default(now()) @db.Timestamptz(3)
+
+  match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  user  User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@unique([matchId, seat])
+  @@index([userId])
+}
+
+model MatchAction {
+  id            String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  matchId       String     @db.Uuid
+  revision      Int
+  actorUserId   String?    @db.Uuid
+  actorSeat     MatchSeat?
+  actionType    String     @db.VarChar(100)
+  actionPayload Json       @db.JsonB
+  events        Json?      @db.JsonB
+  createdAt     DateTime   @default(now()) @db.Timestamptz(3)
+
+  match     Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  actorUser User? @relation("MatchActionActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@unique([matchId, revision])
+  @@index([actorUserId])
+  @@index([actionType])
+}
+
+model MatchSnapshot {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  matchId       String   @db.Uuid
+  revision      Int
+  state         Json     @db.JsonB
+  rngState      Json?    @db.JsonB
+  formatVersion Int      @default(1)
+  createdAt     DateTime @default(now()) @db.Timestamptz(3)
+
+  match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+
+  @@unique([matchId, revision])
+}
+
+model Rating {
+  userId          String   @id @db.Uuid
+  rating          Float    @default(1500)
+  ratingDeviation Float    @default(350)
+  volatility      Float    @default(0.06)
+  ratedGames      Int      @default(0)
+  createdAt       DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime @updatedAt @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([rating(sort: Desc)])
+}
+
+model RatingHistory {
+  id                    String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId                String   @db.Uuid
+  matchId               String?  @db.Uuid
+  ratingBefore          Float
+  ratingAfter           Float
+  ratingDeviationBefore Float
+  ratingDeviationAfter  Float
+  volatilityBefore      Float
+  volatilityAfter       Float
+  createdAt             DateTime @default(now()) @db.Timestamptz(3)
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Restrict)
+  match Match? @relation(fields: [matchId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, matchId])
+  @@index([userId, createdAt])
+  @@index([matchId])
+}

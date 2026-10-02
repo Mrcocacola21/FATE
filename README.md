@@ -18,6 +18,7 @@ Follow active progress and implementation notes in the [Developer Log](https://t
 - [Build](#build)
 - [Tests](#tests)
 - [Environment Variables (Web)](#environment-variables-web)
+- [Database Development](#database-development)
 - [Assets (Figure Arts + Tokens)](#assets-figure-arts--tokens)
 - [Server API](#server-api)
 - [WebSocket](#websocket)
@@ -98,8 +99,57 @@ Local defaults are provided in `.env.example`.
 - `MAX_ROOMS` - maximum in-memory FATE rooms retained. Default: `100`.
 - `MAX_LOG_EVENTS` - maximum action log entries retained per room. Default: `5000`.
 - `WS_MAX_PAYLOAD_BYTES`, `WS_RATE_LIMIT_WINDOW_MS`, `WS_RATE_LIMIT_MAX_MESSAGES`, `RECONNECT_GRACE_MS` - WebSocket payload, rate, and reconnect controls.
+- `DATABASE_URL` - PostgreSQL connection string used only when persistence is explicitly requested. Existing realtime gameplay does not require it.
 
 Local development keeps debug REST endpoints open when `NODE_ENV !== "production"`. In production, `GET /api/games/:id`, `POST /api/games/:id/actions`, and `GET /api/games/:id/log` require `X-FATE-DEBUG-TOKEN` to match `FATE_DEBUG_TOKEN`. Browser WebSocket connections must use an allowed Origin; missing Origin is accepted for non-browser clients.
+
+## Database Development
+
+The persistence foundation uses PostgreSQL and Prisma inside `packages/server`. Set `DATABASE_URL`
+in the environment used by Prisma, for example:
+
+```text
+postgresql://fate:fate@localhost:5432/fate?schema=public
+```
+
+The game server still starts without this variable. Database access fails with a focused configuration
+error only when a repository or an explicit database lifecycle function is used.
+
+For an optional local PostgreSQL 16 instance:
+
+```bash
+docker compose -f docker-compose.db.yml up -d
+```
+
+From the repository root, use:
+
+```bash
+npm run -w server prisma:generate
+npm run -w server db:validate
+npm run -w server db:migrate:dev -- --name <migration-name>
+npm run -w server db:migrate:deploy
+npm run -w server db:studio
+```
+
+`db:migrate:dev` creates and applies migrations in development. Deployments should use
+`db:migrate:deploy` to apply the versioned migrations already committed to the repository.
+
+The optional integration test requires a separately prepared `TEST_DATABASE_URL`. As a safety
+guard, its database name or schema must contain `test`; apply migrations to that database before
+running `npm run -w server test:db`. The normal test suite does not require PostgreSQL.
+
+### Realtime state versus durable records
+
+`GameRoom` remains the authoritative, in-memory operational state used by the current REST and
+WebSocket gameplay paths. `Match` is a separate durable information-system record intended for
+later phases. Phase 1 does not create matches, participants, actions, or snapshots from live rooms.
+
+The persistence dependency direction is `routes / WebSocket -> services -> repositories -> Prisma`.
+No current route or WebSocket handler calls a repository yet. Deleting a match cascades its
+participants, actions, and snapshots; participant/action/user references become `NULL` if a user is
+removed. Rating history survives match deletion, while its required user relation prevents deleting
+an identity that still owns rating history. User-owned profile and current-rating rows cascade with
+the user.
 
 ## Test Room / Sandbox
 

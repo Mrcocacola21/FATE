@@ -7,13 +7,23 @@
   "scripts": {
     "dev:raw": "tsx watch src/index.ts",
     "dev": "node ../../scripts/waitForRulesDist.mjs && npm run dev:raw",
+    "prebuild": "npm run prisma:generate",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
-    "test": "npm run -w rules build && tsx src/tests/view.test.ts && tsx src/tests/markerProjection.test.ts && tsx src/tests/ws.smoke.ts && tsx src/tests/hardening.test.ts && tsx src/tests/testRoom.test.ts && tsx src/tests/testRoom.ws.test.ts && tsx src/tests/modes.test.ts"
+    "pretest": "npm run prisma:generate",
+    "test": "npm run -w rules build && tsx src/tests/databaseFoundation.test.ts && tsx src/tests/view.test.ts && tsx src/tests/markerProjection.test.ts && tsx src/tests/ws.smoke.ts && tsx src/tests/hardening.test.ts && tsx src/tests/testRoom.test.ts && tsx src/tests/testRoom.ws.test.ts && tsx src/tests/modes.test.ts",
+    "pretest:db": "npm run prisma:generate",
+    "test:db": "tsx src/tests/database.integration.test.ts",
+    "prisma:generate": "prisma generate",
+    "db:validate": "prisma validate",
+    "db:migrate:dev": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
+    "db:studio": "prisma studio"
   },
   "dependencies": {
     "@fastify/cors": "^9.0.1",
     "@fastify/websocket": "^10.0.1",
+    "@prisma/client": "^6.19.0",
     "fastify": "^4.26.2",
     "rules": "file:../rules",
     "ws": "^8.16.0",
@@ -22,6 +32,7 @@
   "devDependencies": {
     "@types/node": "^20.11.30",
     "@types/ws": "^8.18.1",
+    "prisma": "^6.19.0",
     "tsx": "^4.7.1",
     "typescript": "^5.9.3"
   }
