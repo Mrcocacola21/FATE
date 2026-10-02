@@ -1,8 +1,9 @@
 import type { GameShellViewModel } from "../hooks/useGameShellViewModel";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { GameAction, PendingRollContext, RollKind } from "rules";
 import { useI18n } from "../../../i18n";
+import { useDialogFocus } from "../../../ui/useDialogFocus";
 import { getPendingRollLabel } from "../helpers";
 import {
   canResolvePendingRollDirectly,
@@ -47,6 +48,8 @@ function PendingRollWaitingOverlay({
   onCollapse: () => void;
 }) {
   const { language, t } = useI18n();
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useDialogFocus(true, dialogRef, onCollapse);
   const pending = vm.pendingMeta!;
   const context = contextForPending(pending);
   const isLocalPending = vm.pendingForLocalPlayer;
@@ -61,14 +64,15 @@ function PendingRollWaitingOverlay({
 
   return (
     <div
-      className="game-pending-modal-layer fixed inset-0 flex items-center justify-center overflow-y-auto bg-black/80 px-3 backdrop-blur-md sm:px-4"
+      ref={dialogRef}
+      className="modal-backdrop game-pending-modal-layer fixed inset-0 flex items-center justify-center overflow-y-auto px-3 sm:px-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby={hasStructuredContext ? "pending-roll-title" : "pending-waiting-title"}
       data-layer="pending-task"
       data-testid="pending-roll-waiting-overlay"
     >
-      <div className="game-pending-modal-card arcane-prompt scroll-panel panel-card relative w-full max-w-lg overflow-y-auto border-violet-400/45 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl shadow-violet-950/30 sm:p-6">
+      <div className="game-pending-modal-card modal-card arcane-prompt scroll-panel panel-card relative w-full max-w-lg overflow-y-auto p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:p-6">
         <button
           type="button"
           className="pending-roll-collapse-icon"

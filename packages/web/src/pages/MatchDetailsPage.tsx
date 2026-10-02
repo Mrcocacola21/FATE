@@ -63,10 +63,7 @@ export function MatchDetailsPage() {
             {[...match.participants]
               .sort((a, b) => a.seat.localeCompare(b.seat))
               .map((p) => (
-                <article
-                  key={p.seat}
-                  className="rounded-xl border border-stone-300 p-4 dark:border-stone-700"
-                >
+                <article key={p.seat} className="match-participant p-4" data-outcome={p.outcome}>
                   <p className="mb-3 text-sm font-bold">
                     {p.seat} · {outcomeLabel(p.outcome, t)}
                   </p>

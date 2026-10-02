@@ -139,7 +139,7 @@ export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm, mobile
   return (
     <PanelCard
       variant="hud"
-      className={`relative flex h-full min-w-0 flex-col overflow-hidden ${mobile ? "mobile-board-panel" : ""}`}
+      className={`game-board-panel relative flex h-full min-w-0 flex-col overflow-hidden ${mobile ? "mobile-board-panel" : ""}`}
     >
       <div className="mobile-board-header shrink-0 border-b border-amber-900/10 px-3 py-2 dark:border-amber-500/15 sm:px-4">
         <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
@@ -161,12 +161,12 @@ export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm, mobile
           className={`mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] font-semibold text-stone-500 dark:text-stone-400 ${mobile ? "mobile-board-legend" : ""}`}
         >
           {[
-            [t("game.legalMove"), "bg-sky-400 ring-sky-500"],
-            [t("game.legalAttack"), "bg-rose-400 ring-rose-500"],
-            [t("game.abilityArea"), "bg-amber-400 ring-amber-500"],
+            [t("game.legalMove"), "board-legend-marker--move"],
+            [t("game.legalAttack"), "board-legend-marker--attack"],
+            [t("game.abilityArea"), "board-legend-marker--ability"],
           ].map(([label, color]) => (
             <span key={label} className="inline-flex items-center gap-1.5">
-              <span className={`h-2.5 w-2.5 rounded-sm ring-1 ${color}`} />
+              <span className={`board-legend-marker ${color}`} aria-hidden="true" />
               {label}
             </span>
           ))}

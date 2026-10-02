@@ -161,17 +161,17 @@ test("revealed stakes keep polished art and a red badge above an occupying token
     /board-marker-icon--stake[^>]*style="width:(\d+)px;height:\1px"/,
     "stake art should render in a square container",
   );
-  assert.match(revealedCell, /rounded-xl border border-white\/60 shadow-xl/);
+  assert.match(revealedCell, /data-unit-visual-state="idle"/);
   assert.match(revealedCell, /data-stake-state="revealed"/);
   assert.match(revealedCell, /stake-state-badge--revealed/);
   assert.match(revealedCell, /z-30/);
   assert.ok(
     revealedCell.indexOf('data-board-marker="vlad_stake"') <
-      revealedCell.indexOf("rounded-xl border border-white/60 shadow-xl"),
+      revealedCell.indexOf('data-unit-visual-state="idle"'),
     "stake art should render behind the occupying token",
   );
   assert.ok(
-    revealedCell.indexOf("rounded-xl border border-white/60 shadow-xl") <
+    revealedCell.indexOf('data-unit-visual-state="idle"') <
       revealedCell.indexOf('data-stake-state="revealed"'),
     "revealed badge should render above the occupying token",
   );

@@ -19,7 +19,7 @@ export function AuthLayout({ children, wide = false }: { children: ReactNode; wi
             <ThemeToggle />
           </div>
         </header>
-        <PanelCard className="p-5 sm:p-7">{children}</PanelCard>
+        <PanelCard className="information-page p-5 sm:p-7">{children}</PanelCard>
       </div>
     </div>
   );

@@ -9,7 +9,7 @@ export function MatchHistoryList({ items }: { items: MatchHistoryItem[] }) {
   return (
     <ul className="grid gap-3">
       {items.map((item) => (
-        <li key={item.id} className="rounded-xl border border-stone-300 p-4 dark:border-stone-700">
+        <li key={item.id} className="history-card p-4">
           <div className="flex min-w-0 items-center gap-3">
             <Avatar
               username={

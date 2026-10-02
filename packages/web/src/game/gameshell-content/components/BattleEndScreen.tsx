@@ -1,5 +1,6 @@
 import type { GameShellViewModel } from "../hooks/useGameShellViewModel";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useDialogFocus } from "../../../ui/useDialogFocus";
 import { type GameOverResult, type PlayerId, type PlayerView, type UnitState } from "rules";
 import { useI18n } from "../../../i18n";
 import { getUnitFigureDisplayName } from "../../../i18n/displayMetadata";
@@ -68,6 +69,8 @@ export function BattleEndScreen({ vm }: { vm: GameShellViewModel }) {
   const hasResult = !!result;
   const resultRevision = result?.endedAtRevision ?? null;
   const [open, setOpen] = useState(view?.phase === "ended" && !!result);
+  const dialogRef = useRef<HTMLElement>(null);
+  useDialogFocus(open && hasResult, dialogRef, () => setOpen(false));
 
   useEffect(() => {
     if (view?.phase === "ended" && hasResult) {
@@ -108,14 +111,15 @@ export function BattleEndScreen({ vm }: { vm: GameShellViewModel }) {
     <>
       {open ? (
         <div
-          className="fixed inset-0 z-[80] flex items-end justify-center bg-stone-950/80 backdrop-blur-[3px] sm:items-center sm:p-5"
+          className="modal-backdrop fixed inset-0 z-[80] flex items-end justify-center sm:items-center sm:p-5"
           data-testid="battle-end-overlay"
           role="presentation"
         >
           <section
+            ref={dialogRef}
             aria-labelledby="battle-end-title"
             aria-modal="true"
-            className="relative flex max-h-dvh w-full flex-col overflow-hidden border border-amber-400/25 bg-gradient-to-b from-stone-900 via-stone-950 to-black shadow-[0_0_80px_rgba(245,158,11,0.16)] sm:max-h-[90dvh] sm:max-w-[640px] sm:rounded-2xl"
+            className="battle-result modal-card relative flex max-h-dvh w-full flex-col overflow-hidden border border-amber-400/25 sm:max-h-[90dvh] sm:max-w-[640px] sm:rounded-2xl"
             data-perspective={perspective}
             role="dialog"
           >

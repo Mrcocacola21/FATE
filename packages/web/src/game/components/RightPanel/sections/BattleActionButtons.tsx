@@ -76,13 +76,7 @@ export const BattleActionButtons: FC<BattleActionButtonsProps> = ({
       <button
         type="button"
         aria-pressed={actionMode === "move"}
-        className={`min-h-11 rounded-lg border px-2.5 py-2 text-left text-xs font-bold transition focus-visible:ring-2 focus-visible:ring-amber-500/25 ${
-          moveBlocked
-            ? "border-slate-200 bg-slate-100 text-slate-400 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-500"
-            : actionMode === "move"
-              ? "border-amber-500 bg-amber-500 text-stone-950"
-              : "border-stone-300 bg-stone-100/70 text-stone-700 hover:border-amber-400 hover:bg-amber-50 dark:border-stone-800 dark:bg-black/20 dark:text-stone-100 dark:hover:border-amber-700 dark:hover:bg-amber-950/25"
-        }`}
+        className="action-control"
         onClick={onMoveClick}
         onMouseEnter={() => !moveBlocked && onModePreview("move")}
         onMouseLeave={() => onModePreview(null)}
@@ -99,13 +93,7 @@ export const BattleActionButtons: FC<BattleActionButtonsProps> = ({
       <button
         type="button"
         aria-pressed={actionMode === "attack"}
-        className={`min-h-11 rounded-lg border px-2.5 py-2 text-left text-xs font-bold transition focus-visible:ring-2 focus-visible:ring-rose-500/25 ${
-          attackBlocked
-            ? "border-slate-200 bg-slate-100 text-slate-400 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-500"
-            : actionMode === "attack"
-              ? "border-rose-500 bg-rose-500 text-white"
-              : "border-stone-300 bg-stone-100/70 text-stone-700 hover:border-rose-300 hover:bg-rose-50 dark:border-stone-800 dark:bg-black/20 dark:text-stone-100 dark:hover:border-rose-800 dark:hover:bg-rose-950/30"
-        }`}
+        className="action-control"
         onClick={onAttackClick}
         onMouseEnter={() => !attackBlocked && onModePreview("attack")}
         onMouseLeave={() => onModePreview(null)}
@@ -121,11 +109,7 @@ export const BattleActionButtons: FC<BattleActionButtonsProps> = ({
       </button>
       <button
         type="button"
-        className={`min-h-11 rounded-lg border px-2.5 py-2 text-left text-xs font-bold transition focus-visible:ring-2 focus-visible:ring-sky-500/25 ${
-          searchMoveBlocked
-            ? "border-slate-200 bg-slate-100 text-slate-400 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-500"
-            : "border-stone-300 bg-stone-100/70 text-stone-700 hover:border-sky-300 hover:bg-sky-50 dark:border-stone-800 dark:bg-black/20 dark:text-stone-100 dark:hover:border-sky-800 dark:hover:bg-sky-950/30"
-        }`}
+        className="action-control"
         onClick={onSearchMoveClick}
         disabled={searchMoveBlocked}
         title={compactSearchMoveReason}
@@ -139,11 +123,7 @@ export const BattleActionButtons: FC<BattleActionButtonsProps> = ({
       </button>
       <button
         type="button"
-        className={`min-h-11 rounded-lg border px-2.5 py-2 text-left text-xs font-bold transition focus-visible:ring-2 focus-visible:ring-sky-500/25 ${
-          searchActionBlocked
-            ? "border-slate-200 bg-slate-100 text-slate-400 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-500"
-            : "border-stone-300 bg-stone-100/70 text-stone-700 hover:border-sky-300 hover:bg-sky-50 dark:border-stone-800 dark:bg-black/20 dark:text-stone-100 dark:hover:border-sky-800 dark:hover:bg-sky-950/30"
-        }`}
+        className="action-control"
         onClick={onSearchActionClick}
         disabled={searchActionBlocked}
         title={compactSearchActionReason}
@@ -159,11 +139,7 @@ export const BattleActionButtons: FC<BattleActionButtonsProps> = ({
         <button
           type="button"
           data-testid="enter-stealth-action"
-          className={`min-h-11 rounded-lg border px-2.5 py-2 text-left text-xs font-bold transition focus-visible:ring-2 focus-visible:ring-violet-500/25 ${
-            stealthBlocked
-              ? "border-slate-200 bg-slate-100 text-slate-400 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-500"
-              : "border-violet-200 bg-violet-50 text-violet-700 hover:border-violet-300 hover:bg-violet-100 dark:border-violet-900/70 dark:bg-violet-950/30 dark:text-violet-200 dark:hover:border-violet-800 dark:hover:bg-violet-950/50"
-          }`}
+          className="action-control"
           onClick={onStealthClick}
           disabled={stealthBlocked}
           title={stealthReason}

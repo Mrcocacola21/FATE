@@ -1,4 +1,5 @@
-import { useEffect } from "react";
+import { useRef } from "react";
+import { useDialogFocus } from "../ui/useDialogFocus";
 import ReactMarkdown, { type Components } from "react-markdown";
 import rulesContent from "../content/rules.md?raw";
 import rulesContentUk from "../content/rules.uk.md?raw";
@@ -56,22 +57,15 @@ const markdownComponents: Components = {
 
 export function RulesModal({ open, onClose }: RulesModalProps) {
   const { language, t } = useI18n();
-  useEffect(() => {
-    if (!open) return undefined;
-    const handleKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        onClose();
-      }
-    };
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
-  }, [open, onClose]);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useDialogFocus(open, dialogRef, onClose);
 
   if (!open) return null;
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4 backdrop-blur-md"
+      ref={dialogRef}
+      className="modal-backdrop fixed inset-0 z-[60] flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="rules-modal-title"
@@ -81,7 +75,7 @@ export function RulesModal({ open, onClose }: RulesModalProps) {
         }
       }}
     >
-      <div className="panel-card panel-parchment w-full max-w-3xl overflow-hidden shadow-2xl">
+      <div className="modal-card rules-modal-card panel-card w-full max-w-3xl overflow-hidden">
         <div className="flex items-center justify-between border-b border-amber-900/10 px-6 py-4 dark:border-amber-500/15">
           <div>
             <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
@@ -101,7 +95,7 @@ export function RulesModal({ open, onClose }: RulesModalProps) {
             </button>
           </div>
         </div>
-        <div className="scroll-panel max-h-[80vh] overflow-y-auto px-6 pb-6 pt-4 text-sm leading-relaxed text-slate-700 dark:text-slate-200">
+        <div className="rules-modal-body scroll-panel overflow-y-auto px-6 pb-6 pt-4 text-sm leading-relaxed text-slate-700 dark:text-slate-200">
           <ReactMarkdown components={markdownComponents}>
             {language === "uk" ? rulesContentUk : rulesContent}
           </ReactMarkdown>

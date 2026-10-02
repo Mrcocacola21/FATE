@@ -1,7 +1,9 @@
+import type { ReactNode } from "react";
+
 export interface BottomNavItem<T extends string> {
   value: T;
   label: string;
-  glyph: string;
+  glyph: ReactNode;
 }
 
 export function BottomNav<T extends string>({

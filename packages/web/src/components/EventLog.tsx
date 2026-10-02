@@ -10,12 +10,12 @@ function eventTone(event: GameEvent): string {
     case "unitDied":
     case "damageBonusApplied":
     case "lechyStormRollResult":
-      return "border-rose-300/80 bg-rose-50/75 text-rose-700 dark:border-rose-900/70 dark:bg-rose-950/30 dark:text-rose-300";
+      return "chronicle-danger";
     case "turnStarted":
     case "roundStarted":
     case "battleStarted":
     case "placementStarted":
-      return "border-sky-300/80 bg-sky-50/75 text-sky-700 dark:border-sky-900/70 dark:bg-sky-950/30 dark:text-sky-300";
+      return "chronicle-neutral";
     case "abilityUsed":
     case "chikatiloMarkApplied":
     case "lokiChickenGroupApplied":
@@ -26,11 +26,11 @@ function eventTone(event: GameEvent): string {
     case "chargesUpdated":
     case "rollRequested":
     case "initiativeRollRequested":
-      return "border-violet-300/80 bg-violet-50/75 text-violet-700 dark:border-violet-900/70 dark:bg-violet-950/30 dark:text-violet-300";
+      return "chronicle-important";
     case "unitHealed":
     case "stealthEntered":
     case "stealthRevealed":
-      return "border-emerald-300/80 bg-emerald-50/75 text-emerald-700 dark:border-emerald-900/70 dark:bg-emerald-950/30 dark:text-emerald-300";
+      return "chronicle-success";
     default:
       return "border-stone-300/80 bg-stone-100/70 text-stone-600 dark:border-stone-800 dark:bg-black/20 dark:text-stone-300";
   }

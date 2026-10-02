@@ -1,0 +1,831 @@
+/* FATE's presentation tokens. RGB channels allow the same palette at quiet opacity. */
+:root {
+  --fate-bg: 234 229 219;
+  --fate-surface: 252 249 241;
+  --fate-raised: 255 253 247;
+  --fate-inset: 226 219 207;
+  --fate-border: 170 157 139;
+  --fate-text: 37 32 29;
+  --fate-muted: 100 91 83;
+  --fate-crimson: 153 46 61;
+  --fate-crimson-hover: 177 55 72;
+  --fate-warm: 133 99 55;
+  --fate-success: 65 117 90;
+  --fate-danger: 159 49 65;
+  --fate-p1: 101 125 144;
+  --fate-p2: 176 93 103;
+  --fate-tile-light: 237 231 217;
+  --fate-tile-dark: 207 197 177;
+  --fate-shadow: 0 16px 40px -22px rgb(48 31 23 / 0.28);
+  --fate-shadow-overlay: 0 24px 80px rgb(0 0 0 / 0.28);
+  --fate-radius: 16px;
+  --fate-radius-control: 8px;
+  --fate-space: 4px;
+  --fate-micro: 150ms;
+  --fate-panel: 240ms;
+  --fate-ease: cubic-bezier(0.2, 0.75, 0.25, 1);
+}
+
+html.dark {
+  color-scheme: dark;
+  --fate-bg: 11 12 15;
+  --fate-surface: 24 25 29;
+  --fate-raised: 32 33 38;
+  --fate-inset: 15 16 20;
+  --fate-border: 91 86 81;
+  --fate-text: 239 232 222;
+  --fate-muted: 173 166 158;
+  --fate-crimson: 155 48 64;
+  --fate-crimson-hover: 184 61 78;
+  --fate-warm: 191 161 116;
+  --fate-success: 143 189 157;
+  --fate-danger: 225 140 151;
+  --fate-p1: 157 183 195;
+  --fate-p2: 217 145 151;
+  --fate-tile-light: 40 40 43;
+  --fate-tile-dark: 24 25 29;
+  --fate-shadow: 0 20px 48px -24px rgb(0 0 0 / 0.65);
+  --fate-shadow-overlay: 0 24px 80px rgb(0 0 0 / 0.65);
+}
+
+@keyframes fate-enter {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fate-turn {
+  0%,
+  100% {
+    opacity: 0.65;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@layer components {
+  .app-shell {
+    @apply min-h-screen w-full overflow-x-hidden;
+    min-height: 100dvh;
+    color: rgb(var(--fate-text));
+    background-color: rgb(var(--fate-bg));
+    background-image:
+      radial-gradient(ellipse at 9% 0%, rgb(var(--fate-crimson) / 0.1), transparent 42rem),
+      radial-gradient(ellipse at 93% 24%, rgb(var(--fate-warm) / 0.035), transparent 38rem),
+      linear-gradient(110deg, transparent, rgb(0 0 0 / 0.06));
+  }
+
+  .panel-card {
+    min-width: 0;
+    border: 1px solid rgb(var(--fate-border) / 0.38);
+    border-radius: var(--fate-radius);
+    background: linear-gradient(145deg, rgb(var(--fate-raised) / 0.94), rgb(var(--fate-surface)));
+    box-shadow:
+      var(--fate-shadow),
+      inset 0 1px 0 rgb(255 255 255 / 0.035);
+  }
+
+  .panel-card-muted {
+    min-width: 0;
+    border: 1px solid rgb(var(--fate-border) / 0.25);
+    border-radius: 12px;
+    background: rgb(var(--fate-inset) / 0.6);
+  }
+
+  .panel-hud {
+    border-color: rgb(var(--fate-border) / 0.42);
+  }
+  .panel-arcane {
+    border-color: rgb(var(--fate-warm) / 0.25);
+  }
+  .panel-parchment {
+    border-color: rgb(var(--fate-warm) / 0.3);
+    background:
+      linear-gradient(135deg, rgb(var(--fate-warm) / 0.07), transparent 70%),
+      rgb(var(--fate-surface));
+  }
+
+  .section-kicker {
+    @apply text-[10px] font-bold uppercase tracking-[0.2em];
+    color: rgb(var(--fate-warm));
+  }
+  .section-title {
+    @apply text-lg font-semibold;
+    font-family: Georgia, Cambria, "Times New Roman", serif;
+    color: rgb(var(--fate-text));
+  }
+  .section-copy {
+    @apply text-sm leading-6;
+    color: rgb(var(--fate-muted));
+  }
+  .field-label {
+    @apply mb-1.5 block text-[11px] font-semibold uppercase tracking-wider;
+    color: rgb(var(--fate-muted));
+  }
+  .field-control {
+    @apply w-full min-w-0 px-3 py-2.5 text-sm outline-none;
+    min-height: 44px;
+    border: 1px solid rgb(var(--fate-border) / 0.45);
+    border-radius: var(--fate-radius-control);
+    background: rgb(var(--fate-inset) / 0.8);
+    color: rgb(var(--fate-text));
+    transition:
+      border-color var(--fate-micro) var(--fate-ease),
+      box-shadow var(--fate-micro) var(--fate-ease);
+  }
+  .field-control::placeholder {
+    color: rgb(var(--fate-muted) / 0.8);
+  }
+  .field-control:hover {
+    border-color: rgb(var(--fate-warm) / 0.65);
+  }
+  .field-control:focus {
+    border-color: rgb(var(--fate-warm));
+    box-shadow: 0 0 0 3px rgb(var(--fate-warm) / 0.12);
+  }
+  .field-control[aria-invalid="true"] {
+    border-color: rgb(var(--fate-danger));
+  }
+
+  .btn {
+    @apply inline-flex min-h-10 min-w-0 items-center justify-center gap-2 border px-4 py-2 text-sm font-semibold disabled:pointer-events-none disabled:opacity-45;
+    border-radius: var(--fate-radius-control);
+    transition:
+      background-color var(--fate-micro) var(--fate-ease),
+      border-color var(--fate-micro) var(--fate-ease),
+      box-shadow var(--fate-micro) var(--fate-ease),
+      transform var(--fate-micro) var(--fate-ease);
+  }
+  .btn-sm {
+    @apply min-h-8 px-3 py-1.5 text-xs;
+  }
+  .btn-primary {
+    border-color: rgb(var(--fate-crimson-hover) / 0.8);
+    background: linear-gradient(rgb(255 255 255 / 0.05), transparent), rgb(var(--fate-crimson));
+    color: #fff5ef;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.08),
+      0 4px 12px rgb(0 0 0 / 0.14);
+  }
+  .btn-primary:hover {
+    background-color: rgb(var(--fate-crimson-hover));
+    transform: translateY(-1px);
+  }
+  .btn-secondary,
+  .btn-strong,
+  .btn-arcane {
+    border-color: rgb(var(--fate-border) / 0.5);
+    background: rgb(var(--fate-raised) / 0.65);
+    color: rgb(var(--fate-text));
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.025);
+  }
+  .btn-secondary:hover,
+  .btn-strong:hover,
+  .btn-arcane:hover {
+    border-color: rgb(var(--fate-warm) / 0.7);
+    background: rgb(var(--fate-raised));
+    transform: translateY(-1px);
+  }
+  .btn-ghost {
+    border-color: transparent;
+    background: transparent;
+    color: rgb(var(--fate-muted));
+    box-shadow: none;
+  }
+  .btn-ghost:hover {
+    color: rgb(var(--fate-text));
+    background: rgb(var(--fate-border) / 0.12);
+  }
+  .btn-warning {
+    border-color: rgb(var(--fate-warm) / 0.55);
+    background: rgb(var(--fate-warm) / 0.12);
+    color: rgb(var(--fate-warm));
+  }
+  .btn-danger {
+    border-color: rgb(var(--fate-danger) / 0.5);
+    background: rgb(var(--fate-danger) / 0.1);
+    color: rgb(var(--fate-danger));
+  }
+  .btn-warning:hover,
+  .btn-danger:hover {
+    box-shadow: inset 0 0 0 1px currentColor;
+  }
+  .btn:active:not(:disabled) {
+    transform: translateY(1px);
+    box-shadow: none;
+  }
+  .btn[aria-busy="true"] {
+    cursor: progress;
+  }
+  .icon-button {
+    @apply inline-flex h-10 w-10 items-center justify-center border;
+    border-radius: var(--fate-radius-control);
+    border-color: rgb(var(--fate-border) / 0.4);
+    background: rgb(var(--fate-raised) / 0.6);
+    color: rgb(var(--fate-muted));
+    transition:
+      background-color var(--fate-micro),
+      border-color var(--fate-micro);
+  }
+  .icon-button:hover {
+    color: rgb(var(--fate-text));
+    border-color: rgb(var(--fate-warm) / 0.6);
+  }
+  .icon-button:active {
+    transform: translateY(1px);
+  }
+
+  .badge-info,
+  .badge-active,
+  .badge-special,
+  .badge-phantasm {
+    border-color: rgb(var(--fate-warm) / 0.24);
+    background: rgb(var(--fate-warm) / 0.07);
+    color: rgb(var(--fate-warm));
+  }
+  .badge-owner-p1 {
+    border-color: rgb(var(--fate-p1) / 0.3);
+    background: rgb(var(--fate-p1) / 0.08);
+    color: rgb(var(--fate-p1));
+  }
+  .badge-owner-p2 {
+    border-color: rgb(var(--fate-p2) / 0.3);
+    background: rgb(var(--fate-p2) / 0.08);
+    color: rgb(var(--fate-p2));
+  }
+  .badge-success,
+  .badge-passive {
+    border-color: rgb(var(--fate-success) / 0.3);
+    background: rgb(var(--fate-success) / 0.07);
+    color: rgb(var(--fate-success));
+  }
+  .badge-warning,
+  .badge-impulse {
+    border-color: rgb(var(--fate-warm) / 0.3);
+    background: rgb(var(--fate-warm) / 0.08);
+    color: rgb(var(--fate-warm));
+  }
+  .badge-danger {
+    border-color: rgb(var(--fate-danger) / 0.3);
+    background: rgb(var(--fate-danger) / 0.08);
+    color: rgb(var(--fate-danger));
+  }
+
+  .fate-brand {
+    @apply font-semibold uppercase tracking-[0.08em];
+    font-family: Georgia, Cambria, "Times New Roman", serif;
+    color: rgb(var(--fate-text));
+  }
+  .brand-sigil {
+    @apply relative flex shrink-0 items-center justify-center rounded-xl border;
+    border-color: rgb(var(--fate-warm) / 0.4);
+    color: rgb(var(--fate-warm));
+    background:
+      radial-gradient(circle, rgb(var(--fate-crimson) / 0.15), transparent 75%),
+      rgb(var(--fate-inset));
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.04);
+  }
+  .brand-sigil::before,
+  .brand-sigil::after {
+    content: "";
+    position: absolute;
+    width: 42%;
+    height: 42%;
+    border: 1px solid currentColor;
+    transform: rotate(45deg);
+  }
+  .brand-sigil::after {
+    width: 17%;
+    height: 17%;
+    background: currentColor;
+  }
+  .hero-command {
+    @apply relative overflow-hidden;
+    background:
+      radial-gradient(ellipse at 0% 0%, rgb(var(--fate-crimson) / 0.1), transparent 70%),
+      rgb(var(--fate-surface));
+  }
+  .hero-command::after {
+    content: "";
+    pointer-events: none;
+    position: absolute;
+    right: -60px;
+    top: -160px;
+    width: 360px;
+    height: 360px;
+    border: 1px solid rgb(var(--fate-warm) / 0.08);
+    border-radius: 50%;
+    box-shadow:
+      0 0 0 28px rgb(var(--fate-warm) / 0.025),
+      0 0 0 58px rgb(var(--fate-warm) / 0.015);
+  }
+  .empty-state-icon {
+    @apply flex h-12 w-12 items-center justify-center rounded-xl border;
+    color: rgb(var(--fate-warm));
+    border-color: rgb(var(--fate-warm) / 0.22);
+    background: rgb(var(--fate-warm) / 0.06);
+  }
+  .tabs-rail {
+    @apply flex min-w-0 gap-1 overflow-x-auto rounded-xl border p-1;
+    border-color: rgb(var(--fate-border) / 0.3);
+    background: rgb(var(--fate-inset) / 0.6);
+  }
+  .stat-pill-sky,
+  .stat-pill-violet,
+  .stat-pill-amber {
+    border-color: rgb(var(--fate-warm) / 0.25);
+    background: rgb(var(--fate-warm) / 0.06);
+    color: rgb(var(--fate-text));
+  }
+  .stat-pill-emerald {
+    border-color: rgb(var(--fate-success) / 0.3);
+    background: rgb(var(--fate-success) / 0.05);
+    color: rgb(var(--fate-success));
+  }
+  .stat-pill-rose {
+    border-color: rgb(var(--fate-danger) / 0.3);
+    background: rgb(var(--fate-danger) / 0.05);
+    color: rgb(var(--fate-danger));
+  }
+  .tab-control[aria-selected="true"],
+  .draft-mobile-tabs .tab-control[aria-selected="true"] {
+    border-color: rgb(var(--fate-warm) / 0.45);
+    background: rgb(var(--fate-raised));
+    color: rgb(var(--fate-text));
+    box-shadow: inset 0 -2px 0 rgb(var(--fate-crimson));
+  }
+
+  .room-card,
+  .history-card,
+  .mode-card,
+  .match-participant {
+    border: 1px solid rgb(var(--fate-border) / 0.35);
+    border-radius: 12px;
+    background: linear-gradient(
+      130deg,
+      rgb(var(--fate-raised) / 0.5),
+      rgb(var(--fate-inset) / 0.45)
+    );
+    transition:
+      border-color var(--fate-micro),
+      background-color var(--fate-micro),
+      transform var(--fate-micro),
+      box-shadow var(--fate-micro);
+  }
+  .room-card {
+    @apply relative overflow-hidden p-4;
+    border-left: 2px solid rgb(var(--fate-warm) / 0.6);
+  }
+  .room-card:hover,
+  .history-card:hover {
+    border-color: rgb(var(--fate-warm) / 0.65);
+    box-shadow: var(--fate-shadow);
+    transform: translateY(-1px);
+  }
+  .room-card[data-state="full"],
+  .room-card[data-state="playing"] {
+    border-left-color: rgb(var(--fate-border));
+  }
+  .room-seat {
+    @apply inline-flex items-center gap-1.5 text-xs;
+    color: rgb(var(--fate-muted));
+  }
+  .room-seat::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 2px;
+    border: 1px solid rgb(var(--fate-warm) / 0.7);
+  }
+  .room-seat[data-occupied="true"]::before {
+    background: rgb(var(--fate-warm));
+  }
+  .mode-card {
+    @apply relative p-3 text-left;
+    color: rgb(var(--fate-text));
+  }
+  .mode-card:not(:disabled):hover {
+    border-color: rgb(var(--fate-warm) / 0.7);
+  }
+  .mode-card[aria-pressed="true"] {
+    border-color: rgb(var(--fate-crimson));
+    box-shadow: inset 3px 0 0 rgb(var(--fate-crimson));
+    background: rgb(var(--fate-crimson) / 0.08);
+    opacity: 1;
+  }
+  .seat-choice {
+    accent-color: rgb(var(--fate-crimson));
+  }
+  .seat-choice:has(input:checked) {
+    border-color: rgb(var(--fate-crimson));
+    background: rgb(var(--fate-crimson) / 0.08);
+    color: rgb(var(--fate-text));
+    box-shadow: inset 3px 0 0 rgb(var(--fate-crimson));
+  }
+  .action-control {
+    @apply min-h-11 rounded-lg border px-2.5 py-2 text-left text-xs font-semibold;
+    border-color: rgb(var(--fate-border) / 0.4);
+    background: rgb(var(--fate-inset) / 0.6);
+    color: rgb(var(--fate-text));
+    transition:
+      border-color var(--fate-micro),
+      background-color var(--fate-micro);
+  }
+  .rule-choice-card {
+    border-color: rgb(var(--fate-border) / 0.4);
+    background: rgb(var(--fate-inset) / 0.6);
+    color: rgb(var(--fate-text));
+  }
+  .rule-choice-card[data-selected="true"] {
+    border-color: rgb(var(--fate-crimson));
+    background: rgb(var(--fate-crimson) / 0.08);
+    box-shadow: inset 3px 0 0 rgb(var(--fate-crimson));
+  }
+  .rule-choice-footer {
+    border-color: rgb(var(--fate-border) / 0.35);
+    background: rgb(var(--fate-surface));
+  }
+  .action-control:not(:disabled):hover {
+    border-color: rgb(var(--fate-warm) / 0.65);
+    background: rgb(var(--fate-raised));
+  }
+  .action-control[aria-pressed="true"] {
+    border-color: rgb(var(--fate-crimson));
+    background: rgb(var(--fate-crimson) / 0.1);
+    box-shadow: inset 2px 0 0 rgb(var(--fate-crimson));
+  }
+  .ability-tone {
+    --ability-tone: var(--fate-warm);
+    border-color: rgb(var(--ability-tone) / 0.3);
+    background: rgb(var(--ability-tone) / 0.04);
+    color: rgb(var(--ability-tone));
+  }
+  .ability-tone--muted {
+    --ability-tone: var(--fate-muted);
+  }
+  .ability-tone--passive {
+    --ability-tone: var(--fate-success);
+  }
+  .ability-tone--active {
+    --ability-tone: var(--fate-p1);
+  }
+  .ability-tone--phantasm {
+    --ability-tone: var(--fate-danger);
+  }
+  .draft-hero-card {
+    border-color: rgb(var(--fate-border) / 0.4);
+    background: rgb(var(--fate-surface));
+    color: rgb(var(--fate-text));
+  }
+  .draft-hero-card[data-state="selected"] {
+    border-color: rgb(var(--fate-crimson));
+    background: rgb(var(--fate-crimson) / 0.08);
+    box-shadow: inset 0 2px 0 rgb(var(--fate-crimson));
+  }
+  .draft-hero-card[data-state="available"]:hover {
+    border-color: rgb(var(--fate-warm) / 0.7);
+    transform: translateY(-1px);
+  }
+  .draft-hero-card[data-state="picked"],
+  .draft-hero-card[data-state="banned"],
+  .draft-hero-card[data-state="locked"],
+  .draft-hero-card[data-state="not_draftable"] {
+    color: rgb(var(--fate-muted));
+    background: rgb(var(--fate-inset));
+  }
+  .draft-selected-label {
+    background: rgb(var(--fate-crimson));
+    color: #fff5ef;
+  }
+
+  .game-board-panel {
+    background:
+      radial-gradient(ellipse at 50% 48%, rgb(var(--fate-warm) / 0.045), transparent 70%),
+      rgb(var(--fate-inset));
+  }
+  .battlefield-frame {
+    @apply relative rounded-xl border p-1.5;
+    border-color: rgb(var(--fate-warm) / 0.32);
+    background:
+      linear-gradient(135deg, rgb(var(--fate-warm) / 0.08), transparent 45%), rgb(var(--fate-inset));
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.05),
+      inset 0 0 30px rgb(0 0 0 / 0.15);
+  }
+  .board-object {
+    box-shadow:
+      0 16px 32px -12px rgb(0 0 0 / 0.6),
+      0 0 0 1px rgb(var(--fate-warm) / 0.2);
+  }
+  .board-cell-light {
+    background:
+      linear-gradient(145deg, rgb(255 255 255 / 0.025), transparent), rgb(var(--fate-tile-light));
+  }
+  .board-cell-dark {
+    background:
+      linear-gradient(145deg, rgb(255 255 255 / 0.015), transparent), rgb(var(--fate-tile-dark));
+  }
+  .board-cell {
+    border-color: rgb(var(--fate-border) / 0.22);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.025);
+  }
+  .board-cell:hover:not(:disabled) {
+    background-color: rgb(var(--fate-raised));
+    box-shadow: inset 0 0 0 1px rgb(var(--fate-warm) / 0.4);
+  }
+  .board-cell[aria-pressed="true"] {
+    box-shadow:
+      inset 0 0 0 2px rgb(var(--fate-crimson-hover)),
+      inset 0 0 18px rgb(var(--fate-crimson) / 0.12);
+  }
+  .board-cell[data-active="true"]:not([aria-pressed="true"]) {
+    box-shadow: inset 0 0 0 2px rgb(var(--fate-warm) / 0.8);
+  }
+  .board-cell[aria-pressed="true"]::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: 3px;
+    width: 6px;
+    height: 6px;
+    background: rgb(var(--fate-crimson-hover));
+    transform: translateX(-50%) rotate(45deg);
+    pointer-events: none;
+  }
+  .board-target {
+    --target-tone: var(--fate-warm);
+    background: rgb(var(--target-tone) / 0.1);
+    box-shadow: inset 0 0 0 1px rgb(var(--target-tone) / 0.65);
+  }
+  .board-target--move,
+  .board-target--previewMove,
+  .board-preview--validMove {
+    --target-tone: var(--fate-p1);
+    border: 1px dashed rgb(var(--fate-p1) / 0.8);
+  }
+  .board-target--attack,
+  .board-target--previewAttack,
+  .board-target--attackRange,
+  .board-preview--validTarget,
+  .board-preview--danger {
+    --target-tone: var(--fate-danger);
+  }
+  .board-target--place,
+  .board-preview--pickup,
+  .board-preview--affected {
+    --target-tone: var(--fate-success);
+  }
+  .board-target--move::after,
+  .board-target--place::after {
+    content: "";
+    position: absolute;
+    inset: 42%;
+    border: 1px solid rgb(var(--target-tone));
+    border-radius: 50%;
+    background: rgb(var(--target-tone) / 0.25);
+  }
+  .board-target--attack::after {
+    content: "";
+    position: absolute;
+    right: 4px;
+    top: 4px;
+    width: 6px;
+    height: 6px;
+    background: rgb(var(--fate-danger));
+    transform: rotate(45deg);
+  }
+  .board-target--attackRange,
+  .board-target--previewMove,
+  .board-target--previewAttack,
+  .board-target--previewAbility {
+    opacity: 0.7;
+  }
+  .board-preview--invalidTarget,
+  .board-preview--blocked {
+    --target-tone: var(--fate-muted);
+    border: 1px dashed rgb(var(--fate-muted));
+    background-image: repeating-linear-gradient(
+      135deg,
+      transparent 0 7px,
+      rgb(var(--fate-muted) / 0.1) 7px 8px
+    );
+  }
+  .board-preview--source {
+    box-shadow: inset 0 0 0 2px rgb(var(--fate-warm));
+  }
+  .board-legend-marker {
+    width: 9px;
+    height: 9px;
+    border: 1px solid rgb(var(--fate-warm));
+  }
+  .board-legend-marker--move {
+    border-color: rgb(var(--fate-p1));
+    border-radius: 50%;
+    border-style: dashed;
+  }
+  .board-legend-marker--attack {
+    border-color: rgb(var(--fate-danger));
+    background: rgb(var(--fate-danger) / 0.25);
+    transform: rotate(45deg);
+  }
+  .board-legend-marker--ability {
+    background: rgb(var(--fate-warm) / 0.15);
+  }
+  .unit-token {
+    border-radius: 9px;
+    border-color: rgb(var(--fate-border) / 0.6);
+    box-shadow:
+      0 5px 7px rgb(0 0 0 / 0.4),
+      0 0 0 2px rgb(var(--unit-tone) / 0.8);
+    --unit-tone: var(--fate-p2);
+  }
+  .unit-token[data-owner="P1"] {
+    --unit-tone: var(--fate-p1);
+  }
+  .unit-token img {
+    border-radius: 8px;
+    background: rgb(var(--fate-inset));
+  }
+  .unit-token[data-unit-visual-state="idle"] {
+    transition: transform var(--fate-micro) var(--fate-ease);
+  }
+  .board-cell:hover:not(:disabled) .unit-token[data-unit-visual-state="idle"] {
+    transform: translateY(-2px);
+  }
+  .board-cell[aria-pressed="true"] .unit-token {
+    box-shadow:
+      0 6px 10px rgb(0 0 0 / 0.45),
+      0 0 0 2px rgb(var(--fate-crimson-hover)),
+      0 0 12px rgb(var(--fate-crimson) / 0.15);
+  }
+
+  .player-strip {
+    @apply mt-2 grid grid-cols-2 gap-2;
+  }
+  .player-presence {
+    @apply flex min-w-0 items-center gap-2 rounded-lg border px-3 py-2;
+    border-color: rgb(var(--fate-border) / 0.25);
+    background: rgb(var(--fate-inset) / 0.45);
+    color: rgb(var(--fate-muted));
+  }
+  .player-presence[data-active="true"],
+  .player-roster-active {
+    border-color: rgb(var(--fate-warm) / 0.55);
+    box-shadow: inset 2px 0 0 rgb(var(--fate-warm));
+    background:
+      linear-gradient(90deg, rgb(var(--fate-warm) / 0.08), transparent), rgb(var(--fate-surface));
+    color: rgb(var(--fate-text));
+  }
+  .player-presence-seat {
+    @apply shrink-0 font-mono text-[10px] font-bold;
+    color: rgb(var(--fate-p1));
+  }
+  .player-presence[data-owner="P2"] .player-presence-seat {
+    color: rgb(var(--fate-p2));
+  }
+  .turn-indicator {
+    @apply ml-auto inline-flex shrink-0 items-center gap-1.5 text-[10px] font-semibold;
+    color: rgb(var(--fate-warm));
+  }
+  .turn-indicator::before {
+    content: "";
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+    animation: fate-turn 2.4s ease-in-out infinite;
+  }
+  .roster-unit[aria-pressed="true"] {
+    border-color: rgb(var(--fate-crimson));
+    background: rgb(var(--fate-crimson) / 0.08);
+    box-shadow: inset 2px 0 0 rgb(var(--fate-crimson));
+    color: rgb(var(--fate-text));
+  }
+
+  .modal-backdrop {
+    background: rgb(7 8 11 / 0.78);
+    backdrop-filter: blur(3px);
+  }
+  .modal-card,
+  .arcane-prompt {
+    background:
+      radial-gradient(ellipse at 50% 0%, rgb(var(--fate-warm) / 0.065), transparent 65%),
+      rgb(var(--fate-surface));
+    border-color: rgb(var(--fate-warm) / 0.35);
+    box-shadow: var(--fate-shadow-overlay);
+    animation: fate-enter var(--fate-panel) var(--fate-ease) both;
+  }
+  .arcane-prompt::before {
+    display: none;
+  }
+  .modal-card {
+    max-height: calc(100dvh - 2rem);
+  }
+  .rules-modal-card {
+    @apply flex flex-col;
+  }
+  .rules-modal-body {
+    min-height: 0;
+  }
+  .battle-result {
+    background:
+      radial-gradient(ellipse at 50% 0%, rgb(var(--fate-warm) / 0.09), transparent 65%),
+      rgb(var(--fate-inset));
+    box-shadow: var(--fate-shadow-overlay);
+  }
+  .battle-result [id="battle-end-title"] {
+    color: rgb(var(--fate-warm));
+    font-weight: 500;
+  }
+  .battle-result[data-perspective="loser"] [id="battle-end-title"] {
+    color: rgb(var(--fate-text));
+  }
+  .information-page {
+    animation: fate-enter var(--fate-panel) var(--fate-ease) both;
+  }
+  .information-page h1 {
+    font-family: Georgia, Cambria, "Times New Roman", serif;
+    font-weight: 500;
+    font-size: 1.9rem;
+  }
+  .information-page dt,
+  .history-card dt {
+    color: rgb(var(--fate-muted));
+    font-size: 11px;
+    margin-bottom: 4px;
+  }
+  .information-page dl > div {
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgb(var(--fate-border) / 0.2);
+  }
+  .history-card dl > div {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+  .history-card a {
+    text-decoration-color: rgb(var(--fate-border));
+    text-underline-offset: 4px;
+  }
+  .history-card a:hover {
+    text-decoration-color: rgb(var(--fate-warm));
+  }
+  .match-participant[data-outcome="WIN"] {
+    border-color: rgb(var(--fate-warm) / 0.6);
+    box-shadow: inset 0 2px 0 rgb(var(--fate-warm));
+  }
+  .information-page [role="alert"],
+  .fate-notice {
+    border: 1px solid rgb(var(--fate-danger) / 0.3);
+    border-radius: 10px;
+    padding: 12px;
+    background: rgb(var(--fate-danger) / 0.06);
+    color: rgb(var(--fate-danger));
+  }
+  .information-page [role="status"] {
+    color: rgb(var(--fate-muted));
+  }
+  .chronicle-neutral,
+  .chronicle-important,
+  .chronicle-success,
+  .chronicle-danger {
+    --event-tone: var(--fate-muted);
+    border-color: rgb(var(--event-tone) / 0.3);
+    background: rgb(var(--event-tone) / 0.035);
+    color: rgb(var(--event-tone));
+  }
+  .chronicle-important {
+    --event-tone: var(--fate-warm);
+    border-left-width: 2px;
+  }
+  .chronicle-success {
+    --event-tone: var(--fate-success);
+  }
+  .chronicle-danger {
+    --event-tone: var(--fate-danger);
+  }
+  .chronicle-item::before {
+    box-shadow: none;
+  }
+  .mobile-bottom-nav-item[aria-current="page"] {
+    color: rgb(var(--fate-warm));
+    background: rgb(var(--fate-warm) / 0.08);
+  }
+}
+
+/* Keyboard focus is shared by every control, including controls outside .btn. */
+@layer base {
+  :where(button, a, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid rgb(var(--fate-warm));
+    outline-offset: 3px;
+  }
+  ::selection {
+    background: rgb(var(--fate-crimson) / 0.4);
+    color: rgb(var(--fate-text));
+  }
+}

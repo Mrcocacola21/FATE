@@ -23,21 +23,6 @@ type DraftHeroCardViewProps = {
   onSelect: (heroId: string) => void;
 };
 
-const CARD_STYLES: Record<DraftHeroCardState, string> = {
-  available:
-    "border-amber-300/80 bg-white text-slate-900 hover:-translate-y-0.5 hover:border-amber-500 hover:shadow-lg hover:shadow-amber-950/10 dark:border-amber-800/70 dark:bg-slate-900 dark:text-white",
-  selected:
-    "border-cyan-400 bg-cyan-50/90 text-slate-950 ring-2 ring-cyan-400/60 shadow-lg shadow-cyan-950/15 dark:border-cyan-400 dark:bg-cyan-950/30 dark:text-white",
-  picked:
-    "border-emerald-300 bg-emerald-50/45 text-slate-600 dark:border-emerald-900 dark:bg-emerald-950/20 dark:text-slate-300",
-  banned:
-    "border-rose-300 bg-rose-50/45 text-slate-500 dark:border-rose-900 dark:bg-rose-950/20 dark:text-slate-400",
-  locked:
-    "border-slate-300 bg-slate-100/80 text-slate-500 dark:border-slate-800 dark:bg-slate-950/55 dark:text-slate-400",
-  not_draftable:
-    "border-slate-300 bg-slate-100/80 text-slate-500 dark:border-slate-800 dark:bg-slate-950/55 dark:text-slate-400",
-};
-
 export function DraftHeroCardView({
   hero,
   meta,
@@ -48,19 +33,13 @@ export function DraftHeroCardView({
   t,
   onSelect,
 }: DraftHeroCardViewProps) {
-  const name = meta
-    ? getHeroDisplayName(meta.id, meta.name, language)
-    : hero.heroId;
+  const name = meta ? getHeroDisplayName(meta.id, meta.name, language) : hero.heroId;
   const banned = lockReason === "banned";
   const picked = lockReason === "picked" || !!pickedBy;
   const firstAbility = meta?.abilities[0];
   const firstAbilityDescription = firstAbility
-    ? getAbilityDisplay(
-        firstAbility.id,
-        firstAbility.name,
-        firstAbility.description,
-        language
-      ).description
+    ? getAbilityDisplay(firstAbility.id, firstAbility.name, firstAbility.description, language)
+        .description
     : null;
   const statusKey = banned
     ? "banned"
@@ -69,18 +48,25 @@ export function DraftHeroCardView({
       : state === "available" || state === "selected"
         ? "available"
         : "locked";
-  const tone = banned ? "danger" : picked ? "warning" : statusKey === "available" ? "success" : "neutral";
+  const tone = banned
+    ? "danger"
+    : picked
+      ? "warning"
+      : statusKey === "available"
+        ? "success"
+        : "neutral";
 
   return (
     <button
       type="button"
       data-testid={`draft-hero-${hero.heroId}`}
       aria-pressed={state === "selected"}
-      className={`relative min-h-40 rounded-xl border p-3 text-left transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cyan-400/30 ${CARD_STYLES[state]}`}
+      data-state={state}
+      className="draft-hero-card relative min-h-40 rounded-xl border p-3 text-left transition"
       onClick={() => onSelect(hero.heroId)}
     >
       {state === "selected" ? (
-        <span className="absolute right-2 top-2 rounded-full bg-cyan-600 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-white">
+        <span className="absolute right-2 top-2 draft-selected-label rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-white">
           ✓ {t("draft.selected")}
         </span>
       ) : null}
@@ -114,7 +100,7 @@ export function DraftHeroCardView({
       <span className="mt-3 block min-h-9 text-xs leading-5 opacity-70">
         {lockReason
           ? t(`draft.lockReasons.${lockReason}`)
-          : firstAbilityDescription ?? t("figureSet.noAbilities")}
+          : (firstAbilityDescription ?? t("figureSet.noAbilities"))}
       </span>
     </button>
   );
@@ -242,7 +228,10 @@ export function DraftConfirmBar({
       </div>
 
       {error ? (
-        <div role="alert" className="mt-2 rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-xs text-rose-800 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-200">
+        <div
+          role="alert"
+          className="mt-2 rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-xs text-rose-800 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-200"
+        >
           {error}
         </div>
       ) : null}
@@ -292,7 +281,7 @@ export function DraftHeroDetailsView({
 }: DraftHeroDetailsViewProps) {
   const heroName = hero
     ? getHeroDisplayName(hero.id, hero.name, language)
-    : draftMeta?.heroId ?? null;
+    : (draftMeta?.heroId ?? null);
   const variants = getHeroVisualVariants(draftMeta?.heroId ?? "");
   const abilities = hero?.abilities ?? [];
   const abilityGroups = (["passive", "active", "impulse", "phantasm"] as const)
@@ -314,7 +303,10 @@ export function DraftHeroDetailsView({
       </div>
 
       {!draftMeta ? (
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-6" data-testid="draft-hero-details-scroll">
+        <div
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-6"
+          data-testid="draft-hero-details-scroll"
+        >
           <div className="mx-4 mb-4 rounded-xl border border-dashed border-stone-300 px-4 py-8 text-center dark:border-stone-700">
             <div className="font-semibold text-stone-700 dark:text-stone-200">
               {t("draft.noHeroSelected")}
@@ -353,10 +345,24 @@ export function DraftHeroDetailsView({
             data-testid="draft-hero-details-scroll"
           >
             <div className="flex flex-wrap gap-2">
-              <StatusBadge tone={lockReason === "banned" ? "danger" : pickedBy ? "warning" : lockReason ? "neutral" : "success"}>
+              <StatusBadge
+                tone={
+                  lockReason === "banned"
+                    ? "danger"
+                    : pickedBy
+                      ? "warning"
+                      : lockReason
+                        ? "neutral"
+                        : "success"
+                }
+              >
                 {lockReason ? t(`draft.lockReasons.${lockReason}`) : t("draft.status.available")}
               </StatusBadge>
-              {pickedBy ? <StatusBadge tone="special">{t("draft.pickedBy", { player: pickedBy })}</StatusBadge> : null}
+              {pickedBy ? (
+                <StatusBadge tone="special">
+                  {t("draft.pickedBy", { player: pickedBy })}
+                </StatusBadge>
+              ) : null}
             </div>
 
             {hero ? (
@@ -371,10 +377,20 @@ export function DraftHeroDetailsView({
                     {t("figureSet.stats")}
                   </div>
                   <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
-                    <div className="panel-card-muted px-2.5 py-2">{t("game.hp", { hp: hero.baseStats.hp })}</div>
-                    <div className="panel-card-muted px-2.5 py-2">{t("figureSet.damage", { value: hero.baseStats.damage })}</div>
-                    <div className="panel-card-muted px-2.5 py-2">{t("figureSet.movement", { value: getStatLabel(hero.baseStats.moveType, t) })}</div>
-                    <div className="panel-card-muted px-2.5 py-2">{t("figureSet.attack", { value: getStatLabel(hero.baseStats.attackRange, t) })}</div>
+                    <div className="panel-card-muted px-2.5 py-2">
+                      {t("game.hp", { hp: hero.baseStats.hp })}
+                    </div>
+                    <div className="panel-card-muted px-2.5 py-2">
+                      {t("figureSet.damage", { value: hero.baseStats.damage })}
+                    </div>
+                    <div className="panel-card-muted px-2.5 py-2">
+                      {t("figureSet.movement", { value: getStatLabel(hero.baseStats.moveType, t) })}
+                    </div>
+                    <div className="panel-card-muted px-2.5 py-2">
+                      {t("figureSet.attack", {
+                        value: getStatLabel(hero.baseStats.attackRange, t),
+                      })}
+                    </div>
                   </div>
                 </div>
               </>
@@ -387,8 +403,15 @@ export function DraftHeroDetailsView({
                 </div>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {variants.map((variant) => (
-                    <div key={variant.id} className="flex items-center gap-2 rounded-lg border border-violet-300/50 bg-violet-50/70 p-2 dark:border-violet-800 dark:bg-violet-950/30">
-                      <img src={variant.token} alt="" className="h-9 w-9 rounded-md object-contain" />
+                    <div
+                      key={variant.id}
+                      className="flex items-center gap-2 rounded-lg border border-violet-300/50 bg-violet-50/70 p-2 dark:border-violet-800 dark:bg-violet-950/30"
+                    >
+                      <img
+                        src={variant.token}
+                        alt=""
+                        className="h-9 w-9 rounded-md object-contain"
+                      />
                       <span className="text-xs font-semibold">{t(variant.labelKey)}</span>
                     </div>
                   ))}

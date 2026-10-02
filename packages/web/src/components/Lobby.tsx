@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useDialogFocus } from "../ui/useDialogFocus";
 import { useGameStore } from "../store";
 import type { PlayerRole } from "../ws";
 import { PanelCard, SectionHeader, StatusBadge } from "./ui";
@@ -42,6 +43,10 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
   const [testBusy, setTestBusy] = useState(false);
   const [showMobileSettings, setShowMobileSettings] = useState(false);
   const selectedHeroes = useMemo(() => getSelectedHeroes(), []);
+  const joinDialogRef = useRef<HTMLDivElement>(null);
+  useDialogFocus(!!pendingJoinRoom, joinDialogRef, () => {
+    if (!joinBusy) setPendingJoinRoom(null);
+  });
 
   useEffect(() => {
     fetchRooms().catch((err) => {
@@ -193,7 +198,7 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
             {onOpenFigures ? (
               <button
                 type="button"
-                className="btn btn-primary w-full lg:w-auto"
+                className="btn btn-secondary w-full lg:w-auto"
                 onClick={onOpenFigures}
               >
                 {t("lobby.figureSet")}
@@ -278,9 +283,15 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
             {roomsList.map((room) => (
               <article
                 key={room.id}
-                className="group relative overflow-hidden rounded-2xl border border-stone-300/70 bg-stone-100/55 p-4 transition hover:-translate-y-px hover:border-amber-500/50 hover:bg-white hover:shadow-xl hover:shadow-amber-950/5 dark:border-stone-700/70 dark:bg-black/20 dark:hover:border-amber-500/45 dark:hover:bg-stone-900/80"
+                className="room-card group"
+                data-state={
+                  room.phase !== "lobby"
+                    ? "playing"
+                    : room.players.P1 && room.players.P2
+                      ? "full"
+                      : "available"
+                }
               >
-                <div className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-amber-500/55" />
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
@@ -305,12 +316,12 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
                           count: Number(room.players.P1) + Number(room.players.P2),
                         })}
                       </StatusBadge>
-                      <StatusBadge tone={room.players.P1 ? "neutral" : "success"}>
+                      <span className="room-seat" data-occupied={String(room.players.P1)}>
                         P1 {room.players.P1 ? t("common.occupied") : t("common.open")}
-                      </StatusBadge>
-                      <StatusBadge tone={room.players.P2 ? "neutral" : "success"}>
+                      </span>
+                      <span className="room-seat" data-occupied={String(room.players.P2)}>
                         P2 {room.players.P2 ? t("common.occupied") : t("common.open")}
-                      </StatusBadge>
+                      </span>
                       <StatusBadge tone="info">
                         {t("lobby.spectators", { count: room.spectators })}
                       </StatusBadge>
@@ -363,6 +374,7 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
               data-testid="create-room"
               onClick={handleCreate}
               disabled={busy}
+              aria-busy={busy}
             >
               {busy ? t("lobby.creating") : t("lobby.createNew")}
             </button>
@@ -396,6 +408,7 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
                 data-testid="create-test-room"
                 onClick={handleCreateTestRoom}
                 disabled={testBusy || (testRoomRequiresToken && !debugToken.trim())}
+                aria-busy={testBusy}
               >
                 {testBusy ? t("testRoom.creating") : t("testRoom.create")}
               </button>
@@ -460,10 +473,7 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
                 {t("lobby.joinRoom")}
               </button>
               {localError || joinError ? (
-                <div
-                  className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-800 dark:border-amber-800/70 dark:bg-amber-950/45 dark:text-amber-200"
-                  role="alert"
-                >
+                <div className="fate-notice text-sm" role="alert">
                   {localError ?? localizeServerText(joinError, t)}
                 </div>
               ) : null}
@@ -474,7 +484,8 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
 
       {pendingJoinRoom ? (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/65 p-4 backdrop-blur-sm"
+          ref={joinDialogRef}
+          className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4"
           role="dialog"
           aria-modal="true"
           aria-labelledby="join-room-title"
@@ -486,7 +497,7 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
         >
           <PanelCard
             variant="arcane"
-            className="arcane-prompt w-full max-w-md p-5 shadow-2xl sm:p-6"
+            className="modal-card arcane-prompt w-full max-w-md overflow-y-auto p-5 sm:p-6"
           >
             <SectionHeader
               kicker={t("lobby.chooseSeat")}
@@ -502,7 +513,7 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
                 return (
                   <label
                     key={option}
-                    className={`flex cursor-pointer items-center justify-between rounded-xl border px-3 py-3 text-sm transition ${
+                    className={`seat-choice flex cursor-pointer items-center justify-between rounded-xl border px-3 py-3 text-sm transition ${
                       joinRole === option
                         ? "border-teal-500 bg-teal-50 text-teal-900 ring-2 ring-teal-500/10 dark:bg-teal-950/40 dark:text-teal-100"
                         : "border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300 dark:border-slate-800 dark:bg-slate-950/45 dark:text-slate-200 dark:hover:border-slate-700"
@@ -516,7 +527,7 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
                         checked={joinRole === option}
                         disabled={taken}
                         onChange={() => setJoinRole(option)}
-                        className="h-4 w-4 accent-teal-600"
+                        className="h-4 w-4"
                       />
                       <span className="font-semibold">{roleLabel(option)}</span>
                     </span>
@@ -570,10 +581,7 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
               </button>
             </div>
             {localError || joinError ? (
-              <div
-                className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-800 dark:border-amber-800/70 dark:bg-amber-950/45 dark:text-amber-200"
-                role="alert"
-              >
+              <div className="fate-notice mt-3 text-sm" role="alert">
                 {localError ?? localizeServerText(joinError, t)}
               </div>
             ) : null}

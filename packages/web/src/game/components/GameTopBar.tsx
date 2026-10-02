@@ -27,6 +27,8 @@ export const GameTopBar: FC<GameTopBarProps> = ({ vm, compact = false }) => {
   const initiativePendingPlayer =
     vm.pendingMeta?.kind === "initiativeRoll" ? vm.pendingMeta.player : null;
   const activeFieldId = getActiveBoardFieldVisual(vm.view!);
+  const activePlayer =
+    initiativePendingPlayer ?? (vm.view!.phase === "ended" ? null : vm.view!.currentPlayer);
 
   return (
     <div
@@ -53,7 +55,7 @@ export const GameTopBar: FC<GameTopBarProps> = ({ vm, compact = false }) => {
             </div>
           </div>
         </div>
-        <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+        <div className="flex min-w-0 flex-wrap items-center gap-1.5 lg:justify-end">
           <StatusBadge tone="info">
             {getGameModeName(vm.roomMeta?.gameMode ?? "standard", t)}
           </StatusBadge>
@@ -100,6 +102,24 @@ export const GameTopBar: FC<GameTopBarProps> = ({ vm, compact = false }) => {
             <ThemeToggle />
           </div>
         </div>
+      </div>
+      <div className="player-strip" aria-label={t("game.tabsPlayers")}>
+        {(["P1", "P2"] as const).map((owner) => (
+          <div
+            key={owner}
+            className="player-presence"
+            data-owner={owner}
+            data-active={String(activePlayer === owner)}
+          >
+            <span className="player-presence-seat">{owner}</span>
+            <span className="player-presence-name min-w-0 truncate text-xs font-semibold">
+              {vm.roomMeta?.playerNames?.[owner] || t(`roles.${owner}`)}
+            </span>
+            {activePlayer === owner ? (
+              <span className="turn-indicator">{t("common.current")}</span>
+            ) : null}
+          </div>
+        ))}
       </div>
     </div>
   );

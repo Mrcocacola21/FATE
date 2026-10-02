@@ -1,11 +1,7 @@
 import type { GameModeId } from "rules";
 import { useI18n } from "../i18n";
 import { StatusBadge } from "../components/ui";
-import {
-  GAME_MODE_IDS,
-  getGameModeDescription,
-  getGameModeName,
-} from "./modeLabels";
+import { GAME_MODE_IDS, getGameModeDescription, getGameModeName } from "./modeLabels";
 
 interface GameModeSelectorProps {
   value: GameModeId;
@@ -45,11 +41,8 @@ export function GameModeSelector({
             <button
               key={mode}
               type="button"
-              className={`rounded-xl border p-3 text-left transition ${
-                selected
-                  ? "border-amber-500 bg-amber-50 text-amber-950 ring-2 ring-amber-500/15 dark:bg-amber-950/30 dark:text-amber-100"
-                  : "border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300 dark:border-slate-800 dark:bg-slate-950/45 dark:text-slate-200 dark:hover:border-slate-700"
-              } ${!isHost || disabled ? "cursor-default" : ""}`}
+              className={`mode-card ${!isHost || disabled ? "cursor-default" : ""}`}
+              aria-pressed={selected}
               disabled={!isHost || disabled || selected}
               onClick={() => onChange(mode)}
             >

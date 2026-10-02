@@ -99,7 +99,11 @@ export function RuleDeclarationChoiceView({
       <div className="text-sm leading-5 text-slate-700 dark:text-slate-200">
         {t("ruleDeclarations.selectionInstructions")}
       </div>
-      <div className="grid grid-cols-1 gap-3" role="radiogroup" aria-label={t("ruleDeclarations.chooseTitle")}>
+      <div
+        className="grid grid-cols-1 gap-3"
+        role="radiogroup"
+        aria-label={t("ruleDeclarations.chooseTitle")}
+      >
         {availableRuleIds.map((ruleId) => {
           const key = ruleDeclarationKey(ruleId);
           const name = t(`ruleDeclarations.${key}.name`);
@@ -109,13 +113,8 @@ export function RuleDeclarationChoiceView({
             <div
               key={ruleId}
               data-testid={`rule-card-${ruleId}`}
-              className={`rounded-xl border p-3 text-slate-900 shadow-sm transition dark:text-slate-100 ${
-                isSelected
-                  ? "border-violet-500 bg-violet-50 ring-2 ring-violet-400/45 shadow-violet-500/20 dark:border-violet-300 dark:bg-violet-950/55 dark:ring-violet-400/40"
-                  : isDefaultRule
-                    ? "border-emerald-300/80 bg-emerald-50/90 dark:border-emerald-800/80 dark:bg-emerald-950/35"
-                    : "border-violet-300/60 bg-white/85 dark:border-violet-800/70 dark:bg-slate-950/80"
-              }`}
+              className="rule-choice-card rounded-xl border p-3 shadow-sm transition"
+              data-selected={isSelected}
             >
               <button
                 type="button"
@@ -123,7 +122,7 @@ export function RuleDeclarationChoiceView({
                 aria-checked={isSelected}
                 disabled={!canChoose || isConfirming}
                 data-testid={`rule-select-${ruleId}`}
-                className="w-full rounded-lg text-left outline-none transition enabled:cursor-pointer enabled:hover:bg-violet-100/60 focus-visible:ring-2 focus-visible:ring-violet-500 disabled:cursor-default dark:enabled:hover:bg-violet-900/25"
+                className="w-full rounded-lg text-left transition enabled:cursor-pointer disabled:cursor-default"
                 onClick={() => onSelect(ruleId)}
               >
                 <div className="flex items-start justify-between gap-3">
@@ -131,7 +130,10 @@ export function RuleDeclarationChoiceView({
                     <div className="flex flex-wrap items-center gap-2 text-sm font-bold">
                       <span>{name}</span>
                       {isSelected && (
-                        <span className="status-pill badge-special" data-testid="selected-rule-badge">
+                        <span
+                          className="status-pill badge-special"
+                          data-testid="selected-rule-badge"
+                        >
                           <span aria-hidden="true">✓</span> {t("ruleDeclarations.selected")}
                         </span>
                       )}
@@ -169,9 +171,12 @@ export function RuleDeclarationChoiceView({
         })}
       </div>
 
-      <div className="sticky bottom-0 z-20 -mx-1 mt-1 border-t border-violet-300/60 bg-white/95 px-1 pb-1 pt-3 shadow-[0_-12px_20px_-16px_rgba(76,29,149,0.7)] backdrop-blur dark:border-violet-800/70 dark:bg-slate-950/95">
+      <div className="rule-choice-footer sticky bottom-0 z-20 -mx-1 mt-1 border-t px-1 pb-1 pt-3">
         {error && (
-          <div className="mb-2 rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-800 dark:border-rose-800 dark:bg-rose-950/60 dark:text-rose-200" role="alert">
+          <div
+            className="mb-2 rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-800 dark:border-rose-800 dark:bg-rose-950/60 dark:text-rose-200"
+            role="alert"
+          >
             {error}
           </div>
         )}
@@ -188,7 +193,7 @@ export function RuleDeclarationChoiceView({
               type="button"
               data-testid="confirm-rule"
               disabled={!selectedRuleId || isConfirming}
-              className="rounded-lg bg-violet-700 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-violet-900/20 transition enabled:hover:bg-violet-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-violet-500 dark:text-slate-950 dark:enabled:hover:bg-violet-400 dark:focus-visible:ring-offset-slate-950"
+              className="btn btn-primary px-5 py-2.5"
               onClick={onConfirm}
             >
               {isConfirming
@@ -199,7 +204,10 @@ export function RuleDeclarationChoiceView({
             </button>
           </div>
         ) : (
-          <div className="text-sm font-semibold text-slate-600 dark:text-slate-300" data-testid="rule-waiting">
+          <div
+            className="text-sm font-semibold text-slate-600 dark:text-slate-300"
+            data-testid="rule-waiting"
+          >
             {t("ruleDeclarations.waiting")}
           </div>
         )}

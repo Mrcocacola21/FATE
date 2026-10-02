@@ -89,21 +89,21 @@ function getHighlightClass(
 ) {
   switch (kind) {
     case "place":
-      return "bg-emerald-300/35 ring-2 ring-inset ring-emerald-500/70 shadow-[inset_0_0_18px_rgba(16,185,129,0.28)] dark:bg-emerald-500/15";
+      return "board-target board-target--place";
     case "move":
-      return "bg-sky-300/35 ring-2 ring-inset ring-sky-500/70 shadow-[inset_0_0_18px_rgba(14,165,233,0.28)] dark:bg-sky-500/15";
+      return "board-target board-target--move";
     case "attack":
-      return "bg-rose-300/40 ring-2 ring-inset ring-rose-500/75 shadow-[inset_0_0_18px_rgba(244,63,94,0.3)] dark:bg-rose-500/18";
+      return "board-target board-target--attack";
     case "attackRange":
-      return "bg-rose-200/30 ring-1 ring-inset ring-rose-500/45 dark:bg-rose-500/12";
+      return "board-target board-target--attackRange";
     case "dora":
-      return "bg-amber-300/35 ring-2 ring-inset ring-amber-500/70 shadow-[inset_0_0_18px_rgba(245,158,11,0.25)] dark:bg-amber-500/15";
+      return "board-target board-target--dora";
     case "previewMove":
-      return "bg-sky-300/20 ring-1 ring-sky-500/45 dark:bg-sky-400/10 dark:ring-sky-300/45";
+      return "board-target board-target--previewMove";
     case "previewAttack":
-      return "bg-rose-300/22 ring-1 ring-rose-500/45 dark:bg-rose-400/10 dark:ring-rose-300/45";
+      return "board-target board-target--previewAttack";
     case "previewAbility":
-      return "bg-amber-300/22 ring-1 ring-amber-500/45 dark:bg-amber-400/10 dark:ring-amber-300/45";
+      return "board-target board-target--previewAbility";
     default:
       return "";
   }
@@ -116,32 +116,21 @@ function getAoEHighlightClass(kind: "aoe" | "aoeDisabled") {
 }
 
 function getPreviewCellClass(kind: PreviewCellKind) {
-  switch (kind) {
-    case "source":
-      return "bg-cyan-300/15 ring-2 ring-inset ring-cyan-500/80 dark:bg-cyan-300/10 dark:ring-cyan-200/75";
-    case "validTarget":
-      return "bg-rose-300/24 ring-2 ring-inset ring-rose-500/80 dark:bg-rose-400/12 dark:ring-rose-300/80";
-    case "invalidTarget":
-      return "border-2 border-dashed border-slate-500/70 bg-slate-400/18 ring-1 ring-inset ring-slate-500/45 dark:border-slate-300/60 dark:bg-slate-200/8 dark:ring-slate-300/35";
-    case "validMove":
-      return "border-2 border-dashed border-sky-500/65 bg-sky-300/22 ring-1 ring-inset ring-sky-500/35 dark:border-sky-300/70 dark:bg-sky-400/10 dark:ring-sky-300/35";
-    case "area":
-      return "bg-amber-300/20 ring-1 ring-inset ring-amber-500/45 dark:bg-amber-300/10 dark:ring-amber-200/45";
-    case "line":
-      return "bg-fuchsia-300/16 ring-1 ring-inset ring-fuchsia-500/60 dark:bg-fuchsia-300/8 dark:ring-fuchsia-200/55";
-    case "blocked":
-      return "bg-slate-700/20 ring-2 ring-inset ring-slate-700/75 dark:bg-slate-100/10 dark:ring-slate-200/65";
-    case "pickup":
-      return "bg-emerald-300/20 ring-2 ring-inset ring-emerald-500/70 dark:bg-emerald-300/10 dark:ring-emerald-200/65";
-    case "drop":
-      return "bg-indigo-300/20 ring-2 ring-inset ring-indigo-500/70 dark:bg-indigo-300/10 dark:ring-indigo-200/65";
-    case "danger":
-      return "bg-red-400/20 ring-2 ring-inset ring-red-600/70 dark:bg-red-400/10 dark:ring-red-300/70";
-    case "affected":
-      return "bg-lime-300/18 ring-2 ring-inset ring-lime-600/55 dark:bg-lime-300/10 dark:ring-lime-200/55";
-    default:
-      return "";
-  }
+  // Keep complete class names visible to Tailwind's production content scan.
+  const classes: Record<PreviewCellKind, string> = {
+    source: "board-target board-preview--source",
+    validTarget: "board-target board-preview--validTarget",
+    invalidTarget: "board-target board-preview--invalidTarget",
+    validMove: "board-target board-preview--validMove",
+    area: "board-target board-preview--area",
+    line: "board-target board-preview--line",
+    blocked: "board-target board-preview--blocked",
+    pickup: "board-target board-preview--pickup",
+    drop: "board-target board-preview--drop",
+    danger: "board-target board-preview--danger",
+    affected: "board-target board-preview--affected",
+  };
+  return classes[kind];
 }
 
 const PREVIEW_KIND_ORDER: PreviewCellKind[] = [
@@ -617,9 +606,8 @@ export const Board: FC<BoardProps> = ({
       const previewKinds = orderedPreviewKinds(previewState);
 
       const cellClasses = [
-        "relative",
+        "board-cell relative",
         "border",
-        "border-stone-400/35 dark:border-slate-700/55",
         "flex",
         "items-center",
         "justify-center",
@@ -627,12 +615,7 @@ export const Board: FC<BoardProps> = ({
         "focus-visible:z-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-400",
         disabled ? "cursor-not-allowed opacity-70" : "cursor-pointer",
         isDark ? "board-cell-dark" : "board-cell-light",
-        isSelected
-          ? "z-10 ring-[3px] ring-inset ring-amber-500 shadow-[inset_0_0_20px_rgba(245,158,11,0.22)] dark:ring-amber-300"
-          : "",
-        isActiveUnit && !isSelected
-          ? "z-10 ring-2 ring-inset ring-cyan-400 shadow-[inset_0_0_16px_rgba(34,211,238,0.18)] dark:ring-cyan-300"
-          : "",
+        isSelected || isActiveUnit ? "z-10" : "",
       ].join(" ");
 
       let content: JSX.Element | null = null;
@@ -711,10 +694,7 @@ export const Board: FC<BoardProps> = ({
           "flex",
           "items-center",
           "justify-center",
-          "rounded-xl border border-white/60 shadow-xl shadow-black/25 dark:border-black/70",
-          unit.owner === "P1"
-            ? "ring-[3px] ring-cyan-400/90 dark:ring-cyan-300/80"
-            : "ring-[3px] ring-rose-400/90 dark:ring-rose-300/80",
+          "unit-token border",
           previewRelationClass,
           isTransforming ? "unit-transforming" : "",
           boneStatus ? `unit-bone-status unit-bone-status--${boneStatus.kind}` : "",
@@ -741,6 +721,7 @@ export const Board: FC<BoardProps> = ({
               height: tokenSize,
             }}
             data-unit-visual-state={unitVisualState}
+            data-owner={unit.owner}
             data-visual-ghost={unit.isVisualOnly ? "true" : undefined}
           >
             {tokenAsset.isFallback ? (
@@ -834,6 +815,8 @@ export const Board: FC<BoardProps> = ({
             details: `${cellDetails}${previewDetailsText}`,
           })}
           aria-pressed={isSelected}
+          data-active={isActiveUnit ? "true" : undefined}
+          data-highlight={highlightKind}
           data-unit-id={unit?.id}
           data-visual-ghost={unit?.isVisualOnly ? "true" : undefined}
           onClick={() => {
@@ -866,9 +849,7 @@ export const Board: FC<BoardProps> = ({
           )}
           {highlightKind && (
             <div
-              className={`pointer-events-none absolute rounded dark:ring-1 dark:ring-neutral-800/70 ${getHighlightClass(
-                highlightKind,
-              )}`}
+              className={`pointer-events-none absolute rounded ${getHighlightClass(highlightKind)}`}
               style={{ inset: highlightInset }}
             />
           )}
@@ -883,9 +864,7 @@ export const Board: FC<BoardProps> = ({
           {previewKinds.map((kind) => (
             <div
               key={kind}
-              className={`pointer-events-none absolute rounded dark:ring-1 dark:ring-neutral-900/60 ${getPreviewCellClass(
-                kind,
-              )}`}
+              className={`pointer-events-none absolute rounded ${getPreviewCellClass(kind)}`}
               style={{ inset: highlightInset }}
             />
           ))}
@@ -1118,7 +1097,7 @@ export const Board: FC<BoardProps> = ({
     >
       <div className="flex min-h-full items-center justify-center">
         <div
-          className={`relative inline-block transition-[width,height] duration-150 ease-out ${
+          className={`board-object relative inline-block transition-[width,height] duration-150 ease-out ${
             renderedFieldId ? "board-has-field" : ""
           }`}
           style={{ width: totalPixelSize }}

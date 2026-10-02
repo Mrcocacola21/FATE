@@ -28,7 +28,10 @@ export function RosterList({
   const { language, t } = useI18n();
 
   return (
-    <PanelCard variant="hud" className="p-4">
+    <PanelCard
+      variant="hud"
+      className={`p-4 ${units.some((unit) => unit.id === activeUnitId) ? "player-roster-active" : ""}`}
+    >
       <SectionHeader
         kicker={t("game.roster")}
         title={owner}
@@ -57,12 +60,13 @@ export function RosterList({
               <button
                 key={unit.id}
                 type="button"
-                className={`flex w-full items-center gap-3 rounded-xl border px-2.5 py-2.5 text-left text-xs shadow-sm transition focus-visible:ring-4 focus-visible:ring-amber-500/15 ${
+                className={`roster-unit flex w-full items-center gap-3 rounded-xl border px-2.5 py-2.5 text-left text-xs shadow-sm transition focus-visible:ring-4 focus-visible:ring-amber-500/15 ${
                   selected
                     ? "border-amber-500 bg-amber-50 text-amber-950 ring-2 ring-amber-500/15 dark:bg-amber-950/35 dark:text-amber-100"
                     : "border-stone-300/70 bg-stone-100/55 text-stone-700 hover:border-amber-500/45 hover:bg-white dark:border-stone-800 dark:bg-black/20 dark:text-stone-200 dark:hover:border-amber-500/40 dark:hover:bg-stone-900"
                 } ${!unit.isAlive ? "opacity-55" : ""}`}
                 onClick={() => onSelectUnit(unit.id)}
+                aria-pressed={selected}
                 data-unit-id={unit.id}
                 data-owner={unit.owner}
                 data-hp-visibility={unit.hpVisibility}
