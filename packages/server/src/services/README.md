@@ -1,5 +1,7 @@
 # Services
 
-Future application business logic belongs here. HTTP routes and WebSocket handlers should call
-services, services should call repositories, and only repositories/database infrastructure should
-depend on Prisma. Phase 1 intentionally adds no placeholder service classes or gameplay coupling.
+Application business logic belongs here. Auth routes call AuthService, which coordinates password
+and token modules with UserRepository and AuthSessionRepository. Only repositories/database
+infrastructure perform Prisma queries. AuthService recognizes Prisma constraint error types to
+map concurrent registration conflicts. Registration uses one atomic nested repository write.
+Realtime gameplay remains independent of authentication and persistence.

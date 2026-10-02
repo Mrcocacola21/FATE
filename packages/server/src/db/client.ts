@@ -6,9 +6,11 @@ const globalDatabase = globalThis as typeof globalThis & {
 
 let localClient: PrismaClient | undefined;
 
+export class DatabaseConfigurationError extends Error {}
+
 function requireDatabaseUrl(): void {
   if (!process.env.DATABASE_URL?.trim()) {
-    throw new Error(
+    throw new DatabaseConfigurationError(
       "DATABASE_URL is required when database access is requested. The realtime game server can run without it.",
     );
   }

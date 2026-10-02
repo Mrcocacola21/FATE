@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useGameStore } from "../store";
 import type { PlayerRole } from "../ws";
 import { PanelCard, SectionHeader, StatusBadge } from "./ui";
@@ -7,7 +7,6 @@ import { ThemeToggle } from "./ThemeToggle";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { useI18n } from "../i18n";
 import {
-  getConnectionLabel,
   getHeroDisplayName,
   getPhaseLabel,
   localizeServerText,
@@ -17,6 +16,7 @@ import { EmptyState } from "../ui";
 import { getGameModeName } from "../modes/modeLabels";
 import { getSelectedHeroes } from "../figures/getSelectedHeroes";
 import { LobbyLayout } from "../layout/LobbyLayouts";
+import { AccountControl } from "../auth/AccountControl";
 
 interface LobbyProps {
   onOpenFigures?: () => void;
@@ -53,7 +53,7 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
         localizeServerText(err instanceof Error ? err.message : "", t) || t("errors.loadRooms"),
       );
     });
-  }, [fetchRooms]);
+  }, [fetchRooms, t]);
 
   useEffect(() => {
     getServerCapabilities()
@@ -193,6 +193,7 @@ export function Lobby({ onOpenFigures, onOpenHeartbreak }: LobbyProps) {
               className={`${showMobileSettings ? "grid" : "hidden"} w-full min-w-0 grid-cols-2 gap-2 lg:flex lg:w-auto lg:max-w-md lg:flex-wrap lg:items-center lg:justify-end`}
               aria-label={t("lobby.navLabel")}
             >
+              <AccountControl />
               {onOpenFigures ? (
                 <button
                   type="button"

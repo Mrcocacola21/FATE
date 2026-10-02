@@ -7,22 +7,7 @@ import type {
   GameModeId,
 } from "rules";
 
-const isProd = import.meta.env.MODE === "production";
-
-const API_URL = isProd
-  ? import.meta.env.VITE_API_URL
-  : import.meta.env.VITE_API_URL ?? "http://localhost:3000";
-
-const WS_URL = isProd
-  ? import.meta.env.VITE_WS_URL
-  : import.meta.env.VITE_WS_URL ?? "ws://localhost:3000/ws";
-
-if (isProd && (!API_URL || !WS_URL)) {
-  throw new Error("Missing VITE_API_URL or VITE_WS_URL in production build.");
-}
-
-const API_BASE = API_URL as string;
-const WS_BASE = WS_URL as string;
+import { API_BASE, WS_BASE } from "./api/config";
 
 export interface CreateGameResponse {
   gameId: string;

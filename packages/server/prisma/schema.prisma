@@ -33,6 +33,23 @@ model User {
   createdMatches    Match[]            @relation("MatchCreator")
   wonMatches        Match[]            @relation("MatchWinner")
   matchActions      MatchAction[]      @relation("MatchActionActor")
+  authSessions      AuthSession[]
+}
+
+model AuthSession {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId           String    @db.Uuid
+  refreshTokenHash String    @db.Char(64)
+  expiresAt        DateTime  @db.Timestamptz(3)
+  revokedAt        DateTime? @db.Timestamptz(3)
+  lastUsedAt       DateTime? @db.Timestamptz(3)
+  createdAt        DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime  @updatedAt @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 model Profile {

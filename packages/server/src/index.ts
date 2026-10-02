@@ -1,24 +1,36 @@
 // packages/server/src/index.ts
 
 import Fastify from "fastify";
-import cors from "@fastify/cors";
+import cors, { type FastifyCorsOptionsDelegate } from "@fastify/cors";
 import websocket from "@fastify/websocket";
 import { registerRoutes } from "./routes";
 import { registerGameWebSocket } from "./ws";
 import { isAllowedOrigin } from "./origin";
 import { disconnectDatabase } from "./db/client";
+import { authRoutes } from "./routes/authRoutes";
+import { isTrustedAuthOrigin } from "./auth/httpSecurity";
 
 export async function buildServer() {
   const logLevel = process.env.LOG_LEVEL ?? "info";
-  const server = Fastify({ logger: { level: logLevel } });
-
-  await server.register(cors, {
-    origin: (origin, cb) => {
-      if (isAllowedOrigin(origin)) return cb(null, true);
-      cb(null, false);
+  const server = Fastify({
+    logger: {
+      level: logLevel,
+      redact: ["req.headers.authorization", "req.headers.cookie", "res.headers.set-cookie"],
     },
-    credentials: true,
   });
+
+  const corsOptions: FastifyCorsOptionsDelegate = (request, cb) =>
+    cb(null, {
+      origin: (origin, cb) => {
+        const allowed = request.url.split("?")[0].startsWith("/api/auth/")
+          ? isTrustedAuthOrigin(origin)
+          : isAllowedOrigin(origin);
+        if (allowed) return cb(null, true);
+        cb(null, false);
+      },
+      credentials: true,
+    });
+  await server.register(cors, { delegator: corsOptions });
 
   await server.register(websocket);
 
@@ -27,6 +39,7 @@ export async function buildServer() {
   });
 
   await registerRoutes(server);
+  await server.register(authRoutes, { prefix: "/api/auth" });
   registerGameWebSocket(server);
 
   return server;

@@ -19,6 +19,8 @@ Follow active progress and implementation notes in the [Developer Log](https://t
 - [Tests](#tests)
 - [Environment Variables (Web)](#environment-variables-web)
 - [Database Development](#database-development)
+- [Authentication Backend](#authentication-backend)
+- [Authentication Frontend](#authentication-frontend)
 - [Assets (Figure Arts + Tokens)](#assets-figure-arts--tokens)
 - [Server API](#server-api)
 - [WebSocket](#websocket)
@@ -145,11 +147,136 @@ WebSocket gameplay paths. `Match` is a separate durable information-system recor
 later phases. Phase 1 does not create matches, participants, actions, or snapshots from live rooms.
 
 The persistence dependency direction is `routes / WebSocket -> services -> repositories -> Prisma`.
-No current route or WebSocket handler calls a repository yet. Deleting a match cascades its
+Auth HTTP routes now use services and repositories; WebSocket gameplay remains independent. Deleting a match cascades its
 participants, actions, and snapshots; participant/action/user references become `NULL` if a user is
 removed. Rating history survives match deletion, while its required user relation prevents deleting
 an identity that still owns rating history. User-owned profile and current-rating rows cascade with
 the user.
+
+## Authentication Backend
+
+Authentication currently does **not** control FATE GameRoom identity. Rooms, P1/P2, spectators,
+WebSocket messages and resume tokens retain their existing behavior. Frontend authentication,
+session management and account/game integration belong to later roadmap phases.
+
+Auth requires PostgreSQL with the committed migrations applied and two independently generated
+`JWT_ACCESS_SECRET` / `JWT_REFRESH_SECRET` keys (each at least 32 UTF-8 bytes). There are no fallback
+keys. Generate each with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`.
+Export configuration into the server environment; the server does not automatically load the root
+`.env`. Missing/invalid auth configuration fails closed with `503 AUTH_UNAVAILABLE`; missing or
+unreachable PostgreSQL yields `503 DATABASE_UNAVAILABLE`. Gameplay can still start and run independently.
+
+| Endpoint | Request / behavior |
+| --- | --- |
+| `POST /api/auth/register` | `{ email, username, password }`; returns 201, safe user and access credentials; atomically creates User, Profile, default Rating and initial AuthSession. |
+| `POST /api/auth/login` | `{ email, password }`; returns 200, safe user and access credentials; creates a separate session per login. |
+| `POST /api/auth/refresh` | Reads `fate_refresh` cookie; returns 200 with new access credentials and replaces the cookie. No body token. |
+| `POST /api/auth/logout` | Revokes only the cookie's session and clears the cookie; returns 204, including missing/invalid/expired credentials. |
+| `GET /api/auth/me` | `Authorization: Bearer <access token>`; returns `{ user }` after loading the current account. |
+
+Emails are trimmed and lowercased. Usernames are trimmed, case-sensitive, 3–32 characters and
+allow only `A-Z`, `a-z`, `0-9`, `_`, `-`. Passwords are 8–128 characters and are never trimmed.
+Passwords use Argon2id with random salts, 64 MiB memory, three passes and one lane. Responses
+contain only `id`, `email`, `username`, `displayName`, `avatarUrl`, `createdAt` and access credentials;
+passwords, password hashes and session/token hashes are never returned.
+
+Access tokens use HS256 with `sub`, `type=access`, unique `jti`, `iat`, `exp`. Their default lifetime is
+900 seconds (`JWT_ACCESS_TTL_SECONDS`). Refresh tokens use a separate HS256 key with `sub`, `sid`,
+unique `jti`, `type=refresh`, `iat`, `exp`; default lifetime is 2592000 seconds
+(`JWT_REFRESH_TTL_SECONDS`). Each refresh rotates the token and persists only its SHA-256 fingerprint.
+Conditional database updates permit exactly one rotation of a credential. Reuse, including concurrent
+requests presenting the same old token, rejects the request and revokes that session. Clients must
+serialize refresh requests. Rotation preserves the original fixed session expiration; it never slides.
+Logout revokes refresh credentials; already issued access tokens remain valid until their short expiry.
+
+The `fate_refresh` cookie is HttpOnly, host-only, scoped to `/api/auth` and expires with the session.
+Development uses `Secure=false; SameSite=Lax`; production defaults to `Secure=true; SameSite=None`
+for the separate Render/Vercel sites. Override SameSite using `AUTH_COOKIE_SAME_SITE=lax|strict|none`;
+`none` requires production HTTPS. Browser privacy settings may still block third-party cookies.
+Future browser auth requests must use `credentials: "include"`.
+
+Auth CORS grants credentials only to the exact configured `WEB_ORIGIN` (development defaults to
+`http://localhost:5173`). All auth POST endpoints independently reject an untrusted Origin with
+`403 FORBIDDEN_ORIGIN`; CORS alone is not the CSRF defense. Originless CLI/native clients are
+intentionally supported, while originless requests declaring `Sec-Fetch-Site: cross-site` are rejected.
+Existing gameplay CORS and WebSocket Origin policies retain their behavior. Auth responses use
+`Cache-Control: no-store`. Process-local rate limits per IP/endpoint are 5 registrations, 10 logins
+and 30 refresh requests per minute; excess requests receive `429 RATE_LIMITED`.
+
+Auth errors consistently use `{ "error": { "code": "...", "message": "..." } }`:
+`INVALID_REQUEST` (400), `UNAUTHORIZED`, `INVALID_CREDENTIALS`, `INVALID_REFRESH_TOKEN` (401),
+`FORBIDDEN_ORIGIN` (403), `EMAIL_ALREADY_REGISTERED`, `USERNAME_ALREADY_TAKEN` (409),
+`RATE_LIMITED` (429), `INTERNAL_ERROR` (500), `DATABASE_UNAVAILABLE`, `AUTH_UNAVAILABLE` (503).
+Unknown email, wrong password and passwordless accounts share the same credentials error.
+
+The regular `npm run test` suite includes password/JWT helpers and HTTP security checks without a
+database. Run the lifecycle integration tests against a separately provisioned PostgreSQL test
+database or schema with a `test` name segment (for example `fate_auth_test`):
+
+```powershell
+$env:TEST_DATABASE_URL = 'postgresql://fate:fate@localhost:5432/fate_auth_test?schema=public'
+$env:DATABASE_URL = $env:TEST_DATABASE_URL
+npm run -w server db:migrate:deploy
+npm run -w server test:auth:db
+npm run -w server test:db
+```
+
+The auth integration suite exercises real HTTP, services, repositories and PostgreSQL, including
+concurrent registration/refresh, rollback, expiration, reuse revocation, multiple sessions and logout.
+It removes only accounts created by that test run, and never truncates or resets a database.
+
+## Authentication Frontend
+
+`/login` and `/register` provide localized English/Ukrainian forms using the existing FATE styles,
+themes and language controls. Registration authenticates the account immediately. `/account` is a
+small protected session page showing account identity and sign-out; it is not the profile feature.
+The Lobby navigation includes minimal account controls (under Settings on mobile).
+
+The auth Zustand store is separate from the game store. Access JWTs live only in runtime memory:
+they are never written to localStorage, sessionStorage, IndexedDB, JavaScript cookies, URLs or
+history state. The server owns the HttpOnly refresh cookie. On application startup, including F5
+and a direct `/account` visit, one `POST /api/auth/refresh` restores access credentials, then
+`GET /api/auth/me` loads the current identity. Protected routes wait for this initialization without
+redirecting prematurely. Infrastructure failures show a retryable session state; an expected invalid
+refresh session becomes unauthenticated. Gameplay remains available while auth initializes or fails.
+
+The typed auth API client uses the existing `VITE_API_URL`, sends `credentials: "include"` and
+parses safe DTOs/errors centrally. Authenticated requests attach the memory access token, refresh
+after `401 UNAUTHORIZED` and retry once. Refresh failures clear credentials; ordinary errors and
+bootstrap endpoints never trigger refresh recursion. One in-flight refresh is shared within a tab.
+Where supported, `navigator.locks` serializes refresh, login, registration and logout cookie mutations
+across same-origin tabs. Browsers without Web Locks retain single-tab single-flight behavior.
+
+Logout calls the backend and clears local identity immediately, including network failures. A failed
+server logout displays a retry message: because JavaScript cannot clear the HttpOnly cookie, server
+revocation must succeed to guarantee that a later reload cannot restore that session. Late responses
+from previous auth operations cannot undo a local logout. Safe internal `returnTo` paths restore the
+intended destination after sign-in; external/protocol-relative destinations are rejected.
+
+`packages/web/vercel.json` provides SPA rewrites for direct auth-page visits. Other static hosts must
+serve the frontend entry point for `/login`, `/register` and `/account`. Production retains the existing
+Render/Vercel cookie and exact WEB_ORIGIN setup documented above; no additional backend URL variable
+is needed. Game WebSocket connections and room resume tokens remain independent of account auth.
+Authenticated User identity is still **not** connected to GameRoom P1/P2/spectator identity.
+
+Focused tests and a real Chromium smoke scenario are available:
+
+```powershell
+npm run -w web test:auth
+$env:TEST_DATABASE_URL = 'postgresql://fate:fate@localhost:5432/fate_auth_test?schema=public'
+$env:DATABASE_URL = $env:TEST_DATABASE_URL
+npm run -w server db:migrate:deploy
+npm run -w web test:auth:e2e
+```
+
+The browser script launches its own backend/Vite processes against the prepared isolated test database.
+It uses an installed Edge/Chrome/Chromium executable; optionally set
+`PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`. `AUTH_TEST_SERVER_PORT` (3103) and `AUTH_TEST_WEB_PORT` (5175)
+can change test-only ports. It verifies registration, cookie rotation, `/me`, F5, direct protected visits,
+expired access recovery, concurrent tabs, logout/reload, responsive/localized UI and public room creation.
+It deletes only its generated test account and stops its child processes. Screenshots are placed under
+the ignored `packages/web/test-results/auth` directory. Root `npm run test` now includes the focused
+frontend auth tests alongside its existing rules/server suites.
 
 ## Test Room / Sandbox
 
