@@ -226,7 +226,7 @@ test("details render canonical metadata and abilities for every selectable hero"
         renderer.root.findAllByType(FigureSetAbilityCard).map((card) => card.props.ability),
         metadata.abilities,
       );
-      assert(node(renderer, "hero-details").findByType("h3").children.includes(hero.name));
+      assert.equal(node(renderer, "hero-details").props["aria-label"], hero.name);
     }
   } finally {
     unmount(renderer);

@@ -55,14 +55,13 @@ export function HeroDetails({
     if (scrollRef.current) scrollRef.current.scrollTop = 0;
   }, [hero.id]);
   return (
-    <div className="figure-details" data-testid="hero-details" data-hero-id={hero.id}>
-      <header className="figure-details-identity">
-        <HeroPortrait heroId={hero.id} label={label} token />
-        <div className="min-w-0">
-          <div className="section-kicker">{getClassLabel(hero.mainClass, t)}</div>
-          <h3 className="font-display text-xl font-semibold leading-tight">{label}</h3>
-        </div>
-      </header>
+    <div
+      className="figure-details"
+      data-testid="hero-details"
+      data-hero-id={hero.id}
+      role="group"
+      aria-label={label}
+    >
       <div className="figure-details-scroll" ref={scrollRef}>
         <div className="figure-detail-art">
           <HeroPortrait heroId={hero.id} label={label} />
