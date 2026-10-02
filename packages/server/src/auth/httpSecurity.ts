@@ -4,9 +4,9 @@ import { AuthError } from "./authErrors";
 
 export const REFRESH_COOKIE = "fate_refresh";
 
-export function refreshCookieOptions(): CookieSerializeOptions {
-  const production = process.env.NODE_ENV === "production";
-  const sameSite = process.env.AUTH_COOKIE_SAME_SITE ?? (production ? "none" : "lax");
+export function refreshCookieOptions(env: NodeJS.ProcessEnv = process.env): CookieSerializeOptions {
+  const production = env.NODE_ENV === "production";
+  const sameSite = env.AUTH_COOKIE_SAME_SITE ?? (production ? "none" : "lax");
   if (sameSite !== "none" && sameSite !== "lax" && sameSite !== "strict") {
     throw new AuthError("AUTH_UNAVAILABLE");
   }

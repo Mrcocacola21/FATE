@@ -77,10 +77,6 @@ export async function registerRoutes(
     version: process.env.npm_package_version ?? "unknown",
   }));
 
-  server.get("/health", async () => ({ ok: true }));
-
-  server.get("/api/health", async () => ({ ok: true }));
-
   server.get("/api/capabilities", async () => ({
     testRooms: getTestRoomCapabilities(),
   }));

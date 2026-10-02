@@ -6,18 +6,10 @@ import { randomUUID } from "node:crypto";
 import { spawn, spawnSync } from "node:child_process";
 import { chromium } from "playwright-core";
 import { PrismaClient } from "@prisma/client";
+import { configureTestDatabase } from "../../../scripts/testDatabase.cjs";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
-const databaseUrl = process.env.TEST_DATABASE_URL;
-if (!databaseUrl) throw new Error("TEST_DATABASE_URL is required");
-const url = new URL(databaseUrl);
-if (
-  !["postgres:", "postgresql:"].includes(url.protocol) ||
-  ![decodeURIComponent(url.pathname.slice(1)), url.searchParams.get("schema") ?? "public"].some(
-    (name) => /(^|[_-])test([_-]|$)/i.test(name),
-  )
-)
-  throw new Error("An isolated test database/schema is required");
+const databaseUrl = configureTestDatabase();
 const browserPath = [
   process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH,
   "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
@@ -63,6 +55,7 @@ try {
       LOG_LEVEL: "silent",
       PORT: String(serverPort),
       DATABASE_URL: databaseUrl,
+      DIRECT_URL: databaseUrl,
       WEB_ORIGIN: webUrl,
       AUTH_TRUSTED_ORIGINS: webUrl,
       JWT_ACCESS_SECRET: "phase6-browser-access-01234567890123456789",

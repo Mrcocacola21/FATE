@@ -1,30 +1,9 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-
-function requireTestDatabaseUrl(): string {
-  const value = process.env.TEST_DATABASE_URL?.trim();
-  if (!value) {
-    throw new Error("TEST_DATABASE_URL is required for the database integration test.");
-  }
-
-  const url = new URL(value);
-  if (!url.protocol.startsWith("postgres")) {
-    throw new Error("TEST_DATABASE_URL must use the postgresql protocol.");
-  }
-
-  const databaseName = url.pathname.replace(/^\//, "");
-  const schemaName = url.searchParams.get("schema") ?? "public";
-  if (!/test/i.test(databaseName) && !/test/i.test(schemaName)) {
-    throw new Error(
-      "Refusing to run: TEST_DATABASE_URL must name a database or schema containing 'test'.",
-    );
-  }
-
-  return value;
-}
+import { configureTestDatabase } from "./testDatabase";
 
 async function run() {
-  process.env.DATABASE_URL = requireTestDatabaseUrl();
+  configureTestDatabase();
 
   const [{ PrismaClient }, { MatchRepository, UserRepository }] = await Promise.all([
     import("@prisma/client"),

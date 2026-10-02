@@ -6,24 +6,11 @@ import { randomBytes, randomUUID } from "node:crypto";
 import { spawn, spawnSync } from "node:child_process";
 import { chromium } from "playwright-core";
 import { PrismaClient } from "@prisma/client";
+import { configureTestDatabase } from "../../../scripts/testDatabase.cjs";
 
 const webRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const repoRoot = path.resolve(webRoot, "../..");
-const databaseUrl = process.env.TEST_DATABASE_URL;
-if (!databaseUrl)
-  throw new Error(
-    "TEST_DATABASE_URL is required; prepare migrations in an isolated test database first.",
-  );
-const parsedUrl = new URL(databaseUrl);
-if (
-  !["postgres:", "postgresql:"].includes(parsedUrl.protocol) ||
-  ![
-    decodeURIComponent(parsedUrl.pathname.slice(1)),
-    parsedUrl.searchParams.get("schema") ?? "public",
-  ].some((name) => /(^|[_-])test([_-]|$)/i.test(name))
-) {
-  throw new Error("Refusing to run against a non-test database/schema.");
-}
+const databaseUrl = configureTestDatabase();
 const serverPort = Number(process.env.AUTH_TEST_SERVER_PORT ?? 3103);
 const webPort = Number(process.env.AUTH_TEST_WEB_PORT ?? 5175);
 const baseUrl = `http://127.0.0.1:${webPort}`;
@@ -89,6 +76,7 @@ try {
       LOG_LEVEL: "silent",
       PORT: String(serverPort),
       DATABASE_URL: databaseUrl,
+      DIRECT_URL: databaseUrl,
       WEB_ORIGIN: baseUrl,
       JWT_ACCESS_SECRET: randomBytes(32).toString("hex"),
       JWT_REFRESH_SECRET: randomBytes(32).toString("hex"),

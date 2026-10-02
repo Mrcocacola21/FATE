@@ -9,7 +9,7 @@ import { MatchLifecycle } from "../persistence/matchLifecycle";
 import { getGameRoom, storeTestHooks, type GameRoom } from "../store";
 import { enqueueRoomCommand, fateRoomKey } from "../roomQueue";
 import { wsTestHooks } from "../ws";
-import { requireTestDatabaseUrl } from "./testDatabase";
+import { configureTestDatabase } from "./testDatabase";
 
 type Message = {
   type: string;
@@ -59,8 +59,7 @@ function victoryFixture(room: GameRoom) {
 }
 
 async function run() {
-  const testUrl = requireTestDatabaseUrl();
-  process.env.DATABASE_URL = testUrl;
+  const testUrl = configureTestDatabase();
   process.env.LOG_LEVEL = "silent";
   process.env.ENABLE_TEST_ROOMS = "true";
   process.env.NODE_ENV = "test";

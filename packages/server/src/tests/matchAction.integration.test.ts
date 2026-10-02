@@ -7,11 +7,11 @@ import { MatchService } from "../services/matchService";
 import { MatchActionService } from "../services/matchActionService";
 import { MatchLifecycle } from "../persistence/matchLifecycle";
 import type { AcceptedActionRecord } from "../persistence/acceptedAction";
-import { requireTestDatabaseUrl } from "./testDatabase";
+import { configureTestDatabase } from "./testDatabase";
 import { storeTestHooks } from "../store";
 
 async function run() {
-  const url = requireTestDatabaseUrl();
+  const url = configureTestDatabase();
   const db = new PrismaClient({ datasources: { db: { url } } });
   const actions = new MatchActionRepository(db);
   const matches = new MatchRepository(db);

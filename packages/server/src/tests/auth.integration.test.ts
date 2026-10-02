@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import type { LightMyRequestResponse } from "fastify";
 import jwt from "jsonwebtoken";
 import { z } from "zod";
-import { requireTestDatabaseUrl } from "./testDatabase";
+import { configureTestDatabase } from "./testDatabase";
 import { hashRefreshToken, TokenService } from "../auth/tokens";
 import { readAuthConfig } from "../auth/config";
 import { verifyPassword } from "../auth/password";
@@ -40,7 +40,7 @@ function error(response: LightMyRequestResponse, status: number, code: string) {
 }
 
 async function run() {
-  process.env.DATABASE_URL = requireTestDatabaseUrl();
+  configureTestDatabase();
   process.env.NODE_ENV = "test";
   process.env.LOG_LEVEL = "silent";
   process.env.WEB_ORIGIN = "http://localhost:5173";

@@ -17,6 +17,9 @@ import { matchHistoryRoutes } from "./routes/matchHistoryRoutes";
 import type { MatchHistoryService } from "./services/matchHistoryService";
 import { isTrustedAuthOrigin } from "./auth/httpSecurity";
 import { ConnectionIdentityService } from "./auth/connectionIdentity";
+import { ProductionConfigurationError, validateProductionEnvironment } from "./config";
+import { checkDatabaseReadiness } from "./db/readiness";
+import { registerHealthRoutes } from "./routes/healthRoutes";
 
 export async function buildServer(
   options: {
@@ -57,6 +60,7 @@ export async function buildServer(
   });
 
   const identity = options.connectionIdentity ?? new ConnectionIdentityService();
+  registerHealthRoutes(server);
   await registerRoutes(server, lifecycle, identity);
   await server.register(authRoutes, { prefix: "/api/auth" });
   await server.register(profileRoutes, { prefix: "/api" });
@@ -72,6 +76,10 @@ export async function buildServer(
 }
 
 async function start() {
+  validateProductionEnvironment();
+  if (process.env.NODE_ENV === "production" && !(await checkDatabaseReadiness())) {
+    throw new ProductionConfigurationError("Production database readiness check failed; server has not started");
+  }
   const port = Number(process.env.PORT ?? 3000);
   const host = "0.0.0.0";
 
@@ -90,12 +98,16 @@ async function start() {
   try {
     const address = await server.listen({ port, host });
     server.log.info(`server listening on ${address}`);
-  } catch (err) {
-    server.log.error(err);
-    process.exit(1);
+  } catch (error) {
+    await server.close();
+    throw error;
   }
 }
 
 if (require.main === module) {
-  start();
+  void start().catch((error: unknown) => {
+    // Never serialize underlying Prisma errors, URLs, environment or stacks.
+    console.error(error instanceof ProductionConfigurationError ? error.message : "Server startup failed");
+    process.exit(1);
+  });
 }

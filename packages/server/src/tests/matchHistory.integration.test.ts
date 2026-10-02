@@ -4,12 +4,11 @@ import { PrismaClient, type MatchOutcome } from "@prisma/client";
 import { buildServer } from "../index";
 import { MatchHistoryRepository } from "../repositories/matchHistoryRepository";
 import { MatchHistoryService } from "../services/matchHistoryService";
-import { requireTestDatabaseUrl } from "./testDatabase";
+import { configureTestDatabase } from "./testDatabase";
 import type { MatchHistoryItemDTO } from "../services/matchHistoryService";
 
 async function run() {
-  const url = requireTestDatabaseUrl();
-  process.env.DATABASE_URL = url;
+  const url = configureTestDatabase();
   process.env.LOG_LEVEL = "silent";
   const db = new PrismaClient({
     datasources: { db: { url } },

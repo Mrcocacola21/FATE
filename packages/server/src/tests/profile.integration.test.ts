@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import { requireTestDatabaseUrl } from "./testDatabase";
+import { configureTestDatabase } from "./testDatabase";
 
 async function run() {
-  process.env.DATABASE_URL = requireTestDatabaseUrl();
+  configureTestDatabase();
   Object.assign(process.env, {
     NODE_ENV: "test",
     LOG_LEVEL: "silent",

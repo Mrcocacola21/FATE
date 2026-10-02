@@ -64,8 +64,9 @@ This runs:
 
 Note: the server waits for `packages/rules/dist/index.js` before starting to avoid intermittent `Cannot find module ... rules/dist/index.js` crashes during watch startup.
 
-Optional local env file (not required for dev):
-- Copy `.env.example` to `.env` if you want to pin API/WS URLs.
+Use `.env.example` as a configuration checklist. Export filled server variables into its process;
+the server does not load the root `.env`. Put public Vite overrides in `packages/web/.env.local`.
+Omit unused optional variables instead of exporting empty values.
 
 ### Dev Flow: Two Tabs, Same Room
 
@@ -89,13 +90,13 @@ npm run -w web typecheck
 
 ## Environment Variables (Web)
 
-The frontend reads these at build time. In production builds they are required and the build will fail fast if missing:
+The frontend reads these at build time. Production requires both URLs; the bundled app refuses initialization if either is missing:
 
 - `VITE_API_URL` (example: `https://your-render-app.onrender.com`)
 - `VITE_WS_URL` (example: `wss://your-render-app.onrender.com/ws`)
 - `VITE_ENABLE_TEST_ROOM=true` - shows the Test Room creator when the server also allows it. Local Vite development enables the entry automatically.
 
-Local defaults are provided in `.env.example`.
+`.env.example` contains empty placeholders; local defaults are described in its comments.
 
 ## Environment Variables (Server)
 
@@ -106,21 +107,27 @@ Local defaults are provided in `.env.example`.
 - `MAX_ROOMS` - maximum in-memory FATE rooms retained. Default: `100`.
 - `MAX_LOG_EVENTS` - maximum action log entries retained per room. Default: `5000`.
 - `WS_MAX_PAYLOAD_BYTES`, `WS_RATE_LIMIT_WINDOW_MS`, `WS_RATE_LIMIT_MAX_MESSAGES`, `RECONNECT_GRACE_MS` - WebSocket payload, rate, and reconnect controls.
-- `DATABASE_URL` - PostgreSQL connection string required for normal room creation, player authentication and durable match metadata. Health endpoints and Test/Sandbox rooms work without it.
+- `DATABASE_URL` - runtime PostgreSQL URL (Neon pooled in production).
+- `DIRECT_URL` - direct PostgreSQL URL for Prisma migration/CLI operations; equal to the local DB URL in development.
+- `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` - different random keys, each at least 32 UTF-8 bytes.
+- `NODE_ENV=production` requires both DB URLs, both JWT keys and exact HTTPS `WEB_ORIGIN` before startup. Development remains lazy; health and Test/Sandbox rooms can run without database/auth config.
+- Production Vercel/Render auth uses `AUTH_COOKIE_SAME_SITE=none`; keep `ENABLE_TEST_ROOMS=false`.
 
 Local development keeps debug REST endpoints open when `NODE_ENV !== "production"`. In production, `GET /api/games/:id`, `POST /api/games/:id/actions`, and `GET /api/games/:id/log` require `X-FATE-DEBUG-TOKEN` to match `FATE_DEBUG_TOKEN`. Browser WebSocket connections must use an allowed Origin; missing Origin is accepted for non-browser clients.
 
 ## Database Development
 
-The persistence foundation uses PostgreSQL and Prisma inside `packages/server`. Set `DATABASE_URL`
+The persistence foundation uses PostgreSQL and Prisma 6.19 inside `packages/server`. Set both
+`DATABASE_URL` and `DIRECT_URL` (equal for local development)
 in the environment used by Prisma, for example:
 
 ```text
 postgresql://fate:fate@localhost:5432/fate?schema=public
 ```
 
-The game server still starts without this variable. Database access fails with a focused configuration
-error only when a repository or an explicit database lifecycle function is used.
+Development startup remains possible without database variables. Database access then fails with a
+focused configuration error. Production validates required configuration and probes PostgreSQL
+before listening; see [production deployment](docs/production-deployment.md).
 
 For an optional local PostgreSQL 16 instance:
 
@@ -142,14 +149,15 @@ npm run -w server db:studio
 `db:migrate:deploy` to apply the versioned migrations already committed to the repository.
 
 The optional integration test requires a separately prepared `TEST_DATABASE_URL`. As a safety
-guard, its database name or schema must contain `test`; apply migrations to that database before
+guard, it must use a loopback host and a distinct `test` database/schema name segment, and refuse
+production mode. Set BOTH `DATABASE_URL` and `DIRECT_URL` to that test target for migrations before
 running `npm run -w server test:db`. The normal test suite does not require PostgreSQL.
 
 ### Realtime state versus durable records
 
 `GameRoom` remains the authoritative, in-memory operational state used by REST and WebSocket
 gameplay. `Match` stores durable match metadata in PostgreSQL. Normal rooms now create matches
-and competitors; actions and snapshots are reserved for later phases.
+and competitors; accepted actions are persisted in the action journal. Snapshot writes remain deferred.
 
 The persistence dependency direction is `routes / WebSocket -> services -> repositories -> Prisma`.
 Auth HTTP routes and room lifecycle projections use services and repositories; rules and ordinary
@@ -202,8 +210,9 @@ IN_PROGRESS if removed; cleanup never fabricates FINISHED. Finished matches reta
 `/rooms` lists the current runtime map, without querying persistent match history.
 
 Integration is `routes / WebSocket -> MatchLifecycle -> MatchService -> MatchRepository -> Prisma`.
-Store/rules actions remain synchronous. Ordinary moves, attacks, abilities, rolls and turns do no
-database reads or writes; only lifecycle transitions and lobby metadata trigger persistence.
+Store/rules actions remain synchronous. Accepted state-changing moves, attacks, abilities, rolls
+and turns enqueue durable action records without waiting on inserts; lifecycle transitions and
+lobby metadata use the existing persistence services.
 The existing per-room command queue serializes runtime changes, persistence and retries; cleanup
 protects connected rooms and in-flight commands. PostgreSQL unique keys, conditional transitions
 and short parent-lock transactions also arbitrate concurrent repository calls. Repeated start,
@@ -215,9 +224,9 @@ start-before-finish order, with the original timestamps/result/revision. Reconne
 cannot rewrite a failed start snapshot. This retry buffer is process-local: process exit loses
 pending work, and shutdown reports outstanding projections. Restart recovery is a later phase.
 
-No GameState, MatchAction or MatchSnapshot writes are implemented. Persistent action logs,
-snapshots, replay, restart recovery, history/statistics and ratings remain deferred.
-The result detail endpoint below reads completed metadata; history lists remain deferred.
+Persistent MatchAction writes, completed results and match history are implemented. GameState
+snapshot writes, replay, restart recovery, statistics and ratings remain deferred.
+The result detail endpoint and history APIs/UI read completed durable records.
 
 Verification uses explicit in-memory persistence injection for the normal runtime test suite,
 never a production fallback. Real PostgreSQL integration requires a migrated, isolated
@@ -273,8 +282,8 @@ or snapshots. Non-FINISHED matches return 409 `MATCH_NOT_FINISHED`, unknown UUID
 `MATCH_NOT_FOUND`, invalid UUIDs return 400 `INVALID_REQUEST`, and database failures return a
 sanitized 503 `MATCH_PERSISTENCE_UNAVAILABLE`. Errors use `{ "error": { "code": "...", "message": "..." } }`.
 JSON summaries are whitelisted again on reads. Test/sandbox rooms have no competitive Match
-and never finalize results. Persistent action history, snapshots, replay, history UI/list APIs,
-statistics and ratings are not implemented yet.
+and never finalize results. Persistent action history and match history UI/list APIs are implemented;
+snapshots, replay, statistics and ratings remain deferred.
 
 Apply incremental migration `20261002050000_persistent_match_results` with
 `npm run -w server db:migrate:deploy`. Focused extraction/retry tests run in `npm run test`;
@@ -294,7 +303,8 @@ Auth requires PostgreSQL with the committed migrations applied and two independe
 `JWT_ACCESS_SECRET` / `JWT_REFRESH_SECRET` keys (each at least 32 UTF-8 bytes). There are no fallback
 keys. Generate each with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`.
 Export configuration into the server environment; the server does not automatically load the root
-`.env`. Missing/invalid auth configuration fails closed with `503 AUTH_UNAVAILABLE`; missing or
+`.env`. Production startup rejects missing/invalid configuration before listening. In development
+and request-time checks, missing/invalid auth configuration fails closed with `503 AUTH_UNAVAILABLE`; missing or
 unreachable PostgreSQL yields `503 DATABASE_UNAVAILABLE`. Normal player seats require authentication. Normal room creation requires match persistence;
 already accepted gameplay continues if PostgreSQL subsequently becomes unavailable.
 
@@ -325,7 +335,7 @@ The `fate_refresh` cookie is HttpOnly, host-only, scoped to `/api/auth` and expi
 Development uses `Secure=false; SameSite=Lax`; production defaults to `Secure=true; SameSite=None`
 for the separate Render/Vercel sites. Override SameSite using `AUTH_COOKIE_SAME_SITE=lax|strict|none`;
 `none` requires production HTTPS. Browser privacy settings may still block third-party cookies.
-Future browser auth requests must use `credentials: "include"`.
+Browser auth requests use `credentials: "include"`.
 
 Auth CORS grants credentials only to the exact configured `WEB_ORIGIN` (development defaults to
 `http://localhost:5173`). All auth POST endpoints independently reject an untrusted Origin with
@@ -348,6 +358,8 @@ database or schema with a `test` name segment (for example `fate_auth_test`):
 ```powershell
 $env:TEST_DATABASE_URL = 'postgresql://fate:fate@localhost:5432/fate_auth_test?schema=public'
 $env:DATABASE_URL = $env:TEST_DATABASE_URL
+$env:DIRECT_URL = $env:TEST_DATABASE_URL
+$env:NODE_ENV = 'test'
 npm run -w server db:migrate:deploy
 npm run -w server test:auth:db
 npm run -w server test:db
@@ -433,7 +445,8 @@ Successful edits synchronize the username, display name and avatar in the curren
 new JWTs or signing in again. Profile state is cleared when the account/session changes; late responses
 cannot restore a signed-out account. Game runtime stays mounted while visiting profile routes.
 Player display names are captured from trusted profiles on seat assignment and frozen at match start.
-No match history, statistics, rating UI, social features or credential-management flows are included.
+Match history is implemented in Phase 9. Statistics, rating UI, social features and
+credential-management flows remain deferred.
 
 Focused checks (database commands require migrated, isolated `TEST_DATABASE_URL` as described above):
 
@@ -454,6 +467,8 @@ Focused tests and a real Chromium smoke scenario are available:
 npm run -w web test:auth
 $env:TEST_DATABASE_URL = 'postgresql://fate:fate@localhost:5432/fate_auth_test?schema=public'
 $env:DATABASE_URL = $env:TEST_DATABASE_URL
+$env:DIRECT_URL = $env:TEST_DATABASE_URL
+$env:NODE_ENV = 'test'
 npm run -w server db:migrate:deploy
 npm run -w web test:auth:e2e
 ```
@@ -474,6 +489,8 @@ Focused tests and a real Chromium smoke scenario are available:
 npm run -w web test:auth
 $env:TEST_DATABASE_URL = 'postgresql://fate:fate@localhost:5432/fate_auth_test?schema=public'
 $env:DATABASE_URL = $env:TEST_DATABASE_URL
+$env:DIRECT_URL = $env:TEST_DATABASE_URL
+$env:NODE_ENV = 'test'
 npm run -w server db:migrate:deploy
 npm run -w web test:auth:e2e
 ```
@@ -715,8 +732,8 @@ private rolls, credentials, email and database row IDs are not exposed. Canonica
 JSON is retained separately for future replay verification. Historical empty journals
 return an empty page.
 
-This prepares a durable journal for replay; it does not implement Match History UI,
-Match Snapshots, Replay, Restart Recovery, Statistics or Rating.
+The durable journal supports the completed Match History API/UI. Match Snapshots, Replay,
+Restart Recovery, Statistics and Rating remain future phases.
 
 ```bash
 npm run -w server test
@@ -728,38 +745,32 @@ npm run -w server test:results:db
 
 ## Deployment
 
-Deployment updates are also posted in the [Developer Log](https://t.me/FATE_Soul_Dev).
+Production is **Vercel (`packages/web`) -> Render (`packages/server`) -> Neon PostgreSQL**
+(`production` branch, `neondb`, Frankfurt). Follow the [production deployment guide](docs/production-deployment.md)
+for the environment contract, first empty-database deployment checklist, existing-schema cases,
+auth cookie limitations and smoke tests.
 
-### Render Deploy (Server)
+Render runs from the repository root using Node 22:
 
-Render can build from the repo root.
+- Build: `npm ci --include=dev && npm run -w rules build && npm run -w server build`
+- Pre-deploy (when available): `npm run -w server db:migrate:deploy && npm run -w server db:migrate:status`
+- Start with pre-deploy configured: `npm run -w server start`
+- Start when pre-deploy is unavailable: `npm run -w server start:deploy`
+- Health Check Path: `/ready`; Render controls `PORT`.
 
-- Build command: `npm install && npm run -w rules build && npm run -w server build`
-- Start command: `npm run -w server start`
+`start:deploy` runs migration deploy and migration status successfully before starting Node.
+Failures block startup. Production validates both DB URLs, both JWT keys, exact HTTPS
+`WEB_ORIGIN` and existing auth security rules, then checks connectivity before listening.
+Runtime Prisma traffic uses pooled `DATABASE_URL`; migration/direct operations use `DIRECT_URL`.
+No production credentials belong in source files or frontend settings.
 
-Environment variables:
-- `PORT` (Render sets this automatically)
-- `WEB_ORIGIN` (set to your Vercel URL for CORS and WebSocket Origin checks)
-- `FATE_DEBUG_TOKEN` (required only if using debug REST endpoints in production)
-- `ROOM_TTL_MS`, `MAX_ROOMS`, `MAX_LOG_EVENTS` (optional in-memory bounds)
-- `NODE_VERSION=22` (optional)
-
-Notes:
-- The server binds to `0.0.0.0` and uses `PORT`
-- WebSockets are available at `wss://<render-host>/ws`
-
-### Vercel Deploy (Web)
-
-Recommended Vercel settings:
-- Framework preset: Vite
-- Root Directory: `packages/web`
-- Install Command: `npm install --prefix ../..`
-- Build Command: `cd ../.. && npm run -w web build`
-- Output Directory: `dist`
-
-Environment variables (required for production builds):
-- `VITE_API_URL=https://<render-server>.onrender.com`
-- `VITE_WS_URL=wss://<render-server>.onrender.com/ws`
+Vercel uses Vite, Root Directory `packages/web`, outside-root workspace sources enabled,
+Install Command `cd ../.. && npm ci --include=dev`, Build Command
+`cd ../.. && npm run -w rules build && npm run -w web typecheck && npm run -w web build`,
+and Output Directory `dist`. Configure only public `VITE_API_URL`, `VITE_WS_URL` and
+`VITE_ENABLE_TEST_ROOM=false`. All `VITE_*` values are exposed to browsers.
+The general SPA fallback preserves static assets and supports direct URLs/refreshes for
+all auth, profile, match and public-history routes.
 
 ## Common Pitfalls
 
@@ -771,7 +782,8 @@ Environment variables (required for production builds):
 
 - Open the Vercel site, check Network tab: `/rooms` should hit your Render domain
 - Confirm WebSocket connects successfully (`wss://<render-host>/ws`)
-- Visit `https://<render-host>/health` and see `{ ok: true }`
+- Visit `https://<render-host>/health` and see `{ ok: true }` (liveness).
+- Visit `https://<render-host>/ready` and require HTTP 200 with `{ ok: true }` (PostgreSQL readiness).
 
 ## Notes
 

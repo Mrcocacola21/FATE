@@ -7,11 +7,10 @@ import { MatchService } from "../services/matchService";
 import { extractPersistentMatchResult, type FinishedMatchInput } from "../persistence/matchResult";
 import { MatchLifecycle } from "../persistence/matchLifecycle";
 import { storeTestHooks } from "../store";
-import { requireTestDatabaseUrl } from "./testDatabase";
+import { configureTestDatabase } from "./testDatabase";
 
 async function run() {
-  const url = requireTestDatabaseUrl();
-  process.env.DATABASE_URL = url;
+  const url = configureTestDatabase();
   process.env.NODE_ENV = "test";
   process.env.LOG_LEVEL = "silent";
   const db = new PrismaClient({ datasources: { db: { url } } });
