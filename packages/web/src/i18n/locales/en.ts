@@ -1,4 +1,22 @@
 export const en = {
+  profile: {
+    title: "Profile",
+    edit: "Edit profile",
+    save: "Save",
+    saving: "Saving…",
+    avatarUrl: "Avatar URL",
+    theme: "Theme",
+    memberSince: "Member since",
+    publicProfile: "Public profile",
+    updated: "Profile updated.",
+    loading: "Loading profile…",
+    loadError: "Unable to load or save the profile. Please try again.",
+    retry: "Try again",
+    notFound: "User not found.",
+    invalidAvatar: "Enter a valid HTTP or HTTPS avatar URL.",
+    invalidRequest: "Check your profile fields and try again.",
+    preferenceError: "Unable to save preferences. Please try again.",
+  },
   auth: {
     brand: "FATE",
     login: "Sign in",
@@ -17,7 +35,8 @@ export const en = {
     registerPrompt: "New to FATE?",
     usernameHelp: "3–32 letters, numbers, underscores or hyphens. Case-sensitive.",
     restoring: "Restoring session…",
-    sessionUnavailable: "Your session could not be checked. Gameplay is still available. Try again when the server is reachable.",
+    sessionUnavailable:
+      "Your session could not be checked. Gameplay is still available. Try again when the server is reachable.",
     retry: "Retry session",
     retryLogout: "Retry sign out",
     errors: {
@@ -29,7 +48,8 @@ export const en = {
       invalidRequest: "Check your email, username and password, then try again.",
       rateLimited: "Too many attempts. Please wait a minute and try again.",
       unavailable: "The server is unavailable. Please try again.",
-      logoutFailed: "Signed out on this page. The server could not confirm sign out; retry before reloading.",
+      logoutFailed:
+        "Signed out on this page. The server could not confirm sign out; retry before reloading.",
       inProgress: "Please wait for the current request to finish.",
       fallback: "Unable to complete the request. Please try again.",
     },

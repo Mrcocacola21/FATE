@@ -2,6 +2,8 @@
   "rewrites": [
     { "source": "/login", "destination": "/index.html" },
     { "source": "/register", "destination": "/index.html" },
-    { "source": "/account", "destination": "/index.html" }
+    { "source": "/account", "destination": "/index.html" },
+    { "source": "/profile", "destination": "/index.html" },
+    { "source": "/users/:username", "destination": "/index.html" }
   ]
 }

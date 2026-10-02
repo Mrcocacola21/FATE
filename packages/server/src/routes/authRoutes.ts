@@ -1,6 +1,5 @@
 import cookie from "@fastify/cookie";
 import rateLimit from "@fastify/rate-limit";
-import { Prisma } from "@prisma/client";
 import type { FastifyInstance, FastifyReply } from "fastify";
 import { AuthError } from "../auth/authErrors";
 import { readAuthConfig } from "../auth/config";
@@ -13,7 +12,7 @@ import {
 import { loginSchema, registerSchema } from "../auth/schemas";
 import { TokenService } from "../auth/tokens";
 import type { toAuthUserDto } from "../auth/userDto";
-import { DatabaseConfigurationError } from "../db/client";
+import { toApiError } from "./apiErrorHandler";
 import { UserRepository, AuthSessionRepository } from "../repositories";
 import { AuthService } from "../services/authService";
 
@@ -60,21 +59,7 @@ export async function authRoutes(server: FastifyInstance): Promise<void> {
   });
 
   server.setErrorHandler((error, request, reply) => {
-    let publicError: AuthError;
-    if (error instanceof AuthError) {
-      publicError = error;
-    } else if (
-      error instanceof DatabaseConfigurationError ||
-      error instanceof Prisma.PrismaClientInitializationError ||
-      (error instanceof Prisma.PrismaClientKnownRequestError &&
-        ["P1001", "P1002", "P1008", "P1017", "P2024"].includes(error.code))
-    ) {
-      publicError = new AuthError("DATABASE_UNAVAILABLE");
-    } else if (error.statusCode && [400, 413, 415].includes(error.statusCode)) {
-      publicError = new AuthError("INVALID_REQUEST");
-    } else {
-      publicError = new AuthError("INTERNAL_ERROR");
-    }
+    const publicError = toApiError(error);
     if (publicError.statusCode >= 500) {
       // Never serialize underlying errors: Prisma diagnostics can contain query values.
       request.log.error(

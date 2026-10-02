@@ -4,6 +4,7 @@ import { useI18n } from "../i18n";
 import { useAuthStore } from "./authStore";
 import { authErrorMessage } from "./errorMessage";
 import { SessionStatus } from "./SessionStatus";
+import { Avatar } from "../profile/Avatar";
 
 export function AccountControl() {
   const { t } = useI18n();
@@ -21,8 +22,18 @@ export function AccountControl() {
     >
       {user && status === "authenticated" ? (
         <>
-          <Link className="btn btn-secondary max-w-48 truncate" to="/account">
-            {user.displayName ?? user.username ?? t("auth.account")}
+          <Link className="btn btn-secondary max-w-48" to="/profile" title={t("profile.title")}>
+            <span aria-hidden="true" className="shrink-0">
+              <Avatar
+                username={user.username ?? t("auth.account")}
+                displayName={user.displayName}
+                avatarUrl={user.avatarUrl}
+                small
+              />
+            </span>
+            <span className="truncate">
+              {user.displayName ?? user.username ?? t("profile.title")}
+            </span>
           </Link>
           <button
             className="btn btn-ghost"

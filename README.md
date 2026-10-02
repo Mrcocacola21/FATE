@@ -21,6 +21,7 @@ Follow active progress and implementation notes in the [Developer Log](https://t
 - [Database Development](#database-development)
 - [Authentication Backend](#authentication-backend)
 - [Authentication Frontend](#authentication-frontend)
+- [User Profiles](#user-profiles)
 - [Assets (Figure Arts + Tokens)](#assets-figure-arts--tokens)
 - [Server API](#server-api)
 - [WebSocket](#websocket)
@@ -228,14 +229,14 @@ It removes only accounts created by that test run, and never truncates or resets
 ## Authentication Frontend
 
 `/login` and `/register` provide localized English/Ukrainian forms using the existing FATE styles,
-themes and language controls. Registration authenticates the account immediately. `/account` is a
-small protected session page showing account identity and sign-out; it is not the profile feature.
+themes and language controls. Registration authenticates the account immediately. `/profile` is the
+protected profile page; the former session-only `/account` page redirects to `/profile`.
 The Lobby navigation includes minimal account controls (under Settings on mobile).
 
 The auth Zustand store is separate from the game store. Access JWTs live only in runtime memory:
 they are never written to localStorage, sessionStorage, IndexedDB, JavaScript cookies, URLs or
 history state. The server owns the HttpOnly refresh cookie. On application startup, including F5
-and a direct `/account` visit, one `POST /api/auth/refresh` restores access credentials, then
+and a direct `/profile` visit, one `POST /api/auth/refresh` restores access credentials, then
 `GET /api/auth/me` loads the current identity. Protected routes wait for this initialization without
 redirecting prematurely. Infrastructure failures show a retryable session state; an expected invalid
 refresh session becomes unauthenticated. Gameplay remains available while auth initializes or fails.
@@ -254,10 +255,87 @@ from previous auth operations cannot undo a local logout. Safe internal `returnT
 intended destination after sign-in; external/protocol-relative destinations are rejected.
 
 `packages/web/vercel.json` provides SPA rewrites for direct auth-page visits. Other static hosts must
-serve the frontend entry point for `/login`, `/register` and `/account`. Production retains the existing
+serve the frontend entry point for `/login`, `/register`, `/account`, `/profile` and `/users/:username`. Production retains the existing
 Render/Vercel cookie and exact WEB_ORIGIN setup documented above; no additional backend URL variable
 is needed. Game WebSocket connections and room resume tokens remain independent of account auth.
 Authenticated User identity is still **not** connected to GameRoom P1/P2/spectator identity.
+
+## User Profiles
+
+Profiles persist in PostgreSQL through `profileRoutes -> ProfileService -> ProfileRepository -> Prisma`.
+Registration already creates exactly one Profile atomically with the User and session. Legacy imports
+and fixtures that create users without profiles must supply their own profile explicitly; profile requests
+return `404 USER_NOT_FOUND` for a missing profile instead of silently creating one.
+
+| Endpoint                   | Access and behavior                                                                                                                  |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `GET /api/profile`         | Bearer access token required; returns `{ profile }` for the verified token's owner.                                                  |
+| `PATCH /api/profile`       | Bearer access token required; updates only supplied editable fields and returns `{ profile }`.                                       |
+| `GET /api/users/:username` | Public; returns `{ profile }` containing only `id`, `username`, `displayName`, `avatarUrl`, `createdAt`. Unknown handles return 404. |
+
+Own profiles additionally contain `email`, `preferredLanguage`, `preferredTheme`, `updatedAt`.
+Neither representation exposes credentials or sessions. The member-since date is always `User.createdAt`;
+`updatedAt` describes the profile. Email is visible only on the owner's `/profile` and cannot be edited.
+`/users/:username` is public and supports direct navigation/reload through the committed Vercel rewrites.
+
+Editable fields are `username`, `displayName`, `avatarUrl`, `preferredLanguage`, `preferredTheme`.
+Username editing uses the registration validator: trimmed, case-sensitive, 3–32 ASCII letters, digits,
+underscores or hyphens. The database unique constraint decides concurrent claims; duplicates return
+`409 USERNAME_ALREADY_TAKEN`. Keeping one's current username succeeds. Renaming changes the public
+URL immediately; no aliases are created for the old handle. Unknown update fields are rejected with
+`400 INVALID_REQUEST`. Absent fields are unchanged; explicit `null` or trimmed empty strings clear
+display names/avatars. Display names allow Unicode and spaces, up to 64 characters.
+
+Avatars use HTTP/HTTPS URLs up to 2048 characters, with no file uploads/storage. The browser loads them
+with `referrerPolicy="no-referrer"`; unsafe legacy URLs and failed images fall back to initials.
+
+Preferences use the existing supported languages (`en`, `uk`) and themes (`light`, `dark`). Migration
+`20261002020000_profile_preferences` adds typed fields with safe `en`/`light` defaults to existing rows.
+Guests retain local UI preferences and the existing initial system-theme fallback. After authentication,
+the profile loads once and persisted preferences take precedence. The profile form and global language/theme
+controls save through the profile API before applying the result to existing UI state. LocalStorage remains
+a UI preference cache; access tokens remain memory-only. Failed preference saves leave the applied values
+unchanged and display an error.
+
+Profile loading/saving uses the existing authenticated client and its single-flight refresh/retry behavior.
+Successful edits synchronize the username, display name and avatar in the current auth identity without
+new JWTs or signing in again. Profile state is cleared when the account/session changes; late responses
+cannot restore a signed-out account. Game runtime stays mounted while visiting profile routes.
+**User Profile identity is not yet connected to GameRoom seats, P1/P2 or spectators.**
+No match history, statistics, rating UI, social features or credential-management flows are included.
+
+Focused checks (database commands require migrated, isolated `TEST_DATABASE_URL` as described above):
+
+```bash
+npm run -w server test:profile
+npm run -w server test:profile:db
+npm run -w web test:profile
+npm run -w web test:profile:e2e
+```
+
+The normal `npm run test` includes database-free profile tests. The browser smoke suite now covers
+authentication plus profile edits, public privacy/URLs, avatars, persistent preferences, reload and
+expired-token recovery, responsive layouts and gameplay connection independence.
+
+Focused tests and a real Chromium smoke scenario are available:
+
+```powershell
+npm run -w web test:auth
+$env:TEST_DATABASE_URL = 'postgresql://fate:fate@localhost:5432/fate_auth_test?schema=public'
+$env:DATABASE_URL = $env:TEST_DATABASE_URL
+npm run -w server db:migrate:deploy
+npm run -w web test:auth:e2e
+```
+
+The browser script launches its own backend/Vite processes against the prepared isolated test database.
+It uses an installed Edge/Chrome/Chromium executable; optionally set
+`PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`. `AUTH_TEST_SERVER_PORT` (3103) and `AUTH_TEST_WEB_PORT` (5175)
+can change test-only ports. It verifies registration, cookie rotation, `/me`, F5, direct protected visits,
+expired access recovery, concurrent tabs, logout/reload, responsive/localized UI and public room creation.
+It deletes only its generated test account and stops its child processes. Screenshots are placed under
+the ignored `packages/web/test-results/auth` directory. Root `npm run test` now includes the focused
+frontend auth tests alongside its existing rules/server suites.
+
 
 Focused tests and a real Chromium smoke scenario are available:
 

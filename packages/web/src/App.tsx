@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { Route, Routes, useLocation } from "react-router";
+import { Navigate, Route, Routes, useLocation } from "react-router";
 import { authStore } from "./auth/authStore";
 import { AuthLayout } from "./auth/AuthLayout";
 import { RequireAuth } from "./auth/RequireAuth";
 import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
-import { AccountPage } from "./pages/AccountPage";
+import { ProfilePage } from "./pages/ProfilePage";
+import { PublicProfilePage } from "./pages/PublicProfilePage";
+import { ProfileSync } from "./profile/ProfileSync";
 import { Lobby } from "./components/Lobby";
 import { GamePage } from "./pages/GamePage";
 import { ErrorBoundary } from "./components/ErrorBoundary";
@@ -17,14 +19,15 @@ import { VFX_PREVIEW_ROUTE } from "./features/vfx/vfxPreviewScenarios";
 
 export default function App() {
   const location = useLocation();
-  const authPage = ["/login", "/register", "/account"].includes(
-    location.pathname.replace(/\/$/, ""),
-  );
+  const authPage =
+    location.pathname.startsWith("/users/") ||
+    ["/login", "/register", "/account", "/profile"].includes(location.pathname.replace(/\/$/, ""));
   useEffect(() => {
     void authStore.getState().initializeSession();
   }, []);
   return (
     <ErrorBoundary>
+      <ProfileSync />
       {/* Preserve mounted game UI and its connection while visiting account routes. */}
       <div hidden={authPage} style={{ display: authPage ? "none" : "contents" }}>
         <GameRuntime />
@@ -34,11 +37,13 @@ export default function App() {
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/users/:username" element={<PublicProfilePage />} />
+            <Route path="/account" element={<Navigate replace to="/profile" />} />
             <Route
-              path="/account"
+              path="/profile"
               element={
                 <RequireAuth>
-                  <AccountPage />
+                  <ProfilePage />
                 </RequireAuth>
               }
             />

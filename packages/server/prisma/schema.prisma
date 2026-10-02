@@ -19,6 +19,16 @@ enum MatchSeat {
   P2
 }
 
+enum ProfileLanguage {
+  en
+  uk
+}
+
+enum ProfileTheme {
+  light
+  dark
+}
+
 model User {
   id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   email        String   @unique @db.VarChar(320)
@@ -57,6 +67,8 @@ model Profile {
   username    String   @unique @db.VarChar(50)
   displayName String?  @db.VarChar(100)
   avatarUrl   String?  @db.Text
+  preferredLanguage ProfileLanguage @default(en)
+  preferredTheme ProfileTheme @default(light)
   createdAt   DateTime @default(now()) @db.Timestamptz(3)
   updatedAt   DateTime @updatedAt @db.Timestamptz(3)
 

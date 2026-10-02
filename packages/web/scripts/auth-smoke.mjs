@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { randomBytes, randomUUID } from "node:crypto";
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { chromium } from "playwright-core";
 import { PrismaClient } from "@prisma/client";
 
@@ -70,7 +70,7 @@ async function ready(url, child) {
 const database = new PrismaClient({ datasources: { db: { url: databaseUrl } } });
 const suffix = randomUUID().slice(0, 8);
 const email = `browser-${suffix}@example.test`;
-const username = `Browser_${suffix}`;
+let username = `Browser_${suffix}`;
 const password = randomBytes(16).toString("hex");
 let browser;
 let page;
@@ -126,7 +126,7 @@ try {
 
   step = "protected redirect";
   await page.goto(`${baseUrl}/account`);
-  await page.waitForURL(/\/login\?returnTo=/);
+  await page.waitForURL(/\/login\?returnTo=%2Fprofile/);
   await page.getByLabel("Email", { exact: true }).waitFor();
   assert.equal(refreshes, 1, "StrictMode must not duplicate bootstrap refresh");
 
@@ -137,8 +137,8 @@ try {
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByLabel("Confirm password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Create account", exact: true }).click();
-  await page.waitForURL(`${baseUrl}/account`);
-  await page.getByTestId("account-page").waitFor();
+  await page.waitForURL(`${baseUrl}/profile`);
+  await page.getByTestId("profile-page").waitFor();
   assert.equal(await page.getByText(email, { exact: true }).count(), 1);
   const initialCookie = (await context.cookies(apiUrl + "/api/auth")).find(
     (cookie) => cookie.name === "fate_refresh",
@@ -151,8 +151,8 @@ try {
 
   step = "reload restoration";
   await page.reload();
-  await page.getByTestId("account-page").waitFor();
-  assert.equal(new URL(page.url()).pathname, "/account");
+  await page.getByTestId("profile-page").waitFor();
+  assert.equal(new URL(page.url()).pathname, "/profile");
   const rotatedCookie = (await context.cookies(apiUrl + "/api/auth")).find(
     (cookie) => cookie.name === "fate_refresh",
   );
@@ -168,10 +168,124 @@ try {
   await page.screenshot({ path: path.join(output, "account-desktop.png") });
   console.log("browser auth: F5, /me, protected direct URL and memory-only credentials passed");
 
+  step = "profile editing and persistence";
+  const oldUsername = username;
+  username = `Updated_${suffix}`;
+  const displayName = `Profile ${suffix}`;
+  const avatarUrl = "https://avatars.example.test/profile.png";
+  await context.route(avatarUrl, (route) =>
+    route.fulfill({
+      contentType: "image/png",
+      body: Buffer.from(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+j5YkAAAAASUVORK5CYII=",
+        "base64",
+      ),
+    }),
+  );
+  await page.getByRole("button", { name: "Edit profile", exact: true }).click();
+  assert.equal(await page.getByLabel("Username", { exact: true }).inputValue(), oldUsername);
+  await page.getByLabel("Display name", { exact: true }).fill("Unsaved name");
+  await page.getByRole("button", { name: "Cancel", exact: true }).click();
+  assert.equal(await page.getByText("Unsaved name", { exact: true }).count(), 0);
+  await page.getByRole("button", { name: "Edit profile", exact: true }).click();
+  await page.getByLabel("Username", { exact: true }).fill(username);
+  await page.getByLabel("Display name", { exact: true }).fill(displayName);
+  await page.getByLabel("Avatar URL", { exact: true }).fill(avatarUrl);
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await page.getByText("Profile updated.", { exact: true }).waitFor();
+  await page.waitForFunction(
+    () => document.querySelector('[data-testid="profile-page"] img')?.naturalWidth > 0,
+  );
+  await page.reload();
+  await page
+    .getByTestId("profile-page")
+    .getByRole("heading", { name: displayName, exact: true })
+    .waitFor();
+  assert.equal(await page.getByText(`@${username}`, { exact: true }).count(), 1);
+  const persistedProfile = await database.profile.findUniqueOrThrow({ where: { username } });
+  assert.equal(persistedProfile.displayName, displayName);
+  assert.equal(persistedProfile.avatarUrl, avatarUrl);
+  await page.screenshot({ path: path.join(output, "profile-desktop.png") });
+
+  step = "profile validation and avatar fallback";
+  await page.getByRole("button", { name: "Edit profile", exact: true }).click();
+  await page.getByLabel("Avatar URL", { exact: true }).fill("javascript:alert(1)");
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await page.getByText("Enter a valid HTTP or HTTPS avatar URL.", { exact: true }).waitFor();
+  await page.getByRole("button", { name: "Cancel", exact: true }).click();
+  const brokenAvatar = "https://avatars.example.test/missing.png";
+  await context.route(brokenAvatar, (route) => route.fulfill({ status: 404, body: "" }));
+  await page.getByRole("button", { name: "Edit profile", exact: true }).click();
+  await page.getByLabel("Avatar URL", { exact: true }).fill(brokenAvatar);
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await page.getByText("Profile updated.", { exact: true }).waitFor();
+  await page.getByTestId("profile-page").locator('span[role="img"]').waitFor();
+  await page.getByRole("button", { name: "Edit profile", exact: true }).click();
+  await page.getByLabel("Avatar URL", { exact: true }).fill("");
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await page.getByText("Profile updated.", { exact: true }).waitFor();
+  assert.equal((await database.profile.findUniqueOrThrow({ where: { username } })).avatarUrl, null);
+
+  step = "persistent preferences";
+  await page.getByRole("button", { name: "Edit profile", exact: true }).click();
+  await page.locator("form").getByLabel("Language", { exact: true }).selectOption("uk");
+  await page.locator("form").getByLabel("Theme", { exact: true }).selectOption("dark");
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await page.getByText("Профіль оновлено.", { exact: true }).waitFor();
+  assert.equal(
+    await page.evaluate(() => document.documentElement.classList.contains("dark")),
+    true,
+  );
+  await page.reload();
+  await page.getByRole("button", { name: "Редагувати профіль", exact: true }).waitFor();
+  assert.equal(await page.evaluate(() => document.documentElement.lang), "uk");
+  assert.equal(
+    await page.evaluate(() => document.documentElement.classList.contains("dark")),
+    true,
+  );
+  await page.getByRole("button", { name: "English", exact: true }).click();
+  await page.getByRole("button", { name: "Edit profile", exact: true }).waitFor();
+  await page.getByRole("button", { name: "Switch to Light mode", exact: true }).click();
+  await page.waitForFunction(() => !document.documentElement.classList.contains("dark"));
+  const savedPreferences = await database.profile.findUniqueOrThrow({ where: { username } });
+  assert.equal(savedPreferences.preferredLanguage, "en");
+  assert.equal(savedPreferences.preferredTheme, "light");
+
+  step = "public profile direct navigation and privacy";
+  const publicContext = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    locale: "en-US",
+  });
+  const publicPage = await publicContext.newPage();
+  await publicPage.goto(`${baseUrl}/users/${username}`);
+  const publicSection = publicPage.getByTestId("public-profile-page");
+  await publicSection.getByRole("heading", { name: displayName, exact: true }).waitFor();
+  assert.equal(
+    (await publicContext.cookies()).some((cookie) => cookie.name === "fate_refresh"),
+    false,
+  );
+  const publicText = await publicSection.textContent();
+  assert.equal(publicText.includes(email), false);
+  assert.equal(publicText.includes("Theme"), false);
+  assert.equal(publicText.includes("Language"), false);
+  assert.equal(
+    await publicPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
+    true,
+  );
+  await publicPage.reload();
+  await publicSection.getByRole("heading", { name: displayName, exact: true }).waitFor();
+  await publicPage.screenshot({ path: path.join(output, "public-profile-mobile.png") });
+  await publicPage.goto(`${baseUrl}/users/${oldUsername}`);
+  await publicPage.getByText("User not found.", { exact: true }).waitFor();
+  await publicContext.close();
+  console.log(
+    "browser profiles: editing/cancel, username URLs, avatar safety/fallback/clear, F5, preferences and public privacy passed",
+  );
+
   step = "cross-tab expired access recovery";
   const second = await context.newPage();
-  await second.goto(`${baseUrl}/account`);
-  await second.getByTestId("account-page").waitFor();
+  await second.goto(`${baseUrl}/profile`);
+  await second.getByTestId("profile-page").waitFor();
   assert.equal(await page.evaluate(() => Boolean(navigator.locks)), true);
   // Wait only for the deliberately short fixture access JWT lifetime.
   await new Promise((resolve) => setTimeout(resolve, 2200));
@@ -218,18 +332,18 @@ try {
   await page.getByLabel("Email", { exact: true }).fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
-  await page.waitForURL(`${baseUrl}/account`);
-  await page.getByTestId("account-page").waitFor();
+  await page.waitForURL(`${baseUrl}/profile`);
+  await page.getByTestId("profile-page").waitFor();
   await page.getByRole("link", { name: "Back to Rooms", exact: true }).click();
   await page
     .getByTestId("account-control")
-    .getByRole("link", { name: username, exact: true })
+    .getByRole("link", { name: displayName, exact: true })
     .waitFor();
   console.log("browser auth: real login and minimal lobby account control passed");
 
   step = "mobile and localization";
-  await page.goto(`${baseUrl}/account`);
-  await page.getByTestId("account-page").waitFor();
+  await page.goto(`${baseUrl}/profile`);
+  await page.getByTestId("profile-page").waitFor();
   await page.setViewportSize({ width: 390, height: 844 });
   assert.equal(
     await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
@@ -275,14 +389,14 @@ try {
   const gameSocketClosures = socketClosures;
   // Exercise an SPA route transition while retaining the established game runtime.
   await page.evaluate(() => {
-    history.pushState({}, "", "/account");
+    history.pushState({}, "", "/profile");
     dispatchEvent(new PopStateEvent("popstate"));
   });
   await page.waitForURL(/\/login\?returnTo=/);
   await page.getByLabel("Email", { exact: true }).fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
-  await page.getByTestId("account-page").waitFor();
+  await page.getByTestId("profile-page").waitFor();
   const finalLogout = page.waitForResponse(
     (value) => value.url() === `${apiUrl}/api/auth/logout` && value.status() === 204,
   );
@@ -299,7 +413,7 @@ try {
   console.log(
     "browser auth: login/logout preserve the room, P1, resume data and active WebSocket passed",
   );
-  console.log("Authentication browser smoke passed");
+  console.log("Authentication and profiles browser smoke passed");
 } catch (error) {
   console.error(`Authentication browser smoke failed during: ${step}`);
   console.error(`Failure type: ${error instanceof Error ? error.name : "unknown"}`);
@@ -313,5 +427,12 @@ try {
   await browser?.close();
   await database.user.deleteMany({ where: { email } });
   await database.$disconnect();
-  for (const child of children) child.kill();
+  for (const child of children) {
+    if (process.platform === "win32" && child.pid) {
+      spawnSync("taskkill", ["/pid", String(child.pid), "/T", "/F"], {
+        windowsHide: true,
+        stdio: "ignore",
+      });
+    } else child.kill();
+  }
 }

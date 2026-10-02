@@ -1,7 +1,11 @@
+import React, { useState } from "react";
+import { changePreference, useProfileStore } from "../profile/profileStore";
 import { useI18n, type Language } from "../i18n";
 
 export function LanguageSwitcher({ className = "" }: { className?: string }) {
-  const { language, setLanguage, t } = useI18n();
+  const { language, t } = useI18n();
+  const saving = useProfileStore((state) => state.saving);
+  const [error, setError] = useState(false);
   const options: Array<{ value: Language; short: string; label: string }> = [
     { value: "en", short: "EN", label: t("language.english") },
     { value: "uk", short: "UA", label: t("language.ukrainian") },
@@ -25,11 +29,20 @@ export function LanguageSwitcher({ className = "" }: { className?: string }) {
           aria-pressed={language === option.value}
           aria-label={option.label}
           title={option.label}
-          onClick={() => setLanguage(option.value)}
+          disabled={saving}
+          onClick={() => {
+            setError(false);
+            void changePreference({ preferredLanguage: option.value }).catch(() => setError(true));
+          }}
         >
           {option.short}
         </button>
       ))}
+      {error && (
+        <span role="alert" className="text-xs">
+          {t("profile.preferenceError")}
+        </span>
+      )}
     </div>
   );
 }

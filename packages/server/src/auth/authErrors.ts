@@ -1,6 +1,7 @@
 export const authErrors = {
   INVALID_REQUEST: [400, "Invalid request"],
   UNAUTHORIZED: [401, "Authentication required"],
+  USER_NOT_FOUND: [404, "User not found"],
   INVALID_CREDENTIALS: [401, "Invalid email or password"],
   INVALID_REFRESH_TOKEN: [401, "Invalid refresh credentials"],
   FORBIDDEN_ORIGIN: [403, "Untrusted request origin"],

@@ -7,7 +7,6 @@ import { authStore } from "./authStore";
 import { RequireAuth } from "./RequireAuth";
 import { LoginPage } from "../pages/LoginPage";
 import { RegisterPage } from "../pages/RegisterPage";
-import { AccountPage } from "../pages/AccountPage";
 import { ApiError } from "../api/client";
 import { setLanguage } from "../i18n";
 
@@ -276,7 +275,7 @@ test("protected route waits during initialization, redirects guests and renders 
   }
 });
 
-test("logging out removes protected account content", async () => {
+test("logging out removes protected profile content", async () => {
   reset();
   authStore.setState({
     status: "authenticated",
@@ -288,16 +287,16 @@ test("logging out removes protected account content", async () => {
   });
   const renderer = mount(
     <RequireAuth>
-      <AccountPage />
+      <section data-testid="profile-page">{"Profile"}</section>
     </RequireAuth>,
-    "/account",
+    "/profile",
   );
   try {
-    assert.equal(renderer.root.findAllByProps({ "data-testid": "account-page" }).length, 1);
+    assert.equal(renderer.root.findAllByProps({ "data-testid": "profile-page" }).length, 1);
     await act(async () => {
       await authStore.getState().logout();
     });
-    assert.equal(renderer.root.findAllByProps({ "data-testid": "account-page" }).length, 0);
+    assert.equal(renderer.root.findAllByProps({ "data-testid": "profile-page" }).length, 0);
     assert.equal(
       renderer.root.findByProps({ "data-testid": "location" }).children.join(""),
       "/login",

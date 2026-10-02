@@ -8,6 +8,7 @@ import { registerGameWebSocket } from "./ws";
 import { isAllowedOrigin } from "./origin";
 import { disconnectDatabase } from "./db/client";
 import { authRoutes } from "./routes/authRoutes";
+import { profileRoutes } from "./routes/profileRoutes";
 import { isTrustedAuthOrigin } from "./auth/httpSecurity";
 
 export async function buildServer() {
@@ -40,6 +41,7 @@ export async function buildServer() {
 
   await registerRoutes(server);
   await server.register(authRoutes, { prefix: "/api/auth" });
+  await server.register(profileRoutes, { prefix: "/api" });
   registerGameWebSocket(server);
 
   return server;
