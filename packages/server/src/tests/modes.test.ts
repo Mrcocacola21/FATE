@@ -17,7 +17,7 @@ import {
   type PlayerId,
   type UnitClass,
 } from "rules";
-import { buildTestServer as buildServer } from "./matchTestSupport";
+import { buildTestServer as buildServer, testAccessToken } from "./matchTestSupport";
 import { createGameRoomWithId, storeTestHooks } from "../store";
 
 const NEW_PLAYABLE_HERO_IDS = [
@@ -141,6 +141,7 @@ async function joinTwoPlayers(wsUrl: string, params: {
       type: "joinRoom",
       mode: "create",
       role: "P1",
+      accessToken: testAccessToken("P1"),
       figureSet: params.p1FigureSet,
     })
   );
@@ -153,6 +154,7 @@ async function joinTwoPlayers(wsUrl: string, params: {
       mode: "join",
       roomId: joinAck.roomId,
       role: "P2",
+      accessToken: testAccessToken("P2"),
       figureSet: params.p2FigureSet,
     })
   );

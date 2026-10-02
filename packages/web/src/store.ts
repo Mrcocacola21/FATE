@@ -244,6 +244,10 @@ function buildLocalBoardUiResetState(): Partial<GameStore> {
   };
 }
 
+import { authStore } from "./auth/authStore";
+import { multiplayerAccessToken, redirectToMultiplayerLogin } from "./auth/multiplayerAuth";
+import { ApiError } from "./api/client";
+
 let socket: WebSocket | null = null;
 let connectPromise: Promise<WebSocket> | null = null;
 let reconnectPromise: Promise<void> | null = null;
@@ -260,6 +264,8 @@ function roomSessionFromState(state: GameStore): RoomSession | null {
       role: state.role,
       seat: state.seat,
       resumeToken: state.resumeToken,
+      roomMode: state.joined ? state.roomMeta?.roomMode
+        : loadRoomSession()?.roomMode ?? state.roomMeta?.roomMode,
     };
   }
   return loadRoomSession();
@@ -284,6 +290,7 @@ function handleServerMessage(
           role: msg.role,
           seat: msg.seat ?? null,
           resumeToken,
+          roomMode: msg.roomMode ?? "normal",
         });
       }
       set(() => ({
@@ -437,6 +444,7 @@ function handleServerMessage(
           role: msg.you.role,
           seat: msg.you.seat ?? null,
           resumeToken,
+          roomMode: nextMeta.roomMode,
         });
       }
       return;
@@ -472,6 +480,10 @@ function handleServerMessage(
       return;
     }
     case "error": {
+      if (["AUTH_REQUIRED", "INVALID_ACCESS_TOKEN", "RESUME_IDENTITY_MISMATCH", "INVALID_RESUME_TOKEN", "SEAT_CONNECTION_REPLACED"].includes(msg.code ?? "")) {
+        suppressAutoReconnect = true;
+        set(() => ({ joinError: msg.message }));
+      }
       get().addClientLog(msg.code ?? msg.message);
       return;
     }
@@ -595,6 +607,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   connect: async () => openSocket(set, get),
   resumeRoom: async (options) => {
     if (reconnectPromise) return reconnectPromise;
+    if (get().joined && socket?.readyState === WebSocket.OPEN &&
+      (!options?.force || authStore.getState().status !== "authenticated")) return;
     const session = roomSessionFromState(get());
     if (!session) return;
 
@@ -603,6 +617,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
         clearTimeout(reconnectTimer);
         reconnectTimer = null;
       }
+      const accessToken = await multiplayerAccessToken(authStore, session.role, session.roomMode);
+      suppressAutoReconnect = false;
       if (options?.force) await closeSocketForReconnect();
       const ws = await openSocket(set, get);
       const selection = loadFigureSetState(HERO_CATALOG).selection;
@@ -612,12 +628,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
         role: session.role,
         figureSet: selection,
         resumeToken: session.resumeToken,
+        accessToken,
       });
     })();
 
     try {
       await reconnectPromise;
     } catch (error) {
+      if (error instanceof ApiError && error.code === "AUTH_REQUIRED") {
+        suppressAutoReconnect = true;
+        set(() => ({ joinError: "Sign in to resume your player seat" }));
+        redirectToMultiplayerLogin();
+      }
       get().addClientLog(error instanceof Error ? error.message : "Failed to reconnect to room");
     } finally {
       reconnectPromise = null;
@@ -628,12 +650,26 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set(() => ({ roomsList: rooms }));
   },
   joinRoom: async (params) => {
+    let accessToken: string | undefined;
+    try {
+      const mode = params.mode === "create" ? params.roomMode
+        : params.roomMode ?? get().roomsList.find((room) => room.id === params.roomId)?.roomMode;
+      accessToken = await multiplayerAccessToken(authStore, params.role, mode);
+    } catch (error) {
+      if (error instanceof ApiError && error.code === "AUTH_REQUIRED") {
+        set(() => ({ joinError: "Sign in to occupy a player seat" }));
+        redirectToMultiplayerLogin();
+        return;
+      }
+      throw error;
+    }
+    suppressAutoReconnect = false;
     intentionalLeave = false;
     set(() => ({ joinError: null }));
     const ws = await openSocket(set, get);
     const selection = loadFigureSetState(HERO_CATALOG).selection;
-    const resumeToken = get().resumeToken ?? undefined;
-    sendJoinRoom(ws, { ...params, figureSet: selection, resumeToken });
+    const resumeToken = params.roomId === get().roomId ? get().resumeToken ?? undefined : undefined;
+    sendJoinRoom(ws, { ...params, figureSet: selection, resumeToken, accessToken });
   },
   leaveRoom: () => {
     const state = get();
@@ -747,7 +783,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
     sendResolvePendingRoll(socket, pendingRollId, choice);
   },
-  switchRole: (role) => {
+  switchRole: async (role) => {
     const state = get();
     if (!state.joined) {
       state.addClientLog("Not joined yet. Please join a room first.");
@@ -757,7 +793,17 @@ export const useGameStore = create<GameStore>((set, get) => ({
       state.addClientLog("WebSocket not connected.");
       return;
     }
-    sendSwitchRole(socket, role);
+    const currentSocket = socket;
+    try {
+      const accessToken = await multiplayerAccessToken(authStore, role, state.roomMeta?.roomMode);
+      if (socket === currentSocket && currentSocket.readyState === WebSocket.OPEN)
+        sendSwitchRole(currentSocket, role, accessToken);
+    } catch (error) {
+      if (error instanceof ApiError && error.code === "AUTH_REQUIRED") {
+        set(() => ({ joinError: "Sign in to occupy a player seat" }));
+        redirectToMultiplayerLogin();
+      } else state.addClientLog("Unable to authenticate player seat");
+    }
   },
   sendAction: (action) => {
     const state = get();

@@ -4,7 +4,7 @@ import WebSocket from "ws";
 import { buildServer } from "../index";
 import { MatchLifecycle, MatchCreationError } from "../persistence/matchLifecycle";
 import { getGameRoom, listGameRooms, storeTestHooks, type GameRoom } from "../store";
-import { MemoryMatchPersistence } from "./matchTestSupport";
+import { MemoryMatchPersistence, testIdentityService, testAccessToken } from "./matchTestSupport";
 import { enqueueRoomCommand, fateRoomKey, getQueuedFateRoomIds } from "../roomQueue";
 import { wsTestHooks } from "../ws";
 
@@ -16,6 +16,10 @@ const logger = {
 
 function ready(room: GameRoom) {
   room.seats = { P1: "one", P2: "two" };
+  room.seatIdentities = {
+    P1: { userId: randomUUID(), username: "Replacement", displayName: null },
+    P2: { userId: randomUUID(), username: "Second", displayName: null },
+  };
   room.state = {
     ...room.state,
     seats: { P1: true, P2: true },
@@ -137,7 +141,10 @@ async function run() {
   assert.equal(match.status, "FINISHED");
   assert.equal(match.result?.finalRevision, finalRevision);
   assert.equal(match.result?.winnerSeat, "P1");
-  assert.equal(match.result?.winnerUserId, null);
+  assert.equal(match.result?.winnerUserId, room.seatIdentities.P1!.userId);
+  assert.equal(match.result?.loserUserId, room.seatIdentities.P2!.userId);
+  assert.equal(match.result?.loserSeat, "P2");
+  assert.equal(match.result?.turnCount, room.state.gameOver!.endedAtTurn);
   assert.equal(match.result?.finishReason, "allEnemyUnitsDefeated");
   assert.equal(match.participants.size, 2);
   await lifecycle.removeRoom(room);
@@ -199,6 +206,10 @@ async function run() {
       assert(!response.body.includes("DATABASE_URL"));
     }
     assert.equal((await server.inject({ url: "/health" })).statusCode, 200);
+    const unavailableResult = await server.inject({ url: `/api/matches/${randomUUID()}` });
+    assert.equal(unavailableResult.statusCode, 503);
+    assert.equal(unavailableResult.json().error.code, "MATCH_PERSISTENCE_UNAVAILABLE");
+    assert(!unavailableResult.body.includes("DATABASE_URL"));
   } finally {
     await server.close();
     if (previous === undefined) delete process.env.DATABASE_URL;
@@ -220,6 +231,7 @@ async function testDisconnectDuringCreation() {
     release = resolve;
   });
   const server = await buildServer({
+    connectionIdentity: testIdentityService(),
     matchPersistence: {
       ...bindPersistence(persistence),
       createWaitingMatch: async (input) => {
@@ -237,7 +249,7 @@ async function testDisconnectDuringCreation() {
       socket.once("open", resolve);
       socket.once("error", reject);
     });
-    socket.send(JSON.stringify({ type: "joinRoom", mode: "create", roomId: id, role: "P1" }));
+    socket.send(JSON.stringify({ type: "joinRoom", mode: "create", roomId: id, role: "P1", accessToken: testAccessToken("P1") }));
     await enteredCreation;
     assert.equal(getGameRoom(id), undefined);
     const closed = new Promise<void>((resolve) => socket.once("close", () => resolve()));
@@ -266,9 +278,10 @@ function bindPersistence(p: MemoryMatchPersistence): MatchPersistenceBindings {
   return {
     createWaitingMatch: p.createWaitingMatch.bind(p),
     syncParticipant: p.syncParticipant.bind(p),
+    removeWaitingParticipant: p.removeWaitingParticipant.bind(p),
     updateWaitingGameMode: p.updateWaitingGameMode.bind(p),
     markStarted: p.markStarted.bind(p),
-    markFinished: p.markFinished.bind(p),
+    finalizeMatch: p.finalizeMatch.bind(p),
     markCancelled: p.markCancelled.bind(p),
   };
 }

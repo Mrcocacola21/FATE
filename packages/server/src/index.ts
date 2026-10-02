@@ -11,9 +11,14 @@ import { isAllowedOrigin } from "./origin";
 import { disconnectDatabase } from "./db/client";
 import { authRoutes } from "./routes/authRoutes";
 import { profileRoutes } from "./routes/profileRoutes";
+import { matchRoutes } from "./routes/matchRoutes";
 import { isTrustedAuthOrigin } from "./auth/httpSecurity";
+import { ConnectionIdentityService } from "./auth/connectionIdentity";
 
-export async function buildServer(options: { matchPersistence?: MatchPersistence } = {}) {
+export async function buildServer(options: {
+  matchPersistence?: MatchPersistence;
+  connectionIdentity?: Pick<ConnectionIdentityService, "verify">;
+} = {}) {
   const logLevel = process.env.LOG_LEVEL ?? "info";
   const server = Fastify({
     logger: {
@@ -44,10 +49,12 @@ export async function buildServer(options: { matchPersistence?: MatchPersistence
     await disconnectDatabase();
   });
 
-  await registerRoutes(server, lifecycle);
+  const identity = options.connectionIdentity ?? new ConnectionIdentityService();
+  await registerRoutes(server, lifecycle, identity);
   await server.register(authRoutes, { prefix: "/api/auth" });
   await server.register(profileRoutes, { prefix: "/api" });
-  registerGameWebSocket(server, lifecycle);
+  await server.register(matchRoutes, { prefix: "/api" });
+  registerGameWebSocket(server, lifecycle, identity);
 
   return server;
 }

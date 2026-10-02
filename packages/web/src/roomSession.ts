@@ -14,6 +14,7 @@ export interface RoomSession {
   role: PlayerRole;
   seat: PlayerId | null;
   resumeToken: string;
+  roomMode?: "normal" | "test";
 }
 
 function browserStorage(): StorageLike | null {
@@ -48,7 +49,10 @@ export function loadRoomSession(
       return null;
     }
     const seat = parsed.seat === "P1" || parsed.seat === "P2" ? parsed.seat : null;
-    return { roomId: parsed.roomId, role: parsed.role, seat, resumeToken: parsed.resumeToken };
+    return {
+      roomId: parsed.roomId, role: parsed.role, seat, resumeToken: parsed.resumeToken,
+      ...(parsed.roomMode === "test" || parsed.roomMode === "normal" ? { roomMode: parsed.roomMode } : {}),
+    };
   } catch {
     return null;
   }
@@ -60,7 +64,11 @@ export function saveRoomSession(
 ): void {
   if (!storage) return;
   try {
-    storage.setItem(ROOM_SESSION_KEY, JSON.stringify(session));
+    // Explicit allowlist: even an accidentally extended object cannot persist credentials.
+    storage.setItem(ROOM_SESSION_KEY, JSON.stringify({
+      roomId: session.roomId, role: session.role, seat: session.seat,
+      resumeToken: session.resumeToken, roomMode: session.roomMode,
+    }));
   } catch {
     // A storage failure must not block the live room snapshot.
   }

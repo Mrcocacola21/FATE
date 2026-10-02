@@ -371,6 +371,7 @@ export const JoinRoomMessageSchema = z.object({
   mode: z.union([z.literal("create"), z.literal("join")]),
   roomId: z.string().min(1).optional(),
   role: RoleSchema,
+  accessToken: z.string().min(1).max(8192).optional(),
   name: z.string().min(1).optional(),
   figureSet: FigureSetSelectionSchema.optional(),
   resumeToken: z.string().min(1).optional(),
@@ -426,6 +427,7 @@ export const LeaveRoomMessageSchema = z.object({
 export const SwitchRoleMessageSchema = z.object({
   type: z.literal("switchRole"),
   role: RoleSchema,
+  accessToken: z.string().min(1).max(8192).optional(),
 });
 
 // Pong messages

@@ -66,10 +66,10 @@ Optional local env file (not required for dev):
 
 ### Dev Flow: Two Tabs, Same Room
 
-- Open `http://localhost:5173`
+- Open `http://localhost:5173` and sign in
 - Create a room in the Lobby and copy the room id
 - Join as P1 in the first tab
-- Open a second tab and join the same room as P2 (or spectator)
+- Use a second account in a separate browser context to join P2; the same account may spectate
 
 ## Build
 
@@ -103,7 +103,7 @@ Local defaults are provided in `.env.example`.
 - `MAX_ROOMS` - maximum in-memory FATE rooms retained. Default: `100`.
 - `MAX_LOG_EVENTS` - maximum action log entries retained per room. Default: `5000`.
 - `WS_MAX_PAYLOAD_BYTES`, `WS_RATE_LIMIT_WINDOW_MS`, `WS_RATE_LIMIT_MAX_MESSAGES`, `RECONNECT_GRACE_MS` - WebSocket payload, rate, and reconnect controls.
-- `DATABASE_URL` - PostgreSQL connection string required for normal room creation and durable match metadata. Health endpoints and Test/Sandbox rooms work without it; gameplay authentication remains optional.
+- `DATABASE_URL` - PostgreSQL connection string required for normal room creation, player authentication and durable match metadata. Health endpoints and Test/Sandbox rooms work without it.
 
 Local development keeps debug REST endpoints open when `NODE_ENV !== "production"`. In production, `GET /api/games/:id`, `POST /api/games/:id/actions`, and `GET /api/games/:id/log` require `X-FATE-DEBUG-TOKEN` to match `FATE_DEBUG_TOKEN`. Browser WebSocket connections must use an allowed Origin; missing Origin is accepted for non-browser clients.
 
@@ -167,8 +167,8 @@ Normal room creation through `/rooms`, `/api/games` or WebSocket stages an in-me
 creates one WAITING Match, binds `matchId`, then publishes the usable room. A persistence failure
 returns HTTP 503 / WebSocket `MATCH_PERSISTENCE_UNAVAILABLE` and leaves no discoverable room.
 Test/Sandbox rooms keep `matchId = null` and never write match or participant records.
-Authentication is optional. Creator and participant User IDs remain null because these request
-paths do not currently supply verified identity; arbitrary client `userId` values are ignored.
+Normal player seats require verified User identity. Authenticated creation populates `createdById`;
+public empty-room creation leaves it null. Client `userId` values are ignored.
 
 Lifecycle transitions:
 
@@ -183,15 +183,14 @@ match; the accepted start after the final pick does. Rejected starts do not pers
 The start transaction stores the current game mode and freezes the final seat competitors.
 
 P1/P2 participants use the unique `(matchId, seat)` key. Lobby joins, role switches and reconnects
-upsert the seat snapshot; reconnects reuse the row. A lobby departure retains temporary occupancy
-until replacement or the start transaction. Once started, historical participant identity and names
-are immutable, including during disconnects or later seat replacement. Spectators remain runtime
-only. Names use the current room name, fall back to the seat, and are bounded to 100 characters
-for the existing column. Profile changes do not rewrite match snapshots.
+upsert the seat snapshot; reconnects reuse the row. Explicit lobby departure or grace expiry removes
+the waiting participant. After start, participant identity and names are immutable and replacement
+by a different user is forbidden. Spectators remain runtime only. Names use trusted Profile
+`displayName` when non-empty, then `username`. Profile changes do not rewrite match snapshots.
 
-An accepted action changing the authoritative state to `ended` persists FINISHED, `finishedAt`,
-`winnerSeat` and `finishReason` directly from `gameOver` when available. `winnerUserId` remains
-null without verified player identity. `finalRevision` means the revision **after the accepted
+An accepted action changing the authoritative state to `ended` persists the complete result
+described in Persistent Match Results below, including authenticated winner/loser identities.
+`finalRevision` means the revision **after the accepted
 ending action**, equal to `gameOver.endedAtRevision`; later connection metadata does not alter it.
 
 Permanent cleanup/removal cancels an unstarted WAITING room, including inactive TTL/capacity
@@ -213,9 +212,9 @@ start-before-finish order, with the original timestamps/result/revision. Reconne
 cannot rewrite a failed start snapshot. This retry buffer is process-local: process exit loses
 pending work, and shutdown reports outstanding projections. Restart recovery is a later phase.
 
-No GameState, MatchAction or MatchSnapshot writes are implemented. Authenticated seat binding,
-action logs, snapshots, replay, restart recovery, history/statistics and ratings remain deferred.
-There are no new history endpoints or frontend changes.
+No GameState, MatchAction or MatchSnapshot writes are implemented. Persistent action logs,
+snapshots, replay, restart recovery, history/statistics and ratings remain deferred.
+The result detail endpoint below reads completed metadata; history lists remain deferred.
 
 Verification uses explicit in-memory persistence injection for the normal runtime test suite,
 never a production fallback. Real PostgreSQL integration requires a migrated, isolated
@@ -225,18 +224,75 @@ never a production fallback. Real PostgreSQL integration requires a migrated, is
 npm run -w server test:match:db
 ```
 
+### Persistent Match Results
+
+The server captures results only after an accepted action changes a normal room to `ended`.
+`extractPersistentMatchResult` reads authoritative state and verified, frozen seat identities;
+clients cannot submit a result. `MatchService.finalizeMatch` validates those identities against
+the existing P1/P2 MatchParticipant rows and atomically writes Match plus both outcomes.
+
+Match stores `winnerSeat`, `winnerUserId`, `loserSeat`, `loserUserId`, `finishReason`, `finishedAt`,
+`durationMs`, `finalRevision` and `turnCount`, alongside its existing mode/seed/start metadata.
+Winner/loser users come from their corresponding participants; legacy unlinked users stay null.
+The real chess rule supports mutual king defeat: both outcomes are `DRAW`, both winner/loser
+seats and user IDs are null, and the mapped reason is `chessMutualKingDefeat`. Other produced
+reasons are `allEnemyUnitsDefeated` and `unknown` (existing special-rule/Frisk results).
+There are no resignation, timeout or disconnect result flows.
+
+`finishedAt` is captured once at the terminal transition. `durationMs` is this timestamp minus
+the persisted server `startedAt`, including initiative/setup/placement; absent legacy starts
+leave duration null and emit an error log. `finalRevision` is the accepted terminal action's
+revision after increment, independent of later room metadata. `turnCount` is the terminal
+battle turn index, including the terminal turn, from `gameOver.endedAtTurn`; chess draws use
+the final authoritative `turnNumber`. Battle numbering starts at 1 after placement. It is
+not an action count or completed-turn count; legacy missing turn stamps remain null.
+
+Participants retain historical `displayNameSnapshot` and gain nullable `outcome` (`WIN`, `LOSS`,
+`DRAW`) and small `resultData` JSON: `{ "version": 1, "remainingUnits": 2, "remainingHealth": 9 }`.
+These are counts and summed non-negative HP of all living owned units, including living tokens,
+which the existing ended spectator view makes public. No hero identities, hidden state, sockets,
+tokens or full GameState are stored. Existing historical rows are preserved without backfilling
+invented results; account deletion uses existing SetNull semantics for winner/loser/participants.
+
+Finalization uses a conditional `IN_PROGRESS -> FINISHED` update inside a Prisma transaction;
+the parent row lock serializes competing calls. Participant failure rolls back every result
+write. Equivalent retries return the first committed result, retaining its timestamp/duration.
+Any changed winner, loser, revision, reason, turn count or participant result raises
+`MATCH_RESULT_CONFLICT`; WAITING/CANCELLED cannot finalize. Ordinary actions do no result writes.
+An unavailable database preserves the accepted ended runtime and captured result, with at most
+five finish attempts through the existing five-second retry timer. Permanent integrity errors
+stop immediately. Exhaustion emits `MATCH_RESULT_RETRY_EXHAUSTED`; pending data is process-local,
+so durable retry/restart recovery remains future work. Finished rooms keep their existing lifetime.
+
+`GET /api/matches/:id` is public and returns only a dedicated completed-result DTO with metadata,
+historical winner/loser names and participant summaries. It queries no current profiles, actions
+or snapshots. Non-FINISHED matches return 409 `MATCH_NOT_FINISHED`, unknown UUIDs return 404
+`MATCH_NOT_FOUND`, invalid UUIDs return 400 `INVALID_REQUEST`, and database failures return a
+sanitized 503 `MATCH_PERSISTENCE_UNAVAILABLE`. Errors use `{ "error": { "code": "...", "message": "..." } }`.
+JSON summaries are whitelisted again on reads. Test/sandbox rooms have no competitive Match
+and never finalize results. Persistent action history, snapshots, replay, history UI/list APIs,
+statistics and ratings are not implemented yet.
+
+Apply incremental migration `20261002050000_persistent_match_results` with
+`npm run -w server db:migrate:deploy`. Focused extraction/retry tests run in `npm run test`;
+real transaction/concurrency/rollback/result API verification uses an isolated test database:
+
+```bash
+npm run -w server test:results:db
+npm run -w server test:match:db
+```
+
 ## Authentication Backend
 
-Authentication currently does **not** control FATE GameRoom identity. Rooms, P1/P2, spectators,
-WebSocket messages and resume tokens retain their existing behavior. Frontend authentication,
-session management and account/game integration belong to later roadmap phases.
+Authentication supplies verified User identity for normal FATE player seats. The WebSocket adapter
+reuses the HTTP `TokenService`; gameplay resume tokens remain separate from account authentication.
 
 Auth requires PostgreSQL with the committed migrations applied and two independently generated
 `JWT_ACCESS_SECRET` / `JWT_REFRESH_SECRET` keys (each at least 32 UTF-8 bytes). There are no fallback
 keys. Generate each with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`.
 Export configuration into the server environment; the server does not automatically load the root
 `.env`. Missing/invalid auth configuration fails closed with `503 AUTH_UNAVAILABLE`; missing or
-unreachable PostgreSQL yields `503 DATABASE_UNAVAILABLE`. Gameplay authentication remains optional. Normal room creation requires match persistence;
+unreachable PostgreSQL yields `503 DATABASE_UNAVAILABLE`. Normal player seats require authentication. Normal room creation requires match persistence;
 already accepted gameplay continues if PostgreSQL subsequently becomes unavailable.
 
 | Endpoint | Request / behavior |
@@ -329,8 +385,8 @@ intended destination after sign-in; external/protocol-relative destinations are 
 `packages/web/vercel.json` provides SPA rewrites for direct auth-page visits. Other static hosts must
 serve the frontend entry point for `/login`, `/register`, `/account`, `/profile` and `/users/:username`. Production retains the existing
 Render/Vercel cookie and exact WEB_ORIGIN setup documented above; no additional backend URL variable
-is needed. Game WebSocket connections and room resume tokens remain independent of account auth.
-Authenticated User identity is still **not** connected to GameRoom P1/P2/spectator identity.
+is needed. WebSocket transport and resume tokens remain distinct from account authentication;
+normal P1/P2 ownership is bound to verified User identity.
 
 ## User Profiles
 
@@ -373,7 +429,7 @@ Profile loading/saving uses the existing authenticated client and its single-fli
 Successful edits synchronize the username, display name and avatar in the current auth identity without
 new JWTs or signing in again. Profile state is cleared when the account/session changes; late responses
 cannot restore a signed-out account. Game runtime stays mounted while visiting profile routes.
-**User Profile identity is not yet connected to GameRoom seats, P1/P2 or spectators.**
+Player display names are captured from trusted profiles on seat assignment and frozen at match start.
 No match history, statistics, rating UI, social features or credential-management flows are included.
 
 Focused checks (database commands require migrated, isolated `TEST_DATABASE_URL` as described above):
@@ -477,17 +533,65 @@ Tips:
 
 - `GET /ws`
   - client -> server:
-    - `{ type: "joinRoom", roomId, requestedRole, name? }`
+    - `{ type: "joinRoom", mode: "create" | "join", roomId?, role: "P1" | "P2" | "spectator", accessToken?, resumeToken?, name? }`
+    - `{ type: "switchRole", role, accessToken? }`
     - `{ type: "leaveRoom" }`
     - `{ type: "action", action }`
     - `{ type: "requestMoveOptions", unitId }`
   - server -> client:
-    - `{ type: "joinAccepted", roomId, role, connId }`
+    - `{ type: "joinAck", roomId, role, seat?, roomMode, isHost, resumeToken }`
     - `{ type: "joinRejected", reason, message }`
-    - `{ type: "roomState", roomId, room }`
+    - `{ type: "roomState", roomId, you, view, meta }`
     - `{ type: "actionResult", ok, events, error?, logIndex? }`
     - `{ type: "moveOptions", unitId, roll, legalTo }`
-    - `{ type: "error", message }`
+    - `{ type: "error", code?, message }`
+
+## Authenticated Multiplayer Identity
+
+| Identifier | Purpose |
+| --- | --- |
+| `User.id` | Persistent account identity derived from verified access JWT `sub`. |
+| `P1` / `P2` | Game seat understood by the auth-free rules engine. |
+| `connId` | Temporary transport ownership; changes when a socket reconnects. |
+| `resumeToken` | Gameplay continuity secret; never substitutes for account authentication. |
+
+Normal P1/P2 seats require two distinct authenticated accounts. `ConnectionIdentity` contains only
+`userId`, `username`, and nullable `displayName`. Room seat identities populate
+`MatchParticipant.userId` and the profile-derived `displayNameSnapshot`. Unique `(matchId, seat)`
+and `(matchId, userId)` keys protect persistence; legacy null-user rows remain supported. Apply
+`20261002040000_authenticated_match_identity` before running this phase. Duplicate legacy non-null
+users must be resolved deliberately before migration; the migration does not rewrite historical data.
+
+The browser sends its in-memory JWT only in `joinRoom` or `switchRole` authentication frames.
+The server uses the existing access-token verifier, loads the account/profile once at identity
+establishment, then retains safe identity fields. Client `userId`, `username`, and `name` cannot
+override verified identity. JWTs never enter WebSocket URLs, browser storage, room state, logs or
+PostgreSQL. Origin restrictions and player/spectator hidden-state projections are preserved.
+
+Each new player connection needs both a current access JWT and its gameplay resume token.
+A different account is rejected with `RESUME_IDENTITY_MISMATCH`, without releasing seat grace.
+One account cannot own both seats (`USER_ALREADY_IN_MATCH`). Duplicate connections to the same
+seat require the existing resume token; successful resume removes the old connection's authority.
+After match start, disconnect/grace expiry clears transport occupancy but retains the owner and
+resume token until room cleanup; only that user can restore the seat. Lobby grace expiry releases
+the waiting seat. Role changes are locked after draft/start.
+
+JWT and User lookups do not run on moves, attacks, rolls, readiness or other gameplay actions.
+Token expiry and HTTP logout leave an established socket usable. On F5/reconnect, the frontend
+waits for auth initialization, refreshes through the existing single-flight HTTP session manager
+when necessary, then sends JWT plus the stored resume token. Guests attempting to play go to
+`/login` with a safe internal return path. Anonymous and authenticated spectators remain supported,
+receive the same spectator projection and create no participant rows. Test/Sandbox rooms retain
+their existing anonymous developer controls and never persist synthetic participants.
+
+Focused verification (browser/DB checks require migrated, isolated `TEST_DATABASE_URL`):
+
+```bash
+npm run -w server test
+npm run -w server test:match:db
+npm run -w web test:auth
+npm run -w web test:multiplayer:e2e
+```
 
 ## Deployment
 

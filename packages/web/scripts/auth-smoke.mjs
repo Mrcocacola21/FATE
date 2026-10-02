@@ -75,6 +75,7 @@ const password = randomBytes(16).toString("hex");
 let browser;
 let page;
 let step = "startup";
+let gameplayRoomId;
 try {
   await database.$connect();
   const server = start(
@@ -363,7 +364,7 @@ try {
   await page.screenshot({ path: path.join(output, "login-uk-mobile.png") });
   console.log("browser auth: responsive account/forms and Ukrainian localization passed");
 
-  step = "public gameplay regression";
+  step = "authenticated gameplay regression";
   let socketCount = 0;
   let socketClosures = 0;
   page.on("websocket", (socket) => {
@@ -375,14 +376,21 @@ try {
   await page.evaluate(() => localStorage.setItem("FATE_LANGUAGE", "en"));
   await page.goto(baseUrl);
   await page.getByTestId("create-room").click();
+  await page.waitForURL(/\/login\?returnTo=/);
+  await page.getByLabel("Email", { exact: true }).fill(email);
+  await page.getByLabel("Password", { exact: true }).fill(password);
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await page.waitForURL(baseUrl + "/");
+  await page.getByTestId("create-room").click();
   await page.waitForFunction(() => Boolean(localStorage.getItem("fate.room-session.v1")));
   // Inspect the established game connection independently of account state.
   const gameSession = await page.evaluate(() =>
     JSON.parse(localStorage.getItem("fate.room-session.v1")),
   );
   assert(gameSession.roomId);
+  gameplayRoomId = gameSession.roomId;
   assert.equal(gameSession.role, "P1");
-  console.log("browser auth: unauthenticated room creation and P1 join passed");
+  console.log("browser auth: guest player login redirect and authenticated P1 join passed");
 
   step = "auth independence from the current game connection";
   const gameSocketCount = socketCount;
@@ -392,6 +400,8 @@ try {
     history.pushState({}, "", "/profile");
     dispatchEvent(new PopStateEvent("popstate"));
   });
+  await page.getByTestId("profile-page").waitFor();
+  await page.getByRole("button", { name: "Sign out", exact: true }).click();
   await page.waitForURL(/\/login\?returnTo=/);
   await page.getByLabel("Email", { exact: true }).fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);
@@ -425,6 +435,7 @@ try {
   process.exitCode = 1;
 } finally {
   await browser?.close();
+  if (gameplayRoomId) await database.match.deleteMany({ where: { roomId: gameplayRoomId } });
   await database.user.deleteMany({ where: { email } });
   await database.$disconnect();
   for (const child of children) {

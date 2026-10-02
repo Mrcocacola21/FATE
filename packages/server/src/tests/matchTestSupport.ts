@@ -1,5 +1,30 @@
 import { randomUUID } from "node:crypto";
+import { isDeepStrictEqual } from "node:util";
+import { MatchResultError } from "../persistence/matchResult";
 import { buildServer } from "../index";
+import { ConnectionIdentityService } from "../auth/connectionIdentity";
+import { TokenService } from "../auth/tokens";
+import type { UserWithProfile } from "../repositories/userRepository";
+
+export const testTokens = new TokenService({
+  accessSecret: "phase6-test-access-secret-01234567890123456789",
+  refreshSecret: "phase6-test-refresh-secret-01234567890123456789",
+  accessTtlSeconds: 900, refreshTtlSeconds: 3600,
+});
+export const testUserIds = { P1: randomUUID(), P2: randomUUID() };
+const testProfiles = new Map<string, { username: string; displayName: string | null }>();
+export function testAccessToken(seat: "P1" | "P2", name: string = seat): string {
+  testProfiles.set(testUserIds[seat], { username: name, displayName: null });
+  return testTokens.signAccessToken(testUserIds[seat]);
+}
+export function testIdentityService() {
+  return new ConnectionIdentityService(testTokens, {
+    findAccountById: async (id) => {
+      const profile = testProfiles.get(id);
+      return profile ? { id, profile } as UserWithProfile : null;
+    },
+  });
+}
 import type {
   MatchPersistence,
   WaitingMatchInput,
@@ -56,6 +81,11 @@ export class MemoryMatchPersistence implements MatchPersistence {
     const match = this.get(id);
     if (match.status === "WAITING") match.gameMode = gameMode;
   }
+  async removeWaitingParticipant(id: string, seat: "P1" | "P2"): Promise<void> {
+    this.called("removeParticipant");
+    const match = this.get(id);
+    if (match.status === "WAITING") match.participants.delete(seat);
+  }
   async markStarted(id: string, input: StartedMatchInput): Promise<void> {
     this.called("start");
     const match = this.get(id);
@@ -66,10 +96,14 @@ export class MemoryMatchPersistence implements MatchPersistence {
     match.gameMode = input.gameMode;
     match.participants = new Map(input.participants.map((p) => [p.seat, { ...p }]));
   }
-  async markFinished(id: string, input: FinishedMatchInput): Promise<void> {
+  async finalizeMatch(id: string, input: FinishedMatchInput): Promise<void> {
     this.called("finish");
     const match = this.get(id);
-    if (match.status === "FINISHED" && match.result?.finalRevision === input.finalRevision) return;
+    if (match.status === "FINISHED") {
+      const previous = { ...match.result, finishedAt: undefined };
+      if (!isDeepStrictEqual(previous, { ...input, finishedAt: undefined })) throw new MatchResultError("MATCH_RESULT_CONFLICT");
+      return;
+    }
     if (match.status !== "IN_PROGRESS") throw new Error("Invalid transition");
     match.status = "FINISHED";
     match.result = { ...input };
@@ -84,5 +118,5 @@ export class MemoryMatchPersistence implements MatchPersistence {
 }
 
 export function buildTestServer() {
-  return buildServer({ matchPersistence: new MemoryMatchPersistence() });
+  return buildServer({ matchPersistence: new MemoryMatchPersistence(), connectionIdentity: testIdentityService() });
 }

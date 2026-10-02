@@ -19,6 +19,12 @@ enum MatchSeat {
   P2
 }
 
+enum MatchOutcome {
+  WIN
+  LOSS
+  DRAW
+}
+
 enum ProfileLanguage {
   en
   uk
@@ -42,6 +48,7 @@ model User {
   matchParticipants MatchParticipant[]
   createdMatches    Match[]            @relation("MatchCreator")
   wonMatches        Match[]            @relation("MatchWinner")
+  lostMatches       Match[]            @relation("MatchLoser")
   matchActions      MatchAction[]      @relation("MatchActionActor")
   authSessions      AuthSession[]
 }
@@ -87,12 +94,17 @@ model Match {
   finishedAt    DateTime?   @db.Timestamptz(3)
   winnerUserId  String?     @db.Uuid
   winnerSeat    MatchSeat?
+  loserUserId   String?     @db.Uuid
+  loserSeat     MatchSeat?
+  durationMs    Int?
+  turnCount     Int?
   finishReason  String?     @db.Text
   finalRevision Int?
   updatedAt     DateTime    @updatedAt @db.Timestamptz(3)
 
   createdBy     User?              @relation("MatchCreator", fields: [createdById], references: [id], onDelete: SetNull)
   winner        User?              @relation("MatchWinner", fields: [winnerUserId], references: [id], onDelete: SetNull)
+  loser         User?              @relation("MatchLoser", fields: [loserUserId], references: [id], onDelete: SetNull)
   participants  MatchParticipant[]
   actions       MatchAction[]
   snapshots     MatchSnapshot[]
@@ -101,6 +113,7 @@ model Match {
   @@index([status, createdAt])
   @@index([createdById])
   @@index([winnerUserId])
+  @@index([loserUserId])
 }
 
 model MatchParticipant {
@@ -109,12 +122,15 @@ model MatchParticipant {
   userId              String?   @db.Uuid
   seat                MatchSeat
   displayNameSnapshot String    @db.VarChar(100)
+  outcome             MatchOutcome?
+  resultData          Json?     @db.JsonB
   createdAt           DateTime  @default(now()) @db.Timestamptz(3)
 
   match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
   user  User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@unique([matchId, seat])
+  @@unique([matchId, userId])
   @@index([userId])
 }
 

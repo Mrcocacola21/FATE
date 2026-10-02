@@ -70,6 +70,7 @@ export type ServerMessage =
   | RoomStateMessage
   | {
       type: "joinAck";
+      roomMode?: "normal" | "test";
       roomId: string;
       role: PlayerRole;
       seat?: PlayerId;
@@ -113,6 +114,7 @@ export type ServerMessage =
 export type ClientMessage =
   | {
       type: "joinRoom";
+      accessToken?: string;
       mode: "create" | "join";
       roomId?: string;
       role: PlayerRole;
@@ -134,7 +136,7 @@ export type ClientMessage =
     }
   | { type: "action"; action: GameAction }
   | { type: "requestMoveOptions"; unitId: string; mode?: MoveMode }
-  | { type: "switchRole"; role: PlayerRole }
+  | { type: "switchRole"; role: PlayerRole; accessToken?: string }
   | { type: "leaveRoom" }
   | { type: "testRoomCommand"; command: TestRoomCommand };
 
@@ -156,6 +158,7 @@ export function connectGameSocket(onMessage: (msg: ServerMessage) => void): WebS
 export function sendJoinRoom(
   socket: WebSocket,
   params: {
+    accessToken?: string;
     mode: "create" | "join";
     roomId?: string;
     role: PlayerRole;
@@ -214,8 +217,8 @@ export function sendMoveOptionsRequest(socket: WebSocket, unitId: string, mode?:
   socket.send(JSON.stringify(msg));
 }
 
-export function sendSwitchRole(socket: WebSocket, role: PlayerRole) {
-  const msg: ClientMessage = { type: "switchRole", role };
+export function sendSwitchRole(socket: WebSocket, role: PlayerRole, accessToken?: string) {
+  const msg: ClientMessage = { type: "switchRole", role, accessToken };
   socket.send(JSON.stringify(msg));
 }
 

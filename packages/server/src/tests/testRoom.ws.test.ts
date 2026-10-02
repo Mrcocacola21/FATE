@@ -1,7 +1,7 @@
 import assert from "assert";
 import type { ServerMessage, RoomStateMessage } from "../ws";
 import WebSocket from "ws";
-import { buildTestServer as buildServer } from "./matchTestSupport";
+import { buildTestServer as buildServer, testAccessToken } from "./matchTestSupport";
 import { getGameRoom, storeTestHooks } from "../store";
 import { wsTestHooks } from "../ws";
 
@@ -212,6 +212,7 @@ async function main() {
       type: "joinRoom",
       mode: "create",
       role: "P1",
+      accessToken: testAccessToken("P1"),
     })
   );
   await waitFor(normalMessages, (message) => message.type === "roomState");

@@ -9,6 +9,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test:auth": "tsx --test src/auth/*.test.ts src/auth/*.test.tsx",
     "test:auth:e2e": "node scripts/auth-smoke.mjs",
+    "test:multiplayer:e2e": "node scripts/multiplayer-smoke.mjs",
     "test:gameplay": "tsx --test src/store.selection.test.ts",
     "test:shared-cell-targeting": "tsx --test src/game/gameshell-content/cellHandlers.test.tsx",
     "test:draft": "tsx --test src/modes/draftPool.test.ts src/modes/DraftHeroPreview.test.tsx",

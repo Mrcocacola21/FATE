@@ -64,6 +64,9 @@ async function run() {
   process.env.LOG_LEVEL = "silent";
   process.env.ENABLE_TEST_ROOMS = "true";
   process.env.NODE_ENV = "test";
+  process.env.JWT_ACCESS_SECRET = "phase6-db-access-01234567890123456789";
+  process.env.JWT_REFRESH_SECRET = "phase6-db-refresh-01234567890123456789";
+  process.env.AUTH_TRUSTED_ORIGINS = "http://localhost:5173";
   const database = new PrismaClient({ datasources: { db: { url: testUrl } } });
   const repository = new MatchRepository(database);
   const service = new MatchService(repository);
@@ -76,7 +79,19 @@ async function run() {
   storeTestHooks.reset();
   wsTestHooks.resetWsStateForTests();
   const extraMatchIds: string[] = [];
+  const accountIds: string[] = [];
   try {
+    const register = async (name: string) => {
+      const response = await server.inject({ method: "POST", url: "/api/auth/register",
+        headers: { origin: "http://localhost:5173" },
+        payload: { email: `${prefix}-${name}@example.test`, username: `${name}_${randomUUID().slice(0, 8)}`, password: "Test-password-123!" } });
+      assert.equal(response.statusCode, 201, response.body);
+      const credentials = response.json() as { accessToken: string; user: { id: string } };
+      accountIds.push(credentials.user.id);
+      await database.profile.update({ where: { userId: credentials.user.id }, data: { displayName: name } });
+      return credentials;
+    };
+    const alice = await register("Alice"), bob = await register("Bob");
     // Unique room creation is enforced by PostgreSQL, even outside runtime serialization.
     const input = { roomId: `${prefix}-unique`, gameMode: "standard", seed: 123 };
     const created = await Promise.all(
@@ -94,6 +109,10 @@ async function run() {
         }),
       ),
     );
+    assert.equal((await repository.findParticipants(id)).length, 1);
+    await service.syncParticipant(id, { seat: "P1", userId: alice.user.id, displayNameSnapshot: "Alice" });
+    await assert.rejects(service.syncParticipant(id, { seat: "P2", userId: alice.user.id, displayNameSnapshot: "Duplicate User" }),
+      (error: unknown) => (error as { code?: string }).code === "P2002");
     assert.equal((await repository.findParticipants(id)).length, 1);
     await assert.rejects(
       database.matchParticipant.create({
@@ -140,10 +159,17 @@ async function run() {
       finalRevision: 19,
       winnerSeat: "P1" as const,
       winnerUserId: null,
+      loserSeat: "P2" as const,
+      loserUserId: null,
+      turnCount: 7,
+      participants: [
+        { seat: "P1" as const, userId: null, outcome: "WIN" as const, resultData: { version: 1 as const, remainingUnits: 4, remainingHealth: 12 } },
+        { seat: "P2" as const, userId: null, outcome: "LOSS" as const, resultData: { version: 1 as const, remainingUnits: 0, remainingHealth: 0 } },
+      ],
       finishReason: "allEnemyUnitsDefeated",
     };
-    await Promise.all([service.markFinished(id, result), service.markFinished(id, result)]);
-    await assert.rejects(service.markFinished(id, { ...result, winnerSeat: "P2" }), /conflicting/);
+    await Promise.all([service.finalizeMatch(id, result), service.finalizeMatch(id, result)]);
+    await assert.rejects(service.finalizeMatch(id, { ...result, winnerSeat: "P2" }), /MATCH_RESULT_CONFLICT/);
     await assert.rejects(service.markStarted(id, start), /Invalid/);
     await assert.rejects(service.markCancelled(id, new Date()), /waiting/);
     assert.equal((await repository.findById(id))?.status, "FINISHED");
@@ -219,6 +245,7 @@ async function run() {
         roomId: actualRoomId,
         role: "P1",
         name: "Alice",
+        accessToken: alice.accessToken,
         userId: randomUUID(),
       }),
     );
@@ -229,6 +256,7 @@ async function run() {
         roomId: actualRoomId,
         role: "P2",
         name: "Bob",
+        accessToken: bob.accessToken,
       }),
     );
     spectator.socket.send(
@@ -247,8 +275,8 @@ async function run() {
     assert.deepEqual(
       participants.map((p) => [p.seat, p.displayNameSnapshot, p.userId]),
       [
-        ["P1", "Alice", null],
-        ["P2", "Bob", null],
+        ["P1", "Alice", alice.user.id],
+        ["P2", "Bob", bob.user.id],
       ],
     );
     const participantId = participants[0].id;
@@ -271,6 +299,7 @@ async function run() {
         role: "P1",
         name: "Alice",
         resumeToken: ack.resumeToken,
+        accessToken: alice.accessToken,
       }),
     );
     await until(() => resumed.messages.find((m) => m.type === "joinAck"));
@@ -300,7 +329,18 @@ async function run() {
       return m?.status === "FINISHED" ? m : null;
     });
     assert.equal(finished.winnerSeat, "P1");
-    assert.equal(finished.winnerUserId, null);
+    assert.equal(finished.winnerUserId, alice.user.id);
+    assert.equal(finished.loserUserId, bob.user.id);
+    assert.equal(finished.loserSeat, "P2");
+    assert.equal(finished.durationMs, finished.finishedAt!.getTime() - finished.startedAt!.getTime());
+    assert.equal(finished.turnCount, room.state.gameOver!.endedAtTurn);
+    assert.deepEqual((await repository.findParticipants(room.matchId)).map((p) => p.outcome), ["WIN", "LOSS"]);
+    const detail = await server.inject({ url: `/api/matches/${room.matchId}` });
+    assert.equal(detail.statusCode, 200, detail.body);
+    assert.equal(detail.json().winner.userId, alice.user.id);
+    assert.equal(detail.json().loser.userId, bob.user.id);
+    await database.profile.update({ where: { userId: alice.user.id }, data: { displayName: "Renamed" } });
+    assert.equal((await server.inject({ url: `/api/matches/${room.matchId}` })).json().winner.displayName, "Alice");
     assert.equal(finished.finishReason, "allEnemyUnitsDefeated");
     assert.equal(finished.finalRevision, room.revision);
     assert.equal(finished.finalRevision, room.state.gameOver?.endedAtRevision);
@@ -322,6 +362,7 @@ async function run() {
     assert.equal(await database.match.count(), beforeSandbox);
 
     const creator = await connect(wsUrl);
+    await database.profile.update({ where: { userId: alice.user.id }, data: { displayName: "Creator" } });
     sockets.push(creator.socket);
     const wsRoomId = `${prefix}-ws-created`;
     creator.socket.send(
@@ -331,10 +372,12 @@ async function run() {
         roomId: wsRoomId,
         role: "P1",
         name: "Creator",
+        accessToken: alice.accessToken,
       }),
     );
     await until(() => creator.messages.find((m) => m.type === "joinAck"));
     assert.equal((await repository.findByRoomId(wsRoomId))?.status, "WAITING");
+    assert.equal((await repository.findByRoomId(wsRoomId))?.createdById, alice.user.id);
     assert.equal(
       (await repository.findParticipants(getGameRoom(wsRoomId)!.matchId!))[0].displayNameSnapshot,
       "Creator",
@@ -345,6 +388,10 @@ async function run() {
     waitingRoom.lastActivityAt = 0;
     const playing = await lifecycle.createRoom({}, `${prefix}-active-ttl`);
     playing.seats = { P1: "a", P2: "b" };
+    playing.seatIdentities = {
+      P1: { userId: alice.user.id, username: "Alice", displayName: null },
+      P2: { userId: bob.user.id, username: "Bob", displayName: null },
+    };
     playing.state = {
       ...playing.state,
       seats: { P1: true, P2: true },
@@ -372,6 +419,7 @@ async function run() {
       where: { OR: [{ roomId: { startsWith: prefix } }, { id: { in: extraMatchIds } }] },
     });
     if (userId) await database.user.deleteMany({ where: { id: userId } });
+    await database.user.deleteMany({ where: { id: { in: accountIds } } });
     await database.$disconnect();
   }
 }

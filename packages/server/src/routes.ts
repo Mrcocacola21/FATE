@@ -10,6 +10,7 @@ import {
   getHeroMeta,
 } from "rules";
 import type { MatchLifecycle } from "./persistence/matchLifecycle";
+import type { ConnectionIdentityService } from "./auth/connectionIdentity";
 import { z } from "zod";
 import { CreateGameBodySchema, GameActionSchema, PlayerIdSchema } from "./schemas";
 import { isActionAllowedByPlayer } from "./permissions";
@@ -56,7 +57,21 @@ function requireDebugRestAccess(
   return false;
 }
 
-export async function registerRoutes(server: FastifyInstance, lifecycle: MatchLifecycle) {
+export async function registerRoutes(
+  server: FastifyInstance, lifecycle: MatchLifecycle,
+  identityService: Pick<ConnectionIdentityService, "verify">,
+) {
+  async function creatorId(request: FastifyRequest, reply: FastifyReply) {
+    if (!request.headers.authorization) return null;
+    const token = /^Bearer ([^\s]+)$/i.exec(request.headers.authorization)?.[1];
+    try {
+      if (!token) throw new Error("Invalid authorization");
+      return (await identityService.verify(token))?.userId ?? null;
+    } catch {
+      reply.code(401).send({ error: { code: "INVALID_ACCESS_TOKEN", message: "Unable to verify access token" } });
+      return null;
+    }
+  }
   server.get("/", async () => ({
     name: "fate-server",
     version: process.env.npm_package_version ?? "unknown",
@@ -105,6 +120,8 @@ export async function registerRoutes(server: FastifyInstance, lifecycle: MatchLi
         return;
       }
 
+      const createdById = await creatorId(request, reply);
+      if (reply.sent) return;
       const room = await enqueueRoomCommand(FATE_CREATE_KEY, async () => {
         await lifecycle.cleanup({ activeRoomIds: getActiveFateRoomIds() });
         return lifecycle.createRoom({
@@ -112,7 +129,7 @@ export async function registerRoutes(server: FastifyInstance, lifecycle: MatchLi
           arenaId: parsed.data.arenaId,
           roomMode: parsed.data.roomMode,
           gameMode: parsed.data.gameMode,
-        });
+        }, undefined, createdById);
       });
       reply.send({
         roomId: room.id,
@@ -137,6 +154,8 @@ export async function registerRoutes(server: FastifyInstance, lifecycle: MatchLi
         return;
       }
 
+      const createdById = await creatorId(request, reply);
+      if (reply.sent) return;
       const room = await enqueueRoomCommand(FATE_CREATE_KEY, async () => {
         await lifecycle.cleanup({ activeRoomIds: getActiveFateRoomIds() });
         return lifecycle.createRoom({
@@ -144,7 +163,7 @@ export async function registerRoutes(server: FastifyInstance, lifecycle: MatchLi
           arenaId: parsed.data.arenaId,
           roomMode: parsed.data.roomMode,
           gameMode: parsed.data.gameMode,
-        });
+        }, undefined, createdById);
       });
       const views = {
         P1: makePlayerView(room.state, "P1"),

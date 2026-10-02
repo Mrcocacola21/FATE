@@ -7,11 +7,13 @@ export interface AuthState {
   status: "initializing" | "authenticated" | "unauthenticated" | "unavailable";
   user: AuthUser | null;
   accessToken: string | null;
+  accessTokenExpiresAt: number | null;
   initialized: boolean;
   error: ApiError | null;
   operation: "login" | "register" | "logout" | null;
   initializeSession(): Promise<void>;
   refreshSession(): Promise<string>;
+  getValidAccessToken(): Promise<string | null>;
   login(input: LoginInput): Promise<void>;
   register(input: RegisterInput): Promise<void>;
   logout(): Promise<void>;
@@ -31,6 +33,7 @@ export function createAuthStore(api: AuthApi, lock: AuthLock = withAuthLock) {
         status: "unauthenticated",
         initialized: true,
         accessToken: null,
+        accessTokenExpiresAt: null,
         user: null,
         error: null,
       });
@@ -49,6 +52,7 @@ export function createAuthStore(api: AuthApi, lock: AuthLock = withAuthLock) {
         isCurrent(expected);
         set({
           accessToken: result.accessToken,
+          accessTokenExpiresAt: Date.now() + result.accessTokenExpiresIn * 1000,
           user,
           status: "authenticated",
           initialized: true,
@@ -65,6 +69,7 @@ export function createAuthStore(api: AuthApi, lock: AuthLock = withAuthLock) {
             version++;
             set({
               accessToken: null,
+              accessTokenExpiresAt: null,
               user: null,
               initialized: true,
               status: absent ? "unauthenticated" : "unavailable",
@@ -109,6 +114,7 @@ export function createAuthStore(api: AuthApi, lock: AuthLock = withAuthLock) {
         isCurrent(expected);
         set({
           accessToken: result.accessToken,
+          accessTokenExpiresAt: Date.now() + result.accessTokenExpiresIn * 1000,
           user: result.user,
           status: "authenticated",
           initialized: true,
@@ -145,11 +151,21 @@ export function createAuthStore(api: AuthApi, lock: AuthLock = withAuthLock) {
       status: "initializing",
       user: null,
       accessToken: null,
+      accessTokenExpiresAt: null,
       initialized: false,
       error: null,
       operation: null,
       initializeSession,
       refreshSession,
+      getValidAccessToken: async () => {
+        await initializeSession();
+        const state = get();
+        if (state.status === "unavailable") throw state.error ?? new ApiError("NETWORK_ERROR");
+        if (state.status !== "authenticated") return null;
+        if (state.accessToken && (state.accessTokenExpiresAt ?? 0) > Date.now() + 5000)
+          return state.accessToken;
+        return refreshSession();
+      },
       login: (input) => signIn("login", input),
       register: (input) => signIn("register", input),
       logout,

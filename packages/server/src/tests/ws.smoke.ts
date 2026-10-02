@@ -3,7 +3,7 @@
 import assert from "assert";
 import type { RoomStateMessage } from "../ws";
 import WebSocket from "ws";
-import { buildTestServer as buildServer } from "./matchTestSupport";
+import { buildTestServer as buildServer, testAccessToken } from "./matchTestSupport";
 
 function collectMessages(ws: WebSocket) {
   const queue: unknown[] = [];
@@ -165,6 +165,7 @@ async function main() {
       type: "joinRoom",
       mode: "create",
       role: "P1",
+      accessToken: testAccessToken("P1"),
     }),
   );
 
@@ -187,6 +188,7 @@ async function main() {
       mode: "join",
       roomId,
       role: "P2",
+      accessToken: testAccessToken("P2"),
     }),
   );
 
@@ -205,7 +207,7 @@ async function main() {
       role: "P2",
     }),
   );
-  await waitForError(queue1, (msg) => msg.code === "role_taken");
+  await waitForError(queue1, (msg) => msg.code === "USER_ALREADY_IN_MATCH");
 
   ws1.close();
   await new Promise((resolve) => setTimeout(resolve, 50));
@@ -222,6 +224,7 @@ async function main() {
       mode: "join",
       roomId,
       role: "P1",
+      accessToken: testAccessToken("P1"),
     }),
   );
   const rejected = (await waitForType(queue3, "joinRejected")) as {
@@ -247,6 +250,7 @@ async function main() {
       roomId,
       role: "P1",
       resumeToken,
+      accessToken: testAccessToken("P1"),
     }),
   );
   const rejoinAck = (await waitForType(queue1, "joinAck")) as {

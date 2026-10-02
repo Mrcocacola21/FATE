@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router";
-import { authStore } from "./auth/authStore";
+import { authStore, useAuthStore } from "./auth/authStore";
 import { AuthLayout } from "./auth/AuthLayout";
 import { RequireAuth } from "./auth/RequireAuth";
 import { LoginPage } from "./pages/LoginPage";
@@ -55,8 +55,13 @@ export default function App() {
 }
 
 function GameRuntime() {
+  const authStatus = useAuthStore((state) => state.status);
+  const joined = useGameStore((state) => state.joined);
   const roomId = useGameStore((state) => state.roomId);
   const resumeRoom = useGameStore((state) => state.resumeRoom);
+  useEffect(() => {
+    if (authStatus === "authenticated" && !joined) void resumeRoom();
+  }, [authStatus, joined, resumeRoom]);
   const [screen, setScreen] = useState<"rooms" | "figures" | "heartbreak">("rooms");
   const isVfxPreviewPath =
     typeof window !== "undefined" && window.location.pathname === VFX_PREVIEW_ROUTE;

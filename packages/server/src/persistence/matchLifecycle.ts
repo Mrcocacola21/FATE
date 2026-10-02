@@ -1,4 +1,8 @@
 import type { GameAction, PlayerId } from "rules";
+import { extractPersistentMatchResult, MatchResultError } from "./matchResult";
+import { Prisma } from "@prisma/client";
+import { hasDistinctPlayerIdentities, identityDisplayName } from "../auth/connectionIdentity";
+import { rejected } from "../commandResult";
 import { randomUUID } from "node:crypto";
 import {
   applyGameAction,
@@ -29,10 +33,13 @@ interface Projection {
   matchId: string;
   names: Map<PlayerId, SeatParticipantInput>;
   dirtySeats: Set<PlayerId>;
+  removedSeats: Set<PlayerId>;
   gameMode?: string;
   started: boolean;
   start?: StartedMatchInput;
   finish?: FinishedMatchInput;
+  finishAttempts?: number;
+  resultBlocked?: boolean;
   cancel?: Date;
   removed: boolean;
 }
@@ -60,7 +67,7 @@ export class MatchLifecycle {
   }
 
   private getService(): MatchPersistence {
-    return (this.service ??= new MatchService(new MatchRepository()));
+    return (this.service ??= new MatchService(new MatchRepository(), this.logger));
   }
 
   startRetries(): void {
@@ -76,7 +83,7 @@ export class MatchLifecycle {
   async close(): Promise<void> {
     if (this.timer) clearInterval(this.timer);
     await this.retryRun;
-    if (Array.from(this.projections.values()).some((p) => this.hasPending(p)))
+    if (Array.from(this.projections.values()).some((p) => this.hasPending(p) || p.resultBlocked))
       this.logger.error(
         { event: "match:pending_at_shutdown" },
         "Match projections still pending at shutdown",
@@ -128,6 +135,7 @@ export class MatchLifecycle {
         matchId: room.matchId,
         names: new Map(),
         dirtySeats: new Set(),
+        removedSeats: new Set(),
         started: false,
         removed: false,
       };
@@ -144,17 +152,32 @@ export class MatchLifecycle {
   ): Promise<void> {
     const p = this.projection(room);
     if (!p || p.started) return;
+    const identity = room.seatIdentities[seat];
     p.names.set(seat, {
       seat,
-      userId: null,
+      userId: identity?.userId ?? null,
       // Existing WS names are unbounded; the durable column is varchar(100).
       displayNameSnapshot: Array.from(
-        name?.trim() || (resumed ? p.names.get(seat)?.displayNameSnapshot : undefined) || seat,
+        (identity ? identityDisplayName(identity) : name?.trim()) ||
+          (resumed ? p.names.get(seat)?.displayNameSnapshot : undefined) || seat,
       )
         .slice(0, 100)
         .join(""),
     });
     p.dirtySeats.add(seat);
+    await this.flush(p);
+  }
+
+  async syncVacantSeats(room: GameRoom): Promise<void> {
+    const p = this.projection(room);
+    if (!p || p.started) return;
+    for (const seat of ["P1", "P2"] as const) {
+      if (!room.seats[seat] && p.names.has(seat)) {
+        p.names.delete(seat);
+        p.dirtySeats.delete(seat);
+        p.removedSeats.add(seat);
+      }
+    }
     await this.flush(p);
   }
 
@@ -166,6 +189,17 @@ export class MatchLifecycle {
   }
 
   async applyAction(room: GameRoom, action: GameAction, playerId?: PlayerId) {
+    if (room.roomMode === "normal" && action.type === "startGame") {
+      if (!hasDistinctPlayerIdentities(room))
+        return rejected("AUTH_REQUIRED", "Two distinct authenticated players are required");
+      const projection = this.projection(room);
+      if (projection && !projection.started) {
+        for (const seat of ["P1", "P2"] as const)
+          await this.syncParticipant(room, seat);
+        if (projection.dirtySeats.size || projection.removedSeats.size)
+          return rejected("MATCH_PERSISTENCE_UNAVAILABLE", "Participants must be synchronized before start");
+      }
+    }
     const previousPhase = room.state.phase;
     const command = applyGameAction(room, action, playerId);
     if (!command.ok) return command;
@@ -177,6 +211,7 @@ export class MatchLifecycle {
         (previousPhase === "lobby" && room.state.phase !== "lobby"))
     ) {
       p.started = true;
+      room.participantsLocked = true;
       p.start = {
         gameMode: room.gameMode,
         startedAt: new Date(),
@@ -191,15 +226,14 @@ export class MatchLifecycle {
       await this.flush(p);
     }
     if (previousPhase !== "ended" && room.state.phase === "ended") {
-      const result = room.state.gameOver;
-      p.finish = {
-        finishedAt: new Date(),
-        finalRevision: room.revision,
-        winnerSeat: result?.winnerPlayerId ?? null,
-        winnerUserId: null,
-        finishReason: result?.reason ?? null,
-      };
-      await this.flush(p);
+      try {
+        p.finish = extractPersistentMatchResult(room, new Date());
+        await this.flush(p);
+      } catch {
+        p.resultBlocked = true;
+        this.logger.error({ event: "match:result_invalid", code: "MATCH_RESULT_INVALID", roomId: room.id, matchId: p.matchId },
+          "Terminal result extraction failed; runtime preserved");
+      }
     }
     // Ordinary actions perform no database reads/writes or retry work.
     return command;
@@ -238,7 +272,7 @@ export class MatchLifecycle {
   }
 
   private hasPending(p: Projection): boolean {
-    return !!(p.dirtySeats.size || p.gameMode || p.start || p.finish || p.cancel);
+    return !p.resultBlocked && !!(p.dirtySeats.size || p.removedSeats.size || p.gameMode || p.start || p.finish || p.cancel);
   }
 
   async retryPending(): Promise<void> {
@@ -255,9 +289,14 @@ export class MatchLifecycle {
   }
 
   private async flush(p: Projection): Promise<void> {
+    if (p.resultBlocked) return;
     let operation = "participant";
     try {
       const service = this.getService();
+      for (const seat of p.removedSeats) {
+        await service.removeWaitingParticipant(p.matchId, seat);
+        p.removedSeats.delete(seat);
+      }
       for (const seat of p.dirtySeats) {
         await service.syncParticipant(p.matchId, p.names.get(seat)!);
         p.dirtySeats.delete(seat);
@@ -282,7 +321,8 @@ export class MatchLifecycle {
       }
       if (p.finish) {
         operation = "finished";
-        await service.markFinished(p.matchId, p.finish);
+        p.finishAttempts = (p.finishAttempts ?? 0) + 1;
+        await service.finalizeMatch(p.matchId, p.finish);
         p.finish = undefined;
         this.logger.info(
           { event: "match:finished", roomId: p.roomId, matchId: p.matchId },
@@ -298,11 +338,20 @@ export class MatchLifecycle {
           "Match cancelled",
         );
       }
-    } catch {
+    } catch (error) {
+      const domainError = error instanceof MatchResultError;
+      const databaseIntegrityError = error instanceof Prisma.PrismaClientKnownRequestError &&
+        ["P2002", "P2003", "P2025"].includes(error.code);
+      const permanent = domainError || databaseIntegrityError;
+      const exhausted = operation === "finished" && (p.finishAttempts ?? 0) >= 5;
+      if (permanent || exhausted) p.resultBlocked = true;
       // Prisma diagnostics can contain values. Log safe identifiers, never tokens/names.
       this.logger.error(
-        { event: "match:persistence_failed", operation, roomId: p.roomId, matchId: p.matchId },
-        "Match persistence failed; runtime preserved and projection queued for retry",
+        { event: "match:persistence_failed", operation, roomId: p.roomId, matchId: p.matchId,
+          code: domainError ? error.code : databaseIntegrityError ? "MATCH_RESULT_INVALID" :
+            exhausted ? "MATCH_RESULT_RETRY_EXHAUSTED" : "MATCH_PERSISTENCE_UNAVAILABLE" },
+        p.resultBlocked ? "Match persistence failed; runtime preserved, automatic retries stopped" :
+          "Match persistence failed; runtime preserved and projection queued for retry",
       );
     }
   }

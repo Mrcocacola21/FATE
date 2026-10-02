@@ -19,6 +19,7 @@ import {
   type DraftState,
 } from "rules";
 import { randomUUID } from "node:crypto";
+import type { ConnectionIdentity } from "./auth/connectionIdentity";
 import { accepted, rejected, type CommandResult } from "./commandResult";
 
 export interface ActionLogEntry {
@@ -49,6 +50,8 @@ export interface GameRoom {
   hostSeat: PlayerId;
   seats: { P1: string | null; P2: string | null };
   seatTokens: { P1: string | null; P2: string | null };
+  seatIdentities: Record<PlayerId, ConnectionIdentity | null>;
+  participantsLocked: boolean;
   spectators: Set<string>;
   figureSets: Partial<Record<PlayerId, HeroSelection>>;
 }
@@ -181,6 +184,8 @@ export function createGameRoomWithId(id: string, options: CreateGameOptions = {}
     hostSeat,
     seats,
     seatTokens: { P1: null, P2: null },
+    seatIdentities: { P1: null, P2: null },
+    participantsLocked: false,
     spectators: new Set<string>(),
     figureSets: {},
   };

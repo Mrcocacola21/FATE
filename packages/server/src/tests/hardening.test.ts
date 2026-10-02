@@ -477,6 +477,7 @@ async function testConcurrentSwitchRoleSerialization() {
     roomIdPrefix: "hardening-switch-queue",
   });
   let meta: Parameters<typeof wsTestHooks.scheduleSeatGrace>[1] = {
+    authIdentity: { userId: randomUUID(), username: "QueuePlayer", displayName: null },
     channel: "fate",
     roomId: room.id,
     role: "P1",

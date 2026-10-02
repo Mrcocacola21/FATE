@@ -32,6 +32,10 @@ import { isAllowedOrigin } from "./origin";
 import { isActionAllowedByPlayer } from "./permissions";
 import { deleteGameRoom, getGameRoom, touchGameRoom, type GameRoom } from "./store";
 import type { MatchLifecycle } from "./persistence/matchLifecycle";
+import {
+  assertSeatIdentity, hasDistinctPlayerIdentities, identityDisplayName,
+  MultiplayerIdentityError, type ConnectionIdentity, type ConnectionIdentityService,
+} from "./auth/connectionIdentity";
 import { logFate } from "./fateLogger";
 import { rejected, type CommandResult } from "./commandResult";
 import { enqueueRoomCommand, fateRoomKey } from "./roomQueue";
@@ -98,6 +102,7 @@ export type RoomStateMessage = {
 
 type JoinAckMessage = {
   type: "joinAck";
+  roomMode?: "normal" | "test";
   roomId: string;
   role: PlayerRole;
   seat?: PlayerId;
@@ -162,6 +167,7 @@ interface ConnectionMeta {
   connId: string;
   resumeToken: string;
   name?: string;
+  authIdentity?: ConnectionIdentity | null;
 }
 
 const roomSockets = new Map<string, Set<WebSocket>>();
@@ -321,7 +327,10 @@ function applyFigureSetToRoom(room: GameRoom, seat: PlayerId, figureSet?: HeroSe
 function vacateSeat(room: GameRoom, seat: PlayerId, connId: string) {
   if (room.seats[seat] !== connId) return;
   room.seats[seat] = null;
-  room.seatTokens[seat] = null;
+  if (!room.participantsLocked) {
+    room.seatTokens[seat] = null;
+    room.seatIdentities[seat] = null;
+  }
   room.state = {
     ...room.state,
     seats: { ...room.state.seats, [seat]: false },
@@ -339,6 +348,7 @@ function cloneRoomForSeatMutation(room: GameRoom): GameRoom {
     },
     seats: { ...room.seats },
     seatTokens: { ...room.seatTokens },
+    seatIdentities: { ...room.seatIdentities },
     spectators: new Set(room.spectators),
   };
 }
@@ -347,6 +357,7 @@ function applySeatMutationSnapshot(room: GameRoom, nextRoom: GameRoom) {
   room.state = nextRoom.state;
   room.seats = nextRoom.seats;
   room.seatTokens = nextRoom.seatTokens;
+  room.seatIdentities = nextRoom.seatIdentities;
   room.spectators = nextRoom.spectators;
   room.hostConnId = nextRoom.hostConnId;
   room.hostSeat = nextRoom.hostSeat;
@@ -367,6 +378,18 @@ function buildSwitchRoleTransition(
 
   const targetSeat =
     requestedRole === "P1" || requestedRole === "P2" ? (requestedRole as PlayerId) : null;
+
+  if (room.roomMode === "normal") {
+    if (room.participantsLocked || room.draftState)
+      return { ok: false, code: "MATCH_IDENTITY_LOCKED", message: "Player roles are locked after start" };
+    try {
+      if (targetSeat) assertSeatIdentity(room, targetSeat, current.authIdentity, current.resumeToken);
+    } catch (error) {
+      if (error instanceof MultiplayerIdentityError)
+        return { ok: false, code: error.code, message: error.message };
+      throw error;
+    }
+  }
 
   if (targetSeat && !canAssignSeat(room, targetSeat, current.connId, current.resumeToken)) {
     return {
@@ -391,6 +414,7 @@ function buildSwitchRoleTransition(
       room.seatTokens[targetSeat] === previousResumeToken;
     nextRoom.seats[targetSeat] = current.connId;
     nextRoom.seatTokens[targetSeat] = nextResumeToken;
+    nextRoom.seatIdentities[targetSeat] = current.authIdentity ?? null;
     nextRoom.state = {
       ...nextRoom.state,
       seats: { ...nextRoom.state.seats, [targetSeat]: true },
@@ -466,7 +490,7 @@ function clearSeatGrace(roomId: string, seat: PlayerId) {
   graceByToken.delete(record.resumeToken);
 }
 
-function scheduleSeatGrace(room: GameRoom, meta: ConnectionMeta) {
+function scheduleSeatGrace(room: GameRoom, meta: ConnectionMeta, lifecycle?: MatchLifecycle) {
   if (!meta.seat || meta.channel !== "fate") return;
   const roomId = room.id;
   const seat = meta.seat;
@@ -478,7 +502,7 @@ function scheduleSeatGrace(room: GameRoom, meta: ConnectionMeta) {
   const timer = setTimeout(() => {
     graceByToken.delete(resumeToken);
     graceBySeat.delete(seatGraceKey(roomId, seat));
-    void enqueueRoomCommand(fateRoomKey(roomId), () => {
+    void enqueueRoomCommand(fateRoomKey(roomId), async () => {
       const current = getGameRoom(roomId);
       if (!current) return;
 
@@ -487,6 +511,7 @@ function scheduleSeatGrace(room: GameRoom, meta: ConnectionMeta) {
       if (!stillReserved) return;
 
       vacateSeat(current, seat, connId);
+      await lifecycle?.syncVacantSeats(current);
       updateHost(current);
       broadcastRoomState(current);
       logFate(serverLogger!, {
@@ -534,6 +559,8 @@ function resetWsStateForTests() {
 }
 
 export const wsTestHooks = {
+  getRoomConnectionIdentities: (roomId: string) => Array.from(socketMeta.values())
+    .filter((meta) => meta.roomId === roomId).map((meta) => meta.authIdentity ?? null),
   canAssignSeat,
   assignSeat,
   clearSeatGraceByToken,
@@ -588,8 +615,10 @@ function buildRoomMeta(
     players: { P1: !!room.seats.P1, P2: !!room.seats.P2 },
     playerNames: {
       P1:
+        (room.seatIdentities.P1 ? identityDisplayName(room.seatIdentities.P1) : null) ??
         Array.from(socketMeta.values()).find((meta) => meta.connId === room.seats.P1)?.name ?? null,
       P2:
+        (room.seatIdentities.P2 ? identityDisplayName(room.seatIdentities.P2) : null) ??
         Array.from(socketMeta.values()).find((meta) => meta.connId === room.seats.P2)?.name ?? null,
     },
     spectators: room.spectators.size,
@@ -608,6 +637,8 @@ function buildRoomMeta(
             if (!projected) return undefined;
             const requestedConnectionId = room.seats[room.state.pendingRoll!.player];
             const requestedPlayerLabel =
+              (room.seatIdentities[room.state.pendingRoll!.player]
+                ? identityDisplayName(room.seatIdentities[room.state.pendingRoll!.player]!) : null) ??
               Array.from(socketMeta.values()).find(
                 (entry) => entry.connId === requestedConnectionId,
               )?.name ?? room.state.pendingRoll!.player;
@@ -718,6 +749,12 @@ async function applyRoomAction(
   const isTestController = room.roomMode === "test" && room.testControllerConnId === meta.connId;
   if (meta.role === "spectator" || !meta.seat) {
     const result = rejected("NOT_SEATED", "Spectators cannot act");
+    sendActionRejected(socket, result);
+    return result;
+  }
+  if (room.seats[meta.seat] !== meta.connId || (room.roomMode === "normal" &&
+    room.seatIdentities[meta.seat]?.userId !== meta.authIdentity?.userId)) {
+    const result = rejected("FORBIDDEN", "Connection does not own this player seat");
     sendActionRejected(socket, result);
     return result;
   }
@@ -835,7 +872,8 @@ async function applyAndBroadcast(
   return command;
 }
 
-function detachFromFateRoom(
+async function detachFromFateRoom(
+  lifecycle: MatchLifecycle,
   meta: ConnectionMeta,
   options: { useGrace: boolean; reason: "leave" | "disconnect" | "switch_room" },
 ) {
@@ -849,7 +887,7 @@ function detachFromFateRoom(
 
   if (meta.seat) {
     if (options.useGrace) {
-      scheduleSeatGrace(room, meta);
+      scheduleSeatGrace(room, meta, lifecycle);
       logFate(serverLogger!, {
         tag: "fate:seat:grace_started",
         roomId: room.id,
@@ -865,6 +903,7 @@ function detachFromFateRoom(
   }
 
   updateHost(room);
+  await lifecycle.syncVacantSeats(room);
   broadcastRoomState(room);
 }
 
@@ -886,7 +925,10 @@ function detachFromPongRoom(meta: ConnectionMeta, reason: "leave" | "disconnect"
   });
 }
 
-export function registerGameWebSocket(server: FastifyInstance, lifecycle: MatchLifecycle) {
+export function registerGameWebSocket(
+  server: FastifyInstance, lifecycle: MatchLifecycle,
+  identityService: Pick<ConnectionIdentityService, "verify">,
+) {
   serverLogger = server.log;
   server.get("/ws", { websocket: true }, (socket, request) => {
     const rawOrigin = request.headers.origin;
@@ -901,12 +943,12 @@ export function registerGameWebSocket(server: FastifyInstance, lifecycle: MatchL
       reason: "leave" | "switch_room" | "disconnect",
     ) {
       const key = queueKey(existing.channel, existing.roomId);
-      await enqueueRoomCommand(key, () => {
+      await enqueueRoomCommand(key, async () => {
         const current = socketMeta.get(socket);
         if (!current || current.connId !== existing.connId) return;
 
         if (current.channel === "fate") {
-          detachFromFateRoom(current, {
+          await detachFromFateRoom(lifecycle, current, {
             useGrace: reason === "disconnect" && !!current.seat,
             reason:
               reason === "switch_room"
@@ -1064,6 +1106,14 @@ export function registerGameWebSocket(server: FastifyInstance, lifecycle: MatchL
           return;
         }
         case "joinRoom": {
+          const identity = await identityService.verify(msg.accessToken);
+          const targetMode = msg.mode === "create" ? msg.roomMode ?? "normal"
+            : getGameRoom(msg.roomId ?? "")?.roomMode;
+          if (targetMode === "normal" && msg.role !== "spectator" && !identity)
+            throw new MultiplayerIdentityError("AUTH_REQUIRED", "Sign in to occupy a player seat");
+          const targetRoom = getGameRoom(msg.roomId ?? "");
+          if (targetRoom && (msg.role === "P1" || msg.role === "P2"))
+            assertSeatIdentity(targetRoom, msg.role, identity, msg.resumeToken ?? "");
           const targetRoomId = msg.mode === "create" ? (msg.roomId ?? randomUUID()) : msg.roomId;
           if (!targetRoomId) {
             sendMessage(socket, {
@@ -1096,7 +1146,6 @@ export function registerGameWebSocket(server: FastifyInstance, lifecycle: MatchL
             if (socket.readyState !== WebSocket.OPEN) return;
             const connId = randomUUID();
             const resumeToken = msg.resumeToken ?? randomUUID();
-            clearSeatGraceByToken(resumeToken);
 
             const requestedSeat =
               msg.role === "P1" || msg.role === "P2" ? (msg.role as PlayerId) : null;
@@ -1125,6 +1174,7 @@ export function registerGameWebSocket(server: FastifyInstance, lifecycle: MatchL
                     roomMode: requestedRoomMode,
                   },
                   targetRoomId,
+                  identity?.userId ?? null,
                 );
               } catch {
                 sendStructuredError(
@@ -1186,6 +1236,7 @@ export function registerGameWebSocket(server: FastifyInstance, lifecycle: MatchL
 
             if (requestedSeat) {
               seat = requestedSeat;
+              assertSeatIdentity(room, seat, identity, resumeToken);
               resumed = room.seatTokens[seat] === resumeToken;
               if (!canAssignSeat(room, seat, connId, resumeToken)) {
                 sendMessage(socket, {
@@ -1195,7 +1246,17 @@ export function registerGameWebSocket(server: FastifyInstance, lifecycle: MatchL
                 });
                 return;
               }
+              // A successful resume replaces transport ownership, including a still-live old socket.
+              for (const [oldSocket, oldMeta] of socketMeta) {
+                if (oldMeta.channel === "fate" && oldMeta.roomId === room.id && oldMeta.seat === seat) {
+                  socketMeta.delete(oldSocket);
+                  removeSocketFromRoom(room.id, oldSocket);
+                  sendStructuredError(oldSocket, "SEAT_CONNECTION_REPLACED", "Seat resumed on another connection");
+                }
+              }
+              clearSeatGrace(room.id, seat);
               const assigned = assignSeat(room, seat, connId, resumeToken);
+              if (!room.participantsLocked) room.seatIdentities[seat] = identity;
               if (!assigned) {
                 sendMessage(socket, {
                   type: "joinRejected",
@@ -1211,7 +1272,7 @@ export function registerGameWebSocket(server: FastifyInstance, lifecycle: MatchL
               ) {
                 room.testControllerConnId = connId;
               }
-              applyFigureSetToRoom(room, seat, msg.figureSet as HeroSelection | undefined);
+              if (!resumed) applyFigureSetToRoom(room, seat, msg.figureSet as HeroSelection | undefined);
             } else {
               room.spectators.add(connId);
             }
@@ -1233,7 +1294,8 @@ export function registerGameWebSocket(server: FastifyInstance, lifecycle: MatchL
               seat,
               connId,
               resumeToken,
-              name: msg.name,
+              authIdentity: identity,
+              name: identity ? identityDisplayName((seat ? room.seatIdentities[seat] : null) ?? identity) : msg.name,
             });
             addSocketToRoom(room.id, socket);
             if (seat) await lifecycle.syncParticipant(room, seat, msg.name, resumed);
@@ -1244,7 +1306,6 @@ export function registerGameWebSocket(server: FastifyInstance, lifecycle: MatchL
               role: msg.role,
               socketId: connId,
               seat,
-              name: msg.name,
             });
 
             sendMessage(socket, {
@@ -1252,6 +1313,7 @@ export function registerGameWebSocket(server: FastifyInstance, lifecycle: MatchL
               roomId: room.id,
               role: msg.role,
               seat: seat ?? undefined,
+              roomMode: room.roomMode,
               isHost: room.hostConnId === connId,
               resumeToken,
             });
@@ -1261,6 +1323,8 @@ export function registerGameWebSocket(server: FastifyInstance, lifecycle: MatchL
           return;
         }
         case "switchRole": {
+          const suppliedIdentity = msg.accessToken === undefined ? undefined
+            : await identityService.verify(msg.accessToken);
           const meta = socketMeta.get(socket);
           if (!meta || meta.channel !== "fate") {
             sendMessage(socket, { type: "error", message: "Must join a room first" });
@@ -1281,6 +1345,13 @@ export function registerGameWebSocket(server: FastifyInstance, lifecycle: MatchL
               return;
             }
 
+            if (suppliedIdentity !== undefined) {
+              if (current.authIdentity && current.authIdentity.userId !== suppliedIdentity?.userId)
+                throw new MultiplayerIdentityError("RESUME_IDENTITY_MISMATCH", "Connection identity cannot change");
+              current.authIdentity = suppliedIdentity;
+              current.name = suppliedIdentity ? identityDisplayName(suppliedIdentity) : current.name;
+            }
+
             const transition = buildSwitchRoleTransition(room, current, msg.role);
             if (!transition.ok) {
               sendMessage(socket, {
@@ -1297,6 +1368,7 @@ export function registerGameWebSocket(server: FastifyInstance, lifecycle: MatchL
             }
             applySeatMutationSnapshot(room, transition.nextRoom);
             socketMeta.set(socket, transition.nextMeta);
+            await lifecycle.syncVacantSeats(room);
             if (transition.nextMeta.seat)
               await lifecycle.syncParticipant(
                 room,
@@ -1308,6 +1380,7 @@ export function registerGameWebSocket(server: FastifyInstance, lifecycle: MatchL
               type: "joinAck",
               roomId: room.id,
               role: transition.nextMeta.role,
+              roomMode: room.roomMode,
               seat: transition.nextMeta.seat ?? undefined,
               isHost: room.hostConnId === transition.nextMeta.connId,
               resumeToken: transition.nextMeta.resumeToken,
@@ -1634,6 +1707,10 @@ export function registerGameWebSocket(server: FastifyInstance, lifecycle: MatchL
             }
 
             if (room.gameMode === "draft") {
+              if (room.roomMode === "normal" && !hasDistinctPlayerIdentities(room)) {
+                sendStructuredError(socket, "AUTH_REQUIRED", "Two distinct authenticated players are required");
+                return;
+              }
               if (!room.draftState) {
                 startDraftSession(room);
                 markRoomMetadataChanged(room);
@@ -1788,6 +1865,7 @@ export function registerGameWebSocket(server: FastifyInstance, lifecycle: MatchL
       }
     }
 
+    let messages = Promise.resolve();
     async function handleIncomingMessage(data: RawData) {
       if (computePayloadBytes(data) > MAX_WS_PAYLOAD_BYTES) {
         sendStructuredError(socket, "PAYLOAD_TOO_LARGE", "Payload too large");
@@ -1813,9 +1891,15 @@ export function registerGameWebSocket(server: FastifyInstance, lifecycle: MatchL
       }
 
       try {
-        await handleParsedMessage(parsed.data);
+        const processing = messages.then(() => handleParsedMessage(parsed.data));
+        messages = processing.catch(() => undefined);
+        await processing;
       } catch (error) {
-        server.log.error({ tag: "fate:ws_unhandled_error", err: error });
+        if (error instanceof MultiplayerIdentityError) {
+          sendStructuredError(socket, error.code, error.message);
+          return;
+        }
+        server.log.error({ tag: "fate:ws_unhandled_error" });
         sendStructuredError(socket, "BAD_REQUEST", "Failed to process message");
       }
     }
@@ -1833,11 +1917,10 @@ export function registerGameWebSocket(server: FastifyInstance, lifecycle: MatchL
 
       try {
         await detachExistingConnection(meta, "disconnect");
-      } catch (error) {
+      } catch {
         server.log.error({
           tag: "fate:disconnect_error",
           roomId: meta.roomId,
-          err: error,
           kind,
         });
       }
