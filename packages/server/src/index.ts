@@ -13,14 +13,19 @@ import { disconnectDatabase } from "./db/client";
 import { authRoutes } from "./routes/authRoutes";
 import { profileRoutes } from "./routes/profileRoutes";
 import { matchRoutes } from "./routes/matchRoutes";
+import { matchHistoryRoutes } from "./routes/matchHistoryRoutes";
+import type { MatchHistoryService } from "./services/matchHistoryService";
 import { isTrustedAuthOrigin } from "./auth/httpSecurity";
 import { ConnectionIdentityService } from "./auth/connectionIdentity";
 
-export async function buildServer(options: {
-  matchPersistence?: MatchPersistence;
-  connectionIdentity?: Pick<ConnectionIdentityService, "verify">;
-  actionHistory?: Pick<MatchActionService, "getCompletedMatchActionHistory">;
-} = {}) {
+export async function buildServer(
+  options: {
+    matchPersistence?: MatchPersistence;
+    connectionIdentity?: Pick<ConnectionIdentityService, "verify">;
+    actionHistory?: Pick<MatchActionService, "getCompletedMatchActionHistory">;
+    matchHistory?: Pick<MatchHistoryService, "getUserMatchHistory">;
+  } = {},
+) {
   const logLevel = process.env.LOG_LEVEL ?? "info";
   const server = Fastify({
     logger: {
@@ -55,7 +60,12 @@ export async function buildServer(options: {
   await registerRoutes(server, lifecycle, identity);
   await server.register(authRoutes, { prefix: "/api/auth" });
   await server.register(profileRoutes, { prefix: "/api" });
-  await server.register(matchRoutes, { prefix: "/api", identity, actionHistory: options.actionHistory });
+  await server.register(matchRoutes, {
+    prefix: "/api",
+    identity,
+    actionHistory: options.actionHistory,
+  });
+  await server.register(matchHistoryRoutes, { prefix: "/api", matchHistory: options.matchHistory });
   registerGameWebSocket(server, lifecycle, identity);
 
   return server;

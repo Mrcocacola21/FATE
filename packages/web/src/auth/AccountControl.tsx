@@ -41,6 +41,9 @@ export function AccountControl() {
           >
             {t("auth.logout")}
           </button>
+          <Link className="btn btn-ghost" to="/matches">
+            {t("matches.history")}
+          </Link>
         </>
       ) : (
         <>

@@ -136,7 +136,7 @@ async function run() {
     const dto = response.json();
     assert.equal(dto.winner.displayName, "Historical Alice");
     assert.deepEqual(Object.keys(dto).sort(), ["id", "status", "gameMode", "createdAt", "startedAt", "finishedAt", "durationMs", "finalRevision", "turnCount", "finishReason", "winner", "loser", "participants"].sort());
-    for (const p of dto.participants) assert.deepEqual(Object.keys(p).sort(), ["seat", "userId", "displayName", "outcome", "resultData"].sort());
+    for (const p of dto.participants) assert.deepEqual(Object.keys(p).sort(), ["seat", "userId", "displayName", "outcome", "resultData", "username", "avatarUrl"].sort());
     assert.deepEqual(dto.participants[0].resultData, summary);
     for (const secret of ["email", "passwordHash", "private-", "AuthSession", "refreshToken", "connId", "resumeToken", "hiddenState", "actions", "snapshots", "preferredLanguage", "seed"])
       assert(!response.body.includes(secret), secret);
@@ -189,7 +189,10 @@ async function run() {
     assert.equal(stored.status, "FINISHED");
     assert.equal(stored.finalRevision, revision);
     assert.equal(room.revision, revision);
-    assert.deepEqual(await service.finalizeMatch(room.matchId!, extractPersistentMatchResult(room, new Date())), await service.getFinishedMatchDetails(room.matchId!));
+    const publicDetails = await service.getFinishedMatchDetails(room.matchId!);
+    // Current profile navigation metadata is read-only and is not part of the canonical persisted result.
+    const canonicalDetails = { ...publicDetails, participants: publicDetails.participants.map(({ username: _username, avatarUrl: _avatarUrl, ...participant }) => participant) };
+    assert.deepEqual(await service.finalizeMatch(room.matchId!, extractPersistentMatchResult(room, new Date())), canonicalDetails);
     // Exercise the actual accepted chess terminal action, whose GameOver is null.
     const chessRoom = await lifecycle.createRoom({}, `${prefix}-chess-runtime`);
     ids.push(chessRoom.matchId!);

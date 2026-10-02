@@ -2,7 +2,11 @@ import { isDeepStrictEqual } from "node:util";
 import { MatchActionRepository } from "../repositories/matchActionRepository";
 import type { AcceptedActionRecord } from "../persistence/acceptedAction";
 import type { DetailedMatch, MatchRepository } from "../repositories/matchRepository";
-import { MatchResultError, safeParticipantResultData, type FinishedMatchInput } from "../persistence/matchResult";
+import {
+  MatchResultError,
+  safeParticipantResultData,
+  type FinishedMatchInput,
+} from "../persistence/matchResult";
 import type { ParticipantResultData, ResultOutcome } from "../persistence/matchResult";
 export type { FinishedMatchInput } from "../persistence/matchResult";
 
@@ -25,7 +29,16 @@ export interface MatchDetailsDTO {
   finishReason: string | null;
   winner: MatchResultIdentityDTO | null;
   loser: MatchResultIdentityDTO | null;
-  participants: (MatchResultIdentityDTO & { outcome: ResultOutcome | null; resultData: ParticipantResultData | null })[];
+  participants: (MatchResultIdentityDTO & {
+    outcome: ResultOutcome | null;
+    resultData: ParticipantResultData | null;
+  })[];
+}
+export interface PublicMatchDetailsDTO extends Omit<MatchDetailsDTO, "participants"> {
+  participants: (MatchDetailsDTO["participants"][number] & {
+    username: string | null;
+    avatarUrl: string | null;
+  })[];
 }
 export interface WaitingMatchInput {
   roomId: string;
@@ -61,7 +74,9 @@ export class MatchService {
     private readonly matches: MatchRepository,
     private readonly logger: { error(data: object, message: string): void } = console,
     actions?: MatchActionRepository,
-  ) { this.actions = actions; }
+  ) {
+    this.actions = actions;
+  }
 
   appendAcceptedAction(record: AcceptedActionRecord): Promise<void> {
     return (this.actions ??= new MatchActionRepository()).appendAcceptedAction(record);
@@ -98,50 +113,101 @@ export class MatchService {
   async finalizeMatch(matchId: string, input: FinishedMatchInput) {
     const canonical = await this.matches.finalizeMatch(matchId, (match, changed) => {
       if (!match) throw new MatchResultError("MATCH_NOT_FOUND", 404);
-      if (!changed && match.status !== "FINISHED") throw new MatchResultError("MATCH_INVALID_TRANSITION");
-      const fail = () => { throw new MatchResultError(changed ? "MATCH_RESULT_INVALID" : "MATCH_RESULT_CONFLICT"); };
+      if (!changed && match.status !== "FINISHED")
+        throw new MatchResultError("MATCH_INVALID_TRANSITION");
+      const fail = () => {
+        throw new MatchResultError(changed ? "MATCH_RESULT_INVALID" : "MATCH_RESULT_CONFLICT");
+      };
       const draw = input.winnerSeat === null && input.loserSeat === null;
-      if (!Number.isSafeInteger(input.finalRevision) || input.finalRevision < 1 || input.finalRevision > 2147483647 ||
-          !Number.isFinite(input.finishedAt.getTime()) ||
-          (input.turnCount !== null && (!Number.isSafeInteger(input.turnCount) || input.turnCount < 1 || input.turnCount > 2147483647)) ||
-          !["allEnemyUnitsDefeated", "unknown", "chessMutualKingDefeat"].includes(input.finishReason) ||
-          (draw ? input.finishReason !== "chessMutualKingDefeat" || input.winnerUserId !== null || input.loserUserId !== null :
-            !input.winnerSeat || !input.loserSeat || !["P1", "P2"].includes(input.winnerSeat) ||
-            !["P1", "P2"].includes(input.loserSeat) || input.winnerSeat === input.loserSeat || input.finishReason === "chessMutualKingDefeat") ||
-          match.participants.length !== 2 || input.participants.length !== 2 ||
-          new Set(input.participants.map((p) => p.seat)).size !== 2) fail();
+      if (
+        !Number.isSafeInteger(input.finalRevision) ||
+        input.finalRevision < 1 ||
+        input.finalRevision > 2147483647 ||
+        !Number.isFinite(input.finishedAt.getTime()) ||
+        (input.turnCount !== null &&
+          (!Number.isSafeInteger(input.turnCount) ||
+            input.turnCount < 1 ||
+            input.turnCount > 2147483647)) ||
+        !["allEnemyUnitsDefeated", "unknown", "chessMutualKingDefeat"].includes(
+          input.finishReason,
+        ) ||
+        (draw
+          ? input.finishReason !== "chessMutualKingDefeat" ||
+            input.winnerUserId !== null ||
+            input.loserUserId !== null
+          : !input.winnerSeat ||
+            !input.loserSeat ||
+            !["P1", "P2"].includes(input.winnerSeat) ||
+            !["P1", "P2"].includes(input.loserSeat) ||
+            input.winnerSeat === input.loserSeat ||
+            input.finishReason === "chessMutualKingDefeat") ||
+        match.participants.length !== 2 ||
+        input.participants.length !== 2 ||
+        new Set(input.participants.map((p) => p.seat)).size !== 2
+      )
+        fail();
       for (const seat of ["P1", "P2"] as const) {
         const stored = match.participants.find((p) => p.seat === seat);
         const result = input.participants.find((p) => p.seat === seat);
-        if (!stored || !result || stored.userId !== result.userId ||
-            result.outcome !== (draw ? "DRAW" : seat === input.winnerSeat ? "WIN" : "LOSS") ||
-            !isDeepStrictEqual(safeParticipantResultData(result.resultData), result.resultData) ||
-            (seat === input.winnerSeat && result.userId !== input.winnerUserId) ||
-            (seat === input.loserSeat && result.userId !== input.loserUserId)) fail();
-        if (!changed && (stored!.outcome !== result!.outcome ||
-            !isDeepStrictEqual(stored!.resultData, result!.resultData))) fail();
+        if (
+          !stored ||
+          !result ||
+          stored.userId !== result.userId ||
+          result.outcome !== (draw ? "DRAW" : seat === input.winnerSeat ? "WIN" : "LOSS") ||
+          !isDeepStrictEqual(safeParticipantResultData(result.resultData), result.resultData) ||
+          (seat === input.winnerSeat && result.userId !== input.winnerUserId) ||
+          (seat === input.loserSeat && result.userId !== input.loserUserId)
+        )
+          fail();
+        if (
+          !changed &&
+          (stored!.outcome !== result!.outcome ||
+            !isDeepStrictEqual(stored!.resultData, result!.resultData))
+        )
+          fail();
       }
       const ids = input.participants.map((p) => p.userId).filter((id) => id !== null);
       if (new Set(ids).size !== ids.length) fail();
       if (!changed) {
-        for (const key of ["winnerSeat", "winnerUserId", "loserSeat", "loserUserId", "finishReason", "finalRevision", "turnCount"] as const)
+        for (const key of [
+          "winnerSeat",
+          "winnerUserId",
+          "loserSeat",
+          "loserUserId",
+          "finishReason",
+          "finalRevision",
+          "turnCount",
+        ] as const)
           if (match[key] !== input[key]) fail();
         // The first committed timestamp/duration remain canonical on retries.
         return null;
       }
-      const durationMs = match.startedAt ? input.finishedAt.getTime() - match.startedAt.getTime() : null;
+      const durationMs = match.startedAt
+        ? input.finishedAt.getTime() - match.startedAt.getTime()
+        : null;
       if (durationMs !== null && (durationMs < 0 || durationMs > 2147483647)) fail();
-      if (!match.startedAt) this.logger.error({ event: "match:missing_started_at", matchId }, "Cannot derive match duration");
+      if (!match.startedAt)
+        this.logger.error(
+          { event: "match:missing_started_at", matchId },
+          "Cannot derive match duration",
+        );
       return { result: input, durationMs };
     });
     return toMatchDetails(canonical);
   }
 
-  async getFinishedMatchDetails(id: string) {
+  async getFinishedMatchDetails(id: string): Promise<PublicMatchDetailsDTO> {
     const match = await this.matches.findByIdWithParticipants(id);
     if (!match) throw new MatchResultError("MATCH_NOT_FOUND", 404);
     if (match.status !== "FINISHED") throw new MatchResultError("MATCH_NOT_FINISHED");
-    return toMatchDetails(match);
+    const details = toMatchDetails(match);
+    return {
+      ...details,
+      participants: details.participants.map((participant) => {
+        const profile = match.participants.find((p) => p.seat === participant.seat)?.user?.profile;
+        return { ...participant, username: profile?.username ?? null, avatarUrl: profile?.avatarUrl ?? null };
+      }),
+    };
   }
 
   async markCancelled(matchId: string, finishedAt: Date): Promise<void> {
@@ -152,19 +218,32 @@ export class MatchService {
 
 export function toMatchDetails(match: DetailedMatch): MatchDetailsDTO {
   if (match.status !== "FINISHED") throw new MatchResultError("MATCH_NOT_FINISHED");
-  const participants = [...match.participants].sort((a, b) => a.seat.localeCompare(b.seat)).map((p) => ({
-    seat: p.seat, userId: p.userId, displayName: p.displayNameSnapshot,
-    outcome: p.outcome, resultData: safeParticipantResultData(p.resultData),
-  }));
+  const participants = [...match.participants]
+    .sort((a, b) => a.seat.localeCompare(b.seat))
+    .map((p) => ({
+      seat: p.seat,
+      userId: p.userId,
+      displayName: p.displayNameSnapshot,
+      outcome: p.outcome,
+      resultData: safeParticipantResultData(p.resultData),
+    }));
   const identity = (seat: MatchSeatId | null) => {
     const p = participants.find((participant) => participant.seat === seat);
     return p ? { seat: p.seat, userId: p.userId, displayName: p.displayName } : null;
   };
   return {
-    id: match.id, status: match.status, gameMode: match.gameMode,
-    createdAt: match.createdAt.toISOString(), startedAt: match.startedAt?.toISOString() ?? null,
-    finishedAt: match.finishedAt?.toISOString() ?? null, durationMs: match.durationMs,
-    finalRevision: match.finalRevision, turnCount: match.turnCount, finishReason: match.finishReason,
-    winner: identity(match.winnerSeat), loser: identity(match.loserSeat), participants,
+    id: match.id,
+    status: match.status,
+    gameMode: match.gameMode,
+    createdAt: match.createdAt.toISOString(),
+    startedAt: match.startedAt?.toISOString() ?? null,
+    finishedAt: match.finishedAt?.toISOString() ?? null,
+    durationMs: match.durationMs,
+    finalRevision: match.finalRevision,
+    turnCount: match.turnCount,
+    finishReason: match.finishReason,
+    winner: identity(match.winnerSeat),
+    loser: identity(match.loserSeat),
+    participants,
   };
 }

@@ -20,6 +20,9 @@ Follow active progress and implementation notes in the [Developer Log](https://t
 - [Environment Variables (Web)](#environment-variables-web)
 - [Database Development](#database-development)
 - [Persistent Match Lifecycle](#persistent-match-lifecycle)
+- [Persistent Match Results](#persistent-match-results)
+- [Match History](#match-history)
+- [Persistent Action Log](#persistent-action-log)
 - [Authentication Backend](#authentication-backend)
 - [Authentication Frontend](#authentication-frontend)
 - [User Profiles](#user-profiles)
@@ -592,6 +595,71 @@ npm run -w server test:match:db
 npm run -w web test:auth
 npm run -w web test:multiplayer:e2e
 ```
+
+## Match History
+
+Match history is a public, read-only view of completed PostgreSQL matches. Own history at
+`/matches` requires a restored session and uses `AuthUser.id`. Public profiles link to
+`/users/:username/matches`; entries open the public informational `/matches/:id` page.
+The existing `GET /api/matches/:id` supplies details, including P1/P2 historical names,
+participant outcomes, current public profile links/avatars where available, mode, dates,
+canonical duration, finish reason, final revision and turn count. Missing legacy data is
+shown as unavailable.
+
+`GET /api/users/:id/matches?page=1&limit=20&result=WIN&gameMode=classic` returns:
+
+```json
+{
+  "items": [],
+  "pagination": { "page": 1, "limit": 20, "total": 0, "totalPages": 0 }
+}
+```
+
+| Parameter | Contract |
+| --- | --- |
+| `page` | Positive integer, default 1, maximum 21474836 (keeps offsets in PostgreSQL's integer range) |
+| `limit` | Positive integer, default 20, maximum 100 |
+| `result` | Optional `WIN`, `LOSS`, `DRAW`; omitted means all participant outcomes, including unavailable legacy outcomes |
+| `gameMode` | Optional `standard`, `draft`, `classic`, validated against shared `rules` metadata |
+
+Only `FINISHED` matches are included; status filtering is not supported. Waiting, active,
+cancelled and runtime test/debug rooms are not normal history. Invalid UUIDs/query values
+return `400 INVALID_REQUEST`; an unknown valid user ID returns `404 USER_NOT_FOUND`.
+An existing user without matches returns an empty list, and an out-of-range page returns
+an empty page with the actual totals (the UI recovers to the last available page).
+
+The route delegates to `MatchHistoryService` and `MatchHistoryRepository`. Participation
+comes from `MatchParticipant.userId`, never the creator. Filters and pagination run in the
+database; count and page use identical predicates in a short repeatable-read transaction.
+Ordering is `finishedAt DESC NULLS LAST, id DESC`. Legacy missing finish dates display
+`startedAt`, then `createdAt`, without claiming a completion time. Results are relative to
+the requested participant. Opponents use the opposing seat and historical
+`displayNameSnapshot`; current username/avatar are separate optional public fields.
+Renames never rewrite historical identity, and deleted users or missing profiles are safe.
+
+Explicit selects and DTOs exclude auth/private data, result payloads, hidden state and
+`MatchAction` rows. The existing participant `userId` index supports participation lookup;
+no schema or index migration was needed. No action log is loaded for list or details UI.
+Filters/page live in the URL, changes reset page 1, and loading/error/empty states are localized
+in English and Ukrainian. Replay, snapshots, aggregated statistics, ratings and leaderboards
+remain future phases.
+
+Focused checks:
+
+```powershell
+npx tsx packages/server/src/tests/matchHistory.test.ts
+npm run -w web test:matches
+# Use a migrated, isolated TEST_DATABASE_URL as described in Database Foundation.
+npm run -w server test:history:db
+# Build server first; requires an installed Chromium browser (or PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH).
+npm run build
+npm run -w web test:matches:e2e
+```
+
+The browser smoke test seeds 24 completed match records into the isolated test database,
+logs in through the UI, checks filters/pagination/refresh/details/public profiles, checks
+historical names after a rename, and saves desktop/mobile screenshots under
+`packages/web/test-results/match-history`. It removes its own records afterward.
 
 ## Persistent Action Log
 

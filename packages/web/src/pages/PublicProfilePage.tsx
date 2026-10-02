@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router";
+import { Link, useParams } from "react-router";
 import { profileApi } from "../api/profileApi";
 import { ApiError } from "../api/client";
 import { useI18n } from "../i18n";
@@ -75,6 +75,12 @@ export function PublicProfilePage() {
             {t("profile.memberSince")}:{" "}
             {new Date(current.profile.createdAt).toLocaleDateString(language)}
           </p>
+          <Link
+            className="btn btn-secondary mt-5"
+            to={`/users/${encodeURIComponent(current.profile.username)}/matches`}
+          >
+            {t("matches.history")}
+          </Link>
         </>
       )}
     </section>

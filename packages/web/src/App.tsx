@@ -7,6 +7,8 @@ import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { PublicProfilePage } from "./pages/PublicProfilePage";
+import { MatchHistoryPage, PublicMatchHistoryPage } from "./pages/MatchHistoryPage";
+import { MatchDetailsPage } from "./pages/MatchDetailsPage";
 import { ProfileSync } from "./profile/ProfileSync";
 import { Lobby } from "./components/Lobby";
 import { GamePage } from "./pages/GamePage";
@@ -21,6 +23,7 @@ export default function App() {
   const location = useLocation();
   const authPage =
     location.pathname.startsWith("/users/") ||
+    /^\/matches(?:\/|$)/.test(location.pathname) ||
     ["/login", "/register", "/account", "/profile"].includes(location.pathname.replace(/\/$/, ""));
   useEffect(() => {
     void authStore.getState().initializeSession();
@@ -33,11 +36,21 @@ export default function App() {
         <GameRuntime />
       </div>
       {authPage && (
-        <AuthLayout>
+        <AuthLayout wide={location.pathname.includes("/matches")}>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/users/:username" element={<PublicProfilePage />} />
+            <Route path="/users/:username/matches" element={<PublicMatchHistoryPage />} />
+            <Route
+              path="/matches"
+              element={
+                <RequireAuth>
+                  <MatchHistoryPage />
+                </RequireAuth>
+              }
+            />
+            <Route path="/matches/:id" element={<MatchDetailsPage />} />
             <Route path="/account" element={<Navigate replace to="/profile" />} />
             <Route
               path="/profile"

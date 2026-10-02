@@ -91,6 +91,9 @@ export function ProfilePage() {
             />
           ) : (
             <div className="mt-5 flex flex-wrap gap-3">
+              <Link className="btn btn-secondary" to="/matches">
+                {t("matches.history")}
+              </Link>
               <button
                 className="btn btn-primary"
                 disabled={saving}

@@ -5,11 +5,11 @@ import { LanguageSwitcher } from "../components/LanguageSwitcher";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { useI18n } from "../i18n";
 
-export function AuthLayout({ children }: { children: ReactNode }) {
+export function AuthLayout({ children, wide = false }: { children: ReactNode; wide?: boolean }) {
   const { t } = useI18n();
   return (
     <div className="app-shell min-h-screen px-3 py-6 sm:px-6 sm:py-10">
-      <div className="mx-auto max-w-md space-y-5">
+      <div className={`mx-auto space-y-5 ${wide ? "max-w-3xl" : "max-w-md"}`}>
         <header className="flex flex-wrap items-center justify-between gap-3">
           <Link to="/" className="btn btn-secondary">
             {t("common.backToRooms")}

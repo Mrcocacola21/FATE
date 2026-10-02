@@ -75,7 +75,10 @@ test("own profile is protected and renders email only after authentication", asy
     assert.match(text(renderer), /private@example.test/);
     assert.match(text(renderer), /Display Name/);
     assert(renderer.root.findAllByType("p").some((node) => node.children.join("") === "@Player"));
-    const publicLink = renderer.root.findByType("a");
+    const publicLink = renderer.root
+      .findAllByType("a")
+      .find((link) => link.props.href === "/users/Player");
+    assert(publicLink);
     assert.equal(publicLink.props.href, "/users/Player");
     assert.equal(publicLink.children.join(""), "Public profile");
   } finally {

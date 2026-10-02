@@ -1,9 +1,18 @@
 import { Prisma, type Match, type MatchStatus, type PrismaClient } from "@prisma/client";
 import { getDatabaseClient } from "../db/client";
-import type { WaitingMatchInput, SeatParticipantInput, StartedMatchInput } from "../services/matchService";
+import type {
+  WaitingMatchInput,
+  SeatParticipantInput,
+  StartedMatchInput,
+} from "../services/matchService";
 import type { FinishedMatchInput } from "../persistence/matchResult";
 
-export type DetailedMatch = Prisma.MatchGetPayload<{ include: { participants: true } }>;
+type MatchWithParticipants = Prisma.MatchGetPayload<{ include: { participants: true } }>;
+export type DetailedMatch = Omit<MatchWithParticipants, "participants"> & {
+  participants: (MatchWithParticipants["participants"][number] & {
+    user?: { profile: { username: string; avatarUrl: string | null } | null } | null;
+  })[];
+};
 export interface FinalMatchWrite {
   result: FinishedMatchInput;
   durationMs: number | null;
@@ -25,7 +34,17 @@ export class MatchRepository {
   }
 
   findByIdWithParticipants(id: string): Promise<DetailedMatch | null> {
-    return this.database.match.findUnique({ where: { id }, include: { participants: { orderBy: { seat: "asc" } } } });
+    return this.database.match.findUnique({
+      where: { id },
+      include: {
+        participants: {
+          orderBy: { seat: "asc" },
+          include: {
+            user: { select: { profile: { select: { username: true, avatarUrl: true } } } },
+          },
+        },
+      },
+    });
   }
 
   findByRoomId(roomId: string): Promise<Match | null> {
@@ -51,14 +70,18 @@ export class MatchRepository {
   }
 
   findParticipants(matchId: string) {
-    return this.database.matchParticipant.findMany({ where: { matchId }, orderBy: { seat: "asc" } });
+    return this.database.matchParticipant.findMany({
+      where: { matchId },
+      orderBy: { seat: "asc" },
+    });
   }
 
   async upsertWaitingParticipant(matchId: string, input: SeatParticipantInput): Promise<void> {
     await this.database.$transaction(async (tx) => {
       // Updating the parent locks it until commit, serializing against start/cancel.
       const locked = await tx.match.updateMany({
-        where: { id: matchId, status: "WAITING" }, data: { updatedAt: new Date() },
+        where: { id: matchId, status: "WAITING" },
+        data: { updatedAt: new Date() },
       });
       if (!locked.count) {
         await tx.match.findUniqueOrThrow({ where: { id: matchId } });
@@ -66,19 +89,24 @@ export class MatchRepository {
       }
       await tx.matchParticipant.upsert({
         where: { matchId_seat: { matchId, seat: input.seat } },
-        create: { matchId, ...input }, update: input,
+        create: { matchId, ...input },
+        update: input,
       });
     });
   }
 
   async updateWaitingGameMode(matchId: string, gameMode: string): Promise<void> {
-    await this.database.match.updateMany({ where: { id: matchId, status: "WAITING" }, data: { gameMode } });
+    await this.database.match.updateMany({
+      where: { id: matchId, status: "WAITING" },
+      data: { gameMode },
+    });
   }
 
   async removeWaitingParticipant(matchId: string, seat: "P1" | "P2"): Promise<void> {
     await this.database.$transaction(async (tx) => {
       const locked = await tx.match.updateMany({
-        where: { id: matchId, status: "WAITING" }, data: { updatedAt: new Date() },
+        where: { id: matchId, status: "WAITING" },
+        data: { updatedAt: new Date() },
       });
       if (locked.count) await tx.matchParticipant.deleteMany({ where: { matchId, seat } });
     });
@@ -97,7 +125,8 @@ export class MatchRepository {
         for (const participant of input.participants) {
           await tx.matchParticipant.upsert({
             where: { matchId_seat: { matchId, seat: participant.seat } },
-            create: { matchId, ...participant }, update: participant,
+            create: { matchId, ...participant },
+            update: participant,
           });
         }
       }
@@ -113,26 +142,37 @@ export class MatchRepository {
       // PostgreSQL serializes contenders on this conditional parent update.
       // Validation and participant failures roll the transition back too.
       const changed = await tx.match.updateMany({
-        where: { id: matchId, status: "IN_PROGRESS" }, data: { status: "FINISHED" },
+        where: { id: matchId, status: "IN_PROGRESS" },
+        data: { status: "FINISHED" },
       });
-      const match = await tx.match.findUnique({ where: { id: matchId }, include: { participants: true } });
+      const match = await tx.match.findUnique({
+        where: { id: matchId },
+        include: { participants: true },
+      });
       const write = decide(match, changed.count === 1);
       if (!write) return match!;
       const { participants, ...fields } = write.result;
-      await tx.match.update({ where: { id: matchId }, data: { ...fields, durationMs: write.durationMs } });
+      await tx.match.update({
+        where: { id: matchId },
+        data: { ...fields, durationMs: write.durationMs },
+      });
       for (const participant of participants) {
         await tx.matchParticipant.update({
           where: { matchId_seat: { matchId, seat: participant.seat } },
           data: { outcome: participant.outcome, resultData: { ...participant.resultData } },
         });
       }
-      return tx.match.findUniqueOrThrow({ where: { id: matchId }, include: { participants: true } });
+      return tx.match.findUniqueOrThrow({
+        where: { id: matchId },
+        include: { participants: true },
+      });
     });
   }
 
   async markCancelled(matchId: string, finishedAt: Date): Promise<Match> {
     await this.database.match.updateMany({
-      where: { id: matchId, status: "WAITING" }, data: { status: "CANCELLED", finishedAt },
+      where: { id: matchId, status: "WAITING" },
+      data: { status: "CANCELLED", finishedAt },
     });
     return this.database.match.findUniqueOrThrow({ where: { id: matchId } });
   }
