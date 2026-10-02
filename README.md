@@ -19,6 +19,7 @@ Follow active progress and implementation notes in the [Developer Log](https://t
 - [Tests](#tests)
 - [Environment Variables (Web)](#environment-variables-web)
 - [Database Development](#database-development)
+- [Persistent Match Lifecycle](#persistent-match-lifecycle)
 - [Authentication Backend](#authentication-backend)
 - [Authentication Frontend](#authentication-frontend)
 - [User Profiles](#user-profiles)
@@ -102,7 +103,7 @@ Local defaults are provided in `.env.example`.
 - `MAX_ROOMS` - maximum in-memory FATE rooms retained. Default: `100`.
 - `MAX_LOG_EVENTS` - maximum action log entries retained per room. Default: `5000`.
 - `WS_MAX_PAYLOAD_BYTES`, `WS_RATE_LIMIT_WINDOW_MS`, `WS_RATE_LIMIT_MAX_MESSAGES`, `RECONNECT_GRACE_MS` - WebSocket payload, rate, and reconnect controls.
-- `DATABASE_URL` - PostgreSQL connection string used only when persistence is explicitly requested. Existing realtime gameplay does not require it.
+- `DATABASE_URL` - PostgreSQL connection string required for normal room creation and durable match metadata. Health endpoints and Test/Sandbox rooms work without it; gameplay authentication remains optional.
 
 Local development keeps debug REST endpoints open when `NODE_ENV !== "production"`. In production, `GET /api/games/:id`, `POST /api/games/:id/actions`, and `GET /api/games/:id/log` require `X-FATE-DEBUG-TOKEN` to match `FATE_DEBUG_TOKEN`. Browser WebSocket connections must use an allowed Origin; missing Origin is accepted for non-browser clients.
 
@@ -143,16 +144,86 @@ running `npm run -w server test:db`. The normal test suite does not require Post
 
 ### Realtime state versus durable records
 
-`GameRoom` remains the authoritative, in-memory operational state used by the current REST and
-WebSocket gameplay paths. `Match` is a separate durable information-system record intended for
-later phases. Phase 1 does not create matches, participants, actions, or snapshots from live rooms.
+`GameRoom` remains the authoritative, in-memory operational state used by REST and WebSocket
+gameplay. `Match` stores durable match metadata in PostgreSQL. Normal rooms now create matches
+and competitors; actions and snapshots are reserved for later phases.
 
 The persistence dependency direction is `routes / WebSocket -> services -> repositories -> Prisma`.
-Auth HTTP routes now use services and repositories; WebSocket gameplay remains independent. Deleting a match cascades its
+Auth HTTP routes and room lifecycle projections use services and repositories; rules and ordinary
+gameplay actions remain independent of PostgreSQL. Deleting a match cascades its
 participants, actions, and snapshots; participant/action/user references become `NULL` if a user is
 removed. Rating history survives match deletion, while its required user relation prevents deleting
 an identity that still owns rating history. User-owned profile and current-rating rows cascade with
 the user.
+
+## Persistent Match Lifecycle
+
+`GameRoom` is the short-lived realtime runtime in RAM: GameState, RNG, sockets, seats, resume
+tokens, revision and the current action log. Its only durable reference is `matchId: string | null`.
+`Match` is the long-lived PostgreSQL record: room correlation, seed, game mode, participants,
+lifecycle timestamps and reliable finish metadata. Room IDs and Match IDs are distinct.
+
+Normal room creation through `/rooms`, `/api/games` or WebSocket stages an in-memory room,
+creates one WAITING Match, binds `matchId`, then publishes the usable room. A persistence failure
+returns HTTP 503 / WebSocket `MATCH_PERSISTENCE_UNAVAILABLE` and leaves no discoverable room.
+Test/Sandbox rooms keep `matchId = null` and never write match or participant records.
+Authentication is optional. Creator and participant User IDs remain null because these request
+paths do not currently supply verified identity; arbitrary client `userId` values are ignored.
+
+Lifecycle transitions:
+
+```text
+WAITING -> IN_PROGRESS -> FINISHED
+WAITING -> CANCELLED
+```
+
+The accepted authoritative `startGame` starts the match when initiative is requested, even though
+GameState still reports `lobby` until setup/placement. Starting a draft alone does not start the
+match; the accepted start after the final pick does. Rejected starts do not persist a transition.
+The start transaction stores the current game mode and freezes the final seat competitors.
+
+P1/P2 participants use the unique `(matchId, seat)` key. Lobby joins, role switches and reconnects
+upsert the seat snapshot; reconnects reuse the row. A lobby departure retains temporary occupancy
+until replacement or the start transaction. Once started, historical participant identity and names
+are immutable, including during disconnects or later seat replacement. Spectators remain runtime
+only. Names use the current room name, fall back to the seat, and are bounded to 100 characters
+for the existing column. Profile changes do not rewrite match snapshots.
+
+An accepted action changing the authoritative state to `ended` persists FINISHED, `finishedAt`,
+`winnerSeat` and `finishReason` directly from `gameOver` when available. `winnerUserId` remains
+null without verified player identity. `finalRevision` means the revision **after the accepted
+ending action**, equal to `gameOver.endedAtRevision`; later connection metadata does not alter it.
+
+Permanent cleanup/removal cancels an unstarted WAITING room, including inactive TTL/capacity
+eviction. A temporary leave/disconnect does not cancel a match. Active initiative/game rooms stay
+IN_PROGRESS if removed; cleanup never fabricates FINISHED. Finished matches retain their results.
+`/rooms` lists the current runtime map, without querying persistent match history.
+
+Integration is `routes / WebSocket -> MatchLifecycle -> MatchService -> MatchRepository -> Prisma`.
+Store/rules actions remain synchronous. Ordinary moves, attacks, abilities, rolls and turns do no
+database reads or writes; only lifecycle transitions and lobby metadata trigger persistence.
+The existing per-room command queue serializes runtime changes, persistence and retries; cleanup
+protects connected rooms and in-flight commands. PostgreSQL unique keys, conditional transitions
+and short parent-lock transactions also arbitrate concurrent repository calls. Repeated start,
+finish and cancel calls retain timestamps/results; conflicting terminal results are rejected.
+
+Participant/start/finish/cancel persistence failures log safe room/match/seat identifiers and
+preserve accepted runtime state. A small in-memory projection retries every five seconds, in
+start-before-finish order, with the original timestamps/result/revision. Reconnect after start
+cannot rewrite a failed start snapshot. This retry buffer is process-local: process exit loses
+pending work, and shutdown reports outstanding projections. Restart recovery is a later phase.
+
+No GameState, MatchAction or MatchSnapshot writes are implemented. Authenticated seat binding,
+action logs, snapshots, replay, restart recovery, history/statistics and ratings remain deferred.
+There are no new history endpoints or frontend changes.
+
+Verification uses explicit in-memory persistence injection for the normal runtime test suite,
+never a production fallback. Real PostgreSQL integration requires a migrated, isolated
+`TEST_DATABASE_URL` whose database/schema has a `test` name segment:
+
+```bash
+npm run -w server test:match:db
+```
 
 ## Authentication Backend
 
@@ -165,7 +236,8 @@ Auth requires PostgreSQL with the committed migrations applied and two independe
 keys. Generate each with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`.
 Export configuration into the server environment; the server does not automatically load the root
 `.env`. Missing/invalid auth configuration fails closed with `503 AUTH_UNAVAILABLE`; missing or
-unreachable PostgreSQL yields `503 DATABASE_UNAVAILABLE`. Gameplay can still start and run independently.
+unreachable PostgreSQL yields `503 DATABASE_UNAVAILABLE`. Gameplay authentication remains optional. Normal room creation requires match persistence;
+already accepted gameplay continues if PostgreSQL subsequently becomes unavailable.
 
 | Endpoint | Request / behavior |
 | --- | --- |

@@ -86,6 +86,7 @@ model Match {
   startedAt     DateTime?   @db.Timestamptz(3)
   finishedAt    DateTime?   @db.Timestamptz(3)
   winnerUserId  String?     @db.Uuid
+  winnerSeat    MatchSeat?
   finishReason  String?     @db.Text
   finalRevision Int?
   updatedAt     DateTime    @updatedAt @db.Timestamptz(3)

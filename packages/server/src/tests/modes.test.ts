@@ -16,7 +16,7 @@ import {
   type PlayerId,
   type UnitClass,
 } from "rules";
-import { buildServer } from "../index";
+import { buildTestServer as buildServer } from "./matchTestSupport";
 import { createGameRoomWithId, getGameRoom, storeTestHooks } from "../store";
 
 const NEW_PLAYABLE_HERO_IDS = [

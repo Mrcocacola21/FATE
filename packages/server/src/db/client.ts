@@ -11,7 +11,7 @@ export class DatabaseConfigurationError extends Error {}
 function requireDatabaseUrl(): void {
   if (!process.env.DATABASE_URL?.trim()) {
     throw new DatabaseConfigurationError(
-      "DATABASE_URL is required when database access is requested. The realtime game server can run without it.",
+      "DATABASE_URL is required when database access is requested. Server health and Test/Sandbox rooms can run without it.",
     );
   }
 }

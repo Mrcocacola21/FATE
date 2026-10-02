@@ -12,14 +12,12 @@ export function enqueueRoomCommand<T>(
     .catch(() => undefined)
     .then(() => task());
 
-  roomQueues.set(
-    roomKey,
-    run.finally(() => {
-      if (roomQueues.get(roomKey) === run) {
-        roomQueues.delete(roomKey);
-      }
-    })
-  );
+  roomQueues.set(roomKey, run);
+  // Observe both outcomes without creating an unhandled rejected finally promise.
+  const release = () => {
+    if (roomQueues.get(roomKey) === run) roomQueues.delete(roomKey);
+  };
+  void run.then(release, release);
 
   return run;
 }
@@ -29,3 +27,9 @@ export function fateRoomKey(roomId: string): string {
 }
 
 export const FATE_CREATE_KEY = "fate:create";
+
+export function getQueuedFateRoomIds(): Set<string> {
+  return new Set(Array.from(roomQueues.keys())
+    .filter((key) => key.startsWith("fate:") && key !== FATE_CREATE_KEY)
+    .map((key) => key.slice(5)));
+}

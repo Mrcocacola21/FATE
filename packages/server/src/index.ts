@@ -1,6 +1,8 @@
 // packages/server/src/index.ts
 
 import Fastify from "fastify";
+import { MatchLifecycle } from "./persistence/matchLifecycle";
+import type { MatchPersistence } from "./services/matchService";
 import cors, { type FastifyCorsOptionsDelegate } from "@fastify/cors";
 import websocket from "@fastify/websocket";
 import { registerRoutes } from "./routes";
@@ -11,7 +13,7 @@ import { authRoutes } from "./routes/authRoutes";
 import { profileRoutes } from "./routes/profileRoutes";
 import { isTrustedAuthOrigin } from "./auth/httpSecurity";
 
-export async function buildServer() {
+export async function buildServer(options: { matchPersistence?: MatchPersistence } = {}) {
   const logLevel = process.env.LOG_LEVEL ?? "info";
   const server = Fastify({
     logger: {
@@ -35,14 +37,17 @@ export async function buildServer() {
 
   await server.register(websocket);
 
+  const lifecycle = new MatchLifecycle(server.log, options.matchPersistence);
+  lifecycle.startRetries();
   server.addHook("onClose", async () => {
+    await lifecycle.close();
     await disconnectDatabase();
   });
 
-  await registerRoutes(server);
+  await registerRoutes(server, lifecycle);
   await server.register(authRoutes, { prefix: "/api/auth" });
   await server.register(profileRoutes, { prefix: "/api" });
-  registerGameWebSocket(server);
+  registerGameWebSocket(server, lifecycle);
 
   return server;
 }

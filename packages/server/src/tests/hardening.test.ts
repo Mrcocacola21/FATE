@@ -40,7 +40,7 @@ import {
   type GameState,
   type UnitState,
 } from "rules";
-import { buildServer } from "../index";
+import { buildTestServer as buildServer } from "./matchTestSupport";
 import { enqueueRoomCommand, fateRoomKey } from "../roomQueue";
 import {
   applyGameAction,

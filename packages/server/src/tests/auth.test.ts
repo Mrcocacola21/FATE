@@ -6,7 +6,7 @@ import { readAuthConfig } from "../auth/config";
 import { hashPassword, PasswordVerifier, verifyPassword } from "../auth/password";
 import { registerSchema, loginSchema } from "../auth/schemas";
 import { equalTokenHashes, hashRefreshToken, TokenService } from "../auth/tokens";
-import { buildServer } from "../index";
+import { buildTestServer as buildServer } from "./matchTestSupport";
 
 const testEnv = {
   JWT_ACCESS_SECRET: "test-access-key-01234567890123456789",

@@ -8,7 +8,7 @@ import {
   rollD6,
   type GameAction,
 } from "rules";
-import { buildServer } from "../index";
+import { buildTestServer as buildServer } from "./matchTestSupport";
 import { applyGameAction, createGameRoomWithId, storeTestHooks } from "../store";
 import { isActionAllowedByPlayer } from "../permissions";
 import {

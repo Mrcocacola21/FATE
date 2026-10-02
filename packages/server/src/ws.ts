@@ -31,14 +31,12 @@ import { ClientMessageSchema } from "./schemas";
 import { isAllowedOrigin } from "./origin";
 import { isActionAllowedByPlayer } from "./permissions";
 import {
-  applyGameAction,
-  cleanupGameRooms,
-  createGameRoomWithId,
   deleteGameRoom,
   getGameRoom,
   touchGameRoom,
   type GameRoom,
 } from "./store";
+import type { MatchLifecycle } from "./persistence/matchLifecycle";
 import { logFate } from "./fateLogger";
 import { rejected, type CommandResult } from "./commandResult";
 import { enqueueRoomCommand, fateRoomKey } from "./roomQueue";
@@ -715,12 +713,13 @@ function sendActionRejected(socket: WebSocket, result: CommandResult) {
   });
 }
 
-function applyRoomAction(
+async function applyRoomAction(
+  lifecycle: MatchLifecycle,
   socket: WebSocket,
   room: GameRoom,
   meta: ConnectionMeta,
   action: GameAction,
-): CommandResult {
+): Promise<CommandResult> {
   const isTestController = room.roomMode === "test" && room.testControllerConnId === meta.connId;
   if (meta.role === "spectator" || !meta.seat) {
     const result = rejected("NOT_SEATED", "Spectators cannot act");
@@ -749,7 +748,7 @@ function applyRoomAction(
   const actingPlayer = isTestController
     ? getTestActionPlayer(room.state, action, meta.seat)
     : meta.seat;
-  const command = applyAndBroadcast(room, action, actingPlayer, socket, true);
+  const command = await applyAndBroadcast(lifecycle, room, action, actingPlayer, socket, true);
   if (!command.ok) return command;
 
   try {
@@ -796,14 +795,15 @@ function getTestActionPlayer(state: GameState, action: GameAction, fallback: Pla
   return state.currentPlayer ?? fallback;
 }
 
-function applyAndBroadcast(
+async function applyAndBroadcast(
+  lifecycle: MatchLifecycle,
   room: GameRoom,
   action: GameAction,
   playerId: PlayerId,
   socketForErrors?: WebSocket,
   sendMoveOptions = false,
-): CommandResult {
-  const command = applyGameAction(room, action, playerId);
+): Promise<CommandResult> {
+  const command = await lifecycle.applyAction(room, action, playerId);
   if (!command.ok) {
     if (socketForErrors) {
       sendActionRejected(socketForErrors, command);
@@ -891,7 +891,7 @@ function detachFromPongRoom(meta: ConnectionMeta, reason: "leave" | "disconnect"
   });
 }
 
-export function registerGameWebSocket(server: FastifyInstance) {
+export function registerGameWebSocket(server: FastifyInstance, lifecycle: MatchLifecycle) {
   serverLogger = server.log;
   server.get("/ws", { websocket: true }, (socket, request) => {
     const rawOrigin = request.headers.origin;
@@ -1097,7 +1097,8 @@ export function registerGameWebSocket(server: FastifyInstance) {
             await detachExistingConnection(existing, "switch_room");
           }
 
-          await enqueueRoomCommand(fateRoomKey(targetRoomId), () => {
+          await enqueueRoomCommand(fateRoomKey(targetRoomId), async () => {
+            if (socket.readyState !== WebSocket.OPEN) return;
             const connId = randomUUID();
             const resumeToken = msg.resumeToken ?? randomUUID();
             clearSeatGraceByToken(resumeToken);
@@ -1106,6 +1107,7 @@ export function registerGameWebSocket(server: FastifyInstance) {
               msg.role === "P1" || msg.role === "P2" ? (msg.role as PlayerId) : null;
             let room: GameRoom | undefined;
             let seat: PlayerId | null = null;
+            let resumed = false;
 
             if (msg.mode === "create") {
               if (getGameRoom(targetRoomId)) {
@@ -1118,12 +1120,22 @@ export function registerGameWebSocket(server: FastifyInstance) {
               }
               const hostSeat: PlayerId = requestedSeat ?? "P1";
               const hostConnForState = requestedSeat ? connId : null;
-              cleanupGameRooms({ activeRoomIds: getActiveFateRoomIds() });
-              room = createGameRoomWithId(targetRoomId, {
-                hostSeat,
-                hostConnId: hostConnForState,
-                roomMode: requestedRoomMode,
-              });
+              await lifecycle.cleanup({ activeRoomIds: getActiveFateRoomIds() });
+              if (socket.readyState !== WebSocket.OPEN) return;
+              try {
+                room = await lifecycle.createRoom({
+                  hostSeat,
+                  hostConnId: hostConnForState,
+                  roomMode: requestedRoomMode,
+                }, targetRoomId);
+              } catch {
+                sendStructuredError(socket, "MATCH_PERSISTENCE_UNAVAILABLE", "Unable to create persistent room");
+                return;
+              }
+              if (socket.readyState !== WebSocket.OPEN) {
+                await lifecycle.removeRoom(room);
+                return;
+              }
               room.hostConnId = connId;
               room.hostSeat = hostSeat;
               if (requestedRoomMode === "test") {
@@ -1172,6 +1184,7 @@ export function registerGameWebSocket(server: FastifyInstance) {
 
             if (requestedSeat) {
               seat = requestedSeat;
+              resumed = room.seatTokens[seat] === resumeToken;
               if (!canAssignSeat(room, seat, connId, resumeToken)) {
                 sendMessage(socket, {
                   type: "joinRejected",
@@ -1221,6 +1234,7 @@ export function registerGameWebSocket(server: FastifyInstance) {
               name: msg.name,
             });
             addSocketToRoom(room.id, socket);
+            if (seat) await lifecycle.syncParticipant(room, seat, msg.name, resumed);
 
             logFate(serverLogger!, {
               tag: "fate:join",
@@ -1250,7 +1264,7 @@ export function registerGameWebSocket(server: FastifyInstance) {
             sendMessage(socket, { type: "error", message: "Must join a room first" });
             return;
           }
-          await enqueueRoomCommand(fateRoomKey(meta.roomId), () => {
+          await enqueueRoomCommand(fateRoomKey(meta.roomId), async () => {
             const current = socketMeta.get(socket);
             if (!current || current.channel !== "fate") {
               sendMessage(socket, {
@@ -1281,6 +1295,8 @@ export function registerGameWebSocket(server: FastifyInstance) {
             }
             applySeatMutationSnapshot(room, transition.nextRoom);
             socketMeta.set(socket, transition.nextMeta);
+            if (transition.nextMeta.seat)
+              await lifecycle.syncParticipant(room, transition.nextMeta.seat, transition.nextMeta.name);
 
             sendMessage(socket, {
               type: "joinAck",
@@ -1311,7 +1327,7 @@ export function registerGameWebSocket(server: FastifyInstance) {
             sendMessage(socket, { type: "error", message: "Must join a room first" });
             return;
           }
-          await enqueueRoomCommand(fateRoomKey(meta.roomId), () => {
+          await enqueueRoomCommand(fateRoomKey(meta.roomId), async () => {
             const current = socketMeta.get(socket);
             if (!current || current.channel !== "fate") {
               sendMessage(socket, {
@@ -1351,6 +1367,7 @@ export function registerGameWebSocket(server: FastifyInstance) {
             }
 
             setRoomGameMode(room, msg.mode);
+            await lifecycle.syncGameMode(room);
             markRoomMetadataChanged(room);
             broadcastRoomState(room);
           });
@@ -1367,7 +1384,7 @@ export function registerGameWebSocket(server: FastifyInstance) {
             });
             return;
           }
-          await enqueueRoomCommand(fateRoomKey(meta.roomId), () => {
+          await enqueueRoomCommand(fateRoomKey(meta.roomId), async () => {
             const current = socketMeta.get(socket);
             if (!current || current.channel !== "fate" || !current.seat) {
               sendMessage(socket, {
@@ -1407,7 +1424,7 @@ export function registerGameWebSocket(server: FastifyInstance) {
             markRoomMetadataChanged(room);
             if (msg.type === "draftPickHero" && room.draftState?.phase === "complete") {
               rebuildDraftedArmies(room);
-              applyAndBroadcast(room, { type: "startGame" }, current.seat, socket);
+              await applyAndBroadcast(lifecycle, room, { type: "startGame" }, current.seat, socket);
               return;
             }
 
@@ -1421,7 +1438,7 @@ export function registerGameWebSocket(server: FastifyInstance) {
             sendStructuredError(socket, "NOT_SEATED", "Must join a room first");
             return;
           }
-          await enqueueRoomCommand(fateRoomKey(meta.roomId), () => {
+          await enqueueRoomCommand(fateRoomKey(meta.roomId), async () => {
             const current = socketMeta.get(socket);
             if (!current || current.channel !== "fate") {
               sendStructuredError(socket, "NOT_SEATED", "Must join a room first");
@@ -1514,7 +1531,7 @@ export function registerGameWebSocket(server: FastifyInstance) {
             });
             return;
           }
-          await enqueueRoomCommand(fateRoomKey(meta.roomId), () => {
+          await enqueueRoomCommand(fateRoomKey(meta.roomId), async () => {
             const current = socketMeta.get(socket);
             if (!current || current.channel !== "fate" || !current.seat) {
               sendMessage(socket, {
@@ -1551,7 +1568,7 @@ export function registerGameWebSocket(server: FastifyInstance) {
               player: current.seat,
               ready: msg.ready,
             };
-            applyAndBroadcast(room, action, current.seat, socket);
+            await applyAndBroadcast(lifecycle, room, action, current.seat, socket);
           });
           return;
         }
@@ -1561,7 +1578,7 @@ export function registerGameWebSocket(server: FastifyInstance) {
             sendMessage(socket, { type: "error", message: "Must join a room first" });
             return;
           }
-          await enqueueRoomCommand(fateRoomKey(meta.roomId), () => {
+          await enqueueRoomCommand(fateRoomKey(meta.roomId), async () => {
             const current = socketMeta.get(socket);
             if (!current || current.channel !== "fate") {
               sendMessage(socket, {
@@ -1631,7 +1648,7 @@ export function registerGameWebSocket(server: FastifyInstance) {
             }
 
             const action: GameAction = { type: "startGame" };
-            applyAndBroadcast(room, action, current.seat ?? room.hostSeat, socket);
+            await applyAndBroadcast(lifecycle, room, action, current.seat ?? room.hostSeat, socket);
           });
           return;
         }
@@ -1645,7 +1662,7 @@ export function registerGameWebSocket(server: FastifyInstance) {
             });
             return;
           }
-          await enqueueRoomCommand(fateRoomKey(meta.roomId), () => {
+          await enqueueRoomCommand(fateRoomKey(meta.roomId), async () => {
             const current = socketMeta.get(socket);
             if (!current || current.channel !== "fate" || !current.seat) {
               sendMessage(socket, {
@@ -1677,7 +1694,7 @@ export function registerGameWebSocket(server: FastifyInstance) {
               choice: msg.choice,
               player: current.seat,
             };
-            applyAndBroadcast(room, action, current.seat, socket, true);
+            await applyAndBroadcast(lifecycle, room, action, current.seat, socket, true);
           });
           return;
         }
@@ -1687,7 +1704,7 @@ export function registerGameWebSocket(server: FastifyInstance) {
             sendMessage(socket, { type: "error", message: "Must join a room first" });
             return;
           }
-          await enqueueRoomCommand(fateRoomKey(meta.roomId), () => {
+          await enqueueRoomCommand(fateRoomKey(meta.roomId), async () => {
             const current = socketMeta.get(socket);
             if (!current || current.channel !== "fate") {
               sendMessage(socket, {
@@ -1706,7 +1723,7 @@ export function registerGameWebSocket(server: FastifyInstance) {
               unitId: msg.unitId,
               mode: msg.mode,
             };
-            applyRoomAction(socket, room, current, action);
+            await applyRoomAction(lifecycle, socket, room, current, action);
           });
           return;
         }
@@ -1728,7 +1745,7 @@ export function registerGameWebSocket(server: FastifyInstance) {
             return;
           }
 
-          await enqueueRoomCommand(fateRoomKey(meta.roomId), () => {
+          await enqueueRoomCommand(fateRoomKey(meta.roomId), async () => {
             const current = socketMeta.get(socket);
             if (!current || current.channel !== "fate") {
               sendMessage(socket, {
@@ -1756,7 +1773,7 @@ export function registerGameWebSocket(server: FastifyInstance) {
                   }
                 : msg.action;
 
-            applyRoomAction(socket, room, current, normalizedAction);
+            await applyRoomAction(lifecycle, socket, room, current, normalizedAction);
           });
           return;
         }

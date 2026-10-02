@@ -1,6 +1,6 @@
 import assert from "assert";
 import WebSocket from "ws";
-import { buildServer } from "../index";
+import { buildTestServer as buildServer } from "./matchTestSupport";
 import { getGameRoom, storeTestHooks } from "../store";
 import { wsTestHooks } from "../ws";
 

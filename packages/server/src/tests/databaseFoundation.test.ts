@@ -82,6 +82,7 @@ async function testMatchRepositoryDelegatesTypedQueries() {
     startedAt: null,
     finishedAt: null,
     winnerUserId: null,
+    winnerSeat: null,
     finishReason: null,
     finalRevision: null,
     updatedAt: now,

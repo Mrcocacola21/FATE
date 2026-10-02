@@ -11,7 +11,7 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
     "pretest": "npm run prisma:generate",
-    "test": "npm run -w rules build && tsx src/tests/databaseFoundation.test.ts && tsx src/tests/auth.test.ts && tsx src/tests/profile.test.ts && tsx src/tests/view.test.ts && tsx src/tests/markerProjection.test.ts && tsx src/tests/ws.smoke.ts && tsx src/tests/hardening.test.ts && tsx src/tests/testRoom.test.ts && tsx src/tests/testRoom.ws.test.ts && tsx src/tests/modes.test.ts",
+    "test": "npm run -w rules build && tsx src/tests/databaseFoundation.test.ts && tsx src/tests/auth.test.ts && tsx src/tests/profile.test.ts && tsx src/tests/view.test.ts && tsx src/tests/markerProjection.test.ts && tsx src/tests/matchLifecycle.test.ts && tsx src/tests/ws.smoke.ts && tsx src/tests/hardening.test.ts && tsx src/tests/testRoom.test.ts && tsx src/tests/testRoom.ws.test.ts && tsx src/tests/modes.test.ts",
     "pretest:db": "npm run prisma:generate",
     "test:db": "tsx src/tests/database.integration.test.ts",
     "pretest:auth:db": "npm run prisma:generate",
@@ -23,7 +23,9 @@
     "db:studio": "prisma studio",
     "test:profile": "tsx src/tests/profile.test.ts",
     "pretest:profile:db": "npm run prisma:generate",
-    "test:profile:db": "tsx src/tests/profile.integration.test.ts"
+    "test:profile:db": "tsx src/tests/profile.integration.test.ts",
+    "pretest:match:db": "npm run prisma:generate",
+    "test:match:db": "tsx src/tests/match.integration.test.ts"
   },
   "dependencies": {
     "@fastify/cookie": "^9.4.0",

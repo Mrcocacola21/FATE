@@ -9,13 +9,11 @@ import {
   HERO_REGISTRY,
   getHeroMeta,
 } from "rules";
+import type { MatchLifecycle } from "./persistence/matchLifecycle";
 import { z } from "zod";
 import { CreateGameBodySchema, GameActionSchema, PlayerIdSchema } from "./schemas";
 import { isActionAllowedByPlayer } from "./permissions";
 import {
-  applyGameAction,
-  cleanupGameRooms,
-  createGameRoom,
   getGameRoom,
   listRoomSummaries,
   touchGameRoom,
@@ -58,7 +56,7 @@ function requireDebugRestAccess(
   return false;
 }
 
-export async function registerRoutes(server: FastifyInstance) {
+export async function registerRoutes(server: FastifyInstance, lifecycle: MatchLifecycle) {
   server.get("/", async () => ({
     name: "fate-server",
     version: process.env.npm_package_version ?? "unknown",
@@ -88,7 +86,7 @@ export async function registerRoutes(server: FastifyInstance) {
   );
 
   server.get("/rooms", async () => {
-    cleanupGameRooms({ activeRoomIds: getActiveFateRoomIds() });
+    await lifecycle.cleanup({ activeRoomIds: getActiveFateRoomIds() });
     return listRoomSummaries();
   });
 
@@ -107,9 +105,9 @@ export async function registerRoutes(server: FastifyInstance) {
         return;
       }
 
-      const room = await enqueueRoomCommand(FATE_CREATE_KEY, () => {
-        cleanupGameRooms({ activeRoomIds: getActiveFateRoomIds() });
-        return createGameRoom({
+      const room = await enqueueRoomCommand(FATE_CREATE_KEY, async () => {
+        await lifecycle.cleanup({ activeRoomIds: getActiveFateRoomIds() });
+        return lifecycle.createRoom({
           seed: parsed.data.seed,
           arenaId: parsed.data.arenaId,
           roomMode: parsed.data.roomMode,
@@ -139,9 +137,9 @@ export async function registerRoutes(server: FastifyInstance) {
         return;
       }
 
-      const room = await enqueueRoomCommand(FATE_CREATE_KEY, () => {
-        cleanupGameRooms({ activeRoomIds: getActiveFateRoomIds() });
-        return createGameRoom({
+      const room = await enqueueRoomCommand(FATE_CREATE_KEY, async () => {
+        await lifecycle.cleanup({ activeRoomIds: getActiveFateRoomIds() });
+        return lifecycle.createRoom({
           seed: parsed.data.seed,
           arenaId: parsed.data.arenaId,
           roomMode: parsed.data.roomMode,
@@ -225,7 +223,7 @@ export async function registerRoutes(server: FastifyInstance) {
             } as GameAction)
           : (parsedAction as GameAction);
 
-      const outcome = await enqueueRoomCommand(fateRoomKey(gameId), () => {
+      const outcome = await enqueueRoomCommand(fateRoomKey(gameId), async () => {
         const room = getGameRoom(gameId);
         if (!room) {
           return {
@@ -248,7 +246,7 @@ export async function registerRoutes(server: FastifyInstance) {
           };
         }
 
-        const command = applyGameAction(room, action, playerId);
+        const command = await lifecycle.applyAction(room, action, playerId);
         if (!command.ok) {
           return {
             status: 409,

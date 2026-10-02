@@ -32,6 +32,7 @@ export interface ActionLogEntry {
 
 export interface GameRoom {
   id: string;
+  matchId: string | null;
   seed: number;
   rng: RNG;
   testDiceRng: DebugDiceRNG | null;
@@ -53,6 +54,8 @@ export interface GameRoom {
 }
 
 export interface CreateGameOptions {
+  /** Stage a room privately until its durable Match has been created. */
+  publish?: boolean;
   seed?: number;
   arenaId?: string;
   hostSeat?: PlayerId;
@@ -73,7 +76,7 @@ export interface RoomSummary {
   gameMode: GameModeId;
 }
 
-// TODO: replace with persistence-backed storage.
+// Authoritative realtime storage stays in memory. Match metadata lives separately.
 const games = new Map<string, GameRoom>();
 
 function readPositiveIntEnv(name: string, fallback: number): number {
@@ -170,6 +173,7 @@ export function createGameRoomWithId(
   const now = Date.now();
   const room: GameRoom = {
     id,
+    matchId: null,
     seed,
     rng:
       roomMode === "test" ? new DebugDiceRNG(rng) : rng,
@@ -194,8 +198,13 @@ export function createGameRoomWithId(
     room.testDiceRng = room.rng as DebugDiceRNG;
   }
 
-  games.set(room.id, room);
+  if (options.publish !== false) publishGameRoom(room);
   return room;
+}
+
+export function publishGameRoom(room: GameRoom): void {
+  if (games.has(room.id)) throw new Error("Room already exists");
+  games.set(room.id, room);
 }
 
 export function createGameRoom(options: CreateGameOptions = {}): GameRoom {
@@ -233,6 +242,7 @@ export function cleanupGameRooms(
     roomTtlMs?: number;
     maxRooms?: number;
     activeRoomIds?: Set<string>;
+    onRemoved?: (room: GameRoom) => void;
   } = {}
 ): string[] {
   const now = options.now ?? Date.now();
@@ -246,6 +256,7 @@ export function cleanupGameRooms(
     if (now - room.lastActivityAt > roomTtlMs) {
       games.delete(room.id);
       removed.push(room.id);
+      options.onRemoved?.(room);
     }
   }
 
@@ -259,6 +270,7 @@ export function cleanupGameRooms(
     if (games.size <= maxRooms) break;
     games.delete(room.id);
     removed.push(room.id);
+    options.onRemoved?.(room);
   }
 
   return removed;

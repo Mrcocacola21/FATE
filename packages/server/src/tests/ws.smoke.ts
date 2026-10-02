@@ -2,7 +2,7 @@
 
 import assert from "assert";
 import WebSocket from "ws";
-import { buildServer } from "../index";
+import { buildTestServer as buildServer } from "./matchTestSupport";
 
 function collectMessages(ws: WebSocket) {
   const queue: unknown[] = [];
