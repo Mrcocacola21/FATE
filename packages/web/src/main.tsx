@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
 import "./styles.css";
+import "./layout/app-shell.css";
 import { getLanguage } from "./i18n";
 import { BrowserRouter } from "react-router";
 

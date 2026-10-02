@@ -1,6 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { ThemeToggle } from "../components/ThemeToggle";
-import { LanguageSwitcher } from "../components/LanguageSwitcher";
 import { useI18n } from "../i18n";
 
 const WIDTH = 800;
@@ -19,7 +17,7 @@ type PongState = {
   score: { P1: number; P2: number };
 };
 
-export function Heartbreak({ onBack }: { onBack?: () => void }) {
+export function Heartbreak() {
   const { t } = useI18n();
   const [connected, setConnected] = useState(false);
   const [role, setRole] = useState<"P1" | "P2" | "spectator">("spectator");
@@ -126,21 +124,12 @@ export function Heartbreak({ onBack }: { onBack?: () => void }) {
   }, [ws]);
 
   return (
-    <div className="app-shell px-3 py-4 sm:px-6 sm:py-8">
+    <div className="heartbreak-page">
       <div className="mx-auto max-w-5xl space-y-4">
         <div className="panel-card flex flex-wrap items-center justify-between gap-3 p-5">
           <div>
             <div className="text-lg font-semibold text-primary">{t("heartbreak.title")}</div>
             <div className="text-xs text-muted">{t("heartbreak.subtitle")}</div>
-          </div>
-          <div className="flex items-center gap-2">
-            {onBack ? (
-              <button type="button" className="btn btn-secondary btn-sm" onClick={onBack}>
-                {t("common.backToRooms")}
-              </button>
-            ) : null}
-            <LanguageSwitcher />
-            <ThemeToggle />
           </div>
         </div>
 

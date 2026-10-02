@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
-import { useAuthStore } from "../auth/authStore";
 import { useI18n } from "../i18n";
 import { Avatar } from "../profile/Avatar";
 import { ProfileForm } from "../profile/ProfileForm";
@@ -10,7 +9,6 @@ import { profileErrorMessage } from "../profile/errorMessage";
 export function ProfilePage() {
   const { t, language } = useI18n();
   const { profile, loading, saving, error, load, save } = useProfileStore((state) => state);
-  const { logout, operation } = useAuthStore((state) => state);
   const [editing, setEditing] = useState(false);
   const [updated, setUpdated] = useState(false);
   useEffect(() => {
@@ -91,9 +89,6 @@ export function ProfilePage() {
             />
           ) : (
             <div className="mt-5 flex flex-wrap gap-3">
-              <Link className="btn btn-secondary" to="/matches">
-                {t("matches.history")}
-              </Link>
               <button
                 className="btn btn-primary"
                 disabled={saving}
@@ -115,13 +110,6 @@ export function ProfilePage() {
           )}
         </>
       )}
-      <button
-        className="btn btn-ghost mt-5"
-        disabled={operation !== null}
-        onClick={() => void logout()}
-      >
-        {t("auth.logout")}
-      </button>
     </section>
   );
 }

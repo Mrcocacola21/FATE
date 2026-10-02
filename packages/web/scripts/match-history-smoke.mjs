@@ -159,7 +159,10 @@ try {
   async function expectRows(count) {
     await page.waitForFunction((expected) => {
       const view = document.querySelector('[data-testid="match-history-page"]');
-      return view?.querySelector('[aria-busy="false"]') && view.querySelectorAll("li").length === expected;
+      return (
+        view?.querySelector('[aria-busy="false"]') &&
+        view.querySelectorAll("li").length === expected
+      );
     }, count);
     assert.equal(await historyBody.locator("li").count(), count);
   }
@@ -246,13 +249,17 @@ try {
   await page.screenshot({ path: path.join(output, "details-desktop.png") });
   await details.getByRole("link", { name: `@${renamed}`, exact: true }).click();
   await page.getByTestId("public-profile-page").getByText("New Bob", { exact: true }).waitFor();
-  await page.getByRole("link", { name: "Match history", exact: true }).click();
+  await page
+    .getByTestId("public-profile-page")
+    .getByRole("link", { name: "Match history", exact: true })
+    .click();
   await historyBody
     .getByRole("link", { name: /vs Historical Alice/ })
     .first()
     .waitFor();
   assert.equal(new URL(page.url()).pathname, `/users/${renamed}/matches`);
   await page.goto(`${baseUrl}/profile`);
+  await page.getByRole("button", { name: "Account menu", exact: true }).click();
   await page.getByRole("button", { name: "Sign out", exact: true }).click();
   await page.getByRole("button", { name: "Sign in", exact: true }).waitFor();
   await page.goto(`${baseUrl}/users/${renamed}/matches`);
@@ -284,6 +291,8 @@ try {
   await browser?.close();
   for (const child of children) child.kill();
   await database.match.deleteMany({ where: { id: { in: matches } } });
-  await database.user.deleteMany({ where: { OR: [{ id: { in: users } }, { email: { in: registeredEmails } }] } });
+  await database.user.deleteMany({
+    where: { OR: [{ id: { in: users } }, { email: { in: registeredEmails } }] },
+  });
   await database.$disconnect();
 }

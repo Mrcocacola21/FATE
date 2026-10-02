@@ -59,6 +59,16 @@ const suffix = randomUUID().slice(0, 8);
 const email = `browser-${suffix}@example.test`;
 let username = `Browser_${suffix}`;
 const password = randomBytes(16).toString("hex");
+async function openNavigation(page) {
+  const trigger = page.getByTestId("open-navigation");
+  if ((await trigger.isVisible()) && !(await page.getByTestId("mobile-sidebar").isVisible()))
+    await trigger.click();
+}
+async function signOut(page) {
+  await openNavigation(page);
+  await page.getByRole("button", { name: "Account menu", exact: true }).click();
+  await page.getByRole("button", { name: "Sign out", exact: true }).click();
+}
 let browser;
 let page;
 let step = "startup";
@@ -190,7 +200,10 @@ try {
     .getByTestId("profile-page")
     .getByRole("heading", { name: displayName, exact: true })
     .waitFor();
-  assert.equal(await page.getByText(`@${username}`, { exact: true }).count(), 1);
+  assert.equal(
+    await page.getByTestId("profile-page").getByText(`@${username}`, { exact: true }).count(),
+    1,
+  );
   const persistedProfile = await database.profile.findUniqueOrThrow({ where: { username } });
   assert.equal(persistedProfile.displayName, displayName);
   assert.equal(persistedProfile.avatarUrl, avatarUrl);
@@ -232,10 +245,12 @@ try {
     await page.evaluate(() => document.documentElement.classList.contains("dark")),
     true,
   );
+  await page.getByTestId("sidebar-settings").filter({ visible: true }).click();
   await page.getByRole("button", { name: "English", exact: true }).click();
   await page.getByRole("button", { name: "Edit profile", exact: true }).waitFor();
   await page.getByRole("button", { name: "Switch to Light mode", exact: true }).click();
   await page.waitForFunction(() => !document.documentElement.classList.contains("dark"));
+  await page.keyboard.press("Escape");
   const savedPreferences = await database.profile.findUniqueOrThrow({ where: { username } });
   assert.equal(savedPreferences.preferredLanguage, "en");
   assert.equal(savedPreferences.preferredTheme, "light");
@@ -299,7 +314,7 @@ try {
   const logoutResponse = page.waitForResponse(
     (response) => response.url() === `${apiUrl}/api/auth/logout` && response.status() === 204,
   );
-  await page.getByRole("button", { name: "Sign out", exact: true }).click();
+  await signOut(page);
   await logoutResponse;
   await page.waitForURL(/\/login\?returnTo=/);
   await page.reload();
@@ -323,11 +338,8 @@ try {
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await page.waitForURL(`${baseUrl}/profile`);
   await page.getByTestId("profile-page").waitFor();
-  await page.getByRole("link", { name: "Back to Rooms", exact: true }).click();
-  await page
-    .getByTestId("account-control")
-    .getByRole("link", { name: displayName, exact: true })
-    .waitFor();
+  await page.getByRole("link", { name: "Play", exact: true }).click();
+  await page.getByTestId("sidebar-account").getByText(displayName, { exact: true }).waitFor();
   console.log("browser auth: real login and minimal lobby account control passed");
 
   step = "mobile and localization";
@@ -342,7 +354,7 @@ try {
   const response = page.waitForResponse(
     (value) => value.url() === `${apiUrl}/api/auth/logout` && value.status() === 204,
   );
-  await page.getByRole("button", { name: "Sign out", exact: true }).click();
+  await signOut(page);
   await response;
   await page.getByLabel("Email", { exact: true }).waitFor();
   await page.screenshot({ path: path.join(output, "login-mobile.png") });
@@ -364,12 +376,14 @@ try {
   await page.evaluate(() => localStorage.setItem("FATE_LANGUAGE", "en"));
   await page.goto(baseUrl);
   await page.getByTestId("create-room").click();
+  await page.getByTestId("submit-room").click();
   await page.waitForURL(/\/login\?returnTo=/);
   await page.getByLabel("Email", { exact: true }).fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await page.waitForURL(baseUrl + "/");
   await page.getByTestId("create-room").click();
+  await page.getByTestId("submit-room").click();
   await page.waitForFunction(() => Boolean(localStorage.getItem("fate.room-session.v1")));
   // Inspect the established game connection independently of account state.
   const gameSession = await page.evaluate(() =>
@@ -389,7 +403,7 @@ try {
     dispatchEvent(new PopStateEvent("popstate"));
   });
   await page.getByTestId("profile-page").waitFor();
-  await page.getByRole("button", { name: "Sign out", exact: true }).click();
+  await signOut(page);
   await page.waitForURL(/\/login\?returnTo=/);
   await page.getByLabel("Email", { exact: true }).fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);
@@ -398,7 +412,7 @@ try {
   const finalLogout = page.waitForResponse(
     (value) => value.url() === `${apiUrl}/api/auth/logout` && value.status() === 204,
   );
-  await page.getByRole("button", { name: "Sign out", exact: true }).click();
+  await signOut(page);
   await finalLogout;
   await page.getByRole("link", { name: "Back to Rooms", exact: true }).click();
   assert.deepEqual(

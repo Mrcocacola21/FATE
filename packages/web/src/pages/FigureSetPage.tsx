@@ -16,10 +16,8 @@ import {
 import { useHeroes } from "../figures/useHeroes";
 import type { AbilityMeta } from "rules";
 import { getFigureArtSrc, getHeroVisualVariants, getTokenSrc } from "../assets/registry";
-import { ThemeToggle } from "../components/ThemeToggle";
 import { PanelCard, SectionHeader, StatusBadge } from "../components/ui";
 import { LECHY_ID } from "../rulesHints";
-import { LanguageSwitcher } from "../components/LanguageSwitcher";
 import { FigureSetAbilityCard } from "../components/abilities/FigureSetAbilityCard";
 import { useI18n } from "../i18n";
 import {
@@ -30,10 +28,6 @@ import {
   localizeFigureSetError,
   localizeServerText,
 } from "../i18n/displayMetadata";
-
-interface FigureSetPageProps {
-  onBack?: () => void;
-}
 
 function HeroToken({
   heroId,
@@ -61,7 +55,7 @@ function HeroToken({
   );
 }
 
-export function FigureSetPage({ onBack }: FigureSetPageProps) {
+export function FigureSetPage() {
   const { language, t } = useI18n();
   const [state, setState] = useState<FigureSetState>(() => loadFigureSetState(HERO_CATALOG));
   const [activeSlot, setActiveSlot] = useState<BaseClass | null>(null);
@@ -176,7 +170,7 @@ export function FigureSetPage({ onBack }: FigureSetPageProps) {
   }, [detailsHero, t]);
 
   return (
-    <div className="app-shell px-3 py-4 sm:px-6 sm:py-8">
+    <div className="figure-set-page">
       <div className="mx-auto max-w-7xl space-y-5">
         <PanelCard as="header" variant="hud" className="hero-command p-5 sm:p-6">
           <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -189,13 +183,6 @@ export function FigureSetPage({ onBack }: FigureSetPageProps) {
                   {t("figureSet.subtitle")}
                 </p>
               </div>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <button type="button" className="btn btn-secondary" onClick={() => onBack?.()}>
-                {t("common.backToRooms")}
-              </button>
-              <ThemeToggle />
-              <LanguageSwitcher />
             </div>
           </div>
         </PanelCard>

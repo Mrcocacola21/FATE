@@ -1,4 +1,19 @@
 export const en = {
+  shell: {
+    command: "Command",
+    developer: "Dev",
+    play: "Play",
+    multiplayer: "Multiplayer",
+    playDescription: "Create or join a tactical match.",
+    createMatch: "Create Match",
+    createDescription: "Open a match and choose your seat. Game mode is selected in the room.",
+    emptyRooms: "Be the first to start a match.",
+    accountMenu: "Account menu",
+    openMenu: "Open navigation",
+    closeMenu: "Close navigation",
+    skipContent: "Skip to content",
+  },
+
   matches: {
     history: "Match history",
     details: "Match details",

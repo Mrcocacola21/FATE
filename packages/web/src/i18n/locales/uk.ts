@@ -2,6 +2,20 @@ import type { LocaleShape } from "./en";
 import { en } from "./en";
 
 export const uk = {
+  shell: {
+    command: "Командування",
+    developer: "Розробка",
+    play: "Грати",
+    multiplayer: "Мережева гра",
+    playDescription: "Створіть тактичний матч або приєднайтесь до нього.",
+    createMatch: "Створити матч",
+    createDescription: "Відкрийте матч і виберіть місце. Режим гри обирається в кімнаті.",
+    emptyRooms: "Будьте першим, хто розпочне матч.",
+    accountMenu: "Меню облікового запису",
+    openMenu: "Відкрити навігацію",
+    closeMenu: "Закрити навігацію",
+    skipContent: "Перейти до вмісту",
+  },
   matches: {
     history: "Історія матчів",
     details: "Деталі матчу",

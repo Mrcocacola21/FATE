@@ -8,6 +8,8 @@
     "generate:favicons": "node scripts/generate-favicons.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test:auth": "tsx --test src/auth/*.test.ts src/auth/*.test.tsx",
+    "test:shell": "tsx --test src/layout/AppShell.test.tsx src/lobby/*.test.tsx",
+    "test:shell:e2e": "node scripts/app-shell-smoke.mjs",
     "test:auth:e2e": "node scripts/auth-smoke.mjs",
     "test:multiplayer:e2e": "node scripts/multiplayer-smoke.mjs",
     "test:gameplay": "tsx --test src/store.selection.test.ts",
