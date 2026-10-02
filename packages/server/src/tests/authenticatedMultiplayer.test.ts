@@ -156,6 +156,10 @@ async function run() {
     assert.deepEqual(anonymousView.view, authenticatedView.view);
     anonymous.send({ type: "switchRole", role: "P1" });
     assert.equal(((await anonymous.wait("error")) as { code: string }).code, "AUTH_REQUIRED");
+    anonymous.send({ type: "action", action: { type: "endTurn" } });
+    const spectatorAction = await anonymous.wait("actionResult");
+    assert(spectatorAction.type === "actionResult" && !spectatorAction.ok);
+    assert.equal(persistence.actions.size, 0);
 
     p1.send({ type: "setReady", ready: true });
     await p1.wait("actionResult");
@@ -167,10 +171,13 @@ async function run() {
     const missingIdentity = await p1.wait("actionResult");
     assert(missingIdentity.type === "actionResult" && !missingIdentity.ok);
     assert.equal(match.status, "WAITING");
+    assert.equal(persistence.actions.size, 0, "rejected start and readiness are not durable actions");
     room.seatIdentities.P2 = identityP2;
     p1.send({ type: "startGame" });
     await p1.wait("actionResult");
     assert.equal(match.status, "IN_PROGRESS");
+    assert.equal(persistence.actions.size, 1);
+    assert.equal([...persistence.actions.values()][0].actorUserId, userA);
     assert(room.participantsLocked);
     const participantBefore = JSON.stringify(Array.from(match.participants));
     const ownerConnection = room.seats.P1;
@@ -200,6 +207,7 @@ async function run() {
     assert(!wsTestHooks.hasSeatGraceToken(ack.resumeToken));
     assert.equal(JSON.stringify(Array.from(match.participants)), participantBefore);
     assert.equal(match.status, "IN_PROGRESS");
+    assert.equal(persistence.actions.size, 1, "reconnect cannot append a duplicate start");
     const resumedState = await resumed.wait("roomState");
     assert(resumedState.type === "roomState");
     assert.equal(resumedState.meta.playerNames.P1, "Alice Profile");
@@ -222,6 +230,11 @@ async function run() {
       assert.equal(accountReads, readsBefore);
       assert.equal(verifications, verifiesBefore);
       assert.equal(persistence.calls.length, callsBefore);
+      assert.equal(persistence.actions.size, 2);
+      const rollRecord = [...persistence.actions.values()].find((entry) => entry.actionType === "resolvePendingRoll")!;
+      assert.equal(rollRecord.actorUserId, pending.player === "P1" ? userA : userB);
+      assert.equal(rollRecord.actorSeat, pending.player);
+      assert(!JSON.stringify([...persistence.actions.values()]).includes(ack.resumeToken!));
       const fresh = await connect();
       fresh.send({ ...resume, accessToken: tokenA });
       assert.equal(((await fresh.wait("error")) as { code: string }).code, "INVALID_ACCESS_TOKEN");

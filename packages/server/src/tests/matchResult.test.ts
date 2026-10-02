@@ -78,6 +78,7 @@ async function run() {
     removeWaitingParticipant: persistence.removeWaitingParticipant.bind(persistence),
     updateWaitingGameMode: persistence.updateWaitingGameMode.bind(persistence),
     markStarted: persistence.markStarted.bind(persistence), markCancelled: persistence.markCancelled.bind(persistence),
+    appendAcceptedAction: persistence.appendAcceptedAction.bind(persistence),
     finalizeMatch: async () => {
       attempts++;
       if (permanent) throw new MatchResultError("MATCH_RESULT_CONFLICT");

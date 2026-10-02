@@ -33,3 +33,18 @@ export function getQueuedFateRoomIds(): Set<string> {
     .filter((key) => key.startsWith("fate:") && key !== FATE_CREATE_KEY)
     .map((key) => key.slice(5)));
 }
+
+/** Shutdown runs after inbound work has stopped; finish commands before journal drain. */
+export async function drainRoomCommands(timeoutMs = 5000): Promise<boolean> {
+  let timer: NodeJS.Timeout | undefined;
+  const drain = async () => {
+    while (roomQueues.size) await Promise.allSettled([...roomQueues.values()]);
+    return true;
+  };
+  const complete = await Promise.race([
+    drain(),
+    new Promise<false>((resolve) => { timer = setTimeout(() => resolve(false), timeoutMs); }),
+  ]);
+  if (timer) clearTimeout(timer);
+  return complete;
+}

@@ -161,6 +161,7 @@ async function run() {
       createWaitingMatch: service.createWaitingMatch.bind(service), syncParticipant: service.syncParticipant.bind(service),
       removeWaitingParticipant: service.removeWaitingParticipant.bind(service), updateWaitingGameMode: service.updateWaitingGameMode.bind(service),
       markStarted: service.markStarted.bind(service), markCancelled: service.markCancelled.bind(service), finalizeMatch: service.finalizeMatch.bind(service),
+      appendAcceptedAction: service.appendAcceptedAction.bind(service),
     };
     lifecycle = new MatchLifecycle(logger, runtimeService);
     const room = await lifecycle.createRoom({}, `${prefix}-runtime`);
@@ -178,6 +179,7 @@ async function run() {
       ruleDeclaration: { ...room.state.ruleDeclaration, selectedRuleId: "normal_rule", setupComplete: true },
       units: Object.fromEntries(Object.entries(room.state.units).map(([unitId, u]) => [unitId, u.owner === "P2" ? { ...u, hp: 0, isAlive: false } : u])) };
     assert((await lifecycle.applyAction(room, { type: "endTurn" }, "P1")).ok);
+    await lifecycle.drainActions(room.matchId!);
     assert.equal(room.state.phase, "ended");
     assert.equal((await repo.findById(room.matchId!))!.status, "IN_PROGRESS");
     const revision = room.revision;
@@ -202,6 +204,7 @@ async function run() {
       units: Object.fromEntries(Object.entries(chessRoom.state.units).map(([unitId, u]) => [unitId,
         unitId === kings.P1 || unitId === kings.P2 ? { ...u, hp: 0, isAlive: false } : u])) };
     assert((await lifecycle.applyAction(chessRoom, { type: "endTurn" }, "P1")).ok);
+    await lifecycle.drainActions(chessRoom.matchId!);
     assert.equal(chessRoom.state.phase, "ended");
     assert.equal(chessRoom.state.gameOver, null);
     const chessDetail = (await server.inject({ url: `/api/matches/${chessRoom.matchId}` })).json();
@@ -221,12 +224,13 @@ async function run() {
       units: Object.fromEntries(Object.entries(p2Room.state.units).map(([unitId, u]) => [unitId,
         u.owner === "P1" ? { ...u, hp: 0, isAlive: false } : u])) };
     assert((await lifecycle.applyAction(p2Room, { type: "endTurn" }, "P2")).ok);
+    await lifecycle.drainActions(p2Room.matchId!);
     assert.equal(p2Room.state.phase, "ended");
     const p2Detail = (await server.inject({ url: `/api/matches/${p2Room.matchId}` })).json();
     assert.equal(p2Detail.winner.seat, "P2");
     assert.equal(p2Detail.winner.userId, users[1]);
     assert.equal(p2Detail.loser.userId, users[0]);
-    assert.equal(await db.matchAction.count({ where: { matchId: { in: ids } } }), 0);
+    assert.equal(await db.matchAction.count({ where: { matchId: { in: ids } } }), 6);
     assert.equal(await db.matchSnapshot.count({ where: { matchId: { in: ids } } }), 0);
     assert.equal(await db.ratingHistory.count({ where: { matchId: { in: ids } } }), 0);
     // SetNull preserves the result and historical names when an account is removed.

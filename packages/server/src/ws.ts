@@ -1500,7 +1500,7 @@ export function registerGameWebSocket(
               return;
             }
 
-            markRoomMetadataChanged(room);
+            lifecycle.recordDraftAction(room, { type: msg.type, player: current.seat, heroId: msg.heroId });
             if (msg.type === "draftPickHero" && room.draftState?.phase === "complete") {
               rebuildDraftedArmies(room);
               await applyAndBroadcast(lifecycle, room, { type: "startGame" }, current.seat, socket);
@@ -1713,7 +1713,7 @@ export function registerGameWebSocket(
               }
               if (!room.draftState) {
                 startDraftSession(room);
-                markRoomMetadataChanged(room);
+                lifecycle.recordDraftAction(room, { type: "draftStarted", player: current.seat ?? room.hostSeat });
                 broadcastRoomState(room);
                 return;
               }

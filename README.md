@@ -593,6 +593,71 @@ npm run -w web test:auth
 npm run -w web test:multiplayer:e2e
 ```
 
+## Persistent Action Log
+
+Normal persistent matches append accepted authoritative gameplay actions to PostgreSQL
+`MatchAction`. Invalid, unauthorized and spectator commands never append rows. Lobby
+joins, readiness and mode changes are not gameplay journal actions; accepted draft start,
+ban and pick commands are included because they determine the armies. Test/Sandbox rooms
+and rooms without `matchId` keep their runtime log only. Older matches are not backfilled.
+
+The existing schema is reused without a migration. Each row contains `matchId`, `revision`,
+`actorUserId`, `actorSeat`, `actionType`, JSONB `actionPayload`, JSONB `events` and server
+`createdAt`. The domain action includes its discriminator and replay-relevant arguments.
+Actors come from verified runtime seat identity, never client `userId` or connection IDs.
+The action mapper strips extra envelope fields and recursively removes credentials and
+transport metadata from extensible ability payloads. Canonical events retain authoritative
+results, including rolls and hidden game information; combat visual batch notifications
+and visual sequencing metadata are excluded. No RNG seed/state is added to action rows.
+
+`revision` describes the state **after** an accepted command: apply rules synchronously,
+advance revision, append runtime entry, schedule durable append. Revisions may have gaps:
+room metadata changes and readiness also advance runtime revision but are not stored here.
+Accepted readiness no-ops do not advance revision. Draft commands advance revision once.
+The terminal gameplay row's revision equals `Match.finalRevision`; later room metadata
+changes do not change that captured result. Ordering uses revision, never timestamp.
+
+`GameRoom.actionLog` remains bounded by `MAX_LOG_EVENTS`; PostgreSQL keeps the full journal.
+Gameplay runs from memory without reading action history or waiting for action inserts.
+Tracked per-match chains write in order, independently across matches, and release drained
+chain state. Each match allows up to 10,000 pending writes. Recognized transient connection,
+timeout and transaction errors receive at most three attempts with 50/100 ms backoff.
+Equivalent retries use unique `(matchId, revision)` protection and compare actor, type,
+payload and events; a conflicting row raises `MATCH_ACTION_CONFLICT` and is never overwritten.
+
+An exhausted/permanent write, mapping failure or queue overflow logs safe structured context,
+stops that match's subsequent writes and blocks result publication. Accepted memory state
+is never rolled back. There is no automatic recovery after these failures; unpersisted
+actions remain process-local and require operational attention. Result finalization runs
+outside the gameplay command, after the complete terminal journal has drained. Cleanup
+retains tracked writes; shutdown stops inbound work, drains commands/actions/results with
+bounded waits, then disconnects Prisma. Action and finalization drain timeouts are 5 seconds
+each and report incomplete work explicitly. Process crash recovery is a later phase.
+
+`GET /api/matches/:id/actions?limit=100&revisionAfter=0` requires a valid Bearer access token.
+Only `FINISHED` matches are readable: unknown IDs return `404 MATCH_NOT_FOUND`, other
+statuses return `409 MATCH_NOT_FINISHED`, invalid IDs/pagination return `400 INVALID_REQUEST`.
+`limit` is 1–500. The response is `{ matchId, actions, nextRevisionAfter }`, ordered ascending
+by revision; a non-null cursor is the last returned revision, otherwise there are no more rows.
+Each action contains `revision`, `actor: { seat, userId, displayName }`, `type`, `payload`,
+`events` and ISO `createdAt`. Display names use historical participant snapshots.
+The player-neutral DTO deliberately returns payload `{ type }` and only allowlisted turn,
+round, battle-start and end events. Hidden unit IDs/positions, targets, ability choices,
+private rolls, credentials, email and database row IDs are not exposed. Canonical server
+JSON is retained separately for future replay verification. Historical empty journals
+return an empty page.
+
+This prepares a durable journal for replay; it does not implement Match History UI,
+Match Snapshots, Replay, Restart Recovery, Statistics or Rating.
+
+```bash
+npm run -w server test
+# Apply migrations to an isolated TEST_DATABASE_URL before DB integration tests.
+npm run -w server test:actions:db
+npm run -w server test:match:db
+npm run -w server test:results:db
+```
+
 ## Deployment
 
 Deployment updates are also posted in the [Developer Log](https://t.me/FATE_Soul_Dev).

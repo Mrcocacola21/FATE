@@ -1,4 +1,6 @@
 import { isDeepStrictEqual } from "node:util";
+import { MatchActionRepository } from "../repositories/matchActionRepository";
+import type { AcceptedActionRecord } from "../persistence/acceptedAction";
 import type { DetailedMatch, MatchRepository } from "../repositories/matchRepository";
 import { MatchResultError, safeParticipantResultData, type FinishedMatchInput } from "../persistence/matchResult";
 import type { ParticipantResultData, ResultOutcome } from "../persistence/matchResult";
@@ -50,13 +52,20 @@ export type MatchPersistence = Pick<
   | "updateWaitingGameMode"
   | "markStarted"
   | "markCancelled"
+  | "appendAcceptedAction"
 > & { finalizeMatch(matchId: string, input: FinishedMatchInput): Promise<unknown> };
 
 export class MatchService {
+  private actions?: MatchActionRepository;
   constructor(
     private readonly matches: MatchRepository,
     private readonly logger: { error(data: object, message: string): void } = console,
-  ) {}
+    actions?: MatchActionRepository,
+  ) { this.actions = actions; }
+
+  appendAcceptedAction(record: AcceptedActionRecord): Promise<void> {
+    return (this.actions ??= new MatchActionRepository()).appendAcceptedAction(record);
+  }
 
   async createWaitingMatch(input: WaitingMatchInput): Promise<{ id: string }> {
     const match = await this.matches.createWaitingMatch(input);

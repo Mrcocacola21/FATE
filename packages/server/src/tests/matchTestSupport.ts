@@ -5,6 +5,8 @@ import { buildServer } from "../index";
 import { ConnectionIdentityService } from "../auth/connectionIdentity";
 import { TokenService } from "../auth/tokens";
 import type { UserWithProfile } from "../repositories/userRepository";
+import type { AcceptedActionRecord } from "../persistence/acceptedAction";
+import { MatchActionConflict } from "../repositories/matchActionRepository";
 
 export const testTokens = new TokenService({
   accessSecret: "phase6-test-access-secret-01234567890123456789",
@@ -43,6 +45,13 @@ interface TestMatch extends WaitingMatchInput {
 
 /** Explicit injected fake for database-free runtime regressions; never a production fallback. */
 export class MemoryMatchPersistence implements MatchPersistence {
+  readonly actions = new Map<string, AcceptedActionRecord>();
+  async appendAcceptedAction(record: AcceptedActionRecord): Promise<void> {
+    const key = `${record.matchId}:${record.revision}`;
+    const previous = this.actions.get(key);
+    if (previous && !isDeepStrictEqual({ ...previous, createdAt: null }, { ...record, createdAt: null })) throw new MatchActionConflict();
+    if (!previous) this.actions.set(key, record);
+  }
   readonly matches = new Map<string, TestMatch>();
   readonly calls: string[] = [];
   fail = new Set<string>();

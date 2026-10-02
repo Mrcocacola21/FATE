@@ -3,6 +3,7 @@
 import Fastify from "fastify";
 import { MatchLifecycle } from "./persistence/matchLifecycle";
 import type { MatchPersistence } from "./services/matchService";
+import type { MatchActionService } from "./services/matchActionService";
 import cors, { type FastifyCorsOptionsDelegate } from "@fastify/cors";
 import websocket from "@fastify/websocket";
 import { registerRoutes } from "./routes";
@@ -18,6 +19,7 @@ import { ConnectionIdentityService } from "./auth/connectionIdentity";
 export async function buildServer(options: {
   matchPersistence?: MatchPersistence;
   connectionIdentity?: Pick<ConnectionIdentityService, "verify">;
+  actionHistory?: Pick<MatchActionService, "getCompletedMatchActionHistory">;
 } = {}) {
   const logLevel = process.env.LOG_LEVEL ?? "info";
   const server = Fastify({
@@ -53,7 +55,7 @@ export async function buildServer(options: {
   await registerRoutes(server, lifecycle, identity);
   await server.register(authRoutes, { prefix: "/api/auth" });
   await server.register(profileRoutes, { prefix: "/api" });
-  await server.register(matchRoutes, { prefix: "/api" });
+  await server.register(matchRoutes, { prefix: "/api", identity, actionHistory: options.actionHistory });
   registerGameWebSocket(server, lifecycle, identity);
 
   return server;
@@ -64,6 +66,17 @@ async function start() {
   const host = "0.0.0.0";
 
   const server = await buildServer();
+  let stopping = false;
+  const shutdown = () => {
+    if (stopping) return;
+    stopping = true;
+    void server.close().catch(() => {
+      server.log.error({ event: "server:shutdown_failed" }, "Graceful shutdown failed");
+      process.exitCode = 1;
+    });
+  };
+  process.once("SIGINT", shutdown);
+  process.once("SIGTERM", shutdown);
   try {
     const address = await server.listen({ port, host });
     server.log.info(`server listening on ${address}`);

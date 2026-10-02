@@ -1,4 +1,7 @@
 import type { GameAction, PlayerId } from "rules";
+import { toAcceptedActionRecord, type DraftAction } from "./acceptedAction";
+import { MatchActionQueue } from "./matchActionQueue";
+import { getMaxLogEvents, touchGameRoom } from "../store";
 import { extractPersistentMatchResult, MatchResultError } from "./matchResult";
 import { Prisma } from "@prisma/client";
 import { hasDistinctPlayerIdentities, identityDisplayName } from "../auth/connectionIdentity";
@@ -14,7 +17,7 @@ import {
   type CreateGameOptions,
   type GameRoom,
 } from "../store";
-import { enqueueRoomCommand, fateRoomKey, getQueuedFateRoomIds } from "../roomQueue";
+import { drainRoomCommands, enqueueRoomCommand, fateRoomKey, getQueuedFateRoomIds } from "../roomQueue";
 import { MatchRepository } from "../repositories/matchRepository";
 import {
   MatchService,
@@ -52,18 +55,24 @@ export class MatchCreationError extends Error {
   }
 }
 
-/** Lifecycle projection only: no GameState, actions, RNG or sockets are persisted. */
+/** Lifecycle metadata and an independent action journal; never persist runtime state/RNG/sockets. */
 export class MatchLifecycle {
   private readonly projections = new Map<string, Projection>();
   private service?: MatchPersistence;
   private timer?: NodeJS.Timeout;
   private retryRun?: Promise<void>;
+  private closing = false;
+  readonly actionQueue: MatchActionQueue;
+  private readonly completions = new Map<string, Promise<void>>();
 
   constructor(
     private readonly logger: Logger,
     service?: MatchPersistence,
   ) {
     this.service = service;
+    this.actionQueue = new MatchActionQueue({
+      appendAcceptedAction: (record) => this.getService().appendAcceptedAction(record),
+    }, logger);
   }
 
   private getService(): MatchPersistence {
@@ -72,7 +81,7 @@ export class MatchLifecycle {
 
   startRetries(): void {
     this.timer = setInterval(() => {
-      if (this.retryRun) return;
+      if (this.closing || this.retryRun) return;
       this.retryRun = this.retryPending().finally(() => {
         this.retryRun = undefined;
       });
@@ -81,8 +90,10 @@ export class MatchLifecycle {
   }
 
   async close(): Promise<void> {
+    this.closing = true;
     if (this.timer) clearInterval(this.timer);
-    await this.retryRun;
+    if (!(await drainRoomCommands())) this.logger.error({ event: "match:command_drain_timeout" }, "Pending commands timed out at shutdown");
+    await this.drainActions();
     if (Array.from(this.projections.values()).some((p) => this.hasPending(p) || p.resultBlocked))
       this.logger.error(
         { event: "match:pending_at_shutdown" },
@@ -203,6 +214,7 @@ export class MatchLifecycle {
     const previousPhase = room.state.phase;
     const command = applyGameAction(room, action, playerId);
     if (!command.ok) return command;
+    if (command.revision !== undefined) this.recordAcceptedAction(room);
     const p = this.projection(room);
     if (!p) return command;
     if (
@@ -228,15 +240,68 @@ export class MatchLifecycle {
     if (previousPhase !== "ended" && room.state.phase === "ended") {
       try {
         p.finish = extractPersistentMatchResult(room, new Date());
-        await this.flush(p);
+        // Return the accepted command immediately. Result publication follows the
+        // complete journal, outside the latency-sensitive room command.
+        const completion = this.actionQueue.drain(p.matchId).then(async (complete) => {
+          if (!complete) {
+            p.resultBlocked = true;
+            this.logger.error({ event: "match:result_journal_incomplete", matchId: p.matchId }, "Result finalization blocked by incomplete action journal");
+            return;
+          }
+          await enqueueRoomCommand(fateRoomKey(p.roomId), () => this.flush(p));
+        }).catch(() => {
+          p.resultBlocked = true;
+          this.logger.error({ event: "match:result_journal_failed", matchId: p.matchId }, "Result finalization failed; runtime preserved");
+        });
+        this.completions.set(p.matchId, completion);
+        void completion.then(() => {
+          if (this.completions.get(p.matchId) === completion) this.completions.delete(p.matchId);
+        });
       } catch {
         p.resultBlocked = true;
         this.logger.error({ event: "match:result_invalid", code: "MATCH_RESULT_INVALID", roomId: room.id, matchId: p.matchId },
           "Terminal result extraction failed; runtime preserved");
       }
     }
-    // Ordinary actions perform no database reads/writes or retry work.
+    // Ordinary gameplay never waits for action persistence or reads historical rows.
     return command;
+  }
+
+  recordAcceptedAction(room: GameRoom): void {
+    if (!room.matchId || room.roomMode === "test") return;
+    const entry = room.actionLog[room.actionLog.length - 1];
+    if (!entry) return;
+    try {
+      const record = toAcceptedActionRecord(room, entry);
+      if (record) this.actionQueue.enqueue(record, room.id);
+    } catch {
+      this.actionQueue.fail(room.matchId, "MATCH_ACTION_MAPPING_FAILED", {
+        roomId: room.id, revision: entry.revision, actionType: entry.action.type, seat: entry.playerId,
+      });
+    }
+  }
+
+  /** Draft commands have their own rules acceptance flow, outside applyAction. */
+  recordDraftAction(room: GameRoom, action: DraftAction): void {
+    touchGameRoom(room);
+    room.revision++;
+    room.actionLog.push({ at: Date.now(), playerId: action.player, action, events: [], revision: room.revision });
+    const max = getMaxLogEvents();
+    if (room.actionLog.length > max) room.actionLog.splice(0, room.actionLog.length - max);
+    this.recordAcceptedAction(room);
+  }
+
+  async drainActions(matchId?: string): Promise<boolean> {
+    const complete = await this.actionQueue.drain(matchId);
+    const completions = matchId ? [this.completions.get(matchId)] : [...this.completions.values()];
+    let timer: NodeJS.Timeout | undefined;
+    const finished = await Promise.race([
+      Promise.all(completions).then(() => true),
+      new Promise<false>((resolve) => { timer = setTimeout(() => resolve(false), 5000); }),
+    ]);
+    if (timer) clearTimeout(timer);
+    if (!finished) this.logger.error({ event: "match:finalization_drain_timeout", matchId }, "Finalization drain timed out");
+    return complete && finished;
   }
 
   async cleanup(options: Parameters<typeof cleanupGameRooms>[0] = {}): Promise<string[]> {
@@ -264,11 +329,13 @@ export class MatchLifecycle {
     const p = this.projection(room);
     if (!p) return;
     p.removed = true;
+    if (!(await this.actionQueue.drain(p.matchId)) && p.finish) p.resultBlocked = true;
     // A pending initiative roll is already a started match, despite phase=lobby.
     if (!p.started && room.state.phase === "lobby" && !room.state.pendingRoll)
       p.cancel = new Date();
     await this.flush(p);
     if (!this.hasPending(p)) this.projections.delete(p.matchId);
+    this.actionQueue.release(p.matchId);
   }
 
   private hasPending(p: Projection): boolean {
@@ -276,6 +343,8 @@ export class MatchLifecycle {
   }
 
   async retryPending(): Promise<void> {
+    await this.drainActions();
+    if (this.closing) return;
     await Promise.all(
       Array.from(this.projections.values())
         .filter((p) => this.hasPending(p))
@@ -320,6 +389,10 @@ export class MatchLifecycle {
         );
       }
       if (p.finish) {
+        // Every path to finalization must respect the journal barrier, including
+        // lifecycle retries and room removal, not just the terminal callback.
+        if (this.actionQueue.failed(p.matchId)) { p.resultBlocked = true; return; }
+        if (this.actionQueue.hasPending(p.matchId)) return;
         operation = "finished";
         p.finishAttempts = (p.finishAttempts ?? 0) + 1;
         await service.finalizeMatch(p.matchId, p.finish);

@@ -282,6 +282,7 @@ function bindPersistence(p: MemoryMatchPersistence): MatchPersistenceBindings {
     updateWaitingGameMode: p.updateWaitingGameMode.bind(p),
     markStarted: p.markStarted.bind(p),
     finalizeMatch: p.finalizeMatch.bind(p),
+    appendAcceptedAction: p.appendAcceptedAction.bind(p),
     markCancelled: p.markCancelled.bind(p),
   };
 }
