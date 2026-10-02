@@ -1,9 +1,4 @@
-import type {
-  ApplyResult,
-  GameEvent,
-  GameState,
-  UnitState,
-} from "../../../../model";
+import type { ApplyResult, GameEvent, GameState, UnitState } from "../../../../model";
 import type { RNG } from "../../../../rng";
 import { resolveAttack } from "../../../../combat";
 import {
@@ -38,7 +33,7 @@ export function finalizeAttackFromContext(
   autoHit: boolean = false,
   damageOverride?: number,
   ignoreBonuses: boolean = false,
-  forceMiss: boolean = false
+  forceMiss: boolean = false,
 ): ApplyResult {
   const resolvedDamageOverride =
     damageOverride !== undefined ? damageOverride : context.damageOverride;
@@ -50,8 +45,7 @@ export function finalizeAttackFromContext(
     tieBreakDefender: context.tieBreakDefender ?? [],
   };
 
-  const sourceId =
-    context.damageBonusSourceId ?? getPolkovodetsSource(state, context.attackerId);
+  const sourceId = context.damageBonusSourceId ?? getPolkovodetsSource(state, context.attackerId);
   const polkovodetsBonus = sourceId ? 1 : 0;
   const damageBonus = (context.damageBonus ?? 0) + polkovodetsBonus;
 
@@ -77,12 +71,12 @@ export function finalizeAttackFromContext(
     rolls,
   });
 
-  let updatedEvents = [...events];
+  const updatedEvents = [...events];
   const attackEvent = events.find(
     (e) =>
       e.type === "attackResolved" &&
       e.attackerId === context.attackerId &&
-      e.defenderId === context.defenderId
+      e.defenderId === context.defenderId,
   );
   if (
     attackEvent &&
@@ -98,7 +92,7 @@ export function finalizeAttackFromContext(
         amount: polkovodetsBonus,
         source: "polkovodets",
         fromUnitId: sourceId,
-      })
+      }),
     );
   }
 
@@ -127,11 +121,7 @@ export function finalizeAttackFromContext(
     }
   }
 
-  if (
-    attackEvent?.type === "attackResolved" &&
-    attackEvent.hit &&
-    context.blindOnHit
-  ) {
+  if (attackEvent?.type === "attackResolved" && attackEvent.hit && context.blindOnHit) {
     const blinded = updatedState.units[attackEvent.defenderId];
     if (blinded?.isAlive) {
       updatedState = {
@@ -166,15 +156,13 @@ export function finalizeAttackFromContext(
       (e) =>
         e.type === "attackResolved" &&
         e.attackerId === context.attackerId &&
-        e.defenderId === context.defenderId
+        e.defenderId === context.defenderId,
     );
     let nextPendingAoE = updatedState.pendingAoE;
     if (attackEventForAoe && attackEventForAoe.type === "attackResolved") {
       const shouldRecord = attackEventForAoe.damage > 0;
       if (shouldRecord) {
-        const damaged = nextPendingAoE.damagedUnitIds.includes(
-          attackEventForAoe.defenderId
-        )
+        const damaged = nextPendingAoE.damagedUnitIds.includes(attackEventForAoe.defenderId)
           ? nextPendingAoE.damagedUnitIds
           : [...nextPendingAoE.damagedUnitIds, attackEventForAoe.defenderId];
         const damageByUnitId = {
@@ -194,9 +182,7 @@ export function finalizeAttackFromContext(
       .map((e) => (e.type === "stealthRevealed" ? e.unitId : ""))
       .filter((id) => id.length > 0);
     if (revealedIds.length > 0) {
-      const merged = Array.from(
-        new Set([...nextPendingAoE.revealedUnitIds, ...revealedIds])
-      );
+      const merged = Array.from(new Set([...nextPendingAoE.revealedUnitIds, ...revealedIds]));
       nextPendingAoE = { ...nextPendingAoE, revealedUnitIds: merged };
     }
 
@@ -212,16 +198,13 @@ export function handleTyrantIfNeeded(
   state: GameState,
   events: GameEvent[],
   context: AttackRollContext,
-  rng: RNG
+  rng: RNG,
 ): { state: GameState; events: GameEvent[]; requested: boolean } {
   return handleGroznyTyrantAfterAttack(state, events, context, rng);
 }
 
 export function canUseFriskSubstitution(defender: UnitState): boolean {
-  return (
-    defender.heroId === HERO_FRISK_ID &&
-    getCharges(defender, ABILITY_FRISK_GENOCIDE) >= 3
-  );
+  return defender.heroId === HERO_FRISK_ID && getCharges(defender, ABILITY_FRISK_GENOCIDE) >= 3;
 }
 
 export function canUseFriskChildsCry(defender: UnitState): boolean {
@@ -235,22 +218,18 @@ export function canUseFriskChildsCry(defender: UnitState): boolean {
 export function wouldAttackHitFromContext(
   ctx: AttackRollContext,
   attacker: UnitState,
-  defender: UnitState
+  defender: UnitState,
 ): boolean {
   if (ctx.friskForceMiss) return false;
 
-  const attackerTotal =
-    sumDice(ctx.attackerDice ?? []) + sumDice(ctx.tieBreakAttacker ?? []);
-  const defenderTotal =
-    sumDice(ctx.defenderDice ?? []) + sumDice(ctx.tieBreakDefender ?? []);
+  const attackerTotal = sumDice(ctx.attackerDice ?? []) + sumDice(ctx.tieBreakAttacker ?? []);
+  const defenderTotal = sumDice(ctx.defenderDice ?? []) + sumDice(ctx.tieBreakDefender ?? []);
 
   let hit = attackerTotal > defenderTotal;
   const attackerDice = ctx.attackerDice ?? [];
   const defenderDice = ctx.defenderDice ?? [];
-  const attackerDouble =
-    attackerDice.length >= 2 && attackerDice[0] === attackerDice[1];
-  const defenderDouble =
-    defenderDice.length >= 2 && defenderDice[0] === defenderDice[1];
+  const attackerDouble = attackerDice.length >= 2 && attackerDice[0] === attackerDice[1];
+  const defenderDouble = defenderDice.length >= 2 && defenderDice[0] === defenderDice[1];
 
   if (
     (defender.class === "spearman" ||

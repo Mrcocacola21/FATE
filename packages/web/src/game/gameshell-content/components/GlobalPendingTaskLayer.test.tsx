@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { gameShellFixture, type GameShellFixture } from "../../testHelpers/gameShellFixture";
+import type { PendingRoll } from "rules";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import { isValidElement, type ReactElement } from "react";
@@ -13,7 +15,7 @@ import {
 } from "./GlobalPendingTaskLayer";
 import { CurrentTaskPanel } from "./CurrentTaskPanel";
 
-const initiativePending = {
+const initiativePending: PendingRoll = {
   id: "initiative-p1",
   kind: "initiativeRoll",
   player: "P1",
@@ -28,8 +30,8 @@ const initiativePending = {
   },
 };
 
-function makeVm(overrides: Record<string, unknown> = {}) {
-  return {
+function makeVm(overrides: GameShellFixture = {}) {
+  return gameShellFixture({
     pendingRoll: initiativePending,
     pendingMeta: initiativePending,
     playerId: "P1",
@@ -84,7 +86,7 @@ function makeVm(overrides: Record<string, unknown> = {}) {
     duelistAttackerHp: 0,
     sendAction: () => undefined,
     ...overrides,
-  };
+  });
 }
 
 test("global pending task layer renders the initial initiative action above layouts", () => {
@@ -137,7 +139,7 @@ test("initiative roll action preserves the resolvePendingRoll command payload", 
 
 test("pending roll card renders structured purpose, units, dice, and outcomes", () => {
   setLanguage("en", null);
-  const attackPending = {
+  const attackPending: PendingRoll = {
     id: "attack-1",
     kind: "attack_defenderRoll",
     player: "P1",
@@ -181,12 +183,12 @@ test("pending roll card renders structured purpose, units, dice, and outcomes", 
 });
 
 test("controlled attack context explicitly explains who the player controls", () => {
-  const controlledPending = {
+  const controlledPending: PendingRoll = {
     ...initiativePending,
     id: "controlled-roll",
     kind: "attack_attackerRoll",
     presentation: {
-      ...initiativePending.presentation,
+      ...initiativePending.presentation!,
       title: "Attack Roll",
       reason: "Duolingo attacks Zoro.",
       rollKind: "attack",
@@ -209,7 +211,7 @@ test("collapsed chip keeps roll and open actions accessible without a board over
   setLanguage("en", null);
   const markup = renderToStaticMarkup(
     <CollapsedPendingRollChip
-      pending={initiativePending as any}
+      pending={initiativePending}
       active
       onOpen={() => undefined}
       onRoll={() => undefined}
@@ -240,7 +242,7 @@ test("collapse preference stays with one roll id and clears on open or resolutio
 
 test("minimal legacy pending roll uses the safe fallback card", () => {
   setLanguage("en", null);
-  const minimalPending = {
+  const minimalPending: PendingRoll = {
     id: "old-roll",
     kind: "attack_attackerRoll",
     player: "P1",
@@ -258,7 +260,7 @@ test("minimal legacy pending roll uses the safe fallback card", () => {
 
 test("transformed Papyrus hit opens a large per-target bone popup", () => {
   setLanguage("en", null);
-  const pending = {
+  const pending: PendingRoll = {
     id: "papyrus-bone-1",
     kind: "papyrusBoneChoice",
     player: "P1",
@@ -300,7 +302,7 @@ test("transformed Papyrus hit opens a large per-target bone popup", () => {
 
 test("Madness of the Knight is a board direction task and never renders a roll action", () => {
   setLanguage("en", null);
-  const pending = {
+  const pending: PendingRoll = {
     id: "don-madness",
     kind: "donMadDelusionDirection",
     player: "P1",

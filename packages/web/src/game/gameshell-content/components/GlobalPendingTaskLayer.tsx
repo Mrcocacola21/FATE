@@ -1,3 +1,4 @@
+import type { GameShellViewModel } from "../hooks/useGameShellViewModel";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import type { GameAction, PendingRollContext, RollKind } from "rules";
@@ -38,9 +39,15 @@ function contextForPending(pending: {
   );
 }
 
-function PendingRollWaitingOverlay({ vm, onCollapse }: { vm: any; onCollapse: () => void }) {
+function PendingRollWaitingOverlay({
+  vm,
+  onCollapse,
+}: {
+  vm: GameShellViewModel;
+  onCollapse: () => void;
+}) {
   const { language, t } = useI18n();
-  const pending = vm.pendingMeta;
+  const pending = vm.pendingMeta!;
   const context = contextForPending(pending);
   const isLocalPending = vm.pendingForLocalPlayer;
   const isDonMadnessDirection = pending.kind === "donMadDelusionDirection";
@@ -121,11 +128,11 @@ function PendingRollWaitingOverlay({ vm, onCollapse }: { vm: any; onCollapse: ()
         {pending.kind === "initiativeRoll" && vm.view?.initiative ? (
           <div className="panel-card-muted mt-3 space-y-1 p-3 text-xs text-stone-600 dark:text-stone-200">
             {(["P1", "P2"] as const).map((player) =>
-              vm.view.initiative[player] !== null ? (
+              vm.view!.initiative[player] !== null ? (
                 <div key={player}>
                   {t("pending.rolled", {
                     player,
-                    value: vm.view.initiative[player],
+                    value: vm.view!.initiative[player],
                   })}
                 </div>
               ) : null,
@@ -197,7 +204,7 @@ export function CollapsedPendingRollChip({
   );
 }
 
-export function GlobalPendingTaskLayer({ vm }: { vm: any }) {
+export function GlobalPendingTaskLayer({ vm }: { vm: GameShellViewModel }) {
   const showAction = !!vm.pendingRoll && !!vm.playerId && !vm.boardSelectionPending;
   const showWaiting = !!vm.pendingMeta && !!vm.playerId && !vm.pendingRoll && !vm.isSpectator;
   const active = showAction || showWaiting;
@@ -236,7 +243,7 @@ export function GlobalPendingTaskLayer({ vm }: { vm: any }) {
     ? () =>
         vm.sendAction({
           type: "resolvePendingRoll",
-          pendingRollId: vm.pendingRoll.id,
+          pendingRollId: vm.pendingRoll!.id,
         } as GameAction)
     : undefined;
 

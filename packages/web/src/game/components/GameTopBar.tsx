@@ -1,3 +1,4 @@
+import type { GameShellViewModel } from "../gameshell-content/hooks/useGameShellViewModel";
 import type { FC } from "react";
 import { ThemeToggle } from "../../components/ThemeToggle";
 import { LanguageSwitcher } from "../../components/LanguageSwitcher";
@@ -9,7 +10,7 @@ import { ruleDeclarationKey } from "../gameshell-content/components/RuleDeclarat
 import { getActiveBoardFieldVisual, getBoardFieldLabelKey } from "../../assets/registry";
 
 interface GameTopBarProps {
-  vm: any;
+  vm: GameShellViewModel;
   compact?: boolean;
 }
 
@@ -22,10 +23,10 @@ export const GameTopBar: FC<GameTopBarProps> = ({ vm, compact = false }) => {
   const phaseLabel =
     vm.pendingMeta?.kind === "initiativeRoll"
       ? t("game.rollingInitiative")
-      : getPhaseLabel(vm.view.phase, t);
+      : getPhaseLabel(vm.view!.phase, t);
   const initiativePendingPlayer =
     vm.pendingMeta?.kind === "initiativeRoll" ? vm.pendingMeta.player : null;
-  const activeFieldId = getActiveBoardFieldVisual(vm.view);
+  const activeFieldId = getActiveBoardFieldVisual(vm.view!);
 
   return (
     <div
@@ -66,23 +67,23 @@ export const GameTopBar: FC<GameTopBarProps> = ({ vm, compact = false }) => {
             </StatusBadge>
           ) : null}
           <StatusBadge tone="neutral">
-            {t("game.roundTurn")}: {vm.view.roundNumber} / {vm.view.turnNumber}
+            {t("game.roundTurn")}: {vm.view!.roundNumber} / {vm.view!.turnNumber}
           </StatusBadge>
           <StatusBadge
             tone={
-              (initiativePendingPlayer ?? vm.view.currentPlayer) === vm.playerId
+              (initiativePendingPlayer ?? vm.view!.currentPlayer) === vm.playerId
                 ? "success"
                 : "neutral"
             }
           >
             {initiativePendingPlayer
               ? t("pending.pendingFor", { player: initiativePendingPlayer })
-              : vm.view.currentPlayer
-                ? t("game.playerTurn", { player: vm.view.currentPlayer })
+              : vm.view!.currentPlayer
+                ? t("game.playerTurn", { player: vm.view!.currentPlayer })
                 : t("common.waiting")}
           </StatusBadge>
           <div className={compact ? "hidden min-[390px]:inline-flex" : "inline-flex"}>
-            <StatusBadge tone="info">{vm.view.activeUnitId ?? "-"}</StatusBadge>
+            <StatusBadge tone="info">{vm.view!.activeUnitId ?? "-"}</StatusBadge>
           </div>
           <button
             type="button"

@@ -1,3 +1,4 @@
+import { gameShellFixture } from "../../testHelpers/gameShellFixture";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -45,15 +46,15 @@ function markupFor(role: PlayerId | "spectator") {
   const view = role === "spectator" ? makeSpectatorView(state) : makePlayerView(state, role);
   return renderToStaticMarkup(
     <BattleEndScreen
-      vm={{
+      vm={gameShellFixture({
         view,
         role,
         seat: role === "spectator" ? null : role,
         roomMeta: { playerNames: { P1: "Aster", P2: "Bram" } },
         leavingRoom: false,
         handleLeave: () => undefined,
-      }}
-    />
+      })}
+    />,
   );
 }
 

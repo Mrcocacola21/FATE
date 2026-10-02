@@ -29,6 +29,7 @@ import { advanceCarpetStrikeQueue } from "../resolveCarpetStrikeRoll";
 import { advanceForestAoEQueue } from "../resolveForestRoll";
 import { advanceElCidAoEQueue } from "../resolveElCidRoll";
 import { advanceFalseTrailExplosionQueue } from "../resolveChikatiloRoll";
+import type { FalseTrailExplosionContext } from "../resolveChikatiloRoll/shared";
 import { advanceJebeHailOfArrowsQueue } from "../resolveJebeRoll";
 import { parseCoordChoice } from "./helpers";
 import type { VladIntimidateContext } from "./types";
@@ -37,7 +38,7 @@ export function resolveVladIntimidateChoice(
   state: GameState,
   pending: PendingRoll,
   choice: ResolveRollChoice | undefined,
-  rng: RNG
+  rng: RNG,
 ): ApplyResult {
   const ctx = pending.context as VladIntimidateContext;
   const defenderId = ctx.defenderId;
@@ -81,12 +82,7 @@ export function resolveVladIntimidateChoice(
     updatedAttacker = updatedState.units[updatedAttacker.id] ?? updatedAttacker;
 
     if (updatedAttacker.isStealthed) {
-      const revealed = revealUnit(
-        updatedState,
-        updatedAttacker.id,
-        "forcedDisplacement",
-        rng
-      );
+      const revealed = revealUnit(updatedState, updatedAttacker.id, "forcedDisplacement", rng);
       updatedState = revealed.state;
       events.push(...revealed.events);
       updatedAttacker = updatedState.units[updatedAttacker.id] ?? updatedAttacker;
@@ -97,7 +93,7 @@ export function resolveVladIntimidateChoice(
         updatedState,
         updatedAttacker,
         updatedAttacker.position,
-        rng
+        rng,
       );
       if (stakeResult.triggered) {
         updatedState = stakeResult.state;
@@ -115,51 +111,48 @@ export function resolveVladIntimidateChoice(
       return advanceTricksterAoEQueue(
         updatedState,
         resume.context as unknown as TricksterAoEContext,
-        events
+        events,
       );
     case "doraAoE":
-      return advanceDoraAoEQueue(
-        updatedState,
-        resume.context as unknown as DoraAoEContext,
-        events
-      );
+      return advanceDoraAoEQueue(updatedState, resume.context as unknown as DoraAoEContext, events);
     case "carpetStrike":
       return advanceCarpetStrikeQueue(
         updatedState,
         resume.context as unknown as CarpetStrikeAoEContext,
-        events
+        events,
       );
     case "forestAoE":
       return advanceForestAoEQueue(
         updatedState,
         resume.context as unknown as ForestAoEContext,
-        events
+        events,
       );
     case "elCidTisonaAoE":
       return advanceElCidAoEQueue(
         updatedState,
         resume.context as unknown as ElCidAoEContext,
         events,
-        "elCidTisona_defenderRoll"
+        "elCidTisona_defenderRoll",
       );
     case "elCidKoladaAoE":
       return advanceElCidAoEQueue(
         updatedState,
         resume.context as unknown as ElCidAoEContext,
         events,
-        "elCidKolada_defenderRoll"
+        "elCidKolada_defenderRoll",
       );
     case "falseTrailExplosion":
       return advanceFalseTrailExplosionQueue(
         updatedState,
-        resume.context as any,
-        events
+        // The resume kind identifies the context saved by the explosion queue.
+        resume.context as FalseTrailExplosionContext,
+        events,
       );
     case "jebeHailOfArrowsAoE":
       return advanceJebeHailOfArrowsQueue(
         updatedState,
         resume.context as unknown as JebeHailOfArrowsAoEContext,
-        events
+        events,
       );
     case "jebeKhansShooter":
       return continueJebeKhansShooter(updatedState, events, resume.context);
@@ -168,12 +161,7 @@ export function resolveVladIntimidateChoice(
       if (!duelCtx.attackerId || !duelCtx.targetId) {
         return { state: updatedState, events };
       }
-      return requestElCidDuelistChoice(
-        updatedState,
-        events,
-        duelCtx.attackerId,
-        duelCtx.targetId
-      );
+      return requestElCidDuelistChoice(updatedState, events, duelCtx.attackerId, duelCtx.targetId);
     }
     default:
       return { state: updatedState, events };

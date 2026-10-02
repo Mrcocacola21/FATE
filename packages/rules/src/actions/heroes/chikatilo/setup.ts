@@ -95,7 +95,7 @@ export function setupChikatiloFalseTrailAtBattleStart(state: GameState): {
     P1: { ...(state.knowledge?.P1 ?? {}) },
     P2: { ...(state.knowledge?.P2 ?? {}) },
   };
-  let lastKnownPositions = {
+  const lastKnownPositions = {
     P1: { ...(state.lastKnownPositions?.P1 ?? {}) },
     P2: { ...(state.lastKnownPositions?.P2 ?? {}) },
   };

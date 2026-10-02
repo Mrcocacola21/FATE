@@ -1,3 +1,4 @@
+import type { GameShellViewModel } from "../hooks/useGameShellViewModel";
 import { useCallback, useEffect, useState, type FC } from "react";
 import { Board } from "../../../components/Board";
 import { PanelCard } from "../../../components/ui";
@@ -9,7 +10,7 @@ import { getOniGiriPreviewLines } from "../../targeting/oniGiriPreviewLines";
 import { getSelectableAttackTargetsAtCell } from "../helpers";
 
 interface GameShellBoardColumnProps {
-  vm: any;
+  vm: GameShellViewModel;
   mobile?: boolean;
 }
 
@@ -53,9 +54,13 @@ export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm, mobile
   const handleBoardCellClick = (col: number, row: number) => {
     const targets =
       vm.getUnitTargetsAtCell?.(col, row) ??
-      getSelectableAttackTargetsAtCell(vm.view, col, row, selectableUnitTargetIds);
+      getSelectableAttackTargetsAtCell(vm.view!, col, row, selectableUnitTargetIds);
     if (targets.length > 1) {
-      setAttackTargetPicker({ col, row, targetIds: targets.map((target: { id: string }) => target.id) });
+      setAttackTargetPicker({
+        col,
+        row,
+        targetIds: targets.map((target: { id: string }) => target.id),
+      });
       return;
     }
     setAttackTargetPicker(null);
@@ -94,7 +99,7 @@ export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm, mobile
 
   const previewLines = [
     ...(vm.actionMode === "zoroOniGiri" && vm.selectedUnitId
-      ? getOniGiriPreviewLines(vm.view, vm.selectedUnitId, vm.newHeroAbilityTargetId)
+      ? getOniGiriPreviewLines(vm.view!, vm.selectedUnitId, vm.newHeroAbilityTargetId)
       : []),
     ...(vm.boardPreviewCenter &&
     vm.selectedUnit?.position &&
@@ -170,7 +175,7 @@ export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm, mobile
 
       <div className="mobile-board-canvas min-h-0 flex-1 p-2 sm:p-3">
         <Board
-          view={vm.view}
+          view={vm.view!}
           playerId={vm.playerId}
           selectedUnitId={vm.selectedUnitId}
           highlightedCells={vm.highlightedCells}
@@ -227,7 +232,7 @@ export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm, mobile
           </div>
           <div className="flex flex-wrap justify-center gap-2">
             {attackTargetPicker.targetIds.map((targetId) => {
-              const target = vm.view.units[targetId];
+              const target = vm.view!.units[targetId];
               if (!target) return null;
               const fallback = getClassLabel(target.class, t);
               const name = getHeroDisplayName(

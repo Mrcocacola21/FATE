@@ -30,12 +30,7 @@ import {
 import { ClientMessageSchema } from "./schemas";
 import { isAllowedOrigin } from "./origin";
 import { isActionAllowedByPlayer } from "./permissions";
-import {
-  deleteGameRoom,
-  getGameRoom,
-  touchGameRoom,
-  type GameRoom,
-} from "./store";
+import { deleteGameRoom, getGameRoom, touchGameRoom, type GameRoom } from "./store";
 import type { MatchLifecycle } from "./persistence/matchLifecycle";
 import { logFate } from "./fateLogger";
 import { rejected, type CommandResult } from "./commandResult";
@@ -50,7 +45,7 @@ import {
   setRoomGameMode,
 } from "./modes/roomModes";
 
-let serverLogger: any = null;
+let serverLogger: FastifyInstance["log"] | null = null;
 import { createPongRoom, getPongRoom } from "./pong/rooms";
 import { logPong } from "./pong/logger";
 
@@ -88,7 +83,7 @@ type RoomMeta = {
   placementFirstPlayer: PlayerId | null;
 };
 
-type RoomStateMessage = {
+export type RoomStateMessage = {
   type: "roomState";
   roomId: string;
   you: {
@@ -149,7 +144,7 @@ type TestRoomSnapshotMessage = {
   snapshot: unknown;
 };
 
-type ServerMessage =
+export type ServerMessage =
   | RoomStateMessage
   | JoinAckMessage
   | JoinRejectedMessage
@@ -753,13 +748,13 @@ async function applyRoomAction(
 
   try {
     for (const ev of command.events) {
-      const summary: Record<string, any> = {
+      const summary: Record<string, unknown> & { tag: string } = {
         tag: "fate:event",
         roomId: room.id,
         eventType: ev.type,
       };
-      if ((ev as any).attackerId) summary.playerId = (ev as any).attackerId;
-      if ((ev as any).defenderId) summary.unitId = (ev as any).defenderId;
+      if (ev.attackerId) summary.playerId = ev.attackerId;
+      if (ev.defenderId) summary.unitId = ev.defenderId;
       logFate(serverLogger!, summary);
     }
   } catch (e) {
@@ -1123,13 +1118,20 @@ export function registerGameWebSocket(server: FastifyInstance, lifecycle: MatchL
               await lifecycle.cleanup({ activeRoomIds: getActiveFateRoomIds() });
               if (socket.readyState !== WebSocket.OPEN) return;
               try {
-                room = await lifecycle.createRoom({
-                  hostSeat,
-                  hostConnId: hostConnForState,
-                  roomMode: requestedRoomMode,
-                }, targetRoomId);
+                room = await lifecycle.createRoom(
+                  {
+                    hostSeat,
+                    hostConnId: hostConnForState,
+                    roomMode: requestedRoomMode,
+                  },
+                  targetRoomId,
+                );
               } catch {
-                sendStructuredError(socket, "MATCH_PERSISTENCE_UNAVAILABLE", "Unable to create persistent room");
+                sendStructuredError(
+                  socket,
+                  "MATCH_PERSISTENCE_UNAVAILABLE",
+                  "Unable to create persistent room",
+                );
                 return;
               }
               if (socket.readyState !== WebSocket.OPEN) {
@@ -1296,7 +1298,11 @@ export function registerGameWebSocket(server: FastifyInstance, lifecycle: MatchL
             applySeatMutationSnapshot(room, transition.nextRoom);
             socketMeta.set(socket, transition.nextMeta);
             if (transition.nextMeta.seat)
-              await lifecycle.syncParticipant(room, transition.nextMeta.seat, transition.nextMeta.name);
+              await lifecycle.syncParticipant(
+                room,
+                transition.nextMeta.seat,
+                transition.nextMeta.name,
+              );
 
             sendMessage(socket, {
               type: "joinAck",
@@ -1760,20 +1766,20 @@ export function registerGameWebSocket(server: FastifyInstance, lifecycle: MatchL
               return;
             }
 
-            const normalizedAction: GameAction =
+            const normalizedAction =
               msg.action.type === "resolvePendingRoll"
                 ? {
                     ...msg.action,
                     player:
                       room.roomMode === "test" && room.testControllerConnId === current.connId
-                        ? (room.state.pendingRoll?.player ??
-                          current.seat ??
-                          (msg.action as any).player)
-                        : (current.seat ?? (msg.action as any).player),
+                        ? (room.state.pendingRoll?.player ?? current.seat ?? msg.action.player)
+                        : (current.seat ?? msg.action.player),
                   }
                 : msg.action;
 
-            await applyRoomAction(lifecycle, socket, room, current, normalizedAction);
+            // applyRoomAction rejects unseated callers before forwarding to rules;
+            // seated callers have an authoritative player in the normalized action.
+            await applyRoomAction(lifecycle, socket, room, current, normalizedAction as GameAction);
           });
           return;
         }

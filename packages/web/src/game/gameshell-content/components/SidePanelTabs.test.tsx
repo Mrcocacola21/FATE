@@ -9,7 +9,7 @@ import {
   type GameState,
   type UnitState,
 } from "rules";
-import { setLanguage } from "../../../i18n";
+import { setLanguage, translate } from "../../../i18n";
 import { BottomSheet } from "../../../ui";
 import { PlayersRosterSection } from "./PlayersRosterSection";
 
@@ -112,7 +112,7 @@ test("mobile Players bottom sheet uses the same HP-safe roster projection", () =
   setLanguage("en", { setItem: () => undefined });
   const { state, enemy } = fixture();
   const markup = renderToStaticMarkup(
-    <BottomSheet open title="Players" onClose={() => undefined}>
+    <BottomSheet open title={translate("game.tabsPlayers")} onClose={() => undefined}>
       <PlayersRosterSection
         view={makePlayerView(state, "P1")}
         selectedUnitId={enemy.id}

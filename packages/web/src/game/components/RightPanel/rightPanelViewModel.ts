@@ -38,7 +38,6 @@ export function buildRightPanelViewModel(params: RightPanelProps, t: Translate) 
     onMoveRequest,
     onSendAction,
     pendingLokiLaughtOption,
-    onQueueLokiLaughtOption,
     onHoverActionMode,
     papyrusLineAxis,
     onSetPapyrusLineAxis,

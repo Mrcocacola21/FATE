@@ -21,7 +21,7 @@ import {
   toBattleState,
 } from "../helpers/testUtils";
 export function testGutsHpBonus() {
-  const { state, guts } = setupGutsState();
+  const { guts } = setupGutsState();
   const baseHp = getUnitDefinition("berserker").maxHp;
   const meta = getHeroMeta(HERO_GUTS_ID);
 
@@ -36,9 +36,10 @@ export function testGutsHpBonus() {
 
 
 export function testGutsKnightMulticlassMovementAndDoubleAutoHit() {
-  let { state, guts } = setupGutsState();
+  const { state: initialState68, guts } = setupGutsState();
+  let state = initialState68;
   const enemy = Object.values(state.units).find(
-    (unit) => unit.owner === "P2" && unit.class === "rider"
+    (unit) => unit.owner === "P2" && unit.class === "rider",
   )!;
 
   state = setUnit(state, guts.id, { position: { col: 4, row: 4 } });
@@ -48,12 +49,10 @@ export function testGutsKnightMulticlassMovementAndDoubleAutoHit() {
 
   const moveModes = applyAction(
     state,
-    { type: "requestMoveOptions", unitId: guts.id } as any,
-    makeRngSequence([])
+    { type: "requestMoveOptions", unitId: guts.id },
+    makeRngSequence([]),
   );
-  const modeEvent = moveModes.events.find(
-    (event) => event.type === "moveOptionsGenerated"
-  );
+  const modeEvent = moveModes.events.find((event) => event.type === "moveOptionsGenerated");
   assert(
     modeEvent &&
       modeEvent.type === "moveOptionsGenerated" &&
@@ -63,8 +62,8 @@ export function testGutsKnightMulticlassMovementAndDoubleAutoHit() {
 
   const knightOptions = applyAction(
     state,
-    { type: "requestMoveOptions", unitId: guts.id, mode: "knight" } as any,
-    makeRngSequence([])
+    { type: "requestMoveOptions", unitId: guts.id, mode: "knight" },
+    makeRngSequence([]),
   );
   const knightDestination = { col: 5, row: 4 };
   assert(
@@ -76,25 +75,25 @@ export function testGutsKnightMulticlassMovementAndDoubleAutoHit() {
   );
   const knightMove = applyAction(
     knightOptions.state,
-    { type: "move", unitId: guts.id, to: knightDestination } as any,
-    makeRngSequence([])
+    { type: "move", unitId: guts.id, to: knightDestination },
+    makeRngSequence([]),
   );
   assert(
     knightMove.state.units[guts.id].position?.col === knightDestination.col &&
       knightMove.state.units[guts.id].position?.row === knightDestination.row &&
       knightMove.state.units[guts.id].turn.moveUsed,
-    "Guts should resolve a selected Knight-mode move"
+    "Guts should resolve a selected Knight-mode move",
   );
 
   const rng = makeRngSequence([0.01, 0.01, 0.99, 0.99]); // attacker double, strong defender
   const initial = applyAction(
     state,
-    { type: "attack", attackerId: guts.id, defenderId: enemy.id } as any,
+    { type: "attack", attackerId: guts.id, defenderId: enemy.id },
     rng
   );
   assert(
     initial.state.pendingRoll?.kind === "attack_attackerRoll",
-    "Guts attack should request attacker roll"
+    "Guts attack should request attacker roll",
   );
 
   const resolved = resolveAllPendingRollsWithEvents(initial.state, rng);
@@ -119,9 +118,10 @@ export function testGutsKnightMulticlassMovementAndDoubleAutoHit() {
 
 export function testGutsArbaletRangedFixedDamage() {
   const rng = makeAttackWinRng(1);
-  let { state, guts } = setupGutsState();
+  const { state: initialState69, guts } = setupGutsState();
+let state = initialState69;
   const enemy = Object.values(state.units).find(
-    (unit) => unit.owner === "P2" && unit.class === "rider"
+    (unit) => unit.owner === "P2" && unit.class === "rider",
   )!;
 
   state = setUnit(state, guts.id, { position: { col: 0, row: 0 } });
@@ -135,13 +135,13 @@ export function testGutsArbaletRangedFixedDamage() {
       type: "useAbility",
       unitId: guts.id,
       abilityId: ABILITY_GUTS_ARBALET,
-    } as any,
+    },
     rng
   );
   assert(!opened.state.pendingRoll, "Arbalet without a target should not resolve");
   assert(
     !opened.state.units[guts.id].turn.actionUsed,
-    "Arbalet without target confirmation should not spend action"
+    "Arbalet without target confirmation should not spend action",
   );
 
   const beforeHp = state.units[enemy.id].hp;
@@ -152,12 +152,12 @@ export function testGutsArbaletRangedFixedDamage() {
       unitId: guts.id,
       abilityId: ABILITY_GUTS_ARBALET,
       payload: { targetId: enemy.id },
-    } as any,
+    },
     rng
   );
   assert(
     used.state.pendingRoll?.kind === "attack_attackerRoll",
-    "Arbalet should use ranged legal target flow and request attack roll"
+    "Arbalet should use ranged legal target flow and request attack roll",
   );
 
   const resolved = resolveAllPendingRollsWithEvents(used.state, rng);
@@ -182,9 +182,10 @@ export function testGutsArbaletRangedFixedDamage() {
 
 export function testGutsCannonGatingAndChargeSpend() {
   const rng = makeAttackWinRng(1);
-  let { state, guts } = setupGutsState();
+  const { state: initialState70, guts } = setupGutsState();
+let state = initialState70;
   const enemy = Object.values(state.units).find(
-    (unit) => unit.owner === "P2" && unit.class === "rider"
+    (unit) => unit.owner === "P2" && unit.class === "rider",
   )!;
 
   state = setUnit(state, guts.id, {
@@ -202,13 +203,13 @@ export function testGutsCannonGatingAndChargeSpend() {
       unitId: guts.id,
       abilityId: ABILITY_GUTS_CANNON,
       payload: { targetId: enemy.id },
-    } as any,
+    },
     rng
   );
   assert(!used.state.pendingRoll, "Cannon should be blocked below 2 charges");
   assert(
     used.state.units[guts.id].charges[ABILITY_GUTS_CANNON] === 1,
-    "Cannon should not spend charges when blocked"
+    "Cannon should not spend charges when blocked",
   );
 
   state = setUnit(state, guts.id, {
@@ -220,13 +221,13 @@ export function testGutsCannonGatingAndChargeSpend() {
       type: "useAbility",
       unitId: guts.id,
       abilityId: ABILITY_GUTS_CANNON,
-    } as any,
+    },
     rng
   );
   assert(!opened.state.pendingRoll, "Cannon without a target should not resolve");
   assert(
     opened.state.units[guts.id].charges[ABILITY_GUTS_CANNON] === 2,
-    "Cannon without target confirmation should not spend charges"
+    "Cannon without target confirmation should not spend charges",
   );
   assert(
     !opened.state.units[guts.id].turn.actionUsed,
@@ -239,7 +240,7 @@ export function testGutsCannonGatingAndChargeSpend() {
       unitId: guts.id,
       abilityId: ABILITY_GUTS_CANNON,
       payload: { targetId: enemy.id },
-    } as any,
+    },
     rng
   );
   assert(
@@ -248,7 +249,7 @@ export function testGutsCannonGatingAndChargeSpend() {
   );
   assert(
     used.state.units[guts.id].charges[ABILITY_GUTS_CANNON] === 0,
-    "Cannon should spend exactly 2 charges on target resolution"
+    "Cannon should spend exactly 2 charges on target resolution",
   );
   assert(
     used.state.units[guts.id].turn.actionUsed,
@@ -260,7 +261,8 @@ export function testGutsCannonGatingAndChargeSpend() {
 
 
 export function testGutsBerserkModeGatingAndActivation() {
-  let { state, guts } = setupGutsState();
+  const { state: initialState71, guts } = setupGutsState();
+let state = initialState71;
   state = setUnit(state, guts.id, {
     position: { col: 4, row: 4 },
     charges: { ...guts.charges, [ABILITY_GUTS_BERSERK_MODE]: 2 },
@@ -274,13 +276,13 @@ export function testGutsBerserkModeGatingAndActivation() {
       type: "useAbility",
       unitId: guts.id,
       abilityId: ABILITY_GUTS_BERSERK_MODE,
-    } as any,
-    makeRngSequence([])
+    },
+    makeRngSequence([]),
   );
   assert(!used.state.units[guts.id].gutsBerserkModeActive, "Berserk should be blocked below 3 charges");
   assert(
     used.state.units[guts.id].charges[ABILITY_GUTS_BERSERK_MODE] === 2,
-    "Berserk should not spend charges when blocked"
+    "Berserk should not spend charges when blocked",
   );
 
   state = setUnit(state, guts.id, {
@@ -292,7 +294,7 @@ export function testGutsBerserkModeGatingAndActivation() {
       type: "useAbility",
       unitId: guts.id,
       abilityId: ABILITY_GUTS_BERSERK_MODE,
-    } as any,
+    },
     makeRngSequence([])
   );
   assert(
@@ -301,12 +303,12 @@ export function testGutsBerserkModeGatingAndActivation() {
   );
   assert(
     used.state.units[guts.id].charges[ABILITY_GUTS_BERSERK_MODE] === 0,
-    "Berserk should spend all 3 charges on activation"
+    "Berserk should spend all 3 charges on activation",
   );
   assert(
     used.state.units[guts.id].turn.actionUsed === false &&
       used.state.units[guts.id].hasActedThisTurn === false,
-    "Berserk activation should not consume the action slot"
+    "Berserk activation should not consume the action slot",
   );
 
   console.log("guts_berserk_mode_gating_and_activation passed");
@@ -314,7 +316,8 @@ export function testGutsBerserkModeGatingAndActivation() {
 
 
 export function testGutsBerserkEndTurnSelfDamage() {
-  let { state, guts } = setupGutsState();
+  const { state: initialState72, guts } = setupGutsState();
+let state = initialState72;
   state = setUnit(state, guts.id, {
     position: { col: 4, row: 4 },
     hp: 6,
@@ -323,10 +326,10 @@ export function testGutsBerserkEndTurnSelfDamage() {
   state = toBattleState(state, "P1", guts.id);
   state = initKnowledgeForOwners(state);
 
-  const ended = applyAction(state, { type: "endTurn" } as any, makeRngSequence([]));
+  const ended = applyAction(state, { type: "endTurn" }, makeRngSequence([]));
   assert(
     ended.state.units[guts.id].hp === 5,
-    "Berserk should deal 1 direct self-damage at end of Guts turn"
+    "Berserk should deal 1 direct self-damage at end of Guts turn",
   );
 
   console.log("guts_berserk_end_turn_self_damage passed");
@@ -334,9 +337,10 @@ export function testGutsBerserkEndTurnSelfDamage() {
 
 
 export function testGutsBerserkMeleeBonusAndRangedNoBonus() {
-  let { state, guts } = setupGutsState();
+  const { state: initialState73, guts } = setupGutsState();
+  let state = initialState73;
   const enemy = Object.values(state.units).find(
-    (unit) => unit.owner === "P2" && unit.class === "rider"
+    (unit) => unit.owner === "P2" && unit.class === "rider",
   )!;
 
   state = setUnit(state, guts.id, {
@@ -358,12 +362,12 @@ export function testGutsBerserkMeleeBonusAndRangedNoBonus() {
     (event) =>
       event.type === "attackResolved" &&
       event.attackerId === guts.id &&
-      event.defenderId === enemy.id
+      event.defenderId === enemy.id,
   ) as Extract<GameEvent, { type: "attackResolved" }> | undefined;
   assert(meleeEvent, "melee attack should resolve");
   assert(
     meleeEvent.damage === state.units[guts.id].attack + 1,
-    "Berserk adjacent attacks should gain +1 damage"
+    "Berserk adjacent attacks should gain +1 damage",
   );
 
   const reachState = setUnit(state, enemy.id, { position: { col: 4, row: 6 } });
@@ -379,12 +383,12 @@ export function testGutsBerserkMeleeBonusAndRangedNoBonus() {
     (event) =>
       event.type === "attackResolved" &&
       event.attackerId === guts.id &&
-      event.defenderId === enemy.id
+      event.defenderId === enemy.id,
   ) as Extract<GameEvent, { type: "attackResolved" }> | undefined;
   assert(reachEvent, "Spearman-reach Berserk attack should resolve");
   assert(
     reachEvent.damage === state.units[guts.id].attack,
-    "Berserk reach attacks should not gain the adjacent +1 damage"
+    "Berserk reach attacks should not gain the adjacent +1 damage",
   );
 
   const ranged = resolveAttack(state, {
@@ -401,12 +405,12 @@ export function testGutsBerserkMeleeBonusAndRangedNoBonus() {
     (event) =>
       event.type === "attackResolved" &&
       event.attackerId === guts.id &&
-      event.defenderId === enemy.id
+      event.defenderId === enemy.id,
   ) as Extract<GameEvent, { type: "attackResolved" }> | undefined;
   assert(rangedEvent, "ranged attack should resolve");
   assert(
     rangedEvent.damage === state.units[guts.id].attack,
-    "Berserk bonus should not apply to ranged attacks"
+    "Berserk bonus should not apply to ranged attacks",
   );
 
   console.log("guts_berserk_melee_bonus_and_ranged_no_bonus passed");
@@ -425,7 +429,8 @@ export function testGutsBerserkMovementAndAoEAndIncomingCap() {
     0.01, // defender 3
   ]);
 
-  let { state, guts } = setupGutsState();
+  const { state: initialState74, guts } = setupGutsState();
+let state = initialState74;
   const ally = Object.values(state.units).find(
     (unit) => unit.owner === "P1" && unit.class === "spearman"
   )!;
@@ -433,7 +438,7 @@ export function testGutsBerserkMovementAndAoEAndIncomingCap() {
     (unit) => unit.owner === "P2" && unit.class === "rider"
   )!;
   const enemy2 = Object.values(state.units).find(
-    (unit) => unit.owner === "P2" && unit.class === "knight"
+    (unit) => unit.owner === "P2" && unit.class === "knight",
   )!;
 
   state = setUnit(state, guts.id, {
@@ -448,7 +453,7 @@ export function testGutsBerserkMovementAndAoEAndIncomingCap() {
 
   const moveModes = applyAction(
     state,
-    { type: "requestMoveOptions", unitId: guts.id } as any,
+    { type: "requestMoveOptions", unitId: guts.id },
     makeRngSequence([])
   );
   const modeEvent = moveModes.events.find(
@@ -463,8 +468,8 @@ export function testGutsBerserkMovementAndAoEAndIncomingCap() {
 
   const assassinMove = applyAction(
     state,
-    { type: "requestMoveOptions", unitId: guts.id, mode: "assassin" } as any,
-    makeRngSequence([])
+    { type: "requestMoveOptions", unitId: guts.id, mode: "assassin" },
+    makeRngSequence([]),
   );
   const assassinMoveEvent = assassinMove.events.find(
     (event) => event.type === "moveOptionsGenerated"
@@ -473,15 +478,15 @@ export function testGutsBerserkMovementAndAoEAndIncomingCap() {
     assassinMoveEvent &&
       assassinMoveEvent.type === "moveOptionsGenerated" &&
       assassinMoveEvent.legalTo.some(
-        (coord) => Math.max(Math.abs(coord.col - 4), Math.abs(coord.row - 4)) === 2
+        (coord) => Math.max(Math.abs(coord.col - 4), Math.abs(coord.row - 4)) === 2,
       ),
-    "Assassin mode should provide distance-2 movement options"
+    "Assassin mode should provide distance-2 movement options",
   );
 
   const attacked = applyAction(
     state,
-    { type: "attack", attackerId: guts.id, defenderId: enemy1.id } as any,
-    rng
+    { type: "attack", attackerId: guts.id, defenderId: enemy1.id },
+    rng,
   );
   assert(
     attacked.state.pendingRoll?.kind === "gutsBerserkAttackChoice",
@@ -500,8 +505,8 @@ export function testGutsBerserkMovementAndAoEAndIncomingCap() {
       pendingRollId: attacked.state.pendingRoll!.id,
       player: "P1",
       choice: "skip",
-    } as any,
-    makeRngSequence([])
+    },
+    makeRngSequence([]),
   );
   assert(!canceled.state.pendingRoll, "canceling Berserk attack choice should clear pending");
   assert(
@@ -512,12 +517,12 @@ export function testGutsBerserkMovementAndAoEAndIncomingCap() {
 
   const restarted = applyAction(
     state,
-    { type: "attack", attackerId: guts.id, defenderId: enemy1.id } as any,
+    { type: "attack", attackerId: guts.id, defenderId: enemy1.id },
     rng
   );
   assert(
     restarted.state.pendingRoll?.kind === "gutsBerserkAttackChoice",
-    "Berserk attack should prompt again after cancel"
+    "Berserk attack should prompt again after cancel",
   );
   const choseAoe = applyAction(
     restarted.state,
@@ -530,12 +535,12 @@ export function testGutsBerserkMovementAndAoEAndIncomingCap() {
         mode: "aoe",
         targetId: enemy1.id,
       },
-    } as any,
-    rng
+    },
+    rng,
   );
   assert(
     choseAoe.state.pendingRoll?.kind === "tricksterAoE_attackerRoll",
-    "choosing Berserk AoE should request the shared AoE attacker roll"
+    "choosing Berserk AoE should request the shared AoE attacker roll",
   );
   assert(
     choseAoe.state.units[guts.id].turn.actionUsed === true &&
@@ -601,7 +606,8 @@ export function testGutsBerserkMovementAndAoEAndIncomingCap() {
 
 
 export function testGutsBerserkAoEOffersAlliedBerserkerAutoDefense() {
-  let { state, guts } = setupGutsState();
+  const { state: initialState75, guts } = setupGutsState();
+let state = initialState75;
   const ally = Object.values(state.units).find(
     (unit) => unit.owner === "P1" && unit.class === "spearman",
   )!;
@@ -627,7 +633,7 @@ export function testGutsBerserkAoEOffersAlliedBerserkerAutoDefense() {
 
   const opened = applyAction(
     state,
-    { type: "attack", attackerId: guts.id, defenderId: enemy.id } as any,
+    { type: "attack", attackerId: guts.id, defenderId: enemy.id },
     makeRngSequence([]),
   );
   const choseAoe = applyAction(
@@ -641,7 +647,7 @@ export function testGutsBerserkAoEOffersAlliedBerserkerAutoDefense() {
         mode: "aoe",
         targetId: enemy.id,
       },
-    } as any,
+    },
     makeRngSequence([]),
   );
   const attackerRolled = applyAction(
@@ -650,7 +656,7 @@ export function testGutsBerserkAoEOffersAlliedBerserkerAutoDefense() {
       type: "resolvePendingRoll",
       pendingRollId: choseAoe.state.pendingRoll!.id,
       player: "P1",
-    } as any,
+    },
     makeRngSequence([0.99, 0.99]),
   );
 
@@ -670,7 +676,7 @@ export function testGutsBerserkAoEOffersAlliedBerserkerAutoDefense() {
       pendingRollId: attackerRolled.state.pendingRoll!.id,
       player: "P1",
       choice: "auto",
-    } as any,
+    },
     makeRngSequence([]),
   );
   const allyAttack = choseAuto.events.find(
@@ -701,7 +707,8 @@ export function testGutsBerserkAttackChoiceSingleTargetSpearmanRange() {
     0.01, // defender roll
   ]);
 
-  let { state, guts } = setupGutsState();
+  const { state: initialState76, guts } = setupGutsState();
+let state = initialState76;
   const ally = Object.values(state.units).find(
     (unit) => unit.owner === "P1" && unit.class === "spearman"
   )!;
@@ -722,8 +729,8 @@ export function testGutsBerserkAttackChoiceSingleTargetSpearmanRange() {
   const beforeEnemyHp = state.units[enemy.id].hp;
   const attacked = applyAction(
     state,
-    { type: "attack", attackerId: guts.id, defenderId: enemy.id } as any,
-    rng
+    { type: "attack", attackerId: guts.id, defenderId: enemy.id },
+    rng,
   );
   assert(
     attacked.state.pendingRoll?.kind === "gutsBerserkAttackChoice",
@@ -754,8 +761,8 @@ export function testGutsBerserkAttackChoiceSingleTargetSpearmanRange() {
         mode: "single",
         targetId: enemy.id,
       },
-    } as any,
-    rng
+    },
+    rng,
   );
   assert(
     choseSingle.state.pendingRoll?.kind === "attack_attackerRoll",
@@ -807,7 +814,8 @@ export function testGutsBerserkAttackChoiceSingleTargetAdjacentBonus() {
     0.01, // defender roll
   ]);
 
-  let { state, guts } = setupGutsState();
+  const { state: initialState77, guts } = setupGutsState();
+let state = initialState77;
   const enemy = Object.values(state.units).find(
     (unit) => unit.owner === "P2" && unit.class === "rider"
   )!;
@@ -822,7 +830,7 @@ export function testGutsBerserkAttackChoiceSingleTargetAdjacentBonus() {
 
   const attacked = applyAction(
     state,
-    { type: "attack", attackerId: guts.id, defenderId: enemy.id } as any,
+    { type: "attack", attackerId: guts.id, defenderId: enemy.id },
     rng
   );
   assert(
@@ -841,15 +849,15 @@ export function testGutsBerserkAttackChoiceSingleTargetAdjacentBonus() {
         mode: "single",
         targetId: enemy.id,
       },
-    } as any,
-    rng
+    },
+    rng,
   );
   const resolved = resolveAllPendingRollsWithEvents(choseSingle.state, rng);
   const attackEvent = [...choseSingle.events, ...resolved.events].find(
     (event) =>
       event.type === "attackResolved" &&
       event.attackerId === guts.id &&
-      event.defenderId === enemy.id
+      event.defenderId === enemy.id,
   ) as Extract<GameEvent, { type: "attackResolved" }> | undefined;
 
   assert(attackEvent, "adjacent single-target Berserk attack should resolve");
@@ -868,7 +876,8 @@ export function testGutsBerserkAttackChoiceSingleTargetAdjacentBonus() {
 
 
 export function testGutsExitBerserkOnceAndNoReentry() {
-  let { state, guts } = setupGutsState();
+  const { state: initialState78, guts } = setupGutsState();
+let state = initialState78;
   state = setUnit(state, guts.id, {
     position: { col: 4, row: 4 },
     gutsBerserkModeActive: true,
@@ -884,7 +893,7 @@ export function testGutsExitBerserkOnceAndNoReentry() {
       type: "useAbility",
       unitId: guts.id,
       abilityId: ABILITY_GUTS_EXIT_BERSERK,
-    } as any,
+    },
     makeRngSequence([])
   );
   assert(
@@ -898,7 +907,7 @@ export function testGutsExitBerserkOnceAndNoReentry() {
   assert(
     exited.state.units[guts.id].turn.actionUsed === false &&
       exited.state.units[guts.id].hasActedThisTurn === false,
-    "Exit Berserk should not consume the action slot"
+    "Exit Berserk should not consume the action slot",
   );
 
   let nextState = setUnit(exited.state, guts.id, {
@@ -916,8 +925,8 @@ export function testGutsExitBerserkOnceAndNoReentry() {
       type: "useAbility",
       unitId: guts.id,
       abilityId: ABILITY_GUTS_BERSERK_MODE,
-    } as any,
-    makeRngSequence([])
+    },
+    makeRngSequence([]),
   );
   assert(
     reenter.state.units[guts.id].gutsBerserkModeActive === false,

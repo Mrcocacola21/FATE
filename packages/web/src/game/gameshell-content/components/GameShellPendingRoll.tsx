@@ -1,3 +1,4 @@
+import type { GameShellViewModel } from "../hooks/useGameShellViewModel";
 import type { GameAction } from "rules";
 import { PendingRollModal } from "./PendingRollModal";
 
@@ -5,7 +6,7 @@ export function GameShellPendingRoll({
   vm,
   onCollapse = () => undefined,
 }: {
-  vm: any;
+  vm: GameShellViewModel;
   onCollapse?: () => void;
 }) {
   if (!vm.pendingRoll || !vm.playerId || vm.boardSelectionPending) return null;
@@ -14,7 +15,7 @@ export function GameShellPendingRoll({
     <PendingRollModal
       pendingRoll={vm.pendingRoll}
       playerId={vm.playerId}
-      view={vm.view}
+      view={vm.view!}
       lastActionResult={vm.lastActionResult}
       showAttackerRoll={vm.showAttackerRoll}
       attackerDice={vm.attackerDice}
@@ -61,13 +62,13 @@ export function GameShellPendingRoll({
         if (choice === undefined) {
           vm.sendAction({
             type: "resolvePendingRoll",
-            pendingRollId: vm.pendingRoll.id,
+            pendingRollId: vm.pendingRoll!.id,
           } as GameAction);
           return;
         }
         vm.sendAction({
           type: "resolvePendingRoll",
-          pendingRollId: vm.pendingRoll.id,
+          pendingRollId: vm.pendingRoll!.id,
           choice,
         } as GameAction);
       }}

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, Navigate, useSearchParams } from "react-router";
 import { useI18n } from "../i18n";
 import { useAuthStore } from "./authStore";

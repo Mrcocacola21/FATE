@@ -33,11 +33,12 @@ export function testSansBaseDamageIsOne() {
 }
 
 export function testSansLongLiverAndSpearmanFeature() {
-  let { state, sans, enemy } = setupSansState();
+  const { state: initialState143, sans, enemy } = setupSansState();
+  let state = initialState143;
 
   assert(
     sans.hp === getUnitDefinition("trickster").maxHp + 2,
-    "Sans should have +2 HP from Long-liver"
+    "Sans should have +2 HP from Long-liver",
   );
 
   state = setUnit(state, sans.id, { position: { col: 4, row: 4 } });
@@ -47,8 +48,8 @@ export function testSansLongLiverAndSpearmanFeature() {
 
   const attack = applyAction(
     state,
-    { type: "attack", attackerId: enemy.id, defenderId: sans.id } as any,
-    makeRngSequence([0.99, 0.5, 0.5, 0.5])
+    { type: "attack", attackerId: enemy.id, defenderId: sans.id },
+    makeRngSequence([0.99, 0.5, 0.5, 0.5]),
   );
   const resolved = resolveAllPendingRollsWithEvents(
     attack.state,
@@ -74,7 +75,8 @@ export function testSansLongLiverAndSpearmanFeature() {
 
 
 export function testSansGasterBlasterGatingLineAndSpend() {
-  let { state, sans, ally, enemy, enemy2 } = setupSansState();
+  const { state: initialState144, sans, ally, enemy, enemy2 } = setupSansState();
+  let state = initialState144;
   state = setUnit(state, sans.id, { position: { col: 4, row: 4 } });
   state = setUnit(state, ally.id, { position: { col: 4, row: 5 } });
   state = setUnit(state, enemy.id, { position: { col: 4, row: 6 } });
@@ -95,12 +97,12 @@ export function testSansGasterBlasterGatingLineAndSpend() {
       unitId: sans.id,
       abilityId: ABILITY_SANS_GASTER_BLASTER,
       payload: { target: { col: 4, row: 6 } },
-    } as any,
+    },
     new SeededRNG(1)
   );
   assert(
     failCost.events.length === 0 && !failCost.state.pendingRoll,
-    "Gaster Blaster should require 2 charges"
+    "Gaster Blaster should require 2 charges",
   );
 
   const readyState = setUnit(state, sans.id, {
@@ -116,12 +118,12 @@ export function testSansGasterBlasterGatingLineAndSpend() {
       unitId: sans.id,
       abilityId: ABILITY_SANS_GASTER_BLASTER,
       payload: { target: { col: 5, row: 6 } },
-    } as any,
+    },
     new SeededRNG(2)
   );
   assert(
     failLine.events.length === 0 && !failLine.state.pendingRoll,
-    "Gaster Blaster target must be on shooter line"
+    "Gaster Blaster target must be on shooter line",
   );
 
   const cast = applyAction(
@@ -131,12 +133,12 @@ export function testSansGasterBlasterGatingLineAndSpend() {
       unitId: sans.id,
       abilityId: ABILITY_SANS_GASTER_BLASTER,
       payload: { target: { col: 4, row: 6 } },
-    } as any,
+    },
     makeSharedAttackerWinRng(2)
   );
   assert(
     cast.state.units[sans.id].charges[ABILITY_SANS_GASTER_BLASTER] === 0,
-    "Gaster Blaster should spend 2 charges"
+    "Gaster Blaster should spend 2 charges",
   );
   assert(
     cast.state.pendingRoll?.kind === "tricksterAoE_attackerRoll",
@@ -169,7 +171,8 @@ export function testSansGasterBlasterGatingLineAndSpend() {
 
 
 export function testSansBadassJokeDebuffAndMovementLock() {
-  let { state, sans, enemy, enemy2 } = setupSansState();
+  const { state: initialState145, sans, enemy, enemy2 } = setupSansState();
+  let state = initialState145;
   state = setUnit(state, sans.id, { position: { col: 4, row: 4 } });
   state = setUnit(state, enemy.id, { position: { col: 5, row: 5 }, hp: 10 });
   state = setUnit(state, enemy2.id, { position: { col: 6, row: 6 }, hp: 10 });
@@ -184,12 +187,12 @@ export function testSansBadassJokeDebuffAndMovementLock() {
   });
   const failCost = applyAction(
     lowChargesState,
-    { type: "useAbility", unitId: sans.id, abilityId: ABILITY_SANS_BADASS_JOKE } as any,
-    makeRngSequence([0.5, 0.5])
+    { type: "useAbility", unitId: sans.id, abilityId: ABILITY_SANS_BADASS_JOKE },
+    makeRngSequence([0.5, 0.5]),
   );
   assert(
     failCost.events.length === 0 && !failCost.state.pendingRoll,
-    "Badass Joke should require 3 charges"
+    "Badass Joke should require 3 charges",
   );
 
   const castState = setUnit(state, sans.id, {
@@ -201,29 +204,29 @@ export function testSansBadassJokeDebuffAndMovementLock() {
   });
   const cast = applyAction(
     castState,
-    { type: "useAbility", unitId: sans.id, abilityId: ABILITY_SANS_BADASS_JOKE } as any,
-    makeRngSequence([0.5, 0.5, 0.01, 0.01, 0.99, 0.99])
+    { type: "useAbility", unitId: sans.id, abilityId: ABILITY_SANS_BADASS_JOKE },
+    makeRngSequence([0.5, 0.5, 0.01, 0.01, 0.99, 0.99]),
   );
   const resolved = resolveAllPendingRollsWithEvents(
     cast.state,
-    makeRngSequence([0.5, 0.5, 0.01, 0.01, 0.99, 0.99])
+    makeRngSequence([0.5, 0.5, 0.01, 0.01, 0.99, 0.99]),
   );
 
   assert(
     resolved.state.units[sans.id].charges[ABILITY_SANS_BADASS_JOKE] === 0,
-    "Badass Joke should spend 3 charges"
+    "Badass Joke should spend 3 charges",
   );
   assert(
     !!resolved.state.units[enemy.id].movementDisabledNextTurn &&
       !!resolved.state.units[enemy.id].sansMoveLockArmed,
-    "Badass Joke should lock movement for targets that fail defense"
+    "Badass Joke should lock movement for targets that fail defense",
   );
   assert(
     !resolved.state.units[enemy2.id].movementDisabledNextTurn,
-    "Badass Joke should not lock movement for targets that defend successfully"
+    "Badass Joke should not lock movement for targets that defend successfully",
   );
 
-  let nextTurnState: GameState = {
+  const nextTurnState: GameState = {
     ...resolved.state,
     currentPlayer: "P2",
     activeUnitId: null,
@@ -234,48 +237,48 @@ export function testSansBadassJokeDebuffAndMovementLock() {
   };
   const start = applyAction(
     nextTurnState,
-    { type: "unitStartTurn", unitId: enemy.id } as any,
-    new SeededRNG(3)
+    { type: "unitStartTurn", unitId: enemy.id },
+    new SeededRNG(3),
   );
   assert(
     start.state.units[enemy.id].turn.moveUsed === true &&
       !start.state.units[enemy.id].movementDisabledNextTurn,
-    "Movement lock should consume move action on the next turn only"
+    "Movement lock should consume move action on the next turn only",
   );
   assert(
     start.events.some((event) => event.type === "sansMoveDenied"),
-    "Movement lock should emit sansMoveDenied notice on turn start"
+    "Movement lock should emit sansMoveDenied notice on turn start",
   );
 
   const beforeMovePos = start.state.units[enemy.id].position;
   const blockedMove = applyAction(
     start.state,
-    { type: "move", unitId: enemy.id, to: { col: 5, row: 4 } } as any,
-    new SeededRNG(4)
+    { type: "move", unitId: enemy.id, to: { col: 5, row: 4 } },
+    new SeededRNG(4),
   );
   assert(
     blockedMove.events.length === 0 &&
       blockedMove.state.units[enemy.id].position?.col === beforeMovePos?.col &&
       blockedMove.state.units[enemy.id].position?.row === beforeMovePos?.row,
-    "Movement lock should block move action on that turn"
+    "Movement lock should block move action on that turn",
   );
 
   const attack = applyAction(
     blockedMove.state,
-    { type: "attack", attackerId: enemy.id, defenderId: sans.id } as any,
-    new SeededRNG(5)
+    { type: "attack", attackerId: enemy.id, defenderId: sans.id },
+    new SeededRNG(5),
   );
   assert(
     !!attack.state.pendingRoll,
-    "Movement lock should not block non-move actions (attack remains available)"
+    "Movement lock should not block non-move actions (attack remains available)",
   );
 
   console.log("sans_badass_joke_debuff_and_movement_lock passed");
 }
 
-
 export function testSansUnbelieverBoneFieldAndSleep() {
-  let { state, sans, papyrus, enemy, enemy2 } = setupSansState();
+  const { state: initialState146, sans, papyrus, enemy, enemy2 } = setupSansState();
+  let state = initialState146;
 
   state = setUnit(state, sans.id, { position: { col: 1, row: 1 } });
   state = toBattleState(state, "P1", sans.id);
@@ -287,23 +290,22 @@ export function testSansUnbelieverBoneFieldAndSleep() {
         [ABILITY_SANS_SLEEP]: 3,
       },
     }),
-    { type: "useAbility", unitId: sans.id, abilityId: ABILITY_SANS_SLEEP } as any,
-    new SeededRNG(6)
+    { type: "useAbility", unitId: sans.id, abilityId: ABILITY_SANS_SLEEP },
+    new SeededRNG(6),
   );
   assert(
     sleepBeforeUnlock.events.length === 0,
-    "Sleep should be unavailable before Unbeliever unlock"
+    "Sleep should be unavailable before Unbeliever unlock",
   );
 
   const boneBeforeUnlock = applyAction(
     state,
-    { type: "useAbility", unitId: sans.id, abilityId: ABILITY_SANS_BONE_FIELD } as any,
-    new SeededRNG(7)
+    { type: "useAbility", unitId: sans.id, abilityId: ABILITY_SANS_BONE_FIELD },
+    new SeededRNG(7),
   );
   assert(
-    boneBeforeUnlock.events.length === 0 &&
-      boneBeforeUnlock.state.arenaId !== "boneField",
-    "Bone Field should be unavailable before Unbeliever unlock"
+    boneBeforeUnlock.events.length === 0 && boneBeforeUnlock.state.arenaId !== "boneField",
+    "Bone Field should be unavailable before Unbeliever unlock",
   );
 
   state = setUnit(state, papyrus.id, {
@@ -317,22 +319,22 @@ export function testSansUnbelieverBoneFieldAndSleep() {
 
   const killAlly = applyAction(
     state,
-    { type: "attack", attackerId: enemy.id, defenderId: papyrus.id } as any,
-    makeRngSequence([0.99, 0.5, 0.01, 0.2])
+    { type: "attack", attackerId: enemy.id, defenderId: papyrus.id },
+    makeRngSequence([0.99, 0.5, 0.01, 0.2]),
   );
   const killAllyResolved = resolveAllPendingRollsWithEvents(
     killAlly.state,
-    makeRngSequence([0.99, 0.5, 0.01, 0.2])
+    makeRngSequence([0.99, 0.5, 0.01, 0.2]),
   );
   assert(
     killAllyResolved.state.units[sans.id].sansUnbelieverUnlocked === true,
-    "Ally death should unlock Unbeliever for Sans"
+    "Ally death should unlock Unbeliever for Sans",
   );
   assert(
     killAllyResolved.events.some(
-      (event) => event.type === "sansUnbelieverActivated" && event.sansId === sans.id
+      (event) => event.type === "sansUnbelieverActivated" && event.sansId === sans.id,
     ),
-    "Unbeliever activation should emit event once"
+    "Unbeliever activation should emit event once",
   );
 
   let secondKillState = setUnit(killAllyResolved.state, papyrus.id, {
@@ -346,18 +348,18 @@ export function testSansUnbelieverBoneFieldAndSleep() {
   secondKillState = toBattleState(secondKillState, "P2", enemy.id);
   const killSecond = applyAction(
     secondKillState,
-    { type: "attack", attackerId: enemy.id, defenderId: papyrus.id } as any,
-    makeRngSequence([0.99, 0.5, 0.01, 0.2])
+    { type: "attack", attackerId: enemy.id, defenderId: papyrus.id },
+    makeRngSequence([0.99, 0.5, 0.01, 0.2]),
   );
   const killSecondResolved = resolveAllPendingRollsWithEvents(
     killSecond.state,
-    makeRngSequence([0.99, 0.5, 0.01, 0.2])
+    makeRngSequence([0.99, 0.5, 0.01, 0.2]),
   );
   assert(
     !killSecondResolved.events.some(
-      (event) => event.type === "sansUnbelieverActivated" && event.sansId === sans.id
+      (event) => event.type === "sansUnbelieverActivated" && event.sansId === sans.id,
     ),
-    "Unbeliever should not trigger twice"
+    "Unbeliever should not trigger twice",
   );
 
   let boneReady = setUnit(killSecondResolved.state, sans.id, {
@@ -367,12 +369,12 @@ export function testSansUnbelieverBoneFieldAndSleep() {
   boneReady = toBattleState(boneReady, "P1", sans.id);
   const bone = applyAction(
     boneReady,
-    { type: "useAbility", unitId: sans.id, abilityId: ABILITY_SANS_BONE_FIELD } as any,
-    makeRngSequence([0.99])
+    { type: "useAbility", unitId: sans.id, abilityId: ABILITY_SANS_BONE_FIELD },
+    makeRngSequence([0.99]),
   );
   assert(
     bone.state.arenaId === "boneField" && bone.state.boneFieldTurnsLeft === 7,
-    "Bone Field should set arena and deterministic duration (1d6+1)"
+    "Bone Field should set arena and deterministic duration (1d6+1)",
   );
 
   const sansStart = applyAction(
@@ -385,12 +387,12 @@ export function testSansUnbelieverBoneFieldAndSleep() {
       turnOrder: [sans.id],
       turnOrderIndex: 0,
     },
-    { type: "unitStartTurn", unitId: sans.id } as any,
-    makeRngSequence([0.01])
+    { type: "unitStartTurn", unitId: sans.id },
+    makeRngSequence([0.01]),
   );
   assert(
     sansStart.state.units[sans.id].sansBoneFieldStatus === undefined,
-    "Bone Field should not apply hazards to Sans"
+    "Bone Field should not apply hazards to Sans",
   );
 
   const boneWithPapyrusAlive = setUnit(bone.state, papyrus.id, {
@@ -408,12 +410,12 @@ export function testSansUnbelieverBoneFieldAndSleep() {
       turnOrder: [papyrus.id],
       turnOrderIndex: 0,
     },
-    { type: "unitStartTurn", unitId: papyrus.id } as any,
-    makeRngSequence([0.01])
+    { type: "unitStartTurn", unitId: papyrus.id },
+    makeRngSequence([0.01]),
   );
   assert(
     papyrusStart.state.units[papyrus.id].sansBoneFieldStatus === undefined,
-    "Bone Field should not apply hazards to Papyrus"
+    "Bone Field should not apply hazards to Papyrus",
   );
 
   const enemyStart = applyAction(
@@ -426,12 +428,12 @@ export function testSansUnbelieverBoneFieldAndSleep() {
       turnOrder: [enemy.id],
       turnOrderIndex: 0,
     },
-    { type: "unitStartTurn", unitId: enemy.id } as any,
-    makeRngSequence([0.01])
+    { type: "unitStartTurn", unitId: enemy.id },
+    makeRngSequence([0.01]),
   );
   assert(
     enemyStart.state.units[enemy.id].sansBoneFieldStatus?.kind === "blue",
-    "Bone Field should apply Blue/Orange hazard to non-Sans/non-Papyrus units"
+    "Bone Field should apply Blue/Orange hazard to non-Sans/non-Papyrus units",
   );
 
   const enemyMoves = getLegalMovesForUnit(enemyStart.state, enemy.id);
@@ -439,16 +441,15 @@ export function testSansUnbelieverBoneFieldAndSleep() {
   const beforeBlueHp = enemyStart.state.units[enemy.id].hp;
   const moved = applyAction(
     enemyStart.state,
-    { type: "move", unitId: enemy.id, to: enemyMoves[0] } as any,
-    new SeededRNG(8)
+    { type: "move", unitId: enemy.id, to: enemyMoves[0] },
+    new SeededRNG(8),
   );
   assert(
     moved.state.units[enemy.id].hp === beforeBlueHp - 1 &&
       moved.events.some(
-        (event) =>
-          event.type === "sansBoneFieldPunished" && event.reason === "moveSpent"
+        (event) => event.type === "sansBoneFieldPunished" && event.reason === "moveSpent",
       ),
-    "Blue hazard should deal 1 damage when movement action is spent"
+    "Blue hazard should deal 1 damage when movement action is spent",
   );
 
   const orangeBase = setUnit(bone.state, enemy2.id, {
@@ -465,22 +466,21 @@ export function testSansUnbelieverBoneFieldAndSleep() {
       turnOrder: [enemy2.id],
       turnOrderIndex: 0,
     },
-    { type: "unitStartTurn", unitId: enemy2.id } as any,
-    makeRngSequence([0.99])
+    { type: "unitStartTurn", unitId: enemy2.id },
+    makeRngSequence([0.99]),
   );
   assert(
     orangeStart.state.units[enemy2.id].sansBoneFieldStatus?.kind === "orange",
-    "Bone Field should also roll Orange hazard deterministically"
+    "Bone Field should also roll Orange hazard deterministically",
   );
   const beforeOrangeHp = orangeStart.state.units[enemy2.id].hp;
-  const ended = applyAction(orangeStart.state, { type: "endTurn" } as any, new SeededRNG(9));
+  const ended = applyAction(orangeStart.state, { type: "endTurn" }, new SeededRNG(9));
   assert(
     ended.state.units[enemy2.id].hp === beforeOrangeHp - 1 &&
       ended.events.some(
-        (event) =>
-          event.type === "sansBoneFieldPunished" && event.reason === "nonMoveFirst"
+        (event) => event.type === "sansBoneFieldPunished" && event.reason === "nonMoveFirst",
       ),
-    "End Turn should trigger the Orange hazard as the first non-movement action"
+    "End Turn should trigger the Orange hazard as the first non-movement action",
   );
 
   let sleepReady = setUnit(killSecondResolved.state, sans.id, {
@@ -494,13 +494,13 @@ export function testSansUnbelieverBoneFieldAndSleep() {
   sleepReady = toBattleState(sleepReady, "P1", sans.id);
   const sleep = applyAction(
     sleepReady,
-    { type: "useAbility", unitId: sans.id, abilityId: ABILITY_SANS_SLEEP } as any,
-    new SeededRNG(10)
+    { type: "useAbility", unitId: sans.id, abilityId: ABILITY_SANS_SLEEP },
+    new SeededRNG(10),
   );
   assert(
     sleep.state.units[sans.id].hp === 6 &&
       sleep.state.units[sans.id].charges[ABILITY_SANS_SLEEP] === 0,
-    "Sleep should heal 2 with clamp and spend 3 charges"
+    "Sleep should heal 2 with clamp and spend 3 charges",
   );
 
   console.log("sans_unbeliever_bone_field_and_sleep passed");
@@ -508,12 +508,13 @@ export function testSansUnbelieverBoneFieldAndSleep() {
 
 
 export function testSansLastAttackCurse() {
-  let { state, sans, enemy, enemy2 } = setupSansState();
-  state = setUnit(state, sans.id, {
-    position: { col: 4, row: 4 },
-    hp: 1,
-    sansUnbelieverUnlocked: true,
-  });
+  const { state: initialState147, sans, enemy, enemy2 } = setupSansState();
+let state = initialState147;
+state = setUnit(state, sans.id, {
+  position: { col: 4, row: 4 },
+  hp: 1,
+  sansUnbelieverUnlocked: true,
+});
   state = setUnit(state, enemy.id, { position: { col: 4, row: 5 }, hp: 4 });
   state = setUnit(state, enemy2.id, { position: { col: 6, row: 6 }, hp: 2 });
   state = toBattleState(state, "P2", enemy.id);
@@ -521,13 +522,10 @@ export function testSansLastAttackCurse() {
 
   const attack = applyAction(
     state,
-    { type: "attack", attackerId: enemy.id, defenderId: sans.id } as any,
-    makeAttackWinRng(1)
+    { type: "attack", attackerId: enemy.id, defenderId: sans.id },
+    makeAttackWinRng(1),
   );
-  const resolved = resolveAllPendingRollsWithEvents(
-    attack.state,
-    makeAttackWinRng(1)
-  );
+  const resolved = resolveAllPendingRollsWithEvents(attack.state, makeAttackWinRng(1));
   assert(
     resolved.events.some(
       (event) =>
@@ -539,7 +537,7 @@ export function testSansLastAttackCurse() {
   );
   assert(
     resolved.state.units[enemy2.id].sansLastAttackCurseSourceId === sans.id,
-    "Curse should be stored on chosen target"
+    "Curse should be stored on chosen target",
   );
 
   const tickState: GameState = {
@@ -553,8 +551,8 @@ export function testSansLastAttackCurse() {
   };
   const tick = applyAction(
     tickState,
-    { type: "unitStartTurn", unitId: enemy2.id } as any,
-    new SeededRNG(11)
+    { type: "unitStartTurn", unitId: enemy2.id },
+    new SeededRNG(11),
   );
   assert(
     tick.state.units[enemy2.id].hp === 1 &&

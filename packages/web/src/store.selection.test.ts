@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { createElement } from "react";
+import { act, create, type ReactTestRenderer } from "react-test-renderer";
 import {
   buildTargetingModeForActionMode,
   shouldClearActionModeAfterConfirmedResult,
@@ -9,6 +11,7 @@ import {
 } from "./game/selectionState";
 import { isActionableAbility } from "./game/components/RightPanel/rightPanelHelpers";
 import { useGameShellBoardUi } from "./game/gameshell-content/hooks/useGameShellBoardUi";
+import { gameShellFixture } from "./game/testHelpers/gameShellFixture";
 
 test("switching from Move to Tisona clears stale move selection", () => {
   const next = transitionActionMode(
@@ -20,7 +23,7 @@ test("switching from Move to Tisona clears stale move selection", () => {
         mode: "normal",
       },
     },
-    "tisona"
+    "tisona",
   );
 
   assert.equal(next.actionMode, "tisona");
@@ -37,7 +40,7 @@ test("leaving Move mode without using movement does not spend movement locally",
         mode: "normal",
       },
     },
-    null
+    null,
   );
 
   assert.deepStrictEqual(next, {
@@ -54,6 +57,7 @@ test("entering an ability action mode creates local targeting mode without spend
     abilityId: "gutsCannon",
     step: "gutsCannon",
     resourcePreview: { action: true },
+    useSource: undefined,
   });
 });
 
@@ -70,7 +74,7 @@ test("canceling action mode clears local targeting mode", () => {
       },
       moveOptions: null,
     },
-    null
+    null,
   );
 
   assert.deepStrictEqual(next, {
@@ -90,7 +94,7 @@ test("Impulse abilities are display-only and not optional action buttons", () =>
       slot: "none",
       isAvailable: true,
     }),
-    false
+    false,
   );
 });
 
@@ -105,22 +109,40 @@ test("Automatic transformation abilities are not manual action buttons", () => {
         slot: "action",
         isAvailable: true,
       }),
-      false
+      false,
     );
   }
 });
 
 test("basic attack targeting routes board unit clicks to the target handler", () => {
-  const boardUi = useGameShellBoardUi({
-    joined: true,
-    isSpectator: false,
-    view: { phase: "battle" },
-    actionMode: "attack",
-    boardSelectionPending: false,
-    selectedUnit: { heroId: "frisk" },
+  let boardUi: ReturnType<typeof useGameShellBoardUi> | undefined;
+  function BoardUiProbe() {
+    // This hook test exercises selection flags; cell callbacks are never invoked.
+    const fields = gameShellFixture({
+      joined: true,
+      isSpectator: false,
+      view: { phase: "battle" },
+      actionMode: "attack",
+      boardSelectionPending: false,
+      selectedUnit: { heroId: "frisk" },
+      papyrusLongBoneAttackTargetIds: [],
+      legalAttackTargets: [],
+      setArtemidaPreviewTarget: () => undefined,
+    });
+    boardUi = useGameShellBoardUi({
+      ...fields,
+      setNewHeroAbilityTargetId: () => undefined,
+      setNewHeroAbilityPreviewCell: () => undefined,
+    });
+    return null;
+  }
+  let renderer!: ReactTestRenderer;
+  act(() => {
+    renderer = create(createElement(BoardUiProbe));
   });
-
+  assert(boardUi, "the mounted probe should produce board selection state");
   assert.equal(boardUi.allowUnitPick, false);
+  act(() => renderer.unmount());
 });
 
 test("stale action results do not clear newly entered targeting mode", () => {
@@ -131,7 +153,7 @@ test("stale action results do not clear newly entered targeting mode", () => {
       lastActionResultAt: 100,
       actionModeStartedAt: 200,
     }),
-    false
+    false,
   );
 
   assert.equal(
@@ -141,7 +163,7 @@ test("stale action results do not clear newly entered targeting mode", () => {
       lastActionResultAt: 300,
       actionModeStartedAt: 200,
     }),
-    true
+    true,
   );
 
   assert.equal(
@@ -151,7 +173,7 @@ test("stale action results do not clear newly entered targeting mode", () => {
       lastActionResultAt: 300,
       actionModeStartedAt: 200,
     }),
-    true
+    true,
   );
 });
 
@@ -169,7 +191,7 @@ test("authoritative pendingMove snapshots preserve local destination selection",
         pendingAoEPreview: null,
       },
     }),
-    false
+    false,
   );
   assert.equal(
     shouldResetLocalBoardUiForSnapshot({
@@ -181,7 +203,7 @@ test("authoritative pendingMove snapshots preserve local destination selection",
         pendingAoEPreview: null,
       },
     }),
-    true
+    true,
   );
 });
 
@@ -199,7 +221,7 @@ test("movement options returned after a roll restore local move intent", () => {
       roll: 4,
       legalTo: [{ col: 4, row: 5 }],
       mode: "normal",
-    }
+    },
   );
 
   assert.equal(next.actionMode, "move");
@@ -208,6 +230,7 @@ test("movement options returned after a roll restore local move intent", () => {
     abilityId: "move",
     step: "move",
     resourcePreview: { move: true },
+    useSource: undefined,
   });
 });
 
@@ -224,7 +247,7 @@ test("movement mode choices do not masquerade as destination options", () => {
       unitId,
       legalTo: [],
       modes: ["normal", "knight"],
-    }
+    },
   );
 
   assert.deepStrictEqual(next, {

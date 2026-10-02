@@ -15,7 +15,7 @@ export function revealUnit(
     return { state, events: [] };
   }
 
-  let events: GameEvent[] = [];
+  const events: GameEvent[] = [];
   const nextState: GameState = {
     ...state,
     units: { ...state.units },

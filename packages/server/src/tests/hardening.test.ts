@@ -372,7 +372,7 @@ async function testGraceExpiryVacatesSeatAndInvalidatesToken() {
     const { room, connId, resumeToken } = makeSeatedRoom({
       roomIdPrefix: "hardening-grace-expiry",
     });
-    const meta = {
+    const meta: Parameters<typeof wsTestHooks.scheduleSeatGrace>[1] = {
       channel: "fate",
       roomId: room.id,
       role: "P1",
@@ -381,7 +381,7 @@ async function testGraceExpiryVacatesSeatAndInvalidatesToken() {
       resumeToken,
     };
 
-    wsTestHooks.scheduleSeatGrace(room, meta as any);
+    wsTestHooks.scheduleSeatGrace(room, meta);
     assert.equal(wsTestHooks.hasSeatGraceToken(resumeToken), true);
     assert.equal(
       wsTestHooks.canAssignSeat(
@@ -433,16 +433,16 @@ async function testReconnectWithinGraceKeepsSeatAndClearsTimer() {
       roomIdPrefix: "hardening-grace-reconnect",
     });
     const reconnectConnId = `reconnected-${randomUUID()}`;
-    const meta = {
+    const meta: Parameters<typeof wsTestHooks.scheduleSeatGrace>[1] = {
       channel: "fate",
       roomId: room.id,
       role: "P1",
       seat: "P1",
-      connId: room.seats.P1,
+      connId: room.seats.P1!,
       resumeToken,
     };
 
-    wsTestHooks.scheduleSeatGrace(room, meta as any);
+    wsTestHooks.scheduleSeatGrace(room, meta);
     assert.equal(wsTestHooks.hasSeatGraceToken(resumeToken), true);
 
     wsTestHooks.clearSeatGraceByToken(resumeToken);
@@ -476,7 +476,7 @@ async function testConcurrentSwitchRoleSerialization() {
   const { room, connId, resumeToken } = makeSeatedRoom({
     roomIdPrefix: "hardening-switch-queue",
   });
-  let meta = {
+  let meta: Parameters<typeof wsTestHooks.scheduleSeatGrace>[1] = {
     channel: "fate",
     roomId: room.id,
     role: "P1",
@@ -497,11 +497,11 @@ async function testConcurrentSwitchRoleSerialization() {
 
   const firstSwitch = enqueueRoomCommand(fateRoomKey(room.id), async () => {
     order.push("first:start");
-    const transition = wsTestHooks.buildSwitchRoleTransition(room, meta as any, "spectator");
+    const transition = wsTestHooks.buildSwitchRoleTransition(room, meta, "spectator");
     assert.equal(transition.ok, true, "first switch should be accepted");
     if (!transition.ok) return;
     wsTestHooks.applySeatMutationSnapshot(room, transition.nextRoom);
-    meta = transition.nextMeta as any;
+    meta = transition.nextMeta;
     order.push("first:applied");
     markFirstApplied();
     await firstGate;
@@ -510,11 +510,11 @@ async function testConcurrentSwitchRoleSerialization() {
 
   const secondSwitch = enqueueRoomCommand(fateRoomKey(room.id), () => {
     order.push("second:start");
-    const transition = wsTestHooks.buildSwitchRoleTransition(room, meta as any, "P2");
+    const transition = wsTestHooks.buildSwitchRoleTransition(room, meta, "P2");
     assert.equal(transition.ok, true, "second switch should be accepted");
     if (!transition.ok) return;
     wsTestHooks.applySeatMutationSnapshot(room, transition.nextRoom);
-    meta = transition.nextMeta as any;
+    meta = transition.nextMeta;
     order.push("second:end");
   });
 
@@ -536,7 +536,7 @@ async function testConcurrentSwitchRoleSerialization() {
   const occupiedByConn = (["P1", "P2"] as const).filter((seat) => room.seats[seat] === connId);
   assert.equal(occupiedByConn.length, 1, "socket must never end up in two seats");
 
-  const sameRole = wsTestHooks.buildSwitchRoleTransition(room, meta as any, "P2");
+  const sameRole = wsTestHooks.buildSwitchRoleTransition(room, meta, "P2");
   assert.equal(sameRole.ok, false, "same-role switch should be rejected");
   if (!sameRole.ok) {
     assert.equal(sameRole.code, "ALREADY_IN_ROLE");
@@ -719,7 +719,8 @@ function testRateLimitWindowResets() {
   wsTestHooks.resetWsStateForTests();
   mock.timers.enable({ apis: ["Date"] });
   try {
-    const socket = {} as any;
+    // Rate limiting only uses socket identity; no transport methods are exercised.
+    const socket = {} as Parameters<typeof wsTestHooks.consumeSocketRateBudget>[0];
     const maxMessages = Number(process.env.WS_RATE_LIMIT_MAX_MESSAGES ?? 60);
     const windowMs = Number(process.env.WS_RATE_LIMIT_WINDOW_MS ?? 1000);
 
@@ -864,7 +865,7 @@ function testGroznyTyrantCommandsRemainSingleTargetAndAuthoritative() {
         type: "groznyTyrantAlly",
         targetId: invalidSetup.enemy.id,
       },
-    } as any,
+    },
     "P1",
   );
   assert.equal(invalid.ok, false, "server should reject an enemy Tyrant target");
@@ -885,7 +886,7 @@ function testGroznyTyrantCommandsRemainSingleTargetAndAuthoritative() {
         type: "groznyTyrantAlly",
         targetId: validSetup.ally.id,
       },
-    } as any,
+    },
     "P1",
   );
   assert.equal(valid.ok, true, "server should accept one valid allied Tyrant target");
@@ -905,7 +906,7 @@ function testGroznyTyrantCommandsRemainSingleTargetAndAuthoritative() {
         type: "groznyTyrantAlly",
         targetId: validSetup.ally.id,
       },
-    } as any,
+    },
     "P1",
   );
   assert.equal(
@@ -1965,7 +1966,7 @@ function testPendingBoardChoiceUsesAuthenticatedSeat() {
       type: "resolvePendingRoll",
       pendingRollId: "pending-board-choice",
       choice: "skip",
-    } as any,
+    },
     "P1",
   );
 
@@ -2051,14 +2052,14 @@ function testMongolChargePendingChoiceIsAuthoritative() {
         type: "mongolChargeAllyAttackTarget",
         targetId: controller.id,
       },
-    } as any,
+    },
     "P1",
   );
   assert.equal(rejected.ok, false);
   assert.equal(room.state, beforeInvalid, "illegal Mongol Charge target must not mutate state");
   assert.equal(room.revision, revisionBeforeInvalid, "illegal target must not advance revision");
 
-  const accepted = applyGameAction(room, payload.data as any, "P1");
+  const accepted = applyGameAction(room, payload.data, "P1");
   assert.equal(accepted.ok, true);
   assert.equal(room.revision, revisionBeforeInvalid + 1);
   assert.equal(room.state.pendingRoll?.kind, "attack_attackerRoll");
@@ -2148,7 +2149,7 @@ function testHassanAssassinOrderCommandAndProjectionAreAuthoritative() {
         type: "hassanAssassinOrderPick",
         unitIds: [allies[0].id, enemy.id],
       },
-    } as any,
+    },
     "P1",
   );
   assert.equal(rejectedChoice.ok, false, "the server should reject an ineligible target");
@@ -2159,7 +2160,7 @@ function testHassanAssassinOrderCommandAndProjectionAreAuthoritative() {
   );
   assert.equal(room.revision, revisionBeforeInvalid, "rejection must not advance revision");
 
-  const acceptedChoice = applyGameAction(room, validPayload.data as any, "P1");
+  const acceptedChoice = applyGameAction(room, validPayload.data, "P1");
   assert(acceptedChoice.ok, "the server should accept a valid Assassin Order choice");
   assert.equal(room.state.pendingRoll, null, "the valid choice should clear the pending task");
   assert.equal(getStealthSuccessMinRoll(room.state.units[allies[0].id]), 5);
@@ -2214,7 +2215,7 @@ function testMissedHiddenAttackRevealIsAuthoritative() {
 
   const declared = applyGameAction(
     room,
-    { type: "attack", attackerId: hassan.id, defenderId: duolingo.id } as any,
+    { type: "attack", attackerId: hassan.id, defenderId: duolingo.id },
     "P1",
   );
   assert(declared.ok, "server should accept the legal hidden attack");
@@ -2223,7 +2224,7 @@ function testMissedHiddenAttackRevealIsAuthoritative() {
   const attackerRollId = room.state.pendingRoll!.id;
   const attackerRolled = applyGameAction(
     room,
-    { type: "resolvePendingRoll", pendingRollId: attackerRollId } as any,
+    { type: "resolvePendingRoll", pendingRollId: attackerRollId },
     "P1",
   );
   assert(attackerRolled.ok, "server should accept the attacker roll");
@@ -2232,7 +2233,7 @@ function testMissedHiddenAttackRevealIsAuthoritative() {
   const defenderRollId = room.state.pendingRoll!.id;
   const defenderRolled = applyGameAction(
     room,
-    { type: "resolvePendingRoll", pendingRollId: defenderRollId } as any,
+    { type: "resolvePendingRoll", pendingRollId: defenderRollId },
     "P2",
   );
   assert(defenderRolled.ok, "server should accept the defender roll");
@@ -2297,7 +2298,7 @@ function testStealthDurationExpiryIsAuthoritative() {
     turnQueueIndex: 0,
   };
 
-  const result = applyGameAction(room, { type: "unitStartTurn", unitId: hidden.id } as any, "P1");
+  const result = applyGameAction(room, { type: "unitStartTurn", unitId: hidden.id }, "P1");
   assert.equal(result.ok, true, "server should accept the fourth own turn start");
   if (!result.ok) {
     throw new Error("server rejected the fourth own turn start");

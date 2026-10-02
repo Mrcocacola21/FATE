@@ -5,29 +5,18 @@ import { clearPendingRoll, requestRoll } from "../../../core";
 import { getPolkovodetsSource, maybeRequestIntimidate } from "../../../actions/heroes/vlad";
 import { addKaladinMoveLock } from "../../../actions/heroes/kaladin";
 import { addLokiChicken, addLokiMoveLock } from "../../../actions/heroes/loki";
-import {
-  ABILITY_BERSERK_AUTO_DEFENSE,
-  ABILITY_LOKI_LAUGHT,
-} from "../../../abilities";
-import {
-  HERO_DUOLINGO_ID,
-  HERO_FEMTO_ID,
-  HERO_PAPYRUS_ID,
-} from "../../../heroes";
+import { ABILITY_BERSERK_AUTO_DEFENSE, ABILITY_LOKI_LAUGHT } from "../../../abilities";
+import { HERO_DUOLINGO_ID, HERO_FEMTO_ID, HERO_PAPYRUS_ID } from "../../../heroes";
 import { hasMettatonBerserkerFeature } from "../../../mettaton";
 import type { IntimidateResume } from "../../../actions/types";
-import {
-  evAoeResolved,
-  evBerserkerDefenseChosen,
-  evDamageBonusApplied,
-} from "../../../core";
+import { evAoeResolved, evBerserkerDefenseChosen, evDamageBonusApplied } from "../../../core";
 import type { TricksterAoEContext } from "../../types";
 import { rollDice } from "../../utils/rollMath";
 
 function finalizeTricksterAoE(
   state: GameState,
   events: GameEvent[],
-  context?: TricksterAoEContext
+  context?: TricksterAoEContext,
 ): ApplyResult {
   if (!state.pendingAoE) {
     return { state: clearPendingRoll(state), events };
@@ -40,12 +29,14 @@ function finalizeTricksterAoE(
     context?.lokiStatusOnHit === "chicken" &&
     context.lokiStatusSourceId &&
     statusTargetIds.length > 0
-      ? [{
-          type: "lokiChickenGroupApplied",
-          lokiId: context.lokiStatusSourceId,
-          targetIds: [...statusTargetIds],
-          abilityId: ABILITY_LOKI_LAUGHT,
-        }]
+      ? [
+          {
+            type: "lokiChickenGroupApplied",
+            lokiId: context.lokiStatusSourceId,
+            targetIds: [...statusTargetIds],
+            abilityId: ABILITY_LOKI_LAUGHT,
+          },
+        ]
       : [];
   return {
     state: clearPendingRoll(nextState),
@@ -70,12 +61,10 @@ function finalizeTricksterAoE(
 export function advanceTricksterAoEQueue(
   state: GameState,
   context: TricksterAoEContext,
-  events: GameEvent[]
+  events: GameEvent[],
 ): ApplyResult {
   const baseState = clearPendingRoll(state);
-  const targets = Array.isArray(context.targetsQueue)
-    ? context.targetsQueue
-    : [];
+  const targets = Array.isArray(context.targetsQueue) ? context.targetsQueue : [];
   let idx = context.currentTargetIndex ?? 0;
 
   while (idx < targets.length) {
@@ -86,29 +75,21 @@ export function advanceTricksterAoEQueue(
         ...context,
         currentTargetIndex: idx,
       };
-      const attackerDice = Array.isArray(nextCtx.attackerDice)
-        ? nextCtx.attackerDice
-        : [];
+      const attackerDice = Array.isArray(nextCtx.attackerDice) ? nextCtx.attackerDice : [];
       const charges = target.charges?.[ABILITY_BERSERK_AUTO_DEFENSE] ?? 0;
       const hasBerserkerDefense =
         target.class === "berserker" ||
         target.heroId === HERO_FEMTO_ID ||
-        (target.heroId === HERO_DUOLINGO_ID &&
-          target.duolingoBerserkerUnlocked) ||
-        (target.heroId === HERO_PAPYRUS_ID &&
-          target.papyrusUnbelieverActive) ||
+        (target.heroId === HERO_DUOLINGO_ID && target.duolingoBerserkerUnlocked) ||
+        (target.heroId === HERO_PAPYRUS_ID && target.papyrusUnbelieverActive) ||
         hasMettatonBerserkerFeature(target);
-      if (
-        hasBerserkerDefense &&
-        charges === 6 &&
-        attackerDice.length >= 2
-      ) {
+      if (hasBerserkerDefense && charges === 6 && attackerDice.length >= 2) {
         const requested = requestRoll(
           baseState,
           target.owner,
           "tricksterAoE_berserkerDefenseChoice",
           nextCtx,
-          target.id
+          target.id,
         );
         return { state: requested.state, events: [...events, ...requested.events] };
       }
@@ -117,7 +98,7 @@ export function advanceTricksterAoEQueue(
         target.owner,
         "tricksterAoE_defenderRoll",
         nextCtx,
-        target.id
+        target.id,
       );
       return { state: requested.state, events: [...events, ...requested.events] };
     }
@@ -130,7 +111,7 @@ export function advanceTricksterAoEQueue(
 export function resolveTricksterAoEAttackerRoll(
   state: GameState,
   pending: PendingRoll,
-  rng: RNG
+  rng: RNG,
 ): ApplyResult {
   const ctx = pending.context as unknown as TricksterAoEContext;
   const caster = state.units[ctx.casterId];
@@ -151,7 +132,7 @@ export function resolveTricksterAoEAttackerRoll(
 export function resolveTricksterAoEDefenderRoll(
   state: GameState,
   pending: PendingRoll,
-  rng: RNG
+  rng: RNG,
 ): ApplyResult {
   return resolveTricksterAoEDefense(state, pending, rng, false);
 }
@@ -160,7 +141,7 @@ function resolveTricksterAoEDefense(
   state: GameState,
   pending: PendingRoll,
   rng: RNG,
-  useBerserkAutoDefense: boolean
+  useBerserkAutoDefense: boolean,
 ): ApplyResult {
   const ctx = pending.context as unknown as TricksterAoEContext;
   const caster = state.units[ctx.casterId];
@@ -192,8 +173,7 @@ function resolveTricksterAoEDefense(
   const defenderDice = useBerserkAutoDefense ? [] : rollDice(rng, 2);
   const sourceId = getPolkovodetsSource(state, caster.id);
   const damageBonus = sourceId ? 1 : 0;
-  const damageOverride =
-    typeof ctx.damageOverride === "number" ? ctx.damageOverride : undefined;
+  const damageOverride = typeof ctx.damageOverride === "number" ? ctx.damageOverride : undefined;
   const ignoreBonuses = ctx.ignoreBonuses === true;
   const suppressGutsBerserkBonus = ctx.suppressGutsBerserkBonus === true;
   const { nextState, events } = resolveAttack(state, {
@@ -218,12 +198,9 @@ function resolveTricksterAoEDefense(
   });
 
   let updatedState = nextState;
-  let updatedEvents = [...events];
+  const updatedEvents = [...events];
   const attackEvent = events.find(
-    (e) =>
-      e.type === "attackResolved" &&
-      e.attackerId === caster.id &&
-      e.defenderId === targetId
+    (e) => e.type === "attackResolved" && e.attackerId === caster.id && e.defenderId === targetId,
   );
   let statusAppliedTargetIds = ctx.lokiStatusAppliedTargetIds ?? [];
   if (
@@ -261,7 +238,7 @@ function resolveTricksterAoEDefense(
         amount: damageBonus,
         source: "polkovodets",
         fromUnitId: sourceId,
-      })
+      }),
     );
   }
   if (attackEvent && attackEvent.type === "attackResolved" && updatedState.pendingAoE) {
@@ -286,9 +263,7 @@ function resolveTricksterAoEDefense(
       .map((e) => (e.type === "stealthRevealed" ? e.unitId : ""))
       .filter((id) => id.length > 0);
     if (revealedIds.length > 0) {
-      const merged = Array.from(
-        new Set([...nextPendingAoE.revealedUnitIds, ...revealedIds])
-      );
+      const merged = Array.from(new Set([...nextPendingAoE.revealedUnitIds, ...revealedIds]));
       nextPendingAoE = { ...nextPendingAoE, revealedUnitIds: merged };
     }
 
@@ -333,7 +308,7 @@ function resolveTricksterAoEDefense(
     caster.id,
     targetId,
     updatedEvents,
-    intimidateResume
+    intimidateResume,
   );
   if (intimidate.requested) {
     return { state: intimidate.state, events: intimidate.events };

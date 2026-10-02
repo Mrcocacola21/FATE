@@ -47,12 +47,12 @@ export function testActiveQueuedRollProjectsAsPending() {
   console.log("active_queued_roll_projects_as_pending passed");
 }
 export function testPendingRollActionsExportsStable() {
-  const expected = ["applyResolvePendingRoll"];
+  const expected = ["applyResolvePendingRoll"] as const;
   const exported = Object.keys(pendingRollActions);
   for (const name of expected) {
     assert(exported.includes(name), `pendingRollActions missing export: ${name}`);
     assert.strictEqual(
-      typeof (pendingRollActions as any)[name],
+      typeof pendingRollActions[name],
       "function",
       `pendingRollActions export ${name} should be a function`,
     );

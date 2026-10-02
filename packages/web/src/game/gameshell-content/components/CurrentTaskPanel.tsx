@@ -1,10 +1,8 @@
+import type { GameShellViewModel } from "../hooks/useGameShellViewModel";
 import type { FC } from "react";
 import type { GameAction } from "rules";
 import type { ActionPreviewMode } from "../../../store";
-import {
-  formatMoveMode,
-  getActionModeHint,
-} from "../../components/RightPanel/rightPanelHelpers";
+import { formatMoveMode, getActionModeHint } from "../../components/RightPanel/rightPanelHelpers";
 import {
   getCostPreview,
   getUsingName,
@@ -13,17 +11,26 @@ import { PanelCard, SectionHeader, StatusBadge } from "../../../components/ui";
 import { useI18n } from "../../../i18n";
 import { getPendingRollLabel } from "../helpers";
 import { PendingBoardNotice } from "./PendingBoardNotice";
-import {
-  getPlacementUnitLabel,
-  getUnitFigureDisplayName,
-} from "../../../i18n/displayMetadata";
+import { getPlacementUnitLabel, getUnitFigureDisplayName } from "../../../i18n/displayMetadata";
 
 interface CurrentTaskPanelProps {
-  vm: any;
+  vm: GameShellViewModel;
   compact?: boolean;
 }
 
-export function hasActiveMobileTask(vm: any): boolean {
+export function hasActiveMobileTask(
+  vm: Partial<
+    Pick<
+      GameShellViewModel,
+      "pendingRoll" | "pendingMeta" | "actionMode" | "targetingMode" | "boardSelectionPending"
+    >
+  > & {
+    view?: Pick<import("rules").PlayerView, "phase"> | null;
+    moveOptions?: Partial<
+      Pick<NonNullable<GameShellViewModel["moveOptions"]>, "unitId" | "modes">
+    > | null;
+  },
+): boolean {
   return !!(
     vm.pendingRoll ||
     vm.pendingMeta ||
@@ -46,7 +53,11 @@ function MobileTaskStrip({
 }) {
   const { t } = useI18n();
   return (
-    <div className="mobile-active-task-bar" aria-live="polite" data-testid="mobile-active-task-strip">
+    <div
+      className="mobile-active-task-bar"
+      aria-live="polite"
+      data-testid="mobile-active-task-strip"
+    >
       <div className="min-w-0 flex-1">
         <div className="section-kicker">{t("game.currentTask")}</div>
         <div className="truncate text-sm font-bold text-stone-900 dark:text-stone-100">{title}</div>
@@ -75,17 +86,17 @@ export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm, compact = fals
           <div>
             <div className="section-kicker">{t("game.currentTask")}</div>
             <div className="section-title mt-0.5 text-base">
-              {getPendingRollLabel(vm.pendingRoll.kind, language)}
+              {getPendingRollLabel(vm.pendingRoll!.kind, language)}
             </div>
           </div>
-          <StatusBadge tone={vm.pendingRoll.player === vm.playerId ? "warning" : "neutral"} dot>
-            {t("pending.pendingFor", { player: vm.pendingRoll.player })}
+          <StatusBadge tone={vm.pendingRoll!.player === vm.playerId ? "warning" : "neutral"} dot>
+            {t("pending.pendingFor", { player: vm.pendingRoll!.player })}
           </StatusBadge>
         </div>
         <PendingBoardNotice
           className="mt-0"
-          pendingRollKind={vm.pendingRoll.kind}
-          pendingRollContext={(vm.pendingRoll.context ?? {}) as Record<string, unknown>}
+          pendingRollKind={vm.pendingRoll!.kind}
+          pendingRollContext={(vm.pendingRoll!.context ?? {}) as Record<string, unknown>}
           pendingQueueCount={vm.pendingQueueCount}
           stakeSelections={vm.stakeSelections}
           stakeLimit={vm.stakeLimit}
@@ -116,9 +127,7 @@ export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm, compact = fals
           isLokiMindControlTargetChoice={vm.isLokiMindControlTargetChoice}
           isHassanTrueEnemyTargetChoice={vm.isHassanTrueEnemyTargetChoice}
           isAsgoreSoulParadePatienceTargetChoice={vm.isAsgoreSoulParadePatienceTargetChoice}
-          isAsgoreSoulParadePerseveranceTargetChoice={
-            vm.isAsgoreSoulParadePerseveranceTargetChoice
-          }
+          isAsgoreSoulParadePerseveranceTargetChoice={vm.isAsgoreSoulParadePerseveranceTargetChoice}
           isAsgoreSoulParadeJusticeTargetChoice={vm.isAsgoreSoulParadeJusticeTargetChoice}
           isAsgoreSoulParadeIntegrityDestination={vm.isAsgoreSoulParadeIntegrityDestination}
           isHassanAssassinOrderSelection={vm.isHassanAssassinOrderSelection}
@@ -130,21 +139,21 @@ export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm, compact = fals
           onResolveChoice={(choice) => {
             vm.sendAction({
               type: "resolvePendingRoll",
-              pendingRollId: vm.pendingRoll.id,
+              pendingRollId: vm.pendingRoll!.id,
               choice,
             } as GameAction);
           }}
           onResolveSkip={() => {
             vm.sendAction({
               type: "resolvePendingRoll",
-              pendingRollId: vm.pendingRoll.id,
+              pendingRollId: vm.pendingRoll!.id,
               choice: "skip",
             } as GameAction);
           }}
           onConfirmStakePlacement={() => {
             vm.sendAction({
               type: "resolvePendingRoll",
-              pendingRollId: vm.pendingRoll.id,
+              pendingRollId: vm.pendingRoll!.id,
               choice: { type: "placeStakes", positions: vm.stakeSelections },
             } as GameAction);
           }}
@@ -152,7 +161,7 @@ export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm, compact = fals
           onConfirmHassanAssassinOrder={() => {
             vm.sendAction({
               type: "resolvePendingRoll",
-              pendingRollId: vm.pendingRoll.id,
+              pendingRollId: vm.pendingRoll!.id,
               choice: {
                 type: "hassanAssassinOrderPick",
                 unitIds: vm.hassanAssassinOrderSelections,
@@ -184,8 +193,7 @@ export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm, compact = fals
     );
   }
 
-  const choosingMoveMode =
-    Array.isArray(vm.moveOptions?.modes) && vm.moveOptions.modes.length > 0;
+  const choosingMoveMode = Array.isArray(vm.moveOptions?.modes) && vm.moveOptions.modes.length > 0;
   if (choosingMoveMode) {
     const unitName = vm.selectedUnit
       ? getUnitFigureDisplayName(vm.selectedUnit, { language, t })
@@ -217,8 +225,8 @@ export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm, compact = fals
     );
   }
 
-  if (vm.view.phase === "placement") {
-    const selectedPlacementUnit = vm.placeUnitId ? vm.view.units?.[vm.placeUnitId] : null;
+  if (vm.view!.phase === "placement") {
+    const selectedPlacementUnit = vm.placeUnitId ? vm.view!.units?.[vm.placeUnitId] : null;
     const selectedPlacementLabel = selectedPlacementUnit
       ? getPlacementUnitLabel(selectedPlacementUnit, { language, t })
       : null;
@@ -228,14 +236,14 @@ export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm, compact = fals
         <MobileTaskStrip
           title={`${t("game.deployment")}: ${
             selectedPlacementLabel ??
-            (vm.view.currentPlayer === vm.playerId
+            (vm.view!.currentPlayer === vm.playerId
               ? t("game.placeUnits")
               : t("game.waitingOtherPlacement"))
           }`}
           instruction={
             selectedPlacementLabel
               ? t("game.placeHint", { unit: selectedPlacementLabel })
-              : vm.view.currentPlayer === vm.playerId
+              : vm.view!.currentPlayer === vm.playerId
                 ? t("game.placeUnits")
                 : null
           }
@@ -254,35 +262,47 @@ export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm, compact = fals
 
   if ((compact && (vm.actionMode || vm.targetingMode)) || (vm.actionMode && vm.targetingMode)) {
     const abilityViews =
-      vm.selectedUnitId && vm.view.abilitiesByUnitId
-        ? vm.view.abilitiesByUnitId[vm.selectedUnitId] ?? []
+      vm.selectedUnitId && vm.view!.abilitiesByUnitId
+        ? (vm.view!.abilitiesByUnitId[vm.selectedUnitId] ?? [])
         : [];
     const undyneAxis =
-      vm.undyneAxis === "col" || vm.papyrusLineAxis === "col" ? "col" : "row";
+      (vm as GameShellViewModel & { undyneAxis?: "row" | "col" }).undyneAxis === "col" ||
+      vm.papyrusLineAxis === "col"
+        ? "col"
+        : "row";
     const selectedMoveLabel =
       vm.actionMode === "move" && vm.moveOptions?.mode
         ? formatMoveMode(vm.moveOptions.mode, t, vm.selectedUnit?.class)
         : null;
     const usingName = vm.targetingMode
-      ? getUsingName(vm.targetingMode, abilityViews, language, t)
+      ? getUsingName(vm.targetingMode!, abilityViews, language, t)
       : null;
     const selectedSource = vm.targetingMode?.useSource;
     const selectedOption = selectedSource
-      ? abilityViews.flatMap((ability: any) => ability.useOptions ?? []).find((option: any) =>
-          option.source?.type === selectedSource.type &&
-          (selectedSource.type === "abilityCounter"
-            ? option.source.counterId === selectedSource.counterId
-            : selectedSource.type === "heroResource"
-              ? option.source.resourceId === selectedSource.resourceId
-              : true),
-        )
+      ? abilityViews
+          .flatMap((ability) => ability.useOptions ?? [])
+          .find(
+            (option) =>
+              option.source?.type === selectedSource.type &&
+              (selectedSource.type === "abilityCounter"
+                ? option.source.type === "abilityCounter" &&
+                  option.source.counterId === selectedSource.counterId
+                : selectedSource.type === "heroResource"
+                  ? option.source.type === "heroResource" &&
+                    option.source.resourceId === selectedSource.resourceId
+                  : true),
+          )
       : null;
-    const sourceSuffix = selectedSource?.type === "abilityCounter"
-      ? (language === "uk" ? "Лічильник" : "Counter")
-      : selectedSource?.type === "heroResource"
-        ? selectedOption?.sourceName ?? selectedSource.resourceId
-        : null;
-    const sourceAwareName = usingName && sourceSuffix ? `${usingName} — ${sourceSuffix}` : usingName;
+    const sourceSuffix =
+      selectedSource?.type === "abilityCounter"
+        ? language === "uk"
+          ? "Лічильник"
+          : "Counter"
+        : selectedSource?.type === "heroResource"
+          ? (selectedOption?.sourceName ?? selectedSource.resourceId)
+          : null;
+    const sourceAwareName =
+      usingName && sourceSuffix ? `${usingName} — ${sourceSuffix}` : usingName;
     const newHeroDestinationStep =
       (vm.actionMode === "duolingoPush" || vm.actionMode === "zoroOniGiri") &&
       !!vm.newHeroAbilityTargetId;
@@ -301,7 +321,9 @@ export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm, compact = fals
           }
           instruction={
             newHeroDestinationStep
-              ? (language === "uk" ? "Оберіть підсвічену клітинку призначення." : "Choose a highlighted destination cell.")
+              ? language === "uk"
+                ? "Оберіть підсвічену клітинку призначення."
+                : "Choose a highlighted destination cell."
               : vm.actionMode
                 ? getActionModeHint(
                     vm.actionMode as ActionPreviewMode,
@@ -325,28 +347,29 @@ export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm, compact = fals
               selectedMoveLabel
                 ? selectedMoveLabel
                 : t("game.usingTargeting", {
-                    name: getUsingName(vm.targetingMode, abilityViews, language, t),
+                    name: getUsingName(vm.targetingMode!, abilityViews, language, t),
                   })
             }
             action={<StatusBadge tone="warning">{t("game.boardSelectionActive")}</StatusBadge>}
           />
           <p className="mt-2 text-xs leading-5 text-stone-600 dark:text-stone-300">
             {t("game.targetingInstruction", {
-              instruction: vm.actionMode === "attack" && vm.selectedUnit?.heroId === "zoro"
+              instruction:
+                vm.actionMode === "attack" && vm.selectedUnit?.heroId === "zoro"
                   ? vm.zoroAttackTargetIds?.length
                     ? t("game.zoroSantoryuNextTarget")
                     : t("game.zoroSantoryuFirstTarget")
-                : getActionModeHint(
-                    vm.actionMode as ActionPreviewMode,
-                    vm.papyrusLineAxis ?? "row",
-                    undyneAxis,
-                    language,
-                  ),
+                  : getActionModeHint(
+                      vm.actionMode as ActionPreviewMode,
+                      vm.papyrusLineAxis ?? "row",
+                      undyneAxis,
+                      language,
+                    ),
             })}
           </p>
           <p className="mt-1 text-xs leading-5 text-sky-700 dark:text-sky-200">
             {t("game.targetingCost", {
-              cost: getCostPreview(vm.targetingMode, abilityViews, t),
+              cost: getCostPreview(vm.targetingMode!, abilityViews, t),
             })}
           </p>
           <button

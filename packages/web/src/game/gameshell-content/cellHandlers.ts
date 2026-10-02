@@ -1,11 +1,5 @@
 import type { Dispatch, SetStateAction } from "react";
-import type {
-  Coord,
-  GameAction,
-  PapyrusLineAxis,
-  PlayerId,
-  PlayerView,
-} from "rules";
+import type { Coord, GameAction, PapyrusLineAxis, PlayerId, PlayerView } from "rules";
 import type { ActionMode } from "../../store";
 import type { TargetingMode } from "../selectionState";
 import {
@@ -40,18 +34,14 @@ import {
   UNDYNE_ENERGY_SPEAR_ID,
   UNDYNE_SPEAR_THROW_ID,
 } from "../../rulesHints";
-import {
-  coordKey,
-  getSelectableAttackTargetsAtCell,
-  isCoordInList,
-} from "./helpers";
+import { coordKey, getSelectableAttackTargetsAtCell, isCoordInList } from "./helpers";
 import { getDonMadnessDirectionForCell } from "../targeting/donMadnessDirection";
 
 interface MoveOptionsState {
   unitId: string;
   legalTo: Coord[];
-  mode?: string;
-  modes?: string[];
+  mode?: import("rules").MoveMode;
+  modes?: import("rules").MoveMode[];
   roll?: number | null;
 }
 
@@ -263,8 +253,7 @@ export function getActiveUnitTargetIds(context: CellClickContext): string[] {
         ? DUOLINGO_PUSH_NOTIFICATION_ID
         : context.actionMode === "zoroOniGiri"
           ? ZORO_ONI_GIRI_ID
-          : context.actionMode === "lucheLightRay" ||
-              context.actionMode === "lucheLightRayAround"
+          : context.actionMode === "lucheLightRay" || context.actionMode === "lucheLightRayAround"
             ? LUCHE_DIVINE_RAY_ID
             : null;
   if (!abilityId || !context.selectedUnitId) return [];
@@ -281,12 +270,7 @@ export function getSelectableUnitTargetsForCell(
   row: number,
 ) {
   if (!context.view) return [];
-  return getSelectableAttackTargetsAtCell(
-    context.view,
-    col,
-    row,
-    getActiveUnitTargetIds(context),
-  );
+  return getSelectableAttackTargetsAtCell(context.view, col, row, getActiveUnitTargetIds(context));
 }
 
 export function createCellClickHandler(context: CellClickContext) {
@@ -492,27 +476,29 @@ export function createCellClickHandler(context: CellClickContext) {
       const key = coordKey({ col, row });
       if (!chargedImpulseTargetKeys.has(key) || !pendingRoll) return;
       const pendingKind = String(pendingRoll.kind);
-      const madnessDirection = pendingKind === "donMadDelusionDirection"
-        ? getDonMadnessDirectionForCell(
-            (pendingRoll.context ?? {}) as Record<string, unknown>,
-            { col, row },
-          )
-        : null;
+      const madnessDirection =
+        pendingKind === "donMadDelusionDirection"
+          ? getDonMadnessDirectionForCell((pendingRoll.context ?? {}) as Record<string, unknown>, {
+              col,
+              row,
+            })
+          : null;
       if (pendingKind === "donMadDelusionDirection" && !madnessDirection) return;
-      const choice = pendingKind === "donWindmillsRepositionChoice"
-        ? { type: "donWindmillsReposition", destination: { col, row } }
-        : pendingKind === "donSorrowfulMoveChoice"
-          ? { type: "donSorrowfulMove", destination: { col, row } }
-          : pendingKind === "donMadDelusionDirection"
-            ? {
-                type: "donMadDelusionDirection",
-                direction: madnessDirection!,
-              }
-          : {
-              type: "chargedImpulseTarget",
-              position: { col, row },
-              axis: papyrusLineAxis,
-            };
+      const choice =
+        pendingKind === "donWindmillsRepositionChoice"
+          ? { type: "donWindmillsReposition", destination: { col, row } }
+          : pendingKind === "donSorrowfulMoveChoice"
+            ? { type: "donSorrowfulMove", destination: { col, row } }
+            : pendingKind === "donMadDelusionDirection"
+              ? {
+                  type: "donMadDelusionDirection",
+                  direction: madnessDirection!,
+                }
+              : {
+                  type: "chargedImpulseTarget",
+                  position: { col, row },
+                  axis: papyrusLineAxis,
+                };
       sendAction({
         type: "resolvePendingRoll",
         pendingRollId: pendingRoll.id,
@@ -613,7 +599,7 @@ export function createCellClickHandler(context: CellClickContext) {
       const key = coordKey({ col, row });
       if (!groznyTyrantAttackCellKeys.has(key) || !pendingRoll) return;
       const selected = groznyTyrantAttackCellOptions.find(
-        (option) => coordKey(option.position) === key
+        (option) => coordKey(option.position) === key,
       );
       if (!selected) return;
       sendAction({
@@ -838,10 +824,11 @@ export function createCellClickHandler(context: CellClickContext) {
     if (!selectedUnitId) return;
 
     if (actionMode === "duolingoPush" || actionMode === "zoroOniGiri") {
-      const abilityId = actionMode === "duolingoPush"
-        ? DUOLINGO_PUSH_NOTIFICATION_ID
-        : ZORO_ONI_GIRI_ID;
-      const targeting = view.abilitiesByUnitId?.[selectedUnitId]?.find((ability) => ability.id === abilityId)?.targeting;
+      const abilityId =
+        actionMode === "duolingoPush" ? DUOLINGO_PUSH_NOTIFICATION_ID : ZORO_ONI_GIRI_ID;
+      const targeting = view.abilitiesByUnitId?.[selectedUnitId]?.find(
+        (ability) => ability.id === abilityId,
+      )?.targeting;
       if (!newHeroAbilityTargetId) {
         const target = targetFor(targeting?.targetIds ?? []);
         if (!target?.isAlive || !target.position) return;
@@ -865,10 +852,7 @@ export function createCellClickHandler(context: CellClickContext) {
       return;
     }
 
-    if (
-      actionMode === "donWindmills" ||
-      actionMode === "jackHolyMother"
-    ) {
+    if (actionMode === "donWindmills" || actionMode === "jackHolyMother") {
       const source = view.units[selectedUnitId];
       if (actionMode === "donWindmills") {
         if (!source?.position) return;
@@ -895,7 +879,13 @@ export function createCellClickHandler(context: CellClickContext) {
         return;
       }
       const target = targetFor(legalAttackTargets);
-      if (!target?.isAlive || !target.position || !source?.position || target.owner === source.owner) return;
+      if (
+        !target?.isAlive ||
+        !target.position ||
+        !source?.position ||
+        target.owner === source.owner
+      )
+        return;
       sendGameAction({
         type: "useAbility",
         unitId: selectedUnitId,
@@ -915,25 +905,28 @@ export function createCellClickHandler(context: CellClickContext) {
       actionMode === "artemisSilverSickle"
     ) {
       if (actionMode === "lucheLightRay") {
-        const legalCells = view.abilitiesByUnitId?.[selectedUnitId]
-          ?.find((ability) => ability.id === LUCHE_DIVINE_RAY_ID)
-          ?.targeting?.modes?.line?.cells ??
-          view.abilitiesByUnitId?.[selectedUnitId]
-            ?.find((ability) => ability.id === LUCHE_DIVINE_RAY_ID)
-            ?.targeting?.cells ??
+        const legalCells =
+          view.abilitiesByUnitId?.[selectedUnitId]?.find(
+            (ability) => ability.id === LUCHE_DIVINE_RAY_ID,
+          )?.targeting?.modes?.line?.cells ??
+          view.abilitiesByUnitId?.[selectedUnitId]?.find(
+            (ability) => ability.id === LUCHE_DIVINE_RAY_ID,
+          )?.targeting?.cells ??
           [];
         if (!isCoordInList(legalCells, col, row)) return;
       }
       if (actionMode === "lucheLightRayAround") {
-        const aroundCells = view.abilitiesByUnitId?.[selectedUnitId]
-          ?.find((ability) => ability.id === LUCHE_DIVINE_RAY_ID)
-          ?.targeting?.modes?.aroundSelf?.cells ?? [];
+        const aroundCells =
+          view.abilitiesByUnitId?.[selectedUnitId]?.find(
+            (ability) => ability.id === LUCHE_DIVINE_RAY_ID,
+          )?.targeting?.modes?.aroundSelf?.cells ?? [];
         if (!isCoordInList(aroundCells, col, row)) return;
       }
       if (
         (actionMode === "artemisMoonInsight" || actionMode === "artemisSilverSickle") &&
         !artemidaLineTargetKeys.has(coordKey({ col, row }))
-      ) return;
+      )
+        return;
       const source = view.units[selectedUnitId];
       if (
         source?.position &&
@@ -943,7 +936,8 @@ export function createCellClickHandler(context: CellClickContext) {
           actionMode === "artemisMoonInsight" ||
           actionMode === "artemisSilverSickle") &&
         Math.max(Math.abs(col - source.position.col), Math.abs(row - source.position.row)) > 1
-      ) return;
+      )
+        return;
       const abilityId =
         actionMode === "lucheLightRay" || actionMode === "lucheLightRayAround"
           ? LUCHE_DIVINE_RAY_ID
@@ -968,8 +962,7 @@ export function createCellClickHandler(context: CellClickContext) {
         abilityId,
         payload: {
           [payloadKey]: { col, row },
-          ...((actionMode === "lucheLightRay" ||
-            actionMode === "lucheLightRayAround") &&
+          ...((actionMode === "lucheLightRay" || actionMode === "lucheLightRayAround") &&
           targetingMode?.useSource
             ? { source: targetingMode.useSource }
             : {}),
@@ -1026,7 +1019,8 @@ export function createCellClickHandler(context: CellClickContext) {
         source?.position &&
         source.blindUntilOwnTurnStart &&
         Math.max(Math.abs(col - source.position.col), Math.abs(row - source.position.row)) > 1
-      ) return;
+      )
+        return;
       sendGameAction({
         type: "useAbility",
         unitId: selectedUnitId,
@@ -1177,10 +1171,7 @@ export function createCellClickHandler(context: CellClickContext) {
           setZoroAttackTargetIds([target.id]);
           return;
         }
-        const defenderIds =
-          firstTargetId === target.id
-            ? [target.id]
-            : [firstTargetId, target.id];
+        const defenderIds = firstTargetId === target.id ? [target.id] : [firstTargetId, target.id];
         sendGameAction({
           type: "attack",
           attackerId: selectedUnitId,
@@ -1404,9 +1395,7 @@ export function createCellHoverHandler(context: CellHoverContext) {
         return;
       }
       const key = coordKey(coord);
-      setMettatonPoppinsPreviewCenter(
-        mettatonLineTargetKeys.has(key) ? coord : null
-      );
+      setMettatonPoppinsPreviewCenter(mettatonLineTargetKeys.has(key) ? coord : null);
       return;
     }
 
@@ -1416,9 +1405,7 @@ export function createCellHoverHandler(context: CellHoverContext) {
         return;
       }
       const key = coordKey(coord);
-      setMettatonLaserPreviewTarget(
-        mettatonLineTargetKeys.has(key) ? coord : null
-      );
+      setMettatonLaserPreviewTarget(mettatonLineTargetKeys.has(key) ? coord : null);
       return;
     }
 
@@ -1428,9 +1415,7 @@ export function createCellHoverHandler(context: CellHoverContext) {
         return;
       }
       const key = coordKey(coord);
-      setSansGasterBlasterPreviewTarget(
-        mettatonLineTargetKeys.has(key) ? coord : null
-      );
+      setSansGasterBlasterPreviewTarget(mettatonLineTargetKeys.has(key) ? coord : null);
       return;
     }
 
@@ -1440,9 +1425,7 @@ export function createCellHoverHandler(context: CellHoverContext) {
         return;
       }
       const key = coordKey(coord);
-      setUndyneEnergySpearPreviewTarget(
-        undyneEnergySpearTargetKeys.has(key) ? coord : null
-      );
+      setUndyneEnergySpearPreviewTarget(undyneEnergySpearTargetKeys.has(key) ? coord : null);
       return;
     }
 

@@ -2,7 +2,12 @@ import type { ApplyResult, GameEvent, GameState, PendingRoll } from "../../../..
 import type { RNG } from "../../../../rng";
 import { resolveAttack } from "../../../../combat";
 import { ABILITY_BERSERK_AUTO_DEFENSE } from "../../../../abilities";
-import { clearPendingRoll, evBerserkerDefenseChosen, evDamageBonusApplied, requestRoll } from "../../../../core";
+import {
+  clearPendingRoll,
+  evBerserkerDefenseChosen,
+  evDamageBonusApplied,
+  requestRoll,
+} from "../../../../core";
 import { getPolkovodetsSource, maybeRequestIntimidate } from "../../../../actions/heroes/vlad";
 import type { IntimidateResume } from "../../../../actions/types";
 import type { ForestAoEContext } from "../../../types";
@@ -19,13 +24,10 @@ function maybeAppendPolkovodetsDamage(
   casterId: string,
   targetId: string,
   damageBonus: number,
-  sourceId: string | null
+  sourceId: string | null,
 ): GameEvent[] {
   const attackEvent = events.find(
-    (e) =>
-      e.type === "attackResolved" &&
-      e.attackerId === casterId &&
-      e.defenderId === targetId
+    (e) => e.type === "attackResolved" && e.attackerId === casterId && e.defenderId === targetId,
   );
   if (
     !attackEvent ||
@@ -50,7 +52,7 @@ function maybeAppendPolkovodetsDamage(
 export function resolveForestAttackerRoll(
   state: GameState,
   pending: PendingRoll,
-  rng: RNG
+  rng: RNG,
 ): ApplyResult {
   const ctx = pending.context as unknown as ForestAoEContext;
   const caster = state.units[ctx.casterId];
@@ -71,7 +73,7 @@ export function resolveForestAttackerRoll(
 export function resolveForestDefenderRoll(
   state: GameState,
   pending: PendingRoll,
-  rng: RNG
+  rng: RNG,
 ): ApplyResult {
   const ctx = pending.context as unknown as ForestAoEContext;
   const caster = state.units[ctx.casterId];
@@ -120,19 +122,14 @@ export function resolveForestDefenderRoll(
     },
   });
 
-  let updatedState = updatePendingAoeFromAttack(
-    nextState,
-    events,
-    caster.id,
-    targetId
-  );
+  let updatedState = updatePendingAoeFromAttack(nextState, events, caster.id, targetId);
   updatedState = applyForestMovementDisableOnHit(updatedState, events, targetId);
-  let updatedEvents = maybeAppendPolkovodetsDamage(
+  const updatedEvents = maybeAppendPolkovodetsDamage(
     [...events],
     caster.id,
     targetId,
     damageBonus,
-    sourceId
+    sourceId,
   );
 
   const nextCtx: ForestAoEContext = {
@@ -150,7 +147,7 @@ export function resolveForestDefenderRoll(
     caster.id,
     targetId,
     updatedEvents,
-    intimidateResume
+    intimidateResume,
   );
   if (intimidate.requested) {
     return { state: intimidate.state, events: intimidate.events };
@@ -163,7 +160,7 @@ export function resolveForestBerserkerDefenseChoice(
   state: GameState,
   pending: PendingRoll,
   choice: "auto" | "roll" | undefined,
-  rng: RNG
+  _rng: RNG,
 ): ApplyResult {
   const ctx = pending.context as unknown as ForestAoEContext;
   const caster = state.units[ctx.casterId];
@@ -212,7 +209,7 @@ export function resolveForestBerserkerDefenseChoice(
       target.owner,
       "vladForest_defenderRoll",
       nextCtx,
-      target.id
+      target.id,
     );
     const choiceEvents: GameEvent[] = [
       evBerserkerDefenseChosen({ defenderId: target.id, choice: "roll" }),
@@ -240,12 +237,7 @@ export function resolveForestBerserkerDefenseChoice(
     },
   });
 
-  let updatedState = updatePendingAoeFromAttack(
-    nextState,
-    events,
-    caster.id,
-    target.id
-  );
+  let updatedState = updatePendingAoeFromAttack(nextState, events, caster.id, target.id);
   updatedState = applyForestMovementDisableOnHit(updatedState, events, target.id);
   let updatedEvents: GameEvent[] = [
     evBerserkerDefenseChosen({ defenderId: target.id, choice: "auto" }),
@@ -256,7 +248,7 @@ export function resolveForestBerserkerDefenseChoice(
     caster.id,
     target.id,
     damageBonus,
-    sourceId
+    sourceId,
   );
 
   const nextCtx: ForestAoEContext = {
@@ -274,7 +266,7 @@ export function resolveForestBerserkerDefenseChoice(
     caster.id,
     target.id,
     updatedEvents,
-    intimidateResume
+    intimidateResume,
   );
   if (intimidate.requested) {
     return { state: intimidate.state, events: intimidate.events };

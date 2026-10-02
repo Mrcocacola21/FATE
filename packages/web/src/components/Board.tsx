@@ -210,7 +210,6 @@ export const Board: FC<BoardProps> = ({
   playerId,
   selectedUnitId,
   highlightedCells,
-  hoveredAbilityId,
   boardPreview = null,
   preferredUnitIds = [],
   doraPreview = null,
@@ -597,8 +596,7 @@ export const Board: FC<BoardProps> = ({
       const occupants = unitsByPos.get(key) ?? [];
       const unit =
         occupants.find(
-          (occupant) =>
-            !occupant.isVisualOnly && preferredUnitIdSet.has(occupant.id),
+          (occupant) => !occupant.isVisualOnly && preferredUnitIdSet.has(occupant.id),
         ) ??
         [...occupants].reverse().find((occupant) => !occupant.isVisualOnly) ??
         occupants[occupants.length - 1];
@@ -683,8 +681,7 @@ export const Board: FC<BoardProps> = ({
         const tokenId = unitView?.figureId ?? unitView?.heroId ?? unit.class;
         const tokenAsset = getUnitTokenAsset(unitView);
         const isTransforming = transformingUnitIds.has(unit.id);
-        const unitVisualState =
-          visualResolution.visualStateByUnitId[unit.id] ?? "idle";
+        const unitVisualState = visualResolution.visualStateByUnitId[unit.id] ?? "idle";
         const expiringBoneKind = expiringBoneStatuses.get(unit.id);
         const previewRelationClass =
           isDoraPreview && selectedUnit

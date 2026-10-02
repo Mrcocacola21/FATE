@@ -30,8 +30,8 @@ const INFO_EVENT_TYPES = new Set([
   "startGame",
 ]);
 
-export function logFate(logger: FastifyBaseLogger, obj: Record<string, any>) {
-  const payload = { tag: obj.tag, ts: ts(), ...obj };
+export function logFate(logger: FastifyBaseLogger, obj: Record<string, unknown> & { tag: string }) {
+  const payload = { ts: ts(), ...obj };
   try {
     const tag: string = obj.tag;
     if (INFO_TAGS.has(tag)) {
@@ -40,7 +40,7 @@ export function logFate(logger: FastifyBaseLogger, obj: Record<string, any>) {
     }
 
     if (tag === "fate:event") {
-      const eventType = (obj as any).eventType as string | undefined;
+      const eventType = obj.eventType as string | undefined;
       if (eventType && INFO_EVENT_TYPES.has(eventType)) {
         logger.info(payload);
         return;
@@ -64,7 +64,12 @@ export function logFate(logger: FastifyBaseLogger, obj: Record<string, any>) {
     }
   } catch (e) {
     try {
-      logger.error({ tag: obj.tag ?? "fate:log_error", ts: ts(), message: "fate logging failed", err: String(e) });
+      logger.error({
+        tag: obj.tag ?? "fate:log_error",
+        ts: ts(),
+        message: "fate logging failed",
+        err: String(e),
+      });
     } catch {
       // swallow
     }

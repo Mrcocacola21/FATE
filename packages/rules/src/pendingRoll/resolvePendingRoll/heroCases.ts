@@ -178,7 +178,7 @@ export function resolveHeroPendingRollCase(
   pending: PendingRoll,
   action: ResolvePendingRollAction,
   rng: RNG,
-  autoRollChoice: AutoRollChoice
+  autoRollChoice: AutoRollChoice,
 ): ApplyResult | null {
   switch (pending.kind) {
     case "kaiserCarpetStrikeCenter":
@@ -188,23 +188,13 @@ export function resolveHeroPendingRollCase(
     case "carpetStrike_defenderRoll":
       return resolveCarpetStrikeDefenderRoll(state, pending, rng);
     case "carpetStrike_berserkerDefenseChoice":
-      return resolveCarpetStrikeBerserkerDefenseChoice(
-        state,
-        pending,
-        autoRollChoice,
-        rng
-      );
+      return resolveCarpetStrikeBerserkerDefenseChoice(state, pending, autoRollChoice, rng);
     case "tricksterAoE_attackerRoll":
       return resolveTricksterAoEAttackerRoll(state, pending, rng);
     case "tricksterAoE_defenderRoll":
       return resolveTricksterAoEDefenderRoll(state, pending, rng);
     case "tricksterAoE_berserkerDefenseChoice":
-      return resolveTricksterAoEBerserkerDefenseChoice(
-        state,
-        pending,
-        autoRollChoice,
-        rng
-      );
+      return resolveTricksterAoEBerserkerDefenseChoice(state, pending, autoRollChoice, rng);
     case "elCidTisona_attackerRoll":
       return resolveElCidTisonaAttackerRoll(state, pending, rng);
     case "elCidTisona_defenderRoll":
@@ -224,12 +214,7 @@ export function resolveHeroPendingRollCase(
     case "jebeHailOfArrows_defenderRoll":
       return resolveJebeHailOfArrowsDefenderRoll(state, pending, rng);
     case "jebeHailOfArrows_berserkerDefenseChoice":
-      return resolveJebeHailOfArrowsBerserkerDefenseChoice(
-        state,
-        pending,
-        autoRollChoice,
-        rng
-      );
+      return resolveJebeHailOfArrowsBerserkerDefenseChoice(state, pending, autoRollChoice, rng);
     case "jebeKhansShooterRicochetRoll":
       return resolveJebeKhansShooterRicochetRoll(state, pending, rng);
     case "jebeKhansShooterTargetChoice":
@@ -271,43 +256,19 @@ export function resolveHeroPendingRollCase(
     case "asgoreSoulParadePatienceTargetChoice":
       return resolveAsgoreSoulParadePatienceTargetChoice(state, pending, action.choice);
     case "asgoreSoulParadePerseveranceTargetChoice":
-      return resolveAsgoreSoulParadePerseveranceTargetChoice(
-        state,
-        pending,
-        action.choice,
-        rng
-      );
+      return resolveAsgoreSoulParadePerseveranceTargetChoice(state, pending, action.choice, rng);
     case "asgoreSoulParadeJusticeTargetChoice":
       return resolveAsgoreSoulParadeJusticeTargetChoice(state, pending, action.choice);
     case "asgoreSoulParadeIntegrityDestination":
-      return resolveAsgoreSoulParadeIntegrityDestinationChoice(
-        state,
-        pending,
-        action.choice
-      );
+      return resolveAsgoreSoulParadeIntegrityDestinationChoice(state, pending, action.choice);
     case "femtoDivineMoveRoll":
       return resolveFemtoDivineMoveRoll(state, pending, rng);
     case "femtoDivineMoveDestination":
-      return resolveFemtoDivineMoveDestinationChoice(
-        state,
-        pending,
-        action.choice,
-        rng
-      );
+      return resolveFemtoDivineMoveDestinationChoice(state, pending, action.choice, rng);
     case "odinSleipnirDestination":
-      return resolveOdinSleipnirDestinationChoice(
-        state,
-        pending,
-        action.choice,
-        rng
-      );
+      return resolveOdinSleipnirDestinationChoice(state, pending, action.choice, rng);
     case "chargedImpulseTargetChoice":
-      return resolveChargedImpulseTargetChoice(
-        state,
-        pending,
-        action.choice,
-        rng
-      );
+      return resolveChargedImpulseTargetChoice(state, pending, action.choice, rng);
     case "mongolChargeAllyAttackTarget":
       return resolveMongolChargeAllyAttackTarget(state, pending, action.choice);
     case "vladIntimidateChoice":
@@ -335,28 +296,22 @@ export function resolveHeroPendingRollCase(
     case "falseTrailExplosion_defenderRoll":
       return resolveFalseTrailExplosionDefenderRoll(state, pending, rng);
     case "groznyTyrantOptionChoice":
-      return resolveGroznyTyrantOptionChoice(
-        state,
-        pending,
-        action.choice,
-        rng
-      );
+      return resolveGroznyTyrantOptionChoice(state, pending, action.choice, rng);
     case "groznyTyrantAllyChoice":
       return resolveGroznyTyrantAllyChoice(state, pending, action.choice, rng);
     case "groznyTyrantAttackCellChoice":
-      return resolveGroznyTyrantAttackCellChoice(
+      return resolveGroznyTyrantAttackCellChoice(state, pending, action.choice, rng);
+    case "lechyGuideTravelerPlacement":
+      return resolveLechyGuideTravelerPlacement(
         state,
         pending,
-        action.choice,
-        rng
+        typeof action.choice === "object" ? action.choice : undefined,
       );
-    case "lechyGuideTravelerPlacement":
-      return resolveLechyGuideTravelerPlacement(state, pending, action.choice as any);
     case "lechyStormStartTurnRoll":
       return resolveLechyStormStartTurnRoll(
         state,
         (pending.context as { unitId?: string }).unitId ?? "",
-        rng
+        rng,
       );
     case "riverBoatCarryChoice":
       return resolveRiverBoatCarryChoice(state, pending, action.choice);

@@ -1,4 +1,10 @@
-import type { ApplyResult, GameState, PendingRoll, RollKind } from "../../../../model";
+import type {
+  ApplyResult,
+  GameState,
+  PendingRoll,
+  RollKind,
+  ResolveRollChoice,
+} from "../../../../model";
 import type { RNG } from "../../../../rng";
 import { ABILITY_ODIN_MUNINN } from "../../../../abilities";
 import { clearPendingRoll } from "../../../../core";
@@ -20,7 +26,7 @@ import {
 export function resolveAttackDefenderRoll(
   state: GameState,
   pending: PendingRoll,
-  rng: RNG
+  rng: RNG,
 ): ApplyResult {
   const ctx = pending.context as unknown as AttackRollContext;
   const attacker = state.units[ctx.attackerId];
@@ -47,11 +53,9 @@ export function resolveAttackDefenderRoll(
   }
 
   const attackerTotal =
-    sumDice(nextCtx.attackerDice ?? []) +
-    sumDice(nextCtx.tieBreakAttacker ?? []);
+    sumDice(nextCtx.attackerDice ?? []) + sumDice(nextCtx.tieBreakAttacker ?? []);
   const defenderTotal =
-    sumDice(nextCtx.defenderDice ?? []) +
-    sumDice(nextCtx.tieBreakDefender ?? []);
+    sumDice(nextCtx.defenderDice ?? []) + sumDice(nextCtx.tieBreakDefender ?? []);
 
   if (attackerTotal === defenderTotal) {
     nextCtx.stage = "tieBreak";
@@ -65,7 +69,7 @@ export function resolveAttackDefenderRoll(
       nextCtx.controllerPlayerId ?? attacker.owner,
       attackerRollKind,
       nextCtx,
-      attacker.id
+      attacker.id,
     );
   }
 
@@ -74,39 +78,24 @@ export function resolveAttackDefenderRoll(
     canUseFriskChildsCry(defender) &&
     !nextCtx.friskChildsCryChoiceMade
   ) {
-    return replacePendingRoll(
-      state,
-      defender.owner,
-      "friskChildsCryChoice",
-      nextCtx,
-      defender.id
-    );
+    return replacePendingRoll(state, defender.owner, "friskChildsCryChoice", nextCtx, defender.id);
   }
 
   if (wouldAttackHitFromContext(nextCtx, attacker, defender)) {
-    const pureBlood = maybeRequestPureBloodRedirect(
-      state,
-      pending,
-      nextCtx,
-      defender.id
-    );
+    const pureBlood = maybeRequestPureBloodRedirect(state, pending, nextCtx, defender.id);
     if (pureBlood) {
       return pureBlood;
     }
   }
 
   const muninnCharges = defender.charges?.[ABILITY_ODIN_MUNINN] ?? 0;
-  if (
-    defender.heroId === HERO_ODIN_ID &&
-    muninnCharges === 6 &&
-    !nextCtx.odinMuninnChoiceMade
-  ) {
+  if (defender.heroId === HERO_ODIN_ID && muninnCharges === 6 && !nextCtx.odinMuninnChoiceMade) {
     return replacePendingRoll(
       state,
       defender.owner,
       "odinMuninnDefenseChoice",
       nextCtx,
-      defender.id
+      defender.id,
     );
   }
 
@@ -115,25 +104,16 @@ export function resolveAttackDefenderRoll(
     odinMuninnChoiceMade: true,
   };
   const resolved = finalizeAttackFromContext(state, finalizedCtx, "none");
-  return continueAfterAttackResolution(
-    resolved.state,
-    resolved.events,
-    finalizedCtx,
-    rng
-  );
+  return continueAfterAttackResolution(resolved.state, resolved.events, finalizedCtx, rng);
 }
 
 export function resolvePureBloodRedirectRoll(
   state: GameState,
   pending: PendingRoll,
-  actionChoice: unknown,
-  rng: RNG
+  actionChoice: ResolveRollChoice | undefined,
+  rng: RNG,
 ): ApplyResult {
-  const redirected = resolvePureBloodRedirectChoice(
-    state,
-    pending,
-    actionChoice as any
-  );
+  const redirected = resolvePureBloodRedirectChoice(state, pending, actionChoice);
   if (!redirected) {
     return { state, events: [] };
   }
@@ -143,10 +123,5 @@ export function resolvePureBloodRedirectRoll(
     odinMuninnChoiceMade: true,
   };
   const resolved = finalizeAttackFromContext(state, finalizedCtx, "none");
-  return continueAfterAttackResolution(
-    resolved.state,
-    resolved.events,
-    finalizedCtx,
-    rng
-  );
+  return continueAfterAttackResolution(resolved.state, resolved.events, finalizedCtx, rng);
 }

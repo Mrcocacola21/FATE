@@ -173,7 +173,7 @@ export function FigureSetPage({ onBack }: FigureSetPageProps) {
       ...group,
       abilities: abilities.filter((ability) => ability.type === group.type),
     }));
-  }, [detailsHero, language, t]);
+  }, [detailsHero, t]);
 
   return (
     <div className="app-shell px-3 py-4 sm:px-6 sm:py-8">

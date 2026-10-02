@@ -1,4 +1,3 @@
-import React from "react";
 import { Link } from "react-router";
 import { useI18n } from "../i18n";
 import { useAuthStore } from "./authStore";

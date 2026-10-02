@@ -46,9 +46,10 @@ function prepareMettatonStartTurn(state: GameState, unitId: string): GameState {
 }
 
 export function testMettatonLongLiverCannotHideAndRiderMovement() {
-  let { state, mettaton } = setupMettatonState();
+  const { state: initialState101, mettaton } = setupMettatonState();
+  let state = initialState101;
   const enemyArcher = Object.values(state.units).find(
-    (u) => u.owner === "P2" && u.class === "archer"
+    (u) => u.owner === "P2" && u.class === "archer",
   )!;
 
   assert(
@@ -77,13 +78,12 @@ export function testMettatonLongLiverCannotHideAndRiderMovement() {
   const battle = toBattleState(state, "P1", mettaton.id);
   const stealthTry = applyAction(
     battle,
-    { type: "enterStealth", unitId: mettaton.id } as any,
+    { type: "enterStealth", unitId: mettaton.id },
     new SeededRNG(1)
   );
   assert(
-    stealthTry.events.length === 0 &&
-      stealthTry.state.units[mettaton.id].isStealthed !== true,
-    "Mettaton should not be able to enter stealth"
+    stealthTry.events.length === 0 && stealthTry.state.units[mettaton.id].isStealthed !== true,
+    "Mettaton should not be able to enter stealth",
   );
 
   console.log("mettaton_long_liver_hide_and_rider_movement passed");
@@ -91,22 +91,23 @@ export function testMettatonLongLiverCannotHideAndRiderMovement() {
 
 
 export function testMettatonRatingPassiveAndThresholdUnlock() {
-  let { state, mettaton, enemy } = setupMettatonState();
-  state = setUnit(state, mettaton.id, { position: { col: 4, row: 4 } });
-  state = setUnit(state, enemy.id, { position: { col: 4, row: 5 } });
+  const { state: initialState102, mettaton, enemy } = setupMettatonState();
+let state = initialState102;
+state = setUnit(state, mettaton.id, { position: { col: 4, row: 4 } });
+state = setUnit(state, enemy.id, { position: { col: 4, row: 5 } });
   state = toBattleState(state, "P1", mettaton.id);
   state = initKnowledgeForOwners(state);
 
   const hitRng = makeRngSequence([0.99, 0.99, 0.01, 0.01]);
   const attack = applyAction(
     state,
-    { type: "attack", attackerId: mettaton.id, defenderId: enemy.id } as any,
+    { type: "attack", attackerId: mettaton.id, defenderId: enemy.id },
     hitRng
   );
   const attacked = resolveAllPendingRollsWithEvents(attack.state, hitRng);
   assert(
     attacked.state.units[mettaton.id].mettatonRating === 2,
-    "Successful attack should grant +2 Rating"
+    "Successful attack should grant +2 Rating",
   );
 
   let defenseState = attacked.state;
@@ -123,13 +124,13 @@ export function testMettatonRatingPassiveAndThresholdUnlock() {
   const missRng = makeRngSequence([0.01, 0.01, 0.99, 0.99]);
   const defended = applyAction(
     defenseState,
-    { type: "attack", attackerId: enemy.id, defenderId: mettaton.id } as any,
+    { type: "attack", attackerId: enemy.id, defenderId: mettaton.id },
     missRng
   );
   const defendedResolved = resolveAllPendingRollsWithEvents(defended.state, missRng);
   assert(
     defendedResolved.state.units[mettaton.id].mettatonRating === 3,
-    "Successful defense should grant +1 Rating"
+    "Successful defense should grant +1 Rating",
   );
 
   let manualState = setUnit(defendedResolved.state, mettaton.id, {
@@ -140,12 +141,12 @@ export function testMettatonRatingPassiveAndThresholdUnlock() {
 
   const exFail = applyAction(
     manualState,
-    { type: "useAbility", unitId: mettaton.id, abilityId: ABILITY_METTATON_EX } as any,
+    { type: "useAbility", unitId: mettaton.id, abilityId: ABILITY_METTATON_EX },
     new SeededRNG(1)
   );
   assert(
     exFail.state.units[mettaton.id].mettatonRating === 2,
-    "Blocked EX attempt should not change Rating"
+    "Blocked EX attempt should not change Rating",
   );
   assert(
     exFail.state.units[mettaton.id].turn.actionUsed === false,
@@ -158,13 +159,13 @@ export function testMettatonRatingPassiveAndThresholdUnlock() {
   });
   const belowStarted = applyAction(
     prepareMettatonStartTurn(belowStartState, mettaton.id),
-    { type: "unitStartTurn", unitId: mettaton.id } as any,
+    { type: "unitStartTurn", unitId: mettaton.id },
     new SeededRNG(2)
   );
   assert(
     belowStarted.state.units[mettaton.id].mettatonExUnlocked !== true &&
       belowStarted.state.units[mettaton.id].mettatonRating === 4,
-    "Mettaton should not transform below threshold at turn start"
+    "Mettaton should not transform below threshold at turn start",
   );
   assert(
     belowStarted.state.units[mettaton.id].turn.actionUsed === false &&
@@ -178,13 +179,13 @@ export function testMettatonRatingPassiveAndThresholdUnlock() {
   });
   const manualEx = applyAction(
     manualReadyState,
-    { type: "useAbility", unitId: mettaton.id, abilityId: ABILITY_METTATON_EX } as any,
+    { type: "useAbility", unitId: mettaton.id, abilityId: ABILITY_METTATON_EX },
     new SeededRNG(2)
   );
   assert(
     manualEx.state.units[mettaton.id].mettatonExUnlocked !== true &&
       manualEx.state.units[mettaton.id].mettatonRating === 5,
-    "EX should not be manually activated even at threshold"
+    "EX should not be manually activated even at threshold",
   );
   assert(
     manualEx.state.units[mettaton.id].turn.actionUsed === false,
@@ -194,13 +195,13 @@ export function testMettatonRatingPassiveAndThresholdUnlock() {
   const startReadyState = prepareMettatonStartTurn(manualReadyState, mettaton.id);
   const started = applyAction(
     startReadyState,
-    { type: "unitStartTurn", unitId: mettaton.id } as any,
+    { type: "unitStartTurn", unitId: mettaton.id },
     new SeededRNG(3)
   );
   assert(
     started.state.units[mettaton.id].mettatonExUnlocked === true &&
       started.state.units[mettaton.id].mettatonRating === 5,
-    "EX should unlock at turn start without spending Rating"
+    "EX should unlock at turn start without spending Rating",
   );
   assert(
     started.state.units[mettaton.id].turn.actionUsed === false &&
@@ -233,12 +234,13 @@ export function testMettatonRatingPassiveAndThresholdUnlock() {
 
 
 export function testMettatonPoppinsGatingAreaAndRating() {
-  let { state, mettaton, enemy } = setupMettatonState();
+  const { state: initialState103, mettaton, enemy } = setupMettatonState();
+  let state = initialState103;
   const ally = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.id !== mettaton.id && u.class === "knight"
+    (u) => u.owner === "P1" && u.id !== mettaton.id && u.class === "knight",
   )!;
   const enemy2 = Object.values(state.units).find(
-    (u) => u.owner === "P2" && u.id !== enemy.id && u.class === "knight"
+    (u) => u.owner === "P2" && u.id !== enemy.id && u.class === "knight",
   )!;
 
   state = setUnit(state, mettaton.id, { position: { col: 4, row: 4 } });
@@ -259,12 +261,12 @@ export function testMettatonPoppinsGatingAreaAndRating() {
       unitId: mettaton.id,
       abilityId: ABILITY_METTATON_POPPINS,
       payload: { center: { col: 4, row: 6 } },
-    } as any,
-    makeAttackWinRng(3)
+    },
+    makeAttackWinRng(3),
   );
   assert(
     failCost.events.length === 0 && !failCost.state.pendingRoll,
-    "Poppins should require Rating 3"
+    "Poppins should require Rating 3",
   );
 
   const readyState = setUnit(state, mettaton.id, {
@@ -278,12 +280,12 @@ export function testMettatonPoppinsGatingAreaAndRating() {
       unitId: mettaton.id,
       abilityId: ABILITY_METTATON_POPPINS,
       payload: { center: { col: 5, row: 6 } },
-    } as any,
-    makeAttackWinRng(3)
+    },
+    makeAttackWinRng(3),
   );
   assert(
     failCenter.events.length === 0 && !failCenter.state.pendingRoll,
-    "Poppins center must be on Mettaton attack line"
+    "Poppins center must be on Mettaton attack line",
   );
 
   const beforeAllyHp = readyState.units[ally.id].hp;
@@ -296,63 +298,60 @@ export function testMettatonPoppinsGatingAreaAndRating() {
       unitId: mettaton.id,
       abilityId: ABILITY_METTATON_POPPINS,
       payload: { center: { col: 4, row: 6 } },
-    } as any,
-    makeAttackWinRng(3)
+    },
+    makeAttackWinRng(3),
   );
   assert(
     poppins.events.some(
       (event) =>
         event.type === "abilityUsed" &&
         event.unitId === mettaton.id &&
-        event.abilityId === ABILITY_METTATON_POPPINS
+        event.abilityId === ABILITY_METTATON_POPPINS,
     ),
-    "Poppins should emit abilityUsed"
+    "Poppins should emit abilityUsed",
   );
   assert(
     poppins.events.some(
       (event) =>
         event.type === "mettatonRatingChanged" &&
         event.reason === "abilitySpend" &&
-        event.delta === -3
+        event.delta === -3,
     ),
-    "Poppins should spend 3 Rating"
+    "Poppins should spend 3 Rating",
   );
 
-  const resolved = resolveAllPendingRollsWithEvents(
-    poppins.state,
-    makeSharedAttackerWinRng(3)
-  );
+  const resolved = resolveAllPendingRollsWithEvents(poppins.state, makeSharedAttackerWinRng(3));
   assert(
     resolved.state.units[ally.id].hp === beforeAllyHp - 1 &&
       resolved.state.units[enemy.id].hp === beforeEnemyHp - 1 &&
       resolved.state.units[enemy2.id].hp === beforeEnemy2Hp - 1,
-    "Poppins should attack all units in the selected 3x3 area"
+    "Poppins should attack all units in the selected 3x3 area",
   );
   assert(
     resolved.state.units[mettaton.id].mettatonRating === 6 &&
       resolved.state.units[mettaton.id].mettatonExUnlocked !== true,
-    "Poppins rating gain should not unlock EX before Mettaton's next turn start"
+    "Poppins rating gain should not unlock EX before Mettaton's next turn start",
   );
 
   const nextTurn = applyAction(
     prepareMettatonStartTurn(resolved.state, mettaton.id),
-    { type: "unitStartTurn", unitId: mettaton.id } as any,
-    new SeededRNG(2)
+    { type: "unitStartTurn", unitId: mettaton.id },
+    new SeededRNG(2),
   );
   assert(
     nextTurn.state.units[mettaton.id].mettatonRating === 6 &&
       nextTurn.state.units[mettaton.id].mettatonExUnlocked === true,
-    "next Mettaton turn start should unlock EX without spending Poppins Rating"
+    "next Mettaton turn start should unlock EX without spending Poppins Rating",
   );
 
   console.log("mettaton_poppins_gating_area_and_rating passed");
 }
 
-
 export function testMettatonExStageAndLaser() {
-  let { state, mettaton, enemy } = setupMettatonState();
+  const { state: initialState104, mettaton, enemy } = setupMettatonState();
+  let state = initialState104;
   const ally = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.id !== mettaton.id && u.class === "knight"
+    (u) => u.owner === "P1" && u.id !== mettaton.id && u.class === "knight",
   )!;
 
   state = setUnit(state, mettaton.id, { position: { col: 4, row: 4 } });
@@ -368,23 +367,20 @@ export function testMettatonExStageAndLaser() {
       unitId: mettaton.id,
       abilityId: ABILITY_METTATON_LASER,
       payload: { target: { col: 4, row: 6 } },
-    } as any,
-    makeAttackWinRng(2)
+    },
+    makeAttackWinRng(2),
   );
   assert(
     laserBeforeEx.events.length === 0 && !laserBeforeEx.state.pendingRoll,
-    "Laser should require EX unlock"
+    "Laser should require EX unlock",
   );
 
   const exFail = applyAction(
     setUnit(state, mettaton.id, { mettatonRating: 4, turn: makeEmptyTurnEconomy() }),
-    { type: "useAbility", unitId: mettaton.id, abilityId: ABILITY_METTATON_EX } as any,
-    new SeededRNG(3)
+    { type: "useAbility", unitId: mettaton.id, abilityId: ABILITY_METTATON_EX },
+    new SeededRNG(3),
   );
-  assert(
-    exFail.state.units[mettaton.id].mettatonExUnlocked !== true,
-    "EX should require Rating 5"
-  );
+  assert(exFail.state.units[mettaton.id].mettatonExUnlocked !== true, "EX should require Rating 5");
 
   const exReadyState = setUnit(state, mettaton.id, {
     mettatonRating: 5,
@@ -392,38 +388,37 @@ export function testMettatonExStageAndLaser() {
   });
   const manualEx = applyAction(
     exReadyState,
-    { type: "useAbility", unitId: mettaton.id, abilityId: ABILITY_METTATON_EX } as any,
-    new SeededRNG(4)
+    { type: "useAbility", unitId: mettaton.id, abilityId: ABILITY_METTATON_EX },
+    new SeededRNG(4),
   );
   assert(
     manualEx.state.units[mettaton.id].mettatonExUnlocked !== true &&
       manualEx.state.units[mettaton.id].mettatonRating === 5,
-    "EX should not be manually activated at threshold"
+    "EX should not be manually activated at threshold",
   );
 
   const exOk = applyAction(
     prepareMettatonStartTurn(exReadyState, mettaton.id),
-    { type: "unitStartTurn", unitId: mettaton.id } as any,
-    new SeededRNG(4)
+    { type: "unitStartTurn", unitId: mettaton.id },
+    new SeededRNG(4),
   );
   assert(
     exOk.state.units[mettaton.id].mettatonExUnlocked === true &&
       exOk.state.units[mettaton.id].mettatonRating === 5,
-    "EX should unlock at turn start without spending Rating"
+    "EX should unlock at turn start without spending Rating",
   );
   assert(
     exOk.state.units[mettaton.id].turn.actionUsed === false &&
       exOk.state.units[mettaton.id].turn.moveUsed === false,
-    "EX turn-start transform should leave action and movement available"
+    "EX turn-start transform should leave action and movement available",
   );
 
   const exView = makePlayerView(exOk.state, "P1");
-  const exAbilities =
-    exView.abilitiesByUnitId?.[mettaton.id]?.map((ability) => ability.id) ?? [];
+  const exAbilities = exView.abilitiesByUnitId?.[mettaton.id]?.map((ability) => ability.id) ?? [];
   assert(
     exAbilities.includes(ABILITY_METTATON_STAGE_PHENOMENON) &&
       exAbilities.includes(ABILITY_METTATON_LASER),
-    "EX should unlock Stage Phenomenon and Laser abilities"
+    "EX should unlock Stage Phenomenon and Laser abilities",
   );
 
   const exTwiceState = setUnit(exOk.state, mettaton.id, {
@@ -432,13 +427,10 @@ export function testMettatonExStageAndLaser() {
   });
   const exTwice = applyAction(
     toBattleState(exTwiceState, "P1", mettaton.id),
-    { type: "useAbility", unitId: mettaton.id, abilityId: ABILITY_METTATON_EX } as any,
-    new SeededRNG(5)
+    { type: "useAbility", unitId: mettaton.id, abilityId: ABILITY_METTATON_EX },
+    new SeededRNG(5),
   );
-  assert(
-    exTwice.state.units[mettaton.id].mettatonRating === 10,
-    "EX should not apply twice"
-  );
+  assert(exTwice.state.units[mettaton.id].mettatonRating === 10, "EX should not apply twice");
 
   const laserState = setUnit(exOk.state, mettaton.id, {
     mettatonRating: 6,
@@ -451,31 +443,29 @@ export function testMettatonExStageAndLaser() {
       unitId: mettaton.id,
       abilityId: ABILITY_METTATON_LASER,
       payload: { target: { col: 4, row: 6 } },
-    } as any,
-    makeSharedAttackerWinRng(2)
+    },
+    makeSharedAttackerWinRng(2),
   );
 
   const beforeAllyHp = laserState.units[ally.id].hp;
   const beforeEnemyHp = laserState.units[enemy.id].hp;
-  const resolved = resolveAllPendingRollsWithEvents(
-    laser.state,
-    makeSharedAttackerWinRng(2)
-  );
+  const resolved = resolveAllPendingRollsWithEvents(laser.state, makeSharedAttackerWinRng(2));
   assert(
     resolved.state.units[ally.id].hp === beforeAllyHp - 1 &&
       resolved.state.units[enemy.id].hp === beforeEnemyHp - 1,
-    "Laser should attack line targets"
+    "Laser should attack line targets",
   );
   assert(
     resolved.state.units[mettaton.id].mettatonRating === 8,
-    "Laser should spend 3, then gain +1 Stage and +2 per successful hit"
+    "Laser should spend 3, then gain +1 Stage and +2 per successful hit",
   );
 
   console.log("mettaton_ex_stage_and_laser passed");
 }
 
 export function testMettatonLaserFullLineRegression() {
-  let { state, mettaton, enemy } = setupMettatonState();
+  const { state: initialState105, mettaton, enemy } = setupMettatonState();
+let state = initialState105;
   const ally = Object.values(state.units).find(
     (unit) => unit.owner === "P1" && unit.id !== mettaton.id && unit.class === "knight"
   )!;
@@ -503,7 +493,7 @@ export function testMettatonLaserFullLineRegression() {
       unitId: mettaton.id,
       abilityId: ABILITY_METTATON_LASER,
       payload: { target: { col: 4, row: 3 } },
-    } as any,
+    },
     makeSharedAttackerWinRng(3)
   );
   assert(
@@ -525,8 +515,8 @@ export function testMettatonLaserFullLineRegression() {
       abilityId: ABILITY_METTATON_LASER,
       // Clicking the first enemy selects the ray; it must not terminate the beam.
       payload: { target: { col: 5, row: 4 } },
-    } as any,
-    makeSharedAttackerWinRng(3)
+    },
+    makeSharedAttackerWinRng(3),
   );
   const queuedIds = (laser.state.pendingRoll?.context as {
     targetsQueue?: string[];
@@ -588,7 +578,7 @@ export function testMettatonLaserFullLineRegression() {
       unitId: mettaton.id,
       abilityId: ABILITY_METTATON_LASER,
       payload: { target: { col: 5, row: 3 } },
-    } as any,
+    },
     makeSharedAttackerWinRng(2)
   );
   assert(
@@ -613,7 +603,7 @@ export function testMettatonLaserFullLineRegression() {
       unitId: mettaton.id,
       abilityId: ABILITY_METTATON_LASER,
       payload: { target: { col: 7, row: 4 } },
-    } as any,
+    },
     makeSharedAttackerWinRng(1)
   );
   assert(
@@ -630,7 +620,8 @@ export function testMettatonLaserFullLineRegression() {
 
 
 export function testMettatonNeoGraceAndRiderPathUnlocks() {
-  let { state, mettaton, enemy } = setupMettatonState();
+  const { state: initialState106, mettaton, enemy } = setupMettatonState();
+let state = initialState106;
   state = setUnit(state, mettaton.id, { position: { col: 4, row: 4 } });
   state = setUnit(state, enemy.id, { position: { col: 4, row: 6 } });
   state = toBattleState(state, "P1", mettaton.id);
@@ -638,13 +629,13 @@ export function testMettatonNeoGraceAndRiderPathUnlocks() {
 
   const beforeMoveOptions = applyAction(
     state,
-    { type: "requestMoveOptions", unitId: mettaton.id } as any,
-    new SeededRNG(6)
+    { type: "requestMoveOptions", unitId: mettaton.id },
+    new SeededRNG(6),
   );
   const beforeMove = applyAction(
     beforeMoveOptions.state,
-    { type: "move", unitId: mettaton.id, to: { col: 4, row: 8 } } as any,
-    new SeededRNG(7)
+    { type: "move", unitId: mettaton.id, to: { col: 4, row: 8 } },
+    new SeededRNG(7),
   );
   assert(
     beforeMove.state.pendingRoll?.kind !== "riderPathAttack_attackerRoll",
@@ -653,12 +644,12 @@ export function testMettatonNeoGraceAndRiderPathUnlocks() {
 
   const neoFail = applyAction(
     setUnit(state, mettaton.id, { mettatonRating: 9, turn: makeEmptyTurnEconomy() }),
-    { type: "useAbility", unitId: mettaton.id, abilityId: ABILITY_METTATON_NEO } as any,
-    new SeededRNG(8)
+    { type: "useAbility", unitId: mettaton.id, abilityId: ABILITY_METTATON_NEO },
+    new SeededRNG(8),
   );
   assert(
     neoFail.state.units[mettaton.id].mettatonNeoUnlocked !== true,
-    "NEO should require Rating 10"
+    "NEO should require Rating 10",
   );
 
   const neoReadyState = setUnit(state, mettaton.id, {
@@ -667,13 +658,13 @@ export function testMettatonNeoGraceAndRiderPathUnlocks() {
   });
   const manualNeo = applyAction(
     neoReadyState,
-    { type: "useAbility", unitId: mettaton.id, abilityId: ABILITY_METTATON_NEO } as any,
-    new SeededRNG(9)
+    { type: "useAbility", unitId: mettaton.id, abilityId: ABILITY_METTATON_NEO },
+    new SeededRNG(9),
   );
   assert(
     manualNeo.state.units[mettaton.id].mettatonNeoUnlocked !== true &&
       manualNeo.state.units[mettaton.id].mettatonRating === 10,
-    "NEO should not be manually activated at threshold"
+    "NEO should not be manually activated at threshold",
   );
   assert(
     manualNeo.state.units[mettaton.id].turn.actionUsed === false,
@@ -682,8 +673,8 @@ export function testMettatonNeoGraceAndRiderPathUnlocks() {
 
   const neoOk = applyAction(
     prepareMettatonStartTurn(neoReadyState, mettaton.id),
-    { type: "unitStartTurn", unitId: mettaton.id } as any,
-    new SeededRNG(9)
+    { type: "unitStartTurn", unitId: mettaton.id },
+    new SeededRNG(9),
   );
   assert(
     neoOk.state.units[mettaton.id].mettatonExUnlocked === true &&
@@ -694,7 +685,7 @@ export function testMettatonNeoGraceAndRiderPathUnlocks() {
   assert(
     neoOk.state.units[mettaton.id].turn.actionUsed === false &&
       neoOk.state.units[mettaton.id].turn.moveUsed === false,
-    "NEO turn-start transform should leave action and movement available"
+    "NEO turn-start transform should leave action and movement available",
   );
   assert(
     neoOk.events.filter(
@@ -703,9 +694,9 @@ export function testMettatonNeoGraceAndRiderPathUnlocks() {
         event.unitId === mettaton.id &&
         event.abilityId === ABILITY_METTATON_NEO &&
         event.reason === "mettatonThreshold" &&
-        event.ratingSpent === false
+        event.ratingSpent === false,
     ).length === 1,
-    "automatic NEO transform should create exactly one transformation event"
+    "automatic NEO transform should create exactly one transformation event",
   );
   assert(
     !neoOk.events.some(
@@ -723,7 +714,7 @@ export function testMettatonNeoGraceAndRiderPathUnlocks() {
   });
   const neoAbove = applyAction(
     prepareMettatonStartTurn(neoAboveState, mettaton.id),
-    { type: "unitStartTurn", unitId: mettaton.id } as any,
+    { type: "unitStartTurn", unitId: mettaton.id },
     new SeededRNG(10)
   );
   assert(
@@ -735,7 +726,7 @@ export function testMettatonNeoGraceAndRiderPathUnlocks() {
   assert(
     neoAbove.state.units[mettaton.id].turn.actionUsed === false &&
       neoAbove.state.units[mettaton.id].turn.moveUsed === false,
-    "above-threshold automatic transform should leave action and movement available"
+    "above-threshold automatic transform should leave action and movement available",
   );
 
   const neoView = makePlayerView(neoOk.state, "P1");
@@ -755,7 +746,7 @@ export function testMettatonNeoGraceAndRiderPathUnlocks() {
   });
   const neoTwice = applyAction(
     toBattleState(neoTwiceState, "P1", mettaton.id),
-    { type: "useAbility", unitId: mettaton.id, abilityId: ABILITY_METTATON_NEO } as any,
+    { type: "useAbility", unitId: mettaton.id, abilityId: ABILITY_METTATON_NEO },
     new SeededRNG(10)
   );
   assert(
@@ -771,13 +762,13 @@ export function testMettatonNeoGraceAndRiderPathUnlocks() {
   riderState = toBattleState(riderState, "P1", mettaton.id);
   const afterMoveOptions = applyAction(
     riderState,
-    { type: "requestMoveOptions", unitId: mettaton.id, mode: "rider" } as any,
-    new SeededRNG(11)
+    { type: "requestMoveOptions", unitId: mettaton.id, mode: "rider" },
+    new SeededRNG(11),
   );
   const afterMove = applyAction(
     afterMoveOptions.state,
-    { type: "move", unitId: mettaton.id, to: { col: 4, row: 8 } } as any,
-    new SeededRNG(12)
+    { type: "move", unitId: mettaton.id, to: { col: 4, row: 8 } },
+    new SeededRNG(12),
   );
   assert(
     afterMove.state.pendingRoll?.kind === "riderPathAttack_attackerRoll" &&
@@ -797,8 +788,8 @@ export function testMettatonNeoGraceAndRiderPathUnlocks() {
   const graceFailState = toBattleState(graceFailEnemy, "P2", enemy.id);
   const graceFailAttack = applyAction(
     graceFailState,
-    { type: "attack", attackerId: enemy.id, defenderId: mettaton.id } as any,
-    makeRngSequence([0.99, 0.99, 0.01, 0.01])
+    { type: "attack", attackerId: enemy.id, defenderId: mettaton.id },
+    makeRngSequence([0.99, 0.99, 0.01, 0.01]),
   );
   const graceFailResolved = resolveAllPendingRollsWithEvents(
     graceFailAttack.state,
@@ -821,7 +812,7 @@ export function testMettatonNeoGraceAndRiderPathUnlocks() {
   const graceSuccessState = toBattleState(graceSuccessEnemy, "P2", enemy.id);
   const graceSuccessAttack = applyAction(
     graceSuccessState,
-    { type: "attack", attackerId: enemy.id, defenderId: mettaton.id } as any,
+    { type: "attack", attackerId: enemy.id, defenderId: mettaton.id },
     makeRngSequence([0.01, 0.01, 0.99, 0.99])
   );
   const graceSuccessResolved = resolveAllPendingRollsWithEvents(
@@ -838,8 +829,9 @@ export function testMettatonNeoGraceAndRiderPathUnlocks() {
 
 
 export function testMettatonBerserkerFeatureOnlyAfterNeo() {
-  let { state, mettaton, enemy } = setupMettatonState();
-  state = setUnit(state, mettaton.id, { position: { col: 4, row: 4 } });
+  const { state: initialState107, mettaton, enemy } = setupMettatonState();
+let state = initialState107;
+state = setUnit(state, mettaton.id, { position: { col: 4, row: 4 } });
   state = setUnit(state, enemy.id, { position: { col: 4, row: 5 } });
 
   const beforeNeoState = setUnit(state, mettaton.id, {
@@ -859,7 +851,7 @@ export function testMettatonBerserkerFeatureOnlyAfterNeo() {
   });
   assert(
     before.nextState.units[mettaton.id].hp < beforeNeoState.units[mettaton.id].hp,
-    "Mettaton should not auto-dodge as berserker before NEO"
+    "Mettaton should not auto-dodge as berserker before NEO",
   );
 
   const afterNeoState = setUnit(beforeNeoState, mettaton.id, {
@@ -891,7 +883,8 @@ export function testMettatonBerserkerFeatureOnlyAfterNeo() {
 
 
 export function testMettatonFinalChordGatingTargetsDamageAndSpend() {
-  let { state, mettaton, enemy } = setupMettatonState();
+  const { state: initialState108, mettaton, enemy } = setupMettatonState();
+let state = initialState108;
   const enemy2 = Object.values(state.units).find(
     (u) => u.owner === "P2" && u.id !== enemy.id && u.class === "knight"
   )!;
@@ -918,7 +911,7 @@ export function testMettatonFinalChordGatingTargetsDamageAndSpend() {
 
   const fail = applyAction(
     setUnit(state, mettaton.id, { mettatonRating: 11, turn: makeEmptyTurnEconomy() }),
-    { type: "useAbility", unitId: mettaton.id, abilityId: ABILITY_METTATON_FINAL_CHORD } as any,
+    { type: "useAbility", unitId: mettaton.id, abilityId: ABILITY_METTATON_FINAL_CHORD },
     makeAttackWinRng(3)
   );
   assert(
@@ -937,7 +930,7 @@ export function testMettatonFinalChordGatingTargetsDamageAndSpend() {
 
   const chord = applyAction(
     ready,
-    { type: "useAbility", unitId: mettaton.id, abilityId: ABILITY_METTATON_FINAL_CHORD } as any,
+    { type: "useAbility", unitId: mettaton.id, abilityId: ABILITY_METTATON_FINAL_CHORD },
     makeSharedAttackerWinRng(3)
   );
   assert(
@@ -945,9 +938,9 @@ export function testMettatonFinalChordGatingTargetsDamageAndSpend() {
       (event) =>
         event.type === "mettatonRatingChanged" &&
         event.reason === "abilitySpend" &&
-        event.delta === -12
+        event.delta === -12,
     ),
-    "Final Chord should spend 12 Rating"
+    "Final Chord should spend 12 Rating",
   );
 
   const affected = chord.state.pendingAoE?.affectedUnitIds ?? [];
@@ -963,10 +956,7 @@ export function testMettatonFinalChordGatingTargetsDamageAndSpend() {
     "Final Chord targets should be deduped"
   );
 
-  const resolved = resolveAllPendingRollsWithEvents(
-    chord.state,
-    makeSharedAttackerWinRng(3)
-  );
+  const resolved = resolveAllPendingRollsWithEvents(chord.state, makeSharedAttackerWinRng(3));
   assert(
     resolved.state.units[enemy.id].hp === beforeEnemyHp - 3 &&
       resolved.state.units[enemy2.id].hp === beforeEnemy2Hp - 3 &&
@@ -984,8 +974,8 @@ export function testMettatonFinalChordGatingTargetsDamageAndSpend() {
 
   const secondUse = applyAction(
     resolved.state,
-    { type: "useAbility", unitId: mettaton.id, abilityId: ABILITY_METTATON_FINAL_CHORD } as any,
-    makeAttackWinRng(3)
+    { type: "useAbility", unitId: mettaton.id, abilityId: ABILITY_METTATON_FINAL_CHORD },
+    makeAttackWinRng(3),
   );
   assert(
     secondUse.events.length === 0,

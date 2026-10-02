@@ -33,6 +33,8 @@ export type RoomMeta = {
     diceConsumed?: number[];
   }>;
   ready: { P1: boolean; P2: boolean };
+  /** Legacy snapshot field read by the store fallback. */
+  playersReady?: { P1?: boolean; P2?: boolean };
   players: { P1: boolean; P2: boolean };
   playerNames: { P1: string | null; P2: string | null };
   spectators: number;

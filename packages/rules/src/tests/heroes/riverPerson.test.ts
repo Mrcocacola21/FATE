@@ -24,17 +24,21 @@ import {
   getMovementActionsRemaining,
 } from "../../index";
 
-function abilityAction(unitId: string, abilityId: string) {
+function abilityAction(
+  unitId: string,
+  abilityId: string,
+): Extract<import("../../model").GameAction, { type: "useAbility" }> {
   return {
     type: "useAbility",
     unitId,
     abilityId,
-  } as any;
+  };
 }
 
-function getPendingOptions<T = Coord>(state: ReturnType<typeof setupRiverPersonState>["state"]): T[] {
-  return ((state.pendingRoll?.context as { options?: T[] } | undefined)?.options ??
-    []) as T[];
+function getPendingOptions<T = Coord>(
+  state: ReturnType<typeof setupRiverPersonState>["state"],
+): T[] {
+  return ((state.pendingRoll?.context as { options?: T[] } | undefined)?.options ?? []) as T[];
 }
 
 function expectCoord(options: Coord[], expected: Coord, message: string): void {
@@ -139,9 +143,10 @@ export function testRiverPersonHpBonus() {
 }
 
 export function testRiverPersonNoRiderPathFeature() {
-  let { state, river } = setupRiverPersonState();
+  const { state: initialState133, river } = setupRiverPersonState();
+let state = initialState133;
   const enemy = Object.values(state.units).find(
-    (unit) => unit.owner === "P2" && unit.class === "knight"
+    (unit) => unit.owner === "P2" && unit.class === "knight",
   )!;
 
   state = setUnit(state, river.id, { position: { col: 0, row: 0 } });
@@ -151,13 +156,13 @@ export function testRiverPersonNoRiderPathFeature() {
 
   const moved = applyAction(
     state,
-    { type: "move", unitId: river.id, to: { col: 0, row: 4 } } as any,
+    { type: "move", unitId: river.id, to: { col: 0, row: 4 } },
     makeRngSequence([])
   );
   assert(
     moved.state.units[river.id].position?.col === 0 &&
       moved.state.units[river.id].position?.row === 4,
-    "River Person should still use rider baseline movement"
+    "River Person should still use rider baseline movement",
   );
   assert(
     moved.state.pendingRoll?.kind !== "riderPathAttack_attackerRoll",
@@ -175,19 +180,20 @@ export function testRiverPersonNoRiderPathFeature() {
 
 export function testRiverPersonBoatCarryFlowAndConstraints() {
   {
-    let { state, river } = setupRiverPersonState();
+    const { state: initialState134, river } = setupRiverPersonState();
+let state = initialState134;
     state = setUnit(state, river.id, { position: { col: 4, row: 4 } });
     state = toBattleState(state, "P1", river.id);
     state = initKnowledgeForOwners(state);
 
     const moveOptions = applyAction(
       state,
-      { type: "requestMoveOptions", unitId: river.id } as any,
-      makeRngSequence([])
+      { type: "requestMoveOptions", unitId: river.id },
+      makeRngSequence([]),
     );
     assert(
       moveOptions.state.pendingRoll?.kind !== "riverBoatCarryChoice",
-      "Normal move options should not auto-open Boat passenger selection"
+      "Normal move options should not auto-open Boat passenger selection",
     );
 
     const boat = applyAction(
@@ -223,12 +229,13 @@ export function testRiverPersonBoatCarryFlowAndConstraints() {
   }
 
   {
-    let { state, river } = setupRiverPersonState();
+    const { state: initialState135, river } = setupRiverPersonState();
+let state = initialState135;
     const carriedAlly = Object.values(state.units).find(
-      (unit) => unit.owner === "P1" && unit.class === "assassin"
+      (unit) => unit.owner === "P1" && unit.class === "assassin",
     )!;
     const blockA = Object.values(state.units).find(
-      (unit) => unit.owner === "P1" && unit.class === "knight"
+      (unit) => unit.owner === "P1" && unit.class === "knight",
     )!;
     const blockB = Object.values(state.units).find(
       (unit) => unit.owner === "P2" && unit.class === "knight"
@@ -375,25 +382,26 @@ export function testRiverPersonBoatCarryFlowAndConstraints() {
 
 export function testRiverPersonBoatmanConvertsActionToMoveAndSupportsCarry() {
   {
-    let { state, river } = setupRiverPersonState();
+    const { state: initialState136, river } = setupRiverPersonState();
+let state = initialState136;
     state = setUnit(state, river.id, { position: { col: 0, row: 0 } });
     state = toBattleState(state, "P1", river.id);
     state = initKnowledgeForOwners(state);
 
     const moved = applyAction(
       state,
-      { type: "move", unitId: river.id, to: { col: 0, row: 2 } } as any,
-      makeRngSequence([])
+      { type: "move", unitId: river.id, to: { col: 0, row: 2 } },
+      makeRngSequence([]),
     );
     assert(
       getMovementActionsRemaining(moved.state.units[river.id]) === 0,
-      "Normal movement should spend the initial movement action"
+      "Normal movement should spend the initial movement action",
     );
 
     const boatman = applyAction(
       moved.state,
       abilityAction(river.id, ABILITY_RIVER_PERSON_BOATMAN),
-      makeRngSequence([])
+      makeRngSequence([]),
     );
     const riverAfterBoatman = boatman.state.units[river.id];
     assert(riverAfterBoatman.turn.actionUsed, "Boatman should spend Action after movement");
@@ -421,7 +429,8 @@ export function testRiverPersonBoatmanConvertsActionToMoveAndSupportsCarry() {
   }
 
   {
-    let { state, river } = setupRiverPersonState();
+    const { state: initialState137, river } = setupRiverPersonState();
+let state = initialState137;
     const ally = Object.values(state.units).find(
       (unit) => unit.owner === "P1" && unit.class === "assassin"
     )!;
@@ -433,7 +442,7 @@ export function testRiverPersonBoatmanConvertsActionToMoveAndSupportsCarry() {
     const usedBoatman = applyAction(
       state,
       abilityAction(river.id, ABILITY_RIVER_PERSON_BOATMAN),
-      makeRngSequence([])
+      makeRngSequence([]),
     );
     const riverAfter = usedBoatman.state.units[river.id];
     assert(riverAfter.turn.actionUsed, "Boatman should consume main action immediately");
@@ -480,7 +489,8 @@ export function testRiverPersonBoatmanConvertsActionToMoveAndSupportsCarry() {
   }
 
   {
-    let { state, river } = setupRiverPersonState();
+    const { state: initialState138, river } = setupRiverPersonState();
+let state = initialState138;
     state = setUnit(state, river.id, { position: { col: 4, row: 4 } });
     state = toBattleState(state, "P1", river.id);
     state = initKnowledgeForOwners(state);
@@ -492,12 +502,12 @@ export function testRiverPersonBoatmanConvertsActionToMoveAndSupportsCarry() {
     );
     const searched = applyAction(
       boatman.state,
-      { type: "searchStealth", unitId: river.id, mode: "move" } as any,
-      makeRngSequence([])
+      { type: "searchStealth", unitId: river.id, mode: "move" },
+      makeRngSequence([]),
     );
     assert(
       getMovementActionsRemaining(searched.state.units[river.id]) === 1,
-      "Search(Move) should consume exactly one shared movement action"
+      "Search(Move) should consume exactly one shared movement action",
     );
     const intents = getLegalIntents(searched.state, "P1");
     assert(
@@ -505,13 +515,14 @@ export function testRiverPersonBoatmanConvertsActionToMoveAndSupportsCarry() {
       "Move and Search(Move) should remain legal while one granted move remains"
     );
     const boatView = getAbilityViewsForUnit(searched.state, river.id).find(
-      (ability) => ability.id === ABILITY_RIVER_PERSON_BOAT
+      (ability) => ability.id === ABILITY_RIVER_PERSON_BOAT,
     );
     assert(boatView?.isAvailable, "Boat should remain legal after one Search(Move)");
   }
 
   {
-    let { state, river } = setupRiverPersonState();
+    const { state: initialState139, river } = setupRiverPersonState();
+let state = initialState139;
     const ally = Object.values(state.units).find(
       (unit) => unit.owner === "P1" && unit.class === "assassin"
     )!;
@@ -523,14 +534,14 @@ export function testRiverPersonBoatmanConvertsActionToMoveAndSupportsCarry() {
     const boatman = applyAction(
       state,
       abilityAction(river.id, ABILITY_RIVER_PERSON_BOATMAN),
-      makeRngSequence([])
+      makeRngSequence([]),
     );
     const firstBoat = completeBoatUse(
       boatman.state,
       river.id,
       ally.id,
       { col: 3, row: 5 },
-      { col: 4, row: 5 }
+      { col: 4, row: 5 },
     );
     assert(
       firstBoat.state.units[river.id].turn.moveUsed,
@@ -569,7 +580,8 @@ export function testRiverPersonBoatmanConvertsActionToMoveAndSupportsCarry() {
   }
 
   {
-    let { state, river } = setupRiverPersonState();
+    const { state: initialState140, river } = setupRiverPersonState();
+let state = initialState140;
     const ally = Object.values(state.units).find(
       (unit) => unit.owner === "P1" && unit.class === "assassin"
     )!;
@@ -583,12 +595,12 @@ export function testRiverPersonBoatmanConvertsActionToMoveAndSupportsCarry() {
       river.id,
       ally.id,
       { col: 3, row: 5 },
-      { col: 4, row: 5 }
+      { col: 4, row: 5 },
     );
     const secondAttempt = applyAction(
       firstBoat.state,
       abilityAction(river.id, ABILITY_RIVER_PERSON_BOAT),
-      makeRngSequence([])
+      makeRngSequence([]),
     );
     assert(
       !secondAttempt.state.pendingRoll,
@@ -600,7 +612,8 @@ export function testRiverPersonBoatmanConvertsActionToMoveAndSupportsCarry() {
 }
 
 export function testRiverPersonGuideOfSoulsStormImmunity() {
-  let { state, river } = setupRiverPersonState();
+  const { state: initialState141, river } = setupRiverPersonState();
+let state = initialState141;
   state = setUnit(state, river.id, { position: { col: 4, row: 4 }, hp: 7 });
   state = {
     ...state,
@@ -617,24 +630,25 @@ export function testRiverPersonGuideOfSoulsStormImmunity() {
 
   const started = applyAction(
     state,
-    { type: "unitStartTurn", unitId: river.id } as any,
+    { type: "unitStartTurn", unitId: river.id },
     makeRngSequence([0.0])
   );
   assert(
     started.state.units[river.id].hp === 7,
-    "Guide of Souls should prevent storm start-turn damage"
+    "Guide of Souls should prevent storm start-turn damage",
   );
 
   console.log("river_person_guide_of_souls_storm_immunity passed");
 }
 
 export function testRiverPersonTraLaLaGatingAndFlow() {
-  let { state, river } = setupRiverPersonState();
+  const { state: initialState142, river } = setupRiverPersonState();
+  let state = initialState142;
   const target = Object.values(state.units).find(
     (unit) => unit.owner === "P2" && unit.class === "berserker"
   )!;
   const enemyPathBlocker = Object.values(state.units).find(
-    (unit) => unit.owner === "P2" && unit.class === "knight"
+    (unit) => unit.owner === "P2" && unit.class === "knight",
   )!;
   const allySpearman = Object.values(state.units).find(
     (unit) => unit.owner === "P1" && unit.class === "spearman"

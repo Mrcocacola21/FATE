@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router";
 import { authStore } from "./auth/authStore";
 import { AuthLayout } from "./auth/AuthLayout";

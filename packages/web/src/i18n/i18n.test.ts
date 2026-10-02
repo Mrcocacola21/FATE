@@ -18,10 +18,7 @@ import {
 import { formatEventMessage } from "./eventMessages";
 
 test("saved language wins, then Ukrainian browser language, then English", () => {
-  assert.equal(
-    resolveInitialLanguage({ getItem: () => "en" }, "uk-UA"),
-    "en",
-  );
+  assert.equal(resolveInitialLanguage({ getItem: () => "en" }, "uk-UA"), "en");
   assert.equal(resolveInitialLanguage({ getItem: () => null }, "uk-UA"), "uk");
   assert.equal(resolveInitialLanguage({ getItem: () => null }, "pl-PL"), "en");
 });
@@ -111,10 +108,7 @@ test("event formatter localizes known and unknown events safely", () => {
   );
 
   const redactedMark = { type: "chikatiloMarkApplied" } as GameEvent;
-  assert.equal(
-    formatEventMessage(redactedMark, "en", translate),
-    "Killer's Mark was applied.",
-  );
+  assert.equal(formatEventMessage(redactedMark, "en", translate), "Killer's Mark was applied.");
 
   const fullMark = {
     type: "chikatiloMarkApplied",
@@ -219,11 +213,18 @@ test("web components do not introduce direct English JSX labels", () => {
   };
   walk(srcRoot);
 
-  const allowedText = new Set(["P1", "P2", "B", "S", "F", "F2", "R", "X"]);
+  // Board status codes have localized titles/aria labels; the short codes stay fixed.
+  const allowedText = new Set(["P1", "P2", "B", "BL", "S", "F", "F2", "R", "X"]);
   const violations: string[] = [];
   for (const file of files) {
     const sourceText = fs.readFileSync(file, "utf8");
-    const source = ts.createSourceFile(file, sourceText, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+    const source = ts.createSourceFile(
+      file,
+      sourceText,
+      ts.ScriptTarget.Latest,
+      true,
+      ts.ScriptKind.TSX,
+    );
     const visit = (node: ts.Node) => {
       if (ts.isJsxText(node)) {
         const text = node.text.replace(/\s+/g, " ").trim();

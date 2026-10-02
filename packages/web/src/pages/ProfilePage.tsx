@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { useAuthStore } from "../auth/authStore";
 import { useI18n } from "../i18n";

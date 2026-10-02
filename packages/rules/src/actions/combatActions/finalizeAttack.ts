@@ -8,7 +8,7 @@ import type { AttackRollContext } from "../types";
 export function finalizeAttackFromContext(
   state: GameState,
   context: AttackRollContext,
-  useAutoDefense: boolean
+  useAutoDefense: boolean,
 ): ApplyResult {
   const rolls = {
     attackerDice: context.attackerDice ?? [],
@@ -17,8 +17,7 @@ export function finalizeAttackFromContext(
     tieBreakDefender: context.tieBreakDefender ?? [],
   };
 
-  const sourceId =
-    context.damageBonusSourceId ?? getPolkovodetsSource(state, context.attackerId);
+  const sourceId = context.damageBonusSourceId ?? getPolkovodetsSource(state, context.attackerId);
   const polkovodetsBonus = sourceId ? 1 : 0;
   const damageBonus = (context.damageBonus ?? 0) + polkovodetsBonus;
 
@@ -39,12 +38,12 @@ export function finalizeAttackFromContext(
     rolls,
   });
 
-  let updatedEvents = [...events];
+  const updatedEvents = [...events];
   const attackEvent = events.find(
     (event) =>
       event.type === "attackResolved" &&
       event.attackerId === context.attackerId &&
-      event.defenderId === context.defenderId
+      event.defenderId === context.defenderId,
   );
   if (
     attackEvent &&
@@ -60,7 +59,7 @@ export function finalizeAttackFromContext(
         amount: polkovodetsBonus,
         source: "polkovodets",
         fromUnitId: sourceId,
-      })
+      }),
     );
   }
 
@@ -89,15 +88,13 @@ export function finalizeAttackFromContext(
       (event) =>
         event.type === "attackResolved" &&
         event.attackerId === context.attackerId &&
-        event.defenderId === context.defenderId
+        event.defenderId === context.defenderId,
     );
     let nextPendingAoE = updatedState.pendingAoE;
 
     if (queuedAttackEvent && queuedAttackEvent.type === "attackResolved") {
       if (queuedAttackEvent.damage > 0) {
-        const damaged = nextPendingAoE.damagedUnitIds.includes(
-          queuedAttackEvent.defenderId
-        )
+        const damaged = nextPendingAoE.damagedUnitIds.includes(queuedAttackEvent.defenderId)
           ? nextPendingAoE.damagedUnitIds
           : [...nextPendingAoE.damagedUnitIds, queuedAttackEvent.defenderId];
         const damageByUnitId = {
@@ -117,9 +114,7 @@ export function finalizeAttackFromContext(
       .map((event) => (event.type === "stealthRevealed" ? event.unitId : ""))
       .filter((unitId) => unitId.length > 0);
     if (revealedIds.length > 0) {
-      const merged = Array.from(
-        new Set([...nextPendingAoE.revealedUnitIds, ...revealedIds])
-      );
+      const merged = Array.from(new Set([...nextPendingAoE.revealedUnitIds, ...revealedIds]));
       nextPendingAoE = { ...nextPendingAoE, revealedUnitIds: merged };
     }
 

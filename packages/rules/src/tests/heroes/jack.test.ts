@@ -64,15 +64,16 @@ function movedEvent(unitId: string, col: number, row: number) {
 }
 
 export function testJackSnareActivatesOncePerTarget() {
-  let { state, jack, enemies } = setupJack();
-  const first = enemies[0];
-  const second = enemies[1];
-  state = {
-    ...state,
-    jackTraps: [snare(jack, 1, 4, 4), snare(jack, 2, 6, 6)],
-  };
+  const { state: initialState80, jack, enemies } = setupJack();
+let state = initialState80;
+const first = enemies[0];
+const second = enemies[1];
+state = {
+  ...state,
+  jackTraps: [snare(jack, 1, 4, 4), snare(jack, 2, 6, 6)],
+};
   state = setUnit(state, first.id, { position: { col: 4, row: 4 } });
-  let triggered = applyNewBatchPostAction(
+  const triggered = applyNewBatchPostAction(
     state,
     state,
     [movedEvent(first.id, 4, 4)],
@@ -157,7 +158,8 @@ export function testJackSnareActivatesOncePerTarget() {
 }
 
 export function testJackSnareIsRemovedWithDeadTarget() {
-  let { state, jack, enemies } = setupJack();
+  const { state: initialState81, jack, enemies } = setupJack();
+let state = initialState81;
   const victim = enemies[0];
   state = setUnit(state, victim.id, {
     position: null,
@@ -195,7 +197,8 @@ export function testJackSnareIsRemovedWithDeadTarget() {
 }
 
 export function testJackCoveringTracksSixthSnareFlow() {
-  let { state, jack, enemies } = setupJack();
+  const { state: initialState82, jack, enemies } = setupJack();
+  let state = initialState82;
   const failed = enemies[0];
   const saved = enemies[1];
   state = setUnit(state, jack.id, { position: { col: 8, row: 8 } });

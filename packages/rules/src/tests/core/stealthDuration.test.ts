@@ -39,7 +39,7 @@ function startUnitTurn(state: GameState, unitId: string): ApplyResult {
       turnOrder: [unit.id],
       turnOrderIndex: 0,
     },
-    { type: "unitStartTurn", unitId: unit.id } as any,
+    { type: "unitStartTurn", unitId: unit.id },
     makeRngSequence([]),
   );
 }
@@ -48,7 +48,7 @@ function enterStealthSuccessfully(state: GameState, unitId: string): GameState {
   const unit = state.units[unitId];
   const ready = initKnowledgeForOwners(toBattleState(state, unit.owner, unit.id));
   const rng = makeRngSequence([0.99]);
-  const requested = applyAction(ready, { type: "enterStealth", unitId } as any, rng);
+  const requested = applyAction(ready, { type: "enterStealth", unitId }, rng);
   assert(
     requested.state.pendingRoll?.kind === "enterStealth",
     `${unitId} should request a stealth roll`,
@@ -129,11 +129,7 @@ export function testNormalStealthCountsOnlyHiddenFiguresOwnTurnStarts() {
 
   before = allyStart.state.units[assassin.id];
   const roundBefore = allyStart.state.roundNumber;
-  const roundAdvanced = applyAction(
-    allyStart.state,
-    { type: "endTurn" } as any,
-    makeRngSequence([]),
-  );
+  const roundAdvanced = applyAction(allyStart.state, { type: "endTurn" }, makeRngSequence([]));
   assert(
     roundAdvanced.state.roundNumber > roundBefore,
     "single-unit queue should advance the round for the regression fixture",
@@ -154,11 +150,7 @@ export function testNormalStealthCountsOnlyHiddenFiguresOwnTurnStarts() {
 
   const pendingRng = makeRngSequence([0.01]);
   const allyReady = initKnowledgeForOwners(toBattleState(enemyStart.state, ally.owner, ally.id));
-  const pending = applyAction(
-    allyReady,
-    { type: "enterStealth", unitId: ally.id } as any,
-    pendingRng,
-  );
+  const pending = applyAction(allyReady, { type: "enterStealth", unitId: ally.id }, pendingRng);
   before = pending.state.units[assassin.id];
   const resolved = resolvePendingRollOnce(pending.state, pendingRng);
   assertUnchangedDuration(
@@ -172,7 +164,8 @@ export function testNormalStealthCountsOnlyHiddenFiguresOwnTurnStarts() {
 }
 
 export function testLokiStealthUsesOwnTurnDuration() {
-  let { state, loki } = setupLokiState();
+  const { state: initialState6, loki } = setupLokiState();
+  let state = initialState6;
   const ally = Object.values(state.units).find(
     (unit) => unit.owner === loki.owner && unit.id !== loki.id,
   )!;
@@ -240,7 +233,7 @@ export function testHassanGrantedStealthUsesGrantedUnitsOwnTurns() {
         type: "hassanAssassinOrderPick",
         unitIds: [granted.id, secondGranted.id],
       },
-    } as any,
+    },
     makeRngSequence([]),
   );
   assert(

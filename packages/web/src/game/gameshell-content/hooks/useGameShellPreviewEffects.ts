@@ -2,38 +2,38 @@ import { useEffect } from "react";
 import { coordKey } from "../helpers";
 
 interface UseGameShellPreviewEffectsParams {
-  actionMode: any;
+  actionMode: import("../../../store").ActionMode;
   selectedUnitId: string | null;
-  doraPreviewCenter: any;
-  setDoraPreviewCenter: (value: any) => void;
+  doraPreviewCenter: import("rules").Coord | null;
+  setDoraPreviewCenter: (value: import("rules").Coord | null) => void;
   doraTargetKeys: Set<string>;
-  jebeHailPreviewCenter: any;
-  setJebeHailPreviewCenter: (value: any) => void;
+  jebeHailPreviewCenter: import("rules").Coord | null;
+  setJebeHailPreviewCenter: (value: import("rules").Coord | null) => void;
   jebeHailTargetKeys: Set<string>;
-  mettatonPoppinsPreviewCenter: any;
-  setMettatonPoppinsPreviewCenter: (value: any) => void;
+  mettatonPoppinsPreviewCenter: import("rules").Coord | null;
+  setMettatonPoppinsPreviewCenter: (value: import("rules").Coord | null) => void;
   mettatonLineTargetKeys: Set<string>;
-  mettatonLaserPreviewTarget: any;
-  setMettatonLaserPreviewTarget: (value: any) => void;
-  sansGasterBlasterPreviewTarget: any;
-  setSansGasterBlasterPreviewTarget: (value: any) => void;
-  undyneEnergySpearPreviewTarget: any;
-  setUndyneEnergySpearPreviewTarget: (value: any) => void;
+  mettatonLaserPreviewTarget: import("rules").Coord | null;
+  setMettatonLaserPreviewTarget: (value: import("rules").Coord | null) => void;
+  sansGasterBlasterPreviewTarget: import("rules").Coord | null;
+  setSansGasterBlasterPreviewTarget: (value: import("rules").Coord | null) => void;
+  undyneEnergySpearPreviewTarget: import("rules").Coord | null;
+  setUndyneEnergySpearPreviewTarget: (value: import("rules").Coord | null) => void;
   undyneEnergySpearTargetKeys: Set<string>;
-  kaladinFifthPreviewCenter: any;
-  setKaladinFifthPreviewCenter: (value: any) => void;
+  kaladinFifthPreviewCenter: import("rules").Coord | null;
+  setKaladinFifthPreviewCenter: (value: import("rules").Coord | null) => void;
   kaladinFifthTargetKeys: Set<string>;
-  tisonaPreviewCoord: any;
-  setTisonaPreviewCoord: (value: any) => void;
+  tisonaPreviewCoord: import("rules").Coord | null;
+  setTisonaPreviewCoord: (value: import("rules").Coord | null) => void;
   tisonaTargetKeys: Set<string>;
   isStakePlacement: boolean;
-  pendingRoll: any;
-  setStakeSelections: (value: any) => void;
+  pendingRoll: import("rules").PendingRoll | null;
+  setStakeSelections: (value: import("rules").Coord[]) => void;
   isHassanAssassinOrderSelection: boolean;
-  setHassanAssassinOrderSelections: (value: any) => void;
+  setHassanAssassinOrderSelections: (value: string[]) => void;
   isForestTarget: boolean;
-  forestPreviewCenter: any;
-  setForestPreviewCenter: (value: any) => void;
+  forestPreviewCenter: import("rules").Coord | null;
+  setForestPreviewCenter: (value: import("rules").Coord | null) => void;
   forestTargetKeys: Set<string>;
 }
 
@@ -213,12 +213,7 @@ export function useGameShellPreviewEffects({
     if (!kaladinFifthTargetKeys.has(coordKey(kaladinFifthPreviewCenter))) {
       setKaladinFifthPreviewCenter(null);
     }
-  }, [
-    actionMode,
-    kaladinFifthPreviewCenter,
-    kaladinFifthTargetKeys,
-    setKaladinFifthPreviewCenter,
-  ]);
+  }, [actionMode, kaladinFifthPreviewCenter, kaladinFifthTargetKeys, setKaladinFifthPreviewCenter]);
 
   useEffect(() => {
     if (actionMode !== "tisona") {
@@ -251,11 +246,7 @@ export function useGameShellPreviewEffects({
       return;
     }
     setHassanAssassinOrderSelections([]);
-  }, [
-    isHassanAssassinOrderSelection,
-    pendingRoll?.id,
-    setHassanAssassinOrderSelections,
-  ]);
+  }, [isHassanAssassinOrderSelection, pendingRoll?.id, setHassanAssassinOrderSelections]);
 
   useEffect(() => {
     if (!isForestTarget) {
@@ -270,10 +261,5 @@ export function useGameShellPreviewEffects({
     if (!forestTargetKeys.has(coordKey(forestPreviewCenter))) {
       setForestPreviewCenter(null);
     }
-  }, [
-    isForestTarget,
-    forestPreviewCenter,
-    forestTargetKeys,
-    setForestPreviewCenter,
-  ]);
+  }, [isForestTarget, forestPreviewCenter, forestTargetKeys, setForestPreviewCenter]);
 }

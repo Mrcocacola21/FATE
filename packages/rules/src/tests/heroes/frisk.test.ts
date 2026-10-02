@@ -15,7 +15,11 @@ import {
   toBattleState,
 } from "../helpers/testUtils";
 
-function resolvePendingChoice(state: GameState, choice: unknown, rng = makeRngSequence([])) {
+function resolvePendingChoice(
+  state: GameState,
+  choice: import("../../model").ResolveRollChoice | undefined,
+  rng = makeRngSequence([]),
+) {
   assert(state.pendingRoll, "expected a pending roll to resolve");
   return applyAction(
     state,
@@ -24,13 +28,14 @@ function resolvePendingChoice(state: GameState, choice: unknown, rng = makeRngSe
       pendingRollId: state.pendingRoll.id,
       player: state.pendingRoll.player,
       choice,
-    } as any,
+    },
     rng,
   );
 }
 
 export function testFriskPacifismIncrementsOnMissIncludingCleanSoul() {
-  let { state, frisk } = setupFriskState();
+  const { state: initialState27, frisk } = setupFriskState();
+  let state = initialState27;
   const attacker = Object.values(state.units).find(
     (unit) => unit.owner === "P2" && unit.class === "knight",
   )!;
@@ -50,7 +55,7 @@ export function testFriskPacifismIncrementsOnMissIncludingCleanSoul() {
 
   const started = applyAction(
     state,
-    { type: "attack", attackerId: attacker.id, defenderId: frisk.id } as any,
+    { type: "attack", attackerId: attacker.id, defenderId: frisk.id },
     makeRngSequence([]),
   );
   const resolved = resolveAllPendingRollsWithEvents(started.state, makeRngSequence([0.99, 0.99]));
@@ -79,7 +84,8 @@ export function testFriskPacifismIncrementsOnMissIncludingCleanSoul() {
 }
 
 export function testFriskGenocideIncrementsOnHit() {
-  let { state, frisk } = setupFriskState();
+  const { state: initialState28, frisk } = setupFriskState();
+  let state = initialState28;
   const target = Object.values(state.units).find(
     (unit) => unit.owner === "P2" && unit.class === "knight",
   )!;
@@ -97,7 +103,7 @@ export function testFriskGenocideIncrementsOnHit() {
 
   const started = applyAction(
     state,
-    { type: "attack", attackerId: frisk.id, defenderId: target.id } as any,
+    { type: "attack", attackerId: frisk.id, defenderId: target.id },
     makeRngSequence([]),
   );
   const resolved = resolveAllPendingRollsWithEvents(
@@ -123,7 +129,8 @@ export function testFriskGenocideIncrementsOnHit() {
 }
 
 export function testFriskCleanSoulShieldFlow() {
-  let { state, frisk } = setupFriskState();
+  const { state: initialState29, frisk } = setupFriskState();
+  let state = initialState29;
   const attacker = Object.values(state.units).find(
     (unit) => unit.owner === "P2" && unit.class === "knight",
   )!;
@@ -135,7 +142,7 @@ export function testFriskCleanSoulShieldFlow() {
 
   const enterStealth = applyAction(
     state,
-    { type: "enterStealth", unitId: frisk.id } as any,
+    { type: "enterStealth", unitId: frisk.id },
     makeRngSequence([]),
   );
   assert(
@@ -168,7 +175,7 @@ export function testFriskCleanSoulShieldFlow() {
 
   const startTurn = applyAction(
     revealState,
-    { type: "unitStartTurn", unitId: frisk.id } as any,
+    { type: "unitStartTurn", unitId: frisk.id },
     makeRngSequence([]),
   );
   const afterReveal = startTurn.state.units[frisk.id];
@@ -181,7 +188,7 @@ export function testFriskCleanSoulShieldFlow() {
   const enemyTurnState = initKnowledgeForOwners(toBattleState(startTurn.state, "P2", attacker.id));
   const attacked = applyAction(
     enemyTurnState,
-    { type: "attack", attackerId: attacker.id, defenderId: frisk.id } as any,
+    { type: "attack", attackerId: attacker.id, defenderId: frisk.id },
     makeRngSequence([]),
   );
   const resolved = resolveAllPendingRollsWithEvents(attacked.state, makeRngSequence([0.99, 0.99]));
@@ -203,7 +210,8 @@ export function testFriskCleanSoulShieldFlow() {
 }
 
 export function testFriskChildsCryNegatesDamageAndSpendsPoints() {
-  let { state, frisk } = setupFriskState();
+  const { state: initialState30, frisk } = setupFriskState();
+  let state = initialState30;
   const attacker = Object.values(state.units).find(
     (unit) => unit.owner === "P2" && unit.class === "knight",
   )!;
@@ -225,7 +233,7 @@ export function testFriskChildsCryNegatesDamageAndSpendsPoints() {
   const rng = makeRngSequence([0.99, 0.99, 0.01, 0.01]);
   const started = applyAction(
     state,
-    { type: "attack", attackerId: attacker.id, defenderId: frisk.id } as any,
+    { type: "attack", attackerId: attacker.id, defenderId: frisk.id },
     rng,
   );
   const afterAttacker = resolvePendingRollOnce(started.state, rng);
@@ -243,7 +251,7 @@ export function testFriskChildsCryNegatesDamageAndSpendsPoints() {
       pendingRollId: afterDefender.state.pendingRoll!.id,
       player: afterDefender.state.pendingRoll!.player,
       choice: "activate",
-    } as any,
+    },
     rng,
   );
   const events = [
@@ -270,7 +278,8 @@ export function testFriskChildsCryNegatesDamageAndSpendsPoints() {
 }
 
 export function testFriskPacifismActiveOptionsSpendOnResolutionOnly() {
-  let { state, frisk } = setupFriskState();
+  const { state: initialState31, frisk } = setupFriskState();
+  let state = initialState31;
   const ally = Object.values(state.units).find(
     (unit) => unit.owner === "P1" && unit.id !== frisk.id,
   )!;
@@ -293,7 +302,7 @@ export function testFriskPacifismActiveOptionsSpendOnResolutionOnly() {
 
   const opened = applyAction(
     state,
-    { type: "useAbility", unitId: frisk.id, abilityId: ABILITY_FRISK_PACIFISM } as any,
+    { type: "useAbility", unitId: frisk.id, abilityId: ABILITY_FRISK_PACIFISM },
     makeRngSequence([]),
   );
   assert(
@@ -339,7 +348,7 @@ export function testFriskPacifismActiveOptionsSpendOnResolutionOnly() {
 
   const reopened = applyAction(
     canceled.state,
-    { type: "useAbility", unitId: frisk.id, abilityId: ABILITY_FRISK_PACIFISM } as any,
+    { type: "useAbility", unitId: frisk.id, abilityId: ABILITY_FRISK_PACIFISM },
     makeRngSequence([]),
   );
   const hugsAgain = resolvePendingChoice(reopened.state, {
@@ -372,7 +381,7 @@ export function testFriskPacifismActiveOptionsSpendOnResolutionOnly() {
   );
   const blockedAttack = applyAction(
     hugged.state,
-    { type: "attack", attackerId: frisk.id, defenderId: enemy.id } as any,
+    { type: "attack", attackerId: frisk.id, defenderId: enemy.id },
     makeRngSequence([]),
   );
   assert(
@@ -380,7 +389,8 @@ export function testFriskPacifismActiveOptionsSpendOnResolutionOnly() {
     "Frisk should not be able to attack after Hugs spends the main action",
   );
 
-  let { state: warmState, frisk: warmFrisk } = setupFriskState();
+  const { state: initialWarmState32, frisk: warmFrisk } = setupFriskState();
+  let warmState = initialWarmState32;
   const warmAlly = Object.values(warmState.units).find(
     (unit) => unit.owner === "P1" && unit.id !== warmFrisk.id,
   )!;
@@ -410,7 +420,7 @@ export function testFriskPacifismActiveOptionsSpendOnResolutionOnly() {
       type: "useAbility",
       unitId: warmFrisk.id,
       abilityId: ABILITY_FRISK_PACIFISM,
-    } as any,
+    },
     makeRngSequence([]),
   );
   const warmWordsOptions = (warmOpened.state.pendingRoll?.context?.warmWordsOptions ??
@@ -465,7 +475,7 @@ export function testFriskPacifismActiveOptionsSpendOnResolutionOnly() {
   assert(healed.state.units[warmAlly.id].hp > 1, "Warm Words should heal the picked allied target");
   const warmBlockedAttack = applyAction(
     healed.state,
-    { type: "attack", attackerId: warmFrisk.id, defenderId: warmEnemy.id } as any,
+    { type: "attack", attackerId: warmFrisk.id, defenderId: warmEnemy.id },
     makeRngSequence([]),
   );
   assert(
@@ -477,7 +487,8 @@ export function testFriskPacifismActiveOptionsSpendOnResolutionOnly() {
 }
 
 export function testFriskGenocideActiveOptionsSpendOnResolutionOnly() {
-  let { state, frisk } = setupFriskState();
+  const { state: initialState33, frisk } = setupFriskState();
+  let state = initialState33;
   const hiddenEnemy = Object.values(state.units).find(
     (unit) => unit.owner === "P2" && unit.class === "knight",
   )!;
@@ -500,7 +511,7 @@ export function testFriskGenocideActiveOptionsSpendOnResolutionOnly() {
 
   const opened = applyAction(
     state,
-    { type: "useAbility", unitId: frisk.id, abilityId: ABILITY_FRISK_GENOCIDE } as any,
+    { type: "useAbility", unitId: frisk.id, abilityId: ABILITY_FRISK_GENOCIDE },
     makeRngSequence([]),
   );
   assert(
@@ -549,7 +560,7 @@ export function testFriskGenocideActiveOptionsSpendOnResolutionOnly() {
   );
   const blockedAttack = applyAction(
     revealed.state,
-    { type: "attack", attackerId: frisk.id, defenderId: hiddenEnemy.id } as any,
+    { type: "attack", attackerId: frisk.id, defenderId: hiddenEnemy.id },
     makeRngSequence([]),
   );
   assert(
@@ -557,7 +568,8 @@ export function testFriskGenocideActiveOptionsSpendOnResolutionOnly() {
     "Frisk should not be able to attack after Keen Eye spends the main action",
   );
 
-  let { state: precisionState, frisk: precisionFrisk } = setupFriskState();
+  const { state: initialPrecisionState34, frisk: precisionFrisk } = setupFriskState();
+  let precisionState = initialPrecisionState34;
   const precisionTarget = Object.values(precisionState.units).find(
     (unit) => unit.owner === "P2" && unit.class === "knight",
   )!;
@@ -584,7 +596,7 @@ export function testFriskGenocideActiveOptionsSpendOnResolutionOnly() {
       type: "useAbility",
       unitId: precisionFrisk.id,
       abilityId: ABILITY_FRISK_GENOCIDE,
-    } as any,
+    },
     makeRngSequence([]),
   );
   const precisionChosen = resolvePendingChoice(precisionOpened.state, {
@@ -626,7 +638,7 @@ export function testFriskGenocideActiveOptionsSpendOnResolutionOnly() {
       type: "useAbility",
       unitId: precisionFrisk.id,
       abilityId: ABILITY_FRISK_GENOCIDE,
-    } as any,
+    },
     makeRngSequence([]),
   );
   const precisionChosenAgain = resolvePendingChoice(precisionReopened.state, {
@@ -682,7 +694,8 @@ export function testFriskGenocideActiveOptionsSpendOnResolutionOnly() {
 }
 
 export function testFriskSubstitutionTakesOneDamageBeforeDefenseRoll() {
-  let { state, frisk } = setupFriskState();
+  const { state: initialState35, frisk } = setupFriskState();
+  let state = initialState35;
   const attacker = Object.values(state.units).find(
     (unit) => unit.owner === "P2" && unit.class === "knight",
   )!;
@@ -703,7 +716,7 @@ export function testFriskSubstitutionTakesOneDamageBeforeDefenseRoll() {
   const rng = makeRngSequence([0.99, 0.99, 0.01, 0.01]);
   const started = applyAction(
     state,
-    { type: "attack", attackerId: attacker.id, defenderId: frisk.id } as any,
+    { type: "attack", attackerId: attacker.id, defenderId: frisk.id },
     rng,
   );
   const afterAttacker = resolvePendingRollOnce(started.state, rng);
@@ -719,7 +732,7 @@ export function testFriskSubstitutionTakesOneDamageBeforeDefenseRoll() {
       pendingRollId: afterAttacker.state.pendingRoll!.id,
       player: afterAttacker.state.pendingRoll!.player,
       choice: "activate",
-    } as any,
+    },
     rng,
   );
   const events = [...started.events, ...afterAttacker.events, ...activated.events];
@@ -746,7 +759,8 @@ export function testFriskSubstitutionTakesOneDamageBeforeDefenseRoll() {
 }
 
 export function testFriskOnePathConvertsAndDisablesPacifism() {
-  let { state, frisk } = setupFriskState();
+  const { state: initialState36, frisk } = setupFriskState();
+  let state = initialState36;
   const victim = Object.values(state.units).find(
     (unit) => unit.owner === "P2" && unit.class === "knight",
   )!;
@@ -770,7 +784,7 @@ export function testFriskOnePathConvertsAndDisablesPacifism() {
 
   const killed = applyAction(
     state,
-    { type: "attack", attackerId: frisk.id, defenderId: victim.id } as any,
+    { type: "attack", attackerId: frisk.id, defenderId: victim.id },
     makeRngSequence([]),
   );
   const resolvedKill = resolveAllPendingRollsWithEvents(
@@ -801,7 +815,7 @@ export function testFriskOnePathConvertsAndDisablesPacifism() {
   };
   const missedAttack = applyAction(
     enemyTurnState,
-    { type: "attack", attackerId: attacker.id, defenderId: frisk.id } as any,
+    { type: "attack", attackerId: attacker.id, defenderId: frisk.id },
     makeRngSequence([]),
   );
   const missedResolved = resolveAllPendingRollsWithEvents(
@@ -829,7 +843,7 @@ export function testFriskOnePathConvertsAndDisablesPacifism() {
   };
   const usePacifism = applyAction(
     pacifismAttemptState,
-    { type: "useAbility", unitId: frisk.id, abilityId: ABILITY_FRISK_PACIFISM } as any,
+    { type: "useAbility", unitId: frisk.id, abilityId: ABILITY_FRISK_PACIFISM },
     makeRngSequence([]),
   );
   assert(
@@ -841,7 +855,8 @@ export function testFriskOnePathConvertsAndDisablesPacifism() {
 }
 
 export function testFriskKillBonusesFirstAndSecondKill() {
-  let { state, frisk } = setupFriskState();
+  const { state: initialState37, frisk } = setupFriskState();
+  let state = initialState37;
   const firstTarget = Object.values(state.units).find(
     (unit) => unit.owner === "P2" && unit.class === "knight",
   )!;
@@ -865,7 +880,7 @@ export function testFriskKillBonusesFirstAndSecondKill() {
 
   const firstAttack = applyAction(
     state,
-    { type: "attack", attackerId: frisk.id, defenderId: firstTarget.id } as any,
+    { type: "attack", attackerId: frisk.id, defenderId: firstTarget.id },
     makeRngSequence([]),
   );
   const firstResolved = resolveAllPendingRollsWithEvents(
@@ -896,7 +911,7 @@ export function testFriskKillBonusesFirstAndSecondKill() {
 
   const secondAttack = applyAction(
     secondState,
-    { type: "attack", attackerId: frisk.id, defenderId: secondTarget.id } as any,
+    { type: "attack", attackerId: frisk.id, defenderId: secondTarget.id },
     makeRngSequence([]),
   );
   assert(
@@ -934,7 +949,8 @@ export function testFriskKillBonusesFirstAndSecondKill() {
 }
 
 export function testFriskPowerOfFriendshipWinCondition() {
-  let { state, frisk } = setupFriskState();
+  const { state: initialState38, frisk } = setupFriskState();
+  let state = initialState38;
   const lastEnemy = Object.values(state.units).find(
     (unit) => unit.owner === "P2" && unit.class === "knight",
   )!;
@@ -975,7 +991,7 @@ export function testFriskPowerOfFriendshipWinCondition() {
 
   const started = applyAction(
     state,
-    { type: "unitStartTurn", unitId: frisk.id } as any,
+    { type: "unitStartTurn", unitId: frisk.id },
     makeRngSequence([]),
   );
 

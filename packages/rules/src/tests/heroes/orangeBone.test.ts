@@ -84,12 +84,12 @@ export function testOrangeBoneRequiresMovementFirst() {
   assert(moves.length > 0, "Orange Bone movement test needs a legal move");
   const moved = applyAction(
     base.state,
-    { type: "move", unitId: base.actor.id, to: moves[0] } as any,
-    makeRngSequence([])
+    { type: "move", unitId: base.actor.id, to: moves[0] },
+    makeRngSequence([]),
   );
   assert(
     moved.state.units[base.actor.id].hp === base.actor.hp,
-    "moving first must not deal Orange Bone damage"
+    "moving first must not deal Orange Bone damage",
   );
   assert(
     moved.state.units[base.actor.id].orangeBoneFirstMoveSatisfied === true &&
@@ -98,12 +98,12 @@ export function testOrangeBoneRequiresMovementFirst() {
   );
   const endedAfterMove = applyAction(
     moved.state,
-    { type: "endTurn" } as any,
+    { type: "endTurn" },
     makeRngSequence([])
   );
   assert(
     orangePenaltyEvents(endedAfterMove.events).length === 0,
-    "ending after moving first must not deal Orange Bone damage"
+    "ending after moving first must not deal Orange Bone damage",
   );
 
   const attackFirst = applyAction(
@@ -112,12 +112,12 @@ export function testOrangeBoneRequiresMovementFirst() {
       type: "attack",
       attackerId: base.actor.id,
       defenderId: base.defender.id,
-    } as any,
+    },
     makeRngSequence([])
   );
   assert(
     attackFirst.state.units[base.actor.id].hp === base.actor.hp - 1,
-    "a legal Attack declaration should take Orange Bone damage immediately"
+    "a legal Attack declaration should take Orange Bone damage immediately",
   );
   assert(
     attackFirst.events[0]?.type === "papyrusBonePunished" &&
@@ -130,36 +130,36 @@ export function testOrangeBoneRequiresMovementFirst() {
   );
   const stealthAfterAttack = applyAction(
     attackResolved.state,
-    { type: "enterStealth", unitId: base.actor.id } as any,
+    { type: "enterStealth", unitId: base.actor.id },
     makeRngSequence([])
   );
   assert(
     stealthAfterAttack.state.units[base.actor.id].hp ===
       attackResolved.state.units[base.actor.id].hp &&
       orangePenaltyEvents(stealthAfterAttack.events).length === 0,
-    "Orange Bone must apply at most once in a turn"
+    "Orange Bone must apply at most once in a turn",
   );
 
   const stealthFirst = applyAction(
     base.state,
-    { type: "enterStealth", unitId: base.actor.id } as any,
+    { type: "enterStealth", unitId: base.actor.id },
     makeRngSequence([])
   );
   assert(
     stealthFirst.state.units[base.actor.id].hp === base.actor.hp - 1 &&
       orangePenaltyEvents(stealthFirst.events).length === 1,
-    "a legal Stealth attempt should trigger Orange Bone before its outcome"
+    "a legal Stealth attempt should trigger Orange Bone before its outcome",
   );
 
   const searchActionFirst = applyAction(
     base.state,
-    { type: "searchStealth", unitId: base.actor.id, mode: "action" } as any,
+    { type: "searchStealth", unitId: base.actor.id, mode: "action" },
     makeRngSequence([])
   );
   assert(
     searchActionFirst.state.units[base.actor.id].hp === base.actor.hp - 1 &&
       searchActionFirst.state.units[base.actor.id].turn.actionUsed,
-    "Search(Action) should trigger Orange Bone and then spend Action"
+    "Search(Action) should trigger Orange Bone and then spend Action",
   );
   assert(
     searchActionFirst.events[0]?.type === "papyrusBonePunished",
@@ -168,34 +168,34 @@ export function testOrangeBoneRequiresMovementFirst() {
 
   const searchMoveFirst = applyAction(
     base.state,
-    { type: "searchStealth", unitId: base.actor.id, mode: "move" } as any,
+    { type: "searchStealth", unitId: base.actor.id, mode: "move" },
     makeRngSequence([])
   );
   assert(
     searchMoveFirst.state.units[base.actor.id].hp === base.actor.hp &&
       searchMoveFirst.state.units[base.actor.id].orangeBoneFirstMoveSatisfied === true,
-    "Search(Move) should safely satisfy Orange Bone when it spends Movement"
+    "Search(Move) should safely satisfy Orange Bone when it spends Movement",
   );
 
   const preview = applyAction(
     base.state,
-    { type: "requestMoveOptions", unitId: base.actor.id } as any,
+    { type: "requestMoveOptions", unitId: base.actor.id },
     makeRngSequence([])
   );
   assert(
     preview.state.units[base.actor.id].orangeBoneFirstMoveSatisfied !== true &&
       preview.state.units[base.actor.id].hp === base.actor.hp,
-    "opening movement options must neither satisfy nor trigger Orange Bone"
+    "opening movement options must neither satisfy nor trigger Orange Bone",
   );
   const invalidMove = applyAction(
     preview.state,
-    { type: "move", unitId: base.actor.id, to: { col: -1, row: -1 } } as any,
+    { type: "move", unitId: base.actor.id, to: { col: -1, row: -1 } },
     makeRngSequence([])
   );
   assert(
     invalidMove.state.units[base.actor.id].orangeBoneFirstMoveSatisfied !== true &&
       invalidMove.state.units[base.actor.id].hp === base.actor.hp,
-    "an invalid movement attempt must not satisfy Orange Bone"
+    "an invalid movement attempt must not satisfy Orange Bone",
   );
 
   const invalidAttack = applyAction(
@@ -204,25 +204,25 @@ export function testOrangeBoneRequiresMovementFirst() {
       type: "attack",
       attackerId: base.actor.id,
       defenderId: "missing-unit",
-    } as any,
+    },
     makeRngSequence([])
   );
   assert(
     invalidAttack.state === base.state &&
       invalidAttack.events.length === 0 &&
       invalidAttack.state.units[base.actor.id].hp === base.actor.hp,
-    "a command rejected before gameplay resolution must not trigger Orange Bone"
+    "a command rejected before gameplay resolution must not trigger Orange Bone",
   );
 
   const endedFirst = applyAction(
     base.state,
-    { type: "endTurn" } as any,
+    { type: "endTurn" },
     makeRngSequence([])
   );
   assert(
     endedFirst.state.units[base.actor.id].hp === base.actor.hp - 1 &&
       endedFirst.events[0]?.type === "papyrusBonePunished",
-    "End Turn without moving first should trigger Orange Bone before turn advance"
+    "End Turn without moving first should trigger Orange Bone before turn advance",
   );
 
   const staleTracking = setUnit(base.state, base.actor.id, {
@@ -240,14 +240,14 @@ export function testOrangeBoneRequiresMovementFirst() {
       turnOrder: [base.actor.id],
       turnOrderIndex: 0,
     },
-    { type: "unitStartTurn", unitId: base.actor.id } as any,
+    { type: "unitStartTurn", unitId: base.actor.id },
     makeRngSequence([])
   );
   assert(
     restarted.state.units[base.actor.id].orangeBoneFirstMoveSatisfied === false &&
       restarted.state.units[base.actor.id].orangeBonePenaltyAppliedThisTurn === false &&
       restarted.state.units[base.actor.id].hasSpentMeaningfulTurnAction === false,
-    "Orange Bone tracking must reset at the affected unit's turn start"
+    "Orange Bone tracking must reset at the affected unit's turn start",
   );
 
   let abilityState = setUnit(base.state, base.papyrus.id, {
@@ -278,14 +278,14 @@ export function testOrangeBoneRequiresMovementFirst() {
       type: "useAbility",
       unitId: base.papyrus.id,
       abilityId: ABILITY_PAPYRUS_SPAGHETTI,
-    } as any,
+    },
     makeRngSequence([])
   );
   assert(
     abilityFirst.state.units[base.papyrus.id].hp === 5 &&
       abilityFirst.events[0]?.type === "papyrusBonePunished" &&
       abilityFirst.events.some((event) => event.type === "abilityUsed"),
-    "an active ability should take Orange Bone damage before it resolves"
+    "an active ability should take Orange Bone damage before it resolves",
   );
 
   const lethalState = setUnit(abilityState, base.papyrus.id, { hp: 1 });
@@ -295,8 +295,8 @@ export function testOrangeBoneRequiresMovementFirst() {
       type: "useAbility",
       unitId: base.papyrus.id,
       abilityId: ABILITY_PAPYRUS_SPAGHETTI,
-    } as any,
-    makeRngSequence([])
+    },
+    makeRngSequence([]),
   );
   assert(
     !lethalAbility.state.units[base.papyrus.id].isAlive &&

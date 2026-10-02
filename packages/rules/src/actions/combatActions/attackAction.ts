@@ -17,7 +17,7 @@ import { canDirectlyTargetUnit } from "../../visibility";
 export function applyAttack(
   state: GameState,
   action: Extract<GameAction, { type: "attack" }>,
-  rng: RNG
+  _rng: RNG,
 ): ApplyResult {
   if (state.phase !== "battle") {
     return { state, events: [] };
@@ -39,9 +39,7 @@ export function applyAttack(
   }
 
   const santoryuTargets =
-    attacker.heroId === HERO_ZORO_ID && Array.isArray(action.defenderIds)
-      ? action.defenderIds
-      : [];
+    attacker.heroId === HERO_ZORO_ID && Array.isArray(action.defenderIds) ? action.defenderIds : [];
   if (santoryuTargets.length > 0) {
     const unique = Array.from(new Set(santoryuTargets));
     if (
@@ -92,7 +90,7 @@ export function applyAttack(
   const papyrusLongBone = maybeApplyPapyrusLongBoneAttack(
     state,
     action.attackerId,
-    action.defenderId
+    action.defenderId,
   );
   if (papyrusLongBone) {
     return papyrusLongBone;
@@ -134,10 +132,7 @@ export function applyAttack(
     preEvents = exited.events;
   }
 
-  const stageBonus = applyMettatonStagePhenomenonOnAttackAction(
-    workingState,
-    workingAttacker.id
-  );
+  const stageBonus = applyMettatonStagePhenomenonOnAttackAction(workingState, workingAttacker.id);
   workingState = stageBonus.state;
   workingAttacker = workingState.units[workingAttacker.id] ?? workingAttacker;
   preEvents = [...preEvents, ...stageBonus.events];
@@ -156,7 +151,7 @@ export function applyAttack(
     workingAttacker.owner,
     "attack_attackerRoll",
     context,
-    workingAttacker.id
+    workingAttacker.id,
   );
 
   return { state: requested.state, events: [...preEvents, ...requested.events] };

@@ -10,12 +10,12 @@ import type { PlayerId } from "rules";
 import { getPendingRollForPlayer, isPendingRollForPlayer } from "../../pendingState";
 
 interface UseGameShellPendingStatusParams {
-  view: any;
-  roomMeta: any;
+  view: import("rules").PlayerView | null;
+  roomMeta: import("../../../ws").RoomMeta | null;
   roomId: string | null;
   leavingRoom: boolean;
   leaveRoom: () => void;
-  seat: any;
+  seat: PlayerId | null;
   playerId: PlayerId | null;
 }
 
@@ -47,8 +47,7 @@ export function useGameShellPendingStatus({
   const isGuideTravelerPlacement = pendingRoll?.kind === "lechyGuideTravelerPlacement";
   const isJebeKhansShooterTargetChoice = pendingRoll?.kind === "jebeKhansShooterTargetChoice";
   const isHassanTrueEnemyTargetChoice = pendingRoll?.kind === "hassanTrueEnemyTargetChoice";
-  const isMongolChargeAllyAttackTarget =
-    pendingRoll?.kind === "mongolChargeAllyAttackTarget";
+  const isMongolChargeAllyAttackTarget = pendingRoll?.kind === "mongolChargeAllyAttackTarget";
   const isForcedAttackTargetChoice =
     isHassanTrueEnemyTargetChoice || isMongolChargeAllyAttackTarget;
   const isHassanAssassinOrderSelection = pendingRoll?.kind === "hassanAssassinOrderSelection";

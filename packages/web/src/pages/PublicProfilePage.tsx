@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { profileApi } from "../api/profileApi";
 import { ApiError } from "../api/client";

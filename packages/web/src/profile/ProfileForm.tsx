@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useI18n } from "../i18n";
 import { profileErrorMessage } from "./errorMessage";
 import type { OwnProfile, ProfilePatch } from "./types";

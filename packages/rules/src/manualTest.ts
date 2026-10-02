@@ -60,7 +60,7 @@ const C = (col: number, row: number): Coord => ({ col, row });
 
 // ---------- ШАГ 1. СОЗДАНИЕ ИГРЫ И АРМИЙ ----------
 
-function stepCreateGameAndArmies(rng: DefaultRNG): GameState {
+function stepCreateGameAndArmies(_rng: DefaultRNG): GameState {
   header("STEP 1: create game & armies");
 
   let state = createEmptyGame();
@@ -84,7 +84,7 @@ function stepInitiativeAndArena(state: GameState, rng: DefaultRNG): GameState {
   header("STEP 2: roll initiative & choose arena");
 
   // бросок инициативы через общий applyAction
-  let res = applyAction(state, { type: "rollInitiative" } as any, rng);
+  let res = applyAction(state, { type: "rollInitiative" }, rng);
   state = res.state;
   dumpEvents(res.events, "Initiative events");
   console.log("initiative in state:", state.initiative);
@@ -96,7 +96,7 @@ function stepInitiativeAndArena(state: GameState, rng: DefaultRNG): GameState {
   );
 
   // выбор арены (условный id)
-  res = applyAction(state, { type: "chooseArena", arenaId: "arena-plain" } as any, rng);
+  res = applyAction(state, { type: "chooseArena", arenaId: "arena-plain" }, rng);
   state = res.state;
   dumpEvents(res.events, "Arena events");
   console.log("arenaId in state:", state.arenaId);
@@ -240,11 +240,7 @@ function stepKnightSearchAssassin(state: GameState, rng: DefaultRNG): GameState 
   dumpEvents(res.events, "move(knight)");
 
   // 3) Рыцарь использует поиск как ДЕЙСТВИЕ
-  res = applyAction(
-    state,
-    { type: "searchStealth", unitId: knight.id, mode: "action" } as any,
-    rng,
-  );
+  res = applyAction(state, { type: "searchStealth", unitId: knight.id, mode: "action" }, rng);
   state = res.state;
   dumpEvents(res.events, "searchStealth(knight, action)");
 

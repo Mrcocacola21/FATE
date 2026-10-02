@@ -46,7 +46,8 @@ export function testImpulseMetadataAllAutoManaged() {
 
 export function testChargedLineImpulsesCreateForcedPendingAtTurnStart() {
   {
-    let { state, sans } = setupSansState();
+    const { state: initialState1, sans } = setupSansState();
+    let state = initialState1;
     state = setUnit(state, sans.id, {
       position: { col: 4, row: 4 },
       charges: {
@@ -57,12 +58,12 @@ export function testChargedLineImpulsesCreateForcedPendingAtTurnStart() {
     state = initKnowledgeForOwners(prepareTurnStart(state, sans.id));
     const started = applyAction(
       state,
-      { type: "unitStartTurn", unitId: sans.id } as any,
-      makeRngSequence([])
+      { type: "unitStartTurn", unitId: sans.id },
+      makeRngSequence([]),
     );
     assert(
       started.state.pendingRoll?.kind === "chargedImpulseTargetChoice",
-      "Gaster Blaster should force a line choice when its charge reaches 2"
+      "Gaster Blaster should force a line choice when its charge reaches 2",
     );
     const pending = started.state.pendingRoll!;
     const resolved = applyAction(
@@ -75,33 +76,34 @@ export function testChargedLineImpulsesCreateForcedPendingAtTurnStart() {
           type: "chargedImpulseTarget",
           position: { col: 4, row: 6 },
         },
-      } as any,
+      },
       makeRngSequence([])
     );
     assert(
       resolved.state.units[sans.id].charges[ABILITY_SANS_GASTER_BLASTER] === 0,
-      "forced Gaster Blaster choice should spend its charges"
+      "forced Gaster Blaster choice should spend its charges",
     );
   }
 
   {
-    let { state, undyne } = setupUndyneState();
-    state = setUnit(state, undyne.id, {
-      position: { col: 4, row: 4 },
-      charges: {
-        ...undyne.charges,
-        [ABILITY_UNDYNE_ENERGY_SPEAR]: 1,
-      },
-    });
+    const { state: initialState2, undyne } = setupUndyneState();
+let state = initialState2;
+state = setUnit(state, undyne.id, {
+  position: { col: 4, row: 4 },
+  charges: {
+    ...undyne.charges,
+    [ABILITY_UNDYNE_ENERGY_SPEAR]: 1,
+  },
+});
     state = initKnowledgeForOwners(prepareTurnStart(state, undyne.id));
     const started = applyAction(
       state,
-      { type: "unitStartTurn", unitId: undyne.id } as any,
+      { type: "unitStartTurn", unitId: undyne.id },
       makeRngSequence([])
     );
     assert(
       started.state.pendingRoll?.kind === "chargedImpulseTargetChoice",
-      "Energy Spear should force a line choice when its charge reaches 2"
+      "Energy Spear should force a line choice when its charge reaches 2",
     );
   }
 
@@ -125,12 +127,12 @@ export function testChargedLineImpulsesCreateForcedPendingAtTurnStart() {
     state = initKnowledgeForOwners(prepareTurnStart(state, papyrus.id));
     const started = applyAction(
       state,
-      { type: "unitStartTurn", unitId: papyrus.id } as any,
+      { type: "unitStartTurn", unitId: papyrus.id },
       makeRngSequence([])
     );
     assert(
       started.state.pendingRoll?.kind === "chargedImpulseTargetChoice",
-      "Cool Guy should force a line choice when its charge reaches 5"
+      "Cool Guy should force a line choice when its charge reaches 5",
     );
   }
 
@@ -139,7 +141,8 @@ export function testChargedLineImpulsesCreateForcedPendingAtTurnStart() {
 
 export function testEventDrivenImpulsesAutoTrigger() {
   {
-    let { state, sans } = setupSansState();
+    const { state: initialState3, sans } = setupSansState();
+let state = initialState3;
     state = setUnit(state, sans.id, {
       position: { col: 4, row: 4 },
       sansUnbelieverUnlocked: true,
@@ -148,18 +151,19 @@ export function testEventDrivenImpulsesAutoTrigger() {
     state = initKnowledgeForOwners(prepareTurnStart(state, sans.id));
     const started = applyAction(
       state,
-      { type: "unitStartTurn", unitId: sans.id } as any,
+      { type: "unitStartTurn", unitId: sans.id },
       makeRngSequence([0.99])
     );
     assert(
       started.state.arenaId === "boneField" &&
         started.state.units[sans.id].sansBoneFieldActivated === true,
-      "Bone Field should auto-trigger once on Sans's turn after Unbeliever"
+      "Bone Field should auto-trigger once on Sans's turn after Unbeliever",
     );
   }
 
   {
-    let { state, mettaton, enemy } = setupMettatonState();
+    const { state: initialState4, mettaton, enemy } = setupMettatonState();
+let state = initialState4;
     state = setUnit(state, mettaton.id, {
       position: { col: 4, row: 4 },
       mettatonRating: 4,
@@ -181,12 +185,12 @@ export function testEventDrivenImpulsesAutoTrigger() {
         type: "attack",
         attackerId: mettaton.id,
         defenderId: enemy.id,
-      } as any,
+      },
       makeRngSequence([0.99, 0.99, 0.01, 0.01])
     );
     const resolved = resolveAllPendingRollsWithEvents(
       attack.state,
-      makeRngSequence([0.99, 0.99, 0.01, 0.01])
+      makeRngSequence([0.99, 0.99, 0.01, 0.01]),
     );
     assert(
       resolved.state.units[mettaton.id].mettatonExUnlocked !== true &&
@@ -196,8 +200,8 @@ export function testEventDrivenImpulsesAutoTrigger() {
 
     const started = applyAction(
       prepareTurnStart(resolved.state, mettaton.id),
-      { type: "unitStartTurn", unitId: mettaton.id } as any,
-      makeRngSequence([])
+      { type: "unitStartTurn", unitId: mettaton.id },
+      makeRngSequence([]),
     );
     assert(
       started.state.units[mettaton.id].mettatonExUnlocked === true &&

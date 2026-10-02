@@ -6,8 +6,8 @@ import { useGameShellBoardPendingActorTargets } from "./useGameShellBoardPending
 import { getDonMadnessRayCells } from "../../targeting/donMadnessDirection";
 
 interface UseGameShellBoardPendingTargetsParams {
-  view: any;
-  pendingRoll: any;
+  view: import("rules").PlayerView | null;
+  pendingRoll: import("rules").PendingRoll | null;
   isStakePlacement: boolean;
   stakeSelections: Coord[];
   isIntimidateChoice: boolean;
@@ -41,19 +41,15 @@ type GroznyTyrantAttackCellOption = {
   position: Coord;
 };
 
-function isGroznyTyrantAttackCellOption(
-  value: unknown
-): value is GroznyTyrantAttackCellOption {
+function isGroznyTyrantAttackCellOption(value: unknown): value is GroznyTyrantAttackCellOption {
   return (
     !!value &&
     typeof value === "object" &&
     typeof (value as { targetId?: unknown }).targetId === "string" &&
     ((value as { mode?: unknown }).mode === "normal" ||
       (value as { mode?: unknown }).mode === "invadeTime") &&
-    typeof (value as { position?: { col?: unknown } }).position?.col ===
-      "number" &&
-    typeof (value as { position?: { row?: unknown } }).position?.row ===
-      "number"
+    typeof (value as { position?: { col?: unknown } }).position?.col === "number" &&
+    typeof (value as { position?: { row?: unknown } }).position?.row === "number"
   );
 }
 
@@ -96,27 +92,27 @@ export function useGameShellBoardPendingTargets({
   const stakeLegalPositions = useMemo(() => {
     if (!isStakePlacement) return [] as Coord[];
     const legal = Array.isArray(stakeContext?.legalPositions)
-      ? stakeContext?.legalPositions ?? []
+      ? (stakeContext?.legalPositions ?? [])
       : [];
     return legal;
   }, [isStakePlacement, stakeContext]);
   const stakeLegalKeys = useMemo(
     () => new Set(stakeLegalPositions.map(coordKey)),
-    [stakeLegalPositions]
+    [stakeLegalPositions],
   );
   const stakeSelectionKeys = useMemo(
     () => new Set(stakeSelections.map(coordKey)),
-    [stakeSelections]
+    [stakeSelections],
   );
 
   const intimidateOptions = useMemo(() => {
     if (!isIntimidateChoice) return [] as Coord[];
     const ctx = pendingRoll?.context as { options?: Coord[] } | undefined;
-    return Array.isArray(ctx?.options) ? ctx?.options ?? [] : [];
+    return Array.isArray(ctx?.options) ? (ctx?.options ?? []) : [];
   }, [isIntimidateChoice, pendingRoll]);
   const intimidateKeys = useMemo(
     () => new Set(intimidateOptions.map(coordKey)),
-    [intimidateOptions]
+    [intimidateOptions],
   );
 
   const forestTargetCenters = useMemo(() => {
@@ -131,7 +127,7 @@ export function useGameShellBoardPendingTargets({
   }, [isForestTarget, view]);
   const forestTargetKeys = useMemo(
     () => new Set(forestTargetCenters.map(coordKey)),
-    [forestTargetCenters]
+    [forestTargetCenters],
   );
 
   const forestMoveDestinationOptions = useMemo(() => {
@@ -141,7 +137,7 @@ export function useGameShellBoardPendingTargets({
   }, [isForestMoveDestination, pendingRoll]);
   const forestMoveDestinationKeys = useMemo(
     () => new Set(forestMoveDestinationOptions.map(coordKey)),
-    [forestMoveDestinationOptions]
+    [forestMoveDestinationOptions],
   );
 
   const femtoDivineMoveOptions = useMemo(() => {
@@ -151,7 +147,7 @@ export function useGameShellBoardPendingTargets({
   }, [isFemtoDivineMoveDestination, pendingRoll]);
   const femtoDivineMoveKeys = useMemo(
     () => new Set(femtoDivineMoveOptions.map(coordKey)),
-    [femtoDivineMoveOptions]
+    [femtoDivineMoveOptions],
   );
   const odinSleipnirOptions = useMemo(() => {
     if (!isOdinSleipnirDestination) return [] as Coord[];
@@ -160,7 +156,7 @@ export function useGameShellBoardPendingTargets({
   }, [isOdinSleipnirDestination, pendingRoll]);
   const odinSleipnirKeys = useMemo(
     () => new Set(odinSleipnirOptions.map(coordKey)),
-    [odinSleipnirOptions]
+    [odinSleipnirOptions],
   );
   const chargedImpulseTargetOptions = useMemo(() => {
     if (!isChargedImpulseTargetChoice) return [] as Coord[];
@@ -175,7 +171,7 @@ export function useGameShellBoardPendingTargets({
   }, [isChargedImpulseTargetChoice, pendingRoll, view?.boardSize]);
   const chargedImpulseTargetKeys = useMemo(
     () => new Set(chargedImpulseTargetOptions.map(coordKey)),
-    [chargedImpulseTargetOptions]
+    [chargedImpulseTargetOptions],
   );
   const riverBoatCarryOptionIds = useMemo(() => {
     if (!isRiverBoatCarryChoice) return [] as string[];
@@ -189,9 +185,9 @@ export function useGameShellBoardPendingTargets({
         riverBoatCarryOptionIds
           .map((unitId) => view?.units[unitId]?.position)
           .filter((coord): coord is Coord => !!coord)
-          .map(coordKey)
+          .map(coordKey),
       ),
-    [riverBoatCarryOptionIds, view]
+    [riverBoatCarryOptionIds, view],
   );
   const riverBoatDestinationOptions = useMemo(() => {
     if (!isRiverBoatDestinationChoice) return [] as Coord[];
@@ -200,7 +196,7 @@ export function useGameShellBoardPendingTargets({
   }, [isRiverBoatDestinationChoice, pendingRoll]);
   const riverBoatDestinationKeys = useMemo(
     () => new Set(riverBoatDestinationOptions.map(coordKey)),
-    [riverBoatDestinationOptions]
+    [riverBoatDestinationOptions],
   );
   const riverBoatDropDestinationOptions = useMemo(() => {
     if (!isRiverBoatDropDestination) return [] as Coord[];
@@ -209,7 +205,7 @@ export function useGameShellBoardPendingTargets({
   }, [isRiverBoatDropDestination, pendingRoll]);
   const riverBoatDropDestinationKeys = useMemo(
     () => new Set(riverBoatDropDestinationOptions.map(coordKey)),
-    [riverBoatDropDestinationOptions]
+    [riverBoatDropDestinationOptions],
   );
   const riverTraLaLaTargetIds = useMemo(() => {
     if (!isRiverTraLaLaTargetChoice) return [] as string[];
@@ -223,9 +219,9 @@ export function useGameShellBoardPendingTargets({
         riverTraLaLaTargetIds
           .map((unitId) => view?.units[unitId]?.position)
           .filter((coord): coord is Coord => !!coord)
-          .map(coordKey)
+          .map(coordKey),
       ),
-    [riverTraLaLaTargetIds, view]
+    [riverTraLaLaTargetIds, view],
   );
   const riverTraLaLaDestinationOptions = useMemo(() => {
     if (!isRiverTraLaLaDestinationChoice) return [] as Coord[];
@@ -234,7 +230,7 @@ export function useGameShellBoardPendingTargets({
   }, [isRiverTraLaLaDestinationChoice, pendingRoll]);
   const riverTraLaLaDestinationKeys = useMemo(
     () => new Set(riverTraLaLaDestinationOptions.map(coordKey)),
-    [riverTraLaLaDestinationOptions]
+    [riverTraLaLaDestinationOptions],
   );
   const riverTraLaLaDropDestinationOptions = useMemo(() => {
     if (!isRiverTraLaLaDropDestinationChoice) return [] as Coord[];
@@ -243,7 +239,7 @@ export function useGameShellBoardPendingTargets({
   }, [isRiverTraLaLaDropDestinationChoice, pendingRoll]);
   const riverTraLaLaDropDestinationKeys = useMemo(
     () => new Set(riverTraLaLaDropDestinationOptions.map(coordKey)),
-    [riverTraLaLaDropDestinationOptions]
+    [riverTraLaLaDropDestinationOptions],
   );
 
   const chikatiloPlacementCoords = useMemo(() => {
@@ -252,7 +248,7 @@ export function useGameShellBoardPendingTargets({
   }, [isChikatiloPlacement, pendingRoll]);
   const chikatiloPlacementKeys = useMemo(
     () => new Set(chikatiloPlacementCoords.map(coordKey)),
-    [chikatiloPlacementCoords]
+    [chikatiloPlacementCoords],
   );
 
   const groznyTyrantAllyOptionIds = useMemo(() => {
@@ -267,9 +263,9 @@ export function useGameShellBoardPendingTargets({
         groznyTyrantAllyOptionIds
           .map((unitId) => view?.units[unitId]?.position)
           .filter((coord): coord is Coord => !!coord)
-          .map(coordKey)
+          .map(coordKey),
       ),
-    [groznyTyrantAllyOptionIds, view]
+    [groznyTyrantAllyOptionIds, view],
   );
 
   const groznyTyrantAttackCellOptions = useMemo(() => {
@@ -279,18 +275,12 @@ export function useGameShellBoardPendingTargets({
     return ctx.options.filter(isGroznyTyrantAttackCellOption);
   }, [isGroznyTyrantAttackCellChoice, pendingRoll]);
   const groznyTyrantAttackCellKeys = useMemo(
-    () =>
-      new Set(
-        groznyTyrantAttackCellOptions.map((option) =>
-          coordKey(option.position)
-        )
-      ),
-    [groznyTyrantAttackCellOptions]
+    () => new Set(groznyTyrantAttackCellOptions.map((option) => coordKey(option.position))),
+    [groznyTyrantAttackCellOptions],
   );
   const groznyTyrantAllowSkip =
     isGroznyTyrantAttackCellChoice &&
-    (pendingRoll?.context as { allowSkip?: unknown } | undefined)?.allowSkip ===
-      true;
+    (pendingRoll?.context as { allowSkip?: unknown } | undefined)?.allowSkip === true;
 
   const guideTravelerPlacementCoords = useMemo(() => {
     if (!isGuideTravelerPlacement) return [] as Coord[];
@@ -311,7 +301,7 @@ export function useGameShellBoardPendingTargets({
   }, [isGuideTravelerPlacement, pendingRoll]);
   const guideTravelerPlacementKeys = useMemo(
     () => new Set(guideTravelerPlacementCoords.map(coordKey)),
-    [guideTravelerPlacementCoords]
+    [guideTravelerPlacementCoords],
   );
 
   const actorTargets = useGameShellBoardPendingActorTargets({

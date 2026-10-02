@@ -35,7 +35,6 @@ export function makeInitialState(): PongState {
   const height = 450;
   const paddleW = 12;
   const paddleH = 90;
-  const paddleYOffset = 20;
   return {
     tick: 0,
     phase: "idle",

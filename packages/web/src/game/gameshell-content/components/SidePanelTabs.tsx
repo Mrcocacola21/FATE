@@ -1,4 +1,5 @@
-import { useEffect, useState, type FC } from "react";
+import type { GameShellViewModel } from "../hooks/useGameShellViewModel";
+import { useCallback, useEffect, useState, type FC } from "react";
 import { EventLog } from "../../../components/EventLog";
 import { TurnQueueTracker } from "../../../components/TurnQueueTracker";
 import { PanelCard, SectionHeader } from "../../../components/ui";
@@ -31,7 +32,7 @@ import { PlayersRosterSection } from "./PlayersRosterSection";
 export type MatchSideTab = "unit" | "actions" | "rules" | "players" | "log";
 
 interface SidePanelTabsProps {
-  vm: any;
+  vm: GameShellViewModel;
   activeTab?: MatchSideTab;
   onActiveTabChange?: (tab: MatchSideTab) => void;
   hideTask?: boolean;
@@ -182,13 +183,17 @@ export const SidePanelTabs: FC<SidePanelTabsProps> = ({
   const { t } = useI18n();
   const [internalTab, setInternalTab] = useState<MatchSideTab>("unit");
   const activeTab = controlledTab ?? internalTab;
-  const setActiveTab = (tab: MatchSideTab) => {
-    onActiveTabChange?.(tab);
-    if (controlledTab === undefined) setInternalTab(tab);
-  };
+  const isControlled = controlledTab !== undefined;
+  const setActiveTab = useCallback(
+    (tab: MatchSideTab) => {
+      onActiveTabChange?.(tab);
+      if (!isControlled) setInternalTab(tab);
+    },
+    [onActiveTabChange, isControlled],
+  );
   const effectiveRole = vm.canControlTestRoom && vm.selectedUnit ? vm.selectedUnit.owner : vm.role;
   const rightPanelProps: RightPanelProps = {
-    view: vm.view,
+    view: vm.view!,
     role: effectiveRole,
     selectedUnitId: vm.selectedUnitId,
     actionMode: vm.actionMode,
@@ -217,8 +222,7 @@ export const SidePanelTabs: FC<SidePanelTabsProps> = ({
     onSendAction: (action) => {
       vm.sendGameAction(action);
       const preserveMode =
-        action.type === "useAbility" &&
-        action.abilityId === PAPYRUS_LONG_BONE_ID;
+        action.type === "useAbility" && action.abilityId === PAPYRUS_LONG_BONE_ID;
       if (action.type !== "requestMoveOptions" && !preserveMode) {
         vm.setActionMode(null);
       }
@@ -232,7 +236,7 @@ export const SidePanelTabs: FC<SidePanelTabsProps> = ({
     if (vm.pendingRoll || vm.pendingMeta) {
       setActiveTab("actions");
     }
-  }, [vm.pendingRoll, vm.pendingMeta]);
+  }, [vm.pendingRoll, vm.pendingMeta, setActiveTab]);
 
   const tabs = [
     { value: "unit" as const, label: t("game.tabsUnit") },
@@ -262,7 +266,7 @@ export const SidePanelTabs: FC<SidePanelTabsProps> = ({
         className={`scroll-panel min-h-0 flex-1 overflow-y-auto pr-1 ${hideTask && hideTabs ? "" : "mt-3"}`}
       >
         {activeTab === "unit" ? (
-          vm.view.phase === "battle" ? (
+          vm.view!.phase === "battle" ? (
             <PanelCard variant="parchment" className="p-4">
               <SectionHeader kicker={t("game.selectedUnit")} title={t("game.unitDetails")} />
               <BattleUnitSummary
@@ -276,7 +280,7 @@ export const SidePanelTabs: FC<SidePanelTabsProps> = ({
                 moveRoll={panelVm.moveRoll}
                 economy={panelVm.economy}
                 abilityViews={panelVm.abilityViews}
-                view={vm.view}
+                view={vm.view!}
                 canAct={panelVm.canAct}
                 pendingRoll={rightPanelProps.pendingRoll}
                 attackDisabledReason={panelVm.attackDisabledReason}
@@ -301,10 +305,10 @@ export const SidePanelTabs: FC<SidePanelTabsProps> = ({
             {shouldShowTestRoomPanel(vm.roomMeta?.roomMode, vm.canControlTestRoom) ? (
               <TestRoomPanel vm={vm} />
             ) : null}
-            <ActiveFieldInfo view={vm.view} />
+            <ActiveFieldInfo view={vm.view!} />
             <RuleDeclarationStatus vm={vm} />
             <StatusSection
-              view={vm.view}
+              view={vm.view!}
               selectedUnit={panelVm.selectedVisibleUnit}
               stormActive={panelVm.stormActive}
               forestMarkers={panelVm.forestMarkers}
@@ -315,14 +319,14 @@ export const SidePanelTabs: FC<SidePanelTabsProps> = ({
               pendingRoll={rightPanelProps.pendingRoll}
               onStartTurn={panelVm.onStartTurn}
             />
-            <TurnQueueTracker view={vm.view} playerId={vm.playerId} />
+            <TurnQueueTracker view={vm.view!} playerId={vm.playerId} />
           </div>
         ) : null}
 
         {activeTab === "players" ? (
           <div className="space-y-3">
             <PlayersRosterSection
-              view={vm.view}
+              view={vm.view!}
               selectedUnitId={vm.selectedUnitId}
               onSelectUnit={rightPanelProps.onSelectUnit}
             />

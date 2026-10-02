@@ -342,16 +342,8 @@ function handleServerMessage(
       const incomingMeta = msg.meta ?? ({} as RoomMeta);
       const incomingInitiative = incomingMeta.initiative;
       const nextReady = {
-        P1:
-          incomingMeta.ready?.P1 ??
-          (incomingMeta as any).playersReady?.P1 ??
-          prevMeta.ready.P1 ??
-          false,
-        P2:
-          incomingMeta.ready?.P2 ??
-          (incomingMeta as any).playersReady?.P2 ??
-          prevMeta.ready.P2 ??
-          false,
+        P1: incomingMeta.ready?.P1 ?? incomingMeta.playersReady?.P1 ?? prevMeta.ready.P1 ?? false,
+        P2: incomingMeta.ready?.P2 ?? incomingMeta.playersReady?.P2 ?? prevMeta.ready.P2 ?? false,
       };
       const nextPlayers = {
         P1: incomingMeta.players?.P1 ?? prevMeta.players.P1 ?? false,

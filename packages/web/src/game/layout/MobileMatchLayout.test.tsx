@@ -1,3 +1,4 @@
+import { gameShellFixture } from "../testHelpers/gameShellFixture";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { Children, isValidElement, type ReactElement, type ReactNode } from "react";
@@ -72,7 +73,7 @@ test("starting a match resets stale mobile panel state", () => {
 });
 
 test("mobile task visibility omits idle state and includes placement and targeting", () => {
-  const idle = { view: { phase: "battle" } };
+  const idle = { view: { phase: "battle" as const } };
   assert.equal(hasActiveMobileTask(idle), false);
   assert.equal(hasActiveMobileTask({ ...idle, actionMode: "attack" }), true);
   assert.equal(hasActiveMobileTask({ view: { phase: "placement" } }), true);
@@ -88,7 +89,10 @@ test("mobile task visibility omits idle state and includes placement and targeti
 
 test("mobile movement chooser remains a cancelable top task before board intent starts", () => {
   setLanguage("en", { setItem: () => undefined });
-  const artemida = {
+  const artemida: Pick<
+    import("rules").UnitState,
+    "id" | "owner" | "class" | "heroId" | "isAlive" | "position"
+  > = {
     id: "artemida",
     owner: "P1",
     class: "archer",
@@ -99,7 +103,7 @@ test("mobile movement chooser remains a cancelable top task before board intent 
   const markup = renderToStaticMarkup(
     <CurrentTaskPanel
       compact
-      vm={{
+      vm={gameShellFixture({
         view: { phase: "battle" },
         pendingRoll: null,
         pendingMeta: null,
@@ -109,7 +113,7 @@ test("mobile movement chooser remains a cancelable top task before board intent 
         moveOptions: { unitId: artemida.id, legalTo: [], modes: ["normal", "trickster"] },
         setMoveOptions: () => undefined,
         setActionMode: () => undefined,
-      }}
+      })}
     />,
   );
   assert.match(markup, /Artemis: choose movement mode/);
@@ -119,7 +123,10 @@ test("mobile movement chooser remains a cancelable top task before board intent 
 
 test("mobile targeting strip names the selected Oni Giri source and keeps cancel visible", () => {
   setLanguage("en", { setItem: () => undefined });
-  const zoro = {
+  const zoro: Pick<
+    import("rules").UnitState,
+    "id" | "owner" | "class" | "heroId" | "isAlive" | "position"
+  > = {
     id: "zoro",
     owner: "P1",
     class: "knight",
@@ -130,7 +137,7 @@ test("mobile targeting strip names the selected Oni Giri source and keeps cancel
   const markup = renderToStaticMarkup(
     <CurrentTaskPanel
       compact
-      vm={{
+      vm={gameShellFixture({
         view: {
           phase: "battle",
           abilitiesByUnitId: {
@@ -163,7 +170,7 @@ test("mobile targeting strip names the selected Oni Giri source and keeps cancel
         newHeroAbilityTargetId: null,
         setActionMode: () => undefined,
         papyrusLineAxis: "row",
-      }}
+      })}
     />,
   );
   assert.match(markup, /Oni Giri.*Determination/);
@@ -173,7 +180,10 @@ test("mobile targeting strip names the selected Oni Giri source and keeps cancel
 
 test("mobile targeting strip names the selected Push Notification source", () => {
   setLanguage("en", { setItem: () => undefined });
-  const duolingo = {
+  const duolingo: Pick<
+    import("rules").UnitState,
+    "id" | "owner" | "class" | "heroId" | "isAlive" | "position"
+  > = {
     id: "duolingo",
     owner: "P1",
     class: "trickster",
@@ -184,7 +194,7 @@ test("mobile targeting strip names the selected Push Notification source", () =>
   const markup = renderToStaticMarkup(
     <CurrentTaskPanel
       compact
-      vm={{
+      vm={gameShellFixture({
         view: {
           phase: "battle",
           abilitiesByUnitId: {
@@ -217,7 +227,7 @@ test("mobile targeting strip names the selected Push Notification source", () =>
         newHeroAbilityTargetId: null,
         setActionMode: () => undefined,
         papyrusLineAxis: "row",
-      }}
+      })}
     />,
   );
   assert.match(markup, /Push Notification.*Missed Lessons/);
@@ -296,7 +306,7 @@ test("mobile Silver Moon Sickle task asks for an endpoint and remains cancelable
   const markup = renderToStaticMarkup(
     <CurrentTaskPanel
       compact
-      vm={{
+      vm={gameShellFixture({
         view: { phase: "battle", abilitiesByUnitId: { artemida: [] } },
         pendingRoll: null,
         pendingMeta: null,
@@ -308,9 +318,8 @@ test("mobile Silver Moon Sickle task asks for an endpoint and remains cancelable
         },
         selectedUnitId: "artemida",
         papyrusLineAxis: "row",
-        undyneAxis: "row",
         setActionMode: () => undefined,
-      }}
+      })}
     />,
   );
   assert.match(markup, /Silver Moon Sickle/);
@@ -320,10 +329,10 @@ test("mobile Silver Moon Sickle task asks for an endpoint and remains cancelable
 
 test("an initiative pending roll exits the mobile room lobby before phase changes", () => {
   const lobbyView = {
-    phase: "lobby",
+    phase: "lobby" as const,
     pendingRoll: null,
     initiative: { P1: null, P2: null, winner: null },
-  } as any;
+  };
   assert.equal(hasMobileMatchStarted(lobbyView, null), false);
   assert.equal(
     hasMobileMatchStarted(lobbyView, {
@@ -429,7 +438,7 @@ test("mobile placement task renders as a compact cancelable strip", () => {
   const markup = renderToStaticMarkup(
     <CurrentTaskPanel
       compact
-      vm={{
+      vm={gameShellFixture({
         view: {
           phase: "placement",
           currentPlayer: "P1",
@@ -446,7 +455,7 @@ test("mobile placement task renders as a compact cancelable strip", () => {
         placeUnitId: "genghis",
         setActionMode: () => undefined,
         setPlaceUnitId: () => undefined,
-      }}
+      })}
     />,
   );
   assert.match(markup, /data-testid="mobile-active-task-strip"/);

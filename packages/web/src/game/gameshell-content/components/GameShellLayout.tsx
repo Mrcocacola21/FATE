@@ -1,3 +1,4 @@
+import type { GameShellViewModel } from "../hooks/useGameShellViewModel";
 import type { FC, ReactNode } from "react";
 import { GameLoadingState } from "./GameLoadingState";
 import { GameShellBoardColumn } from "./GameShellBoardColumn";
@@ -11,7 +12,7 @@ import { ResponsiveMatchLayout } from "../../../layout/ResponsiveMatchLayout";
 import { BattleEndScreen } from "./BattleEndScreen";
 
 interface GameShellLayoutProps {
-  vm: any;
+  vm: GameShellViewModel;
 }
 
 export const DesktopMatchLayout: FC<GameShellLayoutProps> = ({ vm }) => (
@@ -42,7 +43,14 @@ export const GameShellLayout: FC<GameShellLayoutProps> = ({ vm }) => {
     vm.roomMeta.draftState.phase !== "complete" &&
     vm.view.phase === "lobby"
   ) {
-    content = <DraftScreen vm={vm} />;
+    content = (
+      <DraftScreen
+        vm={{
+          ...vm,
+          roomMeta: { ...vm.roomMeta, gameMode: "draft", draftState: vm.roomMeta.draftState },
+        }}
+      />
+    );
   } else {
     content = (
       <ResponsiveMatchLayout

@@ -50,9 +50,10 @@ export function testOdinMuninnStartsFullyCharged() {
 
 
 export function testOdinGungnirAutoHitOnAttackDouble() {
-  let { state, odin } = setupOdinState();
+  const { state: initialState127, odin } = setupOdinState();
+  let state = initialState127;
   const enemy = Object.values(state.units).find(
-    (unit) => unit.owner === "P2" && unit.class === "knight"
+    (unit) => unit.owner === "P2" && unit.class === "knight",
   )!;
 
   state = setUnit(state, odin.id, { position: { col: 4, row: 4 } });
@@ -83,12 +84,12 @@ export function testOdinGungnirAutoHitOnAttackDouble() {
   battle = initKnowledgeForOwners(battle);
   const started = applyAction(
     battle,
-    { type: "attack", attackerId: odin.id, defenderId: enemy.id } as any,
-    makeRngSequence([0.01, 0.01, 0.99, 0.99])
+    { type: "attack", attackerId: odin.id, defenderId: enemy.id },
+    makeRngSequence([0.01, 0.01, 0.99, 0.99]),
   );
   const resolved = resolveAllPendingRollsWithEvents(
     started.state,
-    makeRngSequence([0.01, 0.01, 0.99, 0.99])
+    makeRngSequence([0.01, 0.01, 0.99, 0.99]),
   );
   const pendingEvent = [...started.events, ...resolved.events].find(
     (event) =>
@@ -107,9 +108,10 @@ export function testOdinGungnirAutoHitOnAttackDouble() {
 
 
 export function testOdinHuginnStealthVisibilityRadius() {
-  let { state, odin } = setupOdinState();
+  const { state: initialState128, odin } = setupOdinState();
+let state = initialState128;
   const enemy = Object.values(state.units).find(
-    (unit) => unit.owner === "P2" && unit.class === "assassin"
+    (unit) => unit.owner === "P2" && unit.class === "assassin",
   )!;
 
   state = setUnit(state, odin.id, { position: { col: 4, row: 4 } });
@@ -148,7 +150,8 @@ export function testOdinHuginnStealthVisibilityRadius() {
 
 
 export function testOdinSleipnirGatingTeleportAndNoMoveSpend() {
-  let { state, odin } = setupOdinState();
+  const { state: initialState129, odin } = setupOdinState();
+let state = initialState129;
   state = setUnit(state, odin.id, {
     position: { col: 0, row: 0 },
     charges: { ...odin.charges, [ABILITY_ODIN_SLEIPNIR]: 2 },
@@ -163,13 +166,12 @@ export function testOdinSleipnirGatingTeleportAndNoMoveSpend() {
       unitId: odin.id,
       abilityId: ABILITY_ODIN_SLEIPNIR,
       payload: { to: { col: 8, row: 8 } },
-    } as any,
+    },
     makeRngSequence([])
   );
   assert(
-    used.state.units[odin.id].position?.col === 0 &&
-      used.state.units[odin.id].position?.row === 0,
-    "Sleipnir should be blocked below 3 charges"
+    used.state.units[odin.id].position?.col === 0 && used.state.units[odin.id].position?.row === 0,
+    "Sleipnir should be blocked below 3 charges",
   );
   assert(
     used.state.units[odin.id].charges[ABILITY_ODIN_SLEIPNIR] === 2,
@@ -187,13 +189,12 @@ export function testOdinSleipnirGatingTeleportAndNoMoveSpend() {
       unitId: odin.id,
       abilityId: ABILITY_ODIN_SLEIPNIR,
       payload: { to: { col: 8, row: 8 } },
-    } as any,
+    },
     makeRngSequence([])
   );
   assert(
-    used.state.units[odin.id].position?.col === 8 &&
-      used.state.units[odin.id].position?.row === 8,
-    "Sleipnir should teleport Odin to chosen empty cell"
+    used.state.units[odin.id].position?.col === 8 && used.state.units[odin.id].position?.row === 8,
+    "Sleipnir should teleport Odin to chosen empty cell",
   );
   assert(
     used.state.units[odin.id].charges[ABILITY_ODIN_SLEIPNIR] === 0,
@@ -212,7 +213,8 @@ export function testOdinSleipnirGatingTeleportAndNoMoveSpend() {
 }
 
 export function testOdinSleipnirAutoPendingAndDestinationStakeTrigger() {
-  let { state, odin } = setupOdinState();
+  const { state: initialState130, odin } = setupOdinState();
+let state = initialState130;
   const destination = { col: 3, row: 3 };
   state = setUnit(state, odin.id, {
     position: { col: 0, row: 0 },
@@ -248,7 +250,7 @@ export function testOdinSleipnirAutoPendingAndDestinationStakeTrigger() {
 
   const started = applyAction(
     state,
-    { type: "unitStartTurn", unitId: odin.id } as any,
+    { type: "unitStartTurn", unitId: odin.id },
     makeRngSequence([])
   );
   assert(
@@ -257,7 +259,7 @@ export function testOdinSleipnirAutoPendingAndDestinationStakeTrigger() {
   );
   assert(
     started.state.units[odin.id].charges[ABILITY_ODIN_SLEIPNIR] === 3,
-    "Sleipnir charges should remain until the forced destination is resolved"
+    "Sleipnir charges should remain until the forced destination is resolved",
   );
 
   const pending = started.state.pendingRoll!;
@@ -269,7 +271,7 @@ export function testOdinSleipnirAutoPendingAndDestinationStakeTrigger() {
       pendingRollId: pending.id,
       player: pending.player,
       choice: { type: "odinSleipnirDestination", position: destination },
-    } as any,
+    },
     makeRngSequence([])
   );
   const updated = resolved.state.units[odin.id];
@@ -278,10 +280,7 @@ export function testOdinSleipnirAutoPendingAndDestinationStakeTrigger() {
       updated.position?.row === destination.row,
     "Sleipnir should teleport to the forced destination"
   );
-  assert(
-    updated.hp === hpBefore - 1,
-    "landing on a Vlad stake should deal exactly 1 damage"
-  );
+  assert(updated.hp === hpBefore - 1, "landing on a Vlad stake should deal exactly 1 damage");
   assert(
     updated.charges[ABILITY_ODIN_SLEIPNIR] === 0,
     "Sleipnir should spend all 3 charges on resolution"
@@ -311,7 +310,8 @@ export function testOdinSleipnirAutoPendingAndDestinationStakeTrigger() {
 }
 
 export function testOdinSleipnirDoesNotLeakUnknownHiddenOccupants() {
-  let { state, odin } = setupOdinState();
+  const { state: initialState131, odin } = setupOdinState();
+let state = initialState131;
   const hiddenEnemy = Object.values(state.units).find(
     (unit) => unit.owner === "P2" && unit.class === "assassin"
   )!;
@@ -345,7 +345,7 @@ export function testOdinSleipnirDoesNotLeakUnknownHiddenOccupants() {
 
   const started = applyAction(
     state,
-    { type: "unitStartTurn", unitId: odin.id } as any,
+    { type: "unitStartTurn", unitId: odin.id },
     makeRngSequence([])
   );
   const pending = started.state.pendingRoll!;
@@ -354,10 +354,9 @@ export function testOdinSleipnirDoesNotLeakUnknownHiddenOccupants() {
     : [];
   assert(
     options.some(
-      (option) =>
-        option.col === hiddenPosition.col && option.row === hiddenPosition.row
+      (option) => option.col === hiddenPosition.col && option.row === hiddenPosition.row,
     ),
-    "Sleipnir options must not reveal an unknown hidden occupant by omission"
+    "Sleipnir options must not reveal an unknown hidden occupant by omission",
   );
 
   const attempted = applyAction(
@@ -370,7 +369,7 @@ export function testOdinSleipnirDoesNotLeakUnknownHiddenOccupants() {
         type: "odinSleipnirDestination",
         position: hiddenPosition,
       },
-    } as any,
+    },
     makeRngSequence([])
   );
   assert(
@@ -380,11 +379,11 @@ export function testOdinSleipnirDoesNotLeakUnknownHiddenOccupants() {
   assert(
     attempted.state.units[odin.id].position?.col === 0 &&
       attempted.state.units[odin.id].position?.row === 0,
-    "Odin should not teleport onto an occupied hidden cell"
+    "Odin should not teleport onto an occupied hidden cell",
   );
   assert(
     attempted.state.pendingRoll?.kind === "odinSleipnirDestination",
-    "the forced Sleipnir choice should reopen after revealing the blocker"
+    "the forced Sleipnir choice should reopen after revealing the blocker",
   );
   assert(
     attempted.state.units[odin.id].charges[ABILITY_ODIN_SLEIPNIR] === 3,
@@ -396,7 +395,8 @@ export function testOdinSleipnirDoesNotLeakUnknownHiddenOccupants() {
 
 
 export function testOdinMuninnPostDefenseChoice() {
-  let { state, odin } = setupOdinState();
+  const { state: initialState132, odin } = setupOdinState();
+let state = initialState132;
   const attacker = Object.values(state.units).find(
     (unit) => unit.owner === "P2" && unit.class === "knight"
   )!;
@@ -410,7 +410,7 @@ export function testOdinMuninnPostDefenseChoice() {
 
   let lowStart = applyAction(
     state,
-    { type: "attack", attackerId: attacker.id, defenderId: odin.id } as any,
+    { type: "attack", attackerId: attacker.id, defenderId: odin.id },
     makeRngSequence([])
   );
   lowStart = resolvePendingRollOnce(
@@ -423,11 +423,11 @@ export function testOdinMuninnPostDefenseChoice() {
   );
   assert(
     lowResolved.state.pendingRoll?.kind !== "odinMuninnDefenseChoice",
-    "Muninn choice must not appear below 6 charges"
+    "Muninn choice must not appear below 6 charges",
   );
   assert(
     lowResolved.state.units[odin.id].charges[ABILITY_ODIN_MUNINN] === 5,
-    "Muninn charges should stay unchanged when not full"
+    "Muninn charges should stay unchanged when not full",
   );
 
   state = setUnit(state, odin.id, {
@@ -436,7 +436,7 @@ export function testOdinMuninnPostDefenseChoice() {
   });
   const start = applyAction(
     state,
-    { type: "attack", attackerId: attacker.id, defenderId: odin.id } as any,
+    { type: "attack", attackerId: attacker.id, defenderId: odin.id },
     makeRngSequence([])
   );
   assert(
@@ -450,13 +450,10 @@ export function testOdinMuninnPostDefenseChoice() {
   );
   assert(
     afterAttacker.state.pendingRoll?.kind === "attack_defenderRoll",
-    "after attacker roll, defender roll should be requested"
+    "after attacker roll, defender roll should be requested",
   );
 
-  const afterDefender = resolvePendingRollOnce(
-    afterAttacker.state,
-    makeRngSequence([0.01, 0.01])
-  );
+  const afterDefender = resolvePendingRollOnce(afterAttacker.state, makeRngSequence([0.01, 0.01]));
   assert(
     afterDefender.state.pendingRoll?.kind === "odinMuninnDefenseChoice",
     "Muninn choice should appear after defense roll when charges are full"
@@ -469,8 +466,8 @@ export function testOdinMuninnPostDefenseChoice() {
       pendingRollId: afterDefender.state.pendingRoll!.id,
       player: afterDefender.state.pendingRoll!.player,
       choice: "auto",
-    } as any,
-    makeRngSequence([])
+    },
+    makeRngSequence([]),
   );
   assert(!choseMuninn.state.pendingRoll, "Muninn choice should resolve immediately");
   const attackEvent = choseMuninn.events.find(

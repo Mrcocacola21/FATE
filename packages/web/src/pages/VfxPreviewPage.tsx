@@ -18,7 +18,7 @@ const COPY = {
 export function VfxPreviewPage() {
   const view = useMemo(() => createVfxPreviewView(), []);
   const [batch, setBatch] = useState<BoardEventBatch | null>(null);
-  const [logIndex, setLogIndex] = useState(0);
+  const [, setLogIndex] = useState(0);
   const [activeScenarioId, setActiveScenarioId] = useState<string | null>(null);
 
   const triggerScenario = (scenario: VfxPreviewScenario) => {

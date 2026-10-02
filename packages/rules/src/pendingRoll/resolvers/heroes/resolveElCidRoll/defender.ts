@@ -6,7 +6,11 @@ import { getPolkovodetsSource, maybeRequestIntimidate } from "../../../../action
 import type { IntimidateResume } from "../../../../actions/types";
 import type { ElCidAoEContext } from "../../../types";
 import { rollDice } from "../../../utils/rollMath";
-import { finalizeElCidAoE, maybeBuildPolkovodetsDamageEvent, updatePendingAoEFromAttack } from "./helpers";
+import {
+  finalizeElCidAoE,
+  maybeBuildPolkovodetsDamageEvent,
+  updatePendingAoEFromAttack,
+} from "./helpers";
 import { advanceElCidAoEQueue } from "./queue";
 
 type ElCidResumeKind = "elCidTisonaAoE" | "elCidKoladaAoE";
@@ -16,7 +20,7 @@ export function resolveElCidDefenderRoll(
   pending: PendingRoll,
   rng: RNG,
   defenderRollKind: RollKind,
-  resumeKind: ElCidResumeKind
+  resumeKind: ElCidResumeKind,
 ): ApplyResult {
   const ctx = pending.context as unknown as ElCidAoEContext;
   const caster = state.units[ctx.casterId];
@@ -29,11 +33,9 @@ export function resolveElCidDefenderRoll(
     return { state: clearPendingRoll(state), events: [] };
   }
 
-  const targets = Array.isArray(ctx.targetsQueue)
-    ? Array.from(new Set(ctx.targetsQueue))
-    : [];
+  const targets = Array.isArray(ctx.targetsQueue) ? Array.from(new Set(ctx.targetsQueue)) : [];
   const resolvedTargetIds = new Set(
-    Array.isArray(ctx.resolvedTargetIds) ? ctx.resolvedTargetIds : []
+    Array.isArray(ctx.resolvedTargetIds) ? ctx.resolvedTargetIds : [],
   );
   const idx = ctx.currentTargetIndex ?? 0;
   const targetId = targets[idx];
@@ -76,20 +78,15 @@ export function resolveElCidDefenderRoll(
     },
   });
 
-  let updatedState = updatePendingAoEFromAttack(
-    nextState,
-    events,
-    caster.id,
-    targetId
-  );
-  let updatedEvents: GameEvent[] = [...events];
+  const updatedState = updatePendingAoEFromAttack(nextState, events, caster.id, targetId);
+  const updatedEvents: GameEvent[] = [...events];
 
   const damageEvent = maybeBuildPolkovodetsDamageEvent(
     events,
     caster.id,
     targetId,
     damageBonus,
-    sourceId
+    sourceId,
   );
   if (damageEvent) {
     updatedEvents.push(damageEvent);
@@ -112,16 +109,11 @@ export function resolveElCidDefenderRoll(
     caster.id,
     targetId,
     updatedEvents,
-    intimidateResume
+    intimidateResume,
   );
   if (intimidate.requested) {
     return { state: intimidate.state, events: intimidate.events };
   }
 
-  return advanceElCidAoEQueue(
-    updatedState,
-    nextCtx,
-    updatedEvents,
-    defenderRollKind
-  );
+  return advanceElCidAoEQueue(updatedState, nextCtx, updatedEvents, defenderRollKind);
 }

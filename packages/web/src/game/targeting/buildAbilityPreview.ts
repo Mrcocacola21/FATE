@@ -53,12 +53,7 @@ import {
   straightLineDestinations,
   visiblePositionedUnits,
 } from "./previewGeometry";
-import {
-  targetCells,
-  targetRefsFromIds,
-  targetRefForUnit,
-  visibleUnitTargets,
-} from "./previewVisibility";
+import { targetRefsFromIds, visibleUnitTargets } from "./previewVisibility";
 
 const GUIDE_TRAVELER_RADIUS = 2;
 const LOKI_RADIUS = 2;
@@ -82,7 +77,10 @@ function sourceUnit(view: PlayerView, sourceUnitId: string | null | undefined): 
   return unit?.isAlive && unit.position ? unit : null;
 }
 
-function compactPreview(layers: Array<BoardPreview | null | undefined>, labelKey?: string): BoardPreview | null {
+function compactPreview(
+  layers: Array<BoardPreview | null | undefined>,
+  labelKey?: string,
+): BoardPreview | null {
   const present = layers.filter((layer): layer is BoardPreview => !!layer);
   if (present.length === 0) return null;
   if (present.length === 1) return present[0];
@@ -115,9 +113,7 @@ function visibleAttackTargetIds(
   return visibleTargetIdsInCells(
     view,
     rangeCells,
-    (unit) =>
-      unit.id !== attackerId &&
-      (allowFriendlyTarget || unit.owner !== attacker.owner),
+    (unit) => unit.id !== attackerId && (allowFriendlyTarget || unit.owner !== attacker.owner),
   );
 }
 
@@ -352,10 +348,7 @@ function buildLokiHover(view: PlayerView, loki: UnitState): BoardPreview | null 
   );
   const affectedTargets = visibleUnitTargets(
     view,
-    (unit) =>
-      unit.id !== loki.id &&
-      !!unit.position &&
-      areaKeys.has(coordKey(unit.position)),
+    (unit) => unit.id !== loki.id && !!unit.position && areaKeys.has(coordKey(unit.position)),
   );
 
   return compactPreview(
@@ -375,10 +368,12 @@ function buildLokiHover(view: PlayerView, loki: UnitState): BoardPreview | null 
         validTargets: mindControlCandidates.length > 0 ? mindControlCandidates : enemiesInRange,
         invalidTargets:
           mindControlCandidates.length > 0
-            ? enemiesInRange.filter(
-                (target) =>
-                  !mindControlCandidates.some((valid) => valid.unitId === target.unitId),
-              ).map((target) => ({ ...target, disabled: true }))
+            ? enemiesInRange
+                .filter(
+                  (target) =>
+                    !mindControlCandidates.some((valid) => valid.unitId === target.unitId),
+                )
+                .map((target) => ({ ...target, disabled: true }))
             : undefined,
         labelKey: "preview.labels.selectControlledUnit",
       },
@@ -444,9 +439,11 @@ function isBeyondEndpointOnRay(from: Coord, endpoint: Coord, cell: Coord): boole
     col: cellPath[1].col - from.col,
     row: cellPath[1].row - from.row,
   };
-  return endpointStep.col === cellStep.col &&
+  return (
+    endpointStep.col === cellStep.col &&
     endpointStep.row === cellStep.row &&
-    cellPath.length > endpointPath.length;
+    cellPath.length > endpointPath.length
+  );
 }
 
 export function buildAbilityPreview({
@@ -468,9 +465,7 @@ export function buildAbilityPreview({
       const projectedTargets = gameView.abilitiesByUnitId?.[source.id]?.find(
         (ability) => ability.id === abilityId,
       )?.targeting?.targetIds;
-      const legalTargetIds = projectedTargets
-        ? new Set(projectedTargets)
-        : null;
+      const legalTargetIds = projectedTargets ? new Set(projectedTargets) : null;
       return buildRadiusTargetPreview({
         view: gameView,
         source,
@@ -584,10 +579,17 @@ export function buildAbilityPreview({
     case GROZNY_INVADE_TIME_ID:
       return buildGroznyHover(gameView, source);
     case DUOLINGO_PUSH_NOTIFICATION_ID: {
-      const targeting = gameView.abilitiesByUnitId?.[source.id]?.find((ability) => ability.id === abilityId)?.targeting;
+      const targeting = gameView.abilitiesByUnitId?.[source.id]?.find(
+        (ability) => ability.id === abilityId,
+      )?.targeting;
       const targetIds = targeting?.targetIds ?? [];
       const hoveredTarget = targetingCell
-        ? Object.values(gameView.units).find((unit) => unit.position && coordKey(unit.position) === coordKey(targetingCell) && targetIds.includes(unit.id))?.id
+        ? Object.values(gameView.units).find(
+            (unit) =>
+              unit.position &&
+              coordKey(unit.position) === coordKey(targetingCell) &&
+              targetIds.includes(unit.id),
+          )?.id
         : undefined;
       const activeTargetId = selectedTargetId ?? hoveredTarget;
       if (!activeTargetId) {
@@ -596,14 +598,19 @@ export function buildAbilityPreview({
           sourceCell: { ...source.position },
           cells: [],
           validTargets: targetRefsFromIds(gameView, targetIds),
-          invalidTargets: visibleUnitTargets(gameView, (unit) => unit.id !== source.id && !targetIds.includes(unit.id), true),
+          invalidTargets: visibleUnitTargets(
+            gameView,
+            (unit) => unit.id !== source.id && !targetIds.includes(unit.id),
+            true,
+          ),
           labelKey: "preview.labels.selectTarget",
         };
       }
       const destinations = targeting?.destinationsByTargetId?.[activeTargetId] ?? [];
-      const hoveredDestination = targetingCell && destinations.some((cell) => coordKey(cell) === coordKey(targetingCell))
-        ? targetingCell
-        : null;
+      const hoveredDestination =
+        targetingCell && destinations.some((cell) => coordKey(cell) === coordKey(targetingCell))
+          ? targetingCell
+          : null;
       return compactPreview([
         {
           kind: "movement",
@@ -623,7 +630,9 @@ export function buildAbilityPreview({
       ]);
     }
     case LUCHE_DIVINE_RAY_ID: {
-      const targeting = gameView.abilitiesByUnitId?.[source.id]?.find((ability) => ability.id === abilityId)?.targeting;
+      const targeting = gameView.abilitiesByUnitId?.[source.id]?.find(
+        (ability) => ability.id === abilityId,
+      )?.targeting;
       if (targetingStep === "lucheLightRayAround") {
         const areaCells = targeting?.modes?.aroundSelf?.cells ?? [];
         const areaKeys = new Set(areaCells.map(coordKey));
@@ -643,19 +652,27 @@ export function buildAbilityPreview({
         };
       }
       const legalCells = targeting?.modes?.line?.cells ?? targeting?.cells ?? [];
-      const selectedCell = targetingCell && legalCells.some((cell) => coordKey(cell) === coordKey(targetingCell))
-        ? targetingCell
-        : null;
+      const selectedCell =
+        targetingCell && legalCells.some((cell) => coordKey(cell) === coordKey(targetingCell))
+          ? targetingCell
+          : null;
       const selectedPath = selectedCell ? linePath(source.position, selectedCell) : null;
-      const step = selectedPath && selectedPath.length > 1
-        ? { col: selectedPath[1].col - source.position.col, row: selectedPath[1].row - source.position.row }
-        : null;
+      const step =
+        selectedPath && selectedPath.length > 1
+          ? {
+              col: selectedPath[1].col - source.position.col,
+              row: selectedPath[1].row - source.position.row,
+            }
+          : null;
       const rayCells = step
         ? legalCells.filter((cell) => {
             const path = linePath(source.position!, cell);
-            return !!path && path.length > 1 &&
+            return (
+              !!path &&
+              path.length > 1 &&
               path[1].col - source.position!.col === step.col &&
-              path[1].row - source.position!.row === step.row;
+              path[1].row - source.position!.row === step.row
+            );
           })
         : legalCells;
       const rayKeys = new Set(rayCells.map(coordKey));
@@ -664,7 +681,13 @@ export function buildAbilityPreview({
         sourceCell: { ...source.position },
         lineCells: rayCells,
         affectedTargets: selectedCell
-          ? visibleUnitTargets(gameView, (unit) => unit.owner !== source.owner && !!unit.position && rayKeys.has(coordKey(unit.position)))
+          ? visibleUnitTargets(
+              gameView,
+              (unit) =>
+                unit.owner !== source.owner &&
+                !!unit.position &&
+                rayKeys.has(coordKey(unit.position)),
+            )
           : [],
         labelKey: "preview.labels.archerLine",
       };
@@ -676,13 +699,10 @@ export function buildAbilityPreview({
         source.blindUntilOwnTurnStart ? 1 : undefined,
       );
       const selectedCell =
-        targetingCell &&
-        legalCells.some((cell) => coordKey(cell) === coordKey(targetingCell))
+        targetingCell && legalCells.some((cell) => coordKey(cell) === coordKey(targetingCell))
           ? targetingCell
           : null;
-      const selectedPath = selectedCell
-        ? linePath(source.position, selectedCell)
-        : null;
+      const selectedPath = selectedCell ? linePath(source.position, selectedCell) : null;
       const step =
         selectedPath && selectedPath.length > 1
           ? {
@@ -710,9 +730,7 @@ export function buildAbilityPreview({
           ? visibleUnitTargets(
               gameView,
               (unit) =>
-                unit.id !== source.id &&
-                !!unit.position &&
-                beamKeys.has(coordKey(unit.position)),
+                unit.id !== source.id && !!unit.position && beamKeys.has(coordKey(unit.position)),
             )
           : [],
         labelKey: "preview.labels.affectedLine",
@@ -735,10 +753,17 @@ export function buildAbilityPreview({
         labelKey: "preview.labels.affectedArea",
       };
     case ZORO_ONI_GIRI_ID: {
-      const targeting = gameView.abilitiesByUnitId?.[source.id]?.find((ability) => ability.id === abilityId)?.targeting;
+      const targeting = gameView.abilitiesByUnitId?.[source.id]?.find(
+        (ability) => ability.id === abilityId,
+      )?.targeting;
       const targetIds = targeting?.targetIds ?? [];
       const hoveredTarget = targetingCell
-        ? Object.values(gameView.units).find((unit) => unit.position && coordKey(unit.position) === coordKey(targetingCell) && targetIds.includes(unit.id))?.id
+        ? Object.values(gameView.units).find(
+            (unit) =>
+              unit.position &&
+              coordKey(unit.position) === coordKey(targetingCell) &&
+              targetIds.includes(unit.id),
+          )?.id
         : undefined;
       const activeTargetId = selectedTargetId ?? hoveredTarget;
       if (!activeTargetId) {
@@ -747,14 +772,19 @@ export function buildAbilityPreview({
           sourceCell: { ...source.position },
           lineCells: lineCellsToTargets(source.position, cellsFromTargetIds(gameView, targetIds)),
           validTargets: targetRefsFromIds(gameView, targetIds),
-          invalidTargets: visibleUnitTargets(gameView, (unit) => unit.owner !== source.owner && !targetIds.includes(unit.id), true),
+          invalidTargets: visibleUnitTargets(
+            gameView,
+            (unit) => unit.owner !== source.owner && !targetIds.includes(unit.id),
+            true,
+          ),
           labelKey: "preview.labels.selectTarget",
         };
       }
       const destinations = targeting?.destinationsByTargetId?.[activeTargetId] ?? [];
-      const hoveredDestination = targetingCell && destinations.some((cell) => coordKey(cell) === coordKey(targetingCell))
-        ? targetingCell
-        : null;
+      const hoveredDestination =
+        targetingCell && destinations.some((cell) => coordKey(cell) === coordKey(targetingCell))
+          ? targetingCell
+          : null;
       return compactPreview([
         {
           kind: "movement",
@@ -775,9 +805,8 @@ export function buildAbilityPreview({
     }
     case DON_WINDMILLS_ID: {
       const targetIds =
-        gameView.abilitiesByUnitId?.[source.id]?.find(
-          (ability) => ability.id === DON_WINDMILLS_ID,
-        )?.targeting?.targetIds ?? [];
+        gameView.abilitiesByUnitId?.[source.id]?.find((ability) => ability.id === DON_WINDMILLS_ID)
+          ?.targeting?.targetIds ?? [];
       const hoveredTargetId =
         selectedTargetId && targetIds.includes(selectedTargetId)
           ? selectedTargetId
@@ -801,9 +830,7 @@ export function buildAbilityPreview({
         invalidTargets: visibleUnitTargets(
           gameView,
           (unit) =>
-            unit.id !== source.id &&
-            unit.owner !== source.owner &&
-            !targetIds.includes(unit.id),
+            unit.id !== source.id && unit.owner !== source.owner && !targetIds.includes(unit.id),
           true,
         ),
         affectedTargets: hoveredTargetId
@@ -825,7 +852,12 @@ export function buildAbilityPreview({
       return {
         kind: "movement",
         sourceCell: { ...source.position },
-        reachableCells: cellsInRadius(boardSize(gameView), source.position, boardSize(gameView), true),
+        reachableCells: cellsInRadius(
+          boardSize(gameView),
+          source.position,
+          boardSize(gameView),
+          true,
+        ),
         labelKey: "preview.labels.selectDestination",
       };
     case JACK_HOLY_MOTHER_ID: {
@@ -850,9 +882,10 @@ export function buildAbilityPreview({
     }
     case ARTEMIS_MOON_INSIGHT_ID: {
       const lineCells = archerLineCells(gameView, source.id);
-      const selectedCenter = targetingCell && lineCells.some(
-        (cell) => coordKey(cell) === coordKey(targetingCell),
-      ) ? targetingCell : null;
+      const selectedCenter =
+        targetingCell && lineCells.some((cell) => coordKey(cell) === coordKey(targetingCell))
+          ? targetingCell
+          : null;
       return compactPreview([
         {
           kind: "line",
@@ -860,28 +893,32 @@ export function buildAbilityPreview({
           lineCells,
           labelKey: "preview.labels.archerLine",
         },
-        selectedCenter ? {
-          kind: "area",
-          sourceCell: { ...source.position },
-          centerCell: { ...selectedCenter },
-          areaCells: cellsInRadius(boardSize(gameView), selectedCenter, 1, true),
-          labelKey: "preview.labels.affectedArea",
-        } : null,
+        selectedCenter
+          ? {
+              kind: "area",
+              sourceCell: { ...source.position },
+              centerCell: { ...selectedCenter },
+              areaCells: cellsInRadius(boardSize(gameView), selectedCenter, 1, true),
+              labelKey: "preview.labels.affectedArea",
+            }
+          : null,
       ]);
     }
     case ARTEMIS_SILVER_SICKLE_ID: {
       const lineCells = archerLineCells(gameView, source.id);
-      const selectedTarget = targetingCell && lineCells.some(
-        (cell) => coordKey(cell) === coordKey(targetingCell),
-      ) ? targetingCell : null;
+      const selectedTarget =
+        targetingCell && lineCells.some((cell) => coordKey(cell) === coordKey(targetingCell))
+          ? targetingCell
+          : null;
       const selectedRay = selectedTarget
-        ? linePath(source.position, selectedTarget)?.slice(1) ?? []
+        ? (linePath(source.position, selectedTarget)?.slice(1) ?? [])
         : [];
       const affectedCells = uniqueCells(
         selectedRay.flatMap((cell) => cellsInRadius(boardSize(gameView), cell, 1, true)),
-      ).filter((cell) =>
-        coordKey(cell) !== coordKey(source.position!) &&
-        (!selectedTarget || !isBeyondEndpointOnRay(source.position!, selectedTarget, cell)),
+      ).filter(
+        (cell) =>
+          coordKey(cell) !== coordKey(source.position!) &&
+          (!selectedTarget || !isBeyondEndpointOnRay(source.position!, selectedTarget, cell)),
       );
       return compactPreview([
         {
@@ -890,27 +927,31 @@ export function buildAbilityPreview({
           lineCells,
           labelKey: "preview.labels.archerLine",
         },
-        selectedTarget ? {
-          kind: "multiStep",
-          step: "selectedEndpointLine",
-          sourceCell: { ...source.position },
-          cells: selectedRay,
-          cellKind: "affected",
-          labelKey: "preview.labels.affectedLine",
-        } : null,
-        selectedTarget ? {
-          kind: "area",
-          sourceCell: { ...source.position },
-          centerCell: { ...selectedTarget },
-          areaCells: affectedCells,
-          affectedTargets: visibleUnitTargets(
-            gameView,
-            (unit) => !!unit.position && affectedCells.some(
-              (cell) => coordKey(cell) === coordKey(unit.position!),
-            ),
-          ),
-          labelKey: "preview.labels.affectedArea",
-        } : null,
+        selectedTarget
+          ? {
+              kind: "multiStep",
+              step: "selectedEndpointLine",
+              sourceCell: { ...source.position },
+              cells: selectedRay,
+              cellKind: "affected",
+              labelKey: "preview.labels.affectedLine",
+            }
+          : null,
+        selectedTarget
+          ? {
+              kind: "area",
+              sourceCell: { ...source.position },
+              centerCell: { ...selectedTarget },
+              areaCells: affectedCells,
+              affectedTargets: visibleUnitTargets(
+                gameView,
+                (unit) =>
+                  !!unit.position &&
+                  affectedCells.some((cell) => coordKey(cell) === coordKey(unit.position!)),
+              ),
+              labelKey: "preview.labels.affectedArea",
+            }
+          : null,
       ]);
     }
     default:

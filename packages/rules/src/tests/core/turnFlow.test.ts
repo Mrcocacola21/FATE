@@ -28,12 +28,15 @@ export function testGameEndCondition() {
   // set battle phase to allow endTurn logic to run
   state = { ...state, phase: "battle" };
   // calling endTurn should move to ended if a player has no units
-  state = applyAction(state, { type: "endTurn" } as any, rng).state;
+  state = applyAction(state, { type: "endTurn" }, rng).state;
 
   // If P2 has no living units, phase should be ended
-  const p2alive = Object.values(state.units).some(u => u.owner === "P2" && u.isAlive);
+  const p2alive = Object.values(state.units).some((u) => u.owner === "P2" && u.isAlive);
   if (!p2alive) {
-    assert(state.phase === "ended" || state.phase === "battle" , "phase should be ended when a player's all units are dead");
+    assert(
+      state.phase === "ended" || state.phase === "battle",
+      "phase should be ended when a player's all units are dead",
+    );
   }
 
   console.log("testGameEndCondition passed (phase:", state.phase, ")");
@@ -69,21 +72,25 @@ export function testBattleTurnOrderFollowsPlacementOrder() {
       expectedOrder.push(unitId);
       state = applyAction(
         state,
-        { type: "placeUnit", unitId, position: p1coords[p1c++] } as any,
-        rng
+        { type: "placeUnit", unitId, position: p1coords[p1c++] },
+        rng,
       ).state;
     } else {
       const unitId = p2Order[p2i++];
       expectedOrder.push(unitId);
       state = applyAction(
         state,
-        { type: "placeUnit", unitId, position: p2coords[p2c++] } as any,
-        rng
+        { type: "placeUnit", unitId, position: p2coords[p2c++] },
+        rng,
       ).state;
     }
   }
 
-  assert.deepStrictEqual(state.placementOrder, expectedOrder, "placementOrder should match actual placement");
+  assert.deepStrictEqual(
+    state.placementOrder,
+    expectedOrder,
+    "placementOrder should match actual placement",
+  );
   assert.deepStrictEqual(state.turnQueue, expectedOrder, "turnQueue should follow placementOrder");
   assert(state.turnQueueIndex === 0, "turnQueueIndex should start at 0");
   assert(state.turnQueue[0] === expectedOrder[0], "turnQueue head should be first placed unit");
@@ -92,16 +99,16 @@ export function testBattleTurnOrderFollowsPlacementOrder() {
     "currentPlayer should be owner of queue head"
   );
 
-  let res = applyAction(state, { type: "unitStartTurn", unitId: expectedOrder[0] } as any, rng);
+  let res = applyAction(state, { type: "unitStartTurn", unitId: expectedOrder[0] }, rng);
   assert(res.state.activeUnitId === expectedOrder[0], "queue[0] should start turn");
 
-  state = applyAction(res.state, { type: "endTurn" } as any, rng).state;
+  state = applyAction(res.state, { type: "endTurn" }, rng).state;
 
-  const wrong = applyAction(state, { type: "unitStartTurn", unitId: expectedOrder[0] } as any, rng);
+  const wrong = applyAction(state, { type: "unitStartTurn", unitId: expectedOrder[0] }, rng);
   assert(wrong.events.length === 0, "queue[0] should be rejected after endTurn");
   assert(wrong.state.activeUnitId === state.activeUnitId, "activeUnitId should remain unchanged");
 
-  res = applyAction(state, { type: "unitStartTurn", unitId: expectedOrder[1] } as any, rng);
+  res = applyAction(state, { type: "unitStartTurn", unitId: expectedOrder[1] }, rng);
   assert(res.state.activeUnitId === expectedOrder[1], "queue[1] should start turn after endTurn");
 
   const deadId = expectedOrder[2];
@@ -113,7 +120,7 @@ export function testBattleTurnOrderFollowsPlacementOrder() {
     },
   };
 
-  state = applyAction(state, { type: "endTurn" } as any, rng).state;
+  state = applyAction(state, { type: "endTurn" }, rng).state;
   assert(
     state.turnQueueIndex === 3,
     "endTurn should skip dead units in turnQueue"

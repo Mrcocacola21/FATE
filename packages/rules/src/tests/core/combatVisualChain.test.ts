@@ -102,7 +102,8 @@ export function testCombatVisualChainCompletesOnlyAfterNestedFollowups() {
     attackerId: "attacker",
     defenderId: "target-a",
   });
-  const chainId = started.state.pendingRoll?.chainId!;
+  const chainId = started.state.pendingRoll?.chainId;
+  assert(chainId, "queued attack should start a combat visual chain");
   const attackEvent = {
     type: "attackResolved",
     attackerId: "attacker",

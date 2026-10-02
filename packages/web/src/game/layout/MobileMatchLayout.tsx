@@ -1,3 +1,4 @@
+import type { GameShellViewModel } from "../gameshell-content/hooks/useGameShellViewModel";
 import { useEffect, useRef, useState } from "react";
 import { useI18n } from "../../i18n";
 import { BottomNav, BottomSheet, type BottomNavItem } from "../../ui";
@@ -18,11 +19,11 @@ import {
 } from "./mobilePanelState";
 import { MobileBattleScaffold } from "./MatchScaffolds";
 
-export function MobileMatchLayout({ vm }: { vm: any }) {
+export function MobileMatchLayout({ vm }: { vm: GameShellViewModel }) {
   const { t } = useI18n();
   const [activeTab, setActiveTab] = useState<MatchSideTab>("unit");
   const [sheetOpen, setSheetOpen] = useState(false);
-  const matchStarted = hasMobileMatchStarted(vm.view, vm.pendingMeta);
+  const matchStarted = hasMobileMatchStarted(vm.view!, vm.pendingMeta);
   const boardInteractionKey = getMobileBoardInteractionKey(vm);
   const interactionKeyWhenOpened = useRef<string | null>(null);
 

@@ -13,7 +13,7 @@ import { advanceCarpetStrikeQueue } from "./queue";
 export function resolveCarpetStrikeDefenderRoll(
   state: GameState,
   pending: PendingRoll,
-  rng: RNG
+  rng: RNG,
 ): ApplyResult {
   const ctx = pending.context as unknown as CarpetStrikeAoEContext;
   const caster = state.units[ctx.casterId];
@@ -58,12 +58,7 @@ export function resolveCarpetStrikeDefenderRoll(
     },
   });
 
-  let updatedState = updatePendingAoeFromAttack(
-    nextState,
-    events,
-    caster.id,
-    targetId
-  );
+  const updatedState = updatePendingAoeFromAttack(nextState, events, caster.id, targetId);
   const updatedEvents = [...events];
 
   const nextCtx: CarpetStrikeAoEContext = {
@@ -81,7 +76,7 @@ export function resolveCarpetStrikeDefenderRoll(
     caster.id,
     targetId,
     updatedEvents,
-    intimidateResume
+    intimidateResume,
   );
   if (intimidate.requested) {
     return { state: intimidate.state, events: intimidate.events };
@@ -94,7 +89,7 @@ export function resolveCarpetStrikeBerserkerDefenseChoice(
   state: GameState,
   pending: PendingRoll,
   choice: "auto" | "roll" | undefined,
-  rng: RNG
+  _rng: RNG,
 ): ApplyResult {
   const ctx = pending.context as unknown as CarpetStrikeAoEContext;
   const caster = state.units[ctx.casterId];
@@ -142,7 +137,7 @@ export function resolveCarpetStrikeBerserkerDefenseChoice(
       target.owner,
       "carpetStrike_defenderRoll",
       nextCtx,
-      target.id
+      target.id,
     );
     const choiceEvents: GameEvent[] = [
       evBerserkerDefenseChosen({ defenderId: target.id, choice: "roll" }),
@@ -167,13 +162,8 @@ export function resolveCarpetStrikeBerserkerDefenseChoice(
     },
   });
 
-  let updatedState = updatePendingAoeFromAttack(
-    nextState,
-    events,
-    caster.id,
-    target.id
-  );
-  let updatedEvents: GameEvent[] = [
+  const updatedState = updatePendingAoeFromAttack(nextState, events, caster.id, target.id);
+  const updatedEvents: GameEvent[] = [
     evBerserkerDefenseChosen({ defenderId: target.id, choice: "auto" }),
     ...events,
   ];
@@ -193,7 +183,7 @@ export function resolveCarpetStrikeBerserkerDefenseChoice(
     caster.id,
     target.id,
     updatedEvents,
-    intimidateResume
+    intimidateResume,
   );
   if (intimidate.requested) {
     return { state: intimidate.state, events: intimidate.events };

@@ -1,20 +1,23 @@
 import { PongState, makeInitialState } from "./state";
 import { tick, resetBall, PongInputs } from "./engine";
-import { logPong, shouldLogTick } from "./logger";
+import { logPong, shouldLogTick, type PongLogger } from "./logger";
 
-export type PongBroadcast = (roomId: string, msg: any) => void;
+export type PongBroadcast = (
+  roomId: string,
+  msg: { type: "pongState"; state: ReturnType<PongRoom["snapshot"]> },
+) => void;
 
 export class PongRoom {
   id: string;
   state: PongState;
   inputs: PongInputs;
-  logger: any;
+  logger: PongLogger;
   tickInterval: NodeJS.Timeout | null = null;
   broadcast: PongBroadcast;
   broadcastInterval: NodeJS.Timeout | null = null;
   lastBroadcastState: PongState | null = null;
 
-  constructor(id: string, broadcast: PongBroadcast, logger?: any) {
+  constructor(id: string, broadcast: PongBroadcast, logger?: PongLogger) {
     this.id = id;
     this.state = makeInitialState();
     this.inputs = { P1: "stop", P2: "stop" };
@@ -39,7 +42,12 @@ export class PongRoom {
             tag: "pong:tick",
             roomId: this.id,
             tick: this.state.tick,
-            ball: { x: this.state.ball.x, y: this.state.ball.y, vx: this.state.ball.vx, vy: this.state.ball.vy },
+            ball: {
+              x: this.state.ball.x,
+              y: this.state.ball.y,
+              vx: this.state.ball.vx,
+              vy: this.state.ball.vy,
+            },
             paddles: { P1y: this.state.paddles.P1.y, P2y: this.state.paddles.P2.y },
             score: this.state.score,
           });
@@ -50,19 +58,31 @@ export class PongRoom {
           // determine out side
           const out = this.state.ball.x < 0 ? "left" : "right";
           const scorer = out === "left" ? "P2" : "P1";
-          logPong(this.logger, { tag: "pong:score", roomId: this.id, scorer, score: this.state.score, out });
+          logPong(this.logger, {
+            tag: "pong:score",
+            roomId: this.id,
+            scorer,
+            score: this.state.score,
+            out,
+          });
           // pause and reset after 0.8s
-          this.state.phase = "paused" as any;
+          this.state.phase = "paused";
           setTimeout(() => {
             // serve towards the player who conceded (alternate behaviour)
             const serveTo = scorer === "P1" ? "P2" : "P1";
-            resetBall(this.state, serveTo as any);
+            resetBall(this.state, serveTo);
             this.state.phase = "playing";
             logPong(this.logger, { tag: "pong:start", roomId: this.id });
           }, 800);
         }
       } catch (e) {
-        logPong(this.logger, { tag: "pong:error", roomId: this.id, code: "tick_error", message: String(e), err: e });
+        logPong(this.logger, {
+          tag: "pong:error",
+          roomId: this.id,
+          code: "tick_error",
+          message: String(e),
+          err: e,
+        });
       }
     }, 1000 / 60);
     // broadcast 25 Hz
@@ -72,9 +92,9 @@ export class PongRoom {
   }
 
   stop() {
-    if (this.tickInterval) clearInterval(this.tickInterval as any);
+    if (this.tickInterval) clearInterval(this.tickInterval);
     this.tickInterval = null;
-    if (this.broadcastInterval) clearInterval(this.broadcastInterval as any);
+    if (this.broadcastInterval) clearInterval(this.broadcastInterval);
     this.broadcastInterval = null;
     this.state.phase = "idle";
   }
@@ -108,7 +128,7 @@ export class PongRoom {
 
 const rooms = new Map<string, PongRoom>();
 
-export function createPongRoom(id: string, broadcast: PongBroadcast, logger?: any) {
+export function createPongRoom(id: string, broadcast: PongBroadcast, logger?: PongLogger) {
   if (rooms.has(id)) return rooms.get(id)!;
   const r = new PongRoom(id, broadcast, logger);
   rooms.set(id, r);

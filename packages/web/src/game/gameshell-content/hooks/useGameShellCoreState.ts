@@ -90,9 +90,7 @@ export function useGameShellCoreState() {
     playerId,
   });
   const hassanAssassinOrderPendingId =
-    pending.pendingRoll?.kind === "hassanAssassinOrderSelection"
-      ? pending.pendingRoll.id
-      : null;
+    pending.pendingRoll?.kind === "hassanAssassinOrderSelection" ? pending.pendingRoll.id : null;
 
   useEffect(() => {
     setHassanAssassinOrderSelections([]);
@@ -333,6 +331,7 @@ export function useGameShellCoreState() {
     setHoverPreview,
     queueLokiLaughtOption,
     clearLokiLaughtOption,
+    replayLastEffects,
     sendAction,
     sendTestRoomCommand,
     requestMoveOptions,

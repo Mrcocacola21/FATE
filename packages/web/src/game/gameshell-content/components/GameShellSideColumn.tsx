@@ -1,3 +1,4 @@
+import type { GameShellViewModel } from "../hooks/useGameShellViewModel";
 import { useState, type FC } from "react";
 import { PanelCard, SectionHeader, StatusBadge } from "../../../components/ui";
 import { useI18n } from "../../../i18n";
@@ -12,14 +13,14 @@ import { SidePanelTabs } from "./SidePanelTabs";
 import { hasAuthoritativeMatchStarted } from "../../pendingState";
 
 interface GameShellSideColumnProps {
-  vm: any;
+  vm: GameShellViewModel;
   mobile?: boolean;
 }
 
 export const GameShellSideColumn: FC<GameShellSideColumnProps> = ({ vm, mobile = false }) => {
   const { language, t } = useI18n();
   const [roomCodeCopied, setRoomCodeCopied] = useState(false);
-  if (hasAuthoritativeMatchStarted(vm.view, vm.pendingMeta)) {
+  if (hasAuthoritativeMatchStarted(vm.view!, vm.pendingMeta)) {
     return (
       <aside className="h-full min-h-0 min-w-0 overflow-hidden">
         <SidePanelTabs vm={vm} />
@@ -75,7 +76,7 @@ export const GameShellSideColumn: FC<GameShellSideColumnProps> = ({ vm, mobile =
             type="button"
             className="btn btn-secondary mt-3 w-full"
             onClick={async () => {
-              await navigator.clipboard?.writeText(vm.roomId);
+              await navigator.clipboard?.writeText(vm.roomId!);
               setRoomCodeCopied(true);
             }}
           >
@@ -86,7 +87,7 @@ export const GameShellSideColumn: FC<GameShellSideColumnProps> = ({ vm, mobile =
           <GameModeSelector
             value={vm.roomMeta?.gameMode ?? "standard"}
             isHost={vm.isHost}
-            disabled={!!vm.pendingMeta || !!vm.roomMeta?.draftState || vm.view.phase !== "lobby"}
+            disabled={!!vm.pendingMeta || !!vm.roomMeta?.draftState || vm.view!.phase !== "lobby"}
             onChange={vm.setGameMode}
           />
         ) : null}

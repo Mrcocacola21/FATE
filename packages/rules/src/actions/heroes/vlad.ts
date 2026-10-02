@@ -1,5 +1,5 @@
 import type { Coord, GameEvent, GameState, PlayerId, UnitState } from "../../model";
-import { chebyshev, getUnitAt } from "../../board";
+import { chebyshev } from "../../board";
 import { clearPendingRoll, requestRoll } from "../../core";
 import {
   isVlad,
@@ -8,15 +8,8 @@ import {
   isHassan,
   isJebe,
   getAdjacentCellsAvailableToPlayer,
-  isUnitVisibleToPlayer,
 } from "../shared";
-import {
-  getLegalStakePositions,
-  consumeOldestStakes,
-  getStakeMarkersAt,
-  hasRevealedStakeAt,
-  isStakeBlockedByHiddenUnit,
-} from "../../core";
+import { getLegalStakePositions, consumeOldestStakes } from "../../core";
 import type { ApplyResult } from "../../model";
 import type { IntimidateResume } from "../types";
 import { evForestActivated, evIntimidateTriggered } from "../../core";
@@ -26,7 +19,7 @@ import { isUndyne } from "../../undyne";
 export function getPolkovodetsSource(
   state: GameState,
   attackerId: string,
-  positionOverride?: Coord
+  positionOverride?: Coord,
 ): string | null {
   const attacker = state.units[attackerId];
   if (!attacker || !attacker.position) return null;
@@ -45,7 +38,7 @@ export function getPolkovodetsSource(
           isJebe(unit) ||
           unit.heroId === HERO_DON_KIHOTE_ID) &&
         unit.id !== attacker.id &&
-        chebyshev(origin, unit.position) <= 1
+        chebyshev(origin, unit.position) <= 1,
     )
     .map((unit) => unit.id)
     .sort();
@@ -57,7 +50,7 @@ export function requestVladStakesPlacement(
   state: GameState,
   owner: PlayerId,
   reason: "battleStart" | "turnStart",
-  queue?: PlayerId[]
+  queue?: PlayerId[],
 ): ApplyResult {
   if (state.pendingRoll) {
     return { state, events: [] };
@@ -74,7 +67,7 @@ export function requestVladStakesPlacement(
       legalPositions,
       queue: queue ?? [],
     },
-    undefined
+    undefined,
   );
   return requested;
 }
@@ -84,7 +77,7 @@ export function maybeRequestIntimidate(
   attackerId: string,
   defenderId: string,
   baseEvents: GameEvent[],
-  resume: IntimidateResume = { kind: "none" }
+  resume: IntimidateResume = { kind: "none" },
 ): { state: GameState; events: GameEvent[]; requested: boolean } {
   const defender = state.units[defenderId];
   const attacker = state.units[attackerId];
@@ -92,11 +85,7 @@ export function maybeRequestIntimidate(
     return { state, events: baseEvents, requested: false };
   }
 
-  if (
-    (!isVlad(defender) && !isUndyne(defender)) ||
-    !defender.isAlive ||
-    !defender.position
-  ) {
+  if ((!isVlad(defender) && !isUndyne(defender)) || !defender.isAlive || !defender.position) {
     return { state, events: baseEvents, requested: false };
   }
 
@@ -104,7 +93,7 @@ export function maybeRequestIntimidate(
     (event) =>
       event.type === "attackResolved" &&
       event.attackerId === attackerId &&
-      event.defenderId === defenderId
+      event.defenderId === defenderId,
   );
   if (!attackEvent || attackEvent.type !== "attackResolved" || attackEvent.hit) {
     return { state, events: baseEvents, requested: false };
@@ -117,11 +106,7 @@ export function maybeRequestIntimidate(
   // Intimidate's chooser may force the attacker into a cell whose hidden
   // occupant is unknown to the chooser. The hidden occupant is displaced
   // authoritatively after the move.
-  const options = getAdjacentCellsAvailableToPlayer(
-    state,
-    attacker.position,
-    defender.owner,
-  );
+  const options = getAdjacentCellsAvailableToPlayer(state, attacker.position, defender.owner);
   if (options.length === 0) {
     return { state, events: baseEvents, requested: false };
   }
@@ -136,7 +121,7 @@ export function maybeRequestIntimidate(
       options,
       resume,
     },
-    defender.id
+    defender.id,
   );
 
   const events: GameEvent[] = [
@@ -152,18 +137,12 @@ export function shouldOfferVladStakes(unit: UnitState): boolean {
   return isVlad(unit) && (unit.ownTurnsStarted ?? 0) >= 2;
 }
 
-export function activateVladForest(
-  state: GameState,
-  unitId: string,
-  owner: PlayerId
-): ApplyResult {
+export function activateVladForest(state: GameState, unitId: string, owner: PlayerId): ApplyResult {
   if (state.pendingRoll) {
     return { state, events: [] };
   }
 
-  const ownedStakes = state.stakeMarkers.filter(
-    (marker) => marker.owner === owner
-  );
+  const ownedStakes = state.stakeMarkers.filter((marker) => marker.owner === owner);
   if (ownedStakes.length < 9) {
     return { state, events: [] };
   }
@@ -171,9 +150,7 @@ export function activateVladForest(
   const consumed = consumeOldestStakes(state, owner, 9);
   const cleared = clearPendingRoll(consumed.state);
 
-  const activatedEvents: GameEvent[] = [
-    evForestActivated({ vladId: unitId, stakesConsumed: 9 }),
-  ];
+  const activatedEvents: GameEvent[] = [evForestActivated({ vladId: unitId, stakesConsumed: 9 })];
 
   const requested = requestRoll(
     cleared,
@@ -183,7 +160,7 @@ export function activateVladForest(
       unitId,
       owner,
     },
-    unitId
+    unitId,
   );
 
   return {
@@ -195,7 +172,7 @@ export function activateVladForest(
 export function maybeTriggerVladForestChoice(
   state: GameState,
   unitId: string,
-  requireStakePlacement = false
+  requireStakePlacement = false,
 ): ApplyResult {
   const unit = state.units[unitId];
   if (!unit || !unit.isAlive || !isVlad(unit)) {
@@ -206,9 +183,7 @@ export function maybeTriggerVladForestChoice(
     return { state, events: [] };
   }
 
-  const ownedStakes = state.stakeMarkers.filter(
-    (marker) => marker.owner === unit.owner
-  ).length;
+  const ownedStakes = state.stakeMarkers.filter((marker) => marker.owner === unit.owner).length;
   if (ownedStakes < 9) {
     return { state, events: [] };
   }
@@ -216,23 +191,16 @@ export function maybeTriggerVladForestChoice(
   return activateVladForest(state, unit.id, unit.owner);
 }
 
-export function maybeTriggerVladTurnStakes(
-  state: GameState,
-  unitId: string
-): ApplyResult {
+export function maybeTriggerVladTurnStakes(state: GameState, unitId: string): ApplyResult {
   const unit = state.units[unitId];
   if (!unit || !unit.isAlive || !shouldOfferVladStakes(unit)) {
     return { state, events: [] };
   }
 
-  const ownedStakes = state.stakeMarkers.filter(
-    (marker) => marker.owner === unit.owner
-  ).length;
+  const ownedStakes = state.stakeMarkers.filter((marker) => marker.owner === unit.owner).length;
   if (ownedStakes >= 9) {
     return { state, events: [] };
   }
 
   return requestVladStakesPlacement(state, unit.owner, "turnStart");
 }
-
-

@@ -96,7 +96,7 @@ function getFemtoDivineMoveOptions(state: GameState, unit: UnitState, roll: numb
     if (coord.col === origin.col && coord.row === origin.row) {
       return false;
     }
-    if (!!getUnitAt(state, coord)) {
+    if (getUnitAt(state, coord)) {
       return false;
     }
     return true;
@@ -219,7 +219,7 @@ export function resolveFemtoDivineMoveDestinationChoice(
   state: GameState,
   pending: PendingRoll,
   choice: ResolveRollChoice | undefined,
-  rng: RNG,
+  _rng: RNG,
 ): ApplyResult {
   const unitId = typeof pending.context.unitId === "string" ? pending.context.unitId : null;
   if (!unitId) {

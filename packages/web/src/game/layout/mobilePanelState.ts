@@ -10,7 +10,7 @@ export interface MobilePanelState {
 
 export interface MobileBoardInteractionState {
   actionMode?: string | null;
-  targetingMode?: string | null;
+  targetingMode?: string | import("../selectionState").TargetingMode | null;
   placeUnitId?: string | null;
   boardSelectionPending?: boolean;
   pendingRoll?: { id?: string; kind?: string } | null;

@@ -25,10 +25,10 @@ export function testBerserkerAutoDefenseEnabled() {
   state = attachArmy(state, a2);
 
   const attacker = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.class === "knight"
+    (u) => u.owner === "P1" && u.class === "knight",
   )!;
   const defender = Object.values(state.units).find(
-    (u) => u.owner === "P2" && u.class === "berserker"
+    (u) => u.owner === "P2" && u.class === "berserker",
   )!;
 
   state = setUnit(state, attacker.id, {
@@ -51,18 +51,16 @@ export function testBerserkerAutoDefenseEnabled() {
       attackerId: attacker.id,
       defenderId: defender.id,
       defenderUseBerserkAutoDefense: true,
-    } as any,
-    rng
+    },
+    rng,
   );
   const resolved = resolveAllPendingRolls(initial.state, rng, "auto");
 
   const next = resolved.state;
   const events = resolved.events;
-  const abilityEvent = events.find(
-    (e) => e.type === "abilityUsed" && e.unitId === defender.id
-  );
+  const abilityEvent = events.find((e) => e.type === "abilityUsed" && e.unitId === defender.id);
   const attackEvent = events.find(
-    (e) => e.type === "attackResolved" && e.defenderId === defender.id
+    (e) => e.type === "attackResolved" && e.defenderId === defender.id,
   );
 
   assert(abilityEvent, "abilityUsed should be emitted");
@@ -72,19 +70,15 @@ export function testBerserkerAutoDefenseEnabled() {
     assert(attackEvent.damage === 0, "damage should be 0");
   }
 
-  assert(
-    next.units[defender.id].hp === defenderHpBefore,
-    "defender should take no damage"
-  );
+  assert(next.units[defender.id].hp === defenderHpBefore, "defender should take no damage");
   assert(
     next.units[defender.id].charges[ABILITY_BERSERK_AUTO_DEFENSE] === 0,
-    "charges should drop to 0 after use"
+    "charges should drop to 0 after use",
   );
   assert.deepStrictEqual(next.knowledge, knowledgeBefore, "knowledge unchanged");
 
   console.log("berserker_auto_defense_enabled passed");
 }
-
 
 export function testBerserkerAutoDefenseDeclined() {
   const rng = new SeededRNG(12);
@@ -95,10 +89,10 @@ export function testBerserkerAutoDefenseDeclined() {
   state = attachArmy(state, a2);
 
   const attacker = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.class === "knight"
+    (u) => u.owner === "P1" && u.class === "knight",
   )!;
   const defender = Object.values(state.units).find(
-    (u) => u.owner === "P2" && u.class === "berserker"
+    (u) => u.owner === "P2" && u.class === "berserker",
   )!;
 
   state = setUnit(state, attacker.id, {
@@ -121,8 +115,8 @@ export function testBerserkerAutoDefenseDeclined() {
       attackerId: attacker.id,
       defenderId: defender.id,
       defenderUseBerserkAutoDefense: false,
-    } as any,
-    rng
+    },
+    rng,
   );
   const resolved = resolveAllPendingRolls(initial.state, rng, "roll");
 
@@ -130,7 +124,7 @@ export function testBerserkerAutoDefenseDeclined() {
   const events = resolved.events;
   const abilityEvent = events.find((e) => e.type === "abilityUsed");
   const attackEvent = events.find(
-    (e) => e.type === "attackResolved" && e.defenderId === defender.id
+    (e) => e.type === "attackResolved" && e.defenderId === defender.id,
   );
 
   assert(!abilityEvent, "abilityUsed should not be emitted");
@@ -144,21 +138,19 @@ export function testBerserkerAutoDefenseDeclined() {
       "damage visual metadata should include the exact previous and next HP",
     );
     assert(
-      typeof attackEvent.maxHp === "number" &&
-        attackEvent.maxHp >= defenderHpBefore,
+      typeof attackEvent.maxHp === "number" && attackEvent.maxHp >= defenderHpBefore,
       "damage visual metadata should include max HP",
     );
   }
 
   assert(
     next.units[defender.id].charges[ABILITY_BERSERK_AUTO_DEFENSE] === 6,
-    "charges should remain unchanged"
+    "charges should remain unchanged",
   );
   assert.deepStrictEqual(next.knowledge, knowledgeBefore, "knowledge unchanged");
 
   console.log("berserker_auto_defense_declined passed");
 }
-
 
 export function testBerserkerAutoDefenseNoCharges() {
   const rng = new SeededRNG(12);
@@ -169,10 +161,10 @@ export function testBerserkerAutoDefenseNoCharges() {
   state = attachArmy(state, a2);
 
   const attacker = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.class === "knight"
+    (u) => u.owner === "P1" && u.class === "knight",
   )!;
   const defender = Object.values(state.units).find(
-    (u) => u.owner === "P2" && u.class === "berserker"
+    (u) => u.owner === "P2" && u.class === "berserker",
   )!;
 
   state = setUnit(state, attacker.id, {
@@ -194,8 +186,8 @@ export function testBerserkerAutoDefenseNoCharges() {
       attackerId: attacker.id,
       defenderId: defender.id,
       defenderUseBerserkAutoDefense: true,
-    } as any,
-    rng
+    },
+    rng,
   );
   const resolved = resolveAllPendingRolls(initial.state, rng, "roll");
 
@@ -203,7 +195,7 @@ export function testBerserkerAutoDefenseNoCharges() {
   const events = resolved.events;
   const abilityEvent = events.find((e) => e.type === "abilityUsed");
   const attackEvent = events.find(
-    (e) => e.type === "attackResolved" && e.defenderId === defender.id
+    (e) => e.type === "attackResolved" && e.defenderId === defender.id,
   );
 
   assert(!abilityEvent, "abilityUsed should not be emitted");
@@ -214,7 +206,7 @@ export function testBerserkerAutoDefenseNoCharges() {
 
   assert(
     next.units[defender.id].charges[ABILITY_BERSERK_AUTO_DEFENSE] === 0,
-    "charges should remain 0"
+    "charges should remain 0",
   );
   assert.deepStrictEqual(next.knowledge, knowledgeBefore, "knowledge unchanged");
 
@@ -247,20 +239,22 @@ export function testDamageVisualMetadataAndDeathOrdering() {
       attackerId: attacker.id,
       defenderId: defender.id,
       defenderUseBerserkAutoDefense: true,
-    } as any,
+    },
     rng,
   );
   const resolved = resolveAllPendingRolls(initial.state, rng, "roll");
   const attackIndex = resolved.events.findIndex(
-    (event) =>
-      event.type === "attackResolved" && event.defenderId === defender.id,
+    (event) => event.type === "attackResolved" && event.defenderId === defender.id,
   );
   const deathIndex = resolved.events.findIndex(
     (event) => event.type === "unitDied" && event.unitId === defender.id,
   );
   const attackEvent = resolved.events[attackIndex];
 
-  assert(attackIndex >= 0 && deathIndex > attackIndex, "death must follow damage in its visual batch");
+  assert(
+    attackIndex >= 0 && deathIndex > attackIndex,
+    "death must follow damage in its visual batch",
+  );
   assert(
     attackEvent?.type === "attackResolved" &&
       attackEvent.previousHp === 1 &&
@@ -271,7 +265,6 @@ export function testDamageVisualMetadataAndDeathOrdering() {
   console.log("damage_visual_metadata_and_death_ordering passed");
 }
 
-
 export function testBerserkerDefenseChoiceAutoDodgeSpends6() {
   const rng = new SeededRNG(12);
   let state = createEmptyGame();
@@ -281,10 +274,10 @@ export function testBerserkerDefenseChoiceAutoDodgeSpends6() {
   state = attachArmy(state, a2);
 
   const attacker = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.class === "knight"
+    (u) => u.owner === "P1" && u.class === "knight",
   )!;
   const defender = Object.values(state.units).find(
-    (u) => u.owner === "P2" && u.class === "berserker"
+    (u) => u.owner === "P2" && u.class === "berserker",
   )!;
 
   state = setUnit(state, attacker.id, {
@@ -304,21 +297,19 @@ export function testBerserkerDefenseChoiceAutoDodgeSpends6() {
       type: "attack",
       attackerId: attacker.id,
       defenderId: defender.id,
-    } as any,
-    rng
+    },
+    rng,
   );
   const resolved = resolveAllPendingRolls(initial.state, rng, "auto");
 
-  const choiceEvent = resolved.events.find(
-    (e) => e.type === "berserkerDefenseChosen"
-  );
+  const choiceEvent = resolved.events.find((e) => e.type === "berserkerDefenseChosen");
   assert(
     choiceEvent && choiceEvent.type === "berserkerDefenseChosen" && choiceEvent.choice === "auto",
-    "berserkerDefenseChosen should record auto choice"
+    "berserkerDefenseChosen should record auto choice",
   );
 
   const attackEvent = resolved.events.find(
-    (e) => e.type === "attackResolved" && e.defenderId === defender.id
+    (e) => e.type === "attackResolved" && e.defenderId === defender.id,
   );
   assert(attackEvent, "attackResolved should be emitted");
   if (attackEvent && attackEvent.type === "attackResolved") {
@@ -328,12 +319,11 @@ export function testBerserkerDefenseChoiceAutoDodgeSpends6() {
 
   assert(
     resolved.state.units[defender.id].charges[ABILITY_BERSERK_AUTO_DEFENSE] === 0,
-    "auto-dodge should spend all charges"
+    "auto-dodge should spend all charges",
   );
 
   console.log("berserker_defense_choice_auto_dodge_spends_6 passed");
 }
-
 
 export function testBerserkerDefenseChoiceRollUsesNormalCombat() {
   const rng = new SeededRNG(12);
@@ -344,10 +334,10 @@ export function testBerserkerDefenseChoiceRollUsesNormalCombat() {
   state = attachArmy(state, a2);
 
   const attacker = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.class === "knight"
+    (u) => u.owner === "P1" && u.class === "knight",
   )!;
   const defender = Object.values(state.units).find(
-    (u) => u.owner === "P2" && u.class === "berserker"
+    (u) => u.owner === "P2" && u.class === "berserker",
   )!;
 
   state = setUnit(state, attacker.id, {
@@ -367,14 +357,14 @@ export function testBerserkerDefenseChoiceRollUsesNormalCombat() {
       type: "attack",
       attackerId: attacker.id,
       defenderId: defender.id,
-    } as any,
-    rng
+    },
+    rng,
   );
 
   const pending1 = step1.state.pendingRoll;
   assert(
     pending1 && pending1.kind === "attack_attackerRoll",
-    "attacker roll should be requested first"
+    "attacker roll should be requested first",
   );
 
   const step2 = applyActionRaw(
@@ -383,14 +373,14 @@ export function testBerserkerDefenseChoiceRollUsesNormalCombat() {
       type: "resolvePendingRoll",
       pendingRollId: pending1!.id,
       player: pending1!.player,
-    } as any,
-    rng
+    },
+    rng,
   );
 
   const pending2 = step2.state.pendingRoll;
   assert(
     pending2 && pending2.kind === "berserkerDefenseChoice",
-    "berserkerDefenseChoice roll should be requested after attacker roll"
+    "berserkerDefenseChoice roll should be requested after attacker roll",
   );
 
   const step3 = applyActionRaw(
@@ -400,44 +390,38 @@ export function testBerserkerDefenseChoiceRollUsesNormalCombat() {
       pendingRollId: pending2!.id,
       choice: "roll",
       player: pending2!.player,
-    } as any,
-    rng
+    },
+    rng,
   );
 
-  const choiceEvent = step3.events.find(
-    (e) => e.type === "berserkerDefenseChosen"
-  );
+  const choiceEvent = step3.events.find((e) => e.type === "berserkerDefenseChosen");
   assert(
     choiceEvent && choiceEvent.type === "berserkerDefenseChosen" && choiceEvent.choice === "roll",
-    "berserkerDefenseChosen should record roll choice"
+    "berserkerDefenseChosen should record roll choice",
   );
 
   const pending3 = step3.state.pendingRoll;
   assert(
     pending3 && pending3.kind === "attack_defenderRoll",
-    "defender roll should be requested after roll choice"
+    "defender roll should be requested after roll choice",
   );
 
   const final = resolveAllPendingRolls(step3.state, rng);
 
   const attackEvent = final.events.find(
-    (e) => e.type === "attackResolved" && e.defenderId === defender.id
+    (e) => e.type === "attackResolved" && e.defenderId === defender.id,
   );
   assert(attackEvent, "attackResolved should be emitted");
   if (attackEvent && attackEvent.type === "attackResolved") {
-    assert(
-      attackEvent.attackerRoll.dice.length >= 2,
-      "normal combat should roll dice"
-    );
+    assert(attackEvent.attackerRoll.dice.length >= 2, "normal combat should roll dice");
   }
   assert(
     final.state.units[defender.id].charges[ABILITY_BERSERK_AUTO_DEFENSE] === 6,
-    "roll defense should not spend charges"
+    "roll defense should not spend charges",
   );
 
   console.log("berserker_defense_choice_roll_uses_normal_combat passed");
 }
-
 
 export function testCannotAutoDodgeIfChargesNot6() {
   const rng = new SeededRNG(12);
@@ -448,10 +432,10 @@ export function testCannotAutoDodgeIfChargesNot6() {
   state = attachArmy(state, a2);
 
   const attacker = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.class === "knight"
+    (u) => u.owner === "P1" && u.class === "knight",
   )!;
   const defender = Object.values(state.units).find(
-    (u) => u.owner === "P2" && u.class === "berserker"
+    (u) => u.owner === "P2" && u.class === "berserker",
   )!;
 
   state = setUnit(state, attacker.id, {
@@ -471,23 +455,22 @@ export function testCannotAutoDodgeIfChargesNot6() {
       type: "attack",
       attackerId: attacker.id,
       defenderId: defender.id,
-    } as any,
-    rng
+    },
+    rng,
   );
   const resolved = resolveAllPendingRolls(initial.state, rng, "auto");
 
   assert(
     resolved.state.units[defender.id].charges[ABILITY_BERSERK_AUTO_DEFENSE] === 5,
-    "auto-dodge should be rejected when charges are not 6"
+    "auto-dodge should be rejected when charges are not 6",
   );
   const attackEvent = resolved.events.find(
-    (e) => e.type === "attackResolved" && e.defenderId === defender.id
+    (e) => e.type === "attackResolved" && e.defenderId === defender.id,
   );
   assert(attackEvent, "attack should resolve normally when auto-dodge unavailable");
 
   console.log("cannot_auto_dodge_if_charges_not_6 passed");
 }
-
 
 export function testCannotAttackTwicePerTurn() {
   const rng = new SeededRNG(12);
@@ -498,10 +481,10 @@ export function testCannotAttackTwicePerTurn() {
   state = attachArmy(state, a2);
 
   const attacker = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.class === "knight"
+    (u) => u.owner === "P1" && u.class === "knight",
   )!;
   const defender = Object.values(state.units).find(
-    (u) => u.owner === "P2" && u.class === "spearman"
+    (u) => u.owner === "P2" && u.class === "spearman",
   )!;
 
   state = setUnit(state, attacker.id, {
@@ -520,8 +503,8 @@ export function testCannotAttackTwicePerTurn() {
       type: "attack",
       attackerId: attacker.id,
       defenderId: defender.id,
-    } as any,
-    rng
+    },
+    rng,
   );
   const resolvedFirst = resolveAllPendingRolls(first.state, rng);
 
@@ -531,23 +514,19 @@ export function testCannotAttackTwicePerTurn() {
       type: "attack",
       attackerId: attacker.id,
       defenderId: defender.id,
-    } as any,
-    rng
+    },
+    rng,
   );
 
-  assert(
-    second.events.length === 0,
-    "second attack should emit no events"
-  );
+  assert(second.events.length === 0, "second attack should emit no events");
   assert.deepStrictEqual(
     second.state,
     resolvedFirst.state,
-    "state should be unchanged after second attack"
+    "state should be unchanged after second attack",
   );
 
   console.log("cannot_attack_twice_per_turn passed");
 }
-
 
 export function testAttackConsumesActionSlot() {
   const rng = new SeededRNG(555);
@@ -558,13 +537,13 @@ export function testAttackConsumesActionSlot() {
   state = attachArmy(state, a2);
 
   const attacker = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.class === "spearman"
+    (u) => u.owner === "P1" && u.class === "spearman",
   )!;
   const defender = Object.values(state.units).find(
-    (u) => u.owner === "P2" && u.class === "spearman"
+    (u) => u.owner === "P2" && u.class === "spearman",
   )!;
   const hidden = Object.values(state.units).find(
-    (u) => u.owner === "P2" && u.class === "assassin"
+    (u) => u.owner === "P2" && u.class === "assassin",
   )!;
 
   state = setUnit(state, attacker.id, { position: { col: 3, row: 3 } });
@@ -580,30 +559,29 @@ export function testAttackConsumesActionSlot() {
 
   const attacked = applyAction(
     state,
-    { type: "attack", attackerId: attacker.id, defenderId: defender.id } as any,
-    rng
+    { type: "attack", attackerId: attacker.id, defenderId: defender.id },
+    rng,
   );
   const resolvedAttack = resolveAllPendingRolls(attacked.state, rng);
 
   const searchAfter = applyAction(
     resolvedAttack.state,
-    { type: "searchStealth", unitId: attacker.id, mode: "action" } as any,
-    rng
+    { type: "searchStealth", unitId: attacker.id, mode: "action" },
+    rng,
   );
 
   assert(
     searchAfter.events.length === 0,
-    "searchStealth(mode=action) should be blocked after attack"
+    "searchStealth(mode=action) should be blocked after attack",
   );
   assert.deepStrictEqual(
     searchAfter.state,
     resolvedAttack.state,
-    "state should be unchanged after blocked search"
+    "state should be unchanged after blocked search",
   );
 
   console.log("attack_consumes_action_slot passed");
 }
-
 
 export function testTricksterAoEIs5x5Radius2() {
   const rng = new SeededRNG(120);
@@ -614,13 +592,13 @@ export function testTricksterAoEIs5x5Radius2() {
   state = attachArmy(state, a2);
 
   const trickster = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.class === "trickster"
+    (u) => u.owner === "P1" && u.class === "trickster",
   )!;
   const nearEnemy = Object.values(state.units).find(
-    (u) => u.owner === "P2" && u.class === "assassin"
+    (u) => u.owner === "P2" && u.class === "assassin",
   )!;
   const farEnemy = Object.values(state.units).find(
-    (u) => u.owner === "P2" && u.class === "archer"
+    (u) => u.owner === "P2" && u.class === "archer",
   )!;
 
   state = setUnit(state, trickster.id, { position: { col: 4, row: 4 } });
@@ -637,8 +615,8 @@ export function testTricksterAoEIs5x5Radius2() {
       unitId: trickster.id,
       abilityId: "tricksterAoE",
       payload: { center: { col: 4, row: 4 } },
-    } as any,
-    rng
+    },
+    rng,
   );
   const resolved = resolveAllPendingRollsWithEvents(initial.state, rng);
   const events = [...initial.events, ...resolved.events];
@@ -650,17 +628,16 @@ export function testTricksterAoEIs5x5Radius2() {
     assert(aoeEvent.radius === 2, "aoe radius should be 2");
     assert(
       aoeEvent.affectedUnitIds.includes(nearEnemy.id),
-      "enemy within radius 2 should be affected"
+      "enemy within radius 2 should be affected",
     );
     assert(
       !aoeEvent.affectedUnitIds.includes(farEnemy.id),
-      "enemy outside radius 2 should not be affected"
+      "enemy outside radius 2 should not be affected",
     );
   }
 
   console.log("trickster_aoe_is_5x5_radius2 passed");
 }
-
 
 export function testTricksterAoEHitsAllies() {
   const rng = new SeededRNG(120);
@@ -671,11 +648,9 @@ export function testTricksterAoEHitsAllies() {
   state = attachArmy(state, a2);
 
   const trickster = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.class === "trickster"
+    (u) => u.owner === "P1" && u.class === "trickster",
   )!;
-  const ally = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.class === "assassin"
-  )!;
+  const ally = Object.values(state.units).find((u) => u.owner === "P1" && u.class === "assassin")!;
 
   state = setUnit(state, trickster.id, { position: { col: 4, row: 4 } });
   state = setUnit(state, ally.id, {
@@ -694,8 +669,8 @@ export function testTricksterAoEHitsAllies() {
       unitId: trickster.id,
       abilityId: "tricksterAoE",
       payload: { center: { col: 4, row: 4 } },
-    } as any,
-    rng
+    },
+    rng,
   );
   const resolved = resolveAllPendingRollsWithEvents(initial.state, rng);
   const events = [...initial.events, ...resolved.events];
@@ -703,23 +678,16 @@ export function testTricksterAoEHitsAllies() {
   const aoeEvent = events.find((e) => e.type === "aoeResolved");
   assert(aoeEvent && aoeEvent.type === "aoeResolved", "aoeResolved should be emitted");
   if (aoeEvent && aoeEvent.type === "aoeResolved") {
-    assert(
-      aoeEvent.affectedUnitIds.includes(ally.id),
-      "ally should be affected by aoe"
-    );
-    assert(
-      aoeEvent.revealedUnitIds.includes(ally.id),
-      "ally should be revealed by aoe"
-    );
+    assert(aoeEvent.affectedUnitIds.includes(ally.id), "ally should be affected by aoe");
+    assert(aoeEvent.revealedUnitIds.includes(ally.id), "ally should be revealed by aoe");
   }
   assert(
     resolved.state.units[ally.id].isStealthed === false,
-    "ally stealth should be revealed by aoe"
+    "ally stealth should be revealed by aoe",
   );
 
   console.log("trickster_aoe_hits_allies passed");
 }
-
 
 export function testTricksterAoEDoesNotDamageSelf() {
   const rng = new SeededRNG(122);
@@ -730,11 +698,9 @@ export function testTricksterAoEDoesNotDamageSelf() {
   state = attachArmy(state, a2);
 
   const trickster = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.class === "trickster"
+    (u) => u.owner === "P1" && u.class === "trickster",
   )!;
-  const enemy = Object.values(state.units).find(
-    (u) => u.owner === "P2" && u.class === "spearman"
-  )!;
+  const enemy = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "spearman")!;
 
   state = setUnit(state, trickster.id, { position: { col: 4, row: 4 } });
   state = setUnit(state, enemy.id, { position: { col: 5, row: 4 } });
@@ -751,8 +717,8 @@ export function testTricksterAoEDoesNotDamageSelf() {
       unitId: trickster.id,
       abilityId: "tricksterAoE",
       payload: { center: { col: 4, row: 4 } },
-    } as any,
-    rng
+    },
+    rng,
   );
   const resolved = resolveAllPendingRollsWithEvents(initial.state, rng);
   const events = [...initial.events, ...resolved.events];
@@ -762,22 +728,18 @@ export function testTricksterAoEDoesNotDamageSelf() {
   if (aoeEvent && aoeEvent.type === "aoeResolved") {
     assert(
       !aoeEvent.damagedUnitIds.includes(trickster.id),
-      "caster should not be damaged by own AoE"
+      "caster should not be damaged by own AoE",
     );
     assert(
       !aoeEvent.affectedUnitIds.includes(trickster.id),
-      "caster should not be listed as an affected target"
+      "caster should not be listed as an affected target",
     );
   }
 
-  assert(
-    resolved.state.units[trickster.id].hp === hpBefore,
-    "caster HP should remain unchanged"
-  );
+  assert(resolved.state.units[trickster.id].hp === hpBefore, "caster HP should remain unchanged");
 
   console.log("trickster_aoe_does_not_damage_self passed");
 }
-
 
 export function testTricksterAoEAttackerRollOnce() {
   const rng = new SeededRNG(130);
@@ -788,14 +750,12 @@ export function testTricksterAoEAttackerRollOnce() {
   state = attachArmy(state, a2);
 
   const trickster = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.class === "trickster"
+    (u) => u.owner === "P1" && u.class === "trickster",
   )!;
   const enemy1 = Object.values(state.units).find(
-    (u) => u.owner === "P2" && u.class === "assassin"
+    (u) => u.owner === "P2" && u.class === "assassin",
   )!;
-  const enemy2 = Object.values(state.units).find(
-    (u) => u.owner === "P2" && u.class === "archer"
-  )!;
+  const enemy2 = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "archer")!;
 
   state = setUnit(state, trickster.id, { position: { col: 4, row: 4 } });
   state = setUnit(state, enemy1.id, { position: { col: 5, row: 4 } });
@@ -811,17 +771,17 @@ export function testTricksterAoEAttackerRollOnce() {
       unitId: trickster.id,
       abilityId: "tricksterAoE",
       payload: { center: { col: 4, row: 4 } },
-    } as any,
-    rng
+    },
+    rng,
   );
   const resolved = resolveAllPendingRollsWithEvents(initial.state, rng);
   const events = [...initial.events, ...resolved.events];
 
   const attackerRolls = events.filter(
-    (e) => e.type === "rollRequested" && e.kind === "tricksterAoE_attackerRoll"
+    (e) => e.type === "rollRequested" && e.kind === "tricksterAoE_attackerRoll",
   );
   const defenderRolls = events.filter(
-    (e) => e.type === "rollRequested" && e.kind === "tricksterAoE_defenderRoll"
+    (e) => e.type === "rollRequested" && e.kind === "tricksterAoE_defenderRoll",
   );
 
   assert(attackerRolls.length === 1, "AoE attacker roll should be requested once");
@@ -829,7 +789,6 @@ export function testTricksterAoEAttackerRollOnce() {
 
   console.log("trickster_aoe_attacker_roll_once passed");
 }
-
 
 export function testTricksterAoEMultipleDefendersRollSeparately() {
   const rng = new SeededRNG(131);
@@ -840,14 +799,12 @@ export function testTricksterAoEMultipleDefendersRollSeparately() {
   state = attachArmy(state, a2);
 
   const trickster = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.class === "trickster"
+    (u) => u.owner === "P1" && u.class === "trickster",
   )!;
   const enemy1 = Object.values(state.units).find(
-    (u) => u.owner === "P2" && u.class === "assassin"
+    (u) => u.owner === "P2" && u.class === "assassin",
   )!;
-  const enemy2 = Object.values(state.units).find(
-    (u) => u.owner === "P2" && u.class === "archer"
-  )!;
+  const enemy2 = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "archer")!;
 
   state = setUnit(state, trickster.id, { position: { col: 4, row: 4 } });
   state = setUnit(state, enemy1.id, { position: { col: 5, row: 4 } });
@@ -863,8 +820,8 @@ export function testTricksterAoEMultipleDefendersRollSeparately() {
       unitId: trickster.id,
       abilityId: "tricksterAoE",
       payload: { center: { col: 4, row: 4 } },
-    } as any,
-    rng
+    },
+    rng,
   );
   const resolved = resolveAllPendingRollsWithEvents(initial.state, rng);
   const events = [...initial.events, ...resolved.events];
@@ -876,12 +833,11 @@ export function testTricksterAoEMultipleDefendersRollSeparately() {
     .filter((v) => v > 0);
   assert(
     attackerSums.length === 2 && attackerSums[0] === attackerSums[1],
-    "AoE should reuse the same attacker roll for all targets"
+    "AoE should reuse the same attacker roll for all targets",
   );
 
   console.log("trickster_aoe_multiple_defenders_roll_separately passed");
 }
-
 
 export function testTricksterAoEConsumesAttack() {
   const rng = new SeededRNG(121);
@@ -891,7 +847,9 @@ export function testTricksterAoEConsumesAttack() {
   state = attachArmy(state, a1);
   state = attachArmy(state, a2);
 
-  const trickster = Object.values(state.units).find((u) => u.owner === "P1" && u.class === "trickster")!;
+  const trickster = Object.values(state.units).find(
+    (u) => u.owner === "P1" && u.class === "trickster",
+  )!;
   const enemy = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "spearman")!;
 
   state = setUnit(state, trickster.id, { position: { col: 4, row: 4 } });
@@ -907,24 +865,18 @@ export function testTricksterAoEConsumesAttack() {
       unitId: trickster.id,
       abilityId: "tricksterAoE",
       payload: { center: { col: 4, row: 4 } },
-    } as any,
-    rng
+    },
+    rng,
   );
   const res = resolveAllPendingRollsWithEvents(initial.state, rng);
 
-  assert(
-    res.state.units[trickster.id].turn.actionUsed === true,
-    "AoE should consume action slot"
-  );
-  assert(
-    res.state.units[trickster.id].turn.attackUsed === true,
-    "AoE should consume attack slot"
-  );
+  assert(res.state.units[trickster.id].turn.actionUsed === true, "AoE should consume action slot");
+  assert(res.state.units[trickster.id].turn.attackUsed === true, "AoE should consume attack slot");
 
   const followUp = applyAction(
     res.state,
-    { type: "attack", attackerId: trickster.id, defenderId: enemy.id } as any,
-    rng
+    { type: "attack", attackerId: trickster.id, defenderId: enemy.id },
+    rng,
   );
 
   const attackEvent = followUp.events.find((e) => e.type === "attackResolved");
@@ -933,15 +885,18 @@ export function testTricksterAoEConsumesAttack() {
   assert.deepStrictEqual(
     followUp.state,
     res.state,
-    "state should be unchanged after blocked attack"
+    "state should be unchanged after blocked attack",
   );
 
   console.log("trickster_aoe_consumes_attack passed");
 }
 
-
 export function testSpearmanAttackIncludesAdjacentRing() {
-  const { state: baseState, spearman, enemy } = setupSpearmanAttackState({
+  const {
+    state: baseState,
+    spearman,
+    enemy,
+  } = setupSpearmanAttackState({
     col: 4,
     row: 4,
   });
@@ -965,16 +920,19 @@ export function testSpearmanAttackIncludesAdjacentRing() {
     const targets = getLegalAttackTargets(state, spearman.id);
     assert(
       targets.includes(enemy.id),
-      `spearman should attack adjacent cell ${coord.col},${coord.row}`
+      `spearman should attack adjacent cell ${coord.col},${coord.row}`,
     );
   }
 
   console.log("spearman_attack_includes_adjacent_ring passed");
 }
 
-
 export function testSpearmanAttackKeepsDistance2Directions() {
-  const { state: baseState, spearman, enemy } = setupSpearmanAttackState({
+  const {
+    state: baseState,
+    spearman,
+    enemy,
+  } = setupSpearmanAttackState({
     col: 4,
     row: 4,
   });
@@ -998,16 +956,19 @@ export function testSpearmanAttackKeepsDistance2Directions() {
     const targets = getLegalAttackTargets(state, spearman.id);
     assert(
       targets.includes(enemy.id),
-      `spearman should attack reach-2 cell ${coord.col},${coord.row}`
+      `spearman should attack reach-2 cell ${coord.col},${coord.row}`,
     );
   }
 
   console.log("spearman_attack_keeps_distance2_directions passed");
 }
 
-
 export function testSpearmanAttackExcludesSelf() {
-  const { state: baseState, spearman, enemy } = setupSpearmanAttackState({
+  const {
+    state: baseState,
+    spearman,
+    enemy,
+  } = setupSpearmanAttackState({
     col: 4,
     row: 4,
   });
@@ -1023,9 +984,12 @@ export function testSpearmanAttackExcludesSelf() {
   console.log("spearman_attack_excludes_self passed");
 }
 
-
 export function testSpearmanAttackRespectsBounds() {
-  const { state: baseState, spearman, enemy } = setupSpearmanAttackState({
+  const {
+    state: baseState,
+    spearman,
+    enemy,
+  } = setupSpearmanAttackState({
     col: 0,
     row: 0,
   });
@@ -1054,7 +1018,7 @@ export function testSpearmanAttackRespectsBounds() {
     const targets = getLegalAttackTargets(state, spearman.id);
     assert(
       targets.includes(enemy.id),
-      `spearman should attack in-bounds cell ${coord.col},${coord.row}`
+      `spearman should attack in-bounds cell ${coord.col},${coord.row}`,
     );
   }
 
@@ -1067,13 +1031,12 @@ export function testSpearmanAttackRespectsBounds() {
     const targets = getLegalAttackTargets(state, spearman.id);
     assert(
       !targets.includes(enemy.id),
-      `spearman should not attack out-of-range cell ${coord.col},${coord.row}`
+      `spearman should not attack out-of-range cell ${coord.col},${coord.row}`,
     );
   }
 
   console.log("spearman_attack_respects_bounds passed");
 }
-
 
 export function testArcherCanShootThroughAllies() {
   const rng = new SeededRNG(200);
@@ -1096,8 +1059,8 @@ export function testArcherCanShootThroughAllies() {
 
   const initial = applyAction(
     state,
-    { type: "attack", attackerId: archer.id, defenderId: enemy.id } as any,
-    rng
+    { type: "attack", attackerId: archer.id, defenderId: enemy.id },
+    rng,
   );
   const res = resolveAllPendingRolls(initial.state, rng);
 
@@ -1106,7 +1069,6 @@ export function testArcherCanShootThroughAllies() {
 
   console.log("archer_can_shoot_through_allies passed");
 }
-
 
 export function testArcherCannotShootThroughEnemies() {
   const rng = new SeededRNG(201);
@@ -1117,8 +1079,12 @@ export function testArcherCannotShootThroughEnemies() {
   state = attachArmy(state, a2);
 
   const archer = Object.values(state.units).find((u) => u.owner === "P1" && u.class === "archer")!;
-  const nearEnemy = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "spearman")!;
-  const farEnemy = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "archer")!;
+  const nearEnemy = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "spearman",
+  )!;
+  const farEnemy = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "archer",
+  )!;
 
   state = setUnit(state, archer.id, { position: { col: 2, row: 2 } });
   state = setUnit(state, nearEnemy.id, { position: { col: 2, row: 3 } });
@@ -1129,8 +1095,8 @@ export function testArcherCannotShootThroughEnemies() {
 
   const initial = applyAction(
     state,
-    { type: "attack", attackerId: archer.id, defenderId: farEnemy.id } as any,
-    rng
+    { type: "attack", attackerId: archer.id, defenderId: farEnemy.id },
+    rng,
   );
   const res = resolveAllPendingRolls(initial.state, rng);
 
@@ -1139,7 +1105,6 @@ export function testArcherCannotShootThroughEnemies() {
 
   console.log("archer_cannot_shoot_through_enemies passed");
 }
-
 
 export function testArcherAttacksFirstOnLine() {
   const rng = new SeededRNG(202);
@@ -1150,8 +1115,12 @@ export function testArcherAttacksFirstOnLine() {
   state = attachArmy(state, a2);
 
   const archer = Object.values(state.units).find((u) => u.owner === "P1" && u.class === "archer")!;
-  const nearEnemy = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "spearman")!;
-  const farEnemy = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "archer")!;
+  const nearEnemy = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "spearman",
+  )!;
+  const farEnemy = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "archer",
+  )!;
 
   state = setUnit(state, archer.id, { position: { col: 2, row: 2 } });
   state = setUnit(state, nearEnemy.id, { position: { col: 2, row: 3 } });
@@ -1162,19 +1131,18 @@ export function testArcherAttacksFirstOnLine() {
 
   const initial = applyAction(
     state,
-    { type: "attack", attackerId: archer.id, defenderId: nearEnemy.id } as any,
-    rng
+    { type: "attack", attackerId: archer.id, defenderId: nearEnemy.id },
+    rng,
   );
   const res = resolveAllPendingRolls(initial.state, rng);
 
   const attackEvent = res.events.find(
-    (e) => e.type === "attackResolved" && e.defenderId === nearEnemy.id
+    (e) => e.type === "attackResolved" && e.defenderId === nearEnemy.id,
   );
   assert(attackEvent, "archer should attack first enemy on line");
 
   console.log("archer_attacks_first_on_line passed");
 }
-
 
 export function testArcherCanAttackDiagonalFirstTargetOnly() {
   const rng = new SeededRNG(204);
@@ -1185,8 +1153,12 @@ export function testArcherCanAttackDiagonalFirstTargetOnly() {
   state = attachArmy(state, a2);
 
   const archer = Object.values(state.units).find((u) => u.owner === "P1" && u.class === "archer")!;
-  const nearEnemy = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "spearman")!;
-  const farEnemy = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "archer")!;
+  const nearEnemy = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "spearman",
+  )!;
+  const farEnemy = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "archer",
+  )!;
 
   state = setUnit(state, archer.id, { position: { col: 2, row: 2 } });
   state = setUnit(state, nearEnemy.id, { position: { col: 3, row: 3 } });
@@ -1197,29 +1169,28 @@ export function testArcherCanAttackDiagonalFirstTargetOnly() {
 
   const first = applyAction(
     state,
-    { type: "attack", attackerId: archer.id, defenderId: farEnemy.id } as any,
-    rng
+    { type: "attack", attackerId: archer.id, defenderId: farEnemy.id },
+    rng,
   );
   const firstResolved = resolveAllPendingRolls(first.state, rng);
   const firstAttack = firstResolved.events.find(
-    (e) => e.type === "attackResolved" && e.defenderId === farEnemy.id
+    (e) => e.type === "attackResolved" && e.defenderId === farEnemy.id,
   );
   assert(!firstAttack, "archer should not target enemies beyond the first on diagonal");
 
   const second = applyAction(
     firstResolved.state,
-    { type: "attack", attackerId: archer.id, defenderId: nearEnemy.id } as any,
-    rng
+    { type: "attack", attackerId: archer.id, defenderId: nearEnemy.id },
+    rng,
   );
   const secondResolved = resolveAllPendingRolls(second.state, rng);
   const secondAttack = secondResolved.events.find(
-    (e) => e.type === "attackResolved" && e.defenderId === nearEnemy.id
+    (e) => e.type === "attackResolved" && e.defenderId === nearEnemy.id,
   );
   assert(secondAttack, "archer should attack first enemy on diagonal");
 
   console.log("archer_can_attack_diagonal_first_target_only passed");
 }
-
 
 export function testArcherCanShootThroughAlliesDiagonal() {
   const rng = new SeededRNG(205);
@@ -1242,8 +1213,8 @@ export function testArcherCanShootThroughAlliesDiagonal() {
 
   const initial = applyAction(
     state,
-    { type: "attack", attackerId: archer.id, defenderId: enemy.id } as any,
-    rng
+    { type: "attack", attackerId: archer.id, defenderId: enemy.id },
+    rng,
   );
   const resolved = resolveAllPendingRolls(initial.state, rng);
 
@@ -1252,7 +1223,6 @@ export function testArcherCanShootThroughAlliesDiagonal() {
 
   console.log("archer_can_shoot_through_allies_diagonal passed");
 }
-
 
 export function testArcherCannotShootThroughEnemiesDiagonal() {
   const rng = new SeededRNG(206);
@@ -1263,8 +1233,12 @@ export function testArcherCannotShootThroughEnemiesDiagonal() {
   state = attachArmy(state, a2);
 
   const archer = Object.values(state.units).find((u) => u.owner === "P1" && u.class === "archer")!;
-  const nearEnemy = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "spearman")!;
-  const farEnemy = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "archer")!;
+  const nearEnemy = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "spearman",
+  )!;
+  const farEnemy = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "archer",
+  )!;
 
   state = setUnit(state, archer.id, { position: { col: 2, row: 2 } });
   state = setUnit(state, nearEnemy.id, { position: { col: 3, row: 3 } });
@@ -1275,19 +1249,18 @@ export function testArcherCannotShootThroughEnemiesDiagonal() {
 
   const initial = applyAction(
     state,
-    { type: "attack", attackerId: archer.id, defenderId: farEnemy.id } as any,
-    rng
+    { type: "attack", attackerId: archer.id, defenderId: farEnemy.id },
+    rng,
   );
   const resolved = resolveAllPendingRolls(initial.state, rng);
 
   const attackEvent = resolved.events.find(
-    (e) => e.type === "attackResolved" && e.defenderId === farEnemy.id
+    (e) => e.type === "attackResolved" && e.defenderId === farEnemy.id,
   );
   assert(!attackEvent, "archer should not shoot through enemies diagonally");
 
   console.log("archer_cannot_shoot_through_enemies_diagonal passed");
 }
-
 
 export function testAbilityConsumesMultipleSlots() {
   const rng = new SeededRNG(303);
@@ -1297,12 +1270,8 @@ export function testAbilityConsumesMultipleSlots() {
   state = attachArmy(state, a1);
   state = attachArmy(state, a2);
 
-  const caster = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.class === "knight"
-  )!;
-  const enemy = Object.values(state.units).find(
-    (u) => u.owner === "P2" && u.class === "spearman"
-  )!;
+  const caster = Object.values(state.units).find((u) => u.owner === "P1" && u.class === "knight")!;
+  const enemy = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "spearman")!;
 
   state = setUnit(state, caster.id, { position: { col: 3, row: 3 } });
   state = setUnit(state, enemy.id, { position: { col: 3, row: 4 } });
@@ -1316,29 +1285,23 @@ export function testAbilityConsumesMultipleSlots() {
       type: "useAbility",
       unitId: caster.id,
       abilityId: ABILITY_TEST_MULTI_SLOT,
-    } as any,
-    rng
+    },
+    rng,
   );
 
   const moveAfter = applyAction(
     used.state,
-    { type: "move", unitId: caster.id, to: { col: 3, row: 2 } } as any,
-    rng
+    { type: "move", unitId: caster.id, to: { col: 3, row: 2 } },
+    rng,
   );
-  assert(
-    moveAfter.events.length === 0,
-    "move should be blocked after multi-slot ability"
-  );
+  assert(moveAfter.events.length === 0, "move should be blocked after multi-slot ability");
 
   const attackAfter = applyAction(
     used.state,
-    { type: "attack", attackerId: caster.id, defenderId: enemy.id } as any,
-    rng
+    { type: "attack", attackerId: caster.id, defenderId: enemy.id },
+    rng,
   );
-  assert(
-    attackAfter.events.length === 0,
-    "attack should be blocked after multi-slot ability"
-  );
+  assert(attackAfter.events.length === 0, "attack should be blocked after multi-slot ability");
 
   console.log("ability_consumes_multiple_slots passed");
 }

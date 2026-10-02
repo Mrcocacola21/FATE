@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useTheme } from "../theme";
 import { changePreference, useProfileStore } from "../profile/profileStore";
 import { useI18n } from "../i18n";

@@ -6,10 +6,7 @@ import { isUnitVisibleToPlayer } from "../../actions/shared";
 import { evStakeTriggered, evUnitDied } from "../events/combatEvents";
 import { applyGriffithFemtoRebirth } from "../../actions/heroes/griffith";
 
-export function getLegalStakePositions(
-  state: GameState,
-  owner: "P1" | "P2"
-): Coord[] {
+export function getLegalStakePositions(state: GameState, _owner: "P1" | "P2"): Coord[] {
   const positions: Coord[] = [];
   for (let col = 0; col < state.boardSize; col += 1) {
     for (let row = 0; row < state.boardSize; row += 1) {
@@ -27,13 +24,8 @@ export function getLegalStakePositions(
   return positions;
 }
 
-export function getStakeMarkersAt(
-  state: GameState,
-  position: Coord
-): StakeMarker[] {
-  return state.stakeMarkers.filter((marker) =>
-    coordsEqual(marker.position, position)
-  );
+export function getStakeMarkersAt(state: GameState, position: Coord): StakeMarker[] {
+  return state.stakeMarkers.filter((marker) => coordsEqual(marker.position, position));
 }
 
 export function hasRevealedStakeAt(state: GameState, position: Coord): boolean {
@@ -43,28 +35,24 @@ export function hasRevealedStakeAt(state: GameState, position: Coord): boolean {
 export function isStakeBlockedByHiddenUnit(
   state: GameState,
   position: Coord,
-  ignoreUnitId?: string
+  ignoreUnitId?: string,
 ): boolean {
   return getUnitsAt(state, position).some(
     (occupant) =>
-      occupant.isAlive &&
-      occupant.isStealthed &&
-      (!ignoreUnitId || occupant.id !== ignoreUnitId),
+      occupant.isAlive && occupant.isStealthed && (!ignoreUnitId || occupant.id !== ignoreUnitId),
   );
 }
 
 export function findStakeStopOnPath(
   state: GameState,
   unit: UnitState,
-  path: Coord[]
+  path: Coord[],
 ): Coord | null {
   for (const cell of path) {
     const markers = getStakeMarkersAt(state, cell);
     if (markers.length === 0) continue;
     if (isStakeBlockedByHiddenUnit(state, cell)) continue;
-    const canSeeMover = markers.some((marker) =>
-      isUnitVisibleToPlayer(state, unit, marker.owner)
-    );
+    const canSeeMover = markers.some((marker) => isUnitVisibleToPlayer(state, unit, marker.owner));
     if (!canSeeMover) continue;
     return cell;
   }
@@ -75,7 +63,7 @@ export function applyStakeTriggerIfAny(
   state: GameState,
   unit: UnitState,
   destination: Coord,
-  rng: RNG
+  rng: RNG,
 ): { state: GameState; events: GameEvent[]; unit: UnitState; triggered: boolean } {
   const markers = getStakeMarkersAt(state, destination);
   if (markers.length === 0) {
@@ -85,9 +73,7 @@ export function applyStakeTriggerIfAny(
     return { state, events: [], unit, triggered: false };
   }
 
-  const canSeeMover = markers.some((marker) =>
-    isUnitVisibleToPlayer(state, unit, marker.owner)
-  );
+  const canSeeMover = markers.some((marker) => isUnitVisibleToPlayer(state, unit, marker.owner));
   if (!canSeeMover) {
     return { state, events: [], unit, triggered: false };
   }
@@ -96,9 +82,7 @@ export function applyStakeTriggerIfAny(
   let nextState: GameState = {
     ...state,
     stakeMarkers: state.stakeMarkers.map((marker) =>
-      coordsEqual(marker.position, destination)
-        ? { ...marker, isRevealed: true }
-        : marker
+      coordsEqual(marker.position, destination) ? { ...marker, isRevealed: true } : marker,
     ),
     units: {
       ...state.units,
@@ -125,7 +109,7 @@ export function applyStakeTriggerIfAny(
       evUnitDied({
         unitId: updatedUnit.id,
         killerId: null,
-      })
+      }),
     );
     const rebirth = applyGriffithFemtoRebirth(updatedUnit, deathPosition);
     if (rebirth.transformed) {
@@ -156,7 +140,7 @@ export function applyStakeTriggerIfAny(
       damage: 1,
       stopped: true,
       stakeIdsRevealed: revealedIds,
-    })
+    }),
   );
 
   return { state: nextState, events, unit: updatedUnit, triggered: true };
@@ -165,16 +149,14 @@ export function applyStakeTriggerIfAny(
 export function consumeOldestStakes(
   state: GameState,
   owner: "P1" | "P2",
-  count: number
+  count: number,
 ): { state: GameState; removed: StakeMarker[] } {
   const owned = state.stakeMarkers
     .filter((marker) => marker.owner === owner)
     .sort((a, b) => a.createdAt - b.createdAt);
   const removed = owned.slice(0, count);
   const removedIds = new Set(removed.map((marker) => marker.id));
-  const remaining = state.stakeMarkers.filter(
-    (marker) => !removedIds.has(marker.id)
-  );
+  const remaining = state.stakeMarkers.filter((marker) => !removedIds.has(marker.id));
   return {
     state: { ...state, stakeMarkers: remaining },
     removed,

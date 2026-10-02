@@ -8,10 +8,7 @@ import {
 } from "../heroes";
 import { applyGriffithFemtoRebirth } from "../actions/heroes/griffith";
 import { hasUndyneImmortalActive } from "../undyne";
-import {
-  getChikatiloMarkBonus,
-  hasLegendOfTheSteppesBonus,
-} from "./helpers";
+import { getChikatiloMarkBonus, hasLegendOfTheSteppesBonus } from "./helpers";
 import { distanceInfo, isSpearmanReachTarget } from "./math";
 import type { HitResolution, ResolveAttackParams } from "./types";
 
@@ -22,12 +19,12 @@ export function resolveHitDamage(
   units: Record<string, UnitState>,
   events: GameEvent[],
   hit: boolean,
-  attackerWasStealthedAtAttempt: boolean
+  attackerWasStealthedAtAttempt: boolean,
 ): HitResolution {
   let damage = 0;
   let defenderHpAfterEvent = defenderAfter.hp;
-  let attackerRevealedToDefender = false;
-  let revealedAttackerPos: Coord | null = null;
+  const attackerRevealedToDefender = false;
+  const revealedAttackerPos: Coord | null = null;
 
   if (!hit) {
     return {
@@ -42,8 +39,7 @@ export function resolveHitDamage(
     };
   }
 
-  const attackerWasStealthed =
-    attackerAfter.class === "assassin" && attackerWasStealthedAtAttempt;
+  const attackerWasStealthed = attackerAfter.class === "assassin" && attackerWasStealthedAtAttempt;
 
   if (params.damageOverride !== undefined) {
     damage = params.damageOverride;
@@ -66,7 +62,7 @@ export function resolveHitDamage(
     const markBonus = getChikatiloMarkBonus(
       attackerAfter,
       defenderAfter.id,
-      attackerWasStealthedAtAttempt
+      attackerWasStealthedAtAttempt,
     );
     if (markBonus) {
       damage += markBonus;
@@ -114,16 +110,10 @@ export function resolveHitDamage(
     damage = Math.min(1, damage);
   }
 
-  if (
-    defenderAfter.heroId === HERO_GUTS_ID &&
-    defenderAfter.gutsBerserkModeActive
-  ) {
+  if (defenderAfter.heroId === HERO_GUTS_ID && defenderAfter.gutsBerserkModeActive) {
     damage = Math.min(1, damage);
   }
-  if (
-    defenderAfter.heroId === HERO_UNDYNE_ID &&
-    hasUndyneImmortalActive(defenderAfter)
-  ) {
+  if (defenderAfter.heroId === HERO_UNDYNE_ID && hasUndyneImmortalActive(defenderAfter)) {
     damage = Math.min(1, damage);
   }
 

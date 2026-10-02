@@ -35,18 +35,13 @@ export function getMovementActionsRemaining(unit: UnitState): number {
   const turn = getTurnEconomy(unit);
   const normalMove = turn.moveUsed ? 0 : 1;
   const boatmanMoves = getRiverBoatmanExtraMoves(unit);
-  const flexibleMove =
-    unit.courtExtraFlexibleAction && !unit.courtExtraFlexibleAction.used ? 1 : 0;
-  const centipedeActionMove =
-    unit.kanekiCentipedeUnlocked && !turn.actionUsed ? 1 : 0;
+  const flexibleMove = unit.courtExtraFlexibleAction && !unit.courtExtraFlexibleAction.used ? 1 : 0;
+  const centipedeActionMove = unit.kanekiCentipedeUnlocked && !turn.actionUsed ? 1 : 0;
   return normalMove + boatmanMoves + flexibleMove + centipedeActionMove;
 }
 
 /** Adds move-only uses without reopening or replacing the normal move slot. */
-export function grantMovementActions(
-  unit: UnitState,
-  amount: number = 1
-): UnitState {
+export function grantMovementActions(unit: UnitState, amount: number = 1): UnitState {
   const granted = Math.max(0, Math.floor(amount));
   if (granted === 0) return unit;
   return {
@@ -70,10 +65,7 @@ export function setTurnEconomy(unit: UnitState, turn: TurnEconomy): UnitState {
   };
 }
 
-export function canSpendSlots(
-  unit: UnitState,
-  costs: TurnSlotCosts | undefined
-): boolean {
+export function canSpendSlots(unit: UnitState, costs: TurnSlotCosts | undefined): boolean {
   if (!costs) return true;
   const turn = getTurnEconomy(unit);
   const isChicken = (unit.lokiChickenSources?.length ?? 0) > 0;
@@ -111,19 +103,14 @@ export function canSpendSlots(
   return true;
 }
 
-export function spendSlots(
-  unit: UnitState,
-  costs: TurnSlotCosts | undefined
-): UnitState {
+export function spendSlots(unit: UnitState, costs: TurnSlotCosts | undefined): UnitState {
   if (!costs) return setTurnEconomy(unit, getTurnEconomy(unit));
   const before = getTurnEconomy(unit);
   const actionType = actionTypeFromCosts(costs);
   const turn = { ...getTurnEconomy(unit) };
-  let extra = unit.courtExtraFlexibleAction;
+  const extra = unit.courtExtraFlexibleAction;
   const shouldUseRiverExtraMove =
-    isMoveOnlyCost(costs) &&
-    before.moveUsed &&
-    getRiverBoatmanExtraMoves(unit) > 0;
+    isMoveOnlyCost(costs) && before.moveUsed && getRiverBoatmanExtraMoves(unit) > 0;
   const shouldUseCentipedeAction =
     isMoveOnlyCost(costs) &&
     before.moveUsed &&

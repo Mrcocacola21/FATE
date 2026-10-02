@@ -49,10 +49,9 @@ export function testGenghisMongolChargeInfluenceIncludesFullPathAndSides() {
   console.log("genghis_mongol_charge_influence_includes_full_path_and_sides passed");
 }
 export function testPolkovodetsAppliesToAdjacentAlliesNotSelf() {
-  let { state, vlad, enemy } = setupVladState();
-  const ally = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.class === "archer"
-  )!;
+  const { state: initialState39, vlad, enemy } = setupVladState();
+  let state = initialState39;
+  const ally = Object.values(state.units).find((u) => u.owner === "P1" && u.class === "archer")!;
 
   state = setUnit(state, vlad.id, { position: { col: 4, row: 4 } });
   state = setUnit(state, ally.id, { position: { col: 4, row: 5 } });
@@ -61,10 +60,10 @@ export function testPolkovodetsAppliesToAdjacentAlliesNotSelf() {
   state = initKnowledgeForOwners(state);
 
   const rng = makeRngSequence([0.99, 0.99, 0.01, 0.2]);
-  let res = applyAction(
+  const res = applyAction(
     state,
-    { type: "attack", attackerId: ally.id, defenderId: enemy.id } as any,
-    rng
+    { type: "attack", attackerId: ally.id, defenderId: enemy.id },
+    rng,
   );
   const resolved = resolveAllPendingRollsWithEvents(res.state, rng);
   const attackEvent = resolved.events.find(
@@ -95,15 +94,12 @@ export function testPolkovodetsAppliesToAdjacentAlliesNotSelf() {
   const rng2 = makeRngSequence([0.99, 0.99, 0.01, 0.2]);
   let res2 = applyAction(
     state2,
-    { type: "attack", attackerId: vlad2.id, defenderId: enemy2.id } as any,
+    { type: "attack", attackerId: vlad2.id, defenderId: enemy2.id },
     rng2
   );
   res2 = resolveAllPendingRolls(res2.state, rng2);
   const attackEvent2 = res2.events.find(
-    (e) =>
-      e.type === "attackResolved" &&
-      e.attackerId === vlad2.id &&
-      e.defenderId === enemy2.id
+    (e) => e.type === "attackResolved" && e.attackerId === vlad2.id && e.defenderId === enemy2.id,
   );
   assert(attackEvent2 && attackEvent2.type === "attackResolved", "attack should resolve");
   assert(attackEvent2.hit, "attack should hit");
@@ -117,12 +113,11 @@ export function testPolkovodetsAppliesToAdjacentAlliesNotSelf() {
 
 
 export function testPolkovodetsDoesNotStack() {
-  let { state, vlad, enemy } = setupVladState();
-  const ally = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.class === "archer"
-  )!;
+  const { state: initialState40, vlad, enemy } = setupVladState();
+let state = initialState40;
+  const ally = Object.values(state.units).find((u) => u.owner === "P1" && u.class === "archer")!;
   const secondVlad = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.id !== vlad.id && u.id !== ally.id
+    (u) => u.owner === "P1" && u.id !== vlad.id && u.id !== ally.id,
   )!;
 
   state = setUnit(state, vlad.id, { position: { col: 3, row: 4 } });
@@ -136,17 +131,14 @@ export function testPolkovodetsDoesNotStack() {
   state = initKnowledgeForOwners(state);
 
   const rng = makeRngSequence([0.99, 0.99, 0.01, 0.2]);
-  let res = applyAction(
+  const res = applyAction(
     state,
-    { type: "attack", attackerId: ally.id, defenderId: enemy.id } as any,
+    { type: "attack", attackerId: ally.id, defenderId: enemy.id },
     rng
   );
   const resolved = resolveAllPendingRollsWithEvents(res.state, rng);
   const attackEvent = resolved.events.find(
-    (e) =>
-      e.type === "attackResolved" &&
-      e.attackerId === ally.id &&
-      e.defenderId === enemy.id
+    (e) => e.type === "attackResolved" && e.attackerId === ally.id && e.defenderId === enemy.id,
   );
   assert(attackEvent && attackEvent.type === "attackResolved", "attack should resolve");
   assert(attackEvent.hit, "attack should hit");
@@ -160,13 +152,10 @@ export function testPolkovodetsDoesNotStack() {
 
 
 export function testPolkovodetsRiderOnlyIfStartOrEndInAura() {
-  let { state, vlad } = setupVladState();
-  const rider = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.class === "rider"
-  )!;
-  const enemy = Object.values(state.units).find(
-    (u) => u.owner === "P2" && u.class === "spearman"
-  )!;
+  const { state: initialState41, vlad } = setupVladState();
+let state = initialState41;
+  const rider = Object.values(state.units).find((u) => u.owner === "P1" && u.class === "rider")!;
+  const enemy = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "spearman")!;
 
   state = setUnit(state, vlad.id, { position: { col: 1, row: 0 } });
   state = setUnit(state, rider.id, { position: { col: 0, row: 0 } });
@@ -177,15 +166,12 @@ export function testPolkovodetsRiderOnlyIfStartOrEndInAura() {
   const rng = makeRngSequence([0.99, 0.99, 0.01, 0.2]);
   let res = applyAction(
     state,
-    { type: "move", unitId: rider.id, to: { col: 0, row: 3 } } as any,
+    { type: "move", unitId: rider.id, to: { col: 0, row: 3 } },
     rng
   );
   res = resolveAllPendingRolls(res.state, rng);
   const attackEvent = res.events.find(
-    (e) =>
-      e.type === "attackResolved" &&
-      e.attackerId === rider.id &&
-      e.defenderId === enemy.id
+    (e) => e.type === "attackResolved" && e.attackerId === rider.id && e.defenderId === enemy.id,
   );
   assert(attackEvent && attackEvent.type === "attackResolved", "rider attack should resolve");
   assert(attackEvent.hit, "rider attack should hit");
@@ -214,15 +200,12 @@ export function testPolkovodetsRiderOnlyIfStartOrEndInAura() {
   const rng2 = makeRngSequence([0.99, 0.99, 0.01, 0.2]);
   let res2 = applyAction(
     state2,
-    { type: "move", unitId: rider2.id, to: { col: 0, row: 3 } } as any,
+    { type: "move", unitId: rider2.id, to: { col: 0, row: 3 } },
     rng2
   );
   res2 = resolveAllPendingRolls(res2.state, rng2);
   const attackEvent2 = res2.events.find(
-    (e) =>
-      e.type === "attackResolved" &&
-      e.attackerId === rider2.id &&
-      e.defenderId === enemy2.id
+    (e) => e.type === "attackResolved" && e.attackerId === rider2.id && e.defenderId === enemy2.id,
   );
   assert(attackEvent2 && attackEvent2.type === "attackResolved", "rider attack should resolve");
   assert(attackEvent2.hit, "rider attack should hit");
@@ -270,7 +253,7 @@ export function testKhansDecreeDoesNotConsumeMoveSlot() {
       type: "useAbility",
       unitId: genghis.id,
       abilityId: ABILITY_GENGHIS_KHAN_KHANS_DECREE,
-    } as any,
+    },
     rng
   );
   const updated = res.state.units[genghis.id];
@@ -278,13 +261,10 @@ export function testKhansDecreeDoesNotConsumeMoveSlot() {
     updated.charges[ABILITY_GENGHIS_KHAN_KHANS_DECREE] === 0,
     "decree should spend 2 charges"
   );
-  assert(
-    updated.turn.moveUsed === false,
-    "decree should not consume move slot"
-  );
+  assert(updated.turn.moveUsed === false, "decree should not consume move slot");
   assert(
     res.state.pendingMove && res.state.pendingMove.unitId === genghis.id,
-    "decree should create pending move options"
+    "decree should create pending move options",
   );
 
   console.log("khans_decree_does_not_consume_move_slot passed");
@@ -307,13 +287,13 @@ export function testKhansDecreeAllowsDiagonalMoveThenConsumesMove() {
   });
   state = toBattleState(state, "P1", genghis.id);
 
-  let res = applyAction(
+  const res = applyAction(
     state,
     {
       type: "useAbility",
       unitId: genghis.id,
       abilityId: ABILITY_GENGHIS_KHAN_KHANS_DECREE,
-    } as any,
+    },
     rng
   );
   const pending = res.state.pendingMove;
@@ -321,13 +301,13 @@ export function testKhansDecreeAllowsDiagonalMoveThenConsumesMove() {
     pending &&
       pending.unitId === genghis.id &&
       pending.legalTo.some((c) => c.col === 2 && c.row === 2),
-    "decree should allow diagonal line moves"
+    "decree should allow diagonal line moves",
   );
 
   const moveRes = applyAction(
     res.state,
-    { type: "move", unitId: genghis.id, to: { col: 2, row: 2 } } as any,
-    rng
+    { type: "move", unitId: genghis.id, to: { col: 2, row: 2 } },
+    rng,
   );
   const moved = moveRes.state.units[genghis.id];
   assert(
@@ -336,7 +316,7 @@ export function testKhansDecreeAllowsDiagonalMoveThenConsumesMove() {
   );
   assert(moved.turn.moveUsed === true, "move should consume move slot");
 
-  const endRes = applyAction(moveRes.state, { type: "endTurn" } as any, rng);
+  const endRes = applyAction(moveRes.state, { type: "endTurn" }, rng);
   const afterEnd = endRes.state.units[genghis.id];
   assert(
     afterEnd.genghisKhanDiagonalMoveActive === false,
@@ -352,9 +332,7 @@ export function testKhansDecreeRejectsDiagonalMoveWithoutStatus() {
   state = attachArmy(state, createDefaultArmy("P1", { rider: HERO_GENGHIS_KHAN_ID }));
   state = attachArmy(state, createDefaultArmy("P2"));
 
-  const genghis = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.class === "rider"
-  )!;
+  const genghis = Object.values(state.units).find((u) => u.owner === "P1" && u.class === "rider")!;
 
   state = setUnit(state, genghis.id, {
     position: { col: 0, row: 0 },
@@ -364,14 +342,14 @@ export function testKhansDecreeRejectsDiagonalMoveWithoutStatus() {
 
   const rejected = applyAction(
     state,
-    { type: "move", unitId: genghis.id, to: { col: 2, row: 2 } } as any,
-    rng
+    { type: "move", unitId: genghis.id, to: { col: 2, row: 2 } },
+    rng,
   );
 
   assert.deepStrictEqual(
     rejected.state,
     state,
-    "diagonal move without Decree status should not mutate state"
+    "diagonal move without Decree status should not mutate state",
   );
   assert.strictEqual(rejected.events.length, 0);
 
@@ -379,23 +357,14 @@ export function testKhansDecreeRejectsDiagonalMoveWithoutStatus() {
 }
 
 export function testKhansDecreeDiagonalMoveTriggersRiderAttacksForTouchedEnemies() {
-  const rng = makeRngSequence([
-    0.99, 0.99, 0.01, 0.01,
-    0.99, 0.99, 0.01, 0.01,
-  ]);
+  const rng = makeRngSequence([0.99, 0.99, 0.01, 0.01, 0.99, 0.99, 0.01, 0.01]);
   let state = createEmptyGame();
   state = attachArmy(state, createDefaultArmy("P1", { rider: HERO_GENGHIS_KHAN_ID }));
   state = attachArmy(state, createDefaultArmy("P2"));
 
-  const genghis = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.class === "rider"
-  )!;
-  const enemy1 = Object.values(state.units).find(
-    (u) => u.owner === "P2" && u.class === "knight"
-  )!;
-  const enemy2 = Object.values(state.units).find(
-    (u) => u.owner === "P2" && u.class === "archer"
-  )!;
+  const genghis = Object.values(state.units).find((u) => u.owner === "P1" && u.class === "rider")!;
+  const enemy1 = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "knight")!;
+  const enemy2 = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "archer")!;
 
   state = setUnit(state, genghis.id, {
     position: { col: 0, row: 0 },
@@ -419,18 +388,18 @@ export function testKhansDecreeDiagonalMoveTriggersRiderAttacksForTouchedEnemies
       type: "useAbility",
       unitId: genghis.id,
       abilityId: ABILITY_GENGHIS_KHAN_KHANS_DECREE,
-    } as any,
-    rng
+    },
+    rng,
   );
   const moved = applyAction(
     decree.state,
-    { type: "move", unitId: genghis.id, to: { col: 2, row: 2 } } as any,
-    rng
+    { type: "move", unitId: genghis.id, to: { col: 2, row: 2 } },
+    rng,
   );
 
   assert(
     moved.state.pendingRoll?.kind === "riderPathAttack_attackerRoll",
-    "diagonal Decree movement should enter the normal Rider attack pipeline"
+    "diagonal Decree movement should enter the normal Rider attack pipeline",
   );
   const resolved = resolveAllPendingRollsWithEvents(moved.state, rng);
   const events = [...decree.events, ...moved.events, ...resolved.events];
@@ -440,23 +409,23 @@ export function testKhansDecreeDiagonalMoveTriggersRiderAttacksForTouchedEnemies
       (event) =>
         event.type === "attackResolved" &&
         event.attackerId === genghis.id &&
-        event.defenderId === enemy.id
+        event.defenderId === enemy.id,
     );
     assert(attacks.length === 1, `Rider should attack ${enemy.id} at most once`);
     assert(
       resolved.state.units[enemy.id].hp < hpBefore[enemy.id],
-      `Rider should damage touched enemy ${enemy.id}`
+      `Rider should damage touched enemy ${enemy.id}`,
     );
   }
   const updated = resolved.state.units[genghis.id];
   assert(updated.turn.moveUsed, "Decree movement should spend the move slot");
   assert(
     updated.charges[ABILITY_GENGHIS_KHAN_KHANS_DECREE] === 0,
-    "Decree should spend exactly 2 charges"
+    "Decree should spend exactly 2 charges",
   );
   assert(
     updated.genghisKhanDecreeMovePending !== true,
-    "Decree movement pending flag should clear after the move"
+    "Decree movement pending flag should clear after the move",
   );
 
   console.log("khans_decree_diagonal_move_triggers_rider_attacks_for_touched_enemies passed");
@@ -496,12 +465,12 @@ export function testKhansDecreeIgnoresHiddenTouchedEnemies() {
       type: "useAbility",
       unitId: genghis.id,
       abilityId: ABILITY_GENGHIS_KHAN_KHANS_DECREE,
-    } as any,
+    },
     rng
   );
   const moved = applyAction(
     decree.state,
-    { type: "move", unitId: genghis.id, to: { col: 2, row: 2 } } as any,
+    { type: "move", unitId: genghis.id, to: { col: 2, row: 2 } },
     rng
   );
 
@@ -515,9 +484,9 @@ export function testKhansDecreeIgnoresHiddenTouchedEnemies() {
     !moved.events.some(
       (event) =>
         (event.type === "attackResolved" && event.defenderId === hidden.id) ||
-        (event.type === "stealthRevealed" && event.unitId === hidden.id)
+        (event.type === "stealthRevealed" && event.unitId === hidden.id),
     ),
-    "Decree movement should emit no attack or reveal event for hidden enemies"
+    "Decree movement should emit no attack or reveal event for hidden enemies",
   );
 
   console.log("khans_decree_ignores_hidden_touched_enemies passed");
@@ -560,12 +529,12 @@ export function testKhansDecreeDiagonalMoveTriggersDestinationHazardOnce() {
       type: "useAbility",
       unitId: genghis.id,
       abilityId: ABILITY_GENGHIS_KHAN_KHANS_DECREE,
-    } as any,
+    },
     rng
   );
   const moved = applyAction(
     decree.state,
-    { type: "move", unitId: genghis.id, to: { col: 2, row: 2 } } as any,
+    { type: "move", unitId: genghis.id, to: { col: 2, row: 2 } },
     rng
   );
   const events = [...decree.events, ...moved.events];
@@ -582,9 +551,9 @@ export function testKhansDecreeDiagonalMoveTriggersDestinationHazardOnce() {
         event.type === "unitMoved" &&
         event.unitId === genghis.id &&
         event.to.col === 1 &&
-        event.to.row === 1
+        event.to.row === 1,
     ),
-    "Decree diagonal movement should emit the normal unitMoved event"
+    "Decree diagonal movement should emit the normal unitMoved event",
   );
   assert.strictEqual(
     events.filter((event) => event.type === "stakeTriggered").length,
@@ -616,9 +585,9 @@ export function testKhansDecreeCannotBeUsedAfterMove() {
   });
   state = toBattleState(state, "P1", genghis.id);
 
-  let res = applyAction(
+  const res = applyAction(
     state,
-    { type: "move", unitId: genghis.id, to: { col: 0, row: 2 } } as any,
+    { type: "move", unitId: genghis.id, to: { col: 0, row: 2 } },
     rng
   );
   const moved = res.state.units[genghis.id];
@@ -630,7 +599,7 @@ export function testKhansDecreeCannotBeUsedAfterMove() {
       type: "useAbility",
       unitId: genghis.id,
       abilityId: ABILITY_GENGHIS_KHAN_KHANS_DECREE,
-    } as any,
+    },
     rng
   );
   const afterAttempt = attempt.state.units[genghis.id];
@@ -638,13 +607,10 @@ export function testKhansDecreeCannotBeUsedAfterMove() {
     afterAttempt.charges[ABILITY_GENGHIS_KHAN_KHANS_DECREE] === 1,
     "decree should not spend charges after move"
   );
-  assert(
-    !attempt.state.pendingMove,
-    "decree should not create pending move after move"
-  );
+  assert(!attempt.state.pendingMove, "decree should not create pending move after move");
   assert(
     afterAttempt.genghisKhanDiagonalMoveActive !== true,
-    "decree should not enable diagonal movement after move"
+    "decree should not enable diagonal movement after move",
   );
   assert(attempt.events.length === 0, "blocked decree should emit no events");
 
@@ -658,9 +624,7 @@ export function testGenghisMongolChargeRequires4SpendsAll4() {
   state = attachArmy(state, createDefaultArmy("P1", { rider: HERO_GENGHIS_KHAN_ID }));
   state = attachArmy(state, createDefaultArmy("P2"));
 
-  const genghis = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.class === "rider"
-  )!;
+  const genghis = Object.values(state.units).find((u) => u.owner === "P1" && u.class === "rider")!;
 
   state = setUnit(state, genghis.id, {
     position: { col: 1, row: 1 },
@@ -674,18 +638,15 @@ export function testGenghisMongolChargeRequires4SpendsAll4() {
       type: "useAbility",
       unitId: genghis.id,
       abilityId: ABILITY_GENGHIS_KHAN_MONGOL_CHARGE,
-    } as any,
-    rng
+    },
+    rng,
   );
   const notEnough = res.state.units[genghis.id];
   assert(
     notEnough.charges[ABILITY_GENGHIS_KHAN_MONGOL_CHARGE] === 3,
-    "mongol charge should not spend charges when below 4"
+    "mongol charge should not spend charges when below 4",
   );
-  assert(
-    !res.state.pendingMove,
-    "mongol charge should not create pending move without charges"
-  );
+  assert(!res.state.pendingMove, "mongol charge should not create pending move without charges");
 
   res = applyAction(
     setUnit(res.state, genghis.id, {
@@ -695,18 +656,18 @@ export function testGenghisMongolChargeRequires4SpendsAll4() {
       type: "useAbility",
       unitId: genghis.id,
       abilityId: ABILITY_GENGHIS_KHAN_MONGOL_CHARGE,
-    } as any,
-    rng
+    },
+    rng,
   );
   const updated = res.state.units[genghis.id];
   assert(
     updated.charges[ABILITY_GENGHIS_KHAN_MONGOL_CHARGE] === 0,
-    "mongol charge should spend all 4 charges"
+    "mongol charge should spend all 4 charges",
   );
   assert(updated.turn.actionUsed === true, "mongol charge should consume action slot");
   assert(
     res.state.pendingMove && res.state.pendingMove.unitId === genghis.id,
-    "mongol charge should create pending move"
+    "mongol charge should create pending move",
   );
 
   console.log("genghis_mongol_charge_requires_4_spends_all_4 passed");
@@ -715,23 +676,28 @@ export function testGenghisMongolChargeRequires4SpendsAll4() {
 
 export function testGenghisLegendOfSteppesBonusOnlyVsLastTurnTarget() {
   const rng = makeRngSequence([
-    0.99, 0.99, 0.01, 0.2, // turn N vs A
-    0.99, 0.99, 0.01, 0.2, // turn N+1 vs A
-    0.99, 0.99, 0.01, 0.2, // turn N+2 vs B
+    0.99,
+    0.99,
+    0.01,
+    0.2, // turn N vs A
+    0.99,
+    0.99,
+    0.01,
+    0.2, // turn N+1 vs A
+    0.99,
+    0.99,
+    0.01,
+    0.2, // turn N+2 vs B
   ]);
   let state = createEmptyGame();
   state = attachArmy(state, createDefaultArmy("P1", { rider: HERO_GENGHIS_KHAN_ID }));
   state = attachArmy(state, createDefaultArmy("P2"));
 
-  const genghis = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.class === "rider"
-  )!;
+  const genghis = Object.values(state.units).find((u) => u.owner === "P1" && u.class === "rider")!;
   const enemyA = Object.values(state.units).find(
-    (u) => u.owner === "P2" && u.class === "spearman"
+    (u) => u.owner === "P2" && u.class === "spearman",
   )!;
-  const enemyB = Object.values(state.units).find(
-    (u) => u.owner === "P2" && u.class === "knight"
-  )!;
+  const enemyB = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "knight")!;
 
   state = setUnit(state, genghis.id, { position: { col: 4, row: 4 } });
   state = setUnit(state, enemyA.id, { position: { col: 4, row: 5 } });
@@ -740,95 +706,73 @@ export function testGenghisLegendOfSteppesBonusOnlyVsLastTurnTarget() {
 
   let res = applyAction(
     state,
-    { type: "attack", attackerId: genghis.id, defenderId: enemyA.id } as any,
-    rng
+    { type: "attack", attackerId: genghis.id, defenderId: enemyA.id },
+    rng,
   );
   res = resolveAllPendingRollsWithEvents(res.state, rng);
 
-  let endRes = applyAction(res.state, { type: "endTurn" } as any, rng);
-  let startRes = applyAction(
-    endRes.state,
-    { type: "unitStartTurn", unitId: genghis.id } as any,
-    rng
-  );
+  let endRes = applyAction(res.state, { type: "endTurn" }, rng);
+  let startRes = applyAction(endRes.state, { type: "unitStartTurn", unitId: genghis.id }, rng);
 
   res = applyAction(
     startRes.state,
-    { type: "attack", attackerId: genghis.id, defenderId: enemyA.id } as any,
-    rng
+    { type: "attack", attackerId: genghis.id, defenderId: enemyA.id },
+    rng,
   );
   res = resolveAllPendingRollsWithEvents(res.state, rng);
   const attackA = res.events.find(
-    (e) =>
-      e.type === "attackResolved" &&
-      e.attackerId === genghis.id &&
-      e.defenderId === enemyA.id
+    (e) => e.type === "attackResolved" && e.attackerId === genghis.id && e.defenderId === enemyA.id,
   );
   assert(attackA && attackA.type === "attackResolved", "attack on A should resolve");
   assert(
     attackA.damage === genghis.attack + 1,
-    "legend of the steppes should add +1 vs last turn target"
+    "legend of the steppes should add +1 vs last turn target",
   );
 
-  endRes = applyAction(res.state, { type: "endTurn" } as any, rng);
-  startRes = applyAction(
-    endRes.state,
-    { type: "unitStartTurn", unitId: genghis.id } as any,
-    rng
-  );
+  endRes = applyAction(res.state, { type: "endTurn" }, rng);
+  startRes = applyAction(endRes.state, { type: "unitStartTurn", unitId: genghis.id }, rng);
   res = applyAction(
     startRes.state,
-    { type: "attack", attackerId: genghis.id, defenderId: enemyB.id } as any,
-    rng
+    { type: "attack", attackerId: genghis.id, defenderId: enemyB.id },
+    rng,
   );
   res = resolveAllPendingRollsWithEvents(res.state, rng);
   const attackB = res.events.find(
-    (e) =>
-      e.type === "attackResolved" &&
-      e.attackerId === genghis.id &&
-      e.defenderId === enemyB.id
+    (e) => e.type === "attackResolved" && e.attackerId === genghis.id && e.defenderId === enemyB.id,
   );
   assert(attackB && attackB.type === "attackResolved", "attack on B should resolve");
   assert(
     attackB.damage === genghis.attack,
-    "legend of the steppes should not apply to new targets"
+    "legend of the steppes should not apply to new targets",
   );
 
   console.log("genghis_legend_of_steppes_bonus_only_vs_last_turn_target passed");
 }
 
-
 export function testGenghisMongolChargeSweepTriggersAlliedAttacksInCorridor() {
-  const rng = makeRngSequence([
-    0.99, 0.99, 0.01, 0.2,
-    0.99, 0.99, 0.01, 0.2,
-  ]);
+  const rng = makeRngSequence([0.99, 0.99, 0.01, 0.2, 0.99, 0.99, 0.01, 0.2]);
   let state = createEmptyGame();
   state = attachArmy(state, createDefaultArmy("P1", { rider: HERO_GENGHIS_KHAN_ID }));
   state = attachArmy(state, createDefaultArmy("P2"));
 
-  const genghis = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.class === "rider"
-  )!;
+  const genghis = Object.values(state.units).find((u) => u.owner === "P1" && u.class === "rider")!;
   const allyArcher = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.class === "archer"
+    (u) => u.owner === "P1" && u.class === "archer",
   )!;
   const allySpearman = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.class === "spearman"
+    (u) => u.owner === "P1" && u.class === "spearman",
   )!;
   const allyAssassin = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.class === "assassin"
+    (u) => u.owner === "P1" && u.class === "assassin",
   )!;
   const allyOutside = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.class === "knight"
+    (u) => u.owner === "P1" && u.class === "knight",
   )!;
 
   const enemyA = Object.values(state.units).find(
-    (u) => u.owner === "P2" && u.class === "spearman"
+    (u) => u.owner === "P2" && u.class === "spearman",
   )!;
-  const enemyB = Object.values(state.units).find(
-    (u) => u.owner === "P2" && u.class === "knight"
-  )!;
+  const enemyB = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "knight")!;
 
   state = setUnit(state, genghis.id, {
     position: { col: 1, row: 1 },
@@ -852,49 +796,38 @@ export function testGenghisMongolChargeSweepTriggersAlliedAttacksInCorridor() {
       type: "useAbility",
       unitId: genghis.id,
       abilityId: ABILITY_GENGHIS_KHAN_MONGOL_CHARGE,
-    } as any,
-    rng
+    },
+    rng,
   );
-  res = applyAction(
-    res.state,
-    { type: "move", unitId: genghis.id, to: { col: 5, row: 1 } } as any,
-    rng
-  );
+  res = applyAction(res.state, { type: "move", unitId: genghis.id, to: { col: 5, row: 1 } }, rng);
   const resolved = resolveAllPendingRollsWithEvents(res.state, rng);
 
-  const attackEvents = resolved.events.filter(
-    (e) => e.type === "attackResolved"
-  ) as Extract<GameEvent, { type: "attackResolved" }>[];
+  const attackEvents = resolved.events.filter((e) => e.type === "attackResolved") as Extract<
+    GameEvent,
+    { type: "attackResolved" }
+  >[];
   const attackers = attackEvents.map((e) => e.attackerId);
 
   assert.deepStrictEqual(
     attackers,
     [allyArcher.id, allySpearman.id].sort(),
-    "allied attacks should resolve in unitId order"
+    "allied attacks should resolve in unitId order",
   );
-  assert(
-    !attackers.includes(allyAssassin.id),
-    "allies who cannot attack should do nothing"
-  );
-  assert(
-    !attackers.includes(allyOutside.id),
-    "allies outside corridor should not attack"
-  );
+  assert(!attackers.includes(allyAssassin.id), "allies who cannot attack should do nothing");
+  assert(!attackers.includes(allyOutside.id), "allies outside corridor should not attack");
 
   const archerAttack = attackEvents.find((e) => e.attackerId === allyArcher.id)!;
   const spearmanAttack = attackEvents.find((e) => e.attackerId === allySpearman.id)!;
   assert(
     archerAttack.damage === allyArcher.attack + 1,
-    "commander bonus should apply to corridor attacks"
+    "commander bonus should apply to corridor attacks",
   );
   assert(
     spearmanAttack.damage === allySpearman.attack + 1,
-    "commander bonus should apply to corridor attacks"
+    "commander bonus should apply to corridor attacks",
   );
 
-  console.log(
-    "genghis_mongol_charge_sweep_triggers_allied_attacks_in_3wide_corridor passed"
-  );
+  console.log("genghis_mongol_charge_sweep_triggers_allied_attacks_in_3wide_corridor passed");
 }
 
 export function testGenghisMongolChargeMultipleTargetsCreatesChoiceAndResolves() {
@@ -938,12 +871,12 @@ export function testGenghisMongolChargeMultipleTargetsCreatesChoiceAndResolves()
       type: "useAbility",
       unitId: genghis.id,
       abilityId: ABILITY_GENGHIS_KHAN_MONGOL_CHARGE,
-    } as any,
+    },
     rng
   );
   result = applyAction(
     result.state,
-    { type: "move", unitId: genghis.id, to: { col: 5, row: 1 } } as any,
+    { type: "move", unitId: genghis.id, to: { col: 5, row: 1 } },
     rng
   );
 
@@ -969,13 +902,13 @@ export function testGenghisMongolChargeMultipleTargetsCreatesChoiceAndResolves()
         type: "mongolChargeAllyAttackTarget",
         targetId: illegalEnemy.id,
       },
-    } as any,
+    },
     rng
   );
   assert.strictEqual(
     invalid.state,
     pendingState,
-    "an illegal Mongol Charge target must not mutate or clear pending state"
+    "an illegal Mongol Charge target must not mutate or clear pending state",
   );
 
   const chosen = applyAction(
@@ -988,8 +921,8 @@ export function testGenghisMongolChargeMultipleTargetsCreatesChoiceAndResolves()
         type: "mongolChargeAllyAttackTarget",
         targetId: enemyB.id,
       },
-    } as any,
-    rng
+    },
+    rng,
   );
   assert.equal(chosen.state.pendingRoll?.kind, "attack_attackerRoll");
   assert.equal(chosen.state.pendingRoll?.context.attackerId, ally.id);
@@ -1006,7 +939,7 @@ export function testGenghisMongolChargeMultipleTargetsCreatesChoiceAndResolves()
   assert.equal(
     resolved.state.units[ally.id].isStealthed,
     false,
-    "a hidden affected ally should reveal through the normal attack-attempt pipeline"
+    "a hidden affected ally should reveal through the normal attack-attempt pipeline",
   );
   assert(
     resolved.events.some(
@@ -1046,12 +979,12 @@ export function testGenghisMongolChargeSkipsAlliesWithoutTargets() {
       type: "useAbility",
       unitId: genghis.id,
       abilityId: ABILITY_GENGHIS_KHAN_MONGOL_CHARGE,
-    } as any,
+    },
     rng
   );
   result = applyAction(
     result.state,
-    { type: "move", unitId: genghis.id, to: { col: 5, row: 1 } } as any,
+    { type: "move", unitId: genghis.id, to: { col: 5, row: 1 } },
     rng
   );
   assert.equal(result.state.pendingRoll, null);
@@ -1075,7 +1008,7 @@ export function testGenghisMongolChargeMultipleAlliesPauseInStableOrder() {
       (unit) => unit.owner === "P1" && unit.class === "spearman"
     )!;
     const secondAlly = Object.values(state.units).find(
-      (unit) => unit.owner === "P1" && unit.class === "knight"
+      (unit) => unit.owner === "P1" && unit.class === "knight",
     )!;
     const enemies = Object.values(state.units).filter((unit) => unit.owner === "P2");
     const [enemyA, enemyB, enemyC] = enemies;
@@ -1103,12 +1036,12 @@ export function testGenghisMongolChargeMultipleAlliesPauseInStableOrder() {
         type: "useAbility",
         unitId: genghis.id,
         abilityId: ABILITY_GENGHIS_KHAN_MONGOL_CHARGE,
-      } as any,
+      },
       rng
     );
     result = applyAction(
       result.state,
-      { type: "move", unitId: genghis.id, to: { col: 5, row: 1 } } as any,
+      { type: "move", unitId: genghis.id, to: { col: 5, row: 1 } },
       rng
     );
 
@@ -1135,13 +1068,13 @@ export function testGenghisMongolChargeMultipleAlliesPauseInStableOrder() {
           type: "mongolChargeAllyAttackTarget",
           targetId: selectedTarget,
         },
-      } as any,
-      rng
+      },
+      rng,
     );
     assert.deepStrictEqual(
       chosen.state.pendingCombatQueue?.map((entry) => entry.attackerId),
       [secondAlly.id, firstAlly.id],
-      "all affected allies should enter combat in deterministic unit-id order"
+      "all affected allies should enter combat in deterministic unit-id order",
     );
 
     const resolved = resolveAllPendingRollsWithEvents(chosen.state, rng);

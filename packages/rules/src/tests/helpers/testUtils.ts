@@ -1,3 +1,4 @@
+import type { ResolveRollChoice } from "../../model";
 import {
   createEmptyGame,
   createDefaultArmy,
@@ -162,83 +163,83 @@ export function applyAction(
   action: Parameters<typeof applyActionRaw>[1],
   rng: Parameters<typeof applyActionRaw>[2]
 ) {
-  return applyActionRaw(state, action as any, rng as any);
+  return applyActionRaw(state, action, rng);
 }
 
 
 export function resolvePendingRollOnce(
   state: GameState,
   rng: Parameters<typeof applyActionRaw>[2],
-  choice?: unknown
+  choice?: ResolveRollChoice,
 ) {
   if (!state.pendingRoll) {
-    return { state, events: [] as any[] };
+    return { state, events: [] as GameEvent[] };
   }
   const pending = state.pendingRoll;
   const firstOption = Array.isArray(pending.context?.options)
     ? pending.context.options[0]
     : undefined;
-  const resolvedChoice =
+  const resolvedChoice: ResolveRollChoice | undefined =
     choice !== undefined
       ? choice
       : pending.kind === "berserkerDefenseChoice" ||
-        pending.kind === "tricksterAoE_berserkerDefenseChoice" ||
-        pending.kind === "odinMuninnDefenseChoice" ||
-        pending.kind === "asgoreBraveryDefenseChoice" ||
-        pending.kind === "dora_berserkerDefenseChoice" ||
-        pending.kind === "jebeHailOfArrows_berserkerDefenseChoice" ||
-        pending.kind === "carpetStrike_berserkerDefenseChoice" ||
-        pending.kind === "vladForest_berserkerDefenseChoice"
-      ? "roll"
-      : pending.kind === "ruleDeclarationChoice"
-      ? { type: "chooseRuleDeclaration", ruleId: "moon_game" }
-      : pending.kind === "ruleDeclarationAdvantageThreshold"
-      ? { type: "ruleThreshold", threshold: 3 }
-      : pending.kind === "ruleDeclarationChessKingChoice" && typeof firstOption === "string"
-      ? { type: "ruleUnit", unitId: firstOption }
-      : (pending.kind === "courtEffectUnitChoice" ||
-          pending.kind === "moonCheeseHolesChoice" ||
-          pending.kind === "pureBloodRedirectChoice") &&
-        typeof firstOption === "string"
-      ? { type: "ruleUnit", unitId: firstOption }
-      : pending.kind === "courtEffectChargeChoice" && typeof firstOption === "string"
-      ? { type: "ruleCharge", abilityId: firstOption }
-      : pending.kind === "courtForcedAppearanceDestination" && firstOption
-      ? { type: "ruleCell", position: firstOption }
-      : pending.kind === "groznyTyrantOptionChoice" &&
-        (firstOption === "normal" || firstOption === "invadeTime")
-      ? {
-          type: "groznyTyrantOption",
-          mode: firstOption,
-        }
-      : pending.kind === "groznyTyrantAllyChoice" &&
-        typeof firstOption === "string"
-      ? {
-          type: "groznyTyrantAlly",
-          targetId: firstOption,
-        }
-      : pending.kind === "groznyTyrantAttackCellChoice" &&
-        firstOption &&
-        typeof firstOption === "object" &&
-        typeof (firstOption as { targetId?: unknown }).targetId === "string" &&
-        ((firstOption as { mode?: unknown }).mode === "normal" ||
-          (firstOption as { mode?: unknown }).mode === "invadeTime")
-      ? {
-          type: "groznyTyrantAttackCell",
-          mode: (firstOption as { mode: "normal" | "invadeTime" }).mode,
-          targetId: (firstOption as { targetId: string }).targetId,
-          position: (firstOption as { position: Coord }).position,
-        }
-      : pending.kind === "gutsBerserkAttackChoice" &&
-        typeof (pending.context as { targetId?: unknown }).targetId === "string"
-      ? {
-          type: "gutsBerserkAttackMode",
-          mode: "single",
-          targetId: (pending.context as { targetId: string }).targetId,
-        }
-      : pending.kind === "papyrusBoneChoice"
-      ? { type: "papyrusBoneChoice", boneType: "blue" }
-      : undefined;
+          pending.kind === "tricksterAoE_berserkerDefenseChoice" ||
+          pending.kind === "odinMuninnDefenseChoice" ||
+          pending.kind === "asgoreBraveryDefenseChoice" ||
+          pending.kind === "dora_berserkerDefenseChoice" ||
+          pending.kind === "jebeHailOfArrows_berserkerDefenseChoice" ||
+          pending.kind === "carpetStrike_berserkerDefenseChoice" ||
+          pending.kind === "vladForest_berserkerDefenseChoice"
+        ? "roll"
+        : pending.kind === "ruleDeclarationChoice"
+          ? { type: "chooseRuleDeclaration", ruleId: "moon_game" }
+          : pending.kind === "ruleDeclarationAdvantageThreshold"
+            ? { type: "ruleThreshold", threshold: 3 }
+            : pending.kind === "ruleDeclarationChessKingChoice" && typeof firstOption === "string"
+              ? { type: "ruleUnit", unitId: firstOption }
+              : (pending.kind === "courtEffectUnitChoice" ||
+                    pending.kind === "moonCheeseHolesChoice" ||
+                    pending.kind === "pureBloodRedirectChoice") &&
+                  typeof firstOption === "string"
+                ? { type: "ruleUnit", unitId: firstOption }
+                : pending.kind === "courtEffectChargeChoice" && typeof firstOption === "string"
+                  ? { type: "ruleCharge", abilityId: firstOption }
+                  : pending.kind === "courtForcedAppearanceDestination" && firstOption
+                    ? { type: "ruleCell", position: firstOption as Coord }
+                    : pending.kind === "groznyTyrantOptionChoice" &&
+                        (firstOption === "normal" || firstOption === "invadeTime")
+                      ? {
+                          type: "groznyTyrantOption",
+                          mode: firstOption,
+                        }
+                      : pending.kind === "groznyTyrantAllyChoice" && typeof firstOption === "string"
+                        ? {
+                            type: "groznyTyrantAlly",
+                            targetId: firstOption,
+                          }
+                        : pending.kind === "groznyTyrantAttackCellChoice" &&
+                            firstOption &&
+                            typeof firstOption === "object" &&
+                            typeof (firstOption as { targetId?: unknown }).targetId === "string" &&
+                            ((firstOption as { mode?: unknown }).mode === "normal" ||
+                              (firstOption as { mode?: unknown }).mode === "invadeTime")
+                          ? {
+                              type: "groznyTyrantAttackCell",
+                              mode: (firstOption as { mode: "normal" | "invadeTime" }).mode,
+                              targetId: (firstOption as { targetId: string }).targetId,
+                              position: (firstOption as { position: Coord }).position,
+                            }
+                          : pending.kind === "gutsBerserkAttackChoice" &&
+                              typeof (pending.context as { targetId?: unknown }).targetId ===
+                                "string"
+                            ? {
+                                type: "gutsBerserkAttackMode",
+                                mode: "single",
+                                targetId: (pending.context as { targetId: string }).targetId,
+                              }
+                            : pending.kind === "papyrusBoneChoice"
+                              ? { type: "papyrusBoneChoice", boneType: "blue" }
+                              : undefined;
   return applyActionRaw(
     state,
     {
@@ -246,8 +247,8 @@ export function resolvePendingRollOnce(
       pendingRollId: pending.id,
       choice: resolvedChoice,
       player: pending.player,
-    } as any,
-    rng as any
+    },
+    rng,
   );
 }
 
@@ -255,9 +256,9 @@ export function resolvePendingRollOnce(
 export function resolveAllPendingRolls(
   state: GameState,
   rng: Parameters<typeof applyActionRaw>[2],
-  choice?: unknown
+  choice?: ResolveRollChoice
 ) {
-  let result = { state, events: [] as any[] };
+  let result = { state, events: [] as GameEvent[] };
   while (result.state.pendingRoll) {
     result = resolvePendingRollOnce(result.state, rng, choice);
   }
@@ -268,17 +269,16 @@ export function resolveAllPendingRolls(
 export function resolveAllPendingRollsWithEvents(
   state: GameState,
   rng: Parameters<typeof applyActionRaw>[2],
-  choice?: unknown
+  choice?: ResolveRollChoice,
 ) {
-  let current = { state, events: [] as any[] };
-  const events: any[] = [];
+  let current = { state, events: [] as GameEvent[] };
+  const events: GameEvent[] = [];
   while (current.state.pendingRoll) {
     current = resolvePendingRollOnce(current.state, rng, choice);
     events.push(...current.events);
   }
   return { state: current.state, events };
 }
-
 
 export function coordKeys(coords: { col: number; row: number }[]): string[] {
   return coords.map((c) => `${c.col},${c.row}`).sort();
@@ -655,7 +655,7 @@ export function startAsgoreSoulParadeTurn(state: GameState, asgoreId: string) {
   });
   return applyAction(
     prepared,
-    { type: "unitStartTurn", unitId: asgoreId } as any,
+    { type: "unitStartTurn", unitId: asgoreId },
     makeRngSequence([])
   );
 }
@@ -683,7 +683,7 @@ export function setupRiverPersonState() {
   state = attachArmy(state, createDefaultArmy("P2"));
 
   const river = Object.values(state.units).find(
-    (unit) => unit.owner === "P1" && unit.heroId === HERO_RIVER_PERSON_ID
+    (unit) => unit.owner === "P1" && unit.heroId === HERO_RIVER_PERSON_ID,
   )!;
 
   return { state, river };
@@ -708,7 +708,7 @@ export function setupLokiState() {
 
 export function resolvePendingWithChoice(
   state: GameState,
-  choice: any,
+  choice: ResolveRollChoice,
   rng: Parameters<typeof applyActionRaw>[2]
 ) {
   const pending = state.pendingRoll;
@@ -720,8 +720,8 @@ export function resolvePendingWithChoice(
       pendingRollId: pending.id,
       player: pending.player,
       choice,
-    } as any,
-    rng
+    },
+    rng,
   );
 }
 
@@ -750,14 +750,12 @@ export function setupGroznyTyrantState() {
   state = attachArmy(state, a2);
 
   const grozny = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.class === "berserker"
+    (u) => u.owner === "P1" && u.class === "berserker",
   )!;
   const commander = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.class === "spearman"
+    (u) => u.owner === "P1" && u.class === "spearman",
   )!;
-  const ally = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.class === "archer"
-  )!;
+  const ally = Object.values(state.units).find((u) => u.owner === "P1" && u.class === "archer")!;
 
   return { state, grozny, commander, ally };
 }

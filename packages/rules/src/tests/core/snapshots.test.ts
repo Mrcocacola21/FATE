@@ -1,3 +1,4 @@
+import type { GameEvent } from "../../model";
 import {
   applyAction,
   assert,
@@ -41,29 +42,27 @@ export function testGoldenSnapshotAoeWithIntimidateChain() {
   state = toBattleState(state, "P1", trickster.id);
   state = initKnowledgeForOwners(state);
 
-  const events: any[] = [];
+  const events: GameEvent[] = [];
   let res = applyAction(
     state,
     {
       type: "useAbility",
       unitId: trickster.id,
       abilityId: "tricksterAoE",
-    } as any,
-    rng as any
+    },
+    rng,
   );
   events.push(...res.events);
 
-  let intimidatePending:
-    | { kind: string; player: PlayerId; resumeIndex: number | null }
-    | null = null;
+  let intimidatePending: { kind: string; player: PlayerId; resumeIndex: number | null } | null =
+    null;
   let currentState = res.state;
 
   while (currentState.pendingRoll) {
-    if (
-      currentState.pendingRoll.kind === "vladIntimidateChoice" &&
-      !intimidatePending
-    ) {
-      const ctx = currentState.pendingRoll.context as any;
+    if (currentState.pendingRoll.kind === "vladIntimidateChoice" && !intimidatePending) {
+      const ctx = currentState.pendingRoll.context as {
+        resume?: { context?: { currentTargetIndex?: number } };
+      };
       intimidatePending = {
         kind: currentState.pendingRoll.kind,
         player: currentState.pendingRoll.player,
@@ -71,13 +70,14 @@ export function testGoldenSnapshotAoeWithIntimidateChain() {
       };
     }
 
-    res = resolvePendingRollOnce(currentState, rng as any);
+    res = resolvePendingRollOnce(currentState, rng);
     events.push(...res.events);
     currentState = res.state;
   }
 
   const defenderRolls = events.filter(
-    (e) => e.type === "rollRequested" && e.kind === "tricksterAoE_defenderRoll"
+    (e): e is Extract<GameEvent, { type: "rollRequested" }> =>
+      e.type === "rollRequested" && e.kind === "tricksterAoE_defenderRoll",
   );
   const defenderCounts = new Map<string, number>();
   for (const evt of defenderRolls) {
@@ -107,97 +107,99 @@ export function testGoldenSnapshotAoeWithIntimidateChain() {
     isChainComplete: false,
   };
   const expected = {
-    events: ([
-      {
-        type: "abilityUsed",
-        unitId: "P1-trickster-3",
-        abilityId: "tricksterAoE",
-      },
-      {
-        type: "rollRequested",
-        rollId: "roll-1",
-        kind: "tricksterAoE_attackerRoll",
-        player: "P1",
-        actorUnitId: "P1-trickster-3",
-      },
-      {
-        type: "rollRequested",
-        rollId: "roll-2",
-        kind: "tricksterAoE_defenderRoll",
-        player: "P2",
-        actorUnitId: "P2-rider-1",
-      },
-      {
-        type: "attackResolved",
-        attackerId: "P1-trickster-3",
-        defenderId: "P2-rider-1",
-        attackerRoll: { dice: [1, 1], sum: 2, isDouble: true },
-        defenderRoll: { dice: [6, 6], sum: 12, isDouble: true },
-        hit: false,
-        damage: 0,
-        defenderHpAfter: 6,
-        previousHp: 6,
-        nextHp: 6,
-        maxHp: 6,
-        tieBreakDice: undefined,
-      },
-      {
-        type: "rollRequested",
-        rollId: "roll-3",
-        kind: "tricksterAoE_defenderRoll",
-        player: "P2",
-        actorUnitId: "P2-spearman-2",
-      },
-      {
-        type: "attackResolved",
-        attackerId: "P1-trickster-3",
-        defenderId: "P2-spearman-2",
-        attackerRoll: { dice: [1, 1], sum: 2, isDouble: true },
-        defenderRoll: { dice: [4, 4], sum: 8, isDouble: true },
-        attackerRollIsNew: false,
-        hit: false,
-        damage: 0,
-        defenderHpAfter: 7,
-        previousHp: 7,
-        nextHp: 7,
-        maxHp: 7,
-        tieBreakDice: undefined,
-      },
-      {
-        type: "intimidateTriggered",
-        defenderId: "P2-spearman-2",
-        attackerId: "P1-trickster-3",
-        options: [
-          { col: 5, row: 4 },
-          { col: 3, row: 4 },
-          { col: 4, row: 5 },
-          { col: 4, row: 3 },
-          { col: 5, row: 5 },
-          { col: 5, row: 3 },
-          { col: 3, row: 5 },
-          { col: 3, row: 3 },
-        ],
-      },
-      {
-        type: "rollRequested",
-        rollId: "roll-4",
-        kind: "vladIntimidateChoice",
-        player: "P2",
-        actorUnitId: "P2-spearman-2",
-      },
-      {
-        type: "aoeResolved",
-        sourceUnitId: "P1-trickster-3",
-        abilityId: "tricksterAoE",
-        casterId: "P1-trickster-3",
-        center: { col: 4, row: 4 },
-        radius: 2,
-        affectedUnitIds: ["P2-rider-1", "P2-spearman-2"],
-        revealedUnitIds: [],
-        damagedUnitIds: [],
-        damageByUnitId: {},
-      },
-    ] as any[])
+    events: (
+      [
+        {
+          type: "abilityUsed",
+          unitId: "P1-trickster-3",
+          abilityId: "tricksterAoE",
+        },
+        {
+          type: "rollRequested",
+          rollId: "roll-1",
+          kind: "tricksterAoE_attackerRoll",
+          player: "P1",
+          actorUnitId: "P1-trickster-3",
+        },
+        {
+          type: "rollRequested",
+          rollId: "roll-2",
+          kind: "tricksterAoE_defenderRoll",
+          player: "P2",
+          actorUnitId: "P2-rider-1",
+        },
+        {
+          type: "attackResolved",
+          attackerId: "P1-trickster-3",
+          defenderId: "P2-rider-1",
+          attackerRoll: { dice: [1, 1], sum: 2, isDouble: true },
+          defenderRoll: { dice: [6, 6], sum: 12, isDouble: true },
+          hit: false,
+          damage: 0,
+          defenderHpAfter: 6,
+          previousHp: 6,
+          nextHp: 6,
+          maxHp: 6,
+          tieBreakDice: undefined,
+        },
+        {
+          type: "rollRequested",
+          rollId: "roll-3",
+          kind: "tricksterAoE_defenderRoll",
+          player: "P2",
+          actorUnitId: "P2-spearman-2",
+        },
+        {
+          type: "attackResolved",
+          attackerId: "P1-trickster-3",
+          defenderId: "P2-spearman-2",
+          attackerRoll: { dice: [1, 1], sum: 2, isDouble: true },
+          defenderRoll: { dice: [4, 4], sum: 8, isDouble: true },
+          attackerRollIsNew: false,
+          hit: false,
+          damage: 0,
+          defenderHpAfter: 7,
+          previousHp: 7,
+          nextHp: 7,
+          maxHp: 7,
+          tieBreakDice: undefined,
+        },
+        {
+          type: "intimidateTriggered",
+          defenderId: "P2-spearman-2",
+          attackerId: "P1-trickster-3",
+          options: [
+            { col: 5, row: 4 },
+            { col: 3, row: 4 },
+            { col: 4, row: 5 },
+            { col: 4, row: 3 },
+            { col: 5, row: 5 },
+            { col: 5, row: 3 },
+            { col: 3, row: 5 },
+            { col: 3, row: 3 },
+          ],
+        },
+        {
+          type: "rollRequested",
+          rollId: "roll-4",
+          kind: "vladIntimidateChoice",
+          player: "P2",
+          actorUnitId: "P2-spearman-2",
+        },
+        {
+          type: "aoeResolved",
+          sourceUnitId: "P1-trickster-3",
+          abilityId: "tricksterAoE",
+          casterId: "P1-trickster-3",
+          center: { col: 4, row: 4 },
+          radius: 2,
+          affectedUnitIds: ["P2-rider-1", "P2-spearman-2"],
+          revealedUnitIds: [],
+          damagedUnitIds: [],
+          damageByUnitId: {},
+        },
+      ] as GameEvent[]
+    )
       .map((event) => ({ ...event, ...expectedChainMetadata }))
       .concat({
         type: "combatVisualBatchReady",
@@ -226,28 +228,20 @@ export function testGoldenSnapshotPendingRollSequence() {
     createDefaultArmy("P1", { spearman: HERO_VLAD_TEPES_ID })
   );
   state = attachArmy(state, createDefaultArmy("P2"));
-  state = applyAction(state, { type: "lobbyInit", host: "P1" } as any, rng)
+  state = applyAction(state, { type: "lobbyInit", host: "P1" }, rng)
     .state;
   state = { ...state, seats: { P1: true, P2: true } };
-  state = applyAction(
-    state,
-    { type: "setReady", player: "P1", ready: true } as any,
-    rng
-  ).state;
-  state = applyAction(
-    state,
-    { type: "setReady", player: "P2", ready: true } as any,
-    rng
-  ).state;
+  state = applyAction(state, { type: "setReady", player: "P1", ready: true }, rng).state;
+  state = applyAction(state, { type: "setReady", player: "P2", ready: true }, rng).state;
 
-  const events: any[] = [];
-  let res = applyAction(state, { type: "startGame" } as any, rng as any);
+  const events: GameEvent[] = [];
+  let res = applyAction(state, { type: "startGame" }, rng);
   events.push(...res.events);
-  res = resolvePendingRollOnce(res.state, rng as any);
+  res = resolvePendingRollOnce(res.state, rng);
   events.push(...res.events);
-  res = resolvePendingRollOnce(res.state, rng as any);
+  res = resolvePendingRollOnce(res.state, rng);
   events.push(...res.events);
-  res = resolvePendingRollOnce(res.state, rng as any, {
+  res = resolvePendingRollOnce(res.state, rng, {
     type: "chooseRuleDeclaration",
     ruleId: "moon_game",
   });
@@ -288,8 +282,8 @@ export function testGoldenSnapshotPendingRollSequence() {
   const lastPos = p1Positions[prePlacedP1.length];
   res = applyAction(
     state,
-    { type: "placeUnit", unitId: lastUnit.id, position: lastPos } as any,
-    rng as any
+    { type: "placeUnit", unitId: lastUnit.id, position: lastPos },
+    rng
   );
   events.push(...res.events);
 
@@ -297,7 +291,7 @@ export function testGoldenSnapshotPendingRollSequence() {
   assert(pending && pending.kind === "vladPlaceStakes", "vlad stakes pending");
   const pendingSnapshot = { kind: pending.kind, player: pending.player };
 
-  const legalPositions = (pending.context as any).legalPositions as Coord[] | undefined;
+  const legalPositions = pending.context.legalPositions as Coord[] | undefined;
   const positions =
     legalPositions && legalPositions.length >= 3
       ? legalPositions.slice(0, 3)
@@ -314,8 +308,8 @@ export function testGoldenSnapshotPendingRollSequence() {
       pendingRollId: pending.id,
       player: pending.player,
       choice: { type: "placeStakes", positions },
-    } as any,
-    rng as any
+    },
+    rng,
   );
   events.push(...res.events);
 
@@ -486,8 +480,8 @@ export function testGoldenActionSnapshot() {
 
   const attackRes = applyAction(
     state,
-    { type: "attack", attackerId: attacker.id, defenderId: defender.id } as any,
-    rng
+    { type: "attack", attackerId: attacker.id, defenderId: defender.id },
+    rng,
   );
   const resolved = resolveAllPendingRollsWithEvents(attackRes.state, rng);
   const events = [...attackRes.events, ...resolved.events];

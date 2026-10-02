@@ -8,7 +8,23 @@ import {
 import { PAPYRUS_ID } from "../../../rulesHints";
 import { useEffect, useState } from "react";
 
-export function useGameShellBoardUi(params: any) {
+export function useGameShellBoardUi(
+  params: Omit<CellClickContext, "zoroAttackTargetIds" | "setZoroAttackTargetIds"> &
+    Omit<Parameters<typeof createCellHoverHandler>[0], "isArtemidaMoonInsightChoice"> &
+    Pick<
+      ReturnType<typeof import("./useGameShellCoreState").useGameShellCoreState>,
+      | "artemidaPreviewTarget"
+      | "selectedUnit"
+      | "doraPreviewCenter"
+      | "mettatonPoppinsPreviewCenter"
+      | "mettatonLaserPreviewTarget"
+      | "sansGasterBlasterPreviewTarget"
+      | "undyneEnergySpearPreviewTarget"
+      | "jebeHailPreviewCenter"
+      | "kaladinFifthPreviewCenter"
+      | "forestPreviewCenter"
+    >,
+) {
   const {
     view,
     playerId,
@@ -137,7 +153,7 @@ export function useGameShellBoardUi(params: any) {
     if (actionMode !== "duolingoPush" && actionMode !== "zoroOniGiri") {
       setNewHeroAbilityTargetId(null);
     }
-  }, [actionMode, selectedUnitId]);
+  }, [actionMode, selectedUnitId, setNewHeroAbilityTargetId]);
   const isArtemidaMoonInsightChoice = !!(
     isChargedImpulseTargetChoice &&
     (pendingRoll?.context as { abilityId?: unknown } | undefined)?.abilityId ===

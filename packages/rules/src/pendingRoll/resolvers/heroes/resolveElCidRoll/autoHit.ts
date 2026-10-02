@@ -12,22 +12,20 @@ import {
 export function resolveElCidAoEAutoHit(
   state: GameState,
   context: ElCidAoEContext,
-  events: GameEvent[]
+  events: GameEvent[],
 ): ApplyResult {
   const baseState = clearPendingRoll(state);
   const targets = Array.isArray(context.targetsQueue)
     ? Array.from(new Set(context.targetsQueue))
     : [];
   const resolvedTargetIds = new Set(
-    Array.isArray(context.resolvedTargetIds) ? context.resolvedTargetIds : []
+    Array.isArray(context.resolvedTargetIds) ? context.resolvedTargetIds : [],
   );
   let idx = context.currentTargetIndex ?? 0;
   let workingState = baseState;
-  let updatedEvents = [...events];
+  const updatedEvents = [...events];
 
-  const attackerDice = Array.isArray(context.attackerDice)
-    ? context.attackerDice
-    : [];
+  const attackerDice = Array.isArray(context.attackerDice) ? context.attackerDice : [];
 
   while (idx < targets.length) {
     const targetId = targets[idx];
@@ -59,12 +57,7 @@ export function resolveElCidAoEAutoHit(
       },
     });
 
-    workingState = updatePendingAoEFromAttack(
-      nextState,
-      attackEvents,
-      context.casterId,
-      targetId
-    );
+    workingState = updatePendingAoEFromAttack(nextState, attackEvents, context.casterId, targetId);
     updatedEvents.push(...attackEvents);
 
     const damageEvent = maybeBuildPolkovodetsDamageEvent(
@@ -72,7 +65,7 @@ export function resolveElCidAoEAutoHit(
       context.casterId,
       targetId,
       damageBonus,
-      sourceId
+      sourceId,
     );
     if (damageEvent) {
       updatedEvents.push(damageEvent);

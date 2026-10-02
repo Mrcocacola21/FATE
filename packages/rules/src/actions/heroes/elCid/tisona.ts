@@ -1,11 +1,14 @@
-import type { ApplyResult, Coord, GameAction, GameEvent, GameState, UnitState } from "../../../model";
+import type {
+  ApplyResult,
+  Coord,
+  GameAction,
+  GameEvent,
+  GameState,
+  UnitState,
+} from "../../../model";
 import { isInsideBoard } from "../../../model";
 import type { RNG } from "../../../rng";
-import {
-  ABILITY_EL_SID_COMPEADOR_TISONA,
-  getAbilitySpec,
-  spendCharges,
-} from "../../../abilities";
+import { ABILITY_EL_SID_COMPEADOR_TISONA, getAbilitySpec, spendCharges } from "../../../abilities";
 import { canSpendSlots, spendSlots } from "../../../turnEconomy";
 import { requestRoll, evAbilityUsed, evAoeResolved } from "../../../core";
 import { isElCid } from "../../shared";
@@ -20,7 +23,7 @@ export function applyElCidTisona(
   state: GameState,
   unit: UnitState,
   action: Extract<GameAction, { type: "useAbility" }>,
-  rng: RNG
+  _rng: RNG,
 ): ApplyResult {
   if (!isElCid(unit)) {
     return { state, events: [] };
@@ -55,7 +58,7 @@ export function applyElCidTisona(
   }
 
   const updatedUnit = spendSlots(spent.unit, costs);
-  let nextState: GameState = {
+  const nextState: GameState = {
     ...state,
     pendingMove: null,
     units: {
@@ -64,13 +67,9 @@ export function applyElCidTisona(
     },
   };
 
-  const events: GameEvent[] = [
-    evAbilityUsed({ unitId: updatedUnit.id, abilityId: spec.id }),
-  ];
+  const events: GameEvent[] = [evAbilityUsed({ unitId: updatedUnit.id, abilityId: spec.id })];
 
-  const affectedUnitIds = Array.from(
-    new Set(collectLineTargets(nextState, updatedUnit, target))
-  );
+  const affectedUnitIds = Array.from(new Set(collectLineTargets(nextState, updatedUnit, target)));
   const revealedUnitIds: string[] = [];
 
   if (affectedUnitIds.length === 0) {
@@ -85,7 +84,7 @@ export function applyElCidTisona(
         revealedUnitIds,
         damagedUnitIds: [],
         damageByUnitId: {},
-      })
+      }),
     );
     return { state: nextState, events };
   }
@@ -116,7 +115,7 @@ export function applyElCidTisona(
     updatedUnit.owner,
     "elCidTisona_attackerRoll",
     ctx,
-    updatedUnit.id
+    updatedUnit.id,
   );
 
   return { state: requested.state, events: [...events, ...requested.events] };

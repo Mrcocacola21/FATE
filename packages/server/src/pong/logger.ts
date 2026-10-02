@@ -7,7 +7,9 @@ function timestamp() {
 }
 
 // logPong uses an injected Fastify logger so logs are merged with server logs
-export function logPong(logger: FastifyBaseLogger, obj: Record<string, any>) {
+export type PongLogger = Pick<FastifyBaseLogger, "info" | "debug" | "error">;
+
+export function logPong(logger: PongLogger, obj: Record<string, unknown>) {
   const payload = { tag: obj.tag, ts: timestamp(), ...obj };
   try {
     // route by tag
@@ -18,7 +20,7 @@ export function logPong(logger: FastifyBaseLogger, obj: Record<string, any>) {
     }
     if (obj.tag === "pong:error") {
       // include err if present
-      const err = (obj as any).err;
+      const err = obj.err;
       if (err) {
         logger.error({ ...payload, err });
       } else {

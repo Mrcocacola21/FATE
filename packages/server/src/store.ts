@@ -96,10 +96,7 @@ export function getMaxLogEvents(): number {
   return readPositiveIntEnv("MAX_LOG_EVENTS", 5000);
 }
 
-function isExplicitlyAcceptedNoop(
-  action: GameAction,
-  previousState: GameState
-): boolean {
+function isExplicitlyAcceptedNoop(action: GameAction, previousState: GameState): boolean {
   // Explicitly allow known idempotent commands so they are not misclassified as
   // rejections when they intentionally produce no state delta and no events.
   switch (action.type) {
@@ -117,10 +114,7 @@ function nextSeed(): number {
   return Math.floor(Math.random() * 1_000_000_000) + 1;
 }
 
-export function createGameRoomWithId(
-  id: string,
-  options: CreateGameOptions = {}
-): GameRoom {
+export function createGameRoomWithId(id: string, options: CreateGameOptions = {}): GameRoom {
   const seed = options.seed ?? nextSeed();
   const rng = new SeededRNG(seed);
   const roomMode = options.roomMode ?? "normal";
@@ -128,8 +122,7 @@ export function createGameRoomWithId(
   const hostSeat: PlayerId = options.hostSeat ?? "P1";
   const hostConnId = options.hostConnId ?? null;
 
-  let state =
-    roomMode === "test" ? createDebugSandboxState() : createEmptyGame();
+  let state = roomMode === "test" ? createDebugSandboxState() : createEmptyGame();
   if (roomMode === "normal") {
     state = attachArmy(state, createDefaultArmy("P1"));
     state = attachArmy(state, createDefaultArmy("P2"));
@@ -164,9 +157,7 @@ export function createGameRoomWithId(
       ...state,
       seats: { ...state.seats, [hostSeat]: true },
       playersReady:
-        roomMode === "test"
-          ? state.playersReady
-          : { ...state.playersReady, [hostSeat]: false },
+        roomMode === "test" ? state.playersReady : { ...state.playersReady, [hostSeat]: false },
     };
   }
 
@@ -175,8 +166,7 @@ export function createGameRoomWithId(
     id,
     matchId: null,
     seed,
-    rng:
-      roomMode === "test" ? new DebugDiceRNG(rng) : rng,
+    rng: roomMode === "test" ? new DebugDiceRNG(rng) : rng,
     testDiceRng: null,
     roomMode,
     gameMode,
@@ -223,10 +213,7 @@ export function deleteGameRoom(id: string): boolean {
   return games.delete(id);
 }
 
-export function getOrCreateGameRoom(
-  id: string,
-  options: CreateGameOptions = {}
-): GameRoom {
+export function getOrCreateGameRoom(id: string, options: CreateGameOptions = {}): GameRoom {
   const existing = games.get(id);
   if (existing) return existing;
   return createGameRoomWithId(id, options);
@@ -243,7 +230,7 @@ export function cleanupGameRooms(
     maxRooms?: number;
     activeRoomIds?: Set<string>;
     onRemoved?: (room: GameRoom) => void;
-  } = {}
+  } = {},
 ): string[] {
   const now = options.now ?? Date.now();
   const roomTtlMs = options.roomTtlMs ?? getRoomTtlMs();
@@ -306,16 +293,31 @@ export function listRoomSummaries(): RoomSummary[] {
   });
 }
 
+type AuthenticatedGameAction =
+  | Exclude<GameAction, { type: "resolvePendingRoll" }>
+  | (Omit<Extract<GameAction, { type: "resolvePendingRoll" }>, "player"> & { player?: PlayerId });
+
 export function applyGameAction(
   room: GameRoom,
   action: GameAction,
-  playerId?: PlayerId
+  playerId?: PlayerId,
+): CommandResult;
+// At the server boundary, the authenticated player supplies an omitted roll player.
+export function applyGameAction(
+  room: GameRoom,
+  action: AuthenticatedGameAction,
+  playerId: PlayerId,
+): CommandResult;
+export function applyGameAction(
+  room: GameRoom,
+  action: AuthenticatedGameAction,
+  playerId?: PlayerId,
 ): CommandResult {
   const previousState = room.state;
   const authoritativeAction: GameAction =
     action.type === "resolvePendingRoll" && playerId
       ? { ...action, player: playerId }
-      : action;
+      : (action as GameAction);
   const diceQueueBefore = room.testDiceRng?.getQueue() ?? [];
   const result = applyAction(previousState, authoritativeAction, room.rng);
   const diceQueueAfter = room.testDiceRng?.getQueue() ?? [];
@@ -342,9 +344,7 @@ export function applyGameAction(
 
   const nextRevision = room.revision + 1;
   room.state =
-    previousState.phase !== "ended" &&
-    result.state.phase === "ended" &&
-    result.state.gameOver
+    previousState.phase !== "ended" && result.state.phase === "ended" && result.state.gameOver
       ? {
           ...result.state,
           gameOver: {
@@ -361,8 +361,7 @@ export function applyGameAction(
     action: authoritativeAction,
     events: result.events,
     revision: room.revision,
-    debugDiceConsumed:
-      debugDiceConsumed.length > 0 ? debugDiceConsumed : undefined,
+    debugDiceConsumed: debugDiceConsumed.length > 0 ? debugDiceConsumed : undefined,
   });
   const maxLogEvents = getMaxLogEvents();
   if (room.actionLog.length > maxLogEvents) {

@@ -1,13 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import type {
-  AbilityView,
-  Coord,
-  PlayerId,
-  PlayerView,
-  UnitClass,
-  UnitState,
-} from "rules";
+import type { AbilityView, Coord, PlayerId, PlayerView, UnitState } from "rules";
 import {
   ASGORE_FIRE_PARADE_ID,
   ARTEMIS_MOON_INSIGHT_ID,
@@ -20,7 +13,6 @@ import {
   GENGHIS_KHAN_KHANS_DECREE_ID,
   GUTS_ARBALET_ID,
   GUTS_CANNON_ID,
-  HASSAN_TRUE_ENEMY_ID,
   JACK_SNARES_ID,
   LECHY_GUIDE_TRAVELER_ID,
   LUCHE_DIVINE_RAY_ID,
@@ -1182,16 +1174,13 @@ test("new hero previews expose targets, lines, areas, and trap placement without
   const hiddenEnemy = unit({ id: "hidden", owner: "P2", position: { col: 4, row: 7 }, isStealthed: true });
   const view = makeView([source, visibleEnemy]);
   view.abilitiesByUnitId[source.id] = [
-    {
-      id: DUOLINGO_PUSH_NOTIFICATION_ID,
-      targeting: {
+    ability({id: DUOLINGO_PUSH_NOTIFICATION_ID,
+targeting: {
         targetIds: [visibleEnemy.id],
         destinationsByTargetId: { [visibleEnemy.id]: [{ col: 7, row: 4 }] },
-      },
-    } as any,
-    {
-      id: LUCHE_DIVINE_RAY_ID,
-      targeting: {
+      }}),
+    ability({id: LUCHE_DIVINE_RAY_ID,
+targeting: {
         cells: [{ col: 5, row: 4 }, { col: 6, row: 4 }, { col: 7, row: 4 }],
         modes: {
           line: {
@@ -1210,24 +1199,30 @@ test("new hero previews expose targets, lines, areas, and trap placement without
             ],
           },
         },
-      },
-    } as any,
-    {
-      id: ZORO_ONI_GIRI_ID,
-      targeting: {
+      }}),
+    ability({id: ZORO_ONI_GIRI_ID,
+targeting: {
         targetIds: [visibleEnemy.id],
         destinationsByTargetId: { [visibleEnemy.id]: [{ col: 5, row: 4 }, { col: 7, row: 4 }] },
-      },
-    } as any,
-    {
-      id: DON_WINDMILLS_ID,
-      targeting: { targetIds: [visibleEnemy.id] },
-    } as any,
+      }}),
+    ability({id: DON_WINDMILLS_ID,
+targeting: { targetIds: [visibleEnemy.id] }}),
   ];
 
-  const push = buildAbilityPreview({ gameView: view, viewerPlayerId: "P1", sourceUnitId: source.id, abilityId: DUOLINGO_PUSH_NOTIFICATION_ID });
+  const push = buildAbilityPreview({
+    gameView: view,
+    viewerPlayerId: "P1",
+    sourceUnitId: source.id,
+    abilityId: DUOLINGO_PUSH_NOTIFICATION_ID,
+  });
   assert.deepEqual(validTargetIds(push), [visibleEnemy.id]);
-  const pushDestinations = buildAbilityPreview({ gameView: view, viewerPlayerId: "P1", sourceUnitId: source.id, abilityId: DUOLINGO_PUSH_NOTIFICATION_ID, selectedTargetId: visibleEnemy.id });
+  const pushDestinations = buildAbilityPreview({
+    gameView: view,
+    viewerPlayerId: "P1",
+    sourceUnitId: source.id,
+    abilityId: DUOLINGO_PUSH_NOTIFICATION_ID,
+    selectedTargetId: visibleEnemy.id,
+  });
   assert.equal(hasKind(pushDestinations, { col: 7, row: 4 }, "validMove"), true);
 
   const ray = buildAbilityPreview({ gameView: view, viewerPlayerId: "P1", sourceUnitId: source.id, abilityId: LUCHE_DIVINE_RAY_ID, targetingCell: { col: 7, row: 4 } });
@@ -1373,10 +1368,8 @@ test("Windmills preview uses authoritative orthogonal and diagonal unit targets"
     position: { col: 6, row: 5 },
   });
   const view = makeView([don, ...targets, invalidEnemy]);
-  view.abilitiesByUnitId[don.id] = [{
-    id: DON_WINDMILLS_ID,
-    targeting: { targetIds: targets.map((target) => target.id) },
-  } as any];
+  view.abilitiesByUnitId[don.id] = [ability({id: DON_WINDMILLS_ID,
+targeting: { targetIds: targets.map((target) => target.id) }})];
 
   const preview = buildAbilityPreview({
     gameView: view,
@@ -1412,16 +1405,14 @@ test("Oni Giri draws attack beams only to authoritative legal targets", () => {
   const diagonalEnemy = unit({ id: "diagonal-enemy", owner: "P2", position: { col: 1, row: 7 } });
   const illegalEnemy = unit({ id: "illegal-enemy", owner: "P2", position: { col: 6, row: 5 } });
   const view = makeView([source, rowEnemy, diagonalEnemy, illegalEnemy]);
-  view.abilitiesByUnitId[source.id] = [{
-    id: ZORO_ONI_GIRI_ID,
-    targeting: {
+  view.abilitiesByUnitId[source.id] = [ability({id: ZORO_ONI_GIRI_ID,
+targeting: {
       targetIds: [rowEnemy.id, diagonalEnemy.id],
       destinationsByTargetId: {
         [rowEnemy.id]: [{ col: 6, row: 4 }],
         [diagonalEnemy.id]: [{ col: 2, row: 6 }],
       },
-    },
-  } as any];
+    }})];
 
   assert.deepEqual(
     getOniGiriPreviewLines(view, source.id).map((line) => line.to),
@@ -1527,26 +1518,34 @@ test("charged Light Ray previews line and Around Self from the same projected mo
       },
     } as PlayerView["pendingRoll"],
   });
-  view.abilitiesByUnitId[luche.id] = [{
-    id: LUCHE_DIVINE_RAY_ID,
-    targeting: {
-      modes: {
-        line: { cells: [{ col: 5, row: 4 }, { col: 6, row: 4 }, { col: 7, row: 4 }] },
-        aroundSelf: {
-          cells: [
-            { col: 3, row: 3 },
-            { col: 3, row: 4 },
-            { col: 3, row: 5 },
-            { col: 4, row: 3 },
-            { col: 4, row: 5 },
-            { col: 5, row: 3 },
-            { col: 5, row: 4 },
-            { col: 5, row: 5 },
-          ],
+  view.abilitiesByUnitId[luche.id] = [
+    ability({
+      id: LUCHE_DIVINE_RAY_ID,
+      targeting: {
+        modes: {
+          line: {
+            cells: [
+              { col: 5, row: 4 },
+              { col: 6, row: 4 },
+              { col: 7, row: 4 },
+            ],
+          },
+          aroundSelf: {
+            cells: [
+              { col: 3, row: 3 },
+              { col: 3, row: 4 },
+              { col: 3, row: 5 },
+              { col: 4, row: 3 },
+              { col: 4, row: 5 },
+              { col: 5, row: 3 },
+              { col: 5, row: 4 },
+              { col: 5, row: 5 },
+            ],
+          },
         },
       },
-    },
-  } as any];
+    }),
+  ];
 
   const choices = buildPendingPreview(view);
   assert.equal(hasKind(choices, luche.position!, "validTarget"), true);
@@ -1575,7 +1574,10 @@ test("Covering Tracks highlights existing snares and previews only visible radiu
         abilityId: JACK_SNARES_ID,
         step: "coveringTracks",
         placement: { col: 0, row: 8 },
-        options: [{ col: 1, row: 1 }, { col: 5, row: 5 }],
+        options: [
+          { col: 1, row: 1 },
+          { col: 5, row: 5 },
+        ],
       },
     } as PlayerView["pendingRoll"],
   });

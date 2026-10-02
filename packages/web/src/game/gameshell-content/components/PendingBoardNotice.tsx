@@ -54,13 +54,7 @@ interface PendingBoardNoticeProps {
   className?: string;
 }
 
-type SoulId =
-  | "patience"
-  | "bravery"
-  | "integrity"
-  | "perseverance"
-  | "kindness"
-  | "justice";
+type SoulId = "patience" | "bravery" | "integrity" | "perseverance" | "kindness" | "justice";
 
 const SOUL_IDS = new Set<SoulId>([
   "patience",
@@ -84,8 +78,7 @@ type GroznyTyrantMode = "normal" | "invadeTime";
 function groznyModeList(value: unknown): GroznyTyrantMode[] {
   if (!Array.isArray(value)) return [];
   return value.filter(
-    (item): item is GroznyTyrantMode =>
-      item === "normal" || item === "invadeTime"
+    (item): item is GroznyTyrantMode => item === "normal" || item === "invadeTime",
   );
 }
 
@@ -147,11 +140,10 @@ export function PendingBoardNotice({
     pendingRollContext.mode === "invadeTime"
       ? p("Tyrant with Invade Time", "Тиран разом із Часом вторгнення")
       : pendingRollContext.mode === "normal"
-      ? p("Tyrant normally", "Тиран звичайним способом")
-      : null;
+        ? p("Tyrant normally", "Тиран звичайним способом")
+        : null;
   const soulContext =
-    pendingRollContext.soulResult &&
-    typeof pendingRollContext.soulResult === "object"
+    pendingRollContext.soulResult && typeof pendingRollContext.soulResult === "object"
       ? (pendingRollContext.soulResult as Record<string, unknown>)
       : null;
   const soulId = stringValue(soulContext?.soulId);
@@ -182,9 +174,7 @@ export function PendingBoardNotice({
       : t("pending.khansShooterNextRicochet");
   const chargedAbilityId = stringValue(pendingRollContext.abilityId);
   const windmillIds = Array.isArray(pendingRollContext.affectedIds)
-    ? pendingRollContext.affectedIds.filter(
-        (value): value is string => typeof value === "string",
-      )
+    ? pendingRollContext.affectedIds.filter((value): value is string => typeof value === "string")
     : [];
   const windmillIndex = numberValue(pendingRollContext.index) ?? 0;
   const windmillUnitId = windmillIds[windmillIndex] ?? "?";
@@ -222,10 +212,16 @@ export function PendingBoardNotice({
       ) : pendingRollKind === "donSorrowfulMoveChoice" ? (
         <div>
           <div className="font-semibold">
-            {p("Knight of the Sorrowful Image: optional reaction move", "Лицар Сумного Образу: необов’язковий рух-реакція")}
+            {p(
+              "Knight of the Sorrowful Image: optional reaction move",
+              "Лицар Сумного Образу: необов’язковий рух-реакція",
+            )}
           </div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            {p("Choose a highlighted adjacent cell on the board, or skip.", "Виберіть підсвічену сусідню клітинку на полі або пропустіть.")}
+            {p(
+              "Choose a highlighted adjacent cell on the board, or skip.",
+              "Виберіть підсвічену сусідню клітинку на полі або пропустіть.",
+            )}
           </div>
           <div className="mt-2">
             <button
@@ -242,14 +238,14 @@ export function PendingBoardNotice({
             {chargedAbilityId === "jackRipperSnares" && pendingRollContext.step === "coveringTracks"
               ? p("Covering Tracks", "Заметання слідів")
               : chargedAbilityId === "artemidaMoonlightShot"
-              ? p("Moon Insight", "Місячне прозріння")
-              : chargedAbilityId === "jackRipperSnares"
-                ? p("Maniac Traps", "Силки маніяка")
-                : chargedAbilityId === "lucheDivineRay"
-                  ? p("Light Ray", "Промінь світла")
-                  : chargedAbilityId === "zoroOniGiri"
-                    ? p("Oni Giri", "Оні Ґірі")
-                    : p("Impulse target", "Ціль імпульсу")}
+                ? p("Moon Insight", "Місячне прозріння")
+                : chargedAbilityId === "jackRipperSnares"
+                  ? p("Maniac Traps", "Силки маніяка")
+                  : chargedAbilityId === "lucheDivineRay"
+                    ? p("Light Ray", "Промінь світла")
+                    : chargedAbilityId === "zoroOniGiri"
+                      ? p("Oni Giri", "Оні Ґірі")
+                      : p("Impulse target", "Ціль імпульсу")}
           </div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
             {chargedAbilityId === "jackRipperSnares" && pendingRollContext.step === "coveringTracks"
@@ -258,19 +254,28 @@ export function PendingBoardNotice({
                   "Заметання слідів: оберіть силок, який слід підірвати перед розміщенням нового.",
                 )
               : chargedAbilityId === "artemidaMoonlightShot"
-              ? p("Choose a 3x3 center on Artemida's attack line.", "Виберіть центр області 3×3 на лінії атаки Артеміди.")
-              : chargedAbilityId === "jackRipperSnares"
-                ? p("Choose a trap cell on the board.", "Виберіть клітинку пастки на полі.")
-                : chargedAbilityId === "zoroOniGiri" && pendingRollContext.step === "destination"
-                  ? p("Choose the highlighted cell before or behind the target.", "Виберіть підсвічену клітинку перед ціллю або позаду неї.")
-                : chargedAbilityId === "zoroOniGiri"
-                  ? p("Choose an enemy on Zoro's straight attack line.", "Виберіть ворога на прямій лінії атаки Зоро.")
-                  : chargedAbilityId === "lucheDivineRay"
+                ? p(
+                    "Choose a 3x3 center on Artemida's attack line.",
+                    "Виберіть центр області 3×3 на лінії атаки Артеміди.",
+                  )
+                : chargedAbilityId === "jackRipperSnares"
+                  ? p("Choose a trap cell on the board.", "Виберіть клітинку пастки на полі.")
+                  : chargedAbilityId === "zoroOniGiri" && pendingRollContext.step === "destination"
                     ? p(
-                        "Choose a line target, or choose Luche for Around Self.",
-                        "Оберіть ціль лінії або самого Луче для режиму «Навколо себе».",
+                        "Choose the highlighted cell before or behind the target.",
+                        "Виберіть підсвічену клітинку перед ціллю або позаду неї.",
                       )
-                    : p("Choose a straight attack line.", "Виберіть пряму лінію атаки.")}
+                    : chargedAbilityId === "zoroOniGiri"
+                      ? p(
+                          "Choose an enemy on Zoro's straight attack line.",
+                          "Виберіть ворога на прямій лінії атаки Зоро.",
+                        )
+                      : chargedAbilityId === "lucheDivineRay"
+                        ? p(
+                            "Choose a line target, or choose Luche for Around Self.",
+                            "Оберіть ціль лінії або самого Луче для режиму «Навколо себе».",
+                          )
+                        : p("Choose a straight attack line.", "Виберіть пряму лінію атаки.")}
           </div>
         </div>
       ) : isStakePlacement ? (
@@ -391,10 +396,7 @@ export function PendingBoardNotice({
                   })
                 }
               >
-                {p(
-                  "Use Tyrant with Invade Time",
-                  "Використати Тирана разом із Часом вторгнення",
-                )}
+                {p("Use Tyrant with Invade Time", "Використати Тирана разом із Часом вторгнення")}
               </button>
             ) : null}
             {groznyModeOptions.includes("normal") ? (
@@ -407,10 +409,7 @@ export function PendingBoardNotice({
                   })
                 }
               >
-                {p(
-                  "Use Tyrant normally",
-                  "Використати Тирана звичайним способом",
-                )}
+                {p("Use Tyrant normally", "Використати Тирана звичайним способом")}
               </button>
             ) : null}
             {groznyAllowSkip ? (
@@ -425,15 +424,10 @@ export function PendingBoardNotice({
         </div>
       ) : isGroznyTyrantAllyChoice ? (
         <div>
-          <div className="font-semibold">
-            {p("Tyrant: choose ally", "Тиран: оберіть союзника")}
-          </div>
+          <div className="font-semibold">{p("Tyrant: choose ally", "Тиран: оберіть союзника")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
             {groznySelectedMode ? `${groznySelectedMode}. ` : ""}
-            {p(
-              "Select a highlighted allied figure.",
-              "Оберіть підсвічену союзну фігуру.",
-            )}
+            {p("Select a highlighted allied figure.", "Оберіть підсвічену союзну фігуру.")}
           </div>
           {groznyAllowSkip ? (
             <button
@@ -578,9 +572,7 @@ export function PendingBoardNotice({
       ) : isJebeKhansShooterTargetChoice ? (
         <div>
           <div className="font-semibold">{t("pending.khansShooter")}</div>
-          <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            {ricochetPrompt}
-          </div>
+          <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">{ricochetPrompt}</div>
         </div>
       ) : isLokiLaughtChoice ? (
         <div>
@@ -618,7 +610,7 @@ export function PendingBoardNotice({
         </div>
       ) : pendingRollKind === "mongolChargeAllyAttackTarget" ? (
         <div>
-          <div className="font-semibold">Mongol Charge</div>
+          <div className="font-semibold">{p("Mongol Charge", "Монгольський ривок")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
             {p(
               "Choose a target for the allied attack.",

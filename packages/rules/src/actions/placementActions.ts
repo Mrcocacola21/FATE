@@ -1,11 +1,4 @@
-import type {
-  ApplyResult,
-  GameAction,
-  GameEvent,
-  GameState,
-  PlayerId,
-  UnitState,
-} from "../model";
+import type { ApplyResult, GameAction, GameEvent, GameState, PlayerId, UnitState } from "../model";
 import { isInsideBoard } from "../model";
 import { isCellOccupied } from "../board";
 import { HERO_CHIKATILO_ID, HERO_FALSE_TRAIL_TOKEN_ID } from "../heroes";
@@ -19,21 +12,9 @@ import {
 } from "./heroes/chikatilo";
 import { evBattleStarted, evUnitPlaced } from "../core";
 
-function getOwnerOfStartingUnit(
-  state: GameState,
-  startingUnitId: string,
-  justPlaced: UnitState
-): PlayerId {
-  if (startingUnitId === justPlaced.id) {
-    return justPlaced.owner;
-  }
-  const u = state.units[startingUnitId];
-  return u ? u.owner : justPlaced.owner;
-}
-
 export function applyPlaceUnit(
   state: GameState,
-  action: Extract<GameAction, { type: "placeUnit" }>
+  action: Extract<GameAction, { type: "placeUnit" }>,
 ): ApplyResult {
   if (state.phase !== "placement") {
     return { state, events: [] };
@@ -45,16 +26,12 @@ export function applyPlaceUnit(
   }
 
   if (unit.heroId === HERO_CHIKATILO_ID) {
-    const tokenId =
-      unit.chikatiloFalseTrailTokenId ?? `falseTrail-${unit.id}`;
+    const tokenId = unit.chikatiloFalseTrailTokenId ?? `falseTrail-${unit.id}`;
     const token = state.units[tokenId];
     const hasToken =
       (token && token.isAlive && token.owner === unit.owner) ||
       Object.values(state.units).some(
-        (u) =>
-          u.isAlive &&
-          u.owner === unit.owner &&
-          u.heroId === HERO_FALSE_TRAIL_TOKEN_ID
+        (u) => u.isAlive && u.owner === unit.owner && u.heroId === HERO_FALSE_TRAIL_TOKEN_ID,
       );
     if (hasToken) {
       return { state, events: [] };
@@ -128,7 +105,7 @@ export function applyPlaceUnit(
   let turnQueue = state.turnQueue;
   let turnQueueIndex = state.turnQueueIndex;
 
-  let extraEvents: GameEvent[] = [];
+  const extraEvents: GameEvent[] = [];
   let initialKnowledge: GameState["knowledge"] | undefined = undefined;
   let chikatiloPlacementQueue: string[] = [];
 
@@ -148,9 +125,8 @@ export function applyPlaceUnit(
     startingUnitId = queueHead ?? startingUnitId;
 
     const startingOwner = queueHead
-      ? (state.units[queueHead] ??
-          (queueHead === updatedUnit.id ? updatedUnit : null)
-        )?.owner ?? updatedUnit.owner
+      ? ((state.units[queueHead] ?? (queueHead === updatedUnit.id ? updatedUnit : null))?.owner ??
+        updatedUnit.owner)
       : updatedUnit.owner;
 
     // Владелец первого в очереди ходит первым
@@ -200,7 +176,7 @@ export function applyPlaceUnit(
       ...state.units,
       [updatedUnit.id]: updatedUnit,
     },
-    knowledge: phase === "battle" ? initialKnowledge ?? state.knowledge : state.knowledge,
+    knowledge: phase === "battle" ? (initialKnowledge ?? state.knowledge) : state.knowledge,
   };
 
   let events: GameEvent[] = [
@@ -227,7 +203,7 @@ export function applyPlaceUnit(
       evBattleStarted({
         startingUnitId: battleStartingUnitId ?? updatedUnit.id,
         startingPlayer: startingUnit.owner,
-      })
+      }),
     );
   }
 
@@ -243,15 +219,9 @@ export function applyPlaceUnit(
     finalEvents = [...finalEvents, ...requested.events];
   }
 
-  if (
-    unit.heroId === HERO_FALSE_TRAIL_TOKEN_ID &&
-    !finalState.pendingRoll
-  ) {
+  if (unit.heroId === HERO_FALSE_TRAIL_TOKEN_ID && !finalState.pendingRoll) {
     const chikatilo = Object.values(finalState.units).find(
-      (u) =>
-        u.isAlive &&
-        u.owner === unit.owner &&
-        u.heroId === HERO_CHIKATILO_ID
+      (u) => u.isAlive && u.owner === unit.owner && u.heroId === HERO_CHIKATILO_ID,
     );
     if (chikatilo && !chikatilo.position) {
       const requested = requestChikatiloPlacement(finalState, chikatilo.id);
@@ -273,29 +243,24 @@ export function applyPlaceUnit(
       new Set(
         Object.values(finalState.units)
           .filter((u) => u.isAlive && isVlad(u))
-          .map((u) => u.owner)
-      )
+          .map((u) => u.owner),
+      ),
     ).sort() as PlayerId[];
 
     if (vladOwners.length > 0) {
       const [firstOwner, ...queue] = vladOwners;
       const ownedStakes = finalState.stakeMarkers.filter(
-        (marker) => marker.owner === firstOwner
+        (marker) => marker.owner === firstOwner,
       ).length;
       const vladUnit = Object.values(finalState.units).find(
-        (u) => u.isAlive && isVlad(u) && u.owner === firstOwner
+        (u) => u.isAlive && isVlad(u) && u.owner === firstOwner,
       );
       if (ownedStakes >= 9 && vladUnit) {
         const forest = activateVladForest(finalState, vladUnit.id, firstOwner);
         finalState = forest.state;
         finalEvents = [...finalEvents, ...forest.events];
       } else {
-        const requested = requestVladStakesPlacement(
-          finalState,
-          firstOwner,
-          "battleStart",
-          queue
-        );
+        const requested = requestVladStakesPlacement(finalState, firstOwner, "battleStart", queue);
         finalState = requested.state;
         finalEvents = [...finalEvents, ...requested.events];
       }
@@ -304,4 +269,3 @@ export function applyPlaceUnit(
 
   return { state: finalState, events: finalEvents };
 }
-

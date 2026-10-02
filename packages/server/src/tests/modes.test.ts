@@ -1,4 +1,5 @@
 import assert from "assert";
+import type { ServerMessage, RoomStateMessage } from "../ws";
 import WebSocket from "ws";
 import {
   DRAFT_BAN_ORDER,
@@ -17,7 +18,7 @@ import {
   type UnitClass,
 } from "rules";
 import { buildTestServer as buildServer } from "./matchTestSupport";
-import { createGameRoomWithId, getGameRoom, storeTestHooks } from "../store";
+import { createGameRoomWithId, storeTestHooks } from "../store";
 
 const NEW_PLAYABLE_HERO_IDS = [
   HERO_DUOLINGO_ID,
@@ -30,10 +31,10 @@ const NEW_PLAYABLE_HERO_IDS = [
 ] as const;
 
 function collectMessages(ws: WebSocket) {
-  const queue: unknown[] = [];
+  const queue: ServerMessage[] = [];
   ws.on("message", (data) => {
     try {
-      queue.push(JSON.parse(data.toString()));
+      queue.push(JSON.parse(data.toString()) as ServerMessage);
     } catch {
       // ignore bad payloads in test
     }
@@ -41,15 +42,15 @@ function collectMessages(ws: WebSocket) {
   return queue;
 }
 
-function waitForType(
-  queue: unknown[],
-  type: string,
-  timeoutMs = 2000
-): Promise<any> {
+function waitForType<T extends ServerMessage["type"]>(
+  queue: ServerMessage[],
+  type: T,
+  timeoutMs = 2000,
+): Promise<ServerMessage> {
   return new Promise((resolve, reject) => {
     const start = Date.now();
     const tick = () => {
-      const msg = queue.find((item) => (item as { type?: string }).type === type);
+      const msg = queue.find((item) => item.type === type);
       if (msg) {
         resolve(msg);
         return;
@@ -65,17 +66,17 @@ function waitForType(
 }
 
 function waitForRoomState(
-  queue: unknown[],
-  predicate: (msg: { type?: string; meta?: any; view?: any }) => boolean,
-  timeoutMs = 2500
-): Promise<any> {
+  queue: ServerMessage[],
+  predicate: (msg: RoomStateMessage) => boolean,
+  timeoutMs = 2500,
+): Promise<RoomStateMessage> {
   return new Promise((resolve, reject) => {
     const start = Date.now();
     const tick = () => {
-      const msg = queue.find((item) => {
-        const payload = item as { type?: string; meta?: any; view?: any };
-        return payload.type === "roomState" && predicate(payload);
-      });
+      const msg = queue.find(
+        (payload): payload is RoomStateMessage =>
+          payload.type === "roomState" && predicate(payload),
+      );
       if (msg) {
         resolve(msg);
         return;
@@ -91,10 +92,10 @@ function waitForRoomState(
 }
 
 function waitForError(
-  queue: unknown[],
+  queue: ServerMessage[],
   code: string,
   timeoutMs = 2000
-): Promise<any> {
+): Promise<ServerMessage> {
   return new Promise((resolve, reject) => {
     const start = Date.now();
     const tick = () => {
@@ -116,32 +117,7 @@ function waitForError(
   });
 }
 
-function waitForErrorCount(
-  queue: unknown[],
-  code: string,
-  expectedCount: number,
-  timeoutMs = 2000
-): Promise<any> {
-  return new Promise((resolve, reject) => {
-    const start = Date.now();
-    const tick = () => {
-      const matches = queue.filter((item) => {
-        const payload = item as { type?: string; code?: string };
-        return payload.type === "error" && payload.code === code;
-      });
-      if (matches.length >= expectedCount) {
-        resolve(matches[expectedCount - 1]);
-        return;
-      }
-      if (Date.now() - start > timeoutMs) {
-        reject(new Error(`Timed out waiting for error ${code} count ${expectedCount}`));
-        return;
-      }
-      setTimeout(tick, 20);
-    };
-    tick();
-  });
-}
+
 
 function openSocket(wsUrl: string): Promise<WebSocket> {
   const ws = new WebSocket(wsUrl);
@@ -244,13 +220,13 @@ async function testHostModeSelectionAndClassicStart(wsUrl: string) {
     queue1,
     (msg) => msg.meta?.pendingRoll?.kind === "initiativeRoll"
   );
-  const p1Units = Object.values(started.view.units as Record<string, any>).filter(
+  const p1Units = Object.values(started.view.units).filter(
     (unit) => unit.owner === "P1"
   );
   assert.equal(p1Units.length, 7);
   assert(
-    p1Units.every((unit: any) => !unit.heroId && !unit.figureId),
-    "classic start should ignore custom figure sets"
+    p1Units.every((unit) => !unit.heroId && !unit.figureId),
+    "classic start should ignore custom figure sets",
   );
 
   sendSetMode(ws1, "standard");
@@ -272,16 +248,12 @@ async function testStandardStartPreservesFigureSets(wsUrl: string) {
   ws1.send(JSON.stringify({ type: "startGame" }));
   const started = await waitForRoomState(
     queue1,
-    (msg) => msg.meta?.pendingRoll?.kind === "initiativeRoll"
+    (msg) => msg.meta?.pendingRoll?.kind === "initiativeRoll",
   );
-  const units = Object.values(started.view.units as Record<string, any>);
-  const p1Knight = units.find(
-    (unit: any) => unit.owner === "P1" && unit.class === "knight"
-  ) as any;
+  const units = Object.values(started.view.units);
+  const p1Knight = units.find((unit) => unit.owner === "P1" && unit.class === "knight");
   assert.equal(p1Knight?.heroId, "griffith");
-  const p1Trickster = units.find(
-    (unit: any) => unit.owner === "P1" && unit.class === "trickster"
-  ) as any;
+  const p1Trickster = units.find((unit) => unit.owner === "P1" && unit.class === "trickster");
   assert.equal(p1Trickster?.heroId, HERO_DUOLINGO_ID);
   assert.equal(p1Trickster?.figureId, HERO_DUOLINGO_ID);
 
@@ -301,10 +273,13 @@ async function testDraftRejectsEveryStubWithoutMutation(wsUrl: string) {
 
   const draftStart = await waitForRoomState(
     queue1,
-    (msg) => Array.isArray(msg.meta?.draftPool) && msg.meta.draftPool.length > 0
+    (msg) => Array.isArray(msg.meta?.draftPool) && msg.meta.draftPool.length > 0,
   );
   for (const heroId of NEW_PLAYABLE_HERO_IDS) {
-    assert(draftStart.meta.draftPool.some((hero: any) => hero.heroId === heroId), `${heroId} missing from server draft pool`);
+    assert(
+      draftStart.meta.draftPool.some((hero) => hero.heroId === heroId),
+      `${heroId} missing from server draft pool`,
+    );
   }
 
   ws1.close();
@@ -324,19 +299,19 @@ async function testDraftFlowStartsPlacement(wsUrl: string) {
   await waitForRoomState(queue1, (msg) => msg.meta?.draftState?.phase === "ban");
   const draftStart = await waitForRoomState(
     queue1,
-    (msg) => Array.isArray(msg.meta?.draftPool) && msg.meta.draftPool.length > 0
+    (msg) => Array.isArray(msg.meta?.draftPool) && msg.meta.draftPool.length > 0,
   );
   assert(
     draftStart.meta.draftPool.every(
-      (hero: any) => hero.implemented && !hero.isBase && hero.draftEnabled
+      (hero) => hero.implemented && !hero.isBase && hero.draftEnabled,
     ),
-    "draft pool should exclude base units"
+    "draft pool should exclude base units",
   );
   assert(
-    NEW_PLAYABLE_HERO_IDS.every(
-      (heroId) => draftStart.meta.draftPool.some((hero: any) => hero.heroId === heroId)
+    NEW_PLAYABLE_HERO_IDS.every((heroId) =>
+      draftStart.meta.draftPool.some((hero) => hero.heroId === heroId),
     ),
-    "draft pool should include all newly playable heroes"
+    "draft pool should include all newly playable heroes",
   );
 
   sendSetMode(ws1, "classic");
@@ -358,7 +333,7 @@ async function testDraftFlowStartsPlacement(wsUrl: string) {
     socket.send(JSON.stringify({ type: "draftBanHero", heroId }));
     await waitForRoomState(
       player === "P1" ? queue1 : queue2,
-      (msg) => msg.meta?.draftState?.history?.length === i + 1
+      (msg) => msg.meta?.draftState?.history?.length === i + 1,
     );
   }
 
@@ -370,9 +345,7 @@ async function testDraftFlowStartsPlacement(wsUrl: string) {
   const pickOrder = getPickOrder();
   for (let i = 0; i < pickOrder.length; i += 1) {
     const player = pickOrder[i];
-    const unitClass = DRAFT_CLASSES.find(
-      (candidate) => !pickedClasses[player].has(candidate)
-    );
+    const unitClass = DRAFT_CLASSES.find((candidate) => !pickedClasses[player].has(candidate));
     assert(unitClass, `expected open class for ${player}`);
     const heroId = heroForClass(unitClass, selected);
     selected.add(heroId);
@@ -381,21 +354,19 @@ async function testDraftFlowStartsPlacement(wsUrl: string) {
     socket.send(JSON.stringify({ type: "draftPickHero", heroId }));
     await waitForRoomState(
       player === "P1" ? queue1 : queue2,
-      (msg) => msg.meta?.draftState?.history?.length === DRAFT_BAN_ORDER.length + i + 1
+      (msg) => msg.meta?.draftState?.history?.length === DRAFT_BAN_ORDER.length + i + 1,
     );
   }
 
   const completed = await waitForRoomState(
     queue1,
-    (msg) => msg.meta?.draftState?.phase === "complete" && !!msg.meta?.pendingRoll
+    (msg) => msg.meta?.draftState?.phase === "complete" && !!msg.meta?.pendingRoll,
   );
-  const p1Units = Object.values(completed.view.units as Record<string, any>).filter(
-    (unit) => unit.owner === "P1"
-  );
+  const p1Units = Object.values(completed.view.units).filter((unit) => unit.owner === "P1");
   assert.equal(p1Units.length, 7);
   assert(
-    p1Units.every((unit: any) => !!unit.heroId && !unit.heroId.startsWith("base-")),
-    "drafted roster should contain full heroes only"
+    p1Units.every((unit) => !!unit.heroId && !unit.heroId.startsWith("base-")),
+    "drafted roster should contain full heroes only",
   );
 
   ws1.close();

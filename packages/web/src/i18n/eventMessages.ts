@@ -77,18 +77,10 @@ export function formatEventMessage(event: GameEvent, language: Language, t: Tran
     case "unitMoved":
       return event.unitId
         ? text(language, `Unit moved: ${event.unitId}`, `Фігуру переміщено: ${event.unitId}`)
-        : text(
-            language,
-            "A hidden movement was resolved.",
-            "Приховане переміщення завершено.",
-          );
+        : text(language, "A hidden movement was resolved.", "Приховане переміщення завершено.");
     case "hiddenCollisionResolved":
       if (!event.displacedUnitId) {
-        return text(
-          language,
-          "A hidden collision was resolved.",
-          "Приховане зіткнення завершено.",
-        );
+        return text(language, "A hidden collision was resolved.", "Приховане зіткнення завершено.");
       }
       return event.damage === 1
         ? text(
@@ -629,9 +621,10 @@ export function formatEventMessage(event: GameEvent, language: Language, t: Tran
         `Arena chosen: ${getArenaLabel(event.arenaId, t)}`,
         `Обрано арену: ${getArenaLabel(event.arenaId, t)}`,
       );
-    case "gameEnded":
+    case "gameEnded": {
       const winner = t(`roles.${event.winner}`);
       return text(language, `Battle ended. ${winner} wins.`, `Бій завершено. ${winner} переміг.`);
+    }
     default:
       return t("log.unknownEvent");
   }

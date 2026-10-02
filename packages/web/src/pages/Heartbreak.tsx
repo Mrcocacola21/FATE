@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { LanguageSwitcher } from "../components/LanguageSwitcher";
 import { useI18n } from "../i18n";
@@ -29,8 +29,6 @@ export function Heartbreak({ onBack }: { onBack?: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
-    const socketUrl =
-      (import.meta.env.VITE_WS_URL ?? window.location.origin.replace(/^http/, "ws")) + "/ws";
     if (!ws) return;
     return () => {
       ws.close();
@@ -82,7 +80,9 @@ export function Heartbreak({ onBack }: { onBack?: () => void }) {
         if (msg.type === "pongState") {
           setState(msg.state);
         }
-      } catch {}
+      } catch {
+        // Ignore malformed messages; a later snapshot can still update the board.
+      }
     };
     socket.onclose = () => {
       setConnected(false);
@@ -103,12 +103,11 @@ export function Heartbreak({ onBack }: { onBack?: () => void }) {
     if (!ws) return;
     ws.send(JSON.stringify({ type: "pongReset" }));
   }
-  function sendInput(dir: "up" | "down" | "stop") {
-    if (!ws) return;
-    ws.send(JSON.stringify({ type: "pongInput", dir }));
-  }
 
   useEffect(() => {
+    function sendInput(dir: "up" | "down" | "stop") {
+      ws?.send(JSON.stringify({ type: "pongInput", dir }));
+    }
     function onKey(e: KeyboardEvent) {
       if (!ws) return;
       if (e.type === "keydown") {
@@ -153,7 +152,7 @@ export function Heartbreak({ onBack }: { onBack?: () => void }) {
             <select
               className="field-control mt-1"
               value={role}
-              onChange={(e) => setRole(e.target.value as any)}
+              onChange={(e) => setRole(e.target.value as "P1" | "P2" | "spectator")}
             >
               <option value="P1">P1</option>
               <option value="P2">P2</option>

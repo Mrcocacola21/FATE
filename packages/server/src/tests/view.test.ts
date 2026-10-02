@@ -484,7 +484,7 @@ function testChikatiloMarkEventProjectionRedactsPrivateTarget() {
   const spectatorEvents = projectEventsForRecipient(state, events, "spectator");
 
   assert.equal(
-    (ownerEvents.find((event) => event.type === "chikatiloMarkApplied") as any)?.targetId,
+    ownerEvents.find((event) => event.type === "chikatiloMarkApplied")?.targetId,
     target.id,
     "owner should receive full mark target identity",
   );

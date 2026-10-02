@@ -21,11 +21,12 @@ import { ABILITY_LOKI_NATURAL_STEALTH, getAbilityViewsForUnit } from "../../abil
 
 export function testLokiNaturalStealthThresholdAndPassiveView() {
   for (const roll of [1, 2, 3, 4, 5, 6]) {
-    let { state, loki } = setupLokiState();
+    const { state: initialState90, loki } = setupLokiState();
+    let state = initialState90;
     state = setUnit(state, loki.id, { position: { col: 4, row: 4 } });
     state = initKnowledgeForOwners(toBattleState(state, "P1", loki.id));
     const rng = makeRngSequence([(roll - 0.5) / 6]);
-    const attempt = applyAction(state, { type: "enterStealth", unitId: loki.id } as any, rng);
+    const attempt = applyAction(state, { type: "enterStealth", unitId: loki.id }, rng);
     assert(
       attempt.state.pendingRoll?.kind === "enterStealth",
       `Loki should be able to attempt stealth for forced roll ${roll}`,
@@ -47,7 +48,8 @@ export function testLokiNaturalStealthThresholdAndPassiveView() {
 }
 
 export function testLokiLaughDirectOptionPayloadStartsResolution() {
-  let { state, loki } = setupLokiState();
+  const { state: initialState91, loki } = setupLokiState();
+  let state = initialState91;
   const enemy = Object.values(state.units).find(
     (unit) => unit.owner === "P2" && unit.class === "knight",
   )!;
@@ -65,7 +67,7 @@ export function testLokiLaughDirectOptionPayloadStartsResolution() {
       unitId: loki.id,
       abilityId: ABILITY_LOKI_LAUGHT,
       payload: { optionId: "chicken" },
-    } as any,
+    },
     makeRngSequence([]),
   );
   assert(
@@ -81,7 +83,8 @@ export function testLokiLaughDirectOptionPayloadStartsResolution() {
 }
 
 export function testLokiLaughDirectOptionsSpendOnlyAfterValidStart() {
-  let { state, loki } = setupLokiState();
+  const { state: initialState92, loki } = setupLokiState();
+  let state = initialState92;
   const controlled = Object.values(state.units).find(
     (unit) => unit.owner === "P2" && unit.class === "spearman",
   )!;
@@ -103,7 +106,7 @@ export function testLokiLaughDirectOptionsSpendOnlyAfterValidStart() {
       unitId: loki.id,
       abilityId: ABILITY_LOKI_LAUGHT,
       payload: { optionId: "againSomeNonsense" },
-    } as any,
+    },
     makeRngSequence([]),
   );
   assert(
@@ -122,7 +125,7 @@ export function testLokiLaughDirectOptionsSpendOnlyAfterValidStart() {
       unitId: loki.id,
       abilityId: ABILITY_LOKI_LAUGHT,
       payload: { optionId: "chicken" },
-    } as any,
+    },
     makeRngSequence([]),
   );
   assert(
@@ -159,7 +162,7 @@ export function testLokiLaughDirectOptionsSpendOnlyAfterValidStart() {
       unitId: loki.id,
       abilityId: ABILITY_LOKI_LAUGHT,
       payload: { optionId: "mindControl" },
-    } as any,
+    },
     makeRngSequence([]),
   );
   assert(
@@ -201,7 +204,7 @@ export function testLokiLaughDirectOptionsSpendOnlyAfterValidStart() {
         unitId: loki.id,
         abilityId: ABILITY_LOKI_LAUGHT,
         payload: { optionId },
-      } as any,
+      },
       makeRngSequence([]),
     );
     assert(
@@ -221,7 +224,7 @@ export function testLokiLaughDirectOptionsSpendOnlyAfterValidStart() {
       unitId: loki.id,
       abilityId: ABILITY_LOKI_LAUGHT,
       payload: { optionId: "freeEverything" },
-    } as any,
+    },
     makeRngSequence([]),
   );
   assert(
@@ -241,7 +244,7 @@ export function testLokiLaughDirectOptionsSpendOnlyAfterValidStart() {
       unitId: loki.id,
       abilityId: ABILITY_LOKI_LAUGHT,
       payload: { optionId: "chicken" },
-    } as any,
+    },
     makeRngSequence([]),
   );
   assert(
@@ -259,7 +262,7 @@ export function testLokiLaughDirectOptionsSpendOnlyAfterValidStart() {
       unitId: loki.id,
       abilityId: ABILITY_LOKI_LAUGHT,
       payload: { optionId: "chicken" },
-    } as any,
+    },
     makeRngSequence([]),
   );
   assert(
@@ -270,7 +273,8 @@ export function testLokiLaughDirectOptionsSpendOnlyAfterValidStart() {
   console.log("loki_laugh_direct_options_spend_only_after_valid_start passed");
 }
 export function testLokiLaughterIncrementsOnAnyDouble() {
-  let { state, loki } = setupLokiState();
+  const { state: initialState93, loki } = setupLokiState();
+  let state = initialState93;
   const attacker = Object.values(state.units).find(
     (unit) => unit.owner === "P2" && unit.class === "knight",
   )!;
@@ -289,7 +293,7 @@ export function testLokiLaughterIncrementsOnAnyDouble() {
 
   const started = applyAction(
     state,
-    { type: "attack", attackerId: attacker.id, defenderId: defender.id } as any,
+    { type: "attack", attackerId: attacker.id, defenderId: defender.id },
     makeRngSequence([]),
   );
   const resolved = resolveAllPendingRollsWithEvents(
@@ -313,7 +317,8 @@ export function testLokiLaughterIncrementsOnAnyDouble() {
 }
 
 export function testLokiLaughterSpendingAndGating() {
-  let { state, loki } = setupLokiState();
+  const { state: initialState94, loki } = setupLokiState();
+  let state = initialState94;
   const ally = Object.values(state.units).find(
     (unit) => unit.owner === "P1" && unit.class === "knight",
   )!;
@@ -328,7 +333,7 @@ export function testLokiLaughterSpendingAndGating() {
 
   const started = applyAction(
     state,
-    { type: "useAbility", unitId: loki.id, abilityId: ABILITY_LOKI_LAUGHT } as any,
+    { type: "useAbility", unitId: loki.id, abilityId: ABILITY_LOKI_LAUGHT },
     makeRngSequence([]),
   );
   assert(
@@ -379,7 +384,8 @@ export function testLokiLaughterSpendingAndGating() {
 }
 
 export function testLokiLaughOptionAvailabilityThresholds() {
-  let { state, loki } = setupLokiState();
+  const { state: initialState95, loki } = setupLokiState();
+  let state = initialState95;
   const ally = Object.values(state.units).find(
     (unit) => unit.owner === "P1" && unit.class === "knight",
   )!;
@@ -448,7 +454,8 @@ export function testLokiLaughOptionAvailabilityThresholds() {
 }
 
 export function testLokiOptionOneMoveLockDuration() {
-  let { state, loki } = setupLokiState();
+  const { state: initialState96, loki } = setupLokiState();
+  let state = initialState96;
   const ally = Object.values(state.units).find(
     (unit) => unit.owner === "P1" && unit.class === "knight",
   )!;
@@ -481,7 +488,7 @@ export function testLokiOptionOneMoveLockDuration() {
 
   const started = applyAction(
     state,
-    { type: "useAbility", unitId: loki.id, abilityId: ABILITY_LOKI_LAUGHT } as any,
+    { type: "useAbility", unitId: loki.id, abilityId: ABILITY_LOKI_LAUGHT },
     makeRngSequence([]),
   );
   const queued = resolvePendingWithChoice(
@@ -563,13 +570,13 @@ export function testLokiOptionOneMoveLockDuration() {
   };
   const blockedMove = applyAction(
     blockedMoveState,
-    { type: "requestMoveOptions", unitId: failedEnemyId } as any,
+    { type: "requestMoveOptions", unitId: failedEnemyId },
     makeRngSequence([]),
   );
   assert(!blockedMove.state.pendingMove, "move lock should block generating move options");
   const allowedAttack = applyAction(
     blockedMoveState,
-    { type: "attack", attackerId: failedEnemyId, defenderId: ally.id } as any,
+    { type: "attack", attackerId: failedEnemyId, defenderId: ally.id },
     makeRngSequence([]),
   );
   assert(
@@ -590,7 +597,7 @@ export function testLokiOptionOneMoveLockDuration() {
   };
   const lokiStart = applyAction(
     lokiStartState,
-    { type: "unitStartTurn", unitId: loki.id } as any,
+    { type: "unitStartTurn", unitId: loki.id },
     makeRngSequence([]),
   );
   assert(
@@ -607,7 +614,7 @@ export function testLokiOptionOneMoveLockDuration() {
   };
   const restoredMove = applyAction(
     restoredMoveState,
-    { type: "requestMoveOptions", unitId: failedEnemyId } as any,
+    { type: "requestMoveOptions", unitId: failedEnemyId },
     makeRngSequence([]),
   );
   assert(
@@ -619,7 +626,8 @@ export function testLokiOptionOneMoveLockDuration() {
 }
 
 export function testLokiOptionTwoChickenBlocksAndRestrictsMove() {
-  let { state, loki } = setupLokiState();
+  const { state: initialState97, loki } = setupLokiState();
+  let state = initialState97;
   const enemy = Object.values(state.units).find(
     (unit) => unit.owner === "P2" && unit.heroId === HERO_GENGHIS_KHAN_ID,
   )!;
@@ -646,7 +654,7 @@ export function testLokiOptionTwoChickenBlocksAndRestrictsMove() {
 
   const started = applyAction(
     state,
-    { type: "useAbility", unitId: loki.id, abilityId: ABILITY_LOKI_LAUGHT } as any,
+    { type: "useAbility", unitId: loki.id, abilityId: ABILITY_LOKI_LAUGHT },
     makeRngSequence([]),
   );
   const option = resolvePendingWithChoice(
@@ -688,7 +696,7 @@ export function testLokiOptionTwoChickenBlocksAndRestrictsMove() {
   );
   const reopened = applyAction(
     canceled.state,
-    { type: "useAbility", unitId: loki.id, abilityId: ABILITY_LOKI_LAUGHT } as any,
+    { type: "useAbility", unitId: loki.id, abilityId: ABILITY_LOKI_LAUGHT },
     makeRngSequence([]),
   );
   const optionAgain = resolvePendingWithChoice(
@@ -742,7 +750,7 @@ export function testLokiOptionTwoChickenBlocksAndRestrictsMove() {
   };
   const blockedAttack = applyAction(
     enemyTurnState,
-    { type: "attack", attackerId: enemy.id, defenderId: defender.id } as any,
+    { type: "attack", attackerId: enemy.id, defenderId: defender.id },
     makeRngSequence([]),
   );
   assert(
@@ -756,7 +764,7 @@ export function testLokiOptionTwoChickenBlocksAndRestrictsMove() {
       type: "useAbility",
       unitId: enemy.id,
       abilityId: ABILITY_GENGHIS_KHAN_KHANS_DECREE,
-    } as any,
+    },
     makeRngSequence([]),
   );
   assert(blockedAbility.events.length === 0, "chicken should block activating abilities");
@@ -774,7 +782,7 @@ export function testLokiOptionTwoChickenBlocksAndRestrictsMove() {
   };
   const expired = applyAction(
     expiryState,
-    { type: "unitStartTurn", unitId: loki.id } as any,
+    { type: "unitStartTurn", unitId: loki.id },
     makeRngSequence([]),
   );
   assert(
@@ -787,7 +795,7 @@ export function testLokiOptionTwoChickenBlocksAndRestrictsMove() {
   });
   const retryMenu = applyAction(
     retry,
-    { type: "useAbility", unitId: loki.id, abilityId: ABILITY_LOKI_LAUGHT } as any,
+    { type: "useAbility", unitId: loki.id, abilityId: ABILITY_LOKI_LAUGHT },
     makeRngSequence([]),
   );
   const retryTarget = resolvePendingWithChoice(
@@ -812,7 +820,8 @@ export function testLokiOptionTwoChickenBlocksAndRestrictsMove() {
 }
 
 export function testLokiOptionThreeMindControlForcedAttackAndSlots() {
-  let { state, loki } = setupLokiState();
+  const { state: initialState98, loki } = setupLokiState();
+  let state = initialState98;
   const controlled = Object.values(state.units).find(
     (unit) => unit.owner === "P2" && unit.class === "spearman",
   )!;
@@ -850,7 +859,7 @@ export function testLokiOptionThreeMindControlForcedAttackAndSlots() {
 
   const started = applyAction(
     state,
-    { type: "useAbility", unitId: loki.id, abilityId: ABILITY_LOKI_LAUGHT } as any,
+    { type: "useAbility", unitId: loki.id, abilityId: ABILITY_LOKI_LAUGHT },
     makeRngSequence([]),
   );
   const option = resolvePendingWithChoice(
@@ -987,7 +996,7 @@ export function testLokiOptionThreeMindControlForcedAttackAndSlots() {
   );
   const normalEnemyAttack = applyAction(
     restoredTurnState,
-    { type: "attack", attackerId: controlled.id, defenderId: controllerAlly.id } as any,
+    { type: "attack", attackerId: controlled.id, defenderId: controllerAlly.id },
     makeRngSequence([]),
   );
   assert(
@@ -999,7 +1008,8 @@ export function testLokiOptionThreeMindControlForcedAttackAndSlots() {
 }
 
 export function testLokiSpinWheelPoolFallbackAndCost() {
-  let { state, loki } = setupLokiState();
+  const { state: initialState99, loki } = setupLokiState();
+  let state = initialState99;
   const selected = Object.values(state.units).find(
     (unit) => unit.owner === "P1" && unit.class === "rider",
   )!;
@@ -1019,7 +1029,7 @@ export function testLokiSpinWheelPoolFallbackAndCost() {
 
   const started = applyAction(
     state,
-    { type: "useAbility", unitId: loki.id, abilityId: ABILITY_LOKI_LAUGHT } as any,
+    { type: "useAbility", unitId: loki.id, abilityId: ABILITY_LOKI_LAUGHT },
     makeRngSequence([]),
   );
   const spun = resolvePendingWithChoice(
@@ -1063,7 +1073,7 @@ export function testLokiSpinWheelPoolFallbackAndCost() {
   });
   const noAllyStarted = applyAction(
     noAlly,
-    { type: "useAbility", unitId: loki.id, abilityId: ABILITY_LOKI_LAUGHT } as any,
+    { type: "useAbility", unitId: loki.id, abilityId: ABILITY_LOKI_LAUGHT },
     makeRngSequence([]),
   );
   const rejected = resolvePendingWithChoice(
@@ -1081,7 +1091,8 @@ export function testLokiSpinWheelPoolFallbackAndCost() {
 }
 
 export function testLokiOptionFiveMassChickenFailOnlyAlliesAndEnemies() {
-  let { state, loki } = setupLokiState();
+  const { state: initialState100, loki } = setupLokiState();
+  let state = initialState100;
   const allyOne = Object.values(state.units).find(
     (unit) => unit.owner === "P1" && unit.class === "knight",
   )!;
@@ -1120,7 +1131,7 @@ export function testLokiOptionFiveMassChickenFailOnlyAlliesAndEnemies() {
 
   const started = applyAction(
     state,
-    { type: "useAbility", unitId: loki.id, abilityId: ABILITY_LOKI_LAUGHT } as any,
+    { type: "useAbility", unitId: loki.id, abilityId: ABILITY_LOKI_LAUGHT },
     makeRngSequence([]),
   );
   const queued = resolvePendingWithChoice(

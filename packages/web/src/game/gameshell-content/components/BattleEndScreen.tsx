@@ -1,20 +1,13 @@
+import type { GameShellViewModel } from "../hooks/useGameShellViewModel";
 import { useEffect, useMemo, useState } from "react";
-import {
-  type GameOverResult,
-  type PlayerId,
-  type PlayerView,
-  type UnitState,
-} from "rules";
+import { type GameOverResult, type PlayerId, type PlayerView, type UnitState } from "rules";
 import { useI18n } from "../../../i18n";
 import { getUnitFigureDisplayName } from "../../../i18n/displayMetadata";
 
 export type BattleEndPerspective = "winner" | "loser" | "spectator";
 export type BattleEndOverlayEvent = "resultArrived" | "viewBoard" | "results";
 
-export function getBattleEndOverlayState(
-  current: boolean,
-  event: BattleEndOverlayEvent
-): boolean {
+export function getBattleEndOverlayState(current: boolean, event: BattleEndOverlayEvent): boolean {
   if (event === "viewBoard") return false;
   if (event === "results" || event === "resultArrived") return true;
   return current;
@@ -22,7 +15,7 @@ export function getBattleEndOverlayState(
 
 export function getBattleEndPerspective(
   result: GameOverResult,
-  viewer: PlayerId | null
+  viewer: PlayerId | null,
 ): BattleEndPerspective {
   if (viewer === result.winnerPlayerId) return "winner";
   if (viewer === result.loserPlayerId) return "loser";
@@ -68,39 +61,35 @@ function ResultUnitList({
   );
 }
 
-export function BattleEndScreen({ vm }: { vm: any }) {
+export function BattleEndScreen({ vm }: { vm: GameShellViewModel }) {
   const { t } = useI18n();
   const view = vm.view as PlayerView | null;
   const result = view?.gameOver ?? null;
+  const hasResult = !!result;
   const resultRevision = result?.endedAtRevision ?? null;
   const [open, setOpen] = useState(view?.phase === "ended" && !!result);
 
   useEffect(() => {
-    if (view?.phase === "ended" && result) {
+    if (view?.phase === "ended" && hasResult) {
       setOpen((current) => getBattleEndOverlayState(current, "resultArrived"));
     }
-  }, [view?.phase, resultRevision]);
+  }, [view?.phase, hasResult, resultRevision]);
 
   const summary = useMemo(() => {
     if (!view || !result) return null;
     const units = Object.values(view.units).filter(isBattleUnit);
     return {
-      survivors: units.filter(
-        (unit) => unit.owner === result.winnerPlayerId && unit.isAlive
-      ),
-      defeated: units.filter(
-        (unit) => unit.owner === result.loserPlayerId && !unit.isAlive
-      ),
+      survivors: units.filter((unit) => unit.owner === result.winnerPlayerId && unit.isAlive),
+      defeated: units.filter((unit) => unit.owner === result.loserPlayerId && !unit.isAlive),
     };
   }, [view, result]);
 
   if (!view || view.phase !== "ended" || !result || !summary) return null;
 
-  const viewer = (vm.seat ?? (vm.role === "P1" || vm.role === "P2" ? vm.role : null)) as
-    | PlayerId
-    | null;
+  const viewer = (vm.seat ??
+    (vm.role === "P1" || vm.role === "P2" ? vm.role : null)) as PlayerId | null;
   const perspective = getBattleEndPerspective(result, viewer);
-  const names = vm.roomMeta?.playerNames ?? {};
+  const names: Partial<Record<PlayerId, string | null>> = vm.roomMeta?.playerNames ?? {};
   const winnerName = names[result.winnerPlayerId] || t(`roles.${result.winnerPlayerId}`);
   const loserName = names[result.loserPlayerId] || t(`roles.${result.loserPlayerId}`);
   const title = t(`game.battleEnd.${perspective}.title`);
@@ -112,11 +101,7 @@ export function BattleEndScreen({ vm }: { vm: any }) {
         : t("game.battleEnd.spectator.subtitle", { player: winnerName });
   const reason =
     result.reason === "allEnemyUnitsDefeated"
-      ? t(
-          perspective === "loser"
-            ? "game.battleEnd.reasonAllied"
-            : "game.battleEnd.reasonEnemy"
-        )
+      ? t(perspective === "loser" ? "game.battleEnd.reasonAllied" : "game.battleEnd.reasonEnemy")
       : t(`game.battleEnd.reasons.${result.reason}`);
 
   return (
@@ -159,13 +144,17 @@ export function BattleEndScreen({ vm }: { vm: any }) {
                   <span className="block text-[10px] uppercase tracking-[0.18em] text-stone-500">
                     {t("game.battleEnd.winnerLabel")}
                   </span>
-                  <strong className="mt-1 block truncate text-sm text-amber-200">{winnerName}</strong>
+                  <strong className="mt-1 block truncate text-sm text-amber-200">
+                    {winnerName}
+                  </strong>
                 </div>
                 <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
                   <span className="block text-[10px] uppercase tracking-[0.18em] text-stone-500">
                     {t("game.battleEnd.loserLabel")}
                   </span>
-                  <strong className="mt-1 block truncate text-sm text-stone-200">{loserName}</strong>
+                  <strong className="mt-1 block truncate text-sm text-stone-200">
+                    {loserName}
+                  </strong>
                 </div>
               </div>
 
@@ -199,7 +188,9 @@ export function BattleEndScreen({ vm }: { vm: any }) {
                   type="button"
                   className="btn btn-primary min-h-12 w-full"
                   data-testid="battle-end-view-board"
-                  onClick={() => setOpen((current) => getBattleEndOverlayState(current, "viewBoard"))}
+                  onClick={() =>
+                    setOpen((current) => getBattleEndOverlayState(current, "viewBoard"))
+                  }
                 >
                   {t("game.battleEnd.viewBoard")}
                 </button>
@@ -210,9 +201,7 @@ export function BattleEndScreen({ vm }: { vm: any }) {
                   disabled={vm.leavingRoom}
                   onClick={vm.handleLeave}
                 >
-                  {vm.leavingRoom
-                    ? t("game.leaving")
-                    : t("game.battleEnd.backToLobby")}
+                  {vm.leavingRoom ? t("game.leaving") : t("game.battleEnd.backToLobby")}
                 </button>
               </div>
             </div>

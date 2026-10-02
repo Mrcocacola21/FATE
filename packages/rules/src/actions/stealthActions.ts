@@ -17,7 +17,7 @@ export const KAISER_TRANSFORMED_STEALTH_REJECTION =
 export function applyEnterStealth(
   state: GameState,
   action: Extract<GameAction, { type: "enterStealth" }>,
-  rng: RNG
+  _rng: RNG,
 ): ApplyResult {
   if (state.phase !== "battle") {
     return { state, events: [] };
@@ -75,13 +75,7 @@ export function applyEnterStealth(
       };
     }
 
-    return requestRoll(
-      state,
-      unit.owner,
-      "enterBunker",
-      { unitId: unit.id },
-      unit.id
-    );
+    return requestRoll(state, unit.owner, "enterBunker", { unitId: unit.id }, unit.id);
   }
 
   // Уже тратил слот скрытности
@@ -108,10 +102,7 @@ export function applyEnterStealth(
   const canStealth = getStealthSuccessMinRoll(unit) !== null;
 
   if (canStealth) {
-    if (
-      unit.heroId === HERO_FRISK_ID &&
-      getCharges(unit, ABILITY_FRISK_GENOCIDE) >= 5
-    ) {
+    if (unit.heroId === HERO_FRISK_ID && getCharges(unit, ABILITY_FRISK_GENOCIDE) >= 5) {
       const keenEyeOptions = getFriskKeenEyeTargetIds(state, unit.id);
       if (keenEyeOptions.length > 0) {
         return requestRoll(
@@ -119,7 +110,7 @@ export function applyEnterStealth(
           unit.owner,
           "friskKeenEyeChoice",
           { friskId: unit.id, options: keenEyeOptions },
-          unit.id
+          unit.id,
         );
       }
     }
@@ -139,19 +130,11 @@ export function applyEnterStealth(
           [baseUnit.id]: baseUnit,
         },
       };
-      const events: GameEvent[] = [
-        evStealthEntered({ unitId: baseUnit.id, success: false }),
-      ];
+      const events: GameEvent[] = [evStealthEntered({ unitId: baseUnit.id, success: false })];
       return { state: newState, events };
     }
 
-    return requestRoll(
-      state,
-      unit.owner,
-      "enterStealth",
-      { unitId: unit.id },
-      unit.id
-    );
+    return requestRoll(state, unit.owner, "enterStealth", { unitId: unit.id }, unit.id);
   }
   const baseUnit: UnitState = spendSlots(unit, { stealth: true });
   const newState: GameState = {
@@ -161,16 +144,14 @@ export function applyEnterStealth(
       [baseUnit.id]: baseUnit,
     },
   };
-  const events: GameEvent[] = [
-    evStealthEntered({ unitId: baseUnit.id, success: false }),
-  ];
+  const events: GameEvent[] = [evStealthEntered({ unitId: baseUnit.id, success: false })];
   return { state: newState, events };
 }
 
 export function applySearchStealth(
   state: GameState,
   action: Extract<GameAction, { type: "searchStealth" }>,
-  rng: RNG
+  _rng: RNG,
 ): ApplyResult {
   if (state.phase !== "battle") {
     return { state, events: [] };
@@ -192,8 +173,7 @@ export function applySearchStealth(
     return { state, events: [] };
   }
 
-  const searchCosts =
-    action.mode === "action" ? { action: true } : { move: true };
+  const searchCosts = action.mode === "action" ? { action: true } : { move: true };
   // 🚫 проверяем, чем платим за поиск
   if (!canSpendSlots(unit, searchCosts)) {
     return { state, events: [] };
@@ -235,8 +215,6 @@ export function applySearchStealth(
     unit.owner,
     "searchStealth",
     { unitId: unit.id, mode: action.mode },
-    unit.id
+    unit.id,
   );
 }
-
-

@@ -1,16 +1,11 @@
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import type { Coord } from "rules";
-import {
-  getDoraTargetCenters,
-  getFullLineTargetCells,
-  getUnitAt,
-  coordKey,
-} from "../helpers";
+import { getDoraTargetCenters, getFullLineTargetCells, getUnitAt, coordKey } from "../helpers";
 
 interface UseGameShellAbilityModeTargetsParams {
-  view: any;
-  effectiveActionMode: any;
-  selectedUnit: any;
+  view: import("rules").PlayerView | null;
+  effectiveActionMode: import("../../../store").ActionMode;
+  selectedUnit: import("rules").UnitState | null;
 }
 
 export function useGameShellAbilityModeTargets({
@@ -18,26 +13,27 @@ export function useGameShellAbilityModeTargets({
   effectiveActionMode,
   selectedUnit,
 }: UseGameShellAbilityModeTargetsParams) {
-  const restrictForBlind = (cells: Coord[]): Coord[] => {
-    if (!selectedUnit?.blindUntilOwnTurnStart || !selectedUnit.position) return cells;
-    return cells.filter(
-      (cell) =>
-        Math.max(
-          Math.abs(cell.col - selectedUnit.position.col),
-          Math.abs(cell.row - selectedUnit.position.row),
-        ) <= 1,
-    );
-  };
+  const restrictForBlind = useCallback(
+    (cells: Coord[]): Coord[] => {
+      if (!selectedUnit?.blindUntilOwnTurnStart || !selectedUnit.position) return cells;
+      const position = selectedUnit.position;
+      return cells.filter(
+        (cell) =>
+          Math.max(Math.abs(cell.col - position.col), Math.abs(cell.row - position.row)) <= 1,
+      );
+    },
+    [selectedUnit],
+  );
   const doraTargetCenters = useMemo(() => {
     if (!view || effectiveActionMode !== "dora" || !selectedUnit?.position) {
       return [] as Coord[];
     }
     return restrictForBlind(getDoraTargetCenters(view, selectedUnit.id));
-  }, [view, effectiveActionMode, selectedUnit]);
+  }, [view, effectiveActionMode, selectedUnit, restrictForBlind]);
 
   const doraTargetKeys = useMemo(
     () => new Set(doraTargetCenters.map(coordKey)),
-    [doraTargetCenters]
+    [doraTargetCenters],
   );
 
   const artemidaLineTargets = useMemo(() => {
@@ -50,7 +46,7 @@ export function useGameShellAbilityModeTargets({
       return [] as Coord[];
     }
     return restrictForBlind(getDoraTargetCenters(view, selectedUnit.id));
-  }, [view, effectiveActionMode, selectedUnit]);
+  }, [view, effectiveActionMode, selectedUnit, restrictForBlind]);
 
   const artemidaLineTargetKeys = useMemo(
     () => new Set(artemidaLineTargets.map(coordKey)),
@@ -58,19 +54,15 @@ export function useGameShellAbilityModeTargets({
   );
 
   const jebeHailTargetCenters = useMemo(() => {
-    if (
-      !view ||
-      effectiveActionMode !== "jebeHailOfArrows" ||
-      !selectedUnit?.position
-    ) {
+    if (!view || effectiveActionMode !== "jebeHailOfArrows" || !selectedUnit?.position) {
       return [] as Coord[];
     }
     return restrictForBlind(getDoraTargetCenters(view, selectedUnit.id));
-  }, [view, effectiveActionMode, selectedUnit]);
+  }, [view, effectiveActionMode, selectedUnit, restrictForBlind]);
 
   const jebeHailTargetKeys = useMemo(
     () => new Set(jebeHailTargetCenters.map(coordKey)),
-    [jebeHailTargetCenters]
+    [jebeHailTargetCenters],
   );
 
   const mettatonLineTargets = useMemo(() => {
@@ -86,11 +78,11 @@ export function useGameShellAbilityModeTargets({
     return effectiveActionMode === "mettatonLaser"
       ? restrictForBlind(getFullLineTargetCells(view, selectedUnit.id))
       : restrictForBlind(getDoraTargetCenters(view, selectedUnit.id));
-  }, [view, effectiveActionMode, selectedUnit]);
+  }, [view, effectiveActionMode, selectedUnit, restrictForBlind]);
 
   const mettatonLineTargetKeys = useMemo(
     () => new Set(mettatonLineTargets.map(coordKey)),
-    [mettatonLineTargets]
+    [mettatonLineTargets],
   );
 
   const undyneEnergySpearTargets = useMemo(() => {
@@ -105,11 +97,11 @@ export function useGameShellAbilityModeTargets({
       }
     }
     return restrictForBlind(cells);
-  }, [view, effectiveActionMode, selectedUnit]);
+  }, [view, effectiveActionMode, restrictForBlind]);
 
   const undyneEnergySpearTargetKeys = useMemo(
     () => new Set(undyneEnergySpearTargets.map(coordKey)),
-    [undyneEnergySpearTargets]
+    [undyneEnergySpearTargets],
   );
 
   const kaladinFifthTargetCenters = useMemo(() => {
@@ -124,11 +116,11 @@ export function useGameShellAbilityModeTargets({
       }
     }
     return restrictForBlind(cells);
-  }, [view, effectiveActionMode, selectedUnit]);
+  }, [view, effectiveActionMode, restrictForBlind]);
 
   const kaladinFifthTargetKeys = useMemo(
     () => new Set(kaladinFifthTargetCenters.map(coordKey)),
-    [kaladinFifthTargetCenters]
+    [kaladinFifthTargetCenters],
   );
 
   const tisonaTargetCells = useMemo(() => {
@@ -147,18 +139,17 @@ export function useGameShellAbilityModeTargets({
       cells.push({ col: origin.col, row });
     }
     return restrictForBlind(cells);
-  }, [view, effectiveActionMode, selectedUnit]);
+  }, [view, effectiveActionMode, selectedUnit, restrictForBlind]);
 
   const tisonaTargetKeys = useMemo(
     () => new Set(tisonaTargetCells.map(coordKey)),
-    [tisonaTargetCells]
+    [tisonaTargetCells],
   );
 
   const invadeTimeTargets = useMemo(() => {
     if (
       !view ||
-      (effectiveActionMode !== "invadeTime" &&
-        effectiveActionMode !== "odinSleipnir") ||
+      (effectiveActionMode !== "invadeTime" && effectiveActionMode !== "odinSleipnir") ||
       !selectedUnit?.position
     ) {
       return [] as Coord[];
@@ -178,7 +169,7 @@ export function useGameShellAbilityModeTargets({
 
   const invadeTimeKeys = useMemo(
     () => new Set(invadeTimeTargets.map(coordKey)),
-    [invadeTimeTargets]
+    [invadeTimeTargets],
   );
 
   return {

@@ -1,7 +1,17 @@
 import { useMemo } from "react";
 import { buildHighlightedCells } from "../buildHighlightedCells";
 
-export function useGameShellHighlightedCells(params: any) {
+export function useGameShellHighlightedCells(
+  params: import("../buildHighlightedCells").BuildHighlightedCellsArgs & {
+    riverTraLaLaTargetIds: string[];
+    lokiChickenTargetIds: string[];
+    lokiMindControlEnemyIds: string[];
+    lokiMindControlTargetIds: string[];
+    friskPacifismHugsTargetIds: string[];
+    friskWarmWordsTargetIds: string[];
+    friskPrecisionStrikeTargetIds: string[];
+  },
+) {
   const {
     effectiveActionMode,
     modePreviewKind,
@@ -91,13 +101,6 @@ export function useGameShellHighlightedCells(params: any) {
     asgoreFireballTargetKeys,
     undyneEnergySpearTargets,
     undyneSpearThrowTargetKeys,
-    riverTraLaLaTargetIds,
-    lokiChickenTargetIds,
-    lokiMindControlEnemyIds,
-    lokiMindControlTargetIds,
-    friskPacifismHugsTargetIds,
-    friskWarmWordsTargetIds,
-    friskPrecisionStrikeTargetIds,
   } = params;
 
   return useMemo(
@@ -227,7 +230,6 @@ export function useGameShellHighlightedCells(params: any) {
       riverBoatDropDestinationOptions,
       isRiverTraLaLaTargetChoice,
       riverTraLaLaTargetKeys,
-      riverTraLaLaTargetIds,
       isRiverTraLaLaDestinationChoice,
       riverTraLaLaDestinationOptions,
       isRiverTraLaLaDropDestinationChoice,
@@ -257,22 +259,16 @@ export function useGameShellHighlightedCells(params: any) {
       hassanAssassinOrderSelections,
       isLokiChickenTargetChoice,
       lokiChickenTargetKeys,
-      lokiChickenTargetIds,
       isLokiMindControlEnemyChoice,
       lokiMindControlEnemyKeys,
-      lokiMindControlEnemyIds,
       isLokiMindControlTargetChoice,
       lokiMindControlTargetKeys,
-      lokiMindControlTargetIds,
       isFriskPacifismHugsTargetChoice,
       friskPacifismHugsTargetKeys,
-      friskPacifismHugsTargetIds,
       isFriskWarmWordsTargetChoice,
       friskWarmWordsTargetKeys,
-      friskWarmWordsTargetIds,
       isFriskPrecisionStrikeTargetChoice,
       friskPrecisionStrikeTargetKeys,
-      friskPrecisionStrikeTargetIds,
       hassanTrueEnemyCandidateKeys,
       selectedUnit,
       pendingMoveForSelected,
@@ -288,6 +284,6 @@ export function useGameShellHighlightedCells(params: any) {
       asgoreFireballTargetKeys,
       undyneEnergySpearTargets,
       undyneSpearThrowTargetKeys,
-    ]
+    ],
   );
 }

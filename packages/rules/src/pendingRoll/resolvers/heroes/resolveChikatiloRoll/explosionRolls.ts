@@ -12,13 +12,11 @@ function updatePendingAoEFromFalseTrailAttack(
   state: GameState,
   attackerId: string,
   defenderId: string,
-  events: ReturnType<typeof resolveAttack>["events"]
+  events: ReturnType<typeof resolveAttack>["events"],
 ): GameState {
   const attackEvent = events.find(
     (e) =>
-      e.type === "attackResolved" &&
-      e.attackerId === attackerId &&
-      e.defenderId === defenderId
+      e.type === "attackResolved" && e.attackerId === attackerId && e.defenderId === defenderId,
   );
   if (!attackEvent || attackEvent.type !== "attackResolved" || !state.pendingAoE) {
     return state;
@@ -45,9 +43,7 @@ function updatePendingAoEFromFalseTrailAttack(
     .map((e) => (e.type === "stealthRevealed" ? e.unitId : ""))
     .filter((id) => id.length > 0);
   if (revealedIds.length > 0) {
-    const merged = Array.from(
-      new Set([...nextPendingAoE.revealedUnitIds, ...revealedIds])
-    );
+    const merged = Array.from(new Set([...nextPendingAoE.revealedUnitIds, ...revealedIds]));
     nextPendingAoE = { ...nextPendingAoE, revealedUnitIds: merged };
   }
 
@@ -60,7 +56,7 @@ function updatePendingAoEFromFalseTrailAttack(
 export function resolveFalseTrailExplosionAttackerRoll(
   state: GameState,
   pending: PendingRoll,
-  rng: RNG
+  rng: RNG,
 ): ApplyResult {
   const ctx = pending.context as unknown as FalseTrailExplosionContext;
   const caster = ctx.casterId ? state.units[ctx.casterId] : null;
@@ -81,7 +77,7 @@ export function resolveFalseTrailExplosionAttackerRoll(
 export function resolveFalseTrailExplosionDefenderRoll(
   state: GameState,
   pending: PendingRoll,
-  rng: RNG
+  rng: RNG,
 ): ApplyResult {
   const ctx = pending.context as unknown as FalseTrailExplosionContext;
   const caster = ctx.casterId ? state.units[ctx.casterId] : null;
@@ -98,11 +94,7 @@ export function resolveFalseTrailExplosionDefenderRoll(
   const idx = ctx.currentTargetIndex ?? 0;
   const targetId = targets[idx];
   if (!targetId) {
-    return advanceFalseTrailExplosionQueue(
-      clearPendingRoll(state),
-      ctx,
-      []
-    );
+    return advanceFalseTrailExplosionQueue(clearPendingRoll(state), ctx, []);
   }
 
   const target = state.units[targetId];
@@ -131,12 +123,7 @@ export function resolveFalseTrailExplosionDefenderRoll(
     },
   });
 
-  let updatedState = updatePendingAoEFromFalseTrailAttack(
-    nextState,
-    caster.id,
-    targetId,
-    events
-  );
+  const updatedState = updatePendingAoEFromFalseTrailAttack(nextState, caster.id, targetId, events);
   const updatedEvents = [...events];
 
   const nextCtx: FalseTrailExplosionContext = {
@@ -154,7 +141,7 @@ export function resolveFalseTrailExplosionDefenderRoll(
     caster.id,
     targetId,
     updatedEvents,
-    intimidateResume
+    intimidateResume,
   );
   if (intimidate.requested) {
     return { state: intimidate.state, events: intimidate.events };

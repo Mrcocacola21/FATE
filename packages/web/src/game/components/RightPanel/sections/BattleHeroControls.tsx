@@ -42,7 +42,7 @@ export const BattleHeroControls: FC<BattleHeroControlsProps> = ({
             {t("game.papyrusAxis")}
           </div>
           <div className="col-span-2 grid grid-cols-4 gap-2">
-            {papyrusAxisOptions.map(({ axis, label }) => (
+            {papyrusAxisOptions.map(({ axis }) => (
               <button
                 key={axis}
                 type="button"
@@ -72,7 +72,7 @@ export const BattleHeroControls: FC<BattleHeroControlsProps> = ({
             {t("game.energySpearAxis")}
           </div>
           <div className="col-span-2 grid grid-cols-2 gap-2">
-            {undyneAxisOptions.map(({ axis, label }) => (
+            {undyneAxisOptions.map(({ axis }) => (
               <button
                 key={axis}
                 type="button"

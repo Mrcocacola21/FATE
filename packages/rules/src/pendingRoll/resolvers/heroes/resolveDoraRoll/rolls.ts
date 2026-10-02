@@ -17,7 +17,7 @@ import {
 export function resolveDoraAttackerRoll(
   state: GameState,
   pending: PendingRoll,
-  rng: RNG
+  rng: RNG,
 ): ApplyResult {
   const ctx = pending.context as unknown as DoraAoEContext;
   const caster = state.units[ctx.casterId];
@@ -38,7 +38,7 @@ export function resolveDoraAttackerRoll(
 export function resolveDoraDefenderRoll(
   state: GameState,
   pending: PendingRoll,
-  rng: RNG
+  rng: RNG,
 ): ApplyResult {
   const ctx = pending.context as unknown as DoraAoEContext;
   const caster = state.units[ctx.casterId];
@@ -85,18 +85,13 @@ export function resolveDoraDefenderRoll(
     },
   });
 
-  let updatedState = updatePendingAoeFromAttack(
-    nextState,
-    events,
-    caster.id,
-    targetId
-  );
-  let updatedEvents: GameEvent[] = appendPolkovodetsDamageEvent(
+  const updatedState = updatePendingAoeFromAttack(nextState, events, caster.id, targetId);
+  const updatedEvents: GameEvent[] = appendPolkovodetsDamageEvent(
     [...events],
     caster.id,
     targetId,
     damageBonus,
-    sourceId
+    sourceId,
   );
 
   const nextCtx: DoraAoEContext = {
@@ -114,7 +109,7 @@ export function resolveDoraDefenderRoll(
     caster.id,
     targetId,
     updatedEvents,
-    intimidateResume
+    intimidateResume,
   );
   if (intimidate.requested) {
     return { state: intimidate.state, events: intimidate.events };
@@ -127,7 +122,7 @@ export function resolveDoraBerserkerDefenseChoice(
   state: GameState,
   pending: PendingRoll,
   choice: "auto" | "roll" | undefined,
-  rng: RNG
+  _rng: RNG,
 ): ApplyResult {
   const ctx = pending.context as unknown as DoraAoEContext;
   const caster = state.units[ctx.casterId];
@@ -175,7 +170,7 @@ export function resolveDoraBerserkerDefenseChoice(
       target.owner,
       "dora_defenderRoll",
       nextCtx,
-      target.id
+      target.id,
     );
     const choiceEvents: GameEvent[] = [
       evBerserkerDefenseChosen({ defenderId: target.id, choice: "roll" }),
@@ -202,12 +197,7 @@ export function resolveDoraBerserkerDefenseChoice(
     },
   });
 
-  let updatedState = updatePendingAoeFromAttack(
-    nextState,
-    events,
-    caster.id,
-    target.id
-  );
+  const updatedState = updatePendingAoeFromAttack(nextState, events, caster.id, target.id);
   let updatedEvents: GameEvent[] = [
     evBerserkerDefenseChosen({ defenderId: target.id, choice: "auto" }),
     ...events,
@@ -217,7 +207,7 @@ export function resolveDoraBerserkerDefenseChoice(
     caster.id,
     target.id,
     damageBonus,
-    sourceId
+    sourceId,
   );
 
   const nextCtx: DoraAoEContext = {
@@ -235,7 +225,7 @@ export function resolveDoraBerserkerDefenseChoice(
     caster.id,
     target.id,
     updatedEvents,
-    intimidateResume
+    intimidateResume,
   );
   if (intimidate.requested) {
     return { state: intimidate.state, events: intimidate.events };

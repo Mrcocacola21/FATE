@@ -32,21 +32,14 @@ export function testCannotMoveTwicePerTurn() {
   state = toBattleState(state, "P1", mover.id);
   state = initKnowledgeForOwners(state);
 
-  const first = applyAction(
-    state,
-    { type: "move", unitId: mover.id, to: { col: 3, row: 4 } } as any,
-    rng
-  );
+  const first = applyAction(state, { type: "move", unitId: mover.id, to: { col: 3, row: 4 } }, rng);
   const second = applyAction(
     first.state,
-    { type: "move", unitId: mover.id, to: { col: 3, row: 5 } } as any,
-    rng
+    { type: "move", unitId: mover.id, to: { col: 3, row: 5 } },
+    rng,
   );
 
-  assert(
-    second.events.length === 0,
-    "second move should emit no events"
-  );
+  assert(second.events.length === 0, "second move should emit no events");
   assert.deepStrictEqual(
     second.state,
     first.state,
@@ -75,7 +68,7 @@ export function testTricksterMoveOptionsGeneratedAndUsed() {
 
   const optionsInitial = applyAction(
     state,
-    { type: "requestMoveOptions", unitId: trickster.id } as any,
+    { type: "requestMoveOptions", unitId: trickster.id },
     rng
   );
   const options = resolveAllPendingRolls(optionsInitial.state, rng);
@@ -108,13 +101,13 @@ export function testTricksterMoveOptionsGeneratedAndUsed() {
 
   const rejected = applyAction(
     options.state,
-    { type: "move", unitId: trickster.id, to: { col: 8, row: 8 } } as any,
+    { type: "move", unitId: trickster.id, to: { col: 8, row: 8 } },
     rng
   );
   assert.deepStrictEqual(
     rejected.state,
     options.state,
-    "illegal Trickster destination should not mutate movement state"
+    "illegal Trickster destination should not mutate movement state",
   );
   assert(
     rejected.events.length === 0 &&
@@ -125,7 +118,7 @@ export function testTricksterMoveOptionsGeneratedAndUsed() {
   const dest = expected[0];
   const moved = applyAction(
     options.state,
-    { type: "move", unitId: trickster.id, to: dest } as any,
+    { type: "move", unitId: trickster.id, to: dest },
     rng
   );
 
@@ -160,13 +153,13 @@ export function testBerserkerMoveOptionsGeneratedAndUsed() {
 
   const optionsInitial = applyAction(
     state,
-    { type: "requestMoveOptions", unitId: berserker.id } as any,
+    { type: "requestMoveOptions", unitId: berserker.id },
     rng
   );
   const options = resolveAllPendingRolls(optionsInitial.state, rng);
 
   const moveEvent = options.events.find(
-    (e) => e.type === "moveOptionsGenerated" && e.unitId === berserker.id
+    (e) => e.type === "moveOptionsGenerated" && e.unitId === berserker.id,
   );
   assert(moveEvent && moveEvent.type === "moveOptionsGenerated", "moveOptionsGenerated should be emitted");
   assert(
@@ -189,7 +182,7 @@ export function testBerserkerMoveOptionsGeneratedAndUsed() {
   const dest = expected[0];
   const moved = applyAction(
     options.state,
-    { type: "move", unitId: berserker.id, to: dest } as any,
+    { type: "move", unitId: berserker.id, to: dest },
     rng
   );
 
@@ -207,7 +200,7 @@ export function testBerserkerMoveRoll1GeneratesTopRoof() {
 
   const requested = applyAction(
     setup.state,
-    { type: "requestMoveOptions", unitId: setup.berserkerId } as any,
+    { type: "requestMoveOptions", unitId: setup.berserkerId },
     rng
   );
   assert(
@@ -217,7 +210,7 @@ export function testBerserkerMoveRoll1GeneratesTopRoof() {
 
   const resolved = resolvePendingRollOnce(requested.state, rng);
   const moveEvent = resolved.events.find(
-    (e) => e.type === "moveOptionsGenerated" && e.unitId === setup.berserkerId
+    (e) => e.type === "moveOptionsGenerated" && e.unitId === setup.berserkerId,
   );
   assert(moveEvent && moveEvent.type === "moveOptionsGenerated", "moveOptionsGenerated should be emitted");
 
@@ -236,7 +229,7 @@ export function testBerserkerMoveRoll1GeneratesTopRoof() {
   const dest = expected[0];
   const moved = applyAction(
     resolved.state,
-    { type: "move", unitId: setup.berserkerId, to: dest } as any,
+    { type: "move", unitId: setup.berserkerId, to: dest },
     rng
   );
 
@@ -244,7 +237,7 @@ export function testBerserkerMoveRoll1GeneratesTopRoof() {
   assert(moveResolved, "berserker move should resolve to a legal cell");
   assert(
     moved.state.units[setup.berserkerId].turn.moveUsed,
-    "berserker move should consume the move slot"
+    "berserker move should consume the move slot",
   );
 
   console.log("berserker_move_roll_1_generates_top_roof passed");
@@ -257,14 +250,17 @@ export function testBerserkerMoveRoll3GeneratesLeftVertical() {
 
   const requested = applyAction(
     setup.state,
-    { type: "requestMoveOptions", unitId: setup.berserkerId } as any,
+    { type: "requestMoveOptions", unitId: setup.berserkerId },
     rng
   );
   const resolved = resolvePendingRollOnce(requested.state, rng);
   const moveEvent = resolved.events.find(
-    (e) => e.type === "moveOptionsGenerated" && e.unitId === setup.berserkerId
+    (e) => e.type === "moveOptionsGenerated" && e.unitId === setup.berserkerId,
   );
-  assert(moveEvent && moveEvent.type === "moveOptionsGenerated", "moveOptionsGenerated should be emitted");
+  assert(
+    moveEvent && moveEvent.type === "moveOptionsGenerated",
+    "moveOptionsGenerated should be emitted",
+  );
 
   const expected = [
     { col: 3, row: 3 },
@@ -288,14 +284,17 @@ export function testBerserkerMoveRoll5GeneratesMooreRadius1() {
 
   const requested = applyAction(
     setup.state,
-    { type: "requestMoveOptions", unitId: setup.berserkerId } as any,
+    { type: "requestMoveOptions", unitId: setup.berserkerId },
     rng
   );
   const resolved = resolvePendingRollOnce(requested.state, rng);
   const moveEvent = resolved.events.find(
     (e) => e.type === "moveOptionsGenerated" && e.unitId === setup.berserkerId
   );
-  assert(moveEvent && moveEvent.type === "moveOptionsGenerated", "moveOptionsGenerated should be emitted");
+  assert(
+    moveEvent && moveEvent.type === "moveOptionsGenerated",
+    "moveOptionsGenerated should be emitted",
+  );
 
   const expected = [
     { col: 3, row: 3 },
@@ -324,14 +323,17 @@ export function testBerserkerMoveRoll6GeneratesStarShape() {
 
   const requested = applyAction(
     setup.state,
-    { type: "requestMoveOptions", unitId: setup.berserkerId } as any,
+    { type: "requestMoveOptions", unitId: setup.berserkerId },
     rng
   );
   const resolved = resolvePendingRollOnce(requested.state, rng);
   const moveEvent = resolved.events.find(
     (e) => e.type === "moveOptionsGenerated" && e.unitId === setup.berserkerId
   );
-  assert(moveEvent && moveEvent.type === "moveOptionsGenerated", "moveOptionsGenerated should be emitted");
+  assert(
+    moveEvent && moveEvent.type === "moveOptionsGenerated",
+    "moveOptionsGenerated should be emitted",
+  );
 
   const expected = [
     { col: 3, row: 3 },
@@ -368,14 +370,17 @@ export function testBerserkerMoveFiltersOutOfBounds() {
 
   const requested = applyAction(
     setup.state,
-    { type: "requestMoveOptions", unitId: setup.berserkerId } as any,
+    { type: "requestMoveOptions", unitId: setup.berserkerId },
     rng
   );
   const resolved = resolvePendingRollOnce(requested.state, rng);
   const moveEvent = resolved.events.find(
     (e) => e.type === "moveOptionsGenerated" && e.unitId === setup.berserkerId
   );
-  assert(moveEvent && moveEvent.type === "moveOptionsGenerated", "moveOptionsGenerated should be emitted");
+  assert(
+    moveEvent && moveEvent.type === "moveOptionsGenerated",
+    "moveOptionsGenerated should be emitted",
+  );
 
   const expected = [
     { col: 0, row: 1 },
@@ -409,7 +414,7 @@ export function testBerserkerMoveCannotEndOnAlly() {
 
   const requested = applyAction(
     stateWithAlly,
-    { type: "requestMoveOptions", unitId: setup.berserkerId } as any,
+    { type: "requestMoveOptions", unitId: setup.berserkerId },
     rng
   );
   const resolved = resolvePendingRollOnce(requested.state, rng);
@@ -426,7 +431,7 @@ export function testBerserkerMoveCannotEndOnAlly() {
   assert.deepStrictEqual(
     coordKeys(moveEvent.legalTo),
     coordKeys(expected),
-    "ally-occupied destinations should be excluded"
+    "ally-occupied destinations should be excluded",
   );
 
   console.log("berserker_move_cannot_end_on_ally passed");
@@ -439,7 +444,7 @@ export function testBerserkerMoveRequiresManualRollNoAutoroll() {
 
   const requested = applyAction(
     setup.state,
-    { type: "requestMoveOptions", unitId: setup.berserkerId } as any,
+    { type: "requestMoveOptions", unitId: setup.berserkerId },
     rng
   );
 
@@ -453,7 +458,7 @@ export function testBerserkerMoveRequiresManualRollNoAutoroll() {
   );
   assert(
     requested.events.some((e) => e.type === "rollRequested"),
-    "requestMoveOptions should emit rollRequested"
+    "requestMoveOptions should emit rollRequested",
   );
 
   const resolved = resolvePendingRollOnce(requested.state, rng);
@@ -492,7 +497,7 @@ export function testTricksterMoveRequiresPendingOptions() {
 
   const res = applyAction(
     state,
-    { type: "move", unitId: trickster.id, to: { col: 5, row: 5 } } as any,
+    { type: "move", unitId: trickster.id, to: { col: 5, row: 5 } },
     rng
   );
 
@@ -509,7 +514,8 @@ export function testTricksterMoveRequiresPendingOptions() {
 
 export function testBerserkerMoveRequiresPendingRollAndGeneratesOptions() {
   const rng = new SeededRNG(7788);
-  let { state, kaiser, enemy } = setupKaiserState();
+  const { state: initialState5, kaiser, enemy } = setupKaiserState();
+  let state = initialState5;
 
   state = setUnit(state, kaiser.id, {
     position: { col: 4, row: 4 },
@@ -520,30 +526,24 @@ export function testBerserkerMoveRequiresPendingRollAndGeneratesOptions() {
 
   let res = applyAction(
     state,
-    { type: "requestMoveOptions", unitId: kaiser.id, mode: "berserker" } as any,
-    rng
+    { type: "requestMoveOptions", unitId: kaiser.id, mode: "berserker" },
+    rng,
   );
-  assert(
-    res.state.pendingRoll?.kind === "moveBerserker",
-    "berserker move should request a roll"
-  );
+  assert(res.state.pendingRoll?.kind === "moveBerserker", "berserker move should request a roll");
 
   res = resolvePendingRollOnce(res.state, rng);
   assert(!res.state.pendingRoll, "berserker move should clear pending roll");
   const moveEvent = res.events.find((e) => e.type === "moveOptionsGenerated");
   assert(
     moveEvent && moveEvent.type === "moveOptionsGenerated",
-    "move options should be generated after roll"
+    "move options should be generated after roll",
   );
   if (moveEvent && moveEvent.type === "moveOptionsGenerated") {
-    assert(
-      moveEvent.legalTo.length > 0,
-      "berserker move should produce legal destinations"
-    );
+    assert(moveEvent.legalTo.length > 0, "berserker move should produce legal destinations");
   }
   assert(
     (res.state.pendingMove?.legalTo.length ?? 0) > 0,
-    "pendingMove should be populated after berserker roll"
+    "pendingMove should be populated after berserker roll",
   );
 
   console.log("berserker_move_requires_pending_roll_and_generates_options passed");

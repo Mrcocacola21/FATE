@@ -3,8 +3,8 @@ import type { Coord } from "rules";
 import { coordKey } from "../helpers";
 
 interface UseGameShellBoardPendingActorTargetsParams {
-  view: any;
-  pendingRoll: any;
+  view: import("rules").PlayerView | null;
+  pendingRoll: import("rules").PendingRoll | null;
   isJebeKhansShooterTargetChoice: boolean;
   isHassanTrueEnemyTargetChoice: boolean;
   isAsgoreSoulParadePatienceTargetChoice: boolean;
@@ -37,9 +37,9 @@ export function useGameShellBoardPendingActorTargets({
         jebeKhansShooterTargetIds
           .map((targetId) => view?.units[targetId]?.position)
           .filter((coord): coord is Coord => !!coord)
-          .map(coordKey)
+          .map(coordKey),
       ),
-    [jebeKhansShooterTargetIds, view]
+    [jebeKhansShooterTargetIds, view],
   );
 
   const hassanTrueEnemyTargetIds = useMemo(() => {
@@ -54,9 +54,9 @@ export function useGameShellBoardPendingActorTargets({
         hassanTrueEnemyTargetIds
           .map((targetId) => view?.units[targetId]?.position)
           .filter((coord): coord is Coord => !!coord)
-          .map(coordKey)
+          .map(coordKey),
       ),
-    [hassanTrueEnemyTargetIds, view]
+    [hassanTrueEnemyTargetIds, view],
   );
 
   const asgorePatienceTargetIds = useMemo(() => {
@@ -71,9 +71,9 @@ export function useGameShellBoardPendingActorTargets({
         asgorePatienceTargetIds
           .map((targetId) => view?.units[targetId]?.position)
           .filter((coord): coord is Coord => !!coord)
-          .map(coordKey)
+          .map(coordKey),
       ),
-    [asgorePatienceTargetIds, view]
+    [asgorePatienceTargetIds, view],
   );
 
   const asgorePerseveranceTargetIds = useMemo(() => {
@@ -88,9 +88,9 @@ export function useGameShellBoardPendingActorTargets({
         asgorePerseveranceTargetIds
           .map((targetId) => view?.units[targetId]?.position)
           .filter((coord): coord is Coord => !!coord)
-          .map(coordKey)
+          .map(coordKey),
       ),
-    [asgorePerseveranceTargetIds, view]
+    [asgorePerseveranceTargetIds, view],
   );
 
   const asgoreJusticeTargetIds = useMemo(() => {
@@ -105,9 +105,9 @@ export function useGameShellBoardPendingActorTargets({
         asgoreJusticeTargetIds
           .map((targetId) => view?.units[targetId]?.position)
           .filter((coord): coord is Coord => !!coord)
-          .map(coordKey)
+          .map(coordKey),
       ),
-    [asgoreJusticeTargetIds, view]
+    [asgoreJusticeTargetIds, view],
   );
 
   const asgoreIntegrityDestinationOptions = useMemo(() => {
@@ -119,21 +119,19 @@ export function useGameShellBoardPendingActorTargets({
         !!value &&
         typeof value === "object" &&
         typeof (value as { col?: unknown }).col === "number" &&
-        typeof (value as { row?: unknown }).row === "number"
+        typeof (value as { row?: unknown }).row === "number",
     );
   }, [isAsgoreSoulParadeIntegrityDestination, pendingRoll]);
   const asgoreIntegrityDestinationKeys = useMemo(
     () => new Set(asgoreIntegrityDestinationOptions.map(coordKey)),
-    [asgoreIntegrityDestinationOptions]
+    [asgoreIntegrityDestinationOptions],
   );
 
   const hassanAssassinOrderEligibleIds = useMemo(() => {
     if (!isHassanAssassinOrderSelection) return [] as string[];
     const ctx = pendingRoll?.context as { eligibleUnitIds?: unknown } | undefined;
     if (!Array.isArray(ctx?.eligibleUnitIds)) return [] as string[];
-    return ctx.eligibleUnitIds.filter(
-      (value): value is string => typeof value === "string"
-    );
+    return ctx.eligibleUnitIds.filter((value): value is string => typeof value === "string");
   }, [isHassanAssassinOrderSelection, pendingRoll]);
   const hassanAssassinOrderEligibleKeys = useMemo(
     () =>
@@ -141,9 +139,9 @@ export function useGameShellBoardPendingActorTargets({
         hassanAssassinOrderEligibleIds
           .map((unitId) => view?.units[unitId]?.position)
           .filter((coord): coord is Coord => !!coord)
-          .map(coordKey)
+          .map(coordKey),
       ),
-    [hassanAssassinOrderEligibleIds, view]
+    [hassanAssassinOrderEligibleIds, view],
   );
 
   return {

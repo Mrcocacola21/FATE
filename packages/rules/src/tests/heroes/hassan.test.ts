@@ -29,7 +29,7 @@ import {
   toPlacementState,
 } from "../helpers/testUtils";
 export function testHassanHpBonus() {
-  const { state, hassan } = setupHassanState();
+  const { hassan } = setupHassanState();
   const baseHp = getUnitDefinition("assassin").maxHp;
   const meta = getHeroMeta(HERO_HASSAN_ID);
 
@@ -51,15 +51,8 @@ export function testHassanStealthThresholdIs4() {
   state = initKnowledgeForOwners(state);
 
   let rng = makeRngSequence([0.34]); // roll 3
-  let res = applyAction(
-    state,
-    { type: "enterStealth", unitId: hassan.id } as any,
-    rng
-  );
-  assert(
-    res.state.pendingRoll?.kind === "enterStealth",
-    "stealth should request roll"
-  );
+  let res = applyAction(state, { type: "enterStealth", unitId: hassan.id }, rng);
+  assert(res.state.pendingRoll?.kind === "enterStealth", "stealth should request roll");
   res = resolvePendingRollOnce(res.state, rng);
   assert(
     res.state.units[hassan.id].isStealthed === false,
@@ -74,13 +67,13 @@ export function testHassanStealthThresholdIs4() {
   rng = makeRngSequence([0.5]); // roll 4
   res = applyAction(
     state,
-    { type: "enterStealth", unitId: hassan.id } as any,
+    { type: "enterStealth", unitId: hassan.id },
     rng
   );
   res = resolvePendingRollOnce(res.state, rng);
   assert(
     res.state.units[hassan.id].isStealthed === true,
-    "Hassan stealth should succeed on roll 4"
+    "Hassan stealth should succeed on roll 4",
   );
 
   console.log("hassan_stealth_threshold_is_4 passed");
@@ -89,10 +82,11 @@ export function testHassanStealthThresholdIs4() {
 
 export function testHassanTrueEnemyGatingConsumesAndForcesOneAttack() {
   const rng = makeAttackWinRng(1);
-  let { state, hassan } = setupHassanState();
+  const { state: initialState79, hassan } = setupHassanState();
+let state = initialState79;
 
   const enemyForcedAttacker = Object.values(state.units).find(
-    (unit) => unit.owner === "P2" && unit.class === "rider"
+    (unit) => unit.owner === "P2" && unit.class === "rider",
   )!;
   const enemyForcedTarget = Object.values(state.units).find(
     (unit) => unit.owner === "P2" && unit.class === "spearman"
@@ -136,7 +130,7 @@ export function testHassanTrueEnemyGatingConsumesAndForcesOneAttack() {
       unitId: hassan.id,
       abilityId: ABILITY_HASSAN_TRUE_ENEMY,
       payload: { forcedAttackerId: enemyForcedAttacker.id },
-    } as any,
+    },
     rng
   );
   assert(
@@ -145,7 +139,7 @@ export function testHassanTrueEnemyGatingConsumesAndForcesOneAttack() {
   );
   assert(
     used.state.units[hassan.id].charges[ABILITY_HASSAN_TRUE_ENEMY] === 2,
-    "True Enemy should not spend charges when blocked"
+    "True Enemy should not spend charges when blocked",
   );
 
   state = setUnit(state, hassan.id, {
@@ -159,7 +153,7 @@ export function testHassanTrueEnemyGatingConsumesAndForcesOneAttack() {
       unitId: hassan.id,
       abilityId: ABILITY_HASSAN_TRUE_ENEMY,
       payload: { forcedAttackerId: enemyForcedAttacker.id },
-    } as any,
+    },
     rng
   );
 
@@ -169,7 +163,7 @@ export function testHassanTrueEnemyGatingConsumesAndForcesOneAttack() {
   );
   assert(
     used.state.units[hassan.id].charges[ABILITY_HASSAN_TRUE_ENEMY] === 3,
-    "True Enemy should not spend charges before target resolution"
+    "True Enemy should not spend charges before target resolution",
   );
   assert(
     !used.state.units[hassan.id].turn.actionUsed,
@@ -196,13 +190,13 @@ export function testHassanTrueEnemyGatingConsumesAndForcesOneAttack() {
       pendingRollId: used.state.pendingRoll!.id,
       player: used.state.pendingRoll!.player,
       choice: "skip",
-    } as any,
+    },
     rng
   );
   assert(!canceled.state.pendingRoll, "True Enemy skip should clear target selection");
   assert(
     canceled.state.units[hassan.id].charges[ABILITY_HASSAN_TRUE_ENEMY] === 3,
-    "True Enemy skip should not spend charges"
+    "True Enemy skip should not spend charges",
   );
   assert(
     !canceled.state.units[hassan.id].turn.actionUsed,
@@ -216,7 +210,7 @@ export function testHassanTrueEnemyGatingConsumesAndForcesOneAttack() {
       unitId: hassan.id,
       abilityId: ABILITY_HASSAN_TRUE_ENEMY,
       payload: { forcedAttackerId: enemyForcedAttacker.id },
-    } as any,
+    },
     rng
   );
   assert(
@@ -235,7 +229,7 @@ export function testHassanTrueEnemyGatingConsumesAndForcesOneAttack() {
       pendingRollId: reopened.state.pendingRoll!.id,
       player: reopened.state.pendingRoll!.player,
       choice: { type: "hassanTrueEnemyTarget", targetId: enemyForcedTarget.id },
-    } as any,
+    },
     rng
   );
   assert(
@@ -244,7 +238,7 @@ export function testHassanTrueEnemyGatingConsumesAndForcesOneAttack() {
   );
   assert(
     targetChoice.state.pendingRoll?.player === hassan.owner,
-    "Hassan's owner must control the forced attack roll"
+    "Hassan's owner must control the forced attack roll",
   );
   assert(
     targetChoice.state.units[hassan.id].charges[ABILITY_HASSAN_TRUE_ENEMY] === 0,
@@ -277,7 +271,7 @@ export function testHassanTrueEnemyGatingConsumesAndForcesOneAttack() {
       pendingRollId: reopened.state.pendingRoll!.id,
       player: reopened.state.pendingRoll!.player,
       choice: { type: "hassanTrueEnemyTarget", targetId: enemyForcedTarget.id },
-    } as any,
+    },
     rng
   );
   assert(
@@ -286,7 +280,7 @@ export function testHassanTrueEnemyGatingConsumesAndForcesOneAttack() {
   );
   assert(
     duplicateTargetChoice.state.units[hassan.id].charges[ABILITY_HASSAN_TRUE_ENEMY] === 0,
-    "duplicate True Enemy target resolution should not double-spend charges"
+    "duplicate True Enemy target resolution should not double-spend charges",
   );
 
   const resolved = resolveAllPendingRollsWithEvents(targetChoice.state, rng);
@@ -341,7 +335,7 @@ export function testHassanTrueEnemyGatingConsumesAndForcesOneAttack() {
       type: "attack",
       attackerId: enemyForcedAttacker.id,
       defenderId: controllerAlly.id,
-    } as any,
+    },
     makeRngSequence([])
   );
   assert(
@@ -368,59 +362,52 @@ export function testHassanAssassinOrderBattleStartSelectionAndPerSideIndependenc
   while (state.phase === "placement") {
     const current = state.currentPlayer;
     const nextUnit = Object.values(state.units).find(
-      (u) => u.owner === current && !u.position && u.isAlive
+      (u) => u.owner === current && !u.position && u.isAlive,
     );
     if (!nextUnit) {
-      state = applyAction(state, { type: "endTurn" } as any, rng).state;
+      state = applyAction(state, { type: "endTurn" }, rng).state;
       continue;
     }
     const pos = current === "P1" ? p1Coords[p1i++] : p2Coords[p2i++];
     state = applyAction(
       state,
-      { type: "placeUnit", unitId: nextUnit.id, position: pos } as any,
-      rng
+      { type: "placeUnit", unitId: nextUnit.id, position: pos },
+      rng,
     ).state;
   }
 
   assert(
     state.pendingRoll?.kind === "hassanAssassinOrderSelection",
-    "Assassin Order should trigger at battle start"
+    "Assassin Order should trigger at battle start",
   );
-  assert(
-    state.pendingRoll?.player === "P1",
-    "P1 Assassin Order selection should resolve first"
-  );
+  assert(state.pendingRoll?.player === "P1", "P1 Assassin Order selection should resolve first");
 
   const p1Hassan = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.heroId === HERO_HASSAN_ID
+    (u) => u.owner === "P1" && u.heroId === HERO_HASSAN_ID,
   )!;
   const p2Hassan = Object.values(state.units).find(
-    (u) => u.owner === "P2" && u.heroId === HERO_HASSAN_ID
+    (u) => u.owner === "P2" && u.heroId === HERO_HASSAN_ID,
   )!;
   const p1Archer = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.class === "archer"
+    (u) => u.owner === "P1" && u.class === "archer",
   )!;
-  const p1Rider = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.class === "rider"
-  )!;
+  const p1Rider = Object.values(state.units).find((u) => u.owner === "P1" && u.class === "rider")!;
   const p2Archer = Object.values(state.units).find(
-    (u) => u.owner === "P2" && u.class === "archer"
+    (u) => u.owner === "P2" && u.class === "archer",
   )!;
-  const p2Rider = Object.values(state.units).find(
-    (u) => u.owner === "P2" && u.class === "rider"
-  )!;
+  const p2Rider = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "rider")!;
 
   assert(
     getStealthSuccessMinRoll(state.units[p1Archer.id]) === 6,
-    "base archer should start with stealth threshold 6"
+    "base archer should start with stealth threshold 6",
   );
   assert(
     getStealthSuccessMinRoll(state.units[p1Rider.id]) === null,
-    "base rider should start without stealth"
+    "base rider should start without stealth",
   );
   assert(
     getStealthSuccessMinRoll(state.units[p1Hassan.id]) === 4,
-    "Hassan should keep stealth threshold 4"
+    "Hassan should keep stealth threshold 4",
   );
 
   const firstSelection = applyAction(
@@ -433,21 +420,21 @@ export function testHassanAssassinOrderBattleStartSelectionAndPerSideIndependenc
         type: "hassanAssassinOrderPick",
         unitIds: [p1Archer.id, p1Rider.id],
       },
-    } as any,
-    rng
+    },
+    rng,
   );
 
   assert(
     firstSelection.state.pendingRoll?.kind === "hassanAssassinOrderSelection",
-    "P2 should receive independent Assassin Order selection"
+    "P2 should receive independent Assassin Order selection",
   );
   assert(
     firstSelection.state.pendingRoll?.player === "P2",
-    "second Assassin Order selection should be owned by P2"
+    "second Assassin Order selection should be owned by P2",
   );
   assert(
     getStealthSuccessMinRoll(firstSelection.state.units[p2Archer.id]) === 6,
-    "P2 archer threshold should remain unchanged before P2 selection"
+    "P2 archer threshold should remain unchanged before P2 selection",
   );
 
   const secondSelection = applyAction(
@@ -460,38 +447,36 @@ export function testHassanAssassinOrderBattleStartSelectionAndPerSideIndependenc
         type: "hassanAssassinOrderPick",
         unitIds: [p2Archer.id, p2Rider.id],
       },
-    } as any,
-    rng
+    },
+    rng,
   );
 
   assert(
     !secondSelection.state.pendingRoll,
-    "Assassin Order selections should complete for both sides"
+    "Assassin Order selections should complete for both sides",
   );
   assert(
     getStealthSuccessMinRoll(secondSelection.state.units[p1Archer.id]) === 5,
-    "Assassin Order should upgrade archer stealth threshold from 6 to 5"
+    "Assassin Order should upgrade archer stealth threshold from 6 to 5",
   );
   assert(
     getStealthSuccessMinRoll(secondSelection.state.units[p1Rider.id]) === 5,
-    "Assassin Order should grant stealth to non-stealth unit"
+    "Assassin Order should grant stealth to non-stealth unit",
   );
   assert(
     getStealthSuccessMinRoll(secondSelection.state.units[p2Archer.id]) === 5,
-    "P2 selection should upgrade P2 archer independently"
+    "P2 selection should upgrade P2 archer independently",
   );
   assert(
     getStealthSuccessMinRoll(secondSelection.state.units[p2Rider.id]) === 5,
-    "P2 selection should grant stealth independently"
+    "P2 selection should grant stealth independently",
   );
   assert(
     getStealthSuccessMinRoll(secondSelection.state.units[p2Hassan.id]) === 4,
-    "Hassan should remain at stealth threshold 4"
+    "Hassan should remain at stealth threshold 4",
   );
 
-  console.log(
-    "hassan_assassin_order_battle_start_selection_and_per_side_independence passed"
-  );
+  console.log("hassan_assassin_order_battle_start_selection_and_per_side_independence passed");
 }
 
 export function testHassanAssassinOrderResumesAfterChikatiloAndRejectsSafely() {
@@ -545,7 +530,7 @@ export function testHassanAssassinOrderResumesAfterChikatiloAndRejectsSafely() {
       pendingRollId: state.pendingRoll!.id,
       player: "P2",
       choice: { type: "chikatiloPlace", position: { col: 4, row: 4 } },
-    } as any,
+    },
     rng
   );
   assert(
@@ -580,7 +565,7 @@ export function testHassanAssassinOrderResumesAfterChikatiloAndRejectsSafely() {
         type: "hassanAssassinOrderPick",
         unitIds: [eligibleIds[0], chikatilo.id],
       },
-    } as any,
+    },
     rng
   );
   assert(invalid.state === beforeInvalid, "invalid Assassin Order targets must not mutate state");
@@ -597,7 +582,7 @@ export function testHassanAssassinOrderResumesAfterChikatiloAndRejectsSafely() {
         type: "hassanAssassinOrderPick",
         unitIds: selectedIds,
       },
-    } as any,
+    },
     rng
   );
   assert(!resolved.state.pendingRoll, "Assassin Order should clear after a valid selection");
@@ -628,8 +613,8 @@ export function testHassanAssassinOrderResumesAfterChikatiloAndRejectsSafely() {
       type: "useAbility",
       unitId: hassan.id,
       abilityId: ABILITY_HASSAN_ASSASIN_ORDER,
-    } as any,
-    rng
+    },
+    rng,
   );
   assert(
     manual.rejectionReason === "ability_triggers_automatically_at_battle_start",

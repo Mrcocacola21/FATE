@@ -1,3 +1,4 @@
+import { gameShellFixture, type GameShellFixture } from "../../testHelpers/gameShellFixture";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -696,7 +697,7 @@ test("current task panel shows local targeting name, instruction, cost, and canc
 
   const markup = renderToStaticMarkup(
     <CurrentTaskPanel
-      vm={{
+      vm={gameShellFixture({
         view,
         playerId: "P1",
         pendingRoll: null,
@@ -711,7 +712,7 @@ test("current task panel shows local targeting name, instruction, cost, and canc
         selectedUnitId: guts.id,
         papyrusLineAxis: "row",
         setActionMode: () => undefined,
-      }}
+      })}
     />,
   );
 
@@ -728,7 +729,7 @@ test("current task panel keeps movement intent visible through mode and destinat
     class: "berserker",
     heroId: "undyne",
   });
-  const baseVm = {
+  const baseVm: GameShellFixture = {
     view: makeView(undyne),
     playerId: "P1",
     pendingRoll: null,
@@ -747,14 +748,14 @@ test("current task panel keeps movement intent visible through mode and destinat
 
   const modeMarkup = renderToStaticMarkup(
     <CurrentTaskPanel
-      vm={{
+      vm={gameShellFixture({
         ...baseVm,
         moveOptions: {
           unitId: undyne.id,
           legalTo: [],
           modes: ["normal", "spearman"],
         },
-      }}
+      })}
     />,
   );
   assert.match(modeMarkup, /Choose move mode/);
@@ -762,14 +763,14 @@ test("current task panel keeps movement intent visible through mode and destinat
 
   const destinationMarkup = renderToStaticMarkup(
     <CurrentTaskPanel
-      vm={{
+      vm={gameShellFixture({
         ...baseVm,
         moveOptions: {
           unitId: undyne.id,
           legalTo: [{ col: 2, row: 3 }],
           mode: "spearman",
         },
-      }}
+      })}
     />,
   );
   assert.match(destinationMarkup, /Choose a destination/);
@@ -947,7 +948,7 @@ test("Boat targeting remains a forced board task and offers cancel without spend
   });
   const markup = renderToStaticMarkup(
     <CurrentTaskPanel
-      vm={{
+      vm={gameShellFixture({
         view: makeView(river),
         playerId: "P1",
         pendingRoll: {
@@ -956,7 +957,7 @@ test("Boat targeting remains a forced board task and offers cancel without spend
           kind: "riverBoatCarryChoice",
           context: { riverId: river.id, options: [] },
         },
-        pendingMeta: { id: "boat-choice" },
+        pendingMeta: { id: "boat-choice", kind: "riverBoatCarryChoice", player: "P1" },
         pendingQueueCount: 0,
         stakeSelections: [],
         stakeLimit: 0,
@@ -965,7 +966,7 @@ test("Boat targeting remains a forced board task and offers cancel without spend
         actionMode: null,
         targetingMode: null,
         sendAction: () => undefined,
-      }}
+      })}
     />,
   );
 
@@ -979,7 +980,7 @@ test("current task panel shows Frisk board target pending prompts", () => {
   const frisk = makeUnit({ id: "P1-frisk", heroId: "frisk" });
   const markup = renderToStaticMarkup(
     <CurrentTaskPanel
-      vm={{
+      vm={gameShellFixture({
         view: makeView(frisk),
         playerId: "P1",
         pendingRoll: {
@@ -999,7 +1000,7 @@ test("current task panel shows Frisk board target pending prompts", () => {
         sendAction: () => undefined,
         setStakeSelections: () => undefined,
         setHassanAssassinOrderSelections: () => undefined,
-      }}
+      })}
     />,
   );
 
@@ -1132,7 +1133,7 @@ test("Forest impulse target choice appears in the compact current-task UI", () =
   const markup = renderToStaticMarkup(
     <CurrentTaskPanel
       compact
-      vm={{
+      vm={gameShellFixture({
         view: makeView(vlad),
         playerId: "P1",
         pendingRoll: {
@@ -1149,7 +1150,7 @@ test("Forest impulse target choice appears in the compact current-task UI", () =
         sendAction: () => undefined,
         setStakeSelections: () => undefined,
         setHassanAssassinOrderSelections: () => undefined,
-      }}
+      })}
     />,
   );
 
@@ -1849,7 +1850,7 @@ test("Hassan Assassin Order is automatic info and has a mobile-safe pending inst
   const taskMarkup = renderToStaticMarkup(
     <CurrentTaskPanel
       compact
-      vm={{
+      vm={gameShellFixture({
         view: makeView(hassan),
         playerId: "P1",
         pendingRoll: {
@@ -1866,7 +1867,7 @@ test("Hassan Assassin Order is automatic info and has a mobile-safe pending inst
         sendAction: () => undefined,
         setStakeSelections: () => undefined,
         setHassanAssassinOrderSelections: () => undefined,
-      }}
+      })}
     />,
   );
   assert.match(taskMarkup, /Assassin Order selection/);
@@ -1966,7 +1967,7 @@ test("Mongol Charge compact task shows a board-target instruction", () => {
   const markup = renderToStaticMarkup(
     <CurrentTaskPanel
       compact
-      vm={{
+      vm={gameShellFixture({
         view: makeView(ally),
         playerId: "P1",
         pendingRoll: {
@@ -1984,7 +1985,7 @@ test("Mongol Charge compact task shows a board-target instruction", () => {
         isHassanTrueEnemyTargetChoice: true,
         sendAction: () => undefined,
         setStakeSelections: () => undefined,
-      }}
+      })}
     />,
   );
   assert.match(markup, /Mongol Charge: choose ally attack target/);
@@ -2355,7 +2356,7 @@ test("Action Menu renders a compact selected unit header", () => {
 
   assert.match(markup, /data-testid="compact-selected-unit-header"/);
   assert.match(markup, /Grand Kaiser/);
-  assert.match(markup, new RegExp(`HP 5\/${getMaxHp("archer", "grand-kaiser")}`));
+  assert.match(markup, new RegExp(`HP 5/${getMaxHp("archer", "grand-kaiser")}`));
   assert.match(markup, /Archer/);
   assert.match(markup, /h-10 w-10/);
   assert.doesNotMatch(markup, /h-12 w-12/);

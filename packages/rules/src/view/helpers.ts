@@ -1,6 +1,5 @@
 import {
   ArenaEffectState,
-  Coord,
   ForestMarker,
   GameState,
   PlayerId,
@@ -37,9 +36,7 @@ export function cloneUnit(unit: UnitState): UnitState {
     movementDisabledNextTurn: unit.movementDisabledNextTurn,
     ownTurnsStarted: unit.ownTurnsStarted,
     stormStartTurnResolvedTurnNumber: unit.stormStartTurnResolvedTurnNumber,
-    tyrantFinishedAllyIds: unit.tyrantFinishedAllyIds
-      ? [...unit.tyrantFinishedAllyIds]
-      : undefined,
+    tyrantFinishedAllyIds: unit.tyrantFinishedAllyIds ? [...unit.tyrantFinishedAllyIds] : undefined,
     tyrantMovementSources: unit.tyrantMovementSources?.map((source) => ({
       ...source,
       movementClasses: [...source.movementClasses],

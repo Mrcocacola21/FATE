@@ -5,14 +5,10 @@ import {
   HERO_FALSE_TRAIL_TOKEN_ID,
   HERO_GUTS_ID,
   HERO_KALADIN_ID,
-  HERO_SANS_ID,
   HERO_UNDYNE_ID,
 } from "../heroes";
 import { isStormActive, isStormExempt } from "../forest";
-import {
-  canUnitKnowUnitExactPosition,
-  getLineBlockersForPlayer,
-} from "../visibility";
+import { canUnitKnowUnitExactPosition, getLineBlockersForPlayer } from "../visibility";
 import { coordsEqual } from "../board";
 import { canAttackAcrossRuleDeclarationBoundary } from "../ruleDeclarations";
 import { distanceInfo, isSpearmanReachTarget, isTricksterReachTarget } from "./math";
@@ -21,7 +17,7 @@ export function canAttackTarget(
   state: GameState,
   attacker: UnitState,
   defender: UnitState,
-  options?: { allowFriendlyTarget?: boolean }
+  options?: { allowFriendlyTarget?: boolean },
 ): boolean {
   if (!attacker.isAlive || !defender.isAlive) return false;
   if (!attacker.position || !defender.position) return false;
@@ -80,13 +76,7 @@ export function canAttackTarget(
       const isDiagonal = dx === dy;
       if (!isStraight && !isDiagonal) return false;
 
-      const blockers = getLineBlockersForPlayer(
-        state,
-        attacker.owner,
-        attPos,
-        defPos,
-        attacker.id
-      );
+      const blockers = getLineBlockersForPlayer(state, attacker.owner, attPos, defPos, attacker.id);
       const firstBlocker = blockers[0] ? state.units[blockers[0]] : undefined;
       return !!firstBlocker?.position && coordsEqual(firstBlocker.position, defPos);
     }

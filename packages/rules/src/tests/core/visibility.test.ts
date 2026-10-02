@@ -63,14 +63,14 @@ export function testRiderPathIgnoresHiddenEnemies() {
   state = { ...state, phase: "battle", currentPlayer: "P1", activeUnitId: rider.id };
 
   // start rider turn
-  state = applyAction(state, { type: "unitStartTurn", unitId: rider.id } as any, rng).state;
+  state = applyAction(state, { type: "unitStartTurn", unitId: rider.id }, rng).state;
   const hpBefore = {
     [enemy1.id]: state.units[enemy1.id].hp,
     [enemy2.id]: state.units[enemy2.id].hp,
   };
   const moveRes = applyAction(
     state,
-    { type: "move", unitId: rider.id, to: { col: 5, row: 2 } } as any,
+    { type: "move", unitId: rider.id, to: { col: 5, row: 2 } },
     rng,
   );
 
@@ -119,11 +119,7 @@ export function testRiderPathHitsVisibleEnemy() {
   state = toBattleState(state, "P1", rider.id);
   state = initKnowledgeForOwners(state);
 
-  const moved = applyAction(
-    state,
-    { type: "move", unitId: rider.id, to: { col: 4, row: 2 } } as any,
-    rng,
-  );
+  const moved = applyAction(state, { type: "move", unitId: rider.id, to: { col: 4, row: 2 } }, rng);
   assert(
     moved.state.pendingRoll?.kind === "riderPathAttack_attackerRoll",
     "visible touched enemy should still queue a Rider path attack",
@@ -175,7 +171,7 @@ export function testAssassinAttackFromStealth() {
       type: "attack",
       attackerId: attacker.id,
       defenderId: defender.id,
-    } as any,
+    },
     rng,
   );
   const resolved = resolveAllPendingRolls(initial.state, rng);
@@ -234,7 +230,7 @@ export function testHiddenHassanMissesDuolingoAndReveals() {
   const rng = makeRngSequence([0.01, 0.01, 0.99, 0.99]);
   const declared = applyAction(
     state,
-    { type: "attack", attackerId: hassan.id, defenderId: duolingo.id } as any,
+    { type: "attack", attackerId: hassan.id, defenderId: duolingo.id },
     rng,
   );
   const resolved = resolveAllPendingRollsWithEvents(declared.state, rng);
@@ -269,7 +265,7 @@ export function testHiddenHassanHitsDuolingoAndReveals() {
   const rng = makeRngSequence([0.99, 0.99, 0.01, 0.01]);
   const declared = applyAction(
     state,
-    { type: "attack", attackerId: hassan.id, defenderId: duolingo.id } as any,
+    { type: "attack", attackerId: hassan.id, defenderId: duolingo.id },
     rng,
   );
   const resolved = resolveAllPendingRollsWithEvents(declared.state, rng);
@@ -364,7 +360,7 @@ export function testAssassinAttackWithoutStealth() {
       type: "attack",
       attackerId: attacker.id,
       defenderId: defender.id,
-    } as any,
+    },
     rng,
   );
   const resolved = resolveAllPendingRolls(initial.state, rng);
@@ -429,7 +425,7 @@ export function testSearchRevealsOnlyInRadius() {
       type: "searchStealth",
       unitId: searcher.id,
       mode: "action",
-    } as any,
+    },
     rng,
   );
   const resolved = resolveAllPendingRolls(initial.state, rng);
@@ -480,7 +476,7 @@ export function testSearchUpdatesOnlyPlayerKnowledge() {
       type: "searchStealth",
       unitId: searcher.id,
       mode: "action",
-    } as any,
+    },
     rng,
   );
   const resolved = resolveAllPendingRolls(initial.state, rng);
@@ -533,7 +529,7 @@ export function testSearchStealthRollsLogged() {
       type: "searchStealth",
       unitId: searcher.id,
       mode: "action",
-    } as any,
+    },
     rng,
   );
   const resolved = resolveAllPendingRolls(initial.state, rng);
@@ -587,14 +583,14 @@ export function testSearchActionBlockedAfterAttack() {
 
   const attackInitial = applyAction(
     state,
-    { type: "attack", attackerId: attacker.id, defenderId: defender.id } as any,
+    { type: "attack", attackerId: attacker.id, defenderId: defender.id },
     rng,
   );
   const attackResolved = resolveAllPendingRolls(attackInitial.state, rng);
 
   const searchAttempt = applyAction(
     attackResolved.state,
-    { type: "searchStealth", unitId: attacker.id, mode: "action" } as any,
+    { type: "searchStealth", unitId: attacker.id, mode: "action" },
     rng,
   );
 
@@ -629,7 +625,7 @@ export function testSearchMoveBlockedAfterMove() {
 
   const moveRes = applyAction(
     state,
-    { type: "move", unitId: mover.id, to: { col: 4, row: 5 } } as any,
+    { type: "move", unitId: mover.id, to: { col: 4, row: 5 } },
     rng,
   );
 
@@ -642,7 +638,7 @@ export function testSearchMoveBlockedAfterMove() {
 
   const searchAttempt = applyAction(
     afterMove,
-    { type: "searchStealth", unitId: mover.id, mode: "move" } as any,
+    { type: "searchStealth", unitId: mover.id, mode: "move" },
     rng,
   );
 
@@ -683,7 +679,7 @@ export function testSearchActionWorksBeforeAttack() {
 
   const initial = applyAction(
     state,
-    { type: "searchStealth", unitId: searcher.id, mode: "action" } as any,
+    { type: "searchStealth", unitId: searcher.id, mode: "action" },
     rng,
   );
   assert(
@@ -727,7 +723,7 @@ export function testSearchMoveWorksBeforeMove() {
 
   const initial = applyAction(
     state,
-    { type: "searchStealth", unitId: searcher.id, mode: "move" } as any,
+    { type: "searchStealth", unitId: searcher.id, mode: "move" },
     rng,
   );
   assert(
@@ -761,7 +757,7 @@ export function testSearchButtonsEnabledOnFreshUnitTurn() {
   state = initKnowledgeForOwners(state);
   state = { ...state, activeUnitId: null };
 
-  const started = applyAction(state, { type: "unitStartTurn", unitId: searcher.id } as any, rng);
+  const started = applyAction(state, { type: "unitStartTurn", unitId: searcher.id }, rng);
 
   let intents = getLegalIntents(started.state, "P1");
   assert(intents.canSearchMove === true, "search(move) should be legal on fresh turn");
@@ -771,7 +767,7 @@ export function testSearchButtonsEnabledOnFreshUnitTurn() {
 
   const searchMove = applyAction(
     started.state,
-    { type: "searchStealth", unitId: searcher.id, mode: "move" } as any,
+    { type: "searchStealth", unitId: searcher.id, mode: "move" },
     rng,
   );
 
@@ -781,18 +777,18 @@ export function testSearchButtonsEnabledOnFreshUnitTurn() {
 
   const searchAction = applyAction(
     searchMove.state,
-    { type: "searchStealth", unitId: searcher.id, mode: "action" } as any,
+    { type: "searchStealth", unitId: searcher.id, mode: "action" },
     rng,
   );
 
   intents = getLegalIntents(searchAction.state, "P1");
   assert(intents.canSearchAction === false, "search(action) should be disabled after use");
 
-  const ended = applyAction(searchAction.state, { type: "endTurn" } as any, rng);
+  const ended = applyAction(searchAction.state, { type: "endTurn" }, rng);
 
   const restarted = applyAction(
     { ...ended.state, activeUnitId: null },
-    { type: "unitStartTurn", unitId: searcher.id } as any,
+    { type: "unitStartTurn", unitId: searcher.id },
     rng,
   );
 
@@ -843,7 +839,7 @@ export function testAttackAlreadyRevealedUnit() {
       type: "attack",
       attackerId: attacker.id,
       defenderId: defender.id,
-    } as any,
+    },
     rng,
   );
   const resolved = resolveAllPendingRolls(initial.state, rng);
@@ -896,7 +892,7 @@ export function testAdjacentHiddenEnemyStaysHiddenAfterMove() {
       type: "move",
       unitId: mover.id,
       to: { col: 3, row: 4 },
-    } as any,
+    },
     rng,
   );
 
@@ -950,7 +946,7 @@ export function testCannotAttackAfterSearchAction() {
 
   const searchAction = applyAction(
     state,
-    { type: "searchStealth", unitId: searcher.id, mode: "action" } as any,
+    { type: "searchStealth", unitId: searcher.id, mode: "action" },
     rng,
   );
   const resolvedSearch = resolveAllPendingRolls(searchAction.state, rng);
@@ -962,7 +958,7 @@ export function testCannotAttackAfterSearchAction() {
 
   const attackAfter = applyAction(
     resolvedSearch.state,
-    { type: "attack", attackerId: searcher.id, defenderId: defender.id } as any,
+    { type: "attack", attackerId: searcher.id, defenderId: defender.id },
     rng,
   );
 
@@ -984,15 +980,11 @@ export function testCannotSearchMoveAfterMove() {
   state = setUnit(state, mover.id, { position: { col: 4, row: 4 } });
   state = toBattleState(state, "P1", mover.id);
 
-  const moved = applyAction(
-    state,
-    { type: "move", unitId: mover.id, to: { col: 4, row: 3 } } as any,
-    rng,
-  );
+  const moved = applyAction(state, { type: "move", unitId: mover.id, to: { col: 4, row: 3 } }, rng);
 
   const searchAfterMove = applyAction(
     moved.state,
-    { type: "searchStealth", unitId: mover.id, mode: "move" } as any,
+    { type: "searchStealth", unitId: mover.id, mode: "move" },
     rng,
   );
 
@@ -1019,7 +1011,7 @@ export function testRiderCannotEnterStealth() {
   state = setUnit(state, rider.id, { position: { col: 4, row: 4 } });
   state = toBattleState(state, "P1", rider.id);
 
-  const res = applyAction(state, { type: "enterStealth", unitId: rider.id } as any, rng);
+  const res = applyAction(state, { type: "enterStealth", unitId: rider.id }, rng);
 
   const enter = res.events.find((e) => e.type === "stealthEntered");
   assert(
@@ -1046,7 +1038,7 @@ export function testAssassinCanEnterStealth() {
   state = setUnit(state, assassin.id, { position: { col: 4, row: 4 } });
   state = toBattleState(state, "P1", assassin.id);
 
-  const initial = applyAction(state, { type: "enterStealth", unitId: assassin.id } as any, rng);
+  const initial = applyAction(state, { type: "enterStealth", unitId: assassin.id }, rng);
   const res = resolveAllPendingRolls(initial.state, rng);
 
   const enter = res.events.find((e) => e.type === "stealthEntered");
@@ -1075,7 +1067,7 @@ export function testStealthOnlyForUnitsWithAbility() {
     state = setUnit(state, unit.id, { position: { col: 4, row: 4 } });
     state = toBattleState(state, "P1", unit.id);
 
-    const res = applyAction(state, { type: "enterStealth", unitId: unit.id } as any, rng);
+    const res = applyAction(state, { type: "enterStealth", unitId: unit.id }, rng);
 
     const enter = res.events.find((e) => e.type === "stealthEntered");
     assert(
@@ -1108,11 +1100,7 @@ export function testAllyCannotStepOnStealthedAlly() {
   state = toBattleState(state, "P1", mover.id);
   state = initKnowledgeForOwners(state);
 
-  const res = applyAction(
-    state,
-    { type: "move", unitId: mover.id, to: { col: 3, row: 4 } } as any,
-    rng,
-  );
+  const res = applyAction(state, { type: "move", unitId: mover.id, to: { col: 3, row: 4 } }, rng);
 
   assert(res.events.length === 0, "move onto stealthed ally should be rejected");
   assert(
@@ -1147,11 +1135,7 @@ export function testEnemyCanStepOnUnknownStealthedWithoutReveal() {
   state = toBattleState(state, "P1", mover.id);
   state = initKnowledgeForOwners(state);
 
-  const res = applyAction(
-    state,
-    { type: "move", unitId: mover.id, to: { col: 3, row: 4 } } as any,
-    rng,
-  );
+  const res = applyAction(state, { type: "move", unitId: mover.id, to: { col: 3, row: 4 } }, rng);
 
   assert(
     res.state.units[mover.id].position!.row === 4 && res.state.units[mover.id].position!.col === 3,
@@ -1225,7 +1209,7 @@ export function testHiddenAllyOnEnemyCellDoesNotBlockAttackOrReveal() {
 
   const declared = applyAction(
     state,
-    { type: "attack", attackerId: attacker.id, defenderId: visibleEnemy.id } as any,
+    { type: "attack", attackerId: attacker.id, defenderId: visibleEnemy.id },
     rng,
   );
   assert(
@@ -1288,7 +1272,7 @@ export function testTwoVisibleEnemiesOnFirstArcherCellAreBothLegalById() {
   const selected = enemies[1]!;
   const declared = applyAction(
     state,
-    { type: "attack", attackerId: archer.id, defenderId: selected.id } as any,
+    { type: "attack", attackerId: archer.id, defenderId: selected.id },
     makeRngSequence([0.99]),
   );
   assert(
@@ -1326,7 +1310,7 @@ export function testUnknownStealthedEnemyDoesNotBlockArcherLine() {
 
   const initial = applyAction(
     state,
-    { type: "attack", attackerId: archer.id, defenderId: visible.id } as any,
+    { type: "attack", attackerId: archer.id, defenderId: visible.id },
     rng,
   );
   const resolved = resolveAllPendingRolls(initial.state, rng);
@@ -1376,7 +1360,7 @@ export function testStealthEntryClearsOpponentExactKnowledge() {
     "opponent should know visible unit before stealth",
   );
 
-  const initial = applyAction(state, { type: "enterStealth", unitId: hidden.id } as any, rng);
+  const initial = applyAction(state, { type: "enterStealth", unitId: hidden.id }, rng);
   const resolved = resolveAllPendingRolls(initial.state, rng);
 
   assert(resolved.state.units[hidden.id].isStealthed === true, "unit should enter stealth");
@@ -1424,15 +1408,11 @@ export function testPathPassingAdjacentAfterStealthEntryDoesNotReveal() {
     },
   };
 
-  const enterInitial = applyAction(state, { type: "enterStealth", unitId: hidden.id } as any, rng);
+  const enterInitial = applyAction(state, { type: "enterStealth", unitId: hidden.id }, rng);
   const entered = resolveAllPendingRolls(enterInitial.state, rng);
   state = toBattleState(entered.state, "P2", rider.id);
 
-  const moved = applyAction(
-    state,
-    { type: "move", unitId: rider.id, to: { col: 6, row: 4 } } as any,
-    rng,
-  );
+  const moved = applyAction(state, { type: "move", unitId: rider.id, to: { col: 6, row: 4 } }, rng);
 
   assert(
     moved.state.units[rider.id].position?.col === 6 &&
@@ -1475,15 +1455,11 @@ export function testEnemyCanStepOnRealStealthEntryCellWithoutReveal() {
     },
   };
 
-  const enterInitial = applyAction(state, { type: "enterStealth", unitId: hidden.id } as any, rng);
+  const enterInitial = applyAction(state, { type: "enterStealth", unitId: hidden.id }, rng);
   const entered = resolveAllPendingRolls(enterInitial.state, rng);
   state = toBattleState(entered.state, "P2", mover.id);
 
-  const moved = applyAction(
-    state,
-    { type: "move", unitId: mover.id, to: { col: 3, row: 4 } } as any,
-    rng,
-  );
+  const moved = applyAction(state, { type: "move", unitId: mover.id, to: { col: 3, row: 4 } }, rng);
 
   assert(
     moved.state.units[mover.id].position?.col === 3 &&
@@ -1715,13 +1691,13 @@ export function testRealStealthEntryDoesNotBlockArcherLine() {
     },
   };
 
-  const enterInitial = applyAction(state, { type: "enterStealth", unitId: hidden.id } as any, rng);
+  const enterInitial = applyAction(state, { type: "enterStealth", unitId: hidden.id }, rng);
   const entered = resolveAllPendingRolls(enterInitial.state, rng);
   state = toBattleState(entered.state, "P2", archer.id);
 
   const initial = applyAction(
     state,
-    { type: "attack", attackerId: archer.id, defenderId: visible.id } as any,
+    { type: "attack", attackerId: archer.id, defenderId: visible.id },
     rng,
   );
   const resolved = resolveAllPendingRolls(initial.state, rng);
@@ -1775,7 +1751,7 @@ export function testKnownHiddenEnemyBlocksMovementAndArcherLine() {
   const moveState = toBattleState(state, "P1", mover.id);
   const blockedMove = applyAction(
     moveState,
-    { type: "move", unitId: mover.id, to: { col: 4, row: 3 } } as any,
+    { type: "move", unitId: mover.id, to: { col: 4, row: 3 } },
     rng,
   );
   assert(blockedMove.events.length === 0, "known hidden enemy should block movement");
@@ -1789,7 +1765,7 @@ export function testKnownHiddenEnemyBlocksMovementAndArcherLine() {
   const attackRng = makeRngSequence([0.9, 0.9, 0.1, 0.1]);
   const blockedAttack = applyAction(
     attackState,
-    { type: "attack", attackerId: archer.id, defenderId: visible.id } as any,
+    { type: "attack", attackerId: archer.id, defenderId: visible.id },
     attackRng,
   );
   const resolvedBlockedAttack = resolveAllPendingRolls(blockedAttack.state, attackRng);
@@ -1913,7 +1889,7 @@ export function testCannotAttackStealthedEnemyDirectly() {
 
   const initial = applyAction(
     state,
-    { type: "attack", attackerId: attacker.id, defenderId: hidden.id } as any,
+    { type: "attack", attackerId: attacker.id, defenderId: hidden.id },
     rng,
   );
   const res = resolveAllPendingRolls(initial.state, rng);
@@ -1949,7 +1925,7 @@ export function testNoStealthStackingOnEnter() {
 
   state = toBattleState(state, "P1", entering.id);
 
-  const res = applyAction(state, { type: "enterStealth", unitId: entering.id } as any, rng);
+  const res = applyAction(state, { type: "enterStealth", unitId: entering.id }, rng);
 
   const enterEvent = res.events.find((e) => e.type === "stealthEntered");
   assert(
@@ -1999,7 +1975,7 @@ export function testStealthLasts3OwnTurnsThenExpiresOn4thStart() {
   };
 
   // 1st own turn start: 3 -> 2
-  let res = applyAction(state, { type: "unitStartTurn", unitId: assassin.id } as any, rng);
+  let res = applyAction(state, { type: "unitStartTurn", unitId: assassin.id }, rng);
   assert(
     res.state.units[assassin.id].stealthTurnsLeft === 2,
     "stealth should tick to 2 on 1st own turn",
@@ -2010,12 +1986,12 @@ export function testStealthLasts3OwnTurnsThenExpiresOn4thStart() {
   );
 
   // Enemy turn (no tick)
-  state = applyAction(res.state, { type: "endTurn" } as any, rng).state;
-  state = applyAction(state, { type: "unitStartTurn", unitId: enemy.id } as any, rng).state;
+  state = applyAction(res.state, { type: "endTurn" }, rng).state;
+  state = applyAction(state, { type: "unitStartTurn", unitId: enemy.id }, rng).state;
 
   // 2nd own turn start: 2 -> 1
-  state = applyAction(state, { type: "endTurn" } as any, rng).state;
-  res = applyAction(state, { type: "unitStartTurn", unitId: assassin.id } as any, rng);
+  state = applyAction(state, { type: "endTurn" }, rng).state;
+  res = applyAction(state, { type: "unitStartTurn", unitId: assassin.id }, rng);
   assert(
     res.state.units[assassin.id].stealthTurnsLeft === 1,
     "stealth should tick to 1 on 2nd own turn",
@@ -2026,12 +2002,12 @@ export function testStealthLasts3OwnTurnsThenExpiresOn4thStart() {
   );
 
   // Enemy turn (no tick)
-  state = applyAction(res.state, { type: "endTurn" } as any, rng).state;
-  state = applyAction(state, { type: "unitStartTurn", unitId: enemy.id } as any, rng).state;
+  state = applyAction(res.state, { type: "endTurn" }, rng).state;
+  state = applyAction(state, { type: "unitStartTurn", unitId: enemy.id }, rng).state;
 
   // 3rd own turn start: 1 -> 0 (still stealthed)
-  state = applyAction(state, { type: "endTurn" } as any, rng).state;
-  res = applyAction(state, { type: "unitStartTurn", unitId: assassin.id } as any, rng);
+  state = applyAction(state, { type: "endTurn" }, rng).state;
+  res = applyAction(state, { type: "unitStartTurn", unitId: assassin.id }, rng);
   assert(
     res.state.units[assassin.id].stealthTurnsLeft === 0,
     "stealth should tick to 0 on 3rd own turn",
@@ -2042,12 +2018,12 @@ export function testStealthLasts3OwnTurnsThenExpiresOn4thStart() {
   );
 
   // Enemy turn (no tick)
-  state = applyAction(res.state, { type: "endTurn" } as any, rng).state;
-  state = applyAction(state, { type: "unitStartTurn", unitId: enemy.id } as any, rng).state;
+  state = applyAction(res.state, { type: "endTurn" }, rng).state;
+  state = applyAction(state, { type: "unitStartTurn", unitId: enemy.id }, rng).state;
 
   // 4th own turn start: reveal
-  state = applyAction(state, { type: "endTurn" } as any, rng).state;
-  const revealRes = applyAction(state, { type: "unitStartTurn", unitId: assassin.id } as any, rng);
+  state = applyAction(state, { type: "endTurn" }, rng).state;
+  const revealRes = applyAction(state, { type: "unitStartTurn", unitId: assassin.id }, rng);
   const reveal = revealRes.events.find(
     (e) => e.type === "stealthRevealed" && e.unitId === assassin.id,
   );
@@ -2080,7 +2056,7 @@ export function testStealthRollLogged() {
   });
   state = toBattleState(state, "P1", assassin.id);
 
-  const initial = applyAction(state, { type: "enterStealth", unitId: assassin.id } as any, rng);
+  const initial = applyAction(state, { type: "enterStealth", unitId: assassin.id }, rng);
   const res = resolveAllPendingRolls(initial.state, rng);
 
   const enterEvent = res.events.find((e) => e.type === "stealthEntered");
@@ -2151,11 +2127,7 @@ export function testLastKnownPositionPersistsWhileHidden() {
   state = toBattleState(state, "P1", assassin.id);
   state = initKnowledgeForOwners(state);
 
-  const enterInitial = applyAction(
-    state,
-    { type: "enterStealth", unitId: assassin.id } as any,
-    rng,
-  );
+  const enterInitial = applyAction(state, { type: "enterStealth", unitId: assassin.id }, rng);
   const enterResolved = resolveAllPendingRolls(enterInitial.state, rng);
 
   const lastKnownBefore = enterResolved.state.lastKnownPositions?.P2?.[assassin.id];
@@ -2166,7 +2138,7 @@ export function testLastKnownPositionPersistsWhileHidden() {
 
   const moveRes = applyAction(
     enterResolved.state,
-    { type: "move", unitId: assassin.id, to: { col: 4, row: 5 } } as any,
+    { type: "move", unitId: assassin.id, to: { col: 4, row: 5 } },
     rng,
   );
 
@@ -2223,7 +2195,7 @@ export function testLastKnownClearedOnStealthExit() {
     turnOrderIndex: 0,
   };
 
-  const revealRes = applyAction(state, { type: "unitStartTurn", unitId: assassin.id } as any, rng);
+  const revealRes = applyAction(state, { type: "unitStartTurn", unitId: assassin.id }, rng);
 
   const cleared = revealRes.state.lastKnownPositions?.P2?.[assassin.id];
   assert(cleared === undefined, "last known position should be cleared when stealth ends");
@@ -2279,7 +2251,7 @@ export function testTricksterAoERevealsHiddenInArea() {
       unitId: trickster.id,
       abilityId: "tricksterAoE",
       payload: { center: { col: 5, row: 5 } },
-    } as any,
+    },
     rng,
   );
   const resolved = resolveAllPendingRollsWithEvents(initial.state, rng);
@@ -2351,7 +2323,7 @@ export function testTricksterAoERevealsAllInArea() {
       unitId: trickster.id,
       abilityId: "tricksterAoE",
       payload: { center: { col: 4, row: 4 } },
-    } as any,
+    },
     rng,
   );
   const resolved = resolveAllPendingRollsWithEvents(initial.state, rng);
@@ -2410,7 +2382,7 @@ export function testTricksterAoERevealsStealthedUnits() {
       unitId: trickster.id,
       abilityId: "tricksterAoE",
       payload: { center: { col: 4, row: 4 } },
-    } as any,
+    },
     rng,
   );
   const resolved = resolveAllPendingRollsWithEvents(initial.state, rng);
@@ -2456,7 +2428,7 @@ export function testArcherCannotTargetHiddenEnemy() {
 
   const initial = applyAction(
     state,
-    { type: "attack", attackerId: archer.id, defenderId: hidden.id } as any,
+    { type: "attack", attackerId: archer.id, defenderId: hidden.id },
     rng,
   );
   const res = resolveAllPendingRolls(initial.state, rng);
@@ -2483,11 +2455,11 @@ export function testCannotStealthTwicePerTurn() {
   state = setUnit(state, assassin.id, { position: { col: 4, row: 4 } });
   state = toBattleState(state, "P1", assassin.id);
 
-  const first = applyAction(state, { type: "enterStealth", unitId: assassin.id } as any, rng);
+  const first = applyAction(state, { type: "enterStealth", unitId: assassin.id }, rng);
   const resolvedFirst = resolveAllPendingRolls(first.state, rng);
   const second = applyAction(
     resolvedFirst.state,
-    { type: "enterStealth", unitId: assassin.id } as any,
+    { type: "enterStealth", unitId: assassin.id },
     rng,
   );
 
@@ -2528,14 +2500,14 @@ export function testSearchStealthSlots() {
 
   const searchMove = applyAction(
     state,
-    { type: "searchStealth", unitId: searcher.id, mode: "move" } as any,
+    { type: "searchStealth", unitId: searcher.id, mode: "move" },
     rng,
   );
   const resolvedSearchMove = resolveAllPendingRolls(searchMove.state, rng);
 
   const moveAfterSearch = applyAction(
     resolvedSearchMove.state,
-    { type: "move", unitId: searcher.id, to: { col: 4, row: 3 } } as any,
+    { type: "move", unitId: searcher.id, to: { col: 4, row: 3 } },
     rng,
   );
   assert(
@@ -2548,14 +2520,14 @@ export function testSearchStealthSlots() {
 
   const searchAction = applyAction(
     state2,
-    { type: "searchStealth", unitId: searcher.id, mode: "action" } as any,
+    { type: "searchStealth", unitId: searcher.id, mode: "action" },
     rng,
   );
   const resolvedSearchAction = resolveAllPendingRolls(searchAction.state, rng);
 
   const moveAfterActionSearch = applyAction(
     resolvedSearchAction.state,
-    { type: "move", unitId: searcher.id, to: { col: 4, row: 3 } } as any,
+    { type: "move", unitId: searcher.id, to: { col: 4, row: 3 } },
     rng,
   );
   const moved = moveAfterActionSearch.events.find((e) => e.type === "unitMoved");
@@ -2563,7 +2535,7 @@ export function testSearchStealthSlots() {
 
   const secondActionSearch = applyAction(
     resolvedSearchAction.state,
-    { type: "searchStealth", unitId: searcher.id, mode: "action" } as any,
+    { type: "searchStealth", unitId: searcher.id, mode: "action" },
     rng,
   );
   assert(secondActionSearch.events.length === 0, "second action search should be blocked");

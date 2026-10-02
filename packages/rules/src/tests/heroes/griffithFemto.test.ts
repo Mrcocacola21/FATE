@@ -25,16 +25,17 @@ import {
 } from "../helpers/testUtils";
 import { getAbilitySpec } from "../../abilities";
 export function testGriffithWretchedManDamageReductionClamped() {
-  let { state, griffith } = setupGriffithState();
+  const { state: initialState63, griffith } = setupGriffithState();
+  let state = initialState63;
   const enemy = Object.values(state.units).find(
-    (unit) => unit.owner === "P2" && unit.class === "rider"
+    (unit) => unit.owner === "P2" && unit.class === "rider",
   )!;
 
   state = setUnit(state, griffith.id, { position: { col: 4, row: 4 } });
   state = setUnit(state, enemy.id, { position: { col: 4, row: 5 } });
   state = initKnowledgeForOwners(state);
 
-  let normal = resolveAttack(state, {
+  const normal = resolveAttack(state, {
     attackerId: griffith.id,
     defenderId: enemy.id,
     rolls: {
@@ -42,11 +43,11 @@ export function testGriffithWretchedManDamageReductionClamped() {
       defenderDice: [1, 1],
     },
   });
-  let normalEvent = normal.events.find(
+  const normalEvent = normal.events.find(
     (event) =>
       event.type === "attackResolved" &&
       event.attackerId === griffith.id &&
-      event.defenderId === enemy.id
+      event.defenderId === enemy.id,
   ) as Extract<GameEvent, { type: "attackResolved" }> | undefined;
   assert(normalEvent, "Griffith attack should resolve");
   assert(
@@ -77,10 +78,11 @@ export function testGriffithWretchedManDamageReductionClamped() {
 
 
 export function testGriffithWarriorDoubleAutoHit() {
-  let { state, griffith } = setupGriffithState();
-  const enemy = Object.values(state.units).find(
-    (unit) => unit.owner === "P2" && unit.class === "rider"
-  )!;
+  const { state: initialState64, griffith } = setupGriffithState();
+let state = initialState64;
+const enemy = Object.values(state.units).find(
+  (unit) => unit.owner === "P2" && unit.class === "rider",
+)!;
 
   state = setUnit(state, griffith.id, { position: { col: 4, row: 4 } });
   state = setUnit(state, enemy.id, { position: { col: 4, row: 5 } });
@@ -113,9 +115,10 @@ export function testGriffithWarriorDoubleAutoHit() {
 
 export function testGriffithBasicAttackAndReadOnlyRebirth() {
   const rng = makeRngSequence([0.99, 0.99, 0.01, 0.01]);
-  let { state, griffith } = setupGriffithState();
+  const { state: initialState65, griffith } = setupGriffithState();
+let state = initialState65;
   const enemy = Object.values(state.units).find(
-    (unit) => unit.owner === "P2" && unit.class === "rider"
+    (unit) => unit.owner === "P2" && unit.class === "rider",
   )!;
 
   assert(
@@ -134,13 +137,13 @@ export function testGriffithBasicAttackAndReadOnlyRebirth() {
       type: "useAbility",
       unitId: griffith.id,
       abilityId: ABILITY_GRIFFITH_FEMTO_REBIRTH,
-    } as any,
+    },
     makeRngSequence([])
   );
   assert(
     manualRebirth.events.length === 0 &&
       manualRebirth.state.units[griffith.id].heroId === HERO_GRIFFITH_ID,
-    "manual Femto Rebirth command should not transform or emit an ability event"
+    "manual Femto Rebirth command should not transform or emit an ability event",
   );
   assert(
     manualRebirth.state.units[griffith.id].turn.actionUsed === false,
@@ -155,14 +158,14 @@ export function testGriffithBasicAttackAndReadOnlyRebirth() {
   );
   const invalidAttack = applyAction(
     invalidState,
-    { type: "attack", attackerId: griffith.id, defenderId: enemy.id } as any,
+    { type: "attack", attackerId: griffith.id, defenderId: enemy.id },
     makeRngSequence([])
   );
   assert(
     !invalidAttack.state.pendingRoll &&
       invalidAttack.state.units[griffith.id].turn.actionUsed === false &&
       invalidAttack.state.units[griffith.id].turn.attackUsed === false,
-    "invalid Griffith attack should be rejected without spending slots"
+    "invalid Griffith attack should be rejected without spending slots",
   );
 
   const legalTargets = getLegalAttackTargets(state, griffith.id);
@@ -172,17 +175,17 @@ export function testGriffithBasicAttackAndReadOnlyRebirth() {
   );
   const attacked = applyAction(
     state,
-    { type: "attack", attackerId: griffith.id, defenderId: enemy.id } as any,
+    { type: "attack", attackerId: griffith.id, defenderId: enemy.id },
     rng
   );
   assert(
     attacked.state.pendingRoll?.kind === "attack_attackerRoll",
-    "valid Griffith attack should enter normal attack roll flow"
+    "valid Griffith attack should enter normal attack roll flow",
   );
   assert(
     attacked.state.units[griffith.id].turn.actionUsed === false &&
       attacked.state.units[griffith.id].turn.attackUsed === false,
-    "Griffith attack should not spend slots before the attack resolves"
+    "Griffith attack should not spend slots before the attack resolves",
   );
 
   const resolved = resolveAllPendingRollsWithEvents(attacked.state, rng);
@@ -205,9 +208,10 @@ export function testGriffithBasicAttackAndReadOnlyRebirth() {
 
 export function testGriffithFemtoRebirthOnDeath() {
   const rng = makeAttackWinRng(1);
-  let { state, griffith } = setupGriffithState();
+  const { state: initialState66, griffith } = setupGriffithState();
+let state = initialState66;
   const enemy = Object.values(state.units).find(
-    (unit) => unit.owner === "P2" && unit.class === "rider"
+    (unit) => unit.owner === "P2" && unit.class === "rider",
   )!;
 
   for (const unit of Object.values(state.units)) {
@@ -229,7 +233,7 @@ export function testGriffithFemtoRebirthOnDeath() {
 
   const attack = applyAction(
     state,
-    { type: "attack", attackerId: enemy.id, defenderId: griffith.id } as any,
+    { type: "attack", attackerId: enemy.id, defenderId: griffith.id },
     rng
   );
   const resolved = resolveAllPendingRollsWithEvents(attack.state, rng);
@@ -278,7 +282,7 @@ export function testGriffithFemtoRebirthOnDeath() {
 
   const ended = applyAction(
     resolved.state,
-    { type: "endTurn" } as any,
+    { type: "endTurn" },
     makeRngSequence([])
   );
   assert(
@@ -291,9 +295,10 @@ export function testGriffithFemtoRebirthOnDeath() {
 
 
 export function testFemtoSpearmanReachAndBerserkerDamage() {
-  let { state, griffith } = setupGriffithState();
+  const { state: initialState67, griffith } = setupGriffithState();
+  let state = initialState67;
   const enemy = Object.values(state.units).find(
-    (unit) => unit.owner === "P2" && unit.class === "rider"
+    (unit) => unit.owner === "P2" && unit.class === "rider",
   )!;
 
   state = setUnit(state, griffith.id, { position: { col: 4, row: 4 } });
@@ -305,7 +310,7 @@ export function testFemtoSpearmanReachAndBerserkerDamage() {
   const legalTargets = getLegalAttackTargets(state, griffith.id);
   assert(
     legalTargets.includes(enemy.id),
-    "Femto normal attacks should use spearman reach (distance 2 legal)"
+    "Femto normal attacks should use spearman reach (distance 2 legal)",
   );
 
   const resolved = resolveAttack(state, {
@@ -320,12 +325,12 @@ export function testFemtoSpearmanReachAndBerserkerDamage() {
     (event) =>
       event.type === "attackResolved" &&
       event.attackerId === griffith.id &&
-      event.defenderId === enemy.id
+      event.defenderId === enemy.id,
   ) as Extract<GameEvent, { type: "attackResolved" }> | undefined;
   assert(attackEvent, "Femto attack should resolve");
   assert(
     attackEvent.damage === getUnitDefinition("berserker").baseAttack,
-    "Femto base damage should equal berserker base damage"
+    "Femto base damage should equal berserker base damage",
   );
 
   console.log("femto_spearman_reach_and_berserker_damage passed");
@@ -345,7 +350,7 @@ export function testFemtoDivineMoveUsesMoveSlotAndRollRanges() {
       type: "useAbility",
       unitId: griffith.id,
       abilityId: ABILITY_FEMTO_DIVINE_MOVE,
-    } as any,
+    },
     makeRngSequence([])
   );
   assert(
@@ -358,7 +363,7 @@ export function testFemtoDivineMoveUsesMoveSlotAndRollRanges() {
   );
   assert(
     used.state.units[griffith.id].turn.actionUsed === false,
-    "Divine Movement should not consume main action"
+    "Divine Movement should not consume main action",
   );
 
   const shortRange = resolvePendingRollOnce(used.state, makeRngSequence([0.2])); // roll 2
@@ -386,7 +391,7 @@ export function testFemtoDivineMoveUsesMoveSlotAndRollRanges() {
       pendingRollId: shortRange.state.pendingRoll!.id,
       player: shortRange.state.pendingRoll!.player,
       choice: { type: "femtoDivineMoveDestination", position: shortDestination },
-    } as any,
+    },
     makeRngSequence([])
   );
   assert(
@@ -396,7 +401,7 @@ export function testFemtoDivineMoveUsesMoveSlotAndRollRanges() {
   );
   assert(
     shortChosen.state.units[griffith.id].turn.actionUsed === false,
-    "Divine Movement destination resolve should still keep action slot free"
+    "Divine Movement destination resolve should still keep action slot free",
   );
 
   ({ state, griffith } = setupGriffithState());
@@ -411,7 +416,7 @@ export function testFemtoDivineMoveUsesMoveSlotAndRollRanges() {
       type: "useAbility",
       unitId: griffith.id,
       abilityId: ABILITY_FEMTO_DIVINE_MOVE,
-    } as any,
+    },
     makeRngSequence([])
   );
   const longRange = resolvePendingRollOnce(usedLong.state, makeRngSequence([0.8])); // roll 5
@@ -419,11 +424,8 @@ export function testFemtoDivineMoveUsesMoveSlotAndRollRanges() {
     (longRange.state.pendingRoll?.context as { options?: Coord[] } | undefined)
       ?.options ?? [];
   assert(
-    longOptions.some(
-      (coord) =>
-        Math.max(Math.abs(coord.col - 4), Math.abs(coord.row - 4)) > 2
-    ),
-    "roll 4-6 divine move should allow full-board destinations"
+    longOptions.some((coord) => Math.max(Math.abs(coord.col - 4), Math.abs(coord.row - 4)) > 2),
+    "roll 4-6 divine move should allow full-board destinations",
   );
 
   console.log("femto_divine_move_uses_move_slot_and_roll_ranges passed");
@@ -457,7 +459,7 @@ export function testFemtoBerserkAutoDefenseGatingAndBehavior() {
   const rngAuto = makeRngSequence([0.99, 0.99]);
   const started = applyAction(
     state,
-    { type: "attack", attackerId: attacker.id, defenderId: griffith.id } as any,
+    { type: "attack", attackerId: attacker.id, defenderId: griffith.id },
     rngAuto
   );
   const afterAttackerRoll = resolvePendingRollOnce(started.state, rngAuto);
@@ -473,8 +475,8 @@ export function testFemtoBerserkAutoDefenseGatingAndBehavior() {
       pendingRollId: afterAttackerRoll.state.pendingRoll!.id,
       player: afterAttackerRoll.state.pendingRoll!.player,
       choice: "auto",
-    } as any,
-    rngAuto
+    },
+    rngAuto,
   );
   const autoAttackEvent = choseAuto.events.find(
     (event) =>
@@ -486,7 +488,7 @@ export function testFemtoBerserkAutoDefenseGatingAndBehavior() {
   assert(autoAttackEvent.hit === false, "auto-defense should dodge the attack");
   assert(
     choseAuto.state.units[griffith.id].charges[ABILITY_BERSERK_AUTO_DEFENSE] === 0,
-    "auto-defense should spend all 6 charges"
+    "auto-defense should spend all 6 charges",
   );
 
   ({ state, griffith } = setupGriffithState());
@@ -505,8 +507,8 @@ export function testFemtoBerserkAutoDefenseGatingAndBehavior() {
   const rngRoll = makeRngSequence([0.99, 0.99, 0.01, 0.01]);
   const startedNoPrompt = applyAction(
     state,
-    { type: "attack", attackerId: attacker.id, defenderId: griffith.id } as any,
-    rngRoll
+    { type: "attack", attackerId: attacker.id, defenderId: griffith.id },
+    rngRoll,
   );
   const afterAttackerRollNoPrompt = resolvePendingRollOnce(
     startedNoPrompt.state,

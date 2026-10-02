@@ -52,7 +52,8 @@ export function testChikatiloPlacementListSubstitution() {
 }
 
 export function testFalseTrailTokenPlacementLegalTargets() {
-  let { state, token, rng } = setupChikatiloPlacementState(907);
+  const { state: initialState16, token, rng } = setupChikatiloPlacementState(907);
+  let state = initialState16;
   const blocker = Object.values(state.units).find(
     (u) => u.owner === token.owner && u.id !== token.id && u.heroId !== HERO_CHIKATILO_ID,
   )!;
@@ -97,7 +98,7 @@ export function testFalseTrailTokenPlacementLegalTargets() {
         type: "placeUnit",
         unitId: token.id,
         position,
-      } as any,
+      },
       rng,
     );
 
@@ -123,7 +124,7 @@ export function testFalseTrailTokenPlacementLegalTargets() {
       type: "placeUnit",
       unitId: token.id,
       position: { col: 4, row: 0 },
-    } as any,
+    },
     rng,
   );
 
@@ -138,7 +139,7 @@ export function testFalseTrailTokenPlacementLegalTargets() {
       type: "placeUnit",
       unitId: token.id,
       position: { col: 1, row: 0 },
-    } as any,
+    },
     rng,
   );
   assert(
@@ -156,7 +157,7 @@ export function testChikatiloPlacementAfterToken() {
 
   const placedToken = applyAction(
     state,
-    { type: "placeUnit", unitId: token.id, position: tokenPos } as any,
+    { type: "placeUnit", unitId: token.id, position: tokenPos },
     rng,
   ).state;
 
@@ -170,7 +171,7 @@ export function testChikatiloPlacementAfterToken() {
     "chikatilo placement pending roll should belong to chikatilo owner",
   );
 
-  const legal = (pending?.context as any)?.legalPositions as Coord[];
+  const legal = pending?.context?.legalPositions as Coord[];
   assert(
     legal.length === placedToken.boardSize * (placedToken.boardSize - 2),
     "chikatilo placement should include every empty non-deployment-line cell",
@@ -197,7 +198,7 @@ export function testChikatiloPlacementAfterToken() {
         pendingRollId: pending!.id,
         player: pending!.player,
         choice: { type: "chikatiloPlace", position },
-      } as any,
+      },
       rng,
     );
     assert(
@@ -220,7 +221,7 @@ export function testChikatiloPlacementAfterToken() {
       pendingRollId: pending!.id,
       player: pending!.player,
       choice: { type: "chikatiloPlace", position: target },
-    } as any,
+    },
     rng,
   );
   const placedChikatilo = placement.state;
@@ -323,7 +324,7 @@ export function testChikatiloTokenDeathRevealsChikatilo() {
 
   const attack = applyAction(
     state,
-    { type: "attack", attackerId: killer.id, defenderId: tokenId } as any,
+    { type: "attack", attackerId: killer.id, defenderId: tokenId },
     rng,
   );
   const resolved = resolveAllPendingRollsWithEvents(attack.state, rng);
@@ -375,7 +376,7 @@ export function testChikatiloAssassinMarkDoesNotRevealAndGrantsBonusDamage() {
       type: "useAbility",
       unitId: chikatilo.id,
       abilityId: ABILITY_CHIKATILO_ASSASSIN_MARK,
-    } as any,
+    },
     rng,
   ).state;
   assert(
@@ -390,7 +391,7 @@ export function testChikatiloAssassinMarkDoesNotRevealAndGrantsBonusDamage() {
       unitId: chikatilo.id,
       abilityId: ABILITY_CHIKATILO_ASSASSIN_MARK,
       payload: { targetId: target.id },
-    } as any,
+    },
     rng,
   ).state;
 
@@ -411,7 +412,7 @@ export function testChikatiloAssassinMarkDoesNotRevealAndGrantsBonusDamage() {
 
   const attack = applyAction(
     reset,
-    { type: "attack", attackerId: chikatilo.id, defenderId: target.id } as any,
+    { type: "attack", attackerId: chikatilo.id, defenderId: target.id },
     rng,
   );
   const resolved = resolveAllPendingRolls(attack.state, rng);
@@ -453,7 +454,7 @@ export function testChikatiloAssassinMarkApplicationFlowAndRedaction() {
       type: "useAbility",
       unitId: chikatilo.id,
       abilityId: ABILITY_CHIKATILO_ASSASSIN_MARK,
-    } as any,
+    },
     rng,
   );
   assert(
@@ -476,7 +477,7 @@ export function testChikatiloAssassinMarkApplicationFlowAndRedaction() {
       unitId: chikatilo.id,
       abilityId: ABILITY_CHIKATILO_ASSASSIN_MARK,
       payload: { targetId: target.id },
-    } as any,
+    },
     rng,
   );
   assert(
@@ -495,7 +496,7 @@ export function testChikatiloAssassinMarkApplicationFlowAndRedaction() {
       unitId: chikatilo.id,
       abilityId: ABILITY_CHIKATILO_ASSASSIN_MARK,
       payload: { targetId: target.id },
-    } as any,
+    },
     rng,
   );
 
@@ -533,7 +534,7 @@ export function testChikatiloAssassinMarkApplicationFlowAndRedaction() {
       unitId: chikatilo.id,
       abilityId: ABILITY_CHIKATILO_ASSASSIN_MARK,
       payload: { targetId: target.id },
-    } as any,
+    },
     rng,
   );
   assert(
@@ -557,7 +558,7 @@ export function testChikatiloAssassinMarkApplicationFlowAndRedaction() {
       unitId: chikatilo.id,
       abilityId: ABILITY_CHIKATILO_ASSASSIN_MARK,
       payload: { targetId: secondTarget.id },
-    } as any,
+    },
     rng,
   );
   assert(
@@ -574,7 +575,7 @@ export function testChikatiloAssassinMarkApplicationFlowAndRedaction() {
       unitId: chikatilo.id,
       abilityId: ABILITY_CHIKATILO_ASSASSIN_MARK,
       payload: { targetId: secondTarget.id },
-    } as any,
+    },
     rng,
   );
   assert(
@@ -639,7 +640,7 @@ export function testChikatiloAssassinMarkTrackingProjectionAttackAndExpiry() {
       unitId: chikatilo.id,
       abilityId: ABILITY_CHIKATILO_ASSASSIN_MARK,
       payload: { targetId: target.id },
-    } as any,
+    },
     rng,
   ).state;
   const hiddenTarget = setUnit(marked, target.id, {
@@ -668,7 +669,7 @@ export function testChikatiloAssassinMarkTrackingProjectionAttackAndExpiry() {
   };
   const started = applyAction(
     startReady,
-    { type: "unitStartTurn", unitId: chikatilo.id } as any,
+    { type: "unitStartTurn", unitId: chikatilo.id },
     rng,
   ).state;
   assert(
@@ -702,7 +703,7 @@ export function testChikatiloAssassinMarkTrackingProjectionAttackAndExpiry() {
 
   const attack = applyAction(
     started,
-    { type: "attack", attackerId: chikatilo.id, defenderId: target.id } as any,
+    { type: "attack", attackerId: chikatilo.id, defenderId: target.id },
     rng,
   );
   assert(
@@ -729,7 +730,7 @@ export function testChikatiloAssassinMarkTrackingProjectionAttackAndExpiry() {
     turnOrderIndex: 1,
     turnQueueIndex: 1,
   };
-  const expired = applyAction(targetTurn, { type: "endTurn" } as any, rng).state;
+  const expired = applyAction(targetTurn, { type: "endTurn" }, rng).state;
   assert(
     expired.units[chikatilo.id].chikatiloMarkedTargets?.includes(target.id),
     "persistent mark should survive exact-tracking expiry",
@@ -786,7 +787,7 @@ export function testChikatiloDecoyReducesDamageAndConsumesCharges() {
 
   let res = applyAction(
     state,
-    { type: "attack", attackerId: attacker.id, defenderId: chikatilo.id } as any,
+    { type: "attack", attackerId: attacker.id, defenderId: chikatilo.id },
     rng,
   );
   const firstPending = res.state.pendingRoll;
@@ -798,7 +799,7 @@ export function testChikatiloDecoyReducesDamageAndConsumesCharges() {
       type: "resolvePendingRoll",
       pendingRollId: firstPending!.id,
       player: firstPending!.player,
-    } as any,
+    },
     rng,
   );
   const decoyPending = res.state.pendingRoll;
@@ -811,7 +812,7 @@ export function testChikatiloDecoyReducesDamageAndConsumesCharges() {
       pendingRollId: decoyPending!.id,
       player: decoyPending!.player,
       choice: "decoy",
-    } as any,
+    },
     rng,
   );
 
@@ -822,7 +823,7 @@ export function testChikatiloDecoyReducesDamageAndConsumesCharges() {
   const cancelRng = makeAttackWinRng(1);
   let canceled = applyAction(
     state,
-    { type: "attack", attackerId: attacker.id, defenderId: chikatilo.id } as any,
+    { type: "attack", attackerId: attacker.id, defenderId: chikatilo.id },
     cancelRng,
   );
   canceled = applyAction(
@@ -831,7 +832,7 @@ export function testChikatiloDecoyReducesDamageAndConsumesCharges() {
       type: "resolvePendingRoll",
       pendingRollId: canceled.state.pendingRoll!.id,
       player: canceled.state.pendingRoll!.player,
-    } as any,
+    },
     cancelRng,
   );
   canceled = applyAction(
@@ -841,7 +842,7 @@ export function testChikatiloDecoyReducesDamageAndConsumesCharges() {
       pendingRollId: canceled.state.pendingRoll!.id,
       player: canceled.state.pendingRoll!.player,
       choice: "roll",
-    } as any,
+    },
     cancelRng,
   );
   assert(
@@ -858,7 +859,7 @@ export function testChikatiloDecoyReducesDamageAndConsumesCharges() {
   });
   let lowPoints = applyAction(
     lowPointsState,
-    { type: "attack", attackerId: attacker.id, defenderId: chikatilo.id } as any,
+    { type: "attack", attackerId: attacker.id, defenderId: chikatilo.id },
     makeAttackWinRng(1),
   );
   lowPoints = applyAction(
@@ -867,7 +868,7 @@ export function testChikatiloDecoyReducesDamageAndConsumesCharges() {
       type: "resolvePendingRoll",
       pendingRollId: lowPoints.state.pendingRoll!.id,
       player: lowPoints.state.pendingRoll!.player,
-    } as any,
+    },
     makeAttackWinRng(1),
   );
   assert(
@@ -998,7 +999,7 @@ export function testChikatiloMarkOnlyBonusesStealthAttack() {
 
   const attack = applyAction(
     state,
-    { type: "attack", attackerId: chikatilo.id, defenderId: target.id } as any,
+    { type: "attack", attackerId: chikatilo.id, defenderId: target.id },
     rng,
   );
   const resolved = resolveAllPendingRolls(attack.state, rng);
@@ -1054,7 +1055,7 @@ export function testChikatiloDecoyPointsGainAndStealthTransaction() {
     turnOrderIndex: 0,
     turnQueueIndex: 0,
   };
-  const started = applyAction(state, { type: "unitStartTurn", unitId: chikatilo.id } as any, rng);
+  const started = applyAction(state, { type: "unitStartTurn", unitId: chikatilo.id }, rng);
   assert(
     started.state.units[chikatilo.id].charges[ABILITY_CHIKATILO_DECOY] === 13,
     "Chikatilo should gain one uncapped Decoy Point per live marked enemy hero",
@@ -1066,7 +1067,7 @@ export function testChikatiloDecoyPointsGainAndStealthTransaction() {
       type: "useAbility",
       unitId: chikatilo.id,
       abilityId: ABILITY_CHIKATILO_DECOY,
-    } as any,
+    },
     rng,
   );
   const after = entered.state.units[chikatilo.id];
@@ -1092,7 +1093,7 @@ export function testChikatiloDecoyPointsGainAndStealthTransaction() {
       type: "useAbility",
       unitId: chikatilo.id,
       abilityId: ABILITY_CHIKATILO_DECOY,
-    } as any,
+    },
     rng,
   );
   assert(
@@ -1113,7 +1114,7 @@ export function testChikatiloDecoyPointsGainAndStealthTransaction() {
         turnOrderIndex: 0,
         turnQueueIndex: 0,
       },
-      { type: "unitStartTurn", unitId: chikatilo.id } as any,
+      { type: "unitStartTurn", unitId: chikatilo.id },
       rng,
     );
     assert(
@@ -1156,7 +1157,7 @@ export function testFalseTrailRevealAutoExplodesWithoutChoice() {
 
   const attack = applyAction(
     state,
-    { type: "attack", attackerId: chikatilo.id, defenderId: defender.id } as any,
+    { type: "attack", attackerId: chikatilo.id, defenderId: defender.id },
     rng,
   );
   const resolved = resolveAllPendingRollsWithEvents(attack.state, rng);
@@ -1247,7 +1248,7 @@ export function testFalseTrailStealthTimerAndLastFigureRule() {
         turnOrder: [chikatilo.id],
         turnOrderIndex: 0,
       },
-      { type: "unitStartTurn", unitId: chikatilo.id } as any,
+      { type: "unitStartTurn", unitId: chikatilo.id },
       rng,
     );
     assert(

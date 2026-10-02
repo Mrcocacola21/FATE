@@ -1,3 +1,4 @@
+import type { GameEvent } from "../../model";
 import {
   ABILITY_EL_SID_COMPEADOR_DEMON_DUELIST,
   ABILITY_EL_SID_COMPEADOR_KOLADA,
@@ -32,7 +33,8 @@ export function testElCidLongLiverAdds2Hp() {
 
 export function testElCidWarriorDoubleIsAutoHitNoDefenderRoll() {
   const rng = makeRngSequence([0.99, 0.99]);
-  let { state, elCid, enemy } = setupElCidState();
+  const { state: initialState17, elCid, enemy } = setupElCidState();
+  let state = initialState17;
 
   state = setUnit(state, elCid.id, { position: { col: 4, row: 4 } });
   state = setUnit(state, enemy.id, { position: { col: 4, row: 5 } });
@@ -42,12 +44,12 @@ export function testElCidWarriorDoubleIsAutoHitNoDefenderRoll() {
   const startHp = state.units[enemy.id].hp;
   const initial = applyAction(
     state,
-    { type: "attack", attackerId: elCid.id, defenderId: enemy.id } as any,
-    rng
+    { type: "attack", attackerId: elCid.id, defenderId: enemy.id },
+    rng,
   );
   assert(
     initial.state.pendingRoll?.kind === "attack_attackerRoll",
-    "auto-hit test should request attacker roll first"
+    "auto-hit test should request attacker roll first",
   );
 
   const resolved = resolvePendingRollOnce(initial.state, rng);
@@ -80,10 +82,9 @@ export function testElCidWarriorDoubleIsAutoHitNoDefenderRoll() {
 
 export function testElCidTisonaIsRayOnlyRightDirection() {
   const rng = makeRngSequence([0.99, 0.8, 0.01, 0.01, 0.2, 0.2]);
-  let { state, elCid } = setupElCidState();
-  const allyRight = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.class === "archer"
-  )!;
+  const { state: initialState18, elCid } = setupElCidState();
+let state = initialState18;
+const allyRight = Object.values(state.units).find((u) => u.owner === "P1" && u.class === "archer")!;
   const enemyRight = Object.values(state.units).find(
     (u) => u.owner === "P2" && u.class === "archer"
   )!;
@@ -112,12 +113,12 @@ export function testElCidTisonaIsRayOnlyRightDirection() {
       unitId: elCid.id,
       abilityId: ABILITY_EL_SID_COMPEADOR_TISONA,
       payload: { target: { col: 8, row: 4 } },
-    } as any,
+    },
     rng
   );
   assert(
     initial.state.pendingRoll?.kind === "elCidTisona_attackerRoll",
-    "tisona should request attacker roll"
+    "tisona should request attacker roll",
   );
 
   const resolved = resolveAllPendingRollsWithEvents(initial.state, rng);
@@ -143,12 +144,12 @@ export function testElCidTisonaIsRayOnlyRightDirection() {
 
   const attackEvents = events.filter(
     (e) => e.type === "attackResolved" && e.attackerId === elCid.id
-  ) as any[];
+  ) as Extract<GameEvent, { type: "attackResolved" }>[];
   const attackTargets = attackEvents.map((e) => e.defenderId).sort();
   assert.deepStrictEqual(
     attackTargets,
     expectedTargets,
-    "tisona ray should only attack right-side targets"
+    "tisona ray should only attack right-side targets",
   );
   assert(
     resolved.state.units[enemyLeft.id].hp === leftHpBefore,
@@ -167,13 +168,10 @@ export function testElCidTisonaIsRayOnlyRightDirection() {
 
 export function testElCidTisonaIsRayOnlyUpDirection() {
   const rng = makeRngSequence([0.99, 0.8, 0.01, 0.01, 0.2, 0.2]);
-  let { state, elCid } = setupElCidState();
-  const allyUp = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.class === "archer"
-  )!;
-  const enemyUp = Object.values(state.units).find(
-    (u) => u.owner === "P2" && u.class === "archer"
-  )!;
+  const { state: initialState19, elCid } = setupElCidState();
+let state = initialState19;
+  const allyUp = Object.values(state.units).find((u) => u.owner === "P1" && u.class === "archer")!;
+  const enemyUp = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "archer")!;
   const enemyDown = Object.values(state.units).find(
     (u) => u.owner === "P2" && u.class === "rider"
   )!;
@@ -199,7 +197,7 @@ export function testElCidTisonaIsRayOnlyUpDirection() {
       unitId: elCid.id,
       abilityId: ABILITY_EL_SID_COMPEADOR_TISONA,
       payload: { target: { col: 4, row: 0 } },
-    } as any,
+    },
     rng
   );
   assert(
@@ -225,12 +223,12 @@ export function testElCidTisonaIsRayOnlyUpDirection() {
 
   const attackEvents = events.filter(
     (e) => e.type === "attackResolved" && e.attackerId === elCid.id
-  ) as any[];
+  ) as Extract<GameEvent, { type: "attackResolved" }>[];
   const attackTargets = attackEvents.map((e) => e.defenderId).sort();
   assert.deepStrictEqual(
     attackTargets,
     expectedTargets,
-    "tisona ray should only attack upward targets"
+    "tisona ray should only attack upward targets",
   );
   const sharedDice = JSON.stringify(attackEvents[0]?.attackerRoll?.dice ?? []);
   const allShared = attackEvents.every(
@@ -247,15 +245,12 @@ export function testElCidTisonaIsRayOnlyUpDirection() {
 
 export function testElCidTisonaResolvesOnceAndCannotReplayAfterward() {
   const rng = makeRngSequence([0.99, 0.99]);
-  let { state, elCid } = setupElCidState();
-  const ally = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.class === "archer"
-  )!;
-  const enemy1 = Object.values(state.units).find(
-    (u) => u.owner === "P2" && u.class === "archer"
-  )!;
+  const { state: initialState20, elCid } = setupElCidState();
+  let state = initialState20;
+  const ally = Object.values(state.units).find((u) => u.owner === "P1" && u.class === "archer")!;
+  const enemy1 = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "archer")!;
   const enemy2 = Object.values(state.units).find(
-    (u) => u.owner === "P2" && u.class === "trickster"
+    (u) => u.owner === "P2" && u.class === "trickster",
   )!;
 
   state = setUnit(state, elCid.id, {
@@ -277,9 +272,7 @@ export function testElCidTisonaResolvesOnceAndCannotReplayAfterward() {
   state = toBattleState(state, "P1", elCid.id);
   state = initKnowledgeForOwners(state);
 
-  const hpBefore = new Map(
-    [ally.id, enemy1.id, enemy2.id].map((id) => [id, state.units[id].hp])
-  );
+  const hpBefore = new Map([ally.id, enemy1.id, enemy2.id].map((id) => [id, state.units[id].hp]));
   const started = applyAction(
     state,
     {
@@ -287,8 +280,8 @@ export function testElCidTisonaResolvesOnceAndCannotReplayAfterward() {
       unitId: elCid.id,
       abilityId: ABILITY_EL_SID_COMPEADOR_TISONA,
       payload: { target: { col: 8, row: 4 } },
-    } as any,
-    rng
+    },
+    rng,
   );
   const resolved = resolveAllPendingRollsWithEvents(started.state, rng);
   const events = [...started.events, ...resolved.events];
@@ -299,22 +292,19 @@ export function testElCidTisonaResolvesOnceAndCannotReplayAfterward() {
       (event) =>
         event.type === "attackResolved" &&
         event.attackerId === elCid.id &&
-        event.defenderId === targetId
+        event.defenderId === targetId,
     );
-    assert(
-      targetAttacks.length === 1,
-      `Tisona should resolve exactly once for ${targetId}`
-    );
+    assert(targetAttacks.length === 1, `Tisona should resolve exactly once for ${targetId}`);
     assert(
       resolved.state.units[targetId].hp === hpBefore.get(targetId)! - elCid.attack,
-      `Tisona should damage ${targetId} exactly once`
+      `Tisona should damage ${targetId} exactly once`,
     );
   }
   assert(!resolved.state.pendingRoll, "Tisona should leave no pending roll");
   assert(!resolved.state.pendingAoE, "Tisona should leave no pending AoE");
   assert(
     resolved.state.units[elCid.id].turn.moveUsed,
-    "Tisona must preserve an already-spent move slot"
+    "Tisona must preserve an already-spent move slot",
   );
 
   const hpAfter = targetIds.map((id) => resolved.state.units[id].hp);
@@ -325,43 +315,37 @@ export function testElCidTisonaResolvesOnceAndCannotReplayAfterward() {
       unitId: elCid.id,
       abilityId: ABILITY_EL_SID_COMPEADOR_TISONA,
       payload: { target: { col: 8, row: 4 } },
-    } as any,
-    rng
+    },
+    rng,
   );
   assert(replayAttempt.events.length === 0, "Tisona must not replay after resolution");
   assert.deepStrictEqual(
     targetIds.map((id) => replayAttempt.state.units[id].hp),
     hpAfter,
-    "a later action must not repeat Tisona damage"
+    "a later action must not repeat Tisona damage",
   );
 
   const moveAttempt = applyAction(
     replayAttempt.state,
-    { type: "move", unitId: elCid.id, to: { col: 3, row: 4 } } as any,
-    rng
+    { type: "move", unitId: elCid.id, to: { col: 3, row: 4 } },
+    rng,
   );
   assert(
     moveAttempt.state.units[elCid.id].position?.col === 4 &&
       moveAttempt.state.units[elCid.id].position?.row === 4,
-    "El Cid must not move again after movement was already spent"
+    "El Cid must not move again after movement was already spent",
   );
 
   console.log("el_cid_tisona_resolves_once_and_cannot_replay_afterward passed");
 }
 
-
 export function testElCidKoladaImpulseTriggersAtStartTurnSpends3SharedAttackerRollHitsAllies() {
   const rng = makeRngSequence([0.2, 0.55, 0.01, 0.01, 0.2, 0.4]);
-  let { state, elCid } = setupElCidState();
-  const ally = Object.values(state.units).find(
-    (u) => u.owner === "P1" && u.class === "archer"
-  )!;
-  const enemy = Object.values(state.units).find(
-    (u) => u.owner === "P2" && u.class === "archer"
-  )!;
-  const far = Object.values(state.units).find(
-    (u) => u.owner === "P2" && u.class === "rider"
-  )!;
+  const { state: initialState21, elCid } = setupElCidState();
+  let state = initialState21;
+  const ally = Object.values(state.units).find((u) => u.owner === "P1" && u.class === "archer")!;
+  const enemy = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "archer")!;
+  const far = Object.values(state.units).find((u) => u.owner === "P2" && u.class === "rider")!;
 
   state = setUnit(state, elCid.id, {
     position: { col: 4, row: 4 },
@@ -385,93 +369,82 @@ export function testElCidKoladaImpulseTriggersAtStartTurnSpends3SharedAttackerRo
     turnOrderIndex: 0,
   };
 
-  const start = applyAction(
-    state,
-    { type: "unitStartTurn", unitId: elCid.id } as any,
-    rng
-  );
+  const start = applyAction(state, { type: "unitStartTurn", unitId: elCid.id }, rng);
   assert(
     start.state.pendingRoll?.kind === "elCidKolada_attackerRoll",
-    "kolada should trigger at start turn when charges reach 3"
+    "kolada should trigger at start turn when charges reach 3",
   );
   assert(
     start.state.units[elCid.id].charges?.[ABILITY_EL_SID_COMPEADOR_KOLADA] === 0,
-    "kolada should spend 3 charges"
+    "kolada should spend 3 charges",
   );
   const chargeEvent = start.events.find(
-    (e) => e.type === "chargesUpdated" && e.unitId === elCid.id
+    (e) => e.type === "chargesUpdated" && e.unitId === elCid.id,
   );
   if (chargeEvent && chargeEvent.type === "chargesUpdated") {
     assert(
       chargeEvent.deltas?.[ABILITY_EL_SID_COMPEADOR_KOLADA] === 1,
-      "kolada charges should increment before triggering"
+      "kolada charges should increment before triggering",
     );
   }
   const abilityIndex = start.events.findIndex(
-    (e) => e.type === "abilityUsed" && e.abilityId === ABILITY_EL_SID_COMPEADOR_KOLADA
+    (e) => e.type === "abilityUsed" && e.abilityId === ABILITY_EL_SID_COMPEADOR_KOLADA,
   );
   const rollIndex = start.events.findIndex(
-    (e) => e.type === "rollRequested" && e.kind === "elCidKolada_attackerRoll"
+    (e) => e.type === "rollRequested" && e.kind === "elCidKolada_attackerRoll",
   );
   assert(
     abilityIndex > -1 && rollIndex > -1 && abilityIndex < rollIndex,
-    "kolada abilityUsed should be logged before attacker roll request"
+    "kolada abilityUsed should be logged before attacker roll request",
   );
 
   const resolved = resolveAllPendingRollsWithEvents(start.state, rng);
   const events = [...start.events, ...resolved.events];
 
   const attackerRolls = events.filter(
-    (e) => e.type === "rollRequested" && e.kind === "elCidKolada_attackerRoll"
+    (e) => e.type === "rollRequested" && e.kind === "elCidKolada_attackerRoll",
   );
   const defenderRolls = events.filter(
-    (e) => e.type === "rollRequested" && e.kind === "elCidKolada_defenderRoll"
+    (e) => e.type === "rollRequested" && e.kind === "elCidKolada_defenderRoll",
   );
   assert(attackerRolls.length === 1, "kolada should request attacker roll once");
   assert(defenderRolls.length === 2, "kolada should request defender roll per target");
 
   const attackEvents = events.filter(
-    (e) => e.type === "attackResolved" && e.attackerId === elCid.id
-  ) as any[];
+    (e) => e.type === "attackResolved" && e.attackerId === elCid.id,
+  ) as Extract<GameEvent, { type: "attackResolved" }>[];
   const attackTargets = attackEvents.map((e) => e.defenderId);
-  assert(
-    attackTargets.includes(ally.id),
-    "kolada should attack allies in radius"
-  );
-  assert(
-    attackTargets.includes(enemy.id),
-    "kolada should attack enemies in radius"
-  );
-  assert(
-    !attackTargets.includes(far.id),
-    "kolada should not attack units outside radius"
-  );
+  assert(attackTargets.includes(ally.id), "kolada should attack allies in radius");
+  assert(attackTargets.includes(enemy.id), "kolada should attack enemies in radius");
+  assert(!attackTargets.includes(far.id), "kolada should not attack units outside radius");
 
   const sharedDice = JSON.stringify(attackEvents[0]?.attackerRoll?.dice ?? []);
   const allShared = attackEvents.every(
-    (e) => JSON.stringify(e.attackerRoll?.dice ?? []) === sharedDice
+    (e) => JSON.stringify(e.attackerRoll?.dice ?? []) === sharedDice,
   );
   assert(allShared, "kolada should reuse the same attacker roll for all targets");
 
   const aoeEvent = events.find(
-    (e) => e.type === "aoeResolved" && e.abilityId === ABILITY_EL_SID_COMPEADOR_KOLADA
+    (e) => e.type === "aoeResolved" && e.abilityId === ABILITY_EL_SID_COMPEADOR_KOLADA,
   );
   assert(aoeEvent && aoeEvent.type === "aoeResolved", "kolada should emit aoeResolved");
   if (aoeEvent && aoeEvent.type === "aoeResolved") {
     assert(
-      aoeEvent.affectedUnitIds.includes(ally.id) &&
-        aoeEvent.affectedUnitIds.includes(enemy.id),
-      "kolada aoeResolved should include allied and enemy targets"
+      aoeEvent.affectedUnitIds.includes(ally.id) && aoeEvent.affectedUnitIds.includes(enemy.id),
+      "kolada aoeResolved should include allied and enemy targets",
     );
   }
 
-  console.log("elcid_kolada_impulse_triggers_at_start_turn_spends_3_shared_attacker_roll_hits_allies passed");
+  console.log(
+    "elcid_kolada_impulse_triggers_at_start_turn_spends_3_shared_attacker_roll_hits_allies passed",
+  );
 }
 
 
 export function testElCidDemonDuelistChainHitsUntilMissThenChoicePayHpOrStop() {
   const duelRng = makeRngSequence([0.55, 0.4, 0.01, 0.01, 0.01, 0.2, 0.75, 0.55]);
-  let { state, elCid, enemy } = setupElCidState();
+  const { state: initialState22, elCid, enemy } = setupElCidState();
+let state = initialState22;
 
   state = setUnit(state, elCid.id, {
     position: { col: 4, row: 4 },
@@ -491,10 +464,10 @@ export function testElCidDemonDuelistChainHitsUntilMissThenChoicePayHpOrStop() {
       unitId: elCid.id,
       abilityId: ABILITY_EL_SID_COMPEADOR_DEMON_DUELIST,
       payload: { targetId: enemy.id },
-    } as any,
-    duelRng
+    },
+    duelRng,
   );
-  const events: any[] = [...res.events];
+  const events: GameEvent[] = [...res.events];
   const abilityIndex = events.findIndex(
     (e) =>
       e.type === "abilityUsed" &&
@@ -505,11 +478,11 @@ export function testElCidDemonDuelistChainHitsUntilMissThenChoicePayHpOrStop() {
   );
   assert(
     abilityIndex > -1 && rollIndex > -1 && abilityIndex < rollIndex,
-    "demon duelist abilityUsed should be logged before attacker roll request"
+    "demon duelist abilityUsed should be logged before attacker roll request",
   );
   assert(
     res.state.pendingRoll?.kind === "attack_attackerRoll",
-    "demon duelist should start with attacker roll"
+    "demon duelist should start with attacker roll",
   );
 
   res = resolvePendingRollOnce(res.state, duelRng);
@@ -547,7 +520,7 @@ export function testElCidDemonDuelistChainHitsUntilMissThenChoicePayHpOrStop() {
       pendingRollId: pendingStop.id,
       choice: "elCidDuelistStop",
       player: pendingStop.player,
-    } as any,
+    },
     duelRng
   );
   assert(!stopped.state.pendingRoll, "duelist should end when player stops");
@@ -578,7 +551,7 @@ export function testElCidDemonDuelistChainHitsUntilMissThenChoicePayHpOrStop() {
       unitId: elCid2.id,
       abilityId: ABILITY_EL_SID_COMPEADOR_DEMON_DUELIST,
       payload: { targetId: enemy2.id },
-    } as any,
+    },
     continueRng
   );
   res2 = resolvePendingRollOnce(res2.state, continueRng);
@@ -599,8 +572,8 @@ export function testElCidDemonDuelistChainHitsUntilMissThenChoicePayHpOrStop() {
       pendingRollId: pendingContinue.id,
       choice: "elCidDuelistContinue",
       player: pendingContinue.player,
-    } as any,
-    continueRng
+    },
+    continueRng,
   );
   assert(
     continued.state.units[elCid2.id].hp === hpBefore - 1,
@@ -649,7 +622,7 @@ export function testElCidDemonDuelistChainHitsUntilMissThenChoicePayHpOrStop() {
       pendingRollId: "roll-1",
       choice: "elCidDuelistContinue",
       player: "P1",
-    } as any,
+    },
     cantPayRng
   );
   assert(
@@ -667,7 +640,8 @@ export function testElCidDemonDuelistChainHitsUntilMissThenChoicePayHpOrStop() {
 
 export function testElCidDemonDuelistRequires5AndSpends5() {
   const rng = new SeededRNG(2026);
-  let { state, elCid, enemy } = setupElCidState();
+  const { state: initialState23, elCid, enemy } = setupElCidState();
+let state = initialState23;
 
   state = setUnit(state, elCid.id, { position: { col: 4, row: 4 } });
   state = setUnit(state, enemy.id, { position: { col: 4, row: 5 } });
@@ -683,7 +657,7 @@ export function testElCidDemonDuelistRequires5AndSpends5() {
       unitId: elCid.id,
       abilityId: ABILITY_EL_SID_COMPEADOR_DEMON_DUELIST,
       payload: { targetId: enemy.id },
-    } as any,
+    },
     rng
   );
   assert(attempt.events.length === 0, "duelist should not start without charges");
@@ -699,7 +673,8 @@ export function testElCidDemonDuelistRequires5AndSpends5() {
   );
 
   const rng2 = new SeededRNG(2027);
-  let { state: state2, elCid: elCid2, enemy: enemy2 } = setupElCidState();
+  const { state: initialState224, elCid: elCid2, enemy: enemy2 } = setupElCidState();
+let state2 = initialState224;
   state2 = setUnit(state2, elCid2.id, { position: { col: 4, row: 4 } });
   state2 = setUnit(state2, enemy2.id, { position: { col: 4, row: 7 } });
   state2 = initKnowledgeForOwners(state2);
@@ -717,20 +692,16 @@ export function testElCidDemonDuelistRequires5AndSpends5() {
   for (let turn = 1; turn <= 5; turn += 1) {
     const start = applyAction(
       state2,
-      { type: "unitStartTurn", unitId: elCid2.id } as any,
+      { type: "unitStartTurn", unitId: elCid2.id },
       rng2
     );
     const resolved = resolveAllPendingRolls(start.state, rng2);
     state2 = resolved.state;
     if (turn < 5) {
-      state2 = applyAction(state2, { type: "endTurn" } as any, rng2).state;
-      const enemyStart = applyAction(
-        state2,
-        { type: "unitStartTurn", unitId: enemy2.id } as any,
-        rng2
-      );
+      state2 = applyAction(state2, { type: "endTurn" }, rng2).state;
+      const enemyStart = applyAction(state2, { type: "unitStartTurn", unitId: enemy2.id }, rng2);
       state2 = resolveAllPendingRolls(enemyStart.state, rng2).state;
-      state2 = applyAction(state2, { type: "endTurn" } as any, rng2).state;
+      state2 = applyAction(state2, { type: "endTurn" }, rng2).state;
     }
   }
 
@@ -747,16 +718,16 @@ export function testElCidDemonDuelistRequires5AndSpends5() {
       unitId: elCid2.id,
       abilityId: ABILITY_EL_SID_COMPEADOR_DEMON_DUELIST,
       payload: { targetId: enemy2.id },
-    } as any,
-    rng2
+    },
+    rng2,
   );
   assert(
     started.state.pendingRoll?.kind === "attack_attackerRoll",
-    "duelist should start when charged"
+    "duelist should start when charged",
   );
   assert(
     (started.state.units[elCid2.id].charges?.[ABILITY_EL_SID_COMPEADOR_DEMON_DUELIST] ?? 0) === 0,
-    "duelist should spend 5 charges on activation"
+    "duelist should spend 5 charges on activation",
   );
   assert(
     started.events.some(
@@ -773,7 +744,8 @@ export function testElCidDemonDuelistRequires5AndSpends5() {
 
 export function testElCidTisonaAndKoladaHitAllies() {
   const rng = makeRngSequence([0.99, 0.8, 0.01, 0.01, 0.01, 0.01]);
-  let { state, elCid } = setupElCidState();
+  const { state: initialState25, elCid } = setupElCidState();
+let state = initialState25;
   const ally = Object.values(state.units).find(
     (u) => u.owner === "P1" && u.class === "archer"
   )!;
@@ -801,8 +773,8 @@ export function testElCidTisonaAndKoladaHitAllies() {
       unitId: elCid.id,
       abilityId: ABILITY_EL_SID_COMPEADOR_TISONA,
       payload: { target: { col: 8, row: 4 } },
-    } as any,
-    rng
+    },
+    rng,
   );
   const tisonaResolved = resolveAllPendingRollsWithEvents(tisonaStart.state, rng);
   const tisonaEvents = [...tisonaStart.events, ...tisonaResolved.events];
@@ -818,10 +790,10 @@ export function testElCidTisonaAndKoladaHitAllies() {
 
   const tisonaAttacks = tisonaEvents.filter(
     (e) => e.type === "attackResolved" && e.attackerId === elCid.id
-  ) as any[];
+  ) as Extract<GameEvent, { type: "attackResolved" }>[];
   assert(
     tisonaAttacks.some((e) => e.defenderId === enemy.id),
-    "tisona should attack enemy on the line"
+    "tisona should attack enemy on the line",
   );
   const sharedDice = JSON.stringify(tisonaAttacks[0]?.attackerRoll?.dice ?? []);
   assert(
@@ -832,7 +804,8 @@ export function testElCidTisonaAndKoladaHitAllies() {
   );
 
   const rng2 = makeRngSequence([0.99, 0.8, 0.01, 0.01, 0.01, 0.01]);
-  let { state: state2, elCid: elCid2 } = setupElCidState();
+  const { state: initialState226, elCid: elCid2 } = setupElCidState();
+let state2 = initialState226;
   const ally2 = Object.values(state2.units).find(
     (u) => u.owner === "P1" && u.class === "archer"
   )!;
@@ -862,11 +835,7 @@ export function testElCidTisonaAndKoladaHitAllies() {
   };
 
   const ally2HpBefore = state2.units[ally2.id].hp;
-  const koladaStart = applyAction(
-    state2,
-    { type: "unitStartTurn", unitId: elCid2.id } as any,
-    rng2
-  );
+  const koladaStart = applyAction(state2, { type: "unitStartTurn", unitId: elCid2.id }, rng2);
   const koladaResolved = resolveAllPendingRollsWithEvents(koladaStart.state, rng2);
   const koladaEvents = [...koladaStart.events, ...koladaResolved.events];
   const koladaAllyAttack = koladaEvents.find(

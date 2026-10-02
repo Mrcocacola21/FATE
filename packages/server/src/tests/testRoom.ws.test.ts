@@ -1,27 +1,28 @@
 import assert from "assert";
+import type { ServerMessage, RoomStateMessage } from "../ws";
 import WebSocket from "ws";
 import { buildTestServer as buildServer } from "./matchTestSupport";
 import { getGameRoom, storeTestHooks } from "../store";
 import { wsTestHooks } from "../ws";
 
 function collect(ws: WebSocket) {
-  const messages: any[] = [];
+  const messages: ServerMessage[] = [];
   ws.on("message", (data) => {
-    messages.push(JSON.parse(data.toString()));
+    messages.push(JSON.parse(data.toString()) as ServerMessage);
   });
   return messages;
 }
 
-function waitFor(
-  messages: any[],
-  predicate: (message: any) => boolean,
-  timeoutMs = 3000
-): Promise<any> {
+function waitFor<T extends ServerMessage>(
+  messages: ServerMessage[],
+  predicate: (message: ServerMessage) => boolean,
+  timeoutMs = 3000,
+): Promise<T> {
   return new Promise((resolve, reject) => {
     const started = Date.now();
     const tick = () => {
       const message = messages.find(predicate);
-      if (message) return resolve(message);
+      if (message) return resolve(message as T);
       if (Date.now() - started > timeoutMs) {
         reject(new Error("Timed out waiting for test-room WS message"));
         return;
@@ -60,12 +61,12 @@ async function main() {
       roomMode: "test",
     })
   );
-  const initial = await waitFor(
+  const initial = await waitFor<RoomStateMessage>(
     testMessages,
     (message) =>
       message.type === "roomState" &&
       message.meta?.roomMode === "test" &&
-      message.you?.canControlTestRoom === true
+      message.you?.canControlTestRoom === true,
   );
   assert.equal(initial.meta.revision, 0);
   const testRoomId = initial.roomId as string;
@@ -81,18 +82,21 @@ async function main() {
       },
     })
   );
-  const mutated = await waitFor(
+  const mutated = await waitFor<RoomStateMessage>(
     testMessages,
     (message) =>
       message.type === "roomState" &&
       message.meta?.revision === 1 &&
-      Object.keys(message.view?.units ?? {}).length === 1
+      Object.keys(message.view?.units ?? {}).length === 1,
   );
-  assert.equal(Object.values(mutated.view.units)[0] && (Object.values(mutated.view.units)[0] as any).owner, "P1");
+  assert.equal(
+    Object.values(mutated.view.units)[0] && Object.values(mutated.view.units)[0].owner,
+    "P1",
+  );
   assert.equal(
     mutated.view.activeUnitId,
-    (Object.values(mutated.view.units)[0] as any).id,
-    "first own spawn should become the active test-room unit"
+    Object.values(mutated.view.units)[0].id,
+    "first own spawn should become the active test-room unit",
   );
 
   testSocket.send(
@@ -104,16 +108,16 @@ async function main() {
         owner: "P2",
         coord: { col: 4, row: 4 },
       },
-    })
+    }),
   );
-  const duel = await waitFor(
+  const duel = await waitFor<RoomStateMessage>(
     testMessages,
     (message) =>
       message.type === "roomState" &&
       message.meta?.revision === 2 &&
-      Object.keys(message.view?.units ?? {}).length === 2
+      Object.keys(message.view?.units ?? {}).length === 2,
   );
-  const duelUnits = Object.values(duel.view.units) as any[];
+  const duelUnits = Object.values(duel.view.units);
   const attacker = duelUnits.find((unit) => unit.owner === "P1");
   const defender = duelUnits.find((unit) => unit.owner === "P2");
   assert(attacker, "test room should expose spawned P1 attacker");
@@ -146,49 +150,50 @@ async function main() {
       },
     })
   );
-  const attackerRoll = await waitFor(
+  const attackerRoll = await waitFor<RoomStateMessage>(
     testMessages,
     (message) =>
       message.type === "roomState" &&
       message.view?.pendingRoll?.kind === "attack_attackerRoll" &&
-      message.view.pendingRoll.context?.attackerId === attacker.id
+      message.view.pendingRoll.context?.attackerId === attacker.id,
   );
   testSocket.send(
     JSON.stringify({
       type: "action",
       action: {
         type: "resolvePendingRoll",
-        pendingRollId: attackerRoll.view.pendingRoll.id,
-        player: attackerRoll.view.pendingRoll.player,
+        pendingRollId: attackerRoll.view.pendingRoll!.id,
+        player: attackerRoll.view.pendingRoll!.player,
       },
     })
   );
-  const defenderRoll = await waitFor(
+  const defenderRoll = await waitFor<RoomStateMessage>(
     testMessages,
     (message) =>
-      message.type === "roomState" &&
-      message.view?.pendingRoll?.kind === "attack_defenderRoll"
+      message.type === "roomState" && message.view?.pendingRoll?.kind === "attack_defenderRoll",
   );
   testSocket.send(
     JSON.stringify({
       type: "action",
       action: {
         type: "resolvePendingRoll",
-        pendingRollId: defenderRoll.view.pendingRoll.id,
-        player: defenderRoll.view.pendingRoll.player,
+        pendingRollId: defenderRoll.view.pendingRoll!.id,
+        player: defenderRoll.view.pendingRoll!.player,
       },
-    })
+    }),
   );
-  await waitFor(testMessages, (message) =>
-    message.type === "actionResult" &&
-    message.ok === true &&
-    Array.isArray(message.events) &&
-    message.events.some(
-      (event: any) =>
-        event.type === "attackResolved" &&
-        event.attackerId === attacker.id &&
-        event.defenderId === defender.id
-    )
+  await waitFor(
+    testMessages,
+    (message) =>
+      message.type === "actionResult" &&
+      message.ok === true &&
+      Array.isArray(message.events) &&
+      message.events.some(
+        (event) =>
+          event.type === "attackResolved" &&
+          event.attackerId === attacker.id &&
+          event.defenderId === defender.id,
+      ),
   );
   const testRoom = getGameRoom(testRoomId);
   assert(testRoom, "test room should still exist after attack");

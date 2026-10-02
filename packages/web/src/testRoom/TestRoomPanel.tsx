@@ -1,3 +1,4 @@
+import type { GameShellViewModel } from "../game/gameshell-content/hooks/useGameShellViewModel";
 import { useState } from "react";
 import type { GameAction, UnitState } from "rules";
 import { useHeroes } from "../figures/useHeroes";
@@ -18,12 +19,12 @@ import { Tabs } from "../ui";
 
 type SandboxTab = "presets" | "spawn" | "unit" | "charges" | "combat" | "snapshot" | "state";
 
-export function TestRoomPanel({ vm }: { vm: any }) {
+export function TestRoomPanel({ vm }: { vm: GameShellViewModel }) {
   const { t } = useI18n();
   const [collapsed, setCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState<SandboxTab>("presets");
   const { heroes, loading, error } = useHeroes();
-  const view = vm.view;
+  const view = vm.view!;
   const selectedUnit: UnitState | null =
     view && vm.selectedUnitId ? (view.units[vm.selectedUnitId] ?? null) : null;
   const units = Object.values(view?.units ?? {}) as UnitState[];

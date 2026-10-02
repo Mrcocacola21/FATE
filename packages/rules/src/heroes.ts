@@ -55,14 +55,6 @@ const PLAYABLE_HERO_AVAILABILITY = {
   figureSetEnabled: true,
 } as const satisfies HeroAvailability;
 
-const STUB_HERO_AVAILABILITY = {
-  implemented: false,
-  draftEnabled: false,
-  standardEnabled: false,
-  figureSetEnabled: false,
-  reason: "stub",
-} as const satisfies HeroAvailability;
-
 const NON_SELECTABLE_HERO_AVAILABILITY = {
   implemented: true,
   draftEnabled: false,
@@ -243,7 +235,7 @@ export const HERO_CATALOG: HeroDefinition[] = [
     ...PLAYABLE_HERO_AVAILABILITY,
     baseHpOverride: 6,
   },
-  
+
   {
     id: HERO_CHIKATILO_ID,
     name: "Andrei Chikatilo",
@@ -295,10 +287,7 @@ export function getHeroDefinition(id: string | undefined): HeroDefinition | unde
   return HERO_BY_ID.get(id);
 }
 
-export function heroMatchesClass(
-  heroId: string | undefined,
-  unitClass: UnitClass
-): boolean {
+export function heroMatchesClass(heroId: string | undefined, unitClass: UnitClass): boolean {
   if (heroId === HERO_FEMTO_ID) {
     return false;
   }
@@ -309,7 +298,7 @@ export function heroMatchesClass(
 
 export function isHeroSelectableInStandard(
   heroId: string | undefined,
-  unitClass: UnitClass
+  unitClass: UnitClass,
 ): boolean {
   if (!heroMatchesClass(heroId, unitClass)) return false;
   const hero = getHeroDefinition(heroId);
@@ -319,4 +308,3 @@ export function isHeroSelectableInStandard(
     hero.figureSetEnabled === true
   );
 }
-

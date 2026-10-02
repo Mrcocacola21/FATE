@@ -44,10 +44,7 @@ function blindCenterIsLegal(unit: UnitState, action: UseAbilityAction): boolean 
     return true;
   }
   const payload = action.payload as Record<string, unknown> | undefined;
-  if (
-    action.abilityId === ABILITY_LUCHE_DIVINE_RAY &&
-    payload?.mode === "aroundSelf"
-  ) {
+  if (action.abilityId === ABILITY_LUCHE_DIVINE_RAY && payload?.mode === "aroundSelf") {
     return true;
   }
   const raw = payload?.center ?? payload?.target ?? payload?.line;
@@ -57,10 +54,7 @@ function blindCenterIsLegal(unit: UnitState, action: UseAbilityAction): boolean 
   return chebyshev(unit.position!, { col: coord.col as number, row: coord.row as number }) <= 1;
 }
 
-function getAbilityUserOrNull(
-  state: GameState,
-  action: UseAbilityAction
-): UnitState | null {
+function getAbilityUserOrNull(state: GameState, action: UseAbilityAction): UnitState | null {
   if (state.phase !== "battle") {
     return null;
   }
@@ -91,7 +85,7 @@ function getAbilityUserOrNull(
 export function applyUseAbility(
   state: GameState,
   action: Extract<GameAction, { type: "useAbility" }>,
-  rng: RNG
+  rng: RNG,
 ): ApplyResult {
   const unit = getAbilityUserOrNull(state, action);
   if (!unit) {
@@ -139,7 +133,7 @@ export function applyUseAbility(
   }
 
   const updatedUnit: UnitState = committed.unit;
-  let nextState: GameState = committed.state;
+  const nextState: GameState = committed.state;
   const events: GameEvent[] = committed.events;
 
   if (isTricksterAoE && aoeCenter) {
@@ -148,7 +142,7 @@ export function applyUseAbility(
       updatedUnit,
       aoeCenter,
       spec.id,
-      rng
+      rng,
     );
     return {
       state: tricksterResult.state,

@@ -1,4 +1,4 @@
-import React, { type ReactNode } from "react";
+import { type ReactNode } from "react";
 import { Link } from "react-router";
 import { PanelCard } from "../components/ui";
 import { LanguageSwitcher } from "../components/LanguageSwitcher";

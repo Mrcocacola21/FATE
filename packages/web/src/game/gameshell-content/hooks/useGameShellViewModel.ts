@@ -12,7 +12,9 @@ import { useGameShellPreviewEffects } from "./useGameShellPreviewEffects";
 export function useGameShellViewModel() {
   const core = useGameShellCoreState();
   const [newHeroAbilityTargetId, setNewHeroAbilityTargetId] = useState<string | null>(null);
-  const [newHeroAbilityPreviewCell, setNewHeroAbilityPreviewCell] = useState<import("rules").Coord | null>(null);
+  const [newHeroAbilityPreviewCell, setNewHeroAbilityPreviewCell] = useState<
+    import("rules").Coord | null
+  >(null);
   useEffect(() => {
     if (core.actionMode !== "duolingoPush" && core.actionMode !== "zoroOniGiri") {
       setNewHeroAbilityTargetId(null);
@@ -43,24 +45,18 @@ export function useGameShellViewModel() {
     isRiverBoatDropDestination: core.pending.isRiverBoatDropDestination,
     isRiverTraLaLaTargetChoice: core.pending.isRiverTraLaLaTargetChoice,
     isRiverTraLaLaDestinationChoice: core.pending.isRiverTraLaLaDestinationChoice,
-    isRiverTraLaLaDropDestinationChoice:
-      core.pending.isRiverTraLaLaDropDestinationChoice,
+    isRiverTraLaLaDropDestinationChoice: core.pending.isRiverTraLaLaDropDestinationChoice,
     isChikatiloPlacement: core.pending.isChikatiloPlacement,
-    isGroznyTyrantAllyChoice:
-      core.pending.isGroznyTyrantAllyChoice,
-    isGroznyTyrantAttackCellChoice:
-      core.pending.isGroznyTyrantAttackCellChoice,
+    isGroznyTyrantAllyChoice: core.pending.isGroznyTyrantAllyChoice,
+    isGroznyTyrantAttackCellChoice: core.pending.isGroznyTyrantAttackCellChoice,
     isGuideTravelerPlacement: core.pending.isGuideTravelerPlacement,
     isJebeKhansShooterTargetChoice: core.pending.isJebeKhansShooterTargetChoice,
     isHassanTrueEnemyTargetChoice: core.pending.isHassanTrueEnemyTargetChoice,
-    isAsgoreSoulParadePatienceTargetChoice:
-      core.pending.isAsgoreSoulParadePatienceTargetChoice,
+    isAsgoreSoulParadePatienceTargetChoice: core.pending.isAsgoreSoulParadePatienceTargetChoice,
     isAsgoreSoulParadePerseveranceTargetChoice:
       core.pending.isAsgoreSoulParadePerseveranceTargetChoice,
-    isAsgoreSoulParadeJusticeTargetChoice:
-      core.pending.isAsgoreSoulParadeJusticeTargetChoice,
-    isAsgoreSoulParadeIntegrityDestination:
-      core.pending.isAsgoreSoulParadeIntegrityDestination,
+    isAsgoreSoulParadeJusticeTargetChoice: core.pending.isAsgoreSoulParadeJusticeTargetChoice,
+    isAsgoreSoulParadeIntegrityDestination: core.pending.isAsgoreSoulParadeIntegrityDestination,
     isHassanAssassinOrderSelection: core.pending.isHassanAssassinOrderSelection,
   });
 
@@ -72,8 +68,7 @@ export function useGameShellViewModel() {
     isFriskWarmWordsTargetChoice: core.pending.isFriskWarmWordsTargetChoice,
     isFriskGenocideChoice: core.pending.isFriskGenocideChoice,
     isFriskKeenEyeChoice: core.pending.isFriskKeenEyeChoice,
-    isFriskPrecisionStrikeTargetChoice:
-      core.pending.isFriskPrecisionStrikeTargetChoice,
+    isFriskPrecisionStrikeTargetChoice: core.pending.isFriskPrecisionStrikeTargetChoice,
     isLokiLaughtChoice: core.pending.isLokiLaughtChoice,
     isLokiChickenTargetChoice: core.pending.isLokiChickenTargetChoice,
     isLokiMindControlEnemyChoice: core.pending.isLokiMindControlEnemyChoice,
@@ -155,24 +150,18 @@ export function useGameShellViewModel() {
     isRiverBoatDropDestination: core.pending.isRiverBoatDropDestination,
     isRiverTraLaLaTargetChoice: core.pending.isRiverTraLaLaTargetChoice,
     isRiverTraLaLaDestinationChoice: core.pending.isRiverTraLaLaDestinationChoice,
-    isRiverTraLaLaDropDestinationChoice:
-      core.pending.isRiverTraLaLaDropDestinationChoice,
+    isRiverTraLaLaDropDestinationChoice: core.pending.isRiverTraLaLaDropDestinationChoice,
     isChikatiloPlacement: core.pending.isChikatiloPlacement,
-    isGroznyTyrantAllyChoice:
-      core.pending.isGroznyTyrantAllyChoice,
-    isGroznyTyrantAttackCellChoice:
-      core.pending.isGroznyTyrantAttackCellChoice,
+    isGroznyTyrantAllyChoice: core.pending.isGroznyTyrantAllyChoice,
+    isGroznyTyrantAttackCellChoice: core.pending.isGroznyTyrantAttackCellChoice,
     isGuideTravelerPlacement: core.pending.isGuideTravelerPlacement,
     isJebeKhansShooterTargetChoice: core.pending.isJebeKhansShooterTargetChoice,
     isHassanTrueEnemyTargetChoice: core.pending.isHassanTrueEnemyTargetChoice,
-    isAsgoreSoulParadePatienceTargetChoice:
-      core.pending.isAsgoreSoulParadePatienceTargetChoice,
+    isAsgoreSoulParadePatienceTargetChoice: core.pending.isAsgoreSoulParadePatienceTargetChoice,
     isAsgoreSoulParadePerseveranceTargetChoice:
       core.pending.isAsgoreSoulParadePerseveranceTargetChoice,
-    isAsgoreSoulParadeJusticeTargetChoice:
-      core.pending.isAsgoreSoulParadeJusticeTargetChoice,
-    isAsgoreSoulParadeIntegrityDestination:
-      core.pending.isAsgoreSoulParadeIntegrityDestination,
+    isAsgoreSoulParadeJusticeTargetChoice: core.pending.isAsgoreSoulParadeJusticeTargetChoice,
+    isAsgoreSoulParadeIntegrityDestination: core.pending.isAsgoreSoulParadeIntegrityDestination,
     isHassanAssassinOrderSelection: core.pending.isHassanAssassinOrderSelection,
     hassanAssassinOrderSelections: core.hassanAssassinOrderSelections,
     isLokiChickenTargetChoice: core.pending.isLokiChickenTargetChoice,
@@ -180,8 +169,7 @@ export function useGameShellViewModel() {
     isLokiMindControlTargetChoice: core.pending.isLokiMindControlTargetChoice,
     isFriskPacifismHugsTargetChoice: core.pending.isFriskPacifismHugsTargetChoice,
     isFriskWarmWordsTargetChoice: core.pending.isFriskWarmWordsTargetChoice,
-    isFriskPrecisionStrikeTargetChoice:
-      core.pending.isFriskPrecisionStrikeTargetChoice,
+    isFriskPrecisionStrikeTargetChoice: core.pending.isFriskPrecisionStrikeTargetChoice,
     selectedUnit: core.selectedUnit,
     pendingMoveForSelected: core.pendingMoveForSelected,
     moveOptions: core.moveOptions,
@@ -278,6 +266,9 @@ export function useGameShellViewModel() {
       boardUi,
       highlightedCells,
       boardPreview,
-    ]
+      newHeroAbilityTargetId,
+    ],
   );
 }
+
+export type GameShellViewModel = ReturnType<typeof useGameShellViewModel>;

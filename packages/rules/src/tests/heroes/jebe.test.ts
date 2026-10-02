@@ -16,7 +16,7 @@ import {
   toBattleState,
 } from "../helpers/testUtils";
 export function testJebeHpBonus() {
-  const { state, jebe } = setupJebeState();
+  const { jebe } = setupJebeState();
   const baseHp = getUnitDefinition("archer").maxHp;
   const meta = getHeroMeta(HERO_JEBE_ID);
 
@@ -38,11 +38,7 @@ export function testJebeStealthThresholdIs6() {
   state = initKnowledgeForOwners(state);
 
   let rng = makeRngSequence([0.8]); // roll 5
-  let res = applyAction(
-    state,
-    { type: "enterStealth", unitId: jebe.id } as any,
-    rng
-  );
+  let res = applyAction(state, { type: "enterStealth", unitId: jebe.id }, rng);
   assert(res.state.pendingRoll?.kind === "enterStealth", "stealth should request roll");
   res = resolvePendingRollOnce(res.state, rng);
   assert(
@@ -58,7 +54,7 @@ export function testJebeStealthThresholdIs6() {
   rng = makeRngSequence([0.99]); // roll 6
   res = applyAction(
     state,
-    { type: "enterStealth", unitId: jebe.id } as any,
+    { type: "enterStealth", unitId: jebe.id },
     rng
   );
   res = resolvePendingRollOnce(res.state, rng);
@@ -85,9 +81,10 @@ export function testJebeHailOfArrowsGatingTargetingAndDamage() {
     0.2, // defender 4
   ]);
 
-  let { state, jebe } = setupJebeState();
+  const { state: initialState83, jebe } = setupJebeState();
+let state = initialState83;
   const ally1 = Object.values(state.units).find(
-    (unit) => unit.owner === "P1" && unit.class === "rider"
+    (unit) => unit.owner === "P1" && unit.class === "rider",
   )!;
   const ally2 = Object.values(state.units).find(
     (unit) => unit.owner === "P1" && unit.class === "spearman"
@@ -117,13 +114,13 @@ export function testJebeHailOfArrowsGatingTargetingAndDamage() {
       unitId: jebe.id,
       abilityId: ABILITY_JEBE_HAIL_OF_ARROWS,
       payload: { center: { col: 2, row: 2 } },
-    } as any,
+    },
     rng
   );
   assert(!res.state.pendingRoll, "hail should be blocked below 2 charges");
   assert(
     res.state.units[jebe.id].charges[ABILITY_JEBE_HAIL_OF_ARROWS] === 1,
-    "hail charges should remain when blocked by insufficient charges"
+    "hail charges should remain when blocked by insufficient charges",
   );
 
   state = setUnit(state, jebe.id, {
@@ -136,13 +133,13 @@ export function testJebeHailOfArrowsGatingTargetingAndDamage() {
       type: "useAbility",
       unitId: jebe.id,
       abilityId: ABILITY_JEBE_HAIL_OF_ARROWS,
-    } as any,
+    },
     rng
   );
   assert(!res.state.pendingRoll, "hail without a center should not resolve");
   assert(
     res.state.units[jebe.id].charges[ABILITY_JEBE_HAIL_OF_ARROWS] === 2,
-    "hail without center confirmation should not spend charges"
+    "hail without center confirmation should not spend charges",
   );
 
   res = applyAction(
@@ -152,13 +149,13 @@ export function testJebeHailOfArrowsGatingTargetingAndDamage() {
       unitId: jebe.id,
       abilityId: ABILITY_JEBE_HAIL_OF_ARROWS,
       payload: { center: { col: 1, row: 2 } },
-    } as any,
+    },
     rng
   );
   assert(!res.state.pendingRoll, "center outside attack line should be rejected");
   assert(
     res.state.units[jebe.id].charges[ABILITY_JEBE_HAIL_OF_ARROWS] === 2,
-    "illegal center should not spend hail charges"
+    "illegal center should not spend hail charges",
   );
 
   const beforeHp: Record<string, number> = {
@@ -175,7 +172,7 @@ export function testJebeHailOfArrowsGatingTargetingAndDamage() {
       unitId: jebe.id,
       abilityId: ABILITY_JEBE_HAIL_OF_ARROWS,
       payload: { center: { col: 2, row: 2 } },
-    } as any,
+    },
     rng
   );
   assert(
@@ -184,7 +181,7 @@ export function testJebeHailOfArrowsGatingTargetingAndDamage() {
   );
   assert(
     res.state.units[jebe.id].charges[ABILITY_JEBE_HAIL_OF_ARROWS] === 0,
-    "hail should consume exactly 2 charges"
+    "hail should consume exactly 2 charges",
   );
 
   const resolved = resolveAllPendingRollsWithEvents(res.state, rng);
@@ -232,12 +229,13 @@ export function testJebeKhansShooterGatingConsumesAndRicochets() {
     0.01, // attack 3
   ]);
 
-  let { state, jebe } = setupJebeState();
+  const { state: initialState84, jebe } = setupJebeState();
+let state = initialState84;
   const enemy1 = Object.values(state.units).find(
     (unit) => unit.owner === "P2" && unit.class === "rider"
   )!;
   const enemy2 = Object.values(state.units).find(
-    (unit) => unit.owner === "P2" && unit.class === "spearman"
+    (unit) => unit.owner === "P2" && unit.class === "spearman",
   )!;
   const enemy3 = Object.values(state.units).find(
     (unit) => unit.owner === "P2" && unit.class === "knight"
@@ -260,7 +258,7 @@ export function testJebeKhansShooterGatingConsumesAndRicochets() {
       unitId: jebe.id,
       abilityId: ABILITY_JEBE_KHANS_SHOOTER,
       payload: { targetId: enemy1.id },
-    } as any,
+    },
     rng
   );
   assert(!used.state.pendingRoll, "Khan's Shooter should be blocked below 6 charges");
@@ -279,7 +277,7 @@ export function testJebeKhansShooterGatingConsumesAndRicochets() {
       type: "useAbility",
       unitId: jebe.id,
       abilityId: ABILITY_JEBE_KHANS_SHOOTER,
-    } as any,
+    },
     rng
   );
   assert(!used.state.pendingRoll, "Khan's Shooter without a target should not resolve");
@@ -295,8 +293,8 @@ export function testJebeKhansShooterGatingConsumesAndRicochets() {
       unitId: jebe.id,
       abilityId: ABILITY_JEBE_KHANS_SHOOTER,
       payload: { targetId: enemy1.id },
-    } as any,
-    rng
+    },
+    rng,
   );
 
   assert(
@@ -305,7 +303,7 @@ export function testJebeKhansShooterGatingConsumesAndRicochets() {
   );
   assert(
     used.state.units[jebe.id].charges[ABILITY_JEBE_KHANS_SHOOTER] === 6,
-    "Khan's Shooter first target selection should not spend charges before ricochet roll"
+    "Khan's Shooter first target selection should not spend charges before ricochet roll",
   );
   assert(
     (
@@ -342,8 +340,8 @@ export function testJebeKhansShooterGatingConsumesAndRicochets() {
           type: "resolvePendingRoll",
           pendingRollId: pending.id,
           player: pending.player,
-          choice: { type: "jebeKhansShooterTarget", targetId: ctx.lastTargetId },
-        } as any,
+          choice: { type: "jebeKhansShooterTarget", targetId: ctx.lastTargetId! },
+        },
         rng
       );
       assert(
@@ -358,8 +356,8 @@ export function testJebeKhansShooterGatingConsumesAndRicochets() {
           pendingRollId: pending.id,
           player: pending.player,
           choice: { type: "jebeKhansShooterTarget", targetId: nextTarget },
-        } as any,
-        rng
+        },
+        rng,
       );
       current = step.state;
       events.push(...step.events);

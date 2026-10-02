@@ -37,9 +37,10 @@ export function testAsgoreHpBonus() {
 
 
 export function testAsgoreSpearmanReachAndDefenseDouble() {
-  let { state, asgore } = setupAsgoreState();
+  const { state: initialState7, asgore } = setupAsgoreState();
+  let state = initialState7;
   const rangeTarget = Object.values(state.units).find(
-    (unit) => unit.owner === "P2" && unit.class === "spearman"
+    (unit) => unit.owner === "P2" && unit.class === "spearman",
   )!;
   const attacker = Object.values(state.units).find(
     (unit) => unit.owner === "P2" && unit.class === "rider"
@@ -82,10 +83,11 @@ export function testAsgoreSpearmanReachAndDefenseDouble() {
 
 
 export function testAsgoreFireballTargetingChargesAndDamage() {
-  let { state, asgore } = setupAsgoreState();
-  const lineTarget = Object.values(state.units).find(
-    (unit) => unit.owner === "P2" && unit.class === "knight"
-  )!;
+  const { state: initialState8, asgore } = setupAsgoreState();
+let state = initialState8;
+const lineTarget = Object.values(state.units).find(
+  (unit) => unit.owner === "P2" && unit.class === "knight",
+)!;
   const illegalTarget = Object.values(state.units).find(
     (unit) => unit.owner === "P2" && unit.class === "rider"
   )!;
@@ -106,13 +108,10 @@ export function testAsgoreFireballTargetingChargesAndDamage() {
       unitId: asgore.id,
       abilityId: ABILITY_ASGORE_FIREBALL,
       payload: { targetId: lineTarget.id },
-    } as any,
+    },
     makeRngSequence([])
   );
-  assert(
-    !blockedByCharges.state.pendingRoll,
-    "Fireball should be blocked when charge is 0"
-  );
+  assert(!blockedByCharges.state.pendingRoll, "Fireball should be blocked when charge is 0");
   assert(
     blockedByCharges.state.units[asgore.id].charges[ABILITY_ASGORE_FIREBALL] === 0,
     "blocked Fireball should not change charges"
@@ -129,12 +128,12 @@ export function testAsgoreFireballTargetingChargesAndDamage() {
       unitId: asgore.id,
       abilityId: ABILITY_ASGORE_FIREBALL,
       payload: { targetId: illegalTarget.id },
-    } as any,
+    },
     makeRngSequence([])
   );
   assert(
     !illegalTargetUse.state.pendingRoll,
-    "Fireball should reject illegal non-archer-line target"
+    "Fireball should reject illegal non-archer-line target",
   );
   assert(
     illegalTargetUse.state.units[asgore.id].charges[ABILITY_ASGORE_FIREBALL] === 1,
@@ -148,12 +147,12 @@ export function testAsgoreFireballTargetingChargesAndDamage() {
       unitId: asgore.id,
       abilityId: ABILITY_ASGORE_FIREBALL,
       payload: { targetId: lineTarget.id },
-    } as any,
+    },
     makeRngSequence([])
   );
   assert(
     used.state.pendingRoll?.kind === "attack_attackerRoll",
-    "legal Fireball should start normal attack roll flow"
+    "legal Fireball should start normal attack roll flow",
   );
   assert(
     used.state.units[asgore.id].charges[ABILITY_ASGORE_FIREBALL] === 0,
@@ -182,12 +181,13 @@ export function testAsgoreFireballTargetingChargesAndDamage() {
 
 
 export function testAsgoreFireParadeAreaResolutionAndChargeSpend() {
-  let { state, asgore } = setupAsgoreState();
+  const { state: initialState9, asgore } = setupAsgoreState();
+let state = initialState9;
   const ally = Object.values(state.units).find(
-    (unit) => unit.owner === "P1" && unit.class === "rider"
+    (unit) => unit.owner === "P1" && unit.class === "rider",
   )!;
   const enemyNear = Object.values(state.units).find(
-    (unit) => unit.owner === "P2" && unit.class === "knight"
+    (unit) => unit.owner === "P2" && unit.class === "knight",
   )!;
   const enemyFar = Object.values(state.units).find(
     (unit) => unit.owner === "P2" && unit.class === "archer"
@@ -209,13 +209,13 @@ export function testAsgoreFireParadeAreaResolutionAndChargeSpend() {
       type: "useAbility",
       unitId: asgore.id,
       abilityId: ABILITY_ASGORE_FIRE_PARADE,
-    } as any,
+    },
     makeRngSequence([])
   );
   assert(!blocked.state.pendingRoll, "Fire Parade should be blocked with 0 charges");
   assert(
     blocked.state.units[asgore.id].charges[ABILITY_ASGORE_FIRE_PARADE] === 0,
-    "blocked Fire Parade should keep charges"
+    "blocked Fire Parade should keep charges",
   );
 
   state = setUnit(state, asgore.id, {
@@ -228,7 +228,7 @@ export function testAsgoreFireParadeAreaResolutionAndChargeSpend() {
       type: "useAbility",
       unitId: asgore.id,
       abilityId: ABILITY_ASGORE_FIRE_PARADE,
-    } as any,
+    },
     makeRngSequence([])
   );
   assert(
@@ -237,7 +237,7 @@ export function testAsgoreFireParadeAreaResolutionAndChargeSpend() {
   );
   assert(
     used.state.units[asgore.id].charges[ABILITY_ASGORE_FIRE_PARADE] === 0,
-    "Fire Parade should spend exactly 1 charge"
+    "Fire Parade should spend exactly 1 charge",
   );
   assert(
     used.state.units[asgore.id].turn.actionUsed,
@@ -281,7 +281,8 @@ export function testAsgoreFireParadeAreaResolutionAndChargeSpend() {
 
 
 export function testAsgoreSoulParadePatienceAttackAndTempStealth() {
-  let { state, asgore } = setupAsgoreState();
+  const { state: initialState10, asgore } = setupAsgoreState();
+let state = initialState10;
   const enemy = Object.values(state.units).find(
     (unit) => unit.owner === "P2" && unit.class === "knight"
   )!;
@@ -374,7 +375,7 @@ export function testAsgoreSoulParadePatienceAttackAndTempStealth() {
   stealthState = { ...stealthState, currentPlayer: "P1", activeUnitId: asgore.id };
   const attemptFail = applyAction(
     stealthState,
-    { type: "enterStealth", unitId: asgore.id } as any,
+    { type: "enterStealth", unitId: asgore.id },
     makeRngSequence([])
   );
   assert(
@@ -387,7 +388,7 @@ export function testAsgoreSoulParadePatienceAttackAndTempStealth() {
   ); // roll 4
   assert(
     !failedStealth.state.units[asgore.id].isStealthed,
-    "Patience stealth should fail on roll 4 (threshold 5-6)"
+    "Patience stealth should fail on roll 4 (threshold 5-6)",
   );
 
   let secondAttemptState = setUnit(failedStealth.state, asgore.id, {
@@ -404,7 +405,7 @@ export function testAsgoreSoulParadePatienceAttackAndTempStealth() {
   };
   const attemptSuccess = applyAction(
     secondAttemptState,
-    { type: "enterStealth", unitId: asgore.id } as any,
+    { type: "enterStealth", unitId: asgore.id },
     makeRngSequence([])
   );
   const succeededStealth = resolvePendingRollOnce(
@@ -421,9 +422,10 @@ export function testAsgoreSoulParadePatienceAttackAndTempStealth() {
 
 
 export function testAsgoreSoulParadeBraveryAutoDefenseOneTime() {
-  let { state, asgore } = setupAsgoreState();
+  const { state: initialState11, asgore } = setupAsgoreState();
+  let state = initialState11;
   const attacker = Object.values(state.units).find(
-    (unit) => unit.owner === "P2" && unit.class === "knight"
+    (unit) => unit.owner === "P2" && unit.class === "knight",
   )!;
 
   state = setUnit(state, asgore.id, {
@@ -435,33 +437,30 @@ export function testAsgoreSoulParadeBraveryAutoDefenseOneTime() {
   const started = startAsgoreSoulParadeTurn(state, asgore.id);
   assert(
     started.state.units[asgore.id].charges[ABILITY_ASGORE_SOUL_PARADE] === 3,
-    "Soul Parade trigger should not spend charges before Bravery resolves"
+    "Soul Parade trigger should not spend charges before Bravery resolves",
   );
   const rolled = resolvePendingRollOnce(started.state, makeRngSequence([0.2])); // roll 2
   assert(!rolled.state.pendingRoll, "Bravery branch should resolve immediately");
   assert(
     rolled.state.units[asgore.id].charges[ABILITY_ASGORE_SOUL_PARADE] === 0,
-    "Bravery branch should spend Soul Parade charges when it resolves"
+    "Bravery branch should spend Soul Parade charges when it resolves",
   );
   assert(
     !!rolled.state.units[asgore.id].asgoreBraveryAutoDefenseReady,
-    "Bravery branch should arm one-time auto defense"
+    "Bravery branch should arm one-time auto defense",
   );
 
   let defendState = toBattleState(rolled.state, "P2", attacker.id);
   defendState = initKnowledgeForOwners(defendState);
   const attackStarted = applyAction(
     defendState,
-    { type: "attack", attackerId: attacker.id, defenderId: asgore.id } as any,
-    makeRngSequence([])
+    { type: "attack", attackerId: attacker.id, defenderId: asgore.id },
+    makeRngSequence([]),
   );
-  const afterAttacker = resolvePendingRollOnce(
-    attackStarted.state,
-    makeRngSequence([0.99, 0.99])
-  );
+  const afterAttacker = resolvePendingRollOnce(attackStarted.state, makeRngSequence([0.99, 0.99]));
   assert(
     afterAttacker.state.pendingRoll?.kind === "asgoreBraveryDefenseChoice",
-    "Bravery choice should appear after attacker roll"
+    "Bravery choice should appear after attacker roll",
   );
 
   const autoChosen = applyAction(
@@ -471,20 +470,20 @@ export function testAsgoreSoulParadeBraveryAutoDefenseOneTime() {
       pendingRollId: afterAttacker.state.pendingRoll!.id,
       player: afterAttacker.state.pendingRoll!.player,
       choice: "auto",
-    } as any,
-    makeRngSequence([])
+    },
+    makeRngSequence([]),
   );
   const autoEvent = autoChosen.events.find(
     (event) =>
       event.type === "attackResolved" &&
       event.attackerId === attacker.id &&
-      event.defenderId === asgore.id
+      event.defenderId === asgore.id,
   ) as Extract<GameEvent, { type: "attackResolved" }> | undefined;
   assert(autoEvent, "attack should resolve after Bravery auto-defense");
   assert(!autoEvent.hit && autoEvent.damage === 0, "Bravery auto-defense should negate hit");
   assert(
     !autoChosen.state.units[asgore.id].asgoreBraveryAutoDefenseReady,
-    "Bravery auto-defense should be consumed after one use"
+    "Bravery auto-defense should be consumed after one use",
   );
 
   let secondDefendState = toBattleState(autoChosen.state, "P2", attacker.id);
@@ -498,16 +497,16 @@ export function testAsgoreSoulParadeBraveryAutoDefenseOneTime() {
   });
   const secondStart = applyAction(
     secondDefendState,
-    { type: "attack", attackerId: attacker.id, defenderId: asgore.id } as any,
-    makeRngSequence([])
+    { type: "attack", attackerId: attacker.id, defenderId: asgore.id },
+    makeRngSequence([]),
   );
   const secondAfterAttacker = resolvePendingRollOnce(
     secondStart.state,
-    makeRngSequence([0.99, 0.99])
+    makeRngSequence([0.99, 0.99]),
   );
   assert(
     secondAfterAttacker.state.pendingRoll?.kind === "attack_defenderRoll",
-    "After Bravery is spent, defense should proceed with normal defender roll"
+    "After Bravery is spent, defense should proceed with normal defender roll",
   );
 
   console.log("asgore_soul_parade_bravery_auto_defense_one_time passed");
@@ -516,7 +515,8 @@ export function testAsgoreSoulParadeBraveryAutoDefenseOneTime() {
 
 export function testAsgoreSoulParadeIntegrityPerseveranceKindnessJustice() {
   {
-    let { state, asgore } = setupAsgoreState();
+    const { state: initialState12, asgore } = setupAsgoreState();
+    let state = initialState12;
     state = setUnit(state, asgore.id, {
       position: { col: 4, row: 4 },
       charges: { ...asgore.charges, [ABILITY_ASGORE_SOUL_PARADE]: 2 },
@@ -525,11 +525,11 @@ export function testAsgoreSoulParadeIntegrityPerseveranceKindnessJustice() {
     const rolled = resolvePendingRollOnce(started.state, makeRngSequence([0.4])); // roll 3
     assert(
       rolled.state.pendingRoll?.kind === "asgoreSoulParadeIntegrityDestination",
-      "Soul Parade roll=3 should request Integrity destination"
+      "Soul Parade roll=3 should request Integrity destination",
     );
     assert(
       rolled.state.units[asgore.id].charges[ABILITY_ASGORE_SOUL_PARADE] === 3,
-      "Integrity destination selection should not spend Soul Parade charges"
+      "Integrity destination selection should not spend Soul Parade charges",
     );
     const moved = resolvePendingWithChoice(
       rolled.state,
@@ -537,27 +537,28 @@ export function testAsgoreSoulParadeIntegrityPerseveranceKindnessJustice() {
         type: "asgoreSoulParadeIntegrityDestination",
         position: { col: 8, row: 8 },
       },
-      makeRngSequence([])
+      makeRngSequence([]),
     );
     assert(
       moved.state.units[asgore.id].position?.col === 8 &&
         moved.state.units[asgore.id].position?.row === 8,
-      "Integrity should reposition Asgore to selected empty cell"
+      "Integrity should reposition Asgore to selected empty cell",
     );
     assert(
       !moved.state.units[asgore.id].turn.moveUsed,
-      "Integrity reposition should not consume move action"
+      "Integrity reposition should not consume move action",
     );
     assert(
       moved.state.units[asgore.id].charges[ABILITY_ASGORE_SOUL_PARADE] === 0,
-      "Integrity destination resolution should spend Soul Parade charges"
+      "Integrity destination resolution should spend Soul Parade charges",
     );
   }
 
   {
-    let { state, asgore } = setupAsgoreState();
+    const { state: initialState13, asgore } = setupAsgoreState();
+    let state = initialState13;
     const target = Object.values(state.units).find(
-      (unit) => unit.owner === "P2" && unit.class === "knight"
+      (unit) => unit.owner === "P2" && unit.class === "knight",
     )!;
     state = setUnit(state, asgore.id, {
       position: { col: 4, row: 4 },
@@ -568,29 +569,30 @@ export function testAsgoreSoulParadeIntegrityPerseveranceKindnessJustice() {
     const rolled = resolvePendingRollOnce(started.state, makeRngSequence([0.55])); // roll 4
     assert(
       rolled.state.pendingRoll?.kind === "asgoreSoulParadePerseveranceTargetChoice",
-      "Soul Parade roll=4 should request Perseverance target"
+      "Soul Parade roll=4 should request Perseverance target",
     );
     assert(
       rolled.state.units[asgore.id].charges[ABILITY_ASGORE_SOUL_PARADE] === 3,
-      "Perseverance target selection should not spend Soul Parade charges"
+      "Perseverance target selection should not spend Soul Parade charges",
     );
     const applied = resolvePendingWithChoice(
       rolled.state,
       { type: "asgoreSoulParadePerseveranceTarget", targetId: target.id },
-      makeRngSequence([0.1]) // fail check
+      makeRngSequence([0.1]), // fail check
     );
     assert(
       !!applied.state.units[target.id].movementDisabledNextTurn,
-      "Perseverance failed check should disable target movement next turn"
+      "Perseverance failed check should disable target movement next turn",
     );
     assert(
       applied.state.units[asgore.id].charges[ABILITY_ASGORE_SOUL_PARADE] === 0,
-      "Perseverance target resolution should spend Soul Parade charges"
+      "Perseverance target resolution should spend Soul Parade charges",
     );
   }
 
   {
-    let { state, asgore } = setupAsgoreState();
+    const { state: initialState14, asgore } = setupAsgoreState();
+    let state = initialState14;
     state = setUnit(state, asgore.id, {
       position: { col: 4, row: 4 },
       hp: 5,
@@ -601,21 +603,19 @@ export function testAsgoreSoulParadeIntegrityPerseveranceKindnessJustice() {
     assert(!rolled.state.pendingRoll, "Kindness branch should resolve immediately");
     assert(
       rolled.state.units[asgore.id].charges[ABILITY_ASGORE_SOUL_PARADE] === 0,
-      "Kindness branch should spend Soul Parade charges when it resolves"
+      "Kindness branch should spend Soul Parade charges when it resolves",
     );
-    assert(
-      rolled.state.units[asgore.id].hp === 7,
-      "Kindness should heal Asgore by 2 HP"
-    );
+    assert(rolled.state.units[asgore.id].hp === 7, "Kindness should heal Asgore by 2 HP");
   }
 
   {
-    let { state, asgore } = setupAsgoreState();
+    const { state: initialState15, asgore } = setupAsgoreState();
+    let state = initialState15;
     const target = Object.values(state.units).find(
-      (unit) => unit.owner === "P2" && unit.class === "knight"
+      (unit) => unit.owner === "P2" && unit.class === "knight",
     )!;
     const illegalTarget = Object.values(state.units).find(
-      (unit) => unit.owner === "P2" && unit.class === "rider"
+      (unit) => unit.owner === "P2" && unit.class === "rider",
     )!;
     state = setUnit(state, asgore.id, {
       position: { col: 4, row: 4 },
@@ -627,62 +627,60 @@ export function testAsgoreSoulParadeIntegrityPerseveranceKindnessJustice() {
     const rolled = resolvePendingRollOnce(started.state, makeRngSequence([0.95])); // roll 6
     assert(
       rolled.state.pendingRoll?.kind === "asgoreSoulParadeJusticeTargetChoice",
-      "Soul Parade roll=6 should request Justice target"
+      "Soul Parade roll=6 should request Justice target",
     );
     assert(
       rolled.state.units[asgore.id].charges[ABILITY_ASGORE_SOUL_PARADE] === 3,
-      "Justice target selection should not spend Soul Parade charges"
+      "Justice target selection should not spend Soul Parade charges",
     );
     const justiceOptions =
-      (rolled.state.pendingRoll?.context as { options?: string[] } | undefined)
-        ?.options ?? [];
+      (rolled.state.pendingRoll?.context as { options?: string[] } | undefined)?.options ?? [];
     assert(
       justiceOptions.includes(target.id),
-      "Justice target options should include archer-legal target"
+      "Justice target options should include archer-legal target",
     );
     const justiceContext = rolled.state.pendingRoll?.context as
       | { soulResult?: { roll?: number; soulId?: string } }
       | undefined;
     assert(
-      justiceContext?.soulResult?.roll === 6 &&
-        justiceContext.soulResult.soulId === "justice",
-      "Justice pending choice should preserve the resolved Soul Parade result"
+      justiceContext?.soulResult?.roll === 6 && justiceContext.soulResult.soulId === "justice",
+      "Justice pending choice should preserve the resolved Soul Parade result",
     );
     const illegalPicked = resolvePendingWithChoice(
       rolled.state,
       { type: "asgoreSoulParadeJusticeTarget", targetId: illegalTarget.id },
-      makeRngSequence([])
+      makeRngSequence([]),
     );
     assert(
       illegalPicked.state.pendingRoll?.kind === "asgoreSoulParadeJusticeTargetChoice",
-      "invalid Justice target should keep pending choice active"
+      "invalid Justice target should keep pending choice active",
     );
     assert(
       illegalPicked.state.units[asgore.id].charges[ABILITY_ASGORE_SOUL_PARADE] === 3,
-      "invalid Justice target should not spend Soul Parade charges"
+      "invalid Justice target should not spend Soul Parade charges",
     );
     const picked = resolvePendingWithChoice(
       rolled.state,
       { type: "asgoreSoulParadeJusticeTarget", targetId: target.id },
-      makeRngSequence([])
+      makeRngSequence([]),
     );
     assert(
       picked.state.pendingRoll?.kind === "attack_attackerRoll",
-      "Justice branch should trigger immediate ranged attack flow"
+      "Justice branch should trigger immediate ranged attack flow",
     );
     assert(
       picked.state.units[asgore.id].charges[ABILITY_ASGORE_SOUL_PARADE] === 0,
-      "Justice target resolution should spend Soul Parade charges"
+      "Justice target resolution should spend Soul Parade charges",
     );
     const resolved = resolveAllPendingRollsWithEvents(
       picked.state,
-      makeRngSequence([0.99, 0.99, 0.01, 0.01])
+      makeRngSequence([0.99, 0.99, 0.01, 0.01]),
     );
     const justiceAttack = [...picked.events, ...resolved.events].find(
       (event) =>
         event.type === "attackResolved" &&
         event.attackerId === asgore.id &&
-        event.defenderId === target.id
+        event.defenderId === target.id,
     ) as Extract<GameEvent, { type: "attackResolved" }> | undefined;
     assert(justiceAttack, "Justice branch attack should resolve");
     assert(justiceAttack.hit, "Justice branch should hit with winning deterministic roll");

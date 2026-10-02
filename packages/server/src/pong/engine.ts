@@ -1,4 +1,4 @@
-import { PongState, makeInitialState, Ball, Paddle } from "./state";
+import { PongState, Paddle } from "./state";
 
 export type InputDir = "up" | "down" | "stop";
 

@@ -1,6 +1,7 @@
+import { gameShellFixture } from "../game/testHelpers/gameShellFixture";
 import assert from "node:assert/strict";
 import test from "node:test";
-import React from "react";
+
 import { renderToStaticMarkup } from "react-dom/server";
 import { createEmptyGame, makePlayerView, type GameState, type PlayerView } from "rules";
 import { Board } from "../components/Board";
@@ -117,21 +118,21 @@ test("the match status badge uses localized active field labels", () => {
     view,
     pendingMeta: null,
     roomMeta: null,
-    connectionStatus: "connected",
-    role: "player1",
+    connectionStatus: "connected" as const,
+    role: "P1" as const,
     roomId: "field-test",
-    playerId: "P1",
+    playerId: "P1" as const,
     leavingRoom: false,
     handleLeave: () => undefined,
   };
 
   setLanguage("en", null);
-  const englishMarkup = renderToStaticMarkup(<GameTopBar vm={vm} />);
+  const englishMarkup = renderToStaticMarkup(<GameTopBar vm={gameShellFixture(vm)} />);
   assert.match(englishMarkup, /Active field/);
   assert.match(englishMarkup, /Bone Field/);
 
   setLanguage("uk", null);
-  const ukrainianMarkup = renderToStaticMarkup(<GameTopBar vm={vm} />);
+  const ukrainianMarkup = renderToStaticMarkup(<GameTopBar vm={gameShellFixture(vm)} />);
   assert.match(ukrainianMarkup, /Активне поле/);
   assert.match(ukrainianMarkup, /Поле кісток/);
   setLanguage("en", null);

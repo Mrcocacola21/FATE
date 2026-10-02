@@ -1,3 +1,4 @@
+import type { GameShellViewModel } from "../hooks/useGameShellViewModel";
 import { PanelCard, SectionHeader, StatusBadge } from "../../../components/ui";
 import { useI18n } from "../../../i18n";
 
@@ -18,7 +19,7 @@ export function ruleDeclarationKey(ruleId: string | null | undefined) {
   }
 }
 
-export function RuleDeclarationStatus({ vm }: { vm: any }) {
+export function RuleDeclarationStatus({ vm }: { vm: GameShellViewModel }) {
   const { t } = useI18n();
   const rule = vm.view?.ruleDeclaration;
   const selectedRuleId = rule?.selectedRuleId ?? null;

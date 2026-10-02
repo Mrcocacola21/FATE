@@ -9,18 +9,13 @@ import {
   HERO_GRAND_KAISER_ID,
   HERO_REGISTRY,
   HERO_VLAD_TEPES_ID,
-  resolveAllPendingRolls,
   resolvePendingRollOnce,
   SeededRNG,
   toPlacementState,
   type GameState,
   type UnitState,
 } from "../helpers/testUtils";
-import {
-  ABILITY_KAISER_BUNKER,
-  getAbilityViewsForUnit,
-  HERO_REGISTRY_LIST,
-} from "../../index";
+import { ABILITY_KAISER_BUNKER, getAbilityViewsForUnit, HERO_REGISTRY_LIST } from "../../index";
 export function testPlacementToBattleAndTurnOrder() {
   const rng = new SeededRNG(12345);
   let state = createEmptyGame();
@@ -31,27 +26,39 @@ export function testPlacementToBattleAndTurnOrder() {
   state = toPlacementState(state, "P1");
 
   // simulate simple alternating placement to reach battle
-  const p1coords = ["b0","c0","d0","e0","f0","g0","h0"].map(coordFromNotation);
-  const p2coords = ["b8","c8","d8","e8","f8","g8","h8"].map(coordFromNotation);
+  const p1coords = ["b0", "c0", "d0", "e0", "f0", "g0", "h0"].map(coordFromNotation);
+  const p2coords = ["b8", "c8", "d8", "e8", "f8", "g8", "h8"].map(coordFromNotation);
 
-  let p1i=0,p2i=0;
+  let p1i = 0,
+    p2i = 0;
   while (state.phase === "placement") {
     const current = state.currentPlayer;
-    const nextUnit = Object.values(state.units).find(u => u.owner === current && !u.position && u.isAlive);
-    if (!nextUnit) { state = applyAction(state, { type: "endTurn" } as any, rng).state; continue; }
+    const nextUnit = Object.values(state.units).find(
+      (u) => u.owner === current && !u.position && u.isAlive,
+    );
+    if (!nextUnit) {
+      state = applyAction(state, { type: "endTurn" }, rng).state;
+      continue;
+    }
     const pos = current === "P1" ? p1coords[p1i++] : p2coords[p2i++];
-    state = applyAction(state, { type: "placeUnit", unitId: nextUnit.id, position: pos } as any, rng).state;
+    state = applyAction(
+      state,
+      { type: "placeUnit", unitId: nextUnit.id, position: pos },
+      rng,
+    ).state;
   }
 
   // After placement we must be in battle and have turnOrder length 14
   assert(state.phase === "battle", "phase should be battle");
   assert(state.turnOrder.length === 14, "turnOrder length should be 14");
   // startingUnitId should equal first placed unit
-  assert(state.startingUnitId === state.turnOrder[state.turnOrderIndex], "starting unit must be first in turnOrder");
+  assert(
+    state.startingUnitId === state.turnOrder[state.turnOrderIndex],
+    "starting unit must be first in turnOrder",
+  );
 
   console.log("testPlacementToBattleAndTurnOrder passed");
 }
-
 
 export function testLobbyReadyAndStartRequiresBothReady() {
   const rng = new SeededRNG(500);
@@ -60,47 +67,29 @@ export function testLobbyReadyAndStartRequiresBothReady() {
   const a2 = createDefaultArmy("P2");
   state = attachArmy(state, a1);
   state = attachArmy(state, a2);
-  state = applyAction(state, { type: "lobbyInit", host: "P1" } as any, rng).state;
+  state = applyAction(state, { type: "lobbyInit", host: "P1" }, rng).state;
   state = { ...state, seats: { P1: true, P2: true } };
 
-  const start1 = applyAction(state, { type: "startGame" } as any, rng);
-  assert(
-    !start1.state.pendingRoll,
-    "startGame should not request initiative without both ready"
-  );
+  const start1 = applyAction(state, { type: "startGame" }, rng);
+  assert(!start1.state.pendingRoll, "startGame should not request initiative without both ready");
 
-  state = applyAction(
-    state,
-    { type: "setReady", player: "P1", ready: true } as any,
-    rng
-  ).state;
+  state = applyAction(state, { type: "setReady", player: "P1", ready: true }, rng).state;
 
-  const start2 = applyAction(state, { type: "startGame" } as any, rng);
-  assert(
-    !start2.state.pendingRoll,
-    "startGame should not request initiative until both ready"
-  );
+  const start2 = applyAction(state, { type: "startGame" }, rng);
+  assert(!start2.state.pendingRoll, "startGame should not request initiative until both ready");
 
-  state = applyAction(
-    state,
-    { type: "setReady", player: "P2", ready: true } as any,
-    rng
-  ).state;
+  state = applyAction(state, { type: "setReady", player: "P2", ready: true }, rng).state;
 
-  const start3 = applyAction(state, { type: "startGame" } as any, rng);
+  const start3 = applyAction(state, { type: "startGame" }, rng);
   assert(
     start3.state.pendingRoll?.kind === "initiativeRoll",
-    "startGame should request initiative roll when both ready"
+    "startGame should request initiative roll when both ready",
   );
-  assert(
-    start3.state.pendingRoll?.player === "P1",
-    "initiative roll should start with P1"
-  );
+  assert(start3.state.pendingRoll?.player === "P1", "initiative roll should start with P1");
   assert(start3.state.phase === "lobby", "phase should remain lobby during rolls");
 
   console.log("testLobbyReadyAndStartRequiresBothReady passed");
 }
-
 
 export function testInitiativeRollSequenceNoAutoroll() {
   const rng = new SeededRNG(501);
@@ -109,43 +98,30 @@ export function testInitiativeRollSequenceNoAutoroll() {
   const a2 = createDefaultArmy("P2");
   state = attachArmy(state, a1);
   state = attachArmy(state, a2);
-  state = applyAction(state, { type: "lobbyInit", host: "P1" } as any, rng).state;
+  state = applyAction(state, { type: "lobbyInit", host: "P1" }, rng).state;
   state = { ...state, seats: { P1: true, P2: true } };
-  state = applyAction(
-    state,
-    { type: "setReady", player: "P1", ready: true } as any,
-    rng
-  ).state;
-  state = applyAction(
-    state,
-    { type: "setReady", player: "P2", ready: true } as any,
-    rng
-  ).state;
+  state = applyAction(state, { type: "setReady", player: "P1", ready: true }, rng).state;
+  state = applyAction(state, { type: "setReady", player: "P2", ready: true }, rng).state;
 
-  state = applyAction(state, { type: "startGame" } as any, rng).state;
-  assert(
-    state.pendingRoll?.player === "P1",
-    "startGame should request P1 initiative roll"
-  );
+  state = applyAction(state, { type: "startGame" }, rng).state;
+  assert(state.pendingRoll?.player === "P1", "startGame should request P1 initiative roll");
   assert(
     state.initiative.P1 === null && state.initiative.P2 === null,
-    "initiative should not be set before rolls"
+    "initiative should not be set before rolls",
   );
 
   const afterP1 = resolvePendingRollOnce(state, rng);
   assert(
     afterP1.state.pendingRoll?.player === "P2",
-    "P2 roll should be requested after P1 resolves"
+    "P2 roll should be requested after P1 resolves",
   );
   assert(
-    afterP1.state.initiative.P1 !== null &&
-      afterP1.state.initiative.P2 === null,
-    "P1 initiative should be set after first roll only"
+    afterP1.state.initiative.P1 !== null && afterP1.state.initiative.P2 === null,
+    "P1 initiative should be set after first roll only",
   );
 
   console.log("testInitiativeRollSequenceNoAutoroll passed");
 }
-
 
 export function testInitiativeWinnerSetsPlacementFirstPlayerAndPhasePlacement() {
   const rng = new SeededRNG(502);
@@ -154,19 +130,11 @@ export function testInitiativeWinnerSetsPlacementFirstPlayerAndPhasePlacement() 
   const a2 = createDefaultArmy("P2");
   state = attachArmy(state, a1);
   state = attachArmy(state, a2);
-  state = applyAction(state, { type: "lobbyInit", host: "P1" } as any, rng).state;
+  state = applyAction(state, { type: "lobbyInit", host: "P1" }, rng).state;
   state = { ...state, seats: { P1: true, P2: true } };
-  state = applyAction(
-    state,
-    { type: "setReady", player: "P1", ready: true } as any,
-    rng
-  ).state;
-  state = applyAction(
-    state,
-    { type: "setReady", player: "P2", ready: true } as any,
-    rng
-  ).state;
-  state = applyAction(state, { type: "startGame" } as any, rng).state;
+  state = applyAction(state, { type: "setReady", player: "P1", ready: true }, rng).state;
+  state = applyAction(state, { type: "setReady", player: "P2", ready: true }, rng).state;
+  state = applyAction(state, { type: "startGame" }, rng).state;
 
   const afterInitiativeP1 = resolvePendingRollOnce(state, rng);
   const afterInitiativeP2 = resolvePendingRollOnce(afterInitiativeP1.state, rng);
@@ -174,27 +142,24 @@ export function testInitiativeWinnerSetsPlacementFirstPlayerAndPhasePlacement() 
 
   assert(
     pendingRuleState.phase === "lobby",
-    "phase should remain lobby while rule declaration is pending"
+    "phase should remain lobby while rule declaration is pending",
   );
-  assert(
-    pendingRuleState.initiative.winner !== null,
-    "initiative winner should be set"
-  );
+  assert(pendingRuleState.initiative.winner !== null, "initiative winner should be set");
   assert(
     pendingRuleState.placementFirstPlayer === pendingRuleState.initiative.winner,
-    "placementFirstPlayer should match initiative winner"
+    "placementFirstPlayer should match initiative winner",
   );
   assert(
     pendingRuleState.currentPlayer === pendingRuleState.initiative.winner,
-    "currentPlayer should start as initiative winner"
+    "currentPlayer should start as initiative winner",
   );
   assert(
     pendingRuleState.pendingRoll?.kind === "ruleDeclarationChoice",
-    "initiative loser should choose rule declaration before placement"
+    "initiative loser should choose rule declaration before placement",
   );
   assert(
     pendingRuleState.pendingRoll?.player !== pendingRuleState.initiative.winner,
-    "rule declaration chooser should be initiative loser"
+    "rule declaration chooser should be initiative loser",
   );
 
   const resolved = resolvePendingRollOnce(pendingRuleState, rng, {
@@ -205,12 +170,11 @@ export function testInitiativeWinnerSetsPlacementFirstPlayerAndPhasePlacement() 
   assert(finalState.phase === "placement", "phase should switch to placement after rule choice");
   assert(
     finalState.ruleDeclaration.selectedRuleId === "moon_game",
-    "selected rule should be stored"
+    "selected rule should be stored",
   );
 
   console.log("testInitiativeWinnerSetsPlacementFirstPlayerAndPhasePlacement passed");
 }
-
 
 export function testGetHeroMetaReturnsCorrectData() {
   const meta = getHeroMeta(HERO_VLAD_TEPES_ID);
@@ -220,7 +184,6 @@ export function testGetHeroMetaReturnsCorrectData() {
 
   console.log("getHeroMeta_returns_correct_data passed");
 }
-
 
 export function testHeroRegistryContainsPlayableHeroes() {
   const required = [
@@ -311,12 +274,12 @@ export function testBattleAbilityViewsCoverHeroRegistryMetadata() {
             hero.id === HERO_GRAND_KAISER_ID &&
             unit.transformed &&
             abilityId === ABILITY_KAISER_BUNKER
-          )
+          ),
       );
 
     assert(
       missing.length === 0,
-      `${hero.name} battle ability view should include hero meta abilities: ${missing.join(", ")}`
+      `${hero.name} battle ability view should include hero meta abilities: ${missing.join(", ")}`,
     );
   }
 

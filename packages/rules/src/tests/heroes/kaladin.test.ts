@@ -20,7 +20,7 @@ import {
   toBattleState,
 } from "../helpers/testUtils";
 export function testKaladinHpBonus() {
-  const { state, kaladin } = setupKaladinState();
+  const { kaladin } = setupKaladinState();
   const baseHp = getUnitDefinition("spearman").maxHp;
   const meta = getHeroMeta(HERO_KALADIN_ID);
 
@@ -35,7 +35,8 @@ export function testKaladinHpBonus() {
 
 
 export function testKaladinFirstOathGatingHealingAndCosts() {
-  let { state, kaladin } = setupKaladinState();
+  const { state: initialState85, kaladin } = setupKaladinState();
+  let state = initialState85;
   state = setUnit(state, kaladin.id, {
     position: { col: 4, row: 4 },
     hp: 3,
@@ -50,13 +51,10 @@ export function testKaladinFirstOathGatingHealingAndCosts() {
       type: "useAbility",
       unitId: kaladin.id,
       abilityId: ABILITY_KALADIN_FIRST,
-    } as any,
+    },
     makeRngSequence([])
   );
-  assert(
-    used.state.units[kaladin.id].hp === 3,
-    "First Oath should be blocked below 3 charges"
-  );
+  assert(used.state.units[kaladin.id].hp === 3, "First Oath should be blocked below 3 charges");
   assert(
     used.state.units[kaladin.id].charges[ABILITY_KALADIN_FIRST] === 2,
     "First Oath should not spend charges when blocked"
@@ -73,13 +71,10 @@ export function testKaladinFirstOathGatingHealingAndCosts() {
       type: "useAbility",
       unitId: kaladin.id,
       abilityId: ABILITY_KALADIN_FIRST,
-    } as any,
+    },
     makeRngSequence([])
   );
-  assert(
-    used.state.units[kaladin.id].hp === 5,
-    "First Oath should heal exactly 2 HP"
-  );
+  assert(used.state.units[kaladin.id].hp === 5, "First Oath should heal exactly 2 HP");
   assert(
     used.state.units[kaladin.id].charges[ABILITY_KALADIN_FIRST] === 0,
     "First Oath should spend exactly 3 charges"
@@ -112,22 +107,20 @@ export function testKaladinFirstOathGatingHealingAndCosts() {
       type: "useAbility",
       unitId: kaladin.id,
       abilityId: ABILITY_KALADIN_FIRST,
-    } as any,
+    },
     makeRngSequence([])
   );
-  assert(
-    clamped.state.units[kaladin.id].hp === 6,
-    "First Oath healing should clamp to max HP"
-  );
+  assert(clamped.state.units[kaladin.id].hp === 6, "First Oath healing should clamp to max HP");
 
   console.log("kaladin_first_oath_gating_healing_and_costs passed");
 }
 
 
 export function testKaladinSecondOathTricksterMoveAndAoeTrait() {
-  let { state, kaladin } = setupKaladinState();
+  const { state: initialState86, kaladin } = setupKaladinState();
+let state = initialState86;
   const enemy = Object.values(state.units).find(
-    (unit) => unit.owner === "P2" && unit.class === "rider"
+    (unit) => unit.owner === "P2" && unit.class === "rider",
   )!;
 
   state = setUnit(state, kaladin.id, { position: { col: 4, row: 4 } });
@@ -137,17 +130,15 @@ export function testKaladinSecondOathTricksterMoveAndAoeTrait() {
 
   const moveModes = applyAction(
     state,
-    { type: "requestMoveOptions", unitId: kaladin.id } as any,
+    { type: "requestMoveOptions", unitId: kaladin.id },
     makeRngSequence([])
   );
-  const modeEvent = moveModes.events.find(
-    (event) => event.type === "moveOptionsGenerated"
-  );
+  const modeEvent = moveModes.events.find((event) => event.type === "moveOptionsGenerated");
   assert(
     modeEvent &&
       modeEvent.type === "moveOptionsGenerated" &&
       (modeEvent.modes ?? []).includes("trickster"),
-    "Kaladin should have Trickster move mode from Second Oath"
+    "Kaladin should have Trickster move mode from Second Oath",
   );
 
   const used = applyAction(
@@ -156,12 +147,12 @@ export function testKaladinSecondOathTricksterMoveAndAoeTrait() {
       type: "useAbility",
       unitId: kaladin.id,
       abilityId: ABILITY_TRICKSTER_AOE,
-    } as any,
+    },
     makeRngSequence([0.99, 0.99, 0.01, 0.01])
   );
   assert(
     used.state.pendingRoll?.kind === "tricksterAoE_attackerRoll",
-    "Kaladin should be able to use Trickster AoE trait"
+    "Kaladin should be able to use Trickster AoE trait",
   );
 
   console.log("kaladin_second_oath_trickster_move_and_aoe_trait passed");
@@ -169,12 +160,13 @@ export function testKaladinSecondOathTricksterMoveAndAoeTrait() {
 
 
 export function testKaladinThirdOathSpearmanBonusOnlyOnSpearmanAttack() {
-  let { state, kaladin } = setupKaladinState();
+  const { state: initialState87, kaladin } = setupKaladinState();
+let state = initialState87;
   const enemySpearmanMode = Object.values(state.units).find(
-    (unit) => unit.owner === "P2" && unit.class === "rider"
+    (unit) => unit.owner === "P2" && unit.class === "rider",
   )!;
   const enemyTricksterMode = Object.values(state.units).find(
-    (unit) => unit.owner === "P2" && unit.class === "knight"
+    (unit) => unit.owner === "P2" && unit.class === "knight",
   )!;
 
   state = setUnit(state, kaladin.id, { position: { col: 4, row: 4 } });
@@ -234,39 +226,37 @@ export function testKaladinThirdOathSpearmanBonusOnlyOnSpearmanAttack() {
 
 
 export function testKaladinFourthOathBerserkerTraitMovementMode() {
-  let { state, kaladin } = setupKaladinState();
+  const { state: initialState88, kaladin } = setupKaladinState();
+  let state = initialState88;
   state = setUnit(state, kaladin.id, { position: { col: 4, row: 4 } });
   state = toBattleState(state, "P1", kaladin.id);
   state = initKnowledgeForOwners(state);
 
   const moveModes = applyAction(
     state,
-    { type: "requestMoveOptions", unitId: kaladin.id } as any,
-    makeRngSequence([])
+    { type: "requestMoveOptions", unitId: kaladin.id },
+    makeRngSequence([]),
   );
-  const modeEvent = moveModes.events.find(
-    (event) => event.type === "moveOptionsGenerated"
-  );
+  const modeEvent = moveModes.events.find((event) => event.type === "moveOptionsGenerated");
   assert(
     modeEvent &&
       modeEvent.type === "moveOptionsGenerated" &&
       (modeEvent.modes ?? []).includes("berserker"),
-    "Kaladin should have Berserker movement mode from Fourth Oath"
+    "Kaladin should have Berserker movement mode from Fourth Oath",
   );
 
   const berserkerRequest = applyAction(
     state,
-    { type: "requestMoveOptions", unitId: kaladin.id, mode: "berserker" } as any,
-    makeRngSequence([])
+    { type: "requestMoveOptions", unitId: kaladin.id, mode: "berserker" },
+    makeRngSequence([]),
   );
   assert(
     berserkerRequest.state.pendingRoll?.kind === "moveBerserker",
-    "Kaladin should reuse Berserker movement roll flow"
+    "Kaladin should reuse Berserker movement roll flow",
   );
 
   console.log("kaladin_fourth_oath_berserker_trait_movement_mode passed");
 }
-
 
 export function testKaladinFifthOathGatingDamageAndImmobilizeDuration() {
   const rng = makeRngSequence([
@@ -278,12 +268,13 @@ export function testKaladinFifthOathGatingDamageAndImmobilizeDuration() {
     0.01, // defender 2
   ]);
 
-  let { state, kaladin } = setupKaladinState();
+  const { state: initialState89, kaladin } = setupKaladinState();
+  let state = initialState89;
   const enemy1 = Object.values(state.units).find(
-    (unit) => unit.owner === "P2" && unit.class === "rider"
+    (unit) => unit.owner === "P2" && unit.class === "rider",
   )!;
   const enemy2 = Object.values(state.units).find(
-    (unit) => unit.owner === "P2" && unit.class === "knight"
+    (unit) => unit.owner === "P2" && unit.class === "knight",
   )!;
 
   state = setUnit(state, kaladin.id, {
@@ -302,13 +293,13 @@ export function testKaladinFifthOathGatingDamageAndImmobilizeDuration() {
       unitId: kaladin.id,
       abilityId: ABILITY_KALADIN_FIFTH,
       payload: { center: { col: 4, row: 4 } },
-    } as any,
-    rng
+    },
+    rng,
   );
   assert(!used.state.pendingRoll, "Fifth Oath should be blocked below 6 charges");
   assert(
     used.state.units[kaladin.id].charges[ABILITY_KALADIN_FIFTH] === 5,
-    "Fifth Oath should not spend charges when blocked"
+    "Fifth Oath should not spend charges when blocked",
   );
 
   state = setUnit(state, kaladin.id, {
@@ -322,21 +313,18 @@ export function testKaladinFifthOathGatingDamageAndImmobilizeDuration() {
       unitId: kaladin.id,
       abilityId: ABILITY_KALADIN_FIFTH,
       payload: { center: { col: 4, row: 4 } },
-    } as any,
-    rng
+    },
+    rng,
   );
   assert(
     used.state.pendingRoll?.kind === "tricksterAoE_attackerRoll",
-    "Fifth Oath should start shared-roll AoE resolution"
+    "Fifth Oath should start shared-roll AoE resolution",
   );
   assert(
     used.state.units[kaladin.id].charges[ABILITY_KALADIN_FIFTH] === 0,
-    "Fifth Oath should spend all 6 charges immediately"
+    "Fifth Oath should spend all 6 charges immediately",
   );
-  assert(
-    used.state.units[kaladin.id].turn.actionUsed,
-    "Fifth Oath should consume action slot"
-  );
+  assert(used.state.units[kaladin.id].turn.actionUsed, "Fifth Oath should consume action slot");
 
   const resolved = resolveAllPendingRollsWithEvents(used.state, rng);
   const events = [...used.events, ...resolved.events];
@@ -344,7 +332,7 @@ export function testKaladinFifthOathGatingDamageAndImmobilizeDuration() {
     (event) =>
       event.type === "attackResolved" &&
       event.attackerId === kaladin.id &&
-      [enemy1.id, enemy2.id].includes(event.defenderId)
+      [enemy1.id, enemy2.id].includes(event.defenderId),
   ) as Extract<GameEvent, { type: "attackResolved" }>[];
   assert(attackEvents.length === 2, "Fifth Oath should attack all units in 5x5 area");
   for (const event of attackEvents) {
@@ -353,11 +341,11 @@ export function testKaladinFifthOathGatingDamageAndImmobilizeDuration() {
 
   assert(
     resolved.state.units[enemy1.id].kaladinMoveLockSources?.includes(kaladin.id),
-    "failed Fifth Oath target should become immobilized"
+    "failed Fifth Oath target should become immobilized",
   );
   assert(
     resolved.state.units[enemy2.id].kaladinMoveLockSources?.includes(kaladin.id),
-    "every failed target should become immobilized"
+    "every failed target should become immobilized",
   );
 
   let enemyTurnState = toBattleState(resolved.state, "P2", enemy1.id);
@@ -366,12 +354,12 @@ export function testKaladinFifthOathGatingDamageAndImmobilizeDuration() {
   });
   const blockedMove = applyAction(
     enemyTurnState,
-    { type: "requestMoveOptions", unitId: enemy1.id } as any,
-    makeRngSequence([])
+    { type: "requestMoveOptions", unitId: enemy1.id },
+    makeRngSequence([]),
   );
   assert(
     blockedMove.events.length === 0 && !blockedMove.state.pendingMove,
-    "immobilized target should not receive move options"
+    "immobilized target should not receive move options",
   );
 
   const kaladinStartState: GameState = {
@@ -386,16 +374,16 @@ export function testKaladinFifthOathGatingDamageAndImmobilizeDuration() {
   };
   const started = applyAction(
     kaladinStartState,
-    { type: "unitStartTurn", unitId: kaladin.id } as any,
-    makeRngSequence([])
+    { type: "unitStartTurn", unitId: kaladin.id },
+    makeRngSequence([]),
   );
   assert(
     (started.state.units[enemy1.id].kaladinMoveLockSources?.length ?? 0) === 0,
-    "immobilize should clear at the start of Kaladin's next turn"
+    "immobilize should clear at the start of Kaladin's next turn",
   );
   assert(
     (started.state.units[enemy2.id].kaladinMoveLockSources?.length ?? 0) === 0,
-    "all Fifth Oath immobilize locks from Kaladin should clear together"
+    "all Fifth Oath immobilize locks from Kaladin should clear together",
   );
 
   let restoredMoveState = toBattleState(started.state, "P2", enemy1.id);
@@ -404,12 +392,10 @@ export function testKaladinFifthOathGatingDamageAndImmobilizeDuration() {
   });
   const restoredMove = applyAction(
     restoredMoveState,
-    { type: "requestMoveOptions", unitId: enemy1.id } as any,
-    makeRngSequence([])
+    { type: "requestMoveOptions", unitId: enemy1.id },
+    makeRngSequence([]),
   );
-  const moveEvent = restoredMove.events.find(
-    (event) => event.type === "moveOptionsGenerated"
-  );
+  const moveEvent = restoredMove.events.find((event) => event.type === "moveOptionsGenerated");
   assert(moveEvent, "movement should be restored after Kaladin starts next turn");
 
   console.log("kaladin_fifth_oath_gating_damage_and_immobilize_duration passed");

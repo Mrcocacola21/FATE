@@ -1,6 +1,7 @@
 // packages/server/src/tests/ws.smoke.ts
 
 import assert from "assert";
+import type { RoomStateMessage } from "../ws";
 import WebSocket from "ws";
 import { buildTestServer as buildServer } from "./matchTestSupport";
 
@@ -37,14 +38,14 @@ function waitForType(queue: unknown[], type: string, timeoutMs = 2000): Promise<
 
 function waitForRoomState(
   queue: unknown[],
-  predicate: (msg: { type?: string; meta?: any; view?: any; you?: any }) => boolean,
+  predicate: (msg: RoomStateMessage) => boolean,
   timeoutMs = 2000,
 ): Promise<unknown> {
   return new Promise((resolve, reject) => {
     const start = Date.now();
     const tick = () => {
       const msg = queue.find((item) => {
-        const payload = item as { type?: string; meta?: any; view?: any; you?: any };
+        const payload = item as RoomStateMessage;
         return payload.type === "roomState" && predicate(payload);
       });
       if (msg) {

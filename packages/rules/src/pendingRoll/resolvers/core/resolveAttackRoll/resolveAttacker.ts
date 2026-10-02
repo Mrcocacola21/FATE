@@ -14,22 +14,18 @@ import {
   HERO_FEMTO_ID,
   HERO_DUOLINGO_ID,
   HERO_FRISK_ID,
-  HERO_GUTS_ID,
   HERO_PAPYRUS_ID,
 } from "../../../../heroes";
 import type { AttackRollContext } from "../../../types";
 import { replacePendingRoll } from "../../../builders/buildPendingRoll";
 import { isDoubleRoll, rollDice } from "../../../utils/rollMath";
-import {
-  canUseFriskSubstitution,
-  finalizeAttackFromContext,
-} from "./shared";
+import { canUseFriskSubstitution, finalizeAttackFromContext } from "./shared";
 import { continueAfterAttackResolution } from "./postResolution";
 
 export function resolveAttackAttackerRoll(
   state: GameState,
   pending: PendingRoll,
-  rng: RNG
+  rng: RNG,
 ): ApplyResult {
   const ctx = pending.context as unknown as AttackRollContext;
   const attacker = state.units[ctx.attackerId];
@@ -51,10 +47,7 @@ export function resolveAttackAttackerRoll(
     nextCtx.attackerDice = dice;
   }
 
-  if (
-    workingDefender.heroId === HERO_FRISK_ID &&
-    workingDefender.friskCleanSoulShield
-  ) {
+  if (workingDefender.heroId === HERO_FRISK_ID && workingDefender.friskCleanSoulShield) {
     workingDefender = {
       ...workingDefender,
       friskCleanSoulShield: false,
@@ -92,7 +85,7 @@ export function resolveAttackAttackerRoll(
       workingDefender.owner,
       "chikatiloDecoyChoice",
       nextCtx,
-      workingDefender.id
+      workingDefender.id,
     );
   }
 
@@ -111,7 +104,7 @@ export function resolveAttackAttackerRoll(
       workingDefender.owner,
       "friskSubstitutionChoice",
       resolvedCtx,
-      workingDefender.id
+      workingDefender.id,
     );
   }
 
@@ -123,20 +116,12 @@ export function resolveAttackAttackerRoll(
       false,
       undefined,
       false,
-      true
+      true,
     );
-    return continueAfterAttackResolution(
-      resolved.state,
-      resolved.events,
-      resolvedCtx,
-      rng
-    );
+    return continueAfterAttackResolution(resolved.state, resolved.events, resolvedCtx, rng);
   }
 
-  if (
-    workingAttacker.heroId === HERO_FRISK_ID &&
-    workingAttacker.friskPrecisionStrikeReady
-  ) {
+  if (workingAttacker.heroId === HERO_FRISK_ID && workingAttacker.friskPrecisionStrikeReady) {
     workingAttacker = {
       ...workingAttacker,
       friskPrecisionStrikeReady: false,
@@ -155,41 +140,23 @@ export function resolveAttackAttackerRoll(
       "none",
       true,
       Math.max(0, workingAttacker.attack * 2),
-      true
+      true,
     );
-    return continueAfterAttackResolution(
-      resolved.state,
-      resolved.events,
-      resolvedCtx,
-      rng
-    );
+    return continueAfterAttackResolution(resolved.state, resolved.events, resolvedCtx, rng);
   }
 
-  const isAutoHit =
-    stage === "initial" && isElCid(workingAttacker) && isDoubleRoll(dice);
+  const isAutoHit = stage === "initial" && isElCid(workingAttacker) && isDoubleRoll(dice);
   if (isAutoHit) {
-    const resolved = finalizeAttackFromContext(
-      workingState,
-      resolvedCtx,
-      "none",
-      true
-    );
-    return continueAfterAttackResolution(
-      resolved.state,
-      resolved.events,
-      resolvedCtx,
-      rng
-    );
+    const resolved = finalizeAttackFromContext(workingState, resolvedCtx, "none", true);
+    return continueAfterAttackResolution(resolved.state, resolved.events, resolvedCtx, rng);
   }
 
   const charges = workingDefender.charges?.[ABILITY_BERSERK_AUTO_DEFENSE] ?? 0;
   if (
     (workingDefender.class === "berserker" ||
       workingDefender.heroId === HERO_FEMTO_ID ||
-      (workingDefender.heroId === HERO_DUOLINGO_ID &&
-        workingDefender.duolingoBerserkerUnlocked) ||
-      (workingDefender.heroId === HERO_PAPYRUS_ID &&
-        workingDefender.papyrusUnbelieverActive) ||
+      (workingDefender.heroId === HERO_DUOLINGO_ID && workingDefender.duolingoBerserkerUnlocked) ||
+      (workingDefender.heroId === HERO_PAPYRUS_ID && workingDefender.papyrusUnbelieverActive) ||
       hasMettatonBerserkerFeature(workingDefender)) &&
     charges === 6 &&
     !resolvedCtx.berserkerChoiceMade
@@ -199,7 +166,7 @@ export function resolveAttackAttackerRoll(
       workingDefender.owner,
       "berserkerDefenseChoice",
       resolvedCtx,
-      workingDefender.id
+      workingDefender.id,
     );
   }
 
@@ -213,7 +180,7 @@ export function resolveAttackAttackerRoll(
       workingDefender.owner,
       "asgoreBraveryDefenseChoice",
       resolvedCtx,
-      workingDefender.id
+      workingDefender.id,
     );
   }
 
@@ -227,6 +194,6 @@ export function resolveAttackAttackerRoll(
     workingDefender.owner,
     defenderRollKind,
     resolvedCtx,
-    workingDefender.id
+    workingDefender.id,
   );
 }

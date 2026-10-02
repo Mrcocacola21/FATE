@@ -66,8 +66,8 @@ export function testPapyrusBlueBoneApplyPunishRefreshAndExpiry() {
 
   const firstAttack = applyAction(
     state,
-    { type: "attack", attackerId: papyrus.id, defenderId: enemy.id } as any,
-    rng
+    { type: "attack", attackerId: papyrus.id, defenderId: enemy.id },
+    rng,
   );
   const firstResolved = resolveAllPendingRollsWithEvents(firstAttack.state, rng);
   state = firstResolved.state;
@@ -107,12 +107,12 @@ export function testPapyrusBlueBoneApplyPunishRefreshAndExpiry() {
   const hpBeforeMove = state.units[enemy.id].hp;
   const moved = applyAction(
     state,
-    { type: "move", unitId: enemy.id, to: { col: 4, row: 6 } } as any,
+    { type: "move", unitId: enemy.id, to: { col: 4, row: 6 } },
     rng
   );
   assert(
     moved.state.units[enemy.id].hp === hpBeforeMove - 1,
-    "spending move slot under Blue Bone should deal 1 damage"
+    "spending move slot under Blue Bone should deal 1 damage",
   );
   assert(
     moved.events.some(
@@ -126,12 +126,12 @@ export function testPapyrusBlueBoneApplyPunishRefreshAndExpiry() {
 
   const movedAgain = applyAction(
     moved.state,
-    { type: "move", unitId: enemy.id, to: { col: 4, row: 7 } } as any,
+    { type: "move", unitId: enemy.id, to: { col: 4, row: 7 } },
     rng
   );
   assert(
     movedAgain.state.units[enemy.id].hp === moved.state.units[enemy.id].hp,
-    "blue bone punishment should trigger at most once per turn"
+    "blue bone punishment should trigger at most once per turn",
   );
 
   state = setUnit(movedAgain.state, papyrus.id, {
@@ -166,13 +166,10 @@ export function testPapyrusBlueBoneApplyPunishRefreshAndExpiry() {
 
   const secondAttack = applyAction(
     state,
-    { type: "attack", attackerId: papyrus.id, defenderId: enemy.id } as any,
+    { type: "attack", attackerId: papyrus.id, defenderId: enemy.id },
     refreshRng
   );
-  const secondResolved = resolveAllPendingRollsWithEvents(
-    secondAttack.state,
-    refreshRng
-  );
+  const secondResolved = resolveAllPendingRollsWithEvents(secondAttack.state, refreshRng);
   state = secondResolved.state;
 
   const refreshedStatus = state.units[enemy.id].papyrusBoneStatus;
@@ -192,12 +189,12 @@ export function testPapyrusBlueBoneApplyPunishRefreshAndExpiry() {
   };
   const startTurn = applyAction(
     state,
-    { type: "unitStartTurn", unitId: papyrus.id } as any,
+    { type: "unitStartTurn", unitId: papyrus.id },
     rng
   );
   assert(
     startTurn.state.units[enemy.id].papyrusBoneStatus === undefined,
-    "Blue Bone should expire at start of Papyrus turn"
+    "Blue Bone should expire at start of Papyrus turn",
   );
 
   console.log("papyrus_bluebone_apply_punish_refresh_and_expiry passed");
@@ -233,7 +230,7 @@ export function testPapyrusSpaghettiGatingHealingClampAndChargeSpend() {
       type: "useAbility",
       unitId: papyrus.id,
       abilityId: ABILITY_PAPYRUS_SPAGHETTI,
-    } as any,
+    },
     rng
   );
   assert(
@@ -242,7 +239,7 @@ export function testPapyrusSpaghettiGatingHealingClampAndChargeSpend() {
   );
   assert(
     fail.state.units[papyrus.id].charges[ABILITY_PAPYRUS_SPAGHETTI] === 2,
-    "spaghetti should not spend charges when unavailable"
+    "spaghetti should not spend charges when unavailable",
   );
 
   state = setUnit(fail.state, papyrus.id, {
@@ -263,7 +260,7 @@ export function testPapyrusSpaghettiGatingHealingClampAndChargeSpend() {
       type: "useAbility",
       unitId: papyrus.id,
       abilityId: ABILITY_PAPYRUS_SPAGHETTI,
-    } as any,
+    },
     rng
   );
   assert(
@@ -293,7 +290,7 @@ export function testPapyrusSpaghettiGatingHealingClampAndChargeSpend() {
       type: "useAbility",
       unitId: papyrus.id,
       abilityId: ABILITY_PAPYRUS_SPAGHETTI,
-    } as any,
+    },
     rng
   );
   assert(
@@ -305,7 +302,7 @@ export function testPapyrusSpaghettiGatingHealingClampAndChargeSpend() {
   );
   assert(
     healedEvent && healedEvent.type === "unitHealed" && healedEvent.amount === 1,
-    "clamped spaghetti should report only effective healing"
+    "clamped spaghetti should report only effective healing",
   );
 
   console.log("papyrus_spaghetti_gating_healing_clamp_and_charges passed");
@@ -362,7 +359,7 @@ export function testPapyrusCoolGuyGatingLineHitsAndBlueBone() {
       unitId: papyrus.id,
       abilityId: ABILITY_PAPYRUS_COOL_GUY,
       payload: { target: { col: 4, row: 4 }, axis: "row" },
-    } as any,
+    },
     rng
   );
   assert(
@@ -392,7 +389,7 @@ export function testPapyrusCoolGuyGatingLineHitsAndBlueBone() {
       unitId: papyrus.id,
       abilityId: ABILITY_PAPYRUS_COOL_GUY,
       payload: { target: { col: 4, row: 4 }, axis: "row" },
-    } as any,
+    },
     rng
   );
   assert(
@@ -459,7 +456,7 @@ export function testPapyrusUnbelieverTriggersOnAlliedHeroDeathAndPersists() {
 
   const attack = applyAction(
     state,
-    { type: "attack", attackerId: killer.id, defenderId: fallenAlly.id } as any,
+    { type: "attack", attackerId: killer.id, defenderId: fallenAlly.id },
     rng
   );
   const resolved = resolveAllPendingRollsWithEvents(attack.state, rng);
@@ -470,13 +467,8 @@ export function testPapyrusUnbelieverTriggersOnAlliedHeroDeathAndPersists() {
     papyrusAfter.papyrusUnbelieverActive === true,
     "Papyrus should transform after allied hero death"
   );
-  const transformEvents = events.filter(
-    (event) => event.type === "papyrusUnbelieverActivated"
-  );
-  assert(
-    transformEvents.length === 1,
-    "Unbeliever activation should happen only once"
-  );
+  const transformEvents = events.filter((event) => event.type === "papyrusUnbelieverActivated");
+  assert(transformEvents.length === 1, "Unbeliever activation should happen only once");
   assert(
     transformEvents[0] &&
       transformEvents[0].type === "papyrusUnbelieverActivated" &&
@@ -495,7 +487,7 @@ export function testPapyrusUnbelieverTriggersOnAlliedHeroDeathAndPersists() {
   };
   const startTurn = applyAction(
     state,
-    { type: "unitStartTurn", unitId: papyrus.id } as any,
+    { type: "unitStartTurn", unitId: papyrus.id },
     rng
   );
   assert(
@@ -537,7 +529,7 @@ export function testPapyrusOrangeBoneToggleAndFirstNonMovePunish() {
       unitId: papyrus.id,
       abilityId: ABILITY_PAPYRUS_ORANGE_BONE,
       payload: { boneType: "orange" },
-    } as any,
+    },
     rng
   );
   assert(
@@ -547,14 +539,14 @@ export function testPapyrusOrangeBoneToggleAndFirstNonMovePunish() {
 
   const attack = applyAction(
     state,
-    { type: "attack", attackerId: papyrus.id, defenderId: enemy.id } as any,
+    { type: "attack", attackerId: papyrus.id, defenderId: enemy.id },
     rng
   );
   const attackerRoll = resolvePendingRollOnce(attack.state, rng);
   const defenderRoll = resolvePendingRollOnce(attackerRoll.state, rng);
   assert(
     defenderRoll.state.pendingRoll?.kind === "papyrusBoneChoice",
-    "a transformed Papyrus hit should create a per-target bone choice"
+    "a transformed Papyrus hit should create a per-target bone choice",
   );
   assert(
     defenderRoll.state.pendingRoll?.player === papyrus.owner,
@@ -562,7 +554,7 @@ export function testPapyrusOrangeBoneToggleAndFirstNonMovePunish() {
   );
   assert(
     defenderRoll.state.pendingRoll?.context.targetUnitId === enemy.id,
-    "the pending choice should identify the successfully hit target"
+    "the pending choice should identify the successfully hit target",
   );
   assert(
     defenderRoll.state.units[enemy.id].papyrusBoneStatus === undefined,
@@ -580,7 +572,7 @@ export function testPapyrusOrangeBoneToggleAndFirstNonMovePunish() {
       pendingRollId: staleTargetState.pendingRoll!.id,
       player: papyrus.owner,
       choice: { type: "papyrusBoneChoice", boneType: "blue" },
-    } as any,
+    },
     rng
   );
   assert(
@@ -595,14 +587,15 @@ export function testPapyrusOrangeBoneToggleAndFirstNonMovePunish() {
       type: "resolvePendingRoll",
       pendingRollId: defenderRoll.state.pendingRoll!.id,
       player: papyrus.owner,
-      choice: { type: "papyrusBoneChoice", boneType: "green" },
-    } as any,
+      // Deliberately malformed input tests runtime rejection at the action boundary.
+      choice: { type: "papyrusBoneChoice", boneType: "green" as "blue" },
+    },
     rng
   );
   assert(
     invalid.state === defenderRoll.state &&
       invalid.rejectionReason === "invalid_papyrus_bone_choice",
-    "an invalid bone choice should be rejected without mutation"
+    "an invalid bone choice should be rejected without mutation",
   );
 
   const chosen = applyAction(
@@ -612,14 +605,14 @@ export function testPapyrusOrangeBoneToggleAndFirstNonMovePunish() {
       pendingRollId: defenderRoll.state.pendingRoll!.id,
       player: papyrus.owner,
       choice: { type: "papyrusBoneChoice", boneType: "orange" },
-    } as any,
-    rng
+    },
+    rng,
   );
   state = chosen.state;
   const orangeStatus = state.units[enemy.id].papyrusBoneStatus;
   assert(
     orangeStatus?.kind === "orange",
-    "choosing Orange Bone should apply it to that hit target"
+    "choosing Orange Bone should apply it to that hit target",
   );
   assert(!state.pendingRoll, "single-target bone choice should clear after answer");
 
@@ -640,7 +633,7 @@ export function testPapyrusOrangeBoneToggleAndFirstNonMovePunish() {
     },
   };
   const hpBeforeEnd = state.units[enemy.id].hp;
-  const endTurn = applyAction(state, { type: "endTurn" } as any, rng);
+  const endTurn = applyAction(state, { type: "endTurn" }, rng);
   assert(
     endTurn.state.units[enemy.id].hp === hpBeforeEnd - 1,
     "End Turn should count as the first non-movement action under Orange Bone"
@@ -659,11 +652,7 @@ export function testPapyrusOrangeBoneToggleAndFirstNonMovePunish() {
 }
 
 export function testPapyrusTransformedAoeQueuesPerTargetBoneChoices() {
-  const rng = makeRngSequence([
-    0.99, 0.99,
-    0.01, 0.01,
-    0.01, 0.01,
-  ]);
+  const rng = makeRngSequence([0.99, 0.99, 0.01, 0.01, 0.01, 0.01]);
   let state = createEmptyGame();
   state = attachArmy(
     state,
@@ -710,7 +699,7 @@ export function testPapyrusTransformedAoeQueuesPerTargetBoneChoices() {
       unitId: papyrus.id,
       abilityId: ABILITY_PAPYRUS_COOL_GUY,
       payload: { target: { col: 4, row: 4 }, axis: "row" },
-    } as any,
+    },
     rng
   );
   while (result.state.pendingRoll?.kind !== "papyrusBoneChoice") {
@@ -732,8 +721,8 @@ export function testPapyrusTransformedAoeQueuesPerTargetBoneChoices() {
       pendingRollId: firstPending!.id,
       player: papyrus.owner,
       choice: { type: "papyrusBoneChoice", boneType: "blue" },
-    } as any,
-    rng
+    },
+    rng,
   );
   assert(
     firstChosen.state.units[firstTargetId].papyrusBoneStatus?.kind === "blue",
@@ -758,8 +747,8 @@ export function testPapyrusTransformedAoeQueuesPerTargetBoneChoices() {
       pendingRollId: secondPending.id,
       player: papyrus.owner,
       choice: { type: "papyrusBoneChoice", boneType: "orange" },
-    } as any,
-    rng
+    },
+    rng,
   );
   assert(
     secondChosen.state.units[secondTargetId].papyrusBoneStatus?.kind === "orange",
@@ -801,7 +790,7 @@ export function testPapyrusTransformedMissCreatesNoBoneChoice() {
 
   const attack = applyAction(
     state,
-    { type: "attack", attackerId: papyrus.id, defenderId: target.id } as any,
+    { type: "attack", attackerId: papyrus.id, defenderId: target.id },
     rng
   );
   const resolved = resolveAllPendingRollsWithEvents(attack.state, rng);
@@ -831,7 +820,7 @@ export function testPapyrusLongBoneAttackAndCoolGuyCostReduction() {
   state = attachArmy(state, a2);
 
   const papyrus = Object.values(state.units).find(
-    (unit) => unit.owner === "P1" && unit.heroId === HERO_PAPYRUS_ID
+    (unit) => unit.owner === "P1" && unit.heroId === HERO_PAPYRUS_ID,
   )!;
   const ally = Object.values(state.units).find(
     (unit) => unit.owner === "P1" && unit.class === "knight"
@@ -861,7 +850,7 @@ export function testPapyrusLongBoneAttackAndCoolGuyCostReduction() {
 
   const lineAttack = applyAction(
     state,
-    { type: "attack", attackerId: papyrus.id, defenderId: enemy.id } as any,
+    { type: "attack", attackerId: papyrus.id, defenderId: enemy.id },
     rng
   );
   assert(
@@ -887,7 +876,7 @@ export function testPapyrusLongBoneAttackAndCoolGuyCostReduction() {
   );
   assert(
     !lineTargets.includes(far.id),
-    "Long Bone basic attack should not hit units outside selected line"
+    "Long Bone basic attack should not hit units outside selected line",
   );
 
   state = setUnit(lineResolved.state, papyrus.id, {
@@ -913,7 +902,7 @@ export function testPapyrusLongBoneAttackAndCoolGuyCostReduction() {
       unitId: papyrus.id,
       abilityId: ABILITY_PAPYRUS_COOL_GUY,
       payload: { target: { col: 4, row: 0 }, axis: "row" },
-    } as any,
+    },
     rng
   );
   assert(
@@ -940,12 +929,12 @@ export function testPapyrusLongBoneAttackAndCoolGuyCostReduction() {
       unitId: papyrus.id,
       abilityId: ABILITY_PAPYRUS_COOL_GUY,
       payload: { target: { col: 4, row: 0 }, axis: "row" },
-    } as any,
+    },
     rng
   );
   assert(
     cast.state.units[papyrus.id].charges[ABILITY_PAPYRUS_COOL_GUY] === 0,
-    "Cool Guy should cost 3 charges in Unbeliever mode"
+    "Cool Guy should cost 3 charges in Unbeliever mode",
   );
 
   console.log("papyrus_long_bone_attack_and_cool_guy_cost_reduction passed");
@@ -953,12 +942,7 @@ export function testPapyrusLongBoneAttackAndCoolGuyCostReduction() {
 
 
 export function testPapyrusOssifiedBerserkerFeatureAfterTransformationOnly() {
-  const rng = makeRngSequence([
-    0.99, 0.99,
-    0.01, 0.01,
-    0.99, 0.99,
-    0.01, 0.01,
-  ]);
+  const rng = makeRngSequence([0.99, 0.99, 0.01, 0.01, 0.99, 0.99, 0.01, 0.01]);
   let state = createEmptyGame();
   const a1 = createDefaultArmy("P1", { spearman: HERO_PAPYRUS_ID });
   const a2 = createDefaultArmy("P2");
@@ -966,10 +950,10 @@ export function testPapyrusOssifiedBerserkerFeatureAfterTransformationOnly() {
   state = attachArmy(state, a2);
 
   const papyrus = Object.values(state.units).find(
-    (unit) => unit.owner === "P1" && unit.heroId === HERO_PAPYRUS_ID
+    (unit) => unit.owner === "P1" && unit.heroId === HERO_PAPYRUS_ID,
   )!;
   const attacker = Object.values(state.units).find(
-    (unit) => unit.owner === "P2" && unit.class === "knight"
+    (unit) => unit.owner === "P2" && unit.class === "knight",
   )!;
 
   state = setUnit(state, papyrus.id, { position: { col: 4, row: 4 } });
@@ -986,13 +970,13 @@ export function testPapyrusOssifiedBerserkerFeatureAfterTransformationOnly() {
   });
   const preAttack = applyAction(
     preTransformState,
-    { type: "attack", attackerId: attacker.id, defenderId: papyrus.id } as any,
-    rng
+    { type: "attack", attackerId: attacker.id, defenderId: papyrus.id },
+    rng,
   );
   const preAfterAttacker = resolvePendingRollOnce(preAttack.state, rng);
   assert(
     preAfterAttacker.state.pendingRoll?.kind === "attack_defenderRoll",
-    "Papyrus should not get berserker defense choice before Unbeliever mode"
+    "Papyrus should not get berserker defense choice before Unbeliever mode",
   );
 
   const postTransformState = setUnit(state, papyrus.id, {
@@ -1004,13 +988,13 @@ export function testPapyrusOssifiedBerserkerFeatureAfterTransformationOnly() {
   });
   const postAttack = applyAction(
     postTransformState,
-    { type: "attack", attackerId: attacker.id, defenderId: papyrus.id } as any,
-    rng
+    { type: "attack", attackerId: attacker.id, defenderId: papyrus.id },
+    rng,
   );
   const postAfterAttacker = resolvePendingRollOnce(postAttack.state, rng);
   assert(
     postAfterAttacker.state.pendingRoll?.kind === "berserkerDefenseChoice",
-    "Papyrus should get berserker defense choice after Unbeliever mode"
+    "Papyrus should get berserker defense choice after Unbeliever mode",
   );
 
   console.log("papyrus_ossified_berserker_feature_after_transformation_only passed");

@@ -46,14 +46,12 @@ import { endGameWithWinner, hasPendingBattleResolution } from "../gameOver";
 import { clearUnitStealth, enterUnitStealth } from "../stealth";
 import { getAvailableRuleDeclarationIds } from "./registry";
 import type {
-  AdvantageGameState,
   CourtEffectId,
   CourtPendingEffect,
   CourtState,
   MoonEffectId,
   MoonGameState,
   PendingRoundAdvance,
-  RuleDeclarationId,
   RuleDeclarationState,
 } from "./types";
 import { isRuleDeclarationId } from "./types";
@@ -701,7 +699,7 @@ export function handleRuleDeclarationRoundEnd(
 ): ApplyResult {
   void rng;
   const cleaned = clearExpiredRuleStatusesAtRoundEnd(state, state.roundNumber);
-  let nextState = setPendingRoundAdvance(cleaned.state, advance);
+  const nextState = setPendingRoundAdvance(cleaned.state, advance);
   const rule = getRuleState(nextState);
 
   if (!rule.selectedRuleId || !rule.setupComplete) {
@@ -977,14 +975,14 @@ function applyCourtUnitEffect(
   state: GameState,
   effect: CourtPendingEffect,
   unitId: string,
-  rng: RNG,
+  _rng: RNG,
 ): ApplyResult {
   const unit = state.units[unitId];
   if (!unit || !unit.isAlive) return { state, events: [] };
   const targetRound = activeTargetRound(state);
   const expiresAtRoundEnd = targetRound;
   let nextState = state;
-  let events: GameEvent[] = [];
+  const events: GameEvent[] = [];
 
   switch (effect.effectId) {
     case "judicialManeuver":
@@ -1527,7 +1525,7 @@ export function applyRuleDeclarationAfterAttack(
   events: GameEvent[],
 ): ApplyResult {
   let nextState = state;
-  let nextEvents = [...events];
+  const nextEvents = [...events];
   for (const event of events) {
     if (event.type !== "attackResolved" || !event.hit || event.damage <= 0) {
       continue;

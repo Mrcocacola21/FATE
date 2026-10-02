@@ -136,18 +136,6 @@ export function isArtemidaAttackLineCell(
   return false;
 }
 
-function rayCells(state: GameState, from: Coord, toward: Coord): Coord[] {
-  const dir = directionFrom(from, toward);
-  if (!dir) return [];
-  const result: Coord[] = [];
-  let current = { col: from.col + dir.col, row: from.row + dir.row };
-  while (isInsideBoard(current, state.boardSize)) {
-    result.push(current);
-    current = { col: current.col + dir.col, row: current.row + dir.row };
-  }
-  return result;
-}
-
 function lineCellsToEndpoint(from: Coord, endpoint: Coord): Coord[] {
   return linePath(from, endpoint)?.slice(1) ?? [];
 }
@@ -179,7 +167,7 @@ function applyDuolingoPush(state: GameState, unit: UnitState, action: AbilityAct
   if (unit.heroId !== HERO_DUOLINGO_ID || !unit.position) return { state, events: [] };
   const data = payload(action);
   const targetId = typeof data.targetId === "string" ? data.targetId : "";
-  let destination = parseCoord(data.destination ?? data.position);
+  const destination = parseCoord(data.destination ?? data.position);
   const target = state.units[targetId];
   if (!target || !target.isAlive || !target.position) return { state, events: [] };
   const useCounter = hasAbilityCounterSource(data, ids.ABILITY_DUOLINGO_PUSH_NOTIFICATION);
@@ -334,7 +322,7 @@ function applyZoroOniGiri(
   if (unit.heroId !== HERO_ZORO_ID || !unit.position) return { state, events: [] };
   const data = payload(action);
   const targetId = typeof data.targetId === "string" ? data.targetId : "";
-  let destination = parseCoord(data.destination ?? data.position);
+  const destination = parseCoord(data.destination ?? data.position);
   const target = state.units[targetId];
   if (!target || !target.isAlive || !target.position || target.owner === unit.owner)
     return { state, events: [] };
@@ -460,7 +448,7 @@ function applyDonWindmills(state: GameState, unit: UnitState, action: AbilityAct
   }
   let moved = spendSlots(chargeSpend.unit, spec.actionCost?.consumes);
   moved = { ...moved, position: destination };
-  let units = { ...state.units, [moved.id]: moved };
+  const units = { ...state.units, [moved.id]: moved };
   const events: GameEvent[] = [abilityUsed(moved.id, spec.id)];
   if (!coordsEqual(unit.position, destination)) {
     events.push({ type: "unitMoved", unitId: moved.id, from: unit.position, to: destination });

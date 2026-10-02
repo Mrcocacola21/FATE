@@ -10,7 +10,7 @@
     "build": "npm run -w rules build && npm run -w server build && npm run -w web typecheck && npm run -w web build",
     "postinstall": "npm run -w rules build",
     "test": "npm run -w rules test && npm run -w rules test:boundaries && npm run -w server test && npm run -w web test:auth && npm run -w web test:profile",
-    "lint": "eslint \"packages/**/*.{ts,tsx}\"",
+    "lint": "eslint \"packages/**/*.{ts,tsx}\" --max-warnings 0",
     "format": "prettier -w ."
   },
   "devDependencies": {

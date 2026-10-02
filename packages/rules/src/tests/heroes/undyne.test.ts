@@ -21,11 +21,12 @@ import {
 import { getUnitMovementClasses } from "../../movement";
 
 export function testUndyneToughSpearmanFeatureAndReach() {
-  let { state, undyne, enemy } = setupUndyneState();
+  const { state: initialState148, undyne, enemy } = setupUndyneState();
+  let state = initialState148;
 
   assert(
     undyne.hp === getUnitDefinition("berserker").maxHp + 1,
-    "Undyne should have +1 HP from Tough"
+    "Undyne should have +1 HP from Tough",
   );
   const undyneMeta = getHeroMeta(HERO_UNDYNE_ID);
   assert(
@@ -37,12 +38,10 @@ export function testUndyneToughSpearmanFeatureAndReach() {
   moveState = toBattleState(moveState, "P1", undyne.id);
   const moveModes = applyAction(
     moveState,
-    { type: "requestMoveOptions", unitId: undyne.id } as any,
-    makeRngSequence([])
+    { type: "requestMoveOptions", unitId: undyne.id },
+    makeRngSequence([]),
   );
-  const modeEvent = moveModes.events.find(
-    (event) => event.type === "moveOptionsGenerated"
-  );
+  const modeEvent = moveModes.events.find((event) => event.type === "moveOptionsGenerated");
   assert(
     modeEvent &&
       modeEvent.type === "moveOptionsGenerated" &&
@@ -55,26 +54,26 @@ export function testUndyneToughSpearmanFeatureAndReach() {
   );
   const spearmanMoveOptions = applyAction(
     moveState,
-    { type: "requestMoveOptions", unitId: undyne.id, mode: "spearman" } as any,
-    makeRngSequence([])
+    { type: "requestMoveOptions", unitId: undyne.id, mode: "spearman" },
+    makeRngSequence([]),
   );
   assert(
     spearmanMoveOptions.state.pendingMove?.mode === "spearman" &&
       spearmanMoveOptions.state.pendingMove.legalTo.some(
-        (coord) => coord.col === 5 && coord.row === 5
+        (coord) => coord.col === 5 && coord.row === 5,
       ),
-    "Undyne should be able to generate Spearman movement options"
+    "Undyne should be able to generate Spearman movement options",
   );
   const spearmanMove = applyAction(
     spearmanMoveOptions.state,
-    { type: "move", unitId: undyne.id, to: { col: 5, row: 5 } } as any,
-    makeRngSequence([])
+    { type: "move", unitId: undyne.id, to: { col: 5, row: 5 } },
+    makeRngSequence([]),
   );
   assert(
     spearmanMove.state.units[undyne.id].position?.col === 5 &&
       spearmanMove.state.units[undyne.id].position?.row === 5 &&
       spearmanMove.state.units[undyne.id].turn.moveUsed === true,
-    "Undyne should resolve a Spearman-mode move through the normal movement action"
+    "Undyne should resolve a Spearman-mode move through the normal movement action",
   );
 
   const nonSpearman = Object.values(moveState.units).find(
@@ -90,13 +89,12 @@ export function testUndyneToughSpearmanFeatureAndReach() {
       type: "requestMoveOptions",
       unitId: nonSpearman.id,
       mode: "spearman",
-    } as any,
+    },
     makeRngSequence([])
   );
   assert(
-    illegalSpearmanMode.events.length === 0 &&
-      illegalSpearmanMode.state.pendingMove === null,
-    "non-Spearman units should not be granted Spearman movement mode"
+    illegalSpearmanMode.events.length === 0 && illegalSpearmanMode.state.pendingMove === null,
+    "non-Spearman units should not be granted Spearman movement mode",
   );
 
   state = setUnit(state, undyne.id, { position: { col: 4, row: 4 } });
@@ -106,12 +104,12 @@ export function testUndyneToughSpearmanFeatureAndReach() {
 
   const defended = applyAction(
     state,
-    { type: "attack", attackerId: enemy.id, defenderId: undyne.id } as any,
-    makeRngSequence([0.99, 0.5, 0.5, 0.5])
+    { type: "attack", attackerId: enemy.id, defenderId: undyne.id },
+    makeRngSequence([0.99, 0.5, 0.5, 0.5]),
   );
   const defendedResolved = resolveAllPendingRollsWithEvents(
     defended.state,
-    makeRngSequence([0.99, 0.5, 0.5, 0.5])
+    makeRngSequence([0.99, 0.5, 0.5, 0.5]),
   );
   const defenseEvent = defendedResolved.events.find(
     (event) =>
@@ -134,12 +132,12 @@ export function testUndyneToughSpearmanFeatureAndReach() {
   reachState = toBattleState(reachState, "P1", undyne.id);
   const reachAttack = applyAction(
     reachState,
-    { type: "attack", attackerId: undyne.id, defenderId: enemy.id } as any,
+    { type: "attack", attackerId: undyne.id, defenderId: enemy.id },
     new SeededRNG(12)
   );
   assert(
     reachAttack.state.pendingRoll?.kind === "attack_attackerRoll",
-    "Undyne should be able to use Spearman reach for base attacks"
+    "Undyne should be able to use Spearman reach for base attacks",
   );
 
   console.log("undyne_tough_spearman_feature_and_reach passed");
@@ -147,7 +145,8 @@ export function testUndyneToughSpearmanFeatureAndReach() {
 
 
 export function testUndyneThrowSpearFixedDamageAndSpearRain() {
-  let { state, undyne, enemy } = setupUndyneState();
+  const { state: initialState149, undyne, enemy } = setupUndyneState();
+let state = initialState149;
   state = setUnit(state, undyne.id, { position: { col: 4, row: 4 } });
   state = setUnit(state, enemy.id, { position: { col: 4, row: 7 }, hp: 12 });
   state = toBattleState(state, "P1", undyne.id);
@@ -160,7 +159,7 @@ export function testUndyneThrowSpearFixedDamageAndSpearRain() {
       unitId: undyne.id,
       abilityId: ABILITY_UNDYNE_SPEAR_THROW,
       payload: { targetId: enemy.id },
-    } as any,
+    },
     makeAttackWinRng(1)
   );
   const baseResolved = resolveAllPendingRollsWithEvents(
@@ -171,7 +170,7 @@ export function testUndyneThrowSpearFixedDamageAndSpearRain() {
     (event) =>
       event.type === "attackResolved" &&
       event.attackerId === undyne.id &&
-      event.defenderId === enemy.id
+      event.defenderId === enemy.id,
   );
   assert(
     baseHit && baseHit.type === "attackResolved" && baseHit.damage === 1,
@@ -196,17 +195,14 @@ export function testUndyneThrowSpearFixedDamageAndSpearRain() {
       unitId: undyne.id,
       abilityId: ABILITY_UNDYNE_SPEAR_THROW,
       payload: { targetId: enemy.id },
-    } as any,
+    },
     makeAttackWinRng(3)
   );
   assert(
     rainCast.state.pendingRoll?.kind === "attack_attackerRoll",
     "Immortal Throw Spear should start the Spear Rain attack chain"
   );
-  const rainResolved = resolveAllPendingRollsWithEvents(
-    rainCast.state,
-    makeAttackWinRng(3)
-  );
+  const rainResolved = resolveAllPendingRollsWithEvents(rainCast.state, makeAttackWinRng(3));
   const rainHits = rainResolved.events.filter(
     (event) =>
       event.type === "attackResolved" &&
@@ -226,7 +222,8 @@ export function testUndyneThrowSpearFixedDamageAndSpearRain() {
 
 
 export function testUndyneEnergySpearGatingLineAndFreeImmortalCost() {
-  let { state, undyne, ally, enemy, enemy2 } = setupUndyneState();
+  const { state: initialState150, undyne, ally, enemy, enemy2 } = setupUndyneState();
+let state = initialState150;
   state = setUnit(state, undyne.id, { position: { col: 4, row: 4 } });
   state = setUnit(state, ally.id, { position: { col: 2, row: 6 } });
   state = setUnit(state, enemy.id, { position: { col: 4, row: 6 }, hp: 12 });
@@ -247,7 +244,7 @@ export function testUndyneEnergySpearGatingLineAndFreeImmortalCost() {
       unitId: undyne.id,
       abilityId: ABILITY_UNDYNE_ENERGY_SPEAR,
       payload: { target: { col: 0, row: 6 }, axis: "row" },
-    } as any,
+    },
     makeSharedAttackerWinRng(2)
   );
   assert(
@@ -268,16 +265,14 @@ export function testUndyneEnergySpearGatingLineAndFreeImmortalCost() {
       unitId: undyne.id,
       abilityId: ABILITY_UNDYNE_ENERGY_SPEAR,
       payload: { target: { col: 0, row: 6 }, axis: "diagMain" },
-    } as any,
+    },
     makeSharedAttackerWinRng(2)
   );
   assert(
     fallbackAxis.events.some(
-      (event) =>
-        event.type === "abilityUsed" &&
-        event.abilityId === ABILITY_UNDYNE_ENERGY_SPEAR
+      (event) => event.type === "abilityUsed" && event.abilityId === ABILITY_UNDYNE_ENERGY_SPEAR,
     ) && fallbackAxis.state.pendingRoll?.kind === "tricksterAoE_attackerRoll",
-    "Energy Spear should default non-cardinal line selection to row"
+    "Energy Spear should default non-cardinal line selection to row",
   );
 
   const cast = applyAction(
@@ -287,17 +282,14 @@ export function testUndyneEnergySpearGatingLineAndFreeImmortalCost() {
       unitId: undyne.id,
       abilityId: ABILITY_UNDYNE_ENERGY_SPEAR,
       payload: { target: { col: 0, row: 6 }, axis: "row" },
-    } as any,
+    },
     makeSharedAttackerWinRng(2)
   );
   assert(
     cast.state.units[undyne.id].charges[ABILITY_UNDYNE_ENERGY_SPEAR] === 0,
     "Energy Spear should spend 2 charges in base form"
   );
-  const castResolved = resolveAllPendingRollsWithEvents(
-    cast.state,
-    makeSharedAttackerWinRng(2)
-  );
+  const castResolved = resolveAllPendingRollsWithEvents(cast.state, makeSharedAttackerWinRng(2));
   const hitIds = castResolved.events
     .filter(
       (event) =>
@@ -347,17 +339,14 @@ export function testUndyneEnergySpearGatingLineAndFreeImmortalCost() {
       unitId: undyne.id,
       abilityId: ABILITY_UNDYNE_ENERGY_SPEAR,
       payload: { target: { col: 0, row: 6 }, axis: "row" },
-    } as any,
+    },
     makeSharedAttackerWinRng(2)
   );
   assert(
     freeCast.events.some(
-      (event) =>
-        event.type === "abilityUsed" &&
-        event.abilityId === ABILITY_UNDYNE_ENERGY_SPEAR
-    ) &&
-      freeCast.state.units[undyne.id].charges[ABILITY_UNDYNE_ENERGY_SPEAR] === 0,
-    "Immortal Undyne should cast Energy Spear without charge cost"
+      (event) => event.type === "abilityUsed" && event.abilityId === ABILITY_UNDYNE_ENERGY_SPEAR,
+    ) && freeCast.state.units[undyne.id].charges[ABILITY_UNDYNE_ENERGY_SPEAR] === 0,
+    "Immortal Undyne should cast Energy Spear without charge cost",
   );
 
   console.log("undyne_energy_spear_gating_line_and_free_immortal_cost passed");
@@ -365,7 +354,8 @@ export function testUndyneEnergySpearGatingLineAndFreeImmortalCost() {
 
 
 export function testUndyneDirectionShiftDefenseRedirect() {
-  let { state, undyne, ally, enemy, enemy2 } = setupUndyneState();
+  const { state: initialState151, undyne, ally, enemy, enemy2 } = setupUndyneState();
+let state = initialState151;
   state = setUnit(state, undyne.id, { position: { col: 4, row: 4 } });
   state = setUnit(state, enemy.id, { position: { col: 4, row: 5 } });
   state = toBattleState(state, "P2", enemy.id);
@@ -373,8 +363,8 @@ export function testUndyneDirectionShiftDefenseRedirect() {
 
   const attack = applyAction(
     state,
-    { type: "attack", attackerId: enemy.id, defenderId: undyne.id } as any,
-    makeRngSequence([0.01, 0.01, 0.99, 0.99])
+    { type: "attack", attackerId: enemy.id, defenderId: undyne.id },
+    makeRngSequence([0.01, 0.01, 0.99, 0.99]),
   );
   const resolved = resolveAllPendingRollsWithEvents(
     attack.state,
@@ -385,7 +375,7 @@ export function testUndyneDirectionShiftDefenseRedirect() {
       !resolved.events.some((event) => event.type === "intimidateTriggered") &&
       resolved.state.units[enemy.id].position?.col === 4 &&
       resolved.state.units[enemy.id].position?.row === 5,
-    "Direction Shift metadata should not create Vlad-style push choices"
+    "Direction Shift metadata should not create Vlad-style push choices",
   );
 
   let blockedState = setUnit(state, undyne.id, { position: { col: 0, row: 1 } });
@@ -396,7 +386,7 @@ export function testUndyneDirectionShiftDefenseRedirect() {
   blockedState = initKnowledgeForOwners(blockedState);
   const blockedAttack = applyAction(
     blockedState,
-    { type: "attack", attackerId: enemy.id, defenderId: undyne.id } as any,
+    { type: "attack", attackerId: enemy.id, defenderId: undyne.id },
     makeRngSequence([0.01, 0.01, 0.99, 0.99])
   );
   const blockedResolved = resolveAllPendingRollsWithEvents(
@@ -407,7 +397,7 @@ export function testUndyneDirectionShiftDefenseRedirect() {
     !blockedResolved.events.some((event) => event.type === "intimidateTriggered") &&
       blockedResolved.state.units[enemy.id].position?.col === 0 &&
       blockedResolved.state.units[enemy.id].position?.row === 0,
-    "Direction Shift should no-op cleanly when attacker has no legal adjacent empty cells"
+    "Direction Shift should no-op cleanly when attacker has no legal adjacent empty cells",
   );
 
   console.log("undyne_direction_shift_current_behavior passed");
@@ -415,7 +405,8 @@ export function testUndyneDirectionShiftDefenseRedirect() {
 
 
 export function testUndyneImmortalTriggerCapDrainBonusAndOnce() {
-  let { state, undyne, enemy } = setupUndyneState();
+  const { state: initialState152, undyne, enemy } = setupUndyneState();
+let state = initialState152;
   state = setUnit(state, undyne.id, {
     position: { col: 4, row: 4 },
     hp: 1,
@@ -428,8 +419,8 @@ export function testUndyneImmortalTriggerCapDrainBonusAndOnce() {
 
   const lethal = applyAction(
     state,
-    { type: "attack", attackerId: enemy.id, defenderId: undyne.id } as any,
-    makeAttackWinRng(1)
+    { type: "attack", attackerId: enemy.id, defenderId: undyne.id },
+    makeAttackWinRng(1),
   );
   const revived = resolveAllPendingRollsWithEvents(lethal.state, makeAttackWinRng(1));
   assert(
@@ -437,7 +428,7 @@ export function testUndyneImmortalTriggerCapDrainBonusAndOnce() {
       revived.state.units[undyne.id].hp === 3 &&
       revived.state.units[undyne.id].undyneImmortalUsed === true &&
       revived.state.units[undyne.id].undyneImmortalActive === true,
-    "Immortal Undyne should trigger once on lethal death and restore 3 HP"
+    "Immortal Undyne should trigger once on lethal death and restore 3 HP",
   );
   assert(
     revived.events.some(
@@ -465,7 +456,7 @@ export function testUndyneImmortalTriggerCapDrainBonusAndOnce() {
   capState = toBattleState(capState, "P2", enemy.id);
   const capAttack = applyAction(
     capState,
-    { type: "attack", attackerId: enemy.id, defenderId: undyne.id } as any,
+    { type: "attack", attackerId: enemy.id, defenderId: undyne.id },
     makeAttackWinRng(1)
   );
   const capResolved = resolveAllPendingRollsWithEvents(
@@ -492,7 +483,7 @@ export function testUndyneImmortalTriggerCapDrainBonusAndOnce() {
   bonusState = toBattleState(bonusState, "P1", undyne.id);
   const bonusAttack = applyAction(
     bonusState,
-    { type: "attack", attackerId: undyne.id, defenderId: enemy.id } as any,
+    { type: "attack", attackerId: undyne.id, defenderId: enemy.id },
     makeAttackWinRng(1)
   );
   const bonusResolved = resolveAllPendingRollsWithEvents(
@@ -508,15 +499,15 @@ export function testUndyneImmortalTriggerCapDrainBonusAndOnce() {
   assert(
     bonusEvent &&
       bonusEvent.type === "attackResolved" &&
-      bonusEvent.damage === (bonusResolved.state.units[undyne.id].attack + 1),
-    "Immortal close-range attacks should gain +1 damage"
+      bonusEvent.damage === bonusResolved.state.units[undyne.id].attack + 1,
+    "Immortal close-range attacks should gain +1 damage",
   );
 
   let drainState = setUnit(bonusResolved.state, undyne.id, {
     turn: makeEmptyTurnEconomy(),
   });
   drainState = toBattleState(drainState, "P1", undyne.id);
-  const drained = applyAction(drainState, { type: "endTurn" } as any, new SeededRNG(14));
+  const drained = applyAction(drainState, { type: "endTurn" }, new SeededRNG(14));
   assert(
     drained.state.units[undyne.id].hp === drainState.units[undyne.id].hp - 1,
     "Immortal Undyne should take 1 self-damage at end of own turn"
@@ -542,7 +533,7 @@ export function testUndyneImmortalTriggerCapDrainBonusAndOnce() {
       unitId: undyne.id,
       abilityId: ABILITY_UNDYNE_ENERGY_SPEAR,
       payload: { target: { col: 0, row: 4 }, axis: "row" },
-    } as any,
+    },
     makeAttackWinRng(1)
   );
   assert(
@@ -577,8 +568,8 @@ export function testUndyneImmortalTriggerCapDrainBonusAndOnce() {
   secondDeathState = toBattleState(secondDeathState, "P2", enemy.id);
   const secondDeath = applyAction(
     secondDeathState,
-    { type: "attack", attackerId: enemy.id, defenderId: undyne.id } as any,
-    makeAttackWinRng(1)
+    { type: "attack", attackerId: enemy.id, defenderId: undyne.id },
+    makeAttackWinRng(1),
   );
   const secondDeathResolved = resolveAllPendingRollsWithEvents(
     secondDeath.state,

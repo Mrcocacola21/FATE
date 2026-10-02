@@ -2,7 +2,12 @@ import type { ApplyResult, GameEvent, GameState, PendingRoll } from "../../../..
 import type { RNG } from "../../../../rng";
 import { resolveAttack } from "../../../../combat";
 import { ABILITY_BERSERK_AUTO_DEFENSE } from "../../../../abilities";
-import { clearPendingRoll, evBerserkerDefenseChosen, evDamageBonusApplied, requestRoll } from "../../../../core";
+import {
+  clearPendingRoll,
+  evBerserkerDefenseChosen,
+  evDamageBonusApplied,
+  requestRoll,
+} from "../../../../core";
 import { getPolkovodetsSource, maybeRequestIntimidate } from "../../../../actions/heroes/vlad";
 import type { IntimidateResume } from "../../../../actions/types";
 import type { JebeHailOfArrowsAoEContext } from "../../../types";
@@ -15,13 +20,13 @@ function appendPolkovodetsDamageEvent(
   attackerId: string,
   defenderId: string,
   damageBonus: number,
-  sourceId: string | null
+  sourceId: string | null,
 ): GameEvent[] {
   const attackEvent = events.find(
     (event) =>
       event.type === "attackResolved" &&
       event.attackerId === attackerId &&
-      event.defenderId === defenderId
+      event.defenderId === defenderId,
   );
   if (
     !attackEvent ||
@@ -46,7 +51,7 @@ function appendPolkovodetsDamageEvent(
 export function resolveJebeHailOfArrowsAttackerRoll(
   state: GameState,
   pending: PendingRoll,
-  rng: RNG
+  rng: RNG,
 ): ApplyResult {
   const ctx = pending.context as unknown as JebeHailOfArrowsAoEContext;
   const caster = state.units[ctx.casterId];
@@ -67,7 +72,7 @@ export function resolveJebeHailOfArrowsAttackerRoll(
 export function resolveJebeHailOfArrowsDefenderRoll(
   state: GameState,
   pending: PendingRoll,
-  rng: RNG
+  rng: RNG,
 ): ApplyResult {
   const ctx = pending.context as unknown as JebeHailOfArrowsAoEContext;
   const caster = state.units[ctx.casterId];
@@ -114,18 +119,13 @@ export function resolveJebeHailOfArrowsDefenderRoll(
     },
   });
 
-  let updatedState = updatePendingAoeFromAttack(
-    nextState,
-    events,
-    caster.id,
-    targetId
-  );
-  let updatedEvents = appendPolkovodetsDamageEvent(
+  const updatedState = updatePendingAoeFromAttack(nextState, events, caster.id, targetId);
+  const updatedEvents = appendPolkovodetsDamageEvent(
     [...events],
     caster.id,
     targetId,
     damageBonus,
-    sourceId
+    sourceId,
   );
 
   const nextCtx: JebeHailOfArrowsAoEContext = {
@@ -142,7 +142,7 @@ export function resolveJebeHailOfArrowsDefenderRoll(
     caster.id,
     targetId,
     updatedEvents,
-    intimidateResume
+    intimidateResume,
   );
   if (intimidate.requested) {
     return { state: intimidate.state, events: intimidate.events };
@@ -155,7 +155,7 @@ export function resolveJebeHailOfArrowsBerserkerDefenseChoice(
   state: GameState,
   pending: PendingRoll,
   choice: "auto" | "roll" | undefined,
-  rng: RNG
+  _rng: RNG,
 ): ApplyResult {
   const ctx = pending.context as unknown as JebeHailOfArrowsAoEContext;
   const caster = state.units[ctx.casterId];
@@ -203,7 +203,7 @@ export function resolveJebeHailOfArrowsBerserkerDefenseChoice(
       target.owner,
       "jebeHailOfArrows_defenderRoll",
       nextCtx,
-      target.id
+      target.id,
     );
     const choiceEvents: GameEvent[] = [
       evBerserkerDefenseChosen({ defenderId: target.id, choice: "roll" }),
@@ -230,12 +230,7 @@ export function resolveJebeHailOfArrowsBerserkerDefenseChoice(
     },
   });
 
-  let updatedState = updatePendingAoeFromAttack(
-    nextState,
-    events,
-    caster.id,
-    target.id
-  );
+  const updatedState = updatePendingAoeFromAttack(nextState, events, caster.id, target.id);
   let updatedEvents: GameEvent[] = [
     evBerserkerDefenseChosen({ defenderId: target.id, choice: "auto" }),
     ...events,
@@ -245,7 +240,7 @@ export function resolveJebeHailOfArrowsBerserkerDefenseChoice(
     caster.id,
     target.id,
     damageBonus,
-    sourceId
+    sourceId,
   );
 
   const nextCtx: JebeHailOfArrowsAoEContext = {
@@ -263,7 +258,7 @@ export function resolveJebeHailOfArrowsBerserkerDefenseChoice(
     caster.id,
     target.id,
     updatedEvents,
-    intimidateResume
+    intimidateResume,
   );
   if (intimidate.requested) {
     return { state: intimidate.state, events: intimidate.events };

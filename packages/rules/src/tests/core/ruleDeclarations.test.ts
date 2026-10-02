@@ -18,23 +18,24 @@ import {
   applyRuleDeclarationWinChecks,
   handleRuleDeclarationRoundEnd,
 } from "../../ruleDeclarations";
+import type { RuleDeclarationId } from "../../ruleDeclarations/types";
 
 function startToRuleChoice() {
   const rng = makeRngSequence([0.9, 0.9, 0.1, 0.1]);
   let state = createEmptyGame();
   state = attachArmy(state, createDefaultArmy("P1"));
   state = attachArmy(state, createDefaultArmy("P2"));
-  state = applyAction(state, { type: "lobbyInit", host: "P1" } as any, rng).state;
+  state = applyAction(state, { type: "lobbyInit", host: "P1" }, rng).state;
   state = { ...state, seats: { P1: true, P2: true } };
-  state = applyAction(state, { type: "setReady", player: "P1", ready: true } as any, rng).state;
-  state = applyAction(state, { type: "setReady", player: "P2", ready: true } as any, rng).state;
-  state = applyAction(state, { type: "startGame" } as any, rng).state;
+  state = applyAction(state, { type: "setReady", player: "P1", ready: true }, rng).state;
+  state = applyAction(state, { type: "setReady", player: "P2", ready: true }, rng).state;
+  state = applyAction(state, { type: "startGame" }, rng).state;
   state = resolvePendingRollOnce(state, rng).state;
   state = resolvePendingRollOnce(state, rng).state;
   return { state, rng };
 }
 
-function chooseRule(state: ReturnType<typeof createEmptyGame>, ruleId: string) {
+function chooseRule(state: ReturnType<typeof createEmptyGame>, ruleId: RuleDeclarationId) {
   const pending = state.pendingRoll;
   assert(pending?.kind === "ruleDeclarationChoice", "rule declaration choice should be pending");
   return applyAction(
@@ -44,8 +45,8 @@ function chooseRule(state: ReturnType<typeof createEmptyGame>, ruleId: string) {
       pendingRollId: pending.id,
       player: pending.player,
       choice: { type: "chooseRuleDeclaration", ruleId },
-    } as any,
-    makeRngSequence([])
+    },
+    makeRngSequence([]),
   ).state;
 }
 
@@ -195,13 +196,13 @@ export function testNormalRuleVictoryAndNoRoundEffect() {
         ruleData: {},
       },
     },
-    { type: "endTurn" } as any,
+    { type: "endTurn" },
     makeRngSequence([])
   );
   assert(noRuleEndTurn.state.phase === "ended", "existing normal end-turn victory should be preserved");
   assert(
     noRuleEndTurn.events.some((event) => event.type === "gameEnded" && event.winner === "P1"),
-    "existing normal end-turn victory should still choose the surviving real-figure player"
+    "existing normal end-turn victory should still choose the surviving real-figure player",
   );
 
   console.log("normal_rule_victory_and_no_round_effect passed");
@@ -218,8 +219,8 @@ export function testAdvantageThresholdValidationAndWin() {
       pendingRollId: pending.id,
       player: pending.player,
       choice: { type: "ruleThreshold", threshold: 2 },
-    } as any,
-    makeRngSequence([])
+    },
+    makeRngSequence([]),
   ).state;
   assert(
     invalid.pendingRoll?.kind === "ruleDeclarationAdvantageThreshold",

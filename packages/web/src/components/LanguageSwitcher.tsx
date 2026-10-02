@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { changePreference, useProfileStore } from "../profile/profileStore";
 import { useI18n, type Language } from "../i18n";
 
