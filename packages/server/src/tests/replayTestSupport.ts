@@ -35,11 +35,11 @@ export function snapshotRow(room: GameRoom): MatchSnapshot {
 }
 
 /** Real accepted rules actions, including initiative dice and complete combat, no mocked rules. */
-export function createReplayFixture(mode: GameModeId = "classic", finish = false, seed = 37) {
+export function createReplayFixture(mode: GameModeId = "classic", finish = false, seed = 37, hostSeat: PlayerId = "P2") {
   const room = createGameRoomWithId(randomUUID(), {
     seed,
     gameMode: mode,
-    hostSeat: "P2",
+    hostSeat,
     hostConnId: "fixture-host",
     arenaId: "fixture-arena",
     publish: false,
@@ -50,13 +50,15 @@ export function createReplayFixture(mode: GameModeId = "classic", finish = false
     id: room.matchId,
     roomId: room.id,
     status: "IN_PROGRESS",
+    isRated: false,
+    ratingProcessedAt: null,
     gameMode: mode,
     seed,
     initialConfig: {
       formatVersion: 1,
       rngAlgorithm: "lcg32-numerical-recipes-v1",
       gameMode: mode,
-      hostSeat: "P2",
+      hostSeat,
       hostOccupied: true,
       arenaId: "fixture-arena",
     },
@@ -140,7 +142,7 @@ export function createReplayFixture(mode: GameModeId = "classic", finish = false
     }
     rebuildDraftedArmies(room);
   }
-  act({ type: "startGame" }, "P2");
+  act({ type: "startGame" }, hostSeat);
   while (room.state.pendingRoll) {
     const pending = room.state.pendingRoll;
     act({

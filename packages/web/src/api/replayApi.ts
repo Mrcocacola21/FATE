@@ -60,6 +60,7 @@ export function parseReplayMetadata(value: unknown): ReplayMetadata {
     matchId: string(v.matchId),
     status: choice(v.status, ["FINISHED"]),
     gameMode: string(v.gameMode),
+    matchType: choice(v.matchType, ["CASUAL", "RATED"] as const),
     initialRevision,
     finalRevision,
     participants,

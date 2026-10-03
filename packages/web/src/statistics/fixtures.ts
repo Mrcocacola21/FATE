@@ -51,6 +51,7 @@ export const recentFixture: MatchHistoryResponse = {
   items: ["LOSS", "DRAW", "WIN"].map((result, index) => ({
     id: `match-${index}`,
     status: "FINISHED",
+    matchType: "CASUAL",
     gameMode: "classic",
     result: result as "WIN" | "LOSS" | "DRAW",
     seat: "P1",

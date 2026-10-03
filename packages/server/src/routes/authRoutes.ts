@@ -1,3 +1,4 @@
+import type { MatchmakingService } from "../services/matchmakingService";
 import cookie from "@fastify/cookie";
 import rateLimit from "@fastify/rate-limit";
 import type { FastifyInstance, FastifyReply } from "fastify";
@@ -39,7 +40,7 @@ function sendCredentials(
   });
 }
 
-export async function authRoutes(server: FastifyInstance): Promise<void> {
+export async function authRoutes(server: FastifyInstance, options: { matchmaking?: MatchmakingService } = {}): Promise<void> {
   await server.register(cookie);
   await server.register(rateLimit, {
     global: false,
@@ -124,8 +125,11 @@ export async function authRoutes(server: FastifyInstance): Promise<void> {
     { bodyLimit: 4096, onRequest: requireTrustedAuthOrigin },
     async (request, reply) => {
       reply.clearCookie(REFRESH_COOKIE, refreshCookieOptions());
-      if (request.cookies[REFRESH_COOKIE])
+      if (request.cookies[REFRESH_COOKIE]) {
         await getService().logout(request.cookies[REFRESH_COOKIE]);
+        try { options.matchmaking?.cancel(getTokens().verifyRefreshToken(request.cookies[REFRESH_COOKIE]!).sub); }
+        catch { /* Invalid refresh credentials have no queue identity to clean up. */ }
+      }
       return reply.code(204).send();
     },
   );

@@ -1,3 +1,4 @@
+import type { MatchType } from "./matchType";
 export type MatchOutcome = "WIN" | "LOSS" | "DRAW";
 export interface MatchIdentity {
   userId: string | null;
@@ -11,6 +12,7 @@ export interface MatchOpponent extends MatchIdentity {
 export interface MatchMetadata {
   id: string;
   status: "FINISHED";
+  matchType: MatchType;
   gameMode: string;
   createdAt: string;
   startedAt: string | null;

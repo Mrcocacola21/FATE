@@ -1,3 +1,5 @@
+import { createMatchmakingService } from "./matchmaking/runtime";
+import { matchmakingRoutes } from "./routes/matchmakingRoutes";
 // packages/server/src/index.ts
 
 import Fastify from "fastify";
@@ -18,6 +20,9 @@ import type { ReplayQueryService } from "./services/replayQueryService";
 import { matchHistoryRoutes } from "./routes/matchHistoryRoutes";
 import type { MatchHistoryService } from "./services/matchHistoryService";
 import { statisticsRoutes } from "./routes/statisticsRoutes";
+import { ratingRoutes, type RatingReads } from "./routes/ratingRoutes";
+import { leaderboardRoutes } from "./routes/leaderboardRoutes";
+import type { LeaderboardService } from "./services/leaderboardService";
 import type { PlayerStatisticsService } from "./services/playerStatisticsService";
 import { isTrustedAuthOrigin } from "./auth/httpSecurity";
 import { ConnectionIdentityService } from "./auth/connectionIdentity";
@@ -32,6 +37,9 @@ export async function buildServer(
     actionHistory?: Pick<MatchActionService, "getCompletedMatchActionHistory">;
     matchHistory?: Pick<MatchHistoryService, "getUserMatchHistory">;
     playerStatistics?: Pick<PlayerStatisticsService, "getPlayerStatistics">;
+    ratings?: RatingReads;
+    matchmakingActiveMatch?: (userId: string) => Promise<boolean>;
+    leaderboard?: Pick<LeaderboardService, "getLeaderboard">;
     replayQuery?: Pick<ReplayQueryService, "getMetadata" | "getState">;
   } = {},
 ) {
@@ -60,15 +68,19 @@ export async function buildServer(
 
   const lifecycle = new MatchLifecycle(server.log, options.matchPersistence);
   lifecycle.startRetries();
+  const matchmaking = createMatchmakingService(lifecycle, server.log, options.ratings, options.matchmakingActiveMatch);
+  matchmaking.start();
   server.addHook("onClose", async () => {
+    await matchmaking.close();
     await lifecycle.close();
     await disconnectDatabase();
   });
 
   const identity = options.connectionIdentity ?? new ConnectionIdentityService();
   registerHealthRoutes(server);
-  await registerRoutes(server, lifecycle, identity);
-  await server.register(authRoutes, { prefix: "/api/auth" });
+  await registerRoutes(server, lifecycle, identity, matchmaking);
+  await server.register(authRoutes, { prefix: "/api/auth", matchmaking });
+  await server.register(matchmakingRoutes, { prefix: "/api", identity, matchmaking });
   await server.register(profileRoutes, { prefix: "/api" });
   await server.register(matchRoutes, {
     prefix: "/api",
@@ -77,8 +89,10 @@ export async function buildServer(
   });
   await server.register(matchHistoryRoutes, { prefix: "/api", matchHistory: options.matchHistory });
   await server.register(statisticsRoutes, { prefix: "/api", playerStatistics: options.playerStatistics });
+  await server.register(ratingRoutes, { prefix: "/api", ratings: options.ratings });
+  await server.register(leaderboardRoutes, { prefix: "/api", leaderboard: options.leaderboard });
   await server.register(replayRoutes, { prefix: "/api", identity, replayQuery: options.replayQuery });
-  registerGameWebSocket(server, lifecycle, identity);
+  registerGameWebSocket(server, lifecycle, identity, matchmaking);
 
   return server;
 }

@@ -121,6 +121,7 @@ const recent = ["WIN", "LOSS", "WIN", "WIN", "DRAW", "LOSS", "WIN", "WIN", "WIN"
   (result, index) => ({
     id: `recent-${index}`,
     status: "FINISHED",
+          matchType: "CASUAL",
     gameMode: result === "DRAW" ? "draft" : index % 3 === 0 ? "standard" : "classic",
     createdAt: `2026-09-${String(index + 10).padStart(2, "0")}T10:00:00Z`,
     startedAt: null,

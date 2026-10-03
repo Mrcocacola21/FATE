@@ -1,3 +1,4 @@
+import { MatchmakingSync } from "./matchmaking/MatchmakingSync";
 import { useEffect, useState, type ReactNode } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router";
 import { authStore, useAuthStore } from "./auth/authStore";
@@ -10,6 +11,7 @@ import { PublicProfilePage } from "./pages/PublicProfilePage";
 import { MatchHistoryPage, PublicMatchHistoryPage } from "./pages/MatchHistoryPage";
 import { MatchDetailsPage } from "./pages/MatchDetailsPage";
 import { MatchReplayPage } from "./pages/MatchReplayPage";
+import { LeaderboardPage } from "./pages/LeaderboardPage";
 import { ProfileSync } from "./profile/ProfileSync";
 import { Lobby } from "./components/Lobby";
 import { GamePage } from "./pages/GamePage";
@@ -39,6 +41,7 @@ export default function App() {
   return (
     <ErrorBoundary>
       <ProfileSync />
+      <MatchmakingSync />
       <CapabilitiesProvider>
         <AppShell
           standalone={authPage}
@@ -54,6 +57,7 @@ export default function App() {
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
                 <Route path="/figures" element={<FigureSetPage />} />
+                <Route path="/leaderboard" element={<LeaderboardPage />} />
                 <Route path="/heartbreak" element={<CapabilityHeartbreak />} />
                 <Route path="/users/:username" element={<PublicProfilePage />} />
                 <Route path="/users/:username/matches" element={<PublicMatchHistoryPage />} />
@@ -91,7 +95,7 @@ function ApplicationPage({ children, standalone }: { children: ReactNode; standa
   if (standalone) return <AuthLayout>{children}</AuthLayout>;
   if (/^\/(profile|users\/[^/]+)\/?$/.test(location.pathname))
     return <div className="mx-auto w-full min-w-0 max-w-6xl">{children}</div>;
-  if (["/figures", "/heartbreak"].includes(location.pathname.replace(/\/$/, "")) ||
+  if (["/figures", "/heartbreak", "/leaderboard"].includes(location.pathname.replace(/\/$/, "")) ||
       /^\/matches\/[^/]+\/replay\/?$/.test(location.pathname))
     return <>{children}</>;
   return (

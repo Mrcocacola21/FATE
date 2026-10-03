@@ -1,4 +1,6 @@
+import { matchTypeFromRated, type MatchType } from "../matches/matchType";
 import { isDeepStrictEqual } from "node:util";
+import { RatingService } from "./ratingService";
 import type { InitialMatchConfig } from "../replay/initialState";
 import { MatchActionRepository } from "../repositories/matchActionRepository";
 import type { AcceptedActionRecord } from "../persistence/acceptedAction";
@@ -22,6 +24,7 @@ export interface MatchResultIdentityDTO {
 export interface MatchDetailsDTO {
   id: string;
   status: "FINISHED";
+  matchType: MatchType;
   gameMode: string;
   createdAt: string;
   startedAt: string | null;
@@ -45,10 +48,14 @@ export interface PublicMatchDetailsDTO extends Omit<MatchDetailsDTO, "participan
 }
 export interface WaitingMatchInput {
   roomId: string;
+  /** Trusted server designation only. Derived from validated immutable room classification. */
+  isRated?: boolean;
   gameMode: string;
   seed: number;
   initialConfig?: InitialMatchConfig;
   createdById?: string | null;
+  /** Atomic initial seat reservations, used by the server-owned Rated queue. */
+  participants?: SeatParticipantInput[];
 }
 export interface SeatParticipantInput {
   seat: MatchSeatId;
@@ -71,15 +78,17 @@ export type MatchPersistence = Pick<
   | "markCancelled"
   | "appendAcceptedAction"
   | "appendMatchSnapshot"
-> & { finalizeMatch(matchId: string, input: FinishedMatchInput): Promise<unknown> };
+> & { finalizeMatch(matchId: string, input: FinishedMatchInput): Promise<unknown>;
+  findMatchByRoomId?(roomId: string): Promise<{ id: string } | null> };
 
 export class MatchService {
   private actions?: MatchActionRepository;
   constructor(
     private readonly matches: MatchRepository,
-    private readonly logger: { error(data: object, message: string): void } = console,
+    private readonly logger: { error(data: object, message: string): void; info?(data: object, message: string): void } = console,
     actions?: MatchActionRepository,
     private snapshots?: MatchSnapshotService,
+    private ratings?: Pick<RatingService, "processRatedMatch">,
   ) {
     this.actions = actions;
   }
@@ -93,15 +102,31 @@ export class MatchService {
   }
 
   async createWaitingMatch(input: WaitingMatchInput): Promise<{ id: string }> {
+    if (input.participants && (!input.isRated || input.participants.length !== 2 ||
+      new Set(input.participants.map(p => p.seat)).size !== 2 ||
+      input.participants.some(p => !p.userId || !["P1", "P2"].includes(p.seat)) ||
+      input.participants[0].userId === input.participants[1].userId))
+      throw new Error("Rated matchmaking requires two distinct persistent participants");
     const match = await this.matches.createWaitingMatch(input);
     if (
       match.status !== "WAITING" ||
       match.seed !== input.seed ||
+      match.isRated !== (input.isRated ?? false) ||
       match.gameMode !== input.gameMode
       || (input.initialConfig && !isDeepStrictEqual(match.initialConfig, input.initialConfig))
     )
       throw new Error("Room is already linked to a different or started match");
+    if (input.participants) {
+      const participants = await this.matches.findParticipants(match.id);
+      if (participants.length !== 2 || input.participants.some(p =>
+        !participants.some(stored => stored.seat === p.seat && stored.userId === p.userId && stored.displayNameSnapshot === p.displayNameSnapshot)))
+        throw new Error("Existing matchmaking participants differ from the claimed pair");
+    }
     return { id: match.id };
+  }
+
+  findMatchByRoomId(roomId: string): Promise<{ id: string } | null> {
+    return this.matches.findByRoomId(roomId);
   }
 
   syncParticipant(matchId: string, input: SeatParticipantInput): Promise<void> {
@@ -204,6 +229,16 @@ export class MatchService {
         );
       return { result: input, durationMs };
     });
+    // The result transaction has committed. A failed rating call leaves FINISHED
+    // intact and propagates to the existing bounded lifecycle retry/drain path.
+    // Re-finalization also retries rating after a crash between these commits.
+    if (canonical.isRated) {
+      this.ratings ??= new RatingService(this.matches.createRatingRepository(), {
+        info: (data, message) => this.logger.info?.(data, message),
+        error: (data, message) => this.logger.error(data, message),
+      });
+      await this.ratings.processRatedMatch(matchId);
+    }
     return toMatchDetails(canonical);
   }
 
@@ -246,6 +281,7 @@ export function toMatchDetails(match: DetailedMatch): MatchDetailsDTO {
     id: match.id,
     status: match.status,
     gameMode: match.gameMode,
+    matchType: matchTypeFromRated(match.isRated),
     createdAt: match.createdAt.toISOString(),
     startedAt: match.startedAt?.toISOString() ?? null,
     finishedAt: match.finishedAt?.toISOString() ?? null,

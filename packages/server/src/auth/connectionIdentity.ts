@@ -60,7 +60,9 @@ export function assertSeatIdentity(
 ): void {
   if (room.roomMode === "test") return;
   if (!identity)
-    throw new MultiplayerIdentityError("AUTH_REQUIRED", "Sign in to occupy a player seat");
+    throw new MultiplayerIdentityError(room.matchType === "RATED" ? "RATED_MATCH_REQUIRES_AUTHENTICATION" : "AUTH_REQUIRED", "Sign in to occupy a player seat");
+  if (room.reservedUserIds && room.reservedUserIds[seat] !== identity.userId)
+    throw new MultiplayerIdentityError("SEAT_OWNED_BY_ANOTHER_USER", "Seat is reserved for the matched player");
   const owner = room.seatIdentities[seat];
   const opposite = room.seatIdentities[seat === "P1" ? "P2" : "P1"];
   if (owner && room.seatTokens[seat] === resumeToken && owner.userId !== identity.userId)
@@ -70,7 +72,7 @@ export function assertSeatIdentity(
     );
   if (opposite?.userId === identity.userId)
     throw new MultiplayerIdentityError(
-      "USER_ALREADY_IN_MATCH",
+      room.matchType === "RATED" ? "RATED_MATCH_SAME_USER" : "USER_ALREADY_IN_MATCH",
       "User already owns the other player seat",
     );
   if (owner && owner.userId !== identity.userId && (room.participantsLocked || room.seats[seat]))
@@ -78,7 +80,7 @@ export function assertSeatIdentity(
       "SEAT_OWNED_BY_ANOTHER_USER",
       "Seat belongs to another player",
     );
-  if (room.participantsLocked && (!owner || room.seatTokens[seat] !== resumeToken))
+  if (room.participantsLocked && (!owner || room.seatTokens[seat] !== resumeToken) && !room.reservedUserIds)
     throw new MultiplayerIdentityError("INVALID_RESUME_TOKEN", "A valid resume token is required");
 }
 

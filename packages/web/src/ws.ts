@@ -1,3 +1,5 @@
+import type { MatchmakingEvent } from "./matchmaking/types";
+import type { MatchType } from "./matches/matchType";
 import type {
   GameAction,
   GameEvent,
@@ -20,6 +22,8 @@ import type { TestRoomCommand } from "./testRoom/types";
 export type PlayerRole = PlayerId | "spectator";
 
 export type RoomMeta = {
+  gameModeLocked?: boolean;
+  matchType: MatchType;
   roomMode: "normal" | "test";
   gameMode: GameModeId;
   draftState: DraftState | null;
@@ -67,10 +71,13 @@ export type RoomStateMessage = {
 };
 
 export type ServerMessage =
+  | MatchmakingEvent
+  | { type: "matchmakingSubscribed"; requestId: string }
   | RoomStateMessage
   | {
       type: "joinAck";
       roomMode?: "normal" | "test";
+      matchType?: MatchType;
       roomId: string;
       role: PlayerRole;
       seat?: PlayerId;
@@ -122,6 +129,7 @@ export type ClientMessage =
       figureSet?: FigureSetSelection;
       resumeToken?: string;
       roomMode?: "normal" | "test";
+      matchType?: MatchType;
       debugToken?: string;
     }
   | { type: "setReady"; ready: boolean }
@@ -166,6 +174,7 @@ export function sendJoinRoom(
     figureSet?: FigureSetSelection;
     resumeToken?: string;
     roomMode?: "normal" | "test";
+    matchType?: MatchType;
     debugToken?: string;
   },
 ) {

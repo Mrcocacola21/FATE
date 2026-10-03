@@ -1,3 +1,4 @@
+import { MatchTypeBadge } from "../matches/MatchTypeBadge";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
 import { useI18n } from "../i18n";
@@ -57,6 +58,7 @@ export function MatchDetailsPage() {
       )}
       {match && (
         <>
+          <div className="mt-4"><MatchTypeBadge matchType={match.matchType} /></div>
           <p className="mt-4 font-semibold">
             {t("matches.finished")} · {modeLabel(match.gameMode, t)}
           </p>
@@ -92,6 +94,7 @@ export function MatchDetailsPage() {
           </div>
           <dl className="grid gap-4 text-sm sm:grid-cols-2">
             {[
+              [t("matchTypes.label"), t(`matchTypes.${match.matchType}`)],
               [t("matches.date"), formatDate(matchDate(match), language, t)],
               [t("matches.startedAt"), formatDate(match.startedAt, language, t)],
               [t("matches.finishedAt"), formatDate(match.finishedAt, language, t)],

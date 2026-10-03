@@ -1,3 +1,4 @@
+import { MatchTypeError, validateMatchType } from "../matches/matchType";
 import type { GameAction, PlayerId } from "rules";
 import { captureReplaySetup } from "../replay/actionSetup";
 import { toAcceptedActionRecord, type DraftAction, type LobbyModeAction } from "./acceptedAction";
@@ -7,7 +8,11 @@ import { MatchSnapshotService } from "../services/matchSnapshotService";
 import { getMaxLogEvents, touchGameRoom } from "../store";
 import { extractPersistentMatchResult, MatchResultError } from "./matchResult";
 import { Prisma } from "@prisma/client";
+import { RatingError } from "../rating/ratingError";
+import { Glicko2Error } from "../rating/glicko2";
 import { hasDistinctPlayerIdentities, identityDisplayName } from "../auth/connectionIdentity";
+import type { PairAttempt } from "../matchmaking/types";
+import { PairCreationRolledBack } from "../matchmaking/errors";
 import { rejected } from "../commandResult";
 import { randomUUID } from "node:crypto";
 import {
@@ -65,6 +70,8 @@ export class MatchLifecycle {
   private timer?: NodeJS.Timeout;
   private retryRun?: Promise<void>;
   private closing = false;
+  private readonly stagedPairs = new Map<string, GameRoom>();
+  private readonly uncertainPairs = new Set<string>();
   readonly actionQueue: MatchActionQueue;
   private readonly completions = new Map<string, Promise<void>>();
 
@@ -111,6 +118,8 @@ export class MatchLifecycle {
     id: string = randomUUID(),
     createdById: string | null = null,
   ): Promise<GameRoom> {
+    if (validateMatchType(options.matchType, options.roomMode) === "RATED" && !createdById)
+      throw new MatchTypeError("RATED_MATCH_REQUIRES_AUTHENTICATION", "Rated matches require authenticated players");
     if (getGameRoom(id)) throw new Error("Room already exists");
     // Keep the staged room invisible to discovery, joins and cleanup until binding succeeds.
     const room = createGameRoomWithId(id, { ...options, publish: false });
@@ -118,6 +127,7 @@ export class MatchLifecycle {
       try {
         const match = await this.getService().createWaitingMatch({
           roomId: room.id,
+          isRated: room.matchType === "RATED",
           gameMode: room.gameMode,
           seed: room.seed,
           createdById,
@@ -138,11 +148,62 @@ export class MatchLifecycle {
     if (room.matchId) {
       this.projection(room);
       this.logger.info(
-        { event: "match:created", roomId: room.id, matchId: room.matchId },
+        { event: "match:created", roomId: room.id, matchId: room.matchId, matchType: room.matchType },
         "Match linked to room",
       );
     }
     return room;
+  }
+
+  /** Stable staged runtime makes ambiguous DB failures safe to retry by roomId. */
+  async createMatchedRoom(attempt: PairAttempt): Promise<{ roomId: string; matchId: string }> {
+    const published = getGameRoom(attempt.roomId);
+    if (published?.matchId) return { roomId: published.id, matchId: published.matchId };
+    let room = this.stagedPairs.get(attempt.roomId);
+    if (!room) {
+      room = createGameRoomWithId(attempt.roomId, { publish: false, matchType: "RATED",
+        gameMode: attempt.players.P1.gameMode, hostSeat: "P1" });
+      room.reservedUserIds = { P1: attempt.players.P1.identity.userId, P2: attempt.players.P2.identity.userId };
+      room.seatIdentities = { P1: attempt.players.P1.identity, P2: attempt.players.P2.identity };
+      this.stagedPairs.set(attempt.roomId, room);
+    }
+    const service = this.getService();
+    const input = {
+      roomId: room.id, isRated: true, gameMode: room.gameMode, seed: room.seed,
+      createdById: attempt.players.P1.identity.userId,
+      initialConfig: { formatVersion: 1 as const, rngAlgorithm: "lcg32-numerical-recipes-v1" as const, gameMode: room.gameMode,
+        hostSeat: room.hostSeat, hostOccupied: false, arenaId: room.state.arenaId },
+      participants: (["P1", "P2"] as const).map(seat => ({ seat,
+        userId: attempt.players[seat].identity.userId,
+        displayNameSnapshot: Array.from(identityDisplayName(attempt.players[seat].identity)).slice(0, 100).join("") })),
+    };
+    let match: { id: string };
+    try { match = await service.createWaitingMatch(input); }
+    catch (error) {
+      // A SELECT alone cannot rule out a late commit after a transport timeout.
+      // Require a known statement/transaction rollback AND a successful absent-row
+      // lookup. All other failures retain the pair and retry the same unique roomId.
+      const rolledBack = error instanceof PairCreationRolledBack ||
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        ["P2000", "P2002", "P2003", "P2011", "P2012", "P2025", "P2034"].includes(error.code);
+      // A later rollback says nothing about an earlier transport timeout. Once
+      // any try has an unknown outcome, only success on this roomId resolves it.
+      if (!rolledBack) this.uncertainPairs.add(room.id);
+      if (rolledBack && !this.uncertainPairs.has(room.id) && service.findMatchByRoomId && await service.findMatchByRoomId(room.id) === null) {
+        this.stagedPairs.delete(room.id);
+        throw new PairCreationRolledBack();
+      }
+      if (error instanceof PairCreationRolledBack)
+        throw new Error("Match creation outcome requires the same-pair retry");
+      throw error;
+    }
+    room.matchId = match.id;
+    // No fallible async initialization follows the durable transaction.
+    publishGameRoom(room);
+    this.projection(room);
+    this.stagedPairs.delete(attempt.roomId);
+    this.uncertainPairs.delete(attempt.roomId);
+    return { roomId: room.id, matchId: match.id };
   }
 
   private projection(room: GameRoom): Projection | null {
@@ -191,7 +252,7 @@ export class MatchLifecycle {
     const p = this.projection(room);
     if (!p || p.started) return;
     for (const seat of ["P1", "P2"] as const) {
-      if (!room.seats[seat] && p.names.has(seat)) {
+      if (!room.seats[seat] && !room.reservedUserIds?.[seat] && p.names.has(seat)) {
         p.names.delete(seat);
         p.dirtySeats.delete(seat);
         p.removedSeats.add(seat);
@@ -210,7 +271,7 @@ export class MatchLifecycle {
   async applyAction(room: GameRoom, action: GameAction, playerId?: PlayerId) {
     if (room.roomMode === "normal" && action.type === "startGame") {
       if (!hasDistinctPlayerIdentities(room))
-        return rejected("AUTH_REQUIRED", "Two distinct authenticated players are required");
+        return rejected(room.matchType === "RATED" ? "RATED_MATCH_INVALID_PARTICIPANTS" : "AUTH_REQUIRED", "Two distinct authenticated players are required");
       const projection = this.projection(room);
       if (projection && !projection.started) {
         for (const seat of ["P1", "P2"] as const)
@@ -446,15 +507,17 @@ export class MatchLifecycle {
       }
     } catch (error) {
       const domainError = error instanceof MatchResultError;
+      const ratingError = error instanceof RatingError || error instanceof Glicko2Error;
       const databaseIntegrityError = error instanceof Prisma.PrismaClientKnownRequestError &&
         ["P2002", "P2003", "P2025"].includes(error.code);
-      const permanent = domainError || databaseIntegrityError;
+      const permanent = domainError || databaseIntegrityError ||
+        ratingError && error.code !== "RATING_TRANSACTION_CONFLICT";
       const exhausted = operation === "finished" && (p.finishAttempts ?? 0) >= 5;
       if (permanent || exhausted) p.resultBlocked = true;
       // Prisma diagnostics can contain values. Log safe identifiers, never tokens/names.
       this.logger.error(
         { event: "match:persistence_failed", operation, roomId: p.roomId, matchId: p.matchId,
-          code: domainError ? error.code : databaseIntegrityError ? "MATCH_RESULT_INVALID" :
+          code: domainError || ratingError ? error.code : databaseIntegrityError ? "MATCH_RESULT_INVALID" :
             exhausted ? "MATCH_RESULT_RETRY_EXHAUSTED" : "MATCH_PERSISTENCE_UNAVAILABLE" },
         p.resultBlocked ? "Match persistence failed; runtime preserved, automatic retries stopped" :
           "Match persistence failed; runtime preserved and projection queued for retry",

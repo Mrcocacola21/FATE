@@ -41,6 +41,7 @@ function attachRoomArmies(
 
 export function isGameModeLocked(room: GameRoom): boolean {
   return (
+    !!room.reservedUserIds ||
     room.state.phase !== "lobby" ||
     !!room.state.pendingRoll ||
     !!room.draftState

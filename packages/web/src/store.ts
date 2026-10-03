@@ -1,3 +1,5 @@
+import { queue as matchmakingQueue } from "./matchmaking/store";
+import type { MatchType } from "./matches/matchType";
 import { create } from "zustand";
 import type {
   GameAction,
@@ -97,6 +99,7 @@ export interface PendingLokiLaughtOption {
 
 const defaultRoomMeta: RoomMeta = {
   roomMode: "normal",
+  matchType: "CASUAL",
   gameMode: "standard",
   draftState: null,
   draftPool: [],
@@ -158,6 +161,7 @@ interface GameStore {
     role: PlayerRole;
     name?: string;
     roomMode?: "normal" | "test";
+    matchType?: MatchType;
     debugToken?: string;
   }) => Promise<void>;
   leaveRoom: () => void;
@@ -249,6 +253,33 @@ import { multiplayerAccessToken, redirectToMultiplayerLogin } from "./auth/multi
 import { ApiError } from "./api/client";
 
 let socket: WebSocket | null = null;
+let subscription: { socket: WebSocket; userId: string; promise: Promise<void>; active: boolean; requestId: string } | null = null;
+const subscriptionRequests = new Map<string, { resolve(): void; reject(error: Error): void }>();
+export async function subscribeMatchmaking(): Promise<void> {
+  const owner = authStore.getState().user?.id;
+  const accessToken = await authStore.getState().getValidAccessToken();
+  if (!owner || !accessToken || authStore.getState().user?.id !== owner) throw new ApiError("AUTH_REQUIRED");
+  const ws = await useGameStore.getState().connect();
+  if (subscription?.socket === ws && subscription.userId === owner) return subscription.promise;
+  matchmakingQueue.newConnection();
+  const requestId = crypto.randomUUID();
+  const promise = new Promise<void>((resolve, reject) => {
+    const timer = setTimeout(() => { subscriptionRequests.delete(requestId); reject(new ApiError("NETWORK_ERROR")); }, 10000);
+    subscriptionRequests.set(requestId, {
+      resolve: () => { clearTimeout(timer); subscriptionRequests.delete(requestId); resolve(); },
+      reject: error => { clearTimeout(timer); subscriptionRequests.delete(requestId); reject(error); },
+    });
+    ws.send(JSON.stringify({ type: "matchmakingSubscribe", accessToken, requestId }));
+  });
+  subscription = { socket: ws, userId: owner, promise, active: false, requestId };
+  void promise.catch(() => { if (subscription?.promise === promise) subscription = null; });
+  return promise;
+}
+export function unsubscribeMatchmaking(): void {
+  if (subscription?.socket.readyState === WebSocket.OPEN)
+    subscription.socket.send(JSON.stringify({ type: "matchmakingUnsubscribe" }));
+  subscription = null;
+}
 let connectPromise: Promise<WebSocket> | null = null;
 let reconnectPromise: Promise<void> | null = null;
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
@@ -278,6 +309,14 @@ function handleServerMessage(
   get: () => GameStore,
 ) {
   switch (msg.type) {
+    case "matchmakingStatus":
+    case "matchmakingFound":
+      if (subscription?.active && subscription.userId === authStore.getState().user?.id)
+        matchmakingQueue.event(msg);
+      return;
+    case "matchmakingSubscribed":
+      if (subscription?.requestId === msg.requestId) subscription.active = true;
+      subscriptionRequests.get(msg.requestId)?.resolve(); return;
     case "joinAck": {
       reconnectAttempts = 0;
       if (reconnectTimer) {
@@ -373,7 +412,9 @@ function handleServerMessage(
       };
       const nextMeta: RoomMeta = {
         roomMode: incomingMeta.roomMode ?? prevMeta.roomMode ?? "normal",
+        matchType: incomingMeta.matchType ?? "CASUAL",
         gameMode: incomingMeta.gameMode ?? prevMeta.gameMode ?? "standard",
+        gameModeLocked: incomingMeta.gameModeLocked ?? prevMeta.gameModeLocked ?? false,
         draftState:
           incomingMeta.draftState !== undefined
             ? incomingMeta.draftState
@@ -481,7 +522,7 @@ function handleServerMessage(
       return;
     }
     case "error": {
-      if (["AUTH_REQUIRED", "INVALID_ACCESS_TOKEN", "RESUME_IDENTITY_MISMATCH", "INVALID_RESUME_TOKEN", "SEAT_CONNECTION_REPLACED"].includes(msg.code ?? "")) {
+      if (["AUTH_REQUIRED", "INVALID_ACCESS_TOKEN", "RESUME_IDENTITY_MISMATCH", "INVALID_RESUME_TOKEN", "SEAT_CONNECTION_REPLACED", "SEAT_OWNED_BY_ANOTHER_USER", "MATCHMAKING_IN_QUEUE", "MATCHMAKING_ALREADY_IN_MATCH"].includes(msg.code ?? "")) {
         suppressAutoReconnect = true;
         set(() => ({ joinError: msg.message }));
       }
@@ -504,7 +545,7 @@ function openSocket(
   if (connectPromise) return connectPromise;
 
   set(() => ({ connectionStatus: "connecting" }));
-  const openedSocket = connectGameSocket((msg) => handleServerMessage(msg, set, get));
+  const openedSocket = connectGameSocket((msg) => { if (socket === openedSocket) handleServerMessage(msg, set, get); });
   socket = openedSocket;
 
   connectPromise = new Promise((resolve, reject) => {
@@ -518,6 +559,8 @@ function openSocket(
       if (socket !== openedSocket) return;
       connectPromise = null;
       socket = null;
+      subscription = null;
+      for (const pending of subscriptionRequests.values()) pending.reject(new ApiError("NETWORK_ERROR"));
       set((state) => ({
         ...buildLeaveResetState(state, state.joined ? "Disconnected" : undefined, true),
         connectionStatus: "disconnected",

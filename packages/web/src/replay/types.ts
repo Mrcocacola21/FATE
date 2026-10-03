@@ -1,3 +1,4 @@
+import type { MatchType } from "../matches/matchType";
 import type { ReplayView } from "rules";
 import type { MatchOpponent, MatchOutcome } from "../matches/types";
 
@@ -14,6 +15,7 @@ export interface ReplayTimelineEntry {
 export interface ReplayMetadata {
   matchId: string;
   status: "FINISHED";
+  matchType: MatchType;
   gameMode: string;
   initialRevision: number;
   finalRevision: number;

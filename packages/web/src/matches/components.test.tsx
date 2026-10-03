@@ -28,6 +28,7 @@ import type {
 const item: MatchHistoryItem = {
   id: "match-one",
   status: "FINISHED",
+    matchType: "CASUAL",
   result: "WIN",
   seat: "P1",
   gameMode: "classic",

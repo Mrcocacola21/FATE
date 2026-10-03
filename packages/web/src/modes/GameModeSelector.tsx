@@ -26,7 +26,7 @@ export function GameModeSelector({
             {t("modes.selectorTitle")}
           </div>
           <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-            {isHost ? t("modes.hostHint") : t("modes.readOnlyHint")}
+            {disabled ? t("errors.modeLocked") : isHost ? t("modes.hostHint") : t("modes.readOnlyHint")}
           </p>
         </div>
         <StatusBadge tone={disabled ? "neutral" : "info"}>

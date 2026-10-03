@@ -1,3 +1,4 @@
+import { MatchTypeBadge } from "../../matches/MatchTypeBadge";
 import type { GameShellViewModel } from "../gameshell-content/hooks/useGameShellViewModel";
 import type { FC } from "react";
 import { ThemeToggle } from "../../components/ThemeToggle";
@@ -46,6 +47,7 @@ export const GameTopBar: FC<GameTopBarProps> = ({ vm, compact = false }) => {
               <StatusBadge tone={vm.role === "spectator" ? "info" : "neutral"}>
                 {vm.role ? t(`roles.${vm.role}`) : t("roles.noRole")}
               </StatusBadge>
+              {vm.roomMeta && <MatchTypeBadge matchType={vm.roomMeta.matchType} />}
               {vm.roomMeta?.roomMode === "test" ? (
                 <StatusBadge tone="special">{t("testRoom.badgeSandbox")}</StatusBadge>
               ) : null}

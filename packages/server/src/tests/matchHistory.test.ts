@@ -13,6 +13,7 @@ async function run() {
   const match: HistoryMatch = {
     id: randomUUID(),
     status: "FINISHED",
+    isRated: false,
     gameMode: "classic",
     createdAt: new Date("2026-01-01T12:00:00Z"),
     startedAt: new Date("2026-01-01T12:01:00Z"),
@@ -58,6 +59,8 @@ async function run() {
     assert(matchHistoryQuerySchema.safeParse({ result }).success);
   const item = toMatchHistoryItem(match, a);
   assert.equal(item.result, "WIN");
+  assert.equal(item.matchType, "CASUAL");
+  assert.equal(toMatchHistoryItem({ ...match, isRated: true }, a).matchType, "RATED");
   assert.equal(item.opponent?.displayName, "Old Bob");
   assert.equal(item.opponent?.username, "Bob_now");
   assert.equal(item.durationMs, 180000);

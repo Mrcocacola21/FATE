@@ -1,4 +1,5 @@
 const paths = {
+  leaderboard: "M4 20h16 M6 20v-8h4v8 M10 20V4h4v16 M14 20V9h4v11",
   settings: "M4 7h16 M4 17h16 M8 4v6 M16 14v6",
   menu: "M4 6h16 M4 12h16 M4 18h16",
   close: "m6 6 12 12 M18 6 6 18",

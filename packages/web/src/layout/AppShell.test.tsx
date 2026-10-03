@@ -89,6 +89,18 @@ test("sidebar renders primary navigation and highlights history details/public h
   }
 });
 
+test("leaderboard navigation is present and active, including a trailing slash", () => {
+  reset();
+  for (const path of ["/leaderboard", "/leaderboard/"]) {
+    const renderer = mount(sidebar(), path);
+    try {
+      const active = renderer.root.findAllByType("a").filter((node) => node.props["aria-current"] === "page");
+      assert.equal(active.length, 1);
+      assert.equal(active[0].props.href, "/leaderboard");
+    } finally { act(() => renderer.unmount()); }
+  }
+});
+
 test("Heartbreak and entire DEV section are absent from the rendered tree when test rooms are disabled", () => {
   reset();
   for (const enabled of [false, true]) {

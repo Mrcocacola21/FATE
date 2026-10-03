@@ -1,3 +1,4 @@
+import { validateMatchType, type MatchType } from "./matches/matchType";
 // packages/server/src/store.ts
 
 import {
@@ -35,6 +36,7 @@ export interface ActionLogEntry {
 export interface GameRoom {
   id: string;
   matchId: string | null;
+  readonly matchType: MatchType;
   seed: number;
   rng: RNG;
   testDiceRng: DebugDiceRNG | null;
@@ -53,6 +55,8 @@ export interface GameRoom {
   seatTokens: { P1: string | null; P2: string | null };
   seatIdentities: Record<PlayerId, ConnectionIdentity | null>;
   participantsLocked: boolean;
+  /** Immutable competitor ownership, independent of transport/grace tokens. */
+  reservedUserIds?: Record<PlayerId, string>;
   spectators: Set<string>;
   figureSets: Partial<Record<PlayerId, HeroSelection>>;
 }
@@ -66,9 +70,11 @@ export interface CreateGameOptions {
   hostConnId?: string | null;
   roomMode?: "normal" | "test";
   gameMode?: GameModeId;
+  matchType?: MatchType;
 }
 
 export interface RoomSummary {
+  matchType: MatchType;
   id: string;
   createdAt: number;
   phase: GameState["phase"];
@@ -122,6 +128,7 @@ export function createGameRoomWithId(id: string, options: CreateGameOptions = {}
   const seed = options.seed ?? nextSeed();
   const rng = new SeededRNG(seed);
   const roomMode = options.roomMode ?? "normal";
+  const matchType = validateMatchType(options.matchType, roomMode);
   const gameMode = options.gameMode ?? "standard";
   const hostSeat: PlayerId = options.hostSeat ?? "P1";
   const hostConnId = options.hostConnId ?? null;
@@ -168,6 +175,7 @@ export function createGameRoomWithId(id: string, options: CreateGameOptions = {}
   const room: GameRoom = {
     id,
     matchId: null,
+    matchType,
     seed,
     rng: roomMode === "test" ? new DebugDiceRNG(rng) : rng,
     testDiceRng: null,
@@ -189,6 +197,7 @@ export function createGameRoomWithId(id: string, options: CreateGameOptions = {}
     spectators: new Set<string>(),
     figureSets: {},
   };
+  Object.defineProperty(room, "matchType", { value: matchType, writable: false, configurable: false, enumerable: true });
   if (roomMode === "test") {
     room.testDiceRng = room.rng as DebugDiceRNG;
   }
@@ -271,8 +280,8 @@ export function cleanupGameRooms(
 export function listRoomSummaries(): RoomSummary[] {
   return listGameRooms().map((room) => {
     const players = {
-      P1: !!room.seats.P1,
-      P2: !!room.seats.P2,
+      P1: !!room.seats.P1 || !!room.reservedUserIds?.P1,
+      P2: !!room.seats.P2 || !!room.reservedUserIds?.P2,
     };
     const ready = room.state.playersReady;
     const canStart =
@@ -286,6 +295,7 @@ export function listRoomSummaries(): RoomSummary[] {
 
     return {
       id: room.id,
+      matchType: room.matchType,
       createdAt: room.createdAt,
       phase: room.state.phase,
       players,

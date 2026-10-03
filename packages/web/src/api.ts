@@ -1,3 +1,4 @@
+import type { MatchType } from "./matches/matchType";
 import type {
   GameAction,
   PlayerView,
@@ -10,6 +11,7 @@ import type {
 import { API_BASE, WS_BASE } from "./api/config";
 
 export interface CreateGameResponse {
+  matchType: MatchType;
   gameId: string;
   seed: number;
   views: { P1: PlayerView; P2: PlayerView };
@@ -28,6 +30,7 @@ export interface ActionResponse {
 }
 
 export interface RoomSummary {
+  matchType: MatchType;
   id: string;
   createdAt: number;
   phase: "lobby" | "placement" | "battle" | "ended";
@@ -40,6 +43,7 @@ export interface RoomSummary {
 }
 
 export interface CreateRoomResponse {
+  matchType: MatchType;
   roomId: string;
   roomMode: "normal" | "test";
   gameMode: GameModeId;
@@ -111,17 +115,27 @@ export async function listRooms(): Promise<RoomSummary[]> {
   return (await res.json()) as RoomSummary[];
 }
 
+export async function lookupRoom(id: string): Promise<RoomSummary> {
+  const res = await fetch(`${API_BASE}/rooms/${encodeURIComponent(id)}`);
+  if (!res.ok) throw new Error("Room not found");
+  return await res.json() as RoomSummary;
+}
+
 export async function createRoom(params?: {
   seed?: number;
   arenaId?: string;
   roomMode?: "normal" | "test";
   gameMode?: GameModeId;
+  matchType?: MatchType;
+  accessToken?: string;
   debugToken?: string;
 }): Promise<CreateRoomResponse> {
+  const body = params ? { ...params } : {};
+  delete body.accessToken;
   const res = await fetch(`${API_BASE}/rooms`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(params ?? {}),
+    headers: { "Content-Type": "application/json", ...(params?.accessToken ? { Authorization: `Bearer ${params.accessToken}` } : {}) },
+    body: JSON.stringify(body),
   });
 
   if (!res.ok) {

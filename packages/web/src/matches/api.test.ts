@@ -9,6 +9,7 @@ import { translate, setLanguage } from "../i18n";
 const metadata = {
   id: "id",
   status: "FINISHED",
+    matchType: "CASUAL",
   gameMode: "classic",
   createdAt: "2026-01-01T00:00:00Z",
   startedAt: null,
@@ -29,6 +30,8 @@ test("history and details decoders validate responses and remove unexpected priv
   });
   assert.equal(parsed.items[0].durationMs, null);
   assert.equal(parsed.items[0].opponent, null);
+  assert.equal(parsed.items[0].matchType, "CASUAL");
+  assert.equal(parseMatchHistory({ ...history, items: [{ ...item, matchType: "RATED" }] }).items[0].matchType, "RATED");
   assert.doesNotMatch(JSON.stringify(parsed), /secret|passwordHash|private/);
   const identity = { userId: null, seat: "P1", displayName: "Old Name" };
   const detail = parseMatchDetails({
@@ -43,6 +46,8 @@ test("history and details decoders validate responses and remove unexpected priv
     null,
     {},
     { ...history, items: [{ ...item, result: "banana" }] },
+    { ...history, items: [{ ...item, matchType: "banana" }] },
+    { ...history, items: [{ ...item, matchType: undefined }] },
     { ...history, items: [{ ...item, durationMs: -1 }] },
     { ...history, pagination: { ...history.pagination, page: 0 } },
     { ...history, items: [{ ...item, createdAt: "invalid-date" }] },

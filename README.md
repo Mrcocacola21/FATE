@@ -24,6 +24,7 @@ Follow active progress and implementation notes in the [Developer Log](https://t
 - [Match History](#match-history)
 - [Player Statistics Backend](#player-statistics-backend)
 - [Player Statistics UI](#player-statistics-ui-phase-14)
+- [Leaderboard](#leaderboard-phase-16)
 - [Persistent Action Log](#persistent-action-log)
 - [Authentication Backend](#authentication-backend)
 - [Authentication Frontend](#authentication-frontend)
@@ -227,7 +228,7 @@ cannot rewrite a failed start snapshot. This retry buffer is process-local: proc
 pending work, and shutdown reports outstanding projections. Restart recovery is a later phase.
 
 Persistent MatchAction writes, completed results, match history and private GameState checkpoints
-are implemented, including completed-match Replay API/UI and derived player statistics. Restart recovery and ratings remain deferred.
+are implemented, including completed-match Replay API/UI, derived player statistics and the Phase 15 Glicko-2 backend. Runtime restart recovery remains deferred.
 The result detail endpoint and history APIs/UI read completed durable records.
 
 Verification uses explicit in-memory persistence injection for the normal runtime test suite,
@@ -346,7 +347,7 @@ or snapshots. Non-FINISHED matches return 409 `MATCH_NOT_FINISHED`, unknown UUID
 sanitized 503 `MATCH_PERSISTENCE_UNAVAILABLE`. Errors use `{ "error": { "code": "...", "message": "..." } }`.
 JSON summaries are whitelisted again on reads. Test/sandbox rooms have no competitive Match
 and never finalize results. Persistent action history and match history UI/list APIs are implemented;
-private snapshots, completed-match replay and player statistics are implemented; ratings remain deferred.
+private snapshots, completed-match replay, player statistics and the Glicko-2 rating backend are implemented.
 
 Apply incremental migration `20261002050000_persistent_match_results` with
 `npm run -w server db:migrate:deploy`. Focused extraction/retry tests run in `npm run test`;
@@ -722,7 +723,7 @@ Explicit selects and DTOs exclude auth/private data, result payloads, hidden sta
 no schema or index migration was needed. No action log is loaded for list or details UI.
 Filters/page live in the URL, changes reset page 1, and loading/error/empty states are localized
 in English and Ukrainian. Completed-match replay is available from Match Details. Profile statistics use the aggregate backend endpoint;
-ratings and leaderboards remain future phases.
+the Glicko-2 backend and the competitive Leaderboard are implemented. Rating-history charts remain deferred.
 
 Focused checks:
 
@@ -823,7 +824,7 @@ Match relation read. SELECT count stays bounded as match count grows. No MatchAc
 profile, resultData or private state payload is loaded. Existing participant user indexes and Match
 primary/unique keys serve this user-scoped query; no redundant index or schema migration is added.
 Computation is on demand, with O(n) projected data and arithmetic at the current project scale.
-There is no materialized stats table, cache, scheduled aggregation, rating or leaderboard.
+Statistics have no materialized table, cache or scheduled aggregation. Rating is a separate Phase 15 subsystem; Phase 16 Leaderboard uses its own rated-only query.
 Phase 14's Profile statistics UI consumes this endpoint directly.
 
 **Hero/Figure Set statistics are unavailable and `byHero`/`byFigureSet` are omitted.** Participant
@@ -885,7 +886,7 @@ dependency**. No database or backend changes are required by this frontend phase
 Historical hero/Figure Set analytics remain hidden because the current API does not expose
 reliable `byHero`/`byFigureSet` data or historical coverage. Current Figure Set choices are never
 used as historical usage. Hero breakdown can be added only when the backend reliably supplies it.
-Glicko-2 rating, rating-history visualization and Leaderboard are deferred; this UI includes no
+The Glicko-2 backend is implemented in Phase 15 and the separate Leaderboard in Phase 16. Rating-history visualization is deferred; this Profile statistics UI includes no
 rating, rank, percentile, skill score or future-feature placeholder.
 
 ```powershell
@@ -957,7 +958,7 @@ JSON is retained separately for future replay verification. Historical empty jou
 return an empty page.
 
 The durable journal supports completed Match History, Match Snapshots and Replay API/UI.
-Restart Recovery and Rating remain future phases. Profile statistics UI is implemented in Phase 14.
+Runtime Restart Recovery remains a future phase. Rating backend is implemented in Phase 15; Profile statistics UI is implemented in Phase 14.
 
 ```bash
 npm run -w server test
@@ -1107,8 +1108,203 @@ an already running game remains mounted when navigating other pages, without rep
 The existing Vercel SPA fallback covers direct entry and refresh.
 
 No Phase 12 schema change or migration is required. Autoplay, speed controls, branching/export/sharing
-systems, live spectating, restart recovery, statistics and ratings are outside this phase.
+systems, live spectating, restart recovery, statistics and ratings are outside this replay phase.
+
+## Glicko-2 Rating (Phase 15)
+
+The backend implements [Mark Glickman's official revised Glicko-2 algorithm](https://glicko.net/glicko/glicko2.pdf)
+directly, without a third-party rating package. Its pure module lives in
+`packages/server/src/rating/{glicko2,types,constants}.ts` and imports no database, transport or match code.
+External rating/RD convert to internal mu/phi using scale `173.7178`; volatility is updated using the
+official bracketed Illinois iteration, then the rating/RD return to the external scale. Both bracket
+search and iteration have a defensive limit of 100; invalid/non-finite input or non-convergence throws
+`Glicko2Error` before any transaction can commit. No arbitrary rating/RD/volatility clamps are applied.
+
+Canonical new-player state is **rating 1500, ratingDeviation 350, volatility 0.06, ratedGames 0**.
+Algorithm options default to **tau 0.5, epsilon 0.000001** in `rating/constants.ts`. Trusted server code
+can configure tau/options through the third `RatingService` constructor argument; HTTP clients cannot.
+Existing registration still creates `Rating` atomically. Older users without a row read synthesized
+defaults; their first eligible game creates the row inside the rating transaction. Public reads never
+materialize rows or repair ratings. PostgreSQL double precision stores full values; no destructive rounding.
+
+FATE deliberately treats **one completed rated match as one rating period with one opponent**.
+There is no time-based inactivity inflation or background inactivity job. The pure algorithm supports
+an empty mathematical period, but the application never invokes it on elapsed time. This online product
+decision differs from the multi-game periods recommended by the specification.
+
+`Match.isRated` defaults to **false**, including all existing rows. Current room creation remains casual;
+trusted `MatchService.createWaitingMatch` callers may explicitly designate a new match with `isRated: true`.
+No Rated/Casual selector or client-controlled opt-in exists yet. Historical matches are never automatically
+backfilled. The one canonical `eligibleRatingPlayers` function requires an explicitly rated `FINISHED`
+match, a supported `standard`/`classic`/`draft` mode, a durable completion date/revision and exactly two
+distinct registered P1/P2 participants. Guests, self-play, missing seats, unknown/debug/sandbox modes,
+cancelled and unfinished matches cannot affect rating. Heartbreak/test rooms never create a persistent
+Match and are excluded at every lifecycle boundary. Win/loss outcomes must agree with canonical winner
+and loser seats/user IDs. The existing real `chessMutualKingDefeat` draw supports score 0.5 for each player;
+normal WIN/LOSS scores are 1/0. Corrupt competitive results fail without rating mutation.
+
+Persistence reuses the existing **`Rating`** model (the PlayerRating equivalent) and **`RatingHistory`**.
+History adds opponent user ID, participant-relative result and `ratedGameNumber`, together with existing
+before/after rating, RD, volatility and processing timestamp. New histories populate all these fields;
+nullable additions preserve foundation-era records without inventing data. Existing unique
+`(userId, matchId)` ensures at most one history per player/match; new unique `(userId, ratedGameNumber)`
+captures a durable per-player processing order even when timestamps tie. History is append-only in
+application code. Existing deletion semantics remain: owner User deletion is restricted by history;
+Match/opponent deletion nulls its reference and preserves the audit. Current Rating/Profile rows keep
+their existing cascade policy. Existing rating-descending and user/date indexes are reused.
+
+`MatchService.finalizeMatch` first commits canonical results after the action/snapshot journal barrier,
+then invokes `RatingService.processRatedMatch`. That separate **Serializable** transaction:
+
+1. Locks/loads Match, checks eligibility, marker and history consistency.
+2. Locks both registered User rows in sorted ID order (also protecting missing-row initialization).
+3. Obtains both pre-match rating states and computes **both** new states from those original values.
+4. Updates both ratings and increments each `ratedGames` once, inserts both immutable histories,
+   and sets `Match.ratingProcessedAt` to the same processing timestamp.
+
+All rating writes commit together or all roll back. Concurrent duplicates return a clean
+`alreadyProcessed: true` with exactly two histories and one logical effect. A processed marker with
+missing/inconsistent histories raises a domain error. Serializable isolation plus User locks prevents
+lost updates across different matches sharing players, including concurrent first games. Actual successful
+serialization order is persisted in `ratedGameNumber`; it is processing order, not gameplay finish order.
+Delayed recovery uses the current committed rating and appends a new period, without rewriting history.
+Prisma `P2034` and raw-query `P2010` carrying only PostgreSQL SQLSTATE `40001`/`40P01` are retried with
+25/50/75/100 ms backoff, at most five attempts. Domain/math/integrity errors are not retried by this service.
+Logs include safe match ID, semantic outcome, alreadyProcessed and retry count, never User objects/credentials.
+
+If rating fails after completion, the durable Match stays `FINISHED` with `ratingProcessedAt = null`.
+The existing bounded lifecycle retries and drain include rating. After process restart, trusted tooling
+can call **`processRatedMatch(matchId)`** using only persisted data, or retry canonical finalization.
+There is no automatic startup scan, full background worker, repair HTTP endpoint or historical backfill.
+The pending-match index `(isRated, status, ratingProcessedAt)` supports later operational recovery tooling.
+
+Public competitive data follows existing public profile/statistics policy:
+
+| Endpoint | Contract |
+| --- | --- |
+| `GET /api/users/:id/rating` | `{userId, rating, ratingDeviation, volatility, ratedGames}`; defaults for a valid unrated user. |
+| `GET /api/users/:id/rating/history?page=1&limit=20` | Safe before/after history DTOs, opponent/result, period number, ISO processing date and derived `ratingDelta`; `{items, pagination:{page,limit,total,totalPages}}`. |
+
+History returns newest processed periods first, with timestamp/ID fallbacks for unnumbered legacy rows.
+Default page/limit are 1/20; limit cap is 100. Pagination count/items share a RepeatableRead snapshot.
+Both endpoints validate UUIDs and use `Cache-Control: no-store`; missing users return 404, invalid
+query/UUID returns 400, infrastructure/internal failures are sanitized. No private User, match state,
+email, auth session or credentials are returned. Match details, statistics and replay reads never process rating.
+There is no writable rating endpoint, reset/editor, client-side calculation, ranking tier,
+matchmaking, profile redesign or rating-history chart. Phase 16 adds the read-only Leaderboard below.
+
+Apply new incremental migration **`20261003010000_glicko2_rating`** using `prisma migrate deploy`.
+Prior production migrations are unchanged; production Render/Neon deployment is a separate operation.
+For verification, first set both DATABASE_URL and DIRECT_URL to a guarded local TEST_DATABASE_URL,
+apply the full migration chain to a clean local test DB and check migration status. Never reset/push production.
+
+```bash
+npm run -w server test:rating
+npm run -w server test:rating:db
+```
+
+The reference calculation yields `1464.0506705393013 / RD 151.51652412385727 / sigma 0.059995984286488495`.
+The publication rounds intermediates and reports approximately `1464.06 / 151.52 / 0.05999`; tests use
+tolerances plus tighter full-precision regression assertions. Tests cover WIN/LOSS/DRAW, uncertainty,
+numeric validation, convergence limits, rollback at the final write, same-match concurrency, shared-player
+concurrency and lazy initialization across independent clients, coherent history, eligibility, crash repair,
+real lifecycle journal/drain/retry, public pagination, read-only GET operations and audit constraints.
 See [the Phase 12 implementation report](docs/phase12-implementation-report.md) for contracts and verification.
+
+## Leaderboard (Phase 16)
+
+Public `GET /api/leaderboard` and `/leaderboard` expose competitive standings through
+`leaderboardRoutes -> LeaderboardService -> LeaderboardRepository -> PostgreSQL/Prisma`.
+The sidebar includes Leaderboard with its active state; public profiles are linked at `/users/:username`.
+Existing Vercel SPA rewrites support direct navigation and refresh.
+
+The current PlayerRating equivalent is **`Rating`**. Its precise persisted rating, ratingDeviation and
+ratedGames are authoritative. Reads never recalculate Glicko-2, increase RD, recover matches or write history.
+The UI rounds rating/RD for display, labels RD **Uncertainty**, and explains that lower values mean a more
+established rating. Volatility remains internal to this page.
+
+Qualification uses **`LEADERBOARD_MIN_RATED_GAMES`**, default **5**; the optional non-secret environment
+override must be an integer from 1 through 2147483647. Configuration is validated at startup. RD is not
+an additional qualification threshold. Players with zero rated games are excluded. Players with 1–4
+games under the default policy appear in **Provisional**, with raw rating/RD, progress, games remaining
+and **`ratingRank: null`**. Qualified players appear in **Ranked**, which is the default list. The response
+includes `qualification.minRatedGames`; the frontend never hardcodes the policy threshold.
+
+Leaderboard **games played means `Rating.ratedGames`**. Performance aggregates use durable
+`MatchParticipant.outcome` for rated FINISHED matches with a non-null ratingProcessedAt/finishedAt,
+a supported standard/classic/draft mode, and a matching numbered successful RatingHistory result.
+The processing marker/audit attribution prove successful canonical rating processing; reads do not
+revalidate/reprocess historical opponents after deletion. Casual, pending/failed rating processing,
+test/debug/sandbox and cancelled matches do not affect performance or qualification. Normal test rooms
+never persist these matches. Win rate is **rated wins / ratedGames**, including draws in the denominator.
+Last activity is **MAX(Match.finishedAt)**, independent of login/profile/casual activity. Career Statistics
+semantics are unchanged and can include casual games.
+
+Rating counters survive Match deletion in the existing schema. If available processed result count
+does not equal ratedGames, the row keeps its authoritative rating/games/status/rank and exposes
+`performanceAvailable: false` with wins/losses/draws/winRate/lastActivity all null. The UI shows unavailable
+performance with an explanation, instead of presenting contradictory numbers. Pending rated completion
+before the atomic rating commit affects neither the current counter nor performance. Missing metrics
+sort last in both directions.
+
+Canonical competitive order is **rating DESC, ratingDeviation ASC, ratedGames DESC, userId ASC**.
+PostgreSQL `ROW_NUMBER()` produces global ordinal ratingRank before requested sorting/pagination.
+That rank stays unchanged when viewing ascending rating, games played, win rate or last activity.
+All sorts have deterministic secondary keys; only whitelisted Prisma SQL fragments select column/order.
+Parameters, qualification, game modes, limit and offset are bound values. Count and rows share a
+RepeatableRead snapshot. There are **two SELECT queries** per request, with database aggregation/sorting/
+pagination and no per-player queries or full-history transfer to Node. Existing rating, participant,
+match-eligibility and history unique indexes suffice at current scale; Phase 16 needs no migration,
+materialized view/table, cache, polling, cron or socket.
+
+Query contract (unknown fields and invalid values return the existing **400 INVALID_REQUEST**):
+
+| Parameter | Default | Supported values |
+| --- | --- | --- |
+| status | qualified | qualified, provisional |
+| page | 1 | positive integer, max 21474836 |
+| limit | 20 | integer 1–100 |
+| sort | rating | rating, gamesPlayed, winRate, lastActivity |
+| order | desc | asc, desc |
+
+Response:
+
+```json
+{
+  "items": [{
+    "ratingRank": 12,
+    "user": { "id": "uuid", "username": "Tactician", "displayName": "Player", "avatarUrl": null },
+    "rating": 1584.72, "ratingDeviation": 81.34, "ratedGames": 47,
+    "wins": 29, "losses": 18, "draws": 0, "winRate": 0.6170212765957447,
+    "lastActivity": "2026-10-03T08:00:00.000Z", "performanceAvailable": true,
+    "status": "QUALIFIED", "gamesUntilQualified": 0
+  }],
+  "pagination": { "page": 1, "limit": 20, "total": 236, "totalPages": 12 },
+  "qualification": { "minRatedGames": 5 }
+}
+```
+
+Responses are no-store and contain only current public profile identity and competitive data. No
+authentication is required. Internal/infrastructure errors are sanitized using existing API conventions.
+No email, preferences, tokens, sessions or match payloads are selected.
+
+The responsive interface uses a desktop table and compact cards on tablet/mobile, restrained top-three
+rank accents, avatar fallbacks, long-name wrapping, keyboard-accessible tabs and sortable headers,
+skeleton loading, both empty states, errors/retry and compact Previous/Page/Next pagination. Filter,
+sort/direction/page/limit live in the URL; changing tab/sort resets page 1 and malformed URLs normalize.
+English and Ukrainian translations include the server-provided threshold and uncertainty explanation.
+
+```bash
+npm run -w server test:leaderboard
+npm run -w server test:leaderboard:db
+npm run -w web test:leaderboard
+npm run -w web test:leaderboard:e2e
+```
+
+Database tests require guarded LOCAL TEST PostgreSQL with the full migration chain deployed. Browser
+smoke tests use HTTP fixtures and write screenshots to `packages/web/test-results/leaderboard/`.
+See [the Phase 16 implementation report](docs/phase16-implementation-report.md) for exact verification.
+Full Casual/Rated UX, Matchmaking Queue, seasons, tiers/divisions and advanced filters remain deferred.
 
 ```bash
 npm run -w server test:replay-api
@@ -1136,3 +1332,183 @@ npm run -w web test:replay:e2e
 Track implementation updates, architecture notes, and release progress in the Telegram channel:
 
 - https://t.me/FATE_Soul_Dev
+## Casual / Rated matches (Phase 17)
+
+New rooms default to **Casual**. Choose **Rated** explicitly in Create Match to
+play a competitive match whose eligible result affects Glicko-2. This choice is
+independent of the existing `gameMode` (`standard`, `classic`, `draft`); both types
+use the same rules and the same GameRoom lifecycle.
+
+Casual matches persist their results, actions and snapshots normally, appear in
+Match History and support replay. They count toward general career statistics,
+but never change Rating (rating, deviation, volatility or ratedGames), create
+RatingHistory, or set ratingProcessedAt. They do not affect leaderboard rank,
+qualification, rated wins/losses/win rate or last rated activity.
+
+Rated matches require authenticated, distinct competitors. No existing Rating
+row or completed placement games are required. Classification is immutable after
+creation and visible in the room browser, Join by ID, pre-match screen, game HUD,
+history, details and replay header. Eligible completed Rated matches use the
+existing atomic, idempotent Glicko-2 processing.
+
+The durable source of truth remains `Match.isRated` (default `false`). API DTOs
+expose only `matchType: "CASUAL" | "RATED"`. Historical rows retain their existing
+classification; unrated rows stay Casual and are never backfilled into rating.
+Phase 17 needs no schema migration or environment flag. Test/debug/Heartbreak
+rooms are always Casual and do not create persistent matches; Heartbreak stays
+hidden when test rooms are disabled. Requests for Rated test rooms are rejected.
+
+API contracts:
+
+- `POST /rooms` and `POST /api/games`: optional `matchType` (omitted means Casual),
+  independent optional `gameMode`; Rated creation requires a verified Bearer token.
+- WebSocket `joinRoom` with `mode: "create"`: optional `matchType`; Rated creation
+  requires `accessToken`. `mode: "join"` must omit `matchType` because it cannot
+  redefine the room's policy.
+- `GET /rooms` and public `GET /rooms/:id`: room summaries include `matchType`.
+  Join by ID resolves this metadata before enabling Join.
+- WebSocket `joinAck` and `roomState.meta`, completed-match history/details and
+  replay metadata include `matchType`, derived from authoritative room/DB data.
+- Stable classification errors include `INVALID_MATCH_TYPE`,
+  `RATED_MATCH_REQUIRES_AUTHENTICATION`, `RATED_MATCH_INVALID_PARTICIPANTS`,
+  `RATED_MATCH_SAME_USER` and `MATCH_TYPE_IMMUTABLE`.
+
+Verification: `npm run -w server test:match-types`,
+`npm run -w server test:match-types:db` (guarded local TEST_DATABASE_URL), and
+`npm run -w web test:match-types:e2e`. No matchmaking queue, automatic opponent
+matching, seasons, separate placement algorithm or rank-tier UI is implemented.
+
+
+## Rated Matchmaking Queue (Phase 18)
+
+Play now includes **Find Rated Match**, a game-mode selector, current rating, elapsed waiting
+time, the server's current search window and **Cancel search**. Create Match, Join by ID,
+Room Browser, Casual matches and Test/Sandbox rooms retain their existing paths. New and
+provisional players can queue; leaderboard qualification is not required.
+
+Only authenticated persistent Users may queue. The server uses `RatingService.getPlayerRating`
+(current Glicko-2 rating and RD); missing Rating rows use the canonical **1500 rating / 350 RD**.
+Neither request bodies nor frontend timers choose a rating or drive compatibility. `standard`,
+`draft` and `classic` are separate queues in the same service; only equal actual game modes pair.
+All resulting Matches explicitly persist `isRated=true` (the canonical `RATED` classification).
+
+Defaults, parsed once through typed server configuration:
+
+```dotenv
+MATCHMAKING_SERVER_PROCESSES=1
+MATCHMAKING_INITIAL_RATING_RANGE=100
+MATCHMAKING_RATING_RANGE_STEP=50
+MATCHMAKING_RANGE_STEP_SECONDS=15
+MATCHMAKING_MAX_RATING_RANGE=400
+RECONNECT_GRACE_MS=45000
+```
+
+Ranges must be nonnegative, step and interval positive, maximum at least initial, and values
+must fit validated integer bounds. The single periodic matcher ticks every second and is
+also scheduled after enqueue. It starts once, uses `unref()`, and drains in-flight creation
+before the normal MatchLifecycle shutdown. There are no per-user queue timers.
+
+`range(waitMs) = min(maxRange, initialRange + floor(max(0, waitMs) / stepMs) * rangeStep)`.
+Thus 0–14.999s accepts ±100, 15s ±150, 30s ±200, 45s ±250, 60s ±300, 75s ±350 and 90s+
+±400. Compatibility is **mutual**: `abs(A.rating-B.rating) <= min(A.range,B.range)`.
+The oldest available user is considered first, chooses the smallest compatible rating gap,
+then breaks ties by earliest joinedAt and userId. The small-queue scan is O(n²), and performs
+no per-candidate DB reads. RD is metadata, not a hidden compatibility formula. No ETA is shown.
+
+### HTTP and WebSocket contract
+
+All HTTP endpoints require `Authorization: Bearer <access token>`, return `Cache-Control:
+no-store`, and have a 60-requests/minute limit. POST is strict and rejects rating/RD/extra fields.
+
+| Method | Endpoint | Body / result |
+|---|---|---|
+| POST | `/api/matchmaking/queue` | `{ "gameMode": "standard" }`; idempotent current status |
+| GET | `/api/matchmaking/queue` | Current user's queue or established assignment |
+| DELETE | `/api/matchmaking/queue` | Cancel if QUEUED; harmless when absent; claim/result wins if already MATCHING/FOUND |
+
+The existing `/ws` game connection sends `{type:"matchmakingSubscribe",accessToken,requestId}`.
+The server authenticates the persistent account, registers this connection for user-based delivery,
+and acknowledges `{type:"matchmakingSubscribed",requestId}`. Subscribe precedes HTTP join so a
+connected delivery route exists. `{type:"matchmakingUnsubscribe"}` cancels unclaimed queue state
+and removes that connection's routing; ordinary socket close uses reconnect grace instead.
+No additional matchmaking WebSocket is opened.
+
+Server notifications have `{type:"matchmakingStatus"|"matchmakingFound",revision,status}`.
+Revision is monotonically increasing within this process; clients reset their revision gate when
+rebinding and ignore older events, old-account delivery and HTTP responses superseded by events.
+HTTP status responses also include `revision`, so a confirmed cancellation rejects older queued
+events even when HTTP delivery overtakes the WebSocket stream.
+
+```json
+{"type":"matchmakingStatus","revision":17,"status":{"status":"QUEUED","joinedAt":"2026-10-03T10:00:00.000Z","waitMs":30000,"rating":1512,"currentRange":200,"gameMode":"classic","available":true}}
+```
+
+```json
+{"type":"matchmakingFound","revision":19,"status":{"status":"MATCH_FOUND","matchId":"persistent-match-id","roomId":"runtime-room-id","seat":"P1","gameMode":"classic","matchType":"RATED","opponent":{"displayName":"Opponent"}}}
+```
+
+Statuses are `NOT_QUEUED`, `QUEUED`, `MATCHING` (claimed, durable creation/retry pending) and
+`MATCH_FOUND`. P1/P2 receive the same matchId/roomId with opposite seats. Only the opponent's
+public display-name snapshot is included, never email, credentials or rating internals.
+Stable errors include `AUTH_REQUIRED`, `UNAUTHORIZED` (expired/invalid HTTP token),
+`MATCHMAKING_INVALID_REQUEST`, `MATCHMAKING_CONNECTION_REQUIRED`, `MATCHMAKING_ALREADY_IN_MATCH`,
+`MATCHMAKING_IN_QUEUE`, `MATCHMAKING_CANCELLED`, `MATCHMAKING_UNAVAILABLE` and `RATE_LIMITED`.
+
+### Identity, claims and recovery policy
+
+A Map keyed by userId enforces one active entry. In-flight joins are coalesced, repeated joins
+preserve joinedAt, mode and expansion progress, and joining after a successful result returns
+that same result while its room is usable. Multiple tabs receive the same assignment.
+Normal competitor seats and in-flight competitor mutations block queue eligibility. Creating
+or joining another normal competitor flow while queued is rejected: cancel search first.
+Spectators and Test/Sandbox activity do not block queue eligibility.
+
+Pair selection transitions **both** entries to MATCHING synchronously before any await; concurrent
+ticks share one tracked pass. Cancellation before claim removes the entry; cancellation after
+claim returns MATCHING or MATCH_FOUND without cancelling the durable match. Seat assignment
+is randomly swapped using server crypto, independently of the normal game seed.
+
+MatchLifecycle stages a normal GameRoom privately. The existing MatchService/MatchRepository
+creation path atomically writes a WAITING Rated Match **and both MatchParticipants**, including
+User IDs and display-name snapshots. It publishes the normal room only after this succeeds,
+then emits Match Found. Immutable user-ID reservations protect both seats before either client
+joins, after explicit leave and after reconnect grace expires. The room browser reports both
+seats occupied/reserved; spectators follow existing policy. Matched users resume their own
+reserved seat using verified account identity; only one transport per seat controls gameplay,
+so a later same-account tab can replace the prior connection. Selected game mode is locked.
+Ready/start, draft, actions, snapshots, results, replay, Glicko processing and leaderboard all use
+the existing normal implementations. There is no matchmaking-specific rating or gameplay path.
+
+A known transaction rollback plus a successful absent-row lookup, with no earlier uncertain try, restores both users to
+QUEUED with their original joinedAt. An uncertain failure (including a possible late commit) keeps
+both claims and retries the **same roomId, seed and participants**. A lookup alone never proves an
+uncertain transaction rolled back. Uncertainty persists across retries: even a later known rollback
+cannot release an earlier unresolved attempt. No Match Found is sent until the room is usable. Committed
+Matches remain durable even if delivery fails; GET/re-subscription redelivers the same assignment.
+
+All currently authenticated user connections receive events. When the last disconnects, the
+entry becomes unavailable for new pairing but retains joinedAt for RECONNECT_GRACE_MS (45s by
+default). Rebinding restores availability; grace expiry removes an unclaimed entry using the
+single tick. Refresh restores state with subscription plus GET. Logout cancels unclaimed queue
+state through the server's refresh-session logout flow and frontend unsubscribe; an existing claim
+still wins. A waiting/active matched reservation remains owned until its normal room lifecycle
+ends or cleans up; it cannot be reused to enter a conflicting match.
+
+### Deployment boundary and deferred scope
+
+**Matchmaking is process-local, not distributed. Run exactly one active Node server accepting
+matchmaking clients.** Current room/runtime storage also uses process-local registries. Do not
+scale this service horizontally, run Node cluster/PM2 workers, or overlap active matchmaking
+processes during deployment. `MATCHMAKING_SERVER_PROCESSES` accepts only `1`; deployment must
+actually enforce this topology. It is a configuration assertion, not a distributed lock.
+
+Queued users and cached runtime assignments are lost on server restart. Persistent Matches,
+participants, journals and ratings remain durable, but runtime room recovery is not implemented.
+Redis, durable queue recovery, Server Restart Recovery, accept/decline, dodge penalties, ETA/metrics,
+parties/teams, regions/latency and bot fallback are deliberately deferred.
+
+Run `npm run -w server test:matchmaking`, `npm run -w web test:matchmaking` and the guarded local
+`npm run -w server test:matchmaking:db`. The real-browser test is
+`npm run -w web test:matchmaking:e2e`; it requires an isolated loopback TEST_DATABASE_URL and
+Chromium/Edge, and preserves desktop/tablet/mobile screenshots under
+`packages/web/test-results/matchmaking/`. Never run these database tests against production Neon.

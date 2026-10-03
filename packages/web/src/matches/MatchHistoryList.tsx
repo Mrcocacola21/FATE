@@ -1,3 +1,4 @@
+import { MatchTypeBadge } from "./MatchTypeBadge";
 import { Link } from "react-router";
 import { useI18n } from "../i18n";
 import { Avatar } from "../profile/Avatar";
@@ -52,6 +53,7 @@ export function MatchHistoryList({ items }: { items: MatchHistoryItem[] }) {
               )}
             </div>
           </div>
+          <div className="mt-3"><MatchTypeBadge matchType={item.matchType} /></div>
           <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-3">
             <div>
               <dt>{t("matches.gameMode")}</dt>

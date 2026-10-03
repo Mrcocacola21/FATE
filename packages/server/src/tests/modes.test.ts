@@ -1,4 +1,5 @@
 import assert from "assert";
+import { randomUUID } from "node:crypto";
 import type { ServerMessage, RoomStateMessage } from "../ws";
 import WebSocket from "ws";
 import {
@@ -141,7 +142,7 @@ async function joinTwoPlayers(wsUrl: string, params: {
       type: "joinRoom",
       mode: "create",
       role: "P1",
-      accessToken: testAccessToken("P1"),
+      accessToken: testAccessToken("P1", "P1", randomUUID()),
       figureSet: params.p1FigureSet,
     })
   );
@@ -154,7 +155,7 @@ async function joinTwoPlayers(wsUrl: string, params: {
       mode: "join",
       roomId: joinAck.roomId,
       role: "P2",
-      accessToken: testAccessToken("P2"),
+      accessToken: testAccessToken("P2", "P2", randomUUID()),
       figureSet: params.p2FigureSet,
     })
   );

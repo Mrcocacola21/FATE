@@ -66,6 +66,7 @@ export const translate: Translate = (key, values) => {
   const resolvedKey = pluralKey(key, values);
   const template =
     getByPath(locales[language], resolvedKey) ??
+    getByPath(locales[language], key) ??
     getByPath(locales.en, resolvedKey) ??
     getByPath(locales.en, key) ??
     key;

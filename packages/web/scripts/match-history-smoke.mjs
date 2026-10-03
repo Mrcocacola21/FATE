@@ -112,6 +112,7 @@ try {
         await database.match.create({
           data: {
             status: "FINISHED",
+          matchType: "CASUAL",
             gameMode: ["standard", "classic", "draft"][i % 3],
             seed: 5,
             createdAt: new Date("2026-01-01T12:00:00Z"),

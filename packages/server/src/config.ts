@@ -1,5 +1,7 @@
 import { readAuthConfig } from "./auth/config";
 import { refreshCookieOptions } from "./auth/httpSecurity";
+import { readLeaderboardConfig } from "./leaderboard/config";
+import { readMatchmakingConfig } from "./matchmaking/config";
 
 export class ProductionConfigurationError extends Error {}
 
@@ -17,6 +19,8 @@ export function readMatchSnapshotConfig(env: NodeJS.ProcessEnv = process.env): M
 // Only fixed messages and variable names may escape this validator.
 export function validateProductionEnvironment(env: NodeJS.ProcessEnv = process.env): void {
   readMatchSnapshotConfig(env);
+  readLeaderboardConfig(env);
+  readMatchmakingConfig(env);
   if (env.NODE_ENV !== "production") return;
 
   for (const name of [

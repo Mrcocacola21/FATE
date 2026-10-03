@@ -1,3 +1,4 @@
+import { MatchTypeBadge } from "../../../matches/MatchTypeBadge";
 import type { GameShellViewModel } from "../hooks/useGameShellViewModel";
 import { useState, type FC } from "react";
 import { PanelCard, SectionHeader, StatusBadge } from "../../../components/ui";
@@ -42,6 +43,10 @@ export const GameShellSideColumn: FC<GameShellSideColumnProps> = ({ vm, mobile =
           title={t("game.matchLobby")}
           description={t("game.matchLobbyDescription")}
         />
+        {vm.roomMeta && <div className="mt-4 space-y-2">
+          <MatchTypeBadge matchType={vm.roomMeta.matchType} />
+          <p className="text-sm text-muted">{t(vm.roomMeta.matchType === "RATED" ? "matchTypes.ratedDescription" : "matchTypes.casualDescription")}</p>
+        </div>}
         <div className="mt-4 grid grid-cols-2 gap-2">
           {(["P1", "P2"] as const).map((seat) => (
             <div key={seat} className="panel-card-muted p-3">
@@ -87,7 +92,7 @@ export const GameShellSideColumn: FC<GameShellSideColumnProps> = ({ vm, mobile =
           <GameModeSelector
             value={vm.roomMeta?.gameMode ?? "standard"}
             isHost={vm.isHost}
-            disabled={!!vm.pendingMeta || !!vm.roomMeta?.draftState || vm.view!.phase !== "lobby"}
+            disabled={!!vm.roomMeta?.gameModeLocked || !!vm.pendingMeta || !!vm.roomMeta?.draftState || vm.view!.phase !== "lobby"}
             onChange={vm.setGameMode}
           />
         ) : null}

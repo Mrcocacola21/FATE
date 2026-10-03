@@ -7,6 +7,7 @@ const primaryNavigation = [
   { to: "/", label: "shell.play", icon: "actions" },
   { to: "/figures", label: "lobby.figureSet", icon: "unit" },
   { to: "/matches", label: "matches.history", icon: "log" },
+  { to: "/leaderboard", label: "leaderboard.title", icon: "leaderboard" },
   { to: "/profile", label: "profile.title", icon: "players" },
 ] as const;
 
@@ -65,7 +66,7 @@ export function Sidebar({
                     /^\/users\/[^/]+\/matches\/?$/.test(pathname)
                   : to === "/profile"
                     ? pathname === "/profile" || /^\/users\/[^/]+\/?$/.test(pathname)
-                    : pathname === to;
+                    : pathname.replace(/\/$/, "") === to;
             return (
               <Link
                 key={to}

@@ -5,6 +5,7 @@ import { LOKI_LAUGHT_OPTION_IDS } from "rules";
 import { TestRoomCommandMessageSchema } from "./testRoom/schemas";
 
 export const PlayerIdSchema = z.union([z.literal("P1"), z.literal("P2")]);
+export const MatchTypeSchema = z.enum(["CASUAL", "RATED"]);
 export const GameModeIdSchema = z.enum(["standard", "draft", "classic"]);
 export const RoleSchema = z.union([z.literal("P1"), z.literal("P2"), z.literal("spectator")]);
 
@@ -36,6 +37,7 @@ export const CreateGameBodySchema = z.object({
   seed: z.number().int().optional(),
   arenaId: z.string().optional(),
   roomMode: z.enum(["normal", "test"]).optional(),
+  matchType: MatchTypeSchema.optional(),
   gameMode: GameModeIdSchema.optional(),
   debugToken: z.string().min(1).max(512).optional(),
 });
@@ -376,6 +378,7 @@ export const JoinRoomMessageSchema = z.object({
   figureSet: FigureSetSelectionSchema.optional(),
   resumeToken: z.string().min(1).optional(),
   roomMode: z.enum(["normal", "test"]).optional(),
+  matchType: MatchTypeSchema.optional(),
   debugToken: z.string().min(1).max(512).optional(),
 });
 
@@ -448,6 +451,8 @@ export const PongStartMessageSchema = z.object({ type: z.literal("pongStart") })
 export const PongResetMessageSchema = z.object({ type: z.literal("pongReset") });
 
 export const ClientMessageSchema = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("matchmakingSubscribe"), accessToken: z.string().min(1).max(8192), requestId: z.string().min(1).max(100) }).strict(),
+  z.object({ type: z.literal("matchmakingUnsubscribe") }).strict(),
   JoinRoomMessageSchema,
   ActionMessageSchema,
   RequestMoveOptionsMessageSchema,

@@ -134,7 +134,7 @@ async function run() {
     assert.equal(response.statusCode, 200, response.body);
     const dto = response.json();
     assert.equal(dto.winner.displayName, "Historical Alice");
-    assert.deepEqual(Object.keys(dto).sort(), ["id", "status", "gameMode", "createdAt", "startedAt", "finishedAt", "durationMs", "finalRevision", "turnCount", "finishReason", "winner", "loser", "participants"].sort());
+    assert.deepEqual(Object.keys(dto).sort(), ["id", "status", "matchType", "gameMode", "createdAt", "startedAt", "finishedAt", "durationMs", "finalRevision", "turnCount", "finishReason", "winner", "loser", "participants"].sort());
     for (const p of dto.participants) assert.deepEqual(Object.keys(p).sort(), ["seat", "userId", "displayName", "outcome", "resultData", "username", "avatarUrl"].sort());
     assert.deepEqual(dto.participants[0].resultData, summary);
     for (const secret of ["email", "passwordHash", "private-", "AuthSession", "refreshToken", "connId", "resumeToken", "hiddenState", "actions", "snapshots", "preferredLanguage", "seed"])

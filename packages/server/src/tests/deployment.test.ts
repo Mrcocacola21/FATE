@@ -8,6 +8,10 @@ import { createDatabaseReadinessCheck } from "../db/readiness";
 import { registerHealthRoutes } from "../routes/healthRoutes";
 import { requireTestDatabaseUrl } from "./testDatabase";
 
+// These checks assert startup errors, not process-launch latency. Windows cold
+// starts may include scanning/transpilation before the tested entrypoint runs.
+const childStartupTimeoutMs = process.platform === "win32" ? 30000 : 10000;
+
 const production: NodeJS.ProcessEnv = {
   NODE_ENV: "production",
   DATABASE_URL: "postgresql://localhost:5432/fate_test",
@@ -68,7 +72,7 @@ test("real entrypoint exits before listening when production configuration is mi
     {
       env: { ...process.env, ...production, DATABASE_URL: "", LOG_LEVEL: "silent" },
       encoding: "utf8",
-      timeout: 10000,
+      timeout: childStartupTimeoutMs,
       windowsHide: true,
     },
   );
@@ -93,7 +97,7 @@ test("production startup refuses an unreachable DB with a sanitized error", () =
         LOG_LEVEL: "silent",
       },
       encoding: "utf8",
-      timeout: 10000,
+      timeout: childStartupTimeoutMs,
       windowsHide: true,
     },
   );
@@ -172,7 +176,7 @@ test(
 );
 
 test("browser smoke cleanup scripts reject remote test schemas before connecting", () => {
-  for (const name of ["auth-smoke.mjs", "multiplayer-smoke.mjs", "match-history-smoke.mjs"]) {
+  for (const name of ["auth-smoke.mjs", "multiplayer-smoke.mjs", "match-history-smoke.mjs", "matchmaking-smoke.mjs"]) {
     const child = spawnSync(process.execPath, [resolve(__dirname, "../../../web/scripts", name)], {
       env: {
         ...process.env,
@@ -181,7 +185,7 @@ test("browser smoke cleanup scripts reject remote test schemas before connecting
           "postgresql://ep-example.eu-central-1.aws.neon.tech/neondb?schema=auth_test",
       },
       encoding: "utf8",
-      timeout: 10000,
+      timeout: childStartupTimeoutMs,
       windowsHide: true,
     });
     assert.equal(child.error, undefined);

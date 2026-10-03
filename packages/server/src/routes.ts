@@ -1,3 +1,6 @@
+import type { MatchmakingService } from "./services/matchmakingService";
+import { MultiplayerIdentityError } from "./auth/connectionIdentity";
+import { MatchTypeError } from "./matches/matchType";
 // packages/server/src/routes.ts
 
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
@@ -60,7 +63,25 @@ function requireDebugRestAccess(
 export async function registerRoutes(
   server: FastifyInstance, lifecycle: MatchLifecycle,
   identityService: Pick<ConnectionIdentityService, "verify">,
+  matchmaking?: MatchmakingService,
 ) {
+  async function createPersistentRoom(options: Parameters<MatchLifecycle["createRoom"]>[0], createdById: string | null, reply: FastifyReply) {
+    try {
+      const create = () => lifecycle.createRoom(options, undefined, createdById);
+      return matchmaking && createdById && options?.roomMode !== "test"
+        ? await matchmaking.withCompetitor(createdById, undefined, create) : await create();
+    } catch (error) {
+      if (error instanceof MultiplayerIdentityError) {
+        reply.code(409).send({ error: { code: error.code, message: error.message } });
+        return null;
+      }
+      if (error instanceof MatchTypeError) {
+        reply.code(error.statusCode).send({ error: { code: error.code, message: error.message } });
+        return null;
+      }
+      throw error;
+    }
+  }
   async function creatorId(request: FastifyRequest, reply: FastifyReply) {
     if (!request.headers.authorization) return null;
     const token = /^Bearer ([^\s]+)$/i.exec(request.headers.authorization)?.[1];
@@ -101,11 +122,19 @@ export async function registerRoutes(
     return listRoomSummaries();
   });
 
+  server.get("/rooms/:id", async (request, reply) => {
+    const room = listRoomSummaries().find((item) => item.id === (request.params as { id: string }).id);
+    if (!room) return reply.code(404).send({ error: { code: "ROOM_NOT_FOUND", message: "Room not found" } });
+    return room;
+  });
+
   server.post(
     "/rooms",
     async (request: FastifyRequest, reply: FastifyReply) => {
       const parsed = CreateGameBodySchema.safeParse(request.body ?? {});
       if (!parsed.success) {
+        if (parsed.error.issues.some((issue) => issue.path[0] === "matchType"))
+          return reply.code(400).send({ error: { code: "INVALID_MATCH_TYPE", message: "Choose Casual or Rated" } });
         return sendValidationError(reply, parsed.error);
       }
       if (
@@ -120,16 +149,19 @@ export async function registerRoutes(
       if (reply.sent) return;
       const room = await enqueueRoomCommand(FATE_CREATE_KEY, async () => {
         await lifecycle.cleanup({ activeRoomIds: getActiveFateRoomIds() });
-        return lifecycle.createRoom({
+        return createPersistentRoom({
           seed: parsed.data.seed,
           arenaId: parsed.data.arenaId,
           roomMode: parsed.data.roomMode,
           gameMode: parsed.data.gameMode,
-        }, undefined, createdById);
+          matchType: parsed.data.matchType,
+        }, createdById, reply);
       });
+      if (!room) return;
       reply.send({
         roomId: room.id,
         roomMode: room.roomMode,
+        matchType: room.matchType,
         gameMode: room.gameMode,
       });
     }
@@ -140,6 +172,8 @@ export async function registerRoutes(
     async (request: FastifyRequest, reply: FastifyReply) => {
       const parsed = CreateGameBodySchema.safeParse(request.body ?? {});
       if (!parsed.success) {
+        if (parsed.error.issues.some((issue) => issue.path[0] === "matchType"))
+          return reply.code(400).send({ error: { code: "INVALID_MATCH_TYPE", message: "Choose Casual or Rated" } });
         return sendValidationError(reply, parsed.error);
       }
       if (
@@ -154,13 +188,15 @@ export async function registerRoutes(
       if (reply.sent) return;
       const room = await enqueueRoomCommand(FATE_CREATE_KEY, async () => {
         await lifecycle.cleanup({ activeRoomIds: getActiveFateRoomIds() });
-        return lifecycle.createRoom({
+        return createPersistentRoom({
           seed: parsed.data.seed,
           arenaId: parsed.data.arenaId,
           roomMode: parsed.data.roomMode,
           gameMode: parsed.data.gameMode,
-        }, undefined, createdById);
+          matchType: parsed.data.matchType,
+        }, createdById, reply);
       });
+      if (!room) return;
       const views = {
         P1: makePlayerView(room.state, "P1"),
         P2: makePlayerView(room.state, "P2"),
@@ -168,6 +204,7 @@ export async function registerRoutes(
 
       reply.send({
         gameId: room.id,
+        matchType: room.matchType,
         seed: room.seed,
         views,
       });

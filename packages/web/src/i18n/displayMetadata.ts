@@ -615,6 +615,11 @@ const abilitiesUk: Record<string, AbilityTranslation> = {
 };
 
 const serverTextKeys: Record<string, string> = {
+  "Rated matches require authenticated players": "matchTypes.authRequired",
+  RATED_MATCH_REQUIRES_AUTHENTICATION: "matchTypes.authRequired",
+  "Choose Casual or Rated": "matchTypes.invalidType",
+  "Match type is fixed at creation": "matchTypes.immutable",
+  "Test rooms are always Casual": "matchTypes.testOnly",
   "Pending roll must be resolved": "errors.resolvePending",
   "Not in battle": "errors.gameNotStarted",
   "Not your turn": "game.notYourTurn",

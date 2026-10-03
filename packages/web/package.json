@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "test:match-types:e2e": "node scripts/match-types-smoke.mjs",
+    "test:leaderboard": "tsx --test src/leaderboard/*.test.ts src/leaderboard/*.test.tsx",
+    "test:leaderboard:e2e": "node scripts/leaderboard-smoke.mjs",
     "test:statistics": "tsx --test src/statistics/*.test.ts src/statistics/*.test.tsx",
     "test:statistics:e2e": "node scripts/statistics-smoke.mjs",
     "test:replay": "tsx --test src/replay/*.test.tsx",
@@ -42,7 +45,9 @@
     "test:profile": "tsx --test src/profile/*.test.ts src/profile/*.test.tsx",
     "test:profile:e2e": "node scripts/auth-smoke.mjs",
     "test:matches": "tsx --test src/matches/*.test.ts src/matches/*.test.tsx",
-    "test:matches:e2e": "node scripts/match-history-smoke.mjs"
+    "test:matches:e2e": "node scripts/match-history-smoke.mjs",
+    "test:matchmaking": "tsx --test src/matchmaking/*.test.ts src/matchmaking/*.test.tsx",
+    "test:matchmaking:e2e": "node scripts/matchmaking-smoke.mjs"
   },
   "dependencies": {
     "react": "^18.2.0",

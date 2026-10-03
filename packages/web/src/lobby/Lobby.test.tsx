@@ -55,12 +55,41 @@ test("Play is focused on actions/rooms; forms appear only in their dialogs", () 
     assert.equal(renderer.root.findAllByProps({ role: "dialog" }).length, 1);
     assert.equal(renderer.root.findAllByProps({ id: "player-name" }).length, 0);
     act(() => renderer.root.findByProps({ "aria-label": "Close" }).props.onClick());
+    act(() => useGameStore.setState({ roomsList: [{ id: "room-42", phase: "lobby", players: { P1: false, P2: false }, ready: { P1: false, P2: false }, createdAt: 0, spectators: 0, canStart: false, roomMode: "normal", gameMode: "standard", matchType: "RATED" }] }));
     open(renderer, "join-by-id");
     assert(renderer.root.findByProps({ id: "room-id" }));
     assert(renderer.root.findByProps({ id: "lobby-role" }));
   } finally {
     cleanup(renderer);
   }
+});
+
+test("Casual is the default; Rated has a clear description and sends explicit intent", async () => {
+  const renderer = mount();
+  const requests: unknown[] = [];
+  useGameStore.setState({ joinRoom: async (params) => { requests.push(params); } });
+  try {
+    open(renderer, "create-room");
+    const casual = renderer.root.findByProps({ type: "radio", value: "CASUAL" });
+    const rated = renderer.root.findByProps({ type: "radio", value: "RATED" });
+    assert.equal(casual.props.checked, true);
+    assert.equal(rated.props.checked, false);
+    assert.match(JSON.stringify(renderer.toJSON()), /competitive rating is not affected/);
+    assert.match(JSON.stringify(renderer.toJSON()), /Glicko-2/);
+    act(() => rated.props.onChange());
+    assert.equal(renderer.root.findByProps({ type: "radio", value: "RATED" }).props.checked, true);
+    await submit(renderer);
+    assert.equal((requests[0] as { matchType: string }).matchType, "RATED");
+  } finally { cleanup(renderer); }
+});
+
+test("unauthenticated creator sees the Rated authentication requirement", () => {
+  const renderer = mount([], false);
+  try {
+    open(renderer, "create-room");
+    assert.equal(renderer.root.findByProps({ type: "radio", value: "RATED" }).props.disabled, true);
+    assert.match(JSON.stringify(renderer.toJSON()), /Rated matches require authenticated players/);
+  } finally { cleanup(renderer); }
 });
 
 test("create/join submit existing semantics and only spectators provide temporary names", async () => {
@@ -74,8 +103,9 @@ test("create/join submit existing semantics and only spectators provide temporar
   try {
     open(renderer, "create-room");
     await submit(renderer);
-    assert.deepEqual(joins[0], { mode: "create", role: "P1", name: undefined });
+    assert.deepEqual(joins[0], { mode: "create", role: "P1", name: undefined, matchType: "CASUAL" });
     act(() => renderer.root.findByProps({ "aria-label": "Close" }).props.onClick());
+    act(() => useGameStore.setState({ roomsList: [{ id: "room-42", phase: "lobby", players: { P1: false, P2: false }, ready: { P1: false, P2: false }, createdAt: 0, spectators: 0, canStart: false, roomMode: "normal", gameMode: "standard", matchType: "RATED" }] }));
     open(renderer, "join-by-id");
     act(() =>
       renderer.root
@@ -120,6 +150,7 @@ test("room browser preserves seats, defaults full rooms to spectator, and displa
     spectators: 0,
     canStart: false,
     roomMode: "normal",
+    matchType: "CASUAL",
     gameMode: "standard",
   };
   const renderer = mount([room], false);

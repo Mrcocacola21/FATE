@@ -28,6 +28,7 @@ import { authStore } from "../auth/authStore";
 const metadata: ReplayMetadata = {
   matchId: "replay-one",
   status: "FINISHED",
+    matchType: "CASUAL",
   gameMode: "classic",
   initialRevision: 0,
   finalRevision: 4,
@@ -107,6 +108,15 @@ async function click(label: string) {
   );
 }
 const text = () => JSON.stringify(renderer?.toJSON());
+
+test("replay keeps the persisted Casual or Rated classification visible", async () => {
+  await mount();
+  assert(text().includes("Casual"));
+  act(() => renderer?.unmount());
+  replayApi.getMetadata = async () => ({ ...metadata, matchType: "RATED" });
+  await mount();
+  assert(text().includes("Rated"));
+});
 
 test("page loads only one board, historical participants/result, and disables gameplay", async () => {
   await mount();
@@ -237,6 +247,7 @@ test("Match Details enables replay only after successful availability metadata",
   matchApi.getMatchDetails = async () => ({
     id: metadata.matchId,
     status: "FINISHED",
+    matchType: "CASUAL",
     gameMode: "classic",
     createdAt: "2026-01-01",
     startedAt: null,

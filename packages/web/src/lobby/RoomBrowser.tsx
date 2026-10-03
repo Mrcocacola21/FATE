@@ -1,3 +1,4 @@
+import { MatchTypeBadge } from "../matches/MatchTypeBadge";
 import type { RoomSummary } from "../api";
 import { useI18n } from "../i18n";
 import { getPhaseLabel } from "../i18n/displayMetadata";
@@ -9,12 +10,14 @@ import { TacticalIcon } from "../ui/TacticalIcon";
 export function RoomBrowser({
   rooms,
   refreshing,
+  actionsDisabled = false,
   onRefresh,
   onCreate,
   onJoin,
 }: {
   rooms: RoomSummary[];
   refreshing: boolean;
+  actionsDisabled?: boolean;
   onRefresh: () => void;
   onCreate: () => void;
   onJoin: (room: RoomSummary) => void;
@@ -45,7 +48,7 @@ export function RoomBrowser({
               description={t("shell.emptyRooms")}
               icon={<TacticalIcon name="actions" />}
             />
-            <button type="button" className="btn btn-secondary mt-4" onClick={onCreate}>
+            <button type="button" className="btn btn-secondary mt-4" onClick={onCreate} disabled={actionsDisabled}>
               {t("shell.createMatch")}
             </button>
           </div>
@@ -71,6 +74,7 @@ export function RoomBrowser({
                   <StatusBadge tone={room.phase === "lobby" ? "success" : "warning"}>
                     {getPhaseLabel(room.phase, t)}
                   </StatusBadge>
+                  <MatchTypeBadge matchType={room.matchType} />
                   {room.roomMode === "test" ? (
                     <StatusBadge tone="special">{t("testRoom.badge")}</StatusBadge>
                   ) : null}
@@ -106,6 +110,7 @@ export function RoomBrowser({
               <button
                 type="button"
                 className="btn btn-primary w-full sm:w-auto"
+                disabled={actionsDisabled}
                 onClick={() => {
                   onJoin(room);
                 }}

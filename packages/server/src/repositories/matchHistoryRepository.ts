@@ -5,6 +5,7 @@ import type { MatchHistoryQuery } from "../matches/historySchema";
 export const historyMatchSelect = {
   id: true,
   status: true,
+  isRated: true,
   gameMode: true,
   createdAt: true,
   startedAt: true,

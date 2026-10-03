@@ -137,6 +137,7 @@ try {
         return json({
           id: "example",
           status: "FINISHED",
+          matchType: "CASUAL",
           gameMode: "standard",
           createdAt: profile.createdAt,
           startedAt: profile.createdAt,

@@ -1,5 +1,7 @@
-import { useState } from "react";
-import type { RoomSummary } from "../api";
+import { useEffect, useState } from "react";
+import { lookupRoom, type RoomSummary } from "../api";
+import type { MatchType } from "../matches/matchType";
+import { MatchTypeBadge } from "../matches/MatchTypeBadge";
 import type { PlayerRole } from "../ws";
 import { useGameStore } from "../store";
 import { useAuthStore } from "../auth/authStore";
@@ -33,7 +35,31 @@ export function RoomConnectionDialog({
   const [debugToken, setDebugToken] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const targetRoom = room ?? roomsList.find((item) => item.id === roomId.trim());
+  const [matchType, setMatchType] = useState<MatchType>("CASUAL");
+  const [lookup, setLookup] = useState<{ id: string; room?: RoomSummary; failed?: boolean } | null>(
+    null,
+  );
+  const knownRoom = room ?? roomsList.find((item) => item.id === roomId.trim());
+  const targetRoom = knownRoom ?? (lookup?.id === roomId.trim() ? lookup.room : undefined);
+  useEffect(() => {
+    if (kind !== "join" || knownRoom || !roomId.trim()) return;
+    let active = true;
+    const id = roomId.trim();
+    const timer = setTimeout(() => {
+      void lookupRoom(id).then(
+        (resolved) => {
+          if (active) setLookup({ id, room: resolved });
+        },
+        () => {
+          if (active) setLookup({ id, failed: true });
+        },
+      );
+    }, 250);
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [kind, knownRoom, roomId]);
   const test = kind === "test" || targetRoom?.roomMode === "test";
   const showName = test || role === "spectator";
   const title = t(
@@ -50,6 +76,7 @@ export function RoomConnectionDialog({
       setError(t("lobby.roomIdRequired"));
       return;
     }
+    if (kind === "join" && !targetRoom) return;
     setBusy(true);
     setError(null);
     useGameStore.setState({ joinError: null });
@@ -61,6 +88,7 @@ export function RoomConnectionDialog({
         name: showName && name.trim() ? name.trim() : undefined,
         ...(test ? { roomMode: "test" as const } : {}),
         ...(kind === "test" ? { debugToken: debugToken.trim() || undefined } : {}),
+        ...(kind === "create" ? { matchType } : {}),
       });
       // joinRoom sends a WebSocket request; the authoritative error/snapshot
       // arrives asynchronously. Keep this dialog available for server errors.
@@ -103,6 +131,62 @@ export function RoomConnectionDialog({
         ) : (
           <p className="text-sm text-muted">
             {t(kind === "test" ? "testRoom.createDescription" : "shell.createDescription")}
+          </p>
+        )}
+        {kind === "create" && (
+          <fieldset>
+            <legend className="field-label">{t("matchTypes.label")}</legend>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {(["CASUAL", "RATED"] as const).map((value) => (
+                <label
+                  key={value}
+                  className={`panel-card-muted cursor-pointer p-4 ${matchType === value ? "ring-1 ring-slate-500 dark:ring-slate-400" : ""}`}
+                >
+                  <span className="flex items-center gap-2 font-semibold">
+                    <input
+                      type="radio"
+                      name="match-type"
+                      value={value}
+                      checked={matchType === value}
+                      disabled={value === "RATED" && !authenticated}
+                      aria-label={t(`matchTypes.${value}`)}
+                      aria-describedby={`match-type-${value}`}
+                      onChange={() => setMatchType(value)}
+                    />
+                    {t(`matchTypes.${value}`)}
+                  </span>
+                  <span id={`match-type-${value}`} className="mt-2 block text-sm text-muted">
+                    {t(
+                      value === "RATED"
+                        ? "matchTypes.ratedDescription"
+                        : "matchTypes.casualDescription",
+                    )}
+                  </span>
+                </label>
+              ))}
+            </div>
+            {!authenticated && <p className="mt-2 text-sm">{t("matchTypes.authRequired")}</p>}
+          </fieldset>
+        )}
+        {kind === "join" && targetRoom && (
+          <div className="panel-card-muted space-y-2 p-3">
+            <MatchTypeBadge matchType={targetRoom.matchType} />
+            <p className="text-sm">
+              {t(
+                targetRoom.matchType === "RATED"
+                  ? "matchTypes.ratedDescription"
+                  : "matchTypes.casualDescription",
+              )}
+            </p>
+          </div>
+        )}
+        {kind === "join" && roomId.trim() && !targetRoom && (
+          <p role="status" className="text-sm">
+            {t(
+              lookup?.id === roomId.trim() && lookup.failed
+                ? "matchTypes.lookupFailed"
+                : "matchTypes.lookupPending",
+            )}
           </p>
         )}
         {kind !== "test" && (
@@ -169,7 +253,7 @@ export function RoomConnectionDialog({
           <button
             type="submit"
             className="btn btn-primary"
-            disabled={busy || roleTaken(role)}
+            disabled={busy || roleTaken(role) || (kind === "join" && !targetRoom)}
             aria-busy={busy}
             data-testid="submit-room"
           >

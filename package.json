@@ -9,7 +9,7 @@
     "dev:server:standalone": "concurrently -n rules,server -c \"yellow,green\" \"npm run -w rules build:watch\" \"npm run dev:server\"",
     "build": "npm run -w rules build && npm run -w server build && npm run -w web typecheck && npm run -w web build",
     "postinstall": "npm run -w rules build",
-    "test": "npm run -w rules test && npm run -w rules test:boundaries && npm run -w server test && npm run -w server test:replay-api && npm run -w web test:auth && npm run -w web test:profile && npm run -w web test:matches && npm run -w web test:statistics && npm run -w web test:shell && npm run -w web test:figures && npm run -w web test:replay",
+    "test": "npm run -w rules test && npm run -w rules test:boundaries && npm run -w server test && npm run -w server test:replay-api && npm run -w web test:auth && npm run -w web test:profile && npm run -w web test:matches && npm run -w web test:statistics && npm run -w web test:leaderboard && npm run -w web test:matchmaking && npm run -w web test:shell && npm run -w web test:figures && npm run -w web test:replay",
     "lint": "eslint \"packages/**/*.{ts,tsx}\" --max-warnings 0",
     "format": "prettier -w ."
   },

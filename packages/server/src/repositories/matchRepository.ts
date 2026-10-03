@@ -1,5 +1,6 @@
 import { Prisma, type Match, type MatchStatus, type PrismaClient } from "@prisma/client";
 import { getDatabaseClient } from "../db/client";
+import { RatingRepository } from "./ratingRepository";
 import type {
   WaitingMatchInput,
   SeatParticipantInput,
@@ -29,6 +30,10 @@ export interface CreateMatchInput {
 export class MatchRepository {
   constructor(private readonly database: PrismaClient = getDatabaseClient()) {}
 
+  createRatingRepository(): RatingRepository {
+    return new RatingRepository(this.database);
+  }
+
   findById(id: string): Promise<Match | null> {
     return this.database.match.findUnique({ where: { id } });
   }
@@ -52,10 +57,11 @@ export class MatchRepository {
   }
 
   async createWaitingMatch(input: WaitingMatchInput): Promise<Match> {
+    const { participants, ...fields } = input;
     try {
       return await this.database.match.upsert({
         where: { roomId: input.roomId },
-        create: { ...input, status: "WAITING" },
+        create: { ...fields, status: "WAITING", ...(participants ? { participants: { create: participants } } : {}) },
         update: {},
       });
     } catch (error) {

@@ -4,14 +4,16 @@ import type { MatchHistoryResponse } from "./types";
 export function HistoryPagination({
   pagination,
   onPage,
+  label,
 }: {
   pagination: MatchHistoryResponse["pagination"];
   onPage: (page: number) => void;
+  label?: string;
 }) {
   const { t } = useI18n();
   return (
     <nav
-      aria-label={t("matches.pagination")}
+      aria-label={label ?? t("matches.pagination")}
       className="mt-5 flex flex-wrap items-center justify-between gap-3"
     >
       <button

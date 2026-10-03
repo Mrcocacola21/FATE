@@ -1,5 +1,6 @@
 import type { Prisma, PrismaClient, User } from "@prisma/client";
 import { getDatabaseClient } from "../db/client";
+import { INITIAL_RATING } from "../rating/constants";
 
 export interface CreateUserInput {
   email: string;
@@ -48,7 +49,7 @@ export class UserRepository {
         email: input.email,
         passwordHash: input.passwordHash,
         profile: { create: { username: input.username } },
-        rating: { create: {} },
+        rating: { create: { ...INITIAL_RATING } },
         authSessions: { create: input.session },
       },
       include: { profile: true },

@@ -1,3 +1,4 @@
+import { MatchTypeBadge } from "../matches/MatchTypeBadge";
 import { useI18n } from "../i18n";
 import { Avatar } from "../profile/Avatar";
 import {
@@ -15,6 +16,7 @@ export function ReplayHeader({ metadata }: { metadata: ReplayMetadata }) {
   const draw = metadata.participants.every((p) => p.outcome === "DRAW");
   return (
     <header>
+      <MatchTypeBadge matchType={metadata.matchType} />
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h1 id="replay-title" className="text-2xl font-bold">
           {t("replay.title")}

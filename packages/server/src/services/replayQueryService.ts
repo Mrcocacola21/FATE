@@ -1,3 +1,4 @@
+import { matchTypeFromRated } from "../matches/matchType";
 import { makeReplayView, type ReplayView } from "rules";
 import type { MatchActionRepository } from "../repositories/matchActionRepository";
 import type { DetailedMatch, MatchRepository } from "../repositories/matchRepository";
@@ -68,6 +69,7 @@ export class ReplayQueryService {
       matchId: id,
       status: "FINISHED" as const,
       gameMode: match.gameMode,
+      matchType: matchTypeFromRated(match.isRated),
       initialRevision: 0,
       finalRevision: match.finalRevision,
       participants: [...match.participants]

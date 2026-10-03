@@ -1,3 +1,4 @@
+import { matchTypeFromRated, type MatchType } from "../matches/matchType";
 import { AuthError } from "../auth/authErrors";
 import type { MatchHistoryQuery } from "../matches/historySchema";
 import type { HistoryMatch, MatchHistoryRepository } from "../repositories/matchHistoryRepository";
@@ -5,6 +6,7 @@ import type { HistoryMatch, MatchHistoryRepository } from "../repositories/match
 export interface MatchHistoryItemDTO {
   id: string;
   status: "FINISHED";
+  matchType: MatchType;
   result: "WIN" | "LOSS" | "DRAW" | null;
   seat: "P1" | "P2";
   gameMode: string;
@@ -36,6 +38,7 @@ export function toMatchHistoryItem(match: HistoryMatch, userId: string): MatchHi
     result: participant.outcome,
     seat: participant.seat,
     gameMode: match.gameMode,
+    matchType: matchTypeFromRated(match.isRated),
     createdAt: match.createdAt.toISOString(),
     startedAt: match.startedAt?.toISOString() ?? null,
     finishedAt: match.finishedAt?.toISOString() ?? null,

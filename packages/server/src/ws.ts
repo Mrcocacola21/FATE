@@ -1,3 +1,6 @@
+import type { MatchmakingService } from "./services/matchmakingService";
+import type { MatchmakingEvent } from "./matchmaking/types";
+import { MatchTypeError, type MatchType } from "./matches/matchType";
 // packages/server/src/ws.ts
 
 import type { FastifyInstance } from "fastify";
@@ -56,6 +59,8 @@ import { logPong } from "./pong/logger";
 export type PlayerRole = PlayerId | "spectator";
 
 type RoomMeta = {
+  gameModeLocked?: boolean;
+  matchType: MatchType;
   roomMode: "normal" | "test";
   gameMode: GameModeId;
   draftState: DraftState | null;
@@ -102,6 +107,7 @@ export type RoomStateMessage = {
 
 type JoinAckMessage = {
   type: "joinAck";
+  matchType?: MatchType;
   roomMode?: "normal" | "test";
   roomId: string;
   role: PlayerRole;
@@ -150,6 +156,8 @@ type TestRoomSnapshotMessage = {
 };
 
 export type ServerMessage =
+  | MatchmakingEvent
+  | { type: "matchmakingSubscribed"; requestId: string }
   | RoomStateMessage
   | JoinAckMessage
   | JoinRejectedMessage
@@ -327,7 +335,7 @@ function applyFigureSetToRoom(room: GameRoom, seat: PlayerId, figureSet?: HeroSe
 function vacateSeat(room: GameRoom, seat: PlayerId, connId: string) {
   if (room.seats[seat] !== connId) return;
   room.seats[seat] = null;
-  if (!room.participantsLocked) {
+  if (!room.participantsLocked && !room.reservedUserIds) {
     room.seatTokens[seat] = null;
     room.seatIdentities[seat] = null;
   }
@@ -447,6 +455,10 @@ function buildSwitchRoleTransition(
 }
 
 function updateHost(room: GameRoom) {
+  if (room.reservedUserIds) {
+    room.hostConnId = room.seats[room.hostSeat];
+    return;
+  }
   const hostConnId = room.hostConnId;
   if (!hostConnId) return;
   const stillConnected =
@@ -595,7 +607,9 @@ function buildRoomMeta(
   };
   return {
     roomMode: room.roomMode,
+    matchType: room.matchType,
     gameMode: room.gameMode,
+    gameModeLocked: isGameModeLocked(room),
     draftState: room.draftState,
     draftPool: room.gameMode === "draft" ? DRAFT_HERO_POOL : [],
     revision: room.revision,
@@ -923,6 +937,7 @@ function detachFromPongRoom(meta: ConnectionMeta, reason: "leave" | "disconnect"
 export function registerGameWebSocket(
   server: FastifyInstance, lifecycle: MatchLifecycle,
   identityService: Pick<ConnectionIdentityService, "verify">,
+  matchmaking?: MatchmakingService,
 ) {
   serverLogger = server.log;
   server.get("/ws", { websocket: true }, (socket, request) => {
@@ -932,6 +947,9 @@ export function registerGameWebSocket(
       socket.close(1008, "Origin not allowed");
       return;
     }
+
+    const matchmakingConnectionId = randomUUID();
+    let matchmakingUserId: string | undefined;
 
     async function detachExistingConnection(
       existing: ConnectionMeta,
@@ -971,6 +989,25 @@ export function registerGameWebSocket(
 
     async function handleParsedMessage(msg: ClientMessage) {
       switch (msg.type) {
+        case "matchmakingSubscribe": {
+          const identity = await identityService.verify(msg.accessToken);
+          if (!identity || !matchmaking) throw new MultiplayerIdentityError("AUTH_REQUIRED", "Sign in to find a Rated match");
+          if (socket.readyState !== WebSocket.OPEN) return;
+          if (matchmakingUserId && matchmakingUserId !== identity.userId)
+            matchmaking.disconnect(matchmakingUserId, matchmakingConnectionId);
+          matchmakingUserId = identity.userId;
+          matchmaking.connect(identity, matchmakingConnectionId, event => sendMessage(socket, event));
+          sendMessage(socket, { type: "matchmakingSubscribed", requestId: msg.requestId });
+          return;
+        }
+        case "matchmakingUnsubscribe": {
+          if (matchmakingUserId) {
+            matchmaking?.cancel(matchmakingUserId);
+            matchmaking?.disconnect(matchmakingUserId, matchmakingConnectionId);
+            matchmakingUserId = undefined;
+          }
+          return;
+        }
         case "pongJoin": {
           const existing = socketMeta.get(socket);
           if (existing) {
@@ -1101,12 +1138,18 @@ export function registerGameWebSocket(
           return;
         }
         case "joinRoom": {
+          if (msg.mode === "join" && msg.matchType !== undefined)
+            throw new MultiplayerIdentityError("MATCH_TYPE_IMMUTABLE", "Match type is fixed at creation");
+          if (msg.mode === "create" && msg.roomMode === "test" && msg.matchType === "RATED")
+            throw new MultiplayerIdentityError("INVALID_MATCH_TYPE", "Test rooms are always Casual");
           const identity = await identityService.verify(msg.accessToken);
+          if (msg.mode === "create" && msg.matchType === "RATED" && !identity)
+            throw new MultiplayerIdentityError("RATED_MATCH_REQUIRES_AUTHENTICATION", "Rated matches require authenticated players");
+          const targetRoom = getGameRoom(msg.roomId ?? "");
           const targetMode = msg.mode === "create" ? msg.roomMode ?? "normal"
             : getGameRoom(msg.roomId ?? "")?.roomMode;
           if (targetMode === "normal" && msg.role !== "spectator" && !identity)
-            throw new MultiplayerIdentityError("AUTH_REQUIRED", "Sign in to occupy a player seat");
-          const targetRoom = getGameRoom(msg.roomId ?? "");
+            throw new MultiplayerIdentityError((targetRoom?.matchType ?? msg.matchType) === "RATED" ? "RATED_MATCH_REQUIRES_AUTHENTICATION" : "AUTH_REQUIRED", "Sign in to occupy a player seat");
           if (targetRoom && (msg.role === "P1" || msg.role === "P2"))
             assertSeatIdentity(targetRoom, msg.role, identity, msg.resumeToken ?? "");
           const targetRoomId = msg.mode === "create" ? (msg.roomId ?? randomUUID()) : msg.roomId;
@@ -1132,6 +1175,7 @@ export function registerGameWebSocket(
             return;
           }
 
+          const enter = async () => {
           const existing = socketMeta.get(socket);
           if (existing) {
             await detachExistingConnection(existing, "switch_room");
@@ -1140,7 +1184,10 @@ export function registerGameWebSocket(
           await enqueueRoomCommand(fateRoomKey(targetRoomId), async () => {
             if (socket.readyState !== WebSocket.OPEN) return;
             const connId = randomUUID();
-            const resumeToken = msg.resumeToken ?? randomUUID();
+            const matchedRoom = getGameRoom(targetRoomId);
+            const matchedSeat = msg.role === "P1" || msg.role === "P2" ? msg.role : null;
+            const resumeToken = matchedSeat && identity && matchedRoom?.reservedUserIds?.[matchedSeat] === identity.userId
+              ? matchedRoom.seatTokens[matchedSeat] ?? randomUUID() : msg.resumeToken ?? randomUUID();
 
             const requestedSeat =
               msg.role === "P1" || msg.role === "P2" ? (msg.role as PlayerId) : null;
@@ -1167,11 +1214,16 @@ export function registerGameWebSocket(
                     hostSeat,
                     hostConnId: hostConnForState,
                     roomMode: requestedRoomMode,
+                    matchType: msg.matchType,
                   },
                   targetRoomId,
                   identity?.userId ?? null,
                 );
-              } catch {
+              } catch (error) {
+                if (error instanceof MatchTypeError) {
+                  sendStructuredError(socket, error.code, error.message);
+                  return;
+                }
                 sendStructuredError(
                   socket,
                   "MATCH_PERSISTENCE_UNAVAILABLE",
@@ -1272,7 +1324,7 @@ export function registerGameWebSocket(
               room.spectators.add(connId);
             }
 
-            if (!room.hostConnId) {
+            if (!room.hostConnId && !room.reservedUserIds) {
               room.hostConnId = connId;
               if (requestedSeat) {
                 room.hostSeat = requestedSeat;
@@ -1309,12 +1361,17 @@ export function registerGameWebSocket(
               role: msg.role,
               seat: seat ?? undefined,
               roomMode: room.roomMode,
+              matchType: room.matchType,
               isHost: room.hostConnId === connId,
               resumeToken,
             });
 
             broadcastRoomState(room);
           });
+          };
+          if (matchmaking && identity && msg.role !== "spectator" && targetMode !== "test")
+            await matchmaking.withCompetitor(identity.userId, targetRoomId, enter);
+          else await enter();
           return;
         }
         case "switchRole": {
@@ -1325,7 +1382,7 @@ export function registerGameWebSocket(
             sendMessage(socket, { type: "error", message: "Must join a room first" });
             return;
           }
-          await enqueueRoomCommand(fateRoomKey(meta.roomId), async () => {
+          const change = () => enqueueRoomCommand(fateRoomKey(meta.roomId), async () => {
             const current = socketMeta.get(socket);
             if (!current || current.channel !== "fate") {
               sendMessage(socket, {
@@ -1376,12 +1433,17 @@ export function registerGameWebSocket(
               roomId: room.id,
               role: transition.nextMeta.role,
               roomMode: room.roomMode,
+              matchType: room.matchType,
               seat: transition.nextMeta.seat ?? undefined,
               isHost: room.hostConnId === transition.nextMeta.connId,
               resumeToken: transition.nextMeta.resumeToken,
             });
             broadcastRoomState(room);
           });
+          const actor = suppliedIdentity ?? meta.authIdentity;
+          if (matchmaking && actor && msg.role !== "spectator" && getGameRoom(meta.roomId)?.roomMode !== "test")
+            await matchmaking.withCompetitor(actor.userId, meta.roomId, change);
+          else await change();
           return;
         }
         case "leaveRoom": {
@@ -1705,7 +1767,7 @@ export function registerGameWebSocket(
 
             if (room.gameMode === "draft") {
               if (room.roomMode === "normal" && !hasDistinctPlayerIdentities(room)) {
-                sendStructuredError(socket, "AUTH_REQUIRED", "Two distinct authenticated players are required");
+                sendStructuredError(socket, room.matchType === "RATED" ? "RATED_MATCH_INVALID_PARTICIPANTS" : "AUTH_REQUIRED", "Two distinct authenticated players are required");
                 return;
               }
               if (!room.draftState) {
@@ -1883,7 +1945,7 @@ export function registerGameWebSocket(
 
       const parsed = ClientMessageSchema.safeParse(parsedJson);
       if (!parsed.success) {
-        sendStructuredError(socket, "INVALID_PAYLOAD", "Invalid message payload");
+        sendStructuredError(socket, parsed.error.issues.some((issue) => issue.path[0] === "matchType") ? "INVALID_MATCH_TYPE" : "INVALID_PAYLOAD", "Invalid message payload");
         return;
       }
 
@@ -1906,6 +1968,7 @@ export function registerGameWebSocket(
     });
 
     async function handleSocketTermination(kind: "close" | "error") {
+      if (matchmakingUserId) matchmaking?.disconnect(matchmakingUserId, matchmakingConnectionId);
       const meta = socketMeta.get(socket);
       if (!meta) {
         socketRateState.delete(socket);

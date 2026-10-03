@@ -60,6 +60,7 @@ function metadata(value: unknown): MatchMetadata {
     id: string(value.id),
     status: "FINISHED",
     gameMode: string(value.gameMode),
+    matchType: value.matchType === "CASUAL" || value.matchType === "RATED" ? value.matchType : fail(),
     createdAt: date(value.createdAt),
     startedAt: nullableDate(value.startedAt),
     finishedAt: nullableDate(value.finishedAt),

@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { PairCreationRolledBack } from "../matchmaking/errors";
 import { isDeepStrictEqual } from "node:util";
 import { MatchResultError } from "../persistence/matchResult";
 import { buildServer } from "../index";
@@ -16,9 +17,11 @@ export const testTokens = new TokenService({
 });
 export const testUserIds = { P1: randomUUID(), P2: randomUUID() };
 const testProfiles = new Map<string, { username: string; displayName: string | null }>();
-export function testAccessToken(seat: "P1" | "P2", name: string = seat): string {
-  testProfiles.set(testUserIds[seat], { username: name, displayName: null });
-  return testTokens.signAccessToken(testUserIds[seat]);
+export function testAccessToken(
+  seat: "P1" | "P2", name: string = seat, userId: string = testUserIds[seat],
+): string {
+  testProfiles.set(userId, { username: name, displayName: null });
+  return testTokens.signAccessToken(userId);
 }
 export function testIdentityService() {
   return new ConnectionIdentityService(testTokens, {
@@ -36,7 +39,7 @@ import type {
   FinishedMatchInput,
 } from "../services/matchService";
 
-interface TestMatch extends WaitingMatchInput {
+interface TestMatch extends Omit<WaitingMatchInput, "participants"> {
   id: string;
   status: "WAITING" | "IN_PROGRESS" | "FINISHED" | "CANCELLED";
   participants: Map<string, SeatParticipantInput>;
@@ -67,7 +70,8 @@ export class MemoryMatchPersistence implements MatchPersistence {
 
   private called(operation: string): void {
     this.calls.push(operation);
-    if (this.fail.has(operation)) throw new Error("Simulated persistence failure");
+    if (this.fail.has(operation)) throw operation === "create"
+      ? new PairCreationRolledBack("Simulated persistence failure") : new Error("Simulated persistence failure");
   }
   private get(id: string): TestMatch {
     const match = this.matches.get(id);
@@ -84,10 +88,13 @@ export class MemoryMatchPersistence implements MatchPersistence {
       ...input,
       id: randomUUID(),
       status: "WAITING",
-      participants: new Map(),
+      participants: new Map(input.participants?.map(p => [p.seat, p])),
     };
     this.matches.set(match.id, match);
     return { id: match.id };
+  }
+  async findMatchByRoomId(roomId: string) {
+    return [...this.matches.values()].find(m => m.roomId === roomId) ?? null;
   }
   async syncParticipant(id: string, input: SeatParticipantInput): Promise<void> {
     this.called("participant");
