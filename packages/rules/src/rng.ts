@@ -20,11 +20,30 @@ export class SeededRNG implements RNG {
     // ensure seed in [1..2^31)
     this.state = seed >>> 0 || 1;
   }
+  /** Exact continuation of the existing Numerical Recipes uint32 LCG. */
+  exportState(): SeededRngState {
+    return { algorithm: "lcg32-numerical-recipes-v1", state: this.state };
+  }
+  static fromState(snapshot: SeededRngState): SeededRNG {
+    if (snapshot.algorithm !== "lcg32-numerical-recipes-v1" ||
+        !Number.isInteger(snapshot.state) || snapshot.state < 0 || snapshot.state > 0xffffffff) {
+      throw new Error("INVALID_SEEDED_RNG_STATE");
+    }
+    const rng = new SeededRNG(1);
+    // Zero is a valid continuation state, even though constructor seeds normalize it.
+    rng.state = snapshot.state;
+    return rng;
+  }
   next(): number {
     // constants from Numerical Recipes
     this.state = (this.state * 1664525 + 1013904223) >>> 0;
     return this.state / 0x100000000;
   }
+}
+
+export interface SeededRngState {
+  algorithm: "lcg32-numerical-recipes-v1";
+  state: number;
 }
 
 const defaultRng = new DefaultRNG();

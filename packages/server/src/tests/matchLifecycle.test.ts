@@ -283,6 +283,7 @@ function bindPersistence(p: MemoryMatchPersistence): MatchPersistenceBindings {
     markStarted: p.markStarted.bind(p),
     finalizeMatch: p.finalizeMatch.bind(p),
     appendAcceptedAction: p.appendAcceptedAction.bind(p),
+    appendMatchSnapshot: p.appendMatchSnapshot.bind(p),
     markCancelled: p.markCancelled.bind(p),
   };
 }

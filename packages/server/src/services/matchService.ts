@@ -1,6 +1,9 @@
 import { isDeepStrictEqual } from "node:util";
+import type { InitialMatchConfig } from "../replay/initialState";
 import { MatchActionRepository } from "../repositories/matchActionRepository";
 import type { AcceptedActionRecord } from "../persistence/acceptedAction";
+import type { SerializedMatchSnapshot } from "../persistence/matchSnapshot";
+import { MatchSnapshotService } from "./matchSnapshotService";
 import type { DetailedMatch, MatchRepository } from "../repositories/matchRepository";
 import {
   MatchResultError,
@@ -44,6 +47,7 @@ export interface WaitingMatchInput {
   roomId: string;
   gameMode: string;
   seed: number;
+  initialConfig?: InitialMatchConfig;
   createdById?: string | null;
 }
 export interface SeatParticipantInput {
@@ -66,6 +70,7 @@ export type MatchPersistence = Pick<
   | "markStarted"
   | "markCancelled"
   | "appendAcceptedAction"
+  | "appendMatchSnapshot"
 > & { finalizeMatch(matchId: string, input: FinishedMatchInput): Promise<unknown> };
 
 export class MatchService {
@@ -74,6 +79,7 @@ export class MatchService {
     private readonly matches: MatchRepository,
     private readonly logger: { error(data: object, message: string): void } = console,
     actions?: MatchActionRepository,
+    private snapshots?: MatchSnapshotService,
   ) {
     this.actions = actions;
   }
@@ -82,12 +88,17 @@ export class MatchService {
     return (this.actions ??= new MatchActionRepository()).appendAcceptedAction(record);
   }
 
+  appendMatchSnapshot(snapshot: SerializedMatchSnapshot): Promise<void> {
+    return (this.snapshots ??= new MatchSnapshotService()).persistSnapshot(snapshot);
+  }
+
   async createWaitingMatch(input: WaitingMatchInput): Promise<{ id: string }> {
     const match = await this.matches.createWaitingMatch(input);
     if (
       match.status !== "WAITING" ||
       match.seed !== input.seed ||
       match.gameMode !== input.gameMode
+      || (input.initialConfig && !isDeepStrictEqual(match.initialConfig, input.initialConfig))
     )
       throw new Error("Room is already linked to a different or started match");
     return { id: match.id };

@@ -1,9 +1,10 @@
 import type { Prisma } from "@prisma/client";
-import type { GameEvent, PlayerId } from "rules";
+import type { GameEvent, PlayerId, GameModeId } from "rules";
 import { GameActionSchema } from "../schemas";
 import type { ActionLogEntry, GameRoom } from "../store";
 
 export type DraftAction = { type: "draftStarted" | "draftBanHero" | "draftPickHero"; player: PlayerId; heroId?: string };
+export type LobbyModeAction = { type: "setGameMode"; player: PlayerId; gameMode: GameModeId };
 export interface AcceptedActionRecord {
   matchId: string;
   revision: number;
@@ -38,6 +39,10 @@ function jsonValue(value: unknown, depth = 0): Prisma.InputJsonValue | null {
 }
 
 export function toPersistedAction(action: ActionLogEntry["action"]): Prisma.InputJsonObject {
+  if (action.type === "setGameMode") {
+    const mode = action as LobbyModeAction;
+    return { type: mode.type, player: mode.player, gameMode: mode.gameMode };
+  }
   if (["draftStarted", "draftBanHero", "draftPickHero"].includes(action.type)) {
     const draft = action as DraftAction;
     return { type: draft.type, player: draft.player, ...(draft.heroId ? { heroId: draft.heroId } : {}) };
@@ -51,14 +56,15 @@ export function toPersistedEvents(events: GameEvent[]): Prisma.InputJsonValue[] 
 }
 
 export function toAcceptedActionRecord(room: GameRoom, entry: ActionLogEntry): AcceptedActionRecord | null {
-  if (!room.matchId || room.roomMode === "test" || ["setReady", "lobbyInit"].includes(entry.action.type)) return null;
+  if (!room.matchId || room.roomMode === "test" || entry.action.type === "lobbyInit") return null;
   return {
     matchId: room.matchId,
     revision: entry.revision,
     actorUserId: entry.playerId ? room.seatIdentities[entry.playerId]?.userId ?? null : null,
     actorSeat: entry.playerId ?? null,
     actionType: entry.action.type,
-    actionPayload: toPersistedAction(entry.action),
+    actionPayload: { ...toPersistedAction(entry.action),
+      ...(entry.replaySetup ? { _replay: jsonValue(entry.replaySetup) } : {}) },
     events: toPersistedEvents(entry.events),
     createdAt: new Date(entry.at),
   };

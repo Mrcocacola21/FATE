@@ -1,6 +1,9 @@
 import type { GameAction, PlayerId } from "rules";
-import { toAcceptedActionRecord, type DraftAction } from "./acceptedAction";
+import { captureReplaySetup } from "../replay/actionSetup";
+import { toAcceptedActionRecord, type DraftAction, type LobbyModeAction } from "./acceptedAction";
 import { MatchActionQueue } from "./matchActionQueue";
+import { MATCH_SNAPSHOT_FORMAT_VERSION } from "./matchSnapshot";
+import { MatchSnapshotService } from "../services/matchSnapshotService";
 import { getMaxLogEvents, touchGameRoom } from "../store";
 import { extractPersistentMatchResult, MatchResultError } from "./matchResult";
 import { Prisma } from "@prisma/client";
@@ -55,7 +58,7 @@ export class MatchCreationError extends Error {
   }
 }
 
-/** Lifecycle metadata and an independent action journal; never persist runtime state/RNG/sockets. */
+/** In-memory runtime with tracked durable metadata, journal and private checkpoints. */
 export class MatchLifecycle {
   private readonly projections = new Map<string, Projection>();
   private service?: MatchPersistence;
@@ -68,15 +71,17 @@ export class MatchLifecycle {
   constructor(
     private readonly logger: Logger,
     service?: MatchPersistence,
+    private readonly snapshots: MatchSnapshotService = new MatchSnapshotService(),
   ) {
     this.service = service;
     this.actionQueue = new MatchActionQueue({
       appendAcceptedAction: (record) => this.getService().appendAcceptedAction(record),
+      appendMatchSnapshot: (snapshot) => this.getService().appendMatchSnapshot(snapshot),
     }, logger);
   }
 
   private getService(): MatchPersistence {
-    return (this.service ??= new MatchService(new MatchRepository(), this.logger));
+    return (this.service ??= new MatchService(new MatchRepository(), this.logger, undefined, this.snapshots));
   }
 
   startRetries(): void {
@@ -116,6 +121,9 @@ export class MatchLifecycle {
           gameMode: room.gameMode,
           seed: room.seed,
           createdById,
+          initialConfig: { formatVersion: 1, rngAlgorithm: "lcg32-numerical-recipes-v1",
+            gameMode: room.gameMode, hostSeat: room.hostSeat, hostOccupied: !!options.hostConnId,
+            arenaId: room.state.arenaId },
         });
         room.matchId = match.id;
       } catch {
@@ -273,7 +281,23 @@ export class MatchLifecycle {
     if (!entry) return;
     try {
       const record = toAcceptedActionRecord(room, entry);
-      if (record) this.actionQueue.enqueue(record, room.id);
+      if (record) {
+        this.actionQueue.enqueue(record, room.id);
+        // Synchronous capture, before yielding to DB work or the next room command.
+        // Terminal revisions use this same path, also when interval=0.
+        if (this.snapshots.shouldCapture(record.revision, room.state.phase === "ended")) {
+          try {
+            if (room.revision !== record.revision) throw new Error("MATCH_SNAPSHOT_REVISION_MISMATCH");
+            const snapshot = this.snapshots.capture(room);
+            this.actionQueue.enqueueSnapshot(snapshot, room.id);
+          } catch {
+            this.actionQueue.fail(room.matchId, "MATCH_SNAPSHOT_CAPTURE_FAILED", {
+              operation: "snapshot_capture", roomId: room.id, revision: record.revision,
+              formatVersion: MATCH_SNAPSHOT_FORMAT_VERSION,
+            });
+          }
+        }
+      }
     } catch {
       this.actionQueue.fail(room.matchId, "MATCH_ACTION_MAPPING_FAILED", {
         roomId: room.id, revision: entry.revision, actionType: entry.action.type, seat: entry.playerId,
@@ -283,9 +307,18 @@ export class MatchLifecycle {
 
   /** Draft commands have their own rules acceptance flow, outside applyAction. */
   recordDraftAction(room: GameRoom, action: DraftAction): void {
+    this.recordSetupAction(room, action);
+  }
+
+  recordModeAction(room: GameRoom, player: PlayerId): void {
+    this.recordSetupAction(room, { type: "setGameMode", player, gameMode: room.gameMode });
+  }
+
+  private recordSetupAction(room: GameRoom, action: DraftAction | LobbyModeAction): void {
     touchGameRoom(room);
     room.revision++;
-    room.actionLog.push({ at: Date.now(), playerId: action.player, action, events: [], revision: room.revision });
+    room.actionLog.push({ at: Date.now(), playerId: action.player, action, events: [], revision: room.revision,
+      replaySetup: captureReplaySetup(room.state, room.gameMode, room.draftState) });
     const max = getMaxLogEvents();
     if (room.actionLog.length > max) room.actionLog.splice(0, room.actionLog.length - max);
     this.recordAcceptedAction(room);

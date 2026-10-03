@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router";
 import { authStore, useAuthStore } from "./auth/authStore";
 import { AuthLayout } from "./auth/AuthLayout";
@@ -9,6 +9,7 @@ import { ProfilePage } from "./pages/ProfilePage";
 import { PublicProfilePage } from "./pages/PublicProfilePage";
 import { MatchHistoryPage, PublicMatchHistoryPage } from "./pages/MatchHistoryPage";
 import { MatchDetailsPage } from "./pages/MatchDetailsPage";
+import { MatchReplayPage } from "./pages/MatchReplayPage";
 import { ProfileSync } from "./profile/ProfileSync";
 import { Lobby } from "./components/Lobby";
 import { GamePage } from "./pages/GamePage";
@@ -27,6 +28,10 @@ export default function App() {
   const path = location.pathname.replace(/\/$/, "") || "/";
   const authPage = ["/login", "/register"].includes(path);
   const runtimePage = path === "/" || path === VFX_PREVIEW_ROUTE;
+  // Defer reconnect/runtime mounting until a gameplay route is visited. Once mounted,
+  // preserve an existing live game while navigating account/history/replay pages.
+  const [runtimeMounted, setRuntimeMounted] = useState(runtimePage);
+  useEffect(() => { if (runtimePage) setRuntimeMounted(true); }, [runtimePage]);
   const roomId = useGameStore((state) => state.roomId);
   useEffect(() => {
     void authStore.getState().initializeSession();
@@ -41,7 +46,7 @@ export default function App() {
         >
           {/* Preserve mounted game UI and its connection while visiting account routes. */}
           <div hidden={!runtimePage} style={{ display: runtimePage ? "contents" : "none" }}>
-            <GameRuntime />
+            {runtimeMounted && <GameRuntime active={runtimePage} />}
           </div>
           {!runtimePage && (
             <ApplicationPage standalone={authPage}>
@@ -61,6 +66,7 @@ export default function App() {
                   }
                 />
                 <Route path="/matches/:id" element={<MatchDetailsPage />} />
+                <Route path="/matches/:id/replay" element={<RequireAuth><MatchReplayPage /></RequireAuth>} />
                 <Route path="/account" element={<Navigate replace to="/profile" />} />
                 <Route
                   path="/profile"
@@ -83,7 +89,8 @@ export default function App() {
 function ApplicationPage({ children, standalone }: { children: ReactNode; standalone: boolean }) {
   const location = useLocation();
   if (standalone) return <AuthLayout>{children}</AuthLayout>;
-  if (["/figures", "/heartbreak"].includes(location.pathname.replace(/\/$/, "")))
+  if (["/figures", "/heartbreak"].includes(location.pathname.replace(/\/$/, "")) ||
+      /^\/matches\/[^/]+\/replay\/?$/.test(location.pathname))
     return <>{children}</>;
   return (
     <PanelCard className="information-page mx-auto w-full max-w-4xl p-5 sm:p-7">
@@ -98,18 +105,19 @@ function CapabilityHeartbreak() {
   return capabilities.testRooms.enabled ? <Heartbreak /> : <Navigate replace to="/" />;
 }
 
-function GameRuntime() {
+function GameRuntime({ active }: { active: boolean }) {
   const authStatus = useAuthStore((state) => state.status);
   const joined = useGameStore((state) => state.joined);
   const roomId = useGameStore((state) => state.roomId);
   const resumeRoom = useGameStore((state) => state.resumeRoom);
   useEffect(() => {
-    if (authStatus === "authenticated" && !joined) void resumeRoom();
-  }, [authStatus, joined, resumeRoom]);
+    if (active && authStatus === "authenticated" && !joined) void resumeRoom();
+  }, [active, authStatus, joined, resumeRoom]);
   const isVfxPreviewPath =
     typeof window !== "undefined" && window.location.pathname === VFX_PREVIEW_ROUTE;
   const canShowVfxPreview = import.meta.env.DEV || import.meta.env.VITE_ENABLE_TEST_ROOM === "true";
   useEffect(() => {
+    if (!active) return;
     void resumeRoom();
 
     const refreshRoomSnapshot = () => {
@@ -125,7 +133,7 @@ function GameRuntime() {
       window.removeEventListener("online", refreshRoomSnapshot);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [resumeRoom]);
+  }, [active, resumeRoom]);
   return (
     <ErrorBoundary>
       {isVfxPreviewPath && canShowVfxPreview ? (

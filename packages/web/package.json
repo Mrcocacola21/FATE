@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "test:replay": "tsx --test src/replay/*.test.tsx",
+    "test:replay:e2e": "node scripts/replay-smoke.mjs",
     "dev": "vite",
     "build": "vite build",
     "generate:favicons": "node scripts/generate-favicons.mjs",

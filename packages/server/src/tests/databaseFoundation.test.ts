@@ -72,6 +72,7 @@ async function testUserRepositoryDelegatesTypedQueries() {
 
 async function testMatchRepositoryDelegatesTypedQueries() {
   const match: Match = {
+    initialConfig: null,
     id: "a55a588d-5d05-4303-a0d7-f19e3d9e9a1f",
     roomId: "room-1",
     status: "WAITING",

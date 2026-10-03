@@ -316,10 +316,12 @@ async function run() {
     assert((await repository.findById(room.matchId))?.startedAt);
     assert.equal(room.state.phase, "lobby", "initiative is a started match before placement");
     assert(room.state.pendingRoll);
+    await until(async () => (await database.matchAction.count({ where: { matchId: room.matchId! } })) === room.revision);
+    const countBeforeSpectator = await database.matchAction.count({ where: { matchId: room.matchId } });
     spectator.socket.send(JSON.stringify({ type: "action", action: { type: "endTurn" } }));
     await until(() => spectator.messages.find((message) => message.type === "actionResult"));
     const countAfterSpectator = await database.matchAction.count({ where: { matchId: room.matchId } });
-    assert(countAfterSpectator <= 1, "spectator command cannot append an action");
+    assert.equal(countAfterSpectator, countBeforeSpectator, "spectator command cannot append an action");
     assert.equal((await server.inject({ url: `/api/matches/${room.matchId}/actions`, headers: { authorization: `Bearer ${alice.accessToken}` } })).statusCode, 409);
     const pending = room.state.pendingRoll!;
     const acting = pending.player === "P1" ? resumed : p2;
@@ -347,12 +349,13 @@ async function run() {
     const actionsResponse = await server.inject({ url: `/api/matches/${room.matchId}/actions`, headers: { authorization: `Bearer ${alice.accessToken}` } });
     assert.equal(actionsResponse.statusCode, 200, actionsResponse.body);
     const journal = await database.matchAction.findMany({ where: { matchId: room.matchId }, orderBy: { revision: "asc" } });
-    assert.equal(journal.length, 3, "start, one roll and terminal turn only; reconnect does not duplicate actions");
-    assert.equal(new Set(journal.map((action) => action.revision)).size, 3);
+    assert.equal(journal.length, 6, "mode, two readiness actions, start, roll and terminal turn; reconnect appends nothing");
+    assert.equal(new Set(journal.map((action) => action.revision)).size, journal.length);
     assert.equal(journal[0].actorUserId, alice.user.id);
     assert.equal(journal[0].actorSeat, "P1");
-    assert.equal(journal[1].actorUserId, pending.player === "P1" ? alice.user.id : bob.user.id);
-    assert.equal(journal[1].actorSeat, pending.player);
+    const initiativeAction = journal.find((action) => action.actionType === "resolvePendingRoll")!;
+    assert.equal(initiativeAction.actorUserId, pending.player === "P1" ? alice.user.id : bob.user.id);
+    assert.equal(initiativeAction.actorSeat, pending.player);
     assert.deepEqual(actionsResponse.json().actions.map((action: { revision: number }) => action.revision), journal.map((action) => action.revision));
     for (const secret of [alice.accessToken, bob.accessToken, ack.resumeToken!, "connId", "passwordHash", "email", "pendingRollId"])
       assert(!actionsResponse.body.includes(secret), secret);
@@ -367,7 +370,9 @@ async function run() {
     assert.equal((await repository.findParticipants(room.matchId)).length, 2);
     assert((await database.matchAction.count({ where: { matchId: room.matchId } })) > 0);
     assert.equal((await database.matchAction.findFirst({ where: { matchId: room.matchId }, orderBy: { revision: "desc" } }))?.revision, finished.finalRevision);
-    assert.equal(await database.matchSnapshot.count({ where: { matchId: room.matchId } }), 0);
+    assert.equal(await database.matchSnapshot.count({ where: { matchId: room.matchId } }), 1);
+    assert.equal((await database.matchSnapshot.findFirstOrThrow({ where: { matchId: room.matchId }, orderBy: { revision: "desc" } })).revision, finished.finalRevision);
+    for (const field of ["snapshots", "rngState", "knowledge", "lastKnownPositions"]) assert(!detail.body.includes(field), field);
 
     const beforeSandbox = await database.match.count();
     const sandbox = await server.inject({

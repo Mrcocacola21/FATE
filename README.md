@@ -224,8 +224,8 @@ start-before-finish order, with the original timestamps/result/revision. Reconne
 cannot rewrite a failed start snapshot. This retry buffer is process-local: process exit loses
 pending work, and shutdown reports outstanding projections. Restart recovery is a later phase.
 
-Persistent MatchAction writes, completed results and match history are implemented. GameState
-snapshot writes, replay, restart recovery, statistics and ratings remain deferred.
+Persistent MatchAction writes, completed results, match history and private GameState checkpoints
+are implemented, including completed-match Replay API/UI. Restart recovery, statistics and ratings remain deferred.
 The result detail endpoint and history APIs/UI read completed durable records.
 
 Verification uses explicit in-memory persistence injection for the normal runtime test suite,
@@ -234,6 +234,67 @@ never a production fallback. Real PostgreSQL integration requires a migrated, is
 
 ```bash
 npm run -w server test:match:db
+```
+
+### Match Snapshots
+
+Normal persistent rooms save private PostgreSQL checkpoints while `GameRoom` remains the
+authoritative runtime. `MATCH_SNAPSHOT_INTERVAL` defaults to **20 revisions**; accepted journaled
+revisions divisible by the interval trigger a checkpoint. The setting is an optional, non-secret
+Render override, parsed once per lifecycle; invalid values fail configuration. `0` disables periodic
+checkpoints but preserves final snapshots. Twenty is an operational default, not a benchmarked optimum.
+
+Snapshot revision **N means state after the accepted revision-N action**, matching `MatchAction.revision`.
+For new Phase 11 matches, readiness and mode changes also use the durable journal/queue path,
+so accepted revisions are contiguous. Revision zero is before the first accepted command;
+the internal creation-time `lobbyInit` has no revision. Older journals can contain gaps and cannot
+be assumed replayable. Rejected actions and accepted no-ops without a revision never trigger a snapshot.
+
+The existing `MatchSnapshot` model stores `matchId`, `revision`, `formatVersion`, `state`, `rngState`
+and the generated `id`/`createdAt`; its existing unique `(matchId, revision)` index supports exact,
+latest and at/before-revision lookups. No schema change, migration or historical backfill is needed.
+Format v1 uses the canonical `MATCH_SNAPSHOT_FORMAT_VERSION` constant. `state` is authoritative
+GameState domain JSON, including hidden units/knowledge, markers, rule declaration data and pending
+rolls/moves/combat. V1 stores `units` as an ordered array and restores the runtime `Record` on load:
+JSONB does not preserve object key order, while rules depend on unit iteration order. All other
+fields retain their domain JSON representation. `state.events` is explicitly empty: events are presentation history and historical
+actions/events belong to `MatchAction`. Optional undefined object properties become absent; undefined
+array entries, holes, non-finite numbers, functions, custom instances, Map/Set/Date/BigInt and cycles
+fail capture. A detached, recursively frozen copy is captured synchronously before queueing any DB
+work, so later room mutations cannot change it. No connection/auth/profile/user identity is copied.
+
+Normal rooms already use the Numerical Recipes uint32 LCG. `rngState` stores
+`{ "algorithm": "lcg32-numerical-recipes-v1", "state": <uint32> }`, the exact internal continuation
+state; restoring it produces the same next random value, including a valid zero state. It is not
+the initial seed or a function closure. Test/debug dice queues and runtime-only rooms are excluded.
+
+The tracked per-match chain writes action N, then snapshot N, before later writes. PostgreSQL
+persistence does not add interval-action latency; capture/validation runs synchronously. A terminal
+action always captures its final state, including when off interval or interval=0. A terminal action
+on an interval uses a single capture. Equivalent duplicate writes succeed without changing the
+canonical row or timestamp; different state/RNG/version at the same revision raises
+`MATCH_SNAPSHOT_CONFLICT`. Finalization waits for the complete chain, so a successfully persisted
+FINISHED match has a snapshot at `Match.finalRevision`. Transient Prisma write errors use the existing
+three-attempt bounded retry; permanent conflicts/validation errors stop. A failed checkpoint preserves
+ended gameplay, blocks later writes/result publication, and logs identifiers/operation/version only.
+Pending writes remain tracked through cleanup and drain on graceful shutdown before Prisma disconnects.
+The existing bounded drain can report stalled work; uncompleted in-memory queues are not crash durable.
+
+Internal `MatchSnapshotService` methods `loadSnapshot`, `loadLatestSnapshot` and
+`loadLatestSnapshotAtOrBefore` use indexed PostgreSQL queries (`revision DESC`, one row for latest).
+Missing snapshots return null, including legacy matches. The loader rejects unsupported versions
+with `UNSUPPORTED_SNAPSHOT_VERSION` and malformed payloads with `MATCH_SNAPSHOT_INVALID`; v1 uses
+explicit Zod validation of all typed state fields plus JSON validation of extensible domain contexts.
+Loaded results contain typed GameState and RNG data. Checkpoints contain hidden information and are
+never included in public details, action history, match history, spectator messages or frontend APIs.
+
+Phase 11 reconstruction and Phase 12 replay API/UI now consume these private checkpoints through
+safe read-only projection. Startup room recovery and snapshot performance research remain deferred. Local verification:
+
+```bash
+npm run -w server test:snapshots
+# Uses the existing loopback-only TEST_DATABASE_URL guard; migrate the isolated test DB first.
+npm run -w server test:snapshots:db
 ```
 
 ### Persistent Match Results
@@ -283,7 +344,7 @@ or snapshots. Non-FINISHED matches return 409 `MATCH_NOT_FINISHED`, unknown UUID
 sanitized 503 `MATCH_PERSISTENCE_UNAVAILABLE`. Errors use `{ "error": { "code": "...", "message": "..." } }`.
 JSON summaries are whitelisted again on reads. Test/sandbox rooms have no competitive Match
 and never finalize results. Persistent action history and match history UI/list APIs are implemented;
-snapshots, replay, statistics and ratings remain deferred.
+private snapshots and completed-match replay are implemented; statistics and ratings remain deferred.
 
 Apply incremental migration `20261002050000_persistent_match_results` with
 `npm run -w server db:migrate:deploy`. Focused extraction/retry tests run in `npm run test`;
@@ -658,7 +719,7 @@ Explicit selects and DTOs exclude auth/private data, result payloads, hidden sta
 `MatchAction` rows. The existing participant `userId` index supports participation lookup;
 no schema or index migration was needed. No action log is loaded for list or details UI.
 Filters/page live in the URL, changes reset page 1, and loading/error/empty states are localized
-in English and Ukrainian. Replay, snapshots, aggregated statistics, ratings and leaderboards
+in English and Ukrainian. Completed-match replay is available from Match Details. Aggregated statistics, ratings and leaderboards
 remain future phases.
 
 Focused checks:
@@ -682,8 +743,9 @@ historical names after a rename, and saves desktop/mobile screenshots under
 
 Normal persistent matches append accepted authoritative gameplay actions to PostgreSQL
 `MatchAction`. Invalid, unauthorized and spectator commands never append rows. Lobby
-joins, readiness and mode changes are not gameplay journal actions; accepted draft start,
-ban and pick commands are included because they determine the armies. Test/Sandbox rooms
+joins and figure-set changes are captured as compact setup inputs on the next accepted lobby command.
+Readiness, mode changes, and accepted draft start, ban and pick commands are included because they
+determine authoritative revisions and armies. Test/Sandbox rooms
 and rooms without `matchId` keep their runtime log only. Older matches are not backfilled.
 
 The existing schema is reused without a migration. Each row contains `matchId`, `revision`,
@@ -696,8 +758,8 @@ results, including rolls and hidden game information; combat visual batch notifi
 and visual sequencing metadata are excluded. No RNG seed/state is added to action rows.
 
 `revision` describes the state **after** an accepted command: apply rules synchronously,
-advance revision, append runtime entry, schedule durable append. Revisions may have gaps:
-room metadata changes and readiness also advance runtime revision but are not stored here.
+advance revision, append runtime entry, schedule durable append. New Phase 11 journals have contiguous
+revisions, including readiness and mode changes. Earlier journals may have missing lobby revisions.
 Accepted readiness no-ops do not advance revision. Draft commands advance revision once.
 The terminal gameplay row's revision equals `Match.finalRevision`; later room metadata
 changes do not change that captured result. Ordering uses revision, never timestamp.
@@ -732,7 +794,7 @@ private rolls, credentials, email and database row IDs are not exposed. Canonica
 JSON is retained separately for future replay verification. Historical empty journals
 return an empty page.
 
-The durable journal supports the completed Match History API/UI. Match Snapshots, Replay,
+The durable journal supports completed Match History, Match Snapshots and Replay API/UI.
 Restart Recovery, Statistics and Rating remain future phases.
 
 ```bash
@@ -777,6 +839,122 @@ all auth, profile, match and public-history routes.
 - `Failed to fetch` in production usually means `VITE_API_URL` points to localhost
 - WS connection failures usually mean `VITE_WS_URL` should be `wss://.../ws` in production
 - CORS errors usually mean `WEB_ORIGIN` is missing or incorrect on Render
+
+## Deterministic Replay Engine
+
+Phase 11 provides the internal `ReplayService`; Phase 12 exposes it through the safe API/UI below.
+`reconstructAtRevision(matchId, revision)` reads durable Match metadata, selects the greatest
+snapshot revision at or before the target, and loads only `base < revision <= target` actions
+in ascending revision order. `reconstructFinalState(matchId)` targets the FINISHED Match's
+canonical `finalRevision`, never a guessed maximum action revision. Invalid targets are rejected.
+IN_PROGRESS matches support explicit persisted targets; WAITING/CANCELLED matches are excluded.
+
+Without a suitable checkpoint, reconstruction uses Match.seed and the compact versioned
+Match.initialConfig (original game mode, host seat/occupancy, arena and RNG algorithm).
+Live creation and replay call the same pure `createInitialMatchState` function. Creation uses
+default armies in all modes, matching the existing runtime; later lobby setup actions supply
+the accepted mode/hero selections. Revision zero is this creation state. Revision N is state
+after accepted action N. New matches journal readiness and mode changes as well as draft/gameplay,
+so revisions are contiguous. Missing, duplicated, unordered or malformed required actions fail.
+
+Lobby action payloads include a private `_replay` v1 setup envelope: domain host/seat/readiness,
+mode, actual hero selections and bounded accepted draft history. These inputs capture changes
+that occur between revisions without storing whole GameState blobs or connection/user IDs.
+Draft commands use pure draft rules; checkpoint continuation restores their bounded draft cursor.
+Persisted actions pass a validated deserialization boundary and preserve P1/P2 actor semantics.
+The existing snapshot v1 loader validates state, format, revision and RNG data; unsupported
+snapshots fail explicitly rather than falling back silently.
+
+Each call owns its state and SeededRNG. Initial replay seeds the existing Numerical Recipes LCG;
+checkpoint replay restores the exact uint32 continuation cursor, including zero. Rules re-execute
+random intents deterministically; saved event results are not substituted for rolls. Replay reads
+no live room, sockets or sessions, broadcasts nothing, and writes no actions, snapshots, match
+results, participants, ratings or statistics. PostgreSQL integration tests enforce READ ONLY.
+
+`validateFinalDeterminism(matchId)` always reconstructs from revision zero through the full
+accepted journal and compares with the exact final snapshot. Equality reuses snapshot JSON
+normalization (ordered units, omitted undefined members and empty presentation history) and
+deep structural equality, then separately checks RNG algorithm/cursor. A state or RNG mismatch
+raises a controlled ReplayError with safe identifiers only. Fast final reconstruction reports
+`checkpoint_loaded` if it simply loads the final checkpoint; that does not prove determinism.
+With no final checkpoint, reconstruction can succeed but validation reports `deterministic: null`.
+
+Migration `20261003000000_replay_initial_config` adds one nullable JSONB column for small typed
+creation inputs. Old rows are not guessed or backfilled: a compatible checkpoint plus complete
+following actions can still reconstruct a historical segment; missing initial inputs prevent
+independent full validation. A journal gap or incompatible historical format fails explicitly.
+Phase 12 adds replay API/projection, UI/timeline and a small client cache. Restart recovery and
+performance research remain future phases. See [the Phase 11 report](docs/phase11-implementation-report.md) for engine verification.
+
+```bash
+npm run -w server test:replay
+# Requires the existing guarded, migrated loopback TEST_DATABASE_URL:
+npm run -w server test:replay:db
+```
+
+## Replay API and UI (Phase 12)
+
+Authenticated users can watch any **FINISHED** match with durable replay creation inputs,
+two historical participants and a complete accepted-action journal. Active, waiting and cancelled
+matches are rejected. Legacy matches without sufficient durable history return `MATCH_NOT_REPLAYABLE`.
+This policy does not imply that all completed authoritative state is public.
+
+- `GET /api/matches/:id/replay` returns matchId, status, gameMode, initialRevision (0), finalRevision,
+  historical participants (seat, userId, displayNameSnapshot as displayName, optional current username/avatar,
+  outcome), persisted winnerSeat/finishReason/timing and an ordered lightweight timeline.
+- Timeline entries contain only revision, actorSeat, actionType and createdAt. No action payloads,
+  events, snapshot JSON, seed, RNG cursor or reconstructed states are returned in metadata.
+- `GET /api/matches/:id/replay/state?revision=N` returns `{ matchId, revision, state: ReplayView, action }`.
+  Action is the lightweight timeline entry, or null at revision 0. UUID/revision validation uses Zod;
+  revisions are never clamped. Internal reconstruction/base diagnostics are not exposed.
+
+Routes delegate to the reader-only `ReplayQueryService`, which calls Phase 11's
+`ReplayService.reconstructAtRevision`: nearest validated snapshot plus required accepted actions.
+Normal navigation never runs full `validateFinalDeterminism`. Replay requests never write Match,
+participants, actions, checkpoints or results, create/read a live GameRoom, touch room tokens,
+broadcast sockets, or trigger statistics/ratings. Responses use `Cache-Control: no-store`.
+
+`makeReplayView` is a pure, explicit field allowlist. It preserves the existing spectator visibility
+rule: living stealthed units are omitted before the ended position; the ended position reveals units
+as the current spectator design already does. Visible-unit HP is already public on that board.
+Private hero memory, hidden traps/stakes, pending choices/rolls/targets, action legality, knowledge,
+events, internal counters, RNG and unrevealed unit references are omitted. Only public visual forms,
+statuses and board markers/effects remain. A future private field cannot enter the response through
+an authoritative object spread.
+
+Errors use the existing `{ error: { code, message } }` envelope: 401 `UNAUTHORIZED`, 404
+`MATCH_NOT_FOUND`, 409 `MATCH_NOT_FINISHED`/`MATCH_NOT_REPLAYABLE`, 400 `INVALID_REQUEST`
+(match id)/`INVALID_REPLAY_REVISION`, 500 `REPLAY_INTEGRITY_ERROR`, or sanitized 503 `REPLAY_UNAVAILABLE`.
+Corrupt or unsupported history never yields a replacement guessed board.
+
+Open `/matches/:id/replay`, or use **Watch Replay** on Match Details after its lightweight availability
+check. There is no global Replay sidebar item. The page has both historical participants, persisted
+result, a large read-only shared Board and beginning/previous/next/end/direct-revision controls.
+Previous/next and the slider use actual timeline entries; the Phase 11 journal currently requires
+contiguous revisions and treats gaps as corruption. Arrow Left/Right and Home/End work outside inputs
+and other focused controls. `?revision=N` preserves position on refresh and browser back/forward.
+Invalid URL revisions show feedback and make no state request.
+
+React renders server-projected data only: it does not replay actions. Only the current HTTP result
+and an LRU cache of at most **five** recently viewed states are retained; there is no mass prefetch
+or server-wide all-state cache. AbortController and ignored aborted results prevent request races.
+The slider updates its local label immediately and commits after **180 ms** without further changes.
+Metadata/controls remain visible during board loading. English/Ukrainian labels and responsive board
+fit support desktop, tablet and mobile. Direct replay entry does not mount/reconnect the game runtime or read/write room tokens;
+an already running game remains mounted when navigating other pages, without replay initiating a socket.
+The existing Vercel SPA fallback covers direct entry and refresh.
+
+No Phase 12 schema change or migration is required. Autoplay, speed controls, branching/export/sharing
+systems, live spectating, restart recovery, statistics and ratings are outside this phase.
+See [the Phase 12 implementation report](docs/phase12-implementation-report.md) for contracts and verification.
+
+```bash
+npm run -w server test:replay-api
+npm run -w web test:replay
+# Existing loopback-only test-database guard; apply existing migrations to isolated test DB first:
+npm run -w server test:replay-api:db
+npm run -w web test:replay:e2e
+```
 
 ## Quick Verify
 

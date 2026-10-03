@@ -3,8 +3,20 @@ import { refreshCookieOptions } from "./auth/httpSecurity";
 
 export class ProductionConfigurationError extends Error {}
 
+export interface MatchSnapshotConfig { interval: number }
+/** Parse once per server/lifecycle; zero disables periodic checkpoints only. */
+export function readMatchSnapshotConfig(env: NodeJS.ProcessEnv = process.env): MatchSnapshotConfig {
+  const raw = env.MATCH_SNAPSHOT_INTERVAL;
+  if (raw === undefined) return { interval: 20 };
+  if (!/^\d+$/.test(raw) || !Number.isSafeInteger(Number(raw)) || Number(raw) > 2147483647) {
+    throw new ProductionConfigurationError("MATCH_SNAPSHOT_INTERVAL must be a nonnegative integer (0 disables periodic snapshots)");
+  }
+  return { interval: Number(raw) };
+}
+
 // Only fixed messages and variable names may escape this validator.
 export function validateProductionEnvironment(env: NodeJS.ProcessEnv = process.env): void {
+  readMatchSnapshotConfig(env);
   if (env.NODE_ENV !== "production") return;
 
   for (const name of [

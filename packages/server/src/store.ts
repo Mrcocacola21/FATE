@@ -8,9 +8,6 @@ import {
   PlayerId,
   HeroSelection,
   applyAction,
-  attachArmy,
-  createDefaultArmy,
-  createEmptyGame,
   createDebugSandboxState,
   DebugDiceRNG,
   type RNG,
@@ -21,6 +18,9 @@ import {
 import { randomUUID } from "node:crypto";
 import type { ConnectionIdentity } from "./auth/connectionIdentity";
 import { accepted, rejected, type CommandResult } from "./commandResult";
+import { createInitialMatchState } from "./replay/initialState";
+import { captureReplaySetup, type ReplaySetup } from "./replay/actionSetup";
+import { withAcceptedRevision } from "./replay/stateRevision";
 
 export interface ActionLogEntry {
   at: number;
@@ -29,6 +29,7 @@ export interface ActionLogEntry {
   events: GameEvent[];
   revision: number;
   debugDiceConsumed?: number[];
+  replaySetup?: ReplaySetup;
 }
 
 export interface GameRoom {
@@ -125,12 +126,11 @@ export function createGameRoomWithId(id: string, options: CreateGameOptions = {}
   const hostSeat: PlayerId = options.hostSeat ?? "P1";
   const hostConnId = options.hostConnId ?? null;
 
-  let state = roomMode === "test" ? createDebugSandboxState() : createEmptyGame();
-  if (roomMode === "normal") {
-    state = attachArmy(state, createDefaultArmy("P1"));
-    state = attachArmy(state, createDefaultArmy("P2"));
-    state = applyAction(state, { type: "lobbyInit", host: hostSeat }, rng).state;
-  } else {
+  let state = roomMode === "test" ? createDebugSandboxState() : createInitialMatchState({
+    formatVersion: 1, rngAlgorithm: "lcg32-numerical-recipes-v1", gameMode,
+    hostSeat, hostOccupied: !!hostConnId, arenaId: options.arenaId || null,
+  }, rng);
+  if (roomMode === "test") {
     state = {
       ...state,
       seats: { P1: false, P2: false },
@@ -319,6 +319,8 @@ export function applyGameAction(
   playerId?: PlayerId,
 ): CommandResult {
   const previousState = room.state;
+  const replaySetup = room.roomMode === "normal" && previousState.phase === "lobby"
+    ? captureReplaySetup(room.state, room.gameMode, room.draftState) : undefined;
   const authoritativeAction: GameAction =
     action.type === "resolvePendingRoll" && playerId
       ? { ...action, player: playerId }
@@ -348,16 +350,7 @@ export function applyGameAction(
   }
 
   const nextRevision = room.revision + 1;
-  room.state =
-    previousState.phase !== "ended" && result.state.phase === "ended" && result.state.gameOver
-      ? {
-          ...result.state,
-          gameOver: {
-            ...result.state.gameOver,
-            endedAtRevision: nextRevision,
-          },
-        }
-      : result.state;
+  room.state = withAcceptedRevision(previousState, result.state, nextRevision);
   touchGameRoom(room);
   room.revision = nextRevision;
   room.actionLog.push({
@@ -367,6 +360,7 @@ export function applyGameAction(
     events: result.events,
     revision: room.revision,
     debugDiceConsumed: debugDiceConsumed.length > 0 ? debugDiceConsumed : undefined,
+    replaySetup,
   });
   const maxLogEvents = getMaxLogEvents();
   if (room.actionLog.length > maxLogEvents) {

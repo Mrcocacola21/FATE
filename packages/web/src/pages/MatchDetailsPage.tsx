@@ -13,6 +13,7 @@ import {
   outcomeLabel,
 } from "../matches/presentation";
 import type { MatchDetails } from "../matches/types";
+import { MatchReplayLink } from "../replay/MatchReplayLink";
 
 export function MatchDetailsPage() {
   const { id = "" } = useParams();
@@ -105,6 +106,7 @@ export function MatchDetailsPage() {
               </div>
             ))}
           </dl>
+          <MatchReplayLink id={match.id} finalRevision={match.finalRevision} />
         </>
       )}
     </section>

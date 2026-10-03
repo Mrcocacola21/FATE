@@ -89,6 +89,7 @@ model Match {
   status        MatchStatus @default(WAITING)
   gameMode      String      @db.VarChar(50)
   seed          Int
+  initialConfig Json?       @db.JsonB
   createdById   String?     @db.Uuid
   createdAt     DateTime    @default(now()) @db.Timestamptz(3)
   startedAt     DateTime?   @db.Timestamptz(3)

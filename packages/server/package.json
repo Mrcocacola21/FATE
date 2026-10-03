@@ -5,6 +5,8 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
+    "test:replay-api": "tsx src/tests/replayApi.test.ts",
+    "test:replay-api:db": "tsx src/tests/replayApi.integration.test.ts",
     "dev:raw": "tsx watch src/index.ts",
     "dev": "node ../../scripts/waitForRulesDist.mjs && npm run dev:raw",
     "prebuild": "npm run prisma:generate",
@@ -12,7 +14,7 @@
     "start": "node dist/index.js",
     "start:deploy": "npm run db:migrate:deploy && npm run db:migrate:status && npm run start",
     "pretest": "npm run prisma:generate",
-    "test": "npm run -w rules build && tsx src/tests/deployment.test.ts && tsx src/tests/databaseFoundation.test.ts && tsx src/tests/auth.test.ts && tsx src/tests/profile.test.ts && tsx src/tests/view.test.ts && tsx src/tests/markerProjection.test.ts && tsx src/tests/matchLifecycle.test.ts && tsx src/tests/matchResult.test.ts && tsx src/tests/matchHistory.test.ts && tsx src/tests/matchAction.test.ts && tsx src/tests/authenticatedMultiplayer.test.ts && tsx src/tests/ws.smoke.ts && tsx src/tests/hardening.test.ts && tsx src/tests/testRoom.test.ts && tsx src/tests/testRoom.ws.test.ts && tsx src/tests/modes.test.ts",
+    "test": "npm run -w rules build && tsx src/tests/deployment.test.ts && tsx src/tests/databaseFoundation.test.ts && tsx src/tests/auth.test.ts && tsx src/tests/profile.test.ts && tsx src/tests/view.test.ts && tsx src/tests/markerProjection.test.ts && tsx src/tests/matchLifecycle.test.ts && tsx src/tests/matchResult.test.ts && tsx src/tests/matchHistory.test.ts && tsx src/tests/matchAction.test.ts && tsx src/tests/matchSnapshot.test.ts && tsx src/tests/replay.test.ts && tsx src/tests/authenticatedMultiplayer.test.ts && tsx src/tests/ws.smoke.ts && tsx src/tests/hardening.test.ts && tsx src/tests/testRoom.test.ts && tsx src/tests/testRoom.ws.test.ts && tsx src/tests/modes.test.ts",
     "pretest:db": "npm run prisma:generate",
     "test:db": "tsx src/tests/database.integration.test.ts",
     "pretest:auth:db": "npm run prisma:generate",
@@ -33,7 +35,13 @@
     "pretest:actions:db": "npm run prisma:generate",
     "test:actions:db": "tsx src/tests/matchAction.integration.test.ts",
     "test:history:db": "tsx src/tests/matchHistory.integration.test.ts",
-    "pretest:history:db": "npm run prisma:generate"
+    "pretest:history:db": "npm run prisma:generate",
+    "test:snapshots": "tsx src/tests/matchSnapshot.test.ts",
+    "pretest:snapshots:db": "npm run prisma:generate",
+    "test:snapshots:db": "tsx src/tests/matchSnapshot.integration.test.ts",
+    "test:replay": "tsx src/tests/replay.test.ts",
+    "pretest:replay:db": "npm run prisma:generate",
+    "test:replay:db": "tsx src/tests/replay.integration.test.ts"
   },
   "dependencies": {
     "@fastify/cookie": "^9.4.0",

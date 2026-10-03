@@ -13,6 +13,8 @@ import { disconnectDatabase } from "./db/client";
 import { authRoutes } from "./routes/authRoutes";
 import { profileRoutes } from "./routes/profileRoutes";
 import { matchRoutes } from "./routes/matchRoutes";
+import { replayRoutes } from "./routes/replayRoutes";
+import type { ReplayQueryService } from "./services/replayQueryService";
 import { matchHistoryRoutes } from "./routes/matchHistoryRoutes";
 import type { MatchHistoryService } from "./services/matchHistoryService";
 import { isTrustedAuthOrigin } from "./auth/httpSecurity";
@@ -27,6 +29,7 @@ export async function buildServer(
     connectionIdentity?: Pick<ConnectionIdentityService, "verify">;
     actionHistory?: Pick<MatchActionService, "getCompletedMatchActionHistory">;
     matchHistory?: Pick<MatchHistoryService, "getUserMatchHistory">;
+    replayQuery?: Pick<ReplayQueryService, "getMetadata" | "getState">;
   } = {},
 ) {
   const logLevel = process.env.LOG_LEVEL ?? "info";
@@ -70,6 +73,7 @@ export async function buildServer(
     actionHistory: options.actionHistory,
   });
   await server.register(matchHistoryRoutes, { prefix: "/api", matchHistory: options.matchHistory });
+  await server.register(replayRoutes, { prefix: "/api", identity, replayQuery: options.replayQuery });
   registerGameWebSocket(server, lifecycle, identity);
 
   return server;

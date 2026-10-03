@@ -127,7 +127,8 @@ async function run() {
     lifecycle.recordDraftAction(closing, { type: "draftStarted", player: "P1" });
     await lifecycle.close();
     assert.equal(await db.matchAction.count({ where: { matchId: closing.matchId! } }), 1);
-    assert.equal(await db.matchSnapshot.count({ where: { matchId: { in: matchIds } } }), 0);
+    assert.equal(await db.matchSnapshot.count({ where: { matchId: room.matchId! } }), 1);
+    assert.equal((await db.matchSnapshot.findFirstOrThrow({ where: { matchId: room.matchId! } })).revision, finished!.finalRevision);
     console.log("persistent action journal PostgreSQL races, canonical conflicts, ordering, rolls, terminal result, SQL failure and shutdown passed");
   } finally {
     await dropTrigger();

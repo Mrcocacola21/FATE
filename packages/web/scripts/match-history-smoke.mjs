@@ -235,7 +235,8 @@ try {
   assert.match(content, /P2 · Loss/);
   assert.match(content, /3m 00s/);
   assert.match(content, /Final revision[\s\S]*42/);
-  assert.doesNotMatch(content, /Replay|timeline|rating/i);
+  assert.doesNotMatch(content, /actionPayload|rngState|rating/i);
+  assert.equal(await details.getByRole("link", { name: "Watch Replay", exact: true }).count(), 0);
   await page.screenshot({ path: path.join(output, "details-mobile.png") });
   const renamed = `Renamed_${suffix}`;
   await database.profile.update({

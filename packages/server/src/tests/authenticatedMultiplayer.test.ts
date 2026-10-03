@@ -171,12 +171,12 @@ async function run() {
     const missingIdentity = await p1.wait("actionResult");
     assert(missingIdentity.type === "actionResult" && !missingIdentity.ok);
     assert.equal(match.status, "WAITING");
-    assert.equal(persistence.actions.size, 0, "rejected start and readiness are not durable actions");
+    assert.equal(persistence.actions.size, 2, "readiness is durable; rejected start appends nothing");
     room.seatIdentities.P2 = identityP2;
     p1.send({ type: "startGame" });
     await p1.wait("actionResult");
     assert.equal(match.status, "IN_PROGRESS");
-    assert.equal(persistence.actions.size, 1);
+    assert.equal(persistence.actions.size, 3);
     assert.equal([...persistence.actions.values()][0].actorUserId, userA);
     assert(room.participantsLocked);
     const participantBefore = JSON.stringify(Array.from(match.participants));
@@ -207,7 +207,7 @@ async function run() {
     assert(!wsTestHooks.hasSeatGraceToken(ack.resumeToken));
     assert.equal(JSON.stringify(Array.from(match.participants)), participantBefore);
     assert.equal(match.status, "IN_PROGRESS");
-    assert.equal(persistence.actions.size, 1, "reconnect cannot append a duplicate start");
+    assert.equal(persistence.actions.size, 3, "reconnect cannot append a duplicate start");
     const resumedState = await resumed.wait("roomState");
     assert(resumedState.type === "roomState");
     assert.equal(resumedState.meta.playerNames.P1, "Alice Profile");
@@ -230,7 +230,7 @@ async function run() {
       assert.equal(accountReads, readsBefore);
       assert.equal(verifications, verifiesBefore);
       assert.equal(persistence.calls.length, callsBefore);
-      assert.equal(persistence.actions.size, 2);
+      assert.equal(persistence.actions.size, 4);
       const rollRecord = [...persistence.actions.values()].find((entry) => entry.actionType === "resolvePendingRoll")!;
       assert.equal(rollRecord.actorUserId, pending.player === "P1" ? userA : userB);
       assert.equal(rollRecord.actorSeat, pending.player);

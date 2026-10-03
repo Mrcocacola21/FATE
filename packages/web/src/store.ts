@@ -255,7 +255,8 @@ let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 let reconnectAttempts = 0;
 let suppressAutoReconnect = false;
 let intentionalLeave = false;
-const initialRoomSession = loadRoomSession();
+// Persisted room identity is loaded on demand by resumeRoom, never on module import.
+// Information/replay pages import the shared shell store without touching seat tokens.
 
 function roomSessionFromState(state: GameStore): RoomSession | null {
   if (state.roomId && state.role && state.resumeToken) {
@@ -577,10 +578,10 @@ async function closeSocketForReconnect(): Promise<void> {
 export const useGameStore = create<GameStore>((set, get) => ({
   connectionStatus: "disconnected",
   joined: false,
-  roomId: initialRoomSession?.roomId ?? null,
-  role: initialRoomSession?.role ?? null,
-  resumeToken: initialRoomSession?.resumeToken ?? null,
-  seat: initialRoomSession?.seat ?? null,
+  roomId: null,
+  role: null,
+  resumeToken: null,
+  seat: null,
   isHost: false,
   canControlTestRoom: false,
   roomMeta: defaultRoomMeta,

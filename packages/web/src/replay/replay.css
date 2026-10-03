@@ -1,0 +1,56 @@
+.replay-page {
+  max-width: 1100px;
+}
+.replay-board-stage {
+  height: clamp(310px, 57vh, 680px);
+  min-width: 0;
+}
+.replay-loading {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgb(30 30 30 / 35%);
+  color: white;
+  pointer-events: none;
+}
+.replay-button {
+  border: 1px solid currentColor;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-weight: 600;
+}
+.replay-button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.replay-button:focus-visible,
+.replay-jump:focus-visible {
+  outline: 2px solid #c59d5f;
+  outline-offset: 3px;
+}
+.replay-jump {
+  width: 78px;
+  border: 1px solid currentColor;
+  border-radius: 6px;
+  padding: 6px;
+  background: transparent;
+}
+.replay-board button:disabled {
+  cursor: default;
+  opacity: 1;
+}
+.replay-controls input[type="range"] {
+  accent-color: #a88547;
+  touch-action: pan-y;
+}
+@media (max-width: 480px) {
+  .replay-board-stage {
+    height: 330px;
+  }
+  .replay-page .match-participant {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+}

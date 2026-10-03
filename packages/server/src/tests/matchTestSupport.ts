@@ -7,6 +7,7 @@ import { TokenService } from "../auth/tokens";
 import type { UserWithProfile } from "../repositories/userRepository";
 import type { AcceptedActionRecord } from "../persistence/acceptedAction";
 import { MatchActionConflict } from "../repositories/matchActionRepository";
+import { MatchSnapshotError, type SerializedMatchSnapshot } from "../persistence/matchSnapshot";
 
 export const testTokens = new TokenService({
   accessSecret: "phase6-test-access-secret-01234567890123456789",
@@ -45,6 +46,14 @@ interface TestMatch extends WaitingMatchInput {
 
 /** Explicit injected fake for database-free runtime regressions; never a production fallback. */
 export class MemoryMatchPersistence implements MatchPersistence {
+  readonly snapshots = new Map<string, SerializedMatchSnapshot>();
+  async appendMatchSnapshot(snapshot: SerializedMatchSnapshot): Promise<void> {
+    this.called("snapshot");
+    const key = `${snapshot.matchId}:${snapshot.revision}`;
+    const previous = this.snapshots.get(key);
+    if (previous && !isDeepStrictEqual(previous, snapshot)) throw new MatchSnapshotError("MATCH_SNAPSHOT_CONFLICT");
+    if (!previous) this.snapshots.set(key, snapshot);
+  }
   readonly actions = new Map<string, AcceptedActionRecord>();
   async appendAcceptedAction(record: AcceptedActionRecord): Promise<void> {
     const key = `${record.matchId}:${record.revision}`;

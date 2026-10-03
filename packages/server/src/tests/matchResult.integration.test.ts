@@ -161,6 +161,7 @@ async function run() {
       removeWaitingParticipant: service.removeWaitingParticipant.bind(service), updateWaitingGameMode: service.updateWaitingGameMode.bind(service),
       markStarted: service.markStarted.bind(service), markCancelled: service.markCancelled.bind(service), finalizeMatch: service.finalizeMatch.bind(service),
       appendAcceptedAction: service.appendAcceptedAction.bind(service),
+      appendMatchSnapshot: service.appendMatchSnapshot.bind(service),
     };
     lifecycle = new MatchLifecycle(logger, runtimeService);
     const room = await lifecycle.createRoom({}, `${prefix}-runtime`);
@@ -233,7 +234,12 @@ async function run() {
     assert.equal(p2Detail.winner.userId, users[1]);
     assert.equal(p2Detail.loser.userId, users[0]);
     assert.equal(await db.matchAction.count({ where: { matchId: { in: ids } } }), 6);
-    assert.equal(await db.matchSnapshot.count({ where: { matchId: { in: ids } } }), 0);
+    assert.equal(await db.matchSnapshot.count({ where: { matchId: { in: ids } } }), 3);
+    for (const completed of [room, chessRoom, p2Room]) {
+      const snapshot = await db.matchSnapshot.findFirstOrThrow({ where: { matchId: completed.matchId! }, orderBy: { revision: "desc" } });
+      assert.equal(snapshot.revision, (await repo.findById(completed.matchId!))!.finalRevision);
+      assert.equal((snapshot.state as { phase: string }).phase, "ended");
+    }
     assert.equal(await db.ratingHistory.count({ where: { matchId: { in: ids } } }), 0);
     // SetNull preserves the result and historical names when an account is removed.
     await db.user.delete({ where: { id: users[0] } });

@@ -14,6 +14,7 @@ import { MatchDetailsPage } from "../pages/MatchDetailsPage";
 import { RequireAuth } from "../auth/RequireAuth";
 import { authStore } from "../auth/authStore";
 import { matchApi } from "../api/matchApi";
+import { replayApi } from "../api/replayApi";
 import { profileApi } from "../api/profileApi";
 import { ApiError } from "../api/client";
 import { setLanguage, translate } from "../i18n";
@@ -68,12 +69,14 @@ const detail: MatchDetails = {
 const originalAuth = authStore.getState();
 const originalMatches = { ...matchApi },
   originalProfiles = { ...profileApi };
+const originalReplay = { ...replayApi };
 let renderer: ReactTestRenderer | undefined;
 let navigate: NavigateFunction;
 let location = "";
 const calls: { userId: string; filters: MatchHistoryFilters }[] = [];
 
 beforeEach(() => {
+  replayApi.getMetadata = async () => { throw new ApiError("MATCH_NOT_REPLAYABLE", 409); };
   setLanguage("en", null);
   calls.length = 0;
   authStore.setState(
@@ -103,6 +106,7 @@ afterEach(() => {
   renderer = undefined;
   Object.assign(matchApi, originalMatches);
   Object.assign(profileApi, originalProfiles);
+  Object.assign(replayApi, originalReplay);
   authStore.setState(originalAuth, true);
 });
 function Probe() {
@@ -343,7 +347,8 @@ test("details display seats, historical names, outcomes, current profile links a
   ])
     assert(text().includes(value), value);
   assert(renderer!.root.findAllByType("a").some((node) => node.props.href === "/users/Bob_now"));
-  assert.doesNotMatch(text(), /Replay|timeline|seek|rating|win rate/);
+  assert.doesNotMatch(text(), /actionPayload|rngState|rating|win rate/);
+  assert(!text().includes(translate("replay.watch")), "legacy result has no replay data");
 });
 
 test("legacy details render nulls and draws without fabricated results", async () => {

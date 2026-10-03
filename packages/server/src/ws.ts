@@ -677,11 +677,6 @@ function sendRoomState(socket: WebSocket, room: GameRoom) {
   });
 }
 
-function markRoomMetadataChanged(room: GameRoom) {
-  touchGameRoom(room);
-  room.revision += 1;
-}
-
 export function broadcastRoomState(room: GameRoom) {
   const sockets = roomSockets.get(room.id);
   if (!sockets || sockets.size === 0) return;
@@ -1446,8 +1441,8 @@ export function registerGameWebSocket(
             }
 
             setRoomGameMode(room, msg.mode);
+            lifecycle.recordModeAction(room, current.seat ?? room.hostSeat);
             await lifecycle.syncGameMode(room);
-            markRoomMetadataChanged(room);
             broadcastRoomState(room);
           });
           return;
@@ -1500,9 +1495,11 @@ export function registerGameWebSocket(
               return;
             }
 
+            // The accepted final pick owns the completed armies before its checkpoint is captured.
+            if (msg.type === "draftPickHero" && room.draftState?.phase === "complete")
+              rebuildDraftedArmies(room);
             lifecycle.recordDraftAction(room, { type: msg.type, player: current.seat, heroId: msg.heroId });
             if (msg.type === "draftPickHero" && room.draftState?.phase === "complete") {
-              rebuildDraftedArmies(room);
               await applyAndBroadcast(lifecycle, room, { type: "startGame" }, current.seat, socket);
               return;
             }
