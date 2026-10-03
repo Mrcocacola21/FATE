@@ -17,3 +17,7 @@ It never calls MatchLifecycle, room storage, socket handlers or persistence meth
 ReplayQueryService exposes the completed-match read path: lightweight metadata-only timeline queries,
 revision/accessibility checks, ReplayService reconstruction and explicit makeReplayView projection.
 Authentication and sanitized HTTP error mapping live in replayRoutes; no authoritative state crosses HTTP.
+PlayerStatisticsService reads finished participant results through StatisticsRepository and delegates
+summary, streak and mode calculations to pure statistics helpers. It excludes incomplete legacy results
+with safe diagnostics. Statistics are public derived aggregates, independent of rooms, profiles, current
+Figure Sets and replay JSON/checkpoints; historical hero/loadout statistics remain unavailable.

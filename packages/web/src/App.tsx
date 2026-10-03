@@ -89,6 +89,8 @@ export default function App() {
 function ApplicationPage({ children, standalone }: { children: ReactNode; standalone: boolean }) {
   const location = useLocation();
   if (standalone) return <AuthLayout>{children}</AuthLayout>;
+  if (/^\/(profile|users\/[^/]+)\/?$/.test(location.pathname))
+    return <div className="mx-auto w-full min-w-0 max-w-6xl">{children}</div>;
   if (["/figures", "/heartbreak"].includes(location.pathname.replace(/\/$/, "")) ||
       /^\/matches\/[^/]+\/replay\/?$/.test(location.pathname))
     return <>{children}</>;

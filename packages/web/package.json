@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "test:statistics": "tsx --test src/statistics/*.test.ts src/statistics/*.test.tsx",
+    "test:statistics:e2e": "node scripts/statistics-smoke.mjs",
     "test:replay": "tsx --test src/replay/*.test.tsx",
     "test:replay:e2e": "node scripts/replay-smoke.mjs",
     "dev": "vite",

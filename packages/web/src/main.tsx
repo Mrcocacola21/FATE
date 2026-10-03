@@ -5,6 +5,7 @@ import "./styles.css";
 import "./layout/app-shell.css";
 import "./figures/figure-set.css";
 import "./replay/replay.css";
+import "./statistics/statistics.css";
 import { getLanguage } from "./i18n";
 import { BrowserRouter } from "react-router";
 

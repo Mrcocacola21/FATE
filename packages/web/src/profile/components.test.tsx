@@ -15,6 +15,23 @@ import { ApiError } from "../api/client";
 import { getLanguage, setLanguage } from "../i18n";
 import { getTheme } from "../theme";
 import type { OwnProfile } from "./types";
+import { statisticsApi } from "../api/statisticsApi";
+import { matchApi } from "../api/matchApi";
+import { emptyStatisticsFixture } from "../statistics/fixtures";
+
+const originalStatistics = statisticsApi.getPlayerStatistics;
+const originalMatches = matchApi.getUserMatches;
+test.beforeEach(() => {
+  statisticsApi.getPlayerStatistics = async (id) => emptyStatisticsFixture(id);
+  matchApi.getUserMatches = async () => ({
+    items: [],
+    pagination: { page: 1, limit: 10, total: 0, totalPages: 0 },
+  });
+});
+test.afterEach(() => {
+  statisticsApi.getPlayerStatistics = originalStatistics;
+  matchApi.getUserMatches = originalMatches;
+});
 
 const profile: OwnProfile = {
   id: "test-profile-user",

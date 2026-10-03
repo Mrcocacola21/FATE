@@ -17,6 +17,8 @@ import { replayRoutes } from "./routes/replayRoutes";
 import type { ReplayQueryService } from "./services/replayQueryService";
 import { matchHistoryRoutes } from "./routes/matchHistoryRoutes";
 import type { MatchHistoryService } from "./services/matchHistoryService";
+import { statisticsRoutes } from "./routes/statisticsRoutes";
+import type { PlayerStatisticsService } from "./services/playerStatisticsService";
 import { isTrustedAuthOrigin } from "./auth/httpSecurity";
 import { ConnectionIdentityService } from "./auth/connectionIdentity";
 import { ProductionConfigurationError, validateProductionEnvironment } from "./config";
@@ -29,6 +31,7 @@ export async function buildServer(
     connectionIdentity?: Pick<ConnectionIdentityService, "verify">;
     actionHistory?: Pick<MatchActionService, "getCompletedMatchActionHistory">;
     matchHistory?: Pick<MatchHistoryService, "getUserMatchHistory">;
+    playerStatistics?: Pick<PlayerStatisticsService, "getPlayerStatistics">;
     replayQuery?: Pick<ReplayQueryService, "getMetadata" | "getState">;
   } = {},
 ) {
@@ -73,6 +76,7 @@ export async function buildServer(
     actionHistory: options.actionHistory,
   });
   await server.register(matchHistoryRoutes, { prefix: "/api", matchHistory: options.matchHistory });
+  await server.register(statisticsRoutes, { prefix: "/api", playerStatistics: options.playerStatistics });
   await server.register(replayRoutes, { prefix: "/api", identity, replayQuery: options.replayQuery });
   registerGameWebSocket(server, lifecycle, identity);
 

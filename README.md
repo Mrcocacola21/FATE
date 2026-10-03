@@ -22,6 +22,8 @@ Follow active progress and implementation notes in the [Developer Log](https://t
 - [Persistent Match Lifecycle](#persistent-match-lifecycle)
 - [Persistent Match Results](#persistent-match-results)
 - [Match History](#match-history)
+- [Player Statistics Backend](#player-statistics-backend)
+- [Player Statistics UI](#player-statistics-ui-phase-14)
 - [Persistent Action Log](#persistent-action-log)
 - [Authentication Backend](#authentication-backend)
 - [Authentication Frontend](#authentication-frontend)
@@ -225,7 +227,7 @@ cannot rewrite a failed start snapshot. This retry buffer is process-local: proc
 pending work, and shutdown reports outstanding projections. Restart recovery is a later phase.
 
 Persistent MatchAction writes, completed results, match history and private GameState checkpoints
-are implemented, including completed-match Replay API/UI. Restart recovery, statistics and ratings remain deferred.
+are implemented, including completed-match Replay API/UI and derived player statistics. Restart recovery and ratings remain deferred.
 The result detail endpoint and history APIs/UI read completed durable records.
 
 Verification uses explicit in-memory persistence injection for the normal runtime test suite,
@@ -344,7 +346,7 @@ or snapshots. Non-FINISHED matches return 409 `MATCH_NOT_FINISHED`, unknown UUID
 sanitized 503 `MATCH_PERSISTENCE_UNAVAILABLE`. Errors use `{ "error": { "code": "...", "message": "..." } }`.
 JSON summaries are whitelisted again on reads. Test/sandbox rooms have no competitive Match
 and never finalize results. Persistent action history and match history UI/list APIs are implemented;
-private snapshots and completed-match replay are implemented; statistics and ratings remain deferred.
+private snapshots, completed-match replay and player statistics are implemented; ratings remain deferred.
 
 Apply incremental migration `20261002050000_persistent_match_results` with
 `npm run -w server db:migrate:deploy`. Focused extraction/retry tests run in `npm run test`;
@@ -506,7 +508,7 @@ Successful edits synchronize the username, display name and avatar in the curren
 new JWTs or signing in again. Profile state is cleared when the account/session changes; late responses
 cannot restore a signed-out account. Game runtime stays mounted while visiting profile routes.
 Player display names are captured from trusted profiles on seat assignment and frozen at match start.
-Match history is implemented in Phase 9. Statistics, rating UI, social features and
+Match history is implemented in Phase 9, statistics backend in Phase 13, and Profile statistics UI in Phase 14. Rating UI, social features and
 credential-management flows remain deferred.
 
 Focused checks (database commands require migrated, isolated `TEST_DATABASE_URL` as described above):
@@ -719,8 +721,8 @@ Explicit selects and DTOs exclude auth/private data, result payloads, hidden sta
 `MatchAction` rows. The existing participant `userId` index supports participation lookup;
 no schema or index migration was needed. No action log is loaded for list or details UI.
 Filters/page live in the URL, changes reset page 1, and loading/error/empty states are localized
-in English and Ukrainian. Completed-match replay is available from Match Details. Aggregated statistics, ratings and leaderboards
-remain future phases.
+in English and Ukrainian. Completed-match replay is available from Match Details. Profile statistics use the aggregate backend endpoint;
+ratings and leaderboards remain future phases.
 
 Focused checks:
 
@@ -738,6 +740,166 @@ The browser smoke test seeds 24 completed match records into the isolated test d
 logs in through the UI, checks filters/pagination/refresh/details/public profiles, checks
 historical names after a rename, and saves desktop/mobile screenshots under
 `packages/web/test-results/match-history`. It removes its own records afterward.
+
+## Player Statistics Backend
+
+Phase 13 provides public `GET /api/users/:id/statistics`, separate from lightweight profile
+and paginated history endpoints. No access token is required, matching public profile/history
+policy. Responses contain aggregates only and use `Cache-Control: no-store`. Invalid UUIDs
+return `400 INVALID_REQUEST`; an unknown User returns `404 USER_NOT_FOUND`. A real User
+without eligible matches receives zero counts, `winRate: 0`, null averages, an empty mode
+list and `currentStreak: { type: null, count: 0 }`.
+
+```json
+{
+  "userId": "00000000-0000-4000-8000-000000000001",
+  "overall": {
+    "gamesPlayed": 5,
+    "wins": 3,
+    "losses": 1,
+    "draws": 1,
+    "winRate": 0.6,
+    "averageDurationMs": 2000,
+    "durationSampleSize": 4,
+    "averageTurns": 17.33,
+    "turnCountSampleSize": 3,
+    "currentStreak": { "type": "WIN", "count": 2 },
+    "longestWinStreak": 2,
+    "longestLossStreak": 1
+  },
+  "byGameMode": [
+    {
+      "gameMode": "classic",
+      "gamesPlayed": 5,
+      "wins": 3,
+      "losses": 1,
+      "draws": 1,
+      "winRate": 0.6,
+      "averageDurationMs": 2000,
+      "durationSampleSize": 4,
+      "averageTurns": 17.33,
+      "turnCountSampleSize": 3
+    }
+  ]
+}
+```
+
+Metric semantics:
+
+- Source is durable `MatchParticipant.userId` joined to `Match.status == FINISHED`.
+  Eligible records must have `WIN`, `LOSS` or `DRAW`, a valid `finishedAt`, and a nonempty
+  raw `gameMode`. WAITING, IN_PROGRESS and CANCELLED matches are excluded. Creator and
+  spectator appearances are not participation; the unique `(matchId, userId)` key prevents
+  duplicate games. Test/sandbox rooms never create persisted Matches in the current lifecycle;
+  there is no persisted debug-match flag or speculative JSON marker.
+- `gamesPlayed = wins + losses + draws`, using participant-relative persisted outcomes,
+  exactly the outcome source used by Match History. No fallback to winner names/IDs or
+  current profile exists. Legacy finished rows with missing outcomes/completion dates or
+  empty mode IDs are excluded from every aggregate and produce a safe count-only diagnostic
+  (plus requested user ID); they remain readable through existing Match History.
+- `winRate = wins / gamesPlayed` is a numeric fraction in **[0, 1]**, with zero for no games.
+  Draws count in the denominator. Rules currently permit `chessMutualKingDefeat` draws;
+  statistics count persisted DRAW outcomes without simulating rules again.
+- `averageDurationMs` averages known nonnegative integer persisted durations, including real
+  zero values. Missing/invalid samples are excluded, never converted to zero. Millisecond
+  averages retain numeric precision, including fractional milliseconds.
+- `averageTurns` averages known positive integer `Match.turnCount` values, rounded to two
+  decimals. Current result extraction persists battle turns including the terminal turn;
+  it uses the terminal turn stamp or the mutual-king-defeat turn counter. Neither
+  `finalRevision` nor action count is a turn count. Both averages are null without samples;
+  `durationSampleSize` and `turnCountSampleSize` expose partial coverage.
+- Streaks use eligible completed history ordered by `finishedAt ASC, Match.id ASC`.
+  `currentStreak` ends at the latest eligible result; consecutive draws form a DRAW streak
+  and break both win and loss streaks. Longest streaks count consecutive wins/losses.
+  Excluded legacy records do not participate in or break an eligible-history streak.
+- `byGameMode` uses stable raw mode IDs with the same counts, rates, averages and sample sizes.
+  Groups sort by descending games played, then mode ID ascending. Their games sum to overall
+  games; unknown nonempty historical mode IDs remain their own groups without localization.
+
+Architecture is `statisticsRoutes -> PlayerStatisticsService -> StatisticsRepository -> Prisma`,
+with pure summary/streak/group helpers in `statistics/playerStatistics.ts`. Each request uses
+one ID-only user existence read and one ordered participant query; Prisma batches the lightweight
+Match relation read. SELECT count stays bounded as match count grows. No MatchAction, MatchSnapshot,
+profile, resultData or private state payload is loaded. Existing participant user indexes and Match
+primary/unique keys serve this user-scoped query; no redundant index or schema migration is added.
+Computation is on demand, with O(n) projected data and arithmetic at the current project scale.
+There is no materialized stats table, cache, scheduled aggregation, rating or leaderboard.
+Phase 14's Profile statistics UI consumes this endpoint directly.
+
+**Hero/Figure Set statistics are unavailable and `byHero`/`byFigureSet` are omitted.** Participant
+`resultData` v1 only preserves remaining units/health; it has no authoritative historical hero or
+roster snapshot. Match initialConfig records creation configuration, not participant selections.
+Hero information exists in replay setup/action JSON and full private checkpoints, but extracting
+and validating selection coverage from that replay infrastructure is deferred. Statistics never
+infer historical usage from current Figure Sets, which are client-saved selections sent into live
+rooms. No historical hero/loadout backfill or forward schema change is made in this phase.
+
+Focused verification:
+
+```powershell
+npm run -w server test:statistics
+# Use the guarded, migrated loopback TEST_DATABASE_URL described in Database Foundation.
+npm run -w server test:statistics:db
+```
+
+The unit/API suite is included in `npm test`. The dedicated PostgreSQL suite covers real
+participant queries, relative results, completed-only eligibility, draws, nullable/invalid samples,
+zero users, deterministic tied completion dates, legacy exclusions, test-room non-persistence,
+profile/result JSON independence, privacy and the same SELECT count for 11 and 100 games.
+The [Phase 13 implementation report](docs/phase13-implementation-report.md) records verification.
+
+## Player Statistics UI (Phase 14)
+
+Both `/profile` and `/users/:username` present a shared, responsive Player Statistics section
+below player identity. Public profiles request the **viewed player's ID** and work without login.
+The account page retains editing, preferences, Figure Set and Match History navigation.
+
+- Overview emphasizes win rate and games played, then wins/losses, current result streak,
+  average match duration, average turns and longest winning streak. Draws are included when
+  present, following the existing domain. Percentages use locale-aware formatting; null
+  averages display `—`, and tracked sample counts accompany duration/turn averages.
+- Recent performance requests **one page of at most 10** matches from the existing paginated
+  Match History API. Recorded completed results appear oldest to newest, with opponent,
+  mode, duration and date context, Match Details links and the correct player's full-history link.
+  With at least three eligible matches, the line chart shows cumulative wins divided by matches
+  played **inside that recent sample** after each match; draws remain in the denominator.
+  It is explicitly labeled as recent-sample performance. An expandable list provides the exact
+  point values and match context for keyboard, touch and screen-reader users.
+- Game-mode performance uses backend `byGameMode` rates in compact horizontal bars, with
+  localized canonical mode labels, games played, wins/losses/draws, averages and coverage in text.
+  A one-game mode stays visible with its sample size. There are two distinct visualizations;
+  small/empty samples do not produce a meaningless recent trend.
+
+The backend remains the source of **all career and per-mode aggregates**. React never derives
+those from Match History. `statisticsApi` uses the existing public API client and decodes the
+actual Phase 13 DTO; statistics and recent-history requests run independently and concurrently.
+Failures are isolated with retry, and responses are scoped to player/refresh/attempt so navigating
+between players cannot display stale data. Revisiting/reloading refetches statistics; the own-profile
+Refresh control refetches profile, statistics and the recent page.
+
+Zero-match players get a deliberate empty state, with Play available only on the own profile.
+Charts and metrics use FATE theme tokens, English/Ukrainian translations, responsive layouts,
+visible focus states, text equivalents and reduced-motion support. Custom SVG/CSS uses **no new
+dependency**. No database or backend changes are required by this frontend phase.
+
+Historical hero/Figure Set analytics remain hidden because the current API does not expose
+reliable `byHero`/`byFigureSet` data or historical coverage. Current Figure Set choices are never
+used as historical usage. Hero breakdown can be added only when the backend reliably supplies it.
+Glicko-2 rating, rating-history visualization and Leaderboard are deferred; this UI includes no
+rating, rank, percentile, skill score or future-feature placeholder.
+
+```powershell
+npm run -w web test:statistics
+npm run -w web test:statistics:e2e
+```
+
+The focused suite is included in `npm test`. The browser smoke uses local HTTP fixtures without
+writing a database and verifies own/public profiles, editing, retry, navigation, refresh, two themes,
+both locales, reduced motion and 1920/1366/768/390px viewports. Screenshots and a request log are
+saved under `packages/web/test-results/statistics`. It exercises empty, small, established,
+partial-average coverage, dominant-mode, long-identity and error states. The browser fixtures do
+not replace persisted-data integration tests of the Phase 13 endpoint.
+See [the Phase 14 implementation report](docs/phase14-implementation-report.md) for details.
 
 ## Persistent Action Log
 
@@ -795,7 +957,7 @@ JSON is retained separately for future replay verification. Historical empty jou
 return an empty page.
 
 The durable journal supports completed Match History, Match Snapshots and Replay API/UI.
-Restart Recovery, Statistics and Rating remain future phases.
+Restart Recovery and Rating remain future phases. Profile statistics UI is implemented in Phase 14.
 
 ```bash
 npm run -w server test
