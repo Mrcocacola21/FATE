@@ -133,6 +133,7 @@ try {
       if (/^\/api\/users\/[^/]+\/matches$/.test(pathname))
         return json({ items: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0 } });
       if (pathname === "/api/users/Commander") return json({ profile });
+      if (pathname.endsWith("/rating")) return json({ rating: 1500, ratingDeviation: 350, ratedGames: 0 });
       if (pathname === "/api/matches/example")
         return json({
           id: "example",
@@ -190,6 +191,7 @@ try {
     await noOverflow();
     await screenshot(`play-${width}`);
   }
+  await page.getByRole("link", { name: "Lobby", exact: true }).click();
   await page.getByTestId("create-room").click();
   await page.getByRole("dialog").waitFor();
   assert.equal(await page.locator("#player-name").count(), 0);
@@ -228,7 +230,7 @@ try {
   await page.getByRole("dialog").waitFor();
   await screenshot("rules");
   await page.keyboard.press("Escape");
-  await page.getByRole("link", { name: "Figure Set", exact: true }).click();
+  await page.getByTestId("desktop-sidebar").getByRole("link", { name: "Figure Set", exact: true }).click();
   await page.getByLabel("Search heroes", { exact: true }).waitFor();
   await screenshot("figures-desktop");
   await page.getByRole("link", { name: "Play", exact: true }).click();
@@ -305,13 +307,14 @@ try {
   await page.waitForURL(webUrl + "/");
   assert.equal(await page.getByText("Heartbreak", { exact: true }).count(), 0);
   // Guest spectating remains public; a normal player seat still redirects to login.
+  await page.goto(webUrl + "/lobby");
   await page.getByTestId("join-by-id").click();
   assert.equal(await page.getByLabel("Role", { exact: true }).inputValue(), "spectator");
   await page.keyboard.press("Escape");
   await page.getByTestId("create-room").click();
   await page.getByTestId("submit-room").click();
   await page.getByLabel("Email", { exact: true }).waitFor();
-  await page.getByRole("link", { name: "Back to Rooms", exact: true }).click();
+  await page.getByRole("link", { name: "Back to Play", exact: true }).click();
   assert.equal(await page.getByRole("dialog").count(), 0);
   await guest.context.close();
   const failed = await contextFor({ authenticated: false, capabilityFailure: true });
@@ -337,7 +340,8 @@ try {
   await screenshot("play-test-enabled");
   await page.getByRole("link", { name: "Heartbreak", exact: true }).click();
   await screenshot("heartbreak");
-  await page.getByRole("link", { name: "Play", exact: true }).click();
+  await page.getByTestId("desktop-sidebar").getByRole("link", { name: "Play", exact: true }).click();
+  await page.getByRole("link", { name: "Lobby", exact: true }).click();
   await page.getByTestId("create-room").click();
   await page.getByTestId("submit-room").click();
   await page.waitForFunction(
@@ -383,7 +387,7 @@ try {
   const observer = await contextFor({ authenticated: false, testRooms: true });
   page = await observer.context.newPage();
   page.on("pageerror", (error) => errors.push(error.message));
-  await page.goto(webUrl);
+  await page.goto(webUrl + "/lobby");
   await page.getByRole("button", { name: "Spectate", exact: true }).waitFor();
   await screenshot("room-browser-populated");
   await page.getByRole("button", { name: "Spectate", exact: true }).click();
@@ -397,6 +401,21 @@ try {
   await screenshot("spectator-game");
   await observer.context.close();
   await dev.context.close();
+  step = "guest participant in capability-gated sandbox";
+  const sandboxGuest = await contextFor({ authenticated: false, testRooms: true });
+  page = await sandboxGuest.context.newPage();
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.goto(webUrl + "/lobby");
+  await page.getByRole("button", { name: "Create Test Room", exact: true }).click();
+  await page.locator("#player-name").fill("Guest Scout");
+  await page.getByTestId("submit-room").click();
+  await page.locator(".panel-hud").getByText("Guest Scout", { exact: true }).waitFor();
+  for (const [width, height] of [[1366, 768], [390, 844]]) {
+    await page.setViewportSize({ width, height });
+    await noOverflow();
+    await screenshot(`guest-participant-${width}`);
+  }
+  await sandboxGuest.context.close();
   assert.deepEqual(errors, []);
   console.log(
     "App shell browser smoke passed: navigation, profile/history/public routes, rules/settings, dialogs, DOM capability gates, 1920/1366/768/390 layouts, focus restoration/trapping, real test room and preserved WebSocket.",

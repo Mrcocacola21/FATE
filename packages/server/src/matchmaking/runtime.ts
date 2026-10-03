@@ -12,7 +12,13 @@ export function createMatchmakingService(
   activeMatch?: (userId: string) => Promise<boolean>,
 ): MatchmakingService {
   let ratingService = ratings;
-  return new MatchmakingService({
+  const loadRatings = async (ids: string[]) => {
+    if (ratingService && !("getPlayerRatings" in ratingService))
+      return new Map(await Promise.all(ids.map(async id => [id, (await ratingService!.getPlayerRating(id)).rating] as const)));
+    const service = (ratingService ??= new RatingService(new RatingRepository(), logger)) as RatingService;
+    return service.getPlayerRatings(ids);
+  };
+  const matchmaking = new MatchmakingService({
     logger,
     loadPlayer: (id) =>
       (ratingService ??= new RatingService(new RatingRepository(), logger)).getPlayerRating(id),
@@ -42,4 +48,6 @@ export function createMatchmakingService(
       return !!room && room.state.phase !== "ended" && room.reservedUserIds?.[result.seat] === id;
     },
   });
+  lifecycle.configureRatedLobbies(matchmaking.config, loadRatings);
+  return matchmaking;
 }

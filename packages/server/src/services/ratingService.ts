@@ -27,7 +27,7 @@ export class RatingService {
     private readonly repository: Pick<
       RatingRepository,
       "userExists" | "getRating" | "getHistory" | "serializable"
-    >,
+    > & Partial<Pick<RatingRepository, "getRatings">>,
     private readonly logger: {
       info(data: object, message: string): void;
       error(data: object, message: string): void;
@@ -41,6 +41,16 @@ export class RatingService {
     const state = await this.repository.getRating(userId);
     if (state) validateRating(state);
     return state ?? { userId, ...INITIAL_RATING, ratedGames: 0 };
+  }
+
+  /** Runtime identities have already been authenticated; one query for discovery. */
+  async getPlayerRatings(userIds: string[]): Promise<Map<string, number>> {
+    if (!this.repository.getRatings)
+      return new Map(await Promise.all(userIds.map(async id => [id, (await this.getPlayerRating(id)).rating] as const)));
+    const rows = await this.repository.getRatings(userIds);
+    rows.forEach(validateRating);
+    const found = new Map(rows.map(row => [row.userId, row.rating]));
+    return new Map(userIds.map(id => [id, found.get(id) ?? INITIAL_RATING.rating]));
   }
 
   async getRatingHistory(userId: string, query: RatingHistoryQuery) {

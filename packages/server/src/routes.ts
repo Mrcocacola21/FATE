@@ -1,4 +1,5 @@
 import type { MatchmakingService } from "./services/matchmakingService";
+import { readLeaderboardConfig } from "./leaderboard/config";
 import { MultiplayerIdentityError } from "./auth/connectionIdentity";
 import { MatchTypeError } from "./matches/matchType";
 // packages/server/src/routes.ts
@@ -19,6 +20,7 @@ import { CreateGameBodySchema, GameActionSchema, PlayerIdSchema } from "./schema
 import { isActionAllowedByPlayer } from "./permissions";
 import {
   getGameRoom,
+  listGameRooms,
   listRoomSummaries,
   touchGameRoom,
 } from "./store";
@@ -36,6 +38,10 @@ function parsePlayerId(request: FastifyRequest): PlayerId | null {
 }
 
 function sendValidationError(reply: FastifyReply, error: z.ZodError) {
+  if (error.issues.some(issue => issue.path[0] === "lobbyName")) {
+    reply.code(400).send({ error: { code: "INVALID_LOBBY_NAME", message: "Invalid lobby name" } });
+    return;
+  }
   reply.code(400).send({ error: "Invalid request", details: error.flatten() });
 }
 
@@ -102,6 +108,9 @@ export async function registerRoutes(
     testRooms: getTestRoomCapabilities(),
   }));
 
+  const competitiveConfig = readLeaderboardConfig();
+  server.get("/api/competitive/config", async () => competitiveConfig);
+
   server.get("/api/heroes", async () => Object.values(HERO_REGISTRY));
 
   server.get(
@@ -119,10 +128,13 @@ export async function registerRoutes(
 
   server.get("/rooms", async () => {
     await lifecycle.cleanup({ activeRoomIds: getActiveFateRoomIds() });
+    await lifecycle.refreshRatedLobbies(listGameRooms());
     return listRoomSummaries();
   });
 
   server.get("/rooms/:id", async (request, reply) => {
+    const runtime = getGameRoom((request.params as { id: string }).id);
+    if (runtime) await lifecycle.refreshRatedLobbies([runtime]);
     const room = listRoomSummaries().find((item) => item.id === (request.params as { id: string }).id);
     if (!room) return reply.code(404).send({ error: { code: "ROOM_NOT_FOUND", message: "Room not found" } });
     return room;
@@ -155,6 +167,7 @@ export async function registerRoutes(
           roomMode: parsed.data.roomMode,
           gameMode: parsed.data.gameMode,
           matchType: parsed.data.matchType,
+          lobbyName: parsed.data.lobbyName,
         }, createdById, reply);
       });
       if (!room) return;
@@ -194,6 +207,7 @@ export async function registerRoutes(
           roomMode: parsed.data.roomMode,
           gameMode: parsed.data.gameMode,
           matchType: parsed.data.matchType,
+          lobbyName: parsed.data.lobbyName,
         }, createdById, reply);
       });
       if (!room) return;

@@ -5,6 +5,7 @@ import { AccountMenu } from "./AccountMenu";
 
 const primaryNavigation = [
   { to: "/", label: "shell.play", icon: "actions" },
+  { to: "/lobby", label: "customLobby.title", icon: "players" },
   { to: "/figures", label: "lobby.figureSet", icon: "unit" },
   { to: "/matches", label: "matches.history", icon: "log" },
   { to: "/leaderboard", label: "leaderboard.title", icon: "leaderboard" },

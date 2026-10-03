@@ -28,7 +28,7 @@ export function MatchmakingPanel() {
   const activeMatch = error === "MATCHMAKING_ALREADY_IN_MATCH" || error === "MATCHMAKING_IN_QUEUE";
   return (
     <section
-      className="panel-card min-w-0 space-y-4 rounded-xl border border-white/10 p-4 sm:p-5"
+      className="matchmaking-panel panel-card min-w-0 space-y-4 rounded-xl border border-white/10 p-4 sm:p-5"
       data-testid="matchmaking-panel"
       aria-labelledby="matchmaking-title"
     >
@@ -46,12 +46,12 @@ export function MatchmakingPanel() {
       ) : (
         <>
           <div className="flex flex-wrap items-end gap-5">
-            <div>
+            {waiting && <div>
               <p className="text-xs text-muted">{t("matchmaking.rating")}</p>
               <p className="text-lg font-semibold tabular-nums">
                 {rating === null ? "—" : Math.round(rating)}
               </p>
-            </div>
+            </div>}
             {!waiting && status.status !== "MATCH_FOUND" && (
               <label className="min-w-0 text-sm">
                 {t("matchmaking.mode")}
@@ -72,6 +72,7 @@ export function MatchmakingPanel() {
             )}
             {waiting && (
               <>
+                <p className="text-sm">{getGameModeName(status.gameMode, t)}</p>
                 <div>
                   <p className="text-xs text-muted">{t("matchmaking.time")}</p>
                   <p className="text-lg tabular-nums" data-testid="queue-time">
@@ -107,9 +108,10 @@ export function MatchmakingPanel() {
           ) : status.status === "MATCH_FOUND" ? (
             <div>
               <p role="status" className="break-words">
-                {t("matchmaking.found")} · {status.opponent.displayName} ·{" "}
-                {t("matchmaking.entering")}
+                {t("matchmaking.found")}
               </p>
+              <p className="mt-3 font-display text-xl">{t("competitive.you")} <span className="text-muted">{t("customLobby.vs")}</span> {status.opponent.displayName}</p>
+              <p className="mt-2 text-sm text-muted">{t("matchTypes.RATED")} · {getGameModeName(status.gameMode, t)} · {t("matchmaking.entering")}</p>
               {joinError && (
                 <>
                   <p role="alert" className="fate-notice mt-2 text-sm">

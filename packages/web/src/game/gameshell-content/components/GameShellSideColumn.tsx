@@ -1,4 +1,5 @@
 import { MatchTypeBadge } from "../../../matches/MatchTypeBadge";
+import { RatedCompatibilityPanel } from "../../../lobby/RatedCompatibilityPanel";
 import type { GameShellViewModel } from "../hooks/useGameShellViewModel";
 import { useState, type FC } from "react";
 import { PanelCard, SectionHeader, StatusBadge } from "../../../components/ui";
@@ -40,13 +41,21 @@ export const GameShellSideColumn: FC<GameShellSideColumnProps> = ({ vm, mobile =
       <PanelCard variant="parchment" className="p-5">
         <SectionHeader
           kicker={t("game.stagingRoom")}
-          title={t("game.matchLobby")}
+          title={vm.roomMeta?.lobbyName || t("customLobby.defaultName")}
           description={t("game.matchLobbyDescription")}
         />
-        {vm.roomMeta && <div className="mt-4 space-y-2">
-          <MatchTypeBadge matchType={vm.roomMeta.matchType} />
-          <p className="text-sm text-muted">{t(vm.roomMeta.matchType === "RATED" ? "matchTypes.ratedDescription" : "matchTypes.casualDescription")}</p>
-        </div>}
+        {vm.roomMeta && (
+          <div className="mt-4 space-y-2">
+            <MatchTypeBadge matchType={vm.roomMeta.matchType} />
+            <p className="text-sm text-muted">
+              {t(
+                vm.roomMeta.matchType === "RATED"
+                  ? "matchTypes.ratedDescription"
+                  : "matchTypes.casualDescription",
+              )}
+            </p>
+          </div>
+        )}
         <div className="mt-4 grid grid-cols-2 gap-2">
           {(["P1", "P2"] as const).map((seat) => (
             <div key={seat} className="panel-card-muted p-3">
@@ -54,8 +63,35 @@ export const GameShellSideColumn: FC<GameShellSideColumnProps> = ({ vm, mobile =
                 {seat}
               </div>
               <div className="mt-2 flex flex-wrap gap-1.5">
+                <div className="lobby-player w-full">
+                  <span className="lobby-avatar" aria-hidden="true">
+                    {vm.roomMeta?.players[seat] || vm.roomMeta?.origin === "MATCHMAKING"
+                      ? Array.from(
+                          vm.roomMeta.playerNames?.[seat] || t("customLobby.guest"),
+                        )[0]?.toUpperCase()
+                      : "+"}
+                  </span>
+                  <p className="min-w-0 break-words text-sm font-semibold">
+                    {vm.roomMeta?.players[seat] || vm.roomMeta?.origin === "MATCHMAKING"
+                      ? vm.roomMeta.playerNames?.[seat] || t("customLobby.guest")
+                      : t("customLobby.emptySeat")}
+                  </p>
+                </div>
+                {vm.roomMeta?.matchType === "RATED" &&
+                  vm.roomMeta.ratedCompatibility?.ratings[seat] != null && (
+                    <p className="w-full text-xs text-muted">
+                      {t("matchmaking.rating")}:{" "}
+                      {Math.round(vm.roomMeta.ratedCompatibility.ratings[seat]!)}
+                    </p>
+                  )}
                 <StatusBadge tone={vm.roomMeta?.players[seat] ? "success" : "neutral"}>
-                  {vm.roomMeta?.players[seat] ? t("common.occupied") : t("common.open")}
+                  {vm.roomMeta?.players[seat]
+                    ? t("common.occupied")
+                    : t(
+                        vm.roomMeta?.origin === "MATCHMAKING"
+                          ? "customLobby.reserved"
+                          : "common.open",
+                      )}
                 </StatusBadge>
                 <StatusBadge tone={vm.readyStatus[seat] ? "success" : "warning"}>
                   {vm.readyStatus[seat] ? t("common.ready") : t("common.waiting")}
@@ -64,6 +100,9 @@ export const GameShellSideColumn: FC<GameShellSideColumnProps> = ({ vm, mobile =
             </div>
           ))}
         </div>
+        {vm.roomMeta?.matchType === "RATED" && vm.roomMeta.origin !== "MATCHMAKING" && (
+          <RatedCompatibilityPanel compatibility={vm.roomMeta.ratedCompatibility} />
+        )}
         <div className="mt-3 flex flex-wrap gap-2">
           <StatusBadge tone="info">
             {t("lobby.spectators", { count: vm.roomMeta?.spectators ?? 0 })}
@@ -76,23 +115,34 @@ export const GameShellSideColumn: FC<GameShellSideColumnProps> = ({ vm, mobile =
             {getGameModeName(vm.roomMeta?.gameMode ?? "standard", t)}
           </StatusBadge>
         </div>
-        {mobile && vm.roomId ? (
+        {vm.roomId ? (
           <button
             type="button"
             className="btn btn-secondary mt-3 w-full"
             onClick={async () => {
-              await navigator.clipboard?.writeText(vm.roomId!);
-              setRoomCodeCopied(true);
+              try {
+                if (navigator.clipboard) {
+                  await navigator.clipboard.writeText(vm.roomId!);
+                  setRoomCodeCopied(true);
+                }
+              } catch {
+                setRoomCodeCopied(false);
+              }
             }}
           >
-            {roomCodeCopied ? t("mobile.roomCodeCopied") : t("mobile.copyRoomCode")}
+            {roomCodeCopied ? t("customLobby.copied") : t("customLobby.copyCode")}
           </button>
         ) : null}
         {vm.roomMeta?.roomMode === "normal" ? (
           <GameModeSelector
             value={vm.roomMeta?.gameMode ?? "standard"}
             isHost={vm.isHost}
-            disabled={!!vm.roomMeta?.gameModeLocked || !!vm.pendingMeta || !!vm.roomMeta?.draftState || vm.view!.phase !== "lobby"}
+            disabled={
+              !!vm.roomMeta?.gameModeLocked ||
+              !!vm.pendingMeta ||
+              !!vm.roomMeta?.draftState ||
+              vm.view!.phase !== "lobby"
+            }
             onChange={vm.setGameMode}
           />
         ) : null}
@@ -154,6 +204,11 @@ export const GameShellSideColumn: FC<GameShellSideColumnProps> = ({ vm, mobile =
             className="btn btn-strong mt-3 w-full"
             onClick={() => vm.startGame()}
             disabled={!vm.canStartGame}
+            aria-describedby={
+              vm.roomMeta?.matchType === "RATED" && vm.roomMeta.origin !== "MATCHMAKING"
+                ? "rated-start-eligibility"
+                : undefined
+            }
             title={vm.canStartGame ? t("game.startMatch") : t("game.startBlocked")}
           >
             {vm.roomMeta?.gameMode === "draft" ? t("draft.startDraft") : t("game.startGame")}

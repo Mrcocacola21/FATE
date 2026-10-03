@@ -30,6 +30,11 @@ export interface ActionResponse {
 }
 
 export interface RoomSummary {
+  lobbyName?: string;
+  origin?: "MANUAL" | "MATCHMAKING";
+  playerNames?: { P1: string | null; P2: string | null };
+  hostName?: string | null;
+  ratedCompatibility?: RatedCompatibility | null;
   matchType: MatchType;
   id: string;
   createdAt: number;
@@ -40,6 +45,14 @@ export interface RoomSummary {
   canStart: boolean;
   roomMode: "normal" | "test";
   gameMode: GameModeId;
+}
+
+export interface RatedCompatibility {
+  ratings: { P1: number | null; P2: number | null };
+  difference: number | null;
+  maxDifference: number;
+  eligible: boolean;
+  reason: "RATED_MATCH_INVALID_PARTICIPANTS" | "RATED_RATING_UNAVAILABLE" | "RATED_RATING_DIFFERENCE_TOO_LARGE" | null;
 }
 
 export interface CreateRoomResponse {
@@ -122,6 +135,7 @@ export async function lookupRoom(id: string): Promise<RoomSummary> {
 }
 
 export async function createRoom(params?: {
+  lobbyName?: string;
   seed?: number;
   arenaId?: string;
   roomMode?: "normal" | "test";

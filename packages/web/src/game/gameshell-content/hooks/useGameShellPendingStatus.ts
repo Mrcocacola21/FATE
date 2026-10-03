@@ -239,6 +239,7 @@ export function useGameShellPendingStatus({
   const playerReady = seat ? readyStatus[seat] : false;
   const canStartGame =
     !!roomMeta &&
+    (roomMeta.matchType !== "RATED" || roomMeta.origin === "MATCHMAKING" || roomMeta.ratedCompatibility?.eligible === true) &&
     roomMeta.players.P1 &&
     roomMeta.players.P2 &&
     readyStatus.P1 &&

@@ -22,6 +22,9 @@ import type { TestRoomCommand } from "./testRoom/types";
 export type PlayerRole = PlayerId | "spectator";
 
 export type RoomMeta = {
+  lobbyName?: string;
+  origin?: "MANUAL" | "MATCHMAKING";
+  ratedCompatibility?: import("./api").RatedCompatibility | null;
   gameModeLocked?: boolean;
   matchType: MatchType;
   roomMode: "normal" | "test";
@@ -95,6 +98,7 @@ export type ServerMessage =
     }
   | {
       type: "actionResult";
+      code?: string;
       ok: boolean;
       events: GameEvent[];
       error?: string;
@@ -121,6 +125,8 @@ export type ServerMessage =
 export type ClientMessage =
   | {
       type: "joinRoom";
+      lobbyName?: string;
+      gameMode?: GameModeId;
       accessToken?: string;
       mode: "create" | "join";
       roomId?: string;
@@ -166,6 +172,8 @@ export function connectGameSocket(onMessage: (msg: ServerMessage) => void): WebS
 export function sendJoinRoom(
   socket: WebSocket,
   params: {
+    lobbyName?: string;
+    gameMode?: GameModeId;
     accessToken?: string;
     mode: "create" | "join";
     roomId?: string;

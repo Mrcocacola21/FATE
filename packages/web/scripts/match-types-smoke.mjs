@@ -191,12 +191,12 @@ try {
   page.on("pageerror", (e) => errors.push(e.message));
   page.setDefaultTimeout(60000);
   page.setDefaultNavigationTimeout(60000);
-  const capture = async (name) => {
+  const capture = async (name, target = page) => {
     assert(
-      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1),
+      await target.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1),
       "horizontal overflow",
     );
-    await page.screenshot({
+    await target.screenshot({
       path: path.join(output, `${name}.png`),
       fullPage: true,
       animations: "disabled",
@@ -210,11 +210,11 @@ try {
   ]) {
     console.log(`Checking viewport ${width}x${height}`);
     await page.setViewportSize({ width, height });
-    await page.goto(web, { waitUntil: "domcontentloaded" });
+    await page.goto(web + "/lobby", { waitUntil: "domcontentloaded" });
     await page.getByTestId("room-browser").waitFor();
     const browserPanel = page.getByTestId("room-browser");
-    await browserPanel.getByText("Casual", { exact: true }).waitFor();
-    await browserPanel.getByText("Rated", { exact: true }).waitFor();
+    await browserPanel.locator("article").getByText("Casual", { exact: true }).waitFor();
+    await browserPanel.locator("article").getByText("Rated", { exact: true }).waitFor();
     assert.equal(await page.getByText("Heartbreak", { exact: true }).count(), 0);
     await capture(`rooms-${width}`);
     await page.getByTestId("create-room").click();
@@ -227,7 +227,7 @@ try {
     await capture(`create-rated-${width}`);
     await page.keyboard.press("Escape");
     await page.getByTestId("join-by-id").click();
-    await page.getByLabel("Room ID", { exact: true }).fill(ratedId);
+    await page.getByLabel("Join Code", { exact: true }).fill(ratedId);
     await page.getByRole("dialog").getByText("Rated", { exact: true }).waitFor();
     await capture(`join-rated-${width}`);
     await page.keyboard.press("Escape");
@@ -244,8 +244,16 @@ try {
   // Real WebSocket creation, joining, start and reconnect, using the fixture server.
   for (const type of ["CASUAL", "RATED"]) {
     console.log(`Checking ${type} create/start/reconnect`);
-    await page.goto(web, { waitUntil: "domcontentloaded" });
+    // The earlier active game retains its competitors. Use another pair for
+    // this independent scenario, preserving the active-match protection.
+    if (type === "RATED") {
+      credentials.accessToken = credentials.extraAccessToken;
+      credentials.p2AccessToken = credentials.extraP2AccessToken;
+      profile.id = credentials.extraUserId;
+    }
+    await page.goto(web + "/lobby", { waitUntil: "domcontentloaded" });
     await page.getByTestId("create-room").click();
+    await page.getByLabel("Lobby name (optional)", { exact: true }).fill(type === "CASUAL" ? "Evening Casual" : "Evening Rated");
     if (type === "RATED") await page.getByRole("radio", { name: "Rated", exact: true }).check();
     await page.getByTestId("submit-room").click();
     await page.getByRole("button", { name: "Ready up", exact: true }).waitFor();
@@ -315,13 +323,36 @@ try {
     await page.getByTestId("create-room").waitFor();
     peer.close();
   }
+  // Browse and spectate an active Casual game in an independent guest context.
+  const observerContext = await browser.newContext({ viewport: { width: 1366, height: 768 } });
+  await observerContext.addInitScript(() => {
+    localStorage.setItem("theme", "dark");
+    localStorage.setItem("FATE_LANGUAGE", "en");
+  });
+  await observerContext.route(`${api}/api/auth/refresh`, route => route.fulfill({
+    status: 401, contentType: "application/json", body: JSON.stringify({ error: { code: "UNAUTHORIZED" } }),
+  }));
+  const observer = await observerContext.newPage();
+  observer.on("pageerror", e => errors.push(e.message));
+  await observer.goto(web + "/lobby");
+  const activeCasual = observer.locator("article").filter({ hasText: "Evening Casual" });
+  await activeCasual.getByText("In Progress", { exact: true }).waitFor();
+  await capture("browser-active-casual-1366", observer);
+  await observer.setViewportSize({ width: 390, height: 844 });
+  await capture("browser-active-casual-390", observer);
+  await activeCasual.getByRole("button", { name: "Spectate", exact: true }).click();
+  assert.equal(await observer.getByLabel("Role", { exact: true }).inputValue(), "spectator");
+  await observer.getByTestId("submit-room").click();
+  await observer.getByRole("button", { name: "Leave match", exact: true }).waitFor();
+  await capture("spectator-casual-390", observer);
+  await observerContext.close();
   // A room not present in the last list is resolved through the new lookup API.
   await context.route(`${api}/rooms`, (route) =>
     route.fulfill({ contentType: "application/json", body: "[]" }),
   );
-  await page.goto(web, { waitUntil: "domcontentloaded" });
+  await page.goto(web + "/lobby", { waitUntil: "domcontentloaded" });
   await page.getByTestId("join-by-id").click();
-  await page.getByLabel("Room ID", { exact: true }).fill(casualId);
+  await page.getByLabel("Join Code", { exact: true }).fill(casualId);
   await page.getByRole("dialog").getByText("Casual", { exact: true }).waitFor();
   await capture("lookup-casual-390");
   assert.deepEqual(errors, []);

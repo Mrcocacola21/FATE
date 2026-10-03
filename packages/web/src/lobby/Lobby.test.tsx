@@ -44,13 +44,14 @@ async function submit(renderer: ReactTestRenderer) {
   });
 }
 
-test("Play is focused on actions/rooms; forms appear only in their dialogs", () => {
+test("Lobby contains the browser without a matchmaking queue; forms appear only in dialogs", () => {
   const renderer = mount();
   try {
     assert.equal(renderer.root.findAllByType("form").length, 0);
     assert.equal(renderer.root.findAllByType("nav").length, 0);
     assert.equal(renderer.root.findAllByType("input").length, 0);
     assert(renderer.root.findByProps({ "data-testid": "room-browser" }));
+    assert.equal(renderer.root.findAllByProps({ "data-testid": "matchmaking-panel" }).length, 0);
     open(renderer, "create-room");
     assert.equal(renderer.root.findAllByProps({ role: "dialog" }).length, 1);
     assert.equal(renderer.root.findAllByProps({ id: "player-name" }).length, 0);
@@ -103,7 +104,7 @@ test("create/join submit existing semantics and only spectators provide temporar
   try {
     open(renderer, "create-room");
     await submit(renderer);
-    assert.deepEqual(joins[0], { mode: "create", role: "P1", name: undefined, matchType: "CASUAL" });
+    assert.deepEqual(joins[0], { mode: "create", role: "P1", name: undefined, matchType: "CASUAL", gameMode: "standard" });
     act(() => renderer.root.findByProps({ "aria-label": "Close" }).props.onClick());
     act(() => useGameStore.setState({ roomsList: [{ id: "room-42", phase: "lobby", players: { P1: false, P2: false }, ready: { P1: false, P2: false }, createdAt: 0, spectators: 0, canStart: false, roomMode: "normal", gameMode: "standard", matchType: "RATED" }] }));
     open(renderer, "join-by-id");
@@ -167,7 +168,7 @@ test("room browser preserves seats, defaults full rooms to spectator, and displa
     );
     act(() => useGameStore.setState({ joinError: "Room not found" }));
     assert(renderer.root.findByProps({ role: "dialog" }).findByProps({ role: "alert" }));
-    assert.match(JSON.stringify(renderer.toJSON()), /Room not found/);
+    assert.match(JSON.stringify(renderer.toJSON()), /Lobby not found/);
   } finally {
     cleanup(renderer);
   }

@@ -615,6 +615,14 @@ const abilitiesUk: Record<string, AbilityTranslation> = {
 };
 
 const serverTextKeys: Record<string, string> = {
+  RATED_RATING_DIFFERENCE_TOO_LARGE: "customLobby.gapTooLarge",
+  "Rating difference is too large for a Rated match": "customLobby.gapTooLarge",
+  RATED_RATING_UNAVAILABLE: "customLobby.ratingUnavailable",
+  "Unable to verify player ratings": "customLobby.ratingUnavailable",
+  RATED_MATCH_INVALID_PARTICIPANTS: "customLobby.distinctRequired",
+  "Two distinct authenticated players are required": "customLobby.distinctRequired",
+  INVALID_LOBBY_NAME: "customLobby.invalidName",
+  "Invalid lobby name": "customLobby.invalidName",
   "Rated matches require authenticated players": "matchTypes.authRequired",
   RATED_MATCH_REQUIRES_AUTHENTICATION: "matchTypes.authRequired",
   "Choose Casual or Rated": "matchTypes.invalidType",

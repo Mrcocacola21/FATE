@@ -4,6 +4,7 @@ import { useAuthStore } from "../auth/authStore";
 import { subscribeMatchmaking, unsubscribeMatchmaking, useGameStore } from "../store";
 import { useI18n } from "../i18n";
 import { queue, useQueue } from "./store";
+import { getGameModeName } from "../modes/modeLabels";
 
 /** Mounted across application routes; queue delivery uses the existing game socket. */
 export function MatchmakingSync() {
@@ -64,7 +65,7 @@ export function MatchmakingSync() {
   }, [result, userId, navigate, t, connection]);
   if (!userId || result.status !== "MATCH_FOUND") return null;
   return (
-    <p
+    <div
       role="status"
       className={
         announcement
@@ -72,7 +73,13 @@ export function MatchmakingSync() {
           : "sr-only"
       }
     >
-      {t("matchmaking.found")} · {result.opponent.displayName} · {t("matchTypes.RATED")}
-    </p>
+      <p className="section-kicker">{t("matchmaking.found")}</p>
+      <p className="text-primary mt-1 font-display text-lg">
+        {t("competitive.you")} {t("customLobby.vs")} {result.opponent.displayName}
+      </p>
+      <p className="mt-1 text-xs text-muted">
+        {t("matchTypes.RATED")} · {getGameModeName(result.gameMode, t)}
+      </p>
+    </div>
   );
 }

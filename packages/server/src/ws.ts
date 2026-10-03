@@ -34,6 +34,7 @@ import { ClientMessageSchema } from "./schemas";
 import { isAllowedOrigin } from "./origin";
 import { isActionAllowedByPlayer } from "./permissions";
 import { deleteGameRoom, getGameRoom, touchGameRoom, type GameRoom } from "./store";
+import { defaultLobbyName } from "./lobby/metadata";
 import type { MatchLifecycle } from "./persistence/matchLifecycle";
 import {
   assertSeatIdentity, hasDistinctPlayerIdentities, identityDisplayName,
@@ -59,6 +60,9 @@ import { logPong } from "./pong/logger";
 export type PlayerRole = PlayerId | "spectator";
 
 type RoomMeta = {
+  lobbyName: string;
+  origin: "MANUAL" | "MATCHMAKING";
+  ratedCompatibility: GameRoom["ratedCompatibility"];
   gameModeLocked?: boolean;
   matchType: MatchType;
   roomMode: "normal" | "test";
@@ -124,6 +128,7 @@ type JoinRejectedMessage = {
 
 type ActionResultMessage = {
   type: "actionResult";
+  code?: string;
   ok: boolean;
   events: GameEvent[];
   error?: string;
@@ -607,6 +612,9 @@ function buildRoomMeta(
   };
   return {
     roomMode: room.roomMode,
+    lobbyName: room.lobbyName,
+    origin: room.reservedUserIds ? "MATCHMAKING" : "MANUAL",
+    ratedCompatibility: room.ratedCompatibility,
     matchType: room.matchType,
     gameMode: room.gameMode,
     gameModeLocked: isGameModeLocked(room),
@@ -743,6 +751,7 @@ function sendActionRejected(socket: WebSocket, result: CommandResult) {
   sendMessage(socket, {
     type: "actionResult",
     ok: false,
+    code: result.ok ? undefined : result.code,
     events: [],
     error: message,
   });
@@ -846,6 +855,7 @@ async function applyAndBroadcast(
 ): Promise<CommandResult> {
   const command = await lifecycle.applyAction(room, action, playerId);
   if (!command.ok) {
+    if (action.type === "startGame") broadcastRoomState(room);
     if (socketForErrors) {
       sendActionRejected(socketForErrors, command);
     }
@@ -1215,6 +1225,8 @@ export function registerGameWebSocket(
                     hostConnId: hostConnForState,
                     roomMode: requestedRoomMode,
                     matchType: msg.matchType,
+                    lobbyName: msg.lobbyName ?? defaultLobbyName(identity ? identityDisplayName(identity) : undefined),
+                    gameMode: msg.gameMode,
                   },
                   targetRoomId,
                   identity?.userId ?? null,
@@ -1765,6 +1777,12 @@ export function registerGameWebSocket(
               return;
             }
 
+            const invalidStart = await lifecycle.validateStart(room);
+            if (invalidStart) {
+              broadcastRoomState(room);
+              sendActionRejected(socket, invalidStart);
+              return;
+            }
             if (room.gameMode === "draft") {
               if (room.roomMode === "normal" && !hasDistinctPlayerIdentities(room)) {
                 sendStructuredError(socket, room.matchType === "RATED" ? "RATED_MATCH_INVALID_PARTICIPANTS" : "AUTH_REQUIRED", "Two distinct authenticated players are required");
@@ -1945,7 +1963,8 @@ export function registerGameWebSocket(
 
       const parsed = ClientMessageSchema.safeParse(parsedJson);
       if (!parsed.success) {
-        sendStructuredError(socket, parsed.error.issues.some((issue) => issue.path[0] === "matchType") ? "INVALID_MATCH_TYPE" : "INVALID_PAYLOAD", "Invalid message payload");
+        const invalidName = parsed.error.issues.some(issue => issue.path[0] === "lobbyName");
+        sendStructuredError(socket, invalidName ? "INVALID_LOBBY_NAME" : parsed.error.issues.some((issue) => issue.path[0] === "matchType") ? "INVALID_MATCH_TYPE" : "INVALID_PAYLOAD", invalidName ? "Invalid lobby name" : "Invalid message payload");
         return;
       }
 

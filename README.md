@@ -25,6 +25,7 @@ Follow active progress and implementation notes in the [Developer Log](https://t
 - [Player Statistics Backend](#player-statistics-backend)
 - [Player Statistics UI](#player-statistics-ui-phase-14)
 - [Leaderboard](#leaderboard-phase-16)
+- [Play and Lobby](#play-and-lobby)
 - [Persistent Action Log](#persistent-action-log)
 - [Authentication Backend](#authentication-backend)
 - [Authentication Frontend](#authentication-frontend)
@@ -74,7 +75,7 @@ Omit unused optional variables instead of exporting empty values.
 ### Dev Flow: Two Tabs, Same Room
 
 - Open `http://localhost:5173` and sign in
-- Create a room in the Lobby and copy the room id
+- Open `/lobby`, create a named lobby, and use **Copy Join Code** to invite a player
 - Join as P1 in the first tab
 - Use a second account in a separate browser context to join P2; the same account may spectate
 
@@ -1375,15 +1376,15 @@ API contracts:
 
 Verification: `npm run -w server test:match-types`,
 `npm run -w server test:match-types:db` (guarded local TEST_DATABASE_URL), and
-`npm run -w web test:match-types:e2e`. No matchmaking queue, automatic opponent
-matching, seasons, separate placement algorithm or rank-tier UI is implemented.
+`npm run -w web test:match-types:e2e`. Rated matchmaking is described below.
+Seasons, a separate placement algorithm and rank-tier UI remain deferred.
 
 
 ## Rated Matchmaking Queue (Phase 18)
 
-Play now includes **Find Rated Match**, a game-mode selector, current rating, elapsed waiting
-time, the server's current search window and **Cancel search**. Create Match, Join by ID,
-Room Browser, Casual matches and Test/Sandbox rooms retain their existing paths. New and
+Play includes **Find Rated Match**, a game-mode selector, current rating, elapsed waiting
+time, the server's current search window and **Cancel search**. Manual creation, joining
+and browsing live on `/lobby`; Test/Sandbox rooms remain capability-gated. New and
 provisional players can queue; leaderboard qualification is not required.
 
 Only authenticated persistent Users may queue. The server uses `RatingService.getPlayerRating`
@@ -1512,3 +1513,74 @@ Run `npm run -w server test:matchmaking`, `npm run -w web test:matchmaking` and 
 `npm run -w web test:matchmaking:e2e`; it requires an isolated loopback TEST_DATABASE_URL and
 Chromium/Edge, and preserves desktop/tablet/mobile screenshots under
 `packages/web/test-results/matchmaking/`. Never run these database tests against production Neon.
+
+
+## Play and Lobby
+
+The sidebar separates **Play**, **Lobby**, **Figure Set**, **Match History**, **Leaderboard**
+and **Profile**. The existing `/` bookmark remains Play; `/lobby` opens custom games.
+Existing live sessions and reconnects still use the shared GameRuntime.
+
+**Play** is a competitive hub: numeric Glicko rating, rating uncertainty, rated-game count,
+provisional/qualified identity, and Rated matchmaking as its primary action. Qualification
+uses `LEADERBOARD_MIN_RATED_GAMES`, exposed by `GET /api/competitive/config`; the frontend
+does not hardcode a threshold. Qualified players see leaderboard qualification, without
+invented next-rank progress. `RankMedal({ assetUrl?, label?, size? })` reserves a neutral
+emblem slot for future assets. No medal tiers, rating thresholds, seasons or rewards exist.
+Queue state replaces the identity panel with server rating/range, game mode, elapsed time
+and cancellation; Match Found announces You vs opponent and enters the assigned game.
+
+**Lobby** contains manual Casual/Rated creation, an optional lobby name, actual game-mode
+selection, Join by Code, and waiting/in-progress browsers with status/type filters. Cards
+show human participant names, host, spectator count and Join/Spectate. The list refreshes
+every ten seconds or on request. Active Casual/Rated games support the existing spectator
+projection. Matchmade games also appear; their seats remain permanently reserved, and
+even their starting cards offer only Spectate. Matchmade ready/start controls retain the
+existing normal gameplay flow.
+
+Names are trimmed, 1–60 characters, accept Unicode/Cyrillic, reject control characters,
+and render as escaped text. Omitted names use a display-name-based fallback for WS hosts
+or `FATE Lobby` when no host profile is available. Names need not be unique. The server
+stores `lobbyName` on GameRoom and in the existing `Match.initialConfig` JSON, with a
+backward-compatible optional schema field. Refresh/reconnect/list updates preserve it;
+this does not add recovery of live rooms after a process restart. No database migration
+or ID migration is required. Internal room/match/user IDs retain their routing and
+ownership roles. Normal cards and game headings hide them; Copy Join Code reveals only
+the existing room identifier, never private seat/resume/auth tokens.
+
+Authenticated names prefer trusted displayName, then username. Occupied anonymous
+sandbox slots display Guest, and vacant slots display Waiting for player. Normal Casual
+competitor seats still require authentication, matching the existing server policy.
+Debug screens retain their capability-gated technical information.
+
+### Manual Rated start protection
+
+Manual Rated games may start only when two distinct authenticated users occupy ready
+seats and `abs(P1.rating - P2.rating) <= MATCHMAKING_MAX_RATING_RANGE`. The inclusive
+boundary is intentional: 1800 vs 1400 is allowed at 400; 1800 vs 1350 is rejected.
+
+`createMatchmakingService` passes its **same typed MatchmakingConfig instance**
+(`matchmaking.config.maxRange`, parsed in `matchmaking/config.ts`) to MatchLifecycle.
+There is no separate manual maximum. `RatingService.getPlayerRatings` reads canonical
+`Rating` rows in one batched query for discovery, using `INITIAL_RATING.rating` (1500)
+for authenticated users without a row. Server metadata exposes only ratings, difference,
+maximum, eligibility and a reason; it does not expose volatility or private identities.
+
+At every manual start attempt, MatchLifecycle reloads current ratings after participant
+synchronization and before applying/journaling the start action. The WS draft transition
+also validates before starting a draft or rebuilding armies. Debug REST and direct
+lifecycle callers use the same gate. Discovery metadata is never trusted at start.
+`RATED_RATING_DIFFERENCE_TOO_LARGE` leaves the lobby Rated and intact: no gameplay start,
+accepted start event, result, rating history or rating update. Lookup failure also blocks
+Rated start. Rejection refreshes WS compatibility metadata; the frontend disables Start
+and explains the gap, maximum and explicit Casual alternative.
+
+Casual games ignore rating difference. Automatic matchmaking keeps its dynamic mutual
+range (initial → expanding → maximum); manual lobbies use only the absolute maximum.
+Successful manual games retain the existing exactly-once Glicko, history, statistics,
+leaderboard and deterministic replay pipelines.
+
+Checks: `npm run -w server test:lobby`, `npm run -w web test:shell`,
+`npm run -w web test:play-lobby:e2e`, and the guarded local PostgreSQL
+`npm run -w server test:match-types:db` include naming, escaping, boundary/stale ratings,
+direct WS/action/draft bypass, blocked zero-rating-effects and successful complete games.

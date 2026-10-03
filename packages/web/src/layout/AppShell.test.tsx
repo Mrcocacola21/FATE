@@ -69,7 +69,7 @@ test("sidebar renders primary navigation and highlights history details/public h
     const renderer = mount(sidebar(), path);
     try {
       const links = renderer.root.findAllByType("a");
-      for (const href of ["/", "/figures", "/matches", "/profile"])
+      for (const href of ["/", "/lobby", "/figures", "/matches", "/leaderboard", "/profile"])
         assert(links.some((link) => link.props.href === href));
       const active = links.filter((link) => link.props["aria-current"] === "page");
       assert.equal(active.length, 1);
@@ -86,6 +86,18 @@ test("sidebar renders primary navigation and highlights history details/public h
     } finally {
       act(() => renderer.unmount());
     }
+  }
+});
+
+test("Play and Lobby have distinct active entries, including a trailing slash", () => {
+  reset();
+  for (const path of ["/", "/lobby", "/lobby/"]) {
+    const renderer = mount(sidebar(), path);
+    try {
+      const active = renderer.root.findAllByType("a").filter(node => node.props["aria-current"] === "page");
+      assert.equal(active.length, 1);
+      assert.equal(active[0].props.href, path === "/" ? "/" : "/lobby");
+    } finally { act(() => renderer.unmount()); }
   }
 });
 

@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "test:play-lobby:e2e": "node scripts/play-lobby-smoke.mjs",
     "test:match-types:e2e": "node scripts/match-types-smoke.mjs",
     "test:leaderboard": "tsx --test src/leaderboard/*.test.ts src/leaderboard/*.test.tsx",
     "test:leaderboard:e2e": "node scripts/leaderboard-smoke.mjs",

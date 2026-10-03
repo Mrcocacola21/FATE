@@ -8,10 +8,12 @@ import {
   type RNG,
 } from "rules";
 import { z } from "zod";
+import { LobbyNameSchema } from "../lobby/metadata";
 
 /** Creation inputs only; never sockets, identities or a serialized whole state. */
 export const initialConfigSchema = z
   .object({
+    lobbyName: LobbyNameSchema.optional(),
     formatVersion: z.literal(1),
     rngAlgorithm: z.literal("lcg32-numerical-recipes-v1"),
     gameMode: z.enum(["standard", "classic", "draft"]),

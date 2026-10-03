@@ -14,7 +14,6 @@ import { getConnectionLabel } from "../../../i18n/displayMetadata";
 export function GameLoadingState({
   connectionStatus,
   joined,
-  roomId,
   role,
   leavingRoom,
   onLeave,
@@ -35,10 +34,6 @@ export function GameLoadingState({
           <div>
             <div className="font-semibold text-primary">{t("game.joined")}</div>
             {joined ? t("common.yes") : t("common.no")}
-          </div>
-          <div>
-            <div className="font-semibold text-primary">{t("game.room")}</div>
-            <span className="break-all font-mono">{roomId ?? "-"}</span>
           </div>
           <div>
             <div className="font-semibold text-primary">{t("game.role")}</div>

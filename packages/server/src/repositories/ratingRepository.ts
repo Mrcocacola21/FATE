@@ -143,6 +143,10 @@ export class RatingRepository {
     return this.database.rating.findUnique({ where: { userId }, select: ratingSelect });
   }
 
+  async getRatings(userIds: string[]) {
+    return this.database.rating.findMany({ where: { userId: { in: userIds } }, select: ratingSelect });
+  }
+
   async getHistory(userId: string, query: RatingHistoryQuery) {
     const where = { userId };
     const [total, items] = await this.database.$transaction(

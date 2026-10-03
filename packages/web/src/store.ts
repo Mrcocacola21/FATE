@@ -156,6 +156,8 @@ interface GameStore {
   resumeRoom: (options?: { force?: boolean }) => Promise<void>;
   fetchRooms: () => Promise<void>;
   joinRoom: (params: {
+    lobbyName?: string;
+    gameMode?: GameModeId;
     mode: "create" | "join";
     roomId?: string;
     role: PlayerRole;
@@ -411,6 +413,9 @@ function handleServerMessage(
             : (prevMeta.initiative.winner ?? null),
       };
       const nextMeta: RoomMeta = {
+        lobbyName: incomingMeta.lobbyName,
+        origin: incomingMeta.origin,
+        ratedCompatibility: incomingMeta.ratedCompatibility,
         roomMode: incomingMeta.roomMode ?? prevMeta.roomMode ?? "normal",
         matchType: incomingMeta.matchType ?? "CASUAL",
         gameMode: incomingMeta.gameMode ?? prevMeta.gameMode ?? "standard",
@@ -522,6 +527,8 @@ function handleServerMessage(
       return;
     }
     case "error": {
+      if (["INVALID_LOBBY_NAME", "INVALID_MATCH_TYPE", "RATED_MATCH_REQUIRES_AUTHENTICATION"].includes(msg.code ?? ""))
+        set(() => ({ joinError: msg.code ?? msg.message }));
       if (["AUTH_REQUIRED", "INVALID_ACCESS_TOKEN", "RESUME_IDENTITY_MISMATCH", "INVALID_RESUME_TOKEN", "SEAT_CONNECTION_REPLACED", "SEAT_OWNED_BY_ANOTHER_USER", "MATCHMAKING_IN_QUEUE", "MATCHMAKING_ALREADY_IN_MATCH"].includes(msg.code ?? "")) {
         suppressAutoReconnect = true;
         set(() => ({ joinError: msg.message }));

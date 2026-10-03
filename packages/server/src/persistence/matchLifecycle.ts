@@ -1,4 +1,8 @@
 import { MatchTypeError, validateMatchType } from "../matches/matchType";
+import { readMatchmakingConfig, type MatchmakingConfig } from "../matchmaking/config";
+import { ratedCompatibility, type RatedCompatibility } from "../lobby/metadata";
+import { RatingService } from "../services/ratingService";
+import { RatingRepository } from "../repositories/ratingRepository";
 import type { GameAction, PlayerId } from "rules";
 import { captureReplaySetup } from "../replay/actionSetup";
 import { toAcceptedActionRecord, type DraftAction, type LobbyModeAction } from "./acceptedAction";
@@ -74,6 +78,50 @@ export class MatchLifecycle {
   private readonly uncertainPairs = new Set<string>();
   readonly actionQueue: MatchActionQueue;
   private readonly completions = new Map<string, Promise<void>>();
+  private ratingService?: RatingService;
+  private ratedLobbyConfig: MatchmakingConfig = readMatchmakingConfig();
+  private loadLobbyRatings = (ids: string[]) =>
+    (this.ratingService ??= new RatingService(new RatingRepository(), this.logger)).getPlayerRatings(ids);
+
+  configureRatedLobbies(config: MatchmakingConfig, loadRatings: (ids: string[]) => Promise<Map<string, number>>) {
+    this.ratedLobbyConfig = config;
+    this.loadLobbyRatings = loadRatings;
+  }
+
+  async refreshRatedLobbies(rooms: GameRoom[]): Promise<Map<string, RatedCompatibility>> {
+    const waiting = rooms.filter(room => room.roomMode === "normal" && room.matchType === "RATED" && room.state.phase === "lobby");
+    const ids = [...new Set(waiting.flatMap(room => (["P1", "P2"] as const)
+      .map(seat => room.seatIdentities[seat]?.userId).filter((id): id is string => !!id)))];
+    let ratings = new Map<string, number>();
+    try { if (ids.length) ratings = await this.loadLobbyRatings(ids); }
+    catch { /* Fail closed; browsing and spectating remain available during DB outages. */ }
+    const resolved = new Map<string, RatedCompatibility>();
+    for (const room of waiting) {
+      const rating = (seat: PlayerId) => ratings.get(room.seatIdentities[seat]?.userId ?? "") ?? null;
+      room.ratedCompatibility = ratedCompatibility({ P1: rating("P1"), P2: rating("P2") },
+        this.ratedLobbyConfig.maxRange, hasDistinctPlayerIdentities(room));
+      resolved.set(room.id, room.ratedCompatibility);
+    }
+    return resolved;
+  }
+
+  /** Shared by every start transport and the draft transition, inside the room queue. */
+  async validateStart(room: GameRoom) {
+    if (room.roomMode === "test") return null;
+    if (!hasDistinctPlayerIdentities(room)) {
+      await this.refreshRatedLobbies([room]);
+      return rejected(room.matchType === "RATED" ? "RATED_MATCH_INVALID_PARTICIPANTS" : "AUTH_REQUIRED", "Two distinct authenticated players are required");
+    }
+    if (room.matchType === "RATED" && !room.reservedUserIds) {
+      // Use this lookup's result, never a discovery response racing to update metadata.
+      const compatibility = (await this.refreshRatedLobbies([room])).get(room.id);
+      if (!compatibility?.eligible)
+        return rejected(compatibility?.reason ?? "RATED_RATING_UNAVAILABLE",
+          compatibility?.reason === "RATED_RATING_DIFFERENCE_TOO_LARGE" ?
+            "Rating difference is too large for a Rated match" : "Unable to verify player ratings");
+    }
+    return null;
+  }
 
   constructor(
     private readonly logger: Logger,
@@ -132,6 +180,7 @@ export class MatchLifecycle {
           seed: room.seed,
           createdById,
           initialConfig: { formatVersion: 1, rngAlgorithm: "lcg32-numerical-recipes-v1",
+            lobbyName: room.lobbyName,
             gameMode: room.gameMode, hostSeat: room.hostSeat, hostOccupied: !!options.hostConnId,
             arenaId: room.state.arenaId },
         });
@@ -162,6 +211,7 @@ export class MatchLifecycle {
     let room = this.stagedPairs.get(attempt.roomId);
     if (!room) {
       room = createGameRoomWithId(attempt.roomId, { publish: false, matchType: "RATED",
+        lobbyName: "Rated Match",
         gameMode: attempt.players.P1.gameMode, hostSeat: "P1" });
       room.reservedUserIds = { P1: attempt.players.P1.identity.userId, P2: attempt.players.P2.identity.userId };
       room.seatIdentities = { P1: attempt.players.P1.identity, P2: attempt.players.P2.identity };
@@ -172,6 +222,7 @@ export class MatchLifecycle {
       roomId: room.id, isRated: true, gameMode: room.gameMode, seed: room.seed,
       createdById: attempt.players.P1.identity.userId,
       initialConfig: { formatVersion: 1 as const, rngAlgorithm: "lcg32-numerical-recipes-v1" as const, gameMode: room.gameMode,
+        lobbyName: room.lobbyName,
         hostSeat: room.hostSeat, hostOccupied: false, arenaId: room.state.arenaId },
       participants: (["P1", "P2"] as const).map(seat => ({ seat,
         userId: attempt.players[seat].identity.userId,
@@ -230,6 +281,7 @@ export class MatchLifecycle {
     name?: string,
     resumed = false,
   ): Promise<void> {
+    await this.refreshRatedLobbies([room]);
     const p = this.projection(room);
     if (!p || p.started) return;
     const identity = room.seatIdentities[seat];
@@ -239,7 +291,7 @@ export class MatchLifecycle {
       // Existing WS names are unbounded; the durable column is varchar(100).
       displayNameSnapshot: Array.from(
         (identity ? identityDisplayName(identity) : name?.trim()) ||
-          (resumed ? p.names.get(seat)?.displayNameSnapshot : undefined) || seat,
+          (resumed ? p.names.get(seat)?.displayNameSnapshot : undefined) || "Guest",
       )
         .slice(0, 100)
         .join(""),
@@ -249,6 +301,7 @@ export class MatchLifecycle {
   }
 
   async syncVacantSeats(room: GameRoom): Promise<void> {
+    await this.refreshRatedLobbies([room]);
     const p = this.projection(room);
     if (!p || p.started) return;
     for (const seat of ["P1", "P2"] as const) {
@@ -270,8 +323,7 @@ export class MatchLifecycle {
 
   async applyAction(room: GameRoom, action: GameAction, playerId?: PlayerId) {
     if (room.roomMode === "normal" && action.type === "startGame") {
-      if (!hasDistinctPlayerIdentities(room))
-        return rejected(room.matchType === "RATED" ? "RATED_MATCH_INVALID_PARTICIPANTS" : "AUTH_REQUIRED", "Two distinct authenticated players are required");
+      if (!hasDistinctPlayerIdentities(room)) return await this.validateStart(room) ?? rejected("AUTH_REQUIRED");
       const projection = this.projection(room);
       if (projection && !projection.started) {
         for (const seat of ["P1", "P2"] as const)
@@ -279,6 +331,8 @@ export class MatchLifecycle {
         if (projection.dirtySeats.size || projection.removedSeats.size)
           return rejected("MATCH_PERSISTENCE_UNAVAILABLE", "Participants must be synchronized before start");
       }
+      const invalid = await this.validateStart(room);
+      if (invalid) return invalid;
     }
     const previousPhase = room.state.phase;
     const command = applyGameAction(room, action, playerId);

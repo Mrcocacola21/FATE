@@ -9,6 +9,8 @@ import { useCapabilities } from "../layout/Capabilities";
 import { useI18n } from "../i18n";
 import { localizeServerText } from "../i18n/displayMetadata";
 import { Dialog } from "../ui/Dialog";
+import { GAME_MODE_IDS, getGameModeName } from "../modes/modeLabels";
+import type { GameModeId } from "rules";
 
 export type RoomDialogKind = "create" | "join" | "test";
 
@@ -28,10 +30,17 @@ export function RoomConnectionDialog({
   const [roomId, setRoomId] = useState(room?.id ?? "");
   const [role, setRole] = useState<PlayerRole>(() => {
     if (!room) return kind === "join" && !authenticated ? "spectator" : "P1";
-    if (room.phase !== "lobby" || (room.players.P1 && room.players.P2)) return "spectator";
+    if (
+      room.origin === "MATCHMAKING" ||
+      room.phase !== "lobby" ||
+      (room.players.P1 && room.players.P2)
+    )
+      return "spectator";
     return room.players.P1 ? "P2" : "P1";
   });
   const [name, setName] = useState("");
+  const [lobbyName, setLobbyName] = useState("");
+  const [gameMode, setGameMode] = useState<GameModeId>("standard");
   const [debugToken, setDebugToken] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -66,10 +75,14 @@ export function RoomConnectionDialog({
     kind === "test"
       ? "testRoom.create"
       : kind === "create"
-        ? "shell.createMatch"
-        : "lobby.joinById",
+        ? "customLobby.create"
+        : "customLobby.joinCode",
   );
-  const roleTaken = (value: PlayerRole) => value !== "spectator" && !!targetRoom?.players[value];
+  const roleTaken = (value: PlayerRole) =>
+    value !== "spectator" &&
+    (!!targetRoom?.players[value] ||
+      targetRoom?.origin === "MATCHMAKING" ||
+      (!!targetRoom && targetRoom.phase !== "lobby"));
 
   const submit = async () => {
     if (kind === "join" && !roomId.trim()) {
@@ -88,7 +101,9 @@ export function RoomConnectionDialog({
         name: showName && name.trim() ? name.trim() : undefined,
         ...(test ? { roomMode: "test" as const } : {}),
         ...(kind === "test" ? { debugToken: debugToken.trim() || undefined } : {}),
-        ...(kind === "create" ? { matchType } : {}),
+        ...(kind === "create"
+          ? { matchType, gameMode, ...(lobbyName.trim() ? { lobbyName: lobbyName.trim() } : {}) }
+          : {}),
       });
       // joinRoom sends a WebSocket request; the authoritative error/snapshot
       // arrives asynchronously. Keep this dialog available for server errors.
@@ -112,10 +127,10 @@ export function RoomConnectionDialog({
           void submit();
         }}
       >
-        {kind === "join" ? (
+        {kind === "join" && !room ? (
           <div>
             <label className="field-label" htmlFor="room-id">
-              {t("lobby.roomId")}
+              {t("customLobby.code")}
             </label>
             <input
               id="room-id"
@@ -123,50 +138,82 @@ export function RoomConnectionDialog({
               value={roomId}
               readOnly={!!room}
               required
-              placeholder={t("lobby.pasteRoomId")}
+              placeholder={t("customLobby.pasteCode")}
               onChange={(event) => setRoomId(event.target.value)}
               autoComplete="off"
             />
           </div>
         ) : (
           <p className="text-sm text-muted">
-            {t(kind === "test" ? "testRoom.createDescription" : "shell.createDescription")}
+            {room
+              ? room.lobbyName || t("customLobby.defaultName")
+              : t(kind === "test" ? "testRoom.createDescription" : "customLobby.createDescription")}
           </p>
         )}
         {kind === "create" && (
-          <fieldset>
-            <legend className="field-label">{t("matchTypes.label")}</legend>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {(["CASUAL", "RATED"] as const).map((value) => (
-                <label
-                  key={value}
-                  className={`panel-card-muted cursor-pointer p-4 ${matchType === value ? "ring-1 ring-slate-500 dark:ring-slate-400" : ""}`}
-                >
-                  <span className="flex items-center gap-2 font-semibold">
-                    <input
-                      type="radio"
-                      name="match-type"
-                      value={value}
-                      checked={matchType === value}
-                      disabled={value === "RATED" && !authenticated}
-                      aria-label={t(`matchTypes.${value}`)}
-                      aria-describedby={`match-type-${value}`}
-                      onChange={() => setMatchType(value)}
-                    />
-                    {t(`matchTypes.${value}`)}
-                  </span>
-                  <span id={`match-type-${value}`} className="mt-2 block text-sm text-muted">
-                    {t(
-                      value === "RATED"
-                        ? "matchTypes.ratedDescription"
-                        : "matchTypes.casualDescription",
-                    )}
-                  </span>
-                </label>
-              ))}
+          <>
+            <div>
+              <label className="field-label" htmlFor="lobby-name">
+                {t("customLobby.name")} ({t("common.optional")})
+              </label>
+              <input
+                id="lobby-name"
+                className="field-control"
+                value={lobbyName}
+                maxLength={60}
+                placeholder={t("customLobby.namePlaceholder")}
+                onChange={(event) => setLobbyName(event.target.value)}
+              />
             </div>
-            {!authenticated && <p className="mt-2 text-sm">{t("matchTypes.authRequired")}</p>}
-          </fieldset>
+            <label className="field-label" htmlFor="create-game-mode">
+              {t("matchmaking.mode")}
+              <select
+                id="create-game-mode"
+                className="field-control mt-2"
+                value={gameMode}
+                onChange={(event) => setGameMode(event.target.value as GameModeId)}
+              >
+                {GAME_MODE_IDS.map((mode) => (
+                  <option key={mode} value={mode}>
+                    {getGameModeName(mode, t)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <fieldset>
+              <legend className="field-label">{t("matchTypes.label")}</legend>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {(["CASUAL", "RATED"] as const).map((value) => (
+                  <label
+                    key={value}
+                    className={`panel-card-muted cursor-pointer p-4 ${matchType === value ? "ring-1 ring-slate-500 dark:ring-slate-400" : ""}`}
+                  >
+                    <span className="flex items-center gap-2 font-semibold">
+                      <input
+                        type="radio"
+                        name="match-type"
+                        value={value}
+                        checked={matchType === value}
+                        disabled={value === "RATED" && !authenticated}
+                        aria-label={t(`matchTypes.${value}`)}
+                        aria-describedby={`match-type-${value}`}
+                        onChange={() => setMatchType(value)}
+                      />
+                      {t(`matchTypes.${value}`)}
+                    </span>
+                    <span id={`match-type-${value}`} className="mt-2 block text-sm text-muted">
+                      {t(
+                        value === "RATED"
+                          ? "matchTypes.ratedDescription"
+                          : "matchTypes.casualDescription",
+                      )}
+                    </span>
+                  </label>
+                ))}
+              </div>
+              {!authenticated && <p className="mt-2 text-sm">{t("matchTypes.authRequired")}</p>}
+            </fieldset>
+          </>
         )}
         {kind === "join" && targetRoom && (
           <div className="panel-card-muted space-y-2 p-3">

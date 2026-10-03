@@ -14,6 +14,7 @@ import { MatchReplayPage } from "./pages/MatchReplayPage";
 import { LeaderboardPage } from "./pages/LeaderboardPage";
 import { ProfileSync } from "./profile/ProfileSync";
 import { Lobby } from "./components/Lobby";
+import { PlayPage } from "./pages/PlayPage";
 import { GamePage } from "./pages/GamePage";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { FigureSetPage } from "./pages/FigureSetPage";
@@ -29,7 +30,7 @@ export default function App() {
   const location = useLocation();
   const path = location.pathname.replace(/\/$/, "") || "/";
   const authPage = ["/login", "/register"].includes(path);
-  const runtimePage = path === "/" || path === VFX_PREVIEW_ROUTE;
+  const runtimePage = path === "/" || path === "/lobby" || path === VFX_PREVIEW_ROUTE;
   // Defer reconnect/runtime mounting until a gameplay route is visited. Once mounted,
   // preserve an existing live game while navigating account/history/replay pages.
   const [runtimeMounted, setRuntimeMounted] = useState(runtimePage);
@@ -121,6 +122,7 @@ function GameRuntime({ active }: { active: boolean }) {
   }, [active, authStatus, joined, resumeRoom]);
   const isVfxPreviewPath =
     typeof window !== "undefined" && window.location.pathname === VFX_PREVIEW_ROUTE;
+  const { pathname } = useLocation();
   const canShowVfxPreview = import.meta.env.DEV || import.meta.env.VITE_ENABLE_TEST_ROOM === "true";
   useEffect(() => {
     if (!active) return;
@@ -147,7 +149,7 @@ function GameRuntime({ active }: { active: boolean }) {
       ) : roomId ? (
         <GamePage />
       ) : (
-        <Lobby />
+        pathname.replace(/\/$/, "") === "/lobby" ? <Lobby /> : <PlayPage />
       )}
     </ErrorBoundary>
   );

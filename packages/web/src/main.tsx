@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
 import "./styles.css";
+import "./play/play.css";
 import "./layout/app-shell.css";
 import "./figures/figure-set.css";
 import "./replay/replay.css";

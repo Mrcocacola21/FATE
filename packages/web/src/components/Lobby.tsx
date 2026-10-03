@@ -1,4 +1,3 @@
-import { MatchmakingPanel } from "../matchmaking/MatchmakingPanel";
 import { useQueue } from "../matchmaking/store";
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router";
@@ -12,7 +11,7 @@ import { TacticalIcon } from "../ui/TacticalIcon";
 
 export function Lobby() {
   const { pathname } = useLocation();
-  const queueStatus = useQueue(s => s.status.status);
+  const queueStatus = useQueue((s) => s.status.status);
   const inQueue = queueStatus === "QUEUED" || queueStatus === "MATCHING";
   const { t } = useI18n();
   const { roomsList, fetchRooms } = useGameStore();
@@ -24,15 +23,27 @@ export function Lobby() {
   }, [pathname]);
   useEffect(() => {
     let active = true;
-    fetchRooms().catch((cause) => {
-      if (active)
-        setError(
-          localizeServerText(cause instanceof Error ? cause.message : "", t) ||
-            t("errors.loadRooms"),
-        );
-    });
+    let loading = false;
+    const load = () => {
+      if (loading) return;
+      loading = true;
+      void fetchRooms()
+        .catch((cause) => {
+          if (active)
+            setError(
+              localizeServerText(cause instanceof Error ? cause.message : "", t) ||
+                t("errors.loadRooms"),
+            );
+        })
+        .finally(() => {
+          loading = false;
+        });
+    };
+    load();
+    const timer = setInterval(load, 10000);
     return () => {
       active = false;
+      clearInterval(timer);
     };
   }, [fetchRooms, t]);
   const refresh = async () => {
@@ -54,13 +65,14 @@ export function Lobby() {
     setDialog({ kind, room });
   };
   return (
-    <div className="play-page mx-auto max-w-6xl space-y-6" data-testid="play-page">
+    <div className="lobby-page mx-auto max-w-6xl space-y-6" data-testid="lobby-page">
       <header className="play-header">
-        <p className="section-kicker">{t("shell.multiplayer")}</p>
-        <h1 className="font-display mt-1 text-3xl font-semibold sm:text-4xl">{t("shell.play")}</h1>
-        <p className="mt-2 text-sm text-muted">{t("shell.playDescription")}</p>
+        <p className="section-kicker">{t("customLobby.kicker")}</p>
+        <h1 className="font-display mt-1 text-3xl font-semibold sm:text-4xl">
+          {t("customLobby.title")}
+        </h1>
+        <p className="mt-2 text-sm text-muted">{t("customLobby.description")}</p>
       </header>
-      <MatchmakingPanel />
       <div className="flex flex-wrap gap-3">
         <button
           type="button"
@@ -70,7 +82,7 @@ export function Lobby() {
           onClick={() => open("create")}
         >
           <TacticalIcon name="plus" />
-          {t("shell.createMatch")}
+          {t("customLobby.create")}
         </button>
         <button
           type="button"
@@ -79,7 +91,7 @@ export function Lobby() {
           data-testid="join-by-id"
           onClick={() => open("join")}
         >
-          {t("lobby.joinById")}
+          {t("customLobby.joinCode")}
         </button>
       </div>
       {error && (

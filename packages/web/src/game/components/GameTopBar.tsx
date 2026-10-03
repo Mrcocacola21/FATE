@@ -52,8 +52,8 @@ export const GameTopBar: FC<GameTopBarProps> = ({ vm, compact = false }) => {
                 <StatusBadge tone="special">{t("testRoom.badgeSandbox")}</StatusBadge>
               ) : null}
             </div>
-            <div className="mt-0.5 truncate font-mono text-[11px] text-stone-500 dark:text-stone-400">
-              {t("game.room")} {vm.roomId ?? "-"}
+            <div className="mt-0.5 truncate text-[11px] text-stone-500 dark:text-stone-400">
+              {vm.roomMeta?.lobbyName || t("customLobby.defaultName")}
             </div>
           </div>
         </div>
@@ -115,7 +115,7 @@ export const GameTopBar: FC<GameTopBarProps> = ({ vm, compact = false }) => {
           >
             <span className="player-presence-seat">{owner}</span>
             <span className="player-presence-name min-w-0 truncate text-xs font-semibold">
-              {vm.roomMeta?.playerNames?.[owner] || t(`roles.${owner}`)}
+              {vm.roomMeta?.playerNames?.[owner] || t(vm.roomMeta?.players[owner] ? "customLobby.guest" : "customLobby.emptySeat")}
             </span>
             {activePlayer === owner ? (
               <span className="turn-indicator">{t("common.current")}</span>

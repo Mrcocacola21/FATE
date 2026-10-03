@@ -5,6 +5,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
+    "test:lobby": "tsx src/tests/lobby.test.ts",
     "test:match-types": "tsx src/tests/matchTypes.test.ts",
     "test:match-types:db": "tsx src/tests/matchTypes.integration.test.ts",
     "test:leaderboard": "tsx src/tests/leaderboard.test.ts",
@@ -25,7 +26,7 @@
     "start": "node dist/index.js",
     "start:deploy": "npm run db:migrate:deploy && npm run db:migrate:status && npm run start",
     "pretest": "npm run prisma:generate",
-    "test": "npm run -w rules build && tsx src/tests/deployment.test.ts && tsx src/tests/databaseFoundation.test.ts && tsx src/tests/auth.test.ts && tsx src/tests/profile.test.ts && tsx src/tests/view.test.ts && tsx src/tests/markerProjection.test.ts && tsx src/tests/matchLifecycle.test.ts && tsx src/tests/matchTypes.test.ts && tsx src/tests/matchmaking.test.ts && tsx src/tests/matchmaking.ws.test.ts && tsx src/tests/matchResult.test.ts && tsx src/tests/matchHistory.test.ts && tsx src/tests/playerStatistics.test.ts && tsx src/tests/rating.test.ts && tsx src/tests/leaderboard.test.ts && tsx src/tests/matchAction.test.ts && tsx src/tests/matchSnapshot.test.ts && tsx src/tests/replay.test.ts && tsx src/tests/authenticatedMultiplayer.test.ts && tsx src/tests/ws.smoke.ts && tsx src/tests/hardening.test.ts && tsx src/tests/testRoom.test.ts && tsx src/tests/testRoom.ws.test.ts && tsx src/tests/modes.test.ts",
+    "test": "npm run -w rules build && tsx src/tests/deployment.test.ts && tsx src/tests/databaseFoundation.test.ts && tsx src/tests/auth.test.ts && tsx src/tests/profile.test.ts && tsx src/tests/view.test.ts && tsx src/tests/markerProjection.test.ts && tsx src/tests/matchLifecycle.test.ts && tsx src/tests/matchTypes.test.ts && tsx src/tests/lobby.test.ts && tsx src/tests/matchmaking.test.ts && tsx src/tests/matchmaking.ws.test.ts && tsx src/tests/matchResult.test.ts && tsx src/tests/matchHistory.test.ts && tsx src/tests/playerStatistics.test.ts && tsx src/tests/rating.test.ts && tsx src/tests/leaderboard.test.ts && tsx src/tests/matchAction.test.ts && tsx src/tests/matchSnapshot.test.ts && tsx src/tests/replay.test.ts && tsx src/tests/authenticatedMultiplayer.test.ts && tsx src/tests/ws.smoke.ts && tsx src/tests/hardening.test.ts && tsx src/tests/testRoom.test.ts && tsx src/tests/testRoom.ws.test.ts && tsx src/tests/modes.test.ts",
     "pretest:db": "npm run prisma:generate",
     "test:db": "tsx src/tests/database.integration.test.ts",
     "pretest:auth:db": "npm run prisma:generate",

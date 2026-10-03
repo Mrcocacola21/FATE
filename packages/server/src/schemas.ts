@@ -1,6 +1,7 @@
 // packages/server/src/schemas.ts
 
 import { z } from "zod";
+import { LobbyNameSchema } from "./lobby/metadata";
 import { LOKI_LAUGHT_OPTION_IDS } from "rules";
 import { TestRoomCommandMessageSchema } from "./testRoom/schemas";
 
@@ -34,6 +35,7 @@ const RuleDeclarationIdSchema = z.enum([
 ]);
 
 export const CreateGameBodySchema = z.object({
+  lobbyName: LobbyNameSchema.optional(),
   seed: z.number().int().optional(),
   arenaId: z.string().optional(),
   roomMode: z.enum(["normal", "test"]).optional(),
@@ -369,6 +371,8 @@ export const GameActionSchema = z
 export type GameActionInput = z.infer<typeof GameActionSchema>;
 
 export const JoinRoomMessageSchema = z.object({
+  lobbyName: LobbyNameSchema.optional(),
+  gameMode: GameModeIdSchema.optional(),
   type: z.literal("joinRoom"),
   mode: z.union([z.literal("create"), z.literal("join")]),
   roomId: z.string().min(1).optional(),

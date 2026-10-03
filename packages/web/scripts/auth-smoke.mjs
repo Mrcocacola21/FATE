@@ -374,14 +374,14 @@ try {
     });
   });
   await page.evaluate(() => localStorage.setItem("FATE_LANGUAGE", "en"));
-  await page.goto(baseUrl);
+  await page.goto(baseUrl + "/lobby");
   await page.getByTestId("create-room").click();
   await page.getByTestId("submit-room").click();
   await page.waitForURL(/\/login\?returnTo=/);
   await page.getByLabel("Email", { exact: true }).fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
-  await page.waitForURL(baseUrl + "/");
+  await page.waitForURL(baseUrl + "/lobby");
   await page.getByTestId("create-room").click();
   await page.getByTestId("submit-room").click();
   await page.waitForFunction(() => Boolean(localStorage.getItem("fate.room-session.v1")));
@@ -414,7 +414,7 @@ try {
   );
   await signOut(page);
   await finalLogout;
-  await page.getByRole("link", { name: "Back to Rooms", exact: true }).click();
+  await page.getByRole("link", { name: "Back to Play", exact: true }).click();
   assert.deepEqual(
     await page.evaluate(() => JSON.parse(localStorage.getItem("fate.room-session.v1"))),
     gameSession,

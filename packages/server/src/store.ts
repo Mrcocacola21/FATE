@@ -1,4 +1,6 @@
 import { validateMatchType, type MatchType } from "./matches/matchType";
+import { identityDisplayName } from "./auth/connectionIdentity";
+import { LobbyNameSchema, type RatedCompatibility } from "./lobby/metadata";
 // packages/server/src/store.ts
 
 import {
@@ -34,6 +36,8 @@ export interface ActionLogEntry {
 }
 
 export interface GameRoom {
+  lobbyName: string;
+  ratedCompatibility: RatedCompatibility | null;
   id: string;
   matchId: string | null;
   readonly matchType: MatchType;
@@ -62,6 +66,7 @@ export interface GameRoom {
 }
 
 export interface CreateGameOptions {
+  lobbyName?: string;
   /** Stage a room privately until its durable Match has been created. */
   publish?: boolean;
   seed?: number;
@@ -74,6 +79,11 @@ export interface CreateGameOptions {
 }
 
 export interface RoomSummary {
+  lobbyName: string;
+  origin: "MANUAL" | "MATCHMAKING";
+  playerNames: { P1: string | null; P2: string | null };
+  hostName: string | null;
+  ratedCompatibility: RatedCompatibility | null;
   matchType: MatchType;
   id: string;
   createdAt: number;
@@ -173,6 +183,8 @@ export function createGameRoomWithId(id: string, options: CreateGameOptions = {}
 
   const now = Date.now();
   const room: GameRoom = {
+    lobbyName: options.lobbyName === undefined ? "FATE Lobby" : LobbyNameSchema.parse(options.lobbyName),
+    ratedCompatibility: null,
     id,
     matchId: null,
     matchType,
@@ -280,8 +292,8 @@ export function cleanupGameRooms(
 export function listRoomSummaries(): RoomSummary[] {
   return listGameRooms().map((room) => {
     const players = {
-      P1: !!room.seats.P1 || !!room.reservedUserIds?.P1,
-      P2: !!room.seats.P2 || !!room.reservedUserIds?.P2,
+      P1: !!room.seats.P1 || !!room.reservedUserIds?.P1 || (room.participantsLocked && !!room.seatIdentities.P1),
+      P2: !!room.seats.P2 || !!room.reservedUserIds?.P2 || (room.participantsLocked && !!room.seatIdentities.P2),
     };
     const ready = room.state.playersReady;
     const canStart =
@@ -294,6 +306,14 @@ export function listRoomSummaries(): RoomSummary[] {
       !room.state.pendingRoll;
 
     return {
+      lobbyName: room.lobbyName,
+      origin: room.reservedUserIds ? "MATCHMAKING" : "MANUAL",
+      playerNames: {
+        P1: room.seatIdentities.P1 ? identityDisplayName(room.seatIdentities.P1) : null,
+        P2: room.seatIdentities.P2 ? identityDisplayName(room.seatIdentities.P2) : null,
+      },
+      hostName: room.seatIdentities[room.hostSeat] ? identityDisplayName(room.seatIdentities[room.hostSeat]!) : null,
+      ratedCompatibility: room.ratedCompatibility,
       id: room.id,
       matchType: room.matchType,
       createdAt: room.createdAt,
@@ -301,7 +321,7 @@ export function listRoomSummaries(): RoomSummary[] {
       players,
       spectators: room.spectators.size,
       ready,
-      canStart,
+      canStart: canStart && (room.matchType !== "RATED" || room.ratedCompatibility?.eligible === true),
       roomMode: room.roomMode,
       gameMode: room.gameMode,
     };
