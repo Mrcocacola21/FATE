@@ -234,44 +234,6 @@ export function FigureSetPage() {
           </details>
         </div>
       </header>
-      <section className="figure-loadout panel-card" aria-labelledby="figure-loadout-title">
-        <div className="figure-loadout-heading">
-          <h2 id="figure-loadout-title" className="section-kicker">
-            {t("figureSet.currentLoadout")}
-          </h2>
-          <span className="figure-save-notice" role="status">
-            {notice}
-          </span>
-        </div>
-        <div className="figure-loadout-slots">
-          {BASE_CLASSES.map((slot) => (
-            <button
-              type="button"
-              key={slot}
-              className="figure-loadout-slot"
-              data-testid={`loadout-${slot}`}
-              aria-pressed={activeClass === slot}
-              aria-label={t("figureSet.loadoutSlot", {
-                class: getClassLabel(slot, t),
-                hero: name(state.selection[slot]),
-              })}
-              onClick={() => browseClass(slot, true)}
-            >
-              <HeroPortrait
-                heroId={state.selection[slot]}
-                label={name(state.selection[slot])}
-                token
-              />
-              <span className="min-w-0">
-                <span className="figure-slot-class">{getClassLabel(slot, t)}</span>
-                <span className="figure-slot-name" title={name(state.selection[slot])}>
-                  {name(state.selection[slot])}
-                </span>
-              </span>
-            </button>
-          ))}
-        </div>
-      </section>
       {error && (
         <div className="figure-import-error" role="alert">
           {error}
@@ -289,6 +251,44 @@ export function FigureSetPage() {
         }}
       />
       <div className="figure-workspace">
+        <section className="figure-loadout panel-card" aria-labelledby="figure-loadout-title">
+          <div className="figure-loadout-heading">
+            <h2 id="figure-loadout-title" className="section-kicker">
+              {t("figureSet.currentLoadout")}
+            </h2>
+            <span className="figure-save-notice" role="status">
+              {notice}
+            </span>
+          </div>
+          <div className="figure-loadout-slots">
+            {BASE_CLASSES.map((slot) => (
+              <button
+                type="button"
+                key={slot}
+                className="figure-loadout-slot"
+                data-testid={`loadout-${slot}`}
+                aria-pressed={activeClass === slot}
+                aria-label={t("figureSet.loadoutSlot", {
+                  class: getClassLabel(slot, t),
+                  hero: name(state.selection[slot]),
+                })}
+                onClick={() => browseClass(slot, true)}
+              >
+                <HeroPortrait
+                  heroId={state.selection[slot]}
+                  label={name(state.selection[slot])}
+                  token
+                />
+                <span className="min-w-0">
+                  <span className="figure-slot-class">{getClassLabel(slot, t)}</span>
+                  <span className="figure-slot-name" title={name(state.selection[slot])}>
+                    {name(state.selection[slot])}
+                  </span>
+                </span>
+              </button>
+            ))}
+          </div>
+        </section>
         <nav className="figure-classes panel-card" aria-labelledby="figure-classes-title">
           <h2 id="figure-classes-title" className="section-kicker">
             {t("figureSet.classes")}

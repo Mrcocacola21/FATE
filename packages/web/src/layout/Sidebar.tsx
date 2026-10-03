@@ -33,11 +33,15 @@ export function Sidebar({
     <aside className="shell-sidebar" data-testid={mobile ? "mobile-sidebar" : "desktop-sidebar"}>
       <div className="flex items-center justify-between gap-2">
         <Link to="/" className="shell-brand" onClick={onNavigate} aria-label={t("auth.brand")}>
-          <span className="brand-sigil h-9 w-9 shrink-0" aria-hidden="true" />
-          <span>
-            <span className="fate-brand block text-xl">{t("auth.brand")}</span>
-            <span className="section-kicker text-[9px]">{t("shell.command")}</span>
-          </span>
+          <img
+            className="shell-brand-icon"
+            src="/android-chrome-192x192.png"
+            width={40}
+            height={40}
+            alt=""
+            aria-hidden="true"
+          />
+          <span className="fate-brand block text-xl">{t("auth.brand")}</span>
         </Link>
         {onClose && (
           <button
