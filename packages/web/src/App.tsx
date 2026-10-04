@@ -32,6 +32,7 @@ import { AdminUsersPage } from "./admin/AdminUsersPage";
 import { AdminUserPage } from "./admin/AdminUserPage";
 import { AdminMatchesPage } from "./admin/AdminMatchesPage";
 import { AdminMatchPage } from "./admin/AdminMatchPage";
+import { AdminAuditPage } from "./admin/AdminAuditPage";
 
 export default function App() {
   const location = useLocation();
@@ -68,6 +69,7 @@ export default function App() {
                   <Route path="users/:userId" element={<AdminUserPage />} />
                   <Route path="matches" element={<AdminMatchesPage />} />
                   <Route path="matches/:matchId" element={<AdminMatchPage />} />
+                  <Route path="audit" element={<AdminAuditPage />} />
                   <Route path="*" element={<Navigate replace to="/admin" />} />
                 </Route>
                 <Route path="/login" element={<LoginPage />} />

@@ -2,6 +2,9 @@ import { ApiError, isRecord } from "../api/client";
 import { getRankPresentation } from "../ranks/rankAssets";
 import {
   roles,
+  auditEventTypes,
+  type AuditRecord,
+  type AuditIdentity,
   modes,
   statuses,
   type AdminUser,
@@ -17,6 +20,45 @@ import {
 function record(v: unknown) {
   if (!isRecord(v)) throw new ApiError("INVALID_RESPONSE");
   return v;
+}
+function auditIdentity(v: unknown): AuditIdentity {
+  const x = record(v);
+  return {
+    id: str(x.id),
+    username: nullable(x.username, str),
+    displayName: nullable(x.displayName, str),
+  };
+}
+export function audit(v: unknown): AuditRecord {
+  const x = record(v);
+  const eventType = choice(x.eventType, auditEventTypes);
+  const metadata = x.metadata === null ? null : record(x.metadata);
+  const safe: AuditRecord["metadata"] = metadata === null ? null : {};
+  const keys =
+    eventType === "USER_ROLE_CHANGED"
+      ? ["previousRole", "newRole"]
+      : eventType === "MATCH_INTERRUPTED"
+        ? ["previousStatus", "newStatus", "recoveryReason", "lastDurableRevision"]
+        : ["targetRole"];
+  if (metadata && safe)
+    for (const key of keys) {
+      const value = metadata[key];
+      safe[key] = key === "lastDurableRevision" ? nullable(value, num) : str(value);
+    }
+  return {
+    id: str(x.id),
+    eventType,
+    actorType: choice(x.actorType, ["USER", "SYSTEM"]),
+    actorUserId: nullable(x.actorUserId, str),
+    actorRole: nullable(x.actorRole, (v) => choice(v, roles)),
+    actor: nullable(x.actor, auditIdentity),
+    targetUserId: nullable(x.targetUserId, str),
+    targetUser: nullable(x.targetUser, auditIdentity),
+    matchId: nullable(x.matchId, str),
+    reason: nullable(x.reason, str),
+    metadata: safe,
+    createdAt: str(x.createdAt),
+  };
 }
 function str(v: unknown) {
   if (typeof v !== "string") throw new ApiError("INVALID_RESPONSE");

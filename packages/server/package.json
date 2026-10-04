@@ -5,6 +5,8 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
+    "test:audit": "tsx --test src/tests/audit.test.ts",
+    "test:audit:db": "tsx src/tests/audit.integration.test.ts",
     "test:ranks": "tsx --test src/tests/rankTiers.test.ts",
     "test:lobby": "tsx src/tests/lobby.test.ts",
     "test:match-types": "tsx src/tests/matchTypes.test.ts",
@@ -62,7 +64,7 @@
     "test:rating:modes:db": "tsx src/tests/perModeRatings.integration.test.ts && tsx src/tests/perModeMigration.integration.test.ts",
     "db:rating:inventory": "node ../../scripts/ratingMigrationInventory.cjs",
     "admin:promote": "tsx src/scripts/promoteAdmin.ts",
-    "test:admin": "tsx --test src/tests/admin.test.ts src/tests/adminUiRating.test.ts",
+    "test:admin": "tsx --test src/tests/admin.test.ts src/tests/adminUiRating.test.ts src/tests/audit.test.ts",
     "test:admin:db": "tsx src/tests/admin.integration.test.ts"
   },
   "dependencies": {

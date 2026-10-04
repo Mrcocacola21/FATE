@@ -51,6 +51,7 @@ function AdminLayout() {
           ["/admin", "overview"],
           ["/admin/users", "users"],
           ["/admin/matches", "matches"],
+          ...(role === "ADMIN" ? [["/admin/audit", "auditLog"]] : []),
         ].map(([path, label]) => (
           <NavLink key={path} to={path} end={path === "/admin"}>
             {t(`admin.${label}`)}

@@ -1660,7 +1660,9 @@ ADMIN accounts. It includes a system overview, server-filtered paginated user/ma
 lists, account details and per-mode ranks, confirmation-based block/unblock/role
 changes, and read-only match/action/snapshot metadata inspection. USER accounts
 cannot see the navigation entry or enter the routes. Backend authorization remains
-authoritative. The immutable Audit Log remains a separate future phase.
+authoritative. The append-only [Audit Log](docs/audit-log.md) is available at
+`/admin/audit` exclusively to ADMIN accounts. It records block/unblock, role changes
+and unrecoverable system match interruptions atomically with the affected durable state.
 
 Checks: `npm run -w web test:admin`, `npm run -w server test:admin`,
 `npm run -w web test:admin:e2e`. Browser tests use isolated local fixtures and do not

@@ -54,6 +54,7 @@ async function request<T>(path: string, decoder: Decoder<T>, options: RequestIni
   }
 }
 export const adminApi = {
+  audit: (query: Query) => request(`/audit${queryString(query)}`, decode.page(decode.audit)),
   summary: () => request("/summary", decode.summary),
   users: (query: Query) => request(`/users${queryString(query)}`, decode.page(decode.user)),
   user: (id: string) => request(`/users/${encodeURIComponent(id)}`, decode.userDetail),

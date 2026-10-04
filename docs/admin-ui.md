@@ -12,9 +12,10 @@ Session initialization must finish before any administration page mounts or fetc
 | `/admin/users/:userId`    | Identity, account state, moderation and per-mode ratings        |
 | `/admin/matches`          | Match filters, sorting and server pagination                    |
 | `/admin/matches/:matchId` | Match/participant metadata and paginated action history         |
+| `/admin/audit` | ADMIN-only append-only security/administrative journal |
 
 The single Admin link lives in the sidebar's secondary navigation. Overview, Users
-and Matches are local navigation. Table state lives in URL parameters and survives
+and Matches are local navigation; ADMIN also sees Audit Log. Table state lives in URL parameters and survives
 reload and back/forward navigation. Text searches are explicitly submitted.
 
 ## Permissions and moderation
@@ -93,8 +94,9 @@ English and Ukrainian translations. Persisted action type codes and payload keys
 data and remain untranslated for accurate inspection.
 
 Match actions, snapshots, GameState, results and ratings are inspection-only. There
-are no mutation/injection/force-win/rating-edit controls. Audit Log UI, advanced
-moderation, IP/device bans, OpenAPI publication and operational observability are
+are no mutation/injection/force-win/rating-edit controls. The ADMIN-only
+[Audit Log UI](audit-log.md) records significant security state transitions separately.
+Advanced moderation, IP/device bans, OpenAPI publication and operational observability are
 separate phases. Passwords, auth tokens, environment variables, logs, SQL and server
 filesystem access are not exposed.
 

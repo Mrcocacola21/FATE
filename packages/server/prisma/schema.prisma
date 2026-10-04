@@ -42,6 +42,39 @@ enum UserRole {
   ADMIN
 }
 
+enum AuditEventType {
+  USER_BLOCKED
+  USER_UNBLOCKED
+  USER_ROLE_CHANGED
+  MATCH_INTERRUPTED
+}
+
+enum AuditActorType {
+  USER
+  SYSTEM
+}
+
+// Historical identifiers intentionally have no cascading relations. They survive deletion
+// of the referenced resource; the read service resolves current display identities separately.
+model AuditLog {
+  id           String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  eventType    AuditEventType
+  actorType    AuditActorType
+  actorUserId  String?        @db.Uuid
+  actorRole    UserRole?
+  targetUserId String?        @db.Uuid
+  matchId      String?        @db.Uuid
+  reason       String?        @db.VarChar(500)
+  metadata     Json           @db.JsonB
+  createdAt    DateTime       @default(now()) @db.Timestamptz(3)
+
+  @@index([createdAt, id])
+  @@index([eventType, createdAt, id])
+  @@index([actorUserId, createdAt, id])
+  @@index([targetUserId, createdAt, id])
+  @@index([matchId, createdAt, id])
+}
+
 model User {
   id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   email        String   @unique @db.VarChar(320)

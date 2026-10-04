@@ -1,5 +1,7 @@
 import { getDatabaseClient, disconnectDatabase } from "../db/client";
 import { lockAccountAdministration } from "../repositories/adminRepository";
+import { AuditLogService } from "../services/auditLogService";
+import { AuditEventType, AuditActorType } from "../audit/events";
 
 async function run() {
   const identifier = process.argv[2]?.trim();
@@ -9,13 +11,21 @@ async function run() {
     await lockAccountAdministration(tx);
     const users = await tx.user.findMany({
       where: { OR: [{ email: identifier.toLowerCase() }, { profile: { username: identifier } }] },
-      select: { id: true, blockedAt: true },
+      select: { id: true, blockedAt: true, role: true },
       take: 2,
     });
     if (users.length !== 1)
       throw new Error("Identifier must resolve to exactly one existing account");
     if (users[0].blockedAt) throw new Error("Unblock this account before promotion");
     await tx.user.update({ where: { id: users[0].id }, data: { role: "ADMIN" } });
+    if (users[0].role !== "ADMIN")
+      await new AuditLogService().record(tx, {
+        eventType: AuditEventType.USER_ROLE_CHANGED,
+        actor: { type: AuditActorType.SYSTEM },
+        targetUserId: users[0].id,
+        metadata: { previousRole: users[0].role, newRole: "ADMIN" },
+        reason: "Operator CLI admin promotion",
+      });
     return users[0].id;
   });
   console.log(`ADMIN role assigned to account ${id}`);

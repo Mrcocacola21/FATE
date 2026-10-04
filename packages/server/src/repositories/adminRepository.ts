@@ -3,6 +3,8 @@ import { getDatabaseClient } from "../db/client";
 import { AuthError } from "../auth/authErrors";
 import { assertCanChangeRole, assertCanModerate } from "../admin/policy";
 import type { UserListQuery, MatchListQuery, ActionListQuery } from "../admin/schemas";
+import { AuditLogService } from "../services/auditLogService";
+import { AuditEventType, AuditActorType } from "../audit/events";
 
 const profileSelect = { username: true, displayName: true } satisfies Prisma.ProfileSelect;
 export function adminUserSelect(email: boolean) {
@@ -137,7 +139,7 @@ export class AdminRepository {
       assertCanModerate(actor, target, blocked);
       const now = new Date();
       if (blocked) {
-        await tx.user.updateMany({
+        const changed = await tx.user.updateMany({
           where: { id: targetId, blockedAt: null },
           data: {
             blockedAt: now,
@@ -148,10 +150,24 @@ export class AdminRepository {
           where: { userId: targetId, revokedAt: null },
           data: { revokedAt: now },
         });
+        if (changed.count)
+          await new AuditLogService().record(tx, {
+            eventType: AuditEventType.USER_BLOCKED,
+            actor: { type: AuditActorType.USER, userId: actor.id, role: actor.role },
+            targetUserId: target.id,
+            reason,
+            metadata: { targetRole: target.role },
+          });
       } else if (target.blockedAt) {
         await tx.user.update({
           where: { id: targetId },
           data: { blockedAt: null, blockedReason: null },
+        });
+        await new AuditLogService().record(tx, {
+          eventType: AuditEventType.USER_UNBLOCKED,
+          actor: { type: AuditActorType.USER, userId: actor.id, role: actor.role },
+          targetUserId: target.id,
+          metadata: { targetRole: target.role },
         });
       }
       return tx.user.findUniqueOrThrow({
@@ -182,11 +198,19 @@ export class AdminRepository {
         (await tx.user.count({ where: { role: "ADMIN", blockedAt: null } })) <= 1
       )
         throw new AuthError("LAST_ADMIN_PROTECTED");
-      return tx.user.update({
+      const updated = await tx.user.update({
         where: { id: targetId },
         data: { role },
         select: adminUserSelect(true),
       });
+      if (target.role !== role)
+        await new AuditLogService().record(tx, {
+          eventType: AuditEventType.USER_ROLE_CHANGED,
+          actor: { type: AuditActorType.USER, userId: actor.id, role: actor.role },
+          targetUserId: target.id,
+          metadata: { previousRole: target.role, newRole: role },
+        });
+      return updated;
     });
   }
 

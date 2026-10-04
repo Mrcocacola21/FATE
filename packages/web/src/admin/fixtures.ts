@@ -115,3 +115,45 @@ export const fixturePage = <T>(items: T[], page = 1, total = items.length): Page
   items,
   pagination: { page, limit: 20, total, totalPages: Math.ceil(total / 20) },
 });
+export const fixtureAudit: import("./types").AuditRecord[] = [
+  "USER_BLOCKED",
+  "USER_UNBLOCKED",
+  "USER_ROLE_CHANGED",
+  "MATCH_INTERRUPTED",
+].map(
+  (type, i) =>
+    ({
+      id: `55555555-5555-4555-8555-${String(i).padStart(12, "0")}`,
+      eventType: type as import("./types").AuditRecord["eventType"],
+      actorType: i === 3 ? "SYSTEM" : "USER",
+      actorUserId: i === 3 ? null : "33333333-3333-4333-8333-333333333333",
+      actorRole: i === 3 ? null : "ADMIN",
+      actor:
+        i === 3
+          ? null
+          : { id: "33333333-3333-4333-8333-333333333333", username: "staff", displayName: "Staff" },
+      targetUserId: i === 3 ? null : fixtureUser.id,
+      targetUser:
+        i === 3
+          ? null
+          : {
+              id: fixtureUser.id,
+              username: fixtureUser.username,
+              displayName: fixtureUser.displayName,
+            },
+      matchId: i === 3 ? fixtureMatch.matchId : null,
+      reason: i === 0 ? "Repeated lobby abuse" : i === 3 ? "Restart recovery unavailable" : null,
+      metadata:
+        i === 3
+          ? {
+              previousStatus: "IN_PROGRESS",
+              newStatus: "CANCELLED",
+              recoveryReason: "ACTION_LOG_GAP",
+              lastDurableRevision: 37,
+            }
+          : i === 2
+            ? { previousRole: "USER", newRole: "MODERATOR" }
+            : { targetRole: "USER" },
+      createdAt: fixtureUser.createdAt,
+    }) as import("./types").AuditRecord,
+);

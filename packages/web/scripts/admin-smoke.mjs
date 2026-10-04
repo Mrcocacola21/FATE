@@ -6,6 +6,7 @@ import { spawn } from "node:child_process";
 import { chromium } from "playwright-core";
 import fixtures from "../src/admin/fixtures.ts";
 const { fixtureUser, fixtureMatch, fixtureSummary, fixtureAction } = fixtures;
+const { fixtureAudit } = fixtures;
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
 const port = 5199,
@@ -126,6 +127,16 @@ try {
         return send({ error: { code: "FORBIDDEN" } }, 403);
       if (mode === "error") return send({ error: { code: "DATABASE_UNAVAILABLE" } }, 503);
       if (p === "/api/admin/summary") return send(fixtureSummary);
+      if (p === "/api/admin/audit") {
+        if (role !== "ADMIN") return send({ error: { code: "FORBIDDEN" } }, 403);
+        const items =
+          mode === "empty"
+            ? []
+            : fixtureAudit.filter(
+                (event) => !q.get("eventType") || event.eventType === q.get("eventType"),
+              );
+        return send(pageResult(items, q, items.length));
+      }
       if (p === "/api/admin/users")
         return send(
           pageResult(
@@ -219,6 +230,9 @@ try {
   assert.equal(await page.locator('a[href="/admin"]').count(), 0);
   assert.equal(requests.filter((r) => r.path.startsWith("/api/admin")).length, 0);
   role = "MODERATOR";
+  await visit("/admin/audit", "Access denied");
+  assert.equal(await page.locator('a[href="/admin/audit"]').count(), 0);
+  assert.equal(requests.filter((r) => r.path === "/api/admin/audit").length, 0);
   await visit("/admin", "System overview");
   await page.getByText("1,248", { exact: true }).waitFor();
   assert.equal(await page.locator('a[href="/admin"]').count(), 2);
@@ -235,6 +249,28 @@ try {
     { width: 390, height: 844 },
   ]) {
     await page.setViewportSize(viewport);
+    await visit("/admin/audit", "Restart recovery unavailable");
+    await capture(`audit-${viewport.width}`);
+    await page.getByRole("button", { name: "Details", exact: true }).nth(2).click();
+    await page.getByText("Previous role", { exact: true }).waitFor();
+    await capture(`audit-role-details-${viewport.width}`);
+    await page.getByRole("button", { name: "Details", exact: true }).nth(3).focus();
+    await page.keyboard.press("Enter");
+    await page.getByText("ACTION_LOG_GAP", { exact: true }).waitFor();
+    await capture(`audit-match-details-${viewport.width}`);
+    assert.equal(await page.getByRole("button", { name: /Delete|Edit|Clear/ }).count(), 0);
+    await page.getByLabel("Event", { exact: true }).selectOption("USER_BLOCKED");
+    await page.waitForURL(/eventType=USER_BLOCKED/);
+    await page.waitForFunction(
+      () => document.querySelectorAll(".admin-audit-table tbody tr").length === 1,
+    );
+    assert.equal(
+      await page
+        .locator(".admin-audit-table")
+        .getByText("Match interrupted", { exact: true })
+        .count(),
+      0,
+    );
     await visit("/admin", "System overview");
     await page.getByText("1,248", { exact: true }).waitFor();
     await capture(`overview-${viewport.width}`);

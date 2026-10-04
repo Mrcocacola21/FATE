@@ -4,6 +4,36 @@
   margin: 0 auto;
   color: rgb(var(--fate-text));
 }
+.admin-table.admin-audit-table th:first-child {
+  width: 17%;
+}
+.admin-table.admin-audit-table th:last-child {
+  width: 112px;
+}
+.admin-audit-table .btn {
+  white-space: nowrap;
+}
+.admin-audit-detail-row td {
+  background: rgb(var(--fate-inset) / 0.4);
+}
+.admin-audit-reason {
+  white-space: pre-wrap;
+}
+@media (max-width: 768px) {
+  .admin-tabs {
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .admin-table .admin-audit-detail-row td {
+    display: block;
+  }
+  .admin-table.admin-audit-table td:first-child {
+    display: flex;
+  }
+  .admin-table.admin-audit-table .admin-audit-detail-row td:first-child {
+    display: block;
+  }
+}
 .admin-heading,
 .admin-detail-heading,
 .admin-section-heading {

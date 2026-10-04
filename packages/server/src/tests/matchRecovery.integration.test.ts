@@ -189,6 +189,7 @@ async function run() {
       assert(await b.live.drainActions(matchId));
       assert.equal(room.revision, 38);
       assert.equal(await db.matchAction.count({ where: { matchId, revision: 38 } }), 1);
+      assert.equal(await db.auditLog.count({ where: { matchId } }), 0);
       await applyFixture(b.live, room, f, 54);
       assert(await db.matchSnapshot.findUnique({ where: { matchId_revision: { matchId, revision: 40 } } }));
       await dropRuntime(b.server);
@@ -203,6 +204,7 @@ async function run() {
       await applyFixture(b.live, room, f, f.match.finalRevision!);
       const result = await db.match.findUniqueOrThrow({ where: { id: matchId }, include: { participants: true } });
       assert.equal(result.status, "FINISHED"); assert.equal(result.finalRevision, f.match.finalRevision);
+      assert.equal(await db.auditLog.count({ where: { matchId } }), 0);
       assert(result.participants.every(p => p.outcome));
       assert.equal(await db.matchAction.count({ where: { matchId } }), f.match.finalRevision);
       assert.equal(await db.ratingHistory.count({ where: { matchId } }), rated ? 2 : 0);
@@ -232,6 +234,13 @@ async function run() {
     assert.equal(await db.matchAction.count({ where: { matchId: badId } }), 36);
     assert.equal(await db.matchSnapshot.count({ where: { matchId: badId } }), 1);
     assert.equal(await db.ratingHistory.count({ where: { matchId: badId } }), 0);
+    const audit = await db.auditLog.findMany({ where: { matchId: badId } });
+    assert.equal(audit.length, 1);
+    assert.equal(audit[0].eventType, "MATCH_INTERRUPTED");
+    assert.equal(audit[0].actorType, "SYSTEM");
+    assert.deepEqual(audit[0].metadata, { previousStatus: "IN_PROGRESS", newStatus: "CANCELLED", recoveryReason: "ACTION_LOG_GAP", lastDurableRevision: 37 });
+    await repository.interrupt(badId, "SERVER_RESTART_UNRECOVERABLE:ACTION_LOG_GAP");
+    assert.equal(await db.auditLog.count({ where: { matchId: badId } }), 1);
     assert.equal((await b.server.inject({ url: `/rooms/${roomId}` })).json().error.code, "MATCH_INTERRUPTED");
     const c = await connect(b.server);
     c.send({ type: "joinRoom", mode: "join", roomId, role: "spectator" });

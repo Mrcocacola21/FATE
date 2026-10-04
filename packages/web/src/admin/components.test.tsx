@@ -12,6 +12,8 @@ import { AdminUsersPage } from "./AdminUsersPage";
 import { AdminUserPage } from "./AdminUserPage";
 import { AdminMatchesPage } from "./AdminMatchesPage";
 import { AdminMatchPage } from "./AdminMatchPage";
+import { AdminAuditPage } from "./AdminAuditPage";
+import { fixtureAudit } from "./fixtures";
 import { adminApi } from "./api";
 import { fixtureUser, fixtureMatch, fixtureSummary, fixtureAction, fixturePage } from "./fixtures";
 import type { AdminUserDetail, Query } from "./types";
@@ -41,6 +43,10 @@ beforeEach(() => {
     true,
   );
   adminApi.summary = async () => fixtureSummary;
+  adminApi.audit = async (query) => {
+    calls.push(query);
+    return fixturePage(fixtureAudit, Number(query.page), 80);
+  };
   adminApi.users = async (query) => {
     calls.push(query);
     return fixturePage([fixtureUser], Number(query.page), 42);
@@ -86,6 +92,7 @@ async function mount(path = "/admin") {
             <Route path="users/:userId" element={<AdminUserPage />} />
             <Route path="matches" element={<AdminMatchesPage />} />
             <Route path="matches/:matchId" element={<AdminMatchPage />} />
+            <Route path="audit" element={<AdminAuditPage />} />
           </Route>
           <Route path="/login" element={<p>{translate("auth.login")}</p>} />
         </Routes>
@@ -101,6 +108,61 @@ const select = (label: string) =>
     .findAllByType("label")
     .find((node) => node.findAllByType("span")[0]?.children.join("") === label)!
     .findByType("select");
+
+test("audit ADMIN viewer labels four events, links resources and exposes read-only structured details", async () => {
+  await mount("/admin/audit");
+  for (const label of [
+    "User blocked",
+    "User unblocked",
+    "Role changed",
+    "Match interrupted",
+    "Staff",
+    "System",
+  ])
+    assert(text().includes(label), label);
+  const links = renderer!.root.findAllByType("a");
+  assert(links.some((a) => a.props.href === `/admin/users/${fixtureUser.id}`));
+  assert(links.some((a) => a.props.href === `/admin/matches/${fixtureMatch.matchId}`));
+  const details = renderer!.root
+    .findAllByType("button")
+    .filter((b) => b.children.join("") === "Details");
+  await act(async () => details[2].props.onClick());
+  assert.match(text(), /Previous role/);
+  assert.match(text(), /New role/);
+  await act(async () => details[3].props.onClick());
+  assert.match(text(), /Recovery reason/);
+  assert.match(text(), /ACTION_LOG_GAP/);
+  assert.match(text(), /Last durable revision/);
+  assert.equal(renderer!.root.findAllByType("textarea").length, 0);
+  assert(
+    !renderer!.root
+      .findAllByType("button")
+      .some((b) => /Delete|Edit|Clear/.test(b.children.join(""))),
+  );
+  await act(async () => select("Event").props.onChange({ target: { value: "USER_BLOCKED" } }));
+  assert.equal(calls[calls.length - 1]?.eventType, "USER_BLOCKED");
+});
+
+test("MODERATOR cannot mount audit data and has no Audit Log navigation", async () => {
+  authStore.setState({ user: { ...authStore.getState().user!, role: "MODERATOR" } });
+  await mount("/admin/audit");
+  assert.match(text(), /Access denied/);
+  assert.equal(calls.length, 0);
+  assert(!renderer!.root.findAllByType("a").some((a) => a.props.href === "/admin/audit"));
+});
+
+test("audit viewer has empty and safe error states and translations in both locales", async () => {
+  adminApi.audit = async () => fixturePage([]);
+  await mount("/admin/audit");
+  assert.match(text(), /No audit events match/);
+  adminApi.audit = async () => {
+    throw new ApiError("SERVER_ERROR", 503);
+  };
+  await act(async () => button("Refresh").props.onClick());
+  assert.match(text(), /administration service is unavailable/);
+  await act(async () => setLanguage("uk", null));
+  assert(text().includes("Журнал аудиту"));
+});
 
 test("USER direct routes and unresolved sessions never mount admin data", async () => {
   let count = 0;

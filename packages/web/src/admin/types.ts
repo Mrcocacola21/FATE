@@ -115,3 +115,28 @@ export interface AdminSummary {
   };
 }
 export type Query = Record<string, string | number | undefined>;
+export const auditEventTypes = [
+  "USER_BLOCKED",
+  "USER_UNBLOCKED",
+  "USER_ROLE_CHANGED",
+  "MATCH_INTERRUPTED",
+] as const;
+export interface AuditIdentity {
+  id: string;
+  username: string | null;
+  displayName: string | null;
+}
+export interface AuditRecord {
+  id: string;
+  eventType: (typeof auditEventTypes)[number];
+  actorType: "USER" | "SYSTEM";
+  actorUserId: string | null;
+  actorRole: UserRole | null;
+  actor: AuditIdentity | null;
+  targetUserId: string | null;
+  targetUser: AuditIdentity | null;
+  matchId: string | null;
+  reason: string | null;
+  metadata: Record<string, string | number | null> | null;
+  createdAt: string;
+}

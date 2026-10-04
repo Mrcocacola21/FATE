@@ -13,6 +13,7 @@ continue to apply to every player.
 | Block/unblock MODERATOR                                     | No   | No        | Yes   |
 | Block/unblock ADMIN through ordinary API                    | No   | No        | No    |
 | Assign roles                                                | No   | No        | Yes   |
+| Read global Audit Log                                      | No   | No        | Yes   |
 | Edit GameState, results, actions, snapshots, RNG or ratings | No   | No        | No    |
 
 ## Migration and first administrator
@@ -200,5 +201,6 @@ exact summary aggregates, concurrent role changes and CLI promotion. Recovery te
 cover a blocked reserved-seat reconnect; historical-schema migration tests prove old
 user columns and ratings/history remain intact.
 
-Admin UI, immutable Audit Log, OpenAPI overhaul, advanced moderation, impersonation,
-manual competitive edits and gameplay debugging remain outside this phase.
+The [Admin UI](admin-ui.md) and separate [append-only Audit Log](audit-log.md) are
+implemented in subsequent changes. OpenAPI overhaul, advanced moderation,
+impersonation, manual competitive edits and gameplay debugging remain outside this phase.

@@ -1,11 +1,29 @@
 import { useSearchParams } from "react-router";
-import { modes, roles, statuses, type Query } from "./types";
+import { auditEventTypes, modes, roles, statuses, type Query } from "./types";
 
 const allowed = (value: string | null, values: readonly string[]) =>
   value && values.includes(value) ? value : undefined;
 const positive = (value: string | null) =>
   value && /^[1-9]\d*$/.test(value) && Number(value) <= 1000000 ? Number(value) : 1;
-export function readQuery(params: URLSearchParams, kind: "users" | "matches" | "actions"): Query {
+export function readQuery(
+  params: URLSearchParams,
+  kind: "users" | "matches" | "actions" | "audit",
+): Query {
+  if (kind === "audit") {
+    const query: Query = {
+      page: positive(params.get("page")),
+      limit: Number(allowed(params.get("limit"), ["20", "50", "100"]) ?? 50),
+      eventType: allowed(params.get("eventType"), auditEventTypes),
+      actorType: allowed(params.get("actorType"), ["USER", "SYSTEM"]),
+    };
+    for (const key of ["actorUserId", "targetUserId", "matchId"])
+      query[key] = params.get(key) || undefined;
+    for (const key of ["dateFrom", "dateTo"]) {
+      const value = params.get(key);
+      if (value && Number.isFinite(Date.parse(value))) query[key] = new Date(value).toISOString();
+    }
+    return query;
+  }
   const base = {
     page: positive(params.get(kind === "actions" ? "actionPage" : "page")),
     limit: Number(
@@ -39,7 +57,7 @@ export function readQuery(params: URLSearchParams, kind: "users" | "matches" | "
   }
   return query;
 }
-export function useAdminQuery(kind: "users" | "matches" | "actions") {
+export function useAdminQuery(kind: "users" | "matches" | "actions" | "audit") {
   const [params, setParams] = useSearchParams();
   const query = readQuery(params, kind);
   const change = (patch: Query) =>

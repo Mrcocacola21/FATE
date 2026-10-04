@@ -13,6 +13,7 @@ import { AdminRepository } from "../repositories/adminRepository";
 import { AdminService } from "../services/adminService";
 import {
   actionListSchema,
+  auditListSchema,
   blockSchema,
   matchListSchema,
   parseInput,
@@ -22,6 +23,7 @@ import {
 } from "../admin/schemas";
 import { toApiError } from "./apiErrorHandler";
 import type { AccountAccessLoader } from "../auth/accountAccess";
+import { AuditLogReader } from "../services/auditLogService";
 
 export async function adminRoutes(
   server: FastifyInstance,
@@ -29,6 +31,7 @@ export async function adminRoutes(
     revokeRuntime: (userId: string) => void;
     service?: AdminService;
     loadAccount?: AccountAccessLoader;
+    auditReader?: Pick<AuditLogReader, "list">;
   },
 ) {
   await server.register(rateLimit, {
@@ -52,6 +55,9 @@ export async function adminRoutes(
     ),
   );
   server.addHook("preHandler", requireModerator);
+  server.get("/audit", { preHandler: requireAdmin }, (request) =>
+    (options.auditReader ?? new AuditLogReader()).list(parseInput(auditListSchema, request.query)),
+  );
   server.setErrorHandler((error, request, reply) => {
     const failure = toApiError(error);
     if (failure.statusCode >= 500)

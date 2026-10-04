@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { GameModeIdSchema } from "../schemas";
+import { AuditEventType, AuditActorType } from "../audit/events";
 
 export const userRoleSchema = z.enum(["USER", "MODERATOR", "ADMIN"]);
 const integer = (max: number) =>
@@ -50,6 +51,21 @@ export const actionListSchema = z
   })
   .strict();
 export const blockSchema = z.object({ reason: z.string().trim().max(500).optional() }).strict();
+export const auditListSchema = z
+  .object({
+    page: integer(1000000).default("1"),
+    limit: integer(200).default("50"),
+    eventType: z.nativeEnum(AuditEventType).optional(),
+    actorType: z.nativeEnum(AuditActorType).optional(),
+    actorUserId: z.string().uuid().optional(),
+    targetUserId: z.string().uuid().optional(),
+    matchId: z.string().uuid().optional(),
+    dateFrom: date,
+    dateTo: date,
+  })
+  .strict()
+  .refine((q) => !q.dateFrom || !q.dateTo || q.dateFrom <= q.dateTo);
+export type AuditListQuery = z.infer<typeof auditListSchema>;
 export const rolePatchSchema = z.object({ role: userRoleSchema }).strict();
 export type UserListQuery = z.infer<typeof userListSchema>;
 export type MatchListQuery = z.infer<typeof matchListSchema>;
