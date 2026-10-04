@@ -20,6 +20,7 @@ import type {
 import { PairCreationRolledBack } from "../matchmaking/errors";
 
 export interface MatchmakingDependencies {
+  assertAccountActive?(userId: string): Promise<void>;
   loadPlayer(
     userId: string,
     gameMode: GameModeId,
@@ -143,6 +144,7 @@ export class MatchmakingService {
   ): Promise<MatchmakingStatus> {
     const id = identity.userId;
     this.assertEligible(id);
+    if (this.deps.assertAccountActive) await this.deps.assertAccountActive(id);
     const [rating, active] = await Promise.all([
       this.deps.loadPlayer(id, gameMode),
       this.deps.hasPersistentActiveMatch(id),
@@ -150,6 +152,10 @@ export class MatchmakingService {
     this.assertEligible(id);
     if (active)
       throw this.error("MATCHMAKING_ALREADY_IN_MATCH", "Leave your active match before searching");
+    if (!this.available(id))
+      throw this.error("MATCHMAKING_CONNECTION_REQUIRED", "Reconnect before searching");
+    if (this.deps.assertAccountActive) await this.deps.assertAccountActive(id);
+    this.assertEligible(id);
     if (!this.available(id))
       throw this.error("MATCHMAKING_CONNECTION_REQUIRED", "Reconnect before searching");
     this.entries.set(id, { identity, gameMode, ...rating, joinedAt: this.now(), state: "QUEUED" });
@@ -177,6 +183,21 @@ export class MatchmakingService {
     return this.getStatus(userId);
   }
   async withCompetitor<T>(
+    userId: string | undefined,
+    roomId: string | undefined,
+    action: () => Promise<T>,
+  ): Promise<T> {
+    if (!userId) return action();
+    if (this.deps.assertAccountActive) await this.deps.assertAccountActive(userId);
+    return this.withEligibleCompetitor(userId, roomId, action);
+  }
+  invalidateAccount(userId: string): void {
+    if (this.joining.has(userId)) this.competitorLocks.add(`cancel:${userId}`);
+    this.entries.delete(userId);
+    this.found.delete(userId);
+    this.deliveries.delete(userId);
+  }
+  private async withEligibleCompetitor<T>(
     userId: string | undefined,
     roomId: string | undefined,
     action: () => Promise<T>,
@@ -213,6 +234,24 @@ export class MatchmakingService {
     return work;
   }
   private async runPass(): Promise<void> {
+    if (this.deps.assertAccountActive) {
+      await Promise.all(
+        [...this.entries]
+          .filter(([, entry]) => entry.state === "QUEUED")
+          .map(async ([id]) => {
+            try {
+              await this.deps.assertAccountActive!(id);
+            } catch (error) {
+              if (
+                error instanceof MultiplayerIdentityError &&
+                ["ACCOUNT_BLOCKED", "INVALID_ACCESS_TOKEN"].includes(error.code)
+              )
+                this.invalidateAccount(id);
+              else throw error;
+            }
+          }),
+      );
+    }
     const now = this.now();
     for (const [id, entry] of this.entries) {
       if (

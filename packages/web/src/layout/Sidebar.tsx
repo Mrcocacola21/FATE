@@ -2,6 +2,8 @@ import { Link, useLocation } from "react-router";
 import { useI18n } from "../i18n";
 import { TacticalIcon } from "../ui/TacticalIcon";
 import { AccountMenu } from "./AccountMenu";
+import { useAuthStore } from "../auth/authStore";
+import { canAccessAdmin } from "../admin/policy";
 
 const primaryNavigation = [
   { to: "/", label: "shell.play", icon: "actions" },
@@ -31,6 +33,7 @@ export function Sidebar({
 }) {
   const { t } = useI18n();
   const { pathname } = useLocation();
+  const staff = useAuthStore(state => state.status === "authenticated" && canAccessAdmin(state.user?.role));
   return (
     <aside className="shell-sidebar" data-testid={mobile ? "mobile-sidebar" : "desktop-sidebar"}>
       <div className="flex items-center justify-between gap-2">
@@ -83,6 +86,10 @@ export function Sidebar({
           })}
         </div>
         <div className="shell-nav-secondary">
+          {staff && <Link to="/admin" className="shell-nav-item" onClick={onNavigate}
+            aria-current={/^\/admin(?:\/|$)/.test(pathname) ? "page" : undefined}>
+            <TacticalIcon name="rules" />{t("admin.title")}
+          </Link>}
           <button type="button" className="shell-nav-item" onClick={onRules}>
             <TacticalIcon name="rules" />
             {t("lobby.rules")}

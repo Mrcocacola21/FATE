@@ -25,6 +25,9 @@ async function testUserRepositoryDelegatesTypedQueries() {
     id: "1a3a1eb5-5df2-49ab-b3f2-f75ebf434999",
     email: "player@example.com",
     passwordHash: null,
+    role: "USER",
+    blockedAt: null,
+    blockedReason: null,
     createdAt: now,
     updatedAt: now,
   };

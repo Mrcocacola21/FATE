@@ -9,6 +9,7 @@ import "./figures/figure-set.css";
 import "./replay/replay.css";
 import "./statistics/statistics.css";
 import "./leaderboard/leaderboard.css";
+import "./admin/admin.css";
 import { getLanguage } from "./i18n";
 import { BrowserRouter } from "react-router";
 

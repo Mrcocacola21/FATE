@@ -79,8 +79,10 @@ async function run() {
       headers: { authorization: `Bearer ${token}` },
       payload: { userId: randomUUID() },
     });
-    assert.equal(invalid.statusCode, 400);
-    assert.equal(invalid.json().error.code, "INVALID_REQUEST");
+    // Protected input cannot be processed until current account access is verified.
+    // Payload validation with an authenticated DB account is covered by the DB suite.
+    assert.equal(invalid.statusCode, 503);
+    assert.equal(invalid.json().error.code, "DATABASE_UNAVAILABLE");
     const unavailable = await server.inject({ url: "/api/users/Player" });
     assert.equal(unavailable.statusCode, 503);
     assert.equal(unavailable.json().error.code, "DATABASE_UNAVAILABLE");

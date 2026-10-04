@@ -11,6 +11,7 @@ import { verifyPassword } from "../auth/password";
 const userSchema = z
   .object({
     id: z.string().uuid(),
+    role: z.enum(["USER", "MODERATOR", "ADMIN"]),
     email: z.string().email(),
     username: z.string().nullable(),
     displayName: z.string().nullable(),

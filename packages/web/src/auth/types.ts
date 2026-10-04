@@ -1,5 +1,6 @@
 export interface AuthUser {
   id: string;
+  role: "USER" | "MODERATOR" | "ADMIN";
   email: string;
   username: string | null;
   displayName: string | null;

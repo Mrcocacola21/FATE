@@ -43,6 +43,8 @@ import {
 import { logFate } from "./fateLogger";
 import { rejected, type CommandResult } from "./commandResult";
 import { enqueueRoomCommand, fateRoomKey } from "./roomQueue";
+import { enqueueRoomCommand as enqueueRawRoomCommand } from "./roomQueue";
+import { AccountConnections } from "./auth/accountConnections";
 import type { z } from "zod";
 import { applyTestRoomCommand, canCreateTestRoom, getTestRoomCapabilities } from "./testRoom";
 import { applyDraftBan, applyDraftPick, startDraftSession } from "./modes/draftSession";
@@ -946,9 +948,10 @@ function detachFromPongRoom(meta: ConnectionMeta, reason: "leave" | "disconnect"
 
 export function registerGameWebSocket(
   server: FastifyInstance, lifecycle: MatchLifecycle,
-  identityService: Pick<ConnectionIdentityService, "verify">,
+  identityService: Pick<ConnectionIdentityService, "verify"> & Partial<Pick<ConnectionIdentityService, "assertActive">>,
   matchmaking?: MatchmakingService,
   interruptedRoom: (roomId: string) => Promise<boolean> = async () => false,
+  accounts: AccountConnections = new AccountConnections(),
 ) {
   serverLogger = server.log;
   server.get("/ws", { websocket: true }, (socket, request) => {
@@ -961,13 +964,46 @@ export function registerGameWebSocket(
 
     const matchmakingConnectionId = randomUUID();
     let matchmakingUserId: string | undefined;
+    let authenticatedToken: string | undefined;
+    let authenticatedUserId: string | undefined;
+
+    async function verifyIdentity(token?: string) {
+      const identity = await identityService.verify(token);
+      if (identity && token) {
+        authenticatedToken = token;
+        authenticatedUserId = identity.userId;
+        accounts.bind(socket, ...currentAccountIds());
+        await checkCurrentAccount();
+      }
+      return identity;
+    }
+    function currentAccountIds(): string[] {
+      // A rejected identity/seat switch must never replace the established room owner.
+      return [...new Set([authenticatedUserId, socketMeta.get(socket)?.authIdentity?.userId, matchmakingUserId]
+        .filter((id): id is string => !!id))];
+    }
+    async function checkCurrentAccount() {
+      const ids = currentAccountIds();
+      if (identityService.assertActive)
+        await Promise.all(ids.map(id => identityService.assertActive!(id)));
+      else if (authenticatedToken) await identityService.verify(authenticatedToken);
+      if (ids.length) accounts.bind(socket, ...ids);
+      if (socket.readyState !== WebSocket.OPEN)
+        throw new MultiplayerIdentityError("CONNECTION_CLOSED", "Connection is closed");
+    }
+    function enqueueRoomCommand<T>(key: string, task: () => Promise<T> | T): Promise<T> {
+      return enqueueRawRoomCommand(key, async () => {
+        await checkCurrentAccount();
+        return task();
+      });
+    }
 
     async function detachExistingConnection(
       existing: ConnectionMeta,
       reason: "leave" | "switch_room" | "disconnect",
     ) {
       const key = queueKey(existing.channel, existing.roomId);
-      await enqueueRoomCommand(key, async () => {
+      await enqueueRawRoomCommand(key, async () => {
         const current = socketMeta.get(socket);
         if (!current || current.connId !== existing.connId) return;
 
@@ -999,9 +1035,10 @@ export function registerGameWebSocket(
     }
 
     async function handleParsedMessage(msg: ClientMessage) {
+      await checkCurrentAccount();
       switch (msg.type) {
         case "matchmakingSubscribe": {
-          const identity = await identityService.verify(msg.accessToken);
+          const identity = await verifyIdentity(msg.accessToken);
           if (!identity || !matchmaking) throw new MultiplayerIdentityError("AUTH_REQUIRED", "Sign in to find a Rated match");
           if (socket.readyState !== WebSocket.OPEN) return;
           if (matchmakingUserId && matchmakingUserId !== identity.userId)
@@ -1153,7 +1190,7 @@ export function registerGameWebSocket(
             throw new MultiplayerIdentityError("MATCH_TYPE_IMMUTABLE", "Match type is fixed at creation");
           if (msg.mode === "create" && msg.roomMode === "test" && msg.matchType === "RATED")
             throw new MultiplayerIdentityError("INVALID_MATCH_TYPE", "Test rooms are always Casual");
-          const identity = await identityService.verify(msg.accessToken);
+          const identity = await verifyIdentity(msg.accessToken);
           if (msg.mode === "create" && msg.matchType === "RATED" && !identity)
             throw new MultiplayerIdentityError("RATED_MATCH_REQUIRES_AUTHENTICATION", "Rated matches require authenticated players");
           const targetRoom = getGameRoom(msg.roomId ?? "");
@@ -1390,7 +1427,7 @@ export function registerGameWebSocket(
         }
         case "switchRole": {
           const suppliedIdentity = msg.accessToken === undefined ? undefined
-            : await identityService.verify(msg.accessToken);
+            : await verifyIdentity(msg.accessToken);
           const meta = socketMeta.get(socket);
           if (!meta || meta.channel !== "fate") {
             sendMessage(socket, { type: "error", message: "Must join a room first" });
@@ -1977,6 +2014,7 @@ export function registerGameWebSocket(
       } catch (error) {
         if (error instanceof MultiplayerIdentityError) {
           sendStructuredError(socket, error.code, error.message);
+          if (error.code === "ACCOUNT_BLOCKED") socket.close(1008, "ACCOUNT_BLOCKED");
           return;
         }
         server.log.error({ tag: "fate:ws_unhandled_error" });
@@ -1989,6 +2027,7 @@ export function registerGameWebSocket(
     });
 
     async function handleSocketTermination(kind: "close" | "error") {
+      accounts.remove(socket);
       if (matchmakingUserId) matchmaking?.disconnect(matchmakingUserId, matchmakingConnectionId);
       const meta = socketMeta.get(socket);
       if (!meta) {

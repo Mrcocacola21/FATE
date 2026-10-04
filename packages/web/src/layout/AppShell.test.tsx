@@ -22,6 +22,7 @@ const user = {
   displayName: "Tactician",
   avatarUrl: null,
   email: "test@example.test",
+  role: "USER" as const,
   createdAt: "2026-10-03T00:00:00Z",
 };
 function reset() {
@@ -94,10 +95,14 @@ test("Play and Lobby have distinct active entries, including a trailing slash", 
   for (const path of ["/", "/lobby", "/lobby/"]) {
     const renderer = mount(sidebar(), path);
     try {
-      const active = renderer.root.findAllByType("a").filter(node => node.props["aria-current"] === "page");
+      const active = renderer.root
+        .findAllByType("a")
+        .filter((node) => node.props["aria-current"] === "page");
       assert.equal(active.length, 1);
       assert.equal(active[0].props.href, path === "/" ? "/" : "/lobby");
-    } finally { act(() => renderer.unmount()); }
+    } finally {
+      act(() => renderer.unmount());
+    }
   }
 });
 
@@ -106,10 +111,14 @@ test("leaderboard navigation is present and active, including a trailing slash",
   for (const path of ["/leaderboard", "/leaderboard/"]) {
     const renderer = mount(sidebar(), path);
     try {
-      const active = renderer.root.findAllByType("a").filter((node) => node.props["aria-current"] === "page");
+      const active = renderer.root
+        .findAllByType("a")
+        .filter((node) => node.props["aria-current"] === "page");
       assert.equal(active.length, 1);
       assert.equal(active[0].props.href, "/leaderboard");
-    } finally { act(() => renderer.unmount()); }
+    } finally {
+      act(() => renderer.unmount());
+    }
   }
 });
 

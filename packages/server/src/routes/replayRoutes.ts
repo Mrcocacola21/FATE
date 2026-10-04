@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import type { ConnectionIdentityService } from "../auth/connectionIdentity";
+import { MultiplayerIdentityError } from "../auth/connectionIdentity";
 import { MatchRepository } from "../repositories/matchRepository";
 import { MatchActionRepository } from "../repositories/matchActionRepository";
 import { ReplayQueryService } from "../services/replayQueryService";
@@ -30,7 +31,9 @@ export async function replayRoutes(
     const token = /^Bearer ([^\s]+)$/i.exec(request.headers.authorization ?? "")?.[1];
     try {
       if (!token || !(await options.identity.verify(token))) throw new Error();
-    } catch {
+    } catch (error) {
+      if (error instanceof MultiplayerIdentityError && error.code === "ACCOUNT_BLOCKED")
+        return reply.code(403).send({ error: { code: error.code, message: error.message } });
       // Central authenticated client refreshes on this existing stable convention.
       return reply
         .code(401)

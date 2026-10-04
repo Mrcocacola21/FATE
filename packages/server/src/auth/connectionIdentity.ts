@@ -3,6 +3,8 @@ import { TokenService } from "./tokens";
 import { UserRepository } from "../repositories/userRepository";
 import type { GameRoom } from "../store";
 import type { PlayerId } from "rules";
+import { assertActiveAccount } from "./accountAccess";
+import { AuthError } from "./authErrors";
 
 export interface ConnectionIdentity {
   userId: string;
@@ -36,14 +38,24 @@ export class ConnectionIdentityService {
       ).sub;
       const user = await (this.users ??= new UserRepository()).findAccountById(userId);
       if (!user?.profile) throw new Error("Invalid account");
+      assertActiveAccount(user);
       return {
         userId: user.id,
         username: user.profile.username,
         displayName: user.profile.displayName,
       };
-    } catch {
+    } catch (error) {
+      if (error instanceof AuthError && error.code === "ACCOUNT_BLOCKED")
+        throw new MultiplayerIdentityError(error.code, error.message);
       throw new MultiplayerIdentityError("INVALID_ACCESS_TOKEN", "Unable to verify access token");
     }
+  }
+  async assertActive(userId: string): Promise<void> {
+    const user = await (this.users ??= new UserRepository()).findAccountById(userId);
+    if (!user)
+      throw new MultiplayerIdentityError("INVALID_ACCESS_TOKEN", "Unable to verify account");
+    if (user.blockedAt != null)
+      throw new MultiplayerIdentityError("ACCOUNT_BLOCKED", "Account access is blocked");
   }
 }
 
@@ -60,9 +72,15 @@ export function assertSeatIdentity(
 ): void {
   if (room.roomMode === "test") return;
   if (!identity)
-    throw new MultiplayerIdentityError(room.matchType === "RATED" ? "RATED_MATCH_REQUIRES_AUTHENTICATION" : "AUTH_REQUIRED", "Sign in to occupy a player seat");
+    throw new MultiplayerIdentityError(
+      room.matchType === "RATED" ? "RATED_MATCH_REQUIRES_AUTHENTICATION" : "AUTH_REQUIRED",
+      "Sign in to occupy a player seat",
+    );
   if (room.reservedUserIds && room.reservedUserIds[seat] !== identity.userId)
-    throw new MultiplayerIdentityError("SEAT_OWNED_BY_ANOTHER_USER", "Seat is reserved for the matched player");
+    throw new MultiplayerIdentityError(
+      "SEAT_OWNED_BY_ANOTHER_USER",
+      "Seat is reserved for the matched player",
+    );
   const owner = room.seatIdentities[seat];
   const opposite = room.seatIdentities[seat === "P1" ? "P2" : "P1"];
   if (owner && room.seatTokens[seat] === resumeToken && owner.userId !== identity.userId)
@@ -80,7 +98,11 @@ export function assertSeatIdentity(
       "SEAT_OWNED_BY_ANOTHER_USER",
       "Seat belongs to another player",
     );
-  if (room.participantsLocked && (!owner || room.seatTokens[seat] !== resumeToken) && !room.reservedUserIds)
+  if (
+    room.participantsLocked &&
+    (!owner || room.seatTokens[seat] !== resumeToken) &&
+    !room.reservedUserIds
+  )
     throw new MultiplayerIdentityError("INVALID_RESUME_TOKEN", "A valid resume token is required");
 }
 

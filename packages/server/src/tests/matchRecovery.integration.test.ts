@@ -150,6 +150,21 @@ async function run() {
       const projected = await spectators.wait("roomState");
       assert(projected.type === "roomState");
       assert.deepEqual(projected.view, JSON.parse(JSON.stringify(makeSpectatorView(room.state))));
+      // A recovered seat reservation never overrides the current account block.
+      await db.user.update({ where: { id: userIds[0] }, data: { blockedAt: new Date() } });
+      const blocked = await connect(b.server);
+      blocked.send({
+        type: "joinRoom",
+        mode: "join",
+        roomId,
+        role: "P1",
+        accessToken: testTokens.signAccessToken(userIds[0]),
+        resumeToken: "dead-process-token",
+      });
+      assert.equal(((await blocked.wait("error")) as { code: string }).code, "ACCOUNT_BLOCKED");
+      assert.equal(room.revision, 37);
+      assert.equal(room.seatIdentities.P1?.userId, userIds[0]);
+      await db.user.update({ where: { id: userIds[0] }, data: { blockedAt: null } });
       const players = await Promise.all([connect(b.server), connect(b.server)]);
       for (const [i, player] of players.entries()) {
         const seat = i === 0 ? "P1" : "P2";

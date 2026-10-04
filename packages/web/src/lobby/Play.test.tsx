@@ -25,6 +25,7 @@ test("Play shows real rating/uncertainty and configured qualification without a 
     displayName: null,
     avatarUrl: null,
     email: "private@example.test",
+    role: "USER" as const,
     createdAt: "2026-10-03T00:00:00Z",
   };
   authStore.setState({ user, status: "authenticated" });

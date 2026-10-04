@@ -5,6 +5,7 @@ import { hashPassword, PasswordVerifier } from "../auth/password";
 import { equalTokenHashes, hashRefreshToken, TokenService } from "../auth/tokens";
 import { toAuthUserDto } from "../auth/userDto";
 import { AuthSessionRepository, UserRepository } from "../repositories";
+import { assertActiveAccount } from "../auth/accountAccess";
 
 export class AuthService {
   private readonly passwords = new PasswordVerifier();
@@ -76,6 +77,7 @@ export class AuthService {
       throw new AuthError("INVALID_CREDENTIALS");
     }
     const session = this.newSession(user.id);
+    assertActiveAccount(user);
     await this.sessions.create({
       id: session.id,
       userId: user.id,
@@ -91,6 +93,9 @@ export class AuthService {
   async refresh(rawToken: string | undefined) {
     if (!rawToken) throw new AuthError("INVALID_REFRESH_TOKEN");
     const claims = this.tokens.verifyRefreshToken(rawToken);
+    const user = await this.users.findById(claims.sub);
+    if (!user) throw new AuthError("INVALID_REFRESH_TOKEN");
+    assertActiveAccount(user);
     const session = await this.sessions.findById(claims.sid);
     const now = new Date();
     if (
@@ -138,6 +143,7 @@ export class AuthService {
   async currentUser(userId: string) {
     const user = await this.users.findAccountById(userId);
     if (!user) throw new AuthError("UNAUTHORIZED");
+    assertActiveAccount(user);
     return toAuthUserDto(user);
   }
 }

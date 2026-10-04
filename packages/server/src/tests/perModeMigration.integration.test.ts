@@ -36,7 +36,9 @@ async function run() {
       second = randomUUID(),
       matchId = randomUUID();
     for (const userId of [first, second]) {
-      await db.user.create({ data: { id: userId, email: `${userId}@example.test` } });
+      // Use the historical schema's columns, independent of today's generated User model.
+      await db.$executeRaw`INSERT INTO "User" ("id", "email", "updatedAt")
+        VALUES (${userId}::uuid, ${`${userId}@example.test`}, CURRENT_TIMESTAMP)`;
       await db.$executeRaw`INSERT INTO "Rating" ("userId", "rating", "ratingDeviation", "volatility", "ratedGames", "updatedAt")
         VALUES (${userId}::uuid, 1830, 65, 0.045, 1, CURRENT_TIMESTAMP)`;
     }
@@ -92,6 +94,21 @@ async function run() {
       legacyHistories,
     );
     assert.deepEqual(await db.match.findUniqueOrThrow({ where: { id: matchId } }), match);
+    const usersBefore = await db.$queryRaw`SELECT * FROM "User" ORDER BY "id"`;
+    await migrate(
+      readFileSync(resolve(migrationRoot, "20261004120000_admin_rbac/migration.sql"), "utf8"),
+    );
+    const usersAfter = await db.user.findMany({ orderBy: { id: "asc" } });
+    assert.deepEqual(
+      usersAfter.map(({ role, blockedAt, blockedReason, ...record }) => {
+        assert.equal(role, "USER");
+        assert.equal(blockedAt, null);
+        assert.equal(blockedReason, null);
+        return record;
+      }),
+      usersBefore,
+      "Admin migration preserves every historical user column",
+    );
     const ratings = new RatingService(new RatingRepository(db), { info() {}, error() {} });
     for (const state of Object.values((await ratings.getAllPlayerRatings(first)).ratings)) {
       assert.equal(state.rating, 1500);

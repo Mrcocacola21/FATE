@@ -11,6 +11,7 @@ import { safeReturnTo } from "./safeReturnTo";
 const user: AuthUser = {
   id: "test-user",
   email: "player@example.test",
+  role: "USER" as const,
   username: "Player",
   displayName: null,
   avatarUrl: null,

@@ -28,7 +28,7 @@ import type {
 const item: MatchHistoryItem = {
   id: "match-one",
   status: "FINISHED",
-    matchType: "CASUAL",
+  matchType: "CASUAL",
   result: "WIN",
   seat: "P1",
   gameMode: "classic",
@@ -77,7 +77,9 @@ let location = "";
 const calls: { userId: string; filters: MatchHistoryFilters }[] = [];
 
 beforeEach(() => {
-  replayApi.getMetadata = async () => { throw new ApiError("MATCH_NOT_REPLAYABLE", 409); };
+  replayApi.getMetadata = async () => {
+    throw new ApiError("MATCH_NOT_REPLAYABLE", 409);
+  };
   setLanguage("en", null);
   calls.length = 0;
   authStore.setState(
@@ -88,6 +90,7 @@ beforeEach(() => {
       user: {
         id: "alice-id",
         email: "private@example.test",
+        role: "USER",
         username: "Alice",
         displayName: null,
         avatarUrl: null,

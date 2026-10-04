@@ -5,12 +5,15 @@ import { RatingRepository } from "../repositories/ratingRepository";
 import { RatingService } from "../services/ratingService";
 import { MatchmakingService } from "../services/matchmakingService";
 import type { MatchLifecycle } from "../persistence/matchLifecycle";
+import { ConnectionIdentityService } from "../auth/connectionIdentity";
 
 export function createMatchmakingService(
   lifecycle: MatchLifecycle,
   logger: ConstructorParameters<typeof MatchmakingService>[0]["logger"],
   ratings?: Pick<RatingService, "getPlayerRating">,
   activeMatch?: (userId: string) => Promise<boolean>,
+  assertAccountActive: (userId: string) => Promise<void> = (id) =>
+    new ConnectionIdentityService().assertActive(id),
 ): MatchmakingService {
   let ratingService = ratings;
   const loadRatings = async (ids: string[], mode: GameModeId) => {
@@ -29,6 +32,7 @@ export function createMatchmakingService(
     return service.getPlayerRatings(ids, mode);
   };
   const matchmaking = new MatchmakingService({
+    assertAccountActive,
     logger,
     loadPlayer: (id, mode) =>
       (ratingService ??= new RatingService(new RatingRepository(), logger)).getPlayerRating(

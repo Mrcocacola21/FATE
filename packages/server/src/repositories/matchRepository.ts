@@ -1,6 +1,7 @@
 import { Prisma, type Match, type MatchStatus, type PrismaClient } from "@prisma/client";
 import { getDatabaseClient } from "../db/client";
 import { RatingRepository } from "./ratingRepository";
+import { PairCreationRolledBack } from "../matchmaking/errors";
 import type {
   WaitingMatchInput,
   SeatParticipantInput,
@@ -59,10 +60,33 @@ export class MatchRepository {
   async createWaitingMatch(input: WaitingMatchInput): Promise<Match> {
     const { participants, ...fields } = input;
     try {
-      return await this.database.match.upsert({
-        where: { roomId: input.roomId },
-        create: { ...fields, status: "WAITING", ...(participants ? { participants: { create: participants } } : {}) },
-        update: {},
+      return await this.database.$transaction(async (tx) => {
+        const existing = await tx.match.findUnique({ where: { roomId: input.roomId } });
+        if (existing) return existing;
+        // New competitor rooms cannot commit after a participant's block. Existing
+        // committed rooms retain the original idempotent recovery semantics.
+        const ids = [
+          ...new Set(
+            [fields.createdById, ...(participants?.map((p) => p.userId) ?? [])].filter(
+              (id): id is string => !!id,
+            ),
+          ),
+        ].sort();
+        for (const id of ids) {
+          const users = await tx.$queryRaw<{ blockedAt: Date | null }[]>`
+            SELECT "blockedAt" FROM "User" WHERE "id" = ${id}::uuid FOR UPDATE`;
+          if (!users[0] || users[0].blockedAt)
+            throw new PairCreationRolledBack("Account is unavailable");
+        }
+        return tx.match.upsert({
+          where: { roomId: input.roomId },
+          create: {
+            ...fields,
+            status: "WAITING",
+            ...(participants ? { participants: { create: participants } } : {}),
+          },
+          update: {},
+        });
       });
     } catch (error) {
       // Empty-update upserts can use Prisma's read/insert path instead of native

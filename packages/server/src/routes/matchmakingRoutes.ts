@@ -26,7 +26,7 @@ export async function matchmakingRoutes(
         ? 401
         : code === "MATCHMAKING_UNAVAILABLE"
           ? 503
-          : 409;
+          : code === "ACCOUNT_BLOCKED" ? 403 : 409;
     if (error.statusCode === 429)
       return reply
         .code(429)

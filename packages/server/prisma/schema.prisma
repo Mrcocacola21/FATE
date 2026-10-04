@@ -36,10 +36,19 @@ enum ProfileTheme {
   dark
 }
 
+enum UserRole {
+  USER
+  MODERATOR
+  ADMIN
+}
+
 model User {
   id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   email        String   @unique @db.VarChar(320)
   passwordHash String?  @db.Text
+  role         UserRole @default(USER)
+  blockedAt    DateTime? @db.Timestamptz(3)
+  blockedReason String? @db.VarChar(500)
   createdAt    DateTime @default(now()) @db.Timestamptz(3)
   updatedAt    DateTime @updatedAt @db.Timestamptz(3)
 
@@ -54,6 +63,10 @@ model User {
   lostMatches       Match[]            @relation("MatchLoser")
   matchActions      MatchAction[]      @relation("MatchActionActor")
   authSessions      AuthSession[]
+
+  @@index([role])
+  @@index([blockedAt])
+  @@index([createdAt, id])
 }
 
 model AuthSession {
@@ -121,6 +134,9 @@ model Match {
   @@index([winnerUserId])
   @@index([loserUserId])
   @@index([isRated, status, ratingProcessedAt])
+  @@index([createdAt, id])
+  @@index([finishedAt, id])
+  @@index([gameMode, isRated, createdAt])
 }
 
 model MatchParticipant {

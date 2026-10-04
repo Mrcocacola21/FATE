@@ -19,7 +19,7 @@ const profile: OwnProfile = {
   preferredLanguage: "uk",
   preferredTheme: "dark",
 };
-const user = { ...profile };
+const user = { ...profile, role: "USER" as const };
 const authApi: AuthApi = {
   login: async () => ({ user, accessToken: "token", accessTokenExpiresIn: 900 }),
   register: async () => ({ user, accessToken: "token", accessTokenExpiresIn: 900 }),

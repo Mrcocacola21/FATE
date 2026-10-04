@@ -5,6 +5,7 @@ function user(value: unknown): AuthUser {
   if (
     !isRecord(value) ||
     typeof value.id !== "string" ||
+    !["USER", "MODERATOR", "ADMIN"].includes(value.role as string) ||
     typeof value.email !== "string" ||
     typeof value.createdAt !== "string" ||
     ![value.username, value.displayName, value.avatarUrl].every(
@@ -15,6 +16,7 @@ function user(value: unknown): AuthUser {
   }
   return {
     id: value.id,
+    role: value.role as AuthUser["role"],
     email: value.email,
     createdAt: value.createdAt,
     username: value.username as string | null,

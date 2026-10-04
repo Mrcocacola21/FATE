@@ -6,6 +6,7 @@ import { MatchService } from "../services/matchService";
 import { MatchActionRepository } from "../repositories/matchActionRepository";
 import { MatchActionService } from "../services/matchActionService";
 import type { ConnectionIdentityService } from "../auth/connectionIdentity";
+import { MultiplayerIdentityError } from "../auth/connectionIdentity";
 
 export interface MatchRouteOptions {
   identity: Pick<ConnectionIdentityService, "verify">;
@@ -22,7 +23,9 @@ export async function matchRoutes(server: FastifyInstance, options: MatchRouteOp
     if (!token) return reply.code(401).send({ error: { code: "UNAUTHORIZED", message: "Authentication required" } });
     try {
       if (!(await options.identity.verify(token))) throw new Error("Invalid identity");
-    } catch {
+    } catch (error) {
+      if (error instanceof MultiplayerIdentityError && error.code === "ACCOUNT_BLOCKED")
+        return reply.code(403).send({ error: { code: error.code, message: error.message } });
       return reply.code(401).send({ error: { code: "INVALID_ACCESS_TOKEN", message: "Unable to verify access token" } });
     }
     const query = z.object({

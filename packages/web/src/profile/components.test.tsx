@@ -81,7 +81,11 @@ function text(renderer: ReactTestRenderer) {
   return JSON.stringify(renderer.toJSON());
 }
 function signedIn() {
-  authStore.setState({ user: profile, accessToken: "memory-only", status: "authenticated" });
+  authStore.setState({
+    user: { ...profile, role: "USER" },
+    accessToken: "memory-only",
+    status: "authenticated",
+  });
   profileStore.setState({ profile });
 }
 
@@ -125,7 +129,7 @@ test("editing populates values, sends only changed data, updates visible identit
       submitted = patch;
       const next = { ...profile, ...patch };
       profileStore.setState({ profile: next });
-      authStore.setState({ user: next });
+      authStore.setState({ user: { ...next, role: "USER" } });
       return next;
     },
   });

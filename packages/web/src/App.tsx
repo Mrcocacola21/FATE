@@ -26,6 +26,12 @@ import { AppShell } from "./layout/AppShell";
 import { CapabilitiesProvider, useCapabilities } from "./layout/Capabilities";
 import { PanelCard } from "./components/ui";
 import { MatchInterruptedNotice } from "./components/MatchInterruptedNotice";
+import { AdminGuard } from "./admin/AdminLayout";
+import { AdminOverviewPage } from "./admin/AdminOverviewPage";
+import { AdminUsersPage } from "./admin/AdminUsersPage";
+import { AdminUserPage } from "./admin/AdminUserPage";
+import { AdminMatchesPage } from "./admin/AdminMatchesPage";
+import { AdminMatchPage } from "./admin/AdminMatchPage";
 
 export default function App() {
   const location = useLocation();
@@ -56,6 +62,14 @@ export default function App() {
           {!runtimePage && (
             <ApplicationPage standalone={authPage}>
               <Routes>
+                <Route path="/admin" element={<AdminGuard />}>
+                  <Route index element={<AdminOverviewPage />} />
+                  <Route path="users" element={<AdminUsersPage />} />
+                  <Route path="users/:userId" element={<AdminUserPage />} />
+                  <Route path="matches" element={<AdminMatchesPage />} />
+                  <Route path="matches/:matchId" element={<AdminMatchPage />} />
+                  <Route path="*" element={<Navigate replace to="/admin" />} />
+                </Route>
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
                 <Route path="/figures" element={<FigureSetPage />} />
@@ -95,6 +109,7 @@ export default function App() {
 function ApplicationPage({ children, standalone }: { children: ReactNode; standalone: boolean }) {
   const location = useLocation();
   if (standalone) return <AuthLayout>{children}</AuthLayout>;
+  if (/^\/admin(?:\/|$)/.test(location.pathname)) return <>{children}</>;
   if (/^\/(profile|users\/[^/]+)\/?$/.test(location.pathname))
     return <div className="mx-auto w-full min-w-0 max-w-6xl">{children}</div>;
   if (["/figures", "/heartbreak", "/leaderboard"].includes(location.pathname.replace(/\/$/, "")) ||

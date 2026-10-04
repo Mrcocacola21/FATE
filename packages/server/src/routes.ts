@@ -95,7 +95,11 @@ export async function registerRoutes(
     try {
       if (!token) throw new Error("Invalid authorization");
       return (await identityService.verify(token))?.userId ?? null;
-    } catch {
+    } catch (error) {
+      if (error instanceof MultiplayerIdentityError && error.code === "ACCOUNT_BLOCKED") {
+        reply.code(403).send({ error: { code: error.code, message: error.message } });
+        return null;
+      }
       reply.code(401).send({ error: { code: "INVALID_ACCESS_TOKEN", message: "Unable to verify access token" } });
       return null;
     }

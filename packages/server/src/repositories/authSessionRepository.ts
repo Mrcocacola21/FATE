@@ -1,5 +1,6 @@
 import type { AuthSession, PrismaClient } from "@prisma/client";
 import { getDatabaseClient } from "../db/client";
+import { AuthError } from "../auth/authErrors";
 
 export interface CreateAuthSessionInput {
   id: string;
@@ -12,7 +13,14 @@ export class AuthSessionRepository {
   constructor(private readonly database: PrismaClient = getDatabaseClient()) {}
 
   create(input: CreateAuthSessionInput): Promise<AuthSession> {
-    return this.database.authSession.create({ data: input });
+    return this.database.$transaction(async (tx) => {
+      // Serialize session creation with blocking's user-row update.
+      const users = await tx.$queryRaw<{ blockedAt: Date | null }[]>`
+        SELECT "blockedAt" FROM "User" WHERE "id" = ${input.userId}::uuid FOR UPDATE`;
+      if (!users[0]) throw new AuthError("UNAUTHORIZED");
+      if (users[0].blockedAt) throw new AuthError("ACCOUNT_BLOCKED");
+      return tx.authSession.create({ data: input });
+    });
   }
 
   findById(id: string): Promise<AuthSession | null> {
@@ -27,7 +35,14 @@ export class AuthSessionRepository {
     now: Date,
   ): Promise<boolean> {
     const result = await this.database.authSession.updateMany({
-      where: { id, userId, refreshTokenHash: currentHash, revokedAt: null, expiresAt: { gt: now } },
+      where: {
+        id,
+        userId,
+        refreshTokenHash: currentHash,
+        revokedAt: null,
+        expiresAt: { gt: now },
+        user: { blockedAt: null },
+      },
       data: { refreshTokenHash: nextHash, lastUsedAt: now },
     });
     return result.count === 1;

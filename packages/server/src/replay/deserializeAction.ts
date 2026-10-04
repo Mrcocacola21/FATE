@@ -32,7 +32,9 @@ const draftSchema = z.discriminatedUnion("type", [
 ]);
 export type ReplayAction = GameAction | z.infer<typeof draftSchema>;
 
-export function deserializeReplayAction(row: MatchAction): {
+export function deserializeReplayAction(
+  row: Pick<MatchAction, "matchId" | "revision" | "actionPayload" | "actionType" | "actorSeat">,
+): {
   action: ReplayAction;
   setup?: ReplaySetup;
 } {

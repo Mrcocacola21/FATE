@@ -15,6 +15,7 @@ const user = {
   id: "test-user",
   username: "Player",
   email: "player@example.test",
+  role: "USER" as const,
   displayName: null,
   avatarUrl: null,
   createdAt: "2026-10-02T00:00:00Z",

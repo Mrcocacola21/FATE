@@ -41,6 +41,7 @@ async function run() {
   const server = await buildServer({
     matchPersistence: persistence,
     connectionIdentity: {
+      assertActive: (userId) => identities.assertActive(userId),
       verify: (token) => {
         verifications++;
         return identities.verify(token);
@@ -227,7 +228,7 @@ async function run() {
       actor.send({ type: "resolvePendingRoll", pendingRollId: pending.id });
       const action = await actor.wait("actionResult");
       assert(action.type === "actionResult" && action.ok);
-      assert.equal(accountReads, readsBefore);
+      assert(accountReads > readsBefore, "existing sockets must recheck current account access");
       assert.equal(verifications, verifiesBefore);
       assert.equal(persistence.calls.length, callsBefore);
       assert.equal(persistence.actions.size, 4);

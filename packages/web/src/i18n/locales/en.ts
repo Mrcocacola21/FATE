@@ -1,4 +1,6 @@
+import { adminEn } from "../../admin/locales";
 export const en = {
+  admin: adminEn,
   ranks: {
     shadow: "Shadow",
     crescent: "Crescent",

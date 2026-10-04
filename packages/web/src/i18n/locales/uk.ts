@@ -1,7 +1,9 @@
 import type { LocaleShape } from "./en";
 import { en } from "./en";
+import { adminUk } from "../../admin/locales";
 
 export const uk = {
+  admin: adminUk,
   ranks: {
     shadow: "Тінь",
     crescent: "Серп місяця",

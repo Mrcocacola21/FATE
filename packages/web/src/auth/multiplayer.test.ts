@@ -10,6 +10,7 @@ import { loadRoomSession, saveRoomSession } from "../roomSession";
 const user = {
   id: "user-a",
   email: "a@example.test",
+  role: "USER" as const,
   username: "alice",
   displayName: null,
   avatarUrl: null,
@@ -144,12 +145,19 @@ test("authenticated spectator and seat-auth messages carry current JWT only in f
 });
 
 test("public spectating remains available when HTTP session restoration fails", async () => {
-  const store = createAuthStore(api({ refresh: async () => {
-    throw new ApiError("DATABASE_UNAVAILABLE", 503);
-  } }), lock);
+  const store = createAuthStore(
+    api({
+      refresh: async () => {
+        throw new ApiError("DATABASE_UNAVAILABLE", 503);
+      },
+    }),
+    lock,
+  );
   assert.equal(await multiplayerAccessToken(store, "spectator"), undefined);
-  await assert.rejects(multiplayerAccessToken(store, "P1"),
-    (error: unknown) => error instanceof ApiError && error.code === "DATABASE_UNAVAILABLE");
+  await assert.rejects(
+    multiplayerAccessToken(store, "P1"),
+    (error: unknown) => error instanceof ApiError && error.code === "DATABASE_UNAVAILABLE",
+  );
 });
 
 test("logout leaves gameplay continuity intact and credential fields cannot enter persisted room sessions", async () => {

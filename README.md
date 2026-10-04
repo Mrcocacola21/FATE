@@ -1638,3 +1638,30 @@ Checks: `npm run -w server test:lobby`, `npm run -w web test:shell`,
 `npm run -w web test:play-lobby:e2e`, and the guarded local PostgreSQL
 `npm run -w server test:match-types:db` include naming, escaping, boundary/stale ratings,
 direct WS/action/draft bypass, blocked zero-rating-effects and successful complete games.
+
+### Administration backend and RBAC
+
+The backend supports persistent `USER`, `MODERATOR` and `ADMIN` roles, account blocking,
+current database authorization and paginated inspection under `/api/admin/*`.
+Moderators can block/unblock USER accounts; admins can additionally moderate MODERATOR
+accounts and assign roles. Match/action/snapshot/result/rating inspection is read-only.
+
+Bootstrap an existing unblocked account from a server shell with the configured database:
+
+```powershell
+npm run -w server db:migrate:deploy
+npm run -w server admin:promote -- existing_username
+```
+
+See [administration API, permission matrix and blocking semantics](docs/admin-backend.md)
+for filters, pagination, privacy, session/WebSocket behavior and guarded test commands.
+The role-gated [Admin UI](docs/admin-ui.md) is available at `/admin` to MODERATOR and
+ADMIN accounts. It includes a system overview, server-filtered paginated user/match
+lists, account details and per-mode ranks, confirmation-based block/unblock/role
+changes, and read-only match/action/snapshot metadata inspection. USER accounts
+cannot see the navigation entry or enter the routes. Backend authorization remains
+authoritative. The immutable Audit Log remains a separate future phase.
+
+Checks: `npm run -w web test:admin`, `npm run -w server test:admin`,
+`npm run -w web test:admin:e2e`. Browser tests use isolated local fixtures and do not
+moderate real accounts.

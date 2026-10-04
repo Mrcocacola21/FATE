@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "test:admin": "tsx --test src/admin/*.test.ts src/admin/*.test.tsx",
+    "test:admin:e2e": "tsx scripts/admin-smoke.mjs",
     "test:ranks": "tsx --test src/ranks/*.test.ts src/ranks/*.test.tsx",
     "test:ranks:e2e": "tsx scripts/rank-emblems-smoke.mjs",
     "test:play-lobby:e2e": "node scripts/play-lobby-smoke.mjs",
