@@ -62,6 +62,39 @@ function fixture(
   };
 }
 async function run() {
+  for (const mode of ["standard", "draft", "classic"] as const) {
+    const loadCalls: string[] = [];
+    const f = fixture(
+      {},
+      {
+        loadPlayer: async (id, selectedMode) => {
+          loadCalls.push(selectedMode);
+          const rating =
+            selectedMode === "standard"
+              ? id === "A"
+                ? 1900
+                : 1300
+              : selectedMode === "draft"
+                ? id === "A"
+                  ? 1450
+                  : 1500
+                : id === "A"
+                  ? 2010
+                  : 2060;
+          return { rating, ratingDeviation: 350 };
+        },
+      },
+    );
+    const first = queued(await f.join("A", mode));
+    assert.equal(first.gameMode, mode);
+    assert.equal(first.rating, mode === "standard" ? 1900 : mode === "draft" ? 1450 : 2010);
+    await f.join("B", mode);
+    await f.service.tick();
+    assert.deepEqual(loadCalls, [mode, mode]);
+    assert.equal(f.pairs.length, mode === "standard" ? 0 : 1);
+    if (f.pairs.length) assert.equal(f.pairs[0].players.P1.gameMode, mode);
+    await f.service.close();
+  }
   for (const [ms, range] of [
     [0, 100],
     [14999, 100],
@@ -378,12 +411,16 @@ async function run() {
       roomId: randomUUID(), players: { P1: player, P2: { ...player, identity: identity("B") } },
       retryAt: 0,
     };
-    await assert.rejects(lifecycle.createMatchedRoom(attempt), (error: unknown) =>
-      error instanceof Error && !(error instanceof PairCreationRolledBack));
+    await assert.rejects(
+      lifecycle.createMatchedRoom(attempt),
+      (error: unknown) => error instanceof Error && !(error instanceof PairCreationRolledBack),
+    );
     assert.equal(getGameRoom(attempt.roomId), undefined);
     assert.equal(persistence.matches.size, commitBeforeError ? 1 : 0);
-    await assert.rejects(lifecycle.createMatchedRoom(attempt), (error: unknown) =>
-      error instanceof Error && !(error instanceof PairCreationRolledBack));
+    await assert.rejects(
+      lifecycle.createMatchedRoom(attempt),
+      (error: unknown) => error instanceof Error && !(error instanceof PairCreationRolledBack),
+    );
     assert.equal(getGameRoom(attempt.roomId), undefined);
     assert.equal(persistence.matches.size, commitBeforeError ? 1 : 0);
     const created = await lifecycle.createMatchedRoom(attempt);

@@ -96,10 +96,10 @@ export function createQueueStore(
     restore: () => run(api.status, false),
     join: (mode: GameModeId) => run(() => api.join(mode), true),
     cancel: () => run(api.cancel, false),
-    async loadRating(id: string) {
+    async loadRating(id: string, gameMode: GameModeId) {
       const expected = generation;
       try {
-        const rating = await api.rating(id);
+        const rating = await api.rating(id, gameMode);
         if (expected === generation && state.getState().ownerId === id) state.setState({ rating });
       } catch {
         /* A rating display outage does not gate matchmaking eligibility. */

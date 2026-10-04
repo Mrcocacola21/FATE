@@ -100,6 +100,7 @@ test("API transmits all bounded filters and URL parser normalizes malformed requ
     }),
   );
   await api.getLeaderboard({
+    gameMode: "standard",
     status: "provisional",
     page: 2,
     limit: 10,
@@ -108,12 +109,19 @@ test("API transmits all bounded filters and URL parser normalizes malformed requ
   });
   assert.equal(
     path,
-    "http://localhost/api/leaderboard?status=provisional&page=2&limit=10&sort=winRate&order=asc",
+    "http://localhost/api/leaderboard?gameMode=standard&status=provisional&page=2&limit=10&sort=winRate&order=asc",
   );
   assert.deepEqual(
     readLeaderboardQuery(
       new URLSearchParams("page=banana&limit=999&sort=hacker&status=whatever&order=evil"),
     ),
-    { status: "qualified", page: 1, limit: 20, sort: "rating", order: "desc" },
+    {
+      gameMode: "standard",
+      status: "qualified",
+      page: 1,
+      limit: 20,
+      sort: "rating",
+      order: "desc",
+    },
   );
 });

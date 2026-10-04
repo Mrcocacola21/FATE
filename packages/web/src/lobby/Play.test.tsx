@@ -17,7 +17,7 @@ import { competitiveRatingFixture } from "../ranks/testFixtures";
 
 test("Play shows real rating/uncertainty and configured qualification without a room browser", async () => {
   const auth = authStore.getState(),
-    rating = competitiveApi.rating,
+    rating = competitiveApi.ratings,
     config = competitiveApi.config;
   const user = {
     id: "player",
@@ -30,7 +30,11 @@ test("Play shows real rating/uncertainty and configured qualification without a 
   authStore.setState({ user, status: "authenticated" });
   queue.owner(user.id);
   setLanguage("en", null);
-  competitiveApi.rating = async () => competitiveRatingFixture(1750, 3);
+  competitiveApi.ratings = async () => ({
+    standard: competitiveRatingFixture(1750, 3),
+    draft: competitiveRatingFixture(900, 2),
+    classic: competitiveRatingFixture(2010, 5),
+  });
   competitiveApi.config = async () => 7;
   let renderer!: ReactTestRenderer;
   try {
@@ -56,6 +60,38 @@ test("Play shows real rating/uncertainty and configured qualification without a 
     assert(renderer.root.findByProps({ "data-testid": "matchmaking-panel" }));
     assert.equal(renderer.root.findAllByProps({ "data-testid": "room-browser" }).length, 0);
     assert(!/Bronze|Silver|Gold|Diamond|private@example/.test(output));
+    // A single selector drives medal, qualification and the exact queue mode.
+    const clickMode = (label: string) =>
+      renderer.root
+        .findAllByType("button")
+        .find((button) => button.children.includes(label))!
+        .props.onClick();
+    act(() => clickMode("Draft"));
+    assert.match(JSON.stringify(renderer.toJSON()), /half\.png/);
+    assert.equal(
+      renderer.root.findByProps({ "data-testid": "competitive-rating" }).children.join(""),
+      "900",
+    );
+    assert.match(JSON.stringify(renderer.toJSON()), /Provisional/);
+    let joinedMode = "";
+    const originalJoin = queue.join;
+    queue.join = async (mode) => {
+      joinedMode = mode;
+    };
+    try {
+      act(() => renderer.root.findByProps({ className: "btn btn-primary" }).props.onClick());
+      assert.equal(joinedMode, "draft");
+      act(() => clickMode("Classic"));
+      assert.match(JSON.stringify(renderer.toJSON()), /destiny\.png/);
+      assert.equal(
+        renderer.root.findByProps({ "data-testid": "competitive-rating" }).children.join(""),
+        "2010",
+      );
+      act(() => clickMode("Standard"));
+      assert.match(JSON.stringify(renderer.toJSON()), /blackmoon\.png/);
+    } finally {
+      queue.join = originalJoin;
+    }
     act(() =>
       queue.event({
         type: "matchmakingStatus",
@@ -77,7 +113,7 @@ test("Play shows real rating/uncertainty and configured qualification without a 
     act(() => renderer?.unmount());
     authStore.setState(auth, true);
     queue.owner(null);
-    competitiveApi.rating = rating;
+    competitiveApi.ratings = rating;
     competitiveApi.config = config;
   }
 });

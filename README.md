@@ -9,6 +9,11 @@
 
 Deterministic turn-based game stack in a TypeScript monorepo: authoritative rules engine, Fastify + WebSocket server, and Vite + React client.
 
+Competitive play uses independent Glicko-2 ratings for Standard, Draft and Classic.
+Rating, RD, volatility, rated games, rank and qualification belong to each mode.
+Matchmaking and manual Rated lobby checks use that mode's rating; Casual changes
+none. See [per-mode rating architecture and legacy migration](docs/per-mode-ratings.md).
+
 Follow active progress and implementation notes in the [Developer Log](https://t.me/FATE_Soul_Dev).
 
 ## Contents

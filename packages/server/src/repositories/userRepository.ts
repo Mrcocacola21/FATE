@@ -1,3 +1,4 @@
+import { GAME_MODE_IDS } from "rules";
 import type { Prisma, PrismaClient, User } from "@prisma/client";
 import { getDatabaseClient } from "../db/client";
 import { INITIAL_RATING } from "../rating/constants";
@@ -49,7 +50,7 @@ export class UserRepository {
         email: input.email,
         passwordHash: input.passwordHash,
         profile: { create: { username: input.username } },
-        rating: { create: { ...INITIAL_RATING } },
+        ratings: { create: GAME_MODE_IDS.map((gameMode) => ({ gameMode, ...INITIAL_RATING })) },
         authSessions: { create: input.session },
       },
       include: { profile: true },

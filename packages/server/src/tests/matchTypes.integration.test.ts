@@ -43,7 +43,10 @@ async function run() {
   const snapshots = new MatchSnapshotService(new MatchSnapshotRepository(db));
   const service = new MatchService(matches, logger, actions, snapshots, ratings);
   const lifecycle = new MatchLifecycle(logger, service, snapshots);
-  lifecycle.configureRatedLobbies(readMatchmakingConfig({ MATCHMAKING_MAX_RATING_RANGE: "400" }), ids => ratings.getPlayerRatings(ids));
+  lifecycle.configureRatedLobbies(
+    readMatchmakingConfig({ MATCHMAKING_MAX_RATING_RANGE: "400" }),
+    (ids, mode) => ratings.getPlayerRatings(ids, mode),
+  );
   const users: string[] = [];
   const ids: string[] = [];
   try {
@@ -62,27 +65,61 @@ async function run() {
     }
     const fixture = createReplayFixture("classic", true);
     // A blocked manual lobby cannot create rating history, results or journal entries.
-    await db.rating.createMany({ data: users.map((userId, index) => ({ userId, ...INITIAL_RATING, rating: index === 0 ? 1800 : 1350, ratedGames: 0 })) });
-    const blocked = await lifecycle.createRoom({ matchType: "RATED", lobbyName: "Night Games" }, randomUUID(), users[0]);
+    await db.rating.createMany({
+      data: users.map((userId, index) => ({
+        userId,
+        gameMode: "standard",
+        ...INITIAL_RATING,
+        rating: index === 0 ? 1800 : 1350,
+        ratedGames: 0,
+      })),
+    });
+    const blocked = await lifecycle.createRoom(
+      { matchType: "RATED", lobbyName: "Night Games" },
+      randomUUID(),
+      users[0],
+    );
     ids.push(blocked.matchId!);
     blocked.seats = { P1: "one", P2: "two" };
     blocked.seatIdentities = {
       P1: { userId: users[0], username: "Max", displayName: null },
       P2: { userId: users[1], username: "Polina", displayName: null },
     };
-    blocked.state = { ...blocked.state, seats: { P1: true, P2: true }, playersReady: { P1: true, P2: true } };
-    const beforeBlocked = await db.rating.findMany({ where: { userId: { in: users } }, orderBy: { userId: "asc" } });
+    blocked.state = {
+      ...blocked.state,
+      seats: { P1: true, P2: true },
+      playersReady: { P1: true, P2: true },
+    };
+    const beforeBlocked = await db.rating.findMany({
+      where: { userId: { in: users } },
+      orderBy: { userId: "asc" },
+    });
     const rejection = await lifecycle.applyAction(blocked, { type: "startGame" }, "P1");
     assert(!rejection.ok); assert.equal(rejection.code, "RATED_RATING_DIFFERENCE_TOO_LARGE");
     assert.equal((await matches.findById(blocked.matchId!))!.status, "WAITING");
     assert.equal(await db.ratingHistory.count({ where: { matchId: blocked.matchId! } }), 0);
     assert.equal(await db.matchAction.count({ where: { matchId: blocked.matchId! } }), 0);
-    assert.deepEqual(await db.rating.findMany({ where: { userId: { in: users } }, orderBy: { userId: "asc" } }), beforeBlocked);
-    assert.equal(((await matches.findById(blocked.matchId!))!.initialConfig as { lobbyName: string }).lobbyName, "Night Games");
+    assert.deepEqual(
+      await db.rating.findMany({ where: { userId: { in: users } }, orderBy: { userId: "asc" } }),
+      beforeBlocked,
+    );
+    assert.equal(
+      ((await matches.findById(blocked.matchId!))!.initialConfig as { lobbyName: string })
+        .lobbyName,
+      "Night Games",
+    );
     await db.rating.deleteMany({ where: { userId: { in: users } } });
     // Keep this classification regression's repeated opponents inside the real
     // ceiling. Highly uncertain new ratings can diverge >400 after two wins.
-    await db.rating.createMany({ data: users.map(userId => ({ userId, ...INITIAL_RATING, ratingDeviation: 80, ratedGames: 0 })) });
+    await db.rating.createMany({
+      data: users.map((userId) => ({
+        userId,
+        gameMode: "classic",
+        ...INITIAL_RATING,
+        ratingDeviation: 80,
+        ratedGames: 0,
+      })),
+    });
     const winnerSeat = fixture.room.state.gameOver!.winnerPlayerId!;
     // Three rated results first, then three more recent Casual wins.
     for (let i = 0; i < 6; i++) {
@@ -111,7 +148,10 @@ async function run() {
       );
       ids.push(room.matchId!);
       assert.equal((await matches.findById(room.matchId!))!.isRated, rated);
-      assert.equal(((await matches.findById(room.matchId!))!.initialConfig as { lobbyName: string }).lobbyName, "Night Games");
+      assert.equal(
+        ((await matches.findById(room.matchId!))!.initialConfig as { lobbyName: string }).lobbyName,
+        "Night Games",
+      );
       room.seats = { P1: "one", P2: "two" };
       room.seatIdentities = {
         P1: { userId: seats[0], username: "First", displayName: null },
@@ -189,9 +229,9 @@ async function run() {
     ).getPlayerStatistics(users[0]);
     assert.equal(statistics.overall.gamesPlayed, 6);
     const leaderboard = new LeaderboardService(new LeaderboardRepository(db), { minRatedGames: 3 });
-    const entry = (await leaderboard.getLeaderboard(leaderboardQuerySchema.parse({}))).items.find(
-      (p) => p.user.id === users[0],
-    )!;
+    const entry = (
+      await leaderboard.getLeaderboard(leaderboardQuerySchema.parse({ gameMode: "classic" }))
+    ).items.find((p) => p.user.id === users[0])!;
     assert(entry);
     assert.deepEqual([entry.ratedGames, entry.wins, entry.losses, entry.winRate], [3, 2, 1, 2 / 3]);
     assert.equal(entry.lastActivity, "2026-01-01T12:00:00.000Z");

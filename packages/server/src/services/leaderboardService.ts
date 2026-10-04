@@ -13,6 +13,7 @@ export class LeaderboardService {
     const { minRatedGames } = this.configuration;
     const { total, items } = await this.repository.getLeaderboard(query, minRatedGames);
     return {
+      gameMode: query.gameMode,
       items: items.map((row) => {
         const qualified = row.ratedGames >= minRatedGames;
         const performanceAvailable = row.ratedResultsCount === row.ratedGames;

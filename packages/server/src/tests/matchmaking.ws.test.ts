@@ -46,7 +46,13 @@ async function run() {
     matchPersistence: persistence,
     connectionIdentity: { verify: async (token) => (token ? (identities[token] ?? null) : null) },
     ratings: {
-      getPlayerRating: async (id) => ({ userId: id, ...INITIAL_RATING, ratedGames: 0, ...getRankMetadata(INITIAL_RATING.rating) }),
+      getPlayerRating: async (id, gameMode) => ({
+        gameMode,
+        userId: id,
+        ...INITIAL_RATING,
+        ratedGames: 0,
+        ...getRankMetadata(INITIAL_RATING.rating),
+      }),
       getRatingHistory: async () => ({
         items: [],
         pagination: { page: 1, limit: 20, total: 0, totalPages: 0 },
@@ -154,7 +160,9 @@ async function run() {
       [b, "B", foundB.seat],
     ] as const;
     // P2 arriving first must not rewrite the persisted P1 host assignment.
-    for (const [client, token, seat] of [...competitors].sort((left, right) => right[2].localeCompare(left[2]))) {
+    for (const [client, token, seat] of [...competitors].sort((left, right) =>
+      right[2].localeCompare(left[2]),
+    )) {
       client.socket.send(
         JSON.stringify({
           type: "joinRoom",
@@ -182,9 +190,18 @@ async function run() {
     assert.equal(room.hostSeat, "P1");
     assert.equal(room.hostConnId, null);
     hostClient.messages.length = 0;
-    hostClient.socket.send(JSON.stringify({ type: "joinRoom", mode: "join",
-      roomId: room.id, role: "P1", accessToken: hostToken }));
-    const resumedHost = await until(() => hostClient.messages.find((message) => message.type === "joinAck"));
+    hostClient.socket.send(
+      JSON.stringify({
+        type: "joinRoom",
+        mode: "join",
+        roomId: room.id,
+        role: "P1",
+        accessToken: hostToken,
+      }),
+    );
+    const resumedHost = await until(() =>
+      hostClient.messages.find((message) => message.type === "joinAck"),
+    );
     assert.equal(resumedHost.isHost, true);
     assert.equal(room.hostConnId, room.seats.P1);
     assert.equal(room.seatIdentities[foundA.seat]?.userId, identities.A.userId);

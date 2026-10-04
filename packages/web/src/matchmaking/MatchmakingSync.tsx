@@ -24,8 +24,7 @@ export function MatchmakingSync() {
   }, [foundRoom]);
   useEffect(() => {
     queue.owner(userId ?? null);
-    if (userId) void queue.loadRating(userId);
-    else unsubscribeMatchmaking();
+    if (!userId) unsubscribeMatchmaking();
   }, [userId]);
   useEffect(() => {
     if (!userId) return;

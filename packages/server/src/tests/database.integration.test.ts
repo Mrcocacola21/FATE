@@ -94,7 +94,9 @@ async function run() {
       snapshot.id,
     );
 
-    const rating = await database.rating.create({ data: { userId: firstUser.id } });
+    const rating = await database.rating.create({
+      data: { userId: firstUser.id, gameMode: "standard" },
+    });
     assert.deepEqual(
       {
         rating: rating.rating,
@@ -104,7 +106,9 @@ async function run() {
       },
       { rating: 1500, ratingDeviation: 350, volatility: 0.06, ratedGames: 0 },
     );
-    await assert.rejects(() => database.rating.create({ data: { userId: firstUser.id } }));
+    await assert.rejects(() =>
+      database.rating.create({ data: { userId: firstUser.id, gameMode: "standard" } }),
+    );
 
     const history = await database.ratingHistory.create({
       data: {

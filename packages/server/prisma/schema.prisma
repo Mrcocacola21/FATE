@@ -44,7 +44,8 @@ model User {
   updatedAt    DateTime @updatedAt @db.Timestamptz(3)
 
   profile           Profile?
-  rating            Rating?
+  ratings           Rating[]
+  legacyGlobalRating LegacyGlobalRating?
   ratingHistory     RatingHistory[]
   opponentRatingHistory RatingHistory[] @relation("RatingHistoryOpponent")
   matchParticipants MatchParticipant[]
@@ -174,6 +175,22 @@ model MatchSnapshot {
 }
 
 model Rating {
+  userId          String   @db.Uuid
+  gameMode        String   @db.VarChar(50)
+  rating          Float    @default(1500)
+  ratingDeviation Float    @default(350)
+  volatility      Float    @default(0.06)
+  ratedGames      Int      @default(0)
+  createdAt       DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime @updatedAt @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, gameMode])
+  @@index([gameMode, rating(sort: Desc)])
+}
+
+model LegacyGlobalRating {
   userId          String   @id @db.Uuid
   rating          Float    @default(1500)
   ratingDeviation Float    @default(350)
@@ -184,7 +201,6 @@ model Rating {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([rating(sort: Desc)])
 }
 
 model RatingHistory {
@@ -194,6 +210,8 @@ model RatingHistory {
   opponentUserId        String?  @db.Uuid
   result                MatchOutcome?
   ratedGameNumber       Int?
+  // Null identifies the preserved legacy global stream, never a mode rating.
+  gameMode              String?  @db.VarChar(50)
   ratingBefore          Float
   ratingAfter           Float
   ratingDeviationBefore Float
@@ -207,8 +225,8 @@ model RatingHistory {
   opponent User? @relation("RatingHistoryOpponent", fields: [opponentUserId], references: [id], onDelete: SetNull)
 
   @@unique([userId, matchId])
-  @@unique([userId, ratedGameNumber])
-  @@index([userId, createdAt])
+  @@unique([userId, gameMode, ratedGameNumber])
+  @@index([userId, gameMode, createdAt])
   @@index([matchId])
   @@index([opponentUserId])
 }

@@ -135,6 +135,15 @@ try {
       if (/^\/api\/users\/[^/]+\/matches$/.test(pathname))
         return json({ items: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0 } });
       if (pathname === "/api/users/Commander") return json({ profile });
+      if (pathname.endsWith("/ratings"))
+        return json({
+          ratings: Object.fromEntries(
+            ["standard", "draft", "classic"].map((gameMode) => [
+              gameMode,
+              { rating: 1500, ratingDeviation: 74, ratedGames: 2, ...getRankMetadata(1500) },
+            ]),
+          ),
+        });
       if (pathname.endsWith("/rating"))
         return json({
           rating: 1500,

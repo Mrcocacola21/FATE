@@ -104,7 +104,7 @@ async function run() {
     const waiting = await repository.findByIdWithParticipants(first.matchId);
     assert.equal(waiting?.isRated, true);
     assert.equal(waiting?.participants.length, 2);
-    assert.equal((await ratings.getPlayerRating(a.userId)).ratedGames, 0);
+    assert.equal((await ratings.getPlayerRating(a.userId, "standard")).ratedGames, 0);
     assert.equal(
       await db.rating.count({ where: { userId: { in: [a.userId, b.userId] } } }),
       0,
@@ -129,7 +129,7 @@ async function run() {
     assert((await db.matchSnapshot.count({ where: { matchId: first.matchId } })) > 0);
     assert.equal(await db.ratingHistory.count({ where: { matchId: first.matchId } }), 2);
     for (const id of [a.userId, b.userId])
-      assert.equal((await ratings.getPlayerRating(id)).ratedGames, 1);
+      assert.equal((await ratings.getPlayerRating(id, "classic")).ratedGames, 1);
     const replay = new ReplayService(repository, actions, snapshots);
     assert.equal((await replay.validateFinalDeterminism(first.matchId)).deterministic, true);
     const leaderboard = new LeaderboardService(
@@ -137,6 +137,7 @@ async function run() {
       readLeaderboardConfig({}),
     );
     const board = await leaderboard.getLeaderboard({
+      gameMode: "classic",
       page: 1,
       limit: 20,
       status: "provisional",

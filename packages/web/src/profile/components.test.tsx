@@ -23,10 +23,14 @@ import { competitiveRatingFixture } from "../ranks/testFixtures";
 
 const originalStatistics = statisticsApi.getPlayerStatistics;
 const originalMatches = matchApi.getUserMatches;
-const originalRating = competitiveApi.rating,
+const originalRating = competitiveApi.ratings,
   originalConfig = competitiveApi.config;
 test.beforeEach(() => {
-  competitiveApi.rating = async () => competitiveRatingFixture(1500, 2);
+  competitiveApi.ratings = async () => ({
+    standard: competitiveRatingFixture(1500, 2),
+    draft: competitiveRatingFixture(1500, 0),
+    classic: competitiveRatingFixture(1500, 0),
+  });
   competitiveApi.config = async () => 5;
   statisticsApi.getPlayerStatistics = async (id) => emptyStatisticsFixture(id);
   matchApi.getUserMatches = async () => ({
@@ -35,7 +39,7 @@ test.beforeEach(() => {
   });
 });
 test.afterEach(() => {
-  competitiveApi.rating = originalRating;
+  competitiveApi.ratings = originalRating;
   competitiveApi.config = originalConfig;
   statisticsApi.getPlayerStatistics = originalStatistics;
   matchApi.getUserMatches = originalMatches;

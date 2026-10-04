@@ -27,6 +27,7 @@ async function run() {
   const service = new LeaderboardService(repository, { minRatedGames: 5 });
   const server = await buildServer({ leaderboard: service });
   const defaults: LeaderboardQuery = {
+    gameMode: "standard",
     status: "qualified",
     page: 1,
     limit: 100,
@@ -49,7 +50,7 @@ async function run() {
                 },
               }
             : {}),
-          rating: { create: {} },
+          ratings: { create: { gameMode: "standard" } },
         },
       });
       users.push(user.id);
@@ -144,16 +145,28 @@ async function run() {
     }
     // Controlled values test precise sorting without changing persisted game counters.
     await db.rating.update({
-      where: { userId: a },
+      where: { userId_gameMode: { userId: a, gameMode: "standard" } },
       data: { rating: 1600.12345, ratingDeviation: 80 },
     });
-    await db.rating.update({ where: { userId: b }, data: { rating: 1700, ratingDeviation: 90 } });
-    await db.rating.update({ where: { userId: c }, data: { rating: 1650, ratingDeviation: 60 } });
-    await db.rating.update({ where: { userId: newcomers }, data: { rating: 9999 } });
-    for (const userId of [performance, draws, ...extra])
-      await db.rating.update({ where: { userId }, data: { rating: 1550, ratingDeviation: 100 } });
     await db.rating.update({
-      where: { userId: extra[0] },
+      where: { userId_gameMode: { userId: b, gameMode: "standard" } },
+      data: { rating: 1700, ratingDeviation: 90 },
+    });
+    await db.rating.update({
+      where: { userId_gameMode: { userId: c, gameMode: "standard" } },
+      data: { rating: 1650, ratingDeviation: 60 },
+    });
+    await db.rating.update({
+      where: { userId_gameMode: { userId: newcomers, gameMode: "standard" } },
+      data: { rating: 9999 },
+    });
+    for (const userId of [performance, draws, ...extra])
+      await db.rating.update({
+        where: { userId_gameMode: { userId: userId, gameMode: "standard" } },
+        data: { rating: 1550, ratingDeviation: 100 },
+      });
+    await db.rating.update({
+      where: { userId_gameMode: { userId: extra[0], gameMode: "standard" } },
       data: { rating: 1600.12345, ratingDeviation: 70 },
     });
     const snapshot = async () => ({

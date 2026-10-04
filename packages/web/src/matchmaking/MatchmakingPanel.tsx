@@ -9,12 +9,13 @@ import { queue, useQueue } from "./store";
 import { useGameStore } from "../store";
 import { formatCompetitiveRating } from "../ranks/rankProgress";
 
-export function MatchmakingPanel() {
+export function MatchmakingPanel({ selectedMode }: { selectedMode?: GameModeId } = {}) {
   const { t } = useI18n();
   const user = useAuthStore((s) => s.user);
-  const { status, busy, error, rating, receivedAt } = useQueue((s) => s);
+  const { status, busy, error, receivedAt } = useQueue((s) => s);
   const joinError = useGameStore((s) => s.joinError);
-  const [mode, setMode] = useState<GameModeId>("standard");
+  const [localMode, setMode] = useState<GameModeId>("standard");
+  const mode = selectedMode ?? localMode;
   const [now, setNow] = useState(Date.now());
   const waiting = status.status === "QUEUED" || status.status === "MATCHING";
   useEffect(() => {
@@ -47,13 +48,15 @@ export function MatchmakingPanel() {
       ) : (
         <>
           <div className="flex flex-wrap items-end gap-5">
-            {waiting && <div>
-              <p className="text-xs text-muted">{t("matchmaking.rating")}</p>
-              <p className="text-lg font-semibold tabular-nums">
-                {rating === null ? "—" : formatCompetitiveRating(rating)}
-              </p>
-            </div>}
-            {!waiting && status.status !== "MATCH_FOUND" && (
+            {waiting && (
+              <div>
+                <p className="text-xs text-muted">{t("matchmaking.rating")}</p>
+                <p className="text-lg font-semibold tabular-nums">
+                  {formatCompetitiveRating(status.rating)}
+                </p>
+              </div>
+            )}
+            {selectedMode === undefined && !waiting && status.status !== "MATCH_FOUND" && (
               <label className="min-w-0 text-sm">
                 {t("matchmaking.mode")}
                 <select
@@ -111,8 +114,14 @@ export function MatchmakingPanel() {
               <p role="status" className="break-words">
                 {t("matchmaking.found")}
               </p>
-              <p className="mt-3 font-display text-xl">{t("competitive.you")} <span className="text-muted">{t("customLobby.vs")}</span> {status.opponent.displayName}</p>
-              <p className="mt-2 text-sm text-muted">{t("matchTypes.RATED")} · {getGameModeName(status.gameMode, t)} · {t("matchmaking.entering")}</p>
+              <p className="mt-3 font-display text-xl">
+                {t("competitive.you")} <span className="text-muted">{t("customLobby.vs")}</span>{" "}
+                {status.opponent.displayName}
+              </p>
+              <p className="mt-2 text-sm text-muted">
+                {t("matchTypes.RATED")} · {getGameModeName(status.gameMode, t)} ·{" "}
+                {t("matchmaking.entering")}
+              </p>
               {joinError && (
                 <>
                   <p role="alert" className="fate-notice mt-2 text-sm">

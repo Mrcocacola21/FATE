@@ -1,3 +1,5 @@
+import type { GameModeId } from "rules";
+import { GAME_MODE_IDS } from "../modes/modeLabels";
 import { API_BASE } from "../api/config";
 import { ApiError, isRecord, createApiClient, type ApiClient } from "../api/client";
 import { parseRankTier, parseRankProgress, type RankProgress } from "../ranks/rankProgress";
@@ -33,8 +35,19 @@ export function parseCompetitiveRating(value: unknown): CompetitiveRating {
 /** Rating and qualification config are public reads, including signed-out profiles. */
 export function createCompetitiveApi(client: ApiClient) {
   return {
-    rating: (id: string) =>
-      client.request(`/api/users/${encodeURIComponent(id)}/rating`, parseCompetitiveRating),
+    rating: (id: string, gameMode: GameModeId) =>
+      client.request(
+        `/api/users/${encodeURIComponent(id)}/rating?gameMode=${gameMode}`,
+        parseCompetitiveRating,
+      ),
+    ratings: (id: string) =>
+      client.request(`/api/users/${encodeURIComponent(id)}/ratings`, (value) => {
+        if (!isRecord(value) || !isRecord(value.ratings)) throw new ApiError("INVALID_RESPONSE");
+        const ratings = value.ratings;
+        return Object.fromEntries(
+          GAME_MODE_IDS.map((mode) => [mode, parseCompetitiveRating(ratings[mode])]),
+        ) as Record<GameModeId, CompetitiveRating>;
+      }),
     config: () =>
       client.request("/api/competitive/config", (value) => {
         if (

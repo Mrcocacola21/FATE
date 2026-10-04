@@ -111,7 +111,29 @@ test("public profile rating/config reads need no authenticated session or bearer
       );
     }),
   );
-  assert.equal((await api.rating("public-player")).rankTier, "FULL");
+  assert.equal((await api.rating("public-player", "standard")).rankTier, "FULL");
   assert.equal(await api.config(), 5);
   assert.equal(requested.length, 2);
+});
+
+test("all-mode API keeps distinct states and rejects missing mode responses", async () => {
+  let requested = "";
+  let missing = false;
+  const api = createCompetitiveApi(createApiClient("http://localhost", async url => {
+    requested = String(url);
+    const ratings = {
+      standard: competitiveRatingFixture(1800, 10),
+      draft: competitiveRatingFixture(900, 2),
+      classic: competitiveRatingFixture(2010, 5),
+    };
+    return new Response(JSON.stringify({ ratings: missing ? { standard: ratings.standard } : ratings }));
+  }));
+  const result = await api.ratings("public-player");
+  assert.equal(requested, "http://localhost/api/users/public-player/ratings");
+  assert.equal(result.standard.rankTier, "BLACK_MOON");
+  assert.equal(result.draft.rankTier, "HALF");
+  assert.equal(result.classic.rankTier, "DESTINY");
+  assert.deepEqual([result.standard.ratedGames, result.draft.ratedGames, result.classic.ratedGames], [10, 2, 5]);
+  missing = true;
+  await assert.rejects(api.ratings("public-player"), /INVALID_RESPONSE/);
 });

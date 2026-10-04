@@ -1,3 +1,4 @@
+import { GameModeIdSchema } from "../schemas";
 import { z } from "zod";
 
 const positiveInteger = z
@@ -6,6 +7,7 @@ const positiveInteger = z
   .transform(Number);
 export const leaderboardQuerySchema = z
   .object({
+    gameMode: GameModeIdSchema.default("standard"),
     status: z.enum(["qualified", "provisional"]).default("qualified"),
     page: positiveInteger.pipe(z.number().int().max(21474836)).default("1"),
     limit: positiveInteger.pipe(z.number().int().max(100)).default("20"),

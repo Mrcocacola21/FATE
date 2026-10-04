@@ -107,15 +107,30 @@ async function run() {
     assert.equal(String(account.response.headers["set-cookie"]).includes("Secure"), false);
     const user = await database.user.findUniqueOrThrow({
       where: { id: userId },
-      include: { profile: true, rating: true, authSessions: true },
+      include: { profile: true, ratings: true, authSessions: true },
     });
-    assert(user.passwordHash && user.profile && user.rating);
+    assert(user.passwordHash && user.profile && user.ratings[0]);
     assert.notEqual(user.passwordHash, password);
     assert(await verifyPassword(user.passwordHash, password));
-    assert.equal(user.rating.rating, 1500);
-    assert.equal(user.rating.ratingDeviation, 350);
-    assert.equal(user.rating.volatility, 0.06);
-    assert.equal(user.rating.ratedGames, 0);
+    assert.equal(user.ratings.length, 3);
+    assert.deepEqual(user.ratings.map((row) => row.gameMode).sort(), [
+      "classic",
+      "draft",
+      "standard",
+    ]);
+    assert(
+      user.ratings.every(
+        (row) =>
+          row.rating === 1500 &&
+          row.ratingDeviation === 350 &&
+          row.volatility === 0.06 &&
+          row.ratedGames === 0,
+      ),
+    );
+    assert.equal(user.ratings[0].rating, 1500);
+    assert.equal(user.ratings[0].ratingDeviation, 350);
+    assert.equal(user.ratings[0].volatility, 0.06);
+    assert.equal(user.ratings[0].ratedGames, 0);
     assert.equal(user.authSessions.length, 1);
     assert.equal(user.authSessions[0].refreshTokenHash, hashRefreshToken(account.token));
     assert.notEqual(user.authSessions[0].refreshTokenHash, account.token);

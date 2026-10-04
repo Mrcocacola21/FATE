@@ -1,3 +1,4 @@
+import { GAME_MODE_IDS, isGameModeId, type GameModeId } from "rules";
 import { Prisma } from "@prisma/client";
 import { AuthError } from "../auth/authErrors";
 import { INITIAL_RATING, RATING_TRANSACTION_ATTEMPTS } from "../rating/constants";
@@ -37,22 +38,42 @@ export class RatingService {
     private readonly configuration: Partial<Glicko2Options> = {},
   ) {}
 
-  async getPlayerRating(userId: string) {
+  async getPlayerRating(userId: string, gameMode: GameModeId) {
     if (!(await this.repository.userExists(userId))) throw new AuthError("USER_NOT_FOUND");
-    const state = await this.repository.getRating(userId);
+    const state = await this.repository.getRating(userId, gameMode);
     if (state) validateRating(state);
-    const rating = state ?? { userId, ...INITIAL_RATING, ratedGames: 0 };
-    return { ...rating, ...getRankMetadata(rating.rating) };
+    const rating = state ?? { userId, gameMode, ...INITIAL_RATING, ratedGames: 0 };
+    return { ...rating, gameMode, ...getRankMetadata(rating.rating) };
+  }
+
+  async getAllPlayerRatings(userId: string) {
+    const entries = await Promise.all(
+      GAME_MODE_IDS.map(
+        async (gameMode) => [gameMode, await this.getPlayerRating(userId, gameMode)] as const,
+      ),
+    );
+    return {
+      ratings: Object.fromEntries(entries) as Record<
+        GameModeId,
+        Awaited<ReturnType<RatingService["getPlayerRating"]>>
+      >,
+    };
   }
 
   /** Runtime identities have already been authenticated; one query for discovery. */
-  async getPlayerRatings(userIds: string[]): Promise<Map<string, number>> {
+  async getPlayerRatings(userIds: string[], gameMode: GameModeId): Promise<Map<string, number>> {
     if (!this.repository.getRatings)
-      return new Map(await Promise.all(userIds.map(async id => [id, (await this.getPlayerRating(id)).rating] as const)));
-    const rows = await this.repository.getRatings(userIds);
+      return new Map(
+        await Promise.all(
+          userIds.map(
+            async (id) => [id, (await this.getPlayerRating(id, gameMode)).rating] as const,
+          ),
+        ),
+      );
+    const rows = await this.repository.getRatings(userIds, gameMode);
     rows.forEach(validateRating);
-    const found = new Map(rows.map(row => [row.userId, row.rating]));
-    return new Map(userIds.map(id => [id, found.get(id) ?? INITIAL_RATING.rating]));
+    const found = new Map(rows.map((row) => [row.userId, row.rating]));
+    return new Map(userIds.map((id) => [id, found.get(id) ?? INITIAL_RATING.rating]));
   }
 
   async getRatingHistory(userId: string, query: RatingHistoryQuery) {
@@ -90,7 +111,7 @@ export class RatingService {
               outcome,
               alreadyProcessed: outcome === "alreadyProcessed",
             });
-            if (!players) {
+            if (!players || !isGameModeId(match.gameMode)) {
               if (match.ratingProcessedAt) throw new RatingError("RATING_INCONSISTENT_HISTORY");
               return response("ineligible");
             }
@@ -102,6 +123,7 @@ export class RatingService {
                   histories.some(
                     (h) =>
                       h.userId === p.userId &&
+                      (h.gameMode === null || h.gameMode === match.gameMode) &&
                       h.opponentUserId === players[1 - i].userId &&
                       h.result === p.result &&
                       h.ratedGameNumber !== null,
@@ -112,10 +134,13 @@ export class RatingService {
               return response("alreadyProcessed");
             }
             if (histories.length) throw new RatingError("RATING_INCONSISTENT_HISTORY");
-            await tx.lockPlayers(players.map((p) => p.userId));
+            await tx.lockPlayers(
+              players.map((p) => p.userId),
+              match.gameMode,
+            );
             const before = [
-              await tx.getOrCreateRating(players[0].userId),
-              await tx.getOrCreateRating(players[1].userId),
+              await tx.getOrCreateRating(players[0].userId, match.gameMode),
+              await tx.getOrCreateRating(players[1].userId, match.gameMode),
             ];
             if (
               before.some(
@@ -136,9 +161,10 @@ export class RatingService {
             );
             const timestamp = new Date();
             for (let i = 0; i < 2; i++) {
-              await tx.saveRating(players[i].userId, after[i]);
+              await tx.saveRating(players[i].userId, match.gameMode, after[i]);
               await tx.insertHistory(
                 matchId,
+                match.gameMode,
                 players[i],
                 players[1 - i].userId,
                 before[i],

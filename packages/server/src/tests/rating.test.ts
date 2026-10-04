@@ -220,9 +220,10 @@ async function run() {
   };
   await assert.rejects(service.processRatedMatch(match.id), /RATING_INVALID_RESULT/);
   assert.equal(attempts, 1);
-  const defaultRating = await service.getPlayerRating(a);
+  const defaultRating = await service.getPlayerRating(a, "standard");
   assert.deepEqual(defaultRating, {
     userId: a,
+    gameMode: "standard",
     ...INITIAL_RATING,
     ratedGames: 0,
     ...getRankMetadata(INITIAL_RATING.rating),
@@ -233,9 +234,9 @@ async function run() {
   await server.register(ratingRoutes, {
     prefix: "/api",
     ratings: {
-      getPlayerRating: async (id) => {
+      getPlayerRating: async (id, mode) => {
         reads++;
-        return service.getPlayerRating(id);
+        return service.getPlayerRating(id, mode);
       },
       getRatingHistory: service.getRatingHistory.bind(service),
     },

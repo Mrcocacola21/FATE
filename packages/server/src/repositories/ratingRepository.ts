@@ -1,3 +1,4 @@
+import type { GameModeId } from "rules";
 import { Prisma, type PrismaClient } from "@prisma/client";
 import { getDatabaseClient } from "../db/client";
 import { INITIAL_RATING } from "../rating/constants";
@@ -8,6 +9,7 @@ import { RatingError } from "../rating/ratingError";
 
 const ratingSelect = {
   userId: true,
+  gameMode: true,
   rating: true,
   ratingDeviation: true,
   volatility: true,
@@ -15,6 +17,7 @@ const ratingSelect = {
 } satisfies Prisma.RatingSelect;
 const historySelect = {
   id: true,
+  gameMode: true,
   matchId: true,
   opponentUserId: true,
   result: true,
@@ -61,24 +64,19 @@ export class RatingTransaction {
     });
   }
 
-  async lockPlayers(userIds: string[]): Promise<void> {
-    // Registered User rows exist even when Rating does not. Global ID order avoids
-    // opposite-seat deadlocks and protects first-game initialization across matches.
-    for (const userId of [...userIds].sort()) {
-      const rows = await this.tx.$queryRaw<
-        { id: string }[]
-      >`SELECT "id" FROM "User" WHERE "id" = ${userId}::uuid FOR UPDATE`;
-      if (rows.length !== 1) throw new RatingError("RATING_INVALID_PARTICIPANTS");
-    }
+  async lockPlayers(userIds: string[], gameMode: GameModeId): Promise<void> {
+    // Native upsert locks the actual mode row, including first-game initialization.
+    // Stable user ordering avoids opposite-seat deadlocks. Other modes stay independent.
+    for (const userId of [...userIds].sort()) await this.getOrCreateRating(userId, gameMode);
   }
 
-  async getOrCreateRating(userId: string) {
+  async getOrCreateRating(userId: string, gameMode: GameModeId) {
     // Non-empty update uses PostgreSQL's native upsert. Serializable retries cover
     // an earlier snapshot when another transaction initialized the same user.
     try {
       return await this.tx.rating.upsert({
-        where: { userId },
-        create: { userId, ...INITIAL_RATING },
+        where: { userId_gameMode: { userId, gameMode } },
+        create: { userId, gameMode, ...INITIAL_RATING },
         update: { ratedGames: { increment: 0 } },
         select: ratingSelect,
       });
@@ -91,15 +89,16 @@ export class RatingTransaction {
     }
   }
 
-  async saveRating(userId: string, after: Glicko2Rating): Promise<void> {
+  async saveRating(userId: string, gameMode: GameModeId, after: Glicko2Rating): Promise<void> {
     await this.tx.rating.update({
-      where: { userId },
+      where: { userId_gameMode: { userId, gameMode } },
       data: { ...after, ratedGames: { increment: 1 } },
     });
   }
 
   async insertHistory(
     matchId: string,
+    gameMode: GameModeId,
     player: RatingCompetitor,
     opponentUserId: string,
     before: Glicko2Rating,
@@ -110,6 +109,7 @@ export class RatingTransaction {
     await this.tx.ratingHistory.create({
       data: {
         matchId,
+        gameMode,
         userId: player.userId,
         opponentUserId,
         result: player.result,
@@ -139,16 +139,23 @@ export class RatingRepository {
 
   getRating(
     userId: string,
+    gameMode: GameModeId,
   ): Promise<Prisma.RatingGetPayload<{ select: typeof ratingSelect }> | null> {
-    return this.database.rating.findUnique({ where: { userId }, select: ratingSelect });
+    return this.database.rating.findUnique({
+      where: { userId_gameMode: { userId, gameMode } },
+      select: ratingSelect,
+    });
   }
 
-  async getRatings(userIds: string[]) {
-    return this.database.rating.findMany({ where: { userId: { in: userIds } }, select: ratingSelect });
+  async getRatings(userIds: string[], gameMode: GameModeId) {
+    return this.database.rating.findMany({
+      where: { userId: { in: userIds }, gameMode },
+      select: ratingSelect,
+    });
   }
 
   async getHistory(userId: string, query: RatingHistoryQuery) {
-    const where = { userId };
+    const where = { userId, gameMode: query.gameMode };
     const [total, items] = await this.database.$transaction(
       [
         this.database.ratingHistory.count({ where }),

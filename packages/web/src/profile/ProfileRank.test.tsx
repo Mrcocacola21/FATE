@@ -8,9 +8,13 @@ import { setLanguage } from "../i18n";
 
 test("profile reuses Full medal for provisional players and safely changes identity", async () => {
   setLanguage("en", null);
-  const rating = competitiveApi.rating,
+  const rating = competitiveApi.ratings,
     config = competitiveApi.config;
-  competitiveApi.rating = async (id) => competitiveRatingFixture(id === "first" ? 1500 : 2150, 2);
+  competitiveApi.ratings = async (id) => ({
+    standard: competitiveRatingFixture(id === "first" ? 1500 : 2150, 2),
+    draft: competitiveRatingFixture(900, 2),
+    classic: competitiveRatingFixture(2010, 5),
+  });
   competitiveApi.config = async () => 5;
   let renderer!: ReactTestRenderer;
   try {
@@ -20,6 +24,18 @@ test("profile reuses Full medal for provisional players and safely changes ident
     assert.match(JSON.stringify(renderer.toJSON()), /full\.png/);
     assert.match(JSON.stringify(renderer.toJSON()), /Full/);
     assert.match(JSON.stringify(renderer.toJSON()), /Provisional/);
+    const switchMode = (label: string) =>
+      renderer.root
+        .findAllByType("button")
+        .find((button) => button.children.includes(label))!
+        .props.onClick();
+    act(() => switchMode("Draft"));
+    assert.match(JSON.stringify(renderer.toJSON()), /half\.png/);
+    assert.match(JSON.stringify(renderer.toJSON()), /900/);
+    act(() => switchMode("Classic"));
+    assert.match(JSON.stringify(renderer.toJSON()), /destiny\.png/);
+    assert.match(JSON.stringify(renderer.toJSON()), /Ranked/);
+    act(() => switchMode("Standard"));
     await act(async () => renderer.update(<ProfileRank userId="second" />));
     const output = JSON.stringify(renderer.toJSON());
     assert.match(output, /destiny\.png/);
@@ -27,7 +43,7 @@ test("profile reuses Full medal for provisional players and safely changes ident
     assert(!output.includes("full.png"));
   } finally {
     act(() => renderer?.unmount());
-    competitiveApi.rating = rating;
+    competitiveApi.ratings = rating;
     competitiveApi.config = config;
   }
 });

@@ -1,6 +1,8 @@
+import type { GameModeId } from "rules";
 export type LeaderboardStatus = "qualified" | "provisional";
 export type LeaderboardSort = "rating" | "gamesPlayed" | "winRate" | "lastActivity";
 export interface LeaderboardQuery {
+  gameMode: GameModeId;
   status: LeaderboardStatus;
   page: number;
   limit: number;

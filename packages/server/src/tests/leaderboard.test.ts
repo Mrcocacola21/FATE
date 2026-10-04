@@ -8,6 +8,7 @@ import { leaderboardRoutes } from "../routes/leaderboardRoutes";
 import type { LeaderboardRow } from "../repositories/leaderboardRepository";
 
 const defaults = {
+  gameMode: "standard",
   status: "qualified",
   page: 1,
   limit: 20,
@@ -166,6 +167,7 @@ test("public read route validates before calling service and sanitizes failures"
         reads++;
         assert.deepEqual(query, defaults);
         return {
+          gameMode: query.gameMode,
           items: [],
           pagination: { page: 1, limit: 20, total: 0, totalPages: 0 },
           qualification: { minRatedGames: 5 },

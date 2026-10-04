@@ -20,7 +20,10 @@ import type {
 import { PairCreationRolledBack } from "../matchmaking/errors";
 
 export interface MatchmakingDependencies {
-  loadPlayer(userId: string): Promise<{ rating: number; ratingDeviation: number }>;
+  loadPlayer(
+    userId: string,
+    gameMode: GameModeId,
+  ): Promise<{ rating: number; ratingDeviation: number }>;
   hasPersistentActiveMatch(userId: string): Promise<boolean>;
   hasRuntimeMatch(userId: string, exceptRoomId?: string): boolean;
   createPair(attempt: PairAttempt): Promise<{ matchId: string; roomId: string }>;
@@ -141,7 +144,7 @@ export class MatchmakingService {
     const id = identity.userId;
     this.assertEligible(id);
     const [rating, active] = await Promise.all([
-      this.deps.loadPlayer(id),
+      this.deps.loadPlayer(id, gameMode),
       this.deps.hasPersistentActiveMatch(id),
     ]);
     this.assertEligible(id);

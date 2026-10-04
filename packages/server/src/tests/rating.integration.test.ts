@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { PrismaClient, type MatchOutcome, type Prisma } from "@prisma/client";
 import { buildServer } from "../index";
+import { getRankMetadata } from "../rating/rankTiers";
 import { INITIAL_RATING } from "../rating/constants";
 import { calculateRating } from "../rating/glicko2";
 import { RatingRepository } from "../repositories/ratingRepository";
@@ -148,9 +149,23 @@ async function run() {
       ratings.processRatedMatch(shared1.id),
       otherRatings.processRatedMatch(shared2.id),
     ]);
-    assert.equal((await db.rating.findUniqueOrThrow({ where: { userId: a } })).ratedGames, 3);
+    assert.equal(
+      (
+        await db.rating.findUniqueOrThrow({
+          where: { userId_gameMode: { userId: a, gameMode: "standard" } },
+        })
+      ).ratedGames,
+      3,
+    );
     for (const id of [c, users[5]])
-      assert.equal((await db.rating.findUniqueOrThrow({ where: { userId: id } })).ratedGames, 1);
+      assert.equal(
+        (
+          await db.rating.findUniqueOrThrow({
+            where: { userId_gameMode: { userId: id, gameMode: "standard" } },
+          })
+        ).ratedGames,
+        1,
+      );
     // Also race lazy initialization of the SAME player across different matches.
     const lazy1 = await create(users[6], users[7]);
     const lazy2 = await create(users[6], users[8]);
@@ -159,7 +174,11 @@ async function run() {
       otherRatings.processRatedMatch(lazy2.id),
     ]);
     assert.equal(
-      (await db.rating.findUniqueOrThrow({ where: { userId: users[6] } })).ratedGames,
+      (
+        await db.rating.findUniqueOrThrow({
+          where: { userId_gameMode: { userId: users[6], gameMode: "standard" } },
+        })
+      ).ratedGames,
       2,
     );
     for (const id of [a, users[6]]) {
@@ -167,7 +186,9 @@ async function run() {
         where: { userId: id },
         orderBy: { ratedGameNumber: "asc" },
       });
-      const current = await db.rating.findUniqueOrThrow({ where: { userId: id } });
+      const current = await db.rating.findUniqueOrThrow({
+        where: { userId_gameMode: { userId: id, gameMode: "standard" } },
+      });
       for (let i = 1; i < chain.length; i++) {
         assert.equal(chain[i].ratedGameNumber, chain[i - 1].ratedGameNumber! + 1);
         for (const [before, after] of [
@@ -206,8 +227,11 @@ async function run() {
 
     // A corrupt persisted numeric state cannot cause any one-sided update.
     const numeric = await create(users[9], users[10]);
-    const validVolatility = (await db.rating.findUniqueOrThrow({ where: { userId: users[9] } }))
-      .volatility;
+    const validVolatility = (
+      await db.rating.findUniqueOrThrow({
+        where: { userId_gameMode: { userId: users[9], gameMode: "standard" } },
+      })
+    ).volatility;
     await db.$executeRaw`UPDATE "Rating" SET "volatility" = 'NaN'::double precision WHERE "userId" = ${users[9]}::uuid`;
     // Read the sentinel as text: Prisma itself cannot decode PostgreSQL NaN.
     const numericRatings = () => db.$queryRaw`SELECT "userId", "rating", "ratingDeviation",
@@ -221,7 +245,10 @@ async function run() {
       (await db.match.findUniqueOrThrow({ where: { id: numeric.id } })).ratingProcessedAt,
       null,
     );
-    await db.rating.update({ where: { userId: users[9] }, data: { volatility: validVolatility } });
+    await db.rating.update({
+      where: { userId_gameMode: { userId: users[9], gameMode: "standard" } },
+      data: { volatility: validVolatility },
+    });
 
     // Exclusions must not materialize even default rows or change ratedGames.
     for (const fields of [
@@ -271,7 +298,7 @@ async function run() {
     });
     await ratings.processRatedMatch(draw.id);
     for (const id of [users[11], users[12]])
-      assert.equal((await ratings.getPlayerRating(id)).rating, 1500);
+      assert.equal((await ratings.getPlayerRating(id, "standard")).rating, 1500);
     assert(
       (await db.ratingHistory.findMany({ where: { matchId: draw.id } })).every(
         (h) => h.result === "DRAW",
@@ -340,7 +367,7 @@ async function run() {
     await service.finalizeMatch(final.id, result);
     assert.equal(await db.ratingHistory.count({ where: { matchId: final.id } }), 2);
     await service.finalizeMatch(final.id, result);
-    assert.equal((await ratings.getPlayerRating(users[13])).ratedGames, 1);
+    assert.equal((await ratings.getPlayerRating(users[13], "standard")).ratedGames, 1);
 
     // Real normal-room action journal, finalization, rating failure/retry, and drain.
     let failRatingOnce = true;
@@ -354,7 +381,11 @@ async function run() {
       },
     });
     lifecycle = new MatchLifecycle(logger, runtimeService);
-    const room = await lifecycle.createRoom({ seed: 13, matchType: "RATED" }, randomUUID(), users[15]);
+    const room = await lifecycle.createRoom(
+      { seed: 13, matchType: "RATED" },
+      randomUUID(),
+      users[15],
+    );
     matches.push(room.matchId!);
     assert.equal(
       (await db.match.findUniqueOrThrow({ where: { id: room.matchId! } })).isRated,
@@ -418,7 +449,7 @@ async function run() {
       room.revision,
     );
     await service.finalizeMatch(room.matchId!, extractPersistentMatchResult(room, new Date()));
-    assert.equal((await ratings.getPlayerRating(users[15])).ratedGames, 1);
+    assert.equal((await ratings.getPlayerRating(users[15], "standard")).ratedGames, 1);
     const testRoom = await lifecycle.createRoom({ roomMode: "test", seed: 13 }, randomUUID(), a);
     assert.equal(testRoom.matchId, null);
     await lifecycle.syncParticipant(testRoom, "P1", "Alice");
@@ -439,7 +470,13 @@ async function run() {
     queries.length = 0;
     const get = await server.inject({ url: `/api/users/${users[17]}/rating` });
     assert.equal(get.statusCode, 200, get.body);
-    assert.deepEqual(get.json(), { userId: users[17], ...INITIAL_RATING, ratedGames: 0 });
+    assert.deepEqual(get.json(), {
+      userId: users[17],
+      gameMode: "standard",
+      ...INITIAL_RATING,
+      ratedGames: 0,
+      ...getRankMetadata(INITIAL_RATING.rating),
+    });
     assert.equal(get.headers["cache-control"], "no-store");
     const historyResponse = await server.inject({
       url: `/api/users/${a}/rating/history?page=1&limit=2`,
@@ -478,7 +515,12 @@ async function run() {
       await db.ratingHistory.findMany({ where: { userId: { in: users } }, orderBy: { id: "asc" } }),
       historySnapshot,
     );
-    assert.equal(await db.rating.findUnique({ where: { userId: users[17] } }), null);
+    assert.equal(
+      await db.rating.findUnique({
+        where: { userId_gameMode: { userId: users[17], gameMode: "standard" } },
+      }),
+      null,
+    );
     assert.doesNotMatch(historyResponse.body, /email|password|token|session|initialConfig/);
     // Audit ownership still prevents deletion; Match deletion preserves both histories.
     await assert.rejects(

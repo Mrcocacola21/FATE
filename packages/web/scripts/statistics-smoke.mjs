@@ -210,6 +210,15 @@ try {
       return send({ profile: owner });
     }
     if (url.pathname === "/api/competitive/config") return send({ minRatedGames: 5 });
+    if (url.pathname.endsWith("/ratings"))
+      return send({
+        ratings: Object.fromEntries(
+          ["standard", "draft", "classic"].map((gameMode) => [
+            gameMode,
+            { rating: 1500, ratingDeviation: 74, ratedGames: 2, ...getRankMetadata(1500) },
+          ]),
+        ),
+      });
     if (url.pathname.endsWith("/rating"))
       return send({ rating: 1500, ratingDeviation: 74, ratedGames: 2, ...getRankMetadata(1500) });
     const stats = url.pathname.match(/^\/api\/users\/([^/]+)\/statistics$/);

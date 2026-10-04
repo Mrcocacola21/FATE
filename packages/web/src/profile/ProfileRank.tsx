@@ -1,3 +1,7 @@
+import { useState } from "react";
+import type { GameModeId } from "rules";
+import { CompetitiveModeSelector } from "../modes/CompetitiveModeSelector";
+import { RankProgress } from "../ranks/RankProgressPanel";
 import { useI18n } from "../i18n";
 import { competitiveApi } from "../play/api";
 import { RankEmblem } from "../ranks/RankEmblem";
@@ -6,15 +10,16 @@ import { formatCompetitiveRating } from "../ranks/rankProgress";
 import { useProfileResource } from "../statistics/useProfileResource";
 
 const loadRank = async (userId: string) => {
-  const [rating, minRatedGames] = await Promise.all([
-    competitiveApi.rating(userId),
+  const [ratings, minRatedGames] = await Promise.all([
+    competitiveApi.ratings(userId),
     competitiveApi.config(),
   ]);
-  return { rating, minRatedGames };
+  return { ratings, minRatedGames };
 };
 
 export function ProfileRank({ userId, revision = 0 }: { userId: string; revision?: number }) {
   const { t } = useI18n();
+  const [mode, setMode] = useState<GameModeId>("standard");
   const resource = useProfileResource(userId, revision, loadRank);
   const data = resource.result?.data;
   if (!data)
@@ -30,24 +35,30 @@ export function ProfileRank({ userId, revision = 0 }: { userId: string; revision
         )}
       </div>
     );
-  const rank = getRankPresentation(data.rating.rankTier);
-  const qualified = data.rating.ratedGames >= data.minRatedGames;
+  const rating = data.ratings[mode];
+  const rank = getRankPresentation(rating.rankTier);
+  const qualified = rating.ratedGames >= data.minRatedGames;
   return (
     <div className="profile-rank" data-testid="profile-rank">
-      <RankEmblem rank={data.rating.rankTier} size="medium" decorative />
+      <CompetitiveModeSelector value={mode} onChange={setMode} />
+      <RankEmblem rank={rating.rankTier} size="medium" decorative />
       <div className="min-w-0">
         <p className="font-display rank-summary-name">
           {rank ? t(rank.labelKey) : t("ranks.unassigned")}
         </p>
         <p className="rank-summary-rating">
-          <strong>{formatCompetitiveRating(data.rating.rating)}</strong>{" "}
+          <strong>{formatCompetitiveRating(rating.rating)}</strong>{" "}
           <span>{t("matchmaking.rating")}</span>
         </p>
         <p className="text-sm text-muted">
+          {t("competitive.uncertainty", { value: Math.round(rating.ratingDeviation) })}
+        </p>
+        <RankProgress rank={rating.rankTier} value={rating.rankProgress} />
+        <p className="text-sm text-muted">
           {t(qualified ? "leaderboard.qualified" : "leaderboard.provisional")} ·{" "}
           {qualified
-            ? t("competitive.games", { count: data.rating.ratedGames })
-            : `${data.rating.ratedGames} / ${data.minRatedGames}`}
+            ? t("competitive.games", { count: rating.ratedGames })
+            : `${rating.ratedGames} / ${data.minRatedGames}`}
         </p>
       </div>
     </div>

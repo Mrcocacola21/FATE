@@ -71,6 +71,7 @@ test("default Ranked, rating sort, metrics, public player links and backend poli
   const renderer = await mount();
   try {
     assert.deepEqual(requests[0], {
+      gameMode: "standard",
       status: "qualified",
       page: 1,
       limit: 20,
@@ -126,6 +127,7 @@ test("sort, direction, pagination and browser back are URL state", async () => {
       renderer.root.findByType("select").props.onChange({ target: { value: "winRate" } }),
     );
     assert.deepEqual(requests[requests.length - 1], {
+      gameMode: "standard",
       status: "qualified",
       page: 1,
       limit: 20,
@@ -239,5 +241,39 @@ test("incomplete rated history shows unavailable performance with an explanation
     assert.match(text(renderer), /1684/);
   } finally {
     cleanup(renderer);
+  }
+});
+
+test("mode switching replaces standings and persists shareable/back-forward URL state", async () => {
+  leaderboardApi.getLeaderboard = async (query) => {
+    requests.push(query);
+    const rating = query.gameMode === "standard" ? 1800 : query.gameMode === "draft" ? 900 : 2010;
+    return leaderboardFixture([
+      leaderboardPlayer({
+        rating,
+        rankTier:
+          query.gameMode === "standard"
+            ? "BLACK_MOON"
+            : query.gameMode === "draft"
+              ? "HALF"
+              : "DESTINY",
+      }),
+    ]);
+  };
+  const renderer = await mount();
+  try {
+    assert.match(text(renderer), /blackmoon\.png/);
+    await act(async () => button(renderer, "Draft").props.onClick());
+    assert.equal(requests[requests.length - 1].gameMode, "draft");
+    assert.match(text(renderer), /half\.png/);
+    assert.match(text(renderer), /gameMode=draft/);
+    await act(async () => button(renderer, "Classic").props.onClick());
+    assert.equal(requests[requests.length - 1].gameMode, "classic");
+    assert.match(text(renderer), /destiny\.png/);
+    await act(async () => navigate(-1));
+    assert.equal(requests[requests.length - 1].gameMode, "draft");
+    assert.match(text(renderer), /half\.png/);
+  } finally {
+    act(() => renderer.unmount());
   }
 });

@@ -1,3 +1,5 @@
+import { GAME_MODE_IDS } from "rules";
+import { GameModeIdSchema } from "../schemas";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { AuthError } from "../auth/authErrors";
@@ -23,7 +25,24 @@ export async function ratingRoutes(
     reply.header("Cache-Control", "no-store");
     if (!z.string().uuid().safeParse(request.params.id).success)
       throw new AuthError("INVALID_REQUEST");
-    return getService().getPlayerRating(request.params.id);
+    const query = z
+      .object({ gameMode: GameModeIdSchema.default("standard") })
+      .strict()
+      .safeParse(request.query);
+    if (!query.success) throw new AuthError("INVALID_REQUEST");
+    return getService().getPlayerRating(request.params.id, query.data.gameMode);
+  });
+  server.get<{ Params: { id: string } }>("/users/:id/ratings", async (request, reply) => {
+    reply.header("Cache-Control", "no-store");
+    if (!z.string().uuid().safeParse(request.params.id).success)
+      throw new AuthError("INVALID_REQUEST");
+    const entries = await Promise.all(
+      GAME_MODE_IDS.map(
+        async (mode) =>
+          [mode, await getService().getPlayerRating(request.params.id, mode)] as const,
+      ),
+    );
+    return { ratings: Object.fromEntries(entries) };
   });
   server.get<{ Params: { id: string }; Querystring: unknown }>(
     "/users/:id/rating/history",

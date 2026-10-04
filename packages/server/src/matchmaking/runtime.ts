@@ -1,3 +1,4 @@
+import type { GameModeId } from "rules";
 import { getDatabaseClient } from "../db/client";
 import { getGameRoom, listGameRooms } from "../store";
 import { RatingRepository } from "../repositories/ratingRepository";
@@ -12,16 +13,28 @@ export function createMatchmakingService(
   activeMatch?: (userId: string) => Promise<boolean>,
 ): MatchmakingService {
   let ratingService = ratings;
-  const loadRatings = async (ids: string[]) => {
+  const loadRatings = async (ids: string[], mode: GameModeId) => {
     if (ratingService && !("getPlayerRatings" in ratingService))
-      return new Map(await Promise.all(ids.map(async id => [id, (await ratingService!.getPlayerRating(id)).rating] as const)));
-    const service = (ratingService ??= new RatingService(new RatingRepository(), logger)) as RatingService;
-    return service.getPlayerRatings(ids);
+      return new Map(
+        await Promise.all(
+          ids.map(
+            async (id) => [id, (await ratingService!.getPlayerRating(id, mode)).rating] as const,
+          ),
+        ),
+      );
+    const service = (ratingService ??= new RatingService(
+      new RatingRepository(),
+      logger,
+    )) as RatingService;
+    return service.getPlayerRatings(ids, mode);
   };
   const matchmaking = new MatchmakingService({
     logger,
-    loadPlayer: (id) =>
-      (ratingService ??= new RatingService(new RatingRepository(), logger)).getPlayerRating(id),
+    loadPlayer: (id, mode) =>
+      (ratingService ??= new RatingService(new RatingRepository(), logger)).getPlayerRating(
+        id,
+        mode,
+      ),
     hasPersistentActiveMatch:
       activeMatch ??
       (async (userId) =>

@@ -104,7 +104,9 @@ test("rating API derives the real tier/progress for new and provisional players 
   const service = new RatingService({
     userExists: async () => ({ id: userId }),
     getRating: async () =>
-      rating === null ? null : { userId, ...INITIAL_RATING, rating, ratedGames: 2 },
+      rating === null
+        ? null
+        : { userId, gameMode: "standard", ...INITIAL_RATING, rating, ratedGames: 2 },
     getHistory: async () => ({ total: 0, items: [] }),
     serializable: async () => {
       throw new Error("Read-only test");

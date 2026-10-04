@@ -1,3 +1,4 @@
+import { CompetitiveModeSelector } from "../modes/CompetitiveModeSelector";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router";
 import { leaderboardApi } from "../api/leaderboardApi";
@@ -67,6 +68,10 @@ export function LeaderboardPage() {
         <TacticalIcon name="leaderboard" />
       </header>
       <div className="panel-card leaderboard-panel">
+        <CompetitiveModeSelector
+          value={query.gameMode}
+          onChange={(gameMode) => change({ gameMode })}
+        />
         <div className="leaderboard-toolbar">
           <div className="leaderboard-tabs" role="tablist" aria-label={t("leaderboard.status")}>
             {(["qualified", "provisional"] as const).map((status) => (

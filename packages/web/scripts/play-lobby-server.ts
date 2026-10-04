@@ -25,7 +25,8 @@ async function main() {
     connectionIdentity: testIdentityService(),
     matchmakingActiveMatch: async () => false,
     ratings: {
-      getPlayerRating: async (id) => ({
+      getPlayerRating: async (id, gameMode) => ({
+        gameMode,
         userId: id,
         ...INITIAL_RATING,
         rating: id === testUserIds.P1 ? firstRating : secondRating,

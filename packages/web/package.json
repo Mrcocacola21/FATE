@@ -50,7 +50,8 @@
     "test:matches": "tsx --test src/matches/*.test.ts src/matches/*.test.tsx",
     "test:matches:e2e": "node scripts/match-history-smoke.mjs",
     "test:matchmaking": "tsx --test src/matchmaking/*.test.ts src/matchmaking/*.test.tsx",
-    "test:matchmaking:e2e": "node scripts/matchmaking-smoke.mjs"
+    "test:matchmaking:e2e": "node scripts/matchmaking-smoke.mjs",
+    "test:rating:modes:e2e": "node scripts/per-mode-ratings-smoke.mjs"
   },
   "dependencies": {
     "react": "^18.2.0",

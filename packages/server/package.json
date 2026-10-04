@@ -56,7 +56,9 @@
     "pretest:replay:db": "npm run prisma:generate",
     "test:replay:db": "tsx src/tests/replay.integration.test.ts",
     "test:matchmaking": "tsx src/tests/matchmaking.test.ts && tsx src/tests/matchmaking.ws.test.ts",
-    "test:matchmaking:db": "tsx src/tests/matchmaking.integration.test.ts"
+    "test:matchmaking:db": "tsx src/tests/matchmaking.integration.test.ts",
+    "test:rating:modes:db": "tsx src/tests/perModeRatings.integration.test.ts && tsx src/tests/perModeMigration.integration.test.ts",
+    "db:rating:inventory": "node ../../scripts/ratingMigrationInventory.cjs"
   },
   "dependencies": {
     "@fastify/cookie": "^9.4.0",

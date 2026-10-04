@@ -1,3 +1,6 @@
+import type { GameModeId } from "rules";
+import { CompetitiveModeSelector } from "../modes/CompetitiveModeSelector";
+import { getGameModeName } from "../modes/modeLabels";
 import { useEffect, useState } from "react";
 import { useAuthStore } from "../auth/authStore";
 import { useI18n } from "../i18n";
@@ -67,12 +70,16 @@ export function CompetitiveIdentity({
 export function PlayPage() {
   const { t } = useI18n();
   const user = useAuthStore((s) => s.user);
-  const queueStatus = useQueue((s) => s.status.status);
+  const queueState = useQueue((s) => s.status);
+  const queueBusy = useQueue((s) => s.busy);
+  const queueStatus = queueState.status;
+  const [selectedMode, setMode] = useState<GameModeId>("standard");
+  const mode = queueState.status === "NOT_QUEUED" ? selectedMode : queueState.gameMode;
   const searching =
     queueStatus === "QUEUED" || queueStatus === "MATCHING" || queueStatus === "MATCH_FOUND";
   const [data, setData] = useState<{
     owner: string;
-    rating: CompetitiveRating;
+    ratings: Record<GameModeId, CompetitiveRating>;
     min: number;
   } | null>(null);
   const [failed, setFailed] = useState(false);
@@ -82,10 +89,10 @@ export function PlayPage() {
     let active = true;
     setFailed(false);
     const load = () =>
-      Promise.all([competitiveApi.rating(user.id), competitiveApi.config()]).then(
-        ([rating, min]) => {
+      Promise.all([competitiveApi.ratings(user.id), competitiveApi.config()]).then(
+        ([ratings, min]) => {
           if (active) {
-            setData({ owner: user.id, rating, min });
+            setData({ owner: user.id, ratings, min });
             setFailed(false);
           }
         },
@@ -111,11 +118,13 @@ export function PlayPage() {
         <h1 className="font-display mt-1 text-3xl font-semibold sm:text-4xl">{t("shell.play")}</h1>
         <p className="mt-2 text-sm text-muted">{t("competitive.description")}</p>
       </header>
+      <CompetitiveModeSelector value={mode} onChange={setMode} disabled={searching || queueBusy} />
+      <p className="section-kicker mt-3">{getGameModeName(mode, t)}</p>
       <div className="competitive-hub" data-searching={searching}>
         {!searching &&
           (current ? (
             <CompetitiveIdentity
-              rating={current.rating}
+              rating={current.ratings[mode]}
               minRatedGames={current.min}
               name={user?.displayName || user?.username || t("competitive.you")}
             />
@@ -141,7 +150,7 @@ export function PlayPage() {
               )}
             </section>
           ))}
-        <MatchmakingPanel />
+        <MatchmakingPanel selectedMode={mode} />
       </div>
     </div>
   );

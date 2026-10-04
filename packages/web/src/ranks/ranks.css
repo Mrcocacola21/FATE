@@ -87,9 +87,16 @@
 }
 .profile-rank {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 16px;
   margin-top: 20px;
+}
+.profile-rank > .competitive-mode-selector {
+  flex-basis: 100%;
+}
+.profile-rank > .min-w-0 {
+  flex: 1;
 }
 .profile-rank .rank-emblem,
 .leaderboard-player .rank-emblem {

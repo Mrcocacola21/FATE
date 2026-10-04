@@ -3,7 +3,7 @@ import { readMatchmakingConfig, type MatchmakingConfig } from "../matchmaking/co
 import { ratedCompatibility, type RatedCompatibility } from "../lobby/metadata";
 import { RatingService } from "../services/ratingService";
 import { RatingRepository } from "../repositories/ratingRepository";
-import type { GameAction, PlayerId } from "rules";
+import type { GameAction, GameModeId, PlayerId } from "rules";
 import { captureReplaySetup } from "../replay/actionSetup";
 import { toAcceptedActionRecord, type DraftAction, type LobbyModeAction } from "./acceptedAction";
 import { MatchActionQueue } from "./matchActionQueue";
@@ -80,26 +80,53 @@ export class MatchLifecycle {
   private readonly completions = new Map<string, Promise<void>>();
   private ratingService?: RatingService;
   private ratedLobbyConfig: MatchmakingConfig = readMatchmakingConfig();
-  private loadLobbyRatings = (ids: string[]) =>
-    (this.ratingService ??= new RatingService(new RatingRepository(), this.logger)).getPlayerRatings(ids);
+  private loadLobbyRatings = (ids: string[], gameMode: GameModeId) =>
+    (this.ratingService ??= new RatingService(
+      new RatingRepository(),
+      this.logger,
+    )).getPlayerRatings(ids, gameMode);
 
-  configureRatedLobbies(config: MatchmakingConfig, loadRatings: (ids: string[]) => Promise<Map<string, number>>) {
+  configureRatedLobbies(
+    config: MatchmakingConfig,
+    loadRatings: (ids: string[], gameMode: GameModeId) => Promise<Map<string, number>>,
+  ) {
     this.ratedLobbyConfig = config;
     this.loadLobbyRatings = loadRatings;
   }
 
   async refreshRatedLobbies(rooms: GameRoom[]): Promise<Map<string, RatedCompatibility>> {
-    const waiting = rooms.filter(room => room.roomMode === "normal" && room.matchType === "RATED" && room.state.phase === "lobby");
-    const ids = [...new Set(waiting.flatMap(room => (["P1", "P2"] as const)
-      .map(seat => room.seatIdentities[seat]?.userId).filter((id): id is string => !!id)))];
-    let ratings = new Map<string, number>();
-    try { if (ids.length) ratings = await this.loadLobbyRatings(ids); }
-    catch { /* Fail closed; browsing and spectating remain available during DB outages. */ }
+    const waiting = rooms.filter(
+      (room) =>
+        room.roomMode === "normal" && room.matchType === "RATED" && room.state.phase === "lobby",
+    );
+    const ratingsByMode = new Map<GameModeId, Map<string, number>>();
+    for (const gameMode of new Set(waiting.map((room) => room.gameMode))) {
+      const ids = [
+        ...new Set(
+          waiting
+            .filter((room) => room.gameMode === gameMode)
+            .flatMap((room) =>
+              (["P1", "P2"] as const)
+                .map((seat) => room.seatIdentities[seat]?.userId)
+                .filter((id): id is string => !!id),
+            ),
+        ),
+      ];
+      try {
+        if (ids.length) ratingsByMode.set(gameMode, await this.loadLobbyRatings(ids, gameMode));
+      } catch {
+        /* Fail closed for this mode during DB outages. */
+      }
+    }
     const resolved = new Map<string, RatedCompatibility>();
     for (const room of waiting) {
-      const rating = (seat: PlayerId) => ratings.get(room.seatIdentities[seat]?.userId ?? "") ?? null;
-      room.ratedCompatibility = ratedCompatibility({ P1: rating("P1"), P2: rating("P2") },
-        this.ratedLobbyConfig.maxRange, hasDistinctPlayerIdentities(room));
+      const rating = (seat: PlayerId) =>
+        ratingsByMode.get(room.gameMode)?.get(room.seatIdentities[seat]?.userId ?? "") ?? null;
+      room.ratedCompatibility = ratedCompatibility(
+        { P1: rating("P1"), P2: rating("P2") },
+        this.ratedLobbyConfig.maxRange,
+        hasDistinctPlayerIdentities(room),
+      );
       resolved.set(room.id, room.ratedCompatibility);
     }
     return resolved;

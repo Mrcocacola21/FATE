@@ -174,6 +174,20 @@ try {
     if (url.pathname.endsWith("/statistics"))
       return send({ error: { code: "DATABASE_UNAVAILABLE" } }, 503);
     if (url.pathname === "/api/competitive/config") return send({ minRatedGames: 5 });
+    if (url.pathname.endsWith("/ratings"))
+      return send({
+        ratings: Object.fromEntries(
+          ["standard", "draft", "classic"].map((gameMode) => [
+            gameMode,
+            {
+              rating: player(0).rating,
+              ratingDeviation: 74,
+              ratedGames: 10,
+              ...getRankMetadata(player(0).rating),
+            },
+          ]),
+        ),
+      });
     if (url.pathname.endsWith("/rating"))
       return send({
         rating: player(0).rating,

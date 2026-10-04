@@ -1,5 +1,4 @@
 import { Prisma, type PrismaClient } from "@prisma/client";
-import { GAME_MODE_IDS } from "rules";
 import { getDatabaseClient } from "../db/client";
 import type { LeaderboardQuery } from "../leaderboard/querySchema";
 
@@ -47,7 +46,7 @@ export class LeaderboardRepository {
       [
         this.database.$queryRaw<{ total: number }[]>(Prisma.sql`
         SELECT COUNT(*)::int AS total FROM "Rating" r
-        JOIN "Profile" p ON p."userId" = r."userId" WHERE ${eligibility}`),
+        JOIN "Profile" p ON p."userId" = r."userId" WHERE r."gameMode" = ${query.gameMode} AND ${eligibility}`),
         this.database.$queryRaw<LeaderboardRow[]>(Prisma.sql`
         WITH candidates AS (
           SELECT r."userId", p."username", p."displayName", p."avatarUrl",
@@ -55,7 +54,7 @@ export class LeaderboardRepository {
                  ROW_NUMBER() OVER (ORDER BY r."rating" DESC, r."ratingDeviation" ASC,
                                              r."ratedGames" DESC, r."userId" ASC) AS "ratingRank"
           FROM "Rating" r JOIN "Profile" p ON p."userId" = r."userId"
-          WHERE ${eligibility}
+          WHERE r."gameMode" = ${query.gameMode} AND ${eligibility}
         ), performance AS (
           SELECT mp."userId", COUNT(*)::int AS "ratedResultsCount",
                  COUNT(*) FILTER (WHERE mp."outcome" = 'WIN')::int AS wins,
@@ -66,12 +65,12 @@ export class LeaderboardRepository {
           JOIN "Match" m ON m.id = mp."matchId"
           WHERE m."isRated" = true AND m.status = 'FINISHED'
             AND m."ratingProcessedAt" IS NOT NULL AND m."finishedAt" IS NOT NULL
-            AND m."gameMode" IN (${Prisma.join(GAME_MODE_IDS)})
+            AND m."gameMode" = ${query.gameMode}
             AND mp.outcome IN ('WIN', 'LOSS', 'DRAW')
             AND EXISTS (
               SELECT 1 FROM "RatingHistory" h
               WHERE h."matchId" = m.id AND h."userId" = mp."userId"
-                AND h."ratedGameNumber" IS NOT NULL AND h.result = mp.outcome
+                AND h."gameMode" = ${query.gameMode} AND h."ratedGameNumber" IS NOT NULL AND h.result = mp.outcome
             )
           GROUP BY mp."userId"
         ), standings AS (

@@ -52,9 +52,12 @@ async function run() {
       throw new Error("unused");
     },
   });
-  assert.equal((await ratings.getPlayerRating(testUserIds.P1)).rating, INITIAL_RATING.rating);
+  assert.equal(
+    (await ratings.getPlayerRating(testUserIds.P1, "standard")).rating,
+    INITIAL_RATING.rating,
+  );
   assert.deepEqual(
-    [...(await ratings.getPlayerRatings([testUserIds.P1, testUserIds.P2]))].map(
+    [...(await ratings.getPlayerRatings([testUserIds.P1, testUserIds.P2], "standard"))].map(
       ([, value]) => value,
     ),
     [1500, 1500],
@@ -103,8 +106,10 @@ async function run() {
   assert.equal(stale.ratedCompatibility?.difference, 410);
   // A non-default typed maximum drives the real start gate, without a separate 400 constant.
   const customConfig = readMatchmakingConfig({ MATCHMAKING_MAX_RATING_RANGE: "300" });
-  lifecycle.configureRatedLobbies(customConfig,
-    async (ids) => new Map(ids.map((id) => [id, id === testUserIds.P1 ? p1 : p2])));
+  lifecycle.configureRatedLobbies(
+    customConfig,
+    async (ids) => new Map(ids.map((id) => [id, id === testUserIds.P1 ? p1 : p2])),
+  );
   const custom = await lifecycle.createRoom({ matchType: "RATED" }, randomUUID(), testUserIds.P1);
   ready(custom);
   p2 = 1499;
@@ -130,14 +135,20 @@ async function run() {
     userExists: async (id) => ({ id }),
     getRating: async () => null,
     getRatings: async () => [
-      { userId: testUserIds.P1, ...INITIAL_RATING, ratedGames: 0, rating: 1800 },
+      {
+        userId: testUserIds.P1,
+        gameMode: "standard",
+        ...INITIAL_RATING,
+        ratedGames: 0,
+        rating: 1800,
+      },
     ],
     getHistory: async () => ({ total: 0, items: [] }),
     serializable: async () => {
       throw new Error("unused");
     },
   });
-  lifecycle.configureRatedLobbies(config, (ids) => defaults.getPlayerRatings(ids));
+  lifecycle.configureRatedLobbies(config, (ids) => defaults.getPlayerRatings(ids, "standard"));
   const missingRow = await lifecycle.createRoom(
     { matchType: "RATED" },
     randomUUID(),
@@ -146,6 +157,49 @@ async function run() {
   ready(missingRow);
   assert.equal((await lifecycle.applyAction(missingRow, { type: "startGame" }, "P1")).ok, true);
   assert.deepEqual(missingRow.ratedCompatibility?.ratings, { P1: 1800, P2: 1500 });
+  // Mandatory regression: the SAME identities fail Standard and pass Draft.
+  lifecycle.configureRatedLobbies(
+    config,
+    async (ids, mode) =>
+      new Map(
+        ids.map((id) => [
+          id,
+          mode === "standard"
+            ? id === testUserIds.P1
+              ? 1900
+              : 1300
+            : id === testUserIds.P1
+              ? 1450
+              : 1500,
+        ]),
+      ),
+  );
+  const standardGap = await lifecycle.createRoom(
+    { matchType: "RATED", gameMode: "standard" },
+    randomUUID(),
+    testUserIds.P1,
+  );
+  const draftGap = await lifecycle.createRoom(
+    { matchType: "RATED", gameMode: "draft" },
+    randomUUID(),
+    testUserIds.P1,
+  );
+  ready(standardGap);
+  ready(draftGap);
+  await lifecycle.refreshRatedLobbies([standardGap, draftGap]);
+  assert.equal(standardGap.ratedCompatibility?.difference, 600);
+  assert.equal(draftGap.ratedCompatibility?.difference, 50);
+  assert.deepEqual(draftGap.ratedCompatibility?.ratings, { P1: 1450, P2: 1500 });
+  assert.equal((await lifecycle.applyAction(standardGap, { type: "startGame" }, "P1")).ok, false);
+  assert.equal(await lifecycle.validateStart(draftGap), null);
+  // Switching lobby mode must refresh its rating identity before Start.
+  draftGap.gameMode = "standard";
+  assert.equal(
+    (await lifecycle.validateStart(draftGap))?.code,
+    "RATED_RATING_DIFFERENCE_TOO_LARGE",
+  );
+  draftGap.gameMode = "draft";
+  assert.equal(await lifecycle.validateStart(draftGap), null);
   const casual = await lifecycle.createRoom({ lobbyName: "Friends" });
   ready(casual);
   p1 = 2000;
@@ -165,7 +219,8 @@ async function run() {
     matchPersistence: persistence,
     connectionIdentity: testIdentityService(),
     ratings: {
-      getPlayerRating: async (id) => ({
+      getPlayerRating: async (id, gameMode) => ({
+        gameMode,
         userId: id,
         ...INITIAL_RATING,
         rating: id === testUserIds.P1 ? p1 : p2,

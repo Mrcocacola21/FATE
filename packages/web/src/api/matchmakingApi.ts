@@ -72,10 +72,13 @@ export const matchmakingApi = {
     }),
   cancel: () =>
     authClient.request("/api/matchmaking/queue", parseMatchmakingStatus, { method: "DELETE" }),
-  rating: (id: string) =>
-    authClient.request(`/api/users/${encodeURIComponent(id)}/rating`, (value) => {
-      if (!isRecord(value) || typeof value.rating !== "number" || !Number.isFinite(value.rating))
-        throw new ApiError("INVALID_RESPONSE");
-      return value.rating;
-    }),
+  rating: (id: string, gameMode: GameModeId) =>
+    authClient.request(
+      `/api/users/${encodeURIComponent(id)}/rating?gameMode=${gameMode}`,
+      (value) => {
+        if (!isRecord(value) || typeof value.rating !== "number" || !Number.isFinite(value.rating))
+          throw new ApiError("INVALID_RESPONSE");
+        return value.rating;
+      },
+    ),
 };
