@@ -29,6 +29,8 @@ import { ConnectionIdentityService } from "./auth/connectionIdentity";
 import { ProductionConfigurationError, validateProductionEnvironment } from "./config";
 import { checkDatabaseReadiness } from "./db/readiness";
 import { registerHealthRoutes } from "./routes/healthRoutes";
+import { MatchRecoveryService } from "./services/matchRecoveryService";
+import { MatchRecoveryRepository } from "./repositories/matchRecoveryRepository";
 
 export async function buildServer(
   options: {
@@ -41,6 +43,8 @@ export async function buildServer(
     matchmakingActiveMatch?: (userId: string) => Promise<boolean>;
     leaderboard?: Pick<LeaderboardService, "getLeaderboard">;
     replayQuery?: Pick<ReplayQueryService, "getMetadata" | "getState">;
+    matchRecovery?: Pick<MatchRecoveryService, "recover"> | false;
+    interruptedRoom?: (roomId: string) => Promise<boolean>;
   } = {},
 ) {
   const logLevel = process.env.LOG_LEVEL ?? "info";
@@ -67,9 +71,20 @@ export async function buildServer(
   await server.register(websocket);
 
   const lifecycle = new MatchLifecycle(server.log, options.matchPersistence);
-  lifecycle.startRetries();
   const matchmaking = createMatchmakingService(lifecycle, server.log, options.ratings, options.matchmakingActiveMatch);
-  matchmaking.start();
+  let startupComplete = false;
+  const recoverPersistentMatches = options.matchRecovery !== false &&
+    (!!options.matchRecovery || (!options.matchPersistence && !!process.env.DATABASE_URL?.trim()));
+  const interruptedRoom = options.interruptedRoom ?? (recoverPersistentMatches
+    ? (roomId: string) => new MatchRecoveryRepository().isInterruptedRoom(roomId)
+    : async () => false);
+  server.addHook("onReady", async () => {
+    if (recoverPersistentMatches)
+      await (options.matchRecovery || new MatchRecoveryService()).recover(lifecycle, server.log);
+    lifecycle.startRetries();
+    matchmaking.start();
+    startupComplete = true;
+  });
   server.addHook("onClose", async () => {
     await matchmaking.close();
     await lifecycle.close();
@@ -77,8 +92,8 @@ export async function buildServer(
   });
 
   const identity = options.connectionIdentity ?? new ConnectionIdentityService();
-  registerHealthRoutes(server);
-  await registerRoutes(server, lifecycle, identity, matchmaking);
+  registerHealthRoutes(server, checkDatabaseReadiness, () => startupComplete);
+  await registerRoutes(server, lifecycle, identity, matchmaking, interruptedRoom);
   await server.register(authRoutes, { prefix: "/api/auth", matchmaking });
   await server.register(matchmakingRoutes, { prefix: "/api", identity, matchmaking });
   await server.register(profileRoutes, { prefix: "/api" });
@@ -92,7 +107,7 @@ export async function buildServer(
   await server.register(ratingRoutes, { prefix: "/api", ratings: options.ratings });
   await server.register(leaderboardRoutes, { prefix: "/api", leaderboard: options.leaderboard });
   await server.register(replayRoutes, { prefix: "/api", identity, replayQuery: options.replayQuery });
-  registerGameWebSocket(server, lifecycle, identity, matchmaking);
+  registerGameWebSocket(server, lifecycle, identity, matchmaking, interruptedRoom);
 
   return server;
 }

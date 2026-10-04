@@ -11,6 +11,7 @@ import {
   type DraftState,
   type GameState,
   type SeededRngState,
+  type HeroSelection,
 } from "rules";
 import { MatchRepository } from "../repositories/matchRepository";
 import { MatchActionRepository } from "../repositories/matchActionRepository";
@@ -32,6 +33,8 @@ export interface ReconstructedMatchState {
   revision: number;
   state: GameState;
   rngState: SeededRngState;
+  draftState: DraftState | null;
+  figureSets: Partial<Record<"P1" | "P2", HeroSelection>>;
   base: { type: "initial" | "snapshot"; revision: number };
   actionsApplied: number;
   /** Loading a checkpoint is reconstruction, not independent verification. */
@@ -39,7 +42,8 @@ export interface ReconstructedMatchState {
 }
 type MatchReader = Pick<MatchRepository, "findById">;
 type ActionReader = Pick<MatchActionRepository, "findInRevisionRange">;
-type SnapshotReader = Pick<MatchSnapshotService, "loadSnapshot" | "loadLatestSnapshotAtOrBefore">;
+type SnapshotReader = Pick<MatchSnapshotService, "loadSnapshot" | "loadLatestSnapshotAtOrBefore"> &
+  Partial<Pick<MatchSnapshotService, "loadLatestCompatibleSnapshotAtOrBefore">>;
 
 /** Read-only durable reconstruction. No runtime rooms, lifecycle, socket or write capability. */
 export class ReplayService {
@@ -65,6 +69,15 @@ export class ReplayService {
       const match = await this.loadMatch(matchId);
       const target = this.finalRevision(match);
       return this.reconstruct(match, target, false);
+    });
+  }
+
+  /** Same deterministic engine, with checkpoint fallback and room-owned setup metadata. */
+  async reconstructForRecovery(matchId: string, targetRevision: number): Promise<ReconstructedMatchState> {
+    return this.guard(matchId, async () => {
+      const match = await this.loadMatch(matchId);
+      this.validateTarget(match, targetRevision);
+      return this.reconstruct(match, targetRevision, false, true);
     });
   }
 
@@ -132,10 +145,13 @@ export class ReplayService {
     match: Match,
     target: number,
     fromInitial: boolean,
+    recovery = false,
   ): Promise<ReconstructedMatchState> {
     const snapshot = fromInitial
       ? null
-      : await this.snapshots.loadLatestSnapshotAtOrBefore(match.id, target);
+      : await (this.snapshots.loadLatestCompatibleSnapshotAtOrBefore
+          ? this.snapshots.loadLatestCompatibleSnapshotAtOrBefore(match.id, target)
+          : this.snapshots.loadLatestSnapshotAtOrBefore(match.id, target));
     if (snapshot) this.checkSnapshot(snapshot, match, target);
     const base = {
       type: snapshot ? ("snapshot" as const) : ("initial" as const),
@@ -145,6 +161,7 @@ export class ReplayService {
     let state: GameState;
     // Snapshot v1 does not store room-owned draft state. The first bounded setup restores it.
     let draft: DraftState | null | undefined = snapshot ? undefined : null;
+    let figureSets: ReconstructedMatchState["figureSets"] = {};
     if (snapshot) {
       state = structuredClone(snapshot.state);
       try {
@@ -162,6 +179,22 @@ export class ReplayService {
         throw new ReplayError("MATCH_NOT_REPLAYABLE", { matchId: match.id });
       rng = new SeededRNG(match.seed);
       state = createInitialMatchState(config.data, rng);
+    }
+    if (recovery && snapshot) {
+      // v1 checkpoints contain GameState, not the completed room-owned draft/figure selection.
+      const prefix = await (this.actions ??= new MatchActionRepository()).findInRevisionRange(
+        match.id, 0, base.revision,
+      );
+      for (const row of prefix) {
+        const { setup } = deserializeReplayAction(row);
+        if (setup) {
+          try { draft = restoreDraftHistory(setup); }
+          catch { throw new ReplayError("INVALID_ACTION_LOG", { matchId: match.id, revision: row.revision }); }
+          figureSets = structuredClone(setup.armies);
+        }
+      }
+      if (match.gameMode === "draft" && !draft)
+        throw new ReplayError("MATCH_NOT_REPLAYABLE", { matchId: match.id });
     }
     const rows =
       target === base.revision
@@ -189,6 +222,7 @@ export class ReplayService {
       if (row.revision !== revision + 1)
         throw new ReplayError("REPLAY_ACTION_GAP", { matchId: match.id, revision: revision + 1 });
       const { action, setup } = deserializeReplayAction(row);
+      if (setup) figureSets = structuredClone(setup.armies);
       try {
         if (setup) state = restoreReplaySetup(state, setup);
         // New lobby history must carry its unrevisioned setup; do not invent readiness.
@@ -307,6 +341,8 @@ export class ReplayService {
       revision: target,
       state,
       rngState: rng.exportState(),
+      draftState: draft ?? null,
+      figureSets,
       base,
       actionsApplied: rows.length,
       verification,

@@ -25,7 +25,8 @@ async function run() {
   const ratings = new RatingService(new RatingRepository(db), { info() {}, error() {} });
   const repository = new LeaderboardRepository(db);
   const service = new LeaderboardService(repository, { minRatedGames: 5 });
-  const server = await buildServer({ leaderboard: service });
+  // Isolate endpoint read-only behavior from the separate startup rating repair.
+  const server = await buildServer({ leaderboard: service, matchRecovery: false });
   const defaults: LeaderboardQuery = {
     gameMode: "standard",
     status: "qualified",

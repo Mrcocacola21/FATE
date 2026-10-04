@@ -79,7 +79,8 @@ export type MatchPersistence = Pick<
   | "appendAcceptedAction"
   | "appendMatchSnapshot"
 > & { finalizeMatch(matchId: string, input: FinishedMatchInput): Promise<unknown>;
-  findMatchByRoomId?(roomId: string): Promise<{ id: string } | null> };
+  findMatchByRoomId?(roomId: string): Promise<{ id: string } | null>;
+  interruptMatch?(matchId: string, reason: string): Promise<void> };
 
 export class MatchService {
   private actions?: MatchActionRepository;
@@ -127,6 +128,10 @@ export class MatchService {
 
   findMatchByRoomId(roomId: string): Promise<{ id: string } | null> {
     return this.matches.findByRoomId(roomId);
+  }
+
+  interruptMatch(matchId: string, reason: string): Promise<void> {
+    return this.matches.interruptMatch(matchId, reason);
   }
 
   syncParticipant(matchId: string, input: SeatParticipantInput): Promise<void> {

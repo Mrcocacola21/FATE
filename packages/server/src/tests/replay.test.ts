@@ -199,12 +199,9 @@ async function run() {
   );
   fixture.actions[1] = valid;
   r.setSnapshots([{ ...fixture.history.get(60)!, formatVersion: 99 }]);
-  await assert.rejects(
-    r.service.reconstructAtRevision(fixture.match.id, 73),
-    /UNSUPPORTED_SNAPSHOT_VERSION/,
-  );
+  assert.equal((await r.service.reconstructAtRevision(fixture.match.id, 73)).base.type, "initial");
   r.setSnapshots([{ ...fixture.history.get(60)!, state: {} }]);
-  await assert.rejects(r.service.reconstructAtRevision(fixture.match.id, 73), /INVALID_SNAPSHOT/);
+  assert.equal((await r.service.reconstructAtRevision(fixture.match.id, 73)).base.type, "initial");
   r.setSnapshots([]);
   const initialConfig = fixture.match.initialConfig;
   fixture.match.initialConfig = null;

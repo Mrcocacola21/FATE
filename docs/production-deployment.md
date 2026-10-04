@@ -100,7 +100,7 @@ not force database/auth configuration on development startup or injected unit-te
 | --- | --- | --- |
 | `GET /health` | Process is alive; no database work. | `200 {"ok":true}` |
 | `GET /api/health` | Compatible liveness alias. | `200 {"ok":true}` |
-| `GET /ready` | `SELECT 1` through the shared runtime Prisma Client. | `200 {"ok":true}` or `503 {"ok":false}` |
+| `GET /ready` | Startup recovery complete and `SELECT 1` through the shared runtime Prisma Client. | `200 {"ok":true}` or `503 {"ok":false}` |
 
 Readiness has a five-second response deadline and `Cache-Control: no-store`. Concurrent
 probes share an outstanding query; a response timeout does not cancel Prisma's native
@@ -111,8 +111,18 @@ history or every application table; the deployment migration/status steps establ
 
 Shutdown keeps the existing ordering: stop accepting server/WebSocket work, drain
 tracked room commands and action persistence, report pending projections, disconnect
-Prisma last. Active rooms, GameState, RNG and sockets remain in RAM and can be lost
-on a restart. Match snapshots, replay and restart recovery are future phases.
+Prisma last. Active rooms, GameState, RNG and sockets remain in RAM. Startup recovery
+reconstructs active persistent matches from the contiguous durable action journal,
+compatible checkpoints or exact initial inputs, then reserves seats to persisted user IDs.
+Sockets/tokens are replaced on authenticated reconnect. Asynchronous acknowledged actions
+not committed before a hard crash can be lost. Waiting/unsafe matches are neutrally cancelled;
+finished/unprocessed Rated matches are repaired idempotently. See
+[Server restart recovery](server-restart-recovery.md) for the full boundary.
+
+Run exactly one active backend owner. MATCHMAKING_SERVER_PROCESSES=1 is only a config
+assertion; deployment must prevent overlapping old/new processes during replacement.
+No distributed room lease or multi-replica ownership is implemented. Fastify completes
+recovery before listen, so normal traffic cannot observe a partially rebuilt registry.
 
 ## Vercel frontend
 

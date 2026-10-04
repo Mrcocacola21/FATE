@@ -615,6 +615,7 @@ const abilitiesUk: Record<string, AbilityTranslation> = {
 };
 
 const serverTextKeys: Record<string, string> = {
+  MATCH_INTERRUPTED: "errors.matchInterrupted",
   RATED_RATING_DIFFERENCE_TOO_LARGE: "customLobby.gapTooLarge",
   "Rating difference is too large for a Rated match": "customLobby.gapTooLarge",
   RATED_RATING_UNAVAILABLE: "customLobby.ratingUnavailable",

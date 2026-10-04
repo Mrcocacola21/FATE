@@ -70,6 +70,7 @@ export async function registerRoutes(
   server: FastifyInstance, lifecycle: MatchLifecycle,
   identityService: Pick<ConnectionIdentityService, "verify">,
   matchmaking?: MatchmakingService,
+  interruptedRoom: (roomId: string) => Promise<boolean> = async () => false,
 ) {
   async function createPersistentRoom(options: Parameters<MatchLifecycle["createRoom"]>[0], createdById: string | null, reply: FastifyReply) {
     try {
@@ -136,7 +137,13 @@ export async function registerRoutes(
     const runtime = getGameRoom((request.params as { id: string }).id);
     if (runtime) await lifecycle.refreshRatedLobbies([runtime]);
     const room = listRoomSummaries().find((item) => item.id === (request.params as { id: string }).id);
-    if (!room) return reply.code(404).send({ error: { code: "ROOM_NOT_FOUND", message: "Room not found" } });
+    if (!room) {
+      const interrupted = await interruptedRoom((request.params as { id: string }).id);
+      return reply.code(interrupted ? 410 : 404).send({ error: {
+        code: interrupted ? "MATCH_INTERRUPTED" : "ROOM_NOT_FOUND",
+        message: interrupted ? "This match was interrupted by a server restart and cannot be resumed." : "Room not found",
+      } });
+    }
     return room;
   });
 

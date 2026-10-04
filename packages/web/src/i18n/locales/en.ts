@@ -1899,6 +1899,7 @@ export const en = {
     spectatorCannotAct: "Spectators cannot act.",
     roleTaken: "That role is already taken.",
     roomNotFound: "Lobby not found.",
+    matchInterrupted: "This match was interrupted by a server restart and cannot be resumed.",
     roomExists: "Room already exists.",
     rateLimited: "Too many requests. Please wait and try again.",
     invalidPayload: "The server rejected an invalid request.",

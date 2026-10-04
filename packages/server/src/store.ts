@@ -24,6 +24,50 @@ import { accepted, rejected, type CommandResult } from "./commandResult";
 import { createInitialMatchState } from "./replay/initialState";
 import { captureReplaySetup, type ReplaySetup } from "./replay/actionSetup";
 import { withAcceptedRevision } from "./replay/stateRevision";
+import type { ReconstructedMatchState } from "./services/replayService";
+import { gameStateV1Schema } from "./persistence/snapshotStateV1";
+import { normalizeSnapshotState } from "./persistence/matchSnapshot";
+
+export interface RestoreGameRoomInput {
+  roomId: string;
+  matchId: string;
+  seed: number;
+  gameMode: GameModeId;
+  matchType: MatchType;
+  lobbyName: string;
+  origin: "MANUAL" | "MATCHMAKING";
+  hostSeat: PlayerId;
+  createdAt: Date;
+  recovered: ReconstructedMatchState;
+  participants: Record<PlayerId, ConnectionIdentity>;
+}
+
+/** Explicit live restore boundary. No seed generation, creation writes or stale transports. */
+export function restoreGameRoom(input: RestoreGameRoomInput): GameRoom {
+  if (input.recovered.matchId !== input.matchId || !Number.isSafeInteger(input.recovered.revision) ||
+    input.recovered.revision < 0 || input.recovered.revision > 2147483647 ||
+    input.participants.P1.userId === input.participants.P2.userId)
+    throw new Error("Invalid recovered room");
+  const state = gameStateV1Schema.parse(normalizeSnapshotState(input.recovered.state));
+  const room: GameRoom = {
+    id: input.roomId, matchId: input.matchId, seed: input.seed,
+    gameMode: input.gameMode, matchType: input.matchType,
+    lobbyName: LobbyNameSchema.parse(input.lobbyName), origin: input.origin,
+    ratedCompatibility: null, roomMode: "normal", testDiceRng: null,
+    rng: SeededRNG.fromState(input.recovered.rngState), state,
+    revision: input.recovered.revision, actionLog: [],
+    draftState: structuredClone(input.recovered.draftState),
+    figureSets: structuredClone(input.recovered.figureSets),
+    createdAt: input.createdAt.getTime(), lastActivityAt: Date.now(),
+    hostSeat: input.hostSeat, hostConnId: null,
+    seats: { P1: null, P2: null }, seatTokens: { P1: null, P2: null },
+    seatIdentities: structuredClone(input.participants), participantsLocked: true,
+    reservedUserIds: { P1: input.participants.P1.userId, P2: input.participants.P2.userId },
+    spectators: new Set(), testControllerConnId: null,
+  };
+  Object.defineProperty(room, "matchType", { value: input.matchType, writable: false, configurable: false, enumerable: true });
+  return room;
+}
 
 export interface ActionLogEntry {
   at: number;
@@ -37,6 +81,7 @@ export interface ActionLogEntry {
 
 export interface GameRoom {
   lobbyName: string;
+  origin: "MANUAL" | "MATCHMAKING";
   ratedCompatibility: RatedCompatibility | null;
   id: string;
   matchId: string | null;
@@ -184,6 +229,7 @@ export function createGameRoomWithId(id: string, options: CreateGameOptions = {}
   const now = Date.now();
   const room: GameRoom = {
     lobbyName: options.lobbyName === undefined ? "FATE Lobby" : LobbyNameSchema.parse(options.lobbyName),
+    origin: "MANUAL",
     ratedCompatibility: null,
     id,
     matchId: null,
@@ -307,7 +353,7 @@ export function listRoomSummaries(): RoomSummary[] {
 
     return {
       lobbyName: room.lobbyName,
-      origin: room.reservedUserIds ? "MATCHMAKING" : "MANUAL",
+      origin: room.origin,
       playerNames: {
         P1: room.seatIdentities.P1 ? identityDisplayName(room.seatIdentities.P1) : null,
         P2: room.seatIdentities.P2 ? identityDisplayName(room.seatIdentities.P2) : null,

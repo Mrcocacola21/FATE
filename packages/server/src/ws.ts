@@ -122,7 +122,7 @@ type JoinAckMessage = {
 
 type JoinRejectedMessage = {
   type: "joinRejected";
-  reason: "room_not_found" | "role_taken" | "room_exists" | "test_room_disabled";
+  reason: "room_not_found" | "role_taken" | "room_exists" | "test_room_disabled" | "match_interrupted";
   message: string;
 };
 
@@ -320,7 +320,7 @@ function assignSeat(room: GameRoom, seat: PlayerId, connId: string, resumeToken:
     seats: { ...room.state.seats, [seat]: true },
     playersReady: {
       ...room.state.playersReady,
-      [seat]: wasSameOccupant ? room.state.playersReady[seat] : false,
+      [seat]: wasSameOccupant || room.participantsLocked ? room.state.playersReady[seat] : false,
     },
   };
   if (room.hostSeat === seat) {
@@ -613,7 +613,7 @@ function buildRoomMeta(
   return {
     roomMode: room.roomMode,
     lobbyName: room.lobbyName,
-    origin: room.reservedUserIds ? "MATCHMAKING" : "MANUAL",
+    origin: room.origin,
     ratedCompatibility: room.ratedCompatibility,
     matchType: room.matchType,
     gameMode: room.gameMode,
@@ -948,6 +948,7 @@ export function registerGameWebSocket(
   server: FastifyInstance, lifecycle: MatchLifecycle,
   identityService: Pick<ConnectionIdentityService, "verify">,
   matchmaking?: MatchmakingService,
+  interruptedRoom: (roomId: string) => Promise<boolean> = async () => false,
 ) {
   serverLogger = server.log;
   server.get("/ws", { websocket: true }, (socket, request) => {
@@ -1260,10 +1261,11 @@ export function registerGameWebSocket(
             } else {
               room = getGameRoom(targetRoomId);
               if (!room) {
+                const interrupted = await interruptedRoom(targetRoomId);
                 sendMessage(socket, {
                   type: "joinRejected",
-                  reason: "room_not_found",
-                  message: "Room not found",
+                  reason: interrupted ? "match_interrupted" : "room_not_found",
+                  message: interrupted ? "MATCH_INTERRUPTED" : "Room not found",
                 });
                 return;
               }
@@ -1331,7 +1333,7 @@ export function registerGameWebSocket(
               ) {
                 room.testControllerConnId = connId;
               }
-              if (!resumed) applyFigureSetToRoom(room, seat, msg.figureSet as HeroSelection | undefined);
+              if (!resumed && !room.participantsLocked) applyFigureSetToRoom(room, seat, msg.figureSet as HeroSelection | undefined);
             } else {
               room.spectators.add(connId);
             }

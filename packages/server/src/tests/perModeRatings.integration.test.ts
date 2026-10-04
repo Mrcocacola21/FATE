@@ -27,7 +27,7 @@ async function run() {
   const ratings = new RatingService(new RatingRepository(db), logger);
   const concurrentRatings = new RatingService(new RatingRepository(other), logger);
   const leaderboard = new LeaderboardService(new LeaderboardRepository(db), { minRatedGames: 5 });
-  const server = await buildServer({ ratings, leaderboard });
+  const server = await buildServer({ ratings, leaderboard, matchRecovery: false });
   const users: string[] = [],
     matches: string[] = [];
   try {

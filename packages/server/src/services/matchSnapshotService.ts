@@ -59,6 +59,25 @@ export class MatchSnapshotService {
     const row = await this.getRepository().findLatestAtOrBeforeRevision(matchId, revision);
     return row ? deserializeMatchSnapshot(row) : null;
   }
+  /** Recovery can bypass an unusable checkpoint, but never a storage failure. */
+  async loadLatestCompatibleSnapshotAtOrBefore(
+    matchId: string, revision: number,
+  ): Promise<LoadedMatchSnapshot | null> {
+    this.validateQueryRevision(revision);
+    let ceiling = revision;
+    while (ceiling > 0) {
+      const row = await this.getRepository().findLatestAtOrBeforeRevision(matchId, ceiling);
+      if (!row) return null;
+      if (row.matchId !== matchId || row.revision < 1 || row.revision > ceiling)
+        throw new MatchSnapshotError("MATCH_SNAPSHOT_INVALID");
+      try { return deserializeMatchSnapshot(row); }
+      catch (error) {
+        if (!(error instanceof MatchSnapshotError)) throw error;
+        ceiling = row.revision - 1;
+      }
+    }
+    return null;
+  }
   private validateQueryRevision(revision: number): void {
     if (!Number.isSafeInteger(revision) || revision < 0 || revision > 2147483647)
       throw new MatchSnapshotError("MATCH_SNAPSHOT_INVALID");

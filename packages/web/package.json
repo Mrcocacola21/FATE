@@ -24,6 +24,7 @@
     "test:shell:e2e": "tsx scripts/app-shell-smoke.mjs",
     "test:auth:e2e": "node scripts/auth-smoke.mjs",
     "test:multiplayer:e2e": "node scripts/multiplayer-smoke.mjs",
+    "test:recovery:e2e": "node scripts/restart-recovery-smoke.mjs",
     "test:gameplay": "tsx --test src/store.selection.test.ts",
     "test:shared-cell-targeting": "tsx --test src/game/gameshell-content/cellHandlers.test.tsx",
     "test:draft": "tsx --test src/modes/draftPool.test.ts src/modes/DraftHeroPreview.test.tsx",

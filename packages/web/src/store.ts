@@ -348,6 +348,7 @@ function handleServerMessage(
       return;
     }
     case "joinRejected": {
+      if (msg.reason === "match_interrupted") suppressAutoReconnect = true;
       clearRoomSession();
       set(() => ({
         joined: false,
@@ -358,7 +359,7 @@ function handleServerMessage(
         isHost: false,
         canControlTestRoom: false,
         roomMeta: defaultRoomMeta,
-        joinError: msg.message,
+        joinError: msg.reason === "match_interrupted" ? "MATCH_INTERRUPTED" : msg.message,
         roomState: null,
         hasSnapshot: false,
         pendingLokiLaughtOption: null,
@@ -560,6 +561,16 @@ function openSocket(
       if (socket !== openedSocket) return;
       set(() => ({ connectionStatus: "connected" }));
       resolve(openedSocket);
+      // Matchmaking may reopen the shared socket before the room retry fires.
+      // An earlier failed socket's close callback can then be stale; restore the
+      // retained room session once this successful connection has settled.
+      if (!suppressAutoReconnect && !intentionalLeave && get().roomId && !get().joined) {
+        if (reconnectTimer) clearTimeout(reconnectTimer);
+        reconnectTimer = setTimeout(() => {
+          reconnectTimer = null;
+          void get().resumeRoom();
+        }, 0);
+      }
     };
 
     openedSocket.onclose = () => {

@@ -89,7 +89,7 @@ export type ServerMessage =
     }
   | {
       type: "joinRejected";
-      reason: "room_not_found" | "role_taken" | "room_exists" | "test_room_disabled";
+      reason: "room_not_found" | "role_taken" | "room_exists" | "test_room_disabled" | "match_interrupted";
       message: string;
     }
   | {

@@ -45,6 +45,7 @@ interface TestMatch extends Omit<WaitingMatchInput, "participants"> {
   participants: Map<string, SeatParticipantInput>;
   startedAt?: Date;
   result?: FinishedMatchInput;
+  finishReason?: string;
 }
 
 /** Explicit injected fake for database-free runtime regressions; never a production fallback. */
@@ -139,6 +140,14 @@ export class MemoryMatchPersistence implements MatchPersistence {
     if (match.status === "CANCELLED") return;
     if (match.status !== "WAITING") throw new Error("Invalid transition");
     match.status = "CANCELLED";
+  }
+  async interruptMatch(id: string, reason: string): Promise<void> {
+    this.called("interrupt");
+    const match = this.get(id);
+    if (["WAITING", "IN_PROGRESS"].includes(match.status)) {
+      match.status = "CANCELLED";
+      match.finishReason = reason;
+    }
   }
 }
 

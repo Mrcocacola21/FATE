@@ -406,7 +406,7 @@ async function run() {
       "Creator",
     );
 
-    // Cleanup cancels a permanently removed waiting room, and preserves an active match.
+    // Cleanup closes removed waiting/active rooms neutrally, retaining diagnostic history.
     const waitingRoom = await lifecycle.createRoom({}, `${prefix}-ttl`);
     waitingRoom.lastActivityAt = 0;
     const playing = await lifecycle.createRoom({}, `${prefix}-active-ttl`);
@@ -428,7 +428,12 @@ async function run() {
       activeRoomIds: wsTestHooks.getActiveFateRoomIds(),
     });
     assert.equal((await repository.findById(waitingRoom.matchId!))?.status, "CANCELLED");
-    assert.equal((await repository.findById(playing.matchId!))?.status, "IN_PROGRESS");
+    const expired = await repository.findById(playing.matchId!);
+    assert.equal(expired?.status, "CANCELLED");
+    assert.equal(expired?.finishReason, "SERVER_ROOM_EXPIRED");
+    assert.equal(expired?.winnerUserId, null);
+    assert.equal(expired?.finalRevision, null);
+    assert((await repository.findParticipants(playing.matchId!)).every(p => p.outcome === null));
     console.log(
       "match PostgreSQL service, concurrency, HTTP and WebSocket integration tests passed",
     );

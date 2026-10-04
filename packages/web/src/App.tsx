@@ -25,6 +25,7 @@ import { VFX_PREVIEW_ROUTE } from "./features/vfx/vfxPreviewScenarios";
 import { AppShell } from "./layout/AppShell";
 import { CapabilitiesProvider, useCapabilities } from "./layout/Capabilities";
 import { PanelCard } from "./components/ui";
+import { MatchInterruptedNotice } from "./components/MatchInterruptedNotice";
 
 export default function App() {
   const location = useLocation();
@@ -151,6 +152,7 @@ function GameRuntime({ active }: { active: boolean }) {
       ) : (
         pathname.replace(/\/$/, "") === "/lobby" ? <Lobby /> : <PlayPage />
       )}
+      <MatchInterruptedNotice />
     </ErrorBoundary>
   );
 }

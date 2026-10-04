@@ -17,7 +17,7 @@ async function run() {
   const sql: string[] = [];
   db.$on("query", (event) => sql.push(event.query));
   const history = new MatchHistoryService(new MatchHistoryRepository(db));
-  const server = await buildServer({ matchHistory: history });
+  const server = await buildServer({ matchHistory: history, matchRecovery: false });
   const users: string[] = [],
     ids: string[] = [];
   const prefix = `history-${randomUUID()}`;

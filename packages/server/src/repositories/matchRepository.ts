@@ -183,6 +183,13 @@ export class MatchRepository {
     return this.database.match.findUniqueOrThrow({ where: { id: matchId } });
   }
 
+  async interruptMatch(matchId: string, reason: string): Promise<void> {
+    await this.database.match.updateMany({
+      where: { id: matchId, status: { in: ["IN_PROGRESS", "WAITING"] } },
+      data: { status: "CANCELLED", finishedAt: new Date(), finishReason: reason },
+    });
+  }
+
   create(input: CreateMatchInput): Promise<Match> {
     return this.database.match.create({
       data: {

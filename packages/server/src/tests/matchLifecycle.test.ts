@@ -172,7 +172,8 @@ async function run() {
   assert.equal(getGameRoom(waiting.id), undefined);
   assert.equal(persistence.matches.get(waiting.matchId!)!.status, "CANCELLED");
   assert.equal(getGameRoom(active.id), undefined);
-  assert.equal(persistence.matches.get(active.matchId!)!.status, "IN_PROGRESS");
+  assert.equal(persistence.matches.get(active.matchId!)!.status, "CANCELLED");
+  assert.equal(persistence.matches.get(active.matchId!)!.finishReason, "SERVER_ROOM_EXPIRED");
 
   // Cleanup protects an in-flight command, and queues release after failures.
   const protectedRoom = await lifecycle.createRoom();

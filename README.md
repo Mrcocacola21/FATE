@@ -167,7 +167,8 @@ running `npm run -w server test:db`. The normal test suite does not require Post
 
 `GameRoom` remains the authoritative, in-memory operational state used by REST and WebSocket
 gameplay. `Match` stores durable match metadata in PostgreSQL. Normal rooms now create matches
-and competitors; accepted actions are persisted in the action journal. Snapshot writes remain deferred.
+and competitors; accepted actions and private versioned checkpoints are persisted. Startup
+recovery uses the journal plus compatible checkpoints or exact initial configuration.
 
 The persistence dependency direction is `routes / WebSocket -> services -> repositories -> Prisma`.
 Auth HTTP routes and room lifecycle projections use services and repositories; rules and ordinary
@@ -232,10 +233,15 @@ Participant/start/finish/cancel persistence failures log safe room/match/seat id
 preserve accepted runtime state. A small in-memory projection retries every five seconds, in
 start-before-finish order, with the original timestamps/result/revision. Reconnect after start
 cannot rewrite a failed start snapshot. This retry buffer is process-local: process exit loses
-pending work, and shutdown reports outstanding projections. Restart recovery is a later phase.
+pending work, and shutdown reports outstanding projections. Startup recovery restores only durable work;
+see [Server restart recovery](docs/server-restart-recovery.md).
 
 Persistent MatchAction writes, completed results, match history and private GameState checkpoints
-are implemented, including completed-match Replay API/UI, derived player statistics and the Phase 15 Glicko-2 backend. Runtime restart recovery remains deferred.
+are implemented, including completed-match Replay API/UI, derived player statistics and the Phase 15 Glicko-2 backend.
+Startup restores active persistent matches using a validated contiguous action journal,
+compatible snapshots (or exact initial inputs), and RNG continuation. Acknowledgements remain
+asynchronous: a hard crash can roll back actions not yet committed. See
+[Server restart recovery](docs/server-restart-recovery.md) for identity, lifecycle and deployment limits.
 The result detail endpoint and history APIs/UI read completed durable records.
 
 Verification uses explicit in-memory persistence injection for the normal runtime test suite,
@@ -299,7 +305,8 @@ Loaded results contain typed GameState and RNG data. Checkpoints contain hidden 
 never included in public details, action history, match history, spectator messages or frontend APIs.
 
 Phase 11 reconstruction and Phase 12 replay API/UI now consume these private checkpoints through
-safe read-only projection. Startup room recovery and snapshot performance research remain deferred. Local verification:
+safe read-only projection. Startup room recovery is described in
+[Server restart recovery](docs/server-restart-recovery.md); snapshot performance research remains deferred. Local verification:
 
 ```bash
 npm run -w server test:snapshots
@@ -345,7 +352,8 @@ Any changed winner, loser, revision, reason, turn count or participant result ra
 An unavailable database preserves the accepted ended runtime and captured result, with at most
 five finish attempts through the existing five-second retry timer. Permanent integrity errors
 stop immediately. Exhaustion emits `MATCH_RESULT_RETRY_EXHAUSTED`; pending data is process-local,
-so durable retry/restart recovery remains future work. Finished rooms keep their existing lifetime.
+and startup recovery now completes reconstructable durable terminal actions through the same
+result pipeline. Finished rooms keep their existing lifetime.
 
 `GET /api/matches/:id` is public and returns only a dedicated completed-result DTO with metadata,
 historical winner/loser names and participant summaries. It queries no current profiles, actions
@@ -949,7 +957,8 @@ actions remain process-local and require operational attention. Result finalizat
 outside the gameplay command, after the complete terminal journal has drained. Cleanup
 retains tracked writes; shutdown stops inbound work, drains commands/actions/results with
 bounded waits, then disconnects Prisma. Action and finalization drain timeouts are 5 seconds
-each and report incomplete work explicitly. Process crash recovery is a later phase.
+each and report incomplete work explicitly. Startup recovery now restores only durably committed
+state; non-durable acknowledged work can still be lost in a hard process crash.
 
 `GET /api/matches/:id/actions?limit=100&revisionAfter=0` requires a valid Bearer access token.
 Only `FINISHED` matches are readable: unknown IDs return `404 MATCH_NOT_FOUND`, other
@@ -1182,8 +1191,9 @@ Logs include safe match ID, semantic outcome, alreadyProcessed and retry count, 
 If rating fails after completion, the durable Match stays `FINISHED` with `ratingProcessedAt = null`.
 The existing bounded lifecycle retries and drain include rating. After process restart, trusted tooling
 can call **`processRatedMatch(matchId)`** using only persisted data, or retry canonical finalization.
-There is no automatic startup scan, full background worker, repair HTTP endpoint or historical backfill.
-The pending-match index `(isRated, status, ratingProcessedAt)` supports later operational recovery tooling.
+Startup now scans FINISHED Rated matches with ratingProcessedAt=null and invokes this same
+idempotent processor. There is no full background worker, repair HTTP endpoint or historical backfill.
+The pending-match index `(isRated, status, ratingProcessedAt)` supports the startup repair scan.
 
 Public competitive data follows existing public profile/statistics policy:
 
@@ -1510,8 +1520,9 @@ processes during deployment. `MATCHMAKING_SERVER_PROCESSES` accepts only `1`; de
 actually enforce this topology. It is a configuration assertion, not a distributed lock.
 
 Queued users and cached runtime assignments are lost on server restart. Persistent Matches,
-participants, journals and ratings remain durable, but runtime room recovery is not implemented.
-Redis, durable queue recovery, Server Restart Recovery, accept/decline, dodge penalties, ETA/metrics,
+participants, journals and ratings remain durable; active matches now recover through
+[Server restart recovery](docs/server-restart-recovery.md). Waiting lobbies are neutrally cancelled.
+Redis, durable queue recovery, accept/decline, dodge penalties, ETA/metrics,
 parties/teams, regions/latency and bot fallback are deliberately deferred.
 
 Run `npm run -w server test:matchmaking`, `npm run -w web test:matchmaking` and the guarded local
@@ -1586,7 +1597,7 @@ and render as escaped text. Omitted names use a display-name-based fallback for 
 or `FATE Lobby` when no host profile is available. Names need not be unique. The server
 stores `lobbyName` on GameRoom and in the existing `Match.initialConfig` JSON, with a
 backward-compatible optional schema field. Refresh/reconnect/list updates preserve it;
-this does not add recovery of live rooms after a process restart. No database migration
+startup recovery now restores this metadata alongside the existing live Match. No database migration
 or ID migration is required. Internal room/match/user IDs retain their routing and
 ownership roles. Normal cards and game headings hide them; Copy Join Code reveals only
 the existing room identifier, never private seat/resume/auth tokens.

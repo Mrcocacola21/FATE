@@ -57,6 +57,7 @@ interface Projection {
   resultBlocked?: boolean;
   cancel?: Date;
   removed: boolean;
+  interrupt?: string;
 }
 
 export class MatchCreationError extends Error {
@@ -241,6 +242,7 @@ export class MatchLifecycle {
         lobbyName: "Rated Match",
         gameMode: attempt.players.P1.gameMode, hostSeat: "P1" });
       room.reservedUserIds = { P1: attempt.players.P1.identity.userId, P2: attempt.players.P2.identity.userId };
+      room.origin = "MATCHMAKING";
       room.seatIdentities = { P1: attempt.players.P1.identity, P2: attempt.players.P2.identity };
       this.stagedPairs.set(attempt.roomId, room);
     }
@@ -249,6 +251,7 @@ export class MatchLifecycle {
       roomId: room.id, isRated: true, gameMode: room.gameMode, seed: room.seed,
       createdById: attempt.players.P1.identity.userId,
       initialConfig: { formatVersion: 1 as const, rngAlgorithm: "lcg32-numerical-recipes-v1" as const, gameMode: room.gameMode,
+        origin: "MATCHMAKING" as const,
         lobbyName: room.lobbyName,
         hostSeat: room.hostSeat, hostOccupied: false, arenaId: room.state.arenaId },
       participants: (["P1", "P2"] as const).map(seat => ({ seat,
@@ -300,6 +303,31 @@ export class MatchLifecycle {
       this.projections.set(room.matchId, projection);
     }
     return projection;
+  }
+
+  /** Attach the existing durable lifecycle; never create/start a replacement Match. */
+  attachRestoredRoom(room: GameRoom): void {
+    const p = this.projection(room);
+    if (!p) throw new Error("Persistent room required");
+    p.started = true;
+    for (const seat of ["P1", "P2"] as const) {
+      const identity = room.seatIdentities[seat];
+      if (!identity) throw new Error("Persistent participant required");
+      p.names.set(seat, { seat, userId: identity.userId,
+        displayNameSnapshot: identityDisplayName(identity) });
+    }
+  }
+
+  /** A crash may commit the terminal action before committing its result. */
+  async finalizeRestoredRoom(room: GameRoom, needsSnapshot: boolean, finishedAt: Date): Promise<void> {
+    const p = this.projection(room);
+    if (!p || room.state.phase !== "ended") throw new Error("Terminal persistent room required");
+    if (needsSnapshot) this.actionQueue.enqueueSnapshot(this.snapshots.capture(room), room.id);
+    if (!(await this.actionQueue.drain(p.matchId))) throw new Error("Terminal checkpoint unavailable");
+    p.finish = extractPersistentMatchResult(room, finishedAt);
+    await this.flush(p);
+    if (p.resultBlocked) throw new MatchResultError("MATCH_RESULT_INVALID");
+    if (p.finish) throw new Error("Recovered finalization storage unavailable");
   }
 
   async syncParticipant(
@@ -509,12 +537,16 @@ export class MatchLifecycle {
     if (!p.started && room.state.phase === "lobby" && !room.state.pendingRoll)
       p.cancel = new Date();
     await this.flush(p);
+    if (p.started && room.state.phase !== "ended" && this.getService().interruptMatch) {
+      p.interrupt = "SERVER_ROOM_EXPIRED";
+      await this.flush(p);
+    }
     if (!this.hasPending(p)) this.projections.delete(p.matchId);
     this.actionQueue.release(p.matchId);
   }
 
   private hasPending(p: Projection): boolean {
-    return !p.resultBlocked && !!(p.dirtySeats.size || p.removedSeats.size || p.gameMode || p.start || p.finish || p.cancel);
+    return !p.resultBlocked && !!(p.dirtySeats.size || p.removedSeats.size || p.gameMode || p.start || p.finish || p.cancel || p.interrupt);
   }
 
   async retryPending(): Promise<void> {
@@ -585,6 +617,11 @@ export class MatchLifecycle {
           { event: "match:cancelled", roomId: p.roomId, matchId: p.matchId },
           "Match cancelled",
         );
+      }
+      if (p.interrupt && service.interruptMatch) {
+        operation = "interrupted";
+        await service.interruptMatch(p.matchId, p.interrupt);
+        p.interrupt = undefined;
       }
     } catch (error) {
       const domainError = error instanceof MatchResultError;

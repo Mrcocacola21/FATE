@@ -14,6 +14,7 @@ import { LobbyNameSchema } from "../lobby/metadata";
 export const initialConfigSchema = z
   .object({
     lobbyName: LobbyNameSchema.optional(),
+    origin: z.enum(["MANUAL", "MATCHMAKING"]).optional(),
     formatVersion: z.literal(1),
     rngAlgorithm: z.literal("lcg32-numerical-recipes-v1"),
     gameMode: z.enum(["standard", "classic", "draft"]),

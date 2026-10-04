@@ -23,7 +23,7 @@ async function run() {
   const service = new PlayerStatisticsService(new StatisticsRepository(db), {
     warn: (data) => warnings.push(data),
   });
-  const server = await buildServer({ playerStatistics: service });
+  const server = await buildServer({ playerStatistics: service, matchRecovery: false });
   const users: string[] = [],
     matches: string[] = [];
   const prefix = `statistics-${randomUUID()}`;
