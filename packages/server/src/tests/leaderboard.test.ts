@@ -72,6 +72,7 @@ test("DTO preserves precise state and canonical rank, hides storage/private fiel
   assert.equal(receivedThreshold, 5);
   assert.equal(result.items[0].ratingRank, 21);
   assert.equal(result.items[0].rating, row.rating);
+  assert.equal(result.items[0].rankTier, "FULL");
   assert.equal(result.items[0].gamesUntilQualified, 0);
   assert.equal(result.items[0].lastActivity, row.lastActivity!.toISOString());
   assert.deepEqual(result.pagination, { page: 2, limit: 20, total: 25, totalPages: 2 });
@@ -94,11 +95,66 @@ test("provisional has no ranked placement and partial results are explicitly una
     items: [player],
   } = await service.getLeaderboard({ ...defaults, status: "provisional" });
   assert.equal(player.status, "PROVISIONAL");
+  assert.equal(player.rankTier, "FULL");
   assert.equal(player.ratingRank, null);
   assert.equal(player.gamesUntilQualified, 3);
   assert.equal(player.performanceAvailable, false);
   for (const field of ["wins", "losses", "draws", "winRate", "lastActivity"] as const)
     assert.equal(player[field], null);
+});
+
+test("boundary tiers enrich qualified/provisional rows while preserving numeric order", async () => {
+  const ratings = [
+    2150, 2000, 1999.999, 1850, 1849.999, 1750, 1749.999, 1600, 1599.999, 1100, 1099.999, 700,
+    699.999, 350, 349.999,
+  ];
+  const tiers = [
+    "DESTINY",
+    "DESTINY",
+    "NOVA",
+    "NOVA",
+    "BLACK_MOON",
+    "BLACK_MOON",
+    "ECLIPSE",
+    "ECLIPSE",
+    "FULL",
+    "FULL",
+    "HALF",
+    "HALF",
+    "CRESCENT",
+    "CRESCENT",
+    "SHADOW",
+  ];
+  for (const ratedGames of [2, 5]) {
+    const service = new LeaderboardService(
+      {
+        getLeaderboard: async () => ({
+          total: ratings.length,
+          items: ratings.map((rating, i) => ({
+            ...row,
+            userId: `player-${i}`,
+            rating,
+            ratedGames,
+            ratingRank: BigInt(i + 1),
+          })),
+        }),
+      },
+      { minRatedGames: 5 },
+    );
+    const result = await service.getLeaderboard({
+      ...defaults,
+      status: ratedGames === 2 ? "provisional" : "qualified",
+    });
+    assert.deepEqual(
+      result.items.map((player) => player.rating),
+      ratings,
+    );
+    assert.deepEqual(
+      result.items.map((player) => player.rankTier),
+      tiers,
+    );
+    assert.equal(result.items[0].ratingRank, ratedGames === 2 ? null : 1);
+  }
 });
 test("public read route validates before calling service and sanitizes failures", async () => {
   const app = Fastify();

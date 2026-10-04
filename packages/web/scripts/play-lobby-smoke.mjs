@@ -149,6 +149,12 @@ try {
     await page.setViewportSize({ width, height });
     await page.goto(web);
     await page.getByTestId("competitive-rating").waitFor();
+    assert.equal(await page.locator('.rank-emblem[data-rank="BLACK_MOON"] img').count(), 1);
+    assert(
+      await page
+        .getByRole("button", { name: "Find Rated Match", exact: true })
+        .evaluate((button) => button.getBoundingClientRect().bottom <= innerHeight),
+    );
     assert.equal(await page.getByTestId("room-browser").count(), 0);
     await capture(`play-provisional-${width}`);
     await page.goto(web + "/lobby");
@@ -166,7 +172,7 @@ try {
   step = "real queue and cancel";
   await page.getByRole("button", { name: "Find Rated Match", exact: true }).click();
   await page.getByText("Searching for opponent", { exact: true }).waitFor();
-  assert.equal(await page.getByTestId("rank-medal").count(), 0);
+  assert.equal(await page.getByTestId("rank-emblem").count(), 0);
   for (const [width, height] of viewports) {
     await page.setViewportSize({ width, height });
     await capture(`play-queued-${width}`);
@@ -453,7 +459,9 @@ try {
     ).ok,
   );
   await observer.getByRole("button", { name: "Refresh", exact: true }).click();
-  await observer.getByRole("heading", { name: "Night Games · ".repeat(4).trim(), exact: true }).waitFor();
+  await observer
+    .getByRole("heading", { name: "Night Games · ".repeat(4).trim(), exact: true })
+    .waitFor();
   await capture("browser-long-name-390", observer);
   assert.deepEqual(errors, []);
   console.log(

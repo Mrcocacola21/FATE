@@ -1,6 +1,7 @@
 import { API_BASE } from "./config";
 import { ApiError, createApiClient, isRecord, type ApiClient } from "./client";
 import { leaderboardParams } from "../leaderboard/query";
+import { parseRankTier } from "../ranks/rankProgress";
 import type {
   LeaderboardPlayer,
   LeaderboardQuery,
@@ -84,6 +85,7 @@ export function parseLeaderboard(value: unknown): LeaderboardResponse {
         avatarUrl: nullableString(item.user.avatarUrl),
       },
       rating: number(item.rating),
+      rankTier: parseRankTier(item.rankTier),
       ratingDeviation,
       ratedGames,
       wins,

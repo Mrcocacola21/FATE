@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import WebSocket from "ws";
 import { buildServer } from "../index";
 import { INITIAL_RATING } from "../rating/constants";
+import { getRankMetadata } from "../rating/rankTiers";
 import { MemoryMatchPersistence } from "./matchTestSupport";
 import { getGameRoom, storeTestHooks } from "../store";
 import { wsTestHooks } from "../ws";
@@ -45,7 +46,7 @@ async function run() {
     matchPersistence: persistence,
     connectionIdentity: { verify: async (token) => (token ? (identities[token] ?? null) : null) },
     ratings: {
-      getPlayerRating: async (id) => ({ userId: id, ...INITIAL_RATING, ratedGames: 0 }),
+      getPlayerRating: async (id) => ({ userId: id, ...INITIAL_RATING, ratedGames: 0, ...getRankMetadata(INITIAL_RATING.rating) }),
       getRatingHistory: async () => ({
         items: [],
         pagination: { page: 1, limit: 20, total: 0, totalPages: 0 },

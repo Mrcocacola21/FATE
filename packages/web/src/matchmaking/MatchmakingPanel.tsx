@@ -7,6 +7,7 @@ import { GAME_MODE_IDS, getGameModeName } from "../modes/modeLabels";
 import { MatchTypeBadge } from "../matches/MatchTypeBadge";
 import { queue, useQueue } from "./store";
 import { useGameStore } from "../store";
+import { formatCompetitiveRating } from "../ranks/rankProgress";
 
 export function MatchmakingPanel() {
   const { t } = useI18n();
@@ -49,7 +50,7 @@ export function MatchmakingPanel() {
             {waiting && <div>
               <p className="text-xs text-muted">{t("matchmaking.rating")}</p>
               <p className="text-lg font-semibold tabular-nums">
-                {rating === null ? "—" : Math.round(rating)}
+                {rating === null ? "—" : formatCompetitiveRating(rating)}
               </p>
             </div>}
             {!waiting && status.status !== "MATCH_FOUND" && (

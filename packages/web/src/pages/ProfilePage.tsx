@@ -7,6 +7,7 @@ import { profileStore, useProfileStore } from "../profile/profileStore";
 import { profileErrorMessage } from "../profile/errorMessage";
 import { useAuthStore } from "../auth/authStore";
 import { PlayerStatisticsSection } from "../statistics/PlayerStatisticsSection";
+import { ProfileRank } from "../profile/ProfileRank";
 
 export function ProfilePage() {
   const { t, language } = useI18n();
@@ -48,6 +49,7 @@ export function ProfilePage() {
                 <p className="text-sm text-stone-600 dark:text-stone-300">@{profile.username}</p>
               </div>
             </div>
+            <ProfileRank userId={profile.id} revision={revision} />
             <dl className="my-6 grid gap-4 break-words text-sm sm:grid-cols-2 xl:grid-cols-4">
               <div>
                 <dt>{t("auth.email")}</dt>

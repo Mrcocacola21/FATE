@@ -7,45 +7,35 @@
   background: rgb(var(--fate-surface));
 }
 .competitive-identity {
-  padding: 42px 36px 32px;
+  padding: 28px 36px 28px;
   text-align: center;
   min-width: 0;
-  background: radial-gradient(ellipse at 50% 18%, #b4a27712, transparent 65%);
+  background: radial-gradient(ellipse at 50% 24%, rgb(var(--fate-warm) / 0.055), transparent 65%);
 }
-.rank-medal {
-  width: 120px;
-  height: 120px;
-  margin: 0 auto;
-  display: grid;
-  place-items: center;
-  border: 1px solid #98886e65;
-  outline: 1px solid #98886e25;
-  outline-offset: 7px;
-  border-radius: 50%;
-  background: linear-gradient(145deg, #93816720, #23262930);
-  box-shadow: inset 0 0 35px #a8916010;
+html:not(.dark) .competitive-identity {
+  --fate-text: 239 232 222;
+  --fate-muted: 173 166 158;
+  --fate-warm: 191 161 116;
+  --fate-crimson: 155 48 64;
+  color: rgb(var(--fate-text));
+  background: radial-gradient(ellipse at 50% 24%, #bfa1740e, transparent 65%), #18191d;
 }
-.rank-medal-sigil {
-  font-family: Georgia, serif;
-  font-size: 48px;
-  color: #bba77e;
-  transform: rotate(-8deg);
+.competitive-identity .text-muted {
+  color: rgb(var(--fate-muted));
 }
-.rank-medal img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-.rank-medal[data-size="small"] {
-  width: 56px;
-  height: 56px;
-}
-.rank-medal[data-size="small"] .rank-medal-sigil {
-  font-size: 26px;
+.competitive-rank-name {
+  margin-top: 12px;
+  font-size: clamp(15px, 1.4vw, 19px);
+  line-height: 1.4;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+  color: rgb(var(--fate-warm));
 }
 .competitive-player {
-  margin-top: 25px;
-  font-size: 14px;
+  margin-top: 12px;
+  font-size: 12px;
+  color: rgb(var(--fate-muted));
   overflow-wrap: anywhere;
 }
 .competitive-rating {
@@ -58,12 +48,12 @@
 }
 .competitive-uncertainty {
   font-size: 12px;
-  opacity: 0.6;
+  color: rgb(var(--fate-muted));
   margin-top: 10px;
 }
 .qualification-block {
-  margin-top: 30px;
-  padding-top: 20px;
+  margin-top: 22px;
+  padding-top: 16px;
   border-top: 1px solid #88888824;
 }
 .qualification-label {
@@ -141,32 +131,59 @@
   gap: 12px;
 }
 @media (max-width: 767px) {
+  .competitive-secondary {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px 12px;
+    margin-top: 8px;
+  }
+  .competitive-secondary .competitive-player,
+  .competitive-secondary .competitive-uncertainty {
+    margin-top: 0;
+  }
+  .competitive-identity .rank-progress {
+    margin-top: 10px;
+  }
+  .competitive-hub > .matchmaking-panel > div:first-child {
+    gap: 8px;
+  }
+  .competitive-hub > .matchmaking-panel h2 {
+    font-size: 18px;
+  }
   .competitive-hub {
     grid-template-columns: 1fr;
   }
   .competitive-identity {
-    padding: 24px 24px 20px;
+    padding: 12px 24px 16px;
   }
   .competitive-hub > .matchmaking-panel {
-    padding: 24px;
+    padding: 18px 24px;
     border-left: 0;
     border-top: 1px solid #88888824;
   }
-  .rank-medal {
-    width: 76px;
-    height: 76px;
+  .competitive-hub > .matchmaking-panel > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 12px;
+  }
+  .competitive-rank-name {
+    margin-top: 6px;
+    font-size: 14px;
   }
   .competitive-player {
-    margin-top: 18px;
+    margin-top: 6px;
   }
   .competitive-rating {
     font-size: 48px;
+    margin-top: 6px;
   }
   .qualification-block {
-    margin-top: 20px;
-    padding-top: 16px;
+    margin-top: 10px;
+    padding-top: 10px;
+  }
+  .qualification-progress {
+    margin: 8px 0;
   }
   .competitive-page .play-header {
-    margin-bottom: 22px;
+    margin-bottom: 16px;
   }
 }

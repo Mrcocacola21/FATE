@@ -4,6 +4,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawn } from "node:child_process";
 import { chromium } from "playwright-core";
+import rankTiers from "../../server/src/rating/rankTiers.ts";
+const { getRankMetadata } = rankTiers;
 
 // HTTP fixtures exercise the complete routed UI without touching a database.
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
@@ -121,7 +123,7 @@ const recent = ["WIN", "LOSS", "WIN", "WIN", "DRAW", "LOSS", "WIN", "WIN", "WIN"
   (result, index) => ({
     id: `recent-${index}`,
     status: "FINISHED",
-          matchType: "CASUAL",
+    matchType: "CASUAL",
     gameMode: result === "DRAW" ? "draft" : index % 3 === 0 ? "standard" : "classic",
     createdAt: `2026-09-${String(index + 10).padStart(2, "0")}T10:00:00Z`,
     startedAt: null,
@@ -207,6 +209,9 @@ try {
         Object.assign(owner, route.request().postDataJSON());
       return send({ profile: owner });
     }
+    if (url.pathname === "/api/competitive/config") return send({ minRatedGames: 5 });
+    if (url.pathname.endsWith("/rating"))
+      return send({ rating: 1500, ratingDeviation: 74, ratedGames: 2, ...getRankMetadata(1500) });
     const stats = url.pathname.match(/^\/api\/users\/([^/]+)\/statistics$/);
     if (stats) return statsFailure ? fail("SERVER_ERROR") : send(statistics(stats[1]));
     const history = url.pathname.match(/^\/api\/users\/([^/]+)\/matches$/);

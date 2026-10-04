@@ -18,10 +18,16 @@ import type { OwnProfile } from "./types";
 import { statisticsApi } from "../api/statisticsApi";
 import { matchApi } from "../api/matchApi";
 import { emptyStatisticsFixture } from "../statistics/fixtures";
+import { competitiveApi } from "../play/api";
+import { competitiveRatingFixture } from "../ranks/testFixtures";
 
 const originalStatistics = statisticsApi.getPlayerStatistics;
 const originalMatches = matchApi.getUserMatches;
+const originalRating = competitiveApi.rating,
+  originalConfig = competitiveApi.config;
 test.beforeEach(() => {
+  competitiveApi.rating = async () => competitiveRatingFixture(1500, 2);
+  competitiveApi.config = async () => 5;
   statisticsApi.getPlayerStatistics = async (id) => emptyStatisticsFixture(id);
   matchApi.getUserMatches = async () => ({
     items: [],
@@ -29,6 +35,8 @@ test.beforeEach(() => {
   });
 });
 test.afterEach(() => {
+  competitiveApi.rating = originalRating;
+  competitiveApi.config = originalConfig;
   statisticsApi.getPlayerStatistics = originalStatistics;
   matchApi.getUserMatches = originalMatches;
 });

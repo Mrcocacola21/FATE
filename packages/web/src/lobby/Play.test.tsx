@@ -13,6 +13,7 @@ import { RoomConnectionDialog } from "./RoomConnectionDialog";
 import { RatedCompatibilityPanel } from "./RatedCompatibilityPanel";
 import { useGameStore } from "../store";
 import type { RoomSummary } from "../api";
+import { competitiveRatingFixture } from "../ranks/testFixtures";
 
 test("Play shows real rating/uncertainty and configured qualification without a room browser", async () => {
   const auth = authStore.getState(),
@@ -29,7 +30,7 @@ test("Play shows real rating/uncertainty and configured qualification without a 
   authStore.setState({ user, status: "authenticated" });
   queue.owner(user.id);
   setLanguage("en", null);
-  competitiveApi.rating = async () => ({ rating: 1578, ratingDeviation: 74, ratedGames: 3 });
+  competitiveApi.rating = async () => competitiveRatingFixture(1750, 3);
   competitiveApi.config = async () => 7;
   let renderer!: ReactTestRenderer;
   try {
@@ -41,11 +42,17 @@ test("Play shows real rating/uncertainty and configured qualification without a 
       );
     });
     const output = JSON.stringify(renderer.toJSON());
-    assert.match(output, /1578/);
+    assert.match(output, /1750/);
+    assert.match(output, /blackmoon\.png/);
+    assert.match(output, /Black Moon/);
     assert.match(output, /±74/);
     assert.match(output, /4 games until ranked/);
-    assert.equal(renderer.root.findByType("progress").props.max, 7);
-    assert(renderer.root.findByProps({ "data-testid": "rank-medal" }));
+    assert.equal(renderer.root.findByProps({ className: "qualification-progress" }).props.max, 7);
+    assert.equal(
+      renderer.root.findByProps({ "data-testid": "rank-emblem" }).props["data-assigned"],
+      true,
+    );
+    assert.equal(renderer.root.findAllByType("img").length, 1);
     assert(renderer.root.findByProps({ "data-testid": "matchmaking-panel" }));
     assert.equal(renderer.root.findAllByProps({ "data-testid": "room-browser" }).length, 0);
     assert(!/Bronze|Silver|Gold|Diamond|private@example/.test(output));
@@ -64,7 +71,7 @@ test("Play shows real rating/uncertainty and configured qualification without a 
         },
       }),
     );
-    assert.equal(renderer.root.findAllByProps({ "data-testid": "rank-medal" }).length, 0);
+    assert.equal(renderer.root.findAllByProps({ "data-testid": "rank-emblem" }).length, 0);
     assert.match(JSON.stringify(renderer.toJSON()), /Searching for opponent/);
   } finally {
     act(() => renderer?.unmount());
@@ -75,18 +82,20 @@ test("Play shows real rating/uncertainty and configured qualification without a 
   }
 });
 
-test("qualified identity shows ranked status without invented next-tier progress", () => {
+test("qualified identity shows backend rank progress separately from leaderboard qualification", () => {
   setLanguage("en", null);
   const html = renderToStaticMarkup(
     <CompetitiveIdentity
-      rating={{ rating: 1700, ratingDeviation: 65, ratedGames: 27 }}
+      rating={competitiveRatingFixture(1700, 27)}
       minRatedGames={7}
       name="Max"
     />,
   );
   assert.match(html, /Qualified for the ranked leaderboard/);
-  assert(!html.includes("<progress"));
-  assert(!/next|Diamond|Gold/.test(html));
+  assert.match(html, /eclipse\.png/);
+  assert.match(html, /50 rating to Black Moon/);
+  assert(html.includes('class="rank-progress-track"'));
+  assert(!html.includes('class="qualification-progress"'));
 });
 
 test("browser hides IDs, escapes names, separates filters and always spectates active/reserved rooms", () => {

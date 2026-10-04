@@ -4,6 +4,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawn } from "node:child_process";
 import { chromium } from "playwright-core";
+import rankTiers from "../../server/src/rating/rankTiers.ts";
+const { getRatingTier, getRankMetadata } = rankTiers;
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
 const port = Number(process.env.LEADERBOARD_TEST_WEB_PORT ?? 5197);
@@ -64,6 +66,7 @@ function player(index, provisional = false) {
       avatarUrl: index === 2 ? "javascript:bad" : null,
     },
     rating: 1824.371 - index * 12,
+    rankTier: getRatingTier(1824.371 - index * 12),
     ratingDeviation: provisional ? 280 : 54 + index,
     ratedGames: games,
     wins,
@@ -170,6 +173,14 @@ try {
       });
     if (url.pathname.endsWith("/statistics"))
       return send({ error: { code: "DATABASE_UNAVAILABLE" } }, 503);
+    if (url.pathname === "/api/competitive/config") return send({ minRatedGames: 5 });
+    if (url.pathname.endsWith("/rating"))
+      return send({
+        rating: player(0).rating,
+        ratingDeviation: 74,
+        ratedGames: 10,
+        ...getRankMetadata(player(0).rating),
+      });
     if (url.pathname.endsWith("/matches"))
       return send({ items: [], pagination: { page: 1, limit: 10, total: 0, totalPages: 0 } });
     return send({ error: { code: "NOT_FOUND" } }, 404);

@@ -83,13 +83,14 @@ test("default Ranked, rating sort, metrics, public player links and backend poli
     );
     for (const value of [
       "Established player",
-      "1685",
+      "1684",
       "60%",
       "±65",
       "after 5 rated matches",
       "lower uncertainty",
     ])
       assert(text(renderer).includes(value), value);
+    assert.match(text(renderer), /eclipse\.png/);
     assert.equal(
       renderer.root.findAllByType("th").find((node) => node.props["aria-sort"])!.props["aria-sort"],
       "descending",
@@ -235,7 +236,7 @@ test("incomplete rated history shows unavailable performance with an explanation
   try {
     assert.match(text(renderer), /Rated results are incomplete/);
     assert.doesNotMatch(text(renderer), /60%|NaN/);
-    assert.match(text(renderer), /1685/);
+    assert.match(text(renderer), /1684/);
   } finally {
     cleanup(renderer);
   }

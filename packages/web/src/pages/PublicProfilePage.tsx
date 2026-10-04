@@ -6,6 +6,7 @@ import { useI18n } from "../i18n";
 import { Avatar } from "../profile/Avatar";
 import type { PublicProfile } from "../profile/types";
 import { PlayerStatisticsSection } from "../statistics/PlayerStatisticsSection";
+import { ProfileRank } from "../profile/ProfileRank";
 
 export function PublicProfilePage() {
   const { username = "" } = useParams();
@@ -93,6 +94,7 @@ export function PublicProfilePage() {
             </div>
           </div>
         )}
+        {current?.profile && <ProfileRank userId={current.profile.id} />}
       </div>
       {current?.profile && (
         <PlayerStatisticsSection

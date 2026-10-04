@@ -1,0 +1,132 @@
+.rank-emblem {
+  --rank-size: 64px;
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  place-items: center;
+  width: var(--rank-size);
+  height: var(--rank-size);
+  flex: 0 0 auto;
+  margin-inline: auto;
+}
+.rank-emblem[data-size="small"] {
+  --rank-size: 40px;
+}
+.rank-emblem[data-size="large"] {
+  --rank-size: 128px;
+}
+.rank-emblem[data-size="hero"] {
+  --rank-size: clamp(160px, 15vw, 210px);
+}
+.rank-emblem::before {
+  content: "";
+  position: absolute;
+  inset: -8%;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse at 50% 54%, rgb(var(--fate-crimson) / 0.07), transparent 65%),
+    radial-gradient(ellipse, #111216 20%, #111216e8 48%, #11121600 72%);
+}
+.rank-emblem::after {
+  content: "";
+  position: absolute;
+  inset: auto 18% -4%;
+  height: 5%;
+  z-index: -1;
+  background: radial-gradient(ellipse, #00000035, transparent 70%);
+}
+.rank-emblem img,
+.rank-emblem-unassigned {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.rank-emblem-unassigned {
+  width: 74%;
+  height: 74%;
+  color: #bba77e;
+  opacity: 0.48;
+}
+.rank-emblem[data-assigned="false"]::before {
+  opacity: 0.65;
+}
+.rank-progress {
+  margin-top: 18px;
+  color: rgb(var(--fate-muted));
+  font-size: 12px;
+}
+.rank-progress-labels {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: rgb(var(--fate-warm));
+}
+.rank-progress-track {
+  appearance: none;
+  display: block;
+  width: 100%;
+  height: 3px;
+  margin: 8px 0;
+  border: none;
+  border-radius: 3px;
+  overflow: hidden;
+  background: rgb(var(--fate-border) / 0.25);
+}
+.rank-progress-track::-webkit-progress-bar {
+  background: rgb(var(--fate-border) / 0.25);
+}
+.rank-progress-track::-webkit-progress-value {
+  background: rgb(var(--fate-warm));
+}
+.rank-progress-track::-moz-progress-bar {
+  background: rgb(var(--fate-warm));
+}
+.rank-progress-max {
+  margin-top: 16px;
+}
+.profile-rank {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 20px;
+}
+.profile-rank .rank-emblem,
+.leaderboard-player .rank-emblem {
+  margin-inline: 0;
+}
+.rank-summary-name {
+  color: rgb(var(--fate-warm));
+  font-size: 16px;
+}
+.rank-summary-rating {
+  margin-block: 4px;
+}
+.rank-summary-rating strong {
+  font-size: 22px;
+  font-variant-numeric: tabular-nums;
+}
+.rank-summary-rating span {
+  font-size: 12px;
+  color: rgb(var(--fate-muted));
+}
+@keyframes rank-emblem-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .rank-emblem[data-size="hero"] img {
+    animation: rank-emblem-enter 400ms var(--fate-ease) both;
+  }
+}
+@media (max-width: 767px) {
+  .rank-emblem[data-size="hero"] {
+    --rank-size: clamp(110px, 28vw, 145px);
+  }
+}

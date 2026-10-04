@@ -40,6 +40,7 @@ test("safe leaderboard decoder preserves precision/provisional and strips privat
     ],
   });
   assert.equal(result.items[0].rating, 1684.721);
+  assert.equal(result.items[0].rankTier, "ECLIPSE");
   assert.doesNotMatch(JSON.stringify(result), /secret|email|password|token|volatility/);
   assert.equal(
     parseLeaderboard(leaderboardFixture([provisionalPlayer()])).items[0].ratingRank,
@@ -58,6 +59,7 @@ test("safe leaderboard decoder preserves precision/provisional and strips privat
 test("decoder rejects corrupt numbers, ranks, qualification, activity and contradictory performance", () => {
   for (const patch of [
     { rating: NaN },
+    { rankTier: null },
     { ratedGames: 0 },
     { ratingDeviation: -1 },
     { ratingRank: null },

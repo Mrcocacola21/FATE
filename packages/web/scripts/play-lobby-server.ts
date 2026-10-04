@@ -7,6 +7,7 @@ import {
   testUserIds,
 } from "../../server/src/tests/matchTestSupport";
 import { INITIAL_RATING } from "../../server/src/rating/constants";
+import { getRankMetadata } from "../../server/src/rating/rankTiers";
 import { randomUUID } from "node:crypto";
 
 async function main() {
@@ -28,6 +29,7 @@ async function main() {
         userId: id,
         ...INITIAL_RATING,
         rating: id === testUserIds.P1 ? firstRating : secondRating,
+        ...getRankMetadata(id === testUserIds.P1 ? firstRating : secondRating),
         ratedGames: games,
       }),
       getRatingHistory: async () => ({

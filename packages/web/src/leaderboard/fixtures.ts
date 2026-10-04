@@ -1,4 +1,5 @@
 import type { LeaderboardPlayer, LeaderboardResponse } from "./types";
+import { getRatingTier } from "../../../server/src/rating/rankTiers";
 export function leaderboardPlayer(overrides: Partial<LeaderboardPlayer> = {}): LeaderboardPlayer {
   return {
     ratingRank: 1,
@@ -9,6 +10,7 @@ export function leaderboardPlayer(overrides: Partial<LeaderboardPlayer> = {}): L
       avatarUrl: null,
     },
     rating: 1684.721,
+    rankTier: getRatingTier(Number.isFinite(overrides.rating) ? overrides.rating! : 1684.721),
     ratingDeviation: 65.43,
     ratedGames: 10,
     wins: 6,

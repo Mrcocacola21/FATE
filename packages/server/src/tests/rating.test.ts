@@ -7,6 +7,7 @@ import { calculateRating, Glicko2Error } from "../rating/glicko2";
 import { eligibleRatingPlayers, type RatingMatch } from "../rating/eligibility";
 import type { Glicko2OpponentResult } from "../rating/types";
 import { RatingError } from "../rating/ratingError";
+import { getRankMetadata } from "../rating/rankTiers";
 import { RatingService } from "../services/ratingService";
 import { ratingRoutes } from "../routes/ratingRoutes";
 
@@ -220,7 +221,12 @@ async function run() {
   await assert.rejects(service.processRatedMatch(match.id), /RATING_INVALID_RESULT/);
   assert.equal(attempts, 1);
   const defaultRating = await service.getPlayerRating(a);
-  assert.deepEqual(defaultRating, { userId: a, ...INITIAL_RATING, ratedGames: 0 });
+  assert.deepEqual(defaultRating, {
+    userId: a,
+    ...INITIAL_RATING,
+    ratedGames: 0,
+    ...getRankMetadata(INITIAL_RATING.rating),
+  });
 
   let reads = 0;
   const server = Fastify();

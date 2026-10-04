@@ -3,6 +3,8 @@ import { useI18n } from "../i18n";
 import { Avatar } from "../profile/Avatar";
 import { formatDate } from "../matches/presentation";
 import type { LeaderboardPlayer, LeaderboardQuery, LeaderboardSort } from "./types";
+import { RankEmblem } from "../ranks/RankEmblem";
+import { formatCompetitiveRating } from "../ranks/rankProgress";
 
 function PlayerIdentity({
   player,
@@ -19,6 +21,7 @@ function PlayerIdentity({
         </span>
       )}
       <Avatar {...player.user} small />
+      <RankEmblem rank={player.rankTier} size="small" />
       <span className="leaderboard-name">
         <strong>{player.user.displayName || player.user.username}</strong>
         <span>@{player.user.username}</span>
@@ -118,7 +121,7 @@ export function LeaderboardStandings({
                       <PlayerIdentity player={player} />
                     </td>
                     <td className="leaderboard-rating" title={String(player.rating)}>
-                      {Math.round(player.rating)}
+                      {formatCompetitiveRating(player.rating)}
                     </td>
                     <td
                       title={t("leaderboard.uncertaintyHelp")}
@@ -177,7 +180,7 @@ export function LeaderboardStandings({
                 <dl className="leaderboard-mobile-metrics">
                   <div>
                     <dt>{t("leaderboard.rating")}</dt>
-                    <dd className="leaderboard-rating">{Math.round(player.rating)}</dd>
+                    <dd className="leaderboard-rating">{formatCompetitiveRating(player.rating)}</dd>
                   </div>
                   <div>
                     <dt>{t("leaderboard.winRate")}</dt>

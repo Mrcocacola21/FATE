@@ -1,6 +1,7 @@
 import type { LeaderboardConfig } from "../leaderboard/config";
 import type { LeaderboardQuery } from "../leaderboard/querySchema";
 import type { LeaderboardRepository } from "../repositories/leaderboardRepository";
+import { getRatingTier } from "../rating/rankTiers";
 
 export class LeaderboardService {
   constructor(
@@ -24,6 +25,7 @@ export class LeaderboardService {
             avatarUrl: row.avatarUrl,
           },
           rating: row.rating,
+          rankTier: getRatingTier(row.rating),
           ratingDeviation: row.ratingDeviation,
           ratedGames: row.ratedGames,
           wins: performanceAvailable ? row.wins : null,

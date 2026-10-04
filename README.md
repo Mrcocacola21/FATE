@@ -26,6 +26,7 @@ Follow active progress and implementation notes in the [Developer Log](https://t
 - [Player Statistics UI](#player-statistics-ui-phase-14)
 - [Leaderboard](#leaderboard-phase-16)
 - [Play and Lobby](#play-and-lobby)
+- [Canonical Rank Tiers](#canonical-rank-tiers)
 - [Persistent Action Log](#persistent-action-log)
 - [Authentication Backend](#authentication-backend)
 - [Authentication Frontend](#authentication-frontend)
@@ -1183,7 +1184,7 @@ Public competitive data follows existing public profile/statistics policy:
 
 | Endpoint | Contract |
 | --- | --- |
-| `GET /api/users/:id/rating` | `{userId, rating, ratingDeviation, volatility, ratedGames}`; defaults for a valid unrated user. |
+| `GET /api/users/:id/rating` | `{userId, rating, ratingDeviation, volatility, ratedGames, rankTier, rankProgress}`; defaults for a valid unrated user. |
 | `GET /api/users/:id/rating/history?page=1&limit=20` | Safe before/after history DTOs, opponent/result, period number, ISO processing date and derived `ratingDelta`; `{items, pagination:{page,limit,total,totalPages}}`. |
 
 History returns newest processed periods first, with timestamp/ID fallbacks for unnumbered legacy rows.
@@ -1191,8 +1192,8 @@ Default page/limit are 1/20; limit cap is 100. Pagination count/items share a Re
 Both endpoints validate UUIDs and use `Cache-Control: no-store`; missing users return 404, invalid
 query/UUID returns 400, infrastructure/internal failures are sanitized. No private User, match state,
 email, auth session or credentials are returned. Match details, statistics and replay reads never process rating.
-There is no writable rating endpoint, reset/editor, client-side calculation, ranking tier,
-matchmaking, profile redesign or rating-history chart. Phase 16 adds the read-only Leaderboard below.
+There is no writable rating endpoint, reset/editor, client-side rating calculation or rating-history chart.
+The read-only Leaderboard and derived canonical major ranks are described below.
 
 Apply new incremental migration **`20261003010000_glicko2_rating`** using `prisma migrate deploy`.
 Prior production migrations are unchanged; production Render/Neon deployment is a separate operation.
@@ -1377,7 +1378,7 @@ API contracts:
 Verification: `npm run -w server test:match-types`,
 `npm run -w server test:match-types:db` (guarded local TEST_DATABASE_URL), and
 `npm run -w web test:match-types:e2e`. Rated matchmaking is described below.
-Seasons, a separate placement algorithm and rank-tier UI remain deferred.
+Seasons and a separate placement algorithm remain deferred. Canonical rank-tier UI is described below.
 
 
 ## Rated Matchmaking Queue (Phase 18)
@@ -1515,6 +1516,43 @@ Chromium/Edge, and preserves desktop/tablet/mobile screenshots under
 `packages/web/test-results/matchmaking/`. Never run these database tests against production Neon.
 
 
+## Canonical Rank Tiers
+
+`packages/server/src/rating/rankTiers.ts` is the single backend definition for exactly eight major tiers:
+
+| Tier | Precise rating interval |
+| --- | --- |
+| SHADOW | rating < 350 |
+| CRESCENT | 350 ≤ rating < 700 |
+| HALF | 700 ≤ rating < 1100 |
+| FULL | 1100 ≤ rating < 1600 |
+| ECLIPSE | 1600 ≤ rating < 1750 |
+| BLACK_MOON | 1750 ≤ rating < 1850 |
+| NOVA | 1850 ≤ rating < 2000 |
+| DESTINY | rating ≥ 2000 |
+
+Boundaries operate on precise floating-point rating, without rounding. The unchanged initial
+Glicko rating **1500 maps to Full**, including before leaderboard qualification. **2000 begins Destiny**;
+Destiny is the maximum major tier but does **not** cap numerical rating. Invalid non-finite
+ratings throw a controlled domain error. Tiers and image paths are never persisted; no new migration.
+
+Rating reads return `rankTier` and `rankProgress` (`currentMin`, `nextTier`, `nextRating`,
+`ratingToNext`, `progress`, `isMaxRank`). Finite-tier progress is
+`(rating - currentMin) / (nextRating - currentMin)`, clamped to 0..1. Shadow has no invented lower
+bound and returns null percentage plus distance to Crescent. Destiny returns null next tier,
+threshold and percentage, zero distance, and `isMaxRank: true`. Leaderboard items return the same
+derived `rankTier`; sorting, placement and matchmaking continue using precise numeric rating.
+
+Play uses server progress; leaderboard and own/public Profile reuse `RankEmblem`. Provisional status
+is independent from tier and never hides the actual medal. Integer ratings are displayed with
+**Math.floor** in Play, profile, leaderboard and queue rating; e.g. Nova at 1999.7 displays 1999.
+Distance to the next tier uses **Math.ceil**, so a remaining 0.3 displays 1 rather than 0.
+Neither display operation changes stored rating or backend progress.
+
+Verification: `npm run -w server test:ranks`, `npm run -w web test:ranks`,
+`npm run -w web test:ranks:e2e`, and existing rating/leaderboard/profile/Play tests.
+Divisions, promotion/demotion animation, seasonal ranks and rewards are deferred.
+
 ## Play and Lobby
 
 The sidebar separates **Play**, **Lobby**, **Figure Set**, **Match History**, **Leaderboard**
@@ -1524,9 +1562,9 @@ Existing live sessions and reconnects still use the shared GameRuntime.
 **Play** is a competitive hub: numeric Glicko rating, rating uncertainty, rated-game count,
 provisional/qualified identity, and Rated matchmaking as its primary action. Qualification
 uses `LEADERBOARD_MIN_RATED_GAMES`, exposed by `GET /api/competitive/config`; the frontend
-does not hardcode a threshold. Qualified players see leaderboard qualification, without
-invented next-rank progress. `RankMedal({ assetUrl?, label?, size? })` reserves a neutral
-emblem slot for future assets. No medal tiers, rating thresholds, seasons or rewards exist.
+does not hardcode a qualification threshold. `RankEmblem` renders the canonical backend tier
+through the approved asset registry, including for provisional players. Rank progress uses
+backend metadata and remains separate from leaderboard qualification. Seasons and rewards are deferred.
 Queue state replaces the identity panel with server rating/range, game mode, elapsed time
 and cancellation; Match Found announces You vs opponent and enters the assigned game.
 

@@ -4,6 +4,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawn } from "node:child_process";
 import { chromium } from "playwright-core";
+import rankTiers from "../../server/src/rating/rankTiers.ts";
+const { getRankMetadata } = rankTiers;
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
 const webPort = Number(process.env.SHELL_TEST_WEB_PORT ?? 5187);
@@ -133,7 +135,13 @@ try {
       if (/^\/api\/users\/[^/]+\/matches$/.test(pathname))
         return json({ items: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0 } });
       if (pathname === "/api/users/Commander") return json({ profile });
-      if (pathname.endsWith("/rating")) return json({ rating: 1500, ratingDeviation: 350, ratedGames: 0 });
+      if (pathname.endsWith("/rating"))
+        return json({
+          rating: 1500,
+          ratingDeviation: 350,
+          ratedGames: 0,
+          ...getRankMetadata(1500),
+        });
       if (pathname === "/api/matches/example")
         return json({
           id: "example",
@@ -230,7 +238,10 @@ try {
   await page.getByRole("dialog").waitFor();
   await screenshot("rules");
   await page.keyboard.press("Escape");
-  await page.getByTestId("desktop-sidebar").getByRole("link", { name: "Figure Set", exact: true }).click();
+  await page
+    .getByTestId("desktop-sidebar")
+    .getByRole("link", { name: "Figure Set", exact: true })
+    .click();
   await page.getByLabel("Search heroes", { exact: true }).waitFor();
   await screenshot("figures-desktop");
   await page.getByRole("link", { name: "Play", exact: true }).click();
@@ -340,7 +351,10 @@ try {
   await screenshot("play-test-enabled");
   await page.getByRole("link", { name: "Heartbreak", exact: true }).click();
   await screenshot("heartbreak");
-  await page.getByTestId("desktop-sidebar").getByRole("link", { name: "Play", exact: true }).click();
+  await page
+    .getByTestId("desktop-sidebar")
+    .getByRole("link", { name: "Play", exact: true })
+    .click();
   await page.getByRole("link", { name: "Lobby", exact: true }).click();
   await page.getByTestId("create-room").click();
   await page.getByTestId("submit-room").click();
@@ -410,7 +424,10 @@ try {
   await page.locator("#player-name").fill("Guest Scout");
   await page.getByTestId("submit-room").click();
   await page.locator(".panel-hud").getByText("Guest Scout", { exact: true }).waitFor();
-  for (const [width, height] of [[1366, 768], [390, 844]]) {
+  for (const [width, height] of [
+    [1366, 768],
+    [390, 844],
+  ]) {
     await page.setViewportSize({ width, height });
     await noOverflow();
     await screenshot(`guest-participant-${width}`);

@@ -5,6 +5,7 @@ import { buildServer } from "../index";
 import { MatchLifecycle } from "../persistence/matchLifecycle";
 import { RatingService } from "../services/ratingService";
 import { INITIAL_RATING } from "../rating/constants";
+import { getRankMetadata } from "../rating/rankTiers";
 import { readMatchmakingConfig } from "../matchmaking/config";
 import { LobbyNameSchema, ratedCompatibility } from "../lobby/metadata";
 import { getGameRoom, listRoomSummaries, storeTestHooks, type GameRoom } from "../store";
@@ -168,6 +169,7 @@ async function run() {
         userId: id,
         ...INITIAL_RATING,
         rating: id === testUserIds.P1 ? p1 : p2,
+        ...getRankMetadata(id === testUserIds.P1 ? p1 : p2),
         ratedGames: 0,
       }),
       getRatingHistory: async () => ({

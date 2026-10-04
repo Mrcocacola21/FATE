@@ -6,6 +6,7 @@ import { calculateRating, Glicko2Error, validateRating } from "../rating/glicko2
 import type { RatingHistoryQuery } from "../rating/historySchema";
 import { RatingError } from "../rating/ratingError";
 import type { Glicko2Options } from "../rating/types";
+import { getRankMetadata } from "../rating/rankTiers";
 import type { RatingRepository } from "../repositories/ratingRepository";
 
 function transactionConflict(error: unknown): boolean {
@@ -40,7 +41,8 @@ export class RatingService {
     if (!(await this.repository.userExists(userId))) throw new AuthError("USER_NOT_FOUND");
     const state = await this.repository.getRating(userId);
     if (state) validateRating(state);
-    return state ?? { userId, ...INITIAL_RATING, ratedGames: 0 };
+    const rating = state ?? { userId, ...INITIAL_RATING, ratedGames: 0 };
+    return { ...rating, ...getRankMetadata(rating.rating) };
   }
 
   /** Runtime identities have already been authenticated; one query for discovery. */

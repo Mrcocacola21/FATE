@@ -2,9 +2,26 @@ import type { LocaleShape } from "./en";
 import { en } from "./en";
 
 export const uk = {
+  ranks: {
+    shadow: "Тінь",
+    crescent: "Серп місяця",
+    half: "Півмісяць",
+    full: "Повня",
+    eclipse: "Затемнення",
+    blackMoon: "Чорний місяць",
+    nova: "Нова",
+    destiny: "Доля",
+    emblem: "Емблема рангу «{{rank}}»",
+    unassigned: "Ранг не призначено",
+    maxRank: "Найвищий ранг",
+    ratingToNext: "До рангу «{{rank}}» залишилося {{count}} рейтингу",
+    progressTo: "Прогрес до рангу «{{rank}}»",
+  },
   competitive: {
+    games_one: "Рейтингових ігор: {{count}}",
+    games_other: "Рейтингових ігор: {{count}}",
     kicker: "Рейтингова гра", description: "Ваш рейтинг. Ваш наступний суперник.", identity: "Рейтинговий профіль",
-    medal: "Змагальна емблема — медалі рангів з’являться пізніше", uncertainty: "Невизначеність рейтингу ±{{value}}",
+    uncertainty: "Невизначеність рейтингу ±{{value}}",
     games: "Рейтингових ігор: {{count}}", qualification: "Кваліфікація до таблиці лідерів", qualified: "Кваліфіковано до рейтингової таблиці лідерів",
     you: "Ви", signInIdentity: "Увійдіть, щоб розпочати рейтингову кар’єру.", loading: "Завантаження рейтингу…", unavailable: "Не вдалося завантажити рейтинг.",
   },

@@ -11,6 +11,7 @@ export interface LeaderboardPlayer {
   ratingRank: number | null;
   user: { id: string; username: string; displayName: string | null; avatarUrl: string | null };
   rating: number;
+  rankTier: string;
   ratingDeviation: number;
   ratedGames: number;
   wins: number | null;

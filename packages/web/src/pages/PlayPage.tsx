@@ -4,7 +4,10 @@ import { useI18n } from "../i18n";
 import { MatchmakingPanel } from "../matchmaking/MatchmakingPanel";
 import { useQueue } from "../matchmaking/store";
 import { competitiveApi, type CompetitiveRating } from "../play/api";
-import { RankMedal } from "../play/RankMedal";
+import { RankEmblem } from "../ranks/RankEmblem";
+import { getRankPresentation } from "../ranks/rankAssets";
+import { RankProgress } from "../ranks/RankProgressPanel";
+import { formatCompetitiveRating } from "../ranks/rankProgress";
 
 export function CompetitiveIdentity({
   rating,
@@ -18,17 +21,24 @@ export function CompetitiveIdentity({
   const { t } = useI18n();
   const qualified = rating.ratedGames >= minRatedGames;
   const remaining = Math.max(0, minRatedGames - rating.ratedGames);
+  const presentation = getRankPresentation(rating.rankTier);
   return (
     <section className="competitive-identity" aria-label={t("competitive.identity")}>
-      <RankMedal />
-      <p className="competitive-player">{name}</p>
+      <RankEmblem rank={rating.rankTier} size="hero" decorative />
+      <p className="competitive-rank-name font-display" data-testid="competitive-rank-name">
+        {presentation ? t(presentation.labelKey) : t("ranks.unassigned")}
+      </p>
       <p className="competitive-rating" data-testid="competitive-rating">
-        {Math.round(rating.rating)}
+        {formatCompetitiveRating(rating.rating)}
       </p>
       <p className="section-kicker">{t("matchmaking.rating")}</p>
-      <p className="competitive-uncertainty" title={t("leaderboard.uncertaintyHelp")}>
-        {t("competitive.uncertainty", { value: Math.round(rating.ratingDeviation) })}
-      </p>
+      <div className="competitive-secondary">
+        <p className="competitive-player">{name}</p>
+        <p className="competitive-uncertainty" title={t("leaderboard.uncertaintyHelp")}>
+          {t("competitive.uncertainty", { value: Math.round(rating.ratingDeviation) })}
+        </p>
+      </div>
+      <RankProgress rank={rating.rankTier} value={rating.rankProgress} />
       <div className="qualification-block">
         <div className="qualification-label">
           <span>{t(qualified ? "leaderboard.qualified" : "leaderboard.provisional")}</span>
@@ -111,7 +121,7 @@ export function PlayPage() {
             />
           ) : (
             <section className="competitive-identity">
-              <RankMedal />
+              <RankEmblem size="hero" />
               <p className="mt-5 text-sm text-muted" role="status">
                 {t(
                   !user
