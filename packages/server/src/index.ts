@@ -42,6 +42,7 @@ import { MatchRecoveryRepository } from "./repositories/matchRecoveryRepository"
 export async function buildServer(
   options: {
     documentationOnly?: boolean;
+    roomSeed?: () => number;
     matchPersistence?: MatchPersistence;
     connectionIdentity?: Pick<ConnectionIdentityService, "verify"> &
       Partial<Pick<ConnectionIdentityService, "assertActive">>;
@@ -88,7 +89,7 @@ export async function buildServer(
 
   await server.register(websocket);
 
-  const lifecycle = new MatchLifecycle(server.log, options.matchPersistence);
+  const lifecycle = new MatchLifecycle(server.log, options.matchPersistence, undefined, options.roomSeed);
   const identity = options.connectionIdentity ?? new ConnectionIdentityService();
   const connections = new AccountConnections();
   const matchmaking = createMatchmakingService(

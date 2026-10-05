@@ -745,6 +745,9 @@ async function run() {
     for (const socket of sockets) socket.terminate();
     await server.close();
     const ids = accounts.map((a) => a.id);
+    await db.auditLog.deleteMany({ where: { OR: [
+      { actorUserId: { in: ids } }, { targetUserId: { in: ids } }, { matchId: { in: matches } },
+    ] } });
     await db.match.deleteMany({
       where: { OR: [{ id: { in: matches } }, { createdById: { in: ids } }] },
     });

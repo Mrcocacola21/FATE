@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.tests.json",
+  "compilerOptions": {
+    "strict": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "noEmit": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "lib": ["ES2022", "DOM"],
+    "types": ["node", "vite/client"]
+  },
+  "include": ["packages/web/scripts/journey-smoke.ts", "packages/web/scripts/browserModules.d.ts"]
+}

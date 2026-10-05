@@ -155,6 +155,7 @@ export class MatchLifecycle {
     private readonly logger: Logger,
     service?: MatchPersistence,
     private readonly snapshots: MatchSnapshotService = new MatchSnapshotService(),
+    private readonly roomSeed?: () => number,
   ) {
     this.service = service;
     this.actionQueue = new MatchActionQueue({
@@ -198,7 +199,11 @@ export class MatchLifecycle {
       throw new MatchTypeError("RATED_MATCH_REQUIRES_AUTHENTICATION", "Rated matches require authenticated players");
     if (getGameRoom(id)) throw new Error("Room already exists");
     // Keep the staged room invisible to discovery, joins and cleanup until binding succeeds.
-    const room = createGameRoomWithId(id, { ...options, publish: false });
+    const room = createGameRoomWithId(id, {
+      ...options,
+      seed: options.seed ?? this.roomSeed?.(),
+      publish: false,
+    });
     if (room.roomMode === "normal") {
       try {
         const match = await this.getService().createWaitingMatch({

@@ -293,6 +293,7 @@ async function run() {
     for (const lifecycle of lifecycles) await lifecycle.close();
     storeTestHooks.reset(); wsTestHooks.resetWsStateForTests();
     // Only test-owned identifiers in a guarded loopback test database.
+    await db.auditLog.deleteMany({ where: { matchId: { in: matchIds } } });
     await db.ratingHistory.deleteMany({ where: { userId: { in: userIds } } });
     await db.match.deleteMany({ where: { id: { in: matchIds } } });
     await db.user.deleteMany({ where: { id: { in: userIds } } });

@@ -5,11 +5,12 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
-    "build": "npm run clean && tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json",
     "build:watch": "tsc -p tsconfig.json --watch",
     "test": "ts-node src/tests/index.ts",
     "test:boundaries": "ts-node src/tests/index.ts --boundaries",
-    "manual:test": "ts-node src/manualTest.ts"
+    "manual:test": "ts-node src/manualTest.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "keywords": [],
   "author": "",

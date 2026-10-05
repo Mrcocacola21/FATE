@@ -209,8 +209,9 @@ async function main() {
   );
   await waitForError(queue1, (msg) => msg.code === "USER_ALREADY_IN_MATCH");
 
+  const disconnected = new Promise<void>(resolve => ws1.once("close", () => resolve()));
   ws1.close();
-  await new Promise((resolve) => setTimeout(resolve, 50));
+  await disconnected;
 
   const ws3 = new WebSocket(wsUrl);
   await new Promise<void>((resolve, reject) => {

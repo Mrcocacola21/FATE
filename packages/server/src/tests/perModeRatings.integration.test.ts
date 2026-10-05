@@ -287,6 +287,10 @@ async function run() {
       assert.equal((await lifecycle.applyAction(rooms[0], { type: "startGame" }, "P1")).ok, false);
       assert.equal(await lifecycle.validateStart(rooms[1]), null);
       assert.deepEqual(rooms[1].ratedCompatibility?.ratings, { P1: 1450, P2: 1500 });
+      await db.rating.update({ where: { userId_gameMode: { userId: b, gameMode: "draft" } }, data: { rating: 1850 } });
+      assert.equal(await lifecycle.validateStart(rooms[1]), null, "exact 400-point boundary is allowed");
+      await db.rating.update({ where: { userId_gameMode: { userId: b, gameMode: "draft" } }, data: { rating: 1850.0001 } });
+      assert.equal((await lifecycle.validateStart(rooms[1]))?.code, "RATED_RATING_DIFFERENCE_TOO_LARGE", "fractional gap uses full precision");
       // Discovery cannot authorize a later start after ratings become incompatible.
       await db.rating.update({
         where: { userId_gameMode: { userId: b, gameMode: "draft" } },

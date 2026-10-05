@@ -93,6 +93,11 @@ npm run build
 
 ## Tests
 
+See [the testing guide](docs/testing.md) for layer ownership, guarded PostgreSQL setup and browser smoke.
+
+`npm run test:unit`, `npm run test:integration`, `npm run test:ws` and `npm run test:e2e` run independently.
+`npm test` keeps the DB-free regression workflow; `npm run typecheck` checks all packages and the browser harness.
+
 ```bash
 npm run test
 npm run -w web typecheck

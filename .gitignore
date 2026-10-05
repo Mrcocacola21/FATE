@@ -46,6 +46,7 @@ coverage/
 .env.*
 !.env.example
 !.env.sample
+!.env.test.example
 
 ############################################
 # Runtime / logs
