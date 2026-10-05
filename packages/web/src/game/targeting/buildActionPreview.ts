@@ -19,6 +19,7 @@ import {
   LECHY_GUIDE_TRAVELER_ID,
   LUCHE_DIVINE_RAY_ID,
   METTATON_LASER_ID,
+  SANS_GASTER_BLASTER_ID,
   ODIN_SLEIPNIR_ID,
   ZORO_ONI_GIRI_ID,
 } from "../../rulesHints";
@@ -74,6 +75,8 @@ function abilityIdForPreviewActionMode(actionMode: Exclude<ActionMode, null>): s
       return LUCHE_DIVINE_RAY_ID;
     case "mettatonLaser":
       return METTATON_LASER_ID;
+    case "sansGasterBlaster":
+      return SANS_GASTER_BLASTER_ID;
     case "zoroOniGiri":
       return ZORO_ONI_GIRI_ID;
     case "donReaction":

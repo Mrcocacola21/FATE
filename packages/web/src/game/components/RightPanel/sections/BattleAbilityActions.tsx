@@ -599,38 +599,14 @@ export const BattleAbilityActions: FC<BattleAbilityActionsProps> = ({
           );
         }
         const hideCharges = ability.id === KAISER_DORA_ID && !!selectedUnit.transformed;
-        const chargeState = getAbilityChargeState(ability.id, selectedUnit, ability);
-        const notEnoughCharges = !chargeState.enabled;
-        const slotDisabled =
-          ability.slot === "action"
-            ? economy.actionUsed
-            : ability.slot === "move"
-              ? !view.legalIntents?.canMove
-              : ability.slot === "attack"
-                ? economy.attackUsed
-                : ability.slot === "stealth"
-                  ? economy.stealthUsed
-                  : false;
-        const slotReason = slotDisabled
-          ? ability.slot === "action"
-            ? t("game.actionSlotUsed")
-            : ability.slot === "move"
-              ? t("game.moveSlotUsed")
-              : ability.slot === "attack"
-                ? t("game.attackSlotUsed")
-                : ability.slot === "stealth"
-                  ? t("game.stealthSlotUsed")
-                  : undefined
+        const disabled = targetingActive || !canAct || !ability.isAvailable;
+        const chargeWarning = ability.disabledReasonCode === "notEnoughCharges"
+          ? t("game.notEnoughChargesRequired", { amount: ability.chargeRequired ?? 0 })
           : undefined;
-        const disabledByAvailability = !ability.isAvailable;
-        const disabled =
-          targetingActive || !canAct || notEnoughCharges || slotDisabled || disabledByAvailability;
-        const chargeWarning = notEnoughCharges ? t("game.notEnoughCharges") : undefined;
         const tooltip =
           (targetingActive ? t("game.cancelTargetingFirst") : "") ||
-          localizeServerText(ability.disabledReason, t) ||
-          slotReason ||
           chargeWarning ||
+          localizeServerText(ability.disabledReason, t) ||
           "";
         const display = getAbilityDisplay(ability.id, ability.name, ability.description, language);
         const counter = getOrdinaryAbilityCounterView(ability, selectedUnit);
@@ -728,6 +704,14 @@ export const BattleAbilityActions: FC<BattleAbilityActionsProps> = ({
                       current: counter.current,
                       max: counter.max ?? "∞",
                     })}
+                  </span>
+                ) : null}
+                {counter &&
+                !ability.chargeUnlimited &&
+                (ability.chargeRequired ?? 0) > 0 &&
+                ability.isAvailable ? (
+                  <span className="font-bold uppercase text-emerald-700 dark:text-emerald-300">
+                    {t("game.abilityReady")}
                   </span>
                 ) : null}
               </span>

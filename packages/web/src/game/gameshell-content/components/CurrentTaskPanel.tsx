@@ -97,6 +97,7 @@ export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm, compact = fals
           className="mt-0"
           pendingRollKind={vm.pendingRoll!.kind}
           pendingRollContext={(vm.pendingRoll!.context ?? {}) as Record<string, unknown>}
+          units={vm.view?.rosterUnits}
           pendingQueueCount={vm.pendingQueueCount}
           stakeSelections={vm.stakeSelections}
           stakeLimit={vm.stakeLimit}

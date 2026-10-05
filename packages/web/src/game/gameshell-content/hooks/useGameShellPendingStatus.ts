@@ -93,6 +93,7 @@ export function useGameShellPendingStatus({
   const isChikatiloDecoyChoice = pendingRoll?.kind === "chikatiloDecoyChoice";
   const isDonWindmillsRepositionChoice = pendingRoll?.kind === "donWindmillsRepositionChoice";
   const boardSelectionPending =
+    pendingRoll?.kind === "selectLastAttackTarget" ||
     isStakePlacement ||
     isForestTarget ||
     isForestMoveDestination ||

@@ -18,8 +18,9 @@ import {
   type PlayerId,
   type UnitClass,
 } from "rules";
-import { buildTestServer as buildServer, testAccessToken } from "./matchTestSupport";
-import { createGameRoomWithId, storeTestHooks } from "../store";
+import { MemoryMatchPersistence, testAccessToken, testIdentityService } from "./matchTestSupport";
+import { buildServer } from "../index";
+import { createGameRoomWithId, getGameRoom, storeTestHooks } from "../store";
 
 const NEW_PLAYABLE_HERO_IDS = [
   HERO_DUOLINGO_ID,
@@ -102,7 +103,7 @@ function waitForError(
     const tick = () => {
       const msg = queue.find((item) => {
         const payload = item as { type?: string; code?: string };
-        return payload.type === "error" && payload.code === code;
+        return (payload.type === "error" || payload.type === "actionResult") && payload.code === code;
       });
       if (msg) {
         resolve(msg);
@@ -136,13 +137,14 @@ async function joinTwoPlayers(wsUrl: string, params: {
   const ws2 = await openSocket(wsUrl);
   const queue1 = collectMessages(ws1);
   const queue2 = collectMessages(ws2);
+  const accessTokens = { P1: testAccessToken("P1", "P1", randomUUID()), P2: testAccessToken("P2", "P2", randomUUID()) };
 
   ws1.send(
     JSON.stringify({
       type: "joinRoom",
       mode: "create",
       role: "P1",
-      accessToken: testAccessToken("P1", "P1", randomUUID()),
+      accessToken: accessTokens.P1,
       figureSet: params.p1FigureSet,
     })
   );
@@ -155,14 +157,14 @@ async function joinTwoPlayers(wsUrl: string, params: {
       mode: "join",
       roomId: joinAck.roomId,
       role: "P2",
-      accessToken: testAccessToken("P2", "P2", randomUUID()),
+      accessToken: accessTokens.P2,
       figureSet: params.p2FigureSet,
     })
   );
   await waitForType(queue2, "joinAck");
   await waitForRoomState(queue2, (msg) => !!msg.meta?.players?.P2);
 
-  return { ws1, ws2, queue1, queue2, roomId: joinAck.roomId };
+  return { ws1, ws2, queue1, queue2, roomId: joinAck.roomId, accessTokens };
 }
 
 function sendReadyBoth(ws1: WebSocket, ws2: WebSocket) {
@@ -290,8 +292,12 @@ async function testDraftRejectsEveryStubWithoutMutation(wsUrl: string) {
   console.log("server_modes_draft_rejects_stub_heroes_without_mutation passed");
 }
 
-async function testDraftFlowStartsPlacement(wsUrl: string) {
-  const { ws1, ws2, queue1, queue2 } = await joinTwoPlayers(wsUrl);
+async function testDraftFlowStartsPlacement(wsUrl: string, persistence: MemoryMatchPersistence, rejectFinalPick = false) {
+  const { ws1, ws2, queue1, queue2, roomId, accessTokens } = await joinTwoPlayers(wsUrl);
+  const room = getGameRoom(roomId)!;
+  const matchId = room.matchId!;
+  const seatTokens = { ...room.seatTokens };
+  const seatIdentities = structuredClone(room.seatIdentities);
   sendSetMode(ws1, "draft");
   await waitForRoomState(queue1, (msg) => msg.meta?.gameMode === "draft");
 
@@ -354,6 +360,16 @@ async function testDraftFlowStartsPlacement(wsUrl: string) {
     selected.add(heroId);
     pickedClasses[player].add(unitClass);
     const socket = player === "P1" ? ws1 : ws2;
+    if (rejectFinalPick && i === pickOrder.length - 1) {
+      const revision = room.revision;
+      const draftBefore = structuredClone(room.draftState);
+      persistence.fail.add("participant");
+      socket.send(JSON.stringify({ type: "draftPickHero", heroId }));
+      await waitForError(player === "P1" ? queue1 : queue2, "MATCH_PERSISTENCE_UNAVAILABLE");
+      persistence.fail.delete("participant");
+      assert.deepEqual(room.draftState, draftBefore, "rejected transition must keep the last pick available for retry");
+      assert.equal(room.revision, revision, "rejected transition must not journal a completed draft");
+    }
     socket.send(JSON.stringify({ type: "draftPickHero", heroId }));
     await waitForRoomState(
       player === "P1" ? queue1 : queue2,
@@ -365,6 +381,22 @@ async function testDraftFlowStartsPlacement(wsUrl: string) {
     queue1,
     (msg) => msg.meta?.draftState?.phase === "complete" && !!msg.meta?.pendingRoll,
   );
+  await waitForRoomState(queue2, (msg) => msg.meta?.draftState?.phase === "complete" && !!msg.meta?.pendingRoll);
+  assert.equal(getGameRoom(roomId), room);
+  assert.equal(room.matchId, matchId);
+  assert.equal(persistence.matches.get(matchId)?.status, "IN_PROGRESS");
+  assert.deepEqual(room.seatTokens, seatTokens);
+  assert.deepEqual(room.seatIdentities, seatIdentities);
+  const transition = room.actionLog.slice(-2);
+  assert.deepEqual(transition.map((entry) => entry.action.type), ["draftPickHero", "startGame"]);
+  assert.equal(transition[0].revision + 1, transition[1].revision);
+  const startedResult = queue1.find((msg) => msg.type === "actionResult" && msg.ok && msg.events.some((event) => event.type === "initiativeRollRequested"));
+  assert(startedResult?.type === "actionResult");
+  assert.equal(startedResult.logIndex, room.actionLog.length - 1);
+  for (const queue of [queue1, queue2]) {
+    assert(!queue.some((msg) => msg.type === "leftRoom" || msg.type === "joinRejected"));
+    assert(!queue.some((msg) => msg.type === "roomState" && msg.meta?.draftState?.phase === "complete" && !msg.meta.pendingRoll && msg.view.phase === "lobby"), "completed draft must arrive with gameplay state");
+  }
   const p1Units = Object.values(completed.view.units).filter((unit) => unit.owner === "P1");
   assert.equal(p1Units.length, 7);
   assert(
@@ -372,13 +404,45 @@ async function testDraftFlowStartsPlacement(wsUrl: string) {
     "drafted roster should contain full heroes only",
   );
 
-  ws1.close();
+  // Complete authoritative initiative/rule choices, then reconnect to the same gameplay.
+  let rolls = 0;
+  while (room.state.pendingRoll) {
+    assert(++rolls < 10, "setup rolls must reach placement");
+    const pending = room.state.pendingRoll;
+    const revision = room.revision;
+    (pending.player === "P1" ? ws1 : ws2).send(JSON.stringify({
+      type: "resolvePendingRoll", pendingRollId: pending.id,
+      ...(pending.kind === "ruleDeclarationChoice" ? { choice: { type: "chooseRuleDeclaration", ruleId: "normal_rule" } } : {}),
+    }));
+    await waitForRoomState(queue1, (msg) => msg.meta.revision > revision);
+  }
+  assert.equal(room.state.phase, "placement");
+  const placement = await waitForRoomState(queue2, (msg) => msg.view.phase === "placement");
+  const closed = new Promise<void>((resolve) => ws2.once("close", () => resolve()));
   ws2.close();
+  await closed;
+  const resumed = await openSocket(wsUrl);
+  const resumedQueue = collectMessages(resumed);
+  resumed.send(JSON.stringify({ type: "joinRoom", mode: "join", roomId, role: "P2", resumeToken: seatTokens.P2, accessToken: accessTokens.P2 }));
+  const ack = await waitForType(resumedQueue, "joinAck");
+  assert(ack.type === "joinAck");
+  assert.equal(ack.seat, "P2");
+  assert.equal(ack.resumeToken, seatTokens.P2);
+  const resumedState = await waitForRoomState(resumedQueue, (msg) => msg.view.phase === "placement");
+  assert.equal(resumedState.roomId, roomId);
+  assert.equal(room.matchId, matchId);
+  assert.deepEqual(room.seatTokens, seatTokens);
+  assert.deepEqual(room.seatIdentities, seatIdentities);
+  assert.deepEqual(resumedState.view.units, placement.view.units);
+  resumed.close();
+
+  ws1.close();
   console.log("server_modes_draft_flow_starts_placement passed");
 }
 
 async function main() {
-  const server = await buildServer();
+  const persistence = new MemoryMatchPersistence();
+  const server = await buildServer({ matchPersistence: persistence, connectionIdentity: testIdentityService() });
   await server.listen({ port: 0, host: "127.0.0.1" });
 
   const address = server.server.address();
@@ -393,7 +457,8 @@ async function main() {
     await testStandardStartPreservesFigureSets(wsUrl);
     await testHostModeSelectionAndClassicStart(wsUrl);
     await testDraftRejectsEveryStubWithoutMutation(wsUrl);
-    await testDraftFlowStartsPlacement(wsUrl);
+    await testDraftFlowStartsPlacement(wsUrl, persistence);
+    await testDraftFlowStartsPlacement(wsUrl, persistence, true);
   } finally {
     storeTestHooks.reset();
     await server.close();

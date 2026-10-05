@@ -7,7 +7,6 @@ import {
 } from "./effects";
 import {
   applySansLastAttackFromDeaths,
-  applySansLastAttackTickOnTurnStart,
   applySansMoveDeniedNotice,
   clearCursesForDeadUnits,
 } from "./curses";
@@ -51,13 +50,9 @@ export function applySansPostAction(
   nextState = unbeliever.state;
   nextEvents = [...nextEvents, ...unbeliever.events];
 
-  const lastAttack = applySansLastAttackFromDeaths(nextState, prevState, nextEvents);
+  const lastAttack = applySansLastAttackFromDeaths(nextState);
   nextState = lastAttack.state;
   nextEvents = [...nextEvents, ...lastAttack.events];
-
-  const curseTick = applySansLastAttackTickOnTurnStart(nextState, action);
-  nextState = curseTick.state;
-  nextEvents = [...nextEvents, ...curseTick.events];
 
   const denied = applySansMoveDeniedNotice(nextState, prevState, action);
   nextState = denied.state;

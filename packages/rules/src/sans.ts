@@ -1,15 +1,9 @@
 import type { Coord, GameState, UnitState } from "./model";
 import { HERO_PAPYRUS_ID, HERO_SANS_ID } from "./heroes";
-import {
-  collectMettatonLineTargetIds,
-  isMettatonCenterOnAttackLine,
-} from "./mettaton";
+import { getUnitsAt } from "./board";
+import { getMettatonFullLineCells, isMettatonFullLineEndpoint } from "./mettaton";
 
 export const ARENA_BONE_FIELD_ID = "boneField" as const;
-
-function chebyshevDistance(a: Coord, b: Coord): number {
-  return Math.max(Math.abs(a.col - b.col), Math.abs(a.row - b.row));
-}
 
 export function isSans(unit: UnitState | null | undefined): unit is UnitState {
   return !!unit && unit.heroId === HERO_SANS_ID;
@@ -41,52 +35,19 @@ export function isSansOrPapyrus(unit: UnitState | null | undefined): boolean {
 export function isSansCenterOnAttackLine(
   state: GameState,
   caster: UnitState,
-  target: Coord
+  target: Coord,
 ): boolean {
-  return isMettatonCenterOnAttackLine(state, caster, target);
+  return isMettatonFullLineEndpoint(state, caster, target);
 }
 
 export function collectSansLineTargetIds(
   state: GameState,
   caster: UnitState,
-  target: Coord
+  target: Coord,
 ): string[] {
-  return collectMettatonLineTargetIds(state, caster, target);
-}
-
-export function pickSansLastAttackTargetId(
-  state: GameState,
-  sansOwner: UnitState["owner"],
-  sansPosition: Coord | null
-): string | null {
-  const candidates = Object.values(state.units).filter(
-    (unit) =>
-      unit.isAlive &&
-      unit.owner !== sansOwner &&
-      !!unit.position &&
-      unit.hp > 0
+  return getMettatonFullLineCells(state, caster, target).flatMap((cell) =>
+    getUnitsAt(state, cell)
+      .filter((unit) => unit.isAlive && unit.hp > 0 && unit.owner !== caster.owner)
+      .map((unit) => unit.id),
   );
-  if (candidates.length === 0) {
-    return null;
-  }
-
-  const sorted = [...candidates].sort((a, b) => {
-    if (a.hp !== b.hp) return a.hp - b.hp;
-    if (sansPosition && a.position && b.position) {
-      const da = chebyshevDistance(sansPosition, a.position);
-      const db = chebyshevDistance(sansPosition, b.position);
-      if (da !== db) return da - db;
-    }
-    if (a.position && b.position) {
-      if (a.position.row !== b.position.row) {
-        return a.position.row - b.position.row;
-      }
-      if (a.position.col !== b.position.col) {
-        return a.position.col - b.position.col;
-      }
-    }
-    return a.id.localeCompare(b.id);
-  });
-
-  return sorted[0]?.id ?? null;
 }

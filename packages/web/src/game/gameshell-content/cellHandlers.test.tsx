@@ -16,6 +16,26 @@ import {
   getSelectableAttackTargetsAtCell,
 } from "./helpers";
 
+test("Last Attack sends an authoritative enemy choice while normal actions are blocked", () => {
+  const { view, attacker, enemies } = sharedCellView();
+  const pending = { id: "last-attack", player: "P1" as const, kind: "selectLastAttackTarget" as const,
+    context: { sourceUnitId: attacker.id, legalTargetIds: [enemies[0].id] } };
+  view.pendingRoll = pending;
+  const sent: unknown[] = [];
+  const context = {
+    view, pendingRoll: pending, playerId: "P1", joined: true, isSpectator: false,
+    hasBlockingRoll: true, boardSelectionPending: true, actionMode: null,
+    sendGameAction: (action: unknown) => sent.push(action),
+  } as never;
+  assert.deepEqual(getActiveUnitTargetIds(context), [enemies[0].id]);
+  const click = createCellClickHandler(context);
+  click(3, 3);
+  assert.deepEqual(sent, [], "Clicking Sans or an ally cannot satisfy the choice");
+  click(4, 4);
+  assert.deepEqual(sent, [{ type: "resolvePendingRoll", pendingRollId: pending.id, player: "P1",
+    choice: { type: "sansLastAttackTarget", targetId: enemies[0].id } }]);
+});
+
 function unit(overrides: Partial<UnitState> & Pick<UnitState, "id" | "owner" | "position">) {
   return {
     class: "knight",

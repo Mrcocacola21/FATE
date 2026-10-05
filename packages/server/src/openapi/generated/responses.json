@@ -395,6 +395,25 @@
         "disabledReason": {
           "type": "string"
         },
+        "disabledReasonCode": {
+          "type": "string",
+          "enum": [
+            "abilityConditionNotMet",
+            "abilityNotOwned",
+            "actionSlotUsed",
+            "attackSlotUsed",
+            "automaticAbility",
+            "moveSlotUsed",
+            "notActiveUnit",
+            "notEnoughCharges",
+            "notYourTurn",
+            "pendingResolution",
+            "stealthSlotUsed",
+            "unitNotAlive",
+            "unitNotFound",
+            "wrongPhase"
+          ]
+        },
         "id": {
           "type": "string"
         },
@@ -3057,6 +3076,7 @@
             "ruleDeclarationChessKingChoice",
             "ruleDeclarationChoice",
             "searchStealth",
+            "selectLastAttackTarget",
             "tricksterAoE_attackerRoll",
             "tricksterAoE_berserkerDefenseChoice",
             "tricksterAoE_defenderRoll",
@@ -9126,6 +9146,7 @@
             "ruleDeclarationChessKingChoice",
             "ruleDeclarationChoice",
             "searchStealth",
+            "selectLastAttackTarget",
             "tricksterAoE_attackerRoll",
             "tricksterAoE_berserkerDefenseChoice",
             "tricksterAoE_defenderRoll",
@@ -11362,6 +11383,9 @@
         "sansLastAttackCurseSourceId": {
           "type": "string"
         },
+        "sansLastAttackLastTickTurnNumber": {
+          "type": "number"
+        },
         "sansMoveLockArmed": {
           "type": "boolean",
           "enum": [
@@ -11371,6 +11395,10 @@
         },
         "sansMoveLockSourceId": {
           "type": "string"
+        },
+        "sansPendingDeath": {
+          "$ref": "#/definitions/UnitStateSansPendingDeath",
+          "description": "Lethal damage received; death is held for Last Attack's owner choice."
         },
         "sansUnbelieverUnlocked": {
           "type": "boolean",
@@ -11499,6 +11527,25 @@
         "sourceUnitId",
         "trackingExpires",
         "trackingStarts"
+      ]
+    },
+    "UnitStateSansPendingDeath": {
+      "type": "object",
+      "properties": {
+        "killerId": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "killerId"
       ]
     },
     "VisibleJackTrapMarker": {

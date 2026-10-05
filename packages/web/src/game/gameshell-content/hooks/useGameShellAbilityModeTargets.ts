@@ -75,7 +75,7 @@ export function useGameShellAbilityModeTargets({
     ) {
       return [] as Coord[];
     }
-    return effectiveActionMode === "mettatonLaser"
+    return effectiveActionMode === "mettatonLaser" || effectiveActionMode === "sansGasterBlaster"
       ? restrictForBlind(getFullLineTargetCells(view, selectedUnit.id))
       : restrictForBlind(getDoraTargetCenters(view, selectedUnit.id));
   }, [view, effectiveActionMode, selectedUnit, restrictForBlind]);

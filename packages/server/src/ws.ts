@@ -854,8 +854,11 @@ async function applyAndBroadcast(
   playerId: PlayerId,
   socketForErrors?: WebSocket,
   sendMoveOptions = false,
+  draftCompletion?: { state: DraftState; heroId: string },
 ): Promise<CommandResult> {
-  const command = await lifecycle.applyAction(room, action, playerId);
+  const command = draftCompletion
+    ? await lifecycle.completeDraftPick(room, draftCompletion.state, playerId, draftCompletion.heroId)
+    : await lifecycle.applyAction(room, action, playerId);
   if (!command.ok) {
     if (action.type === "startGame") broadcastRoomState(room);
     if (socketForErrors) {
@@ -1595,10 +1598,11 @@ export function registerGameWebSocket(
               return;
             }
 
+            const staged = { ...room };
             const result =
               msg.type === "draftBanHero"
-                ? applyDraftBan(room, current.seat, msg.heroId)
-                : applyDraftPick(room, current.seat, msg.heroId);
+                ? applyDraftBan(staged, current.seat, msg.heroId)
+                : applyDraftPick(staged, current.seat, msg.heroId);
             if (!result.ok) {
               sendMessage(socket, {
                 type: "error",
@@ -1608,14 +1612,16 @@ export function registerGameWebSocket(
               return;
             }
 
-            // The accepted final pick owns the completed armies before its checkpoint is captured.
-            if (msg.type === "draftPickHero" && room.draftState?.phase === "complete")
-              rebuildDraftedArmies(room);
-            lifecycle.recordDraftAction(room, { type: msg.type, player: current.seat, heroId: msg.heroId });
-            if (msg.type === "draftPickHero" && room.draftState?.phase === "complete") {
-              await applyAndBroadcast(lifecycle, room, { type: "startGame" }, current.seat, socket);
+            if (msg.type === "draftPickHero" && result.state.phase === "complete") {
+              await applyAndBroadcast(
+                lifecycle, room, { type: "startGame" }, current.seat, socket, false,
+                { state: result.state, heroId: msg.heroId },
+              );
               return;
             }
+
+            room.draftState = result.state;
+            lifecycle.recordDraftAction(room, { type: msg.type, player: current.seat, heroId: msg.heroId });
 
             broadcastRoomState(room);
           });

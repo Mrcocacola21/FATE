@@ -111,7 +111,7 @@ const ResolveRollChoiceSchema = z.union([
     targetId: z.string().min(1),
   }),
   z.object({
-    type: z.literal("hassanTrueEnemyTarget"),
+    type: z.enum(["hassanTrueEnemyTarget", "sansLastAttackTarget"]),
     targetId: z.string().min(1),
   }),
   z.object({

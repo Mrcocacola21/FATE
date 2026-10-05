@@ -5,11 +5,15 @@ import {
   ABILITY_FRISK_PACIFISM,
   ABILITY_LOKI_LAUGHT,
   addCharges,
+  canUseAbility,
+  getAbilityChargeCost,
   getChargeLimit,
   getCharges,
   isUnboundedChargeCounter,
   setCharges,
+  spendCharges,
 } from "../../abilities";
+import { ABILITY_SPECS } from "../../abilities/specs";
 import {
   addMettatonRating,
   getMettatonRating,
@@ -43,6 +47,28 @@ function getHeroUnit(heroId: string): UnitState {
   const unit = Object.values(state.units).find((item) => item.heroId === heroId);
   assert(unit, `expected hero unit ${heroId}`);
   return unit;
+}
+
+export function testAllFiniteAbilityCostsUseConfiguredThreshold() {
+  const unit = getHeroUnit(HERO_FRISK_ID);
+  for (const spec of Object.values(ABILITY_SPECS)) {
+    const required = getAbilityChargeCost(spec);
+    if (spec.chargeUnlimited || spec.maxCharges === undefined || required <= 0) continue;
+    for (let current = 0; current < required; current++) {
+      const below = setCharges(unit, spec.id, current);
+      assert.equal(canUseAbility(below, spec.id), false, `${spec.id}: ${current}/${required}`);
+      const rejected = spendCharges(below, spec.id, required);
+      assert.equal(rejected.ok, false, `${spec.id} must reject insufficient charges`);
+      assert.strictEqual(rejected.unit, below);
+      assert.equal(getCharges(rejected.unit, spec.id), current);
+    }
+    const ready = setCharges(unit, spec.id, required);
+    assert.equal(canUseAbility(ready, spec.id), true, `${spec.id} must allow the exact cost`);
+    const spent = spendCharges(ready, spec.id, required);
+    assert.equal(spent.ok, true);
+    assert.equal(getCharges(spent.unit, spec.id), 0);
+  }
+  console.log("all_finite_ability_costs_use_configured_threshold passed");
 }
 
 export function testUnboundedCountersExceedCommonChargeLimits() {

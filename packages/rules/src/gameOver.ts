@@ -21,7 +21,8 @@ export function hasPendingBattleResolution(state: GameState): boolean {
   return (
     state.pendingRoll !== null ||
     state.pendingAoE !== null ||
-    state.pendingCombatQueue.length > 0
+    state.pendingCombatQueue.length > 0 ||
+    Object.values(state.units).some((unit) => !!unit.sansPendingDeath)
   );
 }
 

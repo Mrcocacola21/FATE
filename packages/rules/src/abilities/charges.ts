@@ -10,6 +10,11 @@ export function getCharges(unit: UnitState, abilityId: string): number {
   return unit.charges[abilityId] ?? 0;
 }
 
+/** Canonical spending requirement; capacity and automatic trigger thresholds are separate. */
+export function getAbilityChargeCost(spec: AbilitySpec): number {
+  return spec.chargesPerUse ?? spec.chargeCost ?? 0;
+}
+
 function toChargeInt(value: number): number {
   if (!Number.isFinite(value)) return 0;
   return Math.max(0, Math.trunc(value));
@@ -65,7 +70,7 @@ export function canUseAbility(unit: UnitState, abilityId: string): boolean {
   const spec = getAbilitySpec(abilityId);
   if (!spec) return false;
 
-  const need = spec.chargesPerUse ?? spec.chargeCost ?? 0;
+  const need = getAbilityChargeCost(spec);
   const current = getCharges(unit, abilityId);
 
   return current >= need;
@@ -78,7 +83,7 @@ export function consumeAbilityCharges(
   const spec = getAbilitySpec(abilityId);
   if (!spec) return unit;
 
-  const need = spec.chargesPerUse ?? spec.chargeCost ?? 0;
+  const need = getAbilityChargeCost(spec);
   const { unit: updated } = spendCharges(unit, abilityId, need);
   return updated;
 }

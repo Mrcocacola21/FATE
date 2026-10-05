@@ -193,6 +193,13 @@ export function buildHighlightedCells({
   undyneSpearThrowTargetKeys,
 }: BuildHighlightedCellsArgs): Record<string, CellHighlightKind> {
   const highlights: Record<string, CellHighlightKind> = {};
+  if (view?.pendingRoll?.kind === "selectLastAttackTarget") {
+    for (const id of view.pendingRoll.context.legalTargetIds as string[]) {
+      const position = view.units[id]?.position;
+      if (position) highlights[coordKey(position)] = "attack";
+    }
+    return highlights;
+  }
   const modeKind = (fallback: "move" | "attack" | "dora"): CellHighlightKind =>
     modePreviewKind ?? fallback;
 

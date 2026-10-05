@@ -150,6 +150,9 @@ export interface UnitState {
   sansMoveLockSourceId?: string;
   sansBoneFieldStatus?: SansBoneFieldStatus;
   sansLastAttackCurseSourceId?: string;
+  sansLastAttackLastTickTurnNumber?: number;
+  /** Lethal damage received; death is held for Last Attack's owner choice. */
+  sansPendingDeath?: { killerId: string | null };
   mettatonRating?: number;
   mettatonExUnlocked?: boolean;
   mettatonNeoUnlocked?: boolean;

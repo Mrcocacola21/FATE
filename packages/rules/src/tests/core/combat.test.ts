@@ -1,3 +1,4 @@
+import { commitAbilityCost } from "../../actions/abilityCosts";
 import {
   ABILITY_BERSERK_AUTO_DEFENSE,
   ABILITY_TEST_MULTI_SLOT,
@@ -1279,15 +1280,11 @@ export function testAbilityConsumesMultipleSlots() {
   state = toBattleState(state, "P1", caster.id);
   state = initKnowledgeForOwners(state);
 
-  const used = applyAction(
-    state,
-    {
-      type: "useAbility",
-      unitId: caster.id,
-      abilityId: ABILITY_TEST_MULTI_SLOT,
-    },
-    rng,
-  );
+  // The synthetic spec tests cost commitment, without granting a real unit an unowned ability.
+  const used = commitAbilityCost(state, caster.id, ABILITY_TEST_MULTI_SLOT);
+  assert(used.ok, "multi-slot cost must be accepted on an unused turn");
+  assert(used.unit.turn.moveUsed && used.unit.turn.attackUsed,
+    "the multi-slot cost must commit every configured slot");
 
   const moveAfter = applyAction(
     used.state,

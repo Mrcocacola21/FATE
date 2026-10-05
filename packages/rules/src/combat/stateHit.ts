@@ -11,6 +11,7 @@ import { hasUndyneImmortalActive } from "../undyne";
 import { getChikatiloMarkBonus, hasLegendOfTheSteppesBonus } from "./helpers";
 import { distanceInfo, isSpearmanReachTarget } from "./math";
 import type { HitResolution, ResolveAttackParams } from "./types";
+import { resolveUnitDeath } from "../death";
 
 export function resolveHitDamage(
   params: ResolveAttackParams,
@@ -126,16 +127,7 @@ export function resolveHitDamage(
 
   if (newHp <= 0) {
     const deathPosition = defenderAfter.position ? { ...defenderAfter.position } : null;
-    defenderAfter = {
-      ...defenderAfter,
-      isAlive: false,
-      position: null,
-    };
-    events.push({
-      type: "unitDied",
-      unitId: defenderAfter.id,
-      killerId: attackerAfter.id,
-    });
+    defenderAfter = resolveUnitDeath(defenderAfter, attackerAfter.id, events);
     const rebirth = applyGriffithFemtoRebirth(defenderAfter, deathPosition);
     if (rebirth.transformed) {
       defenderAfter = rebirth.unit;

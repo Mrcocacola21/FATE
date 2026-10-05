@@ -1,3 +1,4 @@
+import { resolveUnitDeath } from "../../../death";
 import type {
   ApplyResult,
   GameEvent,
@@ -11,7 +12,6 @@ import {
   setCharges,
 } from "../../../abilities";
 import { HERO_FALSE_TRAIL_TOKEN_ID } from "../../../heroes";
-import { evUnitDied } from "../../../core";
 import {
   hasSansUnbelieverUnlocked,
   isSans,
@@ -180,17 +180,7 @@ export function applySansBoneFieldPunish(
   ];
 
   if (hpAfter <= 0) {
-    updatedTarget = {
-      ...updatedTarget,
-      isAlive: false,
-      position: null,
-    };
-    events.push(
-      evUnitDied({
-        unitId: updatedTarget.id,
-        killerId: null,
-      })
-    );
+    updatedTarget = resolveUnitDeath(updatedTarget, null, events);
   }
 
   return {

@@ -122,19 +122,23 @@ export function getAbilityChargeState(
     typeof abilityMeta?.chargeRequired === "number"
       ? abilityMeta.chargeRequired
       : null;
-  const enabled = required === null || current >= required;
+  const enabled = abilityMeta?.isAvailable ?? false;
+  const reason = abilityMeta?.disabledReasonCode === "notEnoughCharges" ||
+    abilityMeta?.disabledReason === "Not Enough charges"
+      ? "game.notEnoughCharges"
+      : undefined;
 
   if (abilityMeta?.chargeUnlimited) {
     return {
       current,
       max: null,
       enabled,
-      reason: enabled ? undefined : "game.notEnoughCharges",
+      reason,
     };
   }
 
   if (required === null) {
-    return { current, max: null, enabled: true };
+    return { current, max: null, enabled, reason };
   }
 
   const max =
@@ -145,7 +149,7 @@ export function getAbilityChargeState(
     current,
     max,
     enabled,
-    reason: enabled ? undefined : "game.notEnoughCharges",
+    reason,
   };
 }
 

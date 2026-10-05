@@ -1,6 +1,6 @@
-import type { DiceRoll, GameEvent } from "rules";
+import type { DiceRoll, GameEvent, PlayerView } from "rules";
 import type { Language, Translate } from ".";
-import { getAbilityDisplay, getArenaLabel, getHeroDisplayName } from "./displayMetadata";
+import { getAbilityDisplay, getArenaLabel, getHeroDisplayName, getUnitFigureDisplayName } from "./displayMetadata";
 import {
   GRIFFITH_FEMTO_REBIRTH_ID,
   GUTS_BERSERK_MODE_ID,
@@ -58,7 +58,8 @@ export function formatDice(roll?: DiceRoll | null) {
   return `(${roll.dice.length ? roll.dice.join(", ") : "-"}) = ${roll.sum ?? "-"}`;
 }
 
-export function formatEventMessage(event: GameEvent, language: Language, t: Translate): string {
+export function formatEventMessage(event: GameEvent, language: Language, t: Translate, units?: PlayerView["rosterUnits"]): string {
+  const unitName = (id: string) => units?.[id] ? getUnitFigureDisplayName(units[id], { language, t }) : id;
   switch (event.type) {
     case "turnStarted":
       return text(
@@ -426,20 +427,20 @@ export function formatEventMessage(event: GameEvent, language: Language, t: Tran
     case "sansLastAttackApplied":
       return text(
         language,
-        `Curse applied: ${event.targetId}`,
-        `Прокляття накладено: ${event.targetId}`,
+        `Sans cursed ${unitName(event.targetId)} with Last Attack.`,
+        `???? ??????? ${unitName(event.targetId)} ????????? ??????.`,
       );
     case "sansLastAttackTick":
       return text(
         language,
-        `Curse: ${event.targetId} took ${event.damage}`,
-        `Прокляття: ${event.targetId} отримує ${event.damage} шкоди`,
+        `${unitName(event.targetId)} suffers ${event.damage} damage from Sans's curse.`,
+        `${unitName(event.targetId)} ??????? ${event.damage} ????? ??? ????????? ?????.`,
       );
     case "sansLastAttackRemoved":
       return text(
         language,
-        `Curse removed: ${event.targetId}`,
-        `Прокляття знято: ${event.targetId}`,
+        `Sans's curse on ${unitName(event.targetId)} has ended.`,
+        `????????? ????? ?? ${unitName(event.targetId)} ???????????.`,
       );
     case "friskHugsApplied":
       return text(

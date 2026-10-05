@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import type { GameEvent } from "rules";
+import type { GameEvent, PlayerView } from "rules";
 import { useI18n } from "../i18n";
 import { localizeServerText } from "../i18n/displayMetadata";
 import { formatDice, formatEventMessage } from "../i18n/eventMessages";
@@ -80,6 +80,7 @@ function eventGlyph(event: GameEvent): string {
 interface EventLogProps {
   events: GameEvent[];
   clientLog: string[];
+  units?: PlayerView["rosterUnits"];
 }
 
 function searchEventRevealedUnit(event: GameEvent, unitId: string): boolean {
@@ -126,7 +127,7 @@ function shouldDisplayEvent(event: GameEvent, allEvents: GameEvent[]): boolean {
   return true;
 }
 
-export const EventLog: FC<EventLogProps> = ({ events, clientLog }) => {
+export const EventLog: FC<EventLogProps> = ({ events, clientLog, units }) => {
   const { language, t } = useI18n();
   const displayEvents = events.filter((event) => shouldDisplayEvent(event, events));
   const items = displayEvents.slice(-30).reverse();
@@ -216,7 +217,7 @@ export const EventLog: FC<EventLogProps> = ({ events, clientLog }) => {
                   <span className="mr-1.5 font-black text-current" aria-hidden="true">
                     {eventGlyph(event)}
                   </span>
-                  {formatEventMessage(event, language, t)}
+                  {formatEventMessage(event, language, t, units)}
                 </span>
                 <span className="shrink-0 text-[10px] font-black opacity-45">#{sequence}</span>
               </div>

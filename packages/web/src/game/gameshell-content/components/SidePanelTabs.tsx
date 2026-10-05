@@ -333,7 +333,7 @@ export const SidePanelTabs: FC<SidePanelTabsProps> = ({
           </div>
         ) : null}
 
-        {activeTab === "log" ? <EventLog events={vm.events} clientLog={vm.clientLog} /> : null}
+        {activeTab === "log" ? <EventLog events={vm.events} clientLog={vm.clientLog} units={vm.view?.rosterUnits} /> : null}
       </div>
     </div>
   );

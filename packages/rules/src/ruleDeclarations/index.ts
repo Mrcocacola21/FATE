@@ -1,3 +1,4 @@
+import { resolveUnitDeath } from "../death";
 export * from "./types";
 export * from "./registry";
 
@@ -36,7 +37,6 @@ import {
   evRuleDeclarationSelected,
   evRuleDeclarationSetupCompleted,
   evStealthRevealed,
-  evUnitDied,
   evUnitHealed,
   evUnitMoved,
   requestRoll,
@@ -619,6 +619,10 @@ export function completePendingRoundAdvance(
 ): ApplyResult {
   const advance = getPendingRoundAdvance(state);
   if (!advance || state.phase !== "battle") {
+    return { state, events: leadingEvents };
+  }
+  if (state.pendingRoll?.kind === "selectLastAttackTarget" ||
+      Object.values(state.units).some((unit) => !!unit.sansPendingDeath)) {
     return { state, events: leadingEvents };
   }
 
@@ -1501,15 +1505,10 @@ function applyDirectDamage(
   const unit = state.units[unitId];
   if (!unit || !unit.isAlive || amount <= 0) return { state, events: [] };
   const hp = Math.max(0, unit.hp - amount);
-  const updated: UnitState = {
-    ...unit,
-    hp,
-    isAlive: hp > 0,
-    position: hp > 0 ? unit.position : null,
-  };
+  let updated: UnitState = { ...unit, hp };
   const events: GameEvent[] = [];
   if (hp <= 0) {
-    events.push(evUnitDied({ unitId, killerId }));
+    updated = resolveUnitDeath(updated, killerId, events);
   }
   return {
     state: {

@@ -212,6 +212,9 @@ export function submitUnitTargetClick({
 }
 
 export function getActiveUnitTargetIds(context: CellClickContext): string[] {
+  if (context.pendingRoll?.kind === "selectLastAttackTarget") {
+    return context.pendingRoll.context.legalTargetIds as string[];
+  }
   if (context.isRiverBoatCarryChoice) return context.riverBoatCarryOptionIds;
   if (context.isRiverTraLaLaTargetChoice) return context.riverTraLaLaTargetIds;
   if (context.isGroznyTyrantAllyChoice) return context.groznyTyrantAllyOptionIds;
@@ -399,6 +402,15 @@ export function createCellClickHandler(context: CellClickContext) {
           ? targets[0]
           : undefined;
     };
+
+    if (pendingRoll?.kind === "selectLastAttackTarget") {
+      const target = targetFor(pendingRoll.context.legalTargetIds as string[]);
+      if (target) sendGameAction({
+        type: "resolvePendingRoll", pendingRollId: pendingRoll.id, player: playerId,
+        choice: { type: "sansLastAttackTarget", targetId: target.id },
+      });
+      return;
+    }
 
     if (isStakePlacement) {
       const key = coordKey({ col, row });

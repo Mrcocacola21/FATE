@@ -59,6 +59,7 @@ export type RollKind =
   | "moonCheeseHolesChoice"
   | "pureBloodRedirectChoice"
   | "papyrusBoneChoice"
+  | "selectLastAttackTarget"
   | "attack_attackerRoll"
   | "attack_defenderRoll"
   | "berserkerDefenseChoice"
@@ -162,6 +163,7 @@ export const ALL_ROLL_KINDS = [
   "moonCheeseHolesChoice",
   "pureBloodRedirectChoice",
   "papyrusBoneChoice",
+  "selectLastAttackTarget",
   "attack_attackerRoll",
   "attack_defenderRoll",
   "berserkerDefenseChoice",

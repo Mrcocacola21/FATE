@@ -3,7 +3,9 @@ import { readMatchmakingConfig, type MatchmakingConfig } from "../matchmaking/co
 import { ratedCompatibility, type RatedCompatibility } from "../lobby/metadata";
 import { RatingService } from "../services/ratingService";
 import { RatingRepository } from "../repositories/ratingRepository";
-import type { GameAction, GameModeId, PlayerId } from "rules";
+import type { DraftState, GameAction, GameModeId, PlayerId } from "rules";
+import { rebuildDraftedArmies } from "../modes/roomModes";
+import type { CommandResult } from "../commandResult";
 import { captureReplaySetup } from "../replay/actionSetup";
 import { toAcceptedActionRecord, type DraftAction, type LobbyModeAction } from "./acceptedAction";
 import { MatchActionQueue } from "./matchActionQueue";
@@ -381,8 +383,8 @@ export class MatchLifecycle {
     await this.flush(p);
   }
 
-  async applyAction(room: GameRoom, action: GameAction, playerId?: PlayerId) {
-    if (room.roomMode === "normal" && action.type === "startGame") {
+  private async prepareStart(room: GameRoom) {
+    if (room.roomMode === "normal") {
       if (!hasDistinctPlayerIdentities(room)) return await this.validateStart(room) ?? rejected("AUTH_REQUIRED");
       const projection = this.projection(room);
       if (projection && !projection.started) {
@@ -394,8 +396,57 @@ export class MatchLifecycle {
       const invalid = await this.validateStart(room);
       if (invalid) return invalid;
     }
+    return null;
+  }
+
+  /** Caller holds the room queue. Publish the final pick only together with gameplay. */
+  async completeDraftPick(room: GameRoom, draft: DraftState, player: PlayerId, heroId: string) {
+    const invalid = await this.prepareStart(room);
+    if (invalid) return invalid;
+
+    // Stage rules acceptance without exposing a completed draft or journaling a rejected pick.
+    const staged = {
+      ...room,
+      draftState: draft,
+      actionLog: [...room.actionLog],
+      revision: room.revision + 1,
+    };
+    rebuildDraftedArmies(staged);
+    const armyState = staged.state;
+    const previousPhase = room.state.phase;
+    const command = applyGameAction(staged, { type: "startGame" }, player);
+    if (!command.ok) return command;
+
+    // Preserve the two replay revisions and their setup states. No await separates these writes.
+    room.draftState = draft;
+    room.state = armyState;
+    this.recordDraftAction(room, { type: "draftPickHero", player, heroId });
+    room.state = staged.state;
+    room.revision = staged.revision;
+    room.actionLog.push(staged.actionLog[staged.actionLog.length - 1]);
+    if (room.actionLog.length > getMaxLogEvents()) room.actionLog.shift();
+    return this.recordCommand(room, { type: "startGame" }, previousPhase, {
+      ...command,
+      logIndex: room.actionLog.length - 1,
+    });
+  }
+
+  async applyAction(room: GameRoom, action: GameAction, playerId?: PlayerId) {
+    if (action.type === "startGame") {
+      const invalid = await this.prepareStart(room);
+      if (invalid) return invalid;
+    }
     const previousPhase = room.state.phase;
     const command = applyGameAction(room, action, playerId);
+    return this.recordCommand(room, action, previousPhase, command);
+  }
+
+  private async recordCommand(
+    room: GameRoom,
+    action: GameAction,
+    previousPhase: GameRoom["state"]["phase"],
+    command: CommandResult,
+  ) {
     if (!command.ok) return command;
     if (command.revision !== undefined) this.recordAcceptedAction(room);
     const p = this.projection(room);

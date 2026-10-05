@@ -6,6 +6,12 @@ import {
   createDefaultArmy,
   createEmptyGame,
   HERO_CHIKATILO_ID,
+  HERO_ASGORE_ID,
+  ABILITY_ASGORE_FIREBALL,
+  ABILITY_ASGORE_FIRE_PARADE,
+  getAbilityChargeCost,
+  getAbilitySpec,
+  SeededRNG,
   HERO_LOKI_ID,
   HERO_JACK_RIPPER_ID,
   HERO_ZORO_ID,
@@ -30,12 +36,53 @@ import {
   type GameState,
   type UnitState,
 } from "rules";
+import { applyGameAction, createGameRoom } from "../store";
 
 function setupState() {
   let state = createEmptyGame();
   state = attachArmy(state, createDefaultArmy("P1"));
   state = attachArmy(state, createDefaultArmy("P2"));
   return state;
+}
+
+function testAsgoreChargeProjectionAndServerRejection() {
+  for (const abilityId of [ABILITY_ASGORE_FIREBALL, ABILITY_ASGORE_FIRE_PARADE]) {
+    let state = createEmptyGame();
+    state = attachArmy(state, createDefaultArmy("P1", { knight: HERO_ASGORE_ID }));
+    state = attachArmy(state, createDefaultArmy("P2"));
+    const asgore = Object.values(state.units).find((unit) => unit.heroId === HERO_ASGORE_ID)!;
+    const target = Object.values(state.units).find((unit) => unit.owner === "P2")!;
+    state = setUnit(state, asgore.id, {
+      position: { col: 4, row: 4 },
+      charges: { ...asgore.charges, [abilityId]: 1 },
+    });
+    state = setUnit(state, target.id, { position: { col: 4, row: 5 } });
+    state = { ...state, phase: "battle", currentPlayer: "P1", activeUnitId: asgore.id };
+    const room = createGameRoom();
+    room.state = state;
+    room.rng = new SeededRNG(91);
+    const previousRevision = room.revision;
+    const previousLogLength = room.actionLog.length;
+    const view = JSON.parse(JSON.stringify(makePlayerView(room.state, "P1")));
+    const ability = view.abilitiesByUnitId[asgore.id].find((item: { id: string }) => item.id === abilityId);
+    assert.equal(ability.currentCharges, 1);
+    assert.equal(ability.chargeRequired, getAbilityChargeCost(getAbilitySpec(abilityId)!));
+    assert.equal(ability.isAvailable, false);
+    assert.equal(ability.disabledReasonCode, "notEnoughCharges");
+    const result = applyGameAction(room, {
+      type: "useAbility",
+      unitId: asgore.id,
+      abilityId,
+      payload: { targetId: target.id },
+    }, "P1");
+    assert.equal(result.ok, false);
+    if (result.ok) throw new Error("undercharged action must be rejected");
+    assert.equal(result.code, "notEnoughCharges");
+    assert.strictEqual(room.state, state);
+    assert.equal(room.revision, previousRevision);
+    assert.equal(room.actionLog.length, previousLogLength);
+  }
+  console.log("asgore_charge_projection_and_server_rejection passed");
 }
 
 function setUnit(state: GameState, unitId: string, patch: Partial<UnitState>): GameState {
@@ -1164,6 +1211,7 @@ function testHiddenCollisionProjectionIsOwnerDetailedAndOpponentSafe() {
 }
 
 function main() {
+  testAsgoreChargeProjectionAndServerRejection();
   testGroznyTyrantMovementProjectionAndReconnect();
   testHiddenEnemyOmitted();
   testKnownStealthedEnemyUsesLastKnown();

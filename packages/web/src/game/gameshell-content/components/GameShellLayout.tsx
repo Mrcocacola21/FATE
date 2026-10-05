@@ -10,6 +10,7 @@ import { MobileMatchLayout } from "../../layout/MobileMatchLayout";
 import { DesktopMatchScaffold } from "../../layout/MatchScaffolds";
 import { ResponsiveMatchLayout } from "../../../layout/ResponsiveMatchLayout";
 import { BattleEndScreen } from "./BattleEndScreen";
+import { hasAuthoritativeMatchStarted } from "../../pendingState";
 
 interface GameShellLayoutProps {
   vm: GameShellViewModel;
@@ -40,8 +41,7 @@ export const GameShellLayout: FC<GameShellLayoutProps> = ({ vm }) => {
   } else if (
     vm.roomMeta?.gameMode === "draft" &&
     vm.roomMeta?.draftState &&
-    vm.roomMeta.draftState.phase !== "complete" &&
-    vm.view.phase === "lobby"
+    !hasAuthoritativeMatchStarted(vm.view, vm.roomMeta.pendingRoll)
   ) {
     content = (
       <DraftScreen

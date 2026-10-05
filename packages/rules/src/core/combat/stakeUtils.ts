@@ -1,9 +1,10 @@
+import { resolveUnitDeath } from "../../death";
 import type { Coord, GameEvent, GameState, StakeMarker, UnitState } from "../../model";
 import { coordsEqual, getUnitsAt } from "../../board";
 import { revealUnit } from "../../stealth";
 import type { RNG } from "../../rng";
 import { isUnitVisibleToPlayer } from "../../actions/shared";
-import { evStakeTriggered, evUnitDied } from "../events/combatEvents";
+import { evStakeTriggered } from "../events/combatEvents";
 import { applyGriffithFemtoRebirth } from "../../actions/heroes/griffith";
 
 export function getLegalStakePositions(state: GameState, _owner: "P1" | "P2"): Coord[] {
@@ -100,17 +101,7 @@ export function applyStakeTriggerIfAny(
   };
 
   if (newHp <= 0) {
-    updatedUnit = {
-      ...updatedUnit,
-      isAlive: false,
-      position: null,
-    };
-    events.push(
-      evUnitDied({
-        unitId: updatedUnit.id,
-        killerId: null,
-      }),
-    );
+    updatedUnit = resolveUnitDeath(updatedUnit, null, events);
     const rebirth = applyGriffithFemtoRebirth(updatedUnit, deathPosition);
     if (rebirth.transformed) {
       updatedUnit = rebirth.unit;

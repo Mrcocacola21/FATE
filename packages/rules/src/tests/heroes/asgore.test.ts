@@ -21,6 +21,19 @@ import {
   startAsgoreSoulParadeTurn,
   toBattleState,
 } from "../helpers/testUtils";
+import {
+  getAbilityAvailability,
+  getAbilityChargeCost,
+  getAbilitySpec,
+  makePlayerView,
+  type GameState,
+} from "../../index";
+
+function requiredCharges(abilityId: string): number {
+  const spec = getAbilitySpec(abilityId);
+  assert(spec, "ability definition must exist");
+  return getAbilityChargeCost(spec);
+}
 export function testAsgoreHpBonus() {
   const { asgore } = setupAsgoreState();
   const baseHp = getUnitDefinition("knight").maxHp;
@@ -83,6 +96,7 @@ export function testAsgoreSpearmanReachAndDefenseDouble() {
 
 
 export function testAsgoreFireballTargetingChargesAndDamage() {
+  const required = requiredCharges(ABILITY_ASGORE_FIREBALL);
   const { state: initialState8, asgore } = setupAsgoreState();
 let state = initialState8;
 const lineTarget = Object.values(state.units).find(
@@ -119,7 +133,7 @@ const lineTarget = Object.values(state.units).find(
 
   state = setUnit(state, asgore.id, {
     turn: makeEmptyTurnEconomy(),
-    charges: { ...state.units[asgore.id].charges, [ABILITY_ASGORE_FIREBALL]: 1 },
+    charges: { ...state.units[asgore.id].charges, [ABILITY_ASGORE_FIREBALL]: required },
   });
   const illegalTargetUse = applyAction(
     state,
@@ -136,7 +150,7 @@ const lineTarget = Object.values(state.units).find(
     "Fireball should reject illegal non-archer-line target",
   );
   assert(
-    illegalTargetUse.state.units[asgore.id].charges[ABILITY_ASGORE_FIREBALL] === 1,
+    illegalTargetUse.state.units[asgore.id].charges[ABILITY_ASGORE_FIREBALL] === required,
     "illegal Fireball target should not spend charge"
   );
 
@@ -156,7 +170,7 @@ const lineTarget = Object.values(state.units).find(
   );
   assert(
     used.state.units[asgore.id].charges[ABILITY_ASGORE_FIREBALL] === 0,
-    "Fireball should spend exactly 1 charge"
+    "Fireball should spend its configured charge requirement"
   );
   assert(
     used.state.units[asgore.id].turn.actionUsed,
@@ -181,6 +195,7 @@ const lineTarget = Object.values(state.units).find(
 
 
 export function testAsgoreFireParadeAreaResolutionAndChargeSpend() {
+  const required = requiredCharges(ABILITY_ASGORE_FIRE_PARADE);
   const { state: initialState9, asgore } = setupAsgoreState();
 let state = initialState9;
   const ally = Object.values(state.units).find(
@@ -220,7 +235,7 @@ let state = initialState9;
 
   state = setUnit(state, asgore.id, {
     turn: makeEmptyTurnEconomy(),
-    charges: { ...state.units[asgore.id].charges, [ABILITY_ASGORE_FIRE_PARADE]: 1 },
+    charges: { ...state.units[asgore.id].charges, [ABILITY_ASGORE_FIRE_PARADE]: required },
   });
   const used = applyAction(
     state,
@@ -237,7 +252,7 @@ let state = initialState9;
   );
   assert(
     used.state.units[asgore.id].charges[ABILITY_ASGORE_FIRE_PARADE] === 0,
-    "Fire Parade should spend exactly 1 charge",
+    "Fire Parade should spend its configured charge requirement",
   );
   assert(
     used.state.units[asgore.id].turn.actionUsed,
@@ -277,6 +292,174 @@ let state = initialState9;
   );
 
   console.log("asgore_fire_parade_area_resolution_and_charge_spend passed");
+}
+
+function setupChargeActivation(abilityId: string, current: number) {
+  const { state: initial, asgore } = setupAsgoreState();
+  const target = Object.values(initial.units).find(
+    (unit) => unit.owner === "P2" && unit.class === "knight",
+  )!;
+  let state = setUnit(initial, asgore.id, {
+    position: { col: 4, row: 4 },
+    turn: makeEmptyTurnEconomy(),
+    charges: { ...asgore.charges, [abilityId]: current },
+  });
+  state = setUnit(state, target.id, { position: { col: 4, row: 5 } });
+  state = initKnowledgeForOwners(toBattleState(state, "P1", asgore.id));
+  return {
+    state,
+    asgore,
+    action: {
+      type: "useAbility" as const,
+      unitId: asgore.id,
+      abilityId,
+      payload: { targetId: target.id },
+    },
+  };
+}
+
+function assertRejectedChargeActivation(abilityId: string, current: number) {
+  const { state, asgore, action } = setupChargeActivation(abilityId, current);
+  const availability = getAbilityAvailability(state, asgore.id, abilityId);
+  assert.equal(availability.canUse, false);
+  assert.equal(availability.disabledReason, "notEnoughCharges");
+  const projected = makePlayerView(state, "P1").abilitiesByUnitId[asgore.id]
+    .find((ability) => ability.id === abilityId)!;
+  assert.equal(projected.isAvailable, false);
+  assert.equal(projected.disabledReasonCode, "notEnoughCharges");
+  assert.equal(projected.currentCharges, current);
+  assert.equal(projected.chargeRequired, requiredCharges(abilityId));
+  const rejected = applyAction(state, action, makeRngSequence([]));
+  assert.equal(rejected.rejectionReason, "notEnoughCharges");
+  assert.strictEqual(rejected.state, state, "rejection must preserve the entire state");
+  assert.deepStrictEqual(rejected.events, [], "rejection must produce no effects");
+  assert.equal(rejected.state.units[asgore.id].charges[abilityId], current);
+  assert.equal(rejected.state.units[asgore.id].turn.actionUsed, false);
+  assert.equal(rejected.state.units[asgore.id].turn.moveUsed, false);
+  assert.equal(rejected.state.pendingRoll, null);
+}
+
+function assertAcceptedChargeActivation(abilityId: string, pendingKind: string) {
+  const required = requiredCharges(abilityId);
+  assert.equal(required, getAbilitySpec(abilityId)!.maxCharges,
+    "Asgore's active abilities must require and spend their full configured counter");
+  const { state, asgore, action } = setupChargeActivation(abilityId, required);
+  assert.equal(getAbilityAvailability(state, asgore.id, abilityId).canUse, true);
+  assert.equal(makePlayerView(state, "P1").abilitiesByUnitId[asgore.id]
+    .find((ability) => ability.id === abilityId)!.isAvailable, true);
+  const accepted = applyAction(state, action, makeRngSequence([]));
+  assert.equal(accepted.rejectionReason, undefined);
+  assert.equal(accepted.state.pendingRoll?.kind, pendingKind);
+  assert.equal(accepted.state.units[asgore.id].charges[abilityId], 0);
+  assert.equal(accepted.state.units[asgore.id].turn.actionUsed, true);
+  assert.equal(accepted.state.units[asgore.id].turn.moveUsed, false);
+  assert(accepted.events.some((event) => event.type === "abilityUsed"));
+}
+
+export function testAsgoreFireballDisabledBelowRequiredCharges() {
+  assertRejectedChargeActivation(ABILITY_ASGORE_FIREBALL, 1);
+  console.log("asgore_fireball_disabled_below_required_charges passed");
+}
+
+export function testAsgoreFireballEnabledAtRequiredCharges() {
+  assertAcceptedChargeActivation(ABILITY_ASGORE_FIREBALL, "attack_attackerRoll");
+  console.log("asgore_fireball_enabled_at_required_charges passed");
+}
+
+export function testAsgoreFireParadeDisabledBelowRequiredCharges() {
+  assertRejectedChargeActivation(ABILITY_ASGORE_FIRE_PARADE, 1);
+  console.log("asgore_fire_parade_disabled_below_required_charges passed");
+}
+
+export function testAsgoreFireParadeEnabledAtRequiredCharges() {
+  assertAcceptedChargeActivation(ABILITY_ASGORE_FIRE_PARADE, "tricksterAoE_attackerRoll");
+  console.log("asgore_fire_parade_enabled_at_required_charges passed");
+}
+
+export function testChargeBasedAbilityNeverAllowsNegativeCharges() {
+  for (const abilityId of [ABILITY_ASGORE_FIREBALL, ABILITY_ASGORE_FIRE_PARADE]) {
+    for (let current = 0; current < requiredCharges(abilityId); current++) {
+      assertRejectedChargeActivation(abilityId, current);
+    }
+  }
+  console.log("charge_based_ability_never_allows_negative_charges passed");
+}
+
+export function testAbilityAvailabilityGuardsAndFlexibleAction() {
+  const abilityId = ABILITY_ASGORE_FIREBALL;
+  const { state, asgore, action } = setupChargeActivation(abilityId, requiredCharges(abilityId));
+  assert.equal(getAbilityAvailability(state, "missing", abilityId).disabledReason, "unitNotFound");
+  assert.equal(getAbilityAvailability(state, asgore.id, "missing").disabledReason, "abilityNotOwned");
+  const cases: [GameState, string][] = [
+    [setUnit(state, asgore.id, { isAlive: false }), "unitNotAlive"],
+    [{ ...state, phase: "placement" }, "wrongPhase"],
+    [{ ...state, currentPlayer: "P2" }, "notYourTurn"],
+    [{ ...state, activeUnitId: null }, "notActiveUnit"],
+    [setUnit(state, asgore.id, { turn: { ...asgore.turn, actionUsed: true } }), "actionSlotUsed"],
+    [applyAction(state, action, makeRngSequence([])).state, "pendingResolution"],
+  ];
+  for (const [blocked, reason] of cases) {
+    const availability = getAbilityAvailability(blocked, asgore.id, abilityId);
+    assert.equal(availability.canUse, false);
+    assert.equal(availability.disabledReason, reason);
+    const rejected = applyAction(blocked, action, makeRngSequence([]));
+    assert.strictEqual(rejected.state, blocked);
+    assert.deepStrictEqual(rejected.events, []);
+  }
+  const extraAction = setUnit(state, asgore.id, {
+    turn: { ...asgore.turn, actionUsed: true },
+    courtExtraFlexibleAction: { used: false, expiresAtRoundEnd: 100 },
+  });
+  assert.equal(getAbilityAvailability(extraAction, asgore.id, abilityId).canUse, true,
+    "availability must honor existing flexible actions through canSpendSlots");
+  const accepted = applyAction(extraAction, action, makeRngSequence([]));
+  assert.equal(accepted.state.pendingRoll?.kind, "attack_attackerRoll");
+  assert.equal(accepted.state.units[asgore.id].courtExtraFlexibleAction?.used, true);
+  console.log("ability_availability_guards_and_flexible_action passed");
+}
+
+function startScheduledTurn(state: GameState, unitId: string): GameState {
+  const prepared: GameState = {
+    ...state,
+    currentPlayer: state.units[unitId].owner,
+    activeUnitId: null,
+    pendingRoll: null,
+    turnNumber: state.turnNumber + 1,
+    turnQueue: [unitId],
+    turnQueueIndex: 0,
+    turnOrder: [unitId],
+    turnOrderIndex: 0,
+  };
+  return applyAction(prepared, { type: "unitStartTurn", unitId }, makeRngSequence([])).state;
+}
+
+export function testAsgoreChargesAccumulateOnlyOnOwnTurnAndRestartAfterUse() {
+  for (const abilityId of [ABILITY_ASGORE_FIREBALL, ABILITY_ASGORE_FIRE_PARADE]) {
+    const { state: initial, asgore, action } = setupChargeActivation(abilityId, 0);
+    let state = initial;
+    const other = Object.values(state.units).find(
+      (unit) => unit.owner === "P2" && unit.position,
+    )!;
+    const cap = requiredCharges(abilityId);
+    for (let turn = 1; turn <= cap + 1; turn++) {
+      const before = state.units[asgore.id].charges[abilityId];
+      state = startScheduledTurn(state, other.id);
+      assert.equal(state.units[asgore.id].charges[abilityId], before,
+        "another unit's start must not regenerate Asgore's charges");
+      // Keep the separate automatic Soul Parade trigger out of this charge lifecycle test.
+      state = setUnit(state, asgore.id, {
+        charges: { ...state.units[asgore.id].charges, [ABILITY_ASGORE_SOUL_PARADE]: 0 },
+      });
+      state = startScheduledTurn(state, asgore.id);
+      assert.equal(state.units[asgore.id].charges[abilityId], Math.min(cap, turn));
+    }
+    state = applyAction(state, action, makeRngSequence([])).state;
+    assert.equal(state.units[asgore.id].charges[abilityId], 0);
+    state = resolveAllPendingRollsWithEvents(state, makeRngSequence([0.99, 0.99, 0.01, 0.01])).state;
+    state = startScheduledTurn(state, asgore.id);
+    assert.equal(state.units[asgore.id].charges[abilityId], 1);
+  }
+  console.log("asgore_charges_accumulate_only_on_own_turn_and_restart_after_use passed");
 }
 
 

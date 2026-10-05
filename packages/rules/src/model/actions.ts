@@ -4,6 +4,7 @@ import type { SearchStealthMode } from "./roll";
 import type { RuleDeclarationChoice } from "../ruleDeclarations/types";
 
 export type ResolveRollChoice =
+  | { type: "sansLastAttackTarget"; targetId: string }
   | "auto"
   | "roll"
   | "skip"

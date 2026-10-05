@@ -17,6 +17,8 @@ import {
   ABILITY_TRICKSTER_AOE,
   ABILITY_UNDYNE_ENERGY_SPEAR,
   getAbilitySpec,
+  getAbilityAvailability,
+  getAbilityViewsForUnit,
 } from "../../abilities";
 import { chebyshev } from "../../board";
 import { HERO_FALSE_TRAIL_TOKEN_ID, HERO_KALADIN_ID } from "../../heroes";
@@ -102,6 +104,19 @@ export function applyUseAbility(
       events: [],
       rejectionReason: "ability_triggers_automatically_at_battle_start",
     };
+  }
+  const abilityView = getAbilityViewsForUnit(state, unit.id).find((view) => view.id === spec.id);
+  if (!abilityView) {
+    return { state, events: [], rejectionReason: "abilityNotOwned" };
+  }
+  // Option-based abilities validate the selected source and its cost in their handler.
+  // Preserve automatic/reaction paths, which have their own trigger validation.
+  if (!abilityView.useOptions &&
+      (spec.kind === "active" || (spec.kind === "phantasm" && abilityView.slot !== "none"))) {
+    const availability = getAbilityAvailability(state, unit.id, spec.id);
+    if (!availability.canUse) {
+      return { state, events: [], rejectionReason: availability.disabledReason };
+    }
   }
   if (!blindCenterIsLegal(unit, action)) {
     return { state, events: [] };

@@ -1,3 +1,4 @@
+import { resolveUnitDeath } from "../../death";
 import type { ApplyResult, Coord, GameAction, GameEvent, GameState, UnitState } from "../../model";
 import { ALL_DIRS, chebyshev, coordsEqual, getUnitAt, isCellOccupied } from "../../board";
 import { isInsideBoard } from "../../model";
@@ -461,8 +462,7 @@ function applyDonWindmills(state: GameState, unit: UnitState, action: AbilityAct
   });
   for (const passed of crossed) {
     const damaged = { ...passed, hp: Math.max(0, passed.hp - 1) };
-    units[passed.id] = damaged.hp === 0 ? { ...damaged, isAlive: false, position: null } : damaged;
-    if (damaged.hp === 0) events.push({ type: "unitDied", unitId: damaged.id, killerId: moved.id });
+    units[passed.id] = damaged.hp === 0 ? resolveUnitDeath(damaged, moved.id, events) : damaged;
   }
   const movedState: GameState = { ...state, units };
   const repositionIds = crossed

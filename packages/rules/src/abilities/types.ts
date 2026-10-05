@@ -10,7 +10,9 @@ export interface AbilitySpec {
   kind: AbilityKind;
   description: string;
   targetRange?: number;
+  /** Accumulation cap; does not by itself define the activation cost. */
   maxCharges?: number;
+  /** Activation requirement and amount spent, resolved by getAbilityChargeCost. */
   chargesPerUse?: number;
   chargeCost?: number;
   isSpecialCounter?: boolean;

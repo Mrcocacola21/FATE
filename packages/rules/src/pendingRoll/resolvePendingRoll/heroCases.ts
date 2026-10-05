@@ -101,8 +101,10 @@ import { resolveGutsBerserkAttackChoice } from "../../actions/heroes/guts";
 import { resolvePapyrusBoneChoice } from "../resolvers/heroes/resolvePapyrusRoll";
 import { resolveMongolChargeAllyAttackTarget } from "../../actions/movementActions/mongolCharge";
 import type { AutoRollChoice, ResolvePendingRollAction } from "./types";
+import { resolveSansLastAttackTarget } from "../../actions/heroes/sans/curses";
 
 export const HERO_PENDING_ROLL_KINDS = [
+  "selectLastAttackTarget",
   "kaiserCarpetStrikeCenter",
   "kaiserCarpetStrikeAttack",
   "carpetStrike_defenderRoll",
@@ -181,6 +183,8 @@ export function resolveHeroPendingRollCase(
   autoRollChoice: AutoRollChoice,
 ): ApplyResult | null {
   switch (pending.kind) {
+    case "selectLastAttackTarget":
+      return resolveSansLastAttackTarget(state, pending, action.choice);
     case "kaiserCarpetStrikeCenter":
       return resolveCarpetStrikeCenterRoll(state, pending, rng);
     case "kaiserCarpetStrikeAttack":

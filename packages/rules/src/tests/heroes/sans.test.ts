@@ -158,8 +158,8 @@ export function testSansGasterBlasterGatingLineAndSpend() {
     )
     .map((event) => (event.type === "attackResolved" ? event.defenderId : ""));
   assert(
-    hitTargetIds.includes(ally.id) && hitTargetIds.includes(enemy.id),
-    "Gaster Blaster should hit all units on the selected shooter line"
+    !hitTargetIds.includes(ally.id) && hitTargetIds.includes(enemy.id),
+    "Gaster Blaster should hit enemies on the selected shooter line and spare allies"
   );
   assert(
     !hitTargetIds.includes(enemy2.id),
@@ -525,7 +525,8 @@ state = setUnit(state, sans.id, {
     { type: "attack", attackerId: enemy.id, defenderId: sans.id },
     makeAttackWinRng(1),
   );
-  const resolved = resolveAllPendingRollsWithEvents(attack.state, makeAttackWinRng(1));
+  const resolved = resolveAllPendingRollsWithEvents(attack.state, makeAttackWinRng(1),
+    { type: "sansLastAttackTarget", targetId: enemy2.id });
   assert(
     resolved.events.some(
       (event) =>
@@ -533,7 +534,7 @@ state = setUnit(state, sans.id, {
         event.sansId === sans.id &&
         event.targetId === enemy2.id
     ),
-    "Last Attack should apply curse to deterministic fallback target on Sans death"
+    "Last Attack should apply curse to the owner's selected enemy before death"
   );
   assert(
     resolved.state.units[enemy2.id].sansLastAttackCurseSourceId === sans.id,

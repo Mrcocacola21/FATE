@@ -3,6 +3,14 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { AbilityView, GameAction, PlayerView, UnitState } from "rules";
+import {
+  ABILITY_ASGORE_FIREBALL,
+  ABILITY_ASGORE_FIRE_PARADE,
+  createEmptyGame,
+  getAbilityChargeCost,
+  getAbilitySpec,
+  makePlayerView,
+} from "rules";
 import { setLanguage, translate } from "../../../i18n";
 import {
   ARTEMIS_MOON_INSIGHT_ID,
@@ -639,6 +647,54 @@ test("Windmills renders as an enabled board-targeting action", () => {
     markup,
     new RegExp(`data-ability-action-id="${DON_WINDMILLS_ID}"[^>]*disabled`),
   );
+});
+
+test("Asgore buttons render authoritative charge availability and requirements", () => {
+  setLanguage("en", { setItem: () => undefined });
+  for (const abilityId of [ABILITY_ASGORE_FIREBALL, ABILITY_ASGORE_FIRE_PARADE]) {
+    const required = getAbilityChargeCost(getAbilitySpec(abilityId)!);
+    for (const current of [1, required]) {
+      const asgore = makeUnit({
+        id: "P1-asgore",
+        class: "knight",
+        heroId: "asgore",
+        charges: { [abilityId]: current },
+      });
+      const view = makePlayerView({
+        ...createEmptyGame(),
+        phase: "battle",
+        currentPlayer: "P1",
+        activeUnitId: asgore.id,
+        units: { [asgore.id]: asgore },
+      }, "P1");
+      const ability = view.abilitiesByUnitId[asgore.id].find((item) => item.id === abilityId)!;
+      const markup = renderToStaticMarkup(
+        <BattleAbilityActions
+          view={view}
+          actionableAbilities={[ability]}
+          selectedUnit={asgore}
+          canAct={true}
+          economy={asgore.turn}
+          actionMode={null}
+          targetingActive={false}
+          onUseAbility={() => undefined}
+          onUseLokiLaughtOption={() => undefined}
+          onToggleMode={() => undefined}
+          onModePreview={() => undefined}
+          onHoverAbility={() => undefined}
+        />,
+      );
+      const button = markup.match(new RegExp(`<button[^>]*data-ability-action-id="${abilityId}"[^>]*>`))![0];
+      assert.equal(button.includes("disabled="), !ability.isAvailable);
+      assert.match(markup, new RegExp(`Counter ${current}/${required}`));
+      if (current < required) {
+        assert.match(markup, new RegExp(`Not enough charges — requires ${required}\\.`));
+      } else {
+        assert.equal(ability.isAvailable, true);
+        assert.match(markup, /READY/);
+      }
+    }
+  }
 });
 
 test("charge labels distinguish bounded and unbounded counters", () => {

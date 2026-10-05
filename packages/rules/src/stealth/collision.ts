@@ -1,3 +1,4 @@
+import { resolveUnitDeath } from "../death";
 import { coordsEqual, getUnitsAt } from "../board";
 import type { ApplyResult, Coord, GameEvent, GameState, UnitState } from "../model";
 import { isInsideBoard } from "../model";
@@ -89,7 +90,6 @@ export function resolveHiddenOverlapCollision(
   const damaged: UnitState = {
     ...displaced,
     hp,
-    ...(hp === 0 ? { isAlive: false, position: null } : {}),
   };
   const events: GameEvent[] = [
     {
@@ -103,12 +103,8 @@ export function resolveHiddenOverlapCollision(
 
   let finalUnit = damaged;
   if (hp === 0) {
-    events.push({
-      type: "unitDied",
-      unitId: damaged.id,
-      killerId: null,
-    });
-    const rebirth = applyGriffithFemtoRebirth(damaged, from);
+    finalUnit = resolveUnitDeath(damaged, null, events);
+    const rebirth = applyGriffithFemtoRebirth(finalUnit, from);
     if (rebirth.transformed) {
       finalUnit = rebirth.unit;
       events.push(...rebirth.events);

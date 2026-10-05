@@ -250,9 +250,11 @@ export function getOrdinaryAbilityCounterView(
   );
   if (!hasCounterMetadata || (!counterOption && !hasUnitCounter)) return null;
 
-  const current = counterOption?.currentCharges ?? unit.charges?.[ability.id] ?? 0;
+  const current = counterOption?.currentCharges ?? ability.currentCharges ?? unit.charges?.[ability.id] ?? 0;
   const max =
-    counterOption?.chargeRequired ?? detailsMax ?? ability.maxCharges ?? knownMaximums[ability.id];
+    counterOption?.chargeRequired ??
+    (ability.chargeUnlimited ? undefined : ability.chargeRequired) ??
+    detailsMax ?? ability.maxCharges ?? knownMaximums[ability.id];
   return { current, max: max ?? undefined };
 }
 

@@ -72,8 +72,7 @@ export function applySansGasterBlaster(
     updatedUnit,
     ABILITY_SANS_GASTER_BLASTER,
     target,
-    targets,
-    { allowFriendlyTarget: true }
+    targets
   );
 
   return {

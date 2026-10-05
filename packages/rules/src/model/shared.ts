@@ -5,6 +5,29 @@ export type TurnSlot = "move" | "attack" | "action" | "stealth";
 export type AbilityKind = "passive" | "active" | "impulse" | "phantasm";
 export type AbilitySlot = "none" | "action" | "move" | "attack" | "stealth";
 
+export type AbilityDisabledReason =
+  | "unitNotFound"
+  | "unitNotAlive"
+  | "abilityNotOwned"
+  | "wrongPhase"
+  | "notEnoughCharges"
+  | "actionSlotUsed"
+  | "moveSlotUsed"
+  | "attackSlotUsed"
+  | "stealthSlotUsed"
+  | "notActiveUnit"
+  | "notYourTurn"
+  | "pendingResolution"
+  | "automaticAbility"
+  | "abilityConditionNotMet";
+
+export interface AbilityAvailability {
+  canUse: boolean;
+  currentCharges?: number;
+  requiredCharges?: number;
+  disabledReason?: AbilityDisabledReason;
+}
+
 export type AbilityUseSource =
   | { type: "abilityCounter"; counterId: string }
   | { type: "heroResource"; resourceId: string; amount: number }
@@ -51,6 +74,7 @@ export interface AbilityView {
   currentCharges?: number;
   isAvailable: boolean;
   disabledReason?: string;
+  disabledReasonCode?: AbilityDisabledReason;
   useOptions?: AbilityUseOptionView[];
   targeting?: AbilityTargetingView;
 }

@@ -1,7 +1,8 @@
+import { resolveUnitDeath } from "../../../death";
 import type { ApplyResult, GameEvent, GameState, UnitState } from "../../../model";
 import { ARENA_STORM_ID, isStormActive, isStormExempt } from "../../../forest";
 import { rollD6 } from "../../../rng";
-import { clearPendingRoll, evUnitDied, requestRoll } from "../../../core";
+import { clearPendingRoll, requestRoll } from "../../../core";
 import { applyGriffithFemtoRebirth } from "../../../shared/griffith";
 import type { LechyStormStartTurnRollContext } from "../../../pendingRoll/types";
 
@@ -123,12 +124,7 @@ export function resolveLechyStormStartTurnRoll(
     })
   );
   if (newHp <= 0) {
-    updatedUnit = {
-      ...updatedUnit,
-      isAlive: false,
-      position: null,
-    };
-    events.push(evUnitDied({ unitId: updatedUnit.id, killerId: null }));
+    updatedUnit = resolveUnitDeath(updatedUnit, null, events);
     const rebirth = applyGriffithFemtoRebirth(updatedUnit, deathPosition);
     if (rebirth.transformed) {
       updatedUnit = rebirth.unit;

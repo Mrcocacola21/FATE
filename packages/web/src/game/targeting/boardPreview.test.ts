@@ -18,6 +18,7 @@ import {
   LUCHE_DIVINE_RAY_ID,
   LOKI_LAUGHT_ID,
   METTATON_LASER_ID,
+  SANS_GASTER_BLASTER_ID,
   RIVER_PERSON_BOAT_ID,
   RIVER_PERSON_BOATMAN_ID,
   RIVER_PERSON_TRA_LA_LA_ID,
@@ -114,6 +115,29 @@ function validTargetIds(preview: BoardPreview | null): string[] {
     .map((target) => target.unitId)
     .sort();
 }
+
+test("Gaster Blaster previews every enemy on a full Archer ray and excludes allies", () => {
+  const sans = unit({ id: "sans", owner: "P1", position: { col: 0, row: 4 } });
+  const ally = unit({ id: "ally", owner: "P1", position: { col: 1, row: 4 } });
+  const enemies = [2, 4, 5].map((col) => unit({ id: `enemy-${col}`, owner: "P2", position: { col, row: 4 } }));
+  const gameView = makeView([sans, ally, ...enemies]);
+  const preview = buildAbilityPreview({ gameView, viewerPlayerId: "P1", sourceUnitId: sans.id,
+    abilityId: SANS_GASTER_BLASTER_ID, targetingCell: { col: 8, row: 4 } });
+  assert(preview?.kind === "line");
+  assert.deepEqual(affectedTargetIds(preview), enemies.map((enemy) => enemy.id).sort());
+  assert(preview.lineCells.some((cell) => cell.col === 8 && cell.row === 4), "Preview reaches beyond first enemy to edge");
+});
+
+test("Last Attack preview includes every legal positioned enemy without range filtering", () => {
+  const sans = unit({ id: "sans", owner: "P1", hp: 0, position: { col: 0, row: 0 } });
+  const enemies = [unit({ id: "near", owner: "P2", position: { col: 1, row: 0 } }),
+    unit({ id: "distant", owner: "P2", position: { col: 8, row: 7 } })];
+  const gameView = makeView([sans, ...enemies]);
+  const pending = { id: "last-attack", player: "P1" as const, kind: "selectLastAttackTarget" as const,
+    context: { sourceUnitId: sans.id, legalTargetIds: enemies.map((enemy) => enemy.id) } };
+  const preview = buildPendingPreview({ ...gameView, pendingRoll: pending });
+  assert.deepEqual(selectableTargetIds(preview), ["distant", "near"]);
+});
 
 function selectableTargetIds(preview: BoardPreview | null): string[] {
   if (!preview) return [];

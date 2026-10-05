@@ -1,5 +1,5 @@
+import { resolveUnitDeath } from "../../../death";
 import type { ApplyResult, GameEvent, GameState, UnitState } from "../../../model";
-import { evUnitDied } from "../../../core";
 import { HERO_CHIKATILO_ID, HERO_FALSE_TRAIL_TOKEN_ID, getHeroDefinition } from "../../../heroes";
 import type { RNG } from "../../../rng";
 import { rollContest } from "./helpers";
@@ -83,12 +83,7 @@ function performFalseTrailTrap(
   const events: GameEvent[] = [];
 
   if (newHp <= 0) {
-    updatedTarget = {
-      ...updatedTarget,
-      isAlive: false,
-      position: null,
-    };
-    events.push(evUnitDied({ unitId: updatedTarget.id, killerId: tokenId }));
+    updatedTarget = resolveUnitDeath(updatedTarget, tokenId, events);
   }
 
   const nextState: GameState = {

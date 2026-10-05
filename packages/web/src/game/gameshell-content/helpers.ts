@@ -473,6 +473,7 @@ Object.assign(PENDING_ROLL_LABELS_UK, {
 });
 
 export function getPendingRollLabel(kind?: string | null, language: "en" | "uk" = "en") {
+  if (kind === "selectLastAttackTarget") return language === "uk" ? "Остання атака: вибір цілі" : "Last Attack: choose a target";
   if (language === "uk") {
     return (kind && PENDING_ROLL_LABELS_UK[kind]) ?? "Кидок";
   }

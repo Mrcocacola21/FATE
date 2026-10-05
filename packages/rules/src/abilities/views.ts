@@ -1,5 +1,7 @@
 import type {
   AbilitySlot,
+  AbilityAvailability,
+  AbilityDisabledReason,
   AbilityUseOptionView,
   AbilityView,
   GameState,
@@ -13,7 +15,7 @@ import {
   hasMettatonNeoUnlocked,
 } from "../mettaton";
 import { hasSansUnbelieverUnlocked, isSans } from "../sans";
-import { getAbilitySpec, getCharges, getChargeLimit } from "./charges";
+import { getAbilitySpec, getAbilityChargeCost, getCharges, getChargeLimit } from "./charges";
 import * as ids from "./constants";
 import type { AbilityCost, AbilitySpec } from "./types";
 import { collectAbilityIdsForUnit } from "./viewIds";
@@ -65,7 +67,9 @@ function getSlotFromCost(spec: AbilitySpec): AbilitySlot {
 function getChargeRequired(spec: AbilitySpec): number | undefined {
   const external = getExternalResource(spec.id);
   if (external) return external.required;
-  return spec.chargesPerUse ?? spec.chargeCost ?? spec.triggerCharges ?? spec.maxCharges;
+  return spec.chargesPerUse !== undefined || spec.chargeCost !== undefined
+    ? getAbilityChargeCost(spec)
+    : spec.triggerCharges ?? spec.maxCharges;
 }
 
 function getExternalResource(abilityId: string): { abilityId: string; required: number } | null {
@@ -97,30 +101,34 @@ function getCommonDisabledReason(
   costs?: AbilityCost["consumes"],
 ): string | undefined {
   if (state.pendingRoll) return "Pending roll must be resolved";
+  if (!unit.isAlive || !unit.position) return "Unit cannot act";
   if (state.phase !== "battle") return "Not in battle";
   if (unit.owner !== state.currentPlayer) return "Not your turn";
   if (state.activeUnitId !== unit.id) return "Not active unit";
 
-  if (costs?.action && unit.turn?.actionUsed) {
-    return "Action slot already used";
-  }
-  if (costs?.move && unit.turn?.moveUsed) {
-    return "Move slot already used";
-  }
   if (costs?.move && (unit.kaladinMoveLockSources?.length ?? 0) > 0) {
     return "Movement is blocked";
   }
   if (costs?.move && (unit.lokiMoveLockSources?.length ?? 0) > 0) {
     return "Movement is blocked";
   }
-  if (costs?.attack && unit.turn?.attackUsed) {
-    return "Attack slot already used";
-  }
-  if (costs?.stealth && unit.turn?.stealthUsed) {
-    return "Stealth slot already used";
-  }
   if ((unit.lokiChickenSources?.length ?? 0) > 0) {
     return "Chicken: this unit can only move";
+  }
+  if (!canSpendSlots(unit, costs)) {
+    if (costs?.action && (unit.turn?.actionUsed || unit.hasActedThisTurn)) {
+      return "Action slot already used";
+    }
+    if (costs?.move && (unit.turn?.moveUsed || unit.hasMovedThisTurn)) {
+      return "Move slot already used";
+    }
+    if (costs?.attack && (unit.turn?.attackUsed || unit.hasAttackedThisTurn)) {
+      return "Attack slot already used";
+    }
+    if (costs?.stealth && (unit.turn?.stealthUsed || unit.stealthAttemptedThisTurn)) {
+      return "Stealth slot already used";
+    }
+    return "Turn action is blocked";
   }
 
   return undefined;
@@ -130,6 +138,7 @@ function getActiveDisabledReason(
   state: GameState,
   unit: UnitState,
   spec: AbilitySpec,
+  required = getChargeRequired(spec),
 ): string | undefined {
   const costs = spec.actionCost?.consumes;
   const commonReason = getCommonDisabledReason(state, unit, costs);
@@ -182,7 +191,6 @@ function getActiveDisabledReason(
     }
   }
 
-  const required = getChargeRequired(spec);
   const resourceAbilityId = getExternalResource(spec.id)?.abilityId ?? spec.id;
   if (
     required !== undefined &&
@@ -192,7 +200,7 @@ function getActiveDisabledReason(
       unit.heroId === HERO_GRAND_KAISER_ID &&
       unit.transformed
     ) &&
-    getCharges(unit, resourceAbilityId) < required
+    (isMettaton(unit) ? getMettatonRating(unit) : getCharges(unit, resourceAbilityId)) < required
   ) {
     return "Not Enough charges";
   }
@@ -316,8 +324,8 @@ export function getAbilityViewsForUnit(state: GameState, unitId: string): Abilit
       let isAvailable = true;
       let disabledReason: string | undefined = undefined;
 
-      if (spec.kind === "active") {
-        disabledReason = getActiveDisabledReason(state, unit, spec);
+      if (spec.kind === "active" || (spec.kind === "phantasm" && getSlotFromCost(spec) !== "none")) {
+        disabledReason = getActiveDisabledReason(state, unit, spec, effectiveChargeRequired);
         isAvailable = !disabledReason;
       } else if (spec.kind === "impulse" || spec.id === ids.ABILITY_GENGHIS_KHAN_MONGOL_CHARGE) {
         if (
@@ -550,9 +558,51 @@ export function getAbilityViewsForUnit(state: GameState, unitId: string): Abilit
         currentCharges,
         isAvailable,
         disabledReason,
+        disabledReasonCode: toDisabledReasonCode(disabledReason),
         useOptions,
         targeting,
       } as AbilityView;
     })
     .filter((item): item is AbilityView => item !== null);
+}
+
+function toDisabledReasonCode(reason?: string): AbilityDisabledReason | undefined {
+  if (!reason) return undefined;
+  switch (reason) {
+    case "Not Enough charges": return "notEnoughCharges";
+    case "Action slot already used": return "actionSlotUsed";
+    case "Move slot already used": return "moveSlotUsed";
+    case "Attack slot already used": return "attackSlotUsed";
+    case "Stealth slot already used": return "stealthSlotUsed";
+    case "Not active unit": return "notActiveUnit";
+    case "Not your turn": return "notYourTurn";
+    case "Not in battle": return "wrongPhase";
+    case "Pending roll must be resolved": return "pendingResolution";
+    default: return "abilityConditionNotMet";
+  }
+}
+
+/** Uses the same authoritative projection sent to players; payload legality stays in handlers. */
+export function getAbilityAvailability(
+  state: GameState,
+  unitId: string,
+  abilityId: string,
+): AbilityAvailability {
+  const unit = state.units[unitId];
+  if (!unit) return { canUse: false, disabledReason: "unitNotFound" };
+  if (!unit.isAlive) return { canUse: false, disabledReason: "unitNotAlive" };
+  const ability = getAbilityViewsForUnit(state, unitId).find((view) => view.id === abilityId);
+  if (!ability) return { canUse: false, disabledReason: "abilityNotOwned" };
+  const automatic = ability.kind === "impulse" ||
+    ((ability.kind === "passive" || ability.kind === "phantasm") &&
+      ability.slot === "none" && !ability.useOptions);
+  const commonReason = getCommonDisabledReason(state, unit);
+  const disabledReason = toDisabledReasonCode(commonReason) ??
+    (automatic ? "automaticAbility" : ability.disabledReasonCode);
+  return {
+    canUse: !disabledReason && ability.isAvailable,
+    currentCharges: ability.currentCharges,
+    requiredCharges: ability.chargeRequired,
+    disabledReason,
+  };
 }

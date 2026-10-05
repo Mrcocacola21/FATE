@@ -568,6 +568,15 @@ export function buildPendingPreview(
           affectedTargets: targetRefsFromIds(view, selectedTargetIds),
         };
       }
+      case "selectLastAttackTarget": {
+        const targets = targetRefsFromIds(view, stringList(context.legalTargetIds));
+        return {
+          kind: "multiStep", step: "sansLastAttackTarget",
+          cells: targets.map((target) => ({ ...target.cell })),
+          validTargets: targets, cellKind: "validTarget",
+          labelKey: "preview.labels.selectTarget",
+        };
+      }
       case "hassanTrueEnemyTargetChoice":
         return buildForcedAttackPreview({
           gameView: view,

@@ -1,3 +1,4 @@
+import { resolveUnitDeath } from "./death";
 import { ABILITY_JACK_RIPPER_COVERING_TRACKS, ABILITY_JACK_RIPPER_SNARES } from "./abilities";
 import { chebyshev, coordsEqual } from "./board";
 import { requestRoll } from "./core";
@@ -93,8 +94,7 @@ function explodeTrap(
     damageByUnitId[target.id] = 1;
     damagedUnitIds.push(target.id);
     if (hp <= 0) {
-      target = { ...target, isAlive: false, position: null };
-      events.push({ type: "unitDied", unitId: target.id, killerId: jack.id });
+      target = resolveUnitDeath(target, jack.id, events);
       const rebirth = applyGriffithFemtoRebirth(target, deathPosition);
       if (rebirth.transformed) {
         target = rebirth.unit;

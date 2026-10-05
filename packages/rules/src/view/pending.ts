@@ -63,6 +63,7 @@ export function getVisiblePendingRollForPlayer(
 ): GameState["pendingRoll"] {
   if (!pendingRoll || pendingRoll.player !== playerId) return null;
   const context = { ...(pendingRoll.context ?? {}) } as Record<string, unknown>;
+  delete context.resumePendingRoll;
   const unitIdLists = [
     "targetsQueue",
     "targetIds",
@@ -74,6 +75,7 @@ export function getVisiblePendingRollForPlayer(
     "legalTargetIds",
   ];
   for (const key of unitIdLists) {
+    if (pendingRoll.kind === "selectLastAttackTarget" && key === "legalTargetIds") continue;
     const value = context[key];
     if (!Array.isArray(value)) continue;
     context[key] = value.filter(

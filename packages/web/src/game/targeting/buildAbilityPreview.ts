@@ -24,6 +24,7 @@ import {
   LUCHE_DIVINE_RAY_ID,
   LOKI_LAUGHT_ID,
   METTATON_LASER_ID,
+  SANS_GASTER_BLASTER_ID,
   RIVER_PERSON_BOAT_ID,
   RIVER_PERSON_BOATMAN_ID,
   RIVER_PERSON_TRA_LA_LA_ID,
@@ -692,6 +693,7 @@ export function buildAbilityPreview({
         labelKey: "preview.labels.archerLine",
       };
     }
+    case SANS_GASTER_BLASTER_ID:
     case METTATON_LASER_ID: {
       const legalCells = fullStraightLineCells(
         boardSize(gameView),
@@ -730,7 +732,8 @@ export function buildAbilityPreview({
           ? visibleUnitTargets(
               gameView,
               (unit) =>
-                unit.id !== source.id && !!unit.position && beamKeys.has(coordKey(unit.position)),
+                unit.id !== source.id && !!unit.position && beamKeys.has(coordKey(unit.position)) &&
+                (abilityId !== SANS_GASTER_BLASTER_ID || unit.owner !== source.owner),
             )
           : [],
         labelKey: "preview.labels.affectedLine",

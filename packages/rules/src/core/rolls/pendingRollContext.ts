@@ -363,6 +363,17 @@ const DEFENSE_ROLL_KINDS = new Set<RollKind>([
 export function createPendingRollContext(
   params: PendingRollContextBuilderParams,
 ): PendingRollContext {
+  if (params.kind === "selectLastAttackTarget") {
+    return baseContext(params, {
+      title: "Last Attack",
+      reason: "Last Attack — choose an enemy unit to curse.",
+      rollKind: "reaction",
+      sourceUnitId: valueAsString(params.resolutionContext.sourceUnitId),
+      abilityId: "sansLastAttack",
+      abilityName: "Last Attack",
+      diceLabel: "Choice",
+    });
+  }
   if (params.kind === "enterStealth" || params.kind === "searchStealth") {
     return createStealthRollContext(params);
   }

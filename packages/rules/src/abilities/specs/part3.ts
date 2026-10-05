@@ -20,7 +20,7 @@ export const ABILITY_SPECS_PART_3: Record<string, AbilitySpec> = {
     displayName: "Gaster Blaster",
     kind: "impulse",
     description:
-      "Spend 2 charges. Choose an attack line and attack all units on that shooter line.",
+      "Spend 2 charges. Choose an Archer ray and attack every enemy on it, piercing through units.",
     maxCharges: 2,
     chargesPerUse: 2,
   },
@@ -72,7 +72,7 @@ export const ABILITY_SPECS_PART_3: Record<string, AbilitySpec> = {
     displayName: "Last Attack",
     kind: "passive",
     description:
-      "After Unbeliever, when Sans dies he curses one enemy: it takes 1 damage at turn start until it reaches 1 HP.",
+      "After Unbeliever, before Sans dies his owner chooses any living enemy to curse: it takes 1 damage at the start of its own turns until it reaches 1 HP.",
   },
   [ids.ABILITY_UNDYNE_TOUGH]: {
     id: ids.ABILITY_UNDYNE_TOUGH,
@@ -126,7 +126,7 @@ export const ABILITY_SPECS_PART_3: Record<string, AbilitySpec> = {
     description:
       "Archer-like single-target attack with normal attack resolution.",
     maxCharges: 2,
-    chargesPerUse: 1,
+    chargesPerUse: 2,
     actionCost: {
       consumes: { action: true },
     },
@@ -138,7 +138,7 @@ export const ABILITY_SPECS_PART_3: Record<string, AbilitySpec> = {
     description:
       "Attack all units in Trickster attack area around Asgore using shared attacker roll.",
     maxCharges: 5,
-    chargesPerUse: 1,
+    chargesPerUse: 5,
     actionCost: {
       consumes: { action: true },
     },

@@ -139,6 +139,8 @@ const unit: z.ZodType<UnitState> = z
       .strict()
       .optional(),
     sansLastAttackCurseSourceId: text.optional(),
+    sansLastAttackLastTickTurnNumber: integer.optional(),
+    sansPendingDeath: z.object({ killerId: text.nullable() }).strict().optional(),
     mettatonRating: number.optional(),
     mettatonExUnlocked: bool.optional(),
     mettatonNeoUnlocked: bool.optional(),

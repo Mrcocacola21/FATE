@@ -1,3 +1,4 @@
+import { resolveUnitDeath } from "../../../death";
 import type {
   ApplyResult,
   GameEvent,
@@ -12,7 +13,7 @@ import {
   setCharges,
 } from "../../../abilities";
 import { HERO_FALSE_TRAIL_TOKEN_ID } from "../../../heroes";
-import { evUnitDied, requestRoll } from "../../../core";
+import { requestRoll } from "../../../core";
 import { isPapyrus, isPapyrusBoneStatusActive } from "./helpers";
 
 export function applyPapyrusBonePunish(
@@ -76,17 +77,7 @@ export function applyPapyrusBonePunish(
   ];
 
   if (hpAfter <= 0) {
-    updatedTarget = {
-      ...updatedTarget,
-      isAlive: false,
-      position: null,
-    };
-    events.push(
-      evUnitDied({
-        unitId: updatedTarget.id,
-        killerId: status.sourceUnitId,
-      })
-    );
+    updatedTarget = resolveUnitDeath(updatedTarget, status.sourceUnitId, events);
   }
 
   return {

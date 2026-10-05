@@ -1,11 +1,12 @@
-import type { Coord, ResolveRollChoice } from "rules";
+import type { Coord, ResolveRollChoice, PlayerView } from "rules";
 import { getPendingRollLabel } from "../helpers";
 import { useI18n } from "../../../i18n";
-import { getHeroDisplayName } from "../../../i18n/displayMetadata";
+import { getHeroDisplayName, getUnitFigureDisplayName } from "../../../i18n/displayMetadata";
 
 interface PendingBoardNoticeProps {
   pendingRollKind: string;
   pendingRollContext?: Record<string, unknown>;
+  units?: PlayerView["rosterUnits"];
   pendingQueueCount: number;
   stakeSelections: Coord[];
   stakeLimit: number;
@@ -85,6 +86,7 @@ function groznyModeList(value: unknown): GroznyTyrantMode[] {
 export function PendingBoardNotice({
   pendingRollKind,
   pendingRollContext = {},
+  units,
   pendingQueueCount,
   stakeSelections,
   stakeLimit,
@@ -190,7 +192,21 @@ export function PendingBoardNotice({
           <div>{t("pending.soulParadeEffect", { effect: soulEffect ?? "-" })}</div>
         </div>
       ) : null}
-      {pendingRollKind === "donMadDelusionDirection" ? (
+      {pendingRollKind === "selectLastAttackTarget" ? (
+        <div>
+          <div className="font-semibold">
+            {p("Last Attack — choose an enemy unit to curse.", "Остання атака — оберіть ворожу фігуру для прокляття.")}
+          </div>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {((pendingRollContext.legalTargetIds as string[] | undefined) ?? []).map((targetId) => (
+              <button key={targetId} type="button" className="btn btn-secondary"
+                onClick={() => onResolveChoice({ type: "sansLastAttackTarget", targetId })}>
+                {units?.[targetId] ? getUnitFigureDisplayName(units[targetId], { language, t }) : targetId}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : pendingRollKind === "donMadDelusionDirection" ? (
         <div>
           <div className="font-semibold">{t("pending.donMadnessTitle")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">

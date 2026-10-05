@@ -16,6 +16,7 @@ import {
   maybeRequestPapyrusBoneChoice,
 } from "./heroes/papyrus";
 import { applySansPostAction } from "./heroes/sans";
+import { applySansLastAttackFromDeaths } from "./heroes/sans/curses";
 import { applyUndynePostAction } from "./heroes/undyne";
 import { applyMettatonImpulseUnlocks } from "./heroes/mettaton";
 import { applyNewBatchPostAction } from "./heroes/newBatchPost";
@@ -23,8 +24,9 @@ import { cleanupJackTrapsForDeaths } from "../jackSnares";
 import {
   applyRuleDeclarationAfterAttack,
   applyRuleDeclarationWinChecks,
+  completePendingRoundAdvance,
 } from "../ruleDeclarations";
-import { GAME_OVER_REJECTION } from "../gameOver";
+import { GAME_OVER_REJECTION, hasPendingBattleResolution } from "../gameOver";
 import { finalizeCombatVisualChain } from "../core";
 import {
   applyOrangeBoneNonMovePenalty,
@@ -137,7 +139,7 @@ export function applyAction(
       const penalty = applyOrangeBoneNonMovePenalty(state, action);
       const actorId = state.activeUnitId;
       const actorSurvived = actorId
-        ? penalty.state.units[actorId]?.isAlive === true
+        ? penalty.state.units[actorId]?.isAlive === true && !penalty.state.units[actorId]?.sansPendingDeath
         : true;
       if (!actorSurvived) {
         result = penalty;
@@ -249,10 +251,13 @@ export function applyAction(
     afterPostActionCollisionCleanup.state,
     afterPostActionCollisionCleanup.events
   );
-  const afterWinChecks = applyRuleDeclarationWinChecks(
-    afterRuleAttack.state,
-    afterRuleAttack.events
-  );
+  const preDeath = applySansLastAttackFromDeaths(afterRuleAttack.state);
+  const preDeathResult = { state: preDeath.state, events: [...afterRuleAttack.events, ...preDeath.events] };
+  if (preDeath.state.pendingRoll?.kind === "selectLastAttackTarget") return finalizeVisuals(preDeathResult);
+  const afterRoundAdvance = hasPendingBattleResolution(preDeathResult.state)
+    ? preDeathResult
+    : completePendingRoundAdvance(preDeathResult.state, preDeathResult.events);
+  const afterWinChecks = applyRuleDeclarationWinChecks(afterRoundAdvance.state, afterRoundAdvance.events);
   if (afterWinChecks.state.phase === "ended") {
     return finalizeVisuals({
       ...afterWinChecks,

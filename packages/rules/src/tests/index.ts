@@ -61,6 +61,7 @@ import {
 } from "./core/gameOver.test";
 import {
   testBoundedCountersStillClamp,
+  testAllFiniteAbilityCostsUseConfiguredThreshold,
   testUnboundedCountersExceedCommonChargeLimits,
 } from "./core/counters.test";
 import {
@@ -382,6 +383,13 @@ import {
 } from "./heroes/frisk.test";
 import {
   testAsgoreHpBonus,
+  testAsgoreFireballDisabledBelowRequiredCharges,
+  testAsgoreFireballEnabledAtRequiredCharges,
+  testAsgoreFireParadeDisabledBelowRequiredCharges,
+  testAsgoreFireParadeEnabledAtRequiredCharges,
+  testChargeBasedAbilityNeverAllowsNegativeCharges,
+  testAbilityAvailabilityGuardsAndFlexibleAction,
+  testAsgoreChargesAccumulateOnlyOnOwnTurnAndRestartAfterUse,
   testAsgoreSpearmanReachAndDefenseDouble,
   testAsgoreFireballTargetingChargesAndDamage,
   testAsgoreFireParadeAreaResolutionAndChargeSpend,
@@ -410,6 +418,18 @@ import {
   testPapyrusOssifiedBerserkerFeatureAfterTransformationOnly,
 } from "./heroes/papyrus.test";
 import { testOrangeBoneRequiresMovementFirst } from "./heroes/orangeBone.test";
+import {
+  testSansLastAttackCreatesTargetChoiceBeforeDeath,
+  testSansCurseDealsOneDamageAtTargetOwnTurnStart,
+  testSansCurseStopsAtOneHp,
+  testSansLastAttackSkipsIfNoEnemyExists,
+  testGasterBlasterPiercesMultipleEnemies,
+  testNormalArcherAttackStillStopsAtFirstEnemy,
+  testGasterBlasterDoesNotAttackAllies,
+  testSansLastAttackSuspendsQueuedRollAndKeepsHiddenEnemiesLegal,
+  testSansCurseTurnStartContinuationAndActiveDeath,
+  testSansLastAttackDefersRoundAdvance,
+} from "./heroes/sans.regression.test";
 import {
   testSansBaseDamageIsOne,
   testSansLongLiverAndSpearmanFeature,
@@ -473,6 +493,7 @@ function main(): void {
   testEventDrivenImpulsesAutoTrigger();
   testUnboundedCountersExceedCommonChargeLimits();
   testBoundedCountersStillClamp();
+  testAllFiniteAbilityCostsUseConfiguredThreshold();
   testGameModeConfigsExposeExpectedModes();
   testClassicRosterCreationUsesOnlyBaseUnits();
   testClassicRosterIgnoresCustomFigureSets();
@@ -673,6 +694,13 @@ function main(): void {
   testKaladinFourthOathBerserkerTraitMovementMode();
   testKaladinFifthOathGatingDamageAndImmobilizeDuration();
   testAsgoreHpBonus();
+  testAsgoreFireballDisabledBelowRequiredCharges();
+  testAsgoreFireballEnabledAtRequiredCharges();
+  testAsgoreFireParadeDisabledBelowRequiredCharges();
+  testAsgoreFireParadeEnabledAtRequiredCharges();
+  testChargeBasedAbilityNeverAllowsNegativeCharges();
+  testAbilityAvailabilityGuardsAndFlexibleAction();
+  testAsgoreChargesAccumulateOnlyOnOwnTurnAndRestartAfterUse();
   testAsgoreSpearmanReachAndDefenseDouble();
   testAsgoreFireballTargetingChargesAndDamage();
   testAsgoreFireParadeAreaResolutionAndChargeSpend();
@@ -710,6 +738,16 @@ function main(): void {
   testSansBadassJokeDebuffAndMovementLock();
   testSansUnbelieverBoneFieldAndSleep();
   testSansLastAttackCurse();
+  testSansLastAttackCreatesTargetChoiceBeforeDeath();
+  testSansCurseDealsOneDamageAtTargetOwnTurnStart();
+  testSansCurseStopsAtOneHp();
+  testSansLastAttackSkipsIfNoEnemyExists();
+  testGasterBlasterPiercesMultipleEnemies();
+  testNormalArcherAttackStillStopsAtFirstEnemy();
+  testGasterBlasterDoesNotAttackAllies();
+  testSansLastAttackSuspendsQueuedRollAndKeepsHiddenEnemiesLegal();
+  testSansCurseTurnStartContinuationAndActiveDeath();
+  testSansLastAttackDefersRoundAdvance();
   testUndyneToughSpearmanFeatureAndReach();
   testUndyneThrowSpearFixedDamageAndSpearRain();
   testUndyneEnergySpearGatingLineAndFreeImmortalCost();

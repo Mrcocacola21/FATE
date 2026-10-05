@@ -748,6 +748,8 @@ export const en = {
     attackSlotUsed: "Attack slot already used",
     stealthSlotUsed: "Stealth slot already used",
     notEnoughCharges: "Not enough charges",
+    notEnoughChargesRequired: "Not enough charges — requires {{amount}}.",
+    abilityReady: "READY",
     notEnoughLaugh: "Not enough Laugh",
     move: "Move",
     attack: "Attack",
@@ -1432,7 +1434,7 @@ export const en = {
           lastAttack: {
             name: "Last Attack",
             description:
-              "When Sans dies, curse one enemy; it loses 1 HP at turn start until it reaches 1 HP.",
+              "Before Sans dies, his owner chooses any living enemy to curse; it loses 1 HP at the start of its own turns until it reaches 1 HP.",
           },
         },
       },

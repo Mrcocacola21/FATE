@@ -1,6 +1,7 @@
 import type { GameEvent, GameState, TurnSlot, UnitState } from "../model";
 import {
   getAbilitySpec,
+  getAbilityChargeCost,
   spendCharges,
   type AbilitySpec,
 } from "../abilities";
@@ -47,7 +48,7 @@ function getCommitChargeAmount(
   spec: AbilitySpec,
   options?: AbilityCostCommitOptions
 ): number {
-  return options?.chargeAmount ?? spec.chargesPerUse ?? spec.chargeCost ?? 0;
+  return options?.chargeAmount ?? getAbilityChargeCost(spec);
 }
 
 export function canCommitAbilityCost(

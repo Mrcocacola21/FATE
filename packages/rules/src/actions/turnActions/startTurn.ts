@@ -47,6 +47,7 @@ import {
 import { maybeTriggerOdinSleipnir } from "../heroes/odin";
 import { maybeTriggerChargedImpulseChoice } from "../chargedImpulses";
 import { activateChikatiloTrackingForStartTurn } from "../../chikatiloMark";
+import { applySansLastAttackTickOnTurnStart } from "../heroes/sans/curses";
 
 export function applyUnitStartTurn(
   state: GameState,
@@ -83,13 +84,16 @@ export function applyUnitStartTurn(
     initialUnit.heroId === HERO_KALADIN_ID
       ? clearKaladinMoveLocksForCaster(state, initialUnit.id)
       : state;
+  const curseTick = applySansLastAttackTickOnTurnStart(stateAfterKaladinCleanup, action);
+  const curseState = curseTick.state;
   const stateAfterStatusCleanup =
     initialUnit.heroId === HERO_LOKI_ID
-      ? clearLokiEffectsForCaster(stateAfterKaladinCleanup, initialUnit.id)
-      : stateAfterKaladinCleanup;
+      ? clearLokiEffectsForCaster(curseState, initialUnit.id)
+      : curseState;
 
-  const { state: afterBoneField, events: boneFieldEvents } =
+  const { state: afterBoneField, events: hazardEvents } =
     applySansBoneFieldStartOfTurn(stateAfterStatusCleanup, initialUnit.id, rng);
+  const boneFieldEvents = [...curseTick.events, ...hazardEvents];
   const { state: afterStealth, events: stealthEvents } =
     processUnitStartOfTurnStealth(afterBoneField, initialUnit.id, rng);
 
