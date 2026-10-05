@@ -59,7 +59,8 @@ async function run() {
   const output = path.join(root, "test-results/journey", suffix);
   const executablePath = [process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH, process.env.CHROME_PATH, process.env.EDGE_PATH,
     "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe", "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-    "/usr/bin/chromium", "/usr/bin/chromium-browser", "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"].find(candidate => candidate && existsSync(candidate));
+    "/usr/bin/chromium", "/usr/bin/chromium-browser", "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    chromium.executablePath()].find(candidate => candidate && existsSync(candidate));
   const envBefore = { ...process.env };
   process.env.JWT_ACCESS_SECRET = "fate-journey-access-secret-01234567890123456789";
   process.env.JWT_REFRESH_SECRET = "fate-journey-refresh-secret-01234567890123456789";

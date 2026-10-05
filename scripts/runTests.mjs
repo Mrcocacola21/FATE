@@ -13,7 +13,7 @@ const require = createRequire(import.meta.url);
 const tsx = require.resolve("tsx/cli");
 const config = path.join(root, "tsconfig.tests.json");
 const layer = process.argv[2] ?? "regression";
-const valid = ["unit", "contract", "integration", "ws", "e2e", "regression", "database-prepare"];
+const valid = ["rules", "server", "web", "unit", "contract", "integration", "ws", "e2e", "regression", "database-prepare"];
 if (!valid.includes(layer)) throw new Error(`Unknown test layer: ${layer}`);
 const needsDatabase = ["integration", "ws", "e2e", "database-prepare"].includes(layer);
 const env = { ...process.env, LOG_LEVEL: "silent" };
@@ -47,10 +47,14 @@ async function run(label, args, cwd = root, timeoutMs = 180000) {
     child.once("exit", code => { clearTimeout(timer); active = undefined; resolve(code); });
   });
   const tap = [...output.matchAll(/^# tests (\d+)\r?$/gm)].at(-1);
+  const passed = [...output.matchAll(/^# pass (\d+)\r?$/gm)].at(-1);
   report.suites.push({ name: label, exitCode: code, seconds: Number(((performance.now() - started) / 1000).toFixed(2)),
     ...(tap ? { tests: Number(tap[1]) } : label.startsWith("rules") ? { legacyChecks: (output.match(/^.*passed.*$/gm) ?? []).length } : {}),
   });
   if (code !== 0) throw new Error(`${label} failed (exit ${code})`);
+  if (args.includes("--test") && (!tap || Number(tap[1]) === 0 || !passed || Number(passed[1]) === 0)) {
+    throw new Error(`${label} did not execute any passing tests (empty or entirely skipped suite)`);
+  }
 }
 const serverFile = name => path.join(root, "packages/server/src/tests", name);
 const testFile = (label, file) => run(label, [tsx, "--tsconfig", config, file], path.dirname(path.dirname(path.dirname(file))));
@@ -63,14 +67,25 @@ async function discover(directory, suffix) {
   }
   return files.sort();
 }
-async function units() {
+async function rules() {
   await testFile("rules gameplay (existing runner)", path.join(root, "packages/rules/src/tests/index.ts"));
   await run("rules architecture boundaries", [tsx, "--tsconfig", config, "packages/rules/src/tests/index.ts", "--boundaries"]);
+}
+async function serverUnits() {
   for (const name of serverUnit) await testFile(name, serverFile(name));
   const pure = await discover(path.join(root, "packages/server/src/tests/unit"), /\.test\.ts$/);
+  if (pure.length === 0) throw new Error("No server unit tests discovered");
   await run("server pure units", [tsx, "--tsconfig", config, "--test", "--test-concurrency=1", ...pure]);
+}
+async function webUnits() {
   const web = await discover(path.join(root, "packages/web/src"), /\.test\.tsx?$/);
+  if (web.length === 0) throw new Error("No frontend tests discovered");
   await run("web components and helpers", [tsx, "--tsconfig", config, "--test", "--test-concurrency=1", ...web], path.join(root, "packages/web"));
+}
+async function units() {
+  await rules();
+  await serverUnits();
+  await webUnits();
 }
 async function contracts() {
   await run("OpenAPI generated schema consistency", ["packages/server/scripts/generateResponseSchemas.cjs", "--check"]);
@@ -110,12 +125,17 @@ try {
     await run("Prisma generate", [path.join(root, "scripts/generatePrisma.mjs")], path.join(root, "packages/server"));
     await run("test DB migrations", [require.resolve("prisma/build/index.js"), "migrate", "deploy"], path.join(root, "packages/server"));
   }
+  if (layer === "rules") await rules();
+  if (layer === "server") await serverUnits();
+  if (layer === "web") await webUnits();
   if (layer === "unit" || layer === "regression") await units();
   if (["contract", "integration", "regression"].includes(layer)) await contracts();
   if (layer === "regression" || layer === "ws") await transports();
   if (layer === "integration") {
     const files = await discover(path.join(root, "packages/server/src/tests"), /\.integration\.test\.ts$/);
-    for (const file of files.filter(file => !databaseWs.includes(path.basename(file)))) await testFile(path.basename(file), file);
+    const integration = files.filter(file => !databaseWs.includes(path.basename(file)));
+    if (integration.length === 0) throw new Error("No database integration suites discovered");
+    for (const file of integration) await testFile(path.basename(file), file);
   }
   if (layer === "ws") for (const name of databaseWs) await testFile(name, serverFile(name));
   if (layer === "e2e") await run("register → login → create/join → play → finish → history → replay", [tsx, "--tsconfig", config, path.join(root, "packages/web/scripts/journey-smoke.ts")], path.join(root, "packages/web"), 300000);

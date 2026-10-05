@@ -11,6 +11,8 @@ import { setLanguage } from "../i18n";
 import { PublicProfilePage } from "../pages/PublicProfilePage";
 import { ProfilePage } from "../pages/ProfilePage";
 import { profileStore } from "../profile/profileStore";
+import { competitiveApi } from "../play/api";
+import { competitiveRatingFixture } from "../ranks/testFixtures";
 import { PlayerStatisticsSection } from "./PlayerStatisticsSection";
 import { StatisticsSummary } from "./StatisticsSummary";
 import { statisticsFixture, emptyStatisticsFixture, recentFixture } from "./fixtures";
@@ -20,15 +22,25 @@ const originalStats = statisticsApi.getPlayerStatistics;
 const originalMatches = matchApi.getUserMatches;
 const originalProfile = profileApi.getPublic;
 const originalProfileState = profileStore.getState();
+const originalRatings = competitiveApi.ratings;
+const originalConfig = competitiveApi.config;
 test.beforeEach(() => {
   setLanguage("en", null);
   statisticsApi.getPlayerStatistics = async (id) => statisticsFixture(id);
   matchApi.getUserMatches = async () => recentFixture;
+  competitiveApi.ratings = async () => ({
+    standard: competitiveRatingFixture(1500, 2),
+    draft: competitiveRatingFixture(1500, 0),
+    classic: competitiveRatingFixture(1500, 0),
+  });
+  competitiveApi.config = async () => 5;
 });
 test.afterEach(() => {
   statisticsApi.getPlayerStatistics = originalStats;
   matchApi.getUserMatches = originalMatches;
   profileApi.getPublic = originalProfile;
+  competitiveApi.ratings = originalRatings;
+  competitiveApi.config = originalConfig;
   profileStore.setState(originalProfileState, true);
   setLanguage("en", null);
 });
@@ -392,7 +404,10 @@ test("public routing requests each viewed player's id and never keeps the previo
     assert.deepEqual(calls, ["id-Alice", "id-Bob"]);
     assert.doesNotMatch(content(renderer), /60%/);
     assert.match(content(renderer), /No match data yet/);
-    assert.equal(renderer.root.findAllByType("button").length, 0);
+    assert.equal(
+      renderer.root.findByProps({ "data-testid": "player-statistics" }).findAllByType("button").length,
+      0,
+    );
   } finally {
     cleanup(renderer);
   }

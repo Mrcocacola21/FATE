@@ -5,6 +5,9 @@ FATE keeps its deterministic gameplay runner and existing test files. Layers hav
 | Command | Ownership | Database / sockets / browser |
 | --- | --- | --- |
 | `npm run test:unit` | All existing rules gameplay and architecture checks, server pure helpers and in-memory domain/service tests, every web `.test.ts(x)` | No DB, listening server, or browser |
+| `npm run test:rules` | Rules gameplay and architecture checks | No DB or browser |
+| `npm run test:server` | Server pure helpers and in-memory unit suites | No DB or browser |
+| `npm run test:web` | Every web `.test.ts(x)` | No DB or browser |
 | `npm run test:contract` | Existing Fastify inject/API/security/OpenAPI and mixed legacy service suites | No DB; local process startup checks for deployment |
 | `npm run test:integration` | Contract suites + real PostgreSQL repository/service/API suites | Guarded local PostgreSQL |
 | `npm run test:ws` | Existing live WebSocket regressions + PostgreSQL lifecycle and restart/reconnect suites | Guarded local PostgreSQL, real ephemeral-port servers/sockets |
@@ -84,7 +87,7 @@ The revision barrier accounts for the UI's existing automatic `unitStartTurn`, s
 
 The only production testability change is an optional server/lifecycle `roomSeed` dependency; default room seed behavior is unchanged and explicit room seeds retain precedence. No production raw-state endpoint is added. Gameplay commands use normal protocol/rules behavior; the bot accelerates controls through the client store rather than clicking every move/attack button. Existing component suites cover those controls.
 
-Chromium is required. Windows Edge/Chrome, common Linux Chromium paths and macOS Chrome are detected; otherwise set `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`. No browser download or external application endpoint is used by the tests. Each browser run owns `test-results/journey/<run-id>/`. On failure, inspect its `failure.log`, per-player PNGs and Playwright trace ZIPs. Passing runs retain only compact `result.json`, whose location is printed. Readiness uses `/ready` and Vite's listening server, with no startup sleeps.
+Chromium is required. Windows Edge/Chrome, common Linux Chromium paths, macOS Chrome and the locked Playwright-downloaded Chromium are detected; otherwise set `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`. Install the latter with `npm exec -w web -- playwright-core install --with-deps chromium` (system dependency installation on Linux needs elevated privileges). The tests themselves do not download browsers or use external application endpoints. Each browser run owns `test-results/journey/<run-id>/`. On failure, inspect its `failure.log`, per-player PNGs and Playwright trace ZIPs. Passing runs retain only compact `result.json`, whose location is printed. Readiness uses `/ready` and Vite's listening server, with no startup sleeps.
 
 ## Coverage boundaries and troubleshooting
 
@@ -101,4 +104,4 @@ An absent/unsafe `TEST_DATABASE_URL` is an error, never a green skip. A connecti
 
 When investigating a failure, first rerun the owning layer or its individual existing workspace command. Do not add blanket retries. Keep new scenarios at the narrowest layer that owns the invariant. TAP counts represent individual Node tests; historical custom runners group multiple assertions and must be reported as checks/suite executions rather than invented test counts.
 
-CI workflow implementation and global percentage coverage thresholds are deferred. Existing runners do not share an instrumentation/reporting format, so no arbitrary global coverage gate was introduced. Full browser process-restart smoke remains an optional legacy command (`npm run -w web test:recovery:e2e`); the required WS layer already disposes/rebuilds actual runtimes on the same DB and verifies seat reclaim, revision N+1 and RNG continuation. Extra Rated/admin browser smoke is optional because its deep invariants are already covered in integration/component tests.
+The [CI workflow](ci.md) requires all layers, including the primary browser journey, on PRs and main. Existing runners do not share an instrumentation/reporting format, so no arbitrary global coverage gate was introduced. Full browser process-restart smoke remains an optional legacy command (`npm run -w web test:recovery:e2e`); the required WS layer already disposes/rebuilds actual runtimes on the same DB and verifies seat reclaim, revision N+1 and RNG continuation. Extra Rated/admin browser smoke is optional because its deep invariants are already covered in integration/component tests.

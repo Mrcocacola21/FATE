@@ -22,6 +22,7 @@ Follow active progress and implementation notes in the [Developer Log](https://t
 - [Getting Started](#getting-started)
 - [Build](#build)
 - [Tests](#tests)
+- [Continuous Integration](#continuous-integration)
 - [Environment Variables (Web)](#environment-variables-web)
 - [Database Development](#database-development)
 - [Persistent Match Lifecycle](#persistent-match-lifecycle)
@@ -102,6 +103,17 @@ See [the testing guide](docs/testing.md) for layer ownership, guarded PostgreSQL
 npm run test
 npm run -w web typecheck
 ```
+
+## Continuous Integration
+
+Pull requests and pushes to `main` run the required **CI / Quality** check: locked
+install, Prisma validation/generation, lint, full typecheck, OpenAPI, rules/server/web
+tests, PostgreSQL 16 integration, WebSocket/restart tests, the primary browser journey
+and the complete build. Every stage must pass. No production secrets are required.
+
+See [CI commands, database isolation and required branch protection](docs/ci.md).
+Configure GitHub to require the **Quality** check before merging; the workflow alone
+does not enable branch protection.
 
 ## Environment Variables (Web)
 

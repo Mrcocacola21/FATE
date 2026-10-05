@@ -1,39 +1,119 @@
 name: CI
 
 on:
-  push:
-    branches:
-      - main
   pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   verify:
+    name: Quality
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://fate_test:fate_test@127.0.0.1:5432/fate_test
+      DIRECT_URL: postgresql://fate_test:fate_test@127.0.0.1:5432/fate_test
+      TEST_DATABASE_URL: postgresql://fate_test:fate_test@127.0.0.1:5432/fate_test
+      JWT_ACCESS_SECRET: ci-test-access-secret-at-least-32-bytes
+      JWT_REFRESH_SECRET: ci-test-refresh-secret-different-32-bytes
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: fate_test
+          POSTGRES_PASSWORD: fate_test
+          POSTGRES_DB: fate_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U fate_test -d fate_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - name: Checkout
+        uses: actions/checkout@v7
         with:
-          node-version: 22
+          persist-credentials: false
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v7
+        with:
+          # Matches README and docs/production-deployment.md.
+          node-version: '22'
           cache: npm
+          cache-dependency-path: package-lock.json
 
-      - name: Install
-        run: npm ci
+      - name: Install dependencies
+        run: npm ci --include=dev --no-audit
 
-      - name: Rules tests
-        run: npm run -w rules test
+      - name: Validate Prisma schema
+        run: npm run -w server db:validate
 
-      - name: Server tests
-        run: npm run -w server test
+      - name: Generate fresh Prisma client
+        run: npm run -w server prisma:generate -- --force
 
-      - name: Web typecheck
-        run: npm run -w web typecheck
+      - name: Lint (zero warnings)
+        run: npm run lint
 
-      - name: Build
+      - name: Typecheck all packages and browser harness
+        # Install's postinstall builds the rules declarations required by server/web.
+        run: npm run typecheck
+
+      - name: Validate OpenAPI and committed response schemas
+        run: npm run -w server openapi:validate
+
+      - name: Rules gameplay and architecture tests
+        run: npm run test:rules
+
+      - name: Server unit tests
+        run: npm run test:server
+
+      - name: Frontend component and helper tests
+        run: npm run test:web
+
+      - name: Deploy migrations to empty guarded test database
+        run: npm run test:db:prepare
+
+      - name: Verify migration status
+        run: npm run -w server db:migrate:status
+
+      - name: Database integration and server contract tests
+        run: npm run test:integration
+
+      - name: WebSocket and persisted restart tests
+        run: npm run test:ws
+
+      - name: Install locked Playwright Chromium and system dependencies
+        run: npm exec -w web -- playwright-core install --with-deps chromium
+
+      - name: Primary browser journey
+        run: npm run test:e2e
+
+      - name: Build rules, server and web
         run: npm run build
+        env:
+          NODE_ENV: production
+          VITE_API_URL: http://127.0.0.1:3000
+          VITE_WS_URL: ws://127.0.0.1:3000/ws
 
-      - name: Audit production dependencies
-        run: npm audit --omit=dev || true
+      - name: Upload test diagnostics on failure
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: ci-test-diagnostics
+          path: |
+            test-results/testing/
+            test-results/journey/
+          if-no-files-found: ignore
+          retention-days: 7
