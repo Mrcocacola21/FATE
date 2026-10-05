@@ -1,10 +1,11 @@
+import { queryConfig } from "../validation/queryValidation";
+import { idParamsSchema } from "../validation/commonSchemas";
+import { parseInput } from "../validation/parseRequest";
 import type { FastifyInstance } from "fastify";
-import { z } from "zod";
-import { AuthError } from "../auth/authErrors";
 import { matchHistoryQuerySchema } from "../matches/historySchema";
 import { MatchHistoryRepository } from "../repositories/matchHistoryRepository";
 import { MatchHistoryService } from "../services/matchHistoryService";
-import { toApiError } from "./apiErrorHandler";
+import { registerApiErrorHandler } from "./apiErrorHandler";
 
 export async function matchHistoryRoutes(
   server: FastifyInstance,
@@ -13,21 +14,12 @@ export async function matchHistoryRoutes(
   },
 ): Promise<void> {
   let service = options.matchHistory;
-  server.setErrorHandler((error, request, reply) => {
-    const failure = toApiError(error);
-    if (failure.statusCode >= 500)
-      request.log.error(
-        { category: failure.code, requestId: request.id },
-        "Match history request failed",
-      );
-    reply.code(failure.statusCode).send(failure.toResponse());
-  });
-  server.get<{ Params: { id: string } }>("/users/:id/matches", async (request, reply) => {
+  registerApiErrorHandler(server);
+  server.get<{ Params: { id: string } }>("/users/:id/matches", { config: queryConfig(matchHistoryQuerySchema) }, async (request, reply) => {
     reply.header("Cache-Control", "no-store");
-    const query = matchHistoryQuerySchema.safeParse(request.query);
-    if (!z.string().uuid().safeParse(request.params.id).success || !query.success)
-      throw new AuthError("INVALID_REQUEST");
+    parseInput(idParamsSchema, request.params);
+    const query = parseInput(matchHistoryQuerySchema, request.query);
     service ??= new MatchHistoryService(new MatchHistoryRepository());
-    return service.getUserMatchHistory(request.params.id, query.data);
+    return service.getUserMatchHistory(request.params.id, query);
   });
 }

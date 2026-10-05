@@ -235,7 +235,7 @@ test("100 actions do not trigger mass prefetch; cache stays bounded", async () =
 
 test("controlled unavailable and state errors keep metadata/controls available", async () => {
   replayApi.getState = async () => {
-    throw new ApiError("REPLAY_INTEGRITY_ERROR", 500);
+    throw new ApiError("REPLAY_ACTION_GAP", 409);
   };
   await mount();
   assert(text().includes(translate("replay.integrityError")));

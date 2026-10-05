@@ -245,6 +245,25 @@ test("registration maps duplicate email and username errors", async () => {
   }
 });
 
+test("login displays blocked accounts and marks canonical validation field paths", async () => {
+  for (const code of ["ACCOUNT_BLOCKED", "VALIDATION_ERROR"]) {
+    reset();
+    authStore.setState({ login: async () => {
+      throw new ApiError(code, code === "ACCOUNT_BLOCKED" ? 403 : 400, "Backend fallback", {
+        fields: [{ path: "email", message: "Invalid value." }],
+      });
+    } });
+    const renderer = mount(<LoginPage />);
+    try {
+      await submit(renderer, { email: user.email, password: "password" });
+      const message = renderer.root.findByProps({ role: "alert" }).children.join("");
+      assert.match(message, code === "ACCOUNT_BLOCKED" ? /account is blocked/ : /Check your email, username and password/);
+      assert.equal(renderer.root.findByProps({ name: "email" }).props["aria-invalid"], code === "VALIDATION_ERROR");
+      assert.equal(renderer.root.findByProps({ name: "password" }).props["aria-invalid"], false);
+    } finally { act(() => renderer.unmount()); reset(); }
+  }
+});
+
 test("protected route waits during initialization, redirects guests and renders signed-in content", () => {
   for (const status of [
     "initializing",

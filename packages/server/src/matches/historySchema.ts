@@ -1,16 +1,13 @@
+import { pageSchema, limitSchema } from "../validation/commonSchemas";
 import { z } from "zod";
-import { isGameModeId } from "rules";
+import { GameModeIdSchema } from "../schemas";
 
-const positiveInteger = z
-  .string()
-  .regex(/^[1-9]\d*$/)
-  .transform(Number);
 export const matchHistoryQuerySchema = z
   .object({
-    page: positiveInteger.pipe(z.number().int().max(21474836)).default("1"),
-    limit: positiveInteger.pipe(z.number().int().max(100)).default("20"),
+    page: pageSchema,
+    limit: limitSchema(),
     result: z.enum(["WIN", "LOSS", "DRAW"]).optional(),
-    gameMode: z.string().refine(isGameModeId).optional(),
+    gameMode: GameModeIdSchema.optional(),
   })
   .strict();
 export type MatchHistoryQuery = z.infer<typeof matchHistoryQuerySchema>;

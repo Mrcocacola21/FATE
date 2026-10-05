@@ -63,7 +63,7 @@ interface Projection {
 export class MatchCreationError extends Error {
   readonly statusCode = 503;
   readonly code = "MATCH_PERSISTENCE_UNAVAILABLE";
-  constructor() {
+  constructor(readonly cause?: unknown) {
     super("Unable to create persistent room");
   }
 }
@@ -213,12 +213,12 @@ export class MatchLifecycle {
             arenaId: room.state.arenaId },
         });
         room.matchId = match.id;
-      } catch {
+      } catch (error) {
         this.logger.error(
           { event: "match:create_failed", roomId: room.id },
           "Persistent room creation failed",
         );
-        throw new MatchCreationError();
+        throw new MatchCreationError(error);
       }
     }
     publishGameRoom(room);

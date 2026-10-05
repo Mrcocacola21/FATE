@@ -5,6 +5,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
+    "test:api-errors": "tsx --test src/tests/apiErrors.test.ts",
     "test:audit": "tsx --test src/tests/audit.test.ts",
     "test:audit:db": "tsx src/tests/audit.integration.test.ts",
     "test:ranks": "tsx --test src/tests/rankTiers.test.ts",
@@ -29,7 +30,7 @@
     "start": "node dist/index.js",
     "start:deploy": "npm run db:migrate:deploy && npm run db:migrate:status && npm run start",
     "pretest": "npm run prisma:generate",
-    "test": "npm run -w rules build && tsx src/tests/deployment.test.ts && tsx src/tests/databaseFoundation.test.ts && tsx src/tests/auth.test.ts && npm run test:admin && tsx src/tests/profile.test.ts && tsx src/tests/view.test.ts && tsx src/tests/markerProjection.test.ts && tsx src/tests/matchLifecycle.test.ts && tsx src/tests/matchTypes.test.ts && tsx src/tests/lobby.test.ts && tsx src/tests/matchmaking.test.ts && tsx src/tests/matchmaking.ws.test.ts && tsx src/tests/matchResult.test.ts && tsx src/tests/matchHistory.test.ts && tsx src/tests/playerStatistics.test.ts && tsx src/tests/rating.test.ts && npm run test:ranks && tsx src/tests/leaderboard.test.ts && tsx src/tests/matchAction.test.ts && tsx src/tests/matchSnapshot.test.ts && tsx src/tests/replay.test.ts && tsx src/tests/matchRecovery.test.ts && tsx src/tests/authenticatedMultiplayer.test.ts && tsx src/tests/ws.smoke.ts && tsx src/tests/hardening.test.ts && tsx src/tests/testRoom.test.ts && tsx src/tests/testRoom.ws.test.ts && tsx src/tests/modes.test.ts",
+    "test": "npm run -w rules build && tsx src/tests/deployment.test.ts && tsx src/tests/databaseFoundation.test.ts && tsx src/tests/auth.test.ts && npm run test:api-errors && npm run test:admin && tsx src/tests/profile.test.ts && tsx src/tests/view.test.ts && tsx src/tests/markerProjection.test.ts && tsx src/tests/matchLifecycle.test.ts && tsx src/tests/matchTypes.test.ts && tsx src/tests/lobby.test.ts && tsx src/tests/matchmaking.test.ts && tsx src/tests/matchmaking.ws.test.ts && tsx src/tests/matchResult.test.ts && tsx src/tests/matchHistory.test.ts && tsx src/tests/playerStatistics.test.ts && tsx src/tests/rating.test.ts && npm run test:ranks && tsx src/tests/leaderboard.test.ts && tsx src/tests/matchAction.test.ts && tsx src/tests/matchSnapshot.test.ts && tsx src/tests/replay.test.ts && tsx src/tests/matchRecovery.test.ts && tsx src/tests/authenticatedMultiplayer.test.ts && tsx src/tests/ws.smoke.ts && tsx src/tests/hardening.test.ts && tsx src/tests/testRoom.test.ts && tsx src/tests/testRoom.ws.test.ts && tsx src/tests/modes.test.ts",
     "pretest:db": "npm run prisma:generate",
     "test:db": "tsx src/tests/database.integration.test.ts",
     "pretest:auth:db": "npm run prisma:generate",

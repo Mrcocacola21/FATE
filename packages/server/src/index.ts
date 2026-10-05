@@ -1,3 +1,7 @@
+import { registerQueryValidation } from "./validation/queryValidation";
+import { registerJsonParser } from "./validation/jsonParser";
+import { AppError } from "./errors/appError";
+import { registerApiErrorHandler, handleApiError } from "./routes/apiErrorHandler";
 import { createMatchmakingService } from "./matchmaking/runtime";
 import { matchmakingRoutes } from "./routes/matchmakingRoutes";
 // packages/server/src/index.ts
@@ -52,11 +56,19 @@ export async function buildServer(
 ) {
   const logLevel = process.env.LOG_LEVEL ?? "info";
   const server = Fastify({
+    frameworkErrors: handleApiError,
     logger: {
       level: logLevel,
       redact: ["req.headers.authorization", "req.headers.cookie", "res.headers.set-cookie"],
     },
   });
+
+  registerApiErrorHandler(server);
+  registerQueryValidation(server);
+  registerJsonParser(server);
+  server.setNotFoundHandler((_request, reply) =>
+    reply.code(404).send(new AppError("ROUTE_NOT_FOUND", 404, "Route not found.").toResponse()),
+  );
 
   const corsOptions: FastifyCorsOptionsDelegate = (request, cb) =>
     cb(null, {

@@ -1,3 +1,4 @@
+import { validationFields } from "../api/client";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, Navigate, useSearchParams } from "react-router";
 import { useI18n } from "../i18n";
@@ -18,6 +19,7 @@ export function AuthForm({ kind }: { kind: "login" | "register" }) {
     operation,
     error: sessionError,
   } = useAuthStore((state) => state);
+  const [invalidFields, setInvalidFields] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const pending = useRef(false);
@@ -48,11 +50,13 @@ export function AuthForm({ kind }: { kind: "login" | "register" }) {
     pending.current = true;
     setSubmitting(true);
     setError(null);
+    setInvalidFields([]);
     try {
       if (isRegister) await register({ email, username, password });
       else await login({ email, password });
       form.reset();
     } catch (failure) {
+      setInvalidFields([...new Set(validationFields(failure).map(field => field.path))]);
       setError(authErrorMessage(failure, t));
     } finally {
       pending.current = false;
@@ -92,6 +96,7 @@ export function AuthForm({ kind }: { kind: "login" | "register" }) {
             <input
               id="auth-username"
               name="username"
+              aria-invalid={invalidFields.includes("username")}
               className="field-control"
               autoComplete="username"
               required
@@ -114,6 +119,7 @@ export function AuthForm({ kind }: { kind: "login" | "register" }) {
           <input
             id="auth-email"
             name="email"
+            aria-invalid={invalidFields.includes("email")}
             className="field-control"
             type="email"
             autoComplete="email"
@@ -127,6 +133,7 @@ export function AuthForm({ kind }: { kind: "login" | "register" }) {
           <input
             id="auth-password"
             name="password"
+            aria-invalid={invalidFields.includes("password")}
             className="field-control"
             type="password"
             autoComplete={isRegister ? "new-password" : "current-password"}
@@ -160,6 +167,7 @@ export function AuthForm({ kind }: { kind: "login" | "register" }) {
             className="text-sm text-red-700 dark:text-red-300"
           >
             {error}
+            {invalidFields.length > 0 && ` (${invalidFields.map(field => t(`auth.${field}`)).join(", ")})`}
           </p>
         )}
         <button

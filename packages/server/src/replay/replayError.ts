@@ -23,6 +23,7 @@ export class ReplayError extends Error {
       baseRevision?: number;
       revision?: number;
     },
+    readonly cause?: unknown,
   ) {
     super(code);
   }

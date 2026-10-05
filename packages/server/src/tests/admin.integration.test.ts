@@ -359,7 +359,7 @@ async function run() {
       [`/api/admin/matches/${matches[0]}/actions?limit=201`, mod],
       ["/api/admin/users/not-a-uuid", mod],
     ] as const)
-      expectError(await request(url, actor), 400, "INVALID_REQUEST");
+      expectError(await request(url, actor), 400, "VALIDATION_ERROR");
     expectError(await request(`/api/admin/users/${randomUUID()}`, mod), 404, "USER_NOT_FOUND");
     expectError(await request(`/api/admin/matches/${randomUUID()}`, mod), 404, "MATCH_NOT_FOUND");
     expectError(
@@ -425,7 +425,7 @@ async function run() {
     expectError(
       await request(`/api/admin/users/${liveUser.id}/role`, admin, "PATCH", { role: "OWNER" }),
       400,
-      "INVALID_REQUEST",
+      "VALIDATION_ERROR",
     );
 
     const queued = await connect(),
@@ -723,7 +723,7 @@ async function run() {
           ...privilege,
         }),
         400,
-        "INVALID_REQUEST",
+        "VALIDATION_ERROR",
       );
     }
     const promotion = execFileSync(

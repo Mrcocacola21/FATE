@@ -1,3 +1,4 @@
+import { AuthError } from "../auth/authErrors";
 import assert from "node:assert/strict";
 import Fastify from "fastify";
 import { randomUUID } from "node:crypto";
@@ -62,7 +63,7 @@ async function run() {
     prefix: "/api",
     identity: {
       verify: async (token) => {
-        if (token !== "valid") throw new Error("private-auth-error");
+        if (token !== "valid") throw new AuthError("UNAUTHORIZED");
         return { userId: randomUUID(), username: "Viewer", displayName: "Viewer" };
       },
     },
@@ -142,7 +143,7 @@ async function run() {
     ]) {
       const response = await get(suffix);
       assert.equal(response.statusCode, 400);
-      assert.equal(response.json().error.code, "INVALID_REPLAY_REVISION");
+      assert.equal(response.json().error.code, suffix.includes("999999") ? "INVALID_REPLAY_REVISION" : "VALIDATION_ERROR");
     }
     assert.equal(
       (
@@ -167,7 +168,7 @@ async function run() {
       assert.equal((await get(suffix)).json().error.code, "MATCH_NOT_REPLAYABLE");
     match.initialConfig = fixture.match.initialConfig;
     const removed = rows.splice(40, 1)[0];
-    assert.equal((await get()).json().error.code, "REPLAY_INTEGRITY_ERROR");
+    assert.equal((await get()).json().error.code, "REPLAY_ACTION_GAP");
     assert.equal((await get("/state?revision=41")).json().error.code, "INVALID_REPLAY_REVISION");
     rows.splice(40, 0, removed);
     const original = engine.reconstructAtRevision.bind(engine);
@@ -182,9 +183,9 @@ async function run() {
         throw new ReplayError(code, { matchId: match.id });
       };
       const response = await get("/state?revision=10");
-      assert.equal(response.statusCode, 500);
+      assert.equal(response.statusCode, 409);
       assert.deepEqual(response.json(), {
-        error: { code: "REPLAY_INTEGRITY_ERROR", message: "REPLAY_INTEGRITY_ERROR" },
+        error: { code, message: "Stored replay data cannot be reconstructed." },
       });
     }
     engine.reconstructAtRevision = original;
@@ -192,7 +193,7 @@ async function run() {
     match.winnerSeat = winner === "P1" ? "P2" : "P1";
     assert.equal(
       (await get(`/state?revision=${match.finalRevision}`)).json().error.code,
-      "REPLAY_INTEGRITY_ERROR",
+      "REPLAY_FINAL_STATE_MISMATCH",
     );
     match.winnerSeat = winner;
     const allRows = rows.splice(0);

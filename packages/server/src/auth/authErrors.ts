@@ -1,5 +1,7 @@
+import { AppError } from "../errors/appError";
+
 export const authErrors = {
-  INVALID_REQUEST: [400, "Invalid request"],
+  VALIDATION_ERROR: [400, "Request validation failed."],
   UNAUTHORIZED: [401, "Authentication required"],
   FORBIDDEN: [403, "Insufficient permissions"],
   ACCOUNT_BLOCKED: [403, "Account access is blocked"],
@@ -15,24 +17,17 @@ export const authErrors = {
   FORBIDDEN_ORIGIN: [403, "Untrusted request origin"],
   EMAIL_ALREADY_REGISTERED: [409, "Email already registered"],
   USERNAME_ALREADY_TAKEN: [409, "Username already taken"],
-  RATE_LIMITED: [429, "Too many authentication requests"],
-  INTERNAL_ERROR: [500, "Internal server error"],
+  RATE_LIMITED: [429, "Too many requests."],
+  INTERNAL_SERVER_ERROR: [500, "An unexpected server error occurred."],
   DATABASE_UNAVAILABLE: [503, "Database unavailable"],
   AUTH_UNAVAILABLE: [503, "Authentication is not configured"],
 } as const;
 
 export type AuthErrorCode = keyof typeof authErrors;
 
-export class AuthError extends Error {
-  readonly statusCode: number;
-
+export class AuthError extends AppError {
   constructor(readonly code: AuthErrorCode) {
     const [statusCode, message] = authErrors[code];
-    super(message);
-    this.statusCode = statusCode;
-  }
-
-  toResponse() {
-    return { error: { code: this.code, message: this.message } };
+    super(code, statusCode, message);
   }
 }

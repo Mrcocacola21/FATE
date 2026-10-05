@@ -37,7 +37,7 @@ export class ConnectionIdentityService {
         accessToken,
       ).sub;
       const user = await (this.users ??= new UserRepository()).findAccountById(userId);
-      if (!user?.profile) throw new Error("Invalid account");
+      if (!user?.profile) throw new AuthError("UNAUTHORIZED");
       assertActiveAccount(user);
       return {
         userId: user.id,
@@ -47,7 +47,9 @@ export class ConnectionIdentityService {
     } catch (error) {
       if (error instanceof AuthError && error.code === "ACCOUNT_BLOCKED")
         throw new MultiplayerIdentityError(error.code, error.message);
-      throw new MultiplayerIdentityError("INVALID_ACCESS_TOKEN", "Unable to verify access token");
+      if (error instanceof AuthError && error.code === "UNAUTHORIZED")
+        throw new MultiplayerIdentityError("INVALID_ACCESS_TOKEN", "Unable to verify access token");
+      throw error;
     }
   }
   async assertActive(userId: string): Promise<void> {

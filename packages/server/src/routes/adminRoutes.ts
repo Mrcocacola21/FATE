@@ -1,3 +1,4 @@
+import { queryConfig } from "../validation/queryValidation";
 import type { FastifyInstance } from "fastify";
 import rateLimit from "@fastify/rate-limit";
 import { AuthError } from "../auth/authErrors";
@@ -21,7 +22,7 @@ import {
   rolePatchSchema,
   userListSchema,
 } from "../admin/schemas";
-import { toApiError } from "./apiErrorHandler";
+import { registerApiErrorHandler } from "./apiErrorHandler";
 import type { AccountAccessLoader } from "../auth/accountAccess";
 import { AuditLogReader } from "../services/auditLogService";
 
@@ -55,65 +56,49 @@ export async function adminRoutes(
     ),
   );
   server.addHook("preHandler", requireModerator);
-  server.get("/audit", { preHandler: requireAdmin }, (request) =>
-    (options.auditReader ?? new AuditLogReader()).list(parseInput(auditListSchema, request.query)),
-  );
-  server.setErrorHandler((error, request, reply) => {
-    const failure = toApiError(error);
-    if (failure.statusCode >= 500)
-      request.log.error({ category: failure.code, requestId: request.id }, "Admin request failed");
-    reply.code(failure.statusCode).send(failure.toResponse());
+  registerApiErrorHandler(server);
+  server.get("/audit", { preHandler: requireAdmin, config: queryConfig(auditListSchema) }, request => {
+    const input = parseInput(auditListSchema, request.query);
+    return (options.auditReader ?? new AuditLogReader()).list(input);
   });
-  server.get("/users", (request) =>
-    getService().listUsers(parseInput(userListSchema, request.query), authenticatedRole(request)),
-  );
-  server.get<{ Params: { userId: string } }>("/users/:userId", (request) =>
-    getService().getUser(resourceId(request.params.userId), authenticatedRole(request)),
-  );
-  server.post<{ Params: { userId: string } }>(
-    "/users/:userId/block",
-    { bodyLimit: 4096 },
-    async (request) => {
-      const body = parseInput(blockSchema, request.body ?? {});
-      return getService().setBlocked(
-        request.authUserId!,
-        resourceId(request.params.userId),
-        true,
-        body.reason,
-      );
-    },
-  );
-  server.post<{ Params: { userId: string } }>(
-    "/users/:userId/unblock",
-    { bodyLimit: 4096 },
-    async (request) => {
-      parseInput(blockSchema.omit({ reason: true }), request.body ?? {});
-      return getService().setBlocked(request.authUserId!, resourceId(request.params.userId), false);
-    },
-  );
-  server.patch<{ Params: { userId: string } }>(
-    "/users/:userId/role",
-    { preHandler: requireAdmin, bodyLimit: 4096 },
-    async (request) => {
-      const body = parseInput(rolePatchSchema, request.body);
-      return getService().changeRole(
-        request.authUserId!,
-        resourceId(request.params.userId),
-        body.role,
-      );
-    },
-  );
-  server.get("/matches", (request) =>
-    getService().listMatches(parseInput(matchListSchema, request.query)),
-  );
-  server.get<{ Params: { matchId: string } }>("/matches/:matchId", (request) =>
-    getService().getMatch(resourceId(request.params.matchId)),
-  );
-  server.get<{ Params: { matchId: string } }>("/matches/:matchId/actions", (request) =>
-    getService().listActions(
-      resourceId(request.params.matchId),
-      parseInput(actionListSchema, request.query),
-    ),
-  );
+  server.get("/users", { config: queryConfig(userListSchema) }, request => {
+    const input = parseInput(userListSchema, request.query);
+    return getService().listUsers(input, authenticatedRole(request));
+  });
+  server.get<{ Params: { userId: string } }>("/users/:userId", request => {
+    const id = resourceId(request.params.userId, "userId");
+    return getService().getUser(id, authenticatedRole(request));
+  });
+  server.post<{ Params: { userId: string } }>("/users/:userId/block", { bodyLimit: 4096 }, request => {
+    const id = resourceId(request.params.userId, "userId");
+    const body = parseInput(blockSchema, request.body === undefined ? {} : request.body);
+    if (!request.authUserId) throw new AuthError("UNAUTHORIZED");
+    return getService().setBlocked(request.authUserId, id, true, body.reason);
+  });
+  server.post<{ Params: { userId: string } }>("/users/:userId/unblock", { bodyLimit: 4096 }, request => {
+    const id = resourceId(request.params.userId, "userId");
+    parseInput(blockSchema.omit({ reason: true }), request.body === undefined ? {} : request.body);
+    if (!request.authUserId) throw new AuthError("UNAUTHORIZED");
+    return getService().setBlocked(request.authUserId, id, false);
+  });
+  server.patch<{ Params: { userId: string } }>("/users/:userId/role", { preHandler: requireAdmin, bodyLimit: 4096 }, request => {
+    const id = resourceId(request.params.userId, "userId");
+    const body = parseInput(rolePatchSchema, request.body);
+    if (!request.authUserId) throw new AuthError("UNAUTHORIZED");
+    return getService().changeRole(request.authUserId, id, body.role);
+  });
+  server.get("/matches", { config: queryConfig(matchListSchema) }, request => {
+    const input = parseInput(matchListSchema, request.query);
+    return getService().listMatches(input);
+  });
+  server.get<{ Params: { matchId: string } }>("/matches/:matchId", request => {
+    const id = resourceId(request.params.matchId, "matchId");
+    return getService().getMatch(id);
+  });
+  server.get<{ Params: { matchId: string } }>("/matches/:matchId/actions", { config: queryConfig(actionListSchema) }, request => {
+    const id = resourceId(request.params.matchId, "matchId");
+    const input = parseInput(actionListSchema, request.query);
+    return getService().listActions(id, input);
+  });
   server.get("/summary", () => getService().summary());
 }

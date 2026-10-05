@@ -359,7 +359,7 @@ export class ReplayService {
           error.code === "UNSUPPORTED_SNAPSHOT_VERSION" ? error.code : "INVALID_SNAPSHOT",
           { matchId },
         );
-      throw new ReplayError("REPLAY_STORAGE_UNAVAILABLE", { matchId });
+      throw new ReplayError("REPLAY_STORAGE_UNAVAILABLE", { matchId }, error);
     }
   }
 }

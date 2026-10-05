@@ -110,7 +110,7 @@ async function run() {
     ])
       assert.equal(
         (await server.inject({ url: `/api/users/${a}/matches?${query}` })).json().error.code,
-        "INVALID_REQUEST",
+        "VALIDATION_ERROR",
       );
     assert.equal((await server.inject({ url: "/api/users/bad-id/matches" })).statusCode, 400);
     const missing = await server.inject({ url: `/api/users/${randomUUID()}/matches` });

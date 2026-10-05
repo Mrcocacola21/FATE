@@ -45,7 +45,7 @@ test("public statistics client requests the target id, validates ownership and p
   await assert.rejects(api.getPlayerStatistics("someone-else"), /INVALID_RESPONSE/);
   const failing = createStatisticsApi(
     createApiClient("http://localhost", async () =>
-      Response.json({ error: { code: "USER_NOT_FOUND", message: "sensitive" } }, { status: 404 }),
+      Response.json({ error: { code: "USER_NOT_FOUND", message: "User not found." } }, { status: 404 }),
     ),
   );
   await assert.rejects(
@@ -54,7 +54,7 @@ test("public statistics client requests the target id, validates ownership and p
       error instanceof ApiError &&
       error.code === "USER_NOT_FOUND" &&
       error.status === 404 &&
-      !error.message.includes("sensitive"),
+      error.message === "User not found.",
   );
 });
 

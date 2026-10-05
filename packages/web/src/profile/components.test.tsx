@@ -209,6 +209,24 @@ test("form handles conflicts, preserves drafts and rejects dangerous avatar URLs
   }
 });
 
+test("profile form exposes canonical field errors without losing the draft", async () => {
+  reset();
+  const renderer = mount(<ProfileForm profile={profile} onCancel={() => undefined} onSave={async () => {
+    throw new ApiError("VALIDATION_ERROR", 400, "Backend fallback", {
+      fields: [{ path: "username", message: "Invalid value." }],
+    });
+  }} />);
+  try {
+    act(() => renderer.root.findByProps({ name: "username" }).props.onChange({ target: { value: "Draft_Name" } }));
+    await act(async () => { await renderer.root.findByType("form").props.onSubmit({ preventDefault() {} }); });
+    const input = renderer.root.findByProps({ name: "username" });
+    assert.equal(input.props.value, "Draft_Name");
+    assert.equal(input.props["aria-invalid"], true);
+    assert.equal(input.props["aria-describedby"], "profile-username-error");
+    assert(renderer.root.findByProps({ id: "profile-username-error" }).children.length > 0);
+  } finally { act(() => renderer.unmount()); reset(); }
+});
+
 test("avatar renders HTTP images and falls back for absent, unsafe or failed images", () => {
   const renderer = mount(<Avatar username="Player" avatarUrl={null} />);
   try {

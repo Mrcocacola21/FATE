@@ -147,7 +147,7 @@ async function run() {
     ]) {
       const invalid = await patch(payload);
       assert.equal(invalid.statusCode, 400, invalid.body);
-      assert.equal(invalid.json().error.code, "INVALID_REQUEST");
+      assert.equal(invalid.json().error.code, "VALIDATION_ERROR");
     }
     const bProfile = await database.profile.findUniqueOrThrow({ where: { userId: b.user.id } });
     assert.equal(bProfile.displayName, null);

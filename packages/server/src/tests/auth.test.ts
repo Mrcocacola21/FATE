@@ -151,7 +151,7 @@ async function run() {
       headers: { "content-type": "application/json" },
     });
     assert.equal(malformed.statusCode, 400);
-    assert.equal(malformed.json().error.code, "INVALID_REQUEST");
+    assert.equal(malformed.json().error.code, "VALIDATION_ERROR");
     const unavailable = await server.inject({
       method: "POST",
       url: "/api/auth/login",
@@ -185,7 +185,7 @@ async function run() {
     assert.equal((await server.inject({ url: "/health" })).statusCode, 200);
     assert.equal(
       (await server.inject({ method: "POST", url: "/rooms", payload: {} })).statusCode,
-      200,
+      201,
     );
   } finally {
     await server.close();

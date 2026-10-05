@@ -1,3 +1,4 @@
+import { parseInput } from "../validation/parseRequest";
 import { Prisma } from "@prisma/client";
 import { AuthError } from "../auth/authErrors";
 import { toOwnProfileDto, toPublicProfileDto } from "../profile/dto";
@@ -21,15 +22,16 @@ export class ProfileService {
   }
 
   async updateOwnProfile(userId: string, input: ProfilePatch) {
-    const parsed = profilePatchSchema.safeParse(input);
-    if (!parsed.success) throw new AuthError("INVALID_REQUEST");
-    if (Object.keys(parsed.data).length === 0) return this.getOwnProfile(userId);
+    const parsed = parseInput(profilePatchSchema, input);
+    if (Object.keys(parsed).length === 0) return this.getOwnProfile(userId);
     try {
-      return toOwnProfileDto(await this.profiles.updateByUserId(userId, parsed.data));
+      return toOwnProfileDto(await this.profiles.updateByUserId(userId, parsed));
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         // The unique constraint arbitrates simultaneous claims, including races after any read.
-        if (error.code === "P2002" && parsed.data.username !== undefined)
+        const target = error.meta?.target;
+        const fields = Array.isArray(target) ? target : [target];
+        if (error.code === "P2002" && fields.includes("username") && parsed.username !== undefined)
           throw new AuthError("USERNAME_ALREADY_TAKEN");
         if (error.code === "P2025") throw new AuthError("USER_NOT_FOUND");
       }

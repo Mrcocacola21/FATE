@@ -1667,3 +1667,13 @@ and unrecoverable system match interruptions atomically with the affected durabl
 Checks: `npm run -w web test:admin`, `npm run -w server test:admin`,
 `npm run -w web test:admin:e2e`. Browser tests use isolated local fixtures and do not
 moderate real accounts.
+
+### REST validation and errors
+
+REST failures use `{ error: { code, message, details? } }`, with stable codes,
+Zod-validated input and safe unexpected-error responses. See the
+[API error contract and route audit](docs/api-errors.md) for HTTP statuses,
+validation details, pagination limits, auth/refresh behavior and operational exceptions.
+Run `npm run -w server test:api-errors` for the focused HTTP contract checks.
+The [implementation report](docs/api-validation-implementation-report.md) records
+the changes, compatibility decisions and actual verification results.

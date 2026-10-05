@@ -251,6 +251,7 @@ export const en = {
     errors: {
       required: "Complete all required fields.",
       passwordMismatch: "Passwords do not match.",
+      accountBlocked: "Your account is blocked. Contact an administrator.",
       invalidCredentials: "Invalid email or password.",
       emailTaken: "An account with this email already exists.",
       usernameTaken: "This username is already taken.",

@@ -171,7 +171,7 @@ test("authenticated requests refresh and retry once; concurrent 401 responses sh
     const token = new Headers(options?.headers).get("Authorization");
     calls.push(token ?? "none");
     assert.equal(options?.credentials, "include");
-    if (token === "Bearer initial-access") return json({ error: { code: "UNAUTHORIZED" } }, 401);
+    if (token === "Bearer initial-access") return json({ error: { code: "UNAUTHORIZED" , message: "Request failed." } }, 401);
     retried++;
     return json({ ok: true });
   });
@@ -202,7 +202,7 @@ test("a delayed original 401 uses a token already refreshed by another request",
   const client = createApiClient("https://api.example.test", async (_url, options) => {
     if (new Headers(options?.headers).get("Authorization") !== "Bearer initial-access")
       return json({ ok: true });
-    return ++requests === 1 ? json({ error: { code: "UNAUTHORIZED" } }, 401) : late.promise;
+    return ++requests === 1 ? json({ error: { code: "UNAUTHORIZED" , message: "Request failed." } }, 401) : late.promise;
   });
   const store = createAuthStore(
     api({
@@ -218,7 +218,7 @@ test("a delayed original 401 uses a token already refreshed by another request",
   const first = authenticated.request("/first", (value) => value);
   const second = authenticated.request("/second", (value) => value);
   await first;
-  late.resolve(json({ error: { code: "UNAUTHORIZED" } }, 401));
+  late.resolve(json({ error: { code: "UNAUTHORIZED" , message: "Request failed." } }, 401));
   await second;
   assert.equal(refreshes, 1);
 });
@@ -226,7 +226,7 @@ test("a delayed original 401 uses a token already refreshed by another request",
 test("failed refresh clears credentials and never retries /refresh recursively", async () => {
   let refreshes = 0;
   const client = createApiClient("https://api.example.test", async () =>
-    json({ error: { code: "UNAUTHORIZED" } }, 401),
+    json({ error: { code: "UNAUTHORIZED" , message: "Request failed." } }, 401),
   );
   const store = createAuthStore(
     api({
@@ -251,7 +251,7 @@ test("a retry returning 401 is final and clears credentials", async () => {
   let requests = 0;
   const client = createApiClient("https://api.example.test", async () => {
     requests++;
-    return json({ error: { code: "UNAUTHORIZED" } }, 401);
+    return json({ error: { code: "UNAUTHORIZED" , message: "Request failed." } }, 401);
   });
   const store = createAuthStore(
     api({
@@ -287,7 +287,7 @@ test("a request is not retried under a different signed-in account", async () =>
   );
   await new Promise<void>((resolve) => setImmediate(resolve));
   store.setState({ user: { ...user, id: "other-user" }, accessToken: "other-access" });
-  pending.resolve(json({ error: { code: "UNAUTHORIZED" } }, 401));
+  pending.resolve(json({ error: { code: "UNAUTHORIZED" , message: "Request failed." } }, 401));
   await rejected;
   assert.equal(requests, 1);
 });
@@ -306,7 +306,7 @@ test("ordinary errors and bootstrap auth endpoints never trigger automatic refre
   await store.getState().login({ email: user.email, password: "password" });
   for (const status of [400, 403, 404, 409, 500]) {
     const client = createApiClient("https://api.example.test", async () =>
-      json({ error: { code: "ORDINARY_ERROR" } }, status),
+      json({ error: { code: "ORDINARY_ERROR" , message: "Request failed." } }, status),
     );
     await assert.rejects(
       createAuthenticatedClient(client, store).request("/protected", (value) => value),

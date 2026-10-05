@@ -55,17 +55,17 @@ async function run() {
   try {
     for (const url of ["/rooms", "/api/games"]) {
       const response = await server.inject({ method: "POST", url, payload: {} });
-      assert.equal(response.statusCode, 200, response.body);
+      assert.equal(response.statusCode, 201, response.body);
       assert.equal(response.json().matchType, "CASUAL");
       assert.equal(
         (await server.inject({ method: "POST", url, payload: { matchType: "RATED" } })).statusCode,
-        400,
+        401,
       );
       assert.equal(
         (
           await server.inject({ method: "POST", url, headers, payload: { matchType: "invalid" } })
         ).json().error.code,
-        "INVALID_MATCH_TYPE",
+        "VALIDATION_ERROR",
       );
     }
     const created = await server.inject({
@@ -74,7 +74,7 @@ async function run() {
       headers,
       payload: { matchType: "RATED", gameMode: "classic" },
     });
-    assert.equal(created.statusCode, 200, created.body);
+    assert.equal(created.statusCode, 201, created.body);
     const id = created.json().roomId;
     assert.equal(created.json().matchType, "RATED");
     assert.equal(getGameRoom(id)!.gameMode, "classic");

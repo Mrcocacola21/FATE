@@ -53,6 +53,12 @@ async function run() {
     new ProfileService(repository).updateOwnProfile(randomUUID(), { username: "Taken" }),
     (error: unknown) => error instanceof AuthError && error.code === "USERNAME_ALREADY_TAKEN",
   );
+  const unexpectedConstraint = new Prisma.PrismaClientKnownRequestError("unknown constraint", {
+    code: "P2002", clientVersion: Prisma.prismaVersion.client, meta: { target: ["unrelated_field"] },
+  });
+  repository.updateByUserId = async () => { throw unexpectedConstraint; };
+  await assert.rejects(new ProfileService(repository).updateOwnProfile(randomUUID(), { username: "Player" }),
+    (error: unknown) => error === unexpectedConstraint);
 
   Object.assign(process.env, {
     LOG_LEVEL: "silent",

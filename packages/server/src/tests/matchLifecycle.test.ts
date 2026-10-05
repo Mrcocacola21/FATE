@@ -209,7 +209,7 @@ async function run() {
     assert.equal((await server.inject({ url: "/health" })).statusCode, 200);
     const unavailableResult = await server.inject({ url: `/api/matches/${randomUUID()}` });
     assert.equal(unavailableResult.statusCode, 503);
-    assert.equal(unavailableResult.json().error.code, "MATCH_PERSISTENCE_UNAVAILABLE");
+    assert.equal(unavailableResult.json().error.code, "DATABASE_UNAVAILABLE");
     assert(!unavailableResult.body.includes("DATABASE_URL"));
   } finally {
     await server.close();

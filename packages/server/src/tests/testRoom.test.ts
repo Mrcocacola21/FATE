@@ -120,7 +120,7 @@ async function testProductionEnabledCreationRequiresToken() {
       url: "/rooms",
       payload: { roomMode: "test", debugToken: "sandbox-secret" },
     });
-    assert.equal(accepted.statusCode, 200);
+    assert.equal(accepted.statusCode, 201);
     assert.equal(accepted.json().roomMode, "test");
   } finally {
     await server.close();

@@ -8,6 +8,8 @@ export function authErrorMessage(error: unknown, t: Translate): string {
     EMAIL_ALREADY_REGISTERED: "emailTaken",
     USERNAME_ALREADY_TAKEN: "usernameTaken",
     INVALID_REQUEST: "invalidRequest",
+    VALIDATION_ERROR: "invalidRequest",
+    ACCOUNT_BLOCKED: "accountBlocked",
     RATE_LIMITED: "rateLimited",
     NETWORK_ERROR: "unavailable",
     DATABASE_UNAVAILABLE: "unavailable",

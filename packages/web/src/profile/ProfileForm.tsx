@@ -1,3 +1,4 @@
+import { validationFields } from "../api/client";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useI18n } from "../i18n";
 import { profileErrorMessage } from "./errorMessage";
@@ -22,6 +23,7 @@ export function ProfileForm({
     preferredLanguage: profile.preferredLanguage,
     preferredTheme: profile.preferredTheme,
   });
+  const [invalidFields, setInvalidFields] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const pending = useRef(false);
@@ -33,6 +35,7 @@ export function ProfileForm({
     event.preventDefault();
     if (pending.current || disabled) return;
     setError(null);
+    setInvalidFields([]);
     if (!/^[A-Za-z0-9_-]{3,32}$/.test(values.username.trim())) {
       setError(t("auth.usernameHelp"));
       return;
@@ -66,6 +69,7 @@ export function ProfileForm({
     try {
       await onSave(patch);
     } catch (failure) {
+      setInvalidFields([...new Set(validationFields(failure).map(field => field.path))]);
       setError(profileErrorMessage(failure, t));
     } finally {
       pending.current = false;
@@ -88,6 +92,8 @@ export function ProfileForm({
             <input
               id={`profile-${key}`}
               name={key}
+              aria-invalid={invalidFields.includes(key)}
+              aria-describedby={invalidFields.includes(key) ? `profile-${key}-error` : undefined}
               className="field-control w-full"
               value={values[key]}
               maxLength={max}
@@ -95,6 +101,9 @@ export function ProfileForm({
               autoComplete={key === "username" ? "username" : "off"}
               onChange={(event) => setValues({ ...values, [key]: event.target.value })}
             />
+            {invalidFields.includes(key) && (
+              <p id={`profile-${key}-error`} className="text-sm text-red-700 dark:text-red-300">{t("profile.invalidRequest")}</p>
+            )}
             {key === "username" && (
               <p className="mt-1 text-xs text-stone-600 dark:text-stone-300">
                 {t("auth.usernameHelp")}

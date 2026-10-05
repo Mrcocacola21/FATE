@@ -1,3 +1,4 @@
+import { gameModeSchema, matchTypeSchema } from "./validation/commonSchemas";
 // packages/server/src/schemas.ts
 
 import { z } from "zod";
@@ -6,8 +7,8 @@ import { LOKI_LAUGHT_OPTION_IDS } from "rules";
 import { TestRoomCommandMessageSchema } from "./testRoom/schemas";
 
 export const PlayerIdSchema = z.union([z.literal("P1"), z.literal("P2")]);
-export const MatchTypeSchema = z.enum(["CASUAL", "RATED"]);
-export const GameModeIdSchema = z.enum(["standard", "draft", "classic"]);
+export const MatchTypeSchema = matchTypeSchema;
+export const GameModeIdSchema = gameModeSchema;
 export const RoleSchema = z.union([z.literal("P1"), z.literal("P2"), z.literal("spectator")]);
 
 export const CoordSchema = z.object({

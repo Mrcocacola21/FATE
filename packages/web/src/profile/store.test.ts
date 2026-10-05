@@ -159,7 +159,7 @@ test("profile requests reuse session restoration and expired-access refresh/retr
     const token = new Headers(options?.headers).get("Authorization") ?? "";
     authorizations.push(token);
     if (authorizations.length === 1)
-      return new Response(JSON.stringify({ error: { code: "UNAUTHORIZED" } }), { status: 401 });
+      return new Response(JSON.stringify({ error: { code: "UNAUTHORIZED" , message: "Request failed." } }), { status: 401 });
     return new Response(JSON.stringify({ profile }));
   });
   const api = createProfileApi(client, createAuthenticatedClient(client, auth));

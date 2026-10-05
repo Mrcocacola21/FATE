@@ -33,7 +33,7 @@ export function matchErrorMessage(error: unknown, t: Translate) {
     if (error.code === "USER_NOT_FOUND") return t("profile.notFound");
     if (error.code === "MATCH_NOT_FOUND") return t("matches.notFound");
     if (error.code === "MATCH_NOT_FINISHED") return t("matches.notFinished");
-    if (error.code === "INVALID_REQUEST") return t("matches.invalidRequest");
+    if (["INVALID_REQUEST", "VALIDATION_ERROR"].includes(error.code)) return t("matches.invalidRequest");
   }
   return t("matches.loadError");
 }

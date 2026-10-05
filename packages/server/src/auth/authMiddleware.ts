@@ -1,3 +1,4 @@
+import { bearerToken } from "./bearer";
 import type { FastifyRequest } from "fastify";
 import { AuthError } from "./authErrors";
 import type { TokenService } from "./tokens";
@@ -17,9 +18,9 @@ export function accessTokenPreHandler(
   load: AccountAccessLoader = loadAccountAccess,
 ) {
   return async (request: FastifyRequest): Promise<void> => {
-    const match = /^Bearer ([^\s]+)$/i.exec(request.headers.authorization ?? "");
-    if (!match) throw new AuthError("UNAUTHORIZED");
-    request.authUserId = getTokens().verifyAccessToken(match[1]).sub;
+    const token = bearerToken(request.headers.authorization);
+    if (!token) throw new AuthError("UNAUTHORIZED");
+    request.authUserId = getTokens().verifyAccessToken(token).sub;
     const account = await requireActiveAccount(request.authUserId, load);
     currentRoles.set(request, account.role);
   };

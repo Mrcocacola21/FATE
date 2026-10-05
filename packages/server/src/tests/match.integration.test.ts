@@ -195,12 +195,17 @@ async function run() {
 
     // Run the real HTTP and WebSocket room flow against the real repository/service/database.
     const address = await server.listen({ port: 0, host: "127.0.0.1" });
-    const response = await server.inject({
+    const forgedCreator = await server.inject({
       method: "POST",
       url: "/rooms",
       payload: { seed: 876, gameMode: "standard", userId: randomUUID() },
     });
-    assert.equal(response.statusCode, 200);
+    assert.equal(forgedCreator.statusCode, 400);
+    assert.equal(forgedCreator.json().error.code, "VALIDATION_ERROR");
+    const response = await server.inject({
+      method: "POST", url: "/rooms", payload: { seed: 876, gameMode: "standard" },
+    });
+    assert.equal(response.statusCode, 201);
     const actualRoomId: string = response.json().roomId;
     const room = getGameRoom(actualRoomId)!;
     assert(room.matchId && room.matchId !== room.id);
@@ -223,7 +228,7 @@ async function run() {
       url: "/api/games",
       payload: { seed: 987, gameMode: "classic" },
     });
-    assert.equal(legacy.statusCode, 200);
+    assert.equal(legacy.statusCode, 201);
     const legacyRoom = getGameRoom(legacy.json().gameId)!;
     extraMatchIds.push(legacyRoom.matchId!);
     assert.equal((await repository.findById(legacyRoom.matchId!))?.roomId, legacyRoom.id);
@@ -380,7 +385,7 @@ async function run() {
       url: "/rooms",
       payload: { roomMode: "test" },
     });
-    assert.equal(sandbox.statusCode, 200);
+    assert.equal(sandbox.statusCode, 201);
     assert.equal(getGameRoom(sandbox.json().roomId)?.matchId, null);
     assert.equal(await database.match.count(), beforeSandbox);
 

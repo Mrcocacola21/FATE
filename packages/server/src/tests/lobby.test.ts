@@ -243,7 +243,7 @@ async function run() {
         payload: { lobbyName },
       });
       assert.equal(response.statusCode, 400);
-      assert.equal(response.json().error.code, "INVALID_LOBBY_NAME");
+      assert.equal(response.json().error.code, "VALIDATION_ERROR");
     }
     const named = await server.inject({
       method: "POST",

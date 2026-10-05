@@ -27,6 +27,7 @@ export function AdminError({ error, retry }: { error: ApiError; retry?: () => vo
     "FORBIDDEN",
     "UNAUTHORIZED",
     "INVALID_REQUEST",
+    "VALIDATION_ERROR",
     "RATE_LIMITED",
     "NETWORK_ERROR",
     "ACCOUNT_BLOCKED",

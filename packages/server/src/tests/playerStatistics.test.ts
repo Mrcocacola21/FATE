@@ -235,7 +235,7 @@ async function run() {
     for (const id of ["bad-id", "123", "null"]) {
       const invalid = await server.inject({ url: `/api/users/${id}/statistics` });
       assert.equal(invalid.statusCode, 400);
-      assert.equal(invalid.json().error.code, "INVALID_REQUEST");
+      assert.equal(invalid.json().error.code, "VALIDATION_ERROR");
     }
     const missing = await server.inject({ url: `/api/users/${randomUUID()}/statistics` });
     assert.equal(missing.statusCode, 404);
@@ -246,7 +246,7 @@ async function run() {
   }
 
   for (const [error, status, code] of [
-    [new Error("secret database credentials"), 500, "INTERNAL_ERROR"],
+    [new Error("secret database credentials"), 500, "INTERNAL_SERVER_ERROR"],
     [new DatabaseConfigurationError(), 503, "DATABASE_UNAVAILABLE"],
     [
       new Prisma.PrismaClientKnownRequestError("private diagnostic", {

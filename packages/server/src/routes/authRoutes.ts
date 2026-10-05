@@ -1,3 +1,5 @@
+import { emptyObjectSchema } from "../validation/commonSchemas";
+import { parseInput } from "../validation/parseRequest";
 import type { MatchmakingService } from "../services/matchmakingService";
 import cookie from "@fastify/cookie";
 import rateLimit from "@fastify/rate-limit";
@@ -13,7 +15,7 @@ import {
 import { loginSchema, registerSchema } from "../auth/schemas";
 import { TokenService } from "../auth/tokens";
 import type { toAuthUserDto } from "../auth/userDto";
-import { toApiError } from "./apiErrorHandler";
+import { registerApiErrorHandler } from "./apiErrorHandler";
 import { UserRepository, AuthSessionRepository } from "../repositories";
 import { AuthService } from "../services/authService";
 
@@ -59,19 +61,9 @@ export async function authRoutes(server: FastifyInstance, options: { matchmaking
     reply.header("Cache-Control", "no-store");
   });
 
-  server.setErrorHandler((error, request, reply) => {
-    const publicError = toApiError(error);
-    if (publicError.statusCode >= 500) {
-      // Never serialize underlying errors: Prisma diagnostics can contain query values.
-      request.log.error(
-        { category: publicError.code, requestId: request.id },
-        "Auth request failed",
-      );
-    }
-    if (publicError.code === "INVALID_REFRESH_TOKEN") {
+  registerApiErrorHandler(server, (failure, reply) => {
+    if (failure.code === "INVALID_REFRESH_TOKEN")
       reply.clearCookie(REFRESH_COOKIE, refreshCookieOptions());
-    }
-    reply.code(publicError.statusCode).send(publicError.toResponse());
   });
 
   server.post(
@@ -82,10 +74,9 @@ export async function authRoutes(server: FastifyInstance, options: { matchmaking
       config: { rateLimit: { max: 5, timeWindow: "1 minute" } },
     },
     async (request, reply) => {
-      const parsed = registerSchema.safeParse(request.body);
-      if (!parsed.success) throw new AuthError("INVALID_REQUEST");
+      const input = parseInput(registerSchema, request.body);
       refreshCookieOptions();
-      const result = await getService().register(parsed.data);
+      const result = await getService().register(input);
       return sendCredentials(reply.code(201), result, result.user);
     },
   );
@@ -98,10 +89,9 @@ export async function authRoutes(server: FastifyInstance, options: { matchmaking
       config: { rateLimit: { max: 10, timeWindow: "1 minute" } },
     },
     async (request, reply) => {
-      const parsed = loginSchema.safeParse(request.body);
-      if (!parsed.success) throw new AuthError("INVALID_REQUEST");
+      const input = parseInput(loginSchema, request.body);
       refreshCookieOptions();
-      const result = await getService().login(parsed.data);
+      const result = await getService().login(input);
       return sendCredentials(reply, result, result.user);
     },
   );
@@ -114,8 +104,12 @@ export async function authRoutes(server: FastifyInstance, options: { matchmaking
       config: { rateLimit: { max: 30, timeWindow: "1 minute" } },
     },
     async (request, reply) => {
+      parseInput(emptyObjectSchema, request.body === undefined ? {} : request.body);
       refreshCookieOptions();
-      const result = await getService().refresh(request.cookies[REFRESH_COOKIE]);
+      const token = request.cookies[REFRESH_COOKIE];
+      if (!token) throw new AuthError("INVALID_REFRESH_TOKEN");
+      getTokens().verifyRefreshToken(token);
+      const result = await getService().refresh(token);
       return sendCredentials(reply, result);
     },
   );
@@ -124,11 +118,19 @@ export async function authRoutes(server: FastifyInstance, options: { matchmaking
     "/logout",
     { bodyLimit: 4096, onRequest: requireTrustedAuthOrigin },
     async (request, reply) => {
+      parseInput(emptyObjectSchema, request.body === undefined ? {} : request.body);
       reply.clearCookie(REFRESH_COOKIE, refreshCookieOptions());
-      if (request.cookies[REFRESH_COOKIE]) {
-        await getService().logout(request.cookies[REFRESH_COOKIE]);
-        try { options.matchmaking?.cancel(getTokens().verifyRefreshToken(request.cookies[REFRESH_COOKIE]!).sub); }
-        catch { /* Invalid refresh credentials have no queue identity to clean up. */ }
+      const token = request.cookies[REFRESH_COOKIE];
+      if (token) {
+        let userId: string;
+        try { userId = getTokens().verifyRefreshToken(token).sub; }
+        catch (error) {
+          if (error instanceof AuthError && error.code === "INVALID_REFRESH_TOKEN")
+            return reply.code(204).send();
+          throw error;
+        }
+        await getService().logout(token);
+        options.matchmaking?.cancel(userId);
       }
       return reply.code(204).send();
     },

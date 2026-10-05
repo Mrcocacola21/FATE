@@ -149,7 +149,7 @@ async function run() {
     assert.equal(missing.json().error.code, "MATCH_NOT_FOUND");
     const malformed = await server.inject({ url: "/api/matches/not-a-uuid" });
     assert.equal(malformed.statusCode, 400);
-    assert.equal(malformed.json().error.code, "INVALID_REQUEST");
+    assert.equal(malformed.json().error.code, "VALIDATION_ERROR");
     // Historical finished rows remain readable, without fabricated outcome/summary.
     const historical = await create(true, false);
     await db.match.update({ where: { id: historical }, data: { status: "FINISHED", finishedAt, winnerSeat: "P1" } });

@@ -2,9 +2,11 @@ export class ApiError extends Error {
   constructor(
     readonly code: string,
     readonly status: number = 0,
+    message: string = code,
+    readonly details?: Record<string, unknown>,
   ) {
-    // Never store arbitrary server response text, URLs, credentials or request bodies.
-    super(code);
+    super(message);
+    this.name = "ApiError";
   }
 }
 
@@ -13,6 +15,27 @@ export type ApiClient = ReturnType<typeof createApiClient>;
 
 export function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+/** Only the canonical envelope is accepted; proxy text and legacy shapes stay private. */
+export function parseApiError(body: unknown, status: number): ApiError {
+  if (isRecord(body) && isRecord(body.error)) {
+    const { code, message, details } = body.error;
+    if (typeof code === "string" && /^[A-Z][A-Z0-9_]*$/.test(code) &&
+      typeof message === "string" && message.length > 0 &&
+      (details === undefined || isRecord(details)))
+      return new ApiError(code, status, message, details);
+  }
+  return new ApiError("SERVER_ERROR", status, "Unable to complete the request. Please try again.");
+}
+
+export function validationFields(error: unknown): { path: string; message: string }[] {
+  if (!(error instanceof ApiError) || error.code !== "VALIDATION_ERROR" ||
+    !Array.isArray(error.details?.fields)) return [];
+  return error.details.fields.flatMap(field =>
+    isRecord(field) && typeof field.path === "string" && typeof field.message === "string"
+      ? [{ path: field.path, message: field.message }] : [],
+  );
 }
 
 export function createApiClient(
@@ -38,19 +61,17 @@ export function createApiClient(
           credentials: "include",
           signal: options.signal ?? timeout.signal,
         });
-        if (response.status === 204 && response.ok) return decode(undefined);
         let body: unknown;
-        try {
-          body = await response.json();
-        } catch {
-          throw new ApiError(response.ok ? "INVALID_RESPONSE" : "SERVER_ERROR", response.status);
+        if (response.status !== 204 || !response.ok) {
+          try {
+            body = await response.json();
+          } catch {
+            if (!response.ok) throw parseApiError(undefined, response.status);
+            throw new ApiError("INVALID_RESPONSE", response.status);
+          }
         }
         if (!response.ok) {
-          const code =
-            isRecord(body) && isRecord(body.error) && typeof body.error.code === "string"
-              ? body.error.code
-              : "SERVER_ERROR";
-          throw new ApiError(code, response.status);
+          throw parseApiError(body, response.status);
         }
         try {
           return decode(body);

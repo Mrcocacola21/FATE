@@ -1,9 +1,12 @@
 import type { FastifyInstance, FastifyRequest } from "fastify";
-import { z } from "zod";
-import type { ConnectionIdentityService } from "../auth/connectionIdentity";
-import { MultiplayerIdentityError, type ConnectionIdentity } from "../auth/connectionIdentity";
-import { GameModeIdSchema } from "../schemas";
+import type { ConnectionIdentityService, ConnectionIdentity } from "../auth/connectionIdentity";
+import { requireIdentity } from "../auth/bearer";
+import { AuthError } from "../auth/authErrors";
 import type { MatchmakingService } from "../services/matchmakingService";
+import { registerApiErrorHandler } from "./apiErrorHandler";
+import { parseInput } from "../validation/parseRequest";
+import { emptyObjectSchema } from "../validation/commonSchemas";
+import { joinQueueSchema } from "../matchmaking/schemas";
 import rateLimit from "@fastify/rate-limit";
 
 export async function matchmakingRoutes(
@@ -13,72 +16,32 @@ export async function matchmakingRoutes(
     matchmaking: MatchmakingService;
   },
 ): Promise<void> {
-  await server.register(rateLimit, { max: 60, timeWindow: "1 minute" });
-  server.setErrorHandler((error, request, reply) => {
-    const code =
-      error instanceof MultiplayerIdentityError
-        ? error.code === "INVALID_ACCESS_TOKEN"
-          ? "UNAUTHORIZED"
-          : error.code
-        : "MATCHMAKING_UNAVAILABLE";
-    const status =
-      code === "AUTH_REQUIRED" || code === "UNAUTHORIZED"
-        ? 401
-        : code === "MATCHMAKING_UNAVAILABLE"
-          ? 503
-          : code === "ACCOUNT_BLOCKED" ? 403 : 409;
-    if (error.statusCode === 429)
-      return reply
-        .code(429)
-        .send({ error: { code: "RATE_LIMITED", message: "Try again shortly" } });
-    if (status >= 500)
-      request.log.error(
-        { event: "matchmaking:request_failed", code, requestId: request.id },
-        "Matchmaking request unavailable",
-      );
-    reply
-      .code(status)
-      .send({
-        error: {
-          code,
-          message:
-            error instanceof MultiplayerIdentityError
-              ? error.message
-              : "Unable to search. Try again.",
-        },
-      });
+  await server.register(rateLimit, {
+    max: 60, timeWindow: "1 minute",
+    errorResponseBuilder: () => new AuthError("RATE_LIMITED"),
   });
+  registerApiErrorHandler(server);
   const identities = new WeakMap<FastifyRequest, ConnectionIdentity>();
   server.addHook("preHandler", async (request, reply) => {
     reply.header("Cache-Control", "no-store");
-    const header = request.headers.authorization;
-    const identity = await options.identity.verify(
-      header?.startsWith("Bearer ") ? header.slice(7) : undefined,
-    );
-    if (!identity)
-      throw new MultiplayerIdentityError("AUTH_REQUIRED", "Sign in to find a Rated match");
-    identities.set(request, identity);
+    identities.set(request, await requireIdentity(request.headers.authorization, options.identity));
   });
-  const user = (request: FastifyRequest) => identities.get(request)!;
+  const user = (request: FastifyRequest) => {
+    const identity = identities.get(request);
+    if (!identity) throw new AuthError("UNAUTHORIZED");
+    return identity;
+  };
   server.get("/matchmaking/queue", async (request) =>
     options.matchmaking.getSnapshot(user(request).userId),
   );
   server.delete("/matchmaking/queue", async (request) => {
+    parseInput(emptyObjectSchema, request.body === undefined ? {} : request.body);
     options.matchmaking.cancel(user(request).userId);
     return options.matchmaking.getSnapshot(user(request).userId);
   });
-  server.post("/matchmaking/queue", async (request, reply) => {
-    const body = z.object({ gameMode: GameModeIdSchema }).strict().safeParse(request.body);
-    if (!body.success)
-      return reply
-        .code(400)
-        .send({
-          error: {
-            code: "MATCHMAKING_INVALID_REQUEST",
-            message: "Choose a game mode; ratings are server-owned",
-          },
-        });
-    await options.matchmaking.join(user(request), body.data.gameMode);
+  server.post("/matchmaking/queue", async (request) => {
+    const body = parseInput(joinQueueSchema, request.body);
+    await options.matchmaking.join(user(request), body.gameMode);
     return options.matchmaking.getSnapshot(user(request).userId);
   });
 }

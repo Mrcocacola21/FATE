@@ -1,13 +1,16 @@
+import { queryConfig } from "./validation/queryValidation";
+import { AuthError } from "./auth/authErrors";
+import { requireIdentity } from "./auth/bearer";
+import { AppError } from "./errors/appError";
+import { parseInput } from "./validation/parseRequest";
+import { createRoomSchema, roomParamsSchema, heroParamsSchema, playerQuerySchema } from "./lobby/restSchemas";
 import type { MatchmakingService } from "./services/matchmakingService";
 import { readLeaderboardConfig } from "./leaderboard/config";
-import { MultiplayerIdentityError } from "./auth/connectionIdentity";
-import { MatchTypeError } from "./matches/matchType";
 // packages/server/src/routes.ts
 
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import {
   GameAction,
-  PlayerId,
   makePlayerView,
   projectEventsForRecipient,
   HERO_REGISTRY,
@@ -15,8 +18,7 @@ import {
 } from "rules";
 import type { MatchLifecycle } from "./persistence/matchLifecycle";
 import type { ConnectionIdentityService } from "./auth/connectionIdentity";
-import { z } from "zod";
-import { CreateGameBodySchema, GameActionSchema, PlayerIdSchema } from "./schemas";
+import { GameActionSchema } from "./schemas";
 import { isActionAllowedByPlayer } from "./permissions";
 import {
   getGameRoom,
@@ -31,20 +33,6 @@ import {
   getTestRoomCapabilities,
 } from "./testRoom";
 
-function parsePlayerId(request: FastifyRequest): PlayerId | null {
-  const raw = (request.query as { playerId?: string }).playerId;
-  const parsed = PlayerIdSchema.safeParse(raw);
-  return parsed.success ? parsed.data : null;
-}
-
-function sendValidationError(reply: FastifyReply, error: z.ZodError) {
-  if (error.issues.some(issue => issue.path[0] === "lobbyName")) {
-    reply.code(400).send({ error: { code: "INVALID_LOBBY_NAME", message: "Invalid lobby name" } });
-    return;
-  }
-  reply.code(400).send({ error: "Invalid request", details: error.flatten() });
-}
-
 function hasDebugRestAccess(request: FastifyRequest): boolean {
   if (process.env.NODE_ENV !== "production") return true;
   const expected = process.env.FATE_DEBUG_TOKEN;
@@ -57,13 +45,8 @@ function hasDebugRestAccess(request: FastifyRequest): boolean {
   );
 }
 
-function requireDebugRestAccess(
-  request: FastifyRequest,
-  reply: FastifyReply
-): boolean {
-  if (hasDebugRestAccess(request)) return true;
-  reply.code(401).send({ error: "Debug token required" });
-  return false;
+function requireDebugRestAccess(request: FastifyRequest): void {
+  if (!hasDebugRestAccess(request)) throw new AuthError("UNAUTHORIZED");
 }
 
 export async function registerRoutes(
@@ -72,37 +55,14 @@ export async function registerRoutes(
   matchmaking?: MatchmakingService,
   interruptedRoom: (roomId: string) => Promise<boolean> = async () => false,
 ) {
-  async function createPersistentRoom(options: Parameters<MatchLifecycle["createRoom"]>[0], createdById: string | null, reply: FastifyReply) {
-    try {
-      const create = () => lifecycle.createRoom(options, undefined, createdById);
-      return matchmaking && createdById && options?.roomMode !== "test"
-        ? await matchmaking.withCompetitor(createdById, undefined, create) : await create();
-    } catch (error) {
-      if (error instanceof MultiplayerIdentityError) {
-        reply.code(409).send({ error: { code: error.code, message: error.message } });
-        return null;
-      }
-      if (error instanceof MatchTypeError) {
-        reply.code(error.statusCode).send({ error: { code: error.code, message: error.message } });
-        return null;
-      }
-      throw error;
-    }
+  async function createPersistentRoom(options: Parameters<MatchLifecycle["createRoom"]>[0], createdById: string | null) {
+    const create = () => lifecycle.createRoom(options, undefined, createdById);
+    return matchmaking && createdById && options?.roomMode !== "test"
+      ? matchmaking.withCompetitor(createdById, undefined, create) : create();
   }
-  async function creatorId(request: FastifyRequest, reply: FastifyReply) {
-    if (!request.headers.authorization) return null;
-    const token = /^Bearer ([^\s]+)$/i.exec(request.headers.authorization)?.[1];
-    try {
-      if (!token) throw new Error("Invalid authorization");
-      return (await identityService.verify(token))?.userId ?? null;
-    } catch (error) {
-      if (error instanceof MultiplayerIdentityError && error.code === "ACCOUNT_BLOCKED") {
-        reply.code(403).send({ error: { code: error.code, message: error.message } });
-        return null;
-      }
-      reply.code(401).send({ error: { code: "INVALID_ACCESS_TOKEN", message: "Unable to verify access token" } });
-      return null;
-    }
+  async function creatorId(request: FastifyRequest) {
+    if (request.headers.authorization === undefined) return null;
+    return (await requireIdentity(request.headers.authorization, identityService)).userId;
   }
   server.get("/", async () => ({
     name: "fate-server",
@@ -121,11 +81,10 @@ export async function registerRoutes(
   server.get(
     "/api/heroes/:id",
     async (request: FastifyRequest, reply: FastifyReply) => {
-      const heroId = (request.params as { id: string }).id;
+      const heroId = parseInput(heroParamsSchema, request.params).id;
       const hero = getHeroMeta(heroId);
       if (!hero) {
-        reply.code(404).send({ error: "Hero not found" });
-        return;
+        throw new AppError("HERO_NOT_FOUND", 404, "Hero not found.");
       }
       reply.send(hero);
     }
@@ -137,16 +96,15 @@ export async function registerRoutes(
     return listRoomSummaries();
   });
 
-  server.get("/rooms/:id", async (request, reply) => {
-    const runtime = getGameRoom((request.params as { id: string }).id);
+  server.get("/rooms/:id", async (request) => {
+    const { id } = parseInput(roomParamsSchema, request.params);
+    const runtime = getGameRoom(id);
     if (runtime) await lifecycle.refreshRatedLobbies([runtime]);
-    const room = listRoomSummaries().find((item) => item.id === (request.params as { id: string }).id);
+    const room = listRoomSummaries().find((item) => item.id === id);
     if (!room) {
-      const interrupted = await interruptedRoom((request.params as { id: string }).id);
-      return reply.code(interrupted ? 410 : 404).send({ error: {
-        code: interrupted ? "MATCH_INTERRUPTED" : "ROOM_NOT_FOUND",
-        message: interrupted ? "This match was interrupted by a server restart and cannot be resumed." : "Room not found",
-      } });
+      const interrupted = await interruptedRoom(id);
+      throw new AppError(interrupted ? "MATCH_INTERRUPTED" : "ROOM_NOT_FOUND", interrupted ? 410 : 404,
+        interrupted ? "This match was interrupted by a server restart and cannot be resumed." : "Room not found.");
     }
     return room;
   });
@@ -154,35 +112,28 @@ export async function registerRoutes(
   server.post(
     "/rooms",
     async (request: FastifyRequest, reply: FastifyReply) => {
-      const parsed = CreateGameBodySchema.safeParse(request.body ?? {});
-      if (!parsed.success) {
-        if (parsed.error.issues.some((issue) => issue.path[0] === "matchType"))
-          return reply.code(400).send({ error: { code: "INVALID_MATCH_TYPE", message: "Choose Casual or Rated" } });
-        return sendValidationError(reply, parsed.error);
-      }
+      const input = parseInput(createRoomSchema, request.body === undefined ? {} : request.body);
       if (
-        parsed.data.roomMode === "test" &&
-        !canCreateTestRoom(parsed.data.debugToken)
+        input.roomMode === "test" &&
+        !canCreateTestRoom(input.debugToken)
       ) {
-        reply.code(403).send({ error: "Test rooms are disabled or require a valid debug token" });
-        return;
+        throw new AuthError("FORBIDDEN");
       }
 
-      const createdById = await creatorId(request, reply);
-      if (reply.sent) return;
+      const createdById = await creatorId(request);
       const room = await enqueueRoomCommand(FATE_CREATE_KEY, async () => {
         await lifecycle.cleanup({ activeRoomIds: getActiveFateRoomIds() });
         return createPersistentRoom({
-          seed: parsed.data.seed,
-          arenaId: parsed.data.arenaId,
-          roomMode: parsed.data.roomMode,
-          gameMode: parsed.data.gameMode,
-          matchType: parsed.data.matchType,
-          lobbyName: parsed.data.lobbyName,
-        }, createdById, reply);
+          seed: input.seed,
+          arenaId: input.arenaId,
+          roomMode: input.roomMode,
+          gameMode: input.gameMode,
+          matchType: input.matchType,
+          lobbyName: input.lobbyName,
+        }, createdById);
       });
       if (!room) return;
-      reply.send({
+      reply.code(201).send({
         roomId: room.id,
         roomMode: room.roomMode,
         matchType: room.matchType,
@@ -194,32 +145,25 @@ export async function registerRoutes(
   server.post(
     "/api/games",
     async (request: FastifyRequest, reply: FastifyReply) => {
-      const parsed = CreateGameBodySchema.safeParse(request.body ?? {});
-      if (!parsed.success) {
-        if (parsed.error.issues.some((issue) => issue.path[0] === "matchType"))
-          return reply.code(400).send({ error: { code: "INVALID_MATCH_TYPE", message: "Choose Casual or Rated" } });
-        return sendValidationError(reply, parsed.error);
-      }
+      const input = parseInput(createRoomSchema, request.body === undefined ? {} : request.body);
       if (
-        parsed.data.roomMode === "test" &&
-        !canCreateTestRoom(parsed.data.debugToken)
+        input.roomMode === "test" &&
+        !canCreateTestRoom(input.debugToken)
       ) {
-        reply.code(403).send({ error: "Test rooms are disabled or require a valid debug token" });
-        return;
+        throw new AuthError("FORBIDDEN");
       }
 
-      const createdById = await creatorId(request, reply);
-      if (reply.sent) return;
+      const createdById = await creatorId(request);
       const room = await enqueueRoomCommand(FATE_CREATE_KEY, async () => {
         await lifecycle.cleanup({ activeRoomIds: getActiveFateRoomIds() });
         return createPersistentRoom({
-          seed: parsed.data.seed,
-          arenaId: parsed.data.arenaId,
-          roomMode: parsed.data.roomMode,
-          gameMode: parsed.data.gameMode,
-          matchType: parsed.data.matchType,
-          lobbyName: parsed.data.lobbyName,
-        }, createdById, reply);
+          seed: input.seed,
+          arenaId: input.arenaId,
+          roomMode: input.roomMode,
+          gameMode: input.gameMode,
+          matchType: input.matchType,
+          lobbyName: input.lobbyName,
+        }, createdById);
       });
       if (!room) return;
       const views = {
@@ -227,7 +171,7 @@ export async function registerRoutes(
         P2: makePlayerView(room.state, "P2"),
       };
 
-      reply.send({
+      reply.code(201).send({
         gameId: room.id,
         matchType: room.matchType,
         seed: room.seed,
@@ -238,20 +182,16 @@ export async function registerRoutes(
 
   server.get(
     "/api/games/:id",
+    { config: queryConfig(playerQuerySchema) },
     async (request: FastifyRequest, reply: FastifyReply) => {
-      if (!requireDebugRestAccess(request, reply)) return;
-      const gameId = (request.params as { id: string }).id;
+      requireDebugRestAccess(request);
+      const gameId = parseInput(roomParamsSchema, request.params).id;
       const room = getGameRoom(gameId);
       if (!room) {
-        reply.code(404).send({ error: "Game not found" });
-        return;
+        throw new AppError("ROOM_NOT_FOUND", 404, "Room not found.");
       }
 
-      const playerId = parsePlayerId(request);
-      if (!playerId) {
-        reply.code(400).send({ error: "playerId query is required" });
-        return;
-      }
+      const { playerId } = parseInput(playerQuerySchema, request.query);
 
       const view = makePlayerView(room.state, playerId);
       touchGameRoom(room);
@@ -262,12 +202,11 @@ export async function registerRoutes(
   server.get(
     "/api/games/:id/log",
     async (request: FastifyRequest, reply: FastifyReply) => {
-      if (!requireDebugRestAccess(request, reply)) return;
-      const gameId = (request.params as { id: string }).id;
+      requireDebugRestAccess(request);
+      const gameId = parseInput(roomParamsSchema, request.params).id;
       const room = getGameRoom(gameId);
       if (!room) {
-        reply.code(404).send({ error: "Game not found" });
-        return;
+        throw new AppError("ROOM_NOT_FOUND", 404, "Room not found.");
       }
 
       touchGameRoom(room);
@@ -277,21 +216,13 @@ export async function registerRoutes(
 
   server.post(
     "/api/games/:id/actions",
+    { config: queryConfig(playerQuerySchema) },
     async (request: FastifyRequest, reply: FastifyReply) => {
-      if (!requireDebugRestAccess(request, reply)) return;
-      const gameId = (request.params as { id: string }).id;
-      const playerId = parsePlayerId(request);
-      if (!playerId) {
-        reply.code(400).send({ error: "playerId query is required" });
-        return;
-      }
+      requireDebugRestAccess(request);
+      const gameId = parseInput(roomParamsSchema, request.params).id;
+      const { playerId } = parseInput(playerQuerySchema, request.query);
 
-      const parsed = GameActionSchema.safeParse(request.body ?? {});
-      if (!parsed.success) {
-        return sendValidationError(reply, parsed.error);
-      }
-
-      const parsedAction = parsed.data;
+      const parsedAction = parseInput(GameActionSchema, request.body);
       const action: GameAction =
         parsedAction.type === "resolvePendingRoll"
           ? ({
@@ -303,35 +234,30 @@ export async function registerRoutes(
       const outcome = await enqueueRoomCommand(fateRoomKey(gameId), async () => {
         const room = getGameRoom(gameId);
         if (!room) {
-          return {
-            status: 404,
-            payload: { error: "Game not found" },
-          };
+          throw new AppError("ROOM_NOT_FOUND", 404, "Room not found.");
         }
 
         if (room.state.phase === "ended") {
-          return {
-            status: 409,
-            payload: { error: "Game has ended" },
-          };
+          throw new AppError("GAME_ENDED", 409, "Game has ended.");
         }
 
         if (!isActionAllowedByPlayer(room.state, action, playerId)) {
-          return {
-            status: 403,
-            payload: { error: "Action not allowed for this player" },
-          };
+          throw new AuthError("FORBIDDEN");
         }
 
         const command = await lifecycle.applyAction(room, action, playerId);
         if (!command.ok) {
-          return {
-            status: 409,
-            payload: {
-              error: command.message ?? "Action rejected",
-              code: command.code,
-            },
-          };
+          if (command.code === "AUTH_REQUIRED") throw new AuthError("UNAUTHORIZED");
+          const unavailable = ["MATCH_PERSISTENCE_UNAVAILABLE", "RATED_RATING_UNAVAILABLE"].includes(command.code);
+          const forbidden = ["FORBIDDEN", "NOT_SEATED", "NOT_LOBBY_HOST"].includes(command.code);
+          const details = command.code === "RATED_RATING_DIFFERENCE_TOO_LARGE"
+            ? { difference: room.ratedCompatibility?.difference, maxDifference: room.ratedCompatibility?.maxDifference }
+            : undefined;
+          // Rules still return some free-text/lowercase rejection reasons. They
+          // remain fallback messages, while REST always exposes a stable code.
+          const code = /^[A-Z][A-Z0-9_]*$/.test(command.code) ? command.code : "RULES_REJECTED";
+          throw new AppError(code, unavailable ? 503 : forbidden ? 403 : 409,
+            command.message ?? "Action rejected.", details);
         }
 
         broadcastRoomState(room);

@@ -172,7 +172,7 @@ async function run() {
       { email: `valid-${suffix}@example.test`, username: "bad handle", password },
       { email: `valid-${suffix}@example.test`, username: "ok_name", password: "short" },
     ])
-      error(await post("register", payload), 400, "INVALID_REQUEST");
+      error(await post("register", payload), 400, "VALIDATION_ERROR");
 
     const concurrentEmail = `race-${suffix}@example.test`;
     createdEmails.push(concurrentEmail);
@@ -330,7 +330,7 @@ async function run() {
     assert.equal(await database.authSession.count({ where: { userId: deleted.body.user.id } }), 0);
     assert.equal(
       (await server.inject({ method: "POST", url: "/rooms", payload: {} })).statusCode,
-      200,
+      201,
     );
     console.log("auth integration: deleted identities, cascade and public gameplay passed");
   } finally {

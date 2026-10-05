@@ -9,6 +9,10 @@ import type {
 } from "rules";
 
 import { API_BASE, WS_BASE } from "./api/config";
+import { createApiClient } from "./api/client";
+
+const client = createApiClient(API_BASE);
+
 
 export interface CreateGameResponse {
   matchType: MatchType;
@@ -73,65 +77,27 @@ export async function createGame(params?: {
   seed?: number;
   arenaId?: string;
 }): Promise<CreateGameResponse> {
-  const res = await fetch(`${API_BASE}/api/games`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(params ?? {}),
+  return client.request("/api/games", value => value as CreateGameResponse, {
+    method: "POST", body: JSON.stringify(params ?? {}),
   });
-
-  if (!res.ok) {
-    throw new Error(`Failed to create game: ${res.status}`);
-  }
-
-  return (await res.json()) as CreateGameResponse;
 }
 
-export async function getGameView(
-  gameId: string,
-  playerId: PlayerId
-): Promise<GameViewResponse> {
-  const res = await fetch(
-    `${API_BASE}/api/games/${gameId}?playerId=${playerId}`
-  );
-  if (!res.ok) {
-    throw new Error(`Failed to load game: ${res.status}`);
-  }
-  return (await res.json()) as GameViewResponse;
+export async function getGameView(gameId: string, playerId: PlayerId): Promise<GameViewResponse> {
+  return client.request(`/api/games/${encodeURIComponent(gameId)}?playerId=${playerId}`, value => value as GameViewResponse);
 }
 
-export async function sendAction(
-  gameId: string,
-  playerId: PlayerId,
-  action: GameAction
-): Promise<ActionResponse> {
-  const res = await fetch(
-    `${API_BASE}/api/games/${gameId}/actions?playerId=${playerId}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(action),
-    }
-  );
-
-  if (!res.ok) {
-    throw new Error(`Failed to send action: ${res.status}`);
-  }
-
-  return (await res.json()) as ActionResponse;
+export async function sendAction(gameId: string, playerId: PlayerId, action: GameAction): Promise<ActionResponse> {
+  return client.request(`/api/games/${encodeURIComponent(gameId)}/actions?playerId=${playerId}`, value => value as ActionResponse, {
+    method: "POST", body: JSON.stringify(action),
+  });
 }
 
 export async function listRooms(): Promise<RoomSummary[]> {
-  const res = await fetch(`${API_BASE}/rooms`);
-  if (!res.ok) {
-    throw new Error(`Failed to load rooms: ${res.status}`);
-  }
-  return (await res.json()) as RoomSummary[];
+  return client.request("/rooms", value => value as RoomSummary[]);
 }
 
 export async function lookupRoom(id: string): Promise<RoomSummary> {
-  const res = await fetch(`${API_BASE}/rooms/${encodeURIComponent(id)}`);
-  if (!res.ok) throw new Error("Room not found");
-  return await res.json() as RoomSummary;
+  return client.request(`/rooms/${encodeURIComponent(id)}`, value => value as RoomSummary);
 }
 
 export async function createRoom(params?: {
@@ -144,35 +110,20 @@ export async function createRoom(params?: {
   accessToken?: string;
   debugToken?: string;
 }): Promise<CreateRoomResponse> {
-  const body = params ? { ...params } : {};
-  delete body.accessToken;
-  const res = await fetch(`${API_BASE}/rooms`, {
+  const { accessToken, ...body } = params ?? {};
+  return client.request("/rooms", value => value as CreateRoomResponse, {
     method: "POST",
-    headers: { "Content-Type": "application/json", ...(params?.accessToken ? { Authorization: `Bearer ${params.accessToken}` } : {}) },
+    headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
     body: JSON.stringify(body),
   });
-
-  if (!res.ok) {
-    throw new Error(`Failed to create room: ${res.status}`);
-  }
-
-  return (await res.json()) as CreateRoomResponse;
 }
 
 export async function getServerCapabilities(): Promise<ServerCapabilities> {
-  const res = await fetch(`${API_BASE}/api/capabilities`);
-  if (!res.ok) {
-    throw new Error(`Failed to load capabilities: ${res.status}`);
-  }
-  return (await res.json()) as ServerCapabilities;
+  return client.request("/api/capabilities", value => value as ServerCapabilities);
 }
 
 export async function listHeroes(): Promise<HeroMeta[]> {
-  const res = await fetch(`${API_BASE}/api/heroes`);
-  if (!res.ok) {
-    throw new Error(`Failed to load heroes: ${res.status}`);
-  }
-  return (await res.json()) as HeroMeta[];
+  return client.request("/api/heroes", value => value as HeroMeta[]);
 }
 
 export function getWsUrl(): string {
