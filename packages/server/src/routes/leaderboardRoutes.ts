@@ -1,4 +1,4 @@
-import { queryConfig } from "../validation/queryValidation";
+import { documented } from "../openapi/contract";
 import { parseInput } from "../validation/parseRequest";
 import type { FastifyInstance } from "fastify";
 import { readLeaderboardConfig } from "../leaderboard/config";
@@ -16,9 +16,22 @@ export async function leaderboardRoutes(
   const getService = () =>
     (service ??= new LeaderboardService(new LeaderboardRepository(), configuration));
   registerApiErrorHandler(server);
-  server.get<{ Querystring: unknown }>("/leaderboard", { config: queryConfig(leaderboardQuerySchema) }, async (request, reply) => {
-    reply.header("Cache-Control", "no-store");
-    const query = parseInput(leaderboardQuerySchema, request.query);
-    return getService().getLeaderboard(query);
-  });
+  server.get<{ Querystring: unknown }>(
+    "/leaderboard",
+    documented({
+      operationId: "getLeaderboard",
+      tag: "Leaderboard",
+      summary: "List qualified or provisional players for one mode",
+      query: leaderboardQuerySchema,
+      response: "Leaderboard",
+      description:
+        "Qualification is per mode. ratingRank is null for provisional players. Missing result history makes performance fields null.",
+      errors: { 503: ["DATABASE_UNAVAILABLE"] },
+    }),
+    async (request, reply) => {
+      reply.header("Cache-Control", "no-store");
+      const query = parseInput(leaderboardQuerySchema, request.query);
+      return getService().getLeaderboard(query);
+    },
+  );
 }

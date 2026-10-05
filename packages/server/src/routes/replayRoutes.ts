@@ -1,4 +1,4 @@
-import { queryConfig } from "../validation/queryValidation";
+import { documented, protectedErrors } from "../openapi/contract";
 import type { FastifyInstance } from "fastify";
 import type { ConnectionIdentityService } from "../auth/connectionIdentity";
 import { requireIdentity } from "../auth/bearer";
@@ -25,13 +25,54 @@ export async function replayRoutes(
   });
   const query = () =>
     (service ??= new ReplayQueryService(new MatchRepository(), new MatchActionRepository()));
-  server.get("/matches/:id/replay", async (request) => {
-    const { id } = parseInput(idParamsSchema, request.params);
-    return query().getMetadata(id);
-  });
-  server.get("/matches/:id/replay/state", { config: queryConfig(replayRevisionQuerySchema) }, async (request) => {
-    const { id } = parseInput(idParamsSchema, request.params);
-    const { revision } = parseInput(replayRevisionQuerySchema, request.query);
-    return query().getState(id, revision);
-  });
+  server.get(
+    "/matches/:id/replay",
+    documented({
+      operationId: "getReplayMetadata",
+      tag: "Replay",
+      summary: "Read replay participants and revision timeline",
+      auth: "bearer",
+      params: idParamsSchema,
+      response: "ReplayMetadata",
+      errors: {
+        ...protectedErrors,
+        404: ["MATCH_NOT_FOUND"],
+        409: ["MATCH_NOT_FINISHED", "MATCH_NOT_REPLAYABLE", "REPLAY_ACTION_GAP"],
+      },
+    }),
+    async (request) => {
+      const { id } = parseInput(idParamsSchema, request.params);
+      return query().getMetadata(id);
+    },
+  );
+  server.get(
+    "/matches/:id/replay/state",
+    documented({
+      operationId: "getReplayState",
+      tag: "Replay",
+      summary: "Read the safe board projection at a revision",
+      description:
+        "Read-only ReplayView, never authoritative GameState. Revision zero is the initial position; revision must not exceed finalRevision.",
+      auth: "bearer",
+      params: idParamsSchema,
+      query: replayRevisionQuerySchema,
+      response: "ReplayState",
+      errors: {
+        ...protectedErrors,
+        400: ["VALIDATION_ERROR", "INVALID_REPLAY_REVISION"],
+        404: ["MATCH_NOT_FOUND"],
+        409: [
+          "MATCH_NOT_FINISHED",
+          "MATCH_NOT_REPLAYABLE",
+          "REPLAY_ACTION_GAP",
+          "REPLAY_FINAL_STATE_MISMATCH",
+        ],
+      },
+    }),
+    async (request) => {
+      const { id } = parseInput(idParamsSchema, request.params);
+      const { revision } = parseInput(replayRevisionQuerySchema, request.query);
+      return query().getState(id, revision);
+    },
+  );
 }

@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { assertDocumentedResponse } from "./assertDocumentedResponse";
 import { randomUUID } from "node:crypto";
 import Fastify from "fastify";
 import { Prisma } from "@prisma/client";
@@ -228,6 +229,8 @@ async function run() {
     assert.equal(response.statusCode, 200); // Public access without credentials.
     assert.equal(response.headers["cache-control"], "no-store");
     assert.deepEqual(response.json(), stats);
+    assertDocumentedResponse("PlayerStatistics", response.json());
+    assertDocumentedResponse("PlayerStatistics", zero);
     assert.doesNotMatch(
       response.body,
       /email|passwordHash|token|resultData|initialConfig|GameState|MatchAction|MatchSnapshot|rating|byHero|byFigureSet/,

@@ -1,5 +1,6 @@
 import { AuthError } from "../auth/authErrors";
 import assert from "node:assert/strict";
+import { assertDocumentedResponse } from "./assertDocumentedResponse";
 import Fastify from "fastify";
 import { randomUUID } from "node:crypto";
 import { makeReplayView } from "rules";
@@ -88,6 +89,7 @@ async function run() {
     assert.equal(meta.statusCode, 200);
     assert.equal(meta.headers["cache-control"], "no-store");
     const dto = meta.json();
+    assertDocumentedResponse("ReplayMetadata", dto);
     assert.equal(dto.initialRevision, 0);
     assert.equal(dto.finalRevision, match.finalRevision);
     assert.equal(dto.winnerSeat, match.winnerSeat);
@@ -103,6 +105,7 @@ async function run() {
     for (const revision of [0, 10, 55, 73, match.finalRevision!]) {
       const response = await get(`/state?revision=${revision}`);
       assert.equal(response.statusCode, 200, response.body);
+      assertDocumentedResponse("ReplayState", response.json());
       const expected =
         revision === 0
           ? fixture.initialState

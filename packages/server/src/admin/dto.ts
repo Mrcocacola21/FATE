@@ -1,6 +1,8 @@
 import type { AdminMatch, AdminUser } from "../repositories/adminRepository";
 import type { MatchAction } from "@prisma/client";
 import { deserializeReplayAction } from "../replay/deserializeAction";
+import { matchTypeFromRated } from "../matches/matchType";
+import type { RoomSummary } from "../store";
 
 export function toAdminUser(user: AdminUser) {
   return {
@@ -23,6 +25,8 @@ export function toAdminMatch(match: AdminMatch) {
     !Array.isArray(match.initialConfig)
       ? match.initialConfig
       : {};
+  const origin: RoomSummary["origin"] | null =
+    config.origin === "MANUAL" || config.origin === "MATCHMAKING" ? config.origin : null;
   return {
     matchId: match.id,
     roomId: match.roomId,
@@ -32,8 +36,8 @@ export function toAdminMatch(match: AdminMatch) {
       typeof config.lobbyName === "string" && config.lobbyName.length <= 100
         ? config.lobbyName
         : null,
-    origin: config.origin === "MANUAL" || config.origin === "MATCHMAKING" ? config.origin : null,
-    matchType: match.isRated ? "RATED" : "CASUAL",
+    origin,
+    matchType: matchTypeFromRated(match.isRated),
     createdById: match.createdById,
     createdAt: match.createdAt.toISOString(),
     startedAt: match.startedAt?.toISOString() ?? null,
@@ -57,7 +61,7 @@ export function toAdminMatch(match: AdminMatch) {
       outcome: p.outcome,
       username: p.user?.profile?.username ?? null,
       displayName: p.user?.profile?.displayName ?? null,
-      identityType: p.userId ? "ACCOUNT" : "GUEST_OR_DELETED_ACCOUNT",
+      identityType: p.userId ? ("ACCOUNT" as const) : ("GUEST_OR_DELETED_ACCOUNT" as const),
     })),
   };
 }

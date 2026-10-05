@@ -106,3 +106,6 @@ cypress/screenshots/
 # Misc
 ############################################
 *.local
+
+# Optional exported OpenAPI artifact (response schemas in source are generated and checked).
+docs/generated/openapi.json

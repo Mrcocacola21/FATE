@@ -22,6 +22,7 @@ export const profilePatchSchema = z
           return false;
         }
       })
+      .describe("HTTP(S) avatar URL; an empty/blank string or null clears the avatar.")
       .optional(),
     preferredLanguage: z.enum(["en", "uk"]).optional(),
     preferredTheme: z.enum(["light", "dark"]).optional(),

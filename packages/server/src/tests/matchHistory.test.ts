@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { assertDocumentedResponse } from "./assertDocumentedResponse";
 import { randomUUID } from "node:crypto";
 import Fastify from "fastify";
 import { AuthError } from "../auth/authErrors";
@@ -97,6 +98,7 @@ async function run() {
   try {
     const response = await server.inject({ url: `/api/users/${a}/matches` });
     assert.equal(response.statusCode, 200); // Public, no Authorization header.
+    assertDocumentedResponse("MatchHistory", response.json());
     assert.deepEqual(response.json().pagination, { page: 1, limit: 20, total: 1, totalPages: 1 });
     assert.equal(response.json().items[0].result, "WIN");
     for (const query of [

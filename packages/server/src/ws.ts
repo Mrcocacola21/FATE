@@ -954,7 +954,7 @@ export function registerGameWebSocket(
   accounts: AccountConnections = new AccountConnections(),
 ) {
   serverLogger = server.log;
-  server.get("/ws", { websocket: true }, (socket, request) => {
+  server.get("/ws", { websocket: true, schema: { hide: true } }, (socket, request) => {
     const rawOrigin = request.headers.origin;
     const origin = Array.isArray(rawOrigin) ? rawOrigin[0] : rawOrigin;
     if (!isAllowedOrigin(origin)) {

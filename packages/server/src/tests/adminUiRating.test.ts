@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { AdminService } from "../services/adminService";
 import type { AdminRepository } from "../repositories/adminRepository";
+import { assertDocumentedResponse } from "./assertDocumentedResponse";
 
 test("admin user detail derives canonical per-mode ranks with the existing rating domain", async () => {
   const now = new Date("2026-10-04T12:00:00Z");
@@ -38,5 +39,6 @@ test("admin user detail derives canonical per-mode ranks with the existing ratin
     ],
   );
   assert.equal(user.matchCount, 12);
+  assertDocumentedResponse("AdminUser", JSON.parse(JSON.stringify({ user })));
   assert.equal("passwordHash" in user, false);
 });

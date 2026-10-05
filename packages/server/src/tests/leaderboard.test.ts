@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { assertDocumentedResponse } from "./assertDocumentedResponse";
 import test from "node:test";
 import Fastify from "fastify";
 import { readLeaderboardConfig, LEADERBOARD_MIN_RATED_GAMES } from "../leaderboard/config";
@@ -178,6 +179,7 @@ test("public read route validates before calling service and sanitizes failures"
   try {
     const response = await app.inject({ url: "/api/leaderboard" });
     assert.equal(response.statusCode, 200);
+    assertDocumentedResponse("Leaderboard", response.json());
     assert.equal(response.headers["cache-control"], "no-store");
     assert.equal(response.json().qualification.minRatedGames, 5);
     for (const query of [

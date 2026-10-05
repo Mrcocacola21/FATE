@@ -1,4 +1,5 @@
 import { emptyObjectSchema } from "../validation/commonSchemas";
+import { documented, protectedErrors } from "../openapi/contract";
 import { parseInput } from "../validation/parseRequest";
 import type { MatchmakingService } from "../services/matchmakingService";
 import cookie from "@fastify/cookie";
@@ -26,6 +27,22 @@ type Credentials = {
   refreshExpiresAt: Date;
 };
 
+export function toAccessCredentialsDto(
+  credentials: Pick<Credentials, "accessToken" | "accessTokenExpiresIn">,
+) {
+  return {
+    accessToken: credentials.accessToken,
+    accessTokenExpiresIn: credentials.accessTokenExpiresIn,
+  };
+}
+
+export function toSessionCredentialsDto(
+  credentials: Pick<Credentials, "accessToken" | "accessTokenExpiresIn">,
+  user: ReturnType<typeof toAuthUserDto>,
+) {
+  return { user, ...toAccessCredentialsDto(credentials) };
+}
+
 function sendCredentials(
   reply: FastifyReply,
   credentials: Credentials,
@@ -35,14 +52,17 @@ function sendCredentials(
     ...refreshCookieOptions(),
     expires: credentials.refreshExpiresAt,
   });
-  return reply.send({
-    ...(user === undefined ? {} : { user }),
-    accessToken: credentials.accessToken,
-    accessTokenExpiresIn: credentials.accessTokenExpiresIn,
-  });
+  return reply.send(
+    user === undefined
+      ? toAccessCredentialsDto(credentials)
+      : toSessionCredentialsDto(credentials, user),
+  );
 }
 
-export async function authRoutes(server: FastifyInstance, options: { matchmaking?: MatchmakingService } = {}): Promise<void> {
+export async function authRoutes(
+  server: FastifyInstance,
+  options: { matchmaking?: MatchmakingService } = {},
+): Promise<void> {
   await server.register(cookie);
   await server.register(rateLimit, {
     global: false,
@@ -71,7 +91,29 @@ export async function authRoutes(server: FastifyInstance, options: { matchmaking
     {
       bodyLimit: 4096,
       onRequest: requireTrustedAuthOrigin,
-      config: { rateLimit: { max: 5, timeWindow: "1 minute" } },
+      ...documented(
+        {
+          operationId: "registerUser",
+          tag: "Auth",
+          summary: "Register an account and issue credentials",
+          body: registerSchema,
+          response: "AuthSessionCredentials",
+          success: 201,
+          cookie: "set",
+          errors: {
+            403: ["FORBIDDEN_ORIGIN"],
+            409: ["EMAIL_ALREADY_REGISTERED", "USERNAME_ALREADY_TAKEN"],
+            429: ["RATE_LIMITED"],
+            503: ["DATABASE_UNAVAILABLE", "AUTH_UNAVAILABLE"],
+          },
+          requestExample: {
+            username: "player_one",
+            email: "player@example.com",
+            password: "example-password",
+          },
+        },
+        { rateLimit: { max: 5, timeWindow: "1 minute" } },
+      ),
     },
     async (request, reply) => {
       const input = parseInput(registerSchema, request.body);
@@ -86,7 +128,24 @@ export async function authRoutes(server: FastifyInstance, options: { matchmaking
     {
       bodyLimit: 4096,
       onRequest: requireTrustedAuthOrigin,
-      config: { rateLimit: { max: 10, timeWindow: "1 minute" } },
+      ...documented(
+        {
+          operationId: "login",
+          tag: "Auth",
+          summary: "Log in and issue credentials",
+          body: loginSchema,
+          response: "AuthSessionCredentials",
+          cookie: "set",
+          errors: {
+            401: ["INVALID_CREDENTIALS"],
+            403: ["FORBIDDEN_ORIGIN", "ACCOUNT_BLOCKED"],
+            429: ["RATE_LIMITED"],
+            503: ["DATABASE_UNAVAILABLE", "AUTH_UNAVAILABLE"],
+          },
+          requestExample: { email: "player@example.com", password: "example-password" },
+        },
+        { rateLimit: { max: 10, timeWindow: "1 minute" } },
+      ),
     },
     async (request, reply) => {
       const input = parseInput(loginSchema, request.body);
@@ -101,7 +160,27 @@ export async function authRoutes(server: FastifyInstance, options: { matchmaking
     {
       bodyLimit: 4096,
       onRequest: requireTrustedAuthOrigin,
-      config: { rateLimit: { max: 30, timeWindow: "1 minute" } },
+      ...documented(
+        {
+          operationId: "refreshSession",
+          tag: "Auth",
+          summary: "Rotate refresh cookie and issue an access token",
+          body: emptyObjectSchema,
+          bodyOptional: true,
+          response: "AuthCredentials",
+          auth: "refresh",
+          cookie: "set",
+          description:
+            "The refresh token is accepted only from the HttpOnly cookie. Invalid refresh credentials clear the cookie. No user object is returned.",
+          errors: {
+            401: ["INVALID_REFRESH_TOKEN"],
+            403: ["FORBIDDEN_ORIGIN", "ACCOUNT_BLOCKED"],
+            429: ["RATE_LIMITED"],
+            503: ["DATABASE_UNAVAILABLE", "AUTH_UNAVAILABLE"],
+          },
+        },
+        { rateLimit: { max: 30, timeWindow: "1 minute" } },
+      ),
     },
     async (request, reply) => {
       parseInput(emptyObjectSchema, request.body === undefined ? {} : request.body);
@@ -116,15 +195,32 @@ export async function authRoutes(server: FastifyInstance, options: { matchmaking
 
   server.post(
     "/logout",
-    { bodyLimit: 4096, onRequest: requireTrustedAuthOrigin },
+    {
+      bodyLimit: 4096,
+      onRequest: requireTrustedAuthOrigin,
+      ...documented({
+        operationId: "logout",
+        tag: "Auth",
+        summary: "Revoke the session and clear refresh cookie",
+        body: emptyObjectSchema,
+        bodyOptional: true,
+        success: 204,
+        auth: "optionalRefresh",
+        cookie: "clear",
+        description:
+          "Idempotent: missing or invalid refresh credentials still return 204. A valid cookie revokes the session and cancels the queue.",
+        errors: { 403: ["FORBIDDEN_ORIGIN"], 503: ["DATABASE_UNAVAILABLE", "AUTH_UNAVAILABLE"] },
+      }),
+    },
     async (request, reply) => {
       parseInput(emptyObjectSchema, request.body === undefined ? {} : request.body);
       reply.clearCookie(REFRESH_COOKIE, refreshCookieOptions());
       const token = request.cookies[REFRESH_COOKIE];
       if (token) {
         let userId: string;
-        try { userId = getTokens().verifyRefreshToken(token).sub; }
-        catch (error) {
+        try {
+          userId = getTokens().verifyRefreshToken(token).sub;
+        } catch (error) {
           if (error instanceof AuthError && error.code === "INVALID_REFRESH_TOKEN")
             return reply.code(204).send();
           throw error;
@@ -136,8 +232,22 @@ export async function authRoutes(server: FastifyInstance, options: { matchmaking
     },
   );
 
-  server.get("/me", { preHandler: accessTokenPreHandler(getTokens) }, async (request) => {
-    if (!request.authUserId) throw new AuthError("UNAUTHORIZED");
-    return { user: await getService().currentUser(request.authUserId) };
-  });
+  server.get(
+    "/me",
+    {
+      preHandler: accessTokenPreHandler(getTokens),
+      ...documented({
+        operationId: "getCurrentUser",
+        tag: "Auth",
+        summary: "Return the current account",
+        response: "CurrentUser",
+        auth: "bearer",
+        errors: { ...protectedErrors, 404: ["USER_NOT_FOUND"] },
+      }),
+    },
+    async (request) => {
+      if (!request.authUserId) throw new AuthError("UNAUTHORIZED");
+      return { user: await getService().currentUser(request.authUserId) };
+    },
+  );
 }

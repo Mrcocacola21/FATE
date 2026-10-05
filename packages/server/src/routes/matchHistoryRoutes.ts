@@ -1,4 +1,4 @@
-import { queryConfig } from "../validation/queryValidation";
+import { documented, readErrors } from "../openapi/contract";
 import { idParamsSchema } from "../validation/commonSchemas";
 import { parseInput } from "../validation/parseRequest";
 import type { FastifyInstance } from "fastify";
@@ -15,11 +15,23 @@ export async function matchHistoryRoutes(
 ): Promise<void> {
   let service = options.matchHistory;
   registerApiErrorHandler(server);
-  server.get<{ Params: { id: string } }>("/users/:id/matches", { config: queryConfig(matchHistoryQuerySchema) }, async (request, reply) => {
-    reply.header("Cache-Control", "no-store");
-    parseInput(idParamsSchema, request.params);
-    const query = parseInput(matchHistoryQuerySchema, request.query);
-    service ??= new MatchHistoryService(new MatchHistoryRepository());
-    return service.getUserMatchHistory(request.params.id, query);
-  });
+  server.get<{ Params: { id: string } }>(
+    "/users/:id/matches",
+    documented({
+      operationId: "listUserMatches",
+      tag: "Matches",
+      summary: "List completed matches for a user",
+      params: idParamsSchema,
+      query: matchHistoryQuerySchema,
+      response: "MatchHistory",
+      errors: readErrors,
+    }),
+    async (request, reply) => {
+      reply.header("Cache-Control", "no-store");
+      parseInput(idParamsSchema, request.params);
+      const query = parseInput(matchHistoryQuerySchema, request.query);
+      service ??= new MatchHistoryService(new MatchHistoryRepository());
+      return service.getUserMatchHistory(request.params.id, query);
+    },
+  );
 }

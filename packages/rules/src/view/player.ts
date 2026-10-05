@@ -33,6 +33,8 @@ export function makePlayerView(state: GameState, playerId: PlayerId): PlayerView
     pendingCombatQueue,
     pendingAoE,
     pendingPapyrusBoneChoices: _pendingPapyrusBoneChoices,
+    stakeCounter: _stakeCounter,
+    jackTrapCounter: _jackTrapCounter,
     ...baseState
   } = state;
   const units: Record<string, UnitState> = {};

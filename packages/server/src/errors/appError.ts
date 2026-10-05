@@ -1,4 +1,7 @@
-export type ErrorDetails = Record<string, unknown>;
+import type { z } from "zod";
+import type { apiErrorSchema, errorDetailsSchema } from "./schemas";
+
+export type ErrorDetails = z.infer<typeof errorDetailsSchema>;
 
 /** Expected application failures contain only explicitly safe public metadata. */
 export class AppError extends Error {
@@ -12,7 +15,7 @@ export class AppError extends Error {
     this.name = "AppError";
   }
 
-  toResponse() {
+  toResponse(): z.infer<typeof apiErrorSchema> {
     return {
       error: {
         code: this.code,

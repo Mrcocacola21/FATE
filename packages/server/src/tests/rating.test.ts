@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { assertDocumentedResponse } from "./assertDocumentedResponse";
 import { randomUUID } from "node:crypto";
 import Fastify from "fastify";
 import { Prisma } from "@prisma/client";
@@ -246,6 +247,7 @@ async function run() {
     assert.equal(response.statusCode, 200);
     assert.equal(response.headers["cache-control"], "no-store");
     assert.deepEqual(response.json(), defaultRating);
+    assertDocumentedResponse("PlayerModeRating", response.json());
     assert.equal(reads, 1);
     assert.equal((await server.inject({ url: "/api/users/invalid/rating" })).statusCode, 400);
     const history = await server.inject({ url: `/api/users/${a}/rating/history?page=2&limit=5` });

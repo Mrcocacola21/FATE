@@ -11,10 +11,19 @@ declare module "fastify" {
 
 /** All REST routes reject unsupported query fields. Feature schemas remain local. */
 export function registerQueryValidation(server: FastifyInstance): void {
-  server.addHook("preValidation", async request => {
-    if (!request.routeOptions.url || request.method === "OPTIONS" ||
-      ["/ws", "/health", "/api/health", "/ready"].includes(request.routeOptions.url)) return;
-    const result = (request.routeOptions.config.querySchema ?? emptyObjectSchema).safeParse(request.query);
+  server.addHook("preValidation", async (request) => {
+    if (
+      !request.routeOptions.url ||
+      request.method === "OPTIONS" ||
+      request.routeOptions.url === "/openapi.json" ||
+      request.routeOptions.url === "/docs" ||
+      request.routeOptions.url.startsWith("/docs/") ||
+      ["/ws", "/health", "/api/health", "/ready"].includes(request.routeOptions.url)
+    )
+      return;
+    const result = (request.routeOptions.config.querySchema ?? emptyObjectSchema).safeParse(
+      request.query,
+    );
     if (!result.success) throw new ValidationError(result.error);
   });
 }

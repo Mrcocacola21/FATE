@@ -5,7 +5,7 @@ import { MatchResultError } from "../persistence/matchResult";
 import { ReplayError } from "../replay/replayError";
 import { AppError, internalError } from "./appError";
 
-const domainErrors: Record<string, readonly [number, string]> = {
+export const domainErrors: Record<string, readonly [number, string]> = {
   MATCH_NOT_FOUND: [404, "Match not found."],
   MATCH_NOT_FINISHED: [409, "Match has not finished."],
   MATCH_NOT_REPLAYABLE: [409, "This match cannot be replayed."],

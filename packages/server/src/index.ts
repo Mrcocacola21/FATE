@@ -1,5 +1,6 @@
 import { registerQueryValidation } from "./validation/queryValidation";
 import { registerJsonParser } from "./validation/jsonParser";
+import { registerOpenApi } from "./openapi/register";
 import { AppError } from "./errors/appError";
 import { registerApiErrorHandler, handleApiError } from "./routes/apiErrorHandler";
 import { createMatchmakingService } from "./matchmaking/runtime";
@@ -40,6 +41,7 @@ import { MatchRecoveryRepository } from "./repositories/matchRecoveryRepository"
 
 export async function buildServer(
   options: {
+    documentationOnly?: boolean;
     matchPersistence?: MatchPersistence;
     connectionIdentity?: Pick<ConnectionIdentityService, "verify"> &
       Partial<Pick<ConnectionIdentityService, "assertActive">>;
@@ -64,6 +66,7 @@ export async function buildServer(
   });
 
   registerApiErrorHandler(server);
+  await registerOpenApi(server);
   registerQueryValidation(server);
   registerJsonParser(server);
   server.setNotFoundHandler((_request, reply) =>
@@ -105,6 +108,10 @@ export async function buildServer(
       ? (roomId: string) => new MatchRecoveryRepository().isInterruptedRoom(roomId)
       : async () => false);
   server.addHook("onReady", async () => {
+    if (options.documentationOnly) {
+      startupComplete = true;
+      return;
+    }
     if (recoverPersistentMatches)
       await (options.matchRecovery || new MatchRecoveryService()).recover(lifecycle, server.log);
     lifecycle.startRetries();
