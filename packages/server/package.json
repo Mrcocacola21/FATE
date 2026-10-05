@@ -90,6 +90,7 @@
     "argon2": "^0.45.1",
     "fastify": "^4.26.2",
     "jsonwebtoken": "^9.0.3",
+    "prisma": "^6.19.0",
     "rules": "file:../rules",
     "ws": "^8.16.0",
     "zod": "^3.24.1",
@@ -102,7 +103,6 @@
     "@types/ws": "^8.18.1",
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1",
-    "prisma": "^6.19.0",
     "tsx": "^4.7.1",
     "typescript": "^5.9.3"
   }

@@ -1,0 +1,84 @@
+x-server-image: &server-image
+  image: fate-server:local
+  build:
+    context: .
+    target: runtime
+
+services:
+  postgres:
+    image: postgres:16-bookworm
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    # No host port: only containers on this project's network can reach the DB.
+
+  migrate:
+    <<: *server-image
+    restart: "no"
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL with host postgres}
+      DIRECT_URL: ${DIRECT_URL:?Set DIRECT_URL with host postgres}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      disable: true
+    command: ["npm", "run", "-w", "server", "db:migrate:deploy"]
+
+  server:
+    <<: *server-image
+    # Bounded retries keep permanent configuration failures visible.
+    restart: "on-failure:3"
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL with host postgres}
+      DIRECT_URL: ${DIRECT_URL:?Set DIRECT_URL with host postgres}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?Set JWT_ACCESS_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?Set JWT_REFRESH_SECRET}
+      WEB_ORIGIN: ${WEB_ORIGIN:?Set the exact HTTPS frontend origin}
+      AUTH_COOKIE_SAME_SITE: ${AUTH_COOKIE_SAME_SITE:-none}
+      ENABLE_TEST_ROOMS: "false"
+      MATCHMAKING_SERVER_PROCESSES: "1"
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      JWT_ACCESS_TTL_SECONDS: ${JWT_ACCESS_TTL_SECONDS:-900}
+      JWT_REFRESH_TTL_SECONDS: ${JWT_REFRESH_TTL_SECONDS:-2592000}
+      MATCH_SNAPSHOT_INTERVAL: ${MATCH_SNAPSHOT_INTERVAL:-20}
+      LEADERBOARD_MIN_RATED_GAMES: ${LEADERBOARD_MIN_RATED_GAMES:-5}
+      MATCHMAKING_INITIAL_RATING_RANGE: ${MATCHMAKING_INITIAL_RATING_RANGE:-100}
+      MATCHMAKING_RATING_RANGE_STEP: ${MATCHMAKING_RATING_RANGE_STEP:-50}
+      MATCHMAKING_RANGE_STEP_SECONDS: ${MATCHMAKING_RANGE_STEP_SECONDS:-15}
+      MATCHMAKING_MAX_RATING_RANGE: ${MATCHMAKING_MAX_RATING_RANGE:-400}
+      RECONNECT_GRACE_MS: ${RECONNECT_GRACE_MS:-45000}
+      ROOM_TTL_MS: ${ROOM_TTL_MS:-86400000}
+      MAX_ROOMS: ${MAX_ROOMS:-100}
+      MAX_LOG_EVENTS: ${MAX_LOG_EVENTS:-5000}
+      WS_MAX_PAYLOAD_BYTES: ${WS_MAX_PAYLOAD_BYTES:-65536}
+      WS_RATE_LIMIT_WINDOW_MS: ${WS_RATE_LIMIT_WINDOW_MS:-1000}
+      WS_RATE_LIMIT_MAX_MESSAGES: ${WS_RATE_LIMIT_MAX_MESSAGES:-60}
+      OPENAPI_ENABLED: ${OPENAPI_ENABLED:-true}
+      SWAGGER_UI_ENABLED: ${SWAGGER_UI_ENABLED:-true}
+    ports:
+      # Loopback default; use a TLS proxy for public HTTPS/WSS traffic.
+      - "${SERVER_BIND_ADDRESS:-127.0.0.1}:${SERVER_PORT:-3000}:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    # Room command, action and finalization drains have 5-second bounds each.
+    stop_grace_period: 30s
+
+volumes:
+  postgres_data:

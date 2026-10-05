@@ -1,5 +1,9 @@
 # Phase 9.5: production deployment
 
+Docker is an additive backend alternative: see [Docker production](docker-production.md)
+and the shared [production environment reference](production-environment.md).
+The hosted Vercel/Render/Neon flow below remains supported.
+
 ```text
 Vercel (packages/web) -> Render (packages/server) -> Neon PostgreSQL
 ```

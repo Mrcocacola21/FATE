@@ -2,8 +2,13 @@
 
 `.github/workflows/ci.yml` runs on every pull request and every push to the default
 branch, `main`, including forks. It has no tag trigger or path filters and performs
-no deployment. One sequential job, `Quality` (ID `verify`), runs on `ubuntu-latest`
-with a 30-minute timeout. Every validation, test and build step is required;
+no deployment. The sequential `Quality` job (ID `verify`) runs on `ubuntu-latest`
+with a 30-minute timeout. A separate `Docker runtime` job (ID `docker`, 15-minute
+timeout) builds the backend from a clean checkout and runs
+`node scripts/dockerSmoke.mjs` against disposable local Compose data. It requires
+no host npm install, registry push or production credentials. See
+[Docker production](docker-production.md) for its checks and cleanup boundary.
+Every validation, test and build step is required;
 an unsuccessful command stops the job and fails the workflow.
 
 ## Required stages and local equivalents

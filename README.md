@@ -1030,6 +1030,17 @@ and Output Directory `dist`. Configure only public `VITE_API_URL`, `VITE_WS_URL`
 The general SPA fallback preserves static assets and supports direct URLs/refreshes for
 all auth, profile, match and public-history routes.
 
+### Docker backend alternative
+
+The [Docker production guide](docs/docker-production.md) adds a Node 22 backend
+image and `compose.yml` with PostgreSQL 16, a one-shot migration job, and the server.
+The frontend stays separately deployed; the existing Vercel/Render/Neon flow remains valid.
+Copy `.env.production.example` to `.env.production`, fill its placeholders, then run
+`docker compose --env-file .env.production up -d --build --wait --wait-timeout 180`.
+See the shared [production environment contract](docs/production-environment.md)
+and use `/ready` for readiness. PostgreSQL data persists in a named volume;
+`down -v` deletes it.
+
 ## Common Pitfalls
 
 - `Failed to fetch` in production usually means `VITE_API_URL` points to localhost

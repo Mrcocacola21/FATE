@@ -13,6 +13,24 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  docker:
+    name: Docker runtime
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Setup Node 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+      - name: Build backend image from clean checkout
+        run: docker build --tag fate-server:local .
+      - name: Isolated Compose deployment and restart smoke
+        run: node scripts/dockerSmoke.mjs
+
   verify:
     name: Quality
     runs-on: ubuntu-latest
