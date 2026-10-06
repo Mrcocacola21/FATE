@@ -111,3 +111,6 @@ cypress/screenshots/
 
 # Optional exported OpenAPI artifact (response schemas in source are generated and checked).
 docs/generated/openapi.json
+
+# Research benchmark artifacts (retain selected thesis runs outside source control).
+bench-results/

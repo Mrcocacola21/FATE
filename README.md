@@ -1707,3 +1707,7 @@ The [implementation report](docs/api-validation-implementation-report.md) record
 the changes, compatibility decisions and actual verification results.
 
 Backend operations: [logs, health/readiness and metrics](docs/observability.md).
+
+Offline thesis tooling: [replay / snapshot research harness](packages/server/bench/replay-snapshot/README.md).
+Run `npm.cmd run benchmark:replay:quick` for deterministic correctness and JSON/CSV measurements.
+The harness compares full states, action logs and configurable snapshots without changing production persistence.

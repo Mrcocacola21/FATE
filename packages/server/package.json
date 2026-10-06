@@ -78,7 +78,10 @@
     "test:integration": "node ../../scripts/runTests.mjs integration",
     "test:ws": "node ../../scripts/runTests.mjs ws",
     "test:e2e": "node ../../scripts/runTests.mjs e2e",
-    "test:observability": "tsx --tsconfig ../../tsconfig.tests.json --test src/tests/observability.test.ts"
+    "test:observability": "tsx --tsconfig ../../tsconfig.tests.json --test src/tests/observability.test.ts",
+    "benchmark:typecheck": "tsc -p bench/replay-snapshot/tsconfig.json",
+    "test:benchmark": "tsx --tsconfig ../../tsconfig.tests.json --test bench/replay-snapshot/benchmark.test.ts",
+    "test:benchmark:postgres": "tsx --tsconfig ../../tsconfig.tests.json --test bench/replay-snapshot/postgres.integration.test.ts"
   },
   "dependencies": {
     "@fastify/cookie": "^9.4.0",

@@ -76,6 +76,7 @@ async function serverUnits() {
   const pure = await discover(path.join(root, "packages/server/src/tests/unit"), /\.test\.ts$/);
   if (pure.length === 0) throw new Error("No server unit tests discovered");
   await run("server pure units", [tsx, "--tsconfig", config, "--test", "--test-concurrency=1", ...pure]);
+  await run("replay benchmark correctness (no timing thresholds)", [tsx, "--tsconfig", config, "--test", path.join(root, "packages/server/bench/replay-snapshot/benchmark.test.ts")]);
 }
 async function webUnits() {
   const web = await discover(path.join(root, "packages/web/src"), /\.test\.tsx?$/);

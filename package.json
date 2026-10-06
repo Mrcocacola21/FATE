@@ -21,7 +21,10 @@
     "test:ws": "node scripts/runTests.mjs ws",
     "test:e2e": "node scripts/runTests.mjs e2e",
     "test:db:prepare": "node scripts/runTests.mjs database-prepare",
-    "typecheck": "npm run -w rules typecheck && npm run -w server typecheck && npm run -w web typecheck && tsc -p tsconfig.smoke.json"
+    "typecheck": "npm run -w rules typecheck && npm run -w server typecheck && npm run -w server benchmark:typecheck && npm run -w web typecheck && tsc -p tsconfig.smoke.json",
+    "benchmark:replay": "tsx --tsconfig tsconfig.tests.json packages/server/bench/replay-snapshot/benchmark.ts",
+    "benchmark:replay:quick": "tsx --tsconfig tsconfig.tests.json packages/server/bench/replay-snapshot/benchmark.ts --preset=quick",
+    "benchmark:replay:research": "tsx --tsconfig tsconfig.tests.json packages/server/bench/replay-snapshot/benchmark.ts --preset=research"
   },
   "devDependencies": {
     "@types/ws": "^8.18.1",
