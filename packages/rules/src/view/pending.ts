@@ -171,19 +171,35 @@ export function getVisiblePendingRollForPlayer(
     "spinCandidateIds",
     "options",
     "legalTargetIds",
+    "candidateIds",
+    "eligibleUnitIds",
+    "selectedIds",
+    "damagedUnitIds",
+    "revealedUnitIds",
   ];
   for (const key of unitIdLists) {
     if (pendingRoll.kind === "selectLastAttackTarget" && key === "legalTargetIds") continue;
     const value = context[key];
     if (!Array.isArray(value)) continue;
-    context[key] = value.filter(
-      (item) =>
-        typeof item !== "string" ||
-        !state.units[item] ||
-        canPlayerKnowUnitExactPosition(state, playerId, item),
-    );
+    const isAuthorized = (item: unknown) =>
+      typeof item !== "string" || !state.units[item] ||
+      canPlayerKnowUnitExactPosition(state, playerId, item);
+    if (key === "targetsQueue" && typeof context.currentTargetIndex === "number") {
+      context.currentTargetIndex = value.slice(0, context.currentTargetIndex).filter(isAuthorized).length;
+    }
+    context[key] = value.filter(isAuthorized);
   }
-  for (const key of ["defenderId", "targetId", "targetUnitId"]) {
+  for (const key of ["damageByUnitId", "rollsByUnitId"]) {
+    const value = context[key];
+    if (!value || typeof value !== "object" || Array.isArray(value)) continue;
+    context[key] = Object.fromEntries(Object.entries(value).filter(([unitId]) =>
+      canPlayerKnowUnitExactPosition(state, playerId, unitId),
+    ));
+  }
+  for (const key of [
+    "defenderId", "targetId", "targetUnitId", "attackerId", "actorUnitId",
+    "sourceUnitId", "casterId", "forcedAttackerId", "passengerId", "riverId",
+  ]) {
     const value = context[key];
     if (
       typeof value === "string" &&
@@ -201,8 +217,9 @@ export function getVisiblePendingRollForPlayer(
   ) {
     delete context.targetUnitId;
   }
+  const { chainSource: _chainSource, pendingRollsRemaining: _pendingRollsRemaining, ...visibleRoll } = pendingRoll;
   return {
-    ...pendingRoll,
+    ...visibleRoll,
     context,
     presentation: projectPendingRollPresentation(state, pendingRoll.presentation, playerId),
   };
@@ -241,35 +258,31 @@ export function projectPendingRollPresentation(
     },
   ];
   let sourceWasRedacted = false;
+  const textFields = ["title", "reason", "diceLabel", "successRule", "successText", "failureText", "comparedAgainst"] as const;
+  const scrubText = (secret: string, replacement: string) => {
+    for (const key of textFields) {
+      const value = projected[key];
+      if (value) projected[key] = replaceAllLiteral(value, secret, replacement);
+    }
+  };
 
   for (const field of fields) {
     const unitId = projected[field.idKey];
-    if (!unitId || !state.units[unitId]) continue;
-    const isVisible = playerId !== null && canPlayerKnowUnitExactPosition(state, playerId, unitId);
+    if (!unitId) continue;
+    const isVisible = playerId !== null &&
+      (state.units[unitId]?.owner === playerId || canPlayerKnowUnitExactPosition(state, playerId, unitId));
     if (isVisible) continue;
     const oldName = projected[field.nameKey];
-    if (oldName) {
-      projected.reason = replaceAllLiteral(projected.reason, oldName, field.safeName);
-      if (projected.comparedAgainst) {
-        projected.comparedAgainst = replaceAllLiteral(
-          projected.comparedAgainst,
-          oldName,
-          field.safeName,
-        );
-      }
-      if (projected.successText) {
-        projected.successText = replaceAllLiteral(projected.successText, oldName, field.safeName);
-      }
-      if (projected.failureText) {
-        projected.failureText = replaceAllLiteral(projected.failureText, oldName, field.safeName);
-      }
-    }
+    if (oldName) scrubText(oldName, field.safeName);
+    scrubText(unitId, field.safeName);
     delete projected[field.idKey];
     projected[field.nameKey] = field.safeName;
-    if (field.idKey === "sourceUnitId") sourceWasRedacted = true;
+    if (field.idKey === "sourceUnitId" || (field.idKey === "actorUnitId" && !presentation.sourceUnitId)) sourceWasRedacted = true;
   }
 
   if (sourceWasRedacted) {
+    if (projected.abilityName) scrubText(projected.abilityName, "Hidden effect");
+    if (projected.abilityId) scrubText(projected.abilityId, "Hidden effect");
     delete projected.abilityId;
     delete projected.abilityName;
   }
@@ -277,13 +290,19 @@ export function projectPendingRollPresentation(
   return projected;
 }
 
+/** Committed blast geometry is public; hidden caster/ability identity is independent. */
 export function buildPendingAoEPreview(
-  pendingAoE: GameState["pendingAoE"],
+  state: GameState,
+  viewer: PlayerId | "spectator",
 ): PlayerView["pendingAoEPreview"] {
+  const pendingAoE = state.pendingAoE;
   if (!pendingAoE || !pendingAoE.abilityId) return null;
+  const caster = state.units[pendingAoE.casterId];
+  const visible = !!caster && (viewer === "spectator"
+    ? !caster.isStealthed
+    : canPlayerKnowUnitExactPosition(state, viewer, caster.id));
   return {
-    casterId: pendingAoE.casterId,
-    abilityId: pendingAoE.abilityId,
+    ...(visible ? { casterId: pendingAoE.casterId, abilityId: pendingAoE.abilityId } : {}),
     center: { ...pendingAoE.center },
     radius: pendingAoE.radius,
   };

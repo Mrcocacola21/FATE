@@ -1,5 +1,5 @@
 import type { AbilityView, Coord, GameOverResult, PlayerId } from "./shared";
-import type { GameEvent } from "./events";
+import type { ProjectedGameEvent, GameEvent } from "./events";
 import type { RuleDeclarationState } from "../ruleDeclarations/types";
 import type {
   CombatResolutionChain,
@@ -155,8 +155,8 @@ export interface LegalIntents {
 }
 
 export interface AoEPreview {
-  casterId: string;
-  abilityId: string;
+  casterId?: string;
+  abilityId?: string;
   center: Coord;
   radius: number;
 }
@@ -186,6 +186,7 @@ export type PendingDecisionView =
 
 export type PlayerView = Omit<
   GameState,
+  | "events"
   | "knowledge"
   | "lastKnownPositions"
   | "pendingRoll"
@@ -208,6 +209,7 @@ export type PlayerView = Omit<
   /** Optional for legacy snapshots; current projections always populate this field. */
   pendingDecision?: PendingDecisionView | null;
   pendingCombatQueueCount: number;
+  events: ProjectedGameEvent[];
   pendingAoEPreview: AoEPreview | null;
   stakeMarkers: { position: Coord; isRevealed: boolean }[];
   jackTraps: VisibleJackTrapMarker[];

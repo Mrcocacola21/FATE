@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { randomUUID } from "node:crypto";
-import { SeededRNG, type GameEvent } from "rules";
+import { attachArmy, createDefaultArmy, createEmptyGame, evUnitMoved, SeededRNG, type GameEvent } from "rules";
 import { identifyAcceptedEvents, projectDeliveryEvents } from "../../eventDelivery";
 import { applyGameAction, createGameRoomWithId, restoreGameRoom, deleteGameRoom } from "../../store";
 import { applyTestRoomCommand } from "../../testRoom/applyTestCommand";
@@ -115,6 +115,24 @@ test("same_event_id_for_all_recipients and duplicate_broadcast_preserves_event_i
   for (const projected of deliveries) assert.equal(projected[0].eventId, events[0].eventId);
   assert.deepEqual(projectDeliveryEvents(game.state, events, "P2"), deliveries[1]);
   assert.deepEqual(projectDeliveryEvents(game.state, events, "spectator"), deliveries[2]);
+});
+
+test("event-time movement authorization survives delivery identification and omits hidden paths", () => {
+  const state = attachArmy(createEmptyGame(), createDefaultArmy("P1"));
+  const unit = Object.values(state.units)[0];
+  state.units[unit.id] = { ...unit, position: { col: 3, row: 4 }, isStealthed: true };
+  const movement = evUnitMoved(state, { unitId: unit.id, from: { col: 3, row: 4 }, to: { col: 4, row: 5 } });
+  const deliveries = identifyAcceptedEvents([movement]);
+  const visibleEnd = { ...state, units: { ...state.units, [unit.id]: { ...state.units[unit.id], isStealthed: false, position: { col: 4, row: 5 } } } };
+  assert.deepEqual(projectDeliveryEvents(visibleEnd, deliveries, "P2"), []);
+  assert.deepEqual(projectDeliveryEvents(visibleEnd, deliveries, "spectator"), []);
+  const owner = projectDeliveryEvents(visibleEnd, deliveries, "P1");
+  assert.equal(owner[0].eventId, deliveries[0].eventId);
+  assert.deepEqual(Object.getOwnPropertySymbols(owner[0]), []);
+  assert(!JSON.stringify(owner).includes("recipients"));
+  const publicMove = identifyAcceptedEvents([evUnitMoved(visibleEnd, { unitId: unit.id, from: { col: 4, row: 5 }, to: { col: 5, row: 6 } })]);
+  const opponent = projectDeliveryEvents(state, publicMove, "P2");
+  assert.equal(opponent[0].eventId, publicMove[0].eventId);
 });
 
 test("different_real_events_get_different_ids and persistence retains accepted IDs", () => {

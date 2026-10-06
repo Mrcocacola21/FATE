@@ -5,7 +5,7 @@ import {
   cloneForestMarkers,
   collectSpectatorStakeMarkers,
 } from "./helpers";
-import { buildPendingAoEPreview, getPendingCombatQueueCount, projectPendingDecision } from "./pending";
+import { buildPendingAoEPreview, projectPendingDecision } from "./pending";
 import { projectRuleDeclarationState } from "./ruleDeclarations";
 import { projectRosterUnits } from "./roster";
 
@@ -32,7 +32,8 @@ export function makeSpectatorView(state: GameState): PlayerView {
     units[unit.id] = clonePublicUnit(unit);
   }
 
-  const pendingCombatQueueCount = getPendingCombatQueueCount(pendingCombatQueue, pendingRoll);
+  // Public waiting status conveys no private target/remaining-roll cardinality.
+  const pendingCombatQueueCount = 0;
   const stakeMarkers = collectSpectatorStakeMarkers(state);
   const forestMarkers = cloneForestMarkers(state);
   const arenaEffects = cloneArenaEffectsForRecipient(state, "spectator");
@@ -50,7 +51,7 @@ export function makeSpectatorView(state: GameState): PlayerView {
     pendingRoll: null,
     pendingDecision: projectPendingDecision(state, "spectator"),
     pendingCombatQueueCount,
-    pendingAoEPreview: buildPendingAoEPreview(pendingAoE),
+    pendingAoEPreview: buildPendingAoEPreview(state, "spectator"),
     stakeMarkers,
     pendingMove: null,
     ruleDeclaration: projectRuleDeclarationState(state.ruleDeclaration, "spectator"),

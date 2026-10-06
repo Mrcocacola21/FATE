@@ -16,7 +16,7 @@ export interface CombatResolutionChain {
   isComplete: boolean;
 }
 
-export interface CombatVisualEventMetadata extends Record<string, unknown> {
+export interface CombatVisualEventMetadata {
   chainId?: string;
   visualBatchId?: string;
   isChainComplete?: boolean;

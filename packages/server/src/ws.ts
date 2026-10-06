@@ -664,7 +664,7 @@ function buildRoomMeta(
     },
     spectators: room.spectators.size,
     phase: room.state.phase ?? "lobby",
-    pendingRoll: room.state.pendingRoll
+    pendingRoll: room.state.pendingRoll && viewerRole === room.state.pendingRoll.player
       ? {
           id: room.state.pendingRoll.id,
           kind: room.state.pendingRoll.kind,
@@ -733,7 +733,7 @@ export function broadcastRoomState(room: GameRoom) {
 export function broadcastActionResult(payload: {
   gameId: string;
   ok: boolean;
-  events: DeliveredGameEvent[];
+  events: import("./eventDelivery").AuthoritativeDeliveredGameEvent[];
   streamId?: string;
   revision?: number;
   error?: string;
@@ -836,8 +836,10 @@ async function applyRoomAction(
         connectionId: meta.connectionId,
         eventType: ev.type,
       };
-      if (ev.attackerId) summary.playerId = ev.attackerId;
-      if (ev.defenderId) summary.unitId = ev.defenderId;
+      if (ev.type === "attackResolved") {
+        summary.playerId = ev.attackerId;
+        summary.unitId = ev.defenderId;
+      }
       logFate(serverLogger!, summary);
     }
   } catch (e) {

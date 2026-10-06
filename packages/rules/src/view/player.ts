@@ -1,5 +1,6 @@
 import { AbilityView, Coord, GameState, PlayerId, PlayerView, UnitState } from "../model";
 import { getLegalMovesForUnit } from "../movement";
+import { canPlayerKnowUnitExactPosition } from "../visibility";
 import { getLegalAttackTargets, getLegalIntents, getLegalPlacements } from "../legal";
 import { getAbilityViewsForUnit } from "../abilities";
 import {
@@ -113,12 +114,12 @@ export function makePlayerView(state: GameState, playerId: PlayerId): PlayerView
   }
 
   const visiblePendingRoll = getVisiblePendingRollForPlayer(state, pendingRoll, playerId);
-  const pendingAoEPreview = buildPendingAoEPreview(pendingAoE);
+  const pendingAoEPreview = buildPendingAoEPreview(state, playerId);
   const stakeMarkers = collectPlayerStakeMarkers(state, playerId);
   const forestMarkers = cloneForestMarkers(state);
   const arenaEffects = cloneArenaEffectsForRecipient(state, playerId);
   const pendingCombatQueueCount = getPendingCombatQueueCount(
-    pendingCombatQueue,
+    pendingCombatQueue.filter((entry) => canPlayerKnowUnitExactPosition(state, playerId, entry.defenderId)),
     visiblePendingRoll,
   );
 

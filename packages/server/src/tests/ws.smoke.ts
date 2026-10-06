@@ -312,18 +312,18 @@ async function main() {
   assert(pendingState.meta.pendingRoll?.id, "pending roll id should be present");
 
   const p2WaitingForP1 = (await waitForRoomState(queue2, (msg) => {
-    return msg.meta?.pendingRoll?.player === "P1";
+    return msg.view.pendingDecision?.ownerPlayerId === "P1";
   })) as {
     you: { role: string; seat?: string };
-    meta: { pendingRoll: { player: string; presentation?: unknown } };
+    meta: { pendingRoll: null };
     view: { pendingRoll: unknown; pendingDecision: RoomStateMessage["view"]["pendingDecision"] };
   };
   assert.equal(p2WaitingForP1.you.role, "P2");
   assert.equal(p2WaitingForP1.you.seat, "P2");
   assert.equal(
-    p2WaitingForP1.meta.pendingRoll.presentation,
-    undefined,
-    "opponent metadata must never include resolution descriptions",
+    p2WaitingForP1.meta.pendingRoll,
+    null,
+    "opponent metadata must never include private roll IDs, kinds, or descriptions",
   );
   assert.equal(p2WaitingForP1.view.pendingDecision?.viewerCanRespond, false);
   assert.deepEqual(Object.keys(p2WaitingForP1.view.pendingDecision!).sort(), [
@@ -346,7 +346,7 @@ async function main() {
   );
 
   const p1WaitingForP2 = (await waitForRoomState(queue1, (msg) => {
-    return msg.meta?.pendingRoll?.player === "P2";
+    return msg.view.pendingDecision?.ownerPlayerId === "P2";
   })) as {
     view: { pendingRoll: unknown; initiative: { P1: number | null } };
   };
@@ -447,17 +447,19 @@ async function main() {
   await waitForType(queue2, "joinAck");
   const reconnect = (await waitForRoomState(
     queue2,
-    (msg) => msg.meta.pendingRoll?.id === "private-vlad-reconnect",
+    (msg) => msg.view.pendingDecision?.ownerPlayerId === "P1" &&
+      msg.view.pendingDecision.type === "opponentResolvingDecision" &&
+      msg.view.pendingDecision.opponentStatus.key === "vladStakes",
   )) as RoomStateMessage;
   assert.equal(reconnect.view.pendingRoll, null);
-  assert.equal(reconnect.meta.pendingRoll?.presentation, undefined);
+  assert.equal(reconnect.meta.pendingRoll, null);
   const decision = reconnect.view.pendingDecision;
   assert(decision && !decision.viewerCanRespond);
   assert.equal(decision.opponentStatus.title, "Vlad is preparing the battlefield");
   assert.equal(decision.opponentStatus.abilityName, "Field of Stakes");
   assert.equal(decision.ownerPlayerId, "P1");
   const serialized = JSON.stringify(reconnect);
-  for (const privateText of ["legalPositions", "selectedCells", "PRIVATE SELECTED CELL"]) {
+  for (const privateText of ["legalPositions", "selectedCells", "PRIVATE SELECTED CELL", "private-vlad-reconnect"]) {
     assert(
       !serialized.includes(privateText),
       `${privateText} must not reach a reconnecting opponent`,

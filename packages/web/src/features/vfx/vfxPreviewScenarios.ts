@@ -1,4 +1,4 @@
-import type { Coord, GameEvent, PlayerView, PlayerId, UnitClass, UnitState } from "rules";
+import type { Coord, ProjectedGameEvent, PlayerView, PlayerId, UnitClass, UnitState } from "rules";
 import type { VfxEffectId } from "./vfxTypes";
 
 export const VFX_PREVIEW_ROUTE = "/vfx-preview";
@@ -7,7 +7,7 @@ export interface VfxPreviewScenario {
   id: string;
   label: string;
   group: string;
-  events: GameEvent[];
+  events: ProjectedGameEvent[];
   expectedEffectIds: VfxEffectId[];
   waitMs: number;
 }
@@ -204,7 +204,7 @@ export const VFX_PREVIEW_SCENARIOS: VfxPreviewScenario[] = [
         unitId: "preview-searcher",
         mode: "action",
         rolls: [{ targetId: "preview-hidden", roll: 5, success: false }],
-      } as GameEvent,
+      },
     ],
   },
   {
@@ -213,7 +213,7 @@ export const VFX_PREVIEW_SCENARIOS: VfxPreviewScenario[] = [
     group: "Reveal",
     expectedEffectIds: ["hiddenReveal"],
     waitMs: 240,
-    events: [{ type: "stealthRevealed", unitId: "preview-hidden" } as GameEvent],
+    events: [{ type: "stealthRevealed", unitId: "preview-hidden", reason: "search" }],
   },
   {
     id: "chikatilo-mark",
@@ -229,7 +229,7 @@ export const VFX_PREVIEW_SCENARIOS: VfxPreviewScenario[] = [
         ownerPlayerId: "P1",
         trackingStarts: "startOfChikatiloTurn",
         trackingExpires: "afterMarkedUnitTurn",
-      } as GameEvent,
+      },
     ],
   },
   {
@@ -239,7 +239,7 @@ export const VFX_PREVIEW_SCENARIOS: VfxPreviewScenario[] = [
     expectedEffectIds: ["storm"],
     waitMs: 220,
     events: [
-      { type: "lechyStormStarted", sourceUnitId: "preview-lechy" } as GameEvent,
+      { type: "lechyStormStarted", sourceUnitId: "preview-lechy", roll: 3, duration: 3, durationUnit: "turn" },
       {
         type: "lechyStormRollResult",
         unitId: "preview-storm-target",
@@ -247,7 +247,7 @@ export const VFX_PREVIEW_SCENARIOS: VfxPreviewScenario[] = [
         success: false,
         damage: 1,
         hpAfter: 4,
-      } as GameEvent,
+      },
     ],
   },
   {
@@ -262,7 +262,9 @@ export const VFX_PREVIEW_SCENARIOS: VfxPreviewScenario[] = [
         asgoreId: "preview-asgore",
         soulId: "bravery",
         roll: 2,
-      } as GameEvent,
+        soulName: "Bravery",
+        effectDescription: "Bravery grants automatic defense.",
+      },
     ],
   },
   {
@@ -282,7 +284,7 @@ export const VFX_PREVIEW_SCENARIOS: VfxPreviewScenario[] = [
         damagedUnitIds: ["preview-guts"],
         revealedUnitIds: [],
         damageByUnitId: { "preview-guts": 1 },
-      } as GameEvent,
+      },
     ],
   },
   {
@@ -302,7 +304,7 @@ export const VFX_PREVIEW_SCENARIOS: VfxPreviewScenario[] = [
         damagedUnitIds: ["preview-chicken"],
         revealedUnitIds: [],
         damageByUnitId: { "preview-chicken": 1 },
-      } as GameEvent,
+      },
     ],
   },
   {
@@ -323,7 +325,7 @@ export const VFX_PREVIEW_SCENARIOS: VfxPreviewScenario[] = [
         revealedUnitIds: [],
         damageByUnitId: { "preview-hidden": 1 },
         rollsByUnitId: { "preview-hidden": 2 },
-      } as GameEvent,
+      },
     ],
   },
   {
@@ -339,7 +341,7 @@ export const VFX_PREVIEW_SCENARIOS: VfxPreviewScenario[] = [
         fromHeroId: "griffith",
         toHeroId: "femto",
         reason: "griffithFemtoRebirth",
-      } as GameEvent,
+      },
     ],
   },
   {
@@ -356,7 +358,7 @@ export const VFX_PREVIEW_SCENARIOS: VfxPreviewScenario[] = [
         toHeroId: "mettaton",
         toFormId: "mettatonNeo",
         reason: "mettatonThreshold",
-      } as GameEvent,
+      },
     ],
   },
   {
@@ -371,7 +373,7 @@ export const VFX_PREVIEW_SCENARIOS: VfxPreviewScenario[] = [
         lokiId: "preview-loki",
         targetId: "preview-chicken",
         abilityId: "lokiLaught",
-      } as GameEvent,
+      },
     ],
   },
   {
@@ -387,7 +389,7 @@ export const VFX_PREVIEW_SCENARIOS: VfxPreviewScenario[] = [
         passengerId: "preview-passenger",
         riverDestination: { col: 4, row: 7 },
         dropDestination: { col: 5, row: 7 },
-      } as GameEvent,
+      },
     ],
   },
   {
@@ -403,7 +405,8 @@ export const VFX_PREVIEW_SCENARIOS: VfxPreviewScenario[] = [
         targetId: "preview-passenger",
         riverDestination: { col: 4, row: 7 },
         dropDestination: { col: 6, row: 7 },
-      } as GameEvent,
+        touchedAttackerIds: [],
+      },
     ],
   },
   {
@@ -419,7 +422,8 @@ export const VFX_PREVIEW_SCENARIOS: VfxPreviewScenario[] = [
         targetId: "preview-passenger",
         riverDestination: { col: 3, row: 7 },
         dropDestination: { col: 4, row: 7 },
-      } as GameEvent,
+        touchedAttackerIds: [],
+      },
     ],
   },
   {
@@ -433,7 +437,7 @@ export const VFX_PREVIEW_SCENARIOS: VfxPreviewScenario[] = [
         type: "abilityUsed",
         unitId: "preview-grozny",
         abilityId: "groznyInvadeTime",
-      } as GameEvent,
+      },
     ],
   },
   {
@@ -447,13 +451,13 @@ export const VFX_PREVIEW_SCENARIOS: VfxPreviewScenario[] = [
         type: "abilityUsed",
         unitId: "preview-grozny",
         abilityId: "groznyInvadeTime",
-      } as GameEvent,
+      },
       {
         type: "unitMoved",
         unitId: "preview-grozny",
         from: { col: 6, row: 2 },
         to: { col: 2, row: 6 },
-      } as GameEvent,
+      },
     ],
   },
   {
@@ -463,7 +467,7 @@ export const VFX_PREVIEW_SCENARIOS: VfxPreviewScenario[] = [
     expectedEffectIds: ["muzzle"],
     waitMs: 180,
     events: [
-      { type: "abilityUsed", unitId: "preview-guts", abilityId: "gutsCannon" } as GameEvent,
+      { type: "abilityUsed", unitId: "preview-guts", abilityId: "gutsCannon" },
     ],
   },
   {
@@ -472,7 +476,7 @@ export const VFX_PREVIEW_SCENARIOS: VfxPreviewScenario[] = [
     group: "Defense",
     expectedEffectIds: ["shield"],
     waitMs: 260,
-    events: [{ type: "bunkerEntered", unitId: "preview-shield" } as GameEvent],
+    events: [{ type: "bunkerEntered", unitId: "preview-shield", roll: 6 }],
   },
 ];
 

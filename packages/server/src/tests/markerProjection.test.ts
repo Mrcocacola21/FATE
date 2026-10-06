@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import {
   createEmptyGame,
+  createDefaultArmy,
   makePlayerView,
   makeSpectatorView,
   projectEventsForRecipient,
@@ -12,6 +13,9 @@ const baseState = createEmptyGame();
 const forestMarker = { owner: "P1" as const, position: { col: 4, row: 4 } };
 const state: GameState = {
   ...baseState,
+  units: {
+    "triggering-unit": { ...createDefaultArmy("P2")[0], id: "triggering-unit", position: { col: 5, row: 6 } },
+  },
   forestMarkers: [forestMarker],
   forestMarker,
   stakeMarkers: [
@@ -68,6 +72,8 @@ const triggeredEvent: GameEvent = {
   stopped: true,
   stakeIdsRevealed: ["revealed-p1-stake"],
 };
-assert.deepEqual(projectEventsForRecipient(state, [triggeredEvent], "P2"), [triggeredEvent]);
+const { stakeIdsRevealed: _privateStackIds, ...safeTrigger } = triggeredEvent;
+assert.deepEqual(projectEventsForRecipient(state, [triggeredEvent], "P2"), [safeTrigger]);
+assert(!JSON.stringify(projectEventsForRecipient(state, [triggeredEvent], "spectator")).includes("revealed-p1-stake"));
 
 console.log("marker_projection_hidden_stake_safety passed");

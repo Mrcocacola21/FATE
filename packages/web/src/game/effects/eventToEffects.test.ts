@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import type { GameEvent, PlayerView, UnitState } from "rules";
+import type { ProjectedGameEvent, PlayerView, UnitState } from "rules";
 import { effectsFromGameEvent } from "./eventToEffects";
 
 function unit(
@@ -37,7 +37,7 @@ test("a visible ranged hit maps to a beam, hit flash, and damage text", () => {
       hit: true,
       damage: 2,
       defenderHpAfter: 3,
-    } as GameEvent,
+    } as ProjectedGameEvent,
     { view: currentView, previousPositions: {} },
   );
 
@@ -116,7 +116,7 @@ test("an event naming a hidden unit does not use a cached hidden coordinate", ()
       type: "stealthRevealed",
       unitId: "hidden-unit",
       reason: "attacked",
-    } as GameEvent,
+    } as ProjectedGameEvent,
     {
       view: view([]),
       previousPositions: { "hidden-unit": { col: 7, row: 7 } },

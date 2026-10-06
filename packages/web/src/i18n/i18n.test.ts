@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 import ts from "typescript";
-import type { GameEvent } from "rules";
+import type { ProjectedGameEvent } from "rules";
 import {
   LANGUAGE_STORAGE_KEY,
   en,
@@ -52,7 +52,7 @@ test("event formatter localizes known and unknown events safely", () => {
   const event = {
     type: "unitMoved",
     unitId: "P1-rider-1",
-  } as GameEvent;
+  } as ProjectedGameEvent;
 
   setLanguage("en", { setItem: () => undefined });
   assert.match(formatEventMessage(event, "en", translate), /Unit moved/);
@@ -60,15 +60,15 @@ test("event formatter localizes known and unknown events safely", () => {
   setLanguage("uk", { setItem: () => undefined });
   assert.match(formatEventMessage(event, "uk", translate), /Фігуру переміщено/);
 
-  const unknown = { type: "futureEvent", secret: "must-not-leak" } as unknown as GameEvent;
+  const unknown = { type: "futureEvent", secret: "must-not-leak" } as unknown as ProjectedGameEvent;
   assert.equal(formatEventMessage(unknown, "uk", translate), "Невідома подія");
   assert.doesNotMatch(formatEventMessage(unknown, "uk", translate), /secret|futureEvent/);
 
-  const redactedAbility = { type: "abilityUsed" } as GameEvent;
+  const redactedAbility = { type: "abilityUsed" } as ProjectedGameEvent;
   assert.equal(formatEventMessage(redactedAbility, "en", translate), "Hidden ability used.");
   assert.equal(
     formatEventMessage(
-      { type: "abilityUsed", unitId: "griffith", abilityId: "griffithFemtoRebirth" } as GameEvent,
+      { type: "abilityUsed", unitId: "griffith", abilityId: "griffithFemtoRebirth" } as ProjectedGameEvent,
       "en",
       translate,
     ),
@@ -76,7 +76,7 @@ test("event formatter localizes known and unknown events safely", () => {
   );
   assert.equal(
     formatEventMessage(
-      { type: "abilityUsed", unitId: "guts", abilityId: "gutsBerserkMode" } as GameEvent,
+      { type: "abilityUsed", unitId: "guts", abilityId: "gutsBerserkMode" } as ProjectedGameEvent,
       "en",
       translate,
     ),
@@ -84,7 +84,7 @@ test("event formatter localizes known and unknown events safely", () => {
   );
   assert.equal(
     formatEventMessage(
-      { type: "abilityUsed", unitId: "guts", abilityId: "gutsExitBerserk" } as GameEvent,
+      { type: "abilityUsed", unitId: "guts", abilityId: "gutsExitBerserk" } as ProjectedGameEvent,
       "en",
       translate,
     ),
@@ -92,7 +92,7 @@ test("event formatter localizes known and unknown events safely", () => {
   );
   assert.equal(
     formatEventMessage(
-      { type: "abilityUsed", unitId: "mettaton", abilityId: "mettatonEx" } as GameEvent,
+      { type: "abilityUsed", unitId: "mettaton", abilityId: "mettatonEx" } as ProjectedGameEvent,
       "en",
       translate,
     ),
@@ -100,14 +100,14 @@ test("event formatter localizes known and unknown events safely", () => {
   );
   assert.equal(
     formatEventMessage(
-      { type: "abilityUsed", unitId: "mettaton", abilityId: "mettatonNeo" } as GameEvent,
+      { type: "abilityUsed", unitId: "mettaton", abilityId: "mettatonNeo" } as ProjectedGameEvent,
       "en",
       translate,
     ),
     "mettaton transformed into Mettaton NEO.",
   );
 
-  const redactedMark = { type: "chikatiloMarkApplied" } as GameEvent;
+  const redactedMark = { type: "chikatiloMarkApplied" } as ProjectedGameEvent;
   assert.equal(formatEventMessage(redactedMark, "en", translate), "Killer's Mark was applied.");
 
   const fullMark = {
@@ -117,7 +117,7 @@ test("event formatter localizes known and unknown events safely", () => {
     ownerPlayerId: "P1",
     trackingStarts: "startOfChikatiloTurn",
     trackingExpires: "afterMarkedUnitTurn",
-  } as GameEvent;
+  } as ProjectedGameEvent;
   assert.match(formatEventMessage(fullMark, "en", translate), /hidden-target/);
   assert.match(formatEventMessage(fullMark, "en", translate), /turn start/);
 
@@ -130,7 +130,7 @@ test("event formatter localizes known and unknown events safely", () => {
         toHeroId: "femto",
         reason: "griffithFemtoRebirth",
         abilityId: "griffithFemtoRebirth",
-      } as GameEvent,
+      } as ProjectedGameEvent,
       "en",
       translate,
     ),
@@ -148,7 +148,7 @@ test("event formatter localizes known and unknown events safely", () => {
         abilityId: "mettatonNeo",
         rating: 10,
         ratingSpent: false,
-      } as GameEvent,
+      } as ProjectedGameEvent,
       "en",
       translate,
     ),
@@ -161,7 +161,7 @@ test("event formatter localizes known and unknown events safely", () => {
         lokiId: "loki",
         targetIds: ["Papyrus", "Frisk", "Undyne", "Asgore"],
         abilityId: "lokiLaught",
-      } as GameEvent,
+      } as ProjectedGameEvent,
       "en",
       translate,
     ),
@@ -174,7 +174,7 @@ test("event formatter localizes known and unknown events safely", () => {
         unitId: "Frisk",
         mode: "move",
         rolls: [{ targetId: "Chikatilo", roll: 5, success: true }],
-      } as GameEvent,
+      } as ProjectedGameEvent,
       "en",
       translate,
     ),
@@ -188,7 +188,7 @@ test("event formatter localizes known and unknown events safely", () => {
         passengerId: "Papyrus",
         riverDestination: { col: 4, row: 4 },
         dropDestination: { col: 4, row: 5 },
-      } as GameEvent,
+      } as ProjectedGameEvent,
       "en",
       translate,
     ),

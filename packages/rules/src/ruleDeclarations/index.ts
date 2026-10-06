@@ -567,7 +567,7 @@ function clearExpiredRuleStatusesAtRoundEnd(state: GameState, endedRound: number
         position: target ? { ...target } : null,
       };
       if (target) {
-        events.push(evUnitMoved({ unitId: updated.id, from: returnPosition, to: target }));
+        events.push(evUnitMoved(state, { unitId: updated.id, from: returnPosition, to: target }));
       }
     }
 
@@ -963,7 +963,7 @@ function moveUnitTo(state: GameState, unitId: string, to: Coord, rng: RNG): Appl
       },
     },
   };
-  let events: GameEvent[] = [evUnitMoved({ unitId, from, to })];
+  let events: GameEvent[] = [evUnitMoved(state, { unitId, from, to })];
   const moved = nextState.units[unitId];
   if (moved) {
     const stake = applyStakeTriggerIfAny(nextState, moved, to, rng);
@@ -1486,8 +1486,8 @@ export function resolveMoonCheeseHolesChoice(
         effectId: "cheeseHoles",
         swappedUnitIds: [p1.id, p2.id],
       }),
-      evUnitMoved({ unitId: p1.id, from: p1Pos, to: p2Pos }),
-      evUnitMoved({ unitId: p2.id, from: p2Pos, to: p1Pos }),
+      evUnitMoved(state, { unitId: p1.id, from: p1Pos, to: p2Pos }),
+      evUnitMoved(state, { unitId: p2.id, from: p2Pos, to: p1Pos }),
     );
   } else {
     events.push(evMoonEffectApplied({ effectId: "cheeseHoles" }));

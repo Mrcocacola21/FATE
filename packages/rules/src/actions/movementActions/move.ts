@@ -197,7 +197,7 @@ export function applyMove(
 
   let events: GameEvent[] = [...costEvents];
   if (didMove) {
-    events.push(evUnitMoved({ unitId: updatedUnit.id, from, to: updatedUnit.position! }));
+    events.push(evUnitMoved(state, { unitId: updatedUnit.id, from, to: updatedUnit.position! }));
     // Rider path traversal is transient and continues under the existing pass
     // rules. Only the committed endpoint creates occupancy; resolve that hidden
     // overlap before hazards and queued Rider path attacks are evaluated.

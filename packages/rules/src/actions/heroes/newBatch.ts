@@ -1,3 +1,4 @@
+import { evUnitMoved } from "../../core";
 import { resolveUnitDeath } from "../../death";
 import type { ApplyResult, Coord, GameAction, GameEvent, GameState, UnitState } from "../../model";
 import { ALL_DIRS, chebyshev, coordsEqual, getUnitAt, isCellOccupied } from "../../board";
@@ -199,7 +200,7 @@ function applyDuolingoPush(state: GameState, unit: UnitState, action: AbilityAct
   };
   const events = [
     ...committed.events,
-    { type: "unitMoved", unitId: moved.id, from: unit.position, to: destination } as GameEvent,
+    evUnitMoved(state, { unitId: moved.id, from: unit.position, to: destination }),
   ];
   if (unit.isStealthed)
     events.push({
@@ -354,7 +355,7 @@ function applyZoroOniGiri(
     state: queued.state,
     events: [
       ...committed.events,
-      { type: "unitMoved", unitId: moved.id, from: unit.position, to: destination },
+      evUnitMoved(state, { unitId: moved.id, from: unit.position, to: destination }),
       ...queued.events,
     ],
   };
@@ -410,7 +411,7 @@ function applyDonReaction(state: GameState, unit: UnitState, action: AbilityActi
     state: { ...state, units: { ...state.units, [moved.id]: moved } },
     events: [
       abilityUsed(unit.id, ids.ABILITY_DON_KIHOTE_SORROWFUL_COUNTENANCE),
-      { type: "unitMoved", unitId: moved.id, from: unit.position, to: destination },
+      evUnitMoved(state, { unitId: moved.id, from: unit.position, to: destination }),
     ],
   };
 }
@@ -452,7 +453,7 @@ function applyDonWindmills(state: GameState, unit: UnitState, action: AbilityAct
   const units = { ...state.units, [moved.id]: moved };
   const events: GameEvent[] = [abilityUsed(moved.id, spec.id)];
   if (!coordsEqual(unit.position, destination)) {
-    events.push({ type: "unitMoved", unitId: moved.id, from: unit.position, to: destination });
+    events.push(evUnitMoved(state, { unitId: moved.id, from: unit.position, to: destination }));
   }
   events.push({
     type: "chargesUpdated",

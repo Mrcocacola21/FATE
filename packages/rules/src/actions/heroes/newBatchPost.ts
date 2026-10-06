@@ -1,3 +1,4 @@
+import { evUnitMoved } from "../../core";
 import type { ApplyResult, Coord, GameEvent, GameState, PendingRoll, UnitState } from "../../model";
 import type { RNG } from "../../rng";
 import { ALL_DIRS, chebyshev, coordsEqual, isCellOccupied } from "../../board";
@@ -299,7 +300,7 @@ export function resolveDonSorrowfulMove(
     state: updateUnit(clearPendingRoll(state), moved),
     events: [
       abilityUsed(don.id, ids.ABILITY_DON_KIHOTE_SORROWFUL_COUNTENANCE),
-      { type: "unitMoved", unitId: don.id, from: don.position, to: destination },
+      evUnitMoved(state, { unitId: don.id, from: don.position, to: destination }),
     ],
   };
 }
@@ -393,7 +394,7 @@ export function resolveDonWindmillsReposition(
     if (!legal || !destination) return { state, events: [] };
     const from = target.position;
     nextState = updateUnit(state, { ...target, position: destination });
-    repositionEvent = { type: "unitMoved", unitId: target.id, from, to: destination };
+    repositionEvent = evUnitMoved(state, { unitId: target.id, from, to: destination });
   } else {
     return { state, events: [] };
   }

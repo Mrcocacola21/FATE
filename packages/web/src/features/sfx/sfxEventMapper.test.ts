@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { makeEmptyTurnEconomy, type GameEvent, type PlayerView, type UnitState } from "rules";
+import { makeEmptyTurnEconomy, type ProjectedGameEvent, type PlayerView, type UnitState } from "rules";
 import { mapEventBatchToSfx, mapGameEventToSfxEvents, mapSfxEventToLookup } from "./sfxEventMapper";
 
 function unit(heroId: string): UnitState {
@@ -92,7 +92,7 @@ test("combat events map attack, hit, death, and delayed-chain-safe requests", ()
     hit: true,
     damage: 2,
     defenderHpAfter: 3,
-  } as GameEvent;
+  } as ProjectedGameEvent;
 
   assert.deepEqual(mapGameEventToSfxEvents(attack, view(loki, papyrus)), [
     { type: "unitAttack", heroId: "loki" },

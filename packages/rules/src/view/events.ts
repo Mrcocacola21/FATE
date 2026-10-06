@@ -1,74 +1,25 @@
-import type { GameEvent, GameState, PlayerId } from "../model";
+import type { GameEvent, GameState, PlayerId, ProjectedGameEvent } from "../model";
 import { canPlayerKnowUnitExactPosition } from "../visibility";
+import { copyEventPayload } from "./eventPayload";
+import { EVENT_VISIBILITY } from "../model/events/visibility";
 import { HERO_VLAD_TEPES_ID } from "../heroes";
 
 export type EventRecipient = PlayerId | "spectator";
 
-const PUBLIC_EVENT_TYPES = new Set<GameEvent["type"]>([
-  "turnStarted",
-  "combatVisualBatchReady",
-  "roundStarted",
-  "attackResolved",
-  "unitDied",
-  "initiativeRollRequested",
-  "initiativeRolled",
-  "initiativeResolved",
-  "placementStarted",
-  "berserkerDefenseChosen",
-  "damageBonusApplied",
-  "chargesUpdated",
-  "bunkerEntered",
-  "bunkerEnterFailed",
-  "bunkerExited",
-  "stakeTriggered",
-  "forestActivated",
-  "carpetStrikeTriggered",
-  "carpetStrikeCenter",
-  "carpetStrikeAttackRolled",
-  "unitHealed",
-  "aoeResolved",
-  "moveBlocked",
-  "arenaChosen",
-  "battleStarted",
-  "gameEnded",
-  "mettatonRatingChanged",
-  "papyrusUnbelieverActivated",
-  "papyrusBoneApplied",
-  "papyrusBonePunished",
-  "sansUnbelieverActivated",
-  "sansBadassJokeApplied",
-  "sansMoveDenied",
-  "sansBoneFieldActivated",
-  "sansBoneFieldApplied",
-  "sansBoneFieldPunished",
-  "sansLastAttackApplied",
-  "sansLastAttackTick",
-  "sansLastAttackRemoved",
-  "ruleDeclarationSelected",
-  "ruleDeclarationSetupCompleted",
-  "courtRolesAssigned",
-  "courtRolesSwapped",
-  "courtRollResult",
-  "chessKingSelected",
-  "chessKingDeathResolved",
-  "gameDraw",
-  "moonRollResult",
-  "advantageThresholdDeclared",
-  "advantageWinTriggered",
-]);
-
-function redactedEvent(type: GameEvent["type"]): GameEvent {
-  return { type } as GameEvent;
+/** A notice carries no unit, ability, position, or hidden target count. */
+function redactedEvent(): ProjectedGameEvent {
+  return { type: "eventRedacted" };
 }
 
 function isUnitVisibleToRecipient(
   state: GameState,
   unitId: string,
-  recipient: EventRecipient
+  recipient: EventRecipient,
 ): boolean {
   const unit = state.units[unitId];
   if (!unit) return false;
-  if (!unit.isAlive) return true;
+  if (!unit.isAlive)
+    return (recipient !== "spectator" && unit.owner === recipient) || !unit.isStealthed;
   if (recipient === "spectator") return !unit.isStealthed;
   return canPlayerKnowUnitExactPosition(state, recipient, unitId);
 }
@@ -80,87 +31,76 @@ function unitOwner(state: GameState, unitId: string): PlayerId | null {
 function projectEventForRecipient(
   state: GameState,
   event: GameEvent,
-  recipient: EventRecipient
-): GameEvent[] {
+  recipient: EventRecipient,
+): ProjectedGameEvent[] {
   const filterVisibleUnitIds = (ids: string[]): string[] =>
     ids.filter((unitId) => isUnitVisibleToRecipient(state, unitId, recipient));
   const filterVisibleDamageByUnitId = (
-    damageByUnitId: Record<string, number> | undefined
+    damageByUnitId: Record<string, number> | undefined,
   ): Record<string, number> | undefined => {
     if (!damageByUnitId) return damageByUnitId;
     return Object.fromEntries(
       Object.entries(damageByUnitId).filter(([unitId]) =>
-        isUnitVisibleToRecipient(state, unitId, recipient)
-      )
+        isUnitVisibleToRecipient(state, unitId, recipient),
+      ),
     );
   };
 
   switch (event.type) {
     case "unitPlaced":
-      if (isUnitVisibleToRecipient(state, event.unitId, recipient)) return [event];
-      return [{ type: event.type, unitId: event.unitId } as GameEvent];
+      if (canKnowMovement(event, state, event.unitId, recipient))
+        return [event];
+      return [redactedEvent()];
     case "unitMoved":
-      if (isUnitVisibleToRecipient(state, event.unitId, recipient)) return [event];
-      return [redactedEvent(event.type)];
+      return canKnowMovement(event, state, event.unitId, recipient) ? [event] : [];
+
     case "hiddenCollisionResolved": {
       const owner = unitOwner(state, event.displacedUnitId);
       if (recipient !== "spectator" && recipient === owner) return [event];
-      if (isUnitVisibleToRecipient(state, event.displacedUnitId, recipient)) return [event];
-      return [redactedEvent(event.type)];
+      if (canKnowMovement(event, state, event.displacedUnitId, recipient)) return [event];
+      return [redactedEvent()];
     }
-    case "stealthEntered": {
-      const owner = unitOwner(state, event.unitId);
-      if (recipient !== "spectator" && owner === recipient) return [event];
-      if (isUnitVisibleToRecipient(state, event.unitId, recipient)) {
-        return [{ type: event.type, unitId: event.unitId } as GameEvent];
-      }
-      return [redactedEvent(event.type)];
-    }
+    case "stealthEntered":
+      return recipient === unitOwner(state, event.unitId) ? [event] : [];
     case "searchStealth": {
       const owner = unitOwner(state, event.unitId);
-      if (recipient !== "spectator" && owner === recipient) return [event];
-      return [{ type: event.type, unitId: event.unitId, mode: event.mode } as GameEvent];
+      if (recipient !== "spectator" && owner === recipient)
+        return [
+          {
+            ...event,
+            rolls: event.rolls?.filter((roll) =>
+              isUnitVisibleToRecipient(state, roll.targetId, recipient),
+            ),
+          },
+        ];
+      return isUnitVisibleToRecipient(state, event.unitId, recipient)
+        ? [{ type: event.type, unitId: event.unitId, mode: event.mode }]
+        : [];
     }
     case "abilityUsed": {
       const owner = unitOwner(state, event.unitId);
       if (recipient !== "spectator" && owner === recipient) return [event];
-      return isUnitVisibleToRecipient(state, event.unitId, recipient)
-        ? [event]
-        : [redactedEvent(event.type)];
+      return isUnitVisibleToRecipient(state, event.unitId, recipient) ? [event] : [redactedEvent()];
     }
     case "chikatiloMarkApplied":
       return recipient !== "spectator" && recipient === event.ownerPlayerId
         ? [event]
-        : [redactedEvent(event.type)];
+        : [redactedEvent()];
     case "stealthRevealed":
-      if (isUnitVisibleToRecipient(state, event.unitId, recipient)) return [event];
-      return [redactedEvent(event.type)];
-    case "rollRequested":
-      if (recipient !== "spectator" && event.player === recipient) return [event];
-      if (
-        event.actorUnitId &&
-        !isUnitVisibleToRecipient(state, event.actorUnitId, recipient)
-      ) {
+      if (isUnitVisibleToRecipient(state, event.unitId, recipient))
         return [
           {
-            type: event.type,
-            rollId: event.rollId,
-            kind: event.kind,
-            player: event.player,
-          } as GameEvent,
+            ...event,
+            revealerId:
+              event.revealerId && isUnitVisibleToRecipient(state, event.revealerId, recipient)
+                ? event.revealerId
+                : undefined,
+          },
         ];
-      }
-      return [event];
+      return [redactedEvent()];
+    case "rollRequested":
     case "pendingRollUnhandled":
-      if (recipient !== "spectator" && event.player === recipient) return [event];
-      return [
-        {
-          type: event.type,
-          rollId: event.rollId,
-          player: event.player,
-          kind: "redacted",
-        } as GameEvent,
-      ];
+      return recipient === event.player ? [event] : [];
     case "moveOptionsGenerated": {
       const owner = unitOwner(state, event.unitId);
       if (recipient !== "spectator" && owner === recipient) return [event];
@@ -171,11 +111,16 @@ function projectEventForRecipient(
       const source = Object.values(state.units).find(
         (unit) => unit.owner === event.owner && unit.isAlive && unit.heroId === HERO_VLAD_TEPES_ID,
       );
-      return [{
-        type: "hiddenSetupCompleted",
-        owner: event.owner,
-        ability: source && isUnitVisibleToRecipient(state, source.id, recipient) ? "vladStakes" : "hidden",
-      }];
+      return [
+        {
+          type: "hiddenSetupCompleted",
+          owner: event.owner,
+          ability:
+            source && isUnitVisibleToRecipient(state, source.id, recipient)
+              ? "vladStakes"
+              : "hidden",
+        },
+      ];
     }
     case "hiddenSetupCompleted":
       return [event];
@@ -184,17 +129,20 @@ function projectEventForRecipient(
       return recipient !== "spectator" && recipient === defenderOwner ? [event] : [];
     }
     case "intimidateResolved":
-      if (isUnitVisibleToRecipient(state, event.attackerId, recipient)) return [event];
-      return [{ type: event.type, attackerId: event.attackerId } as GameEvent];
+      if (canKnowMovement(event, state, event.attackerId, recipient)) return [event];
+      return [redactedEvent()];
     case "courtEffectApplied": {
       const projected = { ...event };
       if (projected.unitId && !isUnitVisibleToRecipient(state, projected.unitId, recipient)) {
         delete projected.unitId;
+        delete projected.abilityId;
       }
       if (projected.targetId && !isUnitVisibleToRecipient(state, projected.targetId, recipient)) {
         delete projected.targetId;
       }
-      return [projected as GameEvent];
+      // Stasis return and forced reposition coordinates require event-time authorization.
+      if (recipient !== event.player) delete projected.position;
+      return [projected];
     }
     case "pureBloodRedirected":
       if (
@@ -203,7 +151,7 @@ function projectEventForRecipient(
       ) {
         return [event];
       }
-      return [redactedEvent(event.type)];
+      return [redactedEvent()];
     case "moonEffectApplied": {
       const filterUnitIds = (ids: string[] | undefined): string[] | undefined => {
         if (!ids) return ids;
@@ -215,13 +163,16 @@ function projectEventForRecipient(
           affectedUnitIds: filterUnitIds(event.affectedUnitIds),
           damagedUnitIds: filterUnitIds(event.damagedUnitIds),
           swappedUnitIds: filterUnitIds(event.swappedUnitIds),
-        } as GameEvent,
+        },
       ];
     }
     case "aoeResolved":
       return [
         {
           ...event,
+          abilityId: isUnitVisibleToRecipient(state, event.sourceUnitId, recipient)
+            ? event.abilityId
+            : undefined,
           sourceUnitId: isUnitVisibleToRecipient(state, event.sourceUnitId, recipient)
             ? event.sourceUnitId
             : undefined,
@@ -234,27 +185,35 @@ function projectEventForRecipient(
           damagedUnitIds: filterVisibleUnitIds(event.damagedUnitIds),
           damageByUnitId: filterVisibleDamageByUnitId(event.damageByUnitId),
           rollsByUnitId: filterVisibleDamageByUnitId(event.rollsByUnitId),
-        } as GameEvent,
+        },
+      ];
+    case "carpetStrikeCenter":
+      return [
+        {
+          ...event,
+          unitId: isUnitVisibleToRecipient(state, event.unitId, recipient)
+            ? event.unitId
+            : undefined,
+        },
       ];
     case "carpetStrikeAttackRolled":
       return [
         {
           ...event,
+          unitId: isUnitVisibleToRecipient(state, event.unitId, recipient)
+            ? event.unitId
+            : undefined,
           affectedUnitIds: filterVisibleUnitIds(event.affectedUnitIds),
-        } as GameEvent,
+        },
       ];
     case "lechyStormRollResult":
-      return isUnitVisibleToRecipient(state, event.unitId, recipient)
-        ? [event]
-        : [redactedEvent(event.type)];
+      return isUnitVisibleToRecipient(state, event.unitId, recipient) ? [event] : [redactedEvent()];
     case "asgoreSoulParadeResolved":
-      return event.asgoreId &&
-        !isUnitVisibleToRecipient(state, event.asgoreId, recipient)
+      return event.asgoreId && !isUnitVisibleToRecipient(state, event.asgoreId, recipient)
         ? [{ ...event, asgoreId: undefined }]
         : [event];
     case "lechyStormStarted":
-      return event.sourceUnitId &&
-        !isUnitVisibleToRecipient(state, event.sourceUnitId, recipient)
+      return event.sourceUnitId && !isUnitVisibleToRecipient(state, event.sourceUnitId, recipient)
         ? [{ ...event, sourceUnitId: undefined }]
         : [event];
     case "friskHugsApplied":
@@ -268,10 +227,7 @@ function projectEventForRecipient(
         ? [event]
         : [];
     case "lokiChickenGroupApplied": {
-      if (
-        event.lokiId &&
-        !isUnitVisibleToRecipient(state, event.lokiId, recipient)
-      ) {
+      if (event.lokiId && !isUnitVisibleToRecipient(state, event.lokiId, recipient)) {
         return [];
       }
       const targetIds = filterVisibleUnitIds(event.targetIds);
@@ -280,22 +236,25 @@ function projectEventForRecipient(
         {
           ...event,
           targetIds,
-        } as GameEvent,
+        },
       ];
     }
     case "controlledAttackDeclared":
-      return isUnitVisibleToRecipient(state, event.controllerUnitId, recipient) &&
+      return recipient === unitOwner(state, event.controllerUnitId) &&
+        isUnitVisibleToRecipient(state, event.controllerUnitId, recipient) &&
         isUnitVisibleToRecipient(state, event.controlledUnitId, recipient) &&
         isUnitVisibleToRecipient(state, event.targetId, recipient)
         ? [event]
         : [];
     case "unitTransformed":
-      return isUnitVisibleToRecipient(state, event.unitId, recipient)
-        ? [event]
-        : [redactedEvent(event.type)];
+      return isUnitVisibleToRecipient(state, event.unitId, recipient) ? [event] : [redactedEvent()];
     case "riverBoatmanGranted":
       return isUnitVisibleToRecipient(state, event.riverId, recipient) ? [event] : [];
     case "riverBoatResolved":
+      return canKnowMovement(event, state, event.riverId, recipient) &&
+        canKnowMovement(event, state, event.passengerId, recipient)
+        ? [event]
+        : [];
     case "riverBoatDisembarkFailed":
       return isUnitVisibleToRecipient(state, event.riverId, recipient) &&
         isUnitVisibleToRecipient(state, event.passengerId, recipient)
@@ -303,8 +262,8 @@ function projectEventForRecipient(
         : [];
     case "riverTraLaLaResolved": {
       if (
-        !isUnitVisibleToRecipient(state, event.riverId, recipient) ||
-        !isUnitVisibleToRecipient(state, event.targetId, recipient)
+        !canKnowMovement(event, state, event.riverId, recipient) ||
+        !canKnowMovement(event, state, event.targetId, recipient)
       ) {
         return [];
       }
@@ -312,54 +271,180 @@ function projectEventForRecipient(
         {
           ...event,
           touchedAttackerIds: filterVisibleUnitIds(event.touchedAttackerIds),
-        } as GameEvent,
+        },
       ];
     }
     case "reactionOpportunity": {
-      if (!isUnitVisibleToRecipient(state, event.reactorUnitId, recipient)) return [];
+      if (recipient !== unitOwner(state, event.reactorUnitId)) return [];
       const targetUnitIds = filterVisibleUnitIds(event.targetUnitIds);
       return targetUnitIds.length ? [{ ...event, targetUnitIds }] : [];
     }
     case "reactionChoiceResolved":
       return isUnitVisibleToRecipient(state, event.reactorUnitId, recipient) &&
-        (!event.targetUnitId || isUnitVisibleToRecipient(state, event.targetUnitId, recipient)) ? [event] : [];
+        (!event.targetUnitId || isUnitVisibleToRecipient(state, event.targetUnitId, recipient))
+        ? [event]
+        : [];
     case "reactionMovementResumed":
       return isUnitVisibleToRecipient(state, event.controllerUnitId, recipient) ? [event] : [];
-    default:
-      return PUBLIC_EVENT_TYPES.has(event.type) ? [event] : [redactedEvent(event.type)];
+    case "attackResolved": {
+      if (!isUnitVisibleToRecipient(state, event.defenderId, recipient)) return [];
+      return [
+        {
+          ...event,
+          attackerId: isUnitVisibleToRecipient(state, event.attackerId, recipient)
+            ? event.attackerId
+            : undefined,
+        },
+      ];
+    }
+    case "unitDied":
+      return isUnitVisibleToRecipient(state, event.unitId, recipient)
+        ? [
+            {
+              ...event,
+              killerId:
+                event.killerId === null
+                  ? null
+                  : isUnitVisibleToRecipient(state, event.killerId, recipient)
+                    ? event.killerId
+                    : undefined,
+            },
+          ]
+        : [];
+    case "stakeTriggered": {
+      if (!isUnitVisibleToRecipient(state, event.unitId, recipient)) return [];
+      return [
+        {
+          type: "stakeTriggered",
+          markerPos: event.markerPos,
+          unitId: event.unitId,
+          damage: event.damage,
+          stopped: event.stopped,
+        },
+      ];
+    }
+    case "chargesUpdated":
+      return recipient === unitOwner(state, event.unitId) ? [event] : [];
+    case "combatVisualBatchReady":
+      // Only opaque delivery/chain scalars; no unit references or gameplay payload.
+      return [event];
+    case "turnStarted":
+    case "roundStarted":
+    case "initiativeRollRequested":
+    case "initiativeRolled":
+    case "initiativeResolved":
+    case "placementStarted":
+    case "ruleDeclarationSelected":
+    case "ruleDeclarationSetupCompleted":
+    case "courtRolesAssigned":
+    case "courtRolesSwapped":
+    case "courtRollResult":
+    case "chessKingSelected":
+    case "chessKingDeathResolved":
+    case "gameDraw":
+    case "moonRollResult":
+    case "advantageThresholdDeclared":
+    case "advantageWinTriggered":
+    case "berserkerDefenseChosen":
+    case "damageBonusApplied":
+    case "bunkerEntered":
+    case "bunkerEnterFailed":
+    case "bunkerExited":
+    case "forestActivated":
+    case "carpetStrikeTriggered":
+    case "unitHealed":
+    case "moveBlocked":
+    case "arenaChosen":
+    case "battleStarted":
+    case "gameEnded":
+    case "mettatonRatingChanged":
+    case "papyrusUnbelieverActivated":
+    case "papyrusBoneApplied":
+    case "papyrusBonePunished":
+    case "sansUnbelieverActivated":
+    case "sansBadassJokeApplied":
+    case "sansMoveDenied":
+    case "sansBoneFieldActivated":
+    case "sansBoneFieldApplied":
+    case "sansBoneFieldPunished":
+    case "sansLastAttackApplied":
+    case "sansLastAttackTick":
+    case "sansLastAttackRemoved":
+      // Explicitly copied public scalars, with authorization for every unit reference.
+      return hasOnlyVisibleUnitReferences(state, event, recipient) ? [event] : [];
+    default: {
+      const unclassified: never = event;
+      void unclassified;
+      return [];
+    }
   }
 }
 
 export function projectEventsForRecipient(
   state: GameState,
   events: GameEvent[],
-  recipient: EventRecipient
-): GameEvent[] {
-  return events.flatMap((event) =>
-    projectEventForRecipient(state, event, recipient).map(
-      (projected) => {
-        if (
-          event.chainId === undefined &&
-          event.visualBatchId === undefined &&
-          event.isChainComplete === undefined &&
-          event.deferVisuals === undefined
-        ) {
-          return projected;
-        }
-        return {
-          ...projected,
-          ...(event.chainId !== undefined ? { chainId: event.chainId } : {}),
-          ...(event.visualBatchId !== undefined
-            ? { visualBatchId: event.visualBatchId }
-            : {}),
-          ...(event.isChainComplete !== undefined
-            ? { isChainComplete: event.isChainComplete }
-            : {}),
-          ...(event.deferVisuals !== undefined
-            ? { deferVisuals: event.deferVisuals }
-            : {}),
-        } as GameEvent;
-      },
-    ),
+  recipient: EventRecipient,
+): ProjectedGameEvent[] {
+  return events.flatMap((event) => {
+    const payload = copyEventPayload(event);
+    if (!payload) return [];
+    for (const [key, value] of Object.entries(payload)) {
+      if (value === undefined) Reflect.deleteProperty(payload, key);
+    }
+    if (event[EVENT_VISIBILITY]) payload[EVENT_VISIBILITY] = event[EVENT_VISIBILITY];
+    return projectEventForRecipient(state, payload, recipient).map((projected) => {
+      if (EVENT_VISIBILITY in projected) delete projected[EVENT_VISIBILITY];
+      for (const [key, value] of Object.entries(projected)) {
+        if (value === undefined) Reflect.deleteProperty(projected, key);
+      }
+      if (projected.type === "combatVisualBatchReady") return projected;
+      if (
+        event.chainId === undefined &&
+        event.visualBatchId === undefined &&
+        event.isChainComplete === undefined &&
+        event.deferVisuals === undefined
+      ) {
+        return projected;
+      }
+      return {
+        ...projected,
+        ...(event.chainId !== undefined ? { chainId: event.chainId } : {}),
+        ...(event.visualBatchId !== undefined ? { visualBatchId: event.visualBatchId } : {}),
+        ...(event.isChainComplete !== undefined ? { isChainComplete: event.isChainComplete } : {}),
+        ...(event.deferVisuals !== undefined ? { deferVisuals: event.deferVisuals } : {}),
+      };
+    });
+  });
+}
+
+/** No event-time fact: historical positional payloads are conservatively owner-only. */
+function canKnowMovement(
+  event: GameEvent,
+  state: GameState,
+  unitId: string,
+  recipient: EventRecipient,
+): boolean {
+  const fact = event[EVENT_VISIBILITY];
+  return fact ? fact.recipients.includes(recipient) : recipient === unitOwner(state, unitId);
+}
+
+function hasOnlyVisibleUnitReferences(
+  state: GameState,
+  event: GameEvent,
+  recipient: EventRecipient,
+): boolean {
+  return Object.entries(event).every(
+    ([key, value]) =>
+      !(
+        key.endsWith("Id") &&
+        key !== "abilityId" &&
+        key !== "arenaId" &&
+        key !== "ruleId" &&
+        key !== "effectId" &&
+        key !== "rollId" &&
+        key !== "soulId"
+      ) ||
+      typeof value !== "string" ||
+      isUnitVisibleToRecipient(state, value, recipient),
   );
 }

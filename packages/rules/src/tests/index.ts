@@ -503,7 +503,10 @@ import {
   testWaitingPresentationHiddenSourceAndFallback,
 } from "./core/opponentPending.test";
 
+import { testSafeProjectedEventSerialization } from "./core/projectedEvents.test";
+
 function main(): void {
+  testSafeProjectedEventSerialization();
   testReactionMovementRegressions();
   testVladStakePendingDecisionIsPrivate();
   testJackSnarePendingDecisionIsPrivate();

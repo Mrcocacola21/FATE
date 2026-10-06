@@ -1,4 +1,4 @@
-import type { GameEvent, PlayerView } from "rules";
+import type { ProjectedGameEvent, PlayerView } from "rules";
 import {
   isHeroId,
   type CommonSfxCategory,
@@ -71,12 +71,13 @@ export function resolveSfxEvent(event: SfxEvent): string | undefined {
   return getCommonSfx(lookup.commonCategory, lookup.genericCommonKey);
 }
 
-function heroIdForUnit(view: PlayerView, unitId: string): HeroId | undefined {
+function heroIdForUnit(view: PlayerView, unitId: string | undefined): HeroId | undefined {
+  if (!unitId) return undefined;
   const heroId = view.units[unitId]?.heroId;
   return isHeroId(heroId) ? heroId : undefined;
 }
 
-export function mapGameEventToSfxEvents(event: GameEvent, view: PlayerView): SfxEvent[] {
+export function mapGameEventToSfxEvents(event: ProjectedGameEvent, view: PlayerView): SfxEvent[] {
   switch (event.type) {
     case "attackResolved": {
       const events: SfxEvent[] = [];
@@ -130,7 +131,7 @@ export function mapGameEventToSfxEvents(event: GameEvent, view: PlayerView): Sfx
 }
 
 export function mapEventBatchToSfx(params: {
-  events: GameEvent[];
+  events: ProjectedGameEvent[];
   view: PlayerView;
   revision: number;
   presentationId?: string;

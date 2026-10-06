@@ -1,4 +1,4 @@
-import type { Coord, GameEvent, PlayerView } from "rules";
+import type { Coord, ProjectedGameEvent, PlayerView } from "rules";
 
 export type VfxEffectId =
   | "searchReveal"
@@ -51,6 +51,6 @@ export interface VfxMapperContext {
   previousPositions: VisibleUnitPositions;
   revision: number;
   presentationId?: string;
-  events: GameEvent[];
+  events: ProjectedGameEvent[];
   eventIndex: number;
 }

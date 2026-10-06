@@ -1,4 +1,4 @@
-import type { GameEvent, PlayerView } from "rules";
+import type { ProjectedGameEvent, PlayerView } from "rules";
 import type { BoardEventBatch, PresentationEvent } from "./types";
 
 const MAX_DEFERRED_CHAINS = 64;
@@ -28,7 +28,7 @@ export interface VisualResolutionInput {
   enabled: boolean;
 }
 
-const REDUNDANT_AGGREGATED_EVENT_TYPES = new Set<GameEvent["type"]>([
+const REDUNDANT_AGGREGATED_EVENT_TYPES = new Set<ProjectedGameEvent["type"]>([
   "carpetStrikeTriggered",
   "carpetStrikeCenter",
   "carpetStrikeAttackRolled",
@@ -72,7 +72,7 @@ export function collapseCompletedVisualResolutionEvents(
   events: PresentationEvent[],
 ): PresentationEvent[] {
   const aggregateEvents = events.filter(
-    (event): event is Extract<GameEvent, { type: "aoeResolved" }> => event.type === "aoeResolved",
+    (event): event is Extract<ProjectedGameEvent, { type: "aoeResolved" }> => event.type === "aoeResolved",
   );
   if (aggregateEvents.length === 0) {
     return events;

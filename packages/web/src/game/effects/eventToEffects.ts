@@ -1,4 +1,4 @@
-import type { Coord, GameEvent, PlayerView } from "rules";
+import type { Coord, ProjectedGameEvent, PlayerView } from "rules";
 import { isCoord, linePath, squareArea, uniqueCoords, visibleUnitCoord } from "./boardEffects";
 import type { BoardEffect, VisibleUnitPositions } from "./types";
 
@@ -90,7 +90,7 @@ function boneApplicationEffects(
 }
 
 function effectForAttack(
-  event: Extract<GameEvent, { type: "attackResolved" }>,
+  event: Extract<ProjectedGameEvent, { type: "attackResolved" }>,
   context: EventEffectContext,
 ): BoardEffect[] {
   const attacker = visibleUnitCoord(event.attackerId, context.view, context.previousPositions);
@@ -139,7 +139,7 @@ function effectForAttack(
 }
 
 function effectForAoe(
-  event: Extract<GameEvent, { type: "aoeResolved" }>,
+  event: Extract<ProjectedGameEvent, { type: "aoeResolved" }>,
   context: EventEffectContext,
 ): BoardEffect[] {
   if (!isCoord(event.center)) return unitFlash(event.sourceUnitId, "buff", context);
@@ -187,7 +187,7 @@ function effectForAoe(
   return effects;
 }
 
-export function effectsFromGameEvent(event: GameEvent, context: EventEffectContext): BoardEffect[] {
+export function effectsFromGameEvent(event: ProjectedGameEvent, context: EventEffectContext): BoardEffect[] {
   switch (event.type) {
     case "unitPlaced":
       return isCoord(event.position)
@@ -538,7 +538,7 @@ export function effectsFromGameEvent(event: GameEvent, context: EventEffectConte
 }
 
 export function effectsFromEventBatch(
-  events: GameEvent[],
+  events: ProjectedGameEvent[],
   context: EventEffectContext,
   eventDelaysMs?: readonly number[],
 ): BoardEffect[] {
@@ -547,7 +547,7 @@ export function effectsFromEventBatch(
   const attackTargetIds = new Set(
     events
       .filter(
-        (event): event is Extract<GameEvent, { type: "attackResolved" }> =>
+        (event): event is Extract<ProjectedGameEvent, { type: "attackResolved" }> =>
           event.type === "attackResolved",
       )
       .map((event) => event.defenderId),

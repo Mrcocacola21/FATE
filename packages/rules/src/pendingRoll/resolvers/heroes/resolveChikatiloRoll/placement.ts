@@ -156,7 +156,7 @@ export function resolveChikatiloFalseTrailPlacement(
   });
 
   let events: GameEvent[] = [
-    evUnitPlaced({ unitId: updatedUnit.id, position: updatedUnit.position! }),
+    evUnitPlaced(nextState, { unitId: updatedUnit.id, position: updatedUnit.position! }),
   ];
 
   const queue = Array.isArray(ctx.queue) ? ctx.queue : [];

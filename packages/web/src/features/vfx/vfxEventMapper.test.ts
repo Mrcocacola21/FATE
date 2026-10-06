@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { makeEmptyTurnEconomy, type GameEvent, type PlayerView, type UnitState } from "rules";
+import { makeEmptyTurnEconomy, type ProjectedGameEvent, type PlayerView, type UnitState } from "rules";
 import { mapEventBatchToVfx } from "./vfxEventMapper";
 
 function unit(id: string, position: UnitState["position"]): UnitState {
@@ -31,7 +31,7 @@ function view(units: UnitState[]): PlayerView {
   } as PlayerView;
 }
 
-function map(events: GameEvent[], currentView: PlayerView, previousPositions = {}) {
+function map(events: ProjectedGameEvent[], currentView: PlayerView, previousPositions = {}) {
   return mapEventBatchToVfx({
     events,
     view: currentView,
@@ -52,7 +52,7 @@ test("public AoE ability events map to area VFX using affected radius geometry",
         affectedUnitIds: [],
         revealedUnitIds: [],
         damagedUnitIds: [],
-      } as GameEvent,
+      } as ProjectedGameEvent,
     ],
     view([unit("asgore", { col: 4, row: 4 })]),
   );
@@ -75,7 +75,7 @@ test("Covering Tracks maps to a small explosion on the selected snare cell", () 
         affectedUnitIds: [],
         revealedUnitIds: [],
         damagedUnitIds: [],
-      } as GameEvent,
+      } as ProjectedGameEvent,
     ],
     view([unit("jack", { col: 8, row: 8 })]),
   );
@@ -103,7 +103,7 @@ test("private mark VFX only plays when projected event and target coordinate are
   assert.equal(visible[0]?.effectId, "markApply");
   assert.deepEqual(visible[0]?.sourceCell, { col: 3, row: 3 });
 
-  const redacted = map([{ type: "chikatiloMarkApplied" } as GameEvent], view([]));
+  const redacted = map([{ type: "chikatiloMarkApplied" } as ProjectedGameEvent], view([]));
   assert.deepEqual(redacted, []);
 
   const hiddenTarget = map(
@@ -188,7 +188,7 @@ test("redacted movement events do not create exact-cell phantasm traces", () => 
   const effects = map(
     [
       { type: "abilityUsed", unitId: "grozny", abilityId: "groznyInvadeTime" },
-      { type: "unitMoved", unitId: "grozny" } as GameEvent,
+      { type: "unitMoved", unitId: "grozny" } as ProjectedGameEvent,
     ],
     view([unit("grozny", { col: 6, row: 6 })]),
   );
@@ -212,7 +212,7 @@ test("storm, transformation, chicken, muzzle, and shield events map to unit-safe
       { type: "lokiChickenApplied", lokiId: "loki", targetId: "target", abilityId: "lokiLaught" },
       { type: "abilityUsed", unitId: "guts", abilityId: "gutsCannon" },
       { type: "berserkerDefenseChosen", defenderId: "target", choice: "auto" },
-    ] as GameEvent[],
+    ] as ProjectedGameEvent[],
     view([
       unit("target", { col: 3, row: 3 }),
       unit("griffith", { col: 4, row: 4 }),
@@ -240,7 +240,7 @@ test("storm roll VFX can use a previous visible projected cell after damage remo
         damage: 1,
         hpAfter: 0,
       },
-    ] as GameEvent[],
+    ] as ProjectedGameEvent[],
     view([defeated]),
     { target: { col: 3, row: 3 } },
   );

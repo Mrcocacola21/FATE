@@ -1,4 +1,4 @@
-import type { GameEvent, PlayerView } from "rules";
+import type { ProjectedGameEvent, PlayerView } from "rules";
 import type { BoardEventBatch } from "./types";
 import {
   snapshotVisualHp,
@@ -116,7 +116,7 @@ function finiteNumber(value: unknown): number | undefined {
 }
 
 function damageFromEvent(
-  event: GameEvent,
+  event: ProjectedGameEvent,
   eventIndex: number,
   runningHp: VisualHpByUnitId,
   startingUnits: VisualUnitsByUnitId,

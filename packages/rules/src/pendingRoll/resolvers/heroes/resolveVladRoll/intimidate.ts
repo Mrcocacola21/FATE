@@ -72,7 +72,7 @@ export function resolveVladIntimidateChoice(
         [updatedAttacker.id]: updatedAttacker,
       },
     };
-    events.push(evIntimidateResolved({ attackerId, from, to }));
+    events.push(evIntimidateResolved(state, { attackerId, from, to }));
 
     const collision = resolveHiddenOverlapsAfterTransitions(state, updatedState, rng, {
       entrantUnitIds: [updatedAttacker.id],

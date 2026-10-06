@@ -1,3 +1,4 @@
+import { EVENT_VISIBILITY, intersectVisibility, movementVisibility } from "../../../model/events/visibility";
 import type {
   ApplyResult,
   Coord,
@@ -382,7 +383,7 @@ function resolveLegacyRiverBoatDropDestination(
     },
   });
   const events: GameEvent[] = moved
-    ? [evUnitMoved({ unitId: updatedAlly.id, from: ally.position, to: destination })]
+    ? [evUnitMoved(state, { unitId: updatedAlly.id, from: ally.position, to: destination })]
     : [];
   const landing = applyStakeTriggerIfAny(
     nextState, updatedAlly, destination, rng, { entryKind: "landing" },
@@ -419,7 +420,7 @@ function resolveBoatMovement(
   });
   const events: GameEvent[] = [
     evAbilityUsed({ unitId: river.id, abilityId: ABILITY_RIVER_PERSON_BOAT }),
-    evUnitMoved({ unitId: river.id, from, to: actualDestination }),
+    evUnitMoved(state, { unitId: river.id, from, to: actualDestination }),
   ];
   const stakeResult = applyStakeTriggerIfAny(
     nextState,
@@ -467,7 +468,7 @@ function completeBoatDisembark(
   const events: GameEvent[] = [];
   if (!coordsEqual(ally.position!, destination)) {
     events.push(
-      evUnitMoved({ unitId: ally.id, from: ally.position!, to: destination }),
+      evUnitMoved(state, { unitId: ally.id, from: ally.position!, to: destination }),
     );
   }
   const landedAlly: UnitState = { ...ally, position: { ...destination } };
@@ -485,6 +486,10 @@ function completeBoatDisembark(
   events.push(...landing.events);
   events.push({
     type: "riverBoatResolved",
+    [EVENT_VISIBILITY]: intersectVisibility(
+      movementVisibility(state, river.id, river.position!),
+      movementVisibility(state, ally.id, ally.position!, destination),
+    ),
     riverId: river.id,
     passengerId: ally.id,
     riverDestination: river.position!,

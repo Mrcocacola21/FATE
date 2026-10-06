@@ -96,6 +96,16 @@ export function clonePublicUnit(unit: UnitState): UnitState {
   projected.jackKnownHpByTarget = undefined;
   projected.tyrantFinishedAllyIds = undefined;
   projected.tyrantMovementSources = undefined;
+  projected.lechyGuideTravelerTargetId = undefined;
+  projected.riverBoatCarryAllyId = undefined;
+  projected.donMadDelusionOrigin = undefined;
+  // Hassan's private assignment changes this threshold on selected allies.
+  projected.stealthSuccessMinRoll = undefined;
+  // Death does not authorize a formerly hidden current or stasis position.
+  if (!unit.isAlive && unit.isStealthed) {
+    projected.position = null;
+    projected.courtStasis = undefined;
+  }
   return projected;
 }
 
@@ -150,7 +160,7 @@ function isArenaEffectSourceVisible(
 ): boolean {
   const unit = state.units[sourceUnitId];
   if (!unit) return false;
-  if (!unit.isAlive) return true;
+  if (!unit.isAlive) return !unit.isStealthed || recipient === unit.owner;
   if (recipient === "spectator") return !unit.isStealthed;
   return canPlayerKnowUnitExactPosition(state, recipient, sourceUnitId);
 }
@@ -164,12 +174,14 @@ export function cloneArenaEffectsForRecipient(
     .filter((effect) => effect.remaining > 0)
     .map((effect) => {
       const sourceUnitId = effect.sourceUnitId;
+      const sourceVisible = !sourceUnitId || isArenaEffectSourceVisible(state, recipient, sourceUnitId);
       return {
         ...effect,
         sourceUnitId:
-          sourceUnitId && isArenaEffectSourceVisible(state, recipient, sourceUnitId)
+          sourceUnitId && sourceVisible
             ? sourceUnitId
             : undefined,
+        sourceAbilityId: sourceVisible ? effect.sourceAbilityId : undefined,
       };
     });
 }

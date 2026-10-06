@@ -269,7 +269,7 @@ export function resolveFemtoDivineMoveDestinationChoice(
   return {
     state: nextState,
     events: [
-      evUnitMoved({
+      evUnitMoved(state, {
         unitId: movedUnit.id,
         from,
         to: movedUnit.position!,

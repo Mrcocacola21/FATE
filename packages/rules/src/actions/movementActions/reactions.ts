@@ -1,3 +1,4 @@
+import { EVENT_VISIBILITY, intersectVisibility, movementVisibility } from "../../model/events/visibility";
 import type {
   ApplyResult,
   Coord,
@@ -111,7 +112,7 @@ function reachedOpportunities(
 function moveUnit(state: GameState, unitId: string, to: Coord, events: GameEvent[]): GameState {
   const unit = state.units[unitId];
   if (!unit?.isAlive || !unit.position || coordsEqual(unit.position, to)) return state;
-  events.push(evUnitMoved({ unitId, from: unit.position, to }));
+  events.push(evUnitMoved(state, { unitId, from: unit.position, to }));
   return { ...state, units: { ...state.units, [unitId]: { ...unit, position: { ...to } } } };
 }
 
@@ -145,6 +146,10 @@ function finishMovement(
       state = moveUnit(state, target.id, drop, events);
       events.push({
         type: "riverTraLaLaResolved",
+        [EVENT_VISIBILITY]: intersectVisibility(
+          movementVisibility(state, movement.controllerUnitId, cell),
+          movementVisibility(state, target.id, drop),
+        ),
         riverId: movement.controllerUnitId,
         targetId: target.id,
         riverDestination: cell,

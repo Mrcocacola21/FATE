@@ -87,7 +87,7 @@ export function applyOdinSleipnir(
 
   let events: GameEvent[] = [
     evAbilityUsed({ unitId: updatedUnit.id, abilityId: spec.id }),
-    evUnitMoved({ unitId: updatedUnit.id, from, to: updatedUnit.position! }),
+    evUnitMoved(state, { unitId: updatedUnit.id, from, to: updatedUnit.position! }),
   ];
 
   const stakeResult = applyStakeTriggerIfAny(

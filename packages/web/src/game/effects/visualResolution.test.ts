@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import type { GameEvent, PlayerView, UnitState } from "rules";
+import type { ProjectedGameEvent, PlayerView, UnitState } from "rules";
 import {
   advanceVisualResolution,
   createVisualResolutionState,
@@ -75,7 +75,7 @@ function view(params: {
   } as unknown as PlayerView;
 }
 
-function attack(damage: number, hpAfter: number): GameEvent {
+function attack(damage: number, hpAfter: number): ProjectedGameEvent {
   return {
     type: "attackResolved",
     attackerId: "caster",
@@ -88,7 +88,7 @@ function attack(damage: number, hpAfter: number): GameEvent {
   };
 }
 
-function aoe(): GameEvent {
+function aoe(): ProjectedGameEvent {
   return {
     type: "aoeResolved",
     sourceUnitId: "caster",
@@ -103,19 +103,19 @@ function aoe(): GameEvent {
 }
 
 function deferred(
-  event: GameEvent,
+  event: ProjectedGameEvent,
   chainId: string,
-): GameEvent {
+): ProjectedGameEvent {
   return {
     ...event,
     chainId,
     visualBatchId: chainId,
     deferVisuals: true,
     isChainComplete: false,
-  } as GameEvent;
+  } as ProjectedGameEvent;
 }
 
-function complete(chainId: string): GameEvent {
+function complete(chainId: string): ProjectedGameEvent {
   return {
     type: "combatVisualBatchReady",
     chainId,

@@ -1,10 +1,10 @@
 import type { FC } from "react";
-import type { GameEvent, PlayerView } from "rules";
+import type { ProjectedGameEvent, PlayerView } from "rules";
 import { useI18n } from "../i18n";
 import { localizeServerText } from "../i18n/displayMetadata";
 import { formatDice, formatEventMessage } from "../i18n/eventMessages";
 
-function eventTone(event: GameEvent): string {
+function eventTone(event: ProjectedGameEvent): string {
   switch (event.type) {
     case "attackResolved":
     case "unitDied":
@@ -36,7 +36,7 @@ function eventTone(event: GameEvent): string {
   }
 }
 
-function eventGlyph(event: GameEvent): string {
+function eventGlyph(event: ProjectedGameEvent): string {
   switch (event.type) {
     case "attackResolved":
     case "unitDied":
@@ -78,12 +78,12 @@ function eventGlyph(event: GameEvent): string {
 }
 
 interface EventLogProps {
-  events: GameEvent[];
+  events: ProjectedGameEvent[];
   clientLog: string[];
   units?: PlayerView["rosterUnits"];
 }
 
-function searchEventRevealedUnit(event: GameEvent, unitId: string): boolean {
+function searchEventRevealedUnit(event: ProjectedGameEvent, unitId: string): boolean {
   return (
     event.type === "searchStealth" &&
     Array.isArray(event.rolls) &&
@@ -91,8 +91,8 @@ function searchEventRevealedUnit(event: GameEvent, unitId: string): boolean {
   );
 }
 
-function shouldDisplayEvent(event: GameEvent, allEvents: GameEvent[]): boolean {
-  if (event.type === "combatVisualBatchReady") {
+function shouldDisplayEvent(event: ProjectedGameEvent, allEvents: ProjectedGameEvent[]): boolean {
+  if (event.type === "combatVisualBatchReady" || event.type === "eventRedacted") {
     return false;
   }
   if (

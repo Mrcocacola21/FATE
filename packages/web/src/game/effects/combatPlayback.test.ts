@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import type { GameEvent, PlayerView, UnitState } from "rules";
+import type { ProjectedGameEvent, PlayerView, UnitState } from "rules";
 import {
   buildCombatVisualPlaybackPlan,
   combatVisualPlaybackFrame,
@@ -19,7 +19,7 @@ function unit(id: string, hp: number, position = { col: 2, row: 2 }): UnitState 
   } as UnitState;
 }
 
-function attack(previousHp: number, nextHp: number): GameEvent {
+function attack(previousHp: number, nextHp: number): ProjectedGameEvent {
   return {
     type: "attackResolved",
     attackerId: "attacker",
@@ -152,7 +152,7 @@ test("reduced motion keeps feedback but shortens the full playback", () => {
       events: [
         attack(2, 0),
         { type: "unitDied", unitId: "target", killerId: "attacker" },
-      ] as GameEvent[],
+      ] as ProjectedGameEvent[],
     },
     startingHpByUnitId: { attacker: 6, target: 2 },
     startingUnitsByUnitId: {

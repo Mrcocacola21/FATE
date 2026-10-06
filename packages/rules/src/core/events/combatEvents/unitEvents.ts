@@ -1,3 +1,5 @@
+import { EVENT_VISIBILITY, movementVisibility } from "../../../model/events/visibility";
+import type { GameState } from "../../../model";
 import type {
   AbilityUsedEvent,
   BerserkerDefenseChosenEvent,
@@ -10,24 +12,26 @@ import type {
   UnitPlacedEvent,
 } from "./types";
 
-export function evUnitPlaced(params: {
+export function evUnitPlaced(state: GameState, params: {
   unitId: string;
   position: Coord;
 }): UnitPlacedEvent {
   return {
     type: "unitPlaced",
+    [EVENT_VISIBILITY]: movementVisibility(state, params.unitId, params.position),
     unitId: params.unitId,
     position: params.position,
   };
 }
 
-export function evUnitMoved(params: {
+export function evUnitMoved(state: GameState, params: {
   unitId: string;
   from: Coord;
   to: Coord;
 }): UnitMovedEvent {
   return {
     type: "unitMoved",
+    [EVENT_VISIBILITY]: movementVisibility(state, params.unitId, params.from, params.to),
     unitId: params.unitId,
     from: params.from,
     to: params.to,

@@ -1,3 +1,5 @@
+import { EVENT_VISIBILITY, movementVisibility } from "../../../model/events/visibility";
+import type { GameState } from "../../../model";
 import type {
   AoeResolvedEvent,
   CarpetStrikeAttackRolledEvent,
@@ -25,13 +27,14 @@ export function evIntimidateTriggered(params: {
   };
 }
 
-export function evIntimidateResolved(params: {
+export function evIntimidateResolved(state: GameState, params: {
   attackerId: string;
   from: Coord;
   to: Coord;
 }): IntimidateResolvedEvent {
   return {
     type: "intimidateResolved",
+    [EVENT_VISIBILITY]: movementVisibility(state, params.attackerId, params.from, params.to),
     attackerId: params.attackerId,
     from: params.from,
     to: params.to,

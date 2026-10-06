@@ -57,7 +57,7 @@ type DraftVm = {
     draftState: DraftState;
     draftPool: HeroDraftMeta[];
   };
-  events: import("rules").GameEvent[];
+  events: import("rules").ProjectedGameEvent[];
   clientLog: string[];
   leavingRoom: boolean;
   handleLeave: () => void;

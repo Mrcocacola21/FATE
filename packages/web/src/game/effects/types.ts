@@ -1,4 +1,4 @@
-import type { Coord, GameEvent } from "rules";
+import type { Coord, ProjectedGameEvent } from "rules";
 
 export type CellEffectTone =
   | "attack"
@@ -77,7 +77,7 @@ export type QueuedBoardEffect = BoardEffect & {
   expiresAt: number;
 };
 
-export type PresentationEvent = GameEvent & { eventId?: string };
+export type PresentationEvent = ProjectedGameEvent & { eventId?: string };
 
 export interface BoardEventBatch {
   presentationToken?: import("./presentationSession").PresentationToken;

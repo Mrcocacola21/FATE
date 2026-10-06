@@ -536,16 +536,16 @@ function testChikatiloMarkEventProjectionRedactsPrivateTarget() {
     "owner should receive full mark target identity",
   );
   assert(
-    opponentEvents.some((event) => event.type === "abilityUsed" && !("unitId" in event)),
+    opponentEvents.some((event) => event.type === "eventRedacted" && !("unitId" in event)),
     "hidden chikatilo ability use should be redacted for opponent",
   );
   assert(
-    opponentEvents.some((event) => event.type === "chikatiloMarkApplied" && !("targetId" in event)),
+    opponentEvents.some((event) => event.type === "eventRedacted" && !("targetId" in event)),
     "opponent should not receive private mark target identity",
   );
   assert(
     spectatorEvents.some(
-      (event) => event.type === "chikatiloMarkApplied" && !("targetId" in event),
+      (event) => event.type === "eventRedacted" && !("targetId" in event),
     ),
     "spectator should not receive private mark target identity",
   );
@@ -1201,7 +1201,7 @@ function testHiddenCollisionProjectionIsOwnerDetailedAndOpponentSafe() {
     assert(!serialized.includes('"col":4'), `${recipient} must not receive hidden coordinates`);
     assert.deepEqual(
       projected.map((event) => event.type),
-      ["hiddenCollisionResolved", "unitMoved"],
+      ["eventRedacted"],
       `${recipient} should receive only safe semantic event types`,
     );
   }

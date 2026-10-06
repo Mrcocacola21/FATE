@@ -1,3 +1,4 @@
+import { EVENT_VISIBILITY } from "../../model/events/visibility";
 import type { GameEvent } from "../../model";
 import {
   applyAction,
@@ -92,7 +93,7 @@ export function testGoldenSnapshotAoeWithIntimidateChain() {
   }
 
   const snapshot = {
-    events,
+    events: gameplayEvents(events),
     phase: currentState.phase,
     turnNumber: currentState.turnNumber,
     pendingRoll: intimidatePending,
@@ -314,7 +315,7 @@ export function testGoldenSnapshotPendingRollSequence() {
   events.push(...res.events);
 
   const snapshot = {
-    events,
+    events: gameplayEvents(events),
     phase: res.state.phase,
     currentPlayer: res.state.currentPlayer,
     pendingRoll: pendingSnapshot,
@@ -535,4 +536,9 @@ export function testGoldenActionSnapshot() {
 
   assert.deepStrictEqual(snapshot, expected);
   console.log("golden_action_snapshot passed");
+}
+
+/** Golden gameplay payloads exclude internal projection facts, retaining every gameplay field. */
+function gameplayEvents(events: GameEvent[]) {
+  return events.map(({ [EVENT_VISIBILITY]: _visibility, ...event }) => event);
 }

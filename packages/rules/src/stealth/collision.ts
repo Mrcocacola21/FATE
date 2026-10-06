@@ -1,4 +1,5 @@
 import { resolveUnitDeath } from "../death";
+import { EVENT_VISIBILITY, movementVisibility } from "../model/events/visibility";
 import { coordsEqual, getUnitsAt } from "../board";
 import type { ApplyResult, Coord, GameEvent, GameState, UnitState } from "../model";
 import { isInsideBoard } from "../model";
@@ -69,6 +70,7 @@ export function resolveHiddenOverlapCollision(
       events: [
         {
           type: "hiddenCollisionResolved",
+          [EVENT_VISIBILITY]: movementVisibility(state, moved.id, from, to),
           displacedUnitId: moved.id,
           from,
           to,
@@ -78,6 +80,7 @@ export function resolveHiddenOverlapCollision(
         },
         {
           type: "unitMoved",
+          [EVENT_VISIBILITY]: movementVisibility(state, moved.id, from, to),
           unitId: moved.id,
           from,
           to,
@@ -94,6 +97,7 @@ export function resolveHiddenOverlapCollision(
   const events: GameEvent[] = [
     {
       type: "hiddenCollisionResolved",
+      [EVENT_VISIBILITY]: movementVisibility(state, damaged.id, from),
       displacedUnitId: damaged.id,
       from,
       dieSides: 0,

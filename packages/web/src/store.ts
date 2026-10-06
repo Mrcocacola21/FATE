@@ -4,7 +4,7 @@ import { create } from "zustand";
 import type {
   GameAction,
   LokiLaughtOption as RulesLokiLaughtOption,
-  GameEvent,
+  ProjectedGameEvent,
   PlayerView,
   Coord,
   PlayerId,
@@ -136,7 +136,7 @@ interface GameStore {
   hoveredAbilityId: string | null;
   hoverPreview: HoverPreview;
   pendingLokiLaughtOption: PendingLokiLaughtOption | null;
-  events: GameEvent[];
+  events: ProjectedGameEvent[];
   latestEventBatch: BoardEventBatch | null;
   pendingEventBatches: BoardEventBatch[];
   eventStreamId: string | null;
@@ -185,7 +185,7 @@ interface GameStore {
   requestMoveOptions: (unitId: string, mode?: MoveMode) => void;
   setRoomState: (roomId: string, room: PlayerView) => void;
   applyActionResult: (events: import("rules").DeliveredGameEvent[], revision: number, streamId: string, error?: string) => void;
-  addEvents: (events: GameEvent[]) => void;
+  addEvents: (events: ProjectedGameEvent[]) => void;
   addClientLog: (message: string) => void;
   setSelectedUnit: (unitId: string | null) => void;
   setActionMode: (mode: ActionMode, useSource?: AbilityUseSource) => void;

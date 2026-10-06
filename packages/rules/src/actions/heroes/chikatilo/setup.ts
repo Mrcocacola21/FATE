@@ -156,7 +156,7 @@ export function setupChikatiloFalseTrailAtBattleStart(state: GameState): {
     delete lastKnownPositions.P1[updatedChikatilo.id];
     delete lastKnownPositions.P2[updatedChikatilo.id];
 
-    events.push(evUnitPlaced({ unitId: token.id, position: token.position! }));
+    events.push(evUnitPlaced({ ...nextState, units: { ...nextState.units, [token.id]: token } }, { unitId: token.id, position: token.position! }));
     placementQueue.push(updatedChikatilo.id);
   }
 

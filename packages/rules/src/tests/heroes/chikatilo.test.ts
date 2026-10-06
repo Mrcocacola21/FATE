@@ -258,13 +258,9 @@ export function testChikatiloPlacementAfterToken() {
     "opponent projection should not expose the private Chikatilo placement prompt",
   );
   const opponentEvents = projectEventsForRecipient(placedChikatilo, placement.events, opponentId);
-  const placedEvent = opponentEvents.find(
-    (event) => event.type === "unitPlaced" && event.unitId === chikatilo.id,
-  );
-  assert(
-    placedEvent?.type === "unitPlaced" && !("position" in placedEvent),
-    "opponent placement event should redact real Chikatilo's position",
-  );
+  const placedEvent = opponentEvents.find((event) => event.type === "eventRedacted");
+  assert(placedEvent && !("position" in placedEvent), "opponent placement notice must omit the hidden position");
+  assert(!JSON.stringify(opponentEvents).includes(JSON.stringify(placedChikatilo.units[chikatilo.id].position)), "hidden placement coordinates must be absent from JSON");
 
   console.log("chikatilo_placement_after_token_passed");
 }
@@ -594,17 +590,17 @@ export function testChikatiloAssassinMarkApplicationFlowAndRedaction() {
     "mark owner should receive the full mark-applied event",
   );
   assert(
-    opponentEvents.some((event) => event.type === "chikatiloMarkApplied" && !("targetId" in event)),
+    opponentEvents.some((event) => event.type === "eventRedacted" && !("targetId" in event)),
     "opponent should receive a redacted mark-applied event",
   );
   assert(
     spectatorEvents.some(
-      (event) => event.type === "chikatiloMarkApplied" && !("targetId" in event),
+      (event) => event.type === "eventRedacted" && !("targetId" in event),
     ),
     "spectator should receive a redacted mark-applied event",
   );
   assert(
-    opponentEvents.some((event) => event.type === "abilityUsed" && !("unitId" in event)),
+    opponentEvents.some((event) => event.type === "eventRedacted" && !("unitId" in event)),
     "hidden chikatilo ability use should be redacted for the opponent",
   );
 

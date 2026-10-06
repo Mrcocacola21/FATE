@@ -192,7 +192,7 @@ export function resolveAsgoreSoulParadeIntegrityDestinationChoice(
     }),
     events: [
       ...committed.events,
-      evUnitMoved({
+      evUnitMoved(state, {
         unitId: movedAsgore.id,
         from: { ...asgore.position },
         to: { ...movedAsgore.position! },

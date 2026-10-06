@@ -1092,10 +1092,10 @@ function testProjectedEventsRedactHiddenUnitPositions() {
   const spectatorEvents = projectEventsForRecipient(state, [event], "spectator");
 
   assert.deepEqual(ownerEvents[0], event, "owner should receive full hidden move");
-  assert.equal("from" in (opponentEvents[0] as Record<string, unknown>), false);
-  assert.equal("to" in (opponentEvents[0] as Record<string, unknown>), false);
-  assert.equal("from" in (spectatorEvents[0] as Record<string, unknown>), false);
-  assert.equal("to" in (spectatorEvents[0] as Record<string, unknown>), false);
+  assert(!opponentEvents.some((event) => "from" in event));
+  assert(!opponentEvents.some((event) => "to" in event));
+  assert(!spectatorEvents.some((event) => "from" in event));
+  assert(!spectatorEvents.some((event) => "to" in event));
 
   console.log("hardening_projected_events_redact_hidden_positions passed");
 }

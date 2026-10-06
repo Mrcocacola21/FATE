@@ -381,7 +381,7 @@ async function testDraftFlowStartsPlacement(wsUrl: string, persistence: MemoryMa
     queue1,
     (msg) => msg.meta?.draftState?.phase === "complete" && !!msg.meta?.pendingRoll,
   );
-  await waitForRoomState(queue2, (msg) => msg.meta?.draftState?.phase === "complete" && !!msg.meta?.pendingRoll);
+  await waitForRoomState(queue2, (msg) => msg.meta?.draftState?.phase === "complete" && !!msg.view.pendingDecision);
   assert.equal(getGameRoom(roomId), room);
   assert.equal(room.matchId, matchId);
   assert.equal(persistence.matches.get(matchId)?.status, "IN_PROGRESS");
@@ -395,7 +395,7 @@ async function testDraftFlowStartsPlacement(wsUrl: string, persistence: MemoryMa
   assert.equal(startedResult.revision, room.revision);
   for (const queue of [queue1, queue2]) {
     assert(!queue.some((msg) => msg.type === "leftRoom" || msg.type === "joinRejected"));
-    assert(!queue.some((msg) => msg.type === "roomState" && msg.meta?.draftState?.phase === "complete" && !msg.meta.pendingRoll && msg.view.phase === "lobby"), "completed draft must arrive with gameplay state");
+    assert(!queue.some((msg) => msg.type === "roomState" && msg.meta?.draftState?.phase === "complete" && !msg.meta.pendingRoll && !msg.view.pendingDecision && msg.view.phase === "lobby"), "completed draft must arrive with gameplay state");
   }
   const p1Units = Object.values(completed.view.units).filter((unit) => unit.owner === "P1");
   assert.equal(p1Units.length, 7);

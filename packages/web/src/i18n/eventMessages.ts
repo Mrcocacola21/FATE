@@ -1,4 +1,4 @@
-import type { DiceRoll, GameEvent, PlayerView } from "rules";
+import type { DiceRoll, ProjectedGameEvent, PlayerView } from "rules";
 import type { Language, Translate } from ".";
 import { getAbilityDisplay, getArenaLabel, getHeroDisplayName, getUnitFigureDisplayName } from "./displayMetadata";
 import {
@@ -38,7 +38,7 @@ function coordText(coord: { col?: unknown; row?: unknown } | undefined) {
 }
 
 function transformationForm(
-  event: Extract<GameEvent, { type: "unitTransformed" }>,
+  event: Extract<ProjectedGameEvent, { type: "unitTransformed" }>,
   language: Language,
 ) {
   if (event.toFormId === METTATON_EX_ID || event.abilityId === METTATON_EX_ID) {
@@ -58,9 +58,11 @@ export function formatDice(roll?: DiceRoll | null) {
   return `(${roll.dice.length ? roll.dice.join(", ") : "-"}) = ${roll.sum ?? "-"}`;
 }
 
-export function formatEventMessage(event: GameEvent, language: Language, t: Translate, units?: PlayerView["rosterUnits"]): string {
+export function formatEventMessage(event: ProjectedGameEvent, language: Language, t: Translate, units?: PlayerView["rosterUnits"]): string {
   const unitName = (id: string) => units?.[id] ? getUnitFigureDisplayName(units[id], { language, t }) : id;
   switch (event.type) {
+    case "eventRedacted":
+      return "";
     case "reactionOpportunity":
       return text(language, `${unitName(event.reactorUnitId)} has a reaction opportunity against ${event.targetUnitIds.map(unitName).join(", ")}.`, `${unitName(event.reactorUnitId)} може виконати атаку реакції проти ${event.targetUnitIds.map(unitName).join(", ")}.`);
     case "reactionChoiceResolved":

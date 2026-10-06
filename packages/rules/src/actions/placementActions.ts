@@ -180,7 +180,7 @@ export function applyPlaceUnit(
   };
 
   let events: GameEvent[] = [
-    evUnitPlaced({
+    evUnitPlaced(newState, {
       unitId: updatedUnit.id,
       position: updatedUnit.position!,
     }),

@@ -1,4 +1,4 @@
-import type { GameEvent, PlayerView } from "rules";
+import type { ProjectedGameEvent, PlayerView } from "rules";
 import {
   isCoord,
   linePath,
@@ -18,7 +18,7 @@ const ABILITY_JACK_COVERING_TRACKS = "jackRipperCoveringTracks";
 
 function requestId(
   context: VfxMapperContext,
-  event: GameEvent,
+  event: ProjectedGameEvent,
   effectId: VfxEffectId,
   suffix = "0",
 ): string {
@@ -27,7 +27,7 @@ function requestId(
 
 function cellRequest(
   context: VfxMapperContext,
-  event: GameEvent,
+  event: ProjectedGameEvent,
   effectId: VfxEffectId,
   sourceCell: NonNullable<BoardVfxRequest["sourceCell"]> | null,
   suffix?: string,
@@ -47,7 +47,7 @@ function cellRequest(
 
 function unitRequest(
   context: VfxMapperContext,
-  event: GameEvent,
+  event: ProjectedGameEvent,
   effectId: VfxEffectId,
   unitId: unknown,
   suffix?: string,
@@ -70,7 +70,7 @@ function unitRequest(
 
 function unitOrPreviousRequest(
   context: VfxMapperContext,
-  event: GameEvent,
+  event: ProjectedGameEvent,
   effectId: VfxEffectId,
   unitId: unknown,
   suffix?: string,
@@ -122,7 +122,7 @@ function previousAbilityUsedForUnit(
 }
 
 function mapAbilityUsed(
-  event: Extract<GameEvent, { type: "abilityUsed" }>,
+  event: Extract<ProjectedGameEvent, { type: "abilityUsed" }>,
   context: VfxMapperContext,
 ): BoardVfxRequest[] {
   if (event.abilityId === ABILITY_GUTS_ARBALET || event.abilityId === ABILITY_GUTS_CANNON) {
@@ -141,7 +141,7 @@ function mapAbilityUsed(
 }
 
 function mapAoeResolved(
-  event: Extract<GameEvent, { type: "aoeResolved" }>,
+  event: Extract<ProjectedGameEvent, { type: "aoeResolved" }>,
   context: VfxMapperContext,
 ): BoardVfxRequest[] {
   if (!isCoord(event.center) || typeof event.radius !== "number") return [];
@@ -182,7 +182,7 @@ function mapAoeResolved(
 }
 
 function mapSearchStealth(
-  event: Extract<GameEvent, { type: "searchStealth" }>,
+  event: Extract<ProjectedGameEvent, { type: "searchStealth" }>,
   context: VfxMapperContext,
 ): BoardVfxRequest[] {
   const effects = unitRequest(context, event, "searchReveal", event.unitId, "searcher");
@@ -198,7 +198,7 @@ function mapSearchStealth(
 }
 
 function mapRiverBoat(
-  event: Extract<GameEvent, { type: "riverBoatResolved" }>,
+  event: Extract<ProjectedGameEvent, { type: "riverBoatResolved" }>,
   context: VfxMapperContext,
 ): BoardVfxRequest[] {
   const effects: BoardVfxRequest[] = [];
@@ -232,7 +232,7 @@ function mapRiverBoat(
 }
 
 function mapRiverTraLaLa(
-  event: Extract<GameEvent, { type: "riverTraLaLaResolved" }>,
+  event: Extract<ProjectedGameEvent, { type: "riverTraLaLaResolved" }>,
   context: VfxMapperContext,
 ): BoardVfxRequest[] {
   const effects: BoardVfxRequest[] = [];
@@ -266,7 +266,7 @@ function mapRiverTraLaLa(
 }
 
 function mapUnitMoved(
-  event: Extract<GameEvent, { type: "unitMoved" }>,
+  event: Extract<ProjectedGameEvent, { type: "unitMoved" }>,
   context: VfxMapperContext,
 ): BoardVfxRequest[] {
   if (!isCoord(event.from) || !isCoord(event.to)) return [];
@@ -299,7 +299,7 @@ function mapUnitMoved(
 }
 
 export function mapGameEventToVfx(
-  event: GameEvent,
+  event: ProjectedGameEvent,
   context: VfxMapperContext,
 ): BoardVfxRequest[] {
   switch (event.type) {
@@ -355,7 +355,7 @@ export function mapGameEventToVfx(
 }
 
 export function mapEventBatchToVfx(params: {
-  events: GameEvent[];
+  events: ProjectedGameEvent[];
   view: PlayerView;
   previousPositions: VfxMapperContext["previousPositions"];
   revision: number;
