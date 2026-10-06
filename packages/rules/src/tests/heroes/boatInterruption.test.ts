@@ -22,7 +22,8 @@ const plannedDrop = { col: 1, row: 3 };
 const stoppedAt = { col: 0, row: 1 };
 
 function setupBoat(hiddenStake = true) {
-  let { state, river } = setupRiverPersonState();
+  const { state: initialState, river } = setupRiverPersonState();
+  let state = initialState;
   const passenger = Object.values(state.units).find(
     (unit) => unit.owner === "P1" && unit.class === "assassin",
   )!;
@@ -180,7 +181,8 @@ export function testBoatRecalculatesDisembarkAfterInterruptedMovement() {
 
 export function testBoatInterruptionDoesNotDoubleSpendResources() {
   for (const grantedMove of [false, true]) {
-    let { state, riverId, passengerId } = setupBoat();
+    const { state: initialState, riverId, passengerId } = setupBoat();
+    let state = initialState;
     state = setUnit(state, riverId, {
       turn: { moveUsed: grantedMove, actionUsed: true, attackUsed: true, stealthUsed: true },
       riverBoatmanExtraMoves: grantedMove ? 1 : 0,
@@ -262,7 +264,8 @@ export function testBoatInterruptedLegalDropStillRequiresConfirmation() {
 
 export function testBoatInterruptionHandlesImpossibleDisembark() {
   for (const carrierDies of [false, true]) {
-    let { state, riverId, passengerId } = setupBoat();
+    const { state: initialState, riverId, passengerId } = setupBoat();
+    let state = initialState;
     if (carrierDies) {
       state = setUnit(state, riverId, { hp: 1 });
     } else {
@@ -330,7 +333,9 @@ const landingRiverDestination: Coord = { col: 4, row: 3 }; // E4
 const landingDrop: Coord = { col: 5, row: 3 }; // F4
 
 function setupBoatLanding(sansPassenger = false) {
-  let { state, riverId, passengerId } = setupBoat(false);
+  const { state: initialState, riverId, passengerId: initialPassengerId } = setupBoat(false);
+  let state = initialState;
+  let passengerId = initialPassengerId;
   if (sansPassenger) {
     const { sans } = setupSansState();
     passengerId = sans.id;
@@ -421,7 +426,8 @@ export function testBoatPassengerStackedStakesDealOnlyOneDamage() {
 }
 
 export function testBoatHiddenPassengerIsRevealedByStake() {
-  let { state, riverId, passengerId } = setupBoatLanding();
+  const { state: initialState, riverId, passengerId } = setupBoatLanding();
+  let state = initialState;
   state = setUnit(state, passengerId, { isStealthed: true, stealthTurnsLeft: 3 });
   assert(!state.knowledge.P2[passengerId], "Passenger is unknown to the enemy stake owner");
   const result = landPassenger(state, riverId, passengerId);
@@ -438,7 +444,8 @@ export function testBoatHiddenPassengerIsRevealedByStake() {
 }
 
 export function testBoatPassengerCanDieFromStake() {
-  let { state, riverId, passengerId } = setupBoatLanding();
+  const { state: initialState, riverId, passengerId } = setupBoatLanding();
+  let state = initialState;
   state = setUnit(state, passengerId, { hp: 1 });
   const result = landPassenger(state, riverId, passengerId);
   assert.strictEqual(result.state.units[passengerId].hp, 0);
@@ -522,7 +529,8 @@ export function testBoatInterruptedPassengerLandingTriggersStake() {
 }
 
 export function testBoatLegacyPassengerLandingTriggersStake() {
-  let { state, riverId, passengerId } = setupBoatLanding();
+  const { state: initialState, riverId, passengerId } = setupBoatLanding();
+  let state = initialState;
   state = setUnit(state, riverId, { position: landingRiverDestination, riverBoatCarryAllyId: passengerId });
   const pending = requestRiverBoatDropDestination(state, riverId, passengerId, getRiverDropOptions(state, landingRiverDestination, passengerId));
   const result = chooseCell(pending.state, landingDrop);

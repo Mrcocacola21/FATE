@@ -1,3 +1,4 @@
+import { getLogger } from "../observability/logger";
 import { AuthError } from "../auth/authErrors";
 import type { StatisticsRepository } from "../repositories/statisticsRepository";
 import {
@@ -11,7 +12,7 @@ import {
 export class PlayerStatisticsService {
   constructor(
     private readonly statistics: Pick<StatisticsRepository, "userExists" | "findFinishedResults">,
-    private readonly logger: { warn(data: object, message: string): void } = console,
+    private readonly logger: { warn(data: object, message: string): void } = getLogger(),
   ) {}
 
   async getPlayerStatistics(userId: string): Promise<PlayerStatisticsDTO> {

@@ -1705,3 +1705,5 @@ validation details, pagination limits, auth/refresh behavior and operational exc
 Run `npm run -w server test:api-errors` for the focused HTTP contract checks.
 The [implementation report](docs/api-validation-implementation-report.md) records
 the changes, compatibility decisions and actual verification results.
+
+Backend operations: [logs, health/readiness and metrics](docs/observability.md).

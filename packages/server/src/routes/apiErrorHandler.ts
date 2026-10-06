@@ -47,7 +47,7 @@ export function handleApiError(error: unknown, request: FastifyRequest, reply: F
   onFailure?: (failure: AppError, reply: FastifyReply) => void): void {
   const failure = toApiError(error);
   if (failure.statusCode >= 500)
-    request.log.error({ err: error, category: failure.code, requestId: request.id }, "API request failed");
+    request.log.error({ event: "api_request_failed", err: error, errorCode: failure.code }, "API request failed");
   onFailure?.(failure, reply);
   reply.code(failure.statusCode).send(failure.toResponse());
 }

@@ -80,7 +80,7 @@ test("real entrypoint exits before listening when production configuration is mi
   assert.equal(child.status, 1);
   assert.equal(child.stdout, "");
   assert.equal(
-    child.stderr.trim(),
+    JSON.parse(child.stderr.trim()).msg,
     "Missing required production environment variable: DATABASE_URL",
   );
 });
@@ -105,7 +105,7 @@ test("production startup refuses an unreachable DB with a sanitized error", () =
   assert.equal(child.status, 1);
   assert.equal(child.stdout, "");
   assert.equal(
-    child.stderr.trim(),
+    JSON.parse(child.stderr.trim()).msg,
     "Production database readiness check failed; server has not started",
   );
 });

@@ -7,7 +7,7 @@ import { createMatchmakingService } from "./matchmaking/runtime";
 import { matchmakingRoutes } from "./routes/matchmakingRoutes";
 // packages/server/src/index.ts
 
-import Fastify from "fastify";
+import Fastify, { type FastifyBaseLogger } from "fastify";
 import { MatchLifecycle } from "./persistence/matchLifecycle";
 import type { MatchPersistence } from "./services/matchService";
 import type { MatchActionService } from "./services/matchActionService";
@@ -38,10 +38,21 @@ import { checkDatabaseReadiness } from "./db/readiness";
 import { registerHealthRoutes } from "./routes/healthRoutes";
 import { MatchRecoveryService } from "./services/matchRecoveryService";
 import { MatchRecoveryRepository } from "./repositories/matchRecoveryRepository";
+import { AuthError } from "./auth/authErrors";
+import { readObservabilityConfig } from "./config";
+import { createLogger, safeError } from "./observability/logger";
+import { requestId, registerRequestContext } from "./observability/requestContext";
+import { applicationMetrics, type ApplicationMetrics } from "./observability/metrics";
+import { getGameRoomCount } from "./store";
+import type { DestinationStream } from "pino";
 
 export async function buildServer(
   options: {
     documentationOnly?: boolean;
+    serveDuringRecovery?: boolean;
+    logStream?: DestinationStream;
+    metrics?: ApplicationMetrics;
+    databaseReadiness?: () => Promise<boolean>;
     roomSeed?: () => number;
     matchPersistence?: MatchPersistence;
     connectionIdentity?: Pick<ConnectionIdentityService, "verify"> &
@@ -57,14 +68,18 @@ export async function buildServer(
     interruptedRoom?: (roomId: string) => Promise<boolean>;
   } = {},
 ) {
-  const logLevel = process.env.LOG_LEVEL ?? "info";
+  const observability = readObservabilityConfig();
+  const metrics = options.metrics ?? applicationMetrics;
+  metrics.setRoomCollector(getGameRoomCount);
   const server = Fastify({
     frameworkErrors: handleApiError,
-    logger: {
-      level: logLevel,
-      redact: ["req.headers.authorization", "req.headers.cookie", "res.headers.set-cookie"],
-    },
+    logger: createLogger(options.logStream) as FastifyBaseLogger,
+    requestIdHeader: false,
+    genReqId: requestId,
+    requestIdLogLabel: "requestId",
+    disableRequestLogging: true,
   });
+  registerRequestContext(server);
 
   registerApiErrorHandler(server);
   await registerOpenApi(server);
@@ -84,12 +99,13 @@ export async function buildServer(
         cb(null, false);
       },
       credentials: true,
+      exposedHeaders: ["X-Request-Id"],
     });
   await server.register(cors, { delegator: corsOptions });
 
   await server.register(websocket);
 
-  const lifecycle = new MatchLifecycle(server.log, options.matchPersistence, undefined, options.roomSeed);
+  const lifecycle = new MatchLifecycle(server.log, options.matchPersistence, undefined, options.roomSeed, metrics);
   const identity = options.connectionIdentity ?? new ConnectionIdentityService();
   const connections = new AccountConnections();
   const matchmaking = createMatchmakingService(
@@ -100,6 +116,14 @@ export async function buildServer(
     (userId) => identity.assertActive?.(userId) ?? Promise.resolve(),
   );
   let startupComplete = false;
+  let shuttingDown = false;
+  let startupWork: Promise<void> = Promise.resolve();
+  server.decorate("waitForStartup", () => startupWork);
+  server.decorate("beginShutdown", () => {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    server.log.info({ event: "server_shutdown_started" }, "Server shutdown started");
+  });
   const recoverPersistentMatches =
     options.matchRecovery !== false &&
     (!!options.matchRecovery || (!options.matchPersistence && !!process.env.DATABASE_URL?.trim()));
@@ -108,24 +132,45 @@ export async function buildServer(
     (recoverPersistentMatches
       ? (roomId: string) => new MatchRecoveryRepository().isInterruptedRoom(roomId)
       : async () => false);
-  server.addHook("onReady", async () => {
+  const finishStartup = async () => {
     if (options.documentationOnly) {
       startupComplete = true;
       return;
     }
     if (recoverPersistentMatches)
-      await (options.matchRecovery || new MatchRecoveryService()).recover(lifecycle, server.log);
+      await (options.matchRecovery || new MatchRecoveryService(undefined, undefined, undefined, metrics, server.log)).recover(lifecycle, server.log);
+    if (shuttingDown) return;
     lifecycle.startRetries();
     matchmaking.start();
     startupComplete = true;
+    server.log.info({ event: "server_ready" }, "Startup and recovery complete");
+  };
+  server.addHook("onReady", async () => {
+    startupWork = finishStartup();
+    if (!options.serveDuringRecovery) await startupWork;
+    else void startupWork.catch(error => {
+      server.log.error({ event: "server_startup_failed", err: error }, "Startup failed; normal traffic remains unavailable");
+    });
   });
+  server.addHook("onRequest", async (request) => {
+    if (startupComplete && !shuttingDown) return;
+    if (["/health", "/api/health", "/ready", "/metrics"].includes(request.url.split("?")[0])) return;
+    throw new AuthError("DATABASE_UNAVAILABLE");
+  });
+  server.addHook("preClose", async () => { server.beginShutdown(); });
   server.addHook("onClose", async () => {
+    await startupWork.catch(() => undefined);
     await matchmaking.close();
     await lifecycle.close();
     await disconnectDatabase();
+    server.log.info({ event: "server_shutdown_complete" }, "Server shutdown complete");
   });
 
-  registerHealthRoutes(server, checkDatabaseReadiness, () => startupComplete);
+  registerHealthRoutes(server, options.databaseReadiness ?? checkDatabaseReadiness, () => startupComplete && !shuttingDown);
+  if (observability.metricsEnabled) server.get("/metrics", { schema: { hide: true } }, async (_request, reply) => {
+    reply.header("Cache-Control", "no-store");
+    return reply.type(metrics.registry.contentType).send(await metrics.registry.metrics());
+  });
   await registerRoutes(server, lifecycle, identity, matchmaking, interruptedRoom);
   await server.register(authRoutes, { prefix: "/api/auth", matchmaking });
   await server.register(adminRoutes, {
@@ -154,7 +199,7 @@ export async function buildServer(
     identity,
     replayQuery: options.replayQuery,
   });
-  registerGameWebSocket(server, lifecycle, identity, matchmaking, interruptedRoom, connections);
+  registerGameWebSocket(server, lifecycle, identity, matchmaking, interruptedRoom, connections, metrics);
 
   return server;
 }
@@ -169,21 +214,32 @@ async function start() {
   const port = Number(process.env.PORT ?? 3000);
   const host = "0.0.0.0";
 
-  const server = await buildServer();
+  const server = await buildServer({ serveDuringRecovery: true });
   let stopping = false;
-  const shutdown = () => {
+  const shutdown = (signal: string) => {
     if (stopping) return;
     stopping = true;
-    void server.close().catch(() => {
-      server.log.error({ event: "server:shutdown_failed" }, "Graceful shutdown failed");
+    server.log.info({ event: "shutdown_signal_received", signal }, "Shutdown signal received");
+    server.beginShutdown();
+    void server.close().catch(error => {
+      server.log.error({ event: "server_shutdown_failed", err: error }, "Graceful shutdown failed");
       process.exitCode = 1;
     });
   };
-  process.once("SIGINT", shutdown);
-  process.once("SIGTERM", shutdown);
+  process.once("SIGINT", () => shutdown("SIGINT"));
+  process.once("SIGTERM", () => shutdown("SIGTERM"));
+  const fatal = (error: unknown) => {
+    server.log.fatal({ event: "process_fatal", err: error }, "Fatal process error");
+    server.beginShutdown();
+    const deadline = setTimeout(() => process.exit(1), 15000);
+    void server.close().catch(() => undefined).finally(() => { clearTimeout(deadline); process.exit(1); });
+  };
+  process.once("uncaughtException", fatal);
+  process.once("unhandledRejection", fatal);
   try {
     const address = await server.listen({ port, host });
-    server.log.info(`server listening on ${address}`);
+    server.log.info({ event: "server_started", address }, "Server listening");
+    await server.waitForStartup();
   } catch (error) {
     await server.close();
     throw error;
@@ -192,10 +248,11 @@ async function start() {
 
 if (require.main === module) {
   void start().catch((error: unknown) => {
-    // Never serialize underlying Prisma errors, URLs, environment or stacks.
-    console.error(
-      error instanceof ProductionConfigurationError ? error.message : "Server startup failed",
-    );
+    // A fatal startup event must remain visible even with LOG_LEVEL=silent or invalid config.
+    process.stderr.write(JSON.stringify({ level: 60, time: Date.now(), event: "server_startup_failed",
+      err: safeError(error), msg: error instanceof ProductionConfigurationError ? error.message : "Server startup failed" }) + "\n");
     process.exit(1);
   });
 }
+
+declare module "fastify" { interface FastifyInstance { beginShutdown(): void; waitForStartup(): Promise<void> } }

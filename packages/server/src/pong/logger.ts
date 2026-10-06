@@ -10,7 +10,8 @@ function timestamp() {
 export type PongLogger = Pick<FastifyBaseLogger, "info" | "debug" | "error">;
 
 export function logPong(logger: PongLogger, obj: Record<string, unknown>) {
-  const payload = { tag: obj.tag, ts: timestamp(), ...obj };
+  const payload = { tag: obj.tag, ts: timestamp(), roomId: obj.roomId,
+    connectionId: obj.connectionId ?? obj.socketId, role: obj.role, reason: obj.reason };
   try {
     // route by tag
     if (obj.tag === "pong:tick") {
@@ -32,7 +33,7 @@ export function logPong(logger: PongLogger, obj: Record<string, unknown>) {
     logger.info(payload);
   } catch (e) {
     try {
-      logger.error({ tag: obj.tag, ts: timestamp(), message: "logging_failed", err: String(e) });
+      logger.error({ tag: obj.tag, ts: timestamp(), message: "logging_failed", err: e });
     } catch {
       // best effort
       // swallow

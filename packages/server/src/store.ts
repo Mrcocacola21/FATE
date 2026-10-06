@@ -295,6 +295,8 @@ export function listGameRooms(): GameRoom[] {
   return Array.from(games.values());
 }
 
+export function getGameRoomCount(): number { return games.size; }
+
 export function cleanupGameRooms(
   options: {
     now?: number;

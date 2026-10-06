@@ -21,7 +21,7 @@ export async function replayRoutes(
   let service = options.replayQuery;
   server.addHook("preHandler", async (request, reply) => {
     reply.header("Cache-Control", "no-store");
-    await requireIdentity(request.headers.authorization, options.identity);
+    await requireIdentity(request.headers.authorization, options.identity, request);
   });
   const query = () =>
     (service ??= new ReplayQueryService(new MatchRepository(), new MatchActionRepository()));

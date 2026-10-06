@@ -39,7 +39,7 @@ export async function matchRoutes(
     }),
     async (request, reply) => {
       reply.header("Cache-Control", "no-store");
-      await requireIdentity(request.headers.authorization, options.identity);
+      await requireIdentity(request.headers.authorization, options.identity, request);
       const { id } = parseInput(idParamsSchema, request.params);
       const query = parseInput(matchActionsQuerySchema, request.query);
       history ??= new MatchActionService(new MatchRepository(), new MatchActionRepository());

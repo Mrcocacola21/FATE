@@ -83,7 +83,7 @@ export async function registerRoutes(
   }
   async function creatorId(request: FastifyRequest) {
     if (request.headers.authorization === undefined) return null;
-    return (await requireIdentity(request.headers.authorization, identityService)).userId;
+    return (await requireIdentity(request.headers.authorization, identityService, request)).userId;
   }
   server.get(
     "/",

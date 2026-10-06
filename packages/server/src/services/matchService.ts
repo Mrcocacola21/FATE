@@ -1,3 +1,4 @@
+import { getLogger } from "../observability/logger";
 import { matchTypeFromRated, type MatchType } from "../matches/matchType";
 import { isDeepStrictEqual } from "node:util";
 import { RatingService } from "./ratingService";
@@ -86,7 +87,7 @@ export class MatchService {
   private actions?: MatchActionRepository;
   constructor(
     private readonly matches: MatchRepository,
-    private readonly logger: { error(data: object, message: string): void; info?(data: object, message: string): void } = console,
+    private readonly logger: { error(data: object, message: string): void; info?(data: object, message: string): void } = getLogger(),
     actions?: MatchActionRepository,
     private snapshots?: MatchSnapshotService,
     private ratings?: Pick<RatingService, "processRatedMatch">,

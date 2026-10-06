@@ -1,4 +1,5 @@
 import { MatchTypeError, validateMatchType } from "../matches/matchType";
+import { applicationMetrics, type ApplicationMetrics } from "../observability/metrics";
 import { readMatchmakingConfig, type MatchmakingConfig } from "../matchmaking/config";
 import { ratedCompatibility, type RatedCompatibility } from "../lobby/metadata";
 import { RatingService } from "../services/ratingService";
@@ -56,6 +57,7 @@ interface Projection {
   start?: StartedMatchInput;
   finish?: FinishedMatchInput;
   finishAttempts?: number;
+  finished?: boolean;
   resultBlocked?: boolean;
   cancel?: Date;
   removed: boolean;
@@ -158,6 +160,7 @@ export class MatchLifecycle {
     service?: MatchPersistence,
     private readonly snapshots: MatchSnapshotService = new MatchSnapshotService(),
     private readonly roomSeed?: () => number,
+    private readonly metrics: ApplicationMetrics = applicationMetrics,
   ) {
     this.service = service;
     this.actionQueue = new MatchActionQueue({
@@ -231,6 +234,7 @@ export class MatchLifecycle {
     publishGameRoom(room);
     if (room.matchId) {
       this.projection(room);
+      this.metrics.matchTransition(room, "created");
       this.logger.info(
         { event: "match:created", roomId: room.id, matchId: room.matchId, matchType: room.matchType },
         "Match linked to room",
@@ -289,6 +293,8 @@ export class MatchLifecycle {
     // No fallible async initialization follows the durable transaction.
     publishGameRoom(room);
     this.projection(room);
+    this.metrics.matchTransition(room, "created");
+    this.logger.info({ event: "match:created", roomId: room.id, matchId: match.id }, "Matched room created");
     this.stagedPairs.delete(attempt.roomId);
     this.uncertainPairs.delete(attempt.roomId);
     return { roomId: room.id, matchId: match.id };
@@ -329,6 +335,7 @@ export class MatchLifecycle {
   async finalizeRestoredRoom(room: GameRoom, needsSnapshot: boolean, finishedAt: Date): Promise<void> {
     const p = this.projection(room);
     if (!p || room.state.phase !== "ended") throw new Error("Terminal persistent room required");
+    if (p.finished) return;
     if (needsSnapshot) this.actionQueue.enqueueSnapshot(this.snapshots.capture(room), room.id);
     if (!(await this.actionQueue.drain(p.matchId))) throw new Error("Terminal checkpoint unavailable");
     p.finish = extractPersistentMatchResult(room, finishedAt);
@@ -493,7 +500,7 @@ export class MatchLifecycle {
         });
       } catch {
         p.resultBlocked = true;
-        this.logger.error({ event: "match:result_invalid", code: "MATCH_RESULT_INVALID", roomId: room.id, matchId: p.matchId },
+        this.logger.error({ event: "match:result_invalid", errorCode: "MATCH_RESULT_INVALID", roomId: room.id, matchId: p.matchId },
           "Terminal result extraction failed; runtime preserved");
       }
     }
@@ -646,6 +653,7 @@ export class MatchLifecycle {
         operation = "started";
         await service.markStarted(p.matchId, p.start);
         p.start = undefined;
+        this.metrics.matchTransition(p, "started");
         this.logger.info(
           { event: "match:started", roomId: p.roomId, matchId: p.matchId },
           "Match started",
@@ -660,6 +668,8 @@ export class MatchLifecycle {
         p.finishAttempts = (p.finishAttempts ?? 0) + 1;
         await service.finalizeMatch(p.matchId, p.finish);
         p.finish = undefined;
+        p.finished = true;
+        this.metrics.matchTransition(p, "finished");
         this.logger.info(
           { event: "match:finished", roomId: p.roomId, matchId: p.matchId },
           "Match finished",
@@ -669,6 +679,7 @@ export class MatchLifecycle {
         operation = "cancelled";
         await service.markCancelled(p.matchId, p.cancel);
         p.cancel = undefined;
+        this.metrics.matchTransition(p, "cancelled");
         this.logger.info(
           { event: "match:cancelled", roomId: p.roomId, matchId: p.matchId },
           "Match cancelled",
@@ -678,6 +689,7 @@ export class MatchLifecycle {
         operation = "interrupted";
         await service.interruptMatch(p.matchId, p.interrupt);
         p.interrupt = undefined;
+        this.metrics.matchTransition(p, "interrupted");
       }
     } catch (error) {
       const domainError = error instanceof MatchResultError;
@@ -691,7 +703,7 @@ export class MatchLifecycle {
       // Prisma diagnostics can contain values. Log safe identifiers, never tokens/names.
       this.logger.error(
         { event: "match:persistence_failed", operation, roomId: p.roomId, matchId: p.matchId,
-          code: domainError || ratingError ? error.code : databaseIntegrityError ? "MATCH_RESULT_INVALID" :
+          errorCode: domainError || ratingError ? error.code : databaseIntegrityError ? "MATCH_RESULT_INVALID" :
             exhausted ? "MATCH_RESULT_RETRY_EXHAUSTED" : "MATCH_PERSISTENCE_UNAVAILABLE" },
         p.resultBlocked ? "Match persistence failed; runtime preserved, automatic retries stopped" :
           "Match persistence failed; runtime preserved and projection queued for retry",

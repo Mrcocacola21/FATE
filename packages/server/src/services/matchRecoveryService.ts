@@ -1,4 +1,7 @@
 import type { MatchAction } from "@prisma/client";
+import { applicationMetrics, elapsedSeconds, type ApplicationMetrics } from "../observability/metrics";
+import { getLogger } from "../observability/logger";
+import { performance } from "node:perf_hooks";
 import { getGameRoom, publishGameRoom, restoreGameRoom } from "../store";
 import type { MatchLifecycle } from "../persistence/matchLifecycle";
 import { MatchRecoveryRepository, type RecoveryMatch } from "../repositories/matchRecoveryRepository";
@@ -33,16 +36,26 @@ export interface RecoverySummary {
 /** Single backend owner: run before accepting gameplay. Reconstruction itself is read-only. */
 export class MatchRecoveryService {
   private running?: Promise<RecoverySummary>;
+  private readonly replay: Pick<ReplayService, "reconstructForRecovery">;
   constructor(
     private readonly repository: Repository = new MatchRecoveryRepository(),
-    private readonly replay: Pick<ReplayService, "reconstructForRecovery"> = new ReplayService(),
+    replay?: Pick<ReplayService, "reconstructForRecovery">,
     private readonly ratings: Pick<RatingService, "processRatedMatch"> = new RatingService(new RatingRepository()),
-  ) {}
+    private readonly metrics: ApplicationMetrics = applicationMetrics,
+    logger: Logger = getLogger(),
+  ) { this.replay = replay ?? new ReplayService(undefined, undefined, undefined, metrics, logger); }
 
   recover(lifecycle: MatchLifecycle, logger: Logger): Promise<RecoverySummary> {
     // Concurrent calls share one coordinator; sequential calls inspect the registry again.
     if (this.running) return this.running;
-    const work = this.run(lifecycle, logger);
+    const started = performance.now();
+    const work = this.run(lifecycle, logger).then(summary => {
+      this.metrics.observeStartupRecovery("success", elapsedSeconds(started)); return summary;
+    }, error => {
+      this.metrics.observeStartupRecovery("error", elapsedSeconds(started));
+      logger.error({ event: "startup_recovery_failed", err: error }, "Startup recovery failed");
+      throw error;
+    });
     this.running = work;
     void work.finally(() => { if (this.running === work) this.running = undefined; }).catch(() => {});
     return work;
@@ -58,11 +71,14 @@ export class MatchRecoveryService {
       if (!page.length) break;
       for (const match of page) {
         summary.scanned++;
+        const candidateStarted = performance.now();
+        let outcome: "recovered" | "finalized" | "skipped" | "unrecoverable" | "error" = "error";
         try {
           const existing = match.roomId ? getGameRoom(match.roomId) : undefined;
           if (existing) {
             if (existing.matchId !== match.id) throw new MatchRecoveryError("ROOM_ID_CONFLICT");
             summary.skipped++;
+            outcome = "skipped";
             continue;
           }
           if (match.status === "WAITING") throw new MatchRecoveryError("WAITING_LOBBY_NOT_DURABLE");
@@ -93,9 +109,11 @@ export class MatchRecoveryService {
             // Durable terminal action, result commit interrupted. Use normal result/rating pipeline.
             await lifecycle.finalizeRestoredRoom(room, snapshotRevision < target, rows[rows.length - 1].createdAt);
             summary.finalized++;
+            outcome = "finalized";
           } else {
             publishGameRoom(room);
             summary.recovered++;
+            outcome = "recovered";
           }
           logger.info({ event: "match:recovered", matchId: match.id, roomId: match.roomId,
             revision: target, baseRevision: recovered.base.revision, actionsApplied: recovered.actionsApplied },
@@ -107,8 +125,12 @@ export class MatchRecoveryService {
           if (error instanceof MatchRecoveryError && error.code === "ROOM_ID_CONFLICT") throw error;
           await this.repository.interrupt(match.id, `SERVER_RESTART_UNRECOVERABLE:${error.code}`);
           summary.interrupted++;
-          logger.error({ event: "match:recovery_interrupted", matchId: match.id, code: error.code,
+          outcome = "unrecoverable";
+          this.metrics.matchTransition(match, "interrupted");
+          logger.error({ event: "match:recovery_interrupted", matchId: match.id, errorCode: error.code,
             ...(error instanceof ReplayError ? error.metadata : {}) }, "Match cannot safely resume");
+        } finally {
+          this.metrics.observeRecovery(outcome, elapsedSeconds(candidateStarted));
         }
       }
       afterId = page[page.length - 1].id;
@@ -126,7 +148,7 @@ export class MatchRecoveryService {
           // Rating repair is independent of live-room recovery. Preserve FINISHED on failure.
           summary.ratingFailures++;
           logger.error({ event: "match:rating_repair_failed", matchId: id,
-            code: error instanceof RatingError || error instanceof Glicko2Error ? error.code : "RATING_STORAGE_UNAVAILABLE" },
+            errorCode: error instanceof RatingError || error instanceof Glicko2Error ? error.code : "RATING_STORAGE_UNAVAILABLE" },
           "Finished match rating repair failed");
         }
       }

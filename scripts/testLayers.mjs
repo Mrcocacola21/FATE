@@ -5,7 +5,7 @@ export const serverUnit = [
   "matchmaking.test.ts", "adminUiRating.test.ts",
 ];
 export const serverContract = [
-  "deployment.test.ts", "auth.test.ts", "apiErrors.test.ts", "admin.test.ts",
+  "observability.test.ts", "deployment.test.ts", "auth.test.ts", "apiErrors.test.ts", "admin.test.ts",
   "audit.test.ts", "profile.test.ts", "hardening.test.ts", "matchHistory.test.ts",
   "playerStatistics.test.ts", "rating.test.ts", "rankTiers.test.ts",
   "leaderboard.test.ts", "matchAction.test.ts", "matchRecovery.test.ts",

@@ -1,3 +1,4 @@
+import { getLogger } from "../observability/logger";
 import { PongState, makeInitialState } from "./state";
 import { tick, resetBall, PongInputs } from "./engine";
 import { logPong, shouldLogTick, type PongLogger } from "./logger";
@@ -22,7 +23,7 @@ export class PongRoom {
     this.state = makeInitialState();
     this.inputs = { P1: "stop", P2: "stop" };
     this.broadcast = broadcast;
-    this.logger = logger ?? console;
+    this.logger = logger ?? getLogger();
   }
 
   start() {

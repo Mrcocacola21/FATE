@@ -5,6 +5,15 @@ import { readMatchmakingConfig } from "./matchmaking/config";
 
 export class ProductionConfigurationError extends Error {}
 
+export function readObservabilityConfig(env: NodeJS.ProcessEnv = process.env) {
+  const logLevel = env.LOG_LEVEL ?? "info";
+  if (!["fatal", "error", "warn", "info", "debug", "trace", "silent"].includes(logLevel))
+    throw new ProductionConfigurationError("LOG_LEVEL must be fatal, error, warn, info, debug, trace or silent");
+  if (env.METRICS_ENABLED !== undefined && !["true", "false"].includes(env.METRICS_ENABLED))
+    throw new ProductionConfigurationError("METRICS_ENABLED must be true or false");
+  return { logLevel, metricsEnabled: env.METRICS_ENABLED !== "false" };
+}
+
 export interface MatchSnapshotConfig { interval: number }
 /** Parse once per server/lifecycle; zero disables periodic checkpoints only. */
 export function readMatchSnapshotConfig(env: NodeJS.ProcessEnv = process.env): MatchSnapshotConfig {
@@ -18,6 +27,7 @@ export function readMatchSnapshotConfig(env: NodeJS.ProcessEnv = process.env): M
 
 // Only fixed messages and variable names may escape this validator.
 export function validateProductionEnvironment(env: NodeJS.ProcessEnv = process.env): void {
+  readObservabilityConfig(env);
   readMatchSnapshotConfig(env);
   readLeaderboardConfig(env);
   readMatchmakingConfig(env);

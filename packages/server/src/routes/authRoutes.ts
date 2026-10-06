@@ -1,4 +1,5 @@
 import { emptyObjectSchema } from "../validation/commonSchemas";
+import { correlateUser } from "../observability/requestContext";
 import { documented, protectedErrors } from "../openapi/contract";
 import { parseInput } from "../validation/parseRequest";
 import type { MatchmakingService } from "../services/matchmakingService";
@@ -119,6 +120,7 @@ export async function authRoutes(
       const input = parseInput(registerSchema, request.body);
       refreshCookieOptions();
       const result = await getService().register(input);
+      correlateUser(request, result.user.id);
       return sendCredentials(reply.code(201), result, result.user);
     },
   );
@@ -151,6 +153,7 @@ export async function authRoutes(
       const input = parseInput(loginSchema, request.body);
       refreshCookieOptions();
       const result = await getService().login(input);
+      correlateUser(request, result.user.id);
       return sendCredentials(reply, result, result.user);
     },
   );

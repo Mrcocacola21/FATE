@@ -26,7 +26,7 @@ export async function matchmakingRoutes(
   const identities = new WeakMap<FastifyRequest, ConnectionIdentity>();
   server.addHook("preHandler", async (request, reply) => {
     reply.header("Cache-Control", "no-store");
-    identities.set(request, await requireIdentity(request.headers.authorization, options.identity));
+    identities.set(request, await requireIdentity(request.headers.authorization, options.identity, request));
   });
   const user = (request: FastifyRequest) => {
     const identity = identities.get(request);

@@ -1,4 +1,7 @@
 import type { Match } from "@prisma/client";
+import { applicationMetrics, elapsedSeconds, type ApplicationMetrics } from "../observability/metrics";
+import { getLogger } from "../observability/logger";
+import { performance } from "node:perf_hooks";
 import { isDeepStrictEqual } from "node:util";
 import {
   applyAction,
@@ -51,6 +54,8 @@ export class ReplayService {
     private matches?: MatchReader,
     private actions?: ActionReader,
     private snapshots: SnapshotReader = new MatchSnapshotService(),
+    private readonly metrics: ApplicationMetrics = applicationMetrics,
+    private readonly logger: { debug?(data: object, message: string): void; error(data: object, message: string): void } = getLogger(),
   ) {}
 
   async reconstructAtRevision(
@@ -350,9 +355,21 @@ export class ReplayService {
   }
 
   private async guard<T>(matchId: string, run: () => Promise<T>): Promise<T> {
+    const started = performance.now();
     try {
-      return await run();
+      const value = await run();
+      const base = value && typeof value === "object" && "base" in value ? value.base : undefined;
+      const source = base && typeof base === "object" && "type" in base && base.type === "snapshot" ? "snapshot_tail" : "initial_state";
+      this.metrics.observeReplay(source, "success", elapsedSeconds(started));
+      this.logger.debug?.({ event: "replay_reconstruction_complete", matchId, source, durationMs: elapsedSeconds(started) * 1000 }, "Replay reconstructed");
+      return value;
     } catch (error) {
+      this.metrics.observeReplay("unknown", "error", elapsedSeconds(started));
+      const details = { event: "replay_reconstruction_failed", matchId, err: error,
+        errorCode: error instanceof ReplayError || error instanceof MatchSnapshotError ? error.code : "REPLAY_STORAGE_UNAVAILABLE" };
+      if (error instanceof ReplayError && ["MATCH_NOT_FOUND", "MATCH_NOT_REPLAYABLE", "INVALID_TARGET_REVISION"].includes(error.code))
+        this.logger.debug?.(details, "Replay request rejected");
+      else this.logger.error(details, "Replay reconstruction failed");
       if (error instanceof ReplayError) throw error;
       if (error instanceof MatchSnapshotError)
         throw new ReplayError(

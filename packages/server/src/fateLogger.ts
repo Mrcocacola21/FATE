@@ -1,83 +1,23 @@
 import type { FastifyBaseLogger } from "fastify";
 
-const FATE_DEBUG = process.env.FATE_DEBUG === "1" || process.env.FATE_DEBUG === "true";
+const lifecycleTags = new Set(["fate:join", "fate:leave", "fate:room:create", "fate:placement:start"]);
+const safeFields = new Set(["tag", "event", "roomId", "matchId", "userId", "connectionId", "command",
+  "commandCorrelationId", "revision", "durationMs", "errorCode", "eventType", "role", "reason", "ok"]);
 
-function ts() {
-  return new Date().toISOString();
-}
-
-const INFO_TAGS = new Set([
-  "fate:join",
-  "fate:leave",
-  "fate:room:create",
-  "fate:placement:start",
-  "fate:initiative:resolved",
-  "fate:actionResult",
-  "fate:roll:requested",
-  "fate:roll:resolved",
-  "fate:damage",
-  "fate:move",
-  "fate:stakes:placed",
-]);
-
-const INFO_EVENT_TYPES = new Set([
-  "attackResolved",
-  "rollRequested",
-  "unitMoved",
-  "damageDealt",
-  "stakesPlaced",
-  "initiativeRolled",
-  "startGame",
-]);
-
+/** Legacy game event adapter: metadata only, never state, payloads, rolls or names. */
 export function logFate(logger: FastifyBaseLogger, obj: Record<string, unknown> & { tag: string }) {
-  const payload = { ts: ts(), ...obj };
+  if (!logger) return;
+  const normalized = { ...obj, connectionId: obj.connectionId ?? obj.socketId,
+    errorCode: obj.errorCode ?? obj.code };
+  const payload = Object.fromEntries(Object.entries(normalized).filter(([key]) => safeFields.has(key)));
   try {
-    const tag: string = obj.tag;
-    if (INFO_TAGS.has(tag)) {
-      logger.info(payload);
-      return;
-    }
-
-    if (tag === "fate:event") {
-      const eventType = obj.eventType as string | undefined;
-      if (eventType && INFO_EVENT_TYPES.has(eventType)) {
-        logger.info(payload);
-        return;
-      }
-      if (FATE_DEBUG) {
-        logger.debug(payload);
-      }
-      return;
-    }
-
-    if (tag === "fate:incoming") {
-      logger.debug(payload);
-      return;
-    }
-
-    // default: debug when FATE_DEBUG enabled, otherwise info
-    if (FATE_DEBUG) {
-      logger.debug(payload);
-    } else {
-      logger.info(payload);
-    }
-  } catch (e) {
-    try {
-      logger.error({
-        tag: obj.tag ?? "fate:log_error",
-        ts: ts(),
-        message: "fate logging failed",
-        err: String(e),
-      });
-    } catch {
-      // swallow
-    }
-  }
+    if (obj.tag === "fate:error") logger.error(payload, "Game diagnostic failed");
+    else if (lifecycleTags.has(obj.tag)) logger.info(payload);
+    else logger.debug(payload);
+  } catch { /* Diagnostics must never change authoritative gameplay. */ }
 }
 
 export function shouldLogFateDebug() {
-  return FATE_DEBUG;
+  return process.env.FATE_DEBUG === "1" || process.env.FATE_DEBUG === "true";
 }
-
 export default { logFate, shouldLogFateDebug };

@@ -1,4 +1,6 @@
 import type { MatchmakingService } from "./services/matchmakingService";
+import { applicationMetrics, elapsedSeconds, type ApplicationMetrics, type OperationResult } from "./observability/metrics";
+import { performance } from "node:perf_hooks";
 import type { MatchmakingEvent } from "./matchmaking/types";
 import { MatchTypeError, type MatchType } from "./matches/matchType";
 // packages/server/src/ws.ts
@@ -30,7 +32,7 @@ import {
   projectEventsForRecipient,
   projectPendingRollPresentation,
 } from "rules";
-import { ClientMessageSchema } from "./schemas";
+import { ClientMessageSchema, GameActionSchema } from "./schemas";
 import { isAllowedOrigin } from "./origin";
 import { isActionAllowedByPlayer } from "./permissions";
 import { deleteGameRoom, getGameRoom, touchGameRoom, type GameRoom } from "./store";
@@ -175,6 +177,7 @@ export type ServerMessage =
   | TestRoomSnapshotMessage;
 
 interface ConnectionMeta {
+  connectionId?: string;
   channel: "fate" | "pong";
   roomId: string;
   role: PlayerRole;
@@ -188,6 +191,12 @@ interface ConnectionMeta {
 const roomSockets = new Map<string, Set<WebSocket>>();
 const socketMeta = new Map<WebSocket, ConnectionMeta>();
 const socketRateState = new Map<WebSocket, { windowStartMs: number; messageCount: number }>();
+const commandObservations = new WeakMap<WebSocket, { result: OperationResult; errorCode?: string }>();
+const infrastructureErrorCodes = new Set(["INTERNAL_SERVER_ERROR", "MATCH_PERSISTENCE_UNAVAILABLE", "DATABASE_UNAVAILABLE", "REPLAY_STORAGE_UNAVAILABLE"]);
+const commandNames = new Set<string>([
+  ...ClientMessageSchema.options.map(option => option.shape.type.value),
+  ...GameActionSchema.innerType().options.map(option => option.shape.type.value),
+]);
 
 interface SeatGraceRecord {
   roomId: string;
@@ -221,6 +230,11 @@ type SwitchRoleTransition =
     };
 
 function sendMessage(socket: WebSocket, message: ServerMessage) {
+  const observation = commandObservations.get(socket);
+  if (observation && (message.type === "error" || message.type === "joinRejected" || message.type === "actionResult" && !message.ok)) {
+    observation.errorCode = "code" in message ? message.code : undefined;
+    observation.result = infrastructureErrorCodes.has(observation.errorCode ?? "") ? "error" : "rejected";
+  }
   if (socket.readyState !== WebSocket.OPEN) return;
   socket.send(JSON.stringify(message));
 }
@@ -811,6 +825,9 @@ async function applyRoomAction(
       const summary: Record<string, unknown> & { tag: string } = {
         tag: "fate:event",
         roomId: room.id,
+        matchId: room.matchId,
+        userId: meta.authIdentity?.userId,
+        connectionId: meta.connectionId,
         eventType: ev.type,
       };
       if (ev.attackerId) summary.playerId = ev.attackerId;
@@ -941,7 +958,7 @@ function detachFromPongRoom(meta: ConnectionMeta, reason: "leave" | "disconnect"
     tag: "pong:leave",
     roomId: meta.roomId,
     role: meta.role,
-    socketId: meta.connId,
+    connectionId: meta.connectionId,
     reason,
   });
   pongRoom.stop();
@@ -958,6 +975,7 @@ export function registerGameWebSocket(
   matchmaking?: MatchmakingService,
   interruptedRoom: (roomId: string) => Promise<boolean> = async () => false,
   accounts: AccountConnections = new AccountConnections(),
+  metrics: ApplicationMetrics = applicationMetrics,
 ) {
   serverLogger = server.log;
   server.get("/ws", { websocket: true, schema: { hide: true } }, (socket, request) => {
@@ -969,6 +987,9 @@ export function registerGameWebSocket(
     }
 
     const matchmakingConnectionId = randomUUID();
+    const connectionLogger = request.log.child({ connectionId: matchmakingConnectionId });
+    metrics.socketOpened(socket);
+    connectionLogger.info({ event: "websocket_connected" }, "WebSocket connected");
     let matchmakingUserId: string | undefined;
     let authenticatedToken: string | undefined;
     let authenticatedUserId: string | undefined;
@@ -1026,8 +1047,10 @@ export function registerGameWebSocket(
           logFate(serverLogger!, {
             tag: "fate:leave",
             roomId: current.roomId,
+            matchId: getGameRoom(current.roomId)?.matchId,
+            userId: current.authIdentity?.userId,
             role: current.role,
-            socketId: current.connId,
+            connectionId: current.connectionId,
             reason,
           });
         } else {
@@ -1084,6 +1107,7 @@ export function registerGameWebSocket(
             );
             addSocketToRoom(roomId, socket);
             socketMeta.set(socket, {
+              connectionId: matchmakingConnectionId,
               channel: "pong",
               roomId,
               role: msg.role,
@@ -1096,7 +1120,7 @@ export function registerGameWebSocket(
               tag: "pong:join",
               roomId,
               role: msg.role,
-              socketId: connId,
+              connectionId: matchmakingConnectionId,
               name: msg.name,
             });
             sendMessage(socket, {
@@ -1392,6 +1416,7 @@ export function registerGameWebSocket(
             touchGameRoom(room);
 
             socketMeta.set(socket, {
+              connectionId: matchmakingConnectionId,
               channel: "fate",
               roomId: room.id,
               role: msg.role,
@@ -1407,8 +1432,10 @@ export function registerGameWebSocket(
             logFate(serverLogger!, {
               tag: "fate:join",
               roomId: room.id,
+              matchId: room.matchId,
+              userId: identity?.userId,
               role: msg.role,
-              socketId: connId,
+              connectionId: matchmakingConnectionId,
               seat,
             });
 
@@ -2017,7 +2044,32 @@ export function registerGameWebSocket(
       }
 
       try {
-        const processing = messages.then(() => handleParsedMessage(parsed.data));
+        const started = performance.now();
+        const processing = messages.then(async () => {
+          const observation: { result: OperationResult; errorCode?: string } = { result: "success" };
+          commandObservations.set(socket, observation);
+          const command = parsed.data.type === "action" ? parsed.data.action.type : parsed.data.type;
+          const commandLogger = connectionLogger.child({ commandCorrelationId: randomUUID(), command });
+          try {
+            await handleParsedMessage(parsed.data);
+          } catch (error) {
+            observation.result = error instanceof MultiplayerIdentityError ? "rejected" : "error";
+            if (error instanceof MultiplayerIdentityError) observation.errorCode = error.code;
+            else commandLogger.error({ event: "game_command_failed", err: error,
+              userId: authenticatedUserId, roomId: socketMeta.get(socket)?.roomId,
+              matchId: getGameRoom(socketMeta.get(socket)?.roomId ?? "")?.matchId }, "WebSocket command failed");
+            throw error;
+          } finally {
+            const meta = socketMeta.get(socket);
+            const room = getGameRoom(meta?.roomId ?? "");
+            metrics.observeCommand(command, commandNames, observation.result, elapsedSeconds(started));
+            commandLogger.debug({ event: "game_command_complete", result: observation.result,
+              userId: meta?.authIdentity?.userId ?? authenticatedUserId, roomId: meta?.roomId,
+              matchId: room?.matchId, revision: room?.revision, errorCode: observation.errorCode,
+              durationMs: elapsedSeconds(started) * 1000 }, "WebSocket command complete");
+            commandObservations.delete(socket);
+          }
+        });
         messages = processing.catch(() => undefined);
         await processing;
       } catch (error) {
@@ -2026,7 +2078,6 @@ export function registerGameWebSocket(
           if (error.code === "ACCOUNT_BLOCKED") socket.close(1008, "ACCOUNT_BLOCKED");
           return;
         }
-        server.log.error({ tag: "fate:ws_unhandled_error" });
         sendStructuredError(socket, "BAD_REQUEST", "Failed to process message");
       }
     }
@@ -2036,6 +2087,7 @@ export function registerGameWebSocket(
     });
 
     async function handleSocketTermination(kind: "close" | "error") {
+      metrics.socketClosed(socket);
       accounts.remove(socket);
       if (matchmakingUserId) matchmaking?.disconnect(matchmakingUserId, matchmakingConnectionId);
       const meta = socketMeta.get(socket);
@@ -2056,6 +2108,7 @@ export function registerGameWebSocket(
     }
 
     socket.on("close", () => {
+      connectionLogger.info({ event: "websocket_disconnected", userId: authenticatedUserId }, "WebSocket disconnected");
       void handleSocketTermination("close");
     });
 

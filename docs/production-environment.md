@@ -25,7 +25,8 @@ tokens in frontend variables, image build arguments, source, or committed env fi
 | `JWT_REFRESH_TTL_SECONDS` | Optional | `2592000` | Refresh lifetime, positive integer up to 31536000 | No |
 | `ENABLE_TEST_ROOMS` | Optional | Disabled unless exactly `true` in production; Compose fixes `false` | Sandbox/Test rooms | No |
 | `FATE_DEBUG_TOKEN` | Only for deliberately enabled debug operations | Unset; no example token | Existing protected REST debug access; required with production test rooms; deliberately not passed by base Compose | Yes |
-| `LOG_LEVEL` | Optional | `info` | Existing Fastify/Pino JSON stdout logging; e.g. `warn` | No |
+| `LOG_LEVEL` | Optional | `info` | Validated Pino level: fatal/error/warn/info/debug/trace/silent; JSON stdout logging | No |
+| `METRICS_ENABLED` | Optional | `true` | Exactly true/false; expose read-only Prometheus `/metrics`; restrict at proxy/network layer | No |
 | `ROOM_TTL_MS` | Optional | `86400000` | Idle room cleanup; positive integer, otherwise existing fallback | No |
 | `MAX_ROOMS` | Optional | `100` | In-memory room retention limit; positive integer | No |
 | `MAX_LOG_EVENTS` | Optional | `5000` | Per-room action log retention; positive integer | No |
@@ -82,3 +83,5 @@ Frontend builds use only public `VITE_API_URL=https://api.example.com`,
 The frontend origin is `WEB_ORIGIN=https://fate.example.com`, not the API URL.
 These values are compiled into Vite assets; changing them requires a frontend
 rebuild. Third-party cookie blocking remains a browser constraint for separate sites.
+
+See [backend observability](observability.md) for correlation, redaction, metric labels, liveness/readiness and bounded probes.

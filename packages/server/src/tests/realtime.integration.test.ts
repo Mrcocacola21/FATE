@@ -8,6 +8,7 @@ import { wsTestHooks, broadcastRoomState, broadcastActionResult } from "../ws";
 import { testTokens } from "./matchTestSupport";
 import { databaseFixture } from "./helpers/databaseFixture";
 import { connectWs, type WsClient } from "./helpers/wsClient";
+import { eventually } from "./helpers/eventually";
 
 test("real PostgreSQL WS lifecycle: seats, safe projections, rejection, durable action, reconnect, block and matchmaking", async () => {
   const fixture = databaseFixture();
@@ -64,7 +65,9 @@ test("real PostgreSQL WS lifecycle: seats, safe projections, rejection, durable 
       assert(!JSON.stringify(frame).includes(testTokens.config.accessSecret));
       assert(!JSON.stringify(frame).includes('"rngState"'));
     }
-    assert.equal(await db.matchAction.count({ where: { matchId: room.matchId!, revision: before + 1 } }), 1);
+    await eventually(async () => await db.matchAction.findUnique({
+      where: { matchId_revision: { matchId: room.matchId!, revision: before + 1 } },
+    }) ?? false, "accepted action persisted asynchronously");
     const rejectedRevision = room.revision;
     actor.send({ type: "action", action: { type: "resolvePendingRoll", player: pending.player, pendingRollId: "stale-roll" } });
     assert.equal((await actor.wait("actionResult")).ok, false);
@@ -94,8 +97,9 @@ test("real PostgreSQL WS lifecycle: seats, safe projections, rejection, durable 
       ] });
       const privateEvents = await Promise.all([p1, p2, spectator].map(client => client.wait("actionResult")));
       assert.equal(privateEvents[0].events.length, 1);
-      assert.deepEqual(privateEvents[1].events, []);
-      assert.deepEqual(privateEvents[2].events, []);
+      const safePlacementNotice = [{ type: "hiddenSetupCompleted", owner: "P1", ability: "hidden" }];
+      assert.deepEqual(privateEvents[1].events, safePlacementNotice);
+      assert.deepEqual(privateEvents[2].events, safePlacementNotice);
     } finally { room.state = liveState; }
 
     await p1.close();

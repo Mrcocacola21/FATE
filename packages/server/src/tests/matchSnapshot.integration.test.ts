@@ -270,7 +270,7 @@ async function run() {
     );
     assert.equal(await finalOnlyService.loadLatestSnapshot(failed.matchId!), null);
     assert(
-      errors.some((data) => (data as { code?: string }).code === "MATCH_SNAPSHOT_WRITE_FAILED"),
+      errors.some((data) => (data as { errorCode?: string }).errorCode === "MATCH_SNAPSHOT_WRITE_FAILED"),
     );
     await lifecycle.removeRoom(failed);
     await dropTriggers();

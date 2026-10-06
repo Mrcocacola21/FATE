@@ -9,6 +9,7 @@ export function registerHealthRoutes(
   check: () => Promise<boolean> = checkDatabaseReadiness,
   startupReady: () => boolean = () => true,
 ): void {
+  let previousReady: boolean | undefined;
   server.get(
     "/health",
     documented({
@@ -40,6 +41,10 @@ export function registerHealthRoutes(
     async (_request, reply) => {
       reply.header("Cache-Control", "no-store");
       const ok = startupReady() && (await check());
+      if (previousReady !== ok) {
+        server.log[ok ? "info" : "warn"]({ event: "readiness_changed", ready: ok }, "Readiness changed");
+        previousReady = ok;
+      }
       return reply.code(ok ? 200 : 503).send(healthStatus(ok));
     },
   );

@@ -36,7 +36,7 @@ export class MatchActionQueue {
   fail(matchId: string, code: string, context: object = {}): void {
     if (this.failures.has(matchId)) return;
     this.failures.set(matchId, code);
-    this.logger.error({ event: code.startsWith("MATCH_SNAPSHOT") ? "match:snapshot_persistence_failed" : "match:action_persistence_failed", matchId, code, ...context },
+    this.logger.error({ event: code.startsWith("MATCH_SNAPSHOT") ? "match:snapshot_persistence_failed" : "match:action_persistence_failed", matchId, errorCode: code, ...context },
       "Match persistence incomplete; runtime preserved, result finalization blocked");
   }
 

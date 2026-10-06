@@ -99,7 +99,7 @@ async function run() {
   await lifecycle.retryPending();
   assert.equal(competitive.state.phase, "ended");
   assert.equal(attempts, 1);
-  assert(errors.some((e) => (e as { code?: string }).code === "MATCH_RESULT_CONFLICT"));
+  assert(errors.some((e) => (e as { errorCode?: string }).errorCode === "MATCH_RESULT_CONFLICT"));
   permanent = false;
   const unavailable = await lifecycle.createRoom();
   unavailable.seats = { P1: "one", P2: "two" };
@@ -111,7 +111,7 @@ async function run() {
   for (let i = 0; i < 6; i++) await lifecycle.retryPending();
   assert.equal(attempts, 6, "one permanent attempt plus five bounded transient attempts");
   assert.equal(unavailable.state.phase, "ended");
-  assert(errors.some((e) => (e as { code?: string }).code === "MATCH_RESULT_RETRY_EXHAUSTED"));
+  assert(errors.some((e) => (e as { errorCode?: string }).errorCode === "MATCH_RESULT_RETRY_EXHAUSTED"));
   await lifecycle.close();
   storeTestHooks.reset();
   console.log("match result extraction, actual chess draw, safe summaries and permanent-error retry tests passed");

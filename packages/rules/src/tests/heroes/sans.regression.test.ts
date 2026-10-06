@@ -373,7 +373,7 @@ export function testSansLastAttackSkipsIfNoEnemyExists() {
 
 function blasterLine() {
   const setup = setupSansState();
-  const { sans, enemy, enemy2, ally } = setup;
+  const { sans, enemy, enemy2 } = setup;
   const enemy3 = Object.values(setup.state.units).find(
     (u) => u.owner === "P2" && u.id !== enemy.id && u.id !== enemy2.id,
   )!;

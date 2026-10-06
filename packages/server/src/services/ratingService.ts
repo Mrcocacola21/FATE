@@ -1,3 +1,4 @@
+import { getLogger } from "../observability/logger";
 import { GAME_MODE_IDS, isGameModeId, type GameModeId } from "rules";
 import { Prisma } from "@prisma/client";
 import { AuthError } from "../auth/authErrors";
@@ -33,7 +34,7 @@ export class RatingService {
     private readonly logger: {
       info(data: object, message: string): void;
       error(data: object, message: string): void;
-    } = console,
+    } = getLogger(),
     // Server-owned configuration only; routes never accept algorithm parameters.
     private readonly configuration: Partial<Glicko2Options> = {},
   ) {}

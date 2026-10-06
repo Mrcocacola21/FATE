@@ -56,8 +56,9 @@ const placedEvent: GameEvent = {
   hiddenFromOpponent: true,
 };
 assert.deepEqual(projectEventsForRecipient(state, [placedEvent], "P1"), [placedEvent]);
-assert.deepEqual(projectEventsForRecipient(state, [placedEvent], "P2"), []);
-assert.deepEqual(projectEventsForRecipient(state, [placedEvent], "spectator"), []);
+const safePlacementNotice = [{ type: "hiddenSetupCompleted", owner: "P1", ability: "hidden" }];
+assert.deepEqual(projectEventsForRecipient(state, [placedEvent], "P2"), safePlacementNotice);
+assert.deepEqual(projectEventsForRecipient(state, [placedEvent], "spectator"), safePlacementNotice);
 
 const triggeredEvent: GameEvent = {
   type: "stakeTriggered",

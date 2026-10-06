@@ -1,4 +1,13 @@
 import { PrismaClient } from "@prisma/client";
+import { applicationMetrics, measureDatabase, type ApplicationMetrics } from "../observability/metrics";
+
+export function instrumentDatabase(client: PrismaClient, metrics: ApplicationMetrics = applicationMetrics): PrismaClient {
+  // Public query extension; forwards the original query in its original transaction.
+  // Repository API remains PrismaClient; production never uses $on on this extended client.
+  return client.$extends({ name: "fate-observability", query: {
+    $allOperations({ args, query }) { return measureDatabase(() => query(args), metrics); },
+  } }) as unknown as PrismaClient;
+}
 
 const globalDatabase = globalThis as typeof globalThis & {
   fatePrismaClient?: PrismaClient;
@@ -21,7 +30,7 @@ export function getDatabaseClient(): PrismaClient {
 
   if (localClient) return localClient;
 
-  localClient = globalDatabase.fatePrismaClient ?? new PrismaClient();
+  localClient = globalDatabase.fatePrismaClient ?? instrumentDatabase(new PrismaClient({ log: [] }));
   if (process.env.NODE_ENV !== "production") {
     globalDatabase.fatePrismaClient = localClient;
   }
@@ -37,5 +46,8 @@ export async function connectDatabase(): Promise<PrismaClient> {
 
 export async function disconnectDatabase(): Promise<void> {
   if (!localClient) return;
-  await localClient.$disconnect();
+  const client = localClient;
+  localClient = undefined;
+  if (globalDatabase.fatePrismaClient === client) delete globalDatabase.fatePrismaClient;
+  await client.$disconnect();
 }

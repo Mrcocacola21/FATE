@@ -52,7 +52,7 @@ test("OpenAPI validates, covers production routes, reuses Zod and has no private
       if (["HEAD", "OPTIONS"].includes(route.method)) continue;
       if (route.url.startsWith("/docs") || route.url === "/openapi.json") continue;
       if (
-        ["/ws", "/api/games/:id", "/api/games/:id/log", "/api/games/:id/actions"].includes(
+        ["/metrics", "/ws", "/api/games/:id", "/api/games/:id/log", "/api/games/:id/actions"].includes(
           route.url,
         )
       ) {
@@ -374,6 +374,7 @@ test("real public match DTO, room creation and readiness responses conform", asy
     process.env = saved;
   }
   const runtime = await buildServer({
+    databaseReadiness: async () => false,
     matchPersistence: new MemoryMatchPersistence(),
     matchRecovery: false,
     ratings: (() => {

@@ -1,4 +1,5 @@
 import { bearerToken } from "./bearer";
+import { correlateUser } from "../observability/requestContext";
 import type { FastifyRequest } from "fastify";
 import { AuthError } from "./authErrors";
 import type { TokenService } from "./tokens";
@@ -22,6 +23,7 @@ export function accessTokenPreHandler(
     if (!token) throw new AuthError("UNAUTHORIZED");
     request.authUserId = getTokens().verifyAccessToken(token).sub;
     const account = await requireActiveAccount(request.authUserId, load);
+    correlateUser(request, request.authUserId);
     currentRoles.set(request, account.role);
   };
 }
