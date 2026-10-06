@@ -56,6 +56,8 @@ interface BoardProps {
   allowAnyUnitSelection?: boolean;
   visualEffectsEnabled?: boolean;
   eventBatch?: BoardEventBatch | null;
+  eventBatches?: BoardEventBatch[];
+  onEventBatchesConsumed?: (batches: BoardEventBatch[]) => void;
   effectSessionKey?: string | null;
   previewLines?: readonly BoardPreviewLine[];
   zoom?: number;
@@ -207,6 +209,8 @@ export const Board: FC<BoardProps> = ({
   allowAnyUnitSelection = false,
   visualEffectsEnabled = false,
   eventBatch = null,
+  eventBatches,
+  onEventBatchesConsumed,
   effectSessionKey = null,
   previewLines = [],
   zoom = 1,
@@ -229,6 +233,8 @@ export const Board: FC<BoardProps> = ({
   } = useBoardFit({ boardSize: size, zoom, showCoordinates });
   const visualResolution = useVisualResolution({
     batch: eventBatch,
+    batches: eventBatches,
+    onBatchesConsumed: onEventBatchesConsumed,
     view,
     enabled: visualEffectsEnabled,
     sessionKey: effectSessionKey,

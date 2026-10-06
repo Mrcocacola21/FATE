@@ -135,8 +135,11 @@ interface GameStore {
   pendingLokiLaughtOption: PendingLokiLaughtOption | null;
   events: GameEvent[];
   latestEventBatch: BoardEventBatch | null;
+  pendingEventBatches: BoardEventBatch[];
+  eventStreamId: string | null;
+  acknowledgeEventBatches: (batches: BoardEventBatch[]) => void;
   clientLog: string[];
-  lastLogIndex: number;
+  lastEventRevision: number;
   lastActionResult: { ok: boolean; error?: string } | null;
   lastActionResultAt: number;
   testRoomSnapshot: string | null;
@@ -178,7 +181,7 @@ interface GameStore {
   sendTestRoomCommand: (command: TestRoomCommand) => void;
   requestMoveOptions: (unitId: string, mode?: MoveMode) => void;
   setRoomState: (roomId: string, room: PlayerView) => void;
-  applyActionResult: (events: GameEvent[], logIndex: number, error?: string) => void;
+  applyActionResult: (events: import("rules").DeliveredGameEvent[], revision: number, streamId: string, error?: string) => void;
   addEvents: (events: GameEvent[]) => void;
   addClientLog: (message: string) => void;
   setSelectedUnit: (unitId: string | null) => void;
@@ -224,8 +227,10 @@ function buildLeaveResetState(
     pendingLokiLaughtOption: null,
     events: [],
     latestEventBatch: null,
+    pendingEventBatches: [],
+    eventStreamId: null,
     clientLog,
-    lastLogIndex: -1,
+    lastEventRevision: -1,
     lastActionResult: null,
     lastActionResultAt: 0,
     testRoomSnapshot: null,
@@ -506,7 +511,9 @@ function handleServerMessage(
     case "actionResult": {
       const { applyActionResult, addClientLog } = get();
       if (msg.ok) {
-        applyActionResult(msg.events, msg.logIndex ?? -1);
+        if (msg.streamId && msg.revision !== undefined) {
+          applyActionResult(msg.events, msg.revision, msg.streamId);
+        }
       } else if (msg.error) {
         addClientLog(msg.error);
       }
@@ -655,8 +662,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
   pendingLokiLaughtOption: null,
   events: [],
   latestEventBatch: null,
+  pendingEventBatches: [],
+  eventStreamId: null,
   clientLog: [],
-  lastLogIndex: -1,
+  lastEventRevision: -1,
   lastActionResult: null,
   lastActionResultAt: 0,
   testRoomSnapshot: null,
@@ -983,18 +992,25 @@ export const useGameStore = create<GameStore>((set, get) => ({
           : {}),
       };
     }),
-  applyActionResult: (events, logIndex, error) =>
+  applyActionResult: (events, revision, streamId, error) =>
     set((state) => {
-      if (logIndex <= state.lastLogIndex) {
+      if (!Number.isSafeInteger(revision) || revision < 0 || !streamId ||
+          (streamId === state.eventStreamId && revision <= state.lastEventRevision)) {
         return error ? { clientLog: [...state.clientLog, error] } : {};
       }
+      const batch: BoardEventBatch = { streamId, revision, events, view: state.roomState ?? undefined };
       return {
         events: [...state.events, ...events].slice(-200),
-        latestEventBatch: { logIndex, events },
-        lastLogIndex: logIndex,
+        latestEventBatch: batch,
+        pendingEventBatches: [...(streamId === state.eventStreamId ? state.pendingEventBatches : []), batch],
+        eventStreamId: streamId,
+        lastEventRevision: revision,
         clientLog: error ? [...state.clientLog, error] : state.clientLog,
       };
     }),
+  acknowledgeEventBatches: (batches) => set((state) => ({
+    pendingEventBatches: state.pendingEventBatches.filter((batch) => !batches.includes(batch)),
+  })),
   addEvents: (events) => set((state) => ({ events: [...state.events, ...events].slice(-200) })),
   addClientLog: (message) =>
     set((state) =>
@@ -1027,16 +1043,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set(() => ({ pendingLokiLaughtOption: { unitId, option, queuedAt: Date.now() } })),
   clearLokiLaughtOption: () => set(() => ({ pendingLokiLaughtOption: null })),
   replayLastEffects: () =>
-    set((state) =>
-      state.latestEventBatch
-        ? {
-            latestEventBatch: {
-              logIndex: Date.now(),
-              events: [...state.latestEventBatch.events],
-            },
-          }
-        : {},
-    ),
+    set((state) => {
+      if (!state.latestEventBatch) return {};
+      const batch: BoardEventBatch = {
+        ...state.latestEventBatch,
+        previewId: `preview:${crypto.randomUUID()}`,
+        view: state.roomState ?? undefined,
+      };
+      return { pendingEventBatches: [...state.pendingEventBatches, batch] };
+    }),
   resetGameState: () =>
     set(() => ({
       roomState: null,
@@ -1047,8 +1062,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
       pendingLokiLaughtOption: null,
       events: [],
       latestEventBatch: null,
+      pendingEventBatches: [],
+      eventStreamId: null,
       clientLog: [],
-      lastLogIndex: -1,
+      lastEventRevision: -1,
       lastActionResult: null,
       lastActionResultAt: 0,
       testRoomSnapshot: null,

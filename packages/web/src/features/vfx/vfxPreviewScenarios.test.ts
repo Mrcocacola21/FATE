@@ -31,7 +31,7 @@ test("VFX preview scenarios use the real event mapper path", () => {
       events: scenario.events,
       view,
       previousPositions,
-      logIndex: index + 1,
+      revision: index + 1,
     });
     const effectIds = new Set(effects.map((effect) => effect.effectId));
 
@@ -55,7 +55,7 @@ test("VFX preview scenarios exercise cell, unit, area, line, and path geometry",
       events: scenario.events,
       view,
       previousPositions,
-      logIndex: index + 1,
+      revision: index + 1,
     }).forEach((effect) => placements.add(effect.placement));
   });
 

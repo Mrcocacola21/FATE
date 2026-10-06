@@ -3,7 +3,7 @@ import type {
   GameAction,
   PlayerView,
   PlayerId,
-  GameEvent,
+  DeliveredGameEvent,
   HeroMeta,
   GameModeId,
 } from "rules";
@@ -29,8 +29,9 @@ export interface GameViewResponse {
 
 export interface ActionResponse {
   view: PlayerView;
-  events: GameEvent[];
-  logIndex: number;
+  events: DeliveredGameEvent[];
+  revision?: number;
+  streamId?: string;
 }
 
 export interface RoomSummary {

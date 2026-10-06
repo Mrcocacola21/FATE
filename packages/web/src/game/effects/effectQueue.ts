@@ -37,8 +37,8 @@ export function pruneExpiredBoardEffects(
 }
 
 export function shouldProcessEffectBatch(
-  lastProcessedLogIndex: number,
-  nextLogIndex: number,
+  lastProcessedRevision: number,
+  nextRevision: number,
 ): boolean {
-  return Number.isInteger(nextLogIndex) && nextLogIndex > lastProcessedLogIndex;
+  return Number.isInteger(nextRevision) && nextRevision > lastProcessedRevision;
 }

@@ -565,7 +565,7 @@ function testRejectedActionLogAndRevisionInvariants() {
   const accepted = applyGameAction(room, { type: "setReady", player: "P1", ready: true }, "P1");
   assert.equal(accepted.ok, true);
   if (accepted.ok) {
-    assert.equal(accepted.logIndex, logLen0, "accepted action should expose log index");
+    assert.equal(accepted.revision, room.revision, "accepted action should expose room revision");
   }
   assert.equal(room.revision, revision0 + 1, "accepted action should increment revision");
   assert.equal(room.actionLog.length, logLen0 + 1, "accepted action should append log");

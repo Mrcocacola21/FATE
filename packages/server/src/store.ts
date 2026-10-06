@@ -1,3 +1,4 @@
+import { identifyAcceptedEvents } from "./eventDelivery";
 import { validateMatchType, type MatchType } from "./matches/matchType";
 import { identityDisplayName } from "./auth/connectionIdentity";
 import { LobbyNameSchema, type RatedCompatibility } from "./lobby/metadata";
@@ -50,7 +51,7 @@ export function restoreGameRoom(input: RestoreGameRoomInput): GameRoom {
     throw new Error("Invalid recovered room");
   const state = gameStateV1Schema.parse(normalizeSnapshotState(input.recovered.state));
   const room: GameRoom = {
-    id: input.roomId, matchId: input.matchId, seed: input.seed,
+    id: input.roomId, matchId: input.matchId, streamId: input.matchId, seed: input.seed,
     gameMode: input.gameMode, matchType: input.matchType,
     lobbyName: LobbyNameSchema.parse(input.lobbyName), origin: input.origin,
     ratedCompatibility: null, roomMode: "normal", testDiceRng: null,
@@ -85,6 +86,8 @@ export interface GameRoom {
   ratedCompatibility: RatedCompatibility | null;
   id: string;
   matchId: string | null;
+  /** Persisted matches use Match.id; transient/test timelines use an opaque UUID. */
+  streamId: string;
   readonly matchType: MatchType;
   seed: number;
   rng: RNG;
@@ -233,6 +236,7 @@ export function createGameRoomWithId(id: string, options: CreateGameOptions = {}
     ratedCompatibility: null,
     id,
     matchId: null,
+    streamId: randomUUID(),
     matchType,
     seed,
     rng: roomMode === "test" ? new DebugDiceRNG(rng) : rng,
@@ -427,6 +431,7 @@ export function applyGameAction(
     return rejected("RULES_REJECTED", "Action rejected by rules");
   }
 
+  const events = identifyAcceptedEvents(result.events);
   const nextRevision = room.revision + 1;
   room.state = withAcceptedRevision(previousState, result.state, nextRevision);
   touchGameRoom(room);
@@ -435,7 +440,7 @@ export function applyGameAction(
     at: Date.now(),
     playerId,
     action: authoritativeAction,
-    events: result.events,
+    events,
     revision: room.revision,
     debugDiceConsumed: debugDiceConsumed.length > 0 ? debugDiceConsumed : undefined,
     replaySetup,
@@ -447,9 +452,9 @@ export function applyGameAction(
 
   return accepted({
     stateChanged,
-    events: result.events,
+    events,
     revision: room.revision,
-    logIndex: room.actionLog.length - 1,
+    streamId: room.streamId,
   });
 }
 

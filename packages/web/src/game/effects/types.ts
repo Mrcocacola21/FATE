@@ -77,9 +77,16 @@ export type QueuedBoardEffect = BoardEffect & {
   expiresAt: number;
 };
 
+export type PresentationEvent = GameEvent & { eventId?: string };
+
 export interface BoardEventBatch {
-  logIndex: number;
-  events: GameEvent[];
+  streamId?: string;
+  revision: number;
+  /** Local preview namespace; never used as a live ordering watermark. */
+  previewId?: string;
+  /** Snapshot at ingress, for ordered batches received before a React commit. */
+  view?: import("rules").PlayerView;
+  events: PresentationEvent[];
   /** Client-only deterministic playback offsets. Never sent to the rules engine. */
   eventDelaysMs?: number[];
 }

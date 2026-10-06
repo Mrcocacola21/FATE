@@ -45,6 +45,7 @@ export function createReplayFixture(mode: GameModeId = "classic", finish = false
     publish: false,
   });
   room.matchId = randomUUID();
+  room.streamId = room.matchId;
   const initialState = structuredClone(room.state);
   const match: Match = {
     id: room.matchId,

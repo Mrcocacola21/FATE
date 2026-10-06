@@ -1,3 +1,4 @@
+import { presentationBatchKey } from "../../game/effects/batchIdentity";
 import { useEffect, useRef, useState } from "react";
 import type { PlayerView } from "rules";
 import { mapEventBatchToVfx } from "./vfxEventMapper";
@@ -5,10 +6,8 @@ import { visibleUnitPositions } from "./vfxGeometry";
 import { usePrefersReducedMotion } from "./vfxPreferences";
 import {
   enqueueBoardVfx,
-  getInitialVfxLogIndex,
   pruneExpiredBoardVfx,
   rememberProcessedVfxRequests,
-  shouldProcessVfxBatch,
   simplifyVfxForReducedMotion,
 } from "./vfxQueue";
 import type {
@@ -26,14 +25,14 @@ export function useBoardVfx(params: {
   const { batch, view, enabled, sessionKey } = params;
   const reducedMotion = usePrefersReducedMotion();
   const [effects, setEffects] = useState<QueuedBoardVfxRequest[]>([]);
-  const lastProcessedLogIndexRef = useRef(-1);
+  const lastProcessedBatchKeyRef = useRef<string | null>(null);
   const positionSnapshotRef = useRef<VisibleUnitPositions | null>(null);
   const initializedRef = useRef(false);
   const processedRequestIdsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     initializedRef.current = false;
-    lastProcessedLogIndexRef.current = -1;
+    lastProcessedBatchKeyRef.current = null;
     positionSnapshotRef.current = null;
     processedRequestIdsRef.current = new Set();
     setEffects([]);
@@ -45,21 +44,18 @@ export function useBoardVfx(params: {
     if (!initializedRef.current) {
       initializedRef.current = true;
       positionSnapshotRef.current = nextPositions;
-      lastProcessedLogIndexRef.current = getInitialVfxLogIndex(batch);
+      lastProcessedBatchKeyRef.current = batch ? presentationBatchKey(batch) : null;
       return;
     }
 
     if (!enabled) {
       positionSnapshotRef.current = nextPositions;
-      lastProcessedLogIndexRef.current = Math.max(
-        lastProcessedLogIndexRef.current,
-        batch?.logIndex ?? -1,
-      );
+      lastProcessedBatchKeyRef.current = batch ? presentationBatchKey(batch) : null;
       setEffects([]);
       return;
     }
 
-    if (!batch || !shouldProcessVfxBatch(lastProcessedLogIndexRef.current, batch.logIndex)) {
+    if (!batch || lastProcessedBatchKeyRef.current === presentationBatchKey(batch)) {
       return;
     }
 
@@ -68,7 +64,8 @@ export function useBoardVfx(params: {
       events: batch.events,
       view,
       previousPositions,
-      logIndex: batch.logIndex,
+      revision: batch.revision,
+      presentationId: presentationBatchKey(batch),
       eventDelaysMs: batch.eventDelaysMs,
     });
     if (reducedMotion) {
@@ -85,7 +82,7 @@ export function useBoardVfx(params: {
         now,
       }),
     );
-    lastProcessedLogIndexRef.current = batch.logIndex;
+    lastProcessedBatchKeyRef.current = presentationBatchKey(batch);
     positionSnapshotRef.current = nextPositions;
   }, [batch, enabled, reducedMotion, view]);
 

@@ -392,7 +392,7 @@ async function testDraftFlowStartsPlacement(wsUrl: string, persistence: MemoryMa
   assert.equal(transition[0].revision + 1, transition[1].revision);
   const startedResult = queue1.find((msg) => msg.type === "actionResult" && msg.ok && msg.events.some((event) => event.type === "initiativeRollRequested"));
   assert(startedResult?.type === "actionResult");
-  assert.equal(startedResult.logIndex, room.actionLog.length - 1);
+  assert.equal(startedResult.revision, room.revision);
   for (const queue of [queue1, queue2]) {
     assert(!queue.some((msg) => msg.type === "leftRoom" || msg.type === "joinRejected"));
     assert(!queue.some((msg) => msg.type === "roomState" && msg.meta?.draftState?.phase === "complete" && !msg.meta.pendingRoll && msg.view.phase === "lobby"), "completed draft must arrive with gameplay state");

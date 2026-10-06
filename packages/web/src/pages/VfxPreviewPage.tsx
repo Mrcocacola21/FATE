@@ -18,15 +18,10 @@ const COPY = {
 export function VfxPreviewPage() {
   const view = useMemo(() => createVfxPreviewView(), []);
   const [batch, setBatch] = useState<BoardEventBatch | null>(null);
-  const [, setLogIndex] = useState(0);
   const [activeScenarioId, setActiveScenarioId] = useState<string | null>(null);
 
   const triggerScenario = (scenario: VfxPreviewScenario) => {
-    setLogIndex((current) => {
-      const next = current + 1;
-      setBatch({ logIndex: next, events: scenario.events });
-      return next;
-    });
+    setBatch({ revision: 0, previewId: `preview:${crypto.randomUUID()}`, events: scenario.events });
     setActiveScenarioId(scenario.id);
   };
 

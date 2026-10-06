@@ -1,3 +1,4 @@
+import { projectDeliveryEvents } from "./eventDelivery";
 import type { MatchmakingService } from "./services/matchmakingService";
 import { applicationMetrics, elapsedSeconds, type ApplicationMetrics, type OperationResult } from "./observability/metrics";
 import { performance } from "node:perf_hooks";
@@ -12,6 +13,7 @@ import type {
   Coord,
   GameAction,
   GameEvent,
+  DeliveredGameEvent,
   GameModeId,
   GameState,
   HeroSelection,
@@ -29,7 +31,6 @@ import {
   makePlayerView,
   makeSpectatorView,
   makeTestRoomView,
-  projectEventsForRecipient,
   projectPendingRollPresentation,
 } from "rules";
 import { ClientMessageSchema, GameActionSchema } from "./schemas";
@@ -134,9 +135,10 @@ type ActionResultMessage = {
   type: "actionResult";
   code?: string;
   ok: boolean;
-  events: GameEvent[];
+  events: DeliveredGameEvent[];
   error?: string;
-  logIndex?: number;
+  streamId?: string;
+  revision?: number;
 };
 
 type MoveOptionsMessage = {
@@ -729,8 +731,9 @@ export function broadcastRoomState(room: GameRoom) {
 export function broadcastActionResult(payload: {
   gameId: string;
   ok: boolean;
-  events: GameEvent[];
-  logIndex?: number;
+  events: DeliveredGameEvent[];
+  streamId?: string;
+  revision?: number;
   error?: string;
 }) {
   const sockets = roomSockets.get(payload.gameId);
@@ -740,14 +743,15 @@ export function broadcastActionResult(payload: {
     const meta = socketMeta.get(socket);
     const recipient = meta?.role === "P1" || meta?.role === "P2" ? meta.role : "spectator";
     const filteredEvents = room
-      ? projectEventsForRecipient(room.state, payload.events, recipient)
+      ? projectDeliveryEvents(room.state, payload.events, recipient)
       : [];
     sendMessage(socket, {
       type: "actionResult",
       ok: payload.ok,
       events: filteredEvents,
       error: payload.error,
-      logIndex: payload.logIndex,
+      streamId: payload.streamId,
+      revision: payload.revision,
     });
   }
 }
@@ -900,7 +904,8 @@ async function applyAndBroadcast(
     gameId: room.id,
     ok: true,
     events: command.events,
-    logIndex: command.logIndex,
+    streamId: command.streamId,
+    revision: command.revision,
   });
   if (sendMoveOptions && socketForErrors) {
     sendMoveOptionsIfAny(socketForErrors, command.events);
@@ -1734,7 +1739,8 @@ export function registerGameWebSocket(
                 gameId: room.id,
                 ok: true,
                 events: result.command.events,
-                logIndex: result.command.logIndex,
+                streamId: result.command.streamId,
+                revision: result.command.revision,
               });
             }
             logFate(serverLogger!, {

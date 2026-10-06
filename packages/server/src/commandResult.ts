@@ -1,6 +1,6 @@
 // packages/server/src/commandResult.ts
 
-import type { GameEvent } from "rules";
+import type { DeliveredGameEvent } from "rules";
 
 export type CommandRejectedCode =
   | "BAD_REQUEST"
@@ -17,9 +17,9 @@ export type CommandRejectedCode =
 export interface CommandAccepted {
   ok: true;
   stateChanged: boolean;
-  events: GameEvent[];
+  events: DeliveredGameEvent[];
   revision?: number;
-  logIndex?: number;
+  streamId?: string;
 }
 
 export interface CommandRejected {
@@ -32,16 +32,16 @@ export type CommandResult = CommandAccepted | CommandRejected;
 
 export function accepted(params: {
   stateChanged: boolean;
-  events: GameEvent[];
+  events: DeliveredGameEvent[];
   revision?: number;
-  logIndex?: number;
+  streamId?: string;
 }): CommandAccepted {
   return {
     ok: true,
     stateChanged: params.stateChanged,
     events: params.events,
     revision: params.revision,
-    logIndex: params.logIndex,
+    streamId: params.streamId,
   };
 }
 

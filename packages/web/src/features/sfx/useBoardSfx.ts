@@ -1,7 +1,7 @@
+import { presentationBatchKey } from "../../game/effects/batchIdentity";
 import { useEffect, useRef } from "react";
 import type { PlayerView } from "rules";
 import type { BoardVfxEventBatch } from "../vfx/vfxTypes";
-import { getInitialVfxLogIndex, shouldProcessVfxBatch } from "../vfx/vfxQueue";
 import { mapEventBatchToSfx } from "./sfxEventMapper";
 import { sfxPlayer } from "./sfxPlayer";
 
@@ -22,7 +22,7 @@ export function useBoardSfx(params: {
 }): void {
   const { batch, view, enabled, sessionKey } = params;
   const initializedRef = useRef(false);
-  const lastProcessedLogIndexRef = useRef(-1);
+  const lastProcessedBatchKeyRef = useRef<string | null>(null);
   const processedRequestIdsRef = useRef<Set<string>>(new Set());
   const timersRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
 
@@ -34,34 +34,32 @@ export function useBoardSfx(params: {
   useEffect(() => {
     clearTimers();
     initializedRef.current = false;
-    lastProcessedLogIndexRef.current = -1;
+    lastProcessedBatchKeyRef.current = null;
     processedRequestIdsRef.current = new Set();
   }, [sessionKey]);
 
   useEffect(() => {
     if (!initializedRef.current) {
       initializedRef.current = true;
-      lastProcessedLogIndexRef.current = getInitialVfxLogIndex(batch);
+      lastProcessedBatchKeyRef.current = batch ? presentationBatchKey(batch) : null;
       return;
     }
 
     if (!enabled) {
       clearTimers();
-      lastProcessedLogIndexRef.current = Math.max(
-        lastProcessedLogIndexRef.current,
-        batch?.logIndex ?? -1,
-      );
+      lastProcessedBatchKeyRef.current = batch ? presentationBatchKey(batch) : null;
       return;
     }
 
-    if (!batch || !shouldProcessVfxBatch(lastProcessedLogIndexRef.current, batch.logIndex)) {
+    if (!batch || lastProcessedBatchKeyRef.current === presentationBatchKey(batch)) {
       return;
     }
 
     const incoming = mapEventBatchToSfx({
       events: batch.events,
       view,
-      logIndex: batch.logIndex,
+      revision: batch.revision,
+      presentationId: presentationBatchKey(batch),
       eventDelaysMs: batch.eventDelaysMs,
     }).filter((request) => !processedRequestIdsRef.current.has(request.id));
 
@@ -79,7 +77,7 @@ export function useBoardSfx(params: {
       timersRef.current.add(timer);
     }
     trimProcessedIds(processedRequestIdsRef.current);
-    lastProcessedLogIndexRef.current = batch.logIndex;
+    lastProcessedBatchKeyRef.current = presentationBatchKey(batch);
   }, [batch, enabled, view]);
 
   useEffect(

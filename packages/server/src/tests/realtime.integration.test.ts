@@ -93,11 +93,11 @@ test("real PostgreSQL WS lifecycle: seats, safe projections, rejection, durable 
         assert.deepEqual(frame.view.stakeMarkers, [{ position: { col: 5, row: 6 }, isRevealed: true }]);
       for (const client of [p1, p2, spectator]) client.messages.length = 0;
       broadcastActionResult({ gameId: roomId, ok: true, events: [
-        { type: "stakesPlaced", owner: "P1", positions: [{ col: 2, row: 3 }], hiddenFromOpponent: true },
+        { eventId: "synthetic-private-event", type: "stakesPlaced", owner: "P1", positions: [{ col: 2, row: 3 }], hiddenFromOpponent: true },
       ] });
       const privateEvents = await Promise.all([p1, p2, spectator].map(client => client.wait("actionResult")));
       assert.equal(privateEvents[0].events.length, 1);
-      const safePlacementNotice = [{ type: "hiddenSetupCompleted", owner: "P1", ability: "hidden" }];
+      const safePlacementNotice = [{ eventId: "synthetic-private-event", type: "hiddenSetupCompleted", owner: "P1", ability: "hidden" }];
       assert.deepEqual(privateEvents[1].events, safePlacementNotice);
       assert.deepEqual(privateEvents[2].events, safePlacementNotice);
     } finally { room.state = liveState; }

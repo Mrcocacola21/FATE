@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+import { identifyAcceptedEvents } from "../eventDelivery";
 import {
   DebugDiceRNG,
   SeededRNG,
@@ -7,6 +9,7 @@ import {
   handleRuleDeclarationRoundEnd,
   type DebugStateCommand,
   type GameState,
+  type GameEvent,
   type PendingRoundAdvance,
   type TestRoomSnapshot,
   livingRealUnits,
@@ -134,13 +137,12 @@ function recordMutation(room: GameRoom, command: TestRoomCommand) {
 function recordMutationWithEvents(
   room: GameRoom,
   command: TestRoomCommand,
-  events: unknown[]
+  events: GameEvent[]
 ) {
+  const deliveryEvents = identifyAcceptedEvents(events);
   recordMutation(room, command);
-  const entry = room.actionLog[room.actionLog.length - 1];
-  if (entry) {
-    entry.events = events as never[];
-  }
+  room.actionLog[room.actionLog.length - 1].events = deliveryEvents;
+  return deliveryEvents;
 }
 
 function buildDebugRoundAdvance(state: GameState): PendingRoundAdvance | null {
@@ -203,7 +205,7 @@ export function applyTestRoomCommand(
         stateChanged: true,
         events: [],
         revision: room.revision,
-        logIndex: room.actionLog.length - 1,
+        streamId: room.streamId,
       }),
     };
   }
@@ -216,7 +218,7 @@ export function applyTestRoomCommand(
         stateChanged: true,
         events: [],
         revision: room.revision,
-        logIndex: room.actionLog.length - 1,
+        streamId: room.streamId,
       }),
     };
   }
@@ -267,13 +269,13 @@ export function applyTestRoomCommand(
       room.testDiceRng
     );
     room.state = result.state;
-    recordMutationWithEvents(room, command, result.events);
+    const deliveryEvents = recordMutationWithEvents(room, command, result.events);
     return {
       command: accepted({
         stateChanged: true,
-        events: result.events,
+        events: deliveryEvents,
         revision: room.revision,
-        logIndex: room.actionLog.length - 1,
+        streamId: room.streamId,
       }),
     };
   }
@@ -288,6 +290,7 @@ export function applyTestRoomCommand(
         ),
       };
     }
+    room.streamId = randomUUID();
     room.seed = snapshot.seed;
     room.state = {
       ...cloneDebugState(snapshot.state),
@@ -305,7 +308,7 @@ export function applyTestRoomCommand(
         stateChanged: true,
         events: [],
         revision: room.revision,
-        logIndex: room.actionLog.length - 1,
+        streamId: room.streamId,
       }),
     };
   }
@@ -323,7 +326,7 @@ export function applyTestRoomCommand(
     };
   }
   let nextState = result.state;
-  let events: never[] = [];
+  let events: GameEvent[] = [];
   if (
     hadBothArmies &&
     (command.type === "debugSetHp" ||
@@ -332,16 +335,17 @@ export function applyTestRoomCommand(
   ) {
     const victory = applyNormalVictoryCheck(nextState, []);
     nextState = victory.state;
-    events = victory.events as never[];
+    events = victory.events;
   }
+  if (command.type === "debugClearBoard") room.streamId = randomUUID();
   room.state = nextState;
-  recordMutationWithEvents(room, command, events);
+  const deliveryEvents = recordMutationWithEvents(room, command, events);
   return {
     command: accepted({
       stateChanged: true,
-      events,
+      events: deliveryEvents,
       revision: room.revision,
-      logIndex: room.actionLog.length - 1,
+      streamId: room.streamId,
     }),
   };
 }

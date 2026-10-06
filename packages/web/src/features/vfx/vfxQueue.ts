@@ -4,10 +4,10 @@ import { vfxRegistry } from "./vfxRegistry";
 const MAX_ACTIVE_VFX = 64;
 const MAX_PROCESSED_VFX_IDS = 512;
 
-export function getInitialVfxLogIndex(
-  batch: { logIndex: number } | null | undefined,
+export function getInitialVfxRevision(
+  batch: { revision: number } | null | undefined,
 ): number {
-  return batch?.logIndex ?? -1;
+  return batch?.revision ?? -1;
 }
 
 export function enqueueBoardVfx(params: {
@@ -59,10 +59,10 @@ export function pruneExpiredBoardVfx(
 }
 
 export function shouldProcessVfxBatch(
-  lastProcessedLogIndex: number,
-  nextLogIndex: number,
+  lastProcessedRevision: number,
+  nextRevision: number,
 ): boolean {
-  return Number.isInteger(nextLogIndex) && nextLogIndex > lastProcessedLogIndex;
+  return Number.isInteger(nextRevision) && nextRevision > lastProcessedRevision;
 }
 
 export function simplifyVfxForReducedMotion(

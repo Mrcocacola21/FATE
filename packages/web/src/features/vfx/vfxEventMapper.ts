@@ -22,7 +22,7 @@ function requestId(
   effectId: VfxEffectId,
   suffix = "0",
 ): string {
-  return `${context.logIndex}:${context.eventIndex}:${event.type}:${effectId}:${suffix}`;
+  return `${context.presentationId ?? context.revision}:${context.eventIndex}:${event.type}:${effectId}:${suffix}`;
 }
 
 function cellRequest(
@@ -358,7 +358,8 @@ export function mapEventBatchToVfx(params: {
   events: GameEvent[];
   view: PlayerView;
   previousPositions: VfxMapperContext["previousPositions"];
-  logIndex: number;
+  revision: number;
+  presentationId?: string;
   eventDelaysMs?: readonly number[];
 }): BoardVfxRequest[] {
   const effects: BoardVfxRequest[] = [];
@@ -368,7 +369,8 @@ export function mapEventBatchToVfx(params: {
       ...mapGameEventToVfx(event, {
         view: params.view,
         previousPositions: params.previousPositions,
-        logIndex: params.logIndex,
+        revision: params.revision,
+        presentationId: params.presentationId,
         events: params.events,
         eventIndex,
       }).map((request) => ({

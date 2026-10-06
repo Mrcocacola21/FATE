@@ -1,5 +1,5 @@
 import type { GameEvent, PlayerView } from "rules";
-import type { BoardEventBatch } from "./types";
+import type { BoardEventBatch, PresentationEvent } from "./types";
 
 export type VisualHpByUnitId = Record<string, number>;
 export type VisualUnitsByUnitId = PlayerView["units"];
@@ -7,11 +7,13 @@ export type VisualUnitsByUnitId = PlayerView["units"];
 export interface VisualResolutionState {
   initialized: boolean;
   enabled: boolean;
-  lastProcessedLogIndex: number;
+  lastProcessedRevision: number;
+  streamId: string | undefined;
+  lastPreviewId: string | undefined;
   groupActive: boolean;
-  deferredVisualsByChainId: Map<string, GameEvent[]>;
+  deferredVisualsByChainId: Map<string, PresentationEvent[]>;
   /** Compatibility buffer for older servers that expose only pending queue state. */
-  bufferedEvents: GameEvent[];
+  bufferedEvents: PresentationEvent[];
   visualBatch: BoardEventBatch | null;
   visualHpByUnitId: VisualHpByUnitId;
   visualUnitsByUnitId: VisualUnitsByUnitId;
@@ -30,9 +32,7 @@ const REDUNDANT_AGGREGATED_EVENT_TYPES = new Set<GameEvent["type"]>([
 ]);
 
 export function snapshotVisualHp(view: PlayerView): VisualHpByUnitId {
-  return Object.fromEntries(
-    Object.values(view.units).map((unit) => [unit.id, unit.hp]),
-  );
+  return Object.fromEntries(Object.values(view.units).map((unit) => [unit.id, unit.hp]));
 }
 
 export function snapshotVisualUnits(view: PlayerView): VisualUnitsByUnitId {
@@ -47,15 +47,11 @@ export function snapshotVisualUnits(view: PlayerView): VisualUnitsByUnitId {
   );
 }
 
-export function visualHpSnapshotsEqual(
-  left: VisualHpByUnitId,
-  right: VisualHpByUnitId,
-): boolean {
+export function visualHpSnapshotsEqual(left: VisualHpByUnitId, right: VisualHpByUnitId): boolean {
   const leftIds = Object.keys(left);
   const rightIds = Object.keys(right);
   return (
-    leftIds.length === rightIds.length &&
-    leftIds.every((unitId) => left[unitId] === right[unitId])
+    leftIds.length === rightIds.length && leftIds.every((unitId) => left[unitId] === right[unitId])
   );
 }
 
@@ -70,27 +66,24 @@ export function isVisualResolutionPending(view: PlayerView): boolean {
  * aggregate event's duplicate target flashes while keeping its area/ability VFX.
  */
 export function collapseCompletedVisualResolutionEvents(
-  events: GameEvent[],
-): GameEvent[] {
+  events: PresentationEvent[],
+): PresentationEvent[] {
   const aggregateEvents = events.filter(
-    (event): event is Extract<GameEvent, { type: "aoeResolved" }> =>
-      event.type === "aoeResolved",
+    (event): event is Extract<GameEvent, { type: "aoeResolved" }> => event.type === "aoeResolved",
   );
   if (aggregateEvents.length === 0) {
     return events;
   }
-  return events.filter(
-    (event) => !REDUNDANT_AGGREGATED_EVENT_TYPES.has(event.type),
-  );
+  return events.filter((event) => !REDUNDANT_AGGREGATED_EVENT_TYPES.has(event.type));
 }
 
-export function createVisualResolutionState(
-  input: VisualResolutionInput,
-): VisualResolutionState {
+export function createVisualResolutionState(input: VisualResolutionInput): VisualResolutionState {
   return {
     initialized: true,
     enabled: input.enabled,
-    lastProcessedLogIndex: input.batch?.logIndex ?? -1,
+    lastProcessedRevision: input.batch?.previewId ? -1 : (input.batch?.revision ?? -1),
+    streamId: input.batch?.streamId,
+    lastPreviewId: undefined,
     groupActive: input.enabled && isVisualResolutionPending(input.view),
     deferredVisualsByChainId: new Map(),
     bufferedEvents: [],
@@ -108,25 +101,27 @@ export function advanceVisualResolution(
     return createVisualResolutionState(input);
   }
 
+  if (input.batch?.previewId) {
+    if (input.batch.previewId === state.lastPreviewId) return state;
+    return { ...state, lastPreviewId: input.batch.previewId, visualBatch: input.batch };
+  }
+  if (input.batch && input.batch.streamId !== state.streamId) {
+    state = createVisualResolutionState({ ...input, batch: null });
+    state.streamId = input.batch.streamId;
+  }
+
   const pending = isVisualResolutionPending(input.view);
   const freshBatch =
-    input.batch && input.batch.logIndex > state.lastProcessedLogIndex
-      ? input.batch
-      : null;
-  const groupActive =
-    state.groupActive ||
-    pending ||
-    state.deferredVisualsByChainId.size > 0;
+    input.batch && input.batch.revision > state.lastProcessedRevision ? input.batch : null;
+  const groupActive = state.groupActive || pending || state.deferredVisualsByChainId.size > 0;
 
   if (!freshBatch) {
-    return groupActive === state.groupActive
-      ? state
-      : { ...state, groupActive, visualBatch: null };
+    return groupActive === state.groupActive ? state : { ...state, groupActive, visualBatch: null };
   }
 
   const deferredVisualsByChainId = new Map(state.deferredVisualsByChainId);
   let legacyBufferedEvents = [...state.bufferedEvents];
-  const playableEvents: GameEvent[] = [];
+  const playableEvents: PresentationEvent[] = [];
   let explicitChainEventSeen = false;
 
   for (const event of freshBatch.events) {
@@ -159,14 +154,12 @@ export function advanceVisualResolution(
   }
 
   const nextGroupActive =
-    pending ||
-    deferredVisualsByChainId.size > 0 ||
-    legacyBufferedEvents.length > 0;
+    pending || deferredVisualsByChainId.size > 0 || legacyBufferedEvents.length > 0;
 
   if (playableEvents.length === 0) {
     return {
       ...state,
-      lastProcessedLogIndex: freshBatch.logIndex,
+      lastProcessedRevision: freshBatch.revision,
       groupActive: nextGroupActive,
       deferredVisualsByChainId,
       bufferedEvents: legacyBufferedEvents,
@@ -178,14 +171,12 @@ export function advanceVisualResolution(
     const events = collapseCompletedVisualResolutionEvents(playableEvents);
     return {
       ...state,
-      lastProcessedLogIndex: freshBatch.logIndex,
+      lastProcessedRevision: freshBatch.revision,
       groupActive: nextGroupActive,
       deferredVisualsByChainId,
       bufferedEvents: legacyBufferedEvents,
-      visualBatch: { logIndex: freshBatch.logIndex, events },
-      visualHpByUnitId: nextGroupActive
-        ? state.visualHpByUnitId
-        : snapshotVisualHp(input.view),
+      visualBatch: { ...freshBatch, events },
+      visualHpByUnitId: nextGroupActive ? state.visualHpByUnitId : snapshotVisualHp(input.view),
       visualUnitsByUnitId: nextGroupActive
         ? state.visualUnitsByUnitId
         : snapshotVisualUnits(input.view),
@@ -194,11 +185,11 @@ export function advanceVisualResolution(
 
   return {
     ...state,
-    lastProcessedLogIndex: freshBatch.logIndex,
+    lastProcessedRevision: freshBatch.revision,
     groupActive: nextGroupActive,
     deferredVisualsByChainId,
     bufferedEvents: legacyBufferedEvents,
-    visualBatch: { logIndex: freshBatch.logIndex, events: playableEvents },
+    visualBatch: { ...freshBatch, events: playableEvents },
     visualHpByUnitId: snapshotVisualHp(input.view),
     visualUnitsByUnitId: snapshotVisualUnits(input.view),
   };

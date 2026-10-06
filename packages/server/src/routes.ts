@@ -1,3 +1,4 @@
+import { projectDeliveryEvents } from "./eventDelivery";
 import { queryConfig } from "./validation/queryValidation";
 import { documented, hiddenRest } from "./openapi/contract";
 import { AuthError } from "./auth/authErrors";
@@ -19,7 +20,6 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import {
   GameAction,
   makePlayerView,
-  projectEventsForRecipient,
   HERO_REGISTRY,
   getHeroMeta,
 } from "rules";
@@ -390,7 +390,8 @@ export async function registerRoutes(
           gameId: room.id,
           ok: true,
           events: command.events,
-          logIndex: command.logIndex,
+          streamId: command.streamId,
+          revision: command.revision,
         });
 
         const view = makePlayerView(room.state, playerId);
@@ -398,8 +399,8 @@ export async function registerRoutes(
           status: 200,
           payload: {
             view,
-            events: projectEventsForRecipient(room.state, command.events, playerId),
-            logIndex: command.logIndex,
+            events: projectDeliveryEvents(room.state, command.events, playerId),
+            streamId: command.streamId,
             revision: command.revision,
           },
         };

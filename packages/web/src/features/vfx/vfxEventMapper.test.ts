@@ -36,7 +36,7 @@ function map(events: GameEvent[], currentView: PlayerView, previousPositions = {
     events,
     view: currentView,
     previousPositions,
-    logIndex: 12,
+    revision: 12,
   });
 }
 

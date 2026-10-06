@@ -51,6 +51,8 @@ export function toPersistedAction(action: ActionLogEntry["action"]): Prisma.Inpu
 }
 
 export function toPersistedEvents(events: GameEvent[]): Prisma.InputJsonValue[] {
+  // Delivery eventId survives the JSON journal unchanged. Keep the existing
+  // policy of omitting the presentation-only completion marker/chain metadata.
   return events.filter((event) => event.type !== "combatVisualBatchReady")
     .map((event) => jsonValue(event) as Prisma.InputJsonValue);
 }

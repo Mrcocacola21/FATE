@@ -48,6 +48,16 @@ export interface Trace {
   generationLatencyMs: number;
 }
 
+/** Benchmark trace equality covers gameplay meaning; delivery UUIDs are intentionally opaque. */
+export function semanticEvents(events: MatchAction["events"]) {
+  if (!Array.isArray(events)) return events;
+  return events.map((event) => {
+    if (!event || typeof event !== "object" || Array.isArray(event)) return event;
+    const { eventId, ...meaning } = event;
+    return meaning;
+  });
+}
+
 /** Unpublished ephemeral room; never attaches lifecycle, persistence, ratings or sockets. */
 export function generateTrace(
   mode: GameModeId,
@@ -335,7 +345,7 @@ export function generateTrace(
           actorSeat,
           actionType,
           actionPayload,
-          events,
+          events: semanticEvents(events),
         })),
         finalState: normalizeSnapshotState(room.state),
         rngState: rngStates.at(-1),

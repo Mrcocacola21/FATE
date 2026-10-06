@@ -105,7 +105,7 @@ test("combat events map attack, hit, death, and delayed-chain-safe requests", ()
     mapEventBatchToSfx({
       events: [attack],
       view: view(loki, papyrus),
-      logIndex: 42,
+      revision: 42,
     }),
     [],
   );

@@ -2,7 +2,7 @@ import type { MatchmakingEvent } from "./matchmaking/types";
 import type { MatchType } from "./matches/matchType";
 import type {
   GameAction,
-  GameEvent,
+  DeliveredGameEvent,
   PlayerId,
   PlayerView,
   PendingRollContext,
@@ -100,9 +100,10 @@ export type ServerMessage =
       type: "actionResult";
       code?: string;
       ok: boolean;
-      events: GameEvent[];
+      events: DeliveredGameEvent[];
       error?: string;
-      logIndex?: number;
+      revision?: number;
+      streamId?: string;
     }
   | {
       type: "moveOptions";

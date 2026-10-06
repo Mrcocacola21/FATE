@@ -63,6 +63,7 @@ async function run() {
     const expected = deserializeMatchSnapshot(f.source.history.get(37)!);
     assert.equal(room.revision, 37);
     assert.equal(room.matchId, f.match.id);
+    assert.equal(room.streamId, f.match.id);
     assert.deepEqual(normalizeSnapshotState(room.state), normalizeSnapshotState(expected.state));
     assert.deepEqual((room.rng as SeededRNG).exportState(), expected.rngState);
     const future = SeededRNG.fromState(expected.rngState);

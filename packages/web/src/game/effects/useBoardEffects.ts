@@ -1,3 +1,4 @@
+import { presentationBatchKey } from "./batchIdentity";
 import { useEffect, useRef, useState } from "react";
 import type { PlayerView } from "rules";
 import {
@@ -7,7 +8,6 @@ import {
 import {
   enqueueBoardEffects,
   pruneExpiredBoardEffects,
-  shouldProcessEffectBatch,
 } from "./effectQueue";
 import { effectsFromEventBatch } from "./eventToEffects";
 import type {
@@ -42,14 +42,14 @@ export function useBoardEffects(params: {
   const { batch, view, enabled, sessionKey } = params;
   const reducedMotion = usePrefersReducedMotion();
   const [effects, setEffects] = useState<QueuedBoardEffect[]>([]);
-  const lastProcessedLogIndexRef = useRef(-1);
+  const lastProcessedBatchKeyRef = useRef<string | null>(null);
   const positionSnapshotRef = useRef<VisibleUnitPositions | null>(null);
   const sequenceRef = useRef(0);
   const initializedRef = useRef(false);
 
   useEffect(() => {
     initializedRef.current = false;
-    lastProcessedLogIndexRef.current = -1;
+    lastProcessedBatchKeyRef.current = null;
     positionSnapshotRef.current = null;
     sequenceRef.current = 0;
     setEffects([]);
@@ -61,23 +61,20 @@ export function useBoardEffects(params: {
     if (!initializedRef.current) {
       initializedRef.current = true;
       positionSnapshotRef.current = nextPositions;
-      lastProcessedLogIndexRef.current = batch?.logIndex ?? -1;
+      lastProcessedBatchKeyRef.current = batch ? presentationBatchKey(batch) : null;
       return;
     }
 
     if (!enabled) {
       positionSnapshotRef.current = nextPositions;
-      lastProcessedLogIndexRef.current = Math.max(
-        lastProcessedLogIndexRef.current,
-        batch?.logIndex ?? -1,
-      );
+      lastProcessedBatchKeyRef.current = batch ? presentationBatchKey(batch) : null;
       setEffects([]);
       return;
     }
 
     if (
       !batch ||
-      !shouldProcessEffectBatch(lastProcessedLogIndexRef.current, batch.logIndex)
+      lastProcessedBatchKeyRef.current === presentationBatchKey(batch)
     ) {
       return;
     }
@@ -102,7 +99,7 @@ export function useBoardEffects(params: {
       sequenceRef.current = queued.nextSequence;
       return queued.effects;
     });
-    lastProcessedLogIndexRef.current = batch.logIndex;
+    lastProcessedBatchKeyRef.current = presentationBatchKey(batch);
     positionSnapshotRef.current = nextPositions;
   }, [batch, enabled, reducedMotion, view]);
 

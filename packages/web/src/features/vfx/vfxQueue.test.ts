@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   enqueueBoardVfx,
-  getInitialVfxLogIndex,
+  getInitialVfxRevision,
   pruneExpiredBoardVfx,
   rememberProcessedVfxRequests,
   shouldProcessVfxBatch,
@@ -67,12 +67,12 @@ test("VFX batches are processed only once in increasing log order", () => {
 });
 
 test("initial reconnect baseline skips old event history and allows later batches", () => {
-  const baseline = getInitialVfxLogIndex({ logIndex: 20 });
+  const baseline = getInitialVfxRevision({ revision: 20 });
 
   assert.equal(baseline, 20);
   assert.equal(shouldProcessVfxBatch(baseline, 20), false);
   assert.equal(shouldProcessVfxBatch(baseline, 21), true);
-  assert.equal(getInitialVfxLogIndex(null), -1);
+  assert.equal(getInitialVfxRevision(null), -1);
 });
 
 test("reduced motion simplifies path and hides line-only VFX", () => {

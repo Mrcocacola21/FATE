@@ -6,7 +6,7 @@ import os from "node:os";
 import Ajv from "ajv";
 import addFormats from "ajv-formats";
 import { SeededRNG } from "rules";
-import { generateTrace, selectTargets } from "./scenarios";
+import { generateTrace, selectTargets, semanticEvents } from "./scenarios";
 import { parseConfig } from "./config";
 import { statistics, snapshotRevisions, utf8Bytes } from "./metrics";
 import { serializeInitial, serializeState, serializeAction } from "./serializers";
@@ -73,7 +73,15 @@ test("same seeds/config reproduce legal traces and all strategies share each tra
     const trace = generateTrace(mode, 37, 80, "controlled"),
       again = generateTrace(mode, 37, 80, "controlled");
     assert.equal(trace.identity, again.identity);
-    assert.deepEqual(trace.actions, again.actions);
+    const meaning = (rows: typeof trace.actions) => rows.map(row => ({ ...row, events: semanticEvents(row.events) }));
+    assert.deepEqual(meaning(trace.actions), meaning(again.actions));
+    // Both independent accepted runs must have unique opaque IDs, while semantic data stays identical.
+    const ids = (rows: typeof trace.actions) => rows.flatMap(row =>
+      Array.isArray(row.events) ? row.events.map(event => event && typeof event === "object" && !Array.isArray(event) ? event.eventId : null) : []);
+    const firstIds = ids(trace.actions), secondIds = ids(again.actions);
+    assert(firstIds.length > 0);
+    assert(firstIds.every(id => typeof id === "string" && /^[0-9a-f-]{36}$/.test(id)));
+    assert.equal(new Set([...firstIds, ...secondIds]).size, firstIds.length + secondIds.length);
     assert.deepEqual(trace.states, again.states);
     assert.equal(trace.actions.length, 80);
     assert.equal(

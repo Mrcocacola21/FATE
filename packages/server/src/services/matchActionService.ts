@@ -15,6 +15,7 @@ function safeEvents(value: Prisma.JsonValue | null): Record<string, unknown>[] {
   return value.flatMap((event) => {
     if (!event || typeof event !== "object" || Array.isArray(event) || typeof event.type !== "string" || !Object.prototype.hasOwnProperty.call(fields, event.type)) return [];
     const dto: Record<string, unknown> = { type: event.type };
+    if (typeof event.eventId === "string") dto.eventId = event.eventId;
     for (const field of fields[event.type]) {
       const item = event[field];
       if (typeof item === "number" || typeof item === "string" || typeof item === "boolean") dto[field] = item;

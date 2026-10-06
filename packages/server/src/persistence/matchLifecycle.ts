@@ -223,6 +223,7 @@ export class MatchLifecycle {
             arenaId: room.state.arenaId },
         });
         room.matchId = match.id;
+        room.streamId = match.id;
       } catch (error) {
         this.logger.error(
           { event: "match:create_failed", roomId: room.id },
@@ -290,6 +291,7 @@ export class MatchLifecycle {
       throw error;
     }
     room.matchId = match.id;
+    room.streamId = match.id;
     // No fallible async initialization follows the durable transaction.
     publishGameRoom(room);
     this.projection(room);
@@ -434,7 +436,7 @@ export class MatchLifecycle {
     if (room.actionLog.length > getMaxLogEvents()) room.actionLog.shift();
     return this.recordCommand(room, { type: "startGame" }, previousPhase, {
       ...command,
-      logIndex: room.actionLog.length - 1,
+      streamId: room.streamId,
     });
   }
 

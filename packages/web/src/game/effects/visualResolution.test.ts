@@ -6,6 +6,51 @@ import {
   createVisualResolutionState,
 } from "./visualResolution";
 
+test("deferred_chain_preserves_event_ids across early revisions and completion", () => {
+  const chainId = "stable-chain";
+  const early = { ...deferred(attack(1, 4), chainId), eventId: "early-opaque-id" };
+  const middle = { ...deferred(attack(1, 3), chainId), eventId: "middle-opaque-id" };
+  let state = createVisualResolutionState({ batch: null, view: view({ hp: 5 }), enabled: true });
+  state = advanceVisualResolution(state, {
+    batch: { streamId: "match", revision: 120, events: [early] }, view: view({ hp: 4, pendingQueue: 1 }), enabled: true,
+  });
+  assert.equal(state.deferredVisualsByChainId.get(chainId)?.[0].eventId, early.eventId);
+  state = advanceVisualResolution(state, {
+    batch: { streamId: "match", revision: 121, events: [middle] }, view: view({ hp: 3, pendingQueue: 1 }), enabled: true,
+  });
+  state = advanceVisualResolution(state, {
+    batch: { streamId: "match", revision: 122, events: [{ ...complete(chainId), eventId: "completion-id" }] },
+    view: view({ hp: 3 }), enabled: true,
+  });
+  assert.equal(state.visualBatch?.streamId, "match");
+  assert.equal(state.visualBatch?.revision, 122);
+  assert.deepEqual(state.visualBatch?.events.map(event => event.eventId), [early.eventId, middle.eventId]);
+  assert.equal(state.visualBatch?.events[0], early);
+  assert.equal(state.visualBatch?.events[1], middle);
+});
+
+test("debug replay and a new stream cannot poison live revision ordering", () => {
+  let state = createVisualResolutionState({ batch: null, view: view({ hp: 5 }), enabled: true });
+  state = advanceVisualResolution(state, {
+    batch: { streamId: "first-match", revision: 8457, events: [attack(1, 4)] }, view: view({ hp: 4 }), enabled: true,
+  });
+  state = advanceVisualResolution(state, {
+    batch: { streamId: "first-match", revision: 8457, previewId: "preview:opaque", events: [attack(1, 4)] },
+    view: view({ hp: 4 }), enabled: true,
+  });
+  assert.equal(state.lastProcessedRevision, 8457);
+  assert.equal(state.streamId, "first-match");
+  state = advanceVisualResolution(state, {
+    batch: { streamId: "first-match", revision: 8458, events: [attack(1, 3)] }, view: view({ hp: 3 }), enabled: true,
+  });
+  assert.equal(state.visualBatch?.revision, 8458);
+  state = advanceVisualResolution(state, {
+    batch: { streamId: "second-match", revision: 1, events: [attack(1, 4)] }, view: view({ hp: 4 }), enabled: true,
+  });
+  assert.equal(state.lastProcessedRevision, 1);
+  assert.equal(state.visualBatch?.streamId, "second-match");
+});
+
 function unit(id: string, hp: number): UnitState {
   return { id, hp, isAlive: hp > 0, position: { col: 1, row: 1 } } as UnitState;
 }
@@ -82,18 +127,18 @@ function complete(chainId: string): GameEvent {
 
 test("an incomplete AoE buffers result events and freezes visual HP", () => {
   let state = createVisualResolutionState({
-    batch: { logIndex: 0, events: [] },
+    batch: { revision: 0, events: [] },
     view: view({ hp: 5 }),
     enabled: true,
   });
 
   state = advanceVisualResolution(state, {
-    batch: { logIndex: 0, events: [] },
+    batch: { revision: 0, events: [] },
     view: view({ hp: 5, pendingAoE: true }),
     enabled: true,
   });
   state = advanceVisualResolution(state, {
-    batch: { logIndex: 1, events: [attack(2, 3)] },
+    batch: { revision: 1, events: [attack(2, 3)] },
     view: view({ hp: 3, pendingAoE: true }),
     enabled: true,
   });
@@ -106,26 +151,26 @@ test("an incomplete AoE buffers result events and freezes visual HP", () => {
 
 test("AoE completion releases its ordered hits plus one aggregate marker", () => {
   let state = createVisualResolutionState({
-    batch: { logIndex: 0, events: [] },
+    batch: { revision: 0, events: [] },
     view: view({ hp: 5, pendingAoE: true }),
     enabled: true,
   });
   state = advanceVisualResolution(state, {
-    batch: { logIndex: 1, events: [attack(2, 3)] },
+    batch: { revision: 1, events: [attack(2, 3)] },
     view: view({ hp: 3, pendingAoE: true }),
     enabled: true,
   });
 
   // The authoritative snapshot arrives first, but is held until actionResult.
   state = advanceVisualResolution(state, {
-    batch: { logIndex: 1, events: [attack(2, 3)] },
+    batch: { revision: 1, events: [attack(2, 3)] },
     view: view({ hp: 1 }),
     enabled: true,
   });
   assert.equal(state.visualHpByUnitId.target, 5);
 
   state = advanceVisualResolution(state, {
-    batch: { logIndex: 2, events: [attack(2, 1), aoe()] },
+    batch: { revision: 2, events: [attack(2, 1), aoe()] },
     view: view({ hp: 1 }),
     enabled: true,
   });
@@ -138,7 +183,7 @@ test("AoE completion releases its ordered hits plus one aggregate marker", () =>
   );
 
   const sameState = advanceVisualResolution(state, {
-    batch: { logIndex: 2, events: [attack(2, 1), aoe()] },
+    batch: { revision: 2, events: [attack(2, 1), aoe()] },
     view: view({ hp: 1 }),
     enabled: true,
   });
@@ -147,17 +192,17 @@ test("AoE completion releases its ordered hits plus one aggregate marker", () =>
 
 test("a queued non-AoE attack chain releases all target results together", () => {
   let state = createVisualResolutionState({
-    batch: { logIndex: 0, events: [] },
+    batch: { revision: 0, events: [] },
     view: view({ hp: 5, pendingQueue: 2 }),
     enabled: true,
   });
   state = advanceVisualResolution(state, {
-    batch: { logIndex: 1, events: [attack(1, 4)] },
+    batch: { revision: 1, events: [attack(1, 4)] },
     view: view({ hp: 4, pendingQueue: 1 }),
     enabled: true,
   });
   state = advanceVisualResolution(state, {
-    batch: { logIndex: 2, events: [attack(1, 3)] },
+    batch: { revision: 2, events: [attack(1, 3)] },
     view: view({ hp: 3 }),
     enabled: true,
   });
@@ -172,7 +217,7 @@ test("a queued non-AoE attack chain releases all target results together", () =>
 
 test("a unit revealed by a mass effect enters the board only with the final batch", () => {
   let state = createVisualResolutionState({
-    batch: { logIndex: 0, events: [] },
+    batch: { revision: 0, events: [] },
     view: view({ hp: 5, pendingAoE: true }),
     enabled: true,
   });
@@ -180,7 +225,7 @@ test("a unit revealed by a mass effect enters the board only with the final batc
   projectedAfterReveal.units.revealed = unit("revealed", 4);
 
   state = advanceVisualResolution(state, {
-    batch: { logIndex: 1, events: [attack(1, 4)] },
+    batch: { revision: 1, events: [attack(1, 4)] },
     view: projectedAfterReveal,
     enabled: true,
   });
@@ -189,7 +234,7 @@ test("a unit revealed by a mass effect enters the board only with the final batc
   const completedView = view({ hp: 5 });
   completedView.units.revealed = unit("revealed", 4);
   state = advanceVisualResolution(state, {
-    batch: { logIndex: 2, events: [aoe()] },
+    batch: { revision: 2, events: [aoe()] },
     view: completedView,
     enabled: true,
   });
@@ -198,19 +243,19 @@ test("a unit revealed by a mass effect enters the board only with the final batc
 
 test("a single-target attack stays responsive and reconnect baselines safely", () => {
   let state = createVisualResolutionState({
-    batch: { logIndex: 0, events: [] },
+    batch: { revision: 0, events: [] },
     view: view({ hp: 5 }),
     enabled: true,
   });
   state = advanceVisualResolution(state, {
-    batch: { logIndex: 0, events: [] },
+    batch: { revision: 0, events: [] },
     view: view({ hp: 3 }),
     enabled: true,
   });
   assert.equal(state.visualHpByUnitId.target, 5);
 
   state = advanceVisualResolution(state, {
-    batch: { logIndex: 1, events: [attack(2, 3)] },
+    batch: { revision: 1, events: [attack(2, 3)] },
     view: view({ hp: 3 }),
     enabled: true,
   });
@@ -218,12 +263,12 @@ test("a single-target attack stays responsive and reconnect baselines safely", (
   assert.equal(state.visualBatch?.events[0]?.type, "attackResolved");
 
   state = advanceVisualResolution(state, {
-    batch: { logIndex: 1, events: [attack(2, 3)] },
+    batch: { revision: 1, events: [attack(2, 3)] },
     view: view({ hp: 2, pendingAoE: true }),
     enabled: false,
   });
   state = advanceVisualResolution(state, {
-    batch: { logIndex: 5, events: [attack(1, 2)] },
+    batch: { revision: 5, events: [attack(1, 2)] },
     view: view({ hp: 2, pendingAoE: true }),
     enabled: true,
   });
@@ -234,13 +279,13 @@ test("a single-target attack stays responsive and reconnect baselines safely", (
 test("Rider pass buffers every attack until its explicit chain completion marker", () => {
   const chainId = "combat-chain-rider";
   let state = createVisualResolutionState({
-    batch: { logIndex: 0, events: [] },
+    batch: { revision: 0, events: [] },
     view: view({ hp: 5 }),
     enabled: true,
   });
 
   state = advanceVisualResolution(state, {
-    batch: { logIndex: 1, events: [deferred(attack(1, 4), chainId)] },
+    batch: { revision: 1, events: [deferred(attack(1, 4), chainId)] },
     view: view({ hp: 4 }),
     enabled: true,
   });
@@ -250,7 +295,7 @@ test("Rider pass buffers every attack until its explicit chain completion marker
 
   state = advanceVisualResolution(state, {
     batch: {
-      logIndex: 2,
+      revision: 2,
       events: [deferred(attack(1, 3), chainId), complete(chainId)],
     },
     view: view({ hp: 3 }),
@@ -267,12 +312,12 @@ test("Rider pass buffers every attack until its explicit chain completion marker
 test("El Cid and Jack chains remain deferred without queue-shaped view metadata", () => {
   for (const chainId of ["combat-chain-el-cid", "combat-chain-jack"]) {
     let state = createVisualResolutionState({
-      batch: { logIndex: 0, events: [] },
+      batch: { revision: 0, events: [] },
       view: view({ hp: 5 }),
       enabled: true,
     });
     state = advanceVisualResolution(state, {
-      batch: { logIndex: 1, events: [deferred(attack(2, 3), chainId)] },
+      batch: { revision: 1, events: [deferred(attack(2, 3), chainId)] },
       view: view({ hp: 3 }),
       enabled: true,
     });
@@ -280,7 +325,7 @@ test("El Cid and Jack chains remain deferred without queue-shaped view metadata"
     assert.equal(state.visualHpByUnitId.target, 5);
 
     state = advanceVisualResolution(state, {
-      batch: { logIndex: 2, events: [complete(chainId)] },
+      batch: { revision: 2, events: [complete(chainId)] },
       view: view({ hp: 3 }),
       enabled: true,
     });
@@ -293,17 +338,17 @@ test("El Cid and Jack chains remain deferred without queue-shaped view metadata"
 test("an explicit deferred batch is not replayed and reconnect clears stale buffers", () => {
   const chainId = "combat-chain-reconnect";
   let state = createVisualResolutionState({
-    batch: { logIndex: 0, events: [] },
+    batch: { revision: 0, events: [] },
     view: view({ hp: 5 }),
     enabled: true,
   });
   state = advanceVisualResolution(state, {
-    batch: { logIndex: 1, events: [deferred(attack(1, 4), chainId)] },
+    batch: { revision: 1, events: [deferred(attack(1, 4), chainId)] },
     view: view({ hp: 4 }),
     enabled: true,
   });
   const same = advanceVisualResolution(state, {
-    batch: { logIndex: 1, events: [deferred(attack(1, 4), chainId)] },
+    batch: { revision: 1, events: [deferred(attack(1, 4), chainId)] },
     view: view({ hp: 4 }),
     enabled: true,
   });
@@ -311,7 +356,7 @@ test("an explicit deferred batch is not replayed and reconnect clears stale buff
   assert.equal(same.deferredVisualsByChainId.get(chainId)?.length, 1);
 
   const reconnected = createVisualResolutionState({
-    batch: { logIndex: 5, events: [complete(chainId)] },
+    batch: { revision: 5, events: [complete(chainId)] },
     view: view({ hp: 4 }),
     enabled: true,
   });

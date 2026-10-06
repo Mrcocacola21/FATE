@@ -57,7 +57,7 @@ test("lethal damage keeps a render-only ghost through HP tween and death", () =>
   };
   const plan = buildCombatVisualPlaybackPlan({
     batch: {
-      logIndex: 9,
+      revision: 9,
       events: [
         attack(2, 0),
         { type: "unitDied", unitId: "target", killerId: "attacker" },
@@ -97,7 +97,7 @@ test("non-lethal damage finishes with the authoritative unit still visible", () 
   const target = unit("target", 5);
   const finalTarget = unit("target", 3);
   const plan = buildCombatVisualPlaybackPlan({
-    batch: { logIndex: 2, events: [attack(5, 3)] },
+    batch: { revision: 2, events: [attack(5, 3)] },
     startingHpByUnitId: { attacker: 6, target: 5 },
     startingUnitsByUnitId: {
       attacker: unit("attacker", 6, { col: 2, row: 1 }),
@@ -116,7 +116,7 @@ test("multiple hits tween in event order and death is scheduled once", () => {
   const deadTarget = { ...unit("target", 0), isAlive: false, position: null };
   const plan = buildCombatVisualPlaybackPlan({
     batch: {
-      logIndex: 3,
+      revision: 3,
       events: [
         attack(5, 3),
         attack(3, 0),
@@ -148,7 +148,7 @@ test("reduced motion keeps feedback but shortens the full playback", () => {
   const deadTarget = { ...unit("target", 0), isAlive: false, position: null };
   const common = {
     batch: {
-      logIndex: 4,
+      revision: 4,
       events: [
         attack(2, 0),
         { type: "unitDied", unitId: "target", killerId: "attacker" },

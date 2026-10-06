@@ -42,18 +42,15 @@ export type QueuedBoardVfxRequest = BoardVfxRequest & {
   expiresAt: number;
 };
 
-export interface BoardVfxEventBatch {
-  logIndex: number;
-  events: GameEvent[];
-  eventDelaysMs?: number[];
-}
+export type BoardVfxEventBatch = import("../../game/effects/types").BoardEventBatch;
 
 export type VisibleUnitPositions = Record<string, Coord>;
 
 export interface VfxMapperContext {
   view: PlayerView;
   previousPositions: VisibleUnitPositions;
-  logIndex: number;
+  revision: number;
+  presentationId?: string;
   events: GameEvent[];
   eventIndex: number;
 }
