@@ -344,7 +344,8 @@ export function requestRiverBoatDropDestination(
 function resolveLegacyRiverBoatDropDestination(
   state: GameState,
   ctx: RiverBoatDropDestinationContext,
-  choice: ResolveRollChoice | undefined
+  choice: ResolveRollChoice | undefined,
+  rng: RNG,
 ): ApplyResult {
   const river = state.units[ctx.riverId];
   const ally = state.units[ctx.allyId];
@@ -383,7 +384,10 @@ function resolveLegacyRiverBoatDropDestination(
   const events: GameEvent[] = moved
     ? [evUnitMoved({ unitId: updatedAlly.id, from: ally.position, to: destination })]
     : [];
-  return { state: nextState, events };
+  const landing = applyStakeTriggerIfAny(
+    nextState, updatedAlly, destination, rng, { entryKind: "landing" },
+  );
+  return { state: landing.state, events: [...events, ...landing.events] };
 }
 
 // Commit movement before checking consequences for the planned passenger drop.
@@ -458,6 +462,7 @@ function completeBoatDisembark(
   river: UnitState,
   ally: UnitState,
   destination: Coord,
+  rng: RNG,
 ): ApplyResult {
   const events: GameEvent[] = [];
   if (!coordsEqual(ally.position!, destination)) {
@@ -465,6 +470,19 @@ function completeBoatDisembark(
       evUnitMoved({ unitId: ally.id, from: ally.position!, to: destination }),
     );
   }
+  const landedAlly: UnitState = { ...ally, position: { ...destination } };
+  const nextState = clearPendingRoll({
+    ...state,
+    units: {
+      ...state.units,
+      [river.id]: { ...river, riverBoatCarryAllyId: undefined },
+      [ally.id]: landedAlly,
+    },
+  });
+  const landing = applyStakeTriggerIfAny(
+    nextState, landedAlly, destination, rng, { entryKind: "landing" },
+  );
+  events.push(...landing.events);
   events.push({
     type: "riverBoatResolved",
     riverId: river.id,
@@ -473,14 +491,7 @@ function completeBoatDisembark(
     dropDestination: destination,
   });
   return {
-    state: clearPendingRoll({
-      ...state,
-      units: {
-        ...state.units,
-        [river.id]: { ...river, riverBoatCarryAllyId: undefined },
-        [ally.id]: { ...ally, position: { ...destination } },
-      },
-    }),
+    state: landing.state,
     events,
   };
 }
@@ -493,7 +504,7 @@ export function resolveRiverBoatDropDestination(
 ): ApplyResult {
   const ctx = pending.context as unknown as RiverBoatDropDestinationContext;
   if (!ctx.riverDestination) {
-    return resolveLegacyRiverBoatDropDestination(state, ctx, choice);
+    return resolveLegacyRiverBoatDropDestination(state, ctx, choice, rng);
   }
 
   const river = state.units[ctx.riverId];
@@ -522,7 +533,7 @@ export function resolveRiverBoatDropDestination(
     ) {
       return { state, events: [] };
     }
-    return completeBoatDisembark(state, river, ally, destination);
+    return completeBoatDisembark(state, river, ally, destination, rng);
   }
   if (choice === "skip") {
     return { state: clearPendingRoll(state), events: [] };
@@ -610,6 +621,7 @@ export function resolveRiverBoatDropDestination(
       actualRiver,
       ally,
       selectedDrop,
+      rng,
     );
   }
   return {

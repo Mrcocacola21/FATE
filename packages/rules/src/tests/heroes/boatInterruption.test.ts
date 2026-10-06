@@ -10,10 +10,12 @@ import {
   resolvePendingWithChoice,
   setUnit,
   setupRiverPersonState,
+  setupSansState,
   toBattleState,
 } from "../helpers/testUtils";
 import { getMovementActionsRemaining } from "../../index";
 import { getRiverDropOptions } from "../../actions/heroes/riverPerson/options";
+import { requestRiverBoatDropDestination } from "../../actions/heroes/riverPerson/boatman";
 
 const requestedDestination = { col: 0, row: 3 };
 const plannedDrop = { col: 1, row: 3 };
@@ -322,4 +324,213 @@ export function testBoatWithoutPassengerUsesNormalStakeResolution() {
   assert.strictEqual(moved.state.stakeMarkers[0].isRevealed, true);
   assert.strictEqual(moved.state.pendingRoll, null);
   console.log("boat_without_passenger_uses_normal_stake_resolution passed");
+}
+
+const landingRiverDestination: Coord = { col: 4, row: 3 }; // E4
+const landingDrop: Coord = { col: 5, row: 3 }; // F4
+
+function setupBoatLanding(sansPassenger = false) {
+  let { state, riverId, passengerId } = setupBoat(false);
+  if (sansPassenger) {
+    const { sans } = setupSansState();
+    passengerId = sans.id;
+    state = { ...state, units: { ...state.units, [sans.id]: sans } };
+    state = setUnit(state, sans.id, { hp: 1, sansUnbelieverUnlocked: true });
+  }
+  state = setUnit(state, riverId, { position: { col: 4, row: 0 } });
+  state = setUnit(state, passengerId, { position: { col: 5, row: 0 } });
+  state = initKnowledgeForOwners(state);
+  state = {
+    ...state,
+    stakeMarkers: [
+      { id: "stake-landing", owner: "P2", position: landingDrop, createdAt: 1, isRevealed: false },
+    ],
+  };
+  return { state, riverId, passengerId };
+}
+
+function landPassenger(state: GameState, riverId: string, passengerId: string) {
+  return chooseCell(
+    planBoat(state, riverId, passengerId, landingRiverDestination).state,
+    landingDrop,
+  );
+}
+
+export function testBoatPassengerTriggersStakeOnDisembark() {
+  const { state, riverId, passengerId } = setupBoatLanding();
+  const result = landPassenger(state, riverId, passengerId);
+  assert.deepStrictEqual(result.state.units[riverId].position, landingRiverDestination);
+  assert.deepStrictEqual(result.state.units[passengerId].position, landingDrop);
+  assert.strictEqual(result.state.units[passengerId].hp, state.units[passengerId].hp - 1);
+  assert.deepStrictEqual(result.state.stakeMarkers, [
+    { ...state.stakeMarkers[0], isRevealed: true },
+  ]);
+  assert.deepStrictEqual(makePlayerView(result.state, "P1").stakeMarkers, [
+    { position: landingDrop, isRevealed: true },
+  ]);
+  assert.strictEqual(result.state.pendingRoll, null);
+  assert.strictEqual(result.state.units[riverId].riverBoatCarryAllyId, undefined);
+  const triggers = result.events.filter((event) => event.type === "stakeTriggered");
+  assert.strictEqual(triggers.length, 1);
+  assert.strictEqual(triggers[0].unitId, passengerId);
+  assert.strictEqual(triggers[0].damage, 1);
+  assert.strictEqual(triggers[0].stopped, false, "Landing has no path to truncate");
+  assert.deepStrictEqual(triggers[0].stakeIdsRevealed, ["stake-landing"]);
+  assert(
+    result.events.findIndex((event) => event.type === "stakeTriggered") <
+      result.events.findIndex((event) => event.type === "riverBoatResolved"),
+    "Process landing hazards before finishing Boat",
+  );
+  console.log("boat_passenger_triggers_stake_on_disembark passed");
+}
+
+export function testBoatPassengerDisembarkCellWithHiddenStakeIsStillSelectable() {
+  const { state, riverId, passengerId } = setupBoatLanding();
+  const clearState = { ...state, stakeMarkers: [] };
+  const hiddenMove = selectPassenger(state, riverId, passengerId);
+  const clearMove = selectPassenger(clearState, riverId, passengerId);
+  assert.deepStrictEqual(makePlayerView(hiddenMove.state, "P1"), makePlayerView(clearMove.state, "P1"));
+  const hiddenDrop = chooseCell(hiddenMove.state, landingRiverDestination);
+  const clearDrop = chooseCell(clearMove.state, landingRiverDestination);
+  assert(options(hiddenDrop.state).some((cell) => cell.col === landingDrop.col && cell.row === landingDrop.row));
+  assert.deepStrictEqual(makePlayerView(hiddenDrop.state, "P1"), makePlayerView(clearDrop.state, "P1"));
+  assert.deepStrictEqual(makePlayerView(hiddenDrop.state, "P1").stakeMarkers, []);
+  assert.strictEqual(hiddenDrop.state.stakeMarkers[0].isRevealed, false);
+  assert(!hiddenDrop.events.some((event) => event.type === "stakeTriggered"));
+  console.log("boat_passenger_disembark_cell_with_hidden_stake_is_still_selectable passed");
+}
+
+export function testBoatPassengerStackedStakesDealOnlyOneDamage() {
+  const setup = setupBoatLanding();
+  const state: GameState = {
+    ...setup.state,
+    stakeMarkers: [
+      ...setup.state.stakeMarkers,
+      { id: "stake-friendly", owner: "P1", position: landingDrop, createdAt: 2, isRevealed: false },
+    ],
+  };
+  const result = landPassenger(state, setup.riverId, setup.passengerId);
+  assert.deepStrictEqual(result.state.units[setup.passengerId].position, landingDrop);
+  assert.strictEqual(result.state.units[setup.passengerId].hp, state.units[setup.passengerId].hp - 1);
+  assert.deepStrictEqual(result.state.stakeMarkers, state.stakeMarkers.map((stake) => ({ ...stake, isRevealed: true })));
+  const triggers = result.events.filter((event) => event.type === "stakeTriggered");
+  assert.strictEqual(triggers.length, 1);
+  assert.strictEqual(triggers[0].damage, 1);
+  assert.deepStrictEqual(triggers[0].stakeIdsRevealed, ["stake-landing", "stake-friendly"]);
+  console.log("boat_passenger_stacked_stakes_deal_only_one_damage passed");
+}
+
+export function testBoatHiddenPassengerIsRevealedByStake() {
+  let { state, riverId, passengerId } = setupBoatLanding();
+  state = setUnit(state, passengerId, { isStealthed: true, stealthTurnsLeft: 3 });
+  assert(!state.knowledge.P2[passengerId], "Passenger is unknown to the enemy stake owner");
+  const result = landPassenger(state, riverId, passengerId);
+  const passenger = result.state.units[passengerId];
+  assert.deepStrictEqual(passenger.position, landingDrop);
+  assert.strictEqual(passenger.hp, state.units[passengerId].hp - 1);
+  assert.strictEqual(passenger.isStealthed, false);
+  assert.strictEqual(passenger.stealthTurnsLeft, 0);
+  assert.strictEqual(result.state.stakeMarkers[0].isRevealed, true);
+  assert(result.events.some((event) => event.type === "stealthRevealed" && event.unitId === passengerId && event.reason === "stakeTriggered"));
+  assert.strictEqual(result.events.filter((event) => event.type === "stakeTriggered").length, 1);
+  assert.strictEqual(result.state.pendingRoll, null);
+  console.log("boat_hidden_passenger_is_revealed_by_stake passed");
+}
+
+export function testBoatPassengerCanDieFromStake() {
+  let { state, riverId, passengerId } = setupBoatLanding();
+  state = setUnit(state, passengerId, { hp: 1 });
+  const result = landPassenger(state, riverId, passengerId);
+  assert.strictEqual(result.state.units[passengerId].hp, 0);
+  assert.strictEqual(result.state.units[passengerId].isAlive, false);
+  assert.strictEqual(result.state.units[passengerId].position, null);
+  assert.strictEqual(result.state.stakeMarkers.length, 1);
+  assert.strictEqual(result.state.stakeMarkers[0].isRevealed, true);
+  assert(result.events.some((event) => event.type === "unitDied" && event.unitId === passengerId && event.killerId === null));
+  assert.strictEqual(result.events.filter((event) => event.type === "stakeTriggered").length, 1);
+  assert.strictEqual(result.state.pendingRoll, null);
+  assert.strictEqual(result.state.units[riverId].riverBoatCarryAllyId, undefined);
+  assert(result.events.some((event) => event.type === "riverBoatResolved"));
+  console.log("boat_passenger_can_die_from_stake passed");
+}
+
+export function testBoatPassengerStakePreservesSansLastAttack() {
+  const { state, riverId, passengerId } = setupBoatLanding(true);
+  const result = landPassenger(state, riverId, passengerId);
+  const passenger = result.state.units[passengerId];
+  assert.strictEqual(passenger.hp, 0);
+  assert.strictEqual(passenger.isAlive, true, "Sans remains alive until Last Attack resolves");
+  assert.deepStrictEqual(passenger.position, landingDrop);
+  assert.deepStrictEqual(passenger.sansPendingDeath, { killerId: null });
+  assert.strictEqual(result.state.stakeMarkers[0].isRevealed, true);
+  assert.strictEqual(result.state.pendingRoll?.kind, "selectLastAttackTarget");
+  assert(!result.events.some((event) => event.type === "unitDied" && event.unitId === passengerId));
+  assert.strictEqual(result.state.units[riverId].riverBoatCarryAllyId, undefined);
+  assert(result.events.some((event) => event.type === "riverBoatResolved"));
+  const targetId = (result.state.pendingRoll!.context.legalTargetIds as string[])[0];
+  const resolved = resolvePendingWithChoice(result.state, { type: "sansLastAttackTarget", targetId }, makeRngSequence([]));
+  assert.strictEqual(resolved.state.units[targetId].sansLastAttackCurseSourceId, passengerId);
+  assert.strictEqual(resolved.state.units[passengerId].isAlive, false);
+  assert.strictEqual(resolved.state.units[passengerId].position, null);
+  assert.strictEqual(resolved.state.units[passengerId].sansPendingDeath, undefined);
+  assert.strictEqual(resolved.state.pendingRoll, null, "No stale Boat decision resumes after death");
+  assert(resolved.events.some((event) => event.type === "unitDied" && event.unitId === passengerId));
+  console.log("boat_passenger_stake_preserves_sans_last_attack passed");
+}
+
+export function testBoatItselfHittingStakeStillStopsMovement() {
+  const { state, riverId, passengerId } = setupBoat();
+  const result = chooseCell(planBoat(state, riverId, passengerId, { col: 0, row: 2 }).state, { col: 1, row: 2 });
+  assert.deepStrictEqual(result.state.units[riverId].position, stoppedAt);
+  assert.strictEqual(result.state.units[riverId].hp, state.units[riverId].hp - 1);
+  assert.strictEqual(result.state.stakeMarkers[0].isRevealed, true);
+  assert.strictEqual(result.state.pendingRoll?.context.phase, "selectDisembark");
+  assert.deepStrictEqual(options(result.state), getRiverDropOptions(result.state, stoppedAt, passengerId));
+  assert.deepStrictEqual(result.state.units[passengerId].position, state.units[passengerId].position);
+  const trigger = result.events.find((event) => event.type === "stakeTriggered")!;
+  assert.strictEqual(trigger.stopped, true);
+  assert.deepStrictEqual(result.events.filter((event) => event.type === "unitMoved").map((event) => event.to), [stoppedAt]);
+  const confirmed = chooseCell(result.state, { col: 1, row: 2 });
+  assert.deepStrictEqual(confirmed.state.units[riverId].position, stoppedAt);
+  assert.deepStrictEqual(confirmed.state.units[passengerId].position, { col: 1, row: 2 });
+  assert.strictEqual(confirmed.state.pendingRoll, null);
+  console.log("boat_itself_hitting_stake_still_stops_movement passed");
+}
+
+export function testBoatInterruptedPassengerLandingTriggersStake() {
+  const setup = setupBoat();
+  const drop = { col: 1, row: 2 };
+  const state: GameState = {
+    ...setup.state,
+    stakeMarkers: [
+      ...setup.state.stakeMarkers,
+      { id: "stake-drop-after-stop", owner: "P2", position: drop, createdAt: 2, isRevealed: false },
+    ],
+  };
+  const interrupted = chooseCell(planBoat(state, setup.riverId, setup.passengerId).state, plannedDrop);
+  assert.strictEqual(interrupted.state.stakeMarkers[1].isRevealed, false);
+  assert(options(interrupted.state).some((cell) => cell.col === drop.col && cell.row === drop.row));
+  const result = chooseCell(interrupted.state, drop);
+  assert.deepStrictEqual(result.state.units[setup.passengerId].position, drop);
+  assert.strictEqual(result.state.units[setup.passengerId].hp, state.units[setup.passengerId].hp - 1);
+  assert.strictEqual(result.state.units[setup.riverId].hp, interrupted.state.units[setup.riverId].hp);
+  assert.strictEqual(result.state.stakeMarkers.length, 2);
+  assert(result.state.stakeMarkers.every((stake) => stake.isRevealed));
+  assert.strictEqual(result.events.filter((event) => event.type === "stakeTriggered").length, 1);
+  assert.strictEqual(result.state.pendingRoll, null, "Landing must not request another drop");
+  console.log("boat_interrupted_passenger_landing_triggers_stake passed");
+}
+
+export function testBoatLegacyPassengerLandingTriggersStake() {
+  let { state, riverId, passengerId } = setupBoatLanding();
+  state = setUnit(state, riverId, { position: landingRiverDestination, riverBoatCarryAllyId: passengerId });
+  const pending = requestRiverBoatDropDestination(state, riverId, passengerId, getRiverDropOptions(state, landingRiverDestination, passengerId));
+  const result = chooseCell(pending.state, landingDrop);
+  assert.deepStrictEqual(result.state.units[passengerId].position, landingDrop);
+  assert.strictEqual(result.state.units[passengerId].hp, state.units[passengerId].hp - 1);
+  assert.deepStrictEqual(result.state.stakeMarkers, [{ ...state.stakeMarkers[0], isRevealed: true }]);
+  assert.strictEqual(result.events.filter((event) => event.type === "stakeTriggered").length, 1);
+  assert.strictEqual(result.state.pendingRoll, null);
+  assert.strictEqual(result.state.units[riverId].riverBoatCarryAllyId, undefined);
+  console.log("boat_legacy_passenger_landing_triggers_stake passed");
 }

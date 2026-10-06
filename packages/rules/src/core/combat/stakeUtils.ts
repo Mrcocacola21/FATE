@@ -65,6 +65,7 @@ export function applyStakeTriggerIfAny(
   unit: UnitState,
   destination: Coord,
   rng: RNG,
+  context: { entryKind: "movement" | "landing" } = { entryKind: "movement" },
 ): { state: GameState; events: GameEvent[]; unit: UnitState; triggered: boolean } {
   const markers = getStakeMarkersAt(state, destination);
   if (markers.length === 0) {
@@ -75,7 +76,9 @@ export function applyStakeTriggerIfAny(
   }
 
   const canSeeMover = markers.some((marker) => isUnitVisibleToPlayer(state, unit, marker.owner));
-  if (!canSeeMover) {
+  // Landing hazards apply even to an unknown passenger. Ordinary movement
+  // retains its existing visibility requirement and stop-on-stake behavior.
+  if (context.entryKind === "movement" && !canSeeMover) {
     return { state, events: [], unit, triggered: false };
   }
 
@@ -129,7 +132,7 @@ export function applyStakeTriggerIfAny(
       markerPos: destination,
       unitId: unit.id,
       damage: 1,
-      stopped: true,
+      stopped: context.entryKind === "movement",
       stakeIdsRevealed: revealedIds,
     }),
   );

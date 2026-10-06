@@ -8,6 +8,15 @@ import {
   testBoatInterruptedLegalDropStillRequiresConfirmation,
   testBoatInterruptionHandlesImpossibleDisembark,
   testBoatWithoutPassengerUsesNormalStakeResolution,
+  testBoatPassengerTriggersStakeOnDisembark,
+  testBoatPassengerDisembarkCellWithHiddenStakeIsStillSelectable,
+  testBoatPassengerStackedStakesDealOnlyOneDamage,
+  testBoatHiddenPassengerIsRevealedByStake,
+  testBoatPassengerCanDieFromStake,
+  testBoatPassengerStakePreservesSansLastAttack,
+  testBoatItselfHittingStakeStillStopsMovement,
+  testBoatInterruptedPassengerLandingTriggersStake,
+  testBoatLegacyPassengerLandingTriggersStake,
 } from "./heroes/boatInterruption.test";
 import {
   testCombatVisualChainCompletesOnlyAfterNestedFollowups,
@@ -736,6 +745,15 @@ function main(): void {
   testBoatInterruptedLegalDropStillRequiresConfirmation();
   testBoatInterruptionHandlesImpossibleDisembark();
   testBoatWithoutPassengerUsesNormalStakeResolution();
+  testBoatPassengerTriggersStakeOnDisembark();
+  testBoatPassengerDisembarkCellWithHiddenStakeIsStillSelectable();
+  testBoatPassengerStackedStakesDealOnlyOneDamage();
+  testBoatHiddenPassengerIsRevealedByStake();
+  testBoatPassengerCanDieFromStake();
+  testBoatPassengerStakePreservesSansLastAttack();
+  testBoatItselfHittingStakeStillStopsMovement();
+  testBoatInterruptedPassengerLandingTriggersStake();
+  testBoatLegacyPassengerLandingTriggersStake();
   testRiverPersonBoatmanConvertsActionToMoveAndSupportsCarry();
   testRiverPersonGuideOfSoulsStormImmunity();
   testRiverPersonTraLaLaGatingAndFlow();
