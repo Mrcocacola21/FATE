@@ -528,17 +528,24 @@ export function PendingBoardNotice({
         <div>
           <div className="font-semibold">{p("Boat drop", "Висадка з човна")}</div>
           <div className="mt-1 text-xs text-amber-700 dark:text-amber-200">
-            {p(
-              "Select an adjacent empty cell to drop the passenger.",
-              "Оберіть сусідню порожню клітинку для висадки пасажира.",
-            )}
+            {pendingRollContext.reason === "movementInterrupted"
+              ? p(
+                  "Movement was interrupted by a stake. Choose a new disembark position.",
+                  "Рух було перервано колом. Оберіть нове місце для висадки.",
+                )
+              : p(
+                  "Select an adjacent empty cell to drop the passenger.",
+                  "Оберіть сусідню порожню клітинку для висадки пасажира.",
+                )}
           </div>
-          <button
-            className="mt-2 rounded-lg bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
-            onClick={onResolveSkip}
-          >
-            {t("common.cancel")}
-          </button>
+          {pendingRollContext.phase !== "selectDisembark" && (
+            <button
+              className="mt-2 rounded-lg bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm transition hover:shadow dark:bg-slate-800 dark:text-slate-200"
+              onClick={onResolveSkip}
+            >
+              {t("common.cancel")}
+            </button>
+          )}
         </div>
       ) : isRiverTraLaLaTargetChoice ? (
         <div>

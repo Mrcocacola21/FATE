@@ -2548,6 +2548,9 @@
               },
               {
                 "$ref": "#/definitions/CreatedGameViewsP1EventsItem78"
+              },
+              {
+                "$ref": "#/definitions/CreatedGameViewsP1EventsItem79"
               }
             ]
           }
@@ -6674,6 +6677,57 @@
             true
           ]
         },
+        "isChainComplete": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "passengerId": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string",
+          "enum": [
+            "carrierDied",
+            "noLegalDestinations"
+          ]
+        },
+        "riverId": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "riverBoatDisembarkFailed"
+          ]
+        },
+        "visualBatchId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {},
+      "required": [
+        "passengerId",
+        "reason",
+        "riverId",
+        "type"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem76": {
+      "type": "object",
+      "properties": {
+        "chainId": {
+          "type": "string"
+        },
+        "deferVisuals": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
         "dropDestination": {
           "$ref": "#/definitions/Coord"
         },
@@ -6719,7 +6773,7 @@
         "type"
       ]
     },
-    "CreatedGameViewsP1EventsItem76": {
+    "CreatedGameViewsP1EventsItem77": {
       "type": "object",
       "properties": {
         "asgoreId": {
@@ -6773,7 +6827,7 @@
         "type"
       ]
     },
-    "CreatedGameViewsP1EventsItem77": {
+    "CreatedGameViewsP1EventsItem78": {
       "type": "object",
       "properties": {
         "chainId": {
@@ -6826,7 +6880,7 @@
         "type"
       ]
     },
-    "CreatedGameViewsP1EventsItem78": {
+    "CreatedGameViewsP1EventsItem79": {
       "type": "object",
       "properties": {
         "chainId": {

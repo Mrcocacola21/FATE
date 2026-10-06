@@ -284,6 +284,7 @@ function projectEventForRecipient(
     case "riverBoatmanGranted":
       return isUnitVisibleToRecipient(state, event.riverId, recipient) ? [event] : [];
     case "riverBoatResolved":
+    case "riverBoatDisembarkFailed":
       return isUnitVisibleToRecipient(state, event.riverId, recipient) &&
         isUnitVisibleToRecipient(state, event.passengerId, recipient)
         ? [event]

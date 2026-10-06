@@ -520,6 +520,14 @@ export function formatEventMessage(event: GameEvent, language: Language, t: Tran
         `River Person transported ${value(event.passengerId)} to ${coordText(event.dropDestination)}.`,
         `Річкова Людина перевезла ${value(event.passengerId)} до ${coordText(event.dropDestination)}.`,
       );
+    case "riverBoatDisembarkFailed":
+      return event.reason === "carrierDied"
+        ? text(language,
+            "Boat cannot disembark: the carrier died. The passenger remains in place.",
+            "Висадка неможлива: човняр загинув. Пасажир залишається на місці.")
+        : text(language,
+            "Boat cannot disembark: no legal cells are available. The passenger remains in place.",
+            "Висадка неможлива: немає доступних клітинок. Пасажир залишається на місці.");
     case "riverTraLaLaResolved": {
       const attackers = Array.isArray(event.touchedAttackerIds) ? event.touchedAttackerIds : [];
       const attackText =

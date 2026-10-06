@@ -976,6 +976,56 @@ test("River Person Boat previews pickup and drop cells from pending options", ()
   assert.equal(hasKind(drop, { col: 3, row: 6 }, "drop"), true);
 });
 
+test("Boat interruption replaces planned highlights with authoritative drop options", () => {
+  const river = unit({
+    id: "river",
+    owner: "P1",
+    heroId: "riverPerson",
+    class: "rider",
+    position: { col: 0, row: 0 },
+  });
+  const ally = unit({ id: "ally", owner: "P1", position: { col: 1, row: 0 } });
+  const planned = buildPendingPreview(
+    makeView([river, ally], {
+      pendingRoll: {
+        id: "planned",
+        player: "P1",
+        kind: "riverBoatDropDestination",
+        context: {
+          riverId: river.id,
+          allyId: ally.id,
+          phase: "planDisembark",
+          riverDestination: { col: 0, row: 3 },
+          options: [{ col: 1, row: 3 }],
+        },
+      },
+    }),
+  );
+  assert.equal(hasKind(planned, { col: 1, row: 3 }, "drop"), true);
+  const interrupted = buildPendingPreview(
+    makeView([{ ...river, position: { col: 0, row: 1 } }, ally], {
+      pendingRoll: {
+        id: "reselect",
+        player: "P1",
+        kind: "riverBoatDropDestination",
+        context: {
+          riverId: river.id,
+          allyId: ally.id,
+          phase: "selectDisembark",
+          reason: "movementInterrupted",
+          interruptionReason: "stake",
+          riverDestination: { col: 0, row: 1 },
+          options: [{ col: 1, row: 1 }],
+        },
+      },
+    }),
+  );
+  assert.equal(hasKind(interrupted, { col: 0, row: 1 }, "source"), true);
+  assert.equal(hasKind(interrupted, { col: 1, row: 1 }, "drop"), true);
+  assert.equal(hasKind(interrupted, { col: 1, row: 3 }, "drop"), false);
+  assert.equal(hasKind(interrupted, { col: 0, row: 3 }, "source"), false);
+});
+
 test("River Person Tra-la-la previews target, straight-line destination, and drop", () => {
   const river = unit({
     id: "river",

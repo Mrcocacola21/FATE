@@ -142,6 +142,12 @@ export type HeroGameEvent =
       dropDestination: Coord;
     }
   | {
+      type: "riverBoatDisembarkFailed";
+      riverId: string;
+      passengerId: string;
+      reason: "noLegalDestinations" | "carrierDied";
+    }
+  | {
       type: "riverTraLaLaResolved";
       riverId: string;
       targetId: string;

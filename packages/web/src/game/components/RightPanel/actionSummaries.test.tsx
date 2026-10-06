@@ -1031,6 +1031,56 @@ test("Boat targeting remains a forced board task and offers cancel without spend
   assert.doesNotMatch(markup, /No forced task/);
 });
 
+test("interrupted Boat shows forced disembark instruction without cancel", () => {
+  setLanguage("en", { setItem: () => undefined });
+  const river = makeUnit({
+    id: "P1-river",
+    class: "rider",
+    heroId: "riverPerson",
+  });
+  const markup = renderToStaticMarkup(
+    <CurrentTaskPanel
+      vm={gameShellFixture({
+        view: makeView(river),
+        playerId: "P1",
+        pendingRoll: {
+          id: "boat-reselect",
+          player: "P1",
+          kind: "riverBoatDropDestination",
+          context: {
+            riverId: river.id,
+            allyId: "passenger",
+            phase: "selectDisembark",
+            reason: "movementInterrupted",
+            interruptionReason: "stake",
+            riverDestination: { col: 0, row: 1 },
+            options: [{ col: 1, row: 1 }],
+          },
+        },
+        pendingMeta: {
+          id: "boat-reselect",
+          kind: "riverBoatDropDestination",
+          player: "P1",
+        },
+        pendingQueueCount: 0,
+        stakeSelections: [],
+        stakeLimit: 0,
+        hassanAssassinOrderSelections: [],
+        isRiverBoatDropDestination: true,
+        actionMode: null,
+        targetingMode: null,
+        sendAction: () => undefined,
+      })}
+    />,
+  );
+  assert.match(
+    markup,
+    /Movement was interrupted by a stake\. Choose a new disembark position\./,
+  );
+  assert.doesNotMatch(markup, /Cancel/);
+  assert.doesNotMatch(markup, /Select an adjacent empty cell/);
+});
+
 test("current task panel shows Frisk board target pending prompts", () => {
   setLanguage("en", { setItem: () => undefined });
   const frisk = makeUnit({ id: "P1-frisk", heroId: "frisk" });

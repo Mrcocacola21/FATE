@@ -1,5 +1,15 @@
 import { testActionModuleBoundaries } from "./core/boundaries.test";
 import {
+  testBoatCanSelectDestinationEvenIfHiddenStakeIsOnPath,
+  testBoatStopsAtFirstHiddenStake,
+  testBoatRecalculatesDisembarkAfterInterruptedMovement,
+  testBoatInterruptionDoesNotDoubleSpendResources,
+  testHiddenStakeDoesNotLeakThroughClientOptions,
+  testBoatInterruptedLegalDropStillRequiresConfirmation,
+  testBoatInterruptionHandlesImpossibleDisembark,
+  testBoatWithoutPassengerUsesNormalStakeResolution,
+} from "./heroes/boatInterruption.test";
+import {
   testCombatVisualChainCompletesOnlyAfterNestedFollowups,
   testCombatVisualChainIdsStayStableAcrossRelatedRolls,
   testCombatVisualMetadataProjectionDoesNotLeakHiddenUnits,
@@ -718,6 +728,14 @@ function main(): void {
   testRiverPersonHpBonus();
   testRiverPersonNoRiderPathFeature();
   testRiverPersonBoatCarryFlowAndConstraints();
+  testBoatCanSelectDestinationEvenIfHiddenStakeIsOnPath();
+  testBoatStopsAtFirstHiddenStake();
+  testBoatRecalculatesDisembarkAfterInterruptedMovement();
+  testBoatInterruptionDoesNotDoubleSpendResources();
+  testHiddenStakeDoesNotLeakThroughClientOptions();
+  testBoatInterruptedLegalDropStillRequiresConfirmation();
+  testBoatInterruptionHandlesImpossibleDisembark();
+  testBoatWithoutPassengerUsesNormalStakeResolution();
   testRiverPersonBoatmanConvertsActionToMoveAndSupportsCarry();
   testRiverPersonGuideOfSoulsStormImmunity();
   testRiverPersonTraLaLaGatingAndFlow();

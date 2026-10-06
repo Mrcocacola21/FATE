@@ -297,6 +297,9 @@ export interface RiverBoatDropDestinationContext
   riverId: string;
   allyId: string;
   riverDestination?: Coord;
+  phase?: "planDisembark" | "selectDisembark";
+  reason?: "movementInterrupted";
+  interruptionReason?: "stake";
   options: Coord[];
 }
 

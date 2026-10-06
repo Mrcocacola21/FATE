@@ -1592,6 +1592,155 @@ function testRiverBoatmanCommandsPreserveAuthoritativeMovementBudget() {
   console.log("hardening_river_boatman_authoritative_budget passed");
 }
 
+function testBoatHiddenStakeCommitsMovementAndRequestsNewDrop() {
+  storeTestHooks.reset();
+  try {
+    const room = createGameRoomWithId(`hardening-boat-stake-${randomUUID()}`, {
+      hostSeat: "P1",
+      hostConnId: `conn-${randomUUID()}`,
+    });
+    let state = attachArmy(
+      createEmptyGame(),
+      createDefaultArmy("P1", { rider: HERO_RIVER_PERSON_ID }),
+    );
+    state = attachArmy(state, createDefaultArmy("P2"));
+    const river = Object.values(state.units).find(
+      (unit) => unit.heroId === HERO_RIVER_PERSON_ID,
+    )!;
+    const passenger = Object.values(state.units).find(
+      (unit) => unit.owner === "P1" && unit.class === "assassin",
+    )!;
+    state = setUnit(state, river.id, { position: { col: 0, row: 0 } });
+    state = setUnit(state, passenger.id, { position: { col: 1, row: 0 } });
+    room.state = {
+      ...state,
+      phase: "battle",
+      currentPlayer: "P1",
+      activeUnitId: river.id,
+      turnOrder: [river.id],
+      turnOrderIndex: 0,
+      turnQueue: [river.id],
+      turnQueueIndex: 0,
+      stakeMarkers: [
+        {
+          id: "hidden-stake",
+          owner: "P2",
+          position: { col: 0, row: 1 },
+          createdAt: 1,
+          isRevealed: false,
+        },
+      ],
+    };
+    assert.deepEqual(makePlayerView(room.state, "P1").stakeMarkers, []);
+    assert.equal(
+      applyGameAction(
+        room,
+        {
+          type: "useAbility",
+          unitId: river.id,
+          abilityId: ABILITY_RIVER_PERSON_BOAT,
+        },
+        "P1",
+      ).ok,
+      true,
+    );
+    const respond = (
+      choice: Extract<
+        Parameters<typeof applyGameAction>[1],
+        { type: "resolvePendingRoll" }
+      >["choice"],
+    ) => {
+      const pending = room.state.pendingRoll!;
+      return applyGameAction(
+        room,
+        {
+          type: "resolvePendingRoll",
+          pendingRollId: pending.id,
+          player: "P1",
+          choice,
+        },
+        "P1",
+      );
+    };
+    assert.equal(
+      respond({ type: "hassanTrueEnemyTarget", targetId: passenger.id }).ok,
+      true,
+    );
+    assert.equal(
+      respond({ type: "forestMoveDestination", position: { col: 0, row: 3 } })
+        .ok,
+      true,
+    );
+    const oldPendingId = room.state.pendingRoll!.id;
+    const revision = room.revision;
+    assert.equal(
+      respond({ type: "forestMoveDestination", position: { col: 1, row: 3 } })
+        .ok,
+      true,
+      "The originally legal planned drop must be accepted despite the hidden stake",
+    );
+    assert.equal(room.revision, revision + 1);
+    assert.deepEqual(room.state.units[river.id].position, { col: 0, row: 1 });
+    assert.equal(room.state.units[river.id].hp, river.hp - 1);
+    assert.deepEqual(room.state.units[passenger.id].position, {
+      col: 1,
+      row: 0,
+    });
+    assert.equal(room.state.pendingRoll!.context.reason, "movementInterrupted");
+    assert.notEqual(room.state.pendingRoll!.id, oldPendingId);
+    const view = makePlayerView(room.state, "P1");
+    assert.equal(view.stakeMarkers[0].isRevealed, true);
+    assert.equal(makePlayerView(room.state, "P2").pendingRoll, null);
+    const options = view.pendingRoll!.context.options as {
+      col: number;
+      row: number;
+    }[];
+    assert(options.length > 0);
+    assert(
+      options.every(
+        (cell) => Math.max(Math.abs(cell.col), Math.abs(cell.row - 1)) === 1,
+      ),
+    );
+    const waitingState = room.state;
+    assert.equal(applyGameAction(room, { type: "endTurn" }, "P1").ok, false);
+    assert.equal(respond("skip").ok, false);
+    assert.equal(
+      respond({ type: "forestMoveDestination", position: { col: 1, row: 3 } })
+        .ok,
+      false,
+    );
+    assert.equal(room.state, waitingState);
+    assert.equal(
+      applyGameAction(
+        room,
+        {
+          type: "resolvePendingRoll",
+          pendingRollId: oldPendingId,
+          player: "P1",
+          choice: { type: "forestMoveDestination", position: options[0] },
+        },
+        "P1",
+      ).ok,
+      false,
+    );
+    assert.equal(
+      respond({ type: "forestMoveDestination", position: options[0] }).ok,
+      true,
+    );
+    assert.equal(room.state.pendingRoll, null);
+    assert.deepEqual(room.state.units[passenger.id].position, options[0]);
+    assert.deepEqual(
+      room.state.units[river.id].turn,
+      waitingState.units[river.id].turn,
+    );
+    assert.equal(getMovementActionsRemaining(room.state.units[river.id]), 0);
+    assert.equal(room.state.units[river.id].hp, river.hp - 1);
+  } finally {
+    storeTestHooks.reset();
+  }
+  console.log("hardening_boat_hidden_stake_reselection passed");
+}
+
 function testMulticlassMovementCommandsStayAuthoritative() {
   storeTestHooks.reset();
   try {
@@ -2551,6 +2700,7 @@ async function main() {
   testServerTargetsVisibleEnemyOnHiddenEnemySharedCell();
   testServerRejectsInvalidFalsePromisePlacementsWithoutMutation();
   testRiverBoatmanCommandsPreserveAuthoritativeMovementBudget();
+  testBoatHiddenStakeCommitsMovementAndRequestsNewDrop();
   testMulticlassMovementCommandsStayAuthoritative();
   testArtemidaSickleEndpointCommandsStayAuthoritative();
   testMettatonLaserEndpointCommandsStayAuthoritative();
