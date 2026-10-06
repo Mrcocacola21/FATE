@@ -17,6 +17,7 @@ interface UseGameShellPendingStatusParams {
   leaveRoom: () => void;
   seat: PlayerId | null;
   playerId: PlayerId | null;
+  canControlTestRoom?: boolean;
 }
 
 export function useGameShellPendingStatus({
@@ -27,12 +28,17 @@ export function useGameShellPendingStatus({
   leaveRoom,
   seat,
   playerId,
+  canControlTestRoom = false,
 }: UseGameShellPendingStatusParams) {
   const { t } = useI18n();
   const pendingMeta = roomMeta?.pendingRoll ?? null;
-  const pendingRoll = getPendingRollForPlayer(view?.pendingRoll, pendingMeta, playerId);
+  const pendingRoll = getPendingRollForPlayer(
+    view?.pendingRoll,
+    pendingMeta,
+    canControlTestRoom ? (view?.pendingRoll?.player ?? playerId) : playerId,
+  );
   const pendingForLocalPlayer = isPendingRollForPlayer(pendingMeta, playerId);
-  const hasBlockingRoll = !!pendingMeta;
+  const hasBlockingRoll = !!(view?.pendingDecision || pendingRoll || pendingMeta);
   const isStakePlacement = pendingRoll?.kind === "vladPlaceStakes";
   const isForestTarget = pendingRoll?.kind === "vladForestTarget";
   const isIntimidateChoice = pendingRoll?.kind === "vladIntimidateChoice";
@@ -240,7 +246,9 @@ export function useGameShellPendingStatus({
   const playerReady = seat ? readyStatus[seat] : false;
   const canStartGame =
     !!roomMeta &&
-    (roomMeta.matchType !== "RATED" || roomMeta.origin === "MATCHMAKING" || roomMeta.ratedCompatibility?.eligible === true) &&
+    (roomMeta.matchType !== "RATED" ||
+      roomMeta.origin === "MATCHMAKING" ||
+      roomMeta.ratedCompatibility?.eligible === true) &&
     roomMeta.players.P1 &&
     roomMeta.players.P2 &&
     readyStatus.P1 &&

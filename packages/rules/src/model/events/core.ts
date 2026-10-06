@@ -258,6 +258,12 @@ export type CoreGameEvent =
       hiddenFromOpponent: boolean;
     }
   | {
+      /** Public completion only; hidden coordinates never cross this boundary. */
+      type: "hiddenSetupCompleted";
+      owner: PlayerId;
+      ability: "vladStakes" | "hidden";
+    }
+  | {
       type: "stakeTriggered";
       markerPos: Coord;
       unitId: string;

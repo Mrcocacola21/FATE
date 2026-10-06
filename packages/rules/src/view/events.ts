@@ -1,5 +1,6 @@
 import type { GameEvent, GameState, PlayerId } from "../model";
 import { canPlayerKnowUnitExactPosition } from "../visibility";
+import { HERO_VLAD_TEPES_ID } from "../heroes";
 
 export type EventRecipient = PlayerId | "spectator";
 
@@ -165,8 +166,19 @@ function projectEventForRecipient(
       if (recipient !== "spectator" && owner === recipient) return [event];
       return [];
     }
-    case "stakesPlaced":
-      return recipient !== "spectator" && recipient === event.owner ? [event] : [];
+    case "stakesPlaced": {
+      if (recipient !== "spectator" && recipient === event.owner) return [event];
+      const source = Object.values(state.units).find(
+        (unit) => unit.owner === event.owner && unit.isAlive && unit.heroId === HERO_VLAD_TEPES_ID,
+      );
+      return [{
+        type: "hiddenSetupCompleted",
+        owner: event.owner,
+        ability: source && isUnitVisibleToRecipient(state, source.id, recipient) ? "vladStakes" : "hidden",
+      }];
+    }
+    case "hiddenSetupCompleted":
+      return [event];
     case "intimidateTriggered": {
       const defenderOwner = unitOwner(state, event.defenderId);
       return recipient !== "spectator" && recipient === defenderOwner ? [event] : [];

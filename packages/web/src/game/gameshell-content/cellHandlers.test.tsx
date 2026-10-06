@@ -5,6 +5,8 @@ import type { PlayerView, UnitState } from "rules";
 import { Board } from "../../components/Board";
 import { buildActionPreview } from "../targeting/buildActionPreview";
 import { buildPreviewCellMap } from "../targeting/previewTypes";
+import { selectBoardPreview } from "../targeting/selectBoardPreview";
+import { buildHighlightedCells } from "./buildHighlightedCells";
 import {
   createCellClickHandler,
   getActiveUnitTargetIds,
@@ -34,6 +36,39 @@ test("Last Attack sends an authoritative enemy choice while normal actions are b
   click(4, 4);
   assert.deepEqual(sent, [{ type: "resolvePendingRoll", pendingRollId: pending.id, player: "P1",
     choice: { type: "sansLastAttackTarget", targetId: enemies[0].id } }]);
+});
+
+test("waiting cell clicks explain the action lock and send no gameplay actions", () => {
+  const { view } = sharedCellView();
+  const sent: unknown[] = [];
+  let notices = 0;
+  const click = createCellClickHandler({
+    view, playerId: "P2", joined: true, isSpectator: false,
+    hasBlockingRoll: true, boardSelectionPending: false,
+    onBlockedAction: () => notices++,
+    sendAction: (action: unknown) => sent.push(action),
+    sendGameAction: (action: unknown) => sent.push(action),
+  } as never);
+  click(3, 4);
+  assert.equal(notices, 1);
+  assert.deepEqual(sent, []);
+});
+
+test("waiting projection suppresses stale targeting highlights and previews", () => {
+  const { view, attacker, enemies } = sharedCellView();
+  view.pendingDecision = {
+    type: "opponentResolvingDecision", ownerPlayerId: "P2", viewerCanRespond: false,
+    opponentStatus: { key: "generic", title: "Opponent is making a decision", message: "Waiting for opponent" },
+  };
+  assert.equal(selectBoardPreview({
+    gameView: view, viewerPlayerId: "P1", selectedUnitId: attacker.id,
+    actionMode: "attack", hoverActionMode: null, allowActionHoverPreview: false,
+    hoveredAbilityId: "jackRipperSnares", hasBlockingRoll: true,
+  }), null);
+  assert.deepEqual(buildHighlightedCells({
+    view, effectiveActionMode: "attack", legalAttackTargets: [enemies[0].id],
+    stakeLegalPositions: [{ col: 3, row: 4 }], isStakePlacement: true,
+  } as never), {});
 });
 
 function unit(overrides: Partial<UnitState> & Pick<UnitState, "id" | "owner" | "position">) {

@@ -835,6 +835,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
   resolvePendingRoll: (pendingRollId, choice) => {
     const state = get();
+    if (!state.canControlTestRoom && state.roomState?.pendingDecision?.viewerCanRespond === false) {
+      state.addClientLog("Waiting for your opponent to finish their decision.");
+      return;
+    }
     if (!state.joined) {
       state.addClientLog("Not joined yet. Please join a room first.");
       return;
@@ -869,11 +873,23 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
   sendAction: (action) => {
     const state = get();
+    if (
+      !state.canControlTestRoom &&
+      (state.roomState?.pendingDecision?.viewerCanRespond === false ||
+        (state.roomMeta?.pendingRoll &&
+          state.roomMeta.pendingRoll.player !== getPlayerIdForViewer(state.role, state.seat)))
+    ) {
+      state.addClientLog("Waiting for your opponent to finish their decision.");
+      return;
+    }
     if (state.roomState?.phase === "ended") {
       state.addClientLog("Game is already over.");
       return;
     }
-    if (state.roomMeta?.pendingRoll && action.type !== "resolvePendingRoll") {
+    if (
+      (state.roomState?.pendingDecision || state.roomMeta?.pendingRoll) &&
+      action.type !== "resolvePendingRoll"
+    ) {
       state.addClientLog("Resolve the pending roll before acting.");
       return;
     }
@@ -909,11 +925,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
   requestMoveOptions: (unitId, mode) => {
     const state = get();
+    if (!state.canControlTestRoom && state.roomState?.pendingDecision?.viewerCanRespond === false) {
+      state.addClientLog("Waiting for your opponent to finish their decision.");
+      return;
+    }
     if (state.roomState?.phase === "ended") {
       state.addClientLog("Game is already over.");
       return;
     }
-    if (state.roomMeta?.pendingRoll) {
+    if (state.roomState?.pendingDecision || state.roomMeta?.pendingRoll) {
       state.addClientLog("Resolve the pending roll before acting.");
       return;
     }
@@ -977,7 +997,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }),
   addEvents: (events) => set((state) => ({ events: [...state.events, ...events].slice(-200) })),
   addClientLog: (message) =>
-    set((state) => ({ clientLog: [...state.clientLog, message].slice(-50) })),
+    set((state) =>
+      message === "Waiting for your opponent to finish their decision." &&
+      state.clientLog[state.clientLog.length - 1] === message
+        ? {}
+        : { clientLog: [...state.clientLog, message].slice(-50) },
+    ),
   setSelectedUnit: (unitId) =>
     set(() => ({
       selectedUnitId: unitId,

@@ -35,6 +35,10 @@ test("public initiative metadata remains actionable for its player", () => {
   assert.equal(getPendingRollForPlayer(null, pendingP2, "P1"), null);
 });
 
+test("a pending roll from another owner is never actionable", () => {
+  assert.equal(getPendingRollForPlayer({ ...pendingP2, context: { legalCells: ["secret"] } }, pendingP2, "P1"), null);
+});
+
 test("pending state outranks the lobby phase when selecting the mobile screen", () => {
   assert.equal(hasAuthoritativeMatchStarted(lobbyView, null), false);
   assert.equal(hasAuthoritativeMatchStarted(lobbyView, pendingP2), true);

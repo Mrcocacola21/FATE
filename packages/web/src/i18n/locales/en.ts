@@ -1642,6 +1642,33 @@ export const en = {
     },
   },
   pending: {
+    opponent: {
+      status: "Waiting for opponent...",
+      blockedAction: "Waiting for your opponent to finish their decision.",
+      generic: {
+        title: "Opponent is making a decision",
+        message: "Waiting for your opponent to finish resolving an ability.",
+      },
+      hidden: {
+        title: "Opponent is making a decision",
+        message: "Your opponent is resolving a hidden battlefield effect.",
+      },
+      vladStakes: {
+        title: "Vlad is preparing the battlefield",
+        message: "Your opponent is placing hidden stakes. Their locations will remain unknown until revealed.",
+        abilityName: "Field of Stakes",
+      },
+      jackSnares: {
+        title: "Jack is preparing traps",
+        message: "Your opponent is placing hidden snares. Their locations are secret.",
+        abilityName: "Snares",
+      },
+      hassanStealth: {
+        title: "Hassan is using an ability",
+        message: "Your opponent is choosing targets for a stealth effect.",
+        abilityName: "Assassin Order",
+      },
+    },
     actionRequired: "Action required",
     context: {
       attackRoll: "Attack Roll",
@@ -1754,7 +1781,7 @@ export const en = {
     autoDodge: "Auto-dodge (-6)",
     takeDamage: "Take Damage",
     payHp: "Pay 1 HP",
-    placeStakes: "Place 3 stakes",
+    placeStakes: "Field of Stakes — place 3 stakes.",
     selectedCount: "Selected: {{current}}/{{total}}",
     hassanAssassinOrderTitle: "Assassin Order: choose 2 allied heroes",
     hassanAssassinOrderInstruction:

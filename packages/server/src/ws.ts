@@ -653,6 +653,9 @@ function buildRoomMeta(
           kind: room.state.pendingRoll.kind,
           player: room.state.pendingRoll.player,
           presentation: (() => {
+            // Opponents use the allowlisted PlayerView.pendingDecision status.
+            // Descriptive resolution metadata may contain private choices or progress.
+            if (viewerRole !== room.state.pendingRoll!.player) return undefined;
             const projected = projectPendingRollPresentation(
               room.state,
               room.state.pendingRoll?.presentation,

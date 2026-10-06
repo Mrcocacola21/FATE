@@ -4,6 +4,8 @@ import assert from "assert";
 import type { RoomStateMessage } from "../ws";
 import WebSocket from "ws";
 import { buildTestServer as buildServer, testAccessToken } from "./matchTestSupport";
+import { getGameRoom } from "../store";
+import { attachArmy, createDefaultArmy, createEmptyGame, HERO_VLAD_TEPES_ID } from "rules";
 
 function collectMessages(ws: WebSocket) {
   const queue: unknown[] = [];
@@ -135,7 +137,7 @@ async function main() {
   );
 
   let ws1 = new WebSocket(wsUrl);
-  const ws2 = new WebSocket(wsUrl);
+  let ws2 = new WebSocket(wsUrl);
 
   await Promise.all([
     new Promise<void>((resolve, reject) => {
@@ -149,7 +151,7 @@ async function main() {
   ]);
 
   let queue1 = collectMessages(ws1);
-  const queue2 = collectMessages(ws2);
+  let queue2 = collectMessages(ws2);
 
   ws1.send(
     JSON.stringify({
@@ -192,7 +194,7 @@ async function main() {
     }),
   );
 
-  await waitForType(queue2, "joinAck");
+  const p2JoinAck = (await waitForType(queue2, "joinAck")) as { resumeToken: string };
   await waitForType(queue2, "roomState");
 
   ws1.send(JSON.stringify({ type: "switchRole", role: "invalid_role" }));
@@ -209,7 +211,7 @@ async function main() {
   );
   await waitForError(queue1, (msg) => msg.code === "USER_ALREADY_IN_MATCH");
 
-  const disconnected = new Promise<void>(resolve => ws1.once("close", () => resolve()));
+  const disconnected = new Promise<void>((resolve) => ws1.once("close", () => resolve()));
   ws1.close();
   await disconnected;
 
@@ -313,11 +315,23 @@ async function main() {
     return msg.meta?.pendingRoll?.player === "P1";
   })) as {
     you: { role: string; seat?: string };
-    meta: { pendingRoll: { player: string } };
-    view: { pendingRoll: unknown };
+    meta: { pendingRoll: { player: string; presentation?: unknown } };
+    view: { pendingRoll: unknown; pendingDecision: RoomStateMessage["view"]["pendingDecision"] };
   };
   assert.equal(p2WaitingForP1.you.role, "P2");
   assert.equal(p2WaitingForP1.you.seat, "P2");
+  assert.equal(
+    p2WaitingForP1.meta.pendingRoll.presentation,
+    undefined,
+    "opponent metadata must never include resolution descriptions",
+  );
+  assert.equal(p2WaitingForP1.view.pendingDecision?.viewerCanRespond, false);
+  assert.deepEqual(Object.keys(p2WaitingForP1.view.pendingDecision!).sort(), [
+    "opponentStatus",
+    "ownerPlayerId",
+    "type",
+    "viewerCanRespond",
+  ]);
   assert.equal(
     p2WaitingForP1.view.pendingRoll,
     null,
@@ -376,6 +390,95 @@ async function main() {
       msg.meta?.pendingRoll?.id !== p2Pending.view.pendingRoll.id
     );
   });
+
+  // Seed authoritative private setup to exercise the actual reconnect transport.
+  const liveRoom = getGameRoom(roomId)!;
+  let setup = attachArmy(
+    createEmptyGame(),
+    createDefaultArmy("P1", { spearman: HERO_VLAD_TEPES_ID }),
+  );
+  setup = attachArmy(setup, createDefaultArmy("P2"));
+  const vlad = Object.values(setup.units).find((unit) => unit.heroId === HERO_VLAD_TEPES_ID)!;
+  setup.units[vlad.id] = { ...vlad, position: { col: 4, row: 4 } };
+  const secretCells = [
+    { col: 1, row: 3 },
+    { col: 3, row: 5 },
+    { col: 7, row: 7 },
+  ];
+  liveRoom.state = {
+    ...setup,
+    phase: "battle",
+    pendingRoll: {
+      id: "private-vlad-reconnect",
+      player: "P1",
+      kind: "vladPlaceStakes",
+      context: {
+        owner: "P1",
+        count: 3,
+        reason: "turnStart",
+        legalPositions: secretCells,
+        selectedCells: [secretCells[0]],
+        queue: [],
+      },
+      presentation: {
+        title: "PRIVATE SELECTED CELL",
+        reason: "PRIVATE SELECTED CELL",
+        rollKind: "ability",
+        diceLabel: "Choice",
+        requestedPlayerId: "P1",
+      },
+    },
+  };
+  const p2Disconnected = new Promise<void>((resolve) => ws2.once("close", () => resolve()));
+  ws2.close();
+  await p2Disconnected;
+  ws2 = await openSocket(wsUrl);
+  queue2 = collectMessages(ws2);
+  ws2.send(
+    JSON.stringify({
+      type: "joinRoom",
+      mode: "join",
+      roomId,
+      role: "P2",
+      resumeToken: p2JoinAck.resumeToken,
+      accessToken: testAccessToken("P2"),
+    }),
+  );
+  await waitForType(queue2, "joinAck");
+  const reconnect = (await waitForRoomState(
+    queue2,
+    (msg) => msg.meta.pendingRoll?.id === "private-vlad-reconnect",
+  )) as RoomStateMessage;
+  assert.equal(reconnect.view.pendingRoll, null);
+  assert.equal(reconnect.meta.pendingRoll?.presentation, undefined);
+  const decision = reconnect.view.pendingDecision;
+  assert(decision && !decision.viewerCanRespond);
+  assert.equal(decision.opponentStatus.title, "Vlad is preparing the battlefield");
+  assert.equal(decision.opponentStatus.abilityName, "Field of Stakes");
+  assert.equal(decision.ownerPlayerId, "P1");
+  const serialized = JSON.stringify(reconnect);
+  for (const privateText of ["legalPositions", "selectedCells", "PRIVATE SELECTED CELL"]) {
+    assert(
+      !serialized.includes(privateText),
+      `${privateText} must not reach a reconnecting opponent`,
+    );
+  }
+  const stateBeforeRejectedResolution = JSON.stringify(liveRoom.state);
+  const revisionBeforeRejectedResolution = liveRoom.revision;
+  ws2.send(
+    JSON.stringify({
+      type: "resolvePendingRoll",
+      pendingRollId: "private-vlad-reconnect",
+      choice: { type: "placeStakes", positions: secretCells },
+    }),
+  );
+  const rejectedResolution = (await waitForError(queue2, (msg) => msg.code === "pending_roll")) as {
+    message: string;
+  };
+  assert.equal(rejectedResolution.message, "Not your pending roll");
+  assert.equal(JSON.stringify(liveRoom.state), stateBeforeRejectedResolution);
+  assert.equal(liveRoom.revision, revisionBeforeRejectedResolution);
+  console.log("waiting_state_survives_vlad_websocket_reconnect passed");
 
   ws1.close();
   ws2.close();

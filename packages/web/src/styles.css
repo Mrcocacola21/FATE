@@ -152,6 +152,10 @@
   }
 }
 
+.opponent-decision-status {
+  z-index: var(--z-game-pending-modal);
+}
+
 @keyframes snared-overlay-settle {
   0% {
     opacity: 0;

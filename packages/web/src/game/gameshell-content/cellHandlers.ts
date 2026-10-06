@@ -57,6 +57,7 @@ export interface CellClickContext {
   joined: boolean;
   isSpectator: boolean;
   hasBlockingRoll: boolean;
+  onBlockedAction?: () => void;
   boardSelectionPending: boolean;
   isStakePlacement: boolean;
   stakeLegalKeys: Set<string>;
@@ -384,12 +385,15 @@ export function createCellClickHandler(context: CellClickContext) {
   } = context;
 
   return (col: number, row: number, preferredTargetId?: string) => {
+    if (hasBlockingRoll && !boardSelectionPending) {
+      context.onBlockedAction?.();
+      return;
+    }
     if (
       !view ||
       !playerId ||
       !joined ||
-      isSpectator ||
-      (hasBlockingRoll && !boardSelectionPending)
+      isSpectator
     ) {
       return;
     }

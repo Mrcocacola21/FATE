@@ -1211,6 +1211,7 @@ function testHiddenCollisionProjectionIsOwnerDetailedAndOpponentSafe() {
 }
 
 function main() {
+  testOpponentCannotResolvePrivateSetup();
   testAsgoreChargeProjectionAndServerRejection();
   testGroznyTyrantMovementProjectionAndReconnect();
   testHiddenEnemyOmitted();
@@ -1229,6 +1230,33 @@ function main() {
   testPapyrusBoneChoiceProjectionIsOwnerPrivate();
   testPendingRollPresentationProjectionIsHiddenSafeAndBackwardCompatible();
   testHiddenCollisionProjectionIsOwnerDetailedAndOpponentSafe();
+}
+
+function testOpponentCannotResolvePrivateSetup() {
+  const room = createGameRoom();
+  room.state = { ...setupState(), phase: "battle", pendingRoll: {
+    id: "private-vlad-stakes", kind: "vladPlaceStakes", player: "P1",
+    context: { owner: "P1", count: 3, reason: "turnStart", queue: [], legalPositions: [
+      { col: 1, row: 3 }, { col: 3, row: 5 }, { col: 7, row: 7 },
+    ] },
+  } };
+  const before = JSON.stringify(room.state);
+  const previousState = room.state;
+  const revision = room.revision;
+  const logLength = room.actionLog.length;
+  const result = applyGameAction(room, {
+    type: "resolvePendingRoll", pendingRollId: "private-vlad-stakes",
+    player: "P1", // A forged owner field cannot override the authenticated P2 seat.
+    choice: { type: "placeStakes", positions: [
+      { col: 1, row: 3 }, { col: 3, row: 5 }, { col: 7, row: 7 },
+    ] },
+  }, "P2");
+  assert.equal(result.ok, false);
+  assert.strictEqual(room.state, previousState);
+  assert.equal(JSON.stringify(room.state), before);
+  assert.equal(room.revision, revision);
+  assert.equal(room.actionLog.length, logLength);
+  console.log("opponent_cannot_resolve_private_setup_with_forged_owner passed");
 }
 
 main();

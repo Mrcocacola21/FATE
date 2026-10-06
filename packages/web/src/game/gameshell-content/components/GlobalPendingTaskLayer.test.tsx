@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { gameShellFixture, type GameShellFixture } from "../../testHelpers/gameShellFixture";
-import type { PendingRoll } from "rules";
+import type { OpponentPendingPresentation, PendingRoll } from "rules";
+import { act, create } from "react-test-renderer";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import { isValidElement, type ReactElement } from "react";
@@ -14,6 +15,7 @@ import {
   nextPendingRollCollapseState,
 } from "./GlobalPendingTaskLayer";
 import { CurrentTaskPanel } from "./CurrentTaskPanel";
+import { OpponentDecisionStatus } from "./OpponentDecisionStatus";
 
 const initiativePending: PendingRoll = {
   id: "initiative-p1",
@@ -116,9 +118,10 @@ test("global pending task layer shows the opponent waiting state", () => {
     />,
   );
 
-  assert.match(markup, /data-testid="pending-roll-waiting-overlay"/);
-  assert.match(markup, /Waiting for Player 1 to roll Roll initiative\./);
-  assert.match(markup, /P1 rolled: 8/);
+  assert.match(markup, /data-testid="opponent-decision-status"/);
+  assert.match(markup, /Opponent is making a decision/);
+  assert.match(markup, /Waiting for opponent\.\.\./);
+  assert.doesNotMatch(markup, /<button|role="dialog"|aria-modal|modal-backdrop|fixed inset-0/);
   assert.doesNotMatch(markup, />Roll dice</);
 });
 
@@ -135,6 +138,123 @@ test("initiative roll action preserves the resolvePendingRoll command payload", 
   modal.props.onResolvePendingRoll();
 
   assert.deepEqual(sent, [{ type: "resolvePendingRoll", pendingRollId: "initiative-p1" }]);
+});
+
+test("private setup statuses render public explanations without interactive controls or secret metadata", () => {
+  setLanguage("en", null);
+  const cases = [
+    ["vladStakes", "Vlad is preparing the battlefield", "hidden stakes", "Field of Stakes"],
+    ["jackSnares", "Jack is preparing traps", "hidden snares", "Snares"],
+    [
+      "hassanStealth",
+      "Hassan is using an ability",
+      "choosing targets for a stealth effect",
+      "Assassin Order",
+    ],
+  ] as const;
+  for (const [key, title, message, abilityName] of cases) {
+    const vm = makeVm({
+      // Even stale owner UI data cannot override the authoritative waiting projection.
+      pendingRoll: { ...initiativePending, context: { selectedCells: [{ col: 3, row: 4 }] } },
+      pendingMeta: {
+        ...initiativePending,
+        presentation: { ...initiativePending.presentation!, reason: "SECRET TARGET C3" },
+      },
+      playerId: "P2",
+      view: {
+        phase: "battle",
+        pendingDecision: {
+          type: "opponentResolvingDecision",
+          ownerPlayerId: "P1",
+          viewerCanRespond: false,
+          opponentStatus: { key, title, message, abilityName, hiddenInformation: true },
+        },
+      },
+    });
+    const markup = renderToStaticMarkup(<GlobalPendingTaskLayer vm={vm} />);
+    assert.match(markup, new RegExp(title));
+    assert.match(markup, new RegExp(message));
+    assert.match(markup, new RegExp(abilityName));
+    assert.match(markup, /Waiting for opponent\.\.\./);
+    assert.match(markup, /animate-spin/);
+    assert.doesNotMatch(
+      markup,
+      /<button|role="dialog"|aria-modal|modal-backdrop|SECRET TARGET|selectedCells|\(3,4\)/,
+    );
+    assert.equal(
+      renderToStaticMarkup(<CurrentTaskPanel vm={vm} compact />),
+      "",
+      "only one persistent status is shown",
+    );
+  }
+});
+
+test("waiting status persists across choice steps and disappears on resolution", () => {
+  setLanguage("en", null);
+  const vm = makeVm({
+    pendingRoll: null,
+    playerId: "P2",
+    view: {
+      phase: "battle",
+      pendingDecision: {
+        type: "opponentResolvingDecision",
+        ownerPlayerId: "P1",
+        viewerCanRespond: false,
+        opponentStatus: {
+          key: "jackSnares",
+          title: "Jack is preparing traps",
+          message: "hidden snares",
+          abilityName: "Snares",
+        },
+      },
+    },
+  });
+  let renderer: ReturnType<typeof create>;
+  act(() => {
+    renderer = create(<GlobalPendingTaskLayer vm={vm} />);
+  });
+  const status = renderer!.root.findByProps({ "data-testid": "opponent-decision-status" });
+  act(() => {
+    renderer!.update(
+      <GlobalPendingTaskLayer
+        vm={{ ...vm, pendingMeta: { ...vm.pendingMeta!, id: "step-two" } }}
+      />,
+    );
+  });
+  assert.equal(renderer!.root.findByProps({ "data-testid": "opponent-decision-status" }), status);
+  assert.equal(renderer!.root.findAllByType("button").length, 0);
+  act(() => {
+    renderer!.update(
+      <GlobalPendingTaskLayer
+        vm={{ ...vm, pendingMeta: null, view: { ...vm.view!, pendingDecision: null } }}
+      />,
+    );
+  });
+  assert.equal(renderer!.toJSON(), null);
+  act(() => {
+    renderer!.unmount();
+  });
+});
+
+test("hidden and generic statuses have safe localized copy and action feedback", () => {
+  setLanguage("en", null);
+  const generic = renderToStaticMarkup(<OpponentDecisionStatus attemptedAction />);
+  assert.match(generic, /Opponent is making a decision/);
+  assert.match(generic, /Waiting for your opponent to finish their decision/);
+  const presentation: OpponentPendingPresentation = {
+    key: "hidden",
+    title: "Opponent is making a decision",
+    message: "hidden battlefield effect",
+    hiddenInformation: true,
+  };
+  const hidden = renderToStaticMarkup(<OpponentDecisionStatus presentation={presentation} />);
+  assert.match(hidden, /resolving a hidden battlefield effect/);
+  assert.doesNotMatch(hidden, /Vlad|Jack|Hassan|Field of Stakes|<button/);
+  setLanguage("uk", null);
+  const localized = renderToStaticMarkup(<OpponentDecisionStatus presentation={presentation} />);
+  assert.match(localized, /Очікування суперника/);
+  assert.match(localized, /прихований ефект/);
+  setLanguage("en", null);
 });
 
 test("pending roll card renders structured purpose, units, dice, and outcomes", () => {
@@ -340,7 +460,8 @@ test("Madness of the Knight is a board direction task and never renders a roll a
       })}
     />,
   );
-  assert.match(waitingMarkup, /Waiting for opponent to choose/);
+  assert.match(waitingMarkup, /Waiting for your opponent to finish resolving an ability/);
+  assert.doesNotMatch(waitingMarkup, /<button|role="dialog"/);
   assert.doesNotMatch(waitingMarkup, /Waiting for opponent to roll/);
 });
 

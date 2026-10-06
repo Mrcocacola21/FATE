@@ -1,17 +1,15 @@
 import type { GameShellViewModel } from "../hooks/useGameShellViewModel";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import type { GameAction, PendingRollContext, RollKind } from "rules";
 import { useI18n } from "../../../i18n";
-import { useDialogFocus } from "../../../ui/useDialogFocus";
-import { getPendingRollLabel } from "../helpers";
 import {
   canResolvePendingRollDirectly,
   FALLBACK_PENDING_ROLL_CONTEXT,
   pendingRollTitle,
 } from "../../pendingRollPresentation";
 import { GameShellPendingRoll } from "./GameShellPendingRoll";
-import { PendingRollDetails } from "./PendingRollDetails";
+import { OpponentDecisionStatus } from "./OpponentDecisionStatus";
 
 export function nextPendingRollCollapseState(
   current: string | null,
@@ -37,119 +35,6 @@ function contextForPending(pending: {
       ...FALLBACK_PENDING_ROLL_CONTEXT,
       requestedPlayerId: pending.player,
     }
-  );
-}
-
-function PendingRollWaitingOverlay({
-  vm,
-  onCollapse,
-}: {
-  vm: GameShellViewModel;
-  onCollapse: () => void;
-}) {
-  const { language, t } = useI18n();
-  const dialogRef = useRef<HTMLDivElement>(null);
-  useDialogFocus(true, dialogRef, onCollapse);
-  const pending = vm.pendingMeta!;
-  const context = contextForPending(pending);
-  const isLocalPending = vm.pendingForLocalPlayer;
-  const isDonMadnessDirection = pending.kind === "donMadDelusionDirection";
-  const isDirectChoice = isDonMadnessDirection || pending.kind === "papyrusBoneChoice";
-  const hasStructuredContext =
-    !!pending.presentation && pending.presentation.diceLabel !== "Choice";
-  const legacyTitle =
-    pending.kind === "initiativeRoll"
-      ? t("pending.rollInitiative")
-      : getPendingRollLabel(pending.kind, language);
-
-  return (
-    <div
-      ref={dialogRef}
-      className="modal-backdrop game-pending-modal-layer fixed inset-0 flex items-center justify-center overflow-y-auto px-3 sm:px-4"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby={hasStructuredContext ? "pending-roll-title" : "pending-waiting-title"}
-      data-layer="pending-task"
-      data-testid="pending-roll-waiting-overlay"
-    >
-      <div className="game-pending-modal-card modal-card arcane-prompt scroll-panel panel-card relative w-full max-w-lg overflow-y-auto p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:p-6">
-        <button
-          type="button"
-          className="pending-roll-collapse-icon"
-          onClick={onCollapse}
-          aria-label={t("pending.context.collapse")}
-          title={t("pending.context.viewBattlefield")}
-        >
-          <span aria-hidden="true">−</span>
-        </button>
-        {hasStructuredContext ? (
-          <PendingRollDetails
-            context={context}
-            mode="waiting"
-            playerLabel={
-              context.requestedPlayerLabel ??
-              vm.roomMeta?.playerNames?.[pending.player] ??
-              pending.player
-            }
-          />
-        ) : (
-          <>
-            <div className="relative z-10 flex items-start gap-3">
-              <div className="brand-sigil mt-0.5 h-11 w-11" aria-hidden="true" />
-              <div className="min-w-0">
-                <div className="section-kicker text-violet-700 dark:text-violet-300">
-                  {t("game.currentTask")}
-                </div>
-                <h2 id="pending-waiting-title" className="fate-brand mt-1 text-xl">
-                  {legacyTitle}
-                </h2>
-              </div>
-            </div>
-            <p className="relative z-10 mt-3 text-sm leading-6 text-stone-600 dark:text-stone-300">
-              {isDirectChoice
-                ? isLocalPending
-                  ? t("pending.preparingChoice")
-                  : t("pending.waitingForOpponentChoice")
-                : isLocalPending
-                  ? t("pending.preparingRoll")
-                  : t("pending.waitingForOpponentRoll")}
-            </p>
-          </>
-        )}
-        <div className="mt-3 flex flex-wrap gap-2">
-          <span className="status-pill badge-warning">
-            {t("pending.pendingFor", {
-              player:
-                context.requestedPlayerLabel ??
-                vm.roomMeta?.playerNames?.[pending.player] ??
-                pending.player,
-            })}
-          </span>
-          <span className="status-pill badge-special">
-            {hasStructuredContext ? context.diceLabel : getPendingRollLabel(pending.kind, language)}
-          </span>
-        </div>
-        {pending.kind === "initiativeRoll" && vm.view?.initiative ? (
-          <div className="panel-card-muted mt-3 space-y-1 p-3 text-xs text-stone-600 dark:text-stone-200">
-            {(["P1", "P2"] as const).map((player) =>
-              vm.view!.initiative[player] !== null ? (
-                <div key={player}>
-                  {t("pending.rolled", {
-                    player,
-                    value: vm.view!.initiative[player],
-                  })}
-                </div>
-              ) : null,
-            )}
-          </div>
-        ) : null}
-        <button type="button" className="pending-roll-collapse-button" onClick={onCollapse}>
-          <span aria-hidden="true">⌄</span>
-          {t("pending.context.collapse")}
-          <span className="font-normal opacity-70">· {t("pending.context.viewBattlefield")}</span>
-        </button>
-      </div>
-    </div>
   );
 }
 
@@ -209,9 +94,15 @@ export function CollapsedPendingRollChip({
 }
 
 export function GlobalPendingTaskLayer({ vm }: { vm: GameShellViewModel }) {
-  const showAction = !!vm.pendingRoll && !!vm.playerId && !vm.boardSelectionPending;
-  const showWaiting = !!vm.pendingMeta && !!vm.playerId && !vm.pendingRoll && !vm.isSpectator;
-  const active = showAction || showWaiting;
+  const decision = vm.view?.pendingDecision;
+  const showWaiting =
+    decision?.viewerCanRespond === false ||
+    (!decision &&
+      !!vm.pendingMeta &&
+      vm.pendingMeta.player !== vm.playerId &&
+      !vm.canControlTestRoom);
+  const showAction = !showWaiting && !!vm.pendingRoll && !!vm.playerId && !vm.boardSelectionPending;
+  const active = showAction;
   const pending = showAction ? vm.pendingRoll : vm.pendingMeta;
   const pendingId = pending?.id ?? null;
   const [collapsedRollId, setCollapsedRollId] = useState<string | null>(null);
@@ -232,6 +123,18 @@ export function GlobalPendingTaskLayer({ vm }: { vm: GameShellViewModel }) {
     };
   }, [active, collapsed]);
 
+  if (showWaiting) {
+    const layer = (
+      <OpponentDecisionStatus
+        presentation={decision?.viewerCanRespond === false ? decision.opponentStatus : undefined}
+        attemptedAction={
+          vm.clientLog?.[vm.clientLog.length - 1] ===
+          "Waiting for your opponent to finish their decision."
+        }
+      />
+    );
+    return typeof document === "undefined" ? layer : createPortal(layer, document.body);
+  }
   if (!active || !pending) return null;
 
   const open = () =>
@@ -253,10 +156,8 @@ export function GlobalPendingTaskLayer({ vm }: { vm: GameShellViewModel }) {
 
   const layer = collapsed ? (
     <CollapsedPendingRollChip pending={pending} active={showAction} onOpen={open} onRoll={roll} />
-  ) : showAction ? (
-    <GameShellPendingRoll vm={vm} onCollapse={collapse} />
   ) : (
-    <PendingRollWaitingOverlay vm={vm} onCollapse={collapse} />
+    <GameShellPendingRoll vm={vm} onCollapse={collapse} />
   );
 
   return typeof document === "undefined" ? layer : createPortal(layer, document.body);

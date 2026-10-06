@@ -15,6 +15,7 @@ import {
   buildPendingAoEPreview,
   getPendingCombatQueueCount,
   getVisiblePendingRollForPlayer,
+  projectPendingDecision,
 } from "./pending";
 import { projectRuleDeclarationState } from "./ruleDeclarations";
 import { projectRosterUnits } from "./roster";
@@ -139,6 +140,7 @@ export function makePlayerView(state: GameState, playerId: PlayerId): PlayerView
     forestMarker: forestMarkers[0] ?? null,
     arenaEffects,
     pendingRoll: visiblePendingRoll,
+    pendingDecision: projectPendingDecision(state, playerId),
     pendingCombatQueueCount,
     pendingAoEPreview,
     stakeMarkers,

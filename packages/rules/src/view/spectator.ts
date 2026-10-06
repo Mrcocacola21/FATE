@@ -5,7 +5,7 @@ import {
   cloneForestMarkers,
   collectSpectatorStakeMarkers,
 } from "./helpers";
-import { buildPendingAoEPreview, getPendingCombatQueueCount } from "./pending";
+import { buildPendingAoEPreview, getPendingCombatQueueCount, projectPendingDecision } from "./pending";
 import { projectRuleDeclarationState } from "./ruleDeclarations";
 import { projectRosterUnits } from "./roster";
 
@@ -17,6 +17,8 @@ export function makeSpectatorView(state: GameState): PlayerView {
     pendingCombatQueue,
     pendingAoE,
     pendingPapyrusBoneChoices: _pendingPapyrusBoneChoices,
+    stakeCounter: _stakeCounter,
+    jackTrapCounter: _jackTrapCounter,
     ...baseState
   } = state;
   const units: Record<string, UnitState> = {};
@@ -45,6 +47,7 @@ export function makeSpectatorView(state: GameState): PlayerView {
     forestMarker: forestMarkers[0] ?? null,
     arenaEffects,
     pendingRoll: null,
+    pendingDecision: projectPendingDecision(state, "spectator"),
     pendingCombatQueueCount,
     pendingAoEPreview: buildPendingAoEPreview(pendingAoE),
     stakeMarkers,

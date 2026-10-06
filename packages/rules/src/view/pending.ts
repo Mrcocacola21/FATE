@@ -1,5 +1,96 @@
 import { GameState, PendingRollContext, PlayerId, PlayerView } from "../model";
 import { canPlayerKnowUnitExactPosition } from "../visibility";
+import type { OpponentPendingPresentation, PendingDecisionView, UnitState } from "../model";
+import { HERO_VLAD_TEPES_ID } from "../heroes";
+
+const OPPONENT_PRESENTATIONS: Record<
+  OpponentPendingPresentation["key"],
+  OpponentPendingPresentation
+> = {
+  generic: {
+    key: "generic",
+    title: "Opponent is making a decision",
+    message: "Waiting for your opponent to finish resolving an ability.",
+  },
+  hidden: {
+    key: "hidden",
+    title: "Opponent is making a decision",
+    message: "Your opponent is resolving a hidden battlefield effect.",
+    hiddenInformation: true,
+  },
+  vladStakes: {
+    key: "vladStakes",
+    title: "Vlad is preparing the battlefield",
+    message:
+      "Your opponent is placing hidden stakes. Their locations will remain unknown until revealed.",
+    abilityName: "Field of Stakes",
+    hiddenInformation: true,
+  },
+  jackSnares: {
+    key: "jackSnares",
+    title: "Jack is preparing traps",
+    message: "Your opponent is placing hidden snares. Their locations are secret.",
+    abilityName: "Snares",
+    hiddenInformation: true,
+  },
+  hassanStealth: {
+    key: "hassanStealth",
+    title: "Hassan is using an ability",
+    message: "Your opponent is choosing targets for a stealth effect.",
+    abilityName: "Assassin Order",
+    hiddenInformation: true,
+  },
+};
+
+/** Allowlisted status metadata only. Never spread a pending roll or its context here. */
+export function projectPendingDecision(
+  state: GameState,
+  viewer: PlayerId | "spectator",
+): PendingDecisionView | null {
+  const pending = state.pendingRoll;
+  if (!pending) return null;
+  if (pending.player === viewer) {
+    return {
+      type: "pendingDecision",
+      ownerPlayerId: pending.player,
+      viewerCanRespond: true,
+      decisionType: pending.kind,
+    };
+  }
+
+  let key: OpponentPendingPresentation["key"] = "generic";
+  let source: UnitState | undefined;
+  if (pending.kind === "vladPlaceStakes") {
+    key = "vladStakes";
+    source = Object.values(state.units).find(
+      (unit) => unit.owner === pending.player && unit.isAlive && unit.heroId === HERO_VLAD_TEPES_ID,
+    );
+  } else if (pending.kind === "hassanAssassinOrderSelection") {
+    key = "hassanStealth";
+    source = state.units[String(pending.context.hassanId ?? "")];
+  } else if (
+    pending.kind === "chargedImpulseTargetChoice" &&
+    pending.context.abilityId === "jackRipperSnares"
+  ) {
+    key = "jackSnares";
+    source = state.units[String(pending.context.unitId ?? "")];
+  }
+  if (
+    key !== "generic" &&
+    (!source ||
+      (viewer === "spectator"
+        ? source.isStealthed
+        : !canPlayerKnowUnitExactPosition(state, viewer, source.id)))
+  ) {
+    key = "hidden";
+  }
+  return {
+    type: "opponentResolvingDecision",
+    ownerPlayerId: pending.player,
+    viewerCanRespond: false,
+    opponentStatus: { ...OPPONENT_PRESENTATIONS[key] },
+  };
+}
 
 const PENDING_COMBAT_QUEUE_KINDS = new Set<string>([
   "tricksterAoE_attackerRoll",

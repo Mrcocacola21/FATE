@@ -3,6 +3,7 @@ import { getLegalAttackTargets, getLegalPlacements } from "../legal";
 import { getLegalMovesForUnit } from "../movement";
 import type { AbilityView, Coord, GameState, PlayerView, UnitState } from "../model";
 import { makePlayerView } from "../view";
+import { projectPendingDecision } from "../view/pending";
 import { cloneForestMarkers, cloneUnit } from "../view/helpers";
 
 export function makeTestRoomView(state: GameState): PlayerView {
@@ -25,6 +26,7 @@ export function makeTestRoomView(state: GameState): PlayerView {
     ...base,
     units,
     pendingRoll: state.pendingRoll ? { ...state.pendingRoll, context: { ...state.pendingRoll.context } } : null,
+    pendingDecision: projectPendingDecision(state, state.pendingRoll?.player ?? state.currentPlayer),
     pendingMove: state.pendingMove
       ? { ...state.pendingMove, legalTo: state.pendingMove.legalTo.map((coord) => ({ ...coord })) }
       : null,

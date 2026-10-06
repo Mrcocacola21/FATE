@@ -7,6 +7,7 @@ import {
 } from "../cellHandlers";
 import { PAPYRUS_ID } from "../../../rulesHints";
 import { useEffect, useState } from "react";
+import { useGameStore } from "../../../store";
 
 export function useGameShellBoardUi(
   params: Omit<CellClickContext, "zoroAttackTargetIds" | "setZoroAttackTargetIds"> &
@@ -178,6 +179,14 @@ export function useGameShellBoardUi(
     joined,
     isSpectator,
     hasBlockingRoll,
+    onBlockedAction: () =>
+      useGameStore
+        .getState()
+        .addClientLog(
+          pendingRoll
+            ? "Resolve the pending roll before acting."
+            : "Waiting for your opponent to finish their decision.",
+        ),
     boardSelectionPending,
     isStakePlacement,
     stakeLegalKeys,
@@ -282,31 +291,34 @@ export function useGameShellBoardUi(
   const getUnitTargetsAtCell = (col: number, row: number) =>
     getSelectableUnitTargetsForCell(cellClickContext, col, row);
 
-  const handleCellHover = createCellHoverHandler({
-    actionMode,
-    isForestTarget,
-    doraTargetKeys,
-    artemidaLineTargetKeys,
-    isArtemidaMoonInsightChoice,
-    chargedImpulseTargetKeys,
-    mettatonLineTargetKeys,
-    undyneEnergySpearTargetKeys,
-    jebeHailTargetKeys,
-    kaladinFifthTargetKeys,
-    tisonaTargetKeys,
-    forestTargetKeys,
-    setDoraPreviewCenter,
-    setArtemidaPreviewTarget,
-    setMettatonPoppinsPreviewCenter,
-    setMettatonLaserPreviewTarget,
-    setSansGasterBlasterPreviewTarget,
-    setUndyneEnergySpearPreviewTarget,
-    setJebeHailPreviewCenter,
-    setKaladinFifthPreviewCenter,
-    setTisonaPreviewCoord,
-    setForestPreviewCenter,
-    setNewHeroAbilityPreviewCell,
-  });
+  const handleCellHover =
+    hasBlockingRoll && !boardSelectionPending
+      ? () => undefined
+      : createCellHoverHandler({
+          actionMode,
+          isForestTarget,
+          doraTargetKeys,
+          artemidaLineTargetKeys,
+          isArtemidaMoonInsightChoice,
+          chargedImpulseTargetKeys,
+          mettatonLineTargetKeys,
+          undyneEnergySpearTargetKeys,
+          jebeHailTargetKeys,
+          kaladinFifthTargetKeys,
+          tisonaTargetKeys,
+          forestTargetKeys,
+          setDoraPreviewCenter,
+          setArtemidaPreviewTarget,
+          setMettatonPoppinsPreviewCenter,
+          setMettatonLaserPreviewTarget,
+          setSansGasterBlasterPreviewTarget,
+          setUndyneEnergySpearPreviewTarget,
+          setJebeHailPreviewCenter,
+          setKaladinFifthPreviewCenter,
+          setTisonaPreviewCoord,
+          setForestPreviewCenter,
+          setNewHeroAbilityPreviewCell,
+        });
   const boardPreviewCenter =
     actionMode === "dora"
       ? doraPreviewCenter
@@ -332,37 +344,38 @@ export function useGameShellBoardUi(
     !!selectedUnit.papyrusUnbelieverActive &&
     !!selectedUnit.papyrusLongBoneMode;
   const allowUnitPick =
-    !boardSelectionPending &&
-    actionMode !== "attack" &&
-    actionMode !== "dora" &&
-    actionMode !== "artemisMoonInsight" &&
-    actionMode !== "artemisSilverSickle" &&
-    actionMode !== "mettatonPoppins" &&
-    actionMode !== "mettatonLaser" &&
-    actionMode !== "sansGasterBlaster" &&
-    actionMode !== "undyneSpearThrow" &&
-    actionMode !== "undyneEnergySpear" &&
-    actionMode !== "jebeHailOfArrows" &&
-    actionMode !== "kaladinFifth" &&
-    actionMode !== "tisona" &&
-    actionMode !== "demonDuelist" &&
-    actionMode !== "assassinMark" &&
-    actionMode !== "guideTraveler" &&
-    actionMode !== "jebeKhansShooter" &&
-    actionMode !== "gutsArbalet" &&
-    actionMode !== "gutsCannon" &&
-    actionMode !== "asgoreFireball" &&
-    actionMode !== "asgoreFireParade" &&
-    actionMode !== "odinSleipnir" &&
-    actionMode !== "hassanTrueEnemy" &&
-    actionMode !== "papyrusCoolGuy" &&
-    actionMode !== "duolingoPush" &&
-    actionMode !== "zoroOniGiri" &&
-    actionMode !== "lucheLightRay" &&
-    actionMode !== "lucheLightRayAround" &&
-    actionMode !== "donWindmills" &&
-    actionMode !== "jackHolyMother" &&
-    !papyrusLongBoneAttackMode;
+    (hasBlockingRoll && !boardSelectionPending) ||
+    (!boardSelectionPending &&
+      actionMode !== "attack" &&
+      actionMode !== "dora" &&
+      actionMode !== "artemisMoonInsight" &&
+      actionMode !== "artemisSilverSickle" &&
+      actionMode !== "mettatonPoppins" &&
+      actionMode !== "mettatonLaser" &&
+      actionMode !== "sansGasterBlaster" &&
+      actionMode !== "undyneSpearThrow" &&
+      actionMode !== "undyneEnergySpear" &&
+      actionMode !== "jebeHailOfArrows" &&
+      actionMode !== "kaladinFifth" &&
+      actionMode !== "tisona" &&
+      actionMode !== "demonDuelist" &&
+      actionMode !== "assassinMark" &&
+      actionMode !== "guideTraveler" &&
+      actionMode !== "jebeKhansShooter" &&
+      actionMode !== "gutsArbalet" &&
+      actionMode !== "gutsCannon" &&
+      actionMode !== "asgoreFireball" &&
+      actionMode !== "asgoreFireParade" &&
+      actionMode !== "odinSleipnir" &&
+      actionMode !== "hassanTrueEnemy" &&
+      actionMode !== "papyrusCoolGuy" &&
+      actionMode !== "duolingoPush" &&
+      actionMode !== "zoroOniGiri" &&
+      actionMode !== "lucheLightRay" &&
+      actionMode !== "lucheLightRayAround" &&
+      actionMode !== "donWindmills" &&
+      actionMode !== "jackHolyMother" &&
+      !papyrusLongBoneAttackMode);
 
   return {
     handleCellClick,

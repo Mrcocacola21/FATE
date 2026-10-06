@@ -275,7 +275,7 @@ export function PendingBoardNotice({
                     "Виберіть центр області 3×3 на лінії атаки Артеміди.",
                   )
                 : chargedAbilityId === "jackRipperSnares"
-                  ? p("Choose a trap cell on the board.", "Виберіть клітинку пастки на полі.")
+                  ? p("Place your snares. Choose a trap cell on the board.", "Розмістіть свої силки. Виберіть клітинку пастки на полі.")
                   : chargedAbilityId === "zoroOniGiri" && pendingRollContext.step === "destination"
                     ? p(
                         "Choose the highlighted cell before or behind the target.",

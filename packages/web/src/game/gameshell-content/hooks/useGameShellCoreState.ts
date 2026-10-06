@@ -88,6 +88,7 @@ export function useGameShellCoreState() {
     leaveRoom,
     seat,
     playerId,
+    canControlTestRoom,
   });
   const hassanAssassinOrderPendingId =
     pending.pendingRoll?.kind === "hassanAssassinOrderSelection" ? pending.pendingRoll.id : null;
@@ -249,13 +250,33 @@ export function useGameShellCoreState() {
   ]);
 
   const sendGameAction = (action: GameAction) => {
-    if (!joined || isSpectator || pending.hasBlockingRoll) return;
+    if (!joined || isSpectator) return;
+    if (pending.hasBlockingRoll) {
+      useGameStore
+        .getState()
+        .addClientLog(
+          pending.pendingRoll
+            ? "Resolve the pending roll before acting."
+            : "Waiting for your opponent to finish their decision.",
+        );
+      return;
+    }
     if (!view || view.phase === "lobby" || view.phase === "ended") return;
     sendAction(action);
   };
 
   const requestMove = (unitId: string, mode?: MoveMode) => {
-    if (!joined || isSpectator || pending.hasBlockingRoll) return;
+    if (!joined || isSpectator) return;
+    if (pending.hasBlockingRoll) {
+      useGameStore
+        .getState()
+        .addClientLog(
+          pending.pendingRoll
+            ? "Resolve the pending roll before acting."
+            : "Waiting for your opponent to finish their decision.",
+        );
+      return;
+    }
     if (!view || view.phase === "lobby" || view.phase === "ended") return;
     requestMoveOptions(unitId, mode);
   };

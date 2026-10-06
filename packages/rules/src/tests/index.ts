@@ -493,7 +493,22 @@ import {
   testStubHeroesAreRejectedWithoutDraftMutation,
 } from "./core/modes.test";
 
+import {
+  testVladStakePendingDecisionIsPrivate,
+  testJackSnarePendingDecisionIsPrivate,
+  testHassanStealthPendingDecisionIsPrivate,
+  testOpponentCannotRespondToOtherPlayersDecision,
+  testWaitingStateSurvivesSnapshotReconnect,
+  testWaitingPresentationHiddenSourceAndFallback,
+} from "./core/opponentPending.test";
+
 function main(): void {
+  testVladStakePendingDecisionIsPrivate();
+  testJackSnarePendingDecisionIsPrivate();
+  testHassanStealthPendingDecisionIsPrivate();
+  testOpponentCannotRespondToOtherPlayersDecision();
+  testWaitingStateSurvivesSnapshotReconnect();
+  testWaitingPresentationHiddenSourceAndFallback();
   testActiveQueuedRollProjectsAsPending();
   // Full test run: preserve the historical simpleTests.ts execution order.
   console.log("Running full simpleTests suite");

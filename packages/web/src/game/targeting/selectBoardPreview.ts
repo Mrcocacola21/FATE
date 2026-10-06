@@ -38,9 +38,11 @@ export function selectBoardPreview({
   selectedTargetId,
 }: SelectBoardPreviewArgs): BoardPreview | null {
   if (!gameView) return null;
+  if (gameView.pendingDecision?.viewerCanRespond === false) return null;
 
   const pendingPreview = buildPendingPreview(gameView, targetingCell);
   if (pendingPreview) return pendingPreview;
+  if (hasBlockingRoll) return null;
 
   const activeActionMode = actionMode ?? (allowActionHoverPreview ? hoverActionMode ?? null : null);
   if (activeActionMode && selectedUnitId) {

@@ -24,7 +24,7 @@ export function getPendingRollForPlayer(
   publicPending: PublicPendingRoll | null | undefined,
   playerId: PlayerId | null,
 ): VisiblePendingRoll | null {
-  if (visiblePending) return visiblePending;
+  if (visiblePending && isPendingRollForPlayer(visiblePending, playerId)) return visiblePending;
   if (publicPending?.kind === "initiativeRoll" && isPendingRollForPlayer(publicPending, playerId)) {
     return {
       ...publicPending,

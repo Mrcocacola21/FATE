@@ -79,6 +79,8 @@ function MobileTaskStrip({
 export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm, compact = false }) => {
   const { language, t } = useI18n();
 
+  if (vm.view?.pendingDecision?.viewerCanRespond === false) return null;
+
   if (vm.pendingRoll) {
     return (
       <div aria-live="polite" className={compact ? "mobile-task-content" : ""}>
@@ -175,24 +177,8 @@ export const CurrentTaskPanel: FC<CurrentTaskPanelProps> = ({ vm, compact = fals
     );
   }
 
-  if (vm.pendingMeta) {
-    return (
-      <div aria-live="polite" className={compact ? "mobile-task-content" : ""}>
-        <PanelCard variant="arcane" className="p-3">
-          <SectionHeader
-            kicker={t("game.currentTask")}
-            title={t("game.choicePending")}
-            action={<StatusBadge tone="warning">{vm.pendingMeta.player}</StatusBadge>}
-          />
-          <p className="mt-2 text-xs leading-5 text-violet-800 dark:text-violet-200">
-            {vm.pendingMeta.kind === "donMadDelusionDirection"
-              ? t("game.resolvingChoice", { player: vm.pendingMeta.player })
-              : t("game.resolvingRoll", { player: vm.pendingMeta.player })}
-          </p>
-        </PanelCard>
-      </div>
-    );
-  }
+  // Waiting status is rendered once by GlobalPendingTaskLayer.
+  if (vm.pendingMeta) return null;
 
   const choosingMoveMode = Array.isArray(vm.moveOptions?.modes) && vm.moveOptions.modes.length > 0;
   if (choosingMoveMode) {

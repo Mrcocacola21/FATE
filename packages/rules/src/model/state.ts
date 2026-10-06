@@ -8,6 +8,7 @@ import type {
   PendingCombatQueueEntry,
   PendingPapyrusBoneChoice,
   PendingRoll,
+  RollKind,
   StakeMarker,
 } from "./roll";
 import type { PendingMove } from "./shared";
@@ -158,6 +159,29 @@ export interface AoEPreview {
   radius: number;
 }
 
+export type OpponentPendingPresentation = {
+  /** Stable localization key; all text is authored public copy, never resolution context. */
+  key: "generic" | "hidden" | "vladStakes" | "jackSnares" | "hassanStealth";
+  title: string;
+  message: string;
+  abilityName?: string;
+  hiddenInformation?: boolean;
+};
+
+export type PendingDecisionView =
+  | {
+      type: "pendingDecision";
+      ownerPlayerId: PlayerId;
+      viewerCanRespond: true;
+      decisionType: RollKind;
+    }
+  | {
+      type: "opponentResolvingDecision";
+      ownerPlayerId: PlayerId;
+      viewerCanRespond: false;
+      opponentStatus: OpponentPendingPresentation;
+    };
+
 export type PlayerView = Omit<
   GameState,
   | "knowledge"
@@ -178,6 +202,8 @@ export type PlayerView = Omit<
   };
   lastKnownPositions: { [unitId: string]: Coord };
   pendingRoll: PendingRoll | null;
+  /** Optional for legacy snapshots; current projections always populate this field. */
+  pendingDecision?: PendingDecisionView | null;
   pendingCombatQueueCount: number;
   pendingAoEPreview: AoEPreview | null;
   stakeMarkers: { position: Coord; isRevealed: boolean }[];

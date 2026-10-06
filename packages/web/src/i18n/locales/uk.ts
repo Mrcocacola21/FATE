@@ -1651,6 +1651,33 @@ export const uk = {
     },
   },
   pending: {
+    opponent: {
+      status: "Очікування суперника...",
+      blockedAction: "Зачекайте, поки суперник завершить свій вибір.",
+      generic: {
+        title: "Суперник робить вибір",
+        message: "Зачекайте, поки суперник завершить застосування здібності.",
+      },
+      hidden: {
+        title: "Суперник робить вибір",
+        message: "Суперник застосовує прихований ефект на полі бою.",
+      },
+      vladStakes: {
+        title: "Влад готує поле бою",
+        message: "Суперник розміщує приховані кілки. Їхні місця залишатимуться невідомими до розкриття.",
+        abilityName: "Поле кілків",
+      },
+      jackSnares: {
+        title: "Джек готує пастки",
+        message: "Суперник розміщує приховані силки. Їхні місця таємні.",
+        abilityName: "Силки",
+      },
+      hassanStealth: {
+        title: "Хассан застосовує здібність",
+        message: "Суперник обирає цілі для ефекту невидимості.",
+        abilityName: "Орден асасинів",
+      },
+    },
     actionRequired: "Потрібна дія",
     context: {
       attackRoll: "Кидок атаки",
@@ -1764,7 +1791,7 @@ export const uk = {
     autoDodge: "Автоухилення (-6)",
     takeDamage: "Отримати шкоду",
     payHp: "Сплатити 1 здоров’я",
-    placeStakes: "Розмістіть 3 кілки",
+    placeStakes: "Поле кілків — розмістіть 3 кілки.",
     selectedCount: "Обрано: {{current}}/{{total}}",
     hassanAssassinOrderTitle: "Орден убивць: оберіть 2 союзних героїв",
     hassanAssassinOrderInstruction:

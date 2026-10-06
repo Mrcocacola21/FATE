@@ -12,6 +12,7 @@ import {
 import { isActionableAbility } from "./game/components/RightPanel/rightPanelHelpers";
 import { useGameShellBoardUi } from "./game/gameshell-content/hooks/useGameShellBoardUi";
 import { gameShellFixture } from "./game/testHelpers/gameShellFixture";
+import { useGameStore } from "./store";
 
 test("switching from Move to Tisona clears stale move selection", () => {
   const next = transitionActionMode(
@@ -28,6 +29,43 @@ test("switching from Move to Tisona clears stale move selection", () => {
 
   assert.equal(next.actionMode, "tisona");
   assert.equal(next.moveOptions, null);
+});
+
+test("waiting blocks gameplay, movement requests, and both resolution submission paths", () => {
+  const previous = useGameStore.getState();
+  try {
+    useGameStore.setState({
+      role: "P2",
+      seat: "P2",
+      joined: true,
+      canControlTestRoom: false,
+      clientLog: [],
+      roomState: {
+        ...previous.roomState!,
+        phase: "battle",
+        pendingDecision: {
+          type: "opponentResolvingDecision",
+          ownerPlayerId: "P1",
+          viewerCanRespond: false,
+          opponentStatus: {
+            key: "generic",
+            title: "Opponent is making a decision",
+            message: "Waiting for opponent",
+          },
+        },
+      },
+    });
+    const store = useGameStore.getState();
+    store.sendAction({ type: "endTurn" });
+    store.sendAction({ type: "resolvePendingRoll", pendingRollId: "private-choice", player: "P1" });
+    store.resolvePendingRoll("private-choice");
+    store.requestMoveOptions("P2-unit");
+    assert.deepEqual(useGameStore.getState().clientLog, [
+      "Waiting for your opponent to finish their decision.",
+    ]);
+  } finally {
+    useGameStore.setState(previous);
+  }
 });
 
 test("leaving Move mode without using movement does not spend movement locally", () => {

@@ -339,6 +339,12 @@ export function formatEventMessage(event: GameEvent, language: Language, t: Tran
       if (event.abilityId === GRIFFITH_FEMTO_REBIRTH_ID) {
         return text(language, "Griffith was reborn as Femto.", "Гріффіт переродився у Фемто.");
       }
+      if (event.abilityId === "jackRipperSnares") {
+        return text(language, "Jack finished placing snares.", "Джек завершив розміщення силків.");
+      }
+      if (event.abilityId === "hassanAssasinOrder") {
+        return text(language, "Hassan finished preparing a stealth effect.", "Хассан завершив підготовку ефекту невидимості.");
+      }
       if (event.abilityId === GUTS_BERSERK_MODE_ID) {
         return text(
           language,
@@ -578,6 +584,10 @@ export function formatEventMessage(event: GameEvent, language: Language, t: Tran
         `Damage bonus: ${event.unitId} +${event.amount}`,
         `Бонус шкоди: ${event.unitId} +${event.amount}`,
       );
+    case "hiddenSetupCompleted":
+      return event.ability === "vladStakes"
+        ? text(language, "Vlad finished preparing Field of Stakes.", "Влад завершив підготовку Поля кілків.")
+        : text(language, "Opponent finished resolving a hidden battlefield effect.", "Суперник завершив застосування прихованого ефекту на полі бою.");
     case "stakesPlaced":
       return text(
         language,
