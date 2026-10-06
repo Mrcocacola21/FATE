@@ -37,8 +37,11 @@ import {
 } from "../../ruleDeclarations";
 import type { AutoRollChoice, ResolvePendingRollAction } from "./types";
 import { resolveDonMadDelusionDirection, resolveDonSorrowfulMove, resolveDonWindmillsReposition } from "../../actions/heroes/newBatchPost";
+import { resolveReactionChoice, resolveReactionDropChoice } from "../../actions/movementActions/reactions";
 
 export const CORE_PENDING_ROLL_KINDS = [
+  "reactionChoice",
+  "reactionDropChoice",
   "initiativeRoll",
   "ruleDeclarationChoice",
   "ruleDeclarationChessKingChoice",
@@ -82,6 +85,10 @@ export function resolveCorePendingRollCase(
   autoRollChoice: AutoRollChoice
 ): ApplyResult | null {
   switch (pending.kind) {
+    case "reactionChoice":
+      return resolveReactionChoice(state, pending, action.choice);
+    case "reactionDropChoice":
+      return resolveReactionDropChoice(state, action.choice);
     case "initiativeRoll":
       return resolveInitiativeRoll(state, pending, rng);
     case "ruleDeclarationChoice":

@@ -6,3 +6,5 @@ export {
 export { resolveRiverBoatCarryChoice } from "./river";
 export { applyRequestMoveOptions } from "./requestMoveOptions";
 export { applyMove } from "./move";
+
+export { continueReactionMovement } from "./reactions";

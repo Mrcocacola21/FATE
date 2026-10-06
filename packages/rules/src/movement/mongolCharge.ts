@@ -16,7 +16,8 @@ function isInsideChargeBoard(cell: Coord, boardSize: number): boolean {
  */
 export function getMongolChargeInfluenceCells(
   path: Coord[],
-  boardSize: number
+  boardSize: number,
+  reachedCells: Coord[] = path
 ): Coord[] {
   if (path.length === 0) return [];
 
@@ -53,7 +54,7 @@ export function getMongolChargeInfluenceCells(
     influence.push(cell);
   };
 
-  for (const cell of path) {
+  for (const cell of reachedCells) {
     pushCell(cell);
     for (const offset of sideOffsets) {
       pushCell({ col: cell.col + offset.col, row: cell.row + offset.row });

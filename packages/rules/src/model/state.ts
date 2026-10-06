@@ -13,6 +13,7 @@ import type {
 } from "./roll";
 import type { PendingMove } from "./shared";
 import type { UnitState } from "./unit";
+import type { PendingReactionMovement } from "./reactions";
 
 export interface ProjectedUnitForRoster {
   id: string;
@@ -92,6 +93,7 @@ export interface GameState {
   activeUnitId: string | null;
   pendingMove: PendingMove | null;
   pendingRoll: PendingRoll | null;
+  pendingReactionMovement?: PendingReactionMovement | null;
   /** Internal authoritative visual boundary; omitted from projected player views. */
   combatResolutionChain?: CombatResolutionChain | null;
   pendingCombatQueue: PendingCombatQueueEntry[];
@@ -161,7 +163,7 @@ export interface AoEPreview {
 
 export type OpponentPendingPresentation = {
   /** Stable localization key; all text is authored public copy, never resolution context. */
-  key: "generic" | "hidden" | "vladStakes" | "jackSnares" | "hassanStealth";
+  key: "generic" | "hidden" | "vladStakes" | "jackSnares" | "hassanStealth" | "reaction";
   title: string;
   message: string;
   abilityName?: string;
@@ -187,6 +189,7 @@ export type PlayerView = Omit<
   | "knowledge"
   | "lastKnownPositions"
   | "pendingRoll"
+  | "pendingReactionMovement"
   | "combatResolutionChain"
   | "rollCounter"
   | "pendingCombatQueue"

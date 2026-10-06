@@ -4,6 +4,8 @@ import type { SearchStealthMode } from "./roll";
 import type { RuleDeclarationChoice } from "../ruleDeclarations/types";
 
 export type ResolveRollChoice =
+  | { type: "resolveReactionChoice"; choice: "attack" | "pass"; targetId?: string }
+  | { type: "reactionDropDestination"; position: Coord }
   | { type: "sansLastAttackTarget"; targetId: string }
   | "auto"
   | "roll"

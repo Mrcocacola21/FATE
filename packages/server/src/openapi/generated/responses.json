@@ -2554,6 +2554,15 @@
               },
               {
                 "$ref": "#/definitions/CreatedGameViewsP1EventsItem80"
+              },
+              {
+                "$ref": "#/definitions/CreatedGameViewsP1EventsItem81"
+              },
+              {
+                "$ref": "#/definitions/CreatedGameViewsP1EventsItem82"
+              },
+              {
+                "$ref": "#/definitions/CreatedGameViewsP1EventsItem83"
               }
             ]
           }
@@ -3084,6 +3093,8 @@
             "odinSleipnirDestination",
             "papyrusBoneChoice",
             "pureBloodRedirectChoice",
+            "reactionChoice",
+            "reactionDropChoice",
             "riderPathAttack_attackerRoll",
             "riderPathAttack_defenderRoll",
             "riverBoatCarryChoice",
@@ -7079,6 +7090,165 @@
         "unitId"
       ]
     },
+    "CreatedGameViewsP1EventsItem81": {
+      "type": "object",
+      "properties": {
+        "chainId": {
+          "type": "string"
+        },
+        "deferVisuals": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "isChainComplete": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "reactorUnitId": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string",
+          "enum": [
+            "genghis",
+            "tralala"
+          ]
+        },
+        "targetUnitIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "reactionOpportunity"
+          ]
+        },
+        "visualBatchId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {},
+      "required": [
+        "reactorUnitId",
+        "source",
+        "targetUnitIds",
+        "type"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem82": {
+      "type": "object",
+      "properties": {
+        "chainId": {
+          "type": "string"
+        },
+        "choice": {
+          "type": "string",
+          "enum": [
+            "attack",
+            "pass"
+          ]
+        },
+        "deferVisuals": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "isChainComplete": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "reactorUnitId": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string",
+          "enum": [
+            "genghis",
+            "tralala"
+          ]
+        },
+        "targetUnitId": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "reactionChoiceResolved"
+          ]
+        },
+        "visualBatchId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {},
+      "required": [
+        "choice",
+        "reactorUnitId",
+        "source",
+        "type"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem83": {
+      "type": "object",
+      "properties": {
+        "chainId": {
+          "type": "string"
+        },
+        "controllerUnitId": {
+          "type": "string"
+        },
+        "deferVisuals": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "isChainComplete": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "source": {
+          "type": "string",
+          "enum": [
+            "genghis",
+            "tralala"
+          ]
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "reactionMovementResumed"
+          ]
+        },
+        "visualBatchId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {},
+      "required": [
+        "controllerUnitId",
+        "source",
+        "type"
+      ]
+    },
     "CreatedGameViewsP1EventsItem9": {
       "type": "object",
       "properties": {
@@ -7291,6 +7461,8 @@
             "odinSleipnirDestination",
             "papyrusBoneChoice",
             "pureBloodRedirectChoice",
+            "reactionChoice",
+            "reactionDropChoice",
             "riderPathAttack_attackerRoll",
             "riderPathAttack_defenderRoll",
             "riverBoatCarryChoice",
@@ -7398,6 +7570,7 @@
             "hassanStealth",
             "hidden",
             "jackSnares",
+            "reaction",
             "vladStakes"
           ],
           "description": "Stable localization key; all text is authored public copy, never resolution context."
@@ -9467,6 +9640,8 @@
             "odinSleipnirDestination",
             "papyrusBoneChoice",
             "pureBloodRedirectChoice",
+            "reactionChoice",
+            "reactionDropChoice",
             "riderPathAttack_attackerRoll",
             "riderPathAttack_defenderRoll",
             "riverBoatCarryChoice",

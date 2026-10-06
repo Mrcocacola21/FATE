@@ -1,4 +1,5 @@
 import { testActionModuleBoundaries } from "./core/boundaries.test";
+import { testReactionMovementRegressions } from "./heroes/reactionMovement.test";
 import {
   testBoatCanSelectDestinationEvenIfHiddenStakeIsOnPath,
   testBoatStopsAtFirstHiddenStake,
@@ -503,6 +504,7 @@ import {
 } from "./core/opponentPending.test";
 
 function main(): void {
+  testReactionMovementRegressions();
   testVladStakePendingDecisionIsPrivate();
   testJackSnarePendingDecisionIsPrivate();
   testHassanStealthPendingDecisionIsPrivate();

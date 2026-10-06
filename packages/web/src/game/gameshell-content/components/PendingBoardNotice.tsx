@@ -2,6 +2,7 @@ import type { Coord, ResolveRollChoice, PlayerView } from "rules";
 import { getPendingRollLabel } from "../helpers";
 import { useI18n } from "../../../i18n";
 import { getHeroDisplayName, getUnitFigureDisplayName } from "../../../i18n/displayMetadata";
+import { ReactionChoicePanel } from "./ReactionChoicePanel";
 
 interface PendingBoardNoticeProps {
   pendingRollKind: string;
@@ -192,7 +193,9 @@ export function PendingBoardNotice({
           <div>{t("pending.soulParadeEffect", { effect: soulEffect ?? "-" })}</div>
         </div>
       ) : null}
-      {pendingRollKind === "selectLastAttackTarget" ? (
+      {pendingRollKind === "reactionChoice" ? (
+        <ReactionChoicePanel context={pendingRollContext} units={units} onResolve={onResolveChoice} />
+      ) : pendingRollKind === "selectLastAttackTarget" ? (
         <div>
           <div className="font-semibold">
             {p("Last Attack — choose an enemy unit to curse.", "Остання атака — оберіть ворожу фігуру для прокляття.")}

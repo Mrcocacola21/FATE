@@ -1,16 +1,13 @@
 import type {
   ApplyResult,
   Coord,
-  GameEvent,
   GameState,
-  PendingCombatQueueEntry,
   PendingRoll,
   ResolveRollChoice,
   UnitState,
 } from "../../../model";
 import type { RNG } from "../../../rng";
 import { coordsEqual, getUnitAt } from "../../../board";
-import { canAttackTarget } from "../../../combat";
 import { canDirectlyTargetUnit } from "../../../visibility";
 import {
   ABILITY_RIVER_PERSON_TRA_LA_LA,
@@ -18,11 +15,7 @@ import {
 } from "../../../abilities";
 import { canCommitAbilityCost, commitAbilityCost } from "../../abilityCosts";
 import {
-  applyStakeTriggerIfAny,
   clearPendingRoll,
-  evUnitMoved,
-  findStakeStopOnPath,
-  makeAttackContext,
   requestRoll,
 } from "../../../core";
 import { linePath } from "../../../path";
@@ -44,85 +37,8 @@ import {
   getRiverTraLaLaTargetOptions,
 } from "./options";
 
-interface TouchedAlly {
-  allyId: string;
-  contactIndex: number;
-  contactCell: Coord;
-}
-
-function getRiverTraLaLaTouchedAllies(
-  state: GameState,
-  riverId: string,
-  draggedTargetId: string,
-  from: Coord,
-  to: Coord
-): TouchedAlly[] {
-  const river = state.units[riverId];
-  if (!river || !river.isAlive || !river.position) return [];
-  const path = linePath(from, to);
-  if (!path || path.length === 0) return [];
-
-  const touched = new Map<string, TouchedAlly>();
-  for (const unit of Object.values(state.units)) {
-    if (!unit.isAlive || !unit.position) continue;
-    if (unit.id === river.id || unit.id === draggedTargetId) continue;
-    if (unit.owner !== river.owner) continue;
-    if (river.riverBoatCarryAllyId && unit.id === river.riverBoatCarryAllyId) {
-      continue;
-    }
-    for (let index = 0; index < path.length; index += 1) {
-      const step = path[index]!;
-      if (chebyshev(unit.position, step) <= 1) {
-        touched.set(unit.id, {
-          allyId: unit.id,
-          contactIndex: index,
-          contactCell: { ...step },
-        });
-        break;
-      }
-    }
-  }
-
-  return Array.from(touched.values()).sort((a, b) => {
-    if (a.contactIndex !== b.contactIndex) {
-      return a.contactIndex - b.contactIndex;
-    }
-    const unitA = state.units[a.allyId];
-    const unitB = state.units[b.allyId];
-    const posA = unitA?.position;
-    const posB = unitB?.position;
-    if (posA && posB) {
-      if (posA.row !== posB.row) return posA.row - posB.row;
-      if (posA.col !== posB.col) return posA.col - posB.col;
-    }
-    return a.allyId.localeCompare(b.allyId);
-  });
-}
-
 function isCoordAllowed(options: Coord[], coord: Coord): boolean {
   return options.some((option) => coordsEqual(option, coord));
-}
-
-function canTouchedAllyAttackDraggedTarget(
-  state: GameState,
-  ally: UnitState,
-  target: UnitState,
-  contactCell: Coord
-): boolean {
-  if (!ally.isAlive || !ally.position || !target.isAlive) return false;
-  if (!canDirectlyTargetUnit(state, ally.id, target.id)) return false;
-  const targetAtContact: UnitState = {
-    ...target,
-    position: { ...contactCell },
-  };
-  const stateAtContact: GameState = {
-    ...state,
-    units: {
-      ...state.units,
-      [targetAtContact.id]: targetAtContact,
-    },
-  };
-  return canAttackTarget(stateAtContact, ally, targetAtContact);
 }
 
 export function applyRiverTraLaLa(
@@ -287,53 +203,11 @@ export function resolveRiverTraLaLaDestinationChoice(
   );
 }
 
-function buildTraLaLaAttackQueue(
-  originalState: GameState,
-  currentState: GameState,
-  riverId: string,
-  targetId: string,
-  from: Coord,
-  to: Coord
-): PendingCombatQueueEntry[] {
-  const target = currentState.units[targetId];
-  if (!target || !target.isAlive || !target.position) return [];
-  const touchedAllies = getRiverTraLaLaTouchedAllies(
-    originalState,
-    riverId,
-    targetId,
-    from,
-    to
-  );
-  const queue: PendingCombatQueueEntry[] = [];
-  for (const touched of touchedAllies) {
-    const ally = currentState.units[touched.allyId];
-    if (!ally || !ally.isAlive || !ally.position) continue;
-    if (
-      !canTouchedAllyAttackDraggedTarget(
-        currentState,
-        ally,
-        target,
-        touched.contactCell
-      )
-    ) {
-      continue;
-    }
-    queue.push({
-      attackerId: ally.id,
-      defenderId: target.id,
-      ignoreRange: true,
-      consumeSlots: false,
-      kind: "aoe",
-    });
-  }
-  return queue;
-}
-
 export function resolveRiverTraLaLaDropDestinationChoice(
   state: GameState,
   pending: PendingRoll,
   choice: ResolveRollChoice | undefined,
-  rng: RNG
+  _rng: RNG
 ): ApplyResult {
   const ctx = pending.context as unknown as RiverTraLaLaDropDestinationChoiceContext;
   const river = state.units[ctx.riverId];
@@ -382,16 +256,8 @@ export function resolveRiverTraLaLaDropDestinationChoice(
 
   const path = linePath(river.position, riverDestination);
   if (!path) return { state, events: [] };
-  const stakeStop = findStakeStopOnPath(state, river, path.slice(1));
-  const finalRiverPosition = stakeStop ?? riverDestination;
-  const currentDropOptions = getRiverDropOptions(state, finalRiverPosition, target.id);
-  if (!isCoordAllowed(currentDropOptions, selectedDrop)) {
-    return { state, events: [] };
-  }
-  const dropOccupant = getUnitAt(state, selectedDrop);
-  if (dropOccupant && dropOccupant.isAlive && dropOccupant.id !== target.id) {
-    return { state, events: [] };
-  }
+  const currentDropOptions = getRiverDropOptions(state, riverDestination, target.id);
+  if (!isCoordAllowed(currentDropOptions, selectedDrop)) return { state, events: [] };
 
   const committed = commitAbilityCost(
     state,
@@ -402,92 +268,22 @@ export function resolveRiverTraLaLaDropDestinationChoice(
     return { state, events: [] };
   }
 
-  const movedRiver: UnitState = {
+  const updatedRiver: UnitState = {
     ...committed.unit,
-    position: { ...finalRiverPosition },
     riverBoatCarryAllyId: undefined,
     riverBoatmanMovePending: false,
   };
-  const movedTarget: UnitState = {
-    ...target,
-    position: { ...selectedDrop },
-  };
-
-  let nextState = clearPendingRoll({
-    ...committed.state,
-    units: {
-      ...committed.state.units,
-      [movedRiver.id]: movedRiver,
-      [movedTarget.id]: movedTarget,
-    },
-  });
-  let events: GameEvent[] = [...committed.events];
-  if (!coordsEqual(river.position, movedRiver.position!)) {
-    events.push(
-      evUnitMoved({ unitId: river.id, from: river.position, to: movedRiver.position! })
-    );
-  }
-  if (!coordsEqual(target.position, movedTarget.position!)) {
-    events.push(
-      evUnitMoved({
-        unitId: target.id,
-        from: target.position,
-        to: movedTarget.position!,
-      })
-    );
-  }
-
-  if (!coordsEqual(river.position, movedRiver.position!)) {
-    const stakeResult = applyStakeTriggerIfAny(
-      nextState,
-      movedRiver,
-      movedRiver.position!,
-      rng
-    );
-    if (stakeResult.triggered) {
-      nextState = stakeResult.state;
-      events = [...events, ...stakeResult.events];
-    }
-  }
-
-  const queue = buildTraLaLaAttackQueue(
-    state,
-    nextState,
-    movedRiver.id,
-    movedTarget.id,
-    river.position,
-    movedRiver.position ?? finalRiverPosition
-  );
-  events.push({
-    type: "riverTraLaLaResolved" as const,
-    riverId: movedRiver.id,
-    targetId: movedTarget.id,
-    riverDestination: movedRiver.position!,
-    dropDestination: movedTarget.position!,
-    touchedAttackerIds: queue.map((entry) => entry.attackerId),
-  });
-  if (queue.length === 0) {
-    return { state: nextState, events };
-  }
-
-  nextState = {
-    ...nextState,
-    pendingCombatQueue: queue,
-  };
-
-  const first = queue[0]!;
-  const requested = requestRoll(
-    nextState,
-    nextState.units[first.attackerId].owner,
-    "attack_attackerRoll",
-    makeAttackContext({
-      attackerId: first.attackerId,
-      defenderId: first.defenderId,
-      ignoreRange: true,
-      consumeSlots: false,
-      queueKind: "aoe",
+  return {
+    state: clearPendingRoll({
+      ...committed.state,
+      units: { ...committed.state.units, [updatedRiver.id]: updatedRiver },
+      pendingReactionMovement: {
+        source: "tralala", controllerUnitId: river.id, targetUnitId: target.id,
+        path, stepIndex: 0, stepReached: false, stopped: false,
+        processedReactorIds: [], touchedReactorIds: [], reactionQueue: [],
+        dropDestination: selectedDrop,
+      },
     }),
-    first.attackerId
-  );
-  return { state: requested.state, events: [...events, ...requested.events] };
+    events: committed.events,
+  };
 }

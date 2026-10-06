@@ -363,6 +363,15 @@ const DEFENSE_ROLL_KINDS = new Set<RollKind>([
 export function createPendingRollContext(
   params: PendingRollContextBuilderParams,
 ): PendingRollContext {
+  if (params.kind === "reactionChoice" || params.kind === "reactionDropChoice") {
+    return baseContext(params, {
+      title: params.kind === "reactionChoice" ? "Reaction opportunity" : "Choose a drop cell",
+      reason: params.kind === "reactionChoice" ? "Choose Attack or Pass for this unit." : "Movement stopped. Choose an adjacent drop cell.",
+      rollKind: "reaction",
+      actorUnitId: params.actorUnitId,
+      diceLabel: "Choice",
+    });
+  }
   if (params.kind === "selectLastAttackTarget") {
     return baseContext(params, {
       title: "Last Attack",

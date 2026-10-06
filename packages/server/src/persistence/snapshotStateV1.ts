@@ -395,6 +395,19 @@ export const gameStateV1Schema: z.ZodType<GameState, z.ZodTypeDef, unknown> = z
         })
         .strict(),
     ),
+    pendingReactionMovement: z.object({
+      source: z.enum(["tralala", "genghis"]),
+      controllerUnitId: text,
+      targetUnitId: text.optional(),
+      path: z.array(coord).min(1),
+      stepIndex: integer,
+      stepReached: bool,
+      stopped: bool,
+      processedReactorIds: strings,
+      touchedReactorIds: strings,
+      reactionQueue: z.array(z.object({ reactorUnitId: text, targetUnitIds: strings }).strict()),
+      dropDestination: coord.optional(),
+    }).strict().nullable().optional(),
     pendingAoE: z
       .object({
         casterId: text,

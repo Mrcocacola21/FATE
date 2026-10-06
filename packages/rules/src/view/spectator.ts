@@ -12,6 +12,7 @@ import { projectRosterUnits } from "./roster";
 export function makeSpectatorView(state: GameState): PlayerView {
   const {
     pendingRoll,
+    pendingReactionMovement: _pendingReactionMovement,
     combatResolutionChain: _combatResolutionChain,
     rollCounter,
     pendingCombatQueue,

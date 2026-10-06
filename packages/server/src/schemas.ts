@@ -58,6 +58,8 @@ export const FigureSetSelectionSchema = z
   .partial();
 
 const ResolveRollChoiceSchema = z.union([
+  z.object({ type: z.literal("resolveReactionChoice"), choice: z.enum(["attack", "pass"]), targetId: z.string().optional() }).strict(),
+  z.object({ type: z.literal("reactionDropDestination"), position: CoordSchema }).strict(),
   z.literal("auto"),
   z.literal("roll"),
   z.literal("skip"),

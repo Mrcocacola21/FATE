@@ -1,15 +1,12 @@
-import type { ApplyResult, GameAction, GameEvent, GameState } from "../../model";
+import { prepareAttackAttempt } from "./prepareAttack";
+import type { ApplyResult, GameAction, GameState } from "../../model";
 import type { RNG } from "../../rng";
 import { canAttackTarget } from "../../combat";
 import { canSpendSlots } from "../../turnEconomy";
 import { requestRoll, makeAttackContext } from "../../core";
 import { HERO_FALSE_TRAIL_TOKEN_ID, HERO_ZORO_ID } from "../../heroes";
 import { ABILITY_ZORO_3_SWORD_STYLE } from "../../abilities";
-import { isKaiser } from "../shared";
-import { exitBunkerForUnit } from "../heroes/kaiser";
 import { applyGutsBerserkAttack } from "../heroes/guts";
-import { markFriskAttackedWhileStealthed } from "../heroes/frisk";
-import { applyMettatonStagePhenomenonOnAttackAction } from "../heroes/mettaton";
 import { maybeApplyPapyrusLongBoneAttack } from "../heroes/papyrus";
 import { getPolkovodetsSource } from "../heroes/vlad";
 import { canDirectlyTargetUnit } from "../../visibility";
@@ -118,24 +115,10 @@ export function applyAttack(
     };
   }
 
-  let workingState = state;
-  let workingAttacker = attacker;
-  let preEvents: GameEvent[] = [];
-
-  workingState = markFriskAttackedWhileStealthed(workingState, workingAttacker.id);
-  workingAttacker = workingState.units[workingAttacker.id] ?? workingAttacker;
-
-  if (isKaiser(attacker) && attacker.bunker?.active) {
-    const exited = exitBunkerForUnit(workingState, workingAttacker, "attacked");
-    workingState = exited.state;
-    workingAttacker = exited.unit;
-    preEvents = exited.events;
-  }
-
-  const stageBonus = applyMettatonStagePhenomenonOnAttackAction(workingState, workingAttacker.id);
-  workingState = stageBonus.state;
-  workingAttacker = workingState.units[workingAttacker.id] ?? workingAttacker;
-  preEvents = [...preEvents, ...stageBonus.events];
+  const prepared = prepareAttackAttempt(state, attacker);
+  const workingState = prepared.state;
+  const workingAttacker = prepared.attacker;
+  const preEvents = prepared.events;
 
   const auraSource = getPolkovodetsSource(workingState, workingAttacker.id);
   const context = makeAttackContext({

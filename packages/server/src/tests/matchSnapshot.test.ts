@@ -68,6 +68,14 @@ function serializationTests() {
       context: { attackerId: id, nested: { damage: 3 } },
     },
     pendingCombatQueue: [{ kind: "aoe", attackerId: id, defenderId: "target", damageBonus: 2 }],
+    pendingReactionMovement: {
+      source: "tralala", controllerUnitId: id, targetUnitId: "target",
+      path: [{ col: 1, row: 1 }, { col: 1, row: 2 }, { col: 1, row: 3 }],
+      stepIndex: 1, stepReached: true, stopped: false,
+      processedReactorIds: ["first", "second"], touchedReactorIds: ["first"],
+      reactionQueue: [{ reactorUnitId: "second", targetUnitIds: ["target"] }],
+      dropDestination: { col: 2, row: 3 },
+    },
     pendingAoE: {
       casterId: id,
       abilityId: "aoe",

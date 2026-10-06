@@ -1365,7 +1365,7 @@ export const en = {
       },
       tralala: {
         summary:
-          "At 4 charges, choose an adjacent enemy, move River Person in a straight line, make touched allies attack, then drop the target adjacent to the destination.",
+          "At 4 charges, choose an adjacent enemy and sail in a straight line. Movement pauses while each eligible touched ally chooses Attack or Pass, then the target is dropped adjacent to the destination.",
         options: {
           target: {
             name: "Choose target",
@@ -1379,7 +1379,7 @@ export const en = {
           allies: {
             name: "Attack chain",
             description:
-              "Each eligible ally within 1 cell of the traveled path attacks the dragged target at most once without spending normal action slots.",
+              "Each eligible ally within 1 cell of the traveled path independently chooses Attack or Pass at most once. Reaction attacks use normal dice without spending turn slots.",
           },
         },
       },
@@ -1642,7 +1642,17 @@ export const en = {
     },
   },
   pending: {
+    reactionTitle: "Reaction opportunity",
+    reactionPrompt: "{{reactor}} can attack {{target}}. Attack this enemy?",
+    reactionAttack: "Attack",
+    reactionPass: "Pass",
+    reactionDropPrompt: "Movement stopped. Choose an adjacent drop cell.",
+
     opponent: {
+      reaction: {
+        title: "Reaction opportunity",
+        message: "Opponent is deciding whether to make a reaction attack.",
+      },
       status: "Waiting for opponent...",
       blockedAction: "Waiting for your opponent to finish their decision.",
       generic: {

@@ -29,6 +29,7 @@ import { projectRosterUnits } from "./roster";
 export function makePlayerView(state: GameState, playerId: PlayerId): PlayerView {
   const {
     pendingRoll,
+    pendingReactionMovement: _pendingReactionMovement,
     combatResolutionChain: _combatResolutionChain,
     rollCounter,
     pendingCombatQueue,

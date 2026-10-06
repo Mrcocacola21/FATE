@@ -20,6 +20,7 @@ export function otherPlayer(player: PlayerId): PlayerId {
 export function hasPendingBattleResolution(state: GameState): boolean {
   return (
     state.pendingRoll !== null ||
+    !!state.pendingReactionMovement ||
     state.pendingAoE !== null ||
     state.pendingCombatQueue.length > 0 ||
     Object.values(state.units).some((unit) => !!unit.sansPendingDeath)
@@ -48,6 +49,7 @@ export function endGameWithWinner(
       activeUnitId: null,
       pendingMove: null,
       pendingRoll: null,
+      pendingReactionMovement: null,
       pendingCombatQueue: [],
       pendingAoE: null,
     },

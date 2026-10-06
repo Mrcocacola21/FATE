@@ -61,6 +61,15 @@ export function formatDice(roll?: DiceRoll | null) {
 export function formatEventMessage(event: GameEvent, language: Language, t: Translate, units?: PlayerView["rosterUnits"]): string {
   const unitName = (id: string) => units?.[id] ? getUnitFigureDisplayName(units[id], { language, t }) : id;
   switch (event.type) {
+    case "reactionOpportunity":
+      return text(language, `${unitName(event.reactorUnitId)} has a reaction opportunity against ${event.targetUnitIds.map(unitName).join(", ")}.`, `${unitName(event.reactorUnitId)} може виконати атаку реакції проти ${event.targetUnitIds.map(unitName).join(", ")}.`);
+    case "reactionChoiceResolved":
+      return event.choice === "attack"
+        ? text(language, `${unitName(event.reactorUnitId)} chose to attack.`, `${unitName(event.reactorUnitId)} вирішив атакувати.`)
+        : text(language, `${unitName(event.reactorUnitId)} passed on the reaction.`, `${unitName(event.reactorUnitId)} пропустив реакцію.`);
+    case "reactionMovementResumed":
+      return text(language, `${event.source === "tralala" ? "Tralala" : "Mongol Charge"} movement resumes.`, `Рух ${event.source === "tralala" ? "Тра-ля-ля" : "Монгольського ривка"} продовжується.`);
+
     case "turnStarted":
       return text(
         language,

@@ -182,7 +182,11 @@ export function resolvePendingRollOnce(
   const resolvedChoice: ResolveRollChoice | undefined =
     choice !== undefined
       ? choice
-      : pending.kind === "berserkerDefenseChoice" ||
+      : pending.kind === "reactionChoice"
+        ? { type: "resolveReactionChoice", choice: "attack", targetId: String(firstOption) }
+        : pending.kind === "reactionDropChoice" && firstOption
+          ? { type: "reactionDropDestination", position: firstOption as Coord }
+          : pending.kind === "berserkerDefenseChoice" ||
           pending.kind === "tricksterAoE_berserkerDefenseChoice" ||
           pending.kind === "odinMuninnDefenseChoice" ||
           pending.kind === "asgoreBraveryDefenseChoice" ||

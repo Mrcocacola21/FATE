@@ -3,7 +3,7 @@ import type { RNG } from "../rng";
 import { applyUseAbility } from "./abilityActions";
 import { applyAttack } from "./combatActions";
 import { lobbyHandlers } from "./lobbyActions";
-import { applyMove, applyRequestMoveOptions } from "./movementActions";
+import { applyMove, applyRequestMoveOptions, continueReactionMovement } from "./movementActions";
 import { applyResolvePendingRoll } from "./pendingRollActions";
 import { applyPlaceUnit } from "./placementActions";
 import { applyEnterStealth, applySearchStealth } from "./stealthActions";
@@ -163,6 +163,21 @@ export function applyAction(
     return result;
   }
 
+  return applyPostActionPipeline(prevState, action, result, rng);
+}
+
+function transitEntrantIds(state: GameState): readonly string[] | undefined {
+  const movement = state.pendingReactionMovement;
+  if (!movement) return undefined;
+  return movement.stopped || movement.stepIndex === movement.path.length - 1 ? [movement.controllerUnitId] : [];
+}
+
+function applyPostActionPipeline(
+  prevState: GameState,
+  action: GameAction,
+  result: ApplyResult,
+  rng: RNG,
+): ApplyResult {
   const collisionResolvedIds = new Set(
     result.events
       .filter((event) => event.type === "hiddenCollisionResolved")
@@ -172,7 +187,7 @@ export function applyAction(
     prevState,
     result.state,
     rng,
-    { alreadyResolvedUnitIds: collisionResolvedIds },
+    { alreadyResolvedUnitIds: collisionResolvedIds, entrantUnitIds: transitEntrantIds(result.state) },
   );
   result = {
     state: collisionSafetyNet.state,
@@ -238,7 +253,7 @@ export function applyAction(
     result.state,
     afterNewBatch.state,
     rng,
-    { alreadyResolvedUnitIds: postActionCollisionIds },
+    { alreadyResolvedUnitIds: postActionCollisionIds, entrantUnitIds: transitEntrantIds(afterNewBatch.state) },
   );
   const afterPostActionCollisionCleanup = {
     state: cleanupJackTrapsForDeaths(
@@ -251,7 +266,13 @@ export function applyAction(
     afterPostActionCollisionCleanup.state,
     afterPostActionCollisionCleanup.events
   );
-  const preDeath = applySansLastAttackFromDeaths(afterRuleAttack.state);
+  const draggedId = afterRuleAttack.state.pendingReactionMovement?.targetUnitId;
+  const dragged = draggedId ? afterRuleAttack.state.units[draggedId] : undefined;
+  const movementState = dragged && (!dragged.isAlive || dragged.hp <= 0 || dragged.sansPendingDeath)
+    ? { ...afterRuleAttack.state, pendingReactionMovement: null,
+        pendingRoll: afterRuleAttack.state.pendingRoll?.kind === "reactionChoice" ? null : afterRuleAttack.state.pendingRoll }
+    : afterRuleAttack.state;
+  const preDeath = applySansLastAttackFromDeaths(movementState);
   const preDeathResult = { state: preDeath.state, events: [...afterRuleAttack.events, ...preDeath.events] };
   if (preDeath.state.pendingRoll?.kind === "selectLastAttackTarget") return finalizeVisuals(preDeathResult);
   const afterRoundAdvance = hasPendingBattleResolution(preDeathResult.state)
@@ -269,8 +290,13 @@ export function applyAction(
   }
 
   const papyrusBoneChoice = maybeRequestPapyrusBoneChoice(afterWinChecks.state);
-  return finalizeVisuals({
+  const finalized = {
     state: papyrusBoneChoice.state,
     events: [...afterWinChecks.events, ...papyrusBoneChoice.events],
-  });
+  };
+  // Resume only after combat modifiers, nested choices and the death pipeline.
+  const continued = continueReactionMovement(finalized.state, rng);
+  if (continued.state === finalized.state && continued.events.length === 0) return finalizeVisuals(finalized);
+  const processed = applyPostActionPipeline(finalized.state, action, continued, rng);
+  return finalizeVisuals({ state: processed.state, events: [...finalized.events, ...processed.events] });
 }

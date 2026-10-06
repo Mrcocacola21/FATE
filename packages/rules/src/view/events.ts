@@ -315,6 +315,16 @@ function projectEventForRecipient(
         } as GameEvent,
       ];
     }
+    case "reactionOpportunity": {
+      if (!isUnitVisibleToRecipient(state, event.reactorUnitId, recipient)) return [];
+      const targetUnitIds = filterVisibleUnitIds(event.targetUnitIds);
+      return targetUnitIds.length ? [{ ...event, targetUnitIds }] : [];
+    }
+    case "reactionChoiceResolved":
+      return isUnitVisibleToRecipient(state, event.reactorUnitId, recipient) &&
+        (!event.targetUnitId || isUnitVisibleToRecipient(state, event.targetUnitId, recipient)) ? [event] : [];
+    case "reactionMovementResumed":
+      return isUnitVisibleToRecipient(state, event.controllerUnitId, recipient) ? [event] : [];
     default:
       return PUBLIC_EVENT_TYPES.has(event.type) ? [event] : [redactedEvent(event.type)];
   }

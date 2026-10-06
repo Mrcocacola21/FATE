@@ -40,6 +40,8 @@ export type StealthRevealReason =
   | "stakeTriggered";
 
 export type RollKind =
+  | "reactionChoice"
+  | "reactionDropChoice"
   | "enterStealth"
   | "enterBunker"
   | "searchStealth"
@@ -144,6 +146,8 @@ export type RollKind =
   | "donWindmillsRepositionChoice";
 
 export const ALL_ROLL_KINDS = [
+  "reactionChoice",
+  "reactionDropChoice",
   "enterStealth",
   "enterBunker",
   "searchStealth",

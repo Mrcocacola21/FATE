@@ -2674,6 +2674,7 @@ function testWindmillsCommandsAreAuthoritative() {
 }
 
 async function main() {
+  testOptionalReactionChoicesAreAuthoritative();
   testLokiLaughPayloadSchemas();
   testLokiLaughCommandsAreAuthoritative();
   testLightRayModePayloadSchemas();
@@ -2718,3 +2719,47 @@ main().catch((err) => {
   console.error(err);
   process.exit(1);
 });
+
+function testOptionalReactionChoicesAreAuthoritative() {
+  const { room } = makeSeatedRoom({ roomIdPrefix: "hardening-optional-reaction" });
+  let state = attachArmy(attachArmy(createEmptyGame(), createDefaultArmy("P1")), createDefaultArmy("P2"));
+  const pick = (owner: string, cls: string) => Object.values(state.units).find((unit) => unit.owner === owner && unit.class === cls)!;
+  const controller = pick("P1", "rider"), reactor = pick("P1", "berserker"), target = pick("P2", "knight");
+  state = setUnit(state, controller.id, { position: { col: 0, row: 0 } });
+  state = setUnit(state, reactor.id, { position: { col: 1, row: 1 } });
+  state = setUnit(state, target.id, { position: { col: 0, row: 0 }, hp: 20 });
+  room.state = {
+    ...state, phase: "battle", currentPlayer: "P1", activeUnitId: controller.id,
+    pendingRoll: { id: "optional-reaction", kind: "reactionChoice", player: "P1",
+      context: { reactorUnitId: reactor.id, targetUnitIds: [target.id], source: "tralala" } },
+    pendingReactionMovement: {
+      source: "tralala", controllerUnitId: controller.id, targetUnitId: target.id,
+      path: [{ col: 0, row: 0 }, { col: 0, row: 1 }, { col: 0, row: 2 }, { col: 0, row: 3 }],
+      stepIndex: 0, stepReached: true, stopped: false, processedReactorIds: [reactor.id], touchedReactorIds: [reactor.id],
+      reactionQueue: [{ reactorUnitId: reactor.id, targetUnitIds: [target.id] }], dropDestination: { col: 1, row: 3 },
+    },
+  };
+  const command = { type: "resolvePendingRoll", pendingRollId: "optional-reaction", choice: { type: "resolveReactionChoice", choice: "pass" } };
+  const payload = GameActionSchema.parse(command);
+  assert(!GameActionSchema.safeParse({ ...command, choice: { type: "resolveReactionChoice", choice: "auto" } }).success);
+  const before = room.state, revision = room.revision, logLength = room.actionLog.length;
+  assert.equal(applyGameAction(room, payload, "P2").ok, false);
+  assert.strictEqual(room.state, before);
+  assert.equal(room.revision, revision);
+  assert.equal(room.actionLog.length, logLength);
+  const attackCommand = GameActionSchema.parse({ ...command, choice: { type: "resolveReactionChoice", choice: "attack" } });
+  assert.equal(applyGameAction(room, attackCommand, "P1").ok, true);
+  assert.equal(room.state.pendingRoll?.kind, "attack_attackerRoll");
+  assert.equal(room.state.units[target.id].hp, 20);
+  assert.deepEqual(room.state.units[controller.id].position, { col: 0, row: 0 });
+  assert.equal(room.state.pendingRoll?.context.consumeSlots, false);
+  room.state = before;
+  const passed = applyGameAction(room, payload, "P1");
+  assert.equal(passed.ok, true);
+  assert.equal(room.state.pendingRoll, null);
+  assert.equal(room.state.pendingReactionMovement, null);
+  assert.equal(room.state.units[target.id].hp, 20);
+  assert.deepEqual(room.state.units[target.id].position, { col: 1, row: 3 });
+  assert.deepEqual(room.state.units[reactor.id].turn, before.units[reactor.id].turn);
+  console.log("hardening_optional_reaction_choices_are_authoritative passed");
+}

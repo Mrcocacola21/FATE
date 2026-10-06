@@ -105,7 +105,7 @@ export const ABILITY_SPECS_PART_4: Record<string, AbilitySpec> = {
     displayName: "Tra-la-la",
     kind: "phantasm",
     description:
-      "At full 4 charges: choose adjacent enemy, move in a straight line, touched allies that can legally attack strike that enemy once, then drop the enemy adjacent.",
+      "At full 4 charges: choose adjacent enemy and move in a straight line. Each eligible touched ally independently chooses Attack or Pass as the enemy reaches it. Reaction attacks use normal dice and spend no turn slots. Drop the enemy adjacent when movement ends.",
     maxCharges: 4,
     chargesPerUse: 4,
     actionCost: {

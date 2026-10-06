@@ -810,10 +810,10 @@ export function testGenghisMongolChargeSweepTriggersAlliedAttacksInCorridor() {
 
   assert.deepStrictEqual(
     attackers,
-    [allyArcher.id, allySpearman.id].sort(),
-    "allied attacks should resolve in unitId order",
+    [allySpearman.id, allyArcher.id],
+    "allied attacks should resolve in reached-step order",
   );
-  assert(!attackers.includes(allyAssassin.id), "allies who cannot attack should do nothing");
+  assert(!attackers.includes(allyAssassin.id), "allies without legal targets do nothing even with spent slots");
   assert(!attackers.includes(allyOutside.id), "allies outside corridor should not attack");
 
   const archerAttack = attackEvents.find((e) => e.attackerId === allyArcher.id)!;
@@ -881,12 +881,12 @@ export function testGenghisMongolChargeMultipleTargetsCreatesChoiceAndResolves()
   );
 
   const pending = result.state.pendingRoll;
-  assert.equal(pending?.kind, "mongolChargeAllyAttackTarget");
+  assert.equal(pending?.kind, "reactionChoice");
   assert.equal(pending?.player, "P1");
-  assert.equal(pending?.context.sourceUnitId, ally.id);
-  assert.equal(pending?.context.controllerUnitId, genghis.id);
+  assert.equal(pending?.context.reactorUnitId, ally.id);
+  assert.equal(result.state.pendingReactionMovement?.controllerUnitId, genghis.id);
   assert.deepStrictEqual(
-    pending?.context.legalTargetIds,
+    pending?.context.targetUnitIds,
     [enemyA.id, enemyB.id].sort(),
     "all legal visible targets, but no unknown hidden target, should be projected"
   );
@@ -899,7 +899,8 @@ export function testGenghisMongolChargeMultipleTargetsCreatesChoiceAndResolves()
       pendingRollId: pending!.id,
       player: "P1",
       choice: {
-        type: "mongolChargeAllyAttackTarget",
+        type: "resolveReactionChoice",
+        choice: "attack",
         targetId: illegalEnemy.id,
       },
     },
@@ -918,7 +919,8 @@ export function testGenghisMongolChargeMultipleTargetsCreatesChoiceAndResolves()
       pendingRollId: pending!.id,
       player: "P1",
       choice: {
-        type: "mongolChargeAllyAttackTarget",
+        type: "resolveReactionChoice",
+        choice: "attack",
         targetId: enemyB.id,
       },
     },
@@ -1046,44 +1048,21 @@ export function testGenghisMongolChargeMultipleAlliesPauseInStableOrder() {
     );
 
     const pending = result.state.pendingRoll!;
-    const expectedPendingAlly = multiTargetFirst ? firstAlly : secondAlly;
-    assert.equal(pending.kind, "mongolChargeAllyAttackTarget");
-    assert.equal(pending.context.sourceUnitId, expectedPendingAlly.id);
-    assert.deepStrictEqual(
-      (pending.context.queuedAttacks as { attackerId: string }[]).map(
-        (entry) => entry.attackerId
-      ),
-      multiTargetFirst ? [secondAlly.id] : [],
-      "single-target allies before a choice should remain queued in stable unit-id order"
-    );
-
-    const selectedTarget = (pending.context.legalTargetIds as string[])[0]!;
-    const chosen = applyAction(
-      result.state,
-      {
-        type: "resolvePendingRoll",
-        pendingRollId: pending.id,
-        player: "P1",
-        choice: {
-          type: "mongolChargeAllyAttackTarget",
-          targetId: selectedTarget,
-        },
-      },
-      rng,
-    );
-    assert.deepStrictEqual(
-      chosen.state.pendingCombatQueue?.map((entry) => entry.attackerId),
-      [secondAlly.id, firstAlly.id],
-      "all affected allies should enter combat in deterministic unit-id order",
-    );
-
+    assert.equal(pending.kind, "reactionChoice");
+    assert.equal(pending.context.reactorUnitId, firstAlly.id, "First reached ally decides before later movement");
+    assert.equal(result.state.pendingCombatQueue.length, 0, "Single-target allies also require consent");
+    assert.equal(result.state.units[genghis.id].position?.col, 2, "Movement pauses at the ally's corridor slice");
+    const selectedTarget = (pending.context.targetUnitIds as string[])[0]!;
+    const chosen = applyAction(result.state, {
+      type: "resolvePendingRoll", pendingRollId: pending.id, player: "P1",
+      choice: { type: "resolveReactionChoice", choice: "attack", targetId: selectedTarget },
+    }, rng);
+    assert.equal(chosen.state.pendingRoll?.kind, "attack_attackerRoll");
+    assert.equal(chosen.state.pendingRoll?.context.attackerId, firstAlly.id);
+    assert.equal(chosen.state.pendingCombatQueue.length, 0, "Only the current consented combat runs");
     const resolved = resolveAllPendingRollsWithEvents(chosen.state, rng);
-    assert.deepStrictEqual(
-      resolved.events
-        .filter((event) => event.type === "attackResolved")
-        .map((event) => event.type === "attackResolved" ? event.attackerId : ""),
-      [secondAlly.id, firstAlly.id]
-    );
+    assert.deepStrictEqual(resolved.events.filter((event) => event.type === "attackResolved").map((event) => event.attackerId), [firstAlly.id, secondAlly.id]);
+    assert.deepStrictEqual(resolved.state.units[genghis.id].position, { col: 5, row: 1 });
     assert.equal(resolved.state.pendingRoll, null);
   };
 

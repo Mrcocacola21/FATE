@@ -13,6 +13,7 @@ import {
   FALLBACK_PENDING_ROLL_CONTEXT,
 } from "../../pendingRollPresentation";
 import { PendingRollDetails } from "./PendingRollDetails";
+import { ReactionChoicePanel } from "./ReactionChoicePanel";
 
 type PendingRoll = NonNullable<PlayerView["pendingRoll"]>;
 
@@ -237,7 +238,11 @@ export function PendingRollModal({
                   {t("pending.actionRequired")}
                 </div>
                 <div id="pending-roll-title" className="fate-brand mt-1 text-xl">
-                  {pendingRoll.kind === "initiativeRoll"
+                  {pendingRoll.kind === "reactionChoice"
+                    ? t("pending.reactionTitle")
+                    : pendingRoll.kind === "reactionDropChoice"
+                      ? t("pending.reactionDropPrompt")
+                      : pendingRoll.kind === "initiativeRoll"
                     ? t("pending.rollInitiative")
                     : isRuleDeclarationChoice
                       ? t("ruleDeclarations.chooseTitle")
@@ -462,6 +467,17 @@ export function PendingRollModal({
               >
                 {t("pending.chooseOrangeBone")}
               </button>
+            </div>
+          ) : pendingRoll.kind === "reactionChoice" ? (
+            <ReactionChoicePanel context={pendingContext} units={view.rosterUnits} onResolve={onResolvePendingRoll} />
+          ) : pendingRoll.kind === "reactionDropChoice" ? (
+            <div className="w-full space-y-2">
+              <p>{t("pending.reactionDropPrompt")}</p>
+              {ruleCellOptions.map((position) => <button key={coordLabel(position)} type="button"
+                className="rounded-lg bg-amber-500 px-3 py-2 text-stone-950"
+                onClick={() => onResolvePendingRoll({ type: "reactionDropDestination", position })}>
+                {coordLabel(position)}
+              </button>)}
             </div>
           ) : isRuleDeclarationChoice ? (
             <RuleDeclarationChoicePanel

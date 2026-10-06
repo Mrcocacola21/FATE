@@ -7,6 +7,11 @@ const OPPONENT_PRESENTATIONS: Record<
   OpponentPendingPresentation["key"],
   OpponentPendingPresentation
 > = {
+  reaction: {
+    key: "reaction",
+    title: "Reaction opportunity",
+    message: "Opponent is deciding whether to make a reaction attack.",
+  },
   generic: {
     key: "generic",
     title: "Opponent is making a decision",
@@ -60,6 +65,7 @@ export function projectPendingDecision(
 
   let key: OpponentPendingPresentation["key"] = "generic";
   let source: UnitState | undefined;
+  if (pending.kind === "reactionChoice") key = "reaction";
   if (pending.kind === "vladPlaceStakes") {
     key = "vladStakes";
     source = Object.values(state.units).find(
@@ -76,7 +82,7 @@ export function projectPendingDecision(
     source = state.units[String(pending.context.unitId ?? "")];
   }
   if (
-    key !== "generic" &&
+    key !== "generic" && key !== "reaction" &&
     (!source ||
       (viewer === "spectator"
         ? source.isStealthed
@@ -158,6 +164,7 @@ export function getVisiblePendingRollForPlayer(
   const unitIdLists = [
     "targetsQueue",
     "targetIds",
+    "targetUnitIds",
     "affectedUnitIds",
     "chickenOptions",
     "mindControlEnemyOptions",

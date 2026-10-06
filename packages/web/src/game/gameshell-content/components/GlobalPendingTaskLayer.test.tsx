@@ -16,6 +16,54 @@ import {
 } from "./GlobalPendingTaskLayer";
 import { CurrentTaskPanel } from "./CurrentTaskPanel";
 import { OpponentDecisionStatus } from "./OpponentDecisionStatus";
+import { ReactionChoicePanel } from "./ReactionChoicePanel";
+
+const reactionPending: PendingRoll = {
+  id: "reaction-one", kind: "reactionChoice", player: "P1",
+  context: { source: "tralala", reactorUnitId: "Berserker", targetUnitIds: ["Enemy"] },
+};
+
+test("reaction owner sees Attack and Pass and sends an explicit choice", () => {
+  setLanguage("en", null);
+  const sent: unknown[] = [];
+  const vm = makeVm({ pendingRoll: reactionPending, pendingMeta: reactionPending, sendAction: (action: unknown) => sent.push(action) });
+  const markup = renderToStaticMarkup(<GlobalPendingTaskLayer vm={vm} />);
+  assert.match(markup, /Reaction opportunity/);
+  assert.match(markup, /Berserker can attack Enemy/);
+  assert.match(markup, />Attack</);
+  assert.match(markup, />Pass</);
+  assert.doesNotMatch(markup, />Roll 1d6</);
+  const renderer = create(<GlobalPendingTaskLayer vm={vm} />);
+  const panel = renderer.root.findByType(ReactionChoicePanel);
+  const buttons = panel.findAllByType("button");
+  act(() => buttons[0].props.onClick());
+  act(() => buttons[1].props.onClick());
+  assert.deepEqual(sent, [
+    { type: "resolvePendingRoll", pendingRollId: reactionPending.id, choice: { type: "resolveReactionChoice", choice: "attack", targetId: "Enemy" } },
+    { type: "resolvePendingRoll", pendingRollId: reactionPending.id, choice: { type: "resolveReactionChoice", choice: "pass" } },
+  ]);
+  renderer.unmount();
+});
+
+test("reaction opponent sees only a waiting status", () => {
+  setLanguage("en", null);
+  const markup = renderToStaticMarkup(<GlobalPendingTaskLayer vm={makeVm({
+    pendingRoll: null, pendingMeta: reactionPending, playerId: "P2",
+    view: { pendingDecision: { type: "opponentResolvingDecision", ownerPlayerId: "P1", viewerCanRespond: false,
+      opponentStatus: { key: "reaction", title: "Reaction opportunity", message: "Opponent is deciding whether to make a reaction attack." } } },
+  })} />);
+  assert.match(markup, /Opponent is deciding whether to make a reaction attack/);
+  assert.doesNotMatch(markup, /<button|role="dialog"|reaction-choice-panel/);
+});
+
+test("reaction prompt supports target selection and Ukrainian copy", () => {
+  setLanguage("uk", null);
+  const markup = renderToStaticMarkup(<ReactionChoicePanel context={{ ...reactionPending.context, targetUnitIds: ["Enemy", "Other enemy"] }} onResolve={() => undefined} />);
+  assert.match(markup, /Можливість реакції/);
+  assert.equal((markup.match(/>Атакувати</g) ?? []).length, 2);
+  assert.match(markup, />Пропустити</);
+  setLanguage("en", null);
+});
 
 const initiativePending: PendingRoll = {
   id: "initiative-p1",

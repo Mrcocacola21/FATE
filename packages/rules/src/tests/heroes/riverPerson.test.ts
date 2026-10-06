@@ -817,92 +817,29 @@ export function testRiverPersonTraLaLaGatingAndFlow() {
     { type: "forestMoveDestination", position: chosenDrop },
     makeRngSequence([])
   );
-  assert(
-    dropped.state.units[river.id].position?.col === 4 &&
-      dropped.state.units[river.id].position?.row === 7,
-    "Tra-la-la should move River on final drop resolution"
-  );
-  assert(
-    dropped.state.units[target.id].position?.col === chosenDrop.col &&
-      dropped.state.units[target.id].position?.row === chosenDrop.row,
-    "Tra-la-la should place dragged target on selected adjacent drop cell"
-  );
-  assert(
-    dropped.state.units[river.id].charges[ABILITY_RIVER_PERSON_TRA_LA_LA] === 0,
-    "Tra-la-la final drop should spend charges exactly once"
-  );
-  assert(
-    dropped.state.units[river.id].turn.actionUsed,
-    "Tra-la-la final drop should consume main action"
-  );
-  assert(
-    dropped.state.pendingRoll?.kind === "attack_attackerRoll",
-    "Tra-la-la touched allies should start forced attack resolution"
-  );
-
-  const queue = dropped.state.pendingCombatQueue ?? [];
-  const attackerIds = queue.map((entry) => entry.attackerId);
-  const uniqueAttackers = Array.from(new Set(attackerIds));
-  assert(
-    uniqueAttackers.length === attackerIds.length,
-    "Each touched ally should attack at most once"
-  );
-  assert(
-    attackerIds.includes(allySpearman.id) &&
-      attackerIds.includes(allyKnight.id) &&
-      attackerIds.includes(allyPathBlocker.id),
-    "All eligible allies within one cell of the path should be queued"
-  );
-  assert(
-    !attackerIds.includes(deadAlly.id),
-    "Dead or otherwise ineligible touched allies should be skipped"
-  );
-  assert(
-    !attackerIds.includes(enemyPathBlocker.id),
-    "Enemy units touched by the path should not become allied forced attackers"
-  );
-  assert(
-    attackerIds[0] === allySpearman.id,
-    "Tra-la-la touched attacks should use deterministic first-contact then board order"
-  );
-  assert(
-    queue.every((entry) => entry.consumeSlots === false),
-    "Tra-la-la touched attacks should not consume touched units' normal action slots"
-  );
-  const tralalaEvent = dropped.events.find(
-    (event) => event.type === "riverTraLaLaResolved"
-  );
-  assert(
-    tralalaEvent?.type === "riverTraLaLaResolved" &&
-      tralalaEvent.riverId === river.id &&
-      tralalaEvent.targetId === target.id &&
-      tralalaEvent.dropDestination.col === chosenDrop.col &&
-      tralalaEvent.dropDestination.row === chosenDrop.row,
-    "completed Tra-la-la should emit one semantic drag/drop event"
-  );
-  assert(
-    tralalaEvent?.type === "riverTraLaLaResolved" &&
-      uniqueAttackers.every((unitId) =>
-        tralalaEvent.touchedAttackerIds.includes(unitId)
-      ),
-    "Tra-la-la event should list eligible touched attackers"
-  );
-
-  const resolved = resolveAllPendingRollsWithEvents(
-    dropped.state,
-    makeAttackWinRng(uniqueAttackers.length)
-  );
+  assert.equal(dropped.state.pendingRoll?.kind, "reactionChoice", "Touched allies must choose before any attack");
+  assert.deepStrictEqual(dropped.state.units[river.id].position, { col: 4, row: 4 }, "Drag pauses at first contact");
+  assert.equal(dropped.state.units[river.id].charges[ABILITY_RIVER_PERSON_TRA_LA_LA], 0);
+  assert(dropped.state.units[river.id].turn.actionUsed, "Tra-la-la consumes the caster's main action once");
+  assert.equal(dropped.state.pendingRoll?.context.reactorUnitId, allySpearman.id, "First contact then board order remains deterministic");
+  assert.equal(dropped.state.pendingCombatQueue.length, 0, "No combat is queued before consent");
+  const resolved = resolveAllPendingRollsWithEvents(dropped.state, makeAttackWinRng(3));
   const combinedEvents = [...dropped.events, ...resolved.events];
-  const allyAttackEvents = combinedEvents.filter(
-    (event) =>
-      event.type === "attackResolved" &&
-      uniqueAttackers.includes(event.attackerId) &&
-      event.defenderId === target.id
-  );
-  assert(
-    allyAttackEvents.length === uniqueAttackers.length,
-    "Tra-la-la should resolve exactly one attack per queued touched ally"
-  );
+  const attackerIds = combinedEvents.filter((event) => event.type === "reactionOpportunity").map((event) => event.reactorUnitId);
+  const uniqueAttackers = Array.from(new Set(attackerIds));
+  assert.equal(uniqueAttackers.length, attackerIds.length, "Each touched ally gets only one opportunity");
+  assert.deepStrictEqual(attackerIds, [allySpearman.id, allyPathBlocker.id, allyKnight.id]);
+  assert(!attackerIds.includes(deadAlly.id), "Dead allies are skipped");
+  assert(!attackerIds.includes(enemyPathBlocker.id), "Enemies cannot react as allies");
+  assert.deepStrictEqual(resolved.state.units[river.id].position, { col: 4, row: 7 });
+  assert.deepStrictEqual(resolved.state.units[target.id].position, chosenDrop);
+  for (const id of uniqueAttackers) assert.deepStrictEqual(resolved.state.units[id].turn, state.units[id].turn, "Reactions preserve all normal slots");
+  const tralalaEvent = combinedEvents.find((event) => event.type === "riverTraLaLaResolved");
+  assert(tralalaEvent?.type === "riverTraLaLaResolved" && tralalaEvent.riverId === river.id && tralalaEvent.targetId === target.id);
+  assert.deepStrictEqual(tralalaEvent.dropDestination, chosenDrop);
+  assert.deepStrictEqual(tralalaEvent.touchedAttackerIds, uniqueAttackers);
+  const allyAttackEvents = combinedEvents.filter((event) => event.type === "attackResolved" && uniqueAttackers.includes(event.attackerId) && event.defenderId === target.id);
+  assert.equal(allyAttackEvents.length, uniqueAttackers.length, "Choosing Attack produces one combat per consenting ally");
 
   console.log("river_person_tralala_gating_and_flow passed");
 }
