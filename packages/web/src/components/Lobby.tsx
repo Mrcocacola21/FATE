@@ -8,12 +8,14 @@ import { RoomBrowser } from "../lobby/RoomBrowser";
 import { RoomConnectionDialog, type RoomDialogKind } from "../lobby/RoomConnectionDialog";
 import type { RoomSummary } from "../api";
 import { TacticalIcon } from "../ui/TacticalIcon";
+import { useCapabilities } from "../layout/Capabilities";
 
 export function Lobby() {
   const { pathname } = useLocation();
   const queueStatus = useQueue((s) => s.status.status);
   const inQueue = queueStatus === "QUEUED" || queueStatus === "MATCHING";
   const { t } = useI18n();
+  const capabilities = useCapabilities();
   const { roomsList, fetchRooms } = useGameStore();
   const [dialog, setDialog] = useState<{ kind: RoomDialogKind; room?: RoomSummary } | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -93,6 +95,18 @@ export function Lobby() {
         >
           {t("customLobby.joinCode")}
         </button>
+        {capabilities?.testRooms.enabled && (
+          <button
+            type="button"
+            className="btn btn-secondary"
+            disabled={inQueue}
+            data-testid="create-test-room"
+            onClick={() => open("test")}
+          >
+            <TacticalIcon name="unit" />
+            {t("testRoom.create")}
+          </button>
+        )}
       </div>
       {error && (
         <p role="alert" className="fate-notice text-sm">

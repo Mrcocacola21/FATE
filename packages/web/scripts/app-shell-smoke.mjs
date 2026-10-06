@@ -98,6 +98,7 @@ try {
       displayName: "Tactician",
       avatarUrl: null,
       email: "shell@example.test",
+      role: "USER",
       createdAt: "2026-10-03T00:00:00Z",
       updatedAt: "2026-10-03T00:00:00Z",
       preferredLanguage: "en",
@@ -122,7 +123,7 @@ try {
       if (pathname === "/api/auth/refresh")
         return signedIn
           ? json({ accessToken: credentials.accessToken, accessTokenExpiresIn: 900 })
-          : json({ error: { code: "UNAUTHORIZED" } }, 401);
+          : json({ error: { code: "UNAUTHORIZED", message: "Authentication required." } }, 401);
       if (pathname === "/api/auth/me") return json({ user: profile });
       if (pathname === "/api/auth/logout") {
         signedIn = false;
@@ -209,6 +210,7 @@ try {
     await screenshot(`play-${width}`);
   }
   await page.getByRole("link", { name: "Lobby", exact: true }).click();
+  assert.equal(await page.getByTestId("create-test-room").count(), 0);
   await page.getByTestId("create-room").click();
   await page.getByRole("dialog").waitFor();
   assert.equal(await page.locator("#player-name").count(), 0);
@@ -377,7 +379,7 @@ try {
   page.once("dialog", (dialog) => dialog.accept());
   await page.getByRole("button", { name: "Leave match", exact: true }).click();
   await page.getByTestId("create-room").waitFor();
-  await page.getByRole("button", { name: "Create Test Room", exact: true }).click();
+  await page.getByTestId("create-test-room").click();
   await page.getByTestId("submit-room").click();
   await page.waitForFunction(
     () =>
@@ -429,7 +431,10 @@ try {
   page = await sandboxGuest.context.newPage();
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto(webUrl + "/lobby");
-  await page.getByRole("button", { name: "Create Test Room", exact: true }).click();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByTestId("create-test-room").waitFor();
+  await noOverflow();
+  await page.getByTestId("create-test-room").click();
   await page.locator("#player-name").fill("Guest Scout");
   await page.getByTestId("submit-room").click();
   await page.locator(".panel-hud").getByText("Guest Scout", { exact: true }).waitFor();

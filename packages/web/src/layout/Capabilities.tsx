@@ -10,17 +10,29 @@ export function CapabilitiesProvider({ children }: { children: ReactNode }) {
   const [capabilities, setCapabilities] = useState<ServerCapabilities | null>(null);
   useEffect(() => {
     let active = true;
-    request ??= getServerCapabilities();
-    request.then(
-      (value) => {
-        if (active) setCapabilities(value);
-      },
-      () => {
-        if (active) setCapabilities({ testRooms: { enabled: false, requiresToken: false } });
-      },
-    );
+    let retry: ReturnType<typeof setTimeout> | undefined;
+    const load = () => {
+      request ??= getServerCapabilities().catch((error) => {
+        // The backend may still be starting alongside Vite in `npm run dev`.
+        // Share in-flight requests, but allow a failed request to be retried.
+        request = undefined;
+        throw error;
+      });
+      request.then(
+        (value) => {
+          if (active) setCapabilities(value);
+        },
+        () => {
+          if (!active) return;
+          setCapabilities({ testRooms: { enabled: false, requiresToken: false } });
+          retry = setTimeout(load, 5000);
+        },
+      );
+    };
+    load();
     return () => {
       active = false;
+      clearTimeout(retry);
     };
   }, []);
   return (

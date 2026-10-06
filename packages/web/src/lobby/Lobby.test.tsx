@@ -7,6 +7,8 @@ import { useGameStore } from "../store";
 import { authStore } from "../auth/authStore";
 import { setLanguage } from "../i18n";
 import type { RoomSummary } from "../api";
+import { CapabilitiesProvider } from "../layout/Capabilities";
+import { queue } from "../matchmaking/store";
 
 const initialGame = useGameStore.getState();
 const initialAuth = authStore.getState();
@@ -50,6 +52,7 @@ test("Lobby contains the browser without a matchmaking queue; forms appear only 
     assert.equal(renderer.root.findAllByType("form").length, 0);
     assert.equal(renderer.root.findAllByType("nav").length, 0);
     assert.equal(renderer.root.findAllByType("input").length, 0);
+    assert.equal(renderer.root.findAllByProps({ "data-testid": "create-test-room" }).length, 0);
     assert(renderer.root.findByProps({ "data-testid": "room-browser" }));
     assert.equal(renderer.root.findAllByProps({ "data-testid": "matchmaking-panel" }).length, 0);
     open(renderer, "create-room");
@@ -61,6 +64,43 @@ test("Lobby contains the browser without a matchmaking queue; forms appear only 
     assert(renderer.root.findByProps({ id: "room-id" }));
     assert(renderer.root.findByProps({ id: "lobby-role" }));
   } finally {
+    cleanup(renderer);
+  }
+});
+
+test("Lobby restores Test Room creation after capabilities load and submits the sandbox token", async () => {
+  const originalFetch = globalThis.fetch;
+  const initialQueue = queue.state.getState();
+  const renderer = mount([], false);
+  const requests: unknown[] = [];
+  let finish!: (response: Response) => void;
+  globalThis.fetch = async () => new Promise<Response>((resolve) => { finish = resolve; });
+  useGameStore.setState({ joinRoom: async (params) => { requests.push(params); } });
+  try {
+    act(() => renderer.update(
+      <MemoryRouter><CapabilitiesProvider><Lobby /></CapabilitiesProvider></MemoryRouter>,
+    ));
+    assert.equal(renderer.root.findAllByProps({ "data-testid": "create-test-room" }).length, 0);
+    await act(async () => {
+      finish(new Response(JSON.stringify({ testRooms: { enabled: true, requiresToken: true } })));
+    });
+    assert.equal(renderer.root.findByProps({ "data-testid": "create-test-room" }).props.disabled, false);
+    act(() => queue.state.setState({ status: {
+      status: "MATCHING", gameMode: "standard", rating: 1000,
+      joinedAt: "2026-10-06T00:00:00Z", waitMs: 0, currentRange: 100, available: true,
+    } }));
+    assert.equal(renderer.root.findByProps({ "data-testid": "create-test-room" }).props.disabled, true);
+    act(() => queue.state.setState(initialQueue, true));
+    open(renderer, "create-test-room");
+    assert.equal(renderer.root.findAllByProps({ role: "dialog" }).length, 1);
+    act(() => renderer.root.findByProps({ id: "test-room-token" }).props.onChange({ target: { value: " sandbox-token " } }));
+    await submit(renderer);
+    assert.deepEqual(requests[0], {
+      mode: "create", role: "P1", name: undefined, roomMode: "test", debugToken: "sandbox-token",
+    });
+  } finally {
+    globalThis.fetch = originalFetch;
+    queue.state.setState(initialQueue, true);
     cleanup(renderer);
   }
 });

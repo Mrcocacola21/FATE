@@ -242,15 +242,18 @@ test("standalone auth and immersive game layouts reserve the full content width"
   }
 });
 
-test("capabilities are fetched once for multiple consumers and developer UI stays absent before/after disabled response", async () => {
+test("capabilities share requests, retry startup failures, and keep disabled developer UI hidden", async (context) => {
   reset();
   const originalFetch = globalThis.fetch;
   let count = 0;
   let finish!: (response: Response) => void;
+  let fail!: (error: Error) => void;
+  context.mock.timers.enable({ apis: ["setTimeout"] });
   globalThis.fetch = async () => {
     count++;
-    return new Promise<Response>((resolve) => {
+    return new Promise<Response>((resolve, reject) => {
       finish = resolve;
+      fail = reject;
     });
   };
   function Navigation() {
@@ -279,12 +282,25 @@ test("capabilities are fetched once for multiple consumers and developer UI stay
     assert.equal(count, 1);
     assert.equal(JSON.stringify(renderer.toJSON()).includes("Heartbreak"), false);
     await act(async () => {
+      fail(new Error("Backend is still starting"));
+    });
+    assert.equal(JSON.stringify(renderer.toJSON()).includes("Heartbreak"), false);
+    await act(async () => {
+      context.mock.timers.tick(5000);
+    });
+    assert.equal(count, 2, "both consumers share the retry request");
+    await act(async () => {
       finish(new Response(JSON.stringify({ testRooms: { enabled: false, requiresToken: false } })));
     });
     assert.equal(JSON.stringify(renderer.toJSON()).includes("Heartbreak"), false);
+    await act(async () => {
+      context.mock.timers.tick(5000);
+    });
+    assert.equal(count, 2, "a successful disabled response is cached");
   } finally {
     act(() => renderer.unmount());
     globalThis.fetch = originalFetch;
+    context.mock.timers.reset();
     reset();
   }
 });
