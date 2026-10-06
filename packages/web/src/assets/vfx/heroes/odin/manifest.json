@@ -1,0 +1,146 @@
+{
+  "schema": "fate_asset_library_documentation_v1",
+  "note": "Metadata only; not connected to runtime.",
+  "assets": [
+    {
+      "id": "VFX_ODIN_GUNGNIR",
+      "file": "gungnir.png",
+      "batch": 6,
+      "frames": 11,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1408,
+        128
+      ],
+      "duration": "0.45s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.4",
+      "main_action": "A sharply etched aged-gold spear rune locks along attack direction; one decisive contact spark. Never infer hit against confirmed auto-defense solely from doubles.",
+      "materials": "rune spear geometry, raven feather motes and hoof-shaped waymarks",
+      "colors": "slate silver, aged gold, storm-violet; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "beam",
+      "source_file": "vfx_hero_odin_gungnir.png",
+      "sha256": "42d5fee0b67bfcbd12fb335096d35d457d9cb3d55695b009775f8df5efc033d3",
+      "ability": "odinGungnir",
+      "geometry": "spear trajectory, 0.15-cell core",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "attackResolved attackerRoll.isDouble with known Odin and confirmed hit.",
+      "end_condition": "Dissipate fully by0.45s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "MISSING",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_ODIN_HUGINN",
+      "file": "huginn.png",
+      "batch": 6,
+      "frames": 1,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        128,
+        128
+      ],
+      "duration": "Persistent STATIC state; no impact animation duration",
+      "fps": "1 source frame; CSS pulse at browser refresh",
+      "main_action": "Tiny abstract raven-feather eye notch near Odin; optional thin selection bracket on a legitimately exact-known enemy. Do not make a public stealthRevealed effect for detection alone.",
+      "materials": "rune spear geometry, raven feather motes and hoof-shaped waymarks",
+      "colors": "slate silver, aged gold, storm-violet; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "sigil",
+      "source_file": "vfx_hero_odin_huginn.png",
+      "sha256": "227934b50b99868d783d605fdce26e7260acd985997ad57d309d112b2c22b6e0",
+      "ability": "odinHuginn",
+      "geometry": "owner source corner and legitimately known target cells",
+      "visibility": "OWNER ONLY",
+      "visibility_detail": "Odin owner only",
+      "gameplay_trigger": "Owner legal visibility/targeting updates for hidden enemy within Chebyshev1; no public reveal required.",
+      "end_condition": "Dissipate fully by0s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "persistent status",
+      "static_or_animated": "static",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "MISSING",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_ODIN_MUNINN",
+      "file": "muninn.png",
+      "batch": 6,
+      "frames": 14,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1792,
+        128
+      ],
+      "duration": "0.6s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.3",
+      "main_action": "Two ash-silver feather arcs cross into a rune guard with dark-violet center; consumes all6 charges. Neutral roll display until actual auto decision.",
+      "materials": "rune spear geometry, raven feather motes and hoof-shaped waymarks",
+      "colors": "slate silver, aged gold, storm-violet; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "guard",
+      "source_file": "vfx_hero_odin_muninn.png",
+      "sha256": "9d3b6c004e4f78519454534ea908fd6e4c596b080feac6cbe1496f5b313eae55",
+      "ability": "odinMuninn",
+      "geometry": "defender, 1 cell",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "Committed abilityUsed odinMuninn after seen defense roll; resulting attackResolved confirms miss.",
+      "end_condition": "Dissipate fully by0.6s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "MISSING",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_ODIN_SLEIPNIR",
+      "file": "sleipnir.png",
+      "batch": 6,
+      "frames": 18,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2304,
+        128
+      ],
+      "duration": "0.75s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.0",
+      "main_action": "Eight small hooflike rune imprints collapse at departure and spread at arrival. Instant any-empty-cell teleport; no cavalry path or intermediate attacks.",
+      "materials": "rune spear geometry, raven feather motes and hoof-shaped waymarks",
+      "colors": "slate silver, aged gold, storm-violet; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "portal",
+      "source_file": "vfx_hero_odin_sleipnir.png",
+      "sha256": "7220f5921ade864ec3e215820bff65f72baf284153e25f4488df9a0514d84f90",
+      "ability": "odinSleipnir",
+      "geometry": "two endpoint sigils1.2 cells",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "abilityUsed odinSleipnir then unitMoved after odinSleipnirDestination.",
+      "end_condition": "Dissipate fully by0.75s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    }
+  ]
+}

@@ -1,0 +1,111 @@
+{
+  "schema": "fate_asset_library_documentation_v1",
+  "note": "Metadata only; not connected to runtime.",
+  "assets": [
+    {
+      "id": "VFX_KALADIN_FIRST",
+      "file": "first.png",
+      "batch": 6,
+      "frames": 16,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2048,
+        128
+      ],
+      "duration": "0.65s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.6",
+      "main_action": "Two cool-white wind threads stitch a segmented teal oath ring, rising lightly above token edges; use actual HP gain.",
+      "materials": "wind ribbons, segmented oath sigils and firm protective lattices",
+      "colors": "storm teal, ice-white, dark steel; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "heal",
+      "source_file": "vfx_hero_kaladin_first.png",
+      "sha256": "3b44bc7445a6fc79913f650b5fc4450a98e8da59c68598e1afce67086171235e",
+      "ability": "kaladinFirst",
+      "geometry": "self,1 cell",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "unitHealed from kaladinFirst; heal2 up to maximum.",
+      "end_condition": "Dissipate fully by0.65s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_KALADIN_FIFTH",
+      "file": "fifth_primary.png",
+      "batch": 6,
+      "frames": 32,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        4096,
+        128
+      ],
+      "duration": "1.4s total one-shot (per resolved segment for interactive chains)",
+      "fps": "22.9",
+      "main_action": "Storm-white vertical ribbon columns connect an angular oath lattice, surge as a coherent wind formation, dissipate to thin teal fragments. Failed defenses take2 and remain locked until caster next turn. Center is not required to be Kaladin.",
+      "materials": "wind ribbons, segmented oath sigils and firm protective lattices",
+      "colors": "storm teal, ice-white, dark steel; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "transform",
+      "source_file": "vfx_hero_kaladin_fifth_primary.png",
+      "sha256": "6bbfad550dbcc3a68fc85d841e075a0e85ff57d3ab355d057f8eaac684f1ee3e",
+      "ability": "kaladinFifth",
+      "geometry": "chosen5x5 square, allies and enemies can be attacked",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "aoeResolved.abilityId kaladinFifth; actual successful-target kaladinMoveLockSources.",
+      "end_condition": "Dissipate fully by1.4s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_KALADIN_FIFTH",
+      "file": "fifth_accent.png",
+      "batch": 6,
+      "frames": 32,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        4096,
+        128
+      ],
+      "duration": "1.4s total one-shot (per resolved segment for interactive chains)",
+      "fps": "22.9",
+      "main_action": "Storm-white vertical ribbon columns connect an angular oath lattice, surge as a coherent wind formation, dissipate to thin teal fragments. Failed defenses take2 and remain locked until caster next turn. Center is not required to be Kaladin.",
+      "materials": "wind ribbons, segmented oath sigils and firm protective lattices",
+      "colors": "storm teal, ice-white, dark steel; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "transform",
+      "source_file": "vfx_hero_kaladin_fifth_accent.png",
+      "sha256": "e42a6d41293c1eafd658057eca6e609fa24813c35f0d12da3bf9d57ece0c46ae",
+      "ability": "kaladinFifth",
+      "geometry": "chosen5x5 square, allies and enemies can be attacked",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "aoeResolved.abilityId kaladinFifth; actual successful-target kaladinMoveLockSources.",
+      "end_condition": "Dissipate fully by1.4s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    }
+  ]
+}

@@ -1,0 +1,157 @@
+﻿id,status,priority,productionTier,variant,variants,assetRelativePath,durationSec,sampleRate,channels,subtype,peakDbfs,description
+SFX_UI_CLICK,MISSING,ESSENTIAL,1,1,3,common/ui/buttonClick01.wav,0.089,48000,1,PCM_24,-10.51,"Soft dry wooden tick with a tiny metallic edge, reassuring and unobtrusive."
+SFX_UI_CLICK,MISSING,ESSENTIAL,1,2,3,common/ui/buttonClick02.wav,0.0905,48000,1,PCM_24,-10.51,"Soft dry wooden tick with a tiny metallic edge, reassuring and unobtrusive."
+SFX_UI_CLICK,MISSING,ESSENTIAL,1,3,3,common/ui/buttonClick03.wav,0.0911,48000,1,PCM_24,-10.51,"Soft dry wooden tick with a tiny metallic edge, reassuring and unobtrusive."
+SFX_UI_SELECT,MISSING,ESSENTIAL,1,1,1,common/ui/actionSelect.wav,0.1511,48000,1,PCM_24,-10.51,Focused two-part click with a short airy lift to indicate an action is now armed.
+SFX_UI_INVALID,MISSING,ESSENTIAL,1,1,1,common/ui/actionInvalid.wav,0.2232,48000,1,PCM_24,-10.51,Muted descending two-tone thunk with a small dull click; clearly unsuccessful without an alarm.
+SFX_UI_PENDING,MISSING,ESSENTIAL,1,1,1,common/ui/decisionReady.wav,0.3226,48000,1,PCM_24,-8.01,Brief clear bell-like two-note alert with an intimate dry finish; audible without sounding urgent.
+SFX_UI_TARGET,OPTIONAL,OPTIONAL,4,1,1,common/ui/targetConfirm.wav,0.115,48000,1,PCM_24,-10.51,"Tiny round confirmation pip with a tactile snap, less prominent than ability commitment."
+SFX_UI_MODAL,OPTIONAL,OPTIONAL,4,1,1,common/ui/modalOpen.wav,0.1833,48000,1,PCM_24,-10.51,Quiet paper-like swish ending in a soft tap.
+SFX_DICE_ROLL,MISSING,ESSENTIAL,1,1,4,common/combat/diceRoll01.wav,0.489,48000,1,PCM_24,-6.5,"Two or three small hard dice tumble on a padded tabletop, quick rattle and clean settle."
+SFX_DICE_ROLL,MISSING,ESSENTIAL,1,2,4,common/combat/diceRoll02.wav,0.4953,48000,1,PCM_24,-6.5,"Two or three small hard dice tumble on a padded tabletop, quick rattle and clean settle."
+SFX_DICE_ROLL,MISSING,ESSENTIAL,1,3,4,common/combat/diceRoll03.wav,0.5081,48000,1,PCM_24,-6.5,"Two or three small hard dice tumble on a padded tabletop, quick rattle and clean settle."
+SFX_DICE_ROLL,MISSING,ESSENTIAL,1,4,4,common/combat/diceRoll04.wav,0.516,48000,1,PCM_24,-6.5,"Two or three small hard dice tumble on a padded tabletop, quick rattle and clean settle."
+SFX_ATTACK,MISSING,ESSENTIAL,1,1,3,common/combat/attack01.wav,0.2942,48000,1,PCM_24,-6.5,"Short weapon swing or projectile release impression: clean air cut, light grip/metal accent, no impact."
+SFX_ATTACK,MISSING,ESSENTIAL,1,2,3,common/combat/attack02.wav,0.3004,48000,1,PCM_24,-6.5,"Short weapon swing or projectile release impression: clean air cut, light grip/metal accent, no impact."
+SFX_ATTACK,MISSING,ESSENTIAL,1,3,3,common/combat/attack03.wav,0.3048,48000,1,PCM_24,-6.5,"Short weapon swing or projectile release impression: clean air cut, light grip/metal accent, no impact."
+SFX_HIT,MISSING,ESSENTIAL,1,1,4,common/combat/hit01.wav,0.2839,48000,1,PCM_24,-6.5,"Compact solid impact with a blunt body and a sharp metallic crack; stylized, no gore."
+SFX_HIT,MISSING,ESSENTIAL,1,2,4,common/combat/hit02.wav,0.2921,48000,1,PCM_24,-6.5,"Compact solid impact with a blunt body and a sharp metallic crack; stylized, no gore."
+SFX_HIT,MISSING,ESSENTIAL,1,3,4,common/combat/hit03.wav,0.2954,48000,1,PCM_24,-6.5,"Compact solid impact with a blunt body and a sharp metallic crack; stylized, no gore."
+SFX_HIT,MISSING,ESSENTIAL,1,4,4,common/combat/hit04.wav,0.296,48000,1,PCM_24,-6.5,"Compact solid impact with a blunt body and a sharp metallic crack; stylized, no gore."
+SFX_MISS,MISSING,ESSENTIAL,1,1,3,common/combat/miss01.wav,0.2241,48000,1,PCM_24,-6.5,"Quick clean air swish passing by, ending softly; no impact."
+SFX_MISS,MISSING,ESSENTIAL,1,2,3,common/combat/miss02.wav,0.2258,48000,1,PCM_24,-6.5,"Quick clean air swish passing by, ending softly; no impact."
+SFX_MISS,MISSING,ESSENTIAL,1,3,3,common/combat/miss03.wav,0.2278,48000,1,PCM_24,-6.5,"Quick clean air swish passing by, ending softly; no impact."
+SFX_DEATH,MISSING,ESSENTIAL,1,1,2,common/combat/death01.wav,0.686,48000,1,PCM_24,-6.5,"Low stylized collapse, brief armor rattle and extinguishing magical whisper, without a human cry."
+SFX_DEATH,MISSING,ESSENTIAL,1,2,2,common/combat/death02.wav,0.7105,48000,1,PCM_24,-6.5,"Low stylized collapse, brief armor rattle and extinguishing magical whisper, without a human cry."
+SFX_HEAL,MISSING,ESSENTIAL,1,1,1,common/status/heal.wav,0.5726,48000,1,PCM_24,-9.0,Warm upward harmonic shimmer with a gentle rounded pulse that conveys restoration.
+SFX_AUTO_DEFENSE,MISSING,HIGH,1,1,1,common/combat/autoDefense.wav,0.3709,48000,1,PCM_24,-6.5,"Fast protective air snap and resonant small metal shield pulse, then an immediate damped stop."
+SFX_SPECIAL_ROLL,OPTIONAL,OPTIONAL,4,1,1,common/combat/specialRoll.wav,0.1506,48000,1,PCM_24,-6.5,Tiny bright crystalline accent over the dice settle; crisp and decisive.
+SFX_MOVE,MISSING,ESSENTIAL,1,1,4,common/movement/move01.wav,0.3669,48000,1,PCM_24,-6.5,Two restrained leather/stone foot contacts with a short fabric swish; tactical token movement rather than a long walking recording.
+SFX_MOVE,MISSING,ESSENTIAL,1,2,4,common/movement/move02.wav,0.3765,48000,1,PCM_24,-6.5,Two restrained leather/stone foot contacts with a short fabric swish; tactical token movement rather than a long walking recording.
+SFX_MOVE,MISSING,ESSENTIAL,1,3,4,common/movement/move03.wav,0.3738,48000,1,PCM_24,-6.5,Two restrained leather/stone foot contacts with a short fabric swish; tactical token movement rather than a long walking recording.
+SFX_MOVE,MISSING,ESSENTIAL,1,4,4,common/movement/move04.wav,0.38,48000,1,PCM_24,-6.5,Two restrained leather/stone foot contacts with a short fabric swish; tactical token movement rather than a long walking recording.
+SFX_RIDER_MOVE,MISSING,HIGH,3,1,3,common/movement/riderMove01.wav,0.4938,48000,1,PCM_24,-6.5,"Brief firm hoof-like double contact and air rush, weighty but quick."
+SFX_RIDER_MOVE,MISSING,HIGH,3,2,3,common/movement/riderMove02.wav,0.507,48000,1,PCM_24,-6.5,"Brief firm hoof-like double contact and air rush, weighty but quick."
+SFX_RIDER_MOVE,MISSING,HIGH,3,3,3,common/movement/riderMove03.wav,0.5061,48000,1,PCM_24,-6.5,"Brief firm hoof-like double contact and air rush, weighty but quick."
+SFX_HEAVY_MOVE,MISSING,MEDIUM,3,1,3,common/movement/heavyMove01.wav,0.3659,48000,1,PCM_24,-6.5,Heavy boot landing with a small armor jolt and short low thud.
+SFX_HEAVY_MOVE,MISSING,MEDIUM,3,2,3,common/movement/heavyMove02.wav,0.3787,48000,1,PCM_24,-6.5,Heavy boot landing with a small armor jolt and short low thud.
+SFX_HEAVY_MOVE,MISSING,MEDIUM,3,3,3,common/movement/heavyMove03.wav,0.3865,48000,1,PCM_24,-6.5,Heavy boot landing with a small armor jolt and short low thud.
+SFX_TELEPORT,MISSING,HIGH,1,1,2,common/movement/teleport01.wav,0.541,48000,1,PCM_24,-6.5,"Compressed magical inhale, sharp phase pop and short shimmering arrival; one self-contained cue."
+SFX_TELEPORT,MISSING,HIGH,1,2,2,common/movement/teleport02.wav,0.5628,48000,1,PCM_24,-6.5,"Compressed magical inhale, sharp phase pop and short shimmering arrival; one self-contained cue."
+SFX_FORCED_MOVE,MISSING,HIGH,1,1,2,common/movement/forcedMove01.wav,0.3737,48000,1,PCM_24,-6.5,Short scraping displacement with a pushing air burst and dull landing tap.
+SFX_FORCED_MOVE,MISSING,HIGH,1,2,2,common/movement/forcedMove02.wav,0.3758,48000,1,PCM_24,-6.5,Short scraping displacement with a pushing air burst and dull landing tap.
+SFX_STEALTH_ENTER,MISSING,HIGH,1,1,1,common/status/stealthEnter.wav,0.425,48000,1,PCM_24,-9.0,Soft fabric draw and granular shadow dissolve; restrained disappearance.
+SFX_STEALTH_REVEAL,MISSING,HIGH,1,1,1,common/status/stealthReveal.wav,0.3472,48000,1,PCM_24,-6.5,A small sharp veil tear followed by a clear dry presence accent.
+SFX_SEARCH,MISSING,HIGH,1,1,1,common/status/search.wav,0.4809,48000,1,PCM_24,-9.0,"One short airy scanning sweep with delicate metallic sparkle, no locating ping."
+SFX_STATUS_APPLIED,MISSING,HIGH,3,1,1,common/status/applied.wav,0.3026,48000,1,PCM_24,-9.0,Tight magical knot snapping shut with a short muted resonance.
+SFX_STATUS_TICK,MISSING,HIGH,3,1,2,common/status/damageTick01.wav,0.2214,48000,1,PCM_24,-9.0,"Small dry magical sting and low pulse, less forceful than a weapon hit."
+SFX_STATUS_TICK,MISSING,HIGH,3,2,2,common/status/damageTick02.wav,0.2293,48000,1,PCM_24,-9.0,"Small dry magical sting and low pulse, less forceful than a weapon hit."
+SFX_STATUS_END,OPTIONAL,OPTIONAL,4,1,1,common/status/expired.wav,0.2231,48000,1,PCM_24,-9.0,"Tiny damped release with a downward sparkle, understated relief."
+SFX_CHARGE_READY,OPTIONAL,OPTIONAL,4,1,1,common/ui/chargeReady.wav,0.2224,48000,1,PCM_24,-10.51,Quiet ascending single crystalline pip with a warm finish.
+SFX_TURN,MISSING,ESSENTIAL,1,1,1,common/ui/yourTurn.wav,0.3012,48000,1,PCM_24,-10.51,"Short round woodblock and gentle bell accent, ready without urgency."
+SFX_ROUND,OPTIONAL,OPTIONAL,4,1,1,common/ui/newRound.wav,0.5567,48000,1,PCM_24,-10.51,Low clear gong tap with a small bright upper accent and short decay.
+SFX_PLACEMENT,MISSING,MEDIUM,3,1,1,common/ui/placement.wav,0.3957,48000,1,PCM_24,-10.51,"Soft paired tabletop knocks and a tiny open bell, indicating preparation."
+SFX_BATTLE,MISSING,ESSENTIAL,1,1,1,common/ui/battleStart.wav,1.0541,48000,2,PCM_24,-5.51,"Compact martial percussion swell, brief metal accent and tense original harmonic hit."
+SFX_VICTORY,MISSING,ESSENTIAL,1,1,1,common/ui/victory.wav,1.605,48000,2,PCM_24,-5.51,Restrained triumphant original three-note rising chime over a firm percussion hit; no familiar fanfare.
+SFX_DEFEAT,MISSING,ESSENTIAL,1,1,1,common/ui/defeat.wav,1.3488,48000,1,PCM_24,-8.01,"Low descending original harmonic chime and soft hollow percussion, dignified rather than taunting."
+SFX_DRAW,MISSING,MEDIUM,3,1,1,common/ui/draw.wav,0.9609,48000,1,PCM_24,-10.51,Neutral balanced two-tone bell with a soft centered ending.
+SFX_ROOM_READY,MISSING,MEDIUM,3,1,1,common/ui/roomReady.wav,0.2984,48000,1,PCM_24,-10.51,Light pleasant confirmation chime with one rounded click.
+SFX_DISCONNECT,MISSING,HIGH,1,1,1,common/ui/connectionLost.wav,0.3979,48000,1,PCM_24,-10.51,Soft low two-note alert with a gentle dull pulse.
+SFX_RECONNECT,MISSING,MEDIUM,3,1,1,common/ui/connectionRestored.wav,0.3465,48000,1,PCM_24,-10.51,Quiet upward two-tone chime ending in a reassuring click.
+SFX_REACTION,MISSING,HIGH,1,1,1,common/combat/reactionAttack.wav,0.2269,48000,1,PCM_24,-6.5,"Very brief alerting weapon draw and air snap, sharper than UI selection but lighter than an impact."
+SFX_GENERIC_ABILITY,MISSING,HIGH,1,1,1,common/combat/ability.wav,0.4461,48000,1,PCM_24,-6.5,"Short neutral magical pressure pulse with a tiny metallic flick, adaptable to multiple tactical powers."
+SFX_TRICKSTER_AOE,MISSING,HIGH,1,1,1,common/combat/tricksterAoE.wav,0.6535,48000,1,PCM_24,-6.5,"Radial airy magical snap, small resonant center and quickly spreading shimmer; no target impacts baked in."
+SFX_RULE_EFFECT,MISSING,MEDIUM,3,1,1,common/combat/ruleEffect.wav,0.4251,48000,1,PCM_24,-6.5,Crisp seal-like magical stamp with a short authoritative metallic resonance.
+SFX_MOON_METEOR,MISSING,HIGH,2,1,1,common/combat/moonMeteor.wav,0.8788,48000,2,PCM_24,-4.0,"Small descending rocky air rush followed by a dense stone crack and dust burst, no cinematic sub-bass."
+SFX_KAISER_BUNKER_ENTER,MISSING,HIGH,2,1,1,heroes/grand-kaiser/abilities/kaiserBunkerEnter.wav,0.6491,48000,1,PCM_24,-6.5,"Heavy compact metal hatch closing, latch engaging and one short reinforced plating thump."
+SFX_KAISER_BUNKER_EXIT,MISSING,MEDIUM,3,1,1,heroes/grand-kaiser/abilities/kaiserBunkerExit.wav,0.4197,48000,1,PCM_24,-6.5,Short hatch latch release and muted sliding metal panel.
+SFX_KAISER_CARPET_LAUNCH,MISSING,HIGH,2,1,1,heroes/grand-kaiser/abilities/kaiserCarpetStrikeLaunch.wav,0.9053,48000,1,PCM_24,-6.5,Distant short air squadron rush with a mechanical release flutter; compact and nonvocal.
+SFX_KAISER_CARPET_IMPACT,MISSING,HIGH,2,1,1,heroes/grand-kaiser/abilities/kaiserCarpetStrikeImpact.wav,0.9943,48000,2,PCM_24,-4.0,"A tight cluster of three compact explosions, gravel fragments and clipped pressure cracks, covering a square area."
+SFX_VLAD_STARE,OPTIONAL,OPTIONAL,4,1,1,heroes/vladTepes/abilities/vladIntimidateActivate.wav,0.4003,48000,1,PCM_24,-6.5,"Low short supernatural pressure swell with a dry ominous scrape, without speech or a roar."
+SFX_VLAD_STAKE_PLACE,MISSING,HIGH,2,1,3,heroes/vladTepes/abilities/vladStakesPlace01.wav,0.3464,48000,1,PCM_24,-9.0,"Small dry wooden stake tap into soil, a subdued splinter creak and granular dirt crunch."
+SFX_VLAD_STAKE_PLACE,MISSING,HIGH,2,2,3,heroes/vladTepes/abilities/vladStakesPlace02.wav,0.3461,48000,1,PCM_24,-9.0,"Small dry wooden stake tap into soil, a subdued splinter creak and granular dirt crunch."
+SFX_VLAD_STAKE_PLACE,MISSING,HIGH,2,3,3,heroes/vladTepes/abilities/vladStakesPlace03.wav,0.3573,48000,1,PCM_24,-9.0,"Small dry wooden stake tap into soil, a subdued splinter creak and granular dirt crunch."
+SFX_VLAD_STAKE_TRIGGER,MISSING,HIGH,2,1,3,heroes/vladTepes/abilities/vladStakesTrigger01.wav,0.4119,48000,1,PCM_24,-6.5,"Sudden rising wood jab, taut snap and small impact thud; sharp tactical trap activation without gore."
+SFX_VLAD_STAKE_TRIGGER,MISSING,HIGH,2,2,3,heroes/vladTepes/abilities/vladStakesTrigger02.wav,0.4292,48000,1,PCM_24,-6.5,"Sudden rising wood jab, taut snap and small impact thud; sharp tactical trap activation without gore."
+SFX_VLAD_STAKE_TRIGGER,MISSING,HIGH,2,3,3,heroes/vladTepes/abilities/vladStakesTrigger03.wav,0.4282,48000,1,PCM_24,-6.5,"Sudden rising wood jab, taut snap and small impact thud; sharp tactical trap activation without gore."
+SFX_VLAD_FOREST,MISSING,HIGH,2,1,1,heroes/vladTepes/abilities/vladForestCast.wav,1.0025,48000,2,PCM_24,-4.0,"Dense spectral wooden spikes erupting in a short burst, dry cracks under a dark rising magical breath."
+SFX_SANS_BLASTER_CHARGE,OPTIONAL,OPTIONAL,4,1,1,heroes/sans/abilities/sansGasterBlasterCharge.wav,0.3458,48000,1,PCM_24,-6.5,Eerie compressed rising energy whine with crystalline high-frequency grit and a small low pressure build.
+SFX_SANS_BLASTER_FIRE,MISSING,HIGH,2,1,1,heroes/sans/abilities/sansGasterBlasterFire.wav,0.6921,48000,2,PCM_24,-4.0,"Short supernatural energy cannon discharge, sharp compressed beam crack with eerie high-frequency texture and a restrained low body."
+SFX_SANS_JOKE,MISSING,HIGH,2,1,1,heroes/sans/abilities/sansBadassJokeCast.wav,0.5545,48000,1,PCM_24,-6.5,"Playful but unsettling low magical pulse with a brittle bone rattle and abrupt air snap, no laughter or speech."
+SFX_SANS_BONE_FIELD,MISSING,HIGH,2,1,1,heroes/sans/abilities/sansBoneFieldActivate.wav,0.8909,48000,2,PCM_24,-4.0,"A short spreading chorus of dry bone-like clacks over hollow magical wind, resolving into an eerie low accent."
+SFX_SANS_CURSE_APPLY,MISSING,HIGH,2,1,1,heroes/sans/abilities/sansLastAttackApply.wav,0.545,48000,1,PCM_24,-6.5,"A thin ominous magical thread snapping onto a victim, low resonant pulse and brief dusty shimmer."
+SFX_SANS_CURSE_TICK,MISSING,HIGH,2,1,2,heroes/sans/abilities/sansLastAttackTick01.wav,0.2221,48000,1,PCM_24,-9.0,"Small spectral sting, dry granular crackle and a restrained low pulse, distinct from normal weapon damage."
+SFX_SANS_CURSE_TICK,MISSING,HIGH,2,2,2,heroes/sans/abilities/sansLastAttackTick02.wav,0.2295,48000,1,PCM_24,-9.0,"Small spectral sting, dry granular crackle and a restrained low pulse, distinct from normal weapon damage."
+SFX_SANS_CURSE_END,MISSING,MEDIUM,3,1,1,heroes/sans/abilities/sansLastAttackExpire.wav,0.3041,48000,1,PCM_24,-9.0,A fragile dark tension tone releases into a tiny dry sparkle and silence.
+SFX_ASGORE_FIREBALL_CAST,MISSING,HIGH,2,1,1,heroes/asgore/abilities/asgoreFireballCast.wav,0.5575,48000,1,PCM_24,-6.5,"Compact fire ignition and outward hot air whoosh, small ember crackle, no explosion at the end."
+SFX_ASGORE_FIREBALL_IMPACT,MISSING,HIGH,2,1,2,heroes/asgore/abilities/asgoreFireballImpact01.wav,0.4863,48000,2,PCM_24,-4.0,"Short fiery burst with a crisp pressure snap and scattered sizzling embers, no long roar."
+SFX_ASGORE_FIREBALL_IMPACT,MISSING,HIGH,2,2,2,heroes/asgore/abilities/asgoreFireballImpact02.wav,0.4994,48000,2,PCM_24,-4.0,"Short fiery burst with a crisp pressure snap and scattered sizzling embers, no long roar."
+SFX_ASGORE_FIREBALL_TRAVEL,OPTIONAL,OPTIONAL,4,1,1,heroes/asgore/abilities/asgoreFireballTravel.wav,0.2964,48000,1,PCM_24,-9.0,Brief thin burning-air streak with a tiny fluttering ember texture.
+SFX_ASGORE_FIRE_PARADE,MISSING,HIGH,2,1,1,heroes/asgore/abilities/asgoreFireParadeCast.wav,0.9044,48000,2,PCM_24,-4.0,"Radial sweeping ring of controlled flame, tight ignition at center and several compact hot gusts, no target explosions."
+SFX_ASGORE_SOUL_PARADE,MISSING,HIGH,2,1,1,heroes/asgore/abilities/asgoreSoulParadeReveal.wav,0.8007,48000,1,PCM_24,-6.5,"Six small original spectral harmonic glints converging into one warm magical pulse, with ethereal nonvocal texture."
+SFX_JACK_SNARE_PLACE,MISSING,HIGH,2,1,3,heroes/jackRipper/abilities/jackRipperSnaresPlace01.wav,0.2922,48000,1,PCM_24,-9.0,Quiet metal spring tension click with a tiny cloth/cord rustle and soft ground tap.
+SFX_JACK_SNARE_PLACE,MISSING,HIGH,2,2,3,heroes/jackRipper/abilities/jackRipperSnaresPlace02.wav,0.2997,48000,1,PCM_24,-9.0,Quiet metal spring tension click with a tiny cloth/cord rustle and soft ground tap.
+SFX_JACK_SNARE_PLACE,MISSING,HIGH,2,3,3,heroes/jackRipper/abilities/jackRipperSnaresPlace03.wav,0.306,48000,1,PCM_24,-9.0,Quiet metal spring tension click with a tiny cloth/cord rustle and soft ground tap.
+SFX_JACK_SNARE_TRIGGER,MISSING,HIGH,2,1,3,heroes/jackRipper/abilities/jackRipperSnaresTrigger01.wav,0.4151,48000,1,PCM_24,-6.5,"Fast taut cord cinch and metal spring snap with a small ground thud; clearly restraining, not an explosion."
+SFX_JACK_SNARE_TRIGGER,MISSING,HIGH,2,2,3,heroes/jackRipper/abilities/jackRipperSnaresTrigger02.wav,0.4203,48000,1,PCM_24,-6.5,"Fast taut cord cinch and metal spring snap with a small ground thud; clearly restraining, not an explosion."
+SFX_JACK_SNARE_TRIGGER,MISSING,HIGH,2,3,3,heroes/jackRipper/abilities/jackRipperSnaresTrigger03.wav,0.4369,48000,1,PCM_24,-6.5,"Fast taut cord cinch and metal spring snap with a small ground thud; clearly restraining, not an explosion."
+SFX_JACK_SNARE_EXPLODE,MISSING,HIGH,2,1,2,heroes/jackRipper/abilities/jackRipperCoveringTracksExplode01.wav,0.5946,48000,2,PCM_24,-4.0,"Compact improvised trap burst, spring shards and dusty short pressure pop, without gore."
+SFX_JACK_SNARE_EXPLODE,MISSING,HIGH,2,2,2,heroes/jackRipper/abilities/jackRipperCoveringTracksExplode02.wav,0.6035,48000,2,PCM_24,-4.0,"Compact improvised trap burst, spring shards and dusty short pressure pop, without gore."
+SFX_HASSAN_ORDER,OPTIONAL,OPTIONAL,4,1,1,heroes/hassan/phantasms/hassanAssasinOrderGrant.wav,0.5698,48000,1,PCM_24,-9.0,"Two soft sand-grain swirls folding into a quiet cloaking shimmer, no voice or sharp locating accents."
+SFX_GENGHIS_DECREE,MISSING,HIGH,2,1,1,heroes/genghisKhan/abilities/genghisKhanKhansDecreeActivate.wav,0.469,48000,1,PCM_24,-6.5,Brief commanding nonvocal bronze accent with a taut leather snap and wind lift.
+SFX_GENGHIS_CHARGE,MISSING,HIGH,2,1,1,heroes/genghisKhan/phantasms/genghisKhanMongolChargeActivate.wav,0.8235,48000,1,PCM_24,-6.5,"Short accelerating mounted rush, several close rhythmic hoof thumps and restrained metal gear jingle."
+SFX_GUTS_CROSSBOW,MISSING,HIGH,2,1,1,heroes/guts/abilities/gutsArbaletFire.wav,0.3,48000,1,PCM_24,-6.5,Taut small crossbow string release with a compact wood/metal click and fleeting bolt hiss.
+SFX_GUTS_CANNON,MISSING,HIGH,2,1,1,heroes/guts/abilities/gutsCannonFire.wav,0.4942,48000,2,PCM_24,-4.0,"Short hand-cannon pressure bark, brief metal recoil clank and dry smoke burst with controlled bass."
+SFX_GUTS_BERSERK,MISSING,HIGH,2,1,1,heroes/guts/phantasms/gutsBerserkModeActivate.wav,0.9014,48000,2,PCM_24,-4.0,Heavy armor tension locks with a dark rising nonvocal energy pulse and clipped powerful metal strike.
+SFX_GUTS_BERSERK_EXIT,MISSING,MEDIUM,3,1,1,heroes/guts/abilities/gutsExitBerserkRelease.wav,0.5577,48000,1,PCM_24,-9.0,"Short armor tension release, soft metal creaks and fading dark air pulse."
+SFX_GUTS_SWEEP,MISSING,HIGH,2,1,1,heroes/guts/phantasms/gutsBerserkModeSweep.wav,0.5454,48000,2,PCM_24,-4.0,"Wide heavy sword sweep, thick air cut and restrained metal resonance; no victim hits."
+SFX_GRIFFITH_REBIRTH,MISSING,HIGH,2,1,1,heroes/griffith/transformations/griffithFemtoRebirthTransform.wav,1.2392,48000,2,PCM_24,-4.0,"Deep compressed magical implosion opens into a hard crystalline wing-like flare, dark power and a decisive arrival thump."
+SFX_ODIN_SLEIPNIR,OPTIONAL,OPTIONAL,4,1,1,heroes/odin/abilities/odinSleipnirTeleport.wav,0.6549,48000,1,PCM_24,-6.5,"Compact galloping magical displacement, two bright hoof taps folding into a phase snap."
+SFX_LOKI_ENTANGLE,MISSING,HIGH,2,1,1,heroes/loki/phantasms/lokiLaughtEntangle.wav,0.5481,48000,1,PCM_24,-6.5,Playful coiling magic flutter tightening into a dry cord-like snap; no laugh or damage boom.
+SFX_LOKI_CHICKEN,MISSING,HIGH,2,1,1,heroes/loki/phantasms/lokiLaughtChicken.wav,0.471,48000,1,PCM_24,-6.5,"Small magical smoke puff, light feather flutter and comical rounded rubbery pop; no animal/human vocals."
+SFX_LOKI_SPIN,MISSING,MEDIUM,3,1,1,heroes/loki/phantasms/lokiLaughtSpin.wav,0.6186,48000,1,PCM_24,-6.5,Short mechanical ratchet whirl with glinting magical ticks and a decisive final click.
+SFX_JEBE_HAIL,MISSING,HIGH,2,1,1,heroes/jebe/abilities/jebeHailOfArrowsFire.wav,0.697,48000,1,PCM_24,-6.5,"Short clustered bow-string releases and a descending airy arrow volley, concise and dry."
+SFX_JEBE_RICOCHET,MISSING,HIGH,2,1,2,heroes/jebe/phantasms/jebeKhansShooterFire01.wav,0.3465,48000,1,PCM_24,-6.5,Focused bow release and narrow high arrow whistle with a tiny hard ricochet flick.
+SFX_JEBE_RICOCHET,MISSING,HIGH,2,2,2,heroes/jebe/phantasms/jebeKhansShooterFire02.wav,0.3493,48000,1,PCM_24,-6.5,Focused bow release and narrow high arrow whistle with a tiny hard ricochet flick.
+SFX_KALADIN_FIFTH,MISSING,HIGH,2,1,1,heroes/kaladin/phantasms/kaladinFifthCast.wav,0.8881,48000,2,PCM_24,-4.0,"Broad rising wind pressure opening into a crisp luminous binding pulse, airy power with restrained metal sparkle."
+SFX_ELCID_TISONA,MISSING,HIGH,2,1,1,heroes/elCidCompeador/abilities/elCidCompeadorTisonaSweep.wav,0.522,48000,1,PCM_24,-6.5,Fast clean sword arc with a bright vibrating steel edge and sharp directional air slice.
+SFX_ELCID_KOLADA,MISSING,HIGH,2,1,1,heroes/elCidCompeador/abilities/elCidCompeadorKoladaSweep.wav,0.5809,48000,1,PCM_24,-6.5,Short circular steel sweep with two tightly spaced blade accents and heavy trailing air.
+SFX_ELCID_DUELIST,MISSING,HIGH,2,1,1,heroes/elCidCompeador/phantasms/elCidCompeadorDemonDuelistActivate.wav,0.7603,48000,1,PCM_24,-6.5,"Low metal blade ring, tense brief magical pulse and sharp challenge-like blade draw, without speech."
+SFX_GROZNY_INVADE,MISSING,HIGH,2,1,1,heroes/grozny/abilities/groznyInvadeTimeTeleport.wav,0.6439,48000,1,PCM_24,-6.5,"Low time-warp suck, gritty dark phase crack and firm arrival accent."
+SFX_GROZNY_TYRANT,MISSING,HIGH,2,1,1,heroes/grozny/abilities/groznyTyrantActivate.wav,0.6755,48000,1,PCM_24,-6.5,"Short oppressive metal grind and low nonvocal magical pressure hit, abrupt and severe."
+SFX_FRISK_HUGS,MISSING,HIGH,2,1,1,heroes/frisk/phantasms/friskPacifismHugs.wav,0.4777,48000,1,PCM_24,-9.0,"Gentle warm rounded pulse, soft fabric fold and short reassuring magical shimmer, no voice."
+SFX_FRISK_PRECISION,MISSING,HIGH,2,1,1,heroes/frisk/phantasms/friskGenocidePrecisionStrike.wav,0.354,48000,1,PCM_24,-6.5,"Tight pointed weapon release, small focused metallic shimmer and quick air cut, no baked damage."
+SFX_SUBSTITUTION,MISSING,HIGH,3,1,1,common/status/substitution.wav,0.3966,48000,1,PCM_24,-6.5,"Sharp fabric flick and magical decoy puff, then a small deflected thud; evasive and readable."
+SFX_FRISK_ONE_PATH,OPTIONAL,OPTIONAL,4,1,1,heroes/frisk/phantasms/friskOnePathUnlock.wav,0.6453,48000,1,PCM_24,-6.5,Small warm harmonic tone turns into a dry dark metallic click and compressed low pulse.
+SFX_PAPYRUS_BLUE,MISSING,HIGH,2,1,1,heroes/papyrus/abilities/papyrusBlueBoneApply.wav,0.3479,48000,1,PCM_24,-9.0,"Hollow bone-like chime and crisp cool crystalline tap, clearly one applied condition."
+SFX_PAPYRUS_ORANGE,MISSING,HIGH,2,1,1,heroes/papyrus/abilities/papyrusOrangeBoneApply.wav,0.3455,48000,1,PCM_24,-9.0,"Dry warm wooden-bone clack with a small rising rattly shimmer, distinct from blue chime."
+SFX_BONE_PUNISH,MISSING,HIGH,3,1,2,common/status/bonePunish01.wav,0.27,48000,1,PCM_24,-6.5,"Small sharp bone rattle and magical sting, clipped dry body with a short gritty finish."
+SFX_BONE_PUNISH,MISSING,HIGH,3,2,2,common/status/bonePunish02.wav,0.2802,48000,1,PCM_24,-6.5,"Small sharp bone rattle and magical sting, clipped dry body with a short gritty finish."
+SFX_AWAKEN,MISSING,HIGH,2,1,1,common/status/awaken.wav,0.7715,48000,2,PCM_24,-4.0,Low restrained tension rise into a bright brittle power crack and a short hollow resonance.
+SFX_PAPYRUS_LINE,MISSING,HIGH,2,1,1,heroes/papyrus/abilities/papyrusCoolGuyFire.wav,0.6078,48000,1,PCM_24,-6.5,"Quick chain of hollow clacks swept through a narrow air slice, with a firm magical release."
+SFX_METTATON_POPPINS,MISSING,HIGH,2,1,1,heroes/mettaton/abilities/mettatonPoppinsFire.wav,0.6729,48000,1,PCM_24,-6.5,Compact theatrical mechanical launcher pop and airy clustered projectiles with a polished electronic edge.
+SFX_METTATON_LASER,MISSING,HIGH,2,1,1,heroes/mettaton/abilities/mettatonLaserFire.wav,0.6483,48000,1,PCM_24,-6.5,"Clean rising electronic energy edge followed by a sharp narrow laser crack, short luminous hiss."
+SFX_METTATON_EX,MISSING,HIGH,2,1,1,heroes/mettaton/transformations/mettatonExTransform.wav,0.9162,48000,1,PCM_24,-6.5,"Precise mechanical panel reconfiguration, short rising synth glint and polished locking snap."
+SFX_METTATON_NEO,MISSING,HIGH,2,1,1,heroes/mettaton/transformations/mettatonNeoTransform.wav,1.1455,48000,2,PCM_24,-4.0,"Larger layered mechanical unfolding, bright compressed energy build and strong final lock snap."
+SFX_METTATON_FINAL,MISSING,HIGH,2,1,1,heroes/mettaton/phantasms/mettatonFinalChordFire.wav,0.9979,48000,2,PCM_24,-4.0,"One original synthetic harmonic stab blended with radial beam releases, brilliant but short; a sound effect, not a tune."
+SFX_UNDYNE_REVIVE,MISSING,HIGH,2,1,1,heroes/undyne/abilities/undyneUndyingRevive.wav,1.0088,48000,2,PCM_24,-4.0,"Defiant nonvocal rising energy surge, bright spear-metal ring and short forceful rebirth pulse."
+SFX_RIVER_BOAT_LAUNCH,MISSING,HIGH,2,1,1,heroes/riverPerson/abilities/riverBoatLaunch.wav,0.5229,48000,1,PCM_24,-6.5,"Short wooden hull creak and gentle water push, a compact swish suggesting a spectral ferry launching."
+SFX_RIVER_BOAT_PICKUP,MISSING,MEDIUM,3,1,1,heroes/riverPerson/abilities/riverBoatPickup.wav,0.3448,48000,1,PCM_24,-9.0,"One soft footboard thump, muted rope tension and tiny water lap."
+SFX_RIVER_BOAT_MOVE,MISSING,HIGH,2,1,3,heroes/riverPerson/abilities/riverBoatMove01.wav,0.5896,48000,1,PCM_24,-6.5,Brief smooth water swish under two subdued hull creaks; quiet spectral ferry gliding.
+SFX_RIVER_BOAT_MOVE,MISSING,HIGH,2,2,3,heroes/riverPerson/abilities/riverBoatMove02.wav,0.6048,48000,1,PCM_24,-6.5,Brief smooth water swish under two subdued hull creaks; quiet spectral ferry gliding.
+SFX_RIVER_BOAT_MOVE,MISSING,HIGH,2,3,3,heroes/riverPerson/abilities/riverBoatMove03.wav,0.61,48000,1,PCM_24,-6.5,Brief smooth water swish under two subdued hull creaks; quiet spectral ferry gliding.
+SFX_RIVER_BOAT_DROP,MISSING,HIGH,2,1,1,heroes/riverPerson/abilities/riverBoatDisembark.wav,0.3778,48000,1,PCM_24,-9.0,"Gentle wooden footfall, small settling creak and short soft water lap."
+SFX_RIVER_BOAT_STOP,MISSING,MEDIUM,3,1,1,heroes/riverPerson/abilities/riverBoatInterrupted.wav,0.3551,48000,1,PCM_24,-6.5,"Short abrupt hull check, taut creak and small water slap, subdued unsuccessful stop."
+SFX_RIVER_TRALALA,MISSING,HIGH,2,1,1,heroes/riverPerson/phantasms/riverTraLaLaActivate.wav,0.7551,48000,1,PCM_24,-6.5,"Three small original buoyant bell-like pips over a spectral wooden/water swell, rhythmic but nonvocal and not a recognizable melody."
+SFX_RIVER_BOATMAN,OPTIONAL,OPTIONAL,4,1,1,heroes/riverPerson/abilities/riverBoatmanGrant.wav,0.3476,48000,1,PCM_24,-9.0,"Small wooden oar-lock click with a quiet rising water-like shimmer, signaling movement restored."
+SFX_DUOLINGO_PUSH,MISSING,HIGH,2,1,1,heroes/duolingo/abilities/duolingoPushNotificationTeleport.wav,0.55,48000,1,PCM_24,-6.5,Original crisp two-tone notification-like glint wrapped in a small phase-pop and airy landing shimmer.
+SFX_LUCHE_RAY,MISSING,HIGH,2,1,1,heroes/luche/abilities/lucheDivineRayFire.wav,0.6075,48000,1,PCM_24,-6.5,"Focused bright light discharge with a fine metallic ring, compressed radiant hiss and immediate clean decay."
+SFX_LUCHE_SUN,MISSING,HIGH,2,1,1,heroes/luche/phantasms/lucheBurningSunCast.wav,0.9603,48000,2,PCM_24,-4.0,"Short luminous falling-energy rush into a dense warm radiant pressure pulse, bright grit with restrained bass."
+SFX_ZORO_ONI,MISSING,HIGH,2,1,1,heroes/zoro/abilities/zoroOniGiriDash.wav,0.5683,48000,1,PCM_24,-6.5,"Quick forceful dash swish with three tiny steel draw accents and a clipped stopping scrape, no victim hit baked in."
+SFX_ZORO_ASURA,MISSING,HIGH,2,1,1,heroes/zoro/phantasms/zoroAsuraCast.wav,0.8127,48000,2,PCM_24,-4.0,Layered but concise multi-blade air cuts over a dark magical pressure swell and bright steel ring.
+SFX_DON_WINDMILLS,MISSING,HIGH,2,1,1,heroes/donKihote/abilities/donKihoteWindmillsDash.wav,0.7695,48000,1,PCM_24,-6.5,"Short enthusiastic mounted lance rush, leather tack creak and firm hoof accents, ending in a neat stop."
+SFX_DON_MADNESS,MISSING,HIGH,2,1,1,heroes/donKihote/phantasms/donKihoteMadnessFinalAttack.wav,0.8167,48000,1,PCM_24,-6.5,"Brief rising mounted-warrior energy gust and sweeping metallic lance release, tragic and decisive, without voices."
+SFX_ARTEMIS_REVEAL,MISSING,HIGH,2,1,1,heroes/artemida/abilities/artemidaMoonlightShotScan.wav,0.699,48000,1,PCM_24,-6.5,"Cool silvery light sweep with tiny crystal sparks and one clean presence pulse, serene but clear."
+SFX_ARTEMIS_CRESCENT,MISSING,HIGH,2,1,1,heroes/artemida/phantasms/artemidaSilverCrescentFire.wav,0.7791,48000,1,PCM_24,-6.5,"Thin silver blade-like moon arc, clear ringing air cut and a compact shimmering energy release."
+SFX_PONG_BOUNCE,OPTIONAL,OPTIONAL,4,1,2,common/combat/pongBounce01.wav,0.0894,48000,1,PCM_24,-9.0,"Tiny dry rounded arcade ping with a short wood-like attack, suitable for rapid paddle impacts."
+SFX_PONG_BOUNCE,OPTIONAL,OPTIONAL,4,2,2,common/combat/pongBounce02.wav,0.0901,48000,1,PCM_24,-9.0,"Tiny dry rounded arcade ping with a short wood-like attack, suitable for rapid paddle impacts."

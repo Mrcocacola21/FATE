@@ -1,0 +1,181 @@
+{
+  "schema": "fate_asset_library_documentation_v1",
+  "note": "Metadata only; not connected to runtime.",
+  "assets": [
+    {
+      "id": "VFX_MOVEMENT_RIDER",
+      "file": "movement_rider.png",
+      "batch": 1,
+      "frames": 11,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1408,
+        128
+      ],
+      "duration": "0.45s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.4",
+      "main_action": "Three low ochre dust ticks behind each reached cell, pace aligned to movement and path attacks. End at stake/forest/snare stop, never intended unvisited destination.",
+      "materials": "compact generic impact/dust/guard/icon geometry",
+      "colors": "ivory, desaturated steel, restrained amber; status-specific secondary tones",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "trail",
+      "source_file": "vfx_movement_rider.png",
+      "sha256": "ffbc3d5b5e30228ca0170d699dfdb8986c1dd114fd4bff42c695cce8021a31ef",
+      "ability": "move",
+      "geometry": "path, width 0.22 cell",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "unitMoved plus authorized chosen rider mode; confirmed reached path only.",
+      "end_condition": "Dissipate fully by0.45s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "MISSING",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_MOVEMENT_BERSERKER",
+      "file": "movement_berserker.png",
+      "batch": 1,
+      "frames": 10,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1280,
+        128
+      ],
+      "duration": "0.4s total one-shot (per resolved segment for interactive chains)",
+      "fps": "25.0",
+      "main_action": "Short broken stone scuff and strong directional notch. Roll 6 permits long paths but does not justify a full-board wave.",
+      "materials": "compact generic impact/dust/guard/icon geometry",
+      "colors": "ivory, desaturated steel, restrained amber; status-specific secondary tones",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "trail",
+      "source_file": "vfx_movement_berserker.png",
+      "sha256": "1b57409a6d77604782886de735f083667aafed7df0c7891c07f0d3ab0d81ff87",
+      "ability": "move",
+      "geometry": "actual path, 0.3-cell-wide dust",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "unitMoved with recipient-known berserker mode after roll-constrained destination accepted.",
+      "end_condition": "Dissipate fully by0.4s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "MISSING",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_MOVEMENT_ASSASSIN",
+      "file": "movement_assassin.png",
+      "batch": 1,
+      "frames": 8,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1024,
+        128
+      ],
+      "duration": "0.32s total one-shot (per resolved segment for interactive chains)",
+      "fps": "25.0",
+      "main_action": "Quiet charcoal cut trail; only visible endpoints, no speculative intermediate footprint if transit isn't recorded.",
+      "materials": "compact generic impact/dust/guard/icon geometry",
+      "colors": "ivory, desaturated steel, restrained amber; status-specific secondary tones",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "smoke",
+      "source_file": "vfx_movement_assassin.png",
+      "sha256": "56c403b59cf61b10b98b147f2b135f919bbc6c3a09fec7b4accacccf9c7fd841",
+      "ability": "move",
+      "geometry": "departure and destination, 0.7 cell",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "unitMoved with authorized assassin mode and visible from/to.",
+      "end_condition": "Dissipate fully by0.32s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "MISSING",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_MOVEMENT_TRICKSTER",
+      "file": "movement_trickster.png",
+      "batch": 1,
+      "frames": 12,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1536,
+        128
+      ],
+      "duration": "0.5s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.0",
+      "main_action": "Folded violet contour at departure, matching seam at arrival. A teleport does not draw ground travel, intermediate hits or hazards.",
+      "materials": "compact generic impact/dust/guard/icon geometry",
+      "colors": "ivory, desaturated steel, restrained amber; status-specific secondary tones",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "portal",
+      "source_file": "vfx_movement_trickster.png",
+      "sha256": "5deb329845fcbfb1f70d7bdc0e94e11ce7d27ee4bd63db8c3fd0f7a66d119fd6",
+      "ability": "move",
+      "geometry": "two endpoints, 1 cell each; no traversed cells",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "unitMoved with authorized trickster mode; existing roll 1-4 selects within distance 2, 5-6 any empty cell.",
+      "end_condition": "Dissipate fully by0.5s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "MISSING",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_MOVEMENT_INTERRUPTED",
+      "file": "movement_interrupted.png",
+      "batch": 1,
+      "frames": 8,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1024,
+        128
+      ],
+      "duration": "0.35s total one-shot (per resolved segment for interactive chains)",
+      "fps": "22.9",
+      "main_action": "Trail cuts sharply at stop cell, a tiny squared stop bracket remains for 0.3s. Hazard eruption plays separately. Do not show destination arrival.",
+      "materials": "compact generic impact/dust/guard/icon geometry",
+      "colors": "ivory, desaturated steel, restrained amber; status-specific secondary tones",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "trail",
+      "source_file": "vfx_movement_interrupted.png",
+      "sha256": "11db2dd73bc3a43ccc40baa319973a77ca0035ca22de6c3ca0c41fa2bb7fdd5c",
+      "ability": "stakeTriggered / moveBlocked",
+      "geometry": "actual stop cell and reached path cap",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "Confirmed stakeTriggered.stopped === true; forest stop or snare actual stopped transition; moveBlocked only reports noLegalDestinations.",
+      "end_condition": "Dissipate fully by0.35s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "MISSING",
+      "availability_status": "AVAILABLE"
+    }
+  ]
+}

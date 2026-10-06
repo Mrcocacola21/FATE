@@ -1,0 +1,181 @@
+{
+  "schema": "fate_asset_library_documentation_v1",
+  "note": "Metadata only; not connected to runtime.",
+  "assets": [
+    {
+      "id": "VFX_ELCID_TISONA",
+      "file": "tisona_primary.png",
+      "batch": 6,
+      "frames": 22,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2816,
+        128
+      ],
+      "duration": "0.9s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.4",
+      "main_action": "Silver sword-edge rail with burgundy bevel slashes in a measured clean line, sharp contact accents and brief ceremonial gold tail.",
+      "materials": "ceremonial straight sword lines, orbiting blade crescents and duel intersections",
+      "colors": "silver, burgundy, dusk gold; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "beam",
+      "source_file": "vfx_hero_elcid_tisona_primary.png",
+      "sha256": "dfb16b629d5d110c7e6a6678d4dfdb6304192fa5d1b60bfe7c85944421eca242",
+      "ability": "elCidCompeadorTisona",
+      "geometry": "one selected orthogonal ray from source to board edge, all units in that direction; opposite half-line excluded, no diagonals",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "Committed Tisona and aoeResolved associated legal line.",
+      "end_condition": "Dissipate fully by0.9s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_ELCID_TISONA",
+      "file": "tisona_accent.png",
+      "batch": 6,
+      "frames": 22,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2816,
+        128
+      ],
+      "duration": "0.9s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.4",
+      "main_action": "Silver sword-edge rail with burgundy bevel slashes in a measured clean line, sharp contact accents and brief ceremonial gold tail.",
+      "materials": "ceremonial straight sword lines, orbiting blade crescents and duel intersections",
+      "colors": "silver, burgundy, dusk gold; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "beam",
+      "source_file": "vfx_hero_elcid_tisona_accent.png",
+      "sha256": "45316cd6975934e1594d8d3b0bea2ea27b6ba968af03ec949095e9293d6706f4",
+      "ability": "elCidCompeadorTisona",
+      "geometry": "one selected orthogonal ray from source to board edge, all units in that direction; opposite half-line excluded, no diagonals",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "Committed Tisona and aoeResolved associated legal line.",
+      "end_condition": "Dissipate fully by0.9s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_ELCID_KOLADA",
+      "file": "kolada.png",
+      "batch": 6,
+      "frames": 22,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2816,
+        128
+      ],
+      "duration": "0.9s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.4",
+      "main_action": "Two silver-gold ceremonial blade crescents orbit once in a low angular ring, hit exactly resolved nearby units, burgundy friction chips fade fast.",
+      "materials": "ceremonial straight sword lines, orbiting blade crescents and duel intersections",
+      "colors": "silver, burgundy, dusk gold; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "blades",
+      "source_file": "vfx_hero_elcid_kolada.png",
+      "sha256": "c1d492416eacb3f0ccb14f8834b211a653a8ffc64488a65d417c4b9e543aa433",
+      "ability": "elCidCompeadorKolada",
+      "geometry": "source-centered3x3 within1cell",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "Committed elCidCompeadorKolada at charged turn start; aoeResolved center/radius1.",
+      "end_condition": "Dissipate fully by0.9s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_ELCID_DUEL",
+      "file": "duel_primary.png",
+      "batch": 6,
+      "frames": 29,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3712,
+        128
+      ],
+      "duration": "1.2s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.2",
+      "main_action": "Paired burgundy-gold swordpoint brackets bind the two tokens; each successful strike is a distinct clean cut. After miss wait quietly; paying1HP gets tiny self-damage cue then next actual attack, stop on refusal.",
+      "materials": "ceremonial straight sword lines, orbiting blade crescents and duel intersections",
+      "colors": "silver, burgundy, dusk gold; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "blades",
+      "source_file": "vfx_hero_elcid_duel_primary.png",
+      "sha256": "4f7bccd9eef5a313ce6edcfc680d8c69a4e9257f0a815c9e068523631db1e42b",
+      "ability": "elCidCompeadorDemonDuelist",
+      "geometry": "two actual duelists,1cell each; connector0.1cell",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "Committed enemy hero target and normal duel attackResolved chain; pending elCidDuelistChoice after failed attack.",
+      "end_condition": "Dissipate fully by1.2s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_ELCID_DUEL",
+      "file": "duel_accent.png",
+      "batch": 6,
+      "frames": 29,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3712,
+        128
+      ],
+      "duration": "1.2s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.2",
+      "main_action": "Paired burgundy-gold swordpoint brackets bind the two tokens; each successful strike is a distinct clean cut. After miss wait quietly; paying1HP gets tiny self-damage cue then next actual attack, stop on refusal.",
+      "materials": "ceremonial straight sword lines, orbiting blade crescents and duel intersections",
+      "colors": "silver, burgundy, dusk gold; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "blades",
+      "source_file": "vfx_hero_elcid_duel_accent.png",
+      "sha256": "ac3c2f222b0be202391b1335038e99b331aeb1d3b454c33be896cd729c4362af",
+      "ability": "elCidCompeadorDemonDuelist",
+      "geometry": "two actual duelists,1cell each; connector0.1cell",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "Committed enemy hero target and normal duel attackResolved chain; pending elCidDuelistChoice after failed attack.",
+      "end_condition": "Dissipate fully by1.2s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    }
+  ]
+}

@@ -1,0 +1,181 @@
+{
+  "schema": "fate_asset_library_documentation_v1",
+  "note": "Metadata only; not connected to runtime.",
+  "assets": [
+    {
+      "id": "VFX_CHIKATILO_FALSE_TRAIL",
+      "file": "false_trail.png",
+      "batch": 4,
+      "frames": 13,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1664,
+        128
+      ],
+      "duration": "0.55s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.6",
+      "main_action": "Public decoy receives a dull ash outline pulse at its real visible deployment cell; owner gets a very quiet crimson sand vanish at secret Chikatilo placement. No beam linking the token to real hero.",
+      "materials": "inklike marks, decoy silhouettes and close ground smoke; no graphic gore",
+      "colors": "dirty crimson, ash grey, dull amber tracking accents; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "smoke",
+      "source_file": "vfx_hero_chikatilo_false_trail.png",
+      "sha256": "d220aa1b1d86d125f661b53b664540735306d7a04ed0c696a051529a7ce269fb",
+      "ability": "chikatiloFalseTrail",
+      "geometry": "public decoy cell and owner-private actual cell, never connected",
+      "visibility": "PUBLIC",
+      "visibility_detail": "public decoy feedback to both/spectators; hidden placement only owner",
+      "gameplay_trigger": "Owner chikatiloFalseTrailPlacement resolves hidden actual placement; public falseTrailToken at deployment cell.",
+      "end_condition": "Dissipate fully by0.55s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "MISSING",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_CHIKATILO_MARK",
+      "file": "mark.png",
+      "batch": 4,
+      "frames": 16,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2048,
+        128
+      ],
+      "duration": "0.65s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.6",
+      "main_action": "Small dirty-crimson broken ink seal appears at target for owner, transitions to restrained amber tracking notch when exactTrackingActive. No source glow/line from hidden assassin; no opponent target mark emit.",
+      "materials": "inklike marks, decoy silhouettes and close ground smoke; no graphic gore",
+      "colors": "dirty crimson, ash grey, dull amber tracking accents; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "sigil",
+      "source_file": "vfx_hero_chikatilo_mark.png",
+      "sha256": "1b7e72d0410645535de5b08aeff2023eccbb3f3f0cd116237f7ceba5c6d8a1e4",
+      "ability": "chikatiloAssassinMark",
+      "geometry": "owner-known target0.8 cell; small M badge",
+      "visibility": "OWNER ONLY",
+      "visibility_detail": "Chikatilo owner only",
+      "gameplay_trigger": "chikatiloMarkApplied.ownerPlayerId, tracked mark state begins on source next own turn, expires after marked unit turn.",
+      "end_condition": "Dissipate fully by0.65s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_CHIKATILO_DECOY",
+      "file": "decoy.png",
+      "batch": 4,
+      "frames": 14,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1792,
+        128
+      ],
+      "duration": "0.6s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.3",
+      "main_action": "Ash-black duplicate contour crumples into a small crimson slit; stealth version quietly erodes token for owner; defense version takes a single subdued fixed-damage spark. Do not show real hidden relocation.",
+      "materials": "inklike marks, decoy silhouettes and close ground smoke; no graphic gore",
+      "colors": "dirty crimson, ash grey, dull amber tracking accents; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "smoke",
+      "source_file": "vfx_hero_chikatilo_decoy.png",
+      "sha256": "baff58ac89735778d0f25412ac8565be82c2d06d0286f6ac1b3c22f13feff229",
+      "ability": "chikatiloDecoy",
+      "geometry": "owner source1cell for stealth; actual public defender0.8cell if visible",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "Committed chikatiloDecoyStealth automatic success after3 Decoy Points; accepted chikatiloDecoyChoice before defense leads fixed1 damage.",
+      "end_condition": "Dissipate fully by0.6s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "MISSING",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_FALSE_TRAIL_EXPLOSION",
+      "file": "false_trail_explosion_primary.png",
+      "batch": 4,
+      "frames": 23,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2944,
+        128
+      ],
+      "duration": "0.95s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.2",
+      "main_action": "Public decoy ash shell implodes then releases close jagged crimson-grey fragmentation across exact square. Reveal of real hero is separate and only at newly public coordinate. No connective plume toward hidden hero.",
+      "materials": "inklike marks, decoy silhouettes and close ground smoke; no graphic gore",
+      "colors": "dirty crimson, ash grey, dull amber tracking accents; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "blast",
+      "source_file": "vfx_hero_false_trail_explosion_primary.png",
+      "sha256": "e98a07595d2232b7201df42fa6d2106aa820e45803295de48db32e7c56c32181",
+      "ability": "falseTrailExplosion",
+      "geometry": "actual public decoy-centered resolved radius1 3x3; exclude caster if rules do",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "aoeResolved falseTrailExplosion after actual Chikatilo reveal or token destruction branch.",
+      "end_condition": "Dissipate fully by0.95s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_FALSE_TRAIL_EXPLOSION",
+      "file": "false_trail_explosion_accent.png",
+      "batch": 4,
+      "frames": 23,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2944,
+        128
+      ],
+      "duration": "0.95s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.2",
+      "main_action": "Public decoy ash shell implodes then releases close jagged crimson-grey fragmentation across exact square. Reveal of real hero is separate and only at newly public coordinate. No connective plume toward hidden hero.",
+      "materials": "inklike marks, decoy silhouettes and close ground smoke; no graphic gore",
+      "colors": "dirty crimson, ash grey, dull amber tracking accents; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "blast",
+      "source_file": "vfx_hero_false_trail_explosion_accent.png",
+      "sha256": "7ff04b520de1fa49f1413ac6d98ed93e43a680167632848f2553d7a1bf595f70",
+      "ability": "falseTrailExplosion",
+      "geometry": "actual public decoy-centered resolved radius1 3x3; exclude caster if rules do",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "aoeResolved falseTrailExplosion after actual Chikatilo reveal or token destruction branch.",
+      "end_condition": "Dissipate fully by0.95s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    }
+  ]
+}

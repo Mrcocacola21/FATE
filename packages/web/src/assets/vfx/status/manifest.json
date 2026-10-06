@@ -1,0 +1,147 @@
+{
+  "schema": "fate_asset_library_documentation_v1",
+  "note": "Metadata only; not connected to runtime.",
+  "assets": [
+    {
+      "id": "VFX_STEALTH_ENTER",
+      "file": "stealth_enter.png",
+      "batch": 1,
+      "frames": 12,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1536,
+        128
+      ],
+      "duration": "0.5s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.0",
+      "main_action": "Sand/smoke contour thins into gaps while owner token stays identifiable. Failure uses neutral broken seal. Enemy receives no world emit at hidden current cell.",
+      "materials": "compact generic impact/dust/guard/icon geometry",
+      "colors": "ivory, desaturated steel, restrained amber; status-specific secondary tones",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "smoke",
+      "source_file": "vfx_stealth_enter.png",
+      "sha256": "fb318358957028f1004bc63dfae74c6840888d1726e78d33dcd3058af69517e4",
+      "ability": "enterStealth",
+      "geometry": "owner-visible source token, 1 cell",
+      "visibility": "OWNER ONLY",
+      "visibility_detail": "owner only; no enemy or spectator hidden-position emit",
+      "gameplay_trigger": "stealthEntered.success !== false and confirmed isStealthed false -> true in owner's projected unit.",
+      "end_condition": "Dissipate fully by0.5s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_STEALTH_REVEAL",
+      "file": "stealth_enter.png",
+      "batch": 1,
+      "frames": 12,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1536,
+        128
+      ],
+      "duration": "0.5s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.0",
+      "main_action": "Existing smoke emergence and readable rim flash. Ordinary expiration is quieter than Search discovery. Never use stale hidden coordinates for an enemy reveal.",
+      "materials": "compact generic impact/dust/guard/icon geometry",
+      "colors": "ivory, desaturated steel, restrained amber; status-specific secondary tones",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "smoke",
+      "source_file": "vfx_stealth_reveal.png",
+      "sha256": "fb318358957028f1004bc63dfae74c6840888d1726e78d33dcd3058af69517e4",
+      "ability": "stealthRevealed",
+      "geometry": "newly public unit cell, 1 cell",
+      "visibility": "PUBLIC AFTER REVEAL",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "stealthRevealed with authorized visible coordinate; reason determines attack, search, timer expiration or hazard reveal.",
+      "end_condition": "Dissipate fully by0.5s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "alias_note": "Byte-identical source is deliberately mapped to the canonical shared strip. Enter/reveal differ by recipient permission and playback context.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_SEARCH_CAST",
+      "file": "search_cast.png",
+      "batch": 1,
+      "frames": 16,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2048,
+        128
+      ],
+      "duration": "0.65s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.6",
+      "main_action": "Existing small reveal-star scan around searcher; successful target uses STEALTH_REVEAL only once visibility is confirmed. Failure ends at searcher with a dim notch, never at failed candidate location.",
+      "materials": "compact generic impact/dust/guard/icon geometry",
+      "colors": "ivory, desaturated steel, restrained amber; status-specific secondary tones",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "sigil",
+      "source_file": "vfx_search_cast.png",
+      "sha256": "15d4236c3c6e7ee55ae63c2ed1c21b4bf3a566827af726f4b5457e859458a414",
+      "ability": "searchStealth",
+      "geometry": "searching token, 1 cell",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "Committed Search rollRequested then searchStealth; source must be visible to recipient.",
+      "end_condition": "Dissipate fully by0.65s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_STATUS_SMALL",
+      "file": "status_small.png",
+      "batch": 1,
+      "frames": 1,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        128,
+        128
+      ],
+      "duration": "2.4s restrained CSS cycle; state lifetime is controlled below",
+      "fps": "1 source frame; CSS pulse at browser refresh",
+      "main_action": "Use chain notch for immobilized/entangled, closed-eye sliver for Blind, small blue/orange bone glyph for bone rules, feather knot for Chicken. Keep persistent UI pills; no aura obscuring tokens.",
+      "materials": "compact generic impact/dust/guard/icon geometry",
+      "colors": "ivory, desaturated steel, restrained amber; status-specific secondary tones",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "status_atlas",
+      "source_file": "vfx_status_small.png",
+      "sha256": "2189a8e727636e746fb0d290797f9cf2f942e09384138893d419ad783e7e52c5",
+      "ability": "status state",
+      "geometry": "0.18-0.25 cell corner icon or thin perimeter ring",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "Recipient-visible status transitions: movementDisabledNextTurn, immobilizedUntilOwnTurnStart, kaladinMoveLockSources, lokiMoveLockSources, lokiChickenSources, blindUntilOwnTurnStart, bone statuses.",
+      "end_condition": "While corresponding projected status exists; remove on authoritative expiry/source death/cleanse, not a guessed timer.",
+      "phase": "persistent status",
+      "static_or_animated": "static",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    }
+  ]
+}

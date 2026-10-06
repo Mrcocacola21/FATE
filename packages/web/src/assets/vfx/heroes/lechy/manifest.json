@@ -1,0 +1,146 @@
+{
+  "schema": "fate_asset_library_documentation_v1",
+  "note": "Metadata only; not connected to runtime.",
+  "assets": [
+    {
+      "id": "VFX_LECHY_GUIDE",
+      "file": "guide.png",
+      "batch": 6,
+      "frames": 19,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2432,
+        128
+      ],
+      "duration": "0.8s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.8",
+      "main_action": "Small moss-gold leaf ribbon trails guide and settles as rootless leaf-ring at ally landing; no imaginary intermediate ally path or attacks.",
+      "materials": "root mazes, leaf fragments, storm filaments and low branch silhouettes",
+      "colors": "forest green, moss amber, white-violet lightning; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "trail",
+      "source_file": "vfx_hero_lechy_guide.png",
+      "sha256": "b82f326b5a58552798f02f8fab5bd1ca1ad6deedc63d918e16c67df026367372",
+      "ability": "lechyGuideTraveler",
+      "geometry": "visible source/ally and actual new placement1cell each",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "Committed lechyGuideTraveler, actual Lechy movement, owner lechyGuideTravelerPlacement then ally unitMoved.",
+      "end_condition": "Dissipate fully by0.8s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_LECHY_FOREST",
+      "file": "forest.png",
+      "batch": 6,
+      "frames": 1,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        128,
+        128
+      ],
+      "duration": "0.7s total one-shot (per resolved segment for interactive chains)",
+      "fps": "1 source frame; CSS pulse at browser refresh",
+      "main_action": "Original low moss branch labyrinth beneath grid, amber perimeter knots define aura. Units leaving/crossing must roll5-6 or stop in aura. Keep existing Forest marker; no tall foliage hiding units.",
+      "materials": "root mazes, leaf fragments, storm filaments and low branch silhouettes",
+      "colors": "forest green, moss amber, white-violet lightning; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "roots",
+      "source_file": "vfx_hero_lechy_forest.png",
+      "sha256": "a7d394e08625415aac68002f4de9d88b291264f0dd205d49476e6b172d9eb05b",
+      "ability": "lechyConfuseTerrain",
+      "geometry": "marker cell plus actual FOREST_AURA_RADIUS=2 Chebyshev aura clipped5x5",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "abilityUsed lechyConfuseTerrain plus projected forestMarkers changed.",
+      "end_condition": "Cast burst fades; low ground aura persists only while projected marker exists.",
+      "phase": "persistent status",
+      "static_or_animated": "static",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_LECHY_STORM",
+      "file": "storm_primary.png",
+      "batch": 6,
+      "frames": 1,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        128,
+        128
+      ],
+      "duration": "1.1s total one-shot (per resolved segment for interactive chains)",
+      "fps": "1 source frame; CSS pulse at browser refresh",
+      "main_action": "Sparse white-violet lightning filaments arc at board edge and source, then dark moss storm ground texture at low contrast. Forest aura remains safe-zone readable. Units outside aura face start-turn damage roll and ranged restriction; River Person immune.",
+      "materials": "root mazes, leaf fragments, storm filaments and low branch silhouettes",
+      "colors": "forest green, moss amber, white-violet lightning; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "storm",
+      "source_file": "vfx_hero_lechy_storm_primary.png",
+      "sha256": "0d294fcf9d49795287e42a3e1a7f3d18703e230b2730adc43aa7d3b46c2515ee",
+      "ability": "lechyStorm",
+      "geometry": "9x9 board ground; source1.3cells, visible affected ticks1cell",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "lechyStormStarted.sourceUnitId/roll/duration; arenaId storm with active arenaEffects.",
+      "end_condition": "Activation dissipates; static ground until arena changes/effect.remaining reaches0. Tick only on real lechyStormRollResult.",
+      "phase": "persistent status",
+      "static_or_animated": "static",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_LECHY_STORM",
+      "file": "storm_accent.png",
+      "batch": 6,
+      "frames": 1,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        128,
+        128
+      ],
+      "duration": "1.1s total one-shot (per resolved segment for interactive chains)",
+      "fps": "1 source frame; CSS pulse at browser refresh",
+      "main_action": "Sparse white-violet lightning filaments arc at board edge and source, then dark moss storm ground texture at low contrast. Forest aura remains safe-zone readable. Units outside aura face start-turn damage roll and ranged restriction; River Person immune.",
+      "materials": "root mazes, leaf fragments, storm filaments and low branch silhouettes",
+      "colors": "forest green, moss amber, white-violet lightning; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "storm",
+      "source_file": "vfx_hero_lechy_storm_accent.png",
+      "sha256": "7d7d21dd79ec5e03fb558d56970453fe82797bdb4081993299474d8b5ba91000",
+      "ability": "lechyStorm",
+      "geometry": "9x9 board ground; source1.3cells, visible affected ticks1cell",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "lechyStormStarted.sourceUnitId/roll/duration; arenaId storm with active arenaEffects.",
+      "end_condition": "Activation dissipates; static ground until arena changes/effect.remaining reaches0. Tick only on real lechyStormRollResult.",
+      "phase": "persistent status",
+      "static_or_animated": "static",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    }
+  ]
+}

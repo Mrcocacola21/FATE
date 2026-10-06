@@ -1,0 +1,146 @@
+{
+  "schema": "fate_asset_library_documentation_v1",
+  "note": "Metadata only; not connected to runtime.",
+  "assets": [
+    {
+      "id": "VFX_LOKI_ENTANGLE",
+      "file": "entangle.png",
+      "batch": 4,
+      "frames": 20,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2560,
+        128
+      ],
+      "duration": "0.85s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.5",
+      "main_action": "Crooked green-violet ribbon knots clamp near affected feet, no damage burst because this branch deals0. Source remains hidden when rules preserve Loki stealth; never radiate from secret caster position.",
+      "materials": "crooked ribbon knots, masklike spirals and deceptive split silhouettes",
+      "colors": "jade green, muted violet, acid-gold highlights; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "chain",
+      "source_file": "vfx_hero_loki_entangle.png",
+      "sha256": "261382dd9b599d53e27a9b8e4c17b2325195dc723e09f002d0f9055e227a4ada",
+      "ability": "lokiLaught",
+      "geometry": "5x5 Trickster area; only resolved enemy targets",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "Committed lokiLaught option againSomeNonsense; actual affected lokiMoveLockSources after failed defenses.",
+      "end_condition": "Dissipate fully by0.85s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "MISSING",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_LOKI_CHICKEN",
+      "file": "chicken.png",
+      "batch": 4,
+      "frames": 17,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2176,
+        128
+      ],
+      "duration": "0.7s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.3",
+      "main_action": "Split jade-violet smoke ribbon and feather-knot seal snap into existing chicken token variant, short transformation halo, no copyrighted mascot. Single Chicken preserves Loki stealth; group branch follows its own reveal rules.",
+      "materials": "crooked ribbon knots, masklike spirals and deceptive split silhouettes",
+      "colors": "jade green, muted violet, acid-gold highlights; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "feather",
+      "source_file": "vfx_hero_loki_chicken.png",
+      "sha256": "b8309f6da57f871bbd8f627c20cdf638bd4f723323a480bea7cfa73b843ae369",
+      "ability": "lokiLaught",
+      "geometry": "target1 cell; group footprint is actual 5x5 Trickster selection",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "lokiChickenApplied or lokiChickenGroupApplied, targetIds and authorized positions; option chicken or greatLokiJoke.",
+      "end_condition": "Dissipate fully by0.7s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_LOKI_CONTROL",
+      "file": "control.png",
+      "batch": 4,
+      "frames": 16,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2048,
+        128
+      ],
+      "duration": "0.65s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.6",
+      "main_action": "Crooked jade control knot attaches to controlled token, then its own class attack animates. No harm effect at merely controlled unit and no attack before chosen target commits.",
+      "materials": "crooked ribbon knots, masklike spirals and deceptive split silhouettes",
+      "colors": "jade green, muted violet, acid-gold highlights; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "sigil",
+      "source_file": "vfx_hero_loki_control.png",
+      "sha256": "ea95554da7c38d89aa95d0cda5c7aeaecea7f02680a8c88c2e615b69e3162303",
+      "ability": "lokiLaught",
+      "geometry": "controller and controlled unit,1 cell each; thin visible link",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "controlledAttackDeclared.abilityId lokiLaught with projected controllerUnitId/controlledUnitId/targetId.",
+      "end_condition": "Dissipate fully by0.65s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "MISSING",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_LOKI_SPIN",
+      "file": "spin.png",
+      "batch": 4,
+      "frames": 13,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1664,
+        128
+      ],
+      "duration": "0.55s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.6",
+      "main_action": "Brief three crooked jade glyph shards turn like a selector and settle on ally. Then render that ally's ACTUAL selected hero ability VFX; never a generic random explosion.",
+      "materials": "crooked ribbon knots, masklike spirals and deceptive split silhouettes",
+      "colors": "jade green, muted violet, acid-gold highlights; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "blades",
+      "source_file": "vfx_hero_loki_spin.png",
+      "sha256": "57f455149adbcc3bd6b9b18f7c429fd16a97014b28b1e32b47bc8b3edca99795",
+      "ability": "lokiLaught",
+      "geometry": "chosen allied token1 cell; owner selection UI",
+      "visibility": "OWNER ONLY",
+      "visibility_detail": "Loki owner local selection; public borrowed ability only when authorized",
+      "gameplay_trigger": "Owner committed option spinTheDrum; pending lokiSpinAbilityChoice or actual selected ally abilityUsed.",
+      "end_condition": "Dissipate fully by0.55s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "MISSING",
+      "availability_status": "AVAILABLE"
+    }
+  ]
+}

@@ -1,0 +1,146 @@
+{
+  "schema": "fate_asset_library_documentation_v1",
+  "note": "Metadata only; not connected to runtime.",
+  "assets": [
+    {
+      "id": "VFX_JEBE_HAIL",
+      "file": "hail_primary.png",
+      "batch": 5,
+      "frames": 25,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3200,
+        128
+      ],
+      "duration": "1.05s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.8",
+      "main_action": "Organized bronze arrow fan dives as sharp diagonal streaks; contact chips only at failed-defense units, fading shafts over empty cells do not imply persistent arrows.",
+      "materials": "precise arrow fans, bronze trajectory corners and elastic ricochet glints",
+      "colors": "bronze, pale arrow glints, tan dust; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "storm",
+      "source_file": "vfx_hero_jebe_hail_primary.png",
+      "sha256": "2ae84b9cb32783b609316dc30df0e78cfefd7b8067798177fed18a5aa576e216",
+      "ability": "jebeHailOfArrows",
+      "geometry": "3x3 clipped cells; allies can be affected",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "aoeResolved.abilityId jebeHailOfArrows center/radius1.",
+      "end_condition": "Dissipate fully by1.05s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_JEBE_HAIL",
+      "file": "hail_accent.png",
+      "batch": 5,
+      "frames": 25,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3200,
+        128
+      ],
+      "duration": "1.05s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.8",
+      "main_action": "Organized bronze arrow fan dives as sharp diagonal streaks; contact chips only at failed-defense units, fading shafts over empty cells do not imply persistent arrows.",
+      "materials": "precise arrow fans, bronze trajectory corners and elastic ricochet glints",
+      "colors": "bronze, pale arrow glints, tan dust; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "storm",
+      "source_file": "vfx_hero_jebe_hail_accent.png",
+      "sha256": "d59c247e2837ff92707d4ff4b0ecdf1d79620b55aebe78de62b0c5243a520f0d",
+      "ability": "jebeHailOfArrows",
+      "geometry": "3x3 clipped cells; allies can be affected",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "aoeResolved.abilityId jebeHailOfArrows center/radius1.",
+      "end_condition": "Dissipate fully by1.05s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_JEBE_RICOCHET",
+      "file": "ricochet_primary.png",
+      "batch": 5,
+      "frames": 29,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3712,
+        128
+      ],
+      "duration": "1.2s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.2",
+      "main_action": "One bronze arrowlight pivots at successive confirmed targets with hard angular corner flashes and short residual traces. 1d6 determines attacks; each target is chosen legally, not pre-rendered through hypothetical enemies.",
+      "materials": "precise arrow fans, bronze trajectory corners and elastic ricochet glints",
+      "colors": "bronze, pale arrow glints, tan dust; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "beam",
+      "source_file": "vfx_hero_jebe_ricochet_primary.png",
+      "sha256": "4a8669eaa01a8ddad6e09822d5ee4ee1f11ff92d687ff20d24d16a3942c90f33",
+      "ability": "jebeKhansShooter",
+      "geometry": "actual selected source-to-target legs,0.12cell width",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "Committed jebeKhansShooter; pending jebeKhansShooterRicochetRoll/TargetChoice and actual sequential attackResolved results.",
+      "end_condition": "Dissipate fully by1.2s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_JEBE_RICOCHET",
+      "file": "ricochet_accent.png",
+      "batch": 5,
+      "frames": 29,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3712,
+        128
+      ],
+      "duration": "1.2s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.2",
+      "main_action": "One bronze arrowlight pivots at successive confirmed targets with hard angular corner flashes and short residual traces. 1d6 determines attacks; each target is chosen legally, not pre-rendered through hypothetical enemies.",
+      "materials": "precise arrow fans, bronze trajectory corners and elastic ricochet glints",
+      "colors": "bronze, pale arrow glints, tan dust; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "beam",
+      "source_file": "vfx_hero_jebe_ricochet_accent.png",
+      "sha256": "aec850327a27360689b9906111eedd8673fc0a50688668cdbb562c051f31b474",
+      "ability": "jebeKhansShooter",
+      "geometry": "actual selected source-to-target legs,0.12cell width",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "Committed jebeKhansShooter; pending jebeKhansShooterRicochetRoll/TargetChoice and actual sequential attackResolved results.",
+      "end_condition": "Dissipate fully by1.2s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    }
+  ]
+}

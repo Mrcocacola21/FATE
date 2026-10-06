@@ -1,0 +1,76 @@
+{
+  "schema": "fate_asset_library_documentation_v1",
+  "note": "Metadata only; not connected to runtime.",
+  "assets": [
+    {
+      "id": "VFX_HASSAN_ORDER",
+      "file": "order.png",
+      "batch": 4,
+      "frames": 16,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2048,
+        128
+      ],
+      "duration": "0.65s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.6",
+      "main_action": "Small sand-black seal at source, restrained sand sigil at each selected ally for owner only. This grants game-long stealth threshold5-6 (or better existing threshold); it does NOT immediately fade or hide allies.",
+      "materials": "sand erosion, whisper smoke and small seal geometry",
+      "colors": "sand gold, soot black, muted teal; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "sigil",
+      "source_file": "vfx_hero_hassan_order.png",
+      "sha256": "e6ed94334d38b4d89a63f9a012e9bdcd8ee81307d5c925c75f21ab03c90af26c",
+      "ability": "hassanAssasinOrder",
+      "geometry": "source and selected two allies,0.8 cell each",
+      "visibility": "OWNER ONLY",
+      "visibility_detail": "Hassan owner only for chosen targets; public source accent only if visible",
+      "gameplay_trigger": "Owner selection hassanAssassinOrderSelection resolves two distinct eligible allies; actual stealthSuccessMinRoll changes; abilityUsed hassanAssasinOrder at source.",
+      "end_condition": "Dissipate fully by0.65s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_HASSAN_TRUE_ENEMY",
+      "file": "true_enemy.png",
+      "batch": 4,
+      "frames": 17,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2176,
+        128
+      ],
+      "duration": "0.7s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.3",
+      "main_action": "Taut soot-black sand thread draws a small gold control seal into enemy, then controlled enemy performs its normal class attack. No generic blast at controlled unit or damage before actual attack.",
+      "materials": "sand erosion, whisper smoke and small seal geometry",
+      "colors": "sand gold, soot black, muted teal; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "slash",
+      "source_file": "vfx_hero_hassan_true_enemy.png",
+      "sha256": "4f61a9d65c28cbe7ce5daed2dfb8e947e48abef081bfb0cf484f8e09478c1508",
+      "ability": "hassanTrueEnemy",
+      "geometry": "visible source/controlled enemy<=2 cells, then legal normal attack path",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "controlledAttackDeclared.abilityId hassanTrueEnemy after hassanTrueEnemyTargetChoice.",
+      "end_condition": "Dissipate fully by0.7s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "MISSING",
+      "availability_status": "AVAILABLE"
+    }
+  ]
+}

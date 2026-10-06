@@ -1,0 +1,111 @@
+{
+  "schema": "fate_asset_library_documentation_v1",
+  "note": "Metadata only; not connected to runtime.",
+  "assets": [
+    {
+      "id": "VFX_GROZNY_INVADE",
+      "file": "invade.png",
+      "batch": 6,
+      "frames": 20,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2560,
+        128
+      ],
+      "duration": "0.85s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.5",
+      "main_action": "Keep current procedural portal split rings but sharpen into cracked violet-gold temporal wedges; fleeting trace connects only public endpoints, no clock text or world scene.",
+      "materials": "split temporal portals, cracked clockless rings and oppressive absorption threads",
+      "colors": "imperial violet, ash black, muted tarnished gold; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "portal",
+      "source_file": "vfx_hero_grozny_invade.png",
+      "sha256": "784098096130b227395ef7e466be7e0fa1585fcc9ffb28a09cb249f869bacbb3",
+      "ability": "groznyInvadeTime",
+      "geometry": "source/arrival1.3cells and narrow temporal trace",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "abilityUsed groznyInvadeTime followed authorized unitMoved from/to.",
+      "end_condition": "Dissipate fully by0.85s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_GROZNY_TYRANT",
+      "file": "tyrant_primary.png",
+      "batch": 6,
+      "frames": 24,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3072,
+        128
+      ],
+      "duration": "1s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.0",
+      "main_action": "Tarnished-gold oppressive ring marks committed allied victim; iron-violet strike hits only after real dice; successful finish draws a short absorption thread into Grozny. Exactly one ally per Tyrant resolution, no chain slaughter.",
+      "materials": "split temporal portals, cracked clockless rings and oppressive absorption threads",
+      "colors": "imperial violet, ash black, muted tarnished gold; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "sigil",
+      "source_file": "vfx_hero_grozny_tyrant_primary.png",
+      "sha256": "e414d49652da2dcd31ea468926d6c01dd33665cc465a711204100ef79897f1d1",
+      "ability": "groznyTyrant",
+      "geometry": "actual travel and one allied victim,1cell; sourcegain1cell",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "groznyTyrantOptionChoice/AllyChoice/AttackCellChoice resolves; actual attackResolved versus weak ally; kill yields healed HP and +damage.",
+      "end_condition": "Dissipate fully by1s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_GROZNY_TYRANT",
+      "file": "tyrant_accent.png",
+      "batch": 6,
+      "frames": 24,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3072,
+        128
+      ],
+      "duration": "1s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.0",
+      "main_action": "Tarnished-gold oppressive ring marks committed allied victim; iron-violet strike hits only after real dice; successful finish draws a short absorption thread into Grozny. Exactly one ally per Tyrant resolution, no chain slaughter.",
+      "materials": "split temporal portals, cracked clockless rings and oppressive absorption threads",
+      "colors": "imperial violet, ash black, muted tarnished gold; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "sigil",
+      "source_file": "vfx_hero_grozny_tyrant_accent.png",
+      "sha256": "7b828915f615c4928255ee126b3d614b667f34cc0c6fa20800b87a285cd64683",
+      "ability": "groznyTyrant",
+      "geometry": "actual travel and one allied victim,1cell; sourcegain1cell",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "groznyTyrantOptionChoice/AllyChoice/AttackCellChoice resolves; actual attackResolved versus weak ally; kill yields healed HP and +damage.",
+      "end_condition": "Dissipate fully by1s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    }
+  ]
+}

@@ -1,0 +1,76 @@
+{
+  "schema": "fate_asset_library_documentation_v1",
+  "note": "Metadata only; not connected to runtime.",
+  "assets": [
+    {
+      "id": "VFX_GRIFFITH_REBIRTH",
+      "file": "rebirth_primary.png",
+      "batch": 6,
+      "frames": 32,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        4096,
+        128
+      ],
+      "duration": "1.5s total one-shot (per resolved segment for interactive chains)",
+      "fps": "21.3",
+      "main_action": "Pearl feather shards fold inward beneath a razor violet eclipse; silver void planes reopen around new form. Preserve same-cell identity and restored form token; no unrelated black explosion.",
+      "materials": "noble heraldic feather shards collapse into an angular eclipse",
+      "colors": "pearl, faded gold, deep violet eclipse; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "transform",
+      "source_file": "vfx_hero_griffith_rebirth_primary.png",
+      "sha256": "0330b751ae248cee642f65d92c0db5491394feae0ec04af439578b2c47e76aba",
+      "ability": "griffithFemtoRebirth",
+      "geometry": "same cell, 1.7 cells",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "unitTransformed.reason griffithFemtoRebirth, fromHeroId griffith toHeroId femto; source death is replaced by revival.",
+      "end_condition": "Dissipate fully by1.5s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_GRIFFITH_REBIRTH",
+      "file": "rebirth_accent.png",
+      "batch": 6,
+      "frames": 32,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        4096,
+        128
+      ],
+      "duration": "1.5s total one-shot (per resolved segment for interactive chains)",
+      "fps": "21.3",
+      "main_action": "Pearl feather shards fold inward beneath a razor violet eclipse; silver void planes reopen around new form. Preserve same-cell identity and restored form token; no unrelated black explosion.",
+      "materials": "noble heraldic feather shards collapse into an angular eclipse",
+      "colors": "pearl, faded gold, deep violet eclipse; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "transform",
+      "source_file": "vfx_hero_griffith_rebirth_accent.png",
+      "sha256": "d670d1d3bf77e0f2107461bf20eac64b9961d6832c2172f71b4b55440010afb5",
+      "ability": "griffithFemtoRebirth",
+      "geometry": "same cell, 1.7 cells",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "unitTransformed.reason griffithFemtoRebirth, fromHeroId griffith toHeroId femto; source death is replaced by revival.",
+      "end_condition": "Dissipate fully by1.5s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    }
+  ]
+}

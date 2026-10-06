@@ -1,0 +1,41 @@
+{
+  "schema": "fate_asset_library_documentation_v1",
+  "note": "Metadata only; not connected to runtime.",
+  "assets": [
+    {
+      "id": "VFX_FEMTO_DIVINE_MOVE",
+      "file": "divine_move.png",
+      "batch": 6,
+      "frames": 18,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2304,
+        128
+      ],
+      "duration": "0.75s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.0",
+      "main_action": "Vertical void planes pinch shut at source and unfurl at destination, silver edge slivers marking space folding. Roll 1-3 within 2 cells; 4-6 any empty board cell. No trail through intervening cells.",
+      "materials": "spatial compression, inverted halos and folded void planes",
+      "colors": "near-black violet, silver edges, dim magenta; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "portal",
+      "source_file": "vfx_hero_femto_divine_move.png",
+      "sha256": "a8206cffa22fcf567d7bbf685c6f8186658059785aabba7092119620d39e1901",
+      "ability": "femtoDivineMove",
+      "geometry": "departure and arrival, 1.25 cells each",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "Committed abilityUsed femtoDivineMove plus actual unitMoved; pending femtoDivineMoveRoll then femtoDivineMoveDestination.",
+      "end_condition": "Dissipate fully by0.75s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    }
+  ]
+}

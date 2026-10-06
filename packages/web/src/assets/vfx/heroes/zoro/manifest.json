@@ -1,0 +1,146 @@
+{
+  "schema": "fate_asset_library_documentation_v1",
+  "note": "Metadata only; not connected to runtime.",
+  "assets": [
+    {
+      "id": "VFX_ZORO_SANTORYU",
+      "file": "santoryu.png",
+      "batch": 6,
+      "frames": 13,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1664,
+        128
+      ],
+      "duration": "0.55s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.6",
+      "main_action": "Three steel-jade arcs form distinct overlapping blade directions; each chosen target only receives hit/miss feedback appropriate to its result. No nine-sword ultimate look.",
+      "materials": "interlocking blade arcs, crossing cuts and nine distinct spectral edge strokes",
+      "colors": "jade, steel silver, restrained plum; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "slash",
+      "source_file": "vfx_hero_zoro_santoryu.png",
+      "sha256": "0ec54064b9de17513027d25ba407e80a752eff8c1a52b8336f37c63db09a769a",
+      "ability": "zoro3SwordStyle",
+      "geometry": "actual target cells,0.85 cell cuts",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "Committed basic attack with one/two different legal targets and their sequential attackResolved results.",
+      "end_condition": "Dissipate fully by0.55s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "MISSING",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_ZORO_ONI_GIRI",
+      "file": "oni_giri.png",
+      "batch": 6,
+      "frames": 19,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2432,
+        128
+      ],
+      "duration": "0.8s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.8",
+      "main_action": "A tight jade-steel dash slash splits into three parallel edge streaks, snaps at legal landing, then cuts target only on successful attack. No damage along intervening cells.",
+      "materials": "interlocking blade arcs, crossing cuts and nine distinct spectral edge strokes",
+      "colors": "jade, steel silver, restrained plum; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "slash",
+      "source_file": "vfx_hero_zoro_oni_giri.png",
+      "sha256": "dbbb3dbee283e11126ac9e468e821c56fffa21dbb6f7adb231889221eda9165b",
+      "ability": "zoroOniGiri",
+      "geometry": "actual source-to-landing line and chosen target",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "abilityUsed zoroOniGiri; confirmed unitMoved before/behind selected straight-line enemy, then attackResolved.",
+      "end_condition": "Dissipate fully by0.8s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "MISSING",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_ZORO_ASURA",
+      "file": "asura_primary.png",
+      "batch": 6,
+      "frames": 31,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3968,
+        128
+      ],
+      "duration": "1.3s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.8",
+      "main_action": "Nine individually legible steel-plum spectral blade strokes fan from a jade center, intersect as a clean threatening crown, then collapse outward. Brief and unmistakably multi-blade, no copied body silhouette.",
+      "materials": "interlocking blade arcs, crossing cuts and nine distinct spectral edge strokes",
+      "colors": "jade, steel silver, restrained plum; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "slash",
+      "source_file": "vfx_hero_zoro_asura_primary.png",
+      "sha256": "9815fc49da5e20e2493a53bbaa10b369470233df0b4a21d4e4721afdd8320e25",
+      "ability": "zoroAsura",
+      "geometry": "5x5 Chebyshev2 centered on source, enemy-only attacks",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "aoeResolved zoroAsura and resolved enemy attacks; spend6 Determination.",
+      "end_condition": "Dissipate fully by1.3s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "MISSING",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_ZORO_ASURA",
+      "file": "asura_accent.png",
+      "batch": 6,
+      "frames": 31,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3968,
+        128
+      ],
+      "duration": "1.3s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.8",
+      "main_action": "Nine individually legible steel-plum spectral blade strokes fan from a jade center, intersect as a clean threatening crown, then collapse outward. Brief and unmistakably multi-blade, no copied body silhouette.",
+      "materials": "interlocking blade arcs, crossing cuts and nine distinct spectral edge strokes",
+      "colors": "jade, steel silver, restrained plum; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "slash",
+      "source_file": "vfx_hero_zoro_asura_accent.png",
+      "sha256": "2fad647eda404199ddd7fa81ccfde554f621cea4b29ccad8495a32b184badd5b",
+      "ability": "zoroAsura",
+      "geometry": "5x5 Chebyshev2 centered on source, enemy-only attacks",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "aoeResolved zoroAsura and resolved enemy attacks; spend6 Determination.",
+      "end_condition": "Dissipate fully by1.3s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "MISSING",
+      "availability_status": "AVAILABLE"
+    }
+  ]
+}

@@ -77,6 +77,20 @@ temp/
 .DS_Store
 Thumbs.db
 Desktop.ini
+__MACOSX/
+
+# Temporary asset-generation inputs and extracted packs (repository root only).
+/sound_pack_request.txt
+/vfx_pack_request.txt
+/missing_assets_to_generate.txt
+/FATE_Sound_Pack_*.zip
+/FATE_Sound_Pack_*.rar
+/FATE_Sound_Pack_*.7z
+/FATE_VFX_Pack_*.zip
+/FATE_VFX_Pack_*.rar
+/FATE_VFX_Pack_*.7z
+/FATE_Sound_Pack_*/
+/FATE_VFX_Pack_*/
 
 ############################################
 # IDEs

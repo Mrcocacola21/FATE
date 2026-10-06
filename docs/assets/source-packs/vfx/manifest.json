@@ -1,0 +1,3572 @@
+{
+  "source": "vfx_pack_request.txt",
+  "asset_count": 155,
+  "concept_count": 121,
+  "assets": [
+    {
+      "id": "VFX_COMBAT_LAUNCH",
+      "file": "vfx_combat_launch.png",
+      "batch": 1,
+      "status": "UPGRADE",
+      "frames": 10,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1280,
+        128
+      ],
+      "duration": "0.4s total one-shot (per resolved segment for interactive chains)",
+      "fps": "25.0",
+      "main_action": "Knight/berserker: compact silver slash; archer: narrow arrow streak; spearman: straight tip; trickster: angular impulse; assassin: short shadow cut; rider: directional lance streak. Source cast -> travel -> hit or miss branch.",
+      "materials": "compact generic impact/dust/guard/icon geometry",
+      "colors": "ivory, desaturated steel, restrained amber; status-specific secondary tones",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "trail"
+    },
+    {
+      "id": "VFX_COMBAT_HIT_LIGHT",
+      "file": "vfx_combat_hit_light.png",
+      "batch": 1,
+      "status": "UPGRADE",
+      "frames": 7,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        896,
+        128
+      ],
+      "duration": "0.3s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.3",
+      "main_action": "Three sharp ivory impact chips with a pin-point contact flash, fading before HP text appears. No circular explosion.",
+      "materials": "compact generic impact/dust/guard/icon geometry",
+      "colors": "ivory, desaturated steel, restrained amber; status-specific secondary tones",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "impact"
+    },
+    {
+      "id": "VFX_COMBAT_HIT_HEAVY",
+      "file": "vfx_combat_hit_heavy.png",
+      "batch": 1,
+      "status": "MISSING",
+      "frames": 11,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1408,
+        128
+      ],
+      "duration": "0.45s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.4",
+      "main_action": "Split contact star and two low shock arcs; modest token shake; preserve its silhouette and HP bar.",
+      "materials": "compact generic impact/dust/guard/icon geometry",
+      "colors": "ivory, desaturated steel, restrained amber; status-specific secondary tones",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "impact"
+    },
+    {
+      "id": "VFX_COMBAT_MISS",
+      "file": "vfx_combat_miss.png",
+      "batch": 1,
+      "status": "UPGRADE",
+      "frames": 7,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        896,
+        128
+      ],
+      "duration": "0.3s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.3",
+      "main_action": "Projectile passes to a non-damaging dissolve beside target; melee cut breaks short. Existing MISS label stays. No target damage flash.",
+      "materials": "compact generic impact/dust/guard/icon geometry",
+      "colors": "ivory, desaturated steel, restrained amber; status-specific secondary tones",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "miss"
+    },
+    {
+      "id": "VFX_COMBAT_DODGE",
+      "file": "vfx_combat_dodge.png",
+      "batch": 1,
+      "status": "UPGRADE",
+      "frames": 8,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1024,
+        128
+      ],
+      "duration": "0.32s total one-shot (per resolved segment for interactive chains)",
+      "fps": "25.0",
+      "main_action": "One short lateral ghost contour or thin deflection arc; no false target relocation or HP loss.",
+      "materials": "compact generic impact/dust/guard/icon geometry",
+      "colors": "ivory, desaturated steel, restrained amber; status-specific secondary tones",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "guard"
+    },
+    {
+      "id": "VFX_SPEARMAN_DOUBLE_DODGE",
+      "file": "vfx_spearman_double_dodge.png",
+      "batch": 1,
+      "status": "MISSING",
+      "frames": 9,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1152,
+        128
+      ],
+      "duration": "0.36s total one-shot (per resolved segment for interactive chains)",
+      "fps": "25.0",
+      "main_action": "Two opposing spear-tip brackets snap shut and slide the attack aside, a distinct pale-metal defense accent.",
+      "materials": "compact generic impact/dust/guard/icon geometry",
+      "colors": "ivory, desaturated steel, restrained amber; status-specific secondary tones",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "guard"
+    },
+    {
+      "id": "VFX_BERSERKER_AUTO_DODGE",
+      "file": "vfx_berserker_auto_dodge.png",
+      "batch": 1,
+      "status": "UPGRADE",
+      "frames": 11,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1408,
+        128
+      ],
+      "duration": "0.45s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.4",
+      "main_action": "Six compact iron notches collapse to one guard crescent; consume accent only after auto is chosen. Roll choice receives neutral UI feedback, no shield success.",
+      "materials": "compact generic impact/dust/guard/icon geometry",
+      "colors": "ivory, desaturated steel, restrained amber; status-specific secondary tones",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "guard"
+    },
+    {
+      "id": "VFX_COMBAT_BLOCK",
+      "file": "vfx_combat_block.png",
+      "batch": 1,
+      "status": "UPGRADE",
+      "frames": 7,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        896,
+        128
+      ],
+      "duration": "0.3s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.3",
+      "main_action": "Small steel contact plate spark and BLOCKED text. No red damage pulse.",
+      "materials": "compact generic impact/dust/guard/icon geometry",
+      "colors": "ivory, desaturated steel, restrained amber; status-specific secondary tones",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "guard"
+    },
+    {
+      "id": "VFX_UNIT_DEATH",
+      "file": "vfx_unit_death.png",
+      "batch": 1,
+      "status": "UPGRADE",
+      "frames": 12,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1536,
+        128
+      ],
+      "duration": "0.52s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.1",
+      "main_action": "Existing 520ms token collapse and defeated label; optional few ash flakes. Delay removal to preserve attack -> HP -> death order. No death if revived form continues.",
+      "materials": "compact generic impact/dust/guard/icon geometry",
+      "colors": "ivory, desaturated steel, restrained amber; status-specific secondary tones",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "ash"
+    },
+    {
+      "id": "VFX_UNIT_HEAL",
+      "file": "vfx_unit_heal.png",
+      "batch": 1,
+      "status": "UPGRADE",
+      "frames": 12,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1536,
+        128
+      ],
+      "duration": "0.5s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.0",
+      "main_action": "Low ascending ivory-green motes, one narrow restorative arc and existing +HP label. Hero recipes tint and reshape the arc.",
+      "materials": "compact generic impact/dust/guard/icon geometry",
+      "colors": "ivory, desaturated steel, restrained amber; status-specific secondary tones",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "heal"
+    },
+    {
+      "id": "VFX_MOVEMENT_RIDER",
+      "file": "vfx_movement_rider.png",
+      "batch": 1,
+      "status": "MISSING",
+      "frames": 11,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1408,
+        128
+      ],
+      "duration": "0.45s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.4",
+      "main_action": "Three low ochre dust ticks behind each reached cell, pace aligned to movement and path attacks. End at stake/forest/snare stop, never intended unvisited destination.",
+      "materials": "compact generic impact/dust/guard/icon geometry",
+      "colors": "ivory, desaturated steel, restrained amber; status-specific secondary tones",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "trail"
+    },
+    {
+      "id": "VFX_MOVEMENT_BERSERKER",
+      "file": "vfx_movement_berserker.png",
+      "batch": 1,
+      "status": "MISSING",
+      "frames": 10,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1280,
+        128
+      ],
+      "duration": "0.4s total one-shot (per resolved segment for interactive chains)",
+      "fps": "25.0",
+      "main_action": "Short broken stone scuff and strong directional notch. Roll 6 permits long paths but does not justify a full-board wave.",
+      "materials": "compact generic impact/dust/guard/icon geometry",
+      "colors": "ivory, desaturated steel, restrained amber; status-specific secondary tones",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "trail"
+    },
+    {
+      "id": "VFX_MOVEMENT_ASSASSIN",
+      "file": "vfx_movement_assassin.png",
+      "batch": 1,
+      "status": "MISSING",
+      "frames": 8,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1024,
+        128
+      ],
+      "duration": "0.32s total one-shot (per resolved segment for interactive chains)",
+      "fps": "25.0",
+      "main_action": "Quiet charcoal cut trail; only visible endpoints, no speculative intermediate footprint if transit isn't recorded.",
+      "materials": "compact generic impact/dust/guard/icon geometry",
+      "colors": "ivory, desaturated steel, restrained amber; status-specific secondary tones",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "smoke"
+    },
+    {
+      "id": "VFX_MOVEMENT_TRICKSTER",
+      "file": "vfx_movement_trickster.png",
+      "batch": 1,
+      "status": "MISSING",
+      "frames": 12,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1536,
+        128
+      ],
+      "duration": "0.5s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.0",
+      "main_action": "Folded violet contour at departure, matching seam at arrival. A teleport does not draw ground travel, intermediate hits or hazards.",
+      "materials": "compact generic impact/dust/guard/icon geometry",
+      "colors": "ivory, desaturated steel, restrained amber; status-specific secondary tones",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "portal"
+    },
+    {
+      "id": "VFX_MOVEMENT_INTERRUPTED",
+      "file": "vfx_movement_interrupted.png",
+      "batch": 1,
+      "status": "MISSING",
+      "frames": 8,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1024,
+        128
+      ],
+      "duration": "0.35s total one-shot (per resolved segment for interactive chains)",
+      "fps": "22.9",
+      "main_action": "Trail cuts sharply at stop cell, a tiny squared stop bracket remains for 0.3s. Hazard eruption plays separately. Do not show destination arrival.",
+      "materials": "compact generic impact/dust/guard/icon geometry",
+      "colors": "ivory, desaturated steel, restrained amber; status-specific secondary tones",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "trail"
+    },
+    {
+      "id": "VFX_STEALTH_ENTER",
+      "file": "vfx_stealth_enter.png",
+      "batch": 1,
+      "status": "UPGRADE",
+      "frames": 12,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1536,
+        128
+      ],
+      "duration": "0.5s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.0",
+      "main_action": "Sand/smoke contour thins into gaps while owner token stays identifiable. Failure uses neutral broken seal. Enemy receives no world emit at hidden current cell.",
+      "materials": "compact generic impact/dust/guard/icon geometry",
+      "colors": "ivory, desaturated steel, restrained amber; status-specific secondary tones",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "smoke"
+    },
+    {
+      "id": "VFX_STEALTH_REVEAL",
+      "file": "vfx_stealth_reveal.png",
+      "batch": 1,
+      "status": "UPGRADE",
+      "frames": 12,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1536,
+        128
+      ],
+      "duration": "0.5s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.0",
+      "main_action": "Existing smoke emergence and readable rim flash. Ordinary expiration is quieter than Search discovery. Never use stale hidden coordinates for an enemy reveal.",
+      "materials": "compact generic impact/dust/guard/icon geometry",
+      "colors": "ivory, desaturated steel, restrained amber; status-specific secondary tones",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "smoke"
+    },
+    {
+      "id": "VFX_SEARCH_CAST",
+      "file": "vfx_search_cast.png",
+      "batch": 1,
+      "status": "UPGRADE",
+      "frames": 16,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2048,
+        128
+      ],
+      "duration": "0.65s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.6",
+      "main_action": "Existing small reveal-star scan around searcher; successful target uses STEALTH_REVEAL only once visibility is confirmed. Failure ends at searcher with a dim notch, never at failed candidate location.",
+      "materials": "compact generic impact/dust/guard/icon geometry",
+      "colors": "ivory, desaturated steel, restrained amber; status-specific secondary tones",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "sigil"
+    },
+    {
+      "id": "VFX_STATUS_SMALL",
+      "file": "vfx_status_small.png",
+      "batch": 1,
+      "status": "UPGRADE",
+      "frames": 1,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        128,
+        128
+      ],
+      "duration": "2.4s restrained CSS cycle; state lifetime is controlled below",
+      "fps": "1 source frame; CSS pulse at browser refresh",
+      "main_action": "Use chain notch for immobilized/entangled, closed-eye sliver for Blind, small blue/orange bone glyph for bone rules, feather knot for Chicken. Keep persistent UI pills; no aura obscuring tokens.",
+      "materials": "compact generic impact/dust/guard/icon geometry",
+      "colors": "ivory, desaturated steel, restrained amber; status-specific secondary tones",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "status_atlas"
+    },
+    {
+      "id": "VFX_KAISER_BUNKER_ENTRY",
+      "file": "vfx_hero_kaiser_bunker_entry.png",
+      "batch": 2,
+      "status": "UPGRADE",
+      "frames": 14,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1792,
+        128
+      ],
+      "duration": "0.6s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.3",
+      "main_action": "Heavy segmented metal shutter locks around the token, anchored to ground with ochre sparks. Entry succeeds on 4-6; Kaiser remains publicly visible.",
+      "materials": "heavy military engineering: piston rings, hard shell impacts, flat shockwaves",
+      "colors": "oxidized steel, ivory-hot impact, amber sparks; graphite smoke",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "guard"
+    },
+    {
+      "id": "VFX_KAISER_BUNKER_STATUS",
+      "file": "vfx_hero_kaiser_bunker_status.png",
+      "batch": 2,
+      "status": "UPGRADE",
+      "frames": 1,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        128,
+        128
+      ],
+      "duration": "2s restrained CSS cycle; state lifetime is controlled below",
+      "fps": "1 source frame; CSS pulse at browser refresh",
+      "main_action": "Thin bunker plate ring with four fixed metal seams; retain B badge and HP readability. Any hit while active is capped to 1 damage; no invulnerability visual.",
+      "materials": "heavy military engineering: piston rings, hard shell impacts, flat shockwaves",
+      "colors": "oxidized steel, ivory-hot impact, amber sparks; graphite smoke",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "guard"
+    },
+    {
+      "id": "VFX_KAISER_BUNKER_HIT_EXIT",
+      "file": "vfx_hero_kaiser_bunker_hit_exit.png",
+      "batch": 2,
+      "status": "UPGRADE",
+      "frames": 10,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1280,
+        128
+      ],
+      "duration": "0.4s total one-shot (per resolved segment for interactive chains)",
+      "fps": "25.0",
+      "main_action": "A shell-chip skid on armor when the hit deals capped damage; on exit four seams loosen and dissolve. Transformation exit yields to Engineering Miracle instead of duplicate flash.",
+      "materials": "heavy military engineering: piston rings, hard shell impacts, flat shockwaves",
+      "colors": "oxidized steel, ivory-hot impact, amber sparks; graphite smoke",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "guard"
+    },
+    {
+      "id": "VFX_KAISER_DORA_IMPACT",
+      "file": "vfx_hero_kaiser_dora_impact_primary.png",
+      "batch": 2,
+      "status": "UPGRADE",
+      "frames": 28,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3584,
+        128
+      ],
+      "duration": "1.15s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.3",
+      "main_action": "Short recoil charge at source, descending heavy shell streak, white-hot pin impact, massive flat compression ring and jagged steel shards inside 3x3. Low graphite dust dissipates fast; shell force must be distinct from Fireball.",
+      "materials": "heavy military engineering: piston rings, hard shell impacts, flat shockwaves",
+      "colors": "oxidized steel, ivory-hot impact, amber sparks; graphite smoke",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "blast"
+    },
+    {
+      "id": "VFX_KAISER_DORA_IMPACT",
+      "file": "vfx_hero_kaiser_dora_impact_accent.png",
+      "batch": 2,
+      "status": "UPGRADE",
+      "frames": 28,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3584,
+        128
+      ],
+      "duration": "1.15s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.3",
+      "main_action": "Short recoil charge at source, descending heavy shell streak, white-hot pin impact, massive flat compression ring and jagged steel shards inside 3x3. Low graphite dust dissipates fast; shell force must be distinct from Fireball.",
+      "materials": "heavy military engineering: piston rings, hard shell impacts, flat shockwaves",
+      "colors": "oxidized steel, ivory-hot impact, amber sparks; graphite smoke",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "blast"
+    },
+    {
+      "id": "VFX_KAISER_CARPET_IMPACT",
+      "file": "vfx_hero_kaiser_carpet_impact_primary.png",
+      "batch": 2,
+      "status": "UPGRADE",
+      "frames": 32,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        4096,
+        128
+      ],
+      "duration": "1.6s total one-shot (per resolved segment for interactive chains)",
+      "fps": "20.0",
+      "main_action": "Stagger three organized bands of heavy shell impacts with straight descending streaks, compression flashes, flat shock ripples, short smoke tails. The area attacks units there for fixed 1 damage; Kaiser is exempt in bunker or transformed. Do not imply every particle impact is another hit.",
+      "materials": "heavy military engineering: piston rings, hard shell impacts, flat shockwaves",
+      "colors": "oxidized steel, ivory-hot impact, amber sparks; graphite smoke",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "blast"
+    },
+    {
+      "id": "VFX_KAISER_CARPET_IMPACT",
+      "file": "vfx_hero_kaiser_carpet_impact_accent.png",
+      "batch": 2,
+      "status": "UPGRADE",
+      "frames": 32,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        4096,
+        128
+      ],
+      "duration": "1.6s total one-shot (per resolved segment for interactive chains)",
+      "fps": "20.0",
+      "main_action": "Stagger three organized bands of heavy shell impacts with straight descending streaks, compression flashes, flat shock ripples, short smoke tails. The area attacks units there for fixed 1 damage; Kaiser is exempt in bunker or transformed. Do not imply every particle impact is another hit.",
+      "materials": "heavy military engineering: piston rings, hard shell impacts, flat shockwaves",
+      "colors": "oxidized steel, ivory-hot impact, amber sparks; graphite smoke",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "blast"
+    },
+    {
+      "id": "VFX_KAISER_ENGINEERING",
+      "file": "vfx_hero_kaiser_engineering_primary.png",
+      "batch": 2,
+      "status": "UPGRADE",
+      "frames": 32,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        4096,
+        128
+      ],
+      "duration": "1.5s total one-shot (per resolved segment for interactive chains)",
+      "fps": "21.3",
+      "main_action": "Riveted panels unfold, piston arcs align, orange energy welds close into a reinforced silhouette. Hard mechanical impact with small pressure ring. Gain Rider/Berserker features and free-charge Dora; lose bunker/stealth. Original machinery, no historical insignia.",
+      "materials": "heavy military engineering: piston rings, hard shell impacts, flat shockwaves",
+      "colors": "oxidized steel, ivory-hot impact, amber sparks; graphite smoke",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "transform"
+    },
+    {
+      "id": "VFX_KAISER_ENGINEERING",
+      "file": "vfx_hero_kaiser_engineering_accent.png",
+      "batch": 2,
+      "status": "UPGRADE",
+      "frames": 32,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        4096,
+        128
+      ],
+      "duration": "1.5s total one-shot (per resolved segment for interactive chains)",
+      "fps": "21.3",
+      "main_action": "Riveted panels unfold, piston arcs align, orange energy welds close into a reinforced silhouette. Hard mechanical impact with small pressure ring. Gain Rider/Berserker features and free-charge Dora; lose bunker/stealth. Original machinery, no historical insignia.",
+      "materials": "heavy military engineering: piston rings, hard shell impacts, flat shockwaves",
+      "colors": "oxidized steel, ivory-hot impact, amber sparks; graphite smoke",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "transform"
+    },
+    {
+      "id": "VFX_GRIFFITH_REBIRTH",
+      "file": "vfx_hero_griffith_rebirth_primary.png",
+      "batch": 6,
+      "status": "UPGRADE",
+      "frames": 32,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        4096,
+        128
+      ],
+      "duration": "1.5s total one-shot (per resolved segment for interactive chains)",
+      "fps": "21.3",
+      "main_action": "Pearl feather shards fold inward beneath a razor violet eclipse; silver void planes reopen around new form. Preserve same-cell identity and restored form token; no unrelated black explosion.",
+      "materials": "noble heraldic feather shards collapse into an angular eclipse",
+      "colors": "pearl, faded gold, deep violet eclipse; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "transform"
+    },
+    {
+      "id": "VFX_GRIFFITH_REBIRTH",
+      "file": "vfx_hero_griffith_rebirth_accent.png",
+      "batch": 6,
+      "status": "UPGRADE",
+      "frames": 32,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        4096,
+        128
+      ],
+      "duration": "1.5s total one-shot (per resolved segment for interactive chains)",
+      "fps": "21.3",
+      "main_action": "Pearl feather shards fold inward beneath a razor violet eclipse; silver void planes reopen around new form. Preserve same-cell identity and restored form token; no unrelated black explosion.",
+      "materials": "noble heraldic feather shards collapse into an angular eclipse",
+      "colors": "pearl, faded gold, deep violet eclipse; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "transform"
+    },
+    {
+      "id": "VFX_FEMTO_DIVINE_MOVE",
+      "file": "vfx_hero_femto_divine_move.png",
+      "batch": 6,
+      "status": "UPGRADE",
+      "frames": 18,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2304,
+        128
+      ],
+      "duration": "0.75s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.0",
+      "main_action": "Vertical void planes pinch shut at source and unfurl at destination, silver edge slivers marking space folding. Roll 1-3 within 2 cells; 4-6 any empty board cell. No trail through intervening cells.",
+      "materials": "spatial compression, inverted halos and folded void planes",
+      "colors": "near-black violet, silver edges, dim magenta; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "portal"
+    },
+    {
+      "id": "VFX_GUTS_CROSSBOW",
+      "file": "vfx_hero_guts_crossbow.png",
+      "batch": 6,
+      "status": "UPGRADE",
+      "frames": 14,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1792,
+        128
+      ],
+      "duration": "0.6s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.3",
+      "main_action": "Cold metal bolt snaps from restrained muzzle spark, taut recoil and tiny steel tip impact. Always 1 damage on hit; miss bolt passes harmlessly.",
+      "materials": "weighty iron slashes, recoil jets and fractured restraint rings",
+      "colors": "iron grey, ember red, dirty orange; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "slash"
+    },
+    {
+      "id": "VFX_GUTS_CANNON",
+      "file": "vfx_hero_guts_cannon_primary.png",
+      "batch": 6,
+      "status": "UPGRADE",
+      "frames": 19,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2432,
+        128
+      ],
+      "duration": "0.8s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.8",
+      "main_action": "Heavy dirty-orange directional muzzle fan, iron recoil chips and compact smoke-column shell impact. Distinctly louder visual than Crossbow; normal combat damage rather than fixed1.",
+      "materials": "weighty iron slashes, recoil jets and fractured restraint rings",
+      "colors": "iron grey, ember red, dirty orange; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "blast"
+    },
+    {
+      "id": "VFX_GUTS_CANNON",
+      "file": "vfx_hero_guts_cannon_accent.png",
+      "batch": 6,
+      "status": "UPGRADE",
+      "frames": 19,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2432,
+        128
+      ],
+      "duration": "0.8s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.8",
+      "main_action": "Heavy dirty-orange directional muzzle fan, iron recoil chips and compact smoke-column shell impact. Distinctly louder visual than Crossbow; normal combat damage rather than fixed1.",
+      "materials": "weighty iron slashes, recoil jets and fractured restraint rings",
+      "colors": "iron grey, ember red, dirty orange; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "blast"
+    },
+    {
+      "id": "VFX_GUTS_BERSERK",
+      "file": "vfx_hero_guts_berserk_primary.png",
+      "batch": 6,
+      "status": "UPGRADE",
+      "frames": 31,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3968,
+        128
+      ],
+      "duration": "1.3s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.8",
+      "main_action": "Cracked iron restraints split, ember-red edges flash into a close aggressive silhouette. In-mode attacks use brutal crossed iron crescents over their actual mask, not a generic fire wash. End-turn self-damage stays a small red tick.",
+      "materials": "weighty iron slashes, recoil jets and fractured restraint rings",
+      "colors": "iron grey, ember red, dirty orange; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "transform"
+    },
+    {
+      "id": "VFX_GUTS_BERSERK",
+      "file": "vfx_hero_guts_berserk_accent.png",
+      "batch": 6,
+      "status": "UPGRADE",
+      "frames": 31,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3968,
+        128
+      ],
+      "duration": "1.3s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.8",
+      "main_action": "Cracked iron restraints split, ember-red edges flash into a close aggressive silhouette. In-mode attacks use brutal crossed iron crescents over their actual mask, not a generic fire wash. End-turn self-damage stays a small red tick.",
+      "materials": "weighty iron slashes, recoil jets and fractured restraint rings",
+      "colors": "iron grey, ember red, dirty orange; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "transform"
+    },
+    {
+      "id": "VFX_GUTS_BERSERK_EXIT_DRAIN",
+      "file": "vfx_hero_guts_berserk_exit_drain.png",
+      "batch": 6,
+      "status": "UPGRADE",
+      "frames": 10,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1280,
+        128
+      ],
+      "duration": "0.4s total one-shot (per resolved segment for interactive chains)",
+      "fps": "25.0",
+      "main_action": "Dim ember notch contracts for real self-damage; exit closes broken restraint glow into neutral steel. No attacker shown for self-damage.",
+      "materials": "weighty iron slashes, recoil jets and fractured restraint rings",
+      "colors": "iron grey, ember red, dirty orange; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "ash"
+    },
+    {
+      "id": "VFX_ODIN_GUNGNIR",
+      "file": "vfx_hero_odin_gungnir.png",
+      "batch": 6,
+      "status": "MISSING",
+      "frames": 11,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1408,
+        128
+      ],
+      "duration": "0.45s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.4",
+      "main_action": "A sharply etched aged-gold spear rune locks along attack direction; one decisive contact spark. Never infer hit against confirmed auto-defense solely from doubles.",
+      "materials": "rune spear geometry, raven feather motes and hoof-shaped waymarks",
+      "colors": "slate silver, aged gold, storm-violet; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "beam"
+    },
+    {
+      "id": "VFX_ODIN_HUGINN",
+      "file": "vfx_hero_odin_huginn.png",
+      "batch": 6,
+      "status": "MISSING",
+      "frames": 1,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        128,
+        128
+      ],
+      "duration": "Persistent STATIC state; no impact animation duration",
+      "fps": "1 source frame; CSS pulse at browser refresh",
+      "main_action": "Tiny abstract raven-feather eye notch near Odin; optional thin selection bracket on a legitimately exact-known enemy. Do not make a public stealthRevealed effect for detection alone.",
+      "materials": "rune spear geometry, raven feather motes and hoof-shaped waymarks",
+      "colors": "slate silver, aged gold, storm-violet; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "sigil"
+    },
+    {
+      "id": "VFX_ODIN_MUNINN",
+      "file": "vfx_hero_odin_muninn.png",
+      "batch": 6,
+      "status": "MISSING",
+      "frames": 14,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1792,
+        128
+      ],
+      "duration": "0.6s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.3",
+      "main_action": "Two ash-silver feather arcs cross into a rune guard with dark-violet center; consumes all6 charges. Neutral roll display until actual auto decision.",
+      "materials": "rune spear geometry, raven feather motes and hoof-shaped waymarks",
+      "colors": "slate silver, aged gold, storm-violet; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "guard"
+    },
+    {
+      "id": "VFX_ODIN_SLEIPNIR",
+      "file": "vfx_hero_odin_sleipnir.png",
+      "batch": 6,
+      "status": "UPGRADE",
+      "frames": 18,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2304,
+        128
+      ],
+      "duration": "0.75s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.0",
+      "main_action": "Eight small hooflike rune imprints collapse at departure and spread at arrival. Instant any-empty-cell teleport; no cavalry path or intermediate attacks.",
+      "materials": "rune spear geometry, raven feather motes and hoof-shaped waymarks",
+      "colors": "slate silver, aged gold, storm-violet; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "portal"
+    },
+    {
+      "id": "VFX_LOKI_ENTANGLE",
+      "file": "vfx_hero_loki_entangle.png",
+      "batch": 4,
+      "status": "MISSING",
+      "frames": 20,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2560,
+        128
+      ],
+      "duration": "0.85s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.5",
+      "main_action": "Crooked green-violet ribbon knots clamp near affected feet, no damage burst because this branch deals0. Source remains hidden when rules preserve Loki stealth; never radiate from secret caster position.",
+      "materials": "crooked ribbon knots, masklike spirals and deceptive split silhouettes",
+      "colors": "jade green, muted violet, acid-gold highlights; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "chain"
+    },
+    {
+      "id": "VFX_LOKI_CHICKEN",
+      "file": "vfx_hero_loki_chicken.png",
+      "batch": 4,
+      "status": "UPGRADE",
+      "frames": 17,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2176,
+        128
+      ],
+      "duration": "0.7s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.3",
+      "main_action": "Split jade-violet smoke ribbon and feather-knot seal snap into existing chicken token variant, short transformation halo, no copyrighted mascot. Single Chicken preserves Loki stealth; group branch follows its own reveal rules.",
+      "materials": "crooked ribbon knots, masklike spirals and deceptive split silhouettes",
+      "colors": "jade green, muted violet, acid-gold highlights; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "feather"
+    },
+    {
+      "id": "VFX_LOKI_CONTROL",
+      "file": "vfx_hero_loki_control.png",
+      "batch": 4,
+      "status": "MISSING",
+      "frames": 16,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2048,
+        128
+      ],
+      "duration": "0.65s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.6",
+      "main_action": "Crooked jade control knot attaches to controlled token, then its own class attack animates. No harm effect at merely controlled unit and no attack before chosen target commits.",
+      "materials": "crooked ribbon knots, masklike spirals and deceptive split silhouettes",
+      "colors": "jade green, muted violet, acid-gold highlights; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "sigil"
+    },
+    {
+      "id": "VFX_LOKI_SPIN",
+      "file": "vfx_hero_loki_spin.png",
+      "batch": 4,
+      "status": "MISSING",
+      "frames": 13,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1664,
+        128
+      ],
+      "duration": "0.55s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.6",
+      "main_action": "Brief three crooked jade glyph shards turn like a selector and settle on ally. Then render that ally's ACTUAL selected hero ability VFX; never a generic random explosion.",
+      "materials": "crooked ribbon knots, masklike spirals and deceptive split silhouettes",
+      "colors": "jade green, muted violet, acid-gold highlights; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "blades"
+    },
+    {
+      "id": "VFX_JEBE_HAIL",
+      "file": "vfx_hero_jebe_hail_primary.png",
+      "batch": 5,
+      "status": "UPGRADE",
+      "frames": 25,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3200,
+        128
+      ],
+      "duration": "1.05s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.8",
+      "main_action": "Organized bronze arrow fan dives as sharp diagonal streaks; contact chips only at failed-defense units, fading shafts over empty cells do not imply persistent arrows.",
+      "materials": "precise arrow fans, bronze trajectory corners and elastic ricochet glints",
+      "colors": "bronze, pale arrow glints, tan dust; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "storm"
+    },
+    {
+      "id": "VFX_JEBE_HAIL",
+      "file": "vfx_hero_jebe_hail_accent.png",
+      "batch": 5,
+      "status": "UPGRADE",
+      "frames": 25,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3200,
+        128
+      ],
+      "duration": "1.05s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.8",
+      "main_action": "Organized bronze arrow fan dives as sharp diagonal streaks; contact chips only at failed-defense units, fading shafts over empty cells do not imply persistent arrows.",
+      "materials": "precise arrow fans, bronze trajectory corners and elastic ricochet glints",
+      "colors": "bronze, pale arrow glints, tan dust; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "storm"
+    },
+    {
+      "id": "VFX_JEBE_RICOCHET",
+      "file": "vfx_hero_jebe_ricochet_primary.png",
+      "batch": 5,
+      "status": "UPGRADE",
+      "frames": 29,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3712,
+        128
+      ],
+      "duration": "1.2s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.2",
+      "main_action": "One bronze arrowlight pivots at successive confirmed targets with hard angular corner flashes and short residual traces. 1d6 determines attacks; each target is chosen legally, not pre-rendered through hypothetical enemies.",
+      "materials": "precise arrow fans, bronze trajectory corners and elastic ricochet glints",
+      "colors": "bronze, pale arrow glints, tan dust; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "beam"
+    },
+    {
+      "id": "VFX_JEBE_RICOCHET",
+      "file": "vfx_hero_jebe_ricochet_accent.png",
+      "batch": 5,
+      "status": "UPGRADE",
+      "frames": 29,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3712,
+        128
+      ],
+      "duration": "1.2s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.2",
+      "main_action": "One bronze arrowlight pivots at successive confirmed targets with hard angular corner flashes and short residual traces. 1d6 determines attacks; each target is chosen legally, not pre-rendered through hypothetical enemies.",
+      "materials": "precise arrow fans, bronze trajectory corners and elastic ricochet glints",
+      "colors": "bronze, pale arrow glints, tan dust; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "beam"
+    },
+    {
+      "id": "VFX_HASSAN_ORDER",
+      "file": "vfx_hero_hassan_order.png",
+      "batch": 4,
+      "status": "UPGRADE",
+      "frames": 16,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2048,
+        128
+      ],
+      "duration": "0.65s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.6",
+      "main_action": "Small sand-black seal at source, restrained sand sigil at each selected ally for owner only. This grants game-long stealth threshold5-6 (or better existing threshold); it does NOT immediately fade or hide allies.",
+      "materials": "sand erosion, whisper smoke and small seal geometry",
+      "colors": "sand gold, soot black, muted teal; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "sigil"
+    },
+    {
+      "id": "VFX_HASSAN_TRUE_ENEMY",
+      "file": "vfx_hero_hassan_true_enemy.png",
+      "batch": 4,
+      "status": "MISSING",
+      "frames": 17,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2176,
+        128
+      ],
+      "duration": "0.7s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.3",
+      "main_action": "Taut soot-black sand thread draws a small gold control seal into enemy, then controlled enemy performs its normal class attack. No generic blast at controlled unit or damage before actual attack.",
+      "materials": "sand erosion, whisper smoke and small seal geometry",
+      "colors": "sand gold, soot black, muted teal; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "slash"
+    },
+    {
+      "id": "VFX_KALADIN_FIRST",
+      "file": "vfx_hero_kaladin_first.png",
+      "batch": 6,
+      "status": "UPGRADE",
+      "frames": 16,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2048,
+        128
+      ],
+      "duration": "0.65s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.6",
+      "main_action": "Two cool-white wind threads stitch a segmented teal oath ring, rising lightly above token edges; use actual HP gain.",
+      "materials": "wind ribbons, segmented oath sigils and firm protective lattices",
+      "colors": "storm teal, ice-white, dark steel; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "heal"
+    },
+    {
+      "id": "VFX_KALADIN_FIFTH",
+      "file": "vfx_hero_kaladin_fifth_primary.png",
+      "batch": 6,
+      "status": "UPGRADE",
+      "frames": 32,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        4096,
+        128
+      ],
+      "duration": "1.4s total one-shot (per resolved segment for interactive chains)",
+      "fps": "22.9",
+      "main_action": "Storm-white vertical ribbon columns connect an angular oath lattice, surge as a coherent wind formation, dissipate to thin teal fragments. Failed defenses take2 and remain locked until caster next turn. Center is not required to be Kaladin.",
+      "materials": "wind ribbons, segmented oath sigils and firm protective lattices",
+      "colors": "storm teal, ice-white, dark steel; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "transform"
+    },
+    {
+      "id": "VFX_KALADIN_FIFTH",
+      "file": "vfx_hero_kaladin_fifth_accent.png",
+      "batch": 6,
+      "status": "UPGRADE",
+      "frames": 32,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        4096,
+        128
+      ],
+      "duration": "1.4s total one-shot (per resolved segment for interactive chains)",
+      "fps": "22.9",
+      "main_action": "Storm-white vertical ribbon columns connect an angular oath lattice, surge as a coherent wind formation, dissipate to thin teal fragments. Failed defenses take2 and remain locked until caster next turn. Center is not required to be Kaladin.",
+      "materials": "wind ribbons, segmented oath sigils and firm protective lattices",
+      "colors": "storm teal, ice-white, dark steel; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "transform"
+    },
+    {
+      "id": "VFX_LUCHE_RADIANCE",
+      "file": "vfx_hero_luche_radiance.png",
+      "batch": 6,
+      "status": "MISSING",
+      "frames": 11,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1408,
+        128
+      ],
+      "duration": "0.45s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.4",
+      "main_action": "Tiny sun-spoke glare fractures into a closed-eye glyph at attacker; no injury flash because Blind itself is not extra damage.",
+      "materials": "sharp sun discs, thin radial spokes and low halo bloom",
+      "colors": "white-gold, warm ochre, deep burgundy shadow; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "soul"
+    },
+    {
+      "id": "VFX_LUCHE_RAY",
+      "file": "vfx_hero_luche_ray_primary.png",
+      "batch": 6,
+      "status": "MISSING",
+      "frames": 20,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2560,
+        128
+      ],
+      "duration": "0.85s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.5",
+      "main_action": "Needle-white sunbeam with ochre segmented spokes; around-self mode is eight sharp radiating lobes. Enemy-only Blind on failed defenses. The mode geometry must stay distinct.",
+      "materials": "sharp sun discs, thin radial spokes and low halo bloom",
+      "colors": "white-gold, warm ochre, deep burgundy shadow; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "beam"
+    },
+    {
+      "id": "VFX_LUCHE_RAY",
+      "file": "vfx_hero_luche_ray_accent.png",
+      "batch": 6,
+      "status": "MISSING",
+      "frames": 20,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2560,
+        128
+      ],
+      "duration": "0.85s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.5",
+      "main_action": "Needle-white sunbeam with ochre segmented spokes; around-self mode is eight sharp radiating lobes. Enemy-only Blind on failed defenses. The mode geometry must stay distinct.",
+      "materials": "sharp sun discs, thin radial spokes and low halo bloom",
+      "colors": "white-gold, warm ochre, deep burgundy shadow; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "beam"
+    },
+    {
+      "id": "VFX_LUCHE_FALLING_SUN",
+      "file": "vfx_hero_luche_falling_sun_primary.png",
+      "batch": 6,
+      "status": "MISSING",
+      "frames": 31,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3968,
+        128
+      ],
+      "duration": "1.3s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.8",
+      "main_action": "A small compressed white-gold sun disc fractures into ordered spearlight spokes toward legal affected cells, then sharp solar impact petals. Failed defenses take2 and Blind. Preserve cells that were not attacked.",
+      "materials": "sharp sun discs, thin radial spokes and low halo bloom",
+      "colors": "white-gold, warm ochre, deep burgundy shadow; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "blast"
+    },
+    {
+      "id": "VFX_LUCHE_FALLING_SUN",
+      "file": "vfx_hero_luche_falling_sun_accent.png",
+      "batch": 6,
+      "status": "MISSING",
+      "frames": 31,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3968,
+        128
+      ],
+      "duration": "1.3s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.8",
+      "main_action": "A small compressed white-gold sun disc fractures into ordered spearlight spokes toward legal affected cells, then sharp solar impact petals. Failed defenses take2 and Blind. Preserve cells that were not attacked.",
+      "materials": "sharp sun discs, thin radial spokes and low halo bloom",
+      "colors": "white-gold, warm ochre, deep burgundy shadow; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "blast"
+    },
+    {
+      "id": "VFX_KANEKI_REGEN",
+      "file": "vfx_hero_kaneki_regen.png",
+      "batch": 6,
+      "status": "UPGRADE",
+      "frames": 16,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2048,
+        128
+      ],
+      "duration": "0.65s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.6",
+      "main_action": "Wine-red segmented organic threads coil into a pearl seam, then withdraw. Heal amount equals spent RC up to HP cap; no blood spray.",
+      "materials": "organic segmented arcs and tightly coiling regenerative threads",
+      "colors": "wine red, charcoal, pearl tendril edges; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "heal"
+    },
+    {
+      "id": "VFX_KANEKI_CENTIPEDE",
+      "file": "vfx_hero_kaneki_centipede.png",
+      "batch": 6,
+      "status": "UPGRADE",
+      "frames": 29,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3712,
+        128
+      ],
+      "duration": "1.2s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.2",
+      "main_action": "Original segmented vermilion energy spine circles once into long directional hooks, white seams lock into the upgraded token. Permanent Rider movement unlock; no monster model replacement requested.",
+      "materials": "organic segmented arcs and tightly coiling regenerative threads",
+      "colors": "wine red, charcoal, pearl tendril edges; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "chain"
+    },
+    {
+      "id": "VFX_ZORO_SANTORYU",
+      "file": "vfx_hero_zoro_santoryu.png",
+      "batch": 6,
+      "status": "MISSING",
+      "frames": 13,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1664,
+        128
+      ],
+      "duration": "0.55s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.6",
+      "main_action": "Three steel-jade arcs form distinct overlapping blade directions; each chosen target only receives hit/miss feedback appropriate to its result. No nine-sword ultimate look.",
+      "materials": "interlocking blade arcs, crossing cuts and nine distinct spectral edge strokes",
+      "colors": "jade, steel silver, restrained plum; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "slash"
+    },
+    {
+      "id": "VFX_ZORO_ONI_GIRI",
+      "file": "vfx_hero_zoro_oni_giri.png",
+      "batch": 6,
+      "status": "MISSING",
+      "frames": 19,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2432,
+        128
+      ],
+      "duration": "0.8s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.8",
+      "main_action": "A tight jade-steel dash slash splits into three parallel edge streaks, snaps at legal landing, then cuts target only on successful attack. No damage along intervening cells.",
+      "materials": "interlocking blade arcs, crossing cuts and nine distinct spectral edge strokes",
+      "colors": "jade, steel silver, restrained plum; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "slash"
+    },
+    {
+      "id": "VFX_ZORO_ASURA",
+      "file": "vfx_hero_zoro_asura_primary.png",
+      "batch": 6,
+      "status": "MISSING",
+      "frames": 31,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3968,
+        128
+      ],
+      "duration": "1.3s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.8",
+      "main_action": "Nine individually legible steel-plum spectral blade strokes fan from a jade center, intersect as a clean threatening crown, then collapse outward. Brief and unmistakably multi-blade, no copied body silhouette.",
+      "materials": "interlocking blade arcs, crossing cuts and nine distinct spectral edge strokes",
+      "colors": "jade, steel silver, restrained plum; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "slash"
+    },
+    {
+      "id": "VFX_ZORO_ASURA",
+      "file": "vfx_hero_zoro_asura_accent.png",
+      "batch": 6,
+      "status": "MISSING",
+      "frames": 31,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3968,
+        128
+      ],
+      "duration": "1.3s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.8",
+      "main_action": "Nine individually legible steel-plum spectral blade strokes fan from a jade center, intersect as a clean threatening crown, then collapse outward. Brief and unmistakably multi-blade, no copied body silhouette.",
+      "materials": "interlocking blade arcs, crossing cuts and nine distinct spectral edge strokes",
+      "colors": "jade, steel silver, restrained plum; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "slash"
+    },
+    {
+      "id": "VFX_DON_SORROW_MOVE",
+      "file": "vfx_hero_don_sorrow_move.png",
+      "batch": 5,
+      "status": "MISSING",
+      "frames": 11,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1408,
+        128
+      ],
+      "duration": "0.45s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.4",
+      "main_action": "Small torn brass pennant arcs toward committed destination; waiting choice uses generic UI ring, no movement before acceptance.",
+      "materials": "quixotic lance geometry, windmill-shaped directional spokes and torn pennant motes",
+      "colors": "brass, dusty ivory, restrained scarlet; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "trail"
+    },
+    {
+      "id": "VFX_DON_WINDMILLS",
+      "file": "vfx_hero_don_windmills_primary.png",
+      "batch": 5,
+      "status": "MISSING",
+      "frames": 24,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3072,
+        128
+      ],
+      "duration": "1s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.0",
+      "main_action": "Brass lance streak with three windmill-like spokes marks momentum, small scuff at one crossed enemy for its fixed1 damage and owner relocation choice; only Giant gets full attack cue.",
+      "materials": "quixotic lance geometry, windmill-shaped directional spokes and torn pennant motes",
+      "colors": "brass, dusty ivory, restrained scarlet; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "blades"
+    },
+    {
+      "id": "VFX_DON_WINDMILLS",
+      "file": "vfx_hero_don_windmills_accent.png",
+      "batch": 5,
+      "status": "MISSING",
+      "frames": 24,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3072,
+        128
+      ],
+      "duration": "1s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.0",
+      "main_action": "Brass lance streak with three windmill-like spokes marks momentum, small scuff at one crossed enemy for its fixed1 damage and owner relocation choice; only Giant gets full attack cue.",
+      "materials": "quixotic lance geometry, windmill-shaped directional spokes and torn pennant motes",
+      "colors": "brass, dusty ivory, restrained scarlet; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "blades"
+    },
+    {
+      "id": "VFX_DON_MADNESS",
+      "file": "vfx_hero_don_madness_primary.png",
+      "batch": 5,
+      "status": "MISSING",
+      "frames": 30,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3840,
+        128
+      ],
+      "duration": "1.25s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.0",
+      "main_action": "Torn ivory pennant gathers into a long brass spectral lance wave, runs through enemies along chosen direction with +1 damage only on their confirmed failed defenses. Death ash waits for final attack chain.",
+      "materials": "quixotic lance geometry, windmill-shaped directional spokes and torn pennant motes",
+      "colors": "brass, dusty ivory, restrained scarlet; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "blades"
+    },
+    {
+      "id": "VFX_DON_MADNESS",
+      "file": "vfx_hero_don_madness_accent.png",
+      "batch": 5,
+      "status": "MISSING",
+      "frames": 30,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3840,
+        128
+      ],
+      "duration": "1.25s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.0",
+      "main_action": "Torn ivory pennant gathers into a long brass spectral lance wave, runs through enemies along chosen direction with +1 damage only on their confirmed failed defenses. Death ash waits for final attack chain.",
+      "materials": "quixotic lance geometry, windmill-shaped directional spokes and torn pennant motes",
+      "colors": "brass, dusty ivory, restrained scarlet; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "blades"
+    },
+    {
+      "id": "VFX_JACK_SNARE_PLACE",
+      "file": "vfx_hero_jack_snare_place.png",
+      "batch": 4,
+      "status": "MISSING",
+      "frames": 10,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1280,
+        128
+      ],
+      "duration": "0.4s total one-shot (per resolved segment for interactive chains)",
+      "fps": "25.0",
+      "main_action": "Small surgical silver-wire loop sinks into dark crimson seam; owner-only. On sixth placement owner selects existing trap to explode; don't draw new hidden cell during public explosion.",
+      "materials": "Victorian wire traps, thin surgical slash ribbons and pocket fog",
+      "colors": "crimson, soot black, cold silver; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "chain"
+    },
+    {
+      "id": "VFX_JACK_SNARE_REVEAL_TRIGGER",
+      "file": "vfx_hero_jack_snare_reveal_trigger.png",
+      "batch": 4,
+      "status": "UPGRADE",
+      "frames": 13,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1664,
+        128
+      ],
+      "duration": "0.55s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.6",
+      "main_action": "Silver wire jaws snap around token feet, crimson latch clicks, movement trail stops. This trap immobilizes until next own-turn start; placement/trigger is not stake damage.",
+      "materials": "Victorian wire traps, thin surgical slash ribbons and pocket fog",
+      "colors": "crimson, soot black, cold silver; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "chain"
+    },
+    {
+      "id": "VFX_JACK_COVER_TRACKS",
+      "file": "vfx_hero_jack_cover_tracks_primary.png",
+      "batch": 4,
+      "status": "UPGRADE",
+      "frames": 20,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2560,
+        128
+      ],
+      "duration": "0.85s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.5",
+      "main_action": "Crimson wire spokes recoil into a cold-silver burst with pocket soot fragments across exact square. Rolls1-4 take1,5-6 avoid. Existing snareExplosion displays only a center fire puff; expand readable area, avoid artillery scale.",
+      "materials": "Victorian wire traps, thin surgical slash ribbons and pocket fog",
+      "colors": "crimson, soot black, cold silver; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "blast"
+    },
+    {
+      "id": "VFX_JACK_COVER_TRACKS",
+      "file": "vfx_hero_jack_cover_tracks_accent.png",
+      "batch": 4,
+      "status": "UPGRADE",
+      "frames": 20,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2560,
+        128
+      ],
+      "duration": "0.85s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.5",
+      "main_action": "Crimson wire spokes recoil into a cold-silver burst with pocket soot fragments across exact square. Rolls1-4 take1,5-6 avoid. Existing snareExplosion displays only a center fire puff; expand readable area, avoid artillery scale.",
+      "materials": "Victorian wire traps, thin surgical slash ribbons and pocket fog",
+      "colors": "crimson, soot black, cold silver; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "blast"
+    },
+    {
+      "id": "VFX_JACK_SLAUGHTER",
+      "file": "vfx_hero_jack_slaughter_primary.png",
+      "batch": 4,
+      "status": "MISSING",
+      "frames": 32,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        4096,
+        128
+      ],
+      "duration": "1.8s total one-shot (per resolved segment for interactive chains)",
+      "fps": "17.8",
+      "main_action": "Four separate crisp crimson/silver surgical slash ribbons form a restrained cage sequence, each punctuated only on its own successful hit. Three damage per failed defense; no continuous opaque red cyclone or graphic dismemberment.",
+      "materials": "Victorian wire traps, thin surgical slash ribbons and pocket fog",
+      "colors": "crimson, soot black, cold silver; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "slash"
+    },
+    {
+      "id": "VFX_JACK_SLAUGHTER",
+      "file": "vfx_hero_jack_slaughter_accent.png",
+      "batch": 4,
+      "status": "MISSING",
+      "frames": 32,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        4096,
+        128
+      ],
+      "duration": "1.8s total one-shot (per resolved segment for interactive chains)",
+      "fps": "17.8",
+      "main_action": "Four separate crisp crimson/silver surgical slash ribbons form a restrained cage sequence, each punctuated only on its own successful hit. Three damage per failed defense; no continuous opaque red cyclone or graphic dismemberment.",
+      "materials": "Victorian wire traps, thin surgical slash ribbons and pocket fog",
+      "colors": "crimson, soot black, cold silver; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "slash"
+    },
+    {
+      "id": "VFX_ARTEMIS_MOON_REVEAL",
+      "file": "vfx_hero_artemis_moon_reveal.png",
+      "batch": 7,
+      "status": "MISSING",
+      "frames": 18,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2304,
+        128
+      ],
+      "duration": "0.75s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.0",
+      "main_action": "Low silver-lavender lunar crescent rolls across exact cells, broken stealth contours re-form at confirmed newly visible enemies. No damage explosion: this reveals.",
+      "materials": "crescent arcs, fine arrowlight and sharply bounded lunar fields",
+      "colors": "moon silver, cool lavender, dark moss; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "crescent"
+    },
+    {
+      "id": "VFX_ARTEMIS_CRESCENT",
+      "file": "vfx_hero_artemis_crescent_primary.png",
+      "batch": 7,
+      "status": "MISSING",
+      "frames": 30,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3840,
+        128
+      ],
+      "duration": "1.25s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.0",
+      "main_action": "One sharp silver crescent traverses bounded corridor, sweeping small lunar edge sparks over precisely included neighboring cells. It stops at selected endpoint extent rather than board-edge beam; failed defenses take2.",
+      "materials": "crescent arcs, fine arrowlight and sharply bounded lunar fields",
+      "colors": "moon silver, cool lavender, dark moss; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "crescent"
+    },
+    {
+      "id": "VFX_ARTEMIS_CRESCENT",
+      "file": "vfx_hero_artemis_crescent_accent.png",
+      "batch": 7,
+      "status": "MISSING",
+      "frames": 30,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3840,
+        128
+      ],
+      "duration": "1.25s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.0",
+      "main_action": "One sharp silver crescent traverses bounded corridor, sweeping small lunar edge sparks over precisely included neighboring cells. It stops at selected endpoint extent rather than board-edge beam; failed defenses take2.",
+      "materials": "crescent arcs, fine arrowlight and sharply bounded lunar fields",
+      "colors": "moon silver, cool lavender, dark moss; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "crescent"
+    },
+    {
+      "id": "VFX_FRISK_HUGS",
+      "file": "vfx_hero_frisk_hugs.png",
+      "batch": 4,
+      "status": "MISSING",
+      "frames": 14,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1792,
+        128
+      ],
+      "duration": "0.6s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.3",
+      "main_action": "Soft ivory-peach wrapping arcs close into a small movement-lock knot, no damage and no character hug scene. No source-to-target line if Frisk is hidden.",
+      "materials": "compact empathic rings versus needle-like crimson cuts; original abstract motifs",
+      "colors": "soft ivory, pale peach and teal for mercy; dark vermilion for aggression",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "heal"
+    },
+    {
+      "id": "VFX_FRISK_WARM_WORDS",
+      "file": "vfx_hero_frisk_warm_words.png",
+      "batch": 4,
+      "status": "UPGRADE",
+      "frames": 14,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1792,
+        128
+      ],
+      "duration": "0.6s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.3",
+      "main_action": "Two thin peach-ivory ascending wavelets and small restorative motes; amount follows real1d6 healing, no lettering or exposed secret source.",
+      "materials": "compact empathic rings versus needle-like crimson cuts; original abstract motifs",
+      "colors": "soft ivory, pale peach and teal for mercy; dark vermilion for aggression",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "heal"
+    },
+    {
+      "id": "VFX_FRISK_CRY",
+      "file": "vfx_hero_frisk_cry.png",
+      "batch": 4,
+      "status": "MISSING",
+      "frames": 11,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1408,
+        128
+      ],
+      "duration": "0.45s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.4",
+      "main_action": "Small damped ivory ring interrupts incoming strike, two narrow pulse bands, no tears/face animation. No protection before the optional defensive choice is accepted. Accepted Child's Cry spends5 Pacifism and prevents the incoming damage; a refused/failed spend cannot play protection.",
+      "materials": "compact empathic rings versus needle-like crimson cuts; original abstract motifs",
+      "colors": "soft ivory, pale peach and teal for mercy; dark vermilion for aggression",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "soul"
+    },
+    {
+      "id": "VFX_FRISK_FRIENDSHIP",
+      "file": "vfx_hero_frisk_friendship.png",
+      "batch": 4,
+      "status": "UPGRADE",
+      "frames": 26,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3328,
+        128
+      ],
+      "duration": "1.1s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.6",
+      "main_action": "A compact ivory-peach reconciliation seal opens into two balanced teal arcs inside the victory panel. This is an immediate alternate win, NOT healing, resurrection or mass target conversion. It may resolve from eligibility checks as well as accepted option; reuse result UI.",
+      "materials": "compact empathic rings versus needle-like crimson cuts; original abstract motifs",
+      "colors": "soft ivory, pale peach and teal for mercy; dark vermilion for aggression",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "soul"
+    },
+    {
+      "id": "VFX_FRISK_SUBSTITUTION",
+      "file": "vfx_hero_frisk_substitution.png",
+      "batch": 4,
+      "status": "MISSING",
+      "frames": 11,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1408,
+        128
+      ],
+      "duration": "0.45s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.4",
+      "main_action": "A sharp crimson paper-thin duplicate contour breaks away at contact while real token remains in same cell. No false move destination. Accepted substitution spends3 Genocide and takes exactly1 damage; this is not a dodge or invulnerability shield.",
+      "materials": "compact empathic rings versus needle-like crimson cuts; original abstract motifs",
+      "colors": "soft ivory, pale peach and teal for mercy; dark vermilion for aggression",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "smoke"
+    },
+    {
+      "id": "VFX_FRISK_KEEN_EYE",
+      "file": "vfx_hero_frisk_keen_eye.png",
+      "batch": 4,
+      "status": "UPGRADE",
+      "frames": 13,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1664,
+        128
+      ],
+      "duration": "0.55s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.6",
+      "main_action": "One hard vermilion aperture notch snaps open beside newly visible target, distinct from generic Search ring. No reveal at a hovered hidden candidate.",
+      "materials": "compact empathic rings versus needle-like crimson cuts; original abstract motifs",
+      "colors": "soft ivory, pale peach and teal for mercy; dark vermilion for aggression",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "sigil"
+    },
+    {
+      "id": "VFX_FRISK_PRECISION",
+      "file": "vfx_hero_frisk_precision.png",
+      "batch": 4,
+      "status": "UPGRADE",
+      "frames": 16,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2048,
+        128
+      ],
+      "duration": "0.65s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.6",
+      "main_action": "Compact needle-like crimson cut with ivory edge, fine three-tick convergence at committed target and sharp actual impact. No unsupported large AoE.",
+      "materials": "compact empathic rings versus needle-like crimson cuts; original abstract motifs",
+      "colors": "soft ivory, pale peach and teal for mercy; dark vermilion for aggression",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "slash"
+    },
+    {
+      "id": "VFX_FRISK_ONE_PATH",
+      "file": "vfx_hero_frisk_one_path.png",
+      "batch": 4,
+      "status": "UPGRADE",
+      "frames": 26,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3328,
+        128
+      ],
+      "duration": "1.1s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.6",
+      "main_action": "Soft ivory ring fractures, peach threads contract to a dark vermilion needle seal; token variant change is signature, compact rather than graphic violence.",
+      "materials": "compact empathic rings versus needle-like crimson cuts; original abstract motifs",
+      "colors": "soft ivory, pale peach and teal for mercy; dark vermilion for aggression",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "transform"
+    },
+    {
+      "id": "VFX_FRISK_CLEAN_SOUL",
+      "file": "vfx_hero_frisk_clean_soul.png",
+      "batch": 4,
+      "status": "MISSING",
+      "frames": 11,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1408,
+        128
+      ],
+      "duration": "0.45s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.4",
+      "main_action": "Thin ivory clean arc appears only for permitted viewer; on consumption splits into two gentle deflection ribbons. No permanent invulnerable aura.",
+      "materials": "compact empathic rings versus needle-like crimson cuts; original abstract motifs",
+      "colors": "soft ivory, pale peach and teal for mercy; dark vermilion for aggression",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "soul"
+    },
+    {
+      "id": "VFX_SANS_GASTER_CANNON",
+      "file": "vfx_hero_sans_gaster_cannon.png",
+      "batch": 3,
+      "status": "UPGRADE",
+      "frames": 16,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2048,
+        128
+      ],
+      "duration": "0.65s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.6",
+      "main_action": "Original skull-like arcane cannon assembles from bone-white plates and cyan inner arcs, inhales energy through negative-space jaw aperture, brightens with a tight charge. No copied character face or recognizable game sprite.",
+      "materials": "original arcane bone geometry, spectral cannon silhouettes and narrow piercing energy",
+      "colors": "bone white, cold cyan, indigo-black; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "sigil"
+    },
+    {
+      "id": "VFX_SANS_GASTER_BEAM",
+      "file": "vfx_hero_sans_gaster_beam_primary.png",
+      "batch": 3,
+      "status": "UPGRADE",
+      "frames": 20,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2560,
+        128
+      ],
+      "duration": "0.85s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.5",
+      "main_action": "Bone-white narrow energy spine with cyan serrated envelope fires from cannon aperture to board boundary, visibly continuing through EVERY enemy on the ray and any intervening ally. Each failed-defense target gets its own small hit accent; no first-enemy stop. Fade in 0.18s after peak.",
+      "materials": "original arcane bone geometry, spectral cannon silhouettes and narrow piercing energy",
+      "colors": "bone white, cold cyan, indigo-black; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "beam"
+    },
+    {
+      "id": "VFX_SANS_GASTER_BEAM",
+      "file": "vfx_hero_sans_gaster_beam_accent.png",
+      "batch": 3,
+      "status": "UPGRADE",
+      "frames": 20,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2560,
+        128
+      ],
+      "duration": "0.85s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.5",
+      "main_action": "Bone-white narrow energy spine with cyan serrated envelope fires from cannon aperture to board boundary, visibly continuing through EVERY enemy on the ray and any intervening ally. Each failed-defense target gets its own small hit accent; no first-enemy stop. Fade in 0.18s after peak.",
+      "materials": "original arcane bone geometry, spectral cannon silhouettes and narrow piercing energy",
+      "colors": "bone white, cold cyan, indigo-black; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "beam"
+    },
+    {
+      "id": "VFX_SANS_JOKE",
+      "file": "vfx_hero_sans_joke.png",
+      "batch": 3,
+      "status": "UPGRADE",
+      "frames": 20,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2560,
+        128
+      ],
+      "duration": "0.85s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.5",
+      "main_action": "Angular bone-white brackets clap shut over enemy cells with low cyan distortion. Keep empty center/token readable; attach small lock glyph only to affected targets.",
+      "materials": "original arcane bone geometry, spectral cannon silhouettes and narrow piercing energy",
+      "colors": "bone white, cold cyan, indigo-black; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "sigil"
+    },
+    {
+      "id": "VFX_SANS_UNBELIEVER",
+      "file": "vfx_hero_sans_unbeliever.png",
+      "batch": 3,
+      "status": "UPGRADE",
+      "frames": 24,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3072,
+        128
+      ],
+      "duration": "1s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.0",
+      "main_action": "A broken ivory orbit contracts into a cold cyan eye-slit seal without depicting a face; abrupt internal fracture and short rim flare.",
+      "materials": "original arcane bone geometry, spectral cannon silhouettes and narrow piercing energy",
+      "colors": "bone white, cold cyan, indigo-black; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "transform"
+    },
+    {
+      "id": "VFX_SANS_BONE_FIELD",
+      "file": "vfx_hero_sans_bone_field.png",
+      "batch": 3,
+      "status": "UPGRADE",
+      "frames": 1,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        128,
+        128
+      ],
+      "duration": "0.8s total one-shot (per resolved segment for interactive chains)",
+      "fps": "1 source frame; CSS pulse at browser refresh",
+      "main_action": "Brief low ivory ground ripple; sparse skeletal linework remains dim beneath grid. Arena lasts rolled 1d6+1 turns, not animation duration. Blue/orange per-turn bone statuses use small glyphs.",
+      "materials": "original arcane bone geometry, spectral cannon silhouettes and narrow piercing energy",
+      "colors": "bone white, cold cyan, indigo-black; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "bone"
+    },
+    {
+      "id": "VFX_SANS_SLEEP",
+      "file": "vfx_hero_sans_sleep.png",
+      "batch": 3,
+      "status": "UPGRADE",
+      "frames": 13,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1664,
+        128
+      ],
+      "duration": "0.55s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.6",
+      "main_action": "Small tilted ivory crescent closes around cyan restoration dots; no large sleeping character or comic lettering.",
+      "materials": "original arcane bone geometry, spectral cannon silhouettes and narrow piercing energy",
+      "colors": "bone white, cold cyan, indigo-black; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "sleep"
+    },
+    {
+      "id": "VFX_SANS_CURSE_APPLY",
+      "file": "vfx_hero_sans_curse_apply.png",
+      "batch": 3,
+      "status": "UPGRADE",
+      "frames": 14,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1792,
+        128
+      ],
+      "duration": "0.6s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.3",
+      "main_action": "A sharp small fractured bone seal appears beside target; one inward cyan pressure snap. Cross-board connection is omitted if source/target location is secret.",
+      "materials": "original arcane bone geometry, spectral cannon silhouettes and narrow piercing energy",
+      "colors": "bone white, cold cyan, indigo-black; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "sigil"
+    },
+    {
+      "id": "VFX_SANS_CURSE_STATUS",
+      "file": "vfx_hero_sans_curse_status.png",
+      "batch": 3,
+      "status": "UPGRADE",
+      "frames": 1,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        128,
+        128
+      ],
+      "duration": "2.4s restrained CSS cycle; state lifetime is controlled below",
+      "fps": "1 source frame; CSS pulse at browser refresh",
+      "main_action": "Small original bone-ring glyph with three cyan fractures, 2.4s weak breathe. Board curse icon supplements current right-panel Cursed pill; never oversized looping energy.",
+      "materials": "original arcane bone geometry, spectral cannon silhouettes and narrow piercing energy",
+      "colors": "bone white, cold cyan, indigo-black; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "sigil"
+    },
+    {
+      "id": "VFX_SANS_CURSE_TICK_END",
+      "file": "vfx_hero_sans_curse_tick_end.png",
+      "batch": 3,
+      "status": "UPGRADE",
+      "frames": 10,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1280,
+        128
+      ],
+      "duration": "0.4s total one-shot (per resolved segment for interactive chains)",
+      "fps": "25.0",
+      "main_action": "One needle-like cyan contraction paired with actual 1 damage; at HP1 seal opens and fades gently. Curse cannot itself visually or mechanically execute target at HP1.",
+      "materials": "original arcane bone geometry, spectral cannon silhouettes and narrow piercing energy",
+      "colors": "bone white, cold cyan, indigo-black; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "sigil"
+    },
+    {
+      "id": "VFX_ASGORE_FIREBALL",
+      "file": "vfx_hero_asgore_fireball.png",
+      "batch": 3,
+      "status": "UPGRADE",
+      "frames": 17,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2176,
+        128
+      ],
+      "duration": "0.7s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.3",
+      "main_action": "Crowned furnace ember gathers at source, compact orange molten projectile crosses legal line, opens into golden flame petals only on hit. Miss passes target and dies as thin cinder veil.",
+      "materials": "crowned flame ribs, controlled molten fire and six abstract soul seals",
+      "colors": "royal gold, furnace orange, deep red cinders; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "fire"
+    },
+    {
+      "id": "VFX_ASGORE_FIRE_PARADE",
+      "file": "vfx_hero_asgore_fire_parade_primary.png",
+      "batch": 3,
+      "status": "UPGRADE",
+      "frames": 29,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3712,
+        128
+      ],
+      "duration": "1.2s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.2",
+      "main_action": "A royal flame formation unfurls in organized rows of tall curved furnace ribs, closes into a gold-orange crown wave and collapses to cinders. Significantly larger and more orchestrated than Fireball. Target damage cues respect every defense.",
+      "materials": "crowned flame ribs, controlled molten fire and six abstract soul seals",
+      "colors": "royal gold, furnace orange, deep red cinders; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "fire"
+    },
+    {
+      "id": "VFX_ASGORE_FIRE_PARADE",
+      "file": "vfx_hero_asgore_fire_parade_accent.png",
+      "batch": 3,
+      "status": "UPGRADE",
+      "frames": 29,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3712,
+        128
+      ],
+      "duration": "1.2s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.2",
+      "main_action": "A royal flame formation unfurls in organized rows of tall curved furnace ribs, closes into a gold-orange crown wave and collapses to cinders. Significantly larger and more orchestrated than Fireball. Target damage cues respect every defense.",
+      "materials": "crowned flame ribs, controlled molten fire and six abstract soul seals",
+      "colors": "royal gold, furnace orange, deep red cinders; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "fire"
+    },
+    {
+      "id": "VFX_ASGORE_SOUL_PARADE",
+      "file": "vfx_hero_asgore_soul_parade.png",
+      "batch": 3,
+      "status": "UPGRADE",
+      "frames": 22,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2816,
+        128
+      ],
+      "duration": "0.9s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.4",
+      "main_action": "Six original abstract soul seals rotate briefly; illuminate only actual selected result. Patience: quiet dagger/stealth seam; Bravery: one-use guard crescent; Integrity: teleport seam; Perseverance: movement-lock knot; Kindness: restorative arc; Justice: golden projectile. Do not imply transformation.",
+      "materials": "crowned flame ribs, controlled molten fire and six abstract soul seals",
+      "colors": "royal gold, furnace orange, deep red cinders; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "soul"
+    },
+    {
+      "id": "VFX_UNDYNE_THROW",
+      "file": "vfx_hero_undyne_throw.png",
+      "batch": 3,
+      "status": "UPGRADE",
+      "frames": 17,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2176,
+        128
+      ],
+      "duration": "0.7s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.3",
+      "main_action": "Aqua-white energy spear extrudes at source, flies as one crisp shaft and fractures into teal tip chips on hit; fixed1 damage. Miss continues and evaporates.",
+      "materials": "spear-head energy, disciplined shafts and stubborn broken-ring rebirth",
+      "colors": "deep teal, aqua-white, restrained scarlet; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "beam"
+    },
+    {
+      "id": "VFX_UNDYNE_ENERGY",
+      "file": "vfx_hero_undyne_energy_primary.png",
+      "batch": 3,
+      "status": "UPGRADE",
+      "frames": 25,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3200,
+        128
+      ],
+      "duration": "1.05s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.8",
+      "main_action": "A row/column of aqua spear tips ignites as a continuous disciplined shaft field, including line extent on both sides of clicked region as actual rules specify. Per-unit hits deal1, no first-target beam stop.",
+      "materials": "spear-head energy, disciplined shafts and stubborn broken-ring rebirth",
+      "colors": "deep teal, aqua-white, restrained scarlet; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "beam"
+    },
+    {
+      "id": "VFX_UNDYNE_ENERGY",
+      "file": "vfx_hero_undyne_energy_accent.png",
+      "batch": 3,
+      "status": "UPGRADE",
+      "frames": 25,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3200,
+        128
+      ],
+      "duration": "1.05s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.8",
+      "main_action": "A row/column of aqua spear tips ignites as a continuous disciplined shaft field, including line extent on both sides of clicked region as actual rules specify. Per-unit hits deal1, no first-target beam stop.",
+      "materials": "spear-head energy, disciplined shafts and stubborn broken-ring rebirth",
+      "colors": "deep teal, aqua-white, restrained scarlet; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "beam"
+    },
+    {
+      "id": "VFX_UNDYNE_SHIFT",
+      "file": "vfx_hero_undyne_shift.png",
+      "batch": 3,
+      "status": "UPGRADE",
+      "frames": 12,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1536,
+        128
+      ],
+      "duration": "0.5s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.0",
+      "main_action": "Small teal spear-tip pressure angle at defending token, thin sharp connector to new attacker cell. No extra hit or damage.",
+      "materials": "spear-head energy, disciplined shafts and stubborn broken-ring rebirth",
+      "colors": "deep teal, aqua-white, restrained scarlet; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "sigil"
+    },
+    {
+      "id": "VFX_UNDYNE_UNDYING",
+      "file": "vfx_hero_undyne_undying_primary.png",
+      "batch": 3,
+      "status": "UPGRADE",
+      "frames": 31,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3968,
+        128
+      ],
+      "duration": "1.3s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.8",
+      "main_action": "Broken scarlet core reforges into three aqua spear rings; bright white seam locks upgraded token in same place. Surviving mode caps incoming damage1 and drains1 at own-turn end; no death removal while revived.",
+      "materials": "spear-head energy, disciplined shafts and stubborn broken-ring rebirth",
+      "colors": "deep teal, aqua-white, restrained scarlet; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "transform"
+    },
+    {
+      "id": "VFX_UNDYNE_UNDYING",
+      "file": "vfx_hero_undyne_undying_accent.png",
+      "batch": 3,
+      "status": "UPGRADE",
+      "frames": 31,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3968,
+        128
+      ],
+      "duration": "1.3s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.8",
+      "main_action": "Broken scarlet core reforges into three aqua spear rings; bright white seam locks upgraded token in same place. Surviving mode caps incoming damage1 and drains1 at own-turn end; no death removal while revived.",
+      "materials": "spear-head energy, disciplined shafts and stubborn broken-ring rebirth",
+      "colors": "deep teal, aqua-white, restrained scarlet; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "transform"
+    },
+    {
+      "id": "VFX_PAPYRUS_BONES",
+      "file": "vfx_hero_papyrus_bones.png",
+      "batch": 3,
+      "status": "UPGRADE",
+      "frames": 1,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        128,
+        128
+      ],
+      "duration": "0.6s total one-shot (per resolved segment for interactive chains)",
+      "fps": "1 source frame; CSS pulse at browser refresh",
+      "main_action": "Small angular ivory bone frame with blue seam for movement punishment, orange seam for move-first obligation. Blue: spending move takes1; orange: first meaningful non-move takes1 unless movement satisfies. Clear distinct shapes, not color alone.",
+      "materials": "long angular bone lattices and distinct blue/orange rule glyphs",
+      "colors": "ivory, clear blue, burnt orange; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "bone"
+    },
+    {
+      "id": "VFX_PAPYRUS_SPAGHETTI",
+      "file": "vfx_hero_papyrus_spaghetti.png",
+      "batch": 3,
+      "status": "UPGRADE",
+      "frames": 14,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1792,
+        128
+      ],
+      "duration": "0.6s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.3",
+      "main_action": "Two thin warm ivory ribbons wind upward with ember-orange endpoints and restorative glints; original abstract food warmth, no plate or character asset.",
+      "materials": "long angular bone lattices and distinct blue/orange rule glyphs",
+      "colors": "ivory, clear blue, burnt orange; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "heal"
+    },
+    {
+      "id": "VFX_PAPYRUS_UNBELIEVER",
+      "file": "vfx_hero_papyrus_unbeliever.png",
+      "batch": 3,
+      "status": "UPGRADE",
+      "frames": 28,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3584,
+        128
+      ],
+      "duration": "1.15s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.3",
+      "main_action": "Angular ivory bone lattice fractures and reassembles with two differentiated blue/orange seams. Unlock Orange Bone, Long Bone and Ossified; no heal implied by transform glow.",
+      "materials": "long angular bone lattices and distinct blue/orange rule glyphs",
+      "colors": "ivory, clear blue, burnt orange; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "transform"
+    },
+    {
+      "id": "VFX_PAPYRUS_LINE",
+      "file": "vfx_hero_papyrus_line_primary.png",
+      "batch": 3,
+      "status": "UPGRADE",
+      "frames": 23,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2944,
+        128
+      ],
+      "duration": "0.95s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.2",
+      "main_action": "A slender ivory bone comb extends across cell boundaries in a clean ordered pattern, sharp blue/orange edge accents only for resolved status type. Long Bone toggle itself needs only small UI mark.",
+      "materials": "long angular bone lattices and distinct blue/orange rule glyphs",
+      "colors": "ivory, clear blue, burnt orange; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "bone"
+    },
+    {
+      "id": "VFX_PAPYRUS_LINE",
+      "file": "vfx_hero_papyrus_line_accent.png",
+      "batch": 3,
+      "status": "UPGRADE",
+      "frames": 23,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2944,
+        128
+      ],
+      "duration": "0.95s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.2",
+      "main_action": "A slender ivory bone comb extends across cell boundaries in a clean ordered pattern, sharp blue/orange edge accents only for resolved status type. Long Bone toggle itself needs only small UI mark.",
+      "materials": "long angular bone lattices and distinct blue/orange rule glyphs",
+      "colors": "ivory, clear blue, burnt orange; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "bone"
+    },
+    {
+      "id": "VFX_METTATON_EX",
+      "file": "vfx_hero_mettaton_ex.png",
+      "batch": 6,
+      "status": "UPGRADE",
+      "frames": 26,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3328,
+        128
+      ],
+      "duration": "1.1s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.6",
+      "main_action": "Silver prismatic shutters align into a magenta theatrical core, two disciplined spotlight ribbons and a clean mechanical snap. Original abstract stage machinery; retain EX token.",
+      "materials": "stage prismatic shutters, mechanical spotlights and precise laser bars",
+      "colors": "magenta, silver, neon white, royal violet; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "transform"
+    },
+    {
+      "id": "VFX_METTATON_NEO",
+      "file": "vfx_hero_mettaton_neo_primary.png",
+      "batch": 6,
+      "status": "UPGRADE",
+      "frames": 32,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        4096,
+        128
+      ],
+      "duration": "1.4s total one-shot (per resolved segment for interactive chains)",
+      "fps": "22.9",
+      "main_action": "Wider stacked silver shutters open into sharp violet-white winglike panels, magenta energy rails fuse, short brilliant rim impact. Distinct from EX's smaller core assembly.",
+      "materials": "stage prismatic shutters, mechanical spotlights and precise laser bars",
+      "colors": "magenta, silver, neon white, royal violet; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "transform"
+    },
+    {
+      "id": "VFX_METTATON_NEO",
+      "file": "vfx_hero_mettaton_neo_accent.png",
+      "batch": 6,
+      "status": "UPGRADE",
+      "frames": 32,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        4096,
+        128
+      ],
+      "duration": "1.4s total one-shot (per resolved segment for interactive chains)",
+      "fps": "22.9",
+      "main_action": "Wider stacked silver shutters open into sharp violet-white winglike panels, magenta energy rails fuse, short brilliant rim impact. Distinct from EX's smaller core assembly.",
+      "materials": "stage prismatic shutters, mechanical spotlights and precise laser bars",
+      "colors": "magenta, silver, neon white, royal violet; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "transform"
+    },
+    {
+      "id": "VFX_METTATON_POPPINS",
+      "file": "vfx_hero_mettaton_poppins_primary.png",
+      "batch": 6,
+      "status": "UPGRADE",
+      "frames": 23,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2944,
+        128
+      ],
+      "duration": "0.95s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.2",
+      "main_action": "Prismatic magenta stage tiles flare in a three-beat geometric diamond formation, silver confetti-like shards dissipate promptly. Distinct choreography, not Fire Parade recolor.",
+      "materials": "stage prismatic shutters, mechanical spotlights and precise laser bars",
+      "colors": "magenta, silver, neon white, royal violet; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "blast"
+    },
+    {
+      "id": "VFX_METTATON_POPPINS",
+      "file": "vfx_hero_mettaton_poppins_accent.png",
+      "batch": 6,
+      "status": "UPGRADE",
+      "frames": 23,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2944,
+        128
+      ],
+      "duration": "0.95s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.2",
+      "main_action": "Prismatic magenta stage tiles flare in a three-beat geometric diamond formation, silver confetti-like shards dissipate promptly. Distinct choreography, not Fire Parade recolor.",
+      "materials": "stage prismatic shutters, mechanical spotlights and precise laser bars",
+      "colors": "magenta, silver, neon white, royal violet; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "blast"
+    },
+    {
+      "id": "VFX_METTATON_LASER",
+      "file": "vfx_hero_mettaton_laser_primary.png",
+      "batch": 6,
+      "status": "UPGRADE",
+      "frames": 22,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2816,
+        128
+      ],
+      "duration": "0.9s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.4",
+      "main_action": "Precision magenta-white bar opens from thin silver shutter, stays narrow and cuts continuously through all resolved units. Tiny prismatic hits only on failed defense, fast segmented fade.",
+      "materials": "stage prismatic shutters, mechanical spotlights and precise laser bars",
+      "colors": "magenta, silver, neon white, royal violet; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "beam"
+    },
+    {
+      "id": "VFX_METTATON_LASER",
+      "file": "vfx_hero_mettaton_laser_accent.png",
+      "batch": 6,
+      "status": "UPGRADE",
+      "frames": 22,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2816,
+        128
+      ],
+      "duration": "0.9s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.4",
+      "main_action": "Precision magenta-white bar opens from thin silver shutter, stays narrow and cuts continuously through all resolved units. Tiny prismatic hits only on failed defense, fast segmented fade.",
+      "materials": "stage prismatic shutters, mechanical spotlights and precise laser bars",
+      "colors": "magenta, silver, neon white, royal violet; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "beam"
+    },
+    {
+      "id": "VFX_METTATON_FINAL_CHORD",
+      "file": "vfx_hero_mettaton_final_chord_primary.png",
+      "batch": 6,
+      "status": "UPGRADE",
+      "frames": 32,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        4096,
+        128
+      ],
+      "duration": "1.4s total one-shot (per resolved segment for interactive chains)",
+      "fps": "22.9",
+      "main_action": "A coordinated eight-direction star of thin prismatic stage rails erupts from source with a silver-magenta shutter chord. Every attacked line remains legible;3 damage on confirmed hit. Gaps between rails stay transparent. Unlike EX Laser/Gaster, Final Chord's targeting uses ordinary blocker-limited Archer lines; do not visually promise hits beyond blockers.",
+      "materials": "stage prismatic shutters, mechanical spotlights and precise laser bars",
+      "colors": "magenta, silver, neon white, royal violet; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "beam"
+    },
+    {
+      "id": "VFX_METTATON_FINAL_CHORD",
+      "file": "vfx_hero_mettaton_final_chord_accent.png",
+      "batch": 6,
+      "status": "UPGRADE",
+      "frames": 32,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        4096,
+        128
+      ],
+      "duration": "1.4s total one-shot (per resolved segment for interactive chains)",
+      "fps": "22.9",
+      "main_action": "A coordinated eight-direction star of thin prismatic stage rails erupts from source with a silver-magenta shutter chord. Every attacked line remains legible;3 damage on confirmed hit. Gaps between rails stay transparent. Unlike EX Laser/Gaster, Final Chord's targeting uses ordinary blocker-limited Archer lines; do not visually promise hits beyond blockers.",
+      "materials": "stage prismatic shutters, mechanical spotlights and precise laser bars",
+      "colors": "magenta, silver, neon white, royal violet; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "beam"
+    },
+    {
+      "id": "VFX_RIVER_BOAT_START_PICKUP",
+      "file": "vfx_hero_river_boat_start_pickup.png",
+      "batch": 5,
+      "status": "UPGRADE",
+      "frames": 14,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1792,
+        128
+      ],
+      "duration": "0.6s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.3",
+      "main_action": "Low dark-water crescent unfurls beneath carrier, a short spectral towline wraps passenger outline and merges into carrier travel silhouette. Preserve passenger identity; this is spectral stylization, not a real water terrain mechanic.",
+      "materials": "spectral maritime wake, low water crescents and towline energy",
+      "colors": "dark water teal, pale blue-grey, black violet; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "trail"
+    },
+    {
+      "id": "VFX_RIVER_BOAT_TRAVEL",
+      "file": "vfx_hero_river_boat_travel.png",
+      "batch": 5,
+      "status": "UPGRADE",
+      "frames": 20,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2560,
+        128
+      ],
+      "duration": "0.85s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.5",
+      "main_action": "Two parallel dark-teal wake curls trail carrier with a small pale leading crescent. Passenger stays visibly associated. On arrival wake shrinks to ring at reached cell. Current portals can be upgraded to maritime vocabulary.",
+      "materials": "spectral maritime wake, low water crescents and towline energy",
+      "colors": "dark water teal, pale blue-grey, black violet; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "trail"
+    },
+    {
+      "id": "VFX_RIVER_BOAT_DROP",
+      "file": "vfx_hero_river_boat_drop.png",
+      "batch": 5,
+      "status": "UPGRADE",
+      "frames": 13,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1664,
+        128
+      ],
+      "duration": "0.55s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.6",
+      "main_action": "Passenger separates from carrier with small dark-water landing ring; carrier stays at final cell. Failure is neutral broken ring, no phantom landing. New drop choice may follow interruption.",
+      "materials": "spectral maritime wake, low water crescents and towline energy",
+      "colors": "dark water teal, pale blue-grey, black violet; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "trail"
+    },
+    {
+      "id": "VFX_RIVER_TRALALA",
+      "file": "vfx_hero_river_tralala_primary.png",
+      "batch": 5,
+      "status": "UPGRADE",
+      "frames": 26,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3328,
+        128
+      ],
+      "duration": "1.1s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.6",
+      "main_action": "A dark-water tow filament links enemy outline to carrier, narrow pale leading crescent and short wake show drag direction. Pause filament motion at every optional allied ATTACK/PASS; continue only after reactionMovementResumed and all attack/pre-death decisions. Enemy stays trackable; no hiding whirlpool.",
+      "materials": "spectral maritime wake, low water crescents and towline energy",
+      "colors": "dark water teal, pale blue-grey, black violet; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "portal"
+    },
+    {
+      "id": "VFX_RIVER_TRALALA",
+      "file": "vfx_hero_river_tralala_accent.png",
+      "batch": 5,
+      "status": "UPGRADE",
+      "frames": 26,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3328,
+        128
+      ],
+      "duration": "1.1s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.6",
+      "main_action": "A dark-water tow filament links enemy outline to carrier, narrow pale leading crescent and short wake show drag direction. Pause filament motion at every optional allied ATTACK/PASS; continue only after reactionMovementResumed and all attack/pre-death decisions. Enemy stays trackable; no hiding whirlpool.",
+      "materials": "spectral maritime wake, low water crescents and towline energy",
+      "colors": "dark water teal, pale blue-grey, black violet; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "portal"
+    },
+    {
+      "id": "VFX_DUOLINGO_PUSH",
+      "file": "vfx_hero_duolingo_push.png",
+      "batch": 6,
+      "status": "MISSING",
+      "frames": 17,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2176,
+        128
+      ],
+      "duration": "0.7s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.3",
+      "main_action": "Hard lime-green angular reminder seal pinches shut at source and opens at legal destination with amber edge ticks. Original abstract urgency icon, no app logo/mascot, no path attack.",
+      "materials": "angular reminder seals, hard emerald fracture and disciplined urgency",
+      "colors": "lime green, dark emerald, warning amber; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "portal"
+    },
+    {
+      "id": "VFX_DUOLINGO_BERSERKER",
+      "file": "vfx_hero_duolingo_berserker.png",
+      "batch": 6,
+      "status": "UPGRADE",
+      "frames": 28,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3584,
+        128
+      ],
+      "duration": "1.15s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.3",
+      "main_action": "Emerald segmented reminder ring fractures into hard amber-edged plates, settles into aggressive token variant. Controlled sharp burst, no giant green mascot.",
+      "materials": "angular reminder seals, hard emerald fracture and disciplined urgency",
+      "colors": "lime green, dark emerald, warning amber; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "transform"
+    },
+    {
+      "id": "VFX_CHIKATILO_FALSE_TRAIL",
+      "file": "vfx_hero_chikatilo_false_trail.png",
+      "batch": 4,
+      "status": "MISSING",
+      "frames": 13,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1664,
+        128
+      ],
+      "duration": "0.55s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.6",
+      "main_action": "Public decoy receives a dull ash outline pulse at its real visible deployment cell; owner gets a very quiet crimson sand vanish at secret Chikatilo placement. No beam linking the token to real hero.",
+      "materials": "inklike marks, decoy silhouettes and close ground smoke; no graphic gore",
+      "colors": "dirty crimson, ash grey, dull amber tracking accents; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "smoke"
+    },
+    {
+      "id": "VFX_CHIKATILO_MARK",
+      "file": "vfx_hero_chikatilo_mark.png",
+      "batch": 4,
+      "status": "UPGRADE",
+      "frames": 16,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2048,
+        128
+      ],
+      "duration": "0.65s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.6",
+      "main_action": "Small dirty-crimson broken ink seal appears at target for owner, transitions to restrained amber tracking notch when exactTrackingActive. No source glow/line from hidden assassin; no opponent target mark emit.",
+      "materials": "inklike marks, decoy silhouettes and close ground smoke; no graphic gore",
+      "colors": "dirty crimson, ash grey, dull amber tracking accents; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "sigil"
+    },
+    {
+      "id": "VFX_CHIKATILO_DECOY",
+      "file": "vfx_hero_chikatilo_decoy.png",
+      "batch": 4,
+      "status": "MISSING",
+      "frames": 14,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1792,
+        128
+      ],
+      "duration": "0.6s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.3",
+      "main_action": "Ash-black duplicate contour crumples into a small crimson slit; stealth version quietly erodes token for owner; defense version takes a single subdued fixed-damage spark. Do not show real hidden relocation.",
+      "materials": "inklike marks, decoy silhouettes and close ground smoke; no graphic gore",
+      "colors": "dirty crimson, ash grey, dull amber tracking accents; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "smoke"
+    },
+    {
+      "id": "VFX_FALSE_TRAIL_EXPLOSION",
+      "file": "vfx_hero_false_trail_explosion_primary.png",
+      "batch": 4,
+      "status": "UPGRADE",
+      "frames": 23,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2944,
+        128
+      ],
+      "duration": "0.95s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.2",
+      "main_action": "Public decoy ash shell implodes then releases close jagged crimson-grey fragmentation across exact square. Reveal of real hero is separate and only at newly public coordinate. No connective plume toward hidden hero.",
+      "materials": "inklike marks, decoy silhouettes and close ground smoke; no graphic gore",
+      "colors": "dirty crimson, ash grey, dull amber tracking accents; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "blast"
+    },
+    {
+      "id": "VFX_FALSE_TRAIL_EXPLOSION",
+      "file": "vfx_hero_false_trail_explosion_accent.png",
+      "batch": 4,
+      "status": "UPGRADE",
+      "frames": 23,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2944,
+        128
+      ],
+      "duration": "0.95s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.2",
+      "main_action": "Public decoy ash shell implodes then releases close jagged crimson-grey fragmentation across exact square. Reveal of real hero is separate and only at newly public coordinate. No connective plume toward hidden hero.",
+      "materials": "inklike marks, decoy silhouettes and close ground smoke; no graphic gore",
+      "colors": "dirty crimson, ash grey, dull amber tracking accents; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "blast"
+    },
+    {
+      "id": "VFX_GROZNY_INVADE",
+      "file": "vfx_hero_grozny_invade.png",
+      "batch": 6,
+      "status": "UPGRADE",
+      "frames": 20,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2560,
+        128
+      ],
+      "duration": "0.85s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.5",
+      "main_action": "Keep current procedural portal split rings but sharpen into cracked violet-gold temporal wedges; fleeting trace connects only public endpoints, no clock text or world scene.",
+      "materials": "split temporal portals, cracked clockless rings and oppressive absorption threads",
+      "colors": "imperial violet, ash black, muted tarnished gold; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "portal"
+    },
+    {
+      "id": "VFX_GROZNY_TYRANT",
+      "file": "vfx_hero_grozny_tyrant_primary.png",
+      "batch": 6,
+      "status": "UPGRADE",
+      "frames": 24,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3072,
+        128
+      ],
+      "duration": "1s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.0",
+      "main_action": "Tarnished-gold oppressive ring marks committed allied victim; iron-violet strike hits only after real dice; successful finish draws a short absorption thread into Grozny. Exactly one ally per Tyrant resolution, no chain slaughter.",
+      "materials": "split temporal portals, cracked clockless rings and oppressive absorption threads",
+      "colors": "imperial violet, ash black, muted tarnished gold; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "sigil"
+    },
+    {
+      "id": "VFX_GROZNY_TYRANT",
+      "file": "vfx_hero_grozny_tyrant_accent.png",
+      "batch": 6,
+      "status": "UPGRADE",
+      "frames": 24,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3072,
+        128
+      ],
+      "duration": "1s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.0",
+      "main_action": "Tarnished-gold oppressive ring marks committed allied victim; iron-violet strike hits only after real dice; successful finish draws a short absorption thread into Grozny. Exactly one ally per Tyrant resolution, no chain slaughter.",
+      "materials": "split temporal portals, cracked clockless rings and oppressive absorption threads",
+      "colors": "imperial violet, ash black, muted tarnished gold; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "sigil"
+    },
+    {
+      "id": "VFX_ELCID_TISONA",
+      "file": "vfx_hero_elcid_tisona_primary.png",
+      "batch": 6,
+      "status": "UPGRADE",
+      "frames": 22,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2816,
+        128
+      ],
+      "duration": "0.9s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.4",
+      "main_action": "Silver sword-edge rail with burgundy bevel slashes in a measured clean line, sharp contact accents and brief ceremonial gold tail.",
+      "materials": "ceremonial straight sword lines, orbiting blade crescents and duel intersections",
+      "colors": "silver, burgundy, dusk gold; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "beam"
+    },
+    {
+      "id": "VFX_ELCID_TISONA",
+      "file": "vfx_hero_elcid_tisona_accent.png",
+      "batch": 6,
+      "status": "UPGRADE",
+      "frames": 22,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2816,
+        128
+      ],
+      "duration": "0.9s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.4",
+      "main_action": "Silver sword-edge rail with burgundy bevel slashes in a measured clean line, sharp contact accents and brief ceremonial gold tail.",
+      "materials": "ceremonial straight sword lines, orbiting blade crescents and duel intersections",
+      "colors": "silver, burgundy, dusk gold; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "beam"
+    },
+    {
+      "id": "VFX_ELCID_KOLADA",
+      "file": "vfx_hero_elcid_kolada.png",
+      "batch": 6,
+      "status": "UPGRADE",
+      "frames": 22,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2816,
+        128
+      ],
+      "duration": "0.9s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.4",
+      "main_action": "Two silver-gold ceremonial blade crescents orbit once in a low angular ring, hit exactly resolved nearby units, burgundy friction chips fade fast.",
+      "materials": "ceremonial straight sword lines, orbiting blade crescents and duel intersections",
+      "colors": "silver, burgundy, dusk gold; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "blades"
+    },
+    {
+      "id": "VFX_ELCID_DUEL",
+      "file": "vfx_hero_elcid_duel_primary.png",
+      "batch": 6,
+      "status": "UPGRADE",
+      "frames": 29,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3712,
+        128
+      ],
+      "duration": "1.2s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.2",
+      "main_action": "Paired burgundy-gold swordpoint brackets bind the two tokens; each successful strike is a distinct clean cut. After miss wait quietly; paying1HP gets tiny self-damage cue then next actual attack, stop on refusal.",
+      "materials": "ceremonial straight sword lines, orbiting blade crescents and duel intersections",
+      "colors": "silver, burgundy, dusk gold; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "blades"
+    },
+    {
+      "id": "VFX_ELCID_DUEL",
+      "file": "vfx_hero_elcid_duel_accent.png",
+      "batch": 6,
+      "status": "UPGRADE",
+      "frames": 29,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3712,
+        128
+      ],
+      "duration": "1.2s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.2",
+      "main_action": "Paired burgundy-gold swordpoint brackets bind the two tokens; each successful strike is a distinct clean cut. After miss wait quietly; paying1HP gets tiny self-damage cue then next actual attack, stop on refusal.",
+      "materials": "ceremonial straight sword lines, orbiting blade crescents and duel intersections",
+      "colors": "silver, burgundy, dusk gold; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "blades"
+    },
+    {
+      "id": "VFX_LECHY_GUIDE",
+      "file": "vfx_hero_lechy_guide.png",
+      "batch": 6,
+      "status": "UPGRADE",
+      "frames": 19,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2432,
+        128
+      ],
+      "duration": "0.8s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.8",
+      "main_action": "Small moss-gold leaf ribbon trails guide and settles as rootless leaf-ring at ally landing; no imaginary intermediate ally path or attacks.",
+      "materials": "root mazes, leaf fragments, storm filaments and low branch silhouettes",
+      "colors": "forest green, moss amber, white-violet lightning; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "trail"
+    },
+    {
+      "id": "VFX_LECHY_FOREST",
+      "file": "vfx_hero_lechy_forest.png",
+      "batch": 6,
+      "status": "UPGRADE",
+      "frames": 1,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        128,
+        128
+      ],
+      "duration": "0.7s total one-shot (per resolved segment for interactive chains)",
+      "fps": "1 source frame; CSS pulse at browser refresh",
+      "main_action": "Original low moss branch labyrinth beneath grid, amber perimeter knots define aura. Units leaving/crossing must roll5-6 or stop in aura. Keep existing Forest marker; no tall foliage hiding units.",
+      "materials": "root mazes, leaf fragments, storm filaments and low branch silhouettes",
+      "colors": "forest green, moss amber, white-violet lightning; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "roots"
+    },
+    {
+      "id": "VFX_LECHY_STORM",
+      "file": "vfx_hero_lechy_storm_primary.png",
+      "batch": 6,
+      "status": "UPGRADE",
+      "frames": 1,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        128,
+        128
+      ],
+      "duration": "1.1s total one-shot (per resolved segment for interactive chains)",
+      "fps": "1 source frame; CSS pulse at browser refresh",
+      "main_action": "Sparse white-violet lightning filaments arc at board edge and source, then dark moss storm ground texture at low contrast. Forest aura remains safe-zone readable. Units outside aura face start-turn damage roll and ranged restriction; River Person immune.",
+      "materials": "root mazes, leaf fragments, storm filaments and low branch silhouettes",
+      "colors": "forest green, moss amber, white-violet lightning; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "storm"
+    },
+    {
+      "id": "VFX_LECHY_STORM",
+      "file": "vfx_hero_lechy_storm_accent.png",
+      "batch": 6,
+      "status": "UPGRADE",
+      "frames": 1,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        128,
+        128
+      ],
+      "duration": "1.1s total one-shot (per resolved segment for interactive chains)",
+      "fps": "1 source frame; CSS pulse at browser refresh",
+      "main_action": "Sparse white-violet lightning filaments arc at board edge and source, then dark moss storm ground texture at low contrast. Forest aura remains safe-zone readable. Units outside aura face start-turn damage roll and ranged restriction; River Person immune.",
+      "materials": "root mazes, leaf fragments, storm filaments and low branch silhouettes",
+      "colors": "forest green, moss amber, white-violet lightning; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "storm"
+    },
+    {
+      "id": "VFX_VLAD_STAKES_PLACE",
+      "file": "vfx_hero_vlad_stakes_place.png",
+      "batch": 2,
+      "status": "UPGRADE",
+      "frames": 10,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1280,
+        128
+      ],
+      "duration": "0.4s total one-shot (per resolved segment for interactive chains)",
+      "fps": "25.0",
+      "main_action": "Subtle black-red pointed seams sink into selected cells without an eruption; hidden stakes may stack. Show owner feedback only, no counterpart particles for opponent or spectator.",
+      "materials": "gothic stake eruptions, angular ground cracks and needle-shaped gaze pressure",
+      "colors": "blood-red, blackened wood, muted iron; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "stake"
+    },
+    {
+      "id": "VFX_VLAD_STAKE_TRIGGER",
+      "file": "vfx_hero_vlad_stake_trigger.png",
+      "batch": 1,
+      "status": "UPGRADE",
+      "frames": 13,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1664,
+        128
+      ],
+      "duration": "0.55s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.6",
+      "main_action": "Blackened wood spear erupts vertically from a split crimson ground seam, arrests travel if stopped true, brief impact chips. All stacked stakes reveal, but current trigger applies 1 damage total, not one per stake. Preserve existing count badge.",
+      "materials": "gothic stake eruptions, angular ground cracks and needle-shaped gaze pressure",
+      "colors": "blood-red, blackened wood, muted iron; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "stake"
+    },
+    {
+      "id": "VFX_VLAD_STAKE_MARKER",
+      "file": "vfx_hero_vlad_stake_marker.png",
+      "batch": 1,
+      "status": "REPLACE",
+      "frames": 1,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        128,
+        128
+      ],
+      "duration": "Persistent STATIC state; no impact animation duration",
+      "fps": "1 source frame; CSS pulse at browser refresh",
+      "main_action": "Replace parchment-backed stake drawing with original isolated blackened stake cluster, three-point readable silhouette. Owner sees hidden badge, public sees revealed badge; no ambient map-covering particles.",
+      "materials": "gothic stake eruptions, angular ground cracks and needle-shaped gaze pressure",
+      "colors": "blood-red, blackened wood, muted iron; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "stake_static"
+    },
+    {
+      "id": "VFX_VLAD_FOREST_ERUPTION",
+      "file": "vfx_hero_vlad_forest_eruption_primary.png",
+      "batch": 2,
+      "status": "UPGRADE",
+      "frames": 30,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3840,
+        128
+      ],
+      "duration": "1.25s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.0",
+      "main_action": "Nine dark ground fractures open, uneven towering stakes thrust in a synchronized crown, thin crimson pressure wave and splinter dust. Failed defenses take 2 damage and movementDisabledNextTurn. Dodged targets receive no injury burst.",
+      "materials": "gothic stake eruptions, angular ground cracks and needle-shaped gaze pressure",
+      "colors": "blood-red, blackened wood, muted iron; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "stake"
+    },
+    {
+      "id": "VFX_VLAD_FOREST_ERUPTION",
+      "file": "vfx_hero_vlad_forest_eruption_accent.png",
+      "batch": 2,
+      "status": "UPGRADE",
+      "frames": 30,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3840,
+        128
+      ],
+      "duration": "1.25s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.0",
+      "main_action": "Nine dark ground fractures open, uneven towering stakes thrust in a synchronized crown, thin crimson pressure wave and splinter dust. Failed defenses take 2 damage and movementDisabledNextTurn. Dodged targets receive no injury burst.",
+      "materials": "gothic stake eruptions, angular ground cracks and needle-shaped gaze pressure",
+      "colors": "blood-red, blackened wood, muted iron; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "stake"
+    },
+    {
+      "id": "VFX_VLAD_GAZE",
+      "file": "vfx_hero_vlad_gaze.png",
+      "batch": 2,
+      "status": "UPGRADE",
+      "frames": 12,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1536,
+        128
+      ],
+      "duration": "0.5s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.0",
+      "main_action": "A very small paired crimson eye-notch at Vlad, a taut dark-red pressure thread toward attacker only when both are public. After accepted choice show pushed unit/destination, no attack damage.",
+      "materials": "gothic stake eruptions, angular ground cracks and needle-shaped gaze pressure",
+      "colors": "blood-red, blackened wood, muted iron; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "sigil"
+    },
+    {
+      "id": "VFX_GENGHIS_DECREE",
+      "file": "vfx_hero_genghis_decree.png",
+      "batch": 5,
+      "status": "MISSING",
+      "frames": 16,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2048,
+        128
+      ],
+      "duration": "0.65s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.6",
+      "main_action": "Short bronze directional chevrons and ochre cavalry dust comb lead into actual reached diagonal cells. Diagonal permission is not permission to show a whole-board cinematic.",
+      "materials": "cavalry momentum, directional dust combs and corridor wavefronts",
+      "colors": "ochre dust, bronze, desaturated red pennant accents; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "trail"
+    },
+    {
+      "id": "VFX_GENGHIS_CHARGE",
+      "file": "vfx_hero_genghis_charge_primary.png",
+      "batch": 5,
+      "status": "UPGRADE",
+      "frames": 29,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3712,
+        128
+      ],
+      "duration": "1.2s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.2",
+      "main_action": "Powerful bronze leading spear fan with low rolling ochre dust, thin red pennant-edge slivers. Low corridor edge wave sweeps only reached cells; stop at every eligible ally decision, no attack before ATTACK. Ally attacks get their own normal class cues.",
+      "materials": "cavalry momentum, directional dust combs and corridor wavefronts",
+      "colors": "ochre dust, bronze, desaturated red pennant accents; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "trail"
+    },
+    {
+      "id": "VFX_GENGHIS_CHARGE",
+      "file": "vfx_hero_genghis_charge_accent.png",
+      "batch": 5,
+      "status": "UPGRADE",
+      "frames": 29,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3712,
+        128
+      ],
+      "duration": "1.2s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.2",
+      "main_action": "Powerful bronze leading spear fan with low rolling ochre dust, thin red pennant-edge slivers. Low corridor edge wave sweeps only reached cells; stop at every eligible ally decision, no attack before ATTACK. Ally attacks get their own normal class cues.",
+      "materials": "cavalry momentum, directional dust combs and corridor wavefronts",
+      "colors": "ochre dust, bronze, desaturated red pennant accents; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "trail"
+    }
+  ]
+}

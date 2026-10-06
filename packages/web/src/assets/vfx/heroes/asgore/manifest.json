@@ -1,0 +1,146 @@
+{
+  "schema": "fate_asset_library_documentation_v1",
+  "note": "Metadata only; not connected to runtime.",
+  "assets": [
+    {
+      "id": "VFX_ASGORE_FIREBALL",
+      "file": "fireball.png",
+      "batch": 3,
+      "frames": 17,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2176,
+        128
+      ],
+      "duration": "0.7s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.3",
+      "main_action": "Crowned furnace ember gathers at source, compact orange molten projectile crosses legal line, opens into golden flame petals only on hit. Miss passes target and dies as thin cinder veil.",
+      "materials": "crowned flame ribs, controlled molten fire and six abstract soul seals",
+      "colors": "royal gold, furnace orange, deep red cinders; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "fire",
+      "source_file": "vfx_hero_asgore_fireball.png",
+      "sha256": "436f6f85ff4e2ef363df6bb5a490d1b26c58a0846c98088807955e202342713a",
+      "ability": "asgoreFireball",
+      "geometry": "source and chosen Archer-line target, projectile 0.25 cell, impact 0.85 cell",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "Committed abilityUsed asgoreFireball; matched completed attackResolved; exact target requires safe association.",
+      "end_condition": "Dissipate fully by0.7s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_ASGORE_FIRE_PARADE",
+      "file": "fire_parade_primary.png",
+      "batch": 3,
+      "frames": 29,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3712,
+        128
+      ],
+      "duration": "1.2s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.2",
+      "main_action": "A royal flame formation unfurls in organized rows of tall curved furnace ribs, closes into a gold-orange crown wave and collapses to cinders. Significantly larger and more orchestrated than Fireball. Target damage cues respect every defense.",
+      "materials": "crowned flame ribs, controlled molten fire and six abstract soul seals",
+      "colors": "royal gold, furnace orange, deep red cinders; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "fire",
+      "source_file": "vfx_hero_asgore_fire_parade_primary.png",
+      "sha256": "4f8fe65d41d9b01b0a74fd58ded02d987566e40daefec1b8a18f3267b9ff5ebb",
+      "ability": "asgoreFireParade",
+      "geometry": "5x5 excluding caster target, clipped at edge; all other units in area",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "aoeResolved abilityId asgoreFireParade center=Asgore position radius2; shared attacker roll per target.",
+      "end_condition": "Dissipate fully by1.2s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_ASGORE_FIRE_PARADE",
+      "file": "fire_parade_accent.png",
+      "batch": 3,
+      "frames": 29,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3712,
+        128
+      ],
+      "duration": "1.2s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.2",
+      "main_action": "A royal flame formation unfurls in organized rows of tall curved furnace ribs, closes into a gold-orange crown wave and collapses to cinders. Significantly larger and more orchestrated than Fireball. Target damage cues respect every defense.",
+      "materials": "crowned flame ribs, controlled molten fire and six abstract soul seals",
+      "colors": "royal gold, furnace orange, deep red cinders; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "fire",
+      "source_file": "vfx_hero_asgore_fire_parade_accent.png",
+      "sha256": "dd7394ab4f82bd523dfbea4bddc7e6b6d9e8bacca8e2ea8c134400080299b2fc",
+      "ability": "asgoreFireParade",
+      "geometry": "5x5 excluding caster target, clipped at edge; all other units in area",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "aoeResolved abilityId asgoreFireParade center=Asgore position radius2; shared attacker roll per target.",
+      "end_condition": "Dissipate fully by1.2s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_ASGORE_SOUL_PARADE",
+      "file": "soul_parade.png",
+      "batch": 3,
+      "frames": 22,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2816,
+        128
+      ],
+      "duration": "0.9s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.4",
+      "main_action": "Six original abstract soul seals rotate briefly; illuminate only actual selected result. Patience: quiet dagger/stealth seam; Bravery: one-use guard crescent; Integrity: teleport seam; Perseverance: movement-lock knot; Kindness: restorative arc; Justice: golden projectile. Do not imply transformation.",
+      "materials": "crowned flame ribs, controlled molten fire and six abstract soul seals",
+      "colors": "royal gold, furnace orange, deep red cinders; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "soul",
+      "source_file": "vfx_hero_asgore_soul_parade.png",
+      "sha256": "b673fad222628392703a7965b1e2d334313f8a215f4e2c3658a3f7c8b9b84d26",
+      "ability": "asgoreSoulParade",
+      "geometry": "source 1.2 cells; actual chosen visible target for result",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "asgoreSoulParadeResolved.soulId at charged turn-start roll; then specific target/destination choices resolve.",
+      "end_condition": "Dissipate fully by0.9s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    }
+  ]
+}

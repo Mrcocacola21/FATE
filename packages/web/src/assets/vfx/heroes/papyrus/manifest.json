@@ -1,0 +1,181 @@
+{
+  "schema": "fate_asset_library_documentation_v1",
+  "note": "Metadata only; not connected to runtime.",
+  "assets": [
+    {
+      "id": "VFX_PAPYRUS_BONES",
+      "file": "bones.png",
+      "batch": 3,
+      "frames": 1,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        128,
+        128
+      ],
+      "duration": "0.6s total one-shot (per resolved segment for interactive chains)",
+      "fps": "1 source frame; CSS pulse at browser refresh",
+      "main_action": "Small angular ivory bone frame with blue seam for movement punishment, orange seam for move-first obligation. Blue: spending move takes1; orange: first meaningful non-move takes1 unless movement satisfies. Clear distinct shapes, not color alone.",
+      "materials": "long angular bone lattices and distinct blue/orange rule glyphs",
+      "colors": "ivory, clear blue, burnt orange; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "bone",
+      "source_file": "vfx_hero_papyrus_bones.png",
+      "sha256": "bb11a133309d858ed4c64fdc6065e635bbde5b4fc87ada9d1a04d3713e335f3d",
+      "ability": "papyrusBlueBone / papyrusOrangeBone",
+      "geometry": "target corner0.2 cell glyph, application0.8 cell",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "papyrusBoneApplied.boneType; papyrusBonePunished; projected boneStatus expires at next source turn.",
+      "end_condition": "Dissipate fully by0.6s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "persistent status",
+      "static_or_animated": "static",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_PAPYRUS_SPAGHETTI",
+      "file": "spaghetti.png",
+      "batch": 3,
+      "frames": 14,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1792,
+        128
+      ],
+      "duration": "0.6s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.3",
+      "main_action": "Two thin warm ivory ribbons wind upward with ember-orange endpoints and restorative glints; original abstract food warmth, no plate or character asset.",
+      "materials": "long angular bone lattices and distinct blue/orange rule glyphs",
+      "colors": "ivory, clear blue, burnt orange; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "heal",
+      "source_file": "vfx_hero_papyrus_spaghetti.png",
+      "sha256": "ad6652e82ecee3f2a88ab5b8018f82f0721ebec0a8c78ae48f145924f328e568",
+      "ability": "papyrusSpaghetti",
+      "geometry": "self0.8 cell",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "unitHealed after committed papyrusSpaghetti, spend3 heal2.",
+      "end_condition": "Dissipate fully by0.6s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_PAPYRUS_UNBELIEVER",
+      "file": "unbeliever.png",
+      "batch": 3,
+      "frames": 28,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3584,
+        128
+      ],
+      "duration": "1.15s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.3",
+      "main_action": "Angular ivory bone lattice fractures and reassembles with two differentiated blue/orange seams. Unlock Orange Bone, Long Bone and Ossified; no heal implied by transform glow.",
+      "materials": "long angular bone lattices and distinct blue/orange rule glyphs",
+      "colors": "ivory, clear blue, burnt orange; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "transform",
+      "source_file": "vfx_hero_papyrus_unbeliever.png",
+      "sha256": "aad0a6181c4c9fa64a8e940e252a33372aaa5a3645a20f02d91e0c439c6aa44a",
+      "ability": "papyrusUnbeliever",
+      "geometry": "self1.3 cells",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "papyrusUnbelieverActivated after allied hero death; papyrusUnbelieverActive false -> true.",
+      "end_condition": "Dissipate fully by1.15s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_PAPYRUS_LINE",
+      "file": "line_primary.png",
+      "batch": 3,
+      "frames": 23,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2944,
+        128
+      ],
+      "duration": "0.95s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.2",
+      "main_action": "A slender ivory bone comb extends across cell boundaries in a clean ordered pattern, sharp blue/orange edge accents only for resolved status type. Long Bone toggle itself needs only small UI mark.",
+      "materials": "long angular bone lattices and distinct blue/orange rule glyphs",
+      "colors": "ivory, clear blue, burnt orange; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "bone",
+      "source_file": "vfx_hero_papyrus_line_primary.png",
+      "sha256": "4a8278871168ce8e1d60f21c93efbccf767823dc3c6676afdcdcdd58b045e965",
+      "ability": "papyrusCoolGuy / papyrusLongBone",
+      "geometry": "full selected row, column, diagMain or diagAnti line through selected target according to actual PapyrusLineAxis; all noncaster units on line",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "Committed papyrusCoolGuy or basic attack with papyrusLongBoneMode and selected papyrusLineAxis; queued AoE results.",
+      "end_condition": "Dissipate fully by0.95s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_PAPYRUS_LINE",
+      "file": "line_accent.png",
+      "batch": 3,
+      "frames": 23,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2944,
+        128
+      ],
+      "duration": "0.95s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.2",
+      "main_action": "A slender ivory bone comb extends across cell boundaries in a clean ordered pattern, sharp blue/orange edge accents only for resolved status type. Long Bone toggle itself needs only small UI mark.",
+      "materials": "long angular bone lattices and distinct blue/orange rule glyphs",
+      "colors": "ivory, clear blue, burnt orange; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "bone",
+      "source_file": "vfx_hero_papyrus_line_accent.png",
+      "sha256": "fb6b273b8faff04321d011f7a1cd0e13b8d6d735ece8aa57442de0392bed96da",
+      "ability": "papyrusCoolGuy / papyrusLongBone",
+      "geometry": "full selected row, column, diagMain or diagAnti line through selected target according to actual PapyrusLineAxis; all noncaster units on line",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "Committed papyrusCoolGuy or basic attack with papyrusLongBoneMode and selected papyrusLineAxis; queued AoE results.",
+      "end_condition": "Dissipate fully by0.95s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    }
+  ]
+}

@@ -1,0 +1,76 @@
+{
+  "schema": "fate_asset_library_documentation_v1",
+  "note": "Metadata only; not connected to runtime.",
+  "assets": [
+    {
+      "id": "VFX_DUOLINGO_PUSH",
+      "file": "push.png",
+      "batch": 6,
+      "frames": 17,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2176,
+        128
+      ],
+      "duration": "0.7s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.3",
+      "main_action": "Hard lime-green angular reminder seal pinches shut at source and opens at legal destination with amber edge ticks. Original abstract urgency icon, no app logo/mascot, no path attack.",
+      "materials": "angular reminder seals, hard emerald fracture and disciplined urgency",
+      "colors": "lime green, dark emerald, warning amber; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "portal",
+      "source_file": "vfx_hero_duolingo_push.png",
+      "sha256": "23f59fa2db0dd839a27f0a7d5a635c834b8e4d5aefc148dfa376fdc6abcad154",
+      "ability": "duolingoPushNotification",
+      "geometry": "source/landing1 cell each; within2 of chosen living creature",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "abilityUsed duolingoPushNotification then unitMoved and stealth exit after3 counter or3 Missed Lessons spend.",
+      "end_condition": "Dissipate fully by0.7s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "MISSING",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_DUOLINGO_BERSERKER",
+      "file": "berserker.png",
+      "batch": 6,
+      "frames": 28,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3584,
+        128
+      ],
+      "duration": "1.15s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.3",
+      "main_action": "Emerald segmented reminder ring fractures into hard amber-edged plates, settles into aggressive token variant. Controlled sharp burst, no giant green mascot.",
+      "materials": "angular reminder seals, hard emerald fracture and disciplined urgency",
+      "colors": "lime green, dark emerald, warning amber; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "transform",
+      "source_file": "vfx_hero_duolingo_berserker.png",
+      "sha256": "760a31ff0120a4f49c4c681cf57f0ecea7a7346399a562a39b3cfb74776e52d7",
+      "ability": "duolingoBerserker",
+      "geometry": "source1.5 cells",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "duolingoBerserkerUnlocked false -> true at Missed Lessons>=12; counter not consumed.",
+      "end_condition": "Dissipate fully by1.15s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    }
+  ]
+}

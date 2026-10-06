@@ -1,0 +1,111 @@
+{
+  "schema": "fate_asset_library_documentation_v1",
+  "note": "Metadata only; not connected to runtime.",
+  "assets": [
+    {
+      "id": "VFX_GENGHIS_DECREE",
+      "file": "decree.png",
+      "batch": 5,
+      "frames": 16,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2048,
+        128
+      ],
+      "duration": "0.65s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.6",
+      "main_action": "Short bronze directional chevrons and ochre cavalry dust comb lead into actual reached diagonal cells. Diagonal permission is not permission to show a whole-board cinematic.",
+      "materials": "cavalry momentum, directional dust combs and corridor wavefronts",
+      "colors": "ochre dust, bronze, desaturated red pennant accents; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "trail",
+      "source_file": "vfx_hero_genghis_decree.png",
+      "sha256": "87d39a14afb0c62cd75fbf921495e79e312a08aed6834409029fa1875eb6e2df",
+      "ability": "genghisKhanKhansDecree",
+      "geometry": "actual chosen diagonal path,0.3cell dust",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "abilityUsed genghisKhanKhansDecree then actual unitMoved from authorized movement; source flag applies for turn.",
+      "end_condition": "Dissipate fully by0.65s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "MISSING",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_GENGHIS_CHARGE",
+      "file": "charge_primary.png",
+      "batch": 5,
+      "frames": 29,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3712,
+        128
+      ],
+      "duration": "1.2s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.2",
+      "main_action": "Powerful bronze leading spear fan with low rolling ochre dust, thin red pennant-edge slivers. Low corridor edge wave sweeps only reached cells; stop at every eligible ally decision, no attack before ATTACK. Ally attacks get their own normal class cues.",
+      "materials": "cavalry momentum, directional dust combs and corridor wavefronts",
+      "colors": "ochre dust, bronze, desaturated red pennant accents; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "trail",
+      "source_file": "vfx_hero_genghis_charge_primary.png",
+      "sha256": "31999a5c9c2dc67e050a05fd8405d5e02a01f7a2855f83a861f2741f02d663e8",
+      "ability": "genghisKhanMongolCharge",
+      "geometry": "straight orthogonal/diagonal reached path; influence corridor center+2 side cells per getMongolChargeInfluenceCells",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "Committed genghisKhanMongolCharge; unitMoved reached slices; reactionOpportunity.source genghis and ATTACK/PASS; reactionMovementResumed.",
+      "end_condition": "Dissipate fully by1.2s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_GENGHIS_CHARGE",
+      "file": "charge_accent.png",
+      "batch": 5,
+      "frames": 29,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3712,
+        128
+      ],
+      "duration": "1.2s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.2",
+      "main_action": "Powerful bronze leading spear fan with low rolling ochre dust, thin red pennant-edge slivers. Low corridor edge wave sweeps only reached cells; stop at every eligible ally decision, no attack before ATTACK. Ally attacks get their own normal class cues.",
+      "materials": "cavalry momentum, directional dust combs and corridor wavefronts",
+      "colors": "ochre dust, bronze, desaturated red pennant accents; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "trail",
+      "source_file": "vfx_hero_genghis_charge_accent.png",
+      "sha256": "637aa16feab837047e4885462c3fae05f7aa2a9c702764dd248620439d648e97",
+      "ability": "genghisKhanMongolCharge",
+      "geometry": "straight orthogonal/diagonal reached path; influence corridor center+2 side cells per getMongolChargeInfluenceCells",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "Committed genghisKhanMongolCharge; unitMoved reached slices; reactionOpportunity.source genghis and ATTACK/PASS; reactionMovementResumed.",
+      "end_condition": "Dissipate fully by1.2s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    }
+  ]
+}

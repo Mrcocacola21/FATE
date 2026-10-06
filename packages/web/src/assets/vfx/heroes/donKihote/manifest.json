@@ -1,0 +1,181 @@
+{
+  "schema": "fate_asset_library_documentation_v1",
+  "note": "Metadata only; not connected to runtime.",
+  "assets": [
+    {
+      "id": "VFX_DON_SORROW_MOVE",
+      "file": "sorrow_move.png",
+      "batch": 5,
+      "frames": 11,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1408,
+        128
+      ],
+      "duration": "0.45s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.4",
+      "main_action": "Small torn brass pennant arcs toward committed destination; waiting choice uses generic UI ring, no movement before acceptance.",
+      "materials": "quixotic lance geometry, windmill-shaped directional spokes and torn pennant motes",
+      "colors": "brass, dusty ivory, restrained scarlet; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "trail",
+      "source_file": "vfx_hero_don_sorrow_move.png",
+      "sha256": "299cc89fd5839b595b4fa902af577cfb1e5e5548d43b680a06ce7bc54398ad6e",
+      "ability": "donKihoteSorrowfulCountenance",
+      "geometry": "legal1-cell destination; no attack",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "Owner optional donSorrowfulMove pending after damage; committed abilityUsed donKihoteSorrowfulCountenance and unitMoved.",
+      "end_condition": "Dissipate fully by0.45s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "MISSING",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_DON_WINDMILLS",
+      "file": "windmills_primary.png",
+      "batch": 5,
+      "frames": 24,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3072,
+        128
+      ],
+      "duration": "1s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.0",
+      "main_action": "Brass lance streak with three windmill-like spokes marks momentum, small scuff at one crossed enemy for its fixed1 damage and owner relocation choice; only Giant gets full attack cue.",
+      "materials": "quixotic lance geometry, windmill-shaped directional spokes and torn pennant motes",
+      "colors": "brass, dusty ivory, restrained scarlet; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "blades",
+      "source_file": "vfx_hero_don_windmills_primary.png",
+      "sha256": "b4b64dc20b18b5f2fd47c55df458f533d366b051d4222a1fd73c920ea5932311",
+      "ability": "donKihoteWindmills",
+      "geometry": "selected straight path, crossed enemy cells and Giant target",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "abilityUsed donKihoteWindmills after valid Giant selection, reached movement, donWindmillsReposition choices and final Giant attack.",
+      "end_condition": "Dissipate fully by1s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "MISSING",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_DON_WINDMILLS",
+      "file": "windmills_accent.png",
+      "batch": 5,
+      "frames": 24,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3072,
+        128
+      ],
+      "duration": "1s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.0",
+      "main_action": "Brass lance streak with three windmill-like spokes marks momentum, small scuff at one crossed enemy for its fixed1 damage and owner relocation choice; only Giant gets full attack cue.",
+      "materials": "quixotic lance geometry, windmill-shaped directional spokes and torn pennant motes",
+      "colors": "brass, dusty ivory, restrained scarlet; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "blades",
+      "source_file": "vfx_hero_don_windmills_accent.png",
+      "sha256": "4acb6101b37e3e7401389d54aae3c221f2ac3089a01142ca1364cd08191f7638",
+      "ability": "donKihoteWindmills",
+      "geometry": "selected straight path, crossed enemy cells and Giant target",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "abilityUsed donKihoteWindmills after valid Giant selection, reached movement, donWindmillsReposition choices and final Giant attack.",
+      "end_condition": "Dissipate fully by1s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "MISSING",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_DON_MADNESS",
+      "file": "madness_primary.png",
+      "batch": 5,
+      "frames": 30,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3840,
+        128
+      ],
+      "duration": "1.25s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.0",
+      "main_action": "Torn ivory pennant gathers into a long brass spectral lance wave, runs through enemies along chosen direction with +1 damage only on their confirmed failed defenses. Death ash waits for final attack chain.",
+      "materials": "quixotic lance geometry, windmill-shaped directional spokes and torn pennant motes",
+      "colors": "brass, dusty ivory, restrained scarlet; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "blades",
+      "source_file": "vfx_hero_don_madness_primary.png",
+      "sha256": "c177babcdf25aae3ee4c3b61646e757faa85e33fc2f8e9f7bf7c564a065dacca",
+      "ability": "donKihoteMadness",
+      "geometry": "chosen8-direction straight ray from remembered death origin, enemies only",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "Owner donMadDelusionDirection before final death; abilityUsed donKihoteMadness then aoeResolved/attackResolved.",
+      "end_condition": "Dissipate fully by1.25s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "MISSING",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_DON_MADNESS",
+      "file": "madness_accent.png",
+      "batch": 5,
+      "frames": 30,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3840,
+        128
+      ],
+      "duration": "1.25s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.0",
+      "main_action": "Torn ivory pennant gathers into a long brass spectral lance wave, runs through enemies along chosen direction with +1 damage only on their confirmed failed defenses. Death ash waits for final attack chain.",
+      "materials": "quixotic lance geometry, windmill-shaped directional spokes and torn pennant motes",
+      "colors": "brass, dusty ivory, restrained scarlet; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "blades",
+      "source_file": "vfx_hero_don_madness_accent.png",
+      "sha256": "e7936c4488c804e55578e994a83acdc76b45f6ce17728745d9b3ed4bd7956ce0",
+      "ability": "donKihoteMadness",
+      "geometry": "chosen8-direction straight ray from remembered death origin, enemies only",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "Owner donMadDelusionDirection before final death; abilityUsed donKihoteMadness then aoeResolved/attackResolved.",
+      "end_condition": "Dissipate fully by1.25s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "MISSING",
+      "availability_status": "AVAILABLE"
+    }
+  ]
+}

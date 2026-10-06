@@ -1,0 +1,975 @@
+[
+  {
+    "hero": "grand-kaiser",
+    "ability": "kaiserBunker",
+    "type": "passive",
+    "sound": "SFX_KAISER_BUNKER_ENTER, SFX_KAISER_BUNKER_EXIT",
+    "vfx": "VFX_KAISER_BUNKER_ENTRY, VFX_KAISER_BUNKER_STATUS, VFX_KAISER_BUNKER_HIT_EXIT"
+  },
+  {
+    "hero": "grand-kaiser",
+    "ability": "kaiserDora",
+    "type": "active",
+    "sound": "`heroes/grand-kaiser/abilities/Dora.wav`",
+    "vfx": "VFX_KAISER_DORA_PREVIEW, VFX_KAISER_DORA_IMPACT"
+  },
+  {
+    "hero": "grand-kaiser",
+    "ability": "kaiserCarpetStrike",
+    "type": "impulse",
+    "sound": "SFX_KAISER_CARPET_LAUNCH, SFX_KAISER_CARPET_IMPACT",
+    "vfx": "VFX_KAISER_CARPET_PREVIEW, VFX_KAISER_CARPET_IMPACT"
+  },
+  {
+    "hero": "grand-kaiser",
+    "ability": "kaiserEngineeringMiracle",
+    "type": "impulse",
+    "sound": "`heroes/grand-kaiser/transformations/EngineeringMiracle.mp3`",
+    "vfx": "VFX_KAISER_ENGINEERING"
+  },
+  {
+    "hero": "griffith",
+    "ability": "griffithWretchedMan",
+    "type": "passive",
+    "sound": "No separate source needed: stat/resource/passive modifier; shared combat/UI feedback.",
+    "vfx": "No separate bitmap needed: existing stats/resources/status UI and shared combat presentation."
+  },
+  {
+    "hero": "griffith",
+    "ability": "vladPolkovodets",
+    "type": "passive",
+    "sound": "No separate source needed: stat/resource/passive modifier; shared combat/UI feedback.",
+    "vfx": "No separate bitmap needed: existing stats/resources/status UI and shared combat presentation."
+  },
+  {
+    "hero": "griffith",
+    "ability": "griffithFemtoRebirth",
+    "type": "passive",
+    "sound": "SFX_GRIFFITH_REBIRTH",
+    "vfx": "VFX_GRIFFITH_REBIRTH"
+  },
+  {
+    "hero": "femto",
+    "ability": "femtoGodHp",
+    "type": "passive",
+    "sound": "No separate source needed: stat/resource/passive modifier; shared combat/UI feedback.",
+    "vfx": "No separate bitmap needed: existing stats/resources/status UI and shared combat presentation."
+  },
+  {
+    "hero": "femto",
+    "ability": "femtoMultiBerserkSpear",
+    "type": "passive",
+    "sound": "SFX_AUTO_DEFENSE, SFX_ATTACK",
+    "vfx": "VFX_BERSERKER_AUTO_DODGE, VFX_SPEARMAN_DOUBLE_DODGE"
+  },
+  {
+    "hero": "femto",
+    "ability": "femtoDivineMove",
+    "type": "active",
+    "sound": "SFX_TELEPORT",
+    "vfx": "VFX_FEMTO_DIVINE_MOVE"
+  },
+  {
+    "hero": "femto",
+    "ability": "berserkAutoDefense",
+    "type": "passive",
+    "sound": "SFX_AUTO_DEFENSE",
+    "vfx": "VFX_BERSERKER_AUTO_DODGE"
+  },
+  {
+    "hero": "guts",
+    "ability": "gutsArbalet",
+    "type": "active",
+    "sound": "SFX_GUTS_CROSSBOW",
+    "vfx": "VFX_GUTS_CROSSBOW"
+  },
+  {
+    "hero": "guts",
+    "ability": "gutsCannon",
+    "type": "active",
+    "sound": "SFX_GUTS_CANNON",
+    "vfx": "VFX_GUTS_CANNON"
+  },
+  {
+    "hero": "guts",
+    "ability": "gutsBerserkMode",
+    "type": "phantasm",
+    "sound": "SFX_GUTS_BERSERK, SFX_GUTS_SWEEP",
+    "vfx": "VFX_GUTS_BERSERK"
+  },
+  {
+    "hero": "odin",
+    "ability": "odinGungnir",
+    "type": "passive",
+    "sound": "SFX_HIT",
+    "vfx": "VFX_ODIN_GUNGNIR"
+  },
+  {
+    "hero": "odin",
+    "ability": "odinHuginn",
+    "type": "passive",
+    "sound": "SFX_SEARCH",
+    "vfx": "VFX_ODIN_HUGINN"
+  },
+  {
+    "hero": "odin",
+    "ability": "odinMuninn",
+    "type": "passive",
+    "sound": "SFX_AUTO_DEFENSE",
+    "vfx": "VFX_ODIN_MUNINN"
+  },
+  {
+    "hero": "odin",
+    "ability": "odinSleipnir",
+    "type": "impulse",
+    "sound": "SFX_ODIN_SLEIPNIR",
+    "vfx": "VFX_ODIN_SLEIPNIR"
+  },
+  {
+    "hero": "loki",
+    "ability": "lokiNaturalStealth",
+    "type": "passive",
+    "sound": "SFX_STEALTH_ENTER",
+    "vfx": "VFX_STEALTH_ENTER"
+  },
+  {
+    "hero": "loki",
+    "ability": "lokiIllusoryDouble",
+    "type": "passive",
+    "sound": "No separate source needed: stat/resource/passive modifier; shared combat/UI feedback.",
+    "vfx": "No separate bitmap needed: existing stats/resources/status UI and shared combat presentation."
+  },
+  {
+    "hero": "loki",
+    "ability": "lokiLaught",
+    "type": "phantasm",
+    "sound": "SFX_LOKI_ENTANGLE, SFX_LOKI_CHICKEN, SFX_LOKI_SPIN",
+    "vfx": "VFX_LOKI_ENTANGLE, VFX_LOKI_CHICKEN, VFX_LOKI_CONTROL, VFX_LOKI_SPIN"
+  },
+  {
+    "hero": "jebe",
+    "ability": "jebeDurable",
+    "type": "passive",
+    "sound": "No separate source needed: stat/resource/passive modifier; shared combat/UI feedback.",
+    "vfx": "No separate bitmap needed: existing stats/resources/status UI and shared combat presentation."
+  },
+  {
+    "hero": "jebe",
+    "ability": "jebeKhansShooter",
+    "type": "phantasm",
+    "sound": "SFX_JEBE_RICOCHET",
+    "vfx": "VFX_JEBE_RICOCHET"
+  },
+  {
+    "hero": "jebe",
+    "ability": "jebeHailOfArrows",
+    "type": "active",
+    "sound": "SFX_JEBE_HAIL",
+    "vfx": "VFX_JEBE_HAIL_PREVIEW, VFX_JEBE_HAIL"
+  },
+  {
+    "hero": "jebe",
+    "ability": "genghisKhanLegendOfTheSteppes",
+    "type": "passive",
+    "sound": "No separate source needed: stat/resource/passive modifier; shared combat/UI feedback.",
+    "vfx": "No separate bitmap needed: existing stats/resources/status UI and shared combat presentation."
+  },
+  {
+    "hero": "jebe",
+    "ability": "vladPolkovodets",
+    "type": "passive",
+    "sound": "No separate source needed: stat/resource/passive modifier; shared combat/UI feedback.",
+    "vfx": "No separate bitmap needed: existing stats/resources/status UI and shared combat presentation."
+  },
+  {
+    "hero": "hassan",
+    "ability": "hassanOneWithSand",
+    "type": "passive",
+    "sound": "SFX_STEALTH_ENTER",
+    "vfx": "VFX_STEALTH_ENTER"
+  },
+  {
+    "hero": "hassan",
+    "ability": "hassanTrueEnemy",
+    "type": "active",
+    "sound": "`heroes/hassan/abilities/TrueEnemy.mp3`",
+    "vfx": "VFX_HASSAN_TRUE_ENEMY"
+  },
+  {
+    "hero": "hassan",
+    "ability": "hassanAssasinOrder",
+    "type": "phantasm",
+    "sound": "SFX_HASSAN_ORDER",
+    "vfx": "VFX_HASSAN_ORDER"
+  },
+  {
+    "hero": "hassan",
+    "ability": "vladPolkovodets",
+    "type": "passive",
+    "sound": "No separate source needed: stat/resource/passive modifier; shared combat/UI feedback.",
+    "vfx": "No separate bitmap needed: existing stats/resources/status UI and shared combat presentation."
+  },
+  {
+    "hero": "kaladin",
+    "ability": "kaladinFirst",
+    "type": "active",
+    "sound": "SFX_HEAL",
+    "vfx": "VFX_KALADIN_FIRST"
+  },
+  {
+    "hero": "kaladin",
+    "ability": "kaladinSecond",
+    "type": "passive",
+    "sound": "SFX_TELEPORT, SFX_TRICKSTER_AOE",
+    "vfx": "VFX_MOVEMENT_TRICKSTER, VFX_COMBAT_HIT_LIGHT"
+  },
+  {
+    "hero": "kaladin",
+    "ability": "kaladinThird",
+    "type": "passive",
+    "sound": "No separate source needed: stat/resource/passive modifier; shared combat/UI feedback.",
+    "vfx": "No separate bitmap needed: existing stats/resources/status UI and shared combat presentation."
+  },
+  {
+    "hero": "kaladin",
+    "ability": "kaladinFourth",
+    "type": "passive",
+    "sound": "SFX_AUTO_DEFENSE",
+    "vfx": "VFX_BERSERKER_AUTO_DODGE"
+  },
+  {
+    "hero": "kaladin",
+    "ability": "kaladinFifth",
+    "type": "phantasm",
+    "sound": "SFX_KALADIN_FIFTH",
+    "vfx": "VFX_KALADIN_FIFTH_PREVIEW, VFX_KALADIN_FIFTH"
+  },
+  {
+    "hero": "luche",
+    "ability": "lucheLongLived",
+    "type": "passive",
+    "sound": "No separate source needed: stat/resource/passive modifier; shared combat/UI feedback.",
+    "vfx": "No separate bitmap needed: existing stats/resources/status UI and shared combat presentation."
+  },
+  {
+    "hero": "luche",
+    "ability": "lucheShine",
+    "type": "passive",
+    "sound": "SFX_STATUS_APPLIED",
+    "vfx": "VFX_LUCHE_RADIANCE"
+  },
+  {
+    "hero": "luche",
+    "ability": "lucheBurningSun",
+    "type": "phantasm",
+    "sound": "SFX_LUCHE_SUN",
+    "vfx": "VFX_LUCHE_FALLING_SUN"
+  },
+  {
+    "hero": "luche",
+    "ability": "lucheDivineRay",
+    "type": "impulse",
+    "sound": "SFX_LUCHE_RAY",
+    "vfx": "VFX_LUCHE_RAY"
+  },
+  {
+    "hero": "luche",
+    "ability": "lucheSunGlory",
+    "type": "passive",
+    "sound": "No separate source needed: stat/resource/passive modifier; shared combat/UI feedback.",
+    "vfx": "No separate bitmap needed: existing stats/resources/status UI and shared combat presentation."
+  },
+  {
+    "hero": "kaneki",
+    "ability": "kanekiGhoul",
+    "type": "passive",
+    "sound": "No separate source needed: stat/resource/passive modifier; shared combat/UI feedback.",
+    "vfx": "No separate bitmap needed: existing stats/resources/status UI and shared combat presentation."
+  },
+  {
+    "hero": "kaneki",
+    "ability": "kanekiRcCells",
+    "type": "passive",
+    "sound": "No separate source needed: stat/resource/passive modifier; shared combat/UI feedback.",
+    "vfx": "No separate bitmap needed: existing stats/resources/status UI and shared combat presentation."
+  },
+  {
+    "hero": "kaneki",
+    "ability": "kanekiRinkakuKagune",
+    "type": "passive",
+    "sound": "SFX_MOVE",
+    "vfx": "VFX_MOVEMENT_ASSASSIN"
+  },
+  {
+    "hero": "kaneki",
+    "ability": "kanekiRegeneration",
+    "type": "active",
+    "sound": "SFX_HEAL",
+    "vfx": "VFX_KANEKI_REGEN"
+  },
+  {
+    "hero": "kaneki",
+    "ability": "kanekiScolopendra",
+    "type": "phantasm",
+    "sound": "`heroes/kaneki/transformations/Scolopendra.mp3`",
+    "vfx": "VFX_KANEKI_CENTIPEDE"
+  },
+  {
+    "hero": "zoro",
+    "ability": "zoroCheatedDeath",
+    "type": "passive",
+    "sound": "No separate source needed: stat/resource/passive modifier; shared combat/UI feedback.",
+    "vfx": "No separate bitmap needed: existing stats/resources/status UI and shared combat presentation."
+  },
+  {
+    "hero": "zoro",
+    "ability": "zoro3SwordStyle",
+    "type": "passive",
+    "sound": "SFX_ATTACK, SFX_HIT, SFX_MISS",
+    "vfx": "VFX_ZORO_SANTORYU"
+  },
+  {
+    "hero": "zoro",
+    "ability": "zoroOniGiri",
+    "type": "active",
+    "sound": "SFX_ZORO_ONI",
+    "vfx": "VFX_ZORO_ONI_GIRI"
+  },
+  {
+    "hero": "zoro",
+    "ability": "zoroAsura",
+    "type": "phantasm",
+    "sound": "SFX_ZORO_ASURA",
+    "vfx": "VFX_ZORO_ASURA"
+  },
+  {
+    "hero": "zoro",
+    "ability": "zoroDetermination",
+    "type": "passive",
+    "sound": "No separate source needed: stat/resource/passive modifier; shared combat/UI feedback.",
+    "vfx": "No separate bitmap needed: existing stats/resources/status UI and shared combat presentation."
+  },
+  {
+    "hero": "donKihote",
+    "ability": "donKihoteHardy",
+    "type": "passive",
+    "sound": "No separate source needed: stat/resource/passive modifier; shared combat/UI feedback.",
+    "vfx": "No separate bitmap needed: existing stats/resources/status UI and shared combat presentation."
+  },
+  {
+    "hero": "donKihote",
+    "ability": "donKihoteSorrowfulCountenance",
+    "type": "passive",
+    "sound": "SFX_FORCED_MOVE",
+    "vfx": "VFX_DON_SORROW_MOVE"
+  },
+  {
+    "hero": "donKihote",
+    "ability": "donKihoteWindmills",
+    "type": "active",
+    "sound": "SFX_DON_WINDMILLS",
+    "vfx": "VFX_DON_WINDMILLS"
+  },
+  {
+    "hero": "donKihote",
+    "ability": "donKihoteMadness",
+    "type": "phantasm",
+    "sound": "SFX_DON_MADNESS",
+    "vfx": "VFX_DON_MADNESS"
+  },
+  {
+    "hero": "donKihote",
+    "ability": "vladPolkovodets",
+    "type": "passive",
+    "sound": "No separate source needed: stat/resource/passive modifier; shared combat/UI feedback.",
+    "vfx": "No separate bitmap needed: existing stats/resources/status UI and shared combat presentation."
+  },
+  {
+    "hero": "jackRipper",
+    "ability": "jackRipperResilient",
+    "type": "passive",
+    "sound": "No separate source needed: stat/resource/passive modifier; shared combat/UI feedback.",
+    "vfx": "No separate bitmap needed: existing stats/resources/status UI and shared combat presentation."
+  },
+  {
+    "hero": "jackRipper",
+    "ability": "jackRipperDismemberment",
+    "type": "phantasm",
+    "sound": "`heroes/jackRipper/phantasms/HolyMotherOfSlaughter.mp3`",
+    "vfx": "VFX_JACK_SLAUGHTER"
+  },
+  {
+    "hero": "jackRipper",
+    "ability": "jackRipperCoveringTracks",
+    "type": "passive",
+    "sound": "SFX_JACK_SNARE_EXPLODE",
+    "vfx": "VFX_JACK_COVER_TRACKS"
+  },
+  {
+    "hero": "jackRipper",
+    "ability": "jackRipperSnares",
+    "type": "impulse",
+    "sound": "SFX_JACK_SNARE_PLACE, SFX_JACK_SNARE_TRIGGER",
+    "vfx": "VFX_JACK_SNARE_PLACE, VFX_JACK_SNARE_REVEAL_TRIGGER, VFX_JACK_SNARE_STATUS"
+  },
+  {
+    "hero": "jackRipper",
+    "ability": "jackRipperSurgery",
+    "type": "passive",
+    "sound": "SFX_UI_PENDING",
+    "vfx": "VFX_JACK_SURGERY"
+  },
+  {
+    "hero": "artemida",
+    "ability": "artemidaGod",
+    "type": "passive",
+    "sound": "No separate source needed: stat/resource/passive modifier; shared combat/UI feedback.",
+    "vfx": "No separate bitmap needed: existing stats/resources/status UI and shared combat presentation."
+  },
+  {
+    "hero": "artemida",
+    "ability": "artemidaAccurateArrow",
+    "type": "passive",
+    "sound": "SFX_HIT",
+    "vfx": "VFX_COMBAT_HIT_LIGHT"
+  },
+  {
+    "hero": "artemida",
+    "ability": "artemidaMoonlightShot",
+    "type": "impulse",
+    "sound": "SFX_ARTEMIS_REVEAL",
+    "vfx": "VFX_ARTEMIS_MOON_PREVIEW, VFX_ARTEMIS_MOON_REVEAL"
+  },
+  {
+    "hero": "artemida",
+    "ability": "artemidaSilverCrescent",
+    "type": "phantasm",
+    "sound": "SFX_ARTEMIS_CRESCENT",
+    "vfx": "VFX_ARTEMIS_CRESCENT"
+  },
+  {
+    "hero": "artemida",
+    "ability": "artemidaNatureMovement",
+    "type": "passive",
+    "sound": "SFX_TELEPORT",
+    "vfx": "VFX_MOVEMENT_TRICKSTER"
+  },
+  {
+    "hero": "artemida",
+    "ability": "artemidaStealth",
+    "type": "passive",
+    "sound": "SFX_STEALTH_ENTER",
+    "vfx": "VFX_STEALTH_ENTER"
+  },
+  {
+    "hero": "frisk",
+    "ability": "friskGenocide",
+    "type": "phantasm",
+    "sound": "SFX_FRISK_PRECISION",
+    "vfx": "VFX_FRISK_SUBSTITUTION, VFX_FRISK_KEEN_EYE, VFX_FRISK_PRECISION"
+  },
+  {
+    "hero": "frisk",
+    "ability": "friskOnePath",
+    "type": "phantasm",
+    "sound": "SFX_FRISK_ONE_PATH",
+    "vfx": "VFX_FRISK_ONE_PATH"
+  },
+  {
+    "hero": "frisk",
+    "ability": "friskPacifism",
+    "type": "phantasm",
+    "sound": "SFX_FRISK_HUGS",
+    "vfx": "VFX_FRISK_HUGS, VFX_FRISK_WARM_WORDS, VFX_FRISK_CRY, VFX_FRISK_FRIENDSHIP"
+  },
+  {
+    "hero": "frisk",
+    "ability": "friskCleanSoul",
+    "type": "passive",
+    "sound": "SFX_STEALTH_REVEAL, SFX_MISS",
+    "vfx": "VFX_FRISK_CLEAN_SOUL"
+  },
+  {
+    "hero": "sans",
+    "ability": "sansLongLiver",
+    "type": "passive",
+    "sound": "No separate source needed: stat/resource/passive modifier; shared combat/UI feedback.",
+    "vfx": "No separate bitmap needed: existing stats/resources/status UI and shared combat presentation."
+  },
+  {
+    "hero": "sans",
+    "ability": "sansGasterBlaster",
+    "type": "impulse",
+    "sound": "SFX_SANS_BLASTER_CHARGE, SFX_SANS_BLASTER_FIRE",
+    "vfx": "VFX_SANS_GASTER_PREVIEW, VFX_SANS_GASTER_CANNON, VFX_SANS_GASTER_BEAM"
+  },
+  {
+    "hero": "sans",
+    "ability": "sansBadassJoke",
+    "type": "active",
+    "sound": "SFX_SANS_JOKE",
+    "vfx": "VFX_SANS_JOKE"
+  },
+  {
+    "hero": "sans",
+    "ability": "sansSpearmanFeature",
+    "type": "passive",
+    "sound": "SFX_AUTO_DEFENSE",
+    "vfx": "VFX_SPEARMAN_DOUBLE_DODGE"
+  },
+  {
+    "hero": "sans",
+    "ability": "sansUnbeliever",
+    "type": "passive",
+    "sound": "SFX_AWAKEN",
+    "vfx": "VFX_SANS_UNBELIEVER"
+  },
+  {
+    "hero": "sans",
+    "ability": "sansBoneField",
+    "type": "impulse",
+    "sound": "SFX_SANS_BONE_FIELD",
+    "vfx": "VFX_SANS_BONE_FIELD"
+  },
+  {
+    "hero": "sans",
+    "ability": "sansSleep",
+    "type": "active",
+    "sound": "SFX_HEAL",
+    "vfx": "VFX_SANS_SLEEP"
+  },
+  {
+    "hero": "sans",
+    "ability": "sansLastAttack",
+    "type": "passive",
+    "sound": "SFX_SANS_CURSE_APPLY, SFX_SANS_CURSE_TICK, SFX_SANS_CURSE_END",
+    "vfx": "VFX_SANS_LAST_PREDEATH, VFX_SANS_CURSE_APPLY, VFX_SANS_CURSE_STATUS, VFX_SANS_CURSE_TICK_END"
+  },
+  {
+    "hero": "asgore",
+    "ability": "asgoreFireball",
+    "type": "active",
+    "sound": "SFX_ASGORE_FIREBALL_CAST, SFX_ASGORE_FIREBALL_IMPACT, SFX_ASGORE_FIREBALL_TRAVEL",
+    "vfx": "VFX_ASGORE_FIREBALL"
+  },
+  {
+    "hero": "asgore",
+    "ability": "asgoreFireParade",
+    "type": "active",
+    "sound": "SFX_ASGORE_FIRE_PARADE",
+    "vfx": "VFX_ASGORE_FIRE_PARADE_PREVIEW, VFX_ASGORE_FIRE_PARADE"
+  },
+  {
+    "hero": "asgore",
+    "ability": "asgoreSoulParade",
+    "type": "impulse",
+    "sound": "SFX_ASGORE_SOUL_PARADE",
+    "vfx": "VFX_ASGORE_SOUL_PARADE"
+  },
+  {
+    "hero": "undyne",
+    "ability": "undyneTough",
+    "type": "passive",
+    "sound": "No separate source needed: stat/resource/passive modifier; shared combat/UI feedback.",
+    "vfx": "No separate bitmap needed: existing stats/resources/status UI and shared combat presentation."
+  },
+  {
+    "hero": "undyne",
+    "ability": "undyneSpearmanMulticlass",
+    "type": "passive",
+    "sound": "SFX_AUTO_DEFENSE",
+    "vfx": "VFX_SPEARMAN_DOUBLE_DODGE"
+  },
+  {
+    "hero": "undyne",
+    "ability": "undyneSpearThrow",
+    "type": "active",
+    "sound": "`heroes/undyne/abilities/throw_spear.wav`",
+    "vfx": "VFX_UNDYNE_THROW"
+  },
+  {
+    "hero": "undyne",
+    "ability": "undyneEnergySpear",
+    "type": "impulse",
+    "sound": "`heroes/undyne/abilities/energy_spear.wav`",
+    "vfx": "VFX_UNDYNE_ENERGY_PREVIEW, VFX_UNDYNE_ENERGY"
+  },
+  {
+    "hero": "undyne",
+    "ability": "undyneSwitchDirection",
+    "type": "passive",
+    "sound": "SFX_FORCED_MOVE",
+    "vfx": "VFX_UNDYNE_SHIFT"
+  },
+  {
+    "hero": "undyne",
+    "ability": "undyneUndying",
+    "type": "passive",
+    "sound": "SFX_UNDYNE_REVIVE",
+    "vfx": "VFX_UNDYNE_UNDYING"
+  },
+  {
+    "hero": "papyrus",
+    "ability": "papyrusBlueBone",
+    "type": "passive",
+    "sound": "SFX_PAPYRUS_BLUE",
+    "vfx": "VFX_PAPYRUS_BONES"
+  },
+  {
+    "hero": "papyrus",
+    "ability": "papyrusSpaghetti",
+    "type": "active",
+    "sound": "SFX_HEAL",
+    "vfx": "VFX_PAPYRUS_SPAGHETTI"
+  },
+  {
+    "hero": "papyrus",
+    "ability": "papyrusCoolGuy",
+    "type": "impulse",
+    "sound": "SFX_PAPYRUS_LINE",
+    "vfx": "VFX_PAPYRUS_LINE"
+  },
+  {
+    "hero": "papyrus",
+    "ability": "papyrusUnbeliever",
+    "type": "passive",
+    "sound": "SFX_AWAKEN",
+    "vfx": "VFX_PAPYRUS_UNBELIEVER"
+  },
+  {
+    "hero": "papyrus",
+    "ability": "papyrusOrangeBone",
+    "type": "passive",
+    "sound": "SFX_PAPYRUS_ORANGE",
+    "vfx": "VFX_PAPYRUS_BONES"
+  },
+  {
+    "hero": "papyrus",
+    "ability": "papyrusLongBone",
+    "type": "passive",
+    "sound": "SFX_PAPYRUS_LINE",
+    "vfx": "VFX_PAPYRUS_LINE"
+  },
+  {
+    "hero": "papyrus",
+    "ability": "papyrusOssified",
+    "type": "passive",
+    "sound": "SFX_AUTO_DEFENSE",
+    "vfx": "VFX_BERSERKER_AUTO_DODGE"
+  },
+  {
+    "hero": "mettaton",
+    "ability": "mettatonLongLiver",
+    "type": "passive",
+    "sound": "No separate source needed: stat/resource/passive modifier; shared combat/UI feedback.",
+    "vfx": "No separate bitmap needed: existing stats/resources/status UI and shared combat presentation."
+  },
+  {
+    "hero": "mettaton",
+    "ability": "mettatonRating",
+    "type": "passive",
+    "sound": "SFX_CHARGE_READY",
+    "vfx": "VFX_METTATON_RATING"
+  },
+  {
+    "hero": "mettaton",
+    "ability": "mettatonLaser",
+    "type": "active",
+    "sound": "SFX_METTATON_LASER",
+    "vfx": "VFX_METTATON_LASER"
+  },
+  {
+    "hero": "mettaton",
+    "ability": "mettatonPoppins",
+    "type": "active",
+    "sound": "SFX_METTATON_POPPINS",
+    "vfx": "VFX_METTATON_POPPINS"
+  },
+  {
+    "hero": "mettaton",
+    "ability": "mettatonWorkOnCamera",
+    "type": "passive",
+    "sound": "SFX_RIDER_MOVE",
+    "vfx": "VFX_MOVEMENT_RIDER"
+  },
+  {
+    "hero": "mettaton",
+    "ability": "mettatonEx",
+    "type": "impulse",
+    "sound": "SFX_METTATON_EX",
+    "vfx": "VFX_METTATON_EX"
+  },
+  {
+    "hero": "mettaton",
+    "ability": "mettatonStagePhenomenon",
+    "type": "passive",
+    "sound": "SFX_CHARGE_READY",
+    "vfx": "VFX_METTATON_RATING"
+  },
+  {
+    "hero": "mettaton",
+    "ability": "mettatonNeo",
+    "type": "impulse",
+    "sound": "SFX_METTATON_NEO",
+    "vfx": "VFX_METTATON_NEO"
+  },
+  {
+    "hero": "mettaton",
+    "ability": "mettatonRiderFeature",
+    "type": "passive",
+    "sound": "SFX_RIDER_MOVE, SFX_REACTION",
+    "vfx": "VFX_MOVEMENT_RIDER, VFX_REACTION_ATTACK"
+  },
+  {
+    "hero": "mettaton",
+    "ability": "mettatonBerserkerMulticlass",
+    "type": "passive",
+    "sound": "SFX_AUTO_DEFENSE",
+    "vfx": "VFX_BERSERKER_AUTO_DODGE"
+  },
+  {
+    "hero": "mettaton",
+    "ability": "mettatonGrace",
+    "type": "passive",
+    "sound": "SFX_CHARGE_READY",
+    "vfx": "VFX_METTATON_RATING"
+  },
+  {
+    "hero": "mettaton",
+    "ability": "mettatonFinalChord",
+    "type": "phantasm",
+    "sound": "SFX_METTATON_FINAL",
+    "vfx": "VFX_METTATON_FINAL_CHORD"
+  },
+  {
+    "hero": "riverPerson",
+    "ability": "riverBoat",
+    "type": "active",
+    "sound": "SFX_RIVER_BOAT_LAUNCH, SFX_RIVER_BOAT_PICKUP, SFX_RIVER_BOAT_MOVE, SFX_RIVER_BOAT_DROP, SFX_RIVER_BOAT_STOP",
+    "vfx": "VFX_RIVER_BOAT_START_PICKUP, VFX_RIVER_BOAT_TRAVEL, VFX_RIVER_BOAT_DROP, VFX_RIVER_STAKE_STOP, VFX_RIVER_PASSENGER_STAKE"
+  },
+  {
+    "hero": "riverPerson",
+    "ability": "riverBoatman",
+    "type": "active",
+    "sound": "SFX_RIVER_BOATMAN",
+    "vfx": "VFX_RIVER_BOATMAN"
+  },
+  {
+    "hero": "riverPerson",
+    "ability": "riverGuideOfSouls",
+    "type": "passive",
+    "sound": "No separate source needed: stat/resource/passive modifier; shared combat/UI feedback.",
+    "vfx": "No separate bitmap needed: existing stats/resources/status UI and shared combat presentation."
+  },
+  {
+    "hero": "riverPerson",
+    "ability": "riverTraLaLa",
+    "type": "phantasm",
+    "sound": "SFX_RIVER_TRALALA",
+    "vfx": "VFX_RIVER_TRALALA"
+  },
+  {
+    "hero": "duolingo",
+    "ability": "duolingoLongLived",
+    "type": "passive",
+    "sound": "No separate source needed: stat/resource/passive modifier; shared combat/UI feedback.",
+    "vfx": "No separate bitmap needed: existing stats/resources/status UI and shared combat presentation."
+  },
+  {
+    "hero": "duolingo",
+    "ability": "duolingoBerserker",
+    "type": "impulse",
+    "sound": "SFX_AWAKEN",
+    "vfx": "VFX_DUOLINGO_BERSERKER"
+  },
+  {
+    "hero": "duolingo",
+    "ability": "duolingoPushNotification",
+    "type": "active",
+    "sound": "SFX_DUOLINGO_PUSH",
+    "vfx": "VFX_DUOLINGO_PUSH"
+  },
+  {
+    "hero": "duolingo",
+    "ability": "duolingoSkipClasses",
+    "type": "passive",
+    "sound": "No separate source needed: stat/resource/passive modifier; shared combat/UI feedback.",
+    "vfx": "No separate bitmap needed: existing stats/resources/status UI and shared combat presentation."
+  },
+  {
+    "hero": "duolingo",
+    "ability": "duolingoStrick",
+    "type": "passive",
+    "sound": "No separate source needed: stat/resource/passive modifier; shared combat/UI feedback.",
+    "vfx": "No separate bitmap needed: existing stats/resources/status UI and shared combat presentation."
+  },
+  {
+    "hero": "chikatilo",
+    "ability": "chikatiloTough",
+    "type": "passive",
+    "sound": "No separate source needed: stat/resource/passive modifier; shared combat/UI feedback.",
+    "vfx": "No separate bitmap needed: existing stats/resources/status UI and shared combat presentation."
+  },
+  {
+    "hero": "chikatilo",
+    "ability": "chikatiloFalseTrail",
+    "type": "passive",
+    "sound": "`heroes/chikatilo/phantasms/FalseTrailExplosion.mp3`",
+    "vfx": "VFX_CHIKATILO_FALSE_TRAIL"
+  },
+  {
+    "hero": "chikatilo",
+    "ability": "chikatiloAssassinMark",
+    "type": "active",
+    "sound": "`heroes/chikatilo/abilities/KillerMark.mp3`",
+    "vfx": "VFX_CHIKATILO_MARK"
+  },
+  {
+    "hero": "chikatilo",
+    "ability": "chikatiloDecoy",
+    "type": "active",
+    "sound": "`heroes/chikatilo/abilities/decoy.mp3`",
+    "vfx": "VFX_CHIKATILO_DECOY"
+  },
+  {
+    "hero": "grozny",
+    "ability": "groznyInvadeTime",
+    "type": "active",
+    "sound": "SFX_GROZNY_INVADE",
+    "vfx": "VFX_GROZNY_INVADE"
+  },
+  {
+    "hero": "grozny",
+    "ability": "vladPolkovodets",
+    "type": "passive",
+    "sound": "No separate source needed: stat/resource/passive modifier; shared combat/UI feedback.",
+    "vfx": "No separate bitmap needed: existing stats/resources/status UI and shared combat presentation."
+  },
+  {
+    "hero": "grozny",
+    "ability": "groznyTyrant",
+    "type": "impulse",
+    "sound": "SFX_GROZNY_TYRANT",
+    "vfx": "VFX_GROZNY_TYRANT"
+  },
+  {
+    "hero": "elCidCompeador",
+    "ability": "elCidCompeadorTisona",
+    "type": "active",
+    "sound": "SFX_ELCID_TISONA",
+    "vfx": "VFX_ELCID_TISONA"
+  },
+  {
+    "hero": "elCidCompeador",
+    "ability": "vladPolkovodets",
+    "type": "passive",
+    "sound": "No separate source needed: stat/resource/passive modifier; shared combat/UI feedback.",
+    "vfx": "No separate bitmap needed: existing stats/resources/status UI and shared combat presentation."
+  },
+  {
+    "hero": "elCidCompeador",
+    "ability": "elCidCompeadorKolada",
+    "type": "impulse",
+    "sound": "SFX_ELCID_KOLADA",
+    "vfx": "VFX_ELCID_KOLADA"
+  },
+  {
+    "hero": "elCidCompeador",
+    "ability": "elCidCompeadorDemonDuelist",
+    "type": "phantasm",
+    "sound": "SFX_ELCID_DUELIST",
+    "vfx": "VFX_ELCID_DUEL"
+  },
+  {
+    "hero": "lechy",
+    "ability": "lechyGiant",
+    "type": "passive",
+    "sound": "No separate source needed: stat/resource/passive modifier; shared combat/UI feedback.",
+    "vfx": "No separate bitmap needed: existing stats/resources/status UI and shared combat presentation."
+  },
+  {
+    "hero": "lechy",
+    "ability": "lechyNaturalStealth",
+    "type": "passive",
+    "sound": "SFX_STEALTH_ENTER",
+    "vfx": "VFX_STEALTH_ENTER"
+  },
+  {
+    "hero": "lechy",
+    "ability": "lechyGuideTraveler",
+    "type": "active",
+    "sound": "`heroes/lechy/abilities/GuideTraveler.mp3.mpeg`",
+    "vfx": "VFX_LECHY_GUIDE"
+  },
+  {
+    "hero": "lechy",
+    "ability": "lechyConfuseTerrain",
+    "type": "impulse",
+    "sound": "`heroes/lechy/abilities/ConfuseTerrain.mp3.mpeg`",
+    "vfx": "VFX_LECHY_FOREST"
+  },
+  {
+    "hero": "lechy",
+    "ability": "lechyStorm",
+    "type": "phantasm",
+    "sound": "`heroes/lechy/phantasms/StormSound1.mp3`, `heroes/lechy/phantasms/StormSound2.mp3`",
+    "vfx": "VFX_LECHY_STORM"
+  },
+  {
+    "hero": "vladTepes",
+    "ability": "vladPolkovodets",
+    "type": "passive",
+    "sound": "No separate source needed: stat/resource/passive modifier; shared combat/UI feedback.",
+    "vfx": "No separate bitmap needed: existing stats/resources/status UI and shared combat presentation."
+  },
+  {
+    "hero": "vladTepes",
+    "ability": "vladIntimidate",
+    "type": "passive",
+    "sound": "SFX_VLAD_STARE",
+    "vfx": "VFX_VLAD_GAZE"
+  },
+  {
+    "hero": "vladTepes",
+    "ability": "vladStakes",
+    "type": "impulse",
+    "sound": "SFX_VLAD_STAKE_PLACE, SFX_VLAD_STAKE_TRIGGER",
+    "vfx": "VFX_VLAD_STAKES_PLACE, VFX_VLAD_STAKE_TRIGGER, VFX_VLAD_STAKE_MARKER"
+  },
+  {
+    "hero": "vladTepes",
+    "ability": "vladForest",
+    "type": "impulse",
+    "sound": "SFX_VLAD_FOREST",
+    "vfx": "VFX_VLAD_FOREST_PREVIEW, VFX_VLAD_FOREST_ERUPTION"
+  },
+  {
+    "hero": "genghisKhan",
+    "ability": "genghisKhanKhansDecree",
+    "type": "active",
+    "sound": "SFX_GENGHIS_DECREE",
+    "vfx": "VFX_GENGHIS_DECREE"
+  },
+  {
+    "hero": "genghisKhan",
+    "ability": "genghisKhanMongolCharge",
+    "type": "phantasm",
+    "sound": "SFX_GENGHIS_CHARGE",
+    "vfx": "VFX_GENGHIS_CHARGE"
+  },
+  {
+    "hero": "genghisKhan",
+    "ability": "vladPolkovodets",
+    "type": "passive",
+    "sound": "No separate source needed: stat/resource/passive modifier; shared combat/UI feedback.",
+    "vfx": "No separate bitmap needed: existing stats/resources/status UI and shared combat presentation."
+  },
+  {
+    "hero": "genghisKhan",
+    "ability": "genghisKhanLegendOfTheSteppes",
+    "type": "passive",
+    "sound": "No separate source needed: stat/resource/passive modifier; shared combat/UI feedback.",
+    "vfx": "No separate bitmap needed: existing stats/resources/status UI and shared combat presentation."
+  }
+]

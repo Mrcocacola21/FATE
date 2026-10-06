@@ -1,0 +1,181 @@
+{
+  "schema": "fate_asset_library_documentation_v1",
+  "note": "Metadata only; not connected to runtime.",
+  "assets": [
+    {
+      "id": "VFX_RIVER_BOAT_START_PICKUP",
+      "file": "boat_start_pickup.png",
+      "batch": 5,
+      "frames": 14,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1792,
+        128
+      ],
+      "duration": "0.6s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.3",
+      "main_action": "Low dark-water crescent unfurls beneath carrier, a short spectral towline wraps passenger outline and merges into carrier travel silhouette. Preserve passenger identity; this is spectral stylization, not a real water terrain mechanic.",
+      "materials": "spectral maritime wake, low water crescents and towline energy",
+      "colors": "dark water teal, pale blue-grey, black violet; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "trail",
+      "source_file": "vfx_hero_river_boat_start_pickup.png",
+      "sha256": "48f76a076300727d476a4ac98b2eeb65e25c0493de019b5945675178216d70c7",
+      "ability": "riverBoat",
+      "geometry": "carrier and selected passenger1 cell each",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "Owner riverBoatCarryChoice resolves actual selected adjacent ally (or riverBoatNoPassenger for solo) and subsequent planned Boat commits; current move-flow carry flag/context when projected.",
+      "end_condition": "Dissipate fully by0.6s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_RIVER_BOAT_TRAVEL",
+      "file": "boat_travel.png",
+      "batch": 5,
+      "frames": 20,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2560,
+        128
+      ],
+      "duration": "0.85s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.5",
+      "main_action": "Two parallel dark-teal wake curls trail carrier with a small pale leading crescent. Passenger stays visibly associated. On arrival wake shrinks to ring at reached cell. Current portals can be upgraded to maritime vocabulary.",
+      "materials": "spectral maritime wake, low water crescents and towline energy",
+      "colors": "dark water teal, pale blue-grey, black violet; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "trail",
+      "source_file": "vfx_hero_river_boat_travel.png",
+      "sha256": "28c24506f1bce9e36b1c2cc0ab9d969e07f6e6459df5e33149312ce5d1cf4e5b",
+      "ability": "riverBoat",
+      "geometry": "actual reached path; low0.35cell wake, arrival1.1cell",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "Actual projected unitMoved segments during carry, or riverBoatResolved authorizes completed endpoints; no future path inference.",
+      "end_condition": "Dissipate fully by0.85s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_RIVER_BOAT_DROP",
+      "file": "boat_drop.png",
+      "batch": 5,
+      "frames": 13,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1664,
+        128
+      ],
+      "duration": "0.55s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.6",
+      "main_action": "Passenger separates from carrier with small dark-water landing ring; carrier stays at final cell. Failure is neutral broken ring, no phantom landing. New drop choice may follow interruption.",
+      "materials": "spectral maritime wake, low water crescents and towline energy",
+      "colors": "dark water teal, pale blue-grey, black violet; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "trail",
+      "source_file": "vfx_hero_river_boat_drop.png",
+      "sha256": "1d6b296fee221477649e2d1d91437e14b951d7df4e966163e98cdb249ed881f4",
+      "ability": "riverBoat",
+      "geometry": "actual adjacent chosen passenger cell,0.9 cell",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "riverBoatResolved.dropDestination plus actual passenger unitMoved; pending riverBoatDropDestination; riverBoatDisembarkFailed abort.",
+      "end_condition": "Dissipate fully by0.55s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_RIVER_TRALALA",
+      "file": "tralala_primary.png",
+      "batch": 5,
+      "frames": 26,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3328,
+        128
+      ],
+      "duration": "1.1s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.6",
+      "main_action": "A dark-water tow filament links enemy outline to carrier, narrow pale leading crescent and short wake show drag direction. Pause filament motion at every optional allied ATTACK/PASS; continue only after reactionMovementResumed and all attack/pre-death decisions. Enemy stays trackable; no hiding whirlpool.",
+      "materials": "spectral maritime wake, low water crescents and towline energy",
+      "colors": "dark water teal, pale blue-grey, black violet; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "portal",
+      "source_file": "vfx_hero_river_tralala_primary.png",
+      "sha256": "c2c133c25bc38f8590713ebbff44dcda68e5034d522b685e6524e01a42d6fe57",
+      "ability": "riverTraLaLa",
+      "geometry": "straight orthogonal/diagonal reached path; carrier and adjacent enemy transit positions;0.4-cell wake",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "Committed riverTraLaLa target/destination/drop choices; projected unitMoved reached steps; reactionOpportunity pauses; riverTraLaLaResolved ends.",
+      "end_condition": "Each reached-step burst dissipates <=0.5s; stop transport on finished drop, stake stop, carrier/target death or canceled movement. Never loop motion while a reaction decision waits.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_RIVER_TRALALA",
+      "file": "tralala_accent.png",
+      "batch": 5,
+      "frames": 26,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3328,
+        128
+      ],
+      "duration": "1.1s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.6",
+      "main_action": "A dark-water tow filament links enemy outline to carrier, narrow pale leading crescent and short wake show drag direction. Pause filament motion at every optional allied ATTACK/PASS; continue only after reactionMovementResumed and all attack/pre-death decisions. Enemy stays trackable; no hiding whirlpool.",
+      "materials": "spectral maritime wake, low water crescents and towline energy",
+      "colors": "dark water teal, pale blue-grey, black violet; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "portal",
+      "source_file": "vfx_hero_river_tralala_accent.png",
+      "sha256": "7f89f44f11dee80df3af087254483447066c5f26bf90e5a25f722b709539e7a0",
+      "ability": "riverTraLaLa",
+      "geometry": "straight orthogonal/diagonal reached path; carrier and adjacent enemy transit positions;0.4-cell wake",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "Committed riverTraLaLa target/destination/drop choices; projected unitMoved reached steps; reactionOpportunity pauses; riverTraLaLaResolved ends.",
+      "end_condition": "Each reached-step burst dissipates <=0.5s; stop transport on finished drop, stake stop, carrier/target death or canceled movement. Never loop motion while a reaction decision waits.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    }
+  ]
+}

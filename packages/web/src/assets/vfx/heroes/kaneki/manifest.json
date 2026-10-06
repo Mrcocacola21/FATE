@@ -1,0 +1,76 @@
+{
+  "schema": "fate_asset_library_documentation_v1",
+  "note": "Metadata only; not connected to runtime.",
+  "assets": [
+    {
+      "id": "VFX_KANEKI_REGEN",
+      "file": "regen.png",
+      "batch": 6,
+      "frames": 16,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2048,
+        128
+      ],
+      "duration": "0.65s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.6",
+      "main_action": "Wine-red segmented organic threads coil into a pearl seam, then withdraw. Heal amount equals spent RC up to HP cap; no blood spray.",
+      "materials": "organic segmented arcs and tightly coiling regenerative threads",
+      "colors": "wine red, charcoal, pearl tendril edges; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "heal",
+      "source_file": "vfx_hero_kaneki_regen.png",
+      "sha256": "9a38c0b4a1499bffa518f5162c6f49cf55c50c335e32dce32cec956fe90efdac",
+      "ability": "kanekiRegeneration",
+      "geometry": "self1 cell",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "unitHealed.sourceAbilityId kanekiRegeneration after chosen RC resource spend.",
+      "end_condition": "Dissipate fully by0.65s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_KANEKI_CENTIPEDE",
+      "file": "centipede.png",
+      "batch": 6,
+      "frames": 29,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3712,
+        128
+      ],
+      "duration": "1.2s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.2",
+      "main_action": "Original segmented vermilion energy spine circles once into long directional hooks, white seams lock into the upgraded token. Permanent Rider movement unlock; no monster model replacement requested.",
+      "materials": "organic segmented arcs and tightly coiling regenerative threads",
+      "colors": "wine red, charcoal, pearl tendril edges; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "chain",
+      "source_file": "vfx_hero_kaneki_centipede.png",
+      "sha256": "1afdadc8e1c0b2ccb1d24ca22cb89d5d545ffb5f0e426c79f9cee94200c1f4d3",
+      "ability": "kanekiScolopendra",
+      "geometry": "self1.6 cells",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "kanekiCentipedeUnlocked false -> true when RC Cells>5 via newBatchPost; not repeated for later resource gains.",
+      "end_condition": "Dissipate fully by1.2s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "UPGRADE",
+      "availability_status": "AVAILABLE"
+    }
+  ]
+}

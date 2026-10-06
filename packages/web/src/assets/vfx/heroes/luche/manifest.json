@@ -1,0 +1,181 @@
+{
+  "schema": "fate_asset_library_documentation_v1",
+  "note": "Metadata only; not connected to runtime.",
+  "assets": [
+    {
+      "id": "VFX_LUCHE_RADIANCE",
+      "file": "radiance.png",
+      "batch": 6,
+      "frames": 11,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        1408,
+        128
+      ],
+      "duration": "0.45s total one-shot (per resolved segment for interactive chains)",
+      "fps": "24.4",
+      "main_action": "Tiny sun-spoke glare fractures into a closed-eye glyph at attacker; no injury flash because Blind itself is not extra damage.",
+      "materials": "sharp sun discs, thin radial spokes and low halo bloom",
+      "colors": "white-gold, warm ochre, deep burgundy shadow; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "soul",
+      "source_file": "vfx_hero_luche_radiance.png",
+      "sha256": "63d923980521c84754441193fc97524d16d3d413f1793bc88562854f3b0c03e8",
+      "ability": "lucheShine",
+      "geometry": "attacker token<=1 cell",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "attackResolved.hit against Luche followed abilityUsed lucheShine; projected attacker Blind flag.",
+      "end_condition": "Dissipate fully by0.45s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "MISSING",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_LUCHE_RAY",
+      "file": "ray_primary.png",
+      "batch": 6,
+      "frames": 20,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2560,
+        128
+      ],
+      "duration": "0.85s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.5",
+      "main_action": "Needle-white sunbeam with ochre segmented spokes; around-self mode is eight sharp radiating lobes. Enemy-only Blind on failed defenses. The mode geometry must stay distinct.",
+      "materials": "sharp sun discs, thin radial spokes and low halo bloom",
+      "colors": "white-gold, warm ochre, deep burgundy shadow; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "beam",
+      "source_file": "vfx_hero_luche_ray_primary.png",
+      "sha256": "b7d6ff3586bb36ff0068db90fa67d438850a30e8b3edf280396def76ff5458e9",
+      "ability": "lucheDivineRay",
+      "geometry": "selected full straight ray to board edge or Chebyshev1 3x3 around self",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "Committed lucheDivineRay; aoeResolved and actual Blind transition; owner targeting mode line or aroundSelf.",
+      "end_condition": "Dissipate fully by0.85s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "MISSING",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_LUCHE_RAY",
+      "file": "ray_accent.png",
+      "batch": 6,
+      "frames": 20,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        2560,
+        128
+      ],
+      "duration": "0.85s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.5",
+      "main_action": "Needle-white sunbeam with ochre segmented spokes; around-self mode is eight sharp radiating lobes. Enemy-only Blind on failed defenses. The mode geometry must stay distinct.",
+      "materials": "sharp sun discs, thin radial spokes and low halo bloom",
+      "colors": "white-gold, warm ochre, deep burgundy shadow; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "beam",
+      "source_file": "vfx_hero_luche_ray_accent.png",
+      "sha256": "f9496fcf636e7ab58cb5780f2db7338d7b03c96da0cebb413e079590b1d23cfa",
+      "ability": "lucheDivineRay",
+      "geometry": "selected full straight ray to board edge or Chebyshev1 3x3 around self",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "Committed lucheDivineRay; aoeResolved and actual Blind transition; owner targeting mode line or aroundSelf.",
+      "end_condition": "Dissipate fully by0.85s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "MISSING",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_LUCHE_FALLING_SUN",
+      "file": "falling_sun_primary.png",
+      "batch": 6,
+      "frames": 31,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3968,
+        128
+      ],
+      "duration": "1.3s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.8",
+      "main_action": "A small compressed white-gold sun disc fractures into ordered spearlight spokes toward legal affected cells, then sharp solar impact petals. Failed defenses take2 and Blind. Preserve cells that were not attacked.",
+      "materials": "sharp sun discs, thin radial spokes and low halo bloom",
+      "colors": "white-gold, warm ochre, deep burgundy shadow; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "primary",
+      "alpha": true,
+      "motif": "blast",
+      "source_file": "vfx_hero_luche_falling_sun_primary.png",
+      "sha256": "a321e3a4b0d756c7c31b9347597b0af1ace595afdc6ffe88afcf8bf88f1895f8",
+      "ability": "lucheBurningSun",
+      "geometry": "actual legal enemy attack area from canAttackTarget; radius2 bounding envelope is not a filled5x5 hit mask",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "aoeResolved lucheBurningSun and associated attackResolved successes; spend5 Sun.",
+      "end_condition": "Dissipate fully by1.3s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "MISSING",
+      "availability_status": "AVAILABLE"
+    },
+    {
+      "id": "VFX_LUCHE_FALLING_SUN",
+      "file": "falling_sun_accent.png",
+      "batch": 6,
+      "frames": 31,
+      "frame_size": [
+        128,
+        128
+      ],
+      "sheet_size": [
+        3968,
+        128
+      ],
+      "duration": "1.3s total one-shot (per resolved segment for interactive chains)",
+      "fps": "23.8",
+      "main_action": "A small compressed white-gold sun disc fractures into ordered spearlight spokes toward legal affected cells, then sharp solar impact petals. Failed defenses take2 and Blind. Preserve cells that were not attacked.",
+      "materials": "sharp sun discs, thin radial spokes and low halo bloom",
+      "colors": "white-gold, warm ochre, deep burgundy shadow; Muted near-black grounding and sparse ivory highlights; avoid competing bright fills.",
+      "layer": "accent",
+      "alpha": true,
+      "motif": "blast",
+      "source_file": "vfx_hero_luche_falling_sun_accent.png",
+      "sha256": "e12c23850a9ceba4c7df8e6a3dfd0c45eeb40449480c0cf0e54be36a526d4e1d",
+      "ability": "lucheBurningSun",
+      "geometry": "actual legal enemy attack area from canAttackTarget; radius2 bounding envelope is not a filled5x5 hit mask",
+      "visibility": "PUBLIC",
+      "visibility_detail": "both players and spectators ONLY for their recipient-authorized public cells/units; private source/target cues are suppressed",
+      "gameplay_trigger": "aoeResolved lucheBurningSun and associated attackResolved successes; spend5 Sun.",
+      "end_condition": "Dissipate fully by1.3s after scheduled confirmed trigger; clear on canceled/invalidated presentation, session change or recipient loses permission. Multi-step decisions pause separate bursts rather than prolonging them.",
+      "phase": "cast / resolution; see gameplay_trigger",
+      "static_or_animated": "animated horizontal sprite strip",
+      "playback_note": "Transparent first/last frames are intentional fades; frame ordering is left to right. Gameplay lifetime is separate from strip duration.",
+      "source_request_status": "MISSING",
+      "availability_status": "AVAILABLE"
+    }
+  ]
+}
