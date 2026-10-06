@@ -1,6 +1,9 @@
 import type { GameEvent, PlayerView } from "rules";
 import type { BoardEventBatch, PresentationEvent } from "./types";
 
+const MAX_DEFERRED_CHAINS = 64;
+const MAX_DEFERRED_EVENTS = 1024;
+
 export type VisualHpByUnitId = Record<string, number>;
 export type VisualUnitsByUnitId = PlayerView["units"];
 
@@ -135,7 +138,7 @@ export function advanceVisualResolution(
     if (chainId && event.deferVisuals) {
       explicitChainEventSeen = true;
       const buffered = deferredVisualsByChainId.get(chainId) ?? [];
-      deferredVisualsByChainId.set(chainId, [...buffered, event]);
+      deferredVisualsByChainId.set(chainId, [...buffered, event].slice(-MAX_DEFERRED_EVENTS));
       continue;
     }
     playableEvents.push(event);
@@ -155,6 +158,18 @@ export function advanceVisualResolution(
 
   const nextGroupActive =
     pending || deferredVisualsByChainId.size > 0 || legacyBufferedEvents.length > 0;
+
+  // Cosmetic overload is allowed to drop oldest work; retained work is never
+  // sent through transport dedupe a second time when its chain completes.
+  legacyBufferedEvents = legacyBufferedEvents.slice(-MAX_DEFERRED_EVENTS);
+  let retained = 0;
+  for (const [chainId, events] of [...deferredVisualsByChainId].reverse()) {
+    retained += events.length;
+    if (retained > MAX_DEFERRED_EVENTS) deferredVisualsByChainId.delete(chainId);
+  }
+  while (deferredVisualsByChainId.size > MAX_DEFERRED_CHAINS) {
+    deferredVisualsByChainId.delete(deferredVisualsByChainId.keys().next().value!);
+  }
 
   if (playableEvents.length === 0) {
     return {

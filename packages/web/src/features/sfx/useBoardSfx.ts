@@ -1,4 +1,5 @@
 import { presentationBatchKey } from "../../game/effects/batchIdentity";
+import { MAX_PRESENTATION_AGE_MS, presentationBatchIsCurrent } from "../../game/effects/presentationSession";
 import { useEffect, useRef } from "react";
 import type { PlayerView } from "rules";
 import type { BoardVfxEventBatch } from "../vfx/vfxTypes";
@@ -51,7 +52,7 @@ export function useBoardSfx(params: {
       return;
     }
 
-    if (!batch || lastProcessedBatchKeyRef.current === presentationBatchKey(batch)) {
+    if (!batch || !presentationBatchIsCurrent(batch) || lastProcessedBatchKeyRef.current === presentationBatchKey(batch)) {
       return;
     }
 
@@ -70,8 +71,15 @@ export function useBoardSfx(params: {
         sfxPlayer.play(request.src);
         continue;
       }
+      const scheduledAt = Date.now() + delayMs;
+      if (timersRef.current.size >= MAX_PROCESSED_SFX_IDS) {
+        const oldest = timersRef.current.values().next().value!;
+        clearTimeout(oldest);
+        timersRef.current.delete(oldest);
+      }
       const timer = setTimeout(() => {
         timersRef.current.delete(timer);
+        if (!presentationBatchIsCurrent(batch) || Date.now() > scheduledAt + MAX_PRESENTATION_AGE_MS) return;
         sfxPlayer.play(request.src);
       }, delayMs);
       timersRef.current.add(timer);

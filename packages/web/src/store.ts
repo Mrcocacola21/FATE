@@ -42,6 +42,7 @@ import {
   type TargetingMode,
 } from "./game/selectionState";
 import type { BoardEventBatch } from "./game/effects/types";
+import { PresentationSession, MAX_PRESENTATION_BATCHES } from "./game/effects/presentationSession";
 import { getPlayerIdForViewer } from "./game/pendingState";
 import {
   clearRoomSession,
@@ -117,6 +118,8 @@ const defaultRoomMeta: RoomMeta = {
 };
 
 interface GameStore {
+  presentationSessionKey: string;
+  presentationHydration: "awaitingBaseline" | "live";
   connectionStatus: "disconnected" | "connecting" | "connected";
   joined: boolean;
   roomId: string | null;
@@ -204,6 +207,42 @@ interface GameStore {
   resetGameState: () => void;
 }
 
+export const presentationSession = new PresentationSession((reason, metadata) => {
+  if (import.meta.env?.DEV) console.debug(`[presentation] ${reason}`, metadata);
+});
+
+function recipientIdentity(role: PlayerRole | null, seat: PlayerId | null, controller = false): string {
+  return JSON.stringify([role, seat, controller]);
+}
+
+function beginPresentation(roomId: string | null, role: PlayerRole | null, seat: PlayerId | null = null): Partial<GameStore> {
+  presentationSession.begin({ roomId, recipient: recipientIdentity(role, seat) });
+  return presentationResetState();
+}
+
+function presentationResetState(): Partial<GameStore> {
+  return {
+    presentationSessionKey: presentationSession.key,
+    presentationHydration: presentationSession.hydration,
+    events: [], latestEventBatch: null, pendingEventBatches: [],
+    eventStreamId: null, lastEventRevision: -1,
+  };
+}
+
+function appendPresentationBatches(state: GameStore, batches: BoardEventBatch[]): Partial<GameStore> {
+  return {
+    presentationSessionKey: presentationSession.key,
+    presentationHydration: presentationSession.hydration,
+    eventStreamId: presentationSession.streamId,
+    lastEventRevision: presentationSession.highestReceivedRevision,
+    ...(batches.length ? {
+      events: [...state.events, ...batches.flatMap(batch => batch.events)].slice(-200),
+      latestEventBatch: batches[batches.length - 1],
+      pendingEventBatches: [...state.pendingEventBatches, ...batches].slice(-MAX_PRESENTATION_BATCHES),
+    } : {}),
+  };
+}
+
 function buildLeaveResetState(
   state: GameStore,
   message?: string,
@@ -211,6 +250,7 @@ function buildLeaveResetState(
 ): Partial<GameStore> {
   const clientLog = message ? [...state.clientLog, message].slice(-50) : state.clientLog;
   return {
+    ...beginPresentation(preserveRoomSession ? state.roomId : null, preserveRoomSession ? state.role : null),
     joined: false,
     roomId: preserveRoomSession ? state.roomId : null,
     role: preserveRoomSession ? state.role : null,
@@ -341,12 +381,20 @@ function handleServerMessage(
         });
       }
       set(() => ({
+        ...beginPresentation(msg.roomId, msg.role, msg.seat ?? null),
+        roomState: null,
+        roomMeta: defaultRoomMeta,
+        testRoomSnapshot: null,
+        hasSnapshot: false,
+        selectedUnitId: null,
+        ...buildLocalBoardUiResetState(),
         joined: true,
         roomId: msg.roomId,
         role: msg.role,
         resumeToken: resumeToken ?? null,
         seat: msg.seat ?? null,
         isHost: msg.isHost,
+        canControlTestRoom: false,
         joinError: null,
         leavingRoom: false,
       }));
@@ -356,6 +404,7 @@ function handleServerMessage(
       if (msg.reason === "match_interrupted") suppressAutoReconnect = true;
       clearRoomSession();
       set(() => ({
+        ...beginPresentation(null, null),
         joined: false,
         roomId: null,
         role: null,
@@ -469,6 +518,14 @@ function handleServerMessage(
         pendingLokiContext?.lokiId === queuedLokiOption.unitId
       );
 
+      const generation = presentationSession.generation;
+      const batches = presentationSession.snapshot({
+        roomId: msg.roomId, streamId: msg.streamId, revision: incomingMeta.revision,
+        recipient: recipientIdentity(msg.you.role, msg.you.seat ?? null, msg.you.canControlTestRoom),
+        view: msg.view,
+      });
+      const presentationReset = generation !== presentationSession.generation ? presentationResetState() : {};
+
       set(() => ({
         roomState: msg.view,
         roomId: msg.roomId,
@@ -489,6 +546,8 @@ function handleServerMessage(
           ? buildLocalBoardUiResetState()
           : {}),
         ...(preserveQueuedLokiOption ? { pendingLokiLaughtOption: queuedLokiOption } : {}),
+        ...presentationReset,
+        ...appendPresentationBatches({ ...current, ...presentationReset }, batches),
       }));
       const resumeToken = get().resumeToken;
       if (resumeToken) {
@@ -559,7 +618,7 @@ function openSocket(
 
   if (connectPromise) return connectPromise;
 
-  set(() => ({ connectionStatus: "connecting" }));
+  set((state) => ({ ...beginPresentation(state.roomId, state.role, state.seat), connectionStatus: "connecting" }));
   const openedSocket = connectGameSocket((msg) => { if (socket === openedSocket) handleServerMessage(msg, set, get); });
   socket = openedSocket;
 
@@ -608,7 +667,7 @@ function openSocket(
     openedSocket.onerror = (err) => {
       if (socket !== openedSocket) return;
       connectPromise = null;
-      set(() => ({ connectionStatus: "disconnected" }));
+      set((state) => ({ ...beginPresentation(state.roomId, state.role, state.seat), connectionStatus: "disconnected" }));
       reject(err);
     };
   });
@@ -617,6 +676,8 @@ function openSocket(
 }
 
 async function closeSocketForReconnect(): Promise<void> {
+  const state = useGameStore.getState();
+  useGameStore.setState(beginPresentation(state.roomId, state.role, state.seat));
   const activeSocket = socket;
   if (!activeSocket || activeSocket.readyState === WebSocket.CLOSED) {
     socket = null;
@@ -644,6 +705,8 @@ async function closeSocketForReconnect(): Promise<void> {
 }
 
 export const useGameStore = create<GameStore>((set, get) => ({
+  presentationSessionKey: presentationSession.key,
+  presentationHydration: "awaitingBaseline",
   connectionStatus: "disconnected",
   joined: false,
   roomId: null,
@@ -693,6 +756,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       if (options?.force) await closeSocketForReconnect();
       const ws = await openSocket(set, get);
       const selection = loadFigureSetState(HERO_CATALOG).selection;
+      set(() => beginPresentation(session.roomId, session.role, session.seat));
       sendJoinRoom(ws, {
         mode: "join",
         roomId: session.roomId,
@@ -740,12 +804,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const ws = await openSocket(set, get);
     const selection = loadFigureSetState(HERO_CATALOG).selection;
     const resumeToken = params.roomId === get().roomId ? get().resumeToken ?? undefined : undefined;
+    set(() => ({ ...beginPresentation(params.roomId ?? null, params.role), joined: false }));
     sendJoinRoom(ws, { ...params, figureSet: selection, resumeToken, accessToken });
   },
   leaveRoom: () => {
     const state = get();
     if (state.leavingRoom) return;
     intentionalLeave = true;
+    set(() => beginPresentation(null, null));
     if (!socket || socket.readyState !== WebSocket.OPEN) {
       clearRoomSession();
       set((current) => ({
@@ -871,8 +937,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const currentSocket = socket;
     try {
       const accessToken = await multiplayerAccessToken(authStore, role, state.roomMeta?.roomMode);
-      if (socket === currentSocket && currentSocket.readyState === WebSocket.OPEN)
+      if (socket === currentSocket && currentSocket.readyState === WebSocket.OPEN) {
+        set(() => beginPresentation(state.roomId, state.role, state.seat));
         sendSwitchRole(currentSocket, role, accessToken);
+      }
     } catch (error) {
       if (error instanceof ApiError && error.code === "AUTH_REQUIRED") {
         set(() => ({ joinError: "Sign in to occupy a player seat" }));
@@ -994,17 +1062,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }),
   applyActionResult: (events, revision, streamId, error) =>
     set((state) => {
-      if (!Number.isSafeInteger(revision) || revision < 0 || !streamId ||
-          (streamId === state.eventStreamId && revision <= state.lastEventRevision)) {
-        return error ? { clientLog: [...state.clientLog, error] } : {};
-      }
-      const batch: BoardEventBatch = { streamId, revision, events, view: state.roomState ?? undefined };
+      if (!state.joined || state.leavingRoom) return {};
+      const batches = presentationSession.receive({ streamId, revision, events }, {
+        roomId: state.roomId,
+        recipient: recipientIdentity(state.role, state.seat, state.canControlTestRoom),
+      }, presentationSession.hydration === "live" ? state.roomState ?? undefined : undefined);
       return {
-        events: [...state.events, ...events].slice(-200),
-        latestEventBatch: batch,
-        pendingEventBatches: [...(streamId === state.eventStreamId ? state.pendingEventBatches : []), batch],
-        eventStreamId: streamId,
-        lastEventRevision: revision,
+        ...appendPresentationBatches(state, batches),
         clientLog: error ? [...state.clientLog, error] : state.clientLog,
       };
     }),
@@ -1048,12 +1112,16 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const batch: BoardEventBatch = {
         ...state.latestEventBatch,
         previewId: `preview:${crypto.randomUUID()}`,
+        receivedAt: Date.now(),
+        presentationToken: presentationSession.token,
         view: state.roomState ?? undefined,
       };
-      return { pendingEventBatches: [...state.pendingEventBatches, batch] };
+      if (presentationSession.hydration !== "live") return {};
+      return { pendingEventBatches: [...state.pendingEventBatches, batch].slice(-MAX_PRESENTATION_BATCHES) };
     }),
   resetGameState: () =>
     set(() => ({
+      ...beginPresentation(null, null),
       roomState: null,
       roomMeta: defaultRoomMeta,
       hasSnapshot: false,

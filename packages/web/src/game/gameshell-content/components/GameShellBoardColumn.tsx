@@ -205,11 +205,12 @@ export const GameShellBoardColumn: FC<GameShellBoardColumnProps> = ({ vm, mobile
           }
           allowUnitSelection={vm.allowUnitPick}
           allowAnyUnitSelection={vm.canControlTestRoom || vm.hasBlockingRoll}
-          visualEffectsEnabled={vm.connectionStatus === "connected" && vm.hasSnapshot}
+          key={vm.presentationSessionKey}
+          visualEffectsEnabled={vm.connectionStatus === "connected" && vm.hasSnapshot && vm.presentationHydration === "live"}
           eventBatch={vm.latestEventBatch}
           eventBatches={vm.pendingEventBatches}
           onEventBatchesConsumed={vm.acknowledgeEventBatches}
-          effectSessionKey={`${vm.roomId}:${vm.latestEventBatch?.streamId ?? ""}`}
+          effectSessionKey={vm.presentationSessionKey}
           zoom={boardZoom}
           showCoordinates={showCoordinates}
           previewLines={previewLines}

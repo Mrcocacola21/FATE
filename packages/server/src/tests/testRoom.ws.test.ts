@@ -70,6 +70,8 @@ async function main() {
   );
   assert.equal(initial.meta.revision, 0);
   const testRoomId = initial.roomId as string;
+  assert.equal(initial.streamId, getGameRoom(testRoomId)?.streamId);
+  assert.equal(typeof initial.streamId, "string");
 
   testSocket.send(
     JSON.stringify({
@@ -89,6 +91,7 @@ async function main() {
       message.meta?.revision === 1 &&
       Object.keys(message.view?.units ?? {}).length === 1,
   );
+  assert.equal(mutated.streamId, initial.streamId);
   assert.equal(
     Object.values(mutated.view.units)[0] && Object.values(mutated.view.units)[0].owner,
     "P1",

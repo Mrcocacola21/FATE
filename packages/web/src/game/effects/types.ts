@@ -80,6 +80,8 @@ export type QueuedBoardEffect = BoardEffect & {
 export type PresentationEvent = GameEvent & { eventId?: string };
 
 export interface BoardEventBatch {
+  presentationToken?: import("./presentationSession").PresentationToken;
+  receivedAt?: number;
   streamId?: string;
   revision: number;
   /** Local preview namespace; never used as a live ordering watermark. */

@@ -63,6 +63,7 @@ export type RoomMeta = {
 export type RoomStateMessage = {
   type: "roomState";
   roomId: string;
+  streamId: string;
   you: {
     role: PlayerRole;
     seat?: PlayerId;

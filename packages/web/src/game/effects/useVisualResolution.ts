@@ -1,4 +1,5 @@
 import { presentationBatchKey } from "./batchIdentity";
+import { MAX_PRESENTATION_BATCHES, presentationBatchHasExpired, presentationBatchIsCurrent } from "./presentationSession";
 import { useEffect, useRef, useState } from "react";
 import type { PlayerView } from "rules";
 import { usePrefersReducedMotion } from "../../features/vfx/vfxPreferences";
@@ -89,6 +90,7 @@ export function useVisualResolution(params: {
     let current = resolutionRef.current;
     const nextPlans: CombatVisualPlaybackPlan[] = [];
     for (const inputBatch of incoming) {
+      if (!presentationBatchIsCurrent(inputBatch)) continue;
       const batchView = inputBatch.view ?? view;
       current = advanceVisualResolution(current, { batch: inputBatch, view: batchView, enabled });
       const releasedBatch = current.visualBatch;
@@ -96,6 +98,10 @@ export function useVisualResolution(params: {
       const key = presentationBatchKey(releasedBatch);
       if (processedBatchKeysRef.current.has(key)) continue;
       processedBatchKeysRef.current.add(key);
+      if (processedBatchKeysRef.current.size > MAX_PRESENTATION_BATCHES) {
+        processedBatchKeysRef.current.delete(processedBatchKeysRef.current.values().next().value!);
+      }
+      if (presentationBatchHasExpired(releasedBatch)) continue;
       const starting = queuedTailRef.current;
       const plan = buildCombatVisualPlaybackPlan({
         batch: releasedBatch,
@@ -112,14 +118,20 @@ export function useVisualResolution(params: {
     }
     resolutionRef.current = current;
     setResolution(current);
-    if (nextPlans.length) setPlans((queued) => [...queued, ...nextPlans]);
+    if (nextPlans.length) setPlans((queued) => [...queued, ...nextPlans].slice(-MAX_PRESENTATION_BATCHES));
     if (batches?.length) onBatchesConsumed?.(batches);
   }, [batch, batches, enabled, onBatchesConsumed, reducedMotion, view]);
 
   useEffect(() => {
     const plan = activePlan;
     if (!plan) return;
+    if (!presentationBatchIsCurrent(plan.batch) || presentationBatchHasExpired(plan.batch)) {
+      setPlans(current => current.slice(1));
+      setRendered(baseline(latestInputRef.current.view));
+      return;
+    }
     let animationFrame = 0;
+    let cancelled = false;
     const startedAt = performance.now();
     const initialFrame = combatVisualPlaybackFrame(plan, 0);
     setRendered({
@@ -129,6 +141,7 @@ export function useVisualResolution(params: {
     });
 
     const tick = (now: number) => {
+      if (cancelled || !presentationBatchIsCurrent(plan.batch)) return;
       const frame = combatVisualPlaybackFrame(plan, now - startedAt);
       setRendered({
         visualHpByUnitId: frame.visualHpByUnitId,
@@ -142,8 +155,8 @@ export function useVisualResolution(params: {
       animationFrame = window.requestAnimationFrame(tick);
     };
     animationFrame = window.requestAnimationFrame(tick);
-    return () => window.cancelAnimationFrame(animationFrame);
-  }, [activePlan]);
+    return () => { cancelled = true; window.cancelAnimationFrame(animationFrame); };
+  }, [activePlan, sessionKey]);
 
   useEffect(() => {
     if (enabled) return;
@@ -172,10 +185,11 @@ export function useVisualResolution(params: {
       };
     }, SNAPSHOT_SYNC_FALLBACK_MS);
     return () => window.clearTimeout(timer);
-  }, [enabled, plans.length, rendered.visualHpByUnitId, resolution.groupActive, view]);
+  }, [enabled, plans.length, rendered.visualHpByUnitId, resolution.groupActive, view, sessionKey]);
 
   return {
-    batch: activePlan?.batch ?? null,
+    batch: activePlan && presentationBatchIsCurrent(activePlan.batch) && !presentationBatchHasExpired(activePlan.batch)
+      ? activePlan.batch : null,
     visualHpByUnitId: rendered.visualHpByUnitId,
     visualUnitsByUnitId: rendered.visualUnitsByUnitId,
     visualStateByUnitId: rendered.visualStateByUnitId,

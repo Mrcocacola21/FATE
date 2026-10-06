@@ -104,6 +104,7 @@ type RoomMeta = {
 export type RoomStateMessage = {
   type: "roomState";
   roomId: string;
+  streamId: string;
   you: {
     role: PlayerRole;
     seat?: PlayerId;
@@ -714,6 +715,7 @@ function sendRoomState(socket: WebSocket, room: GameRoom) {
   sendMessage(socket, {
     type: "roomState",
     roomId: room.id,
+    streamId: room.streamId,
     you,
     view,
     meta: buildRoomMeta(room, canControlTestRoom, meta.role),

@@ -1,11 +1,21 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { useGameStore } from "./store";
+import { presentationSession, useGameStore } from "./store";
+
+function hydrate(revision: number, streamId = "match") {
+  const binding = { roomId: "room", recipient: JSON.stringify(["spectator", null, false]) };
+  presentationSession.begin(binding);
+  presentationSession.snapshot({ ...binding, streamId, revision });
+  useGameStore.setState({ joined: true, roomId: "room", role: "spectator", seat: null,
+    canControlTestRoom: false, pendingEventBatches: [], latestEventBatch: null,
+    presentationHydration: "live", presentationSessionKey: presentationSession.key });
+}
 
 test("ordered ingress retains all batches before React commits and acknowledges only consumed batches", () => {
   const previous = useGameStore.getState();
   try {
     useGameStore.getState().resetGameState();
+    hydrate(4999);
     const store = useGameStore.getState();
     for (const revision of [5000, 5001, 5002]) {
       store.applyActionResult(
@@ -36,6 +46,9 @@ test("ordered ingress retains all batches before React commits and acknowledges 
       [5003],
     );
     store.applyActionResult([], 1, "new-match");
+    assert.deepEqual(useGameStore.getState().pendingEventBatches.map(batch => batch.revision), [5003]);
+    hydrate(0, "new-match");
+    store.applyActionResult([], 1, "new-match");
     assert.deepEqual(
       useGameStore.getState().pendingEventBatches.map((batch) => batch.revision),
       [1],
@@ -50,6 +63,7 @@ test("debug_replay_does_not_use_live_revision_identity", () => {
   const previous = useGameStore.getState();
   try {
     useGameStore.getState().resetGameState();
+    hydrate(119);
     const store = useGameStore.getState();
     store.applyActionResult(
       [{ type: "roundStarted", roundNumber: 2, eventId: "original-id" }],
@@ -57,7 +71,11 @@ test("debug_replay_does_not_use_live_revision_identity", () => {
       "match",
     );
     const live = useGameStore.getState().latestEventBatch;
+    const watermarks = [presentationSession.streamId, presentationSession.baselineRevision,
+      presentationSession.highestReceivedRevision, presentationSession.recentEventCount];
     store.replayLastEffects();
+    assert.deepEqual([presentationSession.streamId, presentationSession.baselineRevision,
+      presentationSession.highestReceivedRevision, presentationSession.recentEventCount], watermarks);
     const pending = useGameStore.getState().pendingEventBatches;
     const preview = pending[pending.length - 1];
     assert.match(preview.previewId!, /^preview:/);
