@@ -32,6 +32,8 @@ test("a visible ranged hit maps to a beam, hit flash, and damage text", () => {
       type: "attackResolved",
       attackerId: "attacker",
       defenderId: "defender",
+      sourceCell: { col: 1, row: 1 },
+      targetCell: { col: 5, row: 1 },
       attackerRoll: { dice: [6], sum: 6 },
       defenderRoll: { dice: [1], sum: 1 },
       hit: true,

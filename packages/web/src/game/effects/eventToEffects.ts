@@ -1,6 +1,7 @@
 import type { Coord, ProjectedGameEvent, PlayerView } from "rules";
 import { isCoord, linePath, squareArea, uniqueCoords, visibleUnitCoord } from "./boardEffects";
 import type { BoardEffect, VisibleUnitPositions } from "./types";
+import type { CombatPresentationCue } from "./combatPlayback";
 
 interface EventEffectContext {
   view: PlayerView;
@@ -91,10 +92,9 @@ function boneApplicationEffects(
 
 function effectForAttack(
   event: Extract<ProjectedGameEvent, { type: "attackResolved" }>,
-  context: EventEffectContext,
 ): BoardEffect[] {
-  const attacker = visibleUnitCoord(event.attackerId, context.view, context.previousPositions);
-  const defender = visibleUnitCoord(event.defenderId, context.view, context.previousPositions);
+  const attacker = isCoord(event.sourceCell) ? event.sourceCell : null;
+  const defender = isCoord(event.targetCell) ? event.targetCell : null;
   const effects: BoardEffect[] = [];
 
   if (attacker && defender) {
@@ -109,29 +109,19 @@ function effectForAttack(
     );
   } else if (defender) {
     effects.push({ kind: "cellPulse", cells: [defender], tone: "attack", durationMs: 550 });
-  } else if (attacker) {
-    effects.push({ kind: "cellPulse", cells: [attacker], tone: "warning", durationMs: 500 });
   }
 
   if (event.hit === true) {
     effects.push(
-      ...unitFlash(event.defenderId, "hit", context).map((effect) => ({
-        ...effect,
-        delayMs: (effect.delayMs ?? 0) + 180,
-      })),
+      ...(defender ? [{ kind: "unitFlash", unitId: event.defenderId, coord: defender, tone: "hit", durationMs: 300 } as BoardEffect] : []),
     );
     if (defender && typeof event.damage === "number" && event.damage > 0) {
       effects.push(
-        ...floatingValue(defender, `-${event.damage}`, "damage").map((effect) => ({
-          ...effect,
-          delayMs: (effect.delayMs ?? 0) + 180,
-        })),
+        ...floatingValue(defender, `-${event.damage}`, "damage"),
       );
-    } else {
-      effects.push(...floatingLabel(defender, "blocked", "miss"));
     }
   } else if (event.hit === false) {
-    effects.push(...unitFlash(event.defenderId, "defend", context));
+    if (defender) effects.push({ kind: "unitFlash", unitId: event.defenderId, coord: defender, tone: "defend", durationMs: 300 });
     effects.push(...floatingLabel(defender, "miss", "miss"));
   }
 
@@ -142,12 +132,8 @@ function effectForAoe(
   event: Extract<ProjectedGameEvent, { type: "aoeResolved" }>,
   context: EventEffectContext,
 ): BoardEffect[] {
-  if (!isCoord(event.center)) return unitFlash(event.sourceUnitId, "buff", context);
-  const source = visibleUnitCoord(
-    event.sourceUnitId ?? event.casterId,
-    context.view,
-    context.previousPositions,
-  );
+  if (!isCoord(event.center)) return [];
+  const source = isCoord(event.sourceCell) ? event.sourceCell : null;
   const radius = typeof event.radius === "number" ? Math.max(0, event.radius) : 0;
   const line = radius === 0 && source ? linePath(source, event.center) : null;
   const cells =
@@ -170,7 +156,9 @@ function effectForAoe(
       durationMs: 750,
     });
   }
-  effects.push(...unitFlash(event.sourceUnitId, "buff", context, 650));
+  if (source && event.sourceUnitId) {
+    effects.push({ kind: "unitFlash", unitId: event.sourceUnitId, coord: source, tone: "buff", durationMs: 650 });
+  }
 
   const damagedIds = new Set(Array.isArray(event.damagedUnitIds) ? event.damagedUnitIds : []);
   const affectedIds = Array.isArray(event.affectedUnitIds) ? event.affectedUnitIds : [];
@@ -201,7 +189,7 @@ export function effectsFromGameEvent(event: ProjectedGameEvent, context: EventEf
           ]
         : [];
     case "attackResolved":
-      return effectForAttack(event, context);
+      return effectForAttack(event);
     case "aoeResolved":
       return effectForAoe(event, context);
     case "unitMoved": {
@@ -250,17 +238,12 @@ export function effectsFromGameEvent(event: ProjectedGameEvent, context: EventEf
         },
         { kind: "cellPulse", cells: [event.to], tone: "warning", durationMs: 650 },
       ];
-    case "unitHealed": {
-      const coord = visibleUnitCoord(event.unitId, context.view, context.previousPositions);
-      return [
-        ...unitFlash(event.unitId, "heal", context),
-        ...(coord && typeof event.amount === "number"
-          ? floatingValue(coord, `+${event.amount}`, "heal")
-          : []),
-      ];
-    }
+    case "unitHealed":
+      // This projection has no event-time heal cell. The plan drives HP and
+      // the visible token's healing state without guessing a positional cue.
+      return [];
     case "unitDied": {
-      const coord = visibleUnitCoord(event.unitId, context.view, context.previousPositions);
+      const coord = isCoord(event.deathCell) ? event.deathCell : null;
       return [
         ...(coord
           ? [
@@ -541,6 +524,7 @@ export function effectsFromEventBatch(
   events: ProjectedGameEvent[],
   context: EventEffectContext,
   eventDelaysMs?: readonly number[],
+  combatCues?: readonly CombatPresentationCue[],
 ): BoardEffect[] {
   let sequenceDelay = 0;
   const effects: BoardEffect[] = [];
@@ -553,6 +537,12 @@ export function effectsFromEventBatch(
       .map((event) => event.defenderId),
   );
   events.forEach((event, eventIndex) => {
+    if (combatCues && ["attackResolved", "unitDied", "unitHealed"].includes(event.type)) return;
+    if (combatCues && event.type === "aoeResolved") {
+      effects.push(...effectForAoe({ ...event, affectedUnitIds: [], damagedUnitIds: [], damageByUnitId: {} }, context)
+        .map(effect => ({ ...effect, delayMs: (effect.delayMs ?? 0) + (eventDelaysMs?.[eventIndex] ?? 0) })));
+      return;
+    }
     const eventEffects =
       event.type === "aoeResolved" && attackTargetIds.size > 0
         ? effectForAoe(
@@ -583,6 +573,23 @@ export function effectsFromEventBatch(
       sequenceDelay = Math.min(sequenceDelay + 90, 540);
     }
   });
+
+  for (const cue of combatCues ?? []) {
+    if (cue.kind === "roll" || !cue.cell) continue;
+    if (cue.kind === "death") {
+      effects.push(...floatingLabel(cue.cell, "defeated", "status").map(effect => ({ ...effect, delayMs: cue.atMs })));
+      continue;
+    }
+    effects.push({ kind: "unitFlash", unitId: cue.unitId, coord: cue.cell,
+      tone: cue.kind === "miss" ? "defend" : cue.kind === "heal" ? "heal" : "hit",
+      durationMs: cue.durationMs, delayMs: cue.atMs });
+    if (cue.kind === "miss") {
+      effects.push(...floatingLabel(cue.cell, "miss", "miss").map(effect => ({ ...effect, delayMs: cue.atMs })));
+    } else if (cue.amount && cue.amount > 0) {
+      effects.push(...floatingValue(cue.cell, `${cue.kind === "heal" ? "+" : "-"}${cue.amount}`, cue.kind === "heal" ? "heal" : "damage")
+        .map(effect => ({ ...effect, delayMs: cue.hpAtMs ?? cue.atMs })));
+    }
+  }
 
   const seen = new Set<string>();
   return effects.filter((effect) => {

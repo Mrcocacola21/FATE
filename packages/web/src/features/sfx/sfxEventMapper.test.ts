@@ -200,9 +200,11 @@ test("hit/death audio aligns with shared impact/death phases in normal and reduc
       reducedMotion,
     });
     const requests = mapEventBatchToSfx({ ...plan.batch, view: view() });
-    const impact = plan.queue.find((item) => item.type === "damageHpTween")!;
+    const impact = plan.batch.combatCues!.find(cue => cue.kind === "hit")!;
+    const hp = plan.queue.find((item) => item.type === "damageHpTween")!;
     const death = plan.queue.find((item) => item.type === "death")!;
-    assert.equal(requests[0].delayMs, impact.startsAtMs);
+    assert.equal(requests[0].delayMs, impact.atMs);
+    assert.ok(hp.startsAtMs > impact.atMs);
     assert.equal(requests[1].delayMs, death.startsAtMs);
     assert(requests[0].delayMs! > 0);
   }

@@ -91,8 +91,12 @@ export interface BoardEventBatch {
   events: PresentationEvent[];
   /** Client-only deterministic playback offsets. Never sent to the rules engine. */
   eventDelaysMs?: number[];
-  /** SFX impact/death offsets from the same combat plan; visual offsets stay unchanged. */
+  /** Compatibility offsets for audio consumers; derived from the shared plan. */
   eventSfxDelaysMs?: number[];
+  /** One web-only semantic schedule shared by audio, sprites, HP and text. */
+  combatCues?: import("./combatPlayback").CombatPresentationCue[];
+  /** Shared wall-clock origin assigned when this plan starts, never at ingress. */
+  playbackStartedAt?: number;
 }
 
 export interface BoardPreviewLine {

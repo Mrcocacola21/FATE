@@ -7,6 +7,7 @@ import {
   visibleUnitCoord,
 } from "./vfxGeometry";
 import type { BoardVfxRequest, VfxEffectId, VfxMapperContext } from "./vfxTypes";
+import type { CombatPresentationCue } from "../../game/effects/combatPlayback";
 
 const ABILITY_CHIKATILO_ASSASSIN_MARK = "chikatiloAssassinMark";
 const ABILITY_ASGORE_FIRE_PARADE = "asgoreFireParade";
@@ -308,6 +309,20 @@ export function mapGameEventToVfx(
   context: VfxMapperContext,
 ): BoardVfxRequest[] {
   switch (event.type) {
+    case "attackResolved":
+      return cellRequest(
+        context,
+        event,
+        event.hit ? "combatHit" : "combatMiss",
+        isCoord(event.targetCell) ? event.targetCell : null,
+      );
+    case "unitDied":
+      return cellRequest(
+        context,
+        event,
+        "unitDeath",
+        isCoord(event.deathCell) ? event.deathCell : null,
+      );
     case "abilityUsed":
       return mapAbilityUsed(event, context);
     case "searchStealth":
@@ -366,9 +381,11 @@ export function mapEventBatchToVfx(params: {
   revision: number;
   presentationId?: string;
   eventDelaysMs?: readonly number[];
+  combatCues?: readonly CombatPresentationCue[];
 }): BoardVfxRequest[] {
   const effects: BoardVfxRequest[] = [];
   params.events.forEach((event, eventIndex) => {
+    if (params.combatCues && (event.type === "attackResolved" || event.type === "unitDied")) return;
     const baseDelay = params.eventDelaysMs?.[eventIndex] ?? 0;
     effects.push(
       ...mapGameEventToVfx(event, {
@@ -384,5 +401,18 @@ export function mapEventBatchToVfx(params: {
       })),
     );
   });
+  for (const cue of params.combatCues ?? []) {
+    if (cue.kind === "roll" || cue.kind === "heal" || !cue.cell) continue;
+    effects.push({
+      id: `${cue.id}:vfx`,
+      effectId:
+        cue.kind === "miss" ? "combatMiss" : cue.kind === "death" ? "unitDeath" : "combatHit",
+      placement: "cell",
+      sourceCell: { ...cue.cell },
+      anchorMode: "event",
+      delayMs: cue.atMs,
+      durationMs: cue.durationMs,
+    });
+  }
   return effects;
 }

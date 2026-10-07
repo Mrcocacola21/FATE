@@ -16,6 +16,7 @@ import { getClassLabel, getHeroDisplayName } from "../i18n/displayMetadata";
 import { BoardEffectsLayer } from "../game/effects/BoardEffectsLayer";
 import { useBoardEffects } from "../game/effects/useBoardEffects";
 import { useVisualResolution } from "../game/effects/useVisualResolution";
+import { CombatRollFeedback } from "../game/effects/CombatRollFeedback";
 import { isGameplayProjectedUnit } from "../game/effects/combatPlayback";
 import { useBoardFit } from "../game/hooks/useBoardFit";
 import type { BoardEventBatch, BoardPreviewLine } from "../game/effects/types";
@@ -1158,6 +1159,7 @@ export const Board: FC<BoardProps> = ({
             </div>
           ) : null}
           {rows}
+          <CombatRollFeedback cue={visualResolution.roll} t={t} top={labelSize + 4} />
           <div className="pointer-events-none absolute" style={{ left: labelSize, top: labelSize }}>
             <BoardEffectsLayer
               effects={boardEffects}

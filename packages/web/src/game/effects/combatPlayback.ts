@@ -1,4 +1,4 @@
-import type { ProjectedGameEvent, PlayerView } from "rules";
+import type { Coord, ProjectedGameEvent, PlayerView, RollKind } from "rules";
 import type { BoardEventBatch } from "./types";
 import {
   snapshotVisualHp,
@@ -11,6 +11,7 @@ export type UnitVisualState =
   | "idle"
   | "attacking"
   | "takingDamage"
+  | "healing"
   | "dying"
   | "removed";
 
@@ -27,6 +28,7 @@ export type DamageVisualEvent = {
   abilityId?: string;
   chainId?: string;
   eventIndex: number;
+  showDamageFlash?: boolean;
 };
 
 export type DeathVisualEvent = {
@@ -35,7 +37,34 @@ export type DeathVisualEvent = {
   cause?: string;
   chainId?: string;
   eventIndex: number;
+  cell?: Coord;
 };
+
+/** Classification uses authoritative roll purpose, never the dice or HP result. */
+export function combatRollSide(kind: RollKind): "attack" | "defense" | null {
+  if (kind.endsWith("_attackerRoll") || kind === "kaiserCarpetStrikeAttack") return "attack";
+  if (kind.endsWith("_defenderRoll")) return "defense";
+  return null;
+}
+
+export type CombatPresentationCue = {
+  id: string;
+  eventIndex: number;
+  atMs: number;
+  durationMs: number;
+} & (
+  | { kind: "roll"; roll: Extract<ProjectedGameEvent, { type: "rollResolved" }> }
+  | {
+      kind: "hit" | "miss" | "damage" | "heal" | "death";
+      unitId: string;
+      /** Only an authorized event-time anchor; no position-cache fallback. */
+      cell?: Coord;
+      amount?: number;
+      hpAtMs?: number;
+    }
+);
+
+type WithoutCueIdentity<T> = T extends unknown ? Omit<T, "id" | "eventIndex"> : never;
 
 export type VisualPlaybackQueueItem =
   | {
@@ -47,6 +76,14 @@ export type VisualPlaybackQueueItem =
   | {
       type: "damageHpTween";
       damage: DamageVisualEvent;
+      startsAtMs: number;
+      endsAtMs: number;
+    }
+  | {
+      type: "healHpTween";
+      unitId: string;
+      previousHp: number;
+      nextHp: number;
       startsAtMs: number;
       endsAtMs: number;
     }
@@ -79,17 +116,17 @@ export interface CombatVisualPlaybackFrame {
   visualUnitsByUnitId: VisualUnitsByUnitId;
   visualStateByUnitId: UnitVisualStateByUnitId;
   complete: boolean;
+  roll: Extract<CombatPresentationCue, { kind: "roll" }> | null;
 }
 
-export function isGameplayProjectedUnit(
-  view: PlayerView,
-  unitId: string,
-): boolean {
+export function isGameplayProjectedUnit(view: PlayerView, unitId: string): boolean {
   const unit = view.units[unitId];
   return Boolean(unit?.isAlive && unit.position);
 }
 
 const NORMAL_TIMING = {
+  rollMs: 650,
+  outcomeMs: 300,
   attackLeadMs: 210,
   impactPauseMs: 65,
   hpBaseMs: 300,
@@ -101,6 +138,8 @@ const NORMAL_TIMING = {
 };
 
 const REDUCED_TIMING = {
+  rollMs: 450,
+  outcomeMs: 180,
   attackLeadMs: 70,
   impactPauseMs: 25,
   hpBaseMs: 130,
@@ -144,10 +183,8 @@ function damageFromEvent(
     event.type === "lechyStormRollResult"
   ) {
     if (event.damage <= 0) return null;
-    targetUnitId =
-      event.type === "lechyStormRollResult" ? event.unitId : event.targetId;
-    sourceUnitId =
-      event.type === "papyrusBonePunished" ? event.papyrusId : undefined;
+    targetUnitId = event.type === "lechyStormRollResult" ? event.unitId : event.targetId;
+    sourceUnitId = event.type === "papyrusBonePunished" ? event.papyrusId : undefined;
     amount = event.damage;
     explicitNextHp = event.hpAfter;
   } else if (event.type === "stakeTriggered") {
@@ -164,21 +201,10 @@ function damageFromEvent(
 
   if (!targetUnitId || !amount) return null;
   const knownHp =
-    finiteNumber(runningHp[targetUnitId]) ??
-    finiteNumber(startingUnits[targetUnitId]?.hp);
-  const previousHp =
-    explicitPreviousHp ??
-    knownHp ??
-    Math.max(0, (explicitNextHp ?? 0) + amount);
-  const nextHp = Math.max(
-    0,
-    explicitNextHp ?? Math.max(0, previousHp - amount),
-  );
-  const maxHp = Math.max(
-    1,
-    explicitMaxHp ?? previousHp,
-    startingUnits[targetUnitId]?.hp ?? 0,
-  );
+    finiteNumber(runningHp[targetUnitId]) ?? finiteNumber(startingUnits[targetUnitId]?.hp);
+  const previousHp = explicitPreviousHp ?? knownHp ?? Math.max(0, (explicitNextHp ?? 0) + amount);
+  const nextHp = Math.max(0, explicitNextHp ?? Math.max(0, previousHp - amount));
+  const maxHp = Math.max(1, explicitMaxHp ?? previousHp, startingUnits[targetUnitId]?.hp ?? 0);
 
   return {
     type: "damage",
@@ -191,6 +217,7 @@ function damageFromEvent(
     ...(abilityId ? { abilityId } : {}),
     ...(event.chainId ? { chainId: event.chainId } : {}),
     eventIndex,
+    ...(event.type === "attackResolved" ? { showDamageFlash: Boolean(event.targetCell) } : {}),
   };
 }
 
@@ -210,6 +237,8 @@ export function buildCombatVisualPlaybackPlan(params: {
   startingUnitsByUnitId: VisualUnitsByUnitId;
   finalView: PlayerView;
   reducedMotion: boolean;
+  /** Early rolls must not commit HP/removal belonging to a buffered chain. */
+  holdResolvedState?: boolean;
 }): CombatVisualPlaybackPlan {
   const timing = params.reducedMotion ? REDUCED_TIMING : NORMAL_TIMING;
   const finalSnapshot = cloneView(params.finalView);
@@ -240,24 +269,122 @@ export function buildCombatVisualPlaybackPlan(params: {
   const runningHp = { ...playbackStartingHp };
   const queue: VisualPlaybackQueueItem[] = [];
   const eventDelaysMs = params.batch.events.map(() => 0);
-  const deathEventByUnitId = new Map<string, DeathVisualEvent>();
+  const combatCues: CombatPresentationCue[] = [];
   const scheduledDeaths = new Set<string>();
   const abilityBySourceUnitId = new Map<string, string>();
-
-  params.batch.events.forEach((event, eventIndex) => {
-    if (event.type !== "unitDied" || typeof event.unitId !== "string") return;
-    if (deathEventByUnitId.has(event.unitId)) return;
-    deathEventByUnitId.set(event.unitId, {
-      type: "death",
-      unitId: event.unitId,
-      cause: event.killerId ?? undefined,
-      ...(event.chainId ? { chainId: event.chainId } : {}),
+  const addCue = (eventIndex: number, cue: WithoutCueIdentity<CombatPresentationCue>) => {
+    const event = params.batch.events[eventIndex];
+    combatCues.push({
+      ...cue,
+      id: `${params.batch.streamId ?? params.batch.previewId ?? "preview"}:${event.eventId ?? `${params.batch.revision}:${eventIndex}`}:${cue.kind}:${"unitId" in cue ? cue.unitId : "roll"}`,
       eventIndex,
+    } as CombatPresentationCue);
+  };
+  // Correlate within the actual AoE use/chain, not every attack on this unit.
+  const ownsAoeTarget = (
+    aoe: Extract<ProjectedGameEvent, { type: "aoeResolved" }>,
+    targetId: string,
+    aoeIndex: number,
+  ) =>
+    params.batch.events.some((event, index) => {
+      if (event.type !== "attackResolved" || event.defenderId !== targetId) return false;
+      if (aoe.abilityUseId && event.abilityUseId) return aoe.abilityUseId === event.abilityUseId;
+      const aoeChain = aoe.chainId ?? aoe.visualBatchId;
+      const attackChain = event.chainId ?? event.visualBatchId;
+      if (aoeChain && attackChain) return aoeChain === attackChain;
+      // Legacy batches have no correlation IDs: only the preceding aggregate
+      // segment can own this target, never an unrelated later/earlier AoE.
+      if (
+        index >= aoeIndex ||
+        params.batch.events
+          .slice(index + 1, aoeIndex)
+          .some((candidate) => candidate.type === "aoeResolved")
+      )
+        return false;
+      return !aoe.sourceUnitId || event.attackerId === aoe.sourceUnitId;
     });
-  });
+
+  const hpDuration = (from: number, to: number) =>
+    Math.min(
+      timing.hpMaxMs,
+      timing.hpBaseMs + Math.max(0, Math.abs(from - to) - 1) * timing.hpPerPointMs,
+    );
+  const scheduleDamage = (damage: DamageVisualEvent, hpStart: number) => {
+    const hpEnd = hpStart + hpDuration(damage.previousHp, damage.nextHp);
+    queue.push({ type: "damageHpTween", damage, startsAtMs: hpStart, endsAtMs: hpEnd });
+    runningHp[damage.targetUnitId] = damage.nextHp;
+    return hpEnd;
+  };
 
   let cursorMs = 0;
   params.batch.events.forEach((event, eventIndex) => {
+    eventDelaysMs[eventIndex] = cursorMs;
+    if (event.type === "rollResolved" && combatRollSide(event.rollKind)) {
+      addCue(eventIndex, { kind: "roll", roll: event, atMs: cursorMs, durationMs: timing.rollMs });
+      cursorMs += timing.rollMs;
+      return;
+    }
+    if (event.type === "unitHealed") {
+      if (event.amount <= 0) return;
+      const previousHp = runningHp[event.unitId] ?? Math.max(0, event.hpAfter - event.amount);
+      const hpStart = cursorMs + timing.impactPauseMs;
+      const hpEnd = hpStart + hpDuration(previousHp, event.hpAfter);
+      addCue(eventIndex, {
+        kind: "heal",
+        unitId: event.unitId,
+        amount: event.amount,
+        atMs: cursorMs,
+        hpAtMs: hpStart,
+        durationMs: hpEnd - cursorMs,
+      });
+      queue.push({
+        type: "healHpTween",
+        unitId: event.unitId,
+        previousHp,
+        nextHp: event.hpAfter,
+        startsAtMs: hpStart,
+        endsAtMs: hpEnd,
+      });
+      runningHp[event.unitId] = event.hpAfter;
+      cursorMs = hpEnd + timing.betweenHitsMs;
+      return;
+    }
+    if (event.type === "aoeResolved") {
+      // Aggregate geometry is one cue. Individual attacks own their target outcomes.
+      const impact = cursorMs;
+      let end = cursorMs;
+      for (const [unitId, amount] of Object.entries(event.damageByUnitId ?? {})) {
+        if (amount <= 0 || ownsAoeTarget(event, unitId, eventIndex)) continue;
+        const previousHp = runningHp[unitId];
+        // No exact baseline means no fabricated HP. Silent reconciliation remains available.
+        if (previousHp === undefined) continue;
+        const damage: DamageVisualEvent = {
+          type: "damage",
+          targetUnitId: unitId,
+          previousHp,
+          nextHp: Math.max(0, previousHp - amount),
+          maxHp: Math.max(1, previousHp),
+          amount,
+          sourceUnitId: event.sourceUnitId,
+          abilityId: event.abilityId,
+          chainId: event.chainId,
+          eventIndex,
+          showDamageFlash: false,
+        };
+        const hpStart = impact + timing.impactPauseMs;
+        addCue(eventIndex, {
+          kind: "damage",
+          unitId,
+          amount,
+          atMs: impact,
+          hpAtMs: hpStart,
+          durationMs: timing.outcomeMs,
+        });
+        end = Math.max(end, scheduleDamage(damage, hpStart));
+      }
+      cursorMs = Math.max(end, impact + timing.outcomeMs) + timing.betweenHitsMs;
+      return;
+    }
     if (
       event.type === "abilityUsed" &&
       typeof event.unitId === "string" &&
@@ -265,18 +392,48 @@ export function buildCombatVisualPlaybackPlan(params: {
     ) {
       abilityBySourceUnitId.set(event.unitId, event.abilityId);
     }
-    const damage = damageFromEvent(
-      event,
-      eventIndex,
-      runningHp,
-      playbackStartingUnits,
-    );
+    const attackStart = cursorMs;
+    const impact = attackStart + (event.type === "attackResolved" ? timing.attackLeadMs : 0);
+    if (event.type === "attackResolved") {
+      eventDelaysMs[eventIndex] = impact;
+      addCue(eventIndex, {
+        kind: event.hit ? "hit" : "miss",
+        unitId: event.defenderId,
+        ...(event.targetCell ? { cell: { ...event.targetCell } } : {}),
+        ...(event.hit && event.damage > 0
+          ? { amount: event.damage, hpAtMs: impact + timing.impactPauseMs }
+          : {}),
+        atMs: impact,
+        durationMs: timing.outcomeMs,
+      });
+      if (event.attackerId)
+        queue.push({
+          type: "attack",
+          unitId: event.attackerId,
+          startsAtMs: attackStart,
+          endsAtMs: impact + timing.impactPauseMs,
+        });
+    }
+    const damage = damageFromEvent(event, eventIndex, runningHp, playbackStartingUnits);
     if (!damage) {
       if (event.type === "unitDied" && !scheduledDeaths.has(event.unitId)) {
-        const death = deathEventByUnitId.get(event.unitId);
-        if (!death) return;
+        const death: DeathVisualEvent = {
+          type: "death",
+          unitId: event.unitId,
+          cause: event.cause,
+          chainId: event.chainId,
+          eventIndex,
+          ...(event.deathCell ? { cell: { ...event.deathCell } } : {}),
+        };
         const deathStart = cursorMs + timing.deathPauseMs;
         eventDelaysMs[eventIndex] = deathStart;
+        addCue(eventIndex, {
+          kind: "death",
+          unitId: event.unitId,
+          ...(event.deathCell ? { cell: { ...event.deathCell } } : {}),
+          atMs: deathStart,
+          durationMs: timing.deathMs,
+        });
         queue.push({
           type: "death",
           death,
@@ -291,8 +448,8 @@ export function buildCombatVisualPlaybackPlan(params: {
         });
         scheduledDeaths.add(event.unitId);
         cursorMs = deathStart + timing.deathMs + timing.betweenHitsMs;
-      } else {
-        eventDelaysMs[eventIndex] = cursorMs;
+      } else if (event.type === "attackResolved") {
+        cursorMs = impact + timing.outcomeMs + timing.betweenHitsMs;
       }
       return;
     }
@@ -300,66 +457,29 @@ export function buildCombatVisualPlaybackPlan(params: {
       damage.abilityId = abilityBySourceUnitId.get(damage.sourceUnitId);
     }
 
-    const attackStart = cursorMs;
-    eventDelaysMs[eventIndex] = attackStart;
-    if (damage.sourceUnitId && event.type === "attackResolved") {
-      queue.push({
-        type: "attack",
-        unitId: damage.sourceUnitId,
-        startsAtMs: attackStart,
-        endsAtMs: attackStart + timing.attackLeadMs + timing.impactPauseMs,
-      });
-    }
-    const hpStart =
-      attackStart +
-      (event.type === "attackResolved" ? timing.attackLeadMs : timing.impactPauseMs);
-    const hpDuration = Math.min(
-      timing.hpMaxMs,
-      timing.hpBaseMs +
-        Math.max(0, damage.previousHp - damage.nextHp - 1) * timing.hpPerPointMs,
-    );
-    const hpEnd = hpStart + hpDuration;
-    queue.push({
-      type: "damageHpTween",
-      damage,
-      startsAtMs: hpStart,
-      endsAtMs: hpEnd,
-    });
-    runningHp[damage.targetUnitId] = damage.nextHp;
-    cursorMs = hpEnd;
-
-    const death = deathEventByUnitId.get(damage.targetUnitId);
-    if (damage.nextHp <= 0 && death && !scheduledDeaths.has(damage.targetUnitId)) {
-      const deathStart = hpEnd + timing.deathPauseMs;
-      eventDelaysMs[death.eventIndex] = deathStart;
-      queue.push({
-        type: "death",
-        death,
-        startsAtMs: deathStart,
-        endsAtMs: deathStart + timing.deathMs,
-      });
-      queue.push({
-        type: "removeVisualUnit",
-        unitId: damage.targetUnitId,
-        startsAtMs: deathStart + timing.deathMs,
-        endsAtMs: deathStart + timing.deathMs,
-      });
-      scheduledDeaths.add(damage.targetUnitId);
-      cursorMs = deathStart + timing.deathMs;
-    }
-    cursorMs += timing.betweenHitsMs;
+    cursorMs = scheduleDamage(damage, impact + timing.impactPauseMs) + timing.betweenHitsMs;
   });
+
+  if (params.holdResolvedState) {
+    for (const [unitId, unit] of Object.entries(finalSnapshot.units)) {
+      const previous = playbackStartingUnits[unitId];
+      if (!previous) continue;
+      finalSnapshot.hp[unitId] = runningHp[unitId];
+      finalSnapshot.units[unitId] = {
+        ...unit,
+        hp: runningHp[unitId],
+        position: previous.position,
+        isAlive: previous.isAlive,
+      };
+    }
+  }
 
   return {
     batch: {
       ...params.batch,
       eventDelaysMs,
-      eventSfxDelaysMs: eventDelaysMs.map((delay, eventIndex) => {
-        const phase = queue.find(item =>
-          (item.type === "damageHpTween" && item.damage.eventIndex === eventIndex) ||
-          (item.type === "death" && item.death.eventIndex === eventIndex));
-        return phase?.startsAtMs ?? delay;
-      }),
+      eventSfxDelaysMs: eventDelaysMs,
+      combatCues,
     },
     startingHpByUnitId: playbackStartingHp,
     startingUnitsByUnitId: playbackStartingUnits,
@@ -373,9 +493,8 @@ export function buildCombatVisualPlaybackPlan(params: {
 function tweenHp(previousHp: number, nextHp: number, progress: number): number {
   if (progress <= 0) return previousHp;
   if (progress >= 1) return nextHp;
-  const distance = previousHp - nextHp;
-  if (distance <= 0) return nextHp;
-  return Math.max(nextHp, previousHp - Math.floor(progress * distance));
+  const distance = nextHp - previousHp;
+  return previousHp + Math.sign(distance) * Math.floor(progress * Math.abs(distance));
 }
 
 export function combatVisualPlaybackFrame(
@@ -393,6 +512,7 @@ export function combatVisualPlaybackFrame(
           .map((unitId) => [unitId, "removed" as const]),
       ),
       complete: true,
+      roll: null,
     };
   }
 
@@ -403,6 +523,16 @@ export function combatVisualPlaybackFrame(
   );
 
   for (const item of plan.queue) {
+    if (item.type === "healHpTween") {
+      if (elapsedMs < item.startsAtMs) continue;
+      const progress = Math.min(
+        1,
+        (elapsedMs - item.startsAtMs) / Math.max(1, item.endsAtMs - item.startsAtMs),
+      );
+      visualHpByUnitId[item.unitId] = tweenHp(item.previousHp, item.nextHp, progress);
+      if (elapsedMs < item.endsAtMs) visualStateByUnitId[item.unitId] = "healing";
+      continue;
+    }
     if (item.type === "damageHpTween") {
       if (elapsedMs < item.startsAtMs) continue;
       const duration = Math.max(1, item.endsAtMs - item.startsAtMs);
@@ -412,7 +542,7 @@ export function combatVisualPlaybackFrame(
         item.damage.nextHp,
         progress,
       );
-      if (elapsedMs < item.endsAtMs) {
+      if (elapsedMs < item.endsAtMs && item.damage.showDamageFlash !== false) {
         visualStateByUnitId[item.damage.targetUnitId] = "takingDamage";
       }
       continue;
@@ -424,7 +554,10 @@ export function combatVisualPlaybackFrame(
       continue;
     }
     if (item.type === "death") {
-      if (elapsedMs >= item.startsAtMs && elapsedMs < item.endsAtMs) {
+      if (elapsedMs >= item.startsAtMs && elapsedMs < item.endsAtMs && item.death.cell) {
+        const unit = visualUnitsByUnitId[item.death.unitId];
+        if (unit)
+          visualUnitsByUnitId[item.death.unitId] = { ...unit, position: { ...item.death.cell } };
         visualStateByUnitId[item.death.unitId] = "dying";
       }
       continue;
@@ -441,5 +574,10 @@ export function combatVisualPlaybackFrame(
     visualUnitsByUnitId,
     visualStateByUnitId,
     complete: false,
+    roll:
+      plan.batch.combatCues?.find(
+        (cue): cue is Extract<CombatPresentationCue, { kind: "roll" }> =>
+          cue.kind === "roll" && elapsedMs >= cue.atMs && elapsedMs < cue.atMs + cue.durationMs,
+      ) ?? null,
   };
 }

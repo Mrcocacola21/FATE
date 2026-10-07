@@ -1,5 +1,9 @@
 import { presentationBatchKey } from "./batchIdentity";
-import { MAX_PRESENTATION_BATCHES, presentationBatchHasExpired, presentationBatchIsCurrent } from "./presentationSession";
+import {
+  MAX_PRESENTATION_BATCHES,
+  presentationBatchHasExpired,
+  presentationBatchIsCurrent,
+} from "./presentationSession";
 import { useEffect, useRef, useState } from "react";
 import type { PlayerView } from "rules";
 import { usePrefersReducedMotion } from "../../features/vfx/vfxPreferences";
@@ -8,6 +12,7 @@ import {
   combatVisualPlaybackFrame,
   type CombatVisualPlaybackPlan,
   type UnitVisualStateByUnitId,
+  type CombatPresentationCue,
 } from "./combatPlayback";
 import type { BoardEventBatch } from "./types";
 import {
@@ -27,6 +32,7 @@ interface RenderedVisualState {
   visualHpByUnitId: VisualHpByUnitId;
   visualUnitsByUnitId: VisualUnitsByUnitId;
   visualStateByUnitId: UnitVisualStateByUnitId;
+  roll: Extract<CombatPresentationCue, { kind: "roll" }> | null;
 }
 
 function baseline(view: PlayerView): RenderedVisualState {
@@ -34,6 +40,7 @@ function baseline(view: PlayerView): RenderedVisualState {
     visualHpByUnitId: snapshotVisualHp(view),
     visualUnitsByUnitId: snapshotVisualUnits(view),
     visualStateByUnitId: {},
+    roll: null,
   };
 }
 
@@ -49,6 +56,7 @@ export function useVisualResolution(params: {
   visualHpByUnitId: VisualHpByUnitId;
   visualUnitsByUnitId: VisualUnitsByUnitId;
   visualStateByUnitId: UnitVisualStateByUnitId;
+  roll: Extract<CombatPresentationCue, { kind: "roll" }> | null;
 } {
   const { batch, batches, onBatchesConsumed, view, enabled, sessionKey } = params;
   const reducedMotion = usePrefersReducedMotion();
@@ -61,6 +69,7 @@ export function useVisualResolution(params: {
   const resolutionRef = useRef(resolution);
   const [rendered, setRendered] = useState<RenderedVisualState>(() => baseline(view));
   const [plans, setPlans] = useState<CombatVisualPlaybackPlan[]>([]);
+  const [playingBatch, setPlayingBatch] = useState<BoardEventBatch | null>(null);
   const activePlan = plans[0] ?? null;
   const processedBatchKeysRef = useRef<Set<string>>(new Set());
   const queuedTailRef = useRef<{
@@ -78,6 +87,7 @@ export function useVisualResolution(params: {
     setResolution(nextResolution);
     setRendered(nextRendered);
     setPlans([]);
+    setPlayingBatch(null);
     processedBatchKeysRef.current = new Set();
     queuedTailRef.current = {
       hp: nextRendered.visualHpByUnitId,
@@ -109,6 +119,7 @@ export function useVisualResolution(params: {
         startingUnitsByUnitId: starting.units,
         finalView: batchView,
         reducedMotion,
+        holdResolvedState: current.groupActive,
       });
       queuedTailRef.current = { hp: plan.finalHpByUnitId, units: plan.finalUnitsByUnitId };
       nextPlans.push(plan);
@@ -118,26 +129,32 @@ export function useVisualResolution(params: {
     }
     resolutionRef.current = current;
     setResolution(current);
-    if (nextPlans.length) setPlans((queued) => [...queued, ...nextPlans].slice(-MAX_PRESENTATION_BATCHES));
+    if (nextPlans.length)
+      setPlans((queued) => [...queued, ...nextPlans].slice(-MAX_PRESENTATION_BATCHES));
     if (batches?.length) onBatchesConsumed?.(batches);
   }, [batch, batches, enabled, onBatchesConsumed, reducedMotion, view]);
 
   useEffect(() => {
     const plan = activePlan;
-    if (!plan) return;
+    if (!plan) {
+      setPlayingBatch(null);
+      return;
+    }
     if (!presentationBatchIsCurrent(plan.batch) || presentationBatchHasExpired(plan.batch)) {
-      setPlans(current => current.slice(1));
+      setPlans((current) => current.slice(1));
       setRendered(baseline(latestInputRef.current.view));
       return;
     }
     let animationFrame = 0;
     let cancelled = false;
     const startedAt = performance.now();
+    setPlayingBatch({ ...plan.batch, playbackStartedAt: Date.now() });
     const initialFrame = combatVisualPlaybackFrame(plan, 0);
     setRendered({
       visualHpByUnitId: initialFrame.visualHpByUnitId,
       visualUnitsByUnitId: initialFrame.visualUnitsByUnitId,
       visualStateByUnitId: initialFrame.visualStateByUnitId,
+      roll: initialFrame.roll,
     });
 
     const tick = (now: number) => {
@@ -147,6 +164,7 @@ export function useVisualResolution(params: {
         visualHpByUnitId: frame.visualHpByUnitId,
         visualUnitsByUnitId: frame.visualUnitsByUnitId,
         visualStateByUnitId: frame.visualStateByUnitId,
+        roll: frame.roll,
       });
       if (frame.complete) {
         setPlans((current) => current.slice(1));
@@ -155,13 +173,17 @@ export function useVisualResolution(params: {
       animationFrame = window.requestAnimationFrame(tick);
     };
     animationFrame = window.requestAnimationFrame(tick);
-    return () => { cancelled = true; window.cancelAnimationFrame(animationFrame); };
+    return () => {
+      cancelled = true;
+      window.cancelAnimationFrame(animationFrame);
+    };
   }, [activePlan, sessionKey]);
 
   useEffect(() => {
     if (enabled) return;
     const next = baseline(view);
     setPlans([]);
+    setPlayingBatch(null);
     setRendered(next);
     queuedTailRef.current = {
       hp: next.visualHpByUnitId,
@@ -188,10 +210,15 @@ export function useVisualResolution(params: {
   }, [enabled, plans.length, rendered.visualHpByUnitId, resolution.groupActive, view, sessionKey]);
 
   return {
-    batch: activePlan && presentationBatchIsCurrent(activePlan.batch) && !presentationBatchHasExpired(activePlan.batch)
-      ? activePlan.batch : null,
+    batch:
+      playingBatch &&
+      presentationBatchIsCurrent(playingBatch) &&
+      !presentationBatchHasExpired(playingBatch)
+        ? playingBatch
+        : null,
     visualHpByUnitId: rendered.visualHpByUnitId,
     visualUnitsByUnitId: rendered.visualUnitsByUnitId,
     visualStateByUnitId: rendered.visualStateByUnitId,
+    roll: playingBatch && presentationBatchIsCurrent(playingBatch) ? rendered.roll : null,
   };
 }

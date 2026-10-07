@@ -128,6 +128,11 @@ export function advanceVisualResolution(
   let explicitChainEventSeen = false;
 
   for (const event of freshBatch.events) {
+    // Dice are needed for the next manual decision even while outcomes defer.
+    if (event.type === "rollResolved") {
+      playableEvents.push(event);
+      continue;
+    }
     const chainId = event.chainId ?? event.visualBatchId;
     if (chainId && event.isChainComplete) {
       explicitChainEventSeen = true;
@@ -150,7 +155,9 @@ export function advanceVisualResolution(
       legacyBufferedEvents = [];
     }
   } else if (pending) {
-    legacyBufferedEvents.push(...playableEvents.splice(0));
+    const earlyRolls = playableEvents.filter(event => event.type === "rollResolved");
+    legacyBufferedEvents.push(...playableEvents.filter(event => event.type !== "rollResolved"));
+    playableEvents.splice(0, playableEvents.length, ...earlyRolls);
   } else if (groupActive && legacyBufferedEvents.length > 0) {
     playableEvents.unshift(...legacyBufferedEvents);
     legacyBufferedEvents = [];

@@ -24,6 +24,8 @@ function attack(previousHp: number, nextHp: number): ProjectedGameEvent {
     type: "attackResolved",
     attackerId: "attacker",
     defenderId: "target",
+    sourceCell: { col: 2, row: 1 },
+    targetCell: { col: 2, row: 2 },
     attackerRoll: { dice: [6], sum: 6, isDouble: false },
     defenderRoll: { dice: [1], sum: 1, isDouble: false },
     hit: true,
@@ -60,7 +62,7 @@ test("lethal damage keeps a render-only ghost through HP tween and death", () =>
       revision: 9,
       events: [
         attack(2, 0),
-        { type: "unitDied", unitId: "target", killerId: "attacker" },
+        { type: "unitDied", unitId: "target", killerId: "attacker", deathCell: { col: 2, row: 2 } },
       ],
     },
     startingHpByUnitId: { attacker: 6, target: 2 },

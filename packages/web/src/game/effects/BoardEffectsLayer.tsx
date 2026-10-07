@@ -1,4 +1,4 @@
-import type { CSSProperties, FC } from "react";
+import { useRef, type CSSProperties, type FC } from "react";
 import type { Coord, PlayerView } from "rules";
 import { BOARD_LAYERS } from "../../features/vfx/vfxRegistry";
 import {
@@ -25,10 +25,10 @@ type EffectStyle = CSSProperties & {
   "--effect-delay"?: string;
 };
 
-function effectStyle(effect: QueuedBoardEffect): EffectStyle {
+function effectStyle(effect: QueuedBoardEffect, mountedAt: number): EffectStyle {
   return {
     "--effect-duration": `${Math.max(100, effect.expiresAt - effect.startedAt)}ms`,
-    "--effect-delay": `${Math.max(0, effect.startedAt - Date.now())}ms`,
+    "--effect-delay": `${effect.startedAt - mountedAt}ms`,
     zIndex: effect.kind === "floatingText" ? BOARD_LAYERS.outcome : BOARD_LAYERS.movement,
   };
 }
@@ -83,6 +83,11 @@ export const BoardEffectsLayer: FC<BoardEffectsLayerProps> = ({
   reducedMotion,
   t,
 }) => {
+  const mountedAtById = useRef(new Map<string, number>());
+  const currentIds = new Set(effects.map((effect) => effect.id));
+  for (const id of mountedAtById.current.keys()) {
+    if (!currentIds.has(id)) mountedAtById.current.delete(id);
+  }
   return (
     <div
       className={`pointer-events-none absolute left-0 top-0 overflow-visible ${
@@ -103,7 +108,8 @@ export const BoardEffectsLayer: FC<BoardEffectsLayerProps> = ({
         />
       ))}
       {effects.map((effect) => {
-        const style = effectStyle(effect);
+        if (!mountedAtById.current.has(effect.id)) mountedAtById.current.set(effect.id, Date.now());
+        const style = effectStyle(effect, mountedAtById.current.get(effect.id)!);
         switch (effect.kind) {
           case "cellPulse":
           case "areaHighlight":

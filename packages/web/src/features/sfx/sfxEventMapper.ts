@@ -9,6 +9,7 @@ import {
 import { getCommonSfx, getHeroSfx, resolveSound } from "../../assets/sfx/resolver";
 import type { SoundKey } from "../../assets/sfx/registry";
 import type { PresentationEvent } from "../../game/effects/types";
+import { combatRollSide, type CombatPresentationCue } from "../../game/effects/combatPlayback";
 import type { SfxEvent, SfxLookup, SfxPlaybackRequest } from "./sfxTypes";
 
 function heroLookup(
@@ -140,14 +141,33 @@ export function mapEventBatchToSfx(params: {
   streamId?: string;
   eventDelaysMs?: readonly number[];
   eventSfxDelaysMs?: readonly number[];
+  combatCues?: readonly CombatPresentationCue[];
 }): SfxPlaybackRequest[] {
   const requests: SfxPlaybackRequest[] = [];
+  if (params.combatCues) {
+    for (const cue of params.combatCues) {
+      if (!params.events[cue.eventIndex]?.eventId || cue.kind === "heal") continue;
+      const key: SoundKey =
+        cue.kind === "roll"
+          ? "common.combat.diceRoll"
+          : cue.kind === "miss"
+            ? "common.combat.miss"
+            : cue.kind === "death"
+              ? "common.combat.death"
+              : "common.combat.hit";
+      const id = `${cue.id}:audio:${key}`;
+      const sound = resolveSound(key, id);
+      if (sound) requests.push({ ...sound, id, delayMs: cue.atMs });
+    }
+    return requests;
+  }
   params.events.forEach((gameEvent, eventIndex) => {
     // Live event identity comes from authorized ingress, never state/HP diffs.
     if (!gameEvent.eventId) return;
     let key: SoundKey;
     switch (gameEvent.type) {
       case "rollResolved":
+        if (!combatRollSide(gameEvent.rollKind)) return;
         key = "common.combat.diceRoll";
         break;
       case "attackResolved":

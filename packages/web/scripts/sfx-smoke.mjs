@@ -220,6 +220,41 @@ try {
       target: units.find((unit) => unit.owner === "P2").id,
     };
   });
+  // Observe the real board rather than invoking the presentation mappers.
+  await page.evaluate(() => {
+    const combat = (window.__combat = { rolls: [], sprites: [], hp: [], states: [] });
+    const seenRolls = new Set(), seenSprites = new Set();
+    let previousHp, previousState;
+    const observe = () => {
+      const roll = document.querySelector("[data-combat-cue]");
+      if (roll && !seenRolls.has(roll.dataset.combatCue)) {
+        seenRolls.add(roll.dataset.combatCue);
+        combat.rolls.push({ id: roll.dataset.combatCue,
+          dice: [...roll.querySelectorAll("[data-combat-die]")].map(die => Number(die.dataset.combatDie)), at: performance.now() });
+      }
+      for (const sprite of document.querySelectorAll("[data-vfx-cue]")) {
+        if (seenSprites.has(sprite.dataset.vfxCue)) continue;
+        const kind = ["combatHit", "combatMiss", "unitDeath"].find(kind => sprite.querySelector(`.vfx-${kind}`));
+        if (!kind) continue;
+        seenSprites.add(sprite.dataset.vfxCue);
+        combat.sprites.push({ id: sprite.dataset.vfxCue, kind, startsAt: Number(sprite.dataset.vfxStart),
+          rect: { left: sprite.style.left, top: sprite.style.top } });
+      }
+      const target = document.querySelector('[data-unit-visual-state][data-owner="P2"]');
+      const hp = target?.closest("button")?.querySelector(".board-outcome .h-full")?.style.width;
+      if (hp && hp !== previousHp) {
+        combat.hp.push({ width: hp, at: performance.now() });
+        previousHp = hp;
+      }
+      const state = target?.dataset.unitVisualState;
+      if (state && state !== previousState) {
+        combat.states.push({ state, at: performance.now() });
+        previousState = state;
+      }
+    };
+    new MutationObserver(observe).observe(document.body, { childList: true, subtree: true, attributes: true });
+    observe();
+  });
   async function count(key) {
     return page.evaluate(
       (key) => window.__audio.sources.filter((source) => source.key === key).length,
@@ -239,6 +274,7 @@ try {
       () => window.__store.getState().roomState.pendingRoll?.kind === "attack_attackerRoll",
     );
     const before = await count("common.combat.diceRoll");
+    const rollsBefore = await page.evaluate(() => window.__combat.rolls.length);
     // Actual Roll button produces only UI click; server result then produces dice.
     await page.getByTestId("pending-roll-overlay").getByRole("heading", { name: "Attack Roll", exact: true }).waitFor();
     const rollButton = page.getByRole("button", { name: "Roll 2d6", exact: true });
@@ -252,6 +288,10 @@ try {
       async () => (await count("common.combat.diceRoll")) > before,
       "authoritative attacker dice audio",
     );
+    await wait(async () => (await page.evaluate(() => window.__combat.rolls.length)) > rollsBefore,
+      "actual attacker dice display");
+    assert.deepEqual(await page.evaluate(() => window.__combat.rolls.at(-1).dice), values.slice(0, 2));
+    await page.screenshot({ path: path.join(output, `combat-attacker-${rollsBefore}.png`) });
     await page.getByTestId("pending-roll-overlay").getByRole("heading", { name: "Defense Roll", exact: true }).waitFor();
     await page.getByRole("button", { name: "Roll 2d6", exact: true }).click();
     await page.waitForFunction(() => !window.__store.getState().roomState.pendingRoll);
@@ -259,9 +299,26 @@ try {
       async () => (await count("common.combat.diceRoll")) >= before + 2,
       "authoritative defender dice audio",
     );
+    await wait(async () => (await page.evaluate(() => window.__combat.rolls.length)) === rollsBefore + 2,
+      "ordered defender dice display");
+    assert.deepEqual(await page.evaluate(() => window.__combat.rolls.at(-1).dice), values.slice(2, 4));
+    await page.screenshot({ path: path.join(output, `combat-defender-${rollsBefore}.png`) });
   }
   await attack([5, 4, 1, 1]);
   await wait(async () => (await count("common.combat.hit")) === 1, "hit audio");
+  await wait(async () => (await page.evaluate(() => window.__combat.hp.length)) > 1, "staged HP decrease");
+  const firstImpact = await page.evaluate(() => ({
+    sound: window.__audio.sources.find(source => source.key === "common.combat.hit"),
+    sprite: window.__combat.sprites.find(sprite => sprite.kind === "combatHit"),
+    hp: window.__combat.hp,
+    states: window.__combat.states,
+    epoch: performance.timeOrigin,
+  }));
+  assert(firstImpact.sprite, "one registered generic hit sprite");
+  assert(Math.abs(firstImpact.sound.at + firstImpact.epoch - firstImpact.sprite.startsAt) < 100,
+    "real audio source and sprite share the impact timestamp");
+  assert(firstImpact.hp[1].at > firstImpact.sound.at, "HP fill changes after impact");
+  assert(firstImpact.states.some(item => item.state === "takingDamage"));
   assert.equal(await count("common.combat.miss"), 0);
   assert((await count("common.ui.buttonClick")) >= 1);
   // Re-delivering the exact confirmed batch cannot play again.
@@ -272,13 +329,19 @@ try {
   });
   assert.equal(await page.evaluate(() => window.__audio.sources.length), beforeDuplicate);
   await command({ type: "debugResetActions", unitId: ids.attacker });
+  await wait(async () => await page.locator('[data-unit-visual-state="idle"][data-owner="P2"]').count() === 1,
+    "first HP playback completes");
+  const hpBeforeMiss = await page.evaluate(() => window.__combat.hp.length);
   await attack([1, 2, 5, 6]);
   await wait(async () => (await count("common.combat.miss")) === 1, "miss audio");
+  assert.equal(await page.evaluate(() => window.__combat.hp.length), hpBeforeMiss, "miss does not change HP fill");
+  assert.equal(await page.evaluate(() => window.__combat.sprites.filter(sprite => sprite.kind === "combatMiss").length), 1);
   await command({ type: "debugResetActions", unitId: ids.attacker });
   await command({ type: "debugSetHp", unitId: ids.target, hp: 1 });
   assert.equal(await count("common.combat.death"), 0, "state changes do not invent death cues");
   await attack([5, 4, 1, 1]);
   await wait(async () => (await count("common.combat.death")) === 1, "final death audio");
+  assert.equal(await page.evaluate(() => window.__combat.sprites.filter(sprite => sprite.kind === "unitDeath").length), 1);
   await page.getByTestId("battle-end-view-board").click();
   const volume = page.getByRole("slider", { name: "Master volume", exact: true });
   await volume.press("Home");
@@ -345,6 +408,10 @@ try {
       "master mute/volume",
       "persisted settings",
       "silent reconnect",
+      "actual attacker/defender dice UI order",
+      "registered generic hit/miss/death sprites",
+      "shared impact timestamp in real Web Audio and CSS sprite playback",
+      "HP fill decreases after impact; miss leaves it unchanged",
     ],
     native,
     manualListening: false,

@@ -1,20 +1,11 @@
 import { presentationBatchKey } from "./batchIdentity";
 import { useEffect, useRef, useState } from "react";
 import type { PlayerView } from "rules";
-import {
-  simplifyEffectsForReducedMotion,
-  visibleUnitPositions,
-} from "./boardEffects";
-import {
-  enqueueBoardEffects,
-  pruneExpiredBoardEffects,
-} from "./effectQueue";
+import { presentationBatchHasExpired, presentationBatchIsCurrent } from "./presentationSession";
+import { simplifyEffectsForReducedMotion, visibleUnitPositions } from "./boardEffects";
+import { enqueueBoardEffects, pruneExpiredBoardEffects } from "./effectQueue";
 import { effectsFromEventBatch } from "./eventToEffects";
-import type {
-  BoardEventBatch,
-  QueuedBoardEffect,
-  VisibleUnitPositions,
-} from "./types";
+import type { BoardEventBatch, QueuedBoardEffect, VisibleUnitPositions } from "./types";
 
 function usePrefersReducedMotion(): boolean {
   const [reduced, setReduced] = useState(false);
@@ -46,6 +37,7 @@ export function useBoardEffects(params: {
   const positionSnapshotRef = useRef<VisibleUnitPositions | null>(null);
   const sequenceRef = useRef(0);
   const initializedRef = useRef(false);
+  const tokenRef = useRef<BoardEventBatch["presentationToken"]>();
 
   useEffect(() => {
     initializedRef.current = false;
@@ -74,16 +66,24 @@ export function useBoardEffects(params: {
 
     if (
       !batch ||
+      !presentationBatchIsCurrent(batch) ||
+      presentationBatchHasExpired(batch) ||
       lastProcessedBatchKeyRef.current === presentationBatchKey(batch)
     ) {
       return;
     }
 
     const previousPositions = positionSnapshotRef.current ?? nextPositions;
-    let incoming = effectsFromEventBatch(batch.events, {
-      view,
-      previousPositions,
-    }, batch.eventDelaysMs);
+    let incoming = effectsFromEventBatch(
+      batch.events,
+      {
+        view: batch.view ?? view,
+        previousPositions,
+      },
+      batch.eventDelaysMs,
+      batch.combatCues,
+    );
+    tokenRef.current = batch.presentationToken;
     if (reducedMotion) {
       incoming = simplifyEffectsForReducedMotion(incoming);
     }
@@ -93,7 +93,7 @@ export function useBoardEffects(params: {
       const queued = enqueueBoardEffects({
         current: pruneExpiredBoardEffects(current, now),
         incoming,
-        now,
+        now: batch.playbackStartedAt ?? now,
         sequenceStart: sequenceRef.current,
       });
       sequenceRef.current = queued.nextSequence;
@@ -111,5 +111,5 @@ export function useBoardEffects(params: {
     return () => window.clearTimeout(timer);
   }, [effects]);
 
-  return { effects, reducedMotion };
+  return { effects: tokenRef.current?.cancelled ? [] : effects, reducedMotion };
 }

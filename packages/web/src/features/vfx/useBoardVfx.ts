@@ -1,4 +1,8 @@
 import { presentationBatchKey } from "../../game/effects/batchIdentity";
+import {
+  presentationBatchHasExpired,
+  presentationBatchIsCurrent,
+} from "../../game/effects/presentationSession";
 import { useEffect, useRef, useState } from "react";
 import type { PlayerView } from "rules";
 import { mapEventBatchToVfx } from "./vfxEventMapper";
@@ -10,11 +14,7 @@ import {
   rememberProcessedVfxRequests,
   simplifyVfxForReducedMotion,
 } from "./vfxQueue";
-import type {
-  BoardVfxEventBatch,
-  QueuedBoardVfxRequest,
-  VisibleUnitPositions,
-} from "./vfxTypes";
+import type { BoardVfxEventBatch, QueuedBoardVfxRequest, VisibleUnitPositions } from "./vfxTypes";
 
 export function useBoardVfx(params: {
   batch: BoardVfxEventBatch | null | undefined;
@@ -29,6 +29,7 @@ export function useBoardVfx(params: {
   const positionSnapshotRef = useRef<VisibleUnitPositions | null>(null);
   const initializedRef = useRef(false);
   const processedRequestIdsRef = useRef<Set<string>>(new Set());
+  const tokenRef = useRef<BoardVfxEventBatch["presentationToken"]>();
 
   useEffect(() => {
     initializedRef.current = false;
@@ -55,19 +56,26 @@ export function useBoardVfx(params: {
       return;
     }
 
-    if (!batch || lastProcessedBatchKeyRef.current === presentationBatchKey(batch)) {
+    if (
+      !batch ||
+      !presentationBatchIsCurrent(batch) ||
+      presentationBatchHasExpired(batch) ||
+      lastProcessedBatchKeyRef.current === presentationBatchKey(batch)
+    ) {
       return;
     }
 
     const previousPositions = positionSnapshotRef.current ?? nextPositions;
     let incoming = mapEventBatchToVfx({
       events: batch.events,
-      view,
+      view: batch.view ?? view,
       previousPositions,
       revision: batch.revision,
       presentationId: presentationBatchKey(batch),
       eventDelaysMs: batch.eventDelaysMs,
+      combatCues: batch.combatCues,
     });
+    tokenRef.current = batch.presentationToken;
     if (reducedMotion) {
       incoming = simplifyVfxForReducedMotion(incoming);
     }
@@ -79,7 +87,7 @@ export function useBoardVfx(params: {
       enqueueBoardVfx({
         current: pruneExpiredBoardVfx(current, now),
         incoming,
-        now,
+        now: batch.playbackStartedAt ?? now,
       }),
     );
     lastProcessedBatchKeyRef.current = presentationBatchKey(batch);
@@ -94,5 +102,5 @@ export function useBoardVfx(params: {
     return () => window.clearTimeout(timer);
   }, [effects]);
 
-  return { effects, reducedMotion };
+  return { effects: tokenRef.current?.cancelled ? [] : effects, reducedMotion };
 }

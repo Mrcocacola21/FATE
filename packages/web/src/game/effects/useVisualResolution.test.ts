@@ -6,6 +6,13 @@ import type { PlayerView } from "rules";
 import type { BoardEventBatch } from "./types";
 import { useVisualResolution } from "./useVisualResolution";
 import { PresentationSession } from "./presentationSession";
+import { useBoardEffects } from "./useBoardEffects";
+import { useBoardVfx } from "../../features/vfx/useBoardVfx";
+import { useBoardSfx } from "../../features/sfx/useBoardSfx";
+import { sfxPlayer } from "../../features/sfx/sfxPlayer";
+import type { SoundCue } from "../../features/sfx/sfxTypes";
+import type { QueuedBoardVfxRequest } from "../../features/vfx/vfxTypes";
+import type { QueuedBoardEffect } from "./types";
 
 test("all ingress batches received before one React commit reach the ordered playback queue", () => {
   const previousWindow = Object.getOwnPropertyDescriptor(globalThis, "window");
@@ -185,6 +192,130 @@ test("session reset clears deferred chains and ignores a cancelled animation cal
     assert.equal(output, null);
   } finally {
     if (renderer) act(() => renderer!.unmount());
+    if (previousWindow) Object.defineProperty(globalThis, "window", previousWindow);
+    else Reflect.deleteProperty(globalThis, "window");
+  }
+});
+
+test("room/role/stream reset cancels a real pending HP/death plan across every board consumer", (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout", "Date"], now: 1000 });
+  const previousWindow = Object.getOwnPropertyDescriptor(globalThis, "window");
+  const frames = new Map<number, FrameRequestCallback>();
+  let nextFrame = 0;
+  Object.defineProperty(globalThis, "window", {
+    configurable: true,
+    value: {
+      requestAnimationFrame: (callback: FrameRequestCallback) => {
+        frames.set(++nextFrame, callback);
+        return nextFrame;
+      },
+      cancelAnimationFrame: (id: number) => frames.delete(id),
+      setTimeout: (callback: () => void, delay: number) => setTimeout(callback, delay),
+      clearTimeout: (timer: ReturnType<typeof setTimeout>) => clearTimeout(timer),
+    },
+  });
+  const played: string[] = [];
+  t.mock.method(sfxPlayer, "play", (cue: SoundCue | string | undefined) => {
+    played.push((cue as SoundCue).key);
+    return true;
+  });
+  t.mock.method(sfxPlayer, "stopGameplay", () => undefined);
+  const cell = { col: 3, row: 4 };
+  const before = {
+    boardSize: 9,
+    units: { target: { id: "target", owner: "P2", hp: 2, isAlive: true, position: cell } },
+  } as unknown as PlayerView;
+  const after = {
+    ...before,
+    units: { target: { ...before.units.target, hp: 0, isAlive: false, position: null } },
+  };
+  let output: ReturnType<typeof useVisualResolution>;
+  let sprites: QueuedBoardVfxRequest[] = [];
+  let text: QueuedBoardEffect[] = [];
+  const current = () => output;
+  function Harness({
+    batches,
+    sessionKey,
+    view,
+  }: {
+    batches: BoardEventBatch[];
+    sessionKey: string;
+    view: PlayerView;
+  }) {
+    output = useVisualResolution({ batch: null, batches, sessionKey, view, enabled: true });
+    sprites = useBoardVfx({ batch: output.batch, sessionKey, view, enabled: true }).effects;
+    text = useBoardEffects({ batch: output.batch, sessionKey, view, enabled: true }).effects;
+    useBoardSfx({ batch: output.batch, sessionKey, view, enabled: true });
+    return null;
+  }
+  try {
+    for (const change of ["room", "role", "stream"]) {
+      let renderer: ReactTestRenderer | undefined;
+      const token = { cancelled: false };
+      const batch: BoardEventBatch = {
+        streamId: "old",
+        revision: 1,
+        view: after,
+        presentationToken: token,
+        events: [
+          {
+            type: "attackResolved",
+            eventId: `${change}-hit`,
+            defenderId: "target",
+            targetCell: cell,
+            attackerRoll: { dice: [5, 4], sum: 9, isDouble: false },
+            defenderRoll: { dice: [1, 2], sum: 3, isDouble: false },
+            hit: true,
+            damage: 2,
+            previousHp: 2,
+            nextHp: 0,
+            defenderHpAfter: 0,
+          },
+          {
+            type: "unitDied",
+            eventId: `${change}-death`,
+            unitId: "target",
+            killerId: null,
+            deathCell: cell,
+          },
+        ],
+      };
+      try {
+        act(() => {
+          renderer = create(
+            createElement(Harness, { batches: [], sessionKey: "old", view: before }),
+          );
+        });
+        act(() =>
+          renderer!.update(
+            createElement(Harness, { batches: [batch], sessionKey: "old", view: after }),
+          ),
+        );
+        assert.equal(current().visualHpByUnitId.target, 2);
+        assert.equal(sprites.length, 2);
+        assert.ok(text.length > 0);
+        const oldFrame = frames.values().next().value!;
+        assert.ok(oldFrame);
+        token.cancelled = true;
+        act(() =>
+          renderer!.update(
+            createElement(Harness, { batches: [], sessionKey: change, view: before }),
+          ),
+        );
+        assert.equal(current().batch, null);
+        assert.equal(current().visualHpByUnitId.target, 2);
+        assert.deepEqual(sprites, []);
+        assert.deepEqual(text, []);
+        t.mock.timers.tick(5000);
+        act(() => oldFrame(performance.now() + 5000));
+        assert.deepEqual(played, []);
+        assert.equal(current().visualHpByUnitId.target, 2);
+        assert.ok(current().visualUnitsByUnitId.target.position);
+      } finally {
+        if (renderer) act(() => renderer!.unmount());
+      }
+    }
+  } finally {
     if (previousWindow) Object.defineProperty(globalThis, "window", previousWindow);
     else Reflect.deleteProperty(globalThis, "window");
   }

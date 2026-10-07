@@ -34,8 +34,8 @@ export class SfxPlaybackSession {
       if (this.consumed.has(cue.id)) continue;
       this.consumed.add(cue.id);
       if (this.player.isMuted() || this.player.getVolume() <= 0) continue;
-      const delayMs = Math.max(0, cue.delayMs ?? 0);
-      const scheduledAt = Date.now() + delayMs;
+      const scheduledAt = (batch.playbackStartedAt ?? Date.now()) + (cue.delayMs ?? 0);
+      const delayMs = Math.max(0, scheduledAt - Date.now());
       const play = () => {
         if (
           !presentationBatchIsCurrent(batch) ||
