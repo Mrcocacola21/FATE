@@ -42,6 +42,7 @@
     "test:players": "tsx --test src/game/gameshell-content/components/SidePanelTabs.test.tsx",
     "test:effects": "tsx --test src/game/effects/*.test.ts src/features/vfx/*.test.ts src/features/vfx/*.test.tsx src/pages/VfxPreviewPage.test.tsx",
     "test:sfx": "tsx --test src/assets/sfx/*.test.ts src/features/sfx/*.test.ts",
+    "test:sfx:e2e": "node scripts/sfx-smoke.mjs",
     "test:vfx": "tsx --test src/features/vfx/*.test.ts src/features/vfx/*.test.tsx src/pages/VfxPreviewPage.test.tsx",
     "test:vfx:visual": "node scripts/capture-vfx.mjs --no-video --no-gif",
     "test:test-room": "tsx --test src/testRoom/*.test.ts",

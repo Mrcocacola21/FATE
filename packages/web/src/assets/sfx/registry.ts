@@ -1,5 +1,83 @@
 import type * as Rules from "rules";
 
+export type SoundCategory = "ui" | "gameplay";
+export interface SoundDefinition {
+  sources: readonly string[];
+  category: SoundCategory;
+  gain: number;
+  preload: "core" | "lazy";
+  maxVoices: number;
+}
+
+/** Static URLs keep Vite's asset graph explicit; only this core slice is bundled. */
+export const SOUND_REGISTRY = {
+  "common.ui.buttonClick": {
+    sources: [
+      new URL("./common/ui/buttonClick01.wav", import.meta.url).href,
+      new URL("./common/ui/buttonClick02.wav", import.meta.url).href,
+      new URL("./common/ui/buttonClick03.wav", import.meta.url).href,
+    ],
+    category: "ui",
+    gain: 0.4,
+    preload: "core",
+    maxVoices: 2,
+  },
+  "common.ui.actionInvalid": {
+    sources: [new URL("./common/ui/actionInvalid.wav", import.meta.url).href],
+    category: "ui",
+    gain: 0.4,
+    preload: "core",
+    maxVoices: 1,
+  },
+  "common.combat.diceRoll": {
+    sources: [
+      new URL("./common/combat/diceRoll01.wav", import.meta.url).href,
+      new URL("./common/combat/diceRoll02.wav", import.meta.url).href,
+      new URL("./common/combat/diceRoll03.wav", import.meta.url).href,
+      new URL("./common/combat/diceRoll04.wav", import.meta.url).href,
+    ],
+    category: "gameplay",
+    gain: 0.55,
+    preload: "core",
+    maxVoices: 2,
+  },
+  "common.combat.hit": {
+    sources: [
+      new URL("./common/combat/hit01.wav", import.meta.url).href,
+      new URL("./common/combat/hit02.wav", import.meta.url).href,
+      new URL("./common/combat/hit03.wav", import.meta.url).href,
+      new URL("./common/combat/hit04.wav", import.meta.url).href,
+    ],
+    category: "gameplay",
+    gain: 0.6,
+    preload: "core",
+    maxVoices: 4,
+  },
+  "common.combat.miss": {
+    sources: [
+      new URL("./common/combat/miss01.wav", import.meta.url).href,
+      new URL("./common/combat/miss02.wav", import.meta.url).href,
+      new URL("./common/combat/miss03.wav", import.meta.url).href,
+    ],
+    category: "gameplay",
+    gain: 0.5,
+    preload: "core",
+    maxVoices: 3,
+  },
+  "common.combat.death": {
+    sources: [
+      new URL("./common/combat/death01.wav", import.meta.url).href,
+      new URL("./common/combat/death02.wav", import.meta.url).href,
+    ],
+    category: "gameplay",
+    gain: 0.6,
+    preload: "core",
+    maxVoices: 2,
+  },
+} as const satisfies { [key: `common.${"ui" | "combat"}.${string}`]: SoundDefinition };
+
+export type SoundKey = keyof typeof SOUND_REGISTRY;
+
 type RulesHeroId =
   | typeof Rules.HERO_ARTEMIDA_ID
   | typeof Rules.HERO_ASGORE_ID
@@ -99,9 +177,8 @@ export type CommonSfxRegistry = Partial<Record<CommonSfxCategory, Record<string,
 export const heroSfx: HeroSfxRegistry = {};
 
 /**
- * Common fallbacks use the same explicit-import strategy as hero sounds.
- * Generic event fallbacks are named attack, hit, death, move, ability,
- * phantasm, transform, and applied.
+ * Legacy optional string resolver scaffolding. Phase 5 live playback uses the
+ * closed SOUND_REGISTRY above; hero mappings remain unpopulated for later work.
  */
 export const commonSfx: CommonSfxRegistry = {};
 

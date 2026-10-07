@@ -1,4 +1,5 @@
 import type { CommonSfxCategory, HeroId, HeroSfxCategory, SfxKey } from "../../assets/sfx/registry";
+import type { SoundDefinition, SoundKey } from "../../assets/sfx/registry";
 
 export type SfxEvent =
   | { type: "unitAttack"; heroId: HeroId }
@@ -19,8 +20,11 @@ export interface SfxLookup {
   genericCommonKey?: string;
 }
 
-export interface SfxPlaybackRequest {
+export interface SoundCue extends SoundDefinition {
   id: string;
+  key: SoundKey;
   src: string;
   delayMs?: number;
 }
+
+export type SfxPlaybackRequest = SoundCue;

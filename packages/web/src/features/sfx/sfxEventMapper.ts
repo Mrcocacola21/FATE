@@ -6,7 +6,9 @@ import {
   type HeroSfxCategory,
   type SfxKey,
 } from "../../assets/sfx/registry";
-import { getCommonSfx, getHeroSfx } from "../../assets/sfx/resolver";
+import { getCommonSfx, getHeroSfx, resolveSound } from "../../assets/sfx/resolver";
+import type { SoundKey } from "../../assets/sfx/registry";
+import type { PresentationEvent } from "../../game/effects/types";
 import type { SfxEvent, SfxLookup, SfxPlaybackRequest } from "./sfxTypes";
 
 function heroLookup(
@@ -131,25 +133,40 @@ export function mapGameEventToSfxEvents(event: ProjectedGameEvent, view: PlayerV
 }
 
 export function mapEventBatchToSfx(params: {
-  events: ProjectedGameEvent[];
+  events: PresentationEvent[];
   view: PlayerView;
   revision: number;
   presentationId?: string;
+  streamId?: string;
   eventDelaysMs?: readonly number[];
+  eventSfxDelaysMs?: readonly number[];
 }): SfxPlaybackRequest[] {
   const requests: SfxPlaybackRequest[] = [];
   params.events.forEach((gameEvent, eventIndex) => {
-    mapGameEventToSfxEvents(gameEvent, params.view).forEach((sfxEvent, sfxIndex) => {
-      const src = resolveSfxEvent(sfxEvent);
-      if (!src) return;
+    // Live event identity comes from authorized ingress, never state/HP diffs.
+    if (!gameEvent.eventId) return;
+    let key: SoundKey;
+    switch (gameEvent.type) {
+      case "rollResolved":
+        key = "common.combat.diceRoll";
+        break;
+      case "attackResolved":
+        key = gameEvent.hit ? "common.combat.hit" : "common.combat.miss";
+        break;
+      case "unitDied":
+        key = "common.combat.death";
+        break;
+      default:
+        return;
+    }
+    const id = `${params.streamId ?? params.presentationId ?? "live"}:${gameEvent.eventId}:audio:${key}`;
+    const sound = resolveSound(key, id);
+    if (sound)
       requests.push({
-        id: `${params.presentationId ?? params.revision}:${eventIndex}:${gameEvent.type}:${sfxEvent.type}:${sfxIndex}`,
-        src,
-        delayMs:
-          (params.eventDelaysMs?.[eventIndex] ?? 0) +
-          (sfxEvent.type === "unitHit" ? 180 : 0),
+        ...sound,
+        id,
+        delayMs: params.eventSfxDelaysMs?.[eventIndex] ?? params.eventDelaysMs?.[eventIndex] ?? 0,
       });
-    });
   });
   return requests;
 }

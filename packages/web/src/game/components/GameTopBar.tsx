@@ -3,6 +3,7 @@ import type { GameShellViewModel } from "../gameshell-content/hooks/useGameShell
 import type { FC } from "react";
 import { ThemeToggle } from "../../components/ThemeToggle";
 import { LanguageSwitcher } from "../../components/LanguageSwitcher";
+import { SoundControls } from "../../features/sfx/SoundControls";
 import { useI18n } from "../../i18n";
 import { StatusBadge } from "../../components/ui";
 import { getConnectionLabel, getPhaseLabel } from "../../i18n/displayMetadata";
@@ -103,6 +104,7 @@ export const GameTopBar: FC<GameTopBarProps> = ({ vm, compact = false }) => {
           <div className={compact ? "hidden min-[430px]:inline-flex" : "inline-flex"}>
             <ThemeToggle />
           </div>
+          <SoundControls />
         </div>
       </div>
       <div className="player-strip" aria-label={t("game.tabsPlayers")}>

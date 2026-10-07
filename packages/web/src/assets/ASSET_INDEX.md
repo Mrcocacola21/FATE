@@ -1,6 +1,6 @@
 # FATE Asset Index
 
-Organized 2026-10-06. Asset preparation only; generated files are not registered in gameplay.
+Organized 2026-10-06. Phase 5 now registers a small generic audio core; the remaining sound pack and generated VFX remain staged for later integration.
 
 Audio retains the existing `sfx/common/<category>` and `sfx/heroes/<exactHeroId>/<category>` convention and lowerCamelCase names. VFX uses exact hero IDs and lowercase snake_case filenames. Existing paths and source quality are preserved.
 
@@ -11,6 +11,11 @@ Visibility: **OWNER ONLY**, **PUBLIC AFTER REVEAL**, **PUBLIC**, **LOCAL UI ONLY
 Source archives, temporary extraction files, generation requests and review previews were removed from the repository after SHA-256 verification of every pack asset against its organized runtime copy. Retained metadata and coverage documentation are in `docs/assets/`. See [audit](../../../../docs/assets/INGESTION_AUDIT.md), [ability coverage](../../../../docs/assets/HERO_COVERAGE.md), and [spec comparison](../../../../docs/assets/SPEC_COMPARISON.md).
 
 ## Audio
+
+The six semantic core keys and seventeen WAV variants are documented in
+[Core Audio Infrastructure](../../../../docs/assets/CORE_AUDIO.md). UI preparation
+starts after interaction; match preparation starts when the board mounts. Hero
+audio and movement audio are not registered yet.
 
 ## VFX
 

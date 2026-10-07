@@ -91,6 +91,8 @@ export interface BoardEventBatch {
   events: PresentationEvent[];
   /** Client-only deterministic playback offsets. Never sent to the rules engine. */
   eventDelaysMs?: number[];
+  /** SFX impact/death offsets from the same combat plan; visual offsets stay unchanged. */
+  eventSfxDelaysMs?: number[];
 }
 
 export interface BoardPreviewLine {

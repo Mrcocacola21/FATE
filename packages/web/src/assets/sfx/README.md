@@ -1,4 +1,18 @@
-# Hero SFX
+# SFX
+
+Phase 5 gameplay uses the closed `SoundKey` union and `SOUND_REGISTRY` in
+`registry.ts`. Each definition includes WAV variants, category, gain, preload
+policy and voice cap. The existing optional hero lookup helpers remain scaffolding;
+no hero sounds are registered or played yet.
+
+Live flow: recipient-authorized projected events → shared presentation plan →
+`useBoardSfx` / `SfxPlaybackSession` → `mapEventBatchToSfx` → `SoundCue` →
+`SfxPlayer` → `AudioManager` → Web Audio. UI handlers use `playUiSfx` with semantic
+keys and never import audio files. `ensureAudioReady` resumes from a gesture;
+unavailable audio stays silent.
+
+See [Core Audio Infrastructure](../../../../../docs/assets/CORE_AUDIO.md) for the
+complete core registry, exact preload files, cache/session behavior and verification.
 
 SFX live under `common/<ui|combat|movement|status>/` or
 `heroes/<heroId>/<basic|abilities|phantasms|transformations|statuses>/`.
@@ -20,7 +34,7 @@ Prefer `.mp3` for longer/compressed audio, keep `.ogg` when it is already the
 source format, and use `.wav` only for small impacts where its size is
 acceptable. Do not convert audio just to change its extension.
 
-To add a sound:
+Legacy hero scaffolding (future phases):
 
 1. Put the file in the matching hero/category directory.
 2. Explicitly import it in `registry.ts`; never import a path that does not exist.

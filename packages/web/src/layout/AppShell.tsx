@@ -10,6 +10,8 @@ import { TacticalIcon } from "../ui/TacticalIcon";
 import { Dialog } from "../ui/Dialog";
 import { useDialogFocus } from "../ui/useDialogFocus";
 import { RoomConnectionDialog } from "../lobby/RoomConnectionDialog";
+import { SoundControls, loadSoundSettings } from "../features/sfx/SoundControls";
+import { playUiSfx, prepareAudioFromGesture } from "../features/sfx/uiSfx";
 
 const RulesModal = lazy(() =>
   import("../components/RulesModal").then((module) => ({ default: module.RulesModal })),
@@ -25,6 +27,7 @@ export function AppShell({
   immersive?: boolean;
 }) {
   const { t } = useI18n();
+  useEffect(() => { loadSoundSettings(); }, []);
   const location = useLocation();
   const capabilities = useCapabilities();
   const roomId = useGameStore((state) => state.roomId);
@@ -58,6 +61,7 @@ export function AppShell({
     contentRef.current?.toggleAttribute("inert", drawer);
   }, [drawer]);
   const open = (value: typeof overlay) => {
+    if (value === "settings") playUiSfx();
     setDrawer(false);
     if (drawer) setPendingOverlay(value);
     else setOverlay(value);
@@ -75,6 +79,8 @@ export function AppShell({
       className={navigation ? "app-shell application-shell" : "application-standalone"}
       data-testid="app-shell"
       data-immersive={immersive || undefined}
+      onPointerDownCapture={prepareAudioFromGesture}
+      onKeyDownCapture={event => { if (event.key === "Enter" || event.key === " ") prepareAudioFromGesture(); }}
     >
       {navigation && (
         <>
@@ -139,6 +145,7 @@ export function AppShell({
               <p className="field-label">{t("profile.theme")}</p>
               <ThemeToggle />
             </div>
+            <SoundControls />
           </div>
         </Dialog>
       )}

@@ -354,6 +354,12 @@ export function buildCombatVisualPlaybackPlan(params: {
     batch: {
       ...params.batch,
       eventDelaysMs,
+      eventSfxDelaysMs: eventDelaysMs.map((delay, eventIndex) => {
+        const phase = queue.find(item =>
+          (item.type === "damageHpTween" && item.damage.eventIndex === eventIndex) ||
+          (item.type === "death" && item.death.eventIndex === eventIndex));
+        return phase?.startsAtMs ?? delay;
+      }),
     },
     startingHpByUnitId: playbackStartingHp,
     startingUnitsByUnitId: playbackStartingUnits,

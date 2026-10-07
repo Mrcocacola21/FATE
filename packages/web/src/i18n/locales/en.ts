@@ -1,5 +1,6 @@
 import { adminEn } from "../../admin/locales";
 export const en = {
+  audio: { sound: "Sound", muted: "Muted", mute: "Mute sound", volume: "Master volume" },
   admin: adminEn,
   ranks: {
     shadow: "Shadow",

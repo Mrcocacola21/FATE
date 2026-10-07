@@ -3,6 +3,7 @@ import { en } from "./en";
 import { adminUk } from "../../admin/locales";
 
 export const uk = {
+  audio: { sound: "Звук", muted: "Без звуку", mute: "Вимкнути звук", volume: "Загальна гучність" },
   admin: adminUk,
   ranks: {
     shadow: "Тінь",

@@ -1,4 +1,5 @@
 import { queue as matchmakingQueue } from "./matchmaking/store";
+import { playUiSfx } from "./features/sfx/uiSfx";
 import type { MatchType } from "./matches/matchType";
 import { create } from "zustand";
 import type {
@@ -842,6 +843,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       state.addClientLog("WebSocket not connected.");
       return;
     }
+    playUiSfx();
     sendSetReady(socket, ready);
   },
   startGame: () => {
@@ -858,6 +860,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       state.addClientLog("WebSocket not connected.");
       return;
     }
+    playUiSfx();
     sendStartGame(socket);
   },
   setGameMode: (mode) => {
@@ -950,42 +953,47 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
   sendAction: (action) => {
     const state = get();
+    const rejectInteraction = (message: string) => {
+      playUiSfx("actionInvalid");
+      state.addClientLog(message);
+    };
     if (
       !state.canControlTestRoom &&
       (state.roomState?.pendingDecision?.viewerCanRespond === false ||
         (state.roomMeta?.pendingRoll &&
           state.roomMeta.pendingRoll.player !== getPlayerIdForViewer(state.role, state.seat)))
     ) {
-      state.addClientLog("Waiting for your opponent to finish their decision.");
+      rejectInteraction("Waiting for your opponent to finish their decision.");
       return;
     }
     if (state.roomState?.phase === "ended") {
-      state.addClientLog("Game is already over.");
+      rejectInteraction("Game is already over.");
       return;
     }
     if (
       (state.roomState?.pendingDecision || state.roomMeta?.pendingRoll) &&
       action.type !== "resolvePendingRoll"
     ) {
-      state.addClientLog("Resolve the pending roll before acting.");
+      rejectInteraction("Resolve the pending roll before acting.");
       return;
     }
     if (state.roomState?.phase === "lobby" && action.type !== "resolvePendingRoll") {
-      state.addClientLog("Game has not started yet.");
+      rejectInteraction("Game has not started yet.");
       return;
     }
     if (!state.joined) {
-      state.addClientLog("Not joined yet. Please join a room first.");
+      rejectInteraction("Not joined yet. Please join a room first.");
       return;
     }
     if (state.role === "spectator") {
-      state.addClientLog("Spectators cannot act.");
+      rejectInteraction("Spectators cannot act.");
       return;
     }
     if (!socket || socket.readyState !== WebSocket.OPEN) {
-      state.addClientLog("WebSocket not connected.");
+      rejectInteraction("WebSocket not connected.");
       return;
     }
+    if (action.type === "resolvePendingRoll") playUiSfx();
     sendSocketAction(socket, action);
   },
   sendTestRoomCommand: (command) => {

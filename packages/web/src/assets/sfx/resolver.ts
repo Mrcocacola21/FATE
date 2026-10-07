@@ -6,7 +6,39 @@ import {
   type HeroId,
   type HeroSfxCategory,
   type HeroSfxRegistry,
+  SOUND_REGISTRY,
+  type SoundKey,
+  type SoundDefinition,
 } from "./registry";
+
+export function getSoundDefinition(key: string): SoundDefinition | undefined {
+  return Object.prototype.hasOwnProperty.call(SOUND_REGISTRY, key)
+    ? SOUND_REGISTRY[key as SoundKey]
+    : undefined;
+}
+
+/** Pure presentation hash. Never imports or consumes rules/server RNG. */
+export function soundVariantIndex(cueId: string, key: SoundKey, count: number): number {
+  let hash = 2166136261;
+  for (const char of `${cueId}:${key}`) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
+  return count > 0 ? (hash >>> 0) % count : 0;
+}
+
+/** A fallback must be explicitly approved by the caller; unknown semantics stay silent. */
+export function resolveSound(
+  key: string,
+  cueId: string,
+  fallbackKey?: SoundKey,
+): (SoundDefinition & { key: SoundKey; src: string }) | undefined {
+  const resolvedKey = getSoundDefinition(key) ? (key as SoundKey) : fallbackKey;
+  const definition = resolvedKey && getSoundDefinition(resolvedKey);
+  if (!definition?.sources.length || !resolvedKey) return undefined;
+  return {
+    ...definition,
+    key: resolvedKey,
+    src: definition.sources[soundVariantIndex(cueId, resolvedKey, definition.sources.length)],
+  };
+}
 
 export interface SfxRegistries {
   heroes: HeroSfxRegistry;
