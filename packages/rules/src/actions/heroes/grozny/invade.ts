@@ -55,7 +55,7 @@ export function applyGroznyInvadeTime(
     },
   };
 
-  const moved = applyGroznyFreeMove(baseState, updatedUnit, dest, rng);
+  const moved = applyGroznyFreeMove(baseState, updatedUnit, dest, rng, true);
   const events: GameEvent[] = [
     evAbilityUsed({ unitId: updatedUnit.id, abilityId: spec.id }),
     ...moved.events,

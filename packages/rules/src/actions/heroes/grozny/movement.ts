@@ -7,7 +7,8 @@ export function applyGroznyFreeMove(
   state: GameState,
   unit: UnitState,
   to: Coord,
-  rng: RNG
+  rng: RNG,
+  teleport = false,
 ): { state: GameState; events: GameEvent[]; unit: UnitState } {
   if (!unit.position || coordsEqual(unit.position, to)) {
     return { state, events: [], unit };
@@ -28,7 +29,7 @@ export function applyGroznyFreeMove(
   };
 
   const events: GameEvent[] = [
-    evUnitMoved(state, { provenance: { kind: "ability", abilityId: "groznyTyrant" }, unitId: movedUnit.id, from, to: movedUnit.position! }),
+    evUnitMoved(state, { provenance: { kind: "ability", abilityId: "groznyTyrant", ...(teleport ? { movementKind: "teleport" as const } : {}) }, unitId: movedUnit.id, from, to: movedUnit.position! }),
   ];
 
   const stakeResult = applyStakeTriggerIfAny(

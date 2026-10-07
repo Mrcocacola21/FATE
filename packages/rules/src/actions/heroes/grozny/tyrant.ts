@@ -638,7 +638,7 @@ export function resolveGroznyTyrantAttackCellChoice(
     events.push(evAbilityUsed({ unitId: workingGrozny.id, abilityId: spec.id }));
   }
 
-  const moved = applyGroznyFreeMove(nextState, workingGrozny, selected, rng);
+  const moved = applyGroznyFreeMove(nextState, workingGrozny, selected, rng, choice.mode === "invadeTime");
   nextState = moved.state;
   const movedUnit = moved.unit;
   events.push(

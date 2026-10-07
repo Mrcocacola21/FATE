@@ -391,7 +391,7 @@ export function buildCombatVisualPlaybackPlan(params: {
       namespace: params.batch.streamId ?? params.batch.previewId ?? "preview",
       atMs: cursorMs,
       durationMs: confirmedMovement(event)
-        ? event.type === "unitMoved" && event.provenance.kind === "teleport"
+        ? confirmedMovement(event)?.mode === "teleport"
           ? params.reducedMotion
             ? 100
             : 220

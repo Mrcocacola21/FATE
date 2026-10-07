@@ -25,4 +25,4 @@ export type MovementProvenance =
       kind: "forced";
       cause: "intimidatingStare" | "hiddenCollision" | "court" | "moonSwap" | "donWindmills";
     }
-  | { kind: "ability"; abilityId: string };
+  | { kind: "ability"; abilityId: string; movementKind?: "teleport" };

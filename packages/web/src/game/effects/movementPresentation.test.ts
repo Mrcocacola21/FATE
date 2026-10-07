@@ -29,6 +29,7 @@ import { cellToBoardPoint } from "../../features/vfx/vfxGeometry";
 import { PresentationSession } from "./presentationSession";
 import { useVisualResolution } from "./useVisualResolution";
 import type { BoardEventBatch, PresentationEvent } from "./types";
+import { teleportMovementFixture } from "../../../../rules/src/tests/core/teleportMovement.test";
 
 const A = { col: 1, row: 1 },
   B = { col: 2, row: 2 },
@@ -149,6 +150,63 @@ test("teleport fades at the two event endpoints with no intermediate movement/ha
     mode: "teleport",
   });
   assert.equal(p.movementPlan.cues.length, 1);
+});
+
+test("real default, selected, borrowed and Court teleports have one endpoint transition", () => {
+  for (const mode of ["default", "normal", "borrowed", "court"] as const) {
+    const fixture = teleportMovementFixture(mode);
+    const result = applyAction(
+      fixture.state,
+      { type: "move", unitId: fixture.unit.id, to: fixture.destination },
+      makeRngSequence([]),
+    );
+    const events = projectEventsForRecipient(result.state, result.events, "P1");
+    const p = plan(events, makePlayerView(fixture.state, "P1"), makePlayerView(result.state, "P1"));
+    const movements = p.movementPlan.cues.filter((cue) => cue.kind === "movement");
+    assert.equal(movements.length, 1);
+    assert.equal(movements[0].mode, "teleport");
+    assert.equal(movements[0].durationMs, 220);
+    assert.deepEqual(movementCueEffects(movements[0]), []);
+    for (const elapsed of [0, 50, 109, 110, 170, 220]) {
+      const frame = combatVisualPlaybackFrame(p, elapsed);
+      const motion = frame.visualMotionByUnitId[fixture.unit.id];
+      if (motion)
+        assert.deepEqual(motion.position, elapsed < 110 ? fixture.from : fixture.destination);
+    }
+    assert(!vfx(p).some((effect) => effect.placement === "line" || effect.placement === "ray"));
+  }
+});
+
+test("ability endpoint relocation uses teleport even when the private ability ID is redacted", () => {
+  for (const abilityId of [
+    "femtoDivineMove",
+    "groznyInvadeTime",
+    "lechyGuideTraveler",
+    "asgoreSoulParade",
+    "duolingoPushNotification",
+    undefined,
+  ]) {
+    const event: PresentationEvent = {
+      type: "unitMoved",
+      unitId: "mover",
+      from: A,
+      to: D,
+      provenance: {
+        kind: "ability",
+        ...(abilityId ? { abilityId } : {}),
+        movementKind: "teleport",
+      },
+    };
+    const p = plan([event], view(A), view(D));
+    assert.equal(p.durationMs, 220);
+    const cue = p.movementPlan.cues[0];
+    assert.equal(cue.kind, "movement");
+    assert.deepEqual(movementCueEffects(cue), []);
+    assert.deepEqual(combatVisualPlaybackFrame(p, 55).visualMotionByUnitId.mover.position, A);
+    assert.deepEqual(combatVisualPlaybackFrame(p, 165).visualMotionByUnitId.mover.position, D);
+    assert.equal(vfx(p).filter((effect) => effect.effectId === "portal").length, 2);
+    assert(!vfx(p).some((effect) => effect.placement === "line"));
+  }
 });
 
 test("teleport arrival precedes destination hazard and shared damage/HP playback", () => {

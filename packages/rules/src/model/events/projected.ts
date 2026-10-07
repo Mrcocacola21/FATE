@@ -4,7 +4,7 @@ import type { EVENT_VISIBILITY } from "./visibility";
 import type { MovementProvenance } from "../semantic";
 
 export type ProjectedMovementProvenance = Exclude<MovementProvenance, { kind: "ability" }>
-  | { kind: "ability"; abilityId?: string };
+  | { kind: "ability"; abilityId?: string; movementKind?: "teleport" };
 
 type StripInternal<T> = T extends GameEvent ? Omit<T, typeof EVENT_VISIBILITY> : never;
 type PayloadEvent = StripInternal<GameEvent>;

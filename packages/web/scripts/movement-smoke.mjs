@@ -46,14 +46,14 @@ function App() {
       events.push({ type: "snarePlaced", owner: "P1", sourceUnitId: "mover", cell: { col: 8, row: 0 } });
     } else {
       events.push(kind === "forced" ? { type: "intimidateResolved", attackerId: "mover", from: A, to: B, provenance: { kind: "forced", cause: "intimidatingStare" } }
-        : { type: "unitMoved", unitId: "mover", from: A, to: B, provenance: { kind: kind === "teleport" ? "teleport" : kind === "rider" ? "rider" : "normal" } });
+        : { type: "unitMoved", unitId: "mover", from: A, to: B, provenance: kind === "abilityTeleport" ? { kind: "ability", movementKind: "teleport" } : { kind: kind === "teleport" ? "teleport" : kind === "rider" ? "rider" : "normal" } });
       if (kind === "stake") { hp = 4; events.push({ type: "stakeTriggered", unitId: "mover", markerPos: B, stopped: true, damage: 1 }); }
       if (kind === "snare") events.push({ type: "snareTriggered", unitId: "mover", cell: B, immobilized: true });
     }
     setState(previous => ({ ...previous, revision: previous.revision + 1, events: events.map((event, i) => ({ ...event, eventId: kind + ":" + previous.revision + ":" + i })),
       view: { ...base, units: { mover: { ...mover, position, hp, immobilizedUntilOwnTurnStart: kind === "snare" || undefined } } } }));
   };
-  return <><div>{["normal", "teleport", "forced", "rider", "stake", "snare", "placement"].map(kind => <button key={kind} onClick={() => play(kind)}>{kind}</button>)}<button onClick={reset}>reset</button></div>
+  return <><div>{["normal", "teleport", "abilityTeleport", "forced", "rider", "stake", "snare", "placement"].map(kind => <button key={kind} onClick={() => play(kind)}>{kind}</button>)}<button onClick={reset}>reset</button></div>
     <div style={{display:"flex"}}>{["P1", "P2"].map(playerId => <div key={playerId} data-board={playerId} style={{width:560,height:580}}>
     <Board view={state.view} playerId={playerId} selectedUnitId={null} highlightedCells={{}} visualEffectsEnabled effectSessionKey={state.key}
       eventBatch={state.revision ? { streamId: "smoke", revision: state.revision, events: state.events.filter(event => playerId === "P1" || !["stakesPlaced", "snarePlaced"].includes(event.type)) } : null}
@@ -140,16 +140,19 @@ try {
     await page.clock.runFor(200);
     observations.push(kind + " token interpolation and P1/P2 direction");
   }
-  const starts = await play("teleport");
-  await page.clock.runFor(40);
-  const departure = await token("P1").boundingBox();
-  assert.equal(departure.x, starts[0].x);
-  assert.equal(await page.locator(".board-effect-trail").count(), 0);
-  await page.clock.runFor(100);
-  const arrival = await token("P1").boundingBox();
-  assert.ok(arrival.x > departure.x);
-  assert.ok(Number(await token("P1").evaluate((el) => getComputedStyle(el).opacity)) < 1);
-  observations.push("teleport departure/fade/arrival without intermediate trail");
+  for (const kind of ["teleport", "abilityTeleport"]) {
+    const starts = await play(kind);
+    await page.clock.runFor(40);
+    const departure = await token("P1").boundingBox();
+    assert.equal(departure.x, starts[0].x);
+    assert.equal(departure.y, starts[0].y);
+    assert.equal(await page.locator(".board-effect-trail").count(), 0);
+    await page.clock.runFor(100);
+    const arrival = await token("P1").boundingBox();
+    assert.ok(arrival.x > departure.x);
+    assert.ok(Number(await token("P1").evaluate((el) => getComputedStyle(el).opacity)) < 1);
+    observations.push(kind + " departure/fade/arrival without intermediate trail");
+  }
   await play("stake");
   await page.clock.runFor(64);
   await syncSprites();

@@ -115,7 +115,7 @@ export function resolveLechyGuideTravelerPlacement(
 
   const events: GameEvent[] = [
     ...committed.events,
-    evUnitMoved(state, { provenance: { kind: "ability", abilityId: ABILITY_LECHY_GUIDE_TRAVELER }, unitId: updatedAlly.id, from: ally.position, to: updatedAlly.position! }),
+    evUnitMoved(state, { provenance: { kind: "ability", abilityId: ABILITY_LECHY_GUIDE_TRAVELER, movementKind: "teleport" }, unitId: updatedAlly.id, from: ally.position, to: updatedAlly.position! }),
   ];
 
   return { state: nextState, events };

@@ -1,8 +1,10 @@
 # Phase 8 — Movement and hazards feedback
 
 This change integrates movement and hazard presentation into the existing web
-playback architecture. Rules, server transport, legality, turn economy, hazard
-damage, and privacy contracts are unchanged. No artwork was created.
+playback architecture. No artwork was created. The authorized follow-up correction
+fixes endpoint-only relocation in rules and explicitly carries that semantic
+through event projection; turn costs, hazard damage, and hidden ability identity
+remain unchanged.
 
 ## 1. Movement presentation architecture
 
@@ -57,12 +59,19 @@ through, and fades back in. Existing `portal` effects mark departure and arrival
 There is no walking trail, swept route, or inferred intermediate hazard check.
 A supplied destination trigger starts after the teleport transition.
 
-An existing rules discrepancy was confirmed with a deterministic diagnostic:
-default Trickster movement from B1 toward B4, with a stake at B2, returns a
-`teleport` event B1 -> B2 followed by `stakeTriggered`. The movement code uses
-`moveMode` to choose `intendedLine`, while provenance uses the recovered
-`movementSourceMode`. The client faithfully teleports to B2 and shows the supplied
-trigger. Correcting those rules is outside this presentation-only change.
+The follow-up fixes the previously reported Trickster discrepancy rather than
+leaving it as a rules limitation. Default `PendingMove.mode = normal` now uses the
+recovered Trickster mechanic for both provenance and hazard/forest checks.
+Teleport from A to C checks only C; stakes, snares, and forest between them do not
+interrupt the relocation. Destination hazards retain their existing behavior.
+
+Court's global move is also endpoint-only and does not enqueue Rider path attacks.
+Femto's Divine Move, Grozny's Invade Time (including its Tyrant branch), Lechy's
+Guide Traveler, Asgore's Soul Parade relocation, and Duolingo's relocation emit
+explicit `movementKind: teleport` on their ability provenance. The client consumes
+that semantic without guessing from distance or ability name. Projection preserves
+the movement semantic while redacting an unauthorized ability ID. Odin already
+emits teleport provenance and remains compatible.
 
 ## 5. Forced movement
 
@@ -202,17 +211,26 @@ are generated under ignored `packages/web/test-results/movement/`.
 - `packages/web/src/features/vfx/vfxPreviewScenarios.ts` — hazard sprite preview coverage.
 - `packages/web/src/features/vfx/VfxLayer.tsx` — explicit effect ID attribute for browser verification.
 
-No rules or server files have a final diff.
+The follow-up also modifies the rules movement handler; the above endpoint
+relocation ability emitters; `model/semantic.ts`, `model/events/projected.ts`,
+`view/events.ts`, and `view/eventPayload.ts`; and the rules test index. It creates
+`packages/rules/src/tests/core/teleportMovement.test.ts`. The generated server
+OpenAPI response schema includes the optional movement semantic. Server transport
+implementation is unchanged.
 
 ## 14. Tests added
 
-Sixteen focused tests cover explicit normal provenance, ahead snapshots, ordered
+Eighteen focused web tests cover explicit normal provenance, ahead snapshots, ordered
 and capped segments, teleport fade/anchors, arrival-before-hazard scheduling,
 forced causes and immutable slots, interleaved Rider combat, interrupted future
 cells, real Rider hidden-safe previews, real placement projections, real stacked
 stake triggers and hidden-path redaction, snare/status timing, deferred reveal
 privacy, deferred transport provenance, P1/P2 edges/corners, duplicate ingress,
-and reset cancellation without relying on token invalidation alone.
+and reset cancellation without relying on token invalidation alone. New cases
+exercise actual default, selected, borrowed, and Court relocation events, plus
+ability teleports with a redacted ability ID. Three rules regression tests verify
+intermediate hazard/forest exclusion, destination-only hazard activation, and
+safe projection of endpoint relocation semantics.
 
 The browser smoke uses production `Board`, effects/VFX hooks, and projected-event
 fixtures for P1/P2. It captures actual token geometry and checks scheduled hazards,
@@ -232,8 +250,11 @@ private placement, status timing, pointer safety, and reset cleanup.
 | `npm run build`                                               | Passed: rules, server, web typecheck, production Vite build |
 | `node packages/web/scripts/movement-smoke.mjs`                | Passed, 8 browser observation groups                        |
 
-Server tests were not required because no shared event contracts or server source
-were modified. The build also compiled the server. Existing build notices about
+The original Phase 8 validation above precedes the authorized rules correction.
+Follow-up validation passed: effects (126 tests), complete web (592 tests),
+complete rules, server units (11 suite executions), contract checks (20 suite
+executions), targeted lint, the production build, and the browser smoke (9 groups).
+Existing build notices about
 Browserslist data and bundle size remain; performance polish is deferred.
 
 ## 16. Manual browser test
@@ -245,6 +266,10 @@ arrival with one damage text, snare impact and wrapped status after arrival,
 owner-only placement sprites, reset cleanup, usable board clicks, and no page
 errors. Actual recipient projection and gameplay interruption were verified
 separately with deterministic rules-backed tests.
+
+The follow-up browser smoke adds an ability teleport with its ability ID redacted,
+verifying source hold, destination arrival, fade, and absence of a movement trail.
+It now reports nine observation groups.
 
 Playwright's virtual clock drives RAF and timers. Native CSS animations are
 paused at the matching shared timestamp for the sprite inspections/screenshots;
@@ -259,8 +284,8 @@ this is not a claim of a manual real-time visual or listening check.
 - Remaining hero signature coverage.
 - Persistent status VFX architecture.
 - Final preload and performance polish.
-- Any separately authorized corrections to the observed Trickster hazard and
-  lethal stake event-order discrepancies, or richer ordinary Rider traversal
-  events. This phase does not invent that contract or change those mechanics.
+- The lethal stake event-order discrepancy and richer ordinary Rider traversal
+  events. The Trickster endpoint-only hazard correction is implemented in the
+  authorized follow-up.
 
 Work stops at Movement and Hazards Feedback.

@@ -7713,6 +7713,12 @@
           "enum": [
             "ability"
           ]
+        },
+        "movementKind": {
+          "type": "string",
+          "enum": [
+            "teleport"
+          ]
         }
       },
       "additionalProperties": false,

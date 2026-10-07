@@ -24,7 +24,7 @@ import {
   maybeRequestRiderPathAttacks,
 } from "./postMove";
 import type { MoveActionInternal } from "./types";
-import { markCourtGlobalMoveUsed } from "../../ruleDeclarations";
+import { isCourtGlobalMoveDestination, markCourtGlobalMoveUsed } from "../../ruleDeclarations";
 import { canJackTrapTriggerForTarget } from "../../jackSnares";
 import { resolveHiddenOverlapsAfterTransitions } from "../../stealth";
 
@@ -133,8 +133,25 @@ export function applyMove(
     riderMovementMode &&
     (!isMettatonRider || hasMettatonRiderPathFeature(unit));
 
-  const intendedLine =
-    moveMode === "trickster" ? null : linePath(from, moveAction.to);
+  const courtGlobalMove =
+    Boolean(unit.courtGlobalMoveOnce && !unit.courtGlobalMoveOnce.used) &&
+    isCourtGlobalMoveDestination(
+      state,
+      unit,
+      moveAction.to,
+      getLegalMovesForUnitModes(
+        {
+          ...state,
+          units: { ...state.units, [unit.id]: { ...unit, courtGlobalMoveOnce: undefined } },
+        },
+        unit.id,
+        [movementSourceMode ?? unit.class],
+      ),
+    );
+  const isTeleport = (!isChicken && movementSourceMode === "trickster") || courtGlobalMove;
+  // Endpoint relocation never visits cells between source and destination.
+  // PendingMove.mode can be "normal" even when the selected mechanic is Trickster.
+  const intendedLine = isTeleport ? null : linePath(from, moveAction.to);
   if (moveAction.__forestBypass !== true) {
     const forestCheck = maybeRequestForestMoveCheck(
       state,
@@ -202,7 +219,7 @@ export function applyMove(
 
   let events: GameEvent[] = [...costEvents];
   if (didMove) {
-    events.push(evUnitMoved(state, { provenance: { kind: !isChicken && movementSourceMode === "trickster" ? "teleport" : riderMovementMode ? "rider" : "normal" }, unitId: updatedUnit.id, from, to: updatedUnit.position! }));
+    events.push(evUnitMoved(state, { provenance: { kind: isTeleport ? "teleport" : riderMovementMode ? "rider" : "normal" }, unitId: updatedUnit.id, from, to: updatedUnit.position! }));
     // Rider path traversal is transient and continues under the existing pass
     // rules. Only the committed endpoint creates occupancy; resolve that hidden
     // overlap before hazards and queued Rider path attacks are evaluated.
@@ -240,8 +257,8 @@ export function applyMove(
       from,
       finalTo,
       events,
-      riderMovementMode,
-      riderPathFeatureEnabled
+      riderMovementMode && !isTeleport,
+      riderPathFeatureEnabled && !isTeleport
     );
     if (riderPathResult) {
       return riderPathResult;

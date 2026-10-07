@@ -192,7 +192,7 @@ export function resolveAsgoreSoulParadeIntegrityDestinationChoice(
     }),
     events: [
       ...committed.events,
-      evUnitMoved(state, { provenance: { kind: "ability", abilityId: "asgoreSoulParade" },
+      evUnitMoved(state, { provenance: { kind: "ability", abilityId: "asgoreSoulParade", movementKind: "teleport" },
         unitId: movedAsgore.id,
         from: { ...asgore.position },
         to: { ...movedAsgore.position! },

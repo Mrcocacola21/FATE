@@ -200,7 +200,7 @@ function applyDuolingoPush(state: GameState, unit: UnitState, action: AbilityAct
   };
   const events = [
     ...committed.events,
-    evUnitMoved(state, { provenance: { kind: "ability", abilityId: ids.ABILITY_DUOLINGO_PUSH_NOTIFICATION }, unitId: moved.id, from: unit.position, to: destination }),
+    evUnitMoved(state, { provenance: { kind: "ability", abilityId: ids.ABILITY_DUOLINGO_PUSH_NOTIFICATION, movementKind: "teleport" }, unitId: moved.id, from: unit.position, to: destination }),
   ];
   if (unit.isStealthed)
     events.push({

@@ -59,7 +59,8 @@ function copySemanticPayload(event: GameEvent): GameEvent | undefined {
         provenance: event.provenance.kind === "forced"
           ? { kind: "forced", cause: event.provenance.cause }
           : event.provenance.kind === "ability"
-            ? { kind: "ability", abilityId: event.provenance.abilityId }
+            ? { kind: "ability", abilityId: event.provenance.abilityId,
+                ...(event.provenance.movementKind ? { movementKind: event.provenance.movementKind } : {}) }
             : { kind: event.provenance.kind },
       };
     case "hiddenCollisionResolved":

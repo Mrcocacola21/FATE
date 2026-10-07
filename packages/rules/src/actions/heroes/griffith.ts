@@ -269,7 +269,7 @@ export function resolveFemtoDivineMoveDestinationChoice(
   return {
     state: nextState,
     events: [
-      evUnitMoved(state, { provenance: { kind: "ability", abilityId: ABILITY_FEMTO_DIVINE_MOVE },
+      evUnitMoved(state, { provenance: { kind: "ability", abilityId: ABILITY_FEMTO_DIVINE_MOVE, movementKind: "teleport" },
         unitId: movedUnit.id,
         from,
         to: movedUnit.position!,

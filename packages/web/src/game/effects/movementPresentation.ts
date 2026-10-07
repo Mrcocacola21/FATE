@@ -32,7 +32,8 @@ export interface MovementPresentationPlan {
 
 export function confirmedMovement(event: ProjectedGameEvent) {
   if (event.type !== "unitMoved" && event.type !== "intimidateResolved") return null;
-  const mode = event.provenance.kind;
+  const mode =
+    event.provenance.kind === "ability" ? event.provenance.movementKind : event.provenance.kind;
   if (mode !== "normal" && mode !== "rider" && mode !== "teleport" && mode !== "forced")
     return null;
   if (!isCoord(event.from) || !isCoord(event.to)) return null;

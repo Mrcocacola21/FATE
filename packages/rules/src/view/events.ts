@@ -55,7 +55,7 @@ function projectEventForRecipient(
       return canKnowMovement(event, state, event.unitId, recipient) ? [{
         ...event,
         provenance: event.provenance.kind === "ability" && !event[EVENT_VISIBILITY]?.abilityRecipients?.includes(recipient)
-          ? { kind: "ability" } : event.provenance,
+          ? { kind: "ability", ...(event.provenance.movementKind ? { movementKind: event.provenance.movementKind } : {}) } : event.provenance,
       }] : [];
     case "rollResolved":
       if (!event[EVENT_VISIBILITY]?.recipients.includes(recipient)) return [];

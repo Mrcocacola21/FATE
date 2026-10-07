@@ -1,4 +1,5 @@
 import { testPresentationSemantics } from "./core/presentationSemantics.test";
+import { testTeleportsIgnoreIntermediateHazardsAndForest, testTeleportsTriggerOnlyDestinationHazards, testAbilityTeleportProjectionPreservesRelocationWithoutRevealingCause } from "./core/teleportMovement.test";
 import { testActionModuleBoundaries } from "./core/boundaries.test";
 import { testReactionMovementRegressions } from "./heroes/reactionMovement.test";
 import {
@@ -644,6 +645,9 @@ function main(): void {
   testSearchStealthSlots();
   testAbilityConsumesMultipleSlots();
   testTricksterMoveOptionsGeneratedAndUsed();
+  testTeleportsIgnoreIntermediateHazardsAndForest();
+  testTeleportsTriggerOnlyDestinationHazards();
+  testAbilityTeleportProjectionPreservesRelocationWithoutRevealingCause();
   testBerserkerMoveOptionsGeneratedAndUsed();
   testBerserkerMoveRoll1GeneratesTopRoof();
   testBerserkerMoveRoll3GeneratesLeftVertical();
