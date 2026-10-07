@@ -1,6 +1,6 @@
 import type { AttackRollContext } from "../../actions/types";
 
-export function makeAttackContext(params: {
+export function makeAttackContext(params: import("../../model").AbilityUseContext & {
   attackerId: string;
   defenderId: string;
   allowFriendlyTarget?: boolean;
@@ -22,6 +22,11 @@ export function makeAttackContext(params: {
   queueKind: "normal" | "riderPath" | "aoe";
 }): AttackRollContext {
   return {
+    abilityUseId: params.abilityUseId,
+    abilityId: params.abilityId ?? params.sourceAbilityId,
+    abilitySourceUnitId: params.abilitySourceUnitId,
+    abilitySourceCell: params.abilitySourceCell,
+    abilitySourceRecipients: params.abilitySourceRecipients,
     attackerId: params.attackerId,
     defenderId: params.defenderId,
     allowFriendlyTarget: params.allowFriendlyTarget,

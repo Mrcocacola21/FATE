@@ -383,7 +383,7 @@ function resolveLegacyRiverBoatDropDestination(
     },
   });
   const events: GameEvent[] = moved
-    ? [evUnitMoved(state, { unitId: updatedAlly.id, from: ally.position, to: destination })]
+    ? [evUnitMoved(state, { provenance: { kind: "boat" }, unitId: updatedAlly.id, from: ally.position, to: destination })]
     : [];
   const landing = applyStakeTriggerIfAny(
     nextState, updatedAlly, destination, rng, { entryKind: "landing" },
@@ -420,7 +420,7 @@ function resolveBoatMovement(
   });
   const events: GameEvent[] = [
     evAbilityUsed({ unitId: river.id, abilityId: ABILITY_RIVER_PERSON_BOAT }),
-    evUnitMoved(state, { unitId: river.id, from, to: actualDestination }),
+    evUnitMoved(state, { provenance: { kind: "boat" }, unitId: river.id, from, to: actualDestination }),
   ];
   const stakeResult = applyStakeTriggerIfAny(
     nextState,
@@ -468,7 +468,7 @@ function completeBoatDisembark(
   const events: GameEvent[] = [];
   if (!coordsEqual(ally.position!, destination)) {
     events.push(
-      evUnitMoved(state, { unitId: ally.id, from: ally.position!, to: destination }),
+      evUnitMoved(state, { provenance: { kind: "boat" }, unitId: ally.id, from: ally.position!, to: destination }),
     );
   }
   const landedAlly: UnitState = { ...ally, position: { ...destination } };
@@ -492,8 +492,8 @@ function completeBoatDisembark(
     ),
     riverId: river.id,
     passengerId: ally.id,
-    riverDestination: river.position!,
-    dropDestination: destination,
+    riverDestination: { ...river.position! },
+    dropDestination: { ...destination },
   });
   return {
     state: landing.state,

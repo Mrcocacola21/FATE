@@ -121,7 +121,7 @@ test("event-time movement authorization survives delivery identification and omi
   const state = attachArmy(createEmptyGame(), createDefaultArmy("P1"));
   const unit = Object.values(state.units)[0];
   state.units[unit.id] = { ...unit, position: { col: 3, row: 4 }, isStealthed: true };
-  const movement = evUnitMoved(state, { unitId: unit.id, from: { col: 3, row: 4 }, to: { col: 4, row: 5 } });
+  const movement = evUnitMoved(state, { provenance: { kind: "normal" }, unitId: unit.id, from: { col: 3, row: 4 }, to: { col: 4, row: 5 } });
   const deliveries = identifyAcceptedEvents([movement]);
   const visibleEnd = { ...state, units: { ...state.units, [unit.id]: { ...state.units[unit.id], isStealthed: false, position: { col: 4, row: 5 } } } };
   assert.deepEqual(projectDeliveryEvents(visibleEnd, deliveries, "P2"), []);
@@ -130,7 +130,7 @@ test("event-time movement authorization survives delivery identification and omi
   assert.equal(owner[0].eventId, deliveries[0].eventId);
   assert.deepEqual(Object.getOwnPropertySymbols(owner[0]), []);
   assert(!JSON.stringify(owner).includes("recipients"));
-  const publicMove = identifyAcceptedEvents([evUnitMoved(visibleEnd, { unitId: unit.id, from: { col: 4, row: 5 }, to: { col: 5, row: 6 } })]);
+  const publicMove = identifyAcceptedEvents([evUnitMoved(visibleEnd, { provenance: { kind: "normal" }, unitId: unit.id, from: { col: 4, row: 5 }, to: { col: 5, row: 6 } })]);
   const opponent = projectDeliveryEvents(state, publicMove, "P2");
   assert.equal(opponent[0].eventId, publicMove[0].eventId);
 });
@@ -225,4 +225,19 @@ test("persisted new matches use their existing Match IDs as stream IDs", async (
     deleteGameRoom(second.id);
     await lifecycle.close();
   }
+});
+
+
+test("Phase 4 gameplay correlation preserves distinct delivery identity", () => {
+  const events:GameEvent[]=[
+    {type:"rollResolved",rollId:"roll-5",rollKind:"attack_attackerRoll",rollerPlayerId:"P1",rollIndex:0,
+      dice:[5,4],sides:6,total:9,abilityId:"asgoreFireball",abilityUseId:"ability-use-2",chainId:"combat-chain-3"},
+    {type:"rollResolved",rollId:"roll-6",rollKind:"attack_defenderRoll",rollerPlayerId:"P2",rollIndex:0,
+      dice:[1,2],sides:6,total:3,abilityId:"asgoreFireball",abilityUseId:"ability-use-2",chainId:"combat-chain-3"},
+  ];
+  const delivery=identifyAcceptedEvents(events);
+  assert.equal(new Set(delivery.map(event=>event.eventId)).size,2);
+  assert(delivery.every(event=>event.abilityUseId==="ability-use-2" && event.chainId==="combat-chain-3"));
+  assert.deepEqual(delivery.map(event=>event.type==="rollResolved" && event.rollId),["roll-5","roll-6"]);
+  assert(events.every(event=>!("eventId" in event)),"server adds delivery identity without changing rules events");
 });

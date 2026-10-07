@@ -19,6 +19,7 @@ import type { ResolveAttackParams } from "./types";
 import { evPureBloodRedirected } from "../core";
 import { revealAttackerOnAttackAttempt } from "../stealth";
 import { getUnitDefinition } from "../units";
+import { EVENT_VISIBILITY, movementVisibility } from "../model/events/visibility";
 
 export function resolveAttack(
   state: GameState,
@@ -67,7 +68,8 @@ export function resolveAttack(
     attackerAfter,
     defenderAfter,
     units,
-    events
+    events,
+    stateBeforeAttempt
   );
   if (autoDefense.resolved) {
     return { nextState: autoDefense.state, events: autoDefense.events };
@@ -275,6 +277,13 @@ export function resolveAttack(
 
   events.push({
     type: "attackResolved",
+    sourceCell: { ...attacker.position },
+    targetCell: { ...(redirectTarget?.position ?? defender.position) },
+    [EVENT_VISIBILITY]: {
+      recipients: [],
+      sourceCellRecipients: movementVisibility(stateBeforeAttempt, attacker.id, attacker.position).recipients,
+      targetCellRecipients: movementVisibility(stateBeforeAttempt, defenderAfter.id, redirectTarget?.position ?? defender.position).recipients,
+    },
     attackerId: attackerAfter.id,
     defenderId: defenderAfter.id,
     attackerRoll,

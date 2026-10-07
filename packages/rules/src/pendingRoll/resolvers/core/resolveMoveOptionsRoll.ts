@@ -6,7 +6,7 @@ import type {
   PendingMove,
 } from "../../../model";
 import type { RNG } from "../../../rng";
-import { rollD6 } from "../../../rng";
+import { rollManualD6 as rollD6 } from "../../manualRoll";
 import {
   getBerserkerMovesForRoll,
   getTricksterMovesForRoll,

@@ -114,6 +114,7 @@ export function testGoldenSnapshotAoeWithIntimidateChain() {
           type: "abilityUsed",
           unitId: "P1-trickster-3",
           abilityId: "tricksterAoE",
+          abilityUseId: "ability-use-1",
         },
         {
           type: "rollRequested",
@@ -122,6 +123,7 @@ export function testGoldenSnapshotAoeWithIntimidateChain() {
           player: "P1",
           actorUnitId: "P1-trickster-3",
         },
+        { type: "rollResolved", rollId: "roll-1", rollKind: "tricksterAoE_attackerRoll", rollerPlayerId: "P1", unitId: "P1-trickster-3", rollIndex: 0, dice: [1,1], sides: 6, total: 2, abilityId: "tricksterAoE", abilityUseId: "ability-use-1" },
         {
           type: "rollRequested",
           rollId: "roll-2",
@@ -129,10 +131,14 @@ export function testGoldenSnapshotAoeWithIntimidateChain() {
           player: "P2",
           actorUnitId: "P2-rider-1",
         },
+        { type: "rollResolved", rollId: "roll-2", rollKind: "tricksterAoE_defenderRoll", rollerPlayerId: "P2", unitId: "P2-rider-1", rollIndex: 0, dice: [6,6], sides: 6, total: 12, abilityId: "tricksterAoE", abilityUseId: "ability-use-1" },
         {
           type: "attackResolved",
+          abilityId: "tricksterAoE", abilityUseId: "ability-use-1",
+          sourceCell: { col: 4, row: 4 },
           attackerId: "P1-trickster-3",
           defenderId: "P2-rider-1",
+          targetCell: { col: 3, row: 6 },
           attackerRoll: { dice: [1, 1], sum: 2, isDouble: true },
           defenderRoll: { dice: [6, 6], sum: 12, isDouble: true },
           hit: false,
@@ -150,10 +156,14 @@ export function testGoldenSnapshotAoeWithIntimidateChain() {
           player: "P2",
           actorUnitId: "P2-spearman-2",
         },
+        { type: "rollResolved", rollId: "roll-3", rollKind: "tricksterAoE_defenderRoll", rollerPlayerId: "P2", unitId: "P2-spearman-2", rollIndex: 0, dice: [4,4], sides: 6, total: 8, abilityId: "tricksterAoE", abilityUseId: "ability-use-1" },
         {
           type: "attackResolved",
+          abilityId: "tricksterAoE", abilityUseId: "ability-use-1",
+          sourceCell: { col: 4, row: 4 },
           attackerId: "P1-trickster-3",
           defenderId: "P2-spearman-2",
+          targetCell: { col: 4, row: 6 },
           attackerRoll: { dice: [1, 1], sum: 2, isDouble: true },
           defenderRoll: { dice: [4, 4], sum: 8, isDouble: true },
           attackerRollIsNew: false,
@@ -189,6 +199,8 @@ export function testGoldenSnapshotAoeWithIntimidateChain() {
         },
         {
           type: "aoeResolved",
+          abilityUseId: "ability-use-1",
+          sourceCell: { col: 4, row: 4 },
           sourceUnitId: "P1-trickster-3",
           abilityId: "tricksterAoE",
           casterId: "P1-trickster-3",
@@ -337,8 +349,10 @@ export function testGoldenSnapshotPendingRollSequence() {
         rollId: "roll-1",
         player: "P1",
       },
-      {
+      { type: "rollResolved", rollId: "roll-1", rollKind: "initiativeRoll", rollerPlayerId: "P1", rollIndex: 0, dice: [6,6], sides: 6, total: 12 },
+        {
         type: "initiativeRolled",
+        rollId: "roll-1",
         player: "P1",
         dice: [6, 6],
         sum: 12,
@@ -355,8 +369,10 @@ export function testGoldenSnapshotPendingRollSequence() {
         rollId: "roll-2",
         player: "P2",
       },
-      {
+      { type: "rollResolved", rollId: "roll-2", rollKind: "initiativeRoll", rollerPlayerId: "P2", rollIndex: 0, dice: [1,1], sides: 6, total: 2 },
+        {
         type: "initiativeRolled",
+        rollId: "roll-2",
         player: "P2",
         dice: [1, 1],
         sum: 2,
@@ -488,7 +504,7 @@ export function testGoldenActionSnapshot() {
   const events = [...attackRes.events, ...resolved.events];
 
   const snapshot = {
-    events,
+    events: gameplayEvents(events),
     attackerHp: resolved.state.units[attacker.id]?.hp ?? null,
     defenderHp: resolved.state.units[defender.id]?.hp ?? null,
     defenderAlive: resolved.state.units[defender.id]?.isAlive ?? null,
@@ -505,15 +521,18 @@ export function testGoldenActionSnapshot() {
         player: "P1",
         actorUnitId: "P1-knight-7",
       },
-      {
+      { type: "rollResolved", rollId: "roll-1", rollKind: "attack_attackerRoll", rollerPlayerId: "P1", unitId: "P1-knight-7", rollIndex: 0, dice: [2,3], sides: 6, total: 5 },
+        {
         type: "rollRequested",
         rollId: "roll-2",
         kind: "attack_defenderRoll",
         player: "P2",
         actorUnitId: "P2-archer-6",
       },
-      {
+      { type: "rollResolved", rollId: "roll-2", rollKind: "attack_defenderRoll", rollerPlayerId: "P2", unitId: "P2-archer-6", rollIndex: 0, dice: [1,2], sides: 6, total: 3 },
+        {
         type: "attackResolved",
+        sourceCell: { col: 4, row: 4 }, targetCell: { col: 5, row: 4 },
         attackerId: "P1-knight-7",
         defenderId: "P2-archer-6",
         attackerRoll: { dice: [2, 3], sum: 5, isDouble: false },

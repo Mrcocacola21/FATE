@@ -197,6 +197,7 @@ export function applyJackTrapPlacement(
     events: [
       ...events,
       { type: "abilityUsed", unitId: unit.id, abilityId: ABILITY_JACK_RIPPER_SNARES },
+      { type: "snarePlaced", owner: unit.owner, sourceUnitId: unit.id, cell: { ...position }, abilityId: ABILITY_JACK_RIPPER_SNARES },
     ],
   };
 }

@@ -200,7 +200,7 @@ function applyDuolingoPush(state: GameState, unit: UnitState, action: AbilityAct
   };
   const events = [
     ...committed.events,
-    evUnitMoved(state, { unitId: moved.id, from: unit.position, to: destination }),
+    evUnitMoved(state, { provenance: { kind: "ability", abilityId: ids.ABILITY_DUOLINGO_PUSH_NOTIFICATION }, unitId: moved.id, from: unit.position, to: destination }),
   ];
   if (unit.isStealthed)
     events.push({
@@ -355,7 +355,7 @@ function applyZoroOniGiri(
     state: queued.state,
     events: [
       ...committed.events,
-      evUnitMoved(state, { unitId: moved.id, from: unit.position, to: destination }),
+      evUnitMoved(state, { provenance: { kind: "ability", abilityId: ids.ABILITY_ZORO_ONI_GIRI }, unitId: moved.id, from: unit.position, to: destination }),
       ...queued.events,
     ],
   };
@@ -411,7 +411,7 @@ function applyDonReaction(state: GameState, unit: UnitState, action: AbilityActi
     state: { ...state, units: { ...state.units, [moved.id]: moved } },
     events: [
       abilityUsed(unit.id, ids.ABILITY_DON_KIHOTE_SORROWFUL_COUNTENANCE),
-      evUnitMoved(state, { unitId: moved.id, from: unit.position, to: destination }),
+      evUnitMoved(state, { provenance: { kind: "ability", abilityId: ids.ABILITY_DON_KIHOTE_SORROWFUL_COUNTENANCE }, unitId: moved.id, from: unit.position, to: destination }),
     ],
   };
 }
@@ -453,7 +453,7 @@ function applyDonWindmills(state: GameState, unit: UnitState, action: AbilityAct
   const units = { ...state.units, [moved.id]: moved };
   const events: GameEvent[] = [abilityUsed(moved.id, spec.id)];
   if (!coordsEqual(unit.position, destination)) {
-    events.push(evUnitMoved(state, { unitId: moved.id, from: unit.position, to: destination }));
+    events.push(evUnitMoved(state, { provenance: { kind: "ability", abilityId: ids.ABILITY_DON_KIHOTE_WINDMILLS }, unitId: moved.id, from: unit.position, to: destination }));
   }
   events.push({
     type: "chargesUpdated",

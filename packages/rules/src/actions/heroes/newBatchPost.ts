@@ -1,3 +1,4 @@
+import { EVENT_VISIBILITY } from "../../model/events/visibility";
 import { evUnitMoved } from "../../core";
 import type { ApplyResult, Coord, GameEvent, GameState, PendingRoll, UnitState } from "../../model";
 import type { RNG } from "../../rng";
@@ -228,6 +229,13 @@ export function applyNewBatchPostAction(
           coordsEqual(trap.position, event.to),
       );
       if (moved && trapIndex >= 0) {
+        nextEvents.push({
+          type: "snareTriggered",
+          unitId: moved.id,
+          cell: { ...event.to },
+          immobilized: true,
+          [EVENT_VISIBILITY]: event[EVENT_VISIBILITY],
+        });
         const traps = [...(nextState.jackTraps ?? [])];
         traps[trapIndex] = {
           ...traps[trapIndex],
@@ -300,7 +308,7 @@ export function resolveDonSorrowfulMove(
     state: updateUnit(clearPendingRoll(state), moved),
     events: [
       abilityUsed(don.id, ids.ABILITY_DON_KIHOTE_SORROWFUL_COUNTENANCE),
-      evUnitMoved(state, { unitId: don.id, from: don.position, to: destination }),
+      evUnitMoved(state, { provenance: { kind: "ability", abilityId: ids.ABILITY_DON_KIHOTE_SORROWFUL_COUNTENANCE }, unitId: don.id, from: don.position, to: destination }),
     ],
   };
 }
@@ -394,7 +402,7 @@ export function resolveDonWindmillsReposition(
     if (!legal || !destination) return { state, events: [] };
     const from = target.position;
     nextState = updateUnit(state, { ...target, position: destination });
-    repositionEvent = evUnitMoved(state, { unitId: target.id, from, to: destination });
+    repositionEvent = evUnitMoved(state, { provenance: { kind: "forced", cause: "donWindmills" }, unitId: target.id, from, to: destination });
   } else {
     return { state, events: [] };
   }

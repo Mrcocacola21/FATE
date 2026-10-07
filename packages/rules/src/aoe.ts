@@ -87,7 +87,7 @@ export function resolveAoE(
       sourceUnitId: caster.id,
       abilityId: params.abilityId,
       casterId: caster.id,
-      center,
+      center: { ...center },
       radius,
       affectedUnitIds,
       revealedUnitIds,

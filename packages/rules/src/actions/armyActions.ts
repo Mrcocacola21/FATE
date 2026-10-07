@@ -39,6 +39,7 @@ export function createEmptyGame(): GameState {
     pendingCombatQueue: [],
     pendingAoE: null,
     rollCounter: 0,
+    abilityUseCounter: 0,
     stakeMarkers: [],
     stakeCounter: 0,
     jackTraps: [],

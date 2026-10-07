@@ -34,6 +34,7 @@ import {
   markOrangeBoneMoveFirstSatisfied,
 } from "./orangeBone";
 import { resolveHiddenOverlapsAfterTransitions } from "../stealth";
+import { correlateAbilityResult } from "../core/abilityUse";
 
 class RecordingRng implements RNG {
   readonly values: number[] = [];
@@ -163,7 +164,8 @@ export function applyAction(
     return result;
   }
 
-  return applyPostActionPipeline(prevState, action, result, rng);
+  result = correlateAbilityResult(prevState, result);
+  return correlateAbilityResult(prevState, applyPostActionPipeline(prevState, action, result, rng));
 }
 
 function transitEntrantIds(state: GameState): readonly string[] | undefined {

@@ -70,7 +70,7 @@ export function removeFalseTrailToken(
     },
     tokenId,
   );
-  const events: GameEvent[] = [evUnitDied({ unitId: updatedToken.id, killerId: null })];
+  const events: GameEvent[] = [evUnitDied(state, { unitId: updatedToken.id, killerId: null })];
   return { state: nextState, events };
 }
 

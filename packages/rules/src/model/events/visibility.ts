@@ -3,7 +3,13 @@ import { canPlayerKnowUnitExactPosition } from "../../visibility";
 
 /** Symbol keys survive internal object copies, but cannot enter JSON or wire payloads. */
 export const EVENT_VISIBILITY: unique symbol = Symbol("eventVisibility");
-export type EventVisibility = { recipients: readonly (PlayerId | "spectator")[] };
+export type EventVisibility = {
+  recipients: readonly (PlayerId | "spectator")[];
+  sourceCellRecipients?: readonly (PlayerId | "spectator")[];
+  targetCellRecipients?: readonly (PlayerId | "spectator")[];
+  deathCellRecipients?: readonly (PlayerId | "spectator")[];
+  abilityRecipients?: readonly (PlayerId | "spectator")[];
+};
 
 export function intersectVisibility(...facts: EventVisibility[]): EventVisibility {
   return {

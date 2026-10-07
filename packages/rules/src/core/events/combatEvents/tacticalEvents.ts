@@ -34,10 +34,11 @@ export function evIntimidateResolved(state: GameState, params: {
 }): IntimidateResolvedEvent {
   return {
     type: "intimidateResolved",
+    provenance: { kind: "forced", cause: "intimidatingStare" },
     [EVENT_VISIBILITY]: movementVisibility(state, params.attackerId, params.from, params.to),
     attackerId: params.attackerId,
-    from: params.from,
-    to: params.to,
+    from: { ...params.from },
+    to: { ...params.to },
   };
 }
 
@@ -63,7 +64,7 @@ export function evStakeTriggered(params: {
 }): StakeTriggeredEvent {
   return {
     type: "stakeTriggered",
-    markerPos: params.markerPos,
+    markerPos: { ...params.markerPos },
     unitId: params.unitId,
     damage: params.damage,
     stopped: params.stopped,
@@ -103,7 +104,7 @@ export function evCarpetStrikeCenter(params: {
     unitId: params.unitId,
     dice: params.dice,
     sum: params.sum,
-    center: params.center,
+    center: { ...params.center },
     area: params.area,
   };
 }
@@ -120,7 +121,7 @@ export function evCarpetStrikeAttackRolled(params: {
     unitId: params.unitId,
     dice: params.dice,
     sum: params.sum,
-    center: params.center,
+    center: { ...params.center },
     affectedUnitIds: params.affectedUnitIds,
   };
 }
@@ -141,7 +142,7 @@ export function evAoeResolved(params: {
     sourceUnitId: params.sourceUnitId,
     abilityId: params.abilityId,
     casterId: params.casterId,
-    center: params.center,
+    center: { ...params.center },
     radius: params.radius,
     affectedUnitIds: params.affectedUnitIds,
     revealedUnitIds: params.revealedUnitIds,

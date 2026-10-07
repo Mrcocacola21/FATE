@@ -454,6 +454,7 @@ export const VFX_PREVIEW_SCENARIOS: VfxPreviewScenario[] = [
       },
       {
         type: "unitMoved",
+        provenance: { kind: "teleport" },
         unitId: "preview-grozny",
         from: { col: 6, row: 2 },
         to: { col: 2, row: 6 },

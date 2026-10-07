@@ -6,7 +6,7 @@ import { clearPendingRoll, evBerserkerDefenseChosen, requestRoll } from "../../.
 import { maybeRequestIntimidate } from "../../../../actions/heroes/vlad";
 import type { IntimidateResume } from "../../../../actions/types";
 import type { CarpetStrikeAoEContext } from "../../../types";
-import { rollDice } from "../../../utils/rollMath";
+import { rollManualDice as rollDice } from "../../../manualRoll";
 import { updatePendingAoeFromAttack, finalizeCarpetStrikeAoE } from "./helpers";
 import { advanceCarpetStrikeQueue } from "./queue";
 

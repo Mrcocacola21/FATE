@@ -1082,6 +1082,7 @@ function testProjectedEventsRedactHiddenUnitPositions() {
   });
   const event: GameEvent = {
     type: "unitMoved",
+    provenance: { kind: "normal" },
     unitId: hidden.id,
     from: { col: 1, row: 1 },
     to: { col: 2, row: 2 },

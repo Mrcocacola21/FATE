@@ -236,7 +236,7 @@ export function applyUndyneImmortalEndTurnDrain(
       isAlive: false,
       position: null,
     };
-    events.push(evUnitDied({ unitId: updated.id, killerId: null }));
+    events.push(evUnitDied(state, { unitId: updated.id, killerId: null }));
   }
 
   return {

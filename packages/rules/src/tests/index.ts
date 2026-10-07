@@ -1,3 +1,4 @@
+import { testPresentationSemantics } from "./core/presentationSemantics.test";
 import { testActionModuleBoundaries } from "./core/boundaries.test";
 import { testReactionMovementRegressions } from "./heroes/reactionMovement.test";
 import {
@@ -506,6 +507,7 @@ import {
 import { testSafeProjectedEventSerialization } from "./core/projectedEvents.test";
 
 function main(): void {
+  testPresentationSemantics();
   testSafeProjectedEventSerialization();
   testReactionMovementRegressions();
   testVladStakePendingDecisionIsPrivate();

@@ -317,6 +317,11 @@ export const gameStateV1Schema: z.ZodType<GameState, z.ZodTypeDef, unknown> = z
     pendingRoll: z
       .object({
         id: text,
+        abilityId: text.optional(),
+        abilityUseId: text.optional(),
+        abilitySourceUnitId: text.optional(),
+        abilitySourceCell: coord.optional(),
+        abilitySourceRecipients: z.array(z.enum(["P1", "P2", "spectator"])).optional(),
         player,
         kind: z.enum(ALL_ROLL_KINDS),
         context: z.record(z.unknown()),
@@ -379,6 +384,11 @@ export const gameStateV1Schema: z.ZodType<GameState, z.ZodTypeDef, unknown> = z
       z
         .object({
           attackerId: text,
+        abilityId: text.optional(),
+        abilityUseId: text.optional(),
+        abilitySourceUnitId: text.optional(),
+        abilitySourceCell: coord.optional(),
+        abilitySourceRecipients: z.array(z.enum(["P1", "P2", "spectator"])).optional(),
           defenderId: text,
           kind: z.enum(["riderPath", "aoe"]),
           ignoreRange: bool.optional(),
@@ -398,6 +408,12 @@ export const gameStateV1Schema: z.ZodType<GameState, z.ZodTypeDef, unknown> = z
     pendingReactionMovement: z.object({
       source: z.enum(["tralala", "genghis"]),
       controllerUnitId: text,
+        abilityId: text.optional(),
+        abilityUseId: text.optional(),
+        abilitySourceUnitId: text.optional(),
+        abilitySourceCell: coord.optional(),
+        abilitySourceRecipients: z.array(z.enum(["P1", "P2", "spectator"])).optional(),
+
       targetUnitId: text.optional(),
       path: z.array(coord).min(1),
       stepIndex: integer,
@@ -411,6 +427,10 @@ export const gameStateV1Schema: z.ZodType<GameState, z.ZodTypeDef, unknown> = z
     pendingAoE: z
       .object({
         casterId: text,
+        abilityUseId: text.optional(),
+        abilitySourceUnitId: text.optional(),
+        abilitySourceCell: coord.optional(),
+        abilitySourceRecipients: z.array(z.enum(["P1", "P2", "spectator"])).optional(),
         abilityId: text,
         center: coord,
         radius: number,
@@ -425,6 +445,7 @@ export const gameStateV1Schema: z.ZodType<GameState, z.ZodTypeDef, unknown> = z
       .array(z.object({ papyrusUnitId: text, targetUnitId: text }).strict())
       .optional(),
     rollCounter: integer,
+    abilityUseCounter: integer.optional(),
     stakeCounter: integer,
     stakeMarkers: z.array(
       z

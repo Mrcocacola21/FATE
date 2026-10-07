@@ -157,9 +157,30 @@ export function getVisiblePendingRollForPlayer(
   state: GameState,
   pendingRoll: GameState["pendingRoll"],
   playerId: PlayerId,
-): GameState["pendingRoll"] {
+): PlayerView["pendingRoll"] {
   if (!pendingRoll || pendingRoll.player !== playerId) return null;
-  const context = { ...(pendingRoll.context ?? {}) } as Record<string, unknown>;
+  let context = { ...(pendingRoll.context ?? {}) } as Record<string, unknown>;
+  const canKnowAbility = pendingRoll.abilitySourceRecipients?.includes(playerId) === true;
+  // Continuations can be nested (e.g. Intimidate.resume.context). None of the
+  // internal frozen origins or authorization facts belong in a pending view.
+  function scrubAbilityContext(value: unknown): unknown {
+    if (Array.isArray(value)) return value.map(scrubAbilityContext);
+    if (!value || typeof value !== "object") return value;
+    const object = value as Record<string, unknown>;
+    const correlated = typeof object.abilityUseId === "string";
+    const allowed = Array.isArray(object.abilitySourceRecipients) && object.abilitySourceRecipients.includes(playerId);
+    return Object.fromEntries(Object.entries(object)
+      .filter(([key]) => !["abilitySourceUnitId", "abilitySourceCell", "abilitySourceRecipients"].includes(key)
+        && !(correlated && !allowed && ["abilityId", "abilityUseId", "sourceAbilityId"].includes(key)))
+      .map(([key, item]) => [key, scrubAbilityContext(item)]));
+  }
+  context = scrubAbilityContext({ ...context, ...(pendingRoll.abilityUseId ? { abilityUseId: pendingRoll.abilityUseId,
+    abilitySourceRecipients: pendingRoll.abilitySourceRecipients } : {}) }) as Record<string, unknown>;
+  if (pendingRoll.abilityUseId && !canKnowAbility) {
+    delete context.abilityId;
+    delete context.abilityUseId;
+    delete context.sourceAbilityId;
+  }
   delete context.resumePendingRoll;
   const unitIdLists = [
     "targetsQueue",
@@ -217,7 +238,15 @@ export function getVisiblePendingRollForPlayer(
   ) {
     delete context.targetUnitId;
   }
-  const { chainSource: _chainSource, pendingRollsRemaining: _pendingRollsRemaining, ...visibleRoll } = pendingRoll;
+  const {
+    chainSource: _chainSource, pendingRollsRemaining: _pendingRollsRemaining,
+    abilitySourceUnitId: _abilitySourceUnitId, abilitySourceCell: _abilitySourceCell,
+    abilitySourceRecipients: _abilitySourceRecipients, ...visibleRoll
+  } = pendingRoll;
+  if (!canKnowAbility) {
+    delete visibleRoll.abilityId;
+    delete visibleRoll.abilityUseId;
+  }
   return {
     ...visibleRoll,
     context,

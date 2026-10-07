@@ -21,7 +21,7 @@ import {
   getLokiSpinCandidateIds,
   getLokiTricksterAreaTargetIds,
 } from "../../../../actions/heroes/loki/targets";
-import { pickRandomFromIds } from "../../../../actions/heroes/loki/utils";
+import { rollManualDice } from "../../../manualRoll";
 import {
   COST_AGAIN_SOME_NONSENSE,
   COST_CHICKEN,
@@ -174,7 +174,7 @@ function resolveSpinTheDrum(
     return { state, events: [] };
   }
 
-  const picked = pickRandomFromIds(candidates, () => rng.next());
+  const picked = candidates[rollManualDice(rng, 1, candidates.length, lokiId)[0]! - 1];
   if (!picked) {
     return { state: clearPendingRoll(spent.state), events: spent.events };
   }

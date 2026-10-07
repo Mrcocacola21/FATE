@@ -15,7 +15,8 @@ interface FireballPayload {
 function requestAsgoreClassAttack(
   state: GameState,
   unit: UnitState,
-  targetId: string
+  targetId: string,
+  abilityUseId: string
 ): ApplyResult {
   const ctx = makeAttackContext({
     attackerId: unit.id,
@@ -23,6 +24,9 @@ function requestAsgoreClassAttack(
     ignoreRange: true,
     consumeSlots: false,
     queueKind: "normal",
+    sourceAbilityId: ABILITY_ASGORE_FIREBALL,
+    abilityId: ABILITY_ASGORE_FIREBALL,
+    abilityUseId,
   });
   const requested = requestRoll(
     state,
@@ -74,7 +78,8 @@ export function applyAsgoreFireball(
   const requested = requestAsgoreClassAttack(
     committed.state,
     committed.unit,
-    targetId
+    targetId,
+    committed.abilityUseId
   );
   return { state: requested.state, events: [...committed.events, ...requested.events] };
 }

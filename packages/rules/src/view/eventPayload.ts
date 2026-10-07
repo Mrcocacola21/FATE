@@ -9,6 +9,32 @@ function dice(value: DiceRoll): DiceRoll {
 }
 
 export function copyEventPayload(event: GameEvent): GameEvent | undefined {
+  const payload = copySemanticPayload(event);
+  if (!payload) return payload;
+  // Explicitly approved semantic correlation; internal continuation never copied.
+  switch (event.type) {
+    case "initiativeRolled":
+      if (event.rollId !== undefined && payload.type === "initiativeRolled") payload.rollId = event.rollId;
+      break;
+    case "abilityUsed": case "attackResolved": case "aoeResolved": case "rollResolved":
+    case "unitMoved": case "snarePlaced": case "riverBoatResolved": case "riverBoatDisembarkFailed":
+    case "riverTraLaLaResolved": case "reactionOpportunity": case "reactionChoiceResolved":
+    case "reactionMovementResumed": case "carpetStrikeTriggered": case "carpetStrikeCenter":
+    case "carpetStrikeAttackRolled": case "asgoreSoulParadeResolved": case "unitHealed":
+    case "lokiChickenApplied": case "lokiChickenGroupApplied": case "controlledAttackDeclared":
+    case "lechyStormStarted":
+      if ((event.type === "carpetStrikeCenter" || event.type === "carpetStrikeAttackRolled")
+        && event.rollId !== undefined && (payload.type === "carpetStrikeCenter" || payload.type === "carpetStrikeAttackRolled"))
+        payload.rollId = event.rollId;
+      if (event.abilityUseId !== undefined) payload.abilityUseId = event.abilityUseId;
+      if (event.abilityId !== undefined) payload.abilityId = event.abilityId;
+      break;
+    default: break;
+  }
+  return payload;
+}
+
+function copySemanticPayload(event: GameEvent): GameEvent | undefined {
   switch (event.type) {
     case "combatVisualBatchReady":
       return {
@@ -30,6 +56,11 @@ export function copyEventPayload(event: GameEvent): GameEvent | undefined {
         unitId: event.unitId,
         from: coord(event.from),
         to: coord(event.to),
+        provenance: event.provenance.kind === "forced"
+          ? { kind: "forced", cause: event.provenance.cause }
+          : event.provenance.kind === "ability"
+            ? { kind: "ability", abilityId: event.provenance.abilityId }
+            : { kind: event.provenance.kind },
       };
     case "hiddenCollisionResolved":
       return {
@@ -46,6 +77,8 @@ export function copyEventPayload(event: GameEvent): GameEvent | undefined {
         type: "attackResolved",
         attackerId: event.attackerId,
         defenderId: event.defenderId,
+        sourceCell: event.sourceCell ? coord(event.sourceCell) : null,
+        targetCell: event.targetCell ? coord(event.targetCell) : null,
         attackerRoll: dice(event.attackerRoll),
         defenderRoll: dice(event.defenderRoll),
         attackerRollIsNew: event.attackerRollIsNew,
@@ -68,6 +101,7 @@ export function copyEventPayload(event: GameEvent): GameEvent | undefined {
         unitId: event.unitId,
         killerId: event.killerId,
         cause: event.cause,
+        deathCell: event.deathCell ? coord(event.deathCell) : event.deathCell,
       };
     case "stealthEntered":
       return {
@@ -98,6 +132,16 @@ export function copyEventPayload(event: GameEvent): GameEvent | undefined {
         player: event.player,
         actorUnitId: event.actorUnitId,
       };
+    case "rollResolved":
+      return {
+        type: "rollResolved", rollId: event.rollId, rollKind: event.rollKind,
+        rollerPlayerId: event.rollerPlayerId, unitId: event.unitId, rollIndex: event.rollIndex,
+        dice: [...event.dice], sides: event.sides, total: event.total,
+      };
+    case "snarePlaced":
+      return { type: "snarePlaced", owner: event.owner, sourceUnitId: event.sourceUnitId, cell: coord(event.cell) };
+    case "snareTriggered":
+      return { type: "snareTriggered", unitId: event.unitId, cell: coord(event.cell), immobilized: true };
     case "pendingRollUnhandled":
       return {
         type: "pendingRollUnhandled",
@@ -229,6 +273,7 @@ export function copyEventPayload(event: GameEvent): GameEvent | undefined {
     case "intimidateResolved":
       return {
         type: "intimidateResolved",
+        provenance: { kind: "forced", cause: "intimidatingStare" },
         attackerId: event.attackerId,
         from: coord(event.from),
         to: coord(event.to),
@@ -291,6 +336,7 @@ export function copyEventPayload(event: GameEvent): GameEvent | undefined {
       return {
         type: "aoeResolved",
         sourceUnitId: event.sourceUnitId,
+        sourceCell: event.sourceCell ? coord(event.sourceCell) : undefined,
         abilityId: event.abilityId,
         casterId: event.casterId,
         center: coord(event.center),

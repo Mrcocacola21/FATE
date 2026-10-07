@@ -801,6 +801,7 @@ function testRiderMovementProjectionDoesNotLeakHiddenTarget() {
   const movementOnly: GameEvent[] = [
     {
       type: "unitMoved",
+      provenance: { kind: "normal" },
       unitId: rider.id,
       from: { col: 0, row: 0 },
       to: { col: 6, row: 0 },
@@ -1186,6 +1187,7 @@ function testHiddenCollisionProjectionIsOwnerDetailedAndOpponentSafe() {
     },
     {
       type: "unitMoved",
+      provenance: { kind: "normal" },
       unitId: hidden.id,
       from: { col: 4, row: 4 },
       to: { col: 4, row: 3 },

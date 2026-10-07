@@ -6,7 +6,7 @@ import { clearPendingRoll, evBerserkerDefenseChosen, requestRoll } from "../../.
 import { getPolkovodetsSource, maybeRequestIntimidate } from "../../../../actions/heroes/vlad";
 import type { IntimidateResume } from "../../../../actions/types";
 import type { DoraAoEContext } from "../../../types";
-import { rollDice } from "../../../utils/rollMath";
+import { rollManualDice as rollDice } from "../../../manualRoll";
 import { advanceDoraAoEQueue } from "./queue";
 import {
   appendPolkovodetsDamageEvent,

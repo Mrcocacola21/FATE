@@ -1,5 +1,6 @@
 import { EVENT_VISIBILITY, movementVisibility } from "../../../model/events/visibility";
 import type { GameState } from "../../../model";
+import type { MovementProvenance, PlayerId } from "../../../model";
 import type {
   AbilityUsedEvent,
   BerserkerDefenseChosenEvent,
@@ -28,17 +29,19 @@ export function evUnitMoved(state: GameState, params: {
   unitId: string;
   from: Coord;
   to: Coord;
+  provenance: MovementProvenance;
 }): UnitMovedEvent {
   return {
     type: "unitMoved",
     [EVENT_VISIBILITY]: movementVisibility(state, params.unitId, params.from, params.to),
     unitId: params.unitId,
-    from: params.from,
-    to: params.to,
+    from: { ...params.from },
+    to: { ...params.to },
+    provenance: { ...params.provenance },
   };
 }
 
-export function evUnitDied(params: {
+export function evUnitDied(state: GameState, params: {
   unitId: string;
   killerId: string | null;
 }): UnitDiedEvent {
@@ -46,17 +49,27 @@ export function evUnitDied(params: {
     type: "unitDied",
     unitId: params.unitId,
     killerId: params.killerId,
+    deathCell: state.units[params.unitId]?.position ? { ...state.units[params.unitId].position! } : null,
+    [EVENT_VISIBILITY]: {
+      recipients: [],
+      deathCellRecipients: state.units[params.unitId]?.position
+        ? movementVisibility(state, params.unitId, state.units[params.unitId].position!).recipients : [],
+    },
   };
 }
 
 export function evAbilityUsed(params: {
   unitId: string;
   abilityId: string;
+  abilityUseId?: string;
+  recipients?: readonly (PlayerId | "spectator")[];
 }): AbilityUsedEvent {
   return {
     type: "abilityUsed",
     unitId: params.unitId,
     abilityId: params.abilityId,
+    abilityUseId: params.abilityUseId,
+    ...(params.recipients ? { [EVENT_VISIBILITY]: { recipients: params.recipients, abilityRecipients: params.recipients } } : {}),
   };
 }
 

@@ -17,7 +17,7 @@ import {
   spendCharges,
 } from "../../../abilities";
 import { canSpendSlots, spendSlots } from "../../../turnEconomy";
-import { clearPendingRoll, makeAttackContext, requestRoll, evAbilityUsed } from "../../../core";
+import { clearPendingRoll, makeAttackContext, requestRoll, evAbilityUsed, evUnitDied } from "../../../core";
 import type { GutsBerserkAttackChoiceContext, TricksterAoEContext } from "../../types";
 import { applyGriffithFemtoRebirth } from "../../../shared/griffith";
 import { isGuts } from "./helpers";
@@ -352,11 +352,7 @@ export function applyGutsEndTurnDrain(
       isAlive: false,
       position: null,
     };
-    events.push({
-      type: "unitDied",
-      unitId: updatedUnit.id,
-      killerId: null,
-    });
+    events.push(evUnitDied(state, { unitId: updatedUnit.id, killerId: null }));
     const rebirth = applyGriffithFemtoRebirth(updatedUnit, deathPosition);
     if (rebirth.transformed) {
       updatedUnit = rebirth.unit;

@@ -1,6 +1,6 @@
 import type { ApplyResult, GameEvent, GameState, UnitState } from "../../../model";
 import type { RNG } from "../../../rng";
-import { rollD6 } from "../../../rng";
+import { rollManualD6 as rollD6 } from "../../manualRoll";
 import { canSpendSlots, spendSlots } from "../../../turnEconomy";
 import { clearPendingRoll } from "../../../core";
 import { evBunkerEntered, evBunkerEnterFailed } from "../../../core";

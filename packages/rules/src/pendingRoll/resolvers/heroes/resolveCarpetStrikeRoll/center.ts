@@ -3,10 +3,11 @@ import type { RNG } from "../../../../rng";
 import { resolveAoE } from "../../../../aoe";
 import { ABILITY_KAISER_CARPET_STRIKE } from "../../../../abilities";
 import { clearPendingRoll, evCarpetStrikeAttackRolled, evCarpetStrikeCenter } from "../../../../core";
-import { isKaiserTransformed, map2d9ToCoord, rollD9 } from "../../../../actions/shared";
+import { isKaiserTransformed, map2d9ToCoord } from "../../../../actions/shared";
 import type { CarpetStrikeAoEContext } from "../../../types";
 import { replacePendingRoll } from "../../../builders/buildPendingRoll";
-import { rollDice, sumDice } from "../../../utils/rollMath";
+import { rollManualDice, rollManualDice as rollDice } from "../../../manualRoll";
+import { sumDice } from "../../../utils/rollMath";
 import { advanceCarpetStrikeQueue } from "./queue";
 
 export function resolveCarpetStrikeCenterRoll(
@@ -24,8 +25,7 @@ export function resolveCarpetStrikeCenterRoll(
     return { state: clearPendingRoll(state), events: [] };
   }
 
-  const d1 = rollD9(rng);
-  const d2 = rollD9(rng);
+  const [d1, d2] = rollManualDice(rng, 2, 9);
   const center = map2d9ToCoord(state, d1, d2);
 
   const aoeRes = resolveAoE(

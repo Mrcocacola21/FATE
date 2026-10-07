@@ -14,7 +14,7 @@ import type {
 } from "../model";
 import { isInsideBoard } from "../model";
 import type { RNG } from "../rng";
-import { rollD6 } from "../rng";
+import { rollManualD6 as rollD6, rollManualDice } from "../pendingRoll/manualRoll";
 import { addCoord, ALL_DIRS, chebyshev, coordsEqual, getUnitAt, isCellOccupied } from "../board";
 import { getAbilitySpec, setCharges } from "../abilities";
 import { HERO_FALSE_TRAIL_TOKEN_ID, getHeroDefinition } from "../heroes";
@@ -108,10 +108,6 @@ function getRuleUnitBaseMaxHp(unit: UnitState): number {
   const def = getUnitDefinition(unit.class);
   const hero = getHeroDefinition(unit.heroId);
   return hero?.baseHpOverride ?? def.maxHp;
-}
-
-function rollRuleD9(rng: RNG): number {
-  return 1 + Math.floor(rng.next() * 9);
 }
 
 function mapRule2d9ToCoord(state: GameState, d1: number, d2: number): Coord {
@@ -567,7 +563,7 @@ function clearExpiredRuleStatusesAtRoundEnd(state: GameState, endedRound: number
         position: target ? { ...target } : null,
       };
       if (target) {
-        events.push(evUnitMoved(state, { unitId: updated.id, from: returnPosition, to: target }));
+        events.push(evUnitMoved(state, { provenance: { kind: "forced", cause: "court" }, unitId: updated.id, from: returnPosition, to: target }));
       }
     }
 
@@ -963,7 +959,7 @@ function moveUnitTo(state: GameState, unitId: string, to: Coord, rng: RNG): Appl
       },
     },
   };
-  let events: GameEvent[] = [evUnitMoved(state, { unitId, from, to })];
+  let events: GameEvent[] = [evUnitMoved(state, { provenance: { kind: "forced", cause: "court" }, unitId, from, to })];
   const moved = nextState.units[unitId];
   if (moved) {
     const stake = applyStakeTriggerIfAny(nextState, moved, to, rng);
@@ -1346,8 +1342,7 @@ export function resolveMoonCoordinateRoll(
     : [];
   if (!effectId) return { state: clearPendingRoll(state), events: [] };
 
-  const d1 = rollRuleD9(rng);
-  const d2 = rollRuleD9(rng);
+  const [d1, d2] = rollManualDice(rng, 2, 9);
   centers.push(mapRule2d9ToCoord(state, d1, d2));
   if (centers.length < count) {
     const requested = replacePendingRoll(
@@ -1486,8 +1481,8 @@ export function resolveMoonCheeseHolesChoice(
         effectId: "cheeseHoles",
         swappedUnitIds: [p1.id, p2.id],
       }),
-      evUnitMoved(state, { unitId: p1.id, from: p1Pos, to: p2Pos }),
-      evUnitMoved(state, { unitId: p2.id, from: p2Pos, to: p1Pos }),
+      evUnitMoved(state, { provenance: { kind: "forced", cause: "moonSwap" }, unitId: p1.id, from: p1Pos, to: p2Pos }),
+      evUnitMoved(state, { provenance: { kind: "forced", cause: "moonSwap" }, unitId: p2.id, from: p2Pos, to: p1Pos }),
     );
   } else {
     events.push(evMoonEffectApplied({ effectId: "cheeseHoles" }));

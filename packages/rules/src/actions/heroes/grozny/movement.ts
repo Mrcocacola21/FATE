@@ -28,7 +28,7 @@ export function applyGroznyFreeMove(
   };
 
   const events: GameEvent[] = [
-    evUnitMoved(state, { unitId: movedUnit.id, from, to: movedUnit.position! }),
+    evUnitMoved(state, { provenance: { kind: "ability", abilityId: "groznyTyrant" }, unitId: movedUnit.id, from, to: movedUnit.position! }),
   ];
 
   const stakeResult = applyStakeTriggerIfAny(

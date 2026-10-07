@@ -11,7 +11,7 @@ import { hasMettatonBerserkerFeature } from "../../../mettaton";
 import type { IntimidateResume } from "../../../actions/types";
 import { evAoeResolved, evBerserkerDefenseChosen, evDamageBonusApplied } from "../../../core";
 import type { TricksterAoEContext } from "../../types";
-import { rollDice } from "../../utils/rollMath";
+import { rollManualDice as rollDice } from "../../manualRoll";
 
 function finalizeTricksterAoE(
   state: GameState,

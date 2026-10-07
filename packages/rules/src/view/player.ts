@@ -33,6 +33,7 @@ export function makePlayerView(state: GameState, playerId: PlayerId): PlayerView
     pendingReactionMovement: _pendingReactionMovement,
     combatResolutionChain: _combatResolutionChain,
     rollCounter,
+    abilityUseCounter: _abilityUseCounter,
     pendingCombatQueue,
     pendingAoE,
     pendingPapyrusBoneChoices: _pendingPapyrusBoneChoices,

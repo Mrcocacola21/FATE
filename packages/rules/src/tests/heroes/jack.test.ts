@@ -57,6 +57,7 @@ function snare(
 function movedEvent(unitId: string, col: number, row: number) {
   return {
     type: "unitMoved" as const,
+    provenance: { kind: "normal" as const },
     unitId,
     from: { col: Math.max(0, col - 1), row },
     to: { col, row },

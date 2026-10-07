@@ -222,6 +222,14 @@ export function testReactionAttackUsesManualRolls() {
   assert.deepStrictEqual(attack.state.units[setup.targetId].position, { col: 0, row: 0 });
   assert.equal(attack.state.units[setup.targetId].hp, 20);
   const defender = respond(attack.state, undefined, makeRngSequence([0.01, 0.2]));
+  const use = initial.events.find(event => event.type === "abilityUsed")?.abilityUseId;
+  assert(use);
+  assert.equal(chosen.state.pendingRoll?.abilityUseId, use);
+  assert.equal(attack.state.pendingRoll?.abilityUseId, use);
+  for (const event of [...attack.events, ...defender.events].filter(event => event.type === "rollResolved" || event.type === "attackResolved")) {
+    assert.equal(event.abilityUseId, use);
+    assert.equal(event.abilityId, ABILITY_RIVER_PERSON_TRA_LA_LA);
+  }
   assert(defender.events.some((event) => event.type === "attackResolved"));
   assert.deepStrictEqual(defender.state.units[setup.targetId].position, { col: 0, row: 2 });
   console.log("reaction_attack_uses_manual_rolls passed");

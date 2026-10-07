@@ -1,6 +1,7 @@
+import type { AbilityUseContext } from "../model";
 import type { Coord, PlayerId, StealthRevealReason } from "../model";
 
-export interface AttackRollContext extends Record<string, unknown> {
+export interface AttackRollContext extends Record<string, unknown>, AbilityUseContext {
   attackerId: string;
   defenderId: string;
   allowFriendlyTarget?: boolean;

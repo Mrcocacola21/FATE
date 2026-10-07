@@ -6,7 +6,7 @@ import type {
   PlayerId,
 } from "../../../model";
 import type { RNG } from "../../../rng";
-import { roll2D6 } from "../../../rng";
+import { rollManual2D6 as roll2D6 } from "../../manualRoll";
 import { clearPendingRoll, requestInitiativeRoll } from "../../../core";
 import {
   evInitiativeRolled,

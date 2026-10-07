@@ -52,6 +52,21 @@ function projectEventForRecipient(
         return [event];
       return [redactedEvent()];
     case "unitMoved":
+      return canKnowMovement(event, state, event.unitId, recipient) ? [{
+        ...event,
+        provenance: event.provenance.kind === "ability" && !event[EVENT_VISIBILITY]?.abilityRecipients?.includes(recipient)
+          ? { kind: "ability" } : event.provenance,
+      }] : [];
+    case "rollResolved":
+      if (!event[EVENT_VISIBILITY]?.recipients.includes(recipient)) return [];
+      if (event.rollKind === "searchStealth") {
+        const { rollIndex: _privateDrawIndex, ...visible } = event;
+        return [visible];
+      }
+      return [event];
+    case "snarePlaced":
+      return recipient === event.owner ? [event] : [];
+    case "snareTriggered":
       return canKnowMovement(event, state, event.unitId, recipient) ? [event] : [];
 
     case "hiddenCollisionResolved": {
@@ -170,6 +185,8 @@ function projectEventForRecipient(
       return [
         {
           ...event,
+          sourceCell: event[EVENT_VISIBILITY]?.sourceCellRecipients?.includes(recipient)
+            ? event.sourceCell : undefined,
           abilityId: isUnitVisibleToRecipient(state, event.sourceUnitId, recipient)
             ? event.abilityId
             : undefined,
@@ -294,6 +311,10 @@ function projectEventForRecipient(
           attackerId: isUnitVisibleToRecipient(state, event.attackerId, recipient)
             ? event.attackerId
             : undefined,
+          sourceCell: event[EVENT_VISIBILITY]?.sourceCellRecipients?.includes(recipient)
+            ? event.sourceCell : undefined,
+          targetCell: event[EVENT_VISIBILITY]?.targetCellRecipients?.includes(recipient)
+            ? event.targetCell : undefined,
         },
       ];
     }
@@ -302,6 +323,8 @@ function projectEventForRecipient(
         ? [
             {
               ...event,
+              deathCell: event[EVENT_VISIBILITY]?.deathCellRecipients?.includes(recipient)
+                ? event.deathCell : undefined,
               killerId:
                 event.killerId === null
                   ? null
@@ -393,6 +416,13 @@ export function projectEventsForRecipient(
     }
     if (event[EVENT_VISIBILITY]) payload[EVENT_VISIBILITY] = event[EVENT_VISIBILITY];
     return projectEventForRecipient(state, payload, recipient).map((projected) => {
+      if (!event[EVENT_VISIBILITY]?.abilityRecipients?.includes(recipient)) {
+        if ("abilityUseId" in projected) delete projected.abilityUseId;
+        if (event.abilityUseId && projected.type !== "abilityUsed")
+          Reflect.deleteProperty(projected, "abilityId");
+        if (projected.type === "attackResolved" || projected.type === "rollResolved" || projected.type === "unitMoved")
+          delete projected.abilityId;
+      }
       if (EVENT_VISIBILITY in projected) delete projected[EVENT_VISIBILITY];
       for (const [key, value] of Object.entries(projected)) {
         if (value === undefined) Reflect.deleteProperty(projected, key);
@@ -438,6 +468,9 @@ function hasOnlyVisibleUnitReferences(
       !(
         key.endsWith("Id") &&
         key !== "abilityId" &&
+        key !== "abilityUseId" &&
+        key !== "chainId" &&
+        key !== "visualBatchId" &&
         key !== "arenaId" &&
         key !== "ruleId" &&
         key !== "effectId" &&

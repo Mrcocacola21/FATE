@@ -1,4 +1,7 @@
 import type { Coord, GameEvent, GameState, PlayerId, UnitState } from "../../model";
+import { commitAbilityUse } from "../../core/abilityUse";
+import { ABILITY_VLAD_FOREST } from "../../abilities";
+import { evAbilityUsed } from "../../core";
 import { chebyshev } from "../../board";
 import { clearPendingRoll, requestRoll } from "../../core";
 import {
@@ -148,9 +151,14 @@ export function activateVladForest(state: GameState, unitId: string, owner: Play
   }
 
   const consumed = consumeOldestStakes(state, owner, 9);
-  const cleared = clearPendingRoll(consumed.state);
+  const committed = commitAbilityUse(consumed.state, unitId, ABILITY_VLAD_FOREST);
+  const cleared = clearPendingRoll(committed.state);
 
-  const activatedEvents: GameEvent[] = [evForestActivated({ vladId: unitId, stakesConsumed: 9 })];
+  const activatedEvents: GameEvent[] = [
+    evAbilityUsed({ unitId, abilityId: ABILITY_VLAD_FOREST,
+      abilityUseId: committed.use.abilityUseId, recipients: committed.use.abilitySourceRecipients }),
+    evForestActivated({ vladId: unitId, stakesConsumed: 9 }),
+  ];
 
   const requested = requestRoll(
     cleared,
@@ -159,6 +167,7 @@ export function activateVladForest(state: GameState, unitId: string, owner: Play
     {
       unitId,
       owner,
+      ...committed.use,
     },
     unitId,
   );

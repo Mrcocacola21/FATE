@@ -1,4 +1,11 @@
 import type { Coord, PlayerId } from "./shared";
+import type { AbilityUseContext } from "./semantic";
+
+/** Pending payloads expose authorized correlation, never internal frozen origins. */
+export type ProjectedPendingRoll = Omit<
+  PendingRoll,
+  "abilitySourceUnitId" | "abilitySourceCell" | "abilitySourceRecipients"
+>;
 
 export type CombatChainSource =
   | "riderPass"
@@ -300,7 +307,7 @@ export interface PendingRollContext {
   isControlledRoll?: boolean;
 }
 
-export interface PendingRoll {
+export interface PendingRoll extends AbilityUseContext {
   id: string;
   player: PlayerId;
   kind: RollKind;
@@ -332,7 +339,7 @@ export interface ForestMarker {
   position: Coord;
 }
 
-export interface PendingCombatQueueEntry {
+export interface PendingCombatQueueEntry extends AbilityUseContext {
   attackerId: string;
   defenderId: string;
   ignoreRange?: boolean;
@@ -349,7 +356,7 @@ export interface PendingCombatQueueEntry {
   kind: "riderPath" | "aoe";
 }
 
-export interface PendingAoEResolution {
+export interface PendingAoEResolution extends AbilityUseContext {
   casterId: string;
   abilityId: string;
   center: Coord;

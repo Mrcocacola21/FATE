@@ -1,3 +1,5 @@
+import type { Coord } from "../../../model";
+import { EVENT_VISIBILITY, movementVisibility } from "../../../model/events/visibility";
 import { resolveUnitDeath } from "../../../death";
 import type { ApplyResult, GameEvent, GameState, UnitState } from "../../../model";
 import { HERO_CHIKATILO_ID, HERO_FALSE_TRAIL_TOKEN_ID, getHeroDefinition } from "../../../heroes";
@@ -62,6 +64,7 @@ function performFalseTrailTrap(
   tokenId: string,
   targetId: string,
   rng: RNG,
+  sourceCell: Coord | null,
 ): { state: GameState; events: GameEvent[] } {
   const target = state.units[targetId];
   if (!target || !target.isAlive) {
@@ -96,6 +99,14 @@ function performFalseTrailTrap(
 
   events.unshift({
     type: "attackResolved",
+    sourceCell: sourceCell ? { ...sourceCell } : null,
+    targetCell: target.position ? { ...target.position } : null,
+    abilityId: "falseTrailTrap",
+    [EVENT_VISIBILITY]: {
+      recipients: [],
+      sourceCellRecipients: state.units[tokenId]?.owner ? [state.units[tokenId].owner] : [],
+      targetCellRecipients: target.position ? movementVisibility(state, targetId, target.position).recipients : [],
+    },
     attackerId: tokenId,
     defenderId: targetId,
     attackerRoll,
@@ -149,7 +160,7 @@ export function applyChikatiloPostAction(
         changed = changed || revealed.events.length > 0;
       }
       if (event.killerId) {
-        const trap = performFalseTrailTrap(nextState, event.unitId, event.killerId, rng);
+        const trap = performFalseTrailTrap(nextState, event.unitId, event.killerId, rng, event.deathCell ?? null);
         nextState = trap.state;
         nextEvents.push(...trap.events);
         changed = changed || trap.events.length > 0;

@@ -1,4 +1,5 @@
 import type { Coord, MoveMode, PlayerId } from "../shared";
+import type { MovementProvenance } from "../semantic";
 import type {
   CourtEffectId,
   CourtSide,
@@ -39,6 +40,7 @@ export type CoreGameEvent =
       unitId: string;
       from: Coord;
       to: Coord;
+      provenance: MovementProvenance;
     }
   | {
       type: "hiddenCollisionResolved";
@@ -53,6 +55,8 @@ export type CoreGameEvent =
       type: "attackResolved";
       attackerId: string;
       defenderId: string;
+      sourceCell: Coord | null;
+      targetCell: Coord | null;
       attackerRoll: DiceRoll;
       defenderRoll: DiceRoll;
       /** False when an AoE event repeats an attacker roll already logged for another target. */
@@ -71,6 +75,8 @@ export type CoreGameEvent =
       unitId: string;
       killerId: string | null;
       cause?: string;
+      /** Null when death has no board position. */
+      deathCell?: Coord | null;
     }
   | {
       type: "stealthEntered";
@@ -98,6 +104,30 @@ export type CoreGameEvent =
       actorUnitId?: string;
     }
   | {
+      type: "rollResolved";
+      rollId: string;
+      rollKind: RollKind;
+      rollerPlayerId: PlayerId;
+      unitId?: string;
+      /** Index within one manual request (Search can draw for several candidates). */
+      rollIndex: number;
+      dice: number[];
+      sides: number;
+      total: number;
+    }
+  | {
+      type: "snarePlaced";
+      owner: PlayerId;
+      sourceUnitId: string;
+      cell: Coord;
+    }
+  | {
+      type: "snareTriggered";
+      unitId: string;
+      cell: Coord;
+      immobilized: true;
+    }
+  | {
       type: "pendingRollUnhandled";
       rollId: string;
       kind: string;
@@ -110,6 +140,7 @@ export type CoreGameEvent =
     }
   | {
       type: "initiativeRolled";
+      rollId?: string;
       player: PlayerId;
       dice: number[];
       sum: number;
@@ -247,6 +278,7 @@ export type CoreGameEvent =
     }
   | {
       type: "intimidateResolved";
+      provenance: { kind: "forced"; cause: "intimidatingStare" };
       attackerId: string;
       from: Coord;
       to: Coord;
@@ -282,6 +314,7 @@ export type CoreGameEvent =
     }
   | {
       type: "carpetStrikeCenter";
+      rollId?: string;
       unitId: string;
       dice: number[];
       sum: number;
@@ -290,6 +323,7 @@ export type CoreGameEvent =
     }
   | {
       type: "carpetStrikeAttackRolled";
+      rollId?: string;
       unitId: string;
       dice: number[];
       sum: number;
@@ -311,6 +345,7 @@ export type CoreGameEvent =
   | {
       type: "aoeResolved";
       sourceUnitId: string;
+      sourceCell?: Coord;
       abilityId?: string;
       casterId?: string;
       center: Coord;

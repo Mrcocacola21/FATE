@@ -173,12 +173,12 @@ function testMovementEventTimeAndHistory() {
     units: { ...state.units, [source.id]: { ...source, isStealthed: true, position: a } },
   };
   hidden.lastKnownPositions.P2[source.id] = { col: 1, row: 2 };
-  const first = evUnitMoved(hidden, { unitId: source.id, from: a, to: b });
+  const first = evUnitMoved(hidden, { provenance: { kind: "normal" }, unitId: source.id, from: a, to: b });
   const atB = {
     ...hidden,
     units: { ...hidden.units, [source.id]: { ...hidden.units[source.id], position: b } },
   };
-  const second = evUnitMoved(atB, { unitId: source.id, from: b, to: c });
+  const second = evUnitMoved(atB, { provenance: { kind: "normal" }, unitId: source.id, from: b, to: c });
   const revealed = {
     ...hidden,
     units: { ...hidden.units, [source.id]: { ...source, isStealthed: false, position: c } },
@@ -197,7 +197,7 @@ function testMovementEventTimeAndHistory() {
   assert(!view.units[source.id]);
   assert.deepEqual(view.lastKnownPositions[source.id], { col: 1, row: 2 });
   absent(view, [JSON.stringify(b)]);
-  const publicMove = evUnitMoved(state, { unitId: source.id, from: source.position!, to: b });
+  const publicMove = evUnitMoved(state, { provenance: { kind: "normal" }, unitId: source.id, from: source.position!, to: b });
   for (const recipient of ["P2", "spectator"] as const) {
     const events = projectEventsForRecipient(
       atB,
@@ -223,7 +223,7 @@ function testMovementEventTimeAndHistory() {
     [marker],
     "chain completion cannot be mistaken for a hidden unit reference",
   );
-  const legacy: GameEvent = { type: "unitMoved", unitId: source.id, from: a, to: b };
+  const legacy: GameEvent = { type: "unitMoved", provenance: { kind: "normal" }, unitId: source.id, from: a, to: b };
   assert.deepEqual(
     projectEventsForRecipient(revealed, [legacy, reveal], "P2"),
     [reveal],
@@ -332,7 +332,7 @@ function testCombatAndAoESerialization() {
     type: "attackResolved" as const, attackerId: source.id, defenderId: target.id,
     attackerRoll: { dice: [6], sum: 6, isDouble: false, privateSource: "SECRET_DICE_SOURCE" },
     defenderRoll: { dice: [1], sum: 1, isDouble: false },
-    hit: true, damage: 1, defenderHpAfter: 5, sourceCell: { col: 6, row: 5 },
+    hit: true, damage: 1, defenderHpAfter: 5, sourceCell: { col: 6, row: 5 }, targetCell: { ...target.position! },
   };
   for (const recipient of ["P2", "spectator"] as const) {
     const attacks = projectEventsForRecipient(state, [attack], recipient);

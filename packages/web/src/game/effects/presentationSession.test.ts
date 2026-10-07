@@ -195,3 +195,22 @@ test("cancelled_and_suspended_presentation_work_can_be_dropped", () => {
   s.begin(binding);
   assert.equal(presentationBatchIsCurrent(accepted), false);
 });
+
+
+test("phase4_semantics_survive_ingress_without_reusing_gameplay_ids_for_delivery", () => {
+  const s=session(100);
+  const events:DeliveredGameEvent[]=[
+    {type:"rollResolved",eventId:"delivery-1",rollId:"roll-7",rollKind:"attack_attackerRoll",rollerPlayerId:"P1",unitId:"caster",
+      rollIndex:0,dice:[5,4],sides:6,total:9,abilityId:"asgoreFireball",abilityUseId:"ability-use-2",chainId:"combat-chain-3"},
+    {type:"rollResolved",eventId:"delivery-2",rollId:"roll-8",rollKind:"attack_defenderRoll",rollerPlayerId:"P2",unitId:"target",
+      rollIndex:0,dice:[1,2],sides:6,total:3,abilityId:"asgoreFireball",abilityUseId:"ability-use-2",chainId:"combat-chain-3"},
+    {type:"unitMoved",eventId:"delivery-3",unitId:"caster",from:{col:1,row:1},to:{col:1,row:3},provenance:{kind:"tralala"},
+      abilityId:"riverTraLaLa",abilityUseId:"ability-use-4"},
+    {type:"snareTriggered",eventId:"delivery-4",unitId:"target",cell:{col:1,row:3},immobilized:true},
+  ];
+  const received=s.receive(batch(101,events),binding);
+  assert.equal(received.length,1);assert.deepEqual(received[0].events,events);
+  assert.equal(received[0].events.length,4,"shared ability/chain IDs must not deduplicate separate dice events");
+  assert.deepEqual(s.receive(batch(101,events),binding),[]);
+  s.begin(binding);s.snapshot(snapshot(102));assert.deepEqual(s.receive(batch(101,events),binding),[]);
+});

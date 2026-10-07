@@ -1,6 +1,6 @@
 import type { ApplyResult, GameState, PendingRoll, ResolveRollChoice } from "../../../../model";
 import type { RNG } from "../../../../rng";
-import { rollD6 } from "../../../../rng";
+import { rollManualD6 as rollD6 } from "../../../manualRoll";
 import { clearPendingRoll } from "../../../../core";
 import { ABILITY_JEBE_KHANS_SHOOTER } from "../../../../abilities";
 import { canAttackTarget } from "../../../../combat";

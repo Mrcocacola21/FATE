@@ -7,7 +7,7 @@ import type {
   PendingRoll,
   ResolveRollChoice,
 } from "../../../model";
-import { requestRoll } from "../../../core";
+import { requestRoll, evUnitDied } from "../../../core";
 
 function finishSansDeath(state: GameState, sans: UnitState): ApplyResult {
   return {
@@ -21,7 +21,7 @@ function finishSansDeath(state: GameState, sans: UnitState): ApplyResult {
       },
     },
     events: [
-      { type: "unitDied", unitId: sans.id, killerId: sans.sansPendingDeath?.killerId ?? null },
+      evUnitDied(state, { unitId: sans.id, killerId: sans.sansPendingDeath?.killerId ?? null }),
     ],
   };
 }

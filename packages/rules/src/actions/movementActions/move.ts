@@ -118,6 +118,11 @@ export function applyMove(
 
   const moveMode =
     pendingValid && pending?.mode ? pending.mode : ("normal" as MoveMode);
+  // "normal" in PendingMove is the UI's default class mode. Recover the
+  // selected rules mechanic, including a Trickster's default teleport mode.
+  const movementSourceMode = moveMode === "normal"
+    ? movementModes.includes(unit.class) ? unit.class : movementModes[0]
+    : moveMode;
   const riderMovementMode =
     moveMode === "rider" ||
     (moveMode === "normal" &&
@@ -197,7 +202,7 @@ export function applyMove(
 
   let events: GameEvent[] = [...costEvents];
   if (didMove) {
-    events.push(evUnitMoved(state, { unitId: updatedUnit.id, from, to: updatedUnit.position! }));
+    events.push(evUnitMoved(state, { provenance: { kind: !isChicken && movementSourceMode === "trickster" ? "teleport" : riderMovementMode ? "rider" : "normal" }, unitId: updatedUnit.id, from, to: updatedUnit.position! }));
     // Rider path traversal is transient and continues under the existing pass
     // rules. Only the committed endpoint creates occupancy; resolve that hidden
     // overlap before hazards and queued Rider path attacks are evaluated.

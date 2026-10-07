@@ -1,6 +1,7 @@
+import type { AbilityUseContext } from "../model";
 import type { Coord, MoveMode, PlayerId, StealthRevealReason } from "../model";
 
-export interface CarpetStrikeAoEContext extends Record<string, unknown> {
+export interface CarpetStrikeAoEContext extends Record<string, unknown>, AbilityUseContext {
   casterId: string;
   center: Coord;
   targetsQueue: string[];

@@ -1,12 +1,13 @@
 import type { ApplyResult, GameEvent, GameState, UnitState } from "../../../model";
 import type { RNG } from "../../../rng";
-import { rollD6 } from "../../../rng";
+import { rollManualD6 as rollD6, recordManualResult } from "../../manualRoll";
+import { rollDie } from "../../../rng";
 import { chebyshev } from "../../../board";
 import { canSpendSlots, spendSlots } from "../../../turnEconomy";
 import { clearPendingRoll } from "../../../core";
 import { clearUnitStealth, enterUnitStealth, getStealthSuccessMinRoll } from "../../../stealth";
 import { evSearchStealth, evStealthEntered, evStealthRevealed } from "../../../core";
-import { concealUnitExactPositionFromOpponents } from "../../../visibility";
+import { concealUnitExactPositionFromOpponents, canPlayerKnowUnitExactPosition } from "../../../visibility";
 
 export function resolveEnterStealthRoll(state: GameState, unitId: string, rng: RNG): ApplyResult {
   const unit = state.units[unitId];
@@ -98,8 +99,12 @@ export function resolveSearchStealthRoll(
   }
 
   for (const candidate of candidates) {
-    const roll = rollD6(rng);
+    const roll = rollDie(rng, 6);
     const success = roll >= 5;
+    // Match the existing Search policy: failed rolls against unknown targets
+    // cannot reveal hidden candidate counts, even to the searching player.
+    recordManualResult(rng, [roll], 6, unit.id,
+      success || canPlayerKnowUnitExactPosition(state, unit.owner, candidate.id) ? [unit.owner] : []);
     rollResults.push({ targetId: candidate.id, roll, success });
     if (!success) continue;
 

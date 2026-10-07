@@ -1,6 +1,6 @@
 import type { ApplyResult, GameState, PendingRoll, ResolveRollChoice } from "../../../../model";
 import type { RNG } from "../../../../rng";
-import { rollD6 } from "../../../../rng";
+import { rollManualD6 as rollD6 } from "../../../manualRoll";
 import { ABILITY_FRISK_PACIFISM } from "../../../../abilities";
 import { clearPendingRoll, requestRoll } from "../../../../core";
 import {

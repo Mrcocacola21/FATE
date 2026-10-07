@@ -9,7 +9,7 @@ import type {
 } from "../../model";
 import { makeEmptyTurnEconomy } from "../../model";
 import type { RNG } from "../../rng";
-import { rollD6 } from "../../rng";
+import { rollManualD6 } from "../../pendingRoll/manualRoll";
 import {
   ABILITY_BERSERK_AUTO_DEFENSE,
   ABILITY_FEMTO_DIVINE_MOVE,
@@ -200,7 +200,7 @@ export function resolveFemtoDivineMoveRoll(
     return { state: baseState, events: [] };
   }
 
-  const roll = rollD6(rng);
+  const roll = rollManualD6(rng);
   const options = getFemtoDivineMoveOptions(baseState, unit, roll);
   if (options.length === 0) {
     return { state: baseState, events: [] };
@@ -269,7 +269,7 @@ export function resolveFemtoDivineMoveDestinationChoice(
   return {
     state: nextState,
     events: [
-      evUnitMoved(state, {
+      evUnitMoved(state, { provenance: { kind: "ability", abilityId: ABILITY_FEMTO_DIVINE_MOVE },
         unitId: movedUnit.id,
         from,
         to: movedUnit.position!,

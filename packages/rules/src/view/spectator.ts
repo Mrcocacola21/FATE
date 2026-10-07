@@ -15,6 +15,7 @@ export function makeSpectatorView(state: GameState): PlayerView {
     pendingReactionMovement: _pendingReactionMovement,
     combatResolutionChain: _combatResolutionChain,
     rollCounter,
+    abilityUseCounter: _abilityUseCounter,
     pendingCombatQueue,
     pendingAoE,
     pendingPapyrusBoneChoices: _pendingPapyrusBoneChoices,

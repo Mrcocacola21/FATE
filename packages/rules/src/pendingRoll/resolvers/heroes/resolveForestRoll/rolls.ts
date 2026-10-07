@@ -11,7 +11,7 @@ import {
 import { getPolkovodetsSource, maybeRequestIntimidate } from "../../../../actions/heroes/vlad";
 import type { IntimidateResume } from "../../../../actions/types";
 import type { ForestAoEContext } from "../../../types";
-import { rollDice } from "../../../utils/rollMath";
+import { rollManualDice as rollDice } from "../../../manualRoll";
 import {
   applyForestMovementDisableOnHit,
   finalizeForestAoE,

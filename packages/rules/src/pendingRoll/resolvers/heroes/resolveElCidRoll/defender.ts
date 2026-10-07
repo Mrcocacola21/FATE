@@ -5,7 +5,7 @@ import { clearPendingRoll } from "../../../../core";
 import { getPolkovodetsSource, maybeRequestIntimidate } from "../../../../actions/heroes/vlad";
 import type { IntimidateResume } from "../../../../actions/types";
 import type { ElCidAoEContext } from "../../../types";
-import { rollDice } from "../../../utils/rollMath";
+import { rollManualDice as rollDice } from "../../../manualRoll";
 import {
   finalizeElCidAoE,
   maybeBuildPolkovodetsDamageEvent,

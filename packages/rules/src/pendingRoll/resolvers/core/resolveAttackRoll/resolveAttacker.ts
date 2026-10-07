@@ -18,7 +18,8 @@ import {
 } from "../../../../heroes";
 import type { AttackRollContext } from "../../../types";
 import { replacePendingRoll } from "../../../builders/buildPendingRoll";
-import { isDoubleRoll, rollDice } from "../../../utils/rollMath";
+import { rollManualDice as rollDice } from "../../../manualRoll";
+import { isDoubleRoll } from "../../../utils/rollMath";
 import { canUseFriskSubstitution, finalizeAttackFromContext } from "./shared";
 import { continueAfterAttackResolution } from "./postResolution";
 

@@ -4,7 +4,7 @@ import { resolveAttack } from "../../../../combat";
 import { clearPendingRoll } from "../../../../core";
 import { maybeRequestIntimidate } from "../../../../actions/heroes/vlad";
 import type { IntimidateResume } from "../../../../actions/types";
-import { rollDice } from "../../../utils/rollMath";
+import { rollManualDice as rollDice } from "../../../manualRoll";
 import type { FalseTrailExplosionContext } from "./shared";
 import { advanceFalseTrailExplosionQueue } from "./queue";
 

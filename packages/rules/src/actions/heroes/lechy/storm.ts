@@ -1,7 +1,7 @@
 import { resolveUnitDeath } from "../../../death";
 import type { ApplyResult, GameEvent, GameState, UnitState } from "../../../model";
 import { ARENA_STORM_ID, isStormActive, isStormExempt } from "../../../forest";
-import { rollD6 } from "../../../rng";
+import { rollManualD6 as rollD6 } from "../../../pendingRoll/manualRoll";
 import { clearPendingRoll, requestRoll } from "../../../core";
 import { applyGriffithFemtoRebirth } from "../../../shared/griffith";
 import type { LechyStormStartTurnRollContext } from "../../../pendingRoll/types";

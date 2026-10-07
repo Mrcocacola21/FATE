@@ -24,6 +24,7 @@ import {
 import { buildDiceRoll, recordGenghisAttack } from "./helpers";
 import type { AutoDefenseResolution, ResolveAttackParams } from "./types";
 import { getUnitDefinition } from "../units";
+import { EVENT_VISIBILITY, movementVisibility } from "../model/events/visibility";
 
 export function tryResolveAutoDefense(
   state: GameState,
@@ -31,7 +32,8 @@ export function tryResolveAutoDefense(
   attackerAfter: UnitState,
   defenderAfter: UnitState,
   units: Record<string, UnitState>,
-  events: GameEvent[]
+  events: GameEvent[],
+  anchorState: GameState = state
 ): AutoDefenseResolution {
   const wantsBerserkAutoDefense =
     params.defenderUseBerserkAutoDefense === true;
@@ -112,6 +114,13 @@ export function tryResolveAutoDefense(
 
   events.push({
     type: "attackResolved",
+    sourceCell: { ...attackerAfter.position! },
+    targetCell: { ...defenderAfter.position! },
+    [EVENT_VISIBILITY]: {
+      recipients: [],
+      sourceCellRecipients: movementVisibility(anchorState, attackerAfter.id, attackerAfter.position!).recipients,
+      targetCellRecipients: movementVisibility(anchorState, defenderAfter.id, defenderAfter.position!).recipients,
+    },
     attackerId: attackerAfter.id,
     defenderId: defenderAfter.id,
     attackerRoll,

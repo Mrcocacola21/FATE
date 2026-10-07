@@ -1,3 +1,4 @@
+import { getAbilityUseContext } from "../../core/abilityUse";
 import { EVENT_VISIBILITY, intersectVisibility, movementVisibility } from "../../model/events/visibility";
 import type {
   ApplyResult,
@@ -112,7 +113,7 @@ function reachedOpportunities(
 function moveUnit(state: GameState, unitId: string, to: Coord, events: GameEvent[]): GameState {
   const unit = state.units[unitId];
   if (!unit?.isAlive || !unit.position || coordsEqual(unit.position, to)) return state;
-  events.push(evUnitMoved(state, { unitId, from: unit.position, to }));
+  events.push(evUnitMoved(state, { unitId, from: unit.position, to, provenance: { kind: state.pendingReactionMovement?.source === "tralala" ? "tralala" : "rider" } }));
   return { ...state, units: { ...state.units, [unitId]: { ...unit, position: { ...to } } } };
 }
 
@@ -152,8 +153,8 @@ function finishMovement(
         ),
         riverId: movement.controllerUnitId,
         targetId: target.id,
-        riverDestination: cell,
-        dropDestination: drop,
+        riverDestination: { ...cell },
+        dropDestination: { ...drop },
         touchedAttackerIds: movement.touchedReactorIds,
       });
     }
@@ -338,6 +339,7 @@ export function resolveReactionChoice(
     makeAttackContext({
       attackerId: opportunity.reactorUnitId,
       defenderId: targetId!,
+      ...getAbilityUseContext(movement),
       consumeSlots: false,
       queueKind: "normal",
       ignoreRange: movement.source === "tralala",

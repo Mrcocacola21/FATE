@@ -1,3 +1,5 @@
+import { commitAbilityUse } from "../../../core/abilityUse";
+import { evAbilityUsed } from "../../../core";
 import type { ApplyResult, GameEvent, GameState } from "../../../model";
 import { ABILITY_KAISER_CARPET_STRIKE, getCharges, spendCharges } from "../../../abilities";
 import { requestRoll } from "../../../core";
@@ -23,8 +25,9 @@ export function maybeTriggerCarpetStrike(
     return { state, events: [] };
   }
 
+  const use = commitAbilityUse(state, unit.id, ABILITY_KAISER_CARPET_STRIKE);
   const updatedState: GameState = {
-    ...state,
+    ...use.state,
     units: {
       ...state.units,
       [unit.id]: spent.unit,
@@ -35,11 +38,12 @@ export function maybeTriggerCarpetStrike(
     updatedState,
     unit.owner,
     "kaiserCarpetStrikeCenter",
-    { unitId: unit.id },
+    { unitId: unit.id, ...use.use },
     unit.id
   );
 
   const events: GameEvent[] = [
+    evAbilityUsed({ unitId: unit.id, abilityId: ABILITY_KAISER_CARPET_STRIKE, abilityUseId: use.use.abilityUseId, recipients: use.use.abilitySourceRecipients }),
     evCarpetStrikeTriggered({ unitId: unit.id }),
     ...requested.events,
   ];

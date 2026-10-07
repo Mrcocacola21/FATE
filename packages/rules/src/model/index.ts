@@ -6,3 +6,4 @@ export * from "./actions";
 export * from "./state";
 export * from "./coords";
 export * from "./reactions";
+export * from "./semantic";

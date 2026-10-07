@@ -11,7 +11,8 @@ import { clearPendingRoll } from "../../../../core";
 import { HERO_ODIN_ID } from "../../../../heroes";
 import type { AttackRollContext } from "../../../types";
 import { replacePendingRoll } from "../../../builders/buildPendingRoll";
-import { rollDice, sumDice } from "../../../utils/rollMath";
+import { rollManualDice as rollDice } from "../../../manualRoll";
+import { sumDice } from "../../../utils/rollMath";
 import {
   canUseFriskChildsCry,
   finalizeAttackFromContext,

@@ -8,6 +8,7 @@ import type {
   PendingCombatQueueEntry,
   PendingPapyrusBoneChoice,
   PendingRoll,
+  ProjectedPendingRoll,
   RollKind,
   StakeMarker,
 } from "./roll";
@@ -101,6 +102,8 @@ export interface GameState {
   /** Successful transformed-Papyrus hits waiting for an authoritative choice. */
   pendingPapyrusBoneChoices?: PendingPapyrusBoneChoice[];
   rollCounter: number;
+  /** Optional only for checkpoints created before semantic ability correlation. */
+  abilityUseCounter?: number;
   stakeMarkers: StakeMarker[];
   stakeCounter: number;
   forestMarkers: ForestMarker[];
@@ -193,6 +196,7 @@ export type PlayerView = Omit<
   | "pendingReactionMovement"
   | "combatResolutionChain"
   | "rollCounter"
+  | "abilityUseCounter"
   | "pendingCombatQueue"
   | "pendingAoE"
   | "pendingPapyrusBoneChoices"
@@ -205,7 +209,7 @@ export type PlayerView = Omit<
     [playerId in PlayerId]: { [unitId: string]: boolean };
   };
   lastKnownPositions: { [unitId: string]: Coord };
-  pendingRoll: PendingRoll | null;
+  pendingRoll: ProjectedPendingRoll | null;
   /** Optional for legacy snapshots; current projections always populate this field. */
   pendingDecision?: PendingDecisionView | null;
   pendingCombatQueueCount: number;

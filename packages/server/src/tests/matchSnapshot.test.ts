@@ -1,7 +1,17 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { Prisma, type MatchSnapshot, type PrismaClient } from "@prisma/client";
-import { SeededRNG, DefaultRNG, type GameState } from "rules";
+import {
+  SeededRNG,
+  DefaultRNG,
+  applyAction,
+  attachArmy,
+  createDefaultArmy,
+  createEmptyGame,
+  HERO_ASGORE_ID,
+  ABILITY_ASGORE_FIREBALL,
+  type GameState,
+} from "rules";
 import { createGameRoom, storeTestHooks, type GameRoom } from "../store";
 import { readMatchSnapshotConfig } from "../config";
 import {
@@ -69,10 +79,19 @@ function serializationTests() {
     },
     pendingCombatQueue: [{ kind: "aoe", attackerId: id, defenderId: "target", damageBonus: 2 }],
     pendingReactionMovement: {
-      source: "tralala", controllerUnitId: id, targetUnitId: "target",
-      path: [{ col: 1, row: 1 }, { col: 1, row: 2 }, { col: 1, row: 3 }],
-      stepIndex: 1, stepReached: true, stopped: false,
-      processedReactorIds: ["first", "second"], touchedReactorIds: ["first"],
+      source: "tralala",
+      controllerUnitId: id,
+      targetUnitId: "target",
+      path: [
+        { col: 1, row: 1 },
+        { col: 1, row: 2 },
+        { col: 1, row: 3 },
+      ],
+      stepIndex: 1,
+      stepReached: true,
+      stopped: false,
+      processedReactorIds: ["first", "second"],
+      touchedReactorIds: ["first"],
       reactionQueue: [{ reactorUnitId: "second", targetUnitIds: ["target"] }],
       dropDestination: { col: 2, row: 3 },
     },
@@ -238,6 +257,154 @@ function serializationTests() {
   assert.throws(() =>
     SeededRNG.fromState({ algorithm: "lcg32-numerical-recipes-v1", state: 0x100000000 }),
   );
+}
+
+function presentationRecoveryTests() {
+  const room = makeRoom();
+  let state = attachArmy(
+    attachArmy(createEmptyGame(), createDefaultArmy("P1", { knight: HERO_ASGORE_ID })),
+    createDefaultArmy("P2"),
+  );
+  const caster = Object.values(state.units).find((u) => u.heroId === HERO_ASGORE_ID)!;
+  const defender = Object.values(state.units).find(
+    (u) => u.owner === "P2" && u.class === "archer",
+  )!;
+  state = {
+    ...state,
+    phase: "battle",
+    currentPlayer: "P1",
+    activeUnitId: caster.id,
+    turnQueue: [caster.id, defender.id],
+    turnQueueIndex: 0,
+    turnOrder: [caster.id, defender.id],
+    turnOrderIndex: 0,
+    ruleDeclaration: {
+      ...state.ruleDeclaration,
+      selectedRuleId: "normal_rule",
+      setupComplete: true,
+    },
+    units: {
+      ...state.units,
+      [caster.id]: {
+        ...caster,
+        position: { col: 4, row: 4 },
+        charges: { ...caster.charges, [ABILITY_ASGORE_FIREBALL]: 10 },
+      },
+      [defender.id]: { ...defender, position: { col: 4, row: 7 }, hp: 30 },
+    },
+  };
+  state = {
+    ...state,
+    knowledge: {
+      P1: Object.fromEntries(Object.values(state.units).map((u) => [u.id, true])),
+      P2: Object.fromEntries(Object.values(state.units).map((u) => [u.id, true])),
+    },
+  };
+  const committed = applyAction(
+    state,
+    {
+      type: "useAbility",
+      unitId: caster.id,
+      abilityId: ABILITY_ASGORE_FIREBALL,
+      payload: { targetId: defender.id },
+    },
+    room.rng,
+  );
+  const use = committed.events.find((e) => e.type === "abilityUsed")!.abilityUseId;
+  assert(use);
+  room.state = committed.state;
+  function checkpoint() {
+    const saved = serializeMatchSnapshot(room);
+    const restored = deserializeMatchSnapshot(row(saved));
+    assert.deepEqual(restored.state, normalizedState(room.state));
+    room.state = restored.state;
+    room.rng = SeededRNG.fromState(restored.rngState);
+    return saved;
+  }
+  checkpoint();
+  assert.equal(room.state.pendingRoll!.abilityUseId, use);
+  // Force an initial tie and resolve both independent tie-break requests, with
+  // real serializer restoration before each accepted command.
+  for (const dice of [[0.1, 0.2], [0.1, 0.2], [0.9], [0.01]]) {
+    const pending = room.state.pendingRoll!;
+    assert(pending);
+    assert.equal(pending.abilityUseId, use);
+    let i = 0;
+    const resolved = applyAction(
+      room.state,
+      { type: "resolvePendingRoll", player: pending.player, pendingRollId: pending.id },
+      { next: () => dice[i++]! },
+    );
+    assert.equal(i, dice.length);
+    for (const e of resolved.events.filter(
+      (e) => e.type === "rollResolved" || e.type === "attackResolved",
+    )) {
+      assert.equal(e.abilityUseId, use);
+      assert.equal(e.abilityId, ABILITY_ASGORE_FIREBALL);
+    }
+    room.state = resolved.state;
+    checkpoint();
+  }
+  assert.equal(room.state.abilityUseCounter, 1);
+  assert(!room.state.pendingRoll);
+  // Additive V1 fields round-trip for every persisted continuation container.
+  const lineage = {
+    abilityId: "riverTraLaLa",
+    abilityUseId: "ability-use-12",
+    abilitySourceUnitId: caster.id,
+    abilitySourceCell: { col: 4, row: 4 },
+    abilitySourceRecipients: ["P1", "P2", "spectator"] as const,
+  };
+  room.state = {
+    ...room.state,
+    abilityUseCounter: 12,
+    pendingCombatQueue: [
+      { kind: "aoe", attackerId: caster.id, defenderId: defender.id, ...lineage },
+    ],
+    pendingAoE: {
+      casterId: caster.id,
+      center: { col: 4, row: 5 },
+      radius: 1,
+      affectedUnitIds: [defender.id],
+      revealedUnitIds: [],
+      damagedUnitIds: [],
+      damageByUnitId: {},
+      ...lineage,
+    },
+    pendingReactionMovement: {
+      source: "tralala",
+      controllerUnitId: caster.id,
+      targetUnitId: defender.id,
+      path: [
+        { col: 4, row: 4 },
+        { col: 4, row: 5 },
+      ],
+      stepIndex: 1,
+      stepReached: true,
+      stopped: false,
+      processedReactorIds: [],
+      touchedReactorIds: [],
+      reactionQueue: [],
+      ...lineage,
+    },
+  };
+  const saved = checkpoint();
+  assert.equal(room.state.pendingReactionMovement!.abilityUseId, lineage.abilityUseId);
+  const legacy = structuredClone(saved);
+  Reflect.deleteProperty(legacy.state, "abilityUseCounter");
+  for (const key of ["pendingAoE", "pendingReactionMovement"]) {
+    const value = legacy.state[key] as Record<string, unknown>;
+    for (const field of [
+      "abilityUseId",
+      "abilitySourceUnitId",
+      "abilitySourceCell",
+      "abilitySourceRecipients",
+    ])
+      delete value[field];
+  }
+  const restored = deserializeMatchSnapshot(row(legacy));
+  assert.equal(restored.state.abilityUseCounter, undefined);
+  assert.equal(restored.state.pendingAoE!.abilityUseId, undefined);
 }
 
 async function repositoryTests() {
@@ -595,6 +762,7 @@ async function run() {
   assert(snapshots(0).shouldCapture(73, true));
   assert(!snapshots(0).shouldCapture(20));
   serializationTests();
+  presentationRecoveryTests();
   await repositoryTests();
   await queueTests();
   await runtimeTests();

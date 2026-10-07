@@ -1,3 +1,4 @@
+import { rollManualD6 } from "../../pendingRoll/manualRoll";
 import type {
   ApplyResult,
   GameState,
@@ -21,7 +22,7 @@ export function resolveForestMoveCheckRoll(
     return { state: { ...state, pendingRoll: null }, events: [] };
   }
 
-  const roll = 1 + Math.floor(rng.next() * 6);
+  const roll = rollManualD6(rng);
   if (roll >= 5) {
     return applyMove(
       { ...state, pendingRoll: null },

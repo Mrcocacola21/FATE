@@ -173,6 +173,7 @@ test("resolved transport and phantasm movement map to path/cell VFX from public 
       { type: "abilityUsed", unitId: "grozny", abilityId: "groznyInvadeTime" },
       {
         type: "unitMoved",
+        provenance: { kind: "teleport" },
         unitId: "grozny",
         from: { col: 1, row: 1 },
         to: { col: 6, row: 6 },

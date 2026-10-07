@@ -7,7 +7,7 @@ import type {
   UnitState,
 } from "../../../../model";
 import type { RNG } from "../../../../rng";
-import { rollD6 } from "../../../../rng";
+import { rollManualD6 as rollD6 } from "../../../manualRoll";
 import { getUnitAt } from "../../../../board";
 import { clearPendingRoll, evUnitMoved } from "../../../../core";
 import type {
@@ -192,7 +192,7 @@ export function resolveAsgoreSoulParadeIntegrityDestinationChoice(
     }),
     events: [
       ...committed.events,
-      evUnitMoved(state, {
+      evUnitMoved(state, { provenance: { kind: "ability", abilityId: "asgoreSoulParade" },
         unitId: movedAsgore.id,
         from: { ...asgore.position },
         to: { ...movedAsgore.position! },

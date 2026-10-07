@@ -345,6 +345,9 @@ export function testVladIntimidatePushesAttackerOneCell() {
   );
 
   console.log("vlad_intimidate_pushes_attacker_one_cell passed");
+  const displacement = pushed.events.find(event => event.type === "intimidateResolved");
+  assert(displacement?.type === "intimidateResolved");
+  assert.deepStrictEqual(displacement.provenance, { kind: "forced", cause: "intimidatingStare" });
 }
 
 export function testVladIntimidateHiddenAllyCollisionKeepsUndyneTargetable() {

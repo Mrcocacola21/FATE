@@ -11,6 +11,7 @@ import {
   type TurnSlotCosts,
 } from "../turnEconomy";
 import { evAbilityUsed } from "../core";
+import { commitAbilityUse } from "../core/abilityUse";
 
 export interface AbilityCostCommitOptions {
   costs?: Partial<Record<TurnSlot, boolean>>;
@@ -25,6 +26,7 @@ export type AbilityCostCommitResult =
       unit: UnitState;
       events: GameEvent[];
       spec: AbilitySpec;
+      abilityUseId: string;
     }
   | {
       ok: false;
@@ -99,8 +101,9 @@ export function commitAbilityCost(
   const updatedUnit = hasSlotCost(costs)
     ? spendSlots(spentCharges.unit, costs)
     : spentCharges.unit;
+  const committedUse = commitAbilityUse(state, unitId, abilityId);
   const nextState: GameState = {
-    ...state,
+    ...committedUse.state,
     units: {
       ...state.units,
       [updatedUnit.id]: updatedUnit,
@@ -109,7 +112,7 @@ export function commitAbilityCost(
   const events =
     options?.emitAbilityUsedEvent === false
       ? []
-      : [evAbilityUsed({ unitId: updatedUnit.id, abilityId: spec.id })];
+      : [evAbilityUsed({ unitId: updatedUnit.id, abilityId: spec.id, abilityUseId: committedUse.use.abilityUseId, recipients: committedUse.use.abilitySourceRecipients })];
 
   return {
     ok: true,
@@ -117,5 +120,6 @@ export function commitAbilityCost(
     unit: updatedUnit,
     events,
     spec,
+    abilityUseId: committedUse.use.abilityUseId!,
   };
 }

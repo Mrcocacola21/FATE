@@ -1,6 +1,6 @@
 import type { ApplyResult, GameState, PendingRoll, UnitState } from "../../../../model";
 import type { RNG } from "../../../../rng";
-import { rollD6 } from "../../../../rng";
+import { rollManualD6 as rollD6 } from "../../../manualRoll";
 import { ABILITY_ASGORE_SOUL_PARADE } from "../../../../abilities";
 import { clearPendingRoll, requestRoll, evUnitHealed } from "../../../../core";
 import {
