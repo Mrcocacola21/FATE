@@ -82,6 +82,7 @@ export function useBoardEffects(params: {
       },
       batch.eventDelaysMs,
       batch.combatCues,
+      batch.movementCues,
     );
     tokenRef.current = batch.presentationToken;
     if (reducedMotion) {

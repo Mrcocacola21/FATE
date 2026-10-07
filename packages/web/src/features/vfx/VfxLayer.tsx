@@ -101,6 +101,7 @@ function Effect({
     <span
       key={key}
       data-vfx-cue={effect.id}
+      data-vfx-effect={effect.effectId}
       data-vfx-start={effect.startedAt}
       data-vfx-layer={layer}
       className={`vfx-geometry vfx-geometry-${shape} ${reducedMotion ? "vfx-reduced" : ""}`}

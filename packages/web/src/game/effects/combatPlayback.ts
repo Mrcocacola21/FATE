@@ -1,6 +1,13 @@
 import type { Coord, ProjectedGameEvent, PlayerView, RollKind } from "rules";
 import type { BoardEventBatch } from "./types";
 import {
+  confirmedMovement,
+  movementCueFromEvent,
+  movementSegmentDuration,
+  type MovementPresentationCue,
+  type MovementPresentationPlan,
+} from "./movementPresentation";
+import {
   snapshotVisualHp,
   snapshotVisualUnits,
   type VisualHpByUnitId,
@@ -68,6 +75,14 @@ type WithoutCueIdentity<T> = T extends unknown ? Omit<T, "id" | "eventIndex"> : 
 
 export type VisualPlaybackQueueItem =
   | {
+      type: "movement";
+      cue: Extract<MovementPresentationCue, { kind: "movement" }>;
+      startsAtMs: number;
+      endsAtMs: number;
+    }
+  | { type: "reveal"; unitId: string; cell: Coord; startsAtMs: number; endsAtMs: number }
+  | { type: "snareStatus"; unitId: string; startsAtMs: number; endsAtMs: number }
+  | {
       type: "attack";
       unitId: string;
       startsAtMs: number;
@@ -101,6 +116,9 @@ export type VisualPlaybackQueueItem =
     };
 
 export interface CombatVisualPlaybackPlan {
+  /** Local React binding, checked before starting or restarting a queued plan. */
+  playbackSessionKey?: string | null;
+  movementPlan: MovementPresentationPlan;
   batch: BoardEventBatch;
   startingHpByUnitId: VisualHpByUnitId;
   startingUnitsByUnitId: VisualUnitsByUnitId;
@@ -117,6 +135,7 @@ export interface CombatVisualPlaybackFrame {
   visualStateByUnitId: UnitVisualStateByUnitId;
   complete: boolean;
   roll: Extract<CombatPresentationCue, { kind: "roll" }> | null;
+  visualMotionByUnitId: Record<string, { position: Coord; opacity: number; mode: string }>;
 }
 
 export function isGameplayProjectedUnit(view: PlayerView, unitId: string): boolean {
@@ -246,30 +265,75 @@ export function buildCombatVisualPlaybackPlan(params: {
     ...params.startingUnitsByUnitId,
   };
   const playbackStartingHp = { ...params.startingHpByUnitId };
+  const revealIds = new Set(
+    params.batch.events
+      .filter((event) => event.type === "stealthRevealed")
+      .map((event) => event.unitId),
+  );
+  const snareIds = new Set(
+    params.batch.events
+      .filter((event) => event.type === "snareTriggered")
+      .map((event) => event.unitId),
+  );
   for (const [unitId, finalUnit] of Object.entries(finalSnapshot.units)) {
     const previousUnit = playbackStartingUnits[unitId];
     if (!previousUnit) {
+      if (
+        params.holdResolvedState &&
+        !revealIds.has(unitId) &&
+        !params.batch.events.some((event) => confirmedMovement(event)?.unitId === unitId)
+      ) {
+        // An ahead snapshot can contain a reveal still buffered by the shared
+        // chain scheduler. Early manual dice do not authorize its presentation.
+        delete finalSnapshot.units[unitId];
+        delete finalSnapshot.hp[unitId];
+        continue;
+      }
       // A unit newly revealed by this projected batch may enter visually now.
       if (finalUnit.position) {
-        playbackStartingUnits[unitId] = finalUnit;
-        playbackStartingHp[unitId] = finalUnit.hp;
+        const hazardDamage = params.batch.events.reduce(
+          (sum, event) =>
+            sum + (event.type === "stakeTriggered" && event.unitId === unitId ? event.damage : 0),
+          0,
+        );
+        playbackStartingUnits[unitId] = {
+          ...finalUnit,
+          hp: finalUnit.hp + hazardDamage,
+          position: revealIds.has(unitId) ? null : finalUnit.position,
+        };
+        playbackStartingHp[unitId] = finalUnit.hp + hazardDamage;
       }
       continue;
     }
-    // Statuses from the authoritative projection (for example Jack's wrapped
-    // overlay) are safe to render, while position/HP remain on the pre-hit
-    // visual snapshot until their queued phases complete.
+    // Merge authorized persistent state while semantic movement, hazard status,
+    // reveal and HP remain on their starting values until queued phases run.
     playbackStartingUnits[unitId] = {
       ...previousUnit,
       ...finalUnit,
       hp: previousUnit.hp,
       position: previousUnit.position,
+      ...(revealIds.has(unitId) ? { isStealthed: previousUnit.isStealthed } : {}),
+      ...(snareIds.has(unitId)
+        ? { immobilizedUntilOwnTurnStart: previousUnit.immobilizedUntilOwnTurnStart }
+        : {}),
     };
   }
   const runningHp = { ...playbackStartingHp };
   const queue: VisualPlaybackQueueItem[] = [];
   const eventDelaysMs = params.batch.events.map(() => 0);
   const combatCues: CombatPresentationCue[] = [];
+  const movementCues: MovementPresentationCue[] = [];
+  const movementCount = params.batch.events.filter((event) => confirmedMovement(event)).length;
+  const segmentMs = movementSegmentDuration(movementCount, params.reducedMotion);
+  // Start from the first authorized segment even if the snapshot has already advanced.
+  const anchored = new Set<string>();
+  for (const event of params.batch.events) {
+    const movement = confirmedMovement(event);
+    if (!movement || anchored.has(movement.unitId)) continue;
+    anchored.add(movement.unitId);
+    const unit = playbackStartingUnits[movement.unitId];
+    if (unit) playbackStartingUnits[movement.unitId] = { ...unit, position: movement.from };
+  }
   const scheduledDeaths = new Set<string>();
   const abilityBySourceUnitId = new Map<string, string>();
   const addCue = (eventIndex: number, cue: WithoutCueIdentity<CombatPresentationCue>) => {
@@ -319,6 +383,57 @@ export function buildCombatVisualPlaybackPlan(params: {
   let cursorMs = 0;
   params.batch.events.forEach((event, eventIndex) => {
     eventDelaysMs[eventIndex] = cursorMs;
+    const movementCue = movementCueFromEvent({
+      event,
+      events: params.batch.events,
+      eventIndex,
+      view: params.finalView,
+      namespace: params.batch.streamId ?? params.batch.previewId ?? "preview",
+      atMs: cursorMs,
+      durationMs: confirmedMovement(event)
+        ? event.type === "unitMoved" && event.provenance.kind === "teleport"
+          ? params.reducedMotion
+            ? 100
+            : 220
+          : segmentMs
+        : params.reducedMotion
+          ? 120
+          : 260,
+    });
+    if (movementCue) {
+      movementCues.push(movementCue);
+      if (movementCue.kind === "movement") {
+        queue.push({
+          type: "movement",
+          cue: movementCue,
+          startsAtMs: cursorMs,
+          endsAtMs: cursorMs + movementCue.durationMs,
+        });
+        cursorMs += movementCue.durationMs;
+        return;
+      }
+      if (movementCue.kind === "reveal") {
+        queue.push({
+          type: "reveal",
+          unitId: movementCue.unitId,
+          cell: movementCue.cell,
+          startsAtMs: cursorMs,
+          endsAtMs: cursorMs + movementCue.durationMs,
+        });
+        cursorMs += params.reducedMotion ? 25 : 60;
+        return;
+      }
+      if (movementCue.kind === "snareTrigger") {
+        queue.push({
+          type: "snareStatus",
+          unitId: movementCue.unitId,
+          startsAtMs: cursorMs,
+          endsAtMs: cursorMs,
+        });
+        cursorMs += movementCue.durationMs;
+        return;
+      }
+    }
     if (event.type === "rollResolved" && combatRollSide(event.rollKind)) {
       addCue(eventIndex, { kind: "roll", roll: event, atMs: cursorMs, durationMs: timing.rollMs });
       cursorMs += timing.rollMs;
@@ -457,6 +572,19 @@ export function buildCombatVisualPlaybackPlan(params: {
       damage.abilityId = abilityBySourceUnitId.get(damage.sourceUnitId);
     }
 
+    if (event.type === "stakeTriggered" || event.type === "hiddenCollisionResolved") {
+      const cell = event.type === "stakeTriggered" ? event.markerPos : event.from;
+      addCue(eventIndex, {
+        kind: "damage",
+        unitId: damage.targetUnitId,
+        cell,
+        amount: damage.amount,
+        atMs: impact,
+        hpAtMs: impact + timing.impactPauseMs,
+        durationMs: timing.outcomeMs,
+      });
+    }
+
     cursorMs = scheduleDamage(damage, impact + timing.impactPauseMs) + timing.betweenHitsMs;
   });
 
@@ -468,18 +596,31 @@ export function buildCombatVisualPlaybackPlan(params: {
       finalSnapshot.units[unitId] = {
         ...unit,
         hp: runningHp[unitId],
-        position: previous.position,
+        position:
+          [...movementCues]
+            .reverse()
+            .find(
+              (cue): cue is Extract<MovementPresentationCue, { kind: "movement" }> =>
+                cue.kind === "movement" && cue.unitId === unitId,
+            )?.to ??
+          movementCues.find(
+            (cue): cue is Extract<MovementPresentationCue, { kind: "reveal" }> =>
+              cue.kind === "reveal" && cue.unitId === unitId,
+          )?.cell ??
+          previous.position,
         isAlive: previous.isAlive,
       };
     }
   }
 
   return {
+    movementPlan: { cues: movementCues },
     batch: {
       ...params.batch,
       eventDelaysMs,
       eventSfxDelaysMs: eventDelaysMs,
       combatCues,
+      movementCues,
     },
     startingHpByUnitId: playbackStartingHp,
     startingUnitsByUnitId: playbackStartingUnits,
@@ -513,16 +654,65 @@ export function combatVisualPlaybackFrame(
       ),
       complete: true,
       roll: null,
+      visualMotionByUnitId: {},
     };
   }
 
   const visualHpByUnitId = { ...plan.startingHpByUnitId };
+  const visualMotionByUnitId: CombatVisualPlaybackFrame["visualMotionByUnitId"] = {};
   const visualUnitsByUnitId = { ...plan.startingUnitsByUnitId };
   const visualStateByUnitId: UnitVisualStateByUnitId = Object.fromEntries(
     Object.keys(visualUnitsByUnitId).map((unitId) => [unitId, "idle" as const]),
   );
 
   for (const item of plan.queue) {
+    if (item.type === "snareStatus") {
+      if (elapsedMs >= item.startsAtMs && visualUnitsByUnitId[item.unitId])
+        visualUnitsByUnitId[item.unitId] = {
+          ...visualUnitsByUnitId[item.unitId],
+          immobilizedUntilOwnTurnStart: true,
+        };
+      continue;
+    }
+    if (item.type === "movement") {
+      if (elapsedMs < item.startsAtMs) continue;
+      const { cue } = item;
+      const unit = visualUnitsByUnitId[cue.unitId];
+      if (!unit) continue;
+      const progress = Math.min(
+        1,
+        (elapsedMs - item.startsAtMs) / Math.max(1, item.endsAtMs - item.startsAtMs),
+      );
+      const teleport = cue.mode === "teleport";
+      const position = teleport
+        ? progress < 0.5
+          ? cue.from
+          : cue.to
+        : {
+            col: cue.from.col + (cue.to.col - cue.from.col) * progress,
+            row: cue.from.row + (cue.to.row - cue.from.row) * progress,
+          };
+      visualUnitsByUnitId[cue.unitId] = {
+        ...unit,
+        position: progress >= 1 || (teleport && progress >= 0.5) ? cue.to : cue.from,
+      };
+      visualMotionByUnitId[cue.unitId] = {
+        position,
+        mode: cue.mode,
+        opacity: teleport ? Math.abs(2 * progress - 1) : 1,
+      };
+      continue;
+    }
+    if (item.type === "reveal") {
+      if (elapsedMs >= item.startsAtMs && visualUnitsByUnitId[item.unitId]) {
+        visualUnitsByUnitId[item.unitId] = {
+          ...visualUnitsByUnitId[item.unitId],
+          position: item.cell,
+          isStealthed: false,
+        };
+      }
+      continue;
+    }
     if (item.type === "healHpTween") {
       if (elapsedMs < item.startsAtMs) continue;
       const progress = Math.min(
@@ -579,5 +769,6 @@ export function combatVisualPlaybackFrame(
         (cue): cue is Extract<CombatPresentationCue, { kind: "roll" }> =>
           cue.kind === "roll" && elapsedMs >= cue.atMs && elapsedMs < cue.atMs + cue.durationMs,
       ) ?? null,
+    visualMotionByUnitId,
   };
 }

@@ -1,6 +1,10 @@
 import type { Coord, ProjectedGameEvent, PlayerView } from "rules";
 
 export type VfxEffectId =
+  | "stakePlace"
+  | "stakeTrigger"
+  | "snarePlace"
+  | "snareTrigger"
   | "searchReveal"
   | "hiddenReveal"
   | "markApply"

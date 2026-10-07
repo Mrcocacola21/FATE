@@ -8,6 +8,11 @@ import {
 } from "./vfxGeometry";
 import type { BoardVfxRequest, VfxEffectId, VfxMapperContext } from "./vfxTypes";
 import type { CombatPresentationCue } from "../../game/effects/combatPlayback";
+import {
+  confirmedMovement,
+  movementCueVfx,
+  type MovementPresentationCue,
+} from "../../game/effects/movementPresentation";
 
 const ABILITY_CHIKATILO_ASSASSIN_MARK = "chikatiloAssassinMark";
 const ABILITY_ASGORE_FIRE_PARADE = "asgoreFireParade";
@@ -382,9 +387,12 @@ export function mapEventBatchToVfx(params: {
   presentationId?: string;
   eventDelaysMs?: readonly number[];
   combatCues?: readonly CombatPresentationCue[];
+  movementCues?: readonly MovementPresentationCue[];
 }): BoardVfxRequest[] {
   const effects: BoardVfxRequest[] = [];
   params.events.forEach((event, eventIndex) => {
+    if (params.movementCues && (confirmedMovement(event) || event.type === "stealthRevealed"))
+      return;
     if (params.combatCues && (event.type === "attackResolved" || event.type === "unitDied")) return;
     const baseDelay = params.eventDelaysMs?.[eventIndex] ?? 0;
     effects.push(
@@ -414,5 +422,6 @@ export function mapEventBatchToVfx(params: {
       durationMs: cue.durationMs,
     });
   }
+  for (const cue of params.movementCues ?? []) effects.push(...movementCueVfx(cue));
   return effects;
 }

@@ -18,6 +18,7 @@ import { useBoardEffects } from "../game/effects/useBoardEffects";
 import { useVisualResolution } from "../game/effects/useVisualResolution";
 import { CombatRollFeedback } from "../game/effects/CombatRollFeedback";
 import { isGameplayProjectedUnit } from "../game/effects/combatPlayback";
+import { cellToBoardPoint } from "../features/vfx/vfxGeometry";
 import { useBoardFit } from "../game/hooks/useBoardFit";
 import type { BoardEventBatch, BoardPreviewLine } from "../game/effects/types";
 import { BoneIcon, getActiveBoneStatus, type ActiveBoneStatus } from "../game/boneStatus";
@@ -604,6 +605,24 @@ export const Board: FC<BoardProps> = ({
         [...occupants].reverse().find((occupant) => !occupant.isVisualOnly) ??
         occupants[occupants.length - 1];
       const isGameplayUnit = !!unit && !unit.isVisualOnly;
+      const motion = unit ? visualResolution.visualMotionByUnitId[unit.id] : undefined;
+      const motionStyle =
+        motion && unit
+          ? (() => {
+              const base = cellToBoardPoint(
+                renderedUnits[unit.id].position!,
+                size,
+                cellSize,
+                isFlipped,
+              );
+              const point = cellToBoardPoint(motion.position, size, cellSize, isFlipped);
+              return {
+                transform: `translate(${point.x - base.x}px, ${point.y - base.y}px)`,
+                opacity: motion.opacity,
+                pointerEvents: "none" as const,
+              };
+            })()
+          : undefined;
       const isSelected = isGameplayUnit && unit.id === selectedUnitId;
       const isActiveUnit = isGameplayUnit && unit.id === view.activeUnitId;
       const markStatus = unit?.chikatiloMarkStatus;
@@ -981,7 +1000,9 @@ export const Board: FC<BoardProps> = ({
               <img src={JACK_TRAP_MARKER_ASSET} alt="" draggable={false} />
             </div>
           )}
-          <div className="board-unit-content">{content}</div>
+          <div className="board-unit-content" style={motionStyle} data-movement-mode={motion?.mode}>
+            {content}
+          </div>
           {isSelected || isActiveUnit ? (
             <span className="board-selection-outline" aria-hidden="true" />
           ) : null}
@@ -1066,7 +1087,10 @@ export const Board: FC<BoardProps> = ({
             />
           )}
           {unit && (
-            <div className="board-outcome pointer-events-none absolute bottom-1 left-1 right-1 flex justify-center">
+            <div
+              className="board-outcome pointer-events-none absolute bottom-1 left-1 right-1 flex justify-center"
+              style={motionStyle}
+            >
               <div style={{ width: hpBarWidth }}>
                 <HpBar
                   current={

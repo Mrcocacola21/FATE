@@ -3,6 +3,10 @@ import type { BoardVfxRequest, VfxEffectId } from "./vfxTypes";
 import { vfxRegistry } from "./vfxRegistry";
 
 export const CORE_VFX_PREVIEW_IDS: VfxEffectId[] = [
+  "stakePlace",
+  "stakeTrigger",
+  "snarePlace",
+  "snareTrigger",
   "combatHit",
   "combatMiss",
   "unitDeath",

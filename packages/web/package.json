@@ -41,6 +41,7 @@
     "test:placement": "tsx --test src/game/components/RightPanel/sections/PlacementSection.test.tsx",
     "test:players": "tsx --test src/game/gameshell-content/components/SidePanelTabs.test.tsx",
     "test:effects": "tsx --test src/game/effects/*.test.ts src/features/vfx/*.test.ts src/features/vfx/*.test.tsx src/pages/VfxPreviewPage.test.tsx",
+    "test:movement:e2e": "node scripts/movement-smoke.mjs",
     "test:sfx": "tsx --test src/assets/sfx/*.test.ts src/features/sfx/*.test.ts",
     "test:sfx:e2e": "node scripts/sfx-smoke.mjs",
     "test:vfx": "tsx --test src/features/vfx/*.test.ts src/features/vfx/*.test.tsx src/pages/VfxPreviewPage.test.tsx",

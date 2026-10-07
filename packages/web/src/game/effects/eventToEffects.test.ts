@@ -110,7 +110,11 @@ test("movement maps to a trail between explicit projected coordinates", () => {
   );
 
   const trail = effects.find((effect) => effect.kind === "movementTrail");
-  assert.equal(trail?.kind === "movementTrail" ? trail.path.length : 0, 4);
+  // This event authorizes an endpoint segment, not a list of visited cells.
+  assert.deepEqual(trail?.kind === "movementTrail" ? trail.path : [], [
+    { col: 1, row: 1 },
+    { col: 1, row: 4 },
+  ]);
 });
 
 test("an event naming a hidden unit does not use a cached hidden coordinate", () => {
@@ -195,13 +199,24 @@ test("bone punishment keeps its color cue and shows the exact damage", () => {
   );
 });
 
-
 test("new Phase 4 roll and snare events add no presentation behavior", () => {
-  const events:ProjectedGameEvent[]=[
-    {type:"rollResolved",rollId:"roll-1",rollKind:"attack_attackerRoll",rollerPlayerId:"P1",unitId:"caster",
-      rollIndex:0,dice:[4,5],sides:6,total:9,abilityUseId:"ability-use-1",abilityId:"asgoreFireball"},
-    {type:"snarePlaced",owner:"P1",sourceUnitId:"caster",cell:{col:4,row:4}},
-    {type:"snareTriggered",unitId:"target",cell:{col:4,row:4},immobilized:true},
+  const events: ProjectedGameEvent[] = [
+    {
+      type: "rollResolved",
+      rollId: "roll-1",
+      rollKind: "attack_attackerRoll",
+      rollerPlayerId: "P1",
+      unitId: "caster",
+      rollIndex: 0,
+      dice: [4, 5],
+      sides: 6,
+      total: 9,
+      abilityUseId: "ability-use-1",
+      abilityId: "asgoreFireball",
+    },
+    { type: "snarePlaced", owner: "P1", sourceUnitId: "caster", cell: { col: 4, row: 4 } },
+    { type: "snareTriggered", unitId: "target", cell: { col: 4, row: 4 }, immobilized: true },
   ];
-  for(const event of events) assert.deepEqual(effectsFromGameEvent(event,{view:view([]),previousPositions:{}}),[]);
+  for (const event of events)
+    assert.deepEqual(effectsFromGameEvent(event, { view: view([]), previousPositions: {} }), []);
 });

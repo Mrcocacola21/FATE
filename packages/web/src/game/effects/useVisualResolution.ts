@@ -13,6 +13,7 @@ import {
   type CombatVisualPlaybackPlan,
   type UnitVisualStateByUnitId,
   type CombatPresentationCue,
+  type CombatVisualPlaybackFrame,
 } from "./combatPlayback";
 import type { BoardEventBatch } from "./types";
 import {
@@ -29,6 +30,7 @@ import {
 const SNAPSHOT_SYNC_FALLBACK_MS = 1500;
 
 interface RenderedVisualState {
+  visualMotionByUnitId: CombatVisualPlaybackFrame["visualMotionByUnitId"];
   visualHpByUnitId: VisualHpByUnitId;
   visualUnitsByUnitId: VisualUnitsByUnitId;
   visualStateByUnitId: UnitVisualStateByUnitId;
@@ -37,6 +39,7 @@ interface RenderedVisualState {
 
 function baseline(view: PlayerView): RenderedVisualState {
   return {
+    visualMotionByUnitId: {},
     visualHpByUnitId: snapshotVisualHp(view),
     visualUnitsByUnitId: snapshotVisualUnits(view),
     visualStateByUnitId: {},
@@ -52,6 +55,7 @@ export function useVisualResolution(params: {
   enabled: boolean;
   sessionKey: string | null | undefined;
 }): {
+  visualMotionByUnitId: CombatVisualPlaybackFrame["visualMotionByUnitId"];
   batch: BoardEventBatch | null;
   visualHpByUnitId: VisualHpByUnitId;
   visualUnitsByUnitId: VisualUnitsByUnitId;
@@ -70,6 +74,7 @@ export function useVisualResolution(params: {
   const [rendered, setRendered] = useState<RenderedVisualState>(() => baseline(view));
   const [plans, setPlans] = useState<CombatVisualPlaybackPlan[]>([]);
   const [playingBatch, setPlayingBatch] = useState<BoardEventBatch | null>(null);
+  const renderedSessionKeyRef = useRef(sessionKey);
   const activePlan = plans[0] ?? null;
   const processedBatchKeysRef = useRef<Set<string>>(new Set());
   const queuedTailRef = useRef<{
@@ -81,6 +86,7 @@ export function useVisualResolution(params: {
   });
 
   useEffect(() => {
+    renderedSessionKeyRef.current = sessionKey;
     const nextResolution = createVisualResolutionState(latestInputRef.current);
     const nextRendered = baseline(latestInputRef.current.view);
     resolutionRef.current = nextResolution;
@@ -121,6 +127,7 @@ export function useVisualResolution(params: {
         reducedMotion,
         holdResolvedState: current.groupActive,
       });
+      plan.playbackSessionKey = sessionKey;
       queuedTailRef.current = { hp: plan.finalHpByUnitId, units: plan.finalUnitsByUnitId };
       nextPlans.push(plan);
     }
@@ -132,10 +139,13 @@ export function useVisualResolution(params: {
     if (nextPlans.length)
       setPlans((queued) => [...queued, ...nextPlans].slice(-MAX_PRESENTATION_BATCHES));
     if (batches?.length) onBatchesConsumed?.(batches);
-  }, [batch, batches, enabled, onBatchesConsumed, reducedMotion, view]);
+  }, [batch, batches, enabled, onBatchesConsumed, reducedMotion, view, sessionKey]);
 
   useEffect(() => {
     const plan = activePlan;
+    // Reset effects run in this same commit. Never restart a plan retained by
+    // the previous render while those reset state updates are being applied.
+    if (plan && plan.playbackSessionKey !== sessionKey) return;
     if (!plan) {
       setPlayingBatch(null);
       return;
@@ -151,6 +161,7 @@ export function useVisualResolution(params: {
     setPlayingBatch({ ...plan.batch, playbackStartedAt: Date.now() });
     const initialFrame = combatVisualPlaybackFrame(plan, 0);
     setRendered({
+      visualMotionByUnitId: initialFrame.visualMotionByUnitId,
       visualHpByUnitId: initialFrame.visualHpByUnitId,
       visualUnitsByUnitId: initialFrame.visualUnitsByUnitId,
       visualStateByUnitId: initialFrame.visualStateByUnitId,
@@ -161,6 +172,7 @@ export function useVisualResolution(params: {
       if (cancelled || !presentationBatchIsCurrent(plan.batch)) return;
       const frame = combatVisualPlaybackFrame(plan, now - startedAt);
       setRendered({
+        visualMotionByUnitId: frame.visualMotionByUnitId,
         visualHpByUnitId: frame.visualHpByUnitId,
         visualUnitsByUnitId: frame.visualUnitsByUnitId,
         visualStateByUnitId: frame.visualStateByUnitId,
@@ -194,7 +206,14 @@ export function useVisualResolution(params: {
   useEffect(() => {
     if (!enabled || plans.length > 0 || resolution.groupActive) return;
     const authoritativeHp = snapshotVisualHp(view);
-    if (visualHpSnapshotsEqual(rendered.visualHpByUnitId, authoritativeHp)) return;
+    const positionsEqual =
+      Object.keys(view.units).length === Object.keys(rendered.visualUnitsByUnitId).length &&
+      Object.values(view.units).every((unit) => {
+        const position = rendered.visualUnitsByUnitId[unit.id]?.position;
+        return position?.col === unit.position?.col && position?.row === unit.position?.row;
+      });
+    if (positionsEqual && visualHpSnapshotsEqual(rendered.visualHpByUnitId, authoritativeHp))
+      return;
 
     // roomState normally arrives just before actionResult. A lost result or a
     // snapshot-only resync must eventually reconcile without replaying VFX.
@@ -207,18 +226,34 @@ export function useVisualResolution(params: {
       };
     }, SNAPSHOT_SYNC_FALLBACK_MS);
     return () => window.clearTimeout(timer);
-  }, [enabled, plans.length, rendered.visualHpByUnitId, resolution.groupActive, view, sessionKey]);
+  }, [
+    enabled,
+    plans.length,
+    rendered.visualHpByUnitId,
+    rendered.visualUnitsByUnitId,
+    resolution.groupActive,
+    view,
+    sessionKey,
+  ]);
 
+  const currentRendered = renderedSessionKeyRef.current === sessionKey ? rendered : baseline(view);
   return {
+    visualMotionByUnitId: currentRendered.visualMotionByUnitId,
     batch:
       playingBatch &&
+      activePlan?.playbackSessionKey === sessionKey &&
       presentationBatchIsCurrent(playingBatch) &&
       !presentationBatchHasExpired(playingBatch)
         ? playingBatch
         : null,
-    visualHpByUnitId: rendered.visualHpByUnitId,
-    visualUnitsByUnitId: rendered.visualUnitsByUnitId,
-    visualStateByUnitId: rendered.visualStateByUnitId,
-    roll: playingBatch && presentationBatchIsCurrent(playingBatch) ? rendered.roll : null,
+    visualHpByUnitId: currentRendered.visualHpByUnitId,
+    visualUnitsByUnitId: currentRendered.visualUnitsByUnitId,
+    visualStateByUnitId: currentRendered.visualStateByUnitId,
+    roll:
+      playingBatch &&
+      activePlan?.playbackSessionKey === sessionKey &&
+      presentationBatchIsCurrent(playingBatch)
+        ? currentRendered.roll
+        : null,
   };
 }

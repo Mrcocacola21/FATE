@@ -95,6 +95,7 @@ export interface BoardEventBatch {
   eventSfxDelaysMs?: number[];
   /** One web-only semantic schedule shared by audio, sprites, HP and text. */
   combatCues?: import("./combatPlayback").CombatPresentationCue[];
+  movementCues?: import("./movementPresentation").MovementPresentationCue[];
   /** Shared wall-clock origin assigned when this plan starts, never at ingress. */
   playbackStartedAt?: number;
 }

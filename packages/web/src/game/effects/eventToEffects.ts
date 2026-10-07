@@ -2,6 +2,11 @@ import type { Coord, ProjectedGameEvent, PlayerView } from "rules";
 import { isCoord, linePath, squareArea, uniqueCoords, visibleUnitCoord } from "./boardEffects";
 import type { BoardEffect, VisibleUnitPositions } from "./types";
 import type { CombatPresentationCue } from "./combatPlayback";
+import {
+  confirmedMovement,
+  movementCueEffects,
+  type MovementPresentationCue,
+} from "./movementPresentation";
 
 interface EventEffectContext {
   view: PlayerView;
@@ -113,15 +118,30 @@ function effectForAttack(
 
   if (event.hit === true) {
     effects.push(
-      ...(defender ? [{ kind: "unitFlash", unitId: event.defenderId, coord: defender, tone: "hit", durationMs: 300 } as BoardEffect] : []),
+      ...(defender
+        ? [
+            {
+              kind: "unitFlash",
+              unitId: event.defenderId,
+              coord: defender,
+              tone: "hit",
+              durationMs: 300,
+            } as BoardEffect,
+          ]
+        : []),
     );
     if (defender && typeof event.damage === "number" && event.damage > 0) {
-      effects.push(
-        ...floatingValue(defender, `-${event.damage}`, "damage"),
-      );
+      effects.push(...floatingValue(defender, `-${event.damage}`, "damage"));
     }
   } else if (event.hit === false) {
-    if (defender) effects.push({ kind: "unitFlash", unitId: event.defenderId, coord: defender, tone: "defend", durationMs: 300 });
+    if (defender)
+      effects.push({
+        kind: "unitFlash",
+        unitId: event.defenderId,
+        coord: defender,
+        tone: "defend",
+        durationMs: 300,
+      });
     effects.push(...floatingLabel(defender, "miss", "miss"));
   }
 
@@ -157,7 +177,13 @@ function effectForAoe(
     });
   }
   if (source && event.sourceUnitId) {
-    effects.push({ kind: "unitFlash", unitId: event.sourceUnitId, coord: source, tone: "buff", durationMs: 650 });
+    effects.push({
+      kind: "unitFlash",
+      unitId: event.sourceUnitId,
+      coord: source,
+      tone: "buff",
+      durationMs: 650,
+    });
   }
 
   const damagedIds = new Set(Array.isArray(event.damagedUnitIds) ? event.damagedUnitIds : []);
@@ -175,7 +201,10 @@ function effectForAoe(
   return effects;
 }
 
-export function effectsFromGameEvent(event: ProjectedGameEvent, context: EventEffectContext): BoardEffect[] {
+export function effectsFromGameEvent(
+  event: ProjectedGameEvent,
+  context: EventEffectContext,
+): BoardEffect[] {
   switch (event.type) {
     case "unitPlaced":
       return isCoord(event.position)
@@ -194,17 +223,19 @@ export function effectsFromGameEvent(event: ProjectedGameEvent, context: EventEf
       return effectForAoe(event, context);
     case "unitMoved": {
       if (!isCoord(event.from) || !isCoord(event.to)) return [];
-      const path = linePath(event.from, event.to) ?? [event.from, event.to];
-      const distance = Math.max(
-        Math.abs(event.from.col - event.to.col),
-        Math.abs(event.from.row - event.to.row),
-      );
+      const movement = confirmedMovement(event);
+      if (!movement) return [];
+      if (movement.mode === "teleport")
+        return [
+          { kind: "cellPulse", cells: [event.from], tone: "status", durationMs: 110 },
+          { kind: "cellPulse", cells: [event.to], tone: "status", durationMs: 110, delayMs: 110 },
+        ];
       return [
         {
           kind: "movementTrail",
-          path,
-          tone: distance > 4 || path.length === 2 ? "teleport" : "move",
-          durationMs: 850,
+          path: [event.from, event.to],
+          tone: movement.mode === "forced" ? "push" : "move",
+          durationMs: 160,
         },
         { kind: "cellPulse", cells: [event.to], tone: "move", durationMs: 650 },
       ];
@@ -525,6 +556,7 @@ export function effectsFromEventBatch(
   context: EventEffectContext,
   eventDelaysMs?: readonly number[],
   combatCues?: readonly CombatPresentationCue[],
+  movementCues?: readonly MovementPresentationCue[],
 ): BoardEffect[] {
   let sequenceDelay = 0;
   const effects: BoardEffect[] = [];
@@ -537,10 +569,31 @@ export function effectsFromEventBatch(
       .map((event) => event.defenderId),
   );
   events.forEach((event, eventIndex) => {
+    if (
+      movementCues &&
+      [
+        "unitMoved",
+        "intimidateResolved",
+        "stakesPlaced",
+        "snarePlaced",
+        "snareTriggered",
+        "stealthRevealed",
+      ].includes(event.type)
+    )
+      return;
+    if (combatCues && (event.type === "stakeTriggered" || event.type === "hiddenCollisionResolved"))
+      return;
     if (combatCues && ["attackResolved", "unitDied", "unitHealed"].includes(event.type)) return;
     if (combatCues && event.type === "aoeResolved") {
-      effects.push(...effectForAoe({ ...event, affectedUnitIds: [], damagedUnitIds: [], damageByUnitId: {} }, context)
-        .map(effect => ({ ...effect, delayMs: (effect.delayMs ?? 0) + (eventDelaysMs?.[eventIndex] ?? 0) })));
+      effects.push(
+        ...effectForAoe(
+          { ...event, affectedUnitIds: [], damagedUnitIds: [], damageByUnitId: {} },
+          context,
+        ).map((effect) => ({
+          ...effect,
+          delayMs: (effect.delayMs ?? 0) + (eventDelaysMs?.[eventIndex] ?? 0),
+        })),
+      );
       return;
     }
     const eventEffects =
@@ -551,9 +604,7 @@ export function effectsFromEventBatch(
               affectedUnitIds: event.affectedUnitIds.filter(
                 (unitId) => !attackTargetIds.has(unitId),
               ),
-              damagedUnitIds: event.damagedUnitIds.filter(
-                (unitId) => !attackTargetIds.has(unitId),
-              ),
+              damagedUnitIds: event.damagedUnitIds.filter((unitId) => !attackTargetIds.has(unitId)),
               damageByUnitId: Object.fromEntries(
                 Object.entries(event.damageByUnitId ?? {}).filter(
                   ([unitId]) => !attackTargetIds.has(unitId),
@@ -577,19 +628,41 @@ export function effectsFromEventBatch(
   for (const cue of combatCues ?? []) {
     if (cue.kind === "roll" || !cue.cell) continue;
     if (cue.kind === "death") {
-      effects.push(...floatingLabel(cue.cell, "defeated", "status").map(effect => ({ ...effect, delayMs: cue.atMs })));
+      effects.push(
+        ...floatingLabel(cue.cell, "defeated", "status").map((effect) => ({
+          ...effect,
+          delayMs: cue.atMs,
+        })),
+      );
       continue;
     }
-    effects.push({ kind: "unitFlash", unitId: cue.unitId, coord: cue.cell,
+    effects.push({
+      kind: "unitFlash",
+      unitId: cue.unitId,
+      coord: cue.cell,
       tone: cue.kind === "miss" ? "defend" : cue.kind === "heal" ? "heal" : "hit",
-      durationMs: cue.durationMs, delayMs: cue.atMs });
+      durationMs: cue.durationMs,
+      delayMs: cue.atMs,
+    });
     if (cue.kind === "miss") {
-      effects.push(...floatingLabel(cue.cell, "miss", "miss").map(effect => ({ ...effect, delayMs: cue.atMs })));
+      effects.push(
+        ...floatingLabel(cue.cell, "miss", "miss").map((effect) => ({
+          ...effect,
+          delayMs: cue.atMs,
+        })),
+      );
     } else if (cue.amount && cue.amount > 0) {
-      effects.push(...floatingValue(cue.cell, `${cue.kind === "heal" ? "+" : "-"}${cue.amount}`, cue.kind === "heal" ? "heal" : "damage")
-        .map(effect => ({ ...effect, delayMs: cue.hpAtMs ?? cue.atMs })));
+      effects.push(
+        ...floatingValue(
+          cue.cell,
+          `${cue.kind === "heal" ? "+" : "-"}${cue.amount}`,
+          cue.kind === "heal" ? "heal" : "damage",
+        ).map((effect) => ({ ...effect, delayMs: cue.hpAtMs ?? cue.atMs })),
+      );
     }
   }
+
+  for (const cue of movementCues ?? []) effects.push(...movementCueEffects(cue));
 
   const seen = new Set<string>();
   return effects.filter((effect) => {

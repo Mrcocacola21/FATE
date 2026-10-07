@@ -151,6 +151,38 @@ const paired = (primary: string, accent: string, frames: number): VfxDefinition[
 ];
 
 export const vfxRegistry: Record<VfxEffectId, VfxDefinition> = {
+  stakePlace: generated(
+    "stakePlace",
+    new URL("../../assets/vfx/heroes/vladTepes/stakes_place.png", import.meta.url).href,
+    10,
+    400,
+    "cell",
+    "ground",
+  ),
+  stakeTrigger: generated(
+    "stakeTrigger",
+    new URL("../../assets/vfx/heroes/vladTepes/stake_trigger.png", import.meta.url).href,
+    13,
+    550,
+    "cell",
+    "impact",
+  ),
+  snarePlace: generated(
+    "snarePlace",
+    new URL("../../assets/vfx/heroes/jackRipper/snare_place.png", import.meta.url).href,
+    10,
+    400,
+    "cell",
+    "ground",
+  ),
+  snareTrigger: generated(
+    "snareTrigger",
+    new URL("../../assets/vfx/heroes/jackRipper/snare_reveal_trigger.png", import.meta.url).href,
+    13,
+    550,
+    "cell",
+    "impact",
+  ),
   combatHit: generated(
     "combatHit",
     new URL("../../assets/vfx/combat/combat_hit_light.png", import.meta.url).href,
