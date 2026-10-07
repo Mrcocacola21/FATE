@@ -21,6 +21,8 @@ import { useBoardFit } from "../game/hooks/useBoardFit";
 import type { BoardEventBatch, BoardPreviewLine } from "../game/effects/types";
 import { BoneIcon, getActiveBoneStatus, type ActiveBoneStatus } from "../game/boneStatus";
 import { VfxLayer } from "../features/vfx/VfxLayer";
+import { BOARD_LAYER_STYLES } from "../features/vfx/vfxRegistry";
+import type { QueuedBoardVfxRequest } from "../features/vfx/vfxTypes";
 import { useBoardVfx } from "../features/vfx/useBoardVfx";
 import { useBoardSfx } from "../features/sfx/useBoardSfx";
 import { SnaredOverlay } from "./SnaredOverlay";
@@ -60,6 +62,9 @@ interface BoardProps {
   onEventBatchesConsumed?: (batches: BoardEventBatch[]) => void;
   effectSessionKey?: string | null;
   previewLines?: readonly BoardPreviewLine[];
+  /** Debug-only normalized cues, isolated from the live event/session pipeline. */
+  previewVfx?: QueuedBoardVfxRequest[];
+  previewReducedMotion?: boolean;
   zoom?: number;
   showCoordinates?: boolean;
   className?: string;
@@ -213,6 +218,8 @@ export const Board: FC<BoardProps> = ({
   onEventBatchesConsumed,
   effectSessionKey = null,
   previewLines = [],
+  previewVfx,
+  previewReducedMotion,
   zoom = 1,
   showCoordinates = true,
   className = "",
@@ -617,7 +624,7 @@ export const Board: FC<BoardProps> = ({
         "flex",
         "items-center",
         "justify-center",
-        "transition-[width,height,background-color,box-shadow] duration-150 ease-out",
+        "transition-[background-color,box-shadow] duration-150 ease-out",
         "focus-visible:z-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-400",
         disabled ? "cursor-not-allowed opacity-70" : "cursor-pointer",
         isDark ? "board-cell-dark" : "board-cell-light",
@@ -855,7 +862,7 @@ export const Board: FC<BoardProps> = ({
           )}
           {highlightKind && (
             <div
-              className={`pointer-events-none absolute rounded ${getHighlightClass(highlightKind)}`}
+              className={`board-decision pointer-events-none absolute rounded ${getHighlightClass(highlightKind)}`}
               style={{ inset: highlightInset }}
             />
           )}
@@ -870,7 +877,7 @@ export const Board: FC<BoardProps> = ({
           {previewKinds.map((kind) => (
             <div
               key={kind}
-              className={`pointer-events-none absolute rounded ${getPreviewCellClass(kind)}`}
+              className={`board-decision pointer-events-none absolute rounded ${getPreviewCellClass(kind)}`}
               style={{ inset: highlightInset }}
             />
           ))}
@@ -906,7 +913,7 @@ export const Board: FC<BoardProps> = ({
           )}
           {isDoraPreviewCenter && (
             <div
-              className="pointer-events-none absolute z-10 rounded ring-2 ring-inset ring-amber-300 shadow-[inset_0_0_18px_rgba(251,191,36,0.45)] dark:ring-amber-200"
+              className="board-decision pointer-events-none absolute rounded ring-2 ring-inset ring-amber-300 shadow-[inset_0_0_18px_rgba(251,191,36,0.45)] dark:ring-amber-200"
               style={{ inset: highlightInset }}
             />
           )}
@@ -973,10 +980,13 @@ export const Board: FC<BoardProps> = ({
               <img src={JACK_TRAP_MARKER_ASSET} alt="" draggable={false} />
             </div>
           )}
-          {content}
+          <div className="board-unit-content">{content}</div>
+          {isSelected || isActiveUnit ? (
+            <span className="board-selection-outline" aria-hidden="true" />
+          ) : null}
           {jackTrapStatesByPos.has(key) && (
             <div
-              className={`stake-state-badge stake-state-badge--hidden pointer-events-none absolute left-1 ${
+              className={`board-outcome stake-state-badge stake-state-badge--hidden pointer-events-none absolute left-1 ${
                 stakeMarkersByPos.has(key) ? "top-6" : "top-1"
               } z-30 flex items-center justify-center rounded-full font-bold`}
               style={{
@@ -994,7 +1004,7 @@ export const Board: FC<BoardProps> = ({
           )}
           {stakeMarkersByPos.has(key) && (
             <div
-              className={`stake-state-badge pointer-events-none absolute left-1 top-1 z-30 flex items-center justify-center rounded-full font-bold ${
+              className={`board-outcome stake-state-badge pointer-events-none absolute left-1 top-1 z-30 flex items-center justify-center rounded-full font-bold ${
                 stakeMarkersByPos.get(key)
                   ? "stake-state-badge--revealed"
                   : "stake-state-badge--hidden"
@@ -1055,7 +1065,7 @@ export const Board: FC<BoardProps> = ({
             />
           )}
           {unit && (
-            <div className="pointer-events-none absolute bottom-1 left-1 right-1 z-10 flex justify-center">
+            <div className="board-outcome pointer-events-none absolute bottom-1 left-1 right-1 flex justify-center">
               <div style={{ width: hpBarWidth }}>
                 <HpBar
                   current={
@@ -1077,7 +1087,7 @@ export const Board: FC<BoardProps> = ({
     }
     const rowLabel = isFlipped ? maxIndex - row : row;
     rows.push(
-      <div key={`row-${row}`} className="relative z-10 flex">
+      <div key={`row-${row}`} className="board-row relative flex">
         {showCoordinates ? (
           <div
             className="flex items-center justify-center font-display font-bold text-stone-500 dark:text-stone-400"
@@ -1103,10 +1113,10 @@ export const Board: FC<BoardProps> = ({
     >
       <div className="flex min-h-full items-center justify-center">
         <div
-          className={`board-object relative inline-block transition-[width,height] duration-150 ease-out ${
+          className={`board-object relative inline-block ${
             renderedFieldId ? "board-has-field" : ""
           }`}
-          style={{ width: totalPixelSize }}
+          style={{ width: totalPixelSize, ...BOARD_LAYER_STYLES }}
         >
           {renderedFieldId ? (
             <div
@@ -1160,12 +1170,12 @@ export const Board: FC<BoardProps> = ({
               t={t}
             />
             <VfxLayer
-              effects={boardVfx}
+              effects={previewVfx ?? boardVfx}
               view={view}
               boardSize={size}
               cellSize={cellSize}
               isFlipped={isFlipped}
-              reducedMotion={vfxReducedMotion}
+              reducedMotion={previewReducedMotion ?? vfxReducedMotion}
             />
           </div>
         </div>

@@ -4,15 +4,17 @@ import { mapEventBatchToVfx } from "./vfxEventMapper";
 import { visibleUnitPositions } from "./vfxGeometry";
 import { vfxRegistry } from "./vfxRegistry";
 import {
+  CORE_VFX_PREVIEW_IDS,
   createVfxPreviewView,
   previewScenarioById,
   VFX_PREVIEW_SCENARIOS,
 } from "./vfxPreviewScenarios";
 
 test("VFX preview scenarios cover every registered effect", () => {
-  const covered = new Set(
-    VFX_PREVIEW_SCENARIOS.flatMap((scenario) => scenario.expectedEffectIds),
-  );
+  const covered = new Set([
+    ...CORE_VFX_PREVIEW_IDS,
+    ...VFX_PREVIEW_SCENARIOS.flatMap((scenario) => scenario.expectedEffectIds),
+  ]);
 
   assert.deepEqual(
     Object.keys(vfxRegistry)
@@ -36,11 +38,7 @@ test("VFX preview scenarios use the real event mapper path", () => {
     const effectIds = new Set(effects.map((effect) => effect.effectId));
 
     for (const expected of scenario.expectedEffectIds) {
-      assert.equal(
-        effectIds.has(expected),
-        true,
-        `${scenario.id} should produce ${expected}`,
-      );
+      assert.equal(effectIds.has(expected), true, `${scenario.id} should produce ${expected}`);
     }
   }
 });

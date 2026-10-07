@@ -23,9 +23,7 @@ export interface LineGeometry {
 
 function toViewCoord(coord: Coord, boardSize: number, isFlipped: boolean): Coord {
   const maxIndex = boardSize - 1;
-  return isFlipped
-    ? { col: maxIndex - coord.col, row: maxIndex - coord.row }
-    : coord;
+  return isFlipped ? { col: maxIndex - coord.col, row: maxIndex - coord.row } : coord;
 }
 
 export function isCoord(value: unknown): value is Coord {
@@ -65,6 +63,50 @@ export function cellToBoardRect(
     width: cellSize,
     height: cellSize,
   };
+}
+
+/** Full footprint, including off-board portions. The board root owns clipping. */
+export function areaToBoardRect(
+  center: Coord,
+  widthCells: number,
+  heightCells: number,
+  boardSize: number,
+  cellSize: number,
+  isFlipped: boolean,
+): BoardRect {
+  const point = cellToBoardPoint(center, boardSize, cellSize, isFlipped);
+  return {
+    left: point.x - (widthCells * cellSize) / 2,
+    top: point.y - (heightCells * cellSize) / 2,
+    width: widthCells * cellSize,
+    height: heightCells * cellSize,
+  };
+}
+
+/** Direction is logical (row increases upwards), independent of recipient orientation. */
+export function rayToBoardEdge(
+  from: Coord,
+  direction: Coord,
+  boardSize: number,
+  cellSize: number,
+  isFlipped: boolean,
+): LineGeometry | null {
+  const dx = direction.col,
+    dy = direction.row;
+  if (!Number.isFinite(dx) || !Number.isFinite(dy) || (dx === 0 && dy === 0)) return null;
+  const x = from.col + 0.5,
+    y = from.row + 0.5;
+  const tx = dx > 0 ? (boardSize - x) / dx : dx < 0 ? -x / dx : Infinity;
+  const ty = dy > 0 ? (boardSize - y) / dy : dy < 0 ? -y / dy : Infinity;
+  const distance = Math.min(tx, ty);
+  if (distance < 0) return null;
+  return lineBetweenCellsToCssTransform(
+    from,
+    { col: from.col + dx * distance, row: from.row + dy * distance },
+    boardSize,
+    cellSize,
+    isFlipped,
+  );
 }
 
 export function cellsToBoundingBox(
@@ -109,11 +151,7 @@ export function lineBetweenCellsToCssTransform(
   };
 }
 
-export function radiusCellsToOverlay(
-  center: Coord,
-  radius: number,
-  boardSize: number,
-): Coord[] {
+export function radiusCellsToOverlay(center: Coord, radius: number, boardSize: number): Coord[] {
   const safeRadius = Math.max(0, Math.trunc(radius));
   const cells: Coord[] = [];
   for (let col = center.col - safeRadius; col <= center.col + safeRadius; col += 1) {

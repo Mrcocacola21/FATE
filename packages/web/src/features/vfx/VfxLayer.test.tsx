@@ -60,6 +60,7 @@ test("unit-attached VFX follow the current visible unit coordinate", () => {
       effectId: "muzzle",
       placement: "unit",
       unitId: "target",
+      anchorMode: "followUnit",
       sourceCell: { col: 1, row: 1 },
       startedAt: Date.now(),
       expiresAt: Date.now() + 400,

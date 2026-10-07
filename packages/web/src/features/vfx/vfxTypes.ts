@@ -18,9 +18,18 @@ export type VfxEffectId =
   | "tralala"
   | "muzzle"
   | "snareExplosion"
-  | "berserkAoE";
+  | "berserkAoE"
+  | "combatHit"
+  | "combatMiss"
+  | "unitDeath"
+  | "statusSmall"
+  | "doraImpact"
+  | "carpetImpact"
+  | "gasterBeam"
+  | "bunkerStatus"
+  | "fireball";
 
-export type VfxPlacement = "cell" | "unit" | "area" | "line" | "path";
+export type VfxPlacement = "cell" | "unit" | "area" | "line" | "ray" | "path" | "projectile";
 
 export type BoardVfxRequest = {
   id: string;
@@ -31,6 +40,14 @@ export type BoardVfxRequest = {
   cells?: Coord[];
   path?: Coord[];
   unitId?: string;
+  /** One-shots default to the frozen sourceCell; status previews opt into following. */
+  anchorMode?: "event" | "followUnit";
+  widthCells?: number;
+  heightCells?: number;
+  direction?: Coord;
+  rayToEdge?: boolean;
+  /** Local inspection only: production plays all composition layers. */
+  composition?: "primary" | "accent";
   durationMs?: number;
   delayMs?: number;
   scaleCells?: number;

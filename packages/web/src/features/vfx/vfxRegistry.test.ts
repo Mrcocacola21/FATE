@@ -11,7 +11,7 @@ test("VFX registry metadata is complete for curated assets", () => {
 
 test("runtime registry imports curated assets rather than raw vendor folders", () => {
   for (const definition of Object.values(vfxRegistry)) {
-    if (!("asset" in definition)) continue;
+    if (!definition.asset) continue;
     assert.ok(definition.asset.length > 0);
     assert.ok(!definition.asset.includes("/vendor/"));
     assert.ok(!definition.sourceFile.includes("480x480"));

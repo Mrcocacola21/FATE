@@ -91,16 +91,8 @@ function unitOrPreviousRequest(
   ];
 }
 
-function previousOrCurrentUnitCell(
-  view: PlayerView,
-  context: VfxMapperContext,
-  unitId: unknown,
-) {
-  if (
-    typeof unitId === "string" &&
-    view.units[unitId] &&
-    context.previousPositions[unitId]
-  ) {
+function previousOrCurrentUnitCell(view: PlayerView, context: VfxMapperContext, unitId: unknown) {
+  if (typeof unitId === "string" && view.units[unitId] && context.previousPositions[unitId]) {
     return { ...context.previousPositions[unitId] };
   }
   return previousVisibleUnitCoord(view, context.previousPositions, unitId);
@@ -115,9 +107,7 @@ function previousAbilityUsedForUnit(
     .slice(0, context.eventIndex)
     .some(
       (event) =>
-        event.type === "abilityUsed" &&
-        event.unitId === unitId &&
-        event.abilityId === abilityId,
+        event.type === "abilityUsed" && event.unitId === unitId && event.abilityId === abilityId,
     );
 }
 
@@ -161,6 +151,8 @@ function mapAoeResolved(
         placement: "area",
         sourceCell: event.center,
         cells,
+        widthCells: event.radius * 2 + 1,
+        heightCells: event.radius * 2 + 1,
         durationMs: 900,
         opacity: 0.32,
       },
@@ -174,6 +166,8 @@ function mapAoeResolved(
         placement: "area",
         sourceCell: event.center,
         cells,
+        widthCells: event.radius * 2 + 1,
+        heightCells: event.radius * 2 + 1,
         durationMs: 850,
       },
     ];
@@ -207,16 +201,23 @@ function mapRiverBoat(
   const passengerStart = previousOrCurrentUnitCell(context.view, context, event.passengerId);
   effects.push(...cellRequest(context, event, "boat", riverStart, "river-start"));
   effects.push(...cellRequest(context, event, "boat", event.riverDestination, "river-end"));
-  effects.push(...cellRequest(context, event, "boat", passengerStart, "passenger-start", {
-    delayMs: 80,
-    scaleCells: 1.15,
-  }));
-  effects.push(...cellRequest(context, event, "boat", event.dropDestination, "passenger-drop", {
-    delayMs: 120,
-    scaleCells: 1.15,
-  }));
+  effects.push(
+    ...cellRequest(context, event, "boat", passengerStart, "passenger-start", {
+      delayMs: 80,
+      scaleCells: 1.15,
+    }),
+  );
+  effects.push(
+    ...cellRequest(context, event, "boat", event.dropDestination, "passenger-drop", {
+      delayMs: 120,
+      scaleCells: 1.15,
+    }),
+  );
   if (riverStart) {
-    const path = linePath(riverStart, event.riverDestination) ?? [riverStart, event.riverDestination];
+    const path = linePath(riverStart, event.riverDestination) ?? [
+      riverStart,
+      event.riverDestination,
+    ];
     if (path.length > 1) {
       effects.push({
         id: requestId(context, event, "tralala", "river-path"),
@@ -239,13 +240,17 @@ function mapRiverTraLaLa(
   if (!isCoord(event.riverDestination) || !isCoord(event.dropDestination)) return effects;
   const riverStart = previousOrCurrentUnitCell(context.view, context, event.riverId);
   const targetStart = previousOrCurrentUnitCell(context.view, context, event.targetId);
-  effects.push(...cellRequest(context, event, "portal", targetStart, "target-start", {
-    scaleCells: 1.15,
-  }));
-  effects.push(...cellRequest(context, event, "portal", event.dropDestination, "target-drop", {
-    delayMs: 120,
-    scaleCells: 1.15,
-  }));
+  effects.push(
+    ...cellRequest(context, event, "portal", targetStart, "target-start", {
+      scaleCells: 1.15,
+    }),
+  );
+  effects.push(
+    ...cellRequest(context, event, "portal", event.dropDestination, "target-drop", {
+      delayMs: 120,
+      scaleCells: 1.15,
+    }),
+  );
   effects.push(...cellRequest(context, event, "boat", event.riverDestination, "river-end"));
   if (riverStart) {
     const path = linePath(riverStart, event.riverDestination) ?? [

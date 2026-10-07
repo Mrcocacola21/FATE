@@ -1,5 +1,59 @@
 import type { Coord, ProjectedGameEvent, PlayerView, PlayerId, UnitClass, UnitState } from "rules";
-import type { VfxEffectId } from "./vfxTypes";
+import type { BoardVfxRequest, VfxEffectId } from "./vfxTypes";
+import { vfxRegistry } from "./vfxRegistry";
+
+export const CORE_VFX_PREVIEW_IDS: VfxEffectId[] = [
+  "combatHit",
+  "combatMiss",
+  "unitDeath",
+  "statusSmall",
+  "doraImpact",
+  "carpetImpact",
+  "gasterBeam",
+  "bunkerStatus",
+  "fireball",
+];
+export const VFX_PREVIEW_ANCHORS = {
+  center: { col: 4, row: 4 },
+  left: { col: 0, row: 4 },
+  right: { col: 8, row: 4 },
+  top: { col: 4, row: 8 },
+  bottom: { col: 4, row: 0 },
+  corner: { col: 0, row: 0 },
+} satisfies Record<string, Coord>;
+export type VfxPreviewAnchor = keyof typeof VFX_PREVIEW_ANCHORS;
+export type VfxPreviewRay = "horizontal" | "vertical" | "diagonal" | "board-edge" | "target";
+
+/** Local normalized request only: no stream, revision, event ID or session state. */
+export function createRuntimePreviewRequest(params: {
+  id: string;
+  effectId: VfxEffectId;
+  anchor: VfxPreviewAnchor;
+  ray: VfxPreviewRay;
+  composition?: BoardVfxRequest["composition"];
+}): BoardVfxRequest {
+  const definition = vfxRegistry[params.effectId];
+  const sourceCell = VFX_PREVIEW_ANCHORS[params.anchor];
+  const directed =
+    definition.defaultPlacement === "ray" || definition.defaultPlacement === "projectile";
+  return {
+    id: params.id,
+    effectId: params.effectId,
+    placement: definition.defaultPlacement,
+    sourceCell: directed ? { col: 1, row: 2 } : { ...sourceCell },
+    targetCell: { col: 7, row: 6 },
+    direction:
+      params.ray === "vertical"
+        ? { col: 0, row: 1 }
+        : params.ray === "diagonal"
+          ? { col: 1, row: 1 }
+          : params.ray === "board-edge"
+            ? { col: -1, row: -1 }
+            : { col: 1, row: 0 },
+    rayToEdge: params.ray !== "target",
+    composition: params.composition,
+  };
+}
 
 export const VFX_PREVIEW_ROUTE = "/vfx-preview";
 
@@ -239,7 +293,13 @@ export const VFX_PREVIEW_SCENARIOS: VfxPreviewScenario[] = [
     expectedEffectIds: ["storm"],
     waitMs: 220,
     events: [
-      { type: "lechyStormStarted", sourceUnitId: "preview-lechy", roll: 3, duration: 3, durationUnit: "turn" },
+      {
+        type: "lechyStormStarted",
+        sourceUnitId: "preview-lechy",
+        roll: 3,
+        duration: 3,
+        durationUnit: "turn",
+      },
       {
         type: "lechyStormRollResult",
         unitId: "preview-storm-target",
@@ -467,9 +527,7 @@ export const VFX_PREVIEW_SCENARIOS: VfxPreviewScenario[] = [
     group: "Ranged",
     expectedEffectIds: ["muzzle"],
     waitMs: 180,
-    events: [
-      { type: "abilityUsed", unitId: "preview-guts", abilityId: "gutsCannon" },
-    ],
+    events: [{ type: "abilityUsed", unitId: "preview-guts", abilityId: "gutsCannon" }],
   },
   {
     id: "shield",

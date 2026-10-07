@@ -4,9 +4,7 @@ import { vfxRegistry } from "./vfxRegistry";
 const MAX_ACTIVE_VFX = 64;
 const MAX_PROCESSED_VFX_IDS = 512;
 
-export function getInitialVfxRevision(
-  batch: { revision: number } | null | undefined,
-): number {
+export function getInitialVfxRevision(batch: { revision: number } | null | undefined): number {
   return batch?.revision ?? -1;
 }
 
@@ -27,6 +25,11 @@ export function enqueueBoardVfx(params: {
     const startedAt = params.now + delayMs;
     queued.push({
       ...effect,
+      sourceCell: effect.sourceCell ? { ...effect.sourceCell } : undefined,
+      targetCell: effect.targetCell ? { ...effect.targetCell } : undefined,
+      direction: effect.direction ? { ...effect.direction } : undefined,
+      cells: effect.cells?.map((cell) => ({ ...cell })),
+      path: effect.path?.map((cell) => ({ ...cell })),
       startedAt,
       expiresAt: startedAt + durationMs,
     });
@@ -65,13 +68,14 @@ export function shouldProcessVfxBatch(
   return Number.isInteger(nextRevision) && nextRevision > lastProcessedRevision;
 }
 
-export function simplifyVfxForReducedMotion(
-  requests: BoardVfxRequest[],
-): BoardVfxRequest[] {
+export function simplifyVfxForReducedMotion(requests: BoardVfxRequest[]): BoardVfxRequest[] {
   return requests.flatMap((request) => {
     const definition = vfxRegistry[request.effectId];
     if (definition.reducedMotion === "hide") return [];
-    const durationMs = Math.min(request.durationMs ?? definition.durationMs, 450);
+    const durationMs =
+      definition.reducedMotion === "static"
+        ? (request.durationMs ?? definition.durationMs)
+        : Math.min(request.durationMs ?? definition.durationMs, 450);
     if (request.placement === "path") {
       const path = request.path ?? [];
       const first = path[0];

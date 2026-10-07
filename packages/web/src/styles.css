@@ -249,28 +249,10 @@
 
 @keyframes vfx-sprite-frame {
   from {
-    background-position-x: 0%;
+    background-position-x: var(--vfx-frame-start, 0%);
   }
   to {
-    background-position-x: 100%;
-  }
-}
-
-@keyframes vfx-sprite-strip-envelope {
-  0% {
-    opacity: 0;
-    transform: scale(0.84) rotate(-2deg);
-  }
-  14% {
-    opacity: var(--vfx-opacity);
-    transform: scale(1) rotate(0deg);
-  }
-  78% {
-    opacity: var(--vfx-opacity);
-  }
-  100% {
-    opacity: 0;
-    transform: scale(1.08) rotate(2deg);
+    background-position-x: var(--vfx-frame-end, 100%);
   }
 }
 
@@ -434,29 +416,6 @@
   100% {
     opacity: 0;
     transform: scale(1.16) rotate(7deg);
-  }
-}
-
-@keyframes vfx-area-wash {
-  0%,
-  100% {
-    opacity: 0;
-  }
-  22%,
-  70% {
-    opacity: var(--vfx-opacity);
-  }
-}
-
-@keyframes vfx-line-flash {
-  0% {
-    opacity: 0;
-  }
-  28% {
-    opacity: var(--vfx-opacity);
-  }
-  100% {
-    opacity: 0;
   }
 }
 
@@ -1390,32 +1349,13 @@ html.dark {
   .vfx-sprite-strip {
     background-repeat: no-repeat;
     background-position: 0 0;
-    animation-name: vfx-sprite-frame, vfx-sprite-strip-envelope;
-    animation-timing-function: steps(var(--vfx-frame-steps), end), ease-out;
+    animation-name: vfx-sprite-frame;
+    animation-timing-function: steps(var(--vfx-frame-steps), end);
   }
 
   .vfx-sprite-particle {
     object-fit: contain;
     animation-name: vfx-particle-pop;
-  }
-
-  .vfx-area {
-    object-fit: cover;
-    border-radius: 8px;
-    animation-name: vfx-area-wash;
-  }
-
-  .vfx-line {
-    @apply pointer-events-none absolute block origin-left rounded-full;
-    height: 7px;
-    margin-top: -3.5px;
-    background-position: center;
-    background-repeat: repeat-x;
-    background-size: auto 42px;
-    opacity: 0;
-    animation: vfx-line-flash var(--vfx-duration) ease-out var(--vfx-delay) both;
-    mix-blend-mode: screen;
-    will-change: opacity, transform;
   }
 
   .vfx-fireParade,
@@ -1702,8 +1642,7 @@ html.dark {
   .board-effect-unit,
   .board-effect-board,
   .board-preview-beam,
-  .vfx-sprite,
-  .vfx-line {
+  .vfx-sprite {
     animation: none;
   }
 
@@ -1730,8 +1669,7 @@ html.dark {
     transform: translate(-50%, -12px);
   }
 
-  .vfx-sprite,
-  .vfx-line {
+  .vfx-sprite {
     opacity: min(var(--vfx-opacity), 0.45);
   }
 
@@ -1770,4 +1708,118 @@ html.dark {
   button:disabled {
     @apply cursor-not-allowed opacity-50;
   }
+}
+
+/* Shared board stacking: roots/rows/cells do not trap their positioned children. */
+.board-object {
+  isolation: isolate;
+}
+.board-row,
+.board-cell {
+  z-index: auto;
+}
+.board-unit-content {
+  position: relative;
+  z-index: var(--board-layer-unit);
+}
+.board-decision {
+  z-index: var(--board-layer-decision);
+}
+.board-outcome {
+  z-index: var(--board-layer-outcome);
+}
+.board-selection-outline {
+  position: absolute;
+  inset: 3px;
+  border: 3px solid #fbbf24;
+  border-radius: 8px;
+  z-index: var(--board-layer-decision);
+  pointer-events: none;
+}
+.vfx-board-root {
+  z-index: auto;
+}
+.vfx-geometry {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0;
+  animation: vfx-envelope var(--vfx-duration) linear var(--vfx-delay) both;
+}
+.vfx-artwork {
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  opacity: var(--vfx-opacity);
+}
+.vfx-sprite-static {
+  object-fit: contain;
+}
+.vfx-geometry-ray {
+  overflow: hidden;
+}
+.vfx-geometry-ray .vfx-artwork,
+.vfx-geometry-line .vfx-artwork {
+  object-fit: fill;
+}
+.vfx-projectile-axis {
+  position: absolute;
+  transform-origin: 0 0;
+  pointer-events: none;
+}
+.vfx-geometry-projectile {
+  animation-name: vfx-projectile-travel;
+}
+.vfx-geometry.vfx-reduced {
+  animation-name: vfx-envelope;
+}
+.vfx-sprite.vfx-reduced {
+  animation-name: none !important;
+  opacity: var(--vfx-opacity);
+}
+@keyframes vfx-envelope {
+  0% {
+    opacity: 0;
+  }
+  10%,
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes vfx-projectile-travel {
+  0% {
+    opacity: 0;
+    transform: translateX(0);
+  }
+  10% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(var(--vfx-travel));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vfx-geometry-projectile {
+    animation-name: vfx-envelope;
+  }
+}
+
+.board-cell:focus-visible {
+  z-index: auto;
+}
+.board-cell:focus-visible::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  z-index: var(--board-layer-decision);
+  border: 2px solid #fbbf24;
+  border-radius: 3px;
+  pointer-events: none;
 }

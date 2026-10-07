@@ -1,11 +1,13 @@
 import type { CSSProperties, FC } from "react";
 import type { Coord, PlayerView } from "rules";
+import { BOARD_LAYERS } from "../../features/vfx/vfxRegistry";
+import {
+  cellToBoardPoint as cellCenter,
+  cellToBoardRect as cellTopLeft,
+  lineBetweenCellsToCssTransform,
+} from "../../features/vfx/vfxGeometry";
 import type { Translate } from "../../i18n";
-import type {
-  BoardPreviewLine,
-  EffectLabel,
-  QueuedBoardEffect,
-} from "./types";
+import type { BoardPreviewLine, EffectLabel, QueuedBoardEffect } from "./types";
 
 interface BoardEffectsLayerProps {
   effects: QueuedBoardEffect[];
@@ -27,44 +29,12 @@ function effectStyle(effect: QueuedBoardEffect): EffectStyle {
   return {
     "--effect-duration": `${Math.max(100, effect.expiresAt - effect.startedAt)}ms`,
     "--effect-delay": `${Math.max(0, effect.startedAt - Date.now())}ms`,
+    zIndex: effect.kind === "floatingText" ? BOARD_LAYERS.outcome : BOARD_LAYERS.movement,
   };
 }
 
 function labelText(label: EffectLabel, t: Translate): string {
   return t(`effects.${label}`);
-}
-
-function toViewCoord(coord: Coord, boardSize: number, isFlipped: boolean): Coord {
-  const maxIndex = boardSize - 1;
-  return isFlipped
-    ? { col: maxIndex - coord.col, row: maxIndex - coord.row }
-    : coord;
-}
-
-function cellTopLeft(
-  coord: Coord,
-  boardSize: number,
-  cellSize: number,
-  isFlipped: boolean,
-) {
-  const viewCoord = toViewCoord(coord, boardSize, isFlipped);
-  return {
-    left: viewCoord.col * cellSize,
-    top: (boardSize - 1 - viewCoord.row) * cellSize,
-  };
-}
-
-function cellCenter(
-  coord: Coord,
-  boardSize: number,
-  cellSize: number,
-  isFlipped: boolean,
-) {
-  const topLeft = cellTopLeft(coord, boardSize, cellSize, isFlipped);
-  return {
-    x: topLeft.left + cellSize / 2,
-    y: topLeft.top + cellSize / 2,
-  };
 }
 
 function Segment({
@@ -84,20 +54,18 @@ function Segment({
   className: string;
   style?: EffectStyle;
 }) {
-  const start = cellCenter(from, boardSize, cellSize, isFlipped);
-  const end = cellCenter(to, boardSize, cellSize, isFlipped);
-  const dx = end.x - start.x;
-  const dy = end.y - start.y;
-  const length = Math.sqrt(dx * dx + dy * dy);
-  const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+  const line = lineBetweenCellsToCssTransform(from, to, boardSize, cellSize, isFlipped);
   return (
     <span
       className="absolute origin-left"
       style={{
-        left: start.x,
-        top: start.y,
-        width: length,
-        transform: `rotate(${angle}deg)`,
+        left: line.left,
+        top: line.top,
+        width: line.width,
+        transform: line.transform,
+        zIndex: className.startsWith("board-preview")
+          ? BOARD_LAYERS.decision
+          : BOARD_LAYERS.movement,
       }}
     >
       <span className={className} style={style} />
@@ -117,7 +85,7 @@ export const BoardEffectsLayer: FC<BoardEffectsLayerProps> = ({
 }) => {
   return (
     <div
-      className={`pointer-events-none absolute left-0 top-0 z-30 overflow-visible ${
+      className={`pointer-events-none absolute left-0 top-0 overflow-visible ${
         reducedMotion ? "board-effects-reduced-motion" : ""
       }`}
       style={{ width: boardSize * cellSize, height: boardSize * cellSize }}
@@ -182,9 +150,7 @@ export const BoardEffectsLayer: FC<BoardEffectsLayerProps> = ({
                     boardSize={boardSize}
                     cellSize={cellSize}
                     isFlipped={isFlipped}
-                    className={`board-effect-trail board-effect-trail-${
-                      effect.tone ?? "move"
-                    }`}
+                    className={`board-effect-trail board-effect-trail-${effect.tone ?? "move"}`}
                     style={style}
                   />
                 ))}
