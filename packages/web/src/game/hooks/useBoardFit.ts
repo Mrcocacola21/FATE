@@ -52,7 +52,10 @@ export function calculateBoardFitMetrics({
   const effectiveLabelRatio = showCoordinates ? labelRatio : 0;
   const totalCells = safeBoardSize + effectiveLabelRatio;
   const fitCell = Math.floor(Math.min(safeWidth / totalCells, safeHeight / totalCells));
-  const responsiveMinCell = fitCell < minCellSize ? compactMinCellSize : minCellSize;
+  // On narrow phones the coordinate gutter and shell padding can leave less
+  // than 32px/cell. A preferred minimum must not crop authorized board cells.
+  const responsiveMinCell =
+    fitCell < minCellSize ? Math.min(compactMinCellSize, Math.max(1, fitCell)) : minCellSize;
   const safeZoom = clampBoardZoom(zoom);
   const maxCellSize = safeZoom > 1 ? zoomMaxCellSize : defaultMaxCellSize;
   const cellSize = clamp(Math.floor(fitCell * safeZoom), responsiveMinCell, maxCellSize);

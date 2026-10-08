@@ -85,6 +85,7 @@ function Effect({
   const definition = vfxRegistry[effect.effectId];
   // Fixed per mount: rerenders/resizes never restart or shift playback. Late mounts catch up.
   const [mountedAt] = useState(() => Date.now());
+  if (!definition) return null;
   if (reducedMotion && definition.reducedMotion === "hide") return null;
   const durationMs = effect.expiresAt - effect.startedAt;
   const timing = {

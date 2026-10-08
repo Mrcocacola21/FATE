@@ -1,0 +1,3 @@
+# Browser fixtures are generated test output, not maintained source.
+**/test-results/**
+**/dist/**

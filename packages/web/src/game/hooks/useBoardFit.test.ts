@@ -40,6 +40,27 @@ test("board fit can compact on very small stages", () => {
   assert.equal(metrics.totalPixelSize <= 360, true);
 });
 
+test("narrow phone stages keep all nine cells and coordinate gutters inside both axes", () => {
+  for (const showCoordinates of [true, false]) {
+    for (const [containerWidth, containerHeight] of [
+      [260, 260],
+      [280, 220],
+      [220, 280],
+    ]) {
+      const metrics = calculateBoardFitMetrics({
+        boardSize: 9,
+        containerWidth,
+        containerHeight,
+        showCoordinates,
+        zoom: 0.9,
+      });
+      assert(metrics.totalPixelSize <= Math.min(containerWidth, containerHeight));
+      assert(metrics.cellSize > 0);
+      assert.equal(metrics.boardPixelSize, metrics.cellSize * 9);
+    }
+  }
+});
+
 test("board zoom is clamped to a board-only range", () => {
   assert.equal(clampBoardZoom(0.1), 0.75);
   assert.equal(clampBoardZoom(2), 1.35);

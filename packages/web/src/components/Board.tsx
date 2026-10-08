@@ -24,8 +24,12 @@ import { BOARD_LAYER_STYLES } from "../features/vfx/vfxRegistry";
 import type { QueuedBoardVfxRequest } from "../features/vfx/vfxTypes";
 import { useBoardVfx } from "../features/vfx/useBoardVfx";
 import { useBoardSfx } from "../features/sfx/useBoardSfx";
+import { usePresentationVisibility } from "../game/effects/presentationVisibility";
 import { UnitStatusVfx } from "../features/vfx/UnitStatusVfx";
-import { resolveUnitStatuses, resolvePersistentGroundStatuses } from "../features/vfx/persistentStatuses";
+import {
+  resolveUnitStatuses,
+  resolvePersistentGroundStatuses,
+} from "../features/vfx/persistentStatuses";
 import {
   buildPreviewCellMap,
   type BoardPreview,
@@ -211,11 +215,13 @@ export const Board: FC<BoardProps> = ({
   onCellClick,
 }) => {
   const { language, t } = useI18n();
+  const presentationVisible = usePresentationVisibility();
+  const presentationEnabled = visualEffectsEnabled && presentationVisible;
   const size = view.boardSize ?? 9;
   const activeFieldId = getActiveBoardFieldVisual(view);
   const renderedFieldId = activeFieldId;
   const maxIndex = size - 1;
-  const isFlipped = previewIsFlipped ?? (playerId === "P2");
+  const isFlipped = previewIsFlipped ?? playerId === "P2";
   const {
     ref: boardWrapperRef,
     metrics: { cellSize, labelSize, boardPixelSize, totalPixelSize },
@@ -225,26 +231,26 @@ export const Board: FC<BoardProps> = ({
     batches: eventBatches,
     onBatchesConsumed: onEventBatchesConsumed,
     view,
-    enabled: visualEffectsEnabled,
+    enabled: presentationEnabled,
     sessionKey: effectSessionKey,
   });
   const renderedUnits = visualResolution.visualUnitsByUnitId;
   const { effects: boardEffects, reducedMotion } = useBoardEffects({
     batch: visualResolution.batch,
     view,
-    enabled: visualEffectsEnabled,
+    enabled: presentationEnabled,
     sessionKey: effectSessionKey,
   });
   const { effects: boardVfx, reducedMotion: vfxReducedMotion } = useBoardVfx({
     batch: visualResolution.batch,
     view,
-    enabled: visualEffectsEnabled,
+    enabled: presentationEnabled,
     sessionKey: effectSessionKey,
   });
   useBoardSfx({
     batch: visualResolution.batch,
     view,
-    enabled: visualEffectsEnabled,
+    enabled: presentationEnabled,
     sessionKey: effectSessionKey,
   });
   const labelFontSize = Math.max(10, Math.round(cellSize * 0.22));
@@ -275,9 +281,12 @@ export const Board: FC<BoardProps> = ({
       boneStatus: ActiveBoneStatus | null;
     }>
   >();
-  const groundStatusesByPos = new Map(resolvePersistentGroundStatuses(view).map(status =>
-    [coordKey(toViewCoord(status.cell)), status],
-  ));
+  const groundStatusesByPos = new Map(
+    resolvePersistentGroundStatuses(view).map((status) => [
+      coordKey(toViewCoord(status.cell)),
+      status,
+    ]),
+  );
   const lastKnownByPos = new Map<string, number>();
   const stakeMarkersByPos = new Map<string, boolean>();
   const jackTrapStatesByPos = new Map<string, boolean>();
@@ -452,11 +461,15 @@ export const Board: FC<BoardProps> = ({
       const gameCoord = toGameCoord(viewCoord);
       const key = coordKey(viewCoord);
       const occupants = unitsByPos.get(key) ?? [];
-      const transport = visualResolution.transportAttachments.find(attachment =>
-        occupants.some(occupant => occupant.id === attachment.carrierId) &&
-        occupants.some(occupant => occupant.id === attachment.passengerId));
+      const transport = visualResolution.transportAttachments.find(
+        (attachment) =>
+          occupants.some((occupant) => occupant.id === attachment.carrierId) &&
+          occupants.some((occupant) => occupant.id === attachment.passengerId),
+      );
       const unit =
-        (transport ? occupants.find(occupant => occupant.id === transport.carrierId) : undefined) ??
+        (transport
+          ? occupants.find((occupant) => occupant.id === transport.carrierId)
+          : undefined) ??
         occupants.find(
           (occupant) => !occupant.isVisualOnly && preferredUnitIdSet.has(occupant.id),
         ) ??
@@ -465,13 +478,31 @@ export const Board: FC<BoardProps> = ({
       const isGameplayUnit = !!unit && !unit.isVisualOnly;
       const motion = unit ? visualResolution.visualMotionByUnitId[unit.id] : undefined;
       const transportPassenger = transport ? renderedUnits[transport.passengerId] : undefined;
-      const passengerAsset = transportPassenger && view.units[transportPassenger.id] ? getUnitTokenAsset(view.units[transportPassenger.id]) : null;
-      const passengerMotion = transportPassenger ? visualResolution.visualMotionByUnitId[transportPassenger.id] : undefined;
-      const passengerOffset = transportPassenger?.position && unit ? (() => {
-        const carrierPoint = cellToBoardPoint(motion?.position ?? renderedUnits[unit.id].position!, size, cellSize, isFlipped);
-        const passengerPoint = cellToBoardPoint(passengerMotion?.position ?? transportPassenger.position, size, cellSize, isFlipped);
-        return `translate(${passengerPoint.x - carrierPoint.x}px, ${passengerPoint.y - carrierPoint.y}px)`;
-      })() : undefined;
+      const passengerAsset =
+        transportPassenger && view.units[transportPassenger.id]
+          ? getUnitTokenAsset(view.units[transportPassenger.id])
+          : null;
+      const passengerMotion = transportPassenger
+        ? visualResolution.visualMotionByUnitId[transportPassenger.id]
+        : undefined;
+      const passengerOffset =
+        transportPassenger?.position && unit
+          ? (() => {
+              const carrierPoint = cellToBoardPoint(
+                motion?.position ?? renderedUnits[unit.id].position!,
+                size,
+                cellSize,
+                isFlipped,
+              );
+              const passengerPoint = cellToBoardPoint(
+                passengerMotion?.position ?? transportPassenger.position,
+                size,
+                cellSize,
+                isFlipped,
+              );
+              return `translate(${passengerPoint.x - carrierPoint.x}px, ${passengerPoint.y - carrierPoint.y}px)`;
+            })()
+          : undefined;
       const motionStyle =
         motion && unit
           ? (() => {
@@ -552,10 +583,17 @@ export const Board: FC<BoardProps> = ({
         : lastKnownCount > 0
           ? `, ${t("board.lastKnown")}`
           : "";
-      const currentStatusLabels = unit && view.units[unit.id]
-        ? resolveUnitStatuses(view.units[unit.id], playerId, view).map(status => t(status.labelKey)) : [];
-      const details = [...previewDetails, ...currentStatusLabels,
-        ...(groundStatusesByPos.has(key) ? [t("persistentStatus.crater")] : [])];
+      const currentStatusLabels =
+        unit && view.units[unit.id]
+          ? resolveUnitStatuses(view.units[unit.id], playerId, view).map((status) =>
+              t(status.labelKey),
+            )
+          : [];
+      const details = [
+        ...previewDetails,
+        ...currentStatusLabels,
+        ...(groundStatusesByPos.has(key) ? [t("persistentStatus.crater")] : []),
+      ];
       const previewDetailsText = details.length > 0 ? `, ${details.join(", ")}` : "";
 
       if (unit) {
@@ -597,7 +635,9 @@ export const Board: FC<BoardProps> = ({
           "justify-center",
           "unit-token border",
           previewRelationClass,
-          !unit.isVisualOnly && boneStatus ? `unit-bone-status unit-bone-status--${boneStatus.kind}` : "",
+          !unit.isVisualOnly && boneStatus
+            ? `unit-bone-status unit-bone-status--${boneStatus.kind}`
+            : "",
           `unit-visual-${unitVisualState}`,
         ].join(" ");
 
@@ -703,8 +743,14 @@ export const Board: FC<BoardProps> = ({
           onMouseEnter={() => onCellHover?.(gameCoord)}
           onMouseLeave={() => onCellHover?.(null)}
         >
-          {groundStatusesByPos.has(key) && <span className="persistent-crater-cell"
-            data-ground-status="crater" data-ground-status-id={groundStatusesByPos.get(key)!.id} aria-hidden="true" />}
+          {groundStatusesByPos.has(key) && (
+            <span
+              className="persistent-crater-cell"
+              data-ground-status="crater"
+              data-ground-status-id={groundStatusesByPos.get(key)!.id}
+              aria-hidden="true"
+            />
+          )}
           {view.arenaId === "boneField" ? (
             <div
               className={`bone-field-cell bone-field-cell--${activeSansBoneFieldTone ?? "neutral"}`}
@@ -841,12 +887,26 @@ export const Board: FC<BoardProps> = ({
           <div className="board-unit-content" style={motionStyle} data-movement-mode={motion?.mode}>
             {content}
             {transportPassenger && passengerAsset ? (
-              <span className={`pointer-events-none absolute -bottom-1 -right-1 z-20 flex items-center justify-center overflow-hidden rounded-full border-2 border-teal-200 bg-slate-900 shadow unit-visual-${visualResolution.visualStateByUnitId[transportPassenger.id] ?? "idle"}`}
-                style={{ width: tokenSize * 0.55, height: tokenSize * 0.55, transform: passengerOffset }}
-                data-transport-passenger-id={transportPassenger.id} data-transport-mode={transport?.mode}>
-                {passengerAsset.isFallback ? getUnitLabel(transportPassenger.class) :
-                  <img src={passengerAsset.src} alt={t("board.tokenAlt", { unit: getClassLabel(transportPassenger.class, t) })}
-                    className="h-full w-full object-contain" draggable={false} />}
+              <span
+                className={`pointer-events-none absolute -bottom-1 -right-1 z-20 flex items-center justify-center overflow-hidden rounded-full border-2 border-teal-200 bg-slate-900 shadow unit-visual-${visualResolution.visualStateByUnitId[transportPassenger.id] ?? "idle"}`}
+                style={{
+                  width: tokenSize * 0.55,
+                  height: tokenSize * 0.55,
+                  transform: passengerOffset,
+                }}
+                data-transport-passenger-id={transportPassenger.id}
+                data-transport-mode={transport?.mode}
+              >
+                {passengerAsset.isFallback ? (
+                  getUnitLabel(transportPassenger.class)
+                ) : (
+                  <img
+                    src={passengerAsset.src}
+                    alt={t("board.tokenAlt", { unit: getClassLabel(transportPassenger.class, t) })}
+                    className="h-full w-full object-contain"
+                    draggable={false}
+                  />
+                )}
               </span>
             ) : null}
           </div>

@@ -20,6 +20,7 @@ export function enqueueBoardVfx(params: {
   for (const effect of params.incoming) {
     if (currentIds.has(effect.id) || params.processedIds?.has(effect.id)) continue;
     const definition = vfxRegistry[effect.effectId];
+    if (!definition) continue;
     const delayMs = Math.max(0, effect.delayMs ?? 0);
     const durationMs = Math.max(100, effect.durationMs ?? definition.durationMs);
     const startedAt = params.now + delayMs;

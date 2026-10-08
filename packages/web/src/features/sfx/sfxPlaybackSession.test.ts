@@ -6,7 +6,7 @@ import {
   PresentationSession,
   MAX_PRESENTATION_AGE_MS,
 } from "../../game/effects/presentationSession";
-import { SfxPlaybackSession } from "./sfxPlaybackSession";
+import { SfxPlaybackSession, MAX_AUDIO_CUE_LATENESS_MS } from "./sfxPlaybackSession";
 import { SfxPlayer } from "./sfxPlayer";
 import type { SoundCue } from "./sfxTypes";
 import { audioFixture } from "./audioTestUtils";
@@ -172,5 +172,30 @@ test("local presentation previews and batches lacking live stream identity stay 
   const f = spy();
   f.session.schedule({ ...batch(), previewId: "preview" }, view);
   f.session.schedule({ ...batch(), streamId: undefined }, view);
+  assert.equal(f.played.length, 0);
+});
+
+test("500ms timer deadline drops throttled audio while fresh independent events still play", (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout", "Date"] });
+  const f = spy();
+  f.session.schedule({ ...batch(), eventSfxDelaysMs: [100] }, view);
+  t.mock.timers.setTime(Date.now() + MAX_AUDIO_CUE_LATENESS_MS + 101);
+  t.mock.timers.tick(100);
+  assert.equal(f.played.length, 0);
+  f.session.schedule(batch({ ...roll, eventId: "new-after-resume" }, 3), view);
+  assert.equal(f.played.length, 1);
+  f.session.reset();
+});
+
+test("large scheduled bursts keep timer and cue identity budgets bounded and reset releases every timer", t => {
+  t.mock.timers.enable({ apis: ["setTimeout", "Date"] });
+  const f = spy();
+  for (let revision = 1; revision <= 600; revision++) {
+    f.session.schedule({ ...batch({ ...roll, eventId: `burst-${revision}` }, revision), eventSfxDelaysMs: [1000] }, view);
+  }
+  assert.deepEqual(f.session.diagnostics, { scheduledCues: 512, consumedCueIds: 512 });
+  f.session.reset();
+  assert.deepEqual(f.session.diagnostics, { scheduledCues: 0, consumedCueIds: 0 });
+  t.mock.timers.tick(1001);
   assert.equal(f.played.length, 0);
 });

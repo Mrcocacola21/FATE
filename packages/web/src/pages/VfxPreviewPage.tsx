@@ -6,7 +6,15 @@ import { enqueueBoardVfx, pruneExpiredBoardVfx } from "../features/vfx/vfxQueue"
 import { usePrefersReducedMotion } from "../features/vfx/vfxPreferences";
 import type { QueuedBoardVfxRequest, VfxEffectId } from "../features/vfx/vfxTypes";
 import { Board } from "../components/Board";
-import { createPersistentStatusPreview, type PersistentPreviewMode, type PreviewRecipient } from "../features/vfx/persistentStatusPreview";
+import { imagePreloader, preloadVfx, vfxAssets } from "../features/vfx/imagePreload";
+import { assetLoadQueue } from "../assets/assetLoadQueue";
+import { sfxPlayer } from "../features/sfx/sfxPlayer";
+import { setTheme, useTheme } from "../theme";
+import {
+  createPersistentStatusPreview,
+  type PersistentPreviewMode,
+  type PreviewRecipient,
+} from "../features/vfx/persistentStatusPreview";
 import {
   createVfxPreviewView,
   createRuntimePreviewRequest,
@@ -47,13 +55,22 @@ const COPY = {
   clearedStatuses: "Statuses cleared",
   recipient: "Recipient",
   spectator: "Spectator",
+  theme: "Theme",
+  light: "Light",
+  dark: "Dark",
+  diagnostics: "Presentation diagnostics",
 };
 
 export function VfxPreviewPage() {
   const [persistentMode, setPersistentMode] = useState<PersistentPreviewMode>("off");
   const [recipient, setRecipient] = useState<PreviewRecipient>("P1");
-  const view = useMemo(() => persistentMode === "off" ? createVfxPreviewView()
-    : createPersistentStatusPreview(persistentMode, recipient), [persistentMode, recipient]);
+  const view = useMemo(
+    () =>
+      persistentMode === "off"
+        ? createVfxPreviewView()
+        : createPersistentStatusPreview(persistentMode, recipient),
+    [persistentMode, recipient],
+  );
   const [effects, setEffects] = useState<QueuedBoardVfxRequest[]>([]);
   const [effectId, setEffectId] = useState<VfxEffectId>("doraImpact");
   const [orientation, setOrientation] = useState<"P1" | "P2">("P1");
@@ -67,6 +84,15 @@ export function VfxPreviewPage() {
   const [clickedCell, setClickedCell] = useState("none");
   const sequence = useRef(0);
   const timers = useRef<number[]>([]);
+  const theme = useTheme();
+  const [, refreshDiagnostics] = useState(0);
+  useEffect(() => {
+    void preloadVfx([effectId], "high");
+  }, [effectId]);
+  useEffect(() => {
+    const timer = window.setInterval(() => refreshDiagnostics((value) => value + 1), 500);
+    return () => window.clearInterval(timer);
+  }, []);
   useEffect(() => () => timers.current.forEach(window.clearTimeout), []);
   useEffect(() => {
     if (!effects.length) return;
@@ -130,17 +156,23 @@ export function VfxPreviewPage() {
 
   return (
     <main className="app-shell min-h-screen overflow-auto bg-stone-100 px-4 py-5 text-slate-950 dark:bg-slate-950 dark:text-slate-50">
-      <section className="mx-auto grid max-w-7xl gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <div className="min-h-[720px] rounded-lg border border-stone-300/80 bg-stone-50 p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <section className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)] gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="min-w-0 rounded-lg border border-stone-300/80 bg-stone-50 p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <div
             data-vfx-preview-board
-            style={{ width: boardWidth, maxWidth: "100%", height: boardWidth + 20 }}
+            style={{ width: boardWidth, maxWidth: "100%", aspectRatio: "1 / 1" }}
             className="min-h-0 overflow-hidden rounded-md border border-stone-300 bg-stone-100 dark:border-slate-800 dark:bg-slate-950"
           >
             <Board
               view={view}
               key={`${persistentMode}:${recipient}`}
-              playerId={persistentMode === "off" ? orientation : recipient === "spectator" ? null : recipient}
+              playerId={
+                persistentMode === "off"
+                  ? orientation
+                  : recipient === "spectator"
+                    ? null
+                    : recipient
+              }
               previewIsFlipped={orientation === "P2"}
               selectedUnitId="preview-asgore"
               highlightedCells={{ "4,4": "attack", "0,0": "move" }}
@@ -155,7 +187,7 @@ export function VfxPreviewPage() {
           </div>
         </div>
 
-        <aside className="rounded-lg border border-stone-300/80 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <aside className="min-w-0 rounded-lg border border-stone-300/80 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <div className="mb-4 flex items-start justify-between gap-3">
             <div>
               <h1 className="font-display text-2xl font-black">{COPY.title}</h1>
@@ -173,9 +205,28 @@ export function VfxPreviewPage() {
 
           <div className="mb-4 grid gap-3 text-sm">
             <label>
+              {COPY.theme}
+              <select
+                aria-label={COPY.theme}
+                className="block w-full bg-slate-100 text-slate-950"
+                value={theme}
+                onChange={(event) => setTheme(event.target.value as "light" | "dark")}
+              >
+                <option value="light">{COPY.light}</option>
+                <option value="dark">{COPY.dark}</option>
+              </select>
+            </label>
+            <label>
               {COPY.persistentSnapshot}
-              <select aria-label={COPY.persistentSnapshot} className="block w-full bg-slate-100 text-slate-950"
-                value={persistentMode} onChange={event => { setPersistentMode(event.target.value as PersistentPreviewMode); setEffects([]); }}>
+              <select
+                aria-label={COPY.persistentSnapshot}
+                className="block w-full bg-slate-100 text-slate-950"
+                value={persistentMode}
+                onChange={(event) => {
+                  setPersistentMode(event.target.value as PersistentPreviewMode);
+                  setEffects([]);
+                }}
+              >
                 <option value="off">{COPY.oneShot}</option>
                 <option value="statuses">{COPY.stackedStatuses}</option>
                 <option value="boneField">{COPY.boneSnapshot}</option>
@@ -183,16 +234,26 @@ export function VfxPreviewPage() {
                 <option value="cleared">{COPY.clearedStatuses}</option>
               </select>
             </label>
-            {persistentMode !== "off" && <label>
-              {COPY.recipient}
-              <select aria-label={COPY.recipient} className="block w-full bg-slate-100 text-slate-950"
-                value={recipient} onChange={event => {
-                  const next = event.target.value as PreviewRecipient;
-                  setRecipient(next); if (next !== "spectator") setOrientation(next); setEffects([]);
-                }}>
-                <option>P1</option><option>P2</option><option value="spectator">{COPY.spectator}</option>
-              </select>
-            </label>}
+            {persistentMode !== "off" && (
+              <label>
+                {COPY.recipient}
+                <select
+                  aria-label={COPY.recipient}
+                  className="block w-full bg-slate-100 text-slate-950"
+                  value={recipient}
+                  onChange={(event) => {
+                    const next = event.target.value as PreviewRecipient;
+                    setRecipient(next);
+                    if (next !== "spectator") setOrientation(next);
+                    setEffects([]);
+                  }}
+                >
+                  <option>P1</option>
+                  <option>P2</option>
+                  <option value="spectator">{COPY.spectator}</option>
+                </select>
+              </label>
+            )}
             <label>
               {COPY.runtimeEffect}
               <select
@@ -285,6 +346,18 @@ export function VfxPreviewPage() {
               {COPY.replay}
             </button>
             <output data-vfx-pointer-check>{`${COPY.lastClick}: ${clickedCell}`}</output>
+            <output
+              data-presentation-diagnostics
+              className="break-words text-xs"
+              aria-label={COPY.diagnostics}
+            >
+              {`Active VFX: ${effects.length}/64; voices: ${sfxPlayer.diagnostics.activeVoices}/16; audio buffers: ${sfxPlayer.diagnostics.decodedBuffers}; audio bytes: ${sfxPlayer.diagnostics.decodedBytes}; warm images: ${imagePreloader.diagnostics.ready}; estimated RGBA bytes: ${imagePreloader.diagnostics.estimatedPixelBytes}; failed images: ${imagePreloader.diagnostics.failed}; load jobs: ${assetLoadQueue.diagnostics.active}/${assetLoadQueue.concurrency} active, ${assetLoadQueue.diagnostics.pending} pending`}
+            </output>
+            <output data-vfx-asset-status className="break-all text-xs">
+              {vfxAssets(definition)
+                .map((art) => `${art.asset}: ${imagePreloader.status(art.asset!)}`)
+                .join("; ") || "Procedural (no raster)"}
+            </output>
             <dl className="break-all text-xs" data-vfx-metadata>
               <dt>{COPY.identity}</dt>
               <dd>

@@ -7,6 +7,8 @@ export interface SoundDefinition {
   gain: number;
   preload: "core" | "lazy";
   maxVoices: number;
+  /** Bound legacy signature tails without altering preserved masters. */
+  maxDurationMs?: number;
 }
 
 /** Static URLs keep Vite's asset graph explicit; only this core slice is bundled. */
@@ -86,6 +88,7 @@ export const SOUND_REGISTRY = {
     ],
     category: "gameplay",
     gain: 0.4,
+    maxDurationMs: 2000,
     preload: "lazy",
     maxVoices: 1,
   },
@@ -144,7 +147,7 @@ export const SOUND_REGISTRY = {
       new URL("./heroes/chikatilo/phantasms/FalseTrailExplosion.mp3", import.meta.url).href,
     ],
     category: "gameplay",
-    gain: 0.4,
+    gain: 0.31,
     preload: "lazy",
     maxVoices: 1,
   },
@@ -175,13 +178,15 @@ export const SOUND_REGISTRY = {
     sources: [new URL("./heroes/lechy/abilities/GuideTraveler.mp3.mpeg", import.meta.url).href],
     category: "gameplay",
     gain: 0.4,
+    maxDurationMs: 1200,
     preload: "lazy",
     maxVoices: 1,
   },
   "hero.lechy.abilities.lechyConfuseTerrain": {
     sources: [new URL("./heroes/lechy/abilities/ConfuseTerrain.mp3.mpeg", import.meta.url).href],
     category: "gameplay",
-    gain: 0.4,
+    gain: 0.27,
+    maxDurationMs: 1200,
     preload: "lazy",
     maxVoices: 1,
   },
@@ -189,6 +194,7 @@ export const SOUND_REGISTRY = {
     sources: [new URL("./heroes/lechy/phantasms/StormSound1.mp3", import.meta.url).href],
     category: "gameplay",
     gain: 0.4,
+    maxDurationMs: 1500,
     preload: "lazy",
     maxVoices: 1,
   },
@@ -709,6 +715,7 @@ export const SOUND_REGISTRY = {
     sources: [new URL("./heroes/grand-kaiser/abilities/Dora.wav", import.meta.url).href],
     category: "gameplay",
     gain: 0.65,
+    maxDurationMs: 1500,
     preload: "lazy",
     maxVoices: 1,
   },

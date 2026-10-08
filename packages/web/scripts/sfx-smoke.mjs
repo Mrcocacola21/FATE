@@ -161,6 +161,14 @@ try {
     0,
     "landing does not instantiate/preload audio",
   );
+  const warmCounts = await page.evaluate(async () => {
+    const { SOUND_REGISTRY } = await import("/src/assets/sfx/registry.ts");
+    const core = Object.values(SOUND_REGISTRY).filter((sound) => sound.preload === "core");
+    return {
+      ui: core.filter((sound) => sound.category === "ui").length,
+      gameplay: core.filter((sound) => sound.category === "gameplay").length,
+    };
+  });
   await page.evaluate(async () => {
     const { sfxPlayer } = await import("/src/features/sfx/sfxPlayer.ts");
     const play = sfxPlayer.play.bind(sfxPlayer);
@@ -176,7 +184,8 @@ try {
   // Trusted pointer interaction goes through the actual shell gesture handler.
   await page.locator("main").click({ position: { x: 10, y: 10 } });
   await page.waitForFunction(
-    () => window.__audio.contexts[0]?.state === "running" && window.__audio.decodes === 4,
+    (count) => window.__audio.contexts[0]?.state === "running" && window.__audio.decodes === count,
+    warmCounts.ui,
   );
   assert.equal(
     await page.evaluate(() => window.__audio.sources.length),
@@ -189,7 +198,10 @@ try {
     await useGameStore.getState().joinRoom({ mode: "create", role: "P1", roomMode: "test" });
   });
   await page.getByTestId("sound-controls").waitFor();
-  await page.waitForFunction(() => window.__audio.decodes === 17);
+  await page.waitForFunction(
+    (count) => window.__audio.decodes === count,
+    warmCounts.ui + warmCounts.gameplay,
+  );
   async function command(command) {
     const revision = await page.evaluate(() => window.__store.getState().roomMeta.revision);
     await page.evaluate(
@@ -223,22 +235,34 @@ try {
   // Observe the real board rather than invoking the presentation mappers.
   await page.evaluate(() => {
     const combat = (window.__combat = { rolls: [], sprites: [], hp: [], states: [] });
-    const seenRolls = new Set(), seenSprites = new Set();
+    const seenRolls = new Set(),
+      seenSprites = new Set();
     let previousHp, previousState;
     const observe = () => {
       const roll = document.querySelector("[data-combat-cue]");
       if (roll && !seenRolls.has(roll.dataset.combatCue)) {
         seenRolls.add(roll.dataset.combatCue);
-        combat.rolls.push({ id: roll.dataset.combatCue,
-          dice: [...roll.querySelectorAll("[data-combat-die]")].map(die => Number(die.dataset.combatDie)), at: performance.now() });
+        combat.rolls.push({
+          id: roll.dataset.combatCue,
+          dice: [...roll.querySelectorAll("[data-combat-die]")].map((die) =>
+            Number(die.dataset.combatDie),
+          ),
+          at: performance.now(),
+        });
       }
       for (const sprite of document.querySelectorAll("[data-vfx-cue]")) {
         if (seenSprites.has(sprite.dataset.vfxCue)) continue;
-        const kind = ["combatHit", "combatMiss", "unitDeath"].find(kind => sprite.querySelector(`.vfx-${kind}`));
+        const kind = ["combatHit", "combatMiss", "unitDeath"].find((kind) =>
+          sprite.querySelector(`.vfx-${kind}`),
+        );
         if (!kind) continue;
         seenSprites.add(sprite.dataset.vfxCue);
-        combat.sprites.push({ id: sprite.dataset.vfxCue, kind, startsAt: Number(sprite.dataset.vfxStart),
-          rect: { left: sprite.style.left, top: sprite.style.top } });
+        combat.sprites.push({
+          id: sprite.dataset.vfxCue,
+          kind,
+          startsAt: Number(sprite.dataset.vfxStart),
+          rect: { left: sprite.style.left, top: sprite.style.top },
+        });
       }
       const target = document.querySelector('[data-unit-visual-state][data-owner="P2"]');
       const hp = target?.closest("button")?.querySelector(".board-outcome .h-full")?.style.width;
@@ -252,7 +276,11 @@ try {
         previousState = state;
       }
     };
-    new MutationObserver(observe).observe(document.body, { childList: true, subtree: true, attributes: true });
+    new MutationObserver(observe).observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+    });
     observe();
   });
   async function count(key) {
@@ -276,7 +304,10 @@ try {
     const before = await count("common.combat.diceRoll");
     const rollsBefore = await page.evaluate(() => window.__combat.rolls.length);
     // Actual Roll button produces only UI click; server result then produces dice.
-    await page.getByTestId("pending-roll-overlay").getByRole("heading", { name: "Attack Roll", exact: true }).waitFor();
+    await page
+      .getByTestId("pending-roll-overlay")
+      .getByRole("heading", { name: "Attack Roll", exact: true })
+      .waitFor();
     const rollButton = page.getByRole("button", { name: "Roll 2d6", exact: true });
     await rollButton.waitFor();
     assert.equal(await rollButton.count(), 1);
@@ -288,37 +319,55 @@ try {
       async () => (await count("common.combat.diceRoll")) > before,
       "authoritative attacker dice audio",
     );
-    await wait(async () => (await page.evaluate(() => window.__combat.rolls.length)) > rollsBefore,
-      "actual attacker dice display");
-    assert.deepEqual(await page.evaluate(() => window.__combat.rolls.at(-1).dice), values.slice(0, 2));
+    await wait(
+      async () => (await page.evaluate(() => window.__combat.rolls.length)) > rollsBefore,
+      "actual attacker dice display",
+    );
+    assert.deepEqual(
+      await page.evaluate(() => window.__combat.rolls.at(-1).dice),
+      values.slice(0, 2),
+    );
     await page.screenshot({ path: path.join(output, `combat-attacker-${rollsBefore}.png`) });
-    await page.getByTestId("pending-roll-overlay").getByRole("heading", { name: "Defense Roll", exact: true }).waitFor();
+    await page
+      .getByTestId("pending-roll-overlay")
+      .getByRole("heading", { name: "Defense Roll", exact: true })
+      .waitFor();
     await page.getByRole("button", { name: "Roll 2d6", exact: true }).click();
     await page.waitForFunction(() => !window.__store.getState().roomState.pendingRoll);
     await wait(
       async () => (await count("common.combat.diceRoll")) >= before + 2,
       "authoritative defender dice audio",
     );
-    await wait(async () => (await page.evaluate(() => window.__combat.rolls.length)) === rollsBefore + 2,
-      "ordered defender dice display");
-    assert.deepEqual(await page.evaluate(() => window.__combat.rolls.at(-1).dice), values.slice(2, 4));
+    await wait(
+      async () => (await page.evaluate(() => window.__combat.rolls.length)) === rollsBefore + 2,
+      "ordered defender dice display",
+    );
+    assert.deepEqual(
+      await page.evaluate(() => window.__combat.rolls.at(-1).dice),
+      values.slice(2, 4),
+    );
     await page.screenshot({ path: path.join(output, `combat-defender-${rollsBefore}.png`) });
   }
   await attack([5, 4, 1, 1]);
   await wait(async () => (await count("common.combat.hit")) === 1, "hit audio");
-  await wait(async () => (await page.evaluate(() => window.__combat.hp.length)) > 1, "staged HP decrease");
+  await wait(
+    async () => (await page.evaluate(() => window.__combat.hp.length)) > 1,
+    "staged HP decrease",
+  );
   const firstImpact = await page.evaluate(() => ({
-    sound: window.__audio.sources.find(source => source.key === "common.combat.hit"),
-    sprite: window.__combat.sprites.find(sprite => sprite.kind === "combatHit"),
+    sound: window.__audio.sources.find((source) => source.key === "common.combat.hit"),
+    sprite: window.__combat.sprites.find((sprite) => sprite.kind === "combatHit"),
     hp: window.__combat.hp,
     states: window.__combat.states,
     epoch: performance.timeOrigin,
   }));
   assert(firstImpact.sprite, "one registered generic hit sprite");
-  assert(Math.abs(firstImpact.sound.at + firstImpact.epoch - firstImpact.sprite.startsAt) < 100,
-    "real audio source and sprite share the impact timestamp");
+  assert(
+    Math.abs(firstImpact.sound.at + firstImpact.epoch - firstImpact.sprite.startsAt) < 100,
+    "real audio source and sprite share the impact timestamp",
+  );
   assert(firstImpact.hp[1].at > firstImpact.sound.at, "HP fill changes after impact");
-  assert(firstImpact.states.some(item => item.state === "takingDamage"));
+  assert(firstImpact.states.some((item) => item.state === "takingDamage"));
   assert.equal(await count("common.combat.miss"), 0);
   assert((await count("common.ui.buttonClick")) >= 1);
   // Re-delivering the exact confirmed batch cannot play again.
@@ -329,19 +378,36 @@ try {
   });
   assert.equal(await page.evaluate(() => window.__audio.sources.length), beforeDuplicate);
   await command({ type: "debugResetActions", unitId: ids.attacker });
-  await wait(async () => await page.locator('[data-unit-visual-state="idle"][data-owner="P2"]').count() === 1,
-    "first HP playback completes");
+  await wait(
+    async () =>
+      (await page.locator('[data-unit-visual-state="idle"][data-owner="P2"]').count()) === 1,
+    "first HP playback completes",
+  );
   const hpBeforeMiss = await page.evaluate(() => window.__combat.hp.length);
   await attack([1, 2, 5, 6]);
   await wait(async () => (await count("common.combat.miss")) === 1, "miss audio");
-  assert.equal(await page.evaluate(() => window.__combat.hp.length), hpBeforeMiss, "miss does not change HP fill");
-  assert.equal(await page.evaluate(() => window.__combat.sprites.filter(sprite => sprite.kind === "combatMiss").length), 1);
+  assert.equal(
+    await page.evaluate(() => window.__combat.hp.length),
+    hpBeforeMiss,
+    "miss does not change HP fill",
+  );
+  assert.equal(
+    await page.evaluate(
+      () => window.__combat.sprites.filter((sprite) => sprite.kind === "combatMiss").length,
+    ),
+    1,
+  );
   await command({ type: "debugResetActions", unitId: ids.attacker });
   await command({ type: "debugSetHp", unitId: ids.target, hp: 1 });
   assert.equal(await count("common.combat.death"), 0, "state changes do not invent death cues");
   await attack([5, 4, 1, 1]);
   await wait(async () => (await count("common.combat.death")) === 1, "final death audio");
-  assert.equal(await page.evaluate(() => window.__combat.sprites.filter(sprite => sprite.kind === "unitDeath").length), 1);
+  assert.equal(
+    await page.evaluate(
+      () => window.__combat.sprites.filter((sprite) => sprite.kind === "unitDeath").length,
+    ),
+    1,
+  );
   await page.getByTestId("battle-end-view-board").click();
   const volume = page.getByRole("slider", { name: "Master volume", exact: true });
   await volume.press("Home");
@@ -366,11 +432,20 @@ try {
     decodes: window.__audio.decodes,
     fetches: window.__audio.fetches.length,
     uniqueUrls: new Set(window.__audio.fetches).size,
+    urls: [...new Set(window.__audio.fetches)],
     sources: window.__audio.sources,
   }));
-  assert.equal(native.decodes, 17);
-  assert.equal(native.fetches, 17);
-  assert.equal(native.uniqueUrls, 17);
+  assert.equal(
+    native.decodes,
+    native.uniqueUrls,
+    "Each URL decoded only once despite repeat gameplay",
+  );
+  assert.equal(native.fetches, native.uniqueUrls, "Each URL fetched only once");
+  assert(native.decodes >= warmCounts.ui + warmCounts.gameplay);
+  assert(
+    native.urls.every((url) => !url.includes("/heroes/") || url.includes("/heroes/frisk/")),
+    "Match preloads only its authorized Frisk roster",
+  );
   for (const source of native.sources) {
     assert.equal(source.state, "running");
     assert(source.frames > 0);
@@ -385,20 +460,33 @@ try {
   // Reload/reconnect snapshot is silent, but settings persist and core cache loads once per app.
   await page.reload();
   await page.getByTestId("sound-controls").waitFor();
-  await page.waitForFunction(() => window.__store === undefined && window.__audio.decodes === 13);
+  await page.waitForFunction(async () => {
+    const { sfxPlayer } = await import("/src/features/sfx/sfxPlayer.ts");
+    return (
+      window.__store === undefined &&
+      sfxPlayer.diagnostics.pendingLoads === 0 &&
+      window.__audio.decodes > 0
+    );
+  });
   assert.equal(await page.evaluate(() => window.__audio.sources.length), 0);
   assert.equal(await volume.inputValue(), "0.5");
   await page.getByTestId("battle-end-view-board").click();
   await page.screenshot({ path: path.join(output, "game-sound-controls.png"), fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
-  assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), "mobile sound controls must not overflow");
+  assert(
+    await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
+    "mobile sound controls must not overflow",
+  );
   await page.getByTestId("sound-controls").waitFor();
-  await page.screenshot({ path: path.join(output, "game-sound-controls-mobile.png"), fullPage: true });
+  await page.screenshot({
+    path: path.join(output, "game-sound-controls-mobile.png"),
+    fullPage: true,
+  });
   assert.deepEqual(errors, []);
   const report = {
     verified: [
       "gesture unlock without dummy source",
-      "17 native WAV decodes",
+      "selective core warmup; native WAV decoding deduplicated by URL",
       "UI Roll click",
       "confirmed dice",
       "hit",

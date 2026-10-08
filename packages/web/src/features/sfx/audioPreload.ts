@@ -1,5 +1,23 @@
 import { SOUND_REGISTRY, type SoundCategory, type SoundKey } from "../../assets/sfx/registry";
 import { sfxPlayer, type SfxPlayer } from "./sfxPlayer";
+import type { AssetPriority } from "../../assets/assetLoadQueue";
+
+export function rosterSoundKeys(heroIds: readonly string[]): SoundKey[] {
+  const heroes = new Set(heroIds);
+  return (Object.keys(SOUND_REGISTRY) as SoundKey[]).filter(
+    (key) => key.startsWith("hero.") && heroes.has(key.split(".")[1]) && !key.includes(".transformations."),
+  );
+}
+export function soundPreloadPriority(key: SoundKey): AssetPriority {
+  if (
+    SOUND_REGISTRY[key].preload === "core" ||
+    /kaiserDora|kaiserCarpetStrike|vladForest|sansGaster|asgoreFireball|riverBoat|riverTraLaLa/.test(
+      key,
+    )
+  )
+    return "high";
+  return "medium";
+}
 
 /** Only the explicit core registry; never glob the hero library. */
 export function preloadCoreSounds(
@@ -9,7 +27,9 @@ export function preloadCoreSounds(
   const keys = (Object.keys(SOUND_REGISTRY) as SoundKey[]).filter(
     (key) => SOUND_REGISTRY[key].category === category && SOUND_REGISTRY[key].preload === "core",
   );
-  return Promise.all(keys.map((key) => player.preload(key))).then(() => undefined);
+  return Promise.all(
+    keys.map((key) => player.preload(key, { priority: "high", firstVariantOnly: true })),
+  ).then(() => undefined);
 }
 
 /** Small Sans pack, warmed only when projected Sans/curse state needs it.
@@ -40,8 +60,13 @@ export function preloadRosterSounds(
   heroIds: readonly string[],
   player: Pick<SfxPlayer, "preload"> = sfxPlayer,
 ): Promise<void> {
-  const keys = (Object.keys(SOUND_REGISTRY) as SoundKey[]).filter((key) =>
-    heroIds.some((heroId) => key.startsWith(`hero.${heroId}.`)),
+  const keys = rosterSoundKeys(heroIds).sort(
+    (a, b) =>
+      Number(soundPreloadPriority(a) !== "high") - Number(soundPreloadPriority(b) !== "high"),
   );
-  return Promise.all(keys.map((key) => player.preload(key))).then(() => undefined);
+  return Promise.all(
+    keys.map((key) =>
+      player.preload(key, { priority: soundPreloadPriority(key), firstVariantOnly: true }),
+    ),
+  ).then(() => undefined);
 }

@@ -1,6 +1,6 @@
 # FATE Asset Index
 
-Organized 2026-10-06. Phase 5 now registers a small generic audio core; the remaining sound pack and generated VFX remain staged for later integration.
+Organized 2026-10-06. Integration through Phase 15 is audited in [FINAL_PRESENTATION_QA.md](../../../../docs/assets/FINAL_PRESENTATION_QA.md), with current counts and measurements in [PHASE15_MEASUREMENTS.json](../../../../docs/assets/PHASE15_MEASUREMENTS.json). Historical phase documents describe their original scope; preserved files are not necessarily registered, fetched, or decoded.
 
 Audio retains the existing `sfx/common/<category>` and `sfx/heroes/<exactHeroId>/<category>` convention and lowerCamelCase names. VFX uses exact hero IDs and lowercase snake_case filenames. Existing paths and source quality are preserved.
 

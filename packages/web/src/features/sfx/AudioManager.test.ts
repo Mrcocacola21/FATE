@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { AudioManager } from "./AudioManager";
 import { audioFixture } from "./audioTestUtils";
+import { AssetLoadQueue } from "../../assets/assetLoadQueue";
 
 test("concurrent loads share one promise; decoded buffers survive playback cleanup", async () => {
   const f = audioFixture();
@@ -92,4 +93,40 @@ test("overlapping voices are bounded; handles and category cleanup retain UI/cac
   f.sources[f.sources.length - 1].onended!();
   assert.equal(f.sources[f.sources.length - 1].disconnects, 1);
   assert(f.manager.isReady("/hit.wav"));
+});
+
+test("changing roster drops obsolete cache references while active sources finish and core survives", async () => {
+  const f = audioFixture();
+  await f.manager.ensureAudioReady();
+  f.manager.retainUrls(["/core.wav"], ["/old.wav"]);
+  await Promise.all([f.manager.load("/core.wav"), f.manager.load("/old.wav")]);
+  const handle = f.manager.play("/old.wav");
+  f.manager.retainUrls(["/core.wav"], ["/new.wav"]);
+  assert.equal(f.manager.isReady("/old.wav"), false);
+  assert.equal(f.manager.isReady("/core.wav"), true);
+  assert.equal(f.sources[0].stops, 0);
+  assert.equal(f.sources[0].buffer, f.buffer);
+  handle!.stop();
+  assert.equal(f.manager.diagnostics.activeVoices, 0);
+});
+
+test("audio byte budget protects core and bounds cold buffers while a source owns an evicted buffer", async () => {
+  const f = audioFixture();
+  const buffer = { length: 10000, numberOfChannels: 2, duration: 1 } as AudioBuffer;
+  f.context.decodeAudioData = async () => buffer;
+  const manager = new AudioManager(() => f.context, async () => ({ ok: true, arrayBuffer: async () => new ArrayBuffer(8) }) as Response,
+    () => undefined, new AssetLoadQueue(2), 160000);
+  manager.retainUrls(["/core.wav"], []);
+  await manager.ensureAudioReady();
+  await manager.load("/core.wav");
+  await manager.load("/old.wav");
+  const oldVoice = manager.play("/old.wav");
+  await manager.load("/new.wav");
+  assert(manager.isReady("/core.wav"));
+  assert(!manager.isReady("/old.wav"));
+  assert(manager.isReady("/new.wav"));
+  assert.equal(manager.diagnostics.decodedBytes, 160000);
+  assert.equal(f.sources[0].stops, 0);
+  assert.equal(f.sources[0].buffer, buffer);
+  oldVoice!.stop();
 });

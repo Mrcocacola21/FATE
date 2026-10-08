@@ -238,3 +238,23 @@ Modified:
 - `packages/web/src/features/vfx/README.md` ? architecture, asset catalog, playback/geometry contracts, verification and phase boundary.
 
 No gameplay mechanics, rules/server source, source PNGs, manifests, or audio implementation changed.
+
+## Phase 15 final QA
+
+The current-state report is [FINAL_PRESENTATION_QA.md](../../../../../docs/assets/FINAL_PRESENTATION_QA.md), with evidence in [PHASE15_MEASUREMENTS.json](../../../../../docs/assets/PHASE15_MEASUREMENTS.json). Earlier phase sections describe their historical scope.
+
+`presentationPreload` warms five core VFX definitions, then the recipient's projected roster. Heavy composites/rays take high priority in the shared four-job audio/image queue. First sound variants are warmed; additional variants and rare forms remain lazy. `ImagePreloader` deduplicates URLs, calls `decode()`, reports pending/ready/failed state and estimates the **full** raster's RGBA pixels. Core/active-roster references are protected; obsolete roster references are released. The 32 MiB cache budget is soft for pinned assets and does not measure GPU or browser-wide memory.
+
+The preview uses the runtime registry and adds actual light/dark controls, image readiness, queue/voice/cache counters, and responsive board sizing. Visibility disables one-shots while current state and persistent statuses continue to reconcile. Audio timers allow at most 500 ms of dispatch lateness; asset completion never reschedules missed audio or restarts a sprite.
+
+Repeat from the repository root:
+
+```powershell
+npm run -w web test:presentation:assets
+npm run -w web test:phase15:e2e
+npm run -w web test:vfx:infrastructure
+# After building with the intended VITE_API_URL and VITE_WS_URL:
+npm run -w web test:presentation:production
+```
+
+Production smoke checks the built shell and all registered media URLs, including inline PNGs and legacy MPEG files. The preview route remains gated in production. Local browser fixtures do not constitute subjective listening, a complete manual match, physical mobile testing, or OS-level tab suspension testing.

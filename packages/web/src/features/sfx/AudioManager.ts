@@ -1,4 +1,9 @@
 import type { SoundCategory } from "../../assets/sfx/registry";
+import {
+  assetLoadQueue,
+  type AssetLoadQueue,
+  type AssetPriority,
+} from "../../assets/assetLoadQueue";
 
 export function clampVolume(value: number): number {
   return Number.isFinite(value) ? Math.min(1, Math.max(0, value)) : 1;
@@ -21,6 +26,8 @@ export class AudioManager {
   private muted = false;
   private volume = 1;
   private resumePromise?: Promise<boolean>;
+  private retainedUrls = new Set<string>();
+  private readonly rosterOwnedUrls = new Set<string>();
 
   constructor(
     private readonly createContext = (): AudioContext | undefined =>
@@ -29,6 +36,8 @@ export class AudioManager {
     private readonly diagnose = (key: string, url: string): void => {
       if (import.meta.env?.DEV) console.warn(`[SFX] Unable to load ${key}: ${url}`);
     },
+    private readonly loads: AssetLoadQueue = assetLoadQueue,
+    private readonly cacheBudgetBytes = 32 * 1024 * 1024,
   ) {}
 
   private getContext(): AudioContext | undefined {
@@ -74,7 +83,7 @@ export class AudioManager {
     }
   }
 
-  load(url: string, key = url): Promise<AudioBuffer | undefined> {
+  load(url: string, key = url, priority: AssetPriority = "low"): Promise<AudioBuffer | undefined> {
     const cached = this.decodedBufferCache.get(url);
     if (cached) return Promise.resolve(cached);
     const pending = this.inFlightLoadCache.get(url);
@@ -82,34 +91,72 @@ export class AudioManager {
     if (this.failedUrls.has(url)) return Promise.resolve(undefined);
     const context = this.getContext();
     if (!context) return Promise.resolve(undefined);
-    const load = (async () => {
-      try {
-        const response = await this.fetchAsset(url);
-        if (!response.ok) throw new Error("asset unavailable");
-        const buffer = await context.decodeAudioData(await response.arrayBuffer());
-        this.decodedBufferCache.set(url, buffer);
-        return buffer;
-      } catch {
-        // The registry is finite. Bound diagnostics even for unregistered URL callers.
-        if (this.failedUrls.size < 256 && !this.failedUrls.has(url)) {
-          this.failedUrls.add(url);
-          try {
-            this.diagnose(key, url);
-          } catch {
-            /* diagnostics are optional */
+    const load = this.loads
+      .enqueue(async () => {
+        try {
+          const response = await this.fetchAsset(url);
+          if (!response.ok) throw new Error("asset unavailable");
+          const buffer = await context.decodeAudioData(await response.arrayBuffer());
+          if (!this.rosterOwnedUrls.has(url) || this.retainedUrls.has(url)) {
+            this.decodedBufferCache.set(url, buffer);
+            this.trimCache();
           }
+          return buffer;
+        } catch {
+          // The registry is finite. Bound diagnostics even for unregistered URL callers.
+          if (this.failedUrls.size < 256 && !this.failedUrls.has(url)) {
+            this.failedUrls.add(url);
+            try {
+              this.diagnose(key, url);
+            } catch {
+              /* diagnostics are optional */
+            }
+          }
+          return undefined;
         }
-        return undefined;
-      } finally {
-        this.inFlightLoadCache.delete(url);
-      }
-    })();
+      }, priority)
+      .finally(() => this.inFlightLoadCache.delete(url));
     this.inFlightLoadCache.set(url, load);
     return load;
   }
 
   isReady(url: string): boolean {
     return this.decodedBufferCache.has(url);
+  }
+  /** Active sources own their buffer independently, so dropping a cache reference is safe. */
+  retainUrls(core: readonly string[], roster: readonly string[]): void {
+    this.retainedUrls = new Set([...core, ...roster]);
+    for (const url of roster) this.rosterOwnedUrls.add(url);
+    for (const url of this.decodedBufferCache.keys()) {
+      if (this.rosterOwnedUrls.has(url) && !this.retainedUrls.has(url))
+        this.decodedBufferCache.delete(url);
+    }
+    this.trimCache();
+  }
+  private bufferBytes(buffer: AudioBuffer): number {
+    return (buffer.length ?? 0) * (buffer.numberOfChannels ?? 0) * 4;
+  }
+  private trimCache(): void {
+    let bytes = this.diagnostics.decodedBytes;
+    for (const [url, buffer] of this.decodedBufferCache) {
+      if (bytes <= this.cacheBudgetBytes) break;
+      if (this.retainedUrls.has(url)) continue;
+      this.decodedBufferCache.delete(url);
+      bytes -= this.bufferBytes(buffer);
+    }
+  }
+  get diagnostics() {
+    return {
+      decodedBuffers: this.decodedBufferCache.size,
+      decodedBytes: [...this.decodedBufferCache.values()].reduce(
+        (sum, buffer) => sum + this.bufferBytes(buffer),
+        0,
+      ),
+      pendingLoads: this.inFlightLoadCache.size,
+      failedLoads: this.failedUrls.size,
+      activeVoices: this.voices.size,
+      cacheBudgetBytes: this.cacheBudgetBytes,
+    };
   }
   setMaster(muted: boolean, volume: number): void {
     this.muted = muted;
@@ -132,6 +179,8 @@ export class AudioManager {
     const buffer = this.decodedBufferCache.get(url);
     if (!buffer || !context || context.state !== "running" || this.muted || this.volume <= 0)
       return undefined;
+    this.decodedBufferCache.delete(url);
+    this.decodedBufferCache.set(url, buffer);
     const category = options.category ?? "gameplay";
     const key = options.key ?? url;
     const sameKey = [...this.voices].filter((voice) => voice.key === key);
@@ -150,6 +199,14 @@ export class AudioManager {
       source.buffer = buffer;
       gain = context.createGain();
       gain.gain.value = clampVolume(options.gain ?? 1);
+      if (options.durationMs !== undefined && options.durationMs > 0) {
+        const end =
+          (context.currentTime ?? 0) +
+          Math.min(options.durationMs / 1000, buffer.duration ?? Infinity);
+        // Short fade keeps bounded legacy tails from ending with a hard discontinuity.
+        gain.gain.setValueAtTime?.(gain.gain.value, Math.max(context.currentTime ?? 0, end - 0.06));
+        gain.gain.linearRampToValueAtTime?.(0, end);
+      }
       source.connect(gain);
       gain.connect(this.categories![category]);
       voice = {

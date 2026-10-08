@@ -49,6 +49,10 @@ try {
   const errors = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto(`${url}/vfx-preview`);
+  const { beamThicknessCells } = await page.evaluate(async () => {
+    const { vfxRegistry } = await import("/src/features/vfx/vfxRegistry.ts");
+    return vfxRegistry.gasterBeam;
+  });
   await page.clock.install();
   await page.clock.pauseAt(new Date(Date.now() + 1000));
   const replay = async (elapsed = 500) => {
@@ -182,7 +186,7 @@ try {
       await page.getByLabel("Ray direction", { exact: true }).selectOption(ray);
       await replay();
       const result = await geometry();
-      assert.equal(result.height, Math.round(result.cellSize * 0.35));
+      assert.equal(result.height, Math.round(result.cellSize * beamThicknessCells));
       observations.push({ id: "gasterBeam", orientation, ray, ...result });
       await page.screenshot({ path: path.join(output, `beam-${orientation}-${ray}.png`) });
     }

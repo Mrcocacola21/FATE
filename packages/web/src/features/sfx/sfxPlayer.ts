@@ -2,6 +2,7 @@ import { resolveSound } from "../../assets/sfx/resolver";
 import type { SoundKey } from "../../assets/sfx/registry";
 import { AudioManager, clampVolume } from "./AudioManager";
 import type { SoundCue } from "./sfxTypes";
+import type { AssetPriority } from "../../assets/assetLoadQueue";
 
 /** Existing facade; Web Audio nodes and decoded buffers stay behind this API. */
 export class SfxPlayer {
@@ -26,11 +27,21 @@ export class SfxPlayer {
   ensureAudioReady(): Promise<boolean> {
     return this.audio.ensureAudioReady();
   }
-  preload(key: SoundKey): Promise<void> {
+  preload(
+    key: SoundKey,
+    options: { priority?: AssetPriority; firstVariantOnly?: boolean } = {},
+  ): Promise<void> {
     const sound = resolveSound(key, "preload");
-    return Promise.all(sound?.sources.map((url) => this.audio.load(url, key)) ?? []).then(
-      () => undefined,
-    );
+    const sources = options.firstVariantOnly ? sound?.sources.slice(0, 1) : sound?.sources;
+    return Promise.all(
+      sources?.map((url) => this.audio.load(url, key, options.priority)) ?? [],
+    ).then(() => undefined);
+  }
+  get diagnostics() {
+    return this.audio.diagnostics;
+  }
+  retainUrls(core: readonly string[], roster: readonly string[]): void {
+    this.audio.retainUrls(core, roster);
   }
   stopGameplay(): void {
     this.audio.stopCategory("gameplay");
@@ -50,16 +61,18 @@ export class SfxPlayer {
       ? cue.src
       : cue.sources.find((url) => this.audio.isReady(url));
     if (!src) {
-      void this.preload(cue.key);
+      void this.audio.load(cue.src, cue.key, "high");
       return false;
     }
+    if (src !== cue.src) void this.audio.load(cue.src, cue.key, "low");
+    const durationMs = Math.min(cue.durationMs ?? Infinity, cue.maxDurationMs ?? Infinity);
     return Boolean(
       this.audio.play(src, {
         key: cue.key,
         category: cue.category,
         gain: cue.gain,
         maxVoices: cue.maxVoices,
-        durationMs: cue.durationMs,
+        durationMs: Number.isFinite(durationMs) ? durationMs : undefined,
       }),
     );
   }

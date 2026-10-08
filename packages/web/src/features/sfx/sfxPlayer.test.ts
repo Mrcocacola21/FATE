@@ -5,6 +5,7 @@ import { audioFixture } from "./audioTestUtils";
 import { AudioManager } from "./AudioManager";
 import { resolveSound } from "../../assets/sfx/resolver";
 import { preloadCoreSounds } from "./audioPreload";
+import { SOUND_REGISTRY } from "../../assets/sfx/registry";
 
 test("SFX player applies master and per-sound volume", async () => {
   const f = audioFixture();
@@ -73,19 +74,44 @@ test("ready alternate variant is safe fallback; no ready asset remains silent", 
   const alternate = cue.sources.find((url) => url !== cue.src)!;
   await f.manager.load(alternate);
   assert.equal(player.play(cue), true);
-  assert.equal(f.stats().fetches, 1);
+  await f.manager.load(cue.src);
+  assert.equal(f.stats().fetches, 2, "chosen variant warms lazily alongside the ready fallback");
+  assert.equal(player.play(cue), true);
+  assert.equal(f.stats().fetches, 2, "subsequent plays reuse both variants");
   f.suspend();
   assert.equal(player.play(cue), false);
 });
 
-test("UI and match preloads are bounded to 4 and 16 real core WAVs", async () => {
+test("UI and match warm only the first variant of every core semantic key, deduplicated", async () => {
   const f = audioFixture();
   const player = new SfxPlayer(f.manager);
   await Promise.all([preloadCoreSounds("ui", player), preloadCoreSounds("ui", player)]);
-  assert.equal(f.urls.length, 4);
+  assert.deepEqual(
+    f.urls,
+    Object.values(SOUND_REGISTRY)
+      .filter((sound) => sound.category === "ui" && sound.preload === "core")
+      .map((sound) => sound.sources[0]),
+  );
   assert(f.urls.every((url) => url.includes("/common/ui/")));
   await Promise.all([preloadCoreSounds("gameplay", player), preloadCoreSounds("gameplay", player)]);
-  assert.equal(f.urls.length, 20);
+  const expected = Object.values(SOUND_REGISTRY)
+    .filter((sound) => sound.preload === "core")
+    .map((sound) => sound.sources[0]);
+  assert.equal(f.urls.length, expected.length);
+  assert.deepEqual([...f.urls].sort(), expected.sort());
   assert(f.urls.every((url) => url.endsWith(".wav") && !url.includes("/heroes/")));
-  assert.equal(f.stats().decodes, 20);
+  assert.equal(f.stats().decodes, expected.length);
+});
+
+test("measured long signatures have finite tails; segment duration can shorten them further", async () => {
+  const f = audioFixture();
+  const player = new SfxPlayer(f.manager);
+  await player.ensureAudioReady();
+  await player.preload("hero.grand-kaiser.abilities.kaiserDora");
+  const cue = { ...resolveSound("hero.grand-kaiser.abilities.kaiserDora", "dora")!, id: "dora" };
+  assert.equal(player.play(cue), true);
+  assert.deepEqual(f.sources[0].startArgs, [[0, 0, 1.5]]);
+  player.play({ ...cue, id: "shorter-dora", durationMs: 700 });
+  assert.deepEqual(f.sources[1].startArgs, [[0, 0, 0.7]]);
+  assert.equal(f.sources[0].stops, 1, "per-signature cap cancels the prior voice safely");
 });

@@ -1,0 +1,974 @@
+{
+  "date": "2026-10-09",
+  "environment": "Windows, local headless Chromium/Edge, no network throttling; single samples, concurrent test load",
+  "inventory": {
+    ".wav": {
+      "count": 168,
+      "bytes": 17242898,
+      "estimatedPixelBytes": 0
+    },
+    ".mp3": {
+      "count": 15,
+      "bytes": 2357624,
+      "estimatedPixelBytes": 0
+    },
+    ".mpeg": {
+      "count": 2,
+      "bytes": 340621,
+      "estimatedPixelBytes": 0
+    },
+    ".png": {
+      "count": 165,
+      "bytes": 6464476,
+      "estimatedPixelBytes": 226796544
+    }
+  },
+  "registeredSfx": 91,
+  "registeredAudio": {
+    "uniqueFiles": 114,
+    "transferBytes": 12931012
+  },
+  "registeredVfx": 92,
+  "registeredImages": {
+    "uniqueFiles": 104,
+    "transferBytes": 4369405
+  },
+  "core": {
+    "ui": 2,
+    "gameplay": 7,
+    "before": {
+      "uniqueFiles": 20,
+      "transferBytes": 1003692
+    },
+    "after": {
+      "uniqueFiles": 9,
+      "transferBytes": 463398
+    },
+    "vfx": 5
+  },
+  "sampleRoster": {
+    "heroes": [
+      "grand-kaiser",
+      "sans",
+      "jackRipper"
+    ],
+    "soundKeys": 16,
+    "before": {
+      "uniqueFiles": 23,
+      "transferBytes": 3303838
+    },
+    "after": {
+      "uniqueFiles": 16,
+      "transferBytes": 2810024
+    },
+    "vfx": [
+      "doraImpact",
+      "carpetImpact",
+      "bunkerStatus",
+      "gasterCannon",
+      "gasterBeam",
+      "sansCurseApply",
+      "sansCurseTick",
+      "sansCurseRemove",
+      "sansCurseStatus",
+      "sansJoke",
+      "sansSleep",
+      "snarePlace",
+      "snareTrigger",
+      "jackCoverTracks",
+      "jackSlaughter"
+    ]
+  },
+  "baselineBundle": {
+    ".png": {
+      "count": 134,
+      "bytes": 23584683,
+      "gzipBytes": 0
+    },
+    ".wav": {
+      "count": 104,
+      "bytes": 11348704,
+      "gzipBytes": 0
+    },
+    ".webp": {
+      "count": 48,
+      "bytes": 6410998,
+      "gzipBytes": 0
+    },
+    ".jpg": {
+      "count": 4,
+      "bytes": 845389,
+      "gzipBytes": 0
+    },
+    ".mpeg": {
+      "count": 2,
+      "bytes": 340621,
+      "gzipBytes": 0
+    },
+    ".mp3": {
+      "count": 8,
+      "bytes": 1241687,
+      "gzipBytes": 0
+    },
+    ".css": {
+      "count": 1,
+      "bytes": 180540,
+      "gzipBytes": 32270
+    },
+    ".js": {
+      "count": 2,
+      "bytes": 1392700,
+      "gzipBytes": 397020
+    },
+    ".ico": {
+      "count": 1,
+      "bytes": 15086,
+      "gzipBytes": 0
+    },
+    ".html": {
+      "count": 1,
+      "bytes": 1021,
+      "gzipBytes": 0
+    },
+    ".webmanifest": {
+      "count": 1,
+      "bytes": 368,
+      "gzipBytes": 0
+    }
+  },
+  "finalBundle": {
+    ".png": {
+      "count": 134,
+      "bytes": 23584683,
+      "gzipBytes": 0
+    },
+    ".wav": {
+      "count": 104,
+      "bytes": 11348704,
+      "gzipBytes": 0
+    },
+    ".webp": {
+      "count": 48,
+      "bytes": 6410998,
+      "gzipBytes": 0
+    },
+    ".jpg": {
+      "count": 4,
+      "bytes": 845389,
+      "gzipBytes": 0
+    },
+    ".mpeg": {
+      "count": 2,
+      "bytes": 340621,
+      "gzipBytes": 0
+    },
+    ".mp3": {
+      "count": 8,
+      "bytes": 1241687,
+      "gzipBytes": 0
+    },
+    ".css": {
+      "count": 1,
+      "bytes": 180574,
+      "gzipBytes": 32269
+    },
+    ".js": {
+      "count": 2,
+      "bytes": 1398833,
+      "gzipBytes": 399352
+    },
+    ".ico": {
+      "count": 1,
+      "bytes": 15086,
+      "gzipBytes": 0
+    },
+    ".html": {
+      "count": 1,
+      "bytes": 1021,
+      "gzipBytes": 0
+    },
+    ".webmanifest": {
+      "count": 1,
+      "bytes": 368,
+      "gzipBytes": 0
+    }
+  },
+  "duplicateEmittedFiles": [],
+  "runtime": {
+    "ui": {
+      "decodedBuffers": 2,
+      "decodedBytes": 59936,
+      "pendingLoads": 0,
+      "failedLoads": 0,
+      "activeVoices": 0,
+      "cacheBudgetBytes": 33554432
+    },
+    "corePreloadMs": 19.5,
+    "coreAudio": {
+      "decodedBuffers": 9,
+      "decodedBytes": 617332,
+      "pendingLoads": 0,
+      "failedLoads": 0,
+      "activeVoices": 0,
+      "cacheBudgetBytes": 33554432
+    },
+    "firstReadyPlay": true,
+    "firstReadyDispatchMs": 0.4000000059604645,
+    "coreImageDecodeMs": 14.700000002980232,
+    "coreImages": {
+      "ready": 5,
+      "pending": 0,
+      "failed": 0,
+      "estimatedPixelBytes": 2818048,
+      "budgetBytes": 33554432
+    },
+    "rosterPreloadMs": 157.20000000298023,
+    "rosterAudio": {
+      "decodedBuffers": 25,
+      "decodedBytes": 7927956,
+      "pendingLoads": 0,
+      "failedLoads": 0,
+      "activeVoices": 0,
+      "cacheBudgetBytes": 33554432
+    },
+    "rosterImages": {
+      "ready": 24,
+      "pending": 0,
+      "failed": 0,
+      "estimatedPixelBytes": 41493504,
+      "budgetBytes": 33554432
+    },
+    "boundedDoraPlay": true,
+    "signatureStartArgs": [
+      [
+        0,
+        0,
+        1.5
+      ]
+    ],
+    "warmRosterPreloadMs": 0.29999999701976776,
+    "afterRosterRelease": {
+      "audio": {
+        "decodedBuffers": 9,
+        "decodedBytes": 617332,
+        "pendingLoads": 0,
+        "failedLoads": 0,
+        "activeVoices": 0,
+        "cacheBudgetBytes": 33554432
+      },
+      "images": {
+        "ready": 5,
+        "pending": 0,
+        "failed": 0,
+        "estimatedPixelBytes": 2818048,
+        "budgetBytes": 33554432
+      }
+    },
+    "afterTenMatchChanges": {
+      "audio": {
+        "decodedBuffers": 9,
+        "decodedBytes": 617332,
+        "pendingLoads": 0,
+        "failedLoads": 0,
+        "activeVoices": 0,
+        "cacheBudgetBytes": 33554432
+      },
+      "images": {
+        "ready": 5,
+        "pending": 0,
+        "failed": 0,
+        "estimatedPixelBytes": 2818048,
+        "budgetBytes": 33554432
+      }
+    },
+    "peakJobs": 4,
+    "peakPending": 31
+  },
+  "production": {
+    "checkedAudio": 114,
+    "checkedImages": 104,
+    "totalRegisteredDecodedAudioBytes": 33207340,
+    "errors": [],
+    "basePath": "/",
+    "mimeTypes": [
+      "audio/wav",
+      "audio/mpeg",
+      "video/mpeg",
+      "image/png"
+    ],
+    "legacy": [
+      {
+        "file": "src/assets/sfx/heroes/lechy/abilities/ConfuseTerrain.mp3.mpeg",
+        "url": "/assets/ConfuseTerrain.mp3-BxbhkyC2.mpeg",
+        "transferBytes": 105600,
+        "mime": "video/mpeg",
+        "cacheControl": "no-cache",
+        "durationSeconds": 3.6409583333333333,
+        "decodedBytes": 1398128,
+        "rmsDb": -9.793993471945248,
+        "peakDb": 0.49818331616441713,
+        "fetchDecodeMs": 38.899999998509884
+      },
+      {
+        "file": "src/assets/sfx/heroes/lechy/abilities/GuideTraveler.mp3.mpeg",
+        "url": "/assets/GuideTraveler.mp3-CO02vZaU.mpeg",
+        "transferBytes": 235021,
+        "mime": "video/mpeg",
+        "cacheControl": "no-cache",
+        "durationSeconds": 7.340395833333333,
+        "decodedBytes": 2818712,
+        "rmsDb": -20.84408468050903,
+        "peakDb": -3.1554507103655443,
+        "fetchDecodeMs": 58
+      }
+    ],
+    "longSignatures": [
+      {
+        "key": "hero.jackRipper.phantasms.jackRipperDismemberment",
+        "gain": 0.4,
+        "maxVoices": 1,
+        "maxDurationMs": 2000,
+        "files": [
+          "src/assets/sfx/heroes/jackRipper/phantasms/HolyMotherOfSlaughter.mp3"
+        ],
+        "variants": [
+          {
+            "file": "src/assets/sfx/heroes/jackRipper/phantasms/HolyMotherOfSlaughter.mp3",
+            "durationSeconds": 8.539666666666667,
+            "rmsAfterGainDb": -39.07999435898117,
+            "peakAfterGainDb": -20.653291192668963
+          }
+        ]
+      },
+      {
+        "key": "hero.lechy.abilities.lechyGuideTraveler",
+        "gain": 0.4,
+        "maxVoices": 1,
+        "maxDurationMs": 1200,
+        "files": [
+          "src/assets/sfx/heroes/lechy/abilities/GuideTraveler.mp3.mpeg"
+        ],
+        "variants": [
+          {
+            "file": "src/assets/sfx/heroes/lechy/abilities/GuideTraveler.mp3.mpeg",
+            "durationSeconds": 7.340395833333333,
+            "rmsAfterGainDb": -28.802884853949784,
+            "peakAfterGainDb": -11.114250883806296
+          }
+        ]
+      },
+      {
+        "key": "hero.lechy.abilities.lechyConfuseTerrain",
+        "gain": 0.27,
+        "maxVoices": 1,
+        "maxDurationMs": 1200,
+        "files": [
+          "src/assets/sfx/heroes/lechy/abilities/ConfuseTerrain.mp3.mpeg"
+        ],
+        "variants": [
+          {
+            "file": "src/assets/sfx/heroes/lechy/abilities/ConfuseTerrain.mp3.mpeg",
+            "durationSeconds": 3.6409583333333333,
+            "rmsAfterGainDb": -21.1667181887655,
+            "peakAfterGainDb": -10.874541400655836
+          }
+        ]
+      },
+      {
+        "key": "hero.lechy.phantasms.lechyStorm",
+        "gain": 0.4,
+        "maxVoices": 1,
+        "maxDurationMs": 1500,
+        "files": [
+          "src/assets/sfx/heroes/lechy/phantasms/StormSound1.mp3"
+        ],
+        "variants": [
+          {
+            "file": "src/assets/sfx/heroes/lechy/phantasms/StormSound1.mp3",
+            "durationSeconds": 12.624,
+            "rmsAfterGainDb": -29.92469294976287,
+            "peakAfterGainDb": -11.771939205038638
+          }
+        ]
+      },
+      {
+        "key": "hero.grand-kaiser.abilities.kaiserDora",
+        "gain": 0.65,
+        "maxVoices": 1,
+        "maxDurationMs": 1500,
+        "files": [
+          "src/assets/sfx/heroes/grand-kaiser/abilities/Dora.wav"
+        ],
+        "variants": [
+          {
+            "file": "src/assets/sfx/heroes/grand-kaiser/abilities/Dora.wav",
+            "durationSeconds": 5,
+            "rmsAfterGainDb": -31.402227525907023,
+            "peakAfterGainDb": -9.653490941526648
+          }
+        ]
+      }
+    ],
+    "tunedGains": [
+      {
+        "key": "hero.chikatilo.phantasms.falseTrailExplosion",
+        "gain": 0.31,
+        "maxVoices": 1,
+        "files": [
+          "src/assets/sfx/heroes/chikatilo/phantasms/FalseTrailExplosion.mp3"
+        ],
+        "variants": [
+          {
+            "file": "src/assets/sfx/heroes/chikatilo/phantasms/FalseTrailExplosion.mp3",
+            "durationSeconds": 2.516,
+            "rmsAfterGainDb": -21.28275910429148,
+            "peakAfterGainDb": -10.330657685570294
+          }
+        ]
+      },
+      {
+        "key": "hero.lechy.abilities.lechyConfuseTerrain",
+        "gain": 0.27,
+        "maxVoices": 1,
+        "maxDurationMs": 1200,
+        "files": [
+          "src/assets/sfx/heroes/lechy/abilities/ConfuseTerrain.mp3.mpeg"
+        ],
+        "variants": [
+          {
+            "file": "src/assets/sfx/heroes/lechy/abilities/ConfuseTerrain.mp3.mpeg",
+            "durationSeconds": 3.6409583333333333,
+            "rmsAfterGainDb": -21.1667181887655,
+            "peakAfterGainDb": -10.874541400655836
+          }
+        ]
+      }
+    ]
+  },
+  "background": {
+    "syntheticVisibilityChange": true,
+    "hiddenDeliveries": 120,
+    "duplicateDeliveries": 120,
+    "hiddenOneShots": 0,
+    "resumedHistoricalOneShots": 0,
+    "freshOneShots": 1,
+    "actualOSBackgroundSuspension": false
+  },
+  "visual": {
+    "visual": [
+      {
+        "width": 320,
+        "height": 568,
+        "theme": "light",
+        "orientation": "P1",
+        "overflow": 0,
+        "cells": 81,
+        "cellWidth": 26,
+        "boardRight": 285,
+        "allCellsInViewport": true,
+        "statusCount": 8
+      },
+      {
+        "width": 320,
+        "height": 568,
+        "theme": "light",
+        "orientation": "P2",
+        "overflow": 0,
+        "cells": 81,
+        "cellWidth": 25,
+        "boardRight": 280,
+        "allCellsInViewport": true,
+        "statusCount": 8
+      },
+      {
+        "width": 320,
+        "height": 568,
+        "theme": "dark",
+        "orientation": "P1",
+        "overflow": 0,
+        "cells": 81,
+        "cellWidth": 25,
+        "boardRight": 280,
+        "allCellsInViewport": true,
+        "statusCount": 8
+      },
+      {
+        "width": 320,
+        "height": 568,
+        "theme": "dark",
+        "orientation": "P2",
+        "overflow": 0,
+        "cells": 81,
+        "cellWidth": 25,
+        "boardRight": 280,
+        "allCellsInViewport": true,
+        "statusCount": 8
+      },
+      {
+        "width": 390,
+        "height": 844,
+        "theme": "light",
+        "orientation": "P1",
+        "overflow": 0,
+        "cells": 81,
+        "cellWidth": 32,
+        "boardRight": 348.5,
+        "allCellsInViewport": true,
+        "statusCount": 8
+      },
+      {
+        "width": 390,
+        "height": 844,
+        "theme": "light",
+        "orientation": "P2",
+        "overflow": 0,
+        "cells": 81,
+        "cellWidth": 32,
+        "boardRight": 348.5,
+        "allCellsInViewport": true,
+        "statusCount": 8
+      },
+      {
+        "width": 390,
+        "height": 844,
+        "theme": "dark",
+        "orientation": "P1",
+        "overflow": 0,
+        "cells": 81,
+        "cellWidth": 32,
+        "boardRight": 348.5,
+        "allCellsInViewport": true,
+        "statusCount": 8
+      },
+      {
+        "width": 390,
+        "height": 844,
+        "theme": "dark",
+        "orientation": "P2",
+        "overflow": 0,
+        "cells": 81,
+        "cellWidth": 32,
+        "boardRight": 348.5,
+        "allCellsInViewport": true,
+        "statusCount": 8
+      },
+      {
+        "width": 844,
+        "height": 390,
+        "theme": "light",
+        "orientation": "P1",
+        "overflow": 0,
+        "cells": 81,
+        "cellWidth": 62,
+        "boardRight": 666.5,
+        "allCellsInViewport": true,
+        "statusCount": 11
+      },
+      {
+        "width": 844,
+        "height": 390,
+        "theme": "light",
+        "orientation": "P2",
+        "overflow": 0,
+        "cells": 81,
+        "cellWidth": 62,
+        "boardRight": 666.5,
+        "allCellsInViewport": true,
+        "statusCount": 11
+      },
+      {
+        "width": 844,
+        "height": 390,
+        "theme": "dark",
+        "orientation": "P1",
+        "overflow": 0,
+        "cells": 81,
+        "cellWidth": 62,
+        "boardRight": 666.5,
+        "allCellsInViewport": true,
+        "statusCount": 11
+      },
+      {
+        "width": 844,
+        "height": 390,
+        "theme": "dark",
+        "orientation": "P2",
+        "overflow": 0,
+        "cells": 81,
+        "cellWidth": 62,
+        "boardRight": 666.5,
+        "allCellsInViewport": true,
+        "statusCount": 11
+      },
+      {
+        "width": 768,
+        "height": 1024,
+        "theme": "light",
+        "orientation": "P1",
+        "overflow": 0,
+        "cells": 81,
+        "cellWidth": 62,
+        "boardRight": 666.5,
+        "allCellsInViewport": true,
+        "statusCount": 11
+      },
+      {
+        "width": 768,
+        "height": 1024,
+        "theme": "light",
+        "orientation": "P2",
+        "overflow": 0,
+        "cells": 81,
+        "cellWidth": 62,
+        "boardRight": 666.5,
+        "allCellsInViewport": true,
+        "statusCount": 11
+      },
+      {
+        "width": 768,
+        "height": 1024,
+        "theme": "dark",
+        "orientation": "P1",
+        "overflow": 0,
+        "cells": 81,
+        "cellWidth": 62,
+        "boardRight": 666.5,
+        "allCellsInViewport": true,
+        "statusCount": 11
+      },
+      {
+        "width": 768,
+        "height": 1024,
+        "theme": "dark",
+        "orientation": "P2",
+        "overflow": 0,
+        "cells": 81,
+        "cellWidth": 62,
+        "boardRight": 666.5,
+        "allCellsInViewport": true,
+        "statusCount": 11
+      },
+      {
+        "width": 1440,
+        "height": 1050,
+        "theme": "light",
+        "orientation": "P1",
+        "overflow": 0,
+        "cells": 81,
+        "cellWidth": 62,
+        "boardRight": 730.5,
+        "allCellsInViewport": true,
+        "statusCount": 11
+      },
+      {
+        "width": 1440,
+        "height": 1050,
+        "theme": "light",
+        "orientation": "P2",
+        "overflow": 0,
+        "cells": 81,
+        "cellWidth": 62,
+        "boardRight": 730.5,
+        "allCellsInViewport": true,
+        "statusCount": 11
+      },
+      {
+        "width": 1440,
+        "height": 1050,
+        "theme": "dark",
+        "orientation": "P1",
+        "overflow": 0,
+        "cells": 81,
+        "cellWidth": 62,
+        "boardRight": 730.5,
+        "allCellsInViewport": true,
+        "statusCount": 11
+      },
+      {
+        "width": 1440,
+        "height": 1050,
+        "theme": "dark",
+        "orientation": "P2",
+        "overflow": 0,
+        "cells": 81,
+        "cellWidth": 62,
+        "boardRight": 730.5,
+        "allCellsInViewport": true,
+        "statusCount": 11
+      }
+    ],
+    "errors": []
+  },
+  "limits": {
+    "audioVoices": 16,
+    "activeVfx": 64,
+    "processedVfxIds": 512,
+    "presentationEventIds": 1024,
+    "pendingBatches": 128,
+    "prebaselineBatches": 64,
+    "audioCueTimers": 512,
+    "deferredChains": 64,
+    "deferredEvents": 1024,
+    "assetJobs": 4,
+    "pendingAssetJobs": 256,
+    "inactiveCacheBudgetBytes": 33554432,
+    "lateAudioMs": 500,
+    "presentationBatchAgeMs": 15000
+  },
+  "tests": {
+    "regression": {
+      "layer": "regression",
+      "startedAt": "2026-10-08T21:15:34.502Z",
+      "suites": [
+        {
+          "name": "Prisma generate (no database connection)",
+          "exitCode": 0,
+          "seconds": 0.15
+        },
+        {
+          "name": "rules gameplay (existing runner)",
+          "exitCode": 0,
+          "seconds": 2.87,
+          "legacyChecks": 451
+        },
+        {
+          "name": "rules architecture boundaries",
+          "exitCode": 0,
+          "seconds": 2.01,
+          "legacyChecks": 1
+        },
+        {
+          "name": "databaseFoundation.test.ts",
+          "exitCode": 0,
+          "seconds": 1.89
+        },
+        {
+          "name": "view.test.ts",
+          "exitCode": 0,
+          "seconds": 2.14
+        },
+        {
+          "name": "markerProjection.test.ts",
+          "exitCode": 0,
+          "seconds": 1.69
+        },
+        {
+          "name": "matchResult.test.ts",
+          "exitCode": 0,
+          "seconds": 3.22
+        },
+        {
+          "name": "matchSnapshot.test.ts",
+          "exitCode": 0,
+          "seconds": 3.45
+        },
+        {
+          "name": "replay.test.ts",
+          "exitCode": 0,
+          "seconds": 4.65
+        },
+        {
+          "name": "matchmaking.test.ts",
+          "exitCode": 0,
+          "seconds": 2.81
+        },
+        {
+          "name": "adminUiRating.test.ts",
+          "exitCode": 0,
+          "seconds": 1.86,
+          "tests": 1
+        },
+        {
+          "name": "server pure units",
+          "exitCode": 0,
+          "seconds": 11.73,
+          "tests": 22
+        },
+        {
+          "name": "replay benchmark correctness (no timing thresholds)",
+          "exitCode": 0,
+          "seconds": 8.6,
+          "tests": 11
+        },
+        {
+          "name": "web components and helpers",
+          "exitCode": 0,
+          "seconds": 92.77,
+          "tests": 690
+        },
+        {
+          "name": "OpenAPI generated schema consistency",
+          "exitCode": 0,
+          "seconds": 14.02
+        },
+        {
+          "name": "observability.test.ts",
+          "exitCode": 0,
+          "seconds": 7.76,
+          "tests": 10
+        },
+        {
+          "name": "deployment.test.ts",
+          "exitCode": 0,
+          "seconds": 17.74,
+          "tests": 8
+        },
+        {
+          "name": "auth.test.ts",
+          "exitCode": 0,
+          "seconds": 5.92
+        },
+        {
+          "name": "apiErrors.test.ts",
+          "exitCode": 0,
+          "seconds": 3.71,
+          "tests": 5
+        },
+        {
+          "name": "admin.test.ts",
+          "exitCode": 0,
+          "seconds": 2.91,
+          "tests": 5
+        },
+        {
+          "name": "audit.test.ts",
+          "exitCode": 0,
+          "seconds": 2.68,
+          "tests": 3
+        },
+        {
+          "name": "profile.test.ts",
+          "exitCode": 0,
+          "seconds": 3.18
+        },
+        {
+          "name": "hardening.test.ts",
+          "exitCode": 0,
+          "seconds": 3.46
+        },
+        {
+          "name": "matchHistory.test.ts",
+          "exitCode": 0,
+          "seconds": 3.38
+        },
+        {
+          "name": "playerStatistics.test.ts",
+          "exitCode": 0,
+          "seconds": 3.54
+        },
+        {
+          "name": "rating.test.ts",
+          "exitCode": 0,
+          "seconds": 4.01
+        },
+        {
+          "name": "rankTiers.test.ts",
+          "exitCode": 0,
+          "seconds": 3.7,
+          "tests": 7
+        },
+        {
+          "name": "leaderboard.test.ts",
+          "exitCode": 0,
+          "seconds": 3.55,
+          "tests": 6
+        },
+        {
+          "name": "matchAction.test.ts",
+          "exitCode": 0,
+          "seconds": 4.8
+        },
+        {
+          "name": "matchRecovery.test.ts",
+          "exitCode": 0,
+          "seconds": 6
+        },
+        {
+          "name": "replayApi.test.ts",
+          "exitCode": 0,
+          "seconds": 5.18
+        },
+        {
+          "name": "testRoom.test.ts",
+          "exitCode": 0,
+          "seconds": 4.31
+        },
+        {
+          "name": "openapi.test.ts",
+          "exitCode": 0,
+          "seconds": 9.38,
+          "tests": 5
+        },
+        {
+          "name": "matchLifecycle.test.ts",
+          "exitCode": 0,
+          "seconds": 4.47
+        },
+        {
+          "name": "matchTypes.test.ts",
+          "exitCode": 0,
+          "seconds": 3.97
+        },
+        {
+          "name": "lobby.test.ts",
+          "exitCode": 0,
+          "seconds": 3.86
+        },
+        {
+          "name": "matchmaking.ws.test.ts",
+          "exitCode": 0,
+          "seconds": 4.12
+        },
+        {
+          "name": "authenticatedMultiplayer.test.ts",
+          "exitCode": 0,
+          "seconds": 4.37
+        },
+        {
+          "name": "ws.smoke.ts",
+          "exitCode": 0,
+          "seconds": 7.39
+        },
+        {
+          "name": "testRoom.ws.test.ts",
+          "exitCode": 0,
+          "seconds": 18.37
+        },
+        {
+          "name": "modes.test.ts",
+          "exitCode": 0,
+          "seconds": 7.97
+        }
+      ],
+      "passed": true,
+      "seconds": 303.59
+    },
+    "web": {
+      "layer": "web",
+      "startedAt": "2026-10-08T21:20:44.138Z",
+      "suites": [
+        {
+          "name": "Prisma generate (no database connection)",
+          "exitCode": 0,
+          "seconds": 0.11
+        },
+        {
+          "name": "web components and helpers",
+          "exitCode": 0,
+          "seconds": 85.66,
+          "tests": 691
+        }
+      ],
+      "passed": true,
+      "seconds": 85.77
+    },
+    "focused": {
+      "sfx": 43,
+      "effects": 219,
+      "vfx": 62
+    },
+    "rulesPrintedScenarios": 449,
+    "serverScript": "PASS (40 TAP cases plus legacy assertion runners)",
+    "databaseIntegration": "NOT TESTED: TEST_DATABASE_URL missing; command attempted and refused before tests"
+  }
+}

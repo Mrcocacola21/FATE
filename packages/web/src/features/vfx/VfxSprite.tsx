@@ -1,6 +1,7 @@
-import type { CSSProperties, FC } from "react";
+import { useEffect, useState, type CSSProperties, type FC } from "react";
 import { PortalEffect } from "./PortalEffect";
 import type { VfxArtwork, VfxDefinition } from "./vfxRegistry";
+import { imagePreloader } from "./imagePreload";
 
 export function spritePlayback(art: VfxArtwork, durationMs: number, reducedMotion = false) {
   const frames = art.frames ?? 1;
@@ -48,6 +49,20 @@ export const VfxSprite: FC<VfxSpriteProps> = ({
   opacity,
   durationMs = definition.durationMs,
 }) => {
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    if (!artwork.asset || typeof Image === "undefined") return;
+    let current = true;
+    setFailed(false);
+    // Warm/cache only. Completion never restarts animation or re-enqueues a cue.
+    void imagePreloader.load(artwork.asset, definition.id, "high").then((image) => {
+      if (current && !image) setFailed(true);
+    });
+    return () => {
+      current = false;
+    };
+  }, [artwork.asset, definition.id]);
+  if (failed) return null;
   const spriteStyle = {
     "--vfx-duration": `${durationMs}ms`,
     "--vfx-opacity": opacity ?? definition.opacity,

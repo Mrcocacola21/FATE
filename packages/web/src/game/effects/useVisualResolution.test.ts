@@ -58,7 +58,7 @@ test("all ingress batches received before one React commit reach the ordered pla
     act(() => {
       renderer = create(createElement(Harness, { batches: [] }));
     });
-    const batches: BoardEventBatch[] = [120, 121, 122].map((value) => ({
+    const batches: BoardEventBatch[] = Array.from({ length: 120 }, (_, index) => 120 + index).map((value) => ({
       streamId: "match",
       revision: value,
       view,
@@ -74,10 +74,11 @@ test("all ingress batches received before one React commit reach the ordered pla
     act(() => {
       renderer!.update(createElement(Harness, { batches: [] }));
     });
-    finishCurrentPlan();
-    assert.equal(revision(), 121);
-    finishCurrentPlan();
-    assert.equal(revision(), 122);
+    for (let index = 1; index < batches.length; index++) {
+      finishCurrentPlan();
+      assert.equal(revision(), 120 + index);
+      assert.equal((output as BoardEventBatch | null)?.events[0].eventId, `accepted-${120 + index}`);
+    }
     finishCurrentPlan();
     assert.equal(output, null);
   } finally {

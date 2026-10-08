@@ -1,20 +1,25 @@
 import type { PlayerView } from "rules";
 import type { BoardEventBatch } from "../../game/effects/types";
 import {
-  MAX_PRESENTATION_AGE_MS,
   presentationBatchHasExpired,
   presentationBatchIsCurrent,
 } from "../../game/effects/presentationSession";
 import { mapEventBatchToSfx } from "./sfxEventMapper";
 import { sfxPlayer, type SfxPlayer } from "./sfxPlayer";
+import { presentationIsVisible } from "../../game/effects/presentationVisibility";
 
 const MAX_CUES = 512;
+/** Scheduling jitter allowance, independent of the longer ordered-batch queue lifetime. */
+export const MAX_AUDIO_CUE_LATENESS_MS = 500;
 
 /** Defensive cue dedupe only. PresentationSession remains ingress authority. */
 export class SfxPlaybackSession {
   private readonly consumed = new Set<string>();
   private readonly timers = new Set<ReturnType<typeof setTimeout>>();
   private currentView?: PlayerView;
+  get diagnostics() {
+    return { scheduledCues: this.timers.size, consumedCueIds: this.consumed.size };
+  }
   constructor(
     private readonly player: Pick<
       SfxPlayer,
@@ -35,13 +40,15 @@ export class SfxPlaybackSession {
     for (const cue of cues) {
       if (this.consumed.has(cue.id)) continue;
       this.consumed.add(cue.id);
-      if (this.player.isMuted() || this.player.getVolume() <= 0) continue;
+      if (!presentationIsVisible() || this.player.isMuted() || this.player.getVolume() <= 0)
+        continue;
       const scheduledAt = (batch.playbackStartedAt ?? Date.now()) + (cue.delayMs ?? 0);
       const delayMs = Math.max(0, scheduledAt - Date.now());
       const play = () => {
         if (
           !presentationBatchIsCurrent(batch) ||
-          Date.now() > scheduledAt + MAX_PRESENTATION_AGE_MS
+          !presentationIsVisible() ||
+          Date.now() > scheduledAt + MAX_AUDIO_CUE_LATENESS_MS
         )
           return;
         if (cue.authorizedUnitId && !this.currentView?.units[cue.authorizedUnitId]?.position)
