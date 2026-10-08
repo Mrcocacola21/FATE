@@ -39,7 +39,6 @@ import { mapEventBatchToSfx } from "../../features/sfx/sfxEventMapper";
 import { buildActionPreview } from "../targeting/buildActionPreview";
 import { buildPendingPreview } from "../targeting/buildPendingPreview";
 import { selectBoardPreview } from "../targeting/selectBoardPreview";
-import { buildPreviewCellMap } from "../targeting/previewTypes";
 import { createCellClickHandler, createCellHoverHandler } from "../gameshell-content/cellHandlers";
 import { getDoraTargetCenters } from "../gameshell-content/helpers";
 import { PresentationSession } from "./presentationSession";
@@ -451,7 +450,7 @@ test("Bunker success/exit are one-shots, failure is silent, active hydration is 
 
 test("Stare prompt waits, resolution shares forced movement, hidden source identity stays private", () => {
   const initial = setupVladState();
-  let state = initKnowledgeForOwners(
+  const state = initKnowledgeForOwners(
     toBattleState(
       setUnit(
         setUnit(initial.state, initial.vlad.id, { position: { col: 4, row: 4 } }),
