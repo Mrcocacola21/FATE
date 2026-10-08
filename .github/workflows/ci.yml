@@ -15,7 +15,8 @@ concurrency:
 jobs:
   docker:
     name: Docker runtime
-    runs-on: ubuntu-latest
+    # Keep the runner OS stable across ubuntu-latest migrations.
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - name: Checkout
@@ -33,7 +34,8 @@ jobs:
 
   verify:
     name: Quality
-    runs-on: ubuntu-latest
+    # Keep the runner OS stable across ubuntu-latest migrations.
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
       NODE_ENV: test

@@ -3,8 +3,12 @@ import type { RNG } from "../rng";
 import { applyUseAbility } from "./abilityActions";
 import { applyAttack } from "./combatActions";
 import { lobbyHandlers } from "./lobbyActions";
-import { applyMove, applyRequestMoveOptions, continueReactionMovement } from "./movementActions";
-import { appendReactionMovementEnded } from "./movementActions/reactions";
+import {
+  appendReactionMovementEnded,
+  applyMove,
+  applyRequestMoveOptions,
+  continueReactionMovement,
+} from "./movementActions";
 import { applyResolvePendingRoll } from "./pendingRollActions";
 import { applyPlaceUnit } from "./placementActions";
 import { applyEnterStealth, applySearchStealth } from "./stealthActions";
