@@ -74,7 +74,77 @@ export const SOUND_REGISTRY = {
     preload: "core",
     maxVoices: 2,
   },
-} as const satisfies { [key: `common.${"ui" | "combat"}.${string}`]: SoundDefinition };
+  "hero.grand-kaiser.abilities.kaiserDora": {
+    sources: [new URL("./heroes/grand-kaiser/abilities/Dora.wav", import.meta.url).href],
+    category: "gameplay",
+    gain: 0.65,
+    preload: "lazy",
+    maxVoices: 1,
+  },
+  "hero.grand-kaiser.abilities.kaiserCarpetStrike.launch": {
+    sources: [
+      new URL("./heroes/grand-kaiser/abilities/kaiserCarpetStrikeLaunch.wav", import.meta.url).href,
+    ],
+    category: "gameplay",
+    gain: 0.5,
+    preload: "lazy",
+    maxVoices: 1,
+  },
+  "hero.grand-kaiser.abilities.kaiserCarpetStrike.impact": {
+    sources: [
+      new URL("./heroes/grand-kaiser/abilities/kaiserCarpetStrikeImpact.wav", import.meta.url).href,
+    ],
+    category: "gameplay",
+    gain: 0.65,
+    preload: "lazy",
+    maxVoices: 1,
+  },
+  "hero.grand-kaiser.statuses.bunker.enter": {
+    sources: [
+      new URL("./heroes/grand-kaiser/abilities/kaiserBunkerEnter.wav", import.meta.url).href,
+    ],
+    category: "gameplay",
+    gain: 0.5,
+    preload: "lazy",
+    maxVoices: 1,
+  },
+  "hero.grand-kaiser.statuses.bunker.exit": {
+    sources: [
+      new URL("./heroes/grand-kaiser/abilities/kaiserBunkerExit.wav", import.meta.url).href,
+    ],
+    category: "gameplay",
+    gain: 0.45,
+    preload: "lazy",
+    maxVoices: 1,
+  },
+  "hero.vladTepes.abilities.vladStakes.place": {
+    sources: [
+      new URL("./heroes/vladTepes/abilities/vladStakesPlace01.wav", import.meta.url).href,
+      new URL("./heroes/vladTepes/abilities/vladStakesPlace02.wav", import.meta.url).href,
+      new URL("./heroes/vladTepes/abilities/vladStakesPlace03.wav", import.meta.url).href,
+    ],
+    category: "gameplay",
+    gain: 0.5,
+    preload: "lazy",
+    maxVoices: 1,
+  },
+  "hero.vladTepes.abilities.vladForest.impact": {
+    sources: [new URL("./heroes/vladTepes/abilities/vladForestCast.wav", import.meta.url).href],
+    category: "gameplay",
+    gain: 0.6,
+    preload: "lazy",
+    maxVoices: 1,
+  },
+  "hero.vladTepes.abilities.intimidatingStare": {
+    sources: [
+      new URL("./heroes/vladTepes/abilities/vladIntimidateActivate.wav", import.meta.url).href,
+    ],
+    category: "gameplay",
+    gain: 0.5,
+    preload: "lazy",
+    maxVoices: 1,
+  },
+} as const satisfies Record<string, SoundDefinition>;
 
 export type SoundKey = keyof typeof SOUND_REGISTRY;
 

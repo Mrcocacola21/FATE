@@ -1692,6 +1692,7 @@ export const uk = {
     actionRequired: "Потрібна дія",
     context: {
       attackRoll: "Кидок атаки",
+      centerRoll: "Кидок центру області",
       defenseRoll: "Кидок захисту",
       stealthAttempt: "Спроба невидимості",
       statusSave: "Кидок проти ефекту",

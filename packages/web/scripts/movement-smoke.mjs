@@ -45,7 +45,7 @@ function App() {
       events.push({ type: "stakesPlaced", owner: "P1", positions: [B], hiddenFromOpponent: true });
       events.push({ type: "snarePlaced", owner: "P1", sourceUnitId: "mover", cell: { col: 8, row: 0 } });
     } else {
-      events.push(kind === "forced" ? { type: "intimidateResolved", attackerId: "mover", from: A, to: B, provenance: { kind: "forced", cause: "intimidatingStare" } }
+      events.push(kind === "forced" ? { type: "intimidateResolved", abilityId: "vladIntimidate", attackerId: "mover", from: A, to: B, provenance: { kind: "forced", cause: "intimidatingStare" } }
         : { type: "unitMoved", unitId: "mover", from: A, to: B, provenance: kind === "abilityTeleport" ? { kind: "ability", movementKind: "teleport" } : { kind: kind === "teleport" ? "teleport" : kind === "rider" ? "rider" : "normal" } });
       if (kind === "stake") { hp = 4; events.push({ type: "stakeTriggered", unitId: "mover", markerPos: B, stopped: true, damage: 1 }); }
       if (kind === "snare") events.push({ type: "snareTriggered", unitId: "mover", cell: B, immobilized: true });
@@ -102,7 +102,14 @@ try {
   // Playwright's virtual clock drives RAF/timers. CSS animations retain their
   // native clock, so freeze them at the same shared timestamp for inspection.
   const syncSprites = () =>
-    page.locator("[data-vfx-cue]").evaluateAll((elements) => {
+    page.locator("[data-vfx-cue]").evaluateAll(async (elements) => {
+      await Promise.all(elements.flatMap(el => Array.from(el.children)).map(async el => {
+        const background = getComputedStyle(el).backgroundImage;
+        if (!background.startsWith("url(")) return;
+        const image = new Image();
+        image.src = background.slice(5, -2);
+        await image.decode();
+      }));
       for (const el of elements)
         for (const animation of el.getAnimations({ subtree: true })) {
           const delay = getComputedStyle(animation.effect.target).animationDelay.split(",")[0];
@@ -136,7 +143,14 @@ try {
       kind + " P1 movement " + JSON.stringify({ starts, middles }),
     );
     assert.ok(middles[1].x < starts[1].x && middles[1].y > starts[1].y, kind + " P2 movement");
-    if (kind === "forced") assert.equal(await page.locator(".board-effect-trail-push").count(), 6);
+    if (kind === "forced") {
+      assert.equal(await page.locator(".board-effect-trail-push").count(), 6);
+      for (const player of ["P1", "P2"])
+        assert.equal(await page.locator('[data-board="' + player + '"] [data-vfx-effect="vladGaze"]').count(), 1);
+      await syncSprites();
+      await page.screenshot({ path: path.join(output, "stare-P1-P2.png"), fullPage: true });
+      observations.push("one Vlad Stare signature per recipient with generic forced movement");
+    }
     await page.clock.runFor(200);
     observations.push(kind + " token interpolation and P1/P2 direction");
   }

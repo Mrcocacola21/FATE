@@ -103,9 +103,9 @@ try {
         })),
       };
     });
-  for (const id of ["doraImpact", "carpetImpact"]) {
+  for (const id of ["doraImpact", "carpetImpact", "forestEruption"]) {
     await page.getByLabel("Runtime effect").selectOption(id);
-    const size = id === "doraImpact" ? 3 : 5;
+    const size = id === "carpetImpact" ? 5 : 3;
     for (const orientation of ["P1", "P2"]) {
       await page.getByLabel("Orientation", { exact: true }).selectOption(orientation);
       for (const anchor of ["center", "left", "right", "top", "bottom", "corner"]) {
@@ -193,6 +193,7 @@ try {
     "unitDeath",
     "statusSmall",
     "bunkerStatus",
+    "vladGaze",
     "fireball",
   ]) {
     await page.getByLabel("Runtime effect").selectOption(id);
@@ -217,12 +218,15 @@ try {
   assert.notEqual(projectileSources[0].left, projectileSources[1].left);
   assert.notEqual(projectileSources[0].rotation, projectileSources[1].rotation);
   assert.equal(projectileSources[0].travel, projectileSources[1].travel);
-  await page.getByLabel("Runtime effect").selectOption("doraImpact");
-  await replay();
   await page.getByLabel("Reduced motion", { exact: true }).check();
-  const reduced = await geometry();
-  assert.ok(reduced.children.every((child) => child.animation === "none"));
-  await page.screenshot({ path: path.join(output, "reduced-motion.png") });
+  for (const id of ["doraImpact", "carpetImpact", "forestEruption"]) {
+    await page.getByLabel("Runtime effect").selectOption(id);
+    await replay();
+    const reduced = await geometry();
+    assert.ok(reduced.children.every((child) => child.animation === "none"));
+    assert.equal(reduced.width, (id === "carpetImpact" ? 5 : 3) * reduced.cellSize);
+    await page.screenshot({ path: path.join(output, `${id}-reduced-motion.png`) });
+  }
   // Click through an active impact, exercising the real board input handler.
   const point = await page.locator('[data-highlight="attack"]').boundingBox();
   await page.mouse.click(point.x + point.width / 2, point.y + point.height / 2);
@@ -239,7 +243,7 @@ try {
     JSON.stringify({ positions, observations, errors }, null, 2),
   );
   console.log(
-    `VFX browser checks passed: 24 area cases, 10 rays, all core artwork, composition, frames, resize, input, reduced motion, cleanup. Screenshots: ${output}`,
+    `VFX browser checks passed: 36 area cases, 10 rays, all core artwork, composition, frames, resize, input, reduced motion, cleanup. Screenshots: ${output}`,
   );
 } finally {
   await browser?.close();

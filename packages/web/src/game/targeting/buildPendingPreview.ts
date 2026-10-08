@@ -423,10 +423,38 @@ export function buildPendingPreview(
   targetingCell?: Coord | null,
 ): BoardPreview | null {
   if (!view) return null;
+  if (view.pendingDecision?.viewerCanRespond === false)
+    return view.pendingAoEPreview ? buildPendingAoEPreview(view) : null;
   const pending = view.pendingRoll;
   if (pending) {
     const context = (pending.context ?? {}) as Record<string, unknown>;
     switch (pending.kind) {
+      case "vladForestTarget": {
+        const centers: Coord[] = [];
+        for (let col = 0; col < boardSize(view); col += 1)
+          for (let row = 0; row < boardSize(view); row += 1) centers.push({ col, row });
+        const selected =
+          targetingCell && centers.some((cell) => coordKey(cell) === coordKey(targetingCell))
+            ? targetingCell
+            : null;
+        return compactPreview([
+          {
+            kind: "multiStep",
+            step: "forestCenter",
+            cells: centers,
+            cellKind: "validTarget",
+            labelKey: "preview.labels.selectTarget",
+          },
+          selected
+            ? {
+                kind: "area",
+                centerCell: { ...selected },
+                areaCells: cellsInRadius(boardSize(view), selected, 1, true),
+                labelKey: "preview.labels.affectedArea",
+              }
+            : null,
+        ]);
+      }
       case "papyrusBoneChoice": {
         const papyrusId =
           typeof context.papyrusUnitId === "string" ? context.papyrusUnitId : "";

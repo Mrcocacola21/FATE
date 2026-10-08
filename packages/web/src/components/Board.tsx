@@ -23,6 +23,7 @@ import { useBoardFit } from "../game/hooks/useBoardFit";
 import type { BoardEventBatch, BoardPreviewLine } from "../game/effects/types";
 import { BoneIcon, getActiveBoneStatus, type ActiveBoneStatus } from "../game/boneStatus";
 import { VfxLayer } from "../features/vfx/VfxLayer";
+import { vfxRegistry } from "../features/vfx/vfxRegistry";
 import { BOARD_LAYER_STYLES } from "../features/vfx/vfxRegistry";
 import type { QueuedBoardVfxRequest } from "../features/vfx/vfxTypes";
 import { useBoardVfx } from "../features/vfx/useBoardVfx";
@@ -1045,6 +1046,15 @@ export const Board: FC<BoardProps> = ({
             >
               S
             </div>
+          )}
+          {unit?.bunkerActive && (
+            <img
+              src={vfxRegistry.bunkerStatus.asset}
+              alt=""
+              aria-hidden="true"
+              data-bunker-state="active"
+              className="pointer-events-none absolute inset-0 h-full w-full object-contain opacity-70"
+            />
           )}
           {unit?.bunkerActive && (
             <div

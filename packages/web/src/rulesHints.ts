@@ -1,4 +1,14 @@
 import type { PlayerView, UnitClass } from "rules";
+// Import the pure constants module: the rules package's CommonJS entry point is
+// server-owned and cannot supply browser runtime named exports through Vite.
+export {
+  ABILITY_KAISER_DORA,
+  ABILITY_KAISER_DORA as KAISER_DORA_ID,
+  ABILITY_KAISER_CARPET_STRIKE,
+  ABILITY_KAISER_CARPET_STRIKE as KAISER_CARPET_STRIKE_ID,
+  ABILITY_VLAD_FOREST,
+  ABILITY_VLAD_INTIMIDATE,
+} from "../../rules/src/abilities/constants";
 
 export function getProjectedAbilityTargetRange(
   view: PlayerView | null | undefined,
@@ -19,8 +29,6 @@ export const FOREST_AURA_RADIUS = 2;
 export const ARENA_STORM_ID = "storm";
 export const ARENA_BONE_FIELD_ID = "boneField";
 export const KAISER_BUNKER_ID = "kaiserBunker";
-export const KAISER_DORA_ID = "kaiserDora";
-export const KAISER_CARPET_STRIKE_ID = "kaiserCarpetStrike";
 export const KAISER_ENGINEERING_MIRACLE_ID = "kaiserEngineeringMiracle";
 export const GRAND_KAISER_ID = "grand-kaiser";
 export const VLAD_TEPES_ID = "vladTepes";

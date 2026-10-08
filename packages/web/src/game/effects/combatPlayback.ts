@@ -1,5 +1,6 @@
 import type { Coord, ProjectedGameEvent, PlayerView, RollKind } from "rules";
 import type { BoardEventBatch } from "./types";
+import { heroAoeEffect, sameAbilityResolution } from "./heroPresentation";
 import {
   confirmedMovement,
   movementCueFromEvent,
@@ -52,6 +53,10 @@ export function combatRollSide(kind: RollKind): "attack" | "defense" | null {
   if (kind.endsWith("_attackerRoll") || kind === "kaiserCarpetStrikeAttack") return "attack";
   if (kind.endsWith("_defenderRoll")) return "defense";
   return null;
+}
+
+export function isPresentedRoll(kind: RollKind): boolean {
+  return Boolean(combatRollSide(kind)) || kind === "kaiserCarpetStrikeCenter";
 }
 
 export type CombatPresentationCue = {
@@ -381,8 +386,36 @@ export function buildCombatVisualPlaybackPlan(params: {
   };
 
   let cursorMs = 0;
+  // Completion authorizes the area art, but its start belongs before the first
+  // correlated outcome. Keep event order intact for damage/death ownership.
+  const aggregateStarts = new Map<number, number>();
   params.batch.events.forEach((event, eventIndex) => {
-    eventDelaysMs[eventIndex] = cursorMs;
+    if (event.type === "attackResolved") {
+      params.batch.events.forEach((aggregate, aggregateIndex) => {
+        if (
+          aggregate.type !== "aoeResolved" ||
+          !heroAoeEffect(aggregate.abilityId) ||
+          aggregateStarts.has(aggregateIndex)
+        )
+          return;
+        const correlated = sameAbilityResolution(aggregate, event);
+        const legacy =
+          !aggregate.abilityUseId &&
+          !event.abilityUseId &&
+          !aggregate.chainId &&
+          !event.chainId &&
+          !aggregate.visualBatchId &&
+          !event.visualBatchId &&
+          aggregateIndex > eventIndex &&
+          aggregate.sourceUnitId === event.attackerId &&
+          aggregate.abilityId === event.abilityId &&
+          !params.batch.events
+            .slice(eventIndex + 1, aggregateIndex)
+            .some((e) => e.type === "aoeResolved");
+        if (correlated || legacy) aggregateStarts.set(aggregateIndex, cursorMs);
+      });
+    }
+    eventDelaysMs[eventIndex] = aggregateStarts.get(eventIndex) ?? cursorMs;
     const movementCue = movementCueFromEvent({
       event,
       events: params.batch.events,
@@ -434,7 +467,7 @@ export function buildCombatVisualPlaybackPlan(params: {
         return;
       }
     }
-    if (event.type === "rollResolved" && combatRollSide(event.rollKind)) {
+    if (event.type === "rollResolved" && isPresentedRoll(event.rollKind)) {
       addCue(eventIndex, { kind: "roll", roll: event, atMs: cursorMs, durationMs: timing.rollMs });
       cursorMs += timing.rollMs;
       return;

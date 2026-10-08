@@ -14,7 +14,9 @@ export function CombatRollFeedback({
   if (!cue) return null;
   const { roll } = cue;
   const title = t(
-    combatRollSide(roll.rollKind) === "attack"
+    roll.rollKind === "kaiserCarpetStrikeCenter"
+      ? "pending.context.centerRoll"
+      : combatRollSide(roll.rollKind) === "attack"
       ? "pending.context.attackRoll"
       : "pending.context.defenseRoll",
   );

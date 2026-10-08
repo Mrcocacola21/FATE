@@ -29,6 +29,8 @@ export type VfxEffectId =
   | "statusSmall"
   | "doraImpact"
   | "carpetImpact"
+  | "forestEruption"
+  | "vladGaze"
   | "gasterBeam"
   | "bunkerStatus"
   | "fireball";
@@ -72,6 +74,7 @@ export interface VfxMapperContext {
   previousPositions: VisibleUnitPositions;
   revision: number;
   presentationId?: string;
+  streamId?: string;
   events: ProjectedGameEvent[];
   eventIndex: number;
 }

@@ -1683,6 +1683,7 @@ export const en = {
     actionRequired: "Action required",
     context: {
       attackRoll: "Attack Roll",
+      centerRoll: "Area Center Roll",
       defenseRoll: "Defense Roll",
       stealthAttempt: "Stealth Attempt",
       statusSave: "Status Save",

@@ -1,4 +1,6 @@
 import type { ProjectedGameEvent, PlayerView } from "rules";
+import { ABILITY_KAISER_CARPET_STRIKE, ABILITY_VLAD_INTIMIDATE } from "../../rulesHints";
+import { heroAoeEffect, heroCueId } from "../../game/effects/heroPresentation";
 import {
   isHeroId,
   type CommonSfxCategory,
@@ -9,7 +11,7 @@ import {
 import { getCommonSfx, getHeroSfx, resolveSound } from "../../assets/sfx/resolver";
 import type { SoundKey } from "../../assets/sfx/registry";
 import type { PresentationEvent } from "../../game/effects/types";
-import { combatRollSide, type CombatPresentationCue } from "../../game/effects/combatPlayback";
+import { isPresentedRoll, type CombatPresentationCue } from "../../game/effects/combatPlayback";
 import type { SfxEvent, SfxLookup, SfxPlaybackRequest } from "./sfxTypes";
 
 function heroLookup(
@@ -144,6 +146,37 @@ export function mapEventBatchToSfx(params: {
   combatCues?: readonly CombatPresentationCue[];
 }): SfxPlaybackRequest[] {
   const requests: SfxPlaybackRequest[] = [];
+  for (const [eventIndex, event] of params.events.entries()) {
+    if (!event.eventId) continue;
+    let key: SoundKey | undefined;
+    if (event.type === "aoeResolved") {
+      const effect = heroAoeEffect(event.abilityId);
+      key =
+        effect === "doraImpact"
+          ? "hero.grand-kaiser.abilities.kaiserDora"
+          : effect === "carpetImpact"
+            ? "hero.grand-kaiser.abilities.kaiserCarpetStrike.impact"
+            : effect === "forestEruption"
+              ? "hero.vladTepes.abilities.vladForest.impact"
+              : undefined;
+    } else if (event.type === "abilityUsed" && event.abilityId === ABILITY_KAISER_CARPET_STRIKE) {
+      key = "hero.grand-kaiser.abilities.kaiserCarpetStrike.launch";
+    } else if (event.type === "bunkerEntered") key = "hero.grand-kaiser.statuses.bunker.enter";
+    else if (event.type === "bunkerExited") key = "hero.grand-kaiser.statuses.bunker.exit";
+    else if (event.type === "stakesPlaced") key = "hero.vladTepes.abilities.vladStakes.place";
+    else if (event.type === "intimidateResolved" && event.abilityId === ABILITY_VLAD_INTIMIDATE)
+      key = "hero.vladTepes.abilities.intimidatingStare";
+    if (!key) continue;
+    const id = heroCueId(params.streamId ?? params.presentationId ?? "live", event, key);
+    if (requests.some((request) => request.id === id)) continue;
+    const sound = resolveSound(key, id);
+    if (sound)
+      requests.push({
+        ...sound,
+        id,
+        delayMs: params.eventSfxDelaysMs?.[eventIndex] ?? params.eventDelaysMs?.[eventIndex] ?? 0,
+      });
+  }
   if (params.combatCues) {
     for (const cue of params.combatCues) {
       if (!params.events[cue.eventIndex]?.eventId || cue.kind === "heal") continue;
@@ -167,7 +200,7 @@ export function mapEventBatchToSfx(params: {
     let key: SoundKey;
     switch (gameEvent.type) {
       case "rollResolved":
-        if (!combatRollSide(gameEvent.rollKind)) return;
+        if (!isPresentedRoll(gameEvent.rollKind)) return;
         key = "common.combat.diceRoll";
         break;
       case "attackResolved":

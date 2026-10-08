@@ -22,7 +22,7 @@ export function copyEventPayload(event: GameEvent): GameEvent | undefined {
     case "reactionMovementResumed": case "carpetStrikeTriggered": case "carpetStrikeCenter":
     case "carpetStrikeAttackRolled": case "asgoreSoulParadeResolved": case "unitHealed":
     case "lokiChickenApplied": case "lokiChickenGroupApplied": case "controlledAttackDeclared":
-    case "lechyStormStarted":
+    case "lechyStormStarted": case "intimidateResolved":
       if ((event.type === "carpetStrikeCenter" || event.type === "carpetStrikeAttackRolled")
         && event.rollId !== undefined && (payload.type === "carpetStrikeCenter" || payload.type === "carpetStrikeAttackRolled"))
         payload.rollId = event.rollId;

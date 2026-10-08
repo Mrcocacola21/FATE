@@ -1,4 +1,6 @@
 import type { Coord, PlayerId, PlayerView, UnitState } from "rules";
+import { ABILITY_KAISER_DORA } from "../../rulesHints";
+import { getDoraTargetCenters } from "../gameshell-content/helpers";
 import {
   ASGORE_FIREBALL_ID,
   ASGORE_FIRE_PARADE_ID,
@@ -460,6 +462,33 @@ export function buildAbilityPreview({
   if (!source?.position) return null;
 
   switch (abilityId) {
+    case ABILITY_KAISER_DORA: {
+      const centers = getDoraTargetCenters(gameView, source.id).filter(
+        (cell) => !source.blindUntilOwnTurnStart || chebyshevDistance(source.position!, cell) <= 1,
+      );
+      const hovered =
+        targetingCell && centers.some((cell) => coordKey(cell) === coordKey(targetingCell))
+          ? targetingCell
+          : null;
+      return compactPreview([
+        {
+          kind: "multiStep",
+          step: "doraCenter",
+          sourceCell: { ...source.position },
+          cells: centers,
+          cellKind: "validTarget",
+          labelKey: "preview.labels.selectTarget",
+        },
+        hovered
+          ? {
+              kind: "area",
+              centerCell: { ...hovered },
+              areaCells: cellsInRadius(boardSize(gameView), hovered, 1, true),
+              labelKey: "preview.labels.affectedArea",
+            }
+          : null,
+      ]);
+    }
     case CHIKATILO_ASSASSIN_MARK_ID: {
       const range = getProjectedAbilityTargetRange(gameView, source.id, abilityId);
       if (range === null) return null;
@@ -732,7 +761,9 @@ export function buildAbilityPreview({
           ? visibleUnitTargets(
               gameView,
               (unit) =>
-                unit.id !== source.id && !!unit.position && beamKeys.has(coordKey(unit.position)) &&
+                unit.id !== source.id &&
+                !!unit.position &&
+                beamKeys.has(coordKey(unit.position)) &&
                 (abilityId !== SANS_GASTER_BLASTER_ID || unit.owner !== source.owner),
             )
           : [],

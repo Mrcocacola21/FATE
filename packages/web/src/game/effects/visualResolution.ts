@@ -1,5 +1,6 @@
 import type { ProjectedGameEvent, PlayerView } from "rules";
 import type { BoardEventBatch, PresentationEvent } from "./types";
+import { heroAoeEffect } from "./heroPresentation";
 
 const MAX_DEFERRED_CHAINS = 64;
 const MAX_DEFERRED_EVENTS = 1024;
@@ -72,7 +73,8 @@ export function collapseCompletedVisualResolutionEvents(
   events: PresentationEvent[],
 ): PresentationEvent[] {
   const aggregateEvents = events.filter(
-    (event): event is Extract<ProjectedGameEvent, { type: "aoeResolved" }> => event.type === "aoeResolved",
+    (event): event is Extract<ProjectedGameEvent, { type: "aoeResolved" }> =>
+      event.type === "aoeResolved",
   );
   if (aggregateEvents.length === 0) {
     return events;
@@ -128,6 +130,14 @@ export function advanceVisualResolution(
   let explicitChainEventSeen = false;
 
   for (const event of freshBatch.events) {
+    // Cast/activation has no target geometry; it may precede manual decisions.
+    if (
+      (event.type === "abilityUsed" && heroAoeEffect(event.abilityId)) ||
+      event.type === "forestActivated"
+    ) {
+      playableEvents.push(event);
+      continue;
+    }
     // Dice are needed for the next manual decision even while outcomes defer.
     if (event.type === "rollResolved") {
       playableEvents.push(event);
@@ -155,8 +165,12 @@ export function advanceVisualResolution(
       legacyBufferedEvents = [];
     }
   } else if (pending) {
-    const earlyRolls = playableEvents.filter(event => event.type === "rollResolved");
-    legacyBufferedEvents.push(...playableEvents.filter(event => event.type !== "rollResolved"));
+    const isEarly = (event: PresentationEvent) =>
+      event.type === "rollResolved" ||
+      (event.type === "abilityUsed" && Boolean(heroAoeEffect(event.abilityId))) ||
+      event.type === "forestActivated";
+    const earlyRolls = playableEvents.filter(isEarly);
+    legacyBufferedEvents.push(...playableEvents.filter((event) => !isEarly(event)));
     playableEvents.splice(0, playableEvents.length, ...earlyRolls);
   } else if (groupActive && legacyBufferedEvents.length > 0) {
     playableEvents.unshift(...legacyBufferedEvents);

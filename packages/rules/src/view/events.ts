@@ -420,7 +420,7 @@ export function projectEventsForRecipient(
         if ("abilityUseId" in projected) delete projected.abilityUseId;
         if (event.abilityUseId && projected.type !== "abilityUsed")
           Reflect.deleteProperty(projected, "abilityId");
-        if (projected.type === "attackResolved" || projected.type === "rollResolved" || projected.type === "unitMoved")
+        if (projected.type === "attackResolved" || projected.type === "rollResolved" || projected.type === "unitMoved" || projected.type === "intimidateResolved")
           delete projected.abilityId;
       }
       if (EVENT_VISIBILITY in projected) delete projected[EVENT_VISIBILITY];

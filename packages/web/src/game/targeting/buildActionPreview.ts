@@ -1,4 +1,5 @@
 import type { Coord, MoveMode, PlayerId, PlayerView } from "rules";
+import { ABILITY_KAISER_DORA } from "../../rulesHints";
 import type { ActionMode } from "../../store";
 import {
   ASGORE_FIRE_PARADE_ID,
@@ -48,6 +49,8 @@ export interface BuildActionPreviewArgs {
 
 function abilityIdForPreviewActionMode(actionMode: Exclude<ActionMode, null>): string | null {
   switch (actionMode) {
+    case "dora":
+      return ABILITY_KAISER_DORA;
     case "assassinMark":
       return CHIKATILO_ASSASSIN_MARK_ID;
     case "guideTraveler":

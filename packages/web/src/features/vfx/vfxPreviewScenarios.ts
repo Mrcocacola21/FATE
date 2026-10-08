@@ -13,6 +13,8 @@ export const CORE_VFX_PREVIEW_IDS: VfxEffectId[] = [
   "statusSmall",
   "doraImpact",
   "carpetImpact",
+  "forestEruption",
+  "vladGaze",
   "gasterBeam",
   "bunkerStatus",
   "fireball",

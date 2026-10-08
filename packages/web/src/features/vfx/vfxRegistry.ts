@@ -127,6 +127,14 @@ const carpetAccent = new URL(
   "../../assets/vfx/heroes/grand-kaiser/carpet_impact_accent.png",
   import.meta.url,
 ).href;
+const forestPrimary = new URL(
+  "../../assets/vfx/heroes/vladTepes/forest_eruption_primary.png",
+  import.meta.url,
+).href;
+const forestAccent = new URL(
+  "../../assets/vfx/heroes/vladTepes/forest_eruption_accent.png",
+  import.meta.url,
+).href;
 const beamPrimary = new URL("../../assets/vfx/heroes/sans/gaster_beam_primary.png", import.meta.url)
   .href;
 const beamAccent = new URL("../../assets/vfx/heroes/sans/gaster_beam_accent.png", import.meta.url)
@@ -226,6 +234,23 @@ export const vfxRegistry: Record<VfxEffectId, VfxDefinition> = {
     widthCells: 5,
     heightCells: 5,
     layers: paired(carpetPrimary, carpetAccent, 32),
+  },
+  forestEruption: {
+    ...generated("forestEruption", forestPrimary, 30, 1250, "area", "impact"),
+    widthCells: 3,
+    heightCells: 3,
+    layers: paired(forestPrimary, forestAccent, 30),
+  },
+  vladGaze: {
+    ...generated(
+      "vladGaze",
+      new URL("../../assets/vfx/heroes/vladTepes/gaze.png", import.meta.url).href,
+      12,
+      500,
+      "cell",
+      "movement",
+    ),
+    defaultScaleCells: 0.6,
   },
   gasterBeam: {
     ...generated("gasterBeam", beamPrimary, 20, 850, "ray", "projectile"),

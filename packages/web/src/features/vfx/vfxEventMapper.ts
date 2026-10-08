@@ -1,4 +1,6 @@
 import type { ProjectedGameEvent, PlayerView } from "rules";
+import { ABILITY_VLAD_INTIMIDATE } from "../../rulesHints";
+import { heroAoeEffect, heroCueId } from "../../game/effects/heroPresentation";
 import {
   isCoord,
   linePath,
@@ -142,6 +144,24 @@ function mapAoeResolved(
 ): BoardVfxRequest[] {
   if (!isCoord(event.center) || typeof event.radius !== "number") return [];
   const cells = radiusCellsToOverlay(event.center, event.radius, context.view.boardSize ?? 9);
+  const heroEffect = heroAoeEffect(event.abilityId);
+  if (heroEffect)
+    return [
+      {
+        id: heroCueId(
+          context.streamId ?? context.presentationId ?? context.revision,
+          event,
+          heroEffect,
+        ),
+        effectId: heroEffect,
+        placement: "area",
+        sourceCell: { ...event.center },
+        anchorMode: "event",
+        cells,
+        widthCells: event.radius * 2 + 1,
+        heightCells: event.radius * 2 + 1,
+      },
+    ];
   if (event.abilityId === ABILITY_JACK_COVERING_TRACKS) {
     return cellRequest(context, event, "snareExplosion", event.center, "center", {
       durationMs: 520,
@@ -372,6 +392,22 @@ export function mapGameEventToVfx(
       return mapUnitMoved(event, context);
     case "bunkerEntered":
       return unitRequest(context, event, "shield", event.unitId, "bunker");
+    case "bunkerExited":
+      return unitRequest(context, event, "bunkerStatus", event.unitId, "exit", {
+        durationMs: 250,
+        opacity: 0.35,
+      });
+    case "intimidateResolved":
+      return event.abilityId === ABILITY_VLAD_INTIMIDATE
+        ? cellRequest(context, event, "vladGaze", event.from, "stare", {
+            id: heroCueId(
+              context.streamId ?? context.presentationId ?? context.revision,
+              event,
+              "stare",
+            ),
+            scaleCells: 0.6,
+          })
+        : [];
     case "berserkerDefenseChosen":
       return unitRequest(context, event, "shield", event.defenderId, event.choice);
     default:
@@ -385,13 +421,17 @@ export function mapEventBatchToVfx(params: {
   previousPositions: VfxMapperContext["previousPositions"];
   revision: number;
   presentationId?: string;
+  streamId?: string;
   eventDelaysMs?: readonly number[];
   combatCues?: readonly CombatPresentationCue[];
   movementCues?: readonly MovementPresentationCue[];
 }): BoardVfxRequest[] {
   const effects: BoardVfxRequest[] = [];
   params.events.forEach((event, eventIndex) => {
-    if (params.movementCues && (confirmedMovement(event) || event.type === "stealthRevealed"))
+    if (
+      params.movementCues &&
+      ((event.type === "unitMoved" && confirmedMovement(event)) || event.type === "stealthRevealed")
+    )
       return;
     if (params.combatCues && (event.type === "attackResolved" || event.type === "unitDied")) return;
     const baseDelay = params.eventDelaysMs?.[eventIndex] ?? 0;
@@ -401,6 +441,7 @@ export function mapEventBatchToVfx(params: {
         previousPositions: params.previousPositions,
         revision: params.revision,
         presentationId: params.presentationId,
+        streamId: params.streamId,
         events: params.events,
         eventIndex,
       }).map((request) => ({
@@ -423,5 +464,6 @@ export function mapEventBatchToVfx(params: {
     });
   }
   for (const cue of params.movementCues ?? []) effects.push(...movementCueVfx(cue));
-  return effects;
+  const seen = new Set<string>();
+  return effects.filter((effect) => !seen.has(effect.id) && Boolean(seen.add(effect.id)));
 }
