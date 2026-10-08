@@ -976,6 +976,14 @@ export const vfxRegistry: Record<VfxEffectId, VfxDefinition> = {
       frameCrop: { left: 12, top: 48, width: 104, height: 32 },
     })),
   },
+  sansCurseStatus: generated(
+    "sansCurseStatus",
+    new URL("../../assets/vfx/heroes/sans/curse_status.png", import.meta.url).href,
+    1,
+    1000,
+    "unit",
+    "status",
+  ),
   bunkerStatus: generated(
     "bunkerStatus",
     new URL("../../assets/vfx/heroes/grand-kaiser/bunker_status.png", import.meta.url).href,

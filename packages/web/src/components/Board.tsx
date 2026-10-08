@@ -1,15 +1,12 @@
 import type { Coord, PlayerId, PlayerView, UnitClass, UnitState } from "rules";
 import { FOREST_AURA_RADIUS, getMaxHp } from "../rulesHints";
-import { useEffect, useRef, useState, type FC } from "react";
+import type { FC } from "react";
 import { HpBar } from "./HpBar";
 import {
   getBoardMarkerAsset,
   getActiveBoardFieldVisual,
   getBoardFieldAsset,
-  type BoardFieldVisualId,
   getUnitTokenAsset,
-  getUnitVisualSignature,
-  getUnitVisualVariant,
 } from "../assets/registry";
 import { useI18n } from "../i18n";
 import { getClassLabel, getHeroDisplayName } from "../i18n/displayMetadata";
@@ -21,14 +18,14 @@ import { isGameplayProjectedUnit } from "../game/effects/combatPlayback";
 import { cellToBoardPoint } from "../features/vfx/vfxGeometry";
 import { useBoardFit } from "../game/hooks/useBoardFit";
 import type { BoardEventBatch, BoardPreviewLine } from "../game/effects/types";
-import { BoneIcon, getActiveBoneStatus, type ActiveBoneStatus } from "../game/boneStatus";
+import { getActiveBoneStatus, type ActiveBoneStatus } from "../game/boneStatus";
 import { VfxLayer } from "../features/vfx/VfxLayer";
-import { vfxRegistry } from "../features/vfx/vfxRegistry";
 import { BOARD_LAYER_STYLES } from "../features/vfx/vfxRegistry";
 import type { QueuedBoardVfxRequest } from "../features/vfx/vfxTypes";
 import { useBoardVfx } from "../features/vfx/useBoardVfx";
 import { useBoardSfx } from "../features/sfx/useBoardSfx";
-import { SnaredOverlay } from "./SnaredOverlay";
+import { UnitStatusVfx } from "../features/vfx/UnitStatusVfx";
+import { resolveUnitStatuses, resolvePersistentGroundStatuses } from "../features/vfx/persistentStatuses";
 import {
   buildPreviewCellMap,
   type BoardPreview,
@@ -68,6 +65,7 @@ interface BoardProps {
   /** Debug-only normalized cues, isolated from the live event/session pipeline. */
   previewVfx?: QueuedBoardVfxRequest[];
   previewReducedMotion?: boolean;
+  previewIsFlipped?: boolean;
   zoom?: number;
   showCoordinates?: boolean;
   className?: string;
@@ -161,26 +159,6 @@ const FOREST_MARKER_ASSET = getBoardMarkerAsset("lechy_forest");
 const STAKE_MARKER_ASSET = getBoardMarkerAsset("vlad_stake");
 const JACK_TRAP_MARKER_ASSET = getBoardMarkerAsset("jack_trap");
 
-const FIELD_FADE_DURATION_MS = 180;
-
-function useRenderedBoardField(
-  activeFieldId: BoardFieldVisualId | null,
-): BoardFieldVisualId | null {
-  const [renderedFieldId, setRenderedFieldId] = useState<BoardFieldVisualId | null>(activeFieldId);
-
-  useEffect(() => {
-    if (activeFieldId) {
-      setRenderedFieldId(activeFieldId);
-      return;
-    }
-    if (!renderedFieldId) return;
-    const timer = setTimeout(() => setRenderedFieldId(null), FIELD_FADE_DURATION_MS);
-    return () => clearTimeout(timer);
-  }, [activeFieldId, renderedFieldId]);
-
-  return renderedFieldId;
-}
-
 function orderedPreviewKinds(state: PreviewCellState | undefined): PreviewCellKind[] {
   if (!state) return [];
   return PREVIEW_KIND_ORDER.filter((kind) => state.kinds.includes(kind));
@@ -223,6 +201,7 @@ export const Board: FC<BoardProps> = ({
   previewLines = [],
   previewVfx,
   previewReducedMotion,
+  previewIsFlipped,
   zoom = 1,
   showCoordinates = true,
   className = "",
@@ -234,9 +213,9 @@ export const Board: FC<BoardProps> = ({
   const { language, t } = useI18n();
   const size = view.boardSize ?? 9;
   const activeFieldId = getActiveBoardFieldVisual(view);
-  const renderedFieldId = useRenderedBoardField(activeFieldId);
+  const renderedFieldId = activeFieldId;
   const maxIndex = size - 1;
-  const isFlipped = playerId === "P2";
+  const isFlipped = previewIsFlipped ?? (playerId === "P2");
   const {
     ref: boardWrapperRef,
     metrics: { cellSize, labelSize, boardPixelSize, totalPixelSize },
@@ -250,137 +229,6 @@ export const Board: FC<BoardProps> = ({
     sessionKey: effectSessionKey,
   });
   const renderedUnits = visualResolution.visualUnitsByUnitId;
-  const [transformingUnitIds, setTransformingUnitIds] = useState<Set<string>>(() => new Set());
-  const [expiringBoneStatuses, setExpiringBoneStatuses] = useState<
-    Map<string, ActiveBoneStatus["kind"]>
-  >(() => new Map());
-  const visualStateRef = useRef<{
-    enabled: boolean;
-    turnNumber: number;
-    units: Map<string, { signature: string; variant: string | null }>;
-  } | null>(null);
-  const visualEffectTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
-  const boneStatusRef = useRef<Map<string, ActiveBoneStatus["kind"]> | null>(null);
-  const boneStatusTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
-
-  useEffect(() => {
-    const nextUnits = new Map<string, { signature: string; variant: string | null }>();
-    for (const unit of Object.values(renderedUnits)) {
-      nextUnits.set(unit.id, {
-        signature: getUnitVisualSignature(unit),
-        variant: getUnitVisualVariant(unit),
-      });
-    }
-
-    const previous = visualStateRef.current;
-    const shouldBaseline =
-      !visualEffectsEnabled ||
-      !previous?.enabled ||
-      view.turnNumber < (previous?.turnNumber ?? view.turnNumber);
-
-    visualStateRef.current = {
-      enabled: visualEffectsEnabled,
-      turnNumber: view.turnNumber,
-      units: nextUnits,
-    };
-
-    if (shouldBaseline) {
-      if (!visualEffectsEnabled && previous?.enabled) {
-        for (const timer of visualEffectTimersRef.current.values()) {
-          clearTimeout(timer);
-        }
-        visualEffectTimersRef.current.clear();
-        setTransformingUnitIds((current) => (current.size > 0 ? new Set() : current));
-      }
-      return;
-    }
-
-    const changedUnitIds: string[] = [];
-    for (const [unitId, next] of nextUnits) {
-      const before = previous.units.get(unitId);
-      if (
-        before &&
-        before.signature !== next.signature &&
-        (before.variant !== null || next.variant !== null)
-      ) {
-        changedUnitIds.push(unitId);
-      }
-    }
-    if (changedUnitIds.length === 0) return;
-
-    setTransformingUnitIds((current) => {
-      const next = new Set(current);
-      changedUnitIds.forEach((unitId) => next.add(unitId));
-      return next;
-    });
-
-    for (const unitId of changedUnitIds) {
-      const existingTimer = visualEffectTimersRef.current.get(unitId);
-      if (existingTimer) clearTimeout(existingTimer);
-      const timer = setTimeout(() => {
-        visualEffectTimersRef.current.delete(unitId);
-        setTransformingUnitIds((current) => {
-          if (!current.has(unitId)) return current;
-          const next = new Set(current);
-          next.delete(unitId);
-          return next;
-        });
-      }, 1100);
-      visualEffectTimersRef.current.set(unitId, timer);
-    }
-  }, [renderedUnits, view.turnNumber, visualEffectsEnabled]);
-
-  useEffect(() => {
-    const nextStatuses = new Map<string, ActiveBoneStatus["kind"]>();
-    for (const unit of Object.values(renderedUnits)) {
-      const status = getActiveBoneStatus(unit);
-      if (status) nextStatuses.set(unit.id, status.kind);
-    }
-    const previousStatuses = boneStatusRef.current;
-    boneStatusRef.current = nextStatuses;
-    if (!visualEffectsEnabled || !previousStatuses) return;
-
-    const removed: Array<[string, ActiveBoneStatus["kind"]]> = [];
-    for (const [unitId, kind] of previousStatuses) {
-      if (!nextStatuses.has(unitId) && renderedUnits[unitId]) removed.push([unitId, kind]);
-    }
-    if (removed.length === 0) return;
-
-    setExpiringBoneStatuses((current) => {
-      const next = new Map(current);
-      removed.forEach(([unitId, kind]) => next.set(unitId, kind));
-      return next;
-    });
-    for (const [unitId] of removed) {
-      const existingTimer = boneStatusTimersRef.current.get(unitId);
-      if (existingTimer) clearTimeout(existingTimer);
-      const timer = setTimeout(() => {
-        boneStatusTimersRef.current.delete(unitId);
-        setExpiringBoneStatuses((current) => {
-          if (!current.has(unitId)) return current;
-          const next = new Map(current);
-          next.delete(unitId);
-          return next;
-        });
-      }, 750);
-      boneStatusTimersRef.current.set(unitId, timer);
-    }
-  }, [renderedUnits, visualEffectsEnabled]);
-
-  useEffect(
-    () => () => {
-      for (const timer of visualEffectTimersRef.current.values()) {
-        clearTimeout(timer);
-      }
-      visualEffectTimersRef.current.clear();
-      for (const timer of boneStatusTimersRef.current.values()) {
-        clearTimeout(timer);
-      }
-      boneStatusTimersRef.current.clear();
-    },
-    [],
-  );
-
   const { effects: boardEffects, reducedMotion } = useBoardEffects({
     batch: visualResolution.batch,
     view,
@@ -421,13 +269,15 @@ export const Board: FC<BoardProps> = ({
       class: string;
       isVisualOnly: boolean;
       isStealthed: boolean;
-      bunkerActive: boolean;
       blindUntilOwnTurnStart?: boolean;
       immobilizedUntilOwnTurnStart?: boolean;
       chikatiloMarkStatus?: UnitState["chikatiloMarkStatus"];
       boneStatus: ActiveBoneStatus | null;
     }>
   >();
+  const groundStatusesByPos = new Map(resolvePersistentGroundStatuses(view).map(status =>
+    [coordKey(toViewCoord(status.cell)), status],
+  ));
   const lastKnownByPos = new Map<string, number>();
   const stakeMarkersByPos = new Map<string, boolean>();
   const jackTrapStatesByPos = new Map<string, boolean>();
@@ -478,6 +328,10 @@ export const Board: FC<BoardProps> = ({
 
   for (const unit of Object.values(renderedUnits)) {
     if (!unit.position) continue;
+    const current = view.units[unit.id];
+    // Combat death ghosts can finish their existing event playback. Loss of
+    // visibility/stasis permission removes old current-position tokens immediately.
+    if (!current || (current.isAlive && !current.position)) continue;
     const viewPos = toViewCoord(unit.position);
     const key = coordKey(viewPos);
     const occupants = unitsByPos.get(key) ?? [];
@@ -486,12 +340,11 @@ export const Board: FC<BoardProps> = ({
       owner: unit.owner,
       class: unit.class,
       isVisualOnly: !isGameplayProjectedUnit(view, unit.id),
-      isStealthed: unit.isStealthed,
-      bunkerActive: unit.bunker?.active ?? false,
-      blindUntilOwnTurnStart: unit.blindUntilOwnTurnStart,
-      immobilizedUntilOwnTurnStart: unit.immobilizedUntilOwnTurnStart,
-      chikatiloMarkStatus: unit.chikatiloMarkStatus,
-      boneStatus: getActiveBoneStatus(unit),
+      isStealthed: current.isStealthed,
+      blindUntilOwnTurnStart: current.blindUntilOwnTurnStart,
+      immobilizedUntilOwnTurnStart: current.immobilizedUntilOwnTurnStart,
+      chikatiloMarkStatus: current.chikatiloMarkStatus,
+      boneStatus: getActiveBoneStatus(current),
     });
     unitsByPos.set(key, occupants);
   }
@@ -546,7 +399,7 @@ export const Board: FC<BoardProps> = ({
 
   const selectedUnit =
     selectedUnitId && view.units[selectedUnitId] ? view.units[selectedUnitId] : null;
-  const activeUnitForBoneField = view.activeUnitId ? renderedUnits[view.activeUnitId] : null;
+  const activeUnitForBoneField = view.activeUnitId ? view.units[view.activeUnitId] : null;
   const activeSansBoneFieldTone = activeUnitForBoneField?.position
     ? (activeUnitForBoneField.sansBoneFieldStatus?.kind ?? null)
     : null;
@@ -612,7 +465,7 @@ export const Board: FC<BoardProps> = ({
       const isGameplayUnit = !!unit && !unit.isVisualOnly;
       const motion = unit ? visualResolution.visualMotionByUnitId[unit.id] : undefined;
       const transportPassenger = transport ? renderedUnits[transport.passengerId] : undefined;
-      const passengerAsset = transportPassenger ? getUnitTokenAsset(transportPassenger) : null;
+      const passengerAsset = transportPassenger && view.units[transportPassenger.id] ? getUnitTokenAsset(view.units[transportPassenger.id]) : null;
       const passengerMotion = transportPassenger ? visualResolution.visualMotionByUnitId[transportPassenger.id] : undefined;
       const passengerOffset = transportPassenger?.position && unit ? (() => {
         const carrierPoint = cellToBoardPoint(motion?.position ?? renderedUnits[unit.id].position!, size, cellSize, isFlipped);
@@ -699,19 +552,21 @@ export const Board: FC<BoardProps> = ({
         : lastKnownCount > 0
           ? `, ${t("board.lastKnown")}`
           : "";
-      const previewDetailsText = previewDetails.length > 0 ? `, ${previewDetails.join(", ")}` : "";
+      const currentStatusLabels = unit && view.units[unit.id]
+        ? resolveUnitStatuses(view.units[unit.id], playerId, view).map(status => t(status.labelKey)) : [];
+      const details = [...previewDetails, ...currentStatusLabels,
+        ...(groundStatusesByPos.has(key) ? [t("persistentStatus.crater")] : [])];
+      const previewDetailsText = details.length > 0 ? `, ${details.join(", ")}` : "";
 
       if (unit) {
         const isFriendly = playerId ? unit.owner === playerId : false;
         const isHiddenEnemy = !isFriendly && unit.isStealthed;
         const isTrackedHiddenEnemy = isHiddenEnemy && unit.chikatiloMarkStatus?.exactTrackingActive;
         const marker = getClassMarker(unit.class);
-        const unitView = renderedUnits[unit.id];
+        const unitView = view.units[unit.id] ?? renderedUnits[unit.id];
         const tokenId = unitView?.figureId ?? unitView?.heroId ?? unit.class;
         const tokenAsset = getUnitTokenAsset(unitView);
-        const isTransforming = transformingUnitIds.has(unit.id);
         const unitVisualState = visualResolution.visualStateByUnitId[unit.id] ?? "idle";
-        const expiringBoneKind = expiringBoneStatuses.get(unit.id);
         const previewRelationClass =
           isDoraPreview && selectedUnit
             ? unit.owner === selectedUnit.owner
@@ -742,9 +597,7 @@ export const Board: FC<BoardProps> = ({
           "justify-center",
           "unit-token border",
           previewRelationClass,
-          isTransforming ? "unit-transforming" : "",
-          boneStatus ? `unit-bone-status unit-bone-status--${boneStatus.kind}` : "",
-          expiringBoneKind ? `unit-bone-expiring unit-bone-expiring--${expiringBoneKind}` : "",
+          !unit.isVisualOnly && boneStatus ? `unit-bone-status unit-bone-status--${boneStatus.kind}` : "",
           `unit-visual-${unitVisualState}`,
         ].join(" ");
 
@@ -789,40 +642,10 @@ export const Board: FC<BoardProps> = ({
                 alt={t("board.tokenAlt", {
                   unit: getHeroDisplayName(tokenId, getClassLabel(unit.class, t), language),
                 })}
-                className={`h-full w-full rounded-xl bg-white/90 object-contain shadow-lg shadow-slate-900/20 dark:bg-slate-900/90 ${
-                  isTransforming ? "unit-token-changing" : ""
-                }`}
+                className="h-full w-full rounded-xl bg-white/90 object-contain shadow-lg shadow-slate-900/20 dark:bg-slate-900/90"
                 draggable={false}
               />
             )}
-            {isTransforming ? (
-              <span className="unit-transform-label">{t("visuals.transform")}</span>
-            ) : null}
-            {boneStatus ? (
-              <span
-                className={`unit-bone-badge unit-bone-badge--${boneStatus.kind}`}
-                role="img"
-                aria-label={t(boneStatus.kind === "blue" ? "game.blueBone" : "game.orangeBone")}
-                title={t(boneStatus.kind === "blue" ? "game.blueBone" : "game.orangeBone")}
-                data-bone-status={boneStatus.kind}
-                data-bone-source={boneStatus.source}
-              >
-                <BoneIcon className="h-full w-full" />
-              </span>
-            ) : null}
-            {unit.immobilizedUntilOwnTurnStart && canExposeUnitStatus ? (
-              <SnaredOverlay label={t("board.wrappedInSnares")} />
-            ) : null}
-            {unit.blindUntilOwnTurnStart && canExposeUnitStatus ? (
-              <span
-                className="pointer-events-none absolute -bottom-1 -right-1 z-30 rounded-full border border-amber-200 bg-amber-500 px-1 py-0.5 text-[8px] font-black leading-none text-amber-950 shadow"
-                aria-label={t("game.blind")}
-                title={t("game.blind")}
-                data-blind-status="active"
-              >
-                BL
-              </span>
-            ) : null}
             {marker && (
               <span
                 className="absolute -right-1 -top-1 rounded-full bg-white px-1 font-bold text-slate-700 shadow dark:bg-slate-200 dark:text-slate-900"
@@ -880,6 +703,8 @@ export const Board: FC<BoardProps> = ({
           onMouseEnter={() => onCellHover?.(gameCoord)}
           onMouseLeave={() => onCellHover?.(null)}
         >
+          {groundStatusesByPos.has(key) && <span className="persistent-crater-cell"
+            data-ground-status="crater" data-ground-status-id={groundStatusesByPos.get(key)!.id} aria-hidden="true" />}
           {view.arenaId === "boneField" ? (
             <div
               className={`bone-field-cell bone-field-cell--${activeSansBoneFieldTone ?? "neutral"}`}
@@ -1068,49 +893,6 @@ export const Board: FC<BoardProps> = ({
               S
             </div>
           )}
-          {unit?.bunkerActive && (
-            <img
-              src={vfxRegistry.bunkerStatus.asset}
-              alt=""
-              aria-hidden="true"
-              data-bunker-state="active"
-              className="pointer-events-none absolute inset-0 h-full w-full object-contain opacity-70"
-            />
-          )}
-          {unit?.bunkerActive && (
-            <div
-              className="pointer-events-none absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-200 text-[9px] font-bold text-amber-900 shadow dark:bg-amber-900/60 dark:text-amber-200"
-              title={t("board.bunker")}
-            >
-              B
-            </div>
-          )}
-          {unit?.isStealthed && (
-            <div
-              className="pointer-events-none absolute bottom-3 right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-violet-600 px-1 text-[9px] font-bold text-white shadow dark:bg-violet-400 dark:text-violet-950"
-              title={t("board.stealth")}
-            >
-              S
-            </div>
-          )}
-          {markStatus && (
-            <div
-              className={`pointer-events-none absolute right-1 ${
-                unit?.isStealthed ? "bottom-8" : "bottom-3"
-              } flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-bold shadow ${
-                markStatus.exactTrackingActive
-                  ? "bg-amber-300 text-amber-950 ring-2 ring-amber-600/60"
-                  : "bg-amber-100 text-amber-900 ring-1 ring-amber-500/50 dark:bg-amber-900 dark:text-amber-100"
-              }`}
-              title={
-                markStatus.exactTrackingActive
-                  ? t("board.assassinMarkTracked")
-                  : t("board.assassinMark")
-              }
-            >
-              M
-            </div>
-          )}
           {isActiveUnit && (
             <div
               className="pointer-events-none absolute left-1/2 top-0.5 z-20 h-1.5 w-5 -translate-x-1/2 rounded-full bg-amber-400 shadow-sm shadow-amber-900/30 dark:bg-amber-300"
@@ -1216,6 +998,17 @@ export const Board: FC<BoardProps> = ({
           {rows}
           <CombatRollFeedback cue={visualResolution.roll} t={t} top={labelSize + 4} />
           <div className="pointer-events-none absolute" style={{ left: labelSize, top: labelSize }}>
+            <UnitStatusVfx
+              view={view}
+              playerId={playerId}
+              visualUnits={renderedUnits}
+              motion={visualResolution.visualMotionByUnitId}
+              boardSize={size}
+              cellSize={cellSize}
+              isFlipped={isFlipped}
+              reducedMotion={previewReducedMotion ?? reducedMotion}
+              t={t}
+            />
             <BoardEffectsLayer
               effects={boardEffects}
               previewLines={previewLines}

@@ -48,6 +48,7 @@
     "test:asgore:e2e": "node scripts/asgore-smoke.mjs",
     "test:river:e2e": "node scripts/river-smoke.mjs",
     "test:phase13:e2e": "node scripts/phase13-smoke.mjs",
+    "test:phase14:e2e": "node scripts/phase14-smoke.mjs",
     "test:vfx": "tsx --test src/features/vfx/*.test.ts src/features/vfx/*.test.tsx src/pages/VfxPreviewPage.test.tsx",
     "test:vfx:infrastructure": "node scripts/vfx-infrastructure-smoke.mjs",
     "test:vfx:visual": "node scripts/capture-vfx.mjs --no-video --no-gif",

@@ -1349,6 +1349,76 @@ html.dark {
     color: rgb(14 165 233 / 0.35);
   }
 
+  /* Persistent state has no finite appearance envelope or audio lifecycle. */
+  .unit-status-root { position: absolute; inset: 0; pointer-events: none; }
+  .persistent-crater-cell {
+    position: absolute;
+    inset: 2px;
+    border: 1px dashed rgb(100 116 139 / 0.7);
+    background: rgb(100 116 139 / 0.12);
+    z-index: var(--board-layer-ground, 5);
+    pointer-events: none;
+  }
+  .unit-status-anchor { position: absolute; pointer-events: none; }
+  .unit-status-row {
+    position: absolute;
+    top: 2px;
+    left: 3px;
+    right: 3px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 1px;
+    pointer-events: none;
+  }
+  .unit-status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 12px;
+    height: 12px;
+    padding: 0 2px;
+    border: 1px solid currentColor;
+    border-radius: 3px;
+    font: 800 8px/1 system-ui, sans-serif;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
+    pointer-events: none;
+  }
+  .unit-status-badge--negative { color: #fff1f2; background: #9f1239; }
+  .unit-status-badge--curse { color: #fae8ff; background: #701a75; }
+  .unit-status-badge--positive { color: #ecfdf5; background: #065f46; }
+  .unit-status-badge--neutral { color: #f8fafc; background: #334155; }
+  .unit-status-badge--stealth { color: #f5f3ff; background: #5b21b6; }
+  .unit-status-badge--mark { color: #451a03; background: #fcd34d; }
+  .unit-status-badge--blue { color: #eff6ff; background: #1d4ed8; }
+  .unit-status-badge--orange { color: #fff7ed; background: #9a3412; }
+  .unit-status-summary { display: flex; flex-wrap: wrap; gap: 4px; }
+  .unit-status-summary .unit-status-badge { height: auto; padding: 4px 6px; font-size: 11px; }
+  .persistent-status-art.vfx-sprite {
+    inset: 4%;
+    width: 92%;
+    height: 92%;
+    object-fit: contain;
+    opacity: 0.7;
+    animation: none;
+    will-change: auto;
+    /* Keep centre token/HP legible even for solid authoring backgrounds. */
+    mask-image: radial-gradient(ellipse, transparent 30%, #000 54%);
+  }
+  .persistent-status-art--curse.vfx-sprite { opacity: 0.55; }
+  .persistent-stealth-perimeter {
+    position: absolute;
+    inset: 12%;
+    border-radius: 10px;
+    border: 2px dashed #a78bfa;
+    z-index: var(--board-layer-status, 20);
+  }
+  .persistent-wrapped {
+    position: absolute;
+    inset: 14%;
+    z-index: var(--board-layer-status, 20);
+  }
+
   .vfx-sprite {
     @apply pointer-events-none absolute block select-none;
     opacity: 0;

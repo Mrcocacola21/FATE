@@ -1,5 +1,20 @@
 import { adminEn } from "../../admin/locales";
 export const en = {
+  persistentStatus: {
+    curse: "Last Attack curse", movementDisabled: "Movement disabled next own turn",
+    sansMoveLock: "Badass Joke movement lock", kaladinMoveLock: "Fifth Ideal movement lock",
+    lokiMoveLock: "Entangled", cleanSoul: "Clean Soul shield ready",
+    autoDefense: "Bravery automatic defense ready", patience: "Patience stealth",
+    precision: "Precision Strike ready", form: "Transformed",
+    diagonalMove: "Diagonal movement active", decreeMove: "Decree move ready",
+    mongolCharge: "Mongol Charge active", boatmanMoves: "Boatman extra movement ready",
+    boatCarry: "Carrying an ally", longBone: "Long Bone mode", sorrowReady: "Sorrowful Image ready",
+    courtFlexible: "Extra flexible action ready", courtGlobalMove: "Global move ready",
+    courtRestriction: "Procedural restriction", courtCompensation: "Damage compensation ready",
+    courtCosts: "Court costs active", stealthBlocked: "Stealth blocked until round end",
+    stasis: "Court stasis — off board", king: "Chess king", crater: "Moon crater boundary",
+    berserkDefense: "Berserker automatic defense charge ready",
+  },
   audio: { sound: "Sound", muted: "Muted", mute: "Mute sound", volume: "Master volume" },
   admin: adminEn,
   ranks: {

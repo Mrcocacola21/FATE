@@ -30,6 +30,8 @@ import { Badge } from "../../../../ui";
 import { AbilityDetails } from "../../../../components/abilities/AbilityDetails";
 import { getAbilityDisplayTone } from "../../../../components/abilities/abilityDisplayTone";
 import { BoneStatusPanel } from "../../../boneStatus";
+import { StatusBadges } from "../../../../features/vfx/UnitStatusVfx";
+import { resolveUnitStatuses } from "../../../../features/vfx/persistentStatuses";
 import {
   getUnitDetailActionBars,
   type ActionBarState,
@@ -375,7 +377,7 @@ function UnitActionBars({
 }
 
 export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
-  selectedUnit,
+  selectedUnit: selectedUnitInput,
   selectedHeroName,
   selectedMettatonRating,
   forestMarkers,
@@ -394,6 +396,10 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
   onHoverAbility,
 }) => {
   const { language, t } = useI18n();
+  // A previous selection cannot restore fields removed by the current projection.
+  const selectedUnit = view
+    ? (view.units[selectedUnitInput?.id ?? ""] ?? null)
+    : selectedUnitInput;
   if (!selectedUnit) {
     return (
       <div className="panel-card-muted mt-3 px-4 py-6 text-center text-sm text-slate-500 dark:text-slate-400">
@@ -548,6 +554,14 @@ export const BattleUnitSummary: FC<BattleUnitSummaryProps> = ({
         ) : null}
       </div>
       <BoneStatusPanel unit={selectedUnit} />
+      <StatusBadges summary t={t} statuses={resolveUnitStatuses(
+        selectedUnit,
+        view?.abilitiesByUnitId?.[selectedUnit.id] ? selectedUnit.owner : null,
+        view,
+      ).filter(status =>
+        // Retain the detailed existing summary/bone panels; add missing conditions.
+        !["curse", "sansMoveLock", "lokiMoveLock", "blind", "immobilized", "mark", "trackedMark", "form", "papyrusBlue", "papyrusOrange", "sansBlue", "sansOrange"].includes(status.kind)
+      )} />
       {Object.entries(selectedUnit.jackKnownHpByTarget ?? {}).map(([targetId, hp]) => (
         <div key={targetId} className="text-xs text-violet-700 dark:text-violet-300">
           {t("game.knownHp", { target: targetId, hp })}

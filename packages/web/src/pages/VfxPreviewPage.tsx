@@ -6,6 +6,7 @@ import { enqueueBoardVfx, pruneExpiredBoardVfx } from "../features/vfx/vfxQueue"
 import { usePrefersReducedMotion } from "../features/vfx/vfxPreferences";
 import type { QueuedBoardVfxRequest, VfxEffectId } from "../features/vfx/vfxTypes";
 import { Board } from "../components/Board";
+import { createPersistentStatusPreview, type PersistentPreviewMode, type PreviewRecipient } from "../features/vfx/persistentStatusPreview";
 import {
   createVfxPreviewView,
   createRuntimePreviewRequest,
@@ -38,10 +39,21 @@ const COPY = {
   artwork: "Artwork",
   timing: "Timing",
   geometry: "Geometry",
+  persistentSnapshot: "Persistent status snapshot",
+  oneShot: "One-shot preview",
+  stackedStatuses: "Stacked statuses and private hazards",
+  boneSnapshot: "Bone Field snapshot",
+  stormSnapshot: "Storm snapshot",
+  clearedStatuses: "Statuses cleared",
+  recipient: "Recipient",
+  spectator: "Spectator",
 };
 
 export function VfxPreviewPage() {
-  const view = useMemo(() => createVfxPreviewView(), []);
+  const [persistentMode, setPersistentMode] = useState<PersistentPreviewMode>("off");
+  const [recipient, setRecipient] = useState<PreviewRecipient>("P1");
+  const view = useMemo(() => persistentMode === "off" ? createVfxPreviewView()
+    : createPersistentStatusPreview(persistentMode, recipient), [persistentMode, recipient]);
   const [effects, setEffects] = useState<QueuedBoardVfxRequest[]>([]);
   const [effectId, setEffectId] = useState<VfxEffectId>("doraImpact");
   const [orientation, setOrientation] = useState<"P1" | "P2">("P1");
@@ -127,7 +139,9 @@ export function VfxPreviewPage() {
           >
             <Board
               view={view}
-              playerId={orientation}
+              key={`${persistentMode}:${recipient}`}
+              playerId={persistentMode === "off" ? orientation : recipient === "spectator" ? null : recipient}
+              previewIsFlipped={orientation === "P2"}
               selectedUnitId="preview-asgore"
               highlightedCells={{ "4,4": "attack", "0,0": "move" }}
               previewVfx={effects}
@@ -158,6 +172,27 @@ export function VfxPreviewPage() {
           </div>
 
           <div className="mb-4 grid gap-3 text-sm">
+            <label>
+              {COPY.persistentSnapshot}
+              <select aria-label={COPY.persistentSnapshot} className="block w-full bg-slate-100 text-slate-950"
+                value={persistentMode} onChange={event => { setPersistentMode(event.target.value as PersistentPreviewMode); setEffects([]); }}>
+                <option value="off">{COPY.oneShot}</option>
+                <option value="statuses">{COPY.stackedStatuses}</option>
+                <option value="boneField">{COPY.boneSnapshot}</option>
+                <option value="storm">{COPY.stormSnapshot}</option>
+                <option value="cleared">{COPY.clearedStatuses}</option>
+              </select>
+            </label>
+            {persistentMode !== "off" && <label>
+              {COPY.recipient}
+              <select aria-label={COPY.recipient} className="block w-full bg-slate-100 text-slate-950"
+                value={recipient} onChange={event => {
+                  const next = event.target.value as PreviewRecipient;
+                  setRecipient(next); if (next !== "spectator") setOrientation(next); setEffects([]);
+                }}>
+                <option>P1</option><option>P2</option><option value="spectator">{COPY.spectator}</option>
+              </select>
+            </label>}
             <label>
               {COPY.runtimeEffect}
               <select

@@ -36,6 +36,7 @@ export type VfxEffectId =
   | "gasterBeam"
   | "gasterCannon"
   | "sansCurseApply"
+  | "sansCurseStatus"
   | "sansCurseTick"
   | "sansCurseRemove"
   | "bunkerStatus"

@@ -3,6 +3,21 @@ import { en } from "./en";
 import { adminUk } from "../../admin/locales";
 
 export const uk = {
+  persistentStatus: {
+    curse: "Прокляття останньої атаки", movementDisabled: "Рух заблоковано на наступний власний хід",
+    sansMoveLock: "Блокування руху жартом Санса", kaladinMoveLock: "Блокування руху п'ятим ідеалом",
+    lokiMoveLock: "Обплутано", cleanSoul: "Щит чистої душі готовий",
+    autoDefense: "Автоматичний захист хоробрості готовий", patience: "Скритність терпіння",
+    precision: "Точний удар готовий", form: "Трансформовано",
+    diagonalMove: "Діагональний рух активний", decreeMove: "Рух за указом готовий",
+    mongolCharge: "Монгольський натиск активний", boatmanMoves: "Додатковий рух човняра готовий",
+    boatCarry: "Перевозить союзника", longBone: "Режим довгої кістки", sorrowReady: "Сумний образ готовий",
+    courtFlexible: "Додаткова гнучка дія готова", courtGlobalMove: "Глобальний рух готовий",
+    courtRestriction: "Процесуальне обмеження", courtCompensation: "Відшкодування шкоди готове",
+    courtCosts: "Судові витрати активні", stealthBlocked: "Скритність заблокована до кінця раунду",
+    stasis: "Судовий стазис — поза полем", king: "Шаховий король", crater: "Межа місячного кратера",
+    berserkDefense: "Заряд автоматичного захисту берсеркера готовий",
+  },
   audio: { sound: "Звук", muted: "Без звуку", mute: "Вимкнути звук", volume: "Загальна гучність" },
   admin: adminUk,
   ranks: {

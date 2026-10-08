@@ -50,6 +50,7 @@ export const CORE_VFX_PREVIEW_IDS: VfxEffectId[] = [
   "gasterBeam",
   "gasterCannon",
   "sansCurseApply",
+  "sansCurseStatus",
   "sansCurseTick",
   "sansCurseRemove",
   "bunkerStatus",
