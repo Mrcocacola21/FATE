@@ -419,8 +419,13 @@ function resolveBoatMovement(
     units: { ...state.units, [river.id]: movedRiver },
   });
   const events: GameEvent[] = [
-    evAbilityUsed({ unitId: river.id, abilityId: ABILITY_RIVER_PERSON_BOAT }),
-    evUnitMoved(state, { provenance: { kind: "boat" }, unitId: river.id, from, to: actualDestination }),
+    evAbilityUsed({ unitId: river.id, abilityId: ABILITY_RIVER_PERSON_BOAT, sourceCell: from,
+      recipients: movementVisibility(state, river.id, from).recipients }),
+    ...(passengerId ? [{ type: "riverBoatPickup" as const, riverId: river.id, passengerId,
+      sourceCell: { ...from }, passengerCell: { ...state.units[passengerId].position! },
+      [EVENT_VISIBILITY]: intersectVisibility(movementVisibility(state, river.id, from),
+        movementVisibility(state, passengerId, state.units[passengerId].position!)) }] : []),
+    evUnitMoved(state, { provenance: { kind: "boat", role: "carrier", phase: "travel", stepIndex: 0 }, unitId: river.id, from, to: actualDestination }),
   ];
   const stakeResult = applyStakeTriggerIfAny(
     nextState,
@@ -468,7 +473,7 @@ function completeBoatDisembark(
   const events: GameEvent[] = [];
   if (!coordsEqual(ally.position!, destination)) {
     events.push(
-      evUnitMoved(state, { provenance: { kind: "boat" }, unitId: ally.id, from: ally.position!, to: destination }),
+      evUnitMoved(state, { provenance: { kind: "boat", role: "passenger", phase: "drop", stepIndex: 1 }, unitId: ally.id, from: ally.position!, to: destination }),
     );
   }
   const landedAlly: UnitState = { ...ally, position: { ...destination } };
@@ -483,6 +488,10 @@ function completeBoatDisembark(
   const landing = applyStakeTriggerIfAny(
     nextState, landedAlly, destination, rng, { entryKind: "landing" },
   );
+  events.push({ type: "riverBoatDisembarked", riverId: river.id, passengerId: ally.id,
+    riverDestination: { ...river.position! }, dropDestination: { ...destination },
+    [EVENT_VISIBILITY]: intersectVisibility(movementVisibility(state, river.id, river.position!),
+      movementVisibility(state, ally.id, ally.position!, destination)) });
   events.push(...landing.events);
   events.push({
     type: "riverBoatResolved",

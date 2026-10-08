@@ -117,7 +117,7 @@ test("procedural portal paths render only fixed source and destination portals",
   const effects: QueuedBoardVfxRequest[] = [
     {
       id: "portal-path",
-      effectId: "tralala",
+      effectId: "portal",
       placement: "path",
       path: [
         { col: 1, row: 1 },
@@ -140,6 +140,6 @@ test("procedural portal paths render only fixed source and destination portals",
     />,
   );
 
-  assert.equal(html.match(/data-portal-effect="tralala"/g)?.length, 2);
-  assert.doesNotMatch(html, /vfx-line-tralala/);
+  assert.equal(html.match(/data-portal-effect="portal"/g)?.length, 2);
+  assert.doesNotMatch(html, /vfx-line-portal/);
 });

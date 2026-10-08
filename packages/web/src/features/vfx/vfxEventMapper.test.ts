@@ -151,7 +151,7 @@ test("Search reveal maps only visible revealed units to target VFX", () => {
   assert.ok(!effects.some((effect) => effect.id.includes("still-hidden")));
 });
 
-test("resolved transport and phantasm movement map to path/cell VFX from public events", () => {
+test("completion cannot reconstruct transport; confirmed transport and phantasm moves own geometry", () => {
   const transport = map(
     [
       {
@@ -165,8 +165,13 @@ test("resolved transport and phantasm movement map to path/cell VFX from public 
     view([unit("river", { col: 4, row: 4 }), unit("ally", { col: 5, row: 4 })]),
     { river: { col: 1, row: 1 }, ally: { col: 2, row: 1 } },
   );
-  assert.ok(transport.some((effect) => effect.effectId === "boat"));
-  assert.ok(transport.some((effect) => effect.placement === "path"));
+  assert.deepEqual(transport, []);
+  const reached = map([{ type: "unitMoved", unitId: "river", from: { col: 1, row: 1 }, to: { col: 3, row: 3 },
+    abilityUseId: "boat-use", abilityId: "riverBoat", provenance: { kind: "boat", role: "carrier", phase: "travel", stepIndex: 0 } }], view([]));
+  assert.equal(reached.length, 1);
+  assert.equal(reached[0].effectId, "boat");
+  assert.equal(reached[0].placement, "projectile");
+  assert.deepEqual(reached[0].targetCell, { col: 3, row: 3 });
 
   const phantasm = map(
     [

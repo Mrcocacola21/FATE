@@ -276,6 +276,8 @@ function projectEventForRecipient(
       return isUnitVisibleToRecipient(state, event.unitId, recipient) ? [event] : [redactedEvent()];
     case "riverBoatmanGranted":
       return isUnitVisibleToRecipient(state, event.riverId, recipient) ? [event] : [];
+    case "riverBoatPickup":
+    case "riverBoatDisembarked":
     case "riverBoatResolved":
       return canKnowMovement(event, state, event.riverId, recipient) &&
         canKnowMovement(event, state, event.passengerId, recipient)
@@ -312,6 +314,8 @@ function projectEventForRecipient(
         : [];
     case "reactionMovementResumed":
       return isUnitVisibleToRecipient(state, event.controllerUnitId, recipient) ? [event] : [];
+    case "reactionMovementEnded":
+      return canKnowMovement(event, state, event.controllerUnitId, recipient) ? [event] : [];
     case "attackResolved": {
       if (!isUnitVisibleToRecipient(state, event.defenderId, recipient)) return [];
       return [

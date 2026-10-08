@@ -3,7 +3,7 @@ import { isCoord } from "../../features/vfx/vfxGeometry";
 import type { BoardEffect, PresentationEvent } from "./types";
 import type { BoardVfxRequest } from "../../features/vfx/vfxTypes";
 
-export type MovementPresentationKind = "normal" | "rider" | "teleport" | "forced";
+export type MovementPresentationKind = "normal" | "rider" | "teleport" | "forced" | "boat" | "tralala";
 export type MovementPresentationCue = {
   id: string;
   eventIndex: number;
@@ -17,6 +17,9 @@ export type MovementPresentationCue = {
       from: Coord;
       to: Coord;
       cause?: string;
+      transportGroup?: string;
+      transportRole?: "carrier" | "passenger";
+      transportPhase?: "pickup" | "travel" | "drop";
     }
   | { kind: "stakePlacement"; cells: Coord[] }
   | { kind: "snarePlacement"; cells: Coord[] }
@@ -32,9 +35,10 @@ export interface MovementPresentationPlan {
 
 export function confirmedMovement(event: ProjectedGameEvent) {
   if (event.type !== "unitMoved" && event.type !== "intimidateResolved") return null;
+  if (!event.provenance) return null;
   const mode =
     event.provenance.kind === "ability" ? event.provenance.movementKind : event.provenance.kind;
-  if (mode !== "normal" && mode !== "rider" && mode !== "teleport" && mode !== "forced")
+  if (mode !== "normal" && mode !== "rider" && mode !== "teleport" && mode !== "forced" && mode !== "boat" && mode !== "tralala")
     return null;
   if (!isCoord(event.from) || !isCoord(event.to)) return null;
   return {
@@ -43,6 +47,11 @@ export function confirmedMovement(event: ProjectedGameEvent) {
     from: { ...event.from },
     to: { ...event.to },
     ...(event.provenance.kind === "forced" ? { cause: event.provenance.cause } : {}),
+    ...(event.provenance.kind === "boat" || event.provenance.kind === "tralala"
+      ? { transportRole: event.provenance.role, transportPhase: event.provenance.phase,
+          ...(event.abilityUseId && event.provenance.stepIndex !== undefined
+            ? { transportGroup: `${event.abilityUseId}:${mode}:${event.provenance.phase}:${event.provenance.stepIndex}` } : {}) }
+      : {}),
   };
 }
 
@@ -136,6 +145,7 @@ export function movementCueFromEvent(params: {
 export function movementCueEffects(cue: MovementPresentationCue): BoardEffect[] {
   const timed = { delayMs: cue.atMs, durationMs: cue.durationMs };
   if (cue.kind === "movement") {
+    if (cue.mode === "boat" || cue.mode === "tralala") return []; // Transport owns its single wake.
     if (cue.mode === "teleport") return []; // Endpoint portal sprites own teleport; never a line.
     return [
       {
@@ -168,6 +178,7 @@ export function movementCueEffects(cue: MovementPresentationCue): BoardEffect[] 
 
 export function movementCueVfx(cue: MovementPresentationCue): BoardVfxRequest[] {
   if (cue.kind === "movement") {
+    if (cue.mode === "boat" || cue.mode === "tralala") return []; // River mapper groups both bodies.
     if (cue.mode !== "teleport") return [];
     return [cue.from, cue.to].map((cell, index) => ({
       id: `${cue.id}:portal:${index}`,

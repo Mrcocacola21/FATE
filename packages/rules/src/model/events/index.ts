@@ -8,7 +8,8 @@ import type { AbilityEventMetadata } from "../semantic";
 export type ReactionGameEvent =
   | { type: "reactionOpportunity"; source: ReactionSource; reactorUnitId: string; targetUnitIds: string[] }
   | { type: "reactionChoiceResolved"; source: ReactionSource; reactorUnitId: string; choice: "attack" | "pass"; targetUnitId?: string }
-  | { type: "reactionMovementResumed"; source: ReactionSource; controllerUnitId: string };
+  | { type: "reactionMovementResumed"; source: ReactionSource; controllerUnitId: string }
+  | { type: "reactionMovementEnded"; source: ReactionSource; controllerUnitId: string; reason: "completed" | "cancelled" };
 
 export type GameEvent = (CoreGameEvent | HeroGameEvent | ReactionGameEvent) & CombatVisualEventMetadata & AbilityEventMetadata & { [EVENT_VISIBILITY]?: EventVisibility };
 

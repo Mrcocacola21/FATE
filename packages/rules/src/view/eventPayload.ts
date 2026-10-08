@@ -17,9 +17,9 @@ export function copyEventPayload(event: GameEvent): GameEvent | undefined {
       if (event.rollId !== undefined && payload.type === "initiativeRolled") payload.rollId = event.rollId;
       break;
     case "abilityUsed": case "attackResolved": case "aoeResolved": case "rollResolved":
-    case "unitMoved": case "snarePlaced": case "riverBoatResolved": case "riverBoatDisembarkFailed":
+    case "unitMoved": case "snarePlaced": case "riverBoatPickup": case "riverBoatDisembarked": case "riverBoatResolved": case "riverBoatDisembarkFailed":
     case "riverTraLaLaResolved": case "reactionOpportunity": case "reactionChoiceResolved":
-    case "reactionMovementResumed": case "carpetStrikeTriggered": case "carpetStrikeCenter":
+    case "reactionMovementResumed": case "reactionMovementEnded": case "carpetStrikeTriggered": case "carpetStrikeCenter":
     case "carpetStrikeAttackRolled": case "asgoreSoulParadeResolved": case "unitHealed":
     case "lokiChickenApplied": case "lokiChickenGroupApplied": case "controlledAttackDeclared":
     case "lechyStormStarted": case "intimidateResolved":
@@ -61,7 +61,9 @@ function copySemanticPayload(event: GameEvent): GameEvent | undefined {
           : event.provenance.kind === "ability"
             ? { kind: "ability", abilityId: event.provenance.abilityId,
                 ...(event.provenance.movementKind ? { movementKind: event.provenance.movementKind } : {}) }
-            : { kind: event.provenance.kind },
+            : event.provenance.kind === "boat" || event.provenance.kind === "tralala"
+              ? { kind: event.provenance.kind, role: event.provenance.role, phase: event.provenance.phase, stepIndex: event.provenance.stepIndex }
+              : { kind: event.provenance.kind },
       };
     case "hiddenCollisionResolved":
       return {
@@ -499,6 +501,12 @@ function copySemanticPayload(event: GameEvent): GameEvent | undefined {
       };
     case "riverBoatmanGranted":
       return { type: "riverBoatmanGranted", riverId: event.riverId, extraMoves: event.extraMoves };
+    case "riverBoatPickup":
+      return { type: event.type, riverId: event.riverId, passengerId: event.passengerId,
+        sourceCell: coord(event.sourceCell), passengerCell: coord(event.passengerCell) };
+    case "riverBoatDisembarked":
+      return { type: event.type, riverId: event.riverId, passengerId: event.passengerId,
+        riverDestination: coord(event.riverDestination), dropDestination: coord(event.dropDestination) };
     case "riverBoatResolved":
       return {
         type: "riverBoatResolved",
@@ -565,6 +573,8 @@ function copySemanticPayload(event: GameEvent): GameEvent | undefined {
         choice: event.choice,
         targetUnitId: event.targetUnitId,
       };
+    case "reactionMovementEnded":
+      return { type: event.type, source: event.source, controllerUnitId: event.controllerUnitId, reason: event.reason };
     case "reactionMovementResumed":
       return {
         type: "reactionMovementResumed",

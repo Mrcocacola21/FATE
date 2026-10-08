@@ -1,5 +1,6 @@
 import type { Coord, ProjectedGameEvent, PlayerView, RollKind } from "rules";
 import type { BoardEventBatch } from "./types";
+import { riverStage, riverMovementCue, type TransportPresentationCue, type TransportAttachment } from "./riverPresentation";
 import { sameAbilityResolution } from "./heroPresentation";
 import { FIREBALL_TIMING, FIRE_PARADE_TIMING, isFireballResolution } from "./asgorePresentation";
 import {
@@ -86,6 +87,7 @@ export type CombatPresentationCue = {
 type WithoutCueIdentity<T> = T extends unknown ? Omit<T, "id" | "eventIndex"> : never;
 
 export type VisualPlaybackQueueItem =
+  | { type: "transportAttach" | "transportDetach"; attachment: TransportAttachment; startsAtMs: number; endsAtMs: number }
   | {
       type: "movement";
       cue: Extract<MovementPresentationCue, { kind: "movement" }>;
@@ -128,6 +130,8 @@ export type VisualPlaybackQueueItem =
     };
 
 export interface CombatVisualPlaybackPlan {
+  startingTransportAttachments: TransportAttachment[];
+  transportAttachments: TransportAttachment[];
   /** Local React binding, checked before starting or restarting a queued plan. */
   playbackSessionKey?: string | null;
   movementPlan: MovementPresentationPlan;
@@ -141,6 +145,7 @@ export interface CombatVisualPlaybackPlan {
 }
 
 export interface CombatVisualPlaybackFrame {
+  transportAttachments: TransportAttachment[];
   batch: BoardEventBatch;
   visualHpByUnitId: VisualHpByUnitId;
   visualUnitsByUnitId: VisualUnitsByUnitId;
@@ -271,9 +276,11 @@ export function buildCombatVisualPlaybackPlan(params: {
   reducedMotion: boolean;
   /** Early rolls must not commit HP/removal belonging to a buffered chain. */
   holdResolvedState?: boolean;
+  transportAttachments?: TransportAttachment[];
 }): CombatVisualPlaybackPlan {
   const timing = params.reducedMotion ? REDUCED_TIMING : NORMAL_TIMING;
   const finalSnapshot = cloneView(params.finalView);
+  let transportAttachments = [...(params.transportAttachments ?? [])];
   const playbackStartingUnits: VisualUnitsByUnitId = {
     ...params.startingUnitsByUnitId,
   };
@@ -336,6 +343,8 @@ export function buildCombatVisualPlaybackPlan(params: {
   const eventDelaysMs = params.batch.events.map(() => 0);
   const combatCues: CombatPresentationCue[] = [];
   const movementCues: MovementPresentationCue[] = [];
+  const transportCues: TransportPresentationCue[] = [];
+  const transportSteps = new Map<string, { atMs: number; durationMs: number }>();
   const movementCount = params.batch.events.filter((event) => confirmedMovement(event)).length;
   const segmentMs = movementSegmentDuration(movementCount, params.reducedMotion);
   // Start from the first authorized segment even if the snapshot has already advanced.
@@ -398,6 +407,7 @@ export function buildCombatVisualPlaybackPlan(params: {
   const aggregateStarts = new Map<number, number>();
   let signatureEndMs = 0;
   params.batch.events.forEach((event, eventIndex) => {
+    const abilityUseId = "abilityUseId" in event ? event.abilityUseId : undefined;
     if (event.type === "attackResolved") {
       params.batch.events.forEach((aggregate, aggregateIndex) => {
         if (
@@ -434,6 +444,43 @@ export function buildCombatVisualPlaybackPlan(params: {
       });
     }
     eventDelaysMs[eventIndex] = aggregateStarts.get(eventIndex) ?? cursorMs;
+    const stage = riverStage(event);
+    if (stage && abilityUseId) {
+      if (event.type === "riverBoatDisembarked" && !params.batch.events.some(e => e.type === "unitMoved"
+        && e.unitId === event.passengerId && e.abilityUseId === abilityUseId)) {
+        const cue: Extract<MovementPresentationCue, { kind: "movement" }> = {
+          kind: "movement", mode: "boat", unitId: event.passengerId,
+          from: event.riverDestination, to: event.dropDestination, transportPhase: "drop", transportRole: "passenger",
+          eventIndex, id: `${event.eventId ?? eventIndex}:disembark`, atMs: cursorMs, durationMs: segmentMs,
+        };
+        movementCues.push(cue);
+        queue.push({ type: "movement", cue, startsAtMs: cursorMs, endsAtMs: cursorMs + cue.durationMs });
+        cursorMs += cue.durationMs;
+      }
+      transportCues.push({ ...stage, abilityUseId, eventIndex,
+        id: `${params.batch.streamId ?? params.batch.previewId ?? "preview"}:${event.eventId ?? eventIndex}:transport`, atMs: cursorMs });
+      if (event.type === "riverBoatPickup") {
+        const attachment: TransportAttachment = { abilityUseId, carrierId: event.riverId, passengerId: event.passengerId, mode: "boat" };
+        transportAttachments.push(attachment);
+        queue.push({ type: "transportAttach", attachment, startsAtMs: cursorMs + stage.durationMs, endsAtMs: cursorMs + stage.durationMs });
+        const cue: Extract<MovementPresentationCue, { kind: "movement" }> = {
+          kind: "movement", mode: "boat", unitId: event.passengerId,
+          from: event.passengerCell, to: event.sourceCell, transportPhase: "pickup", transportRole: "passenger",
+          eventIndex, id: `${event.eventId ?? eventIndex}:pickup`, atMs: cursorMs, durationMs: stage.durationMs,
+        };
+        const unit = playbackStartingUnits[event.passengerId];
+        if (unit) playbackStartingUnits[event.passengerId] = { ...unit, position: event.passengerCell };
+        movementCues.push(cue);
+        queue.push({ type: "movement", cue, startsAtMs: cursorMs, endsAtMs: cursorMs + cue.durationMs });
+      }
+      if (event.type === "riverBoatDisembarked" || event.type === "riverBoatDisembarkFailed" || event.type === "reactionMovementEnded") {
+        for (const attachment of transportAttachments.filter(a => a.abilityUseId === abilityUseId))
+          queue.push({ type: "transportDetach", attachment, startsAtMs: cursorMs, endsAtMs: cursorMs });
+        transportAttachments = transportAttachments.filter((attachment) => attachment.abilityUseId !== abilityUseId);
+      }
+      cursorMs += stage.durationMs;
+      return;
+    }
     if (
       event.type === "abilityUsed" &&
       event.abilityId === "asgoreFireball" &&
@@ -467,13 +514,56 @@ export function buildCombatVisualPlaybackPlan(params: {
     if (movementCue) {
       movementCues.push(movementCue);
       if (movementCue.kind === "movement") {
+        if (movementCue.mode === "tralala" && movementCue.transportPhase === "pickup" && abilityUseId) {
+          const activation = params.batch.events.find(e => e.type === "abilityUsed" && e.abilityUseId === abilityUseId);
+          if (activation?.type === "abilityUsed") {
+            const attachment: TransportAttachment = { abilityUseId, carrierId: activation.unitId, passengerId: movementCue.unitId, mode: "tralala" };
+            transportAttachments.push(attachment);
+            queue.push({ type: "transportAttach", attachment, startsAtMs: cursorMs + movementCue.durationMs, endsAtMs: cursorMs + movementCue.durationMs });
+          }
+        }
+        // Pair only explicit operation + reached-step metadata, never proximity or coordinates.
+        const grouped = movementCue.transportGroup && transportSteps.get(movementCue.transportGroup);
+        if (grouped) {
+          movementCue.atMs = grouped.atMs;
+          movementCue.durationMs = grouped.durationMs;
+          eventDelaysMs[eventIndex] = grouped.atMs;
+        } else if (movementCue.transportGroup) {
+          transportSteps.set(movementCue.transportGroup, { atMs: cursorMs, durationMs: movementCue.durationMs });
+        }
+        if (movementCue.mode === "boat" && movementCue.transportPhase === "drop") {
+          const landing = params.batch.events.find((candidate) => candidate.type === "riverBoatDisembarked"
+            && candidate.abilityUseId === abilityUseId);
+          if (landing?.type === "riverBoatDisembarked") movementCue.from = landing.riverDestination;
+        }
         queue.push({
           type: "movement",
           cue: movementCue,
-          startsAtMs: cursorMs,
-          endsAtMs: cursorMs + movementCue.durationMs,
+          startsAtMs: movementCue.atMs,
+          endsAtMs: movementCue.atMs + movementCue.durationMs,
         });
-        cursorMs += movementCue.durationMs;
+        // Boat's passenger is attached cosmetically; rules keep it at the original
+        // cell until landing. Both anchors are authorized by the committed pickup.
+        if (movementCue.mode === "boat" && movementCue.transportRole === "carrier" && abilityUseId) {
+          const attachment = transportAttachments.find((candidate) => candidate.abilityUseId === abilityUseId);
+          if (attachment) {
+            const passengerCue = { ...movementCue, unitId: attachment.passengerId, transportRole: "passenger" as const,
+              id: `${movementCue.id}:passenger` };
+            movementCues.push(passengerCue);
+            queue.push({ type: "movement", cue: passengerCue, startsAtMs: passengerCue.atMs,
+              endsAtMs: passengerCue.atMs + passengerCue.durationMs });
+          }
+        }
+        const transport = riverMovementCue(event, movementCue);
+        if (transport) transportCues.push({ ...transport, eventIndex, abilityUseId: abilityUseId!,
+          id: `${params.batch.streamId ?? params.batch.previewId ?? "preview"}:${event.eventId ?? eventIndex}:transport` });
+        if (!grouped) cursorMs += movementCue.durationMs;
+        if (movementCue.transportPhase === "drop" && abilityUseId && movementCue.mode === "tralala") {
+          for (const attachment of transportAttachments.filter(a => a.abilityUseId === abilityUseId))
+            queue.push({ type: "transportDetach", attachment, startsAtMs: cursorMs, endsAtMs: cursorMs });
+          transportAttachments = transportAttachments.filter(a => a.abilityUseId !== abilityUseId);
+        }
+        if (transport?.kind === "drop") cursorMs += transport.durationMs;
         return;
       }
       if (movementCue.kind === "reveal") {
@@ -503,6 +593,8 @@ export function buildCombatVisualPlaybackPlan(params: {
       cursorMs += timing.rollMs;
       return;
     }
+    if (event.type === "unitDied") transportAttachments = transportAttachments.filter(
+      (attachment) => attachment.carrierId !== event.unitId && attachment.passengerId !== event.unitId);
     if (event.type === "unitHealed") {
       if (event.amount <= 0) return;
       const previousHp = runningHp[event.unitId] ?? Math.max(0, event.hpAfter - event.amount);
@@ -692,7 +784,15 @@ export function buildCombatVisualPlaybackPlan(params: {
     }
   }
 
+  for (const attachment of transportAttachments) {
+    const passenger = finalSnapshot.units[attachment.passengerId];
+    const reached = [...movementCues].reverse().find((cue): cue is Extract<MovementPresentationCue, { kind: "movement" }> =>
+      cue.kind === "movement" && cue.unitId === attachment.carrierId)?.to ?? playbackStartingUnits[attachment.carrierId]?.position;
+    if (passenger && reached) finalSnapshot.units[attachment.passengerId] = { ...passenger, position: reached };
+  }
   return {
+    startingTransportAttachments: params.transportAttachments ?? [],
+    transportAttachments,
     movementPlan: { cues: movementCues },
     batch: {
       ...params.batch,
@@ -700,6 +800,7 @@ export function buildCombatVisualPlaybackPlan(params: {
       eventSfxDelaysMs: eventDelaysMs,
       combatCues,
       movementCues,
+      transportCues,
     },
     startingHpByUnitId: playbackStartingHp,
     startingUnitsByUnitId: playbackStartingUnits,
@@ -723,6 +824,7 @@ export function combatVisualPlaybackFrame(
 ): CombatVisualPlaybackFrame {
   if (elapsedMs >= plan.durationMs) {
     return {
+      transportAttachments: plan.transportAttachments,
       batch: plan.batch,
       visualHpByUnitId: { ...plan.finalHpByUnitId },
       visualUnitsByUnitId: { ...plan.finalUnitsByUnitId },
@@ -738,6 +840,7 @@ export function combatVisualPlaybackFrame(
   }
 
   const visualHpByUnitId = { ...plan.startingHpByUnitId };
+  let transportAttachments = [...plan.startingTransportAttachments];
   const visualMotionByUnitId: CombatVisualPlaybackFrame["visualMotionByUnitId"] = {};
   const visualUnitsByUnitId = { ...plan.startingUnitsByUnitId };
   const visualStateByUnitId: UnitVisualStateByUnitId = Object.fromEntries(
@@ -745,6 +848,13 @@ export function combatVisualPlaybackFrame(
   );
 
   for (const item of plan.queue) {
+    if (item.type === "transportAttach" || item.type === "transportDetach") {
+      if (elapsedMs >= item.startsAtMs) {
+        transportAttachments = transportAttachments.filter(a => a.abilityUseId !== item.attachment.abilityUseId);
+        if (item.type === "transportAttach") transportAttachments.push(item.attachment);
+      }
+      continue;
+    }
     if (item.type === "snareStatus") {
       if (elapsedMs >= item.startsAtMs && visualUnitsByUnitId[item.unitId])
         visualUnitsByUnitId[item.unitId] = {
@@ -831,13 +941,14 @@ export function combatVisualPlaybackFrame(
       }
       continue;
     }
-    if (elapsedMs >= item.startsAtMs) {
+    if (item.type === "removeVisualUnit" && elapsedMs >= item.startsAtMs) {
       delete visualUnitsByUnitId[item.unitId];
       visualStateByUnitId[item.unitId] = "removed";
     }
   }
 
   return {
+    transportAttachments: transportAttachments.filter(a => visualUnitsByUnitId[a.carrierId]?.position && visualUnitsByUnitId[a.passengerId]?.position),
     batch: plan.batch,
     visualHpByUnitId,
     visualUnitsByUnitId,

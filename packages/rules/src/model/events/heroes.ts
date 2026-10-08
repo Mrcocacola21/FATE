@@ -138,6 +138,20 @@ export type HeroGameEvent =
       extraMoves: number;
     }
   | {
+      type: "riverBoatPickup";
+      riverId: string;
+      passengerId: string;
+      sourceCell: Coord;
+      passengerCell: Coord;
+    }
+  | {
+      type: "riverBoatDisembarked";
+      riverId: string;
+      passengerId: string;
+      riverDestination: Coord;
+      dropDestination: Coord;
+    }
+  | {
       type: "riverBoatResolved";
       riverId: string;
       passengerId: string;

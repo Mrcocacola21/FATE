@@ -599,7 +599,11 @@ export const Board: FC<BoardProps> = ({
       const gameCoord = toGameCoord(viewCoord);
       const key = coordKey(viewCoord);
       const occupants = unitsByPos.get(key) ?? [];
+      const transport = visualResolution.transportAttachments.find(attachment =>
+        occupants.some(occupant => occupant.id === attachment.carrierId) &&
+        occupants.some(occupant => occupant.id === attachment.passengerId));
       const unit =
+        (transport ? occupants.find(occupant => occupant.id === transport.carrierId) : undefined) ??
         occupants.find(
           (occupant) => !occupant.isVisualOnly && preferredUnitIdSet.has(occupant.id),
         ) ??
@@ -607,6 +611,14 @@ export const Board: FC<BoardProps> = ({
         occupants[occupants.length - 1];
       const isGameplayUnit = !!unit && !unit.isVisualOnly;
       const motion = unit ? visualResolution.visualMotionByUnitId[unit.id] : undefined;
+      const transportPassenger = transport ? renderedUnits[transport.passengerId] : undefined;
+      const passengerAsset = transportPassenger ? getUnitTokenAsset(transportPassenger) : null;
+      const passengerMotion = transportPassenger ? visualResolution.visualMotionByUnitId[transportPassenger.id] : undefined;
+      const passengerOffset = transportPassenger?.position && unit ? (() => {
+        const carrierPoint = cellToBoardPoint(motion?.position ?? renderedUnits[unit.id].position!, size, cellSize, isFlipped);
+        const passengerPoint = cellToBoardPoint(passengerMotion?.position ?? transportPassenger.position, size, cellSize, isFlipped);
+        return `translate(${passengerPoint.x - carrierPoint.x}px, ${passengerPoint.y - carrierPoint.y}px)`;
+      })() : undefined;
       const motionStyle =
         motion && unit
           ? (() => {
@@ -1003,6 +1015,15 @@ export const Board: FC<BoardProps> = ({
           )}
           <div className="board-unit-content" style={motionStyle} data-movement-mode={motion?.mode}>
             {content}
+            {transportPassenger && passengerAsset ? (
+              <span className={`pointer-events-none absolute -bottom-1 -right-1 z-20 flex items-center justify-center overflow-hidden rounded-full border-2 border-teal-200 bg-slate-900 shadow unit-visual-${visualResolution.visualStateByUnitId[transportPassenger.id] ?? "idle"}`}
+                style={{ width: tokenSize * 0.55, height: tokenSize * 0.55, transform: passengerOffset }}
+                data-transport-passenger-id={transportPassenger.id} data-transport-mode={transport?.mode}>
+                {passengerAsset.isFallback ? getUnitLabel(transportPassenger.class) :
+                  <img src={passengerAsset.src} alt={t("board.tokenAlt", { unit: getClassLabel(transportPassenger.class, t) })}
+                    className="h-full w-full object-contain" draggable={false} />}
+              </span>
+            ) : null}
           </div>
           {isSelected || isActiveUnit ? (
             <span className="board-selection-outline" aria-hidden="true" />

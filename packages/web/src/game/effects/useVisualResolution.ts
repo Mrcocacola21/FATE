@@ -16,6 +16,7 @@ import {
   type CombatVisualPlaybackFrame,
 } from "./combatPlayback";
 import type { BoardEventBatch } from "./types";
+import type { TransportAttachment } from "./riverPresentation";
 import {
   advanceVisualResolution,
   createVisualResolutionState,
@@ -30,6 +31,7 @@ import {
 const SNAPSHOT_SYNC_FALLBACK_MS = 1500;
 
 interface RenderedVisualState {
+  transportAttachments: TransportAttachment[];
   visualMotionByUnitId: CombatVisualPlaybackFrame["visualMotionByUnitId"];
   visualHpByUnitId: VisualHpByUnitId;
   visualUnitsByUnitId: VisualUnitsByUnitId;
@@ -39,6 +41,7 @@ interface RenderedVisualState {
 
 function baseline(view: PlayerView): RenderedVisualState {
   return {
+    transportAttachments: [],
     visualMotionByUnitId: {},
     visualHpByUnitId: snapshotVisualHp(view),
     visualUnitsByUnitId: snapshotVisualUnits(view),
@@ -55,6 +58,7 @@ export function useVisualResolution(params: {
   enabled: boolean;
   sessionKey: string | null | undefined;
 }): {
+  transportAttachments: TransportAttachment[];
   visualMotionByUnitId: CombatVisualPlaybackFrame["visualMotionByUnitId"];
   batch: BoardEventBatch | null;
   visualHpByUnitId: VisualHpByUnitId;
@@ -80,9 +84,11 @@ export function useVisualResolution(params: {
   const queuedTailRef = useRef<{
     hp: VisualHpByUnitId;
     units: VisualUnitsByUnitId;
+    attachments: TransportAttachment[];
   }>({
     hp: rendered.visualHpByUnitId,
     units: rendered.visualUnitsByUnitId,
+    attachments: [],
   });
 
   useEffect(() => {
@@ -98,6 +104,7 @@ export function useVisualResolution(params: {
     queuedTailRef.current = {
       hp: nextRendered.visualHpByUnitId,
       units: nextRendered.visualUnitsByUnitId,
+      attachments: [],
     };
   }, [sessionKey]);
 
@@ -126,9 +133,10 @@ export function useVisualResolution(params: {
         finalView: batchView,
         reducedMotion,
         holdResolvedState: current.groupActive,
+        transportAttachments: starting.attachments,
       });
       plan.playbackSessionKey = sessionKey;
-      queuedTailRef.current = { hp: plan.finalHpByUnitId, units: plan.finalUnitsByUnitId };
+      queuedTailRef.current = { hp: plan.finalHpByUnitId, units: plan.finalUnitsByUnitId, attachments: plan.transportAttachments };
       nextPlans.push(plan);
     }
     if (incoming.length === 0) {
@@ -161,6 +169,7 @@ export function useVisualResolution(params: {
     setPlayingBatch({ ...plan.batch, playbackStartedAt: Date.now() });
     const initialFrame = combatVisualPlaybackFrame(plan, 0);
     setRendered({
+      transportAttachments: initialFrame.transportAttachments,
       visualMotionByUnitId: initialFrame.visualMotionByUnitId,
       visualHpByUnitId: initialFrame.visualHpByUnitId,
       visualUnitsByUnitId: initialFrame.visualUnitsByUnitId,
@@ -172,6 +181,7 @@ export function useVisualResolution(params: {
       if (cancelled || !presentationBatchIsCurrent(plan.batch)) return;
       const frame = combatVisualPlaybackFrame(plan, now - startedAt);
       setRendered({
+        transportAttachments: frame.transportAttachments,
         visualMotionByUnitId: frame.visualMotionByUnitId,
         visualHpByUnitId: frame.visualHpByUnitId,
         visualUnitsByUnitId: frame.visualUnitsByUnitId,
@@ -200,11 +210,12 @@ export function useVisualResolution(params: {
     queuedTailRef.current = {
       hp: next.visualHpByUnitId,
       units: next.visualUnitsByUnitId,
+      attachments: [],
     };
   }, [enabled, view]);
 
   useEffect(() => {
-    if (!enabled || plans.length > 0 || resolution.groupActive) return;
+    if (!enabled || plans.length > 0 || resolution.groupActive || (view.pendingDecision && queuedTailRef.current.attachments.length > 0)) return;
     const authoritativeHp = snapshotVisualHp(view);
     const positionsEqual =
       Object.keys(view.units).length === Object.keys(rendered.visualUnitsByUnitId).length &&
@@ -223,6 +234,7 @@ export function useVisualResolution(params: {
       queuedTailRef.current = {
         hp: next.visualHpByUnitId,
         units: next.visualUnitsByUnitId,
+        attachments: [],
       };
     }, SNAPSHOT_SYNC_FALLBACK_MS);
     return () => window.clearTimeout(timer);
@@ -238,6 +250,7 @@ export function useVisualResolution(params: {
 
   const currentRendered = renderedSessionKeyRef.current === sessionKey ? rendered : baseline(view);
   return {
+    transportAttachments: currentRendered.transportAttachments,
     visualMotionByUnitId: currentRendered.visualMotionByUnitId,
     batch:
       playingBatch &&

@@ -547,15 +547,22 @@ test("an ahead snapshot cannot present a reveal while its semantic chain is stil
   assert.deepEqual(combatVisualPlaybackFrame(released, 0).visualUnitsByUnitId.mover.position, B);
 });
 
-test("Boat/Tralala/ability provenance receive no new generic walk or teleport", () => {
+test("Boat/Tralala confirmed moves interpolate without generic trails; unknown abilities stay silent", () => {
   for (const provenance of [
     { kind: "boat" as const },
     { kind: "tralala" as const },
     { kind: "ability" as const, abilityId: "hero" },
   ]) {
     const p = plan([{ type: "unitMoved", unitId: "mover", from: A, to: D, provenance }]);
-    assert.deepEqual(p.movementPlan.cues, []);
-    assert.deepEqual(p.queue, []);
+    if (provenance.kind === "ability") {
+      assert.deepEqual(p.movementPlan.cues, []);
+      assert.deepEqual(p.queue, []);
+    } else {
+      assert.equal(p.movementPlan.cues.length, 1);
+      assert.equal(p.queue[0].type, "movement");
+      assert.deepEqual(movementCueEffects(p.movementPlan.cues[0]), []);
+      assert.deepEqual(movementCueVfx(p.movementPlan.cues[0]), []);
+    }
   }
 });
 

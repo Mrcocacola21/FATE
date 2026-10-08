@@ -76,6 +76,7 @@ export function useBoardVfx(params: {
       eventDelaysMs: batch.eventDelaysMs,
       combatCues: batch.combatCues,
       movementCues: batch.movementCues,
+      transportCues: batch.transportCues,
     });
     tokenRef.current = batch.presentationToken;
     if (reducedMotion) {

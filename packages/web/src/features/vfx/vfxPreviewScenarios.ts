@@ -453,13 +453,19 @@ export const VFX_PREVIEW_SCENARIOS: VfxPreviewScenario[] = [
     id: "river-boat",
     label: "River Boat",
     group: "Transport",
-    expectedEffectIds: ["boat"],
+    expectedEffectIds: ["boatPickup", "boat", "boatDrop"],
     waitMs: 260,
     events: [
       {
-        type: "riverBoatResolved",
+        type: "riverBoatPickup", abilityUseId: "preview-boat",
         riverId: "preview-river",
         passengerId: "preview-passenger",
+        sourceCell: { col: 4, row: 5 }, passengerCell: { col: 5, row: 5 },
+      },
+      { type: "unitMoved", unitId: "preview-river", abilityUseId: "preview-boat",
+        provenance: { kind: "boat", role: "carrier", phase: "travel", stepIndex: 0 }, from: { col: 4, row: 5 }, to: { col: 4, row: 7 } },
+      {
+        type: "riverBoatDisembarked", abilityUseId: "preview-boat", riverId: "preview-river", passengerId: "preview-passenger",
         riverDestination: { col: 4, row: 7 },
         dropDestination: { col: 5, row: 7 },
       },
@@ -473,12 +479,9 @@ export const VFX_PREVIEW_SCENARIOS: VfxPreviewScenario[] = [
     waitMs: 280,
     events: [
       {
-        type: "riverTraLaLaResolved",
-        riverId: "preview-river",
-        targetId: "preview-passenger",
-        riverDestination: { col: 4, row: 7 },
-        dropDestination: { col: 6, row: 7 },
-        touchedAttackerIds: [],
+        type: "unitMoved", unitId: "preview-river", abilityUseId: "preview-tralala",
+        provenance: { kind: "tralala", role: "carrier", phase: "travel", stepIndex: 1 },
+        from: { col: 4, row: 6 }, to: { col: 4, row: 7 },
       },
     ],
   },
@@ -490,12 +493,8 @@ export const VFX_PREVIEW_SCENARIOS: VfxPreviewScenario[] = [
     waitMs: 240,
     events: [
       {
-        type: "riverTraLaLaResolved",
-        riverId: "preview-river",
-        targetId: "preview-passenger",
-        riverDestination: { col: 3, row: 7 },
-        dropDestination: { col: 4, row: 7 },
-        touchedAttackerIds: [],
+        type: "unitMoved", unitId: "preview-passenger", provenance: { kind: "teleport" },
+        from: { col: 3, row: 7 }, to: { col: 4, row: 7 },
       },
     ],
   },

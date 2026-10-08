@@ -19,8 +19,7 @@ export type MovementProvenance =
   | { kind: "normal" }
   | { kind: "rider" }
   | { kind: "teleport" }
-  | { kind: "boat" }
-  | { kind: "tralala" }
+  | { kind: "boat" | "tralala"; role?: "carrier" | "passenger"; phase?: "pickup" | "travel" | "drop"; stepIndex?: number }
   | {
       kind: "forced";
       cause: "intimidatingStare" | "hiddenCollision" | "court" | "moonSwap" | "donWindmills";

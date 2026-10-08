@@ -9,6 +9,9 @@ export {
   ABILITY_KAISER_CARPET_STRIKE as KAISER_CARPET_STRIKE_ID,
   ABILITY_VLAD_FOREST,
   ABILITY_VLAD_INTIMIDATE,
+  ABILITY_RIVER_PERSON_BOAT,
+  ABILITY_RIVER_PERSON_BOATMAN,
+  ABILITY_RIVER_PERSON_TRA_LA_LA,
 } from "../../rules/src/abilities/constants";
 
 export function getProjectedAbilityTargetRange(

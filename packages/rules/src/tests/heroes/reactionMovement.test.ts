@@ -439,6 +439,37 @@ export function testReactionMovementRegressions() {
   testReactionKeepsBerserkerDefenseChoiceAndAssassinStealthRules();
   testHiddenDraggedTargetDoesNotSuppressStakeInterruption();
   testDraggedTargetStakeStopsHiddenBoat();
+  testTralalaFinalDropResolvesLandingHazards();
+}
+
+export function testTralalaFinalDropResolvesLandingHazards() {
+  for (const hp of [20, 1]) {
+    const setup = fixture();
+    for (const unit of Object.values(setup.state.units)) {
+      if (unit.owner === "P1" && unit.id !== setup.riverId)
+        setup.state = setUnit(setup.state, unit.id, { position: null });
+    }
+    setup.state = setUnit(setup.state, setup.targetId, { hp });
+    setup.state = { ...setup.state, stakeMarkers: [0, 1].map(i => ({
+      id: `landing-${i}`, owner: "P1", position: drop, createdAt: i, isRevealed: false,
+    })) };
+    const landed = start(setup);
+    assert.equal(landed.state.pendingReactionMovement, null);
+    assert.equal(landed.state.pendingRoll, null);
+    const arrivalIndex = landed.events.findIndex(e => e.type === "unitMoved" && e.unitId === setup.targetId
+      && e.provenance.kind === "tralala" && e.provenance.phase === "drop");
+    const hazardIndex = landed.events.findIndex(e => e.type === "stakeTriggered");
+    assert(arrivalIndex >= 0 && hazardIndex > arrivalIndex);
+    const triggers = landed.events.filter(e => e.type === "stakeTriggered");
+    assert.equal(triggers.length, 1);
+    assert.equal(triggers[0].damage, 1);
+    assert.equal(triggers[0].stopped, false);
+    assert.equal(triggers[0].stakeIdsRevealed.length, 2);
+    assert(landed.state.stakeMarkers.every(s => s.isRevealed));
+    assert.equal(landed.state.units[setup.targetId].hp, hp - 1);
+    assert.equal(landed.events.filter(e => e.type === "unitDied").length, hp === 1 ? 1 : 0);
+  }
+  console.log("tralala_final_drop_resolves_landing_hazards passed");
 }
 
 export function testReactionKeepsBerserkerDefenseChoiceAndAssassinStealthRules() {

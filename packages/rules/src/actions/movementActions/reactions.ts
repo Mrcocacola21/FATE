@@ -110,10 +110,14 @@ function reachedOpportunities(
     .filter((opportunity) => opportunity.targetUnitIds.length > 0);
 }
 
-function moveUnit(state: GameState, unitId: string, to: Coord, events: GameEvent[]): GameState {
+function moveUnit(state: GameState, unitId: string, to: Coord, events: GameEvent[], phase: "pickup" | "travel" | "drop" = "travel"): GameState {
   const unit = state.units[unitId];
   if (!unit?.isAlive || !unit.position || coordsEqual(unit.position, to)) return state;
-  events.push(evUnitMoved(state, { unitId, from: unit.position, to, provenance: { kind: state.pendingReactionMovement?.source === "tralala" ? "tralala" : "rider" } }));
+  const movement = state.pendingReactionMovement;
+  events.push(evUnitMoved(state, { unitId, from: unit.position, to,
+    provenance: movement?.source === "tralala"
+      ? { kind: "tralala", role: unitId === movement.controllerUnitId ? "carrier" : "passenger", phase, stepIndex: movement.stepIndex }
+      : { kind: "rider" } }));
   return { ...state, units: { ...state.units, [unitId]: { ...unit, position: { ...to } } } };
 }
 
@@ -121,6 +125,7 @@ function finishMovement(
   state: GameState,
   movement: PendingReactionMovement,
   events: GameEvent[],
+  rng: RNG,
 ): ApplyResult {
   const target = movement.targetUnitId ? state.units[movement.targetUnitId] : undefined;
   if (
@@ -144,7 +149,11 @@ function finishMovement(
         return { state: requested.state, events: [...events, ...requested.events] };
       }
     } else {
-      state = moveUnit(state, target.id, drop, events);
+      state = moveUnit(state, target.id, drop, events, "drop");
+      // A completed drop is a landing, not another interrupted transit step.
+      const landing = applyStakeTriggerIfAny(state, state.units[target.id], drop, rng, { entryKind: "landing" });
+      state = landing.state;
+      events.push(...landing.events);
       events.push({
         type: "riverTraLaLaResolved",
         [EVENT_VISIBILITY]: intersectVisibility(
@@ -159,7 +168,17 @@ function finishMovement(
       });
     }
   }
+  appendReactionMovementEnded(state, movement, events, events.some(e => e.type === "riverTraLaLaResolved") ? "completed" : "cancelled");
   return { state: { ...state, pendingReactionMovement: null }, events };
+}
+
+export function appendReactionMovementEnded(state: GameState, movement: PendingReactionMovement, events: GameEvent[], reason: "completed" | "cancelled") {
+  if (movement.source !== "tralala") return;
+  const controller = state.units[movement.controllerUnitId];
+  events.push({ type: "reactionMovementEnded", source: movement.source, controllerUnitId: movement.controllerUnitId, reason,
+    ...getAbilityUseContext(movement),
+    [EVENT_VISIBILITY]: { ...movementVisibility(state, movement.controllerUnitId, controller?.position ?? movement.path[movement.stepIndex]!),
+      abilityRecipients: movement.abilitySourceRecipients ?? [] } });
 }
 
 /** Resume only after every roll, defense, post-hit choice and pre-death choice. */
@@ -177,15 +196,16 @@ export function continueReactionMovement(state: GameState, rng: RNG): ApplyResul
     const controller = state.units[movement.controllerUnitId];
     const target = movement.targetUnitId ? state.units[movement.targetUnitId] : undefined;
     if (target && (!target.isAlive || target.hp <= 0 || target.sansPendingDeath)) {
+      appendReactionMovementEnded(state, movement, events, "cancelled");
       return { state: { ...state, pendingReactionMovement: null }, events };
     }
     if (!controller?.isAlive || controller.hp <= 0 || controller.sansPendingDeath) {
-      return finishMovement(state, movement, events);
+      return finishMovement(state, movement, events, rng);
     }
     if (!movement.stepReached) {
       const cell = movement.path[movement.stepIndex]!;
       state = moveUnit(state, controller.id, cell, events);
-      if (target) state = moveUnit(state, target.id, cell, events);
+      if (target) state = moveUnit(state, target.id, cell, events, movement.stepIndex === 0 ? "pickup" : "travel");
       let stopped = false;
       if (movement.stepIndex > 0) {
         for (const moverId of [controller.id, ...(target ? [target.id] : [])]) {
@@ -222,9 +242,10 @@ export function continueReactionMovement(state: GameState, rng: RNG): ApplyResul
       if (Object.values(state.units).some((unit) => !!unit.sansPendingDeath))
         return { state, events };
       if (target && (!state.units[target.id].isAlive || state.units[target.id].hp <= 0)) {
+        appendReactionMovementEnded(state, movement, events, "cancelled");
         return { state: { ...state, pendingReactionMovement: null }, events };
       }
-      if (!state.units[controller.id].isAlive) return finishMovement(state, movement, events);
+      if (!state.units[controller.id].isAlive) return finishMovement(state, movement, events, rng);
       const opportunities = reachedOpportunities(state, movement);
       movement = {
         ...movement,
@@ -271,7 +292,7 @@ export function continueReactionMovement(state: GameState, rng: RNG): ApplyResul
       return { state: requested.state, events: [...events, ...requested.events] };
     }
     if (movement.stopped || movement.stepIndex >= movement.path.length - 1)
-      return finishMovement(state, movement, events);
+      return finishMovement(state, movement, events, rng);
     if (
       movement.touchedReactorIds.length > 0 &&
       !events.some((event) => event.type === "reactionMovementResumed")
@@ -353,6 +374,7 @@ export function resolveReactionChoice(
 export function resolveReactionDropChoice(
   state: GameState,
   choice: ResolveRollChoice | undefined,
+  rng: RNG,
 ): ApplyResult {
   const movement = state.pendingReactionMovement;
   if (
@@ -369,5 +391,6 @@ export function resolveReactionDropChoice(
     clearPendingRoll(state),
     { ...movement, dropDestination: choice.position },
     [],
+    rng,
   );
 }

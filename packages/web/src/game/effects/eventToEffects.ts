@@ -404,20 +404,8 @@ export function effectsFromGameEvent(
     case "riverBoatmanGranted":
       return unitFlash(event.riverId, "buff", context);
     case "riverBoatResolved":
-      return [
-        ...unitFlash(event.riverId, "buff", context, 550),
-        ...unitFlash(event.passengerId, "buff", context, 550),
-      ];
     case "riverTraLaLaResolved":
-      return [
-        ...unitFlash(event.riverId, "buff", context, 550),
-        ...unitFlash(event.targetId, "debuff", context, 700),
-        ...(Array.isArray(event.touchedAttackerIds)
-          ? event.touchedAttackerIds.flatMap((attackerId) =>
-              unitFlash(attackerId, "buff", context, 500),
-            )
-          : []),
-      ];
+      return []; // Confirmed stages own transport; completion never replays it.
     case "berserkerDefenseChosen": {
       const coord = visibleUnitCoord(event.defenderId, context.view, context.previousPositions);
       return [

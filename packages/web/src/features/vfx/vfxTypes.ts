@@ -19,6 +19,8 @@ export type VfxEffectId =
   | "transformation"
   | "stageSpark"
   | "boat"
+  | "boatPickup"
+  | "boatDrop"
   | "tralala"
   | "muzzle"
   | "snareExplosion"

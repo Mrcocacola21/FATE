@@ -1,5 +1,5 @@
 import type { ProjectedGameEvent, PlayerView } from "rules";
-import { ABILITY_KAISER_CARPET_STRIKE, ABILITY_VLAD_INTIMIDATE } from "../../rulesHints";
+import { ABILITY_KAISER_CARPET_STRIKE, ABILITY_VLAD_INTIMIDATE, ABILITY_RIVER_PERSON_BOAT } from "../../rulesHints";
 import { heroAoeEffect, heroCueId } from "../../game/effects/heroPresentation";
 import { GASTER_TIMING, isGasterResolution } from "../../game/effects/sansPresentation";
 import { FIREBALL_TIMING, isFireballResolution } from "../../game/effects/asgorePresentation";
@@ -15,6 +15,8 @@ import type { SoundKey } from "../../assets/sfx/registry";
 import type { PresentationEvent } from "../../game/effects/types";
 import { isPresentedRoll, type CombatPresentationCue } from "../../game/effects/combatPlayback";
 import type { SfxEvent, SfxLookup, SfxPlaybackRequest } from "./sfxTypes";
+import { riverStage, riverMovementCue, type TransportPresentationCue } from "../../game/effects/riverPresentation";
+import { confirmedMovement } from "../../game/effects/movementPresentation";
 
 function heroLookup(
   heroId: HeroId,
@@ -146,8 +148,32 @@ export function mapEventBatchToSfx(params: {
   eventDelaysMs?: readonly number[];
   eventSfxDelaysMs?: readonly number[];
   combatCues?: readonly CombatPresentationCue[];
+  transportCues?: readonly TransportPresentationCue[];
 }): SfxPlaybackRequest[] {
   const requests: SfxPlaybackRequest[] = [];
+  // Bounded one-shots end at the reached segment. No loop/timer survives a pause.
+  const riverCues = params.transportCues ?? params.events.flatMap((event, eventIndex) => {
+    const stage = riverStage(event);
+    const movement = confirmedMovement(event);
+    const transport = stage ? { ...stage, atMs: params.eventDelaysMs?.[eventIndex] ?? 0 }
+      : movement ? riverMovementCue(event, { ...movement, kind: "movement", id: "fallback", eventIndex,
+          atMs: params.eventDelaysMs?.[eventIndex] ?? 0, durationMs: 160 }) : null;
+    return transport && "abilityUseId" in event && event.abilityUseId ? [{ ...transport, eventIndex, abilityUseId: event.abilityUseId,
+      id: `${params.streamId ?? params.presentationId ?? "live"}:${event.eventId ?? eventIndex}:transport` }] : [];
+  });
+  for (const cue of riverCues) {
+    if (!params.events[cue.eventIndex]?.eventId) continue;
+    const key: SoundKey | undefined = cue.kind === "travel" ? "hero.riverPerson.abilities.riverBoat.move"
+      : cue.kind === "pickup" ? "hero.riverPerson.abilities.riverBoat.pickup"
+      : cue.kind === "activation" ? "hero.riverPerson.phantasms.riverTraLaLa"
+      : cue.kind === "drop" ? "hero.riverPerson.abilities.riverBoat.disembark"
+      : cue.kind === "interrupted" ? "hero.riverPerson.abilities.riverBoat.interrupted" : undefined;
+    if (!key) continue;
+    const id = `${cue.id}:audio:${key}`;
+    const sound = resolveSound(key, id);
+    if (sound) requests.push({ ...sound, id, delayMs: cue.atMs,
+      ...(cue.durationMs > 0 ? { durationMs: cue.durationMs } : {}) });
+  }
   for (const [eventIndex, event] of params.events.entries()) {
     if (!event.eventId) continue;
     const baseDelay =
@@ -190,7 +216,10 @@ export function mapEventBatchToSfx(params: {
       continue;
     }
     let key: SoundKey | undefined;
-    if (event.type === "abilityUsed" && event.abilityUseId && event.abilityId === "asgoreFireball")
+    if (event.type === "abilityUsed" && event.abilityUseId && event.abilityId === ABILITY_RIVER_PERSON_BOAT)
+      key = "hero.riverPerson.abilities.riverBoat.launch";
+    else if (event.type === "riverBoatmanGranted") key = "hero.riverPerson.abilities.riverBoatman";
+    else if (event.type === "abilityUsed" && event.abilityUseId && event.abilityId === "asgoreFireball")
       key = "hero.asgore.abilities.asgoreFireball.cast";
     else if (
       event.type === "abilityUsed" &&
@@ -251,7 +280,7 @@ export function mapEventBatchToSfx(params: {
           : cue.kind === "miss"
             ? "common.combat.miss"
             : cue.kind === "death"
-              ? "common.combat.death"
+              ? params.view.units[cue.unitId]?.heroId === "riverPerson" ? "hero.riverPerson.basic.death" : "common.combat.death"
               : "common.combat.hit";
       const id = `${cue.id}:audio:${key}`;
       const sound = resolveSound(key, id);

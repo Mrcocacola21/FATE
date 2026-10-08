@@ -219,6 +219,8 @@ export function correlateAbilityResult(before: GameState, result: ApplyResult): 
       case "snarePlaced":
         use = findUse(event.sourceUnitId, event.abilityId);
         break;
+      case "riverBoatPickup":
+      case "riverBoatDisembarked":
       case "riverBoatResolved":
       case "riverBoatDisembarkFailed":
       case "riverTraLaLaResolved":
@@ -227,6 +229,7 @@ export function correlateAbilityResult(before: GameState, result: ApplyResult): 
       case "reactionOpportunity":
       case "reactionChoiceResolved":
       case "reactionMovementResumed":
+      case "reactionMovementEnded":
         use =
           getAbilityUseContext(before.pendingReactionMovement) ??
           getAbilityUseContext(state.pendingReactionMovement);

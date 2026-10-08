@@ -1,9 +1,10 @@
-import type { ApplyResult, GameAction, GameState } from "../model";
+import type { ApplyResult, GameAction, GameEvent, GameState } from "../model";
 import type { RNG } from "../rng";
 import { applyUseAbility } from "./abilityActions";
 import { applyAttack } from "./combatActions";
 import { lobbyHandlers } from "./lobbyActions";
 import { applyMove, applyRequestMoveOptions, continueReactionMovement } from "./movementActions";
+import { appendReactionMovementEnded } from "./movementActions/reactions";
 import { applyResolvePendingRoll } from "./pendingRollActions";
 import { applyPlaceUnit } from "./placementActions";
 import { applyEnterStealth, applySearchStealth } from "./stealthActions";
@@ -270,12 +271,16 @@ function applyPostActionPipeline(
   );
   const draggedId = afterRuleAttack.state.pendingReactionMovement?.targetUnitId;
   const dragged = draggedId ? afterRuleAttack.state.units[draggedId] : undefined;
+  const transportEndEvents: GameEvent[] = [];
+  if (dragged && (!dragged.isAlive || dragged.hp <= 0 || dragged.sansPendingDeath)) {
+    appendReactionMovementEnded(afterRuleAttack.state, afterRuleAttack.state.pendingReactionMovement!, transportEndEvents, "cancelled");
+  }
   const movementState = dragged && (!dragged.isAlive || dragged.hp <= 0 || dragged.sansPendingDeath)
     ? { ...afterRuleAttack.state, pendingReactionMovement: null,
         pendingRoll: afterRuleAttack.state.pendingRoll?.kind === "reactionChoice" ? null : afterRuleAttack.state.pendingRoll }
     : afterRuleAttack.state;
   const preDeath = applySansLastAttackFromDeaths(movementState);
-  const preDeathResult = { state: preDeath.state, events: [...afterRuleAttack.events, ...preDeath.events] };
+  const preDeathResult = { state: preDeath.state, events: [...afterRuleAttack.events, ...transportEndEvents, ...preDeath.events] };
   if (preDeath.state.pendingRoll?.kind === "selectLastAttackTarget") return finalizeVisuals(preDeathResult);
   const afterRoundAdvance = hasPendingBattleResolution(preDeathResult.state)
     ? preDeathResult

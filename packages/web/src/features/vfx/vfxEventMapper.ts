@@ -16,6 +16,7 @@ import {
 } from "./vfxGeometry";
 import type { BoardVfxRequest, VfxEffectId, VfxMapperContext } from "./vfxTypes";
 import type { CombatPresentationCue } from "../../game/effects/combatPlayback";
+import { riverStage, riverMovementCue, transportCueVfx, type TransportPresentationCue } from "../../game/effects/riverPresentation";
 import {
   confirmedMovement,
   movementCueVfx,
@@ -104,12 +105,7 @@ function unitOrPreviousRequest(
   ];
 }
 
-function previousOrCurrentUnitCell(view: PlayerView, context: VfxMapperContext, unitId: unknown) {
-  if (typeof unitId === "string" && view.units[unitId] && context.previousPositions[unitId]) {
-    return { ...context.previousPositions[unitId] };
-  }
-  return previousVisibleUnitCoord(view, context.previousPositions, unitId);
-}
+
 
 function previousAbilityUsedForUnit(
   context: VfxMapperContext,
@@ -285,92 +281,15 @@ function mapSearchStealth(
   return effects;
 }
 
-function mapRiverBoat(
-  event: Extract<ProjectedGameEvent, { type: "riverBoatResolved" }>,
-  context: VfxMapperContext,
-): BoardVfxRequest[] {
-  const effects: BoardVfxRequest[] = [];
-  if (!isCoord(event.riverDestination) || !isCoord(event.dropDestination)) return effects;
-  const riverStart = previousOrCurrentUnitCell(context.view, context, event.riverId);
-  const passengerStart = previousOrCurrentUnitCell(context.view, context, event.passengerId);
-  effects.push(...cellRequest(context, event, "boat", riverStart, "river-start"));
-  effects.push(...cellRequest(context, event, "boat", event.riverDestination, "river-end"));
-  effects.push(
-    ...cellRequest(context, event, "boat", passengerStart, "passenger-start", {
-      delayMs: 80,
-      scaleCells: 1.15,
-    }),
-  );
-  effects.push(
-    ...cellRequest(context, event, "boat", event.dropDestination, "passenger-drop", {
-      delayMs: 120,
-      scaleCells: 1.15,
-    }),
-  );
-  if (riverStart) {
-    const path = linePath(riverStart, event.riverDestination) ?? [
-      riverStart,
-      event.riverDestination,
-    ];
-    if (path.length > 1) {
-      effects.push({
-        id: requestId(context, event, "tralala", "river-path"),
-        effectId: "tralala",
-        placement: "path",
-        path,
-        durationMs: 760,
-        opacity: 0.38,
-      });
-    }
-  }
-  return effects;
-}
-
-function mapRiverTraLaLa(
-  event: Extract<ProjectedGameEvent, { type: "riverTraLaLaResolved" }>,
-  context: VfxMapperContext,
-): BoardVfxRequest[] {
-  const effects: BoardVfxRequest[] = [];
-  if (!isCoord(event.riverDestination) || !isCoord(event.dropDestination)) return effects;
-  const riverStart = previousOrCurrentUnitCell(context.view, context, event.riverId);
-  const targetStart = previousOrCurrentUnitCell(context.view, context, event.targetId);
-  effects.push(
-    ...cellRequest(context, event, "portal", targetStart, "target-start", {
-      scaleCells: 1.15,
-    }),
-  );
-  effects.push(
-    ...cellRequest(context, event, "portal", event.dropDestination, "target-drop", {
-      delayMs: 120,
-      scaleCells: 1.15,
-    }),
-  );
-  effects.push(...cellRequest(context, event, "boat", event.riverDestination, "river-end"));
-  if (riverStart) {
-    const path = linePath(riverStart, event.riverDestination) ?? [
-      riverStart,
-      event.riverDestination,
-    ];
-    if (path.length > 1) {
-      effects.push({
-        id: requestId(context, event, "tralala", "path"),
-        effectId: "tralala",
-        placement: "path",
-        path,
-        durationMs: 900,
-      });
-    }
-  }
-  return effects;
-}
-
 function mapUnitMoved(
   event: Extract<ProjectedGameEvent, { type: "unitMoved" }>,
   context: VfxMapperContext,
 ): BoardVfxRequest[] {
   if (!isCoord(event.from) || !isCoord(event.to)) return [];
   if (!previousAbilityUsedForUnit(context, event.unitId, ABILITY_GROZNY_INVADE_TIME)) {
-    return [];
+    const movement = confirmedMovement(event);
+    return movement?.mode === "teleport" ? movementCueVfx({ ...movement, kind: "movement",
+      id: requestId(context, event, "portal"), eventIndex: context.eventIndex, atMs: 0, durationMs: 220 }) : [];
   }
   return [
     {
@@ -401,6 +320,13 @@ export function mapGameEventToVfx(
   event: ProjectedGameEvent,
   context: VfxMapperContext,
 ): BoardVfxRequest[] {
+  const stage = riverStage(event);
+  const movement = confirmedMovement(event);
+  const transport = stage ? { ...stage, atMs: 0 }
+    : movement ? riverMovementCue(event, { ...movement, kind: "movement", id: "preview", eventIndex: context.eventIndex,
+        atMs: 0, durationMs: 160 }) : null;
+  if (transport && "abilityUseId" in event && event.abilityUseId) return transportCueVfx({ ...transport, abilityUseId: event.abilityUseId,
+    eventIndex: context.eventIndex, id: requestId(context, event, "boat", "transport") });
   switch (event.type) {
     case "chargesUpdated": {
       const ready = asgoreReadyAbilities(event, context.view);
@@ -491,9 +417,8 @@ export function mapGameEventToVfx(
           )
         : [];
     case "riverBoatResolved":
-      return mapRiverBoat(event, context);
     case "riverTraLaLaResolved":
-      return mapRiverTraLaLa(event, context);
+      return []; // Completion never reconstructs or replays a route.
     case "unitMoved":
       return mapUnitMoved(event, context);
     case "bunkerEntered":
@@ -531,9 +456,12 @@ export function mapEventBatchToVfx(params: {
   eventDelaysMs?: readonly number[];
   combatCues?: readonly CombatPresentationCue[];
   movementCues?: readonly MovementPresentationCue[];
+  transportCues?: readonly TransportPresentationCue[];
 }): BoardVfxRequest[] {
   const effects: BoardVfxRequest[] = [];
   params.events.forEach((event, eventIndex) => {
+    if (params.transportCues && (riverStage(event) || (event.type === "unitMoved"
+      && (event.provenance.kind === "boat" || event.provenance.kind === "tralala")))) return;
     if (isFireballResolution(event)) {
       const impactMs =
         params.combatCues?.find(
@@ -566,6 +494,7 @@ export function mapEventBatchToVfx(params: {
       })),
     );
   });
+  for (const cue of params.transportCues ?? []) effects.push(...transportCueVfx(cue));
   for (const cue of params.combatCues ?? []) {
     if (cue.kind === "roll" || cue.kind === "heal" || !cue.cell) continue;
     if (params.events[cue.eventIndex]?.type === "sansLastAttackTick") continue;

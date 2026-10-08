@@ -43,7 +43,7 @@ test("VFX preview scenarios use the real event mapper path", () => {
   }
 });
 
-test("VFX preview scenarios exercise cell, unit, area, line, and path geometry", () => {
+test("VFX preview scenarios exercise cell, unit, area, line, and confirmed projectile geometry", () => {
   const view = createVfxPreviewView();
   const previousPositions = visibleUnitPositions(view);
   const placements = new Set<string>();
@@ -57,7 +57,7 @@ test("VFX preview scenarios exercise cell, unit, area, line, and path geometry",
     }).forEach((effect) => placements.add(effect.placement));
   });
 
-  assert.deepEqual([...placements].sort(), ["area", "cell", "line", "path", "unit"]);
+  assert.deepEqual([...placements].sort(), ["area", "cell", "line", "projectile", "unit"]);
 });
 
 test("VFX preview lookup is stable for capture script ids", () => {

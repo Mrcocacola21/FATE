@@ -11,6 +11,40 @@ export interface SoundDefinition {
 
 /** Static URLs keep Vite's asset graph explicit; only this core slice is bundled. */
 export const SOUND_REGISTRY = {
+  "hero.riverPerson.abilities.riverBoat.launch": {
+    sources: [new URL("./heroes/riverPerson/abilities/riverBoatLaunch.wav", import.meta.url).href],
+    category: "gameplay", gain: 0.45, preload: "lazy", maxVoices: 1,
+  },
+  "hero.riverPerson.abilities.riverBoat.pickup": {
+    sources: [new URL("./heroes/riverPerson/abilities/riverBoatPickup.wav", import.meta.url).href],
+    category: "gameplay", gain: 0.45, preload: "lazy", maxVoices: 1,
+  },
+  "hero.riverPerson.abilities.riverBoat.move": {
+    sources: [new URL("./heroes/riverPerson/abilities/riverBoatMove01.wav", import.meta.url).href,
+      new URL("./heroes/riverPerson/abilities/riverBoatMove02.wav", import.meta.url).href,
+      new URL("./heroes/riverPerson/abilities/riverBoatMove03.wav", import.meta.url).href],
+    category: "gameplay", gain: 0.3, preload: "lazy", maxVoices: 1,
+  },
+  "hero.riverPerson.abilities.riverBoat.disembark": {
+    sources: [new URL("./heroes/riverPerson/abilities/riverBoatDisembark.wav", import.meta.url).href],
+    category: "gameplay", gain: 0.45, preload: "lazy", maxVoices: 1,
+  },
+  "hero.riverPerson.abilities.riverBoat.interrupted": {
+    sources: [new URL("./heroes/riverPerson/abilities/riverBoatInterrupted.wav", import.meta.url).href],
+    category: "gameplay", gain: 0.4, preload: "lazy", maxVoices: 1,
+  },
+  "hero.riverPerson.abilities.riverBoatman": {
+    sources: [new URL("./heroes/riverPerson/abilities/riverBoatmanGrant.wav", import.meta.url).href],
+    category: "gameplay", gain: 0.4, preload: "lazy", maxVoices: 1,
+  },
+  "hero.riverPerson.phantasms.riverTraLaLa": {
+    sources: [new URL("./heroes/riverPerson/phantasms/riverTraLaLaActivate.wav", import.meta.url).href],
+    category: "gameplay", gain: 0.5, preload: "lazy", maxVoices: 1,
+  },
+  "hero.riverPerson.basic.death": {
+    sources: [new URL("./heroes/riverPerson/basic/died.wav", import.meta.url).href],
+    category: "gameplay", gain: 0.5, preload: "lazy", maxVoices: 1,
+  },
   "hero.asgore.abilities.asgoreFireball.cast": {
     sources: [new URL("./heroes/asgore/abilities/asgoreFireballCast.wav", import.meta.url).href],
     category: "gameplay",

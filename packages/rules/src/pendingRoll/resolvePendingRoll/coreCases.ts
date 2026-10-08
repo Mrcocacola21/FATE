@@ -88,7 +88,7 @@ export function resolveCorePendingRollCase(
     case "reactionChoice":
       return resolveReactionChoice(state, pending, action.choice);
     case "reactionDropChoice":
-      return resolveReactionDropChoice(state, action.choice);
+      return resolveReactionDropChoice(state, action.choice, rng);
     case "initiativeRoll":
       return resolveInitiativeRoll(state, pending, rng);
     case "ruleDeclarationChoice":

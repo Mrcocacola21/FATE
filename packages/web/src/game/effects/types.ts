@@ -96,6 +96,7 @@ export interface BoardEventBatch {
   /** One web-only semantic schedule shared by audio, sprites, HP and text. */
   combatCues?: import("./combatPlayback").CombatPresentationCue[];
   movementCues?: import("./movementPresentation").MovementPresentationCue[];
+  transportCues?: import("./riverPresentation").TransportPresentationCue[];
   /** Shared wall-clock origin assigned when this plan starts, never at ingress. */
   playbackStartedAt?: number;
 }
