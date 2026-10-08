@@ -14,6 +14,7 @@ const MAX_CUES = 512;
 export class SfxPlaybackSession {
   private readonly consumed = new Set<string>();
   private readonly timers = new Set<ReturnType<typeof setTimeout>>();
+  private currentView?: PlayerView;
   constructor(
     private readonly player: Pick<
       SfxPlayer,
@@ -22,6 +23,7 @@ export class SfxPlaybackSession {
   ) {}
 
   schedule(batch: BoardEventBatch, view: PlayerView): void {
+    this.updateView(view);
     if (
       batch.previewId ||
       !batch.streamId ||
@@ -41,6 +43,8 @@ export class SfxPlaybackSession {
           !presentationBatchIsCurrent(batch) ||
           Date.now() > scheduledAt + MAX_PRESENTATION_AGE_MS
         )
+          return;
+        if (cue.authorizedUnitId && !this.currentView?.units[cue.authorizedUnitId]?.position)
           return;
         if (cue.durationMs !== undefined) {
           const remainingMs = scheduledAt + cue.durationMs - Date.now();
@@ -67,10 +71,14 @@ export class SfxPlaybackSession {
       this.consumed.delete(id);
     }
   }
+  updateView(view: PlayerView): void {
+    this.currentView = view;
+  }
   reset(): void {
     for (const timer of this.timers) clearTimeout(timer);
     this.timers.clear();
     this.consumed.clear();
+    this.currentView = undefined;
     this.player.stopGameplay();
   }
 }

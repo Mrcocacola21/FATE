@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { makeEmptyTurnEconomy, type ProjectedGameEvent, type PlayerView, type UnitState } from "rules";
+import {
+  makeEmptyTurnEconomy,
+  type ProjectedGameEvent,
+  type PlayerView,
+  type UnitState,
+} from "rules";
 import { mapEventBatchToVfx } from "./vfxEventMapper";
 
 function unit(id: string, position: UnitState["position"]): UnitState {
@@ -63,7 +68,7 @@ test("public AoE ability events map to area VFX using affected radius geometry",
   assert.equal(effects[0]?.cells?.length, 25);
 });
 
-test("Covering Tracks maps to a small explosion on the selected snare cell", () => {
+test("Covering Tracks maps one composite to the confirmed three-by-three snare area", () => {
   const effects = map(
     [
       {
@@ -80,10 +85,11 @@ test("Covering Tracks maps to a small explosion on the selected snare cell", () 
     view([unit("jack", { col: 8, row: 8 })]),
   );
   assert.equal(effects.length, 1);
-  assert.equal(effects[0]?.effectId, "snareExplosion");
-  assert.equal(effects[0]?.placement, "cell");
+  assert.equal(effects[0]?.effectId, "jackCoverTracks");
+  assert.equal(effects[0]?.placement, "area");
   assert.deepEqual(effects[0]?.sourceCell, { col: 4, row: 4 });
-  assert.equal(effects[0]?.scaleCells, 0.9);
+  assert.equal(effects[0]?.widthCells, 3);
+  assert.equal(effects[0]?.cells?.length, 9);
 });
 
 test("private mark VFX only plays when projected event and target coordinate are visible", () => {
@@ -100,7 +106,7 @@ test("private mark VFX only plays when projected event and target coordinate are
     ],
     view([unit("chikatilo", { col: 1, row: 1 }), unit("target", { col: 3, row: 3 })]),
   );
-  assert.equal(visible[0]?.effectId, "markApply");
+  assert.equal(visible[0]?.effectId, "chikatiloMark");
   assert.deepEqual(visible[0]?.sourceCell, { col: 3, row: 3 });
 
   const redacted = map([{ type: "chikatiloMarkApplied" } as ProjectedGameEvent], view([]));
@@ -166,8 +172,20 @@ test("completion cannot reconstruct transport; confirmed transport and phantasm 
     { river: { col: 1, row: 1 }, ally: { col: 2, row: 1 } },
   );
   assert.deepEqual(transport, []);
-  const reached = map([{ type: "unitMoved", unitId: "river", from: { col: 1, row: 1 }, to: { col: 3, row: 3 },
-    abilityUseId: "boat-use", abilityId: "riverBoat", provenance: { kind: "boat", role: "carrier", phase: "travel", stepIndex: 0 } }], view([]));
+  const reached = map(
+    [
+      {
+        type: "unitMoved",
+        unitId: "river",
+        from: { col: 1, row: 1 },
+        to: { col: 3, row: 3 },
+        abilityUseId: "boat-use",
+        abilityId: "riverBoat",
+        provenance: { kind: "boat", role: "carrier", phase: "travel", stepIndex: 0 },
+      },
+    ],
+    view([]),
+  );
   assert.equal(reached.length, 1);
   assert.equal(reached[0].effectId, "boat");
   assert.equal(reached[0].placement, "projectile");
@@ -175,7 +193,13 @@ test("completion cannot reconstruct transport; confirmed transport and phantasm 
 
   const phantasm = map(
     [
-      { type: "abilityUsed", unitId: "grozny", abilityId: "groznyInvadeTime" },
+      {
+        type: "abilityUsed",
+        unitId: "grozny",
+        abilityId: "groznyInvadeTime",
+        abilityUseId: "grozny-use",
+        sourceCell: { col: 1, row: 1 },
+      },
       {
         type: "unitMoved",
         provenance: { kind: "teleport" },
@@ -186,20 +210,27 @@ test("completion cannot reconstruct transport; confirmed transport and phantasm 
     ],
     view([unit("grozny", { col: 6, row: 6 })]),
   );
-  assert.ok(phantasm.some((effect) => effect.effectId === "phantasm"));
-  assert.ok(phantasm.some((effect) => effect.effectId === "phantasmTrace"));
+  assert.ok(phantasm.some((effect) => effect.effectId === "groznyInvade"));
+  assert.ok(phantasm.some((effect) => effect.effectId === "portal"));
+  assert.ok(!phantasm.some((effect) => effect.placement === "line"));
 });
 
 test("redacted movement events do not create exact-cell phantasm traces", () => {
   const effects = map(
     [
-      { type: "abilityUsed", unitId: "grozny", abilityId: "groznyInvadeTime" },
+      {
+        type: "abilityUsed",
+        unitId: "grozny",
+        abilityId: "groznyInvadeTime",
+        abilityUseId: "grozny-use",
+        sourceCell: { col: 1, row: 1 },
+      },
       { type: "unitMoved", unitId: "grozny" } as ProjectedGameEvent,
     ],
     view([unit("grozny", { col: 6, row: 6 })]),
   );
 
-  assert.ok(effects.some((effect) => effect.effectId === "phantasm"));
+  assert.ok(effects.some((effect) => effect.effectId === "groznyInvade"));
   assert.ok(!effects.some((effect) => effect.effectId === "phantasmTrace"));
   assert.ok(!effects.some((effect) => effect.placement === "line"));
 });
@@ -207,7 +238,14 @@ test("redacted movement events do not create exact-cell phantasm traces", () => 
 test("storm, transformation, chicken, muzzle, and shield events map to unit-safe VFX", () => {
   const effects = map(
     [
-      { type: "lechyStormRollResult", unitId: "target", roll: 1, success: false, damage: 1, hpAfter: 2 },
+      {
+        type: "lechyStormRollResult",
+        unitId: "target",
+        roll: 1,
+        success: false,
+        damage: 1,
+        hpAfter: 2,
+      },
       {
         type: "unitTransformed",
         unitId: "griffith",
@@ -216,7 +254,13 @@ test("storm, transformation, chicken, muzzle, and shield events map to unit-safe
         reason: "griffithFemtoRebirth",
       },
       { type: "lokiChickenApplied", lokiId: "loki", targetId: "target", abilityId: "lokiLaught" },
-      { type: "abilityUsed", unitId: "guts", abilityId: "gutsCannon" },
+      {
+        type: "abilityUsed",
+        unitId: "guts",
+        abilityId: "gutsCannon",
+        abilityUseId: "cannon-use",
+        sourceCell: { col: 1, row: 1 },
+      },
       { type: "berserkerDefenseChosen", defenderId: "target", choice: "auto" },
     ] as ProjectedGameEvent[],
     view([
@@ -228,8 +272,8 @@ test("storm, transformation, chicken, muzzle, and shield events map to unit-safe
   );
 
   assert.ok(effects.some((effect) => effect.effectId === "storm"));
-  assert.ok(effects.some((effect) => effect.effectId === "transformation"));
-  assert.ok(effects.some((effect) => effect.effectId === "chicken"));
+  assert.ok(effects.some((effect) => effect.effectId === "griffithRebirth"));
+  assert.ok(effects.some((effect) => effect.effectId === "lokiChicken"));
   assert.ok(effects.some((effect) => effect.effectId === "muzzle"));
   assert.ok(effects.some((effect) => effect.effectId === "shield"));
 });

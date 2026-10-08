@@ -1,8 +1,40 @@
 import type { Coord, ProjectedGameEvent, PlayerView, PlayerId, UnitClass, UnitState } from "rules";
 import type { BoardVfxRequest, VfxEffectId } from "./vfxTypes";
 import { vfxRegistry } from "./vfxRegistry";
+import {
+  REMAINING_CASTS,
+  REMAINING_AREAS,
+  REMAINING_HIT_ACCENTS,
+} from "../../game/effects/remainingHeroPresentation";
 
 export const CORE_VFX_PREVIEW_IDS: VfxEffectId[] = [
+  ...new Set([
+    ...Object.values(REMAINING_CASTS).map((cue) => cue.vfx),
+    ...Object.values(REMAINING_AREAS).map((cue) => cue.vfx),
+    ...Object.values(REMAINING_HIT_ACCENTS),
+    "chikatiloMark",
+    "papyrusBones",
+    "papyrusUnbeliever",
+    "sansUnbeliever",
+    "sansField",
+    "lechyStorm",
+    "friskHugs",
+    "friskHeal",
+    "lokiChicken",
+    "lokiControl",
+    "griffithRebirth",
+    "mettatonEx",
+    "mettatonNeo",
+    "falseTrailSetup",
+    // Older generic aliases remain inspectable for compatibility.
+    "markApply",
+    "transformation",
+    "stageSpark",
+    "chicken",
+    "phantasm",
+    "phantasmTrace",
+    "snareExplosion",
+  ] as VfxEffectId[]),
   "stakePlace",
   "stakeTrigger",
   "snarePlace",
@@ -285,7 +317,7 @@ export const VFX_PREVIEW_SCENARIOS: VfxPreviewScenario[] = [
     id: "chikatilo-mark",
     label: "Chikatilo Mark",
     group: "Status",
-    expectedEffectIds: ["markApply"],
+    expectedEffectIds: ["chikatiloMark"],
     waitMs: 260,
     events: [
       {
@@ -384,7 +416,7 @@ export const VFX_PREVIEW_SCENARIOS: VfxPreviewScenario[] = [
     id: "covering-tracks",
     label: "Covering Tracks snare explosion",
     group: "Area",
-    expectedEffectIds: ["snareExplosion"],
+    expectedEffectIds: ["jackCoverTracks"],
     waitMs: 220,
     events: [
       {
@@ -405,7 +437,7 @@ export const VFX_PREVIEW_SCENARIOS: VfxPreviewScenario[] = [
     id: "griffith-transformation",
     label: "Griffith to Femto",
     group: "Transform",
-    expectedEffectIds: ["transformation"],
+    expectedEffectIds: ["griffithRebirth"],
     waitMs: 260,
     events: [
       {
@@ -421,7 +453,7 @@ export const VFX_PREVIEW_SCENARIOS: VfxPreviewScenario[] = [
     id: "mettaton-stage",
     label: "Mettaton Stage",
     group: "Transform",
-    expectedEffectIds: ["stageSpark"],
+    expectedEffectIds: ["mettatonNeo"],
     waitMs: 220,
     events: [
       {
@@ -438,7 +470,7 @@ export const VFX_PREVIEW_SCENARIOS: VfxPreviewScenario[] = [
     id: "loki-chicken",
     label: "Loki Chicken",
     group: "Smoke",
-    expectedEffectIds: ["chicken"],
+    expectedEffectIds: ["lokiChicken"],
     waitMs: 220,
     events: [
       {
@@ -457,15 +489,26 @@ export const VFX_PREVIEW_SCENARIOS: VfxPreviewScenario[] = [
     waitMs: 260,
     events: [
       {
-        type: "riverBoatPickup", abilityUseId: "preview-boat",
+        type: "riverBoatPickup",
+        abilityUseId: "preview-boat",
         riverId: "preview-river",
         passengerId: "preview-passenger",
-        sourceCell: { col: 4, row: 5 }, passengerCell: { col: 5, row: 5 },
+        sourceCell: { col: 4, row: 5 },
+        passengerCell: { col: 5, row: 5 },
       },
-      { type: "unitMoved", unitId: "preview-river", abilityUseId: "preview-boat",
-        provenance: { kind: "boat", role: "carrier", phase: "travel", stepIndex: 0 }, from: { col: 4, row: 5 }, to: { col: 4, row: 7 } },
       {
-        type: "riverBoatDisembarked", abilityUseId: "preview-boat", riverId: "preview-river", passengerId: "preview-passenger",
+        type: "unitMoved",
+        unitId: "preview-river",
+        abilityUseId: "preview-boat",
+        provenance: { kind: "boat", role: "carrier", phase: "travel", stepIndex: 0 },
+        from: { col: 4, row: 5 },
+        to: { col: 4, row: 7 },
+      },
+      {
+        type: "riverBoatDisembarked",
+        abilityUseId: "preview-boat",
+        riverId: "preview-river",
+        passengerId: "preview-passenger",
         riverDestination: { col: 4, row: 7 },
         dropDestination: { col: 5, row: 7 },
       },
@@ -479,9 +522,12 @@ export const VFX_PREVIEW_SCENARIOS: VfxPreviewScenario[] = [
     waitMs: 280,
     events: [
       {
-        type: "unitMoved", unitId: "preview-river", abilityUseId: "preview-tralala",
+        type: "unitMoved",
+        unitId: "preview-river",
+        abilityUseId: "preview-tralala",
         provenance: { kind: "tralala", role: "carrier", phase: "travel", stepIndex: 1 },
-        from: { col: 4, row: 6 }, to: { col: 4, row: 7 },
+        from: { col: 4, row: 6 },
+        to: { col: 4, row: 7 },
       },
     ],
   },
@@ -493,8 +539,11 @@ export const VFX_PREVIEW_SCENARIOS: VfxPreviewScenario[] = [
     waitMs: 240,
     events: [
       {
-        type: "unitMoved", unitId: "preview-passenger", provenance: { kind: "teleport" },
-        from: { col: 3, row: 7 }, to: { col: 4, row: 7 },
+        type: "unitMoved",
+        unitId: "preview-passenger",
+        provenance: { kind: "teleport" },
+        from: { col: 3, row: 7 },
+        to: { col: 4, row: 7 },
       },
     ],
   },
@@ -502,13 +551,15 @@ export const VFX_PREVIEW_SCENARIOS: VfxPreviewScenario[] = [
     id: "grozny-phantasm",
     label: "Grozny Phantasm",
     group: "Phantasm",
-    expectedEffectIds: ["phantasm"],
+    expectedEffectIds: ["groznyInvade"],
     waitMs: 260,
     events: [
       {
         type: "abilityUsed",
         unitId: "preview-grozny",
         abilityId: "groznyInvadeTime",
+        abilityUseId: "preview-grozny-use",
+        sourceCell: { col: 6, row: 2 },
       },
     ],
   },
@@ -516,13 +567,15 @@ export const VFX_PREVIEW_SCENARIOS: VfxPreviewScenario[] = [
     id: "phantasm-trace",
     label: "Phantasm Trace",
     group: "Phantasm",
-    expectedEffectIds: ["phantasmTrace"],
+    expectedEffectIds: ["portal"],
     waitMs: 260,
     events: [
       {
         type: "abilityUsed",
         unitId: "preview-grozny",
         abilityId: "groznyInvadeTime",
+        abilityUseId: "preview-grozny-use",
+        sourceCell: { col: 6, row: 2 },
       },
       {
         type: "unitMoved",
@@ -539,7 +592,15 @@ export const VFX_PREVIEW_SCENARIOS: VfxPreviewScenario[] = [
     group: "Ranged",
     expectedEffectIds: ["muzzle"],
     waitMs: 180,
-    events: [{ type: "abilityUsed", unitId: "preview-guts", abilityId: "gutsCannon" }],
+    events: [
+      {
+        type: "abilityUsed",
+        unitId: "preview-guts",
+        abilityId: "gutsCannon",
+        abilityUseId: "preview-cannon-use",
+        sourceCell: { col: 2, row: 2 },
+      },
+    ],
   },
   {
     id: "shield",

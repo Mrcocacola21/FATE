@@ -5,6 +5,7 @@ import { visibleUnitPositions } from "./vfxGeometry";
 import { vfxRegistry } from "./vfxRegistry";
 import {
   CORE_VFX_PREVIEW_IDS,
+  createRuntimePreviewRequest,
   createVfxPreviewView,
   previewScenarioById,
   VFX_PREVIEW_SCENARIOS,
@@ -43,10 +44,20 @@ test("VFX preview scenarios use the real event mapper path", () => {
   }
 });
 
-test("VFX preview scenarios exercise cell, unit, area, line, and confirmed projectile geometry", () => {
+test("confirmed event previews and explicit local line preview exercise all supported geometry", () => {
   const view = createVfxPreviewView();
   const previousPositions = visibleUnitPositions(view);
   const placements = new Set<string>();
+  // Teleport is endpoint-only. A line remains available as an explicit local
+  // artwork preview, never reconstructed from an ability log and final move.
+  placements.add(
+    createRuntimePreviewRequest({
+      id: "local-line",
+      effectId: "phantasmTrace",
+      anchor: "center",
+      ray: "target",
+    }).placement,
+  );
 
   VFX_PREVIEW_SCENARIOS.forEach((scenario, index) => {
     mapEventBatchToVfx({

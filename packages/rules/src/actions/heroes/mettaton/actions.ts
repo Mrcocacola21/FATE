@@ -97,7 +97,7 @@ export function applyMettatonPoppins(
     ABILITY_METTATON_POPPINS,
     center,
     affectedUnitIds,
-    { allowFriendlyTarget: true }
+    { allowFriendlyTarget: true, radius: 1 }
   );
 
   return {

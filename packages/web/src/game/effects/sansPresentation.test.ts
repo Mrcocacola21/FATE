@@ -45,7 +45,7 @@ import { EVENT_VISIBILITY } from "../../../../rules/src/model/events/visibility"
 import { projectEventsForRecipient as projectSourceEvents } from "../../../../rules/src/view/events";
 import { preloadSansSounds } from "../../features/sfx/audioPreload";
 
-test("projected Sans pack can warm all five lazy sound keys without playing them", async () => {
+test("projected Sans pack can warm all seven lazy sound keys without playing them", async () => {
   const keys: string[] = [];
   await preloadSansSounds({
     preload: async (key) => {
@@ -55,6 +55,8 @@ test("projected Sans pack can warm all five lazy sound keys without playing them
   assert.deepEqual(
     keys.sort(),
     [
+      "hero.sans.abilities.sansBadassJoke",
+      "hero.sans.abilities.sansBoneField",
       "hero.sans.abilities.sansGasterBlaster.charge",
       "hero.sans.abilities.sansGasterBlaster.fire",
       "hero.sans.abilities.sansLastAttack.apply",

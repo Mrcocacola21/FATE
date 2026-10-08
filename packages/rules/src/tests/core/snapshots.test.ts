@@ -115,6 +115,7 @@ export function testGoldenSnapshotAoeWithIntimidateChain() {
           unitId: "P1-trickster-3",
           abilityId: "tricksterAoE",
           abilityUseId: "ability-use-1",
+          sourceCell: { col: 4, row: 4 },
         },
         {
           type: "rollRequested",

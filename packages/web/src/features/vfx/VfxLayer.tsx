@@ -20,6 +20,9 @@ interface VfxLayerProps {
 }
 
 export function vfxAnchor(view: PlayerView, effect: QueuedBoardVfxRequest): Coord | null {
+  // Unit-attached cues lose authorization when the recipient no longer has a
+  // current position. Explicit historical cell geometry has no unit attachment.
+  if (effect.unitId && !view.units[effect.unitId]?.position) return null;
   if (effect.anchorMode === "followUnit") {
     return effect.unitId ? (view.units[effect.unitId]?.position ?? null) : null;
   }

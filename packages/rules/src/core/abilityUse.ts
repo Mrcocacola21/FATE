@@ -4,6 +4,9 @@ import { EVENT_VISIBILITY, movementVisibility } from "../model/events/visibility
 export function commitAbilityUse(state: GameState, unitId: string, abilityId: string) {
   const counter = (state.abilityUseCounter ?? 0) + 1;
   const unit = state.units[unitId];
+  const privateCommit = ["hassanAssasinOrder", "hassanTrueEnemy", "chikatiloAssassinMark"].includes(
+    abilityId,
+  );
   const use: AbilityUseContext = {
     abilityId,
     abilityUseId: `ability-use-${counter}`,
@@ -11,7 +14,9 @@ export function commitAbilityUse(state: GameState, unitId: string, abilityId: st
     ...(unit?.position
       ? {
           abilitySourceCell: { ...unit.position },
-          abilitySourceRecipients: movementVisibility(state, unitId, unit.position).recipients,
+          abilitySourceRecipients: privateCommit
+            ? [unit.owner]
+            : movementVisibility(state, unitId, unit.position).recipients,
         }
       : { abilitySourceRecipients: unit ? [unit.owner] : [] }),
   };
@@ -76,10 +81,27 @@ export function correlateAbilityResult(before: GameState, result: ApplyResult): 
         abilityId: event.abilityId,
         abilityUseId: event.abilityUseId,
         abilitySourceUnitId: event.unitId,
-        abilitySourceCell: unit?.position ? { ...unit.position } : undefined,
+        abilitySourceCell: event.sourceCell
+          ? { ...event.sourceCell }
+          : unit?.position
+            ? { ...unit.position }
+            : undefined,
         abilitySourceRecipients: event[EVENT_VISIBILITY]?.abilityRecipients,
       });
-      return event;
+      const cell = event.sourceCell ?? unit?.position;
+      return cell
+        ? {
+            ...event,
+            sourceCell: { ...cell },
+            [EVENT_VISIBILITY]: {
+              ...(event[EVENT_VISIBILITY] ?? { recipients: [] }),
+              sourceCellRecipients:
+                event[EVENT_VISIBILITY]?.sourceCellRecipients ??
+                event[EVENT_VISIBILITY]?.abilityRecipients ??
+                [],
+            },
+          }
+        : event;
     }
     // In these handlers costs have already committed. Allocate exactly once.
     const committed = commitAbilityUse(
@@ -93,9 +115,11 @@ export function correlateAbilityResult(before: GameState, result: ApplyResult): 
     return {
       ...event,
       abilityUseId: committed.use.abilityUseId,
+      ...(committed.use.abilitySourceCell ? { sourceCell: committed.use.abilitySourceCell } : {}),
       [EVENT_VISIBILITY]: {
         recipients: committed.use.abilitySourceRecipients ?? [],
         abilityRecipients: committed.use.abilitySourceRecipients,
+        sourceCellRecipients: committed.use.abilitySourceRecipients,
       },
     };
   });
@@ -199,6 +223,19 @@ export function correlateAbilityResult(before: GameState, result: ApplyResult): 
       case "aoeResolved":
         use = findUse(event.sourceUnitId, event.abilityId);
         break;
+      case "unitDied": {
+        // Direct aggregate damage can emit death before its final summary.
+        // Preserve that resolution's identity for presentation ordering.
+        const aggregate = events.find(
+          (candidate) =>
+            candidate.type === "aoeResolved" &&
+            candidate.sourceUnitId === event.killerId &&
+            (candidate.damageByUnitId?.[event.unitId] ?? 0) > 0,
+        );
+        if (aggregate?.type === "aoeResolved")
+          use = findUse(aggregate.sourceUnitId, aggregate.abilityId);
+        break;
+      }
       case "rollResolved":
         use = incoming ?? findUse(event.unitId);
         break;

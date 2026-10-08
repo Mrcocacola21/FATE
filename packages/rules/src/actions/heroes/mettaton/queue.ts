@@ -12,7 +12,8 @@ export function requestMettatonQueuedAttacks(
     allowFriendlyTarget?: boolean;
     damageOverride?: number;
     ignoreBonuses?: boolean;
-  }
+    radius?: number;
+  },
 ): ApplyResult {
   if (affectedUnitIds.length === 0) {
     return {
@@ -23,7 +24,7 @@ export function requestMettatonQueuedAttacks(
           abilityId,
           casterId: caster.id,
           center,
-          radius: 0,
+          radius: options?.radius ?? 0,
           affectedUnitIds: [],
           revealedUnitIds: [],
           damagedUnitIds: [],
@@ -40,7 +41,7 @@ export function requestMettatonQueuedAttacks(
       casterId: caster.id,
       abilityId,
       center,
-      radius: 0,
+      radius: options?.radius ?? 0,
       affectedUnitIds,
       revealedUnitIds: [],
       damagedUnitIds: [],
@@ -65,7 +66,7 @@ export function requestMettatonQueuedAttacks(
     caster.owner,
     "tricksterAoE_attackerRoll",
     ctx,
-    caster.id
+    caster.id,
   );
   return { state: requested.state, events: requested.events };
 }

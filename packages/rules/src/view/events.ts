@@ -95,6 +95,12 @@ function projectEventForRecipient(
     case "abilityUsed": {
       const owner = unitOwner(state, event.unitId);
       if (recipient !== "spectator" && owner === recipient) return [event];
+      // A visible caster does not make a private selection/mark public. Also
+      // suppress its occurrence, timing and audio signature on other clients.
+      if (
+        ["hassanAssasinOrder", "hassanTrueEnemy", "chikatiloAssassinMark"].includes(event.abilityId)
+      )
+        return [];
       return isUnitVisibleToRecipient(state, event.unitId, recipient) ? [event] : [redactedEvent()];
     }
     case "chikatiloMarkApplied":

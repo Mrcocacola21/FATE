@@ -113,7 +113,7 @@ export function commitAbilityCost(
     options?.emitAbilityUsedEvent === false
       ? []
       : [evAbilityUsed({ unitId: updatedUnit.id, abilityId: spec.id, abilityUseId: committedUse.use.abilityUseId,
-          sourceCell: spec.id.startsWith("asgore") ? committedUse.use.abilitySourceCell : undefined,
+          sourceCell: committedUse.use.abilitySourceCell,
           recipients: committedUse.use.abilitySourceRecipients })];
 
   return {

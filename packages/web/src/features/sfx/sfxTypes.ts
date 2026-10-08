@@ -25,6 +25,8 @@ export interface SoundCue extends SoundDefinition {
   key: SoundKey;
   src: string;
   delayMs?: number;
+  /** Unit-attached status cues stop when the current projection loses the unit. */
+  authorizedUnitId?: string;
   /** Bound a finite travel cue to its presentation segment, even if the WAV is longer. */
   durationMs?: number;
 }

@@ -200,7 +200,7 @@ test("hit/death audio aligns with shared impact/death phases in normal and reduc
       reducedMotion,
     });
     const requests = mapEventBatchToSfx({ ...plan.batch, view: view() });
-    const impact = plan.batch.combatCues!.find(cue => cue.kind === "hit")!;
+    const impact = plan.batch.combatCues!.find((cue) => cue.kind === "hit")!;
     const hp = plan.queue.find((item) => item.type === "damageHpTween")!;
     const death = plan.queue.find((item) => item.type === "death")!;
     assert.equal(requests[0].delayMs, impact.atMs);
@@ -225,5 +225,8 @@ test("private snare projection and redacted notices cannot produce audio or trig
   }
   assert.equal(projectEventsForRecipient(state, [placement], "P1").length, 1);
   assert.deepEqual(cues([{ type: "eventRedacted", eventId: "private-notice" }]), []);
-  assert.deepEqual(cues([{ ...placement, eventId: "private-owner" }]), []);
+  assert.deepEqual(
+    cues([{ ...placement, eventId: "private-owner" }]).map((cue) => cue.key),
+    ["hero.jackRipper.abilities.jackRipperSnares.place"],
+  );
 });

@@ -1,12 +1,15 @@
 import type { ProjectedGameEvent, PlayerView } from "rules";
 import { ABILITY_VLAD_INTIMIDATE } from "../../rulesHints";
 import { heroAoeEffect, heroCueId } from "../../game/effects/heroPresentation";
-import { GASTER_TIMING, isGasterResolution } from "../../game/effects/sansPresentation";
 import {
-  FIREBALL_TIMING,
-  isFireballResolution,
-  asgoreReadyAbilities,
-} from "../../game/effects/asgorePresentation";
+  REMAINING_CASTS,
+  REMAINING_AREAS,
+  remainingStatusSignature,
+  chargeReadyAbilities,
+  remainingHitAccent,
+} from "../../game/effects/remainingHeroPresentation";
+import { GASTER_TIMING, isGasterResolution } from "../../game/effects/sansPresentation";
+import { FIREBALL_TIMING, isFireballResolution } from "../../game/effects/asgorePresentation";
 import {
   isCoord,
   linePath,
@@ -16,19 +19,19 @@ import {
 } from "./vfxGeometry";
 import type { BoardVfxRequest, VfxEffectId, VfxMapperContext } from "./vfxTypes";
 import type { CombatPresentationCue } from "../../game/effects/combatPlayback";
-import { riverStage, riverMovementCue, transportCueVfx, type TransportPresentationCue } from "../../game/effects/riverPresentation";
+import {
+  riverStage,
+  riverMovementCue,
+  transportCueVfx,
+  type TransportPresentationCue,
+} from "../../game/effects/riverPresentation";
 import {
   confirmedMovement,
   movementCueVfx,
   type MovementPresentationCue,
 } from "../../game/effects/movementPresentation";
 
-const ABILITY_CHIKATILO_ASSASSIN_MARK = "chikatiloAssassinMark";
-const ABILITY_GUTS_ARBALET = "gutsArbalet";
-const ABILITY_GUTS_CANNON = "gutsCannon";
 const ABILITY_GUTS_BERSERK_MODE = "gutsBerserkMode";
-const ABILITY_GROZNY_INVADE_TIME = "groznyInvadeTime";
-const ABILITY_JACK_COVERING_TRACKS = "jackRipperCoveringTracks";
 
 function requestId(
   context: VfxMapperContext,
@@ -105,25 +108,28 @@ function unitOrPreviousRequest(
   ];
 }
 
-
-
-function previousAbilityUsedForUnit(
-  context: VfxMapperContext,
-  unitId: string,
-  abilityId: string,
-): boolean {
-  return context.events
-    .slice(0, context.eventIndex)
-    .some(
-      (event) =>
-        event.type === "abilityUsed" && event.unitId === unitId && event.abilityId === abilityId,
-    );
-}
-
 function mapAbilityUsed(
   event: Extract<ProjectedGameEvent, { type: "abilityUsed" }>,
   context: VfxMapperContext,
 ): BoardVfxRequest[] {
+  const signature = REMAINING_CASTS[event.abilityId];
+  if (signature && event.abilityUseId)
+    return cellRequest(
+      context,
+      event,
+      signature.vfx,
+      isCoord(event.sourceCell) ? event.sourceCell : null,
+      undefined,
+      {
+        id: heroCueId(
+          context.streamId ?? context.presentationId ?? context.revision,
+          event,
+          "cast",
+        ),
+        anchorMode: "event",
+        scaleCells: 1,
+      },
+    );
   if (event.abilityId === "asgoreFireball" && event.abilityUseId)
     return cellRequest(
       context,
@@ -140,18 +146,6 @@ function mapAbilityUsed(
         ),
       },
     );
-  if (event.abilityId === ABILITY_GUTS_ARBALET || event.abilityId === ABILITY_GUTS_CANNON) {
-    return unitRequest(context, event, "muzzle", event.unitId);
-  }
-  if (event.abilityId === ABILITY_GROZNY_INVADE_TIME) {
-    return unitRequest(context, event, "phantasm", event.unitId, "source");
-  }
-  if (event.abilityId === ABILITY_CHIKATILO_ASSASSIN_MARK) {
-    return unitRequest(context, event, "markApply", event.unitId, "source", {
-      scaleCells: 1.2,
-      opacity: 0.45,
-    });
-  }
   return [];
 }
 
@@ -185,11 +179,56 @@ function fireballRequests(
   return requests;
 }
 
+function remainingHitRequests(
+  event: ProjectedGameEvent,
+  context: VfxMapperContext,
+): BoardVfxRequest[] {
+  const effectId = remainingHitAccent(event);
+  if (!effectId || event.type !== "attackResolved") return [];
+  return cellRequest(
+    context,
+    event,
+    effectId,
+    isCoord(event.targetCell) ? event.targetCell : null,
+    undefined,
+    {
+      id: heroCueId(
+        context.streamId ?? context.presentationId ?? context.revision,
+        event,
+        "confirmedHitAccent",
+      ),
+      anchorMode: "event",
+      scaleCells: 0.75,
+      durationMs: 400,
+    },
+  );
+}
+
 function mapAoeResolved(
   event: Extract<ProjectedGameEvent, { type: "aoeResolved" }>,
   context: VfxMapperContext,
 ): BoardVfxRequest[] {
   if (!isCoord(event.center) || typeof event.radius !== "number") return [];
+  const signature = event.abilityId && REMAINING_AREAS[event.abilityId];
+  if (signature) {
+    const cell = signature.square
+      ? event.center
+      : isCoord(event.sourceCell)
+        ? event.sourceCell
+        : null;
+    return cellRequest(context, event, signature.vfx, cell, undefined, {
+      id: heroCueId(context.streamId ?? context.presentationId ?? context.revision, event, "area"),
+      anchorMode: "event",
+      ...(signature.square
+        ? {
+            placement: "area",
+            cells: radiusCellsToOverlay(event.center, event.radius, context.view.boardSize ?? 9),
+            widthCells: 2 * event.radius + 1,
+            heightCells: 2 * event.radius + 1,
+          }
+        : { scaleCells: 0.85 }),
+    });
+  }
   if (isGasterResolution(event)) {
     // Never infer the source from a token or its last known position. The
     // selected point determines direction; canonical ray rendering owns length.
@@ -241,13 +280,6 @@ function mapAoeResolved(
         heightCells: event.radius * 2 + 1,
       },
     ];
-  if (event.abilityId === ABILITY_JACK_COVERING_TRACKS) {
-    return cellRequest(context, event, "snareExplosion", event.center, "center", {
-      durationMs: 520,
-      scaleCells: 0.9,
-      opacity: 0.58,
-    });
-  }
   if (event.abilityId === ABILITY_GUTS_BERSERK_MODE) {
     return [
       {
@@ -286,50 +318,71 @@ function mapUnitMoved(
   context: VfxMapperContext,
 ): BoardVfxRequest[] {
   if (!isCoord(event.from) || !isCoord(event.to)) return [];
-  if (!previousAbilityUsedForUnit(context, event.unitId, ABILITY_GROZNY_INVADE_TIME)) {
-    const movement = confirmedMovement(event);
-    return movement?.mode === "teleport" ? movementCueVfx({ ...movement, kind: "movement",
-      id: requestId(context, event, "portal"), eventIndex: context.eventIndex, atMs: 0, durationMs: 220 }) : [];
-  }
-  return [
-    {
-      id: requestId(context, event, "phantasm", "from"),
-      effectId: "phantasm",
-      placement: "cell",
-      sourceCell: event.from,
-    },
-    {
-      id: requestId(context, event, "phantasm", "to"),
-      effectId: "phantasm",
-      placement: "cell",
-      sourceCell: event.to,
-      delayMs: 90,
-    },
-    {
-      id: requestId(context, event, "phantasmTrace", "line"),
-      effectId: "phantasmTrace",
-      placement: "line",
-      sourceCell: event.from,
-      targetCell: event.to,
-      durationMs: 420,
-    },
-  ];
+  const movement = confirmedMovement(event);
+  return movement?.mode === "teleport"
+    ? movementCueVfx({
+        ...movement,
+        kind: "movement",
+        id: requestId(context, event, "portal"),
+        eventIndex: context.eventIndex,
+        atMs: 0,
+        durationMs: 220,
+      })
+    : [];
 }
 
 export function mapGameEventToVfx(
   event: ProjectedGameEvent,
   context: VfxMapperContext,
 ): BoardVfxRequest[] {
+  const signature = remainingStatusSignature(event);
+  if (event.type === "lechyStormRollResult")
+    return unitOrPreviousRequest(context, event, "storm", event.unitId, "stormTick", {
+      anchorMode: "event",
+      ...(context.view.units[event.unitId]?.isAlive === false ? { unitId: undefined } : {}),
+    });
+  if (signature)
+    return unitRequest(context, event, signature.vfx, signature.unitId, signature.stage, {
+      anchorMode: "event",
+      scaleCells: 0.85,
+      id: `${context.streamId ?? context.presentationId ?? context.revision}:${"eventId" in event ? event.eventId : context.eventIndex}:${signature.stage}`,
+    });
+  if (event.type === "lokiChickenGroupApplied")
+    return event.targetIds.flatMap((unitId, index) =>
+      unitRequest(context, event, "lokiChicken", unitId, `chicken-${index}`, {
+        anchorMode: "event",
+        scaleCells: 0.8,
+      }),
+    );
+  // A public decoy is a different unit. Never connect it to the real Assassin.
+  if (event.type === "unitPlaced" && context.view.units[event.unitId]?.heroId === "falseTrailToken")
+    return cellRequest(context, event, "falseTrailSetup", event.position, "decoy", {
+      anchorMode: "event",
+    });
   const stage = riverStage(event);
   const movement = confirmedMovement(event);
-  const transport = stage ? { ...stage, atMs: 0 }
-    : movement ? riverMovementCue(event, { ...movement, kind: "movement", id: "preview", eventIndex: context.eventIndex,
-        atMs: 0, durationMs: 160 }) : null;
-  if (transport && "abilityUseId" in event && event.abilityUseId) return transportCueVfx({ ...transport, abilityUseId: event.abilityUseId,
-    eventIndex: context.eventIndex, id: requestId(context, event, "boat", "transport") });
+  const transport = stage
+    ? { ...stage, atMs: 0 }
+    : movement
+      ? riverMovementCue(event, {
+          ...movement,
+          kind: "movement",
+          id: "preview",
+          eventIndex: context.eventIndex,
+          atMs: 0,
+          durationMs: 160,
+        })
+      : null;
+  if (transport && "abilityUseId" in event && event.abilityUseId)
+    return transportCueVfx({
+      ...transport,
+      abilityUseId: event.abilityUseId,
+      eventIndex: context.eventIndex,
+      id: requestId(context, event, "boat", "transport"),
+    });
   switch (event.type) {
     case "chargesUpdated": {
-      const ready = asgoreReadyAbilities(event, context.view);
+      const ready = chargeReadyAbilities(event, context.view);
       return ready.length
         ? cellRequest(
             context,
@@ -384,8 +437,6 @@ export function mapGameEventToVfx(
       return event.sourceUnitId
         ? unitRequest(context, event, "storm", event.sourceUnitId, "start")
         : [];
-    case "lechyStormRollResult":
-      return unitOrPreviousRequest(context, event, "storm", event.unitId, "roll");
     case "asgoreSoulParadeResolved":
       return cellRequest(
         context,
@@ -410,12 +461,6 @@ export function mapGameEventToVfx(
       );
     case "lokiChickenApplied":
       return unitRequest(context, event, "chicken", event.targetId, "target");
-    case "lokiChickenGroupApplied":
-      return Array.isArray(event.targetIds)
-        ? event.targetIds.flatMap((targetId, index) =>
-            unitRequest(context, event, "chicken", targetId, `target-${index}`),
-          )
-        : [];
     case "riverBoatResolved":
     case "riverTraLaLaResolved":
       return []; // Completion never reconstructs or replays a route.
@@ -460,8 +505,13 @@ export function mapEventBatchToVfx(params: {
 }): BoardVfxRequest[] {
   const effects: BoardVfxRequest[] = [];
   params.events.forEach((event, eventIndex) => {
-    if (params.transportCues && (riverStage(event) || (event.type === "unitMoved"
-      && (event.provenance.kind === "boat" || event.provenance.kind === "tralala")))) return;
+    if (
+      params.transportCues &&
+      (riverStage(event) ||
+        (event.type === "unitMoved" &&
+          (event.provenance.kind === "boat" || event.provenance.kind === "tralala")))
+    )
+      return;
     if (isFireballResolution(event)) {
       const impactMs =
         params.combatCues?.find(
@@ -477,6 +527,19 @@ export function mapEventBatchToVfx(params: {
       ((event.type === "unitMoved" && confirmedMovement(event)) || event.type === "stealthRevealed")
     )
       return;
+    if (event.type === "attackResolved") {
+      const impactMs =
+        params.combatCues?.find((cue) => cue.eventIndex === eventIndex && cue.kind === "hit")
+          ?.atMs ??
+        params.eventDelaysMs?.[eventIndex] ??
+        0;
+      effects.push(
+        ...remainingHitRequests(event, { ...params, eventIndex }).map((request) => ({
+          ...request,
+          delayMs: impactMs,
+        })),
+      );
+    }
     if (params.combatCues && (event.type === "attackResolved" || event.type === "unitDied")) return;
     const baseDelay = params.eventDelaysMs?.[eventIndex] ?? 0;
     effects.push(

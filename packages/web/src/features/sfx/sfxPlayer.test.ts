@@ -78,14 +78,14 @@ test("ready alternate variant is safe fallback; no ready asset remains silent", 
   assert.equal(player.play(cue), false);
 });
 
-test("UI and match preloads are bounded to 4 and 13 real core WAVs", async () => {
+test("UI and match preloads are bounded to 4 and 16 real core WAVs", async () => {
   const f = audioFixture();
   const player = new SfxPlayer(f.manager);
   await Promise.all([preloadCoreSounds("ui", player), preloadCoreSounds("ui", player)]);
   assert.equal(f.urls.length, 4);
   assert(f.urls.every((url) => url.includes("/common/ui/")));
   await Promise.all([preloadCoreSounds("gameplay", player), preloadCoreSounds("gameplay", player)]);
-  assert.equal(f.urls.length, 17);
+  assert.equal(f.urls.length, 20);
   assert(f.urls.every((url) => url.endsWith(".wav") && !url.includes("/heroes/")));
-  assert.equal(f.stats().decodes, 17);
+  assert.equal(f.stats().decodes, 20);
 });

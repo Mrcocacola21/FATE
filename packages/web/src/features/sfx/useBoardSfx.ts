@@ -2,7 +2,13 @@ import { useEffect, useRef } from "react";
 import type { PlayerView } from "rules";
 import { HERO_SANS_ID } from "../../rulesHints";
 import type { BoardEventBatch } from "../../game/effects/types";
-import { preloadCoreSounds, preloadSansSounds, preloadAsgoreSounds, preloadRiverSounds } from "./audioPreload";
+import {
+  preloadCoreSounds,
+  preloadSansSounds,
+  preloadAsgoreSounds,
+  preloadRiverSounds,
+  preloadRosterSounds,
+} from "./audioPreload";
 import { SfxPlaybackSession } from "./sfxPlaybackSession";
 
 export function useBoardSfx(params: {
@@ -20,6 +26,20 @@ export function useBoardSfx(params: {
   );
   const needsAsgoreSounds = Object.values(view.units).some((unit) => unit.heroId === "asgore");
   const needsRiverSounds = Object.values(view.units).some((unit) => unit.heroId === "riverPerson");
+  const remainingRoster = [
+    ...new Set(
+      Object.values(view.units)
+        .map((unit) => unit.heroId)
+        .filter(
+          (id): id is string => Boolean(id) && !["sans", "asgore", "riverPerson"].includes(id!),
+        ),
+    ),
+  ]
+    .sort()
+    .join(",");
+  useEffect(() => {
+    if (enabled && remainingRoster) void preloadRosterSounds(remainingRoster.split(","));
+  }, [enabled, remainingRoster]);
 
   useEffect(() => {
     void preloadCoreSounds("gameplay");
@@ -43,6 +63,7 @@ export function useBoardSfx(params: {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionKey]);
   useEffect(() => {
+    sessionRef.current!.updateView(view);
     if (!enabled) {
       sessionRef.current!.reset();
       baselineRef.current = batch;

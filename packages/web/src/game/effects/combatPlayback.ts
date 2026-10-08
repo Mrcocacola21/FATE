@@ -406,7 +406,27 @@ export function buildCombatVisualPlaybackPlan(params: {
   // correlated outcome. Keep event order intact for damage/death ownership.
   const aggregateStarts = new Map<number, number>();
   let signatureEndMs = 0;
-  params.batch.events.forEach((event, eventIndex) => {
+  const presentationOrder = params.batch.events.map((event, eventIndex) => ({ event, eventIndex }));
+  // Some direct-damage resolvers emit final deaths before the aggregate damage
+  // summary. Present the confirmed HP change first, keeping ingress identities.
+  for (const aggregate of [...presentationOrder]) {
+    if (aggregate.event.type !== "aoeResolved") continue;
+    const aoe = aggregate.event;
+    const deathIndex = presentationOrder.findIndex(
+      ({ event, eventIndex }) =>
+        event.type === "unitDied" &&
+        eventIndex < aggregate.eventIndex &&
+        sameAbilityResolution(aoe, event) &&
+        (aoe.damageByUnitId?.[event.unitId] ?? 0) > 0 &&
+        !ownsAoeTarget(aoe, event.unitId, aggregate.eventIndex),
+    );
+    const currentIndex = presentationOrder.indexOf(aggregate);
+    if (deathIndex >= 0 && deathIndex < currentIndex) {
+      presentationOrder.splice(currentIndex, 1);
+      presentationOrder.splice(deathIndex, 0, aggregate);
+    }
+  }
+  presentationOrder.forEach(({ event, eventIndex }) => {
     const abilityUseId = "abilityUseId" in event ? event.abilityUseId : undefined;
     if (event.type === "attackResolved") {
       params.batch.events.forEach((aggregate, aggregateIndex) => {
