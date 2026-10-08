@@ -2,6 +2,8 @@ import type { Coord, ProjectedGameEvent, PlayerView } from "rules";
 import { isCoord, linePath, squareArea, uniqueCoords, visibleUnitCoord } from "./boardEffects";
 import type { BoardEffect, VisibleUnitPositions } from "./types";
 import type { CombatPresentationCue } from "./combatPlayback";
+import { isGasterResolution } from "./sansPresentation";
+import { SANS_GASTER_BLASTER_ID } from "../../rulesHints";
 import {
   confirmedMovement,
   movementCueEffects,
@@ -152,6 +154,7 @@ function effectForAoe(
   event: Extract<ProjectedGameEvent, { type: "aoeResolved" }>,
   context: EventEffectContext,
 ): BoardEffect[] {
+  if (isGasterResolution(event)) return [];
   if (!isCoord(event.center)) return [];
   const source = isCoord(event.sourceCell) ? event.sourceCell : null;
   const radius = typeof event.radius === "number" ? Math.max(0, event.radius) : 0;
@@ -491,8 +494,9 @@ export function effectsFromGameEvent(
           : []),
       ];
     }
-    case "sansBadassJokeApplied":
     case "sansLastAttackApplied":
+      return isCoord(event.targetCell) ? floatingLabel(event.targetCell, "status", "status") : [];
+    case "sansBadassJokeApplied":
       return [
         ...unitFlash(event.targetId, "debuff", context),
         ...floatingLabel(
@@ -509,16 +513,15 @@ export function effectsFromGameEvent(
         ...unitFlash(event.sansId, "buff", context),
       ];
     case "sansLastAttackTick": {
-      const coord = visibleUnitCoord(event.targetId, context.view, context.previousPositions);
+      const coord = isCoord(event.targetCell) ? event.targetCell : null;
       return [
-        ...unitFlash(event.targetId, "hit", context),
         ...(typeof event.damage === "number"
           ? floatingValue(coord, `-${event.damage}`, "damage")
           : []),
       ];
     }
     case "sansLastAttackRemoved":
-      return unitFlash(event.targetId, "heal", context);
+      return [];
     case "lechyStormRollResult": {
       const coord = visibleUnitCoord(event.unitId, context.view, context.previousPositions);
       return [
@@ -569,6 +572,8 @@ export function effectsFromEventBatch(
       .map((event) => event.defenderId),
   );
   events.forEach((event, eventIndex) => {
+    if (event.type === "abilityUsed" && event.abilityId === SANS_GASTER_BLASTER_ID) return;
+    if (combatCues && event.type === "sansLastAttackTick") return;
     if (
       movementCues &&
       [

@@ -222,8 +222,8 @@ test("cardinal and diagonal rays terminate at literal boundaries for both orient
 
 test("ray strip uses one coherent animated artwork with cell-relative thickness", () => {
   const effect = queued("gasterBeam");
-  assert.match(render(effect, 40), /height:14px/);
-  assert.match(render(effect, 80), /height:28px/);
+  assert.match(render(effect, 40), /height:45px/);
+  assert.match(render(effect, 80), /height:90px/);
   assert.equal((render(effect).match(/data-vfx-frames="20"/g) ?? []).length, 2);
   assert.doesNotMatch(render(effect), /background-repeat:repeat/);
 });
@@ -302,13 +302,21 @@ test("runtime preview replay restarts both layers without changing live session 
       assert.equal(effects.length, 1);
       assert.equal(effects[0].startedAt, 5000 + replay * 2000);
       for (const art of vfxRegistry[id].layers ?? [vfxRegistry[id]]) {
-        if (art.assetType === "spriteStrip")
+        if (art.assetType === "spriteStrip") {
+          const frames = art.frames!;
+          const first = art.startFrame ?? 0;
+          const last = art.endFrame ?? frames - 1;
+          const playback = spritePlayback(art, vfxRegistry[id].durationMs);
           assert.equal(
-            spritePlayback(art, vfxRegistry[id].durationMs).style[
-              "--vfx-frame-start" as keyof React.CSSProperties
-            ],
-            "0%",
+            playback.style["--vfx-frame-start" as keyof React.CSSProperties],
+            `${(first * 100) / (frames - 1)}%`,
           );
+          assert.equal(playback.count, last - first + 1);
+          assert.equal(
+            playback.style["--vfx-frame-end" as keyof React.CSSProperties],
+            `${(last * 100) / (frames - 1)}%`,
+          );
+        }
       }
     }
   }

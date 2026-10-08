@@ -16,6 +16,10 @@ export const CORE_VFX_PREVIEW_IDS: VfxEffectId[] = [
   "forestEruption",
   "vladGaze",
   "gasterBeam",
+  "gasterCannon",
+  "sansCurseApply",
+  "sansCurseTick",
+  "sansCurseRemove",
   "bunkerStatus",
   "fireball",
 ];

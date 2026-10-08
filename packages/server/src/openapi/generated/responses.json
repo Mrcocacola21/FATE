@@ -6104,6 +6104,9 @@
         "sansId": {
           "type": "string"
         },
+        "targetCell": {
+          "$ref": "#/definitions/Coord"
+        },
         "targetId": {
           "type": "string"
         },
@@ -6155,6 +6158,9 @@
             false,
             true
           ]
+        },
+        "targetCell": {
+          "$ref": "#/definitions/Coord"
         },
         "targetId": {
           "type": "string"
@@ -6209,6 +6215,9 @@
             "hpOne",
             "targetDead"
           ]
+        },
+        "targetCell": {
+          "$ref": "#/definitions/Coord"
         },
         "targetId": {
           "type": "string"

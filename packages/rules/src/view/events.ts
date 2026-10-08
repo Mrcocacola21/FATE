@@ -390,11 +390,21 @@ function projectEventForRecipient(
     case "sansBoneFieldActivated":
     case "sansBoneFieldApplied":
     case "sansBoneFieldPunished":
+      // Explicitly copied public scalars, with authorization for every unit reference.
+      return hasOnlyVisibleUnitReferences(state, event, recipient) ? [event] : [];
     case "sansLastAttackApplied":
     case "sansLastAttackTick":
     case "sansLastAttackRemoved":
-      // Explicitly copied public scalars, with authorization for every unit reference.
-      return hasOnlyVisibleUnitReferences(state, event, recipient) ? [event] : [];
+      return hasOnlyVisibleUnitReferences(state, event, recipient)
+        ? [
+            {
+              ...event,
+              targetCell: event[EVENT_VISIBILITY]?.targetCellRecipients?.includes(recipient)
+                ? event.targetCell
+                : undefined,
+            },
+          ]
+        : [];
     default: {
       const unclassified: never = event;
       void unclassified;

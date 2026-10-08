@@ -20,7 +20,7 @@ export const ABILITY_SPECS_PART_3: Record<string, AbilitySpec> = {
     displayName: "Gaster Blaster",
     kind: "impulse",
     description:
-      "Spend 2 charges. Choose an Archer ray and attack every enemy on it, piercing through units.",
+      "Spend 2 charges. Choose an Archer ray and attack every unit on it, including allies, piercing through units.",
     maxCharges: 2,
     chargesPerUse: 2,
   },

@@ -1,6 +1,12 @@
 import type { Coord, ProjectedGameEvent, PlayerView, RollKind } from "rules";
 import type { BoardEventBatch } from "./types";
-import { heroAoeEffect, sameAbilityResolution } from "./heroPresentation";
+import { sameAbilityResolution } from "./heroPresentation";
+import {
+  CURSE_APPLY_LEAD_MS,
+  GASTER_TIMING,
+  hasHeroAggregatePresentation,
+  isGasterResolution,
+} from "./sansPresentation";
 import {
   confirmedMovement,
   movementCueFromEvent,
@@ -389,12 +395,13 @@ export function buildCombatVisualPlaybackPlan(params: {
   // Completion authorizes the area art, but its start belongs before the first
   // correlated outcome. Keep event order intact for damage/death ownership.
   const aggregateStarts = new Map<number, number>();
+  let signatureEndMs = 0;
   params.batch.events.forEach((event, eventIndex) => {
     if (event.type === "attackResolved") {
       params.batch.events.forEach((aggregate, aggregateIndex) => {
         if (
           aggregate.type !== "aoeResolved" ||
-          !heroAoeEffect(aggregate.abilityId) ||
+          !hasHeroAggregatePresentation(aggregate.abilityId) ||
           aggregateStarts.has(aggregateIndex)
         )
           return;
@@ -412,10 +419,21 @@ export function buildCombatVisualPlaybackPlan(params: {
           !params.batch.events
             .slice(eventIndex + 1, aggregateIndex)
             .some((e) => e.type === "aoeResolved");
-        if (correlated || legacy) aggregateStarts.set(aggregateIndex, cursorMs);
+        if (correlated || legacy) {
+          aggregateStarts.set(aggregateIndex, cursorMs);
+          if (isGasterResolution(aggregate)) {
+            signatureEndMs = Math.max(signatureEndMs, cursorMs + GASTER_TIMING.endMs);
+            cursorMs += GASTER_TIMING.outcomesMs;
+          }
+        }
       });
     }
     eventDelaysMs[eventIndex] = aggregateStarts.get(eventIndex) ?? cursorMs;
+    if (event.type === "sansLastAttackApplied") {
+      // The accepted curse is introduced before final unitDied owns death.
+      cursorMs += CURSE_APPLY_LEAD_MS;
+      return;
+    }
     const movementCue = movementCueFromEvent({
       event,
       events: params.batch.events,
@@ -498,6 +516,10 @@ export function buildCombatVisualPlaybackPlan(params: {
       return;
     }
     if (event.type === "aoeResolved") {
+      if (isGasterResolution(event) && !aggregateStarts.has(eventIndex)) {
+        signatureEndMs = Math.max(signatureEndMs, cursorMs + GASTER_TIMING.endMs);
+        cursorMs += GASTER_TIMING.outcomesMs;
+      }
       // Aggregate geometry is one cue. Individual attacks own their target outcomes.
       const impact = cursorMs;
       let end = cursorMs;
@@ -605,8 +627,17 @@ export function buildCombatVisualPlaybackPlan(params: {
       damage.abilityId = abilityBySourceUnitId.get(damage.sourceUnitId);
     }
 
-    if (event.type === "stakeTriggered" || event.type === "hiddenCollisionResolved") {
-      const cell = event.type === "stakeTriggered" ? event.markerPos : event.from;
+    if (
+      event.type === "stakeTriggered" ||
+      event.type === "hiddenCollisionResolved" ||
+      event.type === "sansLastAttackTick"
+    ) {
+      const cell =
+        event.type === "stakeTriggered"
+          ? event.markerPos
+          : event.type === "sansLastAttackTick"
+            ? event.targetCell
+            : event.from;
       addCue(eventIndex, {
         kind: "damage",
         unitId: damage.targetUnitId,
@@ -660,7 +691,7 @@ export function buildCombatVisualPlaybackPlan(params: {
     finalHpByUnitId: finalSnapshot.hp,
     finalUnitsByUnitId: finalSnapshot.units,
     queue,
-    durationMs: Math.max(1, cursorMs),
+    durationMs: Math.max(1, cursorMs, signatureEndMs),
   };
 }
 

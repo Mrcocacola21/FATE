@@ -11,3 +11,12 @@ export function preloadCoreSounds(
   );
   return Promise.all(keys.map((key) => player.preload(key))).then(() => undefined);
 }
+
+/** Small Sans pack, warmed only when projected Sans/curse state needs it.
+ * Playback never waits for decoding or replays a cue that missed its deadline. */
+export function preloadSansSounds(player: Pick<SfxPlayer, "preload"> = sfxPlayer): Promise<void> {
+  const keys = (Object.keys(SOUND_REGISTRY) as SoundKey[]).filter((key) =>
+    key.startsWith("hero.sans."),
+  );
+  return Promise.all(keys.map((key) => player.preload(key))).then(() => undefined);
+}

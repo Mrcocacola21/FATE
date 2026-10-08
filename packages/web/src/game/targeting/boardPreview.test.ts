@@ -116,7 +116,7 @@ function validTargetIds(preview: BoardPreview | null): string[] {
     .sort();
 }
 
-test("Gaster Blaster previews every enemy on a full Archer ray and excludes allies", () => {
+test("Gaster Blaster previews enemies and allies on a full Archer ray, excluding its caster", () => {
   const sans = unit({ id: "sans", owner: "P1", position: { col: 0, row: 4 } });
   const ally = unit({ id: "ally", owner: "P1", position: { col: 1, row: 4 } });
   const enemies = [2, 4, 5].map((col) => unit({ id: `enemy-${col}`, owner: "P2", position: { col, row: 4 } }));
@@ -124,7 +124,7 @@ test("Gaster Blaster previews every enemy on a full Archer ray and excludes alli
   const preview = buildAbilityPreview({ gameView, viewerPlayerId: "P1", sourceUnitId: sans.id,
     abilityId: SANS_GASTER_BLASTER_ID, targetingCell: { col: 8, row: 4 } });
   assert(preview?.kind === "line");
-  assert.deepEqual(affectedTargetIds(preview), enemies.map((enemy) => enemy.id).sort());
+  assert.deepEqual(affectedTargetIds(preview), [ally.id, ...enemies.map((enemy) => enemy.id)].sort());
   assert(preview.lineCells.some((cell) => cell.col === 8 && cell.row === 4), "Preview reaches beyond first enemy to edge");
 });
 

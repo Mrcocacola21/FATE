@@ -763,8 +763,7 @@ export function buildAbilityPreview({
               (unit) =>
                 unit.id !== source.id &&
                 !!unit.position &&
-                beamKeys.has(coordKey(unit.position)) &&
-                (abilityId !== SANS_GASTER_BLASTER_ID || unit.owner !== source.owner),
+                beamKeys.has(coordKey(unit.position)),
             )
           : [],
         labelKey: "preview.labels.affectedLine",

@@ -1769,6 +1769,33 @@ html.dark {
 .vfx-sprite-static {
   object-fit: contain;
 }
+.vfx-geometry[data-vfx-effect="gasterCannon"]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: #080e18;
+  /* Fill the transparent face openings without adding a rectangular image background. */
+  clip-path: polygon(
+    48% 7%,
+    59% 22%,
+    75% 30%,
+    74% 45%,
+    69% 60%,
+    66% 70%,
+    54% 87%,
+    43% 87%,
+    31% 70%,
+    27% 60%,
+    23% 45%,
+    22% 30%,
+    37% 22%
+  );
+}
+.vfx-gasterCannon {
+  filter: drop-shadow(1px 0 0 #080e18) drop-shadow(-1px 0 0 #080e18)
+    drop-shadow(0 1px 0 #080e18) drop-shadow(0 -1px 0 #080e18)
+    drop-shadow(0 2px 3px rgb(0 0 0 / 0.85)) drop-shadow(0 0 4px rgb(103 232 249 / 0.35));
+}
 .vfx-geometry-ray {
   overflow: hidden;
 }

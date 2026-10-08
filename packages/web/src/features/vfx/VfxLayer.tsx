@@ -115,18 +115,32 @@ function Effect({
       />
     </span>
   );
-  const centered = (cell: Coord, key: string) =>
-    wrap(
-      key,
-      areaToBoardRect(
-        cell,
-        effect.scaleCells ?? definition.defaultScaleCells,
-        effect.scaleCells ?? definition.defaultScaleCells,
-        boardSize,
-        cellSize,
-        isFlipped,
-      ),
+  const centered = (cell: Coord, key: string) => {
+    const rect = areaToBoardRect(
+      cell,
+      effect.scaleCells ?? definition.defaultScaleCells,
+      effect.scaleCells ?? definition.defaultScaleCells,
+      boardSize,
+      cellSize,
+      isFlipped,
     );
+    const facing =
+      effect.effectId === "gasterCannon" && effect.targetCell
+        ? lineBetweenCellsToCssTransform(cell, effect.targetCell, boardSize, cellSize, isFlipped)
+        : null;
+    const attachment = definition.anchorPoint ?? { x: 0.5, y: 0.5 };
+    return wrap(key, {
+      ...rect,
+      left: rect.left + rect.width * (0.5 - attachment.x),
+      top: rect.top + rect.height * (0.5 - attachment.y),
+      ...(facing
+        ? {
+            transform: `rotate(${facing.angleDeg + (definition.facingOffsetDeg ?? 0)}deg)`,
+            transformOrigin: `${attachment.x * 100}% ${attachment.y * 100}%`,
+          }
+        : {}),
+    });
+  };
   const line = (from: Coord, to: Coord, key: string) => {
     const geometry = lineBetweenCellsToCssTransform(from, to, boardSize, cellSize, isFlipped);
     const height = cellSize * (definition.beamThicknessCells ?? 0.18);

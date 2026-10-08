@@ -11,6 +11,44 @@ export interface SoundDefinition {
 
 /** Static URLs keep Vite's asset graph explicit; only this core slice is bundled. */
 export const SOUND_REGISTRY = {
+  "hero.sans.abilities.sansGasterBlaster.charge": {
+    sources: [new URL("./heroes/sans/abilities/sansGasterBlasterCharge.wav", import.meta.url).href],
+    category: "gameplay",
+    gain: 0.5,
+    preload: "lazy",
+    maxVoices: 1,
+  },
+  "hero.sans.abilities.sansGasterBlaster.fire": {
+    sources: [new URL("./heroes/sans/abilities/sansGasterBlasterFire.wav", import.meta.url).href],
+    category: "gameplay",
+    gain: 0.6,
+    preload: "lazy",
+    maxVoices: 1,
+  },
+  "hero.sans.abilities.sansLastAttack.apply": {
+    sources: [new URL("./heroes/sans/abilities/sansLastAttackApply.wav", import.meta.url).href],
+    category: "gameplay",
+    gain: 0.5,
+    preload: "lazy",
+    maxVoices: 1,
+  },
+  "hero.sans.abilities.sansLastAttack.tick": {
+    sources: [
+      new URL("./heroes/sans/abilities/sansLastAttackTick01.wav", import.meta.url).href,
+      new URL("./heroes/sans/abilities/sansLastAttackTick02.wav", import.meta.url).href,
+    ],
+    category: "gameplay",
+    gain: 0.35,
+    preload: "lazy",
+    maxVoices: 1,
+  },
+  "hero.sans.abilities.sansLastAttack.remove": {
+    sources: [new URL("./heroes/sans/abilities/sansLastAttackExpire.wav", import.meta.url).href],
+    category: "gameplay",
+    gain: 0.3,
+    preload: "lazy",
+    maxVoices: 1,
+  },
   "common.ui.buttonClick": {
     sources: [
       new URL("./common/ui/buttonClick01.wav", import.meta.url).href,

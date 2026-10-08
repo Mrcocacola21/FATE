@@ -1,6 +1,7 @@
 import type { ProjectedGameEvent, PlayerView } from "rules";
 import { ABILITY_VLAD_INTIMIDATE } from "../../rulesHints";
 import { heroAoeEffect, heroCueId } from "../../game/effects/heroPresentation";
+import { GASTER_TIMING, isGasterResolution } from "../../game/effects/sansPresentation";
 import {
   isCoord,
   linePath,
@@ -143,6 +144,38 @@ function mapAoeResolved(
   context: VfxMapperContext,
 ): BoardVfxRequest[] {
   if (!isCoord(event.center) || typeof event.radius !== "number") return [];
+  if (isGasterResolution(event)) {
+    // Never infer the source from a token or its last known position. The
+    // selected point determines direction; canonical ray rendering owns length.
+    if (
+      !isCoord(event.sourceCell) ||
+      !linePath(event.sourceCell, event.center) ||
+      (event.sourceCell.col === event.center.col && event.sourceCell.row === event.center.row)
+    )
+      return [];
+    const namespace = context.streamId ?? context.presentationId ?? context.revision;
+    return [
+      {
+        id: heroCueId(namespace, event, "gasterSummon"),
+        effectId: "gasterCannon",
+        placement: "cell",
+        anchorMode: "event",
+        sourceCell: { ...event.sourceCell },
+        targetCell: { ...event.center },
+        delayMs: GASTER_TIMING.summonMs,
+      },
+      {
+        id: heroCueId(namespace, event, "gasterFire"),
+        effectId: "gasterBeam",
+        placement: "ray",
+        anchorMode: "event",
+        sourceCell: { ...event.sourceCell },
+        targetCell: { ...event.center },
+        rayToEdge: true,
+        delayMs: GASTER_TIMING.fireMs,
+      },
+    ];
+  }
   const cells = radiusCellsToOverlay(event.center, event.radius, context.view.boardSize ?? 9);
   const heroEffect = heroAoeEffect(event.abilityId);
   if (heroEffect)
@@ -334,6 +367,21 @@ export function mapGameEventToVfx(
   context: VfxMapperContext,
 ): BoardVfxRequest[] {
   switch (event.type) {
+    case "sansLastAttackApplied":
+    case "sansLastAttackTick":
+    case "sansLastAttackRemoved":
+      return cellRequest(
+        context,
+        event,
+        event.type === "sansLastAttackApplied"
+          ? "sansCurseApply"
+          : event.type === "sansLastAttackTick"
+            ? "sansCurseTick"
+            : "sansCurseRemove",
+        isCoord(event.targetCell) ? event.targetCell : null,
+        undefined,
+        { anchorMode: "event" },
+      );
     case "attackResolved":
       return cellRequest(
         context,
@@ -452,6 +500,7 @@ export function mapEventBatchToVfx(params: {
   });
   for (const cue of params.combatCues ?? []) {
     if (cue.kind === "roll" || cue.kind === "heal" || !cue.cell) continue;
+    if (params.events[cue.eventIndex]?.type === "sansLastAttackTick") continue;
     effects.push({
       id: `${cue.id}:vfx`,
       effectId:

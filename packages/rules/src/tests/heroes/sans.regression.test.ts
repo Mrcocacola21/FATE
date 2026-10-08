@@ -459,16 +459,16 @@ export function testNormalArcherAttackStillStopsAtFirstEnemy() {
   console.log("normal_archer_attack_still_stops_at_first_enemy passed");
 }
 
-export function testGasterBlasterDoesNotAttackAllies() {
+export function testGasterBlasterAttacksAllies() {
   const { state: initial, sans, ally, enemy, enemy2, enemy3, target } = blasterLine();
   const state = setUnit(initial, ally.id, { position: { col: 1, row: 4 }, hp: 5 });
   const targets = collectSansLineTargetIds(state, state.units[sans.id], target);
   assert(
-    !targets.includes(ally.id) &&
+    targets.includes(ally.id) && !targets.includes(sans.id) &&
       [enemy.id, enemy2.id, enemy3.id].every((id) => targets.includes(id)),
-    "Pass through allies and collect every enemy",
+    "Collect allies and every enemy, excluding the caster",
   );
-  const rng = makeSharedAttackerWinRng(3);
+  const rng = makeSharedAttackerWinRng(4);
   const cast = applyAction(
     state,
     {
@@ -479,13 +479,58 @@ export function testGasterBlasterDoesNotAttackAllies() {
     },
     rng,
   );
-  const resolved = resolveAllPendingRollsWithEvents(cast.state, rng);
-  assert(resolved.state.units[ally.id].hp === 5, "Ally takes no damage");
+  const attackerRoll = resolvePendingRollOnce(cast.state, rng);
   assert(
-    !resolved.events.some((e) => e.type === "attackResolved" && e.defenderId === ally.id),
-    "Ally never enters resolution queue",
+    attackerRoll.state.pendingRoll?.kind === "tricksterAoE_defenderRoll" &&
+      attackerRoll.state.pendingRoll.player === "P1",
+    "Ally owner must manually roll the first defense",
   );
-  console.log("gaster_blaster_does_not_attack_allies passed");
+  const resolved = resolveAllPendingRollsWithEvents(attackerRoll.state, rng);
+  assert(resolved.state.units[ally.id].hp === 4, "Ally takes the same Sans damage as enemies");
+  assert(
+    resolved.events.some((e) => e.type === "attackResolved" && e.defenderId === ally.id && e.hit),
+    "Ally enters the authoritative combat resolution queue",
+  );
+  assert(
+    [enemy.id, enemy2.id, enemy3.id].every((id) => resolved.state.units[id].hp === 4),
+    "Friendly target does not stop piercing through subsequent enemies",
+  );
+  assert(resolved.state.units[sans.id].hp === state.units[sans.id].hp, "Caster takes no self damage");
+  console.log("gaster_blaster_attacks_allies passed");
+}
+
+export function testGasterBlasterCanKillAnAllyOnAnOtherwiseEmptyRay() {
+  const { state: initial, sans, ally, enemy, enemy2, enemy3 } = blasterLine();
+  let state = setUnit(initial, ally.id, { position: { col: 1, row: 4 }, hp: 1 });
+  for (const unit of [enemy, enemy2, enemy3]) {
+    state = setUnit(state, unit.id, { position: { col: state.units[unit.id].position!.col, row: 5 } });
+  }
+  const target = state.units[ally.id].position!;
+  const targets = collectSansLineTargetIds(state, state.units[sans.id], target);
+  assert(targets.length === 1 && targets[0] === ally.id, "Ally-only ray is a valid attack");
+  const rng = makeSharedAttackerWinRng(1);
+  const cast = applyAction(
+    state,
+    { type: "useAbility", unitId: sans.id, abilityId: ABILITY_SANS_GASTER_BLASTER, payload: { target } },
+    rng,
+  );
+  const resolved = resolveAllPendingRollsWithEvents(cast.state, rng);
+  assert(!resolved.state.units[ally.id].isAlive, "Lethal friendly damage uses normal death resolution");
+  assert(
+    resolved.events.filter((e) => e.type === "unitDied" && e.unitId === ally.id).length === 1,
+    "Friendly target dies exactly once",
+  );
+  const aggregate = resolved.events.find((e) => e.type === "aoeResolved");
+  assert(
+    aggregate?.type === "aoeResolved" && aggregate.damageByUnitId?.[ally.id] === 1,
+    "Aggregate reports friendly damage",
+  );
+  assert(
+    [enemy.id, enemy2.id, enemy3.id].every((id) => resolved.state.units[id].hp === 5),
+    "Off-ray enemies are unaffected",
+  );
+  assert(!resolved.state.pendingRoll && !resolved.state.pendingAoE, "Ally-only queue finishes normally");
+  console.log("gaster_blaster_can_kill_an_ally_on_an_otherwise_empty_ray passed");
 }
 
 export function testSansLastAttackSuspendsQueuedRollAndKeepsHiddenEnemiesLegal() {

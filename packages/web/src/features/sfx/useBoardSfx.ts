@@ -1,7 +1,8 @@
 import { useEffect, useRef } from "react";
 import type { PlayerView } from "rules";
+import { HERO_SANS_ID } from "../../rulesHints";
 import type { BoardEventBatch } from "../../game/effects/types";
-import { preloadCoreSounds } from "./audioPreload";
+import { preloadCoreSounds, preloadSansSounds } from "./audioPreload";
 import { SfxPlaybackSession } from "./sfxPlaybackSession";
 
 export function useBoardSfx(params: {
@@ -14,10 +15,16 @@ export function useBoardSfx(params: {
   const sessionRef = useRef<SfxPlaybackSession>();
   if (!sessionRef.current) sessionRef.current = new SfxPlaybackSession();
   const baselineRef = useRef<BoardEventBatch | null | undefined>(batch);
+  const needsSansSounds = Object.values(view.units).some(
+    (unit) => unit.heroId === HERO_SANS_ID || Boolean(unit.sansLastAttackCurseSourceId),
+  );
 
   useEffect(() => {
     void preloadCoreSounds("gameplay");
   }, []);
+  useEffect(() => {
+    if (enabled && needsSansSounds) void preloadSansSounds();
+  }, [enabled, needsSansSounds]);
   useEffect(() => {
     const session = sessionRef.current!;
     session.reset();

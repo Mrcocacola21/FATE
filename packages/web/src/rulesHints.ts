@@ -1,4 +1,5 @@
 import type { PlayerView, UnitClass } from "rules";
+export { HERO_SANS_ID } from "../../rules/src/heroes";
 // Import the pure constants module: the rules package's CommonJS entry point is
 // server-owned and cannot supply browser runtime named exports through Vite.
 export {

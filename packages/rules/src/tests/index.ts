@@ -447,7 +447,8 @@ import {
   testSansLastAttackSkipsIfNoEnemyExists,
   testGasterBlasterPiercesMultipleEnemies,
   testNormalArcherAttackStillStopsAtFirstEnemy,
-  testGasterBlasterDoesNotAttackAllies,
+  testGasterBlasterAttacksAllies,
+  testGasterBlasterCanKillAnAllyOnAnOtherwiseEmptyRay,
   testSansLastAttackSuspendsQueuedRollAndKeepsHiddenEnemiesLegal,
   testSansCurseTurnStartContinuationAndActiveDeath,
   testSansLastAttackDefersRoundAdvance,
@@ -806,7 +807,8 @@ function main(): void {
   testSansLastAttackSkipsIfNoEnemyExists();
   testGasterBlasterPiercesMultipleEnemies();
   testNormalArcherAttackStillStopsAtFirstEnemy();
-  testGasterBlasterDoesNotAttackAllies();
+  testGasterBlasterAttacksAllies();
+  testGasterBlasterCanKillAnAllyOnAnOtherwiseEmptyRay();
   testSansLastAttackSuspendsQueuedRollAndKeepsHiddenEnemiesLegal();
   testSansCurseTurnStartContinuationAndActiveDeath();
   testSansLastAttackDefersRoundAdvance();

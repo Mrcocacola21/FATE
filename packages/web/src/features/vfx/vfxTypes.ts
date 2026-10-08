@@ -32,6 +32,10 @@ export type VfxEffectId =
   | "forestEruption"
   | "vladGaze"
   | "gasterBeam"
+  | "gasterCannon"
+  | "sansCurseApply"
+  | "sansCurseTick"
+  | "sansCurseRemove"
   | "bunkerStatus"
   | "fireball";
 

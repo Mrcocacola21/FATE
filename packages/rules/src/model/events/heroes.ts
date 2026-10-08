@@ -81,16 +81,19 @@ export type HeroGameEvent =
       type: "sansLastAttackApplied";
       sansId: string;
       targetId: string;
+      targetCell?: Coord;
     }
   | {
       type: "sansLastAttackTick";
       targetId: string;
+      targetCell?: Coord;
       damage: number;
       hpAfter: number;
     }
   | {
       type: "sansLastAttackRemoved";
       targetId: string;
+      targetCell?: Coord;
       reason: "hpOne" | "targetDead";
     }
   | {

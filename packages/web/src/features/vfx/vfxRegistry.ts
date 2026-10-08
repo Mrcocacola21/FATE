@@ -83,6 +83,10 @@ export interface VfxDefinition extends VfxArtwork {
   widthCells?: number;
   heightCells?: number;
   beamThicknessCells?: number;
+  /** Artwork attachment point, as fractions of its rendered box. */
+  anchorPoint?: { x: number; y: number };
+  /** Rotation from the artwork's authored facing to the logical ray. */
+  facingOffsetDeg?: number;
   reducedMotion: "hide" | "static" | "short";
 }
 
@@ -252,9 +256,64 @@ export const vfxRegistry: Record<VfxEffectId, VfxDefinition> = {
     ),
     defaultScaleCells: 0.6,
   },
+  gasterCannon: {
+    ...generated(
+      "gasterCannon",
+      new URL("../../assets/vfx/heroes/sans/gaster_blaster.png", import.meta.url).href,
+      1,
+      1350,
+      "cell",
+      "projectile",
+    ),
+    defaultScaleCells: 1.05,
+    frameWidth: 2000,
+    frameHeight: 2000,
+    sourcePack: "User-provided Sans artwork",
+    opacity: 1,
+    // This skull faces down. Slight mouth overlap keeps it close to the cell center.
+    anchorPoint: { x: 0.5, y: 0.8 },
+    facingOffsetDeg: -90,
+  },
+  sansCurseApply: {
+    ...generated(
+      "sansCurseApply",
+      new URL("../../assets/vfx/heroes/sans/curse_apply.png", import.meta.url).href,
+      14,
+      600,
+      "cell",
+      "status",
+    ),
+    defaultScaleCells: 0.75,
+  },
+  sansCurseTick: {
+    ...generated(
+      "sansCurseTick",
+      new URL("../../assets/vfx/heroes/sans/curse_tick_end.png", import.meta.url).href,
+      10,
+      400,
+      "cell",
+      "status",
+    ),
+    defaultScaleCells: 0.6,
+    opacity: 0.65,
+  },
+  sansCurseRemove: {
+    ...generated(
+      "sansCurseRemove",
+      new URL("../../assets/vfx/heroes/sans/curse_tick_end.png", import.meta.url).href,
+      10,
+      240,
+      "cell",
+      "status",
+    ),
+    startFrame: 5,
+    endFrame: 9,
+    defaultScaleCells: 0.45,
+    opacity: 0.4,
+  },
   gasterBeam: {
     ...generated("gasterBeam", beamPrimary, 20, 850, "ray", "projectile"),
-    beamThicknessCells: 0.35,
+    beamThicknessCells: 1.125,
     layers: paired(beamPrimary, beamAccent, 20)?.map((art) => ({
       ...art,
       frameCrop: { left: 12, top: 48, width: 104, height: 32 },

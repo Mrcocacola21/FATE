@@ -439,16 +439,27 @@ function copySemanticPayload(event: GameEvent): GameEvent | undefined {
         hpAfter: event.hpAfter,
       };
     case "sansLastAttackApplied":
-      return { type: "sansLastAttackApplied", sansId: event.sansId, targetId: event.targetId };
+      return {
+        type: "sansLastAttackApplied",
+        sansId: event.sansId,
+        targetId: event.targetId,
+        targetCell: event.targetCell ? coord(event.targetCell) : undefined,
+      };
     case "sansLastAttackTick":
       return {
         type: "sansLastAttackTick",
         targetId: event.targetId,
+        targetCell: event.targetCell ? coord(event.targetCell) : undefined,
         damage: event.damage,
         hpAfter: event.hpAfter,
       };
     case "sansLastAttackRemoved":
-      return { type: "sansLastAttackRemoved", targetId: event.targetId, reason: event.reason };
+      return {
+        type: "sansLastAttackRemoved",
+        targetId: event.targetId,
+        reason: event.reason,
+        targetCell: event.targetCell ? coord(event.targetCell) : undefined,
+      };
     case "friskHugsApplied":
       return { type: "friskHugsApplied", friskId: event.friskId, targetId: event.targetId };
     case "lokiChickenApplied":

@@ -47,7 +47,7 @@ export function collectSansLineTargetIds(
 ): string[] {
   return getMettatonFullLineCells(state, caster, target).flatMap((cell) =>
     getUnitsAt(state, cell)
-      .filter((unit) => unit.isAlive && unit.hp > 0 && unit.owner !== caster.owner)
+      .filter((unit) => unit.isAlive && unit.hp > 0 && unit.id !== caster.id)
       .map((unit) => unit.id),
   );
 }

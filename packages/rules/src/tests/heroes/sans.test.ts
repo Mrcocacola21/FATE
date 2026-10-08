@@ -158,8 +158,8 @@ export function testSansGasterBlasterGatingLineAndSpend() {
     )
     .map((event) => (event.type === "attackResolved" ? event.defenderId : ""));
   assert(
-    !hitTargetIds.includes(ally.id) && hitTargetIds.includes(enemy.id),
-    "Gaster Blaster should hit enemies on the selected shooter line and spare allies"
+    hitTargetIds.includes(ally.id) && hitTargetIds.includes(enemy.id),
+    "Gaster Blaster should hit both allies and enemies on the selected shooter line"
   );
   assert(
     !hitTargetIds.includes(enemy2.id),

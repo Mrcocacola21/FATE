@@ -8,6 +8,20 @@ import type {
   ResolveRollChoice,
 } from "../../../model";
 import { requestRoll, evUnitDied } from "../../../core";
+import { EVENT_VISIBILITY, movementVisibility } from "../../../model/events/visibility";
+
+/** Freeze exact target geometry and authorization before any later transition. */
+function curseAnchor(state: GameState, target: UnitState) {
+  return {
+    targetCell: target.position ? { ...target.position } : undefined,
+    [EVENT_VISIBILITY]: {
+      recipients: [],
+      targetCellRecipients: target.position
+        ? movementVisibility(state, target.id, target.position).recipients
+        : [],
+    },
+  };
+}
 
 function finishSansDeath(state: GameState, sans: UnitState): ApplyResult {
   return {
@@ -55,7 +69,12 @@ export function resolveSansLastAttackTarget(
   return {
     state: finished.state,
     events: [
-      { type: "sansLastAttackApplied", sansId: sans.id, targetId: target.id },
+      {
+        type: "sansLastAttackApplied",
+        sansId: sans.id,
+        targetId: target.id,
+        ...curseAnchor(state, target),
+      },
       ...finished.events,
     ],
   };
@@ -129,6 +148,7 @@ export function applySansLastAttackTickOnTurnStart(
         {
           type: "sansLastAttackRemoved",
           targetId: cleared.id,
+          ...curseAnchor(state, unit),
           reason: "targetDead",
         },
       ],
@@ -153,6 +173,7 @@ export function applySansLastAttackTickOnTurnStart(
         {
           type: "sansLastAttackRemoved",
           targetId: cleared.id,
+          ...curseAnchor(state, unit),
           reason: "hpOne",
         },
       ],
@@ -171,6 +192,7 @@ export function applySansLastAttackTickOnTurnStart(
     {
       type: "sansLastAttackTick",
       targetId: updated.id,
+      ...curseAnchor(state, unit),
       damage,
       hpAfter,
     },
@@ -179,6 +201,7 @@ export function applySansLastAttackTickOnTurnStart(
     events.push({
       type: "sansLastAttackRemoved",
       targetId: updated.id,
+      ...curseAnchor(state, unit),
       reason: "hpOne",
     });
   }
@@ -224,6 +247,7 @@ export function clearCursesForDeadUnits(state: GameState, events: GameEvent[]): 
     nextEvents.push({
       type: "sansLastAttackRemoved",
       targetId: unit.id,
+      ...curseAnchor(nextState, unit),
       reason: unit.isAlive ? "hpOne" : "targetDead",
     });
   }

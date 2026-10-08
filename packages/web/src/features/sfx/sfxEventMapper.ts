@@ -1,6 +1,7 @@
 import type { ProjectedGameEvent, PlayerView } from "rules";
 import { ABILITY_KAISER_CARPET_STRIKE, ABILITY_VLAD_INTIMIDATE } from "../../rulesHints";
 import { heroAoeEffect, heroCueId } from "../../game/effects/heroPresentation";
+import { GASTER_TIMING, isGasterResolution } from "../../game/effects/sansPresentation";
 import {
   isHeroId,
   type CommonSfxCategory,
@@ -148,8 +149,26 @@ export function mapEventBatchToSfx(params: {
   const requests: SfxPlaybackRequest[] = [];
   for (const [eventIndex, event] of params.events.entries()) {
     if (!event.eventId) continue;
+    const baseDelay =
+      params.eventSfxDelaysMs?.[eventIndex] ?? params.eventDelaysMs?.[eventIndex] ?? 0;
+    if (isGasterResolution(event)) {
+      for (const [key, offset] of [
+        ["hero.sans.abilities.sansGasterBlaster.charge", GASTER_TIMING.chargeMs],
+        ["hero.sans.abilities.sansGasterBlaster.fire", GASTER_TIMING.fireMs],
+      ] as const) {
+        const id = heroCueId(params.streamId ?? params.presentationId ?? "live", event, key);
+        if (requests.some((request) => request.id === id)) continue;
+        const sound = resolveSound(key, id);
+        if (sound) requests.push({ ...sound, id, delayMs: baseDelay + offset });
+      }
+      continue;
+    }
     let key: SoundKey | undefined;
-    if (event.type === "aoeResolved") {
+    if (event.type === "sansLastAttackApplied") key = "hero.sans.abilities.sansLastAttack.apply";
+    else if (event.type === "sansLastAttackTick") key = "hero.sans.abilities.sansLastAttack.tick";
+    else if (event.type === "sansLastAttackRemoved")
+      key = "hero.sans.abilities.sansLastAttack.remove";
+    else if (event.type === "aoeResolved") {
       const effect = heroAoeEffect(event.abilityId);
       key =
         effect === "doraImpact"
@@ -167,7 +186,13 @@ export function mapEventBatchToSfx(params: {
     else if (event.type === "intimidateResolved" && event.abilityId === ABILITY_VLAD_INTIMIDATE)
       key = "hero.vladTepes.abilities.intimidatingStare";
     if (!key) continue;
-    const id = heroCueId(params.streamId ?? params.presentationId ?? "live", event, key);
+    // Periodic status events have their own identities, never a reused ability-use ID.
+    const id =
+      event.type === "sansLastAttackApplied" ||
+      event.type === "sansLastAttackTick" ||
+      event.type === "sansLastAttackRemoved"
+        ? `${params.streamId ?? params.presentationId ?? "live"}:${event.eventId}:${key}`
+        : heroCueId(params.streamId ?? params.presentationId ?? "live", event, key);
     if (requests.some((request) => request.id === id)) continue;
     const sound = resolveSound(key, id);
     if (sound)
@@ -180,6 +205,7 @@ export function mapEventBatchToSfx(params: {
   if (params.combatCues) {
     for (const cue of params.combatCues) {
       if (!params.events[cue.eventIndex]?.eventId || cue.kind === "heal") continue;
+      if (params.events[cue.eventIndex]?.type === "sansLastAttackTick") continue;
       const key: SoundKey =
         cue.kind === "roll"
           ? "common.combat.diceRoll"
