@@ -62,6 +62,7 @@ export function evAbilityUsed(params: {
   unitId: string;
   abilityId: string;
   abilityUseId?: string;
+  sourceCell?: Coord;
   recipients?: readonly (PlayerId | "spectator")[];
 }): AbilityUsedEvent {
   return {
@@ -69,7 +70,8 @@ export function evAbilityUsed(params: {
     unitId: params.unitId,
     abilityId: params.abilityId,
     abilityUseId: params.abilityUseId,
-    ...(params.recipients ? { [EVENT_VISIBILITY]: { recipients: params.recipients, abilityRecipients: params.recipients } } : {}),
+    ...(params.sourceCell ? { sourceCell: { ...params.sourceCell } } : {}),
+    ...(params.recipients ? { [EVENT_VISIBILITY]: { recipients: params.recipients, abilityRecipients: params.recipients, sourceCellRecipients: params.recipients } } : {}),
   };
 }
 

@@ -42,7 +42,11 @@ export class SfxPlaybackSession {
           Date.now() > scheduledAt + MAX_PRESENTATION_AGE_MS
         )
           return;
-        this.player.play(cue);
+        if (cue.durationMs !== undefined) {
+          const remainingMs = scheduledAt + cue.durationMs - Date.now();
+          if (remainingMs <= 0) return;
+          this.player.play({ ...cue, durationMs: remainingMs });
+        } else this.player.play(cue);
       };
       if (delayMs === 0) play();
       else {

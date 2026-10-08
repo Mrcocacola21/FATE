@@ -334,6 +334,7 @@ export type CoreGameEvent =
       type: "abilityUsed";
       unitId: string;
       abilityId: string;
+      sourceCell?: Coord;
     }
   | {
       type: "unitHealed";

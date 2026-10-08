@@ -16,8 +16,10 @@ export class TestSource extends TestNode {
   onended?: () => void;
   starts = 0;
   stops = 0;
-  start() {
+  startArgs: number[][] = [];
+  start(...args: number[]) {
     this.starts++;
+    this.startArgs.push(args);
   }
   stop() {
     this.stops++;

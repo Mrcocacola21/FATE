@@ -34,11 +34,15 @@ Documentation/provenance manifests are never imported into the runtime.
 | carpetImpact | heroes/grand-kaiser/carpet_impact_primary.png + carpet_impact_accent.png | strip / 32 each | 20 / 1600ms                            | area / 5x5                                            | ground     |
 | gasterBeam   | heroes/sans/gaster_beam_primary.png + gaster_beam_accent.png             | strip / 20 each | 23.53 / 850ms                          | ray / endpoint or board boundary, 0.35-cell thickness | projectile |
 | bunkerStatus | heroes/grand-kaiser/bunker_status.png                                    | static / 1      | no animation / 1000ms preview lifetime | unit / 1x1                                            | status     |
-| fireball     | heroes/asgore/fireball.png                                               | strip / 17      | 24.29 / 700ms                          | projectile / 0.65-cell sprite, source to target       | projectile |
+| fireball     | heroes/asgore/fireball.png                                               | strip / 17, frame 1 only | static ember / 400ms travel           | projectile / 0.65-cell sprite, source to target       | projectile |
+| fireballCast | heroes/asgore/fireball.png                                               | frames 0–1      | 16 / 125ms                            | event-time source cell                              | projectile |
+| fireballImpact | heroes/asgore/fireball.png                                             | strip / 17      | 24.29 / 700ms, confirmed hit only       | event-time target cell / 0.85 cells                  | impact |
+| fireParade   | heroes/asgore/fire_parade_primary.png + fire_parade_accent.png             | strip / 29 each | 24.17 / 1200ms                        | radius-two area / 5x5, clipped at board edge          | ground |
+| soulParade   | heroes/asgore/soul_parade.png                                            | strip / 22      | 24.44 / 900ms                         | event-time source cell / 1.2 cells                   | status |
 
-These nine entries are renderer/preview assets only. No new generic live mappings
-or generated hero signature mappings were added. Existing legacy mappings remain;
-their AoE requests now include the full event radius dimensions.
+The original infrastructure catalog has been extended with Phase-11 runtime
+slices and Asgore signatures. Live mappings reuse the common presentation plan;
+AoE requests include the full event radius dimensions.
 
 ## Frame playback, timing and cleanup
 
@@ -180,16 +184,16 @@ Dora center/left crop and composition, Carpet P2 corner crop, Gaster P1 diagonal
 and P2 reverse edge, Fireball travel and reduced-motion Dora. Automated frame
 checks establish stepping; this review does not claim a human watched a full
 real-time animation or a live match. Fireball is deliberately small and contains
-mixed authored phases; its production use needs phase metadata later.
+mixed authored phases; Phase 11 uses conservative runtime slices described below.
 
 ## Phase boundary
 
-Deferred: generic hit/miss/death live integration; Kaiser/Vlad, Sans, Asgore,
-River/Tralala and remaining generated hero gameplay mappings; persistent status
-integration and lifecycle; Fireball semantic slices; advanced preload, cache and
-performance tuning. Normal browser loading remains in use; the library is not
-eagerly decoded. Rules and server behavior are unchanged. Do not automatically
-start the next phase.
+Phases 7–11 now integrate generic combat, Kaiser/Vlad, Sans and Asgore. See
+[the Phase 11 report](../../../../../docs/phase-11-asgore-pack.md) for authoritative
+triggers, conservative Fireball slices, audio ownership and verification.
+Deferred: River Person / Boat / Tralala Pack, remaining heroes, persistent status
+VFX, and final preload/performance/polish. Normal browser VFX loading remains in
+use; the library is not eagerly decoded. Do not automatically start the next phase.
 
 ## Completion evidence and file inventory
 

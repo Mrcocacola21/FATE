@@ -11,6 +11,46 @@ export interface SoundDefinition {
 
 /** Static URLs keep Vite's asset graph explicit; only this core slice is bundled. */
 export const SOUND_REGISTRY = {
+  "hero.asgore.abilities.asgoreFireball.cast": {
+    sources: [new URL("./heroes/asgore/abilities/asgoreFireballCast.wav", import.meta.url).href],
+    category: "gameplay",
+    gain: 0.5,
+    preload: "lazy",
+    maxVoices: 1,
+  },
+  "hero.asgore.abilities.asgoreFireball.travel": {
+    sources: [new URL("./heroes/asgore/abilities/asgoreFireballTravel.wav", import.meta.url).href],
+    category: "gameplay",
+    gain: 0.35,
+    preload: "lazy",
+    maxVoices: 1,
+  },
+  "hero.asgore.abilities.asgoreFireball.impact": {
+    sources: [
+      new URL("./heroes/asgore/abilities/asgoreFireballImpact01.wav", import.meta.url).href,
+      new URL("./heroes/asgore/abilities/asgoreFireballImpact02.wav", import.meta.url).href,
+    ],
+    category: "gameplay",
+    gain: 0.6,
+    preload: "lazy",
+    maxVoices: 1,
+  },
+  "hero.asgore.abilities.asgoreFireParade.cast": {
+    sources: [new URL("./heroes/asgore/abilities/asgoreFireParadeCast.wav", import.meta.url).href],
+    category: "gameplay",
+    gain: 0.5,
+    preload: "lazy",
+    maxVoices: 1,
+  },
+  "hero.asgore.abilities.asgoreSoulParade.reveal": {
+    sources: [
+      new URL("./heroes/asgore/abilities/asgoreSoulParadeReveal.wav", import.meta.url).href,
+    ],
+    category: "gameplay",
+    gain: 0.45,
+    preload: "lazy",
+    maxVoices: 1,
+  },
   "hero.sans.abilities.sansGasterBlaster.charge": {
     sources: [new URL("./heroes/sans/abilities/sansGasterBlasterCharge.wav", import.meta.url).href],
     category: "gameplay",

@@ -59,6 +59,7 @@ export class SfxPlayer {
         category: cue.category,
         gain: cue.gain,
         maxVoices: cue.maxVoices,
+        durationMs: cue.durationMs,
       }),
     );
   }

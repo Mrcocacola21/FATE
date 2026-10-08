@@ -6,7 +6,7 @@ test("VFX registry metadata is complete for curated assets", () => {
   assert.deepEqual(validateVfxRegistry(), []);
   assert.equal(vfxRegistry.portal.assetType, "proceduralPortal");
   assert.equal(vfxRegistry.markApply.frameWidth, 192);
-  assert.equal(vfxRegistry.fireParade.sourcePack, "kenney_particle-pack");
+  assert.equal(vfxRegistry.fireParade.sourcePack, "FATE generated pack");
 });
 
 test("runtime registry imports curated assets rather than raw vendor folders", () => {

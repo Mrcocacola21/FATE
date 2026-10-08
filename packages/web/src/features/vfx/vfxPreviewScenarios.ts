@@ -22,6 +22,8 @@ export const CORE_VFX_PREVIEW_IDS: VfxEffectId[] = [
   "sansCurseRemove",
   "bunkerStatus",
   "fireball",
+  "fireballCast",
+  "fireballImpact",
 ];
 export const VFX_PREVIEW_ANCHORS = {
   center: { col: 4, row: 4 },
@@ -330,6 +332,7 @@ export const VFX_PREVIEW_SCENARIOS: VfxPreviewScenario[] = [
       {
         type: "asgoreSoulParadeResolved",
         asgoreId: "preview-asgore",
+        sourceCell: { col: 4, row: 4 },
         soulId: "bravery",
         roll: 2,
         soulName: "Bravery",

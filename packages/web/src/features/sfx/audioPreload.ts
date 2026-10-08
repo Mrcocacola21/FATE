@@ -20,3 +20,8 @@ export function preloadSansSounds(player: Pick<SfxPlayer, "preload"> = sfxPlayer
   );
   return Promise.all(keys.map((key) => player.preload(key))).then(() => undefined);
 }
+
+export function preloadAsgoreSounds(player: Pick<SfxPlayer, "preload"> = sfxPlayer): Promise<void> {
+  const keys = (Object.keys(SOUND_REGISTRY) as SoundKey[]).filter((key) => key.startsWith("hero.asgore."));
+  return Promise.all(keys.map((key) => player.preload(key))).then(() => undefined);
+}

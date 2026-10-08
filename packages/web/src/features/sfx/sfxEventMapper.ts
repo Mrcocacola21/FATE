@@ -2,6 +2,7 @@ import type { ProjectedGameEvent, PlayerView } from "rules";
 import { ABILITY_KAISER_CARPET_STRIKE, ABILITY_VLAD_INTIMIDATE } from "../../rulesHints";
 import { heroAoeEffect, heroCueId } from "../../game/effects/heroPresentation";
 import { GASTER_TIMING, isGasterResolution } from "../../game/effects/sansPresentation";
+import { FIREBALL_TIMING, isFireballResolution } from "../../game/effects/asgorePresentation";
 import {
   isHeroId,
   type CommonSfxCategory,
@@ -151,6 +152,31 @@ export function mapEventBatchToSfx(params: {
     if (!event.eventId) continue;
     const baseDelay =
       params.eventSfxDelaysMs?.[eventIndex] ?? params.eventDelaysMs?.[eventIndex] ?? 0;
+    if (isFireballResolution(event)) {
+      const outcome = params.combatCues?.find(
+        (cue) => cue.eventIndex === eventIndex && (cue.kind === "hit" || cue.kind === "miss"),
+      );
+      const impactMs = outcome?.atMs ?? baseDelay + FIREBALL_TIMING.travelMs;
+      const namespace = params.streamId ?? params.presentationId ?? "live";
+      if (event.sourceCell && event.targetCell) {
+        const id = heroCueId(namespace, event, "travelAudio");
+        const sound = resolveSound("hero.asgore.abilities.asgoreFireball.travel", id);
+        if (sound && !requests.some((request) => request.id === id))
+          requests.push({
+            ...sound,
+            id,
+            delayMs: Math.max(0, impactMs - FIREBALL_TIMING.travelMs),
+            durationMs: FIREBALL_TIMING.travelMs,
+          });
+      }
+      if (event.hit) {
+        const id = heroCueId(namespace, event, "impactAudio");
+        const sound = resolveSound("hero.asgore.abilities.asgoreFireball.impact", id);
+        if (sound && !requests.some((request) => request.id === id))
+          requests.push({ ...sound, id, delayMs: impactMs });
+      }
+      continue;
+    }
     if (isGasterResolution(event)) {
       for (const [key, offset] of [
         ["hero.sans.abilities.sansGasterBlaster.charge", GASTER_TIMING.chargeMs],
@@ -164,7 +190,18 @@ export function mapEventBatchToSfx(params: {
       continue;
     }
     let key: SoundKey | undefined;
-    if (event.type === "sansLastAttackApplied") key = "hero.sans.abilities.sansLastAttack.apply";
+    if (event.type === "abilityUsed" && event.abilityUseId && event.abilityId === "asgoreFireball")
+      key = "hero.asgore.abilities.asgoreFireball.cast";
+    else if (
+      event.type === "abilityUsed" &&
+      event.abilityUseId &&
+      event.abilityId === "asgoreFireParade"
+    )
+      key = "hero.asgore.abilities.asgoreFireParade.cast";
+    else if (event.type === "asgoreSoulParadeResolved" && event.asgoreId)
+      key = "hero.asgore.abilities.asgoreSoulParade.reveal";
+    else if (event.type === "sansLastAttackApplied")
+      key = "hero.sans.abilities.sansLastAttack.apply";
     else if (event.type === "sansLastAttackTick") key = "hero.sans.abilities.sansLastAttack.tick";
     else if (event.type === "sansLastAttackRemoved")
       key = "hero.sans.abilities.sansLastAttack.remove";
@@ -190,7 +227,8 @@ export function mapEventBatchToSfx(params: {
     const id =
       event.type === "sansLastAttackApplied" ||
       event.type === "sansLastAttackTick" ||
-      event.type === "sansLastAttackRemoved"
+      event.type === "sansLastAttackRemoved" ||
+      event.type === "asgoreSoulParadeResolved"
         ? `${params.streamId ?? params.presentationId ?? "live"}:${event.eventId}:${key}`
         : heroCueId(params.streamId ?? params.presentationId ?? "live", event, key);
     if (requests.some((request) => request.id === id)) continue;
@@ -206,6 +244,7 @@ export function mapEventBatchToSfx(params: {
     for (const cue of params.combatCues) {
       if (!params.events[cue.eventIndex]?.eventId || cue.kind === "heal") continue;
       if (params.events[cue.eventIndex]?.type === "sansLastAttackTick") continue;
+      if (cue.kind === "hit" && isFireballResolution(params.events[cue.eventIndex])) continue;
       const key: SoundKey =
         cue.kind === "roll"
           ? "common.combat.diceRoll"
@@ -230,6 +269,7 @@ export function mapEventBatchToSfx(params: {
         key = "common.combat.diceRoll";
         break;
       case "attackResolved":
+        if (isFireballResolution(gameEvent) && gameEvent.hit) return;
         key = gameEvent.hit ? "common.combat.hit" : "common.combat.miss";
         break;
       case "unitDied":
@@ -244,7 +284,9 @@ export function mapEventBatchToSfx(params: {
       requests.push({
         ...sound,
         id,
-        delayMs: params.eventSfxDelaysMs?.[eventIndex] ?? params.eventDelaysMs?.[eventIndex] ?? 0,
+        delayMs:
+          (params.eventSfxDelaysMs?.[eventIndex] ?? params.eventDelaysMs?.[eventIndex] ?? 0) +
+          (isFireballResolution(gameEvent) ? FIREBALL_TIMING.travelMs : 0),
       });
   });
   return requests;

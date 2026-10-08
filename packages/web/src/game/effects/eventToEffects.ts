@@ -572,6 +572,7 @@ export function effectsFromEventBatch(
       .map((event) => event.defenderId),
   );
   events.forEach((event, eventIndex) => {
+    if (event.type === "abilityUsed" && ["asgoreFireball", "asgoreFireParade", "asgoreSoulParade"].includes(event.abilityId)) return;
     if (event.type === "abilityUsed" && event.abilityId === SANS_GASTER_BLASTER_ID) return;
     if (combatCues && event.type === "sansLastAttackTick") return;
     if (

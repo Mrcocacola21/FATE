@@ -4955,6 +4955,9 @@
             true
           ]
         },
+        "sourceCell": {
+          "$ref": "#/definitions/Coord"
+        },
         "type": {
           "type": "string",
           "enum": [
@@ -6847,6 +6850,9 @@
         },
         "soulName": {
           "type": "string"
+        },
+        "sourceCell": {
+          "$ref": "#/definitions/Coord"
         },
         "type": {
           "type": "string",

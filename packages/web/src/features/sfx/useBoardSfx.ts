@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import type { PlayerView } from "rules";
 import { HERO_SANS_ID } from "../../rulesHints";
 import type { BoardEventBatch } from "../../game/effects/types";
-import { preloadCoreSounds, preloadSansSounds } from "./audioPreload";
+import { preloadCoreSounds, preloadSansSounds, preloadAsgoreSounds } from "./audioPreload";
 import { SfxPlaybackSession } from "./sfxPlaybackSession";
 
 export function useBoardSfx(params: {
@@ -18,6 +18,7 @@ export function useBoardSfx(params: {
   const needsSansSounds = Object.values(view.units).some(
     (unit) => unit.heroId === HERO_SANS_ID || Boolean(unit.sansLastAttackCurseSourceId),
   );
+  const needsAsgoreSounds = Object.values(view.units).some((unit) => unit.heroId === "asgore");
 
   useEffect(() => {
     void preloadCoreSounds("gameplay");
@@ -25,6 +26,9 @@ export function useBoardSfx(params: {
   useEffect(() => {
     if (enabled && needsSansSounds) void preloadSansSounds();
   }, [enabled, needsSansSounds]);
+  useEffect(() => {
+    if (enabled && needsAsgoreSounds) void preloadAsgoreSounds();
+  }, [enabled, needsAsgoreSounds]);
   useEffect(() => {
     const session = sessionRef.current!;
     session.reset();

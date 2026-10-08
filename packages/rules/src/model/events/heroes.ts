@@ -161,6 +161,7 @@ export type HeroGameEvent =
   | {
       type: "asgoreSoulParadeResolved";
       asgoreId?: string;
+      sourceCell?: Coord;
       roll: number;
       soulId: string;
       soulName: string;

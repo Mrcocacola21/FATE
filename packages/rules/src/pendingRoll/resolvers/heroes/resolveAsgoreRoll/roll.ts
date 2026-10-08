@@ -17,6 +17,7 @@ import type {
   AsgoreSoulParadeTargetChoiceContext,
 } from "../../../types";
 import { commitAsgoreSoulParadeCost, getAsgore } from "./helpers";
+import { EVENT_VISIBILITY, movementVisibility } from "../../../../model/events/visibility";
 
 export function resolveAsgoreSoulParadeRoll(
   state: GameState,
@@ -34,6 +35,11 @@ export function resolveAsgoreSoulParadeRoll(
   const soulEvent = {
     type: "asgoreSoulParadeResolved" as const,
     asgoreId: asgore.id,
+    sourceCell: asgore.position ? { ...asgore.position } : undefined,
+    [EVENT_VISIBILITY]: {
+      ...movementVisibility(state, asgore.id, asgore.position!),
+      sourceCellRecipients: movementVisibility(state, asgore.id, asgore.position!).recipients,
+    },
     roll: soulResult.roll,
     soulId: soulResult.soulId,
     soulName: soulResult.soulName,

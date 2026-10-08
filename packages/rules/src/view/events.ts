@@ -229,6 +229,15 @@ function projectEventForRecipient(
       return event.asgoreId && !isUnitVisibleToRecipient(state, event.asgoreId, recipient)
         ? [{ ...event, asgoreId: undefined }]
         : [event];
+    case "unitHealed": {
+      if (!isUnitVisibleToRecipient(state, event.unitId, recipient)) return [];
+      // sourceAbilityId is an ability reference, not a unit reference. Its
+      // cause still needs the same event-time authorization as correlation.
+      const projected = { ...event };
+      if (!event[EVENT_VISIBILITY]?.abilityRecipients?.includes(recipient))
+        delete projected.sourceAbilityId;
+      return [projected];
+    }
     case "lechyStormStarted":
       return event.sourceUnitId && !isUnitVisibleToRecipient(state, event.sourceUnitId, recipient)
         ? [{ ...event, sourceUnitId: undefined }]
@@ -375,7 +384,6 @@ function projectEventForRecipient(
     case "bunkerExited":
     case "forestActivated":
     case "carpetStrikeTriggered":
-    case "unitHealed":
     case "moveBlocked":
     case "arenaChosen":
     case "battleStarted":
@@ -426,6 +434,9 @@ export function projectEventsForRecipient(
     }
     if (event[EVENT_VISIBILITY]) payload[EVENT_VISIBILITY] = event[EVENT_VISIBILITY];
     return projectEventForRecipient(state, payload, recipient).map((projected) => {
+      if ((projected.type === "abilityUsed" || projected.type === "asgoreSoulParadeResolved") &&
+          !event[EVENT_VISIBILITY]?.sourceCellRecipients?.includes(recipient))
+        delete projected.sourceCell;
       if (!event[EVENT_VISIBILITY]?.abilityRecipients?.includes(recipient)) {
         if ("abilityUseId" in projected) delete projected.abilityUseId;
         if (event.abilityUseId && projected.type !== "abilityUsed")

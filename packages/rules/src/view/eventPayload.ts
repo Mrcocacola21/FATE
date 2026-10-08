@@ -324,7 +324,7 @@ function copySemanticPayload(event: GameEvent): GameEvent | undefined {
         affectedUnitIds: event.affectedUnitIds,
       };
     case "abilityUsed":
-      return { type: "abilityUsed", unitId: event.unitId, abilityId: event.abilityId };
+      return { type: "abilityUsed", unitId: event.unitId, abilityId: event.abilityId, sourceCell: event.sourceCell ? coord(event.sourceCell) : undefined };
     case "unitHealed":
       return {
         type: "unitHealed",
@@ -527,6 +527,7 @@ function copySemanticPayload(event: GameEvent): GameEvent | undefined {
       return {
         type: "asgoreSoulParadeResolved",
         asgoreId: event.asgoreId,
+        sourceCell: event.sourceCell ? coord(event.sourceCell) : undefined,
         roll: event.roll,
         soulId: event.soulId,
         soulName: event.soulName,

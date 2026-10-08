@@ -40,6 +40,7 @@ import {
 import { correlateAbilityResult } from "../../core/abilityUse";
 import { evUnitMoved } from "../../core";
 import { applyNewBatchPostAction } from "../../actions/heroes/newBatchPost";
+import { EVENT_VISIBILITY } from "../../model/events/visibility";
 
 const noDice: RNG = {
   next() {
@@ -158,6 +159,7 @@ function testFireballAndFrozenAnchors() {
   const setup = semanticFireballFixture();
   const used = eventOf(setup.activated.events, "abilityUsed");
   assert(used.abilityUseId);
+  assert.deepEqual(used.sourceCell, { col: 4, row: 4 });
   assert.equal(setup.activated.state.pendingRoll!.abilityUseId, used.abilityUseId);
   const attacker = respond(setup.activated.state, [0.8, 0.5]);
   const defender = respond(attacker.state, [0.01, 0.2]);
@@ -710,10 +712,41 @@ function testNestedUseIsolationAndMovementPrivacy() {
   assert.deepEqual(projected[0].provenance, { kind: "ability" });
 }
 
+function testAsgoreSourceAnchorsAndHealingProjection() {
+  const setup = semanticFireballFixture();
+  const used = eventOf(setup.activated.events, "abilityUsed");
+  const later = setUnit(setup.activated.state, setup.attackerId, { position: { col: 0, row: 0 } });
+  for (const recipient of ["P1", "P2", "spectator"] as const) {
+    const projected = eventOf(projectEventsForRecipient(later, [used], recipient) as GameEvent[], "abilityUsed");
+    assert.deepEqual(projected.sourceCell, { col: 4, row: 4 });
+  }
+  const privateUsed = { ...used, [EVENT_VISIBILITY]: { recipients: ["P1"] as const,
+    sourceCellRecipients: ["P1"] as const, abilityRecipients: ["P1"] as const } };
+  const soul: GameEvent = { type: "asgoreSoulParadeResolved", asgoreId: setup.attackerId,
+    sourceCell: { col: 4, row: 4 }, roll: 2, soulId: "bravery", soulName: "Bravery", effectDescription: "Guard",
+    [EVENT_VISIBILITY]: privateUsed[EVENT_VISIBILITY] };
+  const heal: GameEvent = { type: "unitHealed", unitId: setup.attackerId, amount: 2, hpAfter: 7,
+    sourceAbilityId: "asgoreSoulParade", abilityId: "asgoreSoulParade", abilityUseId: "U-heal",
+    [EVENT_VISIBILITY]: privateUsed[EVENT_VISIBILITY] };
+  for (const recipient of ["P1", "P2", "spectator"] as const) {
+    const projected = projectEventsForRecipient(later, [privateUsed, soul, heal], recipient) as GameEvent[];
+    const cast = eventOf(projected, "abilityUsed"), reveal = eventOf(projected, "asgoreSoulParadeResolved");
+    assert.equal(Boolean(cast.sourceCell), recipient === "P1");
+    assert.equal(Boolean(reveal.sourceCell), recipient === "P1");
+    const healing = eventOf(projected, "unitHealed");
+    assert.equal(healing.amount, 2, "visible HP healing must survive an ability-valued sourceAbilityId");
+    assert.equal(healing.sourceAbilityId, recipient === "P1" ? "asgoreSoulParade" : undefined);
+    assert.equal(healing.abilityUseId, recipient === "P1" ? "U-heal" : undefined);
+  }
+  const hidden = setUnit(later, setup.attackerId, { isStealthed: true });
+  assert.deepEqual(projectEventsForRecipient(hidden, [heal], "spectator"), []);
+}
+
 export function testPresentationSemantics() {
   for (const test of [
     testNormalAttackAndTieBreaks,
     testFireballAndFrozenAnchors,
+    testAsgoreSourceAnchorsAndHealingProjection,
     testSharedAoECorrelation,
     testAutoDodgeAndPrivateRolls,
     testHiddenAnchorsAndDeath,

@@ -37,7 +37,9 @@ export type VfxEffectId =
   | "sansCurseTick"
   | "sansCurseRemove"
   | "bunkerStatus"
-  | "fireball";
+  | "fireball"
+  | "fireballCast"
+  | "fireballImpact";
 
 export type VfxPlacement = "cell" | "unit" | "area" | "line" | "ray" | "path" | "projectile";
 

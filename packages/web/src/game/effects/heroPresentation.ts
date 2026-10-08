@@ -14,6 +14,8 @@ export function heroAoeEffect(abilityId: string | undefined) {
       return "carpetImpact" as const;
     case ABILITY_VLAD_FOREST:
       return "forestEruption" as const;
+    case "asgoreFireParade":
+      return "fireParade" as const;
     default:
       return null;
   }

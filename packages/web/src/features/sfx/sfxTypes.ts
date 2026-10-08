@@ -25,6 +25,8 @@ export interface SoundCue extends SoundDefinition {
   key: SoundKey;
   src: string;
   delayMs?: number;
+  /** Bound a finite travel cue to its presentation segment, even if the WAV is longer. */
+  durationMs?: number;
 }
 
 export type SfxPlaybackRequest = SoundCue;

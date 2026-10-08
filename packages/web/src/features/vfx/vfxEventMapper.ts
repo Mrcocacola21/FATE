@@ -3,6 +3,11 @@ import { ABILITY_VLAD_INTIMIDATE } from "../../rulesHints";
 import { heroAoeEffect, heroCueId } from "../../game/effects/heroPresentation";
 import { GASTER_TIMING, isGasterResolution } from "../../game/effects/sansPresentation";
 import {
+  FIREBALL_TIMING,
+  isFireballResolution,
+  asgoreReadyAbilities,
+} from "../../game/effects/asgorePresentation";
+import {
   isCoord,
   linePath,
   previousVisibleUnitCoord,
@@ -18,7 +23,6 @@ import {
 } from "../../game/effects/movementPresentation";
 
 const ABILITY_CHIKATILO_ASSASSIN_MARK = "chikatiloAssassinMark";
-const ABILITY_ASGORE_FIRE_PARADE = "asgoreFireParade";
 const ABILITY_GUTS_ARBALET = "gutsArbalet";
 const ABILITY_GUTS_CANNON = "gutsCannon";
 const ABILITY_GUTS_BERSERK_MODE = "gutsBerserkMode";
@@ -124,6 +128,22 @@ function mapAbilityUsed(
   event: Extract<ProjectedGameEvent, { type: "abilityUsed" }>,
   context: VfxMapperContext,
 ): BoardVfxRequest[] {
+  if (event.abilityId === "asgoreFireball" && event.abilityUseId)
+    return cellRequest(
+      context,
+      event,
+      "fireballCast",
+      isCoord(event.sourceCell) ? event.sourceCell : null,
+      undefined,
+      {
+        anchorMode: "event",
+        id: heroCueId(
+          context.streamId ?? context.presentationId ?? context.revision,
+          event,
+          "cast",
+        ),
+      },
+    );
   if (event.abilityId === ABILITY_GUTS_ARBALET || event.abilityId === ABILITY_GUTS_CANNON) {
     return unitRequest(context, event, "muzzle", event.unitId);
   }
@@ -137,6 +157,36 @@ function mapAbilityUsed(
     });
   }
   return [];
+}
+
+function fireballRequests(
+  event: Extract<ProjectedGameEvent, { type: "attackResolved" }>,
+  context: VfxMapperContext,
+  impactMs: number,
+): BoardVfxRequest[] {
+  const namespace = context.streamId ?? context.presentationId ?? context.revision;
+  const requests: BoardVfxRequest[] = [];
+  if (isCoord(event.sourceCell) && isCoord(event.targetCell))
+    requests.push({
+      id: heroCueId(namespace, event, "travel"),
+      effectId: "fireball",
+      placement: "projectile",
+      anchorMode: "event",
+      sourceCell: { ...event.sourceCell },
+      targetCell: { ...event.targetCell },
+      durationMs: FIREBALL_TIMING.travelMs,
+      delayMs: Math.max(0, impactMs - FIREBALL_TIMING.travelMs),
+    });
+  if (isCoord(event.targetCell))
+    requests.push({
+      id: heroCueId(namespace, event, event.hit ? "impact" : "miss"),
+      effectId: event.hit ? "fireballImpact" : "combatMiss",
+      placement: "cell",
+      anchorMode: "event",
+      sourceCell: { ...event.targetCell },
+      delayMs: impactMs,
+    });
+  return requests;
 }
 
 function mapAoeResolved(
@@ -201,21 +251,6 @@ function mapAoeResolved(
       scaleCells: 0.9,
       opacity: 0.58,
     });
-  }
-  if (event.abilityId === ABILITY_ASGORE_FIRE_PARADE) {
-    return [
-      {
-        id: requestId(context, event, "fireParade"),
-        effectId: "fireParade",
-        placement: "area",
-        sourceCell: event.center,
-        cells,
-        widthCells: event.radius * 2 + 1,
-        heightCells: event.radius * 2 + 1,
-        durationMs: 900,
-        opacity: 0.32,
-      },
-    ];
   }
   if (event.abilityId === ABILITY_GUTS_BERSERK_MODE) {
     return [
@@ -367,6 +402,19 @@ export function mapGameEventToVfx(
   context: VfxMapperContext,
 ): BoardVfxRequest[] {
   switch (event.type) {
+    case "chargesUpdated": {
+      const ready = asgoreReadyAbilities(event, context.view);
+      return ready.length
+        ? cellRequest(
+            context,
+            event,
+            "statusSmall",
+            visibleUnitCoord(context.view, event.unitId),
+            "ready",
+            { scaleCells: 0.65, opacity: 0.45, anchorMode: "event" },
+          )
+        : [];
+    }
     case "sansLastAttackApplied":
     case "sansLastAttackTick":
     case "sansLastAttackRemoved":
@@ -383,6 +431,8 @@ export function mapGameEventToVfx(
         { anchorMode: "event" },
       );
     case "attackResolved":
+      if (isFireballResolution(event))
+        return fireballRequests(event, context, FIREBALL_TIMING.travelMs);
       return cellRequest(
         context,
         event,
@@ -411,9 +461,17 @@ export function mapGameEventToVfx(
     case "lechyStormRollResult":
       return unitOrPreviousRequest(context, event, "storm", event.unitId, "roll");
     case "asgoreSoulParadeResolved":
-      return event.asgoreId
-        ? unitRequest(context, event, "soulParade", event.asgoreId, event.soulId)
-        : [];
+      return cellRequest(
+        context,
+        event,
+        "soulParade",
+        isCoord(event.sourceCell) ? event.sourceCell : null,
+        event.soulId,
+        {
+          anchorMode: "event",
+          id: `${context.streamId ?? context.presentationId ?? context.revision}:${"eventId" in event ? event.eventId : context.eventIndex}:soulReveal`,
+        },
+      );
     case "aoeResolved":
       return mapAoeResolved(event, context);
     case "unitTransformed":
@@ -476,6 +534,16 @@ export function mapEventBatchToVfx(params: {
 }): BoardVfxRequest[] {
   const effects: BoardVfxRequest[] = [];
   params.events.forEach((event, eventIndex) => {
+    if (isFireballResolution(event)) {
+      const impactMs =
+        params.combatCues?.find(
+          (cue) => cue.eventIndex === eventIndex && (cue.kind === "hit" || cue.kind === "miss"),
+        )?.atMs ?? (params.eventDelaysMs?.[eventIndex] ?? 0) + FIREBALL_TIMING.travelMs;
+      effects.push(
+        ...fireballRequests(event, { ...params, events: params.events, eventIndex }, impactMs),
+      );
+      return;
+    }
     if (
       params.movementCues &&
       ((event.type === "unitMoved" && confirmedMovement(event)) || event.type === "stealthRevealed")
@@ -501,6 +569,11 @@ export function mapEventBatchToVfx(params: {
   for (const cue of params.combatCues ?? []) {
     if (cue.kind === "roll" || cue.kind === "heal" || !cue.cell) continue;
     if (params.events[cue.eventIndex]?.type === "sansLastAttackTick") continue;
+    if (
+      (cue.kind === "hit" || cue.kind === "miss") &&
+      isFireballResolution(params.events[cue.eventIndex])
+    )
+      continue;
     effects.push({
       id: `${cue.id}:vfx`,
       effectId:

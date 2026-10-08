@@ -125,6 +125,7 @@ export class AudioManager {
       category?: SoundCategory;
       gain?: number;
       maxVoices?: number;
+      durationMs?: number;
     } = {},
   ): PlaybackHandle | undefined {
     const context = this.context;
@@ -165,7 +166,8 @@ export class AudioManager {
       };
       source.onended = release;
       this.voices.add(voice);
-      source.start();
+      if (options.durationMs !== undefined) source.start(0, 0, options.durationMs / 1000);
+      else source.start();
       return voice;
     } catch {
       release();

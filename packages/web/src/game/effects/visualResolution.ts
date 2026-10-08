@@ -133,6 +133,7 @@ export function advanceVisualResolution(
     // Cast/activation has no target geometry; it may precede manual decisions.
     if (
       (event.type === "abilityUsed" && heroAoeEffect(event.abilityId)) ||
+      (event.type === "abilityUsed" && event.abilityId === "asgoreFireball") ||
       event.type === "forestActivated"
     ) {
       playableEvents.push(event);
@@ -168,6 +169,7 @@ export function advanceVisualResolution(
     const isEarly = (event: PresentationEvent) =>
       event.type === "rollResolved" ||
       (event.type === "abilityUsed" && Boolean(heroAoeEffect(event.abilityId))) ||
+      (event.type === "abilityUsed" && event.abilityId === "asgoreFireball") ||
       event.type === "forestActivated";
     const earlyRolls = playableEvents.filter(isEarly);
     legacyBufferedEvents.push(...playableEvents.filter((event) => !isEarly(event)));

@@ -653,7 +653,7 @@ test("Asgore buttons render authoritative charge availability and requirements",
   setLanguage("en", { setItem: () => undefined });
   for (const abilityId of [ABILITY_ASGORE_FIREBALL, ABILITY_ASGORE_FIRE_PARADE]) {
     const required = getAbilityChargeCost(getAbilitySpec(abilityId)!);
-    for (const current of [1, required]) {
+    for (const current of [required - 1, required]) {
       const asgore = makeUnit({
         id: "P1-asgore",
         class: "knight",

@@ -1,4 +1,5 @@
 import type { VfxEffectId, VfxPlacement } from "./vfxTypes";
+import { FIREBALL_TIMING } from "../../game/effects/asgorePresentation";
 
 const fireBurst = new URL(
   "../../assets/vfx/curated/kenney-particle-pack/fire-burst.png",
@@ -143,6 +144,15 @@ const beamPrimary = new URL("../../assets/vfx/heroes/sans/gaster_beam_primary.pn
   .href;
 const beamAccent = new URL("../../assets/vfx/heroes/sans/gaster_beam_accent.png", import.meta.url)
   .href;
+const fireball = new URL("../../assets/vfx/heroes/asgore/fireball.png", import.meta.url).href;
+const paradePrimary = new URL(
+  "../../assets/vfx/heroes/asgore/fire_parade_primary.png",
+  import.meta.url,
+).href;
+const paradeAccent = new URL(
+  "../../assets/vfx/heroes/asgore/fire_parade_accent.png",
+  import.meta.url,
+).href;
 const paired = (primary: string, accent: string, frames: number): VfxDefinition["layers"] => [
   {
     role: "primary",
@@ -328,15 +338,22 @@ export const vfxRegistry: Record<VfxEffectId, VfxDefinition> = {
     "status",
   ),
   fireball: {
-    ...generated(
-      "fireball",
-      new URL("../../assets/vfx/heroes/asgore/fireball.png", import.meta.url).href,
-      17,
-      700,
-      "projectile",
-      "projectile",
-    ),
+    ...generated("fireball", fireball, 17, FIREBALL_TIMING.travelMs, "projectile", "projectile"),
+    // Visually verified compact early ember. No undocumented later flames on misses.
+    startFrame: 1,
+    endFrame: 1,
     defaultScaleCells: 0.65,
+  },
+  fireballCast: {
+    ...generated("fireballCast", fireball, 17, FIREBALL_TIMING.castMs, "cell", "projectile"),
+    startFrame: 0,
+    endFrame: 1,
+    defaultScaleCells: 0.65,
+  },
+  fireballImpact: {
+    ...generated("fireballImpact", fireball, 17, FIREBALL_TIMING.impactMs, "cell", "impact"),
+    // Only a confirmed hit may use the unsliced combined artwork.
+    defaultScaleCells: 0.85,
   },
   searchReveal: {
     id: "searchReveal",
@@ -394,33 +411,21 @@ export const vfxRegistry: Record<VfxEffectId, VfxDefinition> = {
     reducedMotion: "short",
   },
   soulParade: {
-    id: "soulParade",
-    asset: mysticMarkStrip,
-    assetType: "spriteStrip",
-    sourcePack: "PIPOYA FREE VFX Mysterious Object",
-    sourceFile: "192x192/pipo-mapeffect021_192.png",
-    defaultPlacement: "unit",
-    durationMs: 900,
-    defaultScaleCells: 1.75,
-    opacity: 0.58,
-    frameWidth: 192,
-    frameHeight: 192,
-    frames: 20,
-    blendMode: "screen",
-    reducedMotion: "short",
+    ...generated(
+      "soulParade",
+      new URL("../../assets/vfx/heroes/asgore/soul_parade.png", import.meta.url).href,
+      22,
+      900,
+      "cell",
+      "status",
+    ),
+    defaultScaleCells: 1.2,
   },
   fireParade: {
-    id: "fireParade",
-    asset: fireBurst,
-    assetType: "particle",
-    sourcePack: "kenney_particle-pack",
-    sourceFile: "PNG (Transparent)/fire_01.png",
-    defaultPlacement: "area",
-    durationMs: 850,
-    defaultScaleCells: 1,
-    opacity: 0.32,
-    blendMode: "screen",
-    reducedMotion: "short",
+    ...generated("fireParade", paradePrimary, 29, 1200, "area", "ground"),
+    layers: paired(paradePrimary, paradeAccent, 29),
+    widthCells: 5,
+    heightCells: 5,
   },
   shield: {
     id: "shield",

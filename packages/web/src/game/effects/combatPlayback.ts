@@ -1,6 +1,7 @@
 import type { Coord, ProjectedGameEvent, PlayerView, RollKind } from "rules";
 import type { BoardEventBatch } from "./types";
 import { sameAbilityResolution } from "./heroPresentation";
+import { FIREBALL_TIMING, FIRE_PARADE_TIMING, isFireballResolution } from "./asgorePresentation";
 import {
   CURSE_APPLY_LEAD_MS,
   GASTER_TIMING,
@@ -202,6 +203,7 @@ function damageFromEvent(
     if (!event.hit || event.damage <= 0) return null;
     targetUnitId = event.defenderId;
     sourceUnitId = event.attackerId;
+    abilityId = event.abilityId;
     amount = event.damage;
     explicitPreviousHp = finiteNumber(event.previousHp);
     explicitNextHp = finiteNumber(event.nextHp) ?? event.defenderHpAfter;
@@ -346,7 +348,6 @@ export function buildCombatVisualPlaybackPlan(params: {
     if (unit) playbackStartingUnits[movement.unitId] = { ...unit, position: movement.from };
   }
   const scheduledDeaths = new Set<string>();
-  const abilityBySourceUnitId = new Map<string, string>();
   const addCue = (eventIndex: number, cue: WithoutCueIdentity<CombatPresentationCue>) => {
     const event = params.batch.events[eventIndex];
     combatCues.push({
@@ -425,10 +426,22 @@ export function buildCombatVisualPlaybackPlan(params: {
             signatureEndMs = Math.max(signatureEndMs, cursorMs + GASTER_TIMING.endMs);
             cursorMs += GASTER_TIMING.outcomesMs;
           }
+          if (aggregate.abilityId === "asgoreFireParade") {
+            signatureEndMs = Math.max(signatureEndMs, cursorMs + FIRE_PARADE_TIMING.endMs);
+            cursorMs += FIRE_PARADE_TIMING.outcomesMs;
+          }
         }
       });
     }
     eventDelaysMs[eventIndex] = aggregateStarts.get(eventIndex) ?? cursorMs;
+    if (
+      event.type === "abilityUsed" &&
+      event.abilityId === "asgoreFireball" &&
+      event.abilityUseId
+    ) {
+      cursorMs += FIREBALL_TIMING.castMs;
+      return;
+    }
     if (event.type === "sansLastAttackApplied") {
       // The accepted curse is introduced before final unitDied owns death.
       cursorMs += CURSE_APPLY_LEAD_MS;
@@ -516,6 +529,10 @@ export function buildCombatVisualPlaybackPlan(params: {
       return;
     }
     if (event.type === "aoeResolved") {
+      if (event.abilityId === "asgoreFireParade" && !aggregateStarts.has(eventIndex)) {
+        signatureEndMs = Math.max(signatureEndMs, cursorMs + FIRE_PARADE_TIMING.endMs);
+        cursorMs += FIRE_PARADE_TIMING.outcomesMs;
+      }
       if (isGasterResolution(event) && !aggregateStarts.has(eventIndex)) {
         signatureEndMs = Math.max(signatureEndMs, cursorMs + GASTER_TIMING.endMs);
         cursorMs += GASTER_TIMING.outcomesMs;
@@ -555,16 +572,17 @@ export function buildCombatVisualPlaybackPlan(params: {
       cursorMs = Math.max(end, impact + timing.outcomeMs) + timing.betweenHitsMs;
       return;
     }
-    if (
-      event.type === "abilityUsed" &&
-      typeof event.unitId === "string" &&
-      typeof event.abilityId === "string"
-    ) {
-      abilityBySourceUnitId.set(event.unitId, event.abilityId);
-    }
     const attackStart = cursorMs;
-    const impact = attackStart + (event.type === "attackResolved" ? timing.attackLeadMs : 0);
+    const impact =
+      attackStart +
+      (isFireballResolution(event)
+        ? FIREBALL_TIMING.travelMs
+        : event.type === "attackResolved"
+          ? timing.attackLeadMs
+          : 0);
     if (event.type === "attackResolved") {
+      if (isFireballResolution(event) && event.hit)
+        signatureEndMs = Math.max(signatureEndMs, impact + FIREBALL_TIMING.impactMs);
       eventDelaysMs[eventIndex] = impact;
       addCue(eventIndex, {
         kind: event.hit ? "hit" : "miss",
@@ -622,9 +640,6 @@ export function buildCombatVisualPlaybackPlan(params: {
         cursorMs = impact + timing.outcomeMs + timing.betweenHitsMs;
       }
       return;
-    }
-    if (damage.sourceUnitId && !damage.abilityId) {
-      damage.abilityId = abilityBySourceUnitId.get(damage.sourceUnitId);
     }
 
     if (
