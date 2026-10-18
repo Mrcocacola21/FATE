@@ -122,7 +122,7 @@ export const HERO_COVERAGE_EXCEPTIONS: Record<string, HeroAbilityCoverage> = {
   berserkAutoDefense: generic(
     "berserkerDefenseChosen / attackResolved",
     "REACTION / COMBAT",
-    "Authoritative defense choice and miss; no client roll.",
+    "Shield only for accepted automatic defense; manual dice outcomes use confirmed combat feedback.",
   ),
   tricksterAoE: generic(
     "aoeResolved / attackResolved",

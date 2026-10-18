@@ -406,13 +406,10 @@ export function effectsFromGameEvent(
     case "riverBoatResolved":
     case "riverTraLaLaResolved":
       return []; // Confirmed stages own transport; completion never replays it.
-    case "berserkerDefenseChosen": {
-      const coord = visibleUnitCoord(event.defenderId, context.view, context.previousPositions);
-      return [
-        ...unitFlash(event.defenderId, "defend", context),
-        ...floatingLabel(coord, event.choice === "auto" ? "dodge" : "status", "miss"),
-      ];
-    }
+    case "berserkerDefenseChosen":
+      // Choice is not a dice outcome. attackResolved owns defense flash/text,
+      // including automatic defense, so it is never presented twice.
+      return [];
     case "moveBlocked":
     case "sansMoveDenied": {
       const unitId = event.unitId;

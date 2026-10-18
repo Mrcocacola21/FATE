@@ -627,7 +627,11 @@ export function mapGameEventToVfx(
           })
         : [];
     case "berserkerDefenseChosen":
-      return unitRequest(context, event, "shield", event.defenderId, event.choice);
+      // Only the accepted charge-based defense is complete at choice time.
+      // Choosing dice leaves a manual roll pending; attackResolved owns its outcome.
+      return event.choice === "auto"
+        ? unitRequest(context, event, "shield", event.defenderId, event.choice)
+        : [];
     default:
       return [];
   }

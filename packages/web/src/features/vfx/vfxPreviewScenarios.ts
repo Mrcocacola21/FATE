@@ -723,7 +723,7 @@ export const VFX_PREVIEW_SCENARIOS: VfxPreviewScenario[] = [
     group: "Defense",
     expectedEffectIds: ["shield"],
     waitMs: 260,
-    events: [{ type: "berserkerDefenseChosen", defenderId: "preview-shield", choice: "roll" }],
+    events: [{ type: "berserkerDefenseChosen", defenderId: "preview-shield", choice: "auto" }],
   },
 ];
 
