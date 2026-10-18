@@ -27,7 +27,7 @@ import {
   initKnowledgeForOwners,
   makeRngSequence,
 } from "../../../../rules/src/tests/helpers/testUtils";
-import { buildCombatVisualPlaybackPlan } from "./combatPlayback";
+import { buildCombatVisualPlaybackPlan, combatVisualPlaybackFrame } from "./combatPlayback";
 import {
   advanceVisualResolution,
   createVisualResolutionState,
@@ -293,7 +293,11 @@ for (const [i, abilityId] of abilities.entries()) {
         assert.equal(impacts.length, 1);
         const hp = p.queue.filter((q) => q.type === "damageHpTween");
         assert.equal(hp.length, miss ? 0 : 3);
-        assert(hp.every((q) => q.startsAtMs > impacts[0].delayMs!));
+        const outcomes = p.batch.combatCues!.filter(c => c.kind === "hit" || c.kind === "miss");
+        assert(outcomes.every(c => c.atMs === impacts[0].delayMs!));
+        assert(hp.every((q) => q.startsAtMs === impacts[0].delayMs!));
+        assert(impacts[0].delayMs! >= Math.max(...rolls.map(c => c.atMs + c.durationMs)),
+          "all required manual dice finish before any AoE target outcome");
         assert(
           impacts[0].delayMs! >
             rolls.find(
@@ -318,6 +322,77 @@ for (const [i, abilityId] of abilities.entries()) {
       }
     });
 }
+
+for (const choice of ["roll", "auto"] as const) {
+  test(`real Dora Berserker ${choice}: pending defense is silent and confirmed result joins the shared impact`, () => {
+    const f = fixture(ABILITY_KAISER_DORA);
+    const defenderId = f.targets[0];
+    f.state = setUnit(f.state, defenderId, { class: "berserker", heroId: "grozny",
+      charges: { berserkAutoDefense: 6 } });
+    let result = applyAction(f.state, { type: "useAbility", unitId: f.casterId,
+      abilityId: ABILITY_KAISER_DORA, payload: { center } }, makeRngSequence([]));
+    const stages = [result];
+    result = respond(result.state, [0.8, 0.5]); stages.push(result);
+    assert.equal(result.state.pendingRoll?.kind, "dora_berserkerDefenseChoice");
+    result = respond(result.state, [], choice); stages.push(result);
+    assert.equal(result.state.units[defenderId].charges.berserkAutoDefense, choice === "auto" ? 0 : 6);
+    if (choice === "roll") {
+      assert.equal(result.state.pendingRoll?.kind, "dora_defenderRoll");
+      assert(!result.events.some(e => e.type === "attackResolved" || e.type === "rollResolved"));
+    }
+    let visual = createVisualResolutionState({ batch: null, view: makePlayerView(f.state, "P1"), enabled: true });
+    for (const [i, stage] of stages.entries()) {
+      const view = makePlayerView(stage.state, "P1");
+      visual = advanceVisualResolution(visual, { batch: batch(stage.events, view, i + 1), view, enabled: true });
+      if (visual.visualBatch) assert(!vfx(visual.visualBatch).some(e =>
+        ["shield", "combatHit", "combatMiss", "doraImpact"].includes(e.effectId)));
+    }
+    if (choice === "roll") { result = respond(result.state, [0.99, 0.99]); stages.push(result); }
+    for (let i = 0; result.state.pendingRoll; i++) {
+      assert(i < 8);
+      result = respond(result.state, [0.01, 0.2]); stages.push(result);
+    }
+    const events = stages.flatMap(stage => stage.events);
+    const p = plan(projectEventsForRecipient(result.state, events, "P1"), f.state, result.state);
+    const outcomes = p.batch.combatCues!.filter(c => c.kind === "hit" || c.kind === "miss");
+    assert.equal(outcomes.length, 3);
+    assert.equal(new Set(outcomes.map(c => c.atMs)).size, 1);
+    const defense = outcomes.find(c => "unitId" in c && c.unitId === defenderId)!;
+    assert.equal(defense.kind, "miss");
+    const shields = vfx(p.batch).filter(e => e.effectId === "shield");
+    assert.equal(shields.length, choice === "auto" ? 1 : 0);
+    assert(shields.every(e => e.delayMs === defense.atMs));
+  });
+}
+
+test("real lethal Dora preserves Sans Last Attack choice and only the accepted final unitDied removes Sans", () => {
+  const f = fixture(ABILITY_KAISER_DORA);
+  const sansId = f.targets[0];
+  f.state = setUnit(f.state, sansId, { class: "trickster", heroId: "sans", hp: 1,
+    sansUnbelieverUnlocked: true });
+  let result = applyAction(f.state, { type: "useAbility", unitId: f.casterId,
+    abilityId: ABILITY_KAISER_DORA, payload: { center } }, makeRngSequence([]));
+  const stages = [result];
+  for (let i = 0; result.state.pendingRoll?.kind !== "selectLastAttackTarget"; i++) {
+    assert(i < 8);
+    result = respond(result.state, result.state.pendingRoll!.kind.endsWith("_attackerRoll") ? [0.8, 0.5] : [0.01, 0.2]);
+    stages.push(result);
+  }
+  const pending = result.state;
+  assert.equal(pending.units[sansId].hp, 0);
+  assert(pending.units[sansId].position);
+  const events = stages.flatMap(stage => stage.events);
+  assert(!events.some(e => e.type === "unitDied" && e.unitId === sansId));
+  const early = plan(projectEventsForRecipient(pending, events, "P2"), f.state, pending);
+  assert(!early.queue.some(q => q.type === "death" || q.type === "removeVisualUnit"));
+  assert(combatVisualPlaybackFrame(early, early.durationMs).visualUnitsByUnitId[sansId].position);
+  result = respond(pending, [], { type: "sansLastAttackTarget", targetId: f.casterId });
+  assert.equal(result.events.filter(e => e.type === "unitDied" && e.unitId === sansId).length, 1);
+  const final = plan(projectEventsForRecipient(result.state, result.events, "P2"), pending, result.state);
+  assert.equal(final.queue.filter(q => q.type === "death").length, 1);
+  assert.equal(vfx(final.batch).filter(e => e.effectId === "unitDeath").length, 1);
+  assert.equal(sounds(final.batch).filter(s => s.key.endsWith(".death")).length, 1);
+});
 
 test("Carpet center stays authoritative, 2d9 has one dice display, pending area is a telegraph and reveal is reused", () => {
   const f = resolveAoe(ABILITY_KAISER_CARPET_STRIKE, { hidden: true, ally: true });
@@ -665,6 +740,9 @@ test("AoE death stays generic and follows damage; final unitDied alone owns remo
     assert.equal(p.queue.filter((q) => q.type === "damageHpTween").length, 3);
     const deaths = p.queue.filter((q) => q.type === "death");
     assert.equal(deaths.length, 3);
+    assert.equal(new Set(deaths.map(q => q.startsAtMs)).size, 1);
+    assert.equal(vfx(p.batch).filter(e => e.effectId === "unitDeath").length, 3);
+    assert.equal(sounds(p.batch).filter(s => s.key.endsWith(".death")).length, 3);
     for (const death of deaths) {
       const damage = p.queue.find(
         (q) => q.type === "damageHpTween" && q.damage.targetUnitId === death.death.unitId,

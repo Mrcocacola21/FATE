@@ -1,6 +1,6 @@
 import type { ProjectedGameEvent, PlayerView } from "rules";
 import { ABILITY_VLAD_INTIMIDATE } from "../../rulesHints";
-import { heroAoeEffect, heroCueId } from "../../game/effects/heroPresentation";
+import { heroAoeEffect, heroCueId, sameAbilityResolution } from "../../game/effects/heroPresentation";
 import {
   REMAINING_CASTS,
   REMAINING_AREAS,
@@ -651,6 +651,21 @@ export function mapEventBatchToVfx(params: {
 }): BoardVfxRequest[] {
   const effects: BoardVfxRequest[] = [];
   params.events.forEach((event, eventIndex) => {
+    if (event.type === "berserkerDefenseChosen" && event.choice === "auto" && params.combatCues) {
+      const outcome = params.events.findIndex(candidate => candidate.type === "attackResolved" &&
+        candidate.defenderId === event.defenderId && sameAbilityResolution(event, candidate));
+      const cue = params.combatCues.find(candidate => candidate.eventIndex === outcome && candidate.kind === "miss");
+      // Correlated AoE defense uses its authorized outcome anchor and shared time.
+      // A normal Roll choice never enters this branch or creates a shield.
+      if (outcome >= 0) {
+        const cell = cue && "cell" in cue ? cue.cell : undefined;
+        effects.push(...cellRequest({ ...params, eventIndex }, event, "shield", cell ?? null, event.choice,
+          { anchorMode: "event", delayMs: cue?.atMs ?? params.eventDelaysMs?.[eventIndex] ?? 0 }));
+        return;
+      }
+      if (params.events.some(candidate => candidate.type === "aoeResolved" &&
+        sameAbilityResolution(event, candidate))) return;
+    }
     if (
       params.transportCues &&
       (riverStage(event) ||

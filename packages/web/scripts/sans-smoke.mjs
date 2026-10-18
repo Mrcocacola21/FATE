@@ -180,9 +180,13 @@ try {
     const fixtures = await (await fetch("./fixtures.json")).json();
     return fixtures.gaster.length - 1;
   });
+  const rollDurationMs = await page.evaluate(async () => {
+    const { diceResultTiming } = await import("/src/game/effects/diceResultTiming.ts");
+    return diceResultTiming(false).durationMs;
+  });
   for (let i = 0; i < decisionCount; i++) {
     await next();
-    await page.clock.runFor(750);
+    await page.clock.runFor(rollDurationMs + 32);
   }
   await page.clock.runFor(80);
   for (const player of ["P1", "P2"]) {
@@ -201,12 +205,20 @@ try {
     assert(geometry.width > 250, "beam extends well beyond selected adjacent target");
     assert(geometry.transform.includes(player === "P1" ? "-45" : "135"));
     assert.equal(geometry.clipped, "hidden");
+    const outcomes = await page.locator('[data-board="' + player + '"] [data-vfx-effect="combatHit"], [data-board="' + player + '"] [data-vfx-effect="combatMiss"]')
+      .evaluateAll(elements => elements.map(el => Number(el.dataset.vfxStart)));
+    assert.equal(outcomes.length, 4, "one confirmed outcome per affected target, including ally");
+    assert.equal(new Set(outcomes).size, 1, "all targets share one beam impact");
   }
   const beamStarts = await page
     .locator('[data-board="P1"] [data-vfx-effect="gasterBeam"]')
     .evaluate((el) => Number(el.dataset.vfxStart));
   await page.clock.runFor(Math.max(0, beamStarts - (await page.evaluate(() => Date.now())) + 180));
   await syncSprites();
+  for (const player of ["P1", "P2"]) {
+    assert.equal(await page.locator('[data-board="' + player + '"] [data-unit-visual-state="takingDamage"]').count(), 4,
+      "all affected HP transitions are active together at beam impact");
+  }
   for (const player of ["P1", "P2"]) {
     assert(
       Number(
@@ -231,7 +243,7 @@ try {
       "one signature per recipient",
     );
   observations.push(
-    "real manual Gaster chain: one cannon/charge/fire per recipient; paired animated board-edge diagonal, correct P1/P2 rotation; decisions usable during playback",
+    "real manual Gaster chain: readable sequential dice; one cannon/charge/fire per recipient; four shared outcome timestamps and four simultaneous HP transitions, including ally; board-edge diagonal and correct P1/P2 rotation",
   );
   await page.clock.runFor(4000);
   const allyId = await page.evaluate(async () => {
@@ -258,7 +270,7 @@ try {
   await page.getByRole("button", { name: "Last Attack baseline", exact: true }).click();
   await page.clock.runFor(32);
   await next();
-  await page.clock.runFor(2500);
+  await page.clock.runFor(rollDurationMs * 2 + 1000);
   assert.equal(await page.locator('[data-vfx-effect="unitDeath"]').count(), 0);
   const targetIndex = await page.evaluate(async () => {
     const f = await (await fetch("./fixtures.json")).json();
@@ -289,7 +301,7 @@ try {
     finalAudio.some((c) => c.key === "hero.sans.abilities.sansLastAttack.apply" && c.played),
     "curse apply asset decoded and played",
   );
-  assert.equal(finalAudio.filter((c) => c.key === "common.combat.death").length, 2);
+  assert.equal(finalAudio.filter((c) => c.key === "hero.sans.basic.death").length, 2);
   assert.equal(
     finalAudio.filter((c) => c.key === "hero.sans.abilities.sansLastAttack.apply").length,
     2,
@@ -319,7 +331,7 @@ try {
     tickAudio.filter((c) => c.key === "hero.sans.abilities.sansLastAttack.remove").length,
     2,
   );
-  assert(!tickAudio.some((c) => c.key === "common.combat.death"));
+  assert(!tickAudio.some((c) => c.key.endsWith(".death")));
   observations.push(
     "active curse reconnect is silent; next real own-turn 2-to-1 tick and removal each play once, no death",
   );

@@ -399,8 +399,9 @@ export function buildCombatVisualPlaybackPlan(params: {
       timing.hpMaxMs,
       timing.hpBaseMs + Math.max(0, Math.abs(from - to) - 1) * timing.hpPerPointMs,
     );
-  const scheduleDamage = (damage: DamageVisualEvent, hpStart: number) => {
-    const hpEnd = hpStart + hpDuration(damage.previousHp, damage.nextHp);
+  const scheduleDamage = (damage: DamageVisualEvent, hpStart: number,
+    durationMs = hpDuration(damage.previousHp, damage.nextHp)) => {
+    const hpEnd = hpStart + durationMs;
     queue.push({ type: "damageHpTween", damage, startsAtMs: hpStart, endsAtMs: hpEnd });
     runningHp[damage.targetUnitId] = damage.nextHp;
     return hpEnd;
@@ -411,6 +412,66 @@ export function buildCombatVisualPlaybackPlan(params: {
   // correlated outcome. Keep event order intact for damage/death ownership.
   const aggregateStarts = new Map<number, number>();
   let signatureEndMs = 0;
+  // An authoritative aggregate identifies one area impact, not an arbitrary
+  // transport batch or a multi-attack chain. Normal/ordered attacks keep the
+  // cursor below. Each target of this aggregate instead shares one outcome phase.
+  type AoeImpact = {
+    aggregate: Extract<ProjectedGameEvent, { type: "aoeResolved" }>;
+    aggregateIndex: number;
+    hpMs: number;
+    hasDeath: boolean;
+    startMs?: number;
+    impactMs?: number;
+  };
+  const aoeImpacts = new Map<number, AoeImpact>();
+  params.batch.events.forEach((aggregate, aggregateIndex) => {
+    if (aggregate.type !== "aoeResolved" ||
+      !(aggregate.abilityUseId || aggregate.chainId || aggregate.visualBatchId)) return;
+    // Multiple pulses/aggregates sharing one use are ordered boundaries. A chain
+    // ID alone must never collapse those into one impact.
+    if (params.batch.events.some((event, index) => index !== aggregateIndex &&
+      event.type === "aoeResolved" && sameAbilityResolution(aggregate, event))) return;
+    const targets = new Set([...aggregate.affectedUnitIds, ...Object.keys(aggregate.damageByUnitId ?? {})]);
+    const attacks = params.batch.events.flatMap((event, index) =>
+      event.type === "attackResolved" && !event.isBasicAttack &&
+      sameAbilityResolution(aggregate, event) && targets.has(event.defenderId) &&
+      (!aggregate.abilityId || !event.abilityId || aggregate.abilityId === event.abilityId) &&
+      (!aggregate.sourceUnitId || aggregate.sourceUnitId === event.attackerId)
+        ? [{ event, index }] : []);
+    // Several strikes on the same target are an ordered attack, not one area hit.
+    if (new Set(attacks.map(({ event }) => event.defenderId)).size !== attacks.length) return;
+    const impact: AoeImpact = { aggregate, aggregateIndex,
+      hpMs: Math.max(timing.hpBaseMs,
+        ...attacks.map(({ event }) => hpDuration(0, event.damage)),
+        ...Object.values(aggregate.damageByUnitId ?? {}).map(amount => hpDuration(0, amount))),
+      hasDeath: false };
+    aoeImpacts.set(aggregateIndex, impact);
+    for (const { index } of attacks) aoeImpacts.set(index, impact);
+    params.batch.events.forEach((event, index) => {
+      if (event.type === "eventRedacted" || !sameAbilityResolution(aggregate, event)) return;
+      if (event.type === "unitDied" && targets.has(event.unitId)) {
+        impact.hasDeath = true;
+        aoeImpacts.set(index, impact);
+      }
+      if (event.type === "berserkerDefenseChosen" && targets.has(event.defenderId))
+        aoeImpacts.set(index, impact);
+    });
+  });
+  const scheduleDeath = (event: Extract<ProjectedGameEvent, { type: "unitDied" }>,
+    eventIndex: number, deathStart: number) => {
+    if (scheduledDeaths.has(event.unitId)) return;
+    const death: DeathVisualEvent = { type: "death", unitId: event.unitId,
+      cause: event.cause, chainId: event.chainId, eventIndex,
+      ...(event.deathCell ? { cell: { ...event.deathCell } } : {}) };
+    eventDelaysMs[eventIndex] = deathStart;
+    addCue(eventIndex, { kind: "death", unitId: event.unitId,
+      ...(event.deathCell ? { cell: { ...event.deathCell } } : {}),
+      atMs: deathStart, durationMs: timing.deathMs });
+    queue.push({ type: "death", death, startsAtMs: deathStart, endsAtMs: deathStart + timing.deathMs },
+      { type: "removeVisualUnit", unitId: event.unitId,
+        startsAtMs: deathStart + timing.deathMs, endsAtMs: deathStart + timing.deathMs });
+    scheduledDeaths.add(event.unitId);
+  };
   const presentationOrder = params.batch.events.map((event, eventIndex) => ({ event, eventIndex }));
   // Some direct-damage resolvers emit final deaths before the aggregate damage
   // summary. Present the confirmed HP change first, keeping ingress identities.
@@ -431,7 +492,74 @@ export function buildCombatVisualPlaybackPlan(params: {
       presentationOrder.splice(deathIndex, 0, aggregate);
     }
   }
+  // Live release normally already places the last manual roll before buffered
+  // outcomes. Full preview/replay batches can interleave them: keep dice order,
+  // but move this impact's outcomes behind its last actual roll, never replay dice.
+  for (const area of new Set(aoeImpacts.values())) {
+    const lastRoll = [...presentationOrder].reverse().find(({ event }) => event.type === "rollResolved" &&
+      isPresentedRoll(event.rollKind) && sameAbilityResolution(area.aggregate, event));
+    if (!lastRoll) continue;
+    const outcomes = presentationOrder.filter(({ eventIndex }) => aoeImpacts.get(eventIndex) === area);
+    for (const outcome of outcomes) presentationOrder.splice(presentationOrder.indexOf(outcome), 1);
+    presentationOrder.splice(presentationOrder.indexOf(lastRoll) + 1, 0, ...outcomes);
+  }
   presentationOrder.forEach(({ event, eventIndex }) => {
+    const area = aoeImpacts.get(eventIndex);
+    if (area) {
+      if (area.startMs === undefined) {
+        area.startMs = cursorMs;
+        const buildup = isGasterResolution(area.aggregate) ? GASTER_TIMING.outcomesMs
+          : area.aggregate.abilityId === "asgoreFireParade" ? FIRE_PARADE_TIMING.outcomesMs : 0;
+        area.impactMs = cursorMs + buildup;
+        aggregateStarts.set(area.aggregateIndex, cursorMs);
+        if (isGasterResolution(area.aggregate))
+          signatureEndMs = Math.max(signatureEndMs, cursorMs + GASTER_TIMING.endMs);
+        if (area.aggregate.abilityId === "asgoreFireParade")
+          signatureEndMs = Math.max(signatureEndMs, cursorMs + FIRE_PARADE_TIMING.endMs);
+      }
+      const impact = area.impactMs!;
+      const outcomeEnd = impact + Math.max(timing.outcomeMs, area.hpMs);
+      const deathStart = outcomeEnd + timing.deathPauseMs;
+      eventDelaysMs[eventIndex] = event.type === "aoeResolved" ? area.startMs! : impact;
+      if (event.type === "attackResolved") {
+        addCue(eventIndex, { kind: event.hit ? "hit" : "miss", unitId: event.defenderId,
+          ...(event.targetCell ? { cell: { ...event.targetCell } } : {}),
+          ...(event.hit && event.damage > 0 ? { amount: event.damage, hpAtMs: impact } : {}),
+          attackAtMs: area.startMs, atMs: impact, durationMs: timing.outcomeMs });
+        if (event.attackerId && !queue.some(item => item.type === "attack" && item.unitId === event.attackerId && item.startsAtMs === area.startMs))
+          queue.push({ type: "attack", unitId: event.attackerId,
+            startsAtMs: area.startMs!, endsAtMs: impact + timing.impactPauseMs });
+        const damage = damageFromEvent(event, eventIndex, runningHp, playbackStartingUnits);
+        if (damage) scheduleDamage(damage, impact, area.hpMs);
+      } else if (event.type === "aoeResolved") {
+        for (const [unitId, amount] of Object.entries(event.damageByUnitId ?? {})) {
+          if (amount <= 0 || ownsAoeTarget(event, unitId, eventIndex)) continue;
+          const previousHp = runningHp[unitId];
+          if (previousHp === undefined) continue;
+          // A reconnect baseline can already contain earlier defenders' damage,
+          // while this final summary still lists every target of the use. Do not
+          // synthesize those historical hits from the aggregate. A later heal can
+          // legitimately restore the same HP and must retain its damage phase.
+          if (previousHp === playbackStartingHp[unitId] && previousHp === finalSnapshot.hp[unitId] && !params.batch.events.some(candidate =>
+            candidate.type === "unitHealed" && candidate.unitId === unitId)) continue;
+          // Freeze only recipient-authorized ingress geometry; never query later positions.
+          const death = params.batch.events.find(candidate => candidate.type === "unitDied" &&
+            candidate.unitId === unitId && sameAbilityResolution(event, candidate));
+          const cell = death?.type === "unitDied" ? death.deathCell : params.batch.view?.units[unitId]?.position;
+          addCue(eventIndex, { kind: "damage", unitId, amount, ...(cell ? { cell: { ...cell } } : {}),
+            atMs: impact, hpAtMs: impact, durationMs: timing.outcomeMs });
+          scheduleDamage({ type: "damage", targetUnitId: unitId, previousHp,
+            nextHp: Math.max(0, previousHp - amount), maxHp: Math.max(1, previousHp), amount,
+            sourceUnitId: event.sourceUnitId, abilityId: event.abilityId, chainId: event.chainId,
+            eventIndex, showDamageFlash: Boolean(cell) }, impact, area.hpMs);
+        }
+      } else if (event.type === "unitDied") {
+        transportAttachments = transportAttachments.filter(a => a.carrierId !== event.unitId && a.passengerId !== event.unitId);
+        scheduleDeath(event, eventIndex, deathStart);
+      }
+      cursorMs = Math.max(cursorMs, (area.hasDeath ? deathStart + timing.deathMs : outcomeEnd) + timing.betweenHitsMs);
+      return;
+    }
     const abilityUseId = "abilityUseId" in event ? event.abilityUseId : undefined;
     if (event.type === "attackResolved") {
       params.batch.events.forEach((aggregate, aggregateIndex) => {
@@ -727,36 +855,8 @@ export function buildCombatVisualPlaybackPlan(params: {
     const damage = damageFromEvent(event, eventIndex, runningHp, playbackStartingUnits);
     if (!damage) {
       if (event.type === "unitDied" && !scheduledDeaths.has(event.unitId)) {
-        const death: DeathVisualEvent = {
-          type: "death",
-          unitId: event.unitId,
-          cause: event.cause,
-          chainId: event.chainId,
-          eventIndex,
-          ...(event.deathCell ? { cell: { ...event.deathCell } } : {}),
-        };
         const deathStart = cursorMs + timing.deathPauseMs;
-        eventDelaysMs[eventIndex] = deathStart;
-        addCue(eventIndex, {
-          kind: "death",
-          unitId: event.unitId,
-          ...(event.deathCell ? { cell: { ...event.deathCell } } : {}),
-          atMs: deathStart,
-          durationMs: timing.deathMs,
-        });
-        queue.push({
-          type: "death",
-          death,
-          startsAtMs: deathStart,
-          endsAtMs: deathStart + timing.deathMs,
-        });
-        queue.push({
-          type: "removeVisualUnit",
-          unitId: event.unitId,
-          startsAtMs: deathStart + timing.deathMs,
-          endsAtMs: deathStart + timing.deathMs,
-        });
-        scheduledDeaths.add(event.unitId);
+        scheduleDeath(event, eventIndex, deathStart);
         cursorMs = deathStart + timing.deathMs + timing.betweenHitsMs;
       } else if (event.type === "attackResolved") {
         cursorMs = impact + timing.outcomeMs + timing.betweenHitsMs;
