@@ -25,7 +25,7 @@ export interface MatchmakingDependencies {
     userId: string,
     gameMode: GameModeId,
   ): Promise<{ rating: number; ratingDeviation: number }>;
-  hasPersistentActiveMatch(userId: string): Promise<boolean>;
+  hasPersistentActiveMatch(userId: string, exceptRoomId?: string): Promise<boolean>;
   hasRuntimeMatch(userId: string, exceptRoomId?: string): boolean;
   createPair(attempt: PairAttempt): Promise<{ matchId: string; roomId: string }>;
   resultIsUsable(result: MatchFound, userId: string): boolean;
@@ -209,6 +209,10 @@ export class MatchmakingService {
       throw this.error("MATCHMAKING_ALREADY_IN_MATCH", "You already occupy a player seat");
     this.competitorLocks.add(userId);
     try {
+      if (await this.deps.hasPersistentActiveMatch(userId, roomId))
+        throw this.error("MATCHMAKING_ALREADY_IN_MATCH", "You already have an active match");
+      if (this.deps.hasRuntimeMatch(userId, roomId))
+        throw this.error("MATCHMAKING_ALREADY_IN_MATCH", "You already occupy a player seat");
       return await action();
     } finally {
       this.competitorLocks.delete(userId);

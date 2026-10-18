@@ -1,4 +1,5 @@
 import { useQueue } from "../matchmaking/store";
+import { ActiveMatchNotice } from "../matches/ActiveMatchNotice";
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router";
 import { useGameStore } from "../store";
@@ -68,6 +69,7 @@ export function Lobby() {
   };
   return (
     <div className="lobby-page mx-auto max-w-6xl space-y-6" data-testid="lobby-page">
+      <ActiveMatchNotice />
       <header className="play-header">
         <p className="section-kicker">{t("customLobby.kicker")}</p>
         <h1 className="font-display mt-1 text-3xl font-semibold sm:text-4xl">

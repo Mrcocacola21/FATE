@@ -1,4 +1,7 @@
 import assert from "node:assert/strict";
+import { mock } from "node:test";
+import { reconnectGraceMs } from "../matches/reconnectPolicy";
+import { enqueueRoomCommand, fateRoomKey } from "../roomQueue";
 import { randomUUID } from "node:crypto";
 import Fastify from "fastify";
 import { SeededRNG, type GameModeId } from "rules";
@@ -26,7 +29,7 @@ function fixture(mode: GameModeId = "classic", target = 37) {
     snapshots: [20].filter(r => r <= target).map(r => source.history.get(r)!), target };
 }
 type Fixture = ReturnType<typeof fixture>;
-function runtime(fixtures: Fixture[]) {
+function runtime(fixtures: Fixture[], beforeRatingScan?: () => void) {
   const memory = new MemoryMatchPersistence();
   const lifecycle = new MatchLifecycle(logger, memory, new MatchSnapshotService(undefined, { interval: 20 }));
   const snapshots = new MatchSnapshotService({
@@ -47,7 +50,7 @@ function runtime(fixtures: Fixture[]) {
     loadDurableHistory: async id => fixtures.find(f => f.match.id === id)!.rows,
     latestSnapshotRevision: async id => fixtures.find(f => f.match.id === id)!.snapshots.at(-1)?.revision ?? 0,
     interrupt: async (id, reason) => { const f = fixtures.find(f => f.match.id === id)!; f.match.status = "CANCELLED"; f.match.finishReason = reason; },
-    findUnprocessedRatings: async () => [],
+    findUnprocessedRatings: async () => { beforeRatingScan?.(); return []; },
   }, replay, { processRatedMatch: async () => { throw new Error("Recovery rated an active match"); } });
   return { recovery, replay, lifecycle, memory, queries };
 }
@@ -145,6 +148,18 @@ async function run() {
   await assert.rejects(broken.recover(r.lifecycle, logger), /storage offline/);
   assert.equal(outage.match.status, "IN_PROGRESS");
   await r.lifecycle.close(); storeTestHooks.reset();
+  // Slow startup/rating repair cannot consume the post-readiness reconnect window.
+  const slowFixture = fixture();
+  mock.timers.enable({ apis: ["setTimeout"] });
+  const slow = runtime([slowFixture], () => mock.timers.tick(reconnectGraceMs() * 2));
+  try {
+    assert.equal((await slow.recovery.recover(slow.lifecycle, logger)).recovered, 1);
+    await enqueueRoomCommand(fateRoomKey(slowFixture.match.roomId!), () => undefined);
+    assert.equal(getGameRoom(slowFixture.match.roomId!)?.interruptionReason, undefined);
+    assert(getGameRoom(slowFixture.match.roomId!));
+  } finally {
+    mock.timers.reset(); await slow.lifecycle.close(); storeTestHooks.reset();
+  }
   const health = Fastify(); let ready = false;
   registerHealthRoutes(health, async () => true, () => ready);
   assert.equal((await health.inject({ url: "/health" })).statusCode, 200);

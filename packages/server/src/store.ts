@@ -107,6 +107,8 @@ export interface GameRoom {
   seatTokens: { P1: string | null; P2: string | null };
   seatIdentities: Record<PlayerId, ConnectionIdentity | null>;
   participantsLocked: boolean;
+  /** Set under the room queue before neutral interruption persistence begins. */
+  interruptionReason?: string;
   /** Immutable competitor ownership, independent of transport/grace tokens. */
   reservedUserIds?: Record<PlayerId, string>;
   spectators: Set<string>;

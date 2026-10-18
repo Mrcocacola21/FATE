@@ -1,4 +1,5 @@
 import { MatchTypeError, validateMatchType } from "../matches/matchType";
+import { reconnectGraceMs } from "../matches/reconnectPolicy";
 import { applicationMetrics, type ApplicationMetrics } from "../observability/metrics";
 import { readMatchmakingConfig, type MatchmakingConfig } from "../matchmaking/config";
 import { ratedCompatibility, type RatedCompatibility } from "../lobby/metadata";
@@ -74,6 +75,66 @@ export class MatchCreationError extends Error {
 
 /** In-memory runtime with tracked durable metadata, journal and private checkpoints. */
 export class MatchLifecycle {
+  private readonly recoveryGrace = new Map<string, Map<PlayerId, NodeJS.Timeout>>();
+  onInterrupted: (room: GameRoom) => void = () => {};
+
+  startRecoveryGrace(room: GameRoom): void {
+    for (const seat of ["P1", "P2"] as const) {
+      let seats = this.recoveryGrace.get(room.id);
+      if (!seats) this.recoveryGrace.set(room.id, seats = new Map());
+      const timer = setTimeout(() => {
+        void enqueueRoomCommand(fateRoomKey(room.id), async () => {
+          if (this.recoveryGrace.get(room.id)?.get(seat) !== timer) return;
+          await this.interruptRoom(room, "SERVER_RECONNECT_GRACE_EXPIRED");
+        }).catch(() => this.logger.error({ event: "match:grace_expiry_failed", roomId: room.id }, "Recovery grace expiry failed"));
+      }, reconnectGraceMs());
+      timer.unref();
+      seats.set(seat, timer);
+    }
+  }
+
+  participantConnected(room: GameRoom, seat: PlayerId): void {
+    const seats = this.recoveryGrace.get(room.id);
+    const timer = seats?.get(seat);
+    if (timer) clearTimeout(timer);
+    seats?.delete(seat);
+    if (!seats?.size) this.recoveryGrace.delete(room.id);
+  }
+
+  private clearRecoveryGrace(roomId: string): void {
+    for (const timer of this.recoveryGrace.get(roomId)?.values() ?? []) clearTimeout(timer);
+    this.recoveryGrace.delete(roomId);
+  }
+
+  /** Caller holds the room queue. No winner is inferred from transport events. */
+  async interruptRoom(room: GameRoom, reason: string): Promise<void> {
+    if (getGameRoom(room.id) !== room || room.state.phase === "ended") return;
+    const p = this.projection(room);
+    if (!p || !this.getService().interruptMatch) return;
+    room.interruptionReason ??= reason;
+    this.clearRecoveryGrace(room.id);
+    // Stop commands immediately; keep the room as a blocker until the write commits.
+    p.interrupt = room.interruptionReason;
+    p.resultBlocked = false;
+    await this.actionQueue.drain(p.matchId);
+    await this.flush(p);
+  }
+
+  /** Called inside a missing room's queue; never reconstruct over in-flight local writes. */
+  async prepareMissingRoom(matchId: string): Promise<boolean> {
+    const p = this.projections.get(matchId);
+    if (!p) return true;
+    if (this.completions.has(matchId)) return false;
+    if (p.resultBlocked || !(await this.actionQueue.drain(matchId))) {
+      // The runtime is gone and the durable stream cannot be completed safely.
+      // Preserve history and release through neutral interruption, never a fake result.
+      p.resultBlocked = false;
+      p.finish = undefined;
+      p.interrupt = "SERVER_RUNTIME_JOURNAL_UNAVAILABLE";
+    }
+    await this.flush(p);
+    return !this.hasPending(p);
+  }
   private readonly projections = new Map<string, Projection>();
   private service?: MatchPersistence;
   private timer?: NodeJS.Timeout;
@@ -185,6 +246,7 @@ export class MatchLifecycle {
 
   async close(): Promise<void> {
     this.closing = true;
+    for (const id of this.recoveryGrace.keys()) this.clearRecoveryGrace(id);
     if (this.timer) clearInterval(this.timer);
     if (!(await drainRoomCommands())) this.logger.error({ event: "match:command_drain_timeout" }, "Pending commands timed out at shutdown");
     await this.drainActions();
@@ -410,6 +472,7 @@ export class MatchLifecycle {
 
   /** Caller holds the room queue. Publish the final pick only together with gameplay. */
   async completeDraftPick(room: GameRoom, draft: DraftState, player: PlayerId, heroId: string) {
+    if (room.interruptionReason) return rejected("MATCH_INTERRUPTED", "Match interrupted");
     const invalid = await this.prepareStart(room);
     if (invalid) return invalid;
 
@@ -441,6 +504,7 @@ export class MatchLifecycle {
   }
 
   async applyAction(room: GameRoom, action: GameAction, playerId?: PlayerId) {
+    if (room.interruptionReason) return rejected("MATCH_INTERRUPTED", "Match interrupted");
     if (action.type === "startGame") {
       const invalid = await this.prepareStart(room);
       if (invalid) return invalid;
@@ -690,7 +754,18 @@ export class MatchLifecycle {
       if (p.interrupt && service.interruptMatch) {
         operation = "interrupted";
         await service.interruptMatch(p.matchId, p.interrupt);
+        this.logger.info({ event: "match_interrupted", matchId: p.matchId, roomId: p.roomId,
+          reason: p.interrupt }, "Match neutrally interrupted");
         p.interrupt = undefined;
+        const room = getGameRoom(p.roomId);
+        if (room?.matchId === p.matchId && room.interruptionReason) {
+          deleteGameRoom(room.id);
+          this.clearRecoveryGrace(room.id);
+          this.onInterrupted(room);
+          p.removed = true;
+          this.actionQueue.release(p.matchId);
+          this.projections.delete(p.matchId);
+        }
         this.metrics.matchTransition(p, "interrupted");
       }
     } catch (error) {

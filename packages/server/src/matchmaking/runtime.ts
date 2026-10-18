@@ -1,5 +1,5 @@
 import type { GameModeId } from "rules";
-import { getDatabaseClient } from "../db/client";
+import { ActiveMatchService } from "../services/activeMatchService";
 import { getGameRoom, listGameRooms } from "../store";
 import { RatingRepository } from "../repositories/ratingRepository";
 import { RatingService } from "../services/ratingService";
@@ -11,7 +11,7 @@ export function createMatchmakingService(
   lifecycle: MatchLifecycle,
   logger: ConstructorParameters<typeof MatchmakingService>[0]["logger"],
   ratings?: Pick<RatingService, "getPlayerRating">,
-  activeMatch?: (userId: string) => Promise<boolean>,
+  activeMatch?: (userId: string, exceptRoomId?: string) => Promise<boolean>,
   assertAccountActive: (userId: string) => Promise<void> = (id) =>
     new ConnectionIdentityService().assertActive(id),
 ): MatchmakingService {
@@ -41,11 +41,9 @@ export function createMatchmakingService(
       ),
     hasPersistentActiveMatch:
       activeMatch ??
-      (async (userId) =>
-        !!(await getDatabaseClient().matchParticipant.findFirst({
-          where: { userId, match: { status: "IN_PROGRESS" } },
-          select: { id: true },
-        }))),
+      (async (userId, exceptRoomId) => {
+        return !!(await new ActiveMatchService(lifecycle, logger).resolve(userId, exceptRoomId));
+      }),
     hasRuntimeMatch: (id, exceptRoomId) =>
       listGameRooms().some(
         (room) =>

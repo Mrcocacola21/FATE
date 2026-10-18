@@ -15,7 +15,7 @@ test("interrupted match notice is localized, links to Lobby and disappears when 
     useGameStore.setState({ joinError: "MATCH_INTERRUPTED" });
     act(() => { rendered = create(<MemoryRouter><MatchInterruptedNotice /></MemoryRouter>); });
     const notice = rendered.root.findByProps({ role: "alert" });
-    assert.equal(notice.findByType("p").children.join(""), "This match was interrupted by a server restart and cannot be resumed.");
+    assert.equal(notice.findByType("p").children.join(""), "This match ended because a participant left, reconnect time expired, or recovery was impossible.");
     assert.equal(notice.findByType("a").props.href, "/lobby");
     act(() => setLanguage("uk", null));
     assert.equal(notice.findByType("p").children.join(""), translate("errors.matchInterrupted"));

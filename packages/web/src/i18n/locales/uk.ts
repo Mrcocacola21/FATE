@@ -3,6 +3,7 @@ import { en } from "./en";
 import { adminUk } from "../../admin/locales";
 
 export const uk = {
+  activeMatch: { present: "У вас є активний матч", return: "Повернутися до матчу" },
   diceResult: {
     yourRoll: "Ваш кидок",
     playerRoll: "Кидок гравця {{player}}",
@@ -1977,7 +1978,7 @@ export const uk = {
     spectatorCannotAct: "Спостерігачі не можуть виконувати дії.",
     roleTaken: "Цю роль уже зайнято.",
     roomNotFound: "Лобі не знайдено.",
-    matchInterrupted: "Цей матч було перервано через перезапуск сервера. Продовжити його неможливо.",
+    matchInterrupted: "Матч завершено через вихід гравця, тривалу відсутність або неможливість відновлення.",
     roomExists: "Кімната вже існує.",
     rateLimited: "Забагато запитів. Зачекайте та спробуйте ще раз.",
     invalidPayload: "Сервер відхилив некоректний запит.",

@@ -2,7 +2,7 @@ import type { MatchAction } from "@prisma/client";
 import { applicationMetrics, elapsedSeconds, type ApplicationMetrics } from "../observability/metrics";
 import { getLogger } from "../observability/logger";
 import { performance } from "node:perf_hooks";
-import { getGameRoom, publishGameRoom, restoreGameRoom } from "../store";
+import { getGameRoom, publishGameRoom, restoreGameRoom, type GameRoom } from "../store";
 import type { MatchLifecycle } from "../persistence/matchLifecycle";
 import { MatchRecoveryRepository, type RecoveryMatch } from "../repositories/matchRecoveryRepository";
 import { ReplayService } from "./replayService";
@@ -65,73 +65,17 @@ export class MatchRecoveryService {
     const started = Date.now();
     const summary: RecoverySummary = { scanned: 0, recovered: 0, skipped: 0, interrupted: 0,
       finalized: 0, ratingsRepaired: 0, ratingFailures: 0, durationMs: 0 };
+    const awaitingReconnect: GameRoom[] = [];
     let afterId: string | undefined;
     for (;;) {
       const page = await this.repository.findCandidates(afterId);
       if (!page.length) break;
       for (const match of page) {
         summary.scanned++;
-        const candidateStarted = performance.now();
-        let outcome: "recovered" | "finalized" | "skipped" | "unrecoverable" | "error" = "error";
-        try {
-          const existing = match.roomId ? getGameRoom(match.roomId) : undefined;
-          if (existing) {
-            if (existing.matchId !== match.id) throw new MatchRecoveryError("ROOM_ID_CONFLICT");
-            summary.skipped++;
-            outcome = "skipped";
-            continue;
-          }
-          if (match.status === "WAITING") throw new MatchRecoveryError("WAITING_LOBBY_NOT_DURABLE");
-          if (!match.roomId) throw new MatchRecoveryError("MISSING_STABLE_IDENTITY");
-          if (!["standard", "classic", "draft"].includes(match.gameMode))
-            throw new MatchRecoveryError("UNSUPPORTED_GAME_MODE");
-          const participants = this.participants(match);
-          const rows = await this.repository.loadDurableHistory(match.id);
-          const snapshotRevision = await this.repository.latestSnapshotRevision(match.id);
-          const target = durableRecoveryFrontier(match, rows, snapshotRevision);
-          const recovered = await this.replay.reconstructForRecovery(match.id, target);
-          if (recovered.state.phase === "ended" && snapshotRevision === target && recovered.base.revision !== target)
-            throw new MatchRecoveryError("INVALID_TERMINAL_SNAPSHOT");
-          const config = initialConfigSchema.safeParse(match.initialConfig);
-          const hostSeat = recovered.state.hostPlayerId ?? (config.success ? config.data.hostSeat : null);
-          if (!hostSeat) throw new MatchRecoveryError("MISSING_HOST_IDENTITY");
-          let room;
-          try { room = restoreGameRoom({
-            matchId: match.id, roomId: match.roomId, seed: match.seed,
-            gameMode: match.gameMode as "standard" | "classic" | "draft",
-            matchType: match.isRated ? "RATED" : "CASUAL", createdAt: match.createdAt,
-            lobbyName: config.success ? config.data.lobbyName ?? "FATE Lobby" : "FATE Lobby",
-            origin: config.success ? config.data.origin ?? "MANUAL" : "MANUAL",
-            recovered, participants, hostSeat,
-          }); } catch { throw new MatchRecoveryError("STATE_VALIDATION_FAILED"); }
-          lifecycle.attachRestoredRoom(room);
-          if (room.state.phase === "ended") {
-            // Durable terminal action, result commit interrupted. Use normal result/rating pipeline.
-            await lifecycle.finalizeRestoredRoom(room, snapshotRevision < target, rows[rows.length - 1].createdAt);
-            summary.finalized++;
-            outcome = "finalized";
-          } else {
-            publishGameRoom(room);
-            summary.recovered++;
-            outcome = "recovered";
-          }
-          logger.info({ event: "match:recovered", matchId: match.id, roomId: match.roomId,
-            revision: target, baseRevision: recovered.base.revision, actionsApplied: recovered.actionsApplied },
-          "Durable match reconstructed");
-        } catch (error) {
-          // Storage/global failures stop startup. Never cancel games because PostgreSQL is down.
-          if (error instanceof ReplayError && error.code === "REPLAY_STORAGE_UNAVAILABLE") throw error;
-          if (!(error instanceof MatchRecoveryError || error instanceof ReplayError || error instanceof MatchSnapshotError || error instanceof MatchResultError)) throw error;
-          if (error instanceof MatchRecoveryError && error.code === "ROOM_ID_CONFLICT") throw error;
-          await this.repository.interrupt(match.id, `SERVER_RESTART_UNRECOVERABLE:${error.code}`);
-          summary.interrupted++;
-          outcome = "unrecoverable";
-          this.metrics.matchTransition(match, "interrupted");
-          logger.error({ event: "match:recovery_interrupted", matchId: match.id, errorCode: error.code,
-            ...(error instanceof ReplayError ? error.metadata : {}) }, "Match cannot safely resume");
-        } finally {
-          this.metrics.observeRecovery(outcome, elapsedSeconds(candidateStarted));
-        }
+        const existed = match.roomId ? getGameRoom(match.roomId) : undefined;
+        await this.recoverCandidate(match, lifecycle, logger, summary, false);
+        const restored = match.roomId ? getGameRoom(match.roomId) : undefined;
+        if (!existed && restored) awaitingReconnect.push(restored);
       }
       afterId = page[page.length - 1].id;
     }
@@ -154,9 +98,79 @@ export class MatchRecoveryService {
       }
       afterId = page[page.length - 1].id;
     }
+    // Large startup scans/rating repair must not consume players' reconnect windows.
+    for (const room of awaitingReconnect) lifecycle.startRecoveryGrace(room);
     summary.durationMs = Date.now() - started;
     logger.info({ event: "match:recovery_summary", ...summary }, "Startup match recovery completed");
     return summary;
+  }
+
+  /** Caller serializes the room; shared startup/runtime reconstruction and neutral failure policy. */
+  async recoverCandidate(match: RecoveryMatch, lifecycle: MatchLifecycle, logger: Logger,
+    summary: RecoverySummary = { scanned: 1, recovered: 0, skipped: 0, interrupted: 0,
+      finalized: 0, ratingsRepaired: 0, ratingFailures: 0, durationMs: 0 }, startGrace = true): Promise<void> {
+    const candidateStarted = performance.now();
+    let outcome: "recovered" | "finalized" | "skipped" | "unrecoverable" | "error" = "error";
+    try {
+      const existing = match.roomId ? getGameRoom(match.roomId) : undefined;
+      if (existing) {
+        if (existing.matchId !== match.id) throw new MatchRecoveryError("ROOM_ID_CONFLICT");
+        summary.skipped++;
+        outcome = "skipped";
+        return;
+      }
+      if (match.status === "WAITING") throw new MatchRecoveryError("WAITING_LOBBY_NOT_DURABLE");
+      if (!match.roomId) throw new MatchRecoveryError("MISSING_STABLE_IDENTITY");
+      if (!["standard", "classic", "draft"].includes(match.gameMode))
+        throw new MatchRecoveryError("UNSUPPORTED_GAME_MODE");
+      const participants = this.participants(match);
+      const rows = await this.repository.loadDurableHistory(match.id);
+      const snapshotRevision = await this.repository.latestSnapshotRevision(match.id);
+      const target = durableRecoveryFrontier(match, rows, snapshotRevision);
+      const recovered = await this.replay.reconstructForRecovery(match.id, target);
+      if (recovered.state.phase === "ended" && snapshotRevision === target && recovered.base.revision !== target)
+        throw new MatchRecoveryError("INVALID_TERMINAL_SNAPSHOT");
+      const config = initialConfigSchema.safeParse(match.initialConfig);
+      const hostSeat = recovered.state.hostPlayerId ?? (config.success ? config.data.hostSeat : null);
+      if (!hostSeat) throw new MatchRecoveryError("MISSING_HOST_IDENTITY");
+      let room;
+      try { room = restoreGameRoom({
+        matchId: match.id, roomId: match.roomId, seed: match.seed,
+        gameMode: match.gameMode as "standard" | "classic" | "draft",
+        matchType: match.isRated ? "RATED" : "CASUAL", createdAt: match.createdAt,
+        lobbyName: config.success ? config.data.lobbyName ?? "FATE Lobby" : "FATE Lobby",
+        origin: config.success ? config.data.origin ?? "MANUAL" : "MANUAL",
+        recovered, participants, hostSeat,
+      }); } catch { throw new MatchRecoveryError("STATE_VALIDATION_FAILED"); }
+      lifecycle.attachRestoredRoom(room);
+      if (room.state.phase === "ended") {
+        // Durable terminal action, result commit interrupted. Use normal result/rating pipeline.
+        await lifecycle.finalizeRestoredRoom(room, snapshotRevision < target, rows[rows.length - 1].createdAt);
+        summary.finalized++;
+        outcome = "finalized";
+      } else {
+        publishGameRoom(room);
+        if (startGrace) lifecycle.startRecoveryGrace(room);
+        summary.recovered++;
+        outcome = "recovered";
+      }
+      logger.info({ event: "match:recovered", matchId: match.id, roomId: match.roomId,
+        revision: target, baseRevision: recovered.base.revision, actionsApplied: recovered.actionsApplied },
+      "Durable match reconstructed");
+    } catch (error) {
+      // Storage/global failures stop startup. Never cancel games because PostgreSQL is down.
+      if (error instanceof ReplayError && error.code === "REPLAY_STORAGE_UNAVAILABLE") throw error;
+      if (!(error instanceof MatchRecoveryError || error instanceof ReplayError || error instanceof MatchSnapshotError || error instanceof MatchResultError)) throw error;
+      if (error instanceof MatchRecoveryError && error.code === "ROOM_ID_CONFLICT") throw error;
+      await this.repository.interrupt(match.id, `SERVER_RESTART_UNRECOVERABLE:${error.code}`);
+      summary.interrupted++;
+      outcome = "unrecoverable";
+      this.metrics.matchTransition(match, "interrupted");
+      logger.error({ event: "match:recovery_interrupted", matchId: match.id, errorCode: error.code,
+        ...(error instanceof ReplayError ? error.metadata : {}) }, "Match cannot safely resume");
+    } finally {
+      this.metrics.observeRecovery(outcome, elapsedSeconds(candidateStarted));
+    }
   }
 
   private participants(match: RecoveryMatch) {

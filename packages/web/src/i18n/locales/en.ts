@@ -1,5 +1,6 @@
 import { adminEn } from "../../admin/locales";
 export const en = {
+  activeMatch: { present: "You have an active match", return: "Return to match" },
   diceResult: {
     yourRoll: "Your roll",
     playerRoll: "{{player}}'s roll",
@@ -1966,7 +1967,7 @@ export const en = {
     spectatorCannotAct: "Spectators cannot act.",
     roleTaken: "That role is already taken.",
     roomNotFound: "Lobby not found.",
-    matchInterrupted: "This match was interrupted by a server restart and cannot be resumed.",
+    matchInterrupted: "This match ended because a participant left, reconnect time expired, or recovery was impossible.",
     roomExists: "Room already exists.",
     rateLimited: "Too many requests. Please wait and try again.",
     invalidPayload: "The server rejected an invalid request.",

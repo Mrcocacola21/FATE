@@ -540,6 +540,8 @@ async function run() {
     assert.equal((await request("/api/matchmaking/queue", liveUser)).json().status, "NOT_QUEUED");
     const player = await connect(),
       adminPlayer = await connect();
+    // Use an account without the deliberately unrecoverable historical IN_PROGRESS
+    // fixture; competitor admission now correctly reconciles that account's rows.
     const roomId = randomUUID();
     player.send({
       type: "joinRoom",
@@ -554,7 +556,7 @@ async function run() {
       mode: "join",
       roomId,
       role: "P2",
-      accessToken: admin.token,
+      accessToken: admin2.token,
     });
     await adminPlayer.wait("joinAck");
     adminPlayer.send({
@@ -627,7 +629,7 @@ async function run() {
     assert.equal(room.revision, runtimeRevision);
     // A failed attempt to authenticate a different occupied seat cannot erase this
     // connection's established account association or its subsequent block checks.
-    resumed.send({ type: "joinRoom", mode: "join", roomId, role: "P2", accessToken: admin.token, resumeToken: "wrong" });
+    resumed.send({ type: "joinRoom", mode: "join", roomId, role: "P2", accessToken: admin2.token, resumeToken: "wrong" });
     assert.equal((await resumed.wait("error")).code, "INVALID_RESUME_TOKEN");
     assert.equal(
       (await request(`/api/admin/users/${liveUser.id}/block`, admin, "POST", {})).statusCode,

@@ -8,6 +8,7 @@ import { MatchTypeError, type MatchType } from "./matches/matchType";
 
 import type { FastifyInstance } from "fastify";
 import { randomUUID } from "node:crypto";
+import { reconnectGraceMs } from "./matches/reconnectPolicy";
 import WebSocket, { type RawData } from "ws";
 import type {
   Coord,
@@ -216,7 +217,7 @@ const graceBySeat = new Map<string, SeatGraceRecord>();
 const MAX_WS_PAYLOAD_BYTES = Number(process.env.WS_MAX_PAYLOAD_BYTES ?? 64 * 1024);
 const WS_RATE_LIMIT_WINDOW_MS = Number(process.env.WS_RATE_LIMIT_WINDOW_MS ?? 1000);
 const WS_RATE_LIMIT_MAX_MESSAGES = Number(process.env.WS_RATE_LIMIT_MAX_MESSAGES ?? 60);
-const RECONNECT_GRACE_MS = Number(process.env.RECONNECT_GRACE_MS ?? 45_000);
+const RECONNECT_GRACE_MS = reconnectGraceMs();
 type ClientMessage = z.infer<typeof ClientMessageSchema>;
 
 type SwitchRoleTransition =
@@ -536,15 +537,22 @@ function scheduleSeatGrace(room: GameRoom, meta: ConnectionMeta, lifecycle?: Mat
 
   const expiresAt = Date.now() + RECONNECT_GRACE_MS;
   const timer = setTimeout(() => {
-    graceByToken.delete(resumeToken);
-    graceBySeat.delete(seatGraceKey(roomId, seat));
     void enqueueRoomCommand(fateRoomKey(roomId), async () => {
+      // Reconnect may have cleared/replaced the timer while this command waited.
+      if (graceByToken.get(resumeToken)?.timer !== timer) return;
+      graceByToken.delete(resumeToken);
+      graceBySeat.delete(seatGraceKey(roomId, seat));
       const current = getGameRoom(roomId);
       if (!current) return;
 
       const stillReserved =
         current.seats[seat] === connId && current.seatTokens[seat] === resumeToken;
       if (!stillReserved) return;
+
+      if (lifecycle && current.matchId && current.participantsLocked && current.state.phase !== "ended") {
+        await lifecycle.interruptRoom(current, "SERVER_RECONNECT_GRACE_EXPIRED");
+        return;
+      }
 
       vacateSeat(current, seat, connId);
       await lifecycle?.syncVacantSeats(current);
@@ -939,6 +947,7 @@ async function detachFromFateRoom(
   }
 
   if (meta.seat) {
+    if (room.seats[meta.seat] !== meta.connId) return;
     if (options.useGrace) {
       scheduleSeatGrace(room, meta, lifecycle);
       logFate(serverLogger!, {
@@ -950,6 +959,10 @@ async function detachFromFateRoom(
       return;
     }
     clearSeatGraceByToken(meta.resumeToken);
+    if (room.participantsLocked && room.state.phase !== "ended") {
+      await lifecycle.interruptRoom(room, "SERVER_PARTICIPANT_LEFT");
+      return;
+    }
     vacateSeat(room, meta.seat, meta.connId);
   } else {
     room.spectators.delete(meta.connId);
@@ -987,6 +1000,16 @@ export function registerGameWebSocket(
   metrics: ApplicationMetrics = applicationMetrics,
 ) {
   serverLogger = server.log;
+  lifecycle.onInterrupted = (room) => {
+    clearSeatGrace(room.id, "P1");
+    clearSeatGrace(room.id, "P2");
+    for (const [client, meta] of socketMeta) {
+      if (meta.channel !== "fate" || meta.roomId !== room.id) continue;
+      sendMessage(client, { type: "joinRejected", reason: "match_interrupted", message: "MATCH_INTERRUPTED" });
+      removeSocketFromRoom(room.id, client);
+      socketMeta.delete(client);
+    }
+  };
   server.get("/ws", { websocket: true, schema: { hide: true } }, (socket, request) => {
     const rawOrigin = request.headers.origin;
     const origin = Array.isArray(rawOrigin) ? rawOrigin[0] : rawOrigin;
@@ -1030,6 +1053,8 @@ export function registerGameWebSocket(
     function enqueueRoomCommand<T>(key: string, task: () => Promise<T> | T): Promise<T> {
       return enqueueRawRoomCommand(key, async () => {
         await checkCurrentAccount();
+        if (key.startsWith("fate:") && getGameRoom(key.slice(5))?.interruptionReason)
+          throw new MultiplayerIdentityError("MATCH_INTERRUPTED", "Match interrupted");
         return task();
       });
     }
@@ -1238,7 +1263,9 @@ export function registerGameWebSocket(
           if (targetMode === "normal" && msg.role !== "spectator" && !identity)
             throw new MultiplayerIdentityError((targetRoom?.matchType ?? msg.matchType) === "RATED" ? "RATED_MATCH_REQUIRES_AUTHENTICATION" : "AUTH_REQUIRED", "Sign in to occupy a player seat");
           if (targetRoom && (msg.role === "P1" || msg.role === "P2"))
-            assertSeatIdentity(targetRoom, msg.role, identity, msg.resumeToken ?? "");
+            assertSeatIdentity(targetRoom, msg.role, identity, msg.resumeToken ??
+              (identity && targetRoom.participantsLocked && targetRoom.seatIdentities[msg.role]?.userId === identity.userId
+                ? targetRoom.seatTokens[msg.role] ?? "" : ""));
           const targetRoomId = msg.mode === "create" ? (msg.roomId ?? randomUUID()) : msg.roomId;
           if (!targetRoomId) {
             sendMessage(socket, {
@@ -1273,7 +1300,8 @@ export function registerGameWebSocket(
             const connId = randomUUID();
             const matchedRoom = getGameRoom(targetRoomId);
             const matchedSeat = msg.role === "P1" || msg.role === "P2" ? msg.role : null;
-            const resumeToken = matchedSeat && identity && matchedRoom?.reservedUserIds?.[matchedSeat] === identity.userId
+            const resumeToken = matchedSeat && identity && (matchedRoom?.reservedUserIds?.[matchedSeat] === identity.userId ||
+              (!msg.resumeToken && matchedRoom?.participantsLocked && matchedRoom.seatIdentities[matchedSeat]?.userId === identity.userId))
               ? matchedRoom.seatTokens[matchedSeat] ?? randomUUID() : msg.resumeToken ?? randomUUID();
 
             const requestedSeat =
@@ -1371,6 +1399,11 @@ export function registerGameWebSocket(
               return;
             }
 
+            if (room.interruptionReason) {
+              sendMessage(socket, { type: "joinRejected", reason: "match_interrupted", message: "MATCH_INTERRUPTED" });
+              return;
+            }
+
             if (requestedSeat) {
               seat = requestedSeat;
               assertSeatIdentity(room, seat, identity, resumeToken);
@@ -1392,6 +1425,7 @@ export function registerGameWebSocket(
                 }
               }
               clearSeatGrace(room.id, seat);
+              lifecycle.participantConnected(room, seat);
               const assigned = assignSeat(room, seat, connId, resumeToken);
               if (!room.participantsLocked) room.seatIdentities[seat] = identity;
               if (!assigned) {
@@ -1462,7 +1496,7 @@ export function registerGameWebSocket(
             broadcastRoomState(room);
           });
           };
-          if (matchmaking && identity && msg.role !== "spectator" && targetMode !== "test")
+          if (matchmaking && identity && (msg.mode === "create" || msg.role !== "spectator") && targetMode !== "test")
             await matchmaking.withCompetitor(identity.userId, targetRoomId, enter);
           else await enter();
           return;

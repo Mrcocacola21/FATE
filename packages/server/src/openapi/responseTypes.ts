@@ -59,6 +59,7 @@ export type ServerInfo = ReturnType<typeof serverInfo>;
 export type Health = ReturnType<typeof healthStatus>;
 
 export interface ApiResponses {
+  ActiveMatch: { match: import("../services/activeMatchService").ActiveMatch | null };
   CurrentUser: CurrentUser;
   AuthCredentials: AuthCredentials;
   AuthSessionCredentials: AuthSessionCredentials;

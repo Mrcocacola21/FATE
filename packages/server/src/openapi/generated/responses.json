@@ -1,5 +1,8 @@
 {
   "responses": {
+    "ActiveMatch": {
+      "$ref": "#/definitions/ActiveMatch"
+    },
     "AdminMatch": {
       "$ref": "#/definitions/AdminMatch"
     },
@@ -474,6 +477,53 @@
         "kind",
         "name",
         "slot"
+      ]
+    },
+    "ActiveMatch": {
+      "type": "object",
+      "properties": {
+        "match": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/definitions/ActiveMatch2"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "match"
+      ]
+    },
+    "ActiveMatch2": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "rejoinable": {
+          "type": "boolean"
+        },
+        "roomId": {
+          "type": "string"
+        },
+        "seat": {
+          "type": "string",
+          "enum": [
+            "P1",
+            "P2"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "rejoinable",
+        "roomId",
+        "seat"
       ]
     },
     "AdminMatch": {

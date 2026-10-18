@@ -44,6 +44,8 @@ import { createLogger, safeError } from "./observability/logger";
 import { requestId, registerRequestContext } from "./observability/requestContext";
 import { applicationMetrics, type ApplicationMetrics } from "./observability/metrics";
 import { getGameRoomCount } from "./store";
+import { ActiveMatchService } from "./services/activeMatchService";
+import { MatchService } from "./services/matchService";
 import type { DestinationStream } from "pino";
 
 export async function buildServer(
@@ -108,11 +110,21 @@ export async function buildServer(
   const lifecycle = new MatchLifecycle(server.log, options.matchPersistence, undefined, options.roomSeed, metrics);
   const identity = options.connectionIdentity ?? new ConnectionIdentityService();
   const connections = new AccountConnections();
+  // Explicit memory persistence remains database-free; real persistence always reconciles.
+  const persistentEligibility = !options.matchPersistence || options.matchPersistence instanceof MatchService;
+  let activeMatches: ActiveMatchService | undefined;
+  const resolveActiveMatch = async (userId: string, exceptRoomId?: string) => {
+    if (!persistentEligibility) return null;
+    activeMatches ??= new ActiveMatchService(lifecycle, server.log);
+    return activeMatches.resolve(userId, exceptRoomId);
+  };
   const matchmaking = createMatchmakingService(
     lifecycle,
     server.log,
     options.ratings,
-    options.matchmakingActiveMatch,
+    options.matchmakingActiveMatch ?? (async (userId, exceptRoomId) => {
+      return !!(await resolveActiveMatch(userId, exceptRoomId));
+    }),
     (userId) => identity.assertActive?.(userId) ?? Promise.resolve(),
   );
   let startupComplete = false;
@@ -186,6 +198,7 @@ export async function buildServer(
     prefix: "/api",
     identity,
     actionHistory: options.actionHistory,
+    resolveActiveMatch,
   });
   await server.register(matchHistoryRoutes, { prefix: "/api", matchHistory: options.matchHistory });
   await server.register(statisticsRoutes, {

@@ -9,6 +9,19 @@ export type RecoveryMatch = Match & { participants: MatchParticipant[] };
 export class MatchRecoveryRepository {
   constructor(private readonly database: PrismaClient = getDatabaseClient()) {}
 
+  findUserActiveMatches(userId: string): Promise<RecoveryMatch[]> {
+    return this.database.match.findMany({
+      where: { status: "IN_PROGRESS", participants: { some: { userId } } },
+      include: { participants: true },
+      orderBy: { id: "asc" },
+    });
+  }
+
+  findActiveById(id: string): Promise<RecoveryMatch | null> {
+    return this.database.match.findFirst({ where: { id, status: "IN_PROGRESS" },
+      include: { participants: true } });
+  }
+
   findCandidates(afterId?: string): Promise<RecoveryMatch[]> {
     return this.database.match.findMany({
       where: {

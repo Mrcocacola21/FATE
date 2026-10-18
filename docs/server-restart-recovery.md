@@ -147,9 +147,12 @@ GUEST_RECLAIM_UNAVAILABLE; names/IP/user-agent/first arrival are never used. No 
 mechanism was introduced because current persistent competitors are authenticated.
 
 Resume tokens and grace timers remain process-local. Successful recovery reserves offline
-competitors and refreshes lastActivityAt, giving a new room TTL/reconnect opportunity;
-no old timer is resurrected and there is no immediate restart forfeit. Once connected,
-normal disconnect grace applies. There are no additional durable turn deadlines to restore.
+competitors and starts a fresh `RECONNECT_GRACE_MS` window for each seat. Reconnect
+clears that seat's recovery timer. An expired window neutrally interrupts the match,
+without a fabricated winner or rating. No old timer is resurrected and there is no
+immediate restart forfeit. Once connected, normal disconnect grace applies.
+See [disconnect lifecycle](match-disconnect-lifecycle.md) for runtime reconciliation,
+explicit leave, account-level rejoin and the canonical active-match guard.
 If an active room expires/is evicted by normal cleanup before completion, the persistence
 service neutrally cancels it with SERVER_ROOM_EXPIRED rather than leaving a phantom active
 Match. The existing lifecycle retry handles transient cancellation-write failures.

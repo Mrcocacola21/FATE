@@ -1,4 +1,5 @@
 import type { GameModeId } from "rules";
+import { ActiveMatchNotice } from "../matches/ActiveMatchNotice";
 import { CompetitiveModeSelector } from "../modes/CompetitiveModeSelector";
 import { getGameModeName } from "../modes/modeLabels";
 import { useEffect, useState } from "react";
@@ -113,6 +114,7 @@ export function PlayPage() {
   const current = data?.owner === user?.id ? data : null;
   return (
     <div className="play-page competitive-page mx-auto max-w-5xl" data-testid="play-page">
+      <ActiveMatchNotice />
       <header className="play-header mb-7">
         <p className="section-kicker">{t("competitive.kicker")}</p>
         <h1 className="font-display mt-1 text-3xl font-semibold sm:text-4xl">{t("shell.play")}</h1>

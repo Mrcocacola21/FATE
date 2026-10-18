@@ -10,10 +10,12 @@ import { parseInput } from "../validation/parseRequest";
 import { idParamsSchema } from "../validation/commonSchemas";
 import { matchActionsQuerySchema } from "../matches/actionQuerySchema";
 import { registerApiErrorHandler } from "./apiErrorHandler";
+import type { ActiveMatch } from "../services/activeMatchService";
 
 export interface MatchRouteOptions {
   identity: Pick<ConnectionIdentityService, "verify">;
   actionHistory?: Pick<MatchActionService, "getCompletedMatchActionHistory">;
+  resolveActiveMatch?: (userId: string) => Promise<ActiveMatch | null>;
 }
 
 export async function matchRoutes(
@@ -23,6 +25,14 @@ export async function matchRoutes(
   registerApiErrorHandler(server);
   let service: MatchService | undefined;
   let history = options.actionHistory;
+  server.get("/matches/active", documented({
+    operationId: "getActiveMatch", tag: "Matches", summary: "Resolve the current recoverable match",
+    auth: "bearer", response: "ActiveMatch", errors: protectedErrors,
+  }), async (request, reply) => {
+    reply.header("Cache-Control", "no-store");
+    const identity = await requireIdentity(request.headers.authorization, options.identity, request);
+    return { match: await options.resolveActiveMatch?.(identity.userId) ?? null };
+  });
   server.get(
     "/matches/:id/actions",
     documented({
