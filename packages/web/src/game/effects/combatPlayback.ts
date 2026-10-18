@@ -1,5 +1,6 @@
 import type { Coord, ProjectedGameEvent, PlayerView, RollKind } from "rules";
 import type { BoardEventBatch } from "./types";
+import { diceResultTiming } from "./diceResultTiming";
 import { riverStage, riverMovementCue, type TransportPresentationCue, type TransportAttachment } from "./riverPresentation";
 import { sameAbilityResolution } from "./heroPresentation";
 import { FIREBALL_TIMING, FIRE_PARADE_TIMING, isFireballResolution } from "./asgorePresentation";
@@ -73,7 +74,11 @@ export type CombatPresentationCue = {
   atMs: number;
   durationMs: number;
 } & (
-  | { kind: "roll"; roll: Extract<ProjectedGameEvent, { type: "rollResolved" }> }
+  | {
+      kind: "roll";
+      roll: Extract<ProjectedGameEvent, { type: "rollResolved" }>;
+      reducedMotion?: boolean;
+    }
   | {
       kind: "hit" | "miss" | "damage" | "heal" | "death";
       unitId: string;
@@ -163,7 +168,6 @@ export function isGameplayProjectedUnit(view: PlayerView, unitId: string): boole
 }
 
 const NORMAL_TIMING = {
-  rollMs: 650,
   outcomeMs: 300,
   attackLeadMs: 210,
   impactPauseMs: 65,
@@ -176,7 +180,6 @@ const NORMAL_TIMING = {
 };
 
 const REDUCED_TIMING = {
-  rollMs: 450,
   outcomeMs: 180,
   attackLeadMs: 70,
   impactPauseMs: 25,
@@ -611,8 +614,12 @@ export function buildCombatVisualPlaybackPlan(params: {
       }
     }
     if (event.type === "rollResolved" && isPresentedRoll(event.rollKind)) {
-      addCue(eventIndex, { kind: "roll", roll: event, atMs: cursorMs, durationMs: timing.rollMs });
-      cursorMs += timing.rollMs;
+      const { durationMs } = diceResultTiming(params.reducedMotion);
+      addCue(eventIndex, {
+        kind: "roll", roll: event, atMs: cursorMs, durationMs,
+        reducedMotion: params.reducedMotion,
+      });
+      cursorMs += durationMs;
       return;
     }
     if (event.type === "unitDied") transportAttachments = transportAttachments.filter(

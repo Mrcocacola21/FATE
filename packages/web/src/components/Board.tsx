@@ -1056,7 +1056,7 @@ export const Board: FC<BoardProps> = ({
             </div>
           ) : null}
           {rows}
-          <CombatRollFeedback cue={visualResolution.roll} t={t} top={labelSize + 4} />
+          <CombatRollFeedback cue={visualResolution.roll} t={t} playerId={playerId} />
           <div className="pointer-events-none absolute" style={{ left: labelSize, top: labelSize }}>
             <UnitStatusVfx
               view={view}

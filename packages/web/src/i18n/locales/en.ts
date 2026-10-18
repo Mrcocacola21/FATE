@@ -1,5 +1,12 @@
 import { adminEn } from "../../admin/locales";
 export const en = {
+  diceResult: {
+    yourRoll: "Your roll",
+    playerRoll: "{{player}}'s roll",
+    tieBreak: "Tiebreaker Roll",
+    die: "Die {{index}} (d{{sides}}): {{value}}",
+    total: "Total",
+  },
   persistentStatus: {
     odinHuginn: "Huginn: adjacent stealth detection", duolingoBerserker: "Berserker unlocked",
     curse: "Last Attack curse", movementDisabled: "Movement disabled next own turn",

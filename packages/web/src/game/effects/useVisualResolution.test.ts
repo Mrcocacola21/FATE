@@ -13,6 +13,83 @@ import { sfxPlayer } from "../../features/sfx/sfxPlayer";
 import type { SoundCue } from "../../features/sfx/sfxTypes";
 import type { QueuedBoardVfxRequest } from "../../features/vfx/vfxTypes";
 import type { QueuedBoardEffect } from "./types";
+import { diceResultTiming } from "./diceResultTiming";
+import { MAX_PRESENTATION_AGE_MS } from "./presentationSession";
+
+test("dice queue preserves each readable result, drops stale/hidden work and resumes only fresh post-baseline rolls", (t) => {
+  t.mock.timers.enable({ apis: ["Date"], now: 1000 });
+  const previousWindow = Object.getOwnPropertyDescriptor(globalThis, "window");
+  const frames = new Map<number, FrameRequestCallback>();
+  let frameId = 0;
+  let now = 0;
+  t.mock.method(performance, "now", () => now);
+  Object.defineProperty(globalThis, "window", { configurable: true, value: {
+    requestAnimationFrame: (callback: FrameRequestCallback) => { frames.set(++frameId, callback); return frameId; },
+    cancelAnimationFrame: (id: number) => frames.delete(id), setTimeout, clearTimeout,
+  } });
+  const view = { units: {}, pendingCombatQueueCount: 0 } as unknown as PlayerView;
+  const binding = { roomId: "dice", recipient: "P1" };
+  const session = new PresentationSession();
+  session.begin(binding);
+  session.snapshot({ ...binding, streamId: "S", revision: 0 });
+  const roll = (id: string): import("rules").DeliveredGameEvent => ({
+    type: "rollResolved", eventId: id, rollId: id, rollKind: "attack_attackerRoll",
+    rollerPlayerId: "P1", rollIndex: 0, dice: [4, 5], sides: 6, total: 9,
+  });
+  const receive = (revision: number, id: string) => session.receive({ streamId: "S", revision, events: [roll(id)] }, binding, view);
+  let output: ReturnType<typeof useVisualResolution>;
+  function Harness({ batches, enabled = true }: { batches: BoardEventBatch[]; enabled?: boolean }) {
+    output = useVisualResolution({ batch: null, batches, view, enabled, sessionKey: session.key });
+    return null;
+  }
+  const current = () => output;
+  let renderer: ReactTestRenderer | undefined;
+  const update = (batches: BoardEventBatch[], enabled = true) => act(() => {
+    renderer!.update(createElement(Harness, { batches, enabled }));
+  });
+  const advance = (ms: number) => act(() => {
+    now += ms;
+    t.mock.timers.tick(ms);
+    const entry = frames.entries().next().value;
+    assert.ok(entry);
+    frames.delete(entry[0]);
+    entry[1](now);
+  });
+  try {
+    act(() => { renderer = create(createElement(Harness, { batches: [] })); });
+    const accepted = [...receive(1, "first"), ...receive(2, "second"), ...receive(3, "second")];
+    update(accepted);
+    update([]);
+    const timing = diceResultTiming();
+    advance(timing.readableAtMs + timing.holdMs - 1);
+    assert.equal(current().roll?.roll.rollId, "first");
+    advance(1 + timing.exitMs);
+    assert.equal(current().roll?.roll.rollId, "second");
+    advance(timing.durationMs);
+    assert.equal(current().roll, null, "duplicate delivery cannot replay the second card");
+    update(receive(4, "hide-me"));
+    assert.equal(current().roll?.roll.rollId, "hide-me");
+    update([], false);
+    t.mock.timers.tick(MAX_PRESENTATION_AGE_MS + 1);
+    update(receive(5, "received-while-hidden"), false);
+    update([]);
+    assert.equal(current().roll, null);
+    const stale = receive(6, "stale");
+    t.mock.timers.tick(MAX_PRESENTATION_AGE_MS + 1);
+    update(stale);
+    assert.equal(current().roll, null, "an old queued result cannot burst after resuming");
+    session.begin(binding);
+    session.snapshot({ ...binding, streamId: "S", revision: 6 });
+    update(receive(6, "stale"));
+    assert.equal(current().roll, null);
+    update(receive(7, "fresh"));
+    assert.equal(current().roll?.roll.rollId, "fresh");
+  } finally {
+    if (renderer) act(() => renderer!.unmount());
+    if (previousWindow) Object.defineProperty(globalThis, "window", previousWindow);
+    else Reflect.deleteProperty(globalThis, "window");
+  }
+});
 
 test("all ingress batches received before one React commit reach the ordered playback queue", () => {
   const previousWindow = Object.getOwnPropertyDescriptor(globalThis, "window");

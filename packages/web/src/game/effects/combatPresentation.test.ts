@@ -180,7 +180,8 @@ test("pending/click has no result; actual attacker, defender and each tie-break 
     );
     assert.equal((markup.match(/data-combat-die=/g) ?? []).length, cue.roll.dice.length);
     for (const value of cue.roll.dice) assert.ok(markup.includes(`data-combat-die="${value}"`));
-    assert.ok(markup.includes(`= ${cue.roll.total}`));
+    assert.ok(markup.includes(`data-combat-total="${cue.roll.total}"`));
+    if (cue.roll.dice.length > 1) assert.ok(markup.includes(`= ${cue.roll.total}`));
   }
   assert.ok(cues.every((cue, index) => index === 0 || cue.atMs > cues[index - 1].atMs));
 });

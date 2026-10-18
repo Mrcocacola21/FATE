@@ -3,6 +3,13 @@ import { en } from "./en";
 import { adminUk } from "../../admin/locales";
 
 export const uk = {
+  diceResult: {
+    yourRoll: "Ваш кидок",
+    playerRoll: "Кидок гравця {{player}}",
+    tieBreak: "Вирішальний кидок",
+    die: "Кістка {{index}} (d{{sides}}): {{value}}",
+    total: "Сума",
+  },
   persistentStatus: {
     odinHuginn: "Гуґінн: виявлення прихованих ворогів поруч", duolingoBerserker: "Берсерка відкрито",
     curse: "Прокляття останньої атаки", movementDisabled: "Рух заблоковано на наступний власний хід",

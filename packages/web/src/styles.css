@@ -172,8 +172,18 @@
 }
 
 @keyframes combat-roll-appear {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from { opacity: 0; transform: translateY(6px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes combat-die-settle {
+  from { opacity: 0; transform: translateY(-4px) rotate(-6deg) scale(0.94); }
+  to { opacity: 1; transform: translateY(0) rotate(0) scale(1); }
+}
+
+@keyframes combat-roll-exit {
+  from { opacity: 1; }
+  to { opacity: 0; transform: translateY(-3px) scale(0.99); }
 }
 
 @keyframes board-effect-pulse {
@@ -450,6 +460,8 @@ body {
   --z-game-bottom-nav: 50;
   --z-game-bottom-sheet: 60;
   --z-game-pending-modal: 80;
+  --z-game-dice-result: 85;
+  --combat-roll-space: 268px;
   --z-game-toast: 90;
 }
 
@@ -939,8 +951,98 @@ html.dark {
     box-shadow: 0 0 10px 2px rgb(52 211 153 / 55%);
   }
 
+  .combat-roll-layer {
+    position: fixed;
+    inset: max(0.75rem, env(safe-area-inset-top)) 0 auto;
+    z-index: var(--z-game-dice-result);
+    display: flex;
+    justify-content: center;
+    padding-inline: 0.75rem;
+  }
+
   .combat-roll-feedback {
-    animation: combat-roll-appear 160ms ease-out both;
+    @apply w-full max-w-xs rounded-2xl border border-amber-600/35 bg-stone-50 px-4 py-3 text-stone-900 dark:border-amber-400/40 dark:bg-stone-950 dark:text-stone-50;
+    background-image: radial-gradient(ellipse at top, rgb(245 158 11 / 0.12), transparent 75%);
+    box-shadow: 0 16px 48px rgb(0 0 0 / 0.28), inset 0 1px 0 rgb(251 191 36 / 0.16);
+    animation:
+      combat-roll-appear var(--dice-enter-ms) ease-out both,
+      combat-roll-exit var(--dice-exit-ms) ease-in var(--dice-exit-at-ms) forwards;
+  }
+
+  .combat-roll-feedback__meta {
+    @apply flex items-center justify-between gap-2 text-[11px] font-semibold text-stone-600 dark:text-stone-400;
+  }
+
+  .combat-roll-feedback__notation {
+    @apply rounded-md border border-amber-600/20 bg-amber-500/10 px-1.5 py-0.5 font-mono text-amber-900 dark:text-amber-200;
+  }
+
+  .combat-roll-feedback__title {
+    @apply mt-1 text-center font-display text-lg font-black leading-6 text-amber-950 dark:text-amber-100;
+    overflow-wrap: anywhere;
+  }
+
+  .combat-roll-feedback__phase {
+    @apply text-center text-xs text-stone-500 dark:text-stone-400;
+  }
+
+  .combat-roll-feedback__dice {
+    @apply my-3 flex flex-wrap items-center justify-center gap-3;
+  }
+
+  .combat-roll-feedback__die {
+    @apply flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border border-amber-700/30 text-4xl font-black tabular-nums text-stone-900;
+    background: linear-gradient(145deg, #fffdf5, #f5e7c9);
+    box-shadow: inset 0 2px 0 white, inset 0 -3px 0 rgb(120 80 20 / 0.13), 0 4px 10px rgb(0 0 0 / 0.15);
+    animation: combat-die-settle var(--dice-reveal-ms) ease-out var(--dice-enter-ms) both;
+  }
+
+  .combat-roll-feedback__result {
+    @apply flex items-center justify-between gap-3 border-t border-amber-700/20 pt-2 dark:border-amber-300/20;
+  }
+
+  .combat-roll-feedback__total-label {
+    @apply text-[10px] font-bold uppercase tracking-[0.16em] text-stone-500 dark:text-stone-400;
+  }
+
+  .combat-roll-feedback__sum {
+    @apply mt-0.5 text-sm font-semibold tabular-nums text-stone-700 dark:text-stone-200;
+  }
+
+  .combat-roll-feedback__total {
+    @apply text-4xl font-black leading-none tabular-nums text-amber-900 dark:text-amber-200;
+  }
+
+  /* Reserve space while the existing nonblocking result is visible. The next
+     authoritative decision stays interactive and can scroll independently. */
+  body:has(.combat-roll-layer) .game-pending-modal-layer {
+    padding-top: calc(var(--combat-roll-space) + env(safe-area-inset-top));
+  }
+
+  body:has(.combat-roll-layer) .game-pending-modal-card {
+    margin-block: 0;
+    max-height: calc(100dvh - var(--combat-roll-space) - env(safe-area-inset-top) - max(1.5rem, env(safe-area-inset-bottom)));
+  }
+
+  body:has(.combat-roll-layer) .opponent-decision-status {
+    top: calc(var(--combat-roll-space) + env(safe-area-inset-top));
+  }
+
+  @media (min-width: 640px) {
+    body:has(.combat-roll-layer) .pending-roll-chip-layer {
+      top: calc(var(--combat-roll-space) + env(safe-area-inset-top));
+    }
+  }
+
+  @media (max-width: 639px), (max-height: 560px) {
+    :root { --combat-roll-space: 252px; }
+    .combat-roll-feedback { max-width: 19rem; }
+    .combat-roll-feedback__die { width: 3.5rem; height: 3.5rem; font-size: 2rem; }
+  }
+
+  .combat-roll-layer[data-reduced-motion="true"] .combat-roll-feedback,
+  .combat-roll-layer[data-reduced-motion="true"] .combat-roll-feedback__die {
+    animation: none;
   }
 
   .unit-visual-dying {
@@ -1715,6 +1817,7 @@ html.dark {
   .unit-visual-attacking,
   .unit-visual-takingDamage,
   .combat-roll-feedback,
+  .combat-roll-feedback__die,
   .unit-bone-status::after,
   .unit-bone-expiring::after,
   .snared-overlay,
