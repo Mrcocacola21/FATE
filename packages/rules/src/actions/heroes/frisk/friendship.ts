@@ -1,4 +1,4 @@
-import type { ApplyResult, GameState, PlayerId, UnitState } from "../../../model";
+import type { ApplyResult, GameState, UnitState } from "../../../model";
 import { ABILITY_FRISK_GENOCIDE, getCharges } from "../../../abilities";
 import { HERO_FALSE_TRAIL_TOKEN_ID } from "../../../heroes";
 import { endGameWithWinner } from "../../../gameOver";
@@ -22,14 +22,14 @@ export function canTriggerPowerOfFriendshipForFrisk(
   return enemiesAlive === 1;
 }
 
-function getPowerOfFriendshipWinner(state: GameState): PlayerId | null {
+function getPowerOfFriendshipSource(state: GameState): UnitState | null {
   if (state.phase === "ended") return null;
   const friskUnits = Object.values(state.units).filter(
     (unit) => isFrisk(unit) && unit.isAlive && !!unit.position
   );
   for (const frisk of friskUnits) {
     if (canTriggerPowerOfFriendshipForFrisk(state, frisk)) {
-      return frisk.owner;
+      return frisk;
     }
   }
   return null;
@@ -38,7 +38,9 @@ function getPowerOfFriendshipWinner(state: GameState): PlayerId | null {
 export function tryApplyFriskPowerOfFriendship(
   state: GameState
 ): ApplyResult | null {
-  const winner = getPowerOfFriendshipWinner(state);
-  if (!winner) return null;
-  return endGameWithWinner(state, [], winner, "unknown");
+  const frisk = getPowerOfFriendshipSource(state);
+  if (!frisk) return null;
+  return endGameWithWinner(
+    state, [{ type: "friskFriendshipWon", unitId: frisk.id }], frisk.owner, "unknown",
+  );
 }

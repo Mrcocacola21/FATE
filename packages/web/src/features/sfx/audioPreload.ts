@@ -5,7 +5,9 @@ import type { AssetPriority } from "../../assets/assetLoadQueue";
 export function rosterSoundKeys(heroIds: readonly string[]): SoundKey[] {
   const heroes = new Set(heroIds);
   return (Object.keys(SOUND_REGISTRY) as SoundKey[]).filter(
-    (key) => key.startsWith("hero.") && heroes.has(key.split(".")[1]) && !key.includes(".transformations."),
+    (key) => key.startsWith("hero.") && heroes.has(key.split(".")[1]) &&
+      (!key.includes(".transformations.") ||
+        key === "hero.kaneki.transformations.kanekiScolopendra"),
   );
 }
 export function soundPreloadPriority(key: SoundKey): AssetPriority {

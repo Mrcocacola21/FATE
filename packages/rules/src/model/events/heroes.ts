@@ -195,4 +195,8 @@ export type HeroGameEvent =
       success: boolean;
       damage: number;
       hpAfter: number;
-    };
+    }
+  | { type: "kanekiFormEntered"; unitId: string; form: "scolopendra" }
+  | { type: "friskOnePathUnlocked"; unitId: string }
+  | { type: "friskFriendshipWon"; unitId: string }
+  | { type: "lokiSpinCommitted"; unitId: string };

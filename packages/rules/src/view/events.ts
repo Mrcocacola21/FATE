@@ -279,7 +279,12 @@ function projectEventForRecipient(
         ? [event]
         : [];
     case "unitTransformed":
+    case "kanekiFormEntered":
+    case "friskFriendshipWon":
       return isUnitVisibleToRecipient(state, event.unitId, recipient) ? [event] : [redactedEvent()];
+    case "friskOnePathUnlocked":
+    case "lokiSpinCommitted":
+      return recipient === unitOwner(state, event.unitId) ? [event] : [];
     case "riverBoatmanGranted":
       return isUnitVisibleToRecipient(state, event.riverId, recipient) ? [event] : [];
     case "riverBoatPickup":
@@ -330,6 +335,8 @@ function projectEventForRecipient(
           attackerId: isUnitVisibleToRecipient(state, event.attackerId, recipient)
             ? event.attackerId
             : undefined,
+          attackSignature: event[EVENT_VISIBILITY]?.sourceCellRecipients?.includes(recipient)
+            ? event.attackSignature : undefined,
           sourceCell: event[EVENT_VISIBILITY]?.sourceCellRecipients?.includes(recipient)
             ? event.sourceCell : undefined,
           targetCell: event[EVENT_VISIBILITY]?.targetCellRecipients?.includes(recipient)

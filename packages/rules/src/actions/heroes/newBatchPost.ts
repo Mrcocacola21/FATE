@@ -147,6 +147,12 @@ export function applyNewBatchPostAction(
       if (attacker?.heroId === HERO_KANEKI_ID && event.hit) {
         attacker = addCharges(attacker, ids.ABILITY_KANEKI_RC_CELLS, 1);
         if (getCharges(attacker, ids.ABILITY_KANEKI_RC_CELLS) > 5) {
+          if (!attacker.kanekiCentipedeUnlocked)
+            nextEvents.push({
+              type: "kanekiFormEntered",
+              unitId: attacker.id,
+              form: "scolopendra",
+            });
           attacker = { ...attacker, kanekiCentipedeUnlocked: true };
         }
         nextState = updateUnit(nextState, attacker);
@@ -199,6 +205,12 @@ export function applyNewBatchPostAction(
         if (victimBefore?.heroId !== HERO_FALSE_TRAIL_TOKEN_ID) {
           killer = addCharges(killer, ids.ABILITY_KANEKI_RC_CELLS, 3);
           if (getCharges(killer, ids.ABILITY_KANEKI_RC_CELLS) > 5) {
+            if (!killer.kanekiCentipedeUnlocked)
+              nextEvents.push({
+                type: "kanekiFormEntered",
+                unitId: killer.id,
+                form: "scolopendra",
+              });
             killer = { ...killer, kanekiCentipedeUnlocked: true };
           }
           nextState = updateUnit(nextState, killer);

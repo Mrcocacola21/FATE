@@ -193,6 +193,9 @@ export function applyFriskPostAction(
       if (!isFrisk(killer)) continue;
       const applied = applyFriskKillBonuses(nextState, killer);
       nextState = applied.state;
+      if (!killer.friskPacifismDisabled && nextState.units[killer.id].friskPacifismDisabled) {
+        nextEvents.push({ type: "friskOnePathUnlocked", unitId: killer.id });
+      }
       if (applied.event) {
         nextEvents.push(applied.event);
       }

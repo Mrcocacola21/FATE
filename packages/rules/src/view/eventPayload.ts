@@ -36,6 +36,12 @@ export function copyEventPayload(event: GameEvent): GameEvent | undefined {
 
 function copySemanticPayload(event: GameEvent): GameEvent | undefined {
   switch (event.type) {
+    case "kanekiFormEntered":
+      return { type: event.type, unitId: event.unitId, form: event.form };
+    case "friskOnePathUnlocked":
+    case "friskFriendshipWon":
+    case "lokiSpinCommitted":
+      return { type: event.type, unitId: event.unitId };
     case "combatVisualBatchReady":
       return {
         type: "combatVisualBatchReady",
@@ -85,6 +91,8 @@ function copySemanticPayload(event: GameEvent): GameEvent | undefined {
         attackerRoll: dice(event.attackerRoll),
         defenderRoll: dice(event.defenderRoll),
         attackerRollIsNew: event.attackerRollIsNew,
+        ...(event.isBasicAttack === true ? { isBasicAttack: true } : {}),
+        ...(event.attackSignature ? { attackSignature: event.attackSignature } : {}),
         tieBreakDice: event.tieBreakDice
           ? {
               attacker: [...event.tieBreakDice.attacker],

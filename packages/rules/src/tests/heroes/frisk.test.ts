@@ -668,6 +668,13 @@ export function testFriskGenocideActiveOptionsSpendOnResolutionOnly() {
     makeRngSequence([0.99, 0.99, 0.01, 0.01]),
   );
   const precisionEvents = [...precisionTargetPicked.events, ...precisionResolved.events];
+  assert(
+    precisionResolved.events.filter((event) => event.type === "attackResolved" &&
+      event.attackSignature === "friskPrecisionStrike").length === 1 &&
+      !precisionTargetPicked.events.some((event) => event.type === "attackResolved") &&
+      !precisionCanceled.events.some((event) => event.type === "attackResolved"),
+    "Precision signature follows manual attack resolution, never opening, preview or cancellation",
+  );
   const precisionAttack = precisionEvents.find(
     (event) =>
       event.type === "attackResolved" &&
@@ -792,6 +799,10 @@ export function testFriskOnePathConvertsAndDisablesPacifism() {
     makeRngSequence([0.99, 0.99, 0.01, 0.01]),
   );
   const friskAfterKill = resolvedKill.state.units[frisk.id];
+  assert(
+    resolvedKill.events.filter((event) => event.type === "friskOnePathUnlocked").length === 1,
+    "First kill emits one One Path transition",
+  );
 
   assert(
     friskAfterKill.friskPacifismDisabled === true,
@@ -1004,6 +1015,10 @@ export function testFriskPowerOfFriendshipWinCondition() {
     | undefined;
   assert(gameEnded, "Power of Friendship should emit gameEnded event");
   assert(gameEnded.winner === "P1", "Power of Friendship should win for Frisk owner");
+  assert(
+    started.events.filter((event) => event.type === "friskFriendshipWon").length === 1,
+    "Friendship victory has one distinct semantic event",
+  );
 
   console.log("frisk_power_of_friendship_win_condition passed");
 }

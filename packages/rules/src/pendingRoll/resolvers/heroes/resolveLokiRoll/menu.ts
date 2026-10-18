@@ -174,6 +174,13 @@ function resolveSpinTheDrum(
     return { state, events: [] };
   }
 
+  spent.events.push({
+    type: "lokiSpinCommitted",
+    unitId: lokiId,
+    abilityId: ABILITY_LOKI_LAUGHT,
+    abilityUseId: spent.events.find((event) => event.type === "abilityUsed")?.abilityUseId,
+  });
+
   const picked = candidates[rollManualDice(rng, 1, candidates.length, lokiId)[0]! - 1];
   if (!picked) {
     return { state: clearPendingRoll(spent.state), events: spent.events };

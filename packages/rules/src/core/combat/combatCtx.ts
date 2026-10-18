@@ -2,6 +2,8 @@ import type { AttackRollContext } from "../../actions/types";
 
 export function makeAttackContext(params: import("../../model").AbilityUseContext & {
   attackerId: string;
+  isBasicAttack?: boolean;
+  attackSignature?: "friskPrecisionStrike";
   defenderId: string;
   allowFriendlyTarget?: boolean;
   ignoreRange?: boolean;
@@ -28,6 +30,8 @@ export function makeAttackContext(params: import("../../model").AbilityUseContex
     abilitySourceCell: params.abilitySourceCell,
     abilitySourceRecipients: params.abilitySourceRecipients,
     attackerId: params.attackerId,
+    ...(params.isBasicAttack ? { isBasicAttack: true } : {}),
+    ...(params.attackSignature ? { attackSignature: params.attackSignature } : {}),
     defenderId: params.defenderId,
     allowFriendlyTarget: params.allowFriendlyTarget,
     ignoreRange: params.ignoreRange,

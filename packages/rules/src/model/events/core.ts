@@ -61,6 +61,9 @@ export type CoreGameEvent =
       defenderRoll: DiceRoll;
       /** False when an AoE event repeats an attacker roll already logged for another target. */
       attackerRollIsNew?: boolean;
+      /** Explicit normal attack provenance; absence is never interpreted as basic. */
+      isBasicAttack?: boolean;
+      attackSignature?: "friskPrecisionStrike";
       tieBreakDice?: { attacker: number[]; defender: number[] };
       hit: boolean;
       damage: number;

@@ -237,8 +237,14 @@ test("teleport arrival precedes destination hazard and shared damage/HP playback
     [D],
   );
   const sound = mapEventBatchToSfx({ ...p.batch, view: view(D, 4) });
-  assert.equal(sound.length, 1);
-  assert.equal(sound[0].delayMs, 220);
+  assert.equal(sound.length, 2);
+  assert.equal(
+    sound.filter((cue) => cue.key === "hero.vladTepes.abilities.vladStakes.trigger").length,
+    1,
+  );
+  assert.equal(
+    sound.find((cue) => cue.key === "hero.vladTepes.abilities.vladStakes.trigger")!.delayMs, 220,
+  );
 });
 
 test("Stare and other explicit forced causes use push feedback and never modify voluntary Move slots", () => {

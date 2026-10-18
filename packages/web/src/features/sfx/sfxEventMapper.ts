@@ -4,7 +4,7 @@ import {
   ABILITY_VLAD_INTIMIDATE,
   ABILITY_RIVER_PERSON_BOAT,
 } from "../../rulesHints";
-import { heroAoeEffect, heroCueId } from "../../game/effects/heroPresentation";
+import { heroAoeEffect, heroCueId, sameAbilityResolution } from "../../game/effects/heroPresentation";
 import {
   REMAINING_CASTS,
   REMAINING_AREAS,
@@ -31,6 +31,27 @@ import {
   type TransportPresentationCue,
 } from "../../game/effects/riverPresentation";
 import { confirmedMovement } from "../../game/effects/movementPresentation";
+
+const BASIC_ATTACK_KEYS: Partial<Record<HeroId, SoundKey>> = {
+  asgore: "hero.asgore.basic.attack",
+  elCidCompeador: "hero.elCidCompeador.basic.attack",
+  "grand-kaiser": "hero.grand-kaiser.basic.attack",
+  luche: "hero.luche.basic.attack",
+  undyne: "hero.undyne.basic.attack",
+  vladTepes: "hero.vladTepes.basic.attack",
+};
+const DEATH_KEYS: Partial<Record<HeroId, SoundKey>> = {
+  asgore: "hero.asgore.basic.death",
+  frisk: "hero.frisk.basic.death",
+  mettaton: "hero.mettaton.basic.death",
+  sans: "hero.sans.basic.death",
+  undyne: "hero.undyne.basic.death",
+  riverPerson: "hero.riverPerson.basic.death",
+};
+function deathSoundKey(view: PlayerView, unitId: string): SoundKey {
+  const heroId = heroIdForUnit(view, unitId);
+  return (heroId && DEATH_KEYS[heroId]) || "common.combat.death";
+}
 
 function heroLookup(
   heroId: HeroId,
@@ -223,6 +244,30 @@ export function mapEventBatchToSfx(params: {
     if (!event.eventId) continue;
     const baseDelay =
       params.eventSfxDelaysMs?.[eventIndex] ?? params.eventDelaysMs?.[eventIndex] ?? 0;
+    if (
+      event.type === "attackResolved" &&
+      event.attackerRollIsNew !== false &&
+      event.attackerId &&
+      event.sourceCell
+    ) {
+      const heroId = heroIdForUnit(params.view, event.attackerId);
+      const key = event.attackSignature === "friskPrecisionStrike" && heroId === "frisk"
+        ? "hero.frisk.phantasms.friskGenocide.precisionStrike"
+        : event.isBasicAttack === true && !event.abilityId && !event.abilityUseId && heroId
+          ? BASIC_ATTACK_KEYS[heroId] : undefined;
+      const id = `${params.streamId ?? params.presentationId ?? "live"}:${event.eventId}:attack:${key}`;
+      const sound = key && resolveSound(key, id);
+      const outcome = params.combatCues?.find(
+        (cue) => cue.eventIndex === eventIndex && (cue.kind === "hit" || cue.kind === "miss"),
+      );
+      if (sound && !requests.some((request) => request.id === id))
+        requests.push({
+          ...sound,
+          id,
+          delayMs:
+            outcome && "attackAtMs" in outcome ? (outcome.attackAtMs ?? baseDelay) : baseDelay,
+        });
+    }
     if (isFireballResolution(event)) {
       const outcome = params.combatCues?.find(
         (cue) => cue.eventIndex === eventIndex && (cue.kind === "hit" || cue.kind === "miss"),
@@ -262,7 +307,26 @@ export function mapEventBatchToSfx(params: {
     }
     const statusSignature = remainingStatusSignature(event);
     let key: SoundKey | undefined = statusSignature?.sfx;
-    if (event.type === "abilityUsed" && event.abilityUseId && REMAINING_CASTS[event.abilityId])
+    const freshTransition = [
+      "kanekiFormEntered",
+      "friskOnePathUnlocked",
+      "friskFriendshipWon",
+      "lokiSpinCommitted",
+      "stakeTriggered",
+      "unitPlaced",
+    ].includes(event.type);
+    if (event.type === "unitPlaced" && heroIdForUnit(params.view, event.unitId) === "kaneki")
+      key = "hero.kaneki.basic.deployed";
+    else if (event.type === "kanekiFormEntered" && event.form === "scolopendra")
+      key = "hero.kaneki.transformations.kanekiScolopendra";
+    else if (event.type === "friskOnePathUnlocked")
+      key = "hero.frisk.phantasms.friskOnePath.unlock";
+    else if (event.type === "friskFriendshipWon") key = "hero.frisk.abilities.powerOfFriendship";
+    else if (event.type === "lokiSpinCommitted") key = "hero.loki.phantasms.lokiLaught.spin";
+    else if (event.type === "stakeTriggered") key = "hero.vladTepes.abilities.vladStakes.trigger";
+    else if (event.type === "aoeResolved" && event.abilityId === "gutsBerserkMode")
+      key = "hero.guts.phantasms.gutsBerserkMode.sweep";
+    else if (event.type === "abilityUsed" && event.abilityUseId && REMAINING_CASTS[event.abilityId])
       key = REMAINING_CASTS[event.abilityId].sfx;
     else if (event.type === "aoeResolved" && event.abilityId && REMAINING_AREAS[event.abilityId])
       key = REMAINING_AREAS[event.abilityId].sfx;
@@ -324,6 +388,7 @@ export function mapEventBatchToSfx(params: {
     if (!key) continue;
     // Periodic status events have their own identities, never a reused ability-use ID.
     const id =
+      freshTransition ||
       statusSignature ||
       event.type === "snareTriggered" ||
       event.type === "chargesUpdated" ||
@@ -338,17 +403,28 @@ export function mapEventBatchToSfx(params: {
         : heroCueId(params.streamId ?? params.presentationId ?? "live", event, key);
     if (requests.some((request) => request.id === id)) continue;
     const sound = resolveSound(key, id);
+    // A sweep starts with its first confirmed strike, rather than the summary
+    // or every defender. Its offset comes from the existing shared plan.
+    const sweepAttackIndex = event.type === "aoeResolved" && event.abilityId === "gutsBerserkMode"
+      ? params.events.findIndex((candidate) => candidate.type === "attackResolved" &&
+          sameAbilityResolution(event, candidate)) : -1;
+    const sweepAttack = params.combatCues?.find((cue) => cue.eventIndex === sweepAttackIndex &&
+      (cue.kind === "hit" || cue.kind === "miss"));
+    const signatureDelay = sweepAttack && "attackAtMs" in sweepAttack
+      ? sweepAttack.attackAtMs
+      : sweepAttackIndex >= 0 ? params.eventDelaysMs?.[sweepAttackIndex] : undefined;
     if (sound)
       requests.push({
         ...sound,
         id,
-        delayMs: params.eventSfxDelaysMs?.[eventIndex] ?? params.eventDelaysMs?.[eventIndex] ?? 0,
+        delayMs: signatureDelay ?? params.eventSfxDelaysMs?.[eventIndex] ?? params.eventDelaysMs?.[eventIndex] ?? 0,
         ...(statusSignature?.unitId ? { authorizedUnitId: statusSignature.unitId } : {}),
       });
   }
   if (params.combatCues) {
     for (const cue of params.combatCues) {
       if (!params.events[cue.eventIndex]?.eventId || cue.kind === "heal") continue;
+      if (cue.kind === "death" && params.events[cue.eventIndex]?.type !== "unitDied") continue;
       if (params.events[cue.eventIndex]?.type === "sansLastAttackTick") continue;
       if (cue.kind === "hit" && isFireballResolution(params.events[cue.eventIndex])) continue;
       const key: SoundKey =
@@ -357,9 +433,7 @@ export function mapEventBatchToSfx(params: {
           : cue.kind === "miss"
             ? "common.combat.miss"
             : cue.kind === "death"
-              ? params.view.units[cue.unitId]?.heroId === "riverPerson"
-                ? "hero.riverPerson.basic.death"
-                : "common.combat.death"
+              ? deathSoundKey(params.view, cue.unitId)
               : "common.combat.hit";
       const id = `${cue.id}:audio:${key}`;
       const sound = resolveSound(key, id);
@@ -381,7 +455,7 @@ export function mapEventBatchToSfx(params: {
         key = gameEvent.hit ? "common.combat.hit" : "common.combat.miss";
         break;
       case "unitDied":
-        key = "common.combat.death";
+        key = deathSoundKey(params.view, gameEvent.unitId);
         break;
       default:
         return;

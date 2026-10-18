@@ -213,6 +213,8 @@ export function resolveFriskPrecisionStrikeTargetChoice(
     makeAttackContext({
       attackerId: updated.id,
       defenderId: target.id,
+      sourceAbilityId: ABILITY_FRISK_GENOCIDE,
+      attackSignature: "friskPrecisionStrike",
       consumeSlots: true,
       queueKind: "normal",
     }),

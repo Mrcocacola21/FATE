@@ -570,7 +570,7 @@ test("actual Sans Last Attack remains visible at zero HP until its final project
   );
   assert.equal(death.queue.filter((item) => item.type === "death").length, 1);
   assert.equal(
-    outputs(death.batch, after).sounds.filter((sound) => sound.key === "common.combat.death")
+    outputs(death.batch, after).sounds.filter((sound) => sound.key === "hero.sans.basic.death")
       .length,
     1,
   );

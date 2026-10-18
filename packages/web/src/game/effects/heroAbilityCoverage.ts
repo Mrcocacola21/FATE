@@ -145,21 +145,25 @@ export const HERO_COVERAGE_EXCEPTIONS: Record<string, HeroAbilityCoverage> = {
   friskPacifism: generic(
     "abilityUsed / friskHugsApplied / unitHealed / attackResolved / gameEnded",
     "STATUS / REACTION / COMBAT",
-    "Hugs and Warm Words signatures wired. Child's Cry/Power of Friendship have no distinct result discriminator; generic defense/end UI.",
+    "Hugs and Warm Words signatures wired. Friendship victory audio uses friskFriendshipWon; Child's Cry retains generic defense UI.",
   ),
   friskGenocide: generic(
     "abilityUsed / stealthRevealed / attackResolved",
     "STEALTH / REACTION / COMBAT",
-    "Keen Eye, Substitution and Precision use real reveal/combat. Commitment lacks option discriminator; do not guess a signature from resource spend.",
+    "Keen Eye and Substitution use real reveal/combat. Precision audio uses attackResolved.attackSignature after accepted target and manual dice; combat owns outcomes.",
   ),
-  friskOnePath: blocked(
-    "One Path state changes without a dedicated unlock event. Add a recipient-safe semantic trigger before using one_path.png or unlock audio.",
+  friskOnePath: generic(
+    "friskOnePathUnlocked",
+    "STATUS",
+    "Owner-only audio on first kill conversion. Persistent path state restores silently; dedicated unlock artwork remains outside audio coverage.",
   ),
   duolingoBerserker: blocked(
     "Permanent unlock has no distinct semantic event. Current multiclass state restores silently; add an unlock event for berserker.png.",
   ),
-  kanekiScolopendra: blocked(
-    "Centipede unlock has no distinct event. Extra move/actual reached movement works generically; add an unlock event before transformation art/audio.",
+  kanekiScolopendra: generic(
+    "kanekiFormEntered",
+    "STATUS",
+    "Entry audio on the first authoritative RC threshold transition; extra movement stays generic. Persistent form restores silently; no artwork redesign.",
   ),
   chikatiloFalseTrail: generic(
     "unitPlaced / stealthRevealed / aoeResolved",

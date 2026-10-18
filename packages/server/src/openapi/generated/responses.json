@@ -2582,6 +2582,18 @@
               },
               {
                 "$ref": "#/definitions/CreatedGameViewsP1EventsItem90"
+              },
+              {
+                "$ref": "#/definitions/CreatedGameViewsP1EventsItem91"
+              },
+              {
+                "$ref": "#/definitions/CreatedGameViewsP1EventsItem92"
+              },
+              {
+                "$ref": "#/definitions/CreatedGameViewsP1EventsItem93"
+              },
+              {
+                "$ref": "#/definitions/CreatedGameViewsP1EventsItem94"
               }
             ]
           }
@@ -7135,6 +7147,12 @@
             true
           ]
         },
+        "form": {
+          "type": "string",
+          "enum": [
+            "scolopendra"
+          ]
+        },
         "isChainComplete": {
           "type": "boolean",
           "enum": [
@@ -7142,27 +7160,14 @@
             true
           ]
         },
-        "reactorUnitId": {
-          "type": "string"
-        },
-        "source": {
-          "type": "string",
-          "enum": [
-            "genghis",
-            "tralala"
-          ]
-        },
-        "targetUnitIds": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
         "type": {
           "type": "string",
           "enum": [
-            "reactionOpportunity"
+            "kanekiFormEntered"
           ]
+        },
+        "unitId": {
+          "type": "string"
         },
         "visualBatchId": {
           "type": "string"
@@ -7170,10 +7175,9 @@
       },
       "additionalProperties": false,
       "required": [
-        "reactorUnitId",
-        "source",
-        "targetUnitIds",
-        "type"
+        "form",
+        "type",
+        "unitId"
       ]
     },
     "CreatedGameViewsP1EventsItem79": {
@@ -7187,13 +7191,6 @@
         },
         "chainId": {
           "type": "string"
-        },
-        "choice": {
-          "type": "string",
-          "enum": [
-            "attack",
-            "pass"
-          ]
         },
         "deferVisuals": {
           "type": "boolean",
@@ -7209,24 +7206,14 @@
             true
           ]
         },
-        "reactorUnitId": {
-          "type": "string"
-        },
-        "source": {
-          "type": "string",
-          "enum": [
-            "genghis",
-            "tralala"
-          ]
-        },
-        "targetUnitId": {
-          "type": "string"
-        },
         "type": {
           "type": "string",
           "enum": [
-            "reactionChoiceResolved"
+            "friskOnePathUnlocked"
           ]
+        },
+        "unitId": {
+          "type": "string"
         },
         "visualBatchId": {
           "type": "string"
@@ -7234,10 +7221,8 @@
       },
       "additionalProperties": false,
       "required": [
-        "choice",
-        "reactorUnitId",
-        "source",
-        "type"
+        "type",
+        "unitId"
       ]
     },
     "CreatedGameViewsP1EventsItem7RollsItem": {
@@ -7334,6 +7319,220 @@
         "chainId": {
           "type": "string"
         },
+        "deferVisuals": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "isChainComplete": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "friskFriendshipWon"
+          ]
+        },
+        "unitId": {
+          "type": "string"
+        },
+        "visualBatchId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "unitId"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem81": {
+      "type": "object",
+      "properties": {
+        "abilityId": {
+          "type": "string"
+        },
+        "abilityUseId": {
+          "type": "string"
+        },
+        "chainId": {
+          "type": "string"
+        },
+        "deferVisuals": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "isChainComplete": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "lokiSpinCommitted"
+          ]
+        },
+        "unitId": {
+          "type": "string"
+        },
+        "visualBatchId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "unitId"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem82": {
+      "type": "object",
+      "properties": {
+        "abilityId": {
+          "type": "string"
+        },
+        "abilityUseId": {
+          "type": "string"
+        },
+        "chainId": {
+          "type": "string"
+        },
+        "deferVisuals": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "isChainComplete": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "reactorUnitId": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string",
+          "enum": [
+            "genghis",
+            "tralala"
+          ]
+        },
+        "targetUnitIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "reactionOpportunity"
+          ]
+        },
+        "visualBatchId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "reactorUnitId",
+        "source",
+        "targetUnitIds",
+        "type"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem83": {
+      "type": "object",
+      "properties": {
+        "abilityId": {
+          "type": "string"
+        },
+        "abilityUseId": {
+          "type": "string"
+        },
+        "chainId": {
+          "type": "string"
+        },
+        "choice": {
+          "type": "string",
+          "enum": [
+            "attack",
+            "pass"
+          ]
+        },
+        "deferVisuals": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "isChainComplete": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "reactorUnitId": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string",
+          "enum": [
+            "genghis",
+            "tralala"
+          ]
+        },
+        "targetUnitId": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "reactionChoiceResolved"
+          ]
+        },
+        "visualBatchId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "choice",
+        "reactorUnitId",
+        "source",
+        "type"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem84": {
+      "type": "object",
+      "properties": {
+        "abilityId": {
+          "type": "string"
+        },
+        "abilityUseId": {
+          "type": "string"
+        },
+        "chainId": {
+          "type": "string"
+        },
         "controllerUnitId": {
           "type": "string"
         },
@@ -7375,7 +7574,7 @@
         "type"
       ]
     },
-    "CreatedGameViewsP1EventsItem81": {
+    "CreatedGameViewsP1EventsItem85": {
       "type": "object",
       "properties": {
         "abilityId": {
@@ -7436,7 +7635,7 @@
         "type"
       ]
     },
-    "CreatedGameViewsP1EventsItem82": {
+    "CreatedGameViewsP1EventsItem86": {
       "type": "object",
       "properties": {
         "abilityId": {
@@ -7521,7 +7720,7 @@
         "type"
       ]
     },
-    "CreatedGameViewsP1EventsItem83": {
+    "CreatedGameViewsP1EventsItem87": {
       "type": "object",
       "properties": {
         "abilityId": {
@@ -7543,6 +7742,12 @@
             true
           ],
           "description": "False when an AoE event repeats an attacker roll already logged for another target."
+        },
+        "attackSignature": {
+          "type": "string",
+          "enum": [
+            "friskPrecisionStrike"
+          ]
         },
         "chainId": {
           "type": "string"
@@ -7568,6 +7773,14 @@
         },
         "hit": {
           "type": "boolean"
+        },
+        "isBasicAttack": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ],
+          "description": "Explicit normal attack provenance; absence is never interpreted as basic."
         },
         "isChainComplete": {
           "type": "boolean",
@@ -7607,7 +7820,7 @@
           ]
         },
         "tieBreakDice": {
-          "$ref": "#/definitions/CreatedGameViewsP1EventsItem83TieBreakDice"
+          "$ref": "#/definitions/CreatedGameViewsP1EventsItem87TieBreakDice"
         },
         "type": {
           "type": "string",
@@ -7630,7 +7843,7 @@
         "type"
       ]
     },
-    "CreatedGameViewsP1EventsItem83TieBreakDice": {
+    "CreatedGameViewsP1EventsItem87TieBreakDice": {
       "type": "object",
       "properties": {
         "attacker": {
@@ -7652,7 +7865,7 @@
         "defender"
       ]
     },
-    "CreatedGameViewsP1EventsItem84": {
+    "CreatedGameViewsP1EventsItem88": {
       "type": "object",
       "properties": {
         "abilityId": {
@@ -7721,7 +7934,7 @@
         "unitId"
       ]
     },
-    "CreatedGameViewsP1EventsItem85": {
+    "CreatedGameViewsP1EventsItem89": {
       "type": "object",
       "properties": {
         "abilityId": {
@@ -7753,22 +7966,22 @@
         "provenance": {
           "anyOf": [
             {
-              "$ref": "#/definitions/CreatedGameViewsP1EventsItem85Provenance"
+              "$ref": "#/definitions/CreatedGameViewsP1EventsItem89Provenance"
             },
             {
-              "$ref": "#/definitions/CreatedGameViewsP1EventsItem85Provenance2"
+              "$ref": "#/definitions/CreatedGameViewsP1EventsItem89Provenance2"
             },
             {
-              "$ref": "#/definitions/CreatedGameViewsP1EventsItem85Provenance3"
+              "$ref": "#/definitions/CreatedGameViewsP1EventsItem89Provenance3"
             },
             {
-              "$ref": "#/definitions/CreatedGameViewsP1EventsItem85Provenance4"
+              "$ref": "#/definitions/CreatedGameViewsP1EventsItem89Provenance4"
             },
             {
-              "$ref": "#/definitions/CreatedGameViewsP1EventsItem85Provenance5"
+              "$ref": "#/definitions/CreatedGameViewsP1EventsItem89Provenance5"
             },
             {
-              "$ref": "#/definitions/CreatedGameViewsP1EventsItem85Provenance6"
+              "$ref": "#/definitions/CreatedGameViewsP1EventsItem89Provenance6"
             }
           ]
         },
@@ -7797,7 +8010,7 @@
         "unitId"
       ]
     },
-    "CreatedGameViewsP1EventsItem85Provenance": {
+    "CreatedGameViewsP1EventsItem89Provenance": {
       "type": "object",
       "properties": {
         "kind": {
@@ -7812,7 +8025,7 @@
         "kind"
       ]
     },
-    "CreatedGameViewsP1EventsItem85Provenance2": {
+    "CreatedGameViewsP1EventsItem89Provenance2": {
       "type": "object",
       "properties": {
         "kind": {
@@ -7827,7 +8040,7 @@
         "kind"
       ]
     },
-    "CreatedGameViewsP1EventsItem85Provenance3": {
+    "CreatedGameViewsP1EventsItem89Provenance3": {
       "type": "object",
       "properties": {
         "kind": {
@@ -7842,7 +8055,7 @@
         "kind"
       ]
     },
-    "CreatedGameViewsP1EventsItem85Provenance4": {
+    "CreatedGameViewsP1EventsItem89Provenance4": {
       "type": "object",
       "properties": {
         "kind": {
@@ -7876,7 +8089,7 @@
         "kind"
       ]
     },
-    "CreatedGameViewsP1EventsItem85Provenance5": {
+    "CreatedGameViewsP1EventsItem89Provenance5": {
       "type": "object",
       "properties": {
         "cause": {
@@ -7902,7 +8115,7 @@
         "kind"
       ]
     },
-    "CreatedGameViewsP1EventsItem85Provenance6": {
+    "CreatedGameViewsP1EventsItem89Provenance6": {
       "type": "object",
       "properties": {
         "abilityId": {
@@ -7926,7 +8139,173 @@
         "kind"
       ]
     },
-    "CreatedGameViewsP1EventsItem86": {
+    "CreatedGameViewsP1EventsItem9": {
+      "type": "object",
+      "properties": {
+        "abilityId": {
+          "type": "string"
+        },
+        "abilityUseId": {
+          "type": "string"
+        },
+        "actorUnitId": {
+          "type": "string"
+        },
+        "chainId": {
+          "type": "string"
+        },
+        "deferVisuals": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "isChainComplete": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "asgoreBraveryDefenseChoice",
+            "asgoreSoulParadeIntegrityDestination",
+            "asgoreSoulParadeJusticeTargetChoice",
+            "asgoreSoulParadePatienceTargetChoice",
+            "asgoreSoulParadePerseveranceTargetChoice",
+            "asgoreSoulParadeRoll",
+            "attack_attackerRoll",
+            "attack_defenderRoll",
+            "berserkerDefenseChoice",
+            "carpetStrike_berserkerDefenseChoice",
+            "carpetStrike_defenderRoll",
+            "chargedImpulseTargetChoice",
+            "chikatiloDecoyChoice",
+            "chikatiloFalseTrailPlacement",
+            "chikatiloFalseTrailRevealChoice",
+            "courtAttackerRoll",
+            "courtDefenderRoll",
+            "courtEffectChargeChoice",
+            "courtEffectUnitChoice",
+            "courtForcedAppearanceDestination",
+            "donMadDelusionDirection",
+            "donSorrowfulMoveChoice",
+            "donWindmillsRepositionChoice",
+            "dora_attackerRoll",
+            "dora_berserkerDefenseChoice",
+            "dora_defenderRoll",
+            "elCidDuelistChoice",
+            "elCidKolada_attackerRoll",
+            "elCidKolada_defenderRoll",
+            "elCidTisona_attackerRoll",
+            "elCidTisona_defenderRoll",
+            "enterBunker",
+            "enterStealth",
+            "falseTrailExplosion_attackerRoll",
+            "falseTrailExplosion_defenderRoll",
+            "femtoDivineMoveDestination",
+            "femtoDivineMoveRoll",
+            "forestMoveCheck",
+            "forestMoveDestination",
+            "friskChildsCryChoice",
+            "friskGenocideChoice",
+            "friskKeenEyeChoice",
+            "friskPacifismChoice",
+            "friskPacifismHugsTargetChoice",
+            "friskPrecisionStrikeTargetChoice",
+            "friskSubstitutionChoice",
+            "friskWarmWordsHealRoll",
+            "friskWarmWordsTargetChoice",
+            "groznyTyrantAllyChoice",
+            "groznyTyrantAttackCellChoice",
+            "groznyTyrantOptionChoice",
+            "gutsBerserkAttackChoice",
+            "hassanAssassinOrderSelection",
+            "hassanTrueEnemyTargetChoice",
+            "initiativeRoll",
+            "jebeHailOfArrows_attackerRoll",
+            "jebeHailOfArrows_berserkerDefenseChoice",
+            "jebeHailOfArrows_defenderRoll",
+            "jebeKhansShooterRicochetRoll",
+            "jebeKhansShooterTargetChoice",
+            "kaiserCarpetStrikeAttack",
+            "kaiserCarpetStrikeCenter",
+            "lechyGuideTravelerPlacement",
+            "lechyStormStartTurnRoll",
+            "lokiChickenTargetChoice",
+            "lokiLaughtChoice",
+            "lokiMindControlEnemyChoice",
+            "lokiMindControlTargetChoice",
+            "lokiSpinAbilityChoice",
+            "mongolChargeAllyAttackTarget",
+            "moonCheeseHolesChoice",
+            "moonCoordinateRoll",
+            "moonRoundRoll",
+            "moveBerserker",
+            "moveTrickster",
+            "odinMuninnDefenseChoice",
+            "odinSleipnirDestination",
+            "papyrusBoneChoice",
+            "pureBloodRedirectChoice",
+            "reactionChoice",
+            "reactionDropChoice",
+            "riderPathAttack_attackerRoll",
+            "riderPathAttack_defenderRoll",
+            "riverBoatCarryChoice",
+            "riverBoatDestinationChoice",
+            "riverBoatDropDestination",
+            "riverTraLaLaDestinationChoice",
+            "riverTraLaLaDropDestinationChoice",
+            "riverTraLaLaTargetChoice",
+            "ruleDeclarationAdvantageThreshold",
+            "ruleDeclarationChessKingChoice",
+            "ruleDeclarationChoice",
+            "searchStealth",
+            "selectLastAttackTarget",
+            "tricksterAoE_attackerRoll",
+            "tricksterAoE_berserkerDefenseChoice",
+            "tricksterAoE_defenderRoll",
+            "vladForestChoice",
+            "vladForestTarget",
+            "vladForest_attackerRoll",
+            "vladForest_berserkerDefenseChoice",
+            "vladForest_defenderRoll",
+            "vladIntimidateChoice",
+            "vladPlaceStakes"
+          ]
+        },
+        "player": {
+          "type": "string",
+          "enum": [
+            "P1",
+            "P2"
+          ]
+        },
+        "rollId": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "rollRequested"
+          ]
+        },
+        "visualBatchId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "player",
+        "rollId",
+        "type"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem90": {
       "type": "object",
       "properties": {
         "abilityId": {
@@ -8111,7 +8490,7 @@
         "type"
       ]
     },
-    "CreatedGameViewsP1EventsItem87": {
+    "CreatedGameViewsP1EventsItem91": {
       "type": "object",
       "properties": {
         "abilityId": {
@@ -8168,7 +8547,7 @@
         "unitId"
       ]
     },
-    "CreatedGameViewsP1EventsItem88": {
+    "CreatedGameViewsP1EventsItem92": {
       "type": "object",
       "properties": {
         "abilityId": {
@@ -8178,7 +8557,7 @@
           "type": "string"
         },
         "area": {
-          "$ref": "#/definitions/CreatedGameViewsP1EventsItem88Area"
+          "$ref": "#/definitions/CreatedGameViewsP1EventsItem92Area"
         },
         "center": {
           "$ref": "#/definitions/Coord"
@@ -8234,7 +8613,7 @@
         "type"
       ]
     },
-    "CreatedGameViewsP1EventsItem88Area": {
+    "CreatedGameViewsP1EventsItem92Area": {
       "type": "object",
       "properties": {
         "radius": {
@@ -8256,7 +8635,7 @@
         "shape"
       ]
     },
-    "CreatedGameViewsP1EventsItem89": {
+    "CreatedGameViewsP1EventsItem93": {
       "type": "object",
       "properties": {
         "abilityId": {
@@ -8325,173 +8704,7 @@
         "type"
       ]
     },
-    "CreatedGameViewsP1EventsItem9": {
-      "type": "object",
-      "properties": {
-        "abilityId": {
-          "type": "string"
-        },
-        "abilityUseId": {
-          "type": "string"
-        },
-        "actorUnitId": {
-          "type": "string"
-        },
-        "chainId": {
-          "type": "string"
-        },
-        "deferVisuals": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "isChainComplete": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "kind": {
-          "type": "string",
-          "enum": [
-            "asgoreBraveryDefenseChoice",
-            "asgoreSoulParadeIntegrityDestination",
-            "asgoreSoulParadeJusticeTargetChoice",
-            "asgoreSoulParadePatienceTargetChoice",
-            "asgoreSoulParadePerseveranceTargetChoice",
-            "asgoreSoulParadeRoll",
-            "attack_attackerRoll",
-            "attack_defenderRoll",
-            "berserkerDefenseChoice",
-            "carpetStrike_berserkerDefenseChoice",
-            "carpetStrike_defenderRoll",
-            "chargedImpulseTargetChoice",
-            "chikatiloDecoyChoice",
-            "chikatiloFalseTrailPlacement",
-            "chikatiloFalseTrailRevealChoice",
-            "courtAttackerRoll",
-            "courtDefenderRoll",
-            "courtEffectChargeChoice",
-            "courtEffectUnitChoice",
-            "courtForcedAppearanceDestination",
-            "donMadDelusionDirection",
-            "donSorrowfulMoveChoice",
-            "donWindmillsRepositionChoice",
-            "dora_attackerRoll",
-            "dora_berserkerDefenseChoice",
-            "dora_defenderRoll",
-            "elCidDuelistChoice",
-            "elCidKolada_attackerRoll",
-            "elCidKolada_defenderRoll",
-            "elCidTisona_attackerRoll",
-            "elCidTisona_defenderRoll",
-            "enterBunker",
-            "enterStealth",
-            "falseTrailExplosion_attackerRoll",
-            "falseTrailExplosion_defenderRoll",
-            "femtoDivineMoveDestination",
-            "femtoDivineMoveRoll",
-            "forestMoveCheck",
-            "forestMoveDestination",
-            "friskChildsCryChoice",
-            "friskGenocideChoice",
-            "friskKeenEyeChoice",
-            "friskPacifismChoice",
-            "friskPacifismHugsTargetChoice",
-            "friskPrecisionStrikeTargetChoice",
-            "friskSubstitutionChoice",
-            "friskWarmWordsHealRoll",
-            "friskWarmWordsTargetChoice",
-            "groznyTyrantAllyChoice",
-            "groznyTyrantAttackCellChoice",
-            "groznyTyrantOptionChoice",
-            "gutsBerserkAttackChoice",
-            "hassanAssassinOrderSelection",
-            "hassanTrueEnemyTargetChoice",
-            "initiativeRoll",
-            "jebeHailOfArrows_attackerRoll",
-            "jebeHailOfArrows_berserkerDefenseChoice",
-            "jebeHailOfArrows_defenderRoll",
-            "jebeKhansShooterRicochetRoll",
-            "jebeKhansShooterTargetChoice",
-            "kaiserCarpetStrikeAttack",
-            "kaiserCarpetStrikeCenter",
-            "lechyGuideTravelerPlacement",
-            "lechyStormStartTurnRoll",
-            "lokiChickenTargetChoice",
-            "lokiLaughtChoice",
-            "lokiMindControlEnemyChoice",
-            "lokiMindControlTargetChoice",
-            "lokiSpinAbilityChoice",
-            "mongolChargeAllyAttackTarget",
-            "moonCheeseHolesChoice",
-            "moonCoordinateRoll",
-            "moonRoundRoll",
-            "moveBerserker",
-            "moveTrickster",
-            "odinMuninnDefenseChoice",
-            "odinSleipnirDestination",
-            "papyrusBoneChoice",
-            "pureBloodRedirectChoice",
-            "reactionChoice",
-            "reactionDropChoice",
-            "riderPathAttack_attackerRoll",
-            "riderPathAttack_defenderRoll",
-            "riverBoatCarryChoice",
-            "riverBoatDestinationChoice",
-            "riverBoatDropDestination",
-            "riverTraLaLaDestinationChoice",
-            "riverTraLaLaDropDestinationChoice",
-            "riverTraLaLaTargetChoice",
-            "ruleDeclarationAdvantageThreshold",
-            "ruleDeclarationChessKingChoice",
-            "ruleDeclarationChoice",
-            "searchStealth",
-            "selectLastAttackTarget",
-            "tricksterAoE_attackerRoll",
-            "tricksterAoE_berserkerDefenseChoice",
-            "tricksterAoE_defenderRoll",
-            "vladForestChoice",
-            "vladForestTarget",
-            "vladForest_attackerRoll",
-            "vladForest_berserkerDefenseChoice",
-            "vladForest_defenderRoll",
-            "vladIntimidateChoice",
-            "vladPlaceStakes"
-          ]
-        },
-        "player": {
-          "type": "string",
-          "enum": [
-            "P1",
-            "P2"
-          ]
-        },
-        "rollId": {
-          "type": "string"
-        },
-        "type": {
-          "type": "string",
-          "enum": [
-            "rollRequested"
-          ]
-        },
-        "visualBatchId": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "kind",
-        "player",
-        "rollId",
-        "type"
-      ]
-    },
-    "CreatedGameViewsP1EventsItem90": {
+    "CreatedGameViewsP1EventsItem94": {
       "type": "object",
       "properties": {
         "chainId": {

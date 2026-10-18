@@ -564,14 +564,16 @@ test("lethal Fireball respects Sans pre-death choice; only final unitDied remove
   assert.equal(p.queue.filter((q) => q.type === "removeVisualUnit").length, 1);
 });
 
-test("Asgore preloads only its five used keys; finite travel audio stops at the visual boundary and session reset/mute remain effective", async () => {
+test("Asgore preloads its seven used keys; finite travel audio stops at the visual boundary and session reset/mute remain effective", async () => {
   const keys: string[] = [];
   await preloadAsgoreSounds({
     preload: async (key) => {
       keys.push(key);
     },
   });
-  assert.equal(keys.length, 5);
+  assert.equal(keys.length, 7);
+  assert(keys.includes("hero.asgore.basic.attack"));
+  assert(keys.includes("hero.asgore.basic.death"));
   assert(keys.every((key) => key.startsWith("hero.asgore.")));
   const f = audioFixture();
   const player = new SfxPlayer(f.manager);

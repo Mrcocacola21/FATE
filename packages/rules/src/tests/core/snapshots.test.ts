@@ -538,6 +538,7 @@ export function testGoldenActionSnapshot() {
         defenderId: "P2-archer-6",
         attackerRoll: { dice: [2, 3], sum: 5, isDouble: false },
         defenderRoll: { dice: [1, 2], sum: 3, isDouble: false },
+        isBasicAttack: true,
         hit: true,
         damage: 2,
         defenderHpAfter: 3,

@@ -123,6 +123,7 @@ export function applyAttack(
   const auraSource = getPolkovodetsSource(workingState, workingAttacker.id);
   const context = makeAttackContext({
     attackerId: workingAttacker.id,
+    isBasicAttack: true,
     defenderId: defender.id,
     damageBonusSourceId: auraSource ?? undefined,
     consumeSlots: true,

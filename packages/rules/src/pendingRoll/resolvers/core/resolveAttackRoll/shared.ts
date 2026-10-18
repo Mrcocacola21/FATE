@@ -71,7 +71,18 @@ export function finalizeAttackFromContext(
     rolls,
   });
 
-  const updatedEvents = [...events];
+  const updatedEvents: GameEvent[] = events.map((event) =>
+    event.type === "attackResolved" && context.attackSignature === "friskPrecisionStrike"
+      ? { ...event, attackSignature: context.attackSignature }
+      : event.type === "attackResolved" &&
+          context.isBasicAttack &&
+          !context.sourceAbilityId &&
+          !context.abilityId &&
+          !context.controllerPlayerId &&
+          context.queueKind === "normal"
+        ? { ...event, isBasicAttack: true }
+        : event,
+  );
   const attackEvent = events.find(
     (e) =>
       e.type === "attackResolved" &&

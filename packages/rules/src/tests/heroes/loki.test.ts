@@ -1038,6 +1038,11 @@ export function testLokiSpinWheelPoolFallbackAndCost() {
     makeRngSequence([0.5]),
   );
   assert(
+    spun.events.filter((event) => event.type === "lokiSpinCommitted").length === 1 &&
+      !started.events.some((event) => event.type === "lokiSpinCommitted"),
+    "Spin commitment is distinct from opening the Laugh menu",
+  );
+  assert(
     spun.state.pendingRoll?.kind === "lokiSpinAbilityChoice",
     "an impossible selected phantasm should create a fallback ability choice",
   );

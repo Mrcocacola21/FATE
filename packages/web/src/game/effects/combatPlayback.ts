@@ -81,6 +81,8 @@ export type CombatPresentationCue = {
       cell?: Coord;
       amount?: number;
       hpAtMs?: number;
+      /** Shared attack-animation origin; outcome atMs remains the impact. */
+      attackAtMs?: number;
     }
 );
 
@@ -698,6 +700,7 @@ export function buildCombatVisualPlaybackPlan(params: {
       eventDelaysMs[eventIndex] = impact;
       addCue(eventIndex, {
         kind: event.hit ? "hit" : "miss",
+        attackAtMs: attackStart,
         unitId: event.defenderId,
         ...(event.targetCell ? { cell: { ...event.targetCell } } : {}),
         ...(event.hit && event.damage > 0

@@ -45,7 +45,7 @@ import { EVENT_VISIBILITY } from "../../../../rules/src/model/events/visibility"
 import { projectEventsForRecipient as projectSourceEvents } from "../../../../rules/src/view/events";
 import { preloadSansSounds } from "../../features/sfx/audioPreload";
 
-test("projected Sans pack can warm all seven lazy sound keys without playing them", async () => {
+test("projected Sans pack can warm all eight lazy sound keys without playing them", async () => {
   const keys: string[] = [];
   await preloadSansSounds({
     preload: async (key) => {
@@ -61,6 +61,7 @@ test("projected Sans pack can warm all seven lazy sound keys without playing the
       "hero.sans.abilities.sansGasterBlaster.fire",
       "hero.sans.abilities.sansLastAttack.apply",
       "hero.sans.abilities.sansLastAttack.tick",
+      "hero.sans.basic.death",
       "hero.sans.abilities.sansLastAttack.remove",
     ].sort(),
   );
@@ -393,6 +394,7 @@ test("Last Attack pending choice restores silently, blocks unrelated actions, ex
   );
   assert(!outputs(early.batch).sprites.some((s) => s.effectId === "unitDeath"));
   assert(!outputs(early.batch).sounds.some((s) => s.key === "common.combat.death"));
+  assert(!outputs(early.batch).sounds.some((s) => s.key === "hero.sans.basic.death"));
   for (const view of [makePlayerView(f.pending, "P2"), makeSpectatorView(f.pending)]) {
     assert.equal(view.pendingRoll, null);
     assert(!JSON.stringify(view.pendingDecision).includes("legalTargetIds"));
@@ -425,7 +427,8 @@ test("Last Attack pending choice restores silently, blocks unrelated actions, ex
   const death = o.sprites.find((s) => s.effectId === "unitDeath")!;
   assert(death.delayMs! > apply.delayMs!);
   assert.deepEqual(apply.sourceCell, { col: 4, row: 5 });
-  assert.equal(o.sounds.filter((s) => s.key === "common.combat.death").length, 1);
+  assert.equal(o.sounds.filter((s) => s.key === "hero.sans.basic.death").length, 1);
+  assert.equal(o.sounds.filter((s) => s.key === "common.combat.death").length, 0);
   assert.equal(
     o.sounds.filter((s) => s.key === "hero.sans.abilities.sansLastAttack.apply").length,
     1,
