@@ -4431,6 +4431,9 @@
         "roll": {
           "type": "number"
         },
+        "sourceCell": {
+          "$ref": "#/definitions/Coord"
+        },
         "type": {
           "type": "string",
           "enum": [
@@ -4533,6 +4536,9 @@
             "timerExpired",
             "transformed"
           ]
+        },
+        "sourceCell": {
+          "$ref": "#/definitions/Coord"
         },
         "type": {
           "type": "string",
@@ -7160,6 +7166,9 @@
             true
           ]
         },
+        "sourceCell": {
+          "$ref": "#/definitions/Coord"
+        },
         "type": {
           "type": "string",
           "enum": [
@@ -7205,6 +7214,9 @@
             false,
             true
           ]
+        },
+        "sourceCell": {
+          "$ref": "#/definitions/Coord"
         },
         "type": {
           "type": "string",
@@ -7287,6 +7299,15 @@
         "revealerId": {
           "type": "string"
         },
+        "revealSignature": {
+          "type": "string",
+          "enum": [
+            "friskKeenEye"
+          ]
+        },
+        "targetCell": {
+          "$ref": "#/definitions/Coord"
+        },
         "type": {
           "type": "string",
           "enum": [
@@ -7333,6 +7354,9 @@
             true
           ]
         },
+        "sourceCell": {
+          "$ref": "#/definitions/Coord"
+        },
         "type": {
           "type": "string",
           "enum": [
@@ -7377,6 +7401,9 @@
             false,
             true
           ]
+        },
+        "sourceCell": {
+          "$ref": "#/definitions/Coord"
         },
         "type": {
           "type": "string",
@@ -7675,6 +7702,12 @@
             true
           ]
         },
+        "effectSegments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/EffectSegment"
+          }
+        },
         "isChainComplete": {
           "type": "boolean",
           "enum": [
@@ -7763,6 +7796,13 @@
         },
         "defenderRoll": {
           "$ref": "#/definitions/DiceRoll"
+        },
+        "defenseSignature": {
+          "type": "string",
+          "enum": [
+            "friskCry",
+            "friskSubstitution"
+          ]
         },
         "deferVisuals": {
           "type": "boolean",
@@ -9719,6 +9759,22 @@
         "dice",
         "isDouble",
         "sum"
+      ]
+    },
+    "EffectSegment": {
+      "type": "object",
+      "properties": {
+        "from": {
+          "$ref": "#/definitions/Coord"
+        },
+        "to": {
+          "$ref": "#/definitions/Coord"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "from",
+        "to"
       ]
     },
     "ForestMarker": {

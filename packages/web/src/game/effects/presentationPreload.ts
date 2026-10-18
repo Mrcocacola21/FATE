@@ -10,6 +10,7 @@ import { sfxPlayer } from "../../features/sfx/sfxPlayer";
 import { imagePreloader, preloadVfx, vfxAssets } from "../../features/vfx/imagePreload";
 import { vfxRegistry } from "../../features/vfx/vfxRegistry";
 import type { VfxEffectId } from "../../features/vfx/vfxTypes";
+import coverage from "../../assets/heroVfxCoverage.json";
 
 export const CORE_VFX: readonly VfxEffectId[] = [
   "combatHit",
@@ -64,15 +65,19 @@ export function rosterVfx(heroIds: readonly string[]): VfxEffectId[] {
   const ids = Object.keys(vfxRegistry) as VfxEffectId[];
   return [
     ...new Set(
-      heroIds.flatMap(
-        (hero) =>
-          HERO_VFX[hero] ??
+      heroIds.flatMap((hero) => [
+        ...coverage
+          .filter(
+            (row) => row.hero === hero && row.key && row.status !== "BLOCKED_UNIMPLEMENTED_ABILITY",
+          )
+          .map((row) => row.key as VfxEffectId),
+        ...(HERO_VFX[hero] ??
           ids.filter(
             (id) =>
               id.startsWith(hero) &&
               !/Rebirth|Berserk|Undying|Unbeliever|Engineering|Ex$|Neo$/.test(id),
-          ),
-      ),
+          )),
+      ]),
     ),
   ];
 }

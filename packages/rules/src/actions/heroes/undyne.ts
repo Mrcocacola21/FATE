@@ -19,6 +19,7 @@ import { evAbilityUsed, evAoeResolved, requestRoll } from "../../core";
 import type { TricksterAoEContext } from "../../pendingRoll/types";
 import {
   collectUndyneEnergySpearTargetIds,
+  getUndyneEnergySpearLineCells,
   hasUndyneImmortalActive,
   isUndyne,
   isUndyneLineAxis,
@@ -146,6 +147,8 @@ export function applyUndyneEnergySpear(
     axis,
     target
   );
+  const cells = getUndyneEnergySpearLineCells(baseState, axis, target);
+  const effectSegments = [{ from: { ...cells[0] }, to: { ...cells[cells.length - 1] } }];
 
   if (affectedUnitIds.length === 0) {
     return {
@@ -154,6 +157,7 @@ export function applyUndyneEnergySpear(
         evAbilityUsed({ unitId: updatedUnit.id, abilityId: ABILITY_UNDYNE_ENERGY_SPEAR }),
         evAoeResolved({
           sourceUnitId: updatedUnit.id,
+          effectSegments,
           abilityId: ABILITY_UNDYNE_ENERGY_SPEAR,
           casterId: updatedUnit.id,
           center: target,
@@ -171,6 +175,7 @@ export function applyUndyneEnergySpear(
     ...baseState,
     pendingCombatQueue: [],
     pendingAoE: {
+      effectSegments,
       casterId: updatedUnit.id,
       abilityId: ABILITY_UNDYNE_ENERGY_SPEAR,
       center: target,

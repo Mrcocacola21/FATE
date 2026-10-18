@@ -9,6 +9,7 @@ export function requestMettatonQueuedAttacks(
   center: Coord,
   affectedUnitIds: string[],
   options?: {
+    effectSegments?: import("../../../model/semantic").EffectSegment[];
     allowFriendlyTarget?: boolean;
     damageOverride?: number;
     ignoreBonuses?: boolean;
@@ -21,6 +22,7 @@ export function requestMettatonQueuedAttacks(
       events: [
         evAoeResolved({
           sourceUnitId: caster.id,
+          ...(options?.effectSegments ? { effectSegments: options.effectSegments } : {}),
           abilityId,
           casterId: caster.id,
           center,
@@ -38,6 +40,7 @@ export function requestMettatonQueuedAttacks(
     ...state,
     pendingCombatQueue: [],
     pendingAoE: {
+      ...(options?.effectSegments ? { effectSegments: options.effectSegments } : {}),
       casterId: caster.id,
       abilityId,
       center,

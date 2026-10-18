@@ -12,6 +12,7 @@ export interface CarpetStrikeAoEContext extends Record<string, unknown>, Ability
 export interface AttackRollContext extends Record<string, unknown> {
   isBasicAttack?: boolean;
   attackSignature?: "friskPrecisionStrike";
+  defenseSignature?: "friskCry" | "friskSubstitution";
   attackerId: string;
   defenderId: string;
   allowFriendlyTarget?: boolean;

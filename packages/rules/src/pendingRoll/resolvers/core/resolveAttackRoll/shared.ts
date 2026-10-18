@@ -71,7 +71,10 @@ export function finalizeAttackFromContext(
     rolls,
   });
 
-  const updatedEvents: GameEvent[] = events.map((event) =>
+  const updatedEvents: GameEvent[] = events.map((rawEvent) => {
+    const event = rawEvent.type === "attackResolved" && context.defenseSignature
+      ? {...rawEvent, defenseSignature: context.defenseSignature} : rawEvent;
+    return (
     event.type === "attackResolved" && context.attackSignature === "friskPrecisionStrike"
       ? { ...event, attackSignature: context.attackSignature }
       : event.type === "attackResolved" &&
@@ -81,8 +84,9 @@ export function finalizeAttackFromContext(
           !context.controllerPlayerId &&
           context.queueKind === "normal"
         ? { ...event, isBasicAttack: true }
-        : event,
-  );
+        : event
+    );
+  });
   const attackEvent = events.find(
     (e) =>
       e.type === "attackResolved" &&

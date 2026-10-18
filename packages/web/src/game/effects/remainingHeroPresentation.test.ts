@@ -127,9 +127,11 @@ test("every new cast freezes the authorized commit cell, not the later unit posi
     const movedView = view();
     movedView.units.source.position = { col: 8, row: 8 };
     const mapped = outputs([cast], movedView);
-    assert.equal(mapped.sprites.length, 1, abilityId);
-    assert.equal(mapped.sprites[0].effectId, signature.vfx);
-    assert.deepEqual(mapped.sprites[0].sourceCell, origin);
+    assert.equal(mapped.sprites.length, signature.vfxPhase === "resolution" ? 0 : 1, abilityId);
+    if (signature.vfxPhase !== "resolution") {
+      assert.equal(mapped.sprites[0].effectId, signature.vfx);
+      assert.deepEqual(mapped.sprites[0].sourceCell, origin);
+    }
     assert.equal(mapped.sounds.length, signature.sfx ? 1 : 0, abilityId);
     const redacted = outputs([{ ...cast, sourceCell: undefined }], movedView);
     assert.equal(redacted.sprites.length, 0, `No guessed source: ${abilityId}`);
@@ -147,6 +149,7 @@ test("all new areas play once per use; sparse footprints never become a bounding
       sourceCell: origin,
       center,
       radius: 1,
+      effectSegments: [{from: origin, to: center}],
       affectedUnitIds: ["target"],
       damagedUnitIds: [],
       revealedUnitIds: [],
@@ -155,7 +158,7 @@ test("all new areas play once per use; sparse footprints never become a bounding
     const result = outputs([event, { ...event, eventId: `${abilityId}-repeat` }]);
     assert.equal(result.sprites.length, 1, abilityId);
     assert.equal(result.sounds.length, signature.sfx ? 1 : 0, abilityId);
-    assert.equal(result.sprites[0].placement, signature.square ? "area" : "cell");
+    assert.equal(result.sprites[0].placement, signature.square ? "area" : ["elCidTisona", "papyrusLine", "undyneEnergy", "artemidaCrescent", "lucheRay", "mettatonLaser", "donMadness"].includes(signature.vfx) ? "line" : "cell");
     if (!signature.square) assert.equal(result.sprites[0].cells, undefined);
     const missing = outputs([
       { ...event, sourceCell: undefined, center: undefined } as unknown as PresentationEvent,

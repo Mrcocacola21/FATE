@@ -54,7 +54,7 @@ export function applyKaiserEngineeringMiracle(state: GameState, unit: UnitState)
 
   const events: GameEvent[] = [];
   if (unit.bunker?.active) {
-    events.push(evBunkerExited({ unitId: updatedUnit.id, reason: "transformed" }));
+    events.push(evBunkerExited({ unitId: updatedUnit.id, reason: "transformed", sourceCell: updatedUnit.position }));
   }
 
   events.push(

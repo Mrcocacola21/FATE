@@ -176,6 +176,7 @@ function resolveSpinTheDrum(
 
   spent.events.push({
     type: "lokiSpinCommitted",
+    ...(spent.loki.position ? {sourceCell: {...spent.loki.position}} : {}),
     unitId: lokiId,
     abilityId: ABILITY_LOKI_LAUGHT,
     abilityUseId: spent.events.find((event) => event.type === "abilityUsed")?.abilityUseId,

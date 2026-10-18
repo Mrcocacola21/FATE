@@ -51,6 +51,7 @@ export function resolveFriskSubstitutionChoiceRoll(
   const nextCtx: AttackRollContext = {
     ...ctx,
     friskSubstitutionChoiceMade: true,
+    ...(selected === "activate" ? { defenseSignature: "friskSubstitution" as const } : {}),
     friskChildsCryChoiceMade: true,
   };
 
@@ -117,6 +118,7 @@ export function resolveFriskChildsCryChoiceRoll(
   const nextCtx: AttackRollContext = {
     ...ctx,
     friskChildsCryChoiceMade: true,
+    ...(selected === "activate" ? { defenseSignature: "friskCry" as const } : {}),
   };
 
   const resolved = finalizeAttackFromContext(

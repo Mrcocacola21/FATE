@@ -1,6 +1,37 @@
 import type { Coord, ProjectedGameEvent, PlayerView } from "rules";
 
 export type VfxEffectId =
+  | "artemidaCrescent"
+  | "donMadness"
+  | "donWindmills"
+  | "duolingoBerserker"
+  | "elCidDuel"
+  | "elCidKolada"
+  | "elCidTisona"
+  | "friskCleanSoul"
+  | "friskCry"
+  | "friskFriendship"
+  | "friskKeenEye"
+  | "friskOnePath"
+  | "friskPrecision"
+  | "friskSubstitution"
+  | "genghisCharge"
+  | "bunkerEntry"
+  | "bunkerExit"
+  | "jebeRicochet"
+  | "kanekiCentipede"
+  | "lokiSpin"
+  | "lucheSun"
+  | "lucheRay"
+  | "mettatonFinalChord"
+  | "mettatonLaser"
+  | "odinGungnir"
+  | "odinHuginn"
+  | "papyrusLine"
+  | "gasterCharge"
+  | "undyneEnergy"
+  | "vladStakeMarker"
+  | "zoroSantoryu"
   | "stakePlace"
   | "stakeTrigger"
   | "snarePlace"
@@ -104,6 +135,7 @@ export type BoardVfxRequest = {
   targetCell?: Coord;
   cells?: Coord[];
   path?: Coord[];
+  segments?: { from: Coord; to: Coord }[];
   unitId?: string;
   /** One-shots default to the frozen sourceCell; status previews opt into following. */
   anchorMode?: "event" | "followUnit";

@@ -68,7 +68,7 @@ test("confirmed event previews and explicit local line preview exercise all supp
     }).forEach((effect) => placements.add(effect.placement));
   });
 
-  assert.deepEqual([...placements].sort(), ["area", "cell", "line", "projectile", "unit"]);
+  assert.deepEqual([...placements].sort(), ["area", "cell", "line", "projectile", "ray", "unit"]);
 });
 
 test("VFX preview lookup is stable for capture script ids", () => {

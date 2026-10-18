@@ -95,7 +95,7 @@ export function processUnitStartOfTurn(
 
   const events: GameEvent[] = [];
   if (!unit.kanekiCentipedeUnlocked && updated.kanekiCentipedeUnlocked) {
-    events.push({ type: "kanekiFormEntered", unitId: updated.id, form: "scolopendra" });
+    events.push({ type: "kanekiFormEntered", unitId: updated.id, form: "scolopendra", ...(updated.position ? {sourceCell: {...updated.position}} : {}) });
   }
   if (Object.keys(deltas).length > 0) {
     events.push({

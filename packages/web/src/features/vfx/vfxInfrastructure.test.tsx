@@ -229,7 +229,7 @@ test("ray strip uses one coherent animated artwork with cell-relative thickness"
 });
 
 test("projectile capability has source, target, rotation, travel and sprite scaling", () => {
-  const html = render(queued("fireball"));
+  const html = render({...queued("fireball"), sourceCell: {col:1,row:2}, targetCell: {col:7,row:6}});
   assert.match(html, /vfx-projectile-axis/);
   assert.match(html, /rotate\(-33.690067525979785deg\)/);
   assert.match(html, /--vfx-travel:288.44410203711914px/);

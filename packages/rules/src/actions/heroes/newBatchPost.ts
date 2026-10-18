@@ -18,6 +18,7 @@ import {
 import { queueHeroAbilityAttacks as queueNewHeroAttacks } from "../shared";
 import { canJackTrapTriggerForTarget, cleanupJackTrapsForDeaths } from "../../jackSnares";
 import { applyBlindUntilEndOfNextTurn } from "../../blind";
+import { rayEffectSegment } from "../../core/events/combatEvents/presentationGeometry";
 
 function chargeEvent(unit: UnitState, abilityId: string, delta: number): GameEvent {
   return {
@@ -151,6 +152,7 @@ export function applyNewBatchPostAction(
             nextEvents.push({
               type: "kanekiFormEntered",
               unitId: attacker.id,
+              ...(attacker.position ? {sourceCell: {...attacker.position}} : {}),
               form: "scolopendra",
             });
           attacker = { ...attacker, kanekiCentipedeUnlocked: true };
@@ -209,6 +211,7 @@ export function applyNewBatchPostAction(
               nextEvents.push({
                 type: "kanekiFormEntered",
                 unitId: killer.id,
+                ...(killer.position ? {sourceCell: {...killer.position}} : {}),
                 form: "scolopendra",
               });
             killer = { ...killer, kanekiCentipedeUnlocked: true };
@@ -355,7 +358,7 @@ export function resolveDonMadDelusionDirection(
       events: [],
     };
   }
-  const queued = queueNewHeroAttacks(base, don, ids.ABILITY_DON_KIHOTE_MADNESS, targetIds, { damageBonus: 1, center: don.position });
+  const queued = queueNewHeroAttacks(base, don, ids.ABILITY_DON_KIHOTE_MADNESS, targetIds, { damageBonus: 1, center: don.position, effectSegments: rayEffectSegment(don.position, { col: don.position.col + direction.col, row: don.position.row + direction.row }, state.boardSize) });
   return queued;
 }
 

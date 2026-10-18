@@ -37,11 +37,11 @@ export function copyEventPayload(event: GameEvent): GameEvent | undefined {
 function copySemanticPayload(event: GameEvent): GameEvent | undefined {
   switch (event.type) {
     case "kanekiFormEntered":
-      return { type: event.type, unitId: event.unitId, form: event.form };
+      return { type: event.type, unitId: event.unitId, form: event.form, ...(event.sourceCell ? {sourceCell: coord(event.sourceCell)} : {}) };
     case "friskOnePathUnlocked":
     case "friskFriendshipWon":
     case "lokiSpinCommitted":
-      return { type: event.type, unitId: event.unitId };
+      return { type: event.type, unitId: event.unitId, ...(event.sourceCell ? {sourceCell: coord(event.sourceCell)} : {}) };
     case "combatVisualBatchReady":
       return {
         type: "combatVisualBatchReady",
@@ -93,6 +93,7 @@ function copySemanticPayload(event: GameEvent): GameEvent | undefined {
         attackerRollIsNew: event.attackerRollIsNew,
         ...(event.isBasicAttack === true ? { isBasicAttack: true } : {}),
         ...(event.attackSignature ? { attackSignature: event.attackSignature } : {}),
+        ...(event.defenseSignature ? { defenseSignature: event.defenseSignature } : {}),
         tieBreakDice: event.tieBreakDice
           ? {
               attacker: [...event.tieBreakDice.attacker],
@@ -131,6 +132,8 @@ function copySemanticPayload(event: GameEvent): GameEvent | undefined {
     case "stealthRevealed":
       return {
         type: "stealthRevealed",
+        ...(event.revealSignature ? { revealSignature: event.revealSignature } : {}),
+        ...(event.revealSignature && event.targetCell ? {targetCell: coord(event.targetCell)} : {}),
         unitId: event.unitId,
         reason: event.reason,
         revealerId: event.revealerId,
@@ -269,11 +272,11 @@ function copySemanticPayload(event: GameEvent): GameEvent | undefined {
     case "chargesUpdated":
       return { type: "chargesUpdated", unitId: event.unitId, deltas: event.deltas, now: event.now };
     case "bunkerEntered":
-      return { type: "bunkerEntered", unitId: event.unitId, roll: event.roll };
+      return { type: "bunkerEntered", unitId: event.unitId, roll: event.roll, ...(event.sourceCell ? {sourceCell: coord(event.sourceCell)} : {}) };
     case "bunkerEnterFailed":
       return { type: "bunkerEnterFailed", unitId: event.unitId, roll: event.roll };
     case "bunkerExited":
-      return { type: "bunkerExited", unitId: event.unitId, reason: event.reason };
+      return { type: "bunkerExited", unitId: event.unitId, reason: event.reason, ...(event.sourceCell ? {sourceCell: coord(event.sourceCell)} : {}) };
     case "intimidateTriggered":
       return {
         type: "intimidateTriggered",
@@ -346,6 +349,7 @@ function copySemanticPayload(event: GameEvent): GameEvent | undefined {
     case "aoeResolved":
       return {
         type: "aoeResolved",
+        ...(event.effectSegments ? { effectSegments: event.effectSegments.map(({from, to}) => ({from: coord(from), to: coord(to)})) } : {}),
         sourceUnitId: event.sourceUnitId,
         sourceCell: event.sourceCell ? coord(event.sourceCell) : undefined,
         abilityId: event.abilityId,

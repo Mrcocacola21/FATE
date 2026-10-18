@@ -178,6 +178,11 @@ test("real Gaster chain: one shared manual attacker roll, four defenders includi
   const sprites = plans.flatMap((p) => outputs(p.batch).sprites);
   const sounds = plans.flatMap((p) => outputs(p.batch).sounds);
   assert.equal(sprites.filter((s) => s.effectId === "gasterCannon").length, 1);
+  assert.equal(sprites.filter((s) => s.effectId === "gasterCharge").length, 1);
+  const charge = sprites.find(s => s.effectId === "gasterCharge")!;
+  const fire = sprites.find(s => s.effectId === "gasterBeam")!;
+  assert.equal((charge.delayMs ?? 0) + charge.durationMs!, fire.delayMs);
+  assert.equal(charge.durationMs, GASTER_TIMING.fireMs - GASTER_TIMING.chargeMs);
   assert.equal(sprites.filter((s) => s.effectId === "gasterBeam").length, 1);
   for (const key of ["charge", "fire"])
     assert.equal(

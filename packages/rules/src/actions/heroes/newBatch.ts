@@ -4,6 +4,7 @@ import type { ApplyResult, Coord, GameAction, GameEvent, GameState, UnitState } 
 import { ALL_DIRS, chebyshev, coordsEqual, getUnitAt, isCellOccupied } from "../../board";
 import { isInsideBoard } from "../../model";
 import { linePath } from "../../path";
+import { segmentFromCells } from "../../core/events/combatEvents/presentationGeometry";
 import { canAttackTarget } from "../../combat";
 import { canDirectlyTargetUnit } from "../../visibility";
 import { revealStealthedInArea } from "../../stealth";
@@ -250,7 +251,8 @@ function applyLucheLightRay(
     committed.unit,
     ids.ABILITY_LUCHE_DIVINE_RAY,
     unitIdsInCells(committed.state, cells, committed.unit, true),
-    { blindOnHit: true, center, ...(mode === "aroundSelf" ? { radius: 1 } : {}) },
+    { blindOnHit: true, center, ...(mode === "aroundSelf" ? { radius: 1 }
+      : { effectSegments: segmentFromCells(cells, unit.position) }) },
   );
   return { state: queued.state, events: [...committed.events, ...queued.events] };
 }
@@ -650,6 +652,7 @@ function applyArtemisSickle(state: GameState, unit: UnitState, action: AbilityAc
     ignoreBonuses: true,
     allowFriendlyTarget: true,
     center: toward,
+    effectSegments: segmentFromCells(line, unit.position),
   });
   return { state: queued.state, events: [abilityUsed(unit.id, spec.id), ...queued.events] };
 }

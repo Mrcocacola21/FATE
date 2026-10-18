@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { vfxRegistry } from "../features/vfx/vfxRegistry";
 import test from "node:test";
 
 import { renderToStaticMarkup } from "react-dom/server";
@@ -140,7 +141,7 @@ test("forest markers use the centered forest asset in the decorative marker laye
 test("owner-hidden stakes use muted private art and a gray overlay badge", () => {
   const markup = renderBoard(makePlayerView(markerState(), "P1"), "P1");
 
-  assert.ok(markup.includes(getBoardMarkerAsset("vlad_stake")));
+  assert.ok(markup.includes(vfxRegistry.vladStakeMarker.asset!));
   assert.match(markup, /data-board-marker="vlad_stake_hidden"/);
   assert.match(markup, /board-marker-icon--stake-hidden/);
   assert.match(markup, /data-stake-state="hidden"/);

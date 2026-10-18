@@ -39,7 +39,7 @@ function requestId(
   effectId: VfxEffectId,
   suffix = "0",
 ): string {
-  return `${context.presentationId ?? context.revision}:${context.eventIndex}:${event.type}:${effectId}:${suffix}`;
+  return `${context.streamId ?? context.presentationId ?? context.revision}:${"eventId" in event ? event.eventId : context.eventIndex}:${event.type}:${effectId}:${suffix}`;
 }
 
 function cellRequest(
@@ -113,6 +113,7 @@ function mapAbilityUsed(
   context: VfxMapperContext,
 ): BoardVfxRequest[] {
   const signature = REMAINING_CASTS[event.abilityId];
+  if (signature?.vfxPhase === "resolution") return [];
   if (signature && event.abilityUseId)
     return cellRequest(
       context,
@@ -211,6 +212,58 @@ function mapAoeResolved(
   if (!isCoord(event.center) || typeof event.radius !== "number") return [];
   const signature = event.abilityId && REMAINING_AREAS[event.abilityId];
   if (signature) {
+    const directed = [
+      "elCidTisona",
+      "papyrusLine",
+      "undyneEnergy",
+      "artemidaCrescent",
+      "lucheRay",
+      "mettatonLaser",
+      "donMadness",
+    ].includes(signature.vfx);
+    let segments = directed ? event.effectSegments : undefined;
+    if (event.abilityId === "mettatonFinalChord") {
+      // Only resolved, recipient-authorized legs; blockers cannot be inferred.
+      segments = context.events.flatMap((candidate) =>
+        candidate.type === "attackResolved" &&
+        candidate.abilityUseId === event.abilityUseId &&
+        event.abilityUseId &&
+        candidate.abilityId === event.abilityId &&
+        isCoord(candidate.sourceCell) &&
+        isCoord(candidate.targetCell)
+          ? [{ from: candidate.sourceCell, to: candidate.targetCell }]
+          : [],
+      );
+    }
+    if (segments?.length && isCoord(event.sourceCell))
+      return [
+        {
+          id: heroCueId(
+            context.streamId ?? context.presentationId ?? context.revision,
+            event,
+            "area",
+          ),
+          effectId: signature.vfx,
+          placement: "line",
+          anchorMode: "event",
+          sourceCell: { ...event.sourceCell },
+          segments: segments.map(({ from, to }) => ({ from: { ...from }, to: { ...to } })),
+          rayToEdge: false,
+        },
+      ];
+    if (event.abilityId === "lucheDivineRay" && event.radius === 1 && isCoord(event.sourceCell))
+      return cellRequest(context, event, signature.vfx, event.center, undefined, {
+        id: heroCueId(
+          context.streamId ?? context.presentationId ?? context.revision,
+          event,
+          "area",
+        ),
+        anchorMode: "event",
+        placement: "area",
+        widthCells: 3,
+        heightCells: 3,
+      });
+    if (directed) return [];
     const cell = signature.square
       ? event.center
       : isCoord(event.sourceCell)
@@ -248,6 +301,15 @@ function mapAoeResolved(
         sourceCell: { ...event.sourceCell },
         targetCell: { ...event.center },
         delayMs: GASTER_TIMING.summonMs,
+      },
+      {
+        id: heroCueId(namespace, event, "gasterCharge"),
+        effectId: "gasterCharge",
+        placement: "cell",
+        anchorMode: "event",
+        sourceCell: { ...event.sourceCell },
+        delayMs: GASTER_TIMING.chargeMs,
+        durationMs: GASTER_TIMING.fireMs - GASTER_TIMING.chargeMs,
       },
       {
         id: heroCueId(namespace, event, "gasterFire"),
@@ -297,6 +359,54 @@ function mapAoeResolved(
   return [];
 }
 
+function attackSignatures(
+  event: Extract<ProjectedGameEvent, { type: "attackResolved" }>,
+  context: VfxMapperContext,
+): BoardVfxRequest[] {
+  const requests: BoardVfxRequest[] = [];
+  const attacker = event.attackerId ? context.view.units[event.attackerId] : undefined;
+  const projectile: VfxEffectId | undefined =
+    event.attackSignature === "friskPrecisionStrike"
+      ? "friskPrecision"
+      : event.abilityId === "jebeKhansShooter"
+        ? "jebeRicochet"
+        : attacker?.heroId === "odin" && event.hit && event.attackerRoll?.isDouble
+          ? "odinGungnir"
+          : undefined;
+  if (projectile && isCoord(event.sourceCell) && isCoord(event.targetCell))
+    requests.push({
+      id: requestId(context, event, projectile),
+      effectId: projectile,
+      placement: "projectile",
+      anchorMode: "event",
+      sourceCell: { ...event.sourceCell },
+      targetCell: { ...event.targetCell },
+    });
+  if (attacker?.heroId === "zoro" && (event.isBasicAttack || event.abilityId === "zoro3SwordStyle"))
+    requests.push(
+      ...cellRequest(
+        context,
+        event,
+        "zoroSantoryu",
+        isCoord(event.targetCell) ? event.targetCell : null,
+        undefined,
+        { anchorMode: "event" },
+      ),
+    );
+  if (event.defenseSignature)
+    requests.push(
+      ...cellRequest(
+        context,
+        event,
+        event.defenseSignature,
+        isCoord(event.targetCell) ? event.targetCell : null,
+        undefined,
+        { anchorMode: "event" },
+      ),
+    );
+  return requests;
+}
+
 function mapSearchStealth(
   event: Extract<ProjectedGameEvent, { type: "searchStealth" }>,
   context: VfxMapperContext,
@@ -335,6 +445,33 @@ export function mapGameEventToVfx(
   event: ProjectedGameEvent,
   context: VfxMapperContext,
 ): BoardVfxRequest[] {
+  if (
+    event.type === "kanekiFormEntered" ||
+    event.type === "friskOnePathUnlocked" ||
+    event.type === "friskFriendshipWon" ||
+    event.type === "lokiSpinCommitted" ||
+    event.type === "bunkerEntered" ||
+    event.type === "bunkerExited"
+  ) {
+    const signature = remainingStatusSignature(event);
+    const effectId =
+      event.type === "bunkerEntered"
+        ? "bunkerEntry"
+        : event.type === "bunkerExited"
+          ? "bunkerExit"
+          : signature!.vfx;
+    return cellRequest(
+      context,
+      event,
+      effectId,
+      isCoord(event.sourceCell) ? event.sourceCell : null,
+      undefined,
+      {
+        anchorMode: "event",
+        id: `${context.streamId ?? context.revision}:${"eventId" in event ? event.eventId : context.eventIndex}:${effectId}`,
+      },
+    );
+  }
   const signature = remainingStatusSignature(event);
   if (event.type === "lechyStormRollResult")
     return unitOrPreviousRequest(context, event, "storm", event.unitId, "stormTick", {
@@ -412,12 +549,15 @@ export function mapGameEventToVfx(
     case "attackResolved":
       if (isFireballResolution(event))
         return fireballRequests(event, context, FIREBALL_TIMING.travelMs);
-      return cellRequest(
-        context,
-        event,
-        event.hit ? "combatHit" : "combatMiss",
-        isCoord(event.targetCell) ? event.targetCell : null,
-      );
+      return [
+        ...attackSignatures(event, context),
+        ...cellRequest(
+          context,
+          event,
+          event.hit ? "combatHit" : "combatMiss",
+          isCoord(event.targetCell) ? event.targetCell : null,
+        ),
+      ];
     case "unitDied":
       return cellRequest(
         context,
@@ -430,7 +570,16 @@ export function mapGameEventToVfx(
     case "searchStealth":
       return mapSearchStealth(event, context);
     case "stealthRevealed":
-      return unitRequest(context, event, "hiddenReveal", event.unitId);
+      return event.revealSignature === "friskKeenEye"
+        ? cellRequest(
+            context,
+            event,
+            "friskKeenEye",
+            isCoord(event.targetCell) ? event.targetCell : null,
+            undefined,
+            { anchorMode: "event" },
+          )
+        : unitRequest(context, event, "hiddenReveal", event.unitId);
     case "chikatiloMarkApplied":
       return unitRequest(context, event, "markApply", event.targetId, "target");
     case "lechyStormStarted":
@@ -466,13 +615,6 @@ export function mapGameEventToVfx(
       return []; // Completion never reconstructs or replays a route.
     case "unitMoved":
       return mapUnitMoved(event, context);
-    case "bunkerEntered":
-      return unitRequest(context, event, "shield", event.unitId, "bunker");
-    case "bunkerExited":
-      return unitRequest(context, event, "bunkerStatus", event.unitId, "exit", {
-        durationMs: 250,
-        opacity: 0.35,
-      });
     case "intimidateResolved":
       return event.abilityId === ABILITY_VLAD_INTIMIDATE
         ? cellRequest(context, event, "vladGaze", event.from, "stare", {
@@ -524,10 +666,29 @@ export function mapEventBatchToVfx(params: {
     }
     if (
       params.movementCues &&
-      ((event.type === "unitMoved" && confirmedMovement(event)) || event.type === "stealthRevealed")
+      ((event.type === "unitMoved" && confirmedMovement(event)) ||
+        (event.type === "stealthRevealed" && !event.revealSignature))
     )
       return;
     if (event.type === "attackResolved") {
+      if (params.combatCues) {
+        const cue = params.combatCues.find(
+          (cue) => cue.eventIndex === eventIndex && (cue.kind === "hit" || cue.kind === "miss"),
+        );
+        effects.push(
+          ...attackSignatures(event, { ...params, eventIndex }).map((request) => ({
+            ...request,
+            ...(request.placement === "projectile" && cue && "attackAtMs" in cue && cue.attackAtMs !== undefined
+              ? {durationMs: Math.max(100, cue.atMs - cue.attackAtMs)} : {}),
+            delayMs:
+              request.effectId === "friskCry" || request.effectId === "friskSubstitution"
+                ? (cue?.atMs ?? params.eventDelaysMs?.[eventIndex] ?? 0)
+                : ((cue && "attackAtMs" in cue ? cue.attackAtMs : undefined) ??
+                  params.eventDelaysMs?.[eventIndex] ??
+                  0),
+          })),
+        );
+      }
       const impactMs =
         params.combatCues?.find((cue) => cue.eventIndex === eventIndex && cue.kind === "hit")
           ?.atMs ??

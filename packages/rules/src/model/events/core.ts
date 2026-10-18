@@ -1,5 +1,6 @@
 import type { Coord, MoveMode, PlayerId } from "../shared";
 import type { MovementProvenance } from "../semantic";
+import type { EffectSegment } from "../semantic";
 import type {
   CourtEffectId,
   CourtSide,
@@ -64,6 +65,7 @@ export type CoreGameEvent =
       /** Explicit normal attack provenance; absence is never interpreted as basic. */
       isBasicAttack?: boolean;
       attackSignature?: "friskPrecisionStrike";
+      defenseSignature?: "friskCry" | "friskSubstitution";
       tieBreakDice?: { attacker: number[]; defender: number[] };
       hit: boolean;
       damage: number;
@@ -95,6 +97,8 @@ export type CoreGameEvent =
     }
   | {
       type: "stealthRevealed";
+      revealSignature?: "friskKeenEye";
+      targetCell?: Coord;
       unitId: string;
       reason: StealthRevealReason;
       revealerId?: string;
@@ -260,6 +264,7 @@ export type CoreGameEvent =
     }
   | {
       type: "bunkerEntered";
+      sourceCell?: Coord;
       unitId: string;
       roll: number;
     }
@@ -270,6 +275,7 @@ export type CoreGameEvent =
     }
   | {
       type: "bunkerExited";
+      sourceCell?: Coord;
       unitId: string;
       reason: "timerExpired" | "attacked" | "transformed";
     }
@@ -348,6 +354,7 @@ export type CoreGameEvent =
     }
   | {
       type: "aoeResolved";
+      effectSegments?: EffectSegment[];
       sourceUnitId: string;
       sourceCell?: Coord;
       abilityId?: string;

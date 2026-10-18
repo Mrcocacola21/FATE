@@ -196,7 +196,7 @@ export type HeroGameEvent =
       damage: number;
       hpAfter: number;
     }
-  | { type: "kanekiFormEntered"; unitId: string; form: "scolopendra" }
-  | { type: "friskOnePathUnlocked"; unitId: string }
-  | { type: "friskFriendshipWon"; unitId: string }
-  | { type: "lokiSpinCommitted"; unitId: string };
+  | { type: "kanekiFormEntered"; unitId: string; form: "scolopendra"; sourceCell?: Coord }
+  | { type: "friskOnePathUnlocked"; unitId: string; sourceCell?: Coord }
+  | { type: "friskFriendshipWon"; unitId: string; sourceCell?: Coord }
+  | { type: "lokiSpinCommitted"; unitId: string; sourceCell?: Coord };

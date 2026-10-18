@@ -427,7 +427,7 @@ test("Bunker success/exit are one-shots, failure is silent, active hydration is 
     const view = makePlayerView(result.state, "P1");
     const b = batch(projectEventsForRecipient(result.state, result.events, "P1"), view);
     assert.equal(sounds(b).length, success ? 1 : 0);
-    assert.equal(vfx(b).filter((e) => e.effectId === "shield").length, success ? 1 : 0);
+    assert.equal(vfx(b).filter((e) => e.effectId === "bunkerEntry").length, success ? 1 : 0);
     assert.equal(Boolean(view.units[f.casterId].bunker?.active), success);
     const html = renderToStaticMarkup(
       createElement(Board, {
@@ -443,9 +443,9 @@ test("Bunker success/exit are one-shots, failure is silent, active hydration is 
     assert.deepEqual(vfx(batch([], view)), []);
   }
   const view = makePlayerView(f.state, "P1");
-  const exit = batch([{ type: "bunkerExited", unitId: f.casterId, reason: "timerExpired" }], view);
+  const exit = batch([{ type: "bunkerExited", unitId: f.casterId, reason: "timerExpired", sourceCell: view.units[f.casterId].position! }], view);
   assert.equal(sounds(exit).length, 1);
-  assert.equal(vfx(exit)[0].effectId, "bunkerStatus");
+  assert.equal(vfx(exit)[0].effectId, "bunkerExit");
 });
 
 test("Stare prompt waits, resolution shares forced movement, hidden source identity stays private", () => {

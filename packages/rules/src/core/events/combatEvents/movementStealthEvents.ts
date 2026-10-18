@@ -94,10 +94,12 @@ export function evMoveBlocked(params: {
 
 export function evBunkerEntered(params: {
   unitId: string;
+  sourceCell?: Coord | null;
   roll: number;
 }): BunkerEnteredEvent {
   return {
     type: "bunkerEntered",
+    ...(params.sourceCell ? {sourceCell: {...params.sourceCell}} : {}),
     unitId: params.unitId,
     roll: params.roll,
   };
@@ -116,10 +118,12 @@ export function evBunkerEnterFailed(params: {
 
 export function evBunkerExited(params: {
   unitId: string;
+  sourceCell?: Coord | null;
   reason: "timerExpired" | "attacked" | "transformed";
 }): BunkerExitedEvent {
   return {
     type: "bunkerExited",
+    ...(params.sourceCell ? {sourceCell: {...params.sourceCell}} : {}),
     unitId: params.unitId,
     reason: params.reason,
   };

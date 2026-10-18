@@ -14,6 +14,7 @@ import { requestRoll, evAbilityUsed, evAoeResolved } from "../../../core";
 import { isElCid } from "../../shared";
 import type { ElCidAoEContext } from "../../types";
 import { collectLineTargets, isSameRowOrCol } from "./helpers";
+import { rayEffectSegment } from "../../../core/events/combatEvents/presentationGeometry";
 
 interface LinePayload {
   target?: Coord;
@@ -71,11 +72,13 @@ export function applyElCidTisona(
 
   const affectedUnitIds = Array.from(new Set(collectLineTargets(nextState, updatedUnit, target)));
   const revealedUnitIds: string[] = [];
+  const effectSegments = rayEffectSegment(unit.position, target, state.boardSize);
 
   if (affectedUnitIds.length === 0) {
     events.push(
       evAoeResolved({
         sourceUnitId: updatedUnit.id,
+        effectSegments,
         abilityId: spec.id,
         casterId: updatedUnit.id,
         center: { ...target },
@@ -93,6 +96,7 @@ export function applyElCidTisona(
     ...nextState,
     pendingCombatQueue: [],
     pendingAoE: {
+      effectSegments,
       casterId: updatedUnit.id,
       abilityId: spec.id,
       center: { ...target },

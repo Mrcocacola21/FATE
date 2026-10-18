@@ -14,6 +14,7 @@ import { resolveAoE } from "../../../aoe";
 import {
   collectMettatonFinalChordTargetIds,
   collectMettatonFullLineTargetIds,
+  getMettatonFullLineCells,
   getMettatonRating,
   hasMettatonExUnlocked,
   hasMettatonNeoUnlocked,
@@ -27,6 +28,7 @@ import type { RNG } from "../../../rng";
 import { parseCoord, sortUnitIdsByReadingOrder } from "./helpers";
 import { requestMettatonQueuedAttacks } from "./queue";
 import { buildActionBaseState } from "./state";
+import { segmentFromCells } from "../../../core/events/combatEvents/presentationGeometry";
 
 interface CenterPayload {
   center?: Coord;
@@ -202,7 +204,8 @@ export function applyMettatonLaser(
     ABILITY_METTATON_LASER,
     target,
     targets,
-    { allowFriendlyTarget: true }
+    { allowFriendlyTarget: true,
+      effectSegments: segmentFromCells(getMettatonFullLineCells(prepared.state, caster, target), caster.position) }
   );
 
   return {

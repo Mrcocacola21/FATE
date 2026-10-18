@@ -41,6 +41,6 @@ export function tryApplyFriskPowerOfFriendship(
   const frisk = getPowerOfFriendshipSource(state);
   if (!frisk) return null;
   return endGameWithWinner(
-    state, [{ type: "friskFriendshipWon", unitId: frisk.id }], frisk.owner, "unknown",
+    state, [{ type: "friskFriendshipWon", unitId: frisk.id, ...(frisk.position ? {sourceCell: {...frisk.position}} : {}) }], frisk.owner, "unknown",
   );
 }

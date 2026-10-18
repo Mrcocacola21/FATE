@@ -20,7 +20,7 @@ import { useBoardFit } from "../game/hooks/useBoardFit";
 import type { BoardEventBatch, BoardPreviewLine } from "../game/effects/types";
 import { getActiveBoneStatus, type ActiveBoneStatus } from "../game/boneStatus";
 import { VfxLayer } from "../features/vfx/VfxLayer";
-import { BOARD_LAYER_STYLES } from "../features/vfx/vfxRegistry";
+import { BOARD_LAYER_STYLES, vfxRegistry } from "../features/vfx/vfxRegistry";
 import type { QueuedBoardVfxRequest } from "../features/vfx/vfxTypes";
 import { useBoardVfx } from "../features/vfx/useBoardVfx";
 import { useBoardSfx } from "../features/sfx/useBoardSfx";
@@ -160,7 +160,7 @@ const PREVIEW_KIND_ORDER: PreviewCellKind[] = [
 ];
 
 const FOREST_MARKER_ASSET = getBoardMarkerAsset("lechy_forest");
-const STAKE_MARKER_ASSET = getBoardMarkerAsset("vlad_stake");
+const STAKE_MARKER_ASSET = vfxRegistry.vladStakeMarker.asset;
 const JACK_TRAP_MARKER_ASSET = getBoardMarkerAsset("jack_trap");
 
 function orderedPreviewKinds(state: PreviewCellState | undefined): PreviewCellKind[] {

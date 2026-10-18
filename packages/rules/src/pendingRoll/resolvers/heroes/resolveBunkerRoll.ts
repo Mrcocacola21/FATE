@@ -49,7 +49,7 @@ export function resolveEnterBunkerRoll(state: GameState, unitId: string, rng: RN
 
   const events: GameEvent[] = [
     success
-      ? evBunkerEntered({ unitId: updated.id, roll })
+      ? evBunkerEntered({ unitId: updated.id, roll, sourceCell: updated.position })
       : evBunkerEnterFailed({ unitId: updated.id, roll }),
   ];
 

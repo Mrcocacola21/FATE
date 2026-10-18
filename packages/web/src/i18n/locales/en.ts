@@ -1,6 +1,7 @@
 import { adminEn } from "../../admin/locales";
 export const en = {
   persistentStatus: {
+    odinHuginn: "Huginn: adjacent stealth detection", duolingoBerserker: "Berserker unlocked",
     curse: "Last Attack curse", movementDisabled: "Movement disabled next own turn",
     sansMoveLock: "Badass Joke movement lock", kaladinMoveLock: "Fifth Ideal movement lock",
     lokiMoveLock: "Entangled", cleanSoul: "Clean Soul shield ready",

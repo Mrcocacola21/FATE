@@ -43,7 +43,24 @@ export const STATUS_VISUALS = {
   mark: { glyph: "M", tone: "mark", label: "board.assassinMark" },
   trackedMark: { glyph: "M", tone: "mark", label: "board.assassinMarkTracked" },
   bunker: { glyph: "B", tone: "positive", label: "board.bunker", effectId: "bunkerStatus" },
-  cleanSoul: { glyph: "SH", tone: "positive", label: "persistentStatus.cleanSoul" },
+  cleanSoul: {
+    glyph: "SH",
+    tone: "positive",
+    label: "persistentStatus.cleanSoul",
+    effectId: "friskCleanSoul",
+  },
+  duolingoBerserker: {
+    glyph: "B",
+    tone: "positive",
+    label: "persistentStatus.duolingoBerserker",
+    effectId: "duolingoBerserker",
+  },
+  odinHuginn: {
+    glyph: "H",
+    tone: "positive",
+    label: "persistentStatus.odinHuginn",
+    effectId: "odinHuginn",
+  },
   autoDefense: { glyph: "AD", tone: "positive", label: "persistentStatus.autoDefense" },
   berserkDefense: { glyph: "BD", tone: "positive", label: "persistentStatus.berserkDefense" },
   patience: { glyph: "P", tone: "positive", label: "persistentStatus.patience" },
@@ -101,6 +118,8 @@ export function resolveUnitStatuses(
   if (own && unit.isStealthed) active.add("stealth");
   if (unit.bunker?.active) active.add("bunker");
   if (unit.friskCleanSoulShield) active.add("cleanSoul");
+  if (unit.heroId === "duolingo" && unit.duolingoBerserkerUnlocked) active.add("duolingoBerserker");
+  if (unit.heroId === "odin" && own) active.add("odinHuginn");
   if (unit.asgoreBraveryAutoDefenseReady) active.add("autoDefense");
   if (own && (unit.charges?.berserkAutoDefense ?? 0) > 0) active.add("berserkDefense");
   if (own && unit.asgorePatienceStealthActive) active.add("patience");

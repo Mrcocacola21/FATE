@@ -1,4 +1,5 @@
-import type { ApplyResult, GameEvent, GameState } from "../../../../model";
+import type { AbilityUseContext, ApplyResult, GameEvent, GameState } from "../../../../model";
+import { getAbilityUseContext } from "../../../../core/abilityUse";
 import { canAttackTarget } from "../../../../combat";
 import { getLegalAttackTargets } from "../../../../legal";
 import { clearPendingRoll, requestRoll } from "../../../../core";
@@ -6,8 +7,9 @@ import { maybeRequestIntimidate } from "../../../../actions/heroes/vlad";
 import type { AttackRollContext } from "../../../types";
 import { makeAttackContext } from "../../../builders/buildPendingRoll";
 import { findAttackResolved } from "../../../utils/attackEvents";
+import { ABILITY_JEBE_KHANS_SHOOTER } from "../../../../abilities";
 
-export interface JebeKhansShooterChainState {
+export interface JebeKhansShooterChainState extends AbilityUseContext {
   totalAttacks?: number;
   selectedTargetIds?: string[];
   ricochetRoll?: number;
@@ -46,6 +48,7 @@ export function requestJebeKhansShooterAttack(
 
   const ctx: AttackRollContext = {
     ...makeAttackContext({
+      sourceAbilityId: ABILITY_JEBE_KHANS_SHOOTER,
       attackerId: casterId,
       defenderId: targetId,
       consumeSlots: false,
@@ -58,6 +61,7 @@ export function requestJebeKhansShooterAttack(
       selectedTargetIds: chain.selectedTargetIds ?? [targetId],
       ricochetRoll: chain.ricochetRoll,
     },
+    ...getAbilityUseContext(chain),
   };
 
   const requested = requestRoll(
@@ -110,6 +114,8 @@ export function continueJebeKhansShooter(
     caster.owner,
     "jebeKhansShooterTargetChoice",
     {
+      ...getAbilityUseContext(context as AbilityUseContext),
+      sourceAbilityId: ABILITY_JEBE_KHANS_SHOOTER,
       casterId,
       remainingAttacks,
       options,
@@ -156,6 +162,8 @@ export function handleJebeKhansShooterAfterAttack(
     : [...selectedTargetIds, context.defenderId];
 
   const resumeContext: Record<string, unknown> = {
+    ...getAbilityUseContext(context as AbilityUseContext),
+    sourceAbilityId: ABILITY_JEBE_KHANS_SHOOTER,
     casterId: shooter.casterId,
     remainingAttacks,
     lastTargetId: context.defenderId,

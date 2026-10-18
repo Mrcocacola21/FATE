@@ -3,6 +3,9 @@ import type { Coord, PlayerId } from "./shared";
 /** Rules identity of one committed use; unrelated to transport and roll identities. */
 export type AbilityUseId = string;
 
+/** Frozen, non-mechanical artwork extents. Never used to choose targets or damage. */
+export interface EffectSegment { from: Coord; to: Coord }
+
 export interface AbilityEventMetadata {
   abilityId?: string;
   abilityUseId?: AbilityUseId;

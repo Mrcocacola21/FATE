@@ -9,7 +9,8 @@ import type {
 import { ABILITY_PAPYRUS_LONG_BONE } from "../../../abilities";
 import { evAoeResolved, requestRoll } from "../../../core";
 import type { TricksterAoEContext } from "../../../pendingRoll/types";
-import { getUnitsOnPapyrusLine } from "./helpers";
+import { getUnitsOnPapyrusLine, getPapyrusLineCells } from "./helpers";
+import { segmentFromCells } from "../../../core/events/combatEvents/presentationGeometry";
 
 export function startPapyrusLineAttack(
   state: GameState,
@@ -20,11 +21,13 @@ export function startPapyrusLineAttack(
 ): ApplyResult {
   const affectedUnitIds = getUnitsOnPapyrusLine(state, caster.id, axis, target);
   const events: GameEvent[] = [];
+  const effectSegments = segmentFromCells(getPapyrusLineCells(state.boardSize, axis, target));
 
   if (affectedUnitIds.length === 0) {
     events.push(
       evAoeResolved({
         sourceUnitId: caster.id,
+        effectSegments,
         abilityId,
         casterId: caster.id,
         center: target,
@@ -42,6 +45,7 @@ export function startPapyrusLineAttack(
     ...state,
     pendingCombatQueue: [],
     pendingAoE: {
+      effectSegments,
       casterId: caster.id,
       abilityId: abilityId ?? ABILITY_PAPYRUS_LONG_BONE,
       center: target,

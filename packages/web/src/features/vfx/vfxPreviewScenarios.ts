@@ -1,6 +1,7 @@
 import type { Coord, ProjectedGameEvent, PlayerView, PlayerId, UnitClass, UnitState } from "rules";
 import type { BoardVfxRequest, VfxEffectId } from "./vfxTypes";
 import { vfxRegistry } from "./vfxRegistry";
+import coverage from "../../assets/heroVfxCoverage.json";
 import {
   REMAINING_CASTS,
   REMAINING_AREAS,
@@ -9,6 +10,9 @@ import {
 
 export const CORE_VFX_PREVIEW_IDS: VfxEffectId[] = [
   ...new Set([
+    ...coverage
+      .filter((row) => row.key && row.status !== "BLOCKED_UNIMPLEMENTED_ABILITY")
+      .map((row) => row.key as VfxEffectId),
     ...Object.values(REMAINING_CASTS).map((cue) => cue.vfx),
     ...Object.values(REMAINING_AREAS).map((cue) => cue.vfx),
     ...Object.values(REMAINING_HIT_ACCENTS),
@@ -80,21 +84,27 @@ export function createRuntimePreviewRequest(params: {
   const definition = vfxRegistry[params.effectId];
   const sourceCell = VFX_PREVIEW_ANCHORS[params.anchor];
   const directed =
-    definition.defaultPlacement === "ray" || definition.defaultPlacement === "projectile";
+    definition.defaultPlacement === "ray" ||
+    definition.defaultPlacement === "line" ||
+    definition.defaultPlacement === "projectile";
+  const direction =
+    params.ray === "vertical"
+      ? { col: 0, row: 1 }
+      : params.ray === "diagonal"
+        ? { col: 1, row: 1 }
+        : params.ray === "board-edge"
+          ? { col: -1, row: -1 }
+          : { col: 1, row: 0 };
   return {
     id: params.id,
     effectId: params.effectId,
     placement: definition.defaultPlacement,
-    sourceCell: directed ? { col: 1, row: 2 } : { ...sourceCell },
-    targetCell: { col: 7, row: 6 },
-    direction:
-      params.ray === "vertical"
-        ? { col: 0, row: 1 }
-        : params.ray === "diagonal"
-          ? { col: 1, row: 1 }
-          : params.ray === "board-edge"
-            ? { col: -1, row: -1 }
-            : { col: 1, row: 0 },
+    sourceCell: { ...sourceCell },
+    targetCell:
+      directed && params.ray !== "target"
+        ? { col: sourceCell.col + 4 * direction.col, row: sourceCell.row + 4 * direction.row }
+        : { col: 7, row: 6 },
+    direction,
     rayToEdge: params.ray !== "target",
     composition: params.composition,
   };
@@ -291,6 +301,110 @@ export function createVfxPreviewView(): PlayerView {
 }
 
 export const VFX_PREVIEW_SCENARIOS: VfxPreviewScenario[] = [
+  {
+    id: "coverage-gaster",
+    label: "Gaster summon / charge / beam",
+    group: "Hero coverage",
+    waitMs: 700,
+    expectedEffectIds: ["gasterCannon", "gasterCharge", "gasterBeam"],
+    events: [
+      {
+        type: "aoeResolved",
+        sourceUnitId: "preview-searcher",
+        abilityId: "sansGasterBlaster",
+        abilityUseId: "preview-gaster",
+        sourceCell: { col: 1, row: 2 },
+        center: { col: 3, row: 4 },
+        radius: 0,
+        affectedUnitIds: [],
+        revealedUnitIds: [],
+        damagedUnitIds: [],
+      },
+    ],
+  },
+  ...(
+    [
+      ["artemidaSilverCrescent", "artemidaCrescent"],
+      ["elCidCompeadorKolada", "elCidKolada"],
+      ["lucheDivineRay", "lucheRay"],
+      ["mettatonLaser", "mettatonLaser"],
+      ["donKihoteMadness", "donMadness"],
+    ] as const
+  ).map(
+    ([abilityId, effectId]): VfxPreviewScenario => ({
+      id: `coverage-${effectId}`,
+      label: effectId,
+      group: "Hero coverage",
+      waitMs: 350,
+      expectedEffectIds: [effectId],
+      events: [
+        {
+          type: "aoeResolved",
+          sourceUnitId: "preview-searcher",
+          sourceCell: { col: 1, row: 2 },
+          abilityId,
+          abilityUseId: `preview-${abilityId}`,
+          center: { col: 6, row: 2 },
+          radius: 1,
+          affectedUnitIds: [],
+          revealedUnitIds: [],
+          damagedUnitIds: [],
+          effectSegments: [{ from: { col: 1, row: 2 }, to: { col: 6, row: 2 } }],
+        },
+      ],
+    }),
+  ),
+  ...(
+    [
+      ["genghisKhanMongolCharge", "genghisCharge"],
+      ["donKihoteWindmills", "donWindmills"],
+    ] as const
+  ).map(
+    ([abilityId, effectId]): VfxPreviewScenario => ({
+      id: `coverage-${effectId}`,
+      label: effectId,
+      group: "Hero coverage",
+      waitMs: 300,
+      expectedEffectIds: [effectId],
+      events: [
+        {
+          type: "abilityUsed",
+          unitId: "preview-searcher",
+          sourceCell: { col: 2, row: 2 },
+          abilityId,
+          abilityUseId: `preview-${abilityId}`,
+        },
+      ],
+    }),
+  ),
+  ...(
+    [
+      ["kanekiFormEntered", "kanekiCentipede"],
+      ["friskFriendshipWon", "friskFriendship"],
+      ["friskOnePathUnlocked", "friskOnePath"],
+      ["lokiSpinCommitted", "lokiSpin"],
+      ["bunkerEntered", "bunkerEntry"],
+      ["bunkerExited", "bunkerExit"],
+    ] as const
+  ).map(
+    ([type, effectId]): VfxPreviewScenario => ({
+      id: `coverage-${effectId}`,
+      label: effectId,
+      group: "Hero coverage",
+      waitMs: 220,
+      expectedEffectIds: [effectId],
+      events: [
+        {
+          type,
+          unitId: "preview-shield",
+          sourceCell: { col: 3, row: 7 },
+          form: "scolopendra",
+          roll: 6,
+          reason: "timerExpired",
+        } as ProjectedGameEvent,
+      ],
+    }),
+  ),
   {
     id: "search-reveal",
     label: "Search Reveal",
@@ -609,7 +723,7 @@ export const VFX_PREVIEW_SCENARIOS: VfxPreviewScenario[] = [
     group: "Defense",
     expectedEffectIds: ["shield"],
     waitMs: 260,
-    events: [{ type: "bunkerEntered", unitId: "preview-shield", roll: 6 }],
+    events: [{ type: "berserkerDefenseChosen", defenderId: "preview-shield", choice: "roll" }],
   },
 ];
 

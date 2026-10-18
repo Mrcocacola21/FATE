@@ -2,7 +2,7 @@ import type { PlayerView, ProjectedGameEvent } from "rules";
 import type { SoundKey } from "../../assets/sfx/registry";
 import type { VfxEffectId } from "../../features/vfx/vfxTypes";
 
-type Signature = { vfx: VfxEffectId; sfx?: SoundKey };
+type Signature = { vfx: VfxEffectId; sfx?: SoundKey; vfxPhase?: "resolution" };
 
 /** Committed source accents. Costs/legality remain entirely in rules. */
 export const REMAINING_CASTS: Record<string, Signature> = {
@@ -17,16 +17,17 @@ export const REMAINING_CASTS: Record<string, Signature> = {
     sfx: "hero.genghisKhan.abilities.genghisKhanKhansDecree",
   },
   genghisKhanMongolCharge: {
-    vfx: "genghisDecree",
+    vfx: "genghisCharge",
     sfx: "hero.genghisKhan.phantasms.genghisKhanMongolCharge",
   },
   chikatiloDecoy: { vfx: "chikatiloDecoy", sfx: "hero.chikatilo.abilities.chikatiloDecoy" },
   elCidCompeadorTisona: {
-    vfx: "statusSmall",
+    vfx: "elCidTisona",
+    vfxPhase: "resolution",
     sfx: "hero.elCidCompeador.abilities.elCidCompeadorTisona",
   },
   elCidCompeadorDemonDuelist: {
-    vfx: "shield",
+    vfx: "elCidDuel",
     sfx: "hero.elCidCompeador.phantasms.elCidCompeadorDemonDuelist",
   },
   gutsArbalet: { vfx: "muzzle", sfx: "hero.guts.abilities.gutsArbalet" },
@@ -38,7 +39,7 @@ export const REMAINING_CASTS: Record<string, Signature> = {
   odinSleipnir: { vfx: "odinSleipnir", sfx: "hero.odin.abilities.odinSleipnir" },
   odinMuninn: { vfx: "odinMuninn" },
   femtoDivineMove: { vfx: "femtoMove" },
-  jebeKhansShooter: { vfx: "statusSmall", sfx: "hero.jebe.phantasms.jebeKhansShooter" },
+  jebeKhansShooter: { vfx: "jebeRicochet", vfxPhase: "resolution", sfx: "hero.jebe.phantasms.jebeKhansShooter" },
   kaladinFirst: { vfx: "kaladinHeal" },
   kanekiRegeneration: { vfx: "kanekiRegen" },
   papyrusSpaghetti: { vfx: "papyrusSpaghetti" },
@@ -49,7 +50,7 @@ export const REMAINING_CASTS: Record<string, Signature> = {
     sfx: "hero.duolingo.abilities.duolingoPushNotification",
   },
   zoroOniGiri: { vfx: "statusSmall", sfx: "hero.zoro.abilities.zoroOniGiri" },
-  donKihoteWindmills: { vfx: "statusSmall", sfx: "hero.donKihote.abilities.donKihoteWindmills" },
+  donKihoteWindmills: { vfx: "donWindmills", sfx: "hero.donKihote.abilities.donKihoteWindmills" },
   donKihoteSorrowfulCountenance: { vfx: "donSorrow" },
   undyneSpearThrow: { vfx: "statusSmall", sfx: "hero.undyne.abilities.undyneSpearThrow" },
   undyneUndying: { vfx: "undyneUndying", sfx: "hero.undyne.abilities.undyneUndying" },
@@ -64,6 +65,8 @@ export const REMAINING_CASTS: Record<string, Signature> = {
 /** Square areas use confirmed center/radius. Sparse/line abilities receive a
  * compact origin accent: their aggregate radius is not a hit footprint. */
 export const REMAINING_AREAS: Record<string, Signature & { square: boolean }> = {
+  elCidCompeadorTisona: { vfx: "elCidTisona", square: false },
+  papyrusLongBone: { vfx: "papyrusLine", square: false },
   jackRipperCoveringTracks: {
     vfx: "jackCoverTracks",
     sfx: "hero.jackRipper.abilities.jackRipperCoveringTracks",
@@ -75,19 +78,19 @@ export const REMAINING_AREAS: Record<string, Signature & { square: boolean }> = 
     square: true,
   },
   elCidCompeadorKolada: {
-    vfx: "statusSmall",
+    vfx: "elCidKolada",
     sfx: "hero.elCidCompeador.abilities.elCidCompeadorKolada",
     square: true,
   },
   jebeHailOfArrows: { vfx: "jebeHail", sfx: "hero.jebe.abilities.jebeHailOfArrows", square: true },
   kaladinFifth: { vfx: "kaladinFifth", sfx: "hero.kaladin.phantasms.kaladinFifth", square: true },
   papyrusCoolGuy: {
-    vfx: "statusSmall",
+    vfx: "papyrusLine",
     sfx: "hero.papyrus.abilities.papyrusCoolGuy",
     square: false,
   },
   undyneEnergySpear: {
-    vfx: "statusSmall",
+    vfx: "undyneEnergy",
     sfx: "hero.undyne.abilities.undyneEnergySpear",
     square: false,
   },
@@ -98,13 +101,13 @@ export const REMAINING_AREAS: Record<string, Signature & { square: boolean }> = 
     square: true,
   },
   artemidaSilverCrescent: {
-    vfx: "statusSmall",
+    vfx: "artemidaCrescent",
     sfx: "hero.artemida.phantasms.artemidaSilverCrescent",
     square: false,
   },
-  lucheDivineRay: { vfx: "statusSmall", sfx: "hero.luche.abilities.lucheDivineRay", square: false },
+  lucheDivineRay: { vfx: "lucheRay", sfx: "hero.luche.abilities.lucheDivineRay", square: false },
   lucheBurningSun: {
-    vfx: "statusSmall",
+    vfx: "lucheSun",
     sfx: "hero.luche.phantasms.lucheBurningSun",
     square: false,
   },
@@ -114,17 +117,17 @@ export const REMAINING_AREAS: Record<string, Signature & { square: boolean }> = 
     square: true,
   },
   mettatonLaser: {
-    vfx: "statusSmall",
+    vfx: "mettatonLaser",
     sfx: "hero.mettaton.abilities.mettatonLaser",
     square: false,
   },
   mettatonFinalChord: {
-    vfx: "statusSmall",
+    vfx: "mettatonFinalChord",
     sfx: "hero.mettaton.phantasms.mettatonFinalChord",
     square: false,
   },
   donKihoteMadness: {
-    vfx: "statusSmall",
+    vfx: "donMadness",
     sfx: "hero.donKihote.phantasms.donKihoteMadness",
     square: false,
   },
@@ -152,6 +155,14 @@ export function remainingStatusSignature(
   event: ProjectedGameEvent,
 ): (Signature & { unitId?: string; stage: string }) | null {
   switch (event.type) {
+    case "kanekiFormEntered":
+      return { vfx: "kanekiCentipede", unitId: event.unitId, stage: "centipede" };
+    case "friskFriendshipWon":
+      return { vfx: "friskFriendship", unitId: event.unitId, stage: "friendship" };
+    case "friskOnePathUnlocked":
+      return { vfx: "friskOnePath", unitId: event.unitId, stage: "onePath" };
+    case "lokiSpinCommitted":
+      return { vfx: "lokiSpin", unitId: event.unitId, stage: "spin" };
     case "chikatiloMarkApplied":
       return {
         vfx: "chikatiloMark",

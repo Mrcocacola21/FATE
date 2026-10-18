@@ -142,6 +142,7 @@ export function evCarpetStrikeAttackRolled(params: {
 }
 
 export function evAoeResolved(params: {
+  effectSegments?: import("../../../model/semantic").EffectSegment[];
   sourceUnitId: string;
   abilityId?: string;
   casterId?: string;
@@ -154,6 +155,7 @@ export function evAoeResolved(params: {
 }): AoeResolvedEvent {
   return {
     type: "aoeResolved",
+    ...(params.effectSegments ? { effectSegments: params.effectSegments } : {}),
     sourceUnitId: params.sourceUnitId,
     abilityId: params.abilityId,
     casterId: params.casterId,

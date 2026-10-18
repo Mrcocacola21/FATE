@@ -23,7 +23,7 @@ export function exitBunkerForUnit(
         [updated.id]: updated,
       },
     },
-    events: [evBunkerExited({ unitId: updated.id, reason })],
+    events: [evBunkerExited({ unitId: updated.id, reason, sourceCell: unit.position })],
     unit: updated,
   };
 }

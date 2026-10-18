@@ -19,6 +19,11 @@ audio and movement audio are not registered yet.
 
 ## VFX
 
+The targeted final integration of 45 previously unused hero PNGs is documented in
+[HERO_VFX_COVERAGE.md](HERO_VFX_COVERAGE.md): 40 event-driven files, four persistent
+state visuals, and one blocked by the unimplemented Undyne Direction Shift mechanic.
+The physical-file manifest is [heroVfxCoverage.json](heroVfxCoverage.json).
+
 ### Shared VFX aliases
 
 - `VFX_STEALTH_ENTER` and `VFX_STEALTH_REVEAL` both use `vfx/status/stealth_enter.png`; supplied PNG bytes are identical. Their visibility and event conditions remain separate entries in the manifest.

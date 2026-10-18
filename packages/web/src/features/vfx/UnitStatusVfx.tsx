@@ -137,7 +137,7 @@ export function UnitStatusVfx({
                   <VfxSprite
                     definition={vfxRegistry[visual.effectId]}
                     reducedMotion
-                    className={`persistent-status-art ${status.kind === "curse" ? "persistent-status-art--curse" : "persistent-status-art--bunker"}`}
+                    className={`persistent-status-art ${status.kind === "curse" ? "persistent-status-art--curse" : status.kind === "bunker" || status.kind === "cleanSoul" ? "persistent-status-art--bunker" : "persistent-status-art--small"}`}
                     style={{ zIndex: BOARD_LAYERS.status }}
                   />
                 </span>

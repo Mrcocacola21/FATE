@@ -10,6 +10,7 @@ import type {
   JebeKhansShooterTargetChoiceContext,
 } from "../../../types";
 import { requestJebeKhansShooterAttack } from "../../core/resolveAttackRoll";
+import { getAbilityUseContext } from "../../../../core/abilityUse";
 
 function stringList(value: unknown): string[] {
   return Array.isArray(value)
@@ -101,6 +102,7 @@ export function resolveJebeKhansShooterTargetChoice(
     selected,
     remainingAttacks,
     {
+      ...getAbilityUseContext(pending),
       totalAttacks:
         typeof ctx.totalAttacks === "number" ? ctx.totalAttacks : undefined,
       selectedTargetIds: [...stringList(ctx.selectedTargetIds), selected],

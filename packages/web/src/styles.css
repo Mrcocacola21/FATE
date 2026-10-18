@@ -1406,6 +1406,9 @@ html.dark {
     mask-image: radial-gradient(ellipse, transparent 30%, #000 54%);
   }
   .persistent-status-art--curse.vfx-sprite { opacity: 0.55; }
+  .persistent-status-art--small.vfx-sprite {
+    width: 32%; height: 32%; left: auto; top: 4%; right: 4%; opacity: 0.8; mask-image: none;
+  }
   .persistent-stealth-perimeter {
     position: absolute;
     inset: 12%;

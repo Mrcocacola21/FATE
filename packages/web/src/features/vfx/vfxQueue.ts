@@ -31,6 +31,7 @@ export function enqueueBoardVfx(params: {
       direction: effect.direction ? { ...effect.direction } : undefined,
       cells: effect.cells?.map((cell) => ({ ...cell })),
       path: effect.path?.map((cell) => ({ ...cell })),
+      segments: effect.segments?.map(({ from, to }) => ({ from: { ...from }, to: { ...to } })),
       startedAt,
       expiresAt: startedAt + durationMs,
     });

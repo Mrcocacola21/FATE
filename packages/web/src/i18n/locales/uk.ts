@@ -4,6 +4,7 @@ import { adminUk } from "../../admin/locales";
 
 export const uk = {
   persistentStatus: {
+    odinHuginn: "Гуґінн: виявлення прихованих ворогів поруч", duolingoBerserker: "Берсерка відкрито",
     curse: "Прокляття останньої атаки", movementDisabled: "Рух заблоковано на наступний власний хід",
     sansMoveLock: "Блокування руху жартом Санса", kaladinMoveLock: "Блокування руху п'ятим ідеалом",
     lokiMoveLock: "Обплутано", cleanSoul: "Щит чистої душі готовий",

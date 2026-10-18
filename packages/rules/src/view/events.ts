@@ -191,6 +191,8 @@ function projectEventForRecipient(
       return [
         {
           ...event,
+          effectSegments: event[EVENT_VISIBILITY]?.sourceCellRecipients?.includes(recipient)
+            ? event.effectSegments : undefined,
           sourceCell: event[EVENT_VISIBILITY]?.sourceCellRecipients?.includes(recipient)
             ? event.sourceCell : undefined,
           abilityId: isUnitVisibleToRecipient(state, event.sourceUnitId, recipient)

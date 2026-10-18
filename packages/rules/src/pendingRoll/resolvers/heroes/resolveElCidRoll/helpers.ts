@@ -20,6 +20,7 @@ export function finalizeElCidAoE(
         sourceUnitId: aoe.casterId,
         abilityId: aoe.abilityId,
         casterId: aoe.casterId,
+        ...(aoe.effectSegments ? { effectSegments: aoe.effectSegments } : {}),
         center: aoe.center,
         radius: aoe.radius,
         affectedUnitIds: aoe.affectedUnitIds,

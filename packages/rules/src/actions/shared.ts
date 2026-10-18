@@ -27,6 +27,7 @@ import { rollD6 } from "../rng";
 import { makeAttackContext, requestRoll } from "../core";
 
 export interface QueuedHeroAttackOptions {
+  effectSegments?: import("../model/semantic").EffectSegment[];
   damageOverride?: number;
   damageBonus?: number;
   ignoreBonuses?: boolean;
@@ -52,6 +53,7 @@ export function queueHeroAbilityAttacks(
       state,
       events: [{
         type: "aoeResolved",
+        ...(options.effectSegments ? { effectSegments: options.effectSegments } : {}),
         sourceUnitId: caster.id,
         abilityId,
         casterId: caster.id,
@@ -82,6 +84,7 @@ export function queueHeroAbilityAttacks(
     ...state,
     pendingCombatQueue: queue,
     pendingAoE: {
+      ...(options.effectSegments ? { effectSegments: options.effectSegments } : {}),
       casterId: caster.id,
       abilityId,
       center: options.center ?? caster.position!,

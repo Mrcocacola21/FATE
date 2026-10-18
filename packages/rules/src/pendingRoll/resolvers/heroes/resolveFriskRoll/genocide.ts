@@ -143,6 +143,7 @@ export function resolveFriskKeenEyeChoice(
   let events: GameEvent[] = committed.events;
 
   if (target.isStealthed) {
+    const targetCell = {...target.position};
     const revealed = revealUnit(
       nextState,
       target.id,
@@ -151,7 +152,8 @@ export function resolveFriskKeenEyeChoice(
       afterFrisk.id
     );
     nextState = revealed.state;
-    events = [...events, ...revealed.events];
+    events = [...events, ...revealed.events.map(event => event.type === "stealthRevealed"
+      ? { ...event, revealSignature: "friskKeenEye" as const, targetCell } : event)];
   }
 
   return { state: clearPendingRoll(nextState), events };

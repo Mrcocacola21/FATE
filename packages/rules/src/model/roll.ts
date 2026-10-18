@@ -1,5 +1,5 @@
 import type { Coord, PlayerId } from "./shared";
-import type { AbilityUseContext } from "./semantic";
+import type { AbilityUseContext, EffectSegment } from "./semantic";
 
 /** Pending payloads expose authorized correlation, never internal frozen origins. */
 export type ProjectedPendingRoll = Omit<
@@ -357,6 +357,7 @@ export interface PendingCombatQueueEntry extends AbilityUseContext {
 }
 
 export interface PendingAoEResolution extends AbilityUseContext {
+  effectSegments?: EffectSegment[];
   casterId: string;
   abilityId: string;
   center: Coord;

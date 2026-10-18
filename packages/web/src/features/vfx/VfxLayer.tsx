@@ -187,6 +187,14 @@ function Effect({
     return <>{effect.cells?.map((cell, index) => centered(cell, `cell-${index}`))}</>;
   }
   if (effect.placement === "ray" || effect.placement === "line") {
+    if (effect.segments?.length)
+      return (
+        <>
+          {effect.segments.map((segment, index) =>
+            line(segment.from, segment.to, `segment-${index}`),
+          )}
+        </>
+      );
     const direction =
       effect.direction ??
       (effect.targetCell
