@@ -33,6 +33,7 @@ database forensics; the particular production row/logs were not available.
 | --- | --- |
 | Temporary competitor disconnect | Reserve the same seat/state during `RECONNECT_GRACE_MS` (default 45,000 ms). |
 | Reconnect before queued expiration wins | Reclaim the same Match/revision; clear the timer. |
+| Tab activation / online snapshot refresh | Reuse the healthy socket. Repeated joins to the same room, role and authenticated identity retain transport membership; they never trigger leave/abandonment. |
 | Fresh authenticated tab | May reclaim its own locked seat without the previous browser token. A supplied token still undergoes identity/token validation. The newer tab replaces the old transport. |
 | Replaced tab closes / spectator leaves | No competitor abandonment. |
 | Competitor grace expires | Neutral interruption: `CANCELLED`, `finishedAt`, `SERVER_RECONNECT_GRACE_EXPIRED`. |

@@ -58,6 +58,23 @@ async function run() {
     await server.listen({ host: "127.0.0.1", port: 0 });
     const first = await start();
     const revision = first.room.revision;
+    const initialState = structuredClone(first.room.state);
+    const actionCount = memory.actions.size;
+    // Visibility/online refresh can re-send joinRoom on the current transport.
+    // It must refresh the snapshot, never leave the active competitor seat.
+    const connection = first.room.seats.P1;
+    for (let refresh = 0; refresh < 2; refresh++) {
+      first.p1.send({ type: "joinRoom", mode: "join", roomId: first.room.id, role: "P1",
+        accessToken: tokens.P1, resumeToken: first.ack.resumeToken });
+      await until(() => first.p1.messages.find(m => m.type === "joinAck" || m.type === "joinRejected"));
+      assert.equal(first.match.status, "IN_PROGRESS", "same-connection refresh must not abandon the match");
+      assert(!first.p1.messages.some(m => m.type === "error" || m.type === "joinRejected"));
+      assert(!first.p2.messages.some(m => m.type === "joinRejected"));
+      assert.equal(first.room.seats.P1, connection);
+      assert.equal(first.room.revision, revision);
+      assert.deepEqual(first.room.state, initialState);
+      assert.equal(memory.actions.size, actionCount);
+    }
     const spectator = await connect();
     spectator.send({ type: "joinRoom", mode: "join", roomId: first.room.id, role: "spectator" });
     await spectator.wait("joinAck"); await disconnect(spectator);

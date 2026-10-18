@@ -676,35 +676,6 @@ function openSocket(
   return connectPromise;
 }
 
-async function closeSocketForReconnect(): Promise<void> {
-  const state = useGameStore.getState();
-  useGameStore.setState(beginPresentation(state.roomId, state.role, state.seat));
-  const activeSocket = socket;
-  if (!activeSocket || activeSocket.readyState === WebSocket.CLOSED) {
-    socket = null;
-    connectPromise = null;
-    return;
-  }
-
-  suppressAutoReconnect = true;
-  await new Promise<void>((resolve) => {
-    let finished = false;
-    const finish = () => {
-      if (finished) return;
-      finished = true;
-      if (socket === activeSocket) {
-        socket = null;
-        connectPromise = null;
-      }
-      resolve();
-    };
-    activeSocket.addEventListener("close", finish, { once: true });
-    activeSocket.close(4000, "Refresh room snapshot");
-    setTimeout(finish, 1_000);
-  });
-  suppressAutoReconnect = false;
-}
-
 export const useGameStore = create<GameStore>((set, get) => ({
   presentationSessionKey: presentationSession.key,
   presentationHydration: "awaitingBaseline",
@@ -754,7 +725,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       }
       const accessToken = await multiplayerAccessToken(authStore, session.role, session.roomMode);
       suppressAutoReconnect = false;
-      if (options?.force) await closeSocketForReconnect();
+      // Visibility/online refresh requests a snapshot on the current transport.
+      // Only actual socket failure should start the server's disconnect grace.
       const ws = await openSocket(set, get);
       const selection = loadFigureSetState(HERO_CATALOG).selection;
       set(() => beginPresentation(session.roomId, session.role, session.seat));

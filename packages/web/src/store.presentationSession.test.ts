@@ -4,12 +4,14 @@ import type { PlayerView } from "rules";
 import { presentationSession, useGameStore } from "./store";
 import type { PlayerRole, RoomStateMessage, ServerMessage } from "./ws";
 import { MAX_PRESENTATION_BATCHES } from "./game/effects/presentationSession";
+import { authStore } from "./auth/authStore";
 
 class MockSocket {
   static OPEN = 1;
   static CLOSED = 3;
   static instances: MockSocket[] = [];
   readyState = 0;
+  sent: Array<{ type: string; roomId?: string; role?: string; resumeToken?: string }> = [];
   onopen: (() => void) | null = null;
   onclose: (() => void) | null = null;
   onerror: (() => void) | null = null;
@@ -17,7 +19,7 @@ class MockSocket {
   constructor() {
     MockSocket.instances.push(this);
   }
-  send() {}
+  send(data: string) { this.sent.push(JSON.parse(data)); }
   close() {
     this.readyState = MockSocket.CLOSED;
     this.onclose?.();
@@ -126,6 +128,35 @@ test("WS initial_snapshot_establishes_silent_baseline and live snapshot preserve
       [101],
     );
   });
+});
+
+test("visibility/online forced refresh keeps the connected socket and coalesces duplicate resume requests", async () => {
+  const previousAuth = authStore.getState();
+  try {
+    authStore.setState({ status: "authenticated", getValidAccessToken: async () => "test-access" });
+    await withSocket(async socket => {
+      ack(socket, "room", "P1");
+      useGameStore.setState({ resumeToken: "seat-resume" });
+      socket.emit(roomSnapshot(100, "S", "room", "P1"));
+      for (let refresh = 0; refresh < 3; refresh++) {
+        socket.sent = [];
+        await Promise.all([
+          useGameStore.getState().resumeRoom({ force: true }),
+          useGameStore.getState().resumeRoom({ force: true }),
+        ]);
+        assert.equal(MockSocket.instances.length, 1, "tab activation must reuse the healthy transport");
+        assert.equal(socket.readyState, MockSocket.OPEN);
+        assert.equal(useGameStore.getState().joined, true);
+        assert.deepEqual(socket.sent.map(message => message.type), ["joinRoom"]);
+        assert.equal(socket.sent[0].roomId, "room");
+        assert.equal(socket.sent[0].role, "P1");
+        assert.equal(socket.sent[0].resumeToken, "seat-resume");
+        ack(socket, "room", "P1");
+        socket.emit(roomSnapshot(100, "S", "room", "P1"));
+        assert.equal(useGameStore.getState().roomState?.phase, "battle");
+      }
+    });
+  } finally { authStore.setState(previousAuth, true); }
 });
 
 test("WS prebaseline_results_are_buffered_then_filtered", async () => {

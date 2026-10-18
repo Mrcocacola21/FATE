@@ -1291,13 +1291,16 @@ export function registerGameWebSocket(
 
           const enter = async () => {
           const existing = socketMeta.get(socket);
-          if (existing) {
+          const sameMembership = msg.mode === "join" && existing?.channel === "fate" &&
+            existing.roomId === targetRoomId && existing.role === msg.role &&
+            existing.authIdentity?.userId === identity?.userId;
+          if (existing && !sameMembership) {
             await detachExistingConnection(existing, "switch_room");
           }
 
           await enqueueRoomCommand(fateRoomKey(targetRoomId), async () => {
             if (socket.readyState !== WebSocket.OPEN) return;
-            const connId = randomUUID();
+            const connId = sameMembership ? existing.connId : randomUUID();
             const matchedRoom = getGameRoom(targetRoomId);
             const matchedSeat = msg.role === "P1" || msg.role === "P2" ? msg.role : null;
             const resumeToken = matchedSeat && identity && (matchedRoom?.reservedUserIds?.[matchedSeat] === identity.userId ||
@@ -1418,7 +1421,7 @@ export function registerGameWebSocket(
               }
               // A successful resume replaces transport ownership, including a still-live old socket.
               for (const [oldSocket, oldMeta] of socketMeta) {
-                if (oldMeta.channel === "fate" && oldMeta.roomId === room.id && oldMeta.seat === seat) {
+                if (oldSocket !== socket && oldMeta.channel === "fate" && oldMeta.roomId === room.id && oldMeta.seat === seat) {
                   socketMeta.delete(oldSocket);
                   removeSocketFromRoom(room.id, oldSocket);
                   sendStructuredError(oldSocket, "SEAT_CONNECTION_REPLACED", "Seat resumed on another connection");
