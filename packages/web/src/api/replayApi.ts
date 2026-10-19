@@ -154,7 +154,7 @@ export function parseReplayState(value: unknown): ReplayStateResponse {
         id: string(e.id),
         effectId: string(e.effectId),
         remaining: integer(e.remaining),
-        durationUnit: choice(e.durationUnit, ["turn"] as const),
+        durationUnit: choice(e.durationUnit, ["turn", "round"] as const),
         startedTurnNumber: integer(e.startedTurnNumber),
       };
     });

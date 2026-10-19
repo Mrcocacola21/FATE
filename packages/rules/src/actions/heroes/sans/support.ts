@@ -203,10 +203,7 @@ export function applySansBoneFieldStartOfTurn(
   }
 
   return {
-    state: {
-      ...nextState,
-      boneFieldTurnsLeft: Math.max(0, turnsLeft - 1),
-    },
+    state: nextState,
     events: nextEvents,
   };
 }

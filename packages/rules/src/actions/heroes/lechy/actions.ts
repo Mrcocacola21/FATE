@@ -238,7 +238,7 @@ export function applyLechyStorm(
     sourceUnitId: updatedUnit.id,
     sourceAbilityId: spec.id,
     remaining: durationRoll,
-    durationUnit: "turn",
+    durationUnit: "round",
     startedTurnNumber: state.turnNumber,
   });
 
@@ -249,7 +249,7 @@ export function applyLechyStorm(
       sourceUnitId: updatedUnit.id,
       roll: durationRoll,
       duration: durationRoll,
-      durationUnit: "turn",
+      durationUnit: "round",
     },
   ];
 

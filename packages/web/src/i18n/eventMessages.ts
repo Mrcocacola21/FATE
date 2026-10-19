@@ -432,8 +432,8 @@ export function formatEventMessage(event: ProjectedGameEvent, language: Language
     case "sansBoneFieldActivated":
       return text(
         language,
-        `Bone Field activated: ${event.sansId} (${event.duration} turns)`,
-        `Поле кісток активовано: ${event.sansId} (${event.duration} ходів)`,
+        `Bone Field activated: ${event.sansId} (${event.duration} rounds)`,
+        `Поле кісток активовано: ${event.sansId} (${event.duration} раундів)`,
       );
     case "sansBoneFieldApplied":
       return text(
@@ -570,8 +570,8 @@ export function formatEventMessage(event: ProjectedGameEvent, language: Language
     case "lechyStormStarted":
       return text(
         language,
-        `${value(event.sourceUnitId ?? "Lechy")} started Storm. Duration roll: ${value(event.roll)}. Storm will remain active for ${value(event.duration)} turns.`,
-        `${value(event.sourceUnitId ?? "Лісовик")} почав Бурю. Кидок тривалості: ${value(event.roll)}. Буря триватиме ${value(event.duration)} ходів.`,
+        `${value(event.sourceUnitId ?? "Lechy")} started Storm. Duration roll: ${value(event.roll)}. Storm will remain active for ${value(event.duration)} ${event.durationUnit === "round" ? "rounds" : "turns"}.`,
+        `${value(event.sourceUnitId ?? "Лісовик")} почав Бурю. Кидок тривалості: ${value(event.roll)}. Буря триватиме ${value(event.duration)} ${event.durationUnit === "round" ? "раундів" : "ходів"}.`,
       );
     case "lechyStormRollResult":
       return text(

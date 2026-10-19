@@ -33,7 +33,7 @@ export const ActiveFieldInfo: FC<ActiveFieldInfoProps> = ({ view }) => {
           action={
             typeof remaining === "number" ? (
               <StatusBadge tone="warning">
-                {t("game.arenaEffectRemainingTurns", { count: remaining })}
+                {t("game.arenaEffectRemainingRounds", { count: remaining })}
               </StatusBadge>
             ) : undefined
           }

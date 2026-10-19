@@ -274,6 +274,12 @@ test("Match Details enables replay only after successful availability metadata",
 test("explicit decoders reject malformed DTOs and API passes cancellation signal", async () => {
   assert.deepEqual(parseReplayMetadata(metadata), metadata);
   assert.deepEqual(parseReplayState(response(0)), response(0));
+  for (const durationUnit of ["turn", "round"] as const) {
+    const storm = response(0);
+    storm.state.arenaId = "storm";
+    storm.state.arenaEffects = [{ id: "storm", effectId: "storm", remaining: 3, durationUnit, startedTurnNumber: 1 }];
+    assert.deepEqual(parseReplayState(storm), storm, "Current and historical storm durations remain readable");
+  }
   assert.throws(
     () => parseReplayMetadata({ ...metadata, timeline: [...metadata.timeline].reverse() }),
     /INVALID_RESPONSE/,

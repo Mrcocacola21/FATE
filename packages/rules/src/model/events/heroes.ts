@@ -186,7 +186,7 @@ export type HeroGameEvent =
       sourceUnitId?: string;
       roll: number;
       duration: number;
-      durationUnit: "turn";
+      durationUnit: "turn" | "round";
     }
   | {
       type: "lechyStormRollResult";

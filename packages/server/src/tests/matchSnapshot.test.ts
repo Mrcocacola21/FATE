@@ -173,6 +173,15 @@ function serializationTests() {
     for (let n = 0; n < 100; n++) assert.equal(rng.next(), original.next());
   }
   const captured = serializeMatchSnapshot(room);
+  for (const durationUnit of ["turn", "round"] as const) {
+    const stormState = {
+      ...captured.state,
+      arenaId: "storm",
+      arenaEffects: [{ id: "storm", effectId: "storm", remaining: 4, durationUnit, startedTurnNumber: 7 }],
+    };
+    const restored = deserializeMatchSnapshot(row({ ...captured, state: stormState }));
+    assert.deepEqual(restored.state.arenaEffects, stormState.arenaEffects, "Storm duration survives recovery for current and historical saves");
+  }
   const expected = structuredClone(captured);
   room.state.units[id].hp--;
   room.state.pendingMove!.legalTo[0].row++;

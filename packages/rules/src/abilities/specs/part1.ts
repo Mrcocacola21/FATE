@@ -20,7 +20,7 @@ export const ABILITY_SPECS_PART_1: Record<string, AbilitySpec> = {
     id: ids.ABILITY_LECHY_STORM,
     displayName: "Storm",
     kind: "phantasm",
-    description: "Set the arena to Storm. Units outside the forest aura take 1 damage on failed start-turn rolls and lose ranged attacks.",
+    description: "Set the arena to Storm for 1d6 rounds. Units outside the forest aura take 1 damage on failed start-turn rolls and lose ranged attacks.",
     maxCharges: 5,
     chargesPerUse: 5,
     actionCost: {

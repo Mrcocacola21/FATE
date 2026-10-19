@@ -63,7 +63,8 @@ export interface VisibleJackTrapMarker {
   isTriggered: boolean;
 }
 
-export type ArenaEffectDurationUnit = "turn";
+/** `turn` remains readable for historical replays and checkpoints. */
+export type ArenaEffectDurationUnit = "turn" | "round";
 
 export interface ArenaEffectState {
   id: string;
@@ -132,6 +133,7 @@ export interface GameState {
   placementFirstPlayer: PlayerId | null;
   arenaId: string | null;
   arenaEffects?: ArenaEffectState[];
+  /** Remaining battle rounds; the legacy field name is kept for saved games and clients. */
   boneFieldTurnsLeft?: number;
   startingUnitId: string | null;
   unitsPlaced: {

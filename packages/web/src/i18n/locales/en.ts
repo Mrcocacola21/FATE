@@ -699,7 +699,7 @@ export const en = {
     activeUnit: "Active unit",
     arena: "Arena: {{arena}}",
     spectating: "Spectating",
-    boneFieldTurns: "Bone Field: {{count}} turns",
+    boneFieldTurns: "Bone Field: {{count}} rounds",
     stormActive: "Storm active",
     forestMarkers_one: "{{count}} forest marker",
     forestMarkers_few: "{{count}} forest markers",
@@ -714,6 +714,10 @@ export const en = {
     arenaEffectRemainingTurns_few: "Remaining: {{count}} turns",
     arenaEffectRemainingTurns_many: "Remaining: {{count}} turns",
     arenaEffectRemainingTurns_other: "Remaining: {{count}} turns",
+    arenaEffectRemainingRounds_one: "Remaining: {{count}} round",
+    arenaEffectRemainingRounds_few: "Remaining: {{count}} rounds",
+    arenaEffectRemainingRounds_many: "Remaining: {{count}} rounds",
+    arenaEffectRemainingRounds_other: "Remaining: {{count}} rounds",
     arenaEffectStormDescription:
       "At the start of an affected figure's turn, its player rolls d6. On 1-3, that figure takes 1 damage; on 4-6, it resists. Non-exempt ranged units can only attack adjacent targets.",
     arenaEffectBoneFieldDescription:
@@ -1450,7 +1454,7 @@ export const en = {
         options: {
           boneField: {
             name: "Bone Field",
-            description: "Roll 1d6+1 and replace the arena with Bone Field for that many turns.",
+            description: "Roll 1d6+1 and replace the arena with Bone Field for that many rounds.",
           },
           sleep: {
             name: "Sleep",

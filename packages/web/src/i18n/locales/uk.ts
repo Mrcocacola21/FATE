@@ -700,7 +700,7 @@ export const uk = {
     activeUnit: "Активна фігура",
     arena: "Арена: {{arena}}",
     spectating: "Спостереження",
-    boneFieldTurns: "Поле кісток: {{count}} ходів",
+    boneFieldTurns: "Поле кісток: {{count}} раундів",
     stormActive: "Буря активна",
     forestMarkers_one: "{{count}} лісова мітка",
     forestMarkers_few: "{{count}} лісові мітки",
@@ -714,6 +714,10 @@ export const uk = {
     arenaEffectRemainingTurns_few: "Залишилось: {{count}} ходи",
     arenaEffectRemainingTurns_many: "Залишилось: {{count}} ходів",
     arenaEffectRemainingTurns_other: "Залишилось: {{count}} ходу",
+    arenaEffectRemainingRounds_one: "Залишилось: {{count}} раунд",
+    arenaEffectRemainingRounds_few: "Залишилось: {{count}} раунди",
+    arenaEffectRemainingRounds_many: "Залишилось: {{count}} раундів",
+    arenaEffectRemainingRounds_other: "Залишилось: {{count}} раунду",
     arenaEffectStormDescription:
       "На початку ходу фігури, на яку впливає Буря, її гравець кидає d6. На 1-3 фігура отримує 1 шкоду; на 4-6 вона витримує. Дальні фігури без захисту від Бурі можуть атакувати лише сусідні цілі.",
     arenaEffectBoneFieldDescription:
@@ -1457,7 +1461,7 @@ export const uk = {
           boneField: {
             name: "Поле кісток",
             description:
-              "Киньте 1к6+1 і замініть арену Полем кісток на відповідну кількість ходів.",
+              "Киньте 1к6+1 і замініть арену Полем кісток на відповідну кількість раундів.",
           },
           sleep: {
             name: "Сон",

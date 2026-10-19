@@ -27,6 +27,23 @@ export function isBoneFieldActive(state: GameState): boolean {
   return state.arenaId === ARENA_BONE_FIELD_ID && (state.boneFieldTurnsLeft ?? 0) > 0;
 }
 
+export function advanceSansBoneFieldDurationAfterRound(state: GameState): GameState {
+  if (state.arenaId !== ARENA_BONE_FIELD_ID) return state;
+
+  const roundsLeft = Math.max(0, Math.trunc(state.boneFieldTurnsLeft ?? 0) - 1);
+  if (roundsLeft > 0) {
+    return { ...state, boneFieldTurnsLeft: roundsLeft };
+  }
+
+  const units = { ...state.units };
+  for (const unit of Object.values(units)) {
+    if (unit.sansBoneFieldStatus) {
+      units[unit.id] = { ...unit, sansBoneFieldStatus: undefined };
+    }
+  }
+  return { ...state, units, arenaId: null, boneFieldTurnsLeft: 0 };
+}
+
 export function isSansOrPapyrus(unit: UnitState | null | undefined): boolean {
   if (!unit) return false;
   return unit.heroId === HERO_SANS_ID || unit.heroId === HERO_PAPYRUS_ID;

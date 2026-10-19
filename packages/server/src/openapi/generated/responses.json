@@ -1716,6 +1716,7 @@
         "durationUnit": {
           "type": "string",
           "enum": [
+            "round",
             "turn"
           ]
         },
@@ -2350,7 +2351,8 @@
           "type": "number"
         },
         "boneFieldTurnsLeft": {
-          "type": "number"
+          "type": "number",
+          "description": "Remaining battle rounds; the legacy field name is kept for saved games and clients."
         },
         "currentPlayer": {
           "type": "string",
@@ -7089,6 +7091,7 @@
         "durationUnit": {
           "type": "string",
           "enum": [
+            "round",
             "turn"
           ]
         },
@@ -12499,7 +12502,8 @@
           "type": "number"
         },
         "boneFieldTurnsLeft": {
-          "type": "number"
+          "type": "number",
+          "description": "Remaining battle rounds; the legacy field name is kept for saved games and clients."
         },
         "currentPlayer": {
           "type": "string",

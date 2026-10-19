@@ -12,7 +12,6 @@ import {
 } from "./helpers";
 import { handleRuleDeclarationRoundEnd } from "../../ruleDeclarations";
 import { expireChikatiloTrackingAfterTargetTurn } from "../../chikatiloMark";
-import { advanceStormDurationAfterTurn } from "../heroes/lechy";
 import { expireBlindAfterUnitTurn } from "../../blind";
 
 export function applyEndTurn(state: GameState, rng: RNG): ApplyResult {
@@ -62,13 +61,9 @@ export function applyEndTurn(state: GameState, rng: RNG): ApplyResult {
     stateAfterRiver,
     stateAfterRiver.activeUnitId
   );
-  const stateAfterBlindExpiry = expireBlindAfterUnitTurn(
+  const stateAfterArenaEffects = expireBlindAfterUnitTurn(
     stateAfterChikatiloExpiry,
     stateAfterChikatiloExpiry.activeUnitId,
-  );
-  const stateAfterArenaEffects = advanceStormDurationAfterTurn(
-    stateAfterBlindExpiry,
-    state.turnNumber
   );
 
   const queue = state.turnQueue.length > 0 ? state.turnQueue : state.turnOrder;

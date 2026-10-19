@@ -494,7 +494,7 @@ export const gameStateV1Schema: z.ZodType<GameState, z.ZodTypeDef, unknown> = z
             sourceUnitId: text.optional(),
             sourceAbilityId: text.optional(),
             remaining: number,
-            durationUnit: z.literal("turn"),
+            durationUnit: z.enum(["turn", "round"]),
             startedTurnNumber: integer,
           })
           .strict(),

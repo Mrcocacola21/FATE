@@ -45,7 +45,7 @@ test("active field detection follows public arena state and ignores expired fiel
             id: "storm",
             effectId: "storm",
             remaining: 2,
-            durationUnit: "turn",
+            durationUnit: "round",
             startedTurnNumber: 1,
           },
         ],
@@ -97,10 +97,14 @@ test("Bone Field renders below intact board cells and preserves its cell status 
 test("active field rules render localized labels and the implemented rules text", () => {
   setLanguage("en", null);
   const stormMarkup = renderToStaticMarkup(
-    <ActiveFieldInfo view={fieldView({ arenaId: "storm", arenaEffects: [] })} />,
+    <ActiveFieldInfo view={fieldView({
+      arenaId: "storm",
+      arenaEffects: [{ id: "storm", effectId: "storm", remaining: 3, durationUnit: "round", startedTurnNumber: 1 }],
+    })} />,
   );
   assert.match(stormMarkup, /data-active-field-info="lechy_storm"/);
   assert.match(stormMarkup, /Active field/);
+  assert.match(stormMarkup, /Remaining: 3 rounds/);
   assert.match(stormMarkup, /Non-exempt ranged units/);
 
   const boneMarkup = renderToStaticMarkup(
@@ -108,6 +112,7 @@ test("active field rules render localized labels and the implemented rules text"
   );
   assert.match(boneMarkup, /data-active-field-info="sans_bone_field"/);
   assert.match(boneMarkup, /Bone Field/);
+  assert.match(boneMarkup, /Remaining: 3 rounds/);
   assert.match(boneMarkup, /Blue Bone deals 1 damage/);
   assert.match(boneMarkup, /Orange Bone deals 1 damage/);
 });

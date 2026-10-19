@@ -1,6 +1,6 @@
 import { resolveUnitDeath } from "../../../death";
 import type { ApplyResult, GameEvent, GameState, UnitState } from "../../../model";
-import { ARENA_STORM_ID, isStormActive, isStormExempt } from "../../../forest";
+import { isStormActive, isStormExempt } from "../../../forest";
 import { rollManualD6 as rollD6 } from "../../../pendingRoll/manualRoll";
 import { clearPendingRoll, requestRoll } from "../../../core";
 import { applyGriffithFemtoRebirth } from "../../../shared/griffith";
@@ -151,28 +151,4 @@ export function resolveLechyStormStartTurnRoll(
   };
 
   return { state: nextState, events };
-}
-
-export function advanceStormDurationAfterTurn(
-  state: GameState,
-  completedTurnNumber: number
-): GameState {
-  const effects = Array.isArray(state.arenaEffects) ? state.arenaEffects : [];
-  if (effects.length === 0) return state;
-
-  const nextEffects = effects.flatMap((effect) => {
-    if (effect.effectId !== ARENA_STORM_ID) return [{ ...effect }];
-    if (effect.startedTurnNumber === completedTurnNumber) return [{ ...effect }];
-    const remaining = effect.remaining - 1;
-    return remaining > 0 ? [{ ...effect, remaining }] : [];
-  });
-
-  const hasStorm = nextEffects.some(
-    (effect) => effect.effectId === ARENA_STORM_ID && effect.remaining > 0
-  );
-  return {
-    ...state,
-    arenaId: state.arenaId === ARENA_STORM_ID && !hasStorm ? null : state.arenaId,
-    arenaEffects: nextEffects,
-  };
 }

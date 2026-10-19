@@ -21,6 +21,84 @@ import { applySansLastAttackFromDeaths } from "../../actions/heroes/sans/curses"
 import { ARENA_STORM_ID } from "../../forest";
 import { completePendingRoundAdvance } from "../../ruleDeclarations";
 
+export function testSansBoneFieldDurationUsesRounds() {
+  for (const [roll, duration] of [[0, 2], [0.99, 7]]) {
+    const { state: initial, sans, papyrus, ally, enemy, enemy2 } = setupSansState();
+    const livingOrder = [sans.id, papyrus.id, ally.id, enemy.id, enemy2.id];
+    const dead = Object.values(initial.units).find((unit) => !livingOrder.includes(unit.id))!;
+    const order = [...livingOrder, dead.id];
+    let state = toBattleState(initial, "P1", sans.id);
+    for (const [index, id] of livingOrder.entries()) {
+      state = setUnit(state, id, {
+        position: { col: index, row: 4 },
+        hp: 10,
+      });
+    }
+    state = setUnit(state, dead.id, { isAlive: false, position: null, hp: 0 });
+    state = setUnit(state, sans.id, { sansUnbelieverUnlocked: true });
+    state = {
+      ...state,
+      activeUnitId: null,
+      turnQueue: order,
+      turnOrder: order,
+    };
+    const firstRound = state.roundNumber;
+    for (let round = 0; round < duration; round++) {
+      for (const id of livingOrder) {
+        // Keep unrelated charged impulses from interrupting the duration scenario.
+        state = setUnit(state, id, { charges: {} });
+        const started = applyAction(
+          state,
+          { type: "unitStartTurn", unitId: id },
+          { next: () => (round === 0 && id === sans.id ? roll : id === enemy2.id ? 0.99 : 0) },
+        );
+        state = started.state;
+        assert(state.activeUnitId === id, "Every living figure must get its scheduled turn");
+        assert(state.arenaId === "boneField", "Field stays active through the final round");
+        assert(
+          state.boneFieldTurnsLeft === duration - round,
+          "Starting an individual figure's turn must not consume a round of Bone Field",
+        );
+        if (id !== sans.id && id !== papyrus.id) {
+          assert(
+            started.events.some((event) => event.type === "sansBoneFieldApplied" && event.unitId === id),
+            "Each affected figure receives its hazard even in the final round",
+          );
+        }
+        const hpBefore = state.units[id].hp;
+        const ended = applyAction(state, { type: "endTurn" }, { next: () => 0 });
+        state = ended.state;
+        if (id === enemy2.id) {
+          assert(
+            state.units[id].hp === hpBefore - 1,
+            "The last figure's Orange Bone penalty resolves before round expiry",
+          );
+        }
+        const wrapped = id === livingOrder[livingOrder.length - 1];
+        assert(
+          state.boneFieldTurnsLeft === duration - round - (wrapped ? 1 : 0),
+          "Only wrapping the living turn queue consumes one round, skipping dead figures",
+        );
+        assert(
+          state.roundNumber === firstRound + round + (wrapped ? 1 : 0),
+          "Bone Field duration follows the battle round counter",
+        );
+      }
+    }
+    assert(state.arenaId === null, "Bone Field expires immediately after the last round");
+    assert(
+      Object.values(state.units).every((unit) => !unit.sansBoneFieldStatus),
+      "Expired Bone Field clears all remaining bone statuses",
+    );
+    const expired = applyAction(state, { type: "unitStartTurn", unitId: sans.id }, { next: () => 0 });
+    assert(
+      expired.state.arenaId === null && expired.events.every((event) => event.type !== "sansBoneFieldActivated"),
+      "Expired Bone Field does not activate again",
+    );
+  }
+  console.log("sans_bone_field_duration_uses_rounds passed");
+}
+
 export function testSansLastAttackDefersRoundAdvance() {
   const { state: initial, sans, enemy } = setupSansState();
   const before = toBattleState(
@@ -35,6 +113,9 @@ export function testSansLastAttackDefersRoundAdvance() {
   );
   const state: GameState = {
     ...before,
+    arenaId: "boneField",
+    boneFieldTurnsLeft: 2,
+    arenaEffects: [{ id: "storm", effectId: "storm", remaining: 2, durationUnit: "round", startedTurnNumber: before.turnNumber - 1 }],
     ruleDeclaration: {
       ...before.ruleDeclaration,
       ruleData: {
@@ -51,6 +132,8 @@ export function testSansLastAttackDefersRoundAdvance() {
   };
   const held = completePendingRoundAdvance(state);
   assert(held.state === state, "Round-end lethal damage cannot advance before Last Attack");
+  assert(held.state.boneFieldTurnsLeft === 2, "A deferred round must not consume field duration");
+  assert(held.state.arenaEffects?.[0].remaining === 2, "A deferred round must not consume storm duration");
   const decision = applySansLastAttackFromDeaths(held.state);
   const selected = applyAction(
     decision.state,
@@ -70,6 +153,16 @@ export function testSansLastAttackDefersRoundAdvance() {
   assert(
     !selected.state.ruleDeclaration.ruleData.pendingRoundAdvance,
     "Round advance is consumed exactly once",
+  );
+  assert(selected.state.boneFieldTurnsLeft === 1, "Resuming the round consumes one round of field duration");
+  assert(selected.state.arenaEffects?.[0].remaining === 1, "Resuming the round consumes one round of storm duration");
+  assert(
+    completePendingRoundAdvance(selected.state).state.arenaEffects?.[0].remaining === 1,
+    "Repeated round completion must not consume storm duration twice",
+  );
+  assert(
+    completePendingRoundAdvance(selected.state).state.boneFieldTurnsLeft === 1,
+    "Repeated round completion must not consume field duration twice",
   );
   console.log("sans_last_attack_defers_round_advance passed");
 }

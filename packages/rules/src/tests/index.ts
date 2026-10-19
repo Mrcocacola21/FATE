@@ -323,6 +323,7 @@ import {
   testForestCrossRestrictionOnFail,
   testLechyConfuseTerrainPerSideMarkersAndReplacement,
   testLechyStormGatingEffectsAndExemptions,
+  testLechyStormDurationUsesRounds,
 } from "./heroes/lechy.test";
 import {
   testJebeHpBonus,
@@ -452,6 +453,7 @@ import {
   testSansLastAttackSuspendsQueuedRollAndKeepsHiddenEnemiesLegal,
   testSansCurseTurnStartContinuationAndActiveDeath,
   testSansLastAttackDefersRoundAdvance,
+  testSansBoneFieldDurationUsesRounds,
 } from "./heroes/sans.regression.test";
 import {
   testSansBaseDamageIsOne,
@@ -812,6 +814,7 @@ function main(): void {
   testSansLastAttackSuspendsQueuedRollAndKeepsHiddenEnemiesLegal();
   testSansCurseTurnStartContinuationAndActiveDeath();
   testSansLastAttackDefersRoundAdvance();
+  testSansBoneFieldDurationUsesRounds();
   testUndyneToughSpearmanFeatureAndReach();
   testUndyneThrowSpearFixedDamageAndSpearRain();
   testUndyneEnergySpearGatingLineAndFreeImmortalCost();
@@ -883,6 +886,7 @@ function main(): void {
   testForestCrossRestrictionOnFail();
   testLechyConfuseTerrainPerSideMarkersAndReplacement();
   testLechyStormGatingEffectsAndExemptions();
+  testLechyStormDurationUsesRounds();
   testFalseTrailExplosionHitsAlliesAndEnemiesSingleRoll();
   testElCidLongLiverAdds2Hp();
   testElCidWarriorDoubleIsAutoHitNoDefenderRoll();

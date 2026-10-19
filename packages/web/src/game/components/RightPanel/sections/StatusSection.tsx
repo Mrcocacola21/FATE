@@ -180,9 +180,12 @@ export const StatusSection: FC<StatusSectionProps> = ({
                     {t("game.arenaEffectSource", { source: sourceLabel })}
                   </div>
                   <div>
-                    {t("game.arenaEffectRemainingTurns", {
-                      count: Math.max(0, effect.remaining),
-                    })}
+                    {t(
+                      effect.effectId === "storm" || effect.durationUnit === "round"
+                        ? "game.arenaEffectRemainingRounds"
+                        : "game.arenaEffectRemainingTurns",
+                      { count: Math.max(0, effect.remaining) },
+                    )}
                   </div>
                   <div className="mt-1 leading-5">
                     {arenaEffectDescription(effect.effectId, t)}

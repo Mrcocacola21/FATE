@@ -55,6 +55,8 @@ import type {
   RuleDeclarationState,
 } from "./types";
 import { isRuleDeclarationId } from "./types";
+import { advanceSansBoneFieldDurationAfterRound } from "../sans";
+import { advanceStormDurationAfterRound } from "../forest";
 
 const COURT_ATTACKER_EFFECTS: Record<number, CourtEffectId> = {
   1: "judicialManeuver",
@@ -643,7 +645,7 @@ export function completePendingRoundAdvance(
   const rule = getRuleState(state);
   const nextState = withRuleState(
     {
-      ...state,
+      ...advanceStormDurationAfterRound(advanceSansBoneFieldDurationAfterRound(state)),
       currentPlayer: nextPlayer,
       turnNumber: advance.nextTurnNumber,
       roundNumber: advance.nextRoundNumber,

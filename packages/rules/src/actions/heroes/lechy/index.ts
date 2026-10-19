@@ -9,7 +9,6 @@ export {
   resolveLechyGuideTravelerPlacement,
 } from "./guideTraveler";
 export {
-  advanceStormDurationAfterTurn,
   applyStormStartOfTurn,
   resolveLechyStormStartTurnRoll,
 } from "./storm";

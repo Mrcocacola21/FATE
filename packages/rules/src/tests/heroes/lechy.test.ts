@@ -23,6 +23,7 @@ import {
   setUnit,
   toBattleState,
 } from "../helpers/testUtils";
+import { completePendingRoundAdvance } from "../../ruleDeclarations";
 export function testLechyHpBonus() {
   let state = createEmptyGame();
   state = attachArmy(state, createDefaultArmy("P1", { trickster: HERO_LECHY_ID }));
@@ -639,7 +640,7 @@ export function testLechyStormGatingEffectsAndExemptions() {
     | undefined;
   assert(stormStarted, "storm activation should log duration roll");
   assert(
-    stormStarted.roll === 1 && stormStarted.duration === 1,
+    stormStarted.roll === 1 && stormStarted.duration === 1 && stormStarted.durationUnit === "round",
     "storm duration log should include raw roll and resolved duration",
   );
   assert(
@@ -796,4 +797,81 @@ export function testLechyStormGatingEffectsAndExemptions() {
   );
 
   console.log("lechy_storm_gating_effects_exemptions passed");
+}
+
+export function testLechyStormDurationUsesRounds() {
+  for (const [roll, duration] of [[0.01, 1], [0.99, 6]]) {
+    let state = attachArmy(createEmptyGame(), createDefaultArmy("P1", { trickster: HERO_LECHY_ID }));
+    state = attachArmy(state, createDefaultArmy("P2"));
+    const lechy = Object.values(state.units).find((unit) => unit.heroId === HERO_LECHY_ID)!;
+    const enemy = Object.values(state.units).find((unit) => unit.owner === "P2" && unit.class === "archer")!;
+    const ally = Object.values(state.units).find((unit) => unit.owner === "P1" && unit.class === "knight")!;
+    const order = [lechy.id, ally.id, enemy.id];
+    const dead = Object.values(state.units).find((unit) => !order.includes(unit.id))!;
+    for (const [index, id] of order.entries()) {
+      state = setUnit(state, id, { position: { col: index * 4, row: 4 }, hp: 10 });
+    }
+    state = setUnit(state, dead.id, { isAlive: false, hp: 0, position: null });
+    state = setUnit(state, lechy.id, { charges: { [ABILITY_LECHY_STORM]: 5 } });
+    state = toBattleState(state, "P1", lechy.id);
+    state = { ...state, turnQueue: [...order, dead.id], turnOrder: [...order, dead.id] };
+    const cast = applyAction(
+      state,
+      { type: "useAbility", unitId: lechy.id, abilityId: ABILITY_LECHY_STORM },
+      { next: () => roll },
+    );
+    state = cast.state;
+    const firstRound = state.roundNumber;
+    for (let round = 0; round < duration; round++) {
+      for (const id of order) {
+        if (!(round === 0 && id === lechy.id)) {
+          // Isolate the storm lifetime from Lechy's forest-placement impulse.
+          if (id === lechy.id) state = setUnit(state, id, { charges: {} });
+          const started = applyAction(state, { type: "unitStartTurn", unitId: id }, { next: () => 0 });
+          state = started.state;
+          if (id !== lechy.id) {
+            assert(state.pendingRoll?.kind === "lechyStormStartTurnRoll", "Every affected figure rolls even in the final round");
+            const hpBefore = state.units[id].hp;
+            state = resolvePendingRollOnce(state, { next: () => 0 }).state;
+            assert(state.units[id].hp === hpBefore - 1, "Storm damage applies throughout its final round");
+            state = applyAction(state, { type: "unitStartTurn", unitId: id }, { next: () => 0 }).state;
+          }
+        }
+        assert(state.activeUnitId === id, "Each living figure completes its turn after any storm roll");
+        assert(state.arenaId === "storm", "Storm stays active through the last figure's turn");
+        const effect = makePlayerView(state, "P1").arenaEffects?.find((item) => item.effectId === "storm");
+        assert(effect?.remaining === duration - round && effect.durationUnit === "round", "Individual turns and roll continuations do not consume storm rounds");
+        state = applyAction(state, { type: "endTurn" }, { next: () => 0 }).state;
+        const wrapped = id === enemy.id;
+        const remaining = duration - round - (wrapped ? 1 : 0);
+        assert((state.arenaEffects?.find((item) => item.effectId === "storm")?.remaining ?? 0) === remaining, "Only completing the living turn queue consumes one storm round");
+        assert(state.roundNumber === firstRound + round + (wrapped ? 1 : 0), "Storm duration follows the battle round counter");
+      }
+    }
+    assert(state.arenaId === null && state.arenaEffects?.length === 0, "Storm and its restrictions expire at the final round boundary");
+    if (duration === 1) {
+      // Also cover activation by the last figure, directly before a round boundary.
+      state = {
+        ...state,
+        arenaId: "storm",
+        arenaEffects: [{ id: "storm", effectId: "storm", remaining: 1, durationUnit: "round", startedTurnNumber: state.turnNumber }],
+        ruleDeclaration: {
+          ...state.ruleDeclaration,
+          ruleData: {
+            ...state.ruleDeclaration.ruleData,
+            pendingRoundAdvance: {
+              nextRoundNumber: state.roundNumber + 1,
+              nextTurnNumber: state.turnNumber + 1,
+              nextIndex: 0,
+              nextUnitId: lechy.id,
+              nextPlayer: "P1",
+            },
+          },
+        },
+      };
+      const advanced = completePendingRoundAdvance(state).state;
+      assert(advanced.arenaId === "storm" && advanced.arenaEffects?.[0].remaining === 1, "Casting at the round boundary must not immediately expire Storm");
+    }
+  }
+  console.log("lechy_storm_duration_uses_rounds passed");
 }

@@ -168,7 +168,7 @@ const abilitiesUk: Record<string, AbilityTranslation> = {
   lechyStorm: {
     name: "Буря",
     description:
-      "Замінює арену бурею: фігури поза лісом ризикують отримати шкоду та втрачають дальні атаки.",
+      "Замінює арену бурею на 1к6 раундів: фігури поза лісом ризикують отримати шкоду та втрачають дальні атаки.",
   },
   griffithWretchedMan: {
     name: "Жалюгідна людина",
@@ -312,7 +312,7 @@ const abilitiesUk: Record<string, AbilityTranslation> = {
   },
   sansBoneField: {
     name: "Поле кісток",
-    description: "Після перетворення замінює арену Полем кісток на 1d6+1 ходів.",
+    description: "Після перетворення замінює арену Полем кісток на 1d6+1 раундів.",
   },
   sansSleep: {
     name: "Сон",

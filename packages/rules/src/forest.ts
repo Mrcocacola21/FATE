@@ -103,3 +103,24 @@ export function isStormExempt(state: GameState, unit: UnitState): boolean {
   }
   return isUnitInsideForestAura(state, unit);
 }
+
+export function advanceStormDurationAfterRound(state: GameState): GameState {
+  const effects = state.arenaEffects ?? [];
+  if (!effects.some((effect) => effect.effectId === ARENA_STORM_ID)) return state;
+
+  const nextEffects = effects.flatMap((effect) => {
+    if (effect.effectId !== ARENA_STORM_ID) return [effect];
+    // Casting as the last figure must not immediately consume the new storm.
+    if (effect.startedTurnNumber === state.turnNumber) {
+      return [{ ...effect, durationUnit: "round" as const }];
+    }
+    const remaining = Math.max(0, Math.trunc(effect.remaining) - 1);
+    return remaining > 0 ? [{ ...effect, remaining, durationUnit: "round" as const }] : [];
+  });
+  const hasStorm = nextEffects.some((effect) => effect.effectId === ARENA_STORM_ID);
+  return {
+    ...state,
+    arenaId: state.arenaId === ARENA_STORM_ID && !hasStorm ? null : state.arenaId,
+    arenaEffects: nextEffects,
+  };
+}

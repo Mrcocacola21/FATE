@@ -54,7 +54,7 @@ export const ABILITY_SPECS_PART_3: Record<string, AbilitySpec> = {
     displayName: "Bone Field",
     kind: "impulse",
     description:
-      "After Unbeliever, roll 1d6+1 and replace arena with Bone Field for that duration.",
+      "After Unbeliever, roll 1d6+1 and replace arena with Bone Field for that many rounds.",
   },
   [ids.ABILITY_SANS_SLEEP]: {
     id: ids.ABILITY_SANS_SLEEP,
