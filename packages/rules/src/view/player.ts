@@ -20,6 +20,7 @@ import {
 } from "./pending";
 import { projectRuleDeclarationState } from "./ruleDeclarations";
 import { projectRosterUnits } from "./roster";
+import { filterStatusSources } from "./statusSources";
 
 /**
  * Build a player-specific view of the game state.
@@ -85,9 +86,12 @@ export function makePlayerView(state: GameState, playerId: PlayerId): PlayerView
   }
 
   const knowledge = {
+    // Status provenance was filtered against this recipient's units below.
     P1: playerId === "P1" ? { ...(state.knowledge?.P1 ?? {}) } : {},
     P2: playerId === "P2" ? { ...(state.knowledge?.P2 ?? {}) } : {},
   };
+
+  filterStatusSources(units, playerId);
 
   const placementsByUnitId: Record<string, Coord[]> = {};
   const movesByUnitId: Record<string, Coord[]> = {};

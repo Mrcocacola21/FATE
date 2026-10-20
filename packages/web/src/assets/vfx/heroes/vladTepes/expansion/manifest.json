@@ -1,0 +1,323 @@
+{
+  "schemaVersion": 1,
+  "heroId": "vladTepes",
+  "assetRoot": "packages/web/src/assets/",
+  "status": "imported_assets_not_runtime_bindings",
+  "assets": [
+    {
+      "id": "V-vladTepes-move_trail",
+      "heroId": "vladTepes",
+      "filename": "vfx/heroes/vladTepes/expansion/move_trail.png",
+      "sha256": "49171525f43c0f054ee129f60d518e2b8e8c7430fe0fdc5bbce1fe63403dc958",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "+X",
+      "phase": "move",
+      "geometry": "trail",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "vladTepes.basic.move.move",
+      "loop": false,
+      "presentationProfile": "trail",
+      "requestedRoleOrAbilityRefs": [
+        "basic.move"
+      ],
+      "declaredSourceAbilityId": "basic.move",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-vladTepes-move_arrive",
+      "heroId": "vladTepes",
+      "filename": "vfx/heroes/vladTepes/expansion/move_arrive.png",
+      "sha256": "bb77a6b156fbfd7c244cd0d813240714cddf0a17cc0b1c9d332326ededb293c7",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "arrive",
+      "geometry": "impact",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "vladTepes.basic.move.arrive",
+      "loop": false,
+      "presentationProfile": "impact",
+      "requestedRoleOrAbilityRefs": [
+        "basic.move"
+      ],
+      "declaredSourceAbilityId": "basic.move",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-vladTepes-attack_swing",
+      "heroId": "vladTepes",
+      "filename": "vfx/heroes/vladTepes/expansion/attack_swing.png",
+      "sha256": "91caca05b487d5aad7bcb8730af4b7a3bc9c63e4aa7e793e371a56e28a28f117",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "+X",
+      "phase": "swing",
+      "geometry": "swing",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "vladTepes.basic.attack.swing",
+      "loop": false,
+      "presentationProfile": "swing",
+      "requestedRoleOrAbilityRefs": [
+        "basic.attack"
+      ],
+      "declaredSourceAbilityId": "basic.attack",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-vladTepes-attack_impact",
+      "heroId": "vladTepes",
+      "filename": "vfx/heroes/vladTepes/expansion/attack_impact.png",
+      "sha256": "b00eff1a8551083bb7acac30743697180be2a5faa61590824c1492dbec9db143",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "hit",
+      "geometry": "impact",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "vladTepes.basic.attack.hit",
+      "loop": false,
+      "presentationProfile": "impact",
+      "requestedRoleOrAbilityRefs": [
+        "basic.attack"
+      ],
+      "declaredSourceAbilityId": "basic.attack",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "EXTEND",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-vladTepes-select_ring",
+      "heroId": "vladTepes",
+      "filename": "vfx/heroes/vladTepes/expansion/select_ring.png",
+      "sha256": "271e694fcc36f4149b57c861c1867cab4e88eab9c002d7f023f237961c12873c",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 1,
+      "fps": 0,
+      "durationMs": null,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "select",
+      "geometry": "static",
+      "layer": "ground",
+      "sourceVisibility": "local",
+      "compositeGroup": "vladTepes.basic.select.select",
+      "loop": false,
+      "presentationProfile": "static",
+      "requestedRoleOrAbilityRefs": [
+        "basic.select"
+      ],
+      "declaredSourceAbilityId": "basic.select",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-vladTepes-deploy",
+      "heroId": "vladTepes",
+      "filename": "vfx/heroes/vladTepes/expansion/deploy.png",
+      "sha256": "f2a362a4bb608a706e199848cac30e17f7e25505b65a5c83d1bea99011f7c2f8",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 16,
+      "fps": 24,
+      "durationMs": 667,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "deploy",
+      "geometry": "deploy",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "vladTepes.basic.deploy.deploy",
+      "loop": false,
+      "presentationProfile": "deploy",
+      "requestedRoleOrAbilityRefs": [
+        "basic.deploy"
+      ],
+      "declaredSourceAbilityId": "basic.deploy",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-vladTepes-death_final",
+      "heroId": "vladTepes",
+      "filename": "vfx/heroes/vladTepes/expansion/death_final.png",
+      "sha256": "e65384143a190b9e561bb928c1acd9813380fdc2272add3e2395e7403fbcdd58",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 24,
+      "fps": 24,
+      "durationMs": 1000,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "final",
+      "geometry": "death",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "vladTepes.basic.death.final",
+      "loop": false,
+      "presentationProfile": "death",
+      "requestedRoleOrAbilityRefs": [
+        "basic.death"
+      ],
+      "declaredSourceAbilityId": "basic.death",
+      "canonicalTriggerHint": "Окончательная смерть; дождаться возрождений, предсмертной атаки/выбора проклятия",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-vladTepes-auto_defense",
+      "heroId": "vladTepes",
+      "filename": "vfx/heroes/vladTepes/expansion/auto_defense.png",
+      "sha256": "37b0955cff810765181e53d200bda9bfca2ebf3ee809ad95003298439a31b5ab",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "defense",
+      "geometry": "defense",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "vladTepes.defense.defense",
+      "loop": false,
+      "presentationProfile": "defense",
+      "requestedRoleOrAbilityRefs": [
+        "defense"
+      ],
+      "declaredSourceAbilityId": "defense",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P2",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-vladTepes-commander_aura",
+      "heroId": "vladTepes",
+      "filename": "vfx/heroes/vladTepes/expansion/commander_aura.png",
+      "sha256": "037f615daaa1e31a85f6596453f83c52ed576f253301afbfc508584270ed8f8c",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 1,
+      "fps": 0,
+      "durationMs": null,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "status",
+      "geometry": "static",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "vladTepes.vladPolkovodets.status",
+      "loop": false,
+      "presentationProfile": "static",
+      "requestedRoleOrAbilityRefs": [
+        "vladPolkovodets"
+      ],
+      "declaredSourceAbilityId": "vladPolkovodets",
+      "canonicalTriggerHint": "Статичная метка по разрешённому состоянию; на reconnect без вспышки/звука",
+      "priority": "P2",
+      "requestState": "EXTEND",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-vladTepes-forest_root",
+      "heroId": "vladTepes",
+      "filename": "vfx/heroes/vladTepes/expansion/forest_root.png",
+      "sha256": "f48be34b50a79b3031aa97706afadea9a9f4e504026318778f351de84b0b9e29",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 1,
+      "fps": 0,
+      "durationMs": null,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "status",
+      "geometry": "static",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "vladTepes.vladForest.status",
+      "loop": false,
+      "presentationProfile": "static",
+      "requestedRoleOrAbilityRefs": [
+        "vladForest"
+      ],
+      "declaredSourceAbilityId": "vladForest",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P2",
+      "requestState": "EXTEND",
+      "runtimeIntegration": "pending"
+    }
+  ],
+  "notes": [
+    "Original PNG bytes preserved. This manifest does not register VFX or authorize visibility.",
+    "defense/stealth/basic.* are presentation roles; resolve actual rule events when connecting.",
+    "declaredSourceAbilityId is provenance, not proof that the unit has that ability."
+  ]
+}

@@ -148,6 +148,7 @@ export function resolveFriskPacifismHugsTargetChoice(
         [target.id]: {
           ...committed.state.units[target.id],
           movementDisabledNextTurn: true,
+          movementDisabledSourceId: undefined,
         },
       },
     }),

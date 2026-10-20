@@ -1,6 +1,7 @@
 import type { Coord, ProjectedGameEvent, PlayerView, PlayerId, UnitClass, UnitState } from "rules";
 import type { BoardVfxRequest, VfxEffectId } from "./vfxTypes";
 import { vfxRegistry } from "./vfxRegistry";
+import { expansionIds } from "./expansionRegistry";
 import coverage from "../../assets/heroVfxCoverage.json";
 import {
   REMAINING_CASTS,
@@ -9,6 +10,7 @@ import {
 } from "../../game/effects/remainingHeroPresentation";
 
 export const CORE_VFX_PREVIEW_IDS: VfxEffectId[] = [
+  ...expansionIds,
   ...new Set([
     ...coverage
       .filter((row) => row.key && row.status !== "BLOCKED_UNIMPLEMENTED_ABILITY")
@@ -61,6 +63,8 @@ export const CORE_VFX_PREVIEW_IDS: VfxEffectId[] = [
   "fireball",
   "fireballCast",
   "fireballImpact",
+  "hiddenReveal",
+  "storm",
 ];
 export const VFX_PREVIEW_ANCHORS = {
   center: { col: 4, row: 4 },
@@ -424,7 +428,7 @@ export const VFX_PREVIEW_SCENARIOS: VfxPreviewScenario[] = [
     id: "hidden-reveal",
     label: "Hidden Reveal",
     group: "Reveal",
-    expectedEffectIds: ["hiddenReveal"],
+    expectedEffectIds: ["expansion.loki.stealth_reveal"],
     waitMs: 240,
     events: [{ type: "stealthRevealed", unitId: "preview-hidden", reason: "search" }],
   },
@@ -449,7 +453,7 @@ export const VFX_PREVIEW_SCENARIOS: VfxPreviewScenario[] = [
     id: "storm",
     label: "Lechy Storm",
     group: "Storm",
-    expectedEffectIds: ["storm"],
+    expectedEffectIds: ["lechyStorm", "expansion.lechy.storm_tick"],
     waitMs: 220,
     events: [
       {
@@ -462,6 +466,7 @@ export const VFX_PREVIEW_SCENARIOS: VfxPreviewScenario[] = [
       {
         type: "lechyStormRollResult",
         unitId: "preview-storm-target",
+        targetCell: { col: 4, row: 2 },
         roll: 1,
         success: false,
         damage: 1,

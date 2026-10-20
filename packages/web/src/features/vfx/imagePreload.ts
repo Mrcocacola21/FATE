@@ -16,7 +16,9 @@ export class ImagePreloader {
   private readonly pending = new Map<string, Promise<HTMLImageElement | undefined>>();
   private readonly failed = new Set<string>();
   private retained = new Set<string>();
+  private core = new Set<string>();
   private readonly rosterOwned = new Set<string>();
+  private readonly liveRequested = new Set<string>();
   constructor(
     private readonly createImage = () => new Image(),
     private readonly loads: AssetLoadQueue = assetLoadQueue,
@@ -30,6 +32,7 @@ export class ImagePreloader {
     url: string,
     key = url,
     priority: AssetPriority = "low",
+    rosterOnly = false,
   ): Promise<HTMLImageElement | undefined> {
     const image = this.images.get(url);
     if (image) {
@@ -38,10 +41,15 @@ export class ImagePreloader {
       return Promise.resolve(image);
     }
     const pending = this.pending.get(url);
-    if (pending) return pending;
+    if (pending) {
+      if (!rosterOnly) this.liveRequested.add(url);
+      return pending;
+    }
     if (this.failed.has(url) || typeof Image === "undefined") return Promise.resolve(undefined);
+    if (!rosterOnly) this.liveRequested.add(url);
     const job = this.loads
       .enqueue(async () => {
+        if (rosterOnly && !this.liveRequested.has(url) && this.rosterOwned.has(url) && !this.retained.has(url)) return undefined;
         try {
           const image = this.createImage();
           image.src = url;
@@ -53,7 +61,7 @@ export class ImagePreloader {
           }
           return image;
         } catch {
-          if (this.failed.size < 256) this.failed.add(url);
+          this.failed.add(url);
           try {
             this.diagnose(key, url);
           } catch {
@@ -62,11 +70,15 @@ export class ImagePreloader {
           return undefined;
         }
       }, priority)
-      .finally(() => this.pending.delete(url));
+      .finally(() => {
+        this.pending.delete(url);
+        this.liveRequested.delete(url);
+      });
     this.pending.set(url, job);
     return job;
   }
   retainUrls(core: readonly string[], roster: readonly string[]): void {
+    this.core = new Set(core);
     this.retained = new Set([...core, ...roster]);
     for (const url of roster) this.rosterOwned.add(url);
     for (const url of this.images.keys()) {
@@ -76,9 +88,12 @@ export class ImagePreloader {
   }
   private trim(): void {
     let bytes = this.diagnostics.estimatedPixelBytes;
-    for (const [url, image] of this.images) {
+    // Prefer old/lazy references, then LRU roster art. A large authorized roster
+    // is permission to warm assets, not permission to exceed the decoded budget.
+    const candidates = [...this.images].sort(([a], [b]) => Number(this.retained.has(a)) - Number(this.retained.has(b)));
+    for (const [url, image] of candidates) {
       if (bytes <= this.budgetBytes) break;
-      if (this.retained.has(url)) continue;
+      if (this.core.has(url)) continue;
       this.images.delete(url);
       bytes -= image.naturalWidth * image.naturalHeight * 4;
     }
@@ -112,7 +127,7 @@ export function preloadVfx(
 ): Promise<void> {
   return Promise.all(
     ids.flatMap((id) =>
-      vfxAssets(vfxRegistry[id]).map((art) => imagePreloader.load(art.asset!, id, priority)),
+      vfxAssets(vfxRegistry[id]).map((art) => imagePreloader.load(art.asset!, id, priority, true)),
     ),
   ).then(() => undefined);
 }

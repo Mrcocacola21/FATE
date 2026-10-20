@@ -36,6 +36,21 @@ export function copyEventPayload(event: GameEvent): GameEvent | undefined {
 
 function copySemanticPayload(event: GameEvent): GameEvent | undefined {
   switch (event.type) {
+    case "heroSelfCost":
+      return { type: event.type, unitId: event.unitId, sourceAbilityId: event.sourceAbilityId, damage: event.damage, hpAfter: event.hpAfter,
+        ...(event.sourceCell ? { sourceCell: coord(event.sourceCell) } : {}) };
+    case "lokiGreatJokeCommitted":
+      return { type: event.type, unitId: event.unitId, radius: event.radius,
+        ...(event.sourceCell ? { sourceCell: coord(event.sourceCell) } : {}) };
+    case "duolingoBerserkerUnlocked":
+    case "groznyTyrantRewarded":
+    case "forestMovementStopped":
+    case "unitDeathFinalized":
+      return { type: event.type, unitId: event.unitId,
+        ...(event.sourceCell ? { sourceCell: coord(event.sourceCell) } : {}) };
+    case "riverStormWard":
+      return { type: event.type, unitId: event.unitId, turnNumber: event.turnNumber,
+        ...(event.sourceCell ? { sourceCell: coord(event.sourceCell) } : {}) };
     case "kanekiFormEntered":
       return { type: event.type, unitId: event.unitId, form: event.form, ...(event.sourceCell ? {sourceCell: coord(event.sourceCell)} : {}) };
     case "friskOnePathUnlocked":
@@ -94,6 +109,8 @@ function copySemanticPayload(event: GameEvent): GameEvent | undefined {
         ...(event.isBasicAttack === true ? { isBasicAttack: true } : {}),
         ...(event.attackSignature ? { attackSignature: event.attackSignature } : {}),
         ...(event.defenseSignature ? { defenseSignature: event.defenseSignature } : {}),
+        ...(event.spearmanEvaded ? { spearmanEvaded: event.spearmanEvaded } : {}),
+        ...(event.bunkerAbsorbedDamage ? { bunkerAbsorbedDamage: event.bunkerAbsorbedDamage } : {}),
         tieBreakDice: event.tieBreakDice
           ? {
               attacker: [...event.tieBreakDice.attacker],
@@ -349,6 +366,7 @@ function copySemanticPayload(event: GameEvent): GameEvent | undefined {
     case "aoeResolved":
       return {
         type: "aoeResolved",
+        ...(event.lokiStatusResult ? { lokiStatusResult: event.lokiStatusResult } : {}),
         ...(event.effectSegments ? { effectSegments: event.effectSegments.map(({from, to}) => ({from: coord(from), to: coord(to)})) } : {}),
         sourceUnitId: event.sourceUnitId,
         sourceCell: event.sourceCell ? coord(event.sourceCell) : undefined,
@@ -417,6 +435,7 @@ function copySemanticPayload(event: GameEvent): GameEvent | undefined {
     case "papyrusBonePunished":
       return {
         type: "papyrusBonePunished",
+        ...(event.targetCell ? { targetCell: coord(event.targetCell) } : {}),
         papyrusId: event.papyrusId,
         targetId: event.targetId,
         boneType: event.boneType,
@@ -446,6 +465,7 @@ function copySemanticPayload(event: GameEvent): GameEvent | undefined {
     case "sansBoneFieldPunished":
       return {
         type: "sansBoneFieldPunished",
+        ...(event.targetCell ? { targetCell: coord(event.targetCell) } : {}),
         targetId: event.targetId,
         boneType: event.boneType,
         damage: event.damage,
@@ -564,6 +584,7 @@ function copySemanticPayload(event: GameEvent): GameEvent | undefined {
     case "lechyStormRollResult":
       return {
         type: "lechyStormRollResult",
+        ...(event.targetCell ? { targetCell: coord(event.targetCell) } : {}),
         unitId: event.unitId,
         roll: event.roll,
         success: event.success,

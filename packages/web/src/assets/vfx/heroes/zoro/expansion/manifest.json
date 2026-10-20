@@ -1,0 +1,199 @@
+{
+  "schemaVersion": 1,
+  "heroId": "zoro",
+  "assetRoot": "packages/web/src/assets/",
+  "status": "imported_assets_not_runtime_bindings",
+  "assets": [
+    {
+      "id": "V-zoro-move_trail",
+      "heroId": "zoro",
+      "filename": "vfx/heroes/zoro/expansion/move_trail.png",
+      "sha256": "c6b0c60f79ed1680f319732b9d42cd135abde3f5f1b44d55a58542ce9358ac6e",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "+X",
+      "phase": "trail",
+      "geometry": "trail",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "zoro.basic.move.trail",
+      "loop": false,
+      "presentationProfile": "trail",
+      "requestedRoleOrAbilityRefs": [
+        "basic.move"
+      ],
+      "declaredSourceAbilityId": "basic.move",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-zoro-move_arrive",
+      "heroId": "zoro",
+      "filename": "vfx/heroes/zoro/expansion/move_arrive.png",
+      "sha256": "db39a138f5133c3f79a3c295cda182e7a190e9ff62fa39c54be40c3e9d158494",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "arrive",
+      "geometry": "impact",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "zoro.basic.move.arrive",
+      "loop": false,
+      "presentationProfile": "impact",
+      "requestedRoleOrAbilityRefs": [
+        "basic.move"
+      ],
+      "declaredSourceAbilityId": "basic.move",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-zoro-attack_impact",
+      "heroId": "zoro",
+      "filename": "vfx/heroes/zoro/expansion/attack_impact.png",
+      "sha256": "c63a086df563346bd2fbb5646f5ddb1a74e8dce85a924ee4024565133d0489eb",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "hit",
+      "geometry": "impact",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "zoro.basic.attack.hit",
+      "loop": false,
+      "presentationProfile": "impact",
+      "requestedRoleOrAbilityRefs": [
+        "basic.attack"
+      ],
+      "declaredSourceAbilityId": "basic.attack",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P2",
+      "requestState": "EXTEND",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-zoro-select_ring",
+      "heroId": "zoro",
+      "filename": "vfx/heroes/zoro/expansion/select_ring.png",
+      "sha256": "461372ff9752a0d90857d002cba580098ca1f9a25e8022cff0d3367e60e886e2",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 1,
+      "fps": 0,
+      "durationMs": null,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "select",
+      "geometry": "static",
+      "layer": "ground",
+      "sourceVisibility": "local",
+      "compositeGroup": "zoro.basic.select.select",
+      "loop": false,
+      "presentationProfile": "static",
+      "requestedRoleOrAbilityRefs": [
+        "basic.select"
+      ],
+      "declaredSourceAbilityId": "basic.select",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-zoro-deploy",
+      "heroId": "zoro",
+      "filename": "vfx/heroes/zoro/expansion/deploy.png",
+      "sha256": "a799abf2c7fa0a877596242754d214053beef5fd4e6c43016c67c886733eeee0",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 16,
+      "fps": 24,
+      "durationMs": 667,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "deploy",
+      "geometry": "deploy",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "zoro.basic.deploy.deploy",
+      "loop": false,
+      "presentationProfile": "deploy",
+      "requestedRoleOrAbilityRefs": [
+        "basic.deploy"
+      ],
+      "declaredSourceAbilityId": "basic.deploy",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-zoro-death_final",
+      "heroId": "zoro",
+      "filename": "vfx/heroes/zoro/expansion/death_final.png",
+      "sha256": "11bc1a3ef6332eaa5caaaea8927bab29667aba5d1eb4703ff88466334ae1ee2c",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 24,
+      "fps": 24,
+      "durationMs": 1000,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "final",
+      "geometry": "death",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "zoro.basic.death.final",
+      "loop": false,
+      "presentationProfile": "death",
+      "requestedRoleOrAbilityRefs": [
+        "basic.death"
+      ],
+      "declaredSourceAbilityId": "basic.death",
+      "canonicalTriggerHint": "Окончательная смерть; дождаться возрождений, предсмертной атаки/выбора проклятия",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    }
+  ],
+  "notes": [
+    "Original PNG bytes preserved. This manifest does not register VFX or authorize visibility.",
+    "defense/stealth/basic.* are presentation roles; resolve actual rule events when connecting.",
+    "declaredSourceAbilityId is provenance, not proof that the unit has that ability."
+  ]
+}

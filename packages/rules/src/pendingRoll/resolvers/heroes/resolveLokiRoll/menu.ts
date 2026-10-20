@@ -1,10 +1,12 @@
 import type { ApplyResult, GameState, PendingRoll, ResolveRollChoice } from "../../../../model";
 import type { RNG } from "../../../../rng";
+import { unitSignalAnchor } from "../../../../core/heroSignals";
 import { canCommitAbilityCost } from "../../../../actions/abilityCosts";
 import {
   ABILITY_LOKI_ILLUSORY_DOUBLE,
   ABILITY_LOKI_LAUGHT,
   getAbilityViewsForUnit,
+  TRICKSTER_AOE_RADIUS,
 } from "../../../../abilities";
 import { clearPendingRoll, requestRoll } from "../../../../core";
 import { applyUseAbility } from "../../../../actions/abilityActions";
@@ -317,7 +319,9 @@ function resolveGreatLokiJoke(
       lokiStatusSourceId: lokiId,
     }
   );
-  return { state: queued.state, events: [...spent.events, ...queued.events] };
+  return { state: queued.state, events: [...spent.events,
+    { type: "lokiGreatJokeCommitted", ...unitSignalAnchor(spent.state, lokiId), radius: TRICKSTER_AOE_RADIUS },
+    ...queued.events] };
 }
 
 export function resolveLokiLaughtChoice(

@@ -359,7 +359,7 @@ for (const choice of ["roll", "auto"] as const) {
     assert.equal(new Set(outcomes.map(c => c.atMs)).size, 1);
     const defense = outcomes.find(c => "unitId" in c && c.unitId === defenderId)!;
     assert.equal(defense.kind, "miss");
-    const shields = vfx(p.batch).filter(e => e.effectId === "shield");
+    const shields = vfx(p.batch).filter(e => e.effectId === "shield" || e.effectId.endsWith(".auto_defense"));
     assert.equal(shields.length, choice === "auto" ? 1 : 0);
     assert(shields.every(e => e.delayMs === defense.atMs));
   });
@@ -390,7 +390,7 @@ test("real lethal Dora preserves Sans Last Attack choice and only the accepted f
   assert.equal(result.events.filter(e => e.type === "unitDied" && e.unitId === sansId).length, 1);
   const final = plan(projectEventsForRecipient(result.state, result.events, "P2"), pending, result.state);
   assert.equal(final.queue.filter(q => q.type === "death").length, 1);
-  assert.equal(vfx(final.batch).filter(e => e.effectId === "unitDeath").length, 1);
+  assert.equal(vfx(final.batch).filter(e => e.effectId === "expansion.sans.death_final").length, 1);
   assert.equal(sounds(final.batch).filter(s => s.key.endsWith(".death")).length, 1);
 });
 

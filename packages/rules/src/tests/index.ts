@@ -1,4 +1,5 @@
 import { testPresentationSemantics } from "./core/presentationSemantics.test";
+import { testExpansionSignals } from "./core/expansionSignals.test";
 import { testTeleportsIgnoreIntermediateHazardsAndForest, testTeleportsTriggerOnlyDestinationHazards, testAbilityTeleportProjectionPreservesRelocationWithoutRevealingCause } from "./core/teleportMovement.test";
 import { testActionModuleBoundaries } from "./core/boundaries.test";
 import { testReactionMovementRegressions } from "./heroes/reactionMovement.test";
@@ -511,6 +512,7 @@ import {
 import { testSafeProjectedEventSerialization } from "./core/projectedEvents.test";
 
 function main(): void {
+  testExpansionSignals();
   testPresentationSemantics();
   testSafeProjectedEventSerialization();
   testReactionMovementRegressions();
@@ -947,7 +949,9 @@ function mainBoundaries(): void {
   testActionModuleBoundaries();
 }
 
-if (process.argv.includes("--boundaries")) {
+if (process.argv.includes("--expansion-signals")) {
+  testExpansionSignals();
+} else if (process.argv.includes("--boundaries")) {
   mainBoundaries();
 } else {
   main();

@@ -1,0 +1,354 @@
+{
+  "schemaVersion": 1,
+  "heroId": "jackRipper",
+  "assetRoot": "packages/web/src/assets/",
+  "status": "imported_assets_not_runtime_bindings",
+  "assets": [
+    {
+      "id": "V-jackRipper-move_trail",
+      "heroId": "jackRipper",
+      "filename": "vfx/heroes/jackRipper/expansion/move_trail.png",
+      "sha256": "debc5c04810cdb3eeace49d7cb58ba85b2145bfd3502c7b51bdcf76813dc1d99",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "+X",
+      "phase": "move",
+      "geometry": "trail",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "jackRipper.basic.move.move",
+      "loop": false,
+      "presentationProfile": "trail",
+      "requestedRoleOrAbilityRefs": [
+        "basic.move"
+      ],
+      "declaredSourceAbilityId": "basic.move",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-jackRipper-move_arrive",
+      "heroId": "jackRipper",
+      "filename": "vfx/heroes/jackRipper/expansion/move_arrive.png",
+      "sha256": "71d9640f8bbd99a53ceec3f9e4fff04ef5c69507df8e47cfd38179cc09e0d8c3",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "arrive",
+      "geometry": "impact",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "jackRipper.basic.move.arrive",
+      "loop": false,
+      "presentationProfile": "impact",
+      "requestedRoleOrAbilityRefs": [
+        "basic.move"
+      ],
+      "declaredSourceAbilityId": "basic.move",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-jackRipper-attack_swing",
+      "heroId": "jackRipper",
+      "filename": "vfx/heroes/jackRipper/expansion/attack_swing.png",
+      "sha256": "bf0d202a5f7edc019a1a4c0482691c7ee39cc4060bd5bc9fa49d24e465cf14cb",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "+X",
+      "phase": "swing",
+      "geometry": "swing",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "jackRipper.basic.attack.swing",
+      "loop": false,
+      "presentationProfile": "swing",
+      "requestedRoleOrAbilityRefs": [
+        "basic.attack"
+      ],
+      "declaredSourceAbilityId": "basic.attack",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-jackRipper-attack_impact",
+      "heroId": "jackRipper",
+      "filename": "vfx/heroes/jackRipper/expansion/attack_impact.png",
+      "sha256": "06f1b3414cd05eb7f30da8fa43fe4886fc64da217d1126982a1399a2b4e0f00e",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "hit",
+      "geometry": "impact",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "jackRipper.basic.attack.hit",
+      "loop": false,
+      "presentationProfile": "impact",
+      "requestedRoleOrAbilityRefs": [
+        "basic.attack"
+      ],
+      "declaredSourceAbilityId": "basic.attack",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "EXTEND",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-jackRipper-select_ring",
+      "heroId": "jackRipper",
+      "filename": "vfx/heroes/jackRipper/expansion/select_ring.png",
+      "sha256": "5bce5bbd31bddb67645b4f1297e5ba48001a80a87e69b5ad5c64f482dbdeaa40",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 1,
+      "fps": 0,
+      "durationMs": null,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "select",
+      "geometry": "static",
+      "layer": "ground",
+      "sourceVisibility": "local",
+      "compositeGroup": "jackRipper.basic.select.select",
+      "loop": false,
+      "presentationProfile": "static",
+      "requestedRoleOrAbilityRefs": [
+        "basic.select"
+      ],
+      "declaredSourceAbilityId": "basic.select",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-jackRipper-deploy",
+      "heroId": "jackRipper",
+      "filename": "vfx/heroes/jackRipper/expansion/deploy.png",
+      "sha256": "f3dc1ac2d07502c49c2ad4c42c8f83a95ed6ad680b426504038aaee50549c34c",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 16,
+      "fps": 24,
+      "durationMs": 667,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "deploy",
+      "geometry": "deploy",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "jackRipper.basic.deploy.deploy",
+      "loop": false,
+      "presentationProfile": "deploy",
+      "requestedRoleOrAbilityRefs": [
+        "basic.deploy"
+      ],
+      "declaredSourceAbilityId": "basic.deploy",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-jackRipper-death_final",
+      "heroId": "jackRipper",
+      "filename": "vfx/heroes/jackRipper/expansion/death_final.png",
+      "sha256": "e19e997af5db9cfe2e413770f6cfbe1a976d267b4a622c702dbc4b2244909984",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 24,
+      "fps": 24,
+      "durationMs": 1000,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "final",
+      "geometry": "death",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "jackRipper.basic.death.final",
+      "loop": false,
+      "presentationProfile": "death",
+      "requestedRoleOrAbilityRefs": [
+        "basic.death"
+      ],
+      "declaredSourceAbilityId": "basic.death",
+      "canonicalTriggerHint": "Окончательная смерть; дождаться возрождений, предсмертной атаки/выбора проклятия",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-jackRipper-stealth_enter",
+      "heroId": "jackRipper",
+      "filename": "vfx/heroes/jackRipper/expansion/stealth_enter.png",
+      "sha256": "d032a01a9e12afdd63bc99017df31a2317e722d89390d90d157752bd555b0130",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 16,
+      "fps": 24,
+      "durationMs": 667,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "enter",
+      "geometry": "burst",
+      "layer": "ground",
+      "sourceVisibility": "owner",
+      "compositeGroup": "jackRipper.stealth.enter",
+      "loop": false,
+      "presentationProfile": "burst",
+      "requestedRoleOrAbilityRefs": [
+        "stealth"
+      ],
+      "declaredSourceAbilityId": "stealth",
+      "canonicalTriggerHint": "Вход в скрытность только владельцу, никаких подсказок противнику",
+      "priority": "P2",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-jackRipper-stealth_reveal",
+      "heroId": "jackRipper",
+      "filename": "vfx/heroes/jackRipper/expansion/stealth_reveal.png",
+      "sha256": "f15ae3a20e553d0f2b4ad82a0fdab50a210435e5c50ddeddcffa9ec847956dc1",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 16,
+      "fps": 24,
+      "durationMs": 667,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "reveal",
+      "geometry": "burst",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "jackRipper.stealth.reveal",
+      "loop": false,
+      "presentationProfile": "burst",
+      "requestedRoleOrAbilityRefs": [
+        "stealth"
+      ],
+      "declaredSourceAbilityId": "stealth",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P2",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-jackRipper-snare_bound",
+      "heroId": "jackRipper",
+      "filename": "vfx/heroes/jackRipper/expansion/snare_bound.png",
+      "sha256": "524c401a1e388f9dea88e99ad1016f51b664dff1590ee022aa08ef48773c4854",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 1,
+      "fps": 0,
+      "durationMs": null,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "status",
+      "geometry": "static",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "jackRipper.jackRipperSnares.status",
+      "loop": false,
+      "presentationProfile": "static",
+      "requestedRoleOrAbilityRefs": [
+        "jackRipperSnares"
+      ],
+      "declaredSourceAbilityId": "jackRipperSnares",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P2",
+      "requestState": "EXTEND",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-jackRipper-surgeon_insight",
+      "heroId": "jackRipper",
+      "filename": "vfx/heroes/jackRipper/expansion/surgeon_insight.png",
+      "sha256": "030b9d97de152ccbbca0ec30dbee7906afe216e4c4366acc66aa726d816a55f6",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "insight",
+      "geometry": "impact",
+      "layer": "ui",
+      "sourceVisibility": "owner",
+      "compositeGroup": "jackRipper.jackRipperSurgery.insight",
+      "loop": false,
+      "presentationProfile": "impact",
+      "requestedRoleOrAbilityRefs": [
+        "jackRipperSurgery"
+      ],
+      "declaredSourceAbilityId": "jackRipperSurgery",
+      "canonicalTriggerHint": "Только доступный владельцу интерфейс; не публичная точка на доске",
+      "priority": "P2",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    }
+  ],
+  "notes": [
+    "Original PNG bytes preserved. This manifest does not register VFX or authorize visibility.",
+    "defense/stealth/basic.* are presentation roles; resolve actual rule events when connecting.",
+    "declaredSourceAbilityId is provenance, not proof that the unit has that ability."
+  ]
+}

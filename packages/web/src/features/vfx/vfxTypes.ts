@@ -1,6 +1,8 @@
-import type { Coord, ProjectedGameEvent, PlayerView } from "rules";
+import type { Coord, ProjectedGameEvent, PlayerView, PlayerId } from "rules";
+import type { ExpansionEffectId } from "./expansionCatalog.generated";
 
 export type VfxEffectId =
+  | ExpansionEffectId
   | "artemidaCrescent"
   | "donMadness"
   | "donWindmills"
@@ -146,9 +148,16 @@ export type BoardVfxRequest = {
   /** Local inspection only: production plays all composition layers. */
   composition?: "primary" | "accent";
   durationMs?: number;
+  /** Token travel ends before the deposited wake finishes fading. */
+  travelDurationMs?: number;
+  /** Melee contact offset; artwork recovery may continue after the outcome. */
+  strikeContactMs?: number;
+  strikeHit?: boolean;
   delayMs?: number;
   scaleCells?: number;
   opacity?: number;
+  /** Private local UI attachment, rendered by the Board's existing HP control. */
+  uiAnchor?: "healthBar";
 };
 
 export type QueuedBoardVfxRequest = BoardVfxRequest & {
@@ -161,6 +170,7 @@ export type BoardVfxEventBatch = import("../../game/effects/types").BoardEventBa
 export type VisibleUnitPositions = Record<string, Coord>;
 
 export interface VfxMapperContext {
+  viewerPlayerId?: PlayerId | null;
   view: PlayerView;
   previousPositions: VisibleUnitPositions;
   revision: number;

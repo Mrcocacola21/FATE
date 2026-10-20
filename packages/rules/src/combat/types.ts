@@ -40,6 +40,7 @@ export interface AutoDefenseResolution {
 }
 
 export interface HitResolution {
+  bunkerAbsorbedDamage?: number;
   attackerAfter: UnitState;
   defenderAfter: UnitState;
   units: Record<string, UnitState>;

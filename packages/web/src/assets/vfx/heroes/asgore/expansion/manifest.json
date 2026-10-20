@@ -1,0 +1,447 @@
+{
+  "schemaVersion": 1,
+  "heroId": "asgore",
+  "assetRoot": "packages/web/src/assets/",
+  "status": "imported_assets_not_runtime_bindings",
+  "assets": [
+    {
+      "id": "V-asgore-move_trail",
+      "heroId": "asgore",
+      "filename": "vfx/heroes/asgore/expansion/move_trail.png",
+      "sha256": "241a29a9e95cb7d9014d6c31e4e7c52bf793c8fcd4cadb554cf607663cee13d6",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "+X",
+      "phase": "move",
+      "geometry": "trail",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "asgore.basic.move.move",
+      "loop": false,
+      "presentationProfile": "trail",
+      "requestedRoleOrAbilityRefs": [
+        "basic.move"
+      ],
+      "declaredSourceAbilityId": "basic.move",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-asgore-move_arrive",
+      "heroId": "asgore",
+      "filename": "vfx/heroes/asgore/expansion/move_arrive.png",
+      "sha256": "ab94d2ade697f8ce01eb6715a097c5bcc73c2e4deae0358cdd4c187f4d90ce98",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "arrive",
+      "geometry": "impact",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "asgore.basic.move.arrive",
+      "loop": false,
+      "presentationProfile": "impact",
+      "requestedRoleOrAbilityRefs": [
+        "basic.move"
+      ],
+      "declaredSourceAbilityId": "basic.move",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-asgore-attack_swing",
+      "heroId": "asgore",
+      "filename": "vfx/heroes/asgore/expansion/attack_swing.png",
+      "sha256": "fbe3f9333ea78533d50b924951e1a5d627c0b67c5a8b25f559cb1d5a4e3c2532",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "+X",
+      "phase": "swing",
+      "geometry": "swing",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "asgore.basic.attack.swing",
+      "loop": false,
+      "presentationProfile": "swing",
+      "requestedRoleOrAbilityRefs": [
+        "basic.attack"
+      ],
+      "declaredSourceAbilityId": "basic.attack",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-asgore-attack_impact",
+      "heroId": "asgore",
+      "filename": "vfx/heroes/asgore/expansion/attack_impact.png",
+      "sha256": "2f767f466fdd1fb695858140d25142cec79a5818488cc17ff73a6333f756ea25",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "hit",
+      "geometry": "impact",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "asgore.basic.attack.hit",
+      "loop": false,
+      "presentationProfile": "impact",
+      "requestedRoleOrAbilityRefs": [
+        "basic.attack"
+      ],
+      "declaredSourceAbilityId": "basic.attack",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "EXTEND",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-asgore-select_ring",
+      "heroId": "asgore",
+      "filename": "vfx/heroes/asgore/expansion/select_ring.png",
+      "sha256": "2bb7a6831e036b48e29d0a832600f72fe95859221c6fefcac63c6e9d863f5b55",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 1,
+      "fps": 0,
+      "durationMs": null,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "select",
+      "geometry": "static",
+      "layer": "ground",
+      "sourceVisibility": "local",
+      "compositeGroup": "asgore.basic.select.select",
+      "loop": false,
+      "presentationProfile": "static",
+      "requestedRoleOrAbilityRefs": [
+        "basic.select"
+      ],
+      "declaredSourceAbilityId": "basic.select",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-asgore-deploy",
+      "heroId": "asgore",
+      "filename": "vfx/heroes/asgore/expansion/deploy.png",
+      "sha256": "3c3660b20ab552fe5d3ab6655f557526624fce86b963db14df5387718681ab36",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 16,
+      "fps": 24,
+      "durationMs": 667,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "deploy",
+      "geometry": "deploy",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "asgore.basic.deploy.deploy",
+      "loop": false,
+      "presentationProfile": "deploy",
+      "requestedRoleOrAbilityRefs": [
+        "basic.deploy"
+      ],
+      "declaredSourceAbilityId": "basic.deploy",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-asgore-death_final",
+      "heroId": "asgore",
+      "filename": "vfx/heroes/asgore/expansion/death_final.png",
+      "sha256": "76b23d1beaf2c53fa10b77b72734210e4e21c9079d44990652b31d203370ddf2",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 24,
+      "fps": 24,
+      "durationMs": 1000,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "final",
+      "geometry": "death",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "asgore.basic.death.final",
+      "loop": false,
+      "presentationProfile": "death",
+      "requestedRoleOrAbilityRefs": [
+        "basic.death"
+      ],
+      "declaredSourceAbilityId": "basic.death",
+      "canonicalTriggerHint": "Окончательная смерть; дождаться возрождений, предсмертной атаки/выбора проклятия",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-asgore-parade_hit",
+      "heroId": "asgore",
+      "filename": "vfx/heroes/asgore/expansion/parade_hit.png",
+      "sha256": "930b115953135f0f03628867f4f25d270a386fe7edaa1cd0fcf843dcc6ea0f10",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "hit",
+      "geometry": "impact",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "asgore.asgoreFireParade.hit",
+      "loop": false,
+      "presentationProfile": "impact",
+      "requestedRoleOrAbilityRefs": [
+        "asgoreFireParade"
+      ],
+      "declaredSourceAbilityId": "asgoreFireParade",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P2",
+      "requestState": "EXTEND",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-asgore-soul_patience",
+      "heroId": "asgore",
+      "filename": "vfx/heroes/asgore/expansion/soul_patience.png",
+      "sha256": "da2857aef2ba7bae17c852e4c5bde73d9d3aa0f9dbdfd1c5674ac5dfb38606d8",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 16,
+      "fps": 24,
+      "durationMs": 667,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "reveal_patience",
+      "geometry": "burst",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "asgore.asgoreSoulParade.reveal_patience",
+      "loop": false,
+      "presentationProfile": "burst",
+      "requestedRoleOrAbilityRefs": [
+        "asgoreSoulParade"
+      ],
+      "declaredSourceAbilityId": "asgoreSoulParade",
+      "canonicalTriggerHint": "Различение soulId в asgoreSoulParadeResolved; знак раскрытия на источнике. Реальный урон/лечение/перенос — только после их подтверждения.",
+      "priority": "P1",
+      "requestState": "EXTEND",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-asgore-soul_bravery",
+      "heroId": "asgore",
+      "filename": "vfx/heroes/asgore/expansion/soul_bravery.png",
+      "sha256": "019f5ad65366d04c279f2315ede48b72aedd8de07f6ecbb9c13c3e8f7ddbfa26",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 16,
+      "fps": 24,
+      "durationMs": 667,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "reveal_bravery",
+      "geometry": "burst",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "asgore.asgoreSoulParade.reveal_bravery",
+      "loop": false,
+      "presentationProfile": "burst",
+      "requestedRoleOrAbilityRefs": [
+        "asgoreSoulParade"
+      ],
+      "declaredSourceAbilityId": "asgoreSoulParade",
+      "canonicalTriggerHint": "Различение soulId в asgoreSoulParadeResolved; знак раскрытия на источнике. Реальный урон/лечение/перенос — только после их подтверждения.",
+      "priority": "P1",
+      "requestState": "EXTEND",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-asgore-soul_integrity",
+      "heroId": "asgore",
+      "filename": "vfx/heroes/asgore/expansion/soul_integrity.png",
+      "sha256": "5c37cc95282c2778ca7871a030bef92e20903e6509c7c78669e2b9d9b5f4c920",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 16,
+      "fps": 24,
+      "durationMs": 667,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "reveal_integrity",
+      "geometry": "burst",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "asgore.asgoreSoulParade.reveal_integrity",
+      "loop": false,
+      "presentationProfile": "burst",
+      "requestedRoleOrAbilityRefs": [
+        "asgoreSoulParade"
+      ],
+      "declaredSourceAbilityId": "asgoreSoulParade",
+      "canonicalTriggerHint": "Различение soulId в asgoreSoulParadeResolved; знак раскрытия на источнике. Реальный урон/лечение/перенос — только после их подтверждения.",
+      "priority": "P1",
+      "requestState": "EXTEND",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-asgore-soul_perseverance",
+      "heroId": "asgore",
+      "filename": "vfx/heroes/asgore/expansion/soul_perseverance.png",
+      "sha256": "6b21770018b8a664051ce55315293eded3dc88b8e99a297951f8ade293d78861",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 16,
+      "fps": 24,
+      "durationMs": 667,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "reveal_perseverance",
+      "geometry": "burst",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "asgore.asgoreSoulParade.reveal_perseverance",
+      "loop": false,
+      "presentationProfile": "burst",
+      "requestedRoleOrAbilityRefs": [
+        "asgoreSoulParade"
+      ],
+      "declaredSourceAbilityId": "asgoreSoulParade",
+      "canonicalTriggerHint": "Различение soulId в asgoreSoulParadeResolved; знак раскрытия на источнике. Реальный урон/лечение/перенос — только после их подтверждения.",
+      "priority": "P1",
+      "requestState": "EXTEND",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-asgore-soul_kindness",
+      "heroId": "asgore",
+      "filename": "vfx/heroes/asgore/expansion/soul_kindness.png",
+      "sha256": "ce26db5036b8ce89637035848b29546905943b9f4dccd7be271e1b3939f53b8e",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 16,
+      "fps": 24,
+      "durationMs": 667,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "reveal_kindness",
+      "geometry": "burst",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "asgore.asgoreSoulParade.reveal_kindness",
+      "loop": false,
+      "presentationProfile": "burst",
+      "requestedRoleOrAbilityRefs": [
+        "asgoreSoulParade"
+      ],
+      "declaredSourceAbilityId": "asgoreSoulParade",
+      "canonicalTriggerHint": "Различение soulId в asgoreSoulParadeResolved; знак раскрытия на источнике. Реальный урон/лечение/перенос — только после их подтверждения.",
+      "priority": "P1",
+      "requestState": "EXTEND",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-asgore-soul_justice",
+      "heroId": "asgore",
+      "filename": "vfx/heroes/asgore/expansion/soul_justice.png",
+      "sha256": "fa37d22c97814483583199fd0602fd4d00f3c242264e063bb800acdcbf05c84e",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 16,
+      "fps": 24,
+      "durationMs": 667,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "reveal_justice",
+      "geometry": "burst",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "asgore.asgoreSoulParade.reveal_justice",
+      "loop": false,
+      "presentationProfile": "burst",
+      "requestedRoleOrAbilityRefs": [
+        "asgoreSoulParade"
+      ],
+      "declaredSourceAbilityId": "asgoreSoulParade",
+      "canonicalTriggerHint": "Различение soulId в asgoreSoulParadeResolved; знак раскрытия на источнике. Реальный урон/лечение/перенос — только после их подтверждения.",
+      "priority": "P1",
+      "requestState": "EXTEND",
+      "runtimeIntegration": "pending"
+    }
+  ],
+  "notes": [
+    "Original PNG bytes preserved. This manifest does not register VFX or authorize visibility.",
+    "defense/stealth/basic.* are presentation roles; resolve actual rule events when connecting.",
+    "declaredSourceAbilityId is provenance, not proof that the unit has that ability."
+  ]
+}

@@ -7,7 +7,18 @@ import {
   lineBetweenCellsToCssTransform,
 } from "../../features/vfx/vfxGeometry";
 import type { Translate } from "../../i18n";
-import type { BoardPreviewLine, EffectLabel, QueuedBoardEffect } from "./types";
+import type { BoardPreviewLine, CellEffectTone, EffectLabel, MovementTrailTone, QueuedBoardEffect } from "./types";
+
+// Complete names are required by Tailwind's content scan, including production.
+// Interpolated tone names left the common trail transparent despite a live DOM node.
+const trailClasses: Record<MovementTrailTone, string> = {
+  move: "board-effect-trail-move", teleport: "board-effect-trail-teleport", push: "board-effect-trail-push",
+};
+const cellClasses: Record<CellEffectTone, string> = {
+  attack: "board-effect-cell-attack", heal: "board-effect-cell-heal", move: "board-effect-cell-move",
+  status: "board-effect-cell-status", warning: "board-effect-cell-warning",
+  boneBlue: "board-effect-cell-boneBlue", boneOrange: "board-effect-cell-boneOrange",
+};
 
 interface BoardEffectsLayerProps {
   effects: QueuedBoardEffect[];
@@ -120,7 +131,7 @@ export const BoardEffectsLayer: FC<BoardEffectsLayerProps> = ({
                   key={`${effect.id}-${index}`}
                   className={`absolute rounded-lg ${
                     effect.kind === "cellPulse"
-                      ? `board-effect-cell board-effect-cell-${effect.tone}`
+                      ? `board-effect-cell ${cellClasses[effect.tone]}`
                       : `board-effect-area board-effect-area-${effect.tone}`
                   }`}
                   style={{
@@ -156,7 +167,7 @@ export const BoardEffectsLayer: FC<BoardEffectsLayerProps> = ({
                     boardSize={boardSize}
                     cellSize={cellSize}
                     isFlipped={isFlipped}
-                    className={`board-effect-trail board-effect-trail-${effect.tone ?? "move"}`}
+                    className={`board-effect-trail ${trailClasses[effect.tone ?? "move"]}`}
                     style={style}
                   />
                 ))}
@@ -166,9 +177,7 @@ export const BoardEffectsLayer: FC<BoardEffectsLayerProps> = ({
                   return (
                     <span
                       key={`${effect.id}-dot-${index}`}
-                      className={`absolute rounded-full board-effect-trail-dot board-effect-trail-${
-                        effect.tone ?? "move"
-                      }`}
+                      className={`absolute rounded-full board-effect-trail-dot ${trailClasses[effect.tone ?? "move"]}`}
                       style={{
                         left: center.x - dotSize / 2,
                         top: center.y - dotSize / 2,

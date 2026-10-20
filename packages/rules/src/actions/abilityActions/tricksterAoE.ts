@@ -37,6 +37,7 @@ export function applyTricksterAoEAfterUse(
       events: [
         ...res.events,
         evAoeResolved({
+          ...(contextOverrides.lokiStatusOnHit ? { lokiStatusResult: contextOverrides.lokiStatusOnHit } : {}),
           sourceUnitId: unit.id,
           abilityId,
           casterId: unit.id,

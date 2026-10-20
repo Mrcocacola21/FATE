@@ -47,6 +47,14 @@ function projectEventForRecipient(
   };
 
   switch (event.type) {
+    case "lokiGreatJokeCommitted":
+    case "duolingoBerserkerUnlocked":
+    case "riverStormWard":
+    case "heroSelfCost":
+    case "groznyTyrantRewarded":
+    case "forestMovementStopped":
+    case "unitDeathFinalized":
+      return event[EVENT_VISIBILITY]?.recipients.includes(recipient) ? [event] : [];
     case "unitPlaced":
       if (canKnowMovement(event, state, event.unitId, recipient))
         return [event];
@@ -453,6 +461,8 @@ export function projectEventsForRecipient(
     }
     if (event[EVENT_VISIBILITY]) payload[EVENT_VISIBILITY] = event[EVENT_VISIBILITY];
     return projectEventForRecipient(state, payload, recipient).map((projected) => {
+      if ((projected.type === "papyrusBonePunished" || projected.type === "sansBoneFieldPunished" || projected.type === "lechyStormRollResult") &&
+        !event[EVENT_VISIBILITY]?.targetCellRecipients?.includes(recipient)) delete projected.targetCell;
       if ((projected.type === "abilityUsed" || projected.type === "asgoreSoulParadeResolved") &&
           !event[EVENT_VISIBILITY]?.sourceCellRecipients?.includes(recipient))
         delete projected.sourceCell;

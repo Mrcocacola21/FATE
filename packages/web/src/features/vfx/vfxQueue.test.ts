@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+
 import {
   enqueueBoardVfx,
   getInitialVfxRevision,
@@ -9,6 +10,15 @@ import {
   simplifyVfxForReducedMotion,
 } from "./vfxQueue";
 import type { BoardVfxRequest } from "./vfxTypes";
+
+test("explicit short playback phases expire at their true boundary", () => {
+  const effects = enqueueBoardVfx({ current: [], now: 1000, incoming: [{
+    id: "reduced-portal-half", effectId: "expansion.femto.divine_exit", placement: "cell",
+    sourceCell: { col: 2, row: 2 }, durationMs: 50,
+  }] });
+  assert.equal(effects[0].expiresAt, 1050);
+  assert.deepEqual(pruneExpiredBoardVfx(effects, 1050), []);
+});
 
 const request: BoardVfxRequest = {
   id: "event-1",

@@ -2,6 +2,7 @@ import { adminEn } from "../../admin/locales";
 export const en = {
   activeMatch: { present: "You have an active match", return: "Return to match" },
   diceResult: {
+    waiting: "Waiting for roll",
     yourRoll: "Your roll",
     playerRoll: "{{player}}'s roll",
     tieBreak: "Tiebreaker Roll",
@@ -9,6 +10,7 @@ export const en = {
     total: "Total",
   },
   persistentStatus: {
+    commanderAura: "Allied commander aura: +1 damage",
     odinHuginn: "Huginn: adjacent stealth detection", duolingoBerserker: "Berserker unlocked",
     curse: "Last Attack curse", movementDisabled: "Movement disabled next own turn",
     sansMoveLock: "Badass Joke movement lock", kaladinMoveLock: "Fifth Ideal movement lock",

@@ -46,13 +46,20 @@ for (const ability of ["kaiserDora", "kaiserCarpetStrike", "vladForest", "sansGa
     assert.equal(new Set(cues.map(c => c.atMs)).size, 1);
     assert(p.queue.some(q => q.type === "damageHpTween" && q.damage.targetUnitId === "target-2"));
     const sprites = mapEventBatchToVfx({ ...p.batch, view: f.after, previousPositions: {} });
-    const area = sprites.filter(s => !["combatHit", "combatMiss"].includes(s.effectId));
-    assert.equal(area.length, ability === "sansGasterBlaster" ? 3 : 1);
+    const area = sprites.filter(s => !["combatHit", "combatMiss", "expansion.asgore.parade_hit"].includes(s.effectId));
+    assert.equal(area.length, ability === "sansGasterBlaster" ? 3 : ability.startsWith("kaiser") ? 2 : 1);
+    if (ability === "asgoreFireParade") assert.equal(sprites.filter(s => s.effectId === "expansion.asgore.parade_hit").length, 2);
+    if (ability.startsWith("kaiser")) {
+      const buildup = area.find(s => s.effectId.startsWith("expansion.grand-kaiser."))!;
+      const impact = area.find(s => !s.effectId.startsWith("expansion."))!;
+      assert.equal(buildup.delayMs! + buildup.durationMs!, impact.delayMs);
+      assert.equal(impact.delayMs, cues[0].atMs);
+    }
     const origin = p.batch.eventDelaysMs![f.attacks.length];
     assert.equal(cues[0].atMs - origin, ability === "sansGasterBlaster" ? GASTER_TIMING.outcomesMs
       : ability === "asgoreFireParade" ? 300 : 0);
     for (const flip of [false, true]) {
-      const hit = sprites.find(s => s.effectId === "combatHit")!;
+      const hit = sprites.find(s => s.effectId === "combatHit" || s.effectId === "expansion.asgore.parade_hit")!;
       assert.deepEqual(hit.sourceCell, { col: 2, row: 3 });
       assert.deepEqual(cellToBoardPoint(hit.sourceCell!, 9, 40, flip), flip ? { x: 260, y: 140 } : { x: 100, y: 220 });
     }
@@ -71,7 +78,9 @@ test("direct aggregate damage has one synchronized transition/float per target; 
   const empty = fixture([], "kaiserDora"), e = plan(empty);
   assert.equal(e.batch.combatCues!.length, 0);
   assert.equal(e.queue.filter(q => q.type === "damageHpTween").length, 0);
-  assert.equal(mapEventBatchToVfx({ ...e.batch, view: empty.after, previousPositions: {} }).length, 1);
+  const emptyArt = mapEventBatchToVfx({ ...e.batch, view: empty.after, previousPositions: {} });
+  assert.equal(emptyArt.length, 2);
+  assert.deepEqual(emptyArt.map(r => r.effectId), ["expansion.grand-kaiser.dora_launch", "doraImpact"]);
 });
 
 test("confirmed Berserker auto-defense shares the impact and frozen anchor; Roll and zero damage never invent shields", () => {

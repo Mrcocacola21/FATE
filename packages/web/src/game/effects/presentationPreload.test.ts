@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import type { PlayerView } from "rules";
 import { AssetLoadQueue } from "../../assets/assetLoadQueue";
-import { authorizedRoster, rosterVfx } from "./presentationPreload";
+import { authorizedRoster, rosterVfx, rosterPortraitUrls } from "./presentationPreload";
+import { getUnitTokenAsset } from "../../assets/unitVisuals";
 import { rosterSoundKeys, soundPreloadPriority } from "../../features/sfx/audioPreload";
 
 test("load budget prioritizes waiting core jobs, handles failure, and caps the queue", async () => {
@@ -64,4 +65,25 @@ test("roster warmup uses projected assigned identities and ignores secret target
     units: { secret: { heroId: "riverPerson" } },
   } as unknown as PlayerView;
   assert.deepEqual(authorizedRoster(privateChanges), authorizedRoster(view));
+});
+
+test("placement warmup retains deployment art instead of evicting it with the battle roster", () => {
+  const roster = ["genghisKhan", "grand-kaiser", "chikatilo"] as const;
+  const placement = rosterVfx(roster, true);
+  for (const hero of roster) assert(placement.includes(`expansion.${hero}.deploy`));
+  assert(placement.includes("falseTrailSetup"));
+  assert(!placement.includes("doraImpact"));
+  assert(!placement.includes("expansion.genghisKhan.move_trail"));
+  assert(!placement.includes("expansion.zoro.deploy"));
+  assert(rosterVfx(roster).includes("doraImpact"), "battle warms the full authorized roster");
+  assert.deepEqual(rosterVfx([], true), [], "leaving the roster retains no hero deploy art");
+});
+
+test("portrait warmup includes unplaced authorized figures, follows forms, and ignores secret metadata", () => {
+  const unit = { id: "a", heroId: "griffith", class: "spearman", position: null } as const;
+  const view = { rosterUnits: { a: unit }, units: {}, pendingDecision: { secretHero: "sans" } } as unknown as PlayerView;
+  assert.deepEqual(rosterPortraitUrls(view), [getUnitTokenAsset(unit).src]);
+  const form = { ...unit, heroId: "femto" };
+  assert.deepEqual(rosterPortraitUrls({ ...view, units: { a: form } } as unknown as PlayerView), [getUnitTokenAsset(form).src]);
+  assert.deepEqual(rosterPortraitUrls({ rosterUnits: {}, units: {} } as unknown as PlayerView), []);
 });

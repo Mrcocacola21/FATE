@@ -1,0 +1,292 @@
+{
+  "schemaVersion": 1,
+  "heroId": "odin",
+  "assetRoot": "packages/web/src/assets/",
+  "status": "imported_assets_not_runtime_bindings",
+  "assets": [
+    {
+      "id": "V-odin-move_trail",
+      "heroId": "odin",
+      "filename": "vfx/heroes/odin/expansion/move_trail.png",
+      "sha256": "2f1dcefe7496fbad0f1a79060870c873b2639b4a19fab484ae44b9a8393fd138",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "+X",
+      "phase": "trail",
+      "geometry": "trail",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "odin.basic.move.trail",
+      "loop": false,
+      "presentationProfile": "trail",
+      "requestedRoleOrAbilityRefs": [
+        "basic.move"
+      ],
+      "declaredSourceAbilityId": "basic.move",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-odin-move_arrive",
+      "heroId": "odin",
+      "filename": "vfx/heroes/odin/expansion/move_arrive.png",
+      "sha256": "3808248d22b3f85ef63633d8fb6813a065ab03277eb9169600da858bd1a58431",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "arrive",
+      "geometry": "impact",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "odin.basic.move.arrive",
+      "loop": false,
+      "presentationProfile": "impact",
+      "requestedRoleOrAbilityRefs": [
+        "basic.move"
+      ],
+      "declaredSourceAbilityId": "basic.move",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-odin-attack_swing",
+      "heroId": "odin",
+      "filename": "vfx/heroes/odin/expansion/attack_swing.png",
+      "sha256": "d0dcbf135b1fceff0aa1c04a09ecba1bc4c4d2aa26a81bd476e8a309f02fc82c",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "+X",
+      "phase": "swing",
+      "geometry": "swing",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "odin.basic.attack.swing",
+      "loop": false,
+      "presentationProfile": "swing",
+      "requestedRoleOrAbilityRefs": [
+        "basic.attack"
+      ],
+      "declaredSourceAbilityId": "basic.attack",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-odin-attack_impact",
+      "heroId": "odin",
+      "filename": "vfx/heroes/odin/expansion/attack_impact.png",
+      "sha256": "3775864f792f2aba4b90cd3b308f590129e021d03e0192ef11859479ce053b92",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "hit",
+      "geometry": "impact",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "odin.basic.attack.hit",
+      "loop": false,
+      "presentationProfile": "impact",
+      "requestedRoleOrAbilityRefs": [
+        "basic.attack"
+      ],
+      "declaredSourceAbilityId": "basic.attack",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "EXTEND",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-odin-select_ring",
+      "heroId": "odin",
+      "filename": "vfx/heroes/odin/expansion/select_ring.png",
+      "sha256": "daf1b3fde15cc2e6c2ff76aadf9553c2626fe6c629ec937cf5a0db6b63a73a63",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 1,
+      "fps": 0,
+      "durationMs": null,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "select",
+      "geometry": "static",
+      "layer": "ground",
+      "sourceVisibility": "local",
+      "compositeGroup": "odin.basic.select.select",
+      "loop": false,
+      "presentationProfile": "static",
+      "requestedRoleOrAbilityRefs": [
+        "basic.select"
+      ],
+      "declaredSourceAbilityId": "basic.select",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-odin-deploy",
+      "heroId": "odin",
+      "filename": "vfx/heroes/odin/expansion/deploy.png",
+      "sha256": "e7b7d817ffc6821010c1cf2b82dd513db2f51cde658491ab0710148eef45cf77",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 16,
+      "fps": 24,
+      "durationMs": 667,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "deploy",
+      "geometry": "deploy",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "odin.basic.deploy.deploy",
+      "loop": false,
+      "presentationProfile": "deploy",
+      "requestedRoleOrAbilityRefs": [
+        "basic.deploy"
+      ],
+      "declaredSourceAbilityId": "basic.deploy",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-odin-death_final",
+      "heroId": "odin",
+      "filename": "vfx/heroes/odin/expansion/death_final.png",
+      "sha256": "46d0bf28f661d7dd88d7828715d3f9d6ade9206e5f4d5c04cdbebcbd71d7cba3",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 24,
+      "fps": 24,
+      "durationMs": 1000,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "final",
+      "geometry": "death",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "odin.basic.death.final",
+      "loop": false,
+      "presentationProfile": "death",
+      "requestedRoleOrAbilityRefs": [
+        "basic.death"
+      ],
+      "declaredSourceAbilityId": "basic.death",
+      "canonicalTriggerHint": "Окончательная смерть; дождаться возрождений, предсмертной атаки/выбора проклятия",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-odin-sleipnir_exit",
+      "heroId": "odin",
+      "filename": "vfx/heroes/odin/expansion/sleipnir_exit.png",
+      "sha256": "0d9e424fdf879999697fd066de44e31b43a86b9df5146109bf97a24c2d81b44b",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 16,
+      "fps": 24,
+      "durationMs": 667,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "exit",
+      "geometry": "portal",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "odin.odinSleipnir.exit",
+      "loop": false,
+      "presentationProfile": "portal",
+      "requestedRoleOrAbilityRefs": [
+        "odinSleipnir"
+      ],
+      "declaredSourceAbilityId": "odinSleipnir",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P2",
+      "requestState": "EXTEND",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-odin-sleipnir_arrive",
+      "heroId": "odin",
+      "filename": "vfx/heroes/odin/expansion/sleipnir_arrive.png",
+      "sha256": "e3ef0271e4a23341a77ab594a8da78cd832c149eca6a2ced70566a7166dac8ce",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 16,
+      "fps": 24,
+      "durationMs": 667,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "arrive",
+      "geometry": "portal",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "odin.odinSleipnir.arrive",
+      "loop": false,
+      "presentationProfile": "portal",
+      "requestedRoleOrAbilityRefs": [
+        "odinSleipnir"
+      ],
+      "declaredSourceAbilityId": "odinSleipnir",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P2",
+      "requestState": "EXTEND",
+      "runtimeIntegration": "pending"
+    }
+  ],
+  "notes": [
+    "Original PNG bytes preserved. This manifest does not register VFX or authorize visibility.",
+    "defense/stealth/basic.* are presentation roles; resolve actual rule events when connecting.",
+    "declaredSourceAbilityId is provenance, not proof that the unit has that ability."
+  ]
+}

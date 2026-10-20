@@ -40,6 +40,7 @@ export function expireBlindAfterUnitTurn(
         ...unit,
         blindUntilOwnTurnStart: false,
         blindExpiresAfterOwnTurn: undefined,
+        blindSourceId: undefined,
       },
     },
   };

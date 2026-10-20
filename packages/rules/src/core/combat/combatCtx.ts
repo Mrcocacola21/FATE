@@ -3,7 +3,7 @@ import type { AttackRollContext } from "../../actions/types";
 export function makeAttackContext(params: import("../../model").AbilityUseContext & {
   attackerId: string;
   isBasicAttack?: boolean;
-  attackSignature?: "friskPrecisionStrike";
+  attackSignature?: "friskPrecisionStrike" | "gutsBerserkSingle";
   defenderId: string;
   allowFriendlyTarget?: boolean;
   ignoreRange?: boolean;

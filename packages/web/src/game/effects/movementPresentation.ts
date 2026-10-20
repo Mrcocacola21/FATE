@@ -59,6 +59,15 @@ export function movementSegmentDuration(segmentCount: number, reducedMotion: boo
   return reducedMotion ? 50 : Math.min(160, 720 / Math.max(1, segmentCount));
 }
 
+/** Visual speed follows confirmed distance, without manufacturing intermediate path cells. */
+export function walkingDistance(from: Coord, to: Coord): number {
+  return Math.max(1, Math.abs(to.col - from.col), Math.abs(to.row - from.row));
+}
+
+export function walkingSegmentDuration(from: Coord, to: Coord, totalDistance: number, reducedMotion: boolean): number {
+  return reducedMotion ? 50 : walkingDistance(from, to) * movementSegmentDuration(totalDistance, false);
+}
+
 export function movementCueFromEvent(params: {
   event: PresentationEvent;
   events: PresentationEvent[];

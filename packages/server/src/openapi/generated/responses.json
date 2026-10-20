@@ -2646,6 +2646,27 @@
               },
               {
                 "$ref": "#/definitions/CreatedGameViewsP1EventsItem94"
+              },
+              {
+                "$ref": "#/definitions/CreatedGameViewsP1EventsItem95"
+              },
+              {
+                "$ref": "#/definitions/CreatedGameViewsP1EventsItem96"
+              },
+              {
+                "$ref": "#/definitions/CreatedGameViewsP1EventsItem97"
+              },
+              {
+                "$ref": "#/definitions/CreatedGameViewsP1EventsItem98"
+              },
+              {
+                "$ref": "#/definitions/CreatedGameViewsP1EventsItem99"
+              },
+              {
+                "$ref": "#/definitions/CreatedGameViewsP1EventsItem100"
+              },
+              {
+                "$ref": "#/definitions/CreatedGameViewsP1EventsItem101"
               }
             ]
           }
@@ -3002,6 +3023,110 @@
         "cell",
         "owner",
         "sourceUnitId",
+        "type"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem100": {
+      "type": "object",
+      "properties": {
+        "abilityId": {
+          "type": "string"
+        },
+        "abilityUseId": {
+          "type": "string"
+        },
+        "affectedUnitIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "center": {
+          "$ref": "#/definitions/Coord"
+        },
+        "chainId": {
+          "type": "string"
+        },
+        "deferVisuals": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "dice": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "isChainComplete": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "rollId": {
+          "type": "string"
+        },
+        "sum": {
+          "type": "number"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "carpetStrikeAttackRolled"
+          ]
+        },
+        "unitId": {
+          "type": "string"
+        },
+        "visualBatchId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "affectedUnitIds",
+        "center",
+        "dice",
+        "sum",
+        "type"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem101": {
+      "type": "object",
+      "properties": {
+        "chainId": {
+          "type": "string"
+        },
+        "deferVisuals": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "isChainComplete": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "eventRedacted"
+          ]
+        },
+        "visualBatchId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
         "type"
       ]
     },
@@ -5475,6 +5600,366 @@
         "chainId": {
           "type": "string"
         },
+        "deferVisuals": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "isChainComplete": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "radius": {
+          "type": "number"
+        },
+        "sourceCell": {
+          "$ref": "#/definitions/Coord"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "lokiGreatJokeCommitted"
+          ]
+        },
+        "unitId": {
+          "type": "string"
+        },
+        "visualBatchId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "radius",
+        "type",
+        "unitId"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem51": {
+      "type": "object",
+      "properties": {
+        "abilityId": {
+          "type": "string"
+        },
+        "abilityUseId": {
+          "type": "string"
+        },
+        "chainId": {
+          "type": "string"
+        },
+        "deferVisuals": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "isChainComplete": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "sourceCell": {
+          "$ref": "#/definitions/Coord"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "duolingoBerserkerUnlocked"
+          ]
+        },
+        "unitId": {
+          "type": "string"
+        },
+        "visualBatchId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "unitId"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem52": {
+      "type": "object",
+      "properties": {
+        "abilityId": {
+          "type": "string"
+        },
+        "abilityUseId": {
+          "type": "string"
+        },
+        "chainId": {
+          "type": "string"
+        },
+        "deferVisuals": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "isChainComplete": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "sourceCell": {
+          "$ref": "#/definitions/Coord"
+        },
+        "turnNumber": {
+          "type": "number"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "riverStormWard"
+          ]
+        },
+        "unitId": {
+          "type": "string"
+        },
+        "visualBatchId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "turnNumber",
+        "type",
+        "unitId"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem53": {
+      "type": "object",
+      "properties": {
+        "abilityId": {
+          "type": "string"
+        },
+        "abilityUseId": {
+          "type": "string"
+        },
+        "chainId": {
+          "type": "string"
+        },
+        "damage": {
+          "type": "number"
+        },
+        "deferVisuals": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "hpAfter": {
+          "type": "number"
+        },
+        "isChainComplete": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "sourceAbilityId": {
+          "type": "string",
+          "enum": [
+            "gutsBerserkMode",
+            "undyneUndying"
+          ]
+        },
+        "sourceCell": {
+          "$ref": "#/definitions/Coord"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "heroSelfCost"
+          ]
+        },
+        "unitId": {
+          "type": "string"
+        },
+        "visualBatchId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "damage",
+        "hpAfter",
+        "sourceAbilityId",
+        "type",
+        "unitId"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem54": {
+      "type": "object",
+      "properties": {
+        "abilityId": {
+          "type": "string"
+        },
+        "abilityUseId": {
+          "type": "string"
+        },
+        "chainId": {
+          "type": "string"
+        },
+        "deferVisuals": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "isChainComplete": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "sourceCell": {
+          "$ref": "#/definitions/Coord"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "groznyTyrantRewarded"
+          ]
+        },
+        "unitId": {
+          "type": "string"
+        },
+        "visualBatchId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "unitId"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem55": {
+      "type": "object",
+      "properties": {
+        "abilityId": {
+          "type": "string"
+        },
+        "abilityUseId": {
+          "type": "string"
+        },
+        "chainId": {
+          "type": "string"
+        },
+        "deferVisuals": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "isChainComplete": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "sourceCell": {
+          "$ref": "#/definitions/Coord"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "forestMovementStopped"
+          ]
+        },
+        "unitId": {
+          "type": "string"
+        },
+        "visualBatchId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "unitId"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem56": {
+      "type": "object",
+      "properties": {
+        "abilityId": {
+          "type": "string"
+        },
+        "abilityUseId": {
+          "type": "string"
+        },
+        "chainId": {
+          "type": "string"
+        },
+        "deferVisuals": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "isChainComplete": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "sourceCell": {
+          "$ref": "#/definitions/Coord"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "unitDeathFinalized"
+          ]
+        },
+        "unitId": {
+          "type": "string"
+        },
+        "visualBatchId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "unitId"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem57": {
+      "type": "object",
+      "properties": {
+        "abilityId": {
+          "type": "string"
+        },
+        "abilityUseId": {
+          "type": "string"
+        },
+        "chainId": {
+          "type": "string"
+        },
         "chikatiloId": {
           "type": "string"
         },
@@ -5534,7 +6019,7 @@
         "type"
       ]
     },
-    "CreatedGameViewsP1EventsItem51": {
+    "CreatedGameViewsP1EventsItem58": {
       "type": "object",
       "properties": {
         "abilityId": {
@@ -5598,7 +6083,7 @@
         "unitId"
       ]
     },
-    "CreatedGameViewsP1EventsItem52": {
+    "CreatedGameViewsP1EventsItem59": {
       "type": "object",
       "properties": {
         "abilityId": {
@@ -5645,392 +6130,6 @@
         "fallenAllyId",
         "papyrusId",
         "type"
-      ]
-    },
-    "CreatedGameViewsP1EventsItem53": {
-      "type": "object",
-      "properties": {
-        "abilityId": {
-          "type": "string"
-        },
-        "abilityUseId": {
-          "type": "string"
-        },
-        "boneType": {
-          "type": "string",
-          "enum": [
-            "blue",
-            "orange"
-          ]
-        },
-        "chainId": {
-          "type": "string"
-        },
-        "deferVisuals": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "expiresOnSourceOwnTurn": {
-          "type": "number"
-        },
-        "isChainComplete": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "papyrusId": {
-          "type": "string"
-        },
-        "targetId": {
-          "type": "string"
-        },
-        "type": {
-          "type": "string",
-          "enum": [
-            "papyrusBoneApplied"
-          ]
-        },
-        "visualBatchId": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "boneType",
-        "expiresOnSourceOwnTurn",
-        "papyrusId",
-        "targetId",
-        "type"
-      ]
-    },
-    "CreatedGameViewsP1EventsItem54": {
-      "type": "object",
-      "properties": {
-        "abilityId": {
-          "type": "string"
-        },
-        "abilityUseId": {
-          "type": "string"
-        },
-        "boneType": {
-          "type": "string",
-          "enum": [
-            "blue",
-            "orange"
-          ]
-        },
-        "chainId": {
-          "type": "string"
-        },
-        "damage": {
-          "type": "number"
-        },
-        "deferVisuals": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "hpAfter": {
-          "type": "number"
-        },
-        "isChainComplete": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "papyrusId": {
-          "type": "string"
-        },
-        "reason": {
-          "type": "string",
-          "enum": [
-            "moveSpent",
-            "nonMoveFirst"
-          ]
-        },
-        "targetId": {
-          "type": "string"
-        },
-        "type": {
-          "type": "string",
-          "enum": [
-            "papyrusBonePunished"
-          ]
-        },
-        "visualBatchId": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "boneType",
-        "damage",
-        "hpAfter",
-        "papyrusId",
-        "reason",
-        "targetId",
-        "type"
-      ]
-    },
-    "CreatedGameViewsP1EventsItem55": {
-      "type": "object",
-      "properties": {
-        "abilityId": {
-          "type": "string"
-        },
-        "abilityUseId": {
-          "type": "string"
-        },
-        "chainId": {
-          "type": "string"
-        },
-        "deferVisuals": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "fallenAllyId": {
-          "type": "string"
-        },
-        "isChainComplete": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "sansId": {
-          "type": "string"
-        },
-        "type": {
-          "type": "string",
-          "enum": [
-            "sansUnbelieverActivated"
-          ]
-        },
-        "visualBatchId": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "fallenAllyId",
-        "sansId",
-        "type"
-      ]
-    },
-    "CreatedGameViewsP1EventsItem56": {
-      "type": "object",
-      "properties": {
-        "abilityId": {
-          "type": "string"
-        },
-        "abilityUseId": {
-          "type": "string"
-        },
-        "chainId": {
-          "type": "string"
-        },
-        "deferVisuals": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "isChainComplete": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "sansId": {
-          "type": "string"
-        },
-        "targetId": {
-          "type": "string"
-        },
-        "type": {
-          "type": "string",
-          "enum": [
-            "sansBadassJokeApplied"
-          ]
-        },
-        "visualBatchId": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "sansId",
-        "targetId",
-        "type"
-      ]
-    },
-    "CreatedGameViewsP1EventsItem57": {
-      "type": "object",
-      "properties": {
-        "abilityId": {
-          "type": "string"
-        },
-        "abilityUseId": {
-          "type": "string"
-        },
-        "chainId": {
-          "type": "string"
-        },
-        "deferVisuals": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "isChainComplete": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "sourceSansId": {
-          "type": "string"
-        },
-        "type": {
-          "type": "string",
-          "enum": [
-            "sansMoveDenied"
-          ]
-        },
-        "unitId": {
-          "type": "string"
-        },
-        "visualBatchId": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "type",
-        "unitId"
-      ]
-    },
-    "CreatedGameViewsP1EventsItem58": {
-      "type": "object",
-      "properties": {
-        "abilityId": {
-          "type": "string"
-        },
-        "abilityUseId": {
-          "type": "string"
-        },
-        "chainId": {
-          "type": "string"
-        },
-        "deferVisuals": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "duration": {
-          "type": "number"
-        },
-        "isChainComplete": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "sansId": {
-          "type": "string"
-        },
-        "type": {
-          "type": "string",
-          "enum": [
-            "sansBoneFieldActivated"
-          ]
-        },
-        "visualBatchId": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "duration",
-        "sansId",
-        "type"
-      ]
-    },
-    "CreatedGameViewsP1EventsItem59": {
-      "type": "object",
-      "properties": {
-        "abilityId": {
-          "type": "string"
-        },
-        "abilityUseId": {
-          "type": "string"
-        },
-        "boneType": {
-          "type": "string",
-          "enum": [
-            "blue",
-            "orange"
-          ]
-        },
-        "chainId": {
-          "type": "string"
-        },
-        "deferVisuals": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "isChainComplete": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "turnNumber": {
-          "type": "number"
-        },
-        "type": {
-          "type": "string",
-          "enum": [
-            "sansBoneFieldApplied"
-          ]
-        },
-        "unitId": {
-          "type": "string"
-        },
-        "visualBatchId": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "boneType",
-        "turnNumber",
-        "type",
-        "unitId"
       ]
     },
     "CreatedGameViewsP1EventsItem6": {
@@ -6107,6 +6206,395 @@
         "chainId": {
           "type": "string"
         },
+        "deferVisuals": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "expiresOnSourceOwnTurn": {
+          "type": "number"
+        },
+        "isChainComplete": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "papyrusId": {
+          "type": "string"
+        },
+        "targetId": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "papyrusBoneApplied"
+          ]
+        },
+        "visualBatchId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "boneType",
+        "expiresOnSourceOwnTurn",
+        "papyrusId",
+        "targetId",
+        "type"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem61": {
+      "type": "object",
+      "properties": {
+        "abilityId": {
+          "type": "string"
+        },
+        "abilityUseId": {
+          "type": "string"
+        },
+        "boneType": {
+          "type": "string",
+          "enum": [
+            "blue",
+            "orange"
+          ]
+        },
+        "chainId": {
+          "type": "string"
+        },
+        "damage": {
+          "type": "number"
+        },
+        "deferVisuals": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "hpAfter": {
+          "type": "number"
+        },
+        "isChainComplete": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "papyrusId": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string",
+          "enum": [
+            "moveSpent",
+            "nonMoveFirst"
+          ]
+        },
+        "targetCell": {
+          "$ref": "#/definitions/Coord"
+        },
+        "targetId": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "papyrusBonePunished"
+          ]
+        },
+        "visualBatchId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "boneType",
+        "damage",
+        "hpAfter",
+        "papyrusId",
+        "reason",
+        "targetId",
+        "type"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem62": {
+      "type": "object",
+      "properties": {
+        "abilityId": {
+          "type": "string"
+        },
+        "abilityUseId": {
+          "type": "string"
+        },
+        "chainId": {
+          "type": "string"
+        },
+        "deferVisuals": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "fallenAllyId": {
+          "type": "string"
+        },
+        "isChainComplete": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "sansId": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "sansUnbelieverActivated"
+          ]
+        },
+        "visualBatchId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "fallenAllyId",
+        "sansId",
+        "type"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem63": {
+      "type": "object",
+      "properties": {
+        "abilityId": {
+          "type": "string"
+        },
+        "abilityUseId": {
+          "type": "string"
+        },
+        "chainId": {
+          "type": "string"
+        },
+        "deferVisuals": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "isChainComplete": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "sansId": {
+          "type": "string"
+        },
+        "targetId": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "sansBadassJokeApplied"
+          ]
+        },
+        "visualBatchId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "sansId",
+        "targetId",
+        "type"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem64": {
+      "type": "object",
+      "properties": {
+        "abilityId": {
+          "type": "string"
+        },
+        "abilityUseId": {
+          "type": "string"
+        },
+        "chainId": {
+          "type": "string"
+        },
+        "deferVisuals": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "isChainComplete": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "sourceSansId": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "sansMoveDenied"
+          ]
+        },
+        "unitId": {
+          "type": "string"
+        },
+        "visualBatchId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "unitId"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem65": {
+      "type": "object",
+      "properties": {
+        "abilityId": {
+          "type": "string"
+        },
+        "abilityUseId": {
+          "type": "string"
+        },
+        "chainId": {
+          "type": "string"
+        },
+        "deferVisuals": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "duration": {
+          "type": "number"
+        },
+        "isChainComplete": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "sansId": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "sansBoneFieldActivated"
+          ]
+        },
+        "visualBatchId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "duration",
+        "sansId",
+        "type"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem66": {
+      "type": "object",
+      "properties": {
+        "abilityId": {
+          "type": "string"
+        },
+        "abilityUseId": {
+          "type": "string"
+        },
+        "boneType": {
+          "type": "string",
+          "enum": [
+            "blue",
+            "orange"
+          ]
+        },
+        "chainId": {
+          "type": "string"
+        },
+        "deferVisuals": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "isChainComplete": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "turnNumber": {
+          "type": "number"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "sansBoneFieldApplied"
+          ]
+        },
+        "unitId": {
+          "type": "string"
+        },
+        "visualBatchId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "boneType",
+        "turnNumber",
+        "type",
+        "unitId"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem67": {
+      "type": "object",
+      "properties": {
+        "abilityId": {
+          "type": "string"
+        },
+        "abilityUseId": {
+          "type": "string"
+        },
+        "boneType": {
+          "type": "string",
+          "enum": [
+            "blue",
+            "orange"
+          ]
+        },
+        "chainId": {
+          "type": "string"
+        },
         "damage": {
           "type": "number"
         },
@@ -6134,6 +6622,9 @@
             "nonMoveFirst"
           ]
         },
+        "targetCell": {
+          "$ref": "#/definitions/Coord"
+        },
         "targetId": {
           "type": "string"
         },
@@ -6157,7 +6648,7 @@
         "type"
       ]
     },
-    "CreatedGameViewsP1EventsItem61": {
+    "CreatedGameViewsP1EventsItem68": {
       "type": "object",
       "properties": {
         "abilityId": {
@@ -6209,7 +6700,7 @@
         "type"
       ]
     },
-    "CreatedGameViewsP1EventsItem62": {
+    "CreatedGameViewsP1EventsItem69": {
       "type": "object",
       "properties": {
         "abilityId": {
@@ -6262,393 +6753,6 @@
         "damage",
         "hpAfter",
         "targetId",
-        "type"
-      ]
-    },
-    "CreatedGameViewsP1EventsItem63": {
-      "type": "object",
-      "properties": {
-        "abilityId": {
-          "type": "string"
-        },
-        "abilityUseId": {
-          "type": "string"
-        },
-        "chainId": {
-          "type": "string"
-        },
-        "deferVisuals": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "isChainComplete": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "reason": {
-          "type": "string",
-          "enum": [
-            "hpOne",
-            "targetDead"
-          ]
-        },
-        "targetCell": {
-          "$ref": "#/definitions/Coord"
-        },
-        "targetId": {
-          "type": "string"
-        },
-        "type": {
-          "type": "string",
-          "enum": [
-            "sansLastAttackRemoved"
-          ]
-        },
-        "visualBatchId": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "reason",
-        "targetId",
-        "type"
-      ]
-    },
-    "CreatedGameViewsP1EventsItem64": {
-      "type": "object",
-      "properties": {
-        "abilityId": {
-          "type": "string"
-        },
-        "abilityUseId": {
-          "type": "string"
-        },
-        "chainId": {
-          "type": "string"
-        },
-        "deferVisuals": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "friskId": {
-          "type": "string"
-        },
-        "isChainComplete": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "targetId": {
-          "type": "string"
-        },
-        "type": {
-          "type": "string",
-          "enum": [
-            "friskHugsApplied"
-          ]
-        },
-        "visualBatchId": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "friskId",
-        "targetId",
-        "type"
-      ]
-    },
-    "CreatedGameViewsP1EventsItem65": {
-      "type": "object",
-      "properties": {
-        "abilityId": {
-          "type": "string"
-        },
-        "abilityUseId": {
-          "type": "string"
-        },
-        "chainId": {
-          "type": "string"
-        },
-        "deferVisuals": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "isChainComplete": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "lokiId": {
-          "type": "string"
-        },
-        "targetId": {
-          "type": "string"
-        },
-        "type": {
-          "type": "string",
-          "enum": [
-            "lokiChickenApplied"
-          ]
-        },
-        "visualBatchId": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "abilityId",
-        "lokiId",
-        "targetId",
-        "type"
-      ]
-    },
-    "CreatedGameViewsP1EventsItem66": {
-      "type": "object",
-      "properties": {
-        "abilityId": {
-          "type": "string"
-        },
-        "abilityUseId": {
-          "type": "string"
-        },
-        "chainId": {
-          "type": "string"
-        },
-        "deferVisuals": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "isChainComplete": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "lokiId": {
-          "type": "string"
-        },
-        "targetIds": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "type": {
-          "type": "string",
-          "enum": [
-            "lokiChickenGroupApplied"
-          ]
-        },
-        "visualBatchId": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "abilityId",
-        "targetIds",
-        "type"
-      ]
-    },
-    "CreatedGameViewsP1EventsItem67": {
-      "type": "object",
-      "properties": {
-        "abilityId": {
-          "type": "string"
-        },
-        "abilityUseId": {
-          "type": "string"
-        },
-        "chainId": {
-          "type": "string"
-        },
-        "controlledUnitId": {
-          "type": "string"
-        },
-        "controllerUnitId": {
-          "type": "string"
-        },
-        "deferVisuals": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "isChainComplete": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "targetId": {
-          "type": "string"
-        },
-        "type": {
-          "type": "string",
-          "enum": [
-            "controlledAttackDeclared"
-          ]
-        },
-        "visualBatchId": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "abilityId",
-        "controlledUnitId",
-        "controllerUnitId",
-        "targetId",
-        "type"
-      ]
-    },
-    "CreatedGameViewsP1EventsItem68": {
-      "type": "object",
-      "properties": {
-        "abilityId": {
-          "type": "string"
-        },
-        "abilityUseId": {
-          "type": "string"
-        },
-        "chainId": {
-          "type": "string"
-        },
-        "deferVisuals": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "fromFormId": {
-          "type": "string"
-        },
-        "fromHeroId": {
-          "type": "string"
-        },
-        "isChainComplete": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "rating": {
-          "type": "number"
-        },
-        "ratingSpent": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "reason": {
-          "type": "string",
-          "enum": [
-            "griffithFemtoRebirth",
-            "mettatonThreshold"
-          ]
-        },
-        "toFormId": {
-          "type": "string"
-        },
-        "toHeroId": {
-          "type": "string"
-        },
-        "type": {
-          "type": "string",
-          "enum": [
-            "unitTransformed"
-          ]
-        },
-        "unitId": {
-          "type": "string"
-        },
-        "visualBatchId": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "fromHeroId",
-        "reason",
-        "toHeroId",
-        "type",
-        "unitId"
-      ]
-    },
-    "CreatedGameViewsP1EventsItem69": {
-      "type": "object",
-      "properties": {
-        "abilityId": {
-          "type": "string"
-        },
-        "abilityUseId": {
-          "type": "string"
-        },
-        "chainId": {
-          "type": "string"
-        },
-        "deferVisuals": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "extraMoves": {
-          "type": "number"
-        },
-        "isChainComplete": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "riverId": {
-          "type": "string"
-        },
-        "type": {
-          "type": "string",
-          "enum": [
-            "riverBoatmanGranted"
-          ]
-        },
-        "visualBatchId": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "extraMoves",
-        "riverId",
         "type"
       ]
     },
@@ -6737,6 +6841,393 @@
             true
           ]
         },
+        "reason": {
+          "type": "string",
+          "enum": [
+            "hpOne",
+            "targetDead"
+          ]
+        },
+        "targetCell": {
+          "$ref": "#/definitions/Coord"
+        },
+        "targetId": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "sansLastAttackRemoved"
+          ]
+        },
+        "visualBatchId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "reason",
+        "targetId",
+        "type"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem71": {
+      "type": "object",
+      "properties": {
+        "abilityId": {
+          "type": "string"
+        },
+        "abilityUseId": {
+          "type": "string"
+        },
+        "chainId": {
+          "type": "string"
+        },
+        "deferVisuals": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "friskId": {
+          "type": "string"
+        },
+        "isChainComplete": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "targetId": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "friskHugsApplied"
+          ]
+        },
+        "visualBatchId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "friskId",
+        "targetId",
+        "type"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem72": {
+      "type": "object",
+      "properties": {
+        "abilityId": {
+          "type": "string"
+        },
+        "abilityUseId": {
+          "type": "string"
+        },
+        "chainId": {
+          "type": "string"
+        },
+        "deferVisuals": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "isChainComplete": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "lokiId": {
+          "type": "string"
+        },
+        "targetId": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "lokiChickenApplied"
+          ]
+        },
+        "visualBatchId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "abilityId",
+        "lokiId",
+        "targetId",
+        "type"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem73": {
+      "type": "object",
+      "properties": {
+        "abilityId": {
+          "type": "string"
+        },
+        "abilityUseId": {
+          "type": "string"
+        },
+        "chainId": {
+          "type": "string"
+        },
+        "deferVisuals": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "isChainComplete": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "lokiId": {
+          "type": "string"
+        },
+        "targetIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "lokiChickenGroupApplied"
+          ]
+        },
+        "visualBatchId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "abilityId",
+        "targetIds",
+        "type"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem74": {
+      "type": "object",
+      "properties": {
+        "abilityId": {
+          "type": "string"
+        },
+        "abilityUseId": {
+          "type": "string"
+        },
+        "chainId": {
+          "type": "string"
+        },
+        "controlledUnitId": {
+          "type": "string"
+        },
+        "controllerUnitId": {
+          "type": "string"
+        },
+        "deferVisuals": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "isChainComplete": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "targetId": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "controlledAttackDeclared"
+          ]
+        },
+        "visualBatchId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "abilityId",
+        "controlledUnitId",
+        "controllerUnitId",
+        "targetId",
+        "type"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem75": {
+      "type": "object",
+      "properties": {
+        "abilityId": {
+          "type": "string"
+        },
+        "abilityUseId": {
+          "type": "string"
+        },
+        "chainId": {
+          "type": "string"
+        },
+        "deferVisuals": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "fromFormId": {
+          "type": "string"
+        },
+        "fromHeroId": {
+          "type": "string"
+        },
+        "isChainComplete": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "rating": {
+          "type": "number"
+        },
+        "ratingSpent": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "enum": [
+            "griffithFemtoRebirth",
+            "mettatonThreshold"
+          ]
+        },
+        "toFormId": {
+          "type": "string"
+        },
+        "toHeroId": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "unitTransformed"
+          ]
+        },
+        "unitId": {
+          "type": "string"
+        },
+        "visualBatchId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "fromHeroId",
+        "reason",
+        "toHeroId",
+        "type",
+        "unitId"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem76": {
+      "type": "object",
+      "properties": {
+        "abilityId": {
+          "type": "string"
+        },
+        "abilityUseId": {
+          "type": "string"
+        },
+        "chainId": {
+          "type": "string"
+        },
+        "deferVisuals": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "extraMoves": {
+          "type": "number"
+        },
+        "isChainComplete": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "riverId": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "riverBoatmanGranted"
+          ]
+        },
+        "visualBatchId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "extraMoves",
+        "riverId",
+        "type"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem77": {
+      "type": "object",
+      "properties": {
+        "abilityId": {
+          "type": "string"
+        },
+        "abilityUseId": {
+          "type": "string"
+        },
+        "chainId": {
+          "type": "string"
+        },
+        "deferVisuals": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "isChainComplete": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
         "passengerCell": {
           "$ref": "#/definitions/Coord"
         },
@@ -6768,7 +7259,7 @@
         "type"
       ]
     },
-    "CreatedGameViewsP1EventsItem71": {
+    "CreatedGameViewsP1EventsItem78": {
       "type": "object",
       "properties": {
         "abilityId": {
@@ -6825,7 +7316,7 @@
         "type"
       ]
     },
-    "CreatedGameViewsP1EventsItem72": {
+    "CreatedGameViewsP1EventsItem79": {
       "type": "object",
       "properties": {
         "abilityId": {
@@ -6880,414 +7371,6 @@
         "riverDestination",
         "riverId",
         "type"
-      ]
-    },
-    "CreatedGameViewsP1EventsItem73": {
-      "type": "object",
-      "properties": {
-        "abilityId": {
-          "type": "string"
-        },
-        "abilityUseId": {
-          "type": "string"
-        },
-        "chainId": {
-          "type": "string"
-        },
-        "deferVisuals": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "isChainComplete": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "passengerId": {
-          "type": "string"
-        },
-        "reason": {
-          "type": "string",
-          "enum": [
-            "carrierDied",
-            "noLegalDestinations"
-          ]
-        },
-        "riverId": {
-          "type": "string"
-        },
-        "type": {
-          "type": "string",
-          "enum": [
-            "riverBoatDisembarkFailed"
-          ]
-        },
-        "visualBatchId": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "passengerId",
-        "reason",
-        "riverId",
-        "type"
-      ]
-    },
-    "CreatedGameViewsP1EventsItem74": {
-      "type": "object",
-      "properties": {
-        "abilityId": {
-          "type": "string"
-        },
-        "abilityUseId": {
-          "type": "string"
-        },
-        "chainId": {
-          "type": "string"
-        },
-        "deferVisuals": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "dropDestination": {
-          "$ref": "#/definitions/Coord"
-        },
-        "isChainComplete": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "riverDestination": {
-          "$ref": "#/definitions/Coord"
-        },
-        "riverId": {
-          "type": "string"
-        },
-        "targetId": {
-          "type": "string"
-        },
-        "touchedAttackerIds": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "type": {
-          "type": "string",
-          "enum": [
-            "riverTraLaLaResolved"
-          ]
-        },
-        "visualBatchId": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "dropDestination",
-        "riverDestination",
-        "riverId",
-        "targetId",
-        "touchedAttackerIds",
-        "type"
-      ]
-    },
-    "CreatedGameViewsP1EventsItem75": {
-      "type": "object",
-      "properties": {
-        "abilityId": {
-          "type": "string"
-        },
-        "abilityUseId": {
-          "type": "string"
-        },
-        "asgoreId": {
-          "type": "string"
-        },
-        "chainId": {
-          "type": "string"
-        },
-        "deferVisuals": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "effectDescription": {
-          "type": "string"
-        },
-        "isChainComplete": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "roll": {
-          "type": "number"
-        },
-        "soulId": {
-          "type": "string"
-        },
-        "soulName": {
-          "type": "string"
-        },
-        "sourceCell": {
-          "$ref": "#/definitions/Coord"
-        },
-        "type": {
-          "type": "string",
-          "enum": [
-            "asgoreSoulParadeResolved"
-          ]
-        },
-        "visualBatchId": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "effectDescription",
-        "roll",
-        "soulId",
-        "soulName",
-        "type"
-      ]
-    },
-    "CreatedGameViewsP1EventsItem76": {
-      "type": "object",
-      "properties": {
-        "abilityId": {
-          "type": "string"
-        },
-        "abilityUseId": {
-          "type": "string"
-        },
-        "chainId": {
-          "type": "string"
-        },
-        "deferVisuals": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "duration": {
-          "type": "number"
-        },
-        "durationUnit": {
-          "type": "string",
-          "enum": [
-            "round",
-            "turn"
-          ]
-        },
-        "isChainComplete": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "roll": {
-          "type": "number"
-        },
-        "sourceUnitId": {
-          "type": "string"
-        },
-        "type": {
-          "type": "string",
-          "enum": [
-            "lechyStormStarted"
-          ]
-        },
-        "visualBatchId": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "duration",
-        "durationUnit",
-        "roll",
-        "type"
-      ]
-    },
-    "CreatedGameViewsP1EventsItem77": {
-      "type": "object",
-      "properties": {
-        "abilityId": {
-          "type": "string"
-        },
-        "abilityUseId": {
-          "type": "string"
-        },
-        "chainId": {
-          "type": "string"
-        },
-        "damage": {
-          "type": "number"
-        },
-        "deferVisuals": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "hpAfter": {
-          "type": "number"
-        },
-        "isChainComplete": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "roll": {
-          "type": "number"
-        },
-        "success": {
-          "type": "boolean"
-        },
-        "type": {
-          "type": "string",
-          "enum": [
-            "lechyStormRollResult"
-          ]
-        },
-        "unitId": {
-          "type": "string"
-        },
-        "visualBatchId": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "damage",
-        "hpAfter",
-        "roll",
-        "success",
-        "type",
-        "unitId"
-      ]
-    },
-    "CreatedGameViewsP1EventsItem78": {
-      "type": "object",
-      "properties": {
-        "abilityId": {
-          "type": "string"
-        },
-        "abilityUseId": {
-          "type": "string"
-        },
-        "chainId": {
-          "type": "string"
-        },
-        "deferVisuals": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "form": {
-          "type": "string",
-          "enum": [
-            "scolopendra"
-          ]
-        },
-        "isChainComplete": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "sourceCell": {
-          "$ref": "#/definitions/Coord"
-        },
-        "type": {
-          "type": "string",
-          "enum": [
-            "kanekiFormEntered"
-          ]
-        },
-        "unitId": {
-          "type": "string"
-        },
-        "visualBatchId": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "form",
-        "type",
-        "unitId"
-      ]
-    },
-    "CreatedGameViewsP1EventsItem79": {
-      "type": "object",
-      "properties": {
-        "abilityId": {
-          "type": "string"
-        },
-        "abilityUseId": {
-          "type": "string"
-        },
-        "chainId": {
-          "type": "string"
-        },
-        "deferVisuals": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "isChainComplete": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "sourceCell": {
-          "$ref": "#/definitions/Coord"
-        },
-        "type": {
-          "type": "string",
-          "enum": [
-            "friskOnePathUnlocked"
-          ]
-        },
-        "unitId": {
-          "type": "string"
-        },
-        "visualBatchId": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "type",
-        "unitId"
       ]
     },
     "CreatedGameViewsP1EventsItem7RollsItem": {
@@ -7407,6 +7490,417 @@
             true
           ]
         },
+        "passengerId": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string",
+          "enum": [
+            "carrierDied",
+            "noLegalDestinations"
+          ]
+        },
+        "riverId": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "riverBoatDisembarkFailed"
+          ]
+        },
+        "visualBatchId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "passengerId",
+        "reason",
+        "riverId",
+        "type"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem81": {
+      "type": "object",
+      "properties": {
+        "abilityId": {
+          "type": "string"
+        },
+        "abilityUseId": {
+          "type": "string"
+        },
+        "chainId": {
+          "type": "string"
+        },
+        "deferVisuals": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "dropDestination": {
+          "$ref": "#/definitions/Coord"
+        },
+        "isChainComplete": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "riverDestination": {
+          "$ref": "#/definitions/Coord"
+        },
+        "riverId": {
+          "type": "string"
+        },
+        "targetId": {
+          "type": "string"
+        },
+        "touchedAttackerIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "riverTraLaLaResolved"
+          ]
+        },
+        "visualBatchId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "dropDestination",
+        "riverDestination",
+        "riverId",
+        "targetId",
+        "touchedAttackerIds",
+        "type"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem82": {
+      "type": "object",
+      "properties": {
+        "abilityId": {
+          "type": "string"
+        },
+        "abilityUseId": {
+          "type": "string"
+        },
+        "asgoreId": {
+          "type": "string"
+        },
+        "chainId": {
+          "type": "string"
+        },
+        "deferVisuals": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "effectDescription": {
+          "type": "string"
+        },
+        "isChainComplete": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "roll": {
+          "type": "number"
+        },
+        "soulId": {
+          "type": "string"
+        },
+        "soulName": {
+          "type": "string"
+        },
+        "sourceCell": {
+          "$ref": "#/definitions/Coord"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "asgoreSoulParadeResolved"
+          ]
+        },
+        "visualBatchId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "effectDescription",
+        "roll",
+        "soulId",
+        "soulName",
+        "type"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem83": {
+      "type": "object",
+      "properties": {
+        "abilityId": {
+          "type": "string"
+        },
+        "abilityUseId": {
+          "type": "string"
+        },
+        "chainId": {
+          "type": "string"
+        },
+        "deferVisuals": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "duration": {
+          "type": "number"
+        },
+        "durationUnit": {
+          "type": "string",
+          "enum": [
+            "round",
+            "turn"
+          ]
+        },
+        "isChainComplete": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "roll": {
+          "type": "number"
+        },
+        "sourceUnitId": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "lechyStormStarted"
+          ]
+        },
+        "visualBatchId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "duration",
+        "durationUnit",
+        "roll",
+        "type"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem84": {
+      "type": "object",
+      "properties": {
+        "abilityId": {
+          "type": "string"
+        },
+        "abilityUseId": {
+          "type": "string"
+        },
+        "chainId": {
+          "type": "string"
+        },
+        "damage": {
+          "type": "number"
+        },
+        "deferVisuals": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "hpAfter": {
+          "type": "number"
+        },
+        "isChainComplete": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "roll": {
+          "type": "number"
+        },
+        "success": {
+          "type": "boolean"
+        },
+        "targetCell": {
+          "$ref": "#/definitions/Coord"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "lechyStormRollResult"
+          ]
+        },
+        "unitId": {
+          "type": "string"
+        },
+        "visualBatchId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "damage",
+        "hpAfter",
+        "roll",
+        "success",
+        "type",
+        "unitId"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem85": {
+      "type": "object",
+      "properties": {
+        "abilityId": {
+          "type": "string"
+        },
+        "abilityUseId": {
+          "type": "string"
+        },
+        "chainId": {
+          "type": "string"
+        },
+        "deferVisuals": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "form": {
+          "type": "string",
+          "enum": [
+            "scolopendra"
+          ]
+        },
+        "isChainComplete": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "sourceCell": {
+          "$ref": "#/definitions/Coord"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "kanekiFormEntered"
+          ]
+        },
+        "unitId": {
+          "type": "string"
+        },
+        "visualBatchId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "form",
+        "type",
+        "unitId"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem86": {
+      "type": "object",
+      "properties": {
+        "abilityId": {
+          "type": "string"
+        },
+        "abilityUseId": {
+          "type": "string"
+        },
+        "chainId": {
+          "type": "string"
+        },
+        "deferVisuals": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "isChainComplete": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "sourceCell": {
+          "$ref": "#/definitions/Coord"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "friskOnePathUnlocked"
+          ]
+        },
+        "unitId": {
+          "type": "string"
+        },
+        "visualBatchId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "unitId"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem87": {
+      "type": "object",
+      "properties": {
+        "abilityId": {
+          "type": "string"
+        },
+        "abilityUseId": {
+          "type": "string"
+        },
+        "chainId": {
+          "type": "string"
+        },
+        "deferVisuals": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "isChainComplete": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
         "sourceCell": {
           "$ref": "#/definitions/Coord"
         },
@@ -7429,7 +7923,7 @@
         "unitId"
       ]
     },
-    "CreatedGameViewsP1EventsItem81": {
+    "CreatedGameViewsP1EventsItem88": {
       "type": "object",
       "properties": {
         "abilityId": {
@@ -7477,7 +7971,7 @@
         "unitId"
       ]
     },
-    "CreatedGameViewsP1EventsItem82": {
+    "CreatedGameViewsP1EventsItem89": {
       "type": "object",
       "properties": {
         "abilityId": {
@@ -7535,701 +8029,6 @@
         "source",
         "targetUnitIds",
         "type"
-      ]
-    },
-    "CreatedGameViewsP1EventsItem83": {
-      "type": "object",
-      "properties": {
-        "abilityId": {
-          "type": "string"
-        },
-        "abilityUseId": {
-          "type": "string"
-        },
-        "chainId": {
-          "type": "string"
-        },
-        "choice": {
-          "type": "string",
-          "enum": [
-            "attack",
-            "pass"
-          ]
-        },
-        "deferVisuals": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "isChainComplete": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "reactorUnitId": {
-          "type": "string"
-        },
-        "source": {
-          "type": "string",
-          "enum": [
-            "genghis",
-            "tralala"
-          ]
-        },
-        "targetUnitId": {
-          "type": "string"
-        },
-        "type": {
-          "type": "string",
-          "enum": [
-            "reactionChoiceResolved"
-          ]
-        },
-        "visualBatchId": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "choice",
-        "reactorUnitId",
-        "source",
-        "type"
-      ]
-    },
-    "CreatedGameViewsP1EventsItem84": {
-      "type": "object",
-      "properties": {
-        "abilityId": {
-          "type": "string"
-        },
-        "abilityUseId": {
-          "type": "string"
-        },
-        "chainId": {
-          "type": "string"
-        },
-        "controllerUnitId": {
-          "type": "string"
-        },
-        "deferVisuals": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "isChainComplete": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "source": {
-          "type": "string",
-          "enum": [
-            "genghis",
-            "tralala"
-          ]
-        },
-        "type": {
-          "type": "string",
-          "enum": [
-            "reactionMovementResumed"
-          ]
-        },
-        "visualBatchId": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "controllerUnitId",
-        "source",
-        "type"
-      ]
-    },
-    "CreatedGameViewsP1EventsItem85": {
-      "type": "object",
-      "properties": {
-        "abilityId": {
-          "type": "string"
-        },
-        "abilityUseId": {
-          "type": "string"
-        },
-        "chainId": {
-          "type": "string"
-        },
-        "controllerUnitId": {
-          "type": "string"
-        },
-        "deferVisuals": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "isChainComplete": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "reason": {
-          "type": "string",
-          "enum": [
-            "cancelled",
-            "completed"
-          ]
-        },
-        "source": {
-          "type": "string",
-          "enum": [
-            "genghis",
-            "tralala"
-          ]
-        },
-        "type": {
-          "type": "string",
-          "enum": [
-            "reactionMovementEnded"
-          ]
-        },
-        "visualBatchId": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "controllerUnitId",
-        "reason",
-        "source",
-        "type"
-      ]
-    },
-    "CreatedGameViewsP1EventsItem86": {
-      "type": "object",
-      "properties": {
-        "abilityId": {
-          "type": "string"
-        },
-        "abilityUseId": {
-          "type": "string"
-        },
-        "affectedUnitIds": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "casterId": {
-          "type": "string"
-        },
-        "center": {
-          "$ref": "#/definitions/Coord"
-        },
-        "chainId": {
-          "type": "string"
-        },
-        "damageByUnitId": {
-          "$ref": "#/definitions/CreatedGameViewsP1EventsItem33Deltas"
-        },
-        "damagedUnitIds": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "deferVisuals": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "effectSegments": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/EffectSegment"
-          }
-        },
-        "isChainComplete": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "radius": {
-          "type": "number"
-        },
-        "revealedUnitIds": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "rollsByUnitId": {
-          "$ref": "#/definitions/CreatedGameViewsP1EventsItem33Deltas"
-        },
-        "sourceCell": {
-          "$ref": "#/definitions/Coord"
-        },
-        "sourceUnitId": {
-          "type": "string"
-        },
-        "type": {
-          "type": "string",
-          "enum": [
-            "aoeResolved"
-          ]
-        },
-        "visualBatchId": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "affectedUnitIds",
-        "center",
-        "damagedUnitIds",
-        "radius",
-        "revealedUnitIds",
-        "type"
-      ]
-    },
-    "CreatedGameViewsP1EventsItem87": {
-      "type": "object",
-      "properties": {
-        "abilityId": {
-          "type": "string"
-        },
-        "abilityUseId": {
-          "type": "string"
-        },
-        "attackerId": {
-          "type": "string"
-        },
-        "attackerRoll": {
-          "$ref": "#/definitions/DiceRoll"
-        },
-        "attackerRollIsNew": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ],
-          "description": "False when an AoE event repeats an attacker roll already logged for another target."
-        },
-        "attackSignature": {
-          "type": "string",
-          "enum": [
-            "friskPrecisionStrike"
-          ]
-        },
-        "chainId": {
-          "type": "string"
-        },
-        "damage": {
-          "type": "number"
-        },
-        "defenderHpAfter": {
-          "type": "number"
-        },
-        "defenderId": {
-          "type": "string"
-        },
-        "defenderRoll": {
-          "$ref": "#/definitions/DiceRoll"
-        },
-        "defenseSignature": {
-          "type": "string",
-          "enum": [
-            "friskCry",
-            "friskSubstitution"
-          ]
-        },
-        "deferVisuals": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "hit": {
-          "type": "boolean"
-        },
-        "isBasicAttack": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ],
-          "description": "Explicit normal attack provenance; absence is never interpreted as basic."
-        },
-        "isChainComplete": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "maxHp": {
-          "type": "number"
-        },
-        "nextHp": {
-          "type": "number"
-        },
-        "previousHp": {
-          "type": "number",
-          "description": "Visual snapshot metadata; authoritative HP remains on unit state."
-        },
-        "sourceCell": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/definitions/Coord"
-            }
-          ]
-        },
-        "targetCell": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/definitions/Coord"
-            }
-          ]
-        },
-        "tieBreakDice": {
-          "$ref": "#/definitions/CreatedGameViewsP1EventsItem87TieBreakDice"
-        },
-        "type": {
-          "type": "string",
-          "enum": [
-            "attackResolved"
-          ]
-        },
-        "visualBatchId": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "attackerRoll",
-        "damage",
-        "defenderHpAfter",
-        "defenderId",
-        "defenderRoll",
-        "hit",
-        "type"
-      ]
-    },
-    "CreatedGameViewsP1EventsItem87TieBreakDice": {
-      "type": "object",
-      "properties": {
-        "attacker": {
-          "type": "array",
-          "items": {
-            "type": "number"
-          }
-        },
-        "defender": {
-          "type": "array",
-          "items": {
-            "type": "number"
-          }
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "attacker",
-        "defender"
-      ]
-    },
-    "CreatedGameViewsP1EventsItem88": {
-      "type": "object",
-      "properties": {
-        "abilityId": {
-          "type": "string"
-        },
-        "abilityUseId": {
-          "type": "string"
-        },
-        "cause": {
-          "type": "string"
-        },
-        "chainId": {
-          "type": "string"
-        },
-        "deathCell": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/definitions/Coord"
-            }
-          ],
-          "description": "Null when death has no board position."
-        },
-        "deferVisuals": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "isChainComplete": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "killerId": {
-          "anyOf": [
-            {
-              "type": "null"
-            },
-            {
-              "type": "string"
-            }
-          ]
-        },
-        "type": {
-          "type": "string",
-          "enum": [
-            "unitDied"
-          ]
-        },
-        "unitId": {
-          "type": "string"
-        },
-        "visualBatchId": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "type",
-        "unitId"
-      ]
-    },
-    "CreatedGameViewsP1EventsItem89": {
-      "type": "object",
-      "properties": {
-        "abilityId": {
-          "type": "string"
-        },
-        "abilityUseId": {
-          "type": "string"
-        },
-        "chainId": {
-          "type": "string"
-        },
-        "deferVisuals": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "from": {
-          "$ref": "#/definitions/Coord"
-        },
-        "isChainComplete": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "provenance": {
-          "anyOf": [
-            {
-              "$ref": "#/definitions/CreatedGameViewsP1EventsItem89Provenance"
-            },
-            {
-              "$ref": "#/definitions/CreatedGameViewsP1EventsItem89Provenance2"
-            },
-            {
-              "$ref": "#/definitions/CreatedGameViewsP1EventsItem89Provenance3"
-            },
-            {
-              "$ref": "#/definitions/CreatedGameViewsP1EventsItem89Provenance4"
-            },
-            {
-              "$ref": "#/definitions/CreatedGameViewsP1EventsItem89Provenance5"
-            },
-            {
-              "$ref": "#/definitions/CreatedGameViewsP1EventsItem89Provenance6"
-            }
-          ]
-        },
-        "to": {
-          "$ref": "#/definitions/Coord"
-        },
-        "type": {
-          "type": "string",
-          "enum": [
-            "unitMoved"
-          ]
-        },
-        "unitId": {
-          "type": "string"
-        },
-        "visualBatchId": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "from",
-        "provenance",
-        "to",
-        "type",
-        "unitId"
-      ]
-    },
-    "CreatedGameViewsP1EventsItem89Provenance": {
-      "type": "object",
-      "properties": {
-        "kind": {
-          "type": "string",
-          "enum": [
-            "normal"
-          ]
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "kind"
-      ]
-    },
-    "CreatedGameViewsP1EventsItem89Provenance2": {
-      "type": "object",
-      "properties": {
-        "kind": {
-          "type": "string",
-          "enum": [
-            "rider"
-          ]
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "kind"
-      ]
-    },
-    "CreatedGameViewsP1EventsItem89Provenance3": {
-      "type": "object",
-      "properties": {
-        "kind": {
-          "type": "string",
-          "enum": [
-            "teleport"
-          ]
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "kind"
-      ]
-    },
-    "CreatedGameViewsP1EventsItem89Provenance4": {
-      "type": "object",
-      "properties": {
-        "kind": {
-          "type": "string",
-          "enum": [
-            "boat",
-            "tralala"
-          ]
-        },
-        "phase": {
-          "type": "string",
-          "enum": [
-            "drop",
-            "pickup",
-            "travel"
-          ]
-        },
-        "role": {
-          "type": "string",
-          "enum": [
-            "carrier",
-            "passenger"
-          ]
-        },
-        "stepIndex": {
-          "type": "number"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "kind"
-      ]
-    },
-    "CreatedGameViewsP1EventsItem89Provenance5": {
-      "type": "object",
-      "properties": {
-        "cause": {
-          "type": "string",
-          "enum": [
-            "court",
-            "donWindmills",
-            "hiddenCollision",
-            "intimidatingStare",
-            "moonSwap"
-          ]
-        },
-        "kind": {
-          "type": "string",
-          "enum": [
-            "forced"
-          ]
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "cause",
-        "kind"
-      ]
-    },
-    "CreatedGameViewsP1EventsItem89Provenance6": {
-      "type": "object",
-      "properties": {
-        "abilityId": {
-          "type": "string"
-        },
-        "kind": {
-          "type": "string",
-          "enum": [
-            "ability"
-          ]
-        },
-        "movementKind": {
-          "type": "string",
-          "enum": [
-            "teleport"
-          ]
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "kind"
       ]
     },
     "CreatedGameViewsP1EventsItem9": {
@@ -8399,6 +8198,721 @@
       ]
     },
     "CreatedGameViewsP1EventsItem90": {
+      "type": "object",
+      "properties": {
+        "abilityId": {
+          "type": "string"
+        },
+        "abilityUseId": {
+          "type": "string"
+        },
+        "chainId": {
+          "type": "string"
+        },
+        "choice": {
+          "type": "string",
+          "enum": [
+            "attack",
+            "pass"
+          ]
+        },
+        "deferVisuals": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "isChainComplete": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "reactorUnitId": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string",
+          "enum": [
+            "genghis",
+            "tralala"
+          ]
+        },
+        "targetUnitId": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "reactionChoiceResolved"
+          ]
+        },
+        "visualBatchId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "choice",
+        "reactorUnitId",
+        "source",
+        "type"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem91": {
+      "type": "object",
+      "properties": {
+        "abilityId": {
+          "type": "string"
+        },
+        "abilityUseId": {
+          "type": "string"
+        },
+        "chainId": {
+          "type": "string"
+        },
+        "controllerUnitId": {
+          "type": "string"
+        },
+        "deferVisuals": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "isChainComplete": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "source": {
+          "type": "string",
+          "enum": [
+            "genghis",
+            "tralala"
+          ]
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "reactionMovementResumed"
+          ]
+        },
+        "visualBatchId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "controllerUnitId",
+        "source",
+        "type"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem92": {
+      "type": "object",
+      "properties": {
+        "abilityId": {
+          "type": "string"
+        },
+        "abilityUseId": {
+          "type": "string"
+        },
+        "chainId": {
+          "type": "string"
+        },
+        "controllerUnitId": {
+          "type": "string"
+        },
+        "deferVisuals": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "isChainComplete": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "enum": [
+            "cancelled",
+            "completed"
+          ]
+        },
+        "source": {
+          "type": "string",
+          "enum": [
+            "genghis",
+            "tralala"
+          ]
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "reactionMovementEnded"
+          ]
+        },
+        "visualBatchId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "controllerUnitId",
+        "reason",
+        "source",
+        "type"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem93": {
+      "type": "object",
+      "properties": {
+        "abilityId": {
+          "type": "string"
+        },
+        "abilityUseId": {
+          "type": "string"
+        },
+        "affectedUnitIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "casterId": {
+          "type": "string"
+        },
+        "center": {
+          "$ref": "#/definitions/Coord"
+        },
+        "chainId": {
+          "type": "string"
+        },
+        "damageByUnitId": {
+          "$ref": "#/definitions/CreatedGameViewsP1EventsItem33Deltas"
+        },
+        "damagedUnitIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "deferVisuals": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "effectSegments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/EffectSegment"
+          }
+        },
+        "isChainComplete": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "lokiStatusResult": {
+          "type": "string",
+          "enum": [
+            "chicken",
+            "entangled"
+          ]
+        },
+        "radius": {
+          "type": "number"
+        },
+        "revealedUnitIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "rollsByUnitId": {
+          "$ref": "#/definitions/CreatedGameViewsP1EventsItem33Deltas"
+        },
+        "sourceCell": {
+          "$ref": "#/definitions/Coord"
+        },
+        "sourceUnitId": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "aoeResolved"
+          ]
+        },
+        "visualBatchId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "affectedUnitIds",
+        "center",
+        "damagedUnitIds",
+        "radius",
+        "revealedUnitIds",
+        "type"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem94": {
+      "type": "object",
+      "properties": {
+        "abilityId": {
+          "type": "string"
+        },
+        "abilityUseId": {
+          "type": "string"
+        },
+        "attackerId": {
+          "type": "string"
+        },
+        "attackerRoll": {
+          "$ref": "#/definitions/DiceRoll"
+        },
+        "attackerRollIsNew": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ],
+          "description": "False when an AoE event repeats an attacker roll already logged for another target."
+        },
+        "attackSignature": {
+          "type": "string",
+          "enum": [
+            "friskPrecisionStrike",
+            "gutsBerserkSingle"
+          ]
+        },
+        "bunkerAbsorbedDamage": {
+          "type": "number",
+          "description": "Damage actually removed by Bunker, before any later cap."
+        },
+        "chainId": {
+          "type": "string"
+        },
+        "damage": {
+          "type": "number"
+        },
+        "defenderHpAfter": {
+          "type": "number"
+        },
+        "defenderId": {
+          "type": "string"
+        },
+        "defenderRoll": {
+          "$ref": "#/definitions/DiceRoll"
+        },
+        "defenseSignature": {
+          "type": "string",
+          "enum": [
+            "friskCleanSoulBreak",
+            "friskCry",
+            "friskSubstitution"
+          ]
+        },
+        "deferVisuals": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "hit": {
+          "type": "boolean"
+        },
+        "isBasicAttack": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ],
+          "description": "Explicit normal attack provenance; absence is never interpreted as basic."
+        },
+        "isChainComplete": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "maxHp": {
+          "type": "number"
+        },
+        "nextHp": {
+          "type": "number"
+        },
+        "previousHp": {
+          "type": "number",
+          "description": "Visual snapshot metadata; authoritative HP remains on unit state."
+        },
+        "sourceCell": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/definitions/Coord"
+            }
+          ]
+        },
+        "spearmanEvaded": {
+          "type": "boolean",
+          "enum": [
+            true
+          ],
+          "description": "Confirmed final avoidance, after attacker-double precedence."
+        },
+        "targetCell": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/definitions/Coord"
+            }
+          ]
+        },
+        "tieBreakDice": {
+          "$ref": "#/definitions/CreatedGameViewsP1EventsItem94TieBreakDice"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "attackResolved"
+          ]
+        },
+        "visualBatchId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "attackerRoll",
+        "damage",
+        "defenderHpAfter",
+        "defenderId",
+        "defenderRoll",
+        "hit",
+        "type"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem94TieBreakDice": {
+      "type": "object",
+      "properties": {
+        "attacker": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "defender": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "attacker",
+        "defender"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem95": {
+      "type": "object",
+      "properties": {
+        "abilityId": {
+          "type": "string"
+        },
+        "abilityUseId": {
+          "type": "string"
+        },
+        "cause": {
+          "type": "string"
+        },
+        "chainId": {
+          "type": "string"
+        },
+        "deathCell": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/definitions/Coord"
+            }
+          ],
+          "description": "Null when death has no board position."
+        },
+        "deferVisuals": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "isChainComplete": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "killerId": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "unitDied"
+          ]
+        },
+        "unitId": {
+          "type": "string"
+        },
+        "visualBatchId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "unitId"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem96": {
+      "type": "object",
+      "properties": {
+        "abilityId": {
+          "type": "string"
+        },
+        "abilityUseId": {
+          "type": "string"
+        },
+        "chainId": {
+          "type": "string"
+        },
+        "deferVisuals": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "from": {
+          "$ref": "#/definitions/Coord"
+        },
+        "isChainComplete": {
+          "type": "boolean",
+          "enum": [
+            false,
+            true
+          ]
+        },
+        "provenance": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CreatedGameViewsP1EventsItem96Provenance"
+            },
+            {
+              "$ref": "#/definitions/CreatedGameViewsP1EventsItem96Provenance2"
+            },
+            {
+              "$ref": "#/definitions/CreatedGameViewsP1EventsItem96Provenance3"
+            },
+            {
+              "$ref": "#/definitions/CreatedGameViewsP1EventsItem96Provenance4"
+            },
+            {
+              "$ref": "#/definitions/CreatedGameViewsP1EventsItem96Provenance5"
+            },
+            {
+              "$ref": "#/definitions/CreatedGameViewsP1EventsItem96Provenance6"
+            }
+          ]
+        },
+        "to": {
+          "$ref": "#/definitions/Coord"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "unitMoved"
+          ]
+        },
+        "unitId": {
+          "type": "string"
+        },
+        "visualBatchId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "from",
+        "provenance",
+        "to",
+        "type",
+        "unitId"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem96Provenance": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "normal"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "kind"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem96Provenance2": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "rider"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "kind"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem96Provenance3": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "teleport"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "kind"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem96Provenance4": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "boat",
+            "tralala"
+          ]
+        },
+        "phase": {
+          "type": "string",
+          "enum": [
+            "drop",
+            "pickup",
+            "travel"
+          ]
+        },
+        "role": {
+          "type": "string",
+          "enum": [
+            "carrier",
+            "passenger"
+          ]
+        },
+        "stepIndex": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "kind"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem96Provenance5": {
+      "type": "object",
+      "properties": {
+        "cause": {
+          "type": "string",
+          "enum": [
+            "court",
+            "donWindmills",
+            "hiddenCollision",
+            "intimidatingStare",
+            "moonSwap"
+          ]
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "forced"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "cause",
+        "kind"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem96Provenance6": {
+      "type": "object",
+      "properties": {
+        "abilityId": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "ability"
+          ]
+        },
+        "movementKind": {
+          "type": "string",
+          "enum": [
+            "teleport"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "kind"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem97": {
       "type": "object",
       "properties": {
         "abilityId": {
@@ -8583,7 +9097,7 @@
         "type"
       ]
     },
-    "CreatedGameViewsP1EventsItem91": {
+    "CreatedGameViewsP1EventsItem98": {
       "type": "object",
       "properties": {
         "abilityId": {
@@ -8640,7 +9154,7 @@
         "unitId"
       ]
     },
-    "CreatedGameViewsP1EventsItem92": {
+    "CreatedGameViewsP1EventsItem99": {
       "type": "object",
       "properties": {
         "abilityId": {
@@ -8650,7 +9164,7 @@
           "type": "string"
         },
         "area": {
-          "$ref": "#/definitions/CreatedGameViewsP1EventsItem92Area"
+          "$ref": "#/definitions/CreatedGameViewsP1EventsItem99Area"
         },
         "center": {
           "$ref": "#/definitions/Coord"
@@ -8706,7 +9220,7 @@
         "type"
       ]
     },
-    "CreatedGameViewsP1EventsItem92Area": {
+    "CreatedGameViewsP1EventsItem99Area": {
       "type": "object",
       "properties": {
         "radius": {
@@ -8726,110 +9240,6 @@
       "required": [
         "radius",
         "shape"
-      ]
-    },
-    "CreatedGameViewsP1EventsItem93": {
-      "type": "object",
-      "properties": {
-        "abilityId": {
-          "type": "string"
-        },
-        "abilityUseId": {
-          "type": "string"
-        },
-        "affectedUnitIds": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "center": {
-          "$ref": "#/definitions/Coord"
-        },
-        "chainId": {
-          "type": "string"
-        },
-        "deferVisuals": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "dice": {
-          "type": "array",
-          "items": {
-            "type": "number"
-          }
-        },
-        "isChainComplete": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "rollId": {
-          "type": "string"
-        },
-        "sum": {
-          "type": "number"
-        },
-        "type": {
-          "type": "string",
-          "enum": [
-            "carpetStrikeAttackRolled"
-          ]
-        },
-        "unitId": {
-          "type": "string"
-        },
-        "visualBatchId": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "affectedUnitIds",
-        "center",
-        "dice",
-        "sum",
-        "type"
-      ]
-    },
-    "CreatedGameViewsP1EventsItem94": {
-      "type": "object",
-      "properties": {
-        "chainId": {
-          "type": "string"
-        },
-        "deferVisuals": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "isChainComplete": {
-          "type": "boolean",
-          "enum": [
-            false,
-            true
-          ]
-        },
-        "type": {
-          "type": "string",
-          "enum": [
-            "eventRedacted"
-          ]
-        },
-        "visualBatchId": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "type"
       ]
     },
     "CreatedGameViewsP1Initiative": {
@@ -13064,6 +13474,9 @@
           "type": "number",
           "description": "Own-turn ordinal after whose end Blind expires."
         },
+        "blindSourceId": {
+          "type": "string"
+        },
         "blindUntilOwnTurnStart": {
           "type": "boolean",
           "enum": [
@@ -13280,6 +13693,10 @@
         "id": {
           "type": "string"
         },
+        "immobilizedSourceId": {
+          "type": "string",
+          "description": "Status provenance; recipient projections remove unauthorized source IDs."
+        },
         "immobilizedUntilOwnTurnStart": {
           "type": "boolean",
           "enum": [
@@ -13360,6 +13777,9 @@
             false,
             true
           ]
+        },
+        "movementDisabledSourceId": {
+          "type": "string"
         },
         "orangeBoneFirstMoveSatisfied": {
           "type": "boolean",

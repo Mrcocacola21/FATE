@@ -128,6 +128,39 @@ test("confirmed steps remain separate, ordered, capped, and never become an endp
   assert.equal(plan([move()], view(), view(B), true).durationMs, 50);
 });
 
+test("long Rider and Assassin travel keeps a readable shared token/trail clock instead of a 160ms board-wide flash", () => {
+  for (const [classId, heroId, mode, cells] of [["rider", "genghisKhan", "rider", 8], ["assassin", "hassan", "normal", 2]] as const) {
+    const from = { col: 0, row: 0 }, to = { col: cells, row: 0 };
+    const before = view(from), after = view(to);
+    before.units.mover = { ...before.units.mover, class: classId, heroId };
+    after.units.mover = { ...after.units.mover, class: classId, heroId };
+    const playback = plan([move(from, to, mode)], before, after);
+    const expectedMs = cells === 8 ? 720 : 320;
+    assert.equal(playback.durationMs, expectedMs);
+    assert.equal(playback.movementPlan.cues.length, 1, "do not invent a hidden or unconfirmed intermediate route");
+    const effects = mapEventBatchToVfx({ ...playback.batch, view: after, previousPositions: {} });
+    const trail = effects.find(e => e.effectId.endsWith("move_trail"))!;
+    const arrive = effects.find(e => e.effectId.endsWith("move_arrive"))!;
+    assert.equal(trail.travelDurationMs, expectedMs);
+    assert.equal(trail.durationMs, expectedMs + 240, "residue fades without delaying the token or arrival");
+    assert.equal(arrive.delayMs, expectedMs);
+    for (const fraction of [.25, .5, .75]) assert.deepEqual(
+      combatVisualPlaybackFrame(playback, expectedMs * fraction).visualMotionByUnitId.mover.position,
+      { col: cells * fraction, row: 0 },
+    );
+    assert.equal(plan([move(from, to, mode)], before, after, true).durationMs, 50);
+  }
+});
+
+test("unequal confirmed walking segments share the distance budget and preserve their actual turn", () => {
+  const from = { col: 0, row: 0 }, turn = { col: 2, row: 0 }, end = { col: 2, row: 6 };
+  const playback = plan([move(from, turn, "rider", "first"), move(turn, end, "rider", "second")], view(from), view(end));
+  assert.equal(playback.durationMs, 720);
+  assert.deepEqual(playback.movementPlan.cues.map(c => [c.atMs, c.durationMs]), [[0, 180], [180, 540]]);
+  assert.deepEqual(combatVisualPlaybackFrame(playback, 90).visualMotionByUnitId.mover.position, { col: 1, row: 0 });
+  assert.deepEqual(combatVisualPlaybackFrame(playback, 450).visualMotionByUnitId.mover.position, { col: 2, row: 3 });
+});
+
 test("teleport fades at the two event endpoints with no intermediate movement/hazard geometry", () => {
   const p = plan([move(A, D, "teleport")], view(), view(D));
   const cue = p.movementPlan.cues[0];
@@ -588,7 +621,8 @@ test("asymmetric motion and hazard cells share P1/P2 canonical geometry at edges
       view(),
       view(cell),
     );
-    const arrived = combatVisualPlaybackFrame(p, 161).visualMotionByUnitId.mover.position;
+    const movementEnd = p.movementPlan.cues[0].atMs + p.movementPlan.cues[0].durationMs;
+    const arrived = combatVisualPlaybackFrame(p, movementEnd + 1).visualMotionByUnitId.mover.position;
     const hazard = movementCueVfx(p.movementPlan.cues[1])[0].sourceCell!;
     for (const flipped of [false, true])
       assert.deepEqual(

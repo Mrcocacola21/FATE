@@ -1,6 +1,7 @@
 import type { PlayerId, PlayerView, UnitState } from "rules";
 import { getUnitVisualVariant, getUnitVisualVariantLabelKey } from "../../assets/unitVisuals";
 import { radiusCellsToOverlay } from "./vfxGeometry";
+import { hasCommanderSupport } from "./commanderSupport";
 
 // Declaration order is the badge composition order: restrictions, bones, private
 // knowledge, protections, forms, benefits, court effects. No source IDs/counts.
@@ -66,6 +67,7 @@ export const STATUS_VISUALS = {
   patience: { glyph: "P", tone: "positive", label: "persistentStatus.patience" },
   precision: { glyph: "PR", tone: "positive", label: "persistentStatus.precision" },
   form: { glyph: "F", tone: "neutral", label: "persistentStatus.form" },
+  commanderAura: { glyph: "", icon: "banner", tone: "positive", label: "persistentStatus.commanderAura" },
   diagonalMove: { glyph: "DG", tone: "positive", label: "persistentStatus.diagonalMove" },
   decreeMove: { glyph: "DM", tone: "positive", label: "persistentStatus.decreeMove" },
   mongolCharge: { glyph: "MC", tone: "positive", label: "persistentStatus.mongolCharge" },
@@ -90,11 +92,11 @@ export interface PersistentUnitStatus {
   labelKey: string;
 }
 
-/** Read only the recipient's current projected unit. Never resolve source units. */
+/** Read only the current recipient's projected unit and permitted view context. */
 export function resolveUnitStatuses(
   unit: UnitState,
   playerId: PlayerId | null,
-  context?: Pick<PlayerView, "roundNumber" | "ruleDeclaration">,
+  context?: Pick<PlayerView, "roundNumber" | "ruleDeclaration"> & Partial<Pick<PlayerView, "units">>,
 ): PersistentUnitStatus[] {
   if (!unit.isAlive) return [];
   const active = new Set<PersistentStatusKind>();
@@ -126,6 +128,7 @@ export function resolveUnitStatuses(
   if (unit.friskPrecisionStrikeReady) active.add("precision");
   const variant = getUnitVisualVariant(unit);
   if (variant || unit.transformed || unit.gutsBerserkModeActive) active.add("form");
+  if (hasCommanderSupport(unit, context?.units, playerId)) active.add("commanderAura");
   if (unit.genghisKhanDiagonalMoveActive) active.add("diagonalMove");
   if (unit.genghisKhanDecreeMovePending) active.add("decreeMove");
   if (unit.genghisKhanMongolChargeActive) active.add("mongolCharge");

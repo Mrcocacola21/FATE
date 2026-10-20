@@ -1,9 +1,14 @@
 import type { Coord, ProjectedGameEvent, PlayerView, RollKind } from "rules";
 import type { BoardEventBatch } from "./types";
-import { diceResultTiming } from "./diceResultTiming";
+import { diceResultTiming, DICE_RESULT_PAIR_STAGGER_MS } from "./diceResultTiming";
+import { pairCombatRoll } from "./combatExchange";
 import { riverStage, riverMovementCue, type TransportPresentationCue, type TransportAttachment } from "./riverPresentation";
 import { sameAbilityResolution } from "./heroPresentation";
 import { FIREBALL_TIMING, FIRE_PARADE_TIMING, isFireballResolution } from "./asgorePresentation";
+import { kaiserBuildupMs } from "./kaiserPresentation";
+import { isFinalPresentationDeath, finalDeathPresentationEvents } from "./finalDeath";
+import { MELEE_RETURN_MS, meleeLungeDirection, meleeLungePose, type MeleeLungePose } from "./meleeLunge";
+import { expansionViewAtEvent } from "../../features/vfx/expansionPresentation";
 import {
   CURSE_APPLY_LEAD_MS,
   GASTER_TIMING,
@@ -14,6 +19,8 @@ import {
   confirmedMovement,
   movementCueFromEvent,
   movementSegmentDuration,
+  walkingDistance,
+  walkingSegmentDuration,
   type MovementPresentationCue,
   type MovementPresentationPlan,
 } from "./movementPresentation";
@@ -77,6 +84,8 @@ export type CombatPresentationCue = {
   | {
       kind: "roll";
       roll: Extract<ProjectedGameEvent, { type: "rollResolved" }>;
+      pairedRoll?: Extract<ProjectedGameEvent, { type: "rollResolved" }>;
+      outcome?: "hit" | "miss";
       reducedMotion?: boolean;
     }
   | {
@@ -94,6 +103,7 @@ export type CombatPresentationCue = {
 type WithoutCueIdentity<T> = T extends unknown ? Omit<T, "id" | "eventIndex"> : never;
 
 export type VisualPlaybackQueueItem =
+  | { type: "placement"; unitId: string; cell: Coord; startsAtMs: number; endsAtMs: number }
   | { type: "transportAttach" | "transportDetach"; attachment: TransportAttachment; startsAtMs: number; endsAtMs: number }
   | {
       type: "movement";
@@ -106,6 +116,7 @@ export type VisualPlaybackQueueItem =
   | {
       type: "attack";
       unitId: string;
+      lunge?: { direction: Coord; contactMs: number };
       startsAtMs: number;
       endsAtMs: number;
     }
@@ -160,6 +171,7 @@ export interface CombatVisualPlaybackFrame {
   complete: boolean;
   roll: Extract<CombatPresentationCue, { kind: "roll" }> | null;
   visualMotionByUnitId: Record<string, { position: Coord; opacity: number; mode: string }>;
+  visualAttackByUnitId: Record<string, MeleeLungePose>;
 }
 
 export function isGameplayProjectedUnit(view: PlayerView, unitId: string): boolean {
@@ -222,10 +234,11 @@ function damageFromEvent(
     event.type === "papyrusBonePunished" ||
     event.type === "sansBoneFieldPunished" ||
     event.type === "sansLastAttackTick" ||
+    event.type === "heroSelfCost" ||
     event.type === "lechyStormRollResult"
   ) {
     if (event.damage <= 0) return null;
-    targetUnitId = event.type === "lechyStormRollResult" ? event.unitId : event.targetId;
+    targetUnitId = event.type === "lechyStormRollResult" || event.type === "heroSelfCost" ? event.unitId : event.targetId;
     sourceUnitId = event.type === "papyrusBonePunished" ? event.papyrusId : undefined;
     amount = event.damage;
     explicitNextHp = event.hpAfter;
@@ -283,6 +296,8 @@ export function buildCombatVisualPlaybackPlan(params: {
   holdResolvedState?: boolean;
   transportAttachments?: TransportAttachment[];
 }): CombatVisualPlaybackPlan {
+  params = { ...params, batch: { ...params.batch,
+    events: finalDeathPresentationEvents(params.batch.events, params.finalView) } };
   const timing = params.reducedMotion ? REDUCED_TIMING : NORMAL_TIMING;
   const finalSnapshot = cloneView(params.finalView);
   let transportAttachments = [...(params.transportAttachments ?? [])];
@@ -290,6 +305,7 @@ export function buildCombatVisualPlaybackPlan(params: {
     ...params.startingUnitsByUnitId,
   };
   const playbackStartingHp = { ...params.startingHpByUnitId };
+  const placedIds = new Set(params.batch.events.filter(event => event.type === "unitPlaced").map(event => event.unitId));
   const revealIds = new Set(
     params.batch.events
       .filter((event) => event.type === "stealthRevealed")
@@ -305,7 +321,7 @@ export function buildCombatVisualPlaybackPlan(params: {
     if (!previousUnit) {
       if (
         params.holdResolvedState &&
-        !revealIds.has(unitId) &&
+        !revealIds.has(unitId) && !placedIds.has(unitId) &&
         !params.batch.events.some((event) => confirmedMovement(event)?.unitId === unitId)
       ) {
         // An ahead snapshot can contain a reveal still buffered by the shared
@@ -324,7 +340,7 @@ export function buildCombatVisualPlaybackPlan(params: {
         playbackStartingUnits[unitId] = {
           ...finalUnit,
           hp: finalUnit.hp + hazardDamage,
-          position: revealIds.has(unitId) ? null : finalUnit.position,
+          position: revealIds.has(unitId) || placedIds.has(unitId) ? null : finalUnit.position,
         };
         playbackStartingHp[unitId] = finalUnit.hp + hazardDamage;
       }
@@ -347,11 +363,16 @@ export function buildCombatVisualPlaybackPlan(params: {
   const queue: VisualPlaybackQueueItem[] = [];
   const eventDelaysMs = params.batch.events.map(() => 0);
   const combatCues: CombatPresentationCue[] = [];
+  const eventBuildupMs: number[] = [];
   const movementCues: MovementPresentationCue[] = [];
   const transportCues: TransportPresentationCue[] = [];
   const transportSteps = new Map<string, { atMs: number; durationMs: number }>();
   const movementCount = params.batch.events.filter((event) => confirmedMovement(event)).length;
   const segmentMs = movementSegmentDuration(movementCount, params.reducedMotion);
+  const totalWalkingDistance = params.batch.events.reduce((sum, event) => {
+    const move = confirmedMovement(event);
+    return sum + (move && (move.mode === "normal" || move.mode === "rider") ? walkingDistance(move.from, move.to) : 0);
+  }, 0);
   // Start from the first authorized segment even if the snapshot has already advanced.
   const anchored = new Set<string>();
   for (const event of params.batch.events) {
@@ -459,6 +480,7 @@ export function buildCombatVisualPlaybackPlan(params: {
   });
   const scheduleDeath = (event: Extract<ProjectedGameEvent, { type: "unitDied" }>,
     eventIndex: number, deathStart: number) => {
+    if (!isFinalPresentationDeath(params.batch.events, eventIndex, params.finalView)) return;
     if (scheduledDeaths.has(event.unitId)) return;
     const death: DeathVisualEvent = { type: "death", unitId: event.unitId,
       cause: event.cause, chainId: event.chainId, eventIndex,
@@ -509,8 +531,10 @@ export function buildCombatVisualPlaybackPlan(params: {
       if (area.startMs === undefined) {
         area.startMs = cursorMs;
         const buildup = isGasterResolution(area.aggregate) ? GASTER_TIMING.outcomesMs
-          : area.aggregate.abilityId === "asgoreFireParade" ? FIRE_PARADE_TIMING.outcomesMs : 0;
+          : area.aggregate.abilityId === "asgoreFireParade" ? FIRE_PARADE_TIMING.outcomesMs
+          : kaiserBuildupMs(area.aggregate.abilityId, params.reducedMotion);
         area.impactMs = cursorMs + buildup;
+        eventBuildupMs[area.aggregateIndex] = kaiserBuildupMs(area.aggregate.abilityId, params.reducedMotion);
         aggregateStarts.set(area.aggregateIndex, cursorMs);
         if (isGasterResolution(area.aggregate))
           signatureEndMs = Math.max(signatureEndMs, cursorMs + GASTER_TIMING.endMs);
@@ -520,7 +544,7 @@ export function buildCombatVisualPlaybackPlan(params: {
       const impact = area.impactMs!;
       const outcomeEnd = impact + Math.max(timing.outcomeMs, area.hpMs);
       const deathStart = outcomeEnd + timing.deathPauseMs;
-      eventDelaysMs[eventIndex] = event.type === "aoeResolved" ? area.startMs! : impact;
+      eventDelaysMs[eventIndex] = event.type === "aoeResolved" && !kaiserBuildupMs(area.aggregate.abilityId, params.reducedMotion) ? area.startMs! : impact;
       if (event.type === "attackResolved") {
         addCue(eventIndex, { kind: event.hit ? "hit" : "miss", unitId: event.defenderId,
           ...(event.targetCell ? { cell: { ...event.targetCell } } : {}),
@@ -597,6 +621,11 @@ export function buildCombatVisualPlaybackPlan(params: {
       });
     }
     eventDelaysMs[eventIndex] = aggregateStarts.get(eventIndex) ?? cursorMs;
+    if (event.type === "unitPlaced" && finalSnapshot.units[event.unitId]?.position) {
+      queue.push({ type: "placement", unitId: event.unitId, cell: { ...event.position },
+        startsAtMs: cursorMs, endsAtMs: cursorMs });
+      return;
+    }
     const stage = riverStage(event);
     if (stage && abilityUseId) {
       if (event.type === "riverBoatDisembarked" && !params.batch.events.some(e => e.type === "unitMoved"
@@ -647,6 +676,7 @@ export function buildCombatVisualPlaybackPlan(params: {
       cursorMs += CURSE_APPLY_LEAD_MS;
       return;
     }
+    const movement = confirmedMovement(event);
     const movementCue = movementCueFromEvent({
       event,
       events: params.batch.events,
@@ -654,12 +684,14 @@ export function buildCombatVisualPlaybackPlan(params: {
       view: params.finalView,
       namespace: params.batch.streamId ?? params.batch.previewId ?? "preview",
       atMs: cursorMs,
-      durationMs: confirmedMovement(event)
-        ? confirmedMovement(event)?.mode === "teleport"
+      durationMs: movement
+        ? movement.mode === "teleport"
           ? params.reducedMotion
             ? 100
             : 220
-          : segmentMs
+          : movement.mode === "normal" || movement.mode === "rider"
+            ? walkingSegmentDuration(movement.from, movement.to, totalWalkingDistance, params.reducedMotion)
+            : segmentMs
         : params.reducedMotion
           ? 120
           : 260,
@@ -743,11 +775,18 @@ export function buildCombatVisualPlaybackPlan(params: {
     }
     if (event.type === "rollResolved" && isPresentedRoll(event.rollKind)) {
       const { durationMs } = diceResultTiming(params.reducedMotion);
+      const previous = combatCues[combatCues.length - 1];
+      const paired = previous?.kind === "roll" && previous.atMs + previous.durationMs === cursorMs
+        ? pairCombatRoll(previous, { ...previous, roll: event, pairedRoll: undefined }).pairedRoll : undefined;
+      const overlap = paired && previous?.kind === "roll" && combatRollSide(previous.roll.rollKind) === "attack";
+      const atMs = overlap ? previous.atMs + DICE_RESULT_PAIR_STAGGER_MS : cursorMs;
+      eventDelaysMs[eventIndex] = atMs;
       addCue(eventIndex, {
-        kind: "roll", roll: event, atMs: cursorMs, durationMs,
+        kind: "roll", roll: event, atMs, durationMs,
+        ...(paired ? { pairedRoll: paired } : {}),
         reducedMotion: params.reducedMotion,
       });
-      cursorMs += durationMs;
+      cursorMs = atMs + durationMs;
       return;
     }
     if (event.type === "unitDied") transportAttachments = transportAttachments.filter(
@@ -821,7 +860,12 @@ export function buildCombatVisualPlaybackPlan(params: {
       cursorMs = Math.max(end, impact + timing.outcomeMs) + timing.betweenHitsMs;
       return;
     }
-    const attackStart = cursorMs;
+    // A confirmed attack can wind up during the last dice hold. Contact and HP
+    // still wait for the readable result; projectiles keep their travel timing.
+    const lastRoll = combatCues[combatCues.length - 1];
+    const attackStart = event.type === "attackResolved" && !isFireballResolution(event) &&
+      lastRoll?.kind === "roll" && lastRoll.atMs + lastRoll.durationMs === cursorMs
+      ? Math.max(lastRoll.atMs, cursorMs - timing.attackLeadMs) : cursorMs;
     const impact =
       attackStart +
       (isFireballResolution(event)
@@ -844,13 +888,17 @@ export function buildCombatVisualPlaybackPlan(params: {
         atMs: impact,
         durationMs: timing.outcomeMs,
       });
-      if (event.attackerId)
+      if (event.attackerId) {
+        const direction = !params.reducedMotion
+          ? meleeLungeDirection(event, expansionViewAtEvent(params.finalView, params.batch.events, eventIndex)) : null;
         queue.push({
           type: "attack",
           unitId: event.attackerId,
+          ...(direction ? { lunge: { direction, contactMs: impact - attackStart } } : {}),
           startsAtMs: attackStart,
-          endsAtMs: impact + timing.impactPauseMs,
+          endsAtMs: impact + (direction ? Math.max(MELEE_RETURN_MS, timing.impactPauseMs) : timing.impactPauseMs),
         });
+      }
     }
     const damage = damageFromEvent(event, eventIndex, runningHp, playbackStartingUnits);
     if (!damage) {
@@ -867,11 +915,15 @@ export function buildCombatVisualPlaybackPlan(params: {
     if (
       event.type === "stakeTriggered" ||
       event.type === "hiddenCollisionResolved" ||
+      event.type === "heroSelfCost" ||
+      event.type === "papyrusBonePunished" || event.type === "sansBoneFieldPunished" || event.type === "lechyStormRollResult" ||
       event.type === "sansLastAttackTick"
     ) {
       const cell =
         event.type === "stakeTriggered"
           ? event.markerPos
+          : event.type === "heroSelfCost" ? event.sourceCell
+          : event.type === "papyrusBonePunished" || event.type === "sansBoneFieldPunished" || event.type === "lechyStormRollResult" ? event.targetCell
           : event.type === "sansLastAttackTick"
             ? event.targetCell
             : event.from;
@@ -908,6 +960,8 @@ export function buildCombatVisualPlaybackPlan(params: {
             (cue): cue is Extract<MovementPresentationCue, { kind: "reveal" }> =>
               cue.kind === "reveal" && cue.unitId === unitId,
           )?.cell ??
+          [...queue].reverse().find((item): item is Extract<VisualPlaybackQueueItem, { type: "placement" }> =>
+            item.type === "placement" && item.unitId === unitId)?.cell ??
           previous.position,
         isAlive: previous.isAlive,
       };
@@ -927,6 +981,7 @@ export function buildCombatVisualPlaybackPlan(params: {
     batch: {
       ...params.batch,
       eventDelaysMs,
+      eventBuildupMs,
       eventSfxDelaysMs: eventDelaysMs,
       combatCues,
       movementCues,
@@ -966,18 +1021,25 @@ export function combatVisualPlaybackFrame(
       complete: true,
       roll: null,
       visualMotionByUnitId: {},
+      visualAttackByUnitId: {},
     };
   }
 
   const visualHpByUnitId = { ...plan.startingHpByUnitId };
   let transportAttachments = [...plan.startingTransportAttachments];
   const visualMotionByUnitId: CombatVisualPlaybackFrame["visualMotionByUnitId"] = {};
+  const visualAttackByUnitId: CombatVisualPlaybackFrame["visualAttackByUnitId"] = {};
   const visualUnitsByUnitId = { ...plan.startingUnitsByUnitId };
   const visualStateByUnitId: UnitVisualStateByUnitId = Object.fromEntries(
     Object.keys(visualUnitsByUnitId).map((unitId) => [unitId, "idle" as const]),
   );
 
   for (const item of plan.queue) {
+    if (item.type === "placement") {
+      if (elapsedMs >= item.startsAtMs && visualUnitsByUnitId[item.unitId])
+        visualUnitsByUnitId[item.unitId] = { ...visualUnitsByUnitId[item.unitId], position: { ...item.cell } };
+      continue;
+    }
     if (item.type === "transportAttach" || item.type === "transportDetach") {
       if (elapsedMs >= item.startsAtMs) {
         transportAttachments = transportAttachments.filter(a => a.abilityUseId !== item.attachment.abilityUseId);
@@ -1059,6 +1121,8 @@ export function combatVisualPlaybackFrame(
     if (item.type === "attack") {
       if (elapsedMs >= item.startsAtMs && elapsedMs < item.endsAtMs) {
         visualStateByUnitId[item.unitId] = "attacking";
+        if (item.lunge && visualUnitsByUnitId[item.unitId]?.position)
+          visualAttackByUnitId[item.unitId] = meleeLungePose(item.lunge.direction, elapsedMs - item.startsAtMs, item.lunge.contactMs);
       }
       continue;
     }
@@ -1077,6 +1141,18 @@ export function combatVisualPlaybackFrame(
     }
   }
 
+  const latestRoll = [...(plan.batch.combatCues ?? [])].reverse().find(
+    (cue): cue is Extract<CombatPresentationCue, { kind: "roll" }> => cue.kind === "roll" && elapsedMs >= cue.atMs,
+  );
+  const nextOutcome = latestRoll && plan.batch.combatCues?.find(cue =>
+    (cue.kind === "hit" || cue.kind === "miss") && cue.atMs >= latestRoll.atMs + latestRoll.durationMs &&
+    (!latestRoll.roll.unitId || (combatRollSide(latestRoll.roll.rollKind) === "defense"
+      ? cue.unitId === latestRoll.roll.unitId
+      : (plan.batch.events[cue.eventIndex] as { attackerId?: string }).attackerId === latestRoll.roll.unitId)));
+  const roll = latestRoll && (elapsedMs < latestRoll.atMs + latestRoll.durationMs ||
+    (nextOutcome && elapsedMs < nextOutcome.atMs + nextOutcome.durationMs))
+    ? { ...latestRoll, ...(nextOutcome && elapsedMs >= nextOutcome.atMs &&
+      (nextOutcome.kind === "hit" || nextOutcome.kind === "miss") ? { outcome: nextOutcome.kind } : {}) } : null;
   return {
     transportAttachments: transportAttachments.filter(a => visualUnitsByUnitId[a.carrierId]?.position && visualUnitsByUnitId[a.passengerId]?.position),
     batch: plan.batch,
@@ -1084,11 +1160,8 @@ export function combatVisualPlaybackFrame(
     visualUnitsByUnitId,
     visualStateByUnitId,
     complete: false,
-    roll:
-      plan.batch.combatCues?.find(
-        (cue): cue is Extract<CombatPresentationCue, { kind: "roll" }> =>
-          cue.kind === "roll" && elapsedMs >= cue.atMs && elapsedMs < cue.atMs + cue.durationMs,
-      ) ?? null,
+    roll,
     visualMotionByUnitId,
+    visualAttackByUnitId,
   };
 }

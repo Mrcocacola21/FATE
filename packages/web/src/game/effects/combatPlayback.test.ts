@@ -6,6 +6,7 @@ import {
   combatVisualPlaybackFrame,
   isGameplayProjectedUnit,
 } from "./combatPlayback";
+import { meleeLungeDirection } from "./meleeLunge";
 
 function unit(id: string, hp: number, position = { col: 2, row: 2 }): UnitState {
   return {
@@ -19,7 +20,7 @@ function unit(id: string, hp: number, position = { col: 2, row: 2 }): UnitState 
   } as UnitState;
 }
 
-function attack(previousHp: number, nextHp: number): ProjectedGameEvent {
+function attack(previousHp: number, nextHp: number): Extract<ProjectedGameEvent, { type: "attackResolved" }> {
   return {
     type: "attackResolved",
     attackerId: "attacker",
@@ -46,6 +47,58 @@ function playerView(target: UnitState): PlayerView {
     },
   } as unknown as PlayerView;
 }
+
+test("adjacent melee leans toward contact and returns without moving tactical coordinates or changing hit timing", () => {
+  for (const hit of [true, false]) {
+    const finalView = playerView(unit("target", hit ? 3 : 5));
+    const event = { ...attack(5, hit ? 3 : 5), isBasicAttack: true, hit };
+    const plan = buildCombatVisualPlaybackPlan({ batch: { revision: 1, events: [event] },
+      startingHpByUnitId: { attacker: 6, target: 5 }, startingUnitsByUnitId: playerView(unit("target", 5)).units,
+      finalView, reducedMotion: false });
+    const cue = plan.batch.combatCues!.find(cue => cue.kind === (hit ? "hit" : "miss"))!;
+    assert.equal(cue.atMs, 210);
+    const windup = combatVisualPlaybackFrame(plan, 70).visualAttackByUnitId.attacker;
+    assert(windup.distance < 0, "small anticipation before forward thrust");
+    const contact = combatVisualPlaybackFrame(plan, cue.atMs);
+    assert.deepEqual(contact.visualAttackByUnitId.attacker.direction, { col: 0, row: 1 });
+    assert(Math.abs(contact.visualAttackByUnitId.attacker.distance - .24) < .0001);
+    assert(Math.abs(contact.visualAttackByUnitId.attacker.stretch - 1.075) < .0001);
+    assert.deepEqual(contact.visualUnitsByUnitId.attacker.position, { col: 2, row: 1 });
+    assert.deepEqual(contact.visualMotionByUnitId, {}, "lunge cannot move aura, route or status anchors");
+    assert(combatVisualPlaybackFrame(plan, 250).visualAttackByUnitId.attacker.distance < .24);
+    assert.equal(combatVisualPlaybackFrame(plan, 290).visualAttackByUnitId.attacker, undefined);
+    assert.deepEqual(combatVisualPlaybackFrame(plan, plan.durationMs).visualAttackByUnitId, {});
+  }
+});
+
+test("lunge excludes distant, ranged, special, hidden and missing-source attacks and normalizes diagonals", () => {
+  const current = playerView(unit("target", 5));
+  const event = { ...attack(5, 3), isBasicAttack: true };
+  assert.equal(meleeLungeDirection({ ...event, targetCell: { col: 2, row: 3 } }, current), null);
+  assert.equal(meleeLungeDirection({ ...event, sourceCell: null }, current), null);
+  assert.equal(meleeLungeDirection({ ...event, isBasicAttack: undefined }, current), null);
+  assert.equal(meleeLungeDirection({ ...event, attackSignature: "friskPrecisionStrike" }, current), null);
+  current.units.attacker.class = "archer";
+  assert.equal(meleeLungeDirection(event, current), null);
+  current.units.attacker.heroId = "artemida";
+  assert.equal(meleeLungeDirection(event, current), null, "adjacent arrow still releases a projectile");
+  current.units.attacker.heroId = "guts";
+  current.units.attacker.class = "berserker";
+  assert(meleeLungeDirection({ ...event, isBasicAttack: undefined, attackSignature: "gutsBerserkSingle" }, current));
+  const direction = meleeLungeDirection({ ...event, targetCell: { col: 3, row: 2 } }, current)!;
+  assert(Math.abs(Math.hypot(direction.col, direction.row) - 1) < .0001);
+  current.units.attacker.position = null;
+  assert.equal(meleeLungeDirection(event, current), null);
+});
+
+test("reduced motion preserves the adjacent attack outcome without token thrust", () => {
+  const current = playerView(unit("target", 5));
+  const plan = buildCombatVisualPlaybackPlan({ batch: { revision: 1, events: [{ ...attack(5, 3), isBasicAttack: true }] },
+    startingHpByUnitId: { attacker: 6, target: 5 }, startingUnitsByUnitId: current.units,
+    finalView: playerView(unit("target", 3)), reducedMotion: true });
+  assert.equal(plan.batch.combatCues!.find(cue => cue.kind === "hit")!.atMs, 70);
+  assert.deepEqual(combatVisualPlaybackFrame(plan, 60).visualAttackByUnitId, {});
+});
 
 test("lethal damage keeps a render-only ghost through HP tween and death", () => {
   const startingUnits = {

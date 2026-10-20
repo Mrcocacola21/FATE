@@ -8,6 +8,7 @@ import {
 import { buildPendingAoEPreview, projectPendingDecision } from "./pending";
 import { projectRuleDeclarationState } from "./ruleDeclarations";
 import { projectRosterUnits } from "./roster";
+import { filterStatusSources } from "./statusSources";
 
 export function makeSpectatorView(state: GameState): PlayerView {
   const {
@@ -34,6 +35,7 @@ export function makeSpectatorView(state: GameState): PlayerView {
   }
 
   // Public waiting status conveys no private target/remaining-roll cardinality.
+  filterStatusSources(units, "spectator");
   const pendingCombatQueueCount = 0;
   const stakeMarkers = collectSpectatorStakeMarkers(state);
   const forestMarkers = cloneForestMarkers(state);

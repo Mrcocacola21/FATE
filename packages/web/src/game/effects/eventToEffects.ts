@@ -1,4 +1,5 @@
 import type { Coord, ProjectedGameEvent, PlayerView } from "rules";
+import { basicExpansion, expansionMovement } from "../../features/vfx/expansionPresentation";
 import { isCoord, linePath, squareArea, uniqueCoords, visibleUnitCoord } from "./boardEffects";
 import type { BoardEffect, VisibleUnitPositions } from "./types";
 import type { CombatPresentationCue } from "./combatPlayback";
@@ -210,6 +211,7 @@ export function effectsFromGameEvent(
 ): BoardEffect[] {
   switch (event.type) {
     case "unitPlaced":
+      if (basicExpansion(context.view, event.unitId, "deploy")) return [];
       return isCoord(event.position)
         ? [
             {
@@ -653,7 +655,12 @@ export function effectsFromEventBatch(
     }
   }
 
-  for (const cue of movementCues ?? []) effects.push(...movementCueEffects(cue));
+  for (const cue of movementCues ?? []) {
+    // A thematic wake owns ordinary hero travel. Keep common trails for base
+    // pieces and forced movement; transports retain their existing presentation.
+    if (expansionMovement(cue, context.view).length) continue;
+    effects.push(...movementCueEffects(cue));
+  }
 
   const seen = new Set<string>();
   return effects.filter((effect) => {

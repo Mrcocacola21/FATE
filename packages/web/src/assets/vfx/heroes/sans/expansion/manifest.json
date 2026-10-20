@@ -1,0 +1,323 @@
+{
+  "schemaVersion": 1,
+  "heroId": "sans",
+  "assetRoot": "packages/web/src/assets/",
+  "status": "imported_assets_not_runtime_bindings",
+  "assets": [
+    {
+      "id": "V-sans-move_trail",
+      "heroId": "sans",
+      "filename": "vfx/heroes/sans/expansion/move_trail.png",
+      "sha256": "45b1f4d84e9fde6951c5925dd44ede366bd63e3bba47f9f1065477ed54e7f407",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "+X",
+      "phase": "move",
+      "geometry": "trail",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "sans.basic.move.move",
+      "loop": false,
+      "presentationProfile": "trail",
+      "requestedRoleOrAbilityRefs": [
+        "basic.move"
+      ],
+      "declaredSourceAbilityId": "basic.move",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-sans-move_arrive",
+      "heroId": "sans",
+      "filename": "vfx/heroes/sans/expansion/move_arrive.png",
+      "sha256": "ae8802c9ffa509568f497015e399f4e24ec8f7640f147fa10d4e3baa271593aa",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "arrive",
+      "geometry": "impact",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "sans.basic.move.arrive",
+      "loop": false,
+      "presentationProfile": "impact",
+      "requestedRoleOrAbilityRefs": [
+        "basic.move"
+      ],
+      "declaredSourceAbilityId": "basic.move",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-sans-attack_swing",
+      "heroId": "sans",
+      "filename": "vfx/heroes/sans/expansion/attack_swing.png",
+      "sha256": "750e744392e3b17233af08a2616288e4e3dcfb9b7a6f4d81e744615e2d17eeb1",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "+X",
+      "phase": "swing",
+      "geometry": "swing",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "sans.basic.attack.swing",
+      "loop": false,
+      "presentationProfile": "swing",
+      "requestedRoleOrAbilityRefs": [
+        "basic.attack"
+      ],
+      "declaredSourceAbilityId": "basic.attack",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-sans-attack_impact",
+      "heroId": "sans",
+      "filename": "vfx/heroes/sans/expansion/attack_impact.png",
+      "sha256": "9e74dee7f86ed349599fe4bdd917980e63f436ed783a74f67be6a2bb90c27ef1",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "hit",
+      "geometry": "impact",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "sans.basic.attack.hit",
+      "loop": false,
+      "presentationProfile": "impact",
+      "requestedRoleOrAbilityRefs": [
+        "basic.attack"
+      ],
+      "declaredSourceAbilityId": "basic.attack",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "EXTEND",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-sans-select_ring",
+      "heroId": "sans",
+      "filename": "vfx/heroes/sans/expansion/select_ring.png",
+      "sha256": "c2e98d3de843de699d6979e6cace5d6ffd773c8c35950e79305056b487bbf81a",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 1,
+      "fps": 0,
+      "durationMs": null,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "select",
+      "geometry": "static",
+      "layer": "ground",
+      "sourceVisibility": "local",
+      "compositeGroup": "sans.basic.select.select",
+      "loop": false,
+      "presentationProfile": "static",
+      "requestedRoleOrAbilityRefs": [
+        "basic.select"
+      ],
+      "declaredSourceAbilityId": "basic.select",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-sans-deploy",
+      "heroId": "sans",
+      "filename": "vfx/heroes/sans/expansion/deploy.png",
+      "sha256": "2c7f1428b4e5dc6ff4c10b707efcdb2992d9107a67db65ad1321e8df92917d7f",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 16,
+      "fps": 24,
+      "durationMs": 667,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "deploy",
+      "geometry": "deploy",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "sans.basic.deploy.deploy",
+      "loop": false,
+      "presentationProfile": "deploy",
+      "requestedRoleOrAbilityRefs": [
+        "basic.deploy"
+      ],
+      "declaredSourceAbilityId": "basic.deploy",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-sans-death_final",
+      "heroId": "sans",
+      "filename": "vfx/heroes/sans/expansion/death_final.png",
+      "sha256": "7d9b8ffd4049de47a6a9667d8f860fe99f84c8fc2ea5cc3390c477046c7e9a01",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 24,
+      "fps": 24,
+      "durationMs": 1000,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "final",
+      "geometry": "death",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "sans.basic.death.final",
+      "loop": false,
+      "presentationProfile": "death",
+      "requestedRoleOrAbilityRefs": [
+        "basic.death"
+      ],
+      "declaredSourceAbilityId": "basic.death",
+      "canonicalTriggerHint": "Окончательная смерть; дождаться возрождений, предсмертной атаки/выбора проклятия",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-sans-auto_defense",
+      "heroId": "sans",
+      "filename": "vfx/heroes/sans/expansion/auto_defense.png",
+      "sha256": "712529306b7d27e15af75fdc453d09a00f13656f2bab143e18bc8506f8243807",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "defense",
+      "geometry": "defense",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "sans.sansSpearmanFeature.defense",
+      "loop": false,
+      "presentationProfile": "defense",
+      "requestedRoleOrAbilityRefs": [
+        "defense"
+      ],
+      "declaredSourceAbilityId": "sansSpearmanFeature",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P2",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-sans-trickster_sweep",
+      "heroId": "sans",
+      "filename": "vfx/heroes/sans/expansion/trickster_sweep.png",
+      "sha256": "06b9e46571cb929b6ed6a27dd2c5427f92b059cc1eba671f0881e7ac10fbc783",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 24,
+      "fps": 24,
+      "durationMs": 1000,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "sweep",
+      "geometry": "aoe",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "sans.tricksterAoE.sweep",
+      "loop": false,
+      "presentationProfile": "aoe",
+      "requestedRoleOrAbilityRefs": [
+        "tricksterAoE"
+      ],
+      "declaredSourceAbilityId": "tricksterAoE",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-sans-bone_field_tick",
+      "heroId": "sans",
+      "filename": "vfx/heroes/sans/expansion/bone_field_tick.png",
+      "sha256": "43620e296122a440f622b9857d0c37f05b7ce352a91b287ba4540e9aa6591ac9",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "tick",
+      "geometry": "impact",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "sans.sansBoneField.tick",
+      "loop": false,
+      "presentationProfile": "impact",
+      "requestedRoleOrAbilityRefs": [
+        "sansBoneField"
+      ],
+      "declaredSourceAbilityId": "sansBoneField",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P2",
+      "requestState": "EXTEND",
+      "runtimeIntegration": "pending"
+    }
+  ],
+  "notes": [
+    "Original PNG bytes preserved. This manifest does not register VFX or authorize visibility.",
+    "defense/stealth/basic.* are presentation roles; resolve actual rule events when connecting.",
+    "declaredSourceAbilityId is provenance, not proof that the unit has that ability."
+  ]
+}

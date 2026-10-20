@@ -1,0 +1,478 @@
+{
+  "schemaVersion": 1,
+  "heroId": "grand-kaiser",
+  "assetRoot": "packages/web/src/assets/",
+  "status": "imported_assets_not_runtime_bindings",
+  "assets": [
+    {
+      "id": "V-grand-kaiser-move_trail",
+      "heroId": "grand-kaiser",
+      "filename": "vfx/heroes/grand-kaiser/expansion/move_trail.png",
+      "sha256": "68e3ee1a5e374332ea75b07e58e7b62fd6ef8dca98e0f959bbf587cfa610d35c",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "+X",
+      "phase": "movement",
+      "geometry": "trail",
+      "layer": "world",
+      "sourceVisibility": "public",
+      "compositeGroup": "grand-kaiser-p1-move_trail",
+      "loop": false,
+      "presentationProfile": "trail",
+      "requestedRoleOrAbilityRefs": [
+        "basic.move"
+      ],
+      "declaredSourceAbilityId": "basic.move",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-grand-kaiser-move_arrive",
+      "heroId": "grand-kaiser",
+      "filename": "vfx/heroes/grand-kaiser/expansion/move_arrive.png",
+      "sha256": "89b74c9be72374af30bcc1b94676bac990545426f4922682abaacc7d937bf2c8",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": null,
+      "phase": "arrival",
+      "geometry": "point",
+      "layer": "world",
+      "sourceVisibility": "public",
+      "compositeGroup": "grand-kaiser-p1-move_arrive",
+      "loop": false,
+      "presentationProfile": "impact",
+      "requestedRoleOrAbilityRefs": [
+        "basic.move"
+      ],
+      "declaredSourceAbilityId": "basic.move",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-grand-kaiser-attack_projectile",
+      "heroId": "grand-kaiser",
+      "filename": "vfx/heroes/grand-kaiser/expansion/attack_projectile.png",
+      "sha256": "2eb45ac4e04d0515183366b0f83f83ec772f1384f3da5cb657ee3feb7ec578cc",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "+X",
+      "phase": "flight",
+      "geometry": "projectile",
+      "layer": "world",
+      "sourceVisibility": "public",
+      "compositeGroup": "grand-kaiser-p1-attack_projectile",
+      "loop": false,
+      "presentationProfile": "projectile",
+      "requestedRoleOrAbilityRefs": [
+        "basic.attack"
+      ],
+      "declaredSourceAbilityId": "basic.attack",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-grand-kaiser-attack_impact",
+      "heroId": "grand-kaiser",
+      "filename": "vfx/heroes/grand-kaiser/expansion/attack_impact.png",
+      "sha256": "fa4cba4992d50ec5b85fddbd709f24def47fb3b1b3d3d657c72f839aa3ddfbc4",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": null,
+      "phase": "hit",
+      "geometry": "point",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "grand-kaiser-p1-attack_impact",
+      "loop": false,
+      "presentationProfile": "impact",
+      "requestedRoleOrAbilityRefs": [
+        "basic.attack"
+      ],
+      "declaredSourceAbilityId": "basic.attack",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "EXTEND",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-grand-kaiser-select_ring",
+      "heroId": "grand-kaiser",
+      "filename": "vfx/heroes/grand-kaiser/expansion/select_ring.png",
+      "sha256": "7efac1ccffe4173150683780147f38ca23a1dbb95ea7a07c5605b6342e193e0a",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 1,
+      "fps": 0,
+      "durationMs": null,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": null,
+      "phase": "selected",
+      "geometry": "local-ring",
+      "layer": "ground",
+      "sourceVisibility": "local",
+      "compositeGroup": "grand-kaiser-p1-select_ring",
+      "loop": false,
+      "presentationProfile": "static",
+      "requestedRoleOrAbilityRefs": [
+        "basic.select"
+      ],
+      "declaredSourceAbilityId": "basic.select",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-grand-kaiser-deploy",
+      "heroId": "grand-kaiser",
+      "filename": "vfx/heroes/grand-kaiser/expansion/deploy.png",
+      "sha256": "ad0f89fcc730e7647e0eaa98feb16788127ba970a8c4152a57a3e919b9b64271",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 16,
+      "fps": 24,
+      "durationMs": 667,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": null,
+      "phase": "deployment",
+      "geometry": "point",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "grand-kaiser-p1-deploy",
+      "loop": false,
+      "presentationProfile": "deploy",
+      "requestedRoleOrAbilityRefs": [
+        "basic.deploy"
+      ],
+      "declaredSourceAbilityId": "basic.deploy",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-grand-kaiser-death_final",
+      "heroId": "grand-kaiser",
+      "filename": "vfx/heroes/grand-kaiser/expansion/death_final.png",
+      "sha256": "59780d511d2c45da67c445c3db914b5b5f8e1e2adeba6f4185745cfea222388f",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 24,
+      "fps": 24,
+      "durationMs": 1000,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": null,
+      "phase": "final-death",
+      "geometry": "point",
+      "layer": "world",
+      "sourceVisibility": "public",
+      "compositeGroup": "grand-kaiser-p1-death_final",
+      "loop": false,
+      "presentationProfile": "death",
+      "requestedRoleOrAbilityRefs": [
+        "basic.death"
+      ],
+      "declaredSourceAbilityId": "basic.death",
+      "canonicalTriggerHint": "Окончательная смерть; дождаться возрождений, предсмертной атаки/выбора проклятия",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-grand-kaiser-stealth_enter",
+      "heroId": "grand-kaiser",
+      "filename": "vfx/heroes/grand-kaiser/expansion/stealth_enter.png",
+      "sha256": "ff4dc2ba1d9075eae97b5f023e829c2ee16dd900edc0808e010ac21f810f472a",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 16,
+      "fps": 24,
+      "durationMs": 667,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": null,
+      "phase": "enter",
+      "geometry": "point",
+      "layer": "world",
+      "sourceVisibility": "owner",
+      "compositeGroup": "V-grand-kaiser-stealth_enter",
+      "loop": false,
+      "presentationProfile": "burst",
+      "requestedRoleOrAbilityRefs": [
+        "stealth"
+      ],
+      "declaredSourceAbilityId": "stealth",
+      "canonicalTriggerHint": "Вход в скрытность только владельцу, никаких подсказок противнику",
+      "priority": "P2",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-grand-kaiser-stealth_reveal",
+      "heroId": "grand-kaiser",
+      "filename": "vfx/heroes/grand-kaiser/expansion/stealth_reveal.png",
+      "sha256": "7cd107fcd9949522f9be62d60eba690098e5eb9ce568bcc37313d52991a99185",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 16,
+      "fps": 24,
+      "durationMs": 667,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": null,
+      "phase": "reveal",
+      "geometry": "point",
+      "layer": "world",
+      "sourceVisibility": "public",
+      "compositeGroup": "V-grand-kaiser-stealth_reveal",
+      "loop": false,
+      "presentationProfile": "burst",
+      "requestedRoleOrAbilityRefs": [
+        "stealth"
+      ],
+      "declaredSourceAbilityId": "stealth",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P2",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-grand-kaiser-auto_defense",
+      "heroId": "grand-kaiser",
+      "filename": "vfx/heroes/grand-kaiser/expansion/auto_defense.png",
+      "sha256": "c172a48113ba1f75c15bc1dccf4f47909cbaf8a95c9abcee0da0f3d11e73b371",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": null,
+      "phase": "defense",
+      "geometry": "point",
+      "layer": "world",
+      "sourceVisibility": "public",
+      "compositeGroup": "V-grand-kaiser-auto_defense",
+      "loop": false,
+      "presentationProfile": "defense",
+      "requestedRoleOrAbilityRefs": [
+        "defense"
+      ],
+      "declaredSourceAbilityId": "defense",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P2",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-grand-kaiser-dora_launch",
+      "heroId": "grand-kaiser",
+      "filename": "vfx/heroes/grand-kaiser/expansion/dora_launch.png",
+      "sha256": "95a06bb6dd6e08d5f2a9fb08256bb18f80e8af0a46e1f41b8ce58820b5518b08",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 16,
+      "fps": 24,
+      "durationMs": 667,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "+X",
+      "phase": "launch",
+      "geometry": "point",
+      "layer": "world",
+      "sourceVisibility": "public",
+      "compositeGroup": "V-grand-kaiser-dora_launch",
+      "loop": false,
+      "presentationProfile": "burst",
+      "requestedRoleOrAbilityRefs": [
+        "kaiserDora"
+      ],
+      "declaredSourceAbilityId": "kaiserDora",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P2",
+      "requestState": "EXTEND",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-grand-kaiser-carpet_approach",
+      "heroId": "grand-kaiser",
+      "filename": "vfx/heroes/grand-kaiser/expansion/carpet_approach.png",
+      "sha256": "f5ec7cd9174191d219133c73e530edcced5e3edbf8f5b966b432c82a1b354aba",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 24,
+      "fps": 24,
+      "durationMs": 1000,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": null,
+      "phase": "approach",
+      "geometry": "area",
+      "layer": "world",
+      "sourceVisibility": "public",
+      "compositeGroup": "V-grand-kaiser-carpet_approach",
+      "loop": false,
+      "presentationProfile": "aoe",
+      "requestedRoleOrAbilityRefs": [
+        "kaiserCarpetStrike"
+      ],
+      "declaredSourceAbilityId": "kaiserCarpetStrike",
+      "canonicalTriggerHint": "Потребуется отдельная фаза таймлайна до существующего impact; не менять геометрию правил",
+      "priority": "P2",
+      "requestState": "EXTEND",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-grand-kaiser-bunker_absorb",
+      "heroId": "grand-kaiser",
+      "filename": "vfx/heroes/grand-kaiser/expansion/bunker_absorb.png",
+      "sha256": "db2eb213949732efac2c7cde9ddbe1203e3a52021b4389d589a0b3c440fe3ccb",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": null,
+      "phase": "absorb",
+      "geometry": "point",
+      "layer": "world",
+      "sourceVisibility": "public",
+      "compositeGroup": "V-grand-kaiser-bunker_absorb",
+      "loop": false,
+      "presentationProfile": "impact",
+      "requestedRoleOrAbilityRefs": [
+        "kaiserBunker"
+      ],
+      "declaredSourceAbilityId": "kaiserBunker",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P2",
+      "requestState": "EXTEND",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-grand-kaiser-engineering_move",
+      "heroId": "grand-kaiser",
+      "filename": "vfx/heroes/grand-kaiser/expansion/engineering_move.png",
+      "sha256": "7fecfda80ee4011f83da0a84634a35bf2744e39a489d009afbe2ffcd0b147669",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "+X",
+      "phase": "movement",
+      "geometry": "trail",
+      "layer": "world",
+      "sourceVisibility": "public",
+      "compositeGroup": "V-grand-kaiser-engineering_move",
+      "loop": false,
+      "presentationProfile": "trail",
+      "requestedRoleOrAbilityRefs": [
+        "kaiserEngineeringMiracle"
+      ],
+      "declaredSourceAbilityId": "kaiserEngineeringMiracle",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P2",
+      "requestState": "EXTEND",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-grand-kaiser-engineering_attack",
+      "heroId": "grand-kaiser",
+      "filename": "vfx/heroes/grand-kaiser/expansion/engineering_attack.png",
+      "sha256": "821f20df1173258c0edf55509cfac1f65509efaa31aedcd78db751bb2026f8f5",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "+X",
+      "phase": "flight",
+      "geometry": "projectile",
+      "layer": "world",
+      "sourceVisibility": "public",
+      "compositeGroup": "V-grand-kaiser-engineering_attack",
+      "loop": false,
+      "presentationProfile": "projectile",
+      "requestedRoleOrAbilityRefs": [
+        "kaiserEngineeringMiracle"
+      ],
+      "declaredSourceAbilityId": "kaiserEngineeringMiracle",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P2",
+      "requestState": "EXTEND",
+      "runtimeIntegration": "pending"
+    }
+  ],
+  "notes": [
+    "Original PNG bytes preserved. This manifest does not register VFX or authorize visibility.",
+    "defense/stealth/basic.* are presentation roles; resolve actual rule events when connecting.",
+    "declaredSourceAbilityId is provenance, not proof that the unit has that ability."
+  ]
+}

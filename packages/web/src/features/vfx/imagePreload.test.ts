@@ -3,6 +3,43 @@ import test from "node:test";
 import { AssetLoadQueue } from "../../assets/assetLoadQueue";
 import { ImagePreloader } from "./imagePreload";
 
+test("a retained expansion roster cannot exceed the decoded-image budget", async (t) => {
+  const previous = Object.getOwnPropertyDescriptor(globalThis, "Image");
+  class ImageStub { src = ""; naturalWidth = 128; naturalHeight = 128; async decode() {} }
+  Object.defineProperty(globalThis, "Image", { configurable: true, value: ImageStub });
+  t.after(() => { if (previous) Object.defineProperty(globalThis, "Image", previous); else Reflect.deleteProperty(globalThis, "Image"); });
+  const cache = new ImagePreloader(() => new ImageStub() as unknown as HTMLImageElement, new AssetLoadQueue(1), () => undefined, 65536);
+  const roster = ["/expansion-a.png", "/expansion-b.png", "/expansion-c.png"];
+  cache.retainUrls([], roster);
+  await Promise.all(roster.map(url => cache.load(url)));
+  assert(cache.diagnostics.estimatedPixelBytes <= cache.diagnostics.budgetBytes);
+  assert.equal(cache.status(roster[0]), "cold");
+  assert.equal(cache.status(roster[2]), "ready");
+});
+
+test("form changes cancel obsolete roster warmup while an active Rebirth cue can promote the same queued image", async (t) => {
+  const previous = Object.getOwnPropertyDescriptor(globalThis, "Image");
+  const decoded: string[] = [];
+  class ImageStub { src = ""; naturalWidth = 128; naturalHeight = 128; async decode() { decoded.push(this.src); } }
+  Object.defineProperty(globalThis, "Image", { configurable: true, value: ImageStub });
+  t.after(() => { if (previous) Object.defineProperty(globalThis, "Image", previous); else Reflect.deleteProperty(globalThis, "Image"); });
+  const queue = new AssetLoadQueue(1);
+  let unblock!: () => void;
+  const blocked = queue.enqueue(() => new Promise<void>(resolve => { unblock = resolve; }));
+  const cache = new ImagePreloader(() => new ImageStub() as unknown as HTMLImageElement, queue, () => undefined);
+  cache.retainUrls([], ["/griffith/rebirth.png", "/griffith/unused.png"]);
+  const rebirthWarm = cache.load("/griffith/rebirth.png", "rebirth", "medium", true);
+  const unusedWarm = cache.load("/griffith/unused.png", "unused", "medium", true);
+  cache.retainUrls([], ["/femto/attack.png"]);
+  const live = cache.load("/griffith/rebirth.png", "rebirth", "high");
+  assert.equal(live, rebirthWarm);
+  unblock(); await blocked;
+  assert(await live, "the authorized in-flight scene may finish after its old roster retires");
+  assert.equal(await unusedWarm, undefined);
+  assert.deepEqual(decoded, ["/griffith/rebirth.png"]);
+  assert.equal(cache.status("/griffith/rebirth.png"), "cold", "completed retired art does not repin old roster memory");
+});
+
 test("image aliases share in-flight decode; memory counts full strip, failures diagnose once, old roster releases safely", async (t) => {
   let decodes = 0;
   let release!: () => void;

@@ -142,6 +142,7 @@ export function evCarpetStrikeAttackRolled(params: {
 }
 
 export function evAoeResolved(params: {
+  lokiStatusResult?: "entangled" | "chicken";
   effectSegments?: import("../../../model/semantic").EffectSegment[];
   sourceUnitId: string;
   abilityId?: string;
@@ -155,6 +156,7 @@ export function evAoeResolved(params: {
 }): AoeResolvedEvent {
   return {
     type: "aoeResolved",
+    ...(params.lokiStatusResult ? { lokiStatusResult: params.lokiStatusResult } : {}),
     ...(params.effectSegments ? { effectSegments: params.effectSegments } : {}),
     sourceUnitId: params.sourceUnitId,
     abilityId: params.abilityId,

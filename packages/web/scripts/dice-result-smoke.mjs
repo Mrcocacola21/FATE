@@ -20,6 +20,7 @@ const roll = (id, defense = false, dice = [4, 5], sides = 6, rollKind) => ({
   eventId: id,
   rollId: id,
   rollIndex: 0,
+  unitId: defense ? "target" : "attacker",
   rollerPlayerId: defense ? "P2" : "P1",
   rollKind: rollKind ?? (defense ? "attack_defenderRoll" : "attack_attackerRoll"),
   dice,
@@ -104,7 +105,7 @@ try {
     assert.deepEqual(await page.locator("[data-combat-die]").allTextContents(), ["4", "5"]);
     assert.equal(await page.locator("[data-combat-total]").textContent(), "9");
     assert.equal(
-      await page.locator(".combat-roll-feedback__title").textContent(),
+      await page.locator('[data-roll-side="attack"] .combat-roll-feedback__title').textContent(),
       language === "uk" ? "Кидок атаки" : "Attack Roll",
     );
     const card = await page.locator(".combat-roll-feedback").boundingBox();
@@ -139,6 +140,20 @@ try {
       );
     }
     const name = `${width}-${theme}-${reduced ? "reduced" : "motion"}`;
+    assert.equal(await page.locator('[data-combat-preparing="true"]').count(), reduced ? 0 : 1);
+    if (width === 390) {
+      await page.waitForTimeout(1300);
+      assert.equal(
+        await page.locator(`[data-combat-roll="${id}"]`).count(),
+        1,
+        "attack remains readable throughout a slow manual response",
+      );
+      assert.equal(
+        await page.locator('[data-combat-preparing="true"]').count(),
+        1,
+        "preparation holds while waiting without releasing an attack",
+      );
+    }
     await page.screenshot({ path: path.join(output, `${name}-attack.png`) });
     const button = page.getByRole("button", {
       name: language === "uk" ? "Кинути 2d6" : "Roll 2d6",
@@ -151,14 +166,18 @@ try {
       1,
       "required decision remains usable during the result hold",
     );
-    // Inject the next authoritative fixture only after the explicit click.
-    await reset({ viewer: "P2", language });
+    // Inject the next authoritative result only after the explicit click.
     await receive([roll(`defense-${width}`, true, [2, 6])]);
     await settled(`defense-${width}`);
-    assert.deepEqual(await page.locator("[data-combat-die]").allTextContents(), ["2", "6"]);
-    assert.equal(await page.locator("[data-combat-total]").textContent(), "8");
+    assert.deepEqual(await page.locator("[data-combat-die]").allTextContents(), [
+      "4",
+      "5",
+      "2",
+      "6",
+    ]);
+    assert.deepEqual(await page.locator("[data-combat-total]").allTextContents(), ["9", "8"]);
     assert.equal(
-      await page.locator(".combat-roll-feedback__title").textContent(),
+      await page.locator('[data-roll-side="defense"] .combat-roll-feedback__title').textContent(),
       language === "uk" ? "Кидок захисту" : "Defense Roll",
     );
     await page.screenshot({ path: path.join(output, `${name}-defense.png`) });
@@ -185,10 +204,12 @@ try {
   await settled("queue-first");
   const readableAt = Date.now();
   await page.waitForFunction(() => document.querySelector('[data-combat-roll="queue-second"]'));
-  assert(Date.now() - readableAt >= 2500, "readable final dice must hold for at least 2.5 seconds");
+  assert(Date.now() - readableAt < 1200, "paired results must not queue a second full hold");
   await settled("queue-second");
+  assert.deepEqual(await page.locator("[data-combat-total]").allTextContents(), ["9", "8"]);
+  await page.screenshot({ path: path.join(output, "paired-results.png") });
   await receive([roll("queue-second", true, [2, 6])]);
-  await page.locator("[data-combat-roll]").waitFor({ state: "detached" });
+  await page.locator(".combat-roll-layer").waitFor({ state: "detached" });
   assert.equal(await page.locator("[data-combat-roll]").count(), 0);
   await reset();
   await receive([roll("stale")], true);
@@ -203,7 +224,7 @@ try {
     ),
   );
   console.log(
-    `Dice visual smoke passed: ${report.length} viewport/theme/motion combinations, special dice, ordered hold, duplicate and stale delivery. Screenshots: ${output}`,
+    `Dice visual smoke passed: ${report.length} viewport/theme/motion combinations, special dice, paired reveal, duplicate and stale delivery. Screenshots: ${output}`,
   );
 } finally {
   await browser?.close();

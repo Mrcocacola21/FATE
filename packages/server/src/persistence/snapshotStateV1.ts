@@ -160,6 +160,9 @@ const unit: z.ZodType<UnitState> = z
     jackHolyMotherUsed: bool.optional(),
     jackKnownHpByTarget: numbers.optional(),
     immobilizedUntilOwnTurnStart: bool.optional(),
+    immobilizedSourceId: z.string().optional(),
+    blindSourceId: z.string().optional(),
+    movementDisabledSourceId: z.string().optional(),
     courtExtraFlexibleAction: courtAction.optional(),
     courtGlobalMoveOnce: courtAction.optional(),
     courtProceduralRestriction: z

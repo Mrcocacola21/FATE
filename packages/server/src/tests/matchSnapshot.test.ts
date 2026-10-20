@@ -132,6 +132,12 @@ function serializationTests() {
     charges: { ability: 2 },
     sansUnbelieverUnlocked: true,
     jackKnownHpByTarget: { target: 4 },
+    blindUntilOwnTurnStart: true,
+    blindSourceId: "luche-source",
+    immobilizedUntilOwnTurnStart: true,
+    immobilizedSourceId: "jack-source",
+    movementDisabledNextTurn: true,
+    movementDisabledSourceId: "vlad-source",
   };
   room.rng.next();
   room.rng.next();

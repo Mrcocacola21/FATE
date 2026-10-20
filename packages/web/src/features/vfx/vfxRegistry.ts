@@ -1,5 +1,7 @@
 import type { VfxEffectId, VfxPlacement } from "./vfxTypes";
 import { FIREBALL_TIMING } from "../../game/effects/asgorePresentation";
+import { expansionRegistry } from "./expansionRegistry";
+import type { ExpansionStaging, ExpansionStagingProfile } from "./expansionStaging";
 
 const fireBurst = new URL(
   "../../assets/vfx/curated/kenney-particle-pack/fire-burst.png",
@@ -71,6 +73,9 @@ export interface VfxArtwork {
 }
 
 export interface VfxDefinition extends VfxArtwork {
+  meleeSwing?: boolean;
+  staging?: ExpansionStaging;
+  stagingProfile?: ExpansionStagingProfile;
   id: VfxEffectId;
   sourcePack: string;
   sourceFile: string;
@@ -88,6 +93,7 @@ export interface VfxDefinition extends VfxArtwork {
   anchorPoint?: { x: number; y: number };
   /** Rotation from the artwork's authored facing to the logical ray. */
   facingOffsetDeg?: number;
+  orientToTarget?: boolean;
   reducedMotion: "hide" | "static" | "short";
 }
 
@@ -177,6 +183,7 @@ const paired = (
 ];
 
 export const vfxRegistry: Record<VfxEffectId, VfxDefinition> = {
+  ...expansionRegistry,
   artemidaCrescent: {
     ...generated(
       "artemidaCrescent",

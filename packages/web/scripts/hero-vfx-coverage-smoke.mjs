@@ -27,7 +27,9 @@ const output = path.join(
 const coverage = JSON.parse(
   readFileSync(path.join(web, "src/assets/heroVfxCoverage.json"), "utf8"),
 );
-const keys = [...new Set(coverage.filter((row) => row.key).map((row) => row.key))];
+const expansion = JSON.parse(readFileSync(path.join(web, "../../docs/assets/vfx-workflow/integration-state.json"), "utf8")).assets;
+const keys = [...new Set([...coverage.filter((row) => row.key).map((row) => row.key),
+  ...expansion.flatMap(row => row.effectIds)])];
 const url = "http://127.0.0.1:5197";
 mkdirSync(output, { recursive: true });
 const server = spawn(
@@ -81,17 +83,19 @@ try {
     await page.locator("[data-vfx-cue]").evaluateAll(async (elements, elapsed) => {
       for (const el of elements) {
         await Promise.all(
-          Array.from(el.children).map(async (child) => {
+          Array.from(el.querySelectorAll(".vfx-artwork")).map(async (child) => {
             const style = getComputedStyle(child),
               image = new Image();
-            image.src =
-              child instanceof HTMLImageElement ? child.src : style.backgroundImage.slice(5, -2);
-            if (image.src) await image.decode();
+            const src = child instanceof HTMLImageElement ? child.src : style.backgroundImage.match(/^url\(["']?(.*?)["']?\)$/)?.[1];
+            if (src) { image.src = src; await image.decode(); }
+            child.style.willChange = "auto";
           }),
         );
         for (const animation of el.getAnimations({ subtree: true })) {
           animation.pause();
-          animation.currentTime = elapsed;
+          animation.currentTime = el.dataset.vfxContact
+            ? Number(el.dataset.vfxContact) - Number(el.dataset.vfxStart) + (parseFloat(el.style.getPropertyValue("--vfx-delay")) || 0)
+            : elapsed;
         }
       }
     }, elapsed);
@@ -113,7 +117,7 @@ try {
         pointer: getComputedStyle(el.closest(".vfx-board-root")).pointerEvents,
         clip: getComputedStyle(el.closest(".vfx-board-root")).overflow,
         layer: el.dataset.vfxLayer,
-        children: Array.from(el.children).map((child) => ({
+        children: Array.from(el.querySelectorAll(".vfx-artwork")).map((child) => ({
           frames: Number(child.dataset.vfxFrames ?? 1),
           position: getComputedStyle(child).backgroundPositionX,
           delay: getComputedStyle(child).animationDelay,
@@ -143,6 +147,11 @@ try {
         );
       }
       observations.push({ orientation, key, ...sample });
+      if (orientation === "P1" && key.startsWith("expansion.")) {
+        const definitionDuration = Math.max(...sample.children.map(child => Number.parseFloat(child.duration) * 1000));
+        await step(definitionDuration > 0 ? definitionDuration / 2 : 0);
+        await page.locator("[data-vfx-preview-board]").screenshot({ path: path.join(output, `${key}.png`) });
+      }
     }
   }
   // Exercise representative first/middle/last frames and clipping of actual

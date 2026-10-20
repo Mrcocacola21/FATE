@@ -75,7 +75,7 @@ export function finalizeAttackFromContext(
     const event = rawEvent.type === "attackResolved" && context.defenseSignature
       ? {...rawEvent, defenseSignature: context.defenseSignature} : rawEvent;
     return (
-    event.type === "attackResolved" && context.attackSignature === "friskPrecisionStrike"
+    event.type === "attackResolved" && context.attackSignature
       ? { ...event, attackSignature: context.attackSignature }
       : event.type === "attackResolved" &&
           context.isBasicAttack &&
@@ -143,7 +143,7 @@ export function finalizeAttackFromContext(
         ...updatedState,
         units: {
           ...updatedState.units,
-          [blinded.id]: { ...blinded, blindUntilOwnTurnStart: true },
+          [blinded.id]: { ...blinded, blindUntilOwnTurnStart: true, blindSourceId: context.attackerId },
         },
       };
     }

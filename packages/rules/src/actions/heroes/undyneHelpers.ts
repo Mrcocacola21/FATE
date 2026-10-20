@@ -1,3 +1,4 @@
+import { unitSignalAnchor } from "../../core/heroSignals";
 import type {
   ApplyResult,
   Coord,
@@ -229,7 +230,8 @@ export function applyUndyneImmortalEndTurnDrain(
     ...endingNow,
     hp: hpAfter,
   };
-  const events: GameEvent[] = [];
+  const events: GameEvent[] = [{ type: "heroSelfCost", ...unitSignalAnchor(state, endingNow.id),
+    sourceAbilityId: "undyneUndying", damage: endingNow.hp - hpAfter, hpAfter }];
   if (hpAfter <= 0) {
     updated = {
       ...updated,

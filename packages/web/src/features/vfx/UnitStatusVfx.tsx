@@ -7,6 +7,9 @@ import type { Translate } from "../../i18n";
 import { cellToBoardRect } from "./vfxGeometry";
 import { BOARD_LAYERS, vfxRegistry } from "./vfxRegistry";
 import { VfxSprite } from "./VfxSprite";
+import { getUnitTokenAsset } from "../../assets/unitVisuals";
+import { CommanderAura } from "./CommanderAura";
+import { expansionStatusArt } from "./expansionStatuses";
 import {
   resolvePersistentStatuses,
   STATUS_VISUALS,
@@ -69,7 +72,11 @@ export function StatusBadges({
             aria-label={label}
             title={label}
           >
-            {summary ? label : bone ? <BoneIcon className="h-full w-full" /> : visual.glyph}
+            {summary ? label : bone ? <BoneIcon className="h-full w-full" /> : "icon" in visual && visual.icon === "banner" ? (
+              <svg viewBox="0 0 16 16" width="10" height="10" aria-hidden="true" fill="none">
+                <path d="M4 14V2m0 0h8l-2 3 2 3H4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            ) : visual.glyph}
           </span>
         );
       })}
@@ -109,13 +116,37 @@ export function UnitStatusVfx({
   reducedMotion: boolean;
   t: Translate;
 }) {
-  const units = useMemo(() => resolvePersistentStatuses(view, playerId), [view, playerId]);
+  // Snare entry has an explicit playback phase. Keep its permanent badge/art
+  // on that reached frame; a baseline snapshot already contains the final flag.
+  const statusView = useMemo<PlayerView>(() => {
+    const units: PlayerView["units"] = {};
+    for (const unit of Object.values(view.units)) units[unit.id] = visualUnits[unit.id]
+      ? { ...unit, immobilizedUntilOwnTurnStart: visualUnits[unit.id].immobilizedUntilOwnTurnStart } : unit;
+    return { ...view, units };
+  }, [view, visualUnits]);
+  const units = useMemo(() => resolvePersistentStatuses(statusView, playerId), [statusView, playerId]);
   return (
     <div
       className={`unit-status-root ${reducedMotion ? "unit-status-reduced" : ""}`}
       style={{ width: boardSize * cellSize, height: boardSize * cellSize, pointerEvents: "none" }}
     >
-      {units.map(({ unitId, statuses }) => {
+      {Object.values(statusView.units).flatMap(unit => {
+        const arts = expansionStatusArt(statusView, unit, playerId);
+        if (!arts.length || !unit.position) return [];
+        const position = motion[unit.id]?.position ?? visualUnits[unit.id]?.position;
+        if (!position) return [];
+        const rect = cellToBoardRect(position, boardSize, cellSize, isFlipped);
+        return arts.map(art => art.effectId.endsWith("commander_aura") ? <CommanderAura key={`${unit.id}:${art.effectId}`}
+          effectId={art.effectId} position={position} boardSize={boardSize} cellSize={cellSize} isFlipped={isFlipped}
+          portraitSrc={getUnitTokenAsset(unit).src} reducedMotion={reducedMotion} opacity={motion[unit.id]?.opacity} /> : <span key={`${unit.id}:${art.effectId}`} data-expansion-status={art.effectId}
+          className="pointer-events-none absolute" style={{ ...rect, opacity: motion[unit.id]?.opacity, zIndex: BOARD_LAYERS.ground }}>
+          <VfxSprite definition={vfxRegistry[art.effectId]} reducedMotion
+            style={{ width: `${art.scaleCells * 100}%`, height: `${art.scaleCells * 100}%`,
+              left: `${(1 - art.scaleCells) * 50}%`, top: `${(1 - art.scaleCells) * 50}%`, animation: "none",
+              opacity: 0.5 }} />
+        </span>);
+      })}
+      {units.filter(({ unitId }) => motion[unitId]?.position ?? visualUnits[unitId]?.position).map(({ unitId, statuses }) => {
         const position: Coord =
           motion[unitId]?.position ?? visualUnits[unitId]?.position ?? view.units[unitId].position!;
         const rect = cellToBoardRect(position, boardSize, cellSize, isFlipped);

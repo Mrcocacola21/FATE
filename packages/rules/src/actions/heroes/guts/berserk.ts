@@ -1,3 +1,4 @@
+import { unitSignalAnchor } from "../../../core/heroSignals";
 import type {
   ApplyResult,
   GameAction,
@@ -312,6 +313,7 @@ export function resolveGutsBerserkAttackChoice(
       makeAttackContext({
         attackerId: guts.id,
         defenderId: target.id,
+        attackSignature: "gutsBerserkSingle",
         consumeSlots: true,
         queueKind: "normal",
       }),
@@ -345,7 +347,8 @@ export function applyGutsEndTurnDrain(
     ...unit,
     hp: hpAfter,
   };
-  const events: GameEvent[] = [];
+  const events: GameEvent[] = [{ type: "heroSelfCost", ...unitSignalAnchor(state, unit.id),
+    sourceAbilityId: "gutsBerserkMode", damage: unit.hp - hpAfter, hpAfter }];
   if (hpAfter <= 0) {
     updatedUnit = {
       ...updatedUnit,

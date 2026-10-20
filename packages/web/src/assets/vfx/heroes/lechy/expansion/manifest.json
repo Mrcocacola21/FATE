@@ -1,0 +1,447 @@
+{
+  "schemaVersion": 1,
+  "heroId": "lechy",
+  "assetRoot": "packages/web/src/assets/",
+  "status": "imported_assets_not_runtime_bindings",
+  "assets": [
+    {
+      "id": "V-lechy-move_trail",
+      "heroId": "lechy",
+      "filename": "vfx/heroes/lechy/expansion/move_trail.png",
+      "sha256": "6631b88ca8047df99041b3ed1a95043a43be50ec9f13fe49a1679f56bacb272b",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "+X",
+      "phase": "move",
+      "geometry": "trail",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "lechy.basic.move.move",
+      "loop": false,
+      "presentationProfile": "trail",
+      "requestedRoleOrAbilityRefs": [
+        "basic.move"
+      ],
+      "declaredSourceAbilityId": "basic.move",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-lechy-move_arrive",
+      "heroId": "lechy",
+      "filename": "vfx/heroes/lechy/expansion/move_arrive.png",
+      "sha256": "52cd626dc85142e17d1eea8054d3cf59e158ce9c74a5331e7a467cc71b37f95d",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "arrive",
+      "geometry": "impact",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "lechy.basic.move.arrive",
+      "loop": false,
+      "presentationProfile": "impact",
+      "requestedRoleOrAbilityRefs": [
+        "basic.move"
+      ],
+      "declaredSourceAbilityId": "basic.move",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-lechy-attack_swing",
+      "heroId": "lechy",
+      "filename": "vfx/heroes/lechy/expansion/attack_swing.png",
+      "sha256": "70bff1a1cf84a64be28fe2d7c4367be6327c560fda87b47c118f1b9edd1629cd",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "+X",
+      "phase": "swing",
+      "geometry": "swing",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "lechy.basic.attack.swing",
+      "loop": false,
+      "presentationProfile": "swing",
+      "requestedRoleOrAbilityRefs": [
+        "basic.attack"
+      ],
+      "declaredSourceAbilityId": "basic.attack",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-lechy-attack_impact",
+      "heroId": "lechy",
+      "filename": "vfx/heroes/lechy/expansion/attack_impact.png",
+      "sha256": "4eaef43823af66c22283496592bda4a6b0d07079fc98cd27cde537bdcf6d891b",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "hit",
+      "geometry": "impact",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "lechy.basic.attack.hit",
+      "loop": false,
+      "presentationProfile": "impact",
+      "requestedRoleOrAbilityRefs": [
+        "basic.attack"
+      ],
+      "declaredSourceAbilityId": "basic.attack",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "EXTEND",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-lechy-select_ring",
+      "heroId": "lechy",
+      "filename": "vfx/heroes/lechy/expansion/select_ring.png",
+      "sha256": "c9104d3b8b52052d4c745227daf55e613f502f8dbf3e3b0395d0956d28226b4e",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 1,
+      "fps": 0,
+      "durationMs": null,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "select",
+      "geometry": "static",
+      "layer": "ground",
+      "sourceVisibility": "local",
+      "compositeGroup": "lechy.basic.select.select",
+      "loop": false,
+      "presentationProfile": "static",
+      "requestedRoleOrAbilityRefs": [
+        "basic.select"
+      ],
+      "declaredSourceAbilityId": "basic.select",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-lechy-deploy",
+      "heroId": "lechy",
+      "filename": "vfx/heroes/lechy/expansion/deploy.png",
+      "sha256": "bf155e51c0c0a3f36f18665ee9fddc5901c0e467e23fa9792fa72f74efcd2193",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 16,
+      "fps": 24,
+      "durationMs": 667,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "deploy",
+      "geometry": "deploy",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "lechy.basic.deploy.deploy",
+      "loop": false,
+      "presentationProfile": "deploy",
+      "requestedRoleOrAbilityRefs": [
+        "basic.deploy"
+      ],
+      "declaredSourceAbilityId": "basic.deploy",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-lechy-death_final",
+      "heroId": "lechy",
+      "filename": "vfx/heroes/lechy/expansion/death_final.png",
+      "sha256": "0203a243d845e95ec9425ffe05549d07e455b1d331eae807811fed7f60c3cc47",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 24,
+      "fps": 24,
+      "durationMs": 1000,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "final",
+      "geometry": "death",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "lechy.basic.death.final",
+      "loop": false,
+      "presentationProfile": "death",
+      "requestedRoleOrAbilityRefs": [
+        "basic.death"
+      ],
+      "declaredSourceAbilityId": "basic.death",
+      "canonicalTriggerHint": "Окончательная смерть; дождаться возрождений, предсмертной атаки/выбора проклятия",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-lechy-stealth_enter",
+      "heroId": "lechy",
+      "filename": "vfx/heroes/lechy/expansion/stealth_enter.png",
+      "sha256": "6c81f99ae813d0d3474c046352c6b22c71a55b5ce3665435a8002293a59995af",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 16,
+      "fps": 24,
+      "durationMs": 667,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "stealth_enter",
+      "geometry": "burst",
+      "layer": "ground",
+      "sourceVisibility": "owner",
+      "compositeGroup": "lechy.lechyNaturalStealth.stealth_enter",
+      "loop": false,
+      "presentationProfile": "burst",
+      "requestedRoleOrAbilityRefs": [
+        "stealth"
+      ],
+      "declaredSourceAbilityId": "lechyNaturalStealth",
+      "canonicalTriggerHint": "Вход в скрытность только владельцу, никаких подсказок противнику",
+      "priority": "P2",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-lechy-stealth_reveal",
+      "heroId": "lechy",
+      "filename": "vfx/heroes/lechy/expansion/stealth_reveal.png",
+      "sha256": "c925e33657afc9456daa6c52d17a826ad1dba94d28feef701408caaa15a96956",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 16,
+      "fps": 24,
+      "durationMs": 667,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "stealth_reveal",
+      "geometry": "burst",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "lechy.lechyNaturalStealth.stealth_reveal",
+      "loop": false,
+      "presentationProfile": "burst",
+      "requestedRoleOrAbilityRefs": [
+        "stealth"
+      ],
+      "declaredSourceAbilityId": "lechyNaturalStealth",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P2",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-lechy-trickster_sweep",
+      "heroId": "lechy",
+      "filename": "vfx/heroes/lechy/expansion/trickster_sweep.png",
+      "sha256": "527f7fec97e82a19ed85a2d27f41f9c616f0d16a66bfca3a8a0089c74d4e5f73",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 24,
+      "fps": 24,
+      "durationMs": 1000,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "sweep",
+      "geometry": "aoe",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "lechy.tricksterAoE.sweep",
+      "loop": false,
+      "presentationProfile": "aoe",
+      "requestedRoleOrAbilityRefs": [
+        "tricksterAoE"
+      ],
+      "declaredSourceAbilityId": "tricksterAoE",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-lechy-guide_depart",
+      "heroId": "lechy",
+      "filename": "vfx/heroes/lechy/expansion/guide_depart.png",
+      "sha256": "2b2449e92b0cba0bf8bb16dc05d3c586d4cff1c009da20a032f09bb5a93e7a5a",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 16,
+      "fps": 24,
+      "durationMs": 667,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "depart",
+      "geometry": "portal",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "lechy.lechyGuideTraveler.depart",
+      "loop": false,
+      "presentationProfile": "portal",
+      "requestedRoleOrAbilityRefs": [
+        "lechyGuideTraveler"
+      ],
+      "declaredSourceAbilityId": "lechyGuideTraveler",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P2",
+      "requestState": "EXTEND",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-lechy-guide_arrive",
+      "heroId": "lechy",
+      "filename": "vfx/heroes/lechy/expansion/guide_arrive.png",
+      "sha256": "1dc3d94e7a549eaea9753224543559ecc6ce28ec57785a376c51b97d0e4f785d",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 16,
+      "fps": 24,
+      "durationMs": 667,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "arrive",
+      "geometry": "portal",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "lechy.lechyGuideTraveler.arrive",
+      "loop": false,
+      "presentationProfile": "portal",
+      "requestedRoleOrAbilityRefs": [
+        "lechyGuideTraveler"
+      ],
+      "declaredSourceAbilityId": "lechyGuideTraveler",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P2",
+      "requestState": "EXTEND",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-lechy-forest_stop",
+      "heroId": "lechy",
+      "filename": "vfx/heroes/lechy/expansion/forest_stop.png",
+      "sha256": "b0bce5b51ec6f4acf07222bdbfc450b4806de21d991ed2830e1b1869a0abed09",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "stop",
+      "geometry": "impact",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "lechy.lechyConfuseTerrain.stop",
+      "loop": false,
+      "presentationProfile": "impact",
+      "requestedRoleOrAbilityRefs": [
+        "lechyConfuseTerrain"
+      ],
+      "declaredSourceAbilityId": "lechyConfuseTerrain",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P2",
+      "requestState": "EXTEND",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-lechy-storm_tick",
+      "heroId": "lechy",
+      "filename": "vfx/heroes/lechy/expansion/storm_tick.png",
+      "sha256": "00e0f30370612630e17780cb74d7602d268e751eb7a2fb7dbe264b71b3648051",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "tick",
+      "geometry": "impact",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "lechy.lechyStorm.tick",
+      "loop": false,
+      "presentationProfile": "impact",
+      "requestedRoleOrAbilityRefs": [
+        "lechyStorm"
+      ],
+      "declaredSourceAbilityId": "lechyStorm",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P2",
+      "requestState": "EXTEND",
+      "runtimeIntegration": "pending"
+    }
+  ],
+  "notes": [
+    "Original PNG bytes preserved. This manifest does not register VFX or authorize visibility.",
+    "defense/stealth/basic.* are presentation roles; resolve actual rule events when connecting.",
+    "declaredSourceAbilityId is provenance, not proof that the unit has that ability."
+  ]
+}

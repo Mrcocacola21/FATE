@@ -241,6 +241,7 @@ test("storm, transformation, chicken, muzzle, and shield events map to unit-safe
       {
         type: "lechyStormRollResult",
         unitId: "target",
+        targetCell: { col: 3, row: 3 },
         roll: 1,
         success: false,
         damage: 1,
@@ -271,14 +272,14 @@ test("storm, transformation, chicken, muzzle, and shield events map to unit-safe
     ]),
   );
 
-  assert.ok(effects.some((effect) => effect.effectId === "storm"));
+  assert.ok(effects.some((effect) => effect.effectId === "expansion.lechy.storm_tick"));
   assert.ok(effects.some((effect) => effect.effectId === "griffithRebirth"));
   assert.ok(effects.some((effect) => effect.effectId === "lokiChicken"));
   assert.ok(effects.some((effect) => effect.effectId === "muzzle"));
   assert.ok(effects.some((effect) => effect.effectId === "shield"));
 });
 
-test("storm roll VFX can use a previous visible projected cell after damage removes position", () => {
+test("storm tick after lethal damage requires its event-time cell and never reconstructs it from a previous cache", () => {
   const defeated = { ...unit("target", null), isAlive: false, hp: 0 };
   const effects = map(
     [
@@ -295,6 +296,9 @@ test("storm roll VFX can use a previous visible projected cell after damage remo
     { target: { col: 3, row: 3 } },
   );
 
-  assert.equal(effects[0]?.effectId, "storm");
-  assert.deepEqual(effects[0]?.sourceCell, { col: 3, row: 3 });
+  assert.deepEqual(effects, []);
+  const authorized = map([{ type: "lechyStormRollResult", unitId: "target", targetCell: { col: 3, row: 3 },
+    roll: 1, success: false, damage: 1, hpAfter: 0 }], view([defeated]));
+  assert.equal(authorized[0]?.effectId, "expansion.lechy.storm_tick");
+  assert.deepEqual(authorized[0]?.sourceCell, { col: 3, row: 3 });
 });

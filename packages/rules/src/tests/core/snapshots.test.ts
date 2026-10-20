@@ -168,6 +168,7 @@ export function testGoldenSnapshotAoeWithIntimidateChain() {
           attackerRoll: { dice: [1, 1], sum: 2, isDouble: true },
           defenderRoll: { dice: [4, 4], sum: 8, isDouble: true },
           attackerRollIsNew: false,
+          spearmanEvaded: true,
           hit: false,
           damage: 0,
           defenderHpAfter: 7,

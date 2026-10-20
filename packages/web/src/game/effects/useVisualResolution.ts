@@ -4,7 +4,7 @@ import {
   presentationBatchHasExpired,
   presentationBatchIsCurrent,
 } from "./presentationSession";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { PlayerView } from "rules";
 import { usePrefersReducedMotion } from "../../features/vfx/vfxPreferences";
 import {
@@ -29,8 +29,10 @@ import {
 } from "./visualResolution";
 
 const SNAPSHOT_SYNC_FALLBACK_MS = 1500;
+const useBeforePaint = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 interface RenderedVisualState {
+  visualAttackByUnitId: CombatVisualPlaybackFrame["visualAttackByUnitId"];
   transportAttachments: TransportAttachment[];
   visualMotionByUnitId: CombatVisualPlaybackFrame["visualMotionByUnitId"];
   visualHpByUnitId: VisualHpByUnitId;
@@ -41,6 +43,7 @@ interface RenderedVisualState {
 
 function baseline(view: PlayerView): RenderedVisualState {
   return {
+    visualAttackByUnitId: {},
     transportAttachments: [],
     visualMotionByUnitId: {},
     visualHpByUnitId: snapshotVisualHp(view),
@@ -58,6 +61,7 @@ export function useVisualResolution(params: {
   enabled: boolean;
   sessionKey: string | null | undefined;
 }): {
+  visualAttackByUnitId: CombatVisualPlaybackFrame["visualAttackByUnitId"];
   transportAttachments: TransportAttachment[];
   visualMotionByUnitId: CombatVisualPlaybackFrame["visualMotionByUnitId"];
   batch: BoardEventBatch | null;
@@ -91,7 +95,7 @@ export function useVisualResolution(params: {
     attachments: [],
   });
 
-  useEffect(() => {
+  useBeforePaint(() => {
     renderedSessionKeyRef.current = sessionKey;
     const nextResolution = createVisualResolutionState(latestInputRef.current);
     const nextRendered = baseline(latestInputRef.current.view);
@@ -108,7 +112,7 @@ export function useVisualResolution(params: {
     };
   }, [sessionKey]);
 
-  useEffect(() => {
+  useBeforePaint(() => {
     const incoming = batches ?? (batch ? [batch] : []);
     let current = resolutionRef.current;
     const nextPlans: CombatVisualPlaybackPlan[] = [];
@@ -149,7 +153,7 @@ export function useVisualResolution(params: {
     if (batches?.length) onBatchesConsumed?.(batches);
   }, [batch, batches, enabled, onBatchesConsumed, reducedMotion, view, sessionKey]);
 
-  useEffect(() => {
+  useBeforePaint(() => {
     const plan = activePlan;
     // Reset effects run in this same commit. Never restart a plan retained by
     // the previous render while those reset state updates are being applied.
@@ -169,6 +173,7 @@ export function useVisualResolution(params: {
     setPlayingBatch({ ...plan.batch, playbackStartedAt: Date.now() });
     const initialFrame = combatVisualPlaybackFrame(plan, 0);
     setRendered({
+      visualAttackByUnitId: initialFrame.visualAttackByUnitId,
       transportAttachments: initialFrame.transportAttachments,
       visualMotionByUnitId: initialFrame.visualMotionByUnitId,
       visualHpByUnitId: initialFrame.visualHpByUnitId,
@@ -181,6 +186,7 @@ export function useVisualResolution(params: {
       if (cancelled || !presentationBatchIsCurrent(plan.batch)) return;
       const frame = combatVisualPlaybackFrame(plan, now - startedAt);
       setRendered({
+        visualAttackByUnitId: frame.visualAttackByUnitId,
         transportAttachments: frame.transportAttachments,
         visualMotionByUnitId: frame.visualMotionByUnitId,
         visualHpByUnitId: frame.visualHpByUnitId,
@@ -250,6 +256,7 @@ export function useVisualResolution(params: {
 
   const currentRendered = renderedSessionKeyRef.current === sessionKey ? rendered : baseline(view);
   return {
+    visualAttackByUnitId: currentRendered.visualAttackByUnitId,
     transportAttachments: currentRendered.transportAttachments,
     visualMotionByUnitId: currentRendered.visualMotionByUnitId,
     batch:

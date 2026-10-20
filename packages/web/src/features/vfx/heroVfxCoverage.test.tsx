@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
@@ -37,6 +38,8 @@ import { VfxLayer } from "./VfxLayer";
 import { spritePlayback } from "./VfxSprite";
 import { resolveUnitStatuses, STATUS_VISUALS } from "./persistentStatuses";
 import { rosterVfx } from "../../game/effects/presentationPreload";
+import { expansionAssets, type ExpansionEffectId } from "./expansionCatalog.generated";
+import { BASIC_EXPANSION_HEROES } from "./expansionPresentation";
 import { buildCombatVisualPlaybackPlan } from "../../game/effects/combatPlayback";
 import { PresentationSession } from "../../game/effects/presentationSession";
 import type { PresentationEvent } from "../../game/effects/types";
@@ -44,6 +47,35 @@ import type { VfxEffectId, BoardVfxRequest } from "./vfxTypes";
 
 const origin = { col: 2, row: 2 },
   target = { col: 5, row: 2 };
+
+test("expansion ledger accounts for every PNG, binds only reachable profiles, and invalidates changed bytes without claiming visual review", () => {
+  const ledger: { assets: Array<{ id: string; heroId: string; filename: string; sha256: string;
+    effectIds: ExpansionEffectId[]; integrationStatus: string; triggerRoute: string | null;
+    verification: { tests: string[]; visual: { reviewed: boolean; evidence: string[] } }; blocker: string | null }> } =
+    JSON.parse(readFileSync(new URL("../../../../../docs/assets/vfx-workflow/integration-state.json", import.meta.url), "utf8"));
+  const files = readdirSync(new URL("../../assets/vfx/heroes/", import.meta.url), { recursive: true })
+    .map(f => `vfx/heroes/${f.toString().replace(/\\/g, "/")}`).filter(f => f.includes("/expansion/") && f.endsWith(".png"));
+  assert.deepEqual(ledger.assets.map(a => a.filename).sort(), files.sort());
+  assert.equal(new Set(ledger.assets.map(a => a.id)).size, ledger.assets.length);
+  for (const row of ledger.assets) {
+    assert.equal(createHash("sha256").update(readFileSync(new URL(`../../assets/${row.filename}`, import.meta.url))).digest("hex"), row.sha256);
+    for (const id of row.effectIds) {
+      assert.equal(expansionAssets[id].heroId, row.heroId);
+      assert(vfxAssets(vfxRegistry[id]).some(art => art.asset?.endsWith(row.filename)));
+      assert(rosterVfx([row.heroId]).includes(id));
+      assert(!rosterVfx(["unknown-base-profile"]).includes(id));
+    }
+    if (row.integrationStatus === "bound" || row.integrationStatus === "verified") {
+      assert(BASIC_EXPANSION_HEROES.has(row.heroId));
+      assert(row.triggerRoute, row.id);
+      assert.equal(row.blocker, null);
+    }
+    if (row.integrationStatus === "verified") assert(row.verification.tests.length, row.id);
+    if (row.verification.visual.reviewed) assert(row.verification.visual.evidence.length, row.id);
+    if (row.integrationStatus === "blocked") assert(row.blocker, row.id);
+  }
+  assert.equal(Object.keys(expansionAssets).length, ledger.assets.length);
+});
 function fixture(hero: string, slot: UnitClass) {
   let state = attachArmy(
     attachArmy(createEmptyGame(), createDefaultArmy("P1", { [slot]: hero })),
@@ -79,12 +111,56 @@ function map(events: PresentationEvent[], view: PlayerView) {
   });
 }
 
-test("all 45 physical PNGs in 18 folders have verified dimensions, registry URLs or an explicit mechanic blocker", () => {
-  const heroFiles = readdirSync(new URL("../../assets/vfx/heroes/", import.meta.url), {
+test("legacy hero PNGs retain verified coverage and imported expansion PNGs match their explicit manifests", () => {
+  const allHeroFiles = readdirSync(new URL("../../assets/vfx/heroes/", import.meta.url), {
     recursive: true,
   })
     .map((file) => file.toString().replace(/\\/g, "/"))
     .filter((file) => file.endsWith(".png"));
+  // Newly delivered packs are staged for later event integration. Keep the
+  // existing runtime coverage contract strict, and account for every staged
+  // PNG through its manifest rather than treating it as live or ignoring it.
+  const heroFiles = allHeroFiles.filter((file) => !file.includes("/expansion/"));
+  const expansionFiles = allHeroFiles.filter((file) => file.includes("/expansion/"));
+  const declaredExpansionFiles = new Set<string>();
+  const expansionFolders = new Set(expansionFiles.map((file) => file.slice(0, file.lastIndexOf("/"))));
+  for (const folder of expansionFolders) {
+    const manifest: {
+      heroId: string;
+      status: string;
+      assets: Array<{
+        filename: string;
+        sha256: string;
+        frameWidth: number;
+        frameHeight: number;
+        frames: number;
+        fps: number;
+        loop: boolean;
+      }>;
+    } = JSON.parse(readFileSync(new URL(`../../assets/vfx/heroes/${folder}/manifest.json`, import.meta.url), "utf8"));
+    assert.equal(folder, `${manifest.heroId}/expansion`);
+    assert.equal(manifest.status, "imported_assets_not_runtime_bindings");
+    for (const asset of manifest.assets) {
+      assert(asset.filename.startsWith(`vfx/heroes/${folder}/`));
+      assert(/^[\w-]+\.png$/.test(asset.filename.slice(asset.filename.lastIndexOf("/") + 1)));
+      const file = asset.filename.slice("vfx/heroes/".length);
+      assert(!declaredExpansionFiles.has(file), `duplicate imported PNG: ${file}`);
+      declaredExpansionFiles.add(file);
+      const bytes = readFileSync(new URL(`../../assets/${asset.filename}`, import.meta.url));
+      assert.equal(bytes.subarray(1, 4).toString(), "PNG");
+      assert.equal(createHash("sha256").update(bytes).digest("hex"), asset.sha256, file);
+      assert.equal(asset.frameWidth, 128);
+      assert.equal(asset.frameHeight, 128);
+      assert([1, 12, 16, 24].includes(asset.frames), file);
+      assert.equal(bytes.readUInt32BE(16), asset.frames * asset.frameWidth);
+      assert.equal(bytes.readUInt32BE(20), asset.frameHeight);
+      assert.equal(bytes[24], 8, file);
+      assert.equal(bytes[25], 6, file);
+      assert.equal(asset.fps, asset.frames === 1 ? 0 : 24);
+      assert.equal(asset.loop, false);
+    }
+  }
+  assert.deepEqual([...declaredExpansionFiles].sort(), expansionFiles.sort());
   const registered = new Set(
     Object.values(vfxRegistry)
       .flatMap(vfxAssets)

@@ -1,0 +1,292 @@
+{
+  "schemaVersion": 1,
+  "heroId": "femto",
+  "assetRoot": "packages/web/src/assets/",
+  "status": "imported_assets_not_runtime_bindings",
+  "assets": [
+    {
+      "id": "V-femto-move_trail",
+      "heroId": "femto",
+      "filename": "vfx/heroes/femto/expansion/move_trail.png",
+      "sha256": "8e60102aafa4aac329c8502b9c94d1f3028cd35a51ba6a0677652056a4e280fe",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "+X",
+      "phase": "trail",
+      "geometry": "trail",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "femto.basic.move.trail",
+      "loop": false,
+      "presentationProfile": "trail",
+      "requestedRoleOrAbilityRefs": [
+        "basic.move"
+      ],
+      "declaredSourceAbilityId": "basic.move",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "EXTEND",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-femto-move_arrive",
+      "heroId": "femto",
+      "filename": "vfx/heroes/femto/expansion/move_arrive.png",
+      "sha256": "a50ed1d3ca0e81d17e78b69536eaff4e7531fc4d6aea1c435360f0ed6a878aa7",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "arrive",
+      "geometry": "impact",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "femto.basic.move.arrive",
+      "loop": false,
+      "presentationProfile": "impact",
+      "requestedRoleOrAbilityRefs": [
+        "basic.move"
+      ],
+      "declaredSourceAbilityId": "basic.move",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-femto-attack_swing",
+      "heroId": "femto",
+      "filename": "vfx/heroes/femto/expansion/attack_swing.png",
+      "sha256": "ad281d6d5641a8394579592c4d6853ab698efaf0d61ed3cc760b51ff475c2a80",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "+X",
+      "phase": "swing",
+      "geometry": "swing",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "femto.basic.attack.swing",
+      "loop": false,
+      "presentationProfile": "swing",
+      "requestedRoleOrAbilityRefs": [
+        "basic.attack"
+      ],
+      "declaredSourceAbilityId": "basic.attack",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-femto-attack_impact",
+      "heroId": "femto",
+      "filename": "vfx/heroes/femto/expansion/attack_impact.png",
+      "sha256": "087aca614153f7f50989cf0c670b3aa02bc66f2b4b1dfeb69c4078a61784093a",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "hit",
+      "geometry": "impact",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "femto.basic.attack.hit",
+      "loop": false,
+      "presentationProfile": "impact",
+      "requestedRoleOrAbilityRefs": [
+        "basic.attack"
+      ],
+      "declaredSourceAbilityId": "basic.attack",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "EXTEND",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-femto-select_ring",
+      "heroId": "femto",
+      "filename": "vfx/heroes/femto/expansion/select_ring.png",
+      "sha256": "0e0df118d54e20342867f4165bbe39a207a7114d368096ee04cb58c0e2a10037",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 1,
+      "fps": 0,
+      "durationMs": null,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "select",
+      "geometry": "static",
+      "layer": "ground",
+      "sourceVisibility": "local",
+      "compositeGroup": "femto.basic.select.select",
+      "loop": false,
+      "presentationProfile": "static",
+      "requestedRoleOrAbilityRefs": [
+        "basic.select"
+      ],
+      "declaredSourceAbilityId": "basic.select",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-femto-death_final",
+      "heroId": "femto",
+      "filename": "vfx/heroes/femto/expansion/death_final.png",
+      "sha256": "86eb33cecfe7f98669c3cc55703d162c0eee1e5b0d71ac1eba970ef88a0103c4",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 24,
+      "fps": 24,
+      "durationMs": 1000,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "final",
+      "geometry": "death",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "femto.basic.death.final",
+      "loop": false,
+      "presentationProfile": "death",
+      "requestedRoleOrAbilityRefs": [
+        "basic.death"
+      ],
+      "declaredSourceAbilityId": "basic.death",
+      "canonicalTriggerHint": "Окончательная смерть; дождаться возрождений, предсмертной атаки/выбора проклятия",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-femto-auto_defense",
+      "heroId": "femto",
+      "filename": "vfx/heroes/femto/expansion/auto_defense.png",
+      "sha256": "bc4f771593ca594ccfea6995f17a938e1493f02dd9fe58cae422ddf404a068fc",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "auto_defense",
+      "geometry": "defense",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "femto.berserkAutoDefense.auto_defense",
+      "loop": false,
+      "presentationProfile": "defense",
+      "requestedRoleOrAbilityRefs": [
+        "defense"
+      ],
+      "declaredSourceAbilityId": "berserkAutoDefense",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P2",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-femto-divine_exit",
+      "heroId": "femto",
+      "filename": "vfx/heroes/femto/expansion/divine_exit.png",
+      "sha256": "1d45cb91eba019c334dbfddc5e45284f39c6e09dbcebaa5bef5b4c93aaa41343",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 16,
+      "fps": 24,
+      "durationMs": 667,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "exit",
+      "geometry": "portal",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "femto.femtoDivineMove.exit",
+      "loop": false,
+      "presentationProfile": "portal",
+      "requestedRoleOrAbilityRefs": [
+        "femtoDivineMove"
+      ],
+      "declaredSourceAbilityId": "femtoDivineMove",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P2",
+      "requestState": "EXTEND",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-femto-divine_arrive",
+      "heroId": "femto",
+      "filename": "vfx/heroes/femto/expansion/divine_arrive.png",
+      "sha256": "6dfc4558aa0dac4a7320155d523f3e9849619f8a5580efcb65ea34718485fc82",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 16,
+      "fps": 24,
+      "durationMs": 667,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "arrive",
+      "geometry": "portal",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "femto.femtoDivineMove.arrive",
+      "loop": false,
+      "presentationProfile": "portal",
+      "requestedRoleOrAbilityRefs": [
+        "femtoDivineMove"
+      ],
+      "declaredSourceAbilityId": "femtoDivineMove",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P2",
+      "requestState": "EXTEND",
+      "runtimeIntegration": "pending"
+    }
+  ],
+  "notes": [
+    "Original PNG bytes preserved. This manifest does not register VFX or authorize visibility.",
+    "defense/stealth/basic.* are presentation roles; resolve actual rule events when connecting.",
+    "declaredSourceAbilityId is provenance, not proof that the unit has that ability."
+  ]
+}

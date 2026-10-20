@@ -1,3 +1,4 @@
+import { unitSignalTarget } from "../../../core/heroSignals";
 import { resolveUnitDeath } from "../../../death";
 import type {
   ApplyResult,
@@ -67,6 +68,7 @@ export function applyPapyrusBonePunish(
   const events: GameEvent[] = [
     {
       type: "papyrusBonePunished",
+      ...unitSignalTarget(state, target.id),
       papyrusId: status.sourceUnitId,
       targetId: updatedTarget.id,
       boneType: status.kind,

@@ -50,6 +50,7 @@ export function applyForestMovementDisableOnHit(
       [hitUnit.id]: {
         ...hitUnit,
         movementDisabledNextTurn: true,
+        movementDisabledSourceId: attackEvent.attackerId,
       },
     },
   };

@@ -5,6 +5,7 @@ import { adminUk } from "../../admin/locales";
 export const uk = {
   activeMatch: { present: "У вас є активний матч", return: "Повернутися до матчу" },
   diceResult: {
+    waiting: "Очікування кидка",
     yourRoll: "Ваш кидок",
     playerRoll: "Кидок гравця {{player}}",
     tieBreak: "Вирішальний кидок",
@@ -12,6 +13,7 @@ export const uk = {
     total: "Сума",
   },
   persistentStatus: {
+    commanderAura: "Аура союзного полководця: +1 до шкоди",
     odinHuginn: "Гуґінн: виявлення прихованих ворогів поруч", duolingoBerserker: "Берсерка відкрито",
     curse: "Прокляття останньої атаки", movementDisabled: "Рух заблоковано на наступний власний хід",
     sansMoveLock: "Блокування руху жартом Санса", kaladinMoveLock: "Блокування руху п'ятим ідеалом",

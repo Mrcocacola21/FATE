@@ -63,6 +63,7 @@ export function resolveAttackAttackerRoll(
     nextCtx = {
       ...nextCtx,
       friskForceMiss: true,
+      defenseSignature: "friskCleanSoulBreak",
       friskSubstitutionChoiceMade: true,
       friskChildsCryChoiceMade: true,
       defenderDice: [],

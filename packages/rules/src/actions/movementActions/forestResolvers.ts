@@ -1,4 +1,5 @@
 import { rollManualD6 } from "../../pendingRoll/manualRoll";
+import { unitSignalAnchor } from "../../core/heroSignals";
 import type {
   ApplyResult,
   GameState,
@@ -38,7 +39,9 @@ export function resolveForestMoveCheckRoll(
 
   const fallbackOptions = parseCoordList(pending.context.fallbackOptions);
   if (fallbackOptions.length === 0) {
-    return { state: { ...state, pendingRoll: null }, events: [] };
+    return { state: { ...state, pendingRoll: null }, events: [
+      { type: "forestMovementStopped", ...unitSignalAnchor(state, unitId) },
+    ] };
   }
   return requestRoll(
     { ...state, pendingRoll: null },
@@ -79,7 +82,7 @@ export function resolveForestMoveDestinationChoice(
     return { state, events: [] };
   }
 
-  return applyMove(
+  const moved = applyMove(
     { ...state, pendingRoll: null },
     {
       type: "move",
@@ -89,4 +92,8 @@ export function resolveForestMoveDestinationChoice(
     } as MoveActionInternal,
     rng
   );
+  const committed = moved.events.some(event => event.type === "unitMoved" && event.unitId === unitId);
+  if (!committed) return moved;
+  return { ...moved, events: [...moved.events,
+    { type: "forestMovementStopped", ...unitSignalAnchor(moved.state, unitId) }] };
 }

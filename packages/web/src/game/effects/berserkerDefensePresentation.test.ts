@@ -205,7 +205,9 @@ for (const heroId of ["grozny", "guts", "undyne"]) {
     assert.ok(!auto.events.some((e) => e.type === "rollResolved"));
     const p = presentation(f.state, auto);
     const mapped = outputs(p);
-    assert.equal(mapped.sprites.filter((e) => e.effectId === "shield").length, 1);
+    const shield = `expansion.${heroId}.auto_defense`;
+    assert.equal(mapped.sprites.filter((e) => e.effectId === shield).length, 1);
+    assert.equal(mapped.sprites.filter((e) => e.effectId === "shield" || e.effectId.endsWith(".auto_defense")).length, 1);
     assert.deepEqual(
       mapped.sounds.map((e) => e.key),
       ["common.combat.miss"],
@@ -272,7 +274,7 @@ test("duplicate delivery is silent; separate confirmed defenses each retain thei
     };
   };
   const first = receive(1);
-  assert.equal(first.sprites.filter((e) => e.effectId === "shield").length, 1);
+  assert.equal(first.sprites.filter((e) => e.effectId === "expansion.grozny.auto_defense").length, 1);
   assert.deepEqual(
     first.sounds.map((e) => e.key),
     ["common.combat.miss"],
@@ -282,7 +284,7 @@ test("duplicate delivery is silent; separate confirmed defenses each retain thei
   const secondFixture = fixture();
   const second = presentation(secondFixture.state, resolve(secondFixture.state, "auto"), 3);
   const next = receive(3, second.events);
-  assert.equal(next.sprites.filter((e) => e.effectId === "shield").length, 1);
+  assert.equal(next.sprites.filter((e) => e.effectId === "expansion.grozny.auto_defense").length, 1);
   assert.deepEqual(
     next.sounds.map((e) => e.key),
     ["common.combat.miss"],
@@ -297,7 +299,7 @@ test("duplicate delivery is silent; separate confirmed defenses each retain thei
   );
   assert.equal(
     enqueueBoardVfx({ current: queued, incoming: next.sprites, now: 1000, processedIds }).filter(
-      (e) => e.effectId === "shield",
+      (e) => e.effectId === "expansion.grozny.auto_defense",
     ).length,
     2,
   );
@@ -443,7 +445,7 @@ test("lethal failed defense keeps one HP transition and death from the final uni
     0,
   );
   assert.equal(mapped.sprites.filter((e) => e.effectId === "combatHit").length, 1);
-  assert.equal(mapped.sprites.filter((e) => e.effectId === "unitDeath").length, 1);
+  assert.equal(mapped.sprites.filter((e) => e.effectId === "expansion.grozny.death_final").length, 1);
   assert.equal(mapped.sounds.filter((e) => e.key === "common.combat.hit").length, 1);
   assert.equal(p.plan.queue.filter((e) => e.type === "damageHpTween").length, 1);
   const death = p.batch.combatCues!.find((e) => e.kind === "death")!;

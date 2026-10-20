@@ -1,4 +1,5 @@
 import { EVENT_VISIBILITY } from "../../model/events/visibility";
+import { unitSignalAnchor } from "../../core/heroSignals";
 import { evUnitMoved } from "../../core";
 import type { ApplyResult, Coord, GameEvent, GameState, PendingRoll, UnitState } from "../../model";
 import type { RNG } from "../../rng";
@@ -135,6 +136,8 @@ export function applyNewBatchPostAction(
           attacker = addCharges(attacker, ids.ABILITY_DUOLINGO_SKIP_CLASSES, 1);
           nextEvents.push(chargeEvent(attacker, ids.ABILITY_DUOLINGO_SKIP_CLASSES, 1));
           if (getCharges(attacker, ids.ABILITY_DUOLINGO_SKIP_CLASSES) >= 12) {
+            if (!attacker.duolingoBerserkerUnlocked)
+              nextEvents.push({ type: "duolingoBerserkerUnlocked", ...unitSignalAnchor(nextState, attacker.id) });
             attacker = { ...attacker, duolingoBerserkerUnlocked: true };
             if (attacker.charges[ids.ABILITY_BERSERK_AUTO_DEFENSE] === undefined) {
               attacker = setCharges(attacker, ids.ABILITY_BERSERK_AUTO_DEFENSE, 0);
@@ -182,6 +185,7 @@ export function applyNewBatchPostAction(
       }
       if (defender?.heroId === HERO_LUCHE_ID && event.hit && attacker) {
         attacker = applyBlindUntilEndOfNextTurn(attacker);
+        attacker = { ...attacker, blindSourceId: defender.id };
         nextState = updateUnit(nextState, attacker);
         nextEvents.push(abilityUsed(defender.id, ids.ABILITY_LUCHE_SHINE));
       }
@@ -265,7 +269,7 @@ export function applyNewBatchPostAction(
           jackTraps: traps,
           units: {
             ...nextState.units,
-            [moved.id]: { ...moved, immobilizedUntilOwnTurnStart: true },
+            [moved.id]: { ...moved, immobilizedUntilOwnTurnStart: true, immobilizedSourceId: traps[trapIndex].sourceUnitId },
           },
         };
       }
@@ -274,6 +278,8 @@ export function applyNewBatchPostAction(
     if (event.type === "aoeResolved" && event.abilityId === ids.ABILITY_DON_KIHOTE_MADNESS) {
       const don = nextState.units[event.sourceUnitId];
       if (don?.donMadDelusionPending) {
+        nextEvents.push({ type: "unitDeathFinalized", ...unitSignalAnchor(nextState, don.id),
+          abilityId: event.abilityId, abilityUseId: event.abilityUseId });
         nextState = finishDonMadnessDeath(nextState, don);
       }
     }
@@ -355,7 +361,7 @@ export function resolveDonMadDelusionDirection(
   if (targetIds.length === 0) {
     return {
       state: finishDonMadnessDeath(base, don),
-      events: [],
+      events: [{ type: "unitDeathFinalized", ...unitSignalAnchor(base, don.id) }],
     };
   }
   const queued = queueNewHeroAttacks(base, don, ids.ABILITY_DON_KIHOTE_MADNESS, targetIds, { damageBonus: 1, center: don.position, effectSegments: rayEffectSegment(don.position, { col: don.position.col + direction.col, row: don.position.row + direction.row }, state.boardSize) });

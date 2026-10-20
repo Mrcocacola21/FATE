@@ -1,4 +1,5 @@
 import type { GameEvent, GameState } from "../model";
+import { unitSignalAnchor } from "../core/heroSignals";
 import { RNG } from "../rng";
 import {
   HERO_DUOLINGO_ID,
@@ -57,6 +58,7 @@ export function processUnitStartOfTurn(
         ? false
         : updated.blindUntilOwnTurnStart,
     immobilizedUntilOwnTurnStart: false,
+    immobilizedSourceId: undefined,
   };
 
   if (updated.heroId === HERO_DUOLINGO_ID) {
@@ -94,6 +96,9 @@ export function processUnitStartOfTurn(
   }
 
   const events: GameEvent[] = [];
+  if (!unit.duolingoBerserkerUnlocked && updated.duolingoBerserkerUnlocked) {
+    events.push({ type: "duolingoBerserkerUnlocked", ...unitSignalAnchor(state, updated.id) });
+  }
   if (!unit.kanekiCentipedeUnlocked && updated.kanekiCentipedeUnlocked) {
     events.push({ type: "kanekiFormEntered", unitId: updated.id, form: "scolopendra", ...(updated.position ? {sourceCell: {...updated.position}} : {}) });
   }

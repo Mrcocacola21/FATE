@@ -429,7 +429,7 @@ test("Last Attack pending choice restores silently, blocks unrelated actions, ex
   const p = plan(accepted[0], owner);
   const o = outputs(p.batch);
   const apply = o.sprites.find((s) => s.effectId === "sansCurseApply")!;
-  const death = o.sprites.find((s) => s.effectId === "unitDeath")!;
+  const death = o.sprites.find((s) => s.effectId === "expansion.sans.death_final")!;
   assert(death.delayMs! > apply.delayMs!);
   assert.deepEqual(apply.sourceCell, { col: 4, row: 5 });
   assert.equal(o.sounds.filter((s) => s.key === "hero.sans.basic.death").length, 1);

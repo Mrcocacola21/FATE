@@ -3,8 +3,8 @@ import {
   presentationBatchHasExpired,
   presentationBatchIsCurrent,
 } from "../../game/effects/presentationSession";
-import { useEffect, useRef, useState } from "react";
-import type { PlayerView } from "rules";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import type { PlayerView, PlayerId } from "rules";
 import { mapEventBatchToVfx } from "./vfxEventMapper";
 import { visibleUnitPositions } from "./vfxGeometry";
 import { usePrefersReducedMotion } from "./vfxPreferences";
@@ -16,13 +16,17 @@ import {
 } from "./vfxQueue";
 import type { BoardVfxEventBatch, QueuedBoardVfxRequest, VisibleUnitPositions } from "./vfxTypes";
 
+// Board is also rendered to static markup by the preview/asset checks.
+const useBeforePaint = typeof window === "undefined" ? useEffect : useLayoutEffect;
+
 export function useBoardVfx(params: {
   batch: BoardVfxEventBatch | null | undefined;
   view: PlayerView;
   enabled: boolean;
   sessionKey: string | null | undefined;
+  viewerPlayerId?: PlayerId | null;
 }): { effects: QueuedBoardVfxRequest[]; reducedMotion: boolean } {
-  const { batch, view, enabled, sessionKey } = params;
+  const { batch, view, enabled, sessionKey, viewerPlayerId } = params;
   const reducedMotion = usePrefersReducedMotion();
   const [effects, setEffects] = useState<QueuedBoardVfxRequest[]>([]);
   const lastProcessedBatchKeyRef = useRef<string | null>(null);
@@ -31,7 +35,7 @@ export function useBoardVfx(params: {
   const processedRequestIdsRef = useRef<Set<string>>(new Set());
   const tokenRef = useRef<BoardVfxEventBatch["presentationToken"]>();
 
-  useEffect(() => {
+  useBeforePaint(() => {
     initializedRef.current = false;
     lastProcessedBatchKeyRef.current = null;
     positionSnapshotRef.current = null;
@@ -39,7 +43,7 @@ export function useBoardVfx(params: {
     setEffects([]);
   }, [sessionKey]);
 
-  useEffect(() => {
+  useBeforePaint(() => {
     const nextPositions = visibleUnitPositions(view);
 
     if (!initializedRef.current) {
@@ -68,12 +72,14 @@ export function useBoardVfx(params: {
     const previousPositions = positionSnapshotRef.current ?? nextPositions;
     let incoming = mapEventBatchToVfx({
       events: batch.events,
+      viewerPlayerId,
       view: batch.view ?? view,
       previousPositions,
       revision: batch.revision,
       presentationId: presentationBatchKey(batch),
       streamId: batch.streamId,
       eventDelaysMs: batch.eventDelaysMs,
+      eventBuildupMs: batch.eventBuildupMs,
       combatCues: batch.combatCues,
       movementCues: batch.movementCues,
       transportCues: batch.transportCues,
@@ -95,7 +101,7 @@ export function useBoardVfx(params: {
     );
     lastProcessedBatchKeyRef.current = presentationBatchKey(batch);
     positionSnapshotRef.current = nextPositions;
-  }, [batch, enabled, reducedMotion, view]);
+  }, [batch, enabled, reducedMotion, view, viewerPlayerId]);
 
   useEffect(() => {
     if (effects.length === 0) return;

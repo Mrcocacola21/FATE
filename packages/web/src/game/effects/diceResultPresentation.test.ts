@@ -6,7 +6,11 @@ import type { PlayerView } from "rules";
 import { setLanguage, translate } from "../../i18n";
 import { CombatRollFeedback } from "./CombatRollFeedback";
 import { buildCombatVisualPlaybackPlan, combatVisualPlaybackFrame } from "./combatPlayback";
-import { DICE_RESULT_HOLD_MS, diceResultTiming } from "./diceResultTiming";
+import {
+  DICE_RESULT_HOLD_MS,
+  DICE_RESULT_PAIR_STAGGER_MS,
+  diceResultTiming,
+} from "./diceResultTiming";
 import { mapEventBatchToSfx } from "../../features/sfx/sfxEventMapper";
 import type { PresentationEvent } from "./types";
 
@@ -82,7 +86,7 @@ test("attacker and defender get equally prominent authoritative dice, totals and
 });
 
 for (const reducedMotion of [false, true]) {
-  test(`${reducedMotion ? "reduced" : "normal"} motion: each result has the full readable hold before ordered exit and outcome`, (t) => {
+  test(`${reducedMotion ? "reduced" : "normal"} motion: paired dice share a reveal and contact waits for the readable defense`, (t) => {
     t.mock.timers.enable({ apis: ["Date"], now: 0 });
     const events: PresentationEvent[] = [
       roll("a"),
@@ -102,30 +106,36 @@ for (const reducedMotion of [false, true]) {
     const p = plan(events, reducedMotion);
     const timing = diceResultTiming(reducedMotion);
     assert.equal(timing.holdMs, DICE_RESULT_HOLD_MS);
-    assert.ok(timing.holdMs >= 2500 && timing.holdMs <= 3000);
+    assert.ok(timing.holdMs >= 500 && timing.durationMs <= 1100);
     const sample = () => combatVisualPlaybackFrame(p, Date.now());
-    for (const id of ["a", "d"]) {
-      assert.equal(sample().roll?.roll.rollId, id);
-      t.mock.timers.tick(timing.readableAtMs);
-      assert.equal(sample().roll?.roll.rollId, id);
-      t.mock.timers.tick(DICE_RESULT_HOLD_MS - 1);
-      assert.equal(sample().roll?.roll.rollId, id);
-      assert.equal(sample().complete, false);
-      t.mock.timers.tick(1);
-      if (timing.exitMs) {
-        assert.equal(sample().roll?.roll.rollId, id, "hold ends before exit, not before reveal");
-        t.mock.timers.tick(timing.exitMs);
-      }
-    }
-    assert.equal(sample().roll, null);
+    assert.equal(sample().roll?.roll.rollId, "a");
+    t.mock.timers.tick(DICE_RESULT_PAIR_STAGGER_MS);
+    assert.equal(sample().roll?.roll.rollId, "d");
+    assert.equal(
+      sample().roll?.pairedRoll?.rollId,
+      "a",
+      "both results survive even if RAF skipped the attack frame",
+    );
+    assert.equal(sample().roll?.outcome, undefined);
     const outcome = p.batch.combatCues!.find((cue) => cue.kind === "hit")!;
-    assert.ok(outcome.atMs >= timing.durationMs * 2);
+    assert.equal(outcome.atMs, DICE_RESULT_PAIR_STAGGER_MS + timing.durationMs);
+    assert.ok(outcome.atMs < timing.durationMs * 2);
+    const attack = p.queue.find((item) => item.type === "attack")!;
+    assert.ok(attack.startsAtMs < outcome.atMs, "windup overlaps the dice hold");
+    t.mock.timers.tick(outcome.atMs - Date.now() - 1);
+    assert.equal(sample().roll?.outcome, undefined, "dice comparison cannot predict hit/block");
+    t.mock.timers.tick(1);
+    assert.equal(
+      sample().roll?.outcome,
+      "hit",
+      "winner is highlighted only at authoritative contact",
+    );
     const sounds = mapEventBatchToSfx({ ...p.batch, view });
     assert.deepEqual(
       sounds
         .filter((sound) => sound.key === "common.combat.diceRoll")
         .map((sound) => sound.delayMs),
-      [0, timing.durationMs],
+      [0, DICE_RESULT_PAIR_STAGGER_MS],
     );
     assert.equal(sounds.find((sound) => sound.key === "common.combat.hit")!.delayMs, outcome.atMs);
   });
@@ -165,4 +175,19 @@ test("distinct equal-valued rolls retain separate consecutive cards, with no fab
     "two",
   );
   assert.equal(combatVisualPlaybackFrame(p, p.durationMs).roll, null);
+});
+
+test("area defenders keep individual readable holds while sharing the attack evidence", () => {
+  const p = plan([
+    roll("shared-attack"),
+    roll("first-defense", true),
+    roll("second-defense", true),
+  ]);
+  const cues = p.batch.combatCues!.filter((cue) => cue.kind === "roll");
+  assert.equal(cues[1].atMs, DICE_RESULT_PAIR_STAGGER_MS);
+  assert.equal(cues[2].atMs, cues[1].atMs + cues[1].durationMs);
+  assert.equal(
+    combatVisualPlaybackFrame(p, cues[2].atMs).roll?.pairedRoll?.rollId,
+    "shared-attack",
+  );
 });

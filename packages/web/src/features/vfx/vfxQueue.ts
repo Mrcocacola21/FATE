@@ -22,7 +22,10 @@ export function enqueueBoardVfx(params: {
     const definition = vfxRegistry[effect.effectId];
     if (!definition) continue;
     const delayMs = Math.max(0, effect.delayMs ?? 0);
-    const durationMs = Math.max(100, effect.durationMs ?? definition.durationMs);
+    const requestedDuration = effect.durationMs ?? definition.durationMs;
+    // Reduced-motion phase slices must end on the shared playback clock.
+    const durationMs = Number.isFinite(requestedDuration) && requestedDuration > 0
+      ? requestedDuration : Math.max(1, definition.durationMs);
     const startedAt = params.now + delayMs;
     queued.push({
       ...effect,
@@ -74,10 +77,10 @@ export function simplifyVfxForReducedMotion(requests: BoardVfxRequest[]): BoardV
   return requests.flatMap((request) => {
     const definition = vfxRegistry[request.effectId];
     if (definition.reducedMotion === "hide") return [];
-    const durationMs =
+    const durationMs = request.strikeContactMs ?? (
       definition.reducedMotion === "static"
         ? (request.durationMs ?? definition.durationMs)
-        : Math.min(request.durationMs ?? definition.durationMs, 450);
+        : Math.min(request.durationMs ?? definition.durationMs, 450));
     if (request.placement === "path") {
       const path = request.path ?? [];
       const first = path[0];

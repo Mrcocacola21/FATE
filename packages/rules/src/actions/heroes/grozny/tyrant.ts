@@ -1,3 +1,4 @@
+import { unitSignalAnchor } from "../../../core/heroSignals";
 import type {
   ApplyResult,
   Coord,
@@ -759,7 +760,7 @@ export function handleGroznyTyrantAfterAttack(
         [boosted.id]: boosted,
       },
     },
-    events,
+    events: [...events, { type: "groznyTyrantRewarded", ...unitSignalAnchor(state, boosted.id) }],
     requested: false,
   };
 }

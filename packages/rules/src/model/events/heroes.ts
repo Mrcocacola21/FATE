@@ -2,6 +2,13 @@ import type { PapyrusBoneType } from "../unit";
 import type { Coord, PlayerId } from "../shared";
 
 export type HeroGameEvent =
+  | { type: "lokiGreatJokeCommitted"; unitId: string; sourceCell?: Coord; radius: number }
+  | { type: "duolingoBerserkerUnlocked"; unitId: string; sourceCell?: Coord }
+  | { type: "riverStormWard"; unitId: string; sourceCell?: Coord; turnNumber: number }
+  | { type: "heroSelfCost"; unitId: string; sourceCell?: Coord; sourceAbilityId: "gutsBerserkMode" | "undyneUndying"; damage: number; hpAfter: number }
+  | { type: "groznyTyrantRewarded"; unitId: string; sourceCell?: Coord }
+  | { type: "forestMovementStopped"; unitId: string; sourceCell?: Coord }
+  | { type: "unitDeathFinalized"; unitId: string; sourceCell?: Coord }
   | {
       type: "chikatiloMarkApplied";
       chikatiloId: string;
@@ -36,6 +43,7 @@ export type HeroGameEvent =
     }
   | {
       type: "papyrusBonePunished";
+      targetCell?: Coord;
       papyrusId: string;
       targetId: string;
       boneType: PapyrusBoneType;
@@ -71,6 +79,7 @@ export type HeroGameEvent =
     }
   | {
       type: "sansBoneFieldPunished";
+      targetCell?: Coord;
       targetId: string;
       boneType: PapyrusBoneType;
       damage: number;
@@ -190,6 +199,7 @@ export type HeroGameEvent =
     }
   | {
       type: "lechyStormRollResult";
+      targetCell?: Coord;
       unitId: string;
       roll: number;
       success: boolean;

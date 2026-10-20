@@ -13,12 +13,14 @@ import { FIREBALL_TIMING, isFireballResolution } from "../../game/effects/asgore
 import {
   isCoord,
   linePath,
-  previousVisibleUnitCoord,
   radiusCellsToOverlay,
   visibleUnitCoord,
 } from "./vfxGeometry";
 import type { BoardVfxRequest, VfxEffectId, VfxMapperContext } from "./vfxTypes";
 import type { CombatPresentationCue } from "../../game/effects/combatPlayback";
+import { basicExpansion, expansionOutcome, expansionAttack, expansionMovement, expansionTeleport, expansionViewAtEvent } from "./expansionPresentation";
+import { isFinalPresentationDeath } from "../../game/effects/finalDeath";
+import { expansionEffect } from "./expansionRegistry";
 import {
   riverStage,
   riverMovementCue,
@@ -72,29 +74,6 @@ function unitRequest(
 ): BoardVfxRequest[] {
   if (typeof unitId !== "string") return [];
   const coord = visibleUnitCoord(context.view, unitId);
-  if (!coord) return [];
-  return [
-    {
-      id: requestId(context, event, effectId, suffix ?? unitId),
-      effectId,
-      placement: "unit",
-      unitId,
-      sourceCell: coord,
-      ...overrides,
-    },
-  ];
-}
-
-function unitOrPreviousRequest(
-  context: VfxMapperContext,
-  event: ProjectedGameEvent,
-  effectId: VfxEffectId,
-  unitId: unknown,
-  suffix?: string,
-  overrides: Partial<BoardVfxRequest> = {},
-): BoardVfxRequest[] {
-  if (typeof unitId !== "string") return [];
-  const coord = previousVisibleUnitCoord(context.view, context.previousPositions, unitId);
   if (!coord) return [];
   return [
     {
@@ -210,6 +189,11 @@ function mapAoeResolved(
   context: VfxMapperContext,
 ): BoardVfxRequest[] {
   if (!isCoord(event.center) || typeof event.radius !== "number") return [];
+  if (event.abilityId === "lokiLaught" && event.lokiStatusResult === "chicken") return [];
+  const sweep = event.abilityId === "tricksterAoE" ? basicExpansion(context.view, event.sourceUnitId, "trickster_sweep") : undefined;
+  if (sweep) return cellRequest(context, event, sweep, event.center, "sweep", {
+    anchorMode: "event", placement: "area", widthCells: event.radius * 2 + 1, heightCells: event.radius * 2 + 1,
+  });
   const signature = event.abilityId && REMAINING_AREAS[event.abilityId];
   if (signature) {
     const directed = [
@@ -398,12 +382,17 @@ function attackSignatures(
       ...cellRequest(
         context,
         event,
-        event.defenseSignature,
+        event.defenseSignature === "friskCleanSoulBreak" ? "expansion.frisk.clean_soul_break" : event.defenseSignature,
         isCoord(event.targetCell) ? event.targetCell : null,
         undefined,
         { anchorMode: "event" },
       ),
     );
+  if (event.hit && event.damage > 0 && attacker?.heroId === "jackRipper" &&
+    attacker.jackKnownHpByTarget?.[event.defenderId] !== undefined && isCoord(event.targetCell))
+    requests.push(...cellRequest(context, event, "expansion.jackRipper.surgeon_insight", event.targetCell, "private-hp", {
+      uiAnchor: "healthBar", unitId: event.defenderId, anchorMode: "followUnit", durationMs: 500,
+    }));
   return requests;
 }
 
@@ -429,16 +418,16 @@ function mapUnitMoved(
 ): BoardVfxRequest[] {
   if (!isCoord(event.from) || !isCoord(event.to)) return [];
   const movement = confirmedMovement(event);
-  return movement?.mode === "teleport"
-    ? movementCueVfx({
+  if (!movement || movement.mode !== "teleport") return [];
+  const cue: MovementPresentationCue = {
         ...movement,
         kind: "movement",
         id: requestId(context, event, "portal"),
         eventIndex: context.eventIndex,
         atMs: 0,
         durationMs: 220,
-      })
-    : [];
+      };
+  return expansionTeleport(cue, event, context.view) ?? movementCueVfx(cue);
 }
 
 export function mapGameEventToVfx(
@@ -473,11 +462,10 @@ export function mapGameEventToVfx(
     );
   }
   const signature = remainingStatusSignature(event);
-  if (event.type === "lechyStormRollResult")
-    return unitOrPreviousRequest(context, event, "storm", event.unitId, "stormTick", {
-      anchorMode: "event",
-      ...(context.view.units[event.unitId]?.isAlive === false ? { unitId: undefined } : {}),
-    });
+  if (event.type === "lechyStormRollResult" || event.type === "papyrusBonePunished" || event.type === "sansBoneFieldPunished") {
+    const effectId = expansionOutcome(event, context.view);
+    return effectId ? cellRequest(context, event, effectId, event.targetCell ?? null, undefined, { anchorMode: "event" }) : [];
+  }
   if (signature)
     return unitRequest(context, event, signature.vfx, signature.unitId, signature.stage, {
       anchorMode: "event",
@@ -518,6 +506,32 @@ export function mapGameEventToVfx(
       id: requestId(context, event, "boat", "transport"),
     });
   switch (event.type) {
+    case "moonEffectApplied":
+      return event.effectId === "lunarEclipse" && context.viewerPlayerId ? (event.affectedUnitIds ?? []).flatMap(unitId => {
+        const unit = context.view.units[unitId];
+        const effectId = basicExpansion(context.view, unitId, "stealth_enter");
+        return unit?.owner === context.viewerPlayerId && unit.isStealthed && effectId
+          ? unitRequest(context, event, effectId, unitId) : [];
+      }) : [];
+    case "groznyTyrantRewarded":
+    case "forestMovementStopped":
+      return cellRequest(context, event, event.type === "groznyTyrantRewarded" ? "expansion.grozny.tyrant_gain" : "expansion.lechy.forest_stop",
+        event.sourceCell ?? null, undefined, { unitId: event.unitId, anchorMode: "event" });
+    case "stealthEntered": {
+      const effectId = event.success === false ? undefined : basicExpansion(context.view, event.unitId, "stealth_enter");
+      return effectId ? unitRequest(context, event, effectId, event.unitId) : [];
+    }
+    case "heroSelfCost": {
+      const effectId = expansionOutcome(event, context.view);
+      return effectId ? cellRequest(context, event, effectId, event.sourceCell ?? null, undefined, { anchorMode: "event" }) : [];
+    }
+    case "lokiGreatJokeCommitted":
+      return cellRequest(context, event, "expansion.loki.great_joke", event.sourceCell ?? null,
+        undefined, { anchorMode: "event", placement: "area", widthCells: event.radius * 2 + 1, heightCells: event.radius * 2 + 1 });
+    case "duolingoBerserkerUnlocked":
+    case "riverStormWard":
+      return cellRequest(context, event, event.type === "riverStormWard" ? "expansion.riverPerson.storm_ward" : "expansion.duolingo.berserker_unlock",
+        event.sourceCell ?? null, undefined, { unitId: event.unitId, anchorMode: "event" });
     case "chargesUpdated": {
       const ready = chargeReadyAbilities(event, context.view);
       return ready.length
@@ -550,23 +564,30 @@ export function mapGameEventToVfx(
       if (isFireballResolution(event))
         return fireballRequests(event, context, FIREBALL_TIMING.travelMs);
       return [
+        ...expansionAttack(event, undefined, context.view, requestId(context, event, "combatHit")),
         ...attackSignatures(event, context),
         ...cellRequest(
           context,
           event,
-          event.hit ? "combatHit" : "combatMiss",
+          expansionOutcome(event, context.view) ?? (event.hit ? "combatHit" : "combatMiss"),
           isCoord(event.targetCell) ? event.targetCell : null,
         ),
       ];
     case "unitDied":
+      if (!isFinalPresentationDeath(context.events, context.eventIndex, context.view)) return [];
       return cellRequest(
         context,
         event,
-        "unitDeath",
+        expansionOutcome(event, context.view) ?? "unitDeath",
         isCoord(event.deathCell) ? event.deathCell : null,
       );
     case "abilityUsed":
       return mapAbilityUsed(event, context);
+    case "unitPlaced": {
+      const effectId = basicExpansion(context.view, event.unitId, "deploy");
+      return effectId ? cellRequest(context, event, effectId, event.position, undefined,
+        { unitId: event.unitId, anchorMode: "event" }) : [];
+    }
     case "searchStealth":
       return mapSearchStealth(event, context);
     case "stealthRevealed":
@@ -579,15 +600,16 @@ export function mapGameEventToVfx(
             undefined,
             { anchorMode: "event" },
           )
-        : unitRequest(context, event, "hiddenReveal", event.unitId);
+        : unitRequest(context, event, basicExpansion(context.view, event.unitId, "stealth_reveal") ?? "hiddenReveal", event.unitId);
     case "chikatiloMarkApplied":
       return unitRequest(context, event, "markApply", event.targetId, "target");
     case "lechyStormStarted":
       return event.sourceUnitId
         ? unitRequest(context, event, "storm", event.sourceUnitId, "start")
         : [];
-    case "asgoreSoulParadeResolved":
-      return cellRequest(
+    case "asgoreSoulParadeResolved": {
+      const result = expansionEffect("asgore", `soul_${event.soulId}`);
+      return [...cellRequest(
         context,
         event,
         "soulParade",
@@ -597,7 +619,9 @@ export function mapGameEventToVfx(
           anchorMode: "event",
           id: `${context.streamId ?? context.presentationId ?? context.revision}:${"eventId" in event ? event.eventId : context.eventIndex}:soulReveal`,
         },
-      );
+      ), ...(result ? cellRequest(context, event, result,
+        isCoord(event.sourceCell) ? event.sourceCell : null, "soul-result", { anchorMode: "event", scaleCells: 0.9 }) : [])];
+    }
     case "aoeResolved":
       return mapAoeResolved(event, context);
     case "unitTransformed":
@@ -630,7 +654,7 @@ export function mapGameEventToVfx(
       // Only the accepted charge-based defense is complete at choice time.
       // Choosing dice leaves a manual roll pending; attackResolved owns its outcome.
       return event.choice === "auto"
-        ? unitRequest(context, event, "shield", event.defenderId, event.choice)
+        ? unitRequest(context, event, basicExpansion(context.view, event.defenderId, "auto_defense") ?? "shield", event.defenderId, event.choice)
         : [];
     default:
       return [];
@@ -638,6 +662,7 @@ export function mapGameEventToVfx(
 }
 
 export function mapEventBatchToVfx(params: {
+  viewerPlayerId?: VfxMapperContext["viewerPlayerId"];
   events: ProjectedGameEvent[];
   view: PlayerView;
   previousPositions: VfxMapperContext["previousPositions"];
@@ -645,12 +670,14 @@ export function mapEventBatchToVfx(params: {
   presentationId?: string;
   streamId?: string;
   eventDelaysMs?: readonly number[];
+  eventBuildupMs?: readonly number[];
   combatCues?: readonly CombatPresentationCue[];
   movementCues?: readonly MovementPresentationCue[];
   transportCues?: readonly TransportPresentationCue[];
 }): BoardVfxRequest[] {
   const effects: BoardVfxRequest[] = [];
   params.events.forEach((event, eventIndex) => {
+    const eventView = expansionViewAtEvent(params.view, params.events, eventIndex);
     if (event.type === "berserkerDefenseChosen" && event.choice === "auto" && params.combatCues) {
       const outcome = params.events.findIndex(candidate => candidate.type === "attackResolved" &&
         candidate.defenderId === event.defenderId && sameAbilityResolution(event, candidate));
@@ -659,7 +686,7 @@ export function mapEventBatchToVfx(params: {
       // A normal Roll choice never enters this branch or creates a shield.
       if (outcome >= 0) {
         const cell = cue && "cell" in cue ? cue.cell : undefined;
-        effects.push(...cellRequest({ ...params, eventIndex }, event, "shield", cell ?? null, event.choice,
+        effects.push(...cellRequest({ ...params, eventIndex }, event, basicExpansion(params.view, event.defenderId, "auto_defense") ?? "shield", cell ?? null, event.choice,
           { anchorMode: "event", delayMs: cue?.atMs ?? params.eventDelaysMs?.[eventIndex] ?? 0 }));
         return;
       }
@@ -694,13 +721,15 @@ export function mapEventBatchToVfx(params: {
         const cue = params.combatCues.find(
           (cue) => cue.eventIndex === eventIndex && (cue.kind === "hit" || cue.kind === "miss"),
         );
+        effects.push(...expansionAttack(event, cue, eventView,
+          `${params.streamId ?? params.presentationId ?? params.revision}:${"eventId" in event ? event.eventId : eventIndex}:basic`));
         effects.push(
           ...attackSignatures(event, { ...params, eventIndex }).map((request) => ({
             ...request,
             ...(request.placement === "projectile" && cue && "attackAtMs" in cue && cue.attackAtMs !== undefined
               ? {durationMs: Math.max(100, cue.atMs - cue.attackAtMs)} : {}),
             delayMs:
-              request.effectId === "friskCry" || request.effectId === "friskSubstitution"
+              request.uiAnchor || request.effectId === "friskCry" || request.effectId === "friskSubstitution" || request.effectId === "expansion.frisk.clean_soul_break"
                 ? (cue?.atMs ?? params.eventDelaysMs?.[eventIndex] ?? 0)
                 : ((cue && "attackAtMs" in cue ? cue.attackAtMs : undefined) ??
                   params.eventDelaysMs?.[eventIndex] ??
@@ -720,11 +749,23 @@ export function mapEventBatchToVfx(params: {
         })),
       );
     }
-    if (params.combatCues && (event.type === "attackResolved" || event.type === "unitDied")) return;
+    if (params.combatCues && (event.type === "attackResolved" || event.type === "unitDied" || event.type === "heroSelfCost" ||
+      event.type === "lechyStormRollResult" || event.type === "papyrusBonePunished" || event.type === "sansBoneFieldPunished")) return;
     const baseDelay = params.eventDelaysMs?.[eventIndex] ?? 0;
+    if (event.type === "aoeResolved" && event.abilityId && params.combatCues) {
+      const lead = params.eventBuildupMs?.[eventIndex] ?? 0;
+      if (lead > 0 && event.abilityId === "kaiserCarpetStrike")
+        effects.push(...cellRequest({ ...params, eventIndex }, event, "expansion.grand-kaiser.carpet_approach", event.center,
+          "approach", { anchorMode: "event", placement: "area", widthCells: event.radius * 2 + 1, heightCells: event.radius * 2 + 1,
+            delayMs: baseDelay - lead, durationMs: lead }));
+      if (lead > 0 && event.abilityId === "kaiserDora" && event.sourceCell)
+        effects.push(...cellRequest({ ...params, eventIndex }, event, "expansion.grand-kaiser.dora_launch", event.sourceCell,
+          "launch", { anchorMode: "event", targetCell: event.center, delayMs: baseDelay - lead, durationMs: lead }));
+    }
     effects.push(
       ...mapGameEventToVfx(event, {
-        view: params.view,
+        view: eventView,
+        viewerPlayerId: params.viewerPlayerId,
         previousPositions: params.previousPositions,
         revision: params.revision,
         presentationId: params.presentationId,
@@ -749,7 +790,8 @@ export function mapEventBatchToVfx(params: {
     effects.push({
       id: `${cue.id}:vfx`,
       effectId:
-        cue.kind === "miss" ? "combatMiss" : cue.kind === "death" ? "unitDeath" : "combatHit",
+        expansionOutcome(params.events[cue.eventIndex], expansionViewAtEvent(params.view, params.events, cue.eventIndex)) ??
+        (cue.kind === "miss" ? "combatMiss" : cue.kind === "death" ? "unitDeath" : "combatHit"),
       placement: "cell",
       sourceCell: { ...cue.cell },
       anchorMode: "event",
@@ -757,7 +799,17 @@ export function mapEventBatchToVfx(params: {
       durationMs: cue.durationMs,
     });
   }
-  for (const cue of params.movementCues ?? []) effects.push(...movementCueVfx(cue));
+  for (const cue of params.movementCues ?? []) {
+    const eventView = expansionViewAtEvent(params.view, params.events, cue.eventIndex);
+    const requests = expansionTeleport(cue, params.events[cue.eventIndex], eventView) ?? movementCueVfx(cue);
+    effects.push(...requests.map(request => cue.kind === "reveal" && request.effectId === "hiddenReveal"
+      ? { ...request, effectId: basicExpansion(params.view, cue.unitId, "stealth_reveal") ?? request.effectId } : request),
+      ...expansionMovement(cue, eventView, !params.movementCues?.some(next =>
+        cue.kind === "movement" && next.kind === "movement" && next.unitId === cue.unitId &&
+        (next.mode === "normal" || next.mode === "rider") && next.atMs >= cue.atMs + cue.durationMs &&
+        next.atMs <= cue.atMs + cue.durationMs + 1 &&
+        next.from.col === cue.to.col && next.from.row === cue.to.row)));
+  }
   const seen = new Set<string>();
   return effects.filter((effect) => !seen.has(effect.id) && Boolean(seen.add(effect.id)));
 }

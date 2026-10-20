@@ -178,7 +178,8 @@ test("pending/click has no result; actual attacker, defender and each tie-break 
         t: ((key: string) => key) as Translate,
       }),
     );
-    assert.equal((markup.match(/data-combat-die=/g) ?? []).length, cue.roll.dice.length);
+    assert.equal((markup.match(/data-combat-die=/g) ?? []).length,
+      cue.roll.dice.length + (cue.pairedRoll?.dice.length ?? 0));
     for (const value of cue.roll.dice) assert.ok(markup.includes(`data-combat-die="${value}"`));
     assert.ok(markup.includes(`data-combat-total="${cue.roll.total}"`));
     if (cue.roll.dice.length > 1) assert.ok(markup.includes(`= ${cue.roll.total}`));
@@ -576,7 +577,7 @@ test("actual Sans Last Attack remains visible at zero HP until its final project
     1,
   );
   assert.equal(
-    outputs(death.batch, after).sprites.filter((sprite) => sprite.effectId === "unitDeath").length,
+    outputs(death.batch, after).sprites.filter((sprite) => sprite.effectId === "expansion.sans.death_final").length,
     1,
   );
   assert.equal(

@@ -14,6 +14,7 @@ import { BoardEffectsLayer } from "../game/effects/BoardEffectsLayer";
 import { useBoardEffects } from "../game/effects/useBoardEffects";
 import { useVisualResolution } from "../game/effects/useVisualResolution";
 import { CombatRollFeedback } from "../game/effects/CombatRollFeedback";
+import { useCombatExchange } from "../game/effects/useCombatExchange";
 import { isGameplayProjectedUnit } from "../game/effects/combatPlayback";
 import { cellToBoardPoint } from "../features/vfx/vfxGeometry";
 import { useBoardFit } from "../game/hooks/useBoardFit";
@@ -26,6 +27,11 @@ import { useBoardVfx } from "../features/vfx/useBoardVfx";
 import { useBoardSfx } from "../features/sfx/useBoardSfx";
 import { usePresentationVisibility } from "../game/effects/presentationVisibility";
 import { UnitStatusVfx } from "../features/vfx/UnitStatusVfx";
+import { SelectedUnitVfx } from "../features/vfx/SelectedUnitVfx";
+import { basicExpansion } from "../features/vfx/expansionPresentation";
+import { UnitUiVfx } from "../features/vfx/UnitUiVfx";
+import { UnitDeploymentContent } from "../features/vfx/UnitDeploymentContent";
+import { UnitMeleeContent } from "../features/vfx/UnitMeleeContent";
 import {
   resolveUnitStatuses,
   resolvePersistentGroundStatuses,
@@ -235,6 +241,8 @@ export const Board: FC<BoardProps> = ({
     sessionKey: effectSessionKey,
   });
   const renderedUnits = visualResolution.visualUnitsByUnitId;
+  const combatExchange = useCombatExchange({ cue: visualResolution.roll, batch: visualResolution.batch,
+    view, enabled: presentationEnabled, sessionKey: effectSessionKey });
   const { effects: boardEffects, reducedMotion } = useBoardEffects({
     batch: visualResolution.batch,
     view,
@@ -242,6 +250,7 @@ export const Board: FC<BoardProps> = ({
     sessionKey: effectSessionKey,
   });
   const { effects: boardVfx, reducedMotion: vfxReducedMotion } = useBoardVfx({
+    viewerPlayerId: playerId,
     batch: visualResolution.batch,
     view,
     enabled: presentationEnabled,
@@ -884,8 +893,16 @@ export const Board: FC<BoardProps> = ({
               <img src={JACK_TRAP_MARKER_ASSET} alt="" draggable={false} />
             </div>
           )}
-          <div className="board-unit-content" style={motionStyle} data-movement-mode={motion?.mode}>
-            {content}
+          <UnitDeploymentContent style={motionStyle} movementMode={motion?.mode} reducedMotion={vfxReducedMotion} cellSize={cellSize}
+            portraitSrc={unit && (!unit.isStealthed || unit.owner === playerId) && !getUnitTokenAsset(view.units[unit.id] ?? unit).isFallback
+              ? getUnitTokenAsset(view.units[unit.id] ?? unit).src : undefined}
+            effect={presentationEnabled && unit && view.units[unit.id]?.position
+              ? boardVfx.find(effect => effect.unitId === unit.id && vfxRegistry[effect.effectId].staging === "deploy") : undefined}>
+            <UnitMeleeContent cellSize={cellSize} isFlipped={isFlipped}
+              preparing={presentationEnabled && !reducedMotion && unit?.id === combatExchange.preparingUnitId && visualResolution.visualStateByUnitId[unit.id] !== "attacking"}
+              pose={presentationEnabled && unit && view.units[unit.id]?.position ? visualResolution.visualAttackByUnitId[unit.id] : undefined}>
+              {content}
+            </UnitMeleeContent>
             {transportPassenger && passengerAsset ? (
               <span
                 className={`pointer-events-none absolute -bottom-1 -right-1 z-20 flex items-center justify-center overflow-hidden rounded-full border-2 border-teal-200 bg-slate-900 shadow unit-visual-${visualResolution.visualStateByUnitId[transportPassenger.id] ?? "idle"}`}
@@ -909,9 +926,9 @@ export const Board: FC<BoardProps> = ({
                 )}
               </span>
             ) : null}
-          </div>
+          </UnitDeploymentContent>
           {isSelected || isActiveUnit ? (
-            <span className="board-selection-outline" aria-hidden="true" />
+            <span className={`board-selection-outline${presentationEnabled && isSelected && basicExpansion(view, unit.id, "select_ring") ? " board-selection-outline--thematic" : ""}`} aria-hidden="true" />
           ) : null}
           {jackTrapStatesByPos.has(key) && (
             <div
@@ -964,7 +981,9 @@ export const Board: FC<BoardProps> = ({
               className="board-outcome pointer-events-none absolute bottom-1 left-1 right-1 flex justify-center"
               style={motionStyle}
             >
-              <div style={{ width: hpBarWidth }}>
+              <div className="relative" style={{ width: hpBarWidth }}>
+                {presentationEnabled && view.units[unit.id]?.position && boardVfx.filter(effect => effect.uiAnchor === "healthBar" && effect.unitId === unit.id)
+                  .map(effect => <UnitUiVfx key={effect.id} effect={effect} reducedMotion={vfxReducedMotion} />)}
                 <HpBar
                   current={
                     visualResolution.visualHpByUnitId[unit.id] ?? renderedUnits[unit.id]?.hp ?? 0
@@ -1056,8 +1075,12 @@ export const Board: FC<BoardProps> = ({
             </div>
           ) : null}
           {rows}
-          <CombatRollFeedback cue={visualResolution.roll} t={t} playerId={playerId} />
+          <CombatRollFeedback cue={combatExchange.display} t={t} playerId={playerId} />
           <div className="pointer-events-none absolute" style={{ left: labelSize, top: labelSize }}>
+            {presentationEnabled && <SelectedUnitVfx view={view} unitId={selectedUnitId} playerId={playerId}
+              deployment={boardVfx.find(effect => effect.unitId === selectedUnitId && vfxRegistry[effect.effectId].staging === "deploy")} reducedMotion={vfxReducedMotion}
+              visualUnits={renderedUnits} motion={visualResolution.visualMotionByUnitId}
+              boardSize={size} cellSize={cellSize} isFlipped={isFlipped} />}
             <UnitStatusVfx
               view={view}
               playerId={playerId}

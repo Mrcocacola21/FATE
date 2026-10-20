@@ -1,0 +1,292 @@
+{
+  "schemaVersion": 1,
+  "heroId": "chikatilo",
+  "assetRoot": "packages/web/src/assets/",
+  "status": "imported_assets_not_runtime_bindings",
+  "assets": [
+    {
+      "id": "V-chikatilo-move_trail",
+      "heroId": "chikatilo",
+      "filename": "vfx/heroes/chikatilo/expansion/move_trail.png",
+      "sha256": "e9e0f1c540d4fe4765abfcae7a137613b3376ebcb340e15eb7c6c08b8d522b82",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "+X",
+      "phase": "move",
+      "geometry": "trail",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "chikatilo.basic.move.move",
+      "loop": false,
+      "presentationProfile": "trail",
+      "requestedRoleOrAbilityRefs": [
+        "basic.move"
+      ],
+      "declaredSourceAbilityId": "basic.move",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-chikatilo-move_arrive",
+      "heroId": "chikatilo",
+      "filename": "vfx/heroes/chikatilo/expansion/move_arrive.png",
+      "sha256": "1b900cc896b1c579fc95f281a50825bdd43dcf949000275428bbc249e20cbd67",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "arrive",
+      "geometry": "impact",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "chikatilo.basic.move.arrive",
+      "loop": false,
+      "presentationProfile": "impact",
+      "requestedRoleOrAbilityRefs": [
+        "basic.move"
+      ],
+      "declaredSourceAbilityId": "basic.move",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-chikatilo-attack_swing",
+      "heroId": "chikatilo",
+      "filename": "vfx/heroes/chikatilo/expansion/attack_swing.png",
+      "sha256": "758d5fc49f4aa4188ddaf98b3182d7b51ad818f8f8b288cce2e2a8687deb7f25",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "+X",
+      "phase": "swing",
+      "geometry": "swing",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "chikatilo.basic.attack.swing",
+      "loop": false,
+      "presentationProfile": "swing",
+      "requestedRoleOrAbilityRefs": [
+        "basic.attack"
+      ],
+      "declaredSourceAbilityId": "basic.attack",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-chikatilo-attack_impact",
+      "heroId": "chikatilo",
+      "filename": "vfx/heroes/chikatilo/expansion/attack_impact.png",
+      "sha256": "92c129758f0a9075314caae9dfebcf35d839104e16cbc54f6119f943f52909e5",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "hit",
+      "geometry": "impact",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "chikatilo.basic.attack.hit",
+      "loop": false,
+      "presentationProfile": "impact",
+      "requestedRoleOrAbilityRefs": [
+        "basic.attack"
+      ],
+      "declaredSourceAbilityId": "basic.attack",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "EXTEND",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-chikatilo-select_ring",
+      "heroId": "chikatilo",
+      "filename": "vfx/heroes/chikatilo/expansion/select_ring.png",
+      "sha256": "76ba06505b69ed7b89ef9c1c7046f50a29f8f798972fb582349c5b697880f125",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 1,
+      "fps": 0,
+      "durationMs": null,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "select",
+      "geometry": "static",
+      "layer": "ground",
+      "sourceVisibility": "local",
+      "compositeGroup": "chikatilo.basic.select.select",
+      "loop": false,
+      "presentationProfile": "static",
+      "requestedRoleOrAbilityRefs": [
+        "basic.select"
+      ],
+      "declaredSourceAbilityId": "basic.select",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-chikatilo-deploy",
+      "heroId": "chikatilo",
+      "filename": "vfx/heroes/chikatilo/expansion/deploy.png",
+      "sha256": "cd6acb21a8d9d21ba30fb9a8abe2d0ef8cab2f5f008e55c11e7d28aba0baad4d",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 16,
+      "fps": 24,
+      "durationMs": 667,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "deploy",
+      "geometry": "deploy",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "chikatilo.basic.deploy.deploy",
+      "loop": false,
+      "presentationProfile": "deploy",
+      "requestedRoleOrAbilityRefs": [
+        "basic.deploy"
+      ],
+      "declaredSourceAbilityId": "basic.deploy",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-chikatilo-death_final",
+      "heroId": "chikatilo",
+      "filename": "vfx/heroes/chikatilo/expansion/death_final.png",
+      "sha256": "8e750655b64d7095641603cbea4ede3cefc3e4cf049ae4f5275a087ef55ac0a9",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 24,
+      "fps": 24,
+      "durationMs": 1000,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "final",
+      "geometry": "death",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "chikatilo.basic.death.final",
+      "loop": false,
+      "presentationProfile": "death",
+      "requestedRoleOrAbilityRefs": [
+        "basic.death"
+      ],
+      "declaredSourceAbilityId": "basic.death",
+      "canonicalTriggerHint": "Окончательная смерть; дождаться возрождений, предсмертной атаки/выбора проклятия",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-chikatilo-stealth_enter",
+      "heroId": "chikatilo",
+      "filename": "vfx/heroes/chikatilo/expansion/stealth_enter.png",
+      "sha256": "5c7b33758e370f48bb01e52abe0624eefb600feaf6887f55b8f58e39ba3fc33a",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 16,
+      "fps": 24,
+      "durationMs": 667,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "enter",
+      "geometry": "burst",
+      "layer": "foreground",
+      "sourceVisibility": "owner",
+      "compositeGroup": "chikatilo.stealth.enter",
+      "loop": false,
+      "presentationProfile": "burst",
+      "requestedRoleOrAbilityRefs": [
+        "stealth"
+      ],
+      "declaredSourceAbilityId": "stealth",
+      "canonicalTriggerHint": "Вход в скрытность только владельцу, никаких подсказок противнику",
+      "priority": "P2",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-chikatilo-stealth_reveal",
+      "heroId": "chikatilo",
+      "filename": "vfx/heroes/chikatilo/expansion/stealth_reveal.png",
+      "sha256": "5b2af7a983a1c5c915782f0acf34053d2a9a9a5723afb24645676f13de3ca6a4",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 16,
+      "fps": 24,
+      "durationMs": 667,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "reveal",
+      "geometry": "burst",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "chikatilo.stealth.reveal",
+      "loop": false,
+      "presentationProfile": "burst",
+      "requestedRoleOrAbilityRefs": [
+        "stealth"
+      ],
+      "declaredSourceAbilityId": "stealth",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P2",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    }
+  ],
+  "notes": [
+    "Original PNG bytes preserved. This manifest does not register VFX or authorize visibility.",
+    "defense/stealth/basic.* are presentation roles; resolve actual rule events when connecting.",
+    "declaredSourceAbilityId is provenance, not proof that the unit has that ability."
+  ]
+}

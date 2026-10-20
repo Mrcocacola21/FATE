@@ -54,6 +54,7 @@
     "test:vfx:coverage": "tsx --test src/features/vfx/heroVfxCoverage.test.tsx",
     "test:vfx:coverage:e2e": "node scripts/hero-vfx-coverage-smoke.mjs",
     "test:vfx:coverage:production": "node scripts/hero-vfx-coverage-smoke.mjs --production",
+    "test:vfx:expansion:game": "node scripts/vfx-expansion-game-smoke.mjs",
     "generate:vfx-coverage": "node scripts/generate-hero-vfx-coverage.mjs",
     "test:vfx:infrastructure": "node scripts/vfx-infrastructure-smoke.mjs",
     "test:presentation:assets": "tsx scripts/presentation-asset-audit.ts",

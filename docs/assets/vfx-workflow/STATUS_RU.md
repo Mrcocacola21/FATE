@@ -1,0 +1,169 @@
+# Подключение expansion VFX
+
+Игровая привязка выполнена для всех файлов, имеющих подтверждённый маршрут в действующих правилах. Три противоречия заказа правилам остаются заблокированными. Полная визуальная QA всех игровых веток ещё не закрыта.
+
+| Герой | Найдено | Зарегистрировано | Привязано | Проверено поведением | Просмотрено визуально | Остаток привязки / поведения |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| artemida | 10 | 10 | 10 | 10 | 10 | 0 |
+| asgore | 14 | 14 | 14 | 14 | 14 | 0 |
+| chikatilo | 9 | 9 | 9 | 9 | 9 | 0 |
+| donKihote | 8 | 8 | 8 | 8 | 8 | 0 |
+| duolingo | 10 | 10 | 10 | 10 | 10 | 0 |
+| elCidCompeador | 8 | 8 | 8 | 8 | 8 | 0 |
+| femto | 9 | 9 | 9 | 9 | 9 | 0 |
+| frisk | 10 | 10 | 10 | 10 | 10 | 0 |
+| genghisKhan | 8 | 8 | 8 | 8 | 8 | 0 |
+| grand-kaiser | 15 | 15 | 14 | 14 | 15 | 1 |
+| griffith | 7 | 7 | 6 | 6 | 7 | 1 |
+| grozny | 12 | 12 | 11 | 11 | 12 | 1 |
+| guts | 12 | 12 | 12 | 12 | 12 | 0 |
+| hassan | 10 | 10 | 10 | 10 | 10 | 0 |
+| jackRipper | 11 | 11 | 11 | 11 | 11 | 0 |
+| jebe | 10 | 10 | 10 | 10 | 10 | 0 |
+| kaladin | 10 | 10 | 10 | 10 | 10 | 0 |
+| kaneki | 10 | 10 | 10 | 10 | 10 | 0 |
+| lechy | 14 | 14 | 14 | 14 | 14 | 0 |
+| loki | 12 | 12 | 12 | 12 | 12 | 0 |
+| luche | 9 | 9 | 9 | 9 | 9 | 0 |
+| mettaton | 12 | 12 | 12 | 12 | 12 | 0 |
+| odin | 9 | 9 | 9 | 9 | 9 | 0 |
+| papyrus | 12 | 12 | 12 | 12 | 12 | 0 |
+| riverPerson | 8 | 8 | 8 | 8 | 8 | 0 |
+| sans | 10 | 10 | 10 | 10 | 10 | 0 |
+| undyne | 11 | 11 | 11 | 11 | 11 | 0 |
+| vladTepes | 10 | 10 | 10 | 10 | 10 | 0 |
+| zoro | 6 | 6 | 6 | 6 | 6 | 0 |
+| **Всего** | **296** | **296** | **293** | **293** | **296** | **3** |
+
+«Просмотрено визуально» — реальный просмотр средних кадров всех PNG на поле свежего production preview, включая направление снарядов и стально-красную палитру Кайзера. Это не отметка полного просмотра каждой анимации в живом матче. В JSON это разделено полями visual.reviewed и visual.fullRuntimeQa.
+
+Expansion PNG: 296; expansion-определений реестра: 296; PNG с проверенными игровыми маршрутами: 293. Фазы, маршруты и состояния перечислены отдельно в integration-state.json; эти числа не означают столько же способностей или событий.
+
+## Точные блокеры
+
+- **grand-kaiser/auto_defense.png**: Engineering Miracle grants charges, but resolveAttackAttackerRoll/stateAutoDefense do not accept Kaiser as a Berserker defender; no accepted auto-dodge runtime route. Do not change combat eligibility for artwork.
+- **griffith/commander_aura.png**: packages/rules/src/actions/heroes/vlad.ts:getPolkovodetsSource excludes Griffith; art/brief requests vladPolkovodets which has no current rule effect for this hero. Balance unchanged.
+- **grozny/commander_aura.png**: getPolkovodetsSource excludes Grozny, including Tyrant inherited movement. No current commander-aura rule for this hero; balance unchanged.
+
+Следующая партия: Остаются три точных противоречия заказа rules: ауры Griffith/Grozny и auto_defense Кайзера. Для них требуется отдельное решение о смысле заказа/механике; баланс ради арта не изменялся. Следующая независимая партия полной анимационной QA — 11 уникальных PNG Loki/Duolingo/Frisk (nextBatchEffectIds): целиком от старта до исчезновения, статус snapshot/expiry и оба получателя. Средние кадры уже просмотрены; полный ручной сетевой матч двух игроков не выполнен.
+
+## Четыре новых сигнала
+
+- Локи: lokiGreatJokeCommitted только после принятой ветки greatLokiJoke и списания 15; разрешённые sourceCell/radius зафиксированы в rules. Сигнал общего каста не обещает превращение всех целей.
+- Дуолинго: duolingoBerserkerUnlocked на первом false→true при 12 Missed Lessons — оба действующих пути (промах и начало хода). Snapshot/reconnect не запускают unlock; прежний постоянный berserker сохранён.
+- Фриск: attackResolved.defenseSignature=friskCleanSoulBreak только при реальном расходе щита и предотвращённой атаке; Cry/Substitution и обычный miss различаются. Исход, HP и RNG проверены.
+- Речной человек: riverStormWard в фазе фактически предотвращённого стартового воздействия активного шторма вне леса; guard на номер хода исключает повтор. Без броска, урона или лечения.
+
+## Проверки
+
+- node scripts/vfx-integration-inventory.mjs — PASS: 296 PNG / 29 профилей; SHA-256, размеры кадров, все манифесты и оба исторических отчёта согласованы; PNG не изменены.
+- npm run test:effects --workspace packages/web — PASS, 318/318, включая отсутствие дублей следа/deploy и одно приземление в конце пути (staging-effects.log).
+- npm run test:presentation:assets --workspace packages/web — PASS (staging-assets.log).
+- npm run test:rules — PASS, 3 набора (final-rules.log); отдельный --expansion-signals проверяет принятие/отказ/повтор/RNG/owner/opponent/spectator и завершение Don Madness.
+- npm run test:contract — PASS, 20 наборов; актуальные generated OpenAPI response schemas проверены (final-contract.log).
+- npm run test:snapshots --workspace packages/server — PASS; serialization round-trip включает новые blindSourceId/immobilizedSourceId/movementDisabledSourceId (final-snapshots.log).
+- npm run lint; npm run typecheck; npm run build — PASS (staging-lint.log, staging-typecheck.log, staging-build.log).
+- npm run test:vfx:coverage:production --workspace packages/web — PASS на свежей production-сборке: 327 проверенных определений, включая все 296 expansion; обе ориентации, слои/кадры, разрешённые статусы, phone/reduced motion (final-browser-production.log).
+- npm run test:vfx:expansion:game --workspace packages/web — PASS: 222 сценария на настоящем Board из 37 rules-produced fixtures × 3 получателя × 2 viewport/motion. Локальный click/deselect, active-phase opacity, duplicate, expiry, reconnect, бюджет памяти (final-browser-game.log).
+- node packages/web/scripts/vfx-expansion-game-smoke.mjs --review-samples — PASS, ещё 30 целевых наблюдений; просмотрены скриншоты четырёх новых сигналов и обычного движения, включая обратную ориентацию и phone/reduced motion. Проверяется декодированная отрисовка в активной фазе, не только DOM очереди (final-browser-review-samples.log).
+- Реально просмотрены 29 контактных листов / 296 PNG со средними кадрами свежего production preview. Это визуальная оценка арта, не автоматическая отметка полного игрового QA. Артефакты: packages/web/test-results/vfx-coverage/browser-production/contact-sheets/.
+- Deploy/move v2: 318/318 test:effects, test:presentation:assets, root lint/typecheck/build PASS; source PNG hashes unchanged. See staging-*.log and DEPLOY_MOVE_REVIEW_RU.md for real Board review scope.
+- Deploy/move v2: real Board staging matrix 402/402; commander aura alignment 72/72, owner/opponent/spectator, desktop/phone reduced motion. Nine actual Board contact sheets reviewed. Fresh production 327 definitions: staging-production.log.
+- Deploy sync v3: 321/321 test:effects; presentation assets, root lint/typecheck/build PASS (deploy-sync-*.log). PNG hashes unchanged.
+- Deploy sync v3: real Board matrix 402/402 + snapshot-before-event deployments 168/168; no extra frame polling; desktop/phone reduced motion, P1/P2/spectator. All 28 deployment midpoints reviewed; Genghis dark-board sequence reviewed at 16/80/180/360/560ms. Fresh production coverage: deploy-sync-production.log.
+- Aura/entry v4: 325/325 effects tests, presentation asset audit, root lint/typecheck/build PASS; source PNG hashes unchanged (aura-entry-*.log).
+- Aura/entry v4: 402/402 real Board cases, decoded portraits and stable DOM checked, six commander fields cover all radius-one neighbors, both board orientations/phone reduced motion, duplicate/reconnect/expiry. Two controlled cold/expired portrait cases and a 2-scene dark Genghis aura/entrance timeline passed. Fresh production coverage 327/327. Full manual network match remains open.
+- Reveal/selection v5: effects 326/326, asset audit, root lint/typecheck/build PASS; all 296 source PNG hashes preserved (reveal-selection-*.log).
+- Reveal/selection v5: 402/402 actual Board cases; portrait opacity 0/half/peak/after and shared light peak, no first-frame retry; selection contour all 29 profiles and 39 hero/form/Chicken scenes; both orientations, phone/reduced motion, P1/P2/spectator, duplicate/reconnect/cleanup. Fresh production coverage 327/327. Actual server Kaiser spawn and placeUnit recorded separately with real clocks; source events retained.
+- Reveal/selection v5: 168/168 placements with ahead snapshot; two controlled cold/expired portrait counterexamples passed on current source. Selection opacity follows token reveal and its masked center leaves portraits clear; source PNGs unchanged.
+- Commander art v6: effects 326/326, presentation asset audit, root lint/typecheck/build PASS; source inventory remains 296 PNG / 29 profiles with unchanged SHA-256 (aura-art-*.log).
+- Commander art v6: actual Board 72/72 commander cases + 12/12 dark original-art timeline cases; fixed visual center, six styles, both orientations, P1/P2/spectator and phone/reduced motion. All six original rings viewed in three phases. Fresh production coverage 327/327. The three existing rules/art blockers and broader full-animation QA remain open.
+- Commander badge v7: effects 329/329, i18n 5/5, presentation asset audit, root lint/typecheck/build PASS. Actual Board commander smoke 72/72; exactly two neighboring ally flag icons in Genghis placement, none on self; owner/opponent/spectator, orientations and phone/reduced motion. Fresh production coverage 327/327 (commander-badge-*.log). No rules, events, PNG or SFX changes.
+- Long movement v8: effects 332/332, SFX 66/66, asset audit, root lint/typecheck/build PASS; generic trail tones and reduced-motion endpoint color survive production CSS scan. Source PNG hashes unchanged (long-move-*.log).
+- Long movement v8: 84/84 actual Board cases: base Rider/Assassin and Genghis/Don/Hassan/Jack/Chikatilo, real short/long actions, both orientations, three recipients, desktop and phone/reduced motion, quarter/mid/three-quarter wake paint, token alignment, single reached arrival, duplicates, snapshot/reconnect and cleanup. Existing movement browser smoke passed including forced/teleport and stake/snare reached timing. Seven long routes visually reviewed in three phases; five thematic trail PNG, two common base effects. Fresh production coverage 327/327. Broader original QA/blockers preserved.
+- Deposited wake v9: effects 334/334; asset audit, root lint/typecheck/build PASS (wake-*.log). 126 real Board long/short cases: desktop, animated phone, phone/reduced motion, P1/P2/spectator; stationary fragments, transparent future/expired deposits, visible passed positions, actual token positions, one unchanged arrival, duplicates, reconnect/snapshot, cleanup. All 67 profile/form owner desktop staging cases PASS. Fresh production coverage 327/327. Five thematic trail PNG visually reviewed in three phases on desktop and animated phone; broader original QA and blockers preserved.
+- Attack swings v10: effects 336/336; SFX 66/66; full rules 3 suites and contract PASS; asset audit, root lint/typecheck/build and fresh production 327 definitions PASS (swing-*.log). Real Board 261 scenarios: 27 swing PNG + vertical/diagonal examples, P1/P2/spectator and desktop/animated phone/phone reduced motion; direction, source pivot, shared release/outcome, no early impact, no duplicate and cleanup/reconnect. All 27 source PNG visually reviewed on actual owner Board desktop/phone release midpoints. Full-animation/manual-network QA and earlier blockers preserved.
+- Target cuts v11: effects 338/338; SFX 66/66; asset audit, root lint/typecheck/build and fresh production 327 definitions PASS (melee-*.log). 270 real Board swing scenarios plus 81 timeline cases: 27 PNG, three recipients, desktop/phone/reduced motion; target-centered trace, fixed X/Y reflection, attack facing, hit/miss, phase, duplicate, reconnect and cleanup. All 27 PNG sampled visually on desktop/phone; nine representative timelines inspected, Guts recorded normal/x4. Full manual network QA and original blockers preserved.
+- Adjacent melee lunge v12: 341 effects tests, 270 real Board scenarios, asset audit, root lint/typecheck/build and fresh production 327 definitions PASS (lunge-*.log). Small directional token thrust peaks at unchanged contact, returns over 80ms; no tactical movement, additional timer, projectile thrust or reduced-motion travel. All 27 thematic releases sampled on desktop/phone; Guts recorded normal/x4. Rules, SFX routes, PNG and wider QA/blockers preserved.
+
+## Ограничения и особенности маршрутов
+
+- Автоматический Board smoke использует результаты rules и проекции получателей. Ручной сетевой матч двух игроков не проводился; полный просмотр всех фаз каждой уникальной ветки остаётся открытым. Поведенческий verified не закрывает эту визуальную работу.
+- У Loki/Duolingo/Lechy/Sans обычное движение в правилах — телепорт: обычный след не рисуется. Их move_trail/move_arrive доступны на подтверждённой обычной ходьбе в состоянии Chicken; это проверено реальным rules-действием, а не заменой семантики телепорта.
+- У Кайзера enterStealth — Bunker. Его stealth_enter связан только с реальным разрешённым владельцу результатом Lunar Eclipse; Bunker не изображается невидимостью.
+- Постоянные статусы восстанавливаются из разрешённого PlayerView с идентификатором источника и снимаются со статусом/источником/видимостью. Выбор — статичный слой локального Board.selectedUnitId, без сетевого события.
+- 3 заблокированных PNG доступны реестру/preview для проверки арта, но не считаются live. Баланс и eligibility защиты/ауры ради них не менялись.
+- Undyne shift.png вне expansion: Direction Shift отсутствует в правилах; не реализовывался.
+- Base-ассеты исключены пользователем. Исходные PNG, import-манифесты, исторические отчёты и SFX-интеграция сохранены. Новые фазы используют существующие presentation-часы и очередь; Carpet/Dora сохраняют impact/audio на общей границе.
+
+## Доработка deploy и движения
+
+Deploy и движение переработаны для всех профилей и шести форм: тематический эффект окружает портрет, след проходит позади у основания, приземление происходит один раз в конце пути. Размеры и плотность различаются между героями. Общие дубли линии/пульса убраны только там, где есть тематический эффект.
+
+Актуализировано записей PNG: 92. Подробности проверки: [DEPLOY_MOVE_REVIEW_RU.md](DEPLOY_MOVE_REVIEW_RU.md). Это не закрывает перечисленную выше QA остальных уникальных способностей и три rules-блокера.
+
+## Живая аура — версия v4
+
+Командирская аура восстановлена как область 3×3, радиус 1 по Чебышёву: восемь соседних клеток вместе с диагоналями, с обрезкой у границы поля. Мягкая подсветка дышит, свет проходит по краю, волна расходится от источника. Поддержаны шесть действующих командиров; механика и два прежних блокера аур Griffith/Grozny не менялись. Компактный маркер v3 отменён.
+
+Портреты заранее прогреваются только из разрешённого состава/PlayerView. Deploy применяет одну непрерывную анимацию появления ко всей композиции с токеном, свечением и тематическим strip. Сам токен сохраняется при старте и очистке. Пока портрет не декодирован, круг/аура не играют отдельно; поздняя загрузка не перезапускает прошедшую фазу. Reduced motion оставляет спокойное проявление и неподвижное поле.
+
+Проверки: 325 effects-тестов; 402 сценария реального Board для всех 28 deploy/движений и шести аур, оба разворота, phone/reduced motion, три получателя. Два браузерных сценария с намеренно задержанным HTTP портрета; последовательности появления и пульсации Чингисхана просмотрены отдельно. Логи: aura-entry-*.log. Свежая production-проверка — 327 определений. Полный ручной сетевой матч и QA остальных уникальных веток остаются открытыми.
+
+## Проявление токена и размер колец — версия v5
+
+Токен начинает подтверждённый deploy с opacity 0 и плавно достигает 100% к самому яркому кадру конкретного strip. Мягкая вспышка достигает пика одновременно. Далее токен остаётся видимым, пока эффект затухает. Длительность увеличена примерно на 20% (720–860 мс), размер эффекта — примерно на 9%; размер самой фигуры сохранён. Reduced motion ограничивает проявление 120 мс. Начальный кадр очереди публикуется до отрисовки, поэтому короткое размещение не теряет эффект; правила не ждут анимацию.
+
+Для всех 29 select_ring убраны прозрачные поля исходного холста: видимый контур занимает 98% клетки. Он поднят над подложкой, центр оставляет портрет открытым, HP и тактический UI остаются поверх; общая рамка смягчена только у выбранных героев с тематическим кольцом. Кольцо следует отрисованной позиции и движению фигуры, при deploy проявляется вместе с токеном; не появляется заранее из опережающего snapshot или до декодирования портрета. Смена выбора, смерть, потеря видимости и смена сессии снимают его.
+
+Проверки: 326 effects-тестов; 402 браузерных сценария реального Board, все 28 deploy, оба разворота и phone/reduced motion, три получателя; opacity проверяется в начале, середине, пике и после. Просмотрены 39 сцен выбора (29 профилей, шесть форм, четыре Chicken). Свежая production-проверка — 327 определений. Логи: reveal-selection-*.log. Подробности: [DEPLOY_MOVE_REVIEW_RU.md](DEPLOY_MOVE_REVIEW_RU.md).
+
+## Командирская аура из исходного ассета — актуальная версия v6
+
+У всех шести действующих командиров исходный PNG теперь образует само кольцо радиуса 1 вокруг фигуры. Прозрачные поля и сплюснутая авторская проекция нормализованы по альфа-контуру: кольцо центрировано в области 3×3, следует отрисованной фигуре и обрезается у границы поля. Сам PNG медленно вращается за 40 секунд и мягко дышит за 6 секунд. У reduced motion остаётся неподвижным.
+
+Отдельные бегущая прямоугольная рамка и расходящаяся волна убраны. Подсветка клеток снижена с 0.018 до 0.005, радиальная заливка — до 0.002–0.018. Основной контур PNG имеет opacity 0.27–0.38 и остаётся под фигурами, HP и тактическим UI. PNG и правила не менялись; Griffith/Grozny не получают отсутствующую у них механику.
+
+Проверено: 326 effects-тестов; 72 сценария реального Board для шести командиров и 12 сценариев покадровой проверки движения оригинального ассета. Просмотрены все шесть PNG в трёх фазах. Asset audit, root lint/typecheck/build и свежая production-проверка 327 определений пройдены. Логи: aura-art-*.log; детали: [COMMANDER_AURA_REVIEW_RU.md](COMMANDER_AURA_REVIEW_RU.md).
+
+## Значок союзной командирской поддержки — v7
+
+У разрешённых союзников в радиусе 1 появляется маленький зелёный флажок в существующем ряду статусов. Подпись и сводка выбранной фигуры объясняют бонус: +1 к урону. Источник должен быть союзным живым командиром на поле; сам себе бонус не даёт, False Trail не получает его, пересечение аур не создаёт несколько значков. При выходе из радиуса, смерти/удалении источника или потере видимости значок снимается. Скрытый источник не выводится по косвенным данным.
+
+Проверено: 329 effects-тестов, 5 i18n-тестов, 72 сценария реального Board; условия сопоставлены с getPolkovodetsSource для всех шести командиров, включая диагонали и проекции получателей. Просмотрены два значка на соседних союзниках Чингисхана. Новых событий, таймеров, звуков и PNG нет. Логи: commander-badge-*.log.
+
+## Длинные перемещения райдеров и ассасинов — v8
+
+Исправлены две причины: обычный длинный ход сжимался до тех же 160 мс, что один шаг; динамически составленные CSS-классы оставляли общий след базовых фигур прозрачным. Теперь normal/Rider используют 160 мс на клетку при общем бюджете ходьбы 720 мс на пакет: две клетки — 320 мс, восемь — 720 мс. Подтверждённые сегменты и повороты сохранены; промежуточные скрытые клетки не вычисляются. Reduced motion остаётся 50 мс на сегмент.
+
+Токен, тематический след, конечный акцент и ловушки используют общий playback-clock. Постоянное опутывание появляется на достигнутом кадре, а snapshot восстанавливает его сразу. Полные имена классов сохраняют цвета обычного следа и спокойных конечных маркеров в production. Правила, RNG, расходы, SFX-маршруты и исходные PNG не менялись; forced/teleport/Boat/Tralala сохраняют свои виды движения.
+
+Проверки: 332 effects-тестов, 66 SFX-тестов, 84 браузерных сценария настоящего Board для базовых Rider/Assassin и пяти героев, короткие/длинные реальные rules-действия, три получателя, desktop и phone/reduced motion. Проверяются цвет/размер/opacity следа на 25/50/75% пути, позиция токена, одна конечная фаза, повторы, reconnect/snapshot и cleanup. Семь длинных маршрутов просмотрены в трёх фазах. Затронут общий контракт 64 movement PNG; это не отметка просмотра длинной ходьбы всех профилей. Детали: [LONG_MOVE_FIX_RU.md](LONG_MOVE_FIX_RU.md), логи long-move-*.log.
+
+## Запись настоящего теструма — наблюдение разобрано
+
+Отдельное раннее кольцо оказалось локальным select_ring: оно использовало новую позицию из PlayerView раньше, чем появилась отрисованная фигура. Теперь оно ждёт фигуру и следует её визуальной позиции. Обычный placeUnit записан отдельно: подтверждённый unitPlaced запускает новое плавное проявление. У debugSpawnUnit сервер по-прежнему присылает events=[], поэтому этот путь не объявляется deploy и не получает выдуманное событие.
+
+Новые видео с настоящими часами, сервером и WebSocket: `packages/web/test-results/kaiser-reveal-selection/`. Исходная запись до исправления сохранена отдельно в `kaiser-deploy-capture/`. Общая ручная QA всех уникальных способностей остаётся открытой.
+
+## След, остающийся на доске — v9
+
+Вместо одного PNG под движущимся токеном теперь остаётся цепочка небольших фрагментов в уже пройденных точках. Каждый неподвижен и плавно затухает за 240 мс. Плотность зависит от длины пути, максимум 32 фрагмента на один cue; отдельные таймеры не создаются. Движение и момент прибытия сохранены, остаток следа догорает после остановки. Reduced motion скрывает след, разрешения и cleanup действуют на весь cue.
+
+Проверено: 334 effects-тестов; 126 сценариев настоящего Board для коротких/длинных ходов, трёх получателей, desktop, анимированного phone и phone/reduced motion; 67 сценариев deploy/move всех профилей и форм. Проверяются неподвижность фрагментов, отсутствие следа впереди токена, затухание, неизменное прибытие, повторы и очистка. Общий путь затрагивает 35 trail/form PNG; визуально просмотрены пять тематических следов в трёх фазах на desktop и phone. Asset audit, root lint/typecheck/build и свежая production-проверка 327 определений пройдены. Детали: [MOVEMENT_WAKE_RU.md](MOVEMENT_WAKE_RU.md), логи wake-*.log. Прежние блокеры и широкая ручная QA сохранены.
+
+## Разрез через токен цели — v11
+
+Все 27 обычных и форменных взмахов теперь рисуют быстрый рассекающий штрих непосредственно через портрет цели. Арт, блик и прорисовка отражены по горизонтали и вертикали вокруг центра цели; угол следует разрешённому направлению атаки и повороту доски. Фигура не размахивает цельной дугой как оружием. Разрез проявляется в последние 90 мс перед общим contact и затухает за 80 мс; reduced motion сохраняет статичный непустой кадр. При промахе штрих проходит рядом и не создаёт impact. PNG, исходы правил и звуковые фазы сохранены.
+
+Проверки: 338 effects-тестов, 66 SFX-тестов; asset audit, lint/typecheck/build и свежая production-проверка 327 определений PASS. 270 браузерных сценариев настоящего Board и 81 сценарий прорисовки/затухания; три получателя, desktop, phone и reduced motion. Все 27 PNG просмотрены на desktop/phone в фазе разреза; девять характерных последовательностей — отдельно. Запись Guts normal/x4: packages/web/test-results/target-cut-recording/. Полная ручная сетевая QA и исходные блокеры остаются открытыми. Подробности: [TARGET_CUT_RU.md](TARGET_CUT_RU.md), логи melee-*.log.
+
+## Выпад токена при соседней мили-атаке — v12
+
+Токен слегка отводится назад и подаётся на 0,24 клетки к противнику, вытягиваясь на 7,5% в направлении удара. Максимум совпадает с прежним contact, затем за 80 мс токен возвращается. Весь жест вычисляется существующим combat RAF; клетка, аура, тактические маркеры и разрез на цели не переезжают. Только принятые мили-атаки на соседнюю клетку, включая диагональ; дальние атаки, снаряды и reduced motion исключены. Исходные PNG, механика и SFX сохранены.
+
+Проверки: 341 effects-тест, 270 сценариев настоящего Board, asset audit, root lint/typecheck/build и свежая production-проверка 327 определений PASS. Все 27 тематических взмахов просмотрены на desktop/phone, Guts записан normal/x4: packages/web/test-results/melee-lunge-recording/. Базовый общий путь проверен unit-тестами. Логи lunge-*.log; полная ручная сетевая QA и прежние блокеры остаются открытыми.
+
+## Записи всех мили-слешей для просмотра пользователем
+
+Записаны 27 вариантов: 24 обычных и три формы. Каждый фрагмент содержит подписанное имя фигуры, обычную скорость и повтор ×4. Общий ролик: packages/web/test-results/all-slashes-review/all-slashes.mp4. Отдельные видео собраны в index.html; README_RU.md содержит ссылки и таймкоды. Сняты настоящий Board и принятые правилами атаки с разрешённой P1-проекцией, общий clock продвинут с шагом 60 fps. Без звука; это не ручной сетевой матч. Пользовательская визуальная проверка ожидается; наличие записи не отмечает её пройденной. Игровой код и PNG при записи не менялись.

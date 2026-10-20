@@ -1,0 +1,323 @@
+{
+  "schemaVersion": 1,
+  "heroId": "kaladin",
+  "assetRoot": "packages/web/src/assets/",
+  "status": "imported_assets_not_runtime_bindings",
+  "assets": [
+    {
+      "id": "V-kaladin-move_trail",
+      "heroId": "kaladin",
+      "filename": "vfx/heroes/kaladin/expansion/move_trail.png",
+      "sha256": "34af3b872768bf538eed517a62c68070bc54e7644ce66885b8b1135cfb88e382",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "+X",
+      "phase": "trail",
+      "geometry": "trail",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "kaladin.basic.move.trail",
+      "loop": false,
+      "presentationProfile": "trail",
+      "requestedRoleOrAbilityRefs": [
+        "basic.move"
+      ],
+      "declaredSourceAbilityId": "basic.move",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-kaladin-move_arrive",
+      "heroId": "kaladin",
+      "filename": "vfx/heroes/kaladin/expansion/move_arrive.png",
+      "sha256": "d6976f52dc01379b592b7b1200d54b338519c70544e2b6f863bb7b24998d0281",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "arrive",
+      "geometry": "impact",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "kaladin.basic.move.arrive",
+      "loop": false,
+      "presentationProfile": "impact",
+      "requestedRoleOrAbilityRefs": [
+        "basic.move"
+      ],
+      "declaredSourceAbilityId": "basic.move",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-kaladin-attack_swing",
+      "heroId": "kaladin",
+      "filename": "vfx/heroes/kaladin/expansion/attack_swing.png",
+      "sha256": "528bbbb3b983dc9db1b42260bc2d1a36fd65c2089d78433e555e11e13d651036",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "+X",
+      "phase": "swing",
+      "geometry": "swing",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "kaladin.basic.attack.swing",
+      "loop": false,
+      "presentationProfile": "swing",
+      "requestedRoleOrAbilityRefs": [
+        "basic.attack"
+      ],
+      "declaredSourceAbilityId": "basic.attack",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-kaladin-attack_impact",
+      "heroId": "kaladin",
+      "filename": "vfx/heroes/kaladin/expansion/attack_impact.png",
+      "sha256": "9a7cd6ecc1dd245ba0b68de2e362b0a9d5c6de47614dbfd4ea4e775be92f0f9a",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "hit",
+      "geometry": "impact",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "kaladin.basic.attack.hit",
+      "loop": false,
+      "presentationProfile": "impact",
+      "requestedRoleOrAbilityRefs": [
+        "basic.attack"
+      ],
+      "declaredSourceAbilityId": "basic.attack",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "EXTEND",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-kaladin-select_ring",
+      "heroId": "kaladin",
+      "filename": "vfx/heroes/kaladin/expansion/select_ring.png",
+      "sha256": "cd08c64f564662b3cadb7b368ac596cb7fd28610ea15f2584f991418789a17c9",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 1,
+      "fps": 0,
+      "durationMs": null,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "select",
+      "geometry": "static",
+      "layer": "ground",
+      "sourceVisibility": "local",
+      "compositeGroup": "kaladin.basic.select.select",
+      "loop": false,
+      "presentationProfile": "static",
+      "requestedRoleOrAbilityRefs": [
+        "basic.select"
+      ],
+      "declaredSourceAbilityId": "basic.select",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-kaladin-deploy",
+      "heroId": "kaladin",
+      "filename": "vfx/heroes/kaladin/expansion/deploy.png",
+      "sha256": "5c618d888efb20a137f69924be9584cf3e24ebc0a0bdcfb3c19e791e53444a2c",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 16,
+      "fps": 24,
+      "durationMs": 667,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "deploy",
+      "geometry": "deploy",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "kaladin.basic.deploy.deploy",
+      "loop": false,
+      "presentationProfile": "deploy",
+      "requestedRoleOrAbilityRefs": [
+        "basic.deploy"
+      ],
+      "declaredSourceAbilityId": "basic.deploy",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-kaladin-death_final",
+      "heroId": "kaladin",
+      "filename": "vfx/heroes/kaladin/expansion/death_final.png",
+      "sha256": "143b4f8358283cede1920dbdbc1707a43eec88a1b1ea6abf774d82a4ef90d06e",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 24,
+      "fps": 24,
+      "durationMs": 1000,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "final",
+      "geometry": "death",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "kaladin.basic.death.final",
+      "loop": false,
+      "presentationProfile": "death",
+      "requestedRoleOrAbilityRefs": [
+        "basic.death"
+      ],
+      "declaredSourceAbilityId": "basic.death",
+      "canonicalTriggerHint": "Окончательная смерть; дождаться возрождений, предсмертной атаки/выбора проклятия",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-kaladin-auto_defense",
+      "heroId": "kaladin",
+      "filename": "vfx/heroes/kaladin/expansion/auto_defense.png",
+      "sha256": "13ae86d8e7ab0d9a41cf64eb78d7a1ec37e1874a070c402c030569280242d46f",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "defense",
+      "geometry": "defense",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "kaladin.berserkAutoDefense.defense",
+      "loop": false,
+      "presentationProfile": "defense",
+      "requestedRoleOrAbilityRefs": [
+        "defense"
+      ],
+      "declaredSourceAbilityId": "berserkAutoDefense",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P2",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-kaladin-trickster_sweep",
+      "heroId": "kaladin",
+      "filename": "vfx/heroes/kaladin/expansion/trickster_sweep.png",
+      "sha256": "a95706cbbb686e22e9ccc352727c38d1d23d8000a3692e654a7121dd61062840",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 24,
+      "fps": 24,
+      "durationMs": 1000,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "sweep",
+      "geometry": "aoe",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "kaladin.tricksterAoE.sweep",
+      "loop": false,
+      "presentationProfile": "aoe",
+      "requestedRoleOrAbilityRefs": [
+        "tricksterAoE"
+      ],
+      "declaredSourceAbilityId": "tricksterAoE",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-kaladin-liberation_bind",
+      "heroId": "kaladin",
+      "filename": "vfx/heroes/kaladin/expansion/liberation_bind.png",
+      "sha256": "0e796de3d511070b1ddf2844c2ded6d2f2ff635c7ed1cfb01500b8118133f02a",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 1,
+      "fps": 0,
+      "durationMs": null,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "bind",
+      "geometry": "static",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "kaladin.kaladinFifth.bind",
+      "loop": false,
+      "presentationProfile": "static",
+      "requestedRoleOrAbilityRefs": [
+        "kaladinFifth"
+      ],
+      "declaredSourceAbilityId": "kaladinFifth",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P2",
+      "requestState": "EXTEND",
+      "runtimeIntegration": "pending"
+    }
+  ],
+  "notes": [
+    "Original PNG bytes preserved. This manifest does not register VFX or authorize visibility.",
+    "defense/stealth/basic.* are presentation roles; resolve actual rule events when connecting.",
+    "declaredSourceAbilityId is provenance, not proof that the unit has that ability."
+  ]
+}

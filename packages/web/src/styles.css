@@ -176,6 +176,11 @@
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
+@keyframes unit-combat-prepare {
+  from { transform: translateY(0) scale(1); }
+  to { transform: translateY(-2%) scale(1.035, 0.98); filter: drop-shadow(0 0 5px rgb(245 158 11 / 0.45)); }
+}
+
 @keyframes combat-die-settle {
   from { opacity: 0; transform: translateY(-4px) rotate(-6deg) scale(0.94); }
   to { opacity: 1; transform: translateY(0) rotate(0) scale(1); }
@@ -461,7 +466,7 @@ body {
   --z-game-bottom-sheet: 60;
   --z-game-pending-modal: 80;
   --z-game-dice-result: 85;
-  --combat-roll-space: 268px;
+  --combat-roll-space: 198px;
   --z-game-toast: 90;
 }
 
@@ -961,13 +966,19 @@ html.dark {
   }
 
   .combat-roll-feedback {
-    @apply w-full max-w-xs rounded-2xl border border-amber-600/35 bg-stone-50 px-4 py-3 text-stone-900 dark:border-amber-400/40 dark:bg-stone-950 dark:text-stone-50;
+    @apply w-full max-w-sm rounded-2xl border border-amber-600/35 bg-stone-50 px-3 py-2 text-stone-900 dark:border-amber-400/40 dark:bg-stone-950 dark:text-stone-50;
     background-image: radial-gradient(ellipse at top, rgb(245 158 11 / 0.12), transparent 75%);
     box-shadow: 0 16px 48px rgb(0 0 0 / 0.28), inset 0 1px 0 rgb(251 191 36 / 0.16);
-    animation:
-      combat-roll-appear var(--dice-enter-ms) ease-out both,
-      combat-roll-exit var(--dice-exit-ms) ease-in var(--dice-exit-at-ms) forwards;
+    animation: combat-roll-appear var(--dice-enter-ms) ease-out both;
   }
+
+  .combat-roll-columns { display: grid; grid-template-columns: minmax(0, 1fr) 1rem minmax(0, 1fr); gap: 0.5rem; }
+  .combat-roll-column { min-width: 0; }
+  .combat-roll-column[data-roll-winner="true"] { border-radius: 0.5rem; box-shadow: 0 0 0 2px rgb(245 158 11 / 0.5); background: rgb(245 158 11 / 0.1); }
+  .combat-roll-feedback__versus { align-self: center; text-align: center; opacity: 0.5; }
+  .combat-roll-feedback__waiting { min-height: 104px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem; font-size: 11px; opacity: 0.6; }
+  .combat-roll-feedback__waiting > span:first-child { font-size: 2rem; letter-spacing: 0.2em; }
+  .unit-combat-preparing { animation: unit-combat-prepare 220ms ease-out both; transform-origin: center bottom; }
 
   .combat-roll-feedback__meta {
     @apply flex items-center justify-between gap-2 text-[11px] font-semibold text-stone-600 dark:text-stone-400;
@@ -978,7 +989,7 @@ html.dark {
   }
 
   .combat-roll-feedback__title {
-    @apply mt-1 text-center font-display text-lg font-black leading-6 text-amber-950 dark:text-amber-100;
+    @apply mb-1 text-center font-display text-sm font-black leading-5 text-amber-950 dark:text-amber-100;
     overflow-wrap: anywhere;
   }
 
@@ -987,11 +998,11 @@ html.dark {
   }
 
   .combat-roll-feedback__dice {
-    @apply my-3 flex flex-wrap items-center justify-center gap-3;
+    @apply my-2 flex flex-wrap items-center justify-center gap-2;
   }
 
   .combat-roll-feedback__die {
-    @apply flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border border-amber-700/30 text-4xl font-black tabular-nums text-stone-900;
+    @apply flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-amber-700/30 text-2xl font-black tabular-nums text-stone-900;
     background: linear-gradient(145deg, #fffdf5, #f5e7c9);
     box-shadow: inset 0 2px 0 white, inset 0 -3px 0 rgb(120 80 20 / 0.13), 0 4px 10px rgb(0 0 0 / 0.15);
     animation: combat-die-settle var(--dice-reveal-ms) ease-out var(--dice-enter-ms) both;
@@ -1006,11 +1017,11 @@ html.dark {
   }
 
   .combat-roll-feedback__sum {
-    @apply mt-0.5 text-sm font-semibold tabular-nums text-stone-700 dark:text-stone-200;
+    @apply mt-0.5 text-xs font-semibold tabular-nums text-stone-700 dark:text-stone-200;
   }
 
   .combat-roll-feedback__total {
-    @apply text-4xl font-black leading-none tabular-nums text-amber-900 dark:text-amber-200;
+    @apply text-2xl font-black leading-none tabular-nums text-amber-900 dark:text-amber-200;
   }
 
   /* Reserve space while the existing nonblocking result is visible. The next
@@ -1035,15 +1046,16 @@ html.dark {
   }
 
   @media (max-width: 639px), (max-height: 560px) {
-    :root { --combat-roll-space: 252px; }
-    .combat-roll-feedback { max-width: 19rem; }
-    .combat-roll-feedback__die { width: 3.5rem; height: 3.5rem; font-size: 2rem; }
+    :root { --combat-roll-space: 198px; }
+    .combat-roll-feedback { max-width: 24rem; }
   }
 
   .combat-roll-layer[data-reduced-motion="true"] .combat-roll-feedback,
   .combat-roll-layer[data-reduced-motion="true"] .combat-roll-feedback__die {
     animation: none;
   }
+
+  @media (prefers-reduced-motion: reduce) { .unit-combat-preparing { animation: none; } }
 
   .unit-visual-dying {
     pointer-events: none;
@@ -1926,6 +1938,10 @@ html.dark {
   z-index: var(--board-layer-decision);
   pointer-events: none;
 }
+.board-selection-outline--thematic {
+  inset: 1px;
+  border: 1px solid rgb(251 191 36 / 35%);
+}
 .vfx-board-root {
   z-index: auto;
 }
@@ -1944,6 +1960,9 @@ html.dark {
 }
 .vfx-sprite-static {
   object-fit: contain;
+  /* Preflight's img max-width:100% otherwise shrinks a 3-cell aura while
+     leaving its -1-cell centering offset intact. */
+  max-width: none;
 }
 .vfx-geometry[data-vfx-effect="gasterCannon"]::before {
   content: "";
@@ -1988,6 +2007,141 @@ html.dark {
   animation-name: vfx-projectile-travel;
 }
 .vfx-geometry.vfx-reduced {
+  animation-name: vfx-envelope;
+}
+.vfx-wake-fragment {
+  position: absolute;
+  pointer-events: none;
+  /* Fixed board positions: fragments remain behind the token and dissipate. */
+  animation: vfx-wake-fade var(--vfx-duration) linear var(--vfx-delay) both;
+  mask-image: linear-gradient(90deg, transparent, black 22%, black 76%, transparent);
+}
+.vfx-stage-deploy {
+  transform-origin: 50% 74%;
+  animation-name: vfx-deploy-envelope;
+}
+.vfx-melee-stroke, .vfx-melee-art { position: absolute; pointer-events: none; transform-origin: 0 0; }
+.unit-melee-content { display: flex; align-items: center; justify-content: center; transform-origin: 50% 50%; }
+.unit-melee-content[data-melee-lunge] .unit-visual-attacking { animation: none; }
+.vfx-melee-stroke {
+  /* Mirror the entire trace, including its reveal and contact glint, about the defender. */
+  transform: scale(-1, -1);
+  transform-origin: 50% 50%;
+  animation: vfx-target-trace var(--melee-draw) linear var(--melee-trace-delay) both,
+    vfx-target-dissolve var(--melee-recovery) ease-out calc(var(--vfx-delay) + var(--melee-contact)) forwards;
+}
+@keyframes vfx-target-trace {
+  0% { opacity: 0; clip-path: polygon(0 100%, 0 100%, 0 100%, 0 100%); }
+  15% { opacity: 1; }
+  50% { clip-path: polygon(0 0, 100% 100%, 100% 100%, 0 100%); }
+  100% { opacity: 1; clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
+}
+@keyframes vfx-target-dissolve {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+.vfx-target-cut-hit::after {
+  content: ""; position: absolute; pointer-events: none;
+  left: calc(50% - 1px); top: 3%; height: 94%; width: 2px;
+  transform: rotate(45deg);
+  background: linear-gradient(transparent, rgb(255 255 255 / .9), transparent);
+  filter: drop-shadow(0 0 2px rgb(255 255 255 / .5));
+}
+.vfx-melee-reduced {
+  animation: vfx-envelope var(--vfx-duration) linear var(--vfx-delay) both;
+}
+.unit-deployment-composition { position: relative; isolation: isolate; }
+.unit-deployment-enter {
+  transform-origin: 50% 78%;
+  animation: unit-deployment-enter var(--vfx-duration) cubic-bezier(.16,.78,.25,1) var(--vfx-delay) both;
+}
+.unit-deployment-enter-reduced {
+  animation: unit-deployment-enter-reduced var(--vfx-duration) linear var(--vfx-delay) both;
+}
+.unit-deployment-enter > .unit-deployment-token,
+.unit-deployment-enter-reduced > .unit-deployment-token {
+  animation: unit-deployment-token-reveal var(--vfx-reveal-duration) ease-in-out var(--vfx-delay) both;
+}
+.unit-deployment-enter-reduced > .unit-deployment-token { animation-duration: min(120ms, var(--vfx-reveal-duration)); }
+.unit-deployment-pending { opacity: 0; }
+@keyframes unit-deployment-token-reveal { from { opacity: 0; } to { opacity: 1; } }
+.unit-deployment-light {
+  position: absolute; inset: 8%; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(ellipse at 50% 68%, #fff8df55 0%, #e5f6ff28 32%, transparent 66%);
+  animation: unit-deployment-light-rise var(--vfx-reveal-duration) ease-in-out var(--vfx-delay) both,
+    unit-deployment-light-fall calc(var(--vfx-duration) - var(--vfx-reveal-duration)) ease-out calc(var(--vfx-delay) + var(--vfx-reveal-duration)) forwards;
+}
+.unit-deployment-light::before, .unit-deployment-light::after {
+  content: ""; position: absolute; inset: 14%; border: 1px solid transparent;
+  border-top-color: #fff4dba8; border-left-color: #d3ecff66; border-radius: 50%;
+  transform: rotate(-35deg) scaleY(.62);
+  animation: unit-deployment-wisp var(--vfx-duration) ease-out var(--vfx-delay) both;
+}
+.unit-deployment-light::after { inset: 5%; animation-direction: reverse; opacity: .5; }
+@keyframes unit-deployment-enter {
+  0% { filter: brightness(1.3); transform: translateY(-5%) scale(.9); }
+  22% { filter: brightness(1.12); transform: translateY(0) scale(1); }
+  55%, 100% { filter: none; transform: none; }
+}
+@keyframes unit-deployment-enter-reduced {
+  from, to { opacity: 1; }
+}
+@keyframes unit-deployment-light-rise {
+  from { opacity: .1; transform: scale(.75); }
+  to { opacity: .9; transform: scale(1); }
+}
+@keyframes unit-deployment-light-fall {
+  from { opacity: .9; transform: scale(1); }
+  to { opacity: 0; transform: scale(1.18); }
+}
+@keyframes unit-deployment-wisp {
+  0% { transform: rotate(-35deg) scaleY(.62) scale(.75); opacity: 0; }
+  20% { opacity: .7; }
+  100% { transform: rotate(95deg) scaleY(.62) scale(1.15); opacity: 0; }
+}
+.vfx-reduced .unit-deployment-light { animation: none; opacity: .15; }
+.vfx-reduced .unit-deployment-light::before, .vfx-reduced .unit-deployment-light::after { display: none; }
+
+.commander-aura-field { display: block; width: 100%; height: 100%; overflow: hidden; }
+.commander-aura-breath { animation: commander-aura-breath 6000ms ease-in-out infinite; }
+.commander-aura-orbit, .commander-aura-artwork { transform-origin: 150px 150px; transform-box: view-box; }
+.commander-aura-orbit { animation: commander-aura-orbit 40000ms linear infinite; }
+.commander-aura-artwork { opacity: .32; animation: commander-aura-artwork 6000ms ease-in-out infinite; }
+@keyframes commander-aura-breath { 0%, 100% { opacity: .65; } 50% { opacity: .85; } }
+@keyframes commander-aura-orbit { to { transform: rotate(360deg); } }
+@keyframes commander-aura-artwork {
+  0%, 100% { opacity: .27; transform: scale(.99); }
+  50% { opacity: .38; transform: scale(1); }
+}
+.commander-aura-reduced .commander-aura-breath,
+.commander-aura-reduced .commander-aura-orbit,
+.commander-aura-reduced .commander-aura-artwork { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  .commander-aura * { animation: none !important; }
+  .unit-deployment-light::before, .unit-deployment-light::after { display: none; }
+}
+.vfx-stage-moveArrive {
+  animation-name: vfx-arrive-envelope;
+}
+@keyframes vfx-wake-fade {
+  0% { opacity: 0; }
+  12% { opacity: 0.65; }
+  45% { opacity: 0.42; }
+  100% { opacity: 0; }
+}
+@keyframes vfx-deploy-envelope {
+  0% { opacity: 0; transform: scale(0.82); }
+  18% { opacity: 1; transform: scale(1.02); }
+  65% { opacity: 0.9; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.06); }
+}
+@keyframes vfx-arrive-envelope {
+  0% { opacity: 0; transform: scale(0.86); }
+  20% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.08); }
+}
+.vfx-stage-deploy.vfx-reduced,
+.vfx-stage-moveArrive.vfx-reduced {
   animation-name: vfx-envelope;
 }
 .vfx-sprite.vfx-reduced {

@@ -107,6 +107,7 @@ export function resolveHitDamage(
     damage = Math.max(0, damage - 1);
   }
 
+  const bunkerAbsorbedDamage = defenderAfter.bunker?.active ? Math.max(0, damage - Math.min(1, damage)) : 0;
   if (defenderAfter.bunker?.active) {
     damage = Math.min(1, damage);
   }
@@ -147,5 +148,6 @@ export function resolveHitDamage(
     defenderHpAfterEvent,
     attackerRevealedToDefender,
     revealedAttackerPos,
+    ...(bunkerAbsorbedDamage > 0 ? { bunkerAbsorbedDamage } : {}),
   };
 }

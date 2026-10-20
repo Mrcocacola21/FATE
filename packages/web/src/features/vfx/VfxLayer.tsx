@@ -9,6 +9,8 @@ import {
 import { BOARD_LAYERS, vfxRegistry, type VfxDefinition } from "./vfxRegistry";
 import { VfxSprite } from "./VfxSprite";
 import type { QueuedBoardVfxRequest } from "./vfxTypes";
+import { MOVEMENT_WAKE_FADE_MS, movementWakeSamples } from "./movementWake";
+import { MELEE_RECOVERY_MS, meleeTraceMs } from "./meleeStrike";
 
 interface VfxLayerProps {
   effects: QueuedBoardVfxRequest[];
@@ -34,11 +36,13 @@ function Artwork({
   definition,
   reducedMotion,
   timing,
+  durationMs = effect.expiresAt - effect.startedAt,
 }: {
   effect: QueuedBoardVfxRequest;
   definition: VfxDefinition;
   reducedMotion: boolean;
   timing: CSSProperties;
+  durationMs?: number;
 }) {
   const layers = definition.layers ?? [{ ...definition, role: "primary" as const }];
   return (
@@ -50,7 +54,7 @@ function Artwork({
             definition={definition}
             artwork={art}
             reducedMotion={reducedMotion}
-            durationMs={effect.expiresAt - effect.startedAt}
+            durationMs={durationMs}
             opacity={effect.opacity}
             className="vfx-artwork"
             style={{
@@ -86,6 +90,7 @@ function Effect({
   // Fixed per mount: rerenders/resizes never restart or shift playback. Late mounts catch up.
   const [mountedAt] = useState(() => Date.now());
   if (!definition) return null;
+  if (effect.unitId && !view.units[effect.unitId]?.position) return null;
   if (reducedMotion && definition.reducedMotion === "hide") return null;
   const durationMs = effect.expiresAt - effect.startedAt;
   const timing = {
@@ -108,7 +113,7 @@ function Effect({
       data-vfx-effect={effect.effectId}
       data-vfx-start={effect.startedAt}
       data-vfx-layer={layer}
-      className={`vfx-geometry vfx-geometry-${shape} ${reducedMotion ? "vfx-reduced" : ""}`}
+      className={`vfx-geometry vfx-geometry-${shape} ${definition.staging ? `vfx-stage-${definition.staging}` : ""} ${reducedMotion ? "vfx-reduced" : ""}`}
       style={{ ...style, ...timing, zIndex: BOARD_LAYERS[layer] }}
     >
       <Artwork
@@ -129,7 +134,7 @@ function Effect({
       isFlipped,
     );
     const facing =
-      effect.effectId === "gasterCannon" && effect.targetCell
+      (effect.effectId === "gasterCannon" || definition.orientToTarget) && effect.targetCell
         ? lineBetweenCellsToCssTransform(cell, effect.targetCell, boardSize, cellSize, isFlipped)
         : null;
     const attachment = definition.anchorPoint ?? { x: 0.5, y: 0.5 };
@@ -175,6 +180,62 @@ function Effect({
   }
   const anchor = vfxAnchor(view, effect);
   if (!anchor) return null;
+  const profile = definition.stagingProfile;
+  if (definition.meleeSwing && effect.placement === "cell") {
+    if (!effect.targetCell) return null;
+    const route = lineBetweenCellsToCssTransform(anchor, effect.targetCell, boardSize, cellSize, isFlipped);
+    const size = definition.defaultScaleCells * cellSize;
+    const target = areaToBoardRect(effect.targetCell, 1, 1, boardSize, cellSize, isFlipped);
+    const contact = effect.strikeContactMs ?? Math.max(1, durationMs - MELEE_RECOVERY_MS);
+    const strikeTiming = { ...timing, "--melee-contact": `${contact}ms`,
+      "--melee-recovery": `${Math.max(0, durationMs - contact)}ms`,
+      "--melee-draw": `${meleeTraceMs(contact)}ms`,
+      "--melee-trace-delay": `${effect.startedAt - mountedAt + contact - meleeTraceMs(contact)}ms` } as CSSProperties;
+    return <span className="vfx-projectile-axis vfx-melee-axis" data-vfx-cue={effect.id} data-vfx-effect={effect.effectId}
+      data-vfx-start={effect.startedAt} data-vfx-contact={effect.startedAt + contact} data-vfx-hit={effect.strikeHit} data-vfx-layer={layer}
+      style={{ ...strikeTiming, left: target.left + cellSize / 2, top: target.top + cellSize / 2,
+        width: 1, height: 1, transform: route.transform, zIndex: BOARD_LAYERS[layer] }}>
+      <span className={`vfx-melee-stroke ${effect.strikeHit === false ? "vfx-target-cut-miss" : "vfx-target-cut-hit"} ${reducedMotion ? "vfx-melee-reduced" : ""}`}
+        style={{ ...strikeTiming, animationDelay: undefined, left: -size / 2,
+          top: -size / 2 + (effect.strikeHit === false ? cellSize * .65 : 0), width: size, height: size }}>
+        <span className="vfx-melee-art" style={{ left: 0, top: 0, width: size, height: size }}>
+          <Artwork effect={effect} definition={definition} reducedMotion={reducedMotion} timing={timing} />
+        </span>
+      </span>
+    </span>;
+  }
+  if (profile && definition.staging === "moveTrail" && effect.placement === "projectile" && effect.targetCell) {
+    const route = lineBetweenCellsToCssTransform(anchor, effect.targetCell, boardSize, cellSize, isFlipped);
+    const width = profile.trailWidth * cellSize * 0.65, height = profile.trailHeight * cellSize * 0.75;
+    const travelDurationMs = effect.travelDurationMs ?? Math.max(1, durationMs - MOVEMENT_WAKE_FADE_MS);
+    const samples = movementWakeSamples(route.width / cellSize, travelDurationMs);
+    return <span className="vfx-projectile-axis vfx-movement-wake"
+      data-vfx-cue={effect.id} data-vfx-effect={effect.effectId} data-vfx-start={effect.startedAt}
+      data-vfx-layer="ground" data-vfx-travel-duration={travelDurationMs}
+      style={{ ...timing, left: route.left, top: route.top + cellSize * 0.28,
+        width: route.width, height, transform: route.transform, zIndex: BOARD_LAYERS.ground }}>
+      {samples.map((sample, index) => {
+        const fragmentTiming = { ...timing,
+          "--vfx-duration": `${MOVEMENT_WAKE_FADE_MS}ms`,
+          "--vfx-delay": `${effect.startedAt - mountedAt + sample.atMs}ms`,
+          animationDelay: `${effect.startedAt - mountedAt + sample.atMs}ms`,
+        } as CSSProperties;
+        return <span key={index} className="vfx-wake-fragment" data-vfx-wake-sample={index}
+          data-vfx-emission={sample.atMs}
+          style={{ ...fragmentTiming, left: route.width * sample.fraction - width * 0.82,
+            top: -height / 2, width, height }}>
+          <Artwork effect={effect} definition={definition} reducedMotion={false}
+            timing={fragmentTiming} durationMs={MOVEMENT_WAKE_FADE_MS} />
+        </span>;
+      })}
+    </span>;
+  }
+  if (profile && (definition.staging === "deploy" || definition.staging === "moveArrive")) {
+    const deploy = definition.staging === "deploy";
+    const rect = areaToBoardRect(anchor, deploy ? profile.deployWidth : profile.arrivalWidth,
+      deploy ? profile.deployHeight : profile.arrivalHeight, boardSize, cellSize, isFlipped);
+    return wrap(effect.id, { ...rect, top: rect.top + cellSize * (deploy ? -0.04 : 0.22) }, "cell");
+  }
   if (effect.placement === "area") {
     const width = effect.widthCells ?? definition.widthCells;
     const height = effect.heightCells ?? definition.heightCells ?? width;
@@ -261,7 +322,7 @@ export const VfxLayer: FC<VfxLayerProps> = (props) => (
     }}
     aria-hidden="true"
   >
-    {props.effects.map((effect) => (
+    {props.effects.filter(effect => !effect.uiAnchor && !(effect.unitId && vfxRegistry[effect.effectId].staging === "deploy")).map((effect) => (
       <Effect key={effect.id} {...props} effect={effect} />
     ))}
   </div>

@@ -1,0 +1,323 @@
+{
+  "schemaVersion": 1,
+  "heroId": "duolingo",
+  "assetRoot": "packages/web/src/assets/",
+  "status": "imported_assets_not_runtime_bindings",
+  "assets": [
+    {
+      "id": "V-duolingo-move_trail",
+      "heroId": "duolingo",
+      "filename": "vfx/heroes/duolingo/expansion/move_trail.png",
+      "sha256": "e9d21b391ee7dede932fec3a3ee47ac011eb3ee76303aedd8db597edec7b62ab",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "+X",
+      "phase": "move",
+      "geometry": "trail",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "duolingo.basic.move.move",
+      "loop": false,
+      "presentationProfile": "trail",
+      "requestedRoleOrAbilityRefs": [
+        "basic.move"
+      ],
+      "declaredSourceAbilityId": "basic.move",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-duolingo-move_arrive",
+      "heroId": "duolingo",
+      "filename": "vfx/heroes/duolingo/expansion/move_arrive.png",
+      "sha256": "409a6500d439476a504464d98f01a5a705a5b1927ed44ffbb90eb06d3c4e777e",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "arrive",
+      "geometry": "impact",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "duolingo.basic.move.arrive",
+      "loop": false,
+      "presentationProfile": "impact",
+      "requestedRoleOrAbilityRefs": [
+        "basic.move"
+      ],
+      "declaredSourceAbilityId": "basic.move",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-duolingo-attack_swing",
+      "heroId": "duolingo",
+      "filename": "vfx/heroes/duolingo/expansion/attack_swing.png",
+      "sha256": "4bf9b2eb70c53e37dd18d227ad59682d00adb17e146e76ca2510b773630b0ccd",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "+X",
+      "phase": "swing",
+      "geometry": "swing",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "duolingo.basic.attack.swing",
+      "loop": false,
+      "presentationProfile": "swing",
+      "requestedRoleOrAbilityRefs": [
+        "basic.attack"
+      ],
+      "declaredSourceAbilityId": "basic.attack",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-duolingo-attack_impact",
+      "heroId": "duolingo",
+      "filename": "vfx/heroes/duolingo/expansion/attack_impact.png",
+      "sha256": "bfac0dd8643fc9aed326158688754555786dd015aed8585f6487517ce108b7bb",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "hit",
+      "geometry": "impact",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "duolingo.basic.attack.hit",
+      "loop": false,
+      "presentationProfile": "impact",
+      "requestedRoleOrAbilityRefs": [
+        "basic.attack"
+      ],
+      "declaredSourceAbilityId": "basic.attack",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "EXTEND",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-duolingo-select_ring",
+      "heroId": "duolingo",
+      "filename": "vfx/heroes/duolingo/expansion/select_ring.png",
+      "sha256": "4177cefbe68749d9b9f46d628f4b4d5dfe24f79d8754a694464e52828427c919",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 1,
+      "fps": 0,
+      "durationMs": null,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "select",
+      "geometry": "static",
+      "layer": "ground",
+      "sourceVisibility": "local",
+      "compositeGroup": "duolingo.basic.select.select",
+      "loop": false,
+      "presentationProfile": "static",
+      "requestedRoleOrAbilityRefs": [
+        "basic.select"
+      ],
+      "declaredSourceAbilityId": "basic.select",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-duolingo-deploy",
+      "heroId": "duolingo",
+      "filename": "vfx/heroes/duolingo/expansion/deploy.png",
+      "sha256": "a320b061fb95b4bd8c67e26b3f48556eae396f4e019056bc6cf3b8aee1654f7a",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 16,
+      "fps": 24,
+      "durationMs": 667,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "deploy",
+      "geometry": "deploy",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "duolingo.basic.deploy.deploy",
+      "loop": false,
+      "presentationProfile": "deploy",
+      "requestedRoleOrAbilityRefs": [
+        "basic.deploy"
+      ],
+      "declaredSourceAbilityId": "basic.deploy",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-duolingo-death_final",
+      "heroId": "duolingo",
+      "filename": "vfx/heroes/duolingo/expansion/death_final.png",
+      "sha256": "4ae0111e2d0331335415d3f9071ac7f163c9223efcff83ea0d7340330e09f3f2",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 24,
+      "fps": 24,
+      "durationMs": 1000,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "final",
+      "geometry": "death",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "duolingo.basic.death.final",
+      "loop": false,
+      "presentationProfile": "death",
+      "requestedRoleOrAbilityRefs": [
+        "basic.death"
+      ],
+      "declaredSourceAbilityId": "basic.death",
+      "canonicalTriggerHint": "Окончательная смерть; дождаться возрождений, предсмертной атаки/выбора проклятия",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-duolingo-auto_defense",
+      "heroId": "duolingo",
+      "filename": "vfx/heroes/duolingo/expansion/auto_defense.png",
+      "sha256": "3f5a5894d08a3929f1a50cccd05ac0391f8b490c898766078d55c21f33512a21",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "dodge",
+      "geometry": "defense",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "duolingo.defense.dodge",
+      "loop": false,
+      "presentationProfile": "defense",
+      "requestedRoleOrAbilityRefs": [
+        "defense"
+      ],
+      "declaredSourceAbilityId": "defense",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P2",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-duolingo-trickster_sweep",
+      "heroId": "duolingo",
+      "filename": "vfx/heroes/duolingo/expansion/trickster_sweep.png",
+      "sha256": "9da7405049b46c4e6b1dfd8e842b720c2f58e764fe8b38d877ad149c4620aeef",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 24,
+      "fps": 24,
+      "durationMs": 1000,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "sweep",
+      "geometry": "aoe",
+      "layer": "area",
+      "sourceVisibility": "public",
+      "compositeGroup": "duolingo.tricksterAoE.sweep",
+      "loop": false,
+      "presentationProfile": "aoe",
+      "requestedRoleOrAbilityRefs": [
+        "tricksterAoE"
+      ],
+      "declaredSourceAbilityId": "tricksterAoE",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-duolingo-berserker_unlock",
+      "heroId": "duolingo",
+      "filename": "vfx/heroes/duolingo/expansion/berserker_unlock.png",
+      "sha256": "2e51a4495ab03ea361b987619427ad71109fa12f813f645f7890fc78185452b9",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 24,
+      "fps": 24,
+      "durationMs": 1000,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": null,
+      "phase": "unlock",
+      "geometry": "point",
+      "layer": "world",
+      "sourceVisibility": "public",
+      "compositeGroup": "V-duolingo-berserker_unlock",
+      "loop": false,
+      "presentationProfile": "transform",
+      "requestedRoleOrAbilityRefs": [
+        "duolingoBerserker"
+      ],
+      "declaredSourceAbilityId": "duolingoBerserker",
+      "canonicalTriggerHint": "Нужно событие первого открытия; не вычислять по разнице загруженных состояний",
+      "priority": "P1",
+      "requestState": "NEEDS_EVENT",
+      "runtimeIntegration": "needs_event"
+    }
+  ],
+  "notes": [
+    "Original PNG bytes preserved. This manifest does not register VFX or authorize visibility.",
+    "defense/stealth/basic.* are presentation roles; resolve actual rule events when connecting.",
+    "declaredSourceAbilityId is provenance, not proof that the unit has that ability."
+  ]
+}

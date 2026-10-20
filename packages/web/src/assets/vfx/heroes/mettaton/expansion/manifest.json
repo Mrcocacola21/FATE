@@ -1,0 +1,385 @@
+{
+  "schemaVersion": 1,
+  "heroId": "mettaton",
+  "assetRoot": "packages/web/src/assets/",
+  "status": "imported_assets_not_runtime_bindings",
+  "assets": [
+    {
+      "id": "V-mettaton-move_trail",
+      "heroId": "mettaton",
+      "filename": "vfx/heroes/mettaton/expansion/move_trail.png",
+      "sha256": "ea7a10900381a7e4acc8afe2319aa9643b7a5deb94ad34b162ac1eea7e315304",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "+X",
+      "phase": "move",
+      "geometry": "trail",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "mettaton.basic.move.move",
+      "loop": false,
+      "presentationProfile": "trail",
+      "requestedRoleOrAbilityRefs": [
+        "basic.move"
+      ],
+      "declaredSourceAbilityId": "basic.move",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-mettaton-move_arrive",
+      "heroId": "mettaton",
+      "filename": "vfx/heroes/mettaton/expansion/move_arrive.png",
+      "sha256": "17cf3322604eeb06e5bd351b47b8021d875817121a04775de8362a0e528787da",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "arrive",
+      "geometry": "impact",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "mettaton.basic.move.arrive",
+      "loop": false,
+      "presentationProfile": "impact",
+      "requestedRoleOrAbilityRefs": [
+        "basic.move"
+      ],
+      "declaredSourceAbilityId": "basic.move",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-mettaton-attack_projectile",
+      "heroId": "mettaton",
+      "filename": "vfx/heroes/mettaton/expansion/attack_projectile.png",
+      "sha256": "10404b4d52b237fad7d8181bd413784d64d73b2f1627cd084200d6535c835b53",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "+X",
+      "phase": "fire",
+      "geometry": "projectile",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "mettaton.basic.attack.fire",
+      "loop": false,
+      "presentationProfile": "projectile",
+      "requestedRoleOrAbilityRefs": [
+        "basic.attack"
+      ],
+      "declaredSourceAbilityId": "basic.attack",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-mettaton-attack_impact",
+      "heroId": "mettaton",
+      "filename": "vfx/heroes/mettaton/expansion/attack_impact.png",
+      "sha256": "a41bc43837dd44936a9ecc2e06cd0b8e96613c349fc7804f05e245cf48d79f0e",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "hit",
+      "geometry": "impact",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "mettaton.basic.attack.hit",
+      "loop": false,
+      "presentationProfile": "impact",
+      "requestedRoleOrAbilityRefs": [
+        "basic.attack"
+      ],
+      "declaredSourceAbilityId": "basic.attack",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "EXTEND",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-mettaton-select_ring",
+      "heroId": "mettaton",
+      "filename": "vfx/heroes/mettaton/expansion/select_ring.png",
+      "sha256": "d987e3530847595c5fd8eb0c1db7f8a4f2b3c00811b6d70aa60f386ac0894c00",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 1,
+      "fps": 0,
+      "durationMs": null,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "select",
+      "geometry": "static",
+      "layer": "ground",
+      "sourceVisibility": "local",
+      "compositeGroup": "mettaton.basic.select.select",
+      "loop": false,
+      "presentationProfile": "static",
+      "requestedRoleOrAbilityRefs": [
+        "basic.select"
+      ],
+      "declaredSourceAbilityId": "basic.select",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-mettaton-deploy",
+      "heroId": "mettaton",
+      "filename": "vfx/heroes/mettaton/expansion/deploy.png",
+      "sha256": "043f5823b9498f51293805ba323bc24da10ef001d7e4f122081f2b575fbb0cf0",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 16,
+      "fps": 24,
+      "durationMs": 667,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "deploy",
+      "geometry": "deploy",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "mettaton.basic.deploy.deploy",
+      "loop": false,
+      "presentationProfile": "deploy",
+      "requestedRoleOrAbilityRefs": [
+        "basic.deploy"
+      ],
+      "declaredSourceAbilityId": "basic.deploy",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-mettaton-death_final",
+      "heroId": "mettaton",
+      "filename": "vfx/heroes/mettaton/expansion/death_final.png",
+      "sha256": "1738afb657163e2331d651a08d8d81fd78a6ff790a8349a4ade742c5843a8fc0",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 24,
+      "fps": 24,
+      "durationMs": 1000,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "final",
+      "geometry": "death",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "mettaton.basic.death.final",
+      "loop": false,
+      "presentationProfile": "death",
+      "requestedRoleOrAbilityRefs": [
+        "basic.death"
+      ],
+      "declaredSourceAbilityId": "basic.death",
+      "canonicalTriggerHint": "Окончательная смерть; дождаться возрождений, предсмертной атаки/выбора проклятия",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-mettaton-auto_defense",
+      "heroId": "mettaton",
+      "filename": "vfx/heroes/mettaton/expansion/auto_defense.png",
+      "sha256": "bfb2e901026432420cfa9922ae1b8559a193118558300858b9476f86caaad204",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "defense",
+      "geometry": "defense",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "mettaton.berserkAutoDefense.defense",
+      "loop": false,
+      "presentationProfile": "defense",
+      "requestedRoleOrAbilityRefs": [
+        "defense"
+      ],
+      "declaredSourceAbilityId": "berserkAutoDefense",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P2",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-mettaton-ex_move",
+      "heroId": "mettaton",
+      "filename": "vfx/heroes/mettaton/expansion/ex_move.png",
+      "sha256": "ba569c679aef0303b83531e71716d0bb5b29eb50d452f1ba2d81ccfe77de43d9",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "+X",
+      "phase": "move",
+      "geometry": "trail",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "mettaton.mettatonEx.move",
+      "loop": false,
+      "presentationProfile": "trail",
+      "requestedRoleOrAbilityRefs": [
+        "mettatonEx"
+      ],
+      "declaredSourceAbilityId": "mettatonEx",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P2",
+      "requestState": "EXTEND",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-mettaton-ex_attack",
+      "heroId": "mettaton",
+      "filename": "vfx/heroes/mettaton/expansion/ex_attack.png",
+      "sha256": "dd856cbbee960ec0703a0fe8c8e142c9b097ab0bb3c68d23b6559a4851633b86",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "+X",
+      "phase": "fire",
+      "geometry": "projectile",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "mettaton.mettatonEx.fire",
+      "loop": false,
+      "presentationProfile": "projectile",
+      "requestedRoleOrAbilityRefs": [
+        "mettatonEx"
+      ],
+      "declaredSourceAbilityId": "mettatonEx",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P2",
+      "requestState": "EXTEND",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-mettaton-neo_move",
+      "heroId": "mettaton",
+      "filename": "vfx/heroes/mettaton/expansion/neo_move.png",
+      "sha256": "f6f5cc7c27fd6e811df11546cc78f548626bd75a529022e8b0cf84c03a5e37a0",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "+X",
+      "phase": "move",
+      "geometry": "trail",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "mettaton.mettatonNeo.move",
+      "loop": false,
+      "presentationProfile": "trail",
+      "requestedRoleOrAbilityRefs": [
+        "mettatonNeo"
+      ],
+      "declaredSourceAbilityId": "mettatonNeo",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P2",
+      "requestState": "EXTEND",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-mettaton-neo_attack",
+      "heroId": "mettaton",
+      "filename": "vfx/heroes/mettaton/expansion/neo_attack.png",
+      "sha256": "26b39374102b9908aed50eb3cbf4bcef18f21da921ae7899d610f96a7caa9e25",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "+X",
+      "phase": "fire",
+      "geometry": "projectile",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "mettaton.mettatonNeo.fire",
+      "loop": false,
+      "presentationProfile": "projectile",
+      "requestedRoleOrAbilityRefs": [
+        "mettatonNeo"
+      ],
+      "declaredSourceAbilityId": "mettatonNeo",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P2",
+      "requestState": "EXTEND",
+      "runtimeIntegration": "pending"
+    }
+  ],
+  "notes": [
+    "Original PNG bytes preserved. This manifest does not register VFX or authorize visibility.",
+    "defense/stealth/basic.* are presentation roles; resolve actual rule events when connecting.",
+    "declaredSourceAbilityId is provenance, not proof that the unit has that ability."
+  ]
+}

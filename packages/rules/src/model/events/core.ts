@@ -64,8 +64,12 @@ export type CoreGameEvent =
       attackerRollIsNew?: boolean;
       /** Explicit normal attack provenance; absence is never interpreted as basic. */
       isBasicAttack?: boolean;
-      attackSignature?: "friskPrecisionStrike";
-      defenseSignature?: "friskCry" | "friskSubstitution";
+      attackSignature?: "friskPrecisionStrike" | "gutsBerserkSingle";
+      defenseSignature?: "friskCry" | "friskSubstitution" | "friskCleanSoulBreak";
+      /** Confirmed final avoidance, after attacker-double precedence. */
+      spearmanEvaded?: true;
+      /** Damage actually removed by Bunker, before any later cap. */
+      bunkerAbsorbedDamage?: number;
       tieBreakDice?: { attacker: number[]; defender: number[] };
       hit: boolean;
       damage: number;
@@ -354,6 +358,7 @@ export type CoreGameEvent =
     }
   | {
       type: "aoeResolved";
+      lokiStatusResult?: "entangled" | "chicken";
       effectSegments?: EffectSegment[];
       sourceUnitId: string;
       sourceCell?: Coord;

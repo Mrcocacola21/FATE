@@ -172,7 +172,9 @@ try {
   await syncSprites();
   const stake = page.locator('[data-board="P1"] [data-vfx-effect="stakeTrigger"]');
   assert.equal(Number(await stake.evaluate((el) => getComputedStyle(el).opacity)), 0);
-  await page.clock.runFor(128);
+  const untilStakeImpact = await stake.evaluate(el => Number(el.dataset.vfxStart) - Date.now());
+  assert(untilStakeImpact > 0, "long travel must not trigger a hazard before its reached endpoint");
+  await page.clock.runFor(untilStakeImpact + 32);
   await syncSprites();
   assert.ok(Number(await stake.evaluate((el) => getComputedStyle(el).opacity)) > 0);
   assert.equal(await page.locator('[data-board="P1"] .board-effect-text-damage').count(), 1);
@@ -181,7 +183,10 @@ try {
   await play("snare");
   await page.clock.runFor(64);
   assert.equal(await page.locator('[data-board="P1"] .snared-overlay').count(), 0);
-  await page.clock.runFor(128);
+  const untilSnareImpact = await page.locator('[data-board="P1"] [data-vfx-effect="snareTrigger"]')
+    .evaluate(el => Number(el.dataset.vfxStart) - Date.now());
+  assert(untilSnareImpact > 0);
+  await page.clock.runFor(untilSnareImpact + 32);
   assert.equal(await page.locator('[data-board="P1"] [data-vfx-effect="snareTrigger"]').count(), 1);
   assert.ok((await page.locator('[data-board="P1"] [aria-label="Wrapped in snares"]').count()) > 0);
   observations.push("snare impact and wrapped indicator begin after arrival");

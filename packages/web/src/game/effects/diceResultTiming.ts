@@ -1,5 +1,7 @@
 /** Presentation only. Server decisions never wait for this timeline. */
-export const DICE_RESULT_HOLD_MS = 2700;
+export const DICE_RESULT_HOLD_MS = 520;
+/** Two results in one delivery share a reveal instead of adding two holds. */
+export const DICE_RESULT_PAIR_STAGGER_MS = 140;
 
 export function diceResultTiming(reducedMotion = false) {
   const entranceMs = reducedMotion ? 0 : 160;

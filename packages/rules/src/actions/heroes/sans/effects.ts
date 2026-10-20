@@ -1,3 +1,4 @@
+import { unitSignalTarget } from "../../../core/heroSignals";
 import { resolveUnitDeath } from "../../../death";
 import type {
   ApplyResult,
@@ -40,6 +41,7 @@ export function applySansBadassJokeDebuffs(
     const updatedTarget: UnitState = {
       ...target,
       movementDisabledNextTurn: true,
+      movementDisabledSourceId: undefined,
       sansMoveLockArmed: true,
       sansMoveLockSourceId: sans.id,
     };
@@ -171,6 +173,7 @@ export function applySansBoneFieldPunish(
   const events: GameEvent[] = [
     {
       type: "sansBoneFieldPunished",
+      ...unitSignalTarget(state, target.id),
       targetId: updatedTarget.id,
       boneType: status.kind,
       damage: 1,

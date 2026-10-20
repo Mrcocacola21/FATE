@@ -174,6 +174,10 @@ export interface UnitState {
   jackHolyMotherUsed?: boolean;
   jackKnownHpByTarget?: Record<string, number>;
   immobilizedUntilOwnTurnStart?: boolean;
+  /** Status provenance; recipient projections remove unauthorized source IDs. */
+  immobilizedSourceId?: string;
+  blindSourceId?: string;
+  movementDisabledSourceId?: string;
 
   courtExtraFlexibleAction?: CourtExtraFlexibleActionStatus;
   courtGlobalMoveOnce?: CourtGlobalMoveStatus;

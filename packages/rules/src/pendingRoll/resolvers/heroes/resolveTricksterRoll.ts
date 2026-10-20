@@ -44,6 +44,7 @@ function finalizeTricksterAoE(
       ...events,
       ...statusEvents,
       evAoeResolved({
+        ...(context?.lokiStatusOnHit ? { lokiStatusResult: context.lokiStatusOnHit } : {}),
         sourceUnitId: aoe.casterId,
         abilityId: aoe.abilityId,
         casterId: aoe.casterId,

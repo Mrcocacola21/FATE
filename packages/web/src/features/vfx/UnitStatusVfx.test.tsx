@@ -11,7 +11,7 @@ import {
   type PlayerId,
   type DeliveredGameEvent,
   type UnitState,
-} from "rules";
+} from "../../../../rules/src/index";
 import { Board } from "../../components/Board";
 import { BattleUnitSummary } from "../../game/components/RightPanel/sections/BattleUnitSummary";
 import { getUnitTokenAsset } from "../../assets/unitVisuals";
@@ -32,6 +32,7 @@ import {
 } from "./persistentStatusPreview";
 import { UnitStatusVfx, StatusBadges } from "./UnitStatusVfx";
 import { cellToBoardRect } from "./vfxGeometry";
+import { getPolkovodetsSource } from "../../../../rules/src/actions/heroes/vlad";
 
 function board(
   view: PlayerView,
@@ -59,6 +60,70 @@ function patchUnit(state: GameState, id: string, patch: Partial<UnitState>): Gam
   return { ...state, units: { ...state.units, [id]: { ...state.units[id], ...patch } } };
 }
 
+function commanderFixture(heroId = "genghisKhan") {
+  const state = fixture(), template = state.units["status-form"];
+  const ally: UnitState = { ...template, id: "supported", heroId: undefined, gutsBerserkModeActive: false,
+    position: { col: 5, row: 5 } };
+  const source: UnitState = { ...ally, id: "commander", heroId, position: { col: 4, row: 4 } };
+  const enemy: UnitState = { ...ally, id: "enemy", owner: "P2", position: { col: 4, row: 5 } };
+  return { ...state, units: { [ally.id]: ally, [source.id]: source, [enemy.id]: enemy } };
+}
+
+test("commander support badge matches rules for all six commanders, diagonals, allies and non-stacking", () => {
+  for (const hero of ["genghisKhan", "jebe", "hassan", "donKihote", "elCidCompeador", "vladTepes"]) {
+    const state = commanderFixture(hero);
+    const second = { ...state.units.commander, id: "second", position: { col: 5, row: 4 } };
+    const stacked = { ...state, units: { ...state.units, second } };
+    for (const current of [state, stacked]) for (const recipient of ["P1", "P2", null] as const) {
+      const view = recipient ? makePlayerView(current, recipient) : makeSpectatorView(current);
+      const badges = (id: string) => resolveUnitStatuses(view.units[id], recipient, view).filter(s => s.kind === "commanderAura");
+      assert.equal(badges("supported").length, 1, `${hero}/${recipient}: diagonal ally, one badge`);
+      assert.equal(Boolean(getPolkovodetsSource(current, "supported")), true);
+      assert.equal(badges("enemy").length, 0);
+      assert.equal(badges("commander").length, current === stacked ? 1 : 0, "no own aura; another commander can support it");
+    }
+  }
+});
+
+test("commander badge clears with range, death, removal, unsupported hero and False Trail; snapshot is silent", () => {
+  const state = commanderFixture();
+  const scenarios = [
+    patchUnit(state, "supported", { position: { col: 6, row: 6 } }),
+    patchUnit(state, "supported", { heroId: "falseTrailToken" }),
+    patchUnit(state, "supported", { isAlive: false }),
+    patchUnit(state, "commander", { isAlive: false }),
+    patchUnit(state, "commander", { position: null }),
+    patchUnit(state, "commander", { heroId: "griffith" }),
+    patchUnit(state, "commander", { heroId: "grozny" }),
+    { ...state, units: { supported: state.units.supported } },
+  ];
+  for (const current of scenarios) {
+    const view = makePlayerView(current, "P1");
+    assert(!resolveUnitStatuses(view.units.supported, "P1", view).some(s => s.kind === "commanderAura"));
+  }
+  const view = makePlayerView(state, "P1");
+  const html = renderToStaticMarkup(board(view));
+  assert.match(html, /data-status-id="supported:commanderAura"/);
+  assert.match(html, /Аура союзного полководця: \+1 до шкоди/);
+  assert.doesNotMatch(html, /data-vfx-cue=/);
+  assert.match(renderToStaticMarkup(<StatusBadges statuses={resolveUnitStatuses(view.units.supported, "P1", view)}
+    t={translate} />), /<svg/);
+});
+
+test("commander support never infers a concealed source or decorates a hidden enemy", () => {
+  const state = patchUnit(commanderFixture("hassan"), "commander", { isStealthed: true });
+  const owner = makePlayerView(state, "P1"), opponent = makePlayerView(state, "P2"), spectator = makeSpectatorView(state);
+  assert(resolveUnitStatuses(owner.units.supported, "P1", owner).some(s => s.kind === "commanderAura"));
+  for (const [view, recipient] of [[opponent, "P2"], [spectator, null]] as const) {
+    assert(!resolveUnitStatuses(view.units.supported, recipient, view).some(s => s.kind === "commanderAura"));
+    // Even a safely tracked '?' source must not reveal its identity through a buff.
+    const tracked = { ...view, units: { ...view.units, commander: state.units.commander } };
+    assert(!resolveUnitStatuses(view.units.supported, recipient, tracked).some(s => s.kind === "commanderAura"));
+  }
+  const concealedAlly = { ...owner.units.supported, isStealthed: true };
+  assert(!resolveUnitStatuses(concealedAlly, "P2", owner).some(s => s.kind === "commanderAura"));
+});
+
 test("snapshot restores Bunker, curse, restrictions, both bone records and form token without one-shot VFX", () => {
   const view = makePlayerView(fixture(), "P1");
   const html = renderToStaticMarkup(board(view));
@@ -78,6 +143,16 @@ test("snapshot restores Bunker, curse, restrictions, both bone records and form 
   assert.doesNotMatch(html, /data-vfx-cue=|data-vfx-effect=|unit-transforming|unit-bone-expiring/);
   assert.match(html, /data-unit-overlay="snared"/);
   assert.doesNotMatch(html, /hidden-source/);
+});
+
+test("snare badge and persistent overlay wait for the reached playback frame; snapshots restore immediately", () => {
+  const view = makePlayerView(fixture(), "P1");
+  const render = (visualUnits: PlayerView["units"]) => renderToStaticMarkup(<UnitStatusVfx view={view} playerId="P1"
+    visualUnits={visualUnits} motion={{}} boardSize={9} cellSize={64} isFlipped={false} reducedMotion={false} t={translate} />);
+  const before = Object.fromEntries(Object.entries(view.units).map(([id, unit]) => [id, { ...unit, immobilizedUntilOwnTurnStart: false }]));
+  assert.doesNotMatch(render(before), /data-unit-status="immobilized"|data-unit-overlay="snared"/);
+  assert.match(render(view.units), /data-unit-status="immobilized"/);
+  assert.match(render(view.units), /data-unit-overlay="snared"/);
 });
 
 test("owner, opponent and spectator use real projections for stealth, private marks, stakes and snares", () => {

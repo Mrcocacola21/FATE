@@ -1,0 +1,385 @@
+{
+  "schemaVersion": 1,
+  "heroId": "grozny",
+  "assetRoot": "packages/web/src/assets/",
+  "status": "imported_assets_not_runtime_bindings",
+  "assets": [
+    {
+      "id": "V-grozny-move_trail",
+      "heroId": "grozny",
+      "filename": "vfx/heroes/grozny/expansion/move_trail.png",
+      "sha256": "b18e6cfd58b3a9c01ce7f2d2056295be57ec078b7032b0b1bc494d58135ae27f",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "+X",
+      "phase": "move",
+      "geometry": "trail",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "grozny.basic.move.move",
+      "loop": false,
+      "presentationProfile": "trail",
+      "requestedRoleOrAbilityRefs": [
+        "basic.move"
+      ],
+      "declaredSourceAbilityId": "basic.move",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-grozny-move_arrive",
+      "heroId": "grozny",
+      "filename": "vfx/heroes/grozny/expansion/move_arrive.png",
+      "sha256": "aae71ab491a39fab05c79f573b88c07a3b40e00cf3e565b9f9b4ef96ce936a92",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "arrive",
+      "geometry": "impact",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "grozny.basic.move.arrive",
+      "loop": false,
+      "presentationProfile": "impact",
+      "requestedRoleOrAbilityRefs": [
+        "basic.move"
+      ],
+      "declaredSourceAbilityId": "basic.move",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-grozny-attack_swing",
+      "heroId": "grozny",
+      "filename": "vfx/heroes/grozny/expansion/attack_swing.png",
+      "sha256": "461db7398aa7e08dee09a9eda66604a9109921e82408ec2ff3ea43d69d3d4a4c",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "+X",
+      "phase": "swing",
+      "geometry": "swing",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "grozny.basic.attack.swing",
+      "loop": false,
+      "presentationProfile": "swing",
+      "requestedRoleOrAbilityRefs": [
+        "basic.attack"
+      ],
+      "declaredSourceAbilityId": "basic.attack",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-grozny-attack_impact",
+      "heroId": "grozny",
+      "filename": "vfx/heroes/grozny/expansion/attack_impact.png",
+      "sha256": "4bb7dcc529911c027f69adedcd238c073c06df6609f53ad6ba985810a0b1af49",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "hit",
+      "geometry": "impact",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "grozny.basic.attack.hit",
+      "loop": false,
+      "presentationProfile": "impact",
+      "requestedRoleOrAbilityRefs": [
+        "basic.attack"
+      ],
+      "declaredSourceAbilityId": "basic.attack",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "EXTEND",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-grozny-select_ring",
+      "heroId": "grozny",
+      "filename": "vfx/heroes/grozny/expansion/select_ring.png",
+      "sha256": "05f9ab12ae8f58a11b8d77fab403f5dac497c062cb616beb78a864a56af0f8ff",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 1,
+      "fps": 0,
+      "durationMs": null,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "select",
+      "geometry": "static",
+      "layer": "ground",
+      "sourceVisibility": "local",
+      "compositeGroup": "grozny.basic.select.select",
+      "loop": false,
+      "presentationProfile": "static",
+      "requestedRoleOrAbilityRefs": [
+        "basic.select"
+      ],
+      "declaredSourceAbilityId": "basic.select",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-grozny-deploy",
+      "heroId": "grozny",
+      "filename": "vfx/heroes/grozny/expansion/deploy.png",
+      "sha256": "325c6ed973ee5032b91ff68ff6a7129075f9c76c889037a4d954aa7f31a96ba5",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 16,
+      "fps": 24,
+      "durationMs": 667,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "deploy",
+      "geometry": "deploy",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "grozny.basic.deploy.deploy",
+      "loop": false,
+      "presentationProfile": "deploy",
+      "requestedRoleOrAbilityRefs": [
+        "basic.deploy"
+      ],
+      "declaredSourceAbilityId": "basic.deploy",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-grozny-death_final",
+      "heroId": "grozny",
+      "filename": "vfx/heroes/grozny/expansion/death_final.png",
+      "sha256": "0e06da496b4a70c6ff2a8b3c7f828c6f46e6ad10eae71f3459be9a453ea7aab4",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 24,
+      "fps": 24,
+      "durationMs": 1000,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "final",
+      "geometry": "death",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "grozny.basic.death.final",
+      "loop": false,
+      "presentationProfile": "death",
+      "requestedRoleOrAbilityRefs": [
+        "basic.death"
+      ],
+      "declaredSourceAbilityId": "basic.death",
+      "canonicalTriggerHint": "Окончательная смерть; дождаться возрождений, предсмертной атаки/выбора проклятия",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-grozny-auto_defense",
+      "heroId": "grozny",
+      "filename": "vfx/heroes/grozny/expansion/auto_defense.png",
+      "sha256": "342ed0e5b8751f10ae14b8597e24516b9b16433c21f90d5d3d2cb38d181d3e83",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "defend",
+      "geometry": "defense",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "grozny.berserkAutoDefense.defend",
+      "loop": false,
+      "presentationProfile": "defense",
+      "requestedRoleOrAbilityRefs": [
+        "defense"
+      ],
+      "declaredSourceAbilityId": "berserkAutoDefense",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P2",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-grozny-commander_aura",
+      "heroId": "grozny",
+      "filename": "vfx/heroes/grozny/expansion/commander_aura.png",
+      "sha256": "a92b445da93472d6fa57332187518669e68f75b54f27914c0f1e78778eecf9f8",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 1,
+      "fps": 0,
+      "durationMs": null,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "status",
+      "geometry": "static",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "grozny.vladPolkovodets.status",
+      "loop": false,
+      "presentationProfile": "static",
+      "requestedRoleOrAbilityRefs": [
+        "vladPolkovodets"
+      ],
+      "declaredSourceAbilityId": "vladPolkovodets",
+      "canonicalTriggerHint": "Статичная метка по разрешённому состоянию; на reconnect без вспышки/звука",
+      "priority": "P2",
+      "requestState": "EXTEND",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-grozny-invade_exit",
+      "heroId": "grozny",
+      "filename": "vfx/heroes/grozny/expansion/invade_exit.png",
+      "sha256": "9abc3a9162bbeb1a057d82781f177b0a29912bb49c3f8181e8a35b47bb0e3013",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 16,
+      "fps": 24,
+      "durationMs": 667,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "exit",
+      "geometry": "portal",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "grozny.groznyInvadeTime.exit",
+      "loop": false,
+      "presentationProfile": "portal",
+      "requestedRoleOrAbilityRefs": [
+        "groznyInvadeTime"
+      ],
+      "declaredSourceAbilityId": "groznyInvadeTime",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P2",
+      "requestState": "EXTEND",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-grozny-invade_arrive",
+      "heroId": "grozny",
+      "filename": "vfx/heroes/grozny/expansion/invade_arrive.png",
+      "sha256": "1cce56cd6f2222f6b90563c4cc4eea9c83776e993d81a5fdeb07dbf6ebe2e874",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 16,
+      "fps": 24,
+      "durationMs": 667,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "arrive",
+      "geometry": "portal",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "grozny.groznyInvadeTime.arrive",
+      "loop": false,
+      "presentationProfile": "portal",
+      "requestedRoleOrAbilityRefs": [
+        "groznyInvadeTime"
+      ],
+      "declaredSourceAbilityId": "groznyInvadeTime",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P2",
+      "requestState": "EXTEND",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-grozny-tyrant_gain",
+      "heroId": "grozny",
+      "filename": "vfx/heroes/grozny/expansion/tyrant_gain.png",
+      "sha256": "b3276cc078727b4f2b23b5c0c749a5f82fe8f69eabd1985da05c99ca02c0514d",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 16,
+      "fps": 24,
+      "durationMs": 667,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "gain",
+      "geometry": "burst",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "grozny.groznyTyrant.gain",
+      "loop": false,
+      "presentationProfile": "burst",
+      "requestedRoleOrAbilityRefs": [
+        "groznyTyrant"
+      ],
+      "declaredSourceAbilityId": "groznyTyrant",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P2",
+      "requestState": "EXTEND",
+      "runtimeIntegration": "pending"
+    }
+  ],
+  "notes": [
+    "Original PNG bytes preserved. This manifest does not register VFX or authorize visibility.",
+    "defense/stealth/basic.* are presentation roles; resolve actual rule events when connecting.",
+    "declaredSourceAbilityId is provenance, not proof that the unit has that ability."
+  ]
+}

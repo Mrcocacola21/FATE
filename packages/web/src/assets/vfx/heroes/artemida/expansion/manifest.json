@@ -1,0 +1,323 @@
+{
+  "schemaVersion": 1,
+  "heroId": "artemida",
+  "assetRoot": "packages/web/src/assets/",
+  "status": "imported_assets_not_runtime_bindings",
+  "assets": [
+    {
+      "id": "V-artemida-move_trail",
+      "heroId": "artemida",
+      "filename": "vfx/heroes/artemida/expansion/move_trail.png",
+      "sha256": "6e8baa41a8e1c59de192b5756b1e8334cacfbdb36a50ea569656abe134fb387e",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "+X",
+      "phase": "move",
+      "geometry": "trail",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "artemida.basic.move.move",
+      "loop": false,
+      "presentationProfile": "trail",
+      "requestedRoleOrAbilityRefs": [
+        "basic.move"
+      ],
+      "declaredSourceAbilityId": "basic.move",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-artemida-move_arrive",
+      "heroId": "artemida",
+      "filename": "vfx/heroes/artemida/expansion/move_arrive.png",
+      "sha256": "9b472f8d6196969a97b086f9f63067da2ac580dccc602ab8a81a8fecb60a3c28",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "arrive",
+      "geometry": "impact",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "artemida.basic.move.arrive",
+      "loop": false,
+      "presentationProfile": "impact",
+      "requestedRoleOrAbilityRefs": [
+        "basic.move"
+      ],
+      "declaredSourceAbilityId": "basic.move",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-artemida-attack_projectile",
+      "heroId": "artemida",
+      "filename": "vfx/heroes/artemida/expansion/attack_projectile.png",
+      "sha256": "17d089a0c52ab47f3e73d0fb7f49b440b86af71f415aa3e7faf22a94ac6522f7",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "+X",
+      "phase": "release",
+      "geometry": "projectile",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "artemida.basic.attack.release",
+      "loop": false,
+      "presentationProfile": "projectile",
+      "requestedRoleOrAbilityRefs": [
+        "basic.attack"
+      ],
+      "declaredSourceAbilityId": "basic.attack",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-artemida-attack_impact",
+      "heroId": "artemida",
+      "filename": "vfx/heroes/artemida/expansion/attack_impact.png",
+      "sha256": "f674c2b511d533b904352cd0678ca207bbe9920815cf541609fcb63e4da7ebf0",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "hit",
+      "geometry": "impact",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "artemida.basic.attack.hit",
+      "loop": false,
+      "presentationProfile": "impact",
+      "requestedRoleOrAbilityRefs": [
+        "basic.attack"
+      ],
+      "declaredSourceAbilityId": "basic.attack",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "EXTEND",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-artemida-select_ring",
+      "heroId": "artemida",
+      "filename": "vfx/heroes/artemida/expansion/select_ring.png",
+      "sha256": "722cdf6008ae50c334202ac76b8457310004b99c8745919ef6acca383d76f351",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 1,
+      "fps": 0,
+      "durationMs": null,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "select",
+      "geometry": "static",
+      "layer": "ground",
+      "sourceVisibility": "local",
+      "compositeGroup": "artemida.basic.select.select",
+      "loop": false,
+      "presentationProfile": "static",
+      "requestedRoleOrAbilityRefs": [
+        "basic.select"
+      ],
+      "declaredSourceAbilityId": "basic.select",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-artemida-deploy",
+      "heroId": "artemida",
+      "filename": "vfx/heroes/artemida/expansion/deploy.png",
+      "sha256": "fb2f9d71b430156210db329d425343b835404494bf4cb4b6ae6ca65390fb1556",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 16,
+      "fps": 24,
+      "durationMs": 667,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "deploy",
+      "geometry": "deploy",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "artemida.basic.deploy.deploy",
+      "loop": false,
+      "presentationProfile": "deploy",
+      "requestedRoleOrAbilityRefs": [
+        "basic.deploy"
+      ],
+      "declaredSourceAbilityId": "basic.deploy",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-artemida-death_final",
+      "heroId": "artemida",
+      "filename": "vfx/heroes/artemida/expansion/death_final.png",
+      "sha256": "243189e6c0da4cf4a56aac9a34b76707524e559cea7be9788345966b5b943c0b",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 24,
+      "fps": 24,
+      "durationMs": 1000,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "final",
+      "geometry": "death",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "artemida.basic.death.final",
+      "loop": false,
+      "presentationProfile": "death",
+      "requestedRoleOrAbilityRefs": [
+        "basic.death"
+      ],
+      "declaredSourceAbilityId": "basic.death",
+      "canonicalTriggerHint": "Окончательная смерть; дождаться возрождений, предсмертной атаки/выбора проклятия",
+      "priority": "P1",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-artemida-stealth_enter",
+      "heroId": "artemida",
+      "filename": "vfx/heroes/artemida/expansion/stealth_enter.png",
+      "sha256": "086cd9509bdcee9d7267db401aeee9188575c521d2827bc89b586b3679b64861",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 16,
+      "fps": 24,
+      "durationMs": 667,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "enter",
+      "geometry": "burst",
+      "layer": "ground",
+      "sourceVisibility": "owner",
+      "compositeGroup": "artemida.artemidaStealth.enter",
+      "loop": false,
+      "presentationProfile": "burst",
+      "requestedRoleOrAbilityRefs": [
+        "stealth"
+      ],
+      "declaredSourceAbilityId": "artemidaStealth",
+      "canonicalTriggerHint": "Вход в скрытность только владельцу, никаких подсказок противнику",
+      "priority": "P2",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-artemida-stealth_reveal",
+      "heroId": "artemida",
+      "filename": "vfx/heroes/artemida/expansion/stealth_reveal.png",
+      "sha256": "593343d5117d2233a056c58f070b00af3eee77a5a47fc7c513bb1e0f511a75de",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 16,
+      "fps": 24,
+      "durationMs": 667,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "reveal",
+      "geometry": "burst",
+      "layer": "ground",
+      "sourceVisibility": "public",
+      "compositeGroup": "artemida.artemidaStealth.reveal",
+      "loop": false,
+      "presentationProfile": "burst",
+      "requestedRoleOrAbilityRefs": [
+        "stealth"
+      ],
+      "declaredSourceAbilityId": "artemidaStealth",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P2",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    },
+    {
+      "id": "V-artemida-precise_arrow_confirm",
+      "heroId": "artemida",
+      "filename": "vfx/heroes/artemida/expansion/precise_arrow_confirm.png",
+      "sha256": "9df3a13ea848a79829bd5ce59661068887b6be4bb10fb6c46e08b250d5714e5d",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "frames": 12,
+      "fps": 24,
+      "durationMs": 500,
+      "anchorPoint": [
+        0.5,
+        0.5
+      ],
+      "authoredFacing": "none",
+      "phase": "confirmed_hit",
+      "geometry": "impact",
+      "layer": "foreground",
+      "sourceVisibility": "public",
+      "compositeGroup": "artemida.artemidaAccurateArrow.confirmed_hit",
+      "loop": false,
+      "presentationProfile": "impact",
+      "requestedRoleOrAbilityRefs": [
+        "artemidaAccurateArrow"
+      ],
+      "declaredSourceAbilityId": "artemidaAccurateArrow",
+      "canonicalTriggerHint": "Подтверждённое действие/результат; связать с фактической фазой, не с кликом",
+      "priority": "P2",
+      "requestState": "NEW",
+      "runtimeIntegration": "pending"
+    }
+  ],
+  "notes": [
+    "Original PNG bytes preserved. This manifest does not register VFX or authorize visibility.",
+    "defense/stealth/basic.* are presentation roles; resolve actual rule events when connecting.",
+    "declaredSourceAbilityId is provenance, not proof that the unit has that ability."
+  ]
+}

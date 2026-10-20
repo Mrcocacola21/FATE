@@ -91,6 +91,8 @@ export interface BoardEventBatch {
   events: PresentationEvent[];
   /** Client-only deterministic playback offsets. Never sent to the rules engine. */
   eventDelaysMs?: number[];
+  /** Buildup duration on the existing playback clock. */
+  eventBuildupMs?: number[];
   /** Compatibility offsets for audio consumers; derived from the shared plan. */
   eventSfxDelaysMs?: number[];
   /** One web-only semantic schedule shared by audio, sprites, HP and text. */

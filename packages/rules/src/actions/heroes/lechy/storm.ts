@@ -1,6 +1,8 @@
 import { resolveUnitDeath } from "../../../death";
 import type { ApplyResult, GameEvent, GameState, UnitState } from "../../../model";
-import { isStormActive, isStormExempt } from "../../../forest";
+import { isStormActive, isStormExempt, isUnitInsideForestAura } from "../../../forest";
+import { HERO_RIVER_PERSON_ID } from "../../../heroes";
+import { unitSignalAnchor, unitSignalTarget } from "../../../core/heroSignals";
 import { rollManualD6 as rollD6 } from "../../../pendingRoll/manualRoll";
 import { clearPendingRoll, requestRoll } from "../../../core";
 import { applyGriffithFemtoRebirth } from "../../../shared/griffith";
@@ -17,11 +19,17 @@ export function applyStormStartOfTurn(
   if (!unit || !unit.isAlive || !unit.position) {
     return { state, events: [] };
   }
-  if (isStormExempt(state, unit)) {
-    return { state, events: [] };
-  }
   if (unit.stormStartTurnResolvedTurnNumber === state.turnNumber) {
     return { state, events: [] };
+  }
+  if (isStormExempt(state, unit)) {
+    // A forest already prevents this storm check. Only Guide of Souls itself
+    // preventing the otherwise applicable start-turn check produces a ward.
+    if (unit.heroId !== HERO_RIVER_PERSON_ID || isUnitInsideForestAura(state, unit))
+      return { state, events: [] };
+    const marked = markStormResolvedForTurn(state, unit);
+    return { state: marked.state, events: [{ type: "riverStormWard",
+      ...unitSignalAnchor(state, unit.id), turnNumber: state.turnNumber }] };
   }
 
   return requestRoll(
@@ -33,7 +41,7 @@ export function applyStormStartOfTurn(
   );
 }
 
-function evLechyStormRollResult(params: {
+function evLechyStormRollResult(state: GameState, params: {
   unitId: string;
   roll: number;
   success: boolean;
@@ -42,6 +50,7 @@ function evLechyStormRollResult(params: {
 }): GameEvent {
   return {
     type: "lechyStormRollResult",
+    ...unitSignalTarget(state, params.unitId),
     unitId: params.unitId,
     roll: params.roll,
     success: params.success,
@@ -95,7 +104,7 @@ export function resolveLechyStormStartTurnRoll(
     return {
       state: markedState,
       events: [
-        evLechyStormRollResult({
+        evLechyStormRollResult(baseState, {
           unitId: markedUnit.id,
           roll,
           success: true,
@@ -115,7 +124,7 @@ export function resolveLechyStormStartTurnRoll(
 
   const events: GameEvent[] = [];
   events.push(
-    evLechyStormRollResult({
+    evLechyStormRollResult(baseState, {
       unitId: unit.id,
       roll,
       success: false,

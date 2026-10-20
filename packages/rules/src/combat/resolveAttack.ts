@@ -132,7 +132,7 @@ export function resolveAttack(
     ? true
     : attackerRoll.sum > defenderRoll.sum;
 
-  if (
+  const spearmanDouble = (
     !params.autoHit &&
     !params.forceMiss &&
     (defenderAfter.class === "spearman" ||
@@ -142,7 +142,8 @@ export function resolveAttack(
       defenderAfter.heroId === HERO_SANS_ID ||
       defenderAfter.heroId === HERO_UNDYNE_ID) &&
     defenderRoll.isDouble
-  ) {
+  );
+  if (spearmanDouble) {
     hit = false;
   }
 
@@ -295,6 +296,8 @@ export function resolveAttack(
         : undefined,
     hit,
     damage,
+    ...(!hit && spearmanDouble ? { spearmanEvaded: true as const } : {}),
+    ...(resolvedHit.bunkerAbsorbedDamage ? { bunkerAbsorbedDamage: resolvedHit.bunkerAbsorbedDamage } : {}),
     defenderHpAfter: defenderHpAfterEvent,
     previousHp: defenderHpBefore,
     nextHp: defenderHpAfterEvent,

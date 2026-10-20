@@ -20,6 +20,7 @@ import {
   setupGutsState,
   toBattleState,
 } from "../helpers/testUtils";
+import { projectEventsForRecipient } from "../../index";
 export function testGutsHpBonus() {
   const { guts } = setupGutsState();
   const baseHp = getUnitDefinition("berserker").maxHp;
@@ -561,6 +562,7 @@ let state = initialState74;
     attackEvents.length === 3,
     "Berserk AoE should hit all adjacent allies and enemies"
   );
+  assert(attackEvents.every(event => !event.attackSignature), "Berserk AoE must not claim the single-target swing");
   const attackedIds = attackEvents.map((event) => event.defenderId).sort();
   assert.deepStrictEqual(
     attackedIds,
@@ -780,6 +782,13 @@ let state = initialState76;
   ) as Extract<GameEvent, { type: "attackResolved" }>[];
 
   assert(attackEvents.length === 1, "single-target Berserk attack should hit one unit");
+  assert(attackEvents[0].attackSignature === "gutsBerserkSingle", "accepted Berserk single attack identifies its own swing");
+  assert(!attackEvents[0].isBasicAttack, "the visual signature preserves existing normal-attack audio provenance");
+  for (const recipient of ["P1", "P2", "spectator"] as const) {
+    const projected = projectEventsForRecipient(resolved.state, attackEvents, recipient);
+    assert(projected.some(event => event.type === "attackResolved" && event.attackSignature === "gutsBerserkSingle"),
+      `visible single attack keeps its visual signature for ${recipient}`);
+  }
   assert(
     attackEvents[0].defenderId === enemy.id,
     "single-target Berserk attack should hit the chosen target"
