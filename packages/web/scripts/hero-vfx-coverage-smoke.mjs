@@ -29,7 +29,7 @@ const coverage = JSON.parse(
 );
 const expansion = JSON.parse(readFileSync(path.join(web, "../../docs/assets/vfx-workflow/integration-state.json"), "utf8")).assets;
 const keys = [...new Set([...coverage.filter((row) => row.key).map((row) => row.key),
-  ...expansion.flatMap(row => row.effectIds)])];
+  ...expansion.flatMap(row => row.effectIds), "basicProjectile", "basicSlash", "missShield"])];
 const url = "http://127.0.0.1:5197";
 mkdirSync(output, { recursive: true });
 const server = spawn(

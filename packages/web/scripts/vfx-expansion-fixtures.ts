@@ -3,16 +3,19 @@ import {
   applyAction, attachArmy, createDefaultArmy, createEmptyGame, getHeroDefinition, makePlayerView,
   makeSpectatorView, projectEventsForRecipient, getLegalPlacements, type GameEvent, type GameState, type UnitState,
 } from "../../rules/src/index";
-import { initKnowledgeForOwners, makeRngSequence, resolveAllPendingRollsWithEvents, setUnit, toBattleState, toPlacementState } from "../../rules/src/tests/helpers/testUtils";
+import { initKnowledgeForOwners, makeRngSequence, resolveAllPendingRollsWithEvents, resolvePendingRollOnce, setUnit, toBattleState, toPlacementState } from "../../rules/src/tests/helpers/testUtils";
 import { expansionSignalFixtures } from "../../rules/src/tests/core/expansionSignals.test";
 import { applyGriffithFemtoRebirth } from "../../rules/src/actions/heroes/griffith";
 import { addLokiChicken } from "../../rules/src/actions/heroes/loki";
+import { attackOutcomeFixtures } from "../../rules/src/tests/helpers/attackOutcomeFixtures";
 import { BASIC_EXPANSION_HEROES } from "../src/features/vfx/expansionPresentation";
 import { expansionAssets, type ExpansionEffectId } from "../src/features/vfx/expansionCatalog.generated";
+import { meleeArtworkOrientation } from "../src/features/vfx/meleeArtwork";
 
 const frames: Record<string, unknown> = {};
 function add(id: string, before: GameState, after: GameState, events: GameEvent[], sourceId: string, expected: string[]) {
   frames[id] = { sourceId, expected, hiddenInReduced: expected.filter(id => id in expansionAssets && expansionAssets[id as ExpansionEffectId].geometry === "trail"),
+    meleeArtwork: Object.fromEntries(expected.flatMap(id => { const orientation = meleeArtworkOrientation(id); return orientation ? [[id, orientation]] : []; })),
     selectable: Boolean(before.units[sourceId]?.position), recipients: Object.fromEntries((["P1", "P2", "spectator"] as const).map(recipient => {
     const view = (state: GameState) => recipient === "spectator" ? makeSpectatorView(state) : makePlayerView(state, recipient);
     return [recipient, { before: view(before), after: view(after), expected: view(after).units[sourceId]?.position ? expected : [], events: projectEventsForRecipient(after, events, recipient)
@@ -94,8 +97,10 @@ for (const hero of BASIC_EXPANSION_HEROES) {
     const role = form.suffix === ".berserk" ? "berserk_swing" : form.suffix === ".centipede" ? "centipede_attack"
       : form.suffix === ".undying" ? "undying_swing" : form.suffix ? undefined : "attack_swing";
     if (!role || !(`expansion.${hero}.${role}` in expansionAssets)) continue;
-    for (const direction of hero === "guts" && !form.suffix ? ["east", "north", "southwest", "miss"] : ["east"]) {
-    const target = direction === "north" ? { col: 4, row: 5 } : direction === "southwest" ? { col: 3, row: 3 } : { col: 5, row: 4 };
+    for (const direction of ["guts", "genghisKhan"].includes(hero) && !form.suffix ? ["east", "north", "southwest", "miss", "west", "south", "northeast", "northwest", "southeast"] : ["east"]) {
+    const offsets: Record<string, [number, number]> = { east: [1, 0], north: [0, 1], west: [-1, 0], south: [0, -1],
+      northeast: [1, 1], northwest: [-1, 1], southwest: [-1, -1], southeast: [1, -1], miss: [1, 0] };
+    const [dx, dy] = offsets[direction], target = { col: 4 + dx, row: 4 + dy };
     const before = initKnowledgeForOwners(setUnit(setUnit(state, source.id, { ...form.flags, attack: 4 }),
       enemy.id, { position: target, heroId: "griffith", hp: 8, attack: 1 }));
     const rng = makeRngSequence(direction === "miss" ? [.01, .2, .99, .8] : [.99, .8, .01, .2]);
@@ -108,7 +113,8 @@ for (const hero of BASIC_EXPANSION_HEROES) {
     const events = [...started.events, ...chosen.events, ...resolved.events];
     if (!events.some(event => event.type === "attackResolved" && event.attackerId === source.id))
       throw new Error(`${hero}${form.suffix}: basic swing attack refused`);
-    add(`swing.${hero}${form.suffix}${direction === "east" ? "" : `.${direction}`}`, before, resolved.state, events, source.id, [`expansion.${hero}.${role}`]);
+    const prefix = (hero === "genghisKhan" && direction !== "east") || ["west", "south", "northeast", "northwest", "southeast"].includes(direction) ? "direction" : "swing";
+    add(`${prefix}.${hero}${form.suffix}${direction === "east" ? "" : `.${direction}`}`, before, resolved.state, events, source.id, [`expansion.${hero}.${role}`]);
     }
   }
 }
@@ -134,6 +140,93 @@ for (const profile of ["base-rider", "base-assassin", "genghisKhan", "donKihote"
     add(`longmove.${profile}.${length}`, before, moved.state, moved.events, source.id,
       hero ? [`expansion.${hero}.move_trail`, `expansion.${hero}.move_arrive`] : []);
   }
+}
+for (const profile of ["grand-kaiser", "grand-kaiser.engineering", "artemida", "jebe", "mettaton", "mettaton.ex", "mettaton.neo", "base-archer"]) {
+  const [hero, form] = profile.split(".");
+  let state = attachArmy(attachArmy(createEmptyGame(), createDefaultArmy("P1", hero === "base-archer" ? {} : { archer: hero })), createDefaultArmy("P2"));
+  const source = Object.values(state.units).find(unit => unit.owner === "P1" && unit.class === "archer")!;
+  const enemy = Object.values(state.units).find(unit => unit.owner === "P2" && unit.class === "knight")!;
+  state = setUnit(state, source.id, { position: { col: 1, row: 1 }, isStealthed: false,
+    transformed: form === "engineering", mettatonExUnlocked: form === "ex" || form === "neo", mettatonNeoUnlocked: form === "neo" });
+  state = toBattleState(state, "P1", source.id);
+  const role = form === "engineering" ? "engineering_attack" : form === "ex" ? "ex_attack" : form === "neo" ? "neo_attack" : "attack_projectile";
+  for (const branch of ["near", "far", "miss", ...(profile === "grand-kaiser" ? ["north", "diagonal"] : [])]) {
+    const target = branch === "near" ? { col: 2, row: 1 } : branch === "north" ? { col: 1, row: 6 }
+      : branch === "diagonal" ? { col: 5, row: 5 } : { col: 6, row: 1 };
+    const before = initKnowledgeForOwners(setUnit(state, enemy.id, { position: target, heroId: "griffith", hp: 20, attack: 1 }));
+    const rng = makeRngSequence(branch === "miss" ? [.01, .2, .99, .8] : [.99, .8, .01, .2]);
+    const started = applyAction(before, { type: "attack", attackerId: source.id, defenderId: enemy.id }, rng);
+    const resolved = resolveAllPendingRollsWithEvents(started.state, rng);
+    const events = [...started.events, ...resolved.events];
+    if (!events.some(event => event.type === "attackResolved" && event.isBasicAttack)) throw new Error(`${profile}/${branch}: archer attack refused`);
+    add(`projectile.${profile}.${branch}`, before, resolved.state, events, source.id, [hero === "base-archer" ? "basicProjectile" : `expansion.${hero}.${role}`]);
+  }
+}
+for (const spec of [
+  { hero: "guts", ability: "gutsArbalet", effect: "gutsCrossbow" },
+  { hero: "guts", ability: "gutsCannon", effect: "basicProjectile" },
+  { hero: "undyne", ability: "undyneSpearThrow", effect: "undyneThrow" },
+  { hero: "undyne", ability: "undyneSpearThrow", effect: "undyneThrow", form: true },
+  { hero: "asgore", ability: "asgoreFireball", effect: "fireball" },
+  { hero: "jebe", ability: "jebeKhansShooter", effect: "jebeRicochet" },
+  { hero: "frisk", ability: "friskGenocide", effect: "friskPrecision" },
+  { hero: "odin", ability: "basic", effect: "odinGungnir" },
+]) for (const miss of [false, ...(spec.hero === "guts" || spec.hero === "undyne" && !spec.form ? [true] : [])]) {
+  const slot = getHeroDefinition(spec.hero)!.mainClass;
+  let state = attachArmy(attachArmy(createEmptyGame(), createDefaultArmy("P1", { [slot]: spec.hero })), createDefaultArmy("P2"));
+  const source = Object.values(state.units).find(unit => unit.heroId === spec.hero)!;
+  const enemy = Object.values(state.units).find(unit => unit.owner === "P2" && unit.class === "knight")!;
+  state = setUnit(state, source.id, { position: { col: 1, row: 1 }, isStealthed: false, undyneImmortalActive: spec.form,
+    friskPacifismDisabled: spec.hero === "frisk", charges: { ...source.charges, [spec.ability]: 2, jebeKhansShooter: 6, friskGenocide: 10 } });
+  state = initKnowledgeForOwners(toBattleState(setUnit(state, enemy.id, { position: { col: spec.hero === "frisk" || spec.hero === "odin" ? 2 : 6, row: 1 },
+    hp: 20, heroId: "griffith", attack: 1 }), "P1", source.id));
+  const rolls = miss ? [.01, .2, .99, .8] : spec.hero === "odin" ? [.99, .99, .01, .2] : [.99, .8, .01, .2];
+  const rng = makeRngSequence(Array.from({ length: 32 }, () => rolls).flat());
+  let result = applyAction(state, spec.ability === "basic" ? { type: "attack", attackerId: source.id, defenderId: enemy.id }
+    : { type: "useAbility", unitId: source.id, abilityId: spec.ability, payload: { targetId: enemy.id } }, rng);
+  const events = [...result.events];
+  if (spec.hero === "frisk") {
+    for (const choice of [{ type: "friskGenocideOption" as const, option: "precisionStrike" as const },
+      { type: "friskPrecisionStrikeTarget" as const, targetId: enemy.id }]) {
+      if (!result.state.pendingRoll) throw new Error("Precision Strike did not request its real choice");
+      result = applyAction(result.state, { type: "resolvePendingRoll", player: "P1", pendingRollId: result.state.pendingRoll.id, choice }, rng);
+      events.push(...result.events);
+    }
+  }
+  let resolved = result;
+  for (let step = 0; resolved.state.pendingRoll; step++) {
+    if (step >= 64) throw new Error(`${spec.hero}/${spec.ability}/form=${Boolean(spec.form)}/miss=${miss}: pending ${resolved.state.pendingRoll.kind} did not finish, queue=${resolved.state.pendingCombatQueue?.length}, context=${JSON.stringify(resolved.state.pendingRoll.context)}`);
+    const previous = resolved.state;
+    resolved = resolvePendingRollOnce(previous, rng);
+    if (resolved.state === previous) throw new Error(`${spec.hero}/${spec.ability}: needs choice for ${previous.pendingRoll!.kind}`);
+    events.push(...resolved.events);
+  }
+  if (!events.some(event => event.type === "attackResolved")) throw new Error(`${spec.hero}/${spec.ability}: ranged ability refused`);
+  add(`projectile.${spec.hero}.${spec.ability}${spec.form ? ".undying" : ""}${miss ? ".miss" : ""}`, state, resolved.state, events, source.id, [spec.effect]);
+}
+for (const f of attackOutcomeFixtures()) {
+  const special: Record<string, string> = { "berserker.guts": "expansion.guts.auto_defense", "spearman.luche": "expansion.luche.auto_defense",
+    "muninn.odin": "odinMuninn", "bravery.asgore": "shield", "cleanSoul.frisk": "expansion.frisk.clean_soul_break",
+    "reduction.guts": "expansion.guts.auto_defense", "reduction.undyne": "expansion.undyne.auto_defense", "bunker.grand-kaiser": "expansion.grand-kaiser.bunker_absorb" };
+  const hero = f.after.units[f.sourceId].heroId;
+  const slash = hero === "kaneki" ? "expansion.kaneki.centipede_attack" : hero && `expansion.${hero}.attack_swing` in expansionAssets
+    ? `expansion.${hero}.attack_swing` : "basicSlash";
+  const expected = f.id.endsWith("rider.riverPerson") ? [] : f.id.includes(".rider.") ? [slash, "missShield"]
+    : ["basicSlash", special[f.id.slice("outcome.".length)] ?? "missShield"];
+  if (f.id.includes(".reduction.") || f.id.includes(".bunker.")) expected.push("combatHit");
+  add(f.id, f.before, f.after, f.events, f.sourceId, expected);
+}
+for (const hit of [true, false]) {
+  let state = attachArmy(attachArmy(createEmptyGame(), createDefaultArmy("P1", { knight: "zoro" })), createDefaultArmy("P2"));
+  const source = Object.values(state.units).find(unit => unit.heroId === "zoro")!;
+  const target = Object.values(state.units).find(unit => unit.owner === "P2" && unit.class === "knight")!;
+  state = initKnowledgeForOwners(toBattleState(setUnit(setUnit(state, source.id, { position: { col: 3, row: 4 } }),
+    target.id, { position: { col: 4, row: 4 }, hp: hit ? 2 : 30 }), "P1", source.id));
+  const rng = makeRngSequence(hit ? [.99, .8, .01, .2] : [.01, .2, .99, .8]);
+  const started = applyAction(state, { type: "attack", attackerId: source.id, defenderId: target.id }, rng);
+  const resolved = resolveAllPendingRollsWithEvents(started.state, rng);
+  add(`signature.zoro.${hit ? "hit" : "miss"}`, state, resolved.state, [...started.events, ...resolved.events], source.id,
+    ["zoroSantoryu", hit ? "expansion.zoro.attack_impact" : "missShield"]);
 }
 writeFileSync(process.argv[2], JSON.stringify(frames));
 console.log(`Generated ${Object.keys(frames).length} rules-produced Board fixtures.`);

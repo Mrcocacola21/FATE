@@ -8500,7 +8500,8 @@
           "type": "string",
           "enum": [
             "friskPrecisionStrike",
-            "gutsBerserkSingle"
+            "gutsBerserkSingle",
+            "riderPath"
           ]
         },
         "bunkerAbsorbedDamage": {
@@ -8512,6 +8513,13 @@
         },
         "damage": {
           "type": "number"
+        },
+        "damageReductions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CreatedGameViewsP1EventsItem94DamageReductionsItem"
+          },
+          "description": "Actual reductions by active forms, after earlier damage modifiers."
         },
         "defenderHpAfter": {
           "type": "number"
@@ -8560,6 +8568,15 @@
         },
         "nextHp": {
           "type": "number"
+        },
+        "preventedBy": {
+          "type": "string",
+          "enum": [
+            "asgoreBravery",
+            "berserkerAutoDefense",
+            "odinMuninn"
+          ],
+          "description": "An accepted automatic prevention, never inferred from empty dice or damage."
         },
         "previousHp": {
           "type": "number",
@@ -8614,6 +8631,26 @@
         "defenderRoll",
         "hit",
         "type"
+      ]
+    },
+    "CreatedGameViewsP1EventsItem94DamageReductionsItem": {
+      "type": "object",
+      "properties": {
+        "abilityId": {
+          "type": "string",
+          "enum": [
+            "gutsBerserkMode",
+            "undyneUndying"
+          ]
+        },
+        "amount": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "abilityId",
+        "amount"
       ]
     },
     "CreatedGameViewsP1EventsItem94TieBreakDice": {

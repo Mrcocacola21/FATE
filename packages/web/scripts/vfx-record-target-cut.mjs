@@ -5,7 +5,10 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { chromium } from "playwright-core";
 const web = fileURLToPath(new URL("../", import.meta.url)), root = path.resolve(web, "../..");
-const output = path.join(web, process.argv.includes("--lunge") ? "test-results/melee-lunge-recording" : "test-results/target-cut-recording"), frames = path.join(output, "frames");
+const ranged = process.argv.includes("--ranged");
+const fixtureId = ranged ? "projectile.grand-kaiser.far" : "swing.guts";
+const effectId = ranged ? "expansion.grand-kaiser.attack_projectile" : "expansion.guts.attack_swing";
+const output = path.join(web, ranged ? "test-results/kaiser-projectile-recording" : process.argv.includes("--readable") ? "test-results/readable-melee-recording" : process.argv.includes("--lunge") ? "test-results/melee-lunge-recording" : "test-results/target-cut-recording"), frames = path.join(output, "frames");
 mkdirSync(frames, { recursive: true });
 const server = spawn(process.execPath, [path.join(root, "node_modules/vite/bin/vite.js"), "--host", "127.0.0.1", "--port", "5196", "--strictPort"],
   { cwd: web, windowsHide: true, stdio: "ignore" });
@@ -21,19 +24,21 @@ try {
   await page.goto("http://127.0.0.1:5196/test-results/vfx-expansion-game/index.html"); await page.getByLabel("Fixture").waitFor();
   await page.evaluate(() => document.documentElement.classList.add("dark"));
   await page.clock.install(); await page.clock.pauseAt(new Date(Date.now() + 1000));
-  await page.getByLabel("Fixture").selectOption("swing.guts"); await page.clock.runFor(40); await page.evaluate(() => window.warmPortraits());
+  await page.getByLabel("Fixture").selectOption(fixtureId); await page.clock.runFor(40); await page.evaluate(() => window.warmPortraits());
   await page.getByRole("button", { name: "Play", exact: true }).click(); await page.clock.runFor(16);
-  const cue = page.locator('[data-vfx-effect="expansion.guts.attack_swing"]');
+  const cue = page.locator(`[data-vfx-effect="${effectId}"]`);
   const start = await cue.evaluate(el => Number(el.dataset.vfxStart));
   await cue.locator(".vfx-sprite").evaluateAll(els => Promise.all(els.map(async el => {
     const img = new Image(); img.src = getComputedStyle(el).backgroundImage.slice(5, -2); await img.decode();
   })));
   await page.clock.fastForward(Math.max(0, start - 150 - await page.evaluate(() => Date.now())));
-  const fixture = JSON.parse(readFileSync(path.join(web, "test-results/vfx-expansion-game/fixtures.json"), "utf8"))["swing.guts"];
+  const fixture = JSON.parse(readFileSync(path.join(web, "test-results/vfx-expansion-game/fixtures.json"), "utf8"))[fixtureId];
   const targetId = fixture.recipients.P1.events.find(event => event.type === "attackResolved").defenderId;
   const bounds = await page.locator(`[data-unit-id="${targetId}"]`).boundingBox();
   assert(bounds, targetId);
-  const clip = { x: Math.round(bounds.x + bounds.width / 2 - 195), y: Math.round(bounds.y + bounds.height / 2 - 100), width: 320, height: 200 };
+  const sourceBounds = await page.locator(`[data-unit-id="${fixture.sourceId}"]`).boundingBox();
+  const clip = ranged ? { x: Math.round(sourceBounds.x - 45), y: Math.round(sourceBounds.y - 70), width: 480, height: 220 }
+    : { x: Math.round(bounds.x + bounds.width / 2 - 195), y: Math.round(bounds.y + bounds.height / 2 - 100), width: 320, height: 200 };
   for (let i = 0; i < 72; i++) {
     await page.clock.runFor(Math.max(0, Math.round(start - 150 + i * 1000 / 60 - await page.evaluate(() => Date.now()))));
     await page.locator("[data-vfx-cue]").evaluateAll(els => {
@@ -51,12 +56,14 @@ try {
       "-vf", filter, "-c:v", "libx264", "-crf", "18", "-pix_fmt", "yuv420p", "-movflags", "+faststart", path.join(output, file)], { windowsHide: true, encoding: "utf8" });
     assert.equal(result.status, 0, result.stderr);
   };
-  encode("slash-normal.mp4", "scale=960:600:flags=lanczos");
-  encode("slash-slow-x4.mp4", "setpts=4*PTS,scale=960:600:flags=lanczos");
-  writeFileSync(path.join(output, "recording.json"), JSON.stringify({ fixture: "swing.guts", renderer: "Actual Board + rules-produced recipient projection",
+  const prefix = ranged ? "kaiser-projectile" : "slash";
+  const scale = ranged ? "960:440" : "960:600";
+  encode(`${prefix}-normal.mp4`, `scale=${scale}:flags=lanczos`);
+  encode(`${prefix}-slow-x4.mp4`, `setpts=4*PTS,scale=${scale}:flags=lanczos`);
+  writeFileSync(path.join(output, "recording.json"), JSON.stringify({ fixture: fixtureId, renderer: "Actual Board + rules-produced recipient projection",
     timing: "Deterministic shared playback clock stepped at 60fps; sprite and clip animations seeked to that same time", frames: 72, fps: 60,
-    normal: "slash-normal.mp4", slow: "slash-slow-x4.mp4", tokenLunge: process.argv.includes("--lunge"), manualNetworkMatch: false }, null, 2));
-  console.log("Saved actual Board target slash: normal + x4 slow motion.");
+    normal: `${prefix}-normal.mp4`, slow: `${prefix}-slow-x4.mp4`, tokenLunge: process.argv.includes("--lunge"), manualNetworkMatch: false }, null, 2));
+  console.log(`Saved actual Board ${ranged ? "Kaiser projectile" : "target slash"}: normal + x4 slow motion.`);
 } finally {
   await browser?.close();
   if (process.platform === "win32") spawnSync("taskkill", ["/pid", String(server.pid), "/T", "/F"], { windowsHide: true, stdio: "ignore" });

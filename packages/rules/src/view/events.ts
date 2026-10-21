@@ -351,6 +351,8 @@ function projectEventForRecipient(
             ? event.sourceCell : undefined,
           targetCell: event[EVENT_VISIBILITY]?.targetCellRecipients?.includes(recipient)
             ? event.targetCell : undefined,
+            preventedBy: event[EVENT_VISIBILITY]?.targetCellRecipients?.includes(recipient) ? event.preventedBy : undefined,
+            damageReductions: event[EVENT_VISIBILITY]?.targetCellRecipients?.includes(recipient) ? event.damageReductions : undefined,
         },
       ];
     }

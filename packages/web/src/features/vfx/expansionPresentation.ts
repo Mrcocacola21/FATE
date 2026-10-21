@@ -8,6 +8,7 @@ import { expansionStagingProfile } from "./expansionStaging";
 import { MOVEMENT_WAKE_FADE_MS } from "./movementWake";
 import { expansionAssets } from "./expansionCatalog.generated";
 import { MELEE_RECOVERY_MS } from "./meleeStrike";
+import { rangedAttackEffect } from "../../game/effects/rangedPresentation";
 
 /** Rewind identity/form facts only. Positions always remain recipient-projected. */
 export function expansionViewAtEvent(view: PlayerView, events: readonly ProjectedGameEvent[], index: number): PlayerView {
@@ -62,10 +63,6 @@ export function expansionOutcome(event: ProjectedGameEvent | undefined, view: Pl
   if (event?.type === "papyrusBonePunished" && event.damage > 0) return expansionEffect("papyrus", `${event.boneType}_bone_punish`);
   if (event?.type === "sansBoneFieldPunished" && event.damage > 0) return expansionEffect("sans", "bone_field_tick");
   if (event?.type === "lechyStormRollResult" && event.damage > 0 && !event.success) return expansionEffect("lechy", "storm_tick");
-  if (event?.type === "attackResolved" && !event.hit && event.spearmanEvaded)
-    return basicExpansion(view, event.defenderId, "auto_defense");
-  if (event?.type === "attackResolved" && event.hit && (event.bunkerAbsorbedDamage ?? 0) > 0)
-    return basicExpansion(view, event.defenderId, "bunker_absorb");
   if (event?.type === "attackResolved" && event.hit && event.abilityId === "asgoreFireParade")
     return expansionEffect("asgore", "parade_hit");
   if (event?.type === "attackResolved" && event.hit && event.isBasicAttack && event.sourceCell &&
@@ -76,7 +73,7 @@ export function expansionOutcome(event: ProjectedGameEvent | undefined, view: Pl
     event.sourceAbilityId === "gutsBerserkMode" ? "berserk_self_cost" : "undying_self_cost");
   if (event?.type === "attackResolved" && event.hit && event.abilityId === "gutsCannon" && event.abilityUseId)
     return basicExpansion(view, event.attackerId, "cannon_hit");
-  if (event?.type === "attackResolved" && (event.isBasicAttack || isBerserkSingle(event, view)) && event.hit && event.sourceCell && event.targetCell)
+  if (event?.type === "attackResolved" && (event.isBasicAttack || event.attackSignature === "riderPath" || isBerserkSingle(event, view)) && event.hit && event.sourceCell && event.targetCell)
     return basicExpansion(view, event.attackerId, "attack_impact");
   if (event?.type === "unitDied") return basicExpansion(view, event.unitId, "death_final");
   return undefined;
@@ -84,20 +81,30 @@ export function expansionOutcome(event: ProjectedGameEvent | undefined, view: Pl
 
 export function expansionAttack(event: ProjectedGameEvent, cue: CombatPresentationCue | undefined,
   view: PlayerView, id: string): BoardVfxRequest[] {
-  if (event.type !== "attackResolved" || (!event.isBasicAttack && !isBerserkSingle(event, view)) || !event.sourceCell || !event.targetCell) return [];
-  if ((event.attackSignature && !isBerserkSingle(event, view)) || (event.attackerId && view.units[event.attackerId]?.heroId === "odin" && event.hit && event.attackerRoll.isDouble)) return [];
+  if (event.type !== "attackResolved" || !event.sourceCell || !event.targetCell) return [];
+  const ranged = rangedAttackEffect(event, view);
+  const pathAttack = event.attackSignature === "riderPath";
+  if (!event.isBasicAttack && !isBerserkSingle(event, view) && !ranged && !pathAttack) return [];
+  // Signature projectiles have one owner in vfxEventMapper.
+  if (event.attackSignature === "friskPrecisionStrike" || event.abilityId === "jebeKhansShooter") return [];
+  if ((event.attackSignature && !isBerserkSingle(event, view) && !pathAttack) || (!pathAttack && event.attackerId && view.units[event.attackerId]?.heroId === "odin" && event.hit && event.attackerRoll.isDouble)) return [];
   const form = isBerserkSingle(event, view) ? expansionEffect("guts", "berserk_swing") : actionExpansion(view, event.attackerId, "attack");
   const projectile = basicExpansion(view, event.attackerId, "attack_projectile");
   const swing = basicExpansion(view, event.attackerId, "attack_swing");
-  const effectId = form ?? projectile ?? swing;
-  if (!effectId) return [];
+  const effectId = form ?? projectile ?? swing ?? ranged;
+  const rangedAbility = !event.isBasicAttack && !isBerserkSingle(event, view) && !pathAttack;
+  const pathSwing = form && expansionAssets[form].geometry === "swing" ? form : swing ?? "basicSlash";
+  const selected = pathAttack ? pathSwing : rangedAbility ? ranged : effectId ??
+    (event.isBasicAttack && event.attackerId && view.units[event.attackerId]?.position && view.units[event.attackerId]?.heroId !== "zoro" ? "basicSlash" : undefined);
+  if (!selected) return [];
   const start = cue && "attackAtMs" in cue ? cue.attackAtMs ?? 0 : 0;
   const contactMs = Math.max(1, (cue?.atMs ?? 210) - start);
-  const melee = expansionAssets[effectId].geometry === "swing";
-  return [{ id: `${id}:release`, effectId, placement: form ?
+  const melee = selected === "basicSlash" || selected in expansionAssets && expansionAssets[selected as keyof typeof expansionAssets].geometry === "swing";
+  return [{ id: `${id}:release`, effectId: selected, placement: pathAttack ? "cell" : rangedAbility || selected === "basicProjectile" ? "projectile" : form ?
     (/engineering_attack|ex_attack|neo_attack/.test(form) ? "projectile" : "cell") : projectile ? "projectile" : "cell",
     sourceCell: event.sourceCell, targetCell: event.targetCell, anchorMode: "event",
-    ...(melee ? { unitId: event.attackerId, strikeContactMs: contactMs, strikeHit: event.hit } : {}),
+    unitId: event.attackerId,
+    ...(melee ? { strikeContactMs: contactMs, strikeHit: event.hit } : {}),
     delayMs: start, durationMs: contactMs + (melee ? MELEE_RECOVERY_MS : 0),
   }];
 }

@@ -16,6 +16,9 @@ import { expansionIds } from "../../features/vfx/expansionRegistry";
 import { getUnitTokenAsset } from "../../assets/unitVisuals";
 
 export const CORE_VFX: readonly VfxEffectId[] = [
+  "basicProjectile",
+  "basicSlash",
+  "missShield",
   "combatHit",
   "combatMiss",
   "unitDeath",

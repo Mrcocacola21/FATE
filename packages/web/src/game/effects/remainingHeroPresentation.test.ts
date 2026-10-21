@@ -516,7 +516,7 @@ test("confirmed hit accent is once per use, synchronized with generic hits; miss
   const accents = sprites.filter((s) => s.effectId === "gutsCannon");
   assert.equal(accents.length, 2);
   assert.equal(sprites.filter((s) => s.effectId === "combatHit").length, 3);
-  assert.equal(sprites.filter((s) => s.effectId === "combatMiss").length, 1);
+  assert.equal(sprites.filter((s) => s.effectId === "missShield").length, 1);
   for (const accent of accents)
     assert.ok(
       playback.batch.combatCues?.some((c) => c.kind === "hit" && c.atMs === accent.delayMs),

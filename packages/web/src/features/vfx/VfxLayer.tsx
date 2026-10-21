@@ -10,7 +10,7 @@ import { BOARD_LAYERS, vfxRegistry, type VfxDefinition } from "./vfxRegistry";
 import { VfxSprite } from "./VfxSprite";
 import type { QueuedBoardVfxRequest } from "./vfxTypes";
 import { MOVEMENT_WAKE_FADE_MS, movementWakeSamples } from "./movementWake";
-import { MELEE_RECOVERY_MS, meleeTraceMs } from "./meleeStrike";
+import { MELEE_RECOVERY_MS, meleeTraceMs, meleeFacingTransform } from "./meleeStrike";
 
 interface VfxLayerProps {
   effects: QueuedBoardVfxRequest[];
@@ -21,10 +21,20 @@ interface VfxLayerProps {
   reducedMotion: boolean;
 }
 
-export function vfxAnchor(view: PlayerView, effect: QueuedBoardVfxRequest): Coord | null {
+function vfxUnitAuthorized(view: PlayerView, effect: QueuedBoardVfxRequest): boolean {
   // Unit-attached cues lose authorization when the recipient no longer has a
   // current position. Explicit historical cell geometry has no unit attachment.
-  if (effect.unitId && !view.units[effect.unitId]?.position) return null;
+  if (effect.unitId && !view.units[effect.unitId]?.position) {
+    // The authoritative snapshot can already contain a final death while the
+    // shared playback is still showing the preceding hit. Only its committed
+    // event cell survives; a live hidden unit or a following status never does.
+    if (!(view.units[effect.unitId]?.isAlive === false && effect.anchorMode === "event" && effect.sourceCell)) return false;
+  }
+  return true;
+}
+
+export function vfxAnchor(view: PlayerView, effect: QueuedBoardVfxRequest): Coord | null {
+  if (!vfxUnitAuthorized(view, effect)) return null;
   if (effect.anchorMode === "followUnit") {
     return effect.unitId ? (view.units[effect.unitId]?.position ?? null) : null;
   }
@@ -60,6 +70,9 @@ function Artwork({
             style={{
               ...timing,
               zIndex: index,
+              ...(effect.tintHue !== undefined ? { filter: `hue-rotate(${effect.tintHue - 190}deg) saturate(.85) brightness(1.05)` } : {}),
+              ...(effect.placement === "projectile" && definition.facingOffsetDeg
+                ? { transform: `rotate(${definition.facingOffsetDeg}deg)`, transformOrigin: "50% 50%" } : {}),
               ...(art.frameCrop
                 ? {
                     left: `${(-art.frameCrop.left * 100) / art.frameCrop.width}%`,
@@ -90,7 +103,7 @@ function Effect({
   // Fixed per mount: rerenders/resizes never restart or shift playback. Late mounts catch up.
   const [mountedAt] = useState(() => Date.now());
   if (!definition) return null;
-  if (effect.unitId && !view.units[effect.unitId]?.position) return null;
+  if (!vfxUnitAuthorized(view, effect)) return null;
   if (reducedMotion && definition.reducedMotion === "hide") return null;
   const durationMs = effect.expiresAt - effect.startedAt;
   const timing = {
@@ -100,7 +113,7 @@ function Effect({
     animationDelay: `${effect.startedAt - mountedAt}ms`,
   } as CSSProperties;
   const layer =
-    definition.layer ??
+    (effect.placement === "projectile" && definition.layer === "impact" ? "projectile" : definition.layer) ??
     (effect.placement === "area"
       ? "ground"
       : effect.placement === "path" || effect.placement === "line"
@@ -111,6 +124,7 @@ function Effect({
       key={key}
       data-vfx-cue={effect.id}
       data-vfx-effect={effect.effectId}
+      data-vfx-tint={effect.tintHue}
       data-vfx-start={effect.startedAt}
       data-vfx-layer={layer}
       className={`vfx-geometry vfx-geometry-${shape} ${definition.staging ? `vfx-stage-${definition.staging}` : ""} ${reducedMotion ? "vfx-reduced" : ""}`}
@@ -187,18 +201,26 @@ function Effect({
     const size = definition.defaultScaleCells * cellSize;
     const target = areaToBoardRect(effect.targetCell, 1, 1, boardSize, cellSize, isFlipped);
     const contact = effect.strikeContactMs ?? Math.max(1, durationMs - MELEE_RECOVERY_MS);
+    const revealFrom = definition.meleeArtwork?.revealFrom ?? "bottomLeft";
+    const artworkRotation = definition.meleeArtwork?.rotationDeg ?? 0;
     const strikeTiming = { ...timing, "--melee-contact": `${contact}ms`,
       "--melee-recovery": `${Math.max(0, durationMs - contact)}ms`,
       "--melee-draw": `${meleeTraceMs(contact)}ms`,
-      "--melee-trace-delay": `${effect.startedAt - mountedAt + contact - meleeTraceMs(contact)}ms` } as CSSProperties;
+      "--melee-trace-delay": `${effect.startedAt - mountedAt + contact - meleeTraceMs(contact)}ms`,
+      "--melee-start-clip": revealFrom === "topRight"
+        ? "polygon(100% 0, 100% 0, 100% 0, 100% 0)" : "polygon(0 100%, 0 100%, 0 100%, 0 100%)",
+      "--melee-half-clip": revealFrom === "topRight"
+        ? "polygon(0 0, 100% 0, 100% 100%, 100% 100%)" : "polygon(0 0, 100% 100%, 100% 100%, 0 100%)" } as CSSProperties;
     return <span className="vfx-projectile-axis vfx-melee-axis" data-vfx-cue={effect.id} data-vfx-effect={effect.effectId}
       data-vfx-start={effect.startedAt} data-vfx-contact={effect.startedAt + contact} data-vfx-hit={effect.strikeHit} data-vfx-layer={layer}
       style={{ ...strikeTiming, left: target.left + cellSize / 2, top: target.top + cellSize / 2,
-        width: 1, height: 1, transform: route.transform, zIndex: BOARD_LAYERS[layer] }}>
+        width: 1, height: 1, transform: meleeFacingTransform(route.angleDeg), zIndex: BOARD_LAYERS[layer] }}>
       <span className={`vfx-melee-stroke ${effect.strikeHit === false ? "vfx-target-cut-miss" : "vfx-target-cut-hit"} ${reducedMotion ? "vfx-melee-reduced" : ""}`}
-        style={{ ...strikeTiming, animationDelay: undefined, left: -size / 2,
-          top: -size / 2 + (effect.strikeHit === false ? cellSize * .65 : 0), width: size, height: size }}>
-        <span className="vfx-melee-art" style={{ left: 0, top: 0, width: size, height: size }}>
+        data-vfx-melee-reveal={revealFrom}
+        style={{ ...strikeTiming, animationDelay: undefined, transform: "scale(1, 1)", left: -size / 2,
+          top: -size / 2, width: size, height: size }}>
+        <span className="vfx-melee-art" data-vfx-melee-rotation={artworkRotation}
+          style={{ left: 0, top: 0, width: size, height: size, transform: `rotate(${artworkRotation}deg)`, transformOrigin: "50% 50%" }}>
           <Artwork effect={effect} definition={definition} reducedMotion={reducedMotion} timing={timing} />
         </span>
       </span>

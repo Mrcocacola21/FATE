@@ -1,18 +1,21 @@
 import type { Coord, PlayerView, ProjectedGameEvent } from "rules";
 import { expansionAttack } from "../../features/vfx/expansionPresentation";
+import { MELEE_RECOVERY_MS } from "../../features/vfx/meleeStrike";
 
-export const MELEE_RETURN_MS = 80;
+export const MELEE_RETURN_MS = MELEE_RECOVERY_MS;
 export interface MeleeLungePose { direction: Coord; distance: number; stretch: number }
 
 /** Only an accepted adjacent melee release; no aim inferred from hidden units. */
-export function meleeLungeDirection(event: Extract<ProjectedGameEvent, { type: "attackResolved" }>, view: PlayerView): Coord | null {
+export function isMeleeRelease(event: Extract<ProjectedGameEvent, { type: "attackResolved" }>, view: PlayerView): boolean {
   const unit = event.attackerId ? view.units[event.attackerId] : undefined;
-  if (!unit?.position || !event.sourceCell || !event.targetCell) return null;
+  if (!unit?.position || !event.sourceCell || !event.targetCell) return false;
+  return Boolean(expansionAttack(event, undefined, view, "lunge")[0]?.strikeContactMs);
+}
+
+export function meleeLungeDirection(event: Extract<ProjectedGameEvent, { type: "attackResolved" }>, view: PlayerView): Coord | null {
+  if (!isMeleeRelease(event, view) || !event.sourceCell || !event.targetCell) return null;
   const dx = event.targetCell.col - event.sourceCell.col, dy = event.targetCell.row - event.sourceCell.row;
   if (Math.max(Math.abs(dx), Math.abs(dy)) !== 1) return null;
-  if (unit.heroId) {
-    if (!expansionAttack(event, undefined, view, "lunge")[0]?.strikeContactMs) return null;
-  } else if (!event.isBasicAttack || event.attackSignature || unit.class === "archer") return null;
   const length = Math.hypot(dx, dy);
   return { col: dx / length, row: dy / length };
 }

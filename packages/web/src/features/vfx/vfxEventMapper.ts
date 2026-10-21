@@ -20,6 +20,7 @@ import type { BoardVfxRequest, VfxEffectId, VfxMapperContext } from "./vfxTypes"
 import type { CombatPresentationCue } from "../../game/effects/combatPlayback";
 import { basicExpansion, expansionOutcome, expansionAttack, expansionMovement, expansionTeleport, expansionViewAtEvent } from "./expansionPresentation";
 import { isFinalPresentationDeath } from "../../game/effects/finalDeath";
+import { attackOutcomeRequests, acceptedAutoDefense } from "./attackOutcome";
 import { expansionEffect } from "./expansionRegistry";
 import {
   riverStage,
@@ -147,15 +148,8 @@ function fireballRequests(
       durationMs: FIREBALL_TIMING.travelMs,
       delayMs: Math.max(0, impactMs - FIREBALL_TIMING.travelMs),
     });
-  if (isCoord(event.targetCell))
-    requests.push({
-      id: heroCueId(namespace, event, event.hit ? "impact" : "miss"),
-      effectId: event.hit ? "fireballImpact" : "combatMiss",
-      placement: "cell",
-      anchorMode: "event",
-      sourceCell: { ...event.targetCell },
-      delayMs: impactMs,
-    });
+  requests.push(...attackOutcomeRequests(event, context.view, heroCueId(namespace, event, "outcome"), impactMs,
+    undefined, acceptedAutoDefense(context.events, context.eventIndex), "fireballImpact"));
   return requests;
 }
 
@@ -354,7 +348,7 @@ function attackSignatures(
       ? "friskPrecision"
       : event.abilityId === "jebeKhansShooter"
         ? "jebeRicochet"
-        : attacker?.heroId === "odin" && event.hit && event.attackerRoll?.isDouble
+        : event.attackSignature !== "riderPath" && attacker?.heroId === "odin" && event.hit && event.attackerRoll?.isDouble
           ? "odinGungnir"
           : undefined;
   if (projectile && isCoord(event.sourceCell) && isCoord(event.targetCell))
@@ -374,18 +368,7 @@ function attackSignatures(
         "zoroSantoryu",
         isCoord(event.targetCell) ? event.targetCell : null,
         undefined,
-        { anchorMode: "event" },
-      ),
-    );
-  if (event.defenseSignature)
-    requests.push(
-      ...cellRequest(
-        context,
-        event,
-        event.defenseSignature === "friskCleanSoulBreak" ? "expansion.frisk.clean_soul_break" : event.defenseSignature,
-        isCoord(event.targetCell) ? event.targetCell : null,
-        undefined,
-        { anchorMode: "event" },
+        { anchorMode: "event", unitId: event.attackerId },
       ),
     );
   if (event.hit && event.damage > 0 && attacker?.heroId === "jackRipper" &&
@@ -566,12 +549,8 @@ export function mapGameEventToVfx(
       return [
         ...expansionAttack(event, undefined, context.view, requestId(context, event, "combatHit")),
         ...attackSignatures(event, context),
-        ...cellRequest(
-          context,
-          event,
-          expansionOutcome(event, context.view) ?? (event.hit ? "combatHit" : "combatMiss"),
-          isCoord(event.targetCell) ? event.targetCell : null,
-        ),
+        ...attackOutcomeRequests(event, context.view, requestId(context, event, "combatHit"), 0,
+          undefined, acceptedAutoDefense(context.events, context.eventIndex)),
       ];
     case "unitDied":
       if (!isFinalPresentationDeath(context.events, context.eventIndex, context.view)) return [];
@@ -678,16 +657,15 @@ export function mapEventBatchToVfx(params: {
   const effects: BoardVfxRequest[] = [];
   params.events.forEach((event, eventIndex) => {
     const eventView = expansionViewAtEvent(params.view, params.events, eventIndex);
-    if (event.type === "berserkerDefenseChosen" && event.choice === "auto" && params.combatCues) {
-      const outcome = params.events.findIndex(candidate => candidate.type === "attackResolved" &&
-        candidate.defenderId === event.defenderId && sameAbilityResolution(event, candidate));
-      const cue = params.combatCues.find(candidate => candidate.eventIndex === outcome && candidate.kind === "miss");
+    if (event.type === "abilityUsed" && event.abilityId === "odinMuninn" && params.events.slice(eventIndex + 1).some(next =>
+      next.type === "attackResolved" && next.defenderId === event.unitId && next.preventedBy === "odinMuninn")) return;
+    if (event.type === "berserkerDefenseChosen" && event.choice === "auto") {
+      const outcome = params.events.findIndex((candidate, index) => index > eventIndex && candidate.type === "attackResolved" &&
+        candidate.defenderId === event.defenderId && (sameAbilityResolution(event, candidate) || acceptedAutoDefense(params.events, index)));
       // Correlated AoE defense uses its authorized outcome anchor and shared time.
       // A normal Roll choice never enters this branch or creates a shield.
       if (outcome >= 0) {
-        const cell = cue && "cell" in cue ? cue.cell : undefined;
-        effects.push(...cellRequest({ ...params, eventIndex }, event, basicExpansion(params.view, event.defenderId, "auto_defense") ?? "shield", cell ?? null, event.choice,
-          { anchorMode: "event", delayMs: cue?.atMs ?? params.eventDelaysMs?.[eventIndex] ?? 0 }));
+        // The corresponding outcome owns this protection, including legacy streams.
         return;
       }
       if (params.events.some(candidate => candidate.type === "aoeResolved" &&
@@ -727,7 +705,7 @@ export function mapEventBatchToVfx(params: {
           ...attackSignatures(event, { ...params, eventIndex }).map((request) => ({
             ...request,
             ...(request.placement === "projectile" && cue && "attackAtMs" in cue && cue.attackAtMs !== undefined
-              ? {durationMs: Math.max(100, cue.atMs - cue.attackAtMs)} : {}),
+              ? {durationMs: Math.max(1, cue.atMs - cue.attackAtMs)} : {}),
             delayMs:
               request.uiAnchor || request.effectId === "friskCry" || request.effectId === "friskSubstitution" || request.effectId === "expansion.frisk.clean_soul_break"
                 ? (cue?.atMs ?? params.eventDelaysMs?.[eventIndex] ?? 0)
@@ -787,6 +765,12 @@ export function mapEventBatchToVfx(params: {
       isFireballResolution(params.events[cue.eventIndex])
     )
       continue;
+    const event = params.events[cue.eventIndex];
+    if ((cue.kind === "hit" || cue.kind === "miss") && event?.type === "attackResolved") {
+      effects.push(...attackOutcomeRequests(event, expansionViewAtEvent(params.view, params.events, cue.eventIndex),
+        `${cue.id}:vfx`, cue.atMs, cue.durationMs, acceptedAutoDefense(params.events, cue.eventIndex)));
+      continue;
+    }
     effects.push({
       id: `${cue.id}:vfx`,
       effectId:

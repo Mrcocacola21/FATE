@@ -3,11 +3,19 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 import sharp from "sharp";
 const input = fileURLToPath(new URL("../test-results/vfx-expansion-game/", import.meta.url));
-const output = path.join(input, "swing-contact-sheets"); mkdirSync(output, { recursive: true });
-const report = JSON.parse(readFileSync(path.join(input, "swings-report.json"), "utf8"));
+const normalized = process.argv.includes("--normalized");
+const output = path.join(input, normalized ? "normalized-swing-contact-sheets" : "swing-contact-sheets"); mkdirSync(output, { recursive: true });
+const report = JSON.parse(readFileSync(path.join(input, normalized ? "melee-normalization-report.json" : "swings-report.json"), "utf8"));
 const fixtures = JSON.parse(readFileSync(path.join(input, "fixtures.json"), "utf8"));
 for (const viewport of ["desktop", "phone"]) {
-  const rows = report.observations.filter(row => row.recipient === "P1" && row.viewport === viewport);
+  const seen = new Set();
+  const rows = report.observations.filter(row => {
+    if (row.recipient !== "P1" || row.viewport !== viewport) return false;
+    if (!normalized) return true;
+    const key = fixtures[row.id].expected[0];
+    if (!row.id.startsWith("swing.") || seen.has(key)) return false;
+    seen.add(key); return true;
+  });
   for (let page = 0; page * 8 < rows.length; page++) {
     const group = rows.slice(page * 8, (page + 1) * 8), tiles = [];
     for (const [index, row] of group.entries()) {
@@ -25,6 +33,17 @@ for (const viewport of ["desktop", "phone"]) {
     }
     await sharp({ create: { width: 480, height: Math.ceil(group.length / 2) * 204, channels: 4, background: "#20232a" } })
       .composite(tiles).png().toFile(path.join(output, `${viewport}-${page + 1}.png`));
+  }
+  if (normalized) {
+    const pair = [];
+    for (const [column, id] of ["swing.guts", "swing.genghisKhan"].entries()) {
+      const index = rows.findIndex(row => row.id === id), local = index % 8;
+      const input = await sharp(path.join(output, `${viewport}-${Math.floor(index / 8) + 1}.png`))
+        .extract({ left: local % 2 * 240, top: Math.floor(local / 2) * 204, width: 240, height: 204 }).png().toBuffer();
+      pair.push({ input, left: column * 240, top: 0 });
+    }
+    await sharp({ create: { width: 480, height: 204, channels: 4, background: "#20232a" } }).composite(pair).png()
+      .toFile(path.join(output, `${viewport}-guts-genghis.png`));
   }
   console.log(`Saved ${rows.length} actual ${viewport} melee swing scenes.`);
 }

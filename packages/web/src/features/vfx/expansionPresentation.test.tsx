@@ -93,9 +93,9 @@ test("melee releases end at the shared outcome in normal and reduced motion, for
     const release = effects.find(e => e.effectId === "expansion.griffith.attack_swing")!;
     const outcome = plan.batch.combatCues!.find(c => c.kind === (hit ? "hit" : "miss"))!;
     assert(release); assert.equal(release.delayMs! + release.strikeContactMs!, outcome.atMs);
-    assert.equal(release.strikeContactMs, reducedMotion ? 70 : 210);
+    assert.equal(release.strikeContactMs, reducedMotion ? 70 : 420);
     assert.equal(release.strikeHit, hit);
-    assert.equal(release.durationMs, reducedMotion ? 70 : 290, "recovery does not shift confirmed contact");
+    assert.equal(release.durationMs, reducedMotion ? 70 : 640, "recovery does not shift confirmed contact");
     assert.equal(effects.some(e => e.effectId === "expansion.griffith.attack_impact"), hit);
   }
 });
@@ -300,6 +300,8 @@ test("Asgore soul results, precise arrow and Cannon hit preserve KEEP, use the r
     const { effects, plan } = playback(view, view, [event]);
     const expected = hero === "artemida" ? "expansion.artemida.precise_arrow_confirm" : "expansion.guts.cannon_hit";
     assert.equal(effects.filter(e => e.effectId === expected).length, hit ? 1 : 0);
+    if (hero === "artemida") assert.equal(effects.filter(e => e.effectId === "expansion.artemida.attack_impact").length, hit ? 1 : 0,
+      "double confirmation supplements the normal hit instead of replacing it");
     if (hit) assert.equal(effects.find(e => e.effectId === expected)?.delayMs, plan.batch.combatCues?.find(c => c.kind === "hit")?.atMs);
     if (hero === "guts" && hit) assert(effects.some(e => e.effectId === "gutsCannon"));
   }

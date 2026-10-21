@@ -1,6 +1,7 @@
 import { expansionAssets, type ExpansionEffectId } from "./expansionCatalog.generated";
 import type { VfxDefinition, VfxRenderLayer } from "./vfxRegistry";
 import { expansionStaging, expansionStagingProfile } from "./expansionStaging";
+import { meleeArtworkOrientation } from "./meleeArtwork";
 
 export const expansionIds = Object.keys(expansionAssets) as ExpansionEffectId[];
 const byRole = new Map(expansionIds.map(id => [
@@ -26,6 +27,7 @@ export const expansionRegistry = Object.fromEntries(expansionIds.map(id => {
   const definition: VfxDefinition = {
     id, asset: art.asset, frames: art.frames, frameWidth: art.frameWidth, frameHeight: art.frameHeight,
     meleeSwing: art.geometry === "swing",
+    meleeArtwork: art.geometry === "swing" ? meleeArtworkOrientation(id) : undefined,
     staging, stagingProfile: staging ? profile : undefined,
     assetType: art.frames === 1 ? "static" : "spriteStrip",
     sourcePack: "FATE hero expansion", sourceFile: `${art.heroId}/expansion/${art.role}.png`,

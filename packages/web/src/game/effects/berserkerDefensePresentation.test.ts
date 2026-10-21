@@ -176,7 +176,7 @@ for (const heroId of ["grozny", "guts", "undyne"]) {
       const mapped = outputs(p);
       assert.equal(mapped.sprites.filter((e) => e.effectId === "shield").length, 0);
       assert.equal(
-        mapped.sprites.filter((e) => e.effectId === (hit ? "combatHit" : "combatMiss")).length,
+        mapped.sprites.filter((e) => e.effectId === (hit ? "combatHit" : "missShield")).length,
         1,
       );
       assert.equal(
@@ -189,7 +189,7 @@ for (const heroId of ["grozny", "guts", "undyne"]) {
       const cue = p.batch.combatCues!.find((e) => e.kind === (hit ? "hit" : "miss"))!;
       assert.ok(cue.atMs >= rollCue.atMs + rollCue.durationMs);
       assert.equal(
-        mapped.sprites.find((e) => e.effectId === (hit ? "combatHit" : "combatMiss"))!.delayMs,
+        mapped.sprites.find((e) => e.effectId === (hit ? "combatHit" : "missShield"))!.delayMs,
         cue.atMs,
       );
       assert.equal(mapped.sounds.find((e) => e.key === soundKey)!.delayMs, cue.atMs);
@@ -441,7 +441,7 @@ test("lethal failed defense keeps one HP transition and death from the final uni
   const p = presentation(chosen.state, rolled, 2);
   const mapped = outputs(p);
   assert.equal(
-    mapped.sprites.filter((e) => e.effectId === "shield" || e.effectId === "combatMiss").length,
+    mapped.sprites.filter((e) => e.effectId === "shield" || e.effectId === "missShield").length,
     0,
   );
   assert.equal(mapped.sprites.filter((e) => e.effectId === "combatHit").length, 1);

@@ -338,7 +338,7 @@ for (const [hero, slot, abilityId, key, payload, expected] of lines) {
     assert.deepEqual(signature[0].segments, [expected]);
     assert(!sprites.some((r) => r.effectId === "statusSmall"));
     assert.equal(
-      sprites.filter((r) => r.effectId === "combatHit" || r.effectId === "combatMiss").length,
+      sprites.filter((r) => r.effectId === "combatHit" || r.effectId === "missShield").length,
       events.filter((e) => e.type === "attackResolved").length,
     );
     const moved = {
@@ -924,9 +924,10 @@ for (const interrupted of [false, true])
     assert(arrows.every((r) => r.placement === "projectile"));
     assert.equal(new Set(arrows.map((r) => r.id)).size, 3);
     assert.equal(
-      sprites.filter((r) => r.effectId === "combatHit" || r.effectId === "combatMiss").length,
+      sprites.filter((r) => r.effectId === "combatHit" || r.effectId === "missShield" || r.effectId === "shield").length,
       3,
     );
+    assert.equal(sprites.filter(r => r.effectId === "shield").length, attacks.filter(e => e.spearmanEvaded).length);
   });
 
 test("real Frisk Precision target commitment produces its signature, while the menu and cancellation remain silent", () => {

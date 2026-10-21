@@ -76,7 +76,12 @@ try {
       await page.getByLabel("Recipient").selectOption(recipient);
       for (const [id, fixture] of Object.entries(fixtures)) {
         if (process.argv.includes("--long-only") && !id.startsWith("longmove.")) continue;
-        if (process.argv.includes("--swings-only") && !id.startsWith("swing.")) continue;
+        if (process.argv.includes("--swings-only") && !id.startsWith("swing.") && !((process.argv.includes("--facing-only") || process.argv.includes("--normalization-only")) && id.startsWith("direction."))) continue;
+        if (process.argv.includes("--facing-only") && !id.startsWith("direction.") && !["swing.guts", "swing.guts.north", "swing.guts.southwest", "swing.guts.miss", "swing.genghisKhan"].includes(id)) continue;
+        if (process.argv.includes("--projectiles-only") && !id.startsWith("projectile.")) continue;
+        if (process.argv.includes("--outcomes-only") && !id.startsWith("outcome.")) continue;
+        if (process.argv.includes("--signatures-only") && !id.startsWith("signature.")) continue;
+        if (process.argv.includes("--projectile-contrast") && !/^projectile\.(guts\.gutsArbalet|asgore\.)/.test(id)) continue;
         if (process.argv.includes("--melee-timeline") && !["swing.guts", "swing.guts.north", "swing.guts.southwest", "swing.guts.miss", "swing.guts.berserk", "swing.undyne", "swing.chikatilo", "swing.genghisKhan", "swing.luche"].includes(id)) continue;
         if (process.argv.includes("--signals-only") && !id.startsWith("expansion.")) continue;
         if (process.argv.includes("--deploy-only") && !id.startsWith("deploy.")) continue;
@@ -92,7 +97,8 @@ try {
         assert.equal(await page.locator("[data-vfx-cue]").count(), 0, `${id}: hydration is silent`);
         assert.equal(await page.locator("[data-unit-deployment]").count(), 0, `${id}: snapshot does not materialize a token`);
         let selectionRect = null;
-        if (recipient === "P1" && fixture.selectable !== false && !process.argv.includes("--long-only")) {
+        if (recipient === "P1" && fixture.selectable !== false && !process.argv.includes("--long-only") &&
+          (!(process.argv.includes("--projectiles-only") || process.argv.includes("--outcomes-only")) || fixture.recipients.P1.before.units[fixture.sourceId]?.heroId)) {
           await page.locator(`[data-unit-id="${fixture.sourceId}"]`).click(); await page.clock.runFor(16);
           await page.locator("[data-selection-vfx]").waitFor({ state: "attached" });
           assert.equal(await page.locator("[data-selection-vfx]").count(), 1, `${id}: local Board selection`);
@@ -336,7 +342,7 @@ try {
           try { await page.locator(`[data-vfx-effect="${key}"]`).first().waitFor({ state: "attached", timeout: 3000 }); }
           catch (error) {
             await page.screenshot({ path: path.join(output, "failure.png"), fullPage: true });
-            console.log(JSON.stringify({ viewport, recipient, id, errors, state: await page.evaluate(() => window.runtimeHarnessState), effects: await page.locator("[data-vfx-cue]").count() }));
+            console.log(JSON.stringify({ viewport, recipient, id, errors, state: await page.evaluate(() => window.runtimeHarnessState), effects: await page.locator("[data-vfx-cue]").evaluateAll(elements => elements.map(el => ({ effect: el.dataset.vfxEffect, start: el.dataset.vfxStart, now: Date.now() }))) }));
             throw error;
           }
         }
@@ -353,6 +359,7 @@ try {
         assert.deepEqual(await page.locator("[data-vfx-cue]").evaluateAll(elements => elements.map(el => el.dataset.vfxCue)), ids);
         if (!expected.length) {
           assert(!effects.some(key => fixture.expected.includes(key)), `${id}: private placement must not leak art`);
+          if (id === "outcome.rider.riverPerson") assert.equal(await page.locator("[data-vfx-contact], [data-vfx-effect=missShield]").count(), 0, "River movement cannot invent path strikes");
           observations.push({ viewport, recipient, id, effects, activeArt: null });
           continue;
         }
@@ -366,8 +373,8 @@ try {
           const image = new Image(); image.src = src; await image.decode();
           if (!image.naturalWidth || !image.naturalHeight) throw new Error(`Undecoded live art ${src}`);
         })));
-        const untilSample = Math.max(0, phase.start + phase.duration * (process.argv.includes("--melee-timeline") ? .6 : process.argv.includes("--swings-only") ? .85 : .5) - phase.now);
-        if (process.argv.includes("--swings-only")) await page.clock.fastForward(untilSample);
+        const untilSample = Math.max(0, phase.start + phase.duration * (process.argv.includes("--projectiles-only") ? .25 : process.argv.includes("--melee-timeline") ? .6 : process.argv.includes("--swings-only") ? .85 : .5) - phase.now);
+        if (process.argv.includes("--swings-only") || process.argv.includes("--projectiles-only") || process.argv.includes("--outcomes-only")) await page.clock.fastForward(untilSample);
         else await page.clock.runFor(untilSample);
         await stepCss();
         assert(await sample.evaluate(el => parseFloat(getComputedStyle(el).opacity) > 0), `${id}: active phase must be visible`);
@@ -377,18 +384,84 @@ try {
             image: getComputedStyle(child).backgroundImage, position: getComputedStyle(child).backgroundPositionX,
           })) }));
         assert(activeArt.children.length > 0, `${id}: active cue must contain decoded artwork`);
+        if (process.argv.includes("--signatures-only")) {
+          assert.equal(await page.locator('[data-vfx-effect="zoroSantoryu"]').count(), 1, "Zoro retains one native release on either result");
+          assert.equal(await page.locator('[data-vfx-effect="basicSlash"]').count(), 0, "no generic slash over native Santoryu");
+          assert.equal(await page.locator('[data-vfx-effect="expansion.zoro.attack_impact"]').count(), id.endsWith(".hit") ? 1 : 0);
+          assert.equal(await page.locator('[data-vfx-effect="missShield"]').count(), id.endsWith(".miss") ? 1 : 0);
+          await page.locator("[data-runtime-board]").screenshot({ path: path.join(output, `signature-${viewport}-${recipient}-${id}.png`) });
+        }
         if (process.argv.includes("--swings-only")) assert(activeArt.children.some(art => Number(art.opacity) > .1), `${id}: artwork itself must be visible`);
-        let slashFrames;
+        let slashFrames, projectileFrames;
+        if (process.argv.includes("--outcomes-only")) {
+          const attacks = fixture.recipients[recipient].events.filter(event => event.type === "attackResolved");
+          const releases = await page.locator("[data-vfx-contact]").evaluateAll(elements => elements.map(el => ({
+            id: el.dataset.vfxCue, contact: Number(el.dataset.vfxContact), start: Number(el.dataset.vfxStart), effect: el.dataset.vfxEffect,
+          })).sort((a, b) => a.contact - b.contact));
+          assert.equal(releases.length, attacks.length, `${id}: one slash per accepted attack`);
+          assert.equal(new Set(releases.map(release => release.id)).size, attacks.length);
+          for (let n = 0; n < releases.length; n++) {
+            const release = releases[n];
+            const stroke = page.locator(`[data-vfx-cue="${release.id}"] .vfx-melee-stroke`);
+            await page.clock.fastForward(Math.max(0, release.contact - 1 - await page.evaluate(() => Date.now()))); await stepCss();
+            assert(await stroke.evaluate(el => Number(getComputedStyle(el).opacity) > .01), `${id}: the gesture is visible even on miss/protection`);
+            await page.clock.fastForward(Math.max(0, release.contact + 150 - await page.evaluate(() => Date.now()))); await stepCss();
+            const outcomes = await page.locator("[data-vfx-cue]:not([data-vfx-contact])").evaluateAll((elements, contact) => elements
+              .filter(el => Number(el.dataset.vfxStart) === contact && Number(getComputedStyle(el).opacity) > .01)
+              .map(el => ({ effect: el.dataset.vfxEffect, tint: el.dataset.vfxTint, filter: getComputedStyle(el.querySelector(".vfx-artwork")).filter })), release.contact);
+            assert(outcomes.length > 0, `${id}: the confirmed contact result paints`);
+            assert(!outcomes.some(outcome => outcome.effect === "combatMiss"));
+            if (!attacks[n].hit) assert(!outcomes.some(outcome => outcome.effect === "combatHit" || outcome.effect.endsWith(".attack_impact")), `${id}: miss cannot paint damage`);
+            if (id.startsWith("outcome.miss.")) {
+              assert.equal(outcomes.length, 1); assert.equal(outcomes[0].effect, "missShield");
+              assert(outcomes[0].filter.includes("hue-rotate"), `${id}: hero tint reaches the painted shield`);
+            } else if (!id.includes(".rider.")) assert(!outcomes.some(outcome => outcome.effect === "missShield"), `${id}: special defense replaces the generic guard`);
+            await page.locator("[data-runtime-board]").screenshot({ path: path.join(output, `outcome-${viewport}-${recipient}-${id}-${n}.png`) });
+          }
+        }
+        if (process.argv.includes("--projectiles-only")) {
+          const event = fixture.recipients[recipient].events.find(event => event.type === "attackResolved");
+          const source = await page.locator(`[data-unit-id="${fixture.sourceId}"]`).boundingBox();
+          const target = await page.locator(`[data-unit-id="${event.defenderId}"]`).boundingBox();
+          assert(await sample.evaluate(el => el.classList.contains("vfx-geometry-projectile")), `${id}: release is a projectile`);
+          assert.equal(await sample.getAttribute("data-vfx-layer"), "projectile", `${id}: projectile paints above tokens`);
+          assert.equal(await page.locator("[data-melee-lunge]").count(), 0, `${id}: ranged release never lunges like melee`);
+          const poses = [];
+          for (const fraction of [.25, .5, .8]) {
+            await page.clock.fastForward(Math.max(0, Math.round(phase.start + phase.duration * fraction - await page.evaluate(() => Date.now()))));
+            await stepCss();
+            const pose = await sample.evaluate(el => {
+              const rect = el.getBoundingClientRect(), css = getComputedStyle(el);
+              return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2, opacity: Number(css.opacity) };
+            });
+            const progress = viewport === "phone-reduced" ? 0 : fraction;
+            const currentSource = await page.locator(`[data-unit-id="${fixture.sourceId}"]`).boundingBox();
+            const currentTarget = await page.locator(`[data-unit-id="${event.defenderId}"]`).boundingBox();
+            const expectedX = currentSource.x + currentSource.width / 2 + (currentTarget.x - currentSource.x) * progress;
+            const expectedY = currentSource.y + currentSource.height / 2 + (currentTarget.y - currentSource.y) * progress;
+            assert(Math.hypot(pose.x - expectedX, pose.y - expectedY) < source.width * .04, `${id}: actual flight follows source-to-target geometry at ${fraction}: ${JSON.stringify({pose, expectedX, expectedY, duration: phase.duration, now: await page.evaluate(() => Date.now()), start: phase.start})}`);
+            assert(pose.opacity > .01, `${id}: projectile is visible during flight`);
+            poses.push({ fraction, ...pose });
+            if ((recipient === "P1" || recipient === "P2" && fraction === .5) && viewport !== "phone-reduced") await page.locator("[data-runtime-board]").screenshot({ path: path.join(output, `projectile-${viewport}-${recipient === "P1" ? "" : `${recipient}-`}${id}-${fraction}.png`) });
+          }
+          projectileFrames = poses;
+          const impact = page.locator(`[data-vfx-effect="expansion.${id.split(".")[1]}.attack_impact"]`);
+          if (!event.hit) assert.equal(await impact.count(), 0, `${id}: miss still flies but has no damage impact`);
+          if (await impact.count()) {
+            assert.equal(await impact.evaluate(el => Number(el.dataset.vfxStart)), phase.start + phase.duration, `${id}: impact follows flight`);
+            assert(await impact.evaluate(el => Number(getComputedStyle(el).opacity) === 0), `${id}: no early hit flash`);
+          }
+        }
         if (process.argv.includes("--swings-only")) {
           assert.equal(await page.locator(`[data-vfx-effect="${expected[0]}"]`).count(), 1, `${id}: one weapon release`);
-          assert.equal(phase.duration, viewport === "phone-reduced" ? 70 : 210, `${id}: release shares the combat window`);
+          assert.equal(phase.duration, viewport === "phone-reduced" ? 70 : 420, `${id}: release shares the combat window`);
           const pose = await sample.evaluate(el => {
             const css = getComputedStyle(el), matrix = new DOMMatrixReadOnly(css.transform);
             const root = el.closest(".vfx-board-root").getBoundingClientRect();
             const [ox, oy] = css.transformOrigin.split(" ").map(parseFloat);
             return { x: root.x + parseFloat(el.style.left) + ox, y: root.y + parseFloat(el.style.top) + oy,
               width: parseFloat(el.style.width), height: parseFloat(el.style.height),
-              angle: Math.atan2(matrix.b, matrix.a) * 180 / Math.PI, origin: [ox, oy], pointer: css.pointerEvents,
+              matrix: [matrix.a, matrix.b, matrix.c, matrix.d], angle: Math.atan2(matrix.b, matrix.a) * 180 / Math.PI, origin: [ox, oy], pointer: css.pointerEvents,
               layer: el.dataset.vfxLayer };
           });
           const sourceRect = await page.locator(`[data-unit-id="${fixture.sourceId}"]`).boundingBox();
@@ -411,14 +484,17 @@ try {
           const flip = recipient === "P2" ? -1 : 1;
           const expectedAngle = Math.atan2(-(attack.targetCell.row - attack.sourceCell.row) * flip,
             (attack.targetCell.col - attack.sourceCell.col) * flip) * 180 / Math.PI;
-          assert(Math.abs(((pose.angle - expectedAngle + 540) % 360) - 180) < .1,
-            `${id}: facing follows the actual source-to-target vector, including vertical and diagonal attacks`);
+          const octant = ((Math.round(expectedAngle / 45) % 8) + 8) % 8, q = Math.SQRT1_2;
+          const expectedMatrices = [[1, 0, 0, 1], [q, q, -q, q], [1, 0, 0, 1], [-q, q, q, q],
+            [-1, 0, 0, 1], [-q, -q, -q, q], [1, 0, 0, -1], [q, -q, q, q]];
+          pose.matrix.forEach((value, axis) => assert(Math.abs(value - expectedMatrices[octant][axis]) < .001,
+            `${id}: screen direction ${octant} uses the requested mirrored sweep, including opponent board rotation`));
           assert.equal(pose.pointer, "none"); assert.equal(pose.layer, "impact");
           const impact = page.locator(`[data-vfx-effect="expansion.${id.split(".")[1]}.attack_impact"]`);
           assert.equal(await sample.getAttribute("data-vfx-hit"), String(attack.hit));
           if (!attack.hit) {
             assert.equal(await impact.count(), 0, `${id}: missed slash cannot create a damage impact`);
-            assert(await sample.locator(".vfx-target-cut-miss").count(), `${id}: missed stroke glances beside the defender`);
+            assert(await sample.locator(".vfx-target-cut-miss").count(), `${id}: missed stroke still reaches the guard`);
           }
           if (await impact.count()) {
             assert.equal(await impact.evaluate(el => Number(el.dataset.vfxStart)), phase.start + phase.duration,
@@ -426,12 +502,22 @@ try {
             assert(await impact.evaluate(el => Number(getComputedStyle(el).opacity) === 0), `${id}: no early damage flash`);
           }
           const stroke = sample.locator(".vfx-melee-stroke");
+          const authored = fixture.meleeArtwork[expected[0]];
+          assert(authored, `${id}: actual hero strip has a reviewed authored orientation`);
+          assert.equal(await stroke.getAttribute("data-vfx-melee-reveal"), authored.revealFrom);
+          const artworkPose = await sample.locator(".vfx-melee-art").evaluate(el => {
+            const css = getComputedStyle(el), matrix = new DOMMatrixReadOnly(css.transform);
+            return { matrix: [matrix.a, matrix.b, matrix.c, matrix.d], origin: css.transformOrigin };
+          });
+          const radians = authored.rotationDeg * Math.PI / 180;
+          [Math.cos(radians), Math.sin(radians), -Math.sin(radians), Math.cos(radians)].forEach((value, axis) =>
+            assert(Math.abs(value - artworkPose.matrix[axis]) < .001, `${id}: per-asset correction reaches the painted artwork`));
           const reflection = await stroke.evaluate(el => {
             const css = getComputedStyle(el), matrix = new DOMMatrixReadOnly(css.transform);
             return { a: matrix.a, b: matrix.b, c: matrix.c, d: matrix.d, origin: css.transformOrigin };
           });
-          assert.deepEqual([reflection.a, reflection.b, reflection.c, reflection.d], [-1, 0, 0, -1],
-            `${id}: complete cut is reflected horizontally and vertically, preserving target-facing root`);
+          assert.deepEqual([reflection.a, reflection.b, reflection.c, reflection.d], [1, 0, 0, 1],
+            `${id}: canonical reveal stays independent of artwork normalization and directional pose`);
           assert(reflection.origin.split(" ").every(value => Math.abs(parseFloat(value) - blade.size / 2) < .02),
             `${id}: reflection stays centered on defender`);
           assert(await stroke.evaluate(el => Number(getComputedStyle(el).opacity) > .01), `${id}: moving weapon must actually paint during windup`);
@@ -450,7 +536,7 @@ try {
                 y: captureTarget.y - captureBoard.y + captureTarget.height / 2 };
             }
             assert(new Set(poses.map(pose => JSON.stringify(pose.stroke))).size === 4, `${id}: slash draws across the defender and dissipates`);
-            assert(poses.every(pose => pose.stroke.transform === "matrix(-1, 0, 0, -1, 0, 0)"), `${id}: reflection stays fixed while the cut is drawn`);
+            assert(poses.every(pose => pose.stroke.transform === "matrix(1, 0, 0, 1, 0, 0)"), `${id}: reflection stays fixed while the cut is drawn`);
             slashFrames = poses;
           }
         }
@@ -475,7 +561,9 @@ try {
         if (process.argv.includes("--review-samples") || (recipient === "P1" && (viewport === "desktop" || id.startsWith("expansion.") || process.argv.includes("--swings-only"))))
           await page.locator("[data-runtime-board]").screenshot({ path: path.join(output, `${viewport}-${recipient === "P1" ? "" : `${recipient}-`}${id}.png`) });
         const boardRect = await page.locator("[data-runtime-board]").boundingBox();
-        const unitRect = await page.locator(`[data-unit-id="${fixture.sourceId}"] .board-unit-content`).boundingBox();
+        const sourceContent = page.locator(`[data-unit-id="${fixture.sourceId}"] .board-unit-content`);
+        assert.equal(await sourceContent.count(), 1, `${id}: source content remains mounted after flight`);
+        const unitRect = await sourceContent.boundingBox();
         if (process.argv.includes("--aura-live")) {
           for (let n = 0; n < 20; n++) { await page.clock.runFor(50); await page.evaluate(() => undefined); }
           const field = page.locator("[data-commander-radius]").first();
@@ -513,12 +601,12 @@ try {
           arrivalArt = { rect: await landing.boundingBox(), unitRect: await page.locator(`[data-unit-id="${fixture.sourceId}"] .board-unit-content`).boundingBox() };
           if (recipient === "P1" && viewport === "desktop") await page.locator("[data-runtime-board]").screenshot({ path: path.join(output, `${viewport}-${id}.arrival.png`) });
         }
-        if (recipient === "spectator" || process.argv.includes("--swings-only")) {
+        if (recipient === "spectator" || process.argv.includes("--swings-only") || process.argv.includes("--projectiles-only") || process.argv.includes("--outcomes-only") || process.argv.includes("--signatures-only")) {
           const remaining = await page.locator("[data-vfx-cue]").evaluateAll(elements => Math.max(0, ...elements.map(el =>
             Number(el.dataset.vfxStart) + parseFloat(el.style.getPropertyValue("--vfx-duration")) - Date.now())));
           // React effects must commit between timeout ticks. One large fake
           // clock jump batches updates unlike a running browser event loop.
-          if (process.argv.includes("--swings-only")) {
+          if (process.argv.includes("--swings-only") || process.argv.includes("--projectiles-only") || process.argv.includes("--outcomes-only") || process.argv.includes("--signatures-only")) {
             await page.clock.fastForward(remaining + 250); await page.evaluate(() => undefined);
           } else for (let left = remaining + 250; left > 0; left -= 50) {
             await page.clock.runFor(Math.min(50, left));
@@ -534,14 +622,14 @@ try {
         await page.locator("[data-vfx-cue]").first().waitFor({ state: "detached" });
         assert.equal(await page.locator("[data-vfx-cue]").count(), 0);
         if (process.argv.includes("--swings-only")) assert.equal(await page.locator("[data-melee-lunge]").count(), 0, `${id}: reconnect cancels token pose`);
-        observations.push({ viewport, recipient, id, effects, activeArt, arrivalArt, boardRect, unitRect, selectionRect, slashFrames });
+        observations.push({ viewport, recipient, id, effects, activeArt, arrivalArt, boardRect, unitRect, selectionRect, slashFrames, projectileFrames });
       }
     }
   }
   const diagnostics = await page.evaluate(() => window.expansionDiagnostics());
   assert(diagnostics.image.estimatedPixelBytes <= diagnostics.image.budgetBytes);
   assert.deepEqual(errors, []);
-  const reportName = process.argv.includes("--melee-timeline") ? "melee-timeline-report.json" : process.argv.includes("--swings-only") ? "swings-report.json" : process.argv.includes("--long-only") ? "long-movement-report.json" : process.argv.includes("--cold-portrait") ? process.argv.includes("--expired-portrait") ? "expired-portrait-report.json" : "cold-portrait-report.json" : process.argv.includes("--snapshot-first") ? "snapshot-first-report.json" : process.argv.includes("--commander-only") ? "commander-report.json" : process.argv.includes("--deploy-only") ? "deploy-report.json" : process.argv.includes("--staging-only") ? "staging-report.json" : process.argv.includes("--review-samples") ? "review-samples-report.json" : process.argv.includes("--signals-only") ? "signals-report.json" : "report.json";
+  const reportName = process.argv.includes("--normalization-only") && process.argv.includes("--melee-timeline") ? "normalized-timeline-report.json" : process.argv.includes("--normalization-only") ? "melee-normalization-report.json" : process.argv.includes("--reference-facing") ? "direction-reference-report.json" : process.argv.includes("--facing-only") ? "direction-report.json" : process.argv.includes("--signatures-only") ? "signature-report.json" : process.argv.includes("--outcome-projectiles") ? "outcome-projectiles-report.json" : process.argv.includes("--outcomes-only") ? "outcomes-report.json" : process.argv.includes("--projectile-contrast") ? "projectiles-contrast-report.json" : process.argv.includes("--projectiles-only") ? "projectiles-report.json" : process.argv.includes("--melee-timeline") ? "melee-timeline-report.json" : process.argv.includes("--swings-only") ? "swings-report.json" : process.argv.includes("--long-only") ? "long-movement-report.json" : process.argv.includes("--cold-portrait") ? process.argv.includes("--expired-portrait") ? "expired-portrait-report.json" : "cold-portrait-report.json" : process.argv.includes("--snapshot-first") ? "snapshot-first-report.json" : process.argv.includes("--commander-only") ? "commander-report.json" : process.argv.includes("--deploy-only") ? "deploy-report.json" : process.argv.includes("--staging-only") ? "staging-report.json" : process.argv.includes("--review-samples") ? "review-samples-report.json" : process.argv.includes("--signals-only") ? "signals-report.json" : "report.json";
   writeFileSync(path.join(output, reportName), JSON.stringify({ observations, diagnostics, errors, manualTwoPlayerGame: false,
     source: "Rules-produced recipient projections through the actual Board, shared playback and VFX hooks" }, null, 2));
   console.log(`Expansion runtime Board smoke passed: ${observations.length} scenarios; selection, duplicate, reconnect, P1/P2/spectator, desktop/phone reduced motion.`);

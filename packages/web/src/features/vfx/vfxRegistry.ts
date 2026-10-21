@@ -2,6 +2,7 @@ import type { VfxEffectId, VfxPlacement } from "./vfxTypes";
 import { FIREBALL_TIMING } from "../../game/effects/asgorePresentation";
 import { expansionRegistry } from "./expansionRegistry";
 import type { ExpansionStaging, ExpansionStagingProfile } from "./expansionStaging";
+import type { MeleeArtworkOrientation } from "./meleeArtwork";
 
 const fireBurst = new URL(
   "../../assets/vfx/curated/kenney-particle-pack/fire-burst.png",
@@ -74,6 +75,7 @@ export interface VfxArtwork {
 
 export interface VfxDefinition extends VfxArtwork {
   meleeSwing?: boolean;
+  meleeArtwork?: MeleeArtworkOrientation;
   staging?: ExpansionStaging;
   stagingProfile?: ExpansionStagingProfile;
   id: VfxEffectId;
@@ -184,6 +186,12 @@ const paired = (
 
 export const vfxRegistry: Record<VfxEffectId, VfxDefinition> = {
   ...expansionRegistry,
+  basicProjectile: {
+    id: "basicProjectile", asset: phantasmTrace, assetType: "particle",
+    sourcePack: "kenney_particle-pack", sourceFile: "PNG (Transparent)/trace_03.png",
+    defaultPlacement: "projectile", layer: "projectile", durationMs: 480, defaultScaleCells: .55,
+    opacity: .9, blendMode: "screen", facingOffsetDeg: 90, reducedMotion: "static",
+  },
   artemidaCrescent: {
     ...generated(
       "artemidaCrescent",
@@ -796,6 +804,7 @@ export const vfxRegistry: Record<VfxEffectId, VfxDefinition> = {
       "impact",
     ),
     reducedMotion: "static",
+    facingOffsetDeg: 25,
     startFrame: 0,
     endFrame: 4,
   },
@@ -1283,6 +1292,12 @@ export const vfxRegistry: Record<VfxEffectId, VfxDefinition> = {
     "cell",
     "impact",
   ),
+  basicSlash: { ...generated("basicSlash", new URL("../../assets/vfx/combat/combat_launch.png", import.meta.url).href,
+    10, 640, "cell", "projectile"), meleeSwing: true, defaultScaleCells: 1.3 },
+  missShield: { id: "missShield", asset: hexShieldStrip, assetType: "spriteStrip", sourcePack: "Pipoya VFX HEXShield",
+    sourceFile: "192x192/pipo-btleffect206_192.png", defaultPlacement: "cell", layer: "impact", durationMs: 450,
+    defaultScaleCells: 1.35, opacity: .72, frameWidth: 192, frameHeight: 192, frames: 20,
+    blendMode: "screen", reducedMotion: "static" },
   unitDeath: generated(
     "unitDeath",
     new URL("../../assets/vfx/combat/unit_death.png", import.meta.url).href,

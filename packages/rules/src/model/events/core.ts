@@ -64,8 +64,12 @@ export type CoreGameEvent =
       attackerRollIsNew?: boolean;
       /** Explicit normal attack provenance; absence is never interpreted as basic. */
       isBasicAttack?: boolean;
-      attackSignature?: "friskPrecisionStrike" | "gutsBerserkSingle";
+      attackSignature?: "friskPrecisionStrike" | "gutsBerserkSingle" | "riderPath";
       defenseSignature?: "friskCry" | "friskSubstitution" | "friskCleanSoulBreak";
+      /** An accepted automatic prevention, never inferred from empty dice or damage. */
+      preventedBy?: "berserkerAutoDefense" | "odinMuninn" | "asgoreBravery";
+      /** Actual reductions by active forms, after earlier damage modifiers. */
+      damageReductions?: { abilityId: "gutsBerserkMode" | "undyneUndying"; amount: number }[];
       /** Confirmed final avoidance, after attacker-double precedence. */
       spearmanEvaded?: true;
       /** Damage actually removed by Bunker, before any later cap. */

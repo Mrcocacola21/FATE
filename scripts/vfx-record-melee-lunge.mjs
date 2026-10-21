@@ -3,6 +3,10 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 const root = resolve(import.meta.dirname, ".."), dir = resolve(root, "docs/assets/vfx-workflow");
 const json = file => JSON.parse(readFileSync(file, "utf8"));
+if (json(resolve(dir, "integration-state.json")).readableMeleeReview) {
+  console.log("Keeping newer readable-melee timing and verification.");
+  process.exit(0);
+}
 const log = name => { const bytes = readFileSync(resolve(dir, name)); return bytes.toString(bytes[0] === 0xff && bytes[1] === 0xfe ? "utf16le" : "utf8"); };
 assert.match(log("lunge-effects.log"), /# pass 341\b/);
 assert.match(log("lunge-browser.log"), /passed: 270 scenarios/);

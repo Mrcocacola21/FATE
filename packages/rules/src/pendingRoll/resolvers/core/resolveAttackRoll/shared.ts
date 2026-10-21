@@ -72,8 +72,10 @@ export function finalizeAttackFromContext(
   });
 
   const updatedEvents: GameEvent[] = events.map((rawEvent) => {
-    const event = rawEvent.type === "attackResolved" && context.defenseSignature
-      ? {...rawEvent, defenseSignature: context.defenseSignature} : rawEvent;
+    const signed = rawEvent.type === "attackResolved" && context.queueKind === "riderPath"
+      ? { ...rawEvent, attackSignature: "riderPath" as const } : rawEvent;
+    const event = signed.type === "attackResolved" && context.defenseSignature
+      ? {...signed, defenseSignature: context.defenseSignature} : signed;
     return (
     event.type === "attackResolved" && context.attackSignature
       ? { ...event, attackSignature: context.attackSignature }

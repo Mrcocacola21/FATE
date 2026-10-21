@@ -3,8 +3,9 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 import sharp from "sharp";
 const dir = fileURLToPath(new URL("../test-results/vfx-expansion-game/", import.meta.url));
-const output = path.join(dir, "target-cut-timelines"); mkdirSync(output, { recursive: true });
-const report = JSON.parse(readFileSync(path.join(dir, "melee-timeline-report.json"), "utf8"));
+const normalized = process.argv.includes("--normalized");
+const output = path.join(dir, normalized ? "normalized-target-cut-timelines" : "target-cut-timelines"); mkdirSync(output, { recursive: true });
+const report = JSON.parse(readFileSync(path.join(dir, normalized ? "normalized-timeline-report.json" : "melee-timeline-report.json"), "utf8"));
 for (const viewport of ["desktop", "phone"]) {
   const rows = report.observations.filter(row => row.recipient === "P1" && row.viewport === viewport);
   for (let page = 0; page * 3 < rows.length; page++) {

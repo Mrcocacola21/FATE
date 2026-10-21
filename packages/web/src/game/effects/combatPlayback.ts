@@ -7,7 +7,9 @@ import { sameAbilityResolution } from "./heroPresentation";
 import { FIREBALL_TIMING, FIRE_PARADE_TIMING, isFireballResolution } from "./asgorePresentation";
 import { kaiserBuildupMs } from "./kaiserPresentation";
 import { isFinalPresentationDeath, finalDeathPresentationEvents } from "./finalDeath";
-import { MELEE_RETURN_MS, meleeLungeDirection, meleeLungePose, type MeleeLungePose } from "./meleeLunge";
+import { MELEE_RETURN_MS, isMeleeRelease, meleeLungeDirection, meleeLungePose, type MeleeLungePose } from "./meleeLunge";
+import { MELEE_CONTACT_MS } from "../../features/vfx/meleeStrike";
+import { rangedAttackEffect, rangedFlightMs } from "./rangedPresentation";
 import { expansionViewAtEvent } from "../../features/vfx/expansionPresentation";
 import {
   CURSE_APPLY_LEAD_MS,
@@ -860,18 +862,24 @@ export function buildCombatVisualPlaybackPlan(params: {
       cursorMs = Math.max(end, impact + timing.outcomeMs) + timing.betweenHitsMs;
       return;
     }
-    // A confirmed attack can wind up during the last dice hold. Contact and HP
-    // still wait for the readable result; projectiles keep their travel timing.
+    // Melee can wind up during the last dice hold; contact and HP wait for it.
+    // Ranged flights start afterward so dice feedback cannot cover the release.
+    const attackView = event.type === "attackResolved"
+      ? expansionViewAtEvent(params.finalView, params.batch.events, eventIndex) : params.finalView;
+    const ranged = event.type === "attackResolved" && Boolean(rangedAttackEffect(event, attackView));
+    const attackLeadMs = !params.reducedMotion && event.type === "attackResolved"
+      ? ranged ? rangedFlightMs(event) : isMeleeRelease(event, attackView) ? MELEE_CONTACT_MS : timing.attackLeadMs
+      : timing.attackLeadMs;
     const lastRoll = combatCues[combatCues.length - 1];
-    const attackStart = event.type === "attackResolved" && !isFireballResolution(event) &&
+    const attackStart = event.type === "attackResolved" && !ranged && !isFireballResolution(event) &&
       lastRoll?.kind === "roll" && lastRoll.atMs + lastRoll.durationMs === cursorMs
-      ? Math.max(lastRoll.atMs, cursorMs - timing.attackLeadMs) : cursorMs;
+      ? Math.max(lastRoll.atMs, cursorMs - attackLeadMs) : cursorMs;
     const impact =
       attackStart +
       (isFireballResolution(event)
         ? FIREBALL_TIMING.travelMs
         : event.type === "attackResolved"
-          ? timing.attackLeadMs
+          ? attackLeadMs
           : 0);
     if (event.type === "attackResolved") {
       if (isFireballResolution(event) && event.hit)
@@ -890,7 +898,7 @@ export function buildCombatVisualPlaybackPlan(params: {
       });
       if (event.attackerId) {
         const direction = !params.reducedMotion
-          ? meleeLungeDirection(event, expansionViewAtEvent(params.finalView, params.batch.events, eventIndex)) : null;
+          ? meleeLungeDirection(event, attackView) : null;
         queue.push({
           type: "attack",
           unitId: event.attackerId,

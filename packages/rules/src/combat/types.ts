@@ -40,6 +40,7 @@ export interface AutoDefenseResolution {
 }
 
 export interface HitResolution {
+  damageReductions?: Extract<import("../model").GameEvent, { type: "attackResolved" }>["damageReductions"];
   bunkerAbsorbedDamage?: number;
   attackerAfter: UnitState;
   defenderAfter: UnitState;

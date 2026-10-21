@@ -298,6 +298,7 @@ export function resolveAttack(
     damage,
     ...(!hit && spearmanDouble ? { spearmanEvaded: true as const } : {}),
     ...(resolvedHit.bunkerAbsorbedDamage ? { bunkerAbsorbedDamage: resolvedHit.bunkerAbsorbedDamage } : {}),
+    ...(resolvedHit.damageReductions ? { damageReductions: resolvedHit.damageReductions } : {}),
     defenderHpAfter: defenderHpAfterEvent,
     previousHp: defenderHpBefore,
     nextHp: defenderHpAfterEvent,

@@ -3,6 +3,9 @@ import type { ExpansionEffectId } from "./expansionCatalog.generated";
 
 export type VfxEffectId =
   | ExpansionEffectId
+  | "basicProjectile"
+  | "basicSlash"
+  | "missShield"
   | "artemidaCrescent"
   | "donMadness"
   | "donWindmills"
@@ -156,6 +159,8 @@ export type BoardVfxRequest = {
   delayMs?: number;
   scaleCells?: number;
   opacity?: number;
+  /** Recolour a shared guard with the permitted defender's hero palette. */
+  tintHue?: number;
   /** Private local UI attachment, rendered by the Board's existing HP control. */
   uiAnchor?: "healthBar";
 };

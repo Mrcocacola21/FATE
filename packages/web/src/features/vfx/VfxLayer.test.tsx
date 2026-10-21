@@ -53,6 +53,15 @@ test("VFX overlay is non-interactive and hidden from accessibility tree", () => 
   assert.match(html, /aria-hidden="true"/);
 });
 
+test("ranged abilities render above tokens in flight and retain their original impact layer on contact", () => {
+  for (const effectId of ["gutsCrossbow", "undyneThrow"] as const) for (const placement of ["projectile", "cell"] as const) {
+    const html = renderToStaticMarkup(<VfxLayer view={view()} boardSize={9} cellSize={64} isFlipped={false}
+      reducedMotion={false} effects={[{ id: "ability-shot", effectId, placement, sourceCell: { col: 1, row: 4 },
+        targetCell: { col: 4, row: 4 }, startedAt: Date.now(), expiresAt: Date.now() + 600 }]} />);
+    assert.match(html, new RegExp(`data-vfx-layer="${placement === "projectile" ? "projectile" : "impact"}"`));
+  }
+});
+
 test("unit-attached VFX follow the current visible unit coordinate", () => {
   const effects: QueuedBoardVfxRequest[] = [
     {
@@ -172,34 +181,50 @@ test("walking wake owns stationary deposits in one cue, hides on lost permission
 test("melee stroke owns contact and follow-through, refusing a missing target or lost attacker position", () => {
   const now = Date.now();
   const effect: QueuedBoardVfxRequest = { id: "cut", effectId: "expansion.guts.attack_swing", placement: "cell", unitId: "target",
-    sourceCell: { col: 4, row: 4 }, targetCell: { col: 5, row: 4 }, strikeContactMs: 210, startedAt: now, expiresAt: now + 290 };
+    sourceCell: { col: 4, row: 4 }, targetCell: { col: 5, row: 4 }, strikeContactMs: 420, startedAt: now, expiresAt: now + 640 };
   const render = (cue = effect, current = view()) => renderToStaticMarkup(<VfxLayer effects={[cue]} view={current}
     boardSize={9} cellSize={40} isFlipped={false} reducedMotion={false} />);
   const html = render();
   assert.equal(html.match(/data-vfx-cue=/g)?.length, 1);
   assert.match(html, /vfx-melee-stroke/);
-  assert.match(html, /--melee-contact:210ms/); assert.match(html, /--melee-recovery:80ms/);
+  assert.match(html, /--melee-contact:420ms/); assert.match(html, /--melee-recovery:220ms/);
+  assert.match(html, /--melee-draw:260ms/);
   assert.doesNotMatch(render({ ...effect, targetCell: undefined }), /data-vfx-cue=/);
   const hidden = view(); hidden.units.target.position = null;
   assert.doesNotMatch(render(effect, hidden), /data-vfx-cue=/);
 });
 
-test("target cut follows the attack facing in every direction and both board orientations", () => {
-  const now = Date.now();
-  for (const flipped of [false, true]) for (const [col, row, angle] of [
-    [1, 0, 0], [1, -1, 45], [0, -1, 90], [-1, -1, 135],
-    [-1, 0, 180], [-1, 1, -135], [0, 1, -90], [1, 1, -45],
-  ]) {
+test("target cut mirrors the reference sweep in screen directions without rotating left/up upside down", () => {
+  const now = Date.now(), q = Math.SQRT1_2;
+  // Independent screen-space matrices relative to the approved rightward cut.
+  const poses = [
+    { col: 1, row: 0, matrix: [1, 0, 0, 1] },
+    { col: 1, row: -1, matrix: [q, q, -q, q] },
+    { col: 0, row: -1, matrix: [1, 0, 0, 1] },
+    { col: -1, row: -1, matrix: [-q, q, q, q] },
+    { col: -1, row: 0, matrix: [-1, 0, 0, 1] },
+    { col: -1, row: 1, matrix: [-q, -q, -q, q] },
+    { col: 0, row: 1, matrix: [1, 0, 0, -1] },
+    { col: 1, row: 1, matrix: [q, -q, q, q] },
+  ];
+  for (const flipped of [false, true]) for (const reducedMotion of [false, true]) for (const [index, pose] of poses.entries()) {
     const html = renderToStaticMarkup(<VfxLayer view={view()} boardSize={9} cellSize={40}
-      isFlipped={flipped} reducedMotion={false} effects={[{
+      isFlipped={flipped} reducedMotion={reducedMotion} effects={[{
         id: "cut-direction", effectId: "expansion.guts.attack_swing", placement: "cell", unitId: "target",
-        sourceCell: { col: 4, row: 4 }, targetCell: { col: 4 + col, row: 4 + row },
-        strikeContactMs: 210, startedAt: now, expiresAt: now + 290,
+        sourceCell: { col: 4, row: 4 }, targetCell: { col: 4 + pose.col, row: 4 + pose.row },
+        strikeContactMs: 420, startedAt: now, expiresAt: now + 640,
       }]} />);
-    const actual = Number(html.match(/transform:rotate\(([-\d.]+)deg\)/)?.[1]);
-    const expected = angle + (flipped ? 180 : 0);
-    assert(Math.abs(((actual - expected + 540) % 360) - 180) < .001);
+    const transform = html.match(/transform:rotate\(([-\d.]+)deg\) scale\(([-\d]+), ([-\d]+)\)/);
+    assert(transform, "facing explicitly owns both rotation and reflection");
+    const angle = Number(transform[1]) * Math.PI / 180, x = Number(transform[2]), y = Number(transform[3]);
+    const matrix = [Math.cos(angle) * x, Math.sin(angle) * x, -Math.sin(angle) * y, Math.cos(angle) * y];
+    const expected = poses[(index + (flipped ? 4 : 0)) % 8].matrix;
+    matrix.forEach((value, axis) => assert(Math.abs(value - expected[axis]) < 1e-8,
+      `direction ${index}, flipped=${flipped}: transformed sweep landmark ${axis}`));
     assert.match(html, /vfx-melee-stroke/);
+    assert.match(html, /data-vfx-melee-reveal="topRight"/,
+      "Guts reverses its own authored crescent without changing the common direction pose");
+    assert.match(html, /data-vfx-melee-rotation="180"/);
     assert.equal(html.match(/data-vfx-cue=/g)?.length, 1);
   }
 });

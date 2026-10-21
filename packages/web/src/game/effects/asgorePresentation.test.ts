@@ -158,7 +158,7 @@ test("Fireball hit/miss keep one authoritative use through both manual rolls and
       assert.equal(o.sprites.filter((s) => s.effectId === "fireball").length, 1);
       assert.equal(o.sprites.filter((s) => s.effectId === "fireballImpact").length, hit ? 1 : 0);
       assert.equal(o.sprites.filter((s) => s.effectId === "combatHit").length, 0);
-      assert.equal(o.sprites.filter((s) => s.effectId === "combatMiss").length, hit ? 0 : 1);
+      assert.equal(o.sprites.filter((s) => s.effectId === "missShield").length, hit ? 0 : 1);
       assert.equal(o.sounds.filter((s) => s.key.endsWith("asgoreFireball.cast")).length, 1);
       assert.equal(o.sounds.filter((s) => s.key.endsWith("asgoreFireball.travel")).length, 1);
       assert.equal(
@@ -175,14 +175,14 @@ test("Fireball hit/miss keep one authoritative use through both manual rolls and
       );
       const travel = o.sprites.find((s) => s.effectId === "fireball")!;
       const termination = o.sprites.find((s) =>
-        ["fireballImpact", "combatMiss"].includes(s.effectId),
+        ["fireballImpact", "missShield"].includes(s.effectId),
       )!;
       const rolls = p.batch.combatCues!.filter((c) => c.kind === "roll");
       assert.equal(rolls.length, 2);
       assert(travel.delayMs! >= rolls[1].atMs + rolls[1].durationMs);
       assert.equal(termination.delayMs, travel.delayMs! + FIREBALL_TIMING.travelMs);
       for (const s of o.sprites.filter((s) =>
-        ["fireball", "fireballCast", "fireballImpact", "combatMiss"].includes(s.effectId),
+        ["fireball", "fireballCast", "fireballImpact", "missShield"].includes(s.effectId),
       ))
         assert(s.id.includes(use.abilityUseId!));
     }

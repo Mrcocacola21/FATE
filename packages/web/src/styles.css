@@ -2006,6 +2006,17 @@ html.dark {
 .vfx-geometry-projectile {
   animation-name: vfx-projectile-travel;
 }
+.vfx-geometry-projectile:is([data-vfx-effect="basicProjectile"], [data-vfx-effect="gutsCrossbow"])::after {
+  content: ""; position: absolute; left: 20%; top: 40%; width: 65%; height: 20%;
+  background: #fff3ca; filter: drop-shadow(0 0 2px #ffe8a0);
+  clip-path: polygon(0 30%, 68% 30%, 68% 0, 100% 50%, 68% 100%, 68% 70%, 0 70%);
+}
+.vfx-geometry-projectile[data-vfx-effect="basicProjectile"] > .vfx-artwork { animation: none; }
+.vfx-geometry-projectile[data-vfx-effect="fireball"]::after {
+  content: ""; position: absolute; left: 35%; top: 35%; width: 30%; height: 30%;
+  background: radial-gradient(circle, #fff8dd 0 22%, #ffbe60 28%, #ef6c12 48%, transparent 72%);
+  filter: drop-shadow(0 0 3px #ff9a3d);
+}
 .vfx-geometry.vfx-reduced {
   animation-name: vfx-envelope;
 }
@@ -2024,16 +2035,15 @@ html.dark {
 .unit-melee-content { display: flex; align-items: center; justify-content: center; transform-origin: 50% 50%; }
 .unit-melee-content[data-melee-lunge] .unit-visual-attacking { animation: none; }
 .vfx-melee-stroke {
-  /* Mirror the entire trace, including its reveal and contact glint, about the defender. */
-  transform: scale(-1, -1);
+  /* Directional reflection is applied to the whole trace by its facing axis. */
   transform-origin: 50% 50%;
   animation: vfx-target-trace var(--melee-draw) linear var(--melee-trace-delay) both,
     vfx-target-dissolve var(--melee-recovery) ease-out calc(var(--vfx-delay) + var(--melee-contact)) forwards;
 }
 @keyframes vfx-target-trace {
-  0% { opacity: 0; clip-path: polygon(0 100%, 0 100%, 0 100%, 0 100%); }
+  0% { opacity: 0; clip-path: var(--melee-start-clip); }
   15% { opacity: 1; }
-  50% { clip-path: polygon(0 0, 100% 100%, 100% 100%, 0 100%); }
+  50% { clip-path: var(--melee-half-clip); }
   100% { opacity: 1; clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
 }
 @keyframes vfx-target-dissolve {

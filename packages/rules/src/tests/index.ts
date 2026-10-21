@@ -1,4 +1,5 @@
 import { testPresentationSemantics } from "./core/presentationSemantics.test";
+import { testAttackOutcomeFacts } from "./core/attackOutcomeFacts.test";
 import { testExpansionSignals } from "./core/expansionSignals.test";
 import { testTeleportsIgnoreIntermediateHazardsAndForest, testTeleportsTriggerOnlyDestinationHazards, testAbilityTeleportProjectionPreservesRelocationWithoutRevealingCause } from "./core/teleportMovement.test";
 import { testActionModuleBoundaries } from "./core/boundaries.test";
@@ -512,6 +513,7 @@ import {
 import { testSafeProjectedEventSerialization } from "./core/projectedEvents.test";
 
 function main(): void {
+  testAttackOutcomeFacts();
   testExpansionSignals();
   testPresentationSemantics();
   testSafeProjectedEventSerialization();

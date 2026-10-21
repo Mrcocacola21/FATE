@@ -46,7 +46,7 @@ for (const ability of ["kaiserDora", "kaiserCarpetStrike", "vladForest", "sansGa
     assert.equal(new Set(cues.map(c => c.atMs)).size, 1);
     assert(p.queue.some(q => q.type === "damageHpTween" && q.damage.targetUnitId === "target-2"));
     const sprites = mapEventBatchToVfx({ ...p.batch, view: f.after, previousPositions: {} });
-    const area = sprites.filter(s => !["combatHit", "combatMiss", "expansion.asgore.parade_hit"].includes(s.effectId));
+    const area = sprites.filter(s => !["combatHit", "missShield", "expansion.asgore.parade_hit"].includes(s.effectId));
     assert.equal(area.length, ability === "sansGasterBlaster" ? 3 : ability.startsWith("kaiser") ? 2 : 1);
     if (ability === "asgoreFireParade") assert.equal(sprites.filter(s => s.effectId === "expansion.asgore.parade_hit").length, 2);
     if (ability.startsWith("kaiser")) {
@@ -225,7 +225,7 @@ for (const reduced of [false, true]) {
       assert(hp.every(q => q.startsAtMs === impact));
       assert.equal(new Set(hp.map(q => q.endsAtMs)).size, hp.length ? 1 : 0);
       const sprites = mapEventBatchToVfx({ ...p.batch, view: f.after, previousPositions: {} });
-      assert(sprites.filter(s => s.effectId === "combatHit" || s.effectId === "combatMiss").every(s => s.delayMs === impact));
+      assert(sprites.filter(s => s.effectId === "combatHit" || s.effectId === "missShield").every(s => s.delayMs === impact));
       const audio = mapEventBatchToSfx({ ...p.batch, view: f.after });
       assert(audio.filter(s => s.key === "common.combat.hit" || s.key === "common.combat.miss").every(s => s.delayMs === impact));
       const text = effectsFromEventBatch(p.batch.events, { view: f.after, previousPositions: {} }, p.batch.eventDelaysMs, p.batch.combatCues);

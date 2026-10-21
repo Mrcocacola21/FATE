@@ -64,6 +64,8 @@ try {
     const cue = page.locator(`[data-vfx-effect="${fixture.expected[0]}"]`);
     assert.equal(await cue.count(), 1, `${id}: exactly one live slash`);
     const start = await cue.evaluate(el => Number(el.dataset.vfxStart));
+    const contactMs = await cue.evaluate(el => Number(el.dataset.vfxContact) - Number(el.dataset.vfxStart));
+    const contactFrame = Math.ceil((150 + contactMs) * 60 / 1000);
     await cue.locator(".vfx-artwork").evaluateAll(elements => Promise.all(elements.map(async el => {
       const img = new Image(); img.src = getComputedStyle(el).backgroundImage.slice(5, -2); await img.decode();
     })));
@@ -83,7 +85,7 @@ try {
           for (const art of el.querySelectorAll(".vfx-artwork")) art.style.willChange = "auto";
         }
       });
-      if (i === 22) {
+      if (i === contactFrame) {
         painted = await cue.locator(".vfx-melee-stroke").evaluate(el => Number(getComputedStyle(el).opacity) > .1);
         lunged = await page.locator(`[data-unit-id="${fixture.sourceId}"] [data-melee-lunge]`).count() === 1;
       }
@@ -99,7 +101,7 @@ try {
         "-c:v", "libx264", "-preset", "fast", "-crf", "18", "-pix_fmt", "yuv420p", "-movflags", "+faststart", path.join(dir, file)]);
     }
     await sharp({ create: { width: 1152, height: 720, channels: 4, background: "#15181f" } }).composite([
-      { input: await sharp(path.join(frames, "frame-022.png")).resize(1152, 648).toBuffer(), left: 0, top: 72 },
+      { input: await sharp(path.join(frames, `frame-${String(contactFrame).padStart(3, "0")}.png`)).resize(1152, 648).toBuffer(), left: 0, top: 72 },
       { input: normalHeader, left: 0, top: 0 },
     ]).png().toFile(path.join(dir, "poster.png"));
     writeFileSync(path.join(dir, "concat.txt"), "file 'normal.mp4'\nfile 'slow-x4.mp4'\n");

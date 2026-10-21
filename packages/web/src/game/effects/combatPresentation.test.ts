@@ -244,7 +244,7 @@ test("miss has one sound/sprite/text and no damage/death; a zero-damage hit is s
   );
   assert.deepEqual(
     out.sprites.map((sprite) => sprite.effectId),
-    ["combatMiss"],
+    ["missShield"],
   );
   assert.equal(
     out.text.filter((effect) => effect.kind === "floatingText" && effect.label === "miss").length,

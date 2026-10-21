@@ -56,7 +56,7 @@ test("adjacent melee leans toward contact and returns without moving tactical co
       startingHpByUnitId: { attacker: 6, target: 5 }, startingUnitsByUnitId: playerView(unit("target", 5)).units,
       finalView, reducedMotion: false });
     const cue = plan.batch.combatCues!.find(cue => cue.kind === (hit ? "hit" : "miss"))!;
-    assert.equal(cue.atMs, 210);
+    assert.equal(cue.atMs, 420);
     const windup = combatVisualPlaybackFrame(plan, 70).visualAttackByUnitId.attacker;
     assert(windup.distance < 0, "small anticipation before forward thrust");
     const contact = combatVisualPlaybackFrame(plan, cue.atMs);
@@ -65,8 +65,8 @@ test("adjacent melee leans toward contact and returns without moving tactical co
     assert(Math.abs(contact.visualAttackByUnitId.attacker.stretch - 1.075) < .0001);
     assert.deepEqual(contact.visualUnitsByUnitId.attacker.position, { col: 2, row: 1 });
     assert.deepEqual(contact.visualMotionByUnitId, {}, "lunge cannot move aura, route or status anchors");
-    assert(combatVisualPlaybackFrame(plan, 250).visualAttackByUnitId.attacker.distance < .24);
-    assert.equal(combatVisualPlaybackFrame(plan, 290).visualAttackByUnitId.attacker, undefined);
+    assert(combatVisualPlaybackFrame(plan, 530).visualAttackByUnitId.attacker.distance < .24);
+    assert.equal(combatVisualPlaybackFrame(plan, 640).visualAttackByUnitId.attacker, undefined);
     assert.deepEqual(combatVisualPlaybackFrame(plan, plan.durationMs).visualAttackByUnitId, {});
   }
 });
@@ -98,6 +98,20 @@ test("reduced motion preserves the adjacent attack outcome without token thrust"
     finalView: playerView(unit("target", 3)), reducedMotion: true });
   assert.equal(plan.batch.combatCues!.find(cue => cue.kind === "hit")!.atMs, 70);
   assert.deepEqual(combatVisualPlaybackFrame(plan, 60).visualAttackByUnitId, {});
+});
+
+test("readable melee lead and recovery do not slow adjacent projectiles or change authoritative HP", () => {
+  const current = playerView(unit("target", 5));
+  for (const ranged of [false, true]) {
+    current.units.attacker.class = ranged ? "archer" : "knight";
+    const plan = buildCombatVisualPlaybackPlan({ batch: { revision: 1, events: [{ ...attack(5, 3), isBasicAttack: true }] },
+      startingHpByUnitId: { attacker: 6, target: 5 }, startingUnitsByUnitId: current.units,
+      finalView: { ...current, units: { ...current.units, target: { ...current.units.target, hp: 3 } } }, reducedMotion: false });
+    const cue = plan.batch.combatCues!.find(cue => cue.kind === "hit")!;
+    assert.equal(cue.atMs, ranged ? 360 : 420);
+    assert.equal(combatVisualPlaybackFrame(plan, cue.atMs - 1).visualHpByUnitId.target, 5, "no early damage during readable windup");
+    assert.equal(combatVisualPlaybackFrame(plan, plan.durationMs).visualHpByUnitId.target, 3);
+  }
 });
 
 test("lethal damage keeps a render-only ghost through HP tween and death", () => {

@@ -10,6 +10,9 @@ import {
 } from "../../game/effects/remainingHeroPresentation";
 
 export const CORE_VFX_PREVIEW_IDS: VfxEffectId[] = [
+  "basicProjectile",
+  "basicSlash",
+  "missShield",
   ...expansionIds,
   ...new Set([
     ...coverage

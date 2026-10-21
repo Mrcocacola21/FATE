@@ -112,10 +112,13 @@ export function resolveHitDamage(
     damage = Math.min(1, damage);
   }
 
+  const damageReductions: NonNullable<HitResolution["damageReductions"]> = [];
   if (defenderAfter.heroId === HERO_GUTS_ID && defenderAfter.gutsBerserkModeActive) {
+    if (damage > 1) damageReductions.push({ abilityId: "gutsBerserkMode", amount: damage - 1 });
     damage = Math.min(1, damage);
   }
   if (defenderAfter.heroId === HERO_UNDYNE_ID && hasUndyneImmortalActive(defenderAfter)) {
+    if (damage > 1) damageReductions.push({ abilityId: "undyneUndying", amount: damage - 1 });
     damage = Math.min(1, damage);
   }
 
@@ -149,5 +152,6 @@ export function resolveHitDamage(
     attackerRevealedToDefender,
     revealedAttackerPos,
     ...(bunkerAbsorbedDamage > 0 ? { bunkerAbsorbedDamage } : {}),
+    ...(damageReductions.length ? { damageReductions } : {}),
   };
 }

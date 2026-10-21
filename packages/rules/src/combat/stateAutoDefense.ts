@@ -127,6 +127,7 @@ export function tryResolveAutoDefense(
     defenderRoll,
     ...(params.attackerRollIsNew === false ? { attackerRollIsNew: false } : {}),
     hit: false,
+    preventedBy: autoDefenseAbilityId === ABILITY_ODIN_MUNINN ? "odinMuninn" : "berserkerAutoDefense",
     damage: 0,
     defenderHpAfter: defenderAfter.hp,
     previousHp: defenderAfter.hp,

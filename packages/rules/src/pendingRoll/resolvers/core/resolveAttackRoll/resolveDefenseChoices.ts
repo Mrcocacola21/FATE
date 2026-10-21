@@ -183,7 +183,8 @@ export function resolveAsgoreBraveryDefenseChoiceRoll(
   );
   return continueAfterAttackResolution(
     resolved.state,
-    resolved.events,
+    resolved.events.map(event => event.type === "attackResolved" && !event.hit
+      ? { ...event, preventedBy: "asgoreBravery" as const } : event),
     nextCtx,
     rng
   );

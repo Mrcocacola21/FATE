@@ -204,7 +204,7 @@ test("real Gaster chain: one shared manual attacker roll, four defenders includi
     [f.targets[0].id, f.ally.id, f.targets[2].id],
   );
   assert.equal(f.after.units[f.ally.id].hp, 4);
-  assert.equal(sprites.filter((s) => s.effectId === "combatMiss").length, 1);
+  assert.equal(sprites.filter((s) => s.effectId === "missShield").length, 1);
   assert.equal(sprites.filter((s) => s.effectId === "combatHit").length, 3);
   const final = plans[plans.length - 1]!;
   const cannon = outputs(final.batch).sprites.find((s) => s.effectId === "gasterCannon")!;
