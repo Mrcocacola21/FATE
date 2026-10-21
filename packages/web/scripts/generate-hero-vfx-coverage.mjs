@@ -29,7 +29,7 @@ ${table}
 
 Persistent strips use a static representative frame, without permanent animation loops. Their authored duration describes the source strip, not status lifetime. The Gaster charge strip is fitted to the existing 400 ms charge phase; its authored duration is 650 ms. Final Chord uses authorized resolved attack segments and a source pulse if no authorized legs exist; no blocker locations are reconstructed.
 
-The only blocked file is <code>undyne/shift.png</code>. Direction Shift (<code>undyneSwitchDirection</code>) has canonical ability metadata but no activation/forced-movement resolver. Prerequisite: implement and test the actual mechanic in a separate gameplay task, then connect a recipient-safe confirmed movement event. No speculative trigger or unused registry entry was added.
+Direction Shift uses the existing shared defense-push resolver. Only an accepted <code>intimidateResolved</code> with a recipient-authorized <code>undyneSwitchDirection</code> signature plays <code>undyne/shift.png</code>; passing, invalid choices and hidden sources do not produce a themed cue. All 137 legacy hero PNGs are now registered.
 
 Implementation, replacements, validation and browser evidence: [final report](../../../../docs/assets/HERO_VFX_FINAL_45.md).
 `,

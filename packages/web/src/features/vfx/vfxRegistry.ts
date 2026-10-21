@@ -1040,6 +1040,18 @@ export const vfxRegistry: Record<VfxEffectId, VfxDefinition> = {
     startFrame: 0,
     endFrame: 5,
   },
+  undyneShift: {
+    ...generated(
+      "undyneShift",
+      new URL("../../assets/vfx/heroes/undyne/shift.png", import.meta.url).href,
+      12,
+      500,
+      "cell",
+      "movement",
+    ),
+    defaultScaleCells: 1.2,
+    reducedMotion: "static",
+  },
   undyneUndying: {
     ...generated(
       "undyneUndying",

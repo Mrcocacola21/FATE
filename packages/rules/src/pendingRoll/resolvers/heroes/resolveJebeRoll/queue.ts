@@ -1,8 +1,7 @@
 import type { ApplyResult, GameEvent, GameState } from "../../../../model";
 import { clearPendingRoll, requestRoll } from "../../../../core";
 import { ABILITY_BERSERK_AUTO_DEFENSE } from "../../../../abilities";
-import { HERO_FEMTO_ID, HERO_PAPYRUS_ID } from "../../../../heroes";
-import { hasMettatonBerserkerFeature } from "../../../../mettaton";
+import { hasBerserkerAutoDefense } from "../../../../unitFeatures";
 import type { JebeHailOfArrowsAoEContext } from "../../../types";
 import { finalizeJebeHailOfArrows } from "./helpers";
 
@@ -28,11 +27,7 @@ export function advanceJebeHailOfArrowsQueue(
         : [];
       const charges = target.charges?.[ABILITY_BERSERK_AUTO_DEFENSE] ?? 0;
       if (
-        (target.class === "berserker" ||
-          target.heroId === HERO_FEMTO_ID ||
-          (target.heroId === HERO_PAPYRUS_ID &&
-            target.papyrusUnbelieverActive) ||
-          hasMettatonBerserkerFeature(target)) &&
+        hasBerserkerAutoDefense(target) &&
         charges === 6 &&
         attackerDice.length >= 2
       ) {

@@ -7,14 +7,11 @@ import {
 } from "../../../../abilities";
 import { clearPendingRoll } from "../../../../core";
 import { isElCid } from "../../../../actions/shared";
-import { hasMettatonBerserkerFeature } from "../../../../mettaton";
+import { hasBerserkerAutoDefense } from "../../../../unitFeatures";
 import {
   HERO_ASGORE_ID,
   HERO_CHIKATILO_ID,
-  HERO_FEMTO_ID,
-  HERO_DUOLINGO_ID,
   HERO_FRISK_ID,
-  HERO_PAPYRUS_ID,
 } from "../../../../heroes";
 import type { AttackRollContext } from "../../../types";
 import { replacePendingRoll } from "../../../builders/buildPendingRoll";
@@ -155,11 +152,7 @@ export function resolveAttackAttackerRoll(
 
   const charges = workingDefender.charges?.[ABILITY_BERSERK_AUTO_DEFENSE] ?? 0;
   if (
-    (workingDefender.class === "berserker" ||
-      workingDefender.heroId === HERO_FEMTO_ID ||
-      (workingDefender.heroId === HERO_DUOLINGO_ID && workingDefender.duolingoBerserkerUnlocked) ||
-      (workingDefender.heroId === HERO_PAPYRUS_ID && workingDefender.papyrusUnbelieverActive) ||
-      hasMettatonBerserkerFeature(workingDefender)) &&
+    hasBerserkerAutoDefense(workingDefender) &&
     charges === 6 &&
     !resolvedCtx.berserkerChoiceMade
   ) {

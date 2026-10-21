@@ -10,6 +10,7 @@ const colors: Record<string, [string, string]> = {
   genghisKhan: ["#e9b870", "#89cce0"], jebe: ["#5cdec6", "#c4f6e7"],
   hassan: ["#e9c580", "#ded2f5"], donKihote: ["#e6bb6d", "#db9191"],
   elCidCompeador: ["#75c9cc", "#e3cd92"], vladTepes: ["#d48baf", "#cfa3e8"],
+  griffith: ["#b9cfe9", "#e7eff8"], grozny: ["#d79168", "#eacba1"],
 };
 
 /** Chebyshev radius one, matching getPolkovodetsSource; center is not a recipient. */

@@ -4,8 +4,7 @@ import { BASIC_EXPANSION_HEROES } from "./expansionPresentation";
 import type { ExpansionEffectId } from "./expansionCatalog.generated";
 import { isVisibleCommander } from "./commanderSupport";
 
-// Match getPolkovodetsSource, including its exclusions. Griffith and Grozny
-// have commissioned art but do not currently grant this rule effect.
+// Match the shared rules eligibility, including loss of Griffith's aura on Rebirth.
 export interface ExpansionStatusArt { effectId: ExpansionEffectId; scaleCells: number }
 export function expansionStatusArt(view: PlayerView, unit: UnitState, playerId: PlayerId | null): ExpansionStatusArt[] {
   if (!unit.isAlive || !unit.position || (unit.isStealthed && unit.owner !== playerId)) return [];

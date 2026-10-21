@@ -7,7 +7,8 @@ import { chromium } from "playwright-core";
 import sharp from "sharp";
 
 const web = fileURLToPath(new URL("../", import.meta.url)), root = path.resolve(web, "../..");
-const output = path.join(web, "test-results/all-slashes-review");
+const normalized = process.argv.includes("--normalized");
+const output = path.join(web, normalized ? "test-results/all-slashes-review-v18" : "test-results/all-slashes-review");
 mkdirSync(output, { recursive: true });
 const generated = spawnSync(process.execPath, [path.join(root, "node_modules/tsx/dist/cli.mjs"), "--tsconfig", path.join(root, "tsconfig.tests.json"),
   path.join(web, "scripts/vfx-expansion-fixtures.ts"), path.join(web, "test-results/vfx-expansion-game/fixtures.json")], { cwd: root, encoding: "utf8", windowsHide: true });
@@ -22,8 +23,10 @@ const names = { griffith: "Гриффит", femto: "Фемто", guts: "Гатс
   loki: "Локи", kaladin: "Каладин", duolingo: "Дуолинго", odin: "Один", luche: "Луче", papyrus: "Папирус", lechy: "Леший", sans: "Санс", riverPerson: "Речной человек", vladTepes: "Влад Цепеш", frisk: "Фриск" };
 const forms = { berserk: " — Берсерк", centipede: " — Сколопендра", undying: " — Бессмертная форма" };
 const records = [], errors = [];
+const sourceCommit = spawnSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8", windowsHide: true }).stdout.trim();
 const saveState = () => writeFileSync(path.join(output, "recording.json"), JSON.stringify({
-  status: records.length === scenes.length ? "complete" : "recording", expectedCount: scenes.length,
+  status: errors.length ? "failed" : records.length === scenes.length ? "complete" : "recording", expectedCount: scenes.length,
+  sourceCommit, presentationRevision: state.meleeNormalizationReview?.revision ?? null,
   renderer: "Actual Board with current source, rules-produced accepted attacks and P1-projected events",
   timing: "Shared combat clock stepped at 60fps; CSS animations seeked to the same phase. Slow playback x4 after capture.",
   silent: true, manualNetworkMatch: false, errors, records,
@@ -109,7 +112,9 @@ try {
     const probe = spawnSync("ffprobe", ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", path.join(dir, "review.mp4")], { encoding: "utf8", windowsHide: true });
     assert.equal(probe.status, 0, probe.stderr);
     const duration = Number(probe.stdout.trim()); assert(duration > 5.8 && duration < 6.2, `${id}: complete clip duration`);
+    const asset = inventory.find(row => row.effectIds.includes(fixture.expected[0]));
     records.push({ id, label, effectId: fixture.expected[0], folder, frames: 72, duration,
+      artworkOrientation: fixture.meleeArtwork?.[fixture.expected[0]], pngSha256: asset.sha256,
       normal: `${folder}/normal.mp4`, slow: `${folder}/slow-x4.mp4`, review: `${folder}/review.mp4`, painted, lunged });
     saveState(); console.log(`${records.length}/${scenes.length}: ${label} recorded`);
   }

@@ -117,9 +117,8 @@ test("legacy hero PNGs retain verified coverage and imported expansion PNGs matc
   })
     .map((file) => file.toString().replace(/\\/g, "/"))
     .filter((file) => file.endsWith(".png"));
-  // Newly delivered packs are staged for later event integration. Keep the
-  // existing runtime coverage contract strict, and account for every staged
-  // PNG through its manifest rather than treating it as live or ignoring it.
+  // Import manifests retain provenance; the separate integration ledger proves
+  // current runtime bindings. Verify every PNG without equating import to live use.
   const heroFiles = allHeroFiles.filter((file) => !file.includes("/expansion/"));
   const expansionFiles = allHeroFiles.filter((file) => file.includes("/expansion/"));
   const declaredExpansionFiles = new Set<string>();
@@ -169,7 +168,7 @@ test("legacy hero PNGs retain verified coverage and imported expansion PNGs matc
   assert.equal(heroFiles.length, 137);
   assert.deepEqual(
     heroFiles.filter((file) => !registered.has(file)),
-    ["undyne/shift.png"],
+    [],
   );
   assert.equal(coverage.length, 45);
   assert.equal(new Set(coverage.map((row) => row.hero)).size, 18);
@@ -183,11 +182,6 @@ test("legacy hero PNGs retain verified coverage and imported expansion PNGs matc
     assert.equal(bytes.subarray(1, 4).toString(), "PNG");
     assert.equal(bytes.readUInt32BE(16), row.frames * row.frameWidth);
     assert.equal(bytes.readUInt32BE(20), row.frameHeight);
-    if (row.status === "BLOCKED_UNIMPLEMENTED_ABILITY") {
-      assert.equal(`${row.hero}/${row.file}`, "undyne/shift.png");
-      assert(!Object.values(vfxRegistry).some((def) => def.asset?.endsWith("/undyne/shift.png")));
-      continue;
-    }
     const key = row.key as VfxEffectId,
       definition = vfxRegistry[key];
     assert(definition, row.file);
@@ -202,9 +196,8 @@ test("legacy hero PNGs retain verified coverage and imported expansion PNGs matc
     assert(rosterVfx([row.hero]).includes(key), `${key} missing from authorized roster preload`);
   }
   assert.deepEqual(totals, {
-    LIVE_CONNECTED: 40,
+    LIVE_CONNECTED: 41,
     PERSISTENT_CONNECTED: 4,
-    BLOCKED_UNIMPLEMENTED_ABILITY: 1,
   });
 });
 

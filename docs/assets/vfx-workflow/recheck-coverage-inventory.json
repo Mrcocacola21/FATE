@@ -1,0 +1,1154 @@
+{
+  "pngCount": 433,
+  "expansionCount": 296,
+  "legacyCount": 137,
+  "expansionRegistered": 296,
+  "legacyRegistered": 137,
+  "absentFromLedger": [],
+  "staleHashes": [],
+  "unregistered": [],
+  "expansionStatusCounts": {
+    "verified": 296
+  },
+  "blocked": [],
+  "legacyDefinitionsWithoutLiteralRuntimeReference": [
+    {
+      "id": "vladStakeMarker",
+      "files": [
+        "vladTepes/stake_marker.png"
+      ],
+      "runtimeReferences": []
+    }
+  ],
+  "legacyUsage": [
+    {
+      "id": "artemidaCrescent",
+      "files": [
+        "artemida/crescent_primary.png",
+        "artemida/crescent_accent.png"
+      ],
+      "runtimeReferences": [
+        "features/vfx/vfxEventMapper.ts",
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "donMadness",
+      "files": [
+        "donKihote/madness_primary.png",
+        "donKihote/madness_accent.png"
+      ],
+      "runtimeReferences": [
+        "features/vfx/vfxEventMapper.ts",
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "donWindmills",
+      "files": [
+        "donKihote/windmills_primary.png",
+        "donKihote/windmills_accent.png"
+      ],
+      "runtimeReferences": [
+        "store.ts",
+        "game/selectionState.ts",
+        "game/effects/remainingHeroPresentation.ts",
+        "game/gameshell-content/cellHandlers.ts",
+        "game/targeting/buildActionPreview.ts",
+        "game/components/RightPanel/rightPanelHelpers.ts",
+        "game/gameshell-content/hooks/useGameShellBoardUi.ts"
+      ]
+    },
+    {
+      "id": "duolingoBerserker",
+      "files": [
+        "duolingo/berserker.png"
+      ],
+      "runtimeReferences": [
+        "features/vfx/persistentStatuses.ts"
+      ]
+    },
+    {
+      "id": "elCidDuel",
+      "files": [
+        "elCidCompeador/duel_primary.png",
+        "elCidCompeador/duel_accent.png"
+      ],
+      "runtimeReferences": [
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "elCidKolada",
+      "files": [
+        "elCidCompeador/kolada.png"
+      ],
+      "runtimeReferences": [
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "elCidTisona",
+      "files": [
+        "elCidCompeador/tisona_primary.png",
+        "elCidCompeador/tisona_accent.png"
+      ],
+      "runtimeReferences": [
+        "features/vfx/vfxEventMapper.ts",
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "friskCleanSoul",
+      "files": [
+        "frisk/clean_soul.png"
+      ],
+      "runtimeReferences": [
+        "rulesHints.ts",
+        "features/vfx/persistentStatuses.ts"
+      ]
+    },
+    {
+      "id": "friskCry",
+      "files": [
+        "frisk/cry.png"
+      ],
+      "runtimeReferences": [
+        "features/vfx/vfxEventMapper.ts"
+      ]
+    },
+    {
+      "id": "friskFriendship",
+      "files": [
+        "frisk/friendship.png"
+      ],
+      "runtimeReferences": [
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "friskKeenEye",
+      "files": [
+        "frisk/keen_eye.png"
+      ],
+      "runtimeReferences": [
+        "features/vfx/vfxEventMapper.ts"
+      ]
+    },
+    {
+      "id": "friskOnePath",
+      "files": [
+        "frisk/one_path.png"
+      ],
+      "runtimeReferences": [
+        "rulesHints.ts",
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "friskPrecision",
+      "files": [
+        "frisk/precision.png"
+      ],
+      "runtimeReferences": [
+        "features/vfx/vfxEventMapper.ts",
+        "game/effects/rangedPresentation.ts"
+      ]
+    },
+    {
+      "id": "friskSubstitution",
+      "files": [
+        "frisk/substitution.png"
+      ],
+      "runtimeReferences": [
+        "features/vfx/vfxEventMapper.ts"
+      ]
+    },
+    {
+      "id": "genghisCharge",
+      "files": [
+        "genghisKhan/charge_primary.png",
+        "genghisKhan/charge_accent.png"
+      ],
+      "runtimeReferences": [
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "bunkerEntry",
+      "files": [
+        "grand-kaiser/bunker_entry.png"
+      ],
+      "runtimeReferences": [
+        "features/vfx/vfxEventMapper.ts"
+      ]
+    },
+    {
+      "id": "bunkerExit",
+      "files": [
+        "grand-kaiser/bunker_hit_exit.png"
+      ],
+      "runtimeReferences": [
+        "features/vfx/vfxEventMapper.ts"
+      ]
+    },
+    {
+      "id": "jebeRicochet",
+      "files": [
+        "jebe/ricochet_primary.png",
+        "jebe/ricochet_accent.png"
+      ],
+      "runtimeReferences": [
+        "features/vfx/vfxEventMapper.ts",
+        "game/effects/rangedPresentation.ts",
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "kanekiCentipede",
+      "files": [
+        "kaneki/centipede.png"
+      ],
+      "runtimeReferences": [
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "lokiSpin",
+      "files": [
+        "loki/spin.png"
+      ],
+      "runtimeReferences": [
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "lucheSun",
+      "files": [
+        "luche/falling_sun_primary.png",
+        "luche/falling_sun_accent.png"
+      ],
+      "runtimeReferences": [
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "lucheRay",
+      "files": [
+        "luche/ray_primary.png",
+        "luche/ray_accent.png"
+      ],
+      "runtimeReferences": [
+        "features/vfx/vfxEventMapper.ts",
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "mettatonFinalChord",
+      "files": [
+        "mettaton/final_chord_primary.png",
+        "mettaton/final_chord_accent.png"
+      ],
+      "runtimeReferences": [
+        "rulesHints.ts",
+        "features/vfx/vfxEventMapper.ts",
+        "game/effects/eventToEffects.ts",
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "mettatonLaser",
+      "files": [
+        "mettaton/laser_primary.png",
+        "mettaton/laser_accent.png"
+      ],
+      "runtimeReferences": [
+        "rulesHints.ts",
+        "store.ts",
+        "game/selectionState.ts",
+        "features/vfx/vfxEventMapper.ts",
+        "game/effects/eventToEffects.ts",
+        "game/effects/remainingHeroPresentation.ts",
+        "game/gameshell-content/buildHighlightedCells.ts",
+        "game/gameshell-content/cellHandlers.ts",
+        "game/targeting/buildActionPreview.ts",
+        "game/components/RightPanel/rightPanelHelpers.ts",
+        "game/gameshell-content/components/GameShellBoardColumn.tsx",
+        "game/gameshell-content/hooks/useGameShellAbilityModeTargets.ts",
+        "game/gameshell-content/hooks/useGameShellBoardUi.ts",
+        "game/gameshell-content/hooks/useGameShellPreviewEffects.ts"
+      ]
+    },
+    {
+      "id": "odinGungnir",
+      "files": [
+        "odin/gungnir.png"
+      ],
+      "runtimeReferences": [
+        "features/vfx/vfxEventMapper.ts",
+        "game/effects/rangedPresentation.ts"
+      ]
+    },
+    {
+      "id": "odinHuginn",
+      "files": [
+        "odin/huginn.png"
+      ],
+      "runtimeReferences": [
+        "features/vfx/persistentStatuses.ts"
+      ]
+    },
+    {
+      "id": "papyrusLine",
+      "files": [
+        "papyrus/line_primary.png",
+        "papyrus/line_accent.png"
+      ],
+      "runtimeReferences": [
+        "features/vfx/vfxEventMapper.ts",
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "gasterCharge",
+      "files": [
+        "sans/gaster_cannon.png"
+      ],
+      "runtimeReferences": [
+        "features/vfx/vfxEventMapper.ts"
+      ]
+    },
+    {
+      "id": "undyneEnergy",
+      "files": [
+        "undyne/energy_primary.png",
+        "undyne/energy_accent.png"
+      ],
+      "runtimeReferences": [
+        "features/vfx/vfxEventMapper.ts",
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "vladStakeMarker",
+      "files": [
+        "vladTepes/stake_marker.png"
+      ],
+      "runtimeReferences": []
+    },
+    {
+      "id": "zoroSantoryu",
+      "files": [
+        "zoro/santoryu.png"
+      ],
+      "runtimeReferences": [
+        "features/vfx/vfxEventMapper.ts"
+      ]
+    },
+    {
+      "id": "jackCoverTracks",
+      "files": [
+        "jackRipper/cover_tracks_primary.png",
+        "jackRipper/cover_tracks_accent.png"
+      ],
+      "runtimeReferences": [
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "jackSlaughter",
+      "files": [
+        "jackRipper/slaughter_primary.png",
+        "jackRipper/slaughter_accent.png"
+      ],
+      "runtimeReferences": [
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "hassanOrder",
+      "files": [
+        "hassan/order.png"
+      ],
+      "runtimeReferences": [
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "hassanControl",
+      "files": [
+        "hassan/true_enemy.png"
+      ],
+      "runtimeReferences": [
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "genghisDecree",
+      "files": [
+        "genghisKhan/decree.png"
+      ],
+      "runtimeReferences": [
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "chikatiloMark",
+      "files": [
+        "chikatilo/mark.png"
+      ],
+      "runtimeReferences": [
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "chikatiloDecoy",
+      "files": [
+        "chikatilo/decoy.png"
+      ],
+      "runtimeReferences": [
+        "rulesHints.ts",
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "falseTrailSetup",
+      "files": [
+        "chikatilo/false_trail.png"
+      ],
+      "runtimeReferences": [
+        "features/vfx/vfxEventMapper.ts"
+      ]
+    },
+    {
+      "id": "falseTrailBlast",
+      "files": [
+        "chikatilo/false_trail_explosion_primary.png",
+        "chikatilo/false_trail_explosion_accent.png"
+      ],
+      "runtimeReferences": [
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "papyrusBones",
+      "files": [
+        "papyrus/bones.png"
+      ],
+      "runtimeReferences": [
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "papyrusSpaghetti",
+      "files": [
+        "papyrus/spaghetti.png"
+      ],
+      "runtimeReferences": [
+        "rulesHints.ts",
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "papyrusUnbeliever",
+      "files": [
+        "papyrus/unbeliever.png"
+      ],
+      "runtimeReferences": [
+        "rulesHints.ts",
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "lechyGuide",
+      "files": [
+        "lechy/guide.png"
+      ],
+      "runtimeReferences": [
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "lechyForest",
+      "files": [
+        "lechy/forest.png"
+      ],
+      "runtimeReferences": [
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "lechyStorm",
+      "files": [
+        "lechy/storm_primary.png",
+        "lechy/storm_accent.png"
+      ],
+      "runtimeReferences": [
+        "rulesHints.ts",
+        "game/effects/eventToEffects.ts",
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "gutsCrossbow",
+      "files": [
+        "guts/crossbow.png"
+      ],
+      "runtimeReferences": [
+        "game/effects/rangedPresentation.ts",
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "gutsCannon",
+      "files": [
+        "guts/cannon_primary.png",
+        "guts/cannon_accent.png"
+      ],
+      "runtimeReferences": [
+        "rulesHints.ts",
+        "store.ts",
+        "game/selectionState.ts",
+        "features/vfx/expansionPresentation.ts",
+        "game/effects/rangedPresentation.ts",
+        "game/effects/remainingHeroPresentation.ts",
+        "game/gameshell-content/buildHighlightedCells.ts",
+        "game/gameshell-content/cellHandlers.ts",
+        "game/targeting/buildActionPreview.ts",
+        "game/components/RightPanel/rightPanelHelpers.ts",
+        "game/gameshell-content/hooks/useGameShellBoardUi.ts",
+        "game/gameshell-content/hooks/useGameShellCombatTargets.ts"
+      ]
+    },
+    {
+      "id": "gutsBerserk",
+      "files": [
+        "guts/berserk_primary.png",
+        "guts/berserk_accent.png"
+      ],
+      "runtimeReferences": [
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "gutsExit",
+      "files": [
+        "guts/berserk_exit_drain.png"
+      ],
+      "runtimeReferences": [
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "griffithRebirth",
+      "files": [
+        "griffith/rebirth_primary.png",
+        "griffith/rebirth_accent.png"
+      ],
+      "runtimeReferences": [
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "femtoMove",
+      "files": [
+        "femto/divine_move.png"
+      ],
+      "runtimeReferences": [
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "odinSleipnir",
+      "files": [
+        "odin/sleipnir.png"
+      ],
+      "runtimeReferences": [
+        "rulesHints.ts",
+        "store.ts",
+        "game/selectionState.ts",
+        "game/effects/eventToEffects.ts",
+        "game/effects/remainingHeroPresentation.ts",
+        "game/gameshell-content/buildHighlightedCells.ts",
+        "game/gameshell-content/cellHandlers.ts",
+        "game/targeting/buildActionPreview.ts",
+        "game/components/RightPanel/rightPanelHelpers.ts",
+        "game/gameshell-content/hooks/useGameShellAbilityModeTargets.ts",
+        "game/gameshell-content/hooks/useGameShellBoardUi.ts"
+      ]
+    },
+    {
+      "id": "odinMuninn",
+      "files": [
+        "odin/muninn.png"
+      ],
+      "runtimeReferences": [
+        "rulesHints.ts",
+        "features/vfx/attackOutcome.ts",
+        "features/vfx/vfxEventMapper.ts",
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "jebeHail",
+      "files": [
+        "jebe/hail_primary.png",
+        "jebe/hail_accent.png"
+      ],
+      "runtimeReferences": [
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "kaladinHeal",
+      "files": [
+        "kaladin/first.png"
+      ],
+      "runtimeReferences": [
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "kaladinFifth",
+      "files": [
+        "kaladin/fifth_primary.png",
+        "kaladin/fifth_accent.png"
+      ],
+      "runtimeReferences": [
+        "rulesHints.ts",
+        "store.ts",
+        "game/selectionState.ts",
+        "game/effects/eventToEffects.ts",
+        "game/effects/remainingHeroPresentation.ts",
+        "game/gameshell-content/buildHighlightedCells.ts",
+        "game/gameshell-content/cellHandlers.ts",
+        "game/components/RightPanel/rightPanelHelpers.ts",
+        "game/gameshell-content/components/GameShellBoardColumn.tsx",
+        "game/gameshell-content/hooks/useGameShellAbilityModeTargets.ts",
+        "game/gameshell-content/hooks/useGameShellBoardUi.ts",
+        "game/gameshell-content/hooks/useGameShellPreviewEffects.ts"
+      ]
+    },
+    {
+      "id": "lokiEntangle",
+      "files": [
+        "loki/entangle.png"
+      ],
+      "runtimeReferences": [
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "lokiChicken",
+      "files": [
+        "loki/chicken.png"
+      ],
+      "runtimeReferences": [
+        "features/vfx/vfxEventMapper.ts",
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "lokiControl",
+      "files": [
+        "loki/control.png"
+      ],
+      "runtimeReferences": [
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "friskHugs",
+      "files": [
+        "frisk/hugs.png"
+      ],
+      "runtimeReferences": [
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "friskHeal",
+      "files": [
+        "frisk/warm_words.png"
+      ],
+      "runtimeReferences": [
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "groznyInvade",
+      "files": [
+        "grozny/invade.png"
+      ],
+      "runtimeReferences": [
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "groznyTyrant",
+      "files": [
+        "grozny/tyrant_primary.png",
+        "grozny/tyrant_accent.png"
+      ],
+      "runtimeReferences": [
+        "rulesHints.ts",
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "undyneThrow",
+      "files": [
+        "undyne/throw.png"
+      ],
+      "runtimeReferences": [
+        "game/effects/rangedPresentation.ts",
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "undyneShift",
+      "files": [
+        "undyne/shift.png"
+      ],
+      "runtimeReferences": [
+        "features/vfx/vfxEventMapper.ts"
+      ]
+    },
+    {
+      "id": "undyneUndying",
+      "files": [
+        "undyne/undying_primary.png",
+        "undyne/undying_accent.png"
+      ],
+      "runtimeReferences": [
+        "rulesHints.ts",
+        "features/vfx/expansionPresentation.ts",
+        "game/effects/eventToEffects.ts",
+        "game/effects/finalDeath.ts",
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "duolingoPush",
+      "files": [
+        "duolingo/push.png"
+      ],
+      "runtimeReferences": [
+        "store.ts",
+        "game/selectionState.ts",
+        "game/effects/remainingHeroPresentation.ts",
+        "game/gameshell-content/cellHandlers.ts",
+        "game/targeting/buildActionPreview.ts",
+        "game/components/RightPanel/rightPanelHelpers.ts",
+        "game/gameshell-content/components/CurrentTaskPanel.tsx",
+        "game/gameshell-content/hooks/useGameShellBoardUi.ts",
+        "game/gameshell-content/hooks/useGameShellViewModel.ts"
+      ]
+    },
+    {
+      "id": "kanekiRegen",
+      "files": [
+        "kaneki/regen.png"
+      ],
+      "runtimeReferences": [
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "zoroOni",
+      "files": [
+        "zoro/oni_giri.png"
+      ],
+      "runtimeReferences": [
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "zoroAsura",
+      "files": [
+        "zoro/asura_primary.png",
+        "zoro/asura_accent.png"
+      ],
+      "runtimeReferences": [
+        "rulesHints.ts",
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "donSorrow",
+      "files": [
+        "donKihote/sorrow_move.png"
+      ],
+      "runtimeReferences": [
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "artemidaReveal",
+      "files": [
+        "artemida/moon_reveal.png"
+      ],
+      "runtimeReferences": [
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "lucheRadiance",
+      "files": [
+        "luche/radiance.png"
+      ],
+      "runtimeReferences": [
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "mettatonEx",
+      "files": [
+        "mettaton/ex.png"
+      ],
+      "runtimeReferences": [
+        "rulesHints.ts",
+        "features/vfx/expansionPresentation.ts",
+        "game/effects/eventToEffects.ts",
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "mettatonNeo",
+      "files": [
+        "mettaton/neo_primary.png",
+        "mettaton/neo_accent.png"
+      ],
+      "runtimeReferences": [
+        "rulesHints.ts",
+        "features/vfx/expansionPresentation.ts",
+        "game/effects/eventToEffects.ts",
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "mettatonPoppins",
+      "files": [
+        "mettaton/poppins_primary.png",
+        "mettaton/poppins_accent.png"
+      ],
+      "runtimeReferences": [
+        "rulesHints.ts",
+        "store.ts",
+        "game/selectionState.ts",
+        "game/effects/eventToEffects.ts",
+        "game/effects/remainingHeroPresentation.ts",
+        "game/gameshell-content/buildHighlightedCells.ts",
+        "game/gameshell-content/cellHandlers.ts",
+        "game/components/RightPanel/rightPanelHelpers.ts",
+        "game/gameshell-content/hooks/useGameShellAbilityModeTargets.ts",
+        "game/gameshell-content/hooks/useGameShellBoardUi.ts",
+        "game/gameshell-content/hooks/useGameShellPreviewEffects.ts"
+      ]
+    },
+    {
+      "id": "kaiserEngineering",
+      "files": [
+        "grand-kaiser/engineering_primary.png",
+        "grand-kaiser/engineering_accent.png"
+      ],
+      "runtimeReferences": [
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "sansJoke",
+      "files": [
+        "sans/joke.png"
+      ],
+      "runtimeReferences": [
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "sansUnbeliever",
+      "files": [
+        "sans/unbeliever.png"
+      ],
+      "runtimeReferences": [
+        "rulesHints.ts",
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "sansField",
+      "files": [
+        "sans/bone_field.png"
+      ],
+      "runtimeReferences": [
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "sansSleep",
+      "files": [
+        "sans/sleep.png"
+      ],
+      "runtimeReferences": [
+        "rulesHints.ts",
+        "game/effects/remainingHeroPresentation.ts"
+      ]
+    },
+    {
+      "id": "stakePlace",
+      "files": [
+        "vladTepes/stakes_place.png"
+      ],
+      "runtimeReferences": [
+        "game/effects/movementPresentation.ts"
+      ]
+    },
+    {
+      "id": "stakeTrigger",
+      "files": [
+        "vladTepes/stake_trigger.png"
+      ],
+      "runtimeReferences": [
+        "game/effects/movementPresentation.ts"
+      ]
+    },
+    {
+      "id": "snarePlace",
+      "files": [
+        "jackRipper/snare_place.png"
+      ],
+      "runtimeReferences": [
+        "game/effects/movementPresentation.ts"
+      ]
+    },
+    {
+      "id": "snareTrigger",
+      "files": [
+        "jackRipper/snare_reveal_trigger.png"
+      ],
+      "runtimeReferences": [
+        "game/effects/combatPlayback.ts",
+        "game/effects/movementPresentation.ts"
+      ]
+    },
+    {
+      "id": "doraImpact",
+      "files": [
+        "grand-kaiser/dora_impact_primary.png",
+        "grand-kaiser/dora_impact_accent.png"
+      ],
+      "runtimeReferences": [
+        "features/sfx/sfxEventMapper.ts",
+        "game/effects/heroPresentation.ts"
+      ]
+    },
+    {
+      "id": "carpetImpact",
+      "files": [
+        "grand-kaiser/carpet_impact_primary.png",
+        "grand-kaiser/carpet_impact_accent.png"
+      ],
+      "runtimeReferences": [
+        "features/sfx/sfxEventMapper.ts",
+        "game/effects/heroPresentation.ts"
+      ]
+    },
+    {
+      "id": "forestEruption",
+      "files": [
+        "vladTepes/forest_eruption_primary.png",
+        "vladTepes/forest_eruption_accent.png"
+      ],
+      "runtimeReferences": [
+        "features/sfx/sfxEventMapper.ts",
+        "game/effects/heroPresentation.ts"
+      ]
+    },
+    {
+      "id": "vladGaze",
+      "files": [
+        "vladTepes/gaze.png"
+      ],
+      "runtimeReferences": [
+        "features/vfx/vfxEventMapper.ts"
+      ]
+    },
+    {
+      "id": "gasterCannon",
+      "files": [
+        "sans/gaster_blaster.png"
+      ],
+      "runtimeReferences": [
+        "features/vfx/vfxEventMapper.ts",
+        "features/vfx/VfxLayer.tsx"
+      ]
+    },
+    {
+      "id": "sansCurseApply",
+      "files": [
+        "sans/curse_apply.png"
+      ],
+      "runtimeReferences": [
+        "features/vfx/vfxEventMapper.ts"
+      ]
+    },
+    {
+      "id": "sansCurseTick",
+      "files": [
+        "sans/curse_tick_end.png"
+      ],
+      "runtimeReferences": [
+        "features/vfx/vfxEventMapper.ts"
+      ]
+    },
+    {
+      "id": "sansCurseRemove",
+      "files": [
+        "sans/curse_tick_end.png"
+      ],
+      "runtimeReferences": [
+        "features/vfx/vfxEventMapper.ts"
+      ]
+    },
+    {
+      "id": "gasterBeam",
+      "files": [
+        "sans/gaster_beam_primary.png",
+        "sans/gaster_beam_accent.png"
+      ],
+      "runtimeReferences": [
+        "features/vfx/vfxEventMapper.ts"
+      ]
+    },
+    {
+      "id": "sansCurseStatus",
+      "files": [
+        "sans/curse_status.png"
+      ],
+      "runtimeReferences": [
+        "features/vfx/persistentStatuses.ts"
+      ]
+    },
+    {
+      "id": "bunkerStatus",
+      "files": [
+        "grand-kaiser/bunker_status.png"
+      ],
+      "runtimeReferences": [
+        "features/vfx/persistentStatuses.ts"
+      ]
+    },
+    {
+      "id": "fireball",
+      "files": [
+        "asgore/fireball.png"
+      ],
+      "runtimeReferences": [
+        "features/vfx/vfxEventMapper.ts"
+      ]
+    },
+    {
+      "id": "fireballCast",
+      "files": [
+        "asgore/fireball.png"
+      ],
+      "runtimeReferences": [
+        "features/vfx/vfxEventMapper.ts"
+      ]
+    },
+    {
+      "id": "fireballImpact",
+      "files": [
+        "asgore/fireball.png"
+      ],
+      "runtimeReferences": [
+        "features/vfx/vfxEventMapper.ts"
+      ]
+    },
+    {
+      "id": "soulParade",
+      "files": [
+        "asgore/soul_parade.png"
+      ],
+      "runtimeReferences": [
+        "features/vfx/vfxEventMapper.ts"
+      ]
+    },
+    {
+      "id": "fireParade",
+      "files": [
+        "asgore/fire_parade_primary.png",
+        "asgore/fire_parade_accent.png"
+      ],
+      "runtimeReferences": [
+        "game/effects/heroPresentation.ts"
+      ]
+    },
+    {
+      "id": "boatPickup",
+      "files": [
+        "riverPerson/boat_start_pickup.png"
+      ],
+      "runtimeReferences": [
+        "game/effects/riverPresentation.ts"
+      ]
+    },
+    {
+      "id": "boatDrop",
+      "files": [
+        "riverPerson/boat_drop.png"
+      ],
+      "runtimeReferences": [
+        "game/effects/riverPresentation.ts"
+      ]
+    },
+    {
+      "id": "boat",
+      "files": [
+        "riverPerson/boat_travel.png"
+      ],
+      "runtimeReferences": [
+        "features/vfx/vfxEventMapper.ts",
+        "game/effects/combatPlayback.ts",
+        "game/effects/movementPresentation.ts",
+        "game/effects/riverPresentation.ts"
+      ]
+    },
+    {
+      "id": "tralala",
+      "files": [
+        "riverPerson/tralala_primary.png",
+        "riverPerson/tralala_accent.png"
+      ],
+      "runtimeReferences": [
+        "i18n/eventMessages.ts",
+        "features/vfx/vfxEventMapper.ts",
+        "game/effects/combatPlayback.ts",
+        "game/effects/movementPresentation.ts",
+        "game/effects/riverPresentation.ts"
+      ]
+    }
+  ],
+  "pendingAnimationQa": [
+    "expansion.loki.great_joke",
+    "expansion.loki.trickster_sweep",
+    "expansion.loki.entangled_status",
+    "expansion.loki.stealth_enter",
+    "expansion.loki.stealth_reveal",
+    "expansion.duolingo.berserker_unlock",
+    "expansion.duolingo.trickster_sweep",
+    "expansion.duolingo.auto_defense",
+    "expansion.frisk.clean_soul_break",
+    "expansion.frisk.stealth_enter",
+    "expansion.frisk.stealth_reveal"
+  ],
+  "note": "Literal-reference scan is a triage aid, not proof of gameplay reachability. Expansion roles are resolved dynamically and are verified by behavior tests and source inspection.",
+  "manualRuntimeDispositions": [
+    {
+      "id": "vladStakeMarker",
+      "connected": true,
+      "runtime": "Board.tsx: vfxRegistry.vladStakeMarker.asset rendered from permitted view.stakeMarkers",
+      "verification": "BoardMarkers.test.tsx"
+    }
+  ]
+}

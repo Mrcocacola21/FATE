@@ -6,8 +6,7 @@ import { getPolkovodetsSource, maybeRequestIntimidate } from "../../../actions/h
 import { addKaladinMoveLock } from "../../../actions/heroes/kaladin";
 import { addLokiChicken, addLokiMoveLock } from "../../../actions/heroes/loki";
 import { ABILITY_BERSERK_AUTO_DEFENSE, ABILITY_LOKI_LAUGHT } from "../../../abilities";
-import { HERO_DUOLINGO_ID, HERO_FEMTO_ID, HERO_PAPYRUS_ID } from "../../../heroes";
-import { hasMettatonBerserkerFeature } from "../../../mettaton";
+import { hasBerserkerAutoDefense } from "../../../unitFeatures";
 import type { IntimidateResume } from "../../../actions/types";
 import { evAoeResolved, evBerserkerDefenseChosen, evDamageBonusApplied } from "../../../core";
 import type { TricksterAoEContext } from "../../types";
@@ -79,13 +78,7 @@ export function advanceTricksterAoEQueue(
       };
       const attackerDice = Array.isArray(nextCtx.attackerDice) ? nextCtx.attackerDice : [];
       const charges = target.charges?.[ABILITY_BERSERK_AUTO_DEFENSE] ?? 0;
-      const hasBerserkerDefense =
-        target.class === "berserker" ||
-        target.heroId === HERO_FEMTO_ID ||
-        (target.heroId === HERO_DUOLINGO_ID && target.duolingoBerserkerUnlocked) ||
-        (target.heroId === HERO_PAPYRUS_ID && target.papyrusUnbelieverActive) ||
-        hasMettatonBerserkerFeature(target);
-      if (hasBerserkerDefense && charges === 6 && attackerDice.length >= 2) {
+      if (hasBerserkerAutoDefense(target) && charges === 6 && attackerDice.length >= 2) {
         const requested = requestRoll(
           baseState,
           target.owner,

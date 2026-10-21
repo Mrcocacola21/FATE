@@ -591,16 +591,15 @@
     "hero": "undyne",
     "file": "shift.png",
     "ability": "undyneSwitchDirection",
-    "key": null,
-    "placement": "unit",
-    "status": "BLOCKED_UNIMPLEMENTED_ABILITY",
+    "key": "undyneShift",
+    "placement": "cell",
+    "status": "LIVE_CONNECTED",
     "frames": 12,
     "frameWidth": 128,
     "frameHeight": 128,
     "durationMs": 500,
-    "trigger": "No confirmed gameplay trigger: mechanic unimplemented",
-    "composite": null,
-    "reason": "Canonical metadata lists Direction Shift, but there is no implemented activation/forced-movement resolver. Implement the mechanic separately before adding presentation."
+    "trigger": "Accepted intimidateResolved with authorized undyneSwitchDirection signature, at the attacker's confirmed origin",
+    "composite": null
   },
   {
     "hero": "vladTepes",

@@ -869,6 +869,15 @@
             "reviewed": true,
             "evidence": "packages/web/test-results/melee-art-audit/raw-*.png; packages/web/test-results/vfx-expansion-game/normalized-swing-contact-sheets/; normalized-facing-contact-sheets/; normalized-target-cut-timelines/",
             "scope": "All 27 raw strips sampled at six real frames and all 27 normalized reference attacks inspected on the actual Board, desktop and phone; Guts/Genghis directions and representative timelines inspected. Full individual animation/network QA remains open."
+          },
+          "slashRecordingV18": {
+            "recorded": true,
+            "normal": "packages/web/test-results/all-slashes-review-v18/asgore/normal.mp4",
+            "slow": "packages/web/test-results/all-slashes-review-v18/asgore/slow-x4.mp4",
+            "combined": "packages/web/test-results/all-slashes-review-v18/asgore/review.mp4",
+            "sourcePngSha256": "fbe3f9333ea78533d50b924951e1a5d627c0b67c5a8b25f559cb1d5a4e3c2532",
+            "sourceCommit": "c10e563f397b62546076898278a0d12e3c5e35a1",
+            "userReviewPending": true
           }
         },
         "attackSwing": {
@@ -1760,6 +1769,15 @@
             "reviewed": true,
             "evidence": "packages/web/test-results/melee-art-audit/raw-*.png; packages/web/test-results/vfx-expansion-game/normalized-swing-contact-sheets/; normalized-facing-contact-sheets/; normalized-target-cut-timelines/",
             "scope": "All 27 raw strips sampled at six real frames and all 27 normalized reference attacks inspected on the actual Board, desktop and phone; Guts/Genghis directions and representative timelines inspected. Full individual animation/network QA remains open."
+          },
+          "slashRecordingV18": {
+            "recorded": true,
+            "normal": "packages/web/test-results/all-slashes-review-v18/chikatilo/normal.mp4",
+            "slow": "packages/web/test-results/all-slashes-review-v18/chikatilo/slow-x4.mp4",
+            "combined": "packages/web/test-results/all-slashes-review-v18/chikatilo/review.mp4",
+            "sourcePngSha256": "758d5fc49f4aa4188ddaf98b3182d7b51ad818f8f8b288cce2e2a8687deb7f25",
+            "sourceCommit": "c10e563f397b62546076898278a0d12e3c5e35a1",
+            "userReviewPending": true
           }
         },
         "attackSwing": {
@@ -2419,6 +2437,15 @@
             "reviewed": true,
             "evidence": "packages/web/test-results/melee-art-audit/raw-*.png; packages/web/test-results/vfx-expansion-game/normalized-swing-contact-sheets/; normalized-facing-contact-sheets/; normalized-target-cut-timelines/",
             "scope": "All 27 raw strips sampled at six real frames and all 27 normalized reference attacks inspected on the actual Board, desktop and phone; Guts/Genghis directions and representative timelines inspected. Full individual animation/network QA remains open."
+          },
+          "slashRecordingV18": {
+            "recorded": true,
+            "normal": "packages/web/test-results/all-slashes-review-v18/donKihote/normal.mp4",
+            "slow": "packages/web/test-results/all-slashes-review-v18/donKihote/slow-x4.mp4",
+            "combined": "packages/web/test-results/all-slashes-review-v18/donKihote/review.mp4",
+            "sourcePngSha256": "e7f1364d38b54ef9e548dadaf795177e7e7cb6e9401d6d69e00bea6aba5a84b5",
+            "sourceCommit": "c10e563f397b62546076898278a0d12e3c5e35a1",
+            "userReviewPending": true
           }
         },
         "attackSwing": {
@@ -3101,6 +3128,15 @@
             "reviewed": true,
             "evidence": "packages/web/test-results/melee-art-audit/raw-*.png; packages/web/test-results/vfx-expansion-game/normalized-swing-contact-sheets/; normalized-facing-contact-sheets/; normalized-target-cut-timelines/",
             "scope": "All 27 raw strips sampled at six real frames and all 27 normalized reference attacks inspected on the actual Board, desktop and phone; Guts/Genghis directions and representative timelines inspected. Full individual animation/network QA remains open."
+          },
+          "slashRecordingV18": {
+            "recorded": true,
+            "normal": "packages/web/test-results/all-slashes-review-v18/duolingo/normal.mp4",
+            "slow": "packages/web/test-results/all-slashes-review-v18/duolingo/slow-x4.mp4",
+            "combined": "packages/web/test-results/all-slashes-review-v18/duolingo/review.mp4",
+            "sourcePngSha256": "4bf9b2eb70c53e37dd18d227ad59682d00adb17e146e76ca2510b773630b0ccd",
+            "sourceCommit": "c10e563f397b62546076898278a0d12e3c5e35a1",
+            "userReviewPending": true
           }
         },
         "attackSwing": {
@@ -3812,6 +3848,15 @@
             "reviewed": true,
             "evidence": "packages/web/test-results/melee-art-audit/raw-*.png; packages/web/test-results/vfx-expansion-game/normalized-swing-contact-sheets/; normalized-facing-contact-sheets/; normalized-target-cut-timelines/",
             "scope": "All 27 raw strips sampled at six real frames and all 27 normalized reference attacks inspected on the actual Board, desktop and phone; Guts/Genghis directions and representative timelines inspected. Full individual animation/network QA remains open."
+          },
+          "slashRecordingV18": {
+            "recorded": true,
+            "normal": "packages/web/test-results/all-slashes-review-v18/elCidCompeador/normal.mp4",
+            "slow": "packages/web/test-results/all-slashes-review-v18/elCidCompeador/slow-x4.mp4",
+            "combined": "packages/web/test-results/all-slashes-review-v18/elCidCompeador/review.mp4",
+            "sourcePngSha256": "34eeccdf6710a152053c03a82403e65f9bf783c00539ce4889180f3010f9b5c1",
+            "sourceCommit": "c10e563f397b62546076898278a0d12e3c5e35a1",
+            "userReviewPending": true
           }
         },
         "attackSwing": {
@@ -4492,6 +4537,15 @@
             "reviewed": true,
             "evidence": "packages/web/test-results/melee-art-audit/raw-*.png; packages/web/test-results/vfx-expansion-game/normalized-swing-contact-sheets/; normalized-facing-contact-sheets/; normalized-target-cut-timelines/",
             "scope": "All 27 raw strips sampled at six real frames and all 27 normalized reference attacks inspected on the actual Board, desktop and phone; Guts/Genghis directions and representative timelines inspected. Full individual animation/network QA remains open."
+          },
+          "slashRecordingV18": {
+            "recorded": true,
+            "normal": "packages/web/test-results/all-slashes-review-v18/femto/normal.mp4",
+            "slow": "packages/web/test-results/all-slashes-review-v18/femto/slow-x4.mp4",
+            "combined": "packages/web/test-results/all-slashes-review-v18/femto/review.mp4",
+            "sourcePngSha256": "ad281d6d5641a8394579592c4d6853ab698efaf0d61ed3cc760b51ff475c2a80",
+            "sourceCommit": "c10e563f397b62546076898278a0d12e3c5e35a1",
+            "userReviewPending": true
           }
         },
         "attackSwing": {
@@ -5102,6 +5156,15 @@
             "reviewed": true,
             "evidence": "packages/web/test-results/melee-art-audit/raw-*.png; packages/web/test-results/vfx-expansion-game/normalized-swing-contact-sheets/; normalized-facing-contact-sheets/; normalized-target-cut-timelines/",
             "scope": "All 27 raw strips sampled at six real frames and all 27 normalized reference attacks inspected on the actual Board, desktop and phone; Guts/Genghis directions and representative timelines inspected. Full individual animation/network QA remains open."
+          },
+          "slashRecordingV18": {
+            "recorded": true,
+            "normal": "packages/web/test-results/all-slashes-review-v18/frisk/normal.mp4",
+            "slow": "packages/web/test-results/all-slashes-review-v18/frisk/slow-x4.mp4",
+            "combined": "packages/web/test-results/all-slashes-review-v18/frisk/review.mp4",
+            "sourcePngSha256": "d3c89d48916bf0fd17468f52c1f64a165ef8b7bc537ce1cf1fce0b9bc6d337e4",
+            "sourceCommit": "c10e563f397b62546076898278a0d12e3c5e35a1",
+            "userReviewPending": true
           }
         },
         "attackSwing": {
@@ -5819,6 +5882,15 @@
             "reviewed": true,
             "evidence": "packages/web/test-results/melee-art-audit/raw-*.png; packages/web/test-results/vfx-expansion-game/normalized-swing-contact-sheets/; normalized-facing-contact-sheets/; normalized-target-cut-timelines/",
             "scope": "All 27 raw strips sampled at six real frames and all 27 normalized reference attacks inspected on the actual Board, desktop and phone; Guts/Genghis directions and representative timelines inspected. Full individual animation/network QA remains open."
+          },
+          "slashRecordingV18": {
+            "recorded": true,
+            "normal": "packages/web/test-results/all-slashes-review-v18/genghisKhan/normal.mp4",
+            "slow": "packages/web/test-results/all-slashes-review-v18/genghisKhan/slow-x4.mp4",
+            "combined": "packages/web/test-results/all-slashes-review-v18/genghisKhan/review.mp4",
+            "sourcePngSha256": "4828ff6f1a21f41afee3615dc8fb50eb7ec7b983c5296a46664a0d46d8541a82",
+            "sourceCommit": "c10e563f397b62546076898278a0d12e3c5e35a1",
+            "userReviewPending": true
           }
         },
         "attackSwing": {
@@ -6841,17 +6913,24 @@
       "effectIds": [
         "expansion.grand-kaiser.auto_defense"
       ],
-      "triggerRoute": null,
-      "phase": "defense",
-      "geometry": "point",
+      "triggerRoute": "Accepted berserkerDefenseChosen(auto) / attackResolved(preventedBy=berserkerAutoDefense), after Engineering Miracle only; shared combat outcome phase owns the single cue",
+      "phase": "Confirmed automatic defense, at combat outcome; no hit impact and no repeated charge consumption",
+      "geometry": {
+        "placement": "cell",
+        "layer": "impact",
+        "anchorMode": "event",
+        "coordinates": "Projected attackResolved.targetCell; no inferred hidden target"
+      },
       "visibility": {
         "declared": "public",
         "runtime": "ProjectedGameEvent / permitted PlayerView only; missing source/position suppresses artwork"
       },
-      "integrationStatus": "blocked",
+      "integrationStatus": "verified",
       "verification": {
         "tests": [
-          "packages/web/src/features/vfx/expansionPresentation.test.tsx: Every charge-based hero defense binds the accepted branch; transformed Kaiser currently has no charge-defense decision"
+          "packages/web/src/features/vfx/expansionPresentation.test.tsx: Every charge-based hero defense binds the accepted branch; transformed Kaiser currently has no charge-defense decision",
+          "packages/rules/src/tests/core/heroFeatureCorrections.test.ts: transformed/untransformed, 5/6 charges, single attack and five area queues, no extra RNG, charge consumption and duplicate rejection",
+          "packages/web/src/features/vfx/expansionPresentation.test.tsx: Every charge-based hero defense, including transformed Kaiser, binds the accepted branch"
         ],
         "visual": {
           "reviewed": true,
@@ -6860,9 +6939,21 @@
           ],
           "scope": "Human inspection of midpoint art on the Board in fresh production preview. Full runtime animation/phase review is tracked separately; this does not prove trigger reachability.",
           "fullRuntimeQa": false
+        },
+        "featureCorrectionReview": {
+          "revision": "v19",
+          "behaviorVerified": true,
+          "browserReport": "packages/web/test-results/vfx-expansion-game/feature-corrections-report.json",
+          "fullRuntimeVisualQaComplete": false,
+          "visualReview": {
+            "reviewed": true,
+            "scope": "Midpoint art of four actual Board routes on desktop/phone, P1/P2/spectator and reduced motion. Not a full start-to-end animation review or a manual two-player match.",
+            "evidence": "packages/web/test-results/vfx-expansion-game/feature-corrections-contact.png",
+            "fullRuntimeQa": false
+          }
         }
       },
-      "blocker": "Engineering Miracle grants charges, but resolveAttackAttackerRoll/stateAutoDefense do not accept Kaiser as a Berserker defender; no accepted auto-dodge runtime route. Do not change combat eligibility for artwork.",
+      "blocker": null,
       "cleanup": "No reachable runtime instance; registry/preview only"
     },
     {
@@ -7404,6 +7495,15 @@
             "reviewed": true,
             "evidence": "packages/web/test-results/melee-art-audit/raw-*.png; packages/web/test-results/vfx-expansion-game/normalized-swing-contact-sheets/; normalized-facing-contact-sheets/; normalized-target-cut-timelines/",
             "scope": "All 27 raw strips sampled at six real frames and all 27 normalized reference attacks inspected on the actual Board, desktop and phone; Guts/Genghis directions and representative timelines inspected. Full individual animation/network QA remains open."
+          },
+          "slashRecordingV18": {
+            "recorded": true,
+            "normal": "packages/web/test-results/all-slashes-review-v18/griffith/normal.mp4",
+            "slow": "packages/web/test-results/all-slashes-review-v18/griffith/slow-x4.mp4",
+            "combined": "packages/web/test-results/all-slashes-review-v18/griffith/review.mp4",
+            "sourcePngSha256": "1992440ef8cbdff47f1cf1a05012e58833f6c76264126f759111eb209e9cd255",
+            "sourceCommit": "c10e563f397b62546076898278a0d12e3c5e35a1",
+            "userReviewPending": true
           }
         },
         "attackSwing": {
@@ -7665,18 +7765,27 @@
       "effectIds": [
         "expansion.griffith.commander_aura"
       ],
-      "triggerRoute": null,
-      "phase": "aura",
-      "geometry": "static",
+      "triggerRoute": "Permitted PlayerView live commander -> expansionStatusArt -> CommanderAura; shared rules hasCommanderAura/getPolkovodetsSource; allied radius-one support badge",
+      "phase": "Persistent projected state, restored silently from snapshot; Griffith loses aura on Rebirth to Femto",
+      "geometry": {
+        "placement": "cell",
+        "layer": "ground",
+        "anchorMode": "unit",
+        "scaleCells": 3,
+        "coordinates": "Rendered source position, eight Chebyshev radius-one neighbors, board clipping and original-art alpha bounds"
+      },
       "visibility": {
         "declared": "owner",
-        "runtime": null
+        "runtime": "Owner/opponent/spectator only while the living source is projected and visible; never infer a concealed commander"
       },
-      "integrationStatus": "blocked",
+      "integrationStatus": "verified",
       "verification": {
         "tests": [
           "packages/web/src/features/vfx/expansionPresentation.test.tsx: Source-backed static statuses hydrate silently and clear with state, death, hidden source or recipient permission",
-          "packages/rules/src/actions/heroes/vlad.ts: getPolkovodetsSource excludes this hero"
+          "packages/rules/src/actions/heroes/vlad.ts: getPolkovodetsSource excludes this hero",
+          "packages/rules/src/tests/core/heroFeatureCorrections.test.ts: Griffith/Grozny real +1 damage, diagonal radius one, no self/enemy/distant/dead/Femto source",
+          "packages/web/src/features/vfx/expansionPresentation.test.tsx: Commander corrections restore real bonuses and recipient-safe auras; Femto never inherits Griffith's aura",
+          "packages/web/src/features/vfx/UnitStatusVfx.test.tsx: commander support badge matches rules for all eight commanders, diagonals, allies and non-stacking"
         ],
         "visual": {
           "reviewed": true,
@@ -7685,9 +7794,29 @@
           ],
           "scope": "Human inspection of midpoint art on the Board in fresh production preview. Full runtime animation/phase review is tracked separately; this does not prove trigger reachability.",
           "fullRuntimeQa": false
+        },
+        "projectedState": [
+          "heroId",
+          "isAlive",
+          "position",
+          "owner",
+          "isStealthed"
+        ],
+        "cleanup": "State-derived: remove on source death/removal, loss of visibility/recipient permission, room reset or Griffith -> Femto; support badges also clear outside radius",
+        "featureCorrectionReview": {
+          "revision": "v19",
+          "behaviorVerified": true,
+          "browserReport": "packages/web/test-results/vfx-expansion-game/feature-corrections-report.json",
+          "fullRuntimeVisualQaComplete": false,
+          "visualReview": {
+            "reviewed": true,
+            "scope": "Midpoint art of four actual Board routes on desktop/phone, P1/P2/spectator and reduced motion. Not a full start-to-end animation review or a manual two-player match.",
+            "evidence": "packages/web/test-results/vfx-expansion-game/feature-corrections-contact.png",
+            "fullRuntimeQa": false
+          }
         }
       },
-      "blocker": "packages/rules/src/actions/heroes/vlad.ts:getPolkovodetsSource excludes Griffith; art/brief requests vladPolkovodets which has no current rule effect for this hero. Balance unchanged.",
+      "blocker": null,
       "cleanup": "No reachable runtime instance; registry/preview only"
     },
     {
@@ -7950,6 +8079,15 @@
             "reviewed": true,
             "evidence": "packages/web/test-results/melee-art-audit/raw-*.png; packages/web/test-results/vfx-expansion-game/normalized-swing-contact-sheets/; normalized-facing-contact-sheets/; normalized-target-cut-timelines/",
             "scope": "All 27 raw strips sampled at six real frames and all 27 normalized reference attacks inspected on the actual Board, desktop and phone; Guts/Genghis directions and representative timelines inspected. Full individual animation/network QA remains open."
+          },
+          "slashRecordingV18": {
+            "recorded": true,
+            "normal": "packages/web/test-results/all-slashes-review-v18/grozny/normal.mp4",
+            "slow": "packages/web/test-results/all-slashes-review-v18/grozny/slow-x4.mp4",
+            "combined": "packages/web/test-results/all-slashes-review-v18/grozny/review.mp4",
+            "sourcePngSha256": "461db7398aa7e08dee09a9eda66604a9109921e82408ec2ff3ea43d69d3d4a4c",
+            "sourceCommit": "c10e563f397b62546076898278a0d12e3c5e35a1",
+            "userReviewPending": true
           }
         },
         "attackSwing": {
@@ -8310,18 +8448,27 @@
       "effectIds": [
         "expansion.grozny.commander_aura"
       ],
-      "triggerRoute": null,
-      "phase": "status",
-      "geometry": "static",
+      "triggerRoute": "Permitted PlayerView live commander -> expansionStatusArt -> CommanderAura; shared rules hasCommanderAura/getPolkovodetsSource; allied radius-one support badge",
+      "phase": "Persistent projected state, restored silently from snapshot; Griffith loses aura on Rebirth to Femto",
+      "geometry": {
+        "placement": "cell",
+        "layer": "ground",
+        "anchorMode": "unit",
+        "scaleCells": 3,
+        "coordinates": "Rendered source position, eight Chebyshev radius-one neighbors, board clipping and original-art alpha bounds"
+      },
       "visibility": {
         "declared": "public",
-        "runtime": null
+        "runtime": "Owner/opponent/spectator only while the living source is projected and visible; never infer a concealed commander"
       },
-      "integrationStatus": "blocked",
+      "integrationStatus": "verified",
       "verification": {
         "tests": [
           "packages/web/src/features/vfx/expansionPresentation.test.tsx: Source-backed static statuses hydrate silently and clear with state, death, hidden source or recipient permission",
-          "packages/rules/src/actions/heroes/vlad.ts: getPolkovodetsSource excludes this hero"
+          "packages/rules/src/actions/heroes/vlad.ts: getPolkovodetsSource excludes this hero",
+          "packages/rules/src/tests/core/heroFeatureCorrections.test.ts: Griffith/Grozny real +1 damage, diagonal radius one, no self/enemy/distant/dead/Femto source",
+          "packages/web/src/features/vfx/expansionPresentation.test.tsx: Commander corrections restore real bonuses and recipient-safe auras; Femto never inherits Griffith's aura",
+          "packages/web/src/features/vfx/UnitStatusVfx.test.tsx: commander support badge matches rules for all eight commanders, diagonals, allies and non-stacking"
         ],
         "visual": {
           "reviewed": true,
@@ -8330,9 +8477,29 @@
           ],
           "scope": "Human inspection of midpoint art on the Board in fresh production preview. Full runtime animation/phase review is tracked separately; this does not prove trigger reachability.",
           "fullRuntimeQa": false
+        },
+        "projectedState": [
+          "heroId",
+          "isAlive",
+          "position",
+          "owner",
+          "isStealthed"
+        ],
+        "cleanup": "State-derived: remove on source death/removal, loss of visibility/recipient permission, room reset or Griffith -> Femto; support badges also clear outside radius",
+        "featureCorrectionReview": {
+          "revision": "v19",
+          "behaviorVerified": true,
+          "browserReport": "packages/web/test-results/vfx-expansion-game/feature-corrections-report.json",
+          "fullRuntimeVisualQaComplete": false,
+          "visualReview": {
+            "reviewed": true,
+            "scope": "Midpoint art of four actual Board routes on desktop/phone, P1/P2/spectator and reduced motion. Not a full start-to-end animation review or a manual two-player match.",
+            "evidence": "packages/web/test-results/vfx-expansion-game/feature-corrections-contact.png",
+            "fullRuntimeQa": false
+          }
         }
       },
-      "blocker": "getPolkovodetsSource excludes Grozny, including Tyrant inherited movement. No current commander-aura rule for this hero; balance unchanged.",
+      "blocker": null,
       "cleanup": "No reachable runtime instance; registry/preview only"
     },
     {
@@ -8733,6 +8900,15 @@
             "reviewed": true,
             "evidence": "packages/web/test-results/melee-art-audit/raw-*.png; packages/web/test-results/vfx-expansion-game/normalized-swing-contact-sheets/; normalized-facing-contact-sheets/; normalized-target-cut-timelines/",
             "scope": "All 27 raw strips sampled at six real frames and all 27 normalized reference attacks inspected on the actual Board, desktop and phone; Guts/Genghis directions and representative timelines inspected. Full individual animation/network QA remains open."
+          },
+          "slashRecordingV18": {
+            "recorded": true,
+            "normal": "packages/web/test-results/all-slashes-review-v18/guts/normal.mp4",
+            "slow": "packages/web/test-results/all-slashes-review-v18/guts/slow-x4.mp4",
+            "combined": "packages/web/test-results/all-slashes-review-v18/guts/review.mp4",
+            "sourcePngSha256": "8df769dfd65df5c537b779f0f6cb3d2e0f41114be12cd61f9edf2af04dd5f272",
+            "sourceCommit": "c10e563f397b62546076898278a0d12e3c5e35a1",
+            "userReviewPending": true
           }
         },
         "attackSwing": {
@@ -9326,6 +9502,15 @@
             "reviewed": true,
             "evidence": "packages/web/test-results/melee-art-audit/raw-*.png; packages/web/test-results/vfx-expansion-game/normalized-swing-contact-sheets/; normalized-facing-contact-sheets/; normalized-target-cut-timelines/",
             "scope": "All 27 raw strips sampled at six real frames and all 27 normalized reference attacks inspected on the actual Board, desktop and phone; Guts/Genghis directions and representative timelines inspected. Full individual animation/network QA remains open."
+          },
+          "slashRecordingV18": {
+            "recorded": true,
+            "normal": "packages/web/test-results/all-slashes-review-v18/guts.berserk/normal.mp4",
+            "slow": "packages/web/test-results/all-slashes-review-v18/guts.berserk/slow-x4.mp4",
+            "combined": "packages/web/test-results/all-slashes-review-v18/guts.berserk/review.mp4",
+            "sourcePngSha256": "0f51add6a7ea0a4cb40de7829959d3662538088c41979e81f42a35d8a6ce24dd",
+            "sourceCommit": "c10e563f397b62546076898278a0d12e3c5e35a1",
+            "userReviewPending": true
           }
         },
         "attackSwing": {
@@ -9669,6 +9854,15 @@
             "reviewed": true,
             "evidence": "packages/web/test-results/melee-art-audit/raw-*.png; packages/web/test-results/vfx-expansion-game/normalized-swing-contact-sheets/; normalized-facing-contact-sheets/; normalized-target-cut-timelines/",
             "scope": "All 27 raw strips sampled at six real frames and all 27 normalized reference attacks inspected on the actual Board, desktop and phone; Guts/Genghis directions and representative timelines inspected. Full individual animation/network QA remains open."
+          },
+          "slashRecordingV18": {
+            "recorded": true,
+            "normal": "packages/web/test-results/all-slashes-review-v18/hassan/normal.mp4",
+            "slow": "packages/web/test-results/all-slashes-review-v18/hassan/slow-x4.mp4",
+            "combined": "packages/web/test-results/all-slashes-review-v18/hassan/review.mp4",
+            "sourcePngSha256": "d6f80fd5cd10651707d9faca50f43d569c1fbcb3941d270df1b38b07953fc31f",
+            "sourceCommit": "c10e563f397b62546076898278a0d12e3c5e35a1",
+            "userReviewPending": true
           }
         },
         "attackSwing": {
@@ -10450,6 +10644,15 @@
             "reviewed": true,
             "evidence": "packages/web/test-results/melee-art-audit/raw-*.png; packages/web/test-results/vfx-expansion-game/normalized-swing-contact-sheets/; normalized-facing-contact-sheets/; normalized-target-cut-timelines/",
             "scope": "All 27 raw strips sampled at six real frames and all 27 normalized reference attacks inspected on the actual Board, desktop and phone; Guts/Genghis directions and representative timelines inspected. Full individual animation/network QA remains open."
+          },
+          "slashRecordingV18": {
+            "recorded": true,
+            "normal": "packages/web/test-results/all-slashes-review-v18/jackRipper/normal.mp4",
+            "slow": "packages/web/test-results/all-slashes-review-v18/jackRipper/slow-x4.mp4",
+            "combined": "packages/web/test-results/all-slashes-review-v18/jackRipper/review.mp4",
+            "sourcePngSha256": "bf0d202a5f7edc019a1a4c0482691c7ee39cc4060bd5bc9fa49d24e465cf14cb",
+            "sourceCommit": "c10e563f397b62546076898278a0d12e3c5e35a1",
+            "userReviewPending": true
           }
         },
         "attackSwing": {
@@ -11882,6 +12085,15 @@
             "reviewed": true,
             "evidence": "packages/web/test-results/melee-art-audit/raw-*.png; packages/web/test-results/vfx-expansion-game/normalized-swing-contact-sheets/; normalized-facing-contact-sheets/; normalized-target-cut-timelines/",
             "scope": "All 27 raw strips sampled at six real frames and all 27 normalized reference attacks inspected on the actual Board, desktop and phone; Guts/Genghis directions and representative timelines inspected. Full individual animation/network QA remains open."
+          },
+          "slashRecordingV18": {
+            "recorded": true,
+            "normal": "packages/web/test-results/all-slashes-review-v18/kaladin/normal.mp4",
+            "slow": "packages/web/test-results/all-slashes-review-v18/kaladin/slow-x4.mp4",
+            "combined": "packages/web/test-results/all-slashes-review-v18/kaladin/review.mp4",
+            "sourcePngSha256": "528bbbb3b983dc9db1b42260bc2d1a36fd65c2089d78433e555e11e13d651036",
+            "sourceCommit": "c10e563f397b62546076898278a0d12e3c5e35a1",
+            "userReviewPending": true
           }
         },
         "attackSwing": {
@@ -12591,6 +12803,15 @@
             "reviewed": true,
             "evidence": "packages/web/test-results/melee-art-audit/raw-*.png; packages/web/test-results/vfx-expansion-game/normalized-swing-contact-sheets/; normalized-facing-contact-sheets/; normalized-target-cut-timelines/",
             "scope": "All 27 raw strips sampled at six real frames and all 27 normalized reference attacks inspected on the actual Board, desktop and phone; Guts/Genghis directions and representative timelines inspected. Full individual animation/network QA remains open."
+          },
+          "slashRecordingV18": {
+            "recorded": true,
+            "normal": "packages/web/test-results/all-slashes-review-v18/kaneki/normal.mp4",
+            "slow": "packages/web/test-results/all-slashes-review-v18/kaneki/slow-x4.mp4",
+            "combined": "packages/web/test-results/all-slashes-review-v18/kaneki/review.mp4",
+            "sourcePngSha256": "5f9d4499ae07e7ccc888cd3d3540da8dcba00428bfbbd5eeaaf477afba78e521",
+            "sourceCommit": "c10e563f397b62546076898278a0d12e3c5e35a1",
+            "userReviewPending": true
           }
         },
         "attackSwing": {
@@ -13137,6 +13358,15 @@
             "reviewed": true,
             "evidence": "packages/web/test-results/melee-art-audit/raw-*.png; packages/web/test-results/vfx-expansion-game/normalized-swing-contact-sheets/; normalized-facing-contact-sheets/; normalized-target-cut-timelines/",
             "scope": "All 27 raw strips sampled at six real frames and all 27 normalized reference attacks inspected on the actual Board, desktop and phone; Guts/Genghis directions and representative timelines inspected. Full individual animation/network QA remains open."
+          },
+          "slashRecordingV18": {
+            "recorded": true,
+            "normal": "packages/web/test-results/all-slashes-review-v18/kaneki.centipede/normal.mp4",
+            "slow": "packages/web/test-results/all-slashes-review-v18/kaneki.centipede/slow-x4.mp4",
+            "combined": "packages/web/test-results/all-slashes-review-v18/kaneki.centipede/review.mp4",
+            "sourcePngSha256": "a010d0a31e4f3712de1f724c6d855f619d01b841f07f6bc46c6cce1fa028cad0",
+            "sourceCommit": "c10e563f397b62546076898278a0d12e3c5e35a1",
+            "userReviewPending": true
           }
         },
         "attackSwing": {
@@ -13426,6 +13656,15 @@
             "reviewed": true,
             "evidence": "packages/web/test-results/melee-art-audit/raw-*.png; packages/web/test-results/vfx-expansion-game/normalized-swing-contact-sheets/; normalized-facing-contact-sheets/; normalized-target-cut-timelines/",
             "scope": "All 27 raw strips sampled at six real frames and all 27 normalized reference attacks inspected on the actual Board, desktop and phone; Guts/Genghis directions and representative timelines inspected. Full individual animation/network QA remains open."
+          },
+          "slashRecordingV18": {
+            "recorded": true,
+            "normal": "packages/web/test-results/all-slashes-review-v18/lechy/normal.mp4",
+            "slow": "packages/web/test-results/all-slashes-review-v18/lechy/slow-x4.mp4",
+            "combined": "packages/web/test-results/all-slashes-review-v18/lechy/review.mp4",
+            "sourcePngSha256": "70bff1a1cf84a64be28fe2d7c4367be6327c560fda87b47c118f1b9edd1629cd",
+            "sourceCommit": "c10e563f397b62546076898278a0d12e3c5e35a1",
+            "userReviewPending": true
           }
         },
         "attackSwing": {
@@ -14309,6 +14548,15 @@
             "reviewed": true,
             "evidence": "packages/web/test-results/melee-art-audit/raw-*.png; packages/web/test-results/vfx-expansion-game/normalized-swing-contact-sheets/; normalized-facing-contact-sheets/; normalized-target-cut-timelines/",
             "scope": "All 27 raw strips sampled at six real frames and all 27 normalized reference attacks inspected on the actual Board, desktop and phone; Guts/Genghis directions and representative timelines inspected. Full individual animation/network QA remains open."
+          },
+          "slashRecordingV18": {
+            "recorded": true,
+            "normal": "packages/web/test-results/all-slashes-review-v18/loki/normal.mp4",
+            "slow": "packages/web/test-results/all-slashes-review-v18/loki/slow-x4.mp4",
+            "combined": "packages/web/test-results/all-slashes-review-v18/loki/review.mp4",
+            "sourcePngSha256": "2d6272db38394ce40cfbad6dfe82a13d259626a477e36f514bca85ea5af97147",
+            "sourceCommit": "c10e563f397b62546076898278a0d12e3c5e35a1",
+            "userReviewPending": true
           }
         },
         "attackSwing": {
@@ -15113,6 +15361,15 @@
             "reviewed": true,
             "evidence": "packages/web/test-results/melee-art-audit/raw-*.png; packages/web/test-results/vfx-expansion-game/normalized-swing-contact-sheets/; normalized-facing-contact-sheets/; normalized-target-cut-timelines/",
             "scope": "All 27 raw strips sampled at six real frames and all 27 normalized reference attacks inspected on the actual Board, desktop and phone; Guts/Genghis directions and representative timelines inspected. Full individual animation/network QA remains open."
+          },
+          "slashRecordingV18": {
+            "recorded": true,
+            "normal": "packages/web/test-results/all-slashes-review-v18/luche/normal.mp4",
+            "slow": "packages/web/test-results/all-slashes-review-v18/luche/slow-x4.mp4",
+            "combined": "packages/web/test-results/all-slashes-review-v18/luche/review.mp4",
+            "sourcePngSha256": "0ef96279bfd11a628c61ecd06ad2b99e0e25d53f4accf74bdb277695d5cb98de",
+            "sourceCommit": "c10e563f397b62546076898278a0d12e3c5e35a1",
+            "userReviewPending": true
           }
         },
         "attackSwing": {
@@ -16568,6 +16825,15 @@
             "reviewed": true,
             "evidence": "packages/web/test-results/melee-art-audit/raw-*.png; packages/web/test-results/vfx-expansion-game/normalized-swing-contact-sheets/; normalized-facing-contact-sheets/; normalized-target-cut-timelines/",
             "scope": "All 27 raw strips sampled at six real frames and all 27 normalized reference attacks inspected on the actual Board, desktop and phone; Guts/Genghis directions and representative timelines inspected. Full individual animation/network QA remains open."
+          },
+          "slashRecordingV18": {
+            "recorded": true,
+            "normal": "packages/web/test-results/all-slashes-review-v18/odin/normal.mp4",
+            "slow": "packages/web/test-results/all-slashes-review-v18/odin/slow-x4.mp4",
+            "combined": "packages/web/test-results/all-slashes-review-v18/odin/review.mp4",
+            "sourcePngSha256": "d0dcbf135b1fceff0aa1c04a09ecba1bc4c4d2aa26a81bd476e8a309f02fc82c",
+            "sourceCommit": "c10e563f397b62546076898278a0d12e3c5e35a1",
+            "userReviewPending": true
           }
         },
         "attackSwing": {
@@ -17218,6 +17484,15 @@
             "reviewed": true,
             "evidence": "packages/web/test-results/melee-art-audit/raw-*.png; packages/web/test-results/vfx-expansion-game/normalized-swing-contact-sheets/; normalized-facing-contact-sheets/; normalized-target-cut-timelines/",
             "scope": "All 27 raw strips sampled at six real frames and all 27 normalized reference attacks inspected on the actual Board, desktop and phone; Guts/Genghis directions and representative timelines inspected. Full individual animation/network QA remains open."
+          },
+          "slashRecordingV18": {
+            "recorded": true,
+            "normal": "packages/web/test-results/all-slashes-review-v18/papyrus/normal.mp4",
+            "slow": "packages/web/test-results/all-slashes-review-v18/papyrus/slow-x4.mp4",
+            "combined": "packages/web/test-results/all-slashes-review-v18/papyrus/review.mp4",
+            "sourcePngSha256": "aaf94977a01c3cc6cc8aa62e4ec89f46a342578f6c41f646303570aa7c4c3fab",
+            "sourceCommit": "c10e563f397b62546076898278a0d12e3c5e35a1",
+            "userReviewPending": true
           }
         },
         "attackSwing": {
@@ -18025,6 +18300,15 @@
             "reviewed": true,
             "evidence": "packages/web/test-results/melee-art-audit/raw-*.png; packages/web/test-results/vfx-expansion-game/normalized-swing-contact-sheets/; normalized-facing-contact-sheets/; normalized-target-cut-timelines/",
             "scope": "All 27 raw strips sampled at six real frames and all 27 normalized reference attacks inspected on the actual Board, desktop and phone; Guts/Genghis directions and representative timelines inspected. Full individual animation/network QA remains open."
+          },
+          "slashRecordingV18": {
+            "recorded": true,
+            "normal": "packages/web/test-results/all-slashes-review-v18/riverPerson/normal.mp4",
+            "slow": "packages/web/test-results/all-slashes-review-v18/riverPerson/slow-x4.mp4",
+            "combined": "packages/web/test-results/all-slashes-review-v18/riverPerson/review.mp4",
+            "sourcePngSha256": "7b89e99573161751fda1d1f4c0d050c5370aa420efefc559cbb30c767b575702",
+            "sourceCommit": "c10e563f397b62546076898278a0d12e3c5e35a1",
+            "userReviewPending": true
           }
         },
         "attackSwing": {
@@ -18639,6 +18923,15 @@
             "reviewed": true,
             "evidence": "packages/web/test-results/melee-art-audit/raw-*.png; packages/web/test-results/vfx-expansion-game/normalized-swing-contact-sheets/; normalized-facing-contact-sheets/; normalized-target-cut-timelines/",
             "scope": "All 27 raw strips sampled at six real frames and all 27 normalized reference attacks inspected on the actual Board, desktop and phone; Guts/Genghis directions and representative timelines inspected. Full individual animation/network QA remains open."
+          },
+          "slashRecordingV18": {
+            "recorded": true,
+            "normal": "packages/web/test-results/all-slashes-review-v18/sans/normal.mp4",
+            "slow": "packages/web/test-results/all-slashes-review-v18/sans/slow-x4.mp4",
+            "combined": "packages/web/test-results/all-slashes-review-v18/sans/review.mp4",
+            "sourcePngSha256": "750e744392e3b17233af08a2616288e4e3dcfb9b7a6f4d81e744615e2d17eeb1",
+            "sourceCommit": "c10e563f397b62546076898278a0d12e3c5e35a1",
+            "userReviewPending": true
           }
         },
         "attackSwing": {
@@ -19342,6 +19635,15 @@
             "reviewed": true,
             "evidence": "packages/web/test-results/melee-art-audit/raw-*.png; packages/web/test-results/vfx-expansion-game/normalized-swing-contact-sheets/; normalized-facing-contact-sheets/; normalized-target-cut-timelines/",
             "scope": "All 27 raw strips sampled at six real frames and all 27 normalized reference attacks inspected on the actual Board, desktop and phone; Guts/Genghis directions and representative timelines inspected. Full individual animation/network QA remains open."
+          },
+          "slashRecordingV18": {
+            "recorded": true,
+            "normal": "packages/web/test-results/all-slashes-review-v18/undyne/normal.mp4",
+            "slow": "packages/web/test-results/all-slashes-review-v18/undyne/slow-x4.mp4",
+            "combined": "packages/web/test-results/all-slashes-review-v18/undyne/review.mp4",
+            "sourcePngSha256": "60632cc63dbb3543550a18fa607d7951369ab23af53f3d254627d2961d1f8721",
+            "sourceCommit": "c10e563f397b62546076898278a0d12e3c5e35a1",
+            "userReviewPending": true
           }
         },
         "attackSwing": {
@@ -19934,6 +20236,15 @@
             "reviewed": true,
             "evidence": "packages/web/test-results/melee-art-audit/raw-*.png; packages/web/test-results/vfx-expansion-game/normalized-swing-contact-sheets/; normalized-facing-contact-sheets/; normalized-target-cut-timelines/",
             "scope": "All 27 raw strips sampled at six real frames and all 27 normalized reference attacks inspected on the actual Board, desktop and phone; Guts/Genghis directions and representative timelines inspected. Full individual animation/network QA remains open."
+          },
+          "slashRecordingV18": {
+            "recorded": true,
+            "normal": "packages/web/test-results/all-slashes-review-v18/undyne.undying/normal.mp4",
+            "slow": "packages/web/test-results/all-slashes-review-v18/undyne.undying/slow-x4.mp4",
+            "combined": "packages/web/test-results/all-slashes-review-v18/undyne.undying/review.mp4",
+            "sourcePngSha256": "ae013b6d3fa5cbe3fe6ec33abd27e156513ed563f9777ead991c6ef8e1a72449",
+            "sourceCommit": "c10e563f397b62546076898278a0d12e3c5e35a1",
+            "userReviewPending": true
           }
         },
         "attackSwing": {
@@ -20221,6 +20532,15 @@
             "reviewed": true,
             "evidence": "packages/web/test-results/melee-art-audit/raw-*.png; packages/web/test-results/vfx-expansion-game/normalized-swing-contact-sheets/; normalized-facing-contact-sheets/; normalized-target-cut-timelines/",
             "scope": "All 27 raw strips sampled at six real frames and all 27 normalized reference attacks inspected on the actual Board, desktop and phone; Guts/Genghis directions and representative timelines inspected. Full individual animation/network QA remains open."
+          },
+          "slashRecordingV18": {
+            "recorded": true,
+            "normal": "packages/web/test-results/all-slashes-review-v18/vladTepes/normal.mp4",
+            "slow": "packages/web/test-results/all-slashes-review-v18/vladTepes/slow-x4.mp4",
+            "combined": "packages/web/test-results/all-slashes-review-v18/vladTepes/review.mp4",
+            "sourcePngSha256": "91caca05b487d5aad7bcb8730af4b7a3bc9c63e4aa7e793e371a56e28a28f117",
+            "sourceCommit": "c10e563f397b62546076898278a0d12e3c5e35a1",
+            "userReviewPending": true
           }
         },
         "attackSwing": {
@@ -21162,10 +21482,8 @@
     "heroCount": 29,
     "errors": []
   },
-  "knownExternalBlockers": [
-    "undyne/shift.png: Direction Shift mechanic absent; outside expansion scope"
-  ],
-  "nextBatch": "Остаются три точных противоречия заказа rules: ауры Griffith/Grozny и auto_defense Кайзера. Для них требуется отдельное решение о смысле заказа/механике; баланс ради арта не изменялся. Следующая независимая партия полной анимационной QA — 11 уникальных PNG Loki/Duolingo/Frisk (nextBatchEffectIds): целиком от старта до исчезновения, статус snapshot/expiry и оба получателя. Средние кадры уже просмотрены; полный ручной сетевой матч двух игроков не выполнен.",
+  "knownExternalBlockers": [],
+  "nextBatch": "Следующая партия полной анимационной QA — 11 уникальных PNG Loki/Duolingo/Frisk (nextBatchEffectIds): просмотр целиком от старта до исчезновения, восстановление/снятие статусов и разрешённые получатели. Прежние пропуски аур Griffith/Grozny, защиты превращённого Кайзера и shift Андайн закрыты в v19. Средние кадры просмотрены; полный ручной сетевой матч двух игроков не выполнен.",
   "checks": [
     "node scripts/vfx-integration-inventory.mjs — PASS: 296 PNG / 29 профилей; SHA-256, размеры кадров, все манифесты и оба исторических отчёта согласованы; PNG не изменены.",
     "npm run test:effects --workspace packages/web — PASS, 318/318, включая отсутствие дублей следа/deploy и одно приземление в конце пути (staging-effects.log).",
@@ -21201,7 +21519,10 @@
     "Attack outcome v15: effects 355/355, SFX 66/66, full rules 3 suites, network/OpenAPI contracts 20 suites, assets, root lint/typecheck/build and fresh production 330 definitions PASS (outcome-*.log). 765 actual Board cases: 405 result/defense/palette, 270 melee, 72 Kaiser flight and 18 native Zoro hit/miss. All 29 guard palettes and 27 melee PNG sampled visually; exact prevention/reduction/path semantics preserve results/RNG/resources. No PNG or SFX edits; 296 SHA-256 unchanged. Three previous blockers and full manual network/unique-animation QA remain open.",
     "Slash facing v16: effects 355/355, actual Board 81 cases (eight directions plus miss, three recipients, desktop/phone/reduced motion), assets, root lint/typecheck/build and fresh production 330 definitions PASS (facing-*.log). Shared orientation updated for 27 melee PNG; eight-direction Guts desktop/phone sheets inspected. No PNG/rules/SFX changes; prior blockers and full manual unique-animation/network QA stay open.",
     "Slash reference v17: effects 355/355, actual Board 162 cases (Genghis Khan and Guts, eight directions plus miss, three recipients, desktop/phone/reduced motion), assets, root lint/typecheck/build and fresh production 330 definitions PASS (facing-reference-*.log). Shared orientation updated for 27 melee PNG; eight-direction Genghis Khan and Guts desktop/phone sheets inspected. No PNG/rules/SFX changes; prior blockers and full manual unique-animation/network QA stay open.",
-    "Melee normalization v18: effects 357/357 including actual PNG geometry; Board 387 cases covering all 27 melee strips plus 81 reveal/contact/decay timeline cases; assets, root lint/typecheck/build and fresh production 330 definitions PASS (melee-normalization-*.log). All 27 raw strips and normalized reference attacks visually sampled on desktop/phone. PNG/SFX/rules unchanged; prior blockers and full manual unique-animation/network QA remain open."
+    "Melee normalization v18: effects 357/357 including actual PNG geometry; Board 387 cases covering all 27 melee strips plus 81 reveal/contact/decay timeline cases; assets, root lint/typecheck/build and fresh production 330 definitions PASS (melee-normalization-*.log). All 27 raw strips and normalized reference attacks visually sampled on desktop/phone. PNG/SFX/rules unchanged; prior blockers and full manual unique-animation/network QA remain open.",
+    "Slash videos v18: all 27 current normalized melee variants recorded on the actual Board at 60fps, normal and x4 slow, with labels, posters, gallery and a 162s compilation. 81 individual MP4 files plus compilation verified with ffprobe; all master frames decoded; all 296 PNG SHA-256 unchanged. Game source/PNG/SFX unchanged during capture. User visual approval remains pending; old recordings preserved.",
+    "Connection recheck 2026-10-21: 433 hero PNG; expansion 293/296 behavior verified, 3 known rule blockers; legacy 136/137 registered (Undyne shift missing mechanic); SHA unchanged; effects 357/357, BoardMarkers 16/16, assets PASS. [Подробный остаток и ограничения QA](CONNECTION_RECHECK_RU.md).",
+    "Feature corrections v19: 296/296 expansion PNG bound/behavior verified; Undyne shift also live. Effects 359/359, rules 3 suites, contract 20 suites, lint/typecheck/build/assets PASS; Board 36 scenarios; fresh production 331 definitions PASS. [Исправления механик и прежнего аудита](FEATURE_CORRECTIONS_RU.md). Full visual QA remains open."
   ],
   "semanticSignals": [
     "Локи: lokiGreatJokeCommitted только после принятой ветки greatLokiJoke и списания 15; разрешённые sourceCell/radius зафиксированы в rules. Сигнал общего каста не обещает превращение всех целей.",
@@ -21503,5 +21824,97 @@
     "sourcePngChanged": false,
     "manualNetworkMatch": false,
     "fullRuntimeQa": false
+  },
+  "normalizedSlashVideoReview": {
+    "recordedAt": "2026-10-21",
+    "presentationRevision": "melee-artwork-normalization-v18",
+    "sourceCommit": "c10e563f397b62546076898278a0d12e3c5e35a1",
+    "clipCount": 27,
+    "frameCountPerClip": 72,
+    "frameRate": 60,
+    "durationSeconds": 162,
+    "userReviewPending": true,
+    "overview": "packages/web/test-results/all-slashes-review-v18/all-slashes.mp4",
+    "gallery": "packages/web/test-results/all-slashes-review-v18/index.html",
+    "index": "packages/web/test-results/all-slashes-review-v18/README_RU.md",
+    "metadata": "packages/web/test-results/all-slashes-review-v18/recording.json",
+    "silent": true,
+    "manualNetworkMatch": false,
+    "verification": "81 individual MP4 files and master: 1152x720, 60fps, correct normal/x4 durations, no audio; all 9720 master frames decoded successfully; 27 PNG hashes and authored orientations match current inventory"
+  },
+  "connectionRecheck": {
+    "date": "2026-10-21",
+    "sourceCommit": "c10e563f397b62546076898278a0d12e3c5e35a1",
+    "report": "docs/assets/vfx-workflow/CONNECTION_RECHECK_RU.md",
+    "heroPng": 433,
+    "expansionPng": 296,
+    "expansionRegistered": 296,
+    "expansionBehaviorVerified": 293,
+    "expansionBlocked": [
+      "V-grand-kaiser-auto_defense",
+      "V-griffith-commander_aura",
+      "V-grozny-commander_aura"
+    ],
+    "legacyPng": 137,
+    "legacyRegistered": 136,
+    "unregistered": [
+      "undyne/shift.png"
+    ],
+    "changedExpansionHashes": [],
+    "effectsTests": {
+      "passed": 357,
+      "failed": 0
+    },
+    "markerTests": {
+      "passed": 16,
+      "failed": 0
+    },
+    "presentationAssets": "PASS",
+    "newVisualReviewPerformed": false,
+    "fullRuntimeVisualQaComplete": false,
+    "newGameplayChanges": false,
+    "supersededBy": "featureCorrectionReview v19: all four listed gaps resolved; earlier audit missed ability-list/runtime mismatches and existing Undyne shared resolver"
+  },
+  "featureCorrectionReview": {
+    "revision": "v19",
+    "date": "2026-10-21",
+    "state": "verified",
+    "commanders": 8,
+    "expansionPng": 296,
+    "expansionBound": 296,
+    "legacyUndyneShift": {
+      "status": "verified",
+      "effectId": "undyneShift",
+      "trigger": "Accepted intimidateResolved with authorized abilityId=undyneSwitchDirection",
+      "existingMechanicReused": true,
+      "separateNewMechanicImplemented": false
+    },
+    "fullRuntimeVisualQaComplete": false,
+    "effectsTests": 359,
+    "rulesSuites": 3,
+    "contractSuites": 20,
+    "browserScenarios": 36,
+    "productionDefinitions": 331,
+    "checks": {
+      "lint": "PASS",
+      "typecheck": "PASS",
+      "build": "PASS",
+      "presentationAssets": "PASS",
+      "production": "PASS"
+    },
+    "report": "docs/assets/vfx-workflow/FEATURE_CORRECTIONS_RU.md",
+    "visualReview": {
+      "reviewed": true,
+      "scope": "Midpoint art of four actual Board routes on desktop/phone, P1/P2/spectator and reduced motion. Not a full start-to-end animation review or a manual two-player match.",
+      "evidence": "packages/web/test-results/vfx-expansion-game/feature-corrections-contact.png",
+      "fullRuntimeQa": false
+    },
+    "artworkLimitation": {
+      "file": "undyne/shift.png",
+      "actual": "Pale diamond, gray glow and sparks; no teal spear-tip or connector described by the manifest. Existing art plays at confirmed attacker origin; movement playback owns actual displacement."
+    },
+    "resolvedPriorExternalBlockers": [
+      "undyne/shift.png: Direction Shift mechanic absent; outside expansion scope"
+    ]
   }
 }

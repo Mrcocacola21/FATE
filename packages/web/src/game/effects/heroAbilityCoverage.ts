@@ -129,14 +129,11 @@ export const HERO_COVERAGE_EXCEPTIONS: Record<string, HeroAbilityCoverage> = {
     "AREA / COMBAT",
     "Shared generic area/outcomes/HP; no per-hero duplication.",
   ),
-  undyneSwitchDirection: {
-    status: "NOT_IMPLEMENTED",
-    events: "none",
-    template: "MOVEMENT / REACTION",
-    visibility: "none",
-    notes:
-      "Direction Shift is listed in canonical metadata, but no runtime force-move resolver/trigger exists. Implement rules separately before adding presentation; do not invent a displacement.",
-  },
+  undyneSwitchDirection: previous(
+    "intimidateResolved with abilityId undyneSwitchDirection",
+    "MOVEMENT / REACTION",
+    "Accepted shared defense push uses Undyne's shift art; pass, invalid destination and hidden source never create a themed cue.",
+  ),
   papyrusLongBone: generic(
     "aoeResolved / attackResolved",
     "COMBAT",

@@ -15,6 +15,7 @@ export * from "./legal";
 export * from "./stealth";
 export * from "./abilities"; // <-- добавили
 export * from "./heroes";
+export * from "./unitFeatures";
 export * from "./heroMeta";
 export * from "./turnEconomy";
 export * from "./aoe";

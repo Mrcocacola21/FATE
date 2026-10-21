@@ -1,6 +1,6 @@
 # Подключение expansion VFX
 
-Игровая привязка выполнена для всех файлов, имеющих подтверждённый маршрут в действующих правилах. Три противоречия заказа правилам остаются заблокированными. Полная визуальная QA всех игровых веток ещё не закрыта.
+Все 296 expansion PNG привязаны к игре. Исправлены пропуски Полководца у Гриффита и Грозного, защита превращённого Кайзера; существующий shift Андайн также подключён. Прежний вывод о четырёх блокерах исправлен. Полная визуальная QA всех игровых веток ещё не закрыта.
 
 | Герой | Найдено | Зарегистрировано | Привязано | Проверено поведением | Просмотрено визуально | Остаток привязки / поведения |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -13,9 +13,9 @@
 | femto | 9 | 9 | 9 | 9 | 9 | 0 |
 | frisk | 10 | 10 | 10 | 10 | 10 | 0 |
 | genghisKhan | 8 | 8 | 8 | 8 | 8 | 0 |
-| grand-kaiser | 15 | 15 | 14 | 14 | 15 | 1 |
-| griffith | 7 | 7 | 6 | 6 | 7 | 1 |
-| grozny | 12 | 12 | 11 | 11 | 12 | 1 |
+| grand-kaiser | 15 | 15 | 15 | 15 | 15 | 0 |
+| griffith | 7 | 7 | 7 | 7 | 7 | 0 |
+| grozny | 12 | 12 | 12 | 12 | 12 | 0 |
 | guts | 12 | 12 | 12 | 12 | 12 | 0 |
 | hassan | 10 | 10 | 10 | 10 | 10 | 0 |
 | jackRipper | 11 | 11 | 11 | 11 | 11 | 0 |
@@ -33,19 +33,17 @@
 | undyne | 11 | 11 | 11 | 11 | 11 | 0 |
 | vladTepes | 10 | 10 | 10 | 10 | 10 | 0 |
 | zoro | 6 | 6 | 6 | 6 | 6 | 0 |
-| **Всего** | **296** | **296** | **293** | **293** | **296** | **3** |
+| **Всего** | **296** | **296** | **296** | **296** | **296** | **0** |
 
 «Просмотрено визуально» — реальный просмотр средних кадров всех PNG на поле свежего production preview, включая направление снарядов и стально-красную палитру Кайзера. Это не отметка полного просмотра каждой анимации в живом матче. В JSON это разделено полями visual.reviewed и visual.fullRuntimeQa.
 
-Expansion PNG: 296; expansion-определений реестра: 296; PNG с проверенными игровыми маршрутами: 293. Фазы, маршруты и состояния перечислены отдельно в integration-state.json; эти числа не означают столько же способностей или событий.
+Expansion PNG: 296; expansion-определений реестра: 296; PNG с проверенными игровыми маршрутами: 296. Фазы, маршруты и состояния перечислены отдельно в integration-state.json; эти числа не означают столько же способностей или событий.
 
 ## Точные блокеры
 
-- **grand-kaiser/auto_defense.png**: Engineering Miracle grants charges, but resolveAttackAttackerRoll/stateAutoDefense do not accept Kaiser as a Berserker defender; no accepted auto-dodge runtime route. Do not change combat eligibility for artwork.
-- **griffith/commander_aura.png**: packages/rules/src/actions/heroes/vlad.ts:getPolkovodetsSource excludes Griffith; art/brief requests vladPolkovodets which has no current rule effect for this hero. Balance unchanged.
-- **grozny/commander_aura.png**: getPolkovodetsSource excludes Grozny, including Tyrant inherited movement. No current commander-aura rule for this hero; balance unchanged.
+Неподключённых expansion PNG нет. Статус поведенческой проверки и визуальной QA указан отдельно выше.
 
-Следующая партия: Остаются три точных противоречия заказа rules: ауры Griffith/Grozny и auto_defense Кайзера. Для них требуется отдельное решение о смысле заказа/механике; баланс ради арта не изменялся. Следующая независимая партия полной анимационной QA — 11 уникальных PNG Loki/Duolingo/Frisk (nextBatchEffectIds): целиком от старта до исчезновения, статус snapshot/expiry и оба получателя. Средние кадры уже просмотрены; полный ручной сетевой матч двух игроков не выполнен.
+Следующая партия: Следующая партия полной анимационной QA — 11 уникальных PNG Loki/Duolingo/Frisk (nextBatchEffectIds): просмотр целиком от старта до исчезновения, восстановление/снятие статусов и разрешённые получатели. Прежние пропуски аур Griffith/Grozny, защиты превращённого Кайзера и shift Андайн закрыты в v19. Средние кадры просмотрены; полный ручной сетевой матч двух игроков не выполнен.
 
 ## Четыре новых сигнала
 
@@ -91,6 +89,9 @@ Expansion PNG: 296; expansion-определений реестра: 296; PNG с
 - Slash facing v16: effects 355/355, actual Board 81 cases (eight directions plus miss, three recipients, desktop/phone/reduced motion), assets, root lint/typecheck/build and fresh production 330 definitions PASS (facing-*.log). Shared orientation updated for 27 melee PNG; eight-direction Guts desktop/phone sheets inspected. No PNG/rules/SFX changes; prior blockers and full manual unique-animation/network QA stay open.
 - Slash reference v17: effects 355/355, actual Board 162 cases (Genghis Khan and Guts, eight directions plus miss, three recipients, desktop/phone/reduced motion), assets, root lint/typecheck/build and fresh production 330 definitions PASS (facing-reference-*.log). Shared orientation updated for 27 melee PNG; eight-direction Genghis Khan and Guts desktop/phone sheets inspected. No PNG/rules/SFX changes; prior blockers and full manual unique-animation/network QA stay open.
 - Melee normalization v18: effects 357/357 including actual PNG geometry; Board 387 cases covering all 27 melee strips plus 81 reveal/contact/decay timeline cases; assets, root lint/typecheck/build and fresh production 330 definitions PASS (melee-normalization-*.log). All 27 raw strips and normalized reference attacks visually sampled on desktop/phone. PNG/SFX/rules unchanged; prior blockers and full manual unique-animation/network QA remain open.
+- Slash videos v18: all 27 current normalized melee variants recorded on the actual Board at 60fps, normal and x4 slow, with labels, posters, gallery and a 162s compilation. 81 individual MP4 files plus compilation verified with ffprobe; all master frames decoded; all 296 PNG SHA-256 unchanged. Game source/PNG/SFX unchanged during capture. User visual approval remains pending; old recordings preserved.
+- Connection recheck 2026-10-21: 433 hero PNG; expansion 293/296 behavior verified, 3 known rule blockers; legacy 136/137 registered (Undyne shift missing mechanic); SHA unchanged; effects 357/357, BoardMarkers 16/16, assets PASS. [Подробный остаток и ограничения QA](CONNECTION_RECHECK_RU.md).
+- Feature corrections v19: 296/296 expansion PNG bound/behavior verified; Undyne shift also live. Effects 359/359, rules 3 suites, contract 20 suites, lint/typecheck/build/assets PASS; Board 36 scenarios; fresh production 331 definitions PASS. [Исправления механик и прежнего аудита](FEATURE_CORRECTIONS_RU.md). Full visual QA remains open.
 
 ## Ограничения и особенности маршрутов
 
@@ -98,9 +99,17 @@ Expansion PNG: 296; expansion-определений реестра: 296; PNG с
 - У Loki/Duolingo/Lechy/Sans обычное движение в правилах — телепорт: обычный след не рисуется. Их move_trail/move_arrive доступны на подтверждённой обычной ходьбе в состоянии Chicken; это проверено реальным rules-действием, а не заменой семантики телепорта.
 - У Кайзера enterStealth — Bunker. Его stealth_enter связан только с реальным разрешённым владельцу результатом Lunar Eclipse; Bunker не изображается невидимостью.
 - Постоянные статусы восстанавливаются из разрешённого PlayerView с идентификатором источника и снимаются со статусом/источником/видимостью. Выбор — статичный слой локального Board.selectedUnitId, без сетевого события.
-- 3 заблокированных PNG доступны реестру/preview для проверки арта, но не считаются live. Баланс и eligibility защиты/ауры ради них не менялись.
-- Undyne shift.png вне expansion: Direction Shift отсутствует в правилах; не реализовывался.
+- Все 296 expansion PNG имеют игровые привязки. По уточнению пользователя исправлены пропуски Полководца у Griffith/Grozny и защиты превращённого Кайзера; полная визуальная QA остаётся отдельной работой.
+- Undyne shift.png вне expansion подключён к уже существующему общему отталкиванию после успешной защиты. Принятый выбор имеет разрешённую подпись undyneSwitchDirection; отдельная новая механика не вводилась.
 - Base-ассеты исключены пользователем. Исходные PNG, import-манифесты, исторические отчёты и SFX-интеграция сохранены. Новые фазы используют существующие presentation-часы и очередь; Carpet/Dora сохраняют impact/audio на общей границе.
+
+## Исправление четырёх прежних пропусков — v19
+
+Гриффит до Rebirth и Грозный дают Полководца: +1 урона соседним союзникам, живая аура радиуса 1 и значок поддержки. Фемто не наследует ауру. Превращённый Кайзер при 6 зарядах может выбрать автоматическую защиту берсерка и получает тематический эффект. Undyne shift.png подключён к уже существующему принятому отталкиванию с разрешённой подписью undyneSwitchDirection; новая отдельная механика не вводилась.
+
+Все 296 expansion PNG привязаны и проверены поведением; зарегистрированы все 137 прежних геройских PNG. Проверки: 359 effects-тестов, rules (3 набора), contract (20 наборов), lint/typecheck/build/assets; 36 браузерных сценариев для четырёх исправленных маршрутов и свежий production preview (331 определение). Просмотрены средние кадры на desktop/phone, обе ориентации и reduced motion; полный ручной просмотр всех анимаций и сетевой матч остаются открытыми.
+
+Подробности и несоответствие рисунка undyne/shift.png манифесту: [FEATURE_CORRECTIONS_RU.md](FEATURE_CORRECTIONS_RU.md). Предыдущий CONNECTION_RECHECK_RU.md сохранён как история с пометкой об исправлении. PNG и SFX не менялись. Следующие разделы описывают предыдущие проходы v1–v18; их старые числа и блокеры не заменяют текущую таблицу и этот раздел.
 
 ## Доработка deploy и движения
 
@@ -219,3 +228,7 @@ Deploy и движение переработаны для всех профил
 Общий переворот заменён индивидуальной нормализацией всех 27 melee PNG. Эталон исходного пореза — диагональ между нижним левым и верхним правым углами, с проявлением из одного конца в противоположный. У каждого файла свои rotationDeg/revealFrom в meleeArtwork.ts: Гатс и его Берсерк развёрнуты на 180° и проявляются сверху справа; Чингисхан сохраняет 0° и начало снизу слева; почти горизонтальные полосы отдельно повёрнуты к диагонали. Маска проявления и блик согласованы с нормализованным рисунком. Затем применяются прежние направления относительно экрана: влево H, вверх V, вниз два V, диагонали 45°.
 
 Проверки: 357 effects-тестов, включая геометрию реальных PNG; 387 сценариев Board для всех 27 полос и направлений Гатса/Чингисхана; 81 сценарий проявления/контакта/затухания. Assets, lint/typecheck/build и свежий production (330 определений) PASS. Просмотрены кадры всех 27 исходных полос и их нормализованные атаки на desktop/phone: packages/web/test-results/melee-art-audit/ и packages/web/test-results/vfx-expansion-game/normalized-swing-contact-sheets/. Направления и таймлайны — normalized-facing-contact-sheets/ и normalized-target-cut-timelines/. Полная индивидуальная анимационная QA и ручной сетевой матч остаются открытыми. PNG, rules и SFX не менялись.
+
+## Новые записи всех слешей после нормализации v18
+
+Записаны все 27 варианта (24 обычных и три формы), каждый в обычном темпе и с повтором ×4. Общий ролик: packages/web/test-results/all-slashes-review-v18/all-slashes.mp4; галерея: packages/web/test-results/all-slashes-review-v18/index.html; список и таймкоды: packages/web/test-results/all-slashes-review-v18/README_RU.md. Сняты текущий Board, разрешённые P1-события и общий presentation clock с шагом 60 fps. Длительность общего ролика — 162 секунд; без звука. Проверены состав всех 27 PNG, их SHA-256 и параметры видео, видимый разрез/выпад в момент контакта и возврат токена. Старые записи сохранены отдельно. Наличие видео не означает визуальное одобрение пользователем: userReviewPending=true. Игровой код, PNG и SFX при записи не менялись.

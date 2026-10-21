@@ -13,6 +13,7 @@ import {
   makeRngSequence,
   makeSharedAttackerWinRng,
   resolveAllPendingRollsWithEvents,
+  resolvePendingRollOnce,
   SeededRNG,
   setUnit,
   setupUndyneState,
@@ -356,7 +357,7 @@ let state = initialState150;
 export function testUndyneDirectionShiftDefenseRedirect() {
   const { state: initialState151, undyne, ally, enemy, enemy2 } = setupUndyneState();
 let state = initialState151;
-  state = setUnit(state, undyne.id, { position: { col: 4, row: 4 } });
+  state = setUnit(state, undyne.id, { position: { col: 4, row: 4 }, charges: { ...undyne.charges, berserkAutoDefense: 0 } });
   state = setUnit(state, enemy.id, { position: { col: 4, row: 5 } });
   state = toBattleState(state, "P2", enemy.id);
   state = initKnowledgeForOwners(state);
@@ -364,18 +365,16 @@ let state = initialState151;
   const attack = applyAction(
     state,
     { type: "attack", attackerId: enemy.id, defenderId: undyne.id },
-    makeRngSequence([0.01, 0.01, 0.99, 0.99]),
+    makeRngSequence([]),
   );
-  const resolved = resolveAllPendingRollsWithEvents(
-    attack.state,
-    makeRngSequence([0.01, 0.01, 0.99, 0.99])
-  );
+  const rolled = resolvePendingRollOnce(attack.state, makeRngSequence([0.01, 0.2]));
+  const resolved = resolvePendingRollOnce(rolled.state, makeRngSequence([0.99, 0.8]));
   assert(
-    !resolved.state.pendingRoll &&
-      !resolved.events.some((event) => event.type === "intimidateTriggered") &&
+    resolved.state.pendingRoll?.kind === "vladIntimidateChoice" &&
+      resolved.events.some((event) => event.type === "intimidateTriggered") &&
       resolved.state.units[enemy.id].position?.col === 4 &&
       resolved.state.units[enemy.id].position?.row === 5,
-    "Direction Shift metadata should not create Vlad-style push choices",
+    "Successful defense should offer Undyne's shared push choice before any displacement",
   );
 
   let blockedState = setUnit(state, undyne.id, { position: { col: 0, row: 1 } });
@@ -387,11 +386,11 @@ let state = initialState151;
   const blockedAttack = applyAction(
     blockedState,
     { type: "attack", attackerId: enemy.id, defenderId: undyne.id },
-    makeRngSequence([0.01, 0.01, 0.99, 0.99])
+    makeRngSequence([])
   );
   const blockedResolved = resolveAllPendingRollsWithEvents(
     blockedAttack.state,
-    makeRngSequence([0.01, 0.01, 0.99, 0.99])
+    makeRngSequence([0.01, 0.2, 0.99, 0.8])
   );
   assert(
     !blockedResolved.events.some((event) => event.type === "intimidateTriggered") &&
@@ -400,7 +399,7 @@ let state = initialState151;
     "Direction Shift should no-op cleanly when attacker has no legal adjacent empty cells",
   );
 
-  console.log("undyne_direction_shift_current_behavior passed");
+  console.log("undyne_direction_shift_defense_choice_and_no_space passed");
 }
 
 

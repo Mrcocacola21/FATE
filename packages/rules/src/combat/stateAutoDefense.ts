@@ -8,22 +8,19 @@ import {
   getCharges,
 } from "../abilities";
 import {
-  HERO_FEMTO_ID,
-  HERO_DUOLINGO_ID,
   HERO_ODIN_ID,
-  HERO_PAPYRUS_ID,
   getHeroDefinition,
 } from "../heroes";
 import {
   addMettatonRating,
   buildMettatonRatingChangedEvent,
   getMettatonRating,
-  hasMettatonBerserkerFeature,
   isMettaton,
 } from "../mettaton";
 import { buildDiceRoll, recordGenghisAttack } from "./helpers";
 import type { AutoDefenseResolution, ResolveAttackParams } from "./types";
 import { getUnitDefinition } from "../units";
+import { hasBerserkerAutoDefense } from "../unitFeatures";
 import { EVENT_VISIBILITY, movementVisibility } from "../model/events/visibility";
 
 export function tryResolveAutoDefense(
@@ -42,12 +39,7 @@ export function tryResolveAutoDefense(
   let autoDefenseAbilityId: string | null = null;
   if (
     wantsBerserkAutoDefense &&
-    (defenderAfter.class === "berserker" ||
-      defenderAfter.heroId === HERO_FEMTO_ID ||
-      (defenderAfter.heroId === HERO_DUOLINGO_ID && defenderAfter.duolingoBerserkerUnlocked) ||
-      (defenderAfter.heroId === HERO_PAPYRUS_ID &&
-        defenderAfter.papyrusUnbelieverActive) ||
-      hasMettatonBerserkerFeature(defenderAfter))
+    hasBerserkerAutoDefense(defenderAfter)
   ) {
     autoDefenseAbilityId = ABILITY_BERSERK_AUTO_DEFENSE;
   } else if (wantsMuninnAutoDefense && defenderAfter.heroId === HERO_ODIN_ID) {

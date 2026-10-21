@@ -15,7 +15,7 @@ import {
 import { Board } from "../../components/Board";
 import { BattleUnitSummary } from "../../game/components/RightPanel/sections/BattleUnitSummary";
 import { getUnitTokenAsset } from "../../assets/unitVisuals";
-import { translate } from "../../i18n";
+import { getLanguage, setLanguage, translate } from "../../i18n";
 import { sfxPlayer } from "../sfx/sfxPlayer";
 import type { SoundCue } from "../sfx/sfxTypes";
 import { PresentationSession } from "../../game/effects/presentationSession";
@@ -69,8 +69,8 @@ function commanderFixture(heroId = "genghisKhan") {
   return { ...state, units: { [ally.id]: ally, [source.id]: source, [enemy.id]: enemy } };
 }
 
-test("commander support badge matches rules for all six commanders, diagonals, allies and non-stacking", () => {
-  for (const hero of ["genghisKhan", "jebe", "hassan", "donKihote", "elCidCompeador", "vladTepes"]) {
+test("commander support badge matches rules for all eight commanders, diagonals, allies and non-stacking", () => {
+  for (const hero of ["genghisKhan", "jebe", "hassan", "donKihote", "elCidCompeador", "vladTepes", "griffith", "grozny"]) {
     const state = commanderFixture(hero);
     const second = { ...state.units.commander, id: "second", position: { col: 5, row: 4 } };
     const stacked = { ...state, units: { ...state.units, second } };
@@ -93,8 +93,8 @@ test("commander badge clears with range, death, removal, unsupported hero and Fa
     patchUnit(state, "supported", { isAlive: false }),
     patchUnit(state, "commander", { isAlive: false }),
     patchUnit(state, "commander", { position: null }),
-    patchUnit(state, "commander", { heroId: "griffith" }),
-    patchUnit(state, "commander", { heroId: "grozny" }),
+    patchUnit(state, "commander", { heroId: "femto" }),
+    patchUnit(state, "commander", { heroId: "grand-kaiser" }),
     { ...state, units: { supported: state.units.supported } },
   ];
   for (const current of scenarios) {
@@ -104,7 +104,18 @@ test("commander badge clears with range, death, removal, unsupported hero and Fa
   const view = makePlayerView(state, "P1");
   const html = renderToStaticMarkup(board(view));
   assert.match(html, /data-status-id="supported:commanderAura"/);
-  assert.match(html, /Аура союзного полководця: \+1 до шкоди/);
+  const previousLanguage = getLanguage();
+  try {
+    for (const [language, label] of [
+      ["en", "Allied commander aura: +1 damage"],
+      ["uk", "Аура союзного полководця: +1 до шкоди"],
+    ] as const) {
+      setLanguage(language, null);
+      assert(renderToStaticMarkup(board(view)).includes(`title="${label}"`), `${language}: localized commander bonus`);
+    }
+  } finally {
+    setLanguage(previousLanguage, null);
+  }
   assert.doesNotMatch(html, /data-vfx-cue=/);
   assert.match(renderToStaticMarkup(<StatusBadges statuses={resolveUnitStatuses(view.units.supported, "P1", view)}
     t={translate} />), /<svg/);

@@ -114,6 +114,7 @@ export type VfxEffectId =
   | "groznyTyrant"
   | "undyneThrow"
   | "undyneUndying"
+  | "undyneShift"
   | "duolingoPush"
   | "kanekiRegen"
   | "zoroOni"

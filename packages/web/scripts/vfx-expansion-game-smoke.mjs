@@ -75,6 +75,7 @@ try {
       console.log(`Runtime Board: ${viewport}/${recipient}`);
       await page.getByLabel("Recipient").selectOption(recipient);
       for (const [id, fixture] of Object.entries(fixtures)) {
+        if (process.argv.includes("--corrections-only") && !id.startsWith("correction.") && !["move.griffith", "move.grozny"].includes(id)) continue;
         if (process.argv.includes("--long-only") && !id.startsWith("longmove.")) continue;
         if (process.argv.includes("--swings-only") && !id.startsWith("swing.") && !((process.argv.includes("--facing-only") || process.argv.includes("--normalization-only")) && id.startsWith("direction."))) continue;
         if (process.argv.includes("--facing-only") && !id.startsWith("direction.") && !["swing.guts", "swing.guts.north", "swing.guts.southwest", "swing.guts.miss", "swing.genghisKhan"].includes(id)) continue;
@@ -89,7 +90,7 @@ try {
         if (process.argv.includes("--kaiser-only") && !id.includes(".grand-kaiser")) continue;
         if (process.argv.includes("--review-samples") && !id.startsWith("expansion.") && id !== "move.zoro") continue;
         if (process.argv.includes("--staging-only") && !id.startsWith("move.") && !id.startsWith("deploy.")) continue;
-        if (process.argv.includes("--commander-only") && !/\.(jebe|hassan|donKihote|elCidCompeador|genghisKhan|vladTepes)(\.|$)/.test(id)) continue;
+        if (process.argv.includes("--commander-only") && !/\.(jebe|hassan|donKihote|elCidCompeador|genghisKhan|vladTepes|griffith|grozny)(\.|$)/.test(id)) continue;
         await page.getByLabel("Fixture").selectOption(id); await page.getByRole("button", { name: "Reconnect", exact: true }).click();
         await page.clock.runFor(40);
         if (!process.argv.includes("--cold-portrait")) await page.evaluate(() => window.warmPortraits());
@@ -558,7 +559,7 @@ try {
             assert(aura.artOpacity > 0 && aura.artOpacity <= .4); assert(aura.cellOpacity <= .006);
           }
         }
-        if (process.argv.includes("--review-samples") || (recipient === "P1" && (viewport === "desktop" || id.startsWith("expansion.") || process.argv.includes("--swings-only"))))
+        if (process.argv.includes("--corrections-only") || process.argv.includes("--review-samples") || (recipient === "P1" && (viewport === "desktop" || id.startsWith("expansion.") || process.argv.includes("--swings-only"))))
           await page.locator("[data-runtime-board]").screenshot({ path: path.join(output, `${viewport}-${recipient === "P1" ? "" : `${recipient}-`}${id}.png`) });
         const boardRect = await page.locator("[data-runtime-board]").boundingBox();
         const sourceContent = page.locator(`[data-unit-id="${fixture.sourceId}"] .board-unit-content`);
@@ -630,7 +631,7 @@ try {
   assert(diagnostics.image.estimatedPixelBytes <= diagnostics.image.budgetBytes);
   assert.deepEqual(errors, []);
   const reportName = process.argv.includes("--normalization-only") && process.argv.includes("--melee-timeline") ? "normalized-timeline-report.json" : process.argv.includes("--normalization-only") ? "melee-normalization-report.json" : process.argv.includes("--reference-facing") ? "direction-reference-report.json" : process.argv.includes("--facing-only") ? "direction-report.json" : process.argv.includes("--signatures-only") ? "signature-report.json" : process.argv.includes("--outcome-projectiles") ? "outcome-projectiles-report.json" : process.argv.includes("--outcomes-only") ? "outcomes-report.json" : process.argv.includes("--projectile-contrast") ? "projectiles-contrast-report.json" : process.argv.includes("--projectiles-only") ? "projectiles-report.json" : process.argv.includes("--melee-timeline") ? "melee-timeline-report.json" : process.argv.includes("--swings-only") ? "swings-report.json" : process.argv.includes("--long-only") ? "long-movement-report.json" : process.argv.includes("--cold-portrait") ? process.argv.includes("--expired-portrait") ? "expired-portrait-report.json" : "cold-portrait-report.json" : process.argv.includes("--snapshot-first") ? "snapshot-first-report.json" : process.argv.includes("--commander-only") ? "commander-report.json" : process.argv.includes("--deploy-only") ? "deploy-report.json" : process.argv.includes("--staging-only") ? "staging-report.json" : process.argv.includes("--review-samples") ? "review-samples-report.json" : process.argv.includes("--signals-only") ? "signals-report.json" : "report.json";
-  writeFileSync(path.join(output, reportName), JSON.stringify({ observations, diagnostics, errors, manualTwoPlayerGame: false,
+  writeFileSync(path.join(output, process.argv.includes("--corrections-only") ? "feature-corrections-report.json" : reportName), JSON.stringify({ observations, diagnostics, errors, manualTwoPlayerGame: false,
     source: "Rules-produced recipient projections through the actual Board, shared playback and VFX hooks" }, null, 2));
   console.log(`Expansion runtime Board smoke passed: ${observations.length} scenarios; selection, duplicate, reconnect, P1/P2/spectator, desktop/phone reduced motion.`);
 } finally {

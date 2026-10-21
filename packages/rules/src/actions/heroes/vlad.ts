@@ -6,17 +6,14 @@ import { chebyshev } from "../../board";
 import { clearPendingRoll, requestRoll } from "../../core";
 import {
   isVlad,
-  isElCid,
-  isGenghis,
-  isHassan,
-  isJebe,
   getAdjacentCellsAvailableToPlayer,
 } from "../shared";
 import { getLegalStakePositions, consumeOldestStakes } from "../../core";
 import type { ApplyResult } from "../../model";
 import type { IntimidateResume } from "../types";
 import { evForestActivated, evIntimidateTriggered } from "../../core";
-import { HERO_DON_KIHOTE_ID, HERO_FALSE_TRAIL_TOKEN_ID } from "../../heroes";
+import { HERO_FALSE_TRAIL_TOKEN_ID } from "../../heroes";
+import { hasCommanderAura } from "../../unitFeatures";
 import { isUndyne } from "../../undyne";
 
 export function getPolkovodetsSource(
@@ -34,12 +31,7 @@ export function getPolkovodetsSource(
         unit.isAlive &&
         unit.position &&
         unit.owner === attacker.owner &&
-        (isVlad(unit) ||
-          isElCid(unit) ||
-          isGenghis(unit) ||
-          isHassan(unit) ||
-          isJebe(unit) ||
-          unit.heroId === HERO_DON_KIHOTE_ID) &&
+        hasCommanderAura(unit) &&
         unit.id !== attacker.id &&
         chebyshev(origin, unit.position) <= 1,
     )

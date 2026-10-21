@@ -1,10 +1,10 @@
 import type { PlayerId, PlayerView, UnitState } from "rules";
+import { hasCommanderAura } from "../../../../rules/src/unitFeatures";
 
 // Matches getPolkovodetsSource in rules/actions/heroes/vlad.ts. Only projected,
 // permitted sources are considered here; never infer a concealed commander.
-const COMMANDERS: ReadonlySet<string> = new Set(["vladTepes", "elCidCompeador", "genghisKhan", "hassan", "jebe", "donKihote"]);
 export function isVisibleCommander(unit: UnitState, playerId: PlayerId | null): boolean {
-  return Boolean(unit.isAlive && unit.position && unit.heroId && COMMANDERS.has(unit.heroId) &&
+  return Boolean(unit.isAlive && unit.position && hasCommanderAura(unit) &&
     (!unit.isStealthed || unit.owner === playerId));
 }
 

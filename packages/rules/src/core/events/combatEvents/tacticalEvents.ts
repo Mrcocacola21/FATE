@@ -1,7 +1,7 @@
 import { EVENT_VISIBILITY, movementVisibility } from "../../../model/events/visibility";
 import type { GameState } from "../../../model";
-import { HERO_VLAD_TEPES_ID } from "../../../heroes";
-import { ABILITY_VLAD_INTIMIDATE } from "../../../abilities/constants";
+import { HERO_UNDYNE_ID, HERO_VLAD_TEPES_ID } from "../../../heroes";
+import { ABILITY_UNDYNE_SWITCH_DIRECTION, ABILITY_VLAD_INTIMIDATE } from "../../../abilities/constants";
 import type {
   AoeResolvedEvent,
   CarpetStrikeAttackRolledEvent,
@@ -39,15 +39,16 @@ export function evIntimidateResolved(
   },
 ): IntimidateResolvedEvent {
   const source = params.defenderId ? state.units[params.defenderId] : undefined;
-  const isVlad = source?.heroId === HERO_VLAD_TEPES_ID;
+  const abilityId = source?.heroId === HERO_VLAD_TEPES_ID ? ABILITY_VLAD_INTIMIDATE
+    : source?.heroId === HERO_UNDYNE_ID ? ABILITY_UNDYNE_SWITCH_DIRECTION : undefined;
   return {
     type: "intimidateResolved",
     provenance: { kind: "forced", cause: "intimidatingStare" },
-    ...(isVlad ? { abilityId: ABILITY_VLAD_INTIMIDATE } : {}),
+    ...(abilityId ? { abilityId } : {}),
     [EVENT_VISIBILITY]: {
       ...movementVisibility(state, params.attackerId, params.from, params.to),
       abilityRecipients:
-        isVlad && source?.position
+        abilityId && source?.position
           ? movementVisibility(state, source.id, source.position).recipients
           : [],
     },

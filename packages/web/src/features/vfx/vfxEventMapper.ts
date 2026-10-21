@@ -619,8 +619,8 @@ export function mapGameEventToVfx(
     case "unitMoved":
       return mapUnitMoved(event, context);
     case "intimidateResolved":
-      return event.abilityId === ABILITY_VLAD_INTIMIDATE
-        ? cellRequest(context, event, "vladGaze", event.from, "stare", {
+      return event.abilityId === ABILITY_VLAD_INTIMIDATE || event.abilityId === "undyneSwitchDirection"
+        ? cellRequest(context, event, event.abilityId === "undyneSwitchDirection" ? "undyneShift" : "vladGaze", event.from, "stare", {
             id: heroCueId(
               context.streamId ?? context.presentationId ?? context.revision,
               event,

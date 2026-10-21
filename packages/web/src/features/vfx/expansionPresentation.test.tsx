@@ -34,6 +34,9 @@ import { effectsFromEventBatch } from "../../game/effects/eventToEffects";
 import { UnitDeploymentContent } from "./UnitDeploymentContent";
 import { UnitStatusVfx } from "./UnitStatusVfx";
 import { translate } from "../../i18n";
+import { testHeroFeatureCorrections, undyneShiftFixture } from "../../../../rules/src/tests/core/heroFeatureCorrections.test";
+import { hasCommanderSupport } from "./commanderSupport";
+import { evIntimidateResolved } from "../../../../rules/src/core/events/combatEvents/tacticalEvents";
 
 function fixture(hero = "zoro") {
   const slot = getHeroDefinition(hero)?.mainClass ?? "knight";
@@ -498,7 +501,7 @@ test("Actual spearman defense respects knight-double precedence; Bunker art requ
   }
 });
 
-test("Every charge-based hero defense binds the accepted branch; transformed Kaiser currently has no charge-defense decision", () => {
+test("Every charge-based hero defense, including transformed Kaiser, binds the accepted branch", () => {
   const f = fixture(), noDice = { next(): number { throw new Error("Defense choice must not roll"); } };
   for (const heroId of ["femto", "guts", "grozny", "kaneki", "mettaton", "papyrus", "duolingo", "grand-kaiser"]) {
     let state = setUnit(f.state, f.target.id, { heroId, class: getHeroDefinition(heroId)?.mainClass ?? "knight",
@@ -507,11 +510,6 @@ test("Every charge-based hero defense binds the accepted branch; transformed Kai
     state = initKnowledgeForOwners(state);
     const declared = applyAction(state, { type: "attack", attackerId: f.actor.id, defenderId: f.target.id }, noDice);
     const attacked = resolvePendingRollOnce(declared.state, makeRngSequence([0.5, 0.7]));
-    if (heroId === "grand-kaiser") {
-      assert.notEqual(attacked.state.pendingRoll?.kind, "berserkerDefenseChoice");
-      assert.equal(attacked.state.units[f.target.id].charges.berserkAutoDefense, 6);
-      continue;
-    }
     assert.equal(attacked.state.pendingRoll?.kind, "berserkerDefenseChoice", heroId);
     const pending = attacked.state.pendingRoll!;
     const defended = applyAction(attacked.state, { type: "resolvePendingRoll", pendingRollId: pending.id, player: pending.player, choice: "auto" }, noDice);
@@ -521,6 +519,67 @@ test("Every charge-based hero defense binds the accepted branch; transformed Kai
       projectEventsForRecipient(defended.state, defended.events, "P2"));
     assert.equal(effects.filter(e => e.effectId === `expansion.${heroId}.auto_defense`).length, 1, heroId);
     assert(!effects.some(e => e.effectId === "combatHit"));
+  }
+});
+
+test("Commander corrections restore real bonuses and recipient-safe auras; Femto never inherits Griffith's aura", () => {
+  testHeroFeatureCorrections();
+  for (const heroId of ["griffith", "grozny"]) {
+    const f = fixture(heroId);
+    const ally = Object.values(f.state.units).find(u => u.owner === "P1" && u.id !== f.actor.id)!;
+    let state = setUnit(f.state, ally.id, { position: { col: 3, row: 3 } });
+    for (const recipient of ["P1", "P2", "spectator"] as const) {
+      const player = recipient === "spectator" ? null : recipient;
+      const view = player ? makePlayerView(state, player) : makeSpectatorView(state);
+      const art = expansionStatusArt(view, view.units[f.actor.id], player).find(a => a.effectId === `expansion.${heroId}.commander_aura`);
+      assert.equal(art?.scaleCells, 3, `${heroId}/${recipient}: full radius one`);
+      assert(hasCommanderSupport(view.units[ally.id], view.units, player));
+      assert(!hasCommanderSupport(view.units[f.actor.id], view.units, player));
+      assert(!hasCommanderSupport(view.units[f.target.id], view.units, player));
+      for (const change of [{ heroId: "femto" }, { isAlive: false }, { position: null }] satisfies Partial<UnitState>[]) {
+        const removed = { ...view, units: { ...view.units, [f.actor.id]: { ...view.units[f.actor.id], ...change } } };
+        assert(!expansionStatusArt(removed, removed.units[f.actor.id], player).some(a => a.effectId.endsWith("commander_aura")));
+        assert(!hasCommanderSupport(removed.units[ally.id], removed.units, player));
+      }
+      assert.deepEqual(mapEventBatchToVfx({ events: [], view, previousPositions: {}, revision: 1 }), []);
+    }
+    state = setUnit(state, f.actor.id, { isStealthed: true });
+    for (const view of [makePlayerView(state, "P2"), makeSpectatorView(state)]) {
+      assert(!hasCommanderSupport(view.units[ally.id], view.units, null));
+    }
+  }
+});
+
+test("Undyne's real accepted defense push owns shift art once; pass, hidden source and reconnect do not replay it", () => {
+  const f = undyneShiftFixture();
+  for (const recipient of ["P1", "P2", "spectator"] as const) {
+    const before = recipient === "spectator" ? makeSpectatorView(f.before) : makePlayerView(f.before, recipient);
+    const after = recipient === "spectator" ? makeSpectatorView(f.after) : makePlayerView(f.after, recipient);
+    const events = projectEventsForRecipient(f.after, f.events, recipient);
+    const { effects, plan } = playback(before, after, events);
+    const shift = effects.filter(e => e.effectId === "undyneShift");
+    assert.equal(shift.length, 1, recipient);
+    assert(!effects.some(e => e.effectId === "vladGaze"));
+    assert.equal(plan.movementPlan.cues.filter(c => c.kind === "movement").length, 1);
+    assert.deepEqual(shift[0].sourceCell, f.before.units[f.attackerId].position);
+    const queue = enqueueBoardVfx({ current: [], incoming: effects, now: 100 });
+    assert.equal(enqueueBoardVfx({ current: queue, incoming: effects, now: 100 }).length, queue.length);
+    assert.deepEqual(pruneExpiredBoardVfx(queue, 100_000), []);
+    const session = new PresentationSession();
+    const binding = { roomId: "shift-room", recipient };
+    session.begin(binding);
+    assert.deepEqual(session.receive({ events: events.map((e, i) => ({ ...e, eventId: `shift-${i}` })), streamId: "shift", revision: 2 }, binding, after), []);
+    assert.deepEqual(session.snapshot({ ...binding, streamId: "shift", revision: 2, view: after }), []);
+    assert.deepEqual(mapEventBatchToVfx({ events: [], view: after, previousPositions: {}, revision: 3 }), []);
+  }
+  const hidden = setUnit(f.before, f.defenderId, { isStealthed: true });
+  const event = evIntimidateResolved(hidden, { attackerId: f.attackerId, defenderId: f.defenderId,
+    from: f.before.units[f.attackerId].position!, to: f.after.units[f.attackerId].position! });
+  for (const recipient of ["P2", "spectator"] as const) {
+    const view = recipient === "spectator" ? makeSpectatorView(hidden) : makePlayerView(hidden, recipient);
+    const events = projectEventsForRecipient(hidden, [event], recipient);
+    assert(events.every(e => e.type !== "intimidateResolved" || e.abilityId !== "undyneSwitchDirection"));
+    assert(!mapEventBatchToVfx({ events, view, previousPositions: {}, revision: 2 }).some(e => e.effectId === "undyneShift"));
   }
 });
 
@@ -561,7 +620,7 @@ test("Source-backed static statuses hydrate silently and clear with state, death
   for (const heroId of ["jebe", "hassan", "donKihote", "elCidCompeador", "genghisKhan", "vladTepes", "griffith", "grozny"]) {
     const state = setUnit(f.state, f.actor.id, { heroId });
     const view = makePlayerView(state, "P1");
-    assert.equal(expansionStatusArt(view, view.units[f.actor.id], "P1").some(a => a.effectId.endsWith("commander_aura")), !["griffith", "grozny"].includes(heroId));
+    assert.equal(expansionStatusArt(view, view.units[f.actor.id], "P1").some(a => a.effectId.endsWith("commander_aura")), true);
   }
 });
 

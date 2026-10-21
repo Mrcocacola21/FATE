@@ -5,6 +5,7 @@ import {
 } from "../../rules/src/index";
 import { initKnowledgeForOwners, makeRngSequence, resolveAllPendingRollsWithEvents, resolvePendingRollOnce, setUnit, toBattleState, toPlacementState } from "../../rules/src/tests/helpers/testUtils";
 import { expansionSignalFixtures } from "../../rules/src/tests/core/expansionSignals.test";
+import { undyneShiftFixture, kaiserAutoDefenseFixture } from "../../rules/src/tests/core/heroFeatureCorrections.test";
 import { applyGriffithFemtoRebirth } from "../../rules/src/actions/heroes/griffith";
 import { addLokiChicken } from "../../rules/src/actions/heroes/loki";
 import { attackOutcomeFixtures } from "../../rules/src/tests/helpers/attackOutcomeFixtures";
@@ -228,5 +229,10 @@ for (const hit of [true, false]) {
   add(`signature.zoro.${hit ? "hit" : "miss"}`, state, resolved.state, [...started.events, ...resolved.events], source.id,
     ["zoroSantoryu", hit ? "expansion.zoro.attack_impact" : "missShield"]);
 }
+const shift = undyneShiftFixture();
+add("correction.undyne.shift", shift.before, shift.after, shift.events, shift.defenderId, ["undyneShift"]);
+const kaiserDefense = kaiserAutoDefenseFixture();
+add("correction.grand-kaiser.auto_defense", kaiserDefense.before, kaiserDefense.after, kaiserDefense.events, kaiserDefense.defenderId,
+  ["expansion.grand-kaiser.auto_defense"]);
 writeFileSync(process.argv[2], JSON.stringify(frames));
 console.log(`Generated ${Object.keys(frames).length} rules-produced Board fixtures.`);
